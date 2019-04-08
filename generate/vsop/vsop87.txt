@@ -1,0 +1,338 @@
+============
+VSOP87 FILES   BDL-9502
+============
+
+
+REFERENCE
+=========
+
+Bretagnon P., Francou G., : 1988, Astron. Astrophys., 202, 309.
+
+
+ADRESS
+======
+
+Pierre Bretagnon, Gerard Francou
+Bureau des Longitudes
+77, Avenue Denfert-Rochereau
+F75014, Paris, France
+Tel :    (1) 40 51 22 69  (1) 40 51 22 60
+E-Mail : pierre@bdl.fr    francou@bdl.fr
+Fax :    (1) 46 33 28 34
+
+
+DESCRIPTION
+===========
+
+The VSOP87 files contain the VSOP87 analytical solutions of the motion
+of the planets Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus,
+Neptune and Earth-Moon Barycenter.
+
+There are six different versions of the theory VSOP87 which may be recognized
+by the type of coordinates and the reference frame.
+
+The main version VSOP87 consists of the series in elliptic elements as in the
+case of previous solution VSOP82 and the other versions VSOP87 are built in
+rectangular variables (versions A,C,E) or spherical variables (versions B,D).
+
+The reference frame is defined by the dynamical equinox and ecliptic J2000 for
+the main version VSOP87 and the versions A, B, E, and by the dynamical equinox
+and ecliptic of the date for the versions C and D.
+
+
+FILE SUMMARY
+============
+
+Name         Size Kb    Contents
+----         -------    --------
+
+VSOP87.mer     644.1    Mercury     Heliocentric elliptic elements J2000
+VSOP87.ven     401.4    Venus       Heliocentric elliptic elements J2000
+VSOP87.emb     563.0    Earth-Moon  Heliocentric elliptic elements J2000
+VSOP87.mar    1002.8    Mars        Heliocentric elliptic elements J2000
+VSOP87.jup     812.5    Jupiter     Heliocentric elliptic elements J2000
+VSOP87.sat    1645.9    Saturn      Heliocentric elliptic elements J2000
+VSOP87.ura    2023.2    Uranus      Heliocentric elliptic elements J2000
+VSOP87.nep    1070.5    Neptune     Heliocentric elliptic elements J2000
+
+VSOP87A.mer    848.1    Mercury     Heliocentric rectangular variables J2000
+VSOP87A.ven    315.9    Venus       Heliocentric rectangular variables J2000
+VSOP87A.ear    472.9    Earth       Heliocentric rectangular variables J2000
+VSOP87A.emb    444.2    Earth-Moon  Heliocentric rectangular variables J2000
+VSOP87A.mar    943.1    Mars        Heliocentric rectangular variables J2000
+VSOP87A.jup    592.1    Jupiter     Heliocentric rectangular variables J2000
+VSOP87A.sat   1001.5    Saturn      Heliocentric rectangular variables J2000
+VSOP87A.ura    705.3    Uranus      Heliocentric rectangular variables J2000
+VSOP87A.nep    352.5    Neptune     Heliocentric rectangular variables J2000
+
+VSOP87B.mer    949.8    Mercury     Heliocentric spherical   variables J2000
+VSOP87B.ven    229.8    Venus       Heliocentric spherical   variables J2000
+VSOP87B.ear    343.4    Earth       Heliocentric spherical   variables J2000
+VSOP87B.mar    853.6    Mars        Heliocentric spherical   variables J2000
+VSOP87B.jup    484.5    Jupiter     Heliocentric spherical   variables J2000
+VSOP87B.sat    848.9    Saturn      Heliocentric spherical   variables J2000
+VSOP87B.ura    702.6    Uranus      Heliocentric spherical   variables J2000
+VSOP87B.nep    270.9    Neptune     Heliocentric spherical   variables J2000
+
+VSOP87C.mer   1087.0    Mercury     Heliocentric rectangular variables of date
+VSOP87C.ven    386.6    Venus       Heliocentric rectangular variables of date
+VSOP87C.ear    560.1    Earth       Heliocentric rectangular variables of date
+VSOP87C.mar   1106.7    Mars        Heliocentric rectangular variables of date
+VSOP87C.jup    741.2    Jupiter     Heliocentric rectangular variables of date
+VSOP87C.sat   1170.5    Saturn      Heliocentric rectangular variables of date
+VSOP87C.ura    932.3    Uranus      Heliocentric rectangular variables of date
+VSOP87C.nep    385.4    Neptune     Heliocentric rectangular variables of date
+
+VSOP87D.mer    910.4    Mercury     Heliocentric spherical   variables of date
+VSOP87D.ven    226.1    Venus       Heliocentric spherical   variables of date
+VSOP87D.ear    324.8    Earth       Heliocentric spherical   variables of date
+VSOP87D.mar    731.6    Mars        Heliocentric spherical   variables of date
+VSOP87D.jup    465.6    Jupiter     Heliocentric spherical   variables of date
+VSOP87D.sat    768.3    Saturn      Heliocentric spherical   variables of date
+VSOP87D.ura    532.7    Uranus      Heliocentric spherical   variables of date
+VSOP87D.nep    258.8    Neptune     Heliocentric spherical   variables of date
+
+VSOP87E.mer   1050.4    Mercury     Barycentric  rectangular variables J2000
+VSOP87E.ven    621.8    Venus       Barycentric  rectangular variables J2000
+VSOP87E.ear    741.3    Earth       Barycentric  rectangular variables J2000
+VSOP87E.mar   1009.9    Mars        Barycentric  rectangular variables J2000
+VSOP87E.jup    606.5    Jupiter     Barycentric  rectangular variables J2000
+VSOP87E.sat   1002.8    Saturn      Barycentric  rectangular variables J2000
+VSOP87E.ura    683.5    Uranus      Barycentric  rectangular variables J2000
+VSOP87E.nep    319.6    Neptune     Barycentric  rectangular variables J2000
+VSOP87E.sun    884.7    Sun         Barycentric  rectangular variables J2000
+--------------------------------------------------------------------------------
+
+
+CONTENTS
+========
+
+A VSOP87 file deals with a body and a version of the theory.
+It contains trigonometric series which represent the coordinates of the body :
+elliptic, rectangular or spherical coordinates according to the version.
+
+These coordinates are functions of time, periodic and Poisson series,
+given under two forms :
+
+(1)         T**alpha * (S sin phi + K cos phi)
+            with : phi = SUM [i=1,12] [a(i)*lambda(i)]
+
+(2)         T**alpha * A * cos(B+CT)
+
+where       T :     time expressed in Thousands of Julian Years (tjy)
+                    elapsed from J2000 (JD2451545.0).
+            alpha : degree of time in-between 0 and 5.
+
+The amplitudes S, K and A are expressed in au/(tjy**alpha) for the distances
+and in rad/(tjy**alpha) for angular variables.
+The phase B is expressed in radians.
+The frequency C is expressed in rad/tjy.
+The coefficients a(i) are integers.
+
+The means longitudes lambda(i) are expressed in radians :
+    lambda (1) = 4.40260884240 + 26087.9031415742 * T    Mercury
+    lambda (2) = 3.17614669689 + 10213.2855462110 * T    Venus
+    lambda (3) = 1.75347045953 +  6283.0758499914 * T    Earth
+    lambda (4) = 6.20347611291 +  3340.6124266998 * T    Mars
+    lambda (5) = 0.59954649739 +   529.6909650946 * T    Jupiter
+    lambda (6) = 0.87401675650 +   213.2990954380 * T    Saturn
+    lambda (7) = 5.48129387159 +    74.7815985673 * T    Uranus
+    lambda (8) = 5.31188628676 +    38.1330356378 * T    Neptune
+    lambda (9) = 5.19846674103 + 77713.7714681205 * T    Moon D
+    lambda (10) = 1.62790523337 + 84334.6615813083 * T   Moon F
+    lambda (11) = 2.35555589827 + 83286.9142695536 * T   Moon l
+    lambda (12) = 3.81034454697 + 83997.0911355954 * T   Moon Lm
+
+In a VSOP87 file the series of each coordinates are recognized by the degree
+alpha of time variable T :
+- periodic series : alpha=0,
+- Poisson series  : alpha>0.
+
+Series follow one another according to the order of coordinates and for each
+coordinate they follow one another by increasing order of time alpha.
+
+For each term of a serie there is one record in the file.
+
+The terms of the series are placed according to decreasing values of the sum
+of absolute value of S plus absolute value of K.
+
+The quantities related to one term are placed in the order :
+a(i) (i=1,12), S, K, A, B, C.
+
+
+ORGANIZATION
+============
+
+In VSOP87 files, there are two types of records :
+(a) "header record" : characteristics of the series.
+(b) "term record" :   quantities linked to one term of a serie.
+
+For each file, a serie corresponds to one "header record" (a) followed
+by one or several "term records" (b).
+
+
+HEADER RECORD
+=============
+
+Fortran format : 17x,i1,4x,a7,12x,i1,17x,i1,i7
+
+Specifications :
+- iv : code of VSOP87 version               integer     i1  col.18
+- bo : name of body                         character   a7  col.23-29
+- ic : index of coordinate                  integer     i1  col.42
+- it : degree alpha of time variable T      integer     i1  col.60
+- in : number of terms of series            integer     i7  col.61-67
+
+The code iv of the version is :
+iv = 0 for the main version VSOP87
+iv = 1 for the version VSOP87A
+iv = 2 for the version VSOP87B
+iv = 3 for the version VSOP87C
+iv = 4 for the version VSOP87D
+iv = 5 for the version VSOP87E
+
+The names bo of the bodies are :
+MERCURY, VENUS, EARTH, MARS, JUPITER, SATURN, URANUS, NEPTUNE, SUN,
+and EMB for the Earth-Moon Barycenter.
+
+The index ic of the coordinates are :
+- for the elliptic coordinates (main version) :
+  1 : semi-major axis
+  2 : mean longitude
+  3 : k = e cos(p)                  e : eccentricity
+  4 : h = e sin(p)                  p : perihelion longitude
+  5 : q = sin(g) cos(G)             g : semi-inclination
+  6 : p = sin(g) sin(G)             G : ascending node longitude
+- for the rectangular coordinates (versions A,C,E) :
+  1 : X
+  2 : Y
+  3 : Z
+- for the spherical coordinates (versions B,D) :
+  1 : Longitude
+  2 : Latitude
+  3 : Radius
+
+The degree alpha of the time variable is equal to :
+0 for periodic series, 1 to 5 for Poisson series.
+
+
+TERM RECORD
+===========
+
+Fortran format : 1x,4i1,i5,12i3,f15.11,2f18.11,f14.11,f20.11
+
+Specifications :
+iv : code of VSOP87 version                 integer     i1  col.02
+ib : code of body                           integer     i1  col.03
+ic : index of coordinate                    integer     i1  col.04
+it : degree alpha of time variable T        integer     i1  col.05
+n  : rank of the term in a serie            integer     i5  col.06-10
+a  : 12 coefficients a of mean longitudes   integer   12i3  col.11-46
+S  : amplitude S                            real dp f15.11  col.47-61
+K  : amplitude K                            real dp f18.11  col.62-79
+A  : amplitude A                            real dp f18.11  col.80-97
+B  : phase     B                            real dp f14.11  col.98-111
+C  : frequency C                            read dp f20.11  col.112-131
+
+The codes of the bodies are :
+ 1 : Mercury
+ 2 : Venus
+ 3 : Earth for the versions A-E and Earth-Moon Barycenter for the main version
+ 4 : Mars
+ 5 : Jupiter
+ 6 : Saturn
+ 7 : Uranus
+ 8 : Neptune
+ 9 : Earth-Moon barycenter for the version A and Sun for the version E.
+
+
+TIME SCALE
+==========
+
+The time used in VSOP87 theory is dynamical time.
+We can considered this time equal to Terrestrial Time (TT) which is
+measured by international atomic time TAI.
+So, the time argument in VSOP87 theory is equal to TAI + 32.184 s.
+
+
+REFERENCE SYSTEM
+================
+
+The coordinates of the main version VSOP87 and of the version A, B, and E are
+are given in the inertial frame defined by the dynamical equinox and ecliptic
+J2000 (JD2451545.0).
+
+The coordinates of the version C an D are given in the frame defined by the
+mean equinox and ecliptic of the date. This frame is deduced from the previous
+one by precessional moving between J2000 and the epoch of the date.
+
+The rectangular coordinates of VSOP87A and VSOP87E defined in dynamical ecliptic
+frame J2000 can be connected to the equatorial frame FK5 J2000 with the
+following rotation :
+
+  X        +1.000000000000  +0.000000440360  -0.000000190919   X
+  Y     =  -0.000000479966  +0.917482137087  -0.397776982902   Y
+  Z FK5     0.000000000000  +0.397776982902  +0.917482137087   Z VSOP87A
+
+
+PRECISION
+=========
+
+The main version of VSOP87 is similar to the previous theory VSOP82.
+In the both cases the constants of integration have been determined by
+fitting to the numerical integration DE200 of the Jet Propulsion Laboratory.
+
+The differences between VSOP87 and VSOP82 mainly improve the validity time-span
+for Mercury, Venus, Earth-Moon barycenter and Mars with a precision of 1" for
+4000 years before and after J2000.
+The same precision is ensured for Jupiter and Saturn over 2000 years and for
+Uranus and Neptune over 6000 years before and after J2000.
+
+The size of the relative precision p0 of VSOP87 solutions is given hereunder.
+That means that the actual precision is close by p0*a0 au for the distances
+(a0 being the semi-major axis) and close by p0 radian for the other variables.
+By derivation with respect to time expressed in day (d), the precision of the
+velocities is close by p0*a0 au/d for the distances and close by p0 radian/d
+for the other variables.
+
+Body          a0 (au)      p0 (10**-8)
+----          -------      -----------
+Mercury        0.3871          0.6
+Venus          0.7233          2.5
+Earth          1.0000          2.5
+Mars           1.5237         10.0
+Jupiter        5.2026         35.0
+Saturn         9.5547         70.0
+Uranus        19.2181          8.0
+Neptune       30.1096         42.0
+
+
+COMPUTATION
+===========
+
+Being given a julian date JD expressed in dynamical time (TAI+32.184s) and a
+body (planets, Earth-Moon Barycenter, or Sun) associated to a version of the
+theory VSOP87 :
+1/ select the file corresponding to the body and the version,
+2/ read sequentially the terms of the series in the records of the file,
+3/ apply for each term the formulae (1) or (2) with T=(JD-2451545)/365250,
+4/ add up the terms so computed for every one coordinate.
+
+The file vsop87.f contains the Fortran 77 subroutine VSOP87 that computes the
+coordinates for each file of different versions of VSOP87 solutions.
+The VSOP87 file has to be defined and opened in the program which called this
+subroutine.
+
+A Fortran 77 program is also provided in file example.f which compute planetary
+ephemerides with the subroutine VSOP87.
+
+The subroutine VSOP87 and the program EXAMPLE (Fortran 77) are provided to
+illustrate the computation of an ephemeris. If the user wants to improve the
+rapidity of computation, it is recommanded to transform VSOP87 files in direct
+access and/or to read series in memory once at all.
+
+Some results of substitution of time in VSOP87 series are given in the file
+vsop87.chk to check up the validity of computation made by the users.
+
+
+End of document
