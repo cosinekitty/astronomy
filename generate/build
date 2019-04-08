@@ -1,0 +1,21 @@
+#!/bin/bash
+
+if [[ "$1" == "debug" ]]; then
+    BUILDOPT='-g -O0'
+elif [[ -z "$1" ]]; then
+    BUILDOPT='-O3'
+else
+    echo "FATAL(buildcode): unrecognized command line option"
+    exit 1
+fi
+
+gcc ${BUILDOPT} -Wall -Werror -o generate -I novas -I vsop \
+    generate.c \
+    vsop/vsop.c \
+    novas/novas.c \
+    novas/novascon.c \
+    novas/nutation.c \
+    novas/readeph0.c \
+    novas/solsys1.c \
+    novas/eph_manager.c \
+    -lm
