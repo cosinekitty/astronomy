@@ -1,0 +1,64 @@
+#!/bin/bash
+Fail()
+{
+    echo "ERROR($0): $1"
+    exit 1
+}
+
+IsInstalled()
+{
+    type "$1" > /dev/null 2>&1
+    return $?
+}
+
+OUTDIR=../source
+EPHFILE=lnxp1600p2200.405
+EPHURL=ftp://ssd.jpl.nasa.gov/pub/eph/planets/Linux/de405/${EPHFILE}
+
+if [[ ! -f ${EPHFILE} ]]; then
+    echo ""
+    echo "Ephemeris file not found: ${EPHFILE}"
+    echo "Trying to download for you from:"
+    echo "${EPHURL}"
+    echo ""
+    if IsInstalled wget; then
+        wget ${EPHURL} || Fail "Could not download using wget: ${EPHURL}"
+    elif IsInstalled curl; then
+        curl -o ${EPHFILE} ${EPHURL} || Fail "Could not download using curl: ${EPHFILE}"
+    else
+        echo "Neither wget nor curl is installed. Use your browser to download"
+        echo "the above file from the NASA ftp site into this directory."
+        echo "Then run this script again to continue."
+        exit 1
+    fi
+
+    if IsInstalled sha256sum; then
+        if sha256sum -c ephemeris.sha256; then
+            echo "Validated download using sha256 checksum."
+        else
+            rm -f ${EPHFILE}
+            Fail "Detected corrupt ephemeris file: failed sha256 check."
+        fi
+    elif IsInstalled md5sum; then
+        if md5sum -c ephemeris.md5; then
+            echo "Validated download using md5 checksum."
+        else
+            rm -f ${EPHFILE}
+            Fail "Detected corrupt ephemeris file: failed md5 check."
+        fi
+    fi
+fi
+
+if [[ ! -x generate ]]; then
+    echo ""
+    echo "Building C source code for 'generate' program."
+    ./build || Fail "Could not build 'generate' program from source."
+fi
+
+echo ""
+echo "Running the source code generator."
+./generate all || Fail "Could not generate source code."
+
+echo ""
+echo "SUCCESS. The output is in the directory ${OUTDIR}."
+exit 0

@@ -18,4 +18,6 @@ gcc ${BUILDOPT} -Wall -Werror -o generate -I novas -I vsop \
     novas/readeph0.c \
     novas/solsys1.c \
     novas/eph_manager.c \
-    -lm
+    -lm || exit $?
+
+exit 0
