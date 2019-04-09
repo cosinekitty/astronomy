@@ -1,6 +1,5 @@
 /*
-    earth.c  -  Don Cross  -  2019-03-23
-
+    earth.c    
     Special-purpose logic for calculating Earth-Moon Barycenter.
     Based on sun_eph() from NOVAS C 3.1 file solsys3.c.
 */

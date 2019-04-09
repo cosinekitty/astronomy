@@ -468,7 +468,6 @@ static int PositionArcminError(int body, double jd, const double a[3], const dou
     }
 
     /* Exclude Sun and Geocentric Moon (GM) from error estimates. */
-    /* FIXFIXFIX - Rework to use NovasBodyPos(), so we can support Moon also. */
     /* Can also use Earth position rather than EMB position. */
     if (body < BODY_MERCURY || body > BODY_PLUTO)
     {
