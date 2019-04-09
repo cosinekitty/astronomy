@@ -227,8 +227,11 @@ int NovasEarth(double jd, double pos[3])
 {
     int error;
     int k;
-    double jed[2] = { jd, 0.0 };
+    double jed[2];
     double emb_pos[3], sun_pos[3], moon_pos[3], vel[3];
+
+    jed[0] = jd;
+    jed[1] = 0.0;
 
     error = state(jed, 2, emb_pos, vel);    /* Earth/Moon Barycenter with respect to Solar System Barycenter */
     if (error) return error;

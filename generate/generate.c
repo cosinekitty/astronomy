@@ -163,12 +163,14 @@ static int OpenEphem()
 static int NovasBodyPos(double jd, int body, double pos[3])
 {
     int error, k;
-    double jed[2] = { jd, 0.0 };
+    double jed[2];
     double sun_pos[3], moon_pos[3], vel[3];
+
+    jed[0] = jd;
+    jed[1] = 0.0;
 
     if (body == BODY_EARTH || body == BODY_MOON)
     {
-        static const double EarthMoonMassRatio = 81.30056;
         double factor;
 
         /* 
@@ -204,7 +206,7 @@ static int NovasBodyPos(double jd, int body, double pos[3])
     else
     {
         /* This is a body that NOVAS directly models in its ephemerides. */
-        error = state(jed, body, pos, vel);
+        error = (int)state(jed, (short)body, pos, vel);
         if (error)
         {
             fprintf(stderr, "NovasBodyPos: state(%lf, %d) returned %d\n", jd, body, error);
@@ -215,7 +217,7 @@ static int NovasBodyPos(double jd, int body, double pos[3])
         if (body == BODY_GM) return 0;
     }
 
-    error = state(jed, BODY_SUN, sun_pos, vel);
+    error = (int)state(jed, BODY_SUN, sun_pos, vel);
     if (error)
     {
         fprintf(stderr, "NovasBodyPos: state(%lf, SUN) returned %d\n", jd, error);
@@ -679,8 +681,8 @@ static int Resample(int body, const char *outFileName, int npoly, int startYear,
     fprintf(outfile, "body=%d\n", body);
     fprintf(outfile, "\n");     /* blank line terminates the header */
 
-    jdStart = julian_date(startYear, 1, 1, 0.0);
-    jdStop = julian_date(stopYear+1, 1, 1, 0.0);
+    jdStart = julian_date((short)startYear, 1, 1, 0.0);
+    jdStop = julian_date((short)(stopYear+1), 1, 1, 0.0);
     jdDelta = (jdStop - jdStart) / nsections;
     context.body = body;
     for (section = 0; section < nsections; ++section)
@@ -727,7 +729,7 @@ static int SampleFunc(const void *context, double jd, double pos[CHEB_MAX_DIM])
     
     jed[0] = jd;
     jed[1] = 0.0;
-    error = state(jed, c->body, pos, vel);
+    error = state(jed, (short)c->body, pos, vel);
     if (error) return error;
 
     error = state(jed, BODY_SUN, sun_pos, vel);
@@ -854,7 +856,7 @@ static int CheckSkyPos(observer *location, const char *filename, int lnum, const
     else
         bodyIndex = 1 + body;    
 
-    error = make_object(0, bodyIndex, name, NULL, &obj);
+    error = make_object(0, (short)bodyIndex, name, NULL, &obj);
     if (error)
     {
         fprintf(stderr, "CheckSkyPos: make_object(%d) returned %d on line %d of file %s\n", bodyIndex, error, lnum, filename);
