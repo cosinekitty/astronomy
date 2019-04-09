@@ -13,6 +13,9 @@ gcc ${BUILDOPT} -Wall -Werror -o generate -I novas -I vsop \
     generate.c \
     earth.c \
     astro_vector.c \
+    chebyshev.c \
+    codegen.c \
+    ephfile.c \
     vsop/vsop.c \
     novas/novas.c \
     novas/novascon.c \

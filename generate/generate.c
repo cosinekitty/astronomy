@@ -25,12 +25,45 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef _WIN32
+#include <io.h>
+#define unlink _unlink
+#else
+#include <unistd.h>
+#endif
+
 #include "eph_manager.h"
 #include "novas.h"
+
 #include "astro_vector.h"
-#include "vsop.h"
+#include "chebyshev.h"
+#include "codegen.h"
 #include "earth.h"
+#include "ephfile.h"
 #include "novas_body.h"
+#include "vsop.h"
+
+#define VECTOR_DIM 3
+#define MIN_YEAR 1600
+#define MAX_YEAR 2200
+
+typedef struct
+{
+    double rmsPositionError;
+    double maxPositionError;
+    double rmsArcminError;
+    double maxArcminError;
+    long dataCount;     /* a measure of how many floating point numbers need to be encoded for ephemeris translation */
+}
+error_stats_t;
+
+typedef struct
+{
+    int body;       /* which body we are calculating for */
+}
+sample_context_t;
+
+#define CHECK(x)   do{if(0 != (error = (x))) goto fail;}while(0)
 
 static double jd_begin;
 static double jd_end;
@@ -43,6 +76,11 @@ static int TestVsopModel(VsopModel *model, int body, double threshold, double *m
 static int SaveVsopFile(const VsopModel *model);
 static int PositionArcminError(int body, double jd, const double a[3], const double b[3], double *arcmin);
 static double VectorLength(const double v[3]);
+static int MeasureError(const char *inFileName, int nsamples, error_stats_t *stats);
+static int Resample(int body, const char *outFileName, int npoly, int startYear, int stopYear, int nsections);
+static int SampleFunc(const void *context, double jd, double pos[CHEB_MAX_DIM]);
+static double VectorError(double a[3], double b[3]);
+static int ManualResample(int body, int npoly, int nsections, int startYear, int stopYear);
 
 #define MOON_PERIGEE        0.00238
 #define MERCURY_APHELION    0.466697
@@ -199,7 +237,7 @@ static int LoadVsopFile(VsopModel *model, int body)
         return 1;
     }
 
-    snprintf(filename, sizeof(filename)-1, "vsop/VSOP87B.%s", BodyName[body]);
+    snprintf(filename, sizeof(filename), "vsop/VSOP87B.%s", BodyName[body]);
     return VsopLoadModel(model, filename);
 }
 
@@ -266,7 +304,7 @@ static int SaveVsopFile(const VsopModel *model)
 {
     char filename[100];
     
-    snprintf(filename, sizeof(filename)-1, "output/vsop_%d.txt", (int)model->body);
+    snprintf(filename, sizeof(filename), "output/vsop_%d.txt", (int)model->body);
     return VsopWriteTrunc(model, filename);
 }
 
@@ -330,8 +368,11 @@ static int BuildVsopData(void)
 static int GenerateAllSource(void)
 {
     int error;
-    if (0 != (error = OpenEphem())) goto fail;
-    if (0 != (error = BuildVsopData())) goto fail;
+
+    CHECK(OpenEphem());
+    CHECK(BuildVsopData());
+    CHECK(ManualResample(8, 26, 2, 1900, 2100));
+    CHECK(GenerateCode("../source/js/astronomy.js", "template/astronomy.js", "output"));
 
 fail:
     ephem_close();
@@ -469,4 +510,236 @@ calc:
 static double VectorLength(const double v[3])
 {
     return sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
+}
+
+static int ManualResample(int body, int npoly, int nsections, int startYear, int stopYear)
+{
+    int error, nsamples;
+    double daysPerSection;
+    error_stats_t stats;
+    char filename[80];
+
+    snprintf(filename, sizeof(filename), "output/%02d.eph", body);
+    CHECK(Resample(body, filename, npoly, startYear, stopYear, nsections));
+
+    daysPerSection = (365.244 * (stopYear - startYear + 1)) / nsections;
+    nsamples = (int)(24.0 * (60.0/10.0) * daysPerSection);    /* approximately one sample per 10 minutes */
+    if (nsamples < 100*npoly)
+        nsamples = 100*npoly;     /* but always oversample every segment beyond the polynomial count */
+
+    CHECK(MeasureError(filename, nsamples, &stats));
+
+    printf("RMS position error = %lg AU (%lg km)\n", stats.rmsPositionError, stats.rmsPositionError * AU_KM);
+    printf("Max position error = %lg AU (%lg km)\n", stats.maxPositionError, stats.maxPositionError * AU_KM);
+    printf("RMS Angular error = %0.3lf arcmin\n", stats.rmsArcminError);
+    printf("Max Angular error = %0.3lf arcmin\n", stats.maxArcminError);
+    printf("Output data count = %ld, byte estimate = %ld\n", stats.dataCount, 20 * stats.dataCount);
+
+fail:
+    return error;
+}
+
+static int MeasureError(const char *inFileName, int nsamples, error_stats_t *stats)
+{
+    int i, nvectors;
+    int error = 0;
+    double jd, x, sumPosDiff, posDiff, maxPosDiff;
+    double arcmin, arcminSum;
+    double apos[3];     /* our approximate position vector */
+    double npos[3];     /* NOVAS exact position vector */
+    eph_file_reader_t reader;
+    eph_record_t record;
+
+    memset(stats, 0, sizeof(error_stats_t));
+    error = EphFileOpen(&reader, inFileName);
+    if (error) 
+    {
+        fprintf(stderr, "MeasureError: Error %d trying to open file: %s\n", error, inFileName);
+        goto fail;
+    }
+
+    /* sanity check on the body value, to prevent invalid memory access */
+    if (reader.body < 0 || reader.body > 10)
+    {
+        fprintf(stderr, "MeasureError: Invalid body = %d\n", reader.body);
+        error = 1;
+        goto fail;
+    }
+
+    nvectors = 0;
+    sumPosDiff = 0.0;
+    maxPosDiff = 0.0;
+    arcminSum = 0.0;
+    while (EphReadRecord(&reader, &record))
+    {
+        stats->dataCount += (1 + 3*record.numpoly);     /* tally the beginning Julian Date plus all the Chebyshev coefficients */
+
+        /*
+            We sample in such a way as to exclude the endpoints, because
+            we know error will be minimal there (and at all the other Chebyshev nodes).
+            If nsamples==1, we pick the midpoint.
+            If nsamples==2, we pick the 1/3 mark and 2/3 marks.
+            Thus we always divide the interval into (1+nsamples) sections.
+        */
+        for (i=1; i <= nsamples; ++i)
+        {
+            jd = record.jdStart + (i * record.jdDelta)/(1 + nsamples);
+
+            /* Calculate "correct" position at the time 'jd' (according to NOVAS). */
+            error = NovasBodyPos(jd, reader.body, npos);
+            if (error) goto fail;
+            
+            /* Calculate our approximation of the position at the time 'jd'. */
+            x = ChebScale(record.jdStart, record.jdStart + record.jdDelta, jd);
+            ChebApprox(record.numpoly, 3, record.coeff, x, apos);
+
+            /* Tally the root-mean-square error between the two position vectors. */
+            posDiff = VectorError(npos, apos);
+            if (posDiff > maxPosDiff)
+                maxPosDiff = posDiff;
+
+            /* Estimate angular error */
+            error = PositionArcminError(reader.body, jd, npos, apos, &arcmin);
+            if (error) goto fail;
+            arcminSum += arcmin * arcmin;
+            if (arcmin > stats->maxArcminError)
+                stats->maxArcminError = arcmin;
+
+            sumPosDiff += posDiff;
+            ++nvectors;
+        }
+    }
+    error = record.error;
+    if (error)
+    {
+        fprintf(stderr, "MeasureError: Error %d reading record on line %d of file %s\n", error, reader.lnum, inFileName);
+        goto fail;
+    }
+
+    if (nvectors < 1)
+    {
+        fprintf(stderr, "MeasureError(ERROR): nvectors = %d\n", nvectors);
+        error = 1;
+        goto fail;
+    }
+
+    stats->rmsPositionError = sqrt(sumPosDiff / nvectors);
+    stats->maxPositionError = sqrt(maxPosDiff);
+    stats->rmsArcminError = sqrt(arcminSum / nvectors);
+
+fail:
+    EphFileClose(&reader);
+    return error;
+}
+
+static int Resample(int body, const char *outFileName, int npoly, int startYear, int stopYear, int nsections)
+{
+    FILE *outfile = NULL;
+    ChebEncoder encoder;
+    double coeff[CHEB_MAX_DIM][CHEB_MAX_POLYS];    /* independent Chebyshev coefficients for each position coordinate: x, y, z */
+    int error, k, i, section;
+    double jdStart, jdStop, jdDelta, jd;
+    sample_context_t context;
+
+    if (startYear < MIN_YEAR || stopYear < startYear || MAX_YEAR < stopYear)
+    {
+        fprintf(stderr, "ERROR: Invalid year range %d..%d\n", startYear, stopYear);
+        error = 1;
+        goto fail;
+    }
+
+    if (nsections < 1)
+    {
+        fprintf(stderr, "ERROR: nsections must be a positive integer.\n");
+        error = 2;
+        goto fail;
+    }
+
+    error = ChebInit(&encoder, npoly, VECTOR_DIM);
+    if (error) 
+    {
+        fprintf(stderr, "ERROR %d returned by ChebInit()\n", error);
+        goto fail;
+    }
+
+    outfile = fopen(outFileName, "wt");
+    if (outfile == NULL)
+    {
+        fprintf(stderr, "ERROR: Cannot open output file '%s'\n", outFileName);
+        error = 3;
+        goto fail;
+    }
+
+    /* Write header to output file. */
+    fprintf(outfile, "body=%d\n", body);
+    fprintf(outfile, "\n");     /* blank line terminates the header */
+
+    jdStart = julian_date(startYear, 1, 1, 0.0);
+    jdStop = julian_date(stopYear+1, 1, 1, 0.0);
+    jdDelta = (jdStop - jdStart) / nsections;
+    context.body = body;
+    for (section = 0; section < nsections; ++section)
+    {
+        jd = jdStart + (section * jdDelta);
+
+        /* encode coefficients for vector-valued position function */
+        error = ChebGenerate(&encoder, SampleFunc, &context, jd, jd + jdDelta, coeff);
+        if (error)
+        {
+            fprintf(stderr, "ERROR: ChebGenerate() returned %d\n", error);
+            goto fail;
+        }
+
+        /* Prefix each block of polynomial coefficients with the time range and the number of polynomials. */
+        fprintf(outfile, "%0.18lf %0.18lf %d\n", jd, jdDelta, npoly);
+
+        /* Write the Chebyshev coordinates we obtained for the position function. */
+        for (k=0; k < npoly; k++)
+        {
+            for (i=0; i < 3; ++i)
+                fprintf(outfile, "%22.18lf", coeff[i][k]);
+            fprintf(outfile, "\n");
+        }
+    }
+
+fail:
+    if (outfile != NULL)
+        fclose(outfile);
+
+    if (error)
+        unlink(outFileName);
+
+    return error;
+}
+
+static int SampleFunc(const void *context, double jd, double pos[CHEB_MAX_DIM])
+{
+    const sample_context_t *c = context;
+    int error;
+    double jed[2];
+    double sun_pos[3];
+    double vel[3];      /* we don't care about velocities... ignored */
+    
+    jed[0] = jd;
+    jed[1] = 0.0;
+    error = state(jed, c->body, pos, vel);
+    if (error) return error;
+
+    error = state(jed, BODY_SUN, sun_pos, vel);
+    if (error) return error;
+
+    /* Calculate heliocentric coordinates from barycenric coordinates. */
+    pos[0] -= sun_pos[0];
+    pos[1] -= sun_pos[1];
+    pos[2] -= sun_pos[2];
+
+    return 0;
+}
+
+static double VectorError(double a[3], double b[3])
+{
+    double dx = a[0] - b[0];
+    double dy = a[1] - b[1];
+    double dz = a[2] - b[2];
+    return dx*dx + dy*dy + dz*dz;
 }
