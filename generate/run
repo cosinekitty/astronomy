@@ -56,9 +56,11 @@ if [[ ! -x generate ]]; then
 fi
 
 echo ""
-echo "Running the source code generator."
-./generate all || Fail "Could not generate source code."
+echo "Running the target code generator."
+mkdir -pv output || Fail "Error creating directories."
+rm -f output/vsop_*.txt
+./generate all || Fail "Could not generate target code."
 
 echo ""
-echo "SUCCESS. The output is in the directory ${OUTDIR}."
+echo "SUCCESS."
 exit 0
