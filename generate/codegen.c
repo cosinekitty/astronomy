@@ -59,7 +59,7 @@ static int ScanDirective(
 
 static int ProcessDirective(cg_context_t *context);
 static int LogError(const cg_context_t *context, const char *format, ...);
-static int ParseVsopBodyName(const cg_context_t *context, const char *name, VsopBody *body);
+static int ParseVsopBodyName(const cg_context_t *context, const char *name, vsop_body_t *body);
 
 int GenerateCode(
     const char *outCodeFileName,
@@ -187,7 +187,7 @@ static int ScanDirective(
     return 1;
 }
 
-static int ParseVsopBodyName(const cg_context_t *context, const char *name, VsopBody *body)
+static int ParseVsopBodyName(const cg_context_t *context, const char *name, vsop_body_t *body)
 {
     if (!strcmp(name, "Sun"))       { *body = VSOP_SUN;     return 0; }
     if (!strcmp(name, "Mercury"))   { *body = VSOP_MERCURY; return 0; }
@@ -261,8 +261,8 @@ static int JsVsop(cg_context_t *context)
 {
     int error;
     const char *name;
-    VsopBody body;
-    VsopModel model;
+    vsop_body_t body;
+    vsop_model_t model;
     int check_length;
     int k, s, i;
     char filename[100];
@@ -287,16 +287,16 @@ static int JsVsop(cg_context_t *context)
     fprintf(context->outfile, "[\n");
     for (k=0; k < model.ncoords; ++k)
     {
-        const VsopFormula *formula = &model.formula[k];
+        const vsop_formula_t *formula = &model.formula[k];
 
         fprintf(context->outfile, "  [\n");
         for (s=0; s < formula->nseries_total; ++s)
         {
-            const VsopSeries *series = &formula->series[s];
+            const vsop_series_t *series = &formula->series[s];
             fprintf(context->outfile, "    [\n");
             for (i=0; i < series->nterms_total; ++i)
             {
-                const VsopTerm *term = &series->term[i];
+                const vsop_term_t *term = &series->term[i];
                 fprintf(context->outfile, "      [%0.11lf, %0.11lf, %0.11lf]%s\n", 
                     term->amplitude,
                     term->phase,

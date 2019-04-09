@@ -72,8 +72,8 @@ static short int de_number;
 static int OpenEphem(void);
 static int PrintUsage(void);
 static int GenerateAllSource(void);
-static int TestVsopModel(VsopModel *model, int body, double threshold, double *max_arcmin, int *trunc_terms);
-static int SaveVsopFile(const VsopModel *model);
+static int TestVsopModel(vsop_model_t *model, int body, double threshold, double *max_arcmin, int *trunc_terms);
+static int SaveVsopFile(const vsop_model_t *model);
 static int PositionArcminError(int body, double jd, const double a[3], const double b[3], double *arcmin);
 static double VectorLength(const double v[3]);
 static int MeasureError(const char *inFileName, int nsamples, error_stats_t *stats);
@@ -82,7 +82,7 @@ static int SampleFunc(const void *context, double jd, double pos[CHEB_MAX_DIM]);
 static double VectorError(double a[3], double b[3]);
 static int ManualResample(int body, int npoly, int nsections, int startYear, int stopYear);
 static int CheckTestOutput(const char *filename);
-static VsopBody LookupBody(const char *name);
+static vsop_body_t LookupBody(const char *name);
 static int CheckSkyPos(observer *location, const char *filename, int lnum, const char *line, double *arcmin);
 
 #define MOON_PERIGEE        0.00238
@@ -228,7 +228,7 @@ static int NovasBodyPos(double jd, int body, double pos[3])
     return 0;
 }
 
-static int LoadVsopFile(VsopModel *model, int body)
+static int LoadVsopFile(vsop_model_t *model, int body)
 {
     static const char * const BodyName[] =
     {
@@ -257,7 +257,7 @@ static int SearchVsop(int body)
     double max_arcmin, threshold;
     double winner_threshold = 0.0;
     double winner_arcmin = -1.0;
-    VsopModel model;
+    vsop_model_t model;
 
     error = LoadVsopFile(&model, body);
     if (error) goto fail;
@@ -306,7 +306,7 @@ fail:
     return error;
 }
 
-static int SaveVsopFile(const VsopModel *model)
+static int SaveVsopFile(const vsop_model_t *model)
 {
     char filename[100];
     
@@ -314,7 +314,7 @@ static int SaveVsopFile(const VsopModel *model)
     return VsopWriteTrunc(model, filename);
 }
 
-static int TestVsopModel(VsopModel *model, int body, double threshold, double *max_arcmin, int *trunc_terms)
+static int TestVsopModel(vsop_model_t *model, int body, double threshold, double *max_arcmin, int *trunc_terms)
 {
     int error;
     double jdStart, jdStop, jd, jdDelta;
@@ -898,7 +898,7 @@ static int CheckSkyPos(observer *location, const char *filename, int lnum, const
     return 0;
 }
 
-static VsopBody LookupBody(const char *name)
+static vsop_body_t LookupBody(const char *name)
 {
     if (!strcmp(name, "Mercury"))   return BODY_MERCURY;
     if (!strcmp(name, "Venus"))     return BODY_VENUS;

@@ -14,9 +14,9 @@
 static void SphereToRect(double lon, double lat, double radius, double pos[3]);
 static void VsopRotate(const double ecliptic[3], double equatorial[3]);
 
-void VsopInit(VsopModel *model)    /* optional usage: create invalid null model that can be safely freed */
+void VsopInit(vsop_model_t *model)    /* optional usage: create invalid null model that can be safely freed */
 {
-    memset(model, 0, sizeof(VsopModel));
+    memset(model, 0, sizeof(vsop_model_t));
     model->version = VSOP_INVALID_VERSION;
     model->body = VSOP_INVALID_BODY;
 }
@@ -24,7 +24,7 @@ void VsopInit(VsopModel *model)    /* optional usage: create invalid null model 
 typedef struct
 {
     const char *name;
-    VsopBody body;
+    vsop_body_t body;
 }
 BodyItem;
 
@@ -43,7 +43,7 @@ static const BodyItem BodyTable[] =
     { NULL,       VSOP_INVALID_BODY }
 };
 
-int VsopLoadModel(VsopModel *model, const char *inFileName)
+int VsopLoadModel(vsop_model_t *model, const char *inFileName)
 {
     int lnum, length, b;
     char line[200];
@@ -51,8 +51,8 @@ int VsopLoadModel(VsopModel *model, const char *inFileName)
     int nterms, termcount, power, expected_ncoords;
     double A, B, C;
     FILE *infile;
-    VsopSeries *series = NULL;
-    VsopFormula *formula = NULL;
+    vsop_series_t *series = NULL;
+    vsop_formula_t *formula = NULL;
 
     VsopInit(model);    /* must init before checking for any errors; otherwise will crash trying to free! */
 
@@ -85,7 +85,7 @@ int VsopLoadModel(VsopModel *model, const char *inFileName)
             if (lnum == 1)
             {
                 /* Must keep the version so we know what the coordinates mean. */
-                model->version = (VsopVersionCode)(line[17] - '0');
+                model->version = (vsop_version_t)(line[17] - '0');
 
                 /* Keep the body name so caller can verify correct body is loaded. */
                 /* We also use the body to determine how to scale orbital radius for truncation. */
@@ -141,7 +141,7 @@ int VsopLoadModel(VsopModel *model, const char *inFileName)
             series = &formula->series[formula->nseries_total++];
             formula->nseries_calc = formula->nseries_total;
             series->nterms_calc = series->nterms_total = nterms;
-            series->term = calloc(series->nterms_total, sizeof(VsopTerm));
+            series->term = calloc(series->nterms_total, sizeof(vsop_term_t));
             if (series->term == NULL)
             {
                 fprintf(stderr, "VsopLoadModel: out of memory!\n");
@@ -196,7 +196,7 @@ fail:
     return error;
 }
 
-void VsopFreeModel(VsopModel *model)
+void VsopFreeModel(vsop_model_t *model)
 {
     int k, s;
 
@@ -213,7 +213,7 @@ static double Millennia(double jd)
     return t;
 }
 
-int VsopCalc(const VsopModel *model, double jd, double pos[3])
+int VsopCalc(const vsop_model_t *model, double jd, double pos[3])
 {
     int k, s, i;
     double t = Millennia(jd);
@@ -229,15 +229,15 @@ int VsopCalc(const VsopModel *model, double jd, double pos[3])
     for (k=0; k < model->ncoords; ++k)
     {
         double tpower = 1.0;
-        const VsopFormula *formula = &model->formula[k];
+        const vsop_formula_t *formula = &model->formula[k];
         coords[k] = 0.0;
         for (s=0; s < formula->nseries_calc; ++s)
         {
             double sum = 0.0;
-            const VsopSeries *series = &formula->series[s];
+            const vsop_series_t *series = &formula->series[s];
             for (i=0; i < series->nterms_calc; ++i)
             {
-                const VsopTerm *term = &series->term[i];
+                const vsop_term_t *term = &series->term[i];
                 sum += term->amplitude * cos(term->phase + (t * term->frequency));
             }
             coords[k] += tpower * sum;
@@ -299,7 +299,7 @@ static double Power(double t, int n)
     return p;
 }
 
-static int ModelTypeScaling(const VsopModel *model, int k, double *scaling)
+static int ModelTypeScaling(const vsop_model_t *model, int k, double *scaling)
 {
     /*
         Calculate a scaling factor to fairly weigh different kinds of coordinates for a given body.
@@ -350,7 +350,7 @@ static int ModelTypeScaling(const VsopModel *model, int k, double *scaling)
     return 0;
 }
 
-int VsopTruncate(VsopModel *model, double jd1, double jd2, double amplitudeThreshold)
+int VsopTruncate(vsop_model_t *model, double jd1, double jd2, double amplitudeThreshold)
 {
     /*
         Over the specified Julian Date range [jdMin, jdMax],
@@ -365,18 +365,18 @@ int VsopTruncate(VsopModel *model, double jd1, double jd2, double amplitudeThres
     /* Reset all nterms_calc to nterms, undoing any previous truncation. */
     for (k=0; k < model->ncoords; ++k)
     {
-        VsopFormula *formula = &model->formula[k];
+        vsop_formula_t *formula = &model->formula[k];
         formula->nseries_calc = formula->nseries_total;
         for (s = 0; s < formula->nseries_total; ++s)
         {
-            VsopSeries *series = &formula->series[s];
+            vsop_series_t *series = &formula->series[s];
             series->nterms_calc = series->nterms_total;
         }
     }
 
     for (k=0; k < model->ncoords; ++k)
     {
-        VsopFormula *formula = &model->formula[k];
+        vsop_formula_t *formula = &model->formula[k];
         double accum = 0.0;
         double scaled_threshold;
         if (ModelTypeScaling(model, k, &scaled_threshold)) return 1;
@@ -384,16 +384,16 @@ int VsopTruncate(VsopModel *model, double jd1, double jd2, double amplitudeThres
         for(;;)
         {            
             /* Search for smallest remaining term that can be removed without exceeding the amplitude threshold. */
-            VsopSeries *s_best = NULL;
+            vsop_series_t *s_best = NULL;
             double incr_best = -1.0;
             int s_index_best = -1;
             for (s = 0; s < formula->nseries_calc; ++s)
             {
                 double tpower = Power(t, s);
-                VsopSeries *series = &formula->series[s];
+                vsop_series_t *series = &formula->series[s];
                 if (series->nterms_calc > 0)
                 {
-                    const VsopTerm *term = &series->term[series->nterms_calc - 1];
+                    const vsop_term_t *term = &series->term[series->nterms_calc - 1];
                     double increment = tpower * fabs(term->amplitude);
                     if (s_best == NULL || increment < incr_best)
                     {
@@ -420,7 +420,7 @@ int VsopTruncate(VsopModel *model, double jd1, double jd2, double amplitudeThres
     return 0;
 }
 
-int VsopTermCount(const VsopModel *model)
+int VsopTermCount(const vsop_model_t *model)
 {
     /* Count up the total number of cosine terms in the truncated model. */
     int k, s, termcount;
@@ -428,7 +428,7 @@ int VsopTermCount(const VsopModel *model)
     termcount = 0;
     for (k=0; k < model->ncoords; ++k)
     {
-        const VsopFormula *formula = &model->formula[k];
+        const vsop_formula_t *formula = &model->formula[k];
         for (s=0; s < formula->nseries_calc; ++s)
             termcount += formula->series[s].nterms_calc;
     }
@@ -436,7 +436,7 @@ int VsopTermCount(const VsopModel *model)
     return termcount;
 }
 
-int VsopWriteTrunc(const VsopModel *model, const char *outFileName)
+int VsopWriteTrunc(const vsop_model_t *model, const char *outFileName)
 {
     int error = 1;
     int k, s, i;
@@ -452,15 +452,15 @@ int VsopWriteTrunc(const VsopModel *model, const char *outFileName)
     fprintf(outfile, "TRUNC_VSOP87 version=%d body=%d ncoords=%d\n", model->version, model->body, model->ncoords);
     for (k=0; k < model->ncoords; ++k)
     {
-        const VsopFormula *formula = &model->formula[k];
+        const vsop_formula_t *formula = &model->formula[k];
         fprintf(outfile, "    coord=%d, nseries=%d\n", k, formula->nseries_calc);
         for (s = 0; s < formula->nseries_calc; ++s)
         {
-            const VsopSeries *series = &formula->series[s];
+            const vsop_series_t *series = &formula->series[s];
             fprintf(outfile, "        series=%d, nterms=%d\n", s, series->nterms_calc);
             for (i = 0; i < series->nterms_calc; ++i)
             {
-                const VsopTerm *term = &series->term[i];
+                const vsop_term_t *term = &series->term[i];
 
                 /* Match the exact precision in the original VSOP87 file for printing the coefficients. */
                 fprintf(outfile, "        %7d %18.11lf %14.11lf %20.11lf\n", i, term->amplitude, term->phase, term->frequency);
@@ -488,7 +488,7 @@ fail:
     } \
 } while(0)
 
-int VsopReadTrunc(VsopModel *model, const char *inFileName)
+int VsopReadTrunc(vsop_model_t *model, const char *inFileName)
 {
     int error;
     int lnum = 0;
@@ -515,7 +515,7 @@ int VsopReadTrunc(VsopModel *model, const char *inFileName)
 
     for (k = 0; k < model->ncoords; ++k)
     {
-        VsopFormula *formula = &model->formula[k];
+        vsop_formula_t *formula = &model->formula[k];
 
         PARSELINE(
             2 == sscanf(line, " coord=%d, nseries=%d", &check_k, &formula->nseries_total)
@@ -527,14 +527,14 @@ int VsopReadTrunc(VsopModel *model, const char *inFileName)
 
         for (s = 0; s < formula->nseries_total; ++s)
         {
-            VsopSeries *series = &formula->series[s];
+            vsop_series_t *series = &formula->series[s];
 
             PARSELINE(
                 2 == sscanf(line, " series=%d, nterms=%d", &check_s, &series->nterms_total) 
                 && check_s == s);
 
             series->nterms_calc = series->nterms_total;
-            series->term = calloc(series->nterms_total, sizeof(VsopTerm));
+            series->term = calloc(series->nterms_total, sizeof(vsop_term_t));
             if (series->term == NULL)
             {
                 fprintf(stderr, "VsopReadTrunc: memory allocation failure!\n");
@@ -544,7 +544,7 @@ int VsopReadTrunc(VsopModel *model, const char *inFileName)
 
             for (i = 0; i < series->nterms_total; ++i)
             {
-                VsopTerm *term = &series->term[i];
+                vsop_term_t *term = &series->term[i];
                 PARSELINE(
                     4 == sscanf(line, " %d %lf %lf %lf", &check_i, &term->amplitude, &term->phase, &term->frequency)
                     && check_i == i
