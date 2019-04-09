@@ -81,6 +81,9 @@ static int Resample(int body, const char *outFileName, int npoly, int startYear,
 static int SampleFunc(const void *context, double jd, double pos[CHEB_MAX_DIM]);
 static double VectorError(double a[3], double b[3]);
 static int ManualResample(int body, int npoly, int nsections, int startYear, int stopYear);
+static int CheckTestOutput(const char *filename);
+static VsopBody LookupBody(const char *name);
+static int CheckSkyPos(observer *location, const char *filename, int lnum, const char *line, double *arcmin);
 
 #define MOON_PERIGEE        0.00238
 #define MERCURY_APHELION    0.466697
@@ -120,6 +123,9 @@ int main(int argc, const char *argv[])
 {
     if (argc == 2 && !strcmp(argv[1], "all"))
         return GenerateAllSource();
+
+    if (argc == 3 && !strcmp(argv[1], "check"))
+        return CheckTestOutput(argv[2]);
 
     return PrintUsage();
 }
@@ -741,4 +747,235 @@ static double VectorError(double a[3], double b[3])
     double dy = a[1] - b[1];
     double dz = a[2] - b[2];
     return dx*dx + dy*dy + dz*dz;
+}
+
+static int ParseObserver(const char *filename, int lnum, const char *line, observer *location)
+{
+    int error;
+    on_surface surface;
+
+    if (3 != sscanf(line, "o %lf %lf %lf", &surface.latitude, &surface.longitude, &surface.height))
+    {
+        fprintf(stderr, "ParseObserver: Invalid format on line %d of file %s\n", lnum, filename);
+        return 1;
+    }
+
+    surface.temperature = 20;
+    surface.pressure = 1000;
+
+    error = make_observer(1, &surface, NULL, location);
+    if (error)
+    {
+        fprintf(stderr, "ParseObserver: error %d returned by make_observer() for line %d of file %s\n", error, lnum, filename);
+    }
+    return error;
+}
+
+static int CheckTestVector(const char *filename, int lnum, const char *line, double *arcmin)
+{
+    int body, error;
+    char name[10];
+    double jd, xpos[3], npos[3];
+
+    *arcmin = 99999.0;
+
+    if (5 != sscanf(line, "v %9[A-Za-z] %lf %lf %lf %lf", name, &jd, &xpos[0], &xpos[1], &xpos[2]))
+    {
+        fprintf(stderr, "CheckTestVector: Invalid format on line %d of file %s\n", lnum, filename);
+        return 1;
+    }
+
+    body = LookupBody(name);
+    if (body < 0)
+    {
+        fprintf(stderr, "CheckTestVector: Unknown body '%s' on line %d of file %s\n", name, lnum, filename);
+        return 1;
+    }
+
+    error = NovasBodyPos(jd, body, npos);
+    if (error) 
+    {
+        fprintf(stderr, "CheckTestVector: NovasBodyPos returned %d on line %d of file %s\n", error, lnum, filename);
+        return error;
+    }
+
+    error = PositionArcminError(body, jd, npos, xpos, arcmin);
+    if (error) 
+    {
+        fprintf(stderr, "CheckTestVector: PositionArcminError returned %d on line %d of file %s\n", error, lnum, filename);
+        return error;
+    }
+
+    if (*arcmin > 0.4)
+    {
+        fprintf(stderr, "CheckTestVector: Excessive angular error (%lf arcmin) on line %d of file %s\n", *arcmin, lnum, filename);
+        fprintf(stderr, "check   = (%22.16lf, %22.16lf, %22.16lf)\n", xpos[0], xpos[1], xpos[2]);
+        fprintf(stderr, "correct = (%22.16lf, %22.16lf, %22.16lf)\n", npos[0], npos[1], npos[2]);
+        return 1;
+    }
+
+    return 0;   /* success */
+}
+
+static int CheckSkyPos(observer *location, const char *filename, int lnum, const char *line, double *arcmin)
+{
+    int body, error, bodyIndex;
+    char name[10];
+    double jd_tt, jd_utc, ra, dec, dist;
+    object obj;
+    sky_pos sky;
+    double delta_ra, delta_dec;
+
+    *arcmin = 99999.0;
+
+    if (6 != sscanf(line, "s %9[A-Za-z] %lf %lf %lf %lf %lf", name, &jd_tt, &jd_utc, &ra, &dec, &dist))
+    {
+        fprintf(stderr, "CheckSkyPos: Invalid format on line %d of file %s\n", lnum, filename);
+        return 1;
+    }
+
+    body = LookupBody(name);
+    if (body < 0)
+    {
+        fprintf(stderr, "CheckSkyPos: Unknown body '%s' on line %d of file %s\n", name, lnum, filename);
+        return 1;
+    }
+
+    if (body == BODY_EARTH || body == BODY_EMB) 
+    {
+        fprintf(stderr, "CheckSkyPos: Cannot calculate sky position of body '%s'\n", name);
+        return 1;
+    }
+
+    if (body == BODY_GM)
+        bodyIndex = 11;
+    else if (body == BODY_SUN)
+        bodyIndex = 10;
+    else
+        bodyIndex = 1 + body;    
+
+    error = make_object(0, bodyIndex, name, NULL, &obj);
+    if (error)
+    {
+        fprintf(stderr, "CheckSkyPos: make_object(%d) returned %d on line %d of file %s\n", bodyIndex, error, lnum, filename);
+        return error;
+    }
+
+    error = place(jd_tt, &obj, location, jd_tt-jd_utc, 3, 0, &sky);
+    if (error)
+    {
+        fprintf(stderr, "CheckSkyPos: place() returned %d on line %d of file %s\n", error, lnum, filename);
+        return error;
+    }
+
+    /* Calculate the overall angular error between the two (RA,DEC) pairs. */
+    /* Convert both errors to arcminutes. */
+    delta_dec = (sky.dec - dec) * 60.0;
+
+    delta_ra = fabs(sky.ra - ra);
+    if (delta_ra > 12.0)
+    {
+        /* 
+            Sometimes the two RA values can straddle the 24-hour mark.
+            For example, one of them is 0.001 and the other 23.999.
+            The actual error is then 0.002 hours, not 23.998.
+            In general, it is never "fair" to call the error greater than
+            12 hours or 180 degrees. 
+        */
+        delta_ra = 24.0 - delta_ra;
+    }
+    delta_ra *= (15.0 * 60.0);
+
+    /* Calculate pythagorean error as if both were planar coordinates. */
+    *arcmin = sqrt(delta_ra*delta_ra + delta_dec*delta_dec);
+
+    if (*arcmin > 1.0)
+    {
+        fprintf(stderr, "CheckSkyPos: excessive angular error = %lf arcmin at line %d of file %s\n", *arcmin, lnum, filename);
+        return 1;
+    }
+
+    return 0;
+}
+
+static VsopBody LookupBody(const char *name)
+{
+    if (!strcmp(name, "Mercury"))   return BODY_MERCURY;
+    if (!strcmp(name, "Venus"))     return BODY_VENUS;
+    if (!strcmp(name, "Earth"))     return BODY_EARTH;
+    if (!strcmp(name, "Moon"))      return BODY_MOON;
+    if (!strcmp(name, "Mars"))      return BODY_MARS;
+    if (!strcmp(name, "Jupiter"))   return BODY_JUPITER;
+    if (!strcmp(name, "Saturn"))    return BODY_SATURN;
+    if (!strcmp(name, "Uranus"))    return BODY_URANUS;
+    if (!strcmp(name, "Neptune"))   return BODY_NEPTUNE;
+    if (!strcmp(name, "Pluto"))     return BODY_PLUTO;
+    if (!strcmp(name, "Sun"))       return BODY_SUN;
+    if (!strcmp(name, "EMB"))       return BODY_EMB;
+    if (!strcmp(name, "GM"))        return BODY_GM;
+    return BODY_INVALID;
+}
+
+static int CheckTestOutput(const char *filename)
+{
+    int error, lnum;
+    FILE *infile = NULL;
+    char line[200];
+    double arcmin, max_arcmin = 0.0;
+    observer location;
+
+    memset(&location, 0, sizeof(observer));
+
+    CHECK(OpenEphem());
+
+    /* Check input file that contains lines of test output like this: */
+    /* v Jupiter 2458455.2291666665 -2.0544644667646907 -4.271606485974493 -1.899398554516329 */
+    infile = fopen(filename, "rt");
+    if (infile == NULL)
+    {
+        fprintf(stderr, "CheckTestOutput: Cannot open file: %s\n", filename);
+        error = 1;
+        goto fail;
+    }
+
+    lnum = 0;
+    while (fgets(line, sizeof(line), infile))
+    {
+        ++lnum;
+        switch (line[0])
+        {
+        case '#':
+            break;  /* ignore debug output */
+
+        case 'o':
+            /* The observer used for all future sky position calculations */
+            CHECK(ParseObserver(filename, lnum, line, &location));
+            break;
+
+        case 'v':   /* cartesian vector represented in J2000 equatorial plane */
+            CHECK(CheckTestVector(filename, lnum, line, &arcmin));
+            if (arcmin > max_arcmin)
+                max_arcmin = arcmin;
+            break;
+
+        case 's':   /* sky coordinates: RA, DEC, distance */
+            CHECK(CheckSkyPos(&location, filename, lnum, line, &arcmin));
+            if (arcmin > max_arcmin)
+                max_arcmin = arcmin;
+            break;
+        
+        default:
+            fprintf(stderr, "CheckTestOutput: Invalid first character on line %d of file %s\n", lnum, filename);
+            error = 1;
+            goto fail;
+        }
+    }
+
+    printf("CheckTestOutput: Verified %d lines of file %s : max error = %lf arcmin\n", lnum, filename, max_arcmin);
+    error = 0;
+
+fail:
+    ephem_close();
+    if (infile != NULL) fclose(infile);
+    return error;
 }

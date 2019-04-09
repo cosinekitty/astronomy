@@ -57,9 +57,14 @@ fi
 
 echo ""
 echo "Running the target code generator."
-mkdir -pv output || Fail "Error creating directories."
-rm -f output/vsop_*.txt
+mkdir -pv output temp || Fail "Error creating directories."
+rm -f output/vsop_*.txt temp/*
 ./generate all || Fail "Could not generate target code."
+
+echo ""
+echo "Validating JavaScript code."
+node astro_check.js > temp/check.txt || Fail "Problem running JavaScript unit test."
+./generate check temp/check.txt || Fail "Verification failure for JavaScript unit test output."
 
 echo ""
 echo "SUCCESS."
