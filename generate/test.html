@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Astronomy unit test</title>
+        <script src="../source/js/astronomy.js"></script>
+        <script>
+            window.onload = function() {
+                function FormatDec(x) {
+                    var neg = (x < 0);
+                    x = Math.abs(x);
+                    var deg = Math.floor(x);
+                    var dz = '';
+                    if (deg < 10) dz += '0';
+                    var min = 60 * (x % 1);
+                    var mz = '';
+                    if (min < 10) mz += '0';
+                    var prefix = neg ? '-' : '+';
+                    return `${prefix}${dz}${deg.toFixed(0)}:${mz}${min.toFixed(2)}`;
+                }
+
+                function FormatRa(x) {
+                    var neg = (x < 0);
+                    x = Math.abs(x);
+                    var deg = Math.floor(x);
+                    var dz = '';
+                    if (deg < 10) dz += '0';
+                    var min = 60 * (x % 1);
+                    var mz = '';
+                    if (min < 10) mz += '0';
+                    return `${dz}${deg.toFixed(0)}:${mz}${min.toFixed(2)}`;
+                }
+
+                var now = new Date();
+                const observer = Astronomy.MakeObserver(29, -81, 10);
+                var body, pos;
+                document.getElementById('CurrentDateTime').innerText = now.toLocaleString();
+                for (body of Astronomy.Bodies) {
+                    if (body === 'Moon')
+                        pos = Astronomy.GeoVector(body, now);
+                    else
+                        pos = Astronomy.HelioVector(body, now);
+
+                    var cell = document.getElementById('pos_' + body);
+                    cell.innerText = `(${pos.x.toFixed(6)}, ${pos.y.toFixed(6)}, ${pos.z.toFixed(6)})`;
+
+                    if (body !== 'Earth') {
+                        if (body !== 'Moon')    // prevent redundant calculation
+                            pos = Astronomy.GeoVector(body, now);
+                        var sky = Astronomy.SkyPos(pos, observer);
+                        var raCell = document.getElementById('ra_' + body);
+                        raCell.innerText = FormatRa(sky.ra);
+                        var decCell = document.getElementById('dec_' + body);
+                        decCell.innerText = FormatDec(sky.dec);
+                    }
+                }
+            }
+        </script>
+    </head>
+    <body style="font-family: 'Courier New', Courier, monospace;">
+        <div id='CurrentDateTime'></div>
+        <table border="1" cellspacing="0" cellpadding="8">
+            <tr>
+                <td>body</td>
+                <td>coords</td>
+                <td>RA</td>
+                <td>DEC</td>
+            </tr>
+            <tr>
+                <td>Sun</td>
+                <td id='pos_Sun'></td>
+                <td id='ra_Sun'></td>
+                <td id='dec_Sun'></td>
+            </tr>
+            <tr>
+                <td>Moon</td>
+                <td id='pos_Moon'></td>
+                <td id='ra_Moon'></td>
+                <td id='dec_Moon'></td>
+            </tr>
+            <tr>
+                <td>Mercury</td>
+                <td id='pos_Mercury'></td>
+                <td id='ra_Mercury'></td>
+                <td id='dec_Mercury'></td>
+            </tr>
+            <tr>
+                <td>Venus</td>
+                <td id='pos_Venus'></td>
+                <td id='ra_Venus'></td>
+                <td id='dec_Venus'></td>
+            </tr>
+            <tr>
+                <td>Earth</td>
+                <td id='pos_Earth'></td>
+            </tr>
+            <tr>
+                <td>Mars</td>
+                <td id='pos_Mars'></td>
+                <td id='ra_Mars'></td>
+                <td id='dec_Mars'></td>
+            </tr>
+            <tr>
+                <td>Jupiter</td>
+                <td id='pos_Jupiter'></td>
+                <td id='ra_Jupiter'></td>
+                <td id='dec_Jupiter'></td>
+            </tr>
+            <tr>
+                <td>Saturn</td>
+                <td id='pos_Saturn'></td>
+                <td id='ra_Saturn'></td>
+                <td id='dec_Saturn'></td>
+            </tr>
+            <tr>
+                <td>Uranus</td>
+                <td id='pos_Uranus'></td>
+                <td id='ra_Uranus'></td>
+                <td id='dec_Uranus'></td>
+            </tr>
+            <tr>
+                <td>Neptune</td>
+                <td id='pos_Neptune'></td>
+                <td id='ra_Neptune'></td>
+                <td id='dec_Neptune'></td>
+            </tr>
+            <tr>
+                <td>Pluto</td>
+                <td id='pos_Pluto'></td>
+                <td id='ra_Pluto'></td>
+                <td id='dec_Pluto'></td>
+            </tr>
+        </table>
+    </body>
+</html>
