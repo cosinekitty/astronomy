@@ -11,6 +11,7 @@ const ERAD = 6378136.6;   // mean earth radius
 const AU = 1.4959787069098932e+11;    // astronomical unit in meters
 const ASEC2RAD = 4.848136811095359935899141e-6;
 const DEG2RAD = 0.017453292519943296;
+const RAD2DEG = 57.295779513082321;
 const ASEC360 = 1296000;
 const ANGVEL = 7.2921150e-5;
 const AU_KM = 1.4959787069098932e+8;
@@ -98,26 +99,36 @@ function LeapSeconds(jd_utc) {
 }
 
 function Time(date) {
-    // Keep the original Date object.
-    this.date = date;
+    const MillisPerDay = 1000 * 3600 * 24;
 
-    // Convert JavaScript Date object to Julian UTC value.
-    this.jd_utc = (date - j2000) / (1000 * 3600 * 24) + T0;
+    if (date instanceof Date) {
+        // Keep the original Date object.
+        this.date = date;
 
-    // Convert UTC to Terrestrial Time (TT) by adjusting for leap seconds.
-    this.jd_tt = this.jd_utc + (LeapSeconds(this.jd_utc) + 32.184) / 86400.0;
+        // Convert JavaScript Date object to Julian UTC value.
+        this.jd_utc = (date - j2000) / MillisPerDay + T0;
+
+        // Convert UTC to Terrestrial Time (TT) by adjusting for leap seconds.
+        this.jd_tt = this.jd_utc + (LeapSeconds(this.jd_utc) + 32.184) / 86400.0;
+
+        return;
+    }
+
+    if (typeof date === 'number') {
+        this.date = new Date(j2000 - (T0 - date)*MillisPerDay);
+        this.jd_utc = date;
+        this.jd_tt = this.jd_utc + (LeapSeconds(this.jd_utc) + 32.184) / 86400.0;
+        return;
+    }
+
+    throw 'AstroTime() argument must be a Date object, a Time object, or a numeric UTC Julian date.';
 }
 
 function AstroTime(date) {
     if (date instanceof Time) {
         return date;
     }
-
-    if (date instanceof Date) {
-        return new Time(date);
-    }
-
-    throw 'Argument must be a Date object or a Time object.';
+    return new Time(date);
 }
 
 var nals_t = [
@@ -831,6 +842,72 @@ function vector2radec(pos)
     return { ra:ra, dec:dec, dist:dist };
 }
 
+function spin(angle, pos1) {
+    const angr = angle * DEG2RAD;
+    const cosang = Math.cos(angr);
+    const sinang = Math.sin(angr);
+    const xx = cosang;
+    const yx = sinang;
+    const zx = 0;
+    const xy = -sinang;
+    const yy = cosang;
+    const zy = 0;
+    const xz = 0;
+    const yz = 0;
+    const zz = 1;
+    let pos2 = [
+        xx*pos1[0] + yx*pos1[1] + zx*pos1[2],
+        xy*pos1[0] + yy*pos1[1] + zy*pos1[2],
+        xz*pos1[0] + yz*pos1[1] + zz*pos1[2]
+    ];
+    return pos2;
+}
+
+function ter2cel(time, vec1) {
+    const gast = sidereal_time(time, 'gast');
+    let vec2 = spin(-15 * gast, vec1);
+    return vec2;
+}
+
+Astronomy.Horizon = function(date, location, ra, dec) {     // based on NOVAS equ2hor()
+    let time = AstroTime(date);
+
+    // FIXFIXFIX: this code expects (ra,dec) to be in equator and equinox of date, but we are giving J2000?
+
+    const sinlat = Math.sin(location.latitude * DEG2RAD);
+    const coslat = Math.cos(location.latitude * DEG2RAD);
+    const sinlon = Math.sin(location.longitude * DEG2RAD);
+    const coslon = Math.cos(location.longitude * DEG2RAD);
+    const sindc = Math.sin(dec * DEG2RAD);
+    const cosdc = Math.cos(dec * DEG2RAD);
+    const sinra = Math.sin(ra * 15 * DEG2RAD);
+    const cosra = Math.cos(ra * 15 * DEG2RAD);
+    let uze = [coslat*coslon, coslat*sinlon, sinlat];
+    let une = [-sinlat*coslon, -sinlat*sinlon, coslat];
+    let uwe = [sinlon, -coslon, 0];
+
+    let uz = ter2cel(time, uze);
+    let un = ter2cel(time, une);
+    let uw = ter2cel(time, uwe);
+
+    let p = [cosdc*cosra, cosdc*sinra, sindc];
+
+    const pz = p[0]*uz[0] + p[1]*uz[1] + p[2]*uz[2];
+    const pn = p[0]*un[0] + p[1]*un[1] + p[2]*un[2];
+    const pw = p[0]*uw[0] + p[1]*uw[1] + p[2]*uw[2];
+
+    const proj = Math.sqrt(pn*pn + pw*pw);
+    let az = 0;
+    if (proj > 0) {
+        az = -Math.atan2(pw, pn) * RAD2DEG;
+        if (az < 0) az += 360;
+        if (az >= 360) az -= 360;
+    }
+    let zd = Math.atan2(proj, pz) * RAD2DEG;
+
+    return { azimuth:az, altitude:90-zd };
+}
+
 function Observer(latitude_degrees, longitude_degrees, height_in_meters) {
     this.latitude = latitude_degrees;
     this.longitude = longitude_degrees;
@@ -848,7 +925,9 @@ Astronomy.SkyPos = function(gc_vector, observer) {     // based on NOVAS place()
         gc_vector.y - gc_observer[1], 
         gc_vector.z - gc_observer[2] ];
 
-    return vector2radec(topo_vector);
+    let sky = vector2radec(topo_vector);
+    sky.t = gc_vector.t;    // patch in the Time object for convenience
+    return sky;
 }
 
 Astronomy.GeoMoon = function(date) {
