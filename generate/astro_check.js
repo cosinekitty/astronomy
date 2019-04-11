@@ -16,8 +16,8 @@ while (date < stop) {
             if (body !== 'Earth') {
                 pos = Astronomy.GeoVector(body, date);
                 sky = Astronomy.SkyPos(pos, observer);
-                hor = Astronomy.Horizon(sky.t, observer, sky.ra, sky.dec);
-                console.log(`s ${body} ${pos.t.jd_tt} ${pos.t.jd_utc} ${sky.ra} ${sky.dec} ${sky.dist} ${hor.azimuth} ${hor.altitude}`);
+                hor = Astronomy.Horizon(sky.t, observer, sky.ofdate.ra, sky.ofdate.dec);
+                console.log(`s ${body} ${pos.t.jd_tt} ${pos.t.jd_utc} ${sky.j2000.ra} ${sky.j2000.dec} ${sky.j2000.dist} ${hor.azimuth} ${hor.altitude}`);
             }
         }
     }
@@ -25,8 +25,8 @@ while (date < stop) {
     console.log(`v GM ${pos.t.jd_tt} ${pos.x} ${pos.y} ${pos.z}`);
 
     sky = Astronomy.SkyPos(pos, observer);
-    hor = Astronomy.Horizon(sky.t, observer, sky.ra, sky.dec);
-    console.log(`s GM ${pos.t.jd_tt} ${pos.t.jd_utc} ${sky.ra} ${sky.dec} ${sky.dist} ${hor.azimuth} ${hor.altitude}`);
+    hor = Astronomy.Horizon(sky.t, observer, sky.ofdate.ra, sky.ofdate.dec);
+    console.log(`s GM ${pos.t.jd_tt} ${pos.t.jd_utc} ${sky.j2000.ra} ${sky.j2000.dec} ${sky.j2000.dist} ${hor.azimuth} ${hor.altitude}`);
 
     date = new Date(date.getTime() + (24*3600*1000));
 }

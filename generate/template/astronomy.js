@@ -920,13 +920,22 @@ Astronomy.MakeObserver = function(latitude_degrees, longitude_degrees, height_in
 
 Astronomy.SkyPos = function(gc_vector, observer) {     // based on NOVAS place()
     const gc_observer = geo_pos(gc_vector.t, observer);        // vector from geocenter to observer
-    const topo_vector = [ 
+    const j2000_vector = [
         gc_vector.x - gc_observer[0], 
         gc_vector.y - gc_observer[1], 
         gc_vector.z - gc_observer[2] ];
 
-    let sky = vector2radec(topo_vector);
-    sky.t = gc_vector.t;    // patch in the Time object for convenience
+    let j2000_radec = vector2radec(j2000_vector);
+
+    let pos7 = precession(T0, j2000_vector, gc_vector.t.jd_tt);
+    let ofdate_vector = nutation(gc_vector.t.jd_tt, 0, pos7);
+    let ofdate_radec = vector2radec(ofdate_vector);
+
+    let sky = {
+        t: gc_vector.t,
+        j2000: j2000_radec,
+        ofdate: ofdate_radec
+    }
     return sky;
 }
 

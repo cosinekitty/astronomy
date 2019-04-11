@@ -11,7 +11,7 @@
                 console.log(pos);
                 var sky = Astronomy.SkyPos(pos, observer);
                 console.log(sky);
-                var hor = Astronomy.Horizon(sky.t, observer, sky.ra, sky.dec);
+                var hor = Astronomy.Horizon(sky.t, observer, sky.ofdate.ra, sky.ofdate.dec);
                 console.log(hor);
             }
         </script>

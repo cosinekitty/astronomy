@@ -48,9 +48,15 @@
                             pos = Astronomy.GeoVector(body, now);
                         var sky = Astronomy.SkyPos(pos, observer);
                         var raCell = document.getElementById('ra_' + body);
-                        raCell.innerText = FormatRa(sky.ra);
+                        raCell.innerText = FormatRa(sky.j2000.ra);
                         var decCell = document.getElementById('dec_' + body);
-                        decCell.innerText = FormatDec(sky.dec);
+                        decCell.innerText = FormatDec(sky.j2000.dec);
+
+                        var hor = Astronomy.Horizon(sky.t, observer, sky.ofdate.ra, sky.ofdate.dec);
+                        var azCell = document.getElementById('az_' + body);                        
+                        azCell.innerText = hor.azimuth.toFixed(3);
+                        var altCell = document.getElementById('alt_' + body);
+                        altCell.innerText = hor.altitude.toFixed(3);
                     }
                 }
             }
@@ -64,30 +70,40 @@
                 <td>coords</td>
                 <td>RA</td>
                 <td>DEC</td>
+                <td>azimuth</td>
+                <td>altitude</td>
             </tr>
             <tr>
                 <td>Sun</td>
                 <td id='pos_Sun'></td>
                 <td id='ra_Sun'></td>
                 <td id='dec_Sun'></td>
+                <td id='az_Sun'></td>
+                <td id='alt_Sun'></td>
             </tr>
             <tr>
                 <td>Moon</td>
                 <td id='pos_Moon'></td>
                 <td id='ra_Moon'></td>
                 <td id='dec_Moon'></td>
+                <td id='az_Moon'></td>
+                <td id='alt_Moon'></td>
             </tr>
             <tr>
                 <td>Mercury</td>
                 <td id='pos_Mercury'></td>
                 <td id='ra_Mercury'></td>
                 <td id='dec_Mercury'></td>
+                <td id='az_Mercury'></td>
+                <td id='alt_Mercury'></td>
             </tr>
             <tr>
                 <td>Venus</td>
                 <td id='pos_Venus'></td>
                 <td id='ra_Venus'></td>
                 <td id='dec_Venus'></td>
+                <td id='az_Venus'></td>
+                <td id='alt_Venus'></td>
             </tr>
             <tr>
                 <td>Earth</td>
@@ -98,36 +114,48 @@
                 <td id='pos_Mars'></td>
                 <td id='ra_Mars'></td>
                 <td id='dec_Mars'></td>
+                <td id='az_Mars'></td>
+                <td id='alt_Mars'></td>
             </tr>
             <tr>
                 <td>Jupiter</td>
                 <td id='pos_Jupiter'></td>
                 <td id='ra_Jupiter'></td>
                 <td id='dec_Jupiter'></td>
+                <td id='az_Jupiter'></td>
+                <td id='alt_Jupiter'></td>
             </tr>
             <tr>
                 <td>Saturn</td>
                 <td id='pos_Saturn'></td>
                 <td id='ra_Saturn'></td>
                 <td id='dec_Saturn'></td>
+                <td id='az_Saturn'></td>
+                <td id='alt_Saturn'></td>
             </tr>
             <tr>
                 <td>Uranus</td>
                 <td id='pos_Uranus'></td>
                 <td id='ra_Uranus'></td>
                 <td id='dec_Uranus'></td>
+                <td id='az_Uranus'></td>
+                <td id='alt_Uranus'></td>
             </tr>
             <tr>
                 <td>Neptune</td>
                 <td id='pos_Neptune'></td>
                 <td id='ra_Neptune'></td>
                 <td id='dec_Neptune'></td>
+                <td id='az_Neptune'></td>
+                <td id='alt_Neptune'></td>
             </tr>
             <tr>
                 <td>Pluto</td>
                 <td id='pos_Pluto'></td>
                 <td id='ra_Pluto'></td>
                 <td id='dec_Pluto'></td>
+                <td id='az_Pluto'></td>
+                <td id='alt_Pluto'></td>
             </tr>
         </table>
     </body>

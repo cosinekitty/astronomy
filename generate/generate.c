@@ -829,7 +829,8 @@ static int CheckSkyPos(observer *location, const char *filename, int lnum, const
     double jd_tt, jd_utc, ra, dec, dist, azimuth, altitude;
     double check_zenith, check_azimuth, check_altitude, check_ra, check_dec;
     object obj;
-    sky_pos sky;
+    sky_pos sky_ast;    /* astrometric (RA,DEC) */
+    sky_pos sky_dat;    /* (RA,DEC) using true equator and equinox of date*/
     double delta_ra, delta_dec, delta_az, delta_alt;
 
     *arcmin = 99999.0;
@@ -867,18 +868,20 @@ static int CheckSkyPos(observer *location, const char *filename, int lnum, const
         return error;
     }
 
-    error = place(jd_tt, &obj, location, jd_tt-jd_utc, 3, 0, &sky);
+    /* First call to place: ask for astrometric coordinates (J2000) : coord_sys=3 */
+    error = place(jd_tt, &obj, location, jd_tt-jd_utc, 3, 1, &sky_ast);
     if (error)
+
     {
-        fprintf(stderr, "CheckSkyPos: place() returned %d on line %d of file %s\n", error, lnum, filename);
+        fprintf(stderr, "CheckSkyPos: place(3) returned %d on line %d of file %s\n", error, lnum, filename);
         return error;
     }
 
     /* Calculate the overall angular error between the two (RA,DEC) pairs. */
     /* Convert both errors to arcminutes. */
-    delta_dec = (sky.dec - dec) * 60.0;
+    delta_dec = (sky_ast.dec - dec) * 60.0;
 
-    delta_ra = fabs(sky.ra - ra);
+    delta_ra = fabs(sky_ast.ra - ra);
     if (delta_ra > 12.0)
     {
         /* 
@@ -895,7 +898,7 @@ static int CheckSkyPos(observer *location, const char *filename, int lnum, const
     /* Right Ascension errors are less significant as the declination approaches the poles. */
     /* For example, a 12-hour RA error for Polaris would not matter very much to its observed position. */
     /* So diminish the error measurement as appropriate for this declination. */
-    delta_ra *= cos(sky.dec * DEG2RAD);
+    delta_ra *= cos(sky_ast.dec * DEG2RAD);
 
     /* Calculate pythagorean error as if both were planar coordinates. */
     *arcmin = sqrt(delta_ra*delta_ra + delta_dec*delta_dec);
@@ -907,8 +910,16 @@ static int CheckSkyPos(observer *location, const char *filename, int lnum, const
     }
 
     /* We have tested RA,DEC. Now measure the error in horizontal coordinates. */
+    /* We have to call place() again, this time asking for equator and equinox of date (coord_sys=1). */
+    error = place(jd_tt, &obj, location, jd_tt-jd_utc, 1, 1, &sky_dat);
+    if (error)
+    {
+        fprintf(stderr, "CheckSkyPos: place(1) returned %d on line %d of file %s\n", error, lnum, filename);
+        return error;
+    }
+
     equ2hor(jd_utc, jd_tt-jd_utc, 1, 0.0, 0.0, 
-        &location->on_surf, sky.ra, sky.dec, 0, 
+        &location->on_surf, sky_dat.ra, sky_dat.dec, 0, 
         &check_zenith, &check_azimuth, &check_ra, &check_dec);
         
     check_altitude = 90.0 - check_zenith;
@@ -922,12 +933,12 @@ static int CheckSkyPos(observer *location, const char *filename, int lnum, const
     
     delta_alt = 60.0 * (altitude - check_altitude);
 
-    /* Replace the error calculation with the sky coordinate calculation. */
+    /* Replace the (RA,DEC) error with the (az,alt) error. */
     *arcmin = sqrt(delta_az*delta_az + delta_alt*delta_alt);   
 
-    if (*arcmin > 1.0)
+    if (*arcmin > 2.0)
     {
-        fprintf(stderr, "CheckSkyPos: excessive (alt,az) error = %lf arcmin (alt=%lf, check=%lf) for body %d at line %d of file %s\n", *arcmin, altitude, check_altitude, body, lnum, filename);
+        fprintf(stderr, "CheckSkyPos: excessive (az,alt) error = %lf arcmin for body %d at line %d of file %s\n", *arcmin, body, lnum, filename);
         return 1;
     }
 
