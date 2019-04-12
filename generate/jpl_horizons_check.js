@@ -81,7 +81,7 @@ function CompareEquatorial(context, type, jpl_ra, jpl_dec, calc_ra, calc_dec) {
     let dec_error = 60 * (calc_dec - jpl_dec);
     let arcmin = Math.sqrt(ra_error*ra_error + dec_error*dec_error);
     if (arcmin > context.arcmin_threshold) {
-        console.log(`JPL ra=${jpl_ra}, dec=${jpl_dec}; CALC ra=${calc_ra}, dec=${calc_dec}`);
+        console.log(`JPL ra=${jpl_ra}, dec=${jpl_dec}; CALC ra=${calc_ra}, dec=${calc_dec}; deltas=${ra_error}, ${dec_error}`);
         Fatal(context, `Excessive ${type} equatorial error = ${arcmin} arcmin`);
     }
     return arcmin;
@@ -132,11 +132,11 @@ function ProcessRow(context, row) {
     let arcmin = CompareEquatorial(context, 'metric', jpl.m_ra, jpl.m_dec, sky.j2000.ra, sky.j2000.dec);
     context.maxArcminError_MetricEquatorial = Math.max(context.maxArcminError_MetricEquatorial, arcmin);
 
-    //arcmin = CompareEquatorial(context, 'apparent', jpl.a_ra, jpl.a_dec, sky.ofdate.ra, sky.ofdate.dec);
-    //context.maxArcminError_ApparentEquatorial = Math.max(context.maxArcminError_ApparentEquatorial, arcmin);
+    arcmin = CompareEquatorial(context, 'apparent', jpl.a_ra, jpl.a_dec, sky.ofdate.ra, sky.ofdate.dec);
+    context.maxArcminError_ApparentEquatorial = Math.max(context.maxArcminError_ApparentEquatorial, arcmin);
 
-    //arcmin = CompareHorizontal(context, jpl.az, jpl.alt, hor.azimuth, hor.altitude);
-    //context.maxArcminError_Horizontal = Math.max(maxArcminError_Horizontal, arcmin);
+    arcmin = CompareHorizontal(context, jpl.az, jpl.alt, hor.azimuth, hor.altitude);
+    context.maxArcminError_Horizontal = Math.max(context.maxArcminError_Horizontal, arcmin);
 }
 
 function PrintSummary(context) {
