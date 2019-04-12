@@ -33,6 +33,8 @@
 const fs = require('fs');
 const Astronomy = require('../source/js/astronomy.js');
 
+const DEG2RAD = 0.017453292519943296;
+
 function ParseRightAscension(degText) {
     const hours = +(parseFloat(degText) / 15).toFixed(6);
     if (hours < 0 || hours >= 24) {
@@ -65,6 +67,41 @@ function ParseAltitude(text) {
     return alt;
 }
 
+function Fatal(context, message) {
+    throw `FATAL(${context.fn} : ${context.lnum}): ${message}`;
+}
+
+function CompareEquatorial(context, type, jpl_ra, jpl_dec, calc_ra, calc_dec) {
+    let ra_error = Math.abs(calc_ra - jpl_ra);
+    if (ra_error > 12) {
+        ra_error = 24 - ra_error;
+    }
+    ra_error *= 15 * 60 * Math.cos(jpl_dec * DEG2RAD);    // scale to arcminutes at this declination
+
+    let dec_error = 60 * (calc_dec - jpl_dec);
+    let arcmin = Math.sqrt(ra_error*ra_error + dec_error*dec_error);
+    if (arcmin > context.arcmin_threshold) {
+        console.log(`JPL ra=${jpl_ra}, dec=${jpl_dec}; CALC ra=${calc_ra}, dec=${calc_dec}`);
+        Fatal(context, `Excessive ${type} equatorial error = ${arcmin} arcmin`);
+    }
+    return arcmin;
+}
+
+function CompareHorizontal(context, jpl_az, jpl_alt, calc_az, calc_alt) {
+    let az_error = Math.abs(calc_az - jpl_az);
+    if (az_error > 180) {
+        az_error = 360 - az_error;
+    }
+    az_error *= 60 * Math.cos(jpl_alt * DEG2RAD);   // scale to arcminutes at this altitude
+
+    let alt_error = 60 * (calc_alt - jpl_alt);
+    let arcmin = Math.sqrt(alt_error*alt_error + az_error*az_error);
+    if (arcmin > context.arcmin_threshold) {
+        Fatal(context, `Excessive horizontal error = ${arcmin} arcmin`);
+    }
+    return arcmin;
+}
+
 function ProcessRow(context, row) {
     // [ 1900-Jan-01 00:00 A   286.68085 -23.49769 285.80012 -23.36851 250.7166 -13.8716]
     // [ 2019-Aug-25 00:00 C   156.34214  11.05463 156.94501  11.15274 282.1727   1.0678]
@@ -80,15 +117,30 @@ function ProcessRow(context, row) {
     const date = new Date(Date.UTC(year, month, day, hour, minute));
     
     const jpl = {
-        m_ra: ParseRightAscension(m[6]),
+        m_ra:  ParseRightAscension(m[6]),
         m_dec: ParseDeclination(m[7]),
-        a_ra: ParseRightAscension(m[8]),
+        a_ra:  ParseRightAscension(m[8]),
         a_dec: ParseDeclination(m[9]),
-        az: ParseAzimuth(m[10]),
-        alt: ParseAltitude(m[11])
+        az:    ParseAzimuth(m[10]),
+        alt:   ParseAltitude(m[11])
     };
 
-    //console.log(date, jpl);
+    const pos = Astronomy.GeoVector(context.body, date);
+    const sky = Astronomy.SkyPos(pos, context.observer);
+    const hor = Astronomy.Horizon(sky.t, context.observer, sky.ofdate.ra, sky.ofdate.dec);
+
+    let arcmin = CompareEquatorial(context, 'metric', jpl.m_ra, jpl.m_dec, sky.j2000.ra, sky.j2000.dec);
+    context.maxArcminError_MetricEquatorial = Math.max(context.maxArcminError_MetricEquatorial, arcmin);
+
+    //arcmin = CompareEquatorial(context, 'apparent', jpl.a_ra, jpl.a_dec, sky.ofdate.ra, sky.ofdate.dec);
+    //context.maxArcminError_ApparentEquatorial = Math.max(context.maxArcminError_ApparentEquatorial, arcmin);
+
+    //arcmin = CompareHorizontal(context, jpl.az, jpl.alt, hor.azimuth, hor.altitude);
+    //context.maxArcminError_Horizontal = Math.max(maxArcminError_Horizontal, arcmin);
+}
+
+function PrintSummary(context) {
+    console.log(`${context.fn} : m_eq=${context.maxArcminError_MetricEquatorial.toFixed(3)}, a_eq=${context.maxArcminError_ApparentEquatorial.toFixed(3)}, hor=${context.maxArcminError_Horizontal.toFixed(3)}`);
 }
 
 function ProcessFile(inFileName) {
@@ -100,6 +152,7 @@ function ProcessFile(inFileName) {
         body: null,
         lnum: 0,
         fn: inFileName,
+        arcmin_threshold: 1,
         maxArcminError_MetricEquatorial: 0,
         maxArcminError_ApparentEquatorial: 0,
         maxArcminError_Horizontal: 0
@@ -117,14 +170,14 @@ function ProcessFile(inFileName) {
                 let latitude = parseFloat(m[2]);
                 let elevation = 1000 * parseFloat(m[3]);
                 context.observer = Astronomy.MakeObserver(latitude, longitude, elevation);
-                console.debug(`Observer: lat=${latitude}, lon=${longitude}, elev=${elevation}`);
+                //console.debug(`Observer: lat=${latitude}, lon=${longitude}, elev=${elevation}`);
             }
 
             // Target body name: Mars (499)                      {source: mar097}
             m = row.match(/^Target body name: ([A-Za-z]+)/);
             if (m) {
                 context.body = m[1];
-                console.debug(`Body: ${context.body}`);
+                //console.debug(`Body: ${context.body}`);
             }
 
             if (row === '$$SOE') {
@@ -136,9 +189,8 @@ function ProcessFile(inFileName) {
                     throw `Missing target body in file: ${inFileName}`;
                 }
             }
-        } else if (row === '$$EOE') {
-            console.debug(`SUCCESS: ${inFileName}`);
-            return;
+        } else if (row === '$$EOE') {            
+            return PrintSummary(context);
         } else {
             ProcessRow(context, row);
         }

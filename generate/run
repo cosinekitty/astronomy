@@ -67,5 +67,9 @@ node astro_check.js > temp/check.txt || Fail "Problem running JavaScript unit te
 ./generate check temp/check.txt || Fail "Verification failure for JavaScript unit test output."
 
 echo ""
+echo "Running check against JPL Horizons data."
+./jplcheck || Fail "Error in JPL check."
+
+echo ""
 echo "SUCCESS."
 exit 0

@@ -1472,8 +1472,6 @@ function ter2cel(time, vec1) {
 Astronomy.Horizon = function(date, location, ra, dec) {     // based on NOVAS equ2hor()
     let time = AstroTime(date);
 
-    // FIXFIXFIX: this code expects (ra,dec) to be in equator and equinox of date, but we are giving J2000?
-
     const sinlat = Math.sin(location.latitude * DEG2RAD);
     const coslat = Math.cos(location.latitude * DEG2RAD);
     const sinlon = Math.sin(location.longitude * DEG2RAD);
