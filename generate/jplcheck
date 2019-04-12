@@ -1,0 +1,11 @@
+#!/bin/bash
+for file in horizons/*.txt; do
+    echo ""
+    echo "jplcheck: Checking ${file}"
+    node jpl_horizons_check.js $file || exit $?
+done
+
+echo ""
+echo "jplcheck: Finished"
+echo ""
+exit 0

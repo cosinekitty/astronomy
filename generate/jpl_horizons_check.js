@@ -33,12 +33,44 @@
 const fs = require('fs');
 const Astronomy = require('../source/js/astronomy.js');
 
+function ParseRightAscension(degText) {
+    const hours = +(parseFloat(degText) / 15).toFixed(6);
+    if (hours < 0 || hours >= 24) {
+        throw `Invalid RA degrees=${degText} ==> hours=${hours}`;
+    }
+    return hours;
+}
+
+function ParseDeclination(text) {
+    const dec = parseFloat(text);
+    if (dec < -90 || dec > +90) {
+        throw `Invalid DEC text "${text}"`;
+    }
+    return dec;
+}
+
+function ParseAzimuth(text) {
+    const az = parseFloat(text);
+    if (az < 0 || az >= 360) {
+        throw `Invalid azimuth text "${text}"`;
+    }
+    return az;
+}
+
+function ParseAltitude(text) {
+    const alt = parseFloat(text);
+    if (alt < -90 || alt > +90) {
+        throw `Invalid altitude text "${text}"`;
+    }
+    return alt;
+}
+
 function ProcessRow(context, row) {
     // [ 1900-Jan-01 00:00 A   286.68085 -23.49769 285.80012 -23.36851 250.7166 -13.8716]
     // [ 2019-Aug-25 00:00 C   156.34214  11.05463 156.94501  11.15274 282.1727   1.0678]
     let m = row.match(/^\s(\d{4})-(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)-(\d{2})\s(\d{2}):(\d{2})\s[\* ACN][ mrts]\s*(\d+\.\d+)\s+(-?\d+\.\d+)\s+(\d+\.\d+)\s+(-?\d+\.\d+)\s+(\d+\.\d+)\s+(-?\d+\.\d+)/);
     if (!m) {
-        throw `Invalid line ${context.lnum} in file ${context.inFileName}: ${row}`;
+        throw `Invalid line ${context.lnum} in file ${context.fn}: ${row}`;
     }
     const year = parseInt(m[1]);
     const month = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].indexOf(m[2]);
@@ -46,7 +78,17 @@ function ProcessRow(context, row) {
     const hour = parseInt(m[4]);
     const minute = parseInt(m[5]);
     const date = new Date(Date.UTC(year, month, day, hour, minute));
-    //console.log(date);
+    
+    const jpl = {
+        m_ra: ParseRightAscension(m[6]),
+        m_dec: ParseDeclination(m[7]),
+        a_ra: ParseRightAscension(m[8]),
+        a_dec: ParseDeclination(m[9]),
+        az: ParseAzimuth(m[10]),
+        alt: ParseAltitude(m[11])
+    };
+
+    //console.log(date, jpl);
 }
 
 function ProcessFile(inFileName) {
@@ -57,7 +99,7 @@ function ProcessFile(inFileName) {
         observer: null,
         body: null,
         lnum: 0,
-        inFileName: inFileName,
+        fn: inFileName,
         maxArcminError_MetricEquatorial: 0,
         maxArcminError_ApparentEquatorial: 0,
         maxArcminError_Horizontal: 0
