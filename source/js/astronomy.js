@@ -1469,7 +1469,22 @@ function ter2cel(time, vec1) {
     return vec2;
 }
 
-Astronomy.Horizon = function(date, location, ra, dec) {     // based on NOVAS equ2hor()
+function refract(zd_obs, location) {
+    if (zd_obs < 0.1 || zd_obs > 91.0) {
+        return 0.0;
+    }
+    let pressure = 1010 * Math.exp(-location.height / 9100);
+    let celsius = 10;
+    let kelvin = 273 + celsius;
+    let h = 90 - zd_obs;
+    let angle = (h + 7.31/(h + 4.4));
+    //console.debug(`refract angle = ${angle}`);
+    let r = 0.016667 / Math.tan(angle * DEG2RAD);
+    let refr = r * (0.28 * pressure / kelvin);
+    return refr;
+}
+
+Astronomy.Horizon = function(date, location, ra, dec, refraction) {     // based on NOVAS equ2hor()
     let time = AstroTime(date);
 
     const sinlat = Math.sin(location.latitude * DEG2RAD);
@@ -1494,7 +1509,7 @@ Astronomy.Horizon = function(date, location, ra, dec) {     // based on NOVAS eq
     const pn = p[0]*un[0] + p[1]*un[1] + p[2]*un[2];
     const pw = p[0]*uw[0] + p[1]*uw[1] + p[2]*uw[2];
 
-    const proj = Math.sqrt(pn*pn + pw*pw);
+    let proj = Math.sqrt(pn*pn + pw*pw);
     let az = 0;
     if (proj > 0) {
         az = -Math.atan2(pw, pn) * RAD2DEG;
@@ -1502,8 +1517,46 @@ Astronomy.Horizon = function(date, location, ra, dec) {     // based on NOVAS eq
         if (az >= 360) az -= 360;
     }
     let zd = Math.atan2(proj, pz) * RAD2DEG;
+    let out_ra = ra;
+    let out_dec = dec;
 
-    return { azimuth:az, altitude:90-zd };
+    if (refraction) {
+        var zd0, zd1, refr, j;
+
+        zd0 = zd;
+        do {
+            zd1 = zd;
+            refr = refract(zd, location);
+            zd = zd0 - refr;
+            //console.debug(`refract iter: zd0=${zd0}, zd=${zd}, refr=${refr}`);
+        } while (Math.abs(zd - zd1) > 3.0e-5);
+
+        if (refr > 0.0 && zd > 3.0e-4) {
+            const sinzd = Math.sin(zd * DEG2RAD);
+            const coszd = Math.cos(zd * DEG2RAD);
+            const sinzd0 = Math.sin(zd0 * DEG2RAD);
+            const coszd0 = Math.cos(zd0 * DEG2RAD);
+            var pr = [];
+            for (j=0; j<3; ++j) {
+                pr.push(((p[j] - coszd0 * uz[j]) / sinzd0)*sinzd + uz[j]*coszd);
+            }
+            proj = Math.sqrt(pr[0]*pr[0] + pr[1]*pr[1]);
+            if (proj > 0) {
+                out_ra = Math.atan2(pr[1], pr[0]) * RAD2DEG / 15;
+                if (out_ra < 0) {
+                    out_ra += 24;
+                }
+                if (out_ra >= 24) {
+                    out_ra -= 24;
+                }
+            } else {
+                out_ra = 0;
+            }
+            out_dec = Math.atan2(pr[2], proj) * RAD2DEG;
+        }
+    }
+
+    return { azimuth:az, altitude:90-zd, ra:out_ra, dec:out_dec };
 }
 
 function Observer(latitude_degrees, longitude_degrees, height_in_meters) {
