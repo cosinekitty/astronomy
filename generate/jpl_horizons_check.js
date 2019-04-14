@@ -161,6 +161,7 @@ function ProcessFile(inFileName) {
     };
     for (var row of lines) {
         ++context.lnum;
+        row = row.replace(/\s+$/, '');
         if (inHeader) {
             // Center geodetic : 279.000000,29.0000000,0.0100000 {E-lon(deg),Lat(deg),Alt(km)}
             let m = row.match(/^Center geodetic : ([^,]+),([^,]+),(\S+)/);
