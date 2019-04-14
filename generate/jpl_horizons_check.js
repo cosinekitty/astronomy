@@ -141,7 +141,7 @@ function ProcessRow(context, row) {
 }
 
 function PrintSummary(context) {
-    console.log(`${context.fn} : m_eq=${context.maxArcminError_MetricEquatorial.toFixed(3)}, a_eq=${context.maxArcminError_ApparentEquatorial.toFixed(3)}, hor=${context.maxArcminError_Horizontal.toFixed(3)}`);
+    console.log(`${context.fn.padEnd(35)} m_eq=${context.maxArcminError_MetricEquatorial.toFixed(3)}, a_eq=${context.maxArcminError_ApparentEquatorial.toFixed(3)}, hor=${context.maxArcminError_Horizontal.toFixed(3)}`);
 }
 
 function ProcessFile(inFileName) {
