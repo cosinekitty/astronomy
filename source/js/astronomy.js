@@ -1478,7 +1478,6 @@ function refract(zd_obs, location) {
     let kelvin = 273 + celsius;
     let h = 90 - zd_obs;
     let angle = (h + 7.31/(h + 4.4));
-    //console.debug(`refract angle = ${angle}`);
     let r = 0.016667 / Math.tan(angle * DEG2RAD);
     let refr = r * (0.28 * pressure / kelvin);
     return refr;
@@ -1521,15 +1520,34 @@ Astronomy.Horizon = function(date, location, ra, dec, refraction) {     // based
     let out_dec = dec;
 
     if (refraction) {
-        var zd0, zd1, refr, j;
+        let zd1, refr, j;
+        let zd0 = zd;
 
-        zd0 = zd;
-        do {
-            zd1 = zd;
-            refr = refract(zd, location);
-            zd = zd0 - refr;
-            //console.debug(`refract iter: zd0=${zd0}, zd=${zd}, refr=${refr}`);
-        } while (Math.abs(zd - zd1) > 3.0e-5);
+        if (refraction === 'novas') {
+            do {
+                zd1 = zd;
+                refr = refract(zd, location);
+                zd = zd0 - refr;
+            } while (Math.abs(zd - zd1) > 3.0e-5);
+        } else if (refraction === 'sae' || refraction === 'jplhor') {
+            // http://extras.springer.com/1999/978-1-4471-0555-8/chap4/horizons/horizons.pdf
+            // JPL Horizons says it uses refraction algorithm from 
+            // Meeus "Astronomical Algorithms", 1991, p. 101-102.
+            // I found the following Go implementation:
+            // https://github.com/soniakeys/meeus/blob/master/v3/refraction/refract.go
+            // This is a translation from the function "Saemundsson" there.
+            let hd = 90 - zd;
+            if (refraction === 'jplhor') {
+                // I found experimentally that JPL Horizons clamps the angle to 1 degree below the horizon.
+                // The only reason I'm including this is for a unit test that compares against
+                // JPL Horizons data. I recommend most users use the 'sae' option if they want refraction.
+                hd = Math.max(-1, hd);
+            }
+            refr = (1.02 / Math.tan((hd+10.3/(hd+5.11))*DEG2RAD)) / 60;
+            zd -= refr;
+        } else {
+            throw 'If specified, refraction must be one of: "novas", "jplhor", "sae".';
+        }
 
         if (refr > 0.0 && zd > 3.0e-4) {
             const sinzd = Math.sin(zd * DEG2RAD);

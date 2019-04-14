@@ -49,11 +49,9 @@ if [[ ! -f ${EPHFILE} ]]; then
     fi
 fi
 
-if [[ ! -x generate ]]; then
-    echo ""
-    echo "Building C source code for 'generate' program."
-    ./build || Fail "Could not build 'generate' program from source."
-fi
+echo ""
+echo "Building C source code for 'generate' program."
+./build || Fail "Could not build 'generate' program from source."
 
 echo ""
 echo "Running the target code generator."

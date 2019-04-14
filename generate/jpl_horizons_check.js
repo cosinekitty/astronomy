@@ -133,13 +133,11 @@ function ProcessRow(context, row) {
     let arcmin = CompareEquatorial(context, 'metric', jpl.m_ra, jpl.m_dec, sky.j2000.ra, sky.j2000.dec);
     context.maxArcminError_MetricEquatorial = Math.max(context.maxArcminError_MetricEquatorial, arcmin);
 
-    if (!context.refraction || hor.altitude >= -0.6 || jpl.altitude >= -0.6) {
-        arcmin = CompareHorizontal(context, jpl.az, jpl.alt, hor.azimuth, hor.altitude);
-        context.maxArcminError_Horizontal = Math.max(context.maxArcminError_Horizontal, arcmin);
+    arcmin = CompareHorizontal(context, jpl.az, jpl.alt, hor.azimuth, hor.altitude);
+    context.maxArcminError_Horizontal = Math.max(context.maxArcminError_Horizontal, arcmin);
 
-        arcmin = CompareEquatorial(context, 'apparent', jpl.a_ra, jpl.a_dec, hor.ra, hor.dec);
-        context.maxArcminError_ApparentEquatorial = Math.max(context.maxArcminError_ApparentEquatorial, arcmin);
-    }
+    arcmin = CompareEquatorial(context, 'apparent', jpl.a_ra, jpl.a_dec, hor.ra, hor.dec);
+    context.maxArcminError_ApparentEquatorial = Math.max(context.maxArcminError_ApparentEquatorial, arcmin);
 }
 
 function PrintSummary(context) {
@@ -156,7 +154,7 @@ function ProcessFile(inFileName) {
         lnum: 0,
         fn: inFileName,
         refraction: null,
-        arcmin_threshold: 1.167,      // FIXFIXFIX: get this down to 1.0
+        arcmin_threshold: 1.15,      // FIXFIXFIX: get this down to 1.0
         maxArcminError_MetricEquatorial: 0,
         maxArcminError_ApparentEquatorial: 0,
         maxArcminError_Horizontal: 0
@@ -188,8 +186,11 @@ function ProcessFile(inFileName) {
             // Atmos refraction: NO (AIRLESS)
             m = row.match(/^Atmos refraction: (YES|NO) /);
             if (m) {
-                context.refraction = (m[1] === 'YES');
-                //console.debug(`Refraction = ${context.refraction}`);
+                if (m[1] === 'YES') {
+                    context.refraction = 'jplhor';
+                } else {
+                    context.refraction = false;
+                }
             }
 
             if (row === '$$SOE') {
