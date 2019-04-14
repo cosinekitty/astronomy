@@ -6,9 +6,10 @@
 const j2000 = new Date('2000-01-01T12:00:00Z');
 const T0 = 2451545.0;
 const PI2 = 2 * Math.PI;
-const ARC = 3600 * (180 / Math.PI);   // arcseconds per radian
-const ERAD = 6378136.6;   // mean earth radius
-const AU = 1.4959787069098932e+11;    // astronomical unit in meters
+const ARC = 3600 * (180 / Math.PI);     // arcseconds per radian
+const ERAD = 6378136.6;                 // mean earth radius
+const AU = 1.4959787069098932e+11;      // astronomical unit in meters
+const C_AUDAY = 173.1446326846693;      // speed of light in AU/day
 const ASEC2RAD = 4.848136811095359935899141e-6;
 const DEG2RAD = 0.017453292519943296;
 const RAD2DEG = 57.295779513082321;
@@ -122,6 +123,11 @@ function Time(date) {
     }
 
     throw 'AstroTime() argument must be a Date object, a Time object, or a numeric UTC Julian date.';
+}
+
+Time.prototype.SubtractDays = function(days) {
+    // FIXFIXFIX: really should be subtracting using TT, not UTC, but that's more tricky.
+    return new Time(this.jd_utc - days);
 }
 
 function AstroTime(date) {
@@ -1093,7 +1099,7 @@ function CalcChebyshev(model, time) {
             return { t:time, x:pos[0], y:pos[1], z:pos[2] };
         }
     }
-    throw "Cannot extrapolate Chebyshev model for given date.";
+    throw `Cannot extrapolate Chebyshev model for given Terrestrial Time: ${time.jd_tt}`;
 }
 
 Astronomy.HelioVector = function(body, date) {
@@ -1116,16 +1122,31 @@ Astronomy.HelioVector = function(body, date) {
 };
 
 Astronomy.GeoVector = function(body, date) {
-    var time = AstroTime(date);
+    const time = AstroTime(date);
     if (body === 'Moon') {
         return Astronomy.GeoMoon(time);
     }
     if (body === 'Earth') {
         return { t:time, x:0, y:0, z:0 };
     }
-    var h = Astronomy.HelioVector(body, time);
-    var e = CalcVsop(vsop.Earth, time);
-    return { t:time, x:h.x-e.x, y:h.y-e.y, z:h.z-e.z };
+
+    const e = CalcVsop(vsop.Earth, time);
+
+    // Correct for light-travel time, to get position of body as seen from Earth's center.
+    let h, geo, ltravel, dt;
+    let ltime = time;
+    for (let iter=0; iter < 10; ++iter) {
+        h = Astronomy.HelioVector(body, ltime);
+        geo = { t:time, x:h.x-e.x, y:h.y-e.y, z:h.z-e.z, iter:iter };
+        ltravel = Math.sqrt(geo.x*geo.x + geo.y*geo.y + geo.z*geo.z) / C_AUDAY;
+        let ltime2 = time.SubtractDays(ltravel);
+        dt = Math.abs(ltime2.jd_tt - ltime.jd_tt);
+        if (dt < 1.0e-9) {
+            return geo;
+        }
+        ltime = ltime2;
+    }
+    throw `Light-travel time solver did not converge: dt=${dt}`;
 }
 
 })(typeof exports==='undefined' ? (this.Astronomy={}) : exports);

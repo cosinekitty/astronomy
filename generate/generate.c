@@ -538,12 +538,7 @@ static int ManualResample(int body, int npoly, int nsections, int startYear, int
         nsamples = 100*npoly;     /* but always oversample every segment beyond the polynomial count */
 
     CHECK(MeasureError(filename, nsamples, &stats));
-
-    printf("RMS position error = %lg AU (%lg km)\n", stats.rmsPositionError, stats.rmsPositionError * AU_KM);
-    printf("Max position error = %lg AU (%lg km)\n", stats.maxPositionError, stats.maxPositionError * AU_KM);
-    printf("RMS Angular error = %0.3lf arcmin\n", stats.rmsArcminError);
-    printf("Max Angular error = %0.3lf arcmin\n", stats.maxArcminError);
-    printf("Output data count = %ld, byte estimate = %ld\n", stats.dataCount, 20 * stats.dataCount);
+    printf("Chebyshev body=%d, RMS=%0.3lf, max=%0.3lf, data=%ld\n", body, stats.rmsArcminError, stats.maxArcminError, stats.dataCount);
 
 fail:
     return error;
@@ -684,7 +679,7 @@ static int Resample(int body, const char *outFileName, int npoly, int startYear,
     fprintf(outfile, "body=%d\n", body);
     fprintf(outfile, "\n");     /* blank line terminates the header */
 
-    jdStart = julian_date((short)startYear, 1, 1, 0.0);
+    jdStart = julian_date((short)startYear, 1, 1, 0.0) - 1.0;   /* subtract 1 day for light travel time allowance */
     jdStop = julian_date((short)(stopYear+1), 1, 1, 0.0);
     jdDelta = (jdStop - jdStart) / nsections;
     context.body = body;
@@ -903,7 +898,7 @@ static int CheckSkyPos(observer *location, const char *filename, int lnum, const
     /* Calculate pythagorean error as if both were planar coordinates. */
     *arcmin = sqrt(delta_ra*delta_ra + delta_dec*delta_dec);
 
-    if (*arcmin > 1.0)
+    if (*arcmin > 0.9)
     {
         fprintf(stderr, "CheckSkyPos: excessive (RA,DEC) error = %lf arcmin at line %d of file %s\n", *arcmin, lnum, filename);
         return 1;
@@ -936,7 +931,7 @@ static int CheckSkyPos(observer *location, const char *filename, int lnum, const
     /* Replace the (RA,DEC) error with the (az,alt) error. */
     *arcmin = sqrt(delta_az*delta_az + delta_alt*delta_alt);   
 
-    if (*arcmin > 2.0)
+    if (*arcmin > 0.9)
     {
         fprintf(stderr, "CheckSkyPos: excessive (az,alt) error = %lf arcmin for body %d at line %d of file %s\n", *arcmin, body, lnum, filename);
         return 1;
