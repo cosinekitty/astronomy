@@ -25,11 +25,14 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdarg.h>
+#include "novas.h"
 #include "codegen.h"
 #include "vsop.h"
 #include "ephfile.h"
 
 #define CG_MAX_LINE_LENGTH  200
+
+static const double MJD_BASIS = 2400000.5;
 
 typedef struct
 {
@@ -314,6 +317,106 @@ fail:
     return error;
 }
 
+static int JsDeltaT(cg_context_t *context)
+{
+    FILE *infile;
+    int error=1, lnum, count=0;
+    const char *filename;
+    char line[100];
+    char dt_text[20];
+    int year, frac_year, month, day;
+    double dt, ignore;
+    double mjd = 0.0;
+    double last_mjd;
+
+    filename = "delta_t/historic.txt";
+    infile = fopen(filename, "rt");
+    if (infile == NULL) goto fail;
+    lnum = 0;
+    while (fgets(line, sizeof(line), infile))
+    {
+        ++lnum;
+        if (lnum < 3) continue;     /* first 2 lines are headers */
+        if (3 != sscanf(line, "%d.%d %20s", &year, &frac_year, dt_text) || 1 != sscanf(dt_text, "%lf", &dt))
+        {
+            error = LogError(context, "Line %d of file %s has invalid format.\n", lnum, filename);
+            goto fail;
+        }
+
+        if (frac_year == 0)
+        {
+            mjd = julian_date((short)year, 1, 1, 0.0) - MJD_BASIS;
+            ++count;            
+            fprintf(context->outfile, "%s\n", (count==1) ? "[" : ",");
+            fprintf(context->outfile, "{ mjd:%0.1lf, dt:%s }", mjd, dt_text);
+        }
+    }
+    fclose(infile);
+
+    filename = "delta_t/recent.txt";
+    infile = fopen(filename, "rt");
+    if (infile == NULL) goto fail;
+    lnum = 0;
+    last_mjd = mjd;
+    while (fgets(line, sizeof(line), infile))
+    {
+        ++lnum;
+        if (4 != sscanf(line, "%d %d %d %20s", &year, &month, &day, dt_text) || 1 != sscanf(dt_text, "%lf", &dt))
+        {
+            error = LogError(context, "Line %d of file %s has invalid format.", lnum, filename);
+            goto fail;
+        }
+
+        mjd = julian_date((short)year, (short)month, (short)day, 0.0) - MJD_BASIS;
+        if (mjd > last_mjd) 
+        {
+            ++count;
+            fprintf(context->outfile, "%s\n", (count==1) ? "[" : ",");
+            fprintf(context->outfile, "{ mjd:%0.1lf, dt:%s }", mjd, dt_text);
+        }
+    }
+    fclose(infile);
+
+    filename = "delta_t/predicted.txt";
+    infile = fopen(filename, "rt");
+    if (infile == NULL) goto fail;
+    last_mjd = mjd;
+    lnum = 0;
+    while (fgets(line, sizeof(line), infile))
+    {
+        ++lnum;
+        if (lnum < 2) continue;     /* skip header line */
+        if (3 != sscanf(line, "%lf %lf %20s", &mjd, &ignore, dt_text) || 1 != sscanf(dt_text, "%lf", &dt))
+        {
+            error = LogError(context, "Line %d of file %s has invalid format.", lnum, filename);
+            goto fail;
+        }
+
+        if (mjd > last_mjd)
+        {
+            ++count;
+            fprintf(context->outfile, "%s\n", (count==1) ? "[" : ",");
+            fprintf(context->outfile, "{ mjd:%0.1lf, dt:%s }", mjd, dt_text);
+        }
+    }
+    fprintf(context->outfile, "\n]");
+
+    if (count < 2)
+    {
+        error = LogError(context, "There must be at least 2 delta_t data!");
+        goto fail;
+    }
+
+    error = 0;
+
+fail:
+    if (infile == NULL)
+        error = LogError(context, "Cannot open input file: %s", filename);
+    else
+        fclose(infile);
+    return error;
+}
+
 static int LogError(const cg_context_t *context, const char *format, ...)
 {
     va_list v;
@@ -329,6 +432,7 @@ static const cg_directive_entry DirectiveTable[] =
 {
     { "JS_VSOP", JsVsop },
     { "JS_CHEBYSHEV", JsChebyshev },
+    { "JS_DELTA_T", JsDeltaT },
     { NULL, NULL }
 };
 

@@ -5,6 +5,7 @@
 'use strict';
 const j2000 = new Date('2000-01-01T12:00:00Z');
 const T0 = 2451545.0;
+const MJD_BASIS = 2400000.5;            // mjd + MJD_BASIS = jd
 const PI2 = 2 * Math.PI;
 const ARC = 3600 * (180 / Math.PI);     // arcseconds per radian
 const ERAD = 6378136.6;                 // mean earth radius
@@ -35,7 +36,7 @@ Astronomy.Bodies = [
     'Pluto'
 ];
 
-var vsop = {
+const vsop = {
     Mercury: $ASTRO_JS_VSOP(Mercury),
     Venus:   $ASTRO_JS_VSOP(Venus),
     Earth:   $ASTRO_JS_VSOP(Earth),
@@ -46,57 +47,44 @@ var vsop = {
     Neptune: $ASTRO_JS_VSOP(Neptune)
 };
 
-var cheb = {
+const cheb = {
     Pluto:  $ASTRO_JS_CHEBYSHEV(8)
 };
 
-/* 
-    The following table is adapted from:
-    https://www.ietf.org/timezones/data/leap-seconds.list
-    It has the number of seconds since 1900 where each 
-    leap second was added starting with 1972.
-    This list will need to be updated every now and then.
-*/
-var LeapSecondTable = [
-    0.0, /* placeholder for all dates earlier than 1972 */
-    2272060800.0, /*	10	# 1 Jan 1972 */
-    2287785600.0, /*	11	# 1 Jul 1972 */
-    2303683200.0, /*	12	# 1 Jan 1973 */
-    2335219200.0, /*	13	# 1 Jan 1974 */
-    2366755200.0, /*	14	# 1 Jan 1975 */
-    2398291200.0, /*	15	# 1 Jan 1976 */
-    2429913600.0, /*	16	# 1 Jan 1977 */
-    2461449600.0, /*	17	# 1 Jan 1978 */
-    2492985600.0, /*	18	# 1 Jan 1979 */
-    2524521600.0, /*	19	# 1 Jan 1980 */
-    2571782400.0, /*	20	# 1 Jul 1981 */
-    2603318400.0, /*	21	# 1 Jul 1982 */
-    2634854400.0, /*	22	# 1 Jul 1983 */
-    2698012800.0, /*	23	# 1 Jul 1985 */
-    2776982400.0, /*	24	# 1 Jan 1988 */
-    2840140800.0, /*	25	# 1 Jan 1990 */
-    2871676800.0, /*	26	# 1 Jan 1991 */
-    2918937600.0, /*	27	# 1 Jul 1992 */
-    2950473600.0, /*	28	# 1 Jul 1993 */
-    2982009600.0, /*	29	# 1 Jul 1994 */
-    3029443200.0, /*	30	# 1 Jan 1996 */
-    3076704000.0, /*	31	# 1 Jul 1997 */
-    3124137600.0, /*	32	# 1 Jan 1999 */
-    3345062400.0, /*	33	# 1 Jan 2006 */
-    3439756800.0, /*	34	# 1 Jan 2009 */
-    3550089600.0, /*	35	# 1 Jul 2012 */
-    3644697600.0, /*	36	# 1 Jul 2015 */
-    3692217600.0, /*	37	# 1 Jan 2017 */
-    1.0e+99 /* marks end of list */
-];
+const DT = $ASTRO_JS_DELTA_T();
 
-function LeapSeconds(jd_utc) {
-    var LS = (jd_utc - 2415020.5) * 86400.0;
-    for (var i=0; LeapSecondTable[i] < 1.0e+20; ++i)
-        if (LS >= LeapSecondTable[i] && LS < LeapSecondTable[i+1])
-            return 9 + i;
+function DeltaT(mjd) {
+    // Calculate the difference TT-UT for the given date/time, expressed
+    // as a Modified Julian Date.
+    // DT[i] = { mjd: 58484.0, dt: 69.34 }
+    // Check end ranges. If outside the known bounds, clamp to the closest known value.
 
-    return 0;
+    if (mjd <= DT[0].mjd) {
+        return DT[0].dt;
+    }
+
+    if (mjd >= DT[DT.length-1].mjd) {
+        return DT[DT.length-1].dt;
+    }
+
+    // Do a binary search to find the pair of indexes this mjd lies between.
+    
+    let lo = 0;
+    let hi = DT.length-2;   // make sure there is always an array element after the one we are looking at
+    while (lo <= hi) {
+        let c = (lo + hi) >> 1;
+        if (mjd < DT[c].mjd) {
+            hi = c-1;
+        } else if (mjd > DT[c+1].mjd) {
+            lo = c+1;
+        } else {
+            let frac = (mjd - DT[c].mjd) / (DT[c+1].mjd - DT[c].mjd);
+            return DT[c].dt + frac*(DT[c+1].dt - DT[c].dt);
+        }
+    }
+
+    // This should never happen if the binary search algorithm is correct.
+    throw `Could not find Delta-T value for MJD=${mjd}`;
 }
 
 function Time(date) {
@@ -110,7 +98,7 @@ function Time(date) {
         this.jd_utc = (date - j2000) / MillisPerDay + T0;
 
         // Convert UTC to Terrestrial Time (TT) by adjusting for leap seconds.
-        this.jd_tt = this.jd_utc + (LeapSeconds(this.jd_utc) + 32.184) / 86400.0;
+        this.jd_tt = this.jd_utc + DeltaT(this.jd_utc - MJD_BASIS) / 86400.0;
 
         return;
     }
@@ -118,7 +106,7 @@ function Time(date) {
     if (typeof date === 'number') {
         this.date = new Date(j2000 - (T0 - date)*MillisPerDay);
         this.jd_utc = date;
-        this.jd_tt = this.jd_utc + (LeapSeconds(this.jd_utc) + 32.184) / 86400.0;
+        this.jd_tt = this.jd_utc + DeltaT(this.jd_utc - MJD_BASIS) / 86400.0;
         return;
     }
 
