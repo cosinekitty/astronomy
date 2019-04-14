@@ -172,25 +172,22 @@ function ProcessFile(inFileName) {
                 let latitude = parseFloat(m[2]);
                 let elevation = 1000 * parseFloat(m[3]);
                 context.observer = Astronomy.MakeObserver(latitude, longitude, elevation);
-                //console.debug(`Observer: lat=${latitude}, lon=${longitude}, elev=${elevation}`);
+                continue;
             }
 
             // Target body name: Mars (499)                      {source: mar097}
             m = row.match(/^Target body name: ([A-Za-z]+)/);
             if (m) {
                 context.body = m[1];
-                //console.debug(`Body: ${context.body}`);
+                continue;
             }
 
             // Atmos refraction: YES (Earth refraction model)
             // Atmos refraction: NO (AIRLESS)
             m = row.match(/^Atmos refraction: (YES|NO) /);
             if (m) {
-                if (m[1] === 'YES') {
-                    context.refraction = 'jplhor';
-                } else {
-                    context.refraction = false;
-                }
+                context.refraction = (m[1] === 'YES') ? 'jplhor' : false;
+                continue;
             }
 
             if (row === '$$SOE') {
