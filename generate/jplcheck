@@ -1,7 +1,10 @@
 #!/bin/bash
+
+rm -f jpl_summary.txt
 for file in horizons/*.txt; do
-    node jpl_horizons_check.js $file || exit $?
+    node jpl_horizons_check.js $file | tee -a jpl_summary.txt || exit $?
 done
 
-echo "jplcheck: Finished"
+node jpl_horizons_check tally jpl_summary.txt || exit $?
+rm -f jpl_summary.txt
 exit 0

@@ -212,10 +212,33 @@ function ProcessFile(inFileName) {
     throw `Missing $$EOE token in file: ${inFileName}`;
 }
 
-if (process.argv.length !== 3) {
-    console.log(`USAGE:  node ${process.argv[1]} infile`);
-    process.exit(1);
+function Tally(filename) {
+    // horizons/airless_Jupiter.txt        m_eq=0.346, a_eq=0.626, hor=0.716
+
+    const text = fs.readFileSync(filename, 'utf8');
+    const lines = text.split('\n');
+    let max_arcmin = 0.0;
+    for (let row of lines) {
+        row = row.replace(/\s+$/, '');
+        if (row === '') continue;
+        let m = row.match(/^\S+\s+m_eq=([^,]+),\s*a_eq=([^,]+), hor=([^,]+)\s*/);
+        if (!m) {
+            throw `Invalid summary line: ${row}`;
+        }
+        max_arcmin = Math.max(max_arcmin, parseFloat(m[1]), parseFloat(m[2]), parseFloat(m[3]));
+    }
+    console.log(`MAX_ARCMIN = ${max_arcmin}`);
 }
 
-ProcessFile(process.argv[2]);
-process.exit(0);
+if (process.argv.length === 3) {
+    ProcessFile(process.argv[2]);
+    process.exit(0);
+}
+
+if (process.argv.length === 4 && process.argv[2] === 'tally') {
+    Tally(process.argv[3]);
+    process.exit(0);
+}
+
+console.log(`USAGE:  node ${process.argv[1]} infile`);
+process.exit(1);
