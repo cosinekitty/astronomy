@@ -325,7 +325,7 @@ static int JsDeltaT(cg_context_t *context)
     char line[100];
     char dt_text[20];
     int year, frac_year, month, day;
-    double dt, ignore;
+    double dt, float_year;
     double mjd = 0.0;
     double last_mjd;
 
@@ -345,6 +345,11 @@ static int JsDeltaT(cg_context_t *context)
 
         if (frac_year == 0)
         {
+            /* reduce the data size */
+            if (year < 1750 && year % 20 != 0) continue;
+            if (year < 1850 && year % 10 != 0) continue;
+            if (year % 5 != 0) continue;
+
             mjd = julian_date((short)year, 1, 1, 0.0) - MJD_BASIS;
             ++count;            
             fprintf(context->outfile, "%s\n", (count==1) ? "[" : ",");
@@ -367,8 +372,11 @@ static int JsDeltaT(cg_context_t *context)
             goto fail;
         }
 
+        /* reduce the data size by keeping only 1 sample per year */
+        if (month != 1) continue;
+
         mjd = julian_date((short)year, (short)month, (short)day, 0.0) - MJD_BASIS;
-        if (mjd > last_mjd) 
+        if (mjd > last_mjd)
         {
             ++count;
             fprintf(context->outfile, "%s\n", (count==1) ? "[" : ",");
@@ -386,11 +394,14 @@ static int JsDeltaT(cg_context_t *context)
     {
         ++lnum;
         if (lnum < 2) continue;     /* skip header line */
-        if (3 != sscanf(line, "%lf %lf %20s", &mjd, &ignore, dt_text) || 1 != sscanf(dt_text, "%lf", &dt))
+        if (3 != sscanf(line, "%lf %lf %20s", &mjd, &float_year, dt_text) || 1 != sscanf(dt_text, "%lf", &dt))
         {
             error = LogError(context, "Line %d of file %s has invalid format.", lnum, filename);
             goto fail;
         }
+
+        /* reduce the data size by keeping only 1 sample per year */
+        if (float_year != floor(float_year)) continue;
 
         if (mjd > last_mjd)
         {
