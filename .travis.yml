@@ -1,1 +1,4 @@
+branches:
+    only:
+        - travis
 compiler: gcc
