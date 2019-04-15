@@ -1321,16 +1321,16 @@ function CalcMoon(T) {
     };
 }
 
-function precession(jd_tdb1, pos1, jd_tdb2) {
+function precession(tt1, pos1, tt2) {
     var xx, yx, zx, xy, yy, zy, xz, yz, zz;
     var eps0 = 84381.406;
     var t, psia, omegaa, chia, sa, ca, sb, cb, sc, cc, sd, cd;
 
-    if ((jd_tdb1 != T0) && (jd_tdb2 != T0))
-        throw 'One of the two epochs must be J2000.0.';
+    if ((tt1 !== 0) && (tt2 !== 0))
+        throw 'One of (tt1, tt2) must be 0.';
 
-    t = (jd_tdb2 - jd_tdb1) / 36525;
-    if (jd_tdb2 === T0)
+    t = (tt2 - tt1) / 36525;
+    if (tt2 === 0)
         t = -t;
 
     psia   = (((((-    0.0000000951  * t
@@ -1375,7 +1375,7 @@ function precession(jd_tdb1, pos1, jd_tdb2) {
     yz = -sc * cb * ca - sa * cc;
     zz = -sc * cb * sa + cc * ca;
 
-    if (jd_tdb2 == T0)
+    if (tt2 == 0)
     { 
         // Perform rotation from epoch to J2000.0.
         return [
@@ -1502,7 +1502,7 @@ function geo_pos(time, observer) {
     const gast = gmst + tilt.ee/3600;
     const pos1 = terra(observer, gast).pos;
     const pos2 = nutation(time, -1, pos1);
-    const pos3 = precession(time.jd_tt, pos2, T0);
+    const pos3 = precession(time.tt, pos2, 0);
     return pos3;
 }
 
@@ -1683,7 +1683,7 @@ Astronomy.SkyPos = function(gc_vector, observer) {     // based on NOVAS place()
 
     let j2000_radec = vector2radec(j2000_vector);
 
-    let pos7 = precession(T0, j2000_vector, gc_vector.t.jd_tt);
+    let pos7 = precession(0, j2000_vector, gc_vector.t.tt);
     let ofdate_vector = nutation(gc_vector.t, 0, pos7);
     let ofdate_radec = vector2radec(ofdate_vector);
 
@@ -1712,7 +1712,7 @@ Astronomy.GeoMoon = function(date) {
     var mpos1 = ecl2equ_vec(time, gepos);
 
     // Convert from mean equinox of date to J2000...
-    var mpos2 = precession(time.jd_tt, mpos1, T0);
+    var mpos2 = precession(time.tt, mpos1, 0);
 
     return { t:time, x:mpos2[0], y:mpos2[1], z:mpos2[2] };
 }
