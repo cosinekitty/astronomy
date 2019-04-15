@@ -1,24 +1,23 @@
-language: c
-    
-matrix:
-  include:
-    # works on Precise and Trusty
-    - os: linux
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
-            - g++-7
-      env:
-        - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
+dist: trusty
+sudo: required
+language:
+  - c
+compiler:
+  - gcc
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - gcc-7
+script:
+  - ln -s /usr/bin/gcc-6 /usr/local/bin/gcc
+  - export CC=/usr/bin/gcc-6
+  - gcc -v
+  - cd generate && run
 
-before_install:
-    - eval "${MATRIX_EVAL}"
+language: c
 
 branches:
     only:
         - travis
-compiler: gcc
-
-script: cd generate && ./run
