@@ -703,9 +703,9 @@ function precession(jd_tdb1, pos1, jd_tdb2) {
     ]; 
 }
 
-function era(tt_ut1) {    // Earth Rotation Angle
-    const thet1 = 0.7790572732640 + 0.00273781191135448 * (tt_ut1 - T0);
-    const thet3 = tt_ut1 % 1;
+function era(time) {    // Earth Rotation Angle
+    const thet1 = 0.7790572732640 + 0.00273781191135448 * time.ut;
+    const thet3 = time.ut % 1;
     let theta = 360 * ((thet1 + thet3) % 1);
     if (theta < 0) {
         theta += 360;
@@ -730,7 +730,7 @@ function sidereal_time(time, gst_type) {
         throw 'gst_type must be either "gmst" or "gast"';
     }
     
-    const theta = era(time.jd_utc);
+    const theta = era(time);
 
     const st = (eqeq + 0.014506 +
         (((( -    0.0000000368   * t
