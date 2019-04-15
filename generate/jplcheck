@@ -2,7 +2,9 @@
 
 rm -f jpl_summary.txt
 for file in horizons/*.txt; do
-    node jpl_horizons_check.js $file | tee -a jpl_summary.txt || exit $?
+    node jpl_horizons_check.js $file > summary.txt || exit $?
+    cat summary.txt | tee -a jpl_summary.txt
+    rm -f summary.txt
 done
 
 node jpl_horizons_check tally jpl_summary.txt || exit $?
