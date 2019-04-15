@@ -1,22 +1,26 @@
 dist: trusty
 sudo: required
+
 language:
   - c
+
 compiler:
   - gcc
+
 addons:
   apt:
     sources:
       - ubuntu-toolchain-r-test
     packages:
       - gcc-7
+
 script:
-  - sudo ln -s /usr/bin/gcc-6 /usr/local/bin/gcc
-  - export CC=/usr/bin/gcc-6
+  - sudo ln -s /usr/bin/gcc-7 /usr/local/bin/gcc
+  - export CC=/usr/bin/gcc-7
+  - echo ${PATH}
+  - type gcc
   - gcc -v
   - cd generate && ./run
-
-language: c
 
 branches:
     only:
