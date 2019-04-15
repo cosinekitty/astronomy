@@ -1,3 +1,5 @@
+language: c
+
 branches:
     only:
         - travis
