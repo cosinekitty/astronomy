@@ -1457,8 +1457,8 @@ function terra(observer, st) {
     };
 }
 
-function nutation(jd_tdb, direction, pos) {
-    const tilt = e_tilt(jd_tdb);
+function nutation(time, direction, pos) {
+    const tilt = e_tilt(time.jd_tt);
     const oblm = tilt.mobl * DEG2RAD;
     const oblt = tilt.tobl * DEG2RAD;
     const psi = tilt.dpsi * ASEC2RAD;
@@ -1501,7 +1501,7 @@ function geo_pos(time, observer) {
     const tilt = e_tilt(time.jd_tt);
     const gast = gmst + tilt.ee/3600;
     const pos1 = terra(observer, gast).pos;
-    const pos2 = nutation(time.jd_tt, -1, pos1);
+    const pos2 = nutation(time, -1, pos1);
     const pos3 = precession(time.jd_tt, pos2, T0);
     return pos3;
 }
@@ -1684,7 +1684,7 @@ Astronomy.SkyPos = function(gc_vector, observer) {     // based on NOVAS place()
     let j2000_radec = vector2radec(j2000_vector);
 
     let pos7 = precession(T0, j2000_vector, gc_vector.t.jd_tt);
-    let ofdate_vector = nutation(gc_vector.t.jd_tt, 0, pos7);
+    let ofdate_vector = nutation(gc_vector.t, 0, pos7);
     let ofdate_radec = vector2radec(ofdate_vector);
 
     let sky = {
