@@ -594,7 +594,7 @@ const vsop = {
 
 const cheb = {
     Pluto:  [
-{ jd:2415019.500000, ndays:36707.500000, coeff:[
+{ tt:-36525.500000, ndays:36707.500000, coeff:[
     [-25.617936668549514678, 26.146776896480282915, 15.874874123535136050],
     [-12.615559030206249247, -39.603564215141375371, -8.555863566326980418],
     [13.647260607002237975, -5.860390769777701792, -5.939946512509632903],
@@ -622,7 +622,7 @@ const cheb = {
     [0.001116078060442432, -0.000755192217858768, -0.000351440756414860],
     [0.002023069091987001, 0.002603451438688445, 0.001066135982835456]]
 },
-{ jd:2451727.000000, ndays:36707.500000, coeff:[
+{ tt:182.000000, ndays:36707.500000, coeff:[
     [51.873998892450067899, -9.932898639944074404, -18.729007129461162862],
     [24.751928298838340226, 31.565120027727733287, 2.392293961487848897],
     [-11.445301588135478710, 5.065851094801511856, 5.029140716936048250],
@@ -1759,7 +1759,7 @@ function CalcChebyshev(model, time) {
 
     // Search for a record that overlaps the Julian Date 'jd'.
     for (record of model) {
-        x = ChebScale(record.jd, record.jd + record.ndays, time.jd_tt);
+        x = ChebScale(record.tt, record.tt + record.ndays, time.tt);
         if (-1 <= x && x <= +1) {
             pos = [];
             for (d=0; d < 3; ++d) {
@@ -1778,7 +1778,7 @@ function CalcChebyshev(model, time) {
             return { t:time, x:pos[0], y:pos[1], z:pos[2] };
         }
     }
-    throw `Cannot extrapolate Chebyshev model for given Terrestrial Time: ${time.jd_tt}`;
+    throw `Cannot extrapolate Chebyshev model for given Terrestrial Time: ${time.tt}`;
 }
 
 Astronomy.HelioVector = function(body, date) {

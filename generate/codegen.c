@@ -235,7 +235,7 @@ static int JsChebyshev(cg_context_t *context)
         if (record_index > 0)
             fprintf(context->outfile, ",\n");
             
-        fprintf(context->outfile, "{ jd:%lf, ndays:%lf, coeff:[\n", record.jdStart, record.jdDelta);
+        fprintf(context->outfile, "{ tt:%lf, ndays:%lf, coeff:[\n", record.jdStart - T0, record.jdDelta);
         for (i=0; i < record.numpoly; ++i)
         {
             fprintf(context->outfile, "    [%0.18lf, %0.18lf, %0.18lf]%s\n", 

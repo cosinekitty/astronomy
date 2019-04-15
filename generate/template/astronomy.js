@@ -1069,7 +1069,7 @@ function CalcChebyshev(model, time) {
 
     // Search for a record that overlaps the Julian Date 'jd'.
     for (record of model) {
-        x = ChebScale(record.jd, record.jd + record.ndays, time.jd_tt);
+        x = ChebScale(record.tt, record.tt + record.ndays, time.tt);
         if (-1 <= x && x <= +1) {
             pos = [];
             for (d=0; d < 3; ++d) {
@@ -1088,7 +1088,7 @@ function CalcChebyshev(model, time) {
             return { t:time, x:pos[0], y:pos[1], z:pos[2] };
         }
     }
-    throw `Cannot extrapolate Chebyshev model for given Terrestrial Time: ${time.jd_tt}`;
+    throw `Cannot extrapolate Chebyshev model for given Terrestrial Time: ${time.tt}`;
 }
 
 Astronomy.HelioVector = function(body, date) {
