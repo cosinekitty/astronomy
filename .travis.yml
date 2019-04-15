@@ -2,3 +2,4 @@ branches:
     only:
         - travis
 compiler: gcc
+script: cd generate && ./run
