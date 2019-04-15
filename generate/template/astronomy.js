@@ -288,14 +288,14 @@ var cls_t = [
     [      1290.0,       0.0,      0.0,     -556.0,     0.0,     0.0]
 ];
 
-function iau2000b(jd_high, jd_low) {
+function iau2000b(time) {
     var i, t, el, elp, f, d, om, arg, dp, de, sarg, carg;
 
     function mod(x) {
         return (x % ASEC360) * ASEC2RAD;
     }
 
-    t = ((jd_high - T0) + jd_low) / 36525.0;
+    t = time.tt / 36525;
     el  = mod(485868.249036 + t * 1717915923.2178);
     elp = mod(1287104.79305 + t * 129596581.0481);
     f   = mod(335779.526232 + t * 1739527262.8478);
@@ -317,7 +317,7 @@ function iau2000b(jd_high, jd_low) {
  }
 
 function nutation_angles(time) {
-    var nut = iau2000b(T0, time.tt);
+    var nut = iau2000b(time);
     return { dpsi: nut.dpsi/ASEC2RAD, deps: nut.deps/ASEC2RAD };
 }
 
