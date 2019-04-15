@@ -1,12 +1,13 @@
 var Astronomy = require('../source/js/astronomy.js');
 
-var date = new Date('1900-01-01T00:00:00Z');
-var stop = new Date('2100-01-01T00:00:00Z');
-var body, pos, sky, hor;
+var date = new Date('1700-01-01T00:00:00Z');
+var stop = new Date('2200-01-01T00:00:00Z');
+var body, pos, sky, hor, dt;
 const observer = Astronomy.MakeObserver(29, -81, 10);
 
 console.log(`o ${observer.latitude} ${observer.longitude} ${observer.height}`);
 
+dt = (24*3600*1000) * (10 + Math.PI/100);       // 10.03141592... days; exercise different times of day
 while (date < stop) {
     for (body of Astronomy.Bodies) {
         if (body !== 'Moon') {
@@ -28,5 +29,5 @@ while (date < stop) {
     hor = Astronomy.Horizon(sky.t, observer, sky.ofdate.ra, sky.ofdate.dec);
     console.log(`s GM ${pos.t.tt} ${pos.t.ut} ${sky.j2000.ra} ${sky.j2000.dec} ${sky.j2000.dist} ${hor.azimuth} ${hor.altitude}`);
 
-    date = new Date(date.getTime() + (24*3600*1000));
+    date = new Date(date.getTime() + dt);
 }

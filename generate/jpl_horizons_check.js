@@ -154,7 +154,7 @@ function ProcessFile(inFileName) {
         lnum: 0,
         fn: inFileName,
         refraction: null,
-        arcmin_threshold: 0.864,
+        arcmin_threshold: 0.9,
         maxArcminError_MetricEquatorial: 0,
         maxArcminError_ApparentEquatorial: 0,
         maxArcminError_Horizontal: 0

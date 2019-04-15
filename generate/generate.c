@@ -44,7 +44,7 @@
 #include "vsop.h"
 
 #define VECTOR_DIM 3
-#define MIN_YEAR 1600
+#define MIN_YEAR 1700
 #define MAX_YEAR 2200
 
 typedef struct
@@ -337,8 +337,8 @@ static int TestVsopModel(vsop_model_t *model, int body, double threshold, double
         goto fail;
     }
 
-    jdStart = julian_date(1900, 1, 1, 0.0);
-    jdStop = julian_date(2101, 1, 1, 0.0);
+    jdStart = julian_date(MIN_YEAR, 1, 1, 0.0);
+    jdStop = julian_date(MAX_YEAR, 1, 1, 0.0);
     jdDelta = 1.0;
 
     error = VsopTruncate(model, jdStart, jdStop, threshold);
@@ -382,7 +382,7 @@ static int GenerateAllSource(void)
 
     CHECK(OpenEphem());
     CHECK(BuildVsopData());
-    CHECK(ManualResample(8, 26, 2, 1900, 2100));
+    CHECK(ManualResample(8, 19, 7, MIN_YEAR, MAX_YEAR));
     CHECK(GenerateCode("../source/js/astronomy.js", "template/astronomy.js", "output"));
 
 fail:
