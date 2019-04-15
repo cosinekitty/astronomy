@@ -1044,8 +1044,8 @@ function e_tilt(jd) {
     return cache_e_tilt;
 }
 
-function ecl2equ_vec(jd, pos) {
-    var obl = e_tilt(jd).mobl * DEG2RAD;
+function ecl2equ_vec(time, pos) {
+    var obl = e_tilt(time.jd_tt).mobl * DEG2RAD;
     var cos_obl = Math.cos(obl);
     var sin_obl = Math.sin(obl);
     return [
@@ -1404,7 +1404,7 @@ function era(tt_ut1) {    // Earth Rotation Angle
 }
 
 function sidereal_time(time, gst_type) {
-    const t = (time.jd_tt - T0) / 36525;
+    const t = time.tt / 36525;
     let eqeq;
 
     switch (gst_type) {
@@ -1709,7 +1709,7 @@ Astronomy.GeoMoon = function(date) {
     ];
 
     // Convert ecliptic coordinates to equatorial coordinates, both in mean equinox of date.
-    var mpos1 = ecl2equ_vec(time.jd_tt, gepos);
+    var mpos1 = ecl2equ_vec(time, gepos);
 
     // Convert from mean equinox of date to J2000...
     var mpos2 = precession(time.jd_tt, mpos1, T0);
