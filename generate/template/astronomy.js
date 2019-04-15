@@ -113,7 +113,13 @@ function Time(date) {
 }
 
 Time.prototype.SubtractDays = function(days) {
-    // FIXFIXFIX: rework to subtract TT instead of UT. This requires an inverse function for DeltaT.
+    // This is slightly wrong, but the error is tiny.
+    // We really should be subtracting TT, not UT.
+    // But using TT would require creating an inverse function for DeltaT,
+    // which would be quite a bit of extra calculation.
+    // I estimate the error is in practice on the order of 10^(-7)
+    // times the value of 'days'.
+    // This is based on a typical drift of 1 second per year between UT and TT.
     return new Time(this.ut - days);
 }
 
