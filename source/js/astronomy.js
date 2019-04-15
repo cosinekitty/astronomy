@@ -1697,7 +1697,7 @@ Astronomy.SkyPos = function(gc_vector, observer) {     // based on NOVAS place()
 
 Astronomy.GeoMoon = function(date) {
     var time = AstroTime(date);
-    var t = (time.jd_tt - T0) / 36525;   // t = centuries since J2000.0 epoch
+    var t = time.tt / 36525;   // t = centuries since J2000.0 epoch
     var moon = CalcMoon(t);
 
     // Convert geocentric ecliptic spherical coords to cartesian coords.
@@ -1719,7 +1719,7 @@ Astronomy.GeoMoon = function(date) {
 
 function CalcVsop(model, time) {
     var spher = [], eclip, r_coslat;
-    var t = (time.jd_tt - T0) / 365250;   // millennia since 2000
+    var t = time.tt / 365250;   // millennia since 2000
     var formula, series, term, tpower, sum, coord;
     for (formula of model) {
         tpower = 1;
