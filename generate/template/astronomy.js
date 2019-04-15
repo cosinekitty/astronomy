@@ -6,6 +6,7 @@
 const j2000 = new Date('2000-01-01T12:00:00Z');
 const T0 = 2451545.0;
 const MJD_BASIS = 2400000.5;            // mjd + MJD_BASIS = jd
+const Y2000_IN_MJD = T0 - MJD_BASIS;    // the 2000.0 epoch expressed in MJD
 const PI2 = 2 * Math.PI;
 const ARC = 3600 * (180 / Math.PI);     // arcseconds per radian
 const ERAD = 6378136.6;                 // mean earth radius
@@ -91,22 +92,24 @@ function Time(date) {
     const MillisPerDay = 1000 * 3600 * 24;
 
     if (date instanceof Date) {
-        // Keep the original Date object.
         this.date = date;
+        this.ut = (date - j2000) / MillisPerDay;        // ut = days since J2000.0
+        this.jd_utc = this.ut + T0;
 
-        // Convert JavaScript Date object to Julian UTC value.
-        this.jd_utc = (date - j2000) / MillisPerDay + T0;
-
-        // Convert UTC to Terrestrial Time (TT) by adjusting for leap seconds.
-        this.jd_tt = this.jd_utc + DeltaT(this.jd_utc - MJD_BASIS) / 86400.0;
-
+        let dt = DeltaT(this.ut + Y2000_IN_MJD) / 86400;
+        this.tt = this.ut + dt;
+        this.jd_tt = this.jd_utc + dt;
         return;
     }
 
     if (typeof date === 'number') {
-        this.date = new Date(j2000 - (T0 - date)*MillisPerDay);
-        this.jd_utc = date;
-        this.jd_tt = this.jd_utc + DeltaT(this.jd_utc - MJD_BASIS) / 86400.0;
+        this.date = new Date(j2000 - (-date)*MillisPerDay);
+        this.ut = date;
+        this.jd_utc = this.ut + T0;
+
+        let dt = DeltaT(this.ut + Y2000_IN_MJD) / 86400.0;
+        this.tt = this.ut + dt;
+        this.jd_tt = this.jd_utc + dt;
         return;
     }
 
@@ -114,8 +117,8 @@ function Time(date) {
 }
 
 Time.prototype.SubtractDays = function(days) {
-    // FIXFIXFIX: really should be subtracting using TT, not UTC, but that's more tricky.
-    return new Time(this.jd_utc - days);
+    // FIXFIXFIX: rework to subtract TT instead of UT. This requires an inverse function for DeltaT.
+    return new Time(this.ut - days);
 }
 
 function AstroTime(date) {
@@ -1128,7 +1131,7 @@ Astronomy.GeoVector = function(body, date) {
         geo = { t:time, x:h.x-e.x, y:h.y-e.y, z:h.z-e.z, iter:iter };
         ltravel = Math.sqrt(geo.x*geo.x + geo.y*geo.y + geo.z*geo.z) / C_AUDAY;
         let ltime2 = time.SubtractDays(ltravel);
-        dt = Math.abs(ltime2.jd_tt - ltime.jd_tt);
+        dt = Math.abs(ltime2.tt - ltime.tt);
         if (dt < 1.0e-9) {
             return geo;
         }
