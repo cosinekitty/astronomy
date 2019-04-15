@@ -11,10 +11,10 @@ addons:
     packages:
       - gcc-7
 script:
-  - ln -s /usr/bin/gcc-6 /usr/local/bin/gcc
+  - sudo ln -s /usr/bin/gcc-6 /usr/local/bin/gcc
   - export CC=/usr/bin/gcc-6
   - gcc -v
-  - cd generate && run
+  - cd generate && ./run
 
 language: c
 
