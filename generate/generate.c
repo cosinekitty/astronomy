@@ -775,15 +775,16 @@ static int CheckTestVector(const char *filename, int lnum, const char *line, dou
 {
     int body, error;
     char name[10];
-    double jd, xpos[3], npos[3];
+    double tt, jd, xpos[3], npos[3];
 
     *arcmin = 99999.0;
 
-    if (5 != sscanf(line, "v %9[A-Za-z] %lf %lf %lf %lf", name, &jd, &xpos[0], &xpos[1], &xpos[2]))
+    if (5 != sscanf(line, "v %9[A-Za-z] %lf %lf %lf %lf", name, &tt, &xpos[0], &xpos[1], &xpos[2]))
     {
         fprintf(stderr, "CheckTestVector: Invalid format on line %d of file %s\n", lnum, filename);
         return 1;
     }
+    jd = tt + T0;
 
     body = LookupBody(name);
     if (body < 0)
@@ -821,7 +822,7 @@ static int CheckSkyPos(observer *location, const char *filename, int lnum, const
 {
     int body, error, bodyIndex;
     char name[10];
-    double jd_tt, jd_utc, ra, dec, dist, azimuth, altitude;
+    double tt, ut, jd_tt, jd_utc, ra, dec, dist, azimuth, altitude;
     double check_zenith, check_azimuth, check_altitude, check_ra, check_dec;
     object obj;
     sky_pos sky_ast;    /* astrometric (RA,DEC) */
@@ -830,11 +831,13 @@ static int CheckSkyPos(observer *location, const char *filename, int lnum, const
 
     *arcmin = 99999.0;
 
-    if (8 != sscanf(line, "s %9[A-Za-z] %lf %lf %lf %lf %lf %lf %lf", name, &jd_tt, &jd_utc, &ra, &dec, &dist, &azimuth, &altitude))
+    if (8 != sscanf(line, "s %9[A-Za-z] %lf %lf %lf %lf %lf %lf %lf", name, &tt, &ut, &ra, &dec, &dist, &azimuth, &altitude))
     {
         fprintf(stderr, "CheckSkyPos: Invalid format on line %d of file %s\n", lnum, filename);
         return 1;
     }
+    jd_tt = tt + T0;
+    jd_utc = ut + T0;
 
     body = LookupBody(name);
     if (body < 0)

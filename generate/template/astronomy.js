@@ -88,28 +88,24 @@ function DeltaT(mjd) {
     throw `Could not find Delta-T value for MJD=${mjd}`;
 }
 
+function TerrestrialTime(ut) {
+    return ut + DeltaT(ut + Y2000_IN_MJD)/86400;
+}
+
 function Time(date) {
     const MillisPerDay = 1000 * 3600 * 24;
 
     if (date instanceof Date) {
         this.date = date;
-        this.ut = (date - j2000) / MillisPerDay;        // ut = days since J2000.0
-        this.jd_utc = this.ut + T0;
-
-        let dt = DeltaT(this.ut + Y2000_IN_MJD) / 86400;
-        this.tt = this.ut + dt;
-        this.jd_tt = this.jd_utc + dt;
+        this.ut = (date - j2000) / MillisPerDay;
+        this.tt = TerrestrialTime(this.ut);
         return;
     }
 
     if (typeof date === 'number') {
         this.date = new Date(j2000 - (-date)*MillisPerDay);
         this.ut = date;
-        this.jd_utc = this.ut + T0;
-
-        let dt = DeltaT(this.ut + Y2000_IN_MJD) / 86400.0;
-        this.tt = this.ut + dt;
-        this.jd_tt = this.jd_utc + dt;
+        this.tt = TerrestrialTime(this.ut);
         return;
     }
 
