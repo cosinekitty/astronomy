@@ -316,14 +316,13 @@ function iau2000b(jd_high, jd_low) {
     };
  }
 
-function nutation_angles(t) {
-    var t1 = t * 36525;
-    var nut = iau2000b(T0, t1);
+function nutation_angles(time) {
+    var nut = iau2000b(T0, time.tt);
     return { dpsi: nut.dpsi/ASEC2RAD, deps: nut.deps/ASEC2RAD };
 }
 
-function mean_obliq(jd) {
-    var t = (jd - T0) / 36525;
+function mean_obliq(time) {
+    var t = time.tt / 36525;
     return (
         (((( -  0.0000000434   * t
              -  0.000000576  ) * t
@@ -335,15 +334,14 @@ function mean_obliq(jd) {
 
 var cache_e_tilt;
 
-function e_tilt(jd) {
-    if (!cache_e_tilt || Math.abs(cache_e_tilt.jd - jd) > 1.0e-6) {
-        const t = (jd - T0) / 36525;
-        const nut = nutation_angles(t);
-        const mean_obl_seconds = mean_obliq(jd);
+function e_tilt(time) {
+    if (!cache_e_tilt || Math.abs(cache_e_tilt.tt - time.tt) > 1.0e-6) {
+        const nut = nutation_angles(time);
+        const mean_obl_seconds = mean_obliq(time);
         const mean_ob = mean_obl_seconds / 3600;
         const true_ob = (mean_obl_seconds + nut.deps) / 3600;
         cache_e_tilt = {
-            jd: jd,
+            tt: time.tt,
             dpsi: nut.dpsi,
             deps: nut.deps,
             ee: nut.dpsi * Math.cos(mean_ob * DEG2RAD) / 15,
@@ -355,7 +353,7 @@ function e_tilt(jd) {
 }
 
 function ecl2equ_vec(time, pos) {
-    var obl = e_tilt(time.jd_tt).mobl * DEG2RAD;
+    var obl = e_tilt(time).mobl * DEG2RAD;
     var cos_obl = Math.cos(obl);
     var sin_obl = Math.sin(obl);
     return [
@@ -723,7 +721,7 @@ function sidereal_time(time, gst_type) {
         break;
 
     case 'gast':
-        eqeq = 15 * e_tilt(time.jd_tt).ee;
+        eqeq = 15 * e_tilt(time).ee;
         break;
 
     default:
@@ -768,7 +766,7 @@ function terra(observer, st) {
 }
 
 function nutation(time, direction, pos) {
-    const tilt = e_tilt(time.jd_tt);
+    const tilt = e_tilt(time);
     const oblm = tilt.mobl * DEG2RAD;
     const oblt = tilt.tobl * DEG2RAD;
     const psi = tilt.dpsi * ASEC2RAD;
@@ -808,7 +806,7 @@ function nutation(time, direction, pos) {
 
 function geo_pos(time, observer) {
     const gmst = sidereal_time(time, 'gmst');
-    const tilt = e_tilt(time.jd_tt);
+    const tilt = e_tilt(time);
     const gast = gmst + tilt.ee/3600;
     const pos1 = terra(observer, gast).pos;
     const pos2 = nutation(time, -1, pos1);
