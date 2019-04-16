@@ -13,7 +13,8 @@ IsInstalled()
 
 OUTDIR=../source
 EPHFILE=lnxp1600p2200.405
-EPHURL=ftp://ssd.jpl.nasa.gov/pub/eph/planets/Linux/de405/${EPHFILE}
+# EPHURL=ftp://ssd.jpl.nasa.gov/pub/eph/planets/Linux/de405/${EPHFILE}
+EPHURL=https://github.com/cosinekitty/ephemeris/raw/master/${EPHFILE}
 
 if [[ ! -f ${EPHFILE} ]]; then
     echo ""
