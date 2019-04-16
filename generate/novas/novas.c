@@ -7866,7 +7866,7 @@ short int cio_array (double jd_tdb, long int n_pts,
    VALUE:
       (short int)
          = 0 ... everything OK
-         = 1 ... error opening the 'cio_ra.bin' file.
+         = 1 ... error opening or reading the 'cio_ra.bin' file.
          = 2 ... 'jd_tdb' not in the range of the CIO file.
          = 3 ... 'n_pts' out of range.
          = 4 ... unable to allocate memory for the internal 't' array.
@@ -7942,16 +7942,23 @@ short int cio_array (double jd_tdb, long int n_pts,
 */
 
       if ((cio_file = fopen ("cio_ra.bin", "rb")) == NULL)
-         return (error = 1);
+      {
+         error = 1;
+         goto fail;
+      }
 
 /*
    Read the file header.
 */
 
-      fread (&jd_beg, double_size, (size_t) 1, cio_file);
-      fread (&jd_end, double_size, (size_t) 1, cio_file);
-      fread (&t_int, double_size, (size_t) 1, cio_file);
-      fread (&n_recs, long_size, (size_t) 1, cio_file);
+      if (1 != fread (&jd_beg, double_size, (size_t) 1, cio_file) ||
+          1 != fread (&jd_end, double_size, (size_t) 1, cio_file) ||
+          1 != fread (&t_int, double_size, (size_t) 1, cio_file) ||
+          1 != fread (&n_recs, long_size, (size_t) 1, cio_file))
+      {
+         error = 1;
+         goto fail;
+      }
    }
 
 /*
@@ -7980,22 +7987,23 @@ short int cio_array (double jd_tdb, long int n_pts,
       if (!first_call)
       {
          free (t);
+         t = NULL;
          free (ra);
+         ra = NULL;
       }
 
       t = (double *) calloc ((size_t) n_pts, double_size);
-      if (t == NULL )
+      if (t == NULL)
       {
-         fclose (cio_file);
-         return (error = 4);
+         error = 4;
+         goto fail;
       }
 
       ra = (double *) calloc ((size_t) n_pts, double_size);
-      if (ra == NULL )
+      if (ra == NULL)
       {
-         free (t);
-         fclose (cio_file);
-         return (error = 5);
+         error = 5;
+         goto fail;
       }
 
       first_call = 0;
@@ -8046,12 +8054,20 @@ short int cio_array (double jd_tdb, long int n_pts,
 
    if ((abs_del_index > n_pts) || (del_n_pts != 0))
    {
-      fseek (cio_file, bytes_to_lo, SEEK_SET);
+      if (fseek (cio_file, bytes_to_lo, SEEK_SET))
+      {
+         error = 1;
+         goto fail;
+      }
 
       for (i = 0L; i < n_pts; i++)
       {
-         fread (&t[i], double_size, (size_t) 1, cio_file);
-         fread (&ra[i], double_size, (size_t) 1, cio_file);
+         if (1 != fread (&t[i], double_size, (size_t) 1, cio_file) ||
+             1 != fread (&ra[i], double_size, (size_t) 1, cio_file))
+         {
+            error = 1;
+            goto fail;
+         }
       }
    }
 
@@ -8094,8 +8110,12 @@ short int cio_array (double jd_tdb, long int n_pts,
 
          for (i = 0L; i < n_read; i++)
          {
-            fread (&t[i], double_size, (size_t) 1, cio_file);
-            fread (&ra[i], double_size, (size_t) 1, cio_file);
+            if (1 != fread (&t[i], double_size, (size_t) 1, cio_file) ||
+                1 != fread (&ra[i], double_size, (size_t) 1, cio_file))
+            {
+               error = 1;
+               goto fail;
+            }
          }
       }
 
@@ -8117,14 +8137,21 @@ short int cio_array (double jd_tdb, long int n_pts,
             ra[i] = ra_temp;
          }
 
-         fseek (cio_file, bytes_to_lo + (n_swap * record_size),
-            SEEK_SET);
+         if (fseek (cio_file, bytes_to_lo + (n_swap * record_size), SEEK_SET))
+         {
+            error = 1;
+            goto fail;
+         }
 
          j = i++;
          for (i = j; i < n_pts; i++)
          {
-            fread (&t[i], double_size, (size_t) 1, cio_file);
-            fread (&ra[i], double_size, (size_t) 1, cio_file);
+            if (1 != fread (&t[i], double_size, (size_t) 1, cio_file) ||
+                1 != fread (&ra[i], double_size, (size_t) 1, cio_file))
+            {
+               error = 1;
+               goto fail;
+            }
          }
       }
    }
@@ -8151,6 +8178,26 @@ short int cio_array (double jd_tdb, long int n_pts,
 
    last_index_rec = index_rec;
    last_n_pts = n_pts;
+
+fail:
+   if (error)
+   {
+      if (t != NULL)
+      {
+         free(t);
+         t = NULL;
+      }
+      if (ra != NULL)
+      {
+         free(ra);
+         ra = NULL;
+      }
+      if (cio_file != NULL)
+      {
+         fclose (cio_file);
+         cio_file = NULL;
+      }
+   }
 
    return (error);
 }
