@@ -34,7 +34,8 @@ echo.Found executable: !GENEXE!
 
 set OUTDIR=..\source
 set EPHFILE=lnxp1600p2200.405
-set EPHURL=ftp://ssd.jpl.nasa.gov/pub/eph/planets/Linux/de405/!EPHFILE!
+REM set EPHURL=ftp://ssd.jpl.nasa.gov/pub/eph/planets/Linux/de405/!EPHFILE!
+set EPHURL=https://github.com/cosinekitty/ephemeris/raw/master/!EPHFILE!
 
 if not exist !EPHFILE! (
     echo.
@@ -55,9 +56,11 @@ if not exist !EPHFILE! (
     
     if defined curlexe (
         echo.Trying download using !curlexe! ...
-        !curlexe! -o !EPHFILE! !EPHURL!
+        !curlexe! -L -o !EPHFILE! !EPHURL!
         if not errorlevel 1 goto verify_eph
     )
+
+    if exist !EPHFILE! (del !EPHFILE!)
 
     echo.
     echo.Could not download the ephemeris file.
@@ -72,6 +75,7 @@ if not exist !EPHFILE! (
         !md5exe! -c ephemeris.md5
         if errorlevel 1 (
             echo.Corrupt ephemeris file !EPHFILE! detected.
+            if exist !EPHFILE! (del !EPHFILE!)
             exit /b 1
         )
     )
