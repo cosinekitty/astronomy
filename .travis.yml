@@ -1,5 +1,4 @@
 dist: trusty
-sudo: required
 
 language:
   - c
@@ -12,14 +11,11 @@ addons:
     sources:
       - ubuntu-toolchain-r-test
     packages:
-      - gcc-7
+      - gcc-6
 
 script:
-  - sudo ln -s /usr/bin/gcc-7 /usr/local/bin/gcc
-  - export CC=/usr/bin/gcc-7
-  - echo ${PATH}
-  - type gcc
-  - gcc -v
+  - export CC=/usr/bin/gcc-6
+  - ls -l ${CC} && ${CC} --version
   - cd generate && ./run
 
 branches:

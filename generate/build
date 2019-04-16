@@ -1,5 +1,8 @@
 #!/bin/bash
 
+[[ -z "${CC}" ]] && CC=gcc
+echo "$0: C compiler = ${CC}"
+
 if [[ "$1" == "debug" ]]; then
     BUILDOPT='-g -O0'
 elif [[ -z "$1" ]]; then
@@ -9,7 +12,7 @@ else
     exit 1
 fi
 
-gcc ${BUILDOPT} -Wall -Werror -o generate -I novas -I vsop \
+${CC} ${BUILDOPT} -Wall -Werror -o generate -I novas -I vsop \
     generate.c \
     earth.c \
     astro_vector.c \
@@ -25,4 +28,5 @@ gcc ${BUILDOPT} -Wall -Werror -o generate -I novas -I vsop \
     novas/eph_manager.c \
     -lm || exit $?
 
+echo "$0: Built 'generate' program."
 exit 0
