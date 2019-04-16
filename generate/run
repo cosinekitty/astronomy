@@ -25,7 +25,7 @@ if [[ ! -f ${EPHFILE} ]]; then
     if IsInstalled wget; then
         wget ${EPHURL} || Fail "Could not download using wget: ${EPHURL}"
     elif IsInstalled curl; then
-        curl -o ${EPHFILE} ${EPHURL} || Fail "Could not download using curl: ${EPHFILE}"
+        curl -L -o ${EPHFILE} ${EPHURL} || Fail "Could not download using curl: ${EPHFILE}"
     else
         echo "Neither wget nor curl is installed. Use your browser to download"
         echo "the above file from the NASA ftp site into this directory."
