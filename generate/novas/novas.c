@@ -7948,10 +7948,10 @@ short int cio_array (double jd_tdb, long int n_pts,
    Read the file header.
 */
 
-      fread (&jd_beg, double_size, (size_t) 1, cio_file);
-      fread (&jd_end, double_size, (size_t) 1, cio_file);
-      fread (&t_int, double_size, (size_t) 1, cio_file);
-      fread (&n_recs, long_size, (size_t) 1, cio_file);
+      (void)fread (&jd_beg, double_size, (size_t) 1, cio_file);
+      (void)fread (&jd_end, double_size, (size_t) 1, cio_file);
+      (void)fread (&t_int, double_size, (size_t) 1, cio_file);
+      (void)fread (&n_recs, long_size, (size_t) 1, cio_file);
    }
 
 /*
@@ -8050,8 +8050,8 @@ short int cio_array (double jd_tdb, long int n_pts,
 
       for (i = 0L; i < n_pts; i++)
       {
-         fread (&t[i], double_size, (size_t) 1, cio_file);
-         fread (&ra[i], double_size, (size_t) 1, cio_file);
+         (void)fread (&t[i], double_size, (size_t) 1, cio_file);
+         (void)fread (&ra[i], double_size, (size_t) 1, cio_file);
       }
    }
 
@@ -8094,8 +8094,8 @@ short int cio_array (double jd_tdb, long int n_pts,
 
          for (i = 0L; i < n_read; i++)
          {
-            fread (&t[i], double_size, (size_t) 1, cio_file);
-            fread (&ra[i], double_size, (size_t) 1, cio_file);
+            (void)fread (&t[i], double_size, (size_t) 1, cio_file);
+            (void)fread (&ra[i], double_size, (size_t) 1, cio_file);
          }
       }
 
@@ -8123,8 +8123,8 @@ short int cio_array (double jd_tdb, long int n_pts,
          j = i++;
          for (i = j; i < n_pts; i++)
          {
-            fread (&t[i], double_size, (size_t) 1, cio_file);
-            fread (&ra[i], double_size, (size_t) 1, cio_file);
+            (void)fread (&t[i], double_size, (size_t) 1, cio_file);
+            (void)fread (&ra[i], double_size, (size_t) 1, cio_file);
          }
       }
    }
