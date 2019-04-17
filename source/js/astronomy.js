@@ -18,6 +18,9 @@ const RAD2DEG = 57.295779513082321;
 const ASEC360 = 1296000;
 const ANGVEL = 7.2921150e-5;
 const AU_KM = 1.4959787069098932e+8;
+let ob2000;   // lazy-evaluated obliquity of the ecliptic at J2000, in radians
+let cos_ob2000;
+let sin_ob2000;
 
 function Frac(x) {
     return x - Math.floor(x);
@@ -1842,6 +1845,36 @@ Astronomy.SkyPos = function(gc_vector, observer) {     // based on NOVAS place()
         ofdate: ofdate_radec
     }
     return sky;
+}
+
+Astronomy.Ecliptic = function(gx, gy, gz) {
+    // (gx, gy, gz) are J2000 geocentric equatorial cartesian coordinates.
+    // Returns J2000 ecliptic latitude, longitude, and cartesian coordinates.
+    // Based on NOVAS functions equ2ecl() and equ2ecl_vec().
+    // You can call Astronomy.GeoVector() and use its (x, y, z) return values
+    // to pass in to this function.
+    if (ob2000 === undefined) {
+        // Lazy-evaluate and keep the obliquity of the ecliptic at J2000.
+        // This way we don't need to crunch the numbers more than once.
+        // Hack: make a fake Time object that has tt only, which is all we need.
+        ob2000 = DEG2RAD * e_tilt({tt: 0}).mobl;
+        cos_ob2000 = Math.cos(ob2000);
+        sin_ob2000 = Math.sin(ob2000);
+    }    
+
+    const ex =  gx;
+    const ey =  gy*cos_ob2000 + gz*sin_ob2000;
+    const ez = -gy*sin_ob2000 + gz*cos_ob2000;
+
+    const xyproj = Math.sqrt(ex*ex + ey*ey);
+    let elon = 0;
+    if (xyproj > 0) {
+        elon = RAD2DEG * Math.atan2(ey, ex);
+        if (elon < 0) elon += 360;
+    }
+    let elat = RAD2DEG * Math.atan2(ez, xyproj);
+
+    return { ex:ex, ey:ey, ez:ez, elat:elat, elon:elon };
 }
 
 Astronomy.GeoMoon = function(date) {
