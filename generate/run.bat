@@ -110,6 +110,12 @@ echo.Verifying against JPL Horizons data.
 call jplcheck.bat
 if errorlevel 1 (exit /b 1)
 
+
+echo.
+echo.Running test of moon phase search.
+node moon_phase_test.js
+if errorlevel 1 (exit /b 1)
+
 echo.
 echo.SUCCESS.
 exit /b 0
