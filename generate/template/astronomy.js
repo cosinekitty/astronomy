@@ -1019,8 +1019,7 @@ Astronomy.Ecliptic = function(gx, gy, gz) {
     if (ob2000 === undefined) {
         // Lazy-evaluate and keep the obliquity of the ecliptic at J2000.
         // This way we don't need to crunch the numbers more than once.
-        // Hack: make a fake Time object that has tt only, which is all we need.
-        ob2000 = DEG2RAD * e_tilt({tt: 0}).mobl;
+        ob2000 = DEG2RAD * e_tilt(AstroTime(j2000)).mobl;
         cos_ob2000 = Math.cos(ob2000);
         sin_ob2000 = Math.sin(ob2000);
     }    
