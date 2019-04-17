@@ -365,7 +365,9 @@ function ecl2equ_vec(time, pos) {
     ];
 }
 
-function CalcMoon(T) {
+function CalcMoon(time) {
+    const T = time.tt / 36525;
+
     function DeclareArray1(xmin, xmax) {
         var array = [];
         var i;
@@ -1007,8 +1009,7 @@ Astronomy.SkyPos = function(gc_vector, observer) {     // based on NOVAS place()
 
 Astronomy.GeoMoon = function(date) {
     var time = AstroTime(date);
-    var t = time.tt / 36525;   // t = centuries since J2000.0 epoch
-    var moon = CalcMoon(t);
+    var moon = CalcMoon(time);
 
     // Convert geocentric ecliptic spherical coords to cartesian coords.
     var dist_cos_lat = moon.distance_au * Math.cos(moon.geo_eclip_lat);    
