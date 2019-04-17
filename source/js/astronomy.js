@@ -18,7 +18,7 @@ const RAD2DEG = 57.295779513082321;
 const ASEC360 = 1296000;
 const ANGVEL = 7.2921150e-5;
 const AU_KM = 1.4959787069098932e+8;
-let ob2000;   // lazy-evaluated obliquity of the ecliptic at J2000, in radians
+let ob2000;   // lazy-evaluated mean obliquity of the ecliptic at J2000, in radians
 let cos_ob2000;
 let sin_ob2000;
 
