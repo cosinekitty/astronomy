@@ -1,0 +1,8 @@
+#!/bin/bash
+if ! git diff-files --quiet --ignore-submodules; then
+    echo "verify_clean: There are local file changes - build is not clean:"
+    git status --porcelain
+    exit 1
+fi
+echo "verify_clean: OK"
+exit 0

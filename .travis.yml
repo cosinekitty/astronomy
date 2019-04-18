@@ -16,7 +16,7 @@ addons:
 script:
   - export CC=/usr/bin/gcc-6
   - ls -l ${CC} && ${CC} --version
-  - cd generate && ./run
+  - cd generate && ./run && ./verify_clean
 
 branches:
     only:
