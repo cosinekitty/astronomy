@@ -47,8 +47,8 @@ function SearchYear(year, data, index) {
     let date = new Date(Date.UTC(year, 0, 1));
     let maxdiff = 0;
     let count = 0;
+    let mq = Astronomy.SearchMoonQuarter(date);
     while (index < data.length && data[index].date.getUTCFullYear() === year) {
-        let mq = Astronomy.SearchMoonQuarter(date);
 
         // Verify that we found anything at all.
         if (!mq) {
@@ -72,10 +72,10 @@ function SearchYear(year, data, index) {
         }
         maxdiff = Math.max(maxdiff, diff);
 
-        // Skip one day past this moon quarter for next search.
-        date = new Date(mq.time.date.getTime() + millis_per_day);
         ++index;
         ++count;
+        mq = Astronomy.NextMoonQuarter(mq);
+        date = mq.time.date;        
     }
     console.log(`SearchYear(${year}): count=${count}, maxdiff=${maxdiff.toFixed(3)}`);
     return 0;

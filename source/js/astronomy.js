@@ -19,6 +19,7 @@ const ASEC360 = 1296000;
 const ANGVEL = 7.2921150e-5;
 const AU_KM = 1.4959787069098932e+8;
 const mean_synodic_month = 29.530588;       // average number of days for Moon to return to the same phase
+const millis_per_day = 24*3600*1000;
 let ob2000;   // lazy-evaluated mean obliquity of the ecliptic at J2000, in radians
 let cos_ob2000;
 let sin_ob2000;
@@ -2117,6 +2118,12 @@ Astronomy.SearchMoonQuarter = function(dateStart) {
     let time = Astronomy.SearchMoonPhase(90 * quarter, dateStart, 10);
     if (!time) return null;
     return { quarter:quarter, time:time };
+}
+
+Astronomy.NextMoonQuarter = function(mq) {
+    // Skip one day past the previous found moon quarter to find the next one.
+    let date = new Date(mq.time.date.getTime() + millis_per_day);
+    return Astronomy.SearchMoonQuarter(date);
 }
 
 })(typeof exports==='undefined' ? (this.Astronomy={}) : exports);
