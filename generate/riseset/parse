@@ -1,0 +1,2 @@
+#!/bin/bash
+./parse_riseset.py | sort > riseset.txt
