@@ -18,6 +18,7 @@ const RAD2DEG = 57.295779513082321;
 const ASEC360 = 1296000;
 const ANGVEL = 7.2921150e-5;
 const AU_KM = 1.4959787069098932e+8;
+const mean_synodic_month = 29.530588;       // average number of days for Moon to return to the same phase
 let ob2000;   // lazy-evaluated mean obliquity of the ecliptic at J2000, in radians
 let cos_ob2000;
 let sin_ob2000;
@@ -952,7 +953,11 @@ function Time(date) {
     throw 'AstroTime() argument must be a Date object, a Time object, or a numeric UTC Julian date.';
 }
 
-Time.prototype.SubtractDays = function(days) {
+Time.prototype.toString = function() {
+    return this.date.toISOString();
+}
+
+Time.prototype.AddDays = function(days) {
     // This is slightly wrong, but the error is tiny.
     // We really should be subtracting TT, not UT.
     // But using TT would require creating an inverse function for DeltaT,
@@ -960,7 +965,11 @@ Time.prototype.SubtractDays = function(days) {
     // I estimate the error is in practice on the order of 10^(-7)
     // times the value of 'days'.
     // This is based on a typical drift of 1 second per year between UT and TT.
-    return new Time(this.ut - days);
+    return new Time(this.ut + days);
+}
+
+function InterpolateTime(time1, time2, fraction) {
+    return new Time(time1.ut + fraction*(time2.ut - time1.ut));
 }
 
 function AstroTime(date) {
@@ -1854,10 +1863,9 @@ Astronomy.Ecliptic = function(gx, gy, gz) {
     // You can call Astronomy.GeoVector() and use its (x, y, z) return values
     // to pass in to this function.
     if (ob2000 === undefined) {
-        // Lazy-evaluate and keep the obliquity of the ecliptic at J2000.
+        // Lazy-evaluate and keep the mean obliquity of the ecliptic at J2000.
         // This way we don't need to crunch the numbers more than once.
-        // Hack: make a fake Time object that has tt only, which is all we need.
-        ob2000 = DEG2RAD * e_tilt({tt: 0}).mobl;
+        ob2000 = DEG2RAD * e_tilt(AstroTime(j2000)).mobl;
         cos_ob2000 = Math.cos(ob2000);
         sin_ob2000 = Math.sin(ob2000);
     }    
@@ -2001,7 +2009,7 @@ Astronomy.GeoVector = function(body, date) {
         h = Astronomy.HelioVector(body, ltime);
         geo = { t:time, x:h.x-e.x, y:h.y-e.y, z:h.z-e.z, iter:iter };
         ltravel = Math.sqrt(geo.x*geo.x + geo.y*geo.y + geo.z*geo.z) / C_AUDAY;
-        let ltime2 = time.SubtractDays(ltravel);
+        let ltime2 = time.AddDays(-ltravel);
         dt = Math.abs(ltime2.tt - ltime.tt);
         if (dt < 1.0e-9) {
             return geo;
@@ -2009,6 +2017,106 @@ Astronomy.GeoVector = function(body, date) {
         ltime = ltime2;
     }
     throw `Light-travel time solver did not converge: dt=${dt}`;
+}
+
+function Search(func, teps, t1, t2) {
+    // Search for next time t (with time between t1 and t2).
+    // that func(t) crosses from a negative value to a non-negative value.
+    // The given function must have "smooth" behavior over the entire range [t1, t2],
+    // meaning that it behaves like a continuous differentiable function.
+    // It is not required that t1<t2; t1>t2 allows searching backward in time.
+    // Note: t1 and t2 must be chosen such that there is no possibility
+    // of more than one zero-crossing (ascending or descending), or it is possible
+    // that the "wrong" event will be found (i.e. not the first event after t1)
+    // or even that the function will return null, indicating no event found.
+    // This means some searches will not find any events, in which case the function
+    // should be called again with Search(func,t2,t3), and so on, until either
+    // giving up or finding the first event.
+    // For example, if searching for the next full moon, a good maximum span would be 14 days,
+    // which is less than a half of a synodic month (29.18 days).
+    // If the search fails (returns null), call again up to 2 more times
+    // with subsequent 14-day chunks.
+
+    let f1 = func(t1);
+    let f2 = func(t2);
+    while (true) {
+        let tmid = InterpolateTime(t1, t2, 0.5);
+
+        if (Math.abs(t2.tt - t1.tt) < teps) {
+            // We are close enough to the event to stop the binary search.
+            return tmid;
+        }
+
+        let fmid = func(tmid);
+        if (f1<0 && fmid>=0) {
+            t2 = tmid;
+            f2 = fmid;
+        } else if (fmid<0 && f2>=0) {
+            t1 = tmid;
+            f1 = fmid;
+        } else {
+            // Either there is no ascending zero-crossing in this range
+            // or the search window is too wide.
+            return null;
+        }
+    }
+}
+
+Astronomy.MoonPhase = function(date) {
+    const t = AstroTime(date);    
+    let gm = Astronomy.GeoVector('Moon', t);
+    const em = Astronomy.Ecliptic(gm.x, gm.y, gm.z);
+
+    let gs = Astronomy.GeoVector('Sun', t);
+    const es = Astronomy.Ecliptic(gs.x, gs.y, gs.z);
+
+    let phase = em.elon - es.elon;
+    while (phase < 0) phase += 360;
+    while (phase >= 360) phase -= 360;
+    return phase;
+}
+
+Astronomy.SearchMoonPhase = function(targetLon, dateStart, limitDays) {
+    function moon_offset(t) {
+        let offset = Astronomy.MoonPhase(t) - targetLon;
+
+        // Force offset into the range (-180, +180].
+        while (offset <= -180) offset += 360;
+        while (offset > 180) offset -= 360;
+        return offset;
+    }
+
+    // To avoid discontinuities in the moon_offset function causing problems,
+    // we need to approximate when that function will next return 0.
+    // We probe it with the start time and take advantage of the fact
+    // that every lunar phase repeats between 29 and 30 days.
+    // There is a surprising uncertainty in the quarter timing.
+    // I have seen up to 0.826 days away from the simple prediction.
+    // To be safe, we take the predicted time of the event and search
+    // +/-0.9 days around it (a 1.8-day wide window).
+    // But we must return null if the final result goes beyond limitDays after dateStart.
+    const uncertainty = 0.9;
+
+    let ta = AstroTime(dateStart);
+    let ya = moon_offset(ta);
+    if (ya > 0) ya -= 360;  // force searching forward in time, not backward
+    let est_dt = -(mean_synodic_month*ya)/360;
+    let dt1 = est_dt - uncertainty;
+    if (dt1 > limitDays) return null;   // not possible for moon phase to occur within the specified window
+    let dt2 = Math.min(limitDays, est_dt + uncertainty);
+    let t1 = ta.AddDays(dt1);
+    let t2 = ta.AddDays(dt2);
+    return Search(moon_offset, 1.0e-5, t1, t2);
+}
+
+Astronomy.SearchMoonQuarter = function(dateStart) {
+    // Determine what the next quarter phase will be.
+    let phaseStart = Astronomy.MoonPhase(dateStart);
+    let quarterStart = Math.floor(phaseStart / 90);
+    let quarter = (quarterStart + 1) % 4;
+    let time = Astronomy.SearchMoonPhase(90 * quarter, dateStart, 10);
+    if (!time) return null;
+    return { quarter:quarter, time:time };
 }
 
 })(typeof exports==='undefined' ? (this.Astronomy={}) : exports);
