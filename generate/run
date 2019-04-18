@@ -61,8 +61,9 @@ rm -f output/vsop_*.txt temp/*
 ./generate all || Fail "Could not generate target code."
 
 echo ""
-echo "Validating JavaScript code."
+echo "Running astro_check."
 node astro_check.js > temp/check.txt || Fail "Problem running JavaScript unit test."
+echo "Verifying astro_check output."
 ./generate check temp/check.txt || Fail "Verification failure for JavaScript unit test output."
 
 echo ""

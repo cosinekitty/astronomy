@@ -2116,13 +2116,12 @@ Astronomy.SearchMoonQuarter = function(dateStart) {
     let quarterStart = Math.floor(phaseStart / 90);
     let quarter = (quarterStart + 1) % 4;
     let time = Astronomy.SearchMoonPhase(90 * quarter, dateStart, 10);
-    if (!time) return null;
-    return { quarter:quarter, time:time };
+    return time && { quarter:quarter, time:time };
 }
 
 Astronomy.NextMoonQuarter = function(mq) {
-    // Skip one day past the previous found moon quarter to find the next one.
-    let date = new Date(mq.time.date.getTime() + millis_per_day);
+    // Skip 6 days past the previous found moon quarter to find the next one.
+    let date = new Date(mq.time.date.getTime() + 6*millis_per_day);
     return Astronomy.SearchMoonQuarter(date);
 }
 
