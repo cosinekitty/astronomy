@@ -1,6 +1,9 @@
 @echo off
 setlocal EnableDelayedExpansion
 
+call build.bat
+if errorlevel 1 (exit /b 1)
+
 if defined PROGRAMFILES(x86) (
     echo.Detected 64-bit Windows.
     for %%f in (

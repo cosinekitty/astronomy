@@ -6,4 +6,13 @@ if not exist "!msbuild!" (
     exit /b 1
 )
 
-"!msbuild!" ..\windows\generate\generate.sln /t:Rebuild /p:Configuration=Release /v:quiet /nologo /p:clp=Summary
+echo.Building generate.exe
+
+"!msbuild!" ..\windows\generate\generate.sln /p:Configuration=Release /v:quiet /nologo /p:clp=Summary
+if errorlevel 1 (
+    echo.BUILD FAILED.
+    exit /b 1
+)
+
+echo.Build succeeded.
+exit /b 0
