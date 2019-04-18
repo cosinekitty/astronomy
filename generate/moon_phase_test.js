@@ -42,7 +42,6 @@ function TestLongitudes(data) {
 
 function SearchYear(year, data, index) {
     const millis_per_minute = 60*1000;
-    const millis_per_day = 24*3600*1000;
     const threshold_minutes = 2;    // max tolerable prediction error in minutes
     let date = new Date(Date.UTC(year, 0, 1));
     let maxdiff = 0;
