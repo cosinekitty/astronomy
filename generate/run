@@ -55,10 +55,10 @@ echo "Building C source code for 'generate' program."
 ./build || Fail "Could not build 'generate' program from source."
 
 echo ""
-echo "Running the target code generator."
+echo "Generating planet models."
 mkdir -pv output temp || Fail "Error creating directories."
 rm -f output/vsop_*.txt temp/*
-./generate all || Fail "Could not generate target code."
+./generate planets || Fail "Could not generate planet models."
 
 ./unit_test || exit $?
 

@@ -94,7 +94,10 @@ for %%d in (output temp) do (
 )
 if exist output\vsop_*.txt (del /q output\vsop_*.txt)
 if exist temp\* (del /q temp\*)
-!GENEXE! all
+!GENEXE! planets
+if errorlevel 1 (exit /b 1)
+
+!GENEXE! source
 if errorlevel 1 (exit /b 1)
 
 echo.
