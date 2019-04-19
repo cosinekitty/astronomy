@@ -43,6 +43,7 @@ function Test() {
             observer = Astronomy.MakeObserver(evt.lat, evt.lon, 0);
             r_search_date = s_search_date = new Date(Date.UTC(evt.date.getUTCFullYear(), 0, 1));
             b_date = null;
+            console.log(`${body} ${evt.lat} ${evt.lon}`);
         }
 
         if (b_date) {
