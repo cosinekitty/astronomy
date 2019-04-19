@@ -10,6 +10,10 @@ echo "Generating target code."
 ./generate source || Fail "Problem generating target code."
 
 echo ""
+echo "Running rise/set test."
+node rise_set_test.js || Fail "Failed rise/set test."
+
+echo ""
 echo "Running astro_check."
 node astro_check.js > temp/check.txt || Fail "Problem running JavaScript unit test."
 echo "Verifying astro_check output."

@@ -20,6 +20,9 @@ const ANGVEL = 7.2921150e-5;
 const AU_KM = 1.4959787069098932e+8;
 const mean_synodic_month = 29.530588;       // average number of days for Moon to return to the same phase
 const millis_per_day = 24*3600*1000;
+const sun_radius_au   = 4.6505e-3;
+//const earth_radius_au = 4.2588e-5;
+const moon_radius_au = 1.15717e-5;
 let ob2000;   // lazy-evaluated mean obliquity of the ecliptic at J2000, in radians
 let cos_ob2000;
 let sin_ob2000;
@@ -1152,7 +1155,7 @@ Astronomy.HelioVector = function(body, date) {
         var m = Astronomy.GeoMoon(time);
         return { t:time, x:e.x+m.x, y:e.y+m.y, z:e.z+m.z };
     }
-    throw "Unknown body";
+    throw `Astronomy.HelioVector: Unknown body "${body}"`;
 };
 
 Astronomy.GeoVector = function(body, date) {
@@ -1172,7 +1175,8 @@ Astronomy.GeoVector = function(body, date) {
     for (let iter=0; iter < 10; ++iter) {
         h = Astronomy.HelioVector(body, ltime);
         geo = { t:time, x:h.x-e.x, y:h.y-e.y, z:h.z-e.z, iter:iter };
-        ltravel = Math.sqrt(geo.x*geo.x + geo.y*geo.y + geo.z*geo.z) / C_AUDAY;
+        geo.dist = Math.sqrt(geo.x*geo.x + geo.y*geo.y + geo.z*geo.z);
+        ltravel = geo.dist / C_AUDAY;
         let ltime2 = time.AddDays(-ltravel);
         dt = Math.abs(ltime2.tt - ltime.tt);
         if (dt < 1.0e-9) {
@@ -1286,6 +1290,39 @@ Astronomy.NextMoonQuarter = function(mq) {
     // Skip 6 days past the previous found moon quarter to find the next one.
     let date = new Date(mq.time.date.getTime() + 6*millis_per_day);
     return Astronomy.SearchMoonQuarter(date);
+}
+
+Astronomy.SearchRiseSet = function(body, observer, direction, dateStart, limitDays) {
+    // direction = +1 to find rise time, -1 to find set time.
+
+    // We calculate the apparent angular radius of the Sun and Moon, 
+    // but treat all other bodies as points.
+    let body_radius_au = { Sun:sun_radius_au, Moon:moon_radius_au }[body] || 0;
+
+    function peak_altitude(t) {
+        // Return the angular altitude above (positive) or below (negative)
+        // the horizon of the highest part (the peak) of the given object.
+        // This is defined as the altitude of the center of the body plus
+        // the body's angular radius.
+        const pos = Astronomy.GeoVector(body, t);
+        const sky = Astronomy.SkyPos(pos, observer);
+        const hor = Astronomy.Horizon(t, observer, sky.ofdate.ra, sky.ofdate.dec, 'sae');
+        
+        const alt = hor.altitude + RAD2DEG*(body_radius_au / sky.ofdate.dist);
+        return direction * alt;
+    }
+
+    const step = 0.1;   // FIXFIXFIX: this might not be enough for extreme latitudes
+    let ta = AstroTime(dateStart);
+    const tlimit = ta.AddDays(limitDays);
+    while (ta.tt < tlimit.tt) {
+        let tb = (ta.tt + step > tlimit.tt) ? tlimit : ta.AddDays(step);
+        let tx = Search(peak_altitude, 1.0e-5, ta, tb);
+        if (tx) return tx;
+        ta = tb;
+    }
+
+    return null;
 }
 
 })(typeof exports==='undefined' ? (this.Astronomy={}) : exports);
