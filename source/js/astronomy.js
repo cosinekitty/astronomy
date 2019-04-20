@@ -2126,22 +2126,27 @@ Astronomy.SearchMoonQuarter = function(dateStart) {
 
 Astronomy.NextMoonQuarter = function(mq) {
     // Skip 6 days past the previous found moon quarter to find the next one.
+    // This is less than the minimum possible increment.
+    // So far I have seen the interval well contained by the range (6.5, 8.3) days.
     let date = new Date(mq.time.date.getTime() + 6*millis_per_day);
     return Astronomy.SearchMoonQuarter(date);
 }
 
 Astronomy.SearchRiseSet = function(body, observer, direction, dateStart, limitDays) {
-    // direction = +1 to find rise time, -1 to find set time.
-
     // We calculate the apparent angular radius of the Sun and Moon, 
     // but treat all other bodies as points.
     let body_radius_au = { Sun:sun_radius_au, Moon:moon_radius_au }[body] || 0;
 
     function peak_altitude(t) {
-        // Return the angular altitude above (positive) or below (negative)
-        // the horizon of the highest part (the peak) of the given object.
+        // Return the angular altitude above or below the horizon
+        // of the highest part (the peak) of the given object.
         // This is defined as the altitude of the center of the body plus
         // the body's angular radius.
+        // The 'direction' variable in the enclosing function controls
+        // whether the angle is measured positive above the horizon or
+        // positive below the horizon, depending on whether the caller
+        // wants rise times or set times, respectively.
+
         const pos = Astronomy.GeoVector(body, t);
         const sky = Astronomy.SkyPos(pos, observer);
         const hor = Astronomy.Horizon(t, observer, sky.ofdate.ra, sky.ofdate.dec, 'sae');
@@ -2150,17 +2155,65 @@ Astronomy.SearchRiseSet = function(body, observer, direction, dateStart, limitDa
         return direction * alt;
     }
 
-    const step = 0.1;   // FIXFIXFIX: this might not be enough for extreme latitudes
-    let ta = AstroTime(dateStart);
-    const tlimit = ta.AddDays(limitDays);
-    while (ta.tt < tlimit.tt) {
-        let tb = (ta.tt + step > tlimit.tt) ? tlimit : ta.AddDays(step);
-        let tx = Search(peak_altitude, 1.0e-5, ta, tb);
-        if (tx) return tx;
-        ta = tb;
+    // See if object is currently above/below the horizon.
+    // If we are looking for next rise time and the object is below the horizon,
+    // we use the current time as the lower time bound and the next culmination
+    // as the upper bound.
+    // If the object is above the horizon, we search for the next bottom and use it
+    // as the lower bound and the next culmination after that bottom as the upper bound.
+    // The same logic applies for finding set times, only we swap the hour angles.
+    // The peak_altitude() function already considers the 'direction' parameter.
+
+    let ha_before, ha_after;
+    if (direction === +1) {
+        ha_before = 12;     // reaching the minimum altitude (bottom) comes BEFORE the object rises.
+        ha_after = 0;       // reaching the maximum altitude (culmination) comes AFTER the object rises.
+    } else if (direction === -1) {
+        ha_before = 0;      // reaching culmination comes BEFORE the object sets.
+        ha_after = 12;      // reaching bottom comes AFTER the object sets.
+    } else {
+        throw `Astronomy.SearchRiseSet: Invalid direction parameter ${direction} -- must be +1 or -1`;
     }
 
-    return null;
+    let time_start = AstroTime(dateStart);
+    let time_before;
+    let evt_before, evt_after;
+    let alt_before = peak_altitude(time_start);
+    let alt_after;
+    if (alt_before > 0) {
+        // We are past the sought event, so we have to wait for the next "before" event (culm/bottom).
+        evt_before = Astronomy.SearchHourAngle(body, observer, ha_before, time_start);
+        time_before = evt_before.time;
+        alt_before = peak_altitude(time_before);
+    } else {
+        // We are before or at the sought event, so we find the next "after" event (bottom/culm),
+        // and use the current time as the "before" event.
+        time_before = time_start;
+    }
+    evt_after = Astronomy.SearchHourAngle(body, observer, ha_after, time_before);
+    alt_after = peak_altitude(evt_after.time);
+
+    let iter = 0;
+    while (true) {
+        ++iter;
+
+        if (alt_before <= 0 && alt_after > 0) {
+            // Search between evt_before and evt_after for the desired event.
+            let tx = Search(peak_altitude, 1.0e-5, time_before, evt_after.time);
+            if (tx) 
+                return tx;
+        }
+
+        // If we didn't find the desired event, use time_after to find the next before-event.
+        evt_before = Astronomy.SearchHourAngle(body, observer, ha_before, evt_after.time);
+        evt_after = Astronomy.SearchHourAngle(body, observer, ha_after, evt_before.time);
+        if (evt_before.time.ut >= time_start.ut + limitDays)
+            return null;
+
+        time_before = evt_before.time;
+        alt_before = peak_altitude(evt_before.time);
+        alt_after = peak_altitude(evt_after.time);
+    }
 }
 
 Astronomy.SearchHourAngle = function(body, observer, hourAngle, dateStart) {

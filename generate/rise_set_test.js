@@ -12,9 +12,11 @@ function LoadTestData(filename) {
     const text = fs.readFileSync(filename, {encoding:'utf8'});
     const lines = text.trimRight().split('\n');
     let data = [];
+    let lnum = 0;
     for (let row of lines) {        
         let token = row.split(/\s+/g);
         data.push({
+            lnum: ++lnum,
             body: token[0],
             lon: parseFloat(token[1]),
             lat: parseFloat(token[2]),
@@ -76,7 +78,7 @@ function Test() {
         }
 
         if (a_dir !== evt.direction) {
-            Fail(`Expected ${body} dir=${evt.direction} at ${evt.date.toISOString()} but found ${a_dir} ${a_date.toString()}`);
+            Fail(`[line ${evt.lnum}] Expected ${body} dir=${evt.direction} at ${evt.date.toISOString()} but found ${a_dir} ${a_date.toString()}`);
         }
     }
 }

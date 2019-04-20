@@ -9,11 +9,9 @@ echo ""
 echo "Generating target code."
 ./generate source || Fail "Problem generating target code."
 
-if false; then
-    echo ""
-    echo "Running rise/set test."
-    node rise_set_test.js || Fail "Failed rise/set test."
-fi
+echo ""
+echo "Running rise/set test."
+node rise_set_test.js || Fail "Failed rise/set test."
 
 echo ""
 echo "Running astro_check."
