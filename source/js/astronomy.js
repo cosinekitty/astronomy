@@ -20,6 +20,7 @@ const ANGVEL = 7.2921150e-5;
 const AU_KM = 1.4959787069098932e+8;
 const mean_synodic_month = 29.530588;       // average number of days for Moon to return to the same phase
 const millis_per_day = 24*3600*1000;
+const solar_days_per_sidereal_day = 0.9972695717592592;
 const sun_radius_au   = 4.6505e-3;
 //const earth_radius_au = 4.2588e-5;
 const moon_radius_au = 1.15717e-5;
@@ -2160,6 +2161,53 @@ Astronomy.SearchRiseSet = function(body, observer, direction, dateStart, limitDa
     }
 
     return null;
+}
+
+Astronomy.SearchHourAngle = function(body, observer, hourAngle, dateStart) {
+    // Find the next time the given body is seen to reach the specified hour angle
+    // by the specified observer.
+    // Providing hourAngle=0 finds the next maximum altitude event (culmination).
+    // Providing hourAngle=12 finds the next minimum altitude event.
+    let time = AstroTime(dateStart);
+    let iter = 0;
+
+    while (true) {
+        ++iter;
+
+        // Calculate GMST at the given time.
+        let gmst = sidereal_time(time, 'gast');
+
+        // Find the equator-of-date (RA,DEC) for the body.
+        let pos = Astronomy.GeoVector(body, time);
+        let sky = Astronomy.SkyPos(pos, observer);
+
+        // Calculate the adjustment needed in sidereal time to bring
+        // the hour angle to the desired value.
+        let delta_sidereal_hours = ((hourAngle + sky.ofdate.ra - observer.longitude/15) - gmst) % 24;
+        if (iter === 1) {
+            // On the first iteration, always search forward in time.
+            if (delta_sidereal_hours < 0)
+                delta_sidereal_hours += 24;
+        } else {
+            // On subsequent iterations, we make the smallest possible adjustment,
+            // either forward or backward in time.
+            if (delta_sidereal_hours < -12)
+                delta_sidereal_hours += 24;
+            else if (delta_sidereal_hours > +12)
+                delta_sidereal_hours -= 24;
+        }
+
+        // If the error is tolerable (less than 0.1 seconds), stop searching.
+        if (Math.abs(delta_sidereal_hours) * 3600 < 0.1) {
+            const hor = Astronomy.Horizon(time, observer, sky.ofdate.ra, sky.ofdate.dec, 'sae');
+            return { time:time, pos:pos, sky:sky, hor:hor, iter:iter };
+        }
+
+        // We need to loop another time to get more accuracy.
+        // Update the terrestrial time adjusting by sidereal time.
+        let delta_days = (delta_sidereal_hours / 24) * solar_days_per_sidereal_day;
+        time = time.AddDays(delta_days);
+    }
 }
 
 })(typeof exports==='undefined' ? (this.Astronomy={}) : exports);
