@@ -37,6 +37,8 @@ function Test() {
     let r_search_date, r_date;
     let s_search_date, s_date;    
     let a_date, b_date, a_dir, b_dir;
+    let sum_minutes = 0;
+    let max_minutes = 0;
     for (let evt of data) {
         if (!observer || observer.latitude !== evt.lat || observer.longitude !== evt.lon || body !== evt.body) {
             // Every time we see a new geographic location, start a new iteration
@@ -80,7 +82,18 @@ function Test() {
         if (a_dir !== evt.direction) {
             Fail(`[line ${evt.lnum}] Expected ${body} dir=${evt.direction} at ${evt.date.toISOString()} but found ${a_dir} ${a_date.toString()}`);
         }
+
+        let error_minutes = Math.abs(a_date.date - evt.date) / 60000;
+        sum_minutes += error_minutes;
+        max_minutes = Math.max(max_minutes, error_minutes);
+        if (error_minutes > 100) {
+            console.log(`Expected ${evt.date.toISOString()}`);
+            console.log(`Found    ${a_date.toString()}`);
+            Fail(`Line ${evt.lnum} : error = ${error_minutes}`);
+        }
     }
+
+    console.log(`Rise/set error in minutes: mean=${sum_minutes/data.length}, max=${max_minutes}`);
 }
 
 Test();

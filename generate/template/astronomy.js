@@ -945,24 +945,29 @@ Astronomy.Horizon = function(date, location, ra, dec, refraction) {     // based
                 refr = refract(zd, location);
                 zd = zd0 - refr;
             } while (Math.abs(zd - zd1) > 3.0e-5);
-        } else if (refraction === 'sae' || refraction === 'jplhor') {
+        } else if (refraction === 'normal' || refraction === 'jplhor') {
             // http://extras.springer.com/1999/978-1-4471-0555-8/chap4/horizons/horizons.pdf
             // JPL Horizons says it uses refraction algorithm from 
             // Meeus "Astronomical Algorithms", 1991, p. 101-102.
             // I found the following Go implementation:
             // https://github.com/soniakeys/meeus/blob/master/v3/refraction/refract.go
             // This is a translation from the function "Saemundsson" there.
-            let hd = 90 - zd;
-            if (refraction === 'jplhor') {
-                // I found experimentally that JPL Horizons clamps the angle to 1 degree below the horizon.
-                // The only reason I'm including this is for a unit test that compares against
-                // JPL Horizons data. I recommend most users use the 'sae' option if they want refraction.
-                hd = Math.max(-1, hd);
-            }
+            // I found experimentally that JPL Horizons clamps the angle to 1 degree below the horizon.
+            // This is important because the 'refr' formula below goes crazy near hd = -5.11.
+            let hd = Math.max(-1, 90 - zd);
             refr = (1.02 / Math.tan((hd+10.3/(hd+5.11))*DEG2RAD)) / 60;
+
+            if (refraction === 'normal' && zd > 91) {
+                // In "normal" mode we gradually reduce refraction toward the nadir
+                // so that we never get an altitude angle less than -90 degrees.
+                // When horizon angle is -1 degrees, zd = 91, and the factor is exactly 1.
+                // As zd approaches 180 (the nadir), the fraction approaches 0 linearly.
+                refr *= (180 - zd) / 89;
+            }
+
             zd -= refr;
         } else {
-            throw 'If specified, refraction must be one of: "novas", "jplhor", "sae".';
+            throw 'If specified, refraction must be one of: "normal", "jplhor", "novas".';
         }
 
         if (refr > 0.0 && zd > 3.0e-4) {
@@ -1312,7 +1317,7 @@ Astronomy.SearchRiseSet = function(body, observer, direction, dateStart, limitDa
 
         const pos = Astronomy.GeoVector(body, t);
         const sky = Astronomy.SkyPos(pos, observer);
-        const hor = Astronomy.Horizon(t, observer, sky.ofdate.ra, sky.ofdate.dec, 'sae');
+        const hor = Astronomy.Horizon(t, observer, sky.ofdate.ra, sky.ofdate.dec, 'normal');
         
         const alt = hor.altitude + RAD2DEG*(body_radius_au / sky.ofdate.dist);
         return direction * alt;
@@ -1415,7 +1420,7 @@ Astronomy.SearchHourAngle = function(body, observer, hourAngle, dateStart) {
 
         // If the error is tolerable (less than 0.1 seconds), stop searching.
         if (Math.abs(delta_sidereal_hours) * 3600 < 0.1) {
-            const hor = Astronomy.Horizon(time, observer, sky.ofdate.ra, sky.ofdate.dec, 'sae');
+            const hor = Astronomy.Horizon(time, observer, sky.ofdate.ra, sky.ofdate.dec, 'normal');
             return { time:time, pos:pos, sky:sky, hor:hor, iter:iter };
         }
 
