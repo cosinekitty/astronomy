@@ -85,15 +85,18 @@ function Test() {
 
         let error_minutes = Math.abs(a_date.date - evt.date) / 60000;
         sum_minutes += error_minutes;
-        max_minutes = Math.max(max_minutes, error_minutes);
-        if (error_minutes > 100) {
+        if (error_minutes > max_minutes) {
+            max_minutes = error_minutes;
+            console.log(`Line ${evt.lnum} : error = ${error_minutes.toFixed(4)}`);
+        }
+        if (error_minutes > 2) {
             console.log(`Expected ${evt.date.toISOString()}`);
             console.log(`Found    ${a_date.toString()}`);
-            Fail(`Line ${evt.lnum} : error = ${error_minutes}`);
+            Fail("Excessive prediction time error.");
         }
     }
 
-    console.log(`Rise/set error in minutes: mean=${sum_minutes/data.length}, max=${max_minutes}`);
+    console.log(`Rise/set error in minutes: mean=${(sum_minutes/data.length).toFixed(4)}, max=${max_minutes.toFixed(4)}`);
 }
 
 Test();
