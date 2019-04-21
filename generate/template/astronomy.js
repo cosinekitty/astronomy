@@ -33,7 +33,8 @@ let sin_ob2000;
 
 function PerformanceInfo() {
     this.CallCount = {
-        search_func: 0
+        search_func: 0,
+        search: 0
     };
 }
 
@@ -1240,6 +1241,8 @@ function Search(func, teps, t1, t2) {
     // which is less than a half of a synodic month (29.18 days).
     // If the search fails (returns null), call again up to 2 more times
     // with subsequent 14-day chunks.
+
+    ++Perf.CallCount.search;
 
     let f1 = func(t1);
     let f2 = func(t2);
