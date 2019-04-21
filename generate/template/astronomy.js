@@ -1263,8 +1263,9 @@ Astronomy.SearchMoonPhase = function(targetLon, dateStart, limitDays) {
     // To avoid discontinuities in the moon_offset function causing problems,
     // we need to approximate when that function will next return 0.
     // We probe it with the start time and take advantage of the fact
-    // that every lunar phase repeats between 29 and 30 days.
-    // There is a surprising uncertainty in the quarter timing.
+    // that every lunar phase repeats roughly every 29.5 days.
+    // There is a surprising uncertainty in the quarter timing,
+    // due to the eccentricity of the moon's orbit.
     // I have seen up to 0.826 days away from the simple prediction.
     // To be safe, we take the predicted time of the event and search
     // +/-0.9 days around it (a 1.8-day wide window).
@@ -1395,8 +1396,8 @@ Astronomy.SearchHourAngle = function(body, observer, hourAngle, dateStart) {
     while (true) {
         ++iter;
 
-        // Calculate GMST at the given time.
-        let gmst = sidereal_time(time, 'gast');
+        // Calculate Greenwich Apparent Sidereal Time (GAST) at the given time.
+        let gast = sidereal_time(time, 'gast');
 
         // Find the equator-of-date (RA,DEC) for the body.
         let pos = Astronomy.GeoVector(body, time);
@@ -1404,7 +1405,7 @@ Astronomy.SearchHourAngle = function(body, observer, hourAngle, dateStart) {
 
         // Calculate the adjustment needed in sidereal time to bring
         // the hour angle to the desired value.
-        let delta_sidereal_hours = ((hourAngle + sky.ofdate.ra - observer.longitude/15) - gmst) % 24;
+        let delta_sidereal_hours = ((hourAngle + sky.ofdate.ra - observer.longitude/15) - gast) % 24;
         if (iter === 1) {
             // On the first iteration, always search forward in time.
             if (delta_sidereal_hours < 0)
