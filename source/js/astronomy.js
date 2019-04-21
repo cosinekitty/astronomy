@@ -28,6 +28,36 @@ let ob2000;   // lazy-evaluated mean obliquity of the ecliptic at J2000, in radi
 let cos_ob2000;
 let sin_ob2000;
 
+//========================================================================================
+// BEGIN performance measurement
+
+function PerformanceInfo() {
+    this.CallCount = {
+        search_func: 0
+    };
+}
+
+PerformanceInfo.prototype.Clone = function() {
+    const clone = new PerformanceInfo();
+    for (let tag in this.CallCount) {
+        clone.CallCount[tag] = this.CallCount[tag];
+    }
+    return clone;
+}
+
+let Perf = new PerformanceInfo();
+
+Astronomy.GetPerformanceMetrics = function() {
+    return Perf.Clone();
+}
+
+Astronomy.ResetPerformanceMetrics = function() {
+    Perf = new PerformanceInfo();
+}
+
+// END performance measurement
+//========================================================================================
+
 function Frac(x) {
     return x - Math.floor(x);
 }
@@ -2050,6 +2080,7 @@ function Search(func, teps, t1, t2) {
 
     let f1 = func(t1);
     let f2 = func(t2);
+    Perf.CallCount.search_func += 2;
     while (true) {
         let tmid = InterpolateTime(t1, t2, 0.5);
 
@@ -2059,6 +2090,7 @@ function Search(func, teps, t1, t2) {
         }
 
         let fmid = func(tmid);
+        ++Perf.CallCount.search_func;
         if (f1<0 && fmid>=0) {
             t2 = tmid;
             f2 = fmid;

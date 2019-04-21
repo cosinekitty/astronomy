@@ -32,6 +32,9 @@ function Test() {
 
     // The test data is sorted by body, then geographic location, then date/time.
 
+    Astronomy.ResetPerformanceMetrics();
+    const before_date = new Date();
+
     let body;
     let observer;
     let r_search_date, r_date;
@@ -96,8 +99,16 @@ function Test() {
         }
     }
 
+    const after_date = new Date();
+    const elapsed_seconds = (after_date - before_date) / 1000;
+
     console.log(`Rise/set error in minutes: mean=${(sum_minutes/data.length).toFixed(4)}, max=${max_minutes.toFixed(4)}`);
+
+    const perf = Astronomy.GetPerformanceMetrics();
+    console.log(`Search metrics: elapsed=${elapsed_seconds.toFixed(3)}, callcount=${perf.CallCount.search_func}`);
 }
 
+console.log(`rise_set_test: Beginning.`);
 Test();
+console.log(`rise_set_test: Finished.`);
 process.exit(0);
