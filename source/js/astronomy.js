@@ -2109,8 +2109,8 @@ function Search(func, teps, t1, t2) {
     // that the "wrong" event will be found (i.e. not the first event after t1)
     // or even that the function will return null, indicating no event found.
 
-    const curve_threshold = 2.0;
-    const quad_guess = 0.03;
+    const curve_threshold = 1.2;
+    const quad_guess = 0.031;
 
     ++Perf.CallCount.search;
 
