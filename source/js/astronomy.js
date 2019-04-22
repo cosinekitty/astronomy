@@ -2113,14 +2113,18 @@ function Search(func, max_slope, t1, t2, dt_tolerance_seconds = 0.1) {
     // that the "wrong" event will be found (i.e. not the first event after t1)
     // or even that the function will return null, indicating no event found.
 
+    function f(t) {
+        ++Perf.CallCount.search_func;
+        return func(t);
+    }
+
     const dt_days = dt_tolerance_seconds / seconds_per_day;
     const max_df = dt_days * max_slope;
 
     ++Perf.CallCount.search;
 
-    let f1 = func(t1);
-    let f2 = func(t2);
-    Perf.CallCount.search_func += 2;
+    let f1 = f(t1);
+    let f2 = f(t2);
 
     while (true) {
         let tmid = InterpolateTime(t1, t2, 0.5);
@@ -2131,9 +2135,7 @@ function Search(func, max_slope, t1, t2, dt_tolerance_seconds = 0.1) {
             return tmid;
         }
 
-        let fmid = func(tmid);
-        ++Perf.CallCount.search_func;
-
+        let fmid = f(tmid);
         // Quadratic interpolation:
         // Try to find a parabola that passes through the 3 points we have sampled:
         // (t1,f1), (tmid,fmid), (t2,f2).
@@ -2143,8 +2145,7 @@ function Search(func, max_slope, t1, t2, dt_tolerance_seconds = 0.1) {
         if (ut_q !== null) {
             // Evaluate the function at our candidate solution.
             let tq = AstroTime(ut_q);
-            let fq = func(tq);
-            ++Perf.CallCount.search_func;
+            let fq = f(tq);
 
             if (Math.abs(fq) < max_df) {
                 // The error in f(t) is small enough that we can deduce
