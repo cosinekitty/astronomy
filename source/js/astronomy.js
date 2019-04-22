@@ -19,9 +19,13 @@ const ASEC360 = 1296000;
 const ANGVEL = 7.2921150e-5;
 const AU_KM = 1.4959787069098932e+8;
 const mean_synodic_month = 29.530588;       // average number of days for Moon to return to the same phase
-const millis_per_day = 24*3600*1000;
+const max_moon_longitude_degrees_per_day = 90 / 6;      // ??? a guess... need to refine
+const max_altitude_degrees_per_day = 370;   // extra cushion for retrograde objects on celestial equator
+const seconds_per_day = 24 * 3600;
+const millis_per_day = seconds_per_day * 1000;
 const solar_days_per_sidereal_day = 0.9972695717592592;
 const sun_radius_au   = 4.6505e-3;
+const refraction_near_horizon = 34 / 60;        // degrees of refractive "lift" seen for objects near horizon
 //const earth_radius_au = 4.2588e-5;
 const moon_radius_au = 1.15717e-5;
 let ob2000;   // lazy-evaluated mean obliquity of the ecliptic at J2000, in radians
@@ -2094,11 +2098,11 @@ function QuadInterp(tm, dt, fa, fm, fb) {
     }
 
     let t = tm + x*dt;
-    return { curve:Q, time:t };
+    return t;
 }
 
 
-function Search(func, teps, t1, t2) {
+function Search(func, max_slope, t1, t2, dt_tolerance_seconds = 0.1) {
     // Search for next time t (with time between t1 and t2).
     // that func(t) crosses from a negative value to a non-negative value.
     // The given function must have "smooth" behavior over the entire range [t1, t2],
@@ -2109,8 +2113,8 @@ function Search(func, teps, t1, t2) {
     // that the "wrong" event will be found (i.e. not the first event after t1)
     // or even that the function will return null, indicating no event found.
 
-    const curve_threshold = 1.2;
-    const quad_guess = 0.031;
+    const dt_days = dt_tolerance_seconds / seconds_per_day;
+    const max_df = dt_days * max_slope;
 
     ++Perf.CallCount.search;
 
@@ -2122,7 +2126,7 @@ function Search(func, teps, t1, t2) {
         let tmid = InterpolateTime(t1, t2, 0.5);
         let dt = tmid.ut - t1.ut;
 
-        if (Math.abs(dt) < teps) {
+        if (Math.abs(dt) < dt_days) {
             // We are close enough to the event to stop the search.
             return tmid;
         }
@@ -2133,40 +2137,19 @@ function Search(func, teps, t1, t2) {
         // Quadratic interpolation:
         // Try to find a parabola that passes through the 3 points we have sampled:
         // (t1,f1), (tmid,fmid), (t2,f2).
-        // We are very cautious, so if anything goes wrong, we fall back
-        // to the older binary-search method.
-        let q = QuadInterp(tmid.ut, t2.ut - tmid.ut, f1, fmid, f2);
+        let ut_q = QuadInterp(tmid.ut, t2.ut - tmid.ut, f1, fmid, f2);
 
-        // Did we find an approximate root-crossing that is in range?
-        // Also, is the curvature of the parabola small enough that we think it is a good fit?
-        if (q !== null && Math.abs(q.curve) < curve_threshold) {
-            // Speculate that we can find a much smaller window than binary search can.
-            // We might guess wrong, in which case we lose efficiency.
-            // Hopefully we gain more often than we lose.
-            let ta;
-            let ut_a = q.time - dt*quad_guess;
-            if ((ut_a - t1.ut)*(ut_a - t2.ut) > 0) 
-                ta = t1;   // clamp to lower bound
-            else
-                ta = AstroTime(ut_a);
+        // Did we find an approximate root-crossing?
+        if (ut_q !== null) {
+            // Evaluate the function at our candidate solution.
+            let tq = AstroTime(ut_q);
+            let fq = func(tq);
+            ++Perf.CallCount.search_func;
 
-            let tb;
-            let ut_b = q.time + dt*quad_guess;
-            if ((ut_b - t1.ut)*(ut_b - t2.ut) > 0)
-                tb = t2;   // clamp to upper bound
-            else
-                tb = AstroTime(ut_b);
-
-            let fa = func(ta);
-            let fb = func(tb);
-            Perf.CallCount.search_func += 2;
-            if (fa<0 && fb>=0) {
-                // We guessed right!
-                t1 = ta;
-                t2 = tb;
-                f1 = fa;
-                f2 = fb;
-                continue;
+            if (Math.abs(fq) < max_df) {
+                // The error in f(t) is small enough that we can deduce
+                // the error in t is within tolerance.
+                return tq;
             }
         }
 
@@ -2233,7 +2216,7 @@ Astronomy.SearchMoonPhase = function(targetLon, dateStart, limitDays) {
     let dt2 = Math.min(limitDays, est_dt + uncertainty);
     let t1 = ta.AddDays(dt1);
     let t2 = ta.AddDays(dt2);
-    return Search(moon_offset, 1.0e-5, t1, t2);
+    return Search(moon_offset, max_moon_longitude_degrees_per_day, t1, t2);
 }
 
 Astronomy.SearchMoonQuarter = function(dateStart) {
@@ -2261,7 +2244,7 @@ Astronomy.SearchRiseSet = function(body, observer, direction, dateStart, limitDa
     function peak_altitude(t) {
         // Return the angular altitude above or below the horizon
         // of the highest part (the peak) of the given object.
-        // This is defined as the altitude of the center of the body plus
+        // This is defined as the apparent altitude of the center of the body plus
         // the body's angular radius.
         // The 'direction' variable in the enclosing function controls
         // whether the angle is measured positive above the horizon or
@@ -2270,9 +2253,9 @@ Astronomy.SearchRiseSet = function(body, observer, direction, dateStart, limitDa
 
         const pos = Astronomy.GeoVector(body, t);
         const sky = Astronomy.SkyPos(pos, observer);
-        const hor = Astronomy.Horizon(t, observer, sky.ofdate.ra, sky.ofdate.dec, 'normal');
+        const hor = Astronomy.Horizon(t, observer, sky.ofdate.ra, sky.ofdate.dec);
         
-        const alt = hor.altitude + RAD2DEG*(body_radius_au / sky.ofdate.dist);
+        const alt = hor.altitude + RAD2DEG*(body_radius_au / sky.ofdate.dist) + refraction_near_horizon;
         return direction * alt;
     }
 
@@ -2320,7 +2303,7 @@ Astronomy.SearchRiseSet = function(body, observer, direction, dateStart, limitDa
 
         if (alt_before <= 0 && alt_after > 0) {
             // Search between evt_before and evt_after for the desired event.
-            let tx = Search(peak_altitude, 1.0e-5, time_before, evt_after.time);
+            let tx = Search(peak_altitude, max_altitude_degrees_per_day, time_before, evt_after.time);
             if (tx) 
                 return tx;
         }
