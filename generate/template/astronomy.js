@@ -1261,11 +1261,12 @@ function QuadInterp(tm, dt, fa, fm, fb) {
     }
 
     let t = tm + x*dt;
-    return t;
+    let df_dt = (2*Q*x + R) / dt;
+    return { x:x, t:t, df_dt:df_dt };
 }
 
 
-function Search(func, max_slope, t1, t2, dt_tolerance_seconds = 0.1) {
+function Search(func, max_slope, t1, t2, dt_tolerance_seconds = 1) {
     // Search for next time t (with time between t1 and t2).
     // that func(t) crosses from a negative value to a non-negative value.
     // The given function must have "smooth" behavior over the entire range [t1, t2],
@@ -1288,7 +1289,9 @@ function Search(func, max_slope, t1, t2, dt_tolerance_seconds = 0.1) {
 
     let f1 = f(t1);
     let f2 = f(t2);
+    let fmid;
 
+    let calc_fmid = true;
     while (true) {
         let tmid = InterpolateTime(t1, t2, 0.5);
         let dt = tmid.ut - t1.ut;
@@ -1298,22 +1301,50 @@ function Search(func, max_slope, t1, t2, dt_tolerance_seconds = 0.1) {
             return tmid;
         }
 
-        let fmid = f(tmid);
+        if (calc_fmid)
+            fmid = f(tmid);
+        else
+            calc_fmid = true;   // we already have the correct value of fmid from the previous loop
+
         // Quadratic interpolation:
         // Try to find a parabola that passes through the 3 points we have sampled:
         // (t1,f1), (tmid,fmid), (t2,f2).
-        let ut_q = QuadInterp(tmid.ut, t2.ut - tmid.ut, f1, fmid, f2);
+        let q = QuadInterp(tmid.ut, t2.ut - tmid.ut, f1, fmid, f2);
 
         // Did we find an approximate root-crossing?
-        if (ut_q !== null) {
+        if (q) {
             // Evaluate the function at our candidate solution.
-            let tq = AstroTime(ut_q);
+            let tq = AstroTime(q.t);
             let fq = f(tq);
 
             if (Math.abs(fq) < max_df) {
                 // The error in f(t) is small enough that we can deduce
                 // the error in t is within tolerance.
                 return tq;
+            }
+
+            if (q.df_dt !== 0) {
+                // Try guessing a tighter boundary with the interpolated root at the center.
+                let dt_guess = 1.2 * Math.abs(fq / q.df_dt);
+                if (dt_guess < dt/10) {
+                    let tleft = tq.AddDays(-dt_guess);
+                    let tright = tq.AddDays(+dt_guess);
+                    if ((tleft.ut - t1.ut)*(tleft.ut - t2.ut) < 0) {
+                        if ((tright.ut - t1.ut)*(tright.ut - t2.ut) < 0) {
+                            let fleft = f(tleft);
+                            let fright = f(tright);
+                            if (fleft<0 && fright>=0) {
+                                f1 = fleft;
+                                f2 = fright;
+                                t1 = tleft;
+                                t2 = tright;
+                                fmid = fq;
+                                calc_fmid = false;
+                                continue;
+                            }
+                        }
+                    }
+                }
             }
         }
 
