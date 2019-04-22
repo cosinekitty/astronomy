@@ -1224,6 +1224,43 @@ Astronomy.GeoVector = function(body, date) {
     throw `Light-travel time solver did not converge: dt=${dt}`;
 }
 
+function QuadInterp(tm, dt, fa, fm, fb) {
+    let Q = (fb + fa)/2 - fm;
+    let R = (fb - fa)/2;
+    let S = fm;
+    let x;
+
+    if (Q == 0) {
+        // This is a line, not a parabola.
+        if (R == 0) {
+            // This is a HORIZONTAL line... can't make progress!
+            return null;
+        }
+        x = -S / R;
+        if (x < -1 || x > +1) return null;  // out of bounds        
+    } else {
+        // It really is a parabola. Find roots x1, x2.
+        let u = R*R - 4*Q*S;
+        if (u <= 0) return null;
+        let ru = Math.sqrt(u);
+        let x1 = (-R + ru) / (2 * Q);
+        let x2 = (-R - ru) / (2 * Q);
+
+        if (-1 <= x1 && x1 <= +1) {
+            if (-1 <= x2 && x2 <= +1) return null;
+            x = x1;
+        } else if (-1 <= x2 && x2 <= +1) {
+            x = x2;
+        } else {
+            return null;
+        }
+    }
+
+    let t = tm + x*dt;
+    return t;
+}
+
+
 function Search(func, teps, t1, t2) {
     // Search for next time t (with time between t1 and t2).
     // that func(t) crosses from a negative value to a non-negative value.
@@ -1234,40 +1271,105 @@ function Search(func, teps, t1, t2) {
     // of more than one zero-crossing (ascending or descending), or it is possible
     // that the "wrong" event will be found (i.e. not the first event after t1)
     // or even that the function will return null, indicating no event found.
-    // This means some searches will not find any events, in which case the function
-    // should be called again with Search(func,t2,t3), and so on, until either
-    // giving up or finding the first event.
-    // For example, if searching for the next full moon, a good maximum span would be 14 days,
-    // which is less than a half of a synodic month (29.18 days).
-    // If the search fails (returns null), call again up to 2 more times
-    // with subsequent 14-day chunks.
 
     ++Perf.CallCount.search;
 
     let f1 = func(t1);
     let f2 = func(t2);
     Perf.CallCount.search_func += 2;
+
     while (true) {
         let tmid = InterpolateTime(t1, t2, 0.5);
+        let dt_best = Math.abs(tmid.tt - t1.tt);
 
-        if (Math.abs(t2.tt - t1.tt) < teps) {
-            // We are close enough to the event to stop the binary search.
+        if (dt_best < teps) {
+            // We are close enough to the event to stop the search.
             return tmid;
         }
 
         let fmid = func(tmid);
         ++Perf.CallCount.search_func;
+
+        // Quadratic interpolation:
+        // Try to find a parabola that passes through the 3 points we have sampled:
+        // (t1,f1), (tmid,fmid), (t2,f2).
+        // We are very cautious, so if anything goes wrong, we fall back
+        // to the older binary-search method.
+        let uq = QuadInterp(tmid.ut, t2.ut - tmid.ut, f1, fmid, f2);
+
+        // Did we find an approximate root-crossing that is in range?
+        if (uq !== null) {
+            let tq = AstroTime(uq);     // convert from numeric UT to Time object
+            let fq = func(tq);
+            ++Perf.CallCount.search_func;
+
+            // See if we can make a tighter bounding time range than the binary search.
+            // The possibilities are:
+            // t1..tq
+            // tq..tmid
+            // tq..t2
+            // Pick whichever range, if any, that contains the ascending node we seek.
+            // If there are multiple choices, pick the one whose time span is the smallest.
+
+            let dt, tL, tH, fL, fH;
+            if (f1<0 && fq>=0) {
+                dt = Math.abs(t1.tt - tq.tt);
+                if (dt < dt_best) {
+                    dt_best = dt;
+                    tL = t1;
+                    tH = tq;
+                    fL = f1;
+                    fH = fq;
+                }
+            }
+
+            if (fq<0 && fmid>=0) {
+                dt = Math.abs(tq.tt - tmid.tt);
+                if (dt < dt_best) {
+                    dt_best = dt;
+                    tL = tq;
+                    tH = tmid;
+                    fL = fq;
+                    fH = fmid;
+                }
+            }
+
+            if (fq<0 && f2>=0) {
+                dt = Math.abs(tq.tt - t2.tt);
+                if (dt < dt_best) {
+                    dt_best = dt;
+                    tL = tq;
+                    tH = t2;
+                    fL = fq;
+                    fH = f2;
+                }
+            }
+
+            if (tL) {
+                // We found a smaller time span than the binary search would. Use it!
+                t1 = tL;
+                t2 = tH;
+                f1 = fL;
+                f2 = fH;
+                continue;
+            }
+        }
+
         if (f1<0 && fmid>=0) {
             t2 = tmid;
             f2 = fmid;
-        } else if (fmid<0 && f2>=0) {
+            continue;
+        } 
+        
+        if (fmid<0 && f2>=0) {
             t1 = tmid;
             f1 = fmid;
-        } else {
-            // Either there is no ascending zero-crossing in this range
-            // or the search window is too wide.
-            return null;
+            continue;
         }
+
+        // Either there is no ascending zero-crossing in this range
+        // or the search window is too wide.
+        return null;
     }
 }
 
