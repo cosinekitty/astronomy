@@ -1257,7 +1257,7 @@ function QuadInterp(tm, dt, fa, fm, fb) {
     }
 
     let t = tm + x*dt;
-    return t;
+    return { curve:Q, time:t };
 }
 
 
@@ -1272,6 +1272,9 @@ function Search(func, teps, t1, t2) {
     // that the "wrong" event will be found (i.e. not the first event after t1)
     // or even that the function will return null, indicating no event found.
 
+    const curve_threshold = 2.0;
+    const quad_guess = 0.03;
+
     ++Perf.CallCount.search;
 
     let f1 = func(t1);
@@ -1280,9 +1283,9 @@ function Search(func, teps, t1, t2) {
 
     while (true) {
         let tmid = InterpolateTime(t1, t2, 0.5);
-        let dt_best = Math.abs(tmid.tt - t1.tt);
+        let dt = tmid.ut - t1.ut;
 
-        if (dt_best < teps) {
+        if (Math.abs(dt) < teps) {
             // We are close enough to the event to stop the search.
             return tmid;
         }
@@ -1295,62 +1298,37 @@ function Search(func, teps, t1, t2) {
         // (t1,f1), (tmid,fmid), (t2,f2).
         // We are very cautious, so if anything goes wrong, we fall back
         // to the older binary-search method.
-        let uq = QuadInterp(tmid.ut, t2.ut - tmid.ut, f1, fmid, f2);
+        let q = QuadInterp(tmid.ut, t2.ut - tmid.ut, f1, fmid, f2);
 
         // Did we find an approximate root-crossing that is in range?
-        if (uq !== null) {
-            let tq = AstroTime(uq);     // convert from numeric UT to Time object
-            let fq = func(tq);
-            ++Perf.CallCount.search_func;
+        // Also, is the curvature of the parabola small enough that we think it is a good fit?
+        if (q !== null && Math.abs(q.curve) < curve_threshold) {
+            // Speculate that we can find a much smaller window than binary search can.
+            // We might guess wrong, in which case we lose efficiency.
+            // Hopefully we gain more often than we lose.
+            let ta;
+            let ut_a = q.time - dt*quad_guess;
+            if ((ut_a - t1.ut)*(ut_a - t2.ut) > 0) 
+                ta = t1;   // clamp to lower bound
+            else
+                ta = AstroTime(ut_a);
 
-            // See if we can make a tighter bounding time range than the binary search.
-            // The possibilities are:
-            // t1..tq
-            // tq..tmid
-            // tq..t2
-            // Pick whichever range, if any, that contains the ascending node we seek.
-            // If there are multiple choices, pick the one whose time span is the smallest.
+            let tb;
+            let ut_b = q.time + dt*quad_guess;
+            if ((ut_b - t1.ut)*(ut_b - t2.ut) > 0)
+                tb = t2;   // clamp to upper bound
+            else
+                tb = AstroTime(ut_b);
 
-            let dt, tL, tH, fL, fH;
-            if (f1<0 && fq>=0) {
-                dt = Math.abs(t1.tt - tq.tt);
-                if (dt < dt_best) {
-                    dt_best = dt;
-                    tL = t1;
-                    tH = tq;
-                    fL = f1;
-                    fH = fq;
-                }
-            }
-
-            if (fq<0 && fmid>=0) {
-                dt = Math.abs(tq.tt - tmid.tt);
-                if (dt < dt_best) {
-                    dt_best = dt;
-                    tL = tq;
-                    tH = tmid;
-                    fL = fq;
-                    fH = fmid;
-                }
-            }
-
-            if (fq<0 && f2>=0) {
-                dt = Math.abs(tq.tt - t2.tt);
-                if (dt < dt_best) {
-                    dt_best = dt;
-                    tL = tq;
-                    tH = t2;
-                    fL = fq;
-                    fH = f2;
-                }
-            }
-
-            if (tL) {
-                // We found a smaller time span than the binary search would. Use it!
-                t1 = tL;
-                t2 = tH;
-                f1 = fL;
-                f2 = fH;
+            let fa = func(ta);
+            let fb = func(tb);
+            Perf.CallCount.search_func += 2;
+            if (fa<0 && fb>=0) {
+                // We guessed right!
+                t1 = ta;
+                t2 = tb;
+                f1 = fa;
+                f2 = fb;
                 continue;
             }
         }
