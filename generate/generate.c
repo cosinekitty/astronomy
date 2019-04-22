@@ -85,6 +85,7 @@ static int ManualResample(int body, int npoly, int nsections, int startYear, int
 static int CheckTestOutput(const char *filename);
 static vsop_body_t LookupBody(const char *name);
 static int CheckSkyPos(observer *location, const char *filename, int lnum, const char *line, double *arcmin);
+static int UnitTestChebyshev(void);
 
 #define MOON_PERIGEE        0.00238
 #define MERCURY_APHELION    0.466697
@@ -131,6 +132,9 @@ int main(int argc, const char *argv[])
     if (argc == 3 && !strcmp(argv[1], "check"))
         return CheckTestOutput(argv[2]);
 
+    if (argc == 2 && !strcmp(argv[1], "chebyshev"))
+        return UnitTestChebyshev();
+
     return PrintUsage();
 }
 
@@ -148,6 +152,9 @@ static int PrintUsage(void)
         "\n"
         "generate source\n"
         "    Generate source code after running 'generate planets'.\n"
+        "\n"
+        "generate chebyshev\n"
+        "    Run unit test on Chebyshev interpolator.\n"
         "\n"
     );
 
@@ -1033,5 +1040,69 @@ static int CheckTestOutput(const char *filename)
 fail:
     ephem_close();
     if (infile != NULL) fclose(infile);
+    return error;
+}
+
+static int TestChebFunc(const void *context, double t, double f[CHEB_MAX_DIM])
+{
+    (void)context;
+    f[0] = cos(t) - t;
+    return 0;
+}
+
+static void DumpAlpha(const double alpha[CHEB_MAX_POLYS][CHEB_MAX_POLYS], int npoly)
+{
+    int j, k;
+
+    for (j=0; j < npoly; ++j)
+    {
+        printf("alpha[%d][...] = ", j);
+        for (k=0; k < npoly; ++k)
+        {
+            printf(" %15.12lf", alpha[j][k]);
+        }
+        printf("\n");
+    }
+}
+
+static int UnitTestChebyshev(void)
+{
+    const int npoly = 5;
+    const int ndimen = 1;
+    const double t1 = 0.6;
+    const double t2 = 0.8;
+    int error;
+    int i;
+    double x, t, f_exact, f_approx;
+    ChebEncoder encoder;
+    double coeff[CHEB_MAX_DIM][CHEB_MAX_POLYS];
+
+    error = ChebInit(&encoder, npoly, ndimen);
+    if (error)
+    {
+        fprintf(stderr, "UnitTestChebyshev: ChebInit returned error %d\n", error);
+        goto fail;
+    }
+
+    error = ChebGenerate(&encoder, TestChebFunc, NULL, t1, t2, coeff);
+    if (error)
+    {
+        fprintf(stderr, "UnitTestChebyshev: ChebGenerate returned error %d\n", error);
+        goto fail;
+    }
+
+    DumpAlpha(encoder.Alpha, encoder.NumPoly);
+
+    /* Verify that the values are exact at all the sample points. */
+    for (i=0; i < npoly; ++i)
+    {
+        x = (2.0 * i)/(npoly-1) - 1.0;
+        t = t1 + (t2-t1)*((double)i / (npoly-1));
+        TestChebFunc(NULL, t, &f_exact);
+        ChebApprox(npoly, ndimen, coeff, x, &f_approx);
+        printf("UnitTestChebyshev: i=%d, x=%5.2lf, t=%0.4lf, f_exact=%12.9lf, f_approx=%12.9lf, error=%lg\n", i, x, t, f_exact, f_approx, f_approx - f_exact);
+    }
+
+fail:
     return error;
 }
