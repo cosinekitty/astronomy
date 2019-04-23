@@ -1290,8 +1290,13 @@ function Search(func, t1, t2, options) {
     let f2 = (options && options.init_f2) || f(t2);
     let fmid;
 
+    let iter = 0;
+    let iter_limit = (options && options.iter_limit) || 20;
     let calc_fmid = true;
     while (true) {
+        if (++iter > iter_limit)
+            throw `Excessive iteration in Search()`;
+
         let tmid = InterpolateTime(t1, t2, 0.5);
         let dt = tmid.ut - t1.ut;
 
