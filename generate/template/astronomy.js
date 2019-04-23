@@ -765,25 +765,10 @@ function era(time) {    // Earth Rotation Angle
     return theta;
 }
 
-function sidereal_time(time, gst_type) {
+function sidereal_time(time) {          // calculates Greenwich Apparent Sidereal Time (GAST)
     const t = time.tt / 36525;
-    let eqeq;
-
-    switch (gst_type) {
-    case 'gmst':
-        eqeq = 0.0;
-        break;
-
-    case 'gast':
-        eqeq = 15 * e_tilt(time).ee;
-        break;
-
-    default:
-        throw 'gst_type must be either "gmst" or "gast"';
-    }
-    
+    let eqeq = 15 * e_tilt(time).ee;    // Replace with eqeq=0 to get GMST instead of GAST (if we ever need it) 
     const theta = era(time);
-
     const st = (eqeq + 0.014506 +
         (((( -    0.0000000368   * t
             -    0.000029956  ) * t
@@ -859,9 +844,7 @@ function nutation(time, direction, pos) {
 }
 
 function geo_pos(time, observer) {
-    const gmst = sidereal_time(time, 'gmst');
-    const tilt = e_tilt(time);
-    const gast = gmst + tilt.ee/3600;
+    const gast = sidereal_time(time);
     const pos1 = terra(observer, gast).pos;
     const pos2 = nutation(time, -1, pos1);
     const pos3 = precession(time.tt, pos2, 0);
@@ -913,7 +896,7 @@ function spin(angle, pos1) {
 }
 
 function ter2cel(time, vec1) {
-    const gast = sidereal_time(time, 'gast');
+    const gast = sidereal_time(time);
     let vec2 = spin(-15 * gast, vec1);
     return vec2;
 }
@@ -1533,7 +1516,7 @@ Astronomy.SearchHourAngle = function(body, observer, hourAngle, dateStart) {
         ++iter;
 
         // Calculate Greenwich Apparent Sidereal Time (GAST) at the given time.
-        let gast = sidereal_time(time, 'gast');
+        let gast = sidereal_time(time);
 
         // Find the equator-of-date (RA,DEC) for the body.
         let pos = Astronomy.GeoVector(body, time);
