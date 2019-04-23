@@ -19,8 +19,6 @@ const ASEC360 = 1296000;
 const ANGVEL = 7.2921150e-5;
 const AU_KM = 1.4959787069098932e+8;
 const mean_synodic_month = 29.530588;       // average number of days for Moon to return to the same phase
-const max_moon_longitude_degrees_per_day = 90 / 6;      // ??? a guess... need to refine
-const max_altitude_degrees_per_day = 370;   // extra cushion for retrograde objects on celestial equator
 const seconds_per_day = 24 * 3600;
 const millis_per_day = seconds_per_day * 1000;
 const solar_days_per_sidereal_day = 0.9972695717592592;
@@ -1266,7 +1264,7 @@ function QuadInterp(tm, dt, fa, fm, fb) {
 }
 
 
-function Search(func, max_slope, t1, t2, dt_tolerance_seconds = 1) {
+function Search(func, t1, t2, dt_tolerance_seconds = 1) {
     // Search for next time t (with time between t1 and t2).
     // that func(t) crosses from a negative value to a non-negative value.
     // The given function must have "smooth" behavior over the entire range [t1, t2],
@@ -1283,7 +1281,6 @@ function Search(func, max_slope, t1, t2, dt_tolerance_seconds = 1) {
     }
 
     const dt_days = dt_tolerance_seconds / seconds_per_day;
-    const max_df = dt_days * max_slope;
 
     ++Perf.CallCount.search;
 
@@ -1317,13 +1314,12 @@ function Search(func, max_slope, t1, t2, dt_tolerance_seconds = 1) {
             let tq = AstroTime(q.t);
             let fq = f(tq);
 
-            if (Math.abs(fq) < max_df) {
-                // The error in f(t) is small enough that we can deduce
-                // the error in t is within tolerance.
-                return tq;
-            }
-
             if (q.df_dt !== 0) {
+                if (Math.abs(fq / q.df_dt) < dt_days) {
+                    // The estimated time error is small enough that we can quit now.
+                    return tq;
+                }
+    
                 // Try guessing a tighter boundary with the interpolated root at the center.
                 let dt_guess = 1.2 * Math.abs(fq / q.df_dt);
                 if (dt_guess < dt/10) {
@@ -1411,7 +1407,7 @@ Astronomy.SearchMoonPhase = function(targetLon, dateStart, limitDays) {
     let dt2 = Math.min(limitDays, est_dt + uncertainty);
     let t1 = ta.AddDays(dt1);
     let t2 = ta.AddDays(dt2);
-    return Search(moon_offset, max_moon_longitude_degrees_per_day, t1, t2);
+    return Search(moon_offset, t1, t2);
 }
 
 Astronomy.SearchMoonQuarter = function(dateStart) {
@@ -1498,7 +1494,7 @@ Astronomy.SearchRiseSet = function(body, observer, direction, dateStart, limitDa
 
         if (alt_before <= 0 && alt_after > 0) {
             // Search between evt_before and evt_after for the desired event.
-            let tx = Search(peak_altitude, max_altitude_degrees_per_day, time_before, evt_after.time);
+            let tx = Search(peak_altitude, time_before, evt_after.time);
             if (tx) 
                 return tx;
         }
