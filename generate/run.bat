@@ -104,6 +104,11 @@ if errorlevel 1 (exit /b 1)
 if errorlevel 1 (exit /b 1)
 
 echo.
+echo Running rise/set test.
+node rise_set_test.js
+if errorlevel 1 (exit /b 1)
+
+echo.
 echo.Validating JavaScript code.
 node astro_check.js > temp/check.txt
 if errorlevel 1 (exit /b 1)
@@ -115,7 +120,6 @@ echo.
 echo.Verifying against JPL Horizons data.
 call jplcheck.bat
 if errorlevel 1 (exit /b 1)
-
 
 echo.
 echo.Running test of moon phase search.
