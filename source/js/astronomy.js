@@ -2052,6 +2052,9 @@ Astronomy.GeoVector = function(body, date) {
         h = Astronomy.HelioVector(body, ltime);
         geo = { t:time, x:h.x-e.x, y:h.y-e.y, z:h.z-e.z, iter:iter };
         geo.dist = Math.sqrt(geo.x*geo.x + geo.y*geo.y + geo.z*geo.z);
+        if (body === 'Sun') {
+            return geo;     // The Sun's heliocentric coordinates are always (0,0,0). No need to correct.
+        }
         ltravel = geo.dist / C_AUDAY;
         let ltime2 = time.AddDays(-ltravel);
         dt = Math.abs(ltime2.tt - ltime.tt);
