@@ -1024,8 +1024,34 @@ Astronomy.MakeObserver = function(latitude_degrees, longitude_degrees, height_in
     return new Observer(latitude_degrees, longitude_degrees, height_in_meters);
 }
 
+Astronomy.SunPosition = function(date) {    // returns geocentric true ecliptic coordinates of date for the Sun
+    const time = AstroTime(date);
+
+    // Get heliocentric cartesian coordinates of Earth in J2000.
+    const earth2000 = CalcVsop(vsop.Earth, time);
+
+    // Convert to geocentric location of the Sun.
+    const sun2000 = [-earth2000.x, -earth2000.y, -earth2000.z];
+
+    // Convert to equator-of-date equatorial cartesian coordinates.
+    const stemp = precession(0, sun2000, time.tt);
+    const sun_ofdate = nutation(time, 0, stemp);
+
+    // Convert to ecliptic coordinates of date.
+    const true_obliq = DEG2RAD * e_tilt(time).tobl;
+    const cos_ob = Math.cos(true_obliq);
+    const sin_ob = Math.sin(true_obliq);
+
+    const gx = sun_ofdate[0];
+    const gy = sun_ofdate[1];
+    const gz = sun_ofdate[2];
+
+    const sun_ecliptic = RotateEquatorialToEcliptic(gx, gy, gz, cos_ob, sin_ob);
+    return sun_ecliptic;
+}
+
 Astronomy.SkyPos = function(gc_vector, observer) {     // based on NOVAS place()
-    const gc_observer = geo_pos(gc_vector.t, observer);        // vector from geocenter to observer
+    const gc_observer = observer ? geo_pos(gc_vector.t, observer) : [0,0,0];        // vector from geocenter to observer
     const j2000_vector = [
         gc_vector.x - gc_observer[0], 
         gc_vector.y - gc_observer[1], 
@@ -1045,6 +1071,23 @@ Astronomy.SkyPos = function(gc_vector, observer) {     // based on NOVAS place()
     return sky;
 }
 
+function RotateEquatorialToEcliptic(gx, gy, gz, cos_ob, sin_ob) {
+    // Rotate equatorial vector to obtain ecliptic vector.
+    const ex =  gx;
+    const ey =  gy*cos_ob + gz*sin_ob;
+    const ez = -gy*sin_ob + gz*cos_ob;
+
+    const xyproj = Math.sqrt(ex*ex + ey*ey);
+    let elon = 0;
+    if (xyproj > 0) {
+        elon = RAD2DEG * Math.atan2(ey, ex);
+        if (elon < 0) elon += 360;
+    }
+    let elat = RAD2DEG * Math.atan2(ez, xyproj);
+
+    return { ex:ex, ey:ey, ez:ez, elat:elat, elon:elon };
+}
+
 Astronomy.Ecliptic = function(gx, gy, gz) {
     // (gx, gy, gz) are J2000 geocentric equatorial cartesian coordinates.
     // Returns J2000 ecliptic latitude, longitude, and cartesian coordinates.
@@ -1059,19 +1102,7 @@ Astronomy.Ecliptic = function(gx, gy, gz) {
         sin_ob2000 = Math.sin(ob2000);
     }    
 
-    const ex =  gx;
-    const ey =  gy*cos_ob2000 + gz*sin_ob2000;
-    const ez = -gy*sin_ob2000 + gz*cos_ob2000;
-
-    const xyproj = Math.sqrt(ex*ex + ey*ey);
-    let elon = 0;
-    if (xyproj > 0) {
-        elon = RAD2DEG * Math.atan2(ey, ex);
-        if (elon < 0) elon += 360;
-    }
-    let elat = RAD2DEG * Math.atan2(ez, xyproj);
-
-    return { ex:ex, ey:ey, ez:ez, elat:elat, elon:elon };
+    return RotateEquatorialToEcliptic(gx, gy, gz, cos_ob2000, sin_ob2000);
 }
 
 Astronomy.GeoMoon = function(date) {

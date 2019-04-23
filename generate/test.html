@@ -63,6 +63,13 @@
                         cell.innerText = culm.time.date.toLocaleTimeString();
                     }
                 }
+
+                const sun = Astronomy.SunPosition(now);
+                document.getElementById('SunEcliptic_x').innerText = sun.ex.toFixed(6);
+                document.getElementById('SunEcliptic_y').innerText = sun.ey.toFixed(6);
+                document.getElementById('SunEcliptic_z').innerText = sun.ez.toFixed(6);
+                document.getElementById('SunEcliptic_lat').innerText = sun.elat.toFixed(6);
+                document.getElementById('SunEcliptic_lon').innerText = sun.elon.toFixed(6);
             }
         </script>
     </head>
@@ -171,6 +178,32 @@
                 <td id='az_Pluto'></td>
                 <td id='alt_Pluto'></td>
                 <td id='culm_Pluto'></td>
+            </tr>
+        </table>
+
+        <br>
+        <br>
+        <div>Sun Ecliptic Coordinates</div>
+        <table border="1" cellspacing="0" cellpadding="8">
+            <tr>
+                <td>x</td>
+                <td id="SunEcliptic_x"></td>
+            </tr>
+            <tr>
+                <td>y</td>
+                <td id="SunEcliptic_y"></td>
+            </tr>
+            <tr>
+                <td>z</td>
+                <td id="SunEcliptic_z"></td>
+            </tr>
+            <tr>
+                <td>lat</td>
+                <td id="SunEcliptic_lat"></td>
+            </tr>
+            <tr>
+                <td>lon</td>
+                <td id="SunEcliptic_lon"></td>
             </tr>
         </table>
     </body>
