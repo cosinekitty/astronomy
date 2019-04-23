@@ -1264,7 +1264,7 @@ function QuadInterp(tm, dt, fa, fm, fb) {
 }
 
 
-function Search(func, t1, t2, dt_tolerance_seconds = 1) {
+function Search(func, t1, t2, options) {
     // Search for next time t (with time between t1 and t2).
     // that func(t) crosses from a negative value to a non-negative value.
     // The given function must have "smooth" behavior over the entire range [t1, t2],
@@ -1275,6 +1275,8 @@ function Search(func, t1, t2, dt_tolerance_seconds = 1) {
     // that the "wrong" event will be found (i.e. not the first event after t1)
     // or even that the function will return null, indicating no event found.
 
+    const dt_tolerance_seconds = (options && options.dt_tolerance_seconds) || 1;
+
     function f(t) {
         ++Perf.CallCount.search_func;
         return func(t);
@@ -1284,8 +1286,8 @@ function Search(func, t1, t2, dt_tolerance_seconds = 1) {
 
     ++Perf.CallCount.search;
 
-    let f1 = f(t1);
-    let f2 = f(t2);
+    let f1 = (options && options.init_f1) || f(t1);
+    let f2 = (options && options.init_f2) || f(t2);
     let fmid;
 
     let calc_fmid = true;
@@ -1494,7 +1496,7 @@ Astronomy.SearchRiseSet = function(body, observer, direction, dateStart, limitDa
 
         if (alt_before <= 0 && alt_after > 0) {
             // Search between evt_before and evt_after for the desired event.
-            let tx = Search(peak_altitude, time_before, evt_after.time);
+            let tx = Search(peak_altitude, time_before, evt_after.time, {init_f1:alt_before, init_f2:alt_after});
             if (tx) 
                 return tx;
         }
