@@ -1,5 +1,5 @@
 # astronomy
 
-[![Build Status](https://travis-ci.com/cosinekitty/astronomy.svg?branch=travis)](https://travis-ci.com/cosinekitty/astronomy)
+[![Build Status](https://travis-ci.org/cosinekitty/astronomy.svg)](https://travis-ci.org/cosinekitty/astronomy)
 
 Multi-language calculation of Sun, Moon, and planet positions.
