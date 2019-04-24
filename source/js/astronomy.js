@@ -2436,9 +2436,9 @@ Astronomy.SearchHourAngle = function(body, observer, hourAngle, dateStart) {
 }
 
 Astronomy.Seasons = function(year) {
-    function find(targetLon, month, day, ndays) {
+    function find(targetLon, month, day) {
         let startDate = new Date(Date.UTC(year, month-1, day));
-        let time = Astronomy.SearchSunLongitude(targetLon, startDate, 5);
+        let time = Astronomy.SearchSunLongitude(targetLon, startDate, 4);
         if (!time)
             throw `Cannot find season change near ${startDate.toISOString()}`;
         return time;
@@ -2447,10 +2447,10 @@ Astronomy.Seasons = function(year) {
     if (year instanceof Date) {
         year = year.getUTCFullYear();
     }
-    let mar_equinox  = find(  0,  3, 19, 4);
-    let jun_solstice = find( 90,  6, 19, 4);
-    let sep_equinox  = find(180,  9, 21, 4);
-    let dec_solstice = find(270, 12, 20, 4);
+    let mar_equinox  = find(  0,  3, 19);
+    let jun_solstice = find( 90,  6, 19);
+    let sep_equinox  = find(180,  9, 21);
+    let dec_solstice = find(270, 12, 20);
 
     return {
         mar_equinox:  mar_equinox,
