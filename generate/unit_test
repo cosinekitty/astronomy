@@ -10,6 +10,10 @@ echo "Generating target code."
 ./generate source || Fail "Problem generating target code."
 
 echo ""
+echo "Running seasons test."
+node seasons_test.js || Fail "Failed seasons test."
+
+echo ""
 echo "Running rise/set test."
 node rise_set_test.js || Fail "Failed rise/set test."
 

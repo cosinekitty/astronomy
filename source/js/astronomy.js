@@ -2223,6 +2223,19 @@ function Search(func, t1, t2, options) {
     }
 }
 
+Astronomy.SearchSunLongitude = function(targetLon, dateStart, limitDays) {
+    function sun_offset(t) {
+        let pos = Astronomy.SunPosition(t);
+        let offset = pos.elon - targetLon;
+        while (offset <= -180) offset += 360;
+        while (offset > 180) offset -= 360;
+        return offset;
+    }
+    let t1 = AstroTime(dateStart);
+    let t2 = t1.AddDays(limitDays);
+    return Search(sun_offset, t1, t2);
+}
+
 Astronomy.MoonPhase = function(date) {
     const t = AstroTime(date);    
     let gm = Astronomy.GeoVector('Moon', t);
@@ -2417,6 +2430,31 @@ Astronomy.SearchHourAngle = function(body, observer, hourAngle, dateStart) {
         let delta_days = (delta_sidereal_hours / 24) * solar_days_per_sidereal_day;
         time = time.AddDays(delta_days);
     }
+}
+
+Astronomy.Seasons = function(year) {
+    function find(targetLon, month, day, ndays) {
+        let startDate = new Date(Date.UTC(year, month-1, day));
+        let time = Astronomy.SearchSunLongitude(targetLon, startDate, 5);
+        if (!time)
+            throw `Cannot find season change near ${startDate.toISOString()}`;
+        return time;
+    }
+
+    if (year instanceof Date) {
+        year = year.getUTCFullYear();
+    }
+    let mar_equinox  = find(  0,  3, 19, 4);
+    let jun_solstice = find( 90,  6, 19, 4);
+    let sep_equinox  = find(180,  9, 21, 4);
+    let dec_solstice = find(270, 12, 20, 4);
+
+    return {
+        mar_equinox:  mar_equinox,
+        jun_solstice: jun_solstice,
+        sep_equinox:  sep_equinox,
+        dec_solstice: dec_solstice
+    };
 }
 
 })(typeof exports==='undefined' ? (this.Astronomy={}) : exports);
