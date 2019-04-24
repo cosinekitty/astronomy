@@ -1389,13 +1389,17 @@ function Search(func, t1, t2, options) {
     }
 }
 
+function LongitudeOffset(longitude, target) {
+    let offset = longitude - target;
+    while (offset <= -180) offset += 360;
+    while (offset > 180) offset -= 360;
+    return offset;
+}
+
 Astronomy.SearchSunLongitude = function(targetLon, dateStart, limitDays) {
     function sun_offset(t) {
         let pos = Astronomy.SunPosition(t);
-        let offset = pos.elon - targetLon;
-        while (offset <= -180) offset += 360;
-        while (offset > 180) offset -= 360;
-        return offset;
+        return LongitudeOffset(pos.elon, targetLon);
     }
     let t1 = AstroTime(dateStart);
     let t2 = t1.AddDays(limitDays);
@@ -1418,12 +1422,8 @@ Astronomy.MoonPhase = function(date) {
 
 Astronomy.SearchMoonPhase = function(targetLon, dateStart, limitDays) {
     function moon_offset(t) {
-        let offset = Astronomy.MoonPhase(t) - targetLon;
-
-        // Force offset into the range (-180, +180].
-        while (offset <= -180) offset += 360;
-        while (offset > 180) offset -= 360;
-        return offset;
+        let mlon = Astronomy.MoonPhase(t);
+        return LongitudeOffset(mlon, targetLon);
     }
 
     // To avoid discontinuities in the moon_offset function causing problems,
