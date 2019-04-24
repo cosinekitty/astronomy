@@ -87,7 +87,11 @@ function Test() {
         }
         if (!calc_date)
             throw `ERROR: Missing calc_date for test date ${item.date.toISOString()}`;
-        let diff_minutes = (calc_date - item.date) / (60000);   // convert milliseconds to hours
+        let diff_minutes = (calc_date - item.date) / 60000;
+        if (Math.abs(diff_minutes) > 1.7) {
+            throw `ERROR: Excessive error in season calculation: ${diff_minutes.toFixed(3)} minutes`;
+        }
+
         if (min_diff === undefined) {
             min_diff = max_diff = diff_minutes;
         } else {

@@ -1024,8 +1024,11 @@ Astronomy.MakeObserver = function(latitude_degrees, longitude_degrees, height_in
     return new Observer(latitude_degrees, longitude_degrees, height_in_meters);
 }
 
-Astronomy.SunPosition = function(date) {    // returns geocentric true ecliptic coordinates of date for the Sun
-    const time = AstroTime(date);
+Astronomy.SunPosition = function(date) {    // returns apparent geocentric true ecliptic coordinates of date for the Sun
+    // Correct for light travel time from the Sun.
+    // This is really the same as correcting for aberration.
+    // Otherwise season calculations (equinox, solstice) will all be early by about 8 minutes!
+    const time = AstroTime(date).AddDays(-1 / C_AUDAY);
 
     // Get heliocentric cartesian coordinates of Earth in J2000.
     const earth2000 = CalcVsop(vsop.Earth, time);
