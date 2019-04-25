@@ -789,9 +789,135 @@ static int ParseObserver(const char *filename, int lnum, const char *line, obser
     return error;
 }
 
+static int EclipticVector(double jd, vsop_body_t body, double ecl_pos[3])
+{
+    int error;
+    double eq_pos[3];
+
+    /* Find equatorial coordinates for the body. */
+    CHECK(NovasBodyPos(jd, body, eq_pos));
+
+    /* Convert equatorial cartesian coordinates to ecliptic longitude. */
+    error = equ2ecl_vec(jd, 2, 0, eq_pos, ecl_pos);
+    if (error)
+    {
+        fprintf(stderr, "EclipticLongitude: equ2ecl_vec() returned %d\n", error);
+        goto fail;
+    }
+
+fail:
+    return error;
+}
+
+static double EclipticLongitude(const double ecl_pos[3])
+{
+    double lon = RAD2DEG * atan2(ecl_pos[1], ecl_pos[0]);
+    if (lon < 0.0)
+        lon += 360.0;
+
+    return lon;
+}
+
+static double LongitudeOffset(double diff)
+{
+    double offset = diff;
+    while (offset <= -180) offset += 360;
+    while (offset > 180) offset -= 360;
+    return offset;
+}
+
+static int CheckEcliptic(const char *filename, int lnum, const char *line, double *arcmin)
+{
+    int error;
+    vsop_body_t body;
+    char name[10];
+    char event[10];
+    double body_ecl[3];
+    double earth_ecl[3];
+    double geo[3];
+    double tt, jd, lon, dist, blon, elon, diff;
+    
+    *arcmin = 99999.0;
+
+    /* Example line: "e Jupiter opp <tt> <au>" */
+    if (4 != sscanf(line, "e %9[A-Za-z] %9[a-z] %lf %lf", name, event, &tt, &dist))
+    {
+        fprintf(stderr, "CheckEcliptic: Invalid format on line %d of file %s\n", lnum, filename);
+        return 1;
+    }
+
+    body = LookupBody(name);
+    if (body < 0)
+    {
+        fprintf(stderr, "CheckEcliptic: Unknown body '%s' on line %d of file %s\n", name, lnum, filename);
+        return 1;
+    }
+
+    jd = tt + T0;
+    CHECK(EclipticVector(jd, body, body_ecl));
+    CHECK(EclipticVector(jd, VSOP_EARTH, earth_ecl));
+
+    geo[0] = body_ecl[0] - earth_ecl[0];
+    geo[1] = body_ecl[1] - earth_ecl[1];
+    geo[2] = body_ecl[2] - earth_ecl[2];
+    dist = VectorLength(geo);
+
+    if (!strcmp(event, "opp"))
+    {
+        /* Opposition (superior planets only) */
+        lon = 0.0;
+
+        /* Distance could be anything... so ignore it. */
+    }
+    else if (!strcmp(event, "inf"))
+    {
+        /* Inferior conjunction (inferior planets only) */
+        lon = 0.0;
+
+        /* Distance from Earth must be less than 1 AU for an inferior conjunction. */
+        if (dist >= 1.0)
+        {
+            fprintf(stderr, "CheckEcliptic: Invalid distance %0.3lf AU for inferior conjunction; line %d file %s\n", dist, lnum, filename);
+            return 1;
+        }        
+    }
+    else if (!strcmp(event, "sup"))
+    {
+        /* Superior conjunction (inferior or superior planets) */
+        lon = 180.0;
+
+        /* Distance from Earth must be greater than 1 AU for a superior conjunction. */
+        if (dist <= 1.0)
+        {
+            fprintf(stderr, "CheckEcliptic: Invalid distance %0.3lf AU for superior conjunction; line %d file %s\n", dist, lnum, filename);
+            return 1;
+        }        
+    }
+    else
+    {
+        fprintf(stderr, "CheckEcliptic: Invalid event code '%s' on line %d of file %s\n", event, lnum, filename);
+        return 1;
+    }    
+
+    blon = EclipticLongitude(body_ecl);
+    elon = EclipticLongitude(earth_ecl);    
+    diff = LongitudeOffset((elon - blon) - lon);
+
+    *arcmin = fabs(diff * 60.0);
+    if (*arcmin > 1.0)
+    {
+        fprintf(stderr, "CheckEcliptic: Excessive arcminute error = %0.3lf on line %d of file %s\n", *arcmin, lnum, filename);
+        return 1;
+    }
+
+fail:
+    return error;
+}
+
 static int CheckTestVector(const char *filename, int lnum, const char *line, double *arcmin)
 {
-    int body, error;
+    int error;
+    vsop_body_t body;
     char name[10];
     double tt, jd, xpos[3], npos[3];
 
@@ -1023,6 +1149,12 @@ static int CheckTestOutput(const char *filename)
 
         case 's':   /* sky coordinates: RA, DEC, distance */
             CHECK(CheckSkyPos(&location, filename, lnum, line, &arcmin));
+            if (arcmin > max_arcmin)
+                max_arcmin = arcmin;
+            break;
+
+        case 'e':
+            CHECK(CheckEcliptic(filename, lnum, line, &arcmin));
             if (arcmin > max_arcmin)
                 max_arcmin = arcmin;
             break;
