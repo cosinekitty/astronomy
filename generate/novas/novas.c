@@ -2272,15 +2272,7 @@ short int equ2ecl_vec (double jd_tt, short int coord_sys,
             t_last = jd_tt;
          }
 
-         switch (coord_sys)
-         {
-            case 0:       /* Use mean obliquity of date */
-               obl = oblm * DEG2RAD;
-               break;
-            case 1:       /* Use true obliquity of date */
-               obl = oblt * DEG2RAD;
-               break;
-         }
+         obl = DEG2RAD * ((coord_sys==0) ? oblm : oblt);
          break;
 
       case 2:             /* Input: ICRS */
