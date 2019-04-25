@@ -79,6 +79,18 @@ Astronomy.Bodies = [
     'Pluto'
 ];
 
+const Planet = {
+    Mercury: { OrbitalPeriod:    87.969 },
+    Venus:   { OrbitalPeriod:   224.701 },
+    Earth:   { OrbitalPeriod:   365.256 },
+    Mars:    { OrbitalPeriod:   686.980 },
+    Jupiter: { OrbitalPeriod:  4332.589 },
+    Saturn:  { OrbitalPeriod: 10759.22  },
+    Uranus:  { OrbitalPeriod: 30685.4   },
+    Neptune: { OrbitalPeriod: 60189.0   },
+    Pluto:   { OrbitalPeriod: 90560.0   }
+};
+
 const vsop = {
     Mercury: [
   [
@@ -1929,7 +1941,7 @@ function RotateEquatorialToEcliptic(gx, gy, gz, cos_ob, sin_ob) {
 }
 
 Astronomy.Ecliptic = function(gx, gy, gz) {
-    // (gx, gy, gz) are J2000 geocentric equatorial cartesian coordinates.
+    // (gx, gy, gz) are J2000 equatorial cartesian coordinates.
     // Returns J2000 ecliptic latitude, longitude, and cartesian coordinates.
     // Based on NOVAS functions equ2ecl() and equ2ecl_vec().
     // You can call Astronomy.GeoVector() and use its (x, y, z) return values
@@ -2226,41 +2238,125 @@ function Search(func, t1, t2, options) {
     }
 }
 
-function LongitudeOffset(longitude, target) {
-    let offset = longitude - target;
+function LongitudeOffset(diff) {
+    let offset = diff;
     while (offset <= -180) offset += 360;
     while (offset > 180) offset -= 360;
     return offset;
 }
 
+function NormalizeLongitude(lon) {
+    while (lon < 0) lon += 360;
+    while (lon >= 360) lon -= 360;
+    return lon;
+}
+
 Astronomy.SearchSunLongitude = function(targetLon, dateStart, limitDays) {
     function sun_offset(t) {
         let pos = Astronomy.SunPosition(t);
-        return LongitudeOffset(pos.elon, targetLon);
+        return LongitudeOffset(pos.elon - targetLon);
     }
     let t1 = AstroTime(dateStart);
     let t2 = t1.AddDays(limitDays);
     return Search(sun_offset, t1, t2);
 }
 
-Astronomy.MoonPhase = function(date) {
+Astronomy.PhaseAngle = function(body, date) {
+    if (body === 'Earth')
+        throw 'The Earth does not have a phase angle as seen from itself.';
+
     const t = AstroTime(date);    
-    let gm = Astronomy.GeoVector('Moon', t);
-    const em = Astronomy.Ecliptic(gm.x, gm.y, gm.z);
+    let gb = Astronomy.GeoVector(body, t);
+    const eb = Astronomy.Ecliptic(gb.x, gb.y, gb.z);
 
     let gs = Astronomy.GeoVector('Sun', t);
     const es = Astronomy.Ecliptic(gs.x, gs.y, gs.z);
 
-    let phase = em.elon - es.elon;
-    while (phase < 0) phase += 360;
-    while (phase >= 360) phase -= 360;
-    return phase;
+    return NormalizeLongitude(eb.elon - es.elon);
+}
+
+Astronomy.EclipticLongitude = function(body, date) {    // heliocentric ecliptic longitude in J2000
+    let hv = Astronomy.HelioVector(body, date);
+    let eclip = Astronomy.Ecliptic(hv.x, hv.y, hv.z);
+    return eclip.elon;
+}
+
+function SynodicPeriod(body) {
+    if (body === 'Earth')
+        throw 'The Earth does not have a synodic period as seen from itself.';
+
+    if (body === 'Moon')
+        return mean_synodic_month;
+
+    // Calculate the synodic period of the planet from its and the Earth's sidereal periods.
+    // The sidereal period of a planet is how long it takes to go around the Sun in days, on average.
+    // The synodic period of a planet is how long it takes between consecutive oppositions
+    // or conjunctions, on average.
+
+    let planet = Planet[body];
+    if (!planet)
+        throw `Not a valid planet name: ${body}`;
+
+    // See here for explanation of the formula:
+    // https://en.wikipedia.org/wiki/Elongation_(astronomy)#Elongation_period
+
+    const Te = Planet.Earth.OrbitalPeriod;
+    const Tp = planet.OrbitalPeriod;
+    const synodicPeriod = Math.abs(Te / (Te/Tp - 1));
+
+    return synodicPeriod;
+}
+
+Astronomy.SearchRelativeLongitude = function(body, targetRelLon, startDate) {
+    const planet = Planet[body];
+    if (!planet)
+        throw `Cannot search relative longitude because body is not a planet: ${body}`;
+
+    if (body === 'Earth')
+        throw 'Cannot search relative longitude for the Earth (it is always 0)';
+
+    // Determine whether the Earth "gains" (+1) on the planet or "loses" (-1)
+    // as both race around the Sun.
+    const direction = (planet.OrbitalPeriod > Planet.Earth.OrbitalPeriod) ? +1 : -1;
+
+    function offset(t) {
+        const plon = Astronomy.EclipticLongitude(body, t);
+        const elon = Astronomy.EclipticLongitude('Earth', t);
+        const diff = direction * (elon - plon);
+        return LongitudeOffset(diff - targetRelLon);
+    }
+
+    let syn = SynodicPeriod(body);
+    let time = AstroTime(startDate);
+
+    // Iterate until we converge on the desired event.
+    // Calculate the error angle, which will be a negative number of degrees,
+    // meaning we are "behind" the target elongation in time.
+    let error_angle = offset(time);
+    if (error_angle > 0) error_angle -= 360;    // force searching forward in time
+
+    for (let iter=0; iter < 20; ++iter) {
+        // Estimate how many days in the future (positive) or past (negative)
+        // we have to go to get closer to the target elongation.
+        let day_adjust = (-error_angle/360) * syn;
+        time = time.AddDays(day_adjust);
+        if (Math.abs(day_adjust) * seconds_per_day < 1)
+            return time;
+
+        error_angle = offset(time);
+    }
+
+    throw 'Relative longitude search failed to converge.';
+}
+
+Astronomy.MoonPhase = function(date) {
+    return Astronomy.PhaseAngle('Moon', date);
 }
 
 Astronomy.SearchMoonPhase = function(targetLon, dateStart, limitDays) {
     function moon_offset(t) {
         let mlon = Astronomy.MoonPhase(t);
-        return LongitudeOffset(mlon, targetLon);
+        return LongitudeOffset(mlon - targetLon);
     }
 
     // To avoid discontinuities in the moon_offset function causing problems,
