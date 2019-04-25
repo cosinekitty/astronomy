@@ -1,0 +1,2 @@
+#!/bin/bash
+./run && ./verify_clean && git push
