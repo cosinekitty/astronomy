@@ -104,6 +104,11 @@ if errorlevel 1 (exit /b 1)
 if errorlevel 1 (exit /b 1)
 
 echo.
+echo.Running longitude tests.
+node elong_test.js
+if errorlevel 1 (exit /b 1)
+
+echo.
 echo Running seasons test.
 node seasons_test.js
 if errorlevel 1 (exit /b 1)

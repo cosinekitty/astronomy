@@ -7,7 +7,7 @@ function LoadData(filename) {
     const lines = text.trimRight().split('\n');
     let data = [];
     for (let row of lines) {        
-        let token = row.split(' ');
+        let token = row.split(/\s+/);
         data.push({date:new Date(token[0]), body:token[1]});
     }
     return data;
