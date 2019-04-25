@@ -2335,7 +2335,7 @@ Astronomy.SearchRelativeLongitude = function(body, targetRelLon, startDate) {
     let error_angle = offset(time);
     if (error_angle > 0) error_angle -= 360;    // force searching forward in time
 
-    for (let iter=0; iter < 20; ++iter) {
+    for (let iter=0; iter < 100; ++iter) {
         // Estimate how many days in the future (positive) or past (negative)
         // we have to go to get closer to the target elongation.
         let day_adjust = (-error_angle/360) * syn;
@@ -2346,7 +2346,7 @@ Astronomy.SearchRelativeLongitude = function(body, targetRelLon, startDate) {
         error_angle = offset(time);
     }
 
-    throw 'Relative longitude search failed to converge.';
+    throw `Relative longitude search failed to converge for ${body} near ${time.toString()} (error_angle = ${error_angle}).`;
 }
 
 Astronomy.MoonPhase = function(date) {
