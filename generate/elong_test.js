@@ -31,20 +31,40 @@ function TestPlanet(outFileName, body, startYear, stopYear, zeroLonEventName) {
     let stopDate = new Date(Date.UTC(stopYear, 0, 1));
     let text = '';
     let count = 0;
+    let prev_time, min_diff, max_diff, sum_diff=0;
 
     while (date < stopDate) {
         let event = (rlon === 0) ? zeroLonEventName : 'sup';
         let evt_time = Astronomy.SearchRelativeLongitude(body, rlon, date);
+        if (prev_time) {
+            // Check for consistent intervals.
+            // Mainly I don't want to accidentally skip over an event!
+            let day_diff = evt_time.tt - prev_time.tt;
+            if (min_diff === undefined) {
+                min_diff = max_diff = day_diff;
+            } else {
+                min_diff = Math.min(min_diff, day_diff);
+                max_diff = Math.max(max_diff, day_diff);
+            }
+            sum_diff += day_diff;
+        }
         let geo = Astronomy.GeoVector(body, evt_time);
         let dist = Math.sqrt(geo.x*geo.x + geo.y*geo.y + geo.z*geo.z);
         text += `e ${body} ${event} ${evt_time.tt} ${dist}\n`;
         rlon = 180 - rlon;
         date = evt_time.date;
         ++count;
+        prev_time = evt_time;
     }
 
     fs.writeFileSync(outFileName, text);
-    console.log(`TestPlanet(${body}): wrote ${count} events to file ${outFileName}`);
+
+    let ratio = max_diff / min_diff;
+    console.log(`TestPlanet(${body}): ${count} events, interval min=${min_diff.toFixed(1)}, max=${max_diff.toFixed(1)}, avg=${(sum_diff/count).toFixed(1)}, ratio=${ratio.toFixed(3)} : ${outFileName}`);
+
+    let thresh = {Mercury:1.65, Mars:1.30}[body] || 1.07;
+    if (ratio > thresh)
+        throw `TestPlanet: Excessive event interval ratio for ${body} = ${ratio}`;
 }
 
 console.log('elong_test.js: Starting');
