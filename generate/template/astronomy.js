@@ -1512,7 +1512,19 @@ Astronomy.SearchRelativeLongitude = function(body, targetRelLon, startDate) {
         if (Math.abs(day_adjust) * seconds_per_day < 1)
             return time;
 
+        let prev_angle = error_angle;
         error_angle = offset(time);
+
+        if (Math.abs(prev_angle) < 30) {
+            // Improve convergence for Mercury/Mars (eccentric orbits) 
+            // by adjusting the synodic period to more closely match the
+            // variable speed of both planets in this part of their respective orbits.
+            if (prev_angle !== error_angle) {
+                let ratio = prev_angle / (prev_angle - error_angle);
+                if (ratio > 0.5 && ratio < 2.0)
+                    syn *= ratio;
+            }
+        }
     }
 
     throw `Relative longitude search failed to converge for ${body} near ${time.toString()} (error_angle = ${error_angle}).`;
