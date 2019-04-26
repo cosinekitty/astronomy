@@ -36,7 +36,9 @@ let sin_ob2000;
 function PerformanceInfo() {
     this.CallCount = {
         search_func: 0,
-        search: 0
+        search: 0,
+        longitude_search: 0,
+        longitude_iter: 0
     };
 }
 
@@ -1498,7 +1500,11 @@ Astronomy.SearchRelativeLongitude = function(body, targetRelLon, startDate) {
     let error_angle = offset(time);
     if (error_angle > 0) error_angle -= 360;    // force searching forward in time
 
+    ++Perf.CallCount.longitude_search;
+
     for (let iter=0; iter < 100; ++iter) {
+        ++Perf.CallCount.longitude_iter;
+
         // Estimate how many days in the future (positive) or past (negative)
         // we have to go to get closer to the target elongation.
         let day_adjust = (-error_angle/360) * syn;
