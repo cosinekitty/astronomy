@@ -2270,7 +2270,7 @@ Astronomy.LongitudeFromSun = function(body, date) {
     // The returned value ranges [0, 360) degreees.
 
     if (body === 'Earth')
-        throw 'The Earth does not have a phase angle as seen from itself.';
+        throw 'The Earth does not have a longitude as seen from itself.';
 
     const t = AstroTime(date);    
     let gb = Astronomy.GeoVector(body, t);
@@ -2283,6 +2283,9 @@ Astronomy.LongitudeFromSun = function(body, date) {
 }
 
 Astronomy.EclipticLongitude = function(body, date) {    // heliocentric ecliptic longitude in J2000
+    // This function calculates the ecliptic longitude of the body
+    // as seen from the center of the Sun at the given date.
+
     let hv = Astronomy.HelioVector(body, date);
     let eclip = Astronomy.Ecliptic(hv.x, hv.y, hv.z);
     return eclip.elon;
