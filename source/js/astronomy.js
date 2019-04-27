@@ -2263,7 +2263,12 @@ Astronomy.SearchSunLongitude = function(targetLon, dateStart, limitDays) {
     return Search(sun_offset, t1, t2);
 }
 
-Astronomy.PhaseAngle = function(body, date) {
+Astronomy.LongitudeFromSun = function(body, date) {
+    // This function calculates the ecliptic longitude
+    // difference between the given body and the Sun 
+    // as seen from the Earth at a given moment in time.
+    // The returned value ranges [0, 360) degreees.
+
     if (body === 'Earth')
         throw 'The Earth does not have a phase angle as seen from itself.';
 
@@ -2368,7 +2373,17 @@ Astronomy.SearchRelativeLongitude = function(body, targetRelLon, startDate) {
 }
 
 Astronomy.MoonPhase = function(date) {
-    return Astronomy.PhaseAngle('Moon', date);
+    // This function helps us determine the moon's phase.
+    // It returns a value anywhere from 0 to 360 indicating the difference
+    // in ecliptic longitude between the center of the Sun and the
+    // center of the Moon, as seen from the center of the Earth.
+    // Examples of what certain return values mean:
+    //   0 = new moon
+    //  90 = first quarter
+    // 180 = full moon
+    // 270 = third quarter.
+
+    return Astronomy.LongitudeFromSun('Moon', date);
 }
 
 Astronomy.SearchMoonPhase = function(targetLon, dateStart, limitDays) {
