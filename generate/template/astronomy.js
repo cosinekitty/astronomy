@@ -67,6 +67,27 @@ function Frac(x) {
     return x - Math.floor(x);
 }
 
+function AngleBetween(a, b) {
+    const aa = (a.x*a.x + a.y*a.y + a.z*a.z);
+    if (Math.abs(aa) < 1.0e-8)
+        throw `AngleBetween: first vector is too short.`;
+
+    const bb = (b.x*b.x + b.y*b.y + b.z*b.z);
+    if (Math.abs(bb) < 1.0e-8)
+        throw `AngleBetween: second vector is too short.`;
+
+    const dot = (a.x*b.x + a.y*b.y + a.z*b.z) / Math.sqrt(aa * bb);
+
+    if (dot <= -1.0)
+        return 180;
+
+    if (dot >= +1.0)
+        return 0;
+
+    const angle = RAD2DEG * Math.acos(dot);
+    return angle;
+}
+
 Astronomy.Bodies = [
     'Sun',
     'Moon',
@@ -1452,6 +1473,37 @@ Astronomy.EclipticLongitude = function(body, date) {    // heliocentric ecliptic
     let hv = Astronomy.HelioVector(body, date);
     let eclip = Astronomy.Ecliptic(hv.x, hv.y, hv.z);
     return eclip.elon;
+}
+
+Astronomy.PhaseInfo = function(body, date) {
+    // Returns the distance from the Earth, and the 
+    // phase angle between the Sun and the Earth,
+    // as seen by the given body on the given date.
+    // The angle is not confined to the ecliptic plane,
+    // but is the absolute angle in 3D space.
+    // It is used for calculating apparent magnitude of
+    // the Moon and planets as seen from the Earth.
+
+    if (body === 'Sun' || body === 'Earth')
+        throw `The phase angle of the ${body} is not defined.`;
+
+    const time = AstroTime(date);
+    const earth = CalcVsop(vsop.Earth, time);
+    let hc;     // vector from Sun to body
+    let gc;     // vector from Earth to body
+    if (body === 'Moon') {
+        // For extra numeric precision, use geocentric moon formula directly.
+        gc = Astronomy.GeoMoon(time);
+        hc = { x:(earth.x + gc.x), y:(earth.y + gc.y), z:(earth.z + gc.z) };
+    } else {
+        // For planets, heliocentric vector is most direct to calculate.
+        hc = Astronomy.HelioVector(body, date);
+        gc = { x:(hc.x - earth.x), y:(hc.y - earth.y), z:(hc.z - earth.z) };
+    }
+
+    const dist = Math.sqrt(gc.x*gc.x + gc.y*gc.y + gc.z*gc.z);
+    const angle = AngleBetween(gc, hc);
+    return { angle:angle, dist:dist };
 }
 
 function SynodicPeriod(body) {
