@@ -72,9 +72,27 @@ function Test() {
                 all_passed = false;
         }
     }
-    return all_passed;
+    all_passed || Fail('Found excessive error in at least one test.');
+    console.log('SUCCESS');
 }
 
-Test() || Fail('Found excessive error in at least one test.');
-console.log('mag_test.js: SUCCESS');
-process.exit(0);
+function Generate() {
+    
+}
+
+function Run() {
+    if (process.argv.length === 3 && process.argv[2] === 'test') {
+        Test();
+        process.exit(0);
+    }
+
+    if (process.argv.length === 3 && process.argv[2] === 'generate') {
+        Generate();
+        process.exit(0);
+    }
+
+    console.log('USAGE:  node mag_test.js [test | generate]');
+    process.exit(1);
+}
+
+Run();
