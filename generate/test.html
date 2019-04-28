@@ -62,13 +62,13 @@
                         cell = document.getElementById('culm_' + body);
                         cell.innerText = culm.time.date.toLocaleTimeString();
 
-                        if (body !== 'Sun') {
-                            const pinfo = Astronomy.PhaseInfo(body, now);
-                            cell = document.getElementById('phase_' + body);
-                            cell.innerText = pinfo.angle.toFixed(3);
-                            cell = document.getElementById('dist_' + body);
-                            cell.innerText = pinfo.dist.toFixed(6);
-                        }
+                        const illum = Astronomy.Illumination(body, now);
+                        cell = document.getElementById('phase_' + body);
+                        cell.innerText = illum.phase.toFixed(3);
+                        cell = document.getElementById('dist_' + body);
+                        cell.innerText = illum.geo_dist.toFixed(6);
+                        cell = document.getElementById('mag_' + body);
+                        cell.innerText = (illum.mag > 0 ? '+' : '') + illum.mag.toFixed(2);
                     }
                 }
 
@@ -94,6 +94,7 @@
                 <td>culm</td>
                 <td>phase</td>                
                 <td>dist</td>
+                <td>mag</td>
             </tr>
             <tr>
                 <td>Sun</td>
@@ -105,6 +106,7 @@
                 <td id='culm_Sun'></td>
                 <td id='phase_Sun'></td>
                 <td id='dist_Sun'></td>
+                <td id='mag_Sun'></td>
             </tr>
             <tr>
                 <td>Moon</td>
@@ -116,6 +118,7 @@
                 <td id='culm_Moon'></td>
                 <td id='phase_Moon'></td>
                 <td id='dist_Moon'></td>
+                <td id='mag_Moon'></td>
             </tr>
             <tr>
                 <td>Mercury</td>
@@ -127,6 +130,7 @@
                 <td id='culm_Mercury'></td>
                 <td id='phase_Mercury'></td>
                 <td id='dist_Mercury'></td>
+                <td id='mag_Mercury'></td>
             </tr>
             <tr>
                 <td>Venus</td>
@@ -138,6 +142,7 @@
                 <td id='culm_Venus'></td>
                 <td id='phase_Venus'></td>
                 <td id='dist_Venus'></td>
+                <td id='mag_Venus'></td>
             </tr>
             <tr>
                 <td>Earth</td>
@@ -153,6 +158,7 @@
                 <td id='culm_Mars'></td>
                 <td id='phase_Mars'></td>
                 <td id='dist_Mars'></td>
+                <td id='mag_Mars'></td>
             </tr>
             <tr>
                 <td>Jupiter</td>
@@ -164,6 +170,7 @@
                 <td id='culm_Jupiter'></td>
                 <td id='phase_Jupiter'></td>
                 <td id='dist_Jupiter'></td>
+                <td id='mag_Jupiter'></td>
             </tr>
             <tr>
                 <td>Saturn</td>
@@ -175,6 +182,7 @@
                 <td id='culm_Saturn'></td>
                 <td id='phase_Saturn'></td>
                 <td id='dist_Saturn'></td>
+                <td id='mag_Saturn'></td>
             </tr>
             <tr>
                 <td>Uranus</td>
@@ -186,6 +194,7 @@
                 <td id='culm_Uranus'></td>
                 <td id='phase_Uranus'></td>
                 <td id='dist_Uranus'></td>
+                <td id='mag_Uranus'></td>
             </tr>
             <tr>
                 <td>Neptune</td>
@@ -197,6 +206,7 @@
                 <td id='culm_Neptune'></td>
                 <td id='phase_Neptune'></td>
                 <td id='dist_Neptune'></td>
+                <td id='mag_Neptune'></td>
             </tr>
             <tr>
                 <td>Pluto</td>
@@ -208,6 +218,7 @@
                 <td id='culm_Pluto'></td>
                 <td id='phase_Pluto'></td>
                 <td id='dist_Pluto'></td>
+                <td id='mag_Pluto'></td>
             </tr>
         </table>
 

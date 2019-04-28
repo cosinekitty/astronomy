@@ -15,9 +15,12 @@ const C_AUDAY = 173.1446326846693;      // speed of light in AU/day
 const ASEC2RAD = 4.848136811095359935899141e-6;
 const DEG2RAD = 0.017453292519943296;
 const RAD2DEG = 57.295779513082321;
-const ASEC360 = 1296000;
+const ASEC180 = 180 * 60 * 60;              // arcseconds per 180 degrees (or pi radians)
+const ASEC360 = 2 * ASEC180;                // arcseconds per 360 degrees (or 2*pi radians)
 const ANGVEL = 7.2921150e-5;
 const AU_KM = 1.4959787069098932e+8;
+const au_per_parsec = ASEC180 / Math.PI;    // exact definition of how many AU = one parsec
+const sun_mag_at_1_au = -0.17 - 5*Math.log10(au_per_parsec);    // formula from JPL Horizons
 const mean_synodic_month = 29.530588;       // average number of days for Moon to return to the same phase
 const seconds_per_day = 24 * 3600;
 const millis_per_day = seconds_per_day * 1000;
@@ -1475,35 +1478,78 @@ Astronomy.EclipticLongitude = function(body, date) {    // heliocentric ecliptic
     return eclip.elon;
 }
 
-Astronomy.PhaseInfo = function(body, date) {
-    // Returns the distance from the Earth, and the 
-    // phase angle between the Sun and the Earth,
-    // as seen by the given body on the given date.
-    // The angle is not confined to the ecliptic plane,
-    // but is the absolute angle in 3D space.
-    // It is used for calculating apparent magnitude of
-    // the Moon and planets as seen from the Earth.
+function VisualMagnitude(body, phase, helio_dist, geo_dist) {
+    let c0, c1=0, c2=0, c3=0;
+    switch (body) {
+    case 'Mercury':     c0 = -0.46; c1 = +3.80; c2 = -2.73; c3 = +2.00; break;
+    case 'Venus':       c0 = -4.34; c1 = +0.09; c2 = +2.39; c3 = -0.65; break;
+    case 'Mars':        c0 = -1.52; c1 = +1.60;                         break;
+    case 'Jupiter':     c0 = -9.40; c1 = +0.50;                         break;
+    case 'Uranus':      c0 = -7.19;                                     break;
+    case 'Neptune':     c0 = -6.87;                                     break;
+    case 'Pluto':       c0 = -0.93;                                     break;
+    default: throw `VisualMagnitude: unsupported body ${body}`;
+    }
 
-    if (body === 'Sun' || body === 'Earth')
-        throw `The phase angle of the ${body} is not defined.`;
+    const x = phase / 100;
+    let mag = c0 + x*(c1 + x*(c2 + x*c3));
+    mag += 5*Math.log10(helio_dist * geo_dist);
+    return mag;
+}
+
+function SaturnMagnitude(hc, gc) {
+    return 0;   // FIXFIXFIX not yet implemented
+}
+
+Astronomy.Illumination = function(body, date) {
+    // Calculates phase angle, distance, and visual maginitude of the body.
+    // For the Sun, the phase angle returned is always 0.
+    // For other bodies, the phase angle is defined as the
+    // angle in degrees as seen by the center of the body
+    // of the separation between the centers of the Sun and Earth.
+
+    if (body === 'Earth')
+        throw `The illumination of the Earth is not defined.`;
 
     const time = AstroTime(date);
     const earth = CalcVsop(vsop.Earth, time);
-    let hc;     // vector from Sun to body
-    let gc;     // vector from Earth to body
-    if (body === 'Moon') {
-        // For extra numeric precision, use geocentric moon formula directly.
-        gc = Astronomy.GeoMoon(time);
-        hc = { x:(earth.x + gc.x), y:(earth.y + gc.y), z:(earth.z + gc.z) };
+    let phase;
+    let hc;         // vector from Sun to body
+    let gc;         // vector from Earth to body
+    let geo_dist;   // distance from body to center of Earth
+    let helio_dist; // distance from body to center of Sun
+    let mag;        // visual magnitude
+
+    if (body === 'Sun') {
+        gc = { x:(-earth.x), y:(-earth.y), z:(-earth.z) };
+        hc = { x:0, y:0, z:0 };
+        phase = 0;
     } else {
-        // For planets, heliocentric vector is most direct to calculate.
-        hc = Astronomy.HelioVector(body, date);
-        gc = { x:(hc.x - earth.x), y:(hc.y - earth.y), z:(hc.z - earth.z) };
+        if (body === 'Moon') {
+            // For extra numeric precision, use geocentric moon formula directly.
+            gc = Astronomy.GeoMoon(time);
+            hc = { x:(earth.x + gc.x), y:(earth.y + gc.y), z:(earth.z + gc.z) };
+        } else {
+            // For planets, heliocentric vector is most direct to calculate.
+            hc = Astronomy.HelioVector(body, date);
+            gc = { x:(hc.x - earth.x), y:(hc.y - earth.y), z:(hc.z - earth.z) };
+        }
+        phase = AngleBetween(gc, hc);
     }
 
-    const dist = Math.sqrt(gc.x*gc.x + gc.y*gc.y + gc.z*gc.z);
-    const angle = AngleBetween(gc, hc);
-    return { angle:angle, dist:dist };
+    geo_dist = Math.sqrt(gc.x*gc.x + gc.y*gc.y + gc.z*gc.z);
+    helio_dist = Math.sqrt(hc.x*hc.x + hc.y*hc.y + hc.z*hc.z);
+
+    if (body === 'Sun')
+        mag = sun_mag_at_1_au + 5*Math.log10(geo_dist);
+    else if (body === 'Moon')
+        mag = 0;        // FIXFIXFIX - not yet implemented
+    else if (body === 'Saturn')
+        mag = SaturnMagnitude(hc, gc);
+    else
+        mag = VisualMagnitude(body, phase, helio_dist, geo_dist);
+
+    return { mag:mag, phase:phase, helio_dist:helio_dist, geo_dist:geo_dist, gc:gc, hc:hc };
 }
 
 function SynodicPeriod(body) {
