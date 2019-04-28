@@ -8,7 +8,6 @@ function Fail(message) {
 }
 
 function LoadMagnitudeData(filename) {
-    console.log(filename);
     const text = fs.readFileSync(filename, 'utf8');
     const lines = text.split(/[\r\n]+/);
     let lnum = 0;
@@ -27,7 +26,8 @@ function LoadMagnitudeData(filename) {
             const minute = parseInt(m[5]);
 
             const item = {
-                utc: new Date(Date.UTC(year, month, day, hour, minute)),
+                lnum: lnum,
+                date: new Date(Date.UTC(year, month, day, hour, minute)),
                 mag: parseFloat(m[6]),
                 geo_dist: parseFloat(m[8]),
                 phase_angle: parseFloat(m[10])
@@ -37,6 +37,8 @@ function LoadMagnitudeData(filename) {
         }
     }
 
+    console.log(`${filename} : ${rows.length} rows`);
+
     return {
         filename: filename,
         rows: rows
@@ -44,7 +46,23 @@ function LoadMagnitudeData(filename) {
 }
 
 function CheckMagnitudeData(body, data) {
-    console.log(data.rows[0]);
+    let diff_lo, diff_hi;
+    for (let item of data.rows) {
+        let illum = Astronomy.Illumination(body, item.date);
+        let diff = illum.mag - item.mag;
+        if (diff_lo === undefined) {
+            diff_lo = diff_hi = diff;
+        } else {
+            diff_lo = Math.min(diff_lo, diff);
+            diff_hi = Math.max(diff_hi, diff);
+        }
+    }
+    console.log(`${body}: diff_lo=${diff_lo}, diff_hi=${diff_hi}`);
+    if (Math.abs(diff_lo) < 0.01 && Math.abs(diff_hi) < 0.01) {
+        console.log(`${body}: PASS`);
+    } else {
+        console.log(`${body}: FAIL`);
+    }
 }
 
 for (let body of Astronomy.Bodies) {
