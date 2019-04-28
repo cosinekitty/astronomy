@@ -29,7 +29,9 @@ function LoadMagnitudeData(filename) {
                 lnum: lnum,
                 date: new Date(Date.UTC(year, month, day, hour, minute)),
                 mag: parseFloat(m[6]),
+                sbrt: parseFloat(m[7]),
                 geo_dist: parseFloat(m[8]),
+                geo_radvel: parseFloat(m[9]),
                 phase_angle: parseFloat(m[10])
             };
 
@@ -76,8 +78,20 @@ function Test() {
     console.log('SUCCESS');
 }
 
+function Regress(data) {
+    for (let item of data.rows) {
+        
+    }
+}
+
 function Generate() {
-    
+    for (let body of Astronomy.Bodies) {
+        if (body !== 'Earth') {
+            const data = LoadMagnitudeData(`magnitude/${body}.txt`);
+            const model = Regress(data);
+            console.log(model);
+        }
+    }
 }
 
 function Run() {

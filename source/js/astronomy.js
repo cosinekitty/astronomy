@@ -2338,6 +2338,19 @@ function SaturnMagnitude(hc, gc) {
     return 0;   // FIXFIXFIX not yet implemented
 }
 
+function MoonMagnitude(phase, helio_dist, geo_dist) {
+    // https://astronomy.stackexchange.com/questions/10246/is-there-a-simple-analytical-formula-for-the-lunar-phase-brightness-curve
+    let rad = phase * DEG2RAD;
+    let rad2 = rad * rad;
+    let rad4 = rad2 * rad2;
+    let mag = -12.73 + 1.49*Math.abs(rad) + 0.043*rad4;
+
+    const moon_mean_distance_au = 385000.6 / AU_KM;
+    let geo_au = geo_dist / moon_mean_distance_au;
+    mag += 5*Math.log10(helio_dist * geo_au);
+    return mag;
+}
+
 Astronomy.Illumination = function(body, date) {
     // Calculates phase angle, distance, and visual maginitude of the body.
     // For the Sun, the phase angle returned is always 0.
@@ -2380,7 +2393,7 @@ Astronomy.Illumination = function(body, date) {
     if (body === 'Sun')
         mag = sun_mag_at_1_au + 5*Math.log10(geo_dist);
     else if (body === 'Moon')
-        mag = 0;        // FIXFIXFIX - not yet implemented
+        mag = MoonMagnitude(phase, helio_dist, geo_dist);
     else if (body === 'Saturn')
         mag = SaturnMagnitude(hc, gc);
     else
