@@ -39,7 +39,7 @@ function LoadMagnitudeData(filename) {
         }
     }
 
-    console.log(`${filename} : ${rows.length} rows`);
+    //console.log(`${filename} : ${rows.length} rows`);
 
     return {
         filename: filename,
@@ -61,7 +61,7 @@ function CheckMagnitudeData(body, data) {
     }
 
     const pass = (Math.abs(diff_lo) < 0.01 && Math.abs(diff_hi) < 0.01);
-    console.log(`${body}: ${pass?"PASS":"FAIL"}, diff_lo=${diff_lo}, diff_hi=${diff_hi}`);
+    console.log(`${body.padEnd(8)} ${pass?"    ":"FAIL"}  diff_lo=${diff_lo.toFixed(4).padStart(8)}, diff_hi=${diff_hi.toFixed(4).padStart(8)}`);
     return pass;
 }
 
@@ -80,7 +80,7 @@ function Test() {
 
 function Regress(data) {
     for (let item of data.rows) {
-        
+
     }
 }
 
