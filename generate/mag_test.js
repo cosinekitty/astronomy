@@ -57,17 +57,24 @@ function CheckMagnitudeData(body, data) {
             diff_hi = Math.max(diff_hi, diff);
         }
     }
-    console.log(`${body}: diff_lo=${diff_lo}, diff_hi=${diff_hi}`);
-    if (Math.abs(diff_lo) < 0.01 && Math.abs(diff_hi) < 0.01) {
-        console.log(`${body}: PASS`);
-    } else {
-        console.log(`${body}: FAIL`);
-    }
+
+    const pass = (Math.abs(diff_lo) < 0.01 && Math.abs(diff_hi) < 0.01);
+    console.log(`${body}: ${pass?"PASS":"FAIL"}, diff_lo=${diff_lo}, diff_hi=${diff_hi}`);
+    return pass;
 }
 
-for (let body of Astronomy.Bodies) {
-    if (body !== 'Earth') {
-        const data = LoadMagnitudeData(`magnitude/${body}.txt`);
-        CheckMagnitudeData(body, data);
+function Test() {
+    let all_passed = true;
+    for (let body of Astronomy.Bodies) {
+        if (body !== 'Earth') {
+            const data = LoadMagnitudeData(`magnitude/${body}.txt`);
+            if (!CheckMagnitudeData(body, data))
+                all_passed = false;
+        }
     }
+    return all_passed;
 }
+
+Test() || Fail('Found excessive error in at least one test.');
+console.log('mag_test.js: SUCCESS');
+process.exit(0);
