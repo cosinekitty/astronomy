@@ -15,9 +15,9 @@ function LoadMagnitudeData(filename) {
     for (let line of lines) {
         ++lnum;
 
-        //  Date__(UT)__HR:MN      APmag  S-brt            delta      deldot    S-T-O
-        // [ 2016-Mar-28 00:00      -3.83   0.94 1.60152932868679   6.0989077  25.8529]
-        let m = line.match(/^\s(\d{4})-(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)-(\d{2})\s(\d{2}):(\d{2})\s+(-?\d+\.\d+)\s+(-?\d+\.\d+)\s+(-?\d+\.\d+)\s+(-?\d+\.\d+)\s+(-?\d+\.\d+)\s*$/);
+        // [ Date__(UT)__HR:MN      APmag  S-brt               r        rdot            delta      deldot    S-T-O]
+        // [ 2023-Mar-30 00:00      -4.01   1.17  0.719092953368  -0.1186373 1.20453495004726 -11.0204917  55.9004]
+        let m = line.match(/^\s(\d{4})-(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)-(\d{2})\s(\d{2}):(\d{2})\s+(-?\d+\.\d+)\s+(-?\d+\.\d+)\s+(-?\d+\.\d+)\s+(-?\d+\.\d+)\s+(-?\d+\.\d+)\s+(-?\d+\.\d+)\s+(-?\d+\.\d+)\s*$/);
         if (m) {
             const year = parseInt(m[1]);
             const month = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].indexOf(m[2]);
@@ -30,9 +30,11 @@ function LoadMagnitudeData(filename) {
                 date: new Date(Date.UTC(year, month, day, hour, minute)),
                 mag: parseFloat(m[6]),
                 sbrt: parseFloat(m[7]),
-                geo_dist: parseFloat(m[8]),
-                geo_radvel: parseFloat(m[9]),
-                phase_angle: parseFloat(m[10])
+                helio_dist: parseFloat(m[8]),
+                helio_radvel: parseFloat(m[9]),
+                geo_dist: parseFloat(m[10]),
+                geo_radvel: parseFloat(m[11]),
+                phase_angle: parseFloat(m[12])
             };
 
             rows.push(item);
