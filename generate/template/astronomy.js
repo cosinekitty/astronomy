@@ -1479,10 +1479,17 @@ Astronomy.EclipticLongitude = function(body, date) {    // heliocentric ecliptic
 }
 
 function VisualMagnitude(body, phase, helio_dist, geo_dist) {
+    // For Mercury and Venus, see:  https://iopscience.iop.org/article/10.1086/430212
     let c0, c1=0, c2=0, c3=0;
     switch (body) {
-    case 'Mercury':     c0 = -0.46; c1 = +3.80; c2 = -2.73; c3 = +2.00; break;
-    case 'Venus':       c0 = -4.34; c1 = +0.09; c2 = +2.39; c3 = -0.65; break;
+    case 'Mercury':     c0 = -0.60; c1 = +4.98; c2 = -4.88; c3 = +3.02; break;
+    case 'Venus':
+        if (phase < 163.6) {
+            c0 = -4.47; c1 = +1.03; c2 = +0.57; c3 = +0.13;
+        } else {
+            c0 = 0.98; c1 = -1.02;
+        }
+        break;
     case 'Mars':        c0 = -1.52; c1 = +1.60;                         break;
     case 'Jupiter':     c0 = -9.40; c1 = +0.50;                         break;
     case 'Uranus':      c0 = -7.19;                                     break;
