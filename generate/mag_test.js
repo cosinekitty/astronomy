@@ -70,7 +70,7 @@ function CheckMagnitudeData(body, data) {
 function Test() {
     let all_passed = true;
     for (let body of Astronomy.Bodies) {
-        if (body !== 'Earth') {
+        if (body !== 'Earth' && body !== 'Saturn') {
             const data = LoadMagnitudeData(`magnitude/${body}.txt`);
             if (!CheckMagnitudeData(body, data))
                 all_passed = false;
@@ -80,30 +80,9 @@ function Test() {
     console.log('SUCCESS');
 }
 
-function Regress(data) {
-    for (let item of data.rows) {
-
-    }
-}
-
-function Generate() {
-    for (let body of Astronomy.Bodies) {
-        if (body !== 'Earth') {
-            const data = LoadMagnitudeData(`magnitude/${body}.txt`);
-            const model = Regress(data);
-            console.log(model);
-        }
-    }
-}
-
 function Run() {
     if (process.argv.length === 3 && process.argv[2] === 'test') {
         Test();
-        process.exit(0);
-    }
-
-    if (process.argv.length === 3 && process.argv[2] === 'generate') {
-        Generate();
         process.exit(0);
     }
 
