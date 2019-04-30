@@ -51,9 +51,11 @@ function LoadMagnitudeData(filename) {
 
 function CheckMagnitudeData(body, data) {
     let diff_lo, diff_hi;
+    let sum_squared_diff = 0;
     for (let item of data.rows) {
         let illum = Astronomy.Illumination(body, item.date);
         let diff = illum.mag - item.mag;
+        sum_squared_diff += diff*diff;
         if (diff_lo === undefined) {
             diff_lo = diff_hi = diff;
         } else {
@@ -61,10 +63,10 @@ function CheckMagnitudeData(body, data) {
             diff_hi = Math.max(diff_hi, diff);
         }
     }
-
+    let rms = Math.sqrt(sum_squared_diff / data.rows.length);
     const limit = 0.012;
     const pass = (Math.abs(diff_lo) < limit && Math.abs(diff_hi) < limit);
-    console.log(`${body.padEnd(8)} ${pass?"    ":"FAIL"}  diff_lo=${diff_lo.toFixed(4).padStart(8)}, diff_hi=${diff_hi.toFixed(4).padStart(8)}`);
+    console.log(`${body.padEnd(8)} ${pass?"    ":"FAIL"}  diff_lo=${diff_lo.toFixed(4).padStart(8)}, diff_hi=${diff_hi.toFixed(4).padStart(8)}, rms=${rms.toFixed(4).padStart(8)}`);
     return pass;
 }
 
