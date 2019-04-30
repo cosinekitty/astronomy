@@ -2329,7 +2329,7 @@ function VisualMagnitude(body, phase, helio_dist, geo_dist) {
         break;
     case 'Mars':        c0 = -1.52; c1 = +1.60;                         break;
     case 'Jupiter':     c0 = -9.40; c1 = +0.50;                         break;
-    case 'Uranus':      c0 = -7.19;                                     break;
+    case 'Uranus':      c0 = -7.19; c1 = +0.25;                         break;
     case 'Neptune':     c0 = -6.87;                                     break;
     case 'Pluto':       c0 = -1.00; c1 = +4.00;                         break;
     default: throw `VisualMagnitude: unsupported body ${body}`;
