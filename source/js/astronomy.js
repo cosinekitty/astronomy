@@ -2350,7 +2350,7 @@ function MoonMagnitude(phase, helio_dist, geo_dist) {
     let rad = phase * DEG2RAD;
     let rad2 = rad * rad;
     let rad4 = rad2 * rad2;
-    let mag = -12.73 + 1.49*Math.abs(rad) + 0.043*rad4;
+    let mag = -12.717 + 1.49*Math.abs(rad) + 0.0431*rad4;
 
     const moon_mean_distance_au = 385000.6 / AU_KM;
     let geo_au = geo_dist / moon_mean_distance_au;
