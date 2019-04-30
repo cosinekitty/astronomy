@@ -2341,8 +2341,27 @@ function VisualMagnitude(body, phase, helio_dist, geo_dist) {
     return mag;
 }
 
-function SaturnMagnitude(hc, gc) {
-    return 0;   // FIXFIXFIX not yet implemented
+function SaturnMagnitude(phase, helio_dist, geo_dist, gc, time) {
+    // Based on formulas by Paul Schlyter found here:
+    // http://www.stjarnhimlen.se/comp/ppcomp.html#15
+
+    // We must handle Saturn's rings as a major component of its visual magnitude.
+    // Find geocentric ecliptic coordinates of Saturn.
+    const eclip = Astronomy.Ecliptic(gc.x, gc.y, gc.z);
+    const ir = DEG2RAD * 28.06;   // tilt of Saturn's rings to the ecliptic, in radians
+    const Nr = DEG2RAD * (169.51 + (3.82e-5 * time.tt));    // ascending node of Saturn's rings, in radians
+
+    // Find tilt of Saturn's rings, as seen from Earth.
+    const lat = DEG2RAD * eclip.elat;
+    const lon = DEG2RAD * eclip.elon;
+    const tilt = Math.asin(Math.sin(lat)*Math.cos(ir) - Math.cos(lat)*Math.sin(ir)*Math.sin(lon-Nr));
+    const sin_tilt = Math.sin(Math.abs(tilt));
+
+    const x = phase / 100;
+    let mag = -9.0 + 0.044*x;
+    mag += sin_tilt*(-2.6 + 1.2*sin_tilt);
+    mag += 5*Math.log10(helio_dist * geo_dist);
+    return mag;
 }
 
 function MoonMagnitude(phase, helio_dist, geo_dist) {
@@ -2402,7 +2421,7 @@ Astronomy.Illumination = function(body, date) {
     else if (body === 'Moon')
         mag = MoonMagnitude(phase, helio_dist, geo_dist);
     else if (body === 'Saturn')
-        mag = SaturnMagnitude(hc, gc);
+        mag = SaturnMagnitude(phase, helio_dist, geo_dist, gc, time);
     else
         mag = VisualMagnitude(body, phase, helio_dist, geo_dist);
 
