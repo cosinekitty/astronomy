@@ -10,6 +10,20 @@ echo "Generating target code."
 ./generate source || Fail "Problem generating target code."
 
 echo ""
+echo "Running astro_check."
+node astro_check.js > temp/check.txt || Fail "Problem running JavaScript unit test."
+echo "Verifying astro_check output."
+./generate check temp/check.txt || Fail "Verification failure for JavaScript unit test output."
+
+echo ""
+echo "Running check against JPL Horizons data."
+./jplcheck || Fail "Error in JPL check."
+
+echo ""
+echo "Running test of moon phase search."
+node moon_phase_test.js || Fail "Failed moon phase test."
+
+echo ""
 echo "Running longitude tests."
 node elong_test.js || Fail "Failed longitude tests."
 
@@ -28,18 +42,8 @@ echo "Running rise/set test."
 node rise_set_test.js || Fail "Failed rise/set test."
 
 echo ""
-echo "Running astro_check."
-node astro_check.js > temp/check.txt || Fail "Problem running JavaScript unit test."
-echo "Verifying astro_check output."
-./generate check temp/check.txt || Fail "Verification failure for JavaScript unit test output."
-
-echo ""
-echo "Running check against JPL Horizons data."
-./jplcheck || Fail "Error in JPL check."
-
-echo ""
-echo "Running test of moon phase search."
-node moon_phase_test.js || Fail "Failed moon phase test."
+echo "Running magnitude tests."
+node mag_test.js || Fail "Failed magnitude tests."
 
 echo ""
 echo "SUCCESS."

@@ -81,14 +81,5 @@ function Test() {
     console.log('SUCCESS');
 }
 
-function Run() {
-    if (process.argv.length === 3 && process.argv[2] === 'test') {
-        Test();
-        process.exit(0);
-    }
-
-    console.log('USAGE:  node mag_test.js [test | generate]');
-    process.exit(1);
-}
-
-Run();
+Test();
+process.exit(0);
