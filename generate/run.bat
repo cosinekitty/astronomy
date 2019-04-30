@@ -142,5 +142,10 @@ node moon_phase_test.js
 if errorlevel 1 (exit /b 1)
 
 echo.
-echo.SUCCESS.
+echo.Running visual magnitude tests.
+node mag_test.js
+if errorlevel 1 (exit /b 1)
+
+echo.
+echo.ALL TESTS PASSED.
 exit /b 0
