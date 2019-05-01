@@ -1520,8 +1520,7 @@ function SaturnMagnitude(phase, helio_dist, geo_dist, gc, time) {
     const tilt = Math.asin(Math.sin(lat)*Math.cos(ir) - Math.cos(lat)*Math.sin(ir)*Math.sin(lon-Nr));
     const sin_tilt = Math.sin(Math.abs(tilt));
 
-    const x = phase / 100;
-    let mag = -9.0 + 0.044*x;
+    let mag = -9.0 + 0.044*phase;
     mag += sin_tilt*(-2.6 + 1.2*sin_tilt);
     mag += 5*Math.log10(helio_dist * geo_dist);
     return mag;
