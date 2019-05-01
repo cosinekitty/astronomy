@@ -70,6 +70,42 @@ function CheckMagnitudeData(body, data) {
     return pass;
 }
 
+function TestSaturn() {
+    // JPL Horizons does not include Saturn's rings in its magnitude models.
+    // I still don't have authoritative test data for Saturn's magnitude.
+    // For now, I just test for consistency with Paul Schlyter's formulas at:
+    // http://www.stjarnhimlen.se/comp/ppcomp.html#15
+
+    let success = true;
+
+    const data = [
+        { date: '1972-01-01T00:00Z', mag: -0.31904865,  tilt: +24.50061220 },
+        { date: '1980-01-01T00:00Z', mag: +0.85213663,  tilt:  -1.85761461 },
+        { date: '2009-09-04T00:00Z', mag: +1.01626809,  tilt:  +0.08380716 },
+        { date: '2017-06-15T00:00Z', mag: -0.12318790,  tilt: -26.60871409 },
+        { date: '2019-05-01T00:00Z', mag: +0.32954097,  tilt: -23.53880802 },
+        { date: '2025-09-25T00:00Z', mag: +0.51286575,  tilt:  +1.52327932 },
+        { date: '2032-05-15T00:00Z', mag: -0.04652109,  tilt: +26.95717765 }
+    ];
+
+    for (let item of data) {
+        let illum = Astronomy.Illumination('Saturn', new Date(item.date));
+        console.log(`Saturn: date=${illum.time.date.toISOString()}  mag=${illum.mag.toFixed(8).padStart(12)}  ring_tilt=${illum.ring_tilt.toFixed(8).padStart(12)}`);
+        const mag_diff = Math.abs(illum.mag - item.mag);
+        if (mag_diff > 1.0e-8) {
+            console.log(`ERROR: Excessive magnitude error ${mag_diff}`);
+            success = false;
+        }
+        const tilt_diff = Math.abs(illum.ring_tilt - item.tilt);
+        if (tilt_diff > 1.0e-8) {
+            console.log(`ERROR: Excessive ring tilt error ${tilt_diff}`);
+            success = false;
+        }
+    }
+
+    return success;
+}
+
 function Test() {
     let all_passed = true;
     for (let body of Astronomy.Bodies) {
@@ -79,6 +115,10 @@ function Test() {
                 all_passed = false;
         }
     }
+
+    if (!TestSaturn())
+        all_passed = false;
+
     all_passed || Fail('Found excessive error in at least one test.');
     console.log('SUCCESS');
 }

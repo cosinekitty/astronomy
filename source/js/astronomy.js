@@ -2360,7 +2360,7 @@ function SaturnMagnitude(phase, helio_dist, geo_dist, gc, time) {
     let mag = -9.0 + 0.044*phase;
     mag += sin_tilt*(-2.6 + 1.2*sin_tilt);
     mag += 5*Math.log10(helio_dist * geo_dist);
-    return mag;
+    return { mag:mag, ring_tilt:RAD2DEG*tilt };
 }
 
 function MoonMagnitude(phase, helio_dist, geo_dist) {
@@ -2414,17 +2414,30 @@ Astronomy.Illumination = function(body, date) {
 
     geo_dist = Math.sqrt(gc.x*gc.x + gc.y*gc.y + gc.z*gc.z);
     helio_dist = Math.sqrt(hc.x*hc.x + hc.y*hc.y + hc.z*hc.z);
+    let ring_tilt = null;   // only reported for Saturn
 
-    if (body === 'Sun')
+    if (body === 'Sun') {
         mag = sun_mag_at_1_au + 5*Math.log10(geo_dist);
-    else if (body === 'Moon')
+    } else if (body === 'Moon') {
         mag = MoonMagnitude(phase, helio_dist, geo_dist);
-    else if (body === 'Saturn')
-        mag = SaturnMagnitude(phase, helio_dist, geo_dist, gc, time);
-    else
+    } else if (body === 'Saturn') {
+        const saturn = SaturnMagnitude(phase, helio_dist, geo_dist, gc, time);
+        mag = saturn.mag;
+        ring_tilt = saturn.ring_tilt;
+    } else {
         mag = VisualMagnitude(body, phase, helio_dist, geo_dist);
+    }
 
-    return { mag:mag, phase:phase, helio_dist:helio_dist, geo_dist:geo_dist, gc:gc, hc:hc };
+    return { 
+        time: time,
+        mag: mag,
+        phase: phase,
+        helio_dist: helio_dist,
+        geo_dist: geo_dist,
+        gc: gc,
+        hc: hc,
+        ring_tilt: ring_tilt
+    };
 }
 
 function SynodicPeriod(body) {
