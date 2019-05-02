@@ -2791,7 +2791,7 @@ Astronomy.SearchMaxElongation = function(body, startDate) {
     let startTime = AstroTime(startDate);
 
     const table = {
-        Mercury : { s1:55.0, s2:75.0 },
+        Mercury : { s1:50.0, s2:85.0 },
         Venus :   { s1:40.0, s2:50.0 }
     };
 
@@ -2852,6 +2852,7 @@ Astronomy.SearchMaxElongation = function(body, startDate) {
         let m1 = neg_slope(t1);
         if (m1 >= 0) 
             throw `SearchMaxElongation: internal error: m1 = ${m1}`;
+
         let m2 = neg_slope(t2);
         if (m2 <= 0) 
             throw `SearchMaxElongation: internal error: m2 = ${m2}`;
