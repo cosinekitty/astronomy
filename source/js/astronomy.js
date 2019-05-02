@@ -2160,7 +2160,7 @@ function QuadInterp(tm, dt, fa, fm, fb) {
 
 
 function Search(func, t1, t2, options) {
-    // Search for next time t (with time between t1 and t2).
+    // Search for next time t (with time between t1 and t2)
     // that func(t) crosses from a negative value to a non-negative value.
     // The given function must have "smooth" behavior over the entire range [t1, t2],
     // meaning that it behaves like a continuous differentiable function.
@@ -2739,6 +2739,138 @@ Astronomy.Seasons = function(year) {
         sep_equinox:  sep_equinox,
         dec_solstice: dec_solstice
     };
+}
+
+Astronomy.Elongation = function(body, date) {
+    // This function calculates the absolute value of the
+    // angle between the centers of the given body and the Sun as seen 
+    // from the center of the Earth at the given date.
+    // The angle is measured along the plane of the Earth's orbit
+    // (i.e. the ecliptic) and ranges [0, 180] degrees.
+    // This function is helpful for determining how easy it is to
+    // view Mercury or Venus away from the Sun's glare on a given date.
+    // The function also determines whether the object is visible
+    // in the morning or evening; this is more important the smaller
+    // the elongation is.
+
+    let time = AstroTime(date);
+
+    let lon = Astronomy.LongitudeFromSun(body, time);
+    if (lon > 180)
+        return { time: time, visibility: 'morning', elongation: (360 - lon) };
+
+    return { time: time, visibility: 'evening', elongation: lon };
+}
+
+Astronomy.SearchMaxElongation = function(body, startDate) {
+    // This function searches for the next maximum elongation event
+    // for Mercury or Venus that occurs after the given start date.
+    // Calling with other values of 'body' will result in an exception.
+    // Maximum elongation occurs when the body has the greatest
+    // angular separation from the Sun, as seen from the Earth.
+    // It returns an object containing the date and time of the next
+    // maximum elongation, the elongation in degrees, and whether
+    // the body is visible in the morning or evening.
+
+    const dt = 0.01;
+
+    function neg_slope(t) {
+        // The slope de/dt goes from positive to negative at the maximum elongation event.
+        // But Search() is designed for functions that ascend through zero.
+        // So this function returns the negative slope.
+        const t1 = t.AddDays(-dt/2);
+        const t2 = t.AddDays(+dt/2);
+        let e1 = Astronomy.LongitudeFromSun(body, t1);
+        if (e1 > 180) e1 = 360 - e1;
+        let e2 = Astronomy.LongitudeFromSun(body, t2);
+        if (e2 > 180) e2 = 360 - e2;
+        let m = (e1-e2)/dt;
+        return m;
+    }
+
+    let startTime = AstroTime(startDate);
+
+    const table = {
+        Mercury : { s1:55.0, s2:75.0 },
+        Venus :   { s1:40.0, s2:50.0 }
+    };
+
+    const planet = table[body];
+    if (!planet)
+        throw 'SearchMaxElongation works for Mercury and Venus only.';
+
+    let iter = 0;
+    while (++iter <= 2) {
+        // Find current heliocentric relative longitude between the
+        // inferior planet and the Earth.
+        let plon = Astronomy.EclipticLongitude(body, startTime);
+        let elon = Astronomy.EclipticLongitude('Earth', startTime);
+        let rlon = LongitudeOffset(plon - elon);    // clamp to (-180, +180]
+
+        // The slope function is not well-behaved when rlon is near 0 degrees or 180 degrees
+        // because there is a cusp there that causes a discontinuity in the derivative.
+        // So we need to guard against searching near such times.
+
+        let t1, t2;
+        let rlon_lo, rlon_hi, adjust_days;
+        if (rlon >= -planet.s1 && rlon < +planet.s1 ) {
+            // Seek to the window [+s1, +s2].
+            adjust_days = 0;
+            // Search forward for the time t1 when rel lon = +s1.
+            rlon_lo = +planet.s1;
+            // Search forward for the time t2 when rel lon = +s2.
+            rlon_hi = +planet.s2;
+        } else if (rlon >= +planet.s2 || rlon < -planet.s2 ) {
+            // Seek to the next search window at [-s2, -s1].
+            adjust_days = 0;
+            // Search forward for the time t1 when rel lon = -s2.
+            rlon_lo = -planet.s2;
+            // Search forward for the time t2 when rel lon = -s1.
+            rlon_hi = -planet.s1;
+        } else if (rlon >= 0) {
+            // rlon must be in the middle of the window [+s1, +s2].
+            // Search BACKWARD for the time t1 when rel lon = +s1.
+            adjust_days = -SynodicPeriod(body) / 4;
+            rlon_lo = +planet.s1;
+            rlon_hi = +planet.s2;
+            // Search forward from t1 to find t2 such that rel lon = +s2.
+        } else {
+            // rlon must be in the middle of the window [-s2, -s1].
+            // Search BACKWARD for the time t1 when rel lon = -s2.
+            adjust_days = -SynodicPeriod(body) / 4;
+            rlon_lo = -planet.s2;
+            // Search forward from t1 to find t2 such that rel lon = -s1.
+            rlon_hi = -planet.s1;
+        }
+
+        let t_start = startTime.AddDays(adjust_days);
+        t1 = Astronomy.SearchRelativeLongitude(body, rlon_lo, t_start);
+        t2 = Astronomy.SearchRelativeLongitude(body, rlon_hi, t1);
+
+        // Now we have a time range [t1,t2] that brackets a maximum elongation event.
+        // Confirm the bracketing.
+        let m1 = neg_slope(t1);
+        if (m1 >= 0) 
+            throw `SearchMaxElongation: internal error: m1 = ${m1}`;
+        let m2 = neg_slope(t2);
+        if (m2 <= 0) 
+            throw `SearchMaxElongation: internal error: m2 = ${m2}`;
+
+        // Use the generic search algorithm to home in on where the slope crosses from negative to positive.
+        let tx = Search(neg_slope, t1, t2, {init_f1:m1, init_f2:m2, dt_tolerance_seconds:10});
+        if (!tx) 
+            throw `SearchMaxElongation: failed search iter ${iter} (t1=${t1.toString()}, t2=${t2.toString()})`;
+
+        if (tx.tt >= startTime.tt)
+            return Astronomy.Elongation(body, tx);
+
+        // This event is in the past (earlier than startDate).
+        // We need to search forward from t2 to find the next possible window.
+        // We never need to search more than twice.
+        startTime = t2;
+    }
+
+    throw `SearchMaxElongation: failed to find event after 2 tries.`;
 }
 
 })(typeof exports==='undefined' ? (this.Astronomy={}) : exports);

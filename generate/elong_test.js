@@ -72,6 +72,25 @@ function TestPlanet(outFileName, body, startYear, stopYear, zeroLonEventName) {
         throw `TestPlanet: Excessive event interval ratio for ${body} = ${ratio}`;
 }
 
+function TestMaxElong(body, startText, verifyText, verifyAngle, verifyVisibility) {
+    let startDate = new Date(startText);
+    let verifyDate = new Date(verifyText);
+    let evt = Astronomy.SearchMaxElongation(body, startDate);
+
+    let hour_diff = Math.abs(verifyDate - evt.time.date) / (1000 * 3600);
+    let angle_diff = Math.abs(evt.elongation - verifyAngle);
+    console.log(`TestMaxElong: ${body.padStart(8)} ${evt.visibility.padStart(8)} elong=${evt.elongation.toFixed(2).padStart(5)} (err ${angle_diff.toFixed(2).padStart(4)})  ${evt.time.toString()} (err ${hour_diff.toFixed(2).padStart(4)} hours)`);
+
+    if (evt.visibility !== verifyVisibility)
+        throw `TestMaxElong: expected visibility ${verifyVisibility}, but found ${evt.visibility}`;
+
+    if (angle_diff > 1.0)
+        throw `TestMaxElong: excessive angular error = ${angle_diff}`;
+
+    if (hour_diff > 5)
+        throw `TestMaxElong: excessive hour error = ${hour_diff}`;
+}
+
 console.log('elong_test.js: Starting');
 TestFile('longitude/opposition_2018.txt', 2018, 0);
 
@@ -80,6 +99,12 @@ for (let body of ['Mercury', 'Venus'])
 
 for (let body of ['Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Pluto'])
     TestPlanet(`temp/longitude_${body}.txt`, body, 1700, 2200, 'opp');
+
+// Correct answers for max elongation from:
+// https://www.thenauticalalmanac.com/Astronomical_Phenomena_for_the_year_2019.pdf
+TestMaxElong('Mercury', '2019-01-01T00:00Z', '2019-02-27T01:00Z', 18.0, 'evening');
+TestMaxElong('Mercury', '2019-03-01T00:00Z', '2019-04-11T20:00Z', 28.0, 'morning');
+TestMaxElong('Venus',   '2018-12-01T00:00Z', '2019-01-06T05:00Z', 47.0, 'morning');
 
 console.log('elong_test.js: SUCCESS')
 process.exit(0);
