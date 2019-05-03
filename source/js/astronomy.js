@@ -2306,6 +2306,22 @@ Astronomy.LongitudeFromSun = function(body, date) {
     return NormalizeLongitude(eb.elon - es.elon);
 }
 
+Astronomy.AngleFromSun = function(body, date) {
+    // This function returns the full angle seen from
+    // the Earth, between the given body and the Sun.
+    // Unlike LongitudeFromSun, this function does not
+    // project the body's "shadow" onto the ecliptic.
+
+    if (body == 'Earth')
+        throw 'The Earth does not have an angle as seen from itself.';
+
+    const t = AstroTime(date);
+    let sv = Astronomy.GeoVector('Sun', date);
+    let bv = Astronomy.GeoVector(body, date);
+    let angle = AngleBetween(sv, bv);
+    return angle;
+}
+
 Astronomy.EclipticLongitude = function(body, date) {    // heliocentric ecliptic longitude in J2000
     // This function calculates the ecliptic longitude of the body
     // as seen from the center of the Sun at the given date.
@@ -2756,10 +2772,15 @@ Astronomy.Elongation = function(body, date) {
     let time = AstroTime(date);
 
     let lon = Astronomy.LongitudeFromSun(body, time);
-    if (lon > 180)
-        return { time: time, visibility: 'morning', elongation: (360 - lon) };
-
-    return { time: time, visibility: 'evening', elongation: lon };
+    let vis;
+    if (lon > 180) {
+        vis = 'morning';
+        lon = 360 - lon;
+    } else {
+        vis = 'evening';
+    }
+    let angle = Astronomy.AngleFromSun(body, time);
+    return { time: time, visibility: vis, elongation: angle, relative_longitude: lon };
 }
 
 Astronomy.SearchMaxElongation = function(body, startDate) {
@@ -2780,10 +2801,8 @@ Astronomy.SearchMaxElongation = function(body, startDate) {
         // So this function returns the negative slope.
         const t1 = t.AddDays(-dt/2);
         const t2 = t.AddDays(+dt/2);
-        let e1 = Astronomy.LongitudeFromSun(body, t1);
-        if (e1 > 180) e1 = 360 - e1;
-        let e2 = Astronomy.LongitudeFromSun(body, t2);
-        if (e2 > 180) e2 = 360 - e2;
+        let e1 = Astronomy.AngleFromSun(body, t1);
+        let e2 = Astronomy.AngleFromSun(body, t2);
         let m = (e1-e2)/dt;
         return m;
     }

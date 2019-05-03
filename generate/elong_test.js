@@ -167,7 +167,7 @@ function TestMaxElong(body, startText, verifyText, verifyAngle, verifyVisibility
     if (angle_diff > 1.0)
         throw `TestMaxElong: excessive angular error = ${angle_diff}`;
 
-    if (Math.abs(hour_diff) > 15)
+    if (Math.abs(hour_diff) > 0.6)
         throw `TestMaxElong: excessive hour error = ${hour_diff}`;
 }
 
