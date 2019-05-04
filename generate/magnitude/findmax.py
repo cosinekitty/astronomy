@@ -4,9 +4,11 @@ import re
 from datetime import datetime
 
 class Item:
-    def __init__(self, mag, date):
+    def __init__(self, mag, date, elong, rlon):
         self.mag = mag
         self.date = date
+        self.elong = elong
+        self.rlon = rlon
 
 def DateStr(date):
     return date.isoformat()[:-3] + 'Z'
@@ -17,6 +19,8 @@ def FindMaxMagEvents(filename):
         prev_item = None
         first_brightest_item = None
         seen_dimming = False
+        min_rlon = None
+        max_rlon = None
         for line in infile:
             lnum += 1
             line = line.strip()
@@ -26,15 +30,24 @@ def FindMaxMagEvents(filename):
             if m:
                 date = datetime.strptime(m.group(1), '%Y-%b-%d %H:%M')
                 mag = float(m.group(2))
-                item = Item(mag, date)
+                elong = float(m.group(4))
+                rlon = float(m.group(7))
+                item = Item(mag, date, elong, rlon)
                 if prev_item is not None:
                     if item.mag < prev_item.mag:
                         # Getting brighter
                         first_brightest_item = item
                     elif item.mag > prev_item.mag:
-                        # Getting dimmer
-                        if first_brightest_item and seen_dimming:
-                            print('{} {} {:0.2f}'.format(DateStr(first_brightest_item.date), DateStr(prev_item.date), first_brightest_item.mag))
+                        # Getting dimmer ... did we just find a peak?
+                        # Ignore the minor peaks that happen near inferior conjunction... they are too hard to see anyway.
+                        if first_brightest_item and seen_dimming and (first_brightest_item.elong > 10):
+                            print('{} {} {:5.2f} {:5.2f} {:4.2f}'.format(DateStr(first_brightest_item.date), DateStr(prev_item.date), first_brightest_item.rlon, prev_item.rlon, first_brightest_item.mag))
+                            if min_rlon is None:
+                                min_rlon = min(first_brightest_item.rlon, prev_item.rlon)
+                                max_rlon = max(first_brightest_item.rlon, prev_item.rlon)
+                            else:
+                                min_rlon = min(min_rlon, first_brightest_item.rlon, prev_item.rlon)
+                                max_rlon = max(max_rlon, first_brightest_item.rlon, prev_item.rlon)
                         seen_dimming = True
                         first_brightest_item = None
                     else:
@@ -47,5 +60,6 @@ def FindMaxMagEvents(filename):
                 seen_dimming = False
                 prev_item = None
                 first_brightest_item = None
+        #print('min_rlon={:0.2f}, max_rlon={:0.2f}'.format(min_rlon, max_rlon))
         
 FindMaxMagEvents('Venus2.txt')

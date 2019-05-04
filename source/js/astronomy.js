@@ -2887,10 +2887,111 @@ Astronomy.SearchMaxElongation = function(body, startDate) {
         // This event is in the past (earlier than startDate).
         // We need to search forward from t2 to find the next possible window.
         // We never need to search more than twice.
-        startTime = t2;
+        startTime = t2.AddDays(1);
     }
 
     throw `SearchMaxElongation: failed to find event after 2 tries.`;
+}
+
+Astronomy.SearchPeakMagnitude = function(body, startDate) {
+    if (body !== 'Venus')
+        throw 'SearchPeakMagnitude currently works for Venus only.';
+
+    const dt = 0.01;
+
+    function slope(t) {
+        // The Search() function finds a transition from negative to positive values.
+        // The derivative of magnitude y with respect to time t (dy/dt)
+        // is negative as an object gets brighter, because the magnitude numbers
+        // get smaller. At peak magnitude dy/dt = 0, then as the object gets dimmer,
+        // dy/dt > 0.
+        const t1 = t.AddDays(-dt/2);
+        const t2 = t.AddDays(+dt/2);
+        const y1 = Astronomy.Illumination(body, t1).mag;
+        const y2 = Astronomy.Illumination(body, t2).mag;
+        const m = (y2-y1) / dt;
+        return m;
+    }
+
+    let startTime = AstroTime(startDate);
+
+    // s1 and s2 are relative longitudes within which peak magnitude of Venus can occur.
+    const s1 = 10.0;
+    const s2 = 30.0;
+
+    let iter = 0;
+    while (++iter <= 2) {
+        // Find current heliocentric relative longitude between the
+        // inferior planet and the Earth.
+        let plon = Astronomy.EclipticLongitude(body, startTime);
+        let elon = Astronomy.EclipticLongitude('Earth', startTime);
+        let rlon = LongitudeOffset(plon - elon);    // clamp to (-180, +180]
+
+        // The slope function is not well-behaved when rlon is near 0 degrees or 180 degrees
+        // because there is a cusp there that causes a discontinuity in the derivative.
+        // So we need to guard against searching near such times.
+
+        let t1, t2;
+        let rlon_lo, rlon_hi, adjust_days;
+        if (rlon >= -s1 && rlon < +s1 ) {
+            // Seek to the window [+s1, +s2].
+            adjust_days = 0;
+            // Search forward for the time t1 when rel lon = +s1.
+            rlon_lo = +s1;
+            // Search forward for the time t2 when rel lon = +s2.
+            rlon_hi = +s2;
+        } else if (rlon >= +s2 || rlon < -s2 ) {
+            // Seek to the next search window at [-s2, -s1].
+            adjust_days = 0;
+            // Search forward for the time t1 when rel lon = -s2.
+            rlon_lo = -s2;
+            // Search forward for the time t2 when rel lon = -s1.
+            rlon_hi = -s1;
+        } else if (rlon >= 0) {
+            // rlon must be in the middle of the window [+s1, +s2].
+            // Search BACKWARD for the time t1 when rel lon = +s1.
+            adjust_days = -SynodicPeriod(body) / 4;
+            rlon_lo = +s1;
+            rlon_hi = +s2;
+            // Search forward from t1 to find t2 such that rel lon = +s2.
+        } else {
+            // rlon must be in the middle of the window [-s2, -s1].
+            // Search BACKWARD for the time t1 when rel lon = -s2.
+            adjust_days = -SynodicPeriod(body) / 4;
+            rlon_lo = -s2;
+            // Search forward from t1 to find t2 such that rel lon = -s1.
+            rlon_hi = -s1;
+        }
+
+        let t_start = startTime.AddDays(adjust_days);
+        t1 = Astronomy.SearchRelativeLongitude(body, rlon_lo, t_start);
+        t2 = Astronomy.SearchRelativeLongitude(body, rlon_hi, t1);
+
+        // Now we have a time range [t1,t2] that brackets a maximum magnitude event.
+        // Confirm the bracketing.
+        let m1 = slope(t1);
+        if (m1 >= 0) 
+            throw `SearchPeakMagnitude: internal error: m1 = ${m1}`;
+
+        let m2 = slope(t2);
+        if (m2 <= 0) 
+            throw `SearchPeakMagnitude: internal error: m2 = ${m2}`;
+
+        // Use the generic search algorithm to home in on where the slope crosses from negative to positive.
+        let tx = Search(slope, t1, t2, {init_f1:m1, init_f2:m2, dt_tolerance_seconds:10});
+        if (!tx) 
+            throw `SearchPeakMagnitude: failed search iter ${iter} (t1=${t1.toString()}, t2=${t2.toString()})`;
+
+        if (tx.tt >= startTime.tt)
+            return Astronomy.Illumination(body, tx);
+
+        // This event is in the past (earlier than startDate).
+        // We need to search forward from t2 to find the next possible window.
+        // We never need to search more than twice.
+        startTime = t2.AddDays(1);
+    }
+
+    throw `SearchPeakMagnitude: failed to find event after 2 tries.`;
 }
 
 })(typeof exports==='undefined' ? (this.Astronomy={}) : exports);

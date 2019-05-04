@@ -106,6 +106,38 @@ function TestSaturn() {
     return success;
 }
 
+function TestMaxMag(filename, body) {
+    // Test that we can find maximum magnitude events for Venus within
+    // ranges found using JPL Horizons ephemeris data that has been
+    // pre-processed by magnitude/findmax.py.
+
+    console.log('TestMaxMag: entering');
+    const text = fs.readFileSync(filename, 'utf8');
+    const lines = text.trim().split(/[\r\n]+/);
+    let date = new Date(Date.UTC(2000, 0, 1));
+    let max_diff = 0;
+    for (let line of lines) {
+        //console.log(`TestMaxMag: searching after ${date.toISOString()}`);
+        let token = line.split(/\s+/);
+        let date1 = new Date(token[0]);
+        let date2 = new Date(token[1]);
+        let evt = Astronomy.SearchPeakMagnitude(body, date);
+        if (evt.time.date < date1 || evt.time.date > date2)
+            throw `Event time ${evt.time.toString()} is outside the range ${date1.toISOString()} .. ${date2.toISOString()}`;
+
+        // How close are we to the center date?
+        let date_center = new Date((date1.getTime() + date2.getTime())/2);
+        let diff_hours = Math.abs(evt.time.date - date_center) / (1000 * 3600);
+        if (diff_hours > 7.1)
+            throw `Excessive diff_hours = ${diff_hours} from center date ${date_center.toISOString()}`;
+
+        max_diff = Math.max(max_diff, diff_hours);
+        date = date2;
+    }
+    console.log(`TestMaxMag: ${lines.length} events, max error = ${max_diff.toFixed(3)} hours.`);
+    return true;
+}
+
 function Test() {
     let all_passed = true;
     for (let body of Astronomy.Bodies) {
@@ -117,6 +149,9 @@ function Test() {
     }
 
     if (!TestSaturn())
+        all_passed = false;
+
+    if (!TestMaxMag('magnitude/maxmag_Venus.txt', 'Venus'))
         all_passed = false;
 
     all_passed || Fail('Found excessive error in at least one test.');
