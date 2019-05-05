@@ -1939,10 +1939,21 @@ Astronomy.Seasons = function(year) {
  * 
  * @memberof Astronomy
  * 
- * @property {Time}    time    
- * @property {string}  visibility 
- * @property {number}  elongation 
+ * @property {Time}    time         When the event occurs.
+ * @property {string}  visibility   
+ *      Either "morning" or "evening", indicating when the body is most easily seen.
+ * @property {number}  elongation   
+ *      The angle in degrees, as seen from the center of the Earth, 
+ *      of the apparent separation between the body and the Sun.
+ *      This angle is measured in 3D space and is not projected onto the ecliptic plane.
  * @property {number}  relative_longitude 
+ *      The angle in degrees, as seen from the Sun, between the
+ *      observed body and the Earth. This value is always between
+ *      0 and 180. More precisely, relative_longitude is the absolute
+ *      value of the difference between the heliocentric ecliptic longitudes of
+ *      the centers of observed body and the Earth.
+ * 
+ * @see Astronomy.Elongation
  */
 function ElongationEvent(time, visibility, elongation, relative_longitude) {
     this.time = time;
@@ -1951,18 +1962,21 @@ function ElongationEvent(time, visibility, elongation, relative_longitude) {
     this.relative_longitude = relative_longitude;
 }
 
-Astronomy.Elongation = function(body, date) {
-    // This function calculates the absolute value of the
-    // angle between the centers of the given body and the Sun as seen 
-    // from the center of the Earth at the given date.
-    // The angle is measured along the plane of the Earth's orbit
-    // (i.e. the ecliptic) and ranges [0, 180] degrees.
-    // This function is helpful for determining how easy it is to
-    // view Mercury or Venus away from the Sun's glare on a given date.
-    // The function also determines whether the object is visible
-    // in the morning or evening; this is more important the smaller
-    // the elongation is.
-
+/**
+ * Calculates the absolute value of the angle between the centers 
+ * of the given body and the Sun as seen from the center of the Earth at the given date.
+ * The angle is measured along the plane of the Earth's orbit (i.e. the ecliptic) 
+ * and ranges [0, 180] degrees. This function is helpful for determining how easy 
+ * it is to view Mercury or Venus away from the Sun's glare on a given date.
+ * The function also determines whether the object is visible in the morning or evening; 
+ * this is more important the smaller the elongation is.
+ * 
+ * @param {string} body
+ *      The name of the observed body. Not allowed to be "Earth".
+ * 
+ * @returns {Astronomy.ElongationEvent}
+ */
+Astronomy.Elongation = function(body, date) {    
     let time = AstroTime(date);
 
     let lon = Astronomy.LongitudeFromSun(body, time);

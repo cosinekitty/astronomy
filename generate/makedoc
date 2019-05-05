@@ -1,0 +1,14 @@
+#!/bin/bash
+Fail()
+{
+    echo "ERROR($0): $1"
+    exit 1
+}
+
+echo "Generating target code."
+./generate source || Fail "Problem generating target code."
+
+echo "Generating documentation."
+jsdoc2md --template ../jsdoc2md/js.hbs --files ../source/js/astronomy.js > ../source/js/README.md || Fail "Error generating JS documentation."
+
+exit 0

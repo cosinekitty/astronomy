@@ -155,8 +155,8 @@ function Test() {
         all_passed = false;
 
     all_passed || Fail('Found excessive error in at least one test.');
-    console.log('SUCCESS');
 }
 
 Test();
+console.log('mag_test: success');
 process.exit(0);
