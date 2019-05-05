@@ -7,4 +7,10 @@ if errorlevel 1 (
     exit /b 1
 )
 
+node eol_hack.js ..\source\js\README.md
+if errorlevel 1 (
+    echo.FATAL: error in eol_hack.js
+    exit /b 1
+)
+
 exit /b 0
