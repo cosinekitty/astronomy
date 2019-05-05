@@ -85,7 +85,7 @@ if not exist !EPHFILE! (
 )
 
 echo.
-echo.Running the target code generator.
+echo.Cleaning output directories.
 for %%d in (output temp) do (
     if not exist %%d (
         md %%d
@@ -95,12 +95,27 @@ for %%d in (output temp) do (
         )
     )
 )
+
 if exist output\vsop_*.txt (del /q output\vsop_*.txt)
 if exist temp\* (del /q temp\*)
-!GENEXE! planets
-if errorlevel 1 (exit /b 1)
 
+echo.
+echo.Generating planet models.
+!GENEXE! planets
+if errorlevel 1 (
+    echo.FATAL: !GENEXE! planets
+    exit /b 1
+)
+
+echo.
+echo.Generating target code.
 !GENEXE! source
+if errorlevel 1 (
+    echo.FATAL:  !GENEXE! source
+    exit /b 1
+)
+
+call makedocs.bat
 if errorlevel 1 (exit /b 1)
 
 echo.
