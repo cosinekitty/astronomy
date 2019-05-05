@@ -12,6 +12,9 @@ addons:
       - ubuntu-toolchain-r-test
     packages:
       - gcc-6
+      
+before_script:
+  - npm install -g jsdoc-to-markdown
 
 script:
   - export CC=/usr/bin/gcc-6
