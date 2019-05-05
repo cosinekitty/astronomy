@@ -8,7 +8,10 @@ Fail()
 echo "Generating target code."
 ./generate source || Fail "Problem generating target code."
 
-echo "Generating documentation."
+echo "Generating documentation in Markdown format."
 jsdoc2md --template ../jsdoc2md/js.hbs --files ../source/js/astronomy.js > ../source/js/README.md || Fail "Error generating JS documentation."
+
+echo "Generating documentation in HTML format for local viewing."
+jsdoc ../source/js/astronomy.js --destination ./html || Fail "Error generating HTML preview"
 
 exit 0

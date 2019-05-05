@@ -5,10 +5,36 @@
 **Kind**: global namespace  
 
 * [Astronomy](#Astronomy) : <code>object</code>
+    * [.Time](#Astronomy.Time)
+        * [new Time(date)](#new_Astronomy.Time_new)
     * [.ElongationEvent](#Astronomy.ElongationEvent)
         * [new ElongationEvent()](#new_Astronomy.ElongationEvent_new)
     * [.Elongation(body)](#Astronomy.Elongation) ⇒ [<code>ElongationEvent</code>](#Astronomy.ElongationEvent)
     * [.SearchMaxElongation(body, startDate)](#Astronomy.SearchMaxElongation) ⇒ [<code>ElongationEvent</code>](#Astronomy.ElongationEvent)
+
+<a name="Astronomy.Time"></a>
+
+### Astronomy.Time
+**Kind**: static class of [<code>Astronomy</code>](#Astronomy)  
+**Properties**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| date | <code>Date</code> | The JavaScript Date object for the given date and time. |
+| ut | <code>number</code> | Universal Time (UT1/UTC) in fractional days since the J2000 epoch.      Universal Time represents time measured with respect to the Earth's rotation,      tracking mean solar days.      The Astronomy library approximates UT1 and UTC as being the same thing.      This gives sufficient accuracy for the 1-arcminute angular resolution requirement      of this project. |
+| tt | <code>number</code> | Terrestrial Time in fractional days since the J2000 epoch.      TT represents a continuously flowing ephemeris timescale independent of      any variations of the Earth's rotation, and is adjusted from UT      using historical and predictive models of those variations. |
+
+<a name="new_Astronomy.Time_new"></a>
+
+#### new Time(date)
+The date and time of an astronomical observation.
+Objects of this type are used throughout the internals
+of the Astronomy library, and are included in certain return objects.
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| date | <code>Date</code> \| <code>number</code> | A JavaScript Date object or a numeric UTC value expressed in J2000 days. |
 
 <a name="Astronomy.ElongationEvent"></a>
 
@@ -19,10 +45,10 @@
 
 | Name | Type | Description |
 | --- | --- | --- |
-| time | <code>Time</code> | When the event occurs. |
+| time | [<code>Time</code>](#Astronomy.Time) | When the event occurs. |
 | visibility | <code>string</code> | Either "morning" or "evening", indicating when the body is most easily seen. |
 | elongation | <code>number</code> | The angle in degrees, as seen from the center of the Earth,       of the apparent separation between the body and the Sun.      This angle is measured in 3D space and is not projected onto the ecliptic plane. |
-| relative_longitude | <code>number</code> | The angle in degrees, as seen from the Sun, between the      observed body and the Earth. This value is always between      0 and 180. More precisely, relative_longitude is the absolute      value of the difference between the heliocentric ecliptic longitudes of      the centers of observed body and the Earth. |
+| relative_longitude | <code>number</code> | The angle in degrees, as seen from the Sun, between the      observed body and the Earth. This value is always between      0 and 180. More precisely, relative_longitude is the absolute      value of the difference between the heliocentric ecliptic longitudes of      the centers of the observed body and the Earth. |
 
 <a name="new_Astronomy.ElongationEvent_new"></a>
 

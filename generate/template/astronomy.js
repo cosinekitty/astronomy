@@ -180,6 +180,37 @@ function TerrestrialTime(ut) {
     return ut + DeltaT(ut + Y2000_IN_MJD)/86400;
 }
 
+/**
+ * The date and time of an astronomical observation.
+ * Objects of this type are used throughout the internals
+ * of the Astronomy library, and are included in certain return objects.
+ * 
+ * @class
+ * 
+ * @constructor
+ * 
+ * @memberof Astronomy
+ * 
+ * @param {Date|number} date
+ *      A JavaScript Date object or a numeric UTC value expressed in J2000 days.
+ * 
+ * @property {Date} date  
+ *      The JavaScript Date object for the given date and time.
+ * 
+ * @property {number} ut  
+ *      Universal Time (UT1/UTC) in fractional days since the J2000 epoch.
+ *      Universal Time represents time measured with respect to the Earth's rotation,
+ *      tracking mean solar days.
+ *      The Astronomy library approximates UT1 and UTC as being the same thing.
+ *      This gives sufficient accuracy for the 1-arcminute angular resolution requirement
+ *      of this project.
+ * 
+ * @property {number} tt
+ *      Terrestrial Time in fractional days since the J2000 epoch.
+ *      TT represents a continuously flowing ephemeris timescale independent of
+ *      any variations of the Earth's rotation, and is adjusted from UT
+ *      using historical and predictive models of those variations.
+ */
 function Time(date) {
     const MillisPerDay = 1000 * 3600 * 24;
 
@@ -206,7 +237,7 @@ Time.prototype.toString = function() {
 
 Time.prototype.AddDays = function(days) {
     // This is slightly wrong, but the error is tiny.
-    // We really should be subtracting TT, not UT.
+    // We really should be adding to TT, not to UT.
     // But using TT would require creating an inverse function for DeltaT,
     // which would be quite a bit of extra calculation.
     // I estimate the error is in practice on the order of 10^(-7)
@@ -1939,7 +1970,7 @@ Astronomy.Seasons = function(year) {
  * 
  * @memberof Astronomy
  * 
- * @property {Time}    time         When the event occurs.
+ * @property {Astronomy.Time} time  When the event occurs.
  * @property {string}  visibility   
  *      Either "morning" or "evening", indicating when the body is most easily seen.
  * @property {number}  elongation   
@@ -1951,7 +1982,7 @@ Astronomy.Seasons = function(year) {
  *      observed body and the Earth. This value is always between
  *      0 and 180. More precisely, relative_longitude is the absolute
  *      value of the difference between the heliocentric ecliptic longitudes of
- *      the centers of observed body and the Earth.
+ *      the centers of the observed body and the Earth.
  * 
  * @see Astronomy.Elongation
  */
