@@ -1,7 +1,32 @@
+/*
+    MIT License
+
+    Copyright (c) 2019 Don Cross <cosinekitty@gmail.com>
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in all
+    copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+    SOFTWARE.
+*/
+
 /**
  * @fileoverview Astronomy calculation library for browser scripting and Node.js.
  * 
  * @author Don Cross <cosinekitty@gmail.com>
+ * @license MIT
  */
 'use strict';
 
@@ -99,6 +124,12 @@ function AngleBetween(a, b) {
     return angle;
 }
 
+/**
+ * @constant {string[]} Astronomy.Bodies 
+ *      An array of strings, each a name of a supported astronomical body.
+ *      Not all bodies are valid for all functions, but any string not in this
+ *      list is not supported at all.
+ */
 Astronomy.Bodies = [
     'Sun',
     'Moon',
@@ -1021,6 +1052,9 @@ function TerrestrialTime(ut) {
  * The date and time of an astronomical observation.
  * Objects of this type are used throughout the internals
  * of the Astronomy library, and are included in certain return objects.
+ * The constructor is not accessible outside the Astronomy library;
+ * outside users should call the {@link Astronomy.MakeTime} function
+ * to create a Time object.
  * 
  * @class
  * 
@@ -1028,11 +1062,12 @@ function TerrestrialTime(ut) {
  * 
  * @memberof Astronomy
  * 
- * @param {Date|number} date
+ * @param {(Date|number)} date
  *      A JavaScript Date object or a numeric UTC value expressed in J2000 days.
  * 
  * @property {Date} date  
  *      The JavaScript Date object for the given date and time.
+ *      This Date corresponds to the numeric day value stored in the ut property.
  * 
  * @property {number} ut  
  *      Universal Time (UT1/UTC) in fractional days since the J2000 epoch.
@@ -1092,6 +1127,27 @@ function AstroTime(date) {
         return date;
     }
     return new Time(date);
+}
+
+/**
+ * Given a Date object or a number days since noon (12:00) on January 1, 2000 (UTC),
+ * this function creates an {@link Astronomy.Time} object.
+ * Given an {@link Astronomy.Time} object, returns the same object unmodified.
+ * Use of this function is not required for any of the other exposed functions in this library,
+ * because they all guarantee converting date/time parameters to Astronomy.Time
+ * as needed. However, it may be convenient for callers who need to understand
+ * the difference between UTC and TT (Terrestrial Time). In some use cases,
+ * converting once to Astronomy.Time format and passing the result into multiple
+ * function calls may be more efficient than passing in native JavaScript Date objects.
+ * 
+ * @param {(Date | number | Astronomy.Time)} date
+ *      A Date object, a number of UTC days since the J2000 epoch (noon on January 1, 2000),
+ *      or an Astronomy.Time object. See remarks above.
+ * 
+ * @returns {Astronomy.Time}
+ */
+Astronomy.MakeTime = function(date) {
+    return AstroTime(date);
 }
 
 var nals_t = [

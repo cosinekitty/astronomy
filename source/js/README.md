@@ -9,6 +9,8 @@
         * [new Time(date)](#new_Astronomy.Time_new)
     * [.ElongationEvent](#Astronomy.ElongationEvent)
         * [new ElongationEvent()](#new_Astronomy.ElongationEvent_new)
+    * [.Bodies](#Astronomy.Bodies) : <code>Array.&lt;string&gt;</code>
+    * [.MakeTime(date)](#Astronomy.MakeTime) ⇒ [<code>Time</code>](#Astronomy.Time)
     * [.Elongation(body)](#Astronomy.Elongation) ⇒ [<code>ElongationEvent</code>](#Astronomy.ElongationEvent)
     * [.SearchMaxElongation(body, startDate)](#Astronomy.SearchMaxElongation) ⇒ [<code>ElongationEvent</code>](#Astronomy.ElongationEvent)
 
@@ -20,7 +22,7 @@
 
 | Name | Type | Description |
 | --- | --- | --- |
-| date | <code>Date</code> | The JavaScript Date object for the given date and time. |
+| date | <code>Date</code> | The JavaScript Date object for the given date and time.      This Date corresponds to the numeric day value stored in the ut property. |
 | ut | <code>number</code> | Universal Time (UT1/UTC) in fractional days since the J2000 epoch.      Universal Time represents time measured with respect to the Earth's rotation,      tracking mean solar days.      The Astronomy library approximates UT1 and UTC as being the same thing.      This gives sufficient accuracy for the 1-arcminute angular resolution requirement      of this project. |
 | tt | <code>number</code> | Terrestrial Time in fractional days since the J2000 epoch.      TT represents a continuously flowing ephemeris timescale independent of      any variations of the Earth's rotation, and is adjusted from UT      using historical and predictive models of those variations. |
 
@@ -30,6 +32,9 @@
 The date and time of an astronomical observation.
 Objects of this type are used throughout the internals
 of the Astronomy library, and are included in certain return objects.
+The constructor is not accessible outside the Astronomy library;
+outside users should call the [MakeTime](#Astronomy.MakeTime) function
+to create a Time object.
 
 
 | Param | Type | Description |
@@ -56,6 +61,33 @@ of the Astronomy library, and are included in certain return objects.
 Represents the visibility of a planet or the Moon relative to the Sun.
 Includes angular separation from the Sun and whether visibility is
 best in the morning or the evening.
+
+<a name="Astronomy.Bodies"></a>
+
+### Astronomy.Bodies : <code>Array.&lt;string&gt;</code>
+An array of strings, each a name of a supported astronomical body.
+     Not all bodies are valid for all functions, but any string not in this
+     list is not supported at all.
+
+**Kind**: static constant of [<code>Astronomy</code>](#Astronomy)  
+<a name="Astronomy.MakeTime"></a>
+
+### Astronomy.MakeTime(date) ⇒ [<code>Time</code>](#Astronomy.Time)
+Given a Date object or a number days since noon (12:00) on January 1, 2000 (UTC),
+this function creates an [Time](#Astronomy.Time) object.
+Given an [Time](#Astronomy.Time) object, returns the same object unmodified.
+Use of this function is not required for any of the other exposed functions in this library,
+because they all guarantee converting date/time parameters to Astronomy.Time
+as needed. However, it may be convenient for callers who need to understand
+the difference between UTC and TT (Terrestrial Time). In some use cases,
+converting once to Astronomy.Time format and passing the result into multiple
+function calls may be more efficient than passing in native JavaScript Date objects.
+
+**Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| date | <code>Date</code> \| <code>number</code> \| [<code>Time</code>](#Astronomy.Time) | A Date object, a number of UTC days since the J2000 epoch (noon on January 1, 2000),      or an Astronomy.Time object. See remarks above. |
 
 <a name="Astronomy.Elongation"></a>
 
