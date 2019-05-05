@@ -5,7 +5,10 @@
  */
 'use strict';
 
-/** @class Astronomy */
+/**
+ * @name Astronomy
+ * @namespace Astronomy
+ */
 (function(Astronomy){
 'use strict';
 const j2000 = new Date('2000-01-01T12:00:00Z');
@@ -2771,6 +2774,8 @@ Astronomy.Seasons = function(year) {
  * 
  * @constructor
  * 
+ * @memberof Astronomy
+ * 
  * @property {Time}    time    
  * @property {string}  visibility 
  * @property {number}  elongation 
@@ -2822,7 +2827,7 @@ Astronomy.Elongation = function(body, date) {
  * @param {string} body     either "Mercury" or "Venus"
  * @param {Date} startDate  the date and time after which to search for the next maximum elongation event
  * 
- * @returns {ElongationEvent}
+ * @returns {Astronomy.ElongationEvent}
  */
 Astronomy.SearchMaxElongation = function(body, startDate) {
 
