@@ -1,6 +1,11 @@
-/* astronomy.js - Don Cross - cosinekitty@gmail.com */
+/**
+ * @fileoverview Astronomy calculation library for browser scripting and Node.js.
+ * 
+ * @author Don Cross <cosinekitty@gmail.com>
+ */
 'use strict';
 
+/** @class Astronomy */
 (function(Astronomy){
 'use strict';
 const j2000 = new Date('2000-01-01T12:00:00Z');
@@ -1920,6 +1925,27 @@ Astronomy.Seasons = function(year) {
     };
 }
 
+/**
+ * Represents the visibility of a planet or the Moon relative to the Sun.
+ * Includes angular separation from the Sun and whether visibility is
+ * best in the morning or the evening.
+ * 
+ * @class
+ * 
+ * @constructor
+ * 
+ * @property {Time}    time    
+ * @property {string}  visibility 
+ * @property {number}  elongation 
+ * @property {number}  relative_longitude 
+ */
+function ElongationEvent(time, visibility, elongation, relative_longitude) {
+    this.time = time;
+    this.visibility = visibility;
+    this.elongation = elongation;
+    this.relative_longitude = relative_longitude;
+}
+
 Astronomy.Elongation = function(body, date) {
     // This function calculates the absolute value of the
     // angle between the centers of the given body and the Sun as seen 
@@ -1943,18 +1969,25 @@ Astronomy.Elongation = function(body, date) {
         vis = 'evening';
     }
     let angle = Astronomy.AngleFromSun(body, time);
-    return { time: time, visibility: vis, elongation: angle, relative_longitude: lon };
+    return new ElongationEvent(time, vis, angle, lon);
 }
 
+/** 
+ * Searches for the next maximum elongation event for Mercury or Venus 
+ * that occurs after the given start date. Calling with other values 
+ * of 'body' will result in an exception. 
+ * Maximum elongation occurs when the body has the greatest
+ * angular separation from the Sun, as seen from the Earth.
+ * Returns an object containing the date and time of the next
+ * maximum elongation, the elongation in degrees, and whether
+ * the body is visible in the morning or evening.
+ * 
+ * @param {string} body     either "Mercury" or "Venus"
+ * @param {Date} startDate  the date and time after which to search for the next maximum elongation event
+ * 
+ * @returns {ElongationEvent}
+ */
 Astronomy.SearchMaxElongation = function(body, startDate) {
-    // This function searches for the next maximum elongation event
-    // for Mercury or Venus that occurs after the given start date.
-    // Calling with other values of 'body' will result in an exception.
-    // Maximum elongation occurs when the body has the greatest
-    // angular separation from the Sun, as seen from the Earth.
-    // It returns an object containing the date and time of the next
-    // maximum elongation, the elongation in degrees, and whether
-    // the body is visible in the morning or evening.
 
     const dt = 0.01;
 
