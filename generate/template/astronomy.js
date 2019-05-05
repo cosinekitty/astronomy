@@ -1065,6 +1065,22 @@ function refract(zd_obs, location) {
  * equatorial coordinates (right ascension and declination) of a celestial object,
  * returns horizontal coordinates (azimuth and altitude angles) for that object
  * as seen by that observer.
+ * 
+ * @param {(Date|Number|Astronomy.Time)} date
+ * 
+ * @param {Astronomy.Observer} location
+ *      The location of the observer for which to find horizontal coordinates.
+ * 
+ * @param {Number} ra
+ *      Right ascension in sidereal hours of the celestial object, 
+ *      referred to the mean equinox of date for the J2000 epoch.
+ * 
+ * @param {Number} dec
+ *      Declination in degrees of the celestial object, 
+ *      referred to the mean equator of date for the J2000 epoch.
+ *      Positive values are north of the celestial equator and negative values are south.
+ * 
+ * @returns {Astronomy.HorizontalCoordinates}
  */
 Astronomy.Horizon = function(date, location, ra, dec, refraction) {     // based on NOVAS equ2hor()
     let time = AstroTime(date);
@@ -1165,17 +1181,59 @@ Astronomy.Horizon = function(date, location, ra, dec, refraction) {     // based
     return { azimuth:az, altitude:90-zd, ra:out_ra, dec:out_dec };
 }
 
+/**
+ * Represents the geographic location of an observer on the surface of the Earth.
+ * 
+ * @class
+ * @constructor
+ * @memberof Astronomy
+ * 
+ * @property {Number} latitude_degrees 
+ *      The observer's geographic latitude in degrees north of the Earth's equator.
+ *      The value is negative for observers south of the equator.
+ *      Must be in the range -90 to +90.
+ * 
+ * @property {Number} longitude_degrees
+ *      The observer's geographic longitude in degrees east of the prime meridian 
+ *      passing through Greenwich, England.
+ *      The value is negative for observers west of the prime meridian.
+ *      The value should be kept in the range -180 to +180 to minimize floating point errors.
+ * 
+ * @property {Number} height_in_meters
+ *      The observer's elevation above mean sea level, expressed in meters.
+ */
 function Observer(latitude_degrees, longitude_degrees, height_in_meters) {
     this.latitude = latitude_degrees;
     this.longitude = longitude_degrees;
     this.height = height_in_meters;
 }
 
+/**
+ * Creates an {@link Astronomy.Observer} object.
+ * 
+ * @param {Number} latitude_degrees 
+ *      The observer's geographic latitude in degrees north of the Earth's equator.
+ *      The value is negative for observers south of the equator.
+ *      Must be in the range -90 to +90.
+ * 
+ * @param {Number} longitude_degrees
+ *      The observer's geographic longitude in degrees east of the prime meridian 
+ *      passing through Greenwich, England.
+ *      The value is negative for observers west of the prime meridian.
+ *      The value should be kept in the range -180 to +180 to minimize floating point errors.
+ * 
+ * @param {Number} height_in_meters
+ *      The observer's elevation above mean sea level, expressed in meters.
+ *      If omitted, the elevation is assumed to be 0 meters.
+ */
 Astronomy.MakeObserver = function(latitude_degrees, longitude_degrees, height_in_meters) {
-    return new Observer(latitude_degrees, longitude_degrees, height_in_meters);
+    return new Observer(latitude_degrees, longitude_degrees, height_in_meters || 0);
 }
 
-Astronomy.SunPosition = function(date) {    // returns apparent geocentric true ecliptic coordinates of date for the Sun
+/**
+ * Returns apparent geocentric true ecliptic coordinates of date for the Sun.
+ */
+Astronomy.SunPosition = function(date) {
     // Correct for light travel time from the Sun.
     // This is really the same as correcting for aberration.
     // Otherwise season calculations (equinox, solstice) will all be early by about 8 minutes!
@@ -1204,6 +1262,10 @@ Astronomy.SunPosition = function(date) {    // returns apparent geocentric true 
     return sun_ecliptic;
 }
 
+/**
+ * Returns equatorial coordinates (right ascension and declination)
+ * in two different systems: J2000 and true-equator-of-date.
+ */
 Astronomy.SkyPos = function(gc_vector, observer) {     // based on NOVAS place()
     const gc_observer = observer ? geo_pos(gc_vector.t, observer) : [0,0,0];        // vector from geocenter to observer
     const j2000_vector = [
@@ -1242,12 +1304,14 @@ function RotateEquatorialToEcliptic(gx, gy, gz, cos_ob, sin_ob) {
     return { ex:ex, ey:ey, ez:ez, elat:elat, elon:elon };
 }
 
+/**
+ * Given J2000 equatorial Cartesian coordinates, 
+ * returns J2000 ecliptic latitude, longitude, and cartesian coordinates.
+ * You can call {@link Astronomy.GeoVector} and use its (x, y, z) return values
+ * to pass into this function.
+ */
 Astronomy.Ecliptic = function(gx, gy, gz) {
-    // (gx, gy, gz) are J2000 equatorial cartesian coordinates.
-    // Returns J2000 ecliptic latitude, longitude, and cartesian coordinates.
     // Based on NOVAS functions equ2ecl() and equ2ecl_vec().
-    // You can call Astronomy.GeoVector() and use its (x, y, z) return values
-    // to pass in to this function.
     if (ob2000 === undefined) {
         // Lazy-evaluate and keep the mean obliquity of the ecliptic at J2000.
         // This way we don't need to crunch the numbers more than once.
@@ -1259,6 +1323,19 @@ Astronomy.Ecliptic = function(gx, gy, gz) {
     return RotateEquatorialToEcliptic(gx, gy, gz, cos_ob2000, sin_ob2000);
 }
 
+/**
+ * Calculates the geocentric Cartesian coordinates for the Moon in the J2000 equatorial system.
+ * Based on the Nautical Almanac Office's <i>Improved Lunar Ephemeris</i> of 1954,
+ * which in turn derives from E. W. Brown's lunar theories.
+ * Adapted from Turbo Pascal code from the book 
+ * <a href="https://www.springer.com/us/book/9783540672210">Astronomy on the Personal Computer</a> 
+ * by Montenbruck and Pfleger.
+ * 
+ * @param {Date|Number|Astronomy.Time}
+ *      The date and time for which to calculate the Moon's geocentric position.
+ * 
+ * @returns {Astronomy.Vector}
+ */
 Astronomy.GeoMoon = function(date) {
     var time = AstroTime(date);
     var moon = CalcMoon(time);
@@ -1434,18 +1511,32 @@ function QuadInterp(tm, dt, fa, fm, fb) {
     return { x:x, t:t, df_dt:df_dt };
 }
 
+/**
+ * A continuous function of time used in a call to the <code>Search</code> function.
+ * 
+ * @callback ContinuousFunction
+ * @param {Astronomy.Time} t        The time at which to evaluate the function.
+ * @returns {Number}
+ */
 
+/**
+ * Search for next time <i>t</i> (such that <i>t</i> is between <code>t1</code> and <code>t2</code>)
+ * that <code>func(t)</code> crosses from a negative value to a non-negative value.
+ * The given function must have "smooth" behavior over the entire inclusive range [<code>t1</code>, <code>t2</code>],
+ * meaning that it behaves like a continuous differentiable function.
+ * It is not required that <code>t1</code> &lt; <code>t2</code>; <code>t1</code> &gt; <code>t2</code> 
+ * allows searching backward in time.
+ * Note: <code>t1</code> and <code>t2</code> must be chosen such that there is no possibility
+ * of more than one zero-crossing (ascending or descending), or it is possible
+ * that the "wrong" event will be found (i.e. not the first event after t1)
+ * or even that the function will return null, indicating that no event was found.
+ * 
+ * @param {ContinuousFunction} func
+ * @param {*} t1 
+ * @param {*} t2 
+ * @param {*} options 
+ */
 function Search(func, t1, t2, options) {
-    // Search for next time t (with time between t1 and t2)
-    // that func(t) crosses from a negative value to a non-negative value.
-    // The given function must have "smooth" behavior over the entire range [t1, t2],
-    // meaning that it behaves like a continuous differentiable function.
-    // It is not required that t1<t2; t1>t2 allows searching backward in time.
-    // Note: t1 and t2 must be chosen such that there is no possibility
-    // of more than one zero-crossing (ascending or descending), or it is possible
-    // that the "wrong" event will be found (i.e. not the first event after t1)
-    // or even that the function will return null, indicating no event found.
-
     const dt_tolerance_seconds = (options && options.dt_tolerance_seconds) || 1;
 
     function f(t) {
@@ -1668,6 +1759,85 @@ function MoonMagnitude(phase, helio_dist, geo_dist) {
     return mag;
 }
 
+/**
+ * Contains information about the apparent brightness and sunlit phase of a celestial object.
+ * 
+ * @class
+ * @constructor
+ * @memberof Astronomy
+ * 
+ * @property {Astronomy.Time} time 
+ *      The date and time pertaining to the other calculated values in this object.
+ * 
+ * @property {Number} mag 
+ *      The <a href="https://en.wikipedia.org/wiki/Apparent_magnitude">apparent visual magnitude</a> of the celestial body.
+ * 
+ * @property {Number} phase
+ *      The angle in degrees as seen from the center of the celestial body between the Sun and the Earth.
+ *      The value is always in the range 0 to 180.
+ *      The phase angle provides a measure of what fraction of the body's face appears 
+ *      illuminated by the Sun as seen from the Earth.
+ *      When the observed body is the Sun, the <code>phase</code> property is set to 0,
+ *      although this has no physical meaning because the Sun emits, rather than reflects, light.
+ *      To calculate the illuminated fraction, use the formula $f = \frac{1}{2} \left( 1 + cos(\phi) \right)$
+ *      where $f$ is the illuminated fraction and $\phi$ is the phase angle.
+ *      When the phase is near 0 degrees, the body appears "full".
+ *      When it is 90 degrees, the body appears "half full". 
+ *      And when it is 180 degrees, the body appears "new" and is very difficult to see
+ *      because it is both dim and lost in the Sun's glare as seen from the Earth.
+ * 
+ * @property {Number} helio_dist 
+ *      The distance between the center of the Sun and the center of the body in 
+ *      <a href="https://en.wikipedia.org/wiki/Astronomical_unit">Astronomical Units</a> (AU).
+ * 
+ * @property {Number} geo_dist 
+ *      The distance between the center of the Earth and the center of the body in AU.
+ * 
+ * @property {Astronomy.Vector} gc 
+ *      Geocentric coordinates: the 3D vector from the center of the Earth to the center of the body.
+ *      The components are in expressed in AU and the oriented with respect to the J2000 equatorial plane.
+ * 
+ * @property {Astronomy.Vector} hc
+ *      Heliocentric coordinates: The 3D vector from the center of the Sun to the center of the body.
+ *      Like <code>gc</code>, <code>hc</code> is expressed in AU and oriented with respect
+ *      to the J2000 equatorial plane.
+ * 
+ * @property {Number | null} ring_tilt 
+ *      For Saturn, this is the angular tilt of the planet's rings in degrees away
+ *      from the line of sight from the Earth. When the value is near 0, the rings
+ *      appear edge-on from the Earth and are therefore difficult to see.
+ *      When <code>ring_tilt</code> approaches its maximum value (about 27 degrees),
+ *      the rings appear widest and brightest from the Earth.
+ *      Unlike the <a href="https://ssd.jpl.nasa.gov/horizons.cgi">JPL Horizons</a> online tool, 
+ *      this library includes the effect of the ring tilt angle in the calculated value 
+ *      for Saturn's visual magnitude.
+ *      For all bodies other than Saturn, the value of <code>ring_tilt</code> is <code>null</code>.
+ */
+function IlluminationInfo(time, mag, phase, helio_dist, geo_dist, gc, hc, ring_tilt) {
+    this.time = time;
+    this.mag = mag;
+    this.phase = phase;
+    this.helio_dist = helio_dist;
+    this.geo_dist = geo_dist;
+    this.gc = gc;
+    this.hc = hc;
+    this.ring_tilt = ring_tilt;
+}
+
+/**
+ * Calculates the phase angle, visual maginitude, 
+ * and other values relating to the body's illumination
+ * at the given date and time, as seen from the Earth.
+ * 
+ * @param {string} body
+ *      The name of the celestial body being observed.
+ *      Not allowed to be <code>"Earth"</code>.
+ * 
+ * @param {Date | Number | Astronomy.Time} date
+ *      The date and time for which to calculate the illumination data for the given body.
+ * 
+ * @returns {Astronomy.IlluminationInfo}
+ */
 Astronomy.Illumination = function(body, date) {
     // Calculates phase angle, distance, and visual maginitude of the body.
     // For the Sun, the phase angle returned is always 0.
@@ -1720,16 +1890,7 @@ Astronomy.Illumination = function(body, date) {
         mag = VisualMagnitude(body, phase, helio_dist, geo_dist);
     }
 
-    return { 
-        time: time,
-        mag: mag,
-        phase: phase,
-        helio_dist: helio_dist,
-        geo_dist: geo_dist,
-        gc: gc,
-        hc: hc,
-        ring_tilt: ring_tilt
-    };
+    return new IlluminationInfo(time, mag, phase, helio_dist, geo_dist, gc, hc, ring_tilt);
 }
 
 function SynodicPeriod(body) {
@@ -2046,7 +2207,8 @@ Astronomy.Seasons = function(year) {
  * 
  * @property {Astronomy.Time} time  When the event occurs.
  * @property {string}  visibility   
- *      Either "morning" or "evening", indicating when the body is most easily seen.
+ *      Either <code>"morning"</code> or <code>"evening"</code>, 
+ *      indicating when the body is most easily seen.
  * @property {number}  elongation   
  *      The angle in degrees, as seen from the center of the Earth, 
  *      of the apparent separation between the body and the Sun.
@@ -2054,7 +2216,7 @@ Astronomy.Seasons = function(year) {
  * @property {number}  relative_longitude 
  *      The angle in degrees, as seen from the Sun, between the
  *      observed body and the Earth. This value is always between
- *      0 and 180. More precisely, relative_longitude is the absolute
+ *      0 and 180. More precisely, <code>relative_longitude</code> is the absolute
  *      value of the difference between the heliocentric ecliptic longitudes of
  *      the centers of the observed body and the Earth.
  * 
@@ -2077,7 +2239,7 @@ function ElongationEvent(time, visibility, elongation, relative_longitude) {
  * this is more important the smaller the elongation is.
  * 
  * @param {string} body
- *      The name of the observed body. Not allowed to be "Earth".
+ *      The name of the observed body. Not allowed to be <code>"Earth"</code>.
  * 
  * @returns {Astronomy.ElongationEvent}
  */
@@ -2099,10 +2261,10 @@ Astronomy.Elongation = function(body, date) {
 /** 
  * Searches for the next maximum elongation event for Mercury or Venus 
  * that occurs after the given start date. Calling with other values 
- * of 'body' will result in an exception. 
+ * of <code>body</code> will result in an exception.
  * Maximum elongation occurs when the body has the greatest
  * angular separation from the Sun, as seen from the Earth.
- * Returns an object containing the date and time of the next
+ * Returns an <code>ElongationEvent</code> object containing the date and time of the next
  * maximum elongation, the elongation in degrees, and whether
  * the body is visible in the morning or evening.
  * 
@@ -2213,6 +2375,23 @@ Astronomy.SearchMaxElongation = function(body, startDate) {
     throw `SearchMaxElongation: failed to find event after 2 tries.`;
 }
 
+/**
+ * Searches for the date and time Venus will next appear brightest as seen from the Earth.
+ * 
+ * @param {string} body
+ *      Currently only <code>"Venus"</code> is supported.
+ *      Mercury's peak magnitude occurs at superior conjunction, when it is virtually impossible to see from Earth,
+ *      so peak magnitude events have little practical value for this planet.
+ *      The Moon reaches peak magnitude very close to full moon, which can be found using 
+ *      {@link Astronomy.SearchMoonQuarter} or {@link Astronomy.SearchMoonPhase}.
+ *      The other planets reach peak magnitude very close to opposition, 
+ *      which can be found using {@link Astronomy.SearchRelativeLongitude}.
+ * 
+ * @param {(Date | Number | Astronomy.Time)} startDate
+ *      The date and time after which to find the next peak magnitude event.
+ * 
+ * @returns {Astronomy.IlluminationInfo}
+ */
 Astronomy.SearchPeakMagnitude = function(body, startDate) {
     if (body !== 'Venus')
         throw 'SearchPeakMagnitude currently works for Venus only.';
