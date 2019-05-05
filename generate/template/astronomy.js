@@ -1069,17 +1069,17 @@ function refract(zd_obs, location) {
  * returns horizontal coordinates (azimuth and altitude angles) for that object
  * as seen by that observer.
  * 
- * @param {(Date|Number|Astronomy.Time)} date
+ * @param {(Date|number|Astronomy.Time)} date
  *      The date and time for which to find horizontal coordinates.
  * 
  * @param {Astronomy.Observer} location
  *      The location of the observer for which to find horizontal coordinates.
  * 
- * @param {Number} ra
+ * @param {number} ra
  *      Right ascension in sidereal hours of the celestial object, 
  *      referred to the mean equinox of date for the J2000 epoch.
  * 
- * @param {Number} dec
+ * @param {number} dec
  *      Declination in degrees of the celestial object, 
  *      referred to the mean equator of date for the J2000 epoch.
  *      Positive values are north of the celestial equator and negative values are south.
@@ -1192,18 +1192,18 @@ Astronomy.Horizon = function(date, location, ra, dec, refraction) {     // based
  * @constructor
  * @memberof Astronomy
  * 
- * @property {Number} latitude_degrees 
+ * @property {number} latitude_degrees 
  *      The observer's geographic latitude in degrees north of the Earth's equator.
  *      The value is negative for observers south of the equator.
  *      Must be in the range -90 to +90.
  * 
- * @property {Number} longitude_degrees
+ * @property {number} longitude_degrees
  *      The observer's geographic longitude in degrees east of the prime meridian 
  *      passing through Greenwich, England.
  *      The value is negative for observers west of the prime meridian.
  *      The value should be kept in the range -180 to +180 to minimize floating point errors.
  * 
- * @property {Number} height_in_meters
+ * @property {number} height_in_meters
  *      The observer's elevation above mean sea level, expressed in meters.
  */
 function Observer(latitude_degrees, longitude_degrees, height_in_meters) {
@@ -1215,18 +1215,18 @@ function Observer(latitude_degrees, longitude_degrees, height_in_meters) {
 /**
  * Creates an {@link Astronomy.Observer} object.
  * 
- * @param {Number} latitude_degrees 
+ * @param {number} latitude_degrees 
  *      The observer's geographic latitude in degrees north of the Earth's equator.
  *      The value is negative for observers south of the equator.
  *      Must be in the range -90 to +90.
  * 
- * @param {Number} longitude_degrees
+ * @param {number} longitude_degrees
  *      The observer's geographic longitude in degrees east of the prime meridian 
  *      passing through Greenwich, England.
  *      The value is negative for observers west of the prime meridian.
  *      The value should be kept in the range -180 to +180 to minimize floating point errors.
  * 
- * @param {Number} height_in_meters
+ * @param {number} height_in_meters
  *      The observer's elevation above mean sea level, expressed in meters.
  *      If omitted, the elevation is assumed to be 0 meters.
  */
@@ -1335,7 +1335,7 @@ Astronomy.Ecliptic = function(gx, gy, gz) {
  * <a href="https://www.springer.com/us/book/9783540672210">Astronomy on the Personal Computer</a> 
  * by Montenbruck and Pfleger.
  * 
- * @param {Date|Number|Astronomy.Time} date
+ * @param {Date|number|Astronomy.Time} date
  *      The date and time for which to calculate the Moon's geocentric position.
  * 
  * @returns {Astronomy.Vector}
@@ -1520,7 +1520,7 @@ function QuadInterp(tm, dt, fa, fm, fb) {
  * 
  * @callback ContinuousFunction
  * @param {Astronomy.Time} t        The time at which to evaluate the function.
- * @returns {Number}
+ * @returns {number}
  */
 
 /**
@@ -1773,28 +1773,30 @@ function MoonMagnitude(phase, helio_dist, geo_dist) {
  * @property {Astronomy.Time} time 
  *      The date and time pertaining to the other calculated values in this object.
  * 
- * @property {Number} mag 
+ * @property {number} mag 
  *      The <a href="https://en.wikipedia.org/wiki/Apparent_magnitude">apparent visual magnitude</a> of the celestial body.
  * 
- * @property {Number} phase
+ * @property {number} phase_angle
  *      The angle in degrees as seen from the center of the celestial body between the Sun and the Earth.
  *      The value is always in the range 0 to 180.
  *      The phase angle provides a measure of what fraction of the body's face appears 
  *      illuminated by the Sun as seen from the Earth.
  *      When the observed body is the Sun, the <code>phase</code> property is set to 0,
  *      although this has no physical meaning because the Sun emits, rather than reflects, light.
- *      To calculate the illuminated fraction, use the formula $f = \frac{1}{2} \left( 1 + cos(\phi) \right)$
- *      where $f$ is the illuminated fraction and $\phi$ is the phase angle.
  *      When the phase is near 0 degrees, the body appears "full".
  *      When it is 90 degrees, the body appears "half full". 
  *      And when it is 180 degrees, the body appears "new" and is very difficult to see
  *      because it is both dim and lost in the Sun's glare as seen from the Earth.
  * 
- * @property {Number} helio_dist 
+ * @property {number} phase_fraction
+ *      The fraction of the body's face that is illuminated by the Sun, as seen from the Earth.
+ *      Calculated from <code>phase_angle</code> for convenience.
+ * 
+ * @property {number} helio_dist 
  *      The distance between the center of the Sun and the center of the body in 
  *      <a href="https://en.wikipedia.org/wiki/Astronomical_unit">Astronomical Units</a> (AU).
  * 
- * @property {Number} geo_dist 
+ * @property {number} geo_dist 
  *      The distance between the center of the Earth and the center of the body in AU.
  * 
  * @property {Astronomy.Vector} gc 
@@ -1806,7 +1808,7 @@ function MoonMagnitude(phase, helio_dist, geo_dist) {
  *      Like <code>gc</code>, <code>hc</code> is expressed in AU and oriented with respect
  *      to the J2000 equatorial plane.
  * 
- * @property {Number | null} ring_tilt 
+ * @property {number | null} ring_tilt 
  *      For Saturn, this is the angular tilt of the planet's rings in degrees away
  *      from the line of sight from the Earth. When the value is near 0, the rings
  *      appear edge-on from the Earth and are therefore difficult to see.
@@ -1820,7 +1822,8 @@ function MoonMagnitude(phase, helio_dist, geo_dist) {
 function IlluminationInfo(time, mag, phase, helio_dist, geo_dist, gc, hc, ring_tilt) {
     this.time = time;
     this.mag = mag;
-    this.phase = phase;
+    this.phase_angle = phase;
+    this.phase_fraction = (1 + Math.cos(DEG2RAD * phase)) / 2;
     this.helio_dist = helio_dist;
     this.geo_dist = geo_dist;
     this.gc = gc;
@@ -1837,7 +1840,7 @@ function IlluminationInfo(time, mag, phase, helio_dist, geo_dist, gc, hc, ring_t
  *      The name of the celestial body being observed.
  *      Not allowed to be <code>"Earth"</code>.
  * 
- * @param {Date | Number | Astronomy.Time} date
+ * @param {Date | number | Astronomy.Time} date
  *      The date and time for which to calculate the illumination data for the given body.
  * 
  * @returns {Astronomy.IlluminationInfo}
@@ -2391,7 +2394,7 @@ Astronomy.SearchMaxElongation = function(body, startDate) {
  *      The other planets reach peak magnitude very close to opposition, 
  *      which can be found using {@link Astronomy.SearchRelativeLongitude}.
  * 
- * @param {(Date | Number | Astronomy.Time)} startDate
+ * @param {(Date | number | Astronomy.Time)} startDate
  *      The date and time after which to find the next peak magnitude event.
  * 
  * @returns {Astronomy.IlluminationInfo}

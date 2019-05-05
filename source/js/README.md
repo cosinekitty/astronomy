@@ -1,5 +1,3 @@
-<script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML' async></script>
-
 # API Reference
 <a name="Astronomy"></a>
 
@@ -90,9 +88,9 @@ Does NOT modify the original <code>Time</code> object.
 
 | Name | Type | Description |
 | --- | --- | --- |
-| latitude_degrees | <code>Number</code> | The observer's geographic latitude in degrees north of the Earth's equator.      The value is negative for observers south of the equator.      Must be in the range -90 to +90. |
-| longitude_degrees | <code>Number</code> | The observer's geographic longitude in degrees east of the prime meridian       passing through Greenwich, England.      The value is negative for observers west of the prime meridian.      The value should be kept in the range -180 to +180 to minimize floating point errors. |
-| height_in_meters | <code>Number</code> | The observer's elevation above mean sea level, expressed in meters. |
+| latitude_degrees | <code>number</code> | The observer's geographic latitude in degrees north of the Earth's equator.      The value is negative for observers south of the equator.      Must be in the range -90 to +90. |
+| longitude_degrees | <code>number</code> | The observer's geographic longitude in degrees east of the prime meridian       passing through Greenwich, England.      The value is negative for observers west of the prime meridian.      The value should be kept in the range -180 to +180 to minimize floating point errors. |
+| height_in_meters | <code>number</code> | The observer's elevation above mean sea level, expressed in meters. |
 
 <a name="new_Astronomy.Observer_new"></a>
 
@@ -108,13 +106,14 @@ Represents the geographic location of an observer on the surface of the Earth.
 | Name | Type | Description |
 | --- | --- | --- |
 | time | [<code>Time</code>](#Astronomy.Time) | The date and time pertaining to the other calculated values in this object. |
-| mag | <code>Number</code> | The <a href="https://en.wikipedia.org/wiki/Apparent_magnitude">apparent visual magnitude</a> of the celestial body. |
-| phase | <code>Number</code> | The angle in degrees as seen from the center of the celestial body between the Sun and the Earth.      The value is always in the range 0 to 180.      The phase angle provides a measure of what fraction of the body's face appears       illuminated by the Sun as seen from the Earth.      When the observed body is the Sun, the <code>phase</code> property is set to 0,      although this has no physical meaning because the Sun emits, rather than reflects, light.      To calculate the illuminated fraction, use the formula $f = \frac{1}{2} \left( 1 + cos(\phi) \right)$      where $f$ is the illuminated fraction and $\phi$ is the phase angle.      When the phase is near 0 degrees, the body appears "full".      When it is 90 degrees, the body appears "half full".       And when it is 180 degrees, the body appears "new" and is very difficult to see      because it is both dim and lost in the Sun's glare as seen from the Earth. |
-| helio_dist | <code>Number</code> | The distance between the center of the Sun and the center of the body in       <a href="https://en.wikipedia.org/wiki/Astronomical_unit">Astronomical Units</a> (AU). |
-| geo_dist | <code>Number</code> | The distance between the center of the Earth and the center of the body in AU. |
+| mag | <code>number</code> | The <a href="https://en.wikipedia.org/wiki/Apparent_magnitude">apparent visual magnitude</a> of the celestial body. |
+| phase_angle | <code>number</code> | The angle in degrees as seen from the center of the celestial body between the Sun and the Earth.      The value is always in the range 0 to 180.      The phase angle provides a measure of what fraction of the body's face appears       illuminated by the Sun as seen from the Earth.      When the observed body is the Sun, the <code>phase</code> property is set to 0,      although this has no physical meaning because the Sun emits, rather than reflects, light.      When the phase is near 0 degrees, the body appears "full".      When it is 90 degrees, the body appears "half full".       And when it is 180 degrees, the body appears "new" and is very difficult to see      because it is both dim and lost in the Sun's glare as seen from the Earth. |
+| phase_fraction | <code>number</code> | The fraction of the body's face that is illuminated by the Sun, as seen from the Earth.      Calculated from <code>phase_angle</code> for convenience. |
+| helio_dist | <code>number</code> | The distance between the center of the Sun and the center of the body in       <a href="https://en.wikipedia.org/wiki/Astronomical_unit">Astronomical Units</a> (AU). |
+| geo_dist | <code>number</code> | The distance between the center of the Earth and the center of the body in AU. |
 | gc | <code>Astronomy.Vector</code> | Geocentric coordinates: the 3D vector from the center of the Earth to the center of the body.      The components are in expressed in AU and are oriented with respect to the J2000 equatorial plane. |
 | hc | <code>Astronomy.Vector</code> | Heliocentric coordinates: The 3D vector from the center of the Sun to the center of the body.      Like <code>gc</code>, <code>hc</code> is expressed in AU and oriented with respect      to the J2000 equatorial plane. |
-| ring_tilt | <code>Number</code> \| <code>null</code> | For Saturn, this is the angular tilt of the planet's rings in degrees away      from the line of sight from the Earth. When the value is near 0, the rings      appear edge-on from the Earth and are therefore difficult to see.      When <code>ring_tilt</code> approaches its maximum value (about 27 degrees),      the rings appear widest and brightest from the Earth.      Unlike the <a href="https://ssd.jpl.nasa.gov/horizons.cgi">JPL Horizons</a> online tool,       this library includes the effect of the ring tilt angle in the calculated value       for Saturn's visual magnitude.      For all bodies other than Saturn, the value of <code>ring_tilt</code> is <code>null</code>. |
+| ring_tilt | <code>number</code> \| <code>null</code> | For Saturn, this is the angular tilt of the planet's rings in degrees away      from the line of sight from the Earth. When the value is near 0, the rings      appear edge-on from the Earth and are therefore difficult to see.      When <code>ring_tilt</code> approaches its maximum value (about 27 degrees),      the rings appear widest and brightest from the Earth.      Unlike the <a href="https://ssd.jpl.nasa.gov/horizons.cgi">JPL Horizons</a> online tool,       this library includes the effect of the ring tilt angle in the calculated value       for Saturn's visual magnitude.      For all bodies other than Saturn, the value of <code>ring_tilt</code> is <code>null</code>. |
 
 <a name="new_Astronomy.IlluminationInfo_new"></a>
 
@@ -181,10 +180,10 @@ as seen by that observer.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| date | <code>Date</code> \| <code>Number</code> \| [<code>Time</code>](#Astronomy.Time) | The date and time for which to find horizontal coordinates. |
+| date | <code>Date</code> \| <code>number</code> \| [<code>Time</code>](#Astronomy.Time) | The date and time for which to find horizontal coordinates. |
 | location | [<code>Observer</code>](#Astronomy.Observer) | The location of the observer for which to find horizontal coordinates. |
-| ra | <code>Number</code> | Right ascension in sidereal hours of the celestial object,       referred to the mean equinox of date for the J2000 epoch. |
-| dec | <code>Number</code> | Declination in degrees of the celestial object,       referred to the mean equator of date for the J2000 epoch.      Positive values are north of the celestial equator and negative values are south. |
+| ra | <code>number</code> | Right ascension in sidereal hours of the celestial object,       referred to the mean equinox of date for the J2000 epoch. |
+| dec | <code>number</code> | Declination in degrees of the celestial object,       referred to the mean equator of date for the J2000 epoch.      Positive values are north of the celestial equator and negative values are south. |
 
 <a name="Astronomy.MakeObserver"></a>
 
@@ -195,9 +194,9 @@ Creates an [Observer](#Astronomy.Observer) object.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| latitude_degrees | <code>Number</code> | The observer's geographic latitude in degrees north of the Earth's equator.      The value is negative for observers south of the equator.      Must be in the range -90 to +90. |
-| longitude_degrees | <code>Number</code> | The observer's geographic longitude in degrees east of the prime meridian       passing through Greenwich, England.      The value is negative for observers west of the prime meridian.      The value should be kept in the range -180 to +180 to minimize floating point errors. |
-| height_in_meters | <code>Number</code> | The observer's elevation above mean sea level, expressed in meters.      If omitted, the elevation is assumed to be 0 meters. |
+| latitude_degrees | <code>number</code> | The observer's geographic latitude in degrees north of the Earth's equator.      The value is negative for observers south of the equator.      Must be in the range -90 to +90. |
+| longitude_degrees | <code>number</code> | The observer's geographic longitude in degrees east of the prime meridian       passing through Greenwich, England.      The value is negative for observers west of the prime meridian.      The value should be kept in the range -180 to +180 to minimize floating point errors. |
+| height_in_meters | <code>number</code> | The observer's elevation above mean sea level, expressed in meters.      If omitted, the elevation is assumed to be 0 meters. |
 
 <a name="Astronomy.SunPosition"></a>
 
@@ -235,7 +234,7 @@ by Montenbruck and Pfleger.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| date | <code>Date</code> \| <code>Number</code> \| [<code>Time</code>](#Astronomy.Time) | The date and time for which to calculate the Moon's geocentric position. |
+| date | <code>Date</code> \| <code>number</code> \| [<code>Time</code>](#Astronomy.Time) | The date and time for which to calculate the Moon's geocentric position. |
 
 <a name="Astronomy.Illumination"></a>
 
@@ -249,7 +248,7 @@ at the given date and time, as seen from the Earth.
 | Param | Type | Description |
 | --- | --- | --- |
 | body | <code>string</code> | The name of the celestial body being observed.      Not allowed to be <code>"Earth"</code>. |
-| date | <code>Date</code> \| <code>Number</code> \| [<code>Time</code>](#Astronomy.Time) | The date and time for which to calculate the illumination data for the given body. |
+| date | <code>Date</code> \| <code>number</code> \| [<code>Time</code>](#Astronomy.Time) | The date and time for which to calculate the illumination data for the given body. |
 
 <a name="Astronomy.Elongation"></a>
 
@@ -297,5 +296,5 @@ Searches for the date and time Venus will next appear brightest as seen from the
 | Param | Type | Description |
 | --- | --- | --- |
 | body | <code>string</code> | Currently only <code>"Venus"</code> is supported.      Mercury's peak magnitude occurs at superior conjunction, when it is virtually impossible to see from Earth,      so peak magnitude events have little practical value for this planet.      The Moon reaches peak magnitude very close to full moon, which can be found using       [Astronomy.SearchMoonQuarter](Astronomy.SearchMoonQuarter) or [Astronomy.SearchMoonPhase](Astronomy.SearchMoonPhase).      The other planets reach peak magnitude very close to opposition,       which can be found using [Astronomy.SearchRelativeLongitude](Astronomy.SearchRelativeLongitude). |
-| startDate | <code>Date</code> \| <code>Number</code> \| [<code>Time</code>](#Astronomy.Time) | The date and time after which to find the next peak magnitude event. |
+| startDate | <code>Date</code> \| <code>number</code> \| [<code>Time</code>](#Astronomy.Time) | The date and time after which to find the next peak magnitude event. |
 
