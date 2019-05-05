@@ -7,10 +7,13 @@
 * [Astronomy](#Astronomy) : <code>object</code>
     * [.Time](#Astronomy.Time)
         * [new Time(date)](#new_Astronomy.Time_new)
+        * [.toString()](#Astronomy.Time+toString) ⇒ <code>string</code>
+        * [.AddDays()](#Astronomy.Time+AddDays) ⇒ [<code>Time</code>](#Astronomy.Time)
     * [.ElongationEvent](#Astronomy.ElongationEvent)
         * [new ElongationEvent()](#new_Astronomy.ElongationEvent_new)
     * [.Bodies](#Astronomy.Bodies) : <code>Array.&lt;string&gt;</code>
     * [.MakeTime(date)](#Astronomy.MakeTime) ⇒ [<code>Time</code>](#Astronomy.Time)
+    * [.Horizon()](#Astronomy.Horizon)
     * [.Elongation(body)](#Astronomy.Elongation) ⇒ [<code>ElongationEvent</code>](#Astronomy.ElongationEvent)
     * [.SearchMaxElongation(body, startDate)](#Astronomy.SearchMaxElongation) ⇒ [<code>ElongationEvent</code>](#Astronomy.ElongationEvent)
 
@@ -22,9 +25,15 @@
 
 | Name | Type | Description |
 | --- | --- | --- |
-| date | <code>Date</code> | The JavaScript Date object for the given date and time.      This Date corresponds to the numeric day value stored in the ut property. |
+| date | <code>Date</code> | The JavaScript Date object for the given date and time.      This Date corresponds to the numeric day value stored in the <code>ut</code> property. |
 | ut | <code>number</code> | Universal Time (UT1/UTC) in fractional days since the J2000 epoch.      Universal Time represents time measured with respect to the Earth's rotation,      tracking mean solar days.      The Astronomy library approximates UT1 and UTC as being the same thing.      This gives sufficient accuracy for the 1-arcminute angular resolution requirement      of this project. |
 | tt | <code>number</code> | Terrestrial Time in fractional days since the J2000 epoch.      TT represents a continuously flowing ephemeris timescale independent of      any variations of the Earth's rotation, and is adjusted from UT      using historical and predictive models of those variations. |
+
+
+* [.Time](#Astronomy.Time)
+    * [new Time(date)](#new_Astronomy.Time_new)
+    * [.toString()](#Astronomy.Time+toString) ⇒ <code>string</code>
+    * [.AddDays()](#Astronomy.Time+AddDays) ⇒ [<code>Time</code>](#Astronomy.Time)
 
 <a name="new_Astronomy.Time_new"></a>
 
@@ -34,13 +43,29 @@ Objects of this type are used throughout the internals
 of the Astronomy library, and are included in certain return objects.
 The constructor is not accessible outside the Astronomy library;
 outside users should call the [MakeTime](#Astronomy.MakeTime) function
-to create a Time object.
+to create a <code>Time</code> object.
 
 
 | Param | Type | Description |
 | --- | --- | --- |
 | date | <code>Date</code> \| <code>number</code> | A JavaScript Date object or a numeric UTC value expressed in J2000 days. |
 
+<a name="Astronomy.Time+toString"></a>
+
+#### time.toString() ⇒ <code>string</code>
+Formats a <code>Time</code> object as an 
+<a href="https://en.wikipedia.org/wiki/ISO_8601">ISO 8601</a>
+date/time string in UTC, to millisecond resolution.
+Example: <code>2018-08-17T17:22:04.050Z</code>
+
+**Kind**: instance method of [<code>Time</code>](#Astronomy.Time)  
+<a name="Astronomy.Time+AddDays"></a>
+
+#### time.AddDays() ⇒ [<code>Time</code>](#Astronomy.Time)
+Returns a new <code>Time</code> object adjusted by the floating point number of days.
+Does NOT modify the original <code>Time</code> object.
+
+**Kind**: instance method of [<code>Time</code>](#Astronomy.Time)  
 <a name="Astronomy.ElongationEvent"></a>
 
 ### Astronomy.ElongationEvent
@@ -89,6 +114,15 @@ function calls may be more efficient than passing in native JavaScript Date obje
 | --- | --- | --- |
 | date | <code>Date</code> \| <code>number</code> \| [<code>Time</code>](#Astronomy.Time) | A Date object, a number of UTC days since the J2000 epoch (noon on January 1, 2000),      or an Astronomy.Time object. See remarks above. |
 
+<a name="Astronomy.Horizon"></a>
+
+### Astronomy.Horizon()
+Given a date and time, a geographic location of an observer on the Earth, and
+equatorial coordinates (right ascension and declination) of a celestial object,
+returns horizontal coordinates (azimuth and altitude angles) for that object
+as seen by that observer.
+
+**Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
 <a name="Astronomy.Elongation"></a>
 
 ### Astronomy.Elongation(body) ⇒ [<code>ElongationEvent</code>](#Astronomy.ElongationEvent)

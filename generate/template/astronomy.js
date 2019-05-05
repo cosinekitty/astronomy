@@ -217,7 +217,7 @@ function TerrestrialTime(ut) {
  * of the Astronomy library, and are included in certain return objects.
  * The constructor is not accessible outside the Astronomy library;
  * outside users should call the {@link Astronomy.MakeTime} function
- * to create a Time object.
+ * to create a <code>Time</code> object.
  * 
  * @class
  * 
@@ -230,7 +230,7 @@ function TerrestrialTime(ut) {
  * 
  * @property {Date} date  
  *      The JavaScript Date object for the given date and time.
- *      This Date corresponds to the numeric day value stored in the ut property.
+ *      This Date corresponds to the numeric day value stored in the <code>ut</code> property.
  * 
  * @property {number} ut  
  *      Universal Time (UT1/UTC) in fractional days since the J2000 epoch.
@@ -266,10 +266,22 @@ function Time(date) {
     throw 'AstroTime() argument must be a Date object, a Time object, or a numeric UTC Julian date.';
 }
 
+/**
+ * Formats a <code>Time</code> object as an 
+ * <a href="https://en.wikipedia.org/wiki/ISO_8601">ISO 8601</a>
+ * date/time string in UTC, to millisecond resolution.
+ * Example: <code>2018-08-17T17:22:04.050Z</code>
+ * @returns {string}
+ */
 Time.prototype.toString = function() {
     return this.date.toISOString();
 }
 
+/**
+ * Returns a new <code>Time</code> object adjusted by the floating point number of days.
+ * Does NOT modify the original <code>Time</code> object.
+ * @returns {Astronomy.Time}
+ */
 Time.prototype.AddDays = function(days) {
     // This is slightly wrong, but the error is tiny.
     // We really should be adding to TT, not to UT.
@@ -1048,6 +1060,12 @@ function refract(zd_obs, location) {
     return refr;
 }
 
+/**
+ * Given a date and time, a geographic location of an observer on the Earth, and
+ * equatorial coordinates (right ascension and declination) of a celestial object,
+ * returns horizontal coordinates (azimuth and altitude angles) for that object
+ * as seen by that observer.
+ */
 Astronomy.Horizon = function(date, location, ra, dec, refraction) {     // based on NOVAS equ2hor()
     let time = AstroTime(date);
 
