@@ -1107,7 +1107,10 @@ function Time(date) {
  * Formats a <code>Time</code> object as an 
  * <a href="https://en.wikipedia.org/wiki/ISO_8601">ISO 8601</a>
  * date/time string in UTC, to millisecond resolution.
- * Example: <code>2018-08-17T17:22:04.050Z</code>
+ * Example: 
+ * <pre>
+ * <code>2018-08-17T17:22:04.050Z</code>
+ * </pre>
  * @returns {string}
  */
 Time.prototype.toString = function() {
@@ -1904,6 +1907,7 @@ function refract(zd_obs, location) {
  * as seen by that observer.
  * 
  * @param {(Date|Number|Astronomy.Time)} date
+ *      The date and time for which to find horizontal coordinates.
  * 
  * @param {Astronomy.Observer} location
  *      The location of the observer for which to find horizontal coordinates.
@@ -2168,7 +2172,7 @@ Astronomy.Ecliptic = function(gx, gy, gz) {
  * <a href="https://www.springer.com/us/book/9783540672210">Astronomy on the Personal Computer</a> 
  * by Montenbruck and Pfleger.
  * 
- * @param {Date|Number|Astronomy.Time}
+ * @param {Date|Number|Astronomy.Time} date
  *      The date and time for which to calculate the Moon's geocentric position.
  * 
  * @returns {Astronomy.Vector}
@@ -2632,7 +2636,7 @@ function MoonMagnitude(phase, helio_dist, geo_dist) {
  * 
  * @property {Astronomy.Vector} gc 
  *      Geocentric coordinates: the 3D vector from the center of the Earth to the center of the body.
- *      The components are in expressed in AU and the oriented with respect to the J2000 equatorial plane.
+ *      The components are in expressed in AU and are oriented with respect to the J2000 equatorial plane.
  * 
  * @property {Astronomy.Vector} hc
  *      Heliocentric coordinates: The 3D vector from the center of the Sun to the center of the body.

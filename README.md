@@ -21,7 +21,7 @@ and other reliable sources of ephemeris data.
 
 - Calculates for any calendar date and time between the years 1600 and 2200.
 
-- Provides heliocentric and geocentric cartesian vectors of all the above bodies.
+- Provides heliocentric and geocentric Cartesian vectors of all the above bodies.
 
 - Determines apparent horizon-based positions for an observer anywhere on the Earth, 
   given that observer's latitude, longitude, and elevation in meters. 
@@ -36,9 +36,11 @@ and other reliable sources of ephemeris data.
 
 - Finds apparent visual magnitudes of all the supported celestial bodies.
 
-- Predicts date and time of Venus' peak visual magnitude.
+- Predicts dates of planetary conjunctions and oppositions.
 
-- Predicts date and time of maximum elongation for Mercury and Venus.
+- Predicts dates of Venus' peak visual magnitude.
+
+- Predicts dates of maximum elongation for Mercury and Venus.
 
 # Supported Languages
 

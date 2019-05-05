@@ -1,3 +1,5 @@
+<script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML' async></script>
+
 # API Reference
 <a name="Astronomy"></a>
 
@@ -22,7 +24,7 @@
     * [.SunPosition()](#Astronomy.SunPosition)
     * [.SkyPos()](#Astronomy.SkyPos)
     * [.Ecliptic()](#Astronomy.Ecliptic)
-    * [.GeoMoon(The)](#Astronomy.GeoMoon) ⇒ <code>Astronomy.Vector</code>
+    * [.GeoMoon(date)](#Astronomy.GeoMoon) ⇒ <code>Astronomy.Vector</code>
     * [.Illumination(body, date)](#Astronomy.Illumination) ⇒ [<code>IlluminationInfo</code>](#Astronomy.IlluminationInfo)
     * [.Elongation(body)](#Astronomy.Elongation) ⇒ [<code>ElongationEvent</code>](#Astronomy.ElongationEvent)
     * [.SearchMaxElongation(body, startDate)](#Astronomy.SearchMaxElongation) ⇒ [<code>ElongationEvent</code>](#Astronomy.ElongationEvent)
@@ -67,7 +69,10 @@ to create a <code>Time</code> object.
 Formats a <code>Time</code> object as an 
 <a href="https://en.wikipedia.org/wiki/ISO_8601">ISO 8601</a>
 date/time string in UTC, to millisecond resolution.
-Example: <code>2018-08-17T17:22:04.050Z</code>
+Example: 
+<pre>
+<code>2018-08-17T17:22:04.050Z</code>
+</pre>
 
 **Kind**: instance method of [<code>Time</code>](#Astronomy.Time)  
 <a name="Astronomy.Time+AddDays"></a>
@@ -107,7 +112,7 @@ Represents the geographic location of an observer on the surface of the Earth.
 | phase | <code>Number</code> | The angle in degrees as seen from the center of the celestial body between the Sun and the Earth.      The value is always in the range 0 to 180.      The phase angle provides a measure of what fraction of the body's face appears       illuminated by the Sun as seen from the Earth.      When the observed body is the Sun, the <code>phase</code> property is set to 0,      although this has no physical meaning because the Sun emits, rather than reflects, light.      To calculate the illuminated fraction, use the formula $f = \frac{1}{2} \left( 1 + cos(\phi) \right)$      where $f$ is the illuminated fraction and $\phi$ is the phase angle.      When the phase is near 0 degrees, the body appears "full".      When it is 90 degrees, the body appears "half full".       And when it is 180 degrees, the body appears "new" and is very difficult to see      because it is both dim and lost in the Sun's glare as seen from the Earth. |
 | helio_dist | <code>Number</code> | The distance between the center of the Sun and the center of the body in       <a href="https://en.wikipedia.org/wiki/Astronomical_unit">Astronomical Units</a> (AU). |
 | geo_dist | <code>Number</code> | The distance between the center of the Earth and the center of the body in AU. |
-| gc | <code>Astronomy.Vector</code> | Geocentric coordinates: the 3D vector from the center of the Earth to the center of the body.      The components are in expressed in AU and the oriented with respect to the J2000 equatorial plane. |
+| gc | <code>Astronomy.Vector</code> | Geocentric coordinates: the 3D vector from the center of the Earth to the center of the body.      The components are in expressed in AU and are oriented with respect to the J2000 equatorial plane. |
 | hc | <code>Astronomy.Vector</code> | Heliocentric coordinates: The 3D vector from the center of the Sun to the center of the body.      Like <code>gc</code>, <code>hc</code> is expressed in AU and oriented with respect      to the J2000 equatorial plane. |
 | ring_tilt | <code>Number</code> \| <code>null</code> | For Saturn, this is the angular tilt of the planet's rings in degrees away      from the line of sight from the Earth. When the value is near 0, the rings      appear edge-on from the Earth and are therefore difficult to see.      When <code>ring_tilt</code> approaches its maximum value (about 27 degrees),      the rings appear widest and brightest from the Earth.      Unlike the <a href="https://ssd.jpl.nasa.gov/horizons.cgi">JPL Horizons</a> online tool,       this library includes the effect of the ring tilt angle in the calculated value       for Saturn's visual magnitude.      For all bodies other than Saturn, the value of <code>ring_tilt</code> is <code>null</code>. |
 
@@ -176,7 +181,7 @@ as seen by that observer.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| date | <code>Date</code> \| <code>Number</code> \| [<code>Time</code>](#Astronomy.Time) |  |
+| date | <code>Date</code> \| <code>Number</code> \| [<code>Time</code>](#Astronomy.Time) | The date and time for which to find horizontal coordinates. |
 | location | [<code>Observer</code>](#Astronomy.Observer) | The location of the observer for which to find horizontal coordinates. |
 | ra | <code>Number</code> | Right ascension in sidereal hours of the celestial object,       referred to the mean equinox of date for the J2000 epoch. |
 | dec | <code>Number</code> | Declination in degrees of the celestial object,       referred to the mean equator of date for the J2000 epoch.      Positive values are north of the celestial equator and negative values are south. |
@@ -218,7 +223,7 @@ to pass into this function.
 **Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
 <a name="Astronomy.GeoMoon"></a>
 
-### Astronomy.GeoMoon(The) ⇒ <code>Astronomy.Vector</code>
+### Astronomy.GeoMoon(date) ⇒ <code>Astronomy.Vector</code>
 Calculates the geocentric Cartesian coordinates for the Moon in the J2000 equatorial system.
 Based on the Nautical Almanac Office's <i>Improved Lunar Ephemeris</i> of 1954,
 which in turn derives from E. W. Brown's lunar theories.
@@ -230,7 +235,7 @@ by Montenbruck and Pfleger.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| The | <code>Date</code> \| <code>Number</code> \| [<code>Time</code>](#Astronomy.Time) | date and time for which to calculate the Moon's geocentric position. |
+| date | <code>Date</code> \| <code>Number</code> \| [<code>Time</code>](#Astronomy.Time) | The date and time for which to calculate the Moon's geocentric position. |
 
 <a name="Astronomy.Illumination"></a>
 
