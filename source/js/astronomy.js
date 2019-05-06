@@ -1065,9 +1065,18 @@ const DT = [
 { mjd:61680.0, dt:73.66 }
 ];
 
+/**
+ * Calculates the difference TT-UT for the given date/time, expressed
+ * as a Modified Julian Date.
+ * 
+ * @param {number} mjd
+ *      A date and time expressed as a
+ *      <a href="http://scienceworld.wolfram.com/astronomy/ModifiedJulianDate.html">Modified Julian Date</a>.
+ * 
+ * @returns {number}
+ *      The difference TT-UT in seconds for the given date and time.
+ */
 function DeltaT(mjd) {
-    // Calculate the difference TT-UT for the given date/time, expressed
-    // as a Modified Julian Date.
     // DT[i] = { mjd: 58484.0, dt: 69.34 }
     // Check end ranges. If outside the known bounds, clamp to the closest known value.
 
@@ -1099,6 +1108,15 @@ function DeltaT(mjd) {
     throw `Could not find Delta-T value for MJD=${mjd}`;
 }
 
+/**
+ * Calculates Terrestrial Time (TT) from Universal Time (UT).
+ * 
+ * @param {number} ut
+ *      The Universal Time expressed as a floating point number of days since the 2000.0 epoch.
+ * 
+ * @returns {number}
+ *      A Terrestrial Time expressed as a floating point number of days since the 2000.0 epoch.
+ */
 function TerrestrialTime(ut) {
     return ut + DeltaT(ut + Y2000_IN_MJD)/86400;
 }
