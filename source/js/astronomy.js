@@ -69,6 +69,27 @@ let sin_ob2000;
 //========================================================================================
 // BEGIN performance measurement
 
+/**
+ * Holds performance metrics for developers to optimize execution speed.
+ * Most users can safely ignore this class.
+ * 
+ * @class
+ * @constructor
+ * 
+ * @memberof Astronomy
+ * 
+ * @property {number} search_func   
+ *      Number of times {@link Astronomy.Search} called a <code>func</code> passed to it.
+ * 
+ * @property {number} search
+ *      Number of times {@link Astronomy.Search} was called.
+ * 
+ * @property {number} longitude_search
+ *      Number of times {@link Astronomy.SearchRelativeLongitude} was called.
+ * 
+ * @property {number} longitude_iter
+ *      The total number of iterations executed inside {@link Astronomy.SearchRelativeLongitude}.
+ */
 function PerformanceInfo() {
     this.CallCount = {
         search_func: 0,
@@ -78,6 +99,14 @@ function PerformanceInfo() {
     };
 }
 
+/**
+ * Creates a copy of a <code>PerformanceInfo</code> object.
+ * This allows us to create a snapshot of the performance metrics
+ * that can be handed back to outside code that will not change
+ * as the Astronomy code continues to execute and change the metrics.
+ * 
+ * @returns {Astronomy.PerformanceInfo}
+ */
 PerformanceInfo.prototype.Clone = function() {
     const clone = new PerformanceInfo();
     for (let tag in this.CallCount) {
@@ -88,10 +117,21 @@ PerformanceInfo.prototype.Clone = function() {
 
 let Perf = new PerformanceInfo();
 
+/**
+ * Takes a snapshot of the current state of the performance metrics.
+ * The metrics inside the returned object will not change and can be retained by calling code
+ * to be compared with later snapshots.
+ * 
+ * @returns {Astronomy.PerformanceInfo}
+ */
 Astronomy.GetPerformanceMetrics = function() {
     return Perf.Clone();
 }
 
+/**
+ * Resets the internal performance metrics back to zero values.
+ * You can call this before starting a new series of performance tests.
+ */
 Astronomy.ResetPerformanceMetrics = function() {
     Perf = new PerformanceInfo();
 }

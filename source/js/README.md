@@ -5,6 +5,9 @@
 **Kind**: global namespace  
 
 * [Astronomy](#Astronomy) : <code>object</code>
+    * [.PerformanceInfo](#Astronomy.PerformanceInfo)
+        * [new PerformanceInfo()](#new_Astronomy.PerformanceInfo_new)
+        * [.Clone()](#Astronomy.PerformanceInfo+Clone) ⇒ [<code>PerformanceInfo</code>](#Astronomy.PerformanceInfo)
     * [.Time](#Astronomy.Time)
         * [new Time(date)](#new_Astronomy.Time_new)
         * [.toString()](#Astronomy.Time+toString) ⇒ <code>string</code>
@@ -16,6 +19,8 @@
     * [.ElongationEvent](#Astronomy.ElongationEvent)
         * [new ElongationEvent()](#new_Astronomy.ElongationEvent_new)
     * [.Bodies](#Astronomy.Bodies) : <code>Array.&lt;string&gt;</code>
+    * [.GetPerformanceMetrics()](#Astronomy.GetPerformanceMetrics) ⇒ [<code>PerformanceInfo</code>](#Astronomy.PerformanceInfo)
+    * [.ResetPerformanceMetrics()](#Astronomy.ResetPerformanceMetrics)
     * [.MakeTime(date)](#Astronomy.MakeTime) ⇒ [<code>Time</code>](#Astronomy.Time)
     * [.Horizon(date, location, ra, dec)](#Astronomy.Horizon) ⇒ <code>Astronomy.HorizontalCoordinates</code>
     * [.MakeObserver(latitude_degrees, longitude_degrees, height_in_meters)](#Astronomy.MakeObserver)
@@ -33,6 +38,39 @@
     * [.ContinuousFunction](#Astronomy.ContinuousFunction) ⇒ <code>number</code>
     * [.SearchOptions](#Astronomy.SearchOptions) : <code>Object</code>
 
+<a name="Astronomy.PerformanceInfo"></a>
+
+### Astronomy.PerformanceInfo
+**Kind**: static class of [<code>Astronomy</code>](#Astronomy)  
+**Properties**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| search_func | <code>number</code> | Number of times [Search](#Astronomy.Search) called a <code>func</code> passed to it. |
+| search | <code>number</code> | Number of times [Search](#Astronomy.Search) was called. |
+| longitude_search | <code>number</code> | Number of times [Astronomy.SearchRelativeLongitude](Astronomy.SearchRelativeLongitude) was called. |
+| longitude_iter | <code>number</code> | The total number of iterations executed inside [Astronomy.SearchRelativeLongitude](Astronomy.SearchRelativeLongitude). |
+
+
+* [.PerformanceInfo](#Astronomy.PerformanceInfo)
+    * [new PerformanceInfo()](#new_Astronomy.PerformanceInfo_new)
+    * [.Clone()](#Astronomy.PerformanceInfo+Clone) ⇒ [<code>PerformanceInfo</code>](#Astronomy.PerformanceInfo)
+
+<a name="new_Astronomy.PerformanceInfo_new"></a>
+
+#### new PerformanceInfo()
+Holds performance metrics for developers to optimize execution speed.
+Most users can safely ignore this class.
+
+<a name="Astronomy.PerformanceInfo+Clone"></a>
+
+#### performanceInfo.Clone() ⇒ [<code>PerformanceInfo</code>](#Astronomy.PerformanceInfo)
+Creates a copy of a <code>PerformanceInfo</code> object.
+This allows us to create a snapshot of the performance metrics
+that can be handed back to outside code that will not change
+as the Astronomy code continues to execute and change the metrics.
+
+**Kind**: instance method of [<code>PerformanceInfo</code>](#Astronomy.PerformanceInfo)  
 <a name="Astronomy.Time"></a>
 
 ### Astronomy.Time
@@ -154,6 +192,21 @@ An array of strings, each a name of a supported astronomical body.
      list is not supported at all.
 
 **Kind**: static constant of [<code>Astronomy</code>](#Astronomy)  
+<a name="Astronomy.GetPerformanceMetrics"></a>
+
+### Astronomy.GetPerformanceMetrics() ⇒ [<code>PerformanceInfo</code>](#Astronomy.PerformanceInfo)
+Takes a snapshot of the current state of the performance metrics.
+The metrics inside the returned object will not change and can be retained by calling code
+to be compared with later snapshots.
+
+**Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
+<a name="Astronomy.ResetPerformanceMetrics"></a>
+
+### Astronomy.ResetPerformanceMetrics()
+Resets the internal performance metrics back to zero values.
+You can call this before starting a new series of performance tests.
+
+**Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
 <a name="Astronomy.MakeTime"></a>
 
 ### Astronomy.MakeTime(date) ⇒ [<code>Time</code>](#Astronomy.Time)
