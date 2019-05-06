@@ -16,6 +16,8 @@
         * [new Vector()](#new_Astronomy.Vector_new)
     * [.EquatorialCoordinates](#Astronomy.EquatorialCoordinates)
         * [new EquatorialCoordinates()](#new_Astronomy.EquatorialCoordinates_new)
+    * [.SkyCoordinates](#Astronomy.SkyCoordinates)
+        * [new SkyCoordinates()](#new_Astronomy.SkyCoordinates_new)
     * [.HorizontalCoordinates](#Astronomy.HorizontalCoordinates)
         * [new HorizontalCoordinates()](#new_Astronomy.HorizontalCoordinates_new)
     * [.EclipticCoordinates](#Astronomy.EclipticCoordinates)
@@ -33,16 +35,19 @@
     * [.Horizon(date, location, ra, dec)](#Astronomy.Horizon) ⇒ [<code>HorizontalCoordinates</code>](#Astronomy.HorizontalCoordinates)
     * [.MakeObserver(latitude_degrees, longitude_degrees, height_in_meters)](#Astronomy.MakeObserver)
     * [.SunPosition(date)](#Astronomy.SunPosition) ⇒ [<code>EclipticCoordinates</code>](#Astronomy.EclipticCoordinates)
-    * [.SkyPos(gc_vector, observer)](#Astronomy.SkyPos) ⇒ <code>Astronomy.SkyCoordinates</code>
+    * [.SkyPos(gc_vector, observer)](#Astronomy.SkyPos) ⇒ [<code>SkyCoordinates</code>](#Astronomy.SkyCoordinates)
     * [.Ecliptic(gx, gy, gz)](#Astronomy.Ecliptic) ⇒ [<code>EclipticCoordinates</code>](#Astronomy.EclipticCoordinates)
     * [.GeoMoon(date)](#Astronomy.GeoMoon) ⇒ [<code>Vector</code>](#Astronomy.Vector)
     * [.HelioVector(body, date)](#Astronomy.HelioVector) ⇒ [<code>Vector</code>](#Astronomy.Vector)
     * [.GeoVector(body, date)](#Astronomy.GeoVector) ⇒ [<code>Vector</code>](#Astronomy.Vector)
     * [.Search(func, t1, t2, options)](#Astronomy.Search)
+    * [.SearchSunLongitude(targetLon, dateStart, limitDays)](#Astronomy.SearchSunLongitude) ⇒ [<code>Time</code>](#Astronomy.Time) \| <code>null</code>
     * [.LongitudeFromSun(body, date)](#Astronomy.LongitudeFromSun) ⇒ <code>number</code>
     * [.AngleFromSun(body, date)](#Astronomy.AngleFromSun) ⇒ <code>number</code>
     * [.EclipticLongitude(body, date)](#Astronomy.EclipticLongitude) ⇒ <code>number</code>
     * [.Illumination(body, date)](#Astronomy.Illumination) ⇒ [<code>IlluminationInfo</code>](#Astronomy.IlluminationInfo)
+    * [.SearchRelativeLongitude(body, targetRelLon, startDate)](#Astronomy.SearchRelativeLongitude) ⇒ [<code>Time</code>](#Astronomy.Time)
+    * [.MoonPhase(date)](#Astronomy.MoonPhase) ⇒ <code>number</code>
     * [.Elongation(body)](#Astronomy.Elongation) ⇒ [<code>ElongationEvent</code>](#Astronomy.ElongationEvent)
     * [.SearchMaxElongation(body, startDate)](#Astronomy.SearchMaxElongation) ⇒ [<code>ElongationEvent</code>](#Astronomy.ElongationEvent)
     * [.SearchPeakMagnitude(body, startDate)](#Astronomy.SearchPeakMagnitude) ⇒ [<code>IlluminationInfo</code>](#Astronomy.IlluminationInfo)
@@ -62,8 +67,8 @@
 | --- | --- | --- |
 | search_func | <code>number</code> | Number of times [Search](#Astronomy.Search) called a <code>func</code> passed to it. |
 | search | <code>number</code> | Number of times [Search](#Astronomy.Search) was called. |
-| longitude_search | <code>number</code> | Number of times [Astronomy.SearchRelativeLongitude](Astronomy.SearchRelativeLongitude) was called. |
-| longitude_iter | <code>number</code> | The total number of iterations executed inside [Astronomy.SearchRelativeLongitude](Astronomy.SearchRelativeLongitude). |
+| longitude_search | <code>number</code> | Number of times [SearchRelativeLongitude](#Astronomy.SearchRelativeLongitude) was called. |
+| longitude_iter | <code>number</code> | The total number of iterations executed inside [SearchRelativeLongitude](#Astronomy.SearchRelativeLongitude). |
 
 
 * [.PerformanceInfo](#Astronomy.PerformanceInfo)
@@ -207,6 +212,30 @@ along with the time at which the vector is valid.
 
 #### new EquatorialCoordinates()
 Holds right ascension, declination, and distance of a celestial object.
+
+
+* * *
+
+<a name="Astronomy.SkyCoordinates"></a>
+
+### Astronomy.SkyCoordinates
+**Kind**: static class of [<code>Astronomy</code>](#Astronomy)  
+**Properties**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| t | [<code>Time</code>](#Astronomy.Time) | The date and time at which the coordinates are valid. |
+| j2000 | [<code>EquatorialCoordinates</code>](#Astronomy.EquatorialCoordinates) | Equatorial coordinates referenced to the J2000 coordinate system. |
+| ofdate | [<code>EquatorialCoordinates</code>](#Astronomy.EquatorialCoordinates) | Equatorial coordinates referenced to the true equator and equinox      at the specified date and time stored in <code>t</code>.      These coordinates are corrected for precession and nutation of the      Earth's axis of rotation at time <code>t</code>. |
+
+
+* * *
+
+<a name="new_Astronomy.SkyCoordinates_new"></a>
+
+#### new SkyCoordinates()
+Holds topocentric equatorial coordinates (right ascension and declination)
+simultaneously in two different systems: J2000 and true-equator-of-date.
 
 
 * * *
@@ -375,7 +404,7 @@ to be compared with later snapshots.
 <a name="Astronomy.ResetPerformanceMetrics"></a>
 
 ### Astronomy.ResetPerformanceMetrics()
-Resets the internal performance metrics back to zero values.
+Resets the internal performance metrics back to their initial states.
 You can call this before starting a new series of performance tests.
 
 **Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
@@ -464,7 +493,7 @@ axis of rotation on the given date.
 
 <a name="Astronomy.SkyPos"></a>
 
-### Astronomy.SkyPos(gc_vector, observer) ⇒ <code>Astronomy.SkyCoordinates</code>
+### Astronomy.SkyPos(gc_vector, observer) ⇒ [<code>SkyCoordinates</code>](#Astronomy.SkyCoordinates)
 Returns topocentric equatorial coordinates (right ascension and declination)
 simultaneously in two different systems: J2000 and true-equator-of-date.
 <i>Topocentric</i> refers to a position as seen by an observer on the surface of the Earth.
@@ -475,7 +504,7 @@ This is most significant for the Moon, because it is so close to the Earth.
 However, it can have a small effect on the apparent positions of other bodies.
 
 **Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
-**Returns**: <code>Astronomy.SkyCoordinates</code> - The topocentric coordinates of the body as adjusted for the given observer.  
+**Returns**: [<code>SkyCoordinates</code>](#Astronomy.SkyCoordinates) - The topocentric coordinates of the body as adjusted for the given observer.  
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -583,6 +612,33 @@ or even that the function will return null, indicating that no event was found.
 
 * * *
 
+<a name="Astronomy.SearchSunLongitude"></a>
+
+### Astronomy.SearchSunLongitude(targetLon, dateStart, limitDays) ⇒ [<code>Time</code>](#Astronomy.Time) \| <code>null</code>
+Searches for the moment in time when the center of the Sun reaches a given apparent
+ecliptic longitude, as seen from the center of the Earth, within a given range of dates.
+This function can be used to determine equinoxes and solstices.
+However, it is usually more convenient and efficient to call [Astronomy.Seasons](Astronomy.Seasons) 
+to calculate equinoxes and solstices for a given calendar year.
+<code>SearchSunLongitude</code> is more general in that it allows searching for arbitrary longitude values.
+
+**Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
+**Returns**: [<code>Time</code>](#Astronomy.Time) \| <code>null</code> - The date and time when the Sun reaches the apparent ecliptic longitude <code>targetLon</code>
+     within the range of times specified by <code>dateStart</code> and <code>limitDays</code>.
+     If the Sun does not reach the target longitude within the specified time range, or the
+     time range is excessively wide, the return value is <code>null</code>.
+     To avoid a <code>null</code> return value, the caller must pick a time window around
+     the event that is within a few days but not so small that the event might fall outside the window.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| targetLon | <code>number</code> | The desired ecliptic longitude of date in degrees.      This may be any value in the range [0, 360), although certain      values have conventional meanings:      <ul>      <li>When <code>targetLon</code> is 0, finds the March equinox,      which is the moment spring begins in the northern hemisphere      and the beginning of autumn in the southern hemisphere.</li>      <li>When <code>targetLon</code> is 180, finds the September equinox,      which is the moment autumn begins in the northern hemisphere and      spring begins in the southern hemisphere.</li>      <li>When <code>targetLon</code> is 90, finds the northern solstice, which is the      moment summer begins in the northern hemisphere and winter      begins in the southern hemisphere.</li>      <li>When <code>targetLon</code> is 270, finds the southern solstice, which is the      moment winter begins in the northern hemisphere and summer      begins in the southern hemisphere.</li>      </ul> |
+| dateStart | <code>Date</code> \| <code>number</code> \| [<code>Time</code>](#Astronomy.Time) | A date and time known to be earlier than the desired longitude event. |
+| limitDays | <code>number</code> | A floating point number of days, which when added to <code>dateStart</code>,      yields a date and time known to be after the desired longitude event. |
+
+
+* * *
+
 <a name="Astronomy.LongitudeFromSun"></a>
 
 ### Astronomy.LongitudeFromSun(body, date) ⇒ <code>number</code>
@@ -670,6 +726,56 @@ at the given date and time, as seen from the Earth.
 
 * * *
 
+<a name="Astronomy.SearchRelativeLongitude"></a>
+
+### Astronomy.SearchRelativeLongitude(body, targetRelLon, startDate) ⇒ [<code>Time</code>](#Astronomy.Time)
+Searches for the date and time the relative ecliptic longitudes of
+the specified body and the Earth, as seen from the Sun, reach a certain
+difference. This function is useful for finding conjunctions and oppositions
+of the planets. For the opposition of a superior planet (Mars, Jupiter, ..., Pluto),
+or the inferior conjunction of an inferior planet (Mercury, Venus),
+call with <code>targetRelLon</code> = 0. The 0 value indicates that both
+planets are on the same ecliptic longitude line, ignoring the other planet's
+distance above or below the plane of the Earth's orbit.
+For superior conjunctions, call with <code>targetRelLon</code> = 180.
+This means the Earth and the other planet are on opposite sides of the Sun.
+
+**Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
+**Returns**: [<code>Time</code>](#Astronomy.Time) - The time when the Earth and the body next reach the specified relative longitudes.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| body | <code>string</code> | The name of a planet other than the Earth. |
+| targetRelLon | <code>number</code> | The desired angular difference in degrees between the ecliptic longitudes      of <code>body</code> and the Earth. Must be in the range (-180, +180]. |
+| startDate | <code>Date</code> \| <code>number</code> \| [<code>Time</code>](#Astronomy.Time) | The date and time after which to find the next occurrence of the      body and the Earth reaching the desired relative longitude. |
+
+
+* * *
+
+<a name="Astronomy.MoonPhase"></a>
+
+### Astronomy.MoonPhase(date) ⇒ <code>number</code>
+Determines the moon's phase expressed as an ecliptic longitude.
+
+**Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
+**Returns**: <code>number</code> - A value in the range [0, 360) indicating the difference
+     in ecliptic longitude between the center of the Sun and the
+     center of the Moon, as seen from the center of the Earth.
+     Certain longitude values have conventional meanings:
+     <ul>
+         <li>0 = new moon</li>
+         <li>90 = first quarter</li>
+         <li>180 = full moon</li>
+         <li>270 = third quarter</li>
+     </ul>  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| date | <code>Date</code> \| <code>number</code> \| [<code>Time</code>](#Astronomy.Time) | The date and time for which to calculate the moon's phase. |
+
+
+* * *
+
 <a name="Astronomy.Elongation"></a>
 
 ### Astronomy.Elongation(body) ⇒ [<code>ElongationEvent</code>](#Astronomy.ElongationEvent)
@@ -721,7 +827,7 @@ Searches for the date and time Venus will next appear brightest as seen from the
 
 | Param | Type | Description |
 | --- | --- | --- |
-| body | <code>string</code> | Currently only <code>"Venus"</code> is supported.      Mercury's peak magnitude occurs at superior conjunction, when it is virtually impossible to see from Earth,      so peak magnitude events have little practical value for that planet.      The Moon reaches peak magnitude very close to full moon, which can be found using       [Astronomy.SearchMoonQuarter](Astronomy.SearchMoonQuarter) or [Astronomy.SearchMoonPhase](Astronomy.SearchMoonPhase).      The other planets reach peak magnitude very close to opposition,       which can be found using [Astronomy.SearchRelativeLongitude](Astronomy.SearchRelativeLongitude). |
+| body | <code>string</code> | Currently only <code>"Venus"</code> is supported.      Mercury's peak magnitude occurs at superior conjunction, when it is virtually impossible to see from Earth,      so peak magnitude events have little practical value for that planet.      The Moon reaches peak magnitude very close to full moon, which can be found using       [Astronomy.SearchMoonQuarter](Astronomy.SearchMoonQuarter) or [Astronomy.SearchMoonPhase](Astronomy.SearchMoonPhase).      The other planets reach peak magnitude very close to opposition,       which can be found using [SearchRelativeLongitude](#Astronomy.SearchRelativeLongitude). |
 | startDate | <code>Date</code> \| <code>number</code> \| [<code>Time</code>](#Astronomy.Time) | The date and time after which to find the next peak magnitude event. |
 
 

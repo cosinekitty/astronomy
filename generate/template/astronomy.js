@@ -128,7 +128,7 @@ Astronomy.GetPerformanceMetrics = function() {
 }
 
 /**
- * Resets the internal performance metrics back to zero values.
+ * Resets the internal performance metrics back to their initial states.
  * You can call this before starting a new series of performance tests.
  */
 Astronomy.ResetPerformanceMetrics = function() {
@@ -1098,6 +1098,31 @@ function EquatorialCoordinates(ra, dec, dist) {
 }
 
 /**
+ * Holds topocentric equatorial coordinates (right ascension and declination)
+ * simultaneously in two different systems: J2000 and true-equator-of-date.
+ * 
+ * @class
+ * @memberof Astronomy
+ * 
+ * @property {Astronomy.Time} t
+ *      The date and time at which the coordinates are valid.
+ * 
+ * @property {Astronomy.EquatorialCoordinates} j2000
+ *      Equatorial coordinates referenced to the J2000 coordinate system.
+ * 
+ * @property {Astronomy.EquatorialCoordinates} ofdate
+ *      Equatorial coordinates referenced to the true equator and equinox
+ *      at the specified date and time stored in <code>t</code>.
+ *      These coordinates are corrected for precession and nutation of the
+ *      Earth's axis of rotation at time <code>t</code>.
+ */
+function SkyCoordinates(t, j2000, ofdate) {
+    this.t = t;
+    this.j2000 = j2000;
+    this.ofdate = ofdate;
+}
+
+/**
  * Holds azimuth (compass direction) and altitude (angle above/below the horizon)
  * of a celestial object as seen by an observer at a particular location on the Earth's surface.
  * Also holds right ascension and declination of the same object.
@@ -1500,12 +1525,7 @@ Astronomy.SkyPos = function(gc_vector, observer) {     // based on NOVAS place()
     let ofdate_vector = nutation(gc_vector.t, 0, pos7);
     let ofdate_radec = vector2radec(ofdate_vector);
 
-    let sky = {
-        t: gc_vector.t,
-        j2000: j2000_radec,
-        ofdate: ofdate_radec
-    }
-    return sky;
+    return new SkyCoordinates(gc_vector.t, j2000_radec, ofdate_radec);
 }
 
 function RotateEquatorialToEcliptic(gx, gy, gz, cos_ob, sin_ob) {
@@ -1931,6 +1951,48 @@ function NormalizeLongitude(lon) {
     return lon;
 }
 
+/**
+ * Searches for the moment in time when the center of the Sun reaches a given apparent
+ * ecliptic longitude, as seen from the center of the Earth, within a given range of dates.
+ * This function can be used to determine equinoxes and solstices.
+ * However, it is usually more convenient and efficient to call {@link Astronomy.Seasons} 
+ * to calculate equinoxes and solstices for a given calendar year.
+ * <code>SearchSunLongitude</code> is more general in that it allows searching for arbitrary longitude values.
+ * 
+ * @param {number} targetLon
+ *      The desired ecliptic longitude of date in degrees.
+ *      This may be any value in the range [0, 360), although certain
+ *      values have conventional meanings:
+ *      <ul>
+ *      <li>When <code>targetLon</code> is 0, finds the March equinox,
+ *      which is the moment spring begins in the northern hemisphere
+ *      and the beginning of autumn in the southern hemisphere.</li>
+ *      <li>When <code>targetLon</code> is 180, finds the September equinox,
+ *      which is the moment autumn begins in the northern hemisphere and
+ *      spring begins in the southern hemisphere.</li>
+ *      <li>When <code>targetLon</code> is 90, finds the northern solstice, which is the
+ *      moment summer begins in the northern hemisphere and winter
+ *      begins in the southern hemisphere.</li>
+ *      <li>When <code>targetLon</code> is 270, finds the southern solstice, which is the
+ *      moment winter begins in the northern hemisphere and summer
+ *      begins in the southern hemisphere.</li>
+ *      </ul>
+ * 
+ * @param {(Date | number | Astronomy.Time)} dateStart
+ *      A date and time known to be earlier than the desired longitude event.
+ * 
+ * @param {number} limitDays
+ *      A floating point number of days, which when added to <code>dateStart</code>,
+ *      yields a date and time known to be after the desired longitude event.
+ * 
+ * @returns {Astronomy.Time | null}
+ *      The date and time when the Sun reaches the apparent ecliptic longitude <code>targetLon</code>
+ *      within the range of times specified by <code>dateStart</code> and <code>limitDays</code>.
+ *      If the Sun does not reach the target longitude within the specified time range, or the
+ *      time range is excessively wide, the return value is <code>null</code>.
+ *      To avoid a <code>null</code> return value, the caller must pick a time window around
+ *      the event that is within a few days but not so small that the event might fall outside the window.
+ */
 Astronomy.SearchSunLongitude = function(targetLon, dateStart, limitDays) {
     function sun_offset(t) {
         let pos = Astronomy.SunPosition(t);
@@ -2256,6 +2318,32 @@ function SynodicPeriod(body) {
     return synodicPeriod;
 }
 
+/**
+ * Searches for the date and time the relative ecliptic longitudes of
+ * the specified body and the Earth, as seen from the Sun, reach a certain
+ * difference. This function is useful for finding conjunctions and oppositions
+ * of the planets. For the opposition of a superior planet (Mars, Jupiter, ..., Pluto),
+ * or the inferior conjunction of an inferior planet (Mercury, Venus),
+ * call with <code>targetRelLon</code> = 0. The 0 value indicates that both
+ * planets are on the same ecliptic longitude line, ignoring the other planet's
+ * distance above or below the plane of the Earth's orbit.
+ * For superior conjunctions, call with <code>targetRelLon</code> = 180.
+ * This means the Earth and the other planet are on opposite sides of the Sun.
+ * 
+ * @param {string} body
+ *      The name of a planet other than the Earth.
+ * 
+ * @param {number} targetRelLon
+ *      The desired angular difference in degrees between the ecliptic longitudes
+ *      of <code>body</code> and the Earth. Must be in the range (-180, +180].
+ * 
+ * @param {(Date | number | Astronomy.Time)} startDate
+ *      The date and time after which to find the next occurrence of the
+ *      body and the Earth reaching the desired relative longitude.
+ * 
+ * @returns {Astronomy.Time}
+ *      The time when the Earth and the body next reach the specified relative longitudes.
+ */
 Astronomy.SearchRelativeLongitude = function(body, targetRelLon, startDate) {
     const planet = Planet[body];
     if (!planet)
@@ -2314,17 +2402,25 @@ Astronomy.SearchRelativeLongitude = function(body, targetRelLon, startDate) {
     throw `Relative longitude search failed to converge for ${body} near ${time.toString()} (error_angle = ${error_angle}).`;
 }
 
+/**
+ * Determines the moon's phase expressed as an ecliptic longitude.
+ * 
+ * @param {Date | number | Astronomy.Time} date
+ *      The date and time for which to calculate the moon's phase.
+ * 
+ * @returns {number}
+ *      A value in the range [0, 360) indicating the difference
+ *      in ecliptic longitude between the center of the Sun and the
+ *      center of the Moon, as seen from the center of the Earth.
+ *      Certain longitude values have conventional meanings:
+ *      <ul>
+ *          <li>0 = new moon</li>
+ *          <li>90 = first quarter</li>
+ *          <li>180 = full moon</li>
+ *          <li>270 = third quarter</li>
+ *      </ul>
+ */
 Astronomy.MoonPhase = function(date) {
-    // This function helps us determine the moon's phase.
-    // It returns a value anywhere from 0 to 360 indicating the difference
-    // in ecliptic longitude between the center of the Sun and the
-    // center of the Moon, as seen from the center of the Earth.
-    // Examples of what certain return values mean:
-    //   0 = new moon
-    //  90 = first quarter
-    // 180 = full moon
-    // 270 = third quarter.
-
     return Astronomy.LongitudeFromSun('Moon', date);
 }
 
@@ -2608,7 +2704,6 @@ Astronomy.Elongation = function(body, date) {
  * @returns {Astronomy.ElongationEvent}
  */
 Astronomy.SearchMaxElongation = function(body, startDate) {
-
     const dt = 0.01;
 
     function neg_slope(t) {
