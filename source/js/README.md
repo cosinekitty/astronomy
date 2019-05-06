@@ -23,10 +23,15 @@
     * [.SkyPos()](#Astronomy.SkyPos)
     * [.Ecliptic()](#Astronomy.Ecliptic)
     * [.GeoMoon(date)](#Astronomy.GeoMoon) ⇒ <code>Astronomy.Vector</code>
+    * [.Search(func, t1, t2, options)](#Astronomy.Search)
+    * [.LongitudeFromSun(body, date)](#Astronomy.LongitudeFromSun) ⇒ <code>number</code>
+    * [.AngleFromSun(body, date)](#Astronomy.AngleFromSun) ⇒ <code>number</code>
     * [.Illumination(body, date)](#Astronomy.Illumination) ⇒ [<code>IlluminationInfo</code>](#Astronomy.IlluminationInfo)
     * [.Elongation(body)](#Astronomy.Elongation) ⇒ [<code>ElongationEvent</code>](#Astronomy.ElongationEvent)
     * [.SearchMaxElongation(body, startDate)](#Astronomy.SearchMaxElongation) ⇒ [<code>ElongationEvent</code>](#Astronomy.ElongationEvent)
     * [.SearchPeakMagnitude(body, startDate)](#Astronomy.SearchPeakMagnitude) ⇒ [<code>IlluminationInfo</code>](#Astronomy.IlluminationInfo)
+    * [.ContinuousFunction](#Astronomy.ContinuousFunction) ⇒ <code>number</code>
+    * [.SearchOptions](#Astronomy.SearchOptions) : <code>Object</code>
 
 <a name="Astronomy.Time"></a>
 
@@ -236,6 +241,72 @@ by Montenbruck and Pfleger.
 | --- | --- | --- |
 | date | <code>Date</code> \| <code>number</code> \| [<code>Time</code>](#Astronomy.Time) | The date and time for which to calculate the Moon's geocentric position. |
 
+<a name="Astronomy.Search"></a>
+
+### Astronomy.Search(func, t1, t2, options)
+Search for next time <i>t</i> (such that <i>t</i> is between <code>t1</code> and <code>t2</code>)
+that <code>func(t)</code> crosses from a negative value to a non-negative value.
+The given function must have "smooth" behavior over the entire inclusive range [<code>t1</code>, <code>t2</code>],
+meaning that it behaves like a continuous differentiable function.
+It is not required that <code>t1</code> &lt; <code>t2</code>; <code>t1</code> &gt; <code>t2</code> 
+allows searching backward in time.
+Note: <code>t1</code> and <code>t2</code> must be chosen such that there is no possibility
+of more than one zero-crossing (ascending or descending), or it is possible
+that the "wrong" event will be found (i.e. not the first event after t1)
+or even that the function will return null, indicating that no event was found.
+
+**Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
+
+| Param | Type |
+| --- | --- |
+| func | [<code>ContinuousFunction</code>](#Astronomy.ContinuousFunction) | 
+| t1 | [<code>Time</code>](#Astronomy.Time) | 
+| t2 | [<code>Time</code>](#Astronomy.Time) | 
+| options | <code>null</code> \| [<code>SearchOptions</code>](#Astronomy.SearchOptions) | 
+
+<a name="Astronomy.LongitudeFromSun"></a>
+
+### Astronomy.LongitudeFromSun(body, date) ⇒ <code>number</code>
+Calculates the ecliptic longitude difference 
+between the given body and the Sun as seen from 
+the Earth at a given moment in time.
+The returned value ranges [0, 360) degrees.
+By definition, the Earth and the Sun are both in the plane of the ecliptic.
+Ignores the height of the <code>body</code> above or below the ecliptic plane;
+the resulting angle is measured around the ecliptic plane for the "shadow"
+of the body onto that plane.
+
+**Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
+**Returns**: <code>number</code> - An angle in degrees in the range [0, 360).
+     Values less than 180 indicate that the body is to the east
+     of the Sun as seen from the Earth; that is, the body sets after
+     the Sun does and is visible in the evening sky.
+     Values greater than 180 indicate that the body is to the west of
+     the Sun and is visible in the morning sky.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| body | <code>string</code> | The name of a supported celestial body other than the Earth. |
+| date | <code>Date</code> \| <code>number</code> \| [<code>Time</code>](#Astronomy.Time) | The time at which the relative longitude is to be found. |
+
+<a name="Astronomy.AngleFromSun"></a>
+
+### Astronomy.AngleFromSun(body, date) ⇒ <code>number</code>
+Returns the full angle seen from
+the Earth, between the given body and the Sun.
+Unlike [LongitudeFromSun](#Astronomy.LongitudeFromSun), this function does not
+project the body's "shadow" onto the ecliptic; 
+the angle is measured in 3D space around the plane that 
+contains the centers of the Earth, the Sun, and <code>body</code>.
+
+**Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
+**Returns**: <code>number</code> - An angle in degrees in the range [0, 180].  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| body | <code>string</code> | The name of a supported celestial body other than the Earth. |
+| date | <code>Date</code> \| <code>number</code> \| [<code>Time</code>](#Astronomy.Time) | The time at which the angle from the Sun is to be found. |
+
 <a name="Astronomy.Illumination"></a>
 
 ### Astronomy.Illumination(body, date) ⇒ [<code>IlluminationInfo</code>](#Astronomy.IlluminationInfo)
@@ -297,4 +368,29 @@ Searches for the date and time Venus will next appear brightest as seen from the
 | --- | --- | --- |
 | body | <code>string</code> | Currently only <code>"Venus"</code> is supported.      Mercury's peak magnitude occurs at superior conjunction, when it is virtually impossible to see from Earth,      so peak magnitude events have little practical value for this planet.      The Moon reaches peak magnitude very close to full moon, which can be found using       [Astronomy.SearchMoonQuarter](Astronomy.SearchMoonQuarter) or [Astronomy.SearchMoonPhase](Astronomy.SearchMoonPhase).      The other planets reach peak magnitude very close to opposition,       which can be found using [Astronomy.SearchRelativeLongitude](Astronomy.SearchRelativeLongitude). |
 | startDate | <code>Date</code> \| <code>number</code> \| [<code>Time</code>](#Astronomy.Time) | The date and time after which to find the next peak magnitude event. |
+
+<a name="Astronomy.ContinuousFunction"></a>
+
+### Astronomy.ContinuousFunction ⇒ <code>number</code>
+A continuous function of time used in a call to the <code>Search</code> function.
+
+**Kind**: static typedef of [<code>Astronomy</code>](#Astronomy)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| t | [<code>Time</code>](#Astronomy.Time) | The time at which to evaluate the function. |
+
+<a name="Astronomy.SearchOptions"></a>
+
+### Astronomy.SearchOptions : <code>Object</code>
+Options for the [Search](#Astronomy.Search) function.
+
+**Kind**: static typedef of [<code>Astronomy</code>](#Astronomy)  
+**Properties**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| dt_tolerance_seconds | <code>number</code> \| <code>null</code> | The number of seconds for a time window smaller than which the search      is considered successful.  Using too large a tolerance can result in      an inaccurate time estimate.  Using too small a tolerance can cause      excessive computation, or can even cause the search to fail because of      limited floating-point resolution.  Defaults to 1 second. |
+| init_f1 | <code>number</code> \| <code>null</code> | As an optimization, if the caller of [Search](#Astronomy.Search)       has already calculated the value of the function being searched (the parameter <code>func</code>)       at the time coordinate <code>t1</code>, it can pass in that value as <code>init_f1</code>.      For very expensive calculations, this can measurably improve performance. |
+| init_f2 | <code>number</code> \| <code>null</code> | The same as <code>init_f1</code>, except this is the optional initial value of <code>func(t2)</code>      instead of <code>func(t1)</code>. |
 

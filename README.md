@@ -1,5 +1,3 @@
-# Astronomy
-
 ### Overview
 
 [![Build Status](https://travis-ci.org/cosinekitty/astronomy.svg)](https://travis-ci.org/cosinekitty/astronomy)

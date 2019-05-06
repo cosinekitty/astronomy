@@ -2356,8 +2356,32 @@ function QuadInterp(tm, dt, fa, fm, fb) {
  * A continuous function of time used in a call to the <code>Search</code> function.
  * 
  * @callback ContinuousFunction
+ * @memberof Astronomy
  * @param {Astronomy.Time} t        The time at which to evaluate the function.
  * @returns {number}
+ */
+
+/**
+ * Options for the {@link Astronomy.Search} function.
+ * @typedef {Object} SearchOptions
+ * @memberof Astronomy
+ * 
+ * @property {(number|null)} dt_tolerance_seconds
+ *      The number of seconds for a time window smaller than which the search
+ *      is considered successful.  Using too large a tolerance can result in
+ *      an inaccurate time estimate.  Using too small a tolerance can cause
+ *      excessive computation, or can even cause the search to fail because of
+ *      limited floating-point resolution.  Defaults to 1 second.
+ * 
+ * @property {(number|null)} init_f1
+ *      As an optimization, if the caller of {@link Astronomy.Search} 
+ *      has already calculated the value of the function being searched (the parameter <code>func</code>) 
+ *      at the time coordinate <code>t1</code>, it can pass in that value as <code>init_f1</code>.
+ *      For very expensive calculations, this can measurably improve performance.
+ * 
+ * @property {(number|null)} init_f2
+ *      The same as <code>init_f1</code>, except this is the optional initial value of <code>func(t2)</code>
+ *      instead of <code>func(t1)</code>.
  */
 
 /**
@@ -2372,12 +2396,12 @@ function QuadInterp(tm, dt, fa, fm, fb) {
  * that the "wrong" event will be found (i.e. not the first event after t1)
  * or even that the function will return null, indicating that no event was found.
  * 
- * @param {ContinuousFunction} func
- * @param {*} t1 
- * @param {*} t2 
- * @param {*} options 
+ * @param {Astronomy.ContinuousFunction} func
+ * @param {Astronomy.Time} t1
+ * @param {Astronomy.Time} t2 
+ * @param {(null | Astronomy.SearchOptions)} options 
  */
-function Search(func, t1, t2, options) {
+Astronomy.Search = function(func, t1, t2, options) {
     const dt_tolerance_seconds = (options && options.dt_tolerance_seconds) || 1;
 
     function f(t) {
@@ -2492,15 +2516,34 @@ Astronomy.SearchSunLongitude = function(targetLon, dateStart, limitDays) {
     }
     let t1 = AstroTime(dateStart);
     let t2 = t1.AddDays(limitDays);
-    return Search(sun_offset, t1, t2);
+    return Astronomy.Search(sun_offset, t1, t2);
 }
 
+/**
+ * Calculates the ecliptic longitude difference 
+ * between the given body and the Sun as seen from 
+ * the Earth at a given moment in time.
+ * The returned value ranges [0, 360) degrees.
+ * By definition, the Earth and the Sun are both in the plane of the ecliptic.
+ * Ignores the height of the <code>body</code> above or below the ecliptic plane;
+ * the resulting angle is measured around the ecliptic plane for the "shadow"
+ * of the body onto that plane.
+ * 
+ * @param {string} body
+ *      The name of a supported celestial body other than the Earth.
+ * 
+ * @param {(Date|number|Astronomy.Time)} date
+ *      The time at which the relative longitude is to be found.
+ * 
+ * @returns {number}
+ *      An angle in degrees in the range [0, 360).
+ *      Values less than 180 indicate that the body is to the east
+ *      of the Sun as seen from the Earth; that is, the body sets after
+ *      the Sun does and is visible in the evening sky.
+ *      Values greater than 180 indicate that the body is to the west of
+ *      the Sun and is visible in the morning sky.
+ */
 Astronomy.LongitudeFromSun = function(body, date) {
-    // This function calculates the ecliptic longitude
-    // difference between the given body and the Sun 
-    // as seen from the Earth at a given moment in time.
-    // The returned value ranges [0, 360) degreees.
-
     if (body === 'Earth')
         throw 'The Earth does not have a longitude as seen from itself.';
 
@@ -2514,12 +2557,24 @@ Astronomy.LongitudeFromSun = function(body, date) {
     return NormalizeLongitude(eb.elon - es.elon);
 }
 
+/**
+ * Returns the full angle seen from
+ * the Earth, between the given body and the Sun.
+ * Unlike {@link Astronomy.LongitudeFromSun}, this function does not
+ * project the body's "shadow" onto the ecliptic; 
+ * the angle is measured in 3D space around the plane that 
+ * contains the centers of the Earth, the Sun, and <code>body</code>.
+ * 
+ * @param {string} body
+ *      The name of a supported celestial body other than the Earth.
+ * 
+ * @param {(Date|number|Astronomy.Time)} date
+ *      The time at which the angle from the Sun is to be found.
+ * 
+ * @returns {number}
+ *      An angle in degrees in the range [0, 180].
+ */
 Astronomy.AngleFromSun = function(body, date) {
-    // This function returns the full angle seen from
-    // the Earth, between the given body and the Sun.
-    // Unlike LongitudeFromSun, this function does not
-    // project the body's "shadow" onto the ecliptic.
-
     if (body == 'Earth')
         throw 'The Earth does not have an angle as seen from itself.';
 
@@ -2862,7 +2917,7 @@ Astronomy.SearchMoonPhase = function(targetLon, dateStart, limitDays) {
     let dt2 = Math.min(limitDays, est_dt + uncertainty);
     let t1 = ta.AddDays(dt1);
     let t2 = ta.AddDays(dt2);
-    return Search(moon_offset, t1, t2);
+    return Astronomy.Search(moon_offset, t1, t2);
 }
 
 Astronomy.SearchMoonQuarter = function(dateStart) {
@@ -2949,7 +3004,7 @@ Astronomy.SearchRiseSet = function(body, observer, direction, dateStart, limitDa
 
         if (alt_before <= 0 && alt_after > 0) {
             // Search between evt_before and evt_after for the desired event.
-            let tx = Search(peak_altitude, time_before, evt_after.time, {init_f1:alt_before, init_f2:alt_after});
+            let tx = Astronomy.Search(peak_altitude, time_before, evt_after.time, {init_f1:alt_before, init_f2:alt_after});
             if (tx) 
                 return tx;
         }
@@ -3203,7 +3258,7 @@ Astronomy.SearchMaxElongation = function(body, startDate) {
             throw `SearchMaxElongation: internal error: m2 = ${m2}`;
 
         // Use the generic search algorithm to home in on where the slope crosses from negative to positive.
-        let tx = Search(neg_slope, t1, t2, {init_f1:m1, init_f2:m2, dt_tolerance_seconds:10});
+        let tx = Astronomy.Search(neg_slope, t1, t2, {init_f1:m1, init_f2:m2, dt_tolerance_seconds:10});
         if (!tx) 
             throw `SearchMaxElongation: failed search iter ${iter} (t1=${t1.toString()}, t2=${t2.toString()})`;
 
@@ -3321,7 +3376,7 @@ Astronomy.SearchPeakMagnitude = function(body, startDate) {
             throw `SearchPeakMagnitude: internal error: m2 = ${m2}`;
 
         // Use the generic search algorithm to home in on where the slope crosses from negative to positive.
-        let tx = Search(slope, t1, t2, {init_f1:m1, init_f2:m2, dt_tolerance_seconds:10});
+        let tx = Astronomy.Search(slope, t1, t2, {init_f1:m1, init_f2:m2, dt_tolerance_seconds:10});
         if (!tx) 
             throw `SearchPeakMagnitude: failed search iter ${iter} (t1=${t1.toString()}, t2=${t2.toString()})`;
 
