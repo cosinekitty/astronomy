@@ -13,7 +13,8 @@ jsdoc2md --template ../jsdoc2md/js.hbs --files ../source/js/astronomy.js > ../so
 
 if [[ -d html ]]; then
     echo "Generating documentation in HTML format for local viewing."
-    jsdoc ../source/js/astronomy.js --destination ./html || Fail "Error generating HTML preview"
+    rm -rf html
+    jsdoc ../source/js/astronomy.js --destination html || Fail "Error generating HTML preview"
 else
     echo "(Skipping local HTML generation because html directory does not exist.)"
 fi
