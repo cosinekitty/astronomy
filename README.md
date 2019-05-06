@@ -48,6 +48,23 @@ and other reliable sources of ephemeris data.
 
 [API Reference](source/js/README.md)
 
+{% raw %}
+
+<div>
+    Current date and time:
+    <span id="AstroDemo_DateTime"></span>
+</div>
+
+<script src="https://raw.githubusercontent.com/cosinekitty/astronomy/master/source/js/astronomy.js"></script>
+<script>
+    window.onload = function() {
+        var now = new Date();
+        document.getElementById('AstroDemo_DateTime').innerText = now.toString();
+    };
+</script>
+
+{% endraw %}
+
 ### C/C++
 
 (Coming soon.)
