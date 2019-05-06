@@ -74,7 +74,6 @@ let sin_ob2000;
  * Most users can safely ignore this class.
  * 
  * @class
- * @constructor
  * 
  * @memberof Astronomy
  * 
@@ -1113,7 +1112,6 @@ function TerrestrialTime(ut) {
  * to create a <code>Time</code> object.
  * 
  * @class
- * @constructor
  * @memberof Astronomy
  * 
  * @param {(Date|number)} date
@@ -1901,7 +1899,6 @@ function geo_pos(time, observer) {
  * along with the time at which the vector is valid.
  * 
  * @class
- * @constructor
  * @memberof Astronomy
  * 
  * @property {number} x             The x-coordinate expressed in astronomical units (AU).
@@ -1920,7 +1917,6 @@ function Vector(x, y, z, t) {
  * Holds right ascension, declination, and distance of a celestial object.
  * 
  * @class
- * @constructor
  * @memberof Astronomy
  * 
  * @property {number} ra
@@ -1948,7 +1944,6 @@ function EquatorialCoordinates(ra, dec, dist) {
  * those found inside a corresponding {@link Astronomy.EquatorialCoordinates} object.
  * 
  * @class
- * @constructor
  * @memberof Astronomy
  * 
  * @property {number} azimuth
@@ -1990,7 +1985,6 @@ function HorizontalCoordinates(azimuth, altitude, ra, dec) {
  * and spherical coordinates <code>(elon, elat)</code> measured in degrees.
  * 
  * @class
- * @constructor
  * @memberof Astronomy
  * 
  * @property {number} ex
@@ -2220,7 +2214,6 @@ Astronomy.Horizon = function(date, location, ra, dec, refraction) {     // based
  * Represents the geographic location of an observer on the surface of the Earth.
  * 
  * @class
- * @constructor
  * @memberof Astronomy
  * 
  * @property {number} latitude_degrees 
@@ -2942,7 +2935,6 @@ function MoonMagnitude(phase, helio_dist, geo_dist) {
  * Contains information about the apparent brightness and sunlit phase of a celestial object.
  * 
  * @class
- * @constructor
  * @memberof Astronomy
  * 
  * @property {Astronomy.Time} time 
@@ -3382,9 +3374,6 @@ Astronomy.Seasons = function(year) {
  * best in the morning or the evening.
  * 
  * @class
- * 
- * @constructor
- * 
  * @memberof Astronomy
  * 
  * @property {Astronomy.Time} time  When the event occurs.
