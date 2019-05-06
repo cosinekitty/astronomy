@@ -1,4 +1,4 @@
-# API Reference
+# JavaScript API Reference
 <a name="Astronomy"></a>
 
 ## Astronomy : <code>object</code>
@@ -219,8 +219,8 @@ Holds right ascension, declination, and distance of a celestial object.
 
 | Name | Type | Description |
 | --- | --- | --- |
-| azimuth | <code>number</code> | An angle in degrees measured starting at north and increasing positively toward the east.      The value is in the range [0, 360).      North = 0, east = 90, south = 180, west = 270. |
-| altitude | <code>number</code> | An angle in degrees above (positive) or below (negative) the horizon.      The value is in the range [-90, +90].      The altitude angle is optionally adjusted upward due to atmospheric refraction. |
+| azimuth | <code>number</code> | A horizontal compass direction angle in degrees measured starting at north       and increasing positively toward the east.      The value is in the range [0, 360).      North = 0, east = 90, south = 180, west = 270. |
+| altitude | <code>number</code> | A vertical angle in degrees above (positive) or below (negative) the horizon.      The value is in the range [-90, +90].      The altitude angle is optionally adjusted upward due to atmospheric refraction. |
 | ra | <code>number</code> | The right ascension of the celestial body in sidereal hours.      The value is in the reange [0, 24).      If <code>altitude</code> was adjusted for atmospheric reaction, <code>ra</code>      is likewise adjusted. |
 | dec | <code>number</code> | The declination of of the celestial body in degrees.      The value in the range [-90, +90].      If <code>altitude</code> was adjusted for atmospheric reaction, <code>dec</code>      is likewise adjusted. |
 
