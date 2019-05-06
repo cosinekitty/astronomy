@@ -1625,7 +1625,7 @@ function CalcVsop(model, time) {
         eclip[0] + 0.000000440360*eclip[1] - 0.000000190919*eclip[2],
         -0.000000479966*eclip[0] + 0.917482137087*eclip[1] - 0.397776982902*eclip[2],
         0.397776982902*eclip[1] + 0.917482137087*eclip[2],
-        t
+        time
     );
 }
 
@@ -1654,7 +1654,7 @@ function CalcChebyshev(model, time) {
                 }
                 pos.push(sum - record.coeff[0][d]/2);
             }
-            return new Vector(pos[0], pos[1], pos[2], t);
+            return new Vector(pos[0], pos[1], pos[2], time);
         }
     }
     throw `Cannot extrapolate Chebyshev model for given Terrestrial Time: ${time.tt}`;
