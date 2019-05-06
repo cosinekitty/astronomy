@@ -390,6 +390,7 @@ static int JsDeltaT(cg_context_t *context)
     if (infile == NULL) goto fail;
     last_mjd = mjd;
     lnum = 0;
+    float_year = 0.0;
     while (fgets(line, sizeof(line), infile))
     {
         ++lnum;
@@ -409,6 +410,14 @@ static int JsDeltaT(cg_context_t *context)
             fprintf(context->outfile, "%s\n", (count==1) ? "[" : ",");
             fprintf(context->outfile, "{ mjd:%0.1lf, dt:%s }", mjd, dt_text);
         }
+    }
+
+    /* Keep the final data point to maximize the extent of predictions into the future. */
+    if (mjd > last_mjd && float_year != floor(float_year))
+    {
+        ++count;
+        fprintf(context->outfile, "%s\n", (count==1) ? "[" : ",");
+        fprintf(context->outfile, "{ mjd:%0.1lf, dt:%s }", mjd, dt_text);
     }
     fprintf(context->outfile, "\n]");
 
