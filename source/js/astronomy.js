@@ -143,6 +143,21 @@ function Frac(x) {
     return x - Math.floor(x);
 }
 
+/**
+ * Calculates the angle in degrees between two vectors.
+ * The angle is measured in the plane that contains both vectors
+ * emanating from the same point.
+ * 
+ * @param {Astronomy.Vector} a
+ *      The first of a pair of vectors between which to measure an angle.
+ * 
+ * @param {Astronomy.Vector} b
+ *      The second of a pair of vectors between which to measure an angle.
+ * 
+ * @returns {number} 
+ *      The angle between the two vectors expressed in degrees. 
+ *      The value is in the range [0, 180].
+ */
 function AngleBetween(a, b) {
     const aa = (a.x*a.x + a.y*a.y + a.z*a.z);
     if (Math.abs(aa) < 1.0e-8)
@@ -1098,9 +1113,7 @@ function TerrestrialTime(ut) {
  * to create a <code>Time</code> object.
  * 
  * @class
- * 
  * @constructor
- * 
  * @memberof Astronomy
  * 
  * @param {(Date|number)} date
@@ -1161,6 +1174,12 @@ Time.prototype.toString = function() {
 /**
  * Returns a new <code>Time</code> object adjusted by the floating point number of days.
  * Does NOT modify the original <code>Time</code> object.
+ * 
+ * @param {number} days
+ *      The floating point numbers of days by which to adjust the given date and time.
+ *      Positive values adjust the date toward the future, and
+ *      negative values adjust the date toward the past.
+ * 
  * @returns {Astronomy.Time}
  */
 Time.prototype.AddDays = function(days) {
@@ -1877,6 +1896,140 @@ function geo_pos(time, observer) {
     return pos3;
 }
 
+/**
+ * Holds the Cartesian coordinates of a vector in 3D space,
+ * along with the time at which the vector is valid.
+ * 
+ * @class
+ * @constructor
+ * @memberof Astronomy
+ * 
+ * @property {number} x             The x-coordinate expressed in astronomical units (AU).
+ * @property {number} y             The y-coordinate expressed in astronomical units (AU).
+ * @property {number} z             The z-coordinate expressed in astronomical units (AU).
+ * @property {Astronomy.Time} t     The time at which the vector is valid.
+ */
+function Vector(x, y, z, t) {
+    this.x = x;
+    this.y = y;
+    this.z = z;
+    this.t = t;
+}
+
+/**
+ * Holds right ascension, declination, and distance of a celestial object.
+ * 
+ * @class
+ * @constructor
+ * @memberof Astronomy
+ * 
+ * @property {number} ra
+ *      Right ascension in sidereal hours: [0, 24).
+ * 
+ * @property {number} dec
+ *      Declination in degrees: [-90, +90].
+ * 
+ * @property {number} dist
+ *      Distance to the celestial object expressed in 
+ *      <a href="https://en.wikipedia.org/wiki/Astronomical_unit">Astronomical Units</a> (AU).
+ */
+function EquatorialCoordinates(ra, dec, dist) {
+    this.ra = ra;
+    this.dec = dec;
+    this.dist = dist;
+}
+
+/**
+ * Holds azimuth (compass direction) and altitude (angle above/below the horizon)
+ * of a celestial object as seen by an observer at a particular location on the Earth's surface.
+ * Also holds right ascension and declination of the same object.
+ * All of these coordinates are optionally adjusted for atmospheric refraction;
+ * therefore the right ascension and declination values may not exactly match
+ * those found inside a corresponding {@link Astronomy.EquatorialCoordinates} object.
+ * 
+ * @class
+ * @constructor
+ * @memberof Astronomy
+ * 
+ * @property {number} azimuth
+ *      An angle in degrees measured starting at north and increasing positively toward the east.
+ *      The value is in the range [0, 360).
+ *      North = 0, east = 90, south = 180, west = 270.
+ * 
+ * @property {number} altitude
+ *      An angle in degrees above (positive) or below (negative) the horizon.
+ *      The value is in the range [-90, +90].
+ *      The altitude angle is optionally adjusted upward due to atmospheric refraction.
+ * 
+ * @property {number} ra
+ *      The right ascension of the celestial body in sidereal hours.
+ *      The value is in the reange [0, 24).
+ *      If <code>altitude</code> was adjusted for atmospheric reaction, <code>ra</code>
+ *      is likewise adjusted.
+ * 
+ * @property {number} dec
+ *      The declination of of the celestial body in degrees.
+ *      The value in the range [-90, +90].
+ *      If <code>altitude</code> was adjusted for atmospheric reaction, <code>dec</code>
+ *      is likewise adjusted.
+ */
+function HorizontalCoordinates(azimuth, altitude, ra, dec) {
+    this.azimuth = azimuth;
+    this.altitude = altitude;
+    this.ra = ra;
+    this.dec = dec;
+}
+
+/**
+ * Holds ecliptic coordinates of a celestial body.
+ * The origin and date of the coordinate system may vary depending on the caller's usage.
+ * In general, ecliptic coordinates are measured with respect to the mean plane of the Earth's 
+ * orbit around the Sun.
+ * Includes Cartesian coordinates <code>(ex, ey, ez)</code> measured in 
+ * <a href="https://en.wikipedia.org/wiki/Astronomical_unit">Astronomical Units</a> (AU)
+ * and spherical coordinates <code>(elon, elat)</code> measured in degrees.
+ * 
+ * @class
+ * @constructor
+ * @memberof Astronomy
+ * 
+ * @property {number} ex
+ *      The Cartesian x-coordinate of the body in astronomical units (AU).
+ *      The x-axis is oriented in the direction of the 
+ *      <a href="https://en.wikipedia.org/wiki/Equinox_(celestial_coordinates)">equinox</a>.
+ * 
+ * @property {number} ey
+ *      The Cartesian y-coordinate of the body in astronomical units (AU).
+ *      The y-axis is oriented 90 degrees counterclockwise from the equinox,
+ *      as seen from above the Sun's north pole.
+ * 
+ * @property {number} ez
+ *      The Cartesian z-coordinate of the body in astronomical units (AU).
+ *      The z-axis is oriented perpendicular to the mean plane of the Earth's orbit,
+ *      along the direction of the Sun's north pole.
+ * 
+ * @property {number} elat
+ *      The ecliptic latitude of the body in degrees.
+ *      This is the angle north or south of the mean plane of the Earth's orbit.
+ *      The value is in the range [-90, +90].
+ *      Positive values are north and negative values are south.
+ * 
+ * @property {number} elon
+ *      The ecliptic longitude of the body in degrees.
+ *      This is the angle measured counterclockwise around the mean plane
+ *      of the Earth's orbit, as seen from above the Sun's north pole.
+ *      This is the same direction that the Earth orbits around the Sun.
+ *      The angle is measured starting at 0 from the equinox and increases
+ *      up to 360 degrees.
+ */
+function EclipticCoordinates(ex, ey, ez, elat, elon) {
+    this.ex = ex;
+    this.ey = ey;
+    this.ez = ez;
+    this.elat = elat;
+    this.elon = elon;
+}
+
 function vector2radec(pos)
 {
     const xyproj = pos[0]*pos[0] + pos[1]*pos[1];
@@ -1897,7 +2050,7 @@ function vector2radec(pos)
         ra += 24;
     }
     let dec = Math.atan2(pos[2], Math.sqrt(xyproj)) / DEG2RAD;
-    return { ra:ra, dec:dec, dist:dist };
+    return new EquatorialCoordinates(ra, dec, dist);
 }
 
 function spin(angle, pos1) {
@@ -2060,7 +2213,7 @@ Astronomy.Horizon = function(date, location, ra, dec, refraction) {     // based
         }
     }
 
-    return { azimuth:az, altitude:90-zd, ra:out_ra, dec:out_dec };
+    return new HorizontalCoordinates(az, 90-zd, out_ra, out_dec);
 }
 
 /**
@@ -2091,7 +2244,8 @@ function Observer(latitude_degrees, longitude_degrees, height_in_meters) {
 }
 
 /**
- * Creates an {@link Astronomy.Observer} object.
+ * Creates an {@link Astronomy.Observer} object that represents a location
+ * on the surface of the Earth from which observations are made.
  * 
  * @param {number} latitude_degrees 
  *      The observer's geographic latitude in degrees north of the Earth's equator.
@@ -2114,6 +2268,19 @@ Astronomy.MakeObserver = function(latitude_degrees, longitude_degrees, height_in
 
 /**
  * Returns apparent geocentric true ecliptic coordinates of date for the Sun.
+ * <i>Geocentric</i> means coordinates as the Sun would appear to a hypothetical observer
+ * at the center of the Earth.
+ * <i>Ecliptic coordinates of date</i> are measured along the plane of the Earth's mean
+ * orbit around the Sun, using the 
+ * <a href="https://en.wikipedia.org/wiki/Equinox_(celestial_coordinates)">equinox</a>
+ * of the Earth as adjusted for precession and nutation of the Earth's
+ * axis of rotation on the given date.
+ * 
+ * @param {(Date | number | Astronomy.Time)} date
+ *      The date and time at which to calculate the Sun's apparent location as seen from
+ *      the center of the Earth.
+ * 
+ * @returns {Astronomy.EclipticCoordinates}
  */
 Astronomy.SunPosition = function(date) {
     // Correct for light travel time from the Sun.
@@ -2145,8 +2312,24 @@ Astronomy.SunPosition = function(date) {
 }
 
 /**
- * Returns equatorial coordinates (right ascension and declination)
- * in two different systems: J2000 and true-equator-of-date.
+ * Returns topocentric equatorial coordinates (right ascension and declination)
+ * simultaneously in two different systems: J2000 and true-equator-of-date.
+ * <i>Topocentric</i> refers to a position as seen by an observer on the surface of the Earth.
+ * This function corrects for
+ * <a href="https://en.wikipedia.org/wiki/Parallax">parallax</a> 
+ * of the object between a geocentric observer and a topocentric observer.
+ * This is most significant for the Moon, because it is so close to the Earth.
+ * However, it can have a small effect on the apparent positions of other bodies.
+ * 
+ * @param {Astronomy.Vector} gc_vector
+ *      A geocentric vector in the J2000 equatorial system.
+ *      <i>Geocentric</i> refers to a position seen by a hypothetical observer at the center of the Earth.
+ * 
+ * @param {Astronomy.Observer} observer
+ *      The location on the Earth of the observer.
+ * 
+ * @returns {Astronomy.SkyCoordinates}
+ *      The topocentric coordinates of the body as adjusted for the given observer.
  */
 Astronomy.SkyPos = function(gc_vector, observer) {     // based on NOVAS place()
     const gc_observer = observer ? geo_pos(gc_vector.t, observer) : [0,0,0];        // vector from geocenter to observer
@@ -2182,8 +2365,7 @@ function RotateEquatorialToEcliptic(gx, gy, gz, cos_ob, sin_ob) {
         if (elon < 0) elon += 360;
     }
     let elat = RAD2DEG * Math.atan2(ez, xyproj);
-
-    return { ex:ex, ey:ey, ez:ez, elat:elat, elon:elon };
+    return new EclipticCoordinates(ex, ey, ez, elat, elon);
 }
 
 /**
@@ -2191,6 +2373,17 @@ function RotateEquatorialToEcliptic(gx, gy, gz, cos_ob, sin_ob) {
  * returns J2000 ecliptic latitude, longitude, and cartesian coordinates.
  * You can call {@link Astronomy.GeoVector} and use its (x, y, z) return values
  * to pass into this function.
+ * 
+ * @param {number} gx
+ *      The x-coordinate of a 3D vector in the J2000 equatorial coordinate system.
+ * 
+ * @param {number} gy
+ *      The y-coordinate of a 3D vector in the J2000 equatorial coordinate system.
+ * 
+ * @param {number} gz
+ *      The z-coordinate of a 3D vector in the J2000 equatorial coordinate system.
+ * 
+ * @returns {Astronomy.EclipticCoordinates}
  */
 Astronomy.Ecliptic = function(gx, gy, gz) {
     // Based on NOVAS functions equ2ecl() and equ2ecl_vec().
@@ -2236,7 +2429,7 @@ Astronomy.GeoMoon = function(date) {
     // Convert from mean equinox of date to J2000...
     var mpos2 = precession(time.tt, mpos1, 0);
 
-    return { t:time, x:mpos2[0], y:mpos2[1], z:mpos2[2] };
+    return new Vector(mpos2[0], mpos2[1], mpos2[2], time);
 }
 
 function CalcVsop(model, time) {
@@ -2266,12 +2459,12 @@ function CalcVsop(model, time) {
     ];
 
     // Convert ecliptic cartesian coordinates to equatorial cartesian coordinates.
-    return {
-        t: time,
-        x: eclip[0] + 0.000000440360*eclip[1] - 0.000000190919*eclip[2],
-        y: -0.000000479966*eclip[0] + 0.917482137087*eclip[1] - 0.397776982902*eclip[2],
-        z: 0.397776982902*eclip[1] + 0.917482137087*eclip[2]
-    };
+    return new Vector(
+        eclip[0] + 0.000000440360*eclip[1] - 0.000000190919*eclip[2],
+        -0.000000479966*eclip[0] + 0.917482137087*eclip[1] - 0.397776982902*eclip[2],
+        0.397776982902*eclip[1] + 0.917482137087*eclip[2],
+        t
+    );
 }
 
 function ChebScale(t_min, t_max, t) {
@@ -2299,12 +2492,28 @@ function CalcChebyshev(model, time) {
                 }
                 pos.push(sum - record.coeff[0][d]/2);
             }
-            return { t:time, x:pos[0], y:pos[1], z:pos[2] };
+            return new Vector(pos[0], pos[1], pos[2], t);
         }
     }
     throw `Cannot extrapolate Chebyshev model for given Terrestrial Time: ${time.tt}`;
 }
 
+/**
+ * Calculates heliocentric (i.e., with respect to the center of the Sun)
+ * Cartesian coordinates in the J2000 equatorial system of a celestial
+ * body at a specified time.
+ * 
+ * @param {string} body
+ *      One of the strings 
+ *      <code>"Sun"</code>, <code>"Moon"</code>, <code>"Mercury"</code>, <code>"Venus"</code>, 
+ *      <code>"Earth"</code>, <code>"Mars"</code>, <code>"Jupiter"</code>, <code>"Saturn"</code>, 
+ *      <code>"Uranus"</code>, <code>"Neptune"</code>, or <code>"Pluto"</code>.
+ *  
+ * @param {(Date | number | Astronomy.Time)} date
+ *      The date and time for which the body's position is to be calculated.
+ * 
+ * @returns {Astronomy.Vector}
+ */
 Astronomy.HelioVector = function(body, date) {
     var time = AstroTime(date);
     if (body in vsop) {
@@ -2314,16 +2523,32 @@ Astronomy.HelioVector = function(body, date) {
         return CalcChebyshev(cheb[body], time);
     }
     if (body === 'Sun') {
-        return { t:time, x:0, y:0, z:0 };
+        return new Vector(0, 0, 0, time);
     }
     if (body === 'Moon') {
         var e = CalcVsop(vsop.Earth, time);
         var m = Astronomy.GeoMoon(time);
-        return { t:time, x:e.x+m.x, y:e.y+m.y, z:e.z+m.z };
+        return new Vector(e.x+m.x, e.y+m.y, e.z+m.z, time);
     }
     throw `Astronomy.HelioVector: Unknown body "${body}"`;
 };
 
+/**
+ * Calculates geocentric (i.e., with respect to the center of the Earth)
+ * Cartesian coordinates in the J2000 equatorial system of a celestial
+ * body at a specified time.
+ * 
+ * @param {string} body
+ *      One of the strings 
+ *      <code>"Sun"</code>, <code>"Moon"</code>, <code>"Mercury"</code>, <code>"Venus"</code>, 
+ *      <code>"Earth"</code>, <code>"Mars"</code>, <code>"Jupiter"</code>, <code>"Saturn"</code>, 
+ *      <code>"Uranus"</code>, <code>"Neptune"</code>, or <code>"Pluto"</code>.
+ *  
+ * @param {(Date | number | Astronomy.Time)} date
+ *      The date and time for which the body's position is to be calculated.
+ * 
+ * @returns {Astronomy.Vector}
+ */
 Astronomy.GeoVector = function(body, date) {
     const time = AstroTime(date);
     if (body === 'Moon') {
@@ -2626,9 +2851,26 @@ Astronomy.AngleFromSun = function(body, date) {
     return angle;
 }
 
-Astronomy.EclipticLongitude = function(body, date) {    // heliocentric ecliptic longitude in J2000
-    // This function calculates the ecliptic longitude of the body
-    // as seen from the center of the Sun at the given date.
+/**
+ * Calculates heliocentric ecliptic longitude based on the J2000 equinox.
+ * 
+ * @param {string} body
+ *      The name of a celestial body other than the Sun.
+ * 
+ * @param {(Date | number | Astronomy.Time)} date
+ *      The date and time for which to calculate the ecliptic longitude.
+ * 
+ * @returns {number}
+ *      The ecliptic longitude angle of the body in degrees measured counterclockwise around the mean
+ *      plane of the Earth's orbit, as seen from above the Sun's north pole.
+ *      Ecliptic longitude starts at 0 at the J2000
+ *      <a href="https://en.wikipedia.org/wiki/Equinox_(celestial_coordinates)">equinox</a> and
+ *      increases in the same direction the Earth orbits the Sun.
+ *      The returned value is always in the range [0, 360).
+ */
+Astronomy.EclipticLongitude = function(body, date) {
+    if (body === 'Sun') 
+        throw 'Cannot calculate heliocentric longitude of the Sun.';
 
     let hv = Astronomy.HelioVector(body, date);
     let eclip = Astronomy.Ecliptic(hv.x, hv.y, hv.z);
@@ -2805,11 +3047,11 @@ Astronomy.Illumination = function(body, date) {
         if (body === 'Moon') {
             // For extra numeric precision, use geocentric moon formula directly.
             gc = Astronomy.GeoMoon(time);
-            hc = { x:(earth.x + gc.x), y:(earth.y + gc.y), z:(earth.z + gc.z) };
+            hc = new Vector(earth.x + gc.x, earth.y + gc.y, earth.z + gc.z, time);
         } else {
             // For planets, heliocentric vector is most direct to calculate.
             hc = Astronomy.HelioVector(body, date);
-            gc = { x:(hc.x - earth.x), y:(hc.y - earth.y), z:(hc.z - earth.z) };
+            gc = new Vector(hc.x - earth.x, hc.y - earth.y, hc.z - earth.z, time);
         }
         phase = AngleBetween(gc, hc);
     }
@@ -3208,8 +3450,8 @@ Astronomy.Elongation = function(body, date) {
  * maximum elongation, the elongation in degrees, and whether
  * the body is visible in the morning or evening.
  * 
- * @param {string} body     either "Mercury" or "Venus"
- * @param {Date} startDate  the date and time after which to search for the next maximum elongation event
+ * @param {string} body     Either <code>"Mercury"</code> or <code>"Venus"</code>.
+ * @param {Date} startDate  The date and time after which to search for the next maximum elongation event.
  * 
  * @returns {Astronomy.ElongationEvent}
  */
@@ -3321,7 +3563,7 @@ Astronomy.SearchMaxElongation = function(body, startDate) {
  * @param {string} body
  *      Currently only <code>"Venus"</code> is supported.
  *      Mercury's peak magnitude occurs at superior conjunction, when it is virtually impossible to see from Earth,
- *      so peak magnitude events have little practical value for this planet.
+ *      so peak magnitude events have little practical value for that planet.
  *      The Moon reaches peak magnitude very close to full moon, which can be found using 
  *      {@link Astronomy.SearchMoonQuarter} or {@link Astronomy.SearchMoonPhase}.
  *      The other planets reach peak magnitude very close to opposition, 
