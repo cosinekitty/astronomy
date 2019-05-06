@@ -1109,12 +1109,13 @@ function EquatorialCoordinates(ra, dec, dist) {
  * @memberof Astronomy
  * 
  * @property {number} azimuth
- *      An angle in degrees measured starting at north and increasing positively toward the east.
+ *      A horizontal compass direction angle in degrees measured starting at north 
+ *      and increasing positively toward the east.
  *      The value is in the range [0, 360).
  *      North = 0, east = 90, south = 180, west = 270.
  * 
  * @property {number} altitude
- *      An angle in degrees above (positive) or below (negative) the horizon.
+ *      A vertical angle in degrees above (positive) or below (negative) the horizon.
  *      The value is in the range [-90, +90].
  *      The altitude angle is optionally adjusted upward due to atmospheric refraction.
  * 
