@@ -26,6 +26,8 @@
         * [new Observer()](#new_Astronomy.Observer_new)
     * [.IlluminationInfo](#Astronomy.IlluminationInfo)
         * [new IlluminationInfo()](#new_Astronomy.IlluminationInfo_new)
+    * [.MoonQuarter](#Astronomy.MoonQuarter)
+        * [new MoonQuarter()](#new_Astronomy.MoonQuarter_new)
     * [.ElongationEvent](#Astronomy.ElongationEvent)
         * [new ElongationEvent()](#new_Astronomy.ElongationEvent_new)
     * [.Bodies](#Astronomy.Bodies) : <code>Array.&lt;string&gt;</code>
@@ -48,6 +50,9 @@
     * [.Illumination(body, date)](#Astronomy.Illumination) ⇒ [<code>IlluminationInfo</code>](#Astronomy.IlluminationInfo)
     * [.SearchRelativeLongitude(body, targetRelLon, startDate)](#Astronomy.SearchRelativeLongitude) ⇒ [<code>Time</code>](#Astronomy.Time)
     * [.MoonPhase(date)](#Astronomy.MoonPhase) ⇒ <code>number</code>
+    * [.SearchMoonPhase(targetLon, dateStart, limitDays)](#Astronomy.SearchMoonPhase) ⇒ [<code>Time</code>](#Astronomy.Time) \| <code>null</code>
+    * [.SearchMoonQuarter(dateStart)](#Astronomy.SearchMoonQuarter) ⇒ [<code>MoonQuarter</code>](#Astronomy.MoonQuarter)
+    * [.NextMoonQuarter(mq)](#Astronomy.NextMoonQuarter)
     * [.Elongation(body)](#Astronomy.Elongation) ⇒ [<code>ElongationEvent</code>](#Astronomy.ElongationEvent)
     * [.SearchMaxElongation(body, startDate)](#Astronomy.SearchMaxElongation) ⇒ [<code>ElongationEvent</code>](#Astronomy.ElongationEvent)
     * [.SearchPeakMagnitude(body, startDate)](#Astronomy.SearchPeakMagnitude) ⇒ [<code>IlluminationInfo</code>](#Astronomy.IlluminationInfo)
@@ -348,6 +353,28 @@ Represents the geographic location of an observer on the surface of the Earth.
 
 #### new IlluminationInfo()
 Contains information about the apparent brightness and sunlit phase of a celestial object.
+
+
+* * *
+
+<a name="Astronomy.MoonQuarter"></a>
+
+### Astronomy.MoonQuarter
+**Kind**: static class of [<code>Astronomy</code>](#Astronomy)  
+**Properties**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| quarter | <code>number</code> | An integer as follows:      <ul>          <li>0 = new moon</li>          <li>1 = first quarter</li>          <li>2 = full moon</li>          <li>3 = third quarter</li>      </ul> |
+| time | [<code>Time</code>](#Astronomy.Time) | The date and time of the quarter lunar phase. |
+
+
+* * *
+
+<a name="new_Astronomy.MoonQuarter_new"></a>
+
+#### new MoonQuarter()
+Represents a quarter lunar phase, along with when it occurs.
 
 
 * * *
@@ -776,6 +803,69 @@ Determines the moon's phase expressed as an ecliptic longitude.
 
 * * *
 
+<a name="Astronomy.SearchMoonPhase"></a>
+
+### Astronomy.SearchMoonPhase(targetLon, dateStart, limitDays) ⇒ [<code>Time</code>](#Astronomy.Time) \| <code>null</code>
+Searches for the date and time that the Moon reaches a specified phase.
+Lunar phases are defined in terms of geocentric ecliptic longitudes
+with respect to the Sun.  When the Moon and the Sun have the same ecliptic
+longitude, that is defined as a new moon. When the two ecliptic longitudes
+are 180 degrees apart, that is defined as a full moon.
+To enumerate quarter lunar phases, it is simpler to call
+[SearchMoonQuarter](#Astronomy.SearchMoonQuarter) once, followed by repeatedly calling
+[NextMoonQuarter](#Astronomy.NextMoonQuarter). <code>SearchMoonPhase</code> is only
+necessary for finding other lunar phases than the usual quarter phases.
+
+**Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
+**Returns**: [<code>Time</code>](#Astronomy.Time) \| <code>null</code> - If the specified lunar phase occurs after <code>dateStart</code>
+     and before <code>limitDays</code> days after <code>dateStart</code>,
+     this function returns the date and time of the first such occurrence.
+     Otherwise, it returns <code>null</code>.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| targetLon | <code>number</code> | The difference in geocentric ecliptic longitude between the Sun and Moon      that specifies the lunar phase being sought. This can be any value      in the range [0, 360). Here are some helpful examples:      <ul>          <li>0 = new moon</li>          <li>90 = first quarter</li>          <li>180 = full moon</li>          <li>270 = third quarter</li>      </ul> |
+| dateStart | <code>Date</code> \| <code>number</code> \| [<code>Time</code>](#Astronomy.Time) | The beginning of the window of time in which to search. |
+| limitDays | <code>number</code> | The floating point number of days after <code>dateStart</code>      that limits the window of time in which to search. |
+
+
+* * *
+
+<a name="Astronomy.SearchMoonQuarter"></a>
+
+### Astronomy.SearchMoonQuarter(dateStart) ⇒ [<code>MoonQuarter</code>](#Astronomy.MoonQuarter)
+Finds the first quarter lunar phase after the specified date and time.
+The quarter lunar phases are: new moon, first quarter, full moon, and third quarter.
+To enumerate quarter lunar phases, call <code>SearchMoonQuarter</code> once,
+then pass its return value to [NextMoonQuarter](#Astronomy.NextMoonQuarter) to find the next
+<code>MoonQuarter</code>. Keep calling <code>NextMoonQuarter</code> in a loop,
+passing the previous return value as the argument to the next call.
+
+**Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| dateStart | <code>Date</code> \| <code>number</code> \| [<code>Time</code>](#Astronomy.Time) | The date and time after which to find the first quarter lunar phase. |
+
+
+* * *
+
+<a name="Astronomy.NextMoonQuarter"></a>
+
+### Astronomy.NextMoonQuarter(mq)
+Given a [MoonQuarter](#Astronomy.MoonQuarter) object, finds the next consecutive
+quarter lunar phase. See remarks in [SearchMoonQuarter](#Astronomy.SearchMoonQuarter)
+for explanation of usage.
+
+**Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| mq | [<code>MoonQuarter</code>](#Astronomy.MoonQuarter) | The return value of a prior call to [MoonQuarter](#Astronomy.MoonQuarter) or <code>NextMoonQuarter</code>. |
+
+
+* * *
+
 <a name="Astronomy.Elongation"></a>
 
 ### Astronomy.Elongation(body) ⇒ [<code>ElongationEvent</code>](#Astronomy.ElongationEvent)
@@ -827,7 +917,7 @@ Searches for the date and time Venus will next appear brightest as seen from the
 
 | Param | Type | Description |
 | --- | --- | --- |
-| body | <code>string</code> | Currently only <code>"Venus"</code> is supported.      Mercury's peak magnitude occurs at superior conjunction, when it is virtually impossible to see from Earth,      so peak magnitude events have little practical value for that planet.      The Moon reaches peak magnitude very close to full moon, which can be found using       [Astronomy.SearchMoonQuarter](Astronomy.SearchMoonQuarter) or [Astronomy.SearchMoonPhase](Astronomy.SearchMoonPhase).      The other planets reach peak magnitude very close to opposition,       which can be found using [SearchRelativeLongitude](#Astronomy.SearchRelativeLongitude). |
+| body | <code>string</code> | Currently only <code>"Venus"</code> is supported.      Mercury's peak magnitude occurs at superior conjunction, when it is virtually impossible to see from Earth,      so peak magnitude events have little practical value for that planet.      The Moon reaches peak magnitude very close to full moon, which can be found using       [SearchMoonQuarter](#Astronomy.SearchMoonQuarter) or [SearchMoonPhase](#Astronomy.SearchMoonPhase).      The other planets reach peak magnitude very close to opposition,       which can be found using [SearchRelativeLongitude](#Astronomy.SearchRelativeLongitude). |
 | startDate | <code>Date</code> \| <code>number</code> \| [<code>Time</code>](#Astronomy.Time) | The date and time after which to find the next peak magnitude event. |
 
 

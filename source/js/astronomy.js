@@ -2438,7 +2438,7 @@ Astronomy.Ecliptic = function(gx, gy, gz) {
  * <a href="https://www.springer.com/us/book/9783540672210">Astronomy on the Personal Computer</a> 
  * by Montenbruck and Pfleger.
  * 
- * @param {Date|number|Astronomy.Time} date
+ * @param {(Date|number|Astronomy.Time)} date
  *      The date and time for which to calculate the Moon's geocentric position.
  * 
  * @returns {Astronomy.Vector}
@@ -3280,6 +3280,41 @@ Astronomy.MoonPhase = function(date) {
     return Astronomy.LongitudeFromSun('Moon', date);
 }
 
+/**
+ * Searches for the date and time that the Moon reaches a specified phase.
+ * Lunar phases are defined in terms of geocentric ecliptic longitudes
+ * with respect to the Sun.  When the Moon and the Sun have the same ecliptic
+ * longitude, that is defined as a new moon. When the two ecliptic longitudes
+ * are 180 degrees apart, that is defined as a full moon.
+ * To enumerate quarter lunar phases, it is simpler to call
+ * {@link Astronomy.SearchMoonQuarter} once, followed by repeatedly calling
+ * {@link Astronomy.NextMoonQuarter}. <code>SearchMoonPhase</code> is only
+ * necessary for finding other lunar phases than the usual quarter phases.
+ * 
+ * @param {number} targetLon
+ *      The difference in geocentric ecliptic longitude between the Sun and Moon
+ *      that specifies the lunar phase being sought. This can be any value
+ *      in the range [0, 360). Here are some helpful examples:
+ *      <ul>
+ *          <li>0 = new moon</li>
+ *          <li>90 = first quarter</li>
+ *          <li>180 = full moon</li>
+ *          <li>270 = third quarter</li>
+ *      </ul>
+ * 
+ * @param {(Date|number|Astronomy.Time)} dateStart
+ *      The beginning of the window of time in which to search.
+ * 
+ * @param {number} limitDays
+ *      The floating point number of days after <code>dateStart</code>
+ *      that limits the window of time in which to search.
+ * 
+ * @returns {(Astronomy.Time|null)}
+ *      If the specified lunar phase occurs after <code>dateStart</code>
+ *      and before <code>limitDays</code> days after <code>dateStart</code>,
+ *      this function returns the date and time of the first such occurrence.
+ *      Otherwise, it returns <code>null</code>.
+ */
 Astronomy.SearchMoonPhase = function(targetLon, dateStart, limitDays) {
     function moon_offset(t) {
         let mlon = Astronomy.MoonPhase(t);
@@ -3310,15 +3345,59 @@ Astronomy.SearchMoonPhase = function(targetLon, dateStart, limitDays) {
     return Astronomy.Search(moon_offset, t1, t2);
 }
 
+/**
+ * Represents a quarter lunar phase, along with when it occurs.
+ * 
+ * @class
+ * @memberof Astronomy
+ * 
+ * @property {number} quarter 
+ *      An integer as follows:
+ *      <ul>
+ *          <li>0 = new moon</li>
+ *          <li>1 = first quarter</li>
+ *          <li>2 = full moon</li>
+ *          <li>3 = third quarter</li>
+ *      </ul>
+ * 
+ * @property {Astronomy.Time} time 
+ *      The date and time of the quarter lunar phase.
+ */
+function MoonQuarter(quarter, time) {
+    this.quarter = quarter;
+    this.time = time;
+}
+
+/**
+ * Finds the first quarter lunar phase after the specified date and time.
+ * The quarter lunar phases are: new moon, first quarter, full moon, and third quarter.
+ * To enumerate quarter lunar phases, call <code>SearchMoonQuarter</code> once,
+ * then pass its return value to {@link Astronomy.NextMoonQuarter} to find the next
+ * <code>MoonQuarter</code>. Keep calling <code>NextMoonQuarter</code> in a loop,
+ * passing the previous return value as the argument to the next call.
+ * 
+ * @param {(Date|number|Astronomy.Time)} dateStart
+ *      The date and time after which to find the first quarter lunar phase.
+ * 
+ * @returns {Astronomy.MoonQuarter}
+ */
 Astronomy.SearchMoonQuarter = function(dateStart) {
     // Determine what the next quarter phase will be.
     let phaseStart = Astronomy.MoonPhase(dateStart);
     let quarterStart = Math.floor(phaseStart / 90);
     let quarter = (quarterStart + 1) % 4;
     let time = Astronomy.SearchMoonPhase(90 * quarter, dateStart, 10);
-    return time && { quarter:quarter, time:time };
+    return time && new MoonQuarter(quarter, time);
 }
 
+/**
+ * Given a {@link Astronomy.MoonQuarter} object, finds the next consecutive
+ * quarter lunar phase. See remarks in {@link Astronomy.SearchMoonQuarter}
+ * for explanation of usage.
+ * 
+ * @param {Astronomy.MoonQuarter} mq
+ *      The return value of a prior call to {@link Astronomy.MoonQuarter} or <code>NextMoonQuarter</code>.
+ */
 Astronomy.NextMoonQuarter = function(mq) {
     // Skip 6 days past the previous found moon quarter to find the next one.
     // This is less than the minimum possible increment.
