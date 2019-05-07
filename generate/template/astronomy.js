@@ -2000,19 +2000,19 @@ function NormalizeLongitude(lon) {
  *      This may be any value in the range [0, 360), although certain
  *      values have conventional meanings:
  * 
- *      * When <code>targetLon</code> is 0, finds the March equinox,
+ *      When <code>targetLon</code> is 0, finds the March equinox,
  *      which is the moment spring begins in the northern hemisphere
  *      and the beginning of autumn in the southern hemisphere.
  * 
- *      * When <code>targetLon</code> is 180, finds the September equinox,
+ *      When <code>targetLon</code> is 180, finds the September equinox,
  *      which is the moment autumn begins in the northern hemisphere and
  *      spring begins in the southern hemisphere.
  * 
- *      * When <code>targetLon</code> is 90, finds the northern solstice, which is the
+ *      When <code>targetLon</code> is 90, finds the northern solstice, which is the
  *      moment summer begins in the northern hemisphere and winter
  *      begins in the southern hemisphere.
  * 
- *      * When <code>targetLon</code> is 270, finds the southern solstice, which is the
+ *      When <code>targetLon</code> is 270, finds the southern solstice, which is the
  *      moment winter begins in the northern hemisphere and summer
  *      begins in the southern hemisphere.
  * 
@@ -2276,12 +2276,6 @@ function IlluminationInfo(time, mag, phase, helio_dist, geo_dist, gc, hc, ring_t
  * @returns {Astronomy.IlluminationInfo}
  */
 Astronomy.Illumination = function(body, date) {
-    // Calculates phase angle, distance, and visual maginitude of the body.
-    // For the Sun, the phase angle returned is always 0.
-    // For other bodies, the phase angle is defined as the
-    // angle in degrees as seen by the center of the body
-    // of the separation between the centers of the Sun and Earth.
-
     if (body === 'Earth')
         throw `The illumination of the Earth is not defined.`;
 
@@ -2449,12 +2443,11 @@ Astronomy.SearchRelativeLongitude = function(body, targetRelLon, startDate) {
  *      in ecliptic longitude between the center of the Sun and the
  *      center of the Moon, as seen from the center of the Earth.
  *      Certain longitude values have conventional meanings:
- *      <ul>
- *          <li>0 = new moon</li>
- *          <li>90 = first quarter</li>
- *          <li>180 = full moon</li>
- *          <li>270 = third quarter</li>
- *      </ul>
+ *
+ *      * 0 = new moon
+ *      * 90 = first quarter
+ *      * 180 = full moon
+ *      * 270 = third quarter
  */
 Astronomy.MoonPhase = function(date) {
     return Astronomy.LongitudeFromSun('Moon', date);
@@ -2475,11 +2468,10 @@ Astronomy.MoonPhase = function(date) {
  *      The difference in geocentric ecliptic longitude between the Sun and Moon
  *      that specifies the lunar phase being sought. This can be any value
  *      in the range [0, 360). Here are some helpful examples:
- * 
- *          * 0 = new moon
- *          * 90 = first quarter
- *          * 180 = full moon
- *          * 270 = third quarter
+ *      0 = new moon,
+ *      90 = first quarter,
+ *      180 = full moon, 
+ *      270 = third quarter.
  * 
  * @param {(Date|number|Astronomy.Time)} dateStart
  *      The beginning of the window of time in which to search.
@@ -2532,10 +2524,10 @@ Astronomy.SearchMoonPhase = function(targetLon, dateStart, limitDays) {
  * 
  * @property {number} quarter 
  *      An integer as follows:
- *      * 0 = new moon
- *      * 1 = first quarter
- *      * 2 = full moon
- *      * 3 = third quarter
+ *      0 = new moon, 
+ *      1 = first quarter,
+ *      2 = full moon,
+ *      3 = third quarter.
  * 
  * @property {Astronomy.Time} time 
  *      The date and time of the quarter lunar phase.
