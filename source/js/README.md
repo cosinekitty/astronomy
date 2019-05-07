@@ -115,6 +115,13 @@ as the Astronomy code continues to execute and change the metrics.
 <a name="Astronomy.Time"></a>
 
 ### Astronomy.Time
+The date and time of an astronomical observation.
+Objects of this type are used throughout the internals
+of the Astronomy library, and are included in certain return objects.
+The constructor is not accessible outside the Astronomy library;
+outside users should call the [MakeTime](#Astronomy.MakeTime) function
+to create a <code>Time</code> object.
+
 **Kind**: static class of [<code>Astronomy</code>](#Astronomy)  
 **Properties**
 
@@ -136,13 +143,6 @@ as the Astronomy code continues to execute and change the metrics.
 <a name="new_Astronomy.Time_new"></a>
 
 #### new Time(date)
-The date and time of an astronomical observation.
-Objects of this type are used throughout the internals
-of the Astronomy library, and are included in certain return objects.
-The constructor is not accessible outside the Astronomy library;
-outside users should call the [MakeTime](#Astronomy.MakeTime) function
-to create a <code>Time</code> object.
-
 
 | Param | Type | Description |
 | --- | --- | --- |

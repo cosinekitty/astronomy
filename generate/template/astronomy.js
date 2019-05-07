@@ -296,9 +296,6 @@ function TerrestrialTime(ut) {
  * @class
  * @memberof Astronomy
  * 
- * @param {(Date|number)} date
- *      A JavaScript Date object or a numeric UTC value expressed in J2000 days.
- * 
  * @property {Date} date  
  *      The JavaScript Date object for the given date and time.
  *      This Date corresponds to the numeric day value stored in the <code>ut</code> property.
@@ -317,60 +314,68 @@ function TerrestrialTime(ut) {
  *      any variations of the Earth's rotation, and is adjusted from UT
  *      using historical and predictive models of those variations.
  */
-function Time(date) {
-    const MillisPerDay = 1000 * 3600 * 24;
+class Time {
+    /**
+     * @constructor
+     * 
+     * @param {(Date|number)} date
+     *      A JavaScript Date object or a numeric UTC value expressed in J2000 days.
+     */
+    constructor(date) {
+        const MillisPerDay = 1000 * 3600 * 24;
 
-    if (date instanceof Date) {
-        this.date = date;
-        this.ut = (date - j2000) / MillisPerDay;
-        this.tt = TerrestrialTime(this.ut);
-        return;
+        if (date instanceof Date) {
+            this.date = date;
+            this.ut = (date - j2000) / MillisPerDay;
+            this.tt = TerrestrialTime(this.ut);
+            return;
+        }
+    
+        if (typeof date === 'number') {
+            this.date = new Date(j2000 - (-date)*MillisPerDay);
+            this.ut = date;
+            this.tt = TerrestrialTime(this.ut);
+            return;
+        }
+    
+        throw 'Argument must be a Date object, a Time object, or a numeric UTC Julian date.';
     }
 
-    if (typeof date === 'number') {
-        this.date = new Date(j2000 - (-date)*MillisPerDay);
-        this.ut = date;
-        this.tt = TerrestrialTime(this.ut);
-        return;
+    /**
+     * Formats a <code>Time</code> object as an 
+     * <a href="https://en.wikipedia.org/wiki/ISO_8601">ISO 8601</a>
+     * date/time string in UTC, to millisecond resolution.
+     * Example: 
+     * <pre>
+     * <code>2018-08-17T17:22:04.050Z</code>
+     * </pre>
+     * @returns {string}
+     */
+    toString() {
+        return this.date.toISOString();
     }
 
-    throw 'AstroTime() argument must be a Date object, a Time object, or a numeric UTC Julian date.';
-}
-
-/**
- * Formats a <code>Time</code> object as an 
- * <a href="https://en.wikipedia.org/wiki/ISO_8601">ISO 8601</a>
- * date/time string in UTC, to millisecond resolution.
- * Example: 
- * <pre>
- * <code>2018-08-17T17:22:04.050Z</code>
- * </pre>
- * @returns {string}
- */
-Time.prototype.toString = function() {
-    return this.date.toISOString();
-}
-
-/**
- * Returns a new <code>Time</code> object adjusted by the floating point number of days.
- * Does NOT modify the original <code>Time</code> object.
- * 
- * @param {number} days
- *      The floating point numbers of days by which to adjust the given date and time.
- *      Positive values adjust the date toward the future, and
- *      negative values adjust the date toward the past.
- * 
- * @returns {Astronomy.Time}
- */
-Time.prototype.AddDays = function(days) {
-    // This is slightly wrong, but the error is tiny.
-    // We really should be adding to TT, not to UT.
-    // But using TT would require creating an inverse function for DeltaT,
-    // which would be quite a bit of extra calculation.
-    // I estimate the error is in practice on the order of 10^(-7)
-    // times the value of 'days'.
-    // This is based on a typical drift of 1 second per year between UT and TT.
-    return new Time(this.ut + days);
+    /**
+     * Returns a new <code>Time</code> object adjusted by the floating point number of days.
+     * Does NOT modify the original <code>Time</code> object.
+     * 
+     * @param {number} days
+     *      The floating point numbers of days by which to adjust the given date and time.
+     *      Positive values adjust the date toward the future, and
+     *      negative values adjust the date toward the past.
+     * 
+     * @returns {Astronomy.Time}
+     */
+    AddDays(days) {
+        // This is slightly wrong, but the error is tiny.
+        // We really should be adding to TT, not to UT.
+        // But using TT would require creating an inverse function for DeltaT,
+        // which would be quite a bit of extra calculation.
+        // I estimate the error is in practice on the order of 10^(-7)
+        // times the value of 'days'.
+        // This is based on a typical drift of 1 second per year between UT and TT.
+        return new Time(this.ut + days);
+    }
 }
 
 function InterpolateTime(time1, time2, fraction) {
