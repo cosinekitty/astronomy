@@ -28,6 +28,10 @@
         * [new IlluminationInfo()](#new_Astronomy.IlluminationInfo_new)
     * [.MoonQuarter](#Astronomy.MoonQuarter)
         * [new MoonQuarter()](#new_Astronomy.MoonQuarter_new)
+    * [.HourAngleEvent](#Astronomy.HourAngleEvent)
+        * [new HourAngleEvent()](#new_Astronomy.HourAngleEvent_new)
+    * [.SeasonInfo](#Astronomy.SeasonInfo)
+        * [new SeasonInfo(mar_equinox, jun_solstice, sep_equinox, dec_solstice)](#new_Astronomy.SeasonInfo_new)
     * [.ElongationEvent](#Astronomy.ElongationEvent)
         * [new ElongationEvent()](#new_Astronomy.ElongationEvent_new)
     * [.Bodies](#Astronomy.Bodies) : <code>Array.&lt;string&gt;</code>
@@ -53,6 +57,9 @@
     * [.SearchMoonPhase(targetLon, dateStart, limitDays)](#Astronomy.SearchMoonPhase) ⇒ [<code>Time</code>](#Astronomy.Time) \| <code>null</code>
     * [.SearchMoonQuarter(dateStart)](#Astronomy.SearchMoonQuarter) ⇒ [<code>MoonQuarter</code>](#Astronomy.MoonQuarter)
     * [.NextMoonQuarter(mq)](#Astronomy.NextMoonQuarter)
+    * [.SearchRiseSet(body, observer, direction, dateStart, limitDays)](#Astronomy.SearchRiseSet) ⇒ [<code>Time</code>](#Astronomy.Time) \| <code>null</code>
+    * [.SearchHourAngle(body, observer, hourAngle, dateStart)](#Astronomy.SearchHourAngle) ⇒ [<code>HourAngleEvent</code>](#Astronomy.HourAngleEvent)
+    * [.Seasons(year)](#Astronomy.Seasons) ⇒ [<code>SeasonInfo</code>](#Astronomy.SeasonInfo)
     * [.Elongation(body)](#Astronomy.Elongation) ⇒ [<code>ElongationEvent</code>](#Astronomy.ElongationEvent)
     * [.SearchMaxElongation(body, startDate)](#Astronomy.SearchMaxElongation) ⇒ [<code>ElongationEvent</code>](#Astronomy.ElongationEvent)
     * [.SearchPeakMagnitude(body, startDate)](#Astronomy.SearchPeakMagnitude) ⇒ [<code>IlluminationInfo</code>](#Astronomy.IlluminationInfo)
@@ -379,6 +386,58 @@ Represents a quarter lunar phase, along with when it occurs.
 
 * * *
 
+<a name="Astronomy.HourAngleEvent"></a>
+
+### Astronomy.HourAngleEvent
+**Kind**: static class of [<code>Astronomy</code>](#Astronomy)  
+**Properties**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| time | [<code>Time</code>](#Astronomy.Time) | The date and time of the celestial body reaching the hour angle. |
+| pos | [<code>Vector</code>](#Astronomy.Vector) | Geocentric Cartesian coordinates for the body in the J2000 equatorial system      at the time indicated by the <code>time</code> property. |
+| sky | [<code>SkyCoordinates</code>](#Astronomy.SkyCoordinates) | Topocentric equatorial coordinates for the body      at the time indicated by the <code>time</code> property. |
+| hor | [<code>HorizontalCoordinates</code>](#Astronomy.HorizontalCoordinates) | Topocentric horizontal coordinates for the body      at the time indicated by the <code>time</code> property. |
+| iter | <code>number</code> | The positive integer number of iterations required by      <code>SearchHourAngle</code> to converge on the hour angle      solution. |
+
+
+* * *
+
+<a name="new_Astronomy.HourAngleEvent_new"></a>
+
+#### new HourAngleEvent()
+Returns information about an occurrence of a celestial body
+reaching a given hour angle as seen by an observer at a given
+location on the surface of the Earth.
+
+
+* * *
+
+<a name="Astronomy.SeasonInfo"></a>
+
+### Astronomy.SeasonInfo
+**Kind**: static class of [<code>Astronomy</code>](#Astronomy)  
+
+* * *
+
+<a name="new_Astronomy.SeasonInfo_new"></a>
+
+#### new SeasonInfo(mar_equinox, jun_solstice, sep_equinox, dec_solstice)
+Represents the dates and times of the two solstices 
+and the two equinoxes in a given calendar year.
+These four events define the changing of the seasons on the Earth.
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| mar_equinox | [<code>Time</code>](#Astronomy.Time) | The date and time of the March equinox in the given calendar year.      This is the moment in March that the Earth's equator passes      through the center of the Sun; thus the Sun's declination       changes from a negative number to a positive number.      The March equinox marks      the beginning of spring in the northern hemisphere and      the beginning of autumn in the southern hemisphere. |
+| jun_solstice | [<code>Time</code>](#Astronomy.Time) | The date and time of the June solstice in the given calendar year.      This is the moment in June that the Sun reaches its most positive      declination value |
+| sep_equinox | [<code>Time</code>](#Astronomy.Time) | The date and time of the September equinox in the given calendar year. |
+| dec_solstice | [<code>Time</code>](#Astronomy.Time) | The date and time of the December solstice in the given calendar year. |
+
+
+* * *
+
 <a name="Astronomy.ElongationEvent"></a>
 
 ### Astronomy.ElongationEvent
@@ -645,7 +704,7 @@ or even that the function will return null, indicating that no event was found.
 Searches for the moment in time when the center of the Sun reaches a given apparent
 ecliptic longitude, as seen from the center of the Earth, within a given range of dates.
 This function can be used to determine equinoxes and solstices.
-However, it is usually more convenient and efficient to call [Astronomy.Seasons](Astronomy.Seasons) 
+However, it is usually more convenient and efficient to call [Seasons](#Astronomy.Seasons) 
 to calculate equinoxes and solstices for a given calendar year.
 <code>SearchSunLongitude</code> is more general in that it allows searching for arbitrary longitude values.
 
@@ -862,6 +921,71 @@ for explanation of usage.
 | Param | Type | Description |
 | --- | --- | --- |
 | mq | [<code>MoonQuarter</code>](#Astronomy.MoonQuarter) | The return value of a prior call to [MoonQuarter](#Astronomy.MoonQuarter) or <code>NextMoonQuarter</code>. |
+
+
+* * *
+
+<a name="Astronomy.SearchRiseSet"></a>
+
+### Astronomy.SearchRiseSet(body, observer, direction, dateStart, limitDays) ⇒ [<code>Time</code>](#Astronomy.Time) \| <code>null</code>
+Finds a rise or set time for the given body as 
+seen by an observer at the specified location on the Earth.
+Rise time is defined as the moment when the top of the body
+is observed to first appear above the horizon in the east.
+Set time is defined as the moment the top of the body
+is observed to sink below the horizon in the west.
+The times are adjusted for typical atmospheric refraction conditions.
+
+**Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
+**Returns**: [<code>Time</code>](#Astronomy.Time) \| <code>null</code> - The date and time of the rise or set event, or null if no such event
+     occurs within the specified time window.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| body | <code>string</code> | The name of the body to find the rise or set time for. |
+| observer | [<code>Observer</code>](#Astronomy.Observer) | Specifies the geographic coordinates and elevation above sea level of the observer.      Call [MakeObserver](#Astronomy.MakeObserver) to create an observer object. |
+| direction | <code>number</code> | Either +1 to find rise time or -1 to find set time.      Any other value will cause an exception to be thrown. |
+| dateStart | <code>Date</code> \| <code>number</code> \| [<code>Time</code>](#Astronomy.Time) | The date and time after which the specified rise or set time is to be found. |
+| limitDays | <code>number</code> | The fractional number of days after <code>dateStart</code> that limits      when the rise or set time is to be found. |
+
+
+* * *
+
+<a name="Astronomy.SearchHourAngle"></a>
+
+### Astronomy.SearchHourAngle(body, observer, hourAngle, dateStart) ⇒ [<code>HourAngleEvent</code>](#Astronomy.HourAngleEvent)
+Finds the next time the given body is seen to reach the specified 
+<a href="https://en.wikipedia.org/wiki/Hour_angle">hour angle</a>
+by the given observer.
+Providing <code>hourAngle</code> = 0 finds the next maximum altitude event (culmination).
+Providing <code>hourAngle</code> = 12 finds the next minimum altitude event.
+Note that, especially close to the Earth's poles, a body as seen on a given day
+may always be above the horizon or always below the horizon, so the caller cannot
+assume that a culminating object is visible nor that an object is below the horizon
+at its minimum altitude.
+
+**Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| body | <code>string</code> | The name of a celestial body other than the Earth. |
+| observer | [<code>Observer</code>](#Astronomy.Observer) | Specifies the geographic coordinates and elevation above sea level of the observer.      Call [MakeObserver](#Astronomy.MakeObserver) to create an observer object. |
+| hourAngle | <code>number</code> | The hour angle expressed in       <a href="https://en.wikipedia.org/wiki/Sidereal_time">sidereal</a>       hours for which the caller seeks to find the body attain.       The value must be in the range [0, 24).      The hour angle represents the number of sidereal hours that have       elapsed since the most recent time the body crossed the observer's local      <a href="https://en.wikipedia.org/wiki/Meridian_(astronomy)">meridian</a>.      This specifying <code>hourAngle</code> = 0 finds the moment in time      the body reaches the highest angular altitude in a given sidereal day. |
+| dateStart | <code>Date</code> \| <code>number</code> \| [<code>Time</code>](#Astronomy.Time) | The date and time after which the desired hour angle crossing event      is to be found. |
+
+
+* * *
+
+<a name="Astronomy.Seasons"></a>
+
+### Astronomy.Seasons(year) ⇒ [<code>SeasonInfo</code>](#Astronomy.SeasonInfo)
+Find the equinoxes and solstices for a given calendar year.
+
+**Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| year | <code>number</code> \| [<code>Time</code>](#Astronomy.Time) | The integer value or <code>Time</code> object that specifies      the UTC calendar year for which to find equinoxes and solstices. |
 
 
 * * *

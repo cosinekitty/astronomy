@@ -1,4 +1,7 @@
 /*
+    Astronomy library for JavaScript (browser and Node.js).
+    https://github.com/cosinekitty/astronomy
+
     MIT License
 
     Copyright (c) 2019 Don Cross <cosinekitty@gmail.com>
@@ -60,7 +63,6 @@ const millis_per_day = seconds_per_day * 1000;
 const solar_days_per_sidereal_day = 0.9972695717592592;
 const sun_radius_au   = 4.6505e-3;
 const refraction_near_horizon = 34 / 60;        // degrees of refractive "lift" seen for objects near horizon
-//const earth_radius_au = 4.2588e-5;
 const moon_radius_au = 1.15717e-5;
 let ob2000;   // lazy-evaluated mean obliquity of the ecliptic at J2000, in radians
 let cos_ob2000;
@@ -2587,7 +2589,7 @@ Astronomy.GeoVector = function(body, date) {
         return Astronomy.GeoMoon(time);
     }
     if (body === 'Earth') {
-        return { t:time, x:0, y:0, z:0 };
+        return new Vector(0, 0, 0, time);
     }
 
     const e = CalcVsop(vsop.Earth, time);
@@ -2597,8 +2599,9 @@ Astronomy.GeoVector = function(body, date) {
     let ltime = time;
     for (let iter=0; iter < 10; ++iter) {
         h = Astronomy.HelioVector(body, ltime);
-        geo = { t:time, x:h.x-e.x, y:h.y-e.y, z:h.z-e.z, iter:iter };
+        geo = new Vector(h.x-e.x, h.y-e.y, h.z-e.z, time);
         geo.dist = Math.sqrt(geo.x*geo.x + geo.y*geo.y + geo.z*geo.z);
+        geo.iter = iter;
         if (body === 'Sun') {
             return geo;     // The Sun's heliocentric coordinates are always (0,0,0). No need to correct.
         }
@@ -3406,6 +3409,37 @@ Astronomy.NextMoonQuarter = function(mq) {
     return Astronomy.SearchMoonQuarter(date);
 }
 
+/**
+ * Finds a rise or set time for the given body as 
+ * seen by an observer at the specified location on the Earth.
+ * Rise time is defined as the moment when the top of the body
+ * is observed to first appear above the horizon in the east.
+ * Set time is defined as the moment the top of the body
+ * is observed to sink below the horizon in the west.
+ * The times are adjusted for typical atmospheric refraction conditions.
+ * 
+ * @param {string} body
+ *      The name of the body to find the rise or set time for.
+ * 
+ * @param {Astronomy.Observer} observer
+ *      Specifies the geographic coordinates and elevation above sea level of the observer.
+ *      Call {@link Astronomy.MakeObserver} to create an observer object.
+ * 
+ * @param {number} direction
+ *      Either +1 to find rise time or -1 to find set time.
+ *      Any other value will cause an exception to be thrown.
+ * 
+ * @param {(Date|number|Astronomy.Time)} dateStart
+ *      The date and time after which the specified rise or set time is to be found.
+ * 
+ * @param {number} limitDays
+ *      The fractional number of days after <code>dateStart</code> that limits
+ *      when the rise or set time is to be found.
+ * 
+ * @returns {(Astronomy.Time|null)}
+ *      The date and time of the rise or set event, or null if no such event
+ *      occurs within the specified time window.
+ */
 Astronomy.SearchRiseSet = function(body, observer, direction, dateStart, limitDays) {
     // We calculate the apparent angular radius of the Sun and Moon, 
     // but treat all other bodies as points.
@@ -3490,11 +3524,78 @@ Astronomy.SearchRiseSet = function(body, observer, direction, dateStart, limitDa
     }
 }
 
+/**
+ * Returns information about an occurrence of a celestial body
+ * reaching a given hour angle as seen by an observer at a given
+ * location on the surface of the Earth.
+ * 
+ * @class
+ * @memberof Astronomy
+ * 
+ * @property {Astronomy.Time} time
+ *      The date and time of the celestial body reaching the hour angle.
+ * 
+ * @property {Astronomy.Vector} pos
+ *      Geocentric Cartesian coordinates for the body in the J2000 equatorial system
+ *      at the time indicated by the <code>time</code> property.
+ * 
+ * @property {Astronomy.SkyCoordinates} sky
+ *      Topocentric equatorial coordinates for the body
+ *      at the time indicated by the <code>time</code> property.
+ * 
+ * @property {Astronomy.HorizontalCoordinates} hor
+ *      Topocentric horizontal coordinates for the body
+ *      at the time indicated by the <code>time</code> property.
+ * 
+ * @property {number} iter
+ *      The positive integer number of iterations required by
+ *      <code>SearchHourAngle</code> to converge on the hour angle
+ *      solution.
+ */
+function HourAngleEvent(time, pos, sky, hor, iter) {
+    this.time = time;
+    this.pos = pos;
+    this.sky = sky;
+    this.hor = hor;
+    this.iter = iter;
+}
+
+/**
+ * Finds the next time the given body is seen to reach the specified 
+ * <a href="https://en.wikipedia.org/wiki/Hour_angle">hour angle</a>
+ * by the given observer.
+ * Providing <code>hourAngle</code> = 0 finds the next maximum altitude event (culmination).
+ * Providing <code>hourAngle</code> = 12 finds the next minimum altitude event.
+ * Note that, especially close to the Earth's poles, a body as seen on a given day
+ * may always be above the horizon or always below the horizon, so the caller cannot
+ * assume that a culminating object is visible nor that an object is below the horizon
+ * at its minimum altitude.
+ * 
+ * @param {string} body
+ *      The name of a celestial body other than the Earth.
+ * 
+ * @param {Astronomy.Observer} observer
+ *      Specifies the geographic coordinates and elevation above sea level of the observer.
+ *      Call {@link Astronomy.MakeObserver} to create an observer object.
+ * 
+ * @param {number} hourAngle
+ *      The hour angle expressed in 
+ *      <a href="https://en.wikipedia.org/wiki/Sidereal_time">sidereal</a> 
+ *      hours for which the caller seeks to find the body attain. 
+ *      The value must be in the range [0, 24).
+ *      The hour angle represents the number of sidereal hours that have 
+ *      elapsed since the most recent time the body crossed the observer's local
+ *      <a href="https://en.wikipedia.org/wiki/Meridian_(astronomy)">meridian</a>.
+ *      This specifying <code>hourAngle</code> = 0 finds the moment in time
+ *      the body reaches the highest angular altitude in a given sidereal day.
+ * 
+ * @param {(Date|number|Astronomy.Time)} dateStart
+ *      The date and time after which the desired hour angle crossing event
+ *      is to be found.     
+ * 
+ * @returns {Astronomy.HourAngleEvent}
+ */
 Astronomy.SearchHourAngle = function(body, observer, hourAngle, dateStart) {
-    // Find the next time the given body is seen to reach the specified hour angle
-    // by the specified observer.
-    // Providing hourAngle=0 finds the next maximum altitude event (culmination).
-    // Providing hourAngle=12 finds the next minimum altitude event.
     let time = AstroTime(dateStart);
     let iter = 0;
 
@@ -3504,7 +3605,6 @@ Astronomy.SearchHourAngle = function(body, observer, hourAngle, dateStart) {
         // Calculate Greenwich Apparent Sidereal Time (GAST) at the given time.
         let gast = sidereal_time(time);
 
-        // Find the equator-of-date (RA,DEC) for the body.
         let pos = Astronomy.GeoVector(body, time);
         let sky = Astronomy.SkyPos(pos, observer);
 
@@ -3527,7 +3627,7 @@ Astronomy.SearchHourAngle = function(body, observer, hourAngle, dateStart) {
         // If the error is tolerable (less than 0.1 seconds), stop searching.
         if (Math.abs(delta_sidereal_hours) * 3600 < 0.1) {
             const hor = Astronomy.Horizon(time, observer, sky.ofdate.ra, sky.ofdate.dec, 'normal');
-            return { time:time, pos:pos, sky:sky, hor:hor, iter:iter };
+            return new HourAngleEvent(time, pos, sky, hor, iter);
         }
 
         // We need to loop another time to get more accuracy.
@@ -3537,6 +3637,51 @@ Astronomy.SearchHourAngle = function(body, observer, hourAngle, dateStart) {
     }
 }
 
+/**
+ * Represents the dates and times of the two solstices 
+ * and the two equinoxes in a given calendar year.
+ * These four events define the changing of the seasons on the Earth.
+ * 
+ * @class
+ * @memberof Astronomy
+ * 
+ * @param {Astronomy.Time} mar_equinox
+ *      The date and time of the March equinox in the given calendar year.
+ *      This is the moment in March that the Earth's equator passes
+ *      through the center of the Sun; thus the Sun's declination 
+ *      changes from a negative number to a positive number.
+ *      The March equinox marks
+ *      the beginning of spring in the northern hemisphere and
+ *      the beginning of autumn in the southern hemisphere.
+ * 
+ * @param {Astronomy.Time} jun_solstice
+ *      The date and time of the June solstice in the given calendar year.
+ *      This is the moment in June that the Sun reaches its most positive
+ *      declination value
+ * 
+ * @param {Astronomy.Time} sep_equinox
+ *      The date and time of the September equinox in the given calendar year.
+ * 
+ * @param {Astronomy.Time} dec_solstice
+ *      The date and time of the December solstice in the given calendar year.
+ * 
+ */
+function SeasonInfo(mar_equinox, jun_solstice, sep_equinox, dec_solstice) {
+    this.mar_equinox = mar_equinox;
+    this.jun_solstice = jun_solstice;
+    this.sep_equinox = sep_equinox;
+    this.dec_solstice = dec_solstice;
+}
+
+/**
+ * Find the equinoxes and solstices for a given calendar year.
+ * 
+ * @param {(number | Astronomy.Time)} year
+ *      The integer value or <code>Time</code> object that specifies
+ *      the UTC calendar year for which to find equinoxes and solstices.
+ * 
+ * @returns {Astronomy.SeasonInfo}
+ */
 Astronomy.Seasons = function(year) {
     function find(targetLon, month, day) {
         let startDate = new Date(Date.UTC(year, month-1, day));
@@ -3549,17 +3694,13 @@ Astronomy.Seasons = function(year) {
     if (year instanceof Date) {
         year = year.getUTCFullYear();
     }
+
     let mar_equinox  = find(  0,  3, 19);
     let jun_solstice = find( 90,  6, 19);
     let sep_equinox  = find(180,  9, 21);
     let dec_solstice = find(270, 12, 20);
 
-    return {
-        mar_equinox:  mar_equinox,
-        jun_solstice: jun_solstice,
-        sep_equinox:  sep_equinox,
-        dec_solstice: dec_solstice
-    };
+    return new SeasonInfo(mar_equinox, jun_solstice, sep_equinox, dec_solstice);
 }
 
 /**
