@@ -1,4 +1,24 @@
 @echo off
+setlocal EnableDelayedExpansion
+
+echo.
+if not defined GENEXE (
+    call findgenexe.bat
+    if errorlevel 1 (exit /b 1)
+)
+
+if not exist "!GENEXE!" (
+    echo.FATAL[makedoc.bat]: The executable does not exist: !GENEXE!
+    exit /b 1
+)
+
+echo.Generating target code.
+!GENEXE! source
+if errorlevel 1 (
+    echo.FATAL:  !GENEXE! source
+    exit /b 1
+)
+
 echo.
 echo.Making documentation files in Markdown format.
 call jsdoc2md --separators --template ../jsdoc2md/js.hbs --files ..\source\js\astronomy.js > ..\source\js\README.md

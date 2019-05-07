@@ -4,36 +4,15 @@ setlocal EnableDelayedExpansion
 call build.bat
 if errorlevel 1 (exit /b 1)
 
-if defined PROGRAMFILES(x86) (
-    echo.Detected 64-bit Windows.
-    for %%f in (
-        ..\windows\generate\x64\Release\generate.exe
-        ..\windows\generate\Release\generate.exe
-        ..\windows\generate\x64\Debug\generate.exe
-        ..\windows\generate\Debug\generate.exe
-    ) do (
-        if exist %%f (
-            set GENEXE=%%f
-            goto found_generate_exe
-        )
-    )
-) else (
-    echo.Detected 32-bit Windows.
-    for %%f in (
-        ..\windows\generate\Release\generate.exe
-        ..\windows\generate\Debug\generate.exe
-    ) do (
-        if exist %%f (
-            set GENEXE=%%f
-            goto found_generate_exe
-        )
-    )
+if not defined GENEXE (
+    call findgenexe.bat
+    if errorlevel 1 (exit /b 1)
 )
-echo.ERROR: Cannot find generate.exe. 
-echo.Use Microsoft Visual Studio to build ..\windows\generate.sln
-exit /b 1
-:found_generate_exe
-echo.Found executable: !GENEXE!
+
+if not exist "!GENEXE!" (
+    echo.FATAL[run.bat]: The executable does not exist: !GENEXE!
+    exit /b 1
+)
 
 set OUTDIR=..\source
 set EPHFILE=lnxp1600p2200.405
@@ -104,14 +83,6 @@ echo.Generating planet models.
 !GENEXE! planets
 if errorlevel 1 (
     echo.FATAL: !GENEXE! planets
-    exit /b 1
-)
-
-echo.
-echo.Generating target code.
-!GENEXE! source
-if errorlevel 1 (
-    echo.FATAL:  !GENEXE! source
     exit /b 1
 )
 
