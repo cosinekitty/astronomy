@@ -19,15 +19,11 @@
     * [.EclipticCoordinates](#Astronomy.EclipticCoordinates)
     * [.Observer](#Astronomy.Observer)
     * [.IlluminationInfo](#Astronomy.IlluminationInfo)
-        * [new IlluminationInfo()](#new_Astronomy.IlluminationInfo_new)
     * [.MoonQuarter](#Astronomy.MoonQuarter)
-        * [new MoonQuarter()](#new_Astronomy.MoonQuarter_new)
     * [.HourAngleEvent](#Astronomy.HourAngleEvent)
-        * [new HourAngleEvent()](#new_Astronomy.HourAngleEvent_new)
     * [.SeasonInfo](#Astronomy.SeasonInfo)
         * [new SeasonInfo(mar_equinox, jun_solstice, sep_equinox, dec_solstice)](#new_Astronomy.SeasonInfo_new)
     * [.ElongationEvent](#Astronomy.ElongationEvent)
-        * [new ElongationEvent()](#new_Astronomy.ElongationEvent_new)
     * [.Bodies](#Astronomy.Bodies) : <code>Array.&lt;string&gt;</code>
     * [.GetPerformanceMetrics()](#Astronomy.GetPerformanceMetrics) ⇒ [<code>PerformanceInfo</code>](#Astronomy.PerformanceInfo)
     * [.ResetPerformanceMetrics()](#Astronomy.ResetPerformanceMetrics)
@@ -294,6 +290,8 @@ Represents the geographic location of an observer on the surface of the Earth.
 <a name="Astronomy.IlluminationInfo"></a>
 
 ### Astronomy.IlluminationInfo
+Contains information about the apparent brightness and sunlit phase of a celestial object.
+
 **Kind**: static class of [<code>Astronomy</code>](#Astronomy)  
 **Properties**
 
@@ -312,17 +310,11 @@ Represents the geographic location of an observer on the surface of the Earth.
 
 * * *
 
-<a name="new_Astronomy.IlluminationInfo_new"></a>
-
-#### new IlluminationInfo()
-Contains information about the apparent brightness and sunlit phase of a celestial object.
-
-
-* * *
-
 <a name="Astronomy.MoonQuarter"></a>
 
 ### Astronomy.MoonQuarter
+Represents a quarter lunar phase, along with when it occurs.
+
 **Kind**: static class of [<code>Astronomy</code>](#Astronomy)  
 **Properties**
 
@@ -334,17 +326,13 @@ Contains information about the apparent brightness and sunlit phase of a celesti
 
 * * *
 
-<a name="new_Astronomy.MoonQuarter_new"></a>
-
-#### new MoonQuarter()
-Represents a quarter lunar phase, along with when it occurs.
-
-
-* * *
-
 <a name="Astronomy.HourAngleEvent"></a>
 
 ### Astronomy.HourAngleEvent
+Returns information about an occurrence of a celestial body
+reaching a given hour angle as seen by an observer at a given
+location on the surface of the Earth.
+
 **Kind**: static class of [<code>Astronomy</code>](#Astronomy)  
 **Properties**
 
@@ -359,19 +347,13 @@ Represents a quarter lunar phase, along with when it occurs.
 
 * * *
 
-<a name="new_Astronomy.HourAngleEvent_new"></a>
-
-#### new HourAngleEvent()
-Returns information about an occurrence of a celestial body
-reaching a given hour angle as seen by an observer at a given
-location on the surface of the Earth.
-
-
-* * *
-
 <a name="Astronomy.SeasonInfo"></a>
 
 ### Astronomy.SeasonInfo
+Represents the dates and times of the two solstices
+and the two equinoxes in a given calendar year.
+These four events define the changing of the seasons on the Earth.
+
 **Kind**: static class of [<code>Astronomy</code>](#Astronomy)  
 
 * * *
@@ -379,16 +361,12 @@ location on the surface of the Earth.
 <a name="new_Astronomy.SeasonInfo_new"></a>
 
 #### new SeasonInfo(mar_equinox, jun_solstice, sep_equinox, dec_solstice)
-Represents the dates and times of the two solstices 
-and the two equinoxes in a given calendar year.
-These four events define the changing of the seasons on the Earth.
-
 
 | Param | Type | Description |
 | --- | --- | --- |
-| mar_equinox | [<code>Time</code>](#Astronomy.Time) | The date and time of the March equinox in the given calendar year.      This is the moment in March that the plane of the Earth's equator passes      through the center of the Sun; thus the Sun's declination       changes from a negative number to a positive number.      The March equinox defines      the beginning of spring in the northern hemisphere and      the beginning of autumn in the southern hemisphere. |
-| jun_solstice | [<code>Time</code>](#Astronomy.Time) | The date and time of the June solstice in the given calendar year.      This is the moment in June that the Sun reaches its most positive      declination value.      At this moment the Earth's north pole is most tilted most toward the Sun.      The June solstice defines       the beginning of summer in the northern hemisphere and      the beginning of winter in the southern hemisphere. |
-| sep_equinox | [<code>Time</code>](#Astronomy.Time) | The date and time of the September equinox in the given calendar year.      This is the moment in September that the plane of the Earth's equator passes      through the center of the Sun; thus the Sun's declination       changes from a positive number to a negative number.      The September equinox defines      the beginning of autumn in the northern hemisphere and      the beginning of spring in the southern hemisphere. |
+| mar_equinox | [<code>Time</code>](#Astronomy.Time) | The date and time of the March equinox in the given calendar year.      This is the moment in March that the plane of the Earth's equator passes      through the center of the Sun; thus the Sun's declination      changes from a negative number to a positive number.      The March equinox defines      the beginning of spring in the northern hemisphere and      the beginning of autumn in the southern hemisphere. |
+| jun_solstice | [<code>Time</code>](#Astronomy.Time) | The date and time of the June solstice in the given calendar year.      This is the moment in June that the Sun reaches its most positive      declination value.      At this moment the Earth's north pole is most tilted most toward the Sun.      The June solstice defines      the beginning of summer in the northern hemisphere and      the beginning of winter in the southern hemisphere. |
+| sep_equinox | [<code>Time</code>](#Astronomy.Time) | The date and time of the September equinox in the given calendar year.      This is the moment in September that the plane of the Earth's equator passes      through the center of the Sun; thus the Sun's declination      changes from a positive number to a negative number.      The September equinox defines      the beginning of autumn in the northern hemisphere and      the beginning of spring in the southern hemisphere. |
 | dec_solstice | [<code>Time</code>](#Astronomy.Time) | The date and time of the December solstice in the given calendar year.      This is the moment in December that the Sun reaches its most negative      declination value.      At this moment the Earth's south pole is tilted most toward the Sun.      The December solstice defines      the beginning of winter in the northern hemisphere and      the beginning of summer in the southern hemisphere. |
 
 
@@ -397,6 +375,10 @@ These four events define the changing of the seasons on the Earth.
 <a name="Astronomy.ElongationEvent"></a>
 
 ### Astronomy.ElongationEvent
+Represents the visibility of a planet or the Moon relative to the Sun.
+Includes angular separation from the Sun and whether visibility is
+best in the morning or the evening.
+
 **Kind**: static class of [<code>Astronomy</code>](#Astronomy)  
 **See**: Astronomy.Elongation  
 **Properties**
@@ -404,19 +386,9 @@ These four events define the changing of the seasons on the Earth.
 | Name | Type | Description |
 | --- | --- | --- |
 | time | [<code>Time</code>](#Astronomy.Time) | When the event occurs. |
-| visibility | <code>string</code> | Either <code>"morning"</code> or <code>"evening"</code>,       indicating when the body is most easily seen. |
-| elongation | <code>number</code> | The angle in degrees, as seen from the center of the Earth,       of the apparent separation between the body and the Sun.      This angle is measured in 3D space and is not projected onto the ecliptic plane. |
+| visibility | <code>string</code> | Either <code>"morning"</code> or <code>"evening"</code>,      indicating when the body is most easily seen. |
+| elongation | <code>number</code> | The angle in degrees, as seen from the center of the Earth,      of the apparent separation between the body and the Sun.      This angle is measured in 3D space and is not projected onto the ecliptic plane. |
 | relative_longitude | <code>number</code> | The angle in degrees, as seen from the Sun, between the      observed body and the Earth. This value is always between      0 and 180. More precisely, <code>relative_longitude</code> is the absolute      value of the difference between the heliocentric ecliptic longitudes of      the centers of the observed body and the Earth. |
-
-
-* * *
-
-<a name="new_Astronomy.ElongationEvent_new"></a>
-
-#### new ElongationEvent()
-Represents the visibility of a planet or the Moon relative to the Sun.
-Includes angular separation from the Sun and whether visibility is
-best in the morning or the evening.
 
 
 * * *
