@@ -98,23 +98,23 @@ class PerformanceInfo {
         this.longitude_search = 0;
         this.longitude_iter = 0;
     }
-}
 
-/**
- * Creates a copy of a <code>PerformanceInfo</code> object.
- * This allows us to create a snapshot of the performance metrics
- * that can be handed back to outside code that will not change
- * as the Astronomy code continues to execute and change the metrics.
- * 
- * @returns {Astronomy.PerformanceInfo}
- */
-PerformanceInfo.prototype.Clone = function() {
-    const clone = new PerformanceInfo();
-    clone.search_func = this.search_func;
-    clone.search = this.search;
-    clone.longitude_search = this.longitude_search;
-    clone.longitude_iter = this.longitude_iter;
-    return clone;
+    /**
+     * Creates a copy of a <code>PerformanceInfo</code> object.
+     * This allows us to create a snapshot of the performance metrics
+     * that can be handed back to outside code that will not change
+     * as the Astronomy code continues to execute and change the metrics.
+     * 
+     * @returns {Astronomy.PerformanceInfo}
+     */
+    Clone() {
+        const clone = new PerformanceInfo();
+        clone.search_func = this.search_func;
+        clone.search = this.search;
+        clone.longitude_search = this.longitude_search;
+        clone.longitude_iter = this.longitude_iter;
+        return clone;
+    }
 }
 
 let Perf = new PerformanceInfo();
@@ -2268,16 +2268,18 @@ function MoonMagnitude(phase, helio_dist, geo_dist) {
  *      for Saturn's visual magnitude.
  *      For all bodies other than Saturn, the value of <code>ring_tilt</code> is <code>null</code>.
  */
-function IlluminationInfo(time, mag, phase, helio_dist, geo_dist, gc, hc, ring_tilt) {
-    this.time = time;
-    this.mag = mag;
-    this.phase_angle = phase;
-    this.phase_fraction = (1 + Math.cos(DEG2RAD * phase)) / 2;
-    this.helio_dist = helio_dist;
-    this.geo_dist = geo_dist;
-    this.gc = gc;
-    this.hc = hc;
-    this.ring_tilt = ring_tilt;
+class IlluminationInfo {
+    constructor(time, mag, phase, helio_dist, geo_dist, gc, hc, ring_tilt) {
+        this.time = time;
+        this.mag = mag;
+        this.phase_angle = phase;
+        this.phase_fraction = (1 + Math.cos(DEG2RAD * phase)) / 2;
+        this.helio_dist = helio_dist;
+        this.geo_dist = geo_dist;
+        this.gc = gc;
+        this.hc = hc;
+        this.ring_tilt = ring_tilt;
+    }    
 }
 
 /**
@@ -2551,9 +2553,11 @@ Astronomy.SearchMoonPhase = function(targetLon, dateStart, limitDays) {
  * @property {Astronomy.Time} time 
  *      The date and time of the quarter lunar phase.
  */
-function MoonQuarter(quarter, time) {
-    this.quarter = quarter;
-    this.time = time;
+class MoonQuarter {
+    constructor(quarter, time) {
+        this.quarter = quarter;
+        this.time = time;
+    }
 }
 
 /**
@@ -2737,12 +2741,14 @@ Astronomy.SearchRiseSet = function(body, observer, direction, dateStart, limitDa
  *      <code>SearchHourAngle</code> to converge on the hour angle
  *      solution.
  */
-function HourAngleEvent(time, pos, sky, hor, iter) {
-    this.time = time;
-    this.pos = pos;
-    this.sky = sky;
-    this.hor = hor;
-    this.iter = iter;
+class HourAngleEvent {
+    constructor(time, pos, sky, hor, iter) {
+        this.time = time;
+        this.pos = pos;
+        this.sky = sky;
+        this.hor = hor;
+        this.iter = iter;
+    }
 }
 
 /**
@@ -2823,40 +2829,40 @@ Astronomy.SearchHourAngle = function(body, observer, hourAngle, dateStart) {
 }
 
 /**
- * Represents the dates and times of the two solstices 
+ * Represents the dates and times of the two solstices
  * and the two equinoxes in a given calendar year.
  * These four events define the changing of the seasons on the Earth.
- * 
+ *
  * @class
  * @memberof Astronomy
- * 
+ *
  * @param {Astronomy.Time} mar_equinox
  *      The date and time of the March equinox in the given calendar year.
  *      This is the moment in March that the plane of the Earth's equator passes
- *      through the center of the Sun; thus the Sun's declination 
+ *      through the center of the Sun; thus the Sun's declination
  *      changes from a negative number to a positive number.
  *      The March equinox defines
  *      the beginning of spring in the northern hemisphere and
  *      the beginning of autumn in the southern hemisphere.
- * 
+ *
  * @param {Astronomy.Time} jun_solstice
  *      The date and time of the June solstice in the given calendar year.
  *      This is the moment in June that the Sun reaches its most positive
  *      declination value.
  *      At this moment the Earth's north pole is most tilted most toward the Sun.
- *      The June solstice defines 
+ *      The June solstice defines
  *      the beginning of summer in the northern hemisphere and
  *      the beginning of winter in the southern hemisphere.
- * 
+ *
  * @param {Astronomy.Time} sep_equinox
  *      The date and time of the September equinox in the given calendar year.
  *      This is the moment in September that the plane of the Earth's equator passes
- *      through the center of the Sun; thus the Sun's declination 
+ *      through the center of the Sun; thus the Sun's declination
  *      changes from a positive number to a negative number.
  *      The September equinox defines
  *      the beginning of autumn in the northern hemisphere and
  *      the beginning of spring in the southern hemisphere.
- * 
+ *
  * @param {Astronomy.Time} dec_solstice
  *      The date and time of the December solstice in the given calendar year.
  *      This is the moment in December that the Sun reaches its most negative
@@ -2866,11 +2872,13 @@ Astronomy.SearchHourAngle = function(body, observer, hourAngle, dateStart) {
  *      the beginning of winter in the northern hemisphere and
  *      the beginning of summer in the southern hemisphere.
  */
-function SeasonInfo(mar_equinox, jun_solstice, sep_equinox, dec_solstice) {
-    this.mar_equinox = mar_equinox;
-    this.jun_solstice = jun_solstice;
-    this.sep_equinox = sep_equinox;
-    this.dec_solstice = dec_solstice;
+class SeasonInfo {
+    constructor(mar_equinox, jun_solstice, sep_equinox, dec_solstice) {
+        this.mar_equinox = mar_equinox;
+        this.jun_solstice = jun_solstice;
+        this.sep_equinox = sep_equinox;
+        this.dec_solstice = dec_solstice;
+    }
 }
 
 /**
@@ -2907,32 +2915,34 @@ Astronomy.Seasons = function(year) {
  * Represents the visibility of a planet or the Moon relative to the Sun.
  * Includes angular separation from the Sun and whether visibility is
  * best in the morning or the evening.
- * 
+ *
  * @class
  * @memberof Astronomy
- * 
+ *
  * @property {Astronomy.Time} time  When the event occurs.
- * @property {string}  visibility   
- *      Either <code>"morning"</code> or <code>"evening"</code>, 
+ * @property {string}  visibility
+ *      Either <code>"morning"</code> or <code>"evening"</code>,
  *      indicating when the body is most easily seen.
- * @property {number}  elongation   
- *      The angle in degrees, as seen from the center of the Earth, 
+ * @property {number}  elongation
+ *      The angle in degrees, as seen from the center of the Earth,
  *      of the apparent separation between the body and the Sun.
  *      This angle is measured in 3D space and is not projected onto the ecliptic plane.
- * @property {number}  relative_longitude 
+ * @property {number}  relative_longitude
  *      The angle in degrees, as seen from the Sun, between the
  *      observed body and the Earth. This value is always between
  *      0 and 180. More precisely, <code>relative_longitude</code> is the absolute
  *      value of the difference between the heliocentric ecliptic longitudes of
  *      the centers of the observed body and the Earth.
- * 
+ *
  * @see Astronomy.Elongation
  */
-function ElongationEvent(time, visibility, elongation, relative_longitude) {
-    this.time = time;
-    this.visibility = visibility;
-    this.elongation = elongation;
-    this.relative_longitude = relative_longitude;
+class ElongationEvent {
+    constructor(time, visibility, elongation, relative_longitude) {
+        this.time = time;
+        this.visibility = visibility;
+        this.elongation = elongation;
+        this.relative_longitude = relative_longitude;
+    }
 }
 
 /**
