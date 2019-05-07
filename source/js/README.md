@@ -386,10 +386,10 @@ These four events define the changing of the seasons on the Earth.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| mar_equinox | [<code>Time</code>](#Astronomy.Time) | The date and time of the March equinox in the given calendar year.      This is the moment in March that the Earth's equator passes      through the center of the Sun; thus the Sun's declination       changes from a negative number to a positive number.      The March equinox marks      the beginning of spring in the northern hemisphere and      the beginning of autumn in the southern hemisphere. |
-| jun_solstice | [<code>Time</code>](#Astronomy.Time) | The date and time of the June solstice in the given calendar year.      This is the moment in June that the Sun reaches its most positive      declination value |
-| sep_equinox | [<code>Time</code>](#Astronomy.Time) | The date and time of the September equinox in the given calendar year. |
-| dec_solstice | [<code>Time</code>](#Astronomy.Time) | The date and time of the December solstice in the given calendar year. |
+| mar_equinox | [<code>Time</code>](#Astronomy.Time) | The date and time of the March equinox in the given calendar year.      This is the moment in March that the plane of the Earth's equator passes      through the center of the Sun; thus the Sun's declination       changes from a negative number to a positive number.      The March equinox defines      the beginning of spring in the northern hemisphere and      the beginning of autumn in the southern hemisphere. |
+| jun_solstice | [<code>Time</code>](#Astronomy.Time) | The date and time of the June solstice in the given calendar year.      This is the moment in June that the Sun reaches its most positive      declination value.      At this moment the Earth's north pole is most tilted most toward the Sun.      The June solstice defines       the beginning of summer in the northern hemisphere and      the beginning of winter in the southern hemisphere. |
+| sep_equinox | [<code>Time</code>](#Astronomy.Time) | The date and time of the September equinox in the given calendar year.      This is the moment in September that the plane of the Earth's equator passes      through the center of the Sun; thus the Sun's declination       changes from a positive number to a negative number.      The September equinox defines      the beginning of autumn in the northern hemisphere and      the beginning of spring in the southern hemisphere. |
+| dec_solstice | [<code>Time</code>](#Astronomy.Time) | The date and time of the December solstice in the given calendar year.      This is the moment in December that the Sun reaches its most negative      declination value.      At this moment the Earth's south pole is tilted most toward the Sun.      The December solstice defines      the beginning of winter in the northern hemisphere and      the beginning of summer in the southern hemisphere. |
 
 
 * * *
