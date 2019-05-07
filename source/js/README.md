@@ -14,6 +14,7 @@
         * [.AddDays(days)](#Astronomy.Time+AddDays) ⇒ [<code>Time</code>](#Astronomy.Time)
     * [.Vector](#Astronomy.Vector)
         * [new Vector()](#new_Astronomy.Vector_new)
+        * [.Length()](#Astronomy.Vector+Length) ⇒ <code>number</code>
     * [.EquatorialCoordinates](#Astronomy.EquatorialCoordinates)
         * [new EquatorialCoordinates()](#new_Astronomy.EquatorialCoordinates_new)
     * [.SkyCoordinates](#Astronomy.SkyCoordinates)
@@ -194,6 +195,11 @@ Does NOT modify the original <code>Time</code> object.
 | t | [<code>Time</code>](#Astronomy.Time) | The time at which the vector is valid. |
 
 
+* [.Vector](#Astronomy.Vector)
+    * [new Vector()](#new_Astronomy.Vector_new)
+    * [.Length()](#Astronomy.Vector+Length) ⇒ <code>number</code>
+
+
 * * *
 
 <a name="new_Astronomy.Vector_new"></a>
@@ -202,6 +208,15 @@ Does NOT modify the original <code>Time</code> object.
 Holds the Cartesian coordinates of a vector in 3D space,
 along with the time at which the vector is valid.
 
+
+* * *
+
+<a name="Astronomy.Vector+Length"></a>
+
+#### vector.Length() ⇒ <code>number</code>
+Returns the length of the vector using the same units as its components (usually AU).
+
+**Kind**: instance method of [<code>Vector</code>](#Astronomy.Vector)  
 
 * * *
 

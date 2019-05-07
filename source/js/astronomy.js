@@ -1934,6 +1934,14 @@ function Vector(x, y, z, t) {
 }
 
 /**
+ * Returns the length of the vector using the same units as its components (usually AU).
+ * @returns {number}
+ */
+Vector.prototype.Length = function() {
+    return Math.sqrt(this.x*this.x + this.y*this.y + this.z*this.z);
+}
+
+/**
  * Holds right ascension, declination, and distance of a celestial object.
  * 
  * @class
@@ -2595,18 +2603,15 @@ Astronomy.GeoVector = function(body, date) {
     const e = CalcVsop(vsop.Earth, time);
 
     // Correct for light-travel time, to get position of body as seen from Earth's center.
-    let h, geo, ltravel, dt;
+    let h, geo, dt;
     let ltime = time;
     for (let iter=0; iter < 10; ++iter) {
         h = Astronomy.HelioVector(body, ltime);
         geo = new Vector(h.x-e.x, h.y-e.y, h.z-e.z, time);
-        geo.dist = Math.sqrt(geo.x*geo.x + geo.y*geo.y + geo.z*geo.z);
-        geo.iter = iter;
         if (body === 'Sun') {
             return geo;     // The Sun's heliocentric coordinates are always (0,0,0). No need to correct.
         }
-        ltravel = geo.dist / C_AUDAY;
-        let ltime2 = time.AddDays(-ltravel);
+        let ltime2 = time.AddDays(-geo.Length() / C_AUDAY);
         dt = Math.abs(ltime2.tt - ltime.tt);
         if (dt < 1.0e-9) {
             return geo;
@@ -3108,17 +3113,15 @@ Astronomy.Illumination = function(body, date) {
 
     const time = AstroTime(date);
     const earth = CalcVsop(vsop.Earth, time);
-    let phase;
+    let phase;      // phase angle in degrees between Earth and Sun as seen from body
     let hc;         // vector from Sun to body
     let gc;         // vector from Earth to body
-    let geo_dist;   // distance from body to center of Earth
-    let helio_dist; // distance from body to center of Sun
     let mag;        // visual magnitude
 
     if (body === 'Sun') {
-        gc = { x:(-earth.x), y:(-earth.y), z:(-earth.z) };
-        hc = { x:0, y:0, z:0 };
-        phase = 0;
+        gc = new Vector(-earth.x, -earth.y, -earth.z, time);
+        hc = new Vector(0, 0, 0, time);
+        phase = 0;      // a placeholder value; the Sun does not have an illumination phase because it emits, rather than reflects, light.
     } else {
         if (body === 'Moon') {
             // For extra numeric precision, use geocentric moon formula directly.
@@ -3132,8 +3135,8 @@ Astronomy.Illumination = function(body, date) {
         phase = AngleBetween(gc, hc);
     }
 
-    geo_dist = Math.sqrt(gc.x*gc.x + gc.y*gc.y + gc.z*gc.z);
-    helio_dist = Math.sqrt(hc.x*hc.x + hc.y*hc.y + hc.z*hc.z);
+    let geo_dist = gc.Length();     // distance from body to center of Earth
+    let helio_dist = hc.Length();   // distance from body to center of Sun
     let ring_tilt = null;   // only reported for Saturn
 
     if (body === 'Sun') {
