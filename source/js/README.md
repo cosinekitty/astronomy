@@ -864,10 +864,10 @@ Determines the moon's phase expressed as an ecliptic longitude.
      center of the Moon, as seen from the center of the Earth.
      Certain longitude values have conventional meanings:
 
-     * 0 = new moon
-     * 90 = first quarter
-     * 180 = full moon
-     * 270 = third quarter  
+* 0 = new moon
+* 90 = first quarter
+* 180 = full moon
+* 270 = third quarter  
 
 | Param | Type | Description |
 | --- | --- | --- |
