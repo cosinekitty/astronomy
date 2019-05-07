@@ -105,7 +105,7 @@ function Test() {
     console.log(`Rise/set error in minutes: mean=${(sum_minutes/data.length).toFixed(4)}, max=${max_minutes.toFixed(4)}`);
 
     const perf = Astronomy.GetPerformanceMetrics();
-    console.log(`Search metrics: elapsed=${elapsed_seconds.toFixed(3)}, searches=${perf.CallCount.search}, samples=${perf.CallCount.search_func}, ratio=${(perf.CallCount.search_func/perf.CallCount.search).toFixed(3)}`);
+    console.log(`Search metrics: elapsed=${elapsed_seconds.toFixed(3)}, searches=${perf.search}, samples=${perf.search_func}, ratio=${(perf.search_func/perf.search).toFixed(3)}`);
 }
 
 console.log(`rise_set_test: Beginning.`);

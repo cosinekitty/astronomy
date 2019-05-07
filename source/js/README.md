@@ -6,25 +6,18 @@
 
 * [Astronomy](#Astronomy) : <code>object</code>
     * [.PerformanceInfo](#Astronomy.PerformanceInfo)
-        * [new PerformanceInfo()](#new_Astronomy.PerformanceInfo_new)
         * [.Clone()](#Astronomy.PerformanceInfo+Clone) ⇒ [<code>PerformanceInfo</code>](#Astronomy.PerformanceInfo)
     * [.Time](#Astronomy.Time)
         * [new Time(date)](#new_Astronomy.Time_new)
         * [.toString()](#Astronomy.Time+toString) ⇒ <code>string</code>
         * [.AddDays(days)](#Astronomy.Time+AddDays) ⇒ [<code>Time</code>](#Astronomy.Time)
     * [.Vector](#Astronomy.Vector)
-        * [new Vector()](#new_Astronomy.Vector_new)
         * [.Length()](#Astronomy.Vector+Length) ⇒ <code>number</code>
     * [.EquatorialCoordinates](#Astronomy.EquatorialCoordinates)
-        * [new EquatorialCoordinates()](#new_Astronomy.EquatorialCoordinates_new)
     * [.SkyCoordinates](#Astronomy.SkyCoordinates)
-        * [new SkyCoordinates()](#new_Astronomy.SkyCoordinates_new)
     * [.HorizontalCoordinates](#Astronomy.HorizontalCoordinates)
-        * [new HorizontalCoordinates()](#new_Astronomy.HorizontalCoordinates_new)
     * [.EclipticCoordinates](#Astronomy.EclipticCoordinates)
-        * [new EclipticCoordinates()](#new_Astronomy.EclipticCoordinates_new)
     * [.Observer](#Astronomy.Observer)
-        * [new Observer()](#new_Astronomy.Observer_new)
     * [.IlluminationInfo](#Astronomy.IlluminationInfo)
         * [new IlluminationInfo()](#new_Astronomy.IlluminationInfo_new)
     * [.MoonQuarter](#Astronomy.MoonQuarter)
@@ -73,6 +66,9 @@
 <a name="Astronomy.PerformanceInfo"></a>
 
 ### Astronomy.PerformanceInfo
+Holds performance metrics for developers to optimize execution speed.
+Most users can safely ignore this class.
+
 **Kind**: static class of [<code>Astronomy</code>](#Astronomy)  
 **Properties**
 
@@ -82,20 +78,6 @@
 | search | <code>number</code> | Number of times [Search](#Astronomy.Search) was called. |
 | longitude_search | <code>number</code> | Number of times [SearchRelativeLongitude](#Astronomy.SearchRelativeLongitude) was called. |
 | longitude_iter | <code>number</code> | The total number of iterations executed inside [SearchRelativeLongitude](#Astronomy.SearchRelativeLongitude). |
-
-
-* [.PerformanceInfo](#Astronomy.PerformanceInfo)
-    * [new PerformanceInfo()](#new_Astronomy.PerformanceInfo_new)
-    * [.Clone()](#Astronomy.PerformanceInfo+Clone) ⇒ [<code>PerformanceInfo</code>](#Astronomy.PerformanceInfo)
-
-
-* * *
-
-<a name="new_Astronomy.PerformanceInfo_new"></a>
-
-#### new PerformanceInfo()
-Holds performance metrics for developers to optimize execution speed.
-Most users can safely ignore this class.
 
 
 * * *
@@ -184,6 +166,9 @@ Does NOT modify the original <code>Time</code> object.
 <a name="Astronomy.Vector"></a>
 
 ### Astronomy.Vector
+Holds the Cartesian coordinates of a vector in 3D space,
+along with the time at which the vector is valid.
+
 **Kind**: static class of [<code>Astronomy</code>](#Astronomy)  
 **Properties**
 
@@ -193,20 +178,6 @@ Does NOT modify the original <code>Time</code> object.
 | y | <code>number</code> | The y-coordinate expressed in astronomical units (AU). |
 | z | <code>number</code> | The z-coordinate expressed in astronomical units (AU). |
 | t | [<code>Time</code>](#Astronomy.Time) | The time at which the vector is valid. |
-
-
-* [.Vector](#Astronomy.Vector)
-    * [new Vector()](#new_Astronomy.Vector_new)
-    * [.Length()](#Astronomy.Vector+Length) ⇒ <code>number</code>
-
-
-* * *
-
-<a name="new_Astronomy.Vector_new"></a>
-
-#### new Vector()
-Holds the Cartesian coordinates of a vector in 3D space,
-along with the time at which the vector is valid.
 
 
 * * *
@@ -223,6 +194,8 @@ Returns the length of the vector using the same units as its components (usually
 <a name="Astronomy.EquatorialCoordinates"></a>
 
 ### Astronomy.EquatorialCoordinates
+Holds right ascension, declination, and distance of a celestial object.
+
 **Kind**: static class of [<code>Astronomy</code>](#Astronomy)  
 **Properties**
 
@@ -235,17 +208,12 @@ Returns the length of the vector using the same units as its components (usually
 
 * * *
 
-<a name="new_Astronomy.EquatorialCoordinates_new"></a>
-
-#### new EquatorialCoordinates()
-Holds right ascension, declination, and distance of a celestial object.
-
-
-* * *
-
 <a name="Astronomy.SkyCoordinates"></a>
 
 ### Astronomy.SkyCoordinates
+Holds topocentric equatorial coordinates (right ascension and declination)
+simultaneously in two different systems: J2000 and true-equator-of-date.
+
 **Kind**: static class of [<code>Astronomy</code>](#Astronomy)  
 **Properties**
 
@@ -258,18 +226,16 @@ Holds right ascension, declination, and distance of a celestial object.
 
 * * *
 
-<a name="new_Astronomy.SkyCoordinates_new"></a>
-
-#### new SkyCoordinates()
-Holds topocentric equatorial coordinates (right ascension and declination)
-simultaneously in two different systems: J2000 and true-equator-of-date.
-
-
-* * *
-
 <a name="Astronomy.HorizontalCoordinates"></a>
 
 ### Astronomy.HorizontalCoordinates
+Holds azimuth (compass direction) and altitude (angle above/below the horizon)
+of a celestial object as seen by an observer at a particular location on the Earth's surface.
+Also holds right ascension and declination of the same object.
+All of these coordinates are optionally adjusted for atmospheric refraction;
+therefore the right ascension and declination values may not exactly match
+those found inside a corresponding [EquatorialCoordinates](#Astronomy.EquatorialCoordinates) object.
+
 **Kind**: static class of [<code>Astronomy</code>](#Astronomy)  
 **Properties**
 
@@ -283,22 +249,17 @@ simultaneously in two different systems: J2000 and true-equator-of-date.
 
 * * *
 
-<a name="new_Astronomy.HorizontalCoordinates_new"></a>
-
-#### new HorizontalCoordinates()
-Holds azimuth (compass direction) and altitude (angle above/below the horizon)
-of a celestial object as seen by an observer at a particular location on the Earth's surface.
-Also holds right ascension and declination of the same object.
-All of these coordinates are optionally adjusted for atmospheric refraction;
-therefore the right ascension and declination values may not exactly match
-those found inside a corresponding [EquatorialCoordinates](#Astronomy.EquatorialCoordinates) object.
-
-
-* * *
-
 <a name="Astronomy.EclipticCoordinates"></a>
 
 ### Astronomy.EclipticCoordinates
+Holds ecliptic coordinates of a celestial body.
+The origin and date of the coordinate system may vary depending on the caller's usage.
+In general, ecliptic coordinates are measured with respect to the mean plane of the Earth's 
+orbit around the Sun.
+Includes Cartesian coordinates <code>(ex, ey, ez)</code> measured in 
+<a href="https://en.wikipedia.org/wiki/Astronomical_unit">Astronomical Units</a> (AU)
+and spherical coordinates <code>(elon, elat)</code> measured in degrees.
+
 **Kind**: static class of [<code>Astronomy</code>](#Astronomy)  
 **Properties**
 
@@ -313,23 +274,11 @@ those found inside a corresponding [EquatorialCoordinates](#Astronomy.Equatorial
 
 * * *
 
-<a name="new_Astronomy.EclipticCoordinates_new"></a>
-
-#### new EclipticCoordinates()
-Holds ecliptic coordinates of a celestial body.
-The origin and date of the coordinate system may vary depending on the caller's usage.
-In general, ecliptic coordinates are measured with respect to the mean plane of the Earth's 
-orbit around the Sun.
-Includes Cartesian coordinates <code>(ex, ey, ez)</code> measured in 
-<a href="https://en.wikipedia.org/wiki/Astronomical_unit">Astronomical Units</a> (AU)
-and spherical coordinates <code>(elon, elat)</code> measured in degrees.
-
-
-* * *
-
 <a name="Astronomy.Observer"></a>
 
 ### Astronomy.Observer
+Represents the geographic location of an observer on the surface of the Earth.
+
 **Kind**: static class of [<code>Astronomy</code>](#Astronomy)  
 **Properties**
 
@@ -338,14 +287,6 @@ and spherical coordinates <code>(elon, elat)</code> measured in degrees.
 | latitude_degrees | <code>number</code> | The observer's geographic latitude in degrees north of the Earth's equator.      The value is negative for observers south of the equator.      Must be in the range -90 to +90. |
 | longitude_degrees | <code>number</code> | The observer's geographic longitude in degrees east of the prime meridian       passing through Greenwich, England.      The value is negative for observers west of the prime meridian.      The value should be kept in the range -180 to +180 to minimize floating point errors. |
 | height_in_meters | <code>number</code> | The observer's elevation above mean sea level, expressed in meters. |
-
-
-* * *
-
-<a name="new_Astronomy.Observer_new"></a>
-
-#### new Observer()
-Represents the geographic location of an observer on the surface of the Earth.
 
 
 * * *

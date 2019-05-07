@@ -91,13 +91,13 @@ let sin_ob2000;
  * @property {number} longitude_iter
  *      The total number of iterations executed inside {@link Astronomy.SearchRelativeLongitude}.
  */
-function PerformanceInfo() {
-    this.CallCount = {
-        search_func: 0,
-        search: 0,
-        longitude_search: 0,
-        longitude_iter: 0
-    };
+class PerformanceInfo {
+    constructor() {
+        this.search_func = 0;
+        this.search = 0;
+        this.longitude_search = 0;
+        this.longitude_iter = 0;
+    }
 }
 
 /**
@@ -110,9 +110,10 @@ function PerformanceInfo() {
  */
 PerformanceInfo.prototype.Clone = function() {
     const clone = new PerformanceInfo();
-    for (let tag in this.CallCount) {
-        clone.CallCount[tag] = this.CallCount[tag];
-    }
+    clone.search_func = this.search_func;
+    clone.search = this.search;
+    clone.longitude_search = this.longitude_search;
+    clone.longitude_iter = this.longitude_iter;
     return clone;
 }
 
@@ -1093,19 +1094,21 @@ function geo_pos(time, observer) {
  * @property {number} z             The z-coordinate expressed in astronomical units (AU).
  * @property {Astronomy.Time} t     The time at which the vector is valid.
  */
-function Vector(x, y, z, t) {
-    this.x = x;
-    this.y = y;
-    this.z = z;
-    this.t = t;
-}
+class Vector {
+    constructor(x, y, z, t) {
+        this.x = x;
+        this.y = y;
+        this.z = z;
+        this.t = t;
+    }
 
-/**
- * Returns the length of the vector using the same units as its components (usually AU).
- * @returns {number}
- */
-Vector.prototype.Length = function() {
-    return Math.sqrt(this.x*this.x + this.y*this.y + this.z*this.z);
+    /**
+     * Returns the length of the vector using the same units as its components (usually AU).
+     * @returns {number}
+     */
+    Length() {
+        return Math.sqrt(this.x*this.x + this.y*this.y + this.z*this.z);
+    }
 }
 
 /**
@@ -1124,10 +1127,12 @@ Vector.prototype.Length = function() {
  *      Distance to the celestial object expressed in 
  *      <a href="https://en.wikipedia.org/wiki/Astronomical_unit">Astronomical Units</a> (AU).
  */
-function EquatorialCoordinates(ra, dec, dist) {
-    this.ra = ra;
-    this.dec = dec;
-    this.dist = dist;
+class EquatorialCoordinates {
+    constructor(ra, dec, dist) {
+        this.ra = ra;
+        this.dec = dec;
+        this.dist = dist;
+    }    
 }
 
 /**
@@ -1149,10 +1154,12 @@ function EquatorialCoordinates(ra, dec, dist) {
  *      These coordinates are corrected for precession and nutation of the
  *      Earth's axis of rotation at time <code>t</code>.
  */
-function SkyCoordinates(t, j2000, ofdate) {
-    this.t = t;
-    this.j2000 = j2000;
-    this.ofdate = ofdate;
+class SkyCoordinates {
+    constructor(t, j2000, ofdate) {
+        this.t = t;
+        this.j2000 = j2000;
+        this.ofdate = ofdate;
+    }
 }
 
 /**
@@ -1189,11 +1196,13 @@ function SkyCoordinates(t, j2000, ofdate) {
  *      If <code>altitude</code> was adjusted for atmospheric reaction, <code>dec</code>
  *      is likewise adjusted.
  */
-function HorizontalCoordinates(azimuth, altitude, ra, dec) {
-    this.azimuth = azimuth;
-    this.altitude = altitude;
-    this.ra = ra;
-    this.dec = dec;
+class HorizontalCoordinates {
+    constructor(azimuth, altitude, ra, dec) {
+        this.azimuth = azimuth;
+        this.altitude = altitude;
+        this.ra = ra;
+        this.dec = dec;
+    }
 }
 
 /**
@@ -1237,12 +1246,14 @@ function HorizontalCoordinates(azimuth, altitude, ra, dec) {
  *      The angle is measured starting at 0 from the equinox and increases
  *      up to 360 degrees.
  */
-function EclipticCoordinates(ex, ey, ez, elat, elon) {
-    this.ex = ex;
-    this.ey = ey;
-    this.ez = ez;
-    this.elat = elat;
-    this.elon = elon;
+class EclipticCoordinates {
+    constructor(ex, ey, ez, elat, elon) {
+        this.ex = ex;
+        this.ey = ey;
+        this.ez = ez;
+        this.elat = elat;
+        this.elon = elon;
+    }
 }
 
 function vector2radec(pos)
@@ -1451,11 +1462,14 @@ Astronomy.Horizon = function(date, location, ra, dec, refraction) {     // based
  * @property {number} height_in_meters
  *      The observer's elevation above mean sea level, expressed in meters.
  */
-function Observer(latitude_degrees, longitude_degrees, height_in_meters) {
-    this.latitude = latitude_degrees;
-    this.longitude = longitude_degrees;
-    this.height = height_in_meters;
+class Observer {
+    constructor(latitude_degrees, longitude_degrees, height_in_meters) {
+        this.latitude = latitude_degrees;
+        this.longitude = longitude_degrees;
+        this.height = height_in_meters;
+    }
 }
+
 
 /**
  * Creates an {@link Astronomy.Observer} object that represents a location
@@ -1888,13 +1902,13 @@ Astronomy.Search = function(func, t1, t2, options) {
     const dt_tolerance_seconds = (options && options.dt_tolerance_seconds) || 1;
 
     function f(t) {
-        ++Perf.CallCount.search_func;
+        ++Perf.search_func;
         return func(t);
     }
 
     const dt_days = dt_tolerance_seconds / seconds_per_day;
 
-    ++Perf.CallCount.search;
+    ++Perf.search;
 
     let f1 = (options && options.init_f1) || f(t1);
     let f2 = (options && options.init_f2) || f(t2);
@@ -2407,10 +2421,10 @@ Astronomy.SearchRelativeLongitude = function(body, targetRelLon, startDate) {
     let error_angle = offset(time);
     if (error_angle > 0) error_angle -= 360;    // force searching forward in time
 
-    ++Perf.CallCount.longitude_search;
+    ++Perf.longitude_search;
 
     for (let iter=0; iter < 100; ++iter) {
-        ++Perf.CallCount.longitude_iter;
+        ++Perf.longitude_iter;
 
         // Estimate how many days in the future (positive) or past (negative)
         // we have to go to get closer to the target elongation.

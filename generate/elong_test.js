@@ -101,7 +101,7 @@ function TestFile(filename, startSearchYear, targetRelLon) {
         let time = Astronomy.SearchRelativeLongitude(item.body, targetRelLon, startDate);
         const metrics = Astronomy.GetPerformanceMetrics();
         let diff_minutes = (time.date - item.date) / 60000;
-        console.log(`${item.body}: error = ${diff_minutes.toFixed(3)} minutes, iterations = ${metrics.CallCount.longitude_iter}`);
+        console.log(`${item.body}: error = ${diff_minutes.toFixed(3)} minutes, iterations = ${metrics.longitude_iter}`);
         if (Math.abs(diff_minutes) > 15)
             throw `!!! Excessive error for body ${item.body}`;
     }
@@ -144,7 +144,7 @@ function TestPlanet(outFileName, body, startYear, stopYear, zeroLonEventName) {
     fs.writeFileSync(outFileName, text);
 
     const ratio = max_diff / min_diff;
-    const iter_per_call = metrics.CallCount.longitude_iter / metrics.CallCount.longitude_search;
+    const iter_per_call = metrics.longitude_iter / metrics.longitude_search;
     console.log(`TestPlanet(${body}): ${count} events, ${iter_per_call.toFixed(3)} iter/call, interval min=${min_diff.toFixed(1)}, max=${max_diff.toFixed(1)}, avg=${(sum_diff/count).toFixed(1)}, ratio=${ratio.toFixed(3)}`);
 
     let thresh = {Mercury:1.65, Mars:1.30}[body] || 1.07;
