@@ -387,7 +387,7 @@ Contains information about the apparent brightness and sunlit phase of a celesti
 
 | Name | Type | Description |
 | --- | --- | --- |
-| quarter | <code>number</code> | An integer as follows:      <ul>          <li>0 = new moon</li>          <li>1 = first quarter</li>          <li>2 = full moon</li>          <li>3 = third quarter</li>      </ul> |
+| quarter | <code>number</code> | An integer as follows:      * 0 = new moon      * 1 = first quarter      * 2 = full moon      * 3 = third quarter |
 | time | [<code>Time</code>](#Astronomy.Time) | The date and time of the quarter lunar phase. |
 
 
@@ -733,7 +733,7 @@ to calculate equinoxes and solstices for a given calendar year.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| targetLon | <code>number</code> | The desired ecliptic longitude of date in degrees.      This may be any value in the range [0, 360), although certain      values have conventional meanings:      <ul>      <li>When <code>targetLon</code> is 0, finds the March equinox,      which is the moment spring begins in the northern hemisphere      and the beginning of autumn in the southern hemisphere.</li>      <li>When <code>targetLon</code> is 180, finds the September equinox,      which is the moment autumn begins in the northern hemisphere and      spring begins in the southern hemisphere.</li>      <li>When <code>targetLon</code> is 90, finds the northern solstice, which is the      moment summer begins in the northern hemisphere and winter      begins in the southern hemisphere.</li>      <li>When <code>targetLon</code> is 270, finds the southern solstice, which is the      moment winter begins in the northern hemisphere and summer      begins in the southern hemisphere.</li>      </ul> |
+| targetLon | <code>number</code> | The desired ecliptic longitude of date in degrees.      This may be any value in the range [0, 360), although certain      values have conventional meanings:      * When <code>targetLon</code> is 0, finds the March equinox,      which is the moment spring begins in the northern hemisphere      and the beginning of autumn in the southern hemisphere.      * When <code>targetLon</code> is 180, finds the September equinox,      which is the moment autumn begins in the northern hemisphere and      spring begins in the southern hemisphere.      * When <code>targetLon</code> is 90, finds the northern solstice, which is the      moment summer begins in the northern hemisphere and winter      begins in the southern hemisphere.      * When <code>targetLon</code> is 270, finds the southern solstice, which is the      moment winter begins in the northern hemisphere and summer      begins in the southern hemisphere. |
 | dateStart | <code>Date</code> \| <code>number</code> \| [<code>Time</code>](#Astronomy.Time) | A date and time known to be earlier than the desired longitude event. |
 | limitDays | <code>number</code> | A floating point number of days, which when added to <code>dateStart</code>,      yields a date and time known to be after the desired longitude event. |
 
@@ -898,7 +898,7 @@ necessary for finding other lunar phases than the usual quarter phases.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| targetLon | <code>number</code> | The difference in geocentric ecliptic longitude between the Sun and Moon      that specifies the lunar phase being sought. This can be any value      in the range [0, 360). Here are some helpful examples:      <ul>          <li>0 = new moon</li>          <li>90 = first quarter</li>          <li>180 = full moon</li>          <li>270 = third quarter</li>      </ul> |
+| targetLon | <code>number</code> | The difference in geocentric ecliptic longitude between the Sun and Moon      that specifies the lunar phase being sought. This can be any value      in the range [0, 360). Here are some helpful examples:          * 0 = new moon          * 90 = first quarter          * 180 = full moon          * 270 = third quarter |
 | dateStart | <code>Date</code> \| <code>number</code> \| [<code>Time</code>](#Astronomy.Time) | The beginning of the window of time in which to search. |
 | limitDays | <code>number</code> | The floating point number of days after <code>dateStart</code>      that limits the window of time in which to search. |
 

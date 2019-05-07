@@ -2827,20 +2827,22 @@ function NormalizeLongitude(lon) {
  *      The desired ecliptic longitude of date in degrees.
  *      This may be any value in the range [0, 360), although certain
  *      values have conventional meanings:
- *      <ul>
- *      <li>When <code>targetLon</code> is 0, finds the March equinox,
+ * 
+ *      * When <code>targetLon</code> is 0, finds the March equinox,
  *      which is the moment spring begins in the northern hemisphere
- *      and the beginning of autumn in the southern hemisphere.</li>
- *      <li>When <code>targetLon</code> is 180, finds the September equinox,
+ *      and the beginning of autumn in the southern hemisphere.
+ * 
+ *      * When <code>targetLon</code> is 180, finds the September equinox,
  *      which is the moment autumn begins in the northern hemisphere and
- *      spring begins in the southern hemisphere.</li>
- *      <li>When <code>targetLon</code> is 90, finds the northern solstice, which is the
+ *      spring begins in the southern hemisphere.
+ * 
+ *      * When <code>targetLon</code> is 90, finds the northern solstice, which is the
  *      moment summer begins in the northern hemisphere and winter
- *      begins in the southern hemisphere.</li>
- *      <li>When <code>targetLon</code> is 270, finds the southern solstice, which is the
+ *      begins in the southern hemisphere.
+ * 
+ *      * When <code>targetLon</code> is 270, finds the southern solstice, which is the
  *      moment winter begins in the northern hemisphere and summer
- *      begins in the southern hemisphere.</li>
- *      </ul>
+ *      begins in the southern hemisphere.
  * 
  * @param {(Date | number | Astronomy.Time)} dateStart
  *      A date and time known to be earlier than the desired longitude event.
@@ -3301,12 +3303,11 @@ Astronomy.MoonPhase = function(date) {
  *      The difference in geocentric ecliptic longitude between the Sun and Moon
  *      that specifies the lunar phase being sought. This can be any value
  *      in the range [0, 360). Here are some helpful examples:
- *      <ul>
- *          <li>0 = new moon</li>
- *          <li>90 = first quarter</li>
- *          <li>180 = full moon</li>
- *          <li>270 = third quarter</li>
- *      </ul>
+ * 
+ *          * 0 = new moon
+ *          * 90 = first quarter
+ *          * 180 = full moon
+ *          * 270 = third quarter
  * 
  * @param {(Date|number|Astronomy.Time)} dateStart
  *      The beginning of the window of time in which to search.
@@ -3359,12 +3360,10 @@ Astronomy.SearchMoonPhase = function(targetLon, dateStart, limitDays) {
  * 
  * @property {number} quarter 
  *      An integer as follows:
- *      <ul>
- *          <li>0 = new moon</li>
- *          <li>1 = first quarter</li>
- *          <li>2 = full moon</li>
- *          <li>3 = third quarter</li>
- *      </ul>
+ *      * 0 = new moon
+ *      * 1 = first quarter
+ *      * 2 = full moon
+ *      * 3 = third quarter
  * 
  * @property {Astronomy.Time} time 
  *      The date and time of the quarter lunar phase.
