@@ -361,7 +361,7 @@ class Time {
      * Does NOT modify the original <code>Time</code> object.
      * 
      * @param {number} days
-     *      The floating point numbers of days by which to adjust the given date and time.
+     *      The floating point number of days by which to adjust the given date and time.
      *      Positive values adjust the date toward the future, and
      *      negative values adjust the date toward the past.
      * 
@@ -1103,7 +1103,7 @@ class Vector {
     }
 
     /**
-     * Returns the length of the vector using the same units as its components (usually AU).
+     * Returns the length of the vector in astronomical units (AU).
      * @returns {number}
      */
     Length() {
@@ -1125,7 +1125,7 @@ class Vector {
  * 
  * @property {number} dist
  *      Distance to the celestial object expressed in 
- *      <a href="https://en.wikipedia.org/wiki/Astronomical_unit">Astronomical Units</a> (AU).
+ *      <a href="https://en.wikipedia.org/wiki/Astronomical_unit">astronomical units</a> (AU).
  */
 class EquatorialCoordinates {
     constructor(ra, dec, dist) {
@@ -1211,7 +1211,7 @@ class HorizontalCoordinates {
  * In general, ecliptic coordinates are measured with respect to the mean plane of the Earth's 
  * orbit around the Sun.
  * Includes Cartesian coordinates <code>(ex, ey, ez)</code> measured in 
- * <a href="https://en.wikipedia.org/wiki/Astronomical_unit">Astronomical Units</a> (AU)
+ * <a href="https://en.wikipedia.org/wiki/Astronomical_unit">astronomical units</a> (AU)
  * and spherical coordinates <code>(elon, elat)</code> measured in degrees.
  * 
  * @class
@@ -1219,29 +1219,29 @@ class HorizontalCoordinates {
  * 
  * @property {number} ex
  *      The Cartesian x-coordinate of the body in astronomical units (AU).
- *      The x-axis is oriented in the direction of the 
+ *      The x-axis is within the ecliptic plane and is oriented in the direction of the 
  *      <a href="https://en.wikipedia.org/wiki/Equinox_(celestial_coordinates)">equinox</a>.
  * 
  * @property {number} ey
  *      The Cartesian y-coordinate of the body in astronomical units (AU).
- *      The y-axis is oriented 90 degrees counterclockwise from the equinox,
- *      as seen from above the Sun's north pole.
+ *      The y-axis is within the ecliptic plane and is oriented 90 degrees 
+ *      counterclockwise from the equinox, as seen from above the Sun's north pole.
  * 
  * @property {number} ez
  *      The Cartesian z-coordinate of the body in astronomical units (AU).
- *      The z-axis is oriented perpendicular to the mean plane of the Earth's orbit,
+ *      The z-axis is oriented perpendicular to the ecliptic plane,
  *      along the direction of the Sun's north pole.
  * 
  * @property {number} elat
  *      The ecliptic latitude of the body in degrees.
- *      This is the angle north or south of the mean plane of the Earth's orbit.
+ *      This is the angle north or south of the ecliptic plane.
  *      The value is in the range [-90, +90].
  *      Positive values are north and negative values are south.
  * 
  * @property {number} elon
  *      The ecliptic longitude of the body in degrees.
- *      This is the angle measured counterclockwise around the mean plane
- *      of the Earth's orbit, as seen from above the Sun's north pole.
+ *      This is the angle measured counterclockwise around the ecliptic plane,
+ *      as seen from above the Sun's north pole.
  *      This is the same direction that the Earth orbits around the Sun.
  *      The angle is measured starting at 0 from the equinox and increases
  *      up to 360 degrees.
@@ -2240,10 +2240,11 @@ function MoonMagnitude(phase, helio_dist, geo_dist) {
  * @property {number} phase_fraction
  *      The fraction of the body's face that is illuminated by the Sun, as seen from the Earth.
  *      Calculated from <code>phase_angle</code> for convenience.
+ *      This value ranges from 0 to 1.
  * 
  * @property {number} helio_dist 
  *      The distance between the center of the Sun and the center of the body in 
- *      <a href="https://en.wikipedia.org/wiki/Astronomical_unit">Astronomical Units</a> (AU).
+ *      <a href="https://en.wikipedia.org/wiki/Astronomical_unit">astronomical units</a> (AU).
  * 
  * @property {number} geo_dist 
  *      The distance between the center of the Earth and the center of the body in AU.

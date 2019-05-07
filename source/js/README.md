@@ -154,7 +154,7 @@ Does NOT modify the original <code>Time</code> object.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| days | <code>number</code> | The floating point numbers of days by which to adjust the given date and time.      Positive values adjust the date toward the future, and      negative values adjust the date toward the past. |
+| days | <code>number</code> | The floating point number of days by which to adjust the given date and time.      Positive values adjust the date toward the future, and      negative values adjust the date toward the past. |
 
 
 * * *
@@ -181,7 +181,7 @@ along with the time at which the vector is valid.
 <a name="Astronomy.Vector+Length"></a>
 
 #### vector.Length() ⇒ <code>number</code>
-Returns the length of the vector using the same units as its components (usually AU).
+Returns the length of the vector in astronomical units (AU).
 
 **Kind**: instance method of [<code>Vector</code>](#Astronomy.Vector)  
 
@@ -199,7 +199,7 @@ Holds right ascension, declination, and distance of a celestial object.
 | --- | --- | --- |
 | ra | <code>number</code> | Right ascension in sidereal hours: [0, 24). |
 | dec | <code>number</code> | Declination in degrees: [-90, +90]. |
-| dist | <code>number</code> | Distance to the celestial object expressed in       <a href="https://en.wikipedia.org/wiki/Astronomical_unit">Astronomical Units</a> (AU). |
+| dist | <code>number</code> | Distance to the celestial object expressed in       <a href="https://en.wikipedia.org/wiki/Astronomical_unit">astronomical units</a> (AU). |
 
 
 * * *
@@ -253,7 +253,7 @@ The origin and date of the coordinate system may vary depending on the caller's 
 In general, ecliptic coordinates are measured with respect to the mean plane of the Earth's 
 orbit around the Sun.
 Includes Cartesian coordinates <code>(ex, ey, ez)</code> measured in 
-<a href="https://en.wikipedia.org/wiki/Astronomical_unit">Astronomical Units</a> (AU)
+<a href="https://en.wikipedia.org/wiki/Astronomical_unit">astronomical units</a> (AU)
 and spherical coordinates <code>(elon, elat)</code> measured in degrees.
 
 **Kind**: static class of [<code>Astronomy</code>](#Astronomy)  
@@ -261,11 +261,11 @@ and spherical coordinates <code>(elon, elat)</code> measured in degrees.
 
 | Name | Type | Description |
 | --- | --- | --- |
-| ex | <code>number</code> | The Cartesian x-coordinate of the body in astronomical units (AU).      The x-axis is oriented in the direction of the       <a href="https://en.wikipedia.org/wiki/Equinox_(celestial_coordinates)">equinox</a>. |
-| ey | <code>number</code> | The Cartesian y-coordinate of the body in astronomical units (AU).      The y-axis is oriented 90 degrees counterclockwise from the equinox,      as seen from above the Sun's north pole. |
-| ez | <code>number</code> | The Cartesian z-coordinate of the body in astronomical units (AU).      The z-axis is oriented perpendicular to the mean plane of the Earth's orbit,      along the direction of the Sun's north pole. |
-| elat | <code>number</code> | The ecliptic latitude of the body in degrees.      This is the angle north or south of the mean plane of the Earth's orbit.      The value is in the range [-90, +90].      Positive values are north and negative values are south. |
-| elon | <code>number</code> | The ecliptic longitude of the body in degrees.      This is the angle measured counterclockwise around the mean plane      of the Earth's orbit, as seen from above the Sun's north pole.      This is the same direction that the Earth orbits around the Sun.      The angle is measured starting at 0 from the equinox and increases      up to 360 degrees. |
+| ex | <code>number</code> | The Cartesian x-coordinate of the body in astronomical units (AU).      The x-axis is within the ecliptic plane and is oriented in the direction of the       <a href="https://en.wikipedia.org/wiki/Equinox_(celestial_coordinates)">equinox</a>. |
+| ey | <code>number</code> | The Cartesian y-coordinate of the body in astronomical units (AU).      The y-axis is within the ecliptic plane and is oriented 90 degrees       counterclockwise from the equinox, as seen from above the Sun's north pole. |
+| ez | <code>number</code> | The Cartesian z-coordinate of the body in astronomical units (AU).      The z-axis is oriented perpendicular to the ecliptic plane,      along the direction of the Sun's north pole. |
+| elat | <code>number</code> | The ecliptic latitude of the body in degrees.      This is the angle north or south of the ecliptic plane.      The value is in the range [-90, +90].      Positive values are north and negative values are south. |
+| elon | <code>number</code> | The ecliptic longitude of the body in degrees.      This is the angle measured counterclockwise around the ecliptic plane,      as seen from above the Sun's north pole.      This is the same direction that the Earth orbits around the Sun.      The angle is measured starting at 0 from the equinox and increases      up to 360 degrees. |
 
 
 * * *
@@ -300,8 +300,8 @@ Contains information about the apparent brightness and sunlit phase of a celesti
 | time | [<code>Time</code>](#Astronomy.Time) | The date and time pertaining to the other calculated values in this object. |
 | mag | <code>number</code> | The <a href="https://en.wikipedia.org/wiki/Apparent_magnitude">apparent visual magnitude</a> of the celestial body. |
 | phase_angle | <code>number</code> | The angle in degrees as seen from the center of the celestial body between the Sun and the Earth.      The value is always in the range 0 to 180.      The phase angle provides a measure of what fraction of the body's face appears       illuminated by the Sun as seen from the Earth.      When the observed body is the Sun, the <code>phase</code> property is set to 0,      although this has no physical meaning because the Sun emits, rather than reflects, light.      When the phase is near 0 degrees, the body appears "full".      When it is 90 degrees, the body appears "half full".       And when it is 180 degrees, the body appears "new" and is very difficult to see      because it is both dim and lost in the Sun's glare as seen from the Earth. |
-| phase_fraction | <code>number</code> | The fraction of the body's face that is illuminated by the Sun, as seen from the Earth.      Calculated from <code>phase_angle</code> for convenience. |
-| helio_dist | <code>number</code> | The distance between the center of the Sun and the center of the body in       <a href="https://en.wikipedia.org/wiki/Astronomical_unit">Astronomical Units</a> (AU). |
+| phase_fraction | <code>number</code> | The fraction of the body's face that is illuminated by the Sun, as seen from the Earth.      Calculated from <code>phase_angle</code> for convenience.      This value ranges from 0 to 1. |
+| helio_dist | <code>number</code> | The distance between the center of the Sun and the center of the body in       <a href="https://en.wikipedia.org/wiki/Astronomical_unit">astronomical units</a> (AU). |
 | geo_dist | <code>number</code> | The distance between the center of the Earth and the center of the body in AU. |
 | gc | [<code>Vector</code>](#Astronomy.Vector) | Geocentric coordinates: the 3D vector from the center of the Earth to the center of the body.      The components are in expressed in AU and are oriented with respect to the J2000 equatorial plane. |
 | hc | [<code>Vector</code>](#Astronomy.Vector) | Heliocentric coordinates: The 3D vector from the center of the Sun to the center of the body.      Like <code>gc</code>, <code>hc</code> is expressed in AU and oriented with respect      to the J2000 equatorial plane. |
