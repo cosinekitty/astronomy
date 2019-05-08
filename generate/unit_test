@@ -23,6 +23,10 @@ echo "Running test of moon phase search."
 node moon_phase_test.js || Fail "Failed moon phase test."
 
 echo ""
+echo "Running lunar apsis tests."
+node lunar_apsis_test.js || Fail "Failed lunar apsis test."
+
+echo ""
 echo "Running longitude tests."
 node elong_test.js || Fail "Failed longitude tests."
 

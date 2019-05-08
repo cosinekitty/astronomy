@@ -11,6 +11,8 @@ function Test() {
 
     let lnum = 0;
     let count = 0;
+    let max_minute_error = 0;
+    let max_dist_error = 0;
     for (let line of lines) {
         ++lnum;
 
@@ -31,17 +33,19 @@ function Test() {
         if (diff_minutes > 35) {
             throw `${filename} line ${lnum}: Excessive time error: ${diff_minutes} minutes`;
         }
+        max_minute_error = Math.max(max_minute_error, diff_minutes);
 
         let diff_dist = Math.abs(evt.dist_km - dist);
         if (diff_dist > 25) {
             throw `${filename} line ${lnum}: Excessive distance error: ${diff_dist} km`;
         }
+        max_dist_error = Math.max(max_dist_error, diff_dist);
 
         ++count;
         evt = Astronomy.SearchLunarApsis(evt.time.AddDays(1));
     }
 
-    console.log(`lunar_apsis_test: successfully verified ${count} lines.`);
+    console.log(`lunar_apsis_test: verified ${count} lines, max time error = ${max_minute_error.toFixed(3)} minutes, max dist error = ${max_dist_error.toFixed(3)} km.`);
 }
 
 Test();
