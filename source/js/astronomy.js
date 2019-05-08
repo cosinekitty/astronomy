@@ -58,6 +58,7 @@ const AU_KM = 1.4959787069098932e+8;
 const au_per_parsec = ASEC180 / Math.PI;    // exact definition of how many AU = one parsec
 const sun_mag_at_1_au = -0.17 - 5*Math.log10(au_per_parsec);    // formula from JPL Horizons
 const mean_synodic_month = 29.530588;       // average number of days for Moon to return to the same phase
+const mean_anomalistic_month = 27.554550;   // average number of days between consecutive lunar perigees
 const seconds_per_day = 24 * 3600;
 const millis_per_day = seconds_per_day * 1000;
 const solar_days_per_sidereal_day = 0.9972695717592592;
@@ -2735,6 +2736,10 @@ function QuadInterp(tm, dt, fa, fm, fb) {
  * @param {(null | Astronomy.SearchOptions)} options 
  *      Options that can tune the behavior of the search.
  *      Most callers can omit this argument or pass in <code>null</code>.
+ * 
+ * @returns {(null | Astronomy.Time)}
+ *      If the search is successful, returns the date and time of the solution.
+ *      If the search fails, returns null.
  */
 Astronomy.Search = function(func, t1, t2, options) {
     const dt_tolerance_seconds = (options && options.dt_tolerance_seconds) || 1;
@@ -4045,6 +4050,116 @@ Astronomy.SearchPeakMagnitude = function(body, startDate) {
     }
 
     throw `SearchPeakMagnitude: failed to find event after 2 tries.`;
+}
+
+/**
+ * @class
+ * @memberof Astronomy
+ * 
+ * Represents a closest or farthest point in a body's orbit around its primary.
+ * For a planet orbiting the Sun, this is a perihelion or aphelion, respectively.
+ * For the Moon orbiting the Earth, this is a perigee or apogee, respectively.
+ * 
+ * @property {Astronomy.Time} time
+ *      The date and time of the apsis.
+ * 
+ * @property {number} apsisType
+ *      For a closest approach (perigee or perihelion), <code>apsisType</code> is 0.
+ *      For a farthest distance event (apogee or aphelion), <code>apsisType</code> is 1.
+ * 
+ * @property {number} dist_au
+ *      The distance between the centers of the two bodies in astronomical units (AU).
+ * 
+ * @property {number} dist_km
+ *      The distance between the centers of the two bodies in kilometers.
+ */
+class Apsis {
+    constructor(time, apsisType, dist_au) {
+        this.time = time;
+        this.apsisType = apsisType;
+        this.dist_au = dist_au;
+        this.dist_km = dist_au * AU_KM;
+    }
+}
+
+/**
+ * Finds the next perigee (closest approach) or apogee (farthest remove) of the Moon
+ * that occurs after the specified date and time.
+ * 
+ * @param {(Date | number | Astronomy.Time)} startDate
+ *      The date and time after which to find the next perigee or apogee.
+ * 
+ * @returns {Astronomy.Apsis}
+ */
+Astronomy.SearchLunarApsis = function(startDate) {
+    const dt = 0.001;
+
+    function distance_slope(t) {
+        let t1 = t.AddDays(-dt/2);
+        let t2 = t.AddDays(+dt/2);
+
+        let r1 = CalcMoon(t1).distance_au;
+        let r2 = CalcMoon(t2).distance_au;
+
+        let m = (r2-r1) / dt;
+        return m;
+    }
+
+    function negative_distance_slope(t) {
+        return -distance_slope(t);
+    }
+
+    // Check the rate of change of the distance dr/dt at the start time.
+    // If it is positive, the Moon is currently getting farther away,
+    // so start looking for apogee.
+    // Conversely, if dr/dt < 0, start looking for apogee.
+    // Either way, the polarity of the slope will change, so the product will be negative.
+    // Handle the crazy corner case of exactly touching zero by checking for m1*m2 <= 0.
+
+    let t1 = AstroTime(startDate);
+    let m1 = distance_slope(t1);
+    let increment = mean_anomalistic_month / 10;      // number of days to skip in each iteration
+
+    while (true) {
+        let t2 = t1.AddDays(increment);
+        let m2 = distance_slope(t2);
+
+        if (m1 * m2 <= 0) {
+            // The time range [t1, t2] contains an apsis.
+            // Figure out whether it is perigee or apogee.
+
+            if (m1 < 0 || m2 > 0) {
+                // We found a minimum distance event: perigee.
+                // Search the time range [t1, t2] for the time when the slope goes
+                // from negative to positive.
+                let tx = Astronomy.Search(distance_slope, t1, t2, {init_f1:m1, init_f2:m2});
+                if (tx == null)
+                    throw 'SearchLunarApsis INTERNAL ERROR: perigee search failed!';
+
+                let dist = CalcMoon(tx).distance_au;
+                return new Apsis(tx, 0, dist);
+            }
+
+            if (m1 > 0 || m2 < 0) {
+                // We found a maximum distance event: apogee.
+                // Search the time range [t1, t2] for the time when the slope goes
+                // from positive to negative.
+                let tx = Astronomy.Search(negative_distance_slope, t1, t2, {init_f1:-m1, init_f2:-m2});
+                if (tx == null)
+                    throw 'SearchLunarApsis INTERNAL ERROR: apogee search failed!';
+
+                    let dist = CalcMoon(tx).distance_au;
+                    return new Apsis(tx, 1, dist);
+            }
+
+            // This should never happen; it should not be possible for consecutive
+            // times t1 and t2 to both have zero slope.
+            throw 'SearchLunarApsis INTERNAL ERROR: cannot classify apsis event!';
+        }
+
+        t1 = t2;
+        m1 = m2;
+    }
 }
 
 })(typeof exports==='undefined' ? (this.Astronomy={}) : exports);

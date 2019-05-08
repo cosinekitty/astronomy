@@ -36,7 +36,7 @@
     * [.GeoMoon(date)](#Astronomy.GeoMoon) ⇒ [<code>Vector</code>](#Astronomy.Vector)
     * [.HelioVector(body, date)](#Astronomy.HelioVector) ⇒ [<code>Vector</code>](#Astronomy.Vector)
     * [.GeoVector(body, date)](#Astronomy.GeoVector) ⇒ [<code>Vector</code>](#Astronomy.Vector)
-    * [.Search(func, t1, t2, options)](#Astronomy.Search)
+    * [.Search(func, t1, t2, options)](#Astronomy.Search) ⇒ <code>null</code> \| [<code>Time</code>](#Astronomy.Time)
     * [.SearchSunLongitude(targetLon, dateStart, limitDays)](#Astronomy.SearchSunLongitude) ⇒ [<code>Time</code>](#Astronomy.Time) \| <code>null</code>
     * [.LongitudeFromSun(body, date)](#Astronomy.LongitudeFromSun) ⇒ <code>number</code>
     * [.AngleFromSun(body, date)](#Astronomy.AngleFromSun) ⇒ <code>number</code>
@@ -53,6 +53,7 @@
     * [.Elongation(body)](#Astronomy.Elongation) ⇒ [<code>ElongationEvent</code>](#Astronomy.ElongationEvent)
     * [.SearchMaxElongation(body, startDate)](#Astronomy.SearchMaxElongation) ⇒ [<code>ElongationEvent</code>](#Astronomy.ElongationEvent)
     * [.SearchPeakMagnitude(body, startDate)](#Astronomy.SearchPeakMagnitude) ⇒ [<code>IlluminationInfo</code>](#Astronomy.IlluminationInfo)
+    * [.SearchLunarApsis(startDate)](#Astronomy.SearchLunarApsis) ⇒ <code>Astronomy.Apsis</code>
     * [.ContinuousFunction](#Astronomy.ContinuousFunction) ⇒ <code>number</code>
     * [.SearchOptions](#Astronomy.SearchOptions) : <code>Object</code>
 
@@ -602,7 +603,7 @@ body at a specified time.
 
 <a name="Astronomy.Search"></a>
 
-### Astronomy.Search(func, t1, t2, options)
+### Astronomy.Search(func, t1, t2, options) ⇒ <code>null</code> \| [<code>Time</code>](#Astronomy.Time)
 Search for next time <i>t</i> (such that <i>t</i> is between <code>t1</code> and <code>t2</code>)
 that <code>func(t)</code> crosses from a negative value to a non-negative value.
 The given function must have "smooth" behavior over the entire inclusive range [<code>t1</code>, <code>t2</code>],
@@ -615,6 +616,8 @@ that the "wrong" event will be found (i.e. not the first event after t1)
 or even that the function will return null, indicating that no event was found.
 
 **Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
+**Returns**: <code>null</code> \| [<code>Time</code>](#Astronomy.Time) - If the search is successful, returns the date and time of the solution.
+     If the search fails, returns null.  
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -970,6 +973,21 @@ Searches for the date and time Venus will next appear brightest as seen from the
 | --- | --- | --- |
 | body | <code>string</code> | Currently only <code>"Venus"</code> is supported.      Mercury's peak magnitude occurs at superior conjunction, when it is virtually impossible to see from Earth,      so peak magnitude events have little practical value for that planet.      The Moon reaches peak magnitude very close to full moon, which can be found using       [SearchMoonQuarter](#Astronomy.SearchMoonQuarter) or [SearchMoonPhase](#Astronomy.SearchMoonPhase).      The other planets reach peak magnitude very close to opposition,       which can be found using [SearchRelativeLongitude](#Astronomy.SearchRelativeLongitude). |
 | startDate | <code>Date</code> \| <code>number</code> \| [<code>Time</code>](#Astronomy.Time) | The date and time after which to find the next peak magnitude event. |
+
+
+* * *
+
+<a name="Astronomy.SearchLunarApsis"></a>
+
+### Astronomy.SearchLunarApsis(startDate) ⇒ <code>Astronomy.Apsis</code>
+Finds the next perigee (closest approach) or apogee (farthest remove) of the Moon
+that occurs after the specified date and time.
+
+**Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| startDate | <code>Date</code> \| <code>number</code> \| [<code>Time</code>](#Astronomy.Time) | The date and time after which to find the next perigee or apogee. |
 
 
 * * *
