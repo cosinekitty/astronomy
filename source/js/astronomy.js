@@ -58,7 +58,6 @@ const AU_KM = 1.4959787069098932e+8;
 const au_per_parsec = ASEC180 / Math.PI;    // exact definition of how many AU = one parsec
 const sun_mag_at_1_au = -0.17 - 5*Math.log10(au_per_parsec);    // formula from JPL Horizons
 const mean_synodic_month = 29.530588;       // average number of days for Moon to return to the same phase
-const mean_anomalistic_month = 27.554550;   // average number of days between consecutive lunar perigees
 const seconds_per_day = 24 * 3600;
 const millis_per_day = seconds_per_day * 1000;
 const solar_days_per_sidereal_day = 0.9972695717592592;
@@ -91,6 +90,15 @@ let sin_ob2000;
  * 
  * @property {number} longitude_iter
  *      The total number of iterations executed inside {@link Astronomy.SearchRelativeLongitude}.
+ * 
+ * @property {number} lunar_apsis_calls
+ *      The number of times {@link Astronomy.SearchLunarApsis} was called.
+ * 
+ * @property {number} lunar_apsis_iter
+ *      The number of search iterations inside {@link Astronomy.SearchLunarApsis}.
+ * 
+ * @property {number} calcmoon
+ *      The number of times the Moon's position was calculated. (This is an expensive operation.)
  */
 class PerformanceInfo {
     constructor() {
@@ -98,6 +106,9 @@ class PerformanceInfo {
         this.search = 0;
         this.longitude_search = 0;
         this.longitude_iter = 0;
+        this.lunar_apsis_calls = 0;
+        this.lunar_apsis_iter = 0;
+        this.calcmoon = 0;
     }
 
     /**
@@ -114,6 +125,9 @@ class PerformanceInfo {
         clone.search = this.search;
         clone.longitude_search = this.longitude_search;
         clone.longitude_iter = this.longitude_iter;
+        clone.lunar_apsis_calls = this.lunar_apsis_calls;
+        clone.lunar_apsis_iter = this.lunar_apsis_iter;
+        clone.calcmoon = this.calcmoon;
         return clone;
     }
 }
@@ -1486,6 +1500,8 @@ function ecl2equ_vec(time, pos) {
 }
 
 function CalcMoon(time) {
+    ++Perf.calcmoon;
+
     const T = time.tt / 36525;
 
     function DeclareArray1(xmin, xmax) {
@@ -4118,9 +4134,11 @@ Astronomy.SearchLunarApsis = function(startDate) {
 
     let t1 = AstroTime(startDate);
     let m1 = distance_slope(t1);
-    let increment = mean_anomalistic_month / 10;      // number of days to skip in each iteration
+    const increment = 5;      // number of days to skip in each iteration
 
+    ++Perf.lunar_apsis_calls;
     while (true) {
+        ++Perf.lunar_apsis_iter;
         let t2 = t1.AddDays(increment);
         let m2 = distance_slope(t2);
 
@@ -4148,8 +4166,8 @@ Astronomy.SearchLunarApsis = function(startDate) {
                 if (tx == null)
                     throw 'SearchLunarApsis INTERNAL ERROR: apogee search failed!';
 
-                    let dist = CalcMoon(tx).distance_au;
-                    return new Apsis(tx, 1, dist);
+                let dist = CalcMoon(tx).distance_au;
+                return new Apsis(tx, 1, dist);
             }
 
             // This should never happen; it should not be possible for consecutive
@@ -4160,6 +4178,26 @@ Astronomy.SearchLunarApsis = function(startDate) {
         t1 = t2;
         m1 = m2;
     }
+}
+
+/**
+ * Given a lunar apsis returned by an initial call to {@link SearchLunarApsis}, 
+ * or a previous call to this function, finds the next lunar apsis.
+ * If the given apsis is a perigee, this function finds the next apogee, and vice versa.
+ * 
+ * @param {Astronomy.Apsis} apsis
+ *      A lunar perigee or apogee event.
+ * 
+ * @returns {Astronomy.Apsis}
+ *      The successor apogee for the given perigee, or the successor perigee for the given apogee.
+ */
+Astronomy.NextLunarApsis = function(apsis) {
+    const skip = 11;    // number of days to skip to start looking for next apsis event
+    let next = Astronomy.SearchLunarApsis(apsis.time.AddDays(skip));
+    if (next.apsisType + apsis.apsisType !== 1) {
+        throw `NextLunarApsis INTERNAL ERROR: did not find alternating apogee/perigee: prev=${apsis.apsisType} @ ${apsis.time.toString()}, next=${next.apsisType} @ ${next.time.toString()}`;
+    }
+    return next;
 }
 
 })(typeof exports==='undefined' ? (this.Astronomy={}) : exports);

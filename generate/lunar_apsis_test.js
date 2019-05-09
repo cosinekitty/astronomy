@@ -1,3 +1,10 @@
+/*
+    lunar_apsis_test.js
+
+    Exercises finding of lunar apogee and perigee using test data derived from:
+    http://astropixels.com/ephemeris/moon/moonperap2001.html
+*/
+
 'use strict';
 const fs = require('fs');
 const Astronomy = require('../source/js/astronomy.js');
@@ -7,6 +14,7 @@ function Test() {
     const text = fs.readFileSync(filename, {encoding:'utf8'});
     const lines = text.split(/\n/);
 
+    const time_before = new Date();
     let evt = Astronomy.SearchLunarApsis(new Date(Date.UTC(2001, 0, 1)));
 
     let lnum = 0;
@@ -42,10 +50,16 @@ function Test() {
         max_dist_error = Math.max(max_dist_error, diff_dist);
 
         ++count;
-        evt = Astronomy.SearchLunarApsis(evt.time.AddDays(1));
+        evt = Astronomy.NextLunarApsis(evt);
     }
+    const time_after = new Date();
+    const elapsed = (time_after - time_before) / 1000;
 
     console.log(`lunar_apsis_test: verified ${count} lines, max time error = ${max_minute_error.toFixed(3)} minutes, max dist error = ${max_dist_error.toFixed(3)} km.`);
+
+    const perf = Astronomy.GetPerformanceMetrics();
+
+    console.log(`lunar_apsis_test PERFORMANCE: time=${elapsed.toFixed(3)}, iter=${perf.lunar_apsis_iter}, calcmoon=${perf.calcmoon}, calcmoon/call=${perf.calcmoon/perf.lunar_apsis_calls}`);
 }
 
 Test();

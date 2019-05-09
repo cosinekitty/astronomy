@@ -54,6 +54,7 @@
     * [.SearchMaxElongation(body, startDate)](#Astronomy.SearchMaxElongation) ⇒ [<code>ElongationEvent</code>](#Astronomy.ElongationEvent)
     * [.SearchPeakMagnitude(body, startDate)](#Astronomy.SearchPeakMagnitude) ⇒ [<code>IlluminationInfo</code>](#Astronomy.IlluminationInfo)
     * [.SearchLunarApsis(startDate)](#Astronomy.SearchLunarApsis) ⇒ <code>Astronomy.Apsis</code>
+    * [.NextLunarApsis(apsis)](#Astronomy.NextLunarApsis) ⇒ <code>Astronomy.Apsis</code>
     * [.ContinuousFunction](#Astronomy.ContinuousFunction) ⇒ <code>number</code>
     * [.SearchOptions](#Astronomy.SearchOptions) : <code>Object</code>
 
@@ -75,6 +76,9 @@ Most users can safely ignore this class.
 | search | <code>number</code> | Number of times [Search](#Astronomy.Search) was called. |
 | longitude_search | <code>number</code> | Number of times [SearchRelativeLongitude](#Astronomy.SearchRelativeLongitude) was called. |
 | longitude_iter | <code>number</code> | The total number of iterations executed inside [SearchRelativeLongitude](#Astronomy.SearchRelativeLongitude). |
+| lunar_apsis_calls | <code>number</code> | The number of times [SearchLunarApsis](#Astronomy.SearchLunarApsis) was called. |
+| lunar_apsis_iter | <code>number</code> | The number of search iterations inside [SearchLunarApsis](#Astronomy.SearchLunarApsis). |
+| calcmoon | <code>number</code> | The number of times the Moon's position was calculated. (This is an expensive operation.) |
 
 
 * * *
@@ -988,6 +992,23 @@ that occurs after the specified date and time.
 | Param | Type | Description |
 | --- | --- | --- |
 | startDate | <code>Date</code> \| <code>number</code> \| [<code>Time</code>](#Astronomy.Time) | The date and time after which to find the next perigee or apogee. |
+
+
+* * *
+
+<a name="Astronomy.NextLunarApsis"></a>
+
+### Astronomy.NextLunarApsis(apsis) ⇒ <code>Astronomy.Apsis</code>
+Given a lunar apsis returned by an initial call to [SearchLunarApsis](SearchLunarApsis), 
+or a previous call to this function, finds the next lunar apsis.
+If the given apsis is a perigee, this function finds the next apogee, and vice versa.
+
+**Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
+**Returns**: <code>Astronomy.Apsis</code> - The successor apogee for the given perigee, or the successor perigee for the given apogee.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| apsis | <code>Astronomy.Apsis</code> | A lunar perigee or apogee event. |
 
 
 * * *
