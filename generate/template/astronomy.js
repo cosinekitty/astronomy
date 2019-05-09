@@ -3231,12 +3231,12 @@ Astronomy.SearchPeakMagnitude = function(body, startDate) {
 }
 
 /**
- * @class
- * @memberof Astronomy
- * 
  * Represents a closest or farthest point in a body's orbit around its primary.
  * For a planet orbiting the Sun, this is a perihelion or aphelion, respectively.
  * For the Moon orbiting the Earth, this is a perigee or apogee, respectively.
+ * 
+ * @class
+ * @memberof Astronomy
  * 
  * @property {Astronomy.Time} time
  *      The date and time of the apsis.
@@ -3250,6 +3250,9 @@ Astronomy.SearchPeakMagnitude = function(body, startDate) {
  * 
  * @property {number} dist_km
  *      The distance between the centers of the two bodies in kilometers.
+ * 
+ * @see Astronomy.SearchLunarApsis
+ * @see Astronomy.NextLunarApsis
  */
 class Apsis {
     constructor(time, apsisType, dist_au) {
@@ -3344,7 +3347,7 @@ Astronomy.SearchLunarApsis = function(startDate) {
 
 /**
  * Given a lunar apsis returned by an initial call to {@link SearchLunarApsis}, 
- * or a previous call to this function, finds the next lunar apsis.
+ * or a previous call to <code>NextLunarApsis</code>, finds the next lunar apsis.
  * If the given apsis is a perigee, this function finds the next apogee, and vice versa.
  * 
  * @param {Astronomy.Apsis} apsis

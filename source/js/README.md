@@ -24,6 +24,7 @@
     * [.SeasonInfo](#Astronomy.SeasonInfo)
         * [new SeasonInfo(mar_equinox, jun_solstice, sep_equinox, dec_solstice)](#new_Astronomy.SeasonInfo_new)
     * [.ElongationEvent](#Astronomy.ElongationEvent)
+    * [.Apsis](#Astronomy.Apsis)
     * [.Bodies](#Astronomy.Bodies) : <code>Array.&lt;string&gt;</code>
     * [.GetPerformanceMetrics()](#Astronomy.GetPerformanceMetrics) ⇒ [<code>PerformanceInfo</code>](#Astronomy.PerformanceInfo)
     * [.ResetPerformanceMetrics()](#Astronomy.ResetPerformanceMetrics)
@@ -53,8 +54,8 @@
     * [.Elongation(body)](#Astronomy.Elongation) ⇒ [<code>ElongationEvent</code>](#Astronomy.ElongationEvent)
     * [.SearchMaxElongation(body, startDate)](#Astronomy.SearchMaxElongation) ⇒ [<code>ElongationEvent</code>](#Astronomy.ElongationEvent)
     * [.SearchPeakMagnitude(body, startDate)](#Astronomy.SearchPeakMagnitude) ⇒ [<code>IlluminationInfo</code>](#Astronomy.IlluminationInfo)
-    * [.SearchLunarApsis(startDate)](#Astronomy.SearchLunarApsis) ⇒ <code>Astronomy.Apsis</code>
-    * [.NextLunarApsis(apsis)](#Astronomy.NextLunarApsis) ⇒ <code>Astronomy.Apsis</code>
+    * [.SearchLunarApsis(startDate)](#Astronomy.SearchLunarApsis) ⇒ [<code>Apsis</code>](#Astronomy.Apsis)
+    * [.NextLunarApsis(apsis)](#Astronomy.NextLunarApsis) ⇒ [<code>Apsis</code>](#Astronomy.Apsis)
     * [.ContinuousFunction](#Astronomy.ContinuousFunction) ⇒ <code>number</code>
     * [.SearchOptions](#Astronomy.SearchOptions) : <code>Object</code>
 
@@ -394,6 +395,31 @@ best in the morning or the evening.
 | visibility | <code>string</code> | Either <code>"morning"</code> or <code>"evening"</code>,      indicating when the body is most easily seen. |
 | elongation | <code>number</code> | The angle in degrees, as seen from the center of the Earth,      of the apparent separation between the body and the Sun.      This angle is measured in 3D space and is not projected onto the ecliptic plane. |
 | relative_longitude | <code>number</code> | The angle in degrees, as seen from the Sun, between the      observed body and the Earth. This value is always between      0 and 180. More precisely, <code>relative_longitude</code> is the absolute      value of the difference between the heliocentric ecliptic longitudes of      the centers of the observed body and the Earth. |
+
+
+* * *
+
+<a name="Astronomy.Apsis"></a>
+
+### Astronomy.Apsis
+Represents a closest or farthest point in a body's orbit around its primary.
+For a planet orbiting the Sun, this is a perihelion or aphelion, respectively.
+For the Moon orbiting the Earth, this is a perigee or apogee, respectively.
+
+**Kind**: static class of [<code>Astronomy</code>](#Astronomy)  
+**See**
+
+- Astronomy.SearchLunarApsis
+- Astronomy.NextLunarApsis
+
+**Properties**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| time | [<code>Time</code>](#Astronomy.Time) | The date and time of the apsis. |
+| apsisType | <code>number</code> | For a closest approach (perigee or perihelion), <code>apsisType</code> is 0.      For a farthest distance event (apogee or aphelion), <code>apsisType</code> is 1. |
+| dist_au | <code>number</code> | The distance between the centers of the two bodies in astronomical units (AU). |
+| dist_km | <code>number</code> | The distance between the centers of the two bodies in kilometers. |
 
 
 * * *
@@ -983,7 +1009,7 @@ Searches for the date and time Venus will next appear brightest as seen from the
 
 <a name="Astronomy.SearchLunarApsis"></a>
 
-### Astronomy.SearchLunarApsis(startDate) ⇒ <code>Astronomy.Apsis</code>
+### Astronomy.SearchLunarApsis(startDate) ⇒ [<code>Apsis</code>](#Astronomy.Apsis)
 Finds the next perigee (closest approach) or apogee (farthest remove) of the Moon
 that occurs after the specified date and time.
 
@@ -998,17 +1024,17 @@ that occurs after the specified date and time.
 
 <a name="Astronomy.NextLunarApsis"></a>
 
-### Astronomy.NextLunarApsis(apsis) ⇒ <code>Astronomy.Apsis</code>
+### Astronomy.NextLunarApsis(apsis) ⇒ [<code>Apsis</code>](#Astronomy.Apsis)
 Given a lunar apsis returned by an initial call to [SearchLunarApsis](SearchLunarApsis), 
-or a previous call to this function, finds the next lunar apsis.
+or a previous call to <code>NextLunarApsis</code>, finds the next lunar apsis.
 If the given apsis is a perigee, this function finds the next apogee, and vice versa.
 
 **Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
-**Returns**: <code>Astronomy.Apsis</code> - The successor apogee for the given perigee, or the successor perigee for the given apogee.  
+**Returns**: [<code>Apsis</code>](#Astronomy.Apsis) - The successor apogee for the given perigee, or the successor perigee for the given apogee.  
 
 | Param | Type | Description |
 | --- | --- | --- |
-| apsis | <code>Astronomy.Apsis</code> | A lunar perigee or apogee event. |
+| apsis | [<code>Apsis</code>](#Astronomy.Apsis) | A lunar perigee or apogee event. |
 
 
 * * *
