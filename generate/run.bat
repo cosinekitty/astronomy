@@ -128,6 +128,11 @@ node moon_phase_test.js
 if errorlevel 1 (exit /b 1)
 
 echo.
+echo.Running lunar apsis tests.
+node lunar_apsis_test.js
+if errorlevel 1 (exit /b 1)
+
+echo.
 echo.Running visual magnitude tests.
 node mag_test.js
 if errorlevel 1 (exit /b 1)

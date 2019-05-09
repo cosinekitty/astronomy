@@ -12,7 +12,7 @@ const Astronomy = require('../source/js/astronomy.js');
 function Test() {
     const filename = 'apsides/moon.txt';
     const text = fs.readFileSync(filename, {encoding:'utf8'});
-    const lines = text.split(/\n/);
+    const lines = text.split(/\r?\n/);
 
     const time_before = new Date();
     let evt = Astronomy.SearchLunarApsis(new Date(Date.UTC(2001, 0, 1)));
@@ -56,6 +56,9 @@ function Test() {
     const elapsed = (time_after - time_before) / 1000;
 
     console.log(`lunar_apsis_test: verified ${count} lines, max time error = ${max_minute_error.toFixed(3)} minutes, max dist error = ${max_dist_error.toFixed(3)} km.`);
+    
+    if (count !== 2651)
+        throw 'FATAL: Did not process the expected number of data rows!';
 
     const perf = Astronomy.GetPerformanceMetrics();
 
