@@ -4,62 +4,6 @@
 ## Astronomy : <code>object</code>
 **Kind**: global namespace  
 
-* [Astronomy](#Astronomy) : <code>object</code>
-    * [.PerformanceInfo](#Astronomy.PerformanceInfo)
-        * [.Clone()](#Astronomy.PerformanceInfo+Clone) ⇒ [<code>PerformanceInfo</code>](#Astronomy.PerformanceInfo)
-    * [.Time](#Astronomy.Time)
-        * [new Time(date)](#new_Astronomy.Time_new)
-        * [.toString()](#Astronomy.Time+toString) ⇒ <code>string</code>
-        * [.AddDays(days)](#Astronomy.Time+AddDays) ⇒ [<code>Time</code>](#Astronomy.Time)
-    * [.Vector](#Astronomy.Vector)
-        * [.Length()](#Astronomy.Vector+Length) ⇒ <code>number</code>
-    * [.EquatorialCoordinates](#Astronomy.EquatorialCoordinates)
-    * [.SkyCoordinates](#Astronomy.SkyCoordinates)
-    * [.HorizontalCoordinates](#Astronomy.HorizontalCoordinates)
-    * [.EclipticCoordinates](#Astronomy.EclipticCoordinates)
-    * [.Observer](#Astronomy.Observer)
-    * [.IlluminationInfo](#Astronomy.IlluminationInfo)
-    * [.MoonQuarter](#Astronomy.MoonQuarter)
-    * [.HourAngleEvent](#Astronomy.HourAngleEvent)
-    * [.SeasonInfo](#Astronomy.SeasonInfo)
-        * [new SeasonInfo(mar_equinox, jun_solstice, sep_equinox, dec_solstice)](#new_Astronomy.SeasonInfo_new)
-    * [.ElongationEvent](#Astronomy.ElongationEvent)
-    * [.Apsis](#Astronomy.Apsis)
-    * [.Bodies](#Astronomy.Bodies) : <code>Array.&lt;string&gt;</code>
-    * [.GetPerformanceMetrics()](#Astronomy.GetPerformanceMetrics) ⇒ [<code>PerformanceInfo</code>](#Astronomy.PerformanceInfo)
-    * [.ResetPerformanceMetrics()](#Astronomy.ResetPerformanceMetrics)
-    * [.MakeTime(date)](#Astronomy.MakeTime) ⇒ [<code>Time</code>](#Astronomy.Time)
-    * [.Horizon(date, location, ra, dec)](#Astronomy.Horizon) ⇒ [<code>HorizontalCoordinates</code>](#Astronomy.HorizontalCoordinates)
-    * [.MakeObserver(latitude_degrees, longitude_degrees, height_in_meters)](#Astronomy.MakeObserver)
-    * [.SunPosition(date)](#Astronomy.SunPosition) ⇒ [<code>EclipticCoordinates</code>](#Astronomy.EclipticCoordinates)
-    * [.SkyPos(gc_vector, observer)](#Astronomy.SkyPos) ⇒ [<code>SkyCoordinates</code>](#Astronomy.SkyCoordinates)
-    * [.Ecliptic(gx, gy, gz)](#Astronomy.Ecliptic) ⇒ [<code>EclipticCoordinates</code>](#Astronomy.EclipticCoordinates)
-    * [.GeoMoon(date)](#Astronomy.GeoMoon) ⇒ [<code>Vector</code>](#Astronomy.Vector)
-    * [.HelioVector(body, date)](#Astronomy.HelioVector) ⇒ [<code>Vector</code>](#Astronomy.Vector)
-    * [.GeoVector(body, date)](#Astronomy.GeoVector) ⇒ [<code>Vector</code>](#Astronomy.Vector)
-    * [.Search(func, t1, t2, options)](#Astronomy.Search) ⇒ <code>null</code> \| [<code>Time</code>](#Astronomy.Time)
-    * [.SearchSunLongitude(targetLon, dateStart, limitDays)](#Astronomy.SearchSunLongitude) ⇒ [<code>Time</code>](#Astronomy.Time) \| <code>null</code>
-    * [.LongitudeFromSun(body, date)](#Astronomy.LongitudeFromSun) ⇒ <code>number</code>
-    * [.AngleFromSun(body, date)](#Astronomy.AngleFromSun) ⇒ <code>number</code>
-    * [.EclipticLongitude(body, date)](#Astronomy.EclipticLongitude) ⇒ <code>number</code>
-    * [.Illumination(body, date)](#Astronomy.Illumination) ⇒ [<code>IlluminationInfo</code>](#Astronomy.IlluminationInfo)
-    * [.SearchRelativeLongitude(body, targetRelLon, startDate)](#Astronomy.SearchRelativeLongitude) ⇒ [<code>Time</code>](#Astronomy.Time)
-    * [.MoonPhase(date)](#Astronomy.MoonPhase) ⇒ <code>number</code>
-    * [.SearchMoonPhase(targetLon, dateStart, limitDays)](#Astronomy.SearchMoonPhase) ⇒ [<code>Time</code>](#Astronomy.Time) \| <code>null</code>
-    * [.SearchMoonQuarter(dateStart)](#Astronomy.SearchMoonQuarter) ⇒ [<code>MoonQuarter</code>](#Astronomy.MoonQuarter)
-    * [.NextMoonQuarter(mq)](#Astronomy.NextMoonQuarter)
-    * [.SearchRiseSet(body, observer, direction, dateStart, limitDays)](#Astronomy.SearchRiseSet) ⇒ [<code>Time</code>](#Astronomy.Time) \| <code>null</code>
-    * [.SearchHourAngle(body, observer, hourAngle, dateStart)](#Astronomy.SearchHourAngle) ⇒ [<code>HourAngleEvent</code>](#Astronomy.HourAngleEvent)
-    * [.Seasons(year)](#Astronomy.Seasons) ⇒ [<code>SeasonInfo</code>](#Astronomy.SeasonInfo)
-    * [.Elongation(body)](#Astronomy.Elongation) ⇒ [<code>ElongationEvent</code>](#Astronomy.ElongationEvent)
-    * [.SearchMaxElongation(body, startDate)](#Astronomy.SearchMaxElongation) ⇒ [<code>ElongationEvent</code>](#Astronomy.ElongationEvent)
-    * [.SearchPeakMagnitude(body, startDate)](#Astronomy.SearchPeakMagnitude) ⇒ [<code>IlluminationInfo</code>](#Astronomy.IlluminationInfo)
-    * [.SearchLunarApsis(startDate)](#Astronomy.SearchLunarApsis) ⇒ [<code>Apsis</code>](#Astronomy.Apsis)
-    * [.NextLunarApsis(apsis)](#Astronomy.NextLunarApsis) ⇒ [<code>Apsis</code>](#Astronomy.Apsis)
-    * [.ContinuousFunction](#Astronomy.ContinuousFunction) ⇒ <code>number</code>
-    * [.SearchOptions](#Astronomy.SearchOptions) : <code>Object</code>
-
-
 * * *
 
 <a name="Astronomy.PerformanceInfo"></a>
@@ -114,12 +58,6 @@ to create a <code>Time</code> object.
 | date | <code>Date</code> | The JavaScript Date object for the given date and time.      This Date corresponds to the numeric day value stored in the <code>ut</code> property. |
 | ut | <code>number</code> | Universal Time (UT1/UTC) in fractional days since the J2000 epoch.      Universal Time represents time measured with respect to the Earth's rotation,      tracking mean solar days.      The Astronomy library approximates UT1 and UTC as being the same thing.      This gives sufficient accuracy for the 1-arcminute angular resolution requirement      of this project. |
 | tt | <code>number</code> | Terrestrial Time in fractional days since the J2000 epoch.      TT represents a continuously flowing ephemeris timescale independent of      any variations of the Earth's rotation, and is adjusted from UT      using historical and predictive models of those variations. |
-
-
-* [.Time](#Astronomy.Time)
-    * [new Time(date)](#new_Astronomy.Time_new)
-    * [.toString()](#Astronomy.Time+toString) ⇒ <code>string</code>
-    * [.AddDays(days)](#Astronomy.Time+AddDays) ⇒ [<code>Time</code>](#Astronomy.Time)
 
 
 * * *

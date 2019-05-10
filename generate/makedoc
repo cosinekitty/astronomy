@@ -9,7 +9,7 @@ echo "Generating target code."
 ./generate source || Fail "Problem generating target code."
 
 echo "Generating documentation in Markdown format."
-jsdoc2md --separators --template ../jsdoc2md/js.hbs --files ../source/js/astronomy.js > ../source/js/README.md || Fail "Error generating JS documentation."
+jsdoc2md --partial ../jsdoc2md/docs.hbs --separators --template ../jsdoc2md/js.hbs --files ../source/js/astronomy.js > ../source/js/README.md || Fail "Error generating JS documentation."
 
 if [[ -d html ]]; then
     echo "Generating documentation in HTML format for local viewing."
