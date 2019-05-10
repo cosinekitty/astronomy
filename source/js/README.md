@@ -60,6 +60,12 @@ to create a <code>Time</code> object.
 | tt | <code>number</code> | Terrestrial Time in fractional days since the J2000 epoch.      TT represents a continuously flowing ephemeris timescale independent of      any variations of the Earth's rotation, and is adjusted from UT      using historical and predictive models of those variations. |
 
 
+* [.Time](#Astronomy.Time)
+    * [new Time(date)](#new_Astronomy.Time_new)
+    * [.toString()](#Astronomy.Time+toString) ⇒ <code>string</code>
+    * [.AddDays(days)](#Astronomy.Time+AddDays) ⇒ [<code>Time</code>](#Astronomy.Time)
+
+
 * * *
 
 <a name="new_Astronomy.Time_new"></a>
