@@ -1159,8 +1159,7 @@ function TerrestrialTime(ut) {
  *      Universal Time represents time measured with respect to the Earth's rotation,
  *      tracking mean solar days.
  *      The Astronomy library approximates UT1 and UTC as being the same thing.
- *      This gives sufficient accuracy for the 1-arcminute angular resolution requirement
- *      of this project.
+ *      This gives sufficient accuracy for the precision requirements of this project.
  * 
  * @property {number} tt
  *      Terrestrial Time in fractional days since the J2000 epoch.
