@@ -23,7 +23,19 @@ if [[ ! -f ${EPHFILE} ]]; then
     echo "${EPHURL}"
     echo ""
     if IsInstalled wget; then
-        wget ${EPHURL} || Fail "Could not download using wget: ${EPHURL}"
+        wget_success=false
+        for attempt in {1..10}; do
+            if [[ ${attempt} > 1 ]]; then
+                echo "wget failed (attempt ${attempt} of 10) -- will retry download in 10 seconds..."
+                sleep 10
+            fi
+            if wget ${EPHURL}; then
+                echo "wget successfully downloaded the ephemeris file."
+                wget_success=true
+                break
+            fi
+        done
+        [[ ${wget_success} == true ]] || Fail "Could not download using wget: ${EPHFILE}"
     elif IsInstalled curl; then
         curl -L -o ${EPHFILE} ${EPHURL} || Fail "Could not download using curl: ${EPHFILE}"
     else
@@ -47,6 +59,8 @@ if [[ ! -f ${EPHFILE} ]]; then
             rm -f ${EPHFILE}
             Fail "Detected corrupt ephemeris file: failed md5 check."
         fi
+    else
+        echo "Warning: could not validate ephemeris file with md5 or sha256."
     fi
 fi
 
