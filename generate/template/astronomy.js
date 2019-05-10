@@ -2956,7 +2956,7 @@ Astronomy.Seasons = function(year) {
  *      value of the difference between the heliocentric ecliptic longitudes of
  *      the centers of the observed body and the Earth.
  *
- * @see Astronomy.Elongation
+ * @see {@link Astronomy.Elongation}
  */
 class ElongationEvent {
     constructor(time, visibility, elongation, relative_longitude) {
@@ -3251,8 +3251,8 @@ Astronomy.SearchPeakMagnitude = function(body, startDate) {
  * @property {number} dist_km
  *      The distance between the centers of the two bodies in kilometers.
  * 
- * @see Astronomy.SearchLunarApsis
- * @see Astronomy.NextLunarApsis
+ * @see {@link Astronomy.SearchLunarApsis}
+ * @see {@link Astronomy.NextLunarApsis}
  */
 class Apsis {
     constructor(time, apsisType, dist_au) {

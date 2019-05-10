@@ -324,7 +324,7 @@ Includes angular separation from the Sun and whether visibility is
 best in the morning or the evening.
 
 **Kind**: static class of [<code>Astronomy</code>](#Astronomy)  
-**See**: Astronomy.Elongation  
+**See**: [Elongation](#Astronomy.Elongation)  
 **Properties**
 
 | Name | Type | Description |
@@ -347,8 +347,8 @@ For the Moon orbiting the Earth, this is a perigee or apogee, respectively.
 **Kind**: static class of [<code>Astronomy</code>](#Astronomy)  
 **See**
 
-- Astronomy.SearchLunarApsis
-- Astronomy.NextLunarApsis
+- [SearchLunarApsis](#Astronomy.SearchLunarApsis)
+- [NextLunarApsis](#Astronomy.NextLunarApsis)
 
 **Properties**
 
