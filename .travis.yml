@@ -14,9 +14,7 @@ addons:
       - gcc-6
       
 before_script:
-  - npm install -g npm
-  - npm install -g jsdoc-to-markdown
-  - npm update -g
+  - npm install -g jsdoc-to-markdown@4.0.1
 
 script:
   - export CC=/usr/bin/gcc-6
