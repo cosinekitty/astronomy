@@ -2,6 +2,9 @@
 if [[ ! -z "$(git status --porcelain)" ]]; then
     echo "verify_clean: There are local file changes - build is not clean:"
     git status
+    echo ""
+    echo "Diff output:"
+    git diff
     exit 1
 fi
 echo "verify_clean: OK"
