@@ -5,7 +5,7 @@
 [![Build Status](https://travis-ci.org/cosinekitty/astronomy.svg)](https://travis-ci.org/cosinekitty/astronomy)
 
 The Astronomy Engine is a suite of open source libraries for calculating positions of 
-the Sun, Moon, and planets, and for predicting intersting events like oppositions,
+the Sun, Moon, and planets, and for predicting interesting events like oppositions,
 conjunctions, rise and set times, lunar phases, and more.
 
 It supports several popular programming langauges with a consistent API.
@@ -59,6 +59,7 @@ The JavaScript version of the Astronomy Engine is designed to work
 identically in the web browser and on the backend using Node.js.
 
 [Examples](demo/js/README.md)
+
 [API Reference](source/js/README.md)
 
 ### C/C++

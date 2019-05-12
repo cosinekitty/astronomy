@@ -1,33 +1,116 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>Moon Phase calculator</title>
+        <title>Moon Phase Calculator</title>
+        <link rel="stylesheet" href="astro_demo.css" />
     </head>
     <body>
-        <div id="CurrentDateTime"></div>
-        <div>The Moon's phase angle = <span id="MoonPhaseAngle"></span> degrees.</div>
-        <div>The Moon will be <span id="MoonQuarter"></span> on <span id="MoonDate"></span></div>
+        <h1>Moon Phase Calculator</h1>
+
+        <table border="1" cellpadding="5" cellspacing="0">
+            <tr>
+                <td><span id="CurrentDateTime" class="Numeric"></span></td>
+                <td>Moon phase = <span id="MoonPhaseAngle"></span> degrees.</td>
+            </tr>
+
+            <tr>
+                <td><span id="DateTime1" class="Numeric"></span></td>
+                <td><span id="Quarter1"></span></td>
+            </tr>
+
+            <tr>
+                <td><span id="DateTime2" class="Numeric"></span></td>
+                <td><span id="Quarter2"></span></td>
+            </tr>
+
+            <tr>
+                <td><span id="DateTime3" class="Numeric"></span></td>
+                <td><span id="Quarter3"></span></td>
+            </tr>
+
+            <tr>
+                <td><span id="DateTime4" class="Numeric"></span></td>
+                <td><span id="Quarter4"></span></td>
+            </tr>
+        </table>
+
+        <p>
+            Above is a table of the current Moon phase along with predictions of the next
+            four quarters of the Moon's orbit. It is updated every second.
+        </p>
+
+        <p>
+            This is a sample page for the open-source 
+            <a href="https://cosinekitty.github.io/astronomy/">Astronomy Engine</a>.
+            You can obtain all the source code and read the documentation there.
+            Also, try using your browser's View Source command to look at how this page works.
+        </p>
+
+        <p>
+            The phases of the Moon are calculated using relative ecliptic longitudes.
+            This means that the Moon's position is measured as an angle away from the Sun
+            counterclockwise as seen from above the Earth's north pole. This is the same direction
+            as the Moon orbits the Earth.
+        </p>
+            
+        <p>
+            The angle is defined along the ecliptic plane,
+            which is the plane of the Earth's orbit around the Sun. The Moon does not stay 
+            within this plane, so its position above or below the ecliptic plane is ignored
+            for the sake of calculating phases. This is the way almanacs and calendars 
+            historically have reported the dates and times of moon phases.
+        </p>
+
+
+        <p>
+            The phase angle increases from 0 degrees to 360 degrees over the span of each synodic month.
+            Certain values of the phase angle define the four lunar quarters:
+
+            <ul>
+                <li><span class="Numeric">&nbsp;&nbsp;0&deg;</span> = New Moon</li>
+                <li><span class="Numeric">&nbsp;90&deg;</span> = First Quarter</li>
+                <li><span class="Numeric">180&deg;</span> = Full Moon</li>
+                <li><span class="Numeric">270&deg;</span> = Third Quarter</li>
+            </ul>
+        </p>
     </body>
 
     <script src="../../source/js/astronomy.js"></script>
     <script>
         window.onload = function() {
-            var QuarterName = [
-                'new',
-                'at first quarter',
-                'full',
-                'at third quarter'
-            ];
+            var QuarterName = ['New Moon', 'First Quarter', 'Full Moon', 'Third Quarter'];
+
+            function Pad(s, w) {
+                s = s.toFixed(0);
+                while (s.length < w) {
+                    s = '0' + s;
+                }
+                return s;
+            }
+
+            function FormatDate(date) {
+                var year = Pad(date.getFullYear(), 4);
+                var month = Pad(1 + date.getMonth(), 2);
+                var day = Pad(date.getDate(), 2);
+                var hour = Pad(date.getHours(), 2);
+                var minute = Pad(date.getMinutes(), 2);
+                var second = Pad(date.getSeconds(), 2);
+                return `${year}-${month}-${day} ${hour}:${minute}:${second}`;
+            }
 
             function UpdateScreen() {
+                var mq, i;
                 var now = new Date();
                 var phase = Astronomy.MoonPhase(now);
-                var mq = Astronomy.SearchMoonQuarter(now);
 
-                document.getElementById('CurrentDateTime').innerText = now.toLocaleString();
+                document.getElementById('CurrentDateTime').innerText = FormatDate(now);
                 document.getElementById('MoonPhaseAngle').innerText = phase.toFixed(3);
-                document.getElementById('MoonQuarter').innerText = QuarterName[mq.quarter];
-                document.getElementById('MoonDate').innerText = mq.time.date.toLocaleString();
+
+                for (i=1; i<=4; ++i) {
+                    mq = (i==1) ? Astronomy.SearchMoonQuarter(now) : Astronomy.NextMoonQuarter(mq);
+                    document.getElementById(`DateTime${i}`).innerText = FormatDate(mq.time.date);
+                    document.getElementById(`Quarter${i}`).innerText = QuarterName[mq.quarter];
+                }
 
                 setTimeout(UpdateScreen, 1000);
             }
