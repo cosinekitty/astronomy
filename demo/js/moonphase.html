@@ -2,9 +2,11 @@
 <html>
     <head>
         <title>Moon Phase Calculator</title>
+        <meta name="viewport" content="width=device-width,maximum-scale=2">
+        <link rel="stylesheet" href="https://cosinekitty.github.io/astronomy/assets/css/style.css?v=dc7aa5afbbb667af90528a28f566641e207c7a85" />
         <link rel="stylesheet" href="astro_demo.css" />
     </head>
-    <body>
+    <body id="main_content_wrap" class="inner">
         <h1>Moon Phase Calculator</h1>
 
         <table border="1" cellpadding="5" cellspacing="0">
@@ -72,6 +74,38 @@
                 <li><span class="Numeric">180&deg;</span> = Full Moon</li>
                 <li><span class="Numeric">270&deg;</span> = Third Quarter</li>
             </ul>
+        </p>
+
+        <p>
+            In your own code, to calculate the Moon's current phase angle, call
+            the function <code><a href="../../source/js/#Astronomy.MoonPhase">Astronomy.MoonPhase</a></code>.
+        </p>
+
+        <p>
+            To predict upcoming lunar quarter phases, call
+            <code><a href="../../source/js/#Astronomy.SearchMoonQuarter">Astronomy.SearchMoonQuarter</a></code>
+            passing in a Date object to find the first quarter phase after that date and time.
+            Then if you want, you can call 
+            <code><a href="../../source/js/#Astronomy.NextMoonQuarter">Astronomy.NextMoonQuarter</a></code>
+            in a loop to iterate over the next consecutive quarter phases.
+            Each time, you pass the return value of the previous function call as the argument
+            to <code>Astronomy.NextMoonQuarter</code> so it knows where to resume the search.
+        </p>
+
+        <p>
+            Here is an example that finds the next 100 lunar quarter phases:
+        </p>
+
+        <p>
+            <pre><code>
+    let date = new Date();
+    let mq = Astronomy.SearchMoonQuarter(date);
+    console.log(mq.quarter, mq.time.date);
+    for (let i=1; i &lt; 100; ++i) {
+        mq = Astronomy.NextMoonQuarter(mq);
+        console.log(mq.quarter, mq.time.date);
+    }
+            </code></pre>
         </p>
     </body>
 

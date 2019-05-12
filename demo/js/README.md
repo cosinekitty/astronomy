@@ -4,7 +4,7 @@ You can use the JavaScript version of the
 to perform client-side astronomy calculations in a web browser.
 Calculations are offloaded to the visitor's computer.
 Just grab a copy of 
-(astronomy.js)[https://github.com/cosinekitty/astronomy/blob/master/source/js/astronomy.js]
+[astronomy.js](https://github.com/cosinekitty/astronomy/blob/master/source/js/astronomy.js)
 and save it on your server. Inside your HTML code, pull in the script as usual:
 
 ```html
@@ -21,7 +21,7 @@ and how to predict when the next few quarter phases will occur.
 
 # JavaScript examples for Node.js
 The same JavaScript source file
-(astronomy.js)[https://github.com/cosinekitty/astronomy/blob/master/source/js/astronomy.js]
+[astronomy.js](https://github.com/cosinekitty/astronomy/blob/master/source/js/astronomy.js)
 works as a Node.js module. Download the file into your project directory. 
 Then in your own source file, do this:
 
