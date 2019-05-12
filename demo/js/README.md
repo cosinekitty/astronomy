@@ -15,9 +15,13 @@ All the functionality is wrapped inside an object called `Astronomy`.
 
 Here are some example web pages using Astronomy Engine in a web browser.
 
+---
+
 ### [Moon Phase Calculator](moonphase.html)
 This example shows how to determine the Moon's current phase,
 and how to predict when the next few quarter phases will occur.
+
+---
 
 # JavaScript examples for Node.js
 The same JavaScript source file
@@ -28,6 +32,8 @@ Then in your own source file, do this:
 ```javascript
 const Astronomy = require('astronomy.js');
 ```
+
+---
 
 # [API Reference](../../source/js/README.md)
 Complete documentation for all the functions and types available
