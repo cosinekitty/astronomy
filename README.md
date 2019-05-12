@@ -1,17 +1,26 @@
+# Astronomy Engine
+
 ### Overview
 
 [![Build Status](https://travis-ci.org/cosinekitty/astronomy.svg)](https://travis-ci.org/cosinekitty/astronomy)
 
-A suite of open source libraries for calculating positions of the Sun, Moon, and planets.
+The Astronomy Engine is a suite of open source libraries for calculating positions of 
+the Sun, Moon, and planets, and for predicting intersting events like oppositions,
+conjunctions, rise and set times, lunar phases, and more.
 
-This code is designed to be small, fast, and accurate to within &plusmn;1 arcminute.
+It supports several popular programming langauges with a consistent API.
+Function and type names are uniform across all the supported languages.
+
+The Astronomy Engine is designed to be small, fast, and accurate to within &plusmn;1 arcminute.
 It is based on the authoritative and well-tested models
 [VSOP87](https://en.wikipedia.org/wiki/VSOP_(planets))
 and 
 [NOVAS C 3.1](https://aa.usno.navy.mil/software/novas/novas_c/novasc_info.php).
 
-Rigorously unit-tested against NOVAS, [JPL Horizons](https://ssd.jpl.nasa.gov/horizons.cgi),
+These libraries are rigorously unit-tested against NOVAS, 
+[JPL Horizons](https://ssd.jpl.nasa.gov/horizons.cgi),
 and other reliable sources of ephemeris data.
+Calculations are also verified to be identical among all the supported programming languages.
 
 ### Features
 
@@ -25,14 +34,16 @@ and other reliable sources of ephemeris data.
   given that observer's latitude, longitude, and elevation in meters. 
   Optionally corrects for atmospheric refraction.
 
-- Rise, set and culmination times of Sun, Moon, and planets.
+- Calculates rise, set and culmination times of Sun, Moon, and planets.
 
-- Date and time of Moon phases: new, first quarter, full, third quarter 
+- Finds date and time of Moon phases: new, first quarter, full, third quarter 
   (or anywhere in between as expressed in degrees of ecliptic longitude).
 
-- Finds equinoxes and solstices for a given calendar year.
+- Predicts lunar apogee and perigee dates, times, and distances.
 
-- Finds apparent visual magnitudes of all the supported celestial bodies.
+- Predicts date and time of equinoxes and solstices for a given calendar year.
+
+- Determines apparent visual magnitudes of all the supported celestial bodies.
 
 - Predicts dates of planetary conjunctions and oppositions.
 
@@ -44,6 +55,10 @@ and other reliable sources of ephemeris data.
 
 ### JavaScript
 
+The JavaScript version of the Astronomy Engine is designed to work
+identically in the web browser and on the backend using Node.js.
+
+[Examples](demo/js/README.md)
 [API Reference](source/js/README.md)
 
 ### C/C++
