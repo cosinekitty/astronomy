@@ -1,19 +1,38 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>Astronomy demo</title>
+        <title>Moon Phase calculator</title>
     </head>
     <body>
-        <div>The Moon's phase angle is currently <span id="MoonPhaseAngle"></span> degrees.</div>
+        <div id="CurrentDateTime"></div>
+        <div>The Moon's phase angle = <span id="MoonPhaseAngle"></span> degrees.</div>
+        <div>The Moon will be <span id="MoonQuarter"></span> on <span id="MoonDate"></span></div>
     </body>
 
     <script src="../../source/js/astronomy.js"></script>
     <script>
         window.onload = function() {
-            var now = new Date();
-            var phase = Astronomy.MoonPhase(now);
-            var elem = document.getElementById('MoonPhaseAngle');
-            elem.innerText = phase.toFixed(2);
+            var QuarterName = [
+                'new',
+                'at first quarter',
+                'full',
+                'at third quarter'
+            ];
+
+            function UpdateScreen() {
+                var now = new Date();
+                var phase = Astronomy.MoonPhase(now);
+                var mq = Astronomy.SearchMoonQuarter(now);
+
+                document.getElementById('CurrentDateTime').innerText = now.toLocaleString();
+                document.getElementById('MoonPhaseAngle').innerText = phase.toFixed(3);
+                document.getElementById('MoonQuarter').innerText = QuarterName[mq.quarter];
+                document.getElementById('MoonDate').innerText = mq.time.date.toLocaleString();
+
+                setTimeout(UpdateScreen, 1000);
+            }
+
+            UpdateScreen();
         }
     </script>
 </html>
