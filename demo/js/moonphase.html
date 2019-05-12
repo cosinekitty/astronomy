@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Astronomy demo</title>
+    </head>
+    <body>
+        <div>The Moon's phase angle is currently <span id="MoonPhaseAngle"></span> degrees.</div>
+    </body>
+
+    <script src="../../source/js/astronomy.js"></script>
+    <script>
+        window.onload = function() {
+            var now = new Date();
+            var phase = Astronomy.MoonPhase(now);
+            var elem = document.getElementById('MoonPhaseAngle');
+            elem.innerText = phase.toFixed(2);
+        }
+    </script>
+</html>
