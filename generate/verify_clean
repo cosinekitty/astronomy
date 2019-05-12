@@ -5,6 +5,8 @@ if [[ ! -z "$(git status --porcelain)" ]]; then
     echo ""
     echo "Diff output:"
     git diff
+    echo "--- README.md ---"
+    cat ../source/js/README.md
     exit 1
 fi
 echo "verify_clean: OK"
