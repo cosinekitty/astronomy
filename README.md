@@ -67,8 +67,8 @@ Calculations are also verified to be identical among all the supported programmi
         </td>
     </tr>
     <tr>
-        <td style="text-align: center;"><a href="demo/js/">Examples</a></td>
-        <td style="text-align: center;"><a href="demo/js/">Examples</a></td>
+        <td style="text-align: center;"><a href="demo/browser/">Examples</a></td>
+        <td style="text-align: center;"><a href="demo/nodejs/">Examples</a></td>
     </tr>
     <tr>
         <td style="text-align: center;"><a href="source/js/">Documentation</a></td>
