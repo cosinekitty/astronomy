@@ -1,5 +1,28 @@
 # Astronomy Engine
 
+### Supported Programming Languages
+
+<table style="border-width: 0px;" cellspacing="0" cellpadding="10">
+    <tr>
+        <td style="text-align: center;">
+            <div>Browser</div>
+            <div><img src="source/js/javascript.svg" width="100" height="100" alt="JavaScript" /></div>
+        </td>
+        <td style="text-align: center;">
+            <div>Node.js</div>
+            <div><img src="source/js/nodejs.svg" width="100" height="100" alt="Node.js" /></div>
+        </td>
+    </tr>
+    <tr>
+        <td style="text-align: center;"><a href="demo/browser/">Examples</a></td>
+        <td style="text-align: center;"><a href="demo/nodejs/">Examples</a></td>
+    </tr>
+    <tr>
+        <td style="text-align: center;"><a href="source/js/">Documentation</a></td>
+        <td style="text-align: center;"><a href="source/js/">Documentation</a></td>
+    </tr>
+</table>
+
 ### Overview
 
 [![Build Status](https://travis-ci.org/cosinekitty/astronomy.svg)](https://travis-ci.org/cosinekitty/astronomy)
@@ -50,40 +73,3 @@ Calculations are also verified to be identical among all the supported programmi
 - Predicts dates of Venus' peak visual magnitude.
 
 - Predicts dates of maximum elongation for Mercury and Venus.
-
-# Supported Languages
-
-### JavaScript
-
-<table style="border-width: 0px;" cellspacing="0" cellpadding="10">
-    <tr>
-        <td style="text-align: center;">
-            <div>Browser</div>
-            <div><img src="source/js/javascript.svg" width="100" height="100" alt="JavaScript" /></div>
-        </td>
-        <td style="text-align: center;">
-            <div>Node.js</div>
-            <div><img src="source/js/nodejs.svg" width="100" height="100" alt="Node.js" /></div>
-        </td>
-    </tr>
-    <tr>
-        <td style="text-align: center;"><a href="demo/browser/">Examples</a></td>
-        <td style="text-align: center;"><a href="demo/nodejs/">Examples</a></td>
-    </tr>
-    <tr>
-        <td style="text-align: center;"><a href="source/js/">Documentation</a></td>
-        <td style="text-align: center;"><a href="source/js/">Documentation</a></td>
-    </tr>
-</table>
-
-### C/C++
-
-(Coming soon.)
-
-### Go
-
-(Coming soon.)
-
-### Python
-
-(Coming soon.)
