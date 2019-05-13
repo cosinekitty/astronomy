@@ -13,7 +13,7 @@ const Astronomy = require('astronomy.js');
 Astronomy Engine is completely self-contained, and it always will be.
 
 (By the way, you can use the same file <code>astronomy.js</code> for
-[astronomy calculations inside the browser](../nodejs/).)
+[astronomy calculations inside the browser](../browser/).)
 
 ---
 
