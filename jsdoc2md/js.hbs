@@ -5,7 +5,8 @@ of the [Astronomy Engine](../../). It supports client side programming
 in the browser and backend use of [Node.js](https://nodejs.org).
 Other programming languages are supported also. See the [home page](../../) for more info.
 
-See here for [examples](../../demo/js) to get started quickly.
+To get started quickly, here are some [browser scripting examples](../../demo/browser/)
+and some [Node.js examples](../../demo/nodejs/).
 
 # Usage Guide
 
