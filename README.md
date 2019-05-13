@@ -57,16 +57,24 @@ Calculations are also verified to be identical among all the supported programmi
 
 <table style="border-width: 0px;" cellspacing="0" cellpadding="10">
     <tr>
-        <td><img src="source/js/nodejs.svg" width="100" height="100" alt="Node.js" /></td>
-        <td><img src="source/js/javascript.svg" width="100" height="100" alt="JavaScript" /></td>
+        <td style="text-align: center;">
+            <div>Browser</div>
+            <br/>
+            <img src="source/js/javascript.svg" width="100" height="100" alt="JavaScript" />
+        </td>
+        <td style="text-align: center;">
+            <div>Node.js</div>
+            <br/>
+            <img src="source/js/nodejs.svg" width="100" height="100" alt="Node.js" />
+        </td>
     </tr>
     <tr>
-        <td style="text-align: center;"><a href="demo/js/README.md">Examples</a></td>
-        <td style="text-align: center;"><a href="demo/js/README.md">Examples</a></td>
+        <td style="text-align: center;"><a href="demo/js/">Examples</a></td>
+        <td style="text-align: center;"><a href="demo/js/">Examples</a></td>
     </tr>
     <tr>
-        <td style="text-align: center;"><a href="source/js/README.md">Documentation</a></td>
-        <td style="text-align: center;"><a href="source/js/README.md">Documentation</a></td>
+        <td style="text-align: center;"><a href="source/js/">Documentation</a></td>
+        <td style="text-align: center;"><a href="source/js/">Documentation</a></td>
     </tr>
 </table>
 
