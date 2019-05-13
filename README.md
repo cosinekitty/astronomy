@@ -1,4 +1,4 @@
-# Astronomy Engine
+# Astronomy Engine [![Build Status](https://travis-ci.org/cosinekitty/astronomy.svg)](https://travis-ci.org/cosinekitty/astronomy)
 
 ### Supported Programming Languages
 
@@ -24,8 +24,6 @@
 </table>
 
 ### Overview
-
-[![Build Status](https://travis-ci.org/cosinekitty/astronomy.svg)](https://travis-ci.org/cosinekitty/astronomy)
 
 The Astronomy Engine is a suite of open source libraries for calculating positions of 
 the Sun, Moon, and planets, and for predicting interesting events like oppositions,
