@@ -1,4 +1,4 @@
-# Astronomy Engine [![Build Status](https://travis-ci.org/cosinekitty/astronomy.svg)](https://travis-ci.org/cosinekitty/astronomy)
+# Astronomy Engine <span style="vertical-align: middle;">[![Build Status](https://travis-ci.org/cosinekitty/astronomy.svg)](https://travis-ci.org/cosinekitty/astronomy)</span>
 
 ### Supported Programming Languages
 
