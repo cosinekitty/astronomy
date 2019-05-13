@@ -59,13 +59,11 @@ Calculations are also verified to be identical among all the supported programmi
     <tr>
         <td style="text-align: center;">
             <div>Browser</div>
-            <br/>
-            <img src="source/js/javascript.svg" width="100" height="100" alt="JavaScript" />
+            <div><img src="source/js/javascript.svg" width="100" height="100" alt="JavaScript" /></div>
         </td>
         <td style="text-align: center;">
             <div>Node.js</div>
-            <br/>
-            <img src="source/js/nodejs.svg" width="100" height="100" alt="Node.js" />
+            <div><img src="source/js/nodejs.svg" width="100" height="100" alt="Node.js" /></div>
         </td>
     </tr>
     <tr>
