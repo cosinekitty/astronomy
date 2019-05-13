@@ -1,23 +1,18 @@
 # Astronomy Engine (JavaScript)
-
----
-
 This is the complete programming reference for the JavaScript version
-of the [Astronomy Engine](../../). It supports client side programming
+of [Astronomy Engine](../../). It supports client side programming
 in the browser and backend use of [Node.js](https://nodejs.org).
 Other programming languages are supported also. See the [home page](../../) for more info.
 
 ---
 
 ## Quick Start
-
 To get started quickly, here are some [browser scripting examples](../../demo/browser/)
 and some [Node.js examples](../../demo/nodejs/).
 
 ---
 
 ## Topic Index
-
 ### Position vectors of Sun, Moon, and planets
 
 | [HelioVector](#Astronomy.HelioVector) | Calculates vector with respect to the center of the Sun.   |
