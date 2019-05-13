@@ -30,18 +30,6 @@ and how to predict when the next few quarter phases will occur.
 
 ---
 
-# JavaScript examples for Node.js
-The same JavaScript source file
-[astronomy.js](https://github.com/cosinekitty/astronomy/blob/master/source/js/astronomy.js)
-works as a Node.js module. Download the file into your project directory. 
-Then in your own source file, do this:
-
-```javascript
-const Astronomy = require('astronomy.js');
-```
-
----
-
 # [API Reference](../../source/js/)
 Complete documentation for all the functions and types available
 in the JavaScript version of Astronomy Engine.
