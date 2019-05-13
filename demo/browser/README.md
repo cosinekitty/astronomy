@@ -16,7 +16,7 @@ and save it on your server. Inside your HTML code, pull in the script as usual:
 Astronomy Engine is completely self-contained, and it always will be.
 
 (By the way, you can use the same file <code>astronomy.js</code> for 
-[astronomy calculations in Node.js programs](../browser/).)
+[astronomy calculations in Node.js programs](../nodejs/).)
 
 All the functionality is wrapped inside an object called `Astronomy`.
 
