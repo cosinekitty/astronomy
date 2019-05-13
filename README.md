@@ -55,19 +55,20 @@ Calculations are also verified to be identical among all the supported programmi
 
 ### JavaScript
 
-<table border="0" cellspacing="0" cellpadding="10">
+<table style="border-width: 0px;" cellspacing="0" cellpadding="10">
     <tr>
         <td><img src="source/js/nodejs.svg" width="100" height="100" alt="Node.js" /></td>
         <td><img src="source/js/javascript.svg" width="100" height="100" alt="JavaScript" /></td>
     </tr>
+    <tr>
+        <td style="text-align: center;"><a href="demo/js/README.md">Examples</a></td>
+        <td style="text-align: center;"><a href="demo/js/README.md">Examples</a></td>
+    </tr>
+    <tr>
+        <td style="text-align: center;"><a href="source/js/README.md">Documentation</a></td>
+        <td style="text-align: center;"><a href="source/js/README.md">Documentation</a></td>
+    </tr>
 </table>
-
-The JavaScript version of the Astronomy Engine is designed to work
-identically in the web browser and on the backend using Node.js.
-
-[Examples](demo/js/README.md)
-
-[API Reference](source/js/README.md)
 
 ### C/C++
 
