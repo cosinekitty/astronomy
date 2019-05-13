@@ -55,6 +55,13 @@ Calculations are also verified to be identical among all the supported programmi
 
 ### JavaScript
 
+<table border="0" cellspacing="0" cellpadding="10">
+    <tr>
+        <td><img src="nodejs.svg" width="100" height="100" alt="Node.js" /></td>
+        <td><img src="javascript.svg" width="100" height="100" alt="JavaScript" /></td>
+    </tr>
+</table>
+
 The JavaScript version of the Astronomy Engine is designed to work
 identically in the web browser and on the backend using Node.js.
 
