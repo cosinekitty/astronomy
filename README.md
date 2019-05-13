@@ -57,8 +57,8 @@ Calculations are also verified to be identical among all the supported programmi
 
 <table border="0" cellspacing="0" cellpadding="10">
     <tr>
-        <td><img src="nodejs.svg" width="100" height="100" alt="Node.js" /></td>
-        <td><img src="javascript.svg" width="100" height="100" alt="JavaScript" /></td>
+        <td><img src="source/js/nodejs.svg" width="100" height="100" alt="Node.js" /></td>
+        <td><img src="source/js/javascript.svg" width="100" height="100" alt="JavaScript" /></td>
     </tr>
 </table>
 
