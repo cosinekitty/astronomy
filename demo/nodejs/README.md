@@ -17,7 +17,7 @@ Astronomy Engine is completely self-contained, and it always will be.
 
 ---
 
-### [Moon Phase Calculator](moonphase.js)
+### [Moon Phase Calculator](https://github.com/cosinekitty/astronomy/blob/master/demo/nodejs/moonphase.js)
 This example shows how to determine the Moon's current phase,
 and how to predict when the next few quarter phases will occur.
 
