@@ -384,9 +384,8 @@ These four events define the changing of the seasons on the Earth.
 <a name="Astronomy.ElongationEvent"></a>
 
 ### Astronomy.ElongationEvent
-Represents the visibility of a planet or the Moon relative to the Sun.
-Includes angular separation from the Sun and whether visibility is
-best in the morning or the evening.
+Represents the angular separation of a body from the Sun as seen from the Earth
+and the relative ecliptic longitudes between that body and the Earth as seen from the Sun.
 
 **Kind**: static class of [<code>Astronomy</code>](#Astronomy)  
 **See**: [Elongation](#Astronomy.Elongation)  
@@ -396,8 +395,8 @@ best in the morning or the evening.
 | --- | --- | --- |
 | time | [<code>Time</code>](#Astronomy.Time) | When the event occurs. |
 | visibility | <code>string</code> | Either <code>"morning"</code> or <code>"evening"</code>,      indicating when the body is most easily seen. |
-| elongation | <code>number</code> | The angle in degrees, as seen from the center of the Earth,      of the apparent separation between the body and the Sun.      This angle is measured in 3D space and is not projected onto the ecliptic plane. |
-| relative_longitude | <code>number</code> | The angle in degrees, as seen from the Sun, between the      observed body and the Earth. This value is always between      0 and 180. More precisely, <code>relative_longitude</code> is the absolute      value of the difference between the heliocentric ecliptic longitudes of      the centers of the observed body and the Earth. |
+| elongation | <code>number</code> | The angle in degrees, as seen from the center of the Earth,      of the apparent separation between the body and the Sun.      This angle is measured in 3D space and is not projected onto the ecliptic plane.      When <code>elongation</code> is less than a few degrees, the body is very      difficult to see from the Earth because it is lost in the Sun's glare, |
+| relative_longitude | <code>number</code> | The angle in degrees, as seen from the Sun, between the      observed body and the Earth, as projected onto the ecliptic plane.       This value is in the range [0, 180). More precisely,       <code>relative_longitude</code> is the absolute value of the      difference between the heliocentric ecliptic longitudes of      the centers of the observed body and the Earth.      The relative longitude is used to find oppositions and conjunctions.      For example, Jupiter is at opposition when its relative longitude is 0,      because the Earth and Jupiter are along the same ecliptic longitude line      as seen from the Sun at that moment.      Another example: Venus is at superior conjunction when its relative longitude is 180,      at which time the Earth and Venus lie on opposite sides of the Sun.      It is important to note that the same relative longitude means different things      from the Earth's point of view, depending on whether the observed body is      an inferior planet (closer to the Sun than the Earth) or a superior planet      (farther from the Sun than the Earth). For example, as mentioned above, Jupiter is at      opposition when its relative longitude is 0, but Venus is at inferior conjunction      when its relative longitude is 0. |
 
 
 * * *
@@ -957,13 +956,15 @@ Finds the equinoxes and solstices for a given calendar year.
 <a name="Astronomy.Elongation"></a>
 
 ### Astronomy.Elongation(body) ⇒ [<code>ElongationEvent</code>](#Astronomy.ElongationEvent)
-Calculates the absolute value of the angle between the centers 
-of the given body and the Sun as seen from the center of the Earth at the given date.
-The angle is measured along the plane of the Earth's orbit (i.e. the ecliptic) 
-and ranges [0, 180] degrees. This function is helpful for determining how easy 
-it is to view Mercury or Venus away from the Sun's glare on a given date.
-The function also determines whether the object is visible in the morning or evening; 
+Calculates angular separation of a body from the Sun as seen from the Earth
+and the relative ecliptic longitudes between that body and the Earth as seen from the Sun.
+See the return type [ElongationEvent](#Astronomy.ElongationEvent) for details.
+
+This function is helpful for determining how easy 
+it is to view a planet away from the Sun's glare on a given date.
+It also determines whether the object is visible in the morning or evening; 
 this is more important the smaller the elongation is.
+It is also used to determine how far a planet is from opposition, conjunction, or quadrature.
 
 **Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
 
