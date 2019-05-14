@@ -1586,6 +1586,7 @@ Astronomy.SunPosition = function(date) {
  * 
  * @param {Astronomy.Observer} observer
  *      The location on the Earth of the observer.
+ *      Call {@link Astronomy.MakeObserver} to create an observer object.
  * 
  * @returns {Astronomy.SkyCoordinates}
  *      The topocentric coordinates of the body as adjusted for the given observer.
@@ -2918,7 +2919,7 @@ class SeasonInfo {
 }
 
 /**
- * Find the equinoxes and solstices for a given calendar year.
+ * Finds the equinoxes and solstices for a given calendar year.
  * 
  * @param {(number | Astronomy.Time)} year
  *      The integer value or <code>Time</code> object that specifies

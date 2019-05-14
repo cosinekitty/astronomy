@@ -13,14 +13,46 @@ and some [Node.js examples](../../demo/nodejs/).
 ---
 
 ## Topic Index
-### Position vectors of Sun, Moon, and planets
+
+### Position of Sun, Moon, and planets
 
 | [HelioVector](#Astronomy.HelioVector) | Calculates vector with respect to the center of the Sun.   |
 | [GeoVector](#Astronomy.GeoVector)     | Calculates vector with respect to the center of the Earth. |
+| [SkyPos](#Astronomy.SkyPos)           | Calculates right ascension and declination. |
+| [Ecliptic](#Astronomy.Ecliptic)       | Calculates ecliptic latitude, longitude, and Cartesian coordinates. |
+| [Horizon](#Astronomy.Horizon)         | Calculates horizontal coordinates (azimuth, altitude) for a given observer on the Earth. |
 
-### Visual magnitude
+### Rise, set, and culmination times
+
+| [SearchRiseSet](#Astronomy.SearchRiseSet) | Finds time of rise or set for a body as seen by an observer on the Earth. |
+| [SearchHourAngle](#Astronomy.SearchHourAngle) | Finds when body reaches a given hour angle for an observer on the Earth. Hour angle = 0 finds culmination, the highest point in the sky. |
+
+### Moon phases
+
+| [MoonPhase](#Astronomy.MoonPhase) | Determines the Moon's phase expressed as an ecliptic longitude. |
+| [SearchMoonQuarter](#Astronomy.SearchMoonQuarter) | Find the first quarter moon phase after a given date and time. |
+| [NextMoonQuarter](#Astronomy.NextMoonQuarter) | Find the next quarter moon phase after a previous one that has been found. |
+
+### Lunar perigee and apogee
+
+| [SearchLunarApsis](#Astronomy.SearchLunarApsis) | Finds the next perigee or apogee of the Moon after a specified date. |
+| [NextLunarApsis](#Astronomy.NextLunarApsis) | Given an already-found apsis, find the next perigee or apogee of the Moon. |
+
+### Visual magnitude and elongation
 
 | [Illumination](#Astronomy.Illumination) | Calculates visual magnitude and phase angle of bodies as seen from the Earth. |
+| [SearchPeakMagnitude](#Astronomy.SearchPeakMagnitude) | Searches for the date and time Venus will next appear brightest as seen from the Earth. |
+| [AngleFromSun](#Astronomy.AngleFromSun) | Returns full angle seen from Earth between body and Sun. |
+| [Elongation](#Astronomy.Elongation) | Calculates ecliptic longitude angle between a body and the Sun, as seen from the Earth. |
+| [SearchMaxElongation](#Astronomy.SearchMaxElongation) | Searches for the next maximum elongation event for Mercury or Venus that occurs after the given date. |
+
+### Oppositions and conjunctions
+
+| [SearchRelativeLongitude](#Astronomy.SearchRelativeLongitude) | Find oppositions and conjunctions of planets. |
+
+### Equinoxes and solstices
+
+| [Seasons](#Astronomy.Seasons) | Finds the equinoxes and solstices for a given calendar year. |
 
 ---
 
@@ -526,7 +558,7 @@ However, it can have a small effect on the apparent positions of other bodies.
 | Param | Type | Description |
 | --- | --- | --- |
 | gc_vector | [<code>Vector</code>](#Astronomy.Vector) | A geocentric vector in the J2000 equatorial system.      <i>Geocentric</i> refers to a position seen by a hypothetical observer at the center of the Earth. |
-| observer | [<code>Observer</code>](#Astronomy.Observer) | The location on the Earth of the observer. |
+| observer | [<code>Observer</code>](#Astronomy.Observer) | The location on the Earth of the observer.      Call [MakeObserver](#Astronomy.MakeObserver) to create an observer object. |
 
 
 * * *
@@ -911,7 +943,7 @@ at its minimum altitude.
 <a name="Astronomy.Seasons"></a>
 
 ### Astronomy.Seasons(year) ⇒ [<code>SeasonInfo</code>](#Astronomy.SeasonInfo)
-Find the equinoxes and solstices for a given calendar year.
+Finds the equinoxes and solstices for a given calendar year.
 
 **Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
 
