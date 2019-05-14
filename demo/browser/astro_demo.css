@@ -2,4 +2,11 @@
     astro_demo.css
 */
 
-.Numeric { font-family: Monospace; }
+.NumHeader {
+    text-align: right;
+}
+
+.Numeric { 
+    font-family: Monospace; 
+    text-align: right;
+}

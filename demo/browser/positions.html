@@ -12,58 +12,58 @@
         <table border="1" cellpadding="5" cellspacing="0">
             <tr>
                 <td>body</td>
-                <td>RA</td>
-                <td>DEC</td>
+                <td class="NumHeader">RA</td>
+                <td class="NumHeader">DEC</td>
             </tr>
             <tr>
                 <td>Sun</td>
-                <td id="Sun_ra"></td>
-                <td id="Sun_dec"></td>
+                <td id="Sun_ra" class="Numeric"></td>
+                <td id="Sun_dec" class="Numeric"></td>
             </tr>
             <tr>
                 <td>Moon</td>
-                <td id="Moon_ra"></td>
-                <td id="Moon_dec"></td>
+                <td id="Moon_ra" class="Numeric"></td>
+                <td id="Moon_dec" class="Numeric"></td>
             </tr>
             <tr>
                 <td>Mercury</td>
-                <td id="Mercury_ra"></td>
-                <td id="Mercury_dec"></td>
+                <td id="Mercury_ra" class="Numeric"></td>
+                <td id="Mercury_dec" class="Numeric"></td>
             </tr>
             <tr>
                 <td>Venus</td>
-                <td id="Venus_ra"></td>
-                <td id="Venus_dec"></td>
+                <td id="Venus_ra" class="Numeric"></td>
+                <td id="Venus_dec" class="Numeric"></td>
             </tr>
             <tr>
                 <td>Mars</td>
-                <td id="Mars_ra"></td>
-                <td id="Mars_dec"></td>
+                <td id="Mars_ra" class="Numeric"></td>
+                <td id="Mars_dec" class="Numeric"></td>
             </tr>
             <tr>
                 <td>Jupiter</td>
-                <td id="Jupiter_ra"></td>
-                <td id="Jupiter_dec"></td>
+                <td id="Jupiter_ra" class="Numeric"></td>
+                <td id="Jupiter_dec" class="Numeric"></td>
             </tr>
             <tr>
                 <td>Saturn</td>
-                <td id="Saturn_ra"></td>
-                <td id="Saturn_dec"></td>
+                <td id="Saturn_ra" class="Numeric"></td>
+                <td id="Saturn_dec" class="Numeric"></td>
             </tr>
             <tr>
                 <td>Uranus</td>
-                <td id="Uranus_ra"></td>
-                <td id="Uranus_dec"></td>
+                <td id="Uranus_ra" class="Numeric"></td>
+                <td id="Uranus_dec" class="Numeric"></td>
             </tr>
             <tr>
                 <td>Neptune</td>
-                <td id="Neptune_ra"></td>
-                <td id="Neptune_dec"></td>
+                <td id="Neptune_ra" class="Numeric"></td>
+                <td id="Neptune_dec" class="Numeric"></td>
             </tr>
             <tr>
                 <td>Pluto</td>
-                <td id="Pluto_ra"></td>
-                <td id="Pluto_dec"></td>
+                <td id="Pluto_ra" class="Numeric"></td>
+                <td id="Pluto_dec" class="Numeric"></td>
             </tr>
         </table>
 
@@ -103,6 +103,14 @@
                 return `${year}-${month}-${day} ${hour}:${minute}:${second}`;
             }
 
+            function FormatCoord(x) {
+                let s = x.toFixed(2);
+                while (s.length < 6) {
+                    s = ' ' + s;
+                }
+                return s;
+            }
+
             function UpdateScreen() {
                 let date = new Date();
                 let observer = Astronomy.MakeObserver(latitude, longitude, elevation);
@@ -111,8 +119,8 @@
                     if (body !== 'Earth') {
                         let gv = Astronomy.GeoVector(body, date);
                         let sky = Astronomy.SkyPos(gv, observer);
-                        document.getElementById(`${body}_ra`).innerText = sky.j2000.ra;
-                        document.getElementById(`${body}_dec`).innerText = sky.j2000.dec;
+                        document.getElementById(`${body}_ra`).innerText = FormatCoord(sky.j2000.ra);
+                        document.getElementById(`${body}_dec`).innerText = FormatCoord(sky.j2000.dec);
                     }
                 }
 
