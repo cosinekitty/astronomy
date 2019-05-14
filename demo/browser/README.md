@@ -25,8 +25,13 @@ Here are some example web pages using Astronomy Engine in a web browser.
 ---
 
 ### [Moon Phase Calculator](moonphase.html)
-This example shows how to determine the Moon's current phase,
-and how to predict when the next few quarter phases will occur.
+Determines the Moon's current phase and
+predicts when the next few quarter phases will occur.
+
+---
+
+### [Planet Positions](positions.html)
+Calculates equatorial and horizontal coordinates of the Sun, Moon, and planets.
 
 ---
 

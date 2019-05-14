@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Celestial Body Positions</title>
+        <meta name="viewport" content="width=device-width,maximum-scale=2">
+        <link rel="stylesheet" href="https://cosinekitty.github.io/astronomy/assets/css/style.css?v=dc7aa5afbbb667af90528a28f566641e207c7a85" />
+        <link rel="stylesheet" href="astro_demo.css" />
+    </head>
+    <body id="main_content_wrap" class="inner">
+        <h1>Celestial Body Positions</h1>
+
+        <table border="1" cellpadding="5" cellspacing="0">
+            <tr>
+                <td>body</td>
+                <td>RA</td>
+                <td>DEC</td>
+            </tr>
+            <tr>
+                <td>Sun</td>
+                <td id="Sun_ra"></td>
+                <td id="Sun_dec"></td>
+            </tr>
+            <tr>
+                <td>Moon</td>
+                <td id="Moon_ra"></td>
+                <td id="Moon_dec"></td>
+            </tr>
+            <tr>
+                <td>Mercury</td>
+                <td id="Mercury_ra"></td>
+                <td id="Mercury_dec"></td>
+            </tr>
+            <tr>
+                <td>Venus</td>
+                <td id="Venus_ra"></td>
+                <td id="Venus_dec"></td>
+            </tr>
+            <tr>
+                <td>Mars</td>
+                <td id="Mars_ra"></td>
+                <td id="Mars_dec"></td>
+            </tr>
+            <tr>
+                <td>Jupiter</td>
+                <td id="Jupiter_ra"></td>
+                <td id="Jupiter_dec"></td>
+            </tr>
+            <tr>
+                <td>Saturn</td>
+                <td id="Saturn_ra"></td>
+                <td id="Saturn_dec"></td>
+            </tr>
+            <tr>
+                <td>Uranus</td>
+                <td id="Uranus_ra"></td>
+                <td id="Uranus_dec"></td>
+            </tr>
+            <tr>
+                <td>Neptune</td>
+                <td id="Neptune_ra"></td>
+                <td id="Neptune_dec"></td>
+            </tr>
+            <tr>
+                <td>Pluto</td>
+                <td id="Pluto_ra"></td>
+                <td id="Pluto_dec"></td>
+            </tr>
+        </table>
+
+        <p>
+            This is a sample page for the open-source 
+            <a href="https://cosinekitty.github.io/astronomy/">Astronomy Engine</a>.
+            You can read the documentation there. 
+            All the source code is available on the 
+            <a href="https://github.com/cosinekitty/astronomy/">GitHub repo</a>.
+            Also, try using your browser's View Source command to look at how this page works.
+        </p>
+
+    </body>
+
+    <script src="../../source/js/astronomy.js"></script>
+    <script>
+        window.onload = function() {
+            let latitude  = +29.0;
+            let longitude = -81.0;
+            let elevation = 0;
+
+            function Pad(s, w) {
+                s = s.toFixed(0);
+                while (s.length < w) {
+                    s = '0' + s;
+                }
+                return s;
+            }
+
+            function FormatDate(date) {
+                var year = Pad(date.getFullYear(), 4);
+                var month = Pad(1 + date.getMonth(), 2);
+                var day = Pad(date.getDate(), 2);
+                var hour = Pad(date.getHours(), 2);
+                var minute = Pad(date.getMinutes(), 2);
+                var second = Pad(date.getSeconds(), 2);
+                return `${year}-${month}-${day} ${hour}:${minute}:${second}`;
+            }
+
+            function UpdateScreen() {
+                let date = new Date();
+                let observer = Astronomy.MakeObserver(latitude, longitude, elevation);
+
+                for (let body of Astronomy.Bodies) {
+                    if (body !== 'Earth') {
+                        let gv = Astronomy.GeoVector(body, date);
+                        let sky = Astronomy.SkyPos(gv, observer);
+                        document.getElementById(`${body}_ra`).innerText = sky.j2000.ra;
+                        document.getElementById(`${body}_dec`).innerText = sky.j2000.dec;
+                    }
+                }
+
+                setTimeout(UpdateScreen, 1000);
+            }
+
+            UpdateScreen();
+        }
+    </script>
+</html>
