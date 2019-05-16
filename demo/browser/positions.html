@@ -17,20 +17,20 @@
             </tr>
             <tr>
                 <td>Latitude:</td>
-                <td><input type="text" id="EditLatitude" value="29.0" pattern="[\-\+]?\d+(\.\d*)?"></td>
+                <td><input type="text" id="EditLatitude" pattern="[\-\+]?\d+(\.\d*)?"></td>
             </tr>
             <tr>
                 <td>Longitude:</td>
-                <td><input type="text" id="EditLongitude" value="-81.0" pattern="[\-\+]?\d+(\.\d*)?"></td>
+                <td><input type="text" id="EditLongitude" pattern="[\-\+]?\d+(\.\d*)?"></td>
             </tr>
             <tr>
                 <td>Elevation (m):</td>
-                <td><input type="text" id="EditElevation" value="0" pattern="[\-\+]?\d+(\.\d*)?"></td>
+                <td><input type="text" id="EditElevation" pattern="[\-\+]?\d+(\.\d*)?"></td>
             </tr>            
         </table>
 
         <h2>Calculations</h2>
-        <table cellpadding="5" cellspacing="0">
+        <table cellpadding="5" cellspacing="0" id="CalcTable">
             <tr>
                 <td>body</td>
                 <td class="NumHeader">RA</td>
@@ -124,6 +124,42 @@
     <script src="../../source/js/astronomy.js"></script>
     <script>
         window.onload = function() {
+            const StorageKey = 'AstroDemo.Positions.Options';
+            var Options;
+
+            function IsValidNumber(s) {
+                return typeof s === 'string' && /^[\-\+]?\d+(\.\d*)?$/.test(s);
+            }
+
+            function LoadOptions() {
+                let options;
+                try {
+                    options = JSON.parse(window.localStorage.getItem(StorageKey));
+                } catch (e) {
+                }
+
+                if (!options) options = {};
+                if (!IsValidNumber(options.latitude))  options.latitude  = '30';
+                if (!IsValidNumber(options.longitude)) options.longitude = '-90';
+                if (!IsValidNumber(options.elevation)) options.elevation = '0';
+                return options;
+            }
+
+            function SaveOptions() {
+                try {
+                    window.localStorage.setItem(StorageKey, JSON.stringify(Options));
+                } catch (e) {
+                }
+            }
+
+            function Init() {
+                let options = LoadOptions();
+                document.getElementById('EditLatitude').value  = options.latitude;
+                document.getElementById('EditLongitude').value = options.longitude;
+                document.getElementById('EditElevation').value = options.elevation;
+                return options;
+            }
+
             function Pad(s, w) {
                 s = s.toFixed(0);
                 while (s.length < w) {
@@ -143,36 +179,49 @@
             }
 
             function FormatCoord(x) {
-                let s = x.toFixed(2);
-                while (s.length < 6) {
-                    s = ' ' + s;
-                }
-                return s;
+                return x.toFixed(2);
             }
 
             function UpdateScreen() {
-                let date = new Date();
-                document.getElementById('DateTimeBox').innerText = FormatDate(date);
-                let latitude = parseFloat(document.getElementById('EditLatitude').value);
-                let longitude = parseFloat(document.getElementById('EditLongitude').value);
-                let elevation = parseFloat(document.getElementById('EditElevation').value);
-                let observer = Astronomy.MakeObserver(latitude, longitude, elevation);
+                let text_latitude = document.getElementById('EditLatitude').value;
+                let text_longitude = document.getElementById('EditLongitude').value;
+                let text_elevation = document.getElementById('EditElevation').value;
+                if (!IsValidNumber(text_latitude) || !IsValidNumber(text_longitude) || !IsValidNumber(text_elevation)) {
+                    // Bail out until user corrects problems in the observer coordinates.
+                    // Gray out the whole table so the user knows there is something wrong.
+                    document.getElementById('CalcTable').style.display = 'none';
+                } else {
+                    let date = new Date();
+                    document.getElementById('DateTimeBox').innerText = FormatDate(date);
+                    document.getElementById('CalcTable').style.display = '';
 
-                for (let body of Astronomy.Bodies) {
-                    if (body !== 'Earth') {
-                        let gv = Astronomy.GeoVector(body, date);
-                        let sky = Astronomy.SkyPos(gv, observer);
-                        let hor = Astronomy.Horizon(date, observer, sky.ofdate.ra, sky.ofdate.dec);
-                        document.getElementById(`${body}_ra`).innerText = FormatCoord(sky.j2000.ra);
-                        document.getElementById(`${body}_dec`).innerText = FormatCoord(sky.j2000.dec);
-                        document.getElementById(`${body}_az`).innerText = FormatCoord(hor.azimuth);
-                        document.getElementById(`${body}_alt`).innerText = FormatCoord(hor.altitude);
+                    let latitude = parseFloat(text_latitude);
+                    let longitude = parseFloat(text_longitude);
+                    let elevation = parseFloat(text_elevation);
+                    if (latitude !== Options.latitude || longitude !== Options.longitude || elevation !== Options.elevation) {
+                        Options = { latitude:text_latitude, longitude:text_longitude, elevation:text_elevation };
+                        SaveOptions();
                     }
+                    let observer = Astronomy.MakeObserver(latitude, longitude, elevation);
+
+                    for (let body of Astronomy.Bodies) {
+                        if (body !== 'Earth') {
+                            let gv = Astronomy.GeoVector(body, date);
+                            let sky = Astronomy.SkyPos(gv, observer);
+                            let hor = Astronomy.Horizon(date, observer, sky.ofdate.ra, sky.ofdate.dec);
+                            document.getElementById(`${body}_ra`).innerText = FormatCoord(sky.j2000.ra);
+                            document.getElementById(`${body}_dec`).innerText = FormatCoord(sky.j2000.dec);
+                            document.getElementById(`${body}_az`).innerText = FormatCoord(hor.azimuth);
+                            document.getElementById(`${body}_alt`).innerText = FormatCoord(hor.altitude);
+                        }
+                    }
+
                 }
 
                 setTimeout(UpdateScreen, 1000);
             }
 
+            Options = Init();
             UpdateScreen();
         }
     </script>
