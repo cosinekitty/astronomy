@@ -74,6 +74,7 @@ mkdir -pv output temp || Fail "Error creating directories."
 rm -f output/vsop_*.txt temp/*
 ./generate planets || Fail "Could not generate planet models."
 
-./unit_test || exit $?
+./unit_test_js || exit $?
+./unit_test_c || exit $?
 
 exit 0
