@@ -32,11 +32,15 @@
 extern "C" {
 #endif
 
-typedef struct AstroTime
+typedef struct
 {
     double ut;
     double tt;
-};
+}
+astro_time_t;
+
+astro_time_t Astronomy_MakeTime(int year, int month, int day, int hour, int minute, double second);
+astro_time_t Astronomy_AddDays(astro_time_t time, double days);
 
 #ifdef __cplusplus
 }

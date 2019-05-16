@@ -63,8 +63,6 @@ typedef struct
 }
 sample_context_t;
 
-#define CHECK(x)   do{if(0 != (error = (x))) goto fail;}while(0)
-
 static double jd_begin;
 static double jd_end;
 static short int de_number;
@@ -405,7 +403,11 @@ fail:
 
 static int GenerateSource(void)
 {
-    return GenerateCode("../source/js/astronomy.js", "template/astronomy.js", "output");
+    int error;
+    CHECK(GenerateCode(CODEGEN_LANGUAGE_JS, "../source/js/astronomy.js", "template/astronomy.js", "output"));
+    CHECK(GenerateCode(CODEGEN_LANGUAGE_C,  "../source/c/astronomy.c",   "template/astronomy.c",  "output"));
+fail:
+    return error;
 }
 
 static int PositionArcminError(int body, double jd, const double a[3], const double b[3], double *arcmin)

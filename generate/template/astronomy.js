@@ -243,7 +243,7 @@ const cheb = {
     Pluto:  $ASTRO_JS_CHEBYSHEV(8)
 };
 
-const DT = $ASTRO_JS_DELTA_T();
+const DT = $ASTRO_DELTA_T();
 
 /**
  * Calculates the difference TT-UT for the given date/time, expressed

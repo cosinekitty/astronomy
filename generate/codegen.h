@@ -24,7 +24,18 @@
 #ifndef __DDC_ASTRO_CODEGEN_H
 #define __DDC_ASTRO_CODEGEN_H
 
+#define CHECK(x)   do{if(0 != (error = (x))) goto fail;}while(0)
+
+typedef enum
+{
+    CODEGEN_LANGUAGE_UNKNOWN,
+    CODEGEN_LANGUAGE_JS,
+    CODEGEN_LANGUAGE_C
+}
+cg_language_t;
+
 int GenerateCode(
+    cg_language_t language,
     const char *outCodeFileName,
     const char *inTemplateFileName,
     const char *dataPath);

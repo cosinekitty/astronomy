@@ -37,6 +37,7 @@ static const double MJD_BASIS = 2400000.5;
 typedef struct
 {
     FILE *outfile;
+    cg_language_t language;
     const char *datapath;
     const char *verb;
     const char *args;
@@ -65,6 +66,7 @@ static int LogError(const cg_context_t *context, const char *format, ...);
 static int ParseVsopBodyName(const cg_context_t *context, const char *name, vsop_body_t *body);
 
 int GenerateCode(
+    cg_language_t language,
     const char *outCodeFileName,
     const char *inTemplateFileName,
     const char *dataPath)
@@ -76,6 +78,7 @@ int GenerateCode(
     const char *tail;
 
     memset(&context, 0, sizeof(cg_context_t));
+    context.language = language;
     context.inFileName = inTemplateFileName;
     context.datapath = dataPath;
 
@@ -317,7 +320,45 @@ fail:
     return error;
 }
 
-static int JsDeltaT(cg_context_t *context)
+static int GenArrayEnd(cg_context_t *context)
+{
+    switch (context->language)
+    {
+    case CODEGEN_LANGUAGE_JS:
+        fprintf(context->outfile, "\n]");
+        return 0;
+
+    case CODEGEN_LANGUAGE_C:
+        fprintf(context->outfile, "\n}");
+        return 0;
+
+    default:
+        fprintf(stderr, "Do not know how to terminate array declaration for language %d\n", context->language);
+        return 1;
+    }
+}
+
+static int GenDeltaTArrayEntry(cg_context_t *context, int count, double mjd, const char *dt_text)
+{
+    switch (context->language)
+    {
+    case CODEGEN_LANGUAGE_C:
+        fprintf(context->outfile, "%s\n", (count==1) ? "{" : ",");
+        fprintf(context->outfile, "{ %0.1lf, %s }", mjd, dt_text);
+        return 0;
+
+    case CODEGEN_LANGUAGE_JS:
+        fprintf(context->outfile, "%s\n", (count==1) ? "[" : ",");
+        fprintf(context->outfile, "{ mjd:%0.1lf, dt:%s }", mjd, dt_text);
+        return 0;
+
+    default:
+        fprintf(stderr, "GenArrayBegin: Unknown langauge type %d\n", context->language);
+        return 1;
+    }
+}
+
+static int GenDeltaT(cg_context_t *context)
 {
     FILE *infile;
     int error=1, lnum, count=0;
@@ -352,8 +393,7 @@ static int JsDeltaT(cg_context_t *context)
 
             mjd = julian_date((short)year, 1, 1, 0.0) - MJD_BASIS;
             ++count;            
-            fprintf(context->outfile, "%s\n", (count==1) ? "[" : ",");
-            fprintf(context->outfile, "{ mjd:%0.1lf, dt:%s }", mjd, dt_text);
+            CHECK(GenDeltaTArrayEntry(context, count, mjd, dt_text));
         }
     }
     fclose(infile);
@@ -379,8 +419,7 @@ static int JsDeltaT(cg_context_t *context)
         if (mjd > last_mjd)
         {
             ++count;
-            fprintf(context->outfile, "%s\n", (count==1) ? "[" : ",");
-            fprintf(context->outfile, "{ mjd:%0.1lf, dt:%s }", mjd, dt_text);
+            CHECK(GenDeltaTArrayEntry(context, count, mjd, dt_text));
         }
     }
     fclose(infile);
@@ -407,8 +446,7 @@ static int JsDeltaT(cg_context_t *context)
         if (mjd > last_mjd)
         {
             ++count;
-            fprintf(context->outfile, "%s\n", (count==1) ? "[" : ",");
-            fprintf(context->outfile, "{ mjd:%0.1lf, dt:%s }", mjd, dt_text);
+            CHECK(GenDeltaTArrayEntry(context, count, mjd, dt_text));
         }
     }
 
@@ -416,10 +454,10 @@ static int JsDeltaT(cg_context_t *context)
     if (mjd > last_mjd && float_year != floor(float_year))
     {
         ++count;
-        fprintf(context->outfile, "%s\n", (count==1) ? "[" : ",");
-        fprintf(context->outfile, "{ mjd:%0.1lf, dt:%s }", mjd, dt_text);
+        CHECK(GenDeltaTArrayEntry(context, count, mjd, dt_text));
     }
-    fprintf(context->outfile, "\n]");
+
+    CHECK(GenArrayEnd(context));
 
     if (count < 2)
     {
@@ -452,7 +490,7 @@ static const cg_directive_entry DirectiveTable[] =
 {
     { "JS_VSOP", JsVsop },
     { "JS_CHEBYSHEV", JsChebyshev },
-    { "JS_DELTA_T", JsDeltaT },
+    { "DELTA_T", GenDeltaT },
     { NULL, NULL }
 };
 
