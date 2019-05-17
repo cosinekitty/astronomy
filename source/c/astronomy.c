@@ -1262,10 +1262,12 @@ astro_vector_t Astronomy_GeoVector(astro_body_t body, astro_time_t time)
             if (vector.status != ASTRO_SUCCESS)
                 return vector;
 
-            ltime2 = Astronomy_AddDays(ltime, -Astronomy_VectorLength(vector) / C_AUDAY);
+            ltime2 = Astronomy_AddDays(time, -Astronomy_VectorLength(vector) / C_AUDAY);
             dt = fabs(ltime2.tt - ltime.tt);
             if (dt < 1.0e-9)
                 return vector;
+
+            ltime = ltime2;
         }
         vector.status = ASTRO_NO_CONVERGE;  /* light travel time solver did not converge */
         break;

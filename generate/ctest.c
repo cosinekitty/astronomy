@@ -93,8 +93,16 @@ static int AstroCheck(void)
             {
                 CHECK_VECTOR(pos, Astronomy_HelioVector(body, time));
                 fprintf(outfile, "v %s %0.16lf %0.16lf %0.16lf %0.16lf\n", Astronomy_BodyName(body), pos.t.tt, pos.x, pos.y, pos.z);
+
+                if (body != BODY_EARTH)
+                {
+                    CHECK_VECTOR(pos, Astronomy_GeoVector(body, time));
+                    /* FIXFIXFIX: add SkyPos, Horizon calls here; output as 's' record. */
+                }
             }
         }
+
+        /* FIXFIXFIX: Test GeoMoon, SkyPos, Horizon here; output GM 's' record. */
 
         time = Astronomy_AddDays(time, 10.03141592);
     }
