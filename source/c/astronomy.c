@@ -40,6 +40,32 @@ extern "C" {
 #define MJD_BASIS           2400000.5
 #define Y2000_IN_MJD        (T0 - MJD_BASIS)
 
+static const double C_AUDAY = 173.1446326846693;      /* speed of light in AU/day */
+
+double Astronomy_VectorLength(astro_vector_t vector)
+{
+    return sqrt(vector.x*vector.x + vector.y*vector.y + vector.z*vector.z);
+}
+
+const char *Astronomy_BodyName(astro_body_t body)
+{
+    switch (body)
+    {
+    case BODY_MERCURY:  return "Mercury";
+    case BODY_VENUS:    return "Venus";
+    case BODY_EARTH:    return "Earth";
+    case BODY_MARS:     return "Mars";
+    case BODY_JUPITER:  return "Jupiter";
+    case BODY_SATURN:   return "Saturn";
+    case BODY_URANUS:   return "Uranus";
+    case BODY_NEPTUNE:  return "Neptune";
+    case BODY_PLUTO:    return "Pluto";
+    case BODY_SUN:      return "Sun";
+    case BODY_MOON:     return "Moon";
+    default:            return "";
+    }
+}
+
 static void FatalError(const char *message)
 {
     fprintf(stderr, "FATAL: %s\n", message);
@@ -229,6 +255,17 @@ astro_time_t Astronomy_AddDays(astro_time_t time, double days)
     sum.tt = TerrestrialTime(sum.ut);
 
     return sum;   
+}
+
+astro_observer_t Astronomy_MakeObserver(double latitude, double longitude, double elevation)
+{
+    astro_observer_t observer;
+
+    observer.latitude = latitude;
+    observer.longitude = longitude;
+    observer.elevation = elevation;
+
+    return observer;
 }
 
 typedef struct 
@@ -1081,6 +1118,8 @@ static const vsop_model_t vsop[] =
     { { VSOPFORMULA(vsop_lat_Neptune),  VSOPFORMULA(vsop_lon_Neptune),  VSOPFORMULA(vsop_rad_Neptune) } }
 };
 
+#define CalcEarth(time)     CalcVsop(&vsop[BODY_EARTH], (time))
+
 static astro_vector_t CalcVsop(const vsop_model_t *model, astro_time_t time)
 {
     int k, s, i;
@@ -1131,6 +1170,14 @@ astro_vector_t Astronomy_HelioVector(astro_body_t body, astro_time_t time)
 
     switch (body)
     {
+    case BODY_SUN:
+        vector.status = ASTRO_SUCCESS;
+        vector.x = 0.0;
+        vector.y = 0.0;
+        vector.z = 0.0;
+        vector.t = time;
+        return vector;
+
     case BODY_MERCURY:
     case BODY_VENUS:
     case BODY_EARTH:
@@ -1141,16 +1188,6 @@ astro_vector_t Astronomy_HelioVector(astro_body_t body, astro_time_t time)
     case BODY_NEPTUNE:
         return CalcVsop(&vsop[body], time);
 
-    case BODY_SUN:
-    {
-        vector.status = ASTRO_SUCCESS;
-        vector.x = 0.0;
-        vector.y = 0.0;
-        vector.z = 0.0;
-        vector.t = time;
-        return vector;
-    }
-
     case BODY_MOON:     /* FIXFIXFIX: GeoMoon not yet implemented. */
     case BODY_PLUTO:    /* FIXFIXFIX: Chebyshev models not yet implemented */
     default:
@@ -1159,6 +1196,82 @@ astro_vector_t Astronomy_HelioVector(astro_body_t body, astro_time_t time)
         vector.t = time;
         return vector;
     }
+}
+
+static astro_vector_t RawGeoVector(astro_body_t body, astro_time_t time)
+{
+    astro_vector_t earth;
+    astro_vector_t helio;
+    astro_vector_t geo;
+
+    earth = CalcEarth(time);
+    if (earth.status != ASTRO_SUCCESS)
+        return earth;
+
+    helio = Astronomy_HelioVector(body, time);
+    if (helio.status != ASTRO_SUCCESS)
+        return helio;
+
+    geo.status = ASTRO_SUCCESS;
+    geo.x = helio.x - earth.x;
+    geo.y = helio.y - earth.y;
+    geo.z = helio.z - earth.z;
+    geo.t = time;
+    return geo;
+}
+
+astro_vector_t Astronomy_GeoVector(astro_body_t body, astro_time_t time)
+{
+    astro_vector_t vector;
+    astro_time_t ltime;
+    astro_time_t ltime2;
+    double dt;
+    int iter;
+
+    vector.t = time;
+
+    switch (body)
+    {
+    case BODY_EARTH:
+        /* The Earth's geocentric coordinates are always (0,0,0). */
+        vector.status = ASTRO_SUCCESS;
+        vector.x = 0.0;
+        vector.y = 0.0;
+        vector.z = 0.0;
+        break;
+
+    case BODY_SUN:
+        /* The Sun's heliocentric coordinates are always (0,0,0). No need for light travel correction. */
+        vector = CalcEarth(time);
+        vector.x *= -1.0;
+        vector.y *= -1.0;
+        vector.z *= -1.0;
+        break;
+
+    case BODY_MOON:
+        vector.status = ASTRO_INVALID_BODY;     /* FIXFIXFIX: GeoMoon not yet implemented. */
+        vector.x = vector.y = vector.z = 1.0e+99;
+        break;
+
+    default:
+        /* For all other bodies, apply light travel time correction. */
+        ltime = time;
+        for (iter=0; iter < 10; ++iter)
+        {            
+            vector = RawGeoVector(body, ltime);
+            if (vector.status != ASTRO_SUCCESS)
+                return vector;
+
+            ltime2 = Astronomy_AddDays(ltime, -Astronomy_VectorLength(vector) / C_AUDAY);
+            dt = fabs(ltime2.tt - ltime.tt);
+            if (dt < 1.0e-9)
+                return vector;
+        }
+        vector.status = ASTRO_NO_CONVERGE;  /* light travel time solver did not converge */
+        break;
+    }
+
+    return vector;
 }
 
 #ifdef __cplusplus

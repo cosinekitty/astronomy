@@ -21,6 +21,7 @@ ${CC} ${BUILDOPT} -Wall -Werror -o ctest -I ../source/c/ ../source/c/astronomy.c
 echo "$0: Built 'ctest' program."
 
 ./ctest || Fail "Failure reported by ctest."
+./generate check temp/c_check.txt || Fail "Verification failure for C unit test output."
 
 echo "unit_test_c: success"
 exit 0

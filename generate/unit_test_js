@@ -10,9 +10,9 @@ echo ""
 
 echo ""
 echo "Running astro_check."
-node astro_check.js > temp/check.txt || Fail "Problem running JavaScript unit test."
+node astro_check.js > temp/js_check.txt || Fail "Problem running JavaScript unit test."
 echo "Verifying astro_check output."
-./generate check temp/check.txt || Fail "Verification failure for JavaScript unit test output."
+./generate check temp/js_check.txt || Fail "Verification failure for JavaScript unit test output."
 
 echo ""
 echo "Running check against JPL Horizons data."

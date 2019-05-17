@@ -9,21 +9,34 @@
 #include <math.h>
 #include "astronomy.h"
 
-#define CHECK(x)   do{if(0 != (error = (x))) goto fail;}while(0)
+#define CHECK(x)            do{if(0 != (error = (x))) goto fail;}while(0)
+
+static int CheckVector(int lnum, astro_vector_t v)
+{
+    if (v.status != ASTRO_SUCCESS)
+    {
+        fprintf(stderr, "FAILURE at ctest.c[%d]: vector status = %d\n", lnum, v.status);
+        return 1;
+    }
+    return 0;
+}
+
+#define CHECK_VECTOR(v,x)   CHECK(CheckVector(__LINE__, ((v) = (x))))
 
 static int Test_AstroTime(void);
+static int AstroCheck(void);
 
 int main()
 {
     int error;
 
     CHECK(Test_AstroTime());
+    CHECK(AstroCheck());
 
 fail:
     printf("ctest exiting with %d\n", error);
     return error;
 }
-
 
 static int Test_AstroTime(void)
 {
@@ -50,4 +63,44 @@ static int Test_AstroTime(void)
     }
 
     return 0;
+}
+
+static int AstroCheck(void)
+{
+    int error = 1;
+    FILE *outfile = NULL;
+    const char *filename = "temp/c_check.txt";
+    astro_time_t time;
+    astro_time_t stop;
+    astro_body_t body;
+    astro_vector_t pos;
+
+    outfile = fopen(filename, "wt");
+    if (outfile == NULL)
+    {
+        fprintf(stderr, "AstroCheck: Cannot open output file: %s\n", filename);
+        error = 1;
+        goto fail;
+    }
+
+    time = Astronomy_MakeTime(1700, 1, 1, 0, 0, 0.0);
+    stop = Astronomy_MakeTime(2200, 1, 1, 0, 0, 0.0);
+    while (time.tt < stop.tt)
+    {
+        for (body=MIN_BODY; body <= MAX_BODY; ++body)
+        {
+            if (body != BODY_MOON && body != BODY_PLUTO)
+            {
+                CHECK_VECTOR(pos, Astronomy_HelioVector(body, time));
+                fprintf(outfile, "v %s %0.16lf %0.16lf %0.16lf %0.16lf\n", Astronomy_BodyName(body), pos.t.tt, pos.x, pos.y, pos.z);
+            }
+        }
+
+        time = Astronomy_AddDays(time, 10.03141592);
+    }
+
+fail:
+    if (outfile != NULL)
+        fclose(outfile);
+    return error;
 }
