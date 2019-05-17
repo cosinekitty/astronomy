@@ -34,6 +34,8 @@
 extern "C" {
 #endif
 
+#define ARRAYSIZE(x)    (sizeof(x) / sizeof(x[0]))
+
 #define T0                  2451545.0
 #define MJD_BASIS           2400000.5
 #define Y2000_IN_MJD        (T0 - MJD_BASIS)
@@ -50,7 +52,6 @@ typedef struct
     double dt;
 }
 deltat_entry_t;
-
 
 static const deltat_entry_t DT[] = $ASTRO_DELTA_T();
 
@@ -137,6 +138,137 @@ astro_time_t Astronomy_AddDays(astro_time_t time, double days)
     sum.tt = TerrestrialTime(sum.ut);
 
     return sum;   
+}
+
+typedef struct 
+{
+    double amplitude;
+    double phase;
+    double frequency;
+}
+vsop_term_t;
+
+typedef struct 
+{
+    int nterms;
+    const vsop_term_t *term; 
+}
+vsop_series_t;
+
+typedef struct
+{
+    int nseries;
+    const vsop_series_t *series;
+}
+vsop_formula_t;
+
+typedef struct 
+{
+    const vsop_formula_t formula[3];
+}
+vsop_model_t;
+
+$ASTRO_C_VSOP(Mercury)
+$ASTRO_C_VSOP(Venus)
+$ASTRO_C_VSOP(Earth)
+$ASTRO_C_VSOP(Mars)
+$ASTRO_C_VSOP(Jupiter)
+$ASTRO_C_VSOP(Saturn)
+$ASTRO_C_VSOP(Uranus)
+$ASTRO_C_VSOP(Neptune)
+
+#define VSOPFORMULA(x)    { ARRAYSIZE(x), x }
+
+static const vsop_model_t vsop[] = 
+{
+    { { VSOPFORMULA(vsop_lat_Mercury),  VSOPFORMULA(vsop_lon_Mercury),  VSOPFORMULA(vsop_rad_Mercury) } },
+    { { VSOPFORMULA(vsop_lat_Venus),    VSOPFORMULA(vsop_lon_Venus),    VSOPFORMULA(vsop_rad_Venus)   } },
+    { { VSOPFORMULA(vsop_lat_Earth),    VSOPFORMULA(vsop_lon_Earth),    VSOPFORMULA(vsop_rad_Earth)   } },
+    { { VSOPFORMULA(vsop_lat_Mars),     VSOPFORMULA(vsop_lon_Mars),     VSOPFORMULA(vsop_rad_Mars)    } },
+    { { VSOPFORMULA(vsop_lat_Jupiter),  VSOPFORMULA(vsop_lon_Jupiter),  VSOPFORMULA(vsop_rad_Jupiter) } },
+    { { VSOPFORMULA(vsop_lat_Saturn),   VSOPFORMULA(vsop_lon_Saturn),   VSOPFORMULA(vsop_rad_Saturn)  } },
+    { { VSOPFORMULA(vsop_lat_Uranus),   VSOPFORMULA(vsop_lon_Uranus),   VSOPFORMULA(vsop_rad_Uranus)  } },
+    { { VSOPFORMULA(vsop_lat_Neptune),  VSOPFORMULA(vsop_lon_Neptune),  VSOPFORMULA(vsop_rad_Neptune) } }
+};
+
+static astro_vector_t CalcVsop(const vsop_model_t *model, astro_time_t time)
+{
+    int k, s, i;
+    double t = time.tt / 365250;    /* millennia since 2000 */
+    double sphere[3];
+    double r_coslat;
+    double eclip[3];
+    astro_vector_t vector;
+
+    for (k=0; k < 3; ++k)
+    {
+        double tpower = 1.0;
+        const vsop_formula_t *formula = &model->formula[k];
+        sphere[k] = 0.0;
+        for (s=0; s < formula->nseries; ++s)
+        {
+            double sum = 0.0;
+            const vsop_series_t *series = &formula->series[s];
+            for (i=0; i < series->nterms; ++i)
+            {
+                const vsop_term_t *term = &series->term[i];
+                sum += term->amplitude * cos(term->phase + (t * term->frequency));
+            }
+            sphere[k] += tpower * sum;
+            tpower *= t;
+        }
+    }
+
+    /* Convert ecliptic spherical coordinates to ecliptic Cartesian coordinates. */
+    r_coslat = sphere[2] * cos(sphere[1]);
+    eclip[0] = r_coslat * cos(sphere[0]);
+    eclip[1] = r_coslat * sin(sphere[0]);
+    eclip[2] = sphere[2] * sin(sphere[1]);
+
+    /* Convert ecliptic Cartesian coordinates to equatorial Cartesian coordinates. */
+    vector.status = ASTRO_SUCCESS;
+    vector.x = eclip[0] + 0.000000440360*eclip[1] - 0.000000190919*eclip[2];
+    vector.y = -0.000000479966*eclip[0] + 0.917482137087*eclip[1] - 0.397776982902*eclip[2];
+    vector.z = 0.397776982902*eclip[1] + 0.917482137087*eclip[2];
+    vector.t = time;
+
+    return vector;
+}
+
+astro_vector_t Astronomy_HelioVector(astro_body_t body, astro_time_t time)
+{
+    astro_vector_t vector;
+
+    switch (body)
+    {
+    case BODY_MERCURY:
+    case BODY_VENUS:
+    case BODY_EARTH:
+    case BODY_MARS:
+    case BODY_JUPITER:
+    case BODY_SATURN:
+    case BODY_URANUS:
+    case BODY_NEPTUNE:
+        return CalcVsop(&vsop[body], time);
+
+    case BODY_SUN:
+    {
+        vector.status = ASTRO_SUCCESS;
+        vector.x = 0.0;
+        vector.y = 0.0;
+        vector.z = 0.0;
+        vector.t = time;
+        return vector;
+    }
+
+    case BODY_MOON:     /* FIXFIXFIX: GeoMoon not yet implemented. */
+    case BODY_PLUTO:    /* FIXFIXFIX: Chebyshev models not yet implemented */
+    default:
+        vector.status = ASTRO_INVALID_BODY;
+        vector.x = vector.y = vector.z = 1.0e+99;   /* Invalid coordinates */
+        vector.t = time;
+        return vector;
+    }
 }
 
 #ifdef __cplusplus

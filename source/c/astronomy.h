@@ -32,6 +32,13 @@
 extern "C" {
 #endif
 
+typedef enum
+{
+    ASTRO_SUCCESS,
+    ASTRO_INVALID_BODY
+}
+astro_status_t;
+
 typedef struct
 {
     double ut;
@@ -39,8 +46,35 @@ typedef struct
 }
 astro_time_t;
 
+typedef struct
+{
+    astro_status_t status;
+    double x;
+    double y;
+    double z;
+    astro_time_t t;
+}
+astro_vector_t;
+
+typedef enum
+{
+    BODY_MERCURY,
+    BODY_VENUS,
+    BODY_EARTH,
+    BODY_MARS,
+    BODY_JUPITER,
+    BODY_SATURN,
+    BODY_URANUS,
+    BODY_NEPTUNE,
+    BODY_PLUTO,
+    BODY_SUN,
+    BODY_MOON
+}
+astro_body_t;
+
 astro_time_t Astronomy_MakeTime(int year, int month, int day, int hour, int minute, double second);
 astro_time_t Astronomy_AddDays(astro_time_t time, double days);
+astro_vector_t Astronomy_HelioVector(astro_body_t body, astro_time_t time);
 
 #ifdef __cplusplus
 }
