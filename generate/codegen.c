@@ -333,8 +333,7 @@ static int GenArrayEnd(cg_context_t *context)
         return 0;
 
     default:
-        fprintf(stderr, "Do not know how to terminate array declaration for language %d\n", context->language);
-        return 1;
+        return LogError(context, "GenArrayEnd: Unknown language type %d", context->language);
     }
 }
 
@@ -353,8 +352,7 @@ static int GenDeltaTArrayEntry(cg_context_t *context, int count, double mjd, con
         return 0;
 
     default:
-        fprintf(stderr, "GenArrayBegin: Unknown langauge type %d\n", context->language);
-        return 1;
+        return LogError(context, "GenDeltaTArrayEntry: Unknown language type %d", context->language);
     }
 }
 
