@@ -41,7 +41,7 @@ static const double MJD_BASIS = 2400000.5;
 #define Y2000_IN_MJD        (T0 - MJD_BASIS)
 #define PI      3.14159265358979323846
 static const double DEG2RAD = 0.017453292519943296;
-/*static const double RAD2DEG = 57.295779513082321;*/
+static const double RAD2DEG = 57.295779513082321;
 static const double ASEC360 = 1296000.0;
 static const double ASEC2RAD = 4.848136811095359935899141e-6;
 static const double PI2 = 2.0 * PI;
@@ -49,6 +49,8 @@ static const double ARC = 3600.0 * 180.0 / PI;          /* arcseconds per radian
 static const double C_AUDAY = 173.1446326846693;        /* speed of light in AU/day */
 static const double ERAD = 6378136.6;                   /* mean earth radius in meters */
 static const double AU = 1.4959787069098932e+11;        /* astronomical unit in meters */
+static const double KM_PER_AU = 1.4959787069098932e+8;
+static const double ANGVEL = 7.2921150e-5;
 
 double Astronomy_VectorLength(astro_vector_t vector)
 {
@@ -174,13 +176,13 @@ astro_time_t Astronomy_AddDays(astro_time_t time, double days)
     return sum;   
 }
 
-astro_observer_t Astronomy_MakeObserver(double latitude, double longitude, double elevation)
+astro_observer_t Astronomy_MakeObserver(double latitude, double longitude, double height)
 {
     astro_observer_t observer;
 
     observer.latitude = latitude;
     observer.longitude = longitude;
-    observer.elevation = elevation;
+    observer.height = height;
 
     return observer;
 }
@@ -399,7 +401,6 @@ typedef struct
 }
 earth_tilt_t;
 
-#if 0   /* not yet used, but will be soon */
 static earth_tilt_t e_tilt(astro_time_t time)
 {
     earth_tilt_t et;
@@ -412,7 +413,6 @@ static earth_tilt_t e_tilt(astro_time_t time)
 
     return et;
 }
-#endif
 
 static void ecl2equ_vec(astro_time_t time, const double ecl[3], double equ[3])
 {
@@ -425,7 +425,7 @@ static void ecl2equ_vec(astro_time_t time, const double ecl[3], double equ[3])
     equ[2] = ecl[1]*sin_obl + ecl[2]*cos_obl;
 }
 
-static void precession(double tt1, double pos1[3], double tt2, double pos2[3])
+static void precession(double tt1, const double pos1[3], double tt2, double pos2[3])
 {
     double xx, yx, zx, xy, yy, zy, xz, yz, zz;
     double t, psia, omegaa, chia, sa, ca, sb, cb, sc, cc, sd, cd;
@@ -494,6 +494,149 @@ static void precession(double tt1, double pos1[3], double tt2, double pos2[3])
         pos2[1] = xy * pos1[0] + yy * pos1[1] + zy * pos1[2];
         pos2[2] = xz * pos1[0] + yz * pos1[1] + zz * pos1[2];
     }
+}
+
+static astro_equatorial_t vector2radec(const double pos[3])
+{
+    astro_equatorial_t equ;
+    double xyproj;
+
+    xyproj = pos[0]*pos[0] + pos[1]*pos[1];
+    equ.dist = sqrt(xyproj + pos[2]*pos[2]);
+    if (xyproj == 0.0)
+    {
+        if (pos[2] == 0.0)
+        {
+            /* Indeterminate coordinates; pos vector has zero length. */
+            equ.ra = NAN;
+            equ.dec = NAN;
+        }
+        else if (pos[2] < 0)
+        {
+            equ.ra = 0.0;
+            equ.dec = -90.0;
+        }
+        else
+        {
+            equ.ra = 0.0;
+            equ.dec = +90.0;
+        }        
+    }
+    else
+    {
+        equ.ra = atan2(pos[1], pos[0]) / (DEG2RAD * 15.0);
+        if (equ.ra < 0)
+            equ.ra += 24.0;
+
+        equ.dec = RAD2DEG * atan2(pos[2], sqrt(xyproj));
+    }    
+
+    return equ;
+}
+
+static void nutation(astro_time_t time, int direction, const double inpos[3], double outpos[3])
+{
+    earth_tilt_t tilt = e_tilt(time);
+    double oblm = tilt.mobl * DEG2RAD;
+    double oblt = tilt.tobl * DEG2RAD;
+    double psi = tilt.dpsi * ASEC2RAD;
+    double cobm = cos(oblm);
+    double sobm = sin(oblm);
+    double cobt = cos(oblt);
+    double sobt = sin(oblt);
+    double cpsi = cos(psi);
+    double spsi = sin(psi);
+
+    double xx = cpsi;
+    double yx = -spsi * cobm;
+    double zx = -spsi * sobm;
+    double xy = spsi * cobt;
+    double yy = cpsi * cobm * cobt + sobm * sobt;
+    double zy = cpsi * sobm * cobt - cobm * sobt;
+    double xz = spsi * sobt;
+    double yz = cpsi * cobm * sobt - sobm * cobt;
+    double zz = cpsi * sobm * sobt + cobm * cobt; 
+
+    if (direction == 0) 
+    {
+        /* forward rotation */
+        outpos[0] = xx * inpos[0] + yx * inpos[1] + zx * inpos[2];
+        outpos[1] = xy * inpos[0] + yy * inpos[1] + zy * inpos[2];
+        outpos[2] = xz * inpos[0] + yz * inpos[1] + zz * inpos[2];
+    }
+    else
+    {
+        /* inverse rotation */
+        outpos[0] = xx * inpos[0] + xy * inpos[1] + xz * inpos[2];
+        outpos[1] = yx * inpos[0] + yy * inpos[1] + yz * inpos[2];
+        outpos[2] = zx * inpos[0] + zy * inpos[1] + zz * inpos[2];
+    }
+}
+
+static double era(astro_time_t time)        /* Earth Rotation Angle */
+{
+    double thet1 = 0.7790572732640 + 0.00273781191135448 * time.ut;
+    double thet3 = fmod(time.ut, 1.0);
+    double theta = 360.0 * fmod(thet1 + thet3, 1.0);
+    if (theta < 0.0)
+        theta += 360.0;
+
+    return theta;
+}
+
+static double sidereal_time(astro_time_t time)
+{
+    double t = time.tt / 36525.0;
+    double eqeq = 15.0 * e_tilt(time).ee;    /* Replace with eqeq=0 to get GMST instead of GAST (if we ever need it) */
+    double theta = era(time);
+    double st = (eqeq + 0.014506 +
+        (((( -    0.0000000368   * t
+            -    0.000029956  ) * t
+            -    0.00000044   ) * t
+            +    1.3915817    ) * t
+            + 4612.156534     ) * t);
+
+    double gst = fmod(st/3600.0 + theta, 360.0) / 15.0;
+    if (gst < 0.0) 
+        gst += 24.0;
+
+    return gst;
+}
+
+static void terra(astro_observer_t observer, double st, double pos[3], double vel[3]) 
+{
+    double erad_km = ERAD / 1000.0;
+    double df = 1.0 - 0.003352819697896;    /* flattening of the Earth */
+    double df2 = df * df;
+    double phi = observer.latitude * DEG2RAD;
+    double sinphi = sin(phi);
+    double cosphi = cos(phi);
+    double c = 1.0 / sqrt(cosphi*cosphi + df2*sinphi*sinphi);
+    double s = df2 * c;
+    double ht_km = observer.height / 1000.0;
+    double ach = erad_km*c + ht_km;
+    double ash = erad_km*s + ht_km;
+    double stlocl = (15.0*st + observer.longitude) * DEG2RAD;
+    double sinst = sin(stlocl);
+    double cosst = cos(stlocl);
+
+    pos[0] = ach * cosphi * cosst / KM_PER_AU;
+    pos[1] = ach * cosphi * sinst / KM_PER_AU;
+    pos[2] = ash * sinphi / KM_PER_AU;
+
+    vel[0] = -ANGVEL * ach * cosphi * sinst * 86400.0;
+    vel[1] = +ANGVEL * ach * cosphi * cosst * 86400.0;
+    vel[2] = 0.0;
+}
+
+static void geo_pos(astro_time_t time, astro_observer_t observer, double outpos[3])
+{
+    double gast, vel[3], pos1[3], pos2[3];
+
+    gast = sidereal_time(time);
+    terra(observer, gast, pos1, vel);
+    nutation(time, -1, pos1, pos2);
+    precession(time.tt, pos2, 0.0, outpos);
 }
 
 /*------------------ CalcMoon ------------------*/
@@ -915,14 +1058,14 @@ typedef struct
 }
 vsop_model_t;
 
-$ASTRO_C_VSOP(Mercury)
-$ASTRO_C_VSOP(Venus)
-$ASTRO_C_VSOP(Earth)
-$ASTRO_C_VSOP(Mars)
-$ASTRO_C_VSOP(Jupiter)
-$ASTRO_C_VSOP(Saturn)
-$ASTRO_C_VSOP(Uranus)
-$ASTRO_C_VSOP(Neptune)
+$ASTRO_C_VSOP(Mercury);
+$ASTRO_C_VSOP(Venus);
+$ASTRO_C_VSOP(Earth);
+$ASTRO_C_VSOP(Mars);
+$ASTRO_C_VSOP(Jupiter);
+$ASTRO_C_VSOP(Saturn);
+$ASTRO_C_VSOP(Uranus);
+$ASTRO_C_VSOP(Neptune);
 
 #define VSOPFORMULA(x)    { ARRAYSIZE(x), x }
 
@@ -1095,6 +1238,30 @@ astro_vector_t Astronomy_GeoVector(astro_body_t body, astro_time_t time)
 
     return vector;
 }
+
+astro_sky_t Astronomy_SkyPos(astro_vector_t gc_vector, astro_observer_t observer)
+{
+    astro_sky_t sky;
+    double gc_observer[3];
+    double j2000_vector[3];
+    double ofdate_vector[3];
+    double pos7[3];
+
+    geo_pos(gc_vector.t, observer, gc_observer);
+
+    j2000_vector[0] = gc_vector.x - gc_observer[0];
+    j2000_vector[1] = gc_vector.y - gc_observer[1];
+    j2000_vector[2] = gc_vector.z - gc_observer[2];
+
+    sky.j2000 = vector2radec(j2000_vector);
+    precession(0.0, j2000_vector, gc_vector.t.tt, pos7);
+    nutation(gc_vector.t, 0.0, pos7, ofdate_vector);
+    sky.ofdate = vector2radec(ofdate_vector);
+    sky.t = gc_vector.t;
+
+    return sky;
+}
+
 
 #ifdef __cplusplus
 }

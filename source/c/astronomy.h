@@ -82,20 +82,37 @@ typedef struct
 {
     double latitude;
     double longitude;
-    double elevation;
+    double height;
 }
 astro_observer_t;
+
+typedef struct
+{
+    double ra;
+    double dec;
+    double dist;
+}
+astro_equatorial_t;
+
+typedef struct
+{
+    astro_time_t t;
+    astro_equatorial_t j2000;
+    astro_equatorial_t ofdate;
+}
+astro_sky_t;
 
 
 /*---------- functions ----------*/
 
 const char *Astronomy_BodyName(astro_body_t body);
-astro_observer_t Astronomy_MakeObserver(double latitude, double longitude, double elevation);
+astro_observer_t Astronomy_MakeObserver(double latitude, double longitude, double height);
 astro_time_t Astronomy_MakeTime(int year, int month, int day, int hour, int minute, double second);
 astro_time_t Astronomy_AddDays(astro_time_t time, double days);
 astro_vector_t Astronomy_HelioVector(astro_body_t body, astro_time_t time);
 astro_vector_t Astronomy_GeoVector(astro_body_t body, astro_time_t time);
 astro_vector_t Astronomy_GeoMoon(astro_time_t time);
+astro_sky_t Astronomy_SkyPos(astro_vector_t gc_vector, astro_observer_t observer);
 double Astronomy_VectorLength(astro_vector_t vector);
 
 #ifdef __cplusplus

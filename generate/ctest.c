@@ -74,6 +74,8 @@ static int AstroCheck(void)
     astro_time_t stop;
     astro_body_t body;
     astro_vector_t pos;
+    astro_sky_t sky;
+    astro_observer_t observer = Astronomy_MakeObserver(28.0, -81.0, 10.0);
 
     outfile = fopen(filename, "wt");
     if (outfile == NULL)
@@ -82,6 +84,8 @@ static int AstroCheck(void)
         error = 1;
         goto fail;
     }
+
+    fprintf(outfile, "o %lf %lf %lf\n", observer.latitude, observer.longitude, observer.height);
 
     time = Astronomy_MakeTime(1700, 1, 1, 0, 0, 0.0);
     stop = Astronomy_MakeTime(2200, 1, 1, 0, 0, 0.0);
@@ -97,17 +101,23 @@ static int AstroCheck(void)
                 if (body != BODY_EARTH)
                 {
                     CHECK_VECTOR(pos, Astronomy_GeoVector(body, time));
+
                     /* FIXFIXFIX: add SkyPos, Horizon calls here; output as 's' record. */
+                    sky = Astronomy_SkyPos(pos, observer);
                 }
             }
         }
 
         CHECK_VECTOR(pos, Astronomy_GeoMoon(time));
         fprintf(outfile, "v GM %0.16lf %0.16lf %0.16lf %0.16lf\n", pos.t.tt, pos.x, pos.y, pos.z);
+
         /* FIXFIXFIX: Test SkyPos, Horizon here; output GM 's' record. */
+        sky = Astronomy_SkyPos(pos, observer);
 
         time = Astronomy_AddDays(time, 10.03141592);
     }
+
+    (void)sky;
 
 fail:
     if (outfile != NULL)
