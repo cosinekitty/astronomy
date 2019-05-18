@@ -1317,20 +1317,6 @@ function ter2cel(time, vec1) {
     return vec2;
 }
 
-function refract(zd_obs, location) {
-    if (zd_obs < 0.1 || zd_obs > 91.0) {
-        return 0.0;
-    }
-    let pressure = 1010 * Math.exp(-location.height / 9100);
-    let celsius = 10;
-    let kelvin = 273 + celsius;
-    let h = 90 - zd_obs;
-    let angle = (h + 7.31/(h + 4.4));
-    let r = 0.016667 / Math.tan(angle * DEG2RAD);
-    let refr = r * (0.28 * pressure / kelvin);
-    return refr;
-}
-
 /**
  * Given a date and time, a geographic location of an observer on the Earth, and
  * equatorial coordinates (right ascension and declination) of a celestial object,
@@ -1409,13 +1395,7 @@ Astronomy.Horizon = function(date, location, ra, dec, refraction) {     // based
         let zd1, refr, j;
         let zd0 = zd;
 
-        if (refraction === 'novas') {
-            do {
-                zd1 = zd;
-                refr = refract(zd, location);
-                zd = zd0 - refr;
-            } while (Math.abs(zd - zd1) > 3.0e-5);
-        } else if (refraction === 'normal' || refraction === 'jplhor') {
+        if (refraction === 'normal' || refraction === 'jplhor') {
             // http://extras.springer.com/1999/978-1-4471-0555-8/chap4/horizons/horizons.pdf
             // JPL Horizons says it uses refraction algorithm from 
             // Meeus "Astronomical Algorithms", 1991, p. 101-102.
@@ -1437,7 +1417,7 @@ Astronomy.Horizon = function(date, location, ra, dec, refraction) {     // based
 
             zd -= refr;
         } else {
-            throw 'If specified, refraction must be one of: "normal", "jplhor", "novas".';
+            throw 'If specified, refraction must be one of: "normal", "jplhor".';
         }
 
         if (refr > 0.0 && zd > 3.0e-4) {
