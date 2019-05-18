@@ -1015,7 +1015,6 @@ static int CheckSkyPos(observer *location, const char *filename, int lnum, const
     /* First call to place: ask for astrometric coordinates (J2000) : coord_sys=3 */
     error = place(jd_tt, &obj, location, jd_tt-jd_utc, 3, 1, &sky_ast);
     if (error)
-
     {
         fprintf(stderr, "CheckSkyPos: place(3) returned %d on line %d of file %s\n", error, lnum, filename);
         return error;

@@ -6,8 +6,11 @@
 */
 
 #include <stdio.h>
+#include <string.h>
 #include <math.h>
 #include "astronomy.h"
+
+#define PI      3.14159265358979323846
 
 #define CHECK(x)            do{if(0 != (error = (x))) goto fail;}while(0)
 
@@ -23,15 +26,23 @@ static int CheckVector(int lnum, astro_vector_t v)
 
 #define CHECK_VECTOR(v,x)   CHECK(CheckVector(__LINE__, ((v) = (x))))
 
+static int Test_Geo(void);
 static int Test_AstroTime(void);
 static int AstroCheck(void);
 
-int main()
+int main(int argc, const char *argv[])
 {
-    int error;
+    int error = 0;
 
-    CHECK(Test_AstroTime());
-    CHECK(AstroCheck());
+    if (argc == 2 && !strcmp(argv[1], "geo"))
+    {
+        CHECK(Test_Geo());      /* ad hoc test for debugging */
+    }
+    else
+    {
+        CHECK(Test_AstroTime());
+        CHECK(AstroCheck());
+    }
 
 fail:
     printf("ctest exiting with %d\n", error);
@@ -75,6 +86,7 @@ static int AstroCheck(void)
     astro_body_t body;
     astro_vector_t pos;
     astro_sky_t sky;
+    astro_horizon_t hor;
     astro_observer_t observer = Astronomy_MakeObserver(28.0, -81.0, 10.0);
 
     outfile = fopen(filename, "wt");
@@ -101,9 +113,10 @@ static int AstroCheck(void)
                 if (body != BODY_EARTH)
                 {
                     CHECK_VECTOR(pos, Astronomy_GeoVector(body, time));
-
-                    /* FIXFIXFIX: add SkyPos, Horizon calls here; output as 's' record. */
                     sky = Astronomy_SkyPos(pos, observer);
+                    hor = Astronomy_Horizon(sky.t, observer, sky.ofdate.ra, sky.ofdate.dec, REFRACTION_NONE);
+                    fprintf(outfile, "s %s %0.16lf %0.16lf %0.16lf %0.16lf %0.16lf %0.16lf %0.16lf\n", 
+                        Astronomy_BodyName(body), pos.t.tt, pos.t.ut, sky.j2000.ra, sky.j2000.dec, sky.j2000.dist, hor.azimuth, hor.altitude);
                 }
             }
         }
@@ -111,10 +124,12 @@ static int AstroCheck(void)
         CHECK_VECTOR(pos, Astronomy_GeoMoon(time));
         fprintf(outfile, "v GM %0.16lf %0.16lf %0.16lf %0.16lf\n", pos.t.tt, pos.x, pos.y, pos.z);
 
-        /* FIXFIXFIX: Test SkyPos, Horizon here; output GM 's' record. */
         sky = Astronomy_SkyPos(pos, observer);
+        hor = Astronomy_Horizon(sky.t, observer, sky.ofdate.ra, sky.ofdate.dec, REFRACTION_NONE);
+        fprintf(outfile, "s GM %0.16lf %0.16lf %0.16lf %0.16lf %0.16lf %0.16lf %0.16lf\n", 
+            pos.t.tt, pos.t.ut, sky.j2000.ra, sky.j2000.dec, sky.j2000.dist, hor.azimuth, hor.altitude);
 
-        time = Astronomy_AddDays(time, 10.03141592);
+        time = Astronomy_AddDays(time, 10.0 + PI/100.0);
     }
 
     (void)sky;
@@ -122,5 +137,20 @@ static int AstroCheck(void)
 fail:
     if (outfile != NULL)
         fclose(outfile);
+    return error;
+}
+
+static int Test_Geo(void)
+{
+    int error = 0;
+    astro_time_t time;
+    astro_vector_t pos;
+
+    time.ut = -109492.2564886306936387;
+    time.tt = -109492.2562455624283757;
+
+    CHECK_VECTOR(pos, Astronomy_GeoVector(BODY_MERCURY, time));
+    printf("#(C ) GeoVector tt=%0.16lf ut=%0.16lf x=%0.16lf y=%0.16lf z=%0.16lf\n", time.tt, time.ut, pos.x, pos.y, pos.z);
+fail:
     return error;
 }

@@ -2164,7 +2164,7 @@ function ter2cel(time, vec1) {
  * @param {(Date|number|Astronomy.AstroTime)} date
  *      The date and time for which to find horizontal coordinates.
  * 
- * @param {Astronomy.Observer} location
+ * @param {Astronomy.Observer} observer
  *      The location of the observer for which to find horizontal coordinates.
  * 
  * @param {number} ra
@@ -2193,13 +2193,13 @@ function ter2cel(time, vec1) {
  * 
  * @returns {Astronomy.HorizontalCoordinates}
  */
-Astronomy.Horizon = function(date, location, ra, dec, refraction) {     // based on NOVAS equ2hor()
+Astronomy.Horizon = function(date, observer, ra, dec, refraction) {     // based on NOVAS equ2hor()
     let time = Astronomy.MakeTime(date);
 
-    const sinlat = Math.sin(location.latitude * DEG2RAD);
-    const coslat = Math.cos(location.latitude * DEG2RAD);
-    const sinlon = Math.sin(location.longitude * DEG2RAD);
-    const coslon = Math.cos(location.longitude * DEG2RAD);
+    const sinlat = Math.sin(observer.latitude * DEG2RAD);
+    const coslat = Math.cos(observer.latitude * DEG2RAD);
+    const sinlon = Math.sin(observer.longitude * DEG2RAD);
+    const coslon = Math.cos(observer.longitude * DEG2RAD);
     const sindc = Math.sin(dec * DEG2RAD);
     const cosdc = Math.cos(dec * DEG2RAD);
     const sinra = Math.sin(ra * 15 * DEG2RAD);
@@ -2230,7 +2230,7 @@ Astronomy.Horizon = function(date, location, ra, dec, refraction) {     // based
     let out_dec = dec;
 
     if (refraction) {
-        let zd1, refr, j;
+        let refr, j;
         let zd0 = zd;
 
         if (refraction === 'normal' || refraction === 'jplhor') {

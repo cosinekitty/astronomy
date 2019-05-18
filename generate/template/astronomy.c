@@ -639,6 +639,32 @@ static void geo_pos(astro_time_t time, astro_observer_t observer, double outpos[
     precession(time.tt, pos2, 0.0, outpos);
 }
 
+static void spin(double angle, const double pos1[3], double vec2[3]) 
+{
+    double angr = angle * DEG2RAD;
+    double cosang = cos(angr);
+    double sinang = sin(angr);
+    double xx = cosang;
+    double yx = sinang;
+    double zx = 0;
+    double xy = -sinang;
+    double yy = cosang;
+    double zy = 0;
+    double xz = 0;
+    double yz = 0;
+    double zz = 1;
+
+    vec2[0] = xx*pos1[0] + yx*pos1[1] + zx*pos1[2];
+    vec2[1] = xy*pos1[0] + yy*pos1[1] + zy*pos1[2];
+    vec2[2] = xz*pos1[0] + yz*pos1[1] + zz*pos1[2];
+}
+
+static void ter2cel(astro_time_t time, const double vec1[3], double vec2[3])
+{
+    double gast = sidereal_time(time);
+    spin(-15.0 * gast, vec1, vec2);
+}
+
 /*------------------ CalcMoon ------------------*/
 
 #define DECLARE_PASCAL_ARRAY_1(elemtype,name,xmin,xmax) \
@@ -1191,8 +1217,6 @@ astro_vector_t Astronomy_GeoVector(astro_body_t body, astro_time_t time)
     double dt;
     int iter;
 
-    vector.t = time;
-
     switch (body)
     {
     case BODY_EARTH:
@@ -1228,7 +1252,7 @@ astro_vector_t Astronomy_GeoVector(astro_body_t body, astro_time_t time)
             ltime2 = Astronomy_AddDays(time, -Astronomy_VectorLength(vector) / C_AUDAY);
             dt = fabs(ltime2.tt - ltime.tt);
             if (dt < 1.0e-9)
-                return vector;
+                goto finished;  /* Tricky: ensures we patch 'vector.t' with current time, not ante-dated time. */
 
             ltime = ltime2;
         }
@@ -1236,6 +1260,8 @@ astro_vector_t Astronomy_GeoVector(astro_body_t body, astro_time_t time)
         break;
     }
 
+finished:
+    vector.t = time;
     return vector;
 }
 
@@ -1260,6 +1286,126 @@ astro_sky_t Astronomy_SkyPos(astro_vector_t gc_vector, astro_observer_t observer
     sky.t = gc_vector.t;
 
     return sky;
+}
+
+astro_horizon_t Astronomy_Horizon(
+    astro_time_t time, astro_observer_t observer, double ra, double dec, astro_refraction_t refraction)
+{
+    astro_horizon_t hor;
+    double uze[3], une[3], uwe[3];
+    double uz[3], un[3], uw[3];
+    double p[3], pz, pn, pw, proj;
+    double az, zd;
+
+    double sinlat = sin(observer.latitude * DEG2RAD);
+    double coslat = cos(observer.latitude * DEG2RAD);
+    double sinlon = sin(observer.longitude * DEG2RAD);
+    double coslon = cos(observer.longitude * DEG2RAD);
+    double sindc = sin(dec * DEG2RAD);
+    double cosdc = cos(dec * DEG2RAD);
+    double sinra = sin(ra * 15 * DEG2RAD);
+    double cosra = cos(ra * 15 * DEG2RAD);
+
+    uze[0] = coslat * coslon;
+    uze[1] = coslat * sinlon;
+    uze[2] = sinlat;
+
+    une[0] = -sinlat * coslon;
+    une[1] = -sinlat * sinlon;
+    une[2] = coslat;
+
+    uwe[0] = sinlon;
+    uwe[1] = -coslon;
+    uwe[2] = 0.0;
+
+    ter2cel(time, uze, uz);
+    ter2cel(time, une, un);
+    ter2cel(time, uwe, uw);
+
+    p[0] = cosdc * cosra;
+    p[1] = cosdc * sinra;
+    p[2] = sindc;
+
+    pz = p[0]*uz[0] + p[1]*uz[1] + p[2]*uz[2];
+    pn = p[0]*un[0] + p[1]*un[1] + p[2]*un[2];
+    pw = p[0]*uw[0] + p[1]*uw[1] + p[2]*uw[2];
+
+    proj = sqrt(pn*pn + pw*pw);
+    az = 0.0;
+    if (proj > 0.0) {
+        az = -atan2(pw, pn) * RAD2DEG;
+        if (az < 0) 
+            az += 360;
+        if (az >= 360) 
+            az -= 360;
+    }
+    zd = atan2(proj, pz) * RAD2DEG;
+    hor.ra = ra;
+    hor.dec = dec;
+
+    if (refraction == REFRACTION_NORMAL || refraction == REFRACTION_JPLHOR) 
+    {
+        double zd0, refr, hd;
+        int j;
+
+        zd0 = zd;
+
+        // http://extras.springer.com/1999/978-1-4471-0555-8/chap4/horizons/horizons.pdf
+        // JPL Horizons says it uses refraction algorithm from 
+        // Meeus "Astronomical Algorithms", 1991, p. 101-102.
+        // I found the following Go implementation:
+        // https://github.com/soniakeys/meeus/blob/master/v3/refraction/refract.go
+        // This is a translation from the function "Saemundsson" there.
+        // I found experimentally that JPL Horizons clamps the angle to 1 degree below the horizon.
+        // This is important because the 'refr' formula below goes crazy near hd = -5.11.
+        hd = 90.0 - zd;
+        if (hd < -1.0)
+            hd = -1.0;
+
+        refr = (1.02 / tan((hd+10.3/(hd+5.11))*DEG2RAD)) / 60.0;
+
+        if (refraction == REFRACTION_NORMAL && zd > 91.0) 
+        {
+            // In "normal" mode we gradually reduce refraction toward the nadir
+            // so that we never get an altitude angle less than -90 degrees.
+            // When horizon angle is -1 degrees, zd = 91, and the factor is exactly 1.
+            // As zd approaches 180 (the nadir), the fraction approaches 0 linearly.
+            refr *= (180.0 - zd) / 89.0;
+        }
+
+        zd -= refr;
+
+        if (refr > 0.0 && zd > 3.0e-4) 
+        {
+            double sinzd = sin(zd * DEG2RAD);
+            double coszd = cos(zd * DEG2RAD);
+            double sinzd0 = sin(zd0 * DEG2RAD);
+            double coszd0 = cos(zd0 * DEG2RAD);
+            double pr[3];
+
+            for (j=0; j<3; ++j)
+                pr[j] = ((p[j] - coszd0 * uz[j]) / sinzd0)*sinzd + uz[j]*coszd;
+
+            proj = sqrt(pr[0]*pr[0] + pr[1]*pr[1]);
+            if (proj > 0) 
+            {
+                hor.ra = atan2(pr[1], pr[0]) * RAD2DEG / 15;
+                if (hor.ra < 0)
+                    hor.ra += 24;
+                if (hor.ra >= 24)
+                    hor.ra -= 24;
+            } 
+            else 
+            {
+                hor.ra = 0;
+            }
+            hor.dec = atan2(pr[2], proj) * RAD2DEG;
+        }
+    }
+
+    hor.azimuth = az;
+    hor.altitude = 90.0 - zd;
+    return hor;
 }
 
 
