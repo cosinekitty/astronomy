@@ -105,7 +105,7 @@ static int AstroCheck(void)
     {
         for (body=MIN_BODY; body <= MAX_BODY; ++body)
         {
-            if (body != BODY_MOON && body != BODY_PLUTO)
+            if (body != BODY_MOON)
             {
                 CHECK_VECTOR(pos, Astronomy_HelioVector(body, time));
                 fprintf(outfile, "v %s %0.16lf %0.16lf %0.16lf %0.16lf\n", Astronomy_BodyName(body), pos.t.tt, pos.x, pos.y, pos.z);

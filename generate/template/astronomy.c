@@ -1153,6 +1153,27 @@ static astro_vector_t CalcVsop(const vsop_model_t *model, astro_time_t time)
     return vector;
 }
 
+/*------------------ Chebyshev model for Pluto ------------------*/
+
+typedef struct
+{
+    double data[3];
+}
+astro_cheb_coeff_t;
+
+typedef struct
+{
+    double tt;
+    double ndays;
+    int ncoeff;
+    const astro_cheb_coeff_t *coeff;
+}
+astro_cheb_record_t;
+
+$ASTRO_C_CHEBYSHEV(8);
+
+/*------------------ end of generated code ------------------*/
+
 astro_vector_t Astronomy_HelioVector(astro_body_t body, astro_time_t time)
 {
     astro_vector_t vector;
