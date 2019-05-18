@@ -730,7 +730,8 @@ static void geo_pos(astro_time_t time, astro_observer_t observer, double outpos[
     precession(time.tt, pos2, 0.0, outpos);
 }
 
-static void spin(double angle, const double pos1[3], double vec2[3]) {
+static void spin(double angle, const double pos1[3], double vec2[3]) 
+{
     double angr = angle * DEG2RAD;
     double cosang = cos(angr);
     double sinang = sin(angr);
@@ -2272,9 +2273,9 @@ astro_horizon_t Astronomy_Horizon(
             double coszd0 = cos(zd0 * DEG2RAD);
             double pr[3];
 
-            for (j=0; j<3; ++j) {
+            for (j=0; j<3; ++j)
                 pr[j] = ((p[j] - coszd0 * uz[j]) / sinzd0)*sinzd + uz[j]*coszd;
-            }
+
             proj = sqrt(pr[0]*pr[0] + pr[1]*pr[1]);
             if (proj > 0) 
             {
