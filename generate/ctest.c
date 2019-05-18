@@ -102,7 +102,9 @@ static int AstroCheck(void)
             }
         }
 
-        /* FIXFIXFIX: Test GeoMoon, SkyPos, Horizon here; output GM 's' record. */
+        CHECK_VECTOR(pos, Astronomy_GeoMoon(time));
+        fprintf(outfile, "v GM %0.16lf %0.16lf %0.16lf %0.16lf\n", pos.t.tt, pos.x, pos.y, pos.z);
+        /* FIXFIXFIX: Test SkyPos, Horizon here; output GM 's' record. */
 
         time = Astronomy_AddDays(time, 10.03141592);
     }

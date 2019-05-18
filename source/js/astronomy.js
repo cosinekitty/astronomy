@@ -45,7 +45,7 @@ const MJD_BASIS = 2400000.5;            // mjd + MJD_BASIS = jd
 const Y2000_IN_MJD = T0 - MJD_BASIS;    // the 2000.0 epoch expressed in MJD
 const PI2 = 2 * Math.PI;
 const ARC = 3600 * (180 / Math.PI);     // arcseconds per radian
-const ERAD = 6378136.6;                 // mean earth radius
+const ERAD = 6378136.6;                 // mean earth radius in meters
 const AU = 1.4959787069098932e+11;      // astronomical unit in meters
 const C_AUDAY = 173.1446326846693;      // speed of light in AU/day
 const ASEC2RAD = 4.848136811095359935899141e-6;
@@ -1454,13 +1454,14 @@ function nutation_angles(time) {
 
 function mean_obliq(time) {
     var t = time.tt / 36525;
-    return (
+    var asec = (
         (((( -  0.0000000434   * t
              -  0.000000576  ) * t
              +  0.00200340   ) * t
              -  0.0001831    ) * t
              - 46.836769     ) * t + 84381.406
     );
+    return asec / 3600.0;
 }
 
 var cache_e_tilt;
@@ -1468,9 +1469,8 @@ var cache_e_tilt;
 function e_tilt(time) {
     if (!cache_e_tilt || Math.abs(cache_e_tilt.tt - time.tt) > 1.0e-6) {
         const nut = nutation_angles(time);
-        const mean_obl_seconds = mean_obliq(time);
-        const mean_ob = mean_obl_seconds / 3600;
-        const true_ob = (mean_obl_seconds + nut.deps) / 3600;
+        const mean_ob = mean_obliq(time);
+        const true_ob = mean_ob + (nut.deps / 3600);
         cache_e_tilt = {
             tt: time.tt,
             dpsi: nut.dpsi,
@@ -1484,7 +1484,7 @@ function e_tilt(time) {
 }
 
 function ecl2equ_vec(time, pos) {
-    var obl = e_tilt(time).mobl * DEG2RAD;
+    var obl = mean_obliq(time) * DEG2RAD;
     var cos_obl = Math.cos(obl);
     var sin_obl = Math.sin(obl);
     return [
@@ -1818,8 +1818,7 @@ function precession(tt1, pos1, tt2) {
     yz = -sc * cb * ca - sa * cc;
     zz = -sc * cb * sa + cc * ca;
 
-    if (tt2 == 0)
-    { 
+    if (tt2 == 0) { 
         // Perform rotation from epoch to J2000.0.
         return [
             xx * pos1[0] + xy * pos1[1] + xz * pos1[2],

@@ -95,6 +95,7 @@ astro_time_t Astronomy_MakeTime(int year, int month, int day, int hour, int minu
 astro_time_t Astronomy_AddDays(astro_time_t time, double days);
 astro_vector_t Astronomy_HelioVector(astro_body_t body, astro_time_t time);
 astro_vector_t Astronomy_GeoVector(astro_body_t body, astro_time_t time);
+astro_vector_t Astronomy_GeoMoon(astro_time_t time);
 double Astronomy_VectorLength(astro_vector_t vector);
 
 #ifdef __cplusplus
