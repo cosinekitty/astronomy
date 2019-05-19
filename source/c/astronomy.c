@@ -2232,6 +2232,62 @@ static const astro_cheb_record_t cheb_8[] =
     {    47272.5, 26141.0, ARRAYSIZE(cheb_8_6), cheb_8_6 }
 };
 
+static double ChebScale(double t_min, double t_max, double t) 
+{
+    return (2*t - (t_max + t_min)) / (t_max - t_min);
+}
+
+static astro_vector_t CalcChebyshev(const astro_cheb_record_t model[], int nrecs, astro_time_t time)
+{
+    int i, d, k;
+    double pos[3];
+    double p0, p1, p2, sum;
+    astro_vector_t vector;
+
+    /* Search for a record that overlaps the given time value. */
+    for (i=0; i < nrecs; ++i) 
+    {
+        double x = ChebScale(model[i].tt, model[i].tt + model[i].ndays, time.tt);
+        if (-1.0 <= x && x <= +1.0)
+        {
+            for (d=0; d < 3; ++d) 
+            {
+                p0 = 1.0;
+                sum = model[i].coeff[0].data[d];
+                p1 = x;
+                sum += model[i].coeff[1].data[d] * p1;
+                for (k=2; k < model[i].ncoeff; ++k) 
+                {
+                    p2 = (2 * x * p1) - p0;
+                    sum += model[i].coeff[k].data[d] * p2;
+                    p0 = p1;
+                    p1 = p2;
+                }
+                pos[d] = sum - model[i].coeff[0].data[d] / 2.0;
+            }
+
+            /* We found the position of the body. */
+            vector.status = ASTRO_SUCCESS;
+            vector.t = time;
+            vector.x = pos[0];
+            vector.y = pos[1];
+            vector.z = pos[2];
+            return vector;
+        }
+    }
+
+    /* The Chebyshev model does not cover this time value. */
+    vector.status = ASTRO_BAD_TIME;
+    vector.t = time;
+    vector.x = 1.0e+99;
+    vector.y = 1.0e+99;
+    vector.z = 1.0e+99;
+    return vector;
+}
+
+#define CalcPluto(time)    (CalcChebyshev(cheb_8, ARRAYSIZE(cheb_8), (time)))
+
+
 /*------------------ end of generated code ------------------*/
 
 astro_vector_t Astronomy_HelioVector(astro_body_t body, astro_time_t time)
@@ -2258,8 +2314,10 @@ astro_vector_t Astronomy_HelioVector(astro_body_t body, astro_time_t time)
     case BODY_NEPTUNE:
         return CalcVsop(&vsop[body], time);
 
+    case BODY_PLUTO:
+        return CalcPluto(time);
+        
     case BODY_MOON:     /* FIXFIXFIX: GeoMoon not yet implemented. */
-    case BODY_PLUTO:    /* FIXFIXFIX: Chebyshev models not yet implemented */
     default:
         vector.status = ASTRO_INVALID_BODY;
         vector.x = vector.y = vector.z = 1.0e+99;   /* Invalid coordinates */

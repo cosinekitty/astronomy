@@ -1704,7 +1704,7 @@ function ChebScale(t_min, t_max, t) {
 function CalcChebyshev(model, time) {
     var record, x, k, d, sum, p0, p1, p2, pos;
 
-    // Search for a record that overlaps the Julian Date 'jd'.
+    // Search for a record that overlaps the given time value.
     for (record of model) {
         x = ChebScale(record.tt, record.tt + record.ndays, time.tt);
         if (-1 <= x && x <= +1) {

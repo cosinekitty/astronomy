@@ -38,7 +38,8 @@ typedef enum
 {
     ASTRO_SUCCESS,
     ASTRO_INVALID_BODY,
-    ASTRO_NO_CONVERGE
+    ASTRO_NO_CONVERGE,
+    ASTRO_BAD_TIME
 }
 astro_status_t;
 
