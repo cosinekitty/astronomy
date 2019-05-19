@@ -1111,6 +1111,7 @@ static int CheckTestOutput(const char *filename)
     FILE *infile = NULL;
     char line[200];
     double arcmin_helio, arcmin_eclip, arcmin_equ, arcmin_hor;
+    double sum_helio = 0.0, sum_eclip = 0.0, sum_equ = 0.0, sum_hor = 0.0;
     double max_helio = 0.0, max_eclip = 0.0, max_equ = 0.0, max_hor = 0.0;
     int count_helio=0, count_eclip=0, count_sky=0;
     observer location;
@@ -1146,6 +1147,7 @@ static int CheckTestOutput(const char *filename)
         case 'v':   /* heliocentric cartesian vector represented in J2000 equatorial plane */            
             CHECK(CheckTestVector(filename, lnum, line, &arcmin_helio));
             ++count_helio;
+            sum_helio += arcmin_helio * arcmin_helio;
             if (arcmin_helio > max_helio)
                 max_helio = arcmin_helio;
             break;
@@ -1153,6 +1155,8 @@ static int CheckTestOutput(const char *filename)
         case 's':   /* sky coordinates: RA, DEC, distance */
             CHECK(CheckSkyPos(&location, filename, lnum, line, &arcmin_equ, &arcmin_hor));
             ++count_sky;
+            sum_equ += arcmin_equ * arcmin_equ;
+            sum_hor += arcmin_hor * arcmin_hor;
             if (arcmin_equ > max_equ)
                 max_equ = arcmin_equ;
             if (arcmin_hor > max_hor)
@@ -1162,6 +1166,7 @@ static int CheckTestOutput(const char *filename)
         case 'e':
             CHECK(CheckEcliptic(filename, lnum, line, &arcmin_eclip));
             ++count_eclip;
+            sum_eclip += arcmin_eclip * arcmin_eclip;
             if (arcmin_eclip > max_eclip)
                 max_eclip = arcmin_eclip;
             break;
@@ -1176,16 +1181,16 @@ static int CheckTestOutput(const char *filename)
     printf("CheckTestOutput: Verified %d lines of file %s\n", lnum, filename);
 
     if (count_helio > 0)
-        printf("CheckTestOutput(HELIO): count = %6d, helio error = %8.6lf arcmin\n", count_helio, max_helio);
+        printf("CheckTestOutput(HELIO): count = %6d, helio max = %10.8lf, rms = %10.8lf\n", count_helio, max_helio, sqrt(sum_helio / count_helio));
 
     if (count_sky > 0)
     {
-        printf("CheckTestOutput(SKY):   count = %6d, equ   error = %8.6lf arcmin\n", count_sky, max_equ);
-        printf("CheckTestOutput(SKY):   count = %6d, hor   error = %8.6lf arcmin\n", count_sky, max_hor);
+        printf("CheckTestOutput(SKY):   count = %6d, equ   max = %10.8lf, rms = %10.8lf\n", count_sky, max_equ, sqrt(sum_equ / count_sky));
+        printf("CheckTestOutput(SKY):   count = %6d, hor   max = %10.8lf, rms = %10.8lf\n", count_sky, max_hor, sqrt(sum_hor / count_sky));
     }
 
     if (count_eclip > 0)
-        printf("CheckTestOutput(ECLIP): count = %6d, eclip error = %8.6lf arcmin\n", count_eclip, max_eclip);
+        printf("CheckTestOutput(ECLIP): count = %6d, eclip max = %10.8lf, rms = %10.8lf\n", count_eclip, max_eclip, sqrt(sum_eclip / count_eclip));
 
     error = 0;
 
