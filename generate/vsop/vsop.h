@@ -65,6 +65,8 @@ typedef enum    /* values created for compatibility with NOVAS; these are *NOT* 
 }
 vsop_body_t;
 
+#define VSOP_BODY_LIMIT 12
+
 typedef struct 
 {
     vsop_version_t version;

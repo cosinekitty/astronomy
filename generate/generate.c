@@ -82,7 +82,7 @@ static double VectorError(double a[3], double b[3]);
 static int ManualResample(int body, int npoly, int nsections, int startYear, int stopYear);
 static int CheckTestOutput(const char *filename);
 static vsop_body_t LookupBody(const char *name);
-static int CheckSkyPos(observer *location, const char *filename, int lnum, const char *line, double *arcmin_equ, double *arcmin_hor);
+static int CheckSkyPos(observer *location, const char *filename, int lnum, const char *line, double *arcmin_equ, double *arcmin_hor, vsop_body_t *body);
 static int UnitTestChebyshev(void);
 
 #define MOON_PERIGEE        0.00238
@@ -828,7 +828,7 @@ static double LongitudeOffset(double diff)
     return offset;
 }
 
-static int CheckEcliptic(const char *filename, int lnum, const char *line, double *arcmin)
+static int CheckEcliptic(const char *filename, int lnum, const char *line, double *arcmin, vsop_body_t *outbody)
 {
     int error;
     vsop_body_t body;
@@ -840,6 +840,7 @@ static int CheckEcliptic(const char *filename, int lnum, const char *line, doubl
     double tt, jd, lon, dist, blon, elon, diff;
     
     *arcmin = 99999.0;
+    *outbody = VSOP_INVALID_BODY;    
 
     /* Example line: "e Jupiter opp <tt> <au>" */
     if (4 != sscanf(line, "e %9[A-Za-z] %9[a-z] %lf %lf", name, event, &tt, &dist))
@@ -848,7 +849,7 @@ static int CheckEcliptic(const char *filename, int lnum, const char *line, doubl
         return 1;
     }
 
-    body = LookupBody(name);
+    *outbody = body = LookupBody(name);
     if (body < 0)
     {
         fprintf(stderr, "CheckEcliptic: Unknown body '%s' on line %d of file %s\n", name, lnum, filename);
@@ -916,13 +917,14 @@ fail:
     return error;
 }
 
-static int CheckTestVector(const char *filename, int lnum, const char *line, double *arcmin)
+static int CheckTestVector(const char *filename, int lnum, const char *line, double *arcmin, vsop_body_t *outbody)
 {
     int error;
     vsop_body_t body;
     char name[10];
     double tt, jd, xpos[3], npos[3];
 
+    *outbody = VSOP_INVALID_BODY;
     *arcmin = 99999.0;
 
     if (5 != sscanf(line, "v %9[A-Za-z] %lf %lf %lf %lf", name, &tt, &xpos[0], &xpos[1], &xpos[2]))
@@ -932,7 +934,7 @@ static int CheckTestVector(const char *filename, int lnum, const char *line, dou
     }
     jd = tt + T0;
 
-    body = LookupBody(name);
+    *outbody = body = LookupBody(name);
     if (body < 0)
     {
         fprintf(stderr, "CheckTestVector: Unknown body '%s' on line %d of file %s\n", name, lnum, filename);
@@ -964,7 +966,7 @@ static int CheckTestVector(const char *filename, int lnum, const char *line, dou
     return 0;   /* success */
 }
 
-static int CheckSkyPos(observer *location, const char *filename, int lnum, const char *line, double *arcmin_equ, double *arcmin_hor)
+static int CheckSkyPos(observer *location, const char *filename, int lnum, const char *line, double *arcmin_equ, double *arcmin_hor, vsop_body_t *outbody)
 {
     int body, error, bodyIndex;
     char name[10];
@@ -975,6 +977,7 @@ static int CheckSkyPos(observer *location, const char *filename, int lnum, const
     sky_pos sky_dat;    /* (RA,DEC) using true equator and equinox of date*/
     double delta_ra, delta_dec, delta_az, delta_alt;
 
+    *outbody = VSOP_INVALID_BODY;
     *arcmin_equ = *arcmin_hor = 99999.0;
 
     if (8 != sscanf(line, "s %9[A-Za-z] %lf %lf %lf %lf %lf %lf %lf", name, &tt, &ut, &ra, &dec, &dist, &azimuth, &altitude))
@@ -985,7 +988,7 @@ static int CheckSkyPos(observer *location, const char *filename, int lnum, const
     jd_tt = tt + T0;
     jd_utc = ut + T0;
 
-    body = LookupBody(name);
+    *outbody = body = LookupBody(name);
     if (body < 0)
     {
         fprintf(stderr, "CheckSkyPos: Unknown body '%s' on line %d of file %s\n", name, lnum, filename);
@@ -1105,18 +1108,78 @@ static vsop_body_t LookupBody(const char *name)
     return BODY_INVALID;
 }
 
+typedef struct
+{
+    int    count;
+    double sum;
+    double max;
+}
+error_stat_t;
+
+typedef struct
+{
+    error_stat_t    helio;
+    error_stat_t    equ;
+    error_stat_t    hor;
+    error_stat_t    eclip;
+}
+error_bundle_t;
+
+static void UpdateErrorStats(error_stat_t *stats, double arcmin)
+{
+    ++(stats->count);
+    stats->sum += arcmin * arcmin;
+    if (arcmin > stats->max)
+        stats->max = arcmin;
+}
+
+static void PrintErrorStats(vsop_body_t body, const char *tag, const error_stat_t *stats, error_stat_t *tally)
+{
+    if (stats->count > 0)
+    {
+        const char *name;
+        switch ((int)body)
+        {
+        case VSOP_MERCURY:  name = "Mercury";   break;
+        case VSOP_VENUS:    name = "Venus";     break;
+        case VSOP_EARTH:    name = "Earth";     break;
+        case VSOP_EMB:      name = "EMB";       break;
+        case VSOP_MARS:     name = "Mars";      break;
+        case VSOP_JUPITER:  name = "Jupiter";   break;
+        case VSOP_SATURN:   name = "Saturn";    break;
+        case VSOP_URANUS:   name = "Uranus";    break;
+        case VSOP_NEPTUNE:  name = "Neptune";   break;
+        case 8:             name = "Pluto";     break;
+        case 9:             name = "Moon";      break;
+        case VSOP_SUN:      name = "Sun";       break;
+        default:            name = "";          break;
+        }
+        printf("STATS(%-8s %s):  count= %6d  max= %10.8lf  rms= %10.8lf\n", name, tag, stats->count, stats->max, sqrt(stats->sum / stats->count));
+
+        if (tally != NULL)
+        {
+            tally->count += stats->count;
+            tally->sum += stats->sum;
+            if (stats->max > tally->max)
+                tally->max = stats->max;
+        }
+    }
+}
+
 static int CheckTestOutput(const char *filename)
 {
     int error, lnum;
+    vsop_body_t body;
     FILE *infile = NULL;
     char line[200];
     double arcmin_helio, arcmin_eclip, arcmin_equ, arcmin_hor;
-    double sum_helio = 0.0, sum_eclip = 0.0, sum_equ = 0.0, sum_hor = 0.0;
-    double max_helio = 0.0, max_eclip = 0.0, max_equ = 0.0, max_hor = 0.0;
-    int count_helio=0, count_eclip=0, count_sky=0;
+    error_bundle_t bundle[VSOP_BODY_LIMIT];
+    error_stat_t tally;
     observer location;
 
     memset(&location, 0, sizeof(observer));
+    memset(bundle, 0, sizeof(bundle));
+    memset(&tally, 0, sizeof(tally));
 
     CHECK(OpenEphem());
 
@@ -1145,30 +1208,19 @@ static int CheckTestOutput(const char *filename)
             break;
 
         case 'v':   /* heliocentric cartesian vector represented in J2000 equatorial plane */            
-            CHECK(CheckTestVector(filename, lnum, line, &arcmin_helio));
-            ++count_helio;
-            sum_helio += arcmin_helio * arcmin_helio;
-            if (arcmin_helio > max_helio)
-                max_helio = arcmin_helio;
+            CHECK(CheckTestVector(filename, lnum, line, &arcmin_helio, &body));
+            UpdateErrorStats(&bundle[body].helio, arcmin_helio);
             break;
 
         case 's':   /* sky coordinates: RA, DEC, distance */
-            CHECK(CheckSkyPos(&location, filename, lnum, line, &arcmin_equ, &arcmin_hor));
-            ++count_sky;
-            sum_equ += arcmin_equ * arcmin_equ;
-            sum_hor += arcmin_hor * arcmin_hor;
-            if (arcmin_equ > max_equ)
-                max_equ = arcmin_equ;
-            if (arcmin_hor > max_hor)
-                max_hor = arcmin_hor;
+            CHECK(CheckSkyPos(&location, filename, lnum, line, &arcmin_equ, &arcmin_hor, &body));
+            UpdateErrorStats(&bundle[body].equ, arcmin_equ);
+            UpdateErrorStats(&bundle[body].hor, arcmin_hor);
             break;
 
         case 'e':
-            CHECK(CheckEcliptic(filename, lnum, line, &arcmin_eclip));
-            ++count_eclip;
-            sum_eclip += arcmin_eclip * arcmin_eclip;
-            if (arcmin_eclip > max_eclip)
-                max_eclip = arcmin_eclip;
+            CHECK(CheckEcliptic(filename, lnum, line, &arcmin_eclip, &body));
+            UpdateErrorStats(&bundle[body].eclip, arcmin_eclip);
             break;
         
         default:
@@ -1180,17 +1232,15 @@ static int CheckTestOutput(const char *filename)
 
     printf("CheckTestOutput: Verified %d lines of file %s\n", lnum, filename);
 
-    if (count_helio > 0)
-        printf("CheckTestOutput(HELIO): count = %6d, helio max = %10.8lf, rms = %10.8lf\n", count_helio, max_helio, sqrt(sum_helio / count_helio));
-
-    if (count_sky > 0)
+    for (body=0; body < VSOP_BODY_LIMIT; ++body)
     {
-        printf("CheckTestOutput(SKY):   count = %6d, equ   max = %10.8lf, rms = %10.8lf\n", count_sky, max_equ, sqrt(sum_equ / count_sky));
-        printf("CheckTestOutput(SKY):   count = %6d, hor   max = %10.8lf, rms = %10.8lf\n", count_sky, max_hor, sqrt(sum_hor / count_sky));
+        PrintErrorStats(body, "hel", &bundle[body].helio, &tally);
+        PrintErrorStats(body, "equ", &bundle[body].equ,   &tally);
+        PrintErrorStats(body, "hor", &bundle[body].hor,   &tally);
+        PrintErrorStats(body, "ecl", &bundle[body].eclip, &tally);
     }
-
-    if (count_eclip > 0)
-        printf("CheckTestOutput(ECLIP): count = %6d, eclip max = %10.8lf, rms = %10.8lf\n", count_eclip, max_eclip, sqrt(sum_eclip / count_eclip));
+    printf("---------------------------------------------------------------------\n");
+    PrintErrorStats(-1, "ALL", &tally, NULL);
 
     error = 0;
 
