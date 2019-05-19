@@ -82,7 +82,7 @@ static double VectorError(double a[3], double b[3]);
 static int ManualResample(int body, int npoly, int nsections, int startYear, int stopYear);
 static int CheckTestOutput(const char *filename);
 static vsop_body_t LookupBody(const char *name);
-static int CheckSkyPos(observer *location, const char *filename, int lnum, const char *line, double *arcmin_geo, double *arcmin_hor);
+static int CheckSkyPos(observer *location, const char *filename, int lnum, const char *line, double *arcmin_equ, double *arcmin_hor);
 static int UnitTestChebyshev(void);
 
 #define MOON_PERIGEE        0.00238
@@ -964,7 +964,7 @@ static int CheckTestVector(const char *filename, int lnum, const char *line, dou
     return 0;   /* success */
 }
 
-static int CheckSkyPos(observer *location, const char *filename, int lnum, const char *line, double *arcmin_geo, double *arcmin_hor)
+static int CheckSkyPos(observer *location, const char *filename, int lnum, const char *line, double *arcmin_equ, double *arcmin_hor)
 {
     int body, error, bodyIndex;
     char name[10];
@@ -975,7 +975,7 @@ static int CheckSkyPos(observer *location, const char *filename, int lnum, const
     sky_pos sky_dat;    /* (RA,DEC) using true equator and equinox of date*/
     double delta_ra, delta_dec, delta_az, delta_alt;
 
-    *arcmin_geo = *arcmin_hor = 99999.0;
+    *arcmin_equ = *arcmin_hor = 99999.0;
 
     if (8 != sscanf(line, "s %9[A-Za-z] %lf %lf %lf %lf %lf %lf %lf", name, &tt, &ut, &ra, &dec, &dist, &azimuth, &altitude))
     {
@@ -1044,11 +1044,11 @@ static int CheckSkyPos(observer *location, const char *filename, int lnum, const
     delta_ra *= cos(sky_ast.dec * DEG2RAD);
 
     /* Calculate pythagorean error as if both were planar coordinates. */
-    *arcmin_geo = sqrt(delta_ra*delta_ra + delta_dec*delta_dec);
+    *arcmin_equ = sqrt(delta_ra*delta_ra + delta_dec*delta_dec);
 
-    if (*arcmin_geo > 0.9)
+    if (*arcmin_equ > 0.9)
     {
-        fprintf(stderr, "CheckSkyPos: excessive (RA,DEC) error = %lf arcmin at line %d of file %s\n", *arcmin_geo, lnum, filename);
+        fprintf(stderr, "CheckSkyPos: excessive (RA,DEC) error = %lf arcmin at line %d of file %s\n", *arcmin_equ, lnum, filename);
         return 1;
     }
 
@@ -1110,8 +1110,8 @@ static int CheckTestOutput(const char *filename)
     int error, lnum;
     FILE *infile = NULL;
     char line[200];
-    double arcmin_helio, arcmin_eclip, arcmin_geo, arcmin_hor;
-    double max_helio = 0.0, max_eclip = 0.0, max_geo = 0.0, max_hor = 0.0;
+    double arcmin_helio, arcmin_eclip, arcmin_equ, arcmin_hor;
+    double max_helio = 0.0, max_eclip = 0.0, max_equ = 0.0, max_hor = 0.0;
     int count_helio=0, count_eclip=0, count_sky=0;
     observer location;
 
@@ -1143,7 +1143,7 @@ static int CheckTestOutput(const char *filename)
             CHECK(ParseObserver(filename, lnum, line, &location));
             break;
 
-        case 'v':   /* cartesian vector represented in J2000 equatorial plane */            
+        case 'v':   /* heliocentric cartesian vector represented in J2000 equatorial plane */            
             CHECK(CheckTestVector(filename, lnum, line, &arcmin_helio));
             ++count_helio;
             if (arcmin_helio > max_helio)
@@ -1151,10 +1151,10 @@ static int CheckTestOutput(const char *filename)
             break;
 
         case 's':   /* sky coordinates: RA, DEC, distance */
-            CHECK(CheckSkyPos(&location, filename, lnum, line, &arcmin_geo, &arcmin_hor));
+            CHECK(CheckSkyPos(&location, filename, lnum, line, &arcmin_equ, &arcmin_hor));
             ++count_sky;
-            if (arcmin_geo > max_geo)
-                max_geo = arcmin_geo;
+            if (arcmin_equ > max_equ)
+                max_equ = arcmin_equ;
             if (arcmin_hor > max_hor)
                 max_hor = arcmin_hor;
             break;
@@ -1176,13 +1176,16 @@ static int CheckTestOutput(const char *filename)
     printf("CheckTestOutput: Verified %d lines of file %s\n", lnum, filename);
 
     if (count_helio > 0)
-        printf("CheckTestOutput(HELIO): count = %6d, helio error = %8.4lf arcmin\n", count_helio, max_helio);
+        printf("CheckTestOutput(HELIO): count = %6d, helio error = %8.6lf arcmin\n", count_helio, max_helio);
 
     if (count_sky > 0)
-        printf("CheckTestOutput(SKY):   count = %6d, geocn error = %8.4lf arcmin, horzn error = %8.4lf arcmin\n", count_sky, max_geo, max_hor);
+    {
+        printf("CheckTestOutput(SKY):   count = %6d, equ   error = %8.6lf arcmin\n", count_sky, max_equ);
+        printf("CheckTestOutput(SKY):   count = %6d, hor   error = %8.6lf arcmin\n", count_sky, max_hor);
+    }
 
     if (count_eclip > 0)
-        printf("CheckTestOutput(ECLIP): count = %6d, eclip error = %8.4lf arcmin\n", count_eclip, max_eclip);
+        printf("CheckTestOutput(ECLIP): count = %6d, eclip error = %8.6lf arcmin\n", count_eclip, max_eclip);
 
     error = 0;
 
