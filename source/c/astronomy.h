@@ -129,9 +129,9 @@ astro_observer_t Astronomy_MakeObserver(double latitude, double longitude, doubl
 astro_time_t Astronomy_MakeTime(int year, int month, int day, int hour, int minute, double second);
 astro_time_t Astronomy_AddDays(astro_time_t time, double days);
 astro_vector_t Astronomy_HelioVector(astro_body_t body, astro_time_t time);
-astro_vector_t Astronomy_GeoVector(astro_body_t body, astro_time_t time);
+astro_vector_t Astronomy_GeoVector(astro_body_t body, astro_time_t time, int correct_aberration);
 astro_vector_t Astronomy_GeoMoon(astro_time_t time);
-astro_sky_t Astronomy_SkyPos(astro_vector_t gc_vector, astro_observer_t observer);
+astro_sky_t Astronomy_SkyPos(astro_body_t body, astro_time_t time, astro_observer_t observer);
 astro_horizon_t Astronomy_Horizon(astro_time_t time, astro_observer_t observer, double ra, double dec, astro_refraction_t refraction);
 
 #ifdef __cplusplus

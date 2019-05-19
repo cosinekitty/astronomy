@@ -2333,7 +2333,7 @@ astro_vector_t Astronomy_HelioVector(astro_body_t body, astro_time_t time)
     }
 }
 
-astro_vector_t Astronomy_GeoVector(astro_body_t body, astro_time_t time)
+astro_vector_t Astronomy_GeoVector(astro_body_t body, astro_time_t time, int correct_aberration)
 {
     astro_vector_t vector;
     astro_vector_t earth;
@@ -2366,9 +2366,14 @@ astro_vector_t Astronomy_GeoVector(astro_body_t body, astro_time_t time)
 
     default:
         /* For all other bodies, apply light travel time correction. */
-        earth = CalcEarth(time);
-        if (earth.status != ASTRO_SUCCESS)
-            return earth;
+
+        if (!correct_aberration)
+        {
+            /* No aberration, so calculate Earth's position once, at the time of observation. */
+            earth = CalcEarth(time);
+            if (earth.status != ASTRO_SUCCESS)
+                return earth;
+        }
 
         ltime = time;
         for (iter=0; iter < 10; ++iter)
@@ -2376,6 +2381,26 @@ astro_vector_t Astronomy_GeoVector(astro_body_t body, astro_time_t time)
             vector = Astronomy_HelioVector(body, ltime);
             if (vector.status != ASTRO_SUCCESS)
                 return vector;
+
+            if (correct_aberration)
+            {
+                /* 
+                    Include aberration, so make a good first-order approximation
+                    by backdating the Earth's position also.
+                    This is confusing, but it works for objects within the Solar System
+                    because the distance the Earth moves in that small amount of light
+                    travel time (a few minutes to a few hours) is well approximated
+                    by a line segment that substends the angle seen from the remote
+                    body viewing Earth. That angle is pretty close to the aberration
+                    angle of the moving Earth viewing the remote body.
+                    In other words, both of the following approximate the aberration angle:
+                        (transverse distance Earth moves) / (distance to body)
+                        (transverse speed of Earth) / (speed of light).
+                */
+                earth = CalcEarth(ltime);
+                if (earth.status != ASTRO_SUCCESS)
+                    return earth;
+            }
 
             /* Convert heliocentric vector to geocentric vector. */
             vector.x -= earth.x;
@@ -2398,25 +2423,36 @@ finished:
     return vector;
 }
 
-astro_sky_t Astronomy_SkyPos(astro_vector_t gc_vector, astro_observer_t observer)
+astro_sky_t Astronomy_SkyPos(astro_body_t body, astro_time_t time, astro_observer_t observer)
 {
     astro_sky_t sky;
+    astro_vector_t gc_ast;
+    astro_vector_t gc_cor;
     double gc_observer[3];
-    double j2000_vector[3];
+    double j2000_ast[3];
+    double j2000_cor[3];
     double ofdate_vector[3];
     double pos7[3];
 
-    geo_pos(gc_vector.t, observer, gc_observer);
+    geo_pos(time, observer, gc_observer);
 
-    j2000_vector[0] = gc_vector.x - gc_observer[0];
-    j2000_vector[1] = gc_vector.y - gc_observer[1];
-    j2000_vector[2] = gc_vector.z - gc_observer[2];
+    /* Calculate astrometric (no-aberration) vector */
+    gc_ast = Astronomy_GeoVector(body, time, 0);    /* FIXFIXFIX - must check for errors instead of ignoring them */
 
-    sky.j2000 = vector2radec(j2000_vector);
-    precession(0.0, j2000_vector, gc_vector.t.tt, pos7);
-    nutation(gc_vector.t, 0.0, pos7, ofdate_vector);
+    j2000_ast[0] = gc_ast.x - gc_observer[0];
+    j2000_ast[1] = gc_ast.y - gc_observer[1];
+    j2000_ast[2] = gc_ast.z - gc_observer[2];
+    sky.j2000 = vector2radec(j2000_ast);
+
+    /* Calculate aberration-corrected coordinates. */
+    gc_cor = Astronomy_GeoVector(body, time, 1);
+    j2000_cor[0] = gc_cor.x - gc_observer[0];
+    j2000_cor[1] = gc_cor.y - gc_observer[1];
+    j2000_cor[2] = gc_cor.z - gc_observer[2];
+    precession(0.0, j2000_cor, time.tt, pos7);
+    nutation(time, 0.0, pos7, ofdate_vector);
     sky.ofdate = vector2radec(ofdate_vector);
-    sky.t = gc_vector.t;
+    sky.t = time;
 
     return sky;
 }

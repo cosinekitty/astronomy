@@ -118,21 +118,20 @@ static int AstroCheck(void)
 
             if (body != BODY_EARTH)
             {
-                CHECK_VECTOR(pos, Astronomy_GeoVector(body, time));
-                sky = Astronomy_SkyPos(pos, observer);
+                sky = Astronomy_SkyPos(body, time, observer);
                 hor = Astronomy_Horizon(sky.t, observer, sky.ofdate.ra, sky.ofdate.dec, REFRACTION_NONE);
                 fprintf(outfile, "s %s %0.16lf %0.16lf %0.16lf %0.16lf %0.16lf %0.16lf %0.16lf\n", 
-                    Astronomy_BodyName(body), pos.t.tt, pos.t.ut, sky.j2000.ra, sky.j2000.dec, sky.j2000.dist, hor.azimuth, hor.altitude);
+                    Astronomy_BodyName(body), time.tt, time.ut, sky.j2000.ra, sky.j2000.dec, sky.j2000.dist, hor.azimuth, hor.altitude);
             }
         }
 
-        CHECK_VECTOR(pos, Astronomy_GeoVector(BODY_MOON, time));
+        CHECK_VECTOR(pos, Astronomy_GeoVector(BODY_MOON, time, 0));     /*FIXFIXFIX: allow disabling light correction too?*/
         fprintf(outfile, "v GM %0.16lf %0.16lf %0.16lf %0.16lf\n", pos.t.tt, pos.x, pos.y, pos.z);
 
-        sky = Astronomy_SkyPos(pos, observer);
+        sky = Astronomy_SkyPos(BODY_MOON, time, observer);
         hor = Astronomy_Horizon(sky.t, observer, sky.ofdate.ra, sky.ofdate.dec, REFRACTION_NONE);
         fprintf(outfile, "s GM %0.16lf %0.16lf %0.16lf %0.16lf %0.16lf %0.16lf %0.16lf\n", 
-            pos.t.tt, pos.t.ut, sky.j2000.ra, sky.j2000.dec, sky.j2000.dist, hor.azimuth, hor.altitude);
+            time.tt, time.ut, sky.j2000.ra, sky.j2000.dec, sky.j2000.dist, hor.azimuth, hor.altitude);
 
         time = Astronomy_AddDays(time, 10.0 + PI/100.0);
     }
@@ -150,19 +149,17 @@ static int AdHoc(void)
     int error = 0;
     astro_observer_t observer = Astronomy_MakeObserver(29.0, -81.0, 10.0);
     astro_time_t time;
-    astro_vector_t pos;
     astro_sky_t sky;
 
     time.tt = -109572.4997569444385590;
     time.ut = -109572.5;
 
-    CHECK_VECTOR(pos, Astronomy_GeoVector(BODY_MERCURY, time));
-    sky = Astronomy_SkyPos(pos, observer);
+    sky = Astronomy_SkyPos(BODY_MERCURY, time, observer);
     printf("J2000  RA  = %0.16lf\n", sky.j2000.ra);
     printf("J2000  DEC = %0.16lf\n", sky.j2000.dec);
     printf("ofdate RA  = %0.16lf\n", sky.ofdate.ra);
     printf("ofdate DEC = %0.16lf\n", sky.ofdate.dec);
 
-fail:
+/*fail:*/
     return error;
 }
