@@ -88,6 +88,13 @@ static int AstroCheck(void)
     astro_sky_t sky;
     astro_horizon_t hor;
     astro_observer_t observer = Astronomy_MakeObserver(28.0, -81.0, 10.0);
+    int b;
+    static const astro_body_t bodylist[] =  /* match the order in the JavaScript unit test */
+    {
+        BODY_SUN, BODY_MERCURY, BODY_VENUS, BODY_EARTH, BODY_MARS, 
+        BODY_JUPITER, BODY_SATURN, BODY_URANUS, BODY_NEPTUNE, BODY_PLUTO
+    };
+    static int nbodies = sizeof(bodylist) / sizeof(bodylist[0]);
 
     outfile = fopen(filename, "wt");
     if (outfile == NULL)
@@ -103,21 +110,19 @@ static int AstroCheck(void)
     stop = Astronomy_MakeTime(2200, 1, 1, 0, 0, 0.0);
     while (time.tt < stop.tt)
     {
-        for (body=MIN_BODY; body <= MAX_BODY; ++body)
+        for (b=0; b < nbodies; ++b)
         {
-            if (body != BODY_MOON)
-            {
-                CHECK_VECTOR(pos, Astronomy_HelioVector(body, time));
-                fprintf(outfile, "v %s %0.16lf %0.16lf %0.16lf %0.16lf\n", Astronomy_BodyName(body), pos.t.tt, pos.x, pos.y, pos.z);
+            body = bodylist[b];
+            CHECK_VECTOR(pos, Astronomy_HelioVector(body, time));
+            fprintf(outfile, "v %s %0.16lf %0.16lf %0.16lf %0.16lf\n", Astronomy_BodyName(body), pos.t.tt, pos.x, pos.y, pos.z);
 
-                if (body != BODY_EARTH)
-                {
-                    CHECK_VECTOR(pos, Astronomy_GeoVector(body, time));
-                    sky = Astronomy_SkyPos(pos, observer);
-                    hor = Astronomy_Horizon(sky.t, observer, sky.ofdate.ra, sky.ofdate.dec, REFRACTION_NONE);
-                    fprintf(outfile, "s %s %0.16lf %0.16lf %0.16lf %0.16lf %0.16lf %0.16lf %0.16lf\n", 
-                        Astronomy_BodyName(body), pos.t.tt, pos.t.ut, sky.j2000.ra, sky.j2000.dec, sky.j2000.dist, hor.azimuth, hor.altitude);
-                }
+            if (body != BODY_EARTH)
+            {
+                CHECK_VECTOR(pos, Astronomy_GeoVector(body, time));
+                sky = Astronomy_SkyPos(pos, observer);
+                hor = Astronomy_Horizon(sky.t, observer, sky.ofdate.ra, sky.ofdate.dec, REFRACTION_NONE);
+                fprintf(outfile, "s %s %0.16lf %0.16lf %0.16lf %0.16lf %0.16lf %0.16lf %0.16lf\n", 
+                    Astronomy_BodyName(body), pos.t.tt, pos.t.ut, sky.j2000.ra, sky.j2000.dec, sky.j2000.dist, hor.azimuth, hor.altitude);
             }
         }
 
