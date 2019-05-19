@@ -148,7 +148,7 @@ fail:
 static int AdHoc(void)
 {
     int error = 0;
-    astro_observer_t observer = Astronomy_MakeObserver(28.0, -81.0, 10.0);
+    astro_observer_t observer = Astronomy_MakeObserver(29.0, -81.0, 10.0);
     astro_time_t time;
     astro_vector_t pos;
     astro_sky_t sky;
