@@ -1,0 +1,20 @@
+#!/bin/bash
+Fail()
+{
+    echo "ERROR($0): $1"
+    exit 1
+}
+
+[[ -z "${CC}" ]] && CC=gcc
+echo "$0: C compiler = ${CC}"
+
+BUILDOPT='-g -O0'
+
+${CC} ${BUILDOPT} -Wall -Werror -o ctest -I ../source/c/ ../source/c/astronomy.c ctest.c -lm || Fail "Error building ctest"
+
+echo "$0: Built 'ctest' program."
+
+./ctest adhoc || Fail "Failure reported by ctest."
+
+echo "adhoc_c: success"
+exit 0

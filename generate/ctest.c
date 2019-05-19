@@ -26,7 +26,7 @@ static int CheckVector(int lnum, astro_vector_t v)
 
 #define CHECK_VECTOR(v,x)   CHECK(CheckVector(__LINE__, ((v) = (x))))
 
-static int Test_Geo(void);
+static int AdHoc(void);
 static int Test_AstroTime(void);
 static int AstroCheck(void);
 
@@ -34,9 +34,9 @@ int main(int argc, const char *argv[])
 {
     int error = 0;
 
-    if (argc == 2 && !strcmp(argv[1], "geo"))
+    if (argc == 2 && !strcmp(argv[1], "adhoc"))
     {
-        CHECK(Test_Geo());      /* ad hoc test for debugging */
+        CHECK(AdHoc());      /* ad hoc test for debugging */
     }
     else
     {
@@ -145,17 +145,24 @@ fail:
     return error;
 }
 
-static int Test_Geo(void)
+static int AdHoc(void)
 {
     int error = 0;
+    astro_observer_t observer = Astronomy_MakeObserver(28.0, -81.0, 10.0);
     astro_time_t time;
     astro_vector_t pos;
+    astro_sky_t sky;
 
-    time.ut = -109492.2564886306936387;
-    time.tt = -109492.2562455624283757;
+    time.tt = -109572.4997569444385590;
+    time.ut = -109572.5;
 
-    CHECK_VECTOR(pos, Astronomy_GeoVector(BODY_MERCURY, time));
-    printf("#(C ) GeoVector tt=%0.16lf ut=%0.16lf x=%0.16lf y=%0.16lf z=%0.16lf\n", time.tt, time.ut, pos.x, pos.y, pos.z);
+    CHECK_VECTOR(pos, Astronomy_GeoVector(BODY_SUN, time));
+    sky = Astronomy_SkyPos(pos, observer);
+    printf("J2000  RA  = %0.16lf\n", sky.j2000.ra);
+    printf("J2000  DEC = %0.16lf\n", sky.j2000.dec);
+    printf("ofdate RA  = %0.16lf\n", sky.ofdate.ra);
+    printf("ofdate DEC = %0.16lf\n", sky.ofdate.dec);
+
 fail:
     return error;
 }
