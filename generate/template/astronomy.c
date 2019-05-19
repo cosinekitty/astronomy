@@ -1232,7 +1232,7 @@ static astro_vector_t CalcChebyshev(const astro_cheb_record_t model[], int nrecs
 
 astro_vector_t Astronomy_HelioVector(astro_body_t body, astro_time_t time)
 {
-    astro_vector_t vector;
+    astro_vector_t vector, earth;
 
     switch (body)
     {
@@ -1257,7 +1257,14 @@ astro_vector_t Astronomy_HelioVector(astro_body_t body, astro_time_t time)
     case BODY_PLUTO:
         return CalcPluto(time);
         
-    case BODY_MOON:     /* FIXFIXFIX: GeoMoon not yet implemented. */
+    case BODY_MOON:
+        vector = Astronomy_GeoMoon(time);
+        earth = CalcEarth(time);
+        vector.x += earth.x;
+        vector.y += earth.y;
+        vector.z += earth.z;
+        return vector;
+
     default:
         vector.status = ASTRO_INVALID_BODY;
         vector.x = vector.y = vector.z = 1.0e+99;   /* Invalid coordinates */
