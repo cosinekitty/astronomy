@@ -82,6 +82,23 @@ static void FatalError(const char *message)
     exit(1);
 }
 
+static astro_vector_t VecError(astro_status_t status, astro_time_t time)
+{
+    astro_vector_t vec;
+    vec.x = vec.y = vec.z = NAN;
+    vec.t = time;
+    vec.status = status;
+    return vec;
+}
+
+static astro_equatorial_t EquError(astro_status_t status)
+{
+    astro_equatorial_t equ;
+    equ.ra = equ.dec = equ.dist = NAN;
+    equ.status = status;
+    return equ;
+}
+
 typedef struct
 {
     double mjd;
@@ -594,13 +611,13 @@ static astro_equatorial_t vector2radec(const double pos[3])
 
     xyproj = pos[0]*pos[0] + pos[1]*pos[1];
     equ.dist = sqrt(xyproj + pos[2]*pos[2]);
+    equ.status = ASTRO_SUCCESS;
     if (xyproj == 0.0)
     {
         if (pos[2] == 0.0)
         {
             /* Indeterminate coordinates; pos vector has zero length. */
-            equ.ra = NAN;
-            equ.dec = NAN;
+            equ = EquError(ASTRO_BAD_VECTOR);
         }
         else if (pos[2] < 0)
         {
@@ -2277,12 +2294,7 @@ static astro_vector_t CalcChebyshev(const astro_cheb_record_t model[], int nrecs
     }
 
     /* The Chebyshev model does not cover this time value. */
-    vector.status = ASTRO_BAD_TIME;
-    vector.t = time;
-    vector.x = 1.0e+99;
-    vector.y = 1.0e+99;
-    vector.z = 1.0e+99;
-    return vector;
+    return VecError(ASTRO_BAD_TIME, time);
 }
 
 #define CalcPluto(time)    (CalcChebyshev(cheb_8, ARRAYSIZE(cheb_8), (time)))
@@ -2326,10 +2338,7 @@ astro_vector_t Astronomy_HelioVector(astro_body_t body, astro_time_t time)
         return vector;
 
     default:
-        vector.status = ASTRO_INVALID_BODY;
-        vector.x = vector.y = vector.z = 1.0e+99;   /* Invalid coordinates */
-        vector.t = time;
-        return vector;
+        return VecError(ASTRO_INVALID_BODY, time);
     }
 }
 
@@ -2414,8 +2423,7 @@ astro_vector_t Astronomy_GeoVector(astro_body_t body, astro_time_t time, int cor
 
             ltime = ltime2;
         }
-        vector.status = ASTRO_NO_CONVERGE;  /* light travel time solver did not converge */
-        break;
+        return VecError(ASTRO_NO_CONVERGE, time);   /* light travel time solver did not converge */
     }
 
 finished:
@@ -2423,38 +2431,41 @@ finished:
     return vector;
 }
 
-astro_sky_t Astronomy_SkyPos(astro_body_t body, astro_time_t time, astro_observer_t observer)
+astro_equatorial_t Astronomy_Equator(
+    astro_body_t body, 
+    astro_time_t time, 
+    astro_observer_t observer,
+    int ofdate,
+    int aberration)
 {
-    astro_sky_t sky;
-    astro_vector_t gc_ast;
-    astro_vector_t gc_cor;
+    astro_equatorial_t equ;
+    astro_vector_t gc;
     double gc_observer[3];
-    double j2000_ast[3];
-    double j2000_cor[3];
-    double ofdate_vector[3];
-    double pos7[3];
+    double j2000[3];
+    double temp[3];
+    double datevect[3];
 
     geo_pos(time, observer, gc_observer);
+    gc = Astronomy_GeoVector(body, time, aberration);
+    if (gc.status != ASTRO_SUCCESS)
+        return EquError(gc.status);
 
-    /* Calculate astrometric (no-aberration) vector */
-    gc_ast = Astronomy_GeoVector(body, time, 0);    /* FIXFIXFIX - must check for errors instead of ignoring them */
+    j2000[0] = gc.x - gc_observer[0];
+    j2000[1] = gc.y - gc_observer[1];
+    j2000[2] = gc.z - gc_observer[2];
 
-    j2000_ast[0] = gc_ast.x - gc_observer[0];
-    j2000_ast[1] = gc_ast.y - gc_observer[1];
-    j2000_ast[2] = gc_ast.z - gc_observer[2];
-    sky.j2000 = vector2radec(j2000_ast);
+    if (ofdate)
+    {
+        precession(0.0, j2000, time.tt, temp);
+        nutation(time, 0.0, temp, datevect);
+        equ = vector2radec(datevect);
+    }
+    else
+    {
+        equ = vector2radec(j2000);
+    }    
 
-    /* Calculate aberration-corrected coordinates. */
-    gc_cor = Astronomy_GeoVector(body, time, 1);
-    j2000_cor[0] = gc_cor.x - gc_observer[0];
-    j2000_cor[1] = gc_cor.y - gc_observer[1];
-    j2000_cor[2] = gc_cor.z - gc_observer[2];
-    precession(0.0, j2000_cor, time.tt, pos7);
-    nutation(time, 0.0, pos7, ofdate_vector);
-    sky.ofdate = vector2radec(ofdate_vector);
-    sky.t = time;
-
-    return sky;
+    return equ;
 }
 
 astro_horizon_t Astronomy_Horizon(

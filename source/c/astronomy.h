@@ -39,7 +39,8 @@ typedef enum
     ASTRO_SUCCESS,
     ASTRO_INVALID_BODY,
     ASTRO_NO_CONVERGE,
-    ASTRO_BAD_TIME
+    ASTRO_BAD_TIME,
+    ASTRO_BAD_VECTOR
 }
 astro_status_t;
 
@@ -89,19 +90,12 @@ astro_observer_t;
 
 typedef struct
 {
+    astro_status_t status;
     double ra;
     double dec;
     double dist;
 }
 astro_equatorial_t;
-
-typedef struct
-{
-    astro_time_t t;
-    astro_equatorial_t j2000;
-    astro_equatorial_t ofdate;
-}
-astro_sky_t;
 
 typedef struct
 {
@@ -131,7 +125,13 @@ astro_time_t Astronomy_AddDays(astro_time_t time, double days);
 astro_vector_t Astronomy_HelioVector(astro_body_t body, astro_time_t time);
 astro_vector_t Astronomy_GeoVector(astro_body_t body, astro_time_t time, int correct_aberration);
 astro_vector_t Astronomy_GeoMoon(astro_time_t time);
-astro_sky_t Astronomy_SkyPos(astro_body_t body, astro_time_t time, astro_observer_t observer);
+astro_equatorial_t Astronomy_Equator(
+    astro_body_t body, 
+    astro_time_t time, 
+    astro_observer_t observer,
+    int ofdate,
+    int aberration
+);
 astro_horizon_t Astronomy_Horizon(astro_time_t time, astro_observer_t observer, double ra, double dec, astro_refraction_t refraction);
 
 #ifdef __cplusplus

@@ -24,7 +24,18 @@ static int CheckVector(int lnum, astro_vector_t v)
     return 0;
 }
 
-#define CHECK_VECTOR(v,x)   CHECK(CheckVector(__LINE__, ((v) = (x))))
+static int CheckEquator(int lnum, astro_equatorial_t equ)
+{
+    if (equ.status != ASTRO_SUCCESS)
+    {
+        fprintf(stderr, "FAILURE at ctest.c[%d]: equatorial status = %d\n", lnum, equ.status);
+        return 1;
+    }
+    return 0;
+}
+
+#define CHECK_VECTOR(var,expr)   CHECK(CheckVector(__LINE__, ((var) = (expr))))
+#define CHECK_EQU(var,expr)      CHECK(CheckEquator(__LINE__, ((var) = (expr))))
 
 static int AdHoc(void);
 static int Test_AstroTime(void);
@@ -85,7 +96,8 @@ static int AstroCheck(void)
     astro_time_t stop;
     astro_body_t body;
     astro_vector_t pos;
-    astro_sky_t sky;
+    astro_equatorial_t j2000;
+    astro_equatorial_t ofdate;
     astro_horizon_t hor;
     astro_observer_t observer = Astronomy_MakeObserver(29.0, -81.0, 10.0);
     int b;
@@ -118,25 +130,25 @@ static int AstroCheck(void)
 
             if (body != BODY_EARTH)
             {
-                sky = Astronomy_SkyPos(body, time, observer);
-                hor = Astronomy_Horizon(sky.t, observer, sky.ofdate.ra, sky.ofdate.dec, REFRACTION_NONE);
+                CHECK_EQU(j2000, Astronomy_Equator(body, time, observer, 0, 0));
+                CHECK_EQU(ofdate, Astronomy_Equator(body, time, observer, 1, 1));
+                hor = Astronomy_Horizon(time, observer, ofdate.ra, ofdate.dec, REFRACTION_NONE);
                 fprintf(outfile, "s %s %0.16lf %0.16lf %0.16lf %0.16lf %0.16lf %0.16lf %0.16lf\n", 
-                    Astronomy_BodyName(body), time.tt, time.ut, sky.j2000.ra, sky.j2000.dec, sky.j2000.dist, hor.azimuth, hor.altitude);
+                    Astronomy_BodyName(body), time.tt, time.ut, j2000.ra, j2000.dec, j2000.dist, hor.azimuth, hor.altitude);
             }
         }
 
-        CHECK_VECTOR(pos, Astronomy_GeoVector(BODY_MOON, time, 0));     /*FIXFIXFIX: allow disabling light correction too?*/
+        CHECK_VECTOR(pos, Astronomy_GeoVector(BODY_MOON, time, 0));
         fprintf(outfile, "v GM %0.16lf %0.16lf %0.16lf %0.16lf\n", pos.t.tt, pos.x, pos.y, pos.z);
 
-        sky = Astronomy_SkyPos(BODY_MOON, time, observer);
-        hor = Astronomy_Horizon(sky.t, observer, sky.ofdate.ra, sky.ofdate.dec, REFRACTION_NONE);
+        CHECK_EQU(j2000, Astronomy_Equator(BODY_MOON, time, observer, 0, 0));
+        CHECK_EQU(ofdate, Astronomy_Equator(BODY_MOON, time, observer, 1, 1));
+        hor = Astronomy_Horizon(time, observer, ofdate.ra, ofdate.dec, REFRACTION_NONE);
         fprintf(outfile, "s GM %0.16lf %0.16lf %0.16lf %0.16lf %0.16lf %0.16lf %0.16lf\n", 
-            time.tt, time.ut, sky.j2000.ra, sky.j2000.dec, sky.j2000.dist, hor.azimuth, hor.altitude);
+            time.tt, time.ut, j2000.ra, j2000.dec, j2000.dist, hor.azimuth, hor.altitude);
 
         time = Astronomy_AddDays(time, 10.0 + PI/100.0);
     }
-
-    (void)sky;
 
 fail:
     if (outfile != NULL)
@@ -146,20 +158,6 @@ fail:
 
 static int AdHoc(void)
 {
-    int error = 0;
-    astro_observer_t observer = Astronomy_MakeObserver(29.0, -81.0, 10.0);
-    astro_time_t time;
-    astro_sky_t sky;
-
-    time.tt = -109572.4997569444385590;
-    time.ut = -109572.5;
-
-    sky = Astronomy_SkyPos(BODY_MERCURY, time, observer);
-    printf("J2000  RA  = %0.16lf\n", sky.j2000.ra);
-    printf("J2000  DEC = %0.16lf\n", sky.j2000.dec);
-    printf("ofdate RA  = %0.16lf\n", sky.ofdate.ra);
-    printf("ofdate DEC = %0.16lf\n", sky.ofdate.dec);
-
-/*fail:*/
-    return error;
+    /* Put ad-hoc stuff here to test. */
+    return 0;
 }
