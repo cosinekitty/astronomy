@@ -126,11 +126,11 @@ function ProcessRow(context, row) {
         alt:   ParseAltitude(m[11])
     };
 
-    const pos = Astronomy.GeoVector(context.body, date);
-    const sky = Astronomy.SkyPos(pos, context.observer);
-    const hor = Astronomy.Horizon(sky.t, context.observer, sky.ofdate.ra, sky.ofdate.dec, context.refraction);
+    const ofdate = Astronomy.Equator(context.body, date, context.observer, true, true);
+    const hor = Astronomy.Horizon(date, context.observer, ofdate.ra, ofdate.dec, context.refraction);
 
-    let arcmin = CompareEquatorial(context, 'metric', jpl.m_ra, jpl.m_dec, sky.j2000.ra, sky.j2000.dec);
+    const j2000 = Astronomy.Equator(context.body, date, context.observer, false, false);
+    let arcmin = CompareEquatorial(context, 'metric', jpl.m_ra, jpl.m_dec, j2000.ra, j2000.dec);
     context.maxArcminError_MetricEquatorial = Math.max(context.maxArcminError_MetricEquatorial, arcmin);
 
     arcmin = CompareHorizontal(context, jpl.az, jpl.alt, hor.azimuth, hor.altitude);

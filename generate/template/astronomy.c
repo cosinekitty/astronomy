@@ -1282,7 +1282,7 @@ astro_vector_t Astronomy_HelioVector(astro_body_t body, astro_time_t time)
     }
 }
 
-astro_vector_t Astronomy_GeoVector(astro_body_t body, astro_time_t time, int correct_aberration)
+astro_vector_t Astronomy_GeoVector(astro_body_t body, astro_time_t time, int aberration)
 {
     astro_vector_t vector;
     astro_vector_t earth;
@@ -1316,7 +1316,7 @@ astro_vector_t Astronomy_GeoVector(astro_body_t body, astro_time_t time, int cor
     default:
         /* For all other bodies, apply light travel time correction. */
 
-        if (!correct_aberration)
+        if (!aberration)
         {
             /* No aberration, so calculate Earth's position once, at the time of observation. */
             earth = CalcEarth(time);
@@ -1331,7 +1331,7 @@ astro_vector_t Astronomy_GeoVector(astro_body_t body, astro_time_t time, int cor
             if (vector.status != ASTRO_SUCCESS)
                 return vector;
 
-            if (correct_aberration)
+            if (aberration)
             {
                 /* 
                     Include aberration, so make a good first-order approximation

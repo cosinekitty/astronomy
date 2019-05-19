@@ -18,7 +18,7 @@ and some [Node.js examples](../../demo/nodejs/).
 
 | [HelioVector](#Astronomy.HelioVector) | Calculates vector with respect to the center of the Sun.   |
 | [GeoVector](#Astronomy.GeoVector)     | Calculates vector with respect to the center of the Earth. |
-| [SkyPos](#Astronomy.SkyPos)           | Calculates right ascension and declination. |
+| [Equator](#Astronomy.Equator)         | Calculates right ascension and declination. |
 | [Ecliptic](#Astronomy.Ecliptic)       | Calculates ecliptic latitude, longitude, and Cartesian coordinates. |
 | [Horizon](#Astronomy.Horizon)         | Calculates horizontal coordinates (azimuth, altitude) for a given observer on the Earth. |
 
@@ -213,24 +213,6 @@ Holds right ascension, declination, and distance of a celestial object.
 
 * * *
 
-<a name="Astronomy.SkyCoordinates"></a>
-
-### Astronomy.SkyCoordinates
-Holds topocentric equatorial coordinates (right ascension and declination)
-simultaneously in two different systems: J2000 and true-equator-of-date.
-
-**Kind**: static class of [<code>Astronomy</code>](#Astronomy)  
-**Properties**
-
-| Name | Type | Description |
-| --- | --- | --- |
-| t | [<code>AstroTime</code>](#Astronomy.AstroTime) | The date and time at which the coordinates are valid. |
-| j2000 | [<code>EquatorialCoordinates</code>](#Astronomy.EquatorialCoordinates) | Equatorial coordinates referenced to the J2000 coordinate system. |
-| ofdate | [<code>EquatorialCoordinates</code>](#Astronomy.EquatorialCoordinates) | Equatorial coordinates referenced to the true equator and equinox      at the specified date and time stored in <code>t</code>.      These coordinates are corrected for precession and nutation of the      Earth's axis of rotation at time <code>t</code>. |
-
-
-* * *
-
 <a name="Astronomy.HorizontalCoordinates"></a>
 
 ### Astronomy.HorizontalCoordinates
@@ -348,8 +330,6 @@ location on the surface of the Earth.
 | Name | Type | Description |
 | --- | --- | --- |
 | time | [<code>AstroTime</code>](#Astronomy.AstroTime) | The date and time of the celestial body reaching the hour angle. |
-| pos | [<code>Vector</code>](#Astronomy.Vector) | Geocentric Cartesian coordinates for the body in the J2000 equatorial system      at the time indicated by the <code>time</code> property. |
-| sky | [<code>SkyCoordinates</code>](#Astronomy.SkyCoordinates) | Topocentric equatorial coordinates for the body      at the time indicated by the <code>time</code> property. |
 | hor | [<code>HorizontalCoordinates</code>](#Astronomy.HorizontalCoordinates) | Topocentric horizontal coordinates for the body      at the time indicated by the <code>time</code> property. |
 | iter | <code>number</code> | The positive integer number of iterations required by      <code>SearchHourAngle</code> to converge on the hour angle      solution. |
 
@@ -539,11 +519,14 @@ axis of rotation on the given date.
 
 * * *
 
-<a name="Astronomy.SkyPos"></a>
+<a name="Astronomy.Equator"></a>
 
-### Astronomy.SkyPos(gc_vector, observer) ⇒ [<code>SkyCoordinates</code>](#Astronomy.SkyCoordinates)
+### Astronomy.Equator(body, date, observer, ofdate, aberration) ⇒ [<code>EquatorialCoordinates</code>](#Astronomy.EquatorialCoordinates)
 Returns topocentric equatorial coordinates (right ascension and declination)
-simultaneously in two different systems: J2000 and true-equator-of-date.
+in one of two different systems: J2000 or true-equator-of-date.
+Allows optional correction for aberration.
+Always corrects for light travel time (represents the object as seen by the observer
+with light traveling to the Earth at finite speed, not where the object is right now).
 <i>Topocentric</i> refers to a position as seen by an observer on the surface of the Earth.
 This function corrects for
 <a href="https://en.wikipedia.org/wiki/Parallax">parallax</a> 
@@ -552,12 +535,15 @@ This is most significant for the Moon, because it is so close to the Earth.
 However, it can have a small effect on the apparent positions of other bodies.
 
 **Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
-**Returns**: [<code>SkyCoordinates</code>](#Astronomy.SkyCoordinates) - The topocentric coordinates of the body as adjusted for the given observer.  
+**Returns**: [<code>EquatorialCoordinates</code>](#Astronomy.EquatorialCoordinates) - The topocentric coordinates of the body as adjusted for the given observer.  
 
 | Param | Type | Description |
 | --- | --- | --- |
-| gc_vector | [<code>Vector</code>](#Astronomy.Vector) | A geocentric vector in the J2000 equatorial system.      <i>Geocentric</i> refers to a position seen by a hypothetical observer at the center of the Earth. |
+| body | <code>string</code> | The name of the body for which to find equatorial coordinates. |
+| date | <code>Date</code> \| <code>number</code> \| <code>Astronomy.Time</code> | Specifies the date and time at which the body is to be observed. |
 | observer | [<code>Observer</code>](#Astronomy.Observer) | The location on the Earth of the observer.      Call [MakeObserver](#Astronomy.MakeObserver) to create an observer object. |
+| ofdate | <code>bool</code> | Pass <code>true</code> to return equatorial coordinates of date,      i.e. corrected for precession and nutation at the given date.      This is needed to get correct horizontal coordinates when you call      [Horizon](#Astronomy.Horizon).      Pass <code>false</code> to return equatorial coordinates in the J2000 system. |
+| aberration | <code>bool</code> | Pass <code>true</code> to correct for       <a href="https://en.wikipedia.org/wiki/Aberration_of_light">aberration</a>,      or <code>false</code> to leave uncorrected. |
 
 
 * * *
@@ -619,7 +605,7 @@ body at a specified time.
 
 <a name="Astronomy.GeoVector"></a>
 
-### Astronomy.GeoVector(body, date) ⇒ [<code>Vector</code>](#Astronomy.Vector)
+### Astronomy.GeoVector(body, date, aberration) ⇒ [<code>Vector</code>](#Astronomy.Vector)
 Calculates geocentric (i.e., with respect to the center of the Earth)
 Cartesian coordinates in the J2000 equatorial system of a celestial
 body at a specified time.
@@ -630,6 +616,7 @@ body at a specified time.
 | --- | --- | --- |
 | body | <code>string</code> | One of the strings       <code>"Sun"</code>, <code>"Moon"</code>, <code>"Mercury"</code>, <code>"Venus"</code>,       <code>"Earth"</code>, <code>"Mars"</code>, <code>"Jupiter"</code>, <code>"Saturn"</code>,       <code>"Uranus"</code>, <code>"Neptune"</code>, or <code>"Pluto"</code>. |
 | date | <code>Date</code> \| <code>number</code> \| [<code>AstroTime</code>](#Astronomy.AstroTime) | The date and time for which the body's position is to be calculated. |
+| aberration | <code>bool</code> | Pass <code>true</code> to correct for       <a href="https://en.wikipedia.org/wiki/Aberration_of_light">aberration</a>,      or <code>false</code> to leave uncorrected. |
 
 
 * * *

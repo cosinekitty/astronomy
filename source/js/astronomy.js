@@ -1985,33 +1985,6 @@ class EquatorialCoordinates {
 }
 
 /**
- * Holds topocentric equatorial coordinates (right ascension and declination)
- * simultaneously in two different systems: J2000 and true-equator-of-date.
- * 
- * @class
- * @memberof Astronomy
- * 
- * @property {Astronomy.AstroTime} t
- *      The date and time at which the coordinates are valid.
- * 
- * @property {Astronomy.EquatorialCoordinates} j2000
- *      Equatorial coordinates referenced to the J2000 coordinate system.
- * 
- * @property {Astronomy.EquatorialCoordinates} ofdate
- *      Equatorial coordinates referenced to the true equator and equinox
- *      at the specified date and time stored in <code>t</code>.
- *      These coordinates are corrected for precession and nutation of the
- *      Earth's axis of rotation at time <code>t</code>.
- */
-class SkyCoordinates {
-    constructor(t, j2000, ofdate) {
-        this.t = t;
-        this.j2000 = j2000;
-        this.ofdate = ofdate;
-    }
-}
-
-/**
  * Holds azimuth (compass direction) and altitude (angle above/below the horizon)
  * of a celestial object as seen by an observer at a particular location on the Earth's surface.
  * Also holds right ascension and declination of the same object.
@@ -2385,7 +2358,10 @@ Astronomy.SunPosition = function(date) {
 
 /**
  * Returns topocentric equatorial coordinates (right ascension and declination)
- * simultaneously in two different systems: J2000 and true-equator-of-date.
+ * in one of two different systems: J2000 or true-equator-of-date.
+ * Allows optional correction for aberration.
+ * Always corrects for light travel time (represents the object as seen by the observer
+ * with light traveling to the Earth at finite speed, not where the object is right now).
  * <i>Topocentric</i> refers to a position as seen by an observer on the surface of the Earth.
  * This function corrects for
  * <a href="https://en.wikipedia.org/wiki/Parallax">parallax</a> 
@@ -2393,31 +2369,47 @@ Astronomy.SunPosition = function(date) {
  * This is most significant for the Moon, because it is so close to the Earth.
  * However, it can have a small effect on the apparent positions of other bodies.
  * 
- * @param {Astronomy.Vector} gc_vector
- *      A geocentric vector in the J2000 equatorial system.
- *      <i>Geocentric</i> refers to a position seen by a hypothetical observer at the center of the Earth.
+ * @param {string} body
+ *      The name of the body for which to find equatorial coordinates.
+ * 
+ * @param {(Date | number | Astronomy.Time)} date
+ *      Specifies the date and time at which the body is to be observed.
  * 
  * @param {Astronomy.Observer} observer
  *      The location on the Earth of the observer.
  *      Call {@link Astronomy.MakeObserver} to create an observer object.
  * 
- * @returns {Astronomy.SkyCoordinates}
+ * @param {bool} ofdate
+ *      Pass <code>true</code> to return equatorial coordinates of date,
+ *      i.e. corrected for precession and nutation at the given date.
+ *      This is needed to get correct horizontal coordinates when you call
+ *      {@link Astronomy.Horizon}.
+ *      Pass <code>false</code> to return equatorial coordinates in the J2000 system.
+ * 
+ * @param {bool} aberration
+ *      Pass <code>true</code> to correct for 
+ *      <a href="https://en.wikipedia.org/wiki/Aberration_of_light">aberration</a>,
+ *      or <code>false</code> to leave uncorrected.
+ * 
+ * @returns {Astronomy.EquatorialCoordinates}
  *      The topocentric coordinates of the body as adjusted for the given observer.
  */
-Astronomy.SkyPos = function(gc_vector, observer) {     // based on NOVAS place()
-    const gc_observer = observer ? geo_pos(gc_vector.t, observer) : [0,0,0];        // vector from geocenter to observer
-    const j2000_vector = [
-        gc_vector.x - gc_observer[0], 
-        gc_vector.y - gc_observer[1], 
-        gc_vector.z - gc_observer[2] ];
+Astronomy.Equator = function(body, date, observer, ofdate, aberration) {
+    const time = Astronomy.MakeTime(date);
+    const gc_observer = geo_pos(time, observer);
+    const gc = Astronomy.GeoVector(body, time, aberration);
+    const j2000 = [
+        gc.x - gc_observer[0],
+        gc.y - gc_observer[1],
+        gc.z - gc_observer[2]
+    ];
 
-    let j2000_radec = vector2radec(j2000_vector);
+    if (!ofdate)
+        return vector2radec(j2000);
 
-    let pos7 = precession(0, j2000_vector, gc_vector.t.tt);
-    let ofdate_vector = nutation(gc_vector.t, 0, pos7);
-    let ofdate_radec = vector2radec(ofdate_vector);
-
-    return new SkyCoordinates(gc_vector.t, j2000_radec, ofdate_radec);
+    const temp = precession(0, j2000, time.tt);
+    const datevect = nutation(time, 0, temp);
+    return vector2radec(datevect);
 }
 
 function RotateEquatorialToEcliptic(gx, gy, gz, cos_ob, sin_ob) {
@@ -2615,9 +2607,14 @@ Astronomy.HelioVector = function(body, date) {
  * @param {(Date | number | Astronomy.AstroTime)} date
  *      The date and time for which the body's position is to be calculated.
  * 
+ * @param {bool} aberration
+ *      Pass <code>true</code> to correct for 
+ *      <a href="https://en.wikipedia.org/wiki/Aberration_of_light">aberration</a>,
+ *      or <code>false</code> to leave uncorrected.
+ * 
  * @returns {Astronomy.Vector}
  */
-Astronomy.GeoVector = function(body, date) {
+Astronomy.GeoVector = function(body, date, aberration) {
     const time = Astronomy.MakeTime(date);
     if (body === 'Moon') {
         return Astronomy.GeoMoon(time);
@@ -2626,14 +2623,36 @@ Astronomy.GeoVector = function(body, date) {
         return new Vector(0, 0, 0, time);
     }
 
-    const e = CalcVsop(vsop.Earth, time);
+    let earth;
+    if (!aberration) {
+        // No aberration, so calculate Earth's position once, at the time of observation.
+        earth = CalcVsop(vsop.Earth, time);
+    }
 
     // Correct for light-travel time, to get position of body as seen from Earth's center.
     let h, geo, dt;
     let ltime = time;
     for (let iter=0; iter < 10; ++iter) {
         h = Astronomy.HelioVector(body, ltime);
-        geo = new Vector(h.x-e.x, h.y-e.y, h.z-e.z, time);
+
+        if (aberration) {
+            /* 
+                Include aberration, so make a good first-order approximation
+                by backdating the Earth's position also.
+                This is confusing, but it works for objects within the Solar System
+                because the distance the Earth moves in that small amount of light
+                travel time (a few minutes to a few hours) is well approximated
+                by a line segment that substends the angle seen from the remote
+                body viewing Earth. That angle is pretty close to the aberration
+                angle of the moving Earth viewing the remote body.
+                In other words, both of the following approximate the aberration angle:
+                    (transverse distance Earth moves) / (distance to body)
+                    (transverse speed of Earth) / (speed of light).
+            */
+            earth = CalcVsop(vsop.Earth, ltime);
+        }
+
+        geo = new Vector(h.x-earth.x, h.y-earth.y, h.z-earth.z, time);
         if (body === 'Sun') {
             return geo;     // The Sun's heliocentric coordinates are always (0,0,0). No need to correct.
         }
@@ -3494,11 +3513,9 @@ Astronomy.SearchRiseSet = function(body, observer, direction, dateStart, limitDa
         // positive below the horizon, depending on whether the caller
         // wants rise times or set times, respectively.
 
-        const pos = Astronomy.GeoVector(body, t);
-        const sky = Astronomy.SkyPos(pos, observer);
-        const hor = Astronomy.Horizon(t, observer, sky.ofdate.ra, sky.ofdate.dec);
-        
-        const alt = hor.altitude + RAD2DEG*(body_radius_au / sky.ofdate.dist) + REFRACTION_NEAR_HORIZON;
+        const ofdate = Astronomy.Equator(body, t, observer, true, true);
+        const hor = Astronomy.Horizon(t, observer, ofdate.ra, ofdate.dec);        
+        const alt = hor.altitude + RAD2DEG*(body_radius_au / ofdate.dist) + REFRACTION_NEAR_HORIZON;
         return direction * alt;
     }
 
@@ -3574,14 +3591,6 @@ Astronomy.SearchRiseSet = function(body, observer, direction, dateStart, limitDa
  * @property {Astronomy.AstroTime} time
  *      The date and time of the celestial body reaching the hour angle.
  * 
- * @property {Astronomy.Vector} pos
- *      Geocentric Cartesian coordinates for the body in the J2000 equatorial system
- *      at the time indicated by the <code>time</code> property.
- * 
- * @property {Astronomy.SkyCoordinates} sky
- *      Topocentric equatorial coordinates for the body
- *      at the time indicated by the <code>time</code> property.
- * 
  * @property {Astronomy.HorizontalCoordinates} hor
  *      Topocentric horizontal coordinates for the body
  *      at the time indicated by the <code>time</code> property.
@@ -3592,10 +3601,8 @@ Astronomy.SearchRiseSet = function(body, observer, direction, dateStart, limitDa
  *      solution.
  */
 class HourAngleEvent {
-    constructor(time, pos, sky, hor, iter) {
+    constructor(time, hor, iter) {
         this.time = time;
-        this.pos = pos;
-        this.sky = sky;
         this.hor = hor;
         this.iter = iter;
     }
@@ -3646,12 +3653,11 @@ Astronomy.SearchHourAngle = function(body, observer, hourAngle, dateStart) {
         // Calculate Greenwich Apparent Sidereal Time (GAST) at the given time.
         let gast = sidereal_time(time);
 
-        let pos = Astronomy.GeoVector(body, time);
-        let sky = Astronomy.SkyPos(pos, observer);
+        let ofdate = Astronomy.Equator(body, time, observer, true, true);
 
         // Calculate the adjustment needed in sidereal time to bring
         // the hour angle to the desired value.
-        let delta_sidereal_hours = ((hourAngle + sky.ofdate.ra - observer.longitude/15) - gast) % 24;
+        let delta_sidereal_hours = ((hourAngle + ofdate.ra - observer.longitude/15) - gast) % 24;
         if (iter === 1) {
             // On the first iteration, always search forward in time.
             if (delta_sidereal_hours < 0)
@@ -3667,8 +3673,8 @@ Astronomy.SearchHourAngle = function(body, observer, hourAngle, dateStart) {
 
         // If the error is tolerable (less than 0.1 seconds), stop searching.
         if (Math.abs(delta_sidereal_hours) * 3600 < 0.1) {
-            const hor = Astronomy.Horizon(time, observer, sky.ofdate.ra, sky.ofdate.dec, 'normal');
-            return new HourAngleEvent(time, pos, sky, hor, iter);
+            const hor = Astronomy.Horizon(time, observer, ofdate.ra, ofdate.dec, 'normal');
+            return new HourAngleEvent(time, hor, iter);
         }
 
         // We need to loop another time to get more accuracy.
