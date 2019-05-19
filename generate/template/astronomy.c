@@ -1294,8 +1294,7 @@ astro_vector_t Astronomy_GeoVector(astro_body_t body, astro_time_t time)
         break;
 
     case BODY_MOON:
-        vector.status = ASTRO_INVALID_BODY;     /* FIXFIXFIX: GeoMoon not yet implemented. */
-        vector.x = vector.y = vector.z = 1.0e+99;
+        vector = Astronomy_GeoMoon(time);
         break;
 
     default:

@@ -126,7 +126,7 @@ static int AstroCheck(void)
             }
         }
 
-        CHECK_VECTOR(pos, Astronomy_GeoMoon(time));
+        CHECK_VECTOR(pos, Astronomy_GeoVector(BODY_MOON, time));
         fprintf(outfile, "v GM %0.16lf %0.16lf %0.16lf %0.16lf\n", pos.t.tt, pos.x, pos.y, pos.z);
 
         sky = Astronomy_SkyPos(pos, observer);
