@@ -87,7 +87,7 @@ static int AstroCheck(void)
     astro_vector_t pos;
     astro_sky_t sky;
     astro_horizon_t hor;
-    astro_observer_t observer = Astronomy_MakeObserver(28.0, -81.0, 10.0);
+    astro_observer_t observer = Astronomy_MakeObserver(29.0, -81.0, 10.0);
     int b;
     static const astro_body_t bodylist[] =  /* match the order in the JavaScript unit test */
     {
@@ -156,7 +156,7 @@ static int AdHoc(void)
     time.tt = -109572.4997569444385590;
     time.ut = -109572.5;
 
-    CHECK_VECTOR(pos, Astronomy_GeoVector(BODY_SUN, time));
+    CHECK_VECTOR(pos, Astronomy_GeoVector(BODY_MERCURY, time));
     sky = Astronomy_SkyPos(pos, observer);
     printf("J2000  RA  = %0.16lf\n", sky.j2000.ra);
     printf("J2000  DEC = %0.16lf\n", sky.j2000.dec);

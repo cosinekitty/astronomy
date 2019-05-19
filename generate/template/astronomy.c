@@ -1266,31 +1266,10 @@ astro_vector_t Astronomy_HelioVector(astro_body_t body, astro_time_t time)
     }
 }
 
-static astro_vector_t RawGeoVector(astro_body_t body, astro_time_t time)
-{
-    astro_vector_t earth;
-    astro_vector_t helio;
-    astro_vector_t geo;
-
-    earth = CalcEarth(time);
-    if (earth.status != ASTRO_SUCCESS)
-        return earth;
-
-    helio = Astronomy_HelioVector(body, time);
-    if (helio.status != ASTRO_SUCCESS)
-        return helio;
-
-    geo.status = ASTRO_SUCCESS;
-    geo.x = helio.x - earth.x;
-    geo.y = helio.y - earth.y;
-    geo.z = helio.z - earth.z;
-    geo.t = time;
-    return geo;
-}
-
 astro_vector_t Astronomy_GeoVector(astro_body_t body, astro_time_t time)
 {
     astro_vector_t vector;
+    astro_vector_t earth;
     astro_time_t ltime;
     astro_time_t ltime2;
     double dt;
@@ -1321,17 +1300,26 @@ astro_vector_t Astronomy_GeoVector(astro_body_t body, astro_time_t time)
 
     default:
         /* For all other bodies, apply light travel time correction. */
+        earth = CalcEarth(time);
+        if (earth.status != ASTRO_SUCCESS)
+            return earth;
+
         ltime = time;
         for (iter=0; iter < 10; ++iter)
         {            
-            vector = RawGeoVector(body, ltime);
+            vector = Astronomy_HelioVector(body, ltime);
             if (vector.status != ASTRO_SUCCESS)
                 return vector;
+
+            /* Convert heliocentric vector to geocentric vector. */
+            vector.x -= earth.x;
+            vector.y -= earth.y;
+            vector.z -= earth.z;
 
             ltime2 = Astronomy_AddDays(time, -Astronomy_VectorLength(vector) / C_AUDAY);
             dt = fabs(ltime2.tt - ltime.tt);
             if (dt < 1.0e-9)
-                goto finished;  /* Tricky: ensures we patch 'vector.t' with current time, not ante-dated time. */
+                goto finished;  /* Ensures we patch 'vector.t' with current time, not ante-dated time. */
 
             ltime = ltime2;
         }

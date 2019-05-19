@@ -1,6 +1,6 @@
 var Astronomy = require('../source/js/astronomy.js');
 const observer = Astronomy.MakeObserver(29, -81, 10);
-var body = 'Sun';
+var body = 'Mercury';
 var time = Astronomy.MakeTime(-109572.5);
 var pos = Astronomy.GeoVector(body, time);
 var sky = Astronomy.SkyPos(pos, observer);
