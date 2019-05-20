@@ -62,6 +62,13 @@ typedef struct
 }
 astro_vector_t;
 
+typedef struct
+{
+    astro_status_t status;
+    double angle;
+}
+astro_angle_result_t;
+
 typedef enum
 {
     BODY_MERCURY,

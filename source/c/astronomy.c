@@ -127,6 +127,36 @@ static astro_ecliptic_t EclError(astro_status_t status)
     return ecl;
 }
 
+static astro_angle_result_t AngleError(astro_status_t status)
+{
+    astro_angle_result_t result;
+    result.status = status;
+    result.angle = NAN;
+    return result;
+}
+
+static astro_angle_result_t AngleBetween(astro_vector_t a, astro_vector_t b)
+{
+    double r, dot;
+    astro_angle_result_t result;
+
+    r = Astronomy_VectorLength(a) * Astronomy_VectorLength(b);
+    if (r < 1.0e-8)
+        return AngleError(ASTRO_BAD_VECTOR);
+
+    dot = (a.x*b.x + a.y*b.y + a.z*b.z) / r;
+
+    if (dot <= -1.0)
+        result.angle = 180.0;
+    else if (dot >= +1.0)
+        result.angle = 0.0;
+    else
+        result.angle = RAD2DEG * acos(dot);
+    
+    result.status = ASTRO_SUCCESS;
+    return result;
+}
+
 typedef struct
 {
     double mjd;
@@ -2887,6 +2917,21 @@ astro_seasons_t Astronomy_Seasons(int year)
     return seasons;
 }
 
+astro_angle_result_t Astronomy_AngleFromSun(astro_body_t body, astro_time_t time)
+{
+    astro_vector_t sv, bv;
+
+    sv = Astronomy_GeoVector(BODY_SUN, time, 0);    /* FIXFIXFIX: use aberration or not? */
+    if (sv.status != ASTRO_SUCCESS)
+        return AngleError(sv.status);
+
+    bv = Astronomy_GeoVector(body, time, 0);        /* FIXFIXFIX: use aberration or not? */
+    if (bv.status != ASTRO_SUCCESS)
+        return AngleError(bv.status);
+
+    return AngleBetween(sv, bv);
+}
+
 #ifdef __cplusplus
 }
 #endif
@@ -2897,7 +2942,7 @@ astro_seasons_t Astronomy_Seasons(int year)
 
     -------------------------------------------
 
-    X   AngleFromSun
+    -   AngleFromSun
     X   Ecliptic
     X   EclipticLongitude
     X   Elongation
