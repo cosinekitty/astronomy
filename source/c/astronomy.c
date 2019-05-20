@@ -52,6 +52,8 @@ static const double AU = 1.4959787069098932e+11;        /* astronomical unit in 
 static const double KM_PER_AU = 1.4959787069098932e+8;
 static const double ANGVEL = 7.2921150e-5;
 
+static astro_ecliptic_t RotateEquatorialToEcliptic(const double pos[3], double obliq_radians);
+
 double Astronomy_VectorLength(astro_vector_t vector)
 {
     return sqrt(vector.x*vector.x + vector.y*vector.y + vector.z*vector.z);
@@ -97,6 +99,14 @@ static astro_equatorial_t EquError(astro_status_t status)
     equ.ra = equ.dec = equ.dist = NAN;
     equ.status = status;
     return equ;
+}
+
+static astro_ecliptic_t EclError(astro_status_t status)
+{
+    astro_ecliptic_t ecl;
+    ecl.status = status;
+    ecl.ex = ecl.ey = ecl.ez = ecl.elat = ecl.elon = NAN;
+    return ecl;
 }
 
 typedef struct
@@ -2584,6 +2594,97 @@ astro_horizon_t Astronomy_Horizon(
     return hor;
 }
 
+
+
+/*
+    X = not yet implemented
+    T = still needs testing
+
+    -------------------------------------------
+
+    X   AngleFromSun
+    X   Ecliptic
+    X   EclipticLongitude
+    X   Elongation
+    X   GetPeformanceMetrics
+    X   Illumination
+    X   LongitudeFromSun
+    X   MoonPhase
+    X   NextLunarApsis
+    X   NextMoonQuarter
+    X   ResetPerformanceMetrics
+    X   Search
+    X   SearchHourAngle
+    X   SearchLunarApsis
+    X   SearchMaxElongation
+    X   SearchMoonPhase
+    X   SearchMoonQuarter
+    X   SearchPeakMagnitude
+    X   SearchRelativeLongitude
+    X   SearchRiseSet
+    X   SearchSunLongitude
+    X   Seasons
+    T   SunPosition
+*/
+
+astro_ecliptic_t Astronomy_SunPosition(astro_time_t observation_time)
+{
+    astro_time_t time;
+    astro_vector_t earth2000;
+    double sun2000[3];
+    double stemp[3];
+    double sun_ofdate[3];
+    double true_obliq;
+
+    /* Correct for light travel time from the Sun. */
+    /* Otherwise season calculations (equinox, solstice) will all be early by about 8 minutes! */
+    time = Astronomy_AddDays(observation_time, -1.0 / C_AUDAY);
+
+    earth2000 = CalcEarth(time);
+    if (earth2000.status != ASTRO_SUCCESS)
+        return EclError(earth2000.status);
+
+    /* Convert heliocentric location of Earth to geocentric location of Sun. */
+    sun2000[0] = -earth2000.x;
+    sun2000[1] = -earth2000.y;
+    sun2000[2] = -earth2000.z;
+
+    /* Convert to equatorial Cartesian coordinates of date. */
+    precession(0.0, sun2000, time.tt, stemp);
+    nutation(time, 0, stemp, sun_ofdate);
+
+    /* Convert equatorial coordinates to ecliptic coordinates. */
+    true_obliq = DEG2RAD * e_tilt(time).tobl;
+    return RotateEquatorialToEcliptic(sun_ofdate, true_obliq);
+}
+
+static astro_ecliptic_t RotateEquatorialToEcliptic(const double pos[3], double obliq_radians)
+{
+    astro_ecliptic_t ecl;
+    double cos_ob, sin_ob;
+    double xyproj;
+
+    cos_ob = cos(obliq_radians);
+    sin_ob = sin(obliq_radians);
+
+    ecl.ex = +pos[0];
+    ecl.ey = +pos[1]*cos_ob + pos[2]*sin_ob;
+    ecl.ez = -pos[1]*sin_ob + pos[2]*cos_ob;
+
+    xyproj = sqrt(ecl.ex*ecl.ex + ecl.ey*ecl.ey);
+    if (xyproj > 0.0)
+    {
+        ecl.elon = RAD2DEG * atan2(ecl.ey, ecl.ex);
+        if (ecl.elon < 0.0)
+            ecl.elon += 360.0;
+    }
+    else
+        ecl.elon = 0.0;
+
+    ecl.elat = RAD2DEG * atan2(ecl.ez, xyproj);
+    ecl.status = ASTRO_SUCCESS;
+    return ecl;
+}
 
 #ifdef __cplusplus
 }

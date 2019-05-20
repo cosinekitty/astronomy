@@ -99,6 +99,17 @@ astro_equatorial_t;
 
 typedef struct
 {
+    astro_status_t status;
+    double ex;
+    double ey;
+    double ez;
+    double elat;
+    double elon;
+}
+astro_ecliptic_t;
+
+typedef struct
+{
     double azimuth;
     double altitude;
     double ra;
@@ -132,6 +143,7 @@ astro_equatorial_t Astronomy_Equator(
     int ofdate,
     int aberration
 );
+astro_ecliptic_t Astronomy_SunPosition(astro_time_t time);
 astro_horizon_t Astronomy_Horizon(astro_time_t time, astro_observer_t observer, double ra, double dec, astro_refraction_t refraction);
 
 #ifdef __cplusplus
