@@ -59,6 +59,19 @@ static int QuadInterp(
     double tm, double dt, double fa, double fm, double fb,
     double *x, double *t, double *df_dt);
 
+static double LongitudeOffset(double diff)
+{
+    double offset = diff;
+
+    while (offset <= -180.0)
+        offset += 360.0;
+    
+    while (offset > 180.0)
+        offset -= 360.0;
+
+    return offset;
+}
+
 double Astronomy_VectorLength(astro_vector_t vector)
 {
     return sqrt(vector.x*vector.x + vector.y*vector.y + vector.z*vector.z);
@@ -1551,37 +1564,6 @@ astro_horizon_t Astronomy_Horizon(
     return hor;
 }
 
-
-
-/*
-    X = not yet implemented
-    - = still needs testing
-
-    -------------------------------------------
-
-    X   AngleFromSun
-    X   Ecliptic
-    X   EclipticLongitude
-    X   Elongation
-    X   Illumination
-    X   LongitudeFromSun
-    X   MoonPhase
-    X   NextLunarApsis
-    X   NextMoonQuarter
-    -   Search
-    X   SearchHourAngle
-    X   SearchLunarApsis
-    X   SearchMaxElongation
-    X   SearchMoonPhase
-    X   SearchMoonQuarter
-    X   SearchPeakMagnitude
-    X   SearchRelativeLongitude
-    X   SearchRiseSet
-    X   SearchSunLongitude
-    X   Seasons
-    -   SunPosition
-*/
-
 astro_ecliptic_t Astronomy_SunPosition(astro_time_t observation_time)
 {
     astro_time_t time;
@@ -1639,6 +1621,22 @@ static astro_ecliptic_t RotateEquatorialToEcliptic(const double pos[3], double o
     ecl.elat = RAD2DEG * atan2(ecl.ez, xyproj);
     ecl.status = ASTRO_SUCCESS;
     return ecl;
+}
+
+static double sun_offset(void *context, astro_time_t time)
+{
+    double targetLon = *((double *)context);
+    astro_ecliptic_t ecl = Astronomy_SunPosition(time);
+    return LongitudeOffset(ecl.elon - targetLon);
+}
+
+astro_search_result_t Astronomy_SearchSunLongitude(
+    double targetLon, 
+    astro_time_t dateStart,
+    double limitDays)
+{
+    astro_time_t t2 = Astronomy_AddDays(dateStart, limitDays);
+    return Astronomy_Search(sun_offset, &targetLon, dateStart, t2, 1.0);
 }
 
 astro_search_result_t Astronomy_Search(
@@ -1803,6 +1801,36 @@ static int QuadInterp(
     return 1;   /* success */
 }
 
+
 #ifdef __cplusplus
 }
 #endif
+
+/*
+    X = not yet implemented
+    - = still needs testing
+
+    -------------------------------------------
+
+    X   AngleFromSun
+    X   Ecliptic
+    X   EclipticLongitude
+    X   Elongation
+    X   Illumination
+    X   LongitudeFromSun
+    X   MoonPhase
+    X   NextLunarApsis
+    X   NextMoonQuarter
+    -   Search
+    X   SearchHourAngle
+    X   SearchLunarApsis
+    X   SearchMaxElongation
+    X   SearchMoonPhase
+    X   SearchMoonQuarter
+    X   SearchPeakMagnitude
+    X   SearchRelativeLongitude
+    X   SearchRiseSet
+    -   SearchSunLongitude
+    X   Seasons
+    -   SunPosition
+*/

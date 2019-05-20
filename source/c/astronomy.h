@@ -164,6 +164,11 @@ astro_search_result_t Astronomy_Search(
     double dt_tolerance_seconds
 );
 
+astro_search_result_t Astronomy_SearchSunLongitude(
+    double targetLon, 
+    astro_time_t dateStart,
+    double limitDays);
+
 #ifdef __cplusplus
 }
 #endif
