@@ -72,6 +72,17 @@ static double LongitudeOffset(double diff)
     return offset;
 }
 
+static double NormalizeLongitude(double lon)
+{
+    while (lon < 0.0)
+        lon += 360.0;
+
+    while (lon >= 360.0)
+        lon -= 360.0;
+
+    return lon;
+}
+
 double Astronomy_VectorLength(astro_vector_t vector)
 {
     return sqrt(vector.x*vector.x + vector.y*vector.y + vector.z*vector.z);
@@ -2687,6 +2698,9 @@ astro_ecliptic_t Astronomy_Ecliptic(astro_vector_t equ)
     static double ob2000;
     double pos[3];
 
+    if (equ.status != ASTRO_SUCCESS)
+        return EclError(equ.status);
+
     if (ob2000 == 0.0)
     {
         /* Lazy-evaluate and keep the mean obliquity of the ecliptic at J2000. */
@@ -2953,6 +2967,30 @@ astro_angle_result_t Astronomy_AngleFromSun(astro_body_t body, astro_time_t time
     return AngleBetween(sv, bv);
 }
 
+astro_angle_result_t Astronomy_LongitudeFromSun(astro_body_t body, astro_time_t time)
+{
+    astro_vector_t sv, bv;
+    astro_ecliptic_t se, be;
+    astro_angle_result_t result;
+
+    if (body == BODY_EARTH)
+        return AngleError(ASTRO_EARTH_NOT_ALLOWED);
+
+    sv = Astronomy_GeoVector(BODY_SUN, time, 0);    /* FIXFIXFIX: use aberration or not? */
+    se = Astronomy_Ecliptic(sv);        /* checks for errors in sv */
+    if (se.status != ASTRO_SUCCESS)
+        return AngleError(se.status);
+
+    bv = Astronomy_GeoVector(body, time, 0);        /* FIXFIXFIX: use aberration or not? */
+    be = Astronomy_Ecliptic(bv);        /* checks for errors in bv */
+    if (be.status != ASTRO_SUCCESS)
+        return AngleError(be.status);
+
+    result.status = ASTRO_SUCCESS;
+    result.angle = NormalizeLongitude(be.elon - se.elon);
+    return result;
+}
+
 #ifdef __cplusplus
 }
 #endif
@@ -2968,7 +3006,7 @@ astro_angle_result_t Astronomy_AngleFromSun(astro_body_t body, astro_time_t time
     X   EclipticLongitude
     X   Elongation
     X   Illumination
-    X   LongitudeFromSun
+    -   LongitudeFromSun
     X   MoonPhase
     X   NextLunarApsis
     X   NextMoonQuarter
