@@ -351,7 +351,15 @@ static int SeasonsTest(const char *filename)
     FILE *infile = NULL;
     char line[200];
     int nscanned, year, month, day, hour, minute;
+    int current_year = 0;
     char name[20];
+    astro_time_t correct_time;
+    astro_time_t calc_time;
+    astro_seasons_t seasons;
+    double diff_minutes, max_minutes = 0.0;
+    int mar_count=0, jun_count=0, sep_count=0, dec_count=0;
+
+    memset(&seasons, 0, sizeof(seasons));    
 
     infile = fopen(filename, "rt");
     if (infile == NULL)
@@ -380,9 +388,89 @@ static int SeasonsTest(const char *filename)
             error = 1;
             goto fail;
         }
+
+        if (year != current_year)
+        {
+            current_year = year;
+            seasons = Astronomy_Seasons(year);
+            if (seasons.status != ASTRO_SUCCESS)
+            {
+                fprintf(stderr, "SeasonsTest: Astronomy_Seasons(%d) returned %d\n", year, seasons.status);
+                error = 1;
+                goto fail;
+            }
+        }
+
+        memset(&calc_time, 0xcd, sizeof(calc_time));
+        correct_time = Astronomy_MakeTime(year, month, day, hour, minute, 0.0);
+        if (!strcmp(name, "Equinox"))
+        {
+            switch (month)
+            {
+            case 3:
+                calc_time = seasons.mar_equinox;
+                ++mar_count;
+                break;
+            case 9:
+                calc_time = seasons.sep_equinox;
+                ++sep_count;
+                break;
+            default:
+                fprintf(stderr, "SeasonsTest: Invalid equinox date in test data: %s line %d\n", filename, lnum);
+                error = 1;
+                goto fail;
+            }
+        }
+        else if (!strcmp(name, "Solstice"))
+        {
+            switch (month)
+            {
+            case 6:
+                calc_time = seasons.jun_solstice;
+                ++jun_count;
+                break;
+            case 12:
+                calc_time = seasons.dec_solstice;
+                ++dec_count;
+                break;
+            default:
+                fprintf(stderr, "SeasonsTest: Invalid solstice date in test data: %s line %d\n", filename, lnum);
+                error = 1;
+                goto fail;
+            }
+        }
+        else if (!strcmp(name, "Aphelion"))
+        {
+            /* not yet calculated */
+            continue;
+        }
+        else if (!strcmp(name, "Perihelion"))
+        {
+            /* not yet calculated */
+            continue;
+        }
+        else
+        {
+            fprintf(stderr, "SeasonsTest: %s line %d: unknown event type '%s'\n", filename, lnum, name);
+            error = 1;
+            goto fail;
+        }
+
+        /* Verify that the calculated time matches the correct time for this event. */
+        diff_minutes = (24.0 * 60.0) * fabs(calc_time.tt - correct_time.tt);
+        if (diff_minutes > max_minutes)
+            max_minutes = diff_minutes;
+
+        if (diff_minutes > 1.7)
+        {
+            fprintf(stderr, "SeasonsTest: %s line %d: excessive error (%s): %lf minutes.\n", filename, lnum, name, diff_minutes);
+            error = 1;
+            goto fail;
+        }
     }
 
-    printf("SeasonsTest: verified %d lines from file %s\n", lnum, filename);
+    printf("SeasonsTest: verified %d lines from file %s : max error minutes = %0.3lf\n", lnum, filename, max_minutes);
+    printf("SeasonsTest: Event counts: mar=%d, jun=%d, sep=%d, dec=%d\n", mar_count, jun_count, sep_count, dec_count);
     error = 0;
 
 fail:

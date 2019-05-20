@@ -1850,7 +1850,6 @@ astro_seasons_t Astronomy_Seasons(int year)
     X   MoonPhase
     X   NextLunarApsis
     X   NextMoonQuarter
-    -   Search
     X   SearchHourAngle
     X   SearchLunarApsis
     X   SearchMaxElongation
@@ -1859,7 +1858,4 @@ astro_seasons_t Astronomy_Seasons(int year)
     X   SearchPeakMagnitude
     X   SearchRelativeLongitude
     X   SearchRiseSet
-    -   SearchSunLongitude
-    -   Seasons
-    -   SunPosition
 */
