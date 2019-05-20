@@ -1,13 +1,13 @@
 @echo off
 setlocal EnableDelayedExpansion
 
+REM OUTDIR is a magic variable that tells msbuild where to put executables.
+set OUTDIR=%cd%\bin\
+set GENEXE=bin\generate.exe
+set CTESTEXE=bin\ctest.exe
+if exist "!GENEXE!" (del "!GENEXE!")
 call build.bat
 if errorlevel 1 (exit /b 1)
-
-if not defined GENEXE (
-    call findgenexe.bat
-    if errorlevel 1 (exit /b 1)
-)
 
 if not exist "!GENEXE!" (
     echo.FATAL[run.bat]: The executable does not exist: !GENEXE!
@@ -91,11 +91,10 @@ if errorlevel 1 (exit /b 1)
 REM     makedoc.bat has generated source code as a side effect.
 REM     Call build.bat AGAIN to build ctest.c (C unit tests).
 echo.Re-building to get C unit test.
+if exist "!CTESTEXE!" (del "!CTESTEXE!")
 call build.bat
 if errorlevel 1 (exit /b 1)
 
-REM     Now figure out where ctest.exe is.
-call findctest.bat
 if not exist "!CTESTEXE!" (
     echo.FATAL[run.bat]: The executable does not exist: !CTESTEXE!
     exit /b 1

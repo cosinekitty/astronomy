@@ -5,3 +5,4 @@ temp/
 html/
 .ipynb_checkpoints
 ctest
+bin/
