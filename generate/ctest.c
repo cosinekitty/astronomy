@@ -37,11 +37,11 @@ static int CheckEquator(int lnum, astro_equatorial_t equ)
 #define CHECK_VECTOR(var,expr)   CHECK(CheckVector(__LINE__, ((var) = (expr))))
 #define CHECK_EQU(var,expr)      CHECK(CheckEquator(__LINE__, ((var) = (expr))))
 
-static int AdHoc(void);
 static int Test_AstroTime(void);
 static int AstroCheck(void);
 static int Diff(const char *c_filename, const char *js_filename);
 static int DiffLine(int lnum, const char *cline, const char *jline, double *maxdiff, int *worst_lnum);
+static int SeasonsTest(const char *filename);
 
 int main(int argc, const char *argv[])
 {
@@ -54,11 +54,12 @@ int main(int argc, const char *argv[])
         goto success;
     }
 
-    if (argc == 2)
+    if (argc == 3)
     {
-        if (!strcmp(argv[1], "adhoc"))
+        if (!strcmp(argv[1], "seasons"))
         {
-            CHECK(AdHoc());      /* ad hoc test for debugging */
+            const char *filename = argv[2];
+            CHECK(SeasonsTest(filename));
             goto success;
         }
     }
@@ -182,11 +183,7 @@ fail:
     return error;
 }
 
-static int AdHoc(void)
-{
-    /* Put ad-hoc stuff here to test. */
-    return 0;
-}
+/*-----------------------------------------------------------------------------------------------------------*/
 
 static int Diff(const char *c_filename, const char *js_filename)
 {
@@ -344,3 +341,53 @@ static int DiffLine(int lnum, const char *cline, const char *jline, double *maxd
 fail:
     return error;
 }
+
+/*-----------------------------------------------------------------------------------------------------------*/
+
+static int SeasonsTest(const char *filename)
+{
+    int error = 1;
+    int lnum;
+    FILE *infile = NULL;
+    char line[200];
+    int nscanned, year, month, day, hour, minute;
+    char name[20];
+
+    infile = fopen(filename, "rt");
+    if (infile == NULL)
+    {
+        fprintf(stderr, "SeasonsTest: Cannot open input file: %s\n", filename);
+        error = 1;
+        goto fail;
+    }
+
+    lnum = 0;
+    while (fgets(line, sizeof(line), infile))
+    {
+        ++lnum;
+        /*
+            2019-01-03T05:20Z Perihelion
+            2019-03-20T21:58Z Equinox
+            2019-06-21T15:54Z Solstice
+            2019-07-04T22:11Z Aphelion
+            2019-09-23T07:50Z Equinox
+            2019-12-22T04:19Z Solstice
+        */
+        nscanned = sscanf(line, "%d-%d-%dT%d:%dZ %10[A-Za-z]", &year, &month, &day, &hour, &minute, name);
+        if (nscanned != 6)
+        {
+            fprintf(stderr, "SeasonsTest: %s line %d : scanned %d, expected 6\n", filename, lnum, nscanned);
+            error = 1;
+            goto fail;
+        }
+    }
+
+    printf("SeasonsTest: verified %d lines from file %s\n", lnum, filename);
+    error = 0;
+
+fail:
+    if (infile != NULL) fclose(infile);
+    return error;
+}
+
+/*-----------------------------------------------------------------------------------------------------------*/
