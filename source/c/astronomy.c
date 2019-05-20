@@ -1379,10 +1379,6 @@ static const vsop_series_t vsop_lat_Earth[] =
     { 1, vsop_lat_Earth_2 }
 };
 
-static const vsop_term_t vsop_lon_Earth_0[] = 
-{
-};
-
 static const vsop_term_t vsop_lon_Earth_1[] = 
 {
     { 0.00227777722, 3.41376620530, 6283.07584999140 },
@@ -1391,7 +1387,7 @@ static const vsop_term_t vsop_lon_Earth_1[] =
 
 static const vsop_series_t vsop_lon_Earth[] = 
 {
-    { 0, vsop_lon_Earth_0 },
+    { 0, NULL },
     { 2, vsop_lon_Earth_1 }
 };
 
@@ -2457,7 +2453,7 @@ astro_equatorial_t Astronomy_Equator(
     if (ofdate)
     {
         precession(0.0, j2000, time.tt, temp);
-        nutation(time, 0.0, temp, datevect);
+        nutation(time, 0, temp, datevect);
         equ = vector2radec(datevect);
     }
     else

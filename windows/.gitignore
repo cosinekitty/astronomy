@@ -4,3 +4,4 @@ x64
 *.db
 .vs
 *.opendb
+*.user

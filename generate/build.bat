@@ -6,7 +6,7 @@ if not exist "!msbuild!" (
     exit /b 1
 )
 
-echo.Building generate.exe
+echo.Building C code
 
 "!msbuild!" ..\windows\generate\generate.sln /p:Configuration=Release /v:quiet /nologo /p:clp=Summary
 if errorlevel 1 (

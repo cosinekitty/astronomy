@@ -403,18 +403,21 @@ static int CVsop_Series(cg_context_t *context, const vsop_series_t *series, cons
 {
     int i;
 
-    fprintf(context->outfile, "static const vsop_term_t %s_%d[] = \n{\n", varprefix, s);
-    for (i=0; i < series->nterms_total; ++i)
+    if (series->nterms_total > 0)
     {
-        const vsop_term_t *term = &series->term[i];
+        fprintf(context->outfile, "static const vsop_term_t %s_%d[] = \n{\n", varprefix, s);
+        for (i = 0; i < series->nterms_total; ++i)
+        {
+            const vsop_term_t *term = &series->term[i];
 
-        fprintf(context->outfile, "    { %0.11lf, %0.11lf, %0.11lf }%s\n",
-            term->amplitude,
-            term->phase,
-            term->frequency,
-            (i+1 < series->nterms_total) ? "," : "");        
+            fprintf(context->outfile, "    { %0.11lf, %0.11lf, %0.11lf }%s\n",
+                term->amplitude,
+                term->phase,
+                term->frequency,
+                (i + 1 < series->nterms_total) ? "," : "");
+        }
+        fprintf(context->outfile, "};\n\n");
     }
-    fprintf(context->outfile, "};\n\n");
 
     return 0;
 }
@@ -424,6 +427,7 @@ static int CVsop_Formula(cg_context_t *context, const vsop_formula_t *formula, c
     int error = 0;
     int s;
     char varprefix[100];
+    char sname[100];
 
     snprintf(varprefix, sizeof(varprefix), "vsop_%s_%s", coord_name, body_name);
 
@@ -433,10 +437,14 @@ static int CVsop_Formula(cg_context_t *context, const vsop_formula_t *formula, c
     fprintf(context->outfile, "static const vsop_series_t %s[] = \n{\n", varprefix);
     for (s=0; s < formula->nseries_total; ++s)
     {
-        fprintf(context->outfile, "    { %d, %s_%d }%s\n", 
+        if (formula->series[s].nterms_total == 0)
+            strcpy(sname, "NULL");
+        else
+            snprintf(sname, sizeof(sname), "%s_%d", varprefix, s);
+
+        fprintf(context->outfile, "    { %d, %s }%s\n", 
             formula->series[s].nterms_total, 
-            varprefix, 
-            s,
+            sname,
             (s+1 < formula->nseries_total) ? "," : "");
     }
     fprintf(context->outfile, "};\n\n");

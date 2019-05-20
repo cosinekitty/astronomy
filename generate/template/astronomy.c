@@ -1397,7 +1397,7 @@ astro_equatorial_t Astronomy_Equator(
     if (ofdate)
     {
         precession(0.0, j2000, time.tt, temp);
-        nutation(time, 0.0, temp, datevect);
+        nutation(time, 0, temp, datevect);
         equ = vector2radec(datevect);
     }
     else
