@@ -1625,6 +1625,27 @@ astro_ecliptic_t Astronomy_SunPosition(astro_time_t observation_time)
     return RotateEquatorialToEcliptic(sun_ofdate, true_obliq);
 }
 
+astro_ecliptic_t Astronomy_Ecliptic(astro_vector_t equ)
+{
+    /* Based on NOVAS functions equ2ecl() and equ2ecl_vec(). */
+    static double ob2000;
+    double pos[3];
+
+    if (ob2000 == 0.0)
+    {
+        /* Lazy-evaluate and keep the mean obliquity of the ecliptic at J2000. */
+        /* This way we don't need to crunch the numbers more than once. */
+        /* This is not thread safe. */
+        ob2000 = DEG2RAD * e_tilt(Astronomy_MakeTime(2000, 1, 1, 0, 0, 0.0)).mobl;
+    }
+
+    pos[0] = equ.x;
+    pos[1] = equ.y;
+    pos[2] = equ.z;
+
+    return RotateEquatorialToEcliptic(pos, ob2000);
+}
+
 static astro_ecliptic_t RotateEquatorialToEcliptic(const double pos[3], double obliq_radians)
 {
     astro_ecliptic_t ecl;
@@ -1887,7 +1908,7 @@ astro_angle_result_t Astronomy_AngleFromSun(astro_body_t body, astro_time_t time
     -------------------------------------------
 
     -   AngleFromSun
-    X   Ecliptic
+    -   Ecliptic
     X   EclipticLongitude
     X   Elongation
     X   Illumination
