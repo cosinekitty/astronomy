@@ -51,8 +51,13 @@ static const double ERAD = 6378136.6;                   /* mean earth radius in 
 static const double AU = 1.4959787069098932e+11;        /* astronomical unit in meters */
 static const double KM_PER_AU = 1.4959787069098932e+8;
 static const double ANGVEL = 7.2921150e-5;
+static const double SECONDS_PER_DAY = 24.0 * 3600.0;
 
+static astro_time_t UniversalTime(double ut);
 static astro_ecliptic_t RotateEquatorialToEcliptic(const double pos[3], double obliq_radians);
+static int QuadInterp(
+    double tm, double dt, double fa, double fm, double fb,
+    double *x, double *t, double *df_dt);
 
 double Astronomy_VectorLength(astro_vector_t vector)
 {
@@ -250,6 +255,14 @@ static double DeltaT(double mjd)
 static double TerrestrialTime(double ut)
 {
     return ut + DeltaT(ut + Y2000_IN_MJD)/86400.0;
+}
+
+static astro_time_t UniversalTime(double ut)
+{
+    astro_time_t  time;
+    time.ut = ut;
+    time.tt = TerrestrialTime(ut);
+    return time;
 }
 
 astro_time_t Astronomy_MakeTime(int year, int month, int day, int hour, int minute, double second)
@@ -2598,7 +2611,7 @@ astro_horizon_t Astronomy_Horizon(
 
 /*
     X = not yet implemented
-    T = still needs testing
+    - = still needs testing
 
     -------------------------------------------
 
@@ -2606,14 +2619,12 @@ astro_horizon_t Astronomy_Horizon(
     X   Ecliptic
     X   EclipticLongitude
     X   Elongation
-    X   GetPeformanceMetrics
     X   Illumination
     X   LongitudeFromSun
     X   MoonPhase
     X   NextLunarApsis
     X   NextMoonQuarter
-    X   ResetPerformanceMetrics
-    X   Search
+    -   Search
     X   SearchHourAngle
     X   SearchLunarApsis
     X   SearchMaxElongation
@@ -2624,7 +2635,7 @@ astro_horizon_t Astronomy_Horizon(
     X   SearchRiseSet
     X   SearchSunLongitude
     X   Seasons
-    T   SunPosition
+    -   SunPosition
 */
 
 astro_ecliptic_t Astronomy_SunPosition(astro_time_t observation_time)
@@ -2684,6 +2695,168 @@ static astro_ecliptic_t RotateEquatorialToEcliptic(const double pos[3], double o
     ecl.elat = RAD2DEG * atan2(ecl.ez, xyproj);
     ecl.status = ASTRO_SUCCESS;
     return ecl;
+}
+
+astro_search_result_t Astronomy_Search(
+    astro_search_func_t func,
+    void *context,
+    astro_time_t t1,
+    astro_time_t t2,
+    double dt_tolerance_seconds)
+{
+    astro_search_result_t result;
+    astro_time_t tmid;
+    astro_time_t tq;
+    double f1, f2, fmid, fq, dt_days, dt, dt_guess;
+    double q_x, q_ut, q_df_dt;
+    int iter_limit = 20;
+    int calc_fmid = 1;
+
+    dt_days = fabs(dt_tolerance_seconds / SECONDS_PER_DAY);
+    f1 = func(context, t1);
+    f2 = func(context, t2);
+
+    result.iter = 0;
+    for(;;)
+    {
+        if (++result.iter > iter_limit)
+        {
+            /* failure to converge */
+            result.time.tt = result.time.ut = NAN;
+            result.status = ASTRO_NO_CONVERGE;
+            return result;
+        }
+
+        dt = (t2.tt - t1.tt) / 2.0;
+        tmid = Astronomy_AddDays(t1, dt);
+        if (fabs(dt) < dt_days)
+        {
+            /* We are close enough to the event to stop the search. */
+            result.time = tmid;
+            result.status = ASTRO_SUCCESS;
+            return result;
+        }
+
+        if (calc_fmid)
+            fmid = func(context, tmid);
+        else
+            calc_fmid = 1;      /* we already have the correct value of fmid from the previous loop */
+
+        /* Quadratic interpolation: */
+        /* Try to find a parabola that passes through the 3 points we have sampled: */
+        /* (t1,f1), (tmid,fmid), (t2,f2) */
+
+        if (QuadInterp(tmid.ut, t2.ut - tmid.ut, f1, fmid, f2, &q_x, &q_ut, &q_df_dt))
+        {
+            tq = UniversalTime(q_ut);
+            fq = func(context, tq);
+            if (q_df_dt != 0.0)
+            {
+                if (fabs(fq / q_df_dt) < dt_days)
+                {
+                    /* The estimated time error is small enough that we can quit now. */
+                    result.time = tq;
+                    result.status = ASTRO_SUCCESS;
+                    return result;
+                }
+
+                /* Try guessing a tighter boundary with the interpolated root at the center. */
+                dt_guess = 1.2 * fabs(fq / q_df_dt);
+                if (dt_guess < dt/10.0)
+                {
+                    astro_time_t tleft = Astronomy_AddDays(tq, -dt_guess);
+                    astro_time_t tright = Astronomy_AddDays(tq, +dt_guess);
+                    if ((tleft.ut - t1.ut)*(tleft.ut - t2.ut) < 0) 
+                    {
+                        if ((tright.ut - t1.ut)*(tright.ut - t2.ut) < 0) 
+                        {
+                            double fleft  = func(context, tleft);
+                            double fright = func(context, tright);
+                            if (fleft<0.0 && fright>=0.0)
+                            {
+                                f1 = fleft;
+                                f2 = fright;
+                                t1 = tleft;
+                                t2 = tright;
+                                fmid = fq;
+                                calc_fmid = 0;  /* save a little work -- no need to re-calculate fmid next time around the loop */
+                                continue;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        /* After quadratic interpolation attempt. */
+        /* Now just divide the region in two parts and pick whichever one appears to contain a root. */
+        if (f1 < 0.0 && fmid >= 0.0)
+        {
+            t2 = tmid;
+            f2 = fmid;
+            continue;
+        }
+
+        if (fmid < 0.0 && f2 >= 0.0)
+        {
+            t1 = tmid;
+            f1 = fmid;
+            continue;
+        }
+
+        /* Either there is no ascending zero-crossing in this range */
+        /* or the search window is too wide (more than one zero-crossing). */
+        result.time.tt = result.time.ut = NAN;
+        result.status = ASTRO_SEARCH_FAILURE;
+        return result;
+    }
+}
+
+static int QuadInterp(
+    double tm, double dt, double fa, double fm, double fb,
+    double *out_x, double *out_t, double *out_df_dt)
+{
+    double Q, R, S;
+    double u, ru, x1, x2;
+
+    Q = (fb + fa)/2.0 - fm;
+    R = (fb - fa)/2.0;
+    S = fm;
+
+    if (Q == 0.0)
+    {
+        /* This is a line, not a parabola. */
+        if (R == 0.0)
+            return 0;       /* This is a HORIZONTAL line... can't make progress! */
+        *out_x = -S / R;
+        if (*out_x < -1.0 || *out_x > +1.0)
+            return 0;   /* out of bounds */            
+    }
+    else
+    {
+        /* This really is a parabola. Find roots x1, x2. */
+        u = R*R - 4*Q*S;
+        if (u <= 0.0)
+            return 0;   /* can't solve if imaginary, or if vertex of parabola is tangent. */
+
+        ru = sqrt(u);
+        x1 = (-R + ru) / (2.0 * Q);
+        x2 = (-R - ru) / (2.0 * Q);
+        if (-1.0 <= x1 && x1 <= +1.0)
+        {
+            if (-1.0 <= x2 && x2 <= +1.0)
+                return 0;   /* two roots are within bounds; we require a unique zero-crossing. */
+            *out_x = x1;
+        }
+        else if (-1.0 <= x2 && x2 <= +1.0)
+            *out_x = x2;
+        else
+            return 0;   /* neither root is within bounds */
+    }
+
+    *out_t = tm + (*out_x)*dt;
+    *out_df_dt = (2*Q*(*out_x) + R) / dt;
+    return 1;   /* success */
 }
 
 #ifdef __cplusplus

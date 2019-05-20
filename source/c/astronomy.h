@@ -40,7 +40,8 @@ typedef enum
     ASTRO_INVALID_BODY,
     ASTRO_NO_CONVERGE,
     ASTRO_BAD_TIME,
-    ASTRO_BAD_VECTOR
+    ASTRO_BAD_VECTOR,
+    ASTRO_SEARCH_FAILURE
 }
 astro_status_t;
 
@@ -125,6 +126,15 @@ typedef enum
 }
 astro_refraction_t;
 
+typedef struct
+{
+    astro_status_t  status;
+    astro_time_t    time;
+    int             iter;
+}
+astro_search_result_t;
+
+typedef double (* astro_search_func_t) (void *context, astro_time_t time);
 
 /*---------- functions ----------*/
 
@@ -145,6 +155,14 @@ astro_equatorial_t Astronomy_Equator(
 );
 astro_ecliptic_t Astronomy_SunPosition(astro_time_t time);
 astro_horizon_t Astronomy_Horizon(astro_time_t time, astro_observer_t observer, double ra, double dec, astro_refraction_t refraction);
+
+astro_search_result_t Astronomy_Search(
+    astro_search_func_t func,
+    void *context,
+    astro_time_t t1,
+    astro_time_t t2,
+    double dt_tolerance_seconds
+);
 
 #ifdef __cplusplus
 }
