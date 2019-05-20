@@ -14,7 +14,6 @@ if not exist "!GENEXE!" (
     exit /b 1
 )
 
-set OUTDIR=..\source
 set EPHFILE=lnxp1600p2200.405
 REM set EPHURL=ftp://ssd.jpl.nasa.gov/pub/eph/planets/Linux/de405/!EPHFILE!
 set EPHURL=https://github.com/cosinekitty/ephemeris/raw/master/!EPHFILE!
