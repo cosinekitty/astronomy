@@ -88,8 +88,10 @@ if errorlevel 1 (
 call makedoc.bat
 if errorlevel 1 (exit /b 1)
 
+REM -----------------------------------------------------------------------------------------
 REM     makedoc.bat has generated source code as a side effect.
 REM     Call build.bat AGAIN to build ctest.c (C unit tests).
+
 echo.Re-building to get C unit test.
 if exist "!CTESTEXE!" (del "!CTESTEXE!")
 call build.bat
@@ -99,13 +101,7 @@ if not exist "!CTESTEXE!" (
     echo.FATAL[run.bat]: The executable does not exist: !CTESTEXE!
     exit /b 1
 )
-
-echo.Running C unit tests.
-!CTESTEXE!
-if errorlevel 1 (exit /b 1)
-
-!GENEXE! check temp\c_check.txt
-if errorlevel 1 (exit /b 1)
+REM -----------------------------------------------------------------------------------------
 
 echo.
 echo.Running longitude tests.
@@ -154,6 +150,20 @@ echo.
 echo.Running visual magnitude tests.
 node mag_test.js
 if errorlevel 1 (exit /b 1)
+
+REM -----------------------------------------------------------------------------------------
+
+echo.Running C unit tests.
+!CTESTEXE!
+if errorlevel 1 (exit /b 1)
+
+!GENEXE! check temp\c_check.txt
+if errorlevel 1 (exit /b 1)
+
+!CTESTEXE! diff temp\c_check.txt temp\js_check.txt
+if errorlevel 1 (exit /b 1)
+
+REM -----------------------------------------------------------------------------------------
 
 echo.
 echo.ALL TESTS PASSED.

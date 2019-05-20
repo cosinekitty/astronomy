@@ -40,23 +40,49 @@ static int CheckEquator(int lnum, astro_equatorial_t equ)
 static int AdHoc(void);
 static int Test_AstroTime(void);
 static int AstroCheck(void);
+static int Diff(const char *c_filename, const char *js_filename);
+static int DiffLine(int lnum, const char *cline, const char *jline, double *maxdiff, int *worst_lnum);
 
 int main(int argc, const char *argv[])
 {
-    int error = 0;
+    int error = 1;
 
-    if (argc == 2 && !strcmp(argv[1], "adhoc"))
-    {
-        CHECK(AdHoc());      /* ad hoc test for debugging */
-    }
-    else
+    if (argc == 1)
     {
         CHECK(Test_AstroTime());
         CHECK(AstroCheck());
+        goto success;
     }
 
+    if (argc == 2)
+    {
+        if (!strcmp(argv[1], "adhoc"))
+        {
+            CHECK(AdHoc());      /* ad hoc test for debugging */
+            goto success;
+        }
+    }
+
+    if (argc == 4)
+    {
+        if (!strcmp(argv[1], "diff"))
+        {
+            const char *c_filename = argv[2];
+            const char *js_filename = argv[3];
+            CHECK(Diff(c_filename, js_filename));
+            goto success;
+        }
+    }
+
+    fprintf(stderr, "Invalid command line arguments.\n");
+    error = 1;
+    goto fail;
+
+success:
+    error = 0;
+
 fail:
-    printf("ctest exiting with %d\n", error);
+    fprintf(stderr, "ctest exiting with %d\n", error);
     return error;
 }
 
@@ -160,4 +186,161 @@ static int AdHoc(void)
 {
     /* Put ad-hoc stuff here to test. */
     return 0;
+}
+
+static int Diff(const char *c_filename, const char *js_filename)
+{
+    int error = 1;
+    int lnum;
+    FILE *cfile = NULL;
+    FILE *jfile = NULL;
+    char cline[200];
+    char jline[200];
+    char *cread;
+    char *jread;
+    double maxdiff = 0.0;
+    int worst_lnum = 0;
+
+    cfile = fopen(c_filename, "rt");
+    if (cfile == NULL)
+    {
+        fprintf(stderr, "ctest(Diff): Cannot open input file: %s\n", c_filename);
+        error = 1;
+        goto fail;
+    }
+
+    jfile = fopen(js_filename, "rt");
+    if (jfile == NULL)
+    {
+        fprintf(stderr, "ctest(Diff): Cannot open input file: %s\n", js_filename);
+        error = 1;
+        goto fail;
+    }
+
+    lnum = 0;
+    for(;;)
+    {
+        cread = fgets(cline, sizeof(cline), cfile);
+        jread = fgets(jline, sizeof(jline), jfile);
+        if (cread==NULL && jread==NULL)
+            break;      /* normal end of both files */
+        
+        if (cread==NULL || jread==NULL)
+        {
+            fprintf(stderr, "ctest(Diff): Files do not have same number of lines: %s and %s\n", c_filename, js_filename);
+            error = 1;
+            goto fail;
+        }
+
+        ++lnum;
+        CHECK(DiffLine(lnum, cline, jline, &maxdiff, &worst_lnum));
+    }
+
+    printf("ctest(Diff): Maximum numeric difference = %lg, worst line number = %d\n", maxdiff, worst_lnum);
+    if (maxdiff > 1.8e-12)
+    {
+        fprintf(stderr, "ERROR: Excessive error comparing files %s and %s\n", c_filename, js_filename);
+        error = 1;
+        goto fail;
+    }
+
+    error = 0;
+
+fail:
+    if (cfile != NULL) fclose(cfile);
+    if (jfile != NULL) fclose(jfile);
+    return error;
+}
+
+static int DiffLine(int lnum, const char *cline, const char *jline, double *maxdiff, int *worst_lnum)
+{
+    int error = 1;
+    char cbody[10];
+    char jbody[10];
+    double cdata[7];
+    double jdata[7];
+    double diff;
+    int i, nc, nj, nrequired = -1;
+
+    /* be paranoid: make sure we can't possibly have a fake match. */
+    memset(cdata, 0xdc, sizeof(cdata));
+    memset(jdata, 0xce, sizeof(jdata));
+
+    /* Make sure the two data records are the same type. */
+    if (cline[0] != jline[0])
+    {
+        fprintf(stderr, "ctest(DiffLine): Line %d mismatch record type: '%c' vs '%c'.\n", lnum, cline[0], jline[0]);
+        error = 1;
+        goto fail;
+    }
+
+    switch (cline[0])
+    {
+    case 'o':       /* observer */
+        nc = sscanf(cline, "o %lf %lf %lf", &cdata[0], &cdata[1], &cdata[2]);
+        nj = sscanf(jline, "o %lf %lf %lf", &jdata[0], &jdata[1], &jdata[2]);
+        cbody[0] = jbody[1] = '\0';
+        nrequired = 3;
+        break;
+
+    case 'v':       /* heliocentric vector */
+        nc = sscanf(cline, "v %9[A-Za-z] %lf %lf %lf", cbody, &cdata[0], &cdata[1], &cdata[2]);
+        nj = sscanf(jline, "v %9[A-Za-z] %lf %lf %lf", jbody, &jdata[0], &jdata[1], &jdata[2]);
+        nrequired = 4;
+        break;
+
+    case 's':       /* sky coords: ecliptic and horizontal */
+        nc = sscanf(cline, "s %9[A-Za-z] %lf %lf %lf %lf %lf %lf %lf", cbody, &cdata[0], &cdata[1], &cdata[2], &cdata[3], &cdata[4], &cdata[5], &cdata[6]);
+        nj = sscanf(jline, "s %9[A-Za-z] %lf %lf %lf %lf %lf %lf %lf", jbody, &jdata[0], &jdata[1], &jdata[2], &jdata[3], &jdata[4], &jdata[5], &jdata[6]);
+        nrequired = 8;
+        break;
+
+    default:
+        fprintf(stderr, "ctest(DiffLine): Line %d type '%c' is not a valid record type.\n", lnum, cline[0]);
+        error = 1;
+        goto fail;
+    }
+
+    if (nc != nj)
+    {
+        fprintf(stderr, "ctest(DiffLine): Line %d mismatch data counts: %d vs %d\n", lnum, nc, nj);
+        error = 1;
+        goto fail;
+    }
+
+    if (nc != nrequired)
+    {
+        fprintf(stderr, "ctest(DiffLine): Line %d incorrect number of scanned arguments: %d\n", lnum, nc);
+        error = 1;
+        goto fail;
+    }
+
+    if (strcmp(cbody, jbody))
+    {
+        fprintf(stderr, "ctest(DiffLine): Line %d body mismatch: '%s' vs '%s'\n.", lnum, cbody, jbody);
+        error = 1;
+        goto fail;
+    }
+
+    if (cbody[0])
+    {
+        /* This is one of the record types that contains a body name. */
+        /* Therefore, we need to correct the number of numeric data. */
+        --nrequired;
+    }
+
+    /* Verify all the numeric data are very close. */
+    for (i=0; i < nrequired; ++i)
+    {
+        diff = fabs(cdata[i] - jdata[i]);
+        if (diff > *maxdiff)
+        {
+            *maxdiff = diff;
+            *worst_lnum = lnum;
+        }
+    }
+    error = 0;
+
+fail:
+    return error;
 }

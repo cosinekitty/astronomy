@@ -22,6 +22,7 @@ echo "$0: Built 'ctest' program."
 
 ./ctest || Fail "Failure reported by ctest."
 ./generate check temp/c_check.txt || Fail "Verification failure for C unit test output."
+./ctest diff temp/c_check.txt temp/js_check.txt || Fail "Diff(C,JS) failure."
 
 echo "unit_test_c: success"
 exit 0
