@@ -1801,6 +1801,35 @@ static int QuadInterp(
     return 1;   /* success */
 }
 
+static astro_status_t FindSeasonChange(double targetLon, int year, int month, int day, astro_time_t *time)
+{
+    astro_time_t startDate = Astronomy_MakeTime(year, month, day, 0, 0, 0.0);
+    astro_search_result_t result = Astronomy_SearchSunLongitude(targetLon, startDate, 4.0);
+    *time = result.time;
+    return result.status;
+}
+
+astro_seasons_t Astronomy_Seasons(int year)
+{
+    astro_seasons_t seasons;
+    astro_status_t  status;
+
+    seasons.status = ASTRO_SUCCESS;
+
+    status = FindSeasonChange(  0, year,  3, 19, &seasons.mar_equinox);
+    if (status != ASTRO_SUCCESS) seasons.status = status;
+
+    status = FindSeasonChange( 90, year,  6, 19, &seasons.jun_solstice);
+    if (status != ASTRO_SUCCESS) seasons.status = status;
+
+    status = FindSeasonChange(180, year,  9, 21, &seasons.sep_equinox);
+    if (status != ASTRO_SUCCESS) seasons.status = status;
+
+    status = FindSeasonChange(270, year, 12, 20, &seasons.dec_solstice);
+    if (status != ASTRO_SUCCESS) seasons.status = status;
+
+    return seasons;
+}
 
 #ifdef __cplusplus
 }
@@ -1831,6 +1860,6 @@ static int QuadInterp(
     X   SearchRelativeLongitude
     X   SearchRiseSet
     -   SearchSunLongitude
-    X   Seasons
+    -   Seasons
     -   SunPosition
 */

@@ -134,6 +134,16 @@ typedef struct
 }
 astro_search_result_t;
 
+typedef struct
+{
+    astro_status_t  status;
+    astro_time_t    mar_equinox;
+    astro_time_t    jun_solstice;
+    astro_time_t    sep_equinox;
+    astro_time_t    dec_solstice;
+}
+astro_seasons_t;
+
 typedef double (* astro_search_func_t) (void *context, astro_time_t time);
 
 /*---------- functions ----------*/
@@ -168,6 +178,8 @@ astro_search_result_t Astronomy_SearchSunLongitude(
     double targetLon, 
     astro_time_t dateStart,
     double limitDays);
+
+astro_seasons_t Astronomy_Seasons(int calendar_year);
 
 #ifdef __cplusplus
 }
