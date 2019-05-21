@@ -276,7 +276,7 @@ static int DiffLine(int lnum, const char *cline, const char *jline, double *maxd
     case 'o':       /* observer */
         nc = sscanf(cline, "o %lf %lf %lf", &cdata[0], &cdata[1], &cdata[2]);
         nj = sscanf(jline, "o %lf %lf %lf", &jdata[0], &jdata[1], &jdata[2]);
-        cbody[0] = jbody[1] = '\0';
+        cbody[0] = jbody[0] = '\0';
         nrequired = 3;
         break;
 
