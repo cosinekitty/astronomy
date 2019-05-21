@@ -495,12 +495,16 @@ static int MoonPhase(const char *filename)
     FILE *infile = NULL;
     int lnum, nscanned;
     int quarter, year, month, day, hour, minute;
+    int expected_quarter, quarter_count = 0;
     int prev_year = 0;
     double second, expected_elong;
     astro_time_t time;
     astro_angle_result_t result;
     double degree_error, arcmin, max_arcmin = 0.0;
+    astro_moon_quarter_t mq;
     char line[200];    
+
+    memset(&mq, 0xcd, sizeof(mq));
 
     infile = fopen(filename, "rt");
     if (infile == NULL)
@@ -557,14 +561,37 @@ static int MoonPhase(const char *filename)
             /* The test data contains a single year's worth of data for every 10 years. */
             /* Every time we see the year value change, it breaks continuity of the phases. */            
             /* Start the search over again. */
+            time = Astronomy_MakeTime(year, 1, 1, 0, 0, 0.0);
+            mq = Astronomy_SearchMoonQuarter(time);
+            expected_quarter = -1;  /* we have no idea what the quarter should be */
         }
         else
         {
             /* Yet another lunar quarter in the same year. Make sure we find the next expected quarter. */
+            expected_quarter = (1 + mq.quarter) % 4;        /* expect the next consecutive quarter */
+            mq = Astronomy_NextMoonQuarter(mq);
+        }
+
+        if (mq.status != ASTRO_SUCCESS)
+        {
+            fprintf(stderr, "MoonPhase(%s line %d): Astronomy_SearchMoonQuarter returned %d\n", filename, lnum, mq.status);
+            error = 1;
+            goto fail;
+        }
+
+        if (expected_quarter != -1)
+        {
+            if (expected_quarter != mq.quarter)
+            {
+                fprintf(stderr, "MoonPhase(%s line %d): Astronomy_SearchMoonQuarter returned quarter %d, but expected %d\n", filename, lnum, quarter, expected_quarter);
+                error = 1;
+                goto fail;
+            }
+            ++quarter_count;
         }
     }
 
-    printf("MoonPhase: passed %d lines for file %s : max_arcmin = %0.6lf\n", lnum, filename, max_arcmin);
+    printf("MoonPhase: passed %d lines for file %s : max_arcmin = %0.6lf, %d quarters\n", lnum, filename, max_arcmin, quarter_count);
     error = 0;
 
 fail:

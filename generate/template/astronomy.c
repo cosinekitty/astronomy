@@ -2010,7 +2010,7 @@ astro_search_result_t Astronomy_SearchMoonPhase(double targetLon, astro_time_t d
 
     ya = funcres.value;
     if (ya > 0.0) ya -= 360.0;  /* force searching forward in time, not backward */
-    est_dt = -(MEAN_SYNODIC_MONTH * ya) * 360.0;
+    est_dt = -(MEAN_SYNODIC_MONTH * ya) / 360.0;
     dt1 = est_dt - uncertainty;
     if (dt1 > limitDays)
         return SearchErr(ASTRO_NO_MOON_QUARTER);    /* not possible for moon phase to occur within specified window (too short) */
@@ -2078,12 +2078,9 @@ astro_moon_quarter_t Astronomy_NextMoonQuarter(astro_moon_quarter_t mq)
     X   Elongation
     X   Illumination
     X   NextLunarApsis
-    -   NextMoonQuarter
     X   SearchHourAngle
     X   SearchLunarApsis
     X   SearchMaxElongation
-    -   SearchMoonPhase
-    -   SearchMoonQuarter
     X   SearchPeakMagnitude
     X   SearchRelativeLongitude
     X   SearchRiseSet
