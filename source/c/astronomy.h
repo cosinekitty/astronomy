@@ -75,6 +75,7 @@ astro_angle_result_t;
 
 typedef enum
 {
+    BODY_INVALID = -1,
     BODY_MERCURY,
     BODY_VENUS,
     BODY_EARTH,

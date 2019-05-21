@@ -43,6 +43,8 @@ static int Diff(const char *c_filename, const char *js_filename);
 static int DiffLine(int lnum, const char *cline, const char *jline, double *maxdiff, int *worst_lnum);
 static int SeasonsTest(const char *filename);
 static int MoonPhase(const char *filename);
+static int ElongationTest(void);
+static astro_body_t ParseBodyName(const char *name);
 
 int main(int argc, const char *argv[])
 {
@@ -53,6 +55,16 @@ int main(int argc, const char *argv[])
         CHECK(Test_AstroTime());
         CHECK(AstroCheck());
         goto success;
+    }
+
+    if (argc == 2)
+    {
+        const char *verb = argv[1];
+        if (!strcmp(verb, "elongation"))
+        {
+            CHECK(ElongationTest());
+            goto success;
+        }
     }
 
     if (argc == 3)
@@ -615,3 +627,102 @@ fail:
 }
 
 /*-----------------------------------------------------------------------------------------------------------*/
+
+static astro_body_t ParseBodyName(const char *name)
+{
+    if (!strcmp(name, "Mercury"))   return BODY_MERCURY;
+    if (!strcmp(name, "Venus"))     return BODY_VENUS;
+    if (!strcmp(name, "Earth"))     return BODY_EARTH;
+    if (!strcmp(name, "Mars"))      return BODY_MARS;
+    if (!strcmp(name, "Jupiter"))   return BODY_JUPITER;
+    if (!strcmp(name, "Saturn"))    return BODY_SATURN;
+    if (!strcmp(name, "Uranus"))    return BODY_URANUS;
+    if (!strcmp(name, "Neptune"))   return BODY_NEPTUNE;
+    if (!strcmp(name, "Pluto"))     return BODY_PLUTO;
+    if (!strcmp(name, "Sun"))       return BODY_SUN;
+    if (!strcmp(name, "Moon"))      return BODY_MOON;
+    return BODY_INVALID;
+}
+
+static int TestElongFile(const char *filename, double targetRelLon)
+{
+    int error = 1;
+    FILE *infile = NULL;
+    int lnum;
+    char line[100];
+    char name[20];
+    int year, month, day, hour, minute;
+    int nscanned;
+    astro_time_t search_date, expected_time;
+    astro_body_t body;
+    astro_search_result_t search_result;
+    double diff_minutes;
+
+    infile = fopen(filename, "rt");
+    if (infile == NULL)
+    {
+        fprintf(stderr, "TestElongFile: Cannot open input file: %s\n", filename);
+        error = 1;
+        goto fail;
+    }
+
+    lnum = 0;
+    while (fgets(line, sizeof(line), infile))
+    {
+        /* 2018-05-09T00:28Z Jupiter */
+        nscanned = sscanf(line, "%d-%d-%dT%d:%dZ %9[A-Za-z]", &year, &month, &day, &hour, &minute, name);
+        if (nscanned != 6)
+        {
+            fprintf(stderr, "TestElongFile(%s line %d): Invalid data format.\n", filename, lnum);
+            error = 1;
+            goto fail;
+        }
+
+        body = ParseBodyName(name);
+        if (body == BODY_INVALID)
+        {
+            fprintf(stderr, "TestElongFile(%s line %d): Invalid body name '%s'\n", filename, lnum, name);
+            error = 1;
+            goto fail;
+        }
+
+        search_date = Astronomy_MakeTime(year, 1, 1, 0, 0, 0.0);
+        expected_time = Astronomy_MakeTime(year, month, day, hour, minute, 0.0);
+        search_result = Astronomy_SearchRelativeLongitude(body, targetRelLon, search_date);
+        if (search_result.status != ASTRO_SUCCESS)
+        {
+            fprintf(stderr, "TestElongFile(%s line %d): SearchRelativeLongitude returned %d\n", filename, lnum, search_result.status);
+            error = 1;
+            goto fail;
+        }
+
+        diff_minutes = (24.0 * 60.0) * (search_result.time.tt - expected_time.tt);
+        printf("TestElongFile: %-7s error = %6.3lf minutes, iterations = %3d\n", name, diff_minutes, search_result.iter);
+        if (fabs(diff_minutes) > 15.0)
+        {
+            fprintf(stderr, "TestElongFile(%s line %d): EXCESSIVE ERROR\n", filename, lnum);
+            error = 1;
+            goto fail;
+        }
+    }
+
+    printf("TestElongFile: passed %d rows of data\n", lnum);
+    error = 0;
+
+fail:
+    if (infile != NULL) fclose(infile);
+    return error;
+}
+
+static int ElongationTest(void)
+{
+    int error;
+
+    CHECK(TestElongFile("longitude/opposition_2018.txt", 0.0));
+
+fail:
+    return error;
+}
+
+/*-----------------------------------------------------------------------------------------------------------*/
+
