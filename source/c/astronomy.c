@@ -3134,12 +3134,9 @@ astro_moon_quarter_t Astronomy_NextMoonQuarter(astro_moon_quarter_t mq)
     X   Elongation
     X   Illumination
     X   NextLunarApsis
-    -   NextMoonQuarter
     X   SearchHourAngle
     X   SearchLunarApsis
     X   SearchMaxElongation
-    -   SearchMoonPhase
-    -   SearchMoonQuarter
     X   SearchPeakMagnitude
     X   SearchRelativeLongitude
     X   SearchRiseSet

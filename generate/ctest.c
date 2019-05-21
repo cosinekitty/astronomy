@@ -498,9 +498,11 @@ static int MoonPhase(const char *filename)
     int expected_quarter, quarter_count = 0;
     int prev_year = 0;
     double second, expected_elong;
-    astro_time_t time;
+    astro_time_t expected_time, start_time;
     astro_angle_result_t result;
     double degree_error, arcmin, max_arcmin = 0.0;
+    double diff_seconds, maxdiff = 0.0;
+    const double threshold_seconds = 120.0; /* max tolerable prediction error in seconds */
     astro_moon_quarter_t mq;
     char line[200];    
 
@@ -540,8 +542,8 @@ static int MoonPhase(const char *filename)
         }
 
         expected_elong = 90.0 * quarter;
-        time = Astronomy_MakeTime(year, month, day, hour, minute, second);
-        result = Astronomy_MoonPhase(time);
+        expected_time = Astronomy_MakeTime(year, month, day, hour, minute, second);
+        result = Astronomy_MoonPhase(expected_time);
         degree_error = fabs(result.angle - expected_elong);
         if (degree_error > 180.0)
             degree_error = 360 - degree_error;
@@ -561,13 +563,13 @@ static int MoonPhase(const char *filename)
             /* The test data contains a single year's worth of data for every 10 years. */
             /* Every time we see the year value change, it breaks continuity of the phases. */            
             /* Start the search over again. */
-            time = Astronomy_MakeTime(year, 1, 1, 0, 0, 0.0);
-            mq = Astronomy_SearchMoonQuarter(time);
+            start_time = Astronomy_MakeTime(year, 1, 1, 0, 0, 0.0);
+            mq = Astronomy_SearchMoonQuarter(start_time);
             expected_quarter = -1;  /* we have no idea what the quarter should be */
         }
         else
         {
-            /* Yet another lunar quarter in the same year. Make sure we find the next expected quarter. */
+            /* Yet another lunar quarter in the same year. */
             expected_quarter = (1 + mq.quarter) % 4;        /* expect the next consecutive quarter */
             mq = Astronomy_NextMoonQuarter(mq);
         }
@@ -579,6 +581,7 @@ static int MoonPhase(const char *filename)
             goto fail;
         }
 
+        /* Make sure we find the next expected quarter. */
         if (expected_quarter != -1)
         {
             if (expected_quarter != mq.quarter)
@@ -589,9 +592,21 @@ static int MoonPhase(const char *filename)
             }
             ++quarter_count;
         }
+
+        /* Make sure the time matches what we expect. */
+        diff_seconds = fabs(mq.time.tt - expected_time.tt) * (24.0 * 3600.0);
+        if (diff_seconds > threshold_seconds)
+        {
+            fprintf(stderr, "MoonPhase(%s line %d): excessive time error %0.3lf seconds\n", filename, lnum, diff_seconds);
+            error = 1;
+            goto fail;
+        }
+
+        if (diff_seconds > maxdiff)
+            maxdiff = diff_seconds;
     }
 
-    printf("MoonPhase: passed %d lines for file %s : max_arcmin = %0.6lf, %d quarters\n", lnum, filename, max_arcmin, quarter_count);
+    printf("MoonPhase: passed %d lines for file %s : max_arcmin = %0.6lf, maxdiff = %0.3lf seconds, %d quarters\n", lnum, filename, max_arcmin, maxdiff, quarter_count);
     error = 0;
 
 fail:

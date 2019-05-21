@@ -58,7 +58,7 @@ function SearchYear(year, data, index) {
         // Verify that the date and time we found is very close to the correct answer.
         // Calculate the discrepancy in minutes.
         // This is appropriate because the "correct" answers are only given to the minute.
-        let diff = (mq.time.date - data[index].date) / millis_per_minute;
+        let diff = Math.abs(mq.time.date - data[index].date) / millis_per_minute;
         if (diff > threshold_minutes) {
             console.log(`SearchYear: EXCESSIVE ERROR = ${diff.toFixed(3)} minutes, correct=${data[index].date.toISOString()}, calculated=${mq.time.toString()}`);
             return 1;
