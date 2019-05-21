@@ -3503,6 +3503,5 @@ astro_search_result_t Astronomy_SearchRelativeLongitude(astro_body_t body, doubl
     X   SearchLunarApsis
     -   SearchMaxElongation
     X   SearchPeakMagnitude
-    -   SearchRelativeLongitude
     X   SearchRiseSet
 */
