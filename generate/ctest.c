@@ -669,6 +669,8 @@ static int TestElongFile(const char *filename, double targetRelLon)
     lnum = 0;
     while (fgets(line, sizeof(line), infile))
     {
+        ++lnum;
+
         /* 2018-05-09T00:28Z Jupiter */
         nscanned = sscanf(line, "%d-%d-%dT%d:%dZ %9[A-Za-z]", &year, &month, &day, &hour, &minute, name);
         if (nscanned != 6)
