@@ -53,6 +53,7 @@ static const double KM_PER_AU = 1.4959787069098932e+8;
 static const double ANGVEL = 7.2921150e-5;
 static const double SECONDS_PER_DAY = 24.0 * 3600.0;
 static const double MEAN_SYNODIC_MONTH = 29.530588;     /* average number of days for Moon to return to the same phase */
+static const double EARTH_ORBITAL_PERIOD = 365.256;
 
 static astro_time_t UniversalTime(double ut);
 static astro_ecliptic_t RotateEquatorialToEcliptic(const double pos[3], double obliq_radians);
@@ -105,6 +106,41 @@ const char *Astronomy_BodyName(astro_body_t body)
     case BODY_SUN:      return "Sun";
     case BODY_MOON:     return "Moon";
     default:            return "";
+    }
+}
+
+
+static int IsSuperiorPlanet(astro_body_t body)
+{
+    switch (body)
+    {
+    case BODY_MARS:
+    case BODY_JUPITER:
+    case BODY_SATURN:
+    case BODY_URANUS:
+    case BODY_NEPTUNE:
+    case BODY_PLUTO:
+        return 1;
+
+    default:
+        return 0;
+    }
+}
+
+static double PlanetOrbitalPeriod(astro_body_t body)
+{
+    switch (body)
+    {
+    case BODY_MERCURY:  return     87.969;
+    case BODY_VENUS:    return    224.701;
+    case BODY_EARTH:    return    EARTH_ORBITAL_PERIOD;
+    case BODY_MARS:     return    686.980;
+    case BODY_JUPITER:  return   4332.589;
+    case BODY_SATURN:   return  10759.22;
+    case BODY_URANUS:   return  30685.4;
+    case BODY_NEPTUNE:  return  60189.0;
+    case BODY_PLUTO:    return  90560.0;
+    default:            return  0.0;        /* invalid body */
     }
 }
 
@@ -174,6 +210,32 @@ static astro_elongation_t ElongError(astro_status_t status)
     result.time.tt = result.time.ut = NAN;
     result.visibility = (astro_visibility_t)(-1);
 
+    return result;
+}
+
+static astro_func_result_t SynodicPeriod(astro_body_t body)
+{
+    static const double Te = 365.256;  /* Earth's orbital period in days */
+    double Tp;                         /* planet's orbital period in days */
+    astro_func_result_t result;
+
+    /* The Earth does not have a synodic period as seen from itself. */
+    if (body == BODY_EARTH)
+        return FuncError(ASTRO_EARTH_NOT_ALLOWED);
+
+    if (body == BODY_MOON)
+    {
+        result.status = ASTRO_SUCCESS;
+        result.value = MEAN_SYNODIC_MONTH;
+        return result;
+    }
+
+    Tp = PlanetOrbitalPeriod(body);
+    if (Tp <= 0.0)
+        return FuncError(ASTRO_INVALID_BODY);
+
+    result.status = ASTRO_SUCCESS;
+    result.value = fabs(Te / (Te/Tp - 1.0));
     return result;
 }
 
@@ -2747,6 +2809,25 @@ astro_ecliptic_t Astronomy_Ecliptic(astro_vector_t equ)
     return RotateEquatorialToEcliptic(pos, ob2000);
 }
 
+astro_angle_result_t Astronomy_EclipticLongitude(astro_body_t body, astro_time_t time)
+{
+    astro_vector_t hv;
+    astro_ecliptic_t eclip;
+    astro_angle_result_t result;
+
+    if (body == BODY_SUN)
+        return AngleError(ASTRO_INVALID_BODY);      /* cannot calculate heliocentric longitude of the Sun */
+
+    hv = Astronomy_HelioVector(body, time);
+    eclip = Astronomy_Ecliptic(hv);     /* checks for errors in hv, so we don't have to here */
+    if (eclip.status != ASTRO_SUCCESS)
+        return AngleError(eclip.status);
+
+    result.angle = eclip.elon;
+    result.status = ASTRO_SUCCESS;
+    return result;
+}
+
 static astro_ecliptic_t RotateEquatorialToEcliptic(const double pos[3], double obliq_radians)
 {
     astro_ecliptic_t ecl;
@@ -3044,6 +3125,160 @@ astro_elongation_t Astronomy_Elongation(astro_body_t body, astro_time_t time)
     return result;
 }
 
+astro_func_result_t neg_elong_slope(void *context, astro_time_t time)
+{
+    static const double dt = 0.1;    
+    astro_angle_result_t e1, e2;
+    astro_func_result_t result;
+    astro_body_t body = *((astro_body_t *)context);
+    astro_time_t t1 = Astronomy_AddDays(time, -dt/2.0);
+    astro_time_t t2 = Astronomy_AddDays(time, +dt/2.0);
+
+    e1 = Astronomy_AngleFromSun(body, t1);
+    if (e1.status != ASTRO_SUCCESS)
+        return FuncError(e1.status);
+
+    e2 = Astronomy_AngleFromSun(body, t2);
+    if (e2.status)
+        return FuncError(e2.status);
+
+    result.value = (e1.angle - e2.angle)/dt;
+    result.status = ASTRO_SUCCESS;
+    return result;
+}
+
+astro_elongation_t Astronomy_SearchMaxElongation(astro_body_t body, astro_time_t startDate)
+{
+    double s1, s2;
+    int iter;
+    astro_angle_result_t plon, elon;
+    astro_time_t t_start;
+    double rlon, rlon_lo, rlon_hi, adjust_days;
+    astro_func_result_t syn;
+    astro_search_result_t search1, search2, searchx;
+    astro_time_t t1, t2;
+    astro_func_result_t m1, m2;
+
+    /* Determine the range of relative longitudes within which maximum elongation can occur for this planet. */
+    switch (body)
+    {
+    case BODY_MERCURY:
+        s1 = 50.0;
+        s2 = 85.0;
+        break;
+
+    case BODY_VENUS:
+        s1 = 40.0;
+        s2 = 50.0;
+        break;
+
+    default:
+        /* SearchMaxElongation works for Mercury and Venus only. */
+        return ElongError(ASTRO_INVALID_BODY);
+    }
+
+    syn = SynodicPeriod(body);
+    if (syn.status != ASTRO_SUCCESS)
+        return ElongError(syn.status);
+
+    iter = 0;
+    while (++iter <= 2)
+    {
+        plon = Astronomy_EclipticLongitude(body, startDate);
+        if (plon.status != ASTRO_SUCCESS)
+            return ElongError(plon.status);
+
+        elon = Astronomy_EclipticLongitude(BODY_EARTH, startDate);
+        if (elon.status != ASTRO_SUCCESS)
+            return ElongError(elon.status);
+
+        rlon = LongitudeOffset(plon.angle - elon.angle);    /* clamp to (-180, +180] */
+
+        /* The slope function is not well-behaved when rlon is near 0 degrees or 180 degrees */
+        /* because there is a cusp there that causes a discontinuity in the derivative. */
+        /* So we need to guard against searching near such times. */
+        if (rlon >= -s1 && rlon < +s1)
+        {
+            /* Seek to the window [+s1, +s2]. */
+            adjust_days = 0.0;
+            /* Search forward for the time t1 when rel lon = +s1. */
+            rlon_lo = +s1;
+            /* Search forward for the time t2 when rel lon = +s2. */
+            rlon_hi = +s2;
+        }
+        else if (rlon > +s2 || rlon < -s2)
+        {
+            /* Seek to the next search window at [-s2, -s1]. */
+            adjust_days = 0.0;
+            /* Search forward for the time t1 when rel lon = -s2. */
+            rlon_lo = -s2;
+            /* Search forward for the time t2 when rel lon = -s1. */
+            rlon_hi = -s1;
+        }
+        else if (rlon >= 0.0)
+        {
+            /* rlon must be in the middle of the window [+s1, +s2]. */
+            /* Search BACKWARD for the time t1 when rel lon = +s1. */
+            adjust_days = -syn.value / 4.0;
+            rlon_lo = +s1;
+            rlon_hi = +s2;
+            /* Search forward from t1 to find t2 such that rel lon = +s2. */
+        }
+        else
+        {
+            /* rlon must be in the middle of the window [-s2, -s1]. */
+            /* Search BACKWARD for the time t1 when rel lon = -s2. */
+            adjust_days = -syn.value / 4.0;
+            rlon_lo = -s2;
+            /* Search forward from t1 to find t2 such that rel lon = -s1. */
+            rlon_hi = -s1;
+        }
+
+        t_start = Astronomy_AddDays(startDate, adjust_days);
+
+        search1 = Astronomy_SearchRelativeLongitude(body, rlon_lo, t_start);
+        if (search1.status != ASTRO_SUCCESS)
+            return ElongError(search1.status);
+        t1 = search1.time;
+
+        search2 = Astronomy_SearchRelativeLongitude(body, rlon_hi, t1);
+        if (search2.status != ASTRO_SUCCESS)
+            return ElongError(search2.status);
+        t2 = search2.time;
+
+        /* Now we have a time range [t1,t2] that brackets a maximum elongation event. */
+        /* Confirm the bracketing. */
+        m1 = neg_elong_slope(&body, t1);
+        if (m1.status != ASTRO_SUCCESS)
+            return ElongError(m1.status);
+
+        if (m1.value >= 0)
+            return ElongError(ASTRO_INTERNAL_ERROR);    /* there is a bug in the bracketing algorithm! */
+
+        m2 = neg_elong_slope(&body, t2);
+        if (m2.status != ASTRO_SUCCESS)
+            return ElongError(m2.status);
+
+        if (m2.value <= 0)
+            return ElongError(ASTRO_INTERNAL_ERROR);    /* there is a bug in the bracketing algorithm! */
+
+        /* Use the generic search algorithm to home in on where the slope crosses from negative to positive. */
+        searchx = Astronomy_Search(neg_elong_slope, &body, t1, t2, 10.0);
+        if (searchx.status != ASTRO_SUCCESS)
+            return ElongError(searchx.status);
+
+        if (searchx.time.tt >= startDate.tt)
+            return Astronomy_Elongation(body, searchx.time);
+
+        /* This event is in the past (earlier than startDate). */
+        /* We need to search forward from t2 to find the next possible window. */
+        /* We never need to search more than twice. */
+        startDate = Astronomy_AddDays(t2, 1.0);
+    }
+
+    return ElongError(ASTRO_SEARCH_FAILURE);
+}
+
 astro_angle_result_t Astronomy_LongitudeFromSun(astro_body_t body, astro_time_t time)
 {
     astro_vector_t sv, bv;
@@ -3163,6 +3398,92 @@ astro_moon_quarter_t Astronomy_NextMoonQuarter(astro_moon_quarter_t mq)
     return next_mq;
 }
 
+static astro_func_result_t rlon_offset(astro_body_t body, astro_time_t time, int direction, double targetRelLon)
+{
+    astro_func_result_t result;
+    astro_angle_result_t plon, elon;
+    double diff;
+
+    plon = Astronomy_EclipticLongitude(body, time);
+    if (plon.status != ASTRO_SUCCESS)
+        return FuncError(plon.status);
+
+    elon = Astronomy_EclipticLongitude(BODY_EARTH, time);
+    if (elon.status != ASTRO_SUCCESS)
+        return FuncError(elon.status);
+
+    diff = direction * (elon.angle - plon.angle);
+    result.value = LongitudeOffset(diff - targetRelLon);
+    result.status = ASTRO_SUCCESS;
+    return result;
+}
+
+astro_search_result_t Astronomy_SearchRelativeLongitude(astro_body_t body, double targetRelLon, astro_time_t startDate)
+{
+    astro_search_result_t result;
+    astro_func_result_t syn;
+    astro_func_result_t error_angle;
+    double prev_angle;
+    astro_time_t time;
+    int iter, direction;
+
+    if (body == BODY_EARTH)
+        return SearchErr(ASTRO_EARTH_NOT_ALLOWED);
+
+    if (body == BODY_MOON)
+        return SearchErr(ASTRO_INVALID_BODY);
+
+    syn = SynodicPeriod(body);
+    if (syn.status != ASTRO_SUCCESS)
+        return SearchErr(syn.status);
+
+    direction = IsSuperiorPlanet(body) ? +1 : -1;
+
+    /* Iterate until we converge on the desired event. */
+    /* Calculate the error angle, which will be a negative number of degrees, */
+    /* meaning we are "behind" the target relative longitude. */
+
+    error_angle = rlon_offset(body, startDate, direction, targetRelLon);
+    if (error_angle.status != ASTRO_SUCCESS)
+        return SearchErr(error_angle.status);
+
+    if (error_angle.value > 0) 
+        error_angle.value -= 360;    /* force searching forward in time */
+
+    time = startDate;
+    for (iter = 0; iter < 100; ++iter)
+    {
+        /* Estimate how many days in the future (positive) or past (negative) */
+        /* we have to go to get closer to the target relative longitude. */
+        double day_adjust = (-error_angle.value/360.0) * syn.value;
+        time = Astronomy_AddDays(time, day_adjust);
+        if (fabs(day_adjust) * SECONDS_PER_DAY < 1.0)
+        {
+            result.iter = iter;
+            result.time = time;
+            result.status = ASTRO_SUCCESS;
+            return result;
+        }
+
+        prev_angle = error_angle.value;
+        error_angle = rlon_offset(body, time, direction, targetRelLon);
+        if (error_angle.status != ASTRO_SUCCESS)
+            return SearchErr(error_angle.status);
+
+        if (fabs(prev_angle) < 30.0 && (prev_angle != error_angle.value))
+        {
+            /* Improve convergence for Mercury/Mars (eccentric orbits) */
+            /* by adjusting the synodic period to more closely match the */
+            /* variable speed of both planets in this part of their respective orbits. */
+            double ratio = prev_angle / (prev_angle - error_angle.value);
+            if (ratio > 0.5 && ratio < 2.0)
+                syn.value *= ratio;
+        }
+    }
+
+    return SearchErr(ASTRO_NO_CONVERGE);
+}
+
 #ifdef __cplusplus
 }
 #endif
@@ -3174,14 +3495,14 @@ astro_moon_quarter_t Astronomy_NextMoonQuarter(astro_moon_quarter_t mq)
     -------------------------------------------
 
     -   AngleFromSun
-    X   EclipticLongitude
+    -   EclipticLongitude
     -   Elongation
     X   Illumination
     X   NextLunarApsis
     X   SearchHourAngle
     X   SearchLunarApsis
-    X   SearchMaxElongation
+    -   SearchMaxElongation
     X   SearchPeakMagnitude
-    X   SearchRelativeLongitude
+    -   SearchRelativeLongitude
     X   SearchRiseSet
 */

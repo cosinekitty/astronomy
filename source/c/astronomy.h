@@ -45,6 +45,7 @@ typedef enum
     ASTRO_EARTH_NOT_ALLOWED,
     ASTRO_NO_MOON_QUARTER,
     ASTRO_WRONG_MOON_QUARTER,
+    ASTRO_INTERNAL_ERROR
 }
 astro_status_t;
 
@@ -207,10 +208,14 @@ astro_equatorial_t Astronomy_Equator(
     int aberration
 );
 astro_ecliptic_t Astronomy_SunPosition(astro_time_t time);
+astro_ecliptic_t Astronomy_Ecliptic(astro_vector_t equ);
+astro_angle_result_t Astronomy_EclipticLongitude(astro_body_t body, astro_time_t time);
 astro_horizon_t Astronomy_Horizon(astro_time_t time, astro_observer_t observer, double ra, double dec, astro_refraction_t refraction);
 astro_angle_result_t Astronomy_AngleFromSun(astro_body_t body, astro_time_t time);
 astro_elongation_t Astronomy_Elongation(astro_body_t body, astro_time_t time);
+astro_elongation_t Astronomy_SearchMaxElongation(astro_body_t body, astro_time_t startDate);
 astro_angle_result_t Astronomy_LongitudeFromSun(astro_body_t body, astro_time_t time);
+astro_search_result_t Astronomy_SearchRelativeLongitude(astro_body_t body, double targetRelLon, astro_time_t startDate);
 astro_angle_result_t Astronomy_MoonPhase(astro_time_t time);
 astro_search_result_t Astronomy_SearchMoonPhase(double targetLon, astro_time_t dateStart, double limitDays);
 astro_moon_quarter_t Astronomy_SearchMoonQuarter(astro_time_t dateStart);
