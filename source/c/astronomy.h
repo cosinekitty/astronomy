@@ -175,6 +175,7 @@ astro_ecliptic_t Astronomy_SunPosition(astro_time_t time);
 astro_horizon_t Astronomy_Horizon(astro_time_t time, astro_observer_t observer, double ra, double dec, astro_refraction_t refraction);
 astro_angle_result_t Astronomy_AngleFromSun(astro_body_t body, astro_time_t time);
 astro_angle_result_t Astronomy_LongitudeFromSun(astro_body_t body, astro_time_t time);
+astro_angle_result_t Astronomy_MoonPhase(astro_time_t time);
 
 astro_search_result_t Astronomy_Search(
     astro_search_func_t func,

@@ -2991,6 +2991,11 @@ astro_angle_result_t Astronomy_LongitudeFromSun(astro_body_t body, astro_time_t 
     return result;
 }
 
+astro_angle_result_t Astronomy_MoonPhase(astro_time_t time)
+{
+    return Astronomy_LongitudeFromSun(BODY_MOON, time);
+}
+
 #ifdef __cplusplus
 }
 #endif
@@ -3007,7 +3012,7 @@ astro_angle_result_t Astronomy_LongitudeFromSun(astro_body_t body, astro_time_t 
     X   Elongation
     X   Illumination
     -   LongitudeFromSun
-    X   MoonPhase
+    -   MoonPhase
     X   NextLunarApsis
     X   NextMoonQuarter
     X   SearchHourAngle
