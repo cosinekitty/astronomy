@@ -158,14 +158,14 @@ function TestMaxElong(body, startText, verifyText, verifyAngle, verifyVisibility
     let evt = Astronomy.SearchMaxElongation(body, startDate);
 
     let hour_diff = (verifyDate - evt.time.date) / (1000 * 3600);
-    let angle_diff = Math.abs(evt.elongation - verifyAngle);
-    console.log(`TestMaxElong: ${body.padStart(8)} ${evt.visibility.padStart(8)} elong=${evt.elongation.toFixed(2).padStart(5)} (err ${angle_diff.toFixed(2).padStart(4)})  ${evt.time.toString()} (err ${hour_diff.toFixed(2).padStart(5)} hours)`);
+    let arcmin_diff = 60.0 * Math.abs(evt.elongation - verifyAngle);
+    console.log(`TestMaxElong: ${body.padStart(8)} ${evt.visibility.padStart(8)} elong=${evt.elongation.toFixed(2).padStart(5)} (${arcmin_diff.toFixed(2).padStart(4)} arcmin)  ${evt.time.toString()} (err ${hour_diff.toFixed(2).padStart(5)} hours)`);
 
     if (evt.visibility !== verifyVisibility)
         throw `TestMaxElong: expected visibility ${verifyVisibility}, but found ${evt.visibility}`;
 
-    if (angle_diff > 1.0)
-        throw `TestMaxElong: excessive angular error = ${angle_diff}`;
+    if (arcmin_diff > 4.0)
+        throw `TestMaxElong: excessive angular error = ${angle_diff} arcmin`;
 
     if (Math.abs(hour_diff) > 0.6)
         throw `TestMaxElong: excessive hour error = ${hour_diff}`;

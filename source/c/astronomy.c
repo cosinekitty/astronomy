@@ -3494,14 +3494,10 @@ astro_search_result_t Astronomy_SearchRelativeLongitude(astro_body_t body, doubl
 
     -------------------------------------------
 
-    -   AngleFromSun
-    -   EclipticLongitude
-    -   Elongation
     X   Illumination
     X   NextLunarApsis
     X   SearchHourAngle
     X   SearchLunarApsis
-    -   SearchMaxElongation
     X   SearchPeakMagnitude
     X   SearchRiseSet
 */
