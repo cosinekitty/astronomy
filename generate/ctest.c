@@ -42,6 +42,7 @@ static int AstroCheck(void);
 static int Diff(const char *c_filename, const char *js_filename);
 static int DiffLine(int lnum, const char *cline, const char *jline, double *maxdiff, int *worst_lnum);
 static int SeasonsTest(const char *filename);
+static int MoonPhase(const char *filename);
 
 int main(int argc, const char *argv[])
 {
@@ -56,10 +57,18 @@ int main(int argc, const char *argv[])
 
     if (argc == 3)
     {
-        if (!strcmp(argv[1], "seasons"))
+        const char *verb = argv[1];
+        const char *filename = argv[2];
+
+        if (!strcmp(verb, "seasons"))
         {
-            const char *filename = argv[2];
             CHECK(SeasonsTest(filename));
+            goto success;
+        }
+
+        if (!strcmp(verb, "moonphase"))
+        {
+            CHECK(MoonPhase(filename));
             goto success;
         }
     }
@@ -471,6 +480,59 @@ static int SeasonsTest(const char *filename)
 
     printf("SeasonsTest: verified %d lines from file %s : max error minutes = %0.3lf\n", lnum, filename, max_minutes);
     printf("SeasonsTest: Event counts: mar=%d, jun=%d, sep=%d, dec=%d\n", mar_count, jun_count, sep_count, dec_count);
+    error = 0;
+
+fail:
+    if (infile != NULL) fclose(infile);
+    return error;
+}
+
+/*-----------------------------------------------------------------------------------------------------------*/
+
+static int MoonPhase(const char *filename)
+{
+    int error = 1;
+    FILE *infile = NULL;
+    int lnum, nscanned;
+    int quarter, year, month, day, hour, minute;
+    double second;
+    char line[200];    
+
+    infile = fopen(filename, "rt");
+    if (infile == NULL)
+    {
+        fprintf(stderr, "MoonPhase: Cannot open input file '%s'\n", filename);
+        error = 1;
+        goto fail;
+    }
+
+    /*
+        0 1800-01-25T03:21:00.000Z
+        1 1800-02-01T20:40:00.000Z
+        2 1800-02-09T17:26:00.000Z
+        3 1800-02-16T15:49:00.000Z
+    */
+    lnum = 0;
+    while (fgets(line, sizeof(line), infile))
+    {
+        ++lnum;
+        nscanned = sscanf(line, "%d %d-%d-%dT%d:%d:%lfZ", &quarter, &year, &month, &day, &hour, &minute, &second);
+        if (nscanned != 7)
+        {
+            fprintf(stderr, "MoonPhase(%s line %d): Invalid data format\n", filename, lnum);
+            error = 1;
+            goto fail;
+        }
+
+        if (quarter < 0 || quarter > 3)
+        {
+            fprintf(stderr, "MoonPhase(%s line %d): Invalid quarter %d\n", filename, lnum, quarter);
+            error = 1;
+            goto fail;
+        }
+    }
+
+    printf("MoonPhase: passed %d lines for file %s\n", lnum, filename);
     error = 0;
 
 fail:
