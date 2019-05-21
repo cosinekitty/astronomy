@@ -27,6 +27,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <math.h>
 #include "astronomy.h"
 
@@ -109,6 +110,24 @@ const char *Astronomy_BodyName(astro_body_t body)
     }
 }
 
+astro_body_t Astronomy_BodyCode(const char *name)
+{
+    if (name != NULL)
+    {
+        if (!strcmp(name, "Mercury"))   return BODY_MERCURY;
+        if (!strcmp(name, "Venus"))     return BODY_VENUS;
+        if (!strcmp(name, "Earth"))     return BODY_EARTH;
+        if (!strcmp(name, "Mars"))      return BODY_MARS;
+        if (!strcmp(name, "Jupiter"))   return BODY_JUPITER;
+        if (!strcmp(name, "Saturn"))    return BODY_SATURN;
+        if (!strcmp(name, "Uranus"))    return BODY_URANUS;
+        if (!strcmp(name, "Neptune"))   return BODY_NEPTUNE;
+        if (!strcmp(name, "Pluto"))     return BODY_PLUTO;
+        if (!strcmp(name, "Sun"))       return BODY_SUN;
+        if (!strcmp(name, "Moon"))      return BODY_MOON;
+    }
+    return BODY_INVALID;
+}
 
 static int IsSuperiorPlanet(astro_body_t body)
 {

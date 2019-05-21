@@ -44,7 +44,6 @@ static int DiffLine(int lnum, const char *cline, const char *jline, double *maxd
 static int SeasonsTest(const char *filename);
 static int MoonPhase(const char *filename);
 static int ElongationTest(void);
-static astro_body_t ParseBodyName(const char *name);
 
 int main(int argc, const char *argv[])
 {
@@ -628,22 +627,6 @@ fail:
 
 /*-----------------------------------------------------------------------------------------------------------*/
 
-static astro_body_t ParseBodyName(const char *name)
-{
-    if (!strcmp(name, "Mercury"))   return BODY_MERCURY;
-    if (!strcmp(name, "Venus"))     return BODY_VENUS;
-    if (!strcmp(name, "Earth"))     return BODY_EARTH;
-    if (!strcmp(name, "Mars"))      return BODY_MARS;
-    if (!strcmp(name, "Jupiter"))   return BODY_JUPITER;
-    if (!strcmp(name, "Saturn"))    return BODY_SATURN;
-    if (!strcmp(name, "Uranus"))    return BODY_URANUS;
-    if (!strcmp(name, "Neptune"))   return BODY_NEPTUNE;
-    if (!strcmp(name, "Pluto"))     return BODY_PLUTO;
-    if (!strcmp(name, "Sun"))       return BODY_SUN;
-    if (!strcmp(name, "Moon"))      return BODY_MOON;
-    return BODY_INVALID;
-}
-
 static int TestElongFile(const char *filename, double targetRelLon)
 {
     int error = 1;
@@ -680,7 +663,7 @@ static int TestElongFile(const char *filename, double targetRelLon)
             goto fail;
         }
 
-        body = ParseBodyName(name);
+        body = Astronomy_BodyCode(name);
         if (body == BODY_INVALID)
         {
             fprintf(stderr, "TestElongFile(%s line %d): Invalid body name '%s'\n", filename, lnum, name);
@@ -903,11 +886,129 @@ fail:
     return error;
 }
 
+static int TestPlanetLongitudes(
+    astro_body_t body, 
+    const char *outFileName, 
+    const char *zeroLonEventName)
+{
+    int error = 1;
+    const int startYear = 1700;
+    const int stopYear  = 2200;
+    astro_time_t time, stopTime;
+    double rlon = 0.0;
+    const char *event;
+    astro_search_result_t search_result;
+    int count = 0;
+    double day_diff, min_diff = 1.0e+99, max_diff = 1.0e+99, sum_diff = 0.0;
+    astro_vector_t geo;
+    double dist;
+    FILE *outfile = NULL;
+    const char *name;
+    double ratio, thresh;
+
+    name = Astronomy_BodyName(body);
+    if (!name[0])
+    {
+        fprintf(stderr, "TestPlanetLongitudes: Invalid body code %d\n", body);
+        error = 1;
+        goto fail;
+    }
+
+    outfile = fopen(outFileName, "wt");
+    if (outfile == NULL)
+    {
+        fprintf(stderr, "TestPlanetLongitudes: Cannot open output file: %s\n", outFileName);
+        error = 1;
+        goto fail;
+    }
+
+    time = Astronomy_MakeTime(startYear, 1, 1, 0, 0, 0.0);
+    stopTime = Astronomy_MakeTime(stopYear, 1, 1, 0, 0, 0.0);
+    while (time.tt < stopTime.tt)
+    {
+        ++count;
+        event = (rlon == 0.0) ? zeroLonEventName : "sup";
+        search_result = Astronomy_SearchRelativeLongitude(body, rlon, time);
+        if (search_result.status != ASTRO_SUCCESS)
+        {
+            fprintf(stderr, "TestPlanetLongitudes(%s): SearchRelativeLongitude returned %d\n", name, search_result.status);
+            error = 1;
+            goto fail;
+        }
+
+        if (count >= 2)
+        {
+            /* Check for consistent intervals. */
+            /* Mainly I don't want to skip over an event! */
+            day_diff = search_result.time.tt - time.tt;
+            sum_diff += day_diff;
+            if (count == 2)
+            {
+                min_diff = max_diff = day_diff;
+            }
+            else
+            {
+                if (day_diff < min_diff) 
+                    min_diff = day_diff;
+
+                if (day_diff > max_diff) 
+                    max_diff = day_diff;
+            }
+        }
+
+        geo = Astronomy_GeoVector(body, search_result.time, 0);
+        if (geo.status != ASTRO_SUCCESS)
+        {
+            fprintf(stderr, "TestPlanetLongitudes(%s): GeoVector returned %d\n", name, geo.status);
+            error = 1;
+            goto fail;
+        }
+        dist = Astronomy_VectorLength(geo);
+        fprintf(outfile, "e %s %s %0.16lf %0.16lf\n", name, event, search_result.time.tt, dist);
+
+        /* Search for the opposite longitude event next time. */
+        time = search_result.time;
+        rlon = 180.0 - rlon;
+    }
+
+    switch (body)
+    {
+    case BODY_MERCURY:  thresh = 1.65;  break;
+    case BODY_MARS:     thresh = 1.30;  break;
+    default:            thresh = 1.07;  break;
+    }
+
+    ratio = max_diff / min_diff;
+    printf("TestPlanetLongitudes(%-7s): %5d events, ratio=%5.3lf, file: %s\n", name, count, ratio, outFileName);
+
+    if (ratio > thresh)
+    {
+        fprintf(stderr, "TestPlanetLongitudes(%s): excessive event interval ratio.\n", name);
+        error = 1;
+        goto fail;
+    }
+
+    error = 0;
+fail:
+    if (outfile != NULL) fclose(outfile);
+    return error;
+}
+
 static int ElongationTest(void)
 {
     int error;
 
     CHECK(TestElongFile("longitude/opposition_2018.txt", 0.0));
+
+    CHECK(TestPlanetLongitudes(BODY_MERCURY, "temp/c_longitude_Mercury.txt", "inf"));
+    CHECK(TestPlanetLongitudes(BODY_VENUS,   "temp/c_longitude_Venus.txt",   "inf"));
+    CHECK(TestPlanetLongitudes(BODY_MARS,    "temp/c_longitude_Mars.txt",    "opp"));
+    CHECK(TestPlanetLongitudes(BODY_JUPITER, "temp/c_longitude_Jupiter.txt", "opp"));
+    CHECK(TestPlanetLongitudes(BODY_SATURN,  "temp/c_longitude_Saturn.txt",  "opp"));
+    CHECK(TestPlanetLongitudes(BODY_URANUS,  "temp/c_longitude_Uranus.txt",  "opp"));
+    CHECK(TestPlanetLongitudes(BODY_NEPTUNE, "temp/c_longitude_Neptune.txt", "opp"));
+    CHECK(TestPlanetLongitudes(BODY_PLUTO,   "temp/c_longitude_Pluto.txt",   "opp"));
+
     CHECK(SearchElongTest());
 
 fail:

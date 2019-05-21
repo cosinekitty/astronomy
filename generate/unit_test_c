@@ -27,5 +27,10 @@ echo "$0: Built 'ctest' program."
 ./ctest moonphase moonphase/moonphases.txt || Fail "Failed C moon phase test."
 ./ctest elongation || Fail "Failed C elongation tests."
 
+for file in temp/c_longitude_*.txt; do
+    ./generate check ${file} || Fail "Failed verification of file ${file}"
+    echo ""
+done
+
 echo "unit_test_c: success"
 exit 0

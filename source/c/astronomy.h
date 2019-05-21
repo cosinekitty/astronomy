@@ -195,6 +195,7 @@ astro_elongation_t;
 
 double Astronomy_VectorLength(astro_vector_t vector);
 const char *Astronomy_BodyName(astro_body_t body);
+astro_body_t Astronomy_BodyCode(const char *name);
 astro_observer_t Astronomy_MakeObserver(double latitude, double longitude, double height);
 astro_time_t Astronomy_MakeTime(int year, int month, int day, int hour, int minute, double second);
 astro_time_t Astronomy_AddDays(astro_time_t time, double days);
