@@ -175,10 +175,10 @@ console.log('elong_test.js: Starting');
 TestFile('longitude/opposition_2018.txt', 2018, 0);
 
 for (let body of ['Mercury', 'Venus'])
-    TestPlanet(`temp/longitude_${body}.txt`, body, 1700, 2200, 'inf');
+    TestPlanet(`temp/js_longitude_${body}.txt`, body, 1700, 2200, 'inf');
 
 for (let body of ['Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Pluto'])
-    TestPlanet(`temp/longitude_${body}.txt`, body, 1700, 2200, 'opp');
+    TestPlanet(`temp/js_longitude_${body}.txt`, body, 1700, 2200, 'opp');
 
 SearchElongTest();
 

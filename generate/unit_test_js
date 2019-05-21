@@ -32,7 +32,7 @@ node elong_test.js || Fail "Failed longitude tests."
 
 echo ""
 echo "Verifying elong_test output."
-for file in temp/longitude_*.txt; do
+for file in temp/js_longitude_*.txt; do
     ./generate check ${file} || Fail "Failed verification of ${file}"
 done
 
