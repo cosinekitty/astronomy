@@ -1133,7 +1133,7 @@ static void UpdateErrorStats(error_stat_t *stats, double arcmin)
         stats->max = arcmin;
 }
 
-static void PrintErrorStats(vsop_body_t body, const char *tag, const error_stat_t *stats, error_stat_t *tally)
+static int PrintErrorStats(vsop_body_t body, const char *tag, const error_stat_t *stats, error_stat_t *tally)
 {
     if (stats->count > 0)
     {
@@ -1163,12 +1163,15 @@ static void PrintErrorStats(vsop_body_t body, const char *tag, const error_stat_
             if (stats->max > tally->max)
                 tally->max = stats->max;
         }
+
+        return 1;   /* printed a line */
     }
+    return 0;       /* did not print a line */
 }
 
 static int CheckTestOutput(const char *filename)
 {
-    int error, lnum;
+    int error, lnum, nprinted, nbodies;
     vsop_body_t body;
     FILE *infile = NULL;
     char line[200];
@@ -1232,15 +1235,22 @@ static int CheckTestOutput(const char *filename)
 
     printf("CheckTestOutput: Verified %d lines of file %s\n", lnum, filename);
 
+    nbodies = 0;
     for (body=0; body < VSOP_BODY_LIMIT; ++body)
     {
-        PrintErrorStats(body, "hel", &bundle[body].helio, &tally);
-        PrintErrorStats(body, "equ", &bundle[body].equ,   &tally);
-        PrintErrorStats(body, "hor", &bundle[body].hor,   &tally);
-        PrintErrorStats(body, "ecl", &bundle[body].eclip, &tally);
+        nprinted  = PrintErrorStats(body, "hel", &bundle[body].helio, &tally);
+        nprinted += PrintErrorStats(body, "equ", &bundle[body].equ,   &tally);
+        nprinted += PrintErrorStats(body, "hor", &bundle[body].hor,   &tally);
+        nprinted += PrintErrorStats(body, "ecl", &bundle[body].eclip, &tally);
+        if (nprinted > 0)
+            ++nbodies;
     }
-    printf("---------------------------------------------------------------------\n");
-    PrintErrorStats(-1, "ALL", &tally, NULL);
+
+    if (nbodies > 1)
+    {
+        printf("---------------------------------------------------------------------\n");
+        PrintErrorStats(-1, "ALL", &tally, NULL);
+    }
 
     error = 0;
 
