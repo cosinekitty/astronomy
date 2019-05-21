@@ -125,10 +125,10 @@ if errorlevel 1 (exit /b 1)
 
 echo.
 echo.Validating JavaScript code.
-node astro_check.js > temp/check.txt
+node astro_check.js > temp/js_check.txt
 if errorlevel 1 (exit /b 1)
 
-!GENEXE! check temp/check.txt
+!GENEXE! check temp/js_check.txt
 if errorlevel 1 (exit /b 1)
 
 echo.
