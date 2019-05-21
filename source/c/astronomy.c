@@ -164,6 +164,19 @@ static astro_moon_quarter_t MoonQuarterError(astro_status_t status)
     return result;
 }
 
+static astro_elongation_t ElongError(astro_status_t status)
+{
+    astro_elongation_t result;
+
+    result.status = status;
+    result.elongation = NAN;
+    result.relative_longitude = NAN;
+    result.time.tt = result.time.ut = NAN;
+    result.visibility = (astro_visibility_t)(-1);
+
+    return result;
+}
+
 static astro_angle_result_t AngleBetween(astro_vector_t a, astro_vector_t b)
 {
     double r, dot;
@@ -3000,6 +3013,37 @@ astro_angle_result_t Astronomy_AngleFromSun(astro_body_t body, astro_time_t time
     return AngleBetween(sv, bv);
 }
 
+astro_elongation_t Astronomy_Elongation(astro_body_t body, astro_time_t time)
+{
+    astro_elongation_t result;
+    astro_angle_result_t angres;
+
+    angres = Astronomy_LongitudeFromSun(body, time);
+    if (angres.status != ASTRO_SUCCESS)
+        return ElongError(angres.status);
+
+    if (angres.angle > 180.0)
+    {
+        result.visibility = VISIBLE_MORNING;
+        result.relative_longitude = 360.0 - angres.angle;
+    }
+    else
+    {
+        result.visibility = VISIBLE_EVENING;
+        result.relative_longitude = angres.angle;
+    }
+
+    angres = Astronomy_AngleFromSun(body, time);
+    if (angres.status != ASTRO_SUCCESS)
+        return ElongError(angres.status);
+
+    result.elongation = angres.angle;
+    result.time = time;
+    result.status = ASTRO_SUCCESS;
+
+    return result;
+}
+
 astro_angle_result_t Astronomy_LongitudeFromSun(astro_body_t body, astro_time_t time)
 {
     astro_vector_t sv, bv;
@@ -3131,7 +3175,7 @@ astro_moon_quarter_t Astronomy_NextMoonQuarter(astro_moon_quarter_t mq)
 
     -   AngleFromSun
     X   EclipticLongitude
-    X   Elongation
+    -   Elongation
     X   Illumination
     X   NextLunarApsis
     X   SearchHourAngle

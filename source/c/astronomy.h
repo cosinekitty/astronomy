@@ -171,6 +171,24 @@ astro_func_result_t;
 
 typedef astro_func_result_t (* astro_search_func_t) (void *context, astro_time_t time);
 
+typedef enum
+{
+    VISIBLE_MORNING,
+    VISIBLE_EVENING
+}
+astro_visibility_t;
+
+typedef struct
+{
+    astro_status_t      status;
+    astro_time_t        time;
+    astro_visibility_t  visibility;
+    double              elongation;
+    double              relative_longitude;
+
+}
+astro_elongation_t;
+
 /*---------- functions ----------*/
 
 double Astronomy_VectorLength(astro_vector_t vector);
@@ -191,6 +209,7 @@ astro_equatorial_t Astronomy_Equator(
 astro_ecliptic_t Astronomy_SunPosition(astro_time_t time);
 astro_horizon_t Astronomy_Horizon(astro_time_t time, astro_observer_t observer, double ra, double dec, astro_refraction_t refraction);
 astro_angle_result_t Astronomy_AngleFromSun(astro_body_t body, astro_time_t time);
+astro_elongation_t Astronomy_Elongation(astro_body_t body, astro_time_t time);
 astro_angle_result_t Astronomy_LongitudeFromSun(astro_body_t body, astro_time_t time);
 astro_angle_result_t Astronomy_MoonPhase(astro_time_t time);
 astro_search_result_t Astronomy_SearchMoonPhase(double targetLon, astro_time_t dateStart, double limitDays);
