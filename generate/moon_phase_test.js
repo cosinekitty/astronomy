@@ -18,14 +18,7 @@ function TestLongitudes(data) {
     // Using known moon phase times from US Naval Obs
     let max_arcmin = 0;
     for (let row of data) {
-        let gm = Astronomy.GeoVector('Moon', row.date);
-        const moon_eclip = Astronomy.Ecliptic(gm.x, gm.y, gm.z);
-
-        let sun = Astronomy.GeoVector('Sun', row.date);
-        const sun_eclip = Astronomy.Ecliptic(sun.x, sun.y, sun.z);
-
-        let elong = moon_eclip.elon - sun_eclip.elon;
-        if (elong < 0) elong += 360;
+        let elong = Astronomy.MoonPhase(row.date);
         let expected_elong = 90 * row.quarter;
         let degree_error = Math.abs(elong - expected_elong);
         if (degree_error > 180) degree_error = 360 - degree_error;
