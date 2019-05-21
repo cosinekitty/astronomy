@@ -155,6 +155,15 @@ static astro_func_result_t FuncError(astro_status_t status)
     return result;
 }
 
+static astro_moon_quarter_t MoonQuarterError(astro_status_t status)
+{
+    astro_moon_quarter_t result;
+    result.status = status;
+    result.quarter = -1;
+    result.time.tt = result.time.ut = NAN;
+    return result;
+}
+
 static astro_angle_result_t AngleBetween(astro_vector_t a, astro_vector_t b)
 {
     double r, dot;
@@ -2013,6 +2022,47 @@ astro_search_result_t Astronomy_SearchMoonPhase(double targetLon, astro_time_t d
     return Astronomy_Search(moon_offset, &targetLon, t1, t2, 1.0);
 }
 
+astro_moon_quarter_t Astronomy_SearchMoonQuarter(astro_time_t dateStart)
+{
+    astro_moon_quarter_t mq;
+    astro_angle_result_t angres;
+    astro_search_result_t srchres;
+
+    /* Determine what the next quarter phase will be. */
+    angres = Astronomy_MoonPhase(dateStart);
+    if (angres.status != ASTRO_SUCCESS)
+        return MoonQuarterError(angres.status);
+
+    mq.quarter = (1 + (int)floor(angres.angle / 90.0)) % 4;
+    srchres = Astronomy_SearchMoonPhase(90.0 * mq.quarter, dateStart, 10.0);
+    if (srchres.status != ASTRO_SUCCESS)
+        return MoonQuarterError(srchres.status);
+
+    mq.status = ASTRO_SUCCESS;
+    mq.time = srchres.time;
+    return mq;
+}
+
+astro_moon_quarter_t Astronomy_NextMoonQuarter(astro_moon_quarter_t mq)
+{
+    astro_time_t time;
+    astro_moon_quarter_t next_mq;
+
+    /* Skip 6 days past the previous found moon quarter to find the next one. */
+    /* This is less than the minimum possible increment. */
+    /* So far I have seen the interval well contained by the range (6.5, 8.3) days. */
+
+    time = Astronomy_AddDays(mq.time, 6.0);
+    next_mq = Astronomy_SearchMoonQuarter(time);
+    if (next_mq.status == ASTRO_SUCCESS)
+    {
+        /* Verify that we found the expected moon quarter. */
+        if (next_mq.quarter != (1 + mq.quarter) % 4)
+            return MoonQuarterError(ASTRO_WRONG_MOON_QUARTER);  /* internal error! we found the wrong moon quarter */
+    }
+    return next_mq;
+}
+
 #ifdef __cplusplus
 }
 #endif
@@ -2028,12 +2078,12 @@ astro_search_result_t Astronomy_SearchMoonPhase(double targetLon, astro_time_t d
     X   Elongation
     X   Illumination
     X   NextLunarApsis
-    X   NextMoonQuarter
+    -   NextMoonQuarter
     X   SearchHourAngle
     X   SearchLunarApsis
     X   SearchMaxElongation
     -   SearchMoonPhase
-    X   SearchMoonQuarter
+    -   SearchMoonQuarter
     X   SearchPeakMagnitude
     X   SearchRelativeLongitude
     X   SearchRiseSet

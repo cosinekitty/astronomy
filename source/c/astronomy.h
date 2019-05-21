@@ -43,7 +43,8 @@ typedef enum
     ASTRO_BAD_VECTOR,
     ASTRO_SEARCH_FAILURE,
     ASTRO_EARTH_NOT_ALLOWED,
-    ASTRO_NO_MOON_QUARTER
+    ASTRO_NO_MOON_QUARTER,
+    ASTRO_WRONG_MOON_QUARTER,
 }
 astro_status_t;
 
@@ -155,6 +156,14 @@ astro_seasons_t;
 
 typedef struct
 {
+    astro_status_t  status;
+    int             quarter;
+    astro_time_t    time;
+}
+astro_moon_quarter_t;
+
+typedef struct
+{
     astro_status_t status;
     double value;    
 }
@@ -185,6 +194,8 @@ astro_angle_result_t Astronomy_AngleFromSun(astro_body_t body, astro_time_t time
 astro_angle_result_t Astronomy_LongitudeFromSun(astro_body_t body, astro_time_t time);
 astro_angle_result_t Astronomy_MoonPhase(astro_time_t time);
 astro_search_result_t Astronomy_SearchMoonPhase(double targetLon, astro_time_t dateStart, double limitDays);
+astro_moon_quarter_t Astronomy_SearchMoonQuarter(astro_time_t dateStart);
+astro_moon_quarter_t Astronomy_NextMoonQuarter(astro_moon_quarter_t mq);
 
 astro_search_result_t Astronomy_Search(
     astro_search_func_t func,

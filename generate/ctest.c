@@ -553,9 +553,10 @@ static int MoonPhase(const char *filename)
 
         if (year != prev_year)
         {
-            /* The test data contains a single year's worth of data for every 10 years. */
-            /* Every time we see the year value change, it breaks continuity of the phases. */
             prev_year = year;
+            /* The test data contains a single year's worth of data for every 10 years. */
+            /* Every time we see the year value change, it breaks continuity of the phases. */            
+            /* Start the search over again. */
         }
         else
         {
