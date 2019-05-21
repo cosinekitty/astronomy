@@ -495,7 +495,10 @@ static int MoonPhase(const char *filename)
     FILE *infile = NULL;
     int lnum, nscanned;
     int quarter, year, month, day, hour, minute;
-    double second;
+    double second, expected_elong;
+    astro_time_t time;
+    astro_angle_result_t result;
+    double degree_error, arcmin, max_arcmin = 0.0;
     char line[200];    
 
     infile = fopen(filename, "rt");
@@ -530,9 +533,25 @@ static int MoonPhase(const char *filename)
             error = 1;
             goto fail;
         }
+
+        expected_elong = 90.0 * quarter;
+        time = Astronomy_MakeTime(year, month, day, hour, minute, second);
+        result = Astronomy_MoonPhase(time);
+        degree_error = fabs(result.angle - expected_elong);
+        if (degree_error > 180.0)
+            degree_error = 360 - degree_error;
+        arcmin = 60.0 * degree_error;
+        if (arcmin > 1.0)
+        {
+            fprintf(stderr, "MoonPhase(%s line %d): EXCESSIVE ANGULAR ERROR: %lg arcmin\n", filename, lnum, arcmin);
+            error = 1;
+            goto fail;
+        }
+        if (arcmin > max_arcmin)
+            max_arcmin = arcmin;
     }
 
-    printf("MoonPhase: passed %d lines for file %s\n", lnum, filename);
+    printf("MoonPhase: passed %d lines for file %s : max_arcmin = %0.6lf\n", lnum, filename, max_arcmin);
     error = 0;
 
 fail:

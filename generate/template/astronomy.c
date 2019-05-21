@@ -1951,12 +1951,9 @@ astro_angle_result_t Astronomy_MoonPhase(astro_time_t time)
     -------------------------------------------
 
     -   AngleFromSun
-    -   Ecliptic
     X   EclipticLongitude
     X   Elongation
     X   Illumination
-    -   LongitudeFromSun
-    -   MoonPhase
     X   NextLunarApsis
     X   NextMoonQuarter
     X   SearchHourAngle
