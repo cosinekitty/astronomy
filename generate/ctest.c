@@ -495,6 +495,7 @@ static int MoonPhase(const char *filename)
     FILE *infile = NULL;
     int lnum, nscanned;
     int quarter, year, month, day, hour, minute;
+    int prev_year = 0;
     double second, expected_elong;
     astro_time_t time;
     astro_angle_result_t result;
@@ -549,6 +550,17 @@ static int MoonPhase(const char *filename)
         }
         if (arcmin > max_arcmin)
             max_arcmin = arcmin;
+
+        if (year != prev_year)
+        {
+            /* The test data contains a single year's worth of data for every 10 years. */
+            /* Every time we see the year value change, it breaks continuity of the phases. */
+            prev_year = year;
+        }
+        else
+        {
+            /* Yet another lunar quarter in the same year. Make sure we find the next expected quarter. */
+        }
     }
 
     printf("MoonPhase: passed %d lines for file %s : max_arcmin = %0.6lf\n", lnum, filename, max_arcmin);

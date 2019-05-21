@@ -52,6 +52,7 @@ static const double AU = 1.4959787069098932e+11;        /* astronomical unit in 
 static const double KM_PER_AU = 1.4959787069098932e+8;
 static const double ANGVEL = 7.2921150e-5;
 static const double SECONDS_PER_DAY = 24.0 * 3600.0;
+static const double MEAN_SYNODIC_MONTH = 29.530588;     /* average number of days for Moon to return to the same phase */
 
 static astro_time_t UniversalTime(double ut);
 static astro_ecliptic_t RotateEquatorialToEcliptic(const double pos[3], double obliq_radians);
@@ -143,6 +144,14 @@ static astro_angle_result_t AngleError(astro_status_t status)
     astro_angle_result_t result;
     result.status = status;
     result.angle = NAN;
+    return result;
+}
+
+static astro_func_result_t FuncError(astro_status_t status)
+{
+    astro_func_result_t result;
+    result.status = status;
+    result.value = NAN;
     return result;
 }
 
@@ -1688,11 +1697,16 @@ static astro_ecliptic_t RotateEquatorialToEcliptic(const double pos[3], double o
     return ecl;
 }
 
-static double sun_offset(void *context, astro_time_t time)
+static astro_func_result_t sun_offset(void *context, astro_time_t time)
 {
+    astro_func_result_t result;
     double targetLon = *((double *)context);
     astro_ecliptic_t ecl = Astronomy_SunPosition(time);
-    return LongitudeOffset(ecl.elon - targetLon);
+    if (ecl.status != ASTRO_SUCCESS)
+        return FuncError(ecl.status);
+    result.value = LongitudeOffset(ecl.elon - targetLon);
+    result.status = ASTRO_SUCCESS;
+    return result;
 }
 
 astro_search_result_t Astronomy_SearchSunLongitude(
@@ -1704,6 +1718,21 @@ astro_search_result_t Astronomy_SearchSunLongitude(
     return Astronomy_Search(sun_offset, &targetLon, dateStart, t2, 1.0);
 }
 
+static astro_search_result_t SearchErr(astro_status_t status)
+{
+    astro_search_result_t result;
+    result.time.tt = result.time.ut = NAN;
+    result.status = status;
+    return result;
+}
+
+#define CALLFUNC(f,t)  \
+    do { \
+        funcres = func(context, (t)); \
+        if (funcres.status != ASTRO_SUCCESS) return SearchErr(funcres.status); \
+        (f) = funcres.value; \
+    } while(0)
+
 astro_search_result_t Astronomy_Search(
     astro_search_func_t func,
     void *context,
@@ -1714,25 +1743,21 @@ astro_search_result_t Astronomy_Search(
     astro_search_result_t result;
     astro_time_t tmid;
     astro_time_t tq;
+    astro_func_result_t funcres;
     double f1, f2, fmid, fq, dt_days, dt, dt_guess;
     double q_x, q_ut, q_df_dt;
     int iter_limit = 20;
     int calc_fmid = 1;
 
     dt_days = fabs(dt_tolerance_seconds / SECONDS_PER_DAY);
-    f1 = func(context, t1);
-    f2 = func(context, t2);
+    CALLFUNC(f1, t1);
+    CALLFUNC(f2, t2);
 
     result.iter = 0;
     for(;;)
     {
         if (++result.iter > iter_limit)
-        {
-            /* failure to converge */
-            result.time.tt = result.time.ut = NAN;
-            result.status = ASTRO_NO_CONVERGE;
-            return result;
-        }
+            return SearchErr(ASTRO_NO_CONVERGE);
 
         dt = (t2.tt - t1.tt) / 2.0;
         tmid = Astronomy_AddDays(t1, dt);
@@ -1745,7 +1770,7 @@ astro_search_result_t Astronomy_Search(
         }
 
         if (calc_fmid)
-            fmid = func(context, tmid);
+            CALLFUNC(fmid, tmid);
         else
             calc_fmid = 1;      /* we already have the correct value of fmid from the previous loop */
 
@@ -1756,7 +1781,7 @@ astro_search_result_t Astronomy_Search(
         if (QuadInterp(tmid.ut, t2.ut - tmid.ut, f1, fmid, f2, &q_x, &q_ut, &q_df_dt))
         {
             tq = UniversalTime(q_ut);
-            fq = func(context, tq);
+            CALLFUNC(fq, tq);
             if (q_df_dt != 0.0)
             {
                 if (fabs(fq / q_df_dt) < dt_days)
@@ -1777,8 +1802,9 @@ astro_search_result_t Astronomy_Search(
                     {
                         if ((tright.ut - t1.ut)*(tright.ut - t2.ut) < 0) 
                         {
-                            double fleft  = func(context, tleft);
-                            double fright = func(context, tright);
+                            double fleft, fright;
+                            CALLFUNC(fleft, tleft);
+                            CALLFUNC(fright, tright);
                             if (fleft<0.0 && fright>=0.0)
                             {
                                 f1 = fleft;
@@ -1813,9 +1839,7 @@ astro_search_result_t Astronomy_Search(
 
         /* Either there is no ascending zero-crossing in this range */
         /* or the search window is too wide (more than one zero-crossing). */
-        result.time.tt = result.time.ut = NAN;
-        result.status = ASTRO_SEARCH_FAILURE;
-        return result;
+        return SearchErr(ASTRO_SEARCH_FAILURE);
     }
 }
 
@@ -1940,6 +1964,55 @@ astro_angle_result_t Astronomy_MoonPhase(astro_time_t time)
     return Astronomy_LongitudeFromSun(BODY_MOON, time);
 }
 
+static astro_func_result_t moon_offset(void *context, astro_time_t time)
+{
+    astro_func_result_t result;
+    double targetLon = *((double *)context);
+    astro_angle_result_t angres = Astronomy_MoonPhase(time);
+    if (angres.status != ASTRO_SUCCESS)
+        return FuncError(angres.status);
+    result.value = LongitudeOffset(angres.angle - targetLon);
+    result.status = ASTRO_SUCCESS;
+    return result;
+}
+
+astro_search_result_t Astronomy_SearchMoonPhase(double targetLon, astro_time_t dateStart, double limitDays)
+{
+    /*
+        To avoid discontinuities in the moon_offset function causing problems,
+        we need to approximate when that function will next return 0.
+        We probe it with the start time and take advantage of the fact
+        that every lunar phase repeats roughly every 29.5 days.
+        There is a surprising uncertainty in the quarter timing,
+        due to the eccentricity of the moon's orbit.
+        I have seen up to 0.826 days away from the simple prediction.
+        To be safe, we take the predicted time of the event and search
+        +/-0.9 days around it (a 1.8-day wide window).
+        But we must return null if the final result goes beyond limitDays after dateStart.
+    */
+    const double uncertainty = 0.9;
+    astro_func_result_t funcres;
+    double ya, est_dt, dt1, dt2;
+    astro_time_t t1, t2;
+
+    funcres = moon_offset(&targetLon, dateStart);
+    if (funcres.status != ASTRO_SUCCESS)
+        return SearchErr(funcres.status);
+
+    ya = funcres.value;
+    if (ya > 0.0) ya -= 360.0;  /* force searching forward in time, not backward */
+    est_dt = -(MEAN_SYNODIC_MONTH * ya) * 360.0;
+    dt1 = est_dt - uncertainty;
+    if (dt1 > limitDays)
+        return SearchErr(ASTRO_NO_MOON_QUARTER);    /* not possible for moon phase to occur within specified window (too short) */
+    dt2 = est_dt + uncertainty;
+    if (limitDays < dt2)
+        dt2 = limitDays;
+    t1 = Astronomy_AddDays(dateStart, dt1);
+    t2 = Astronomy_AddDays(dateStart, dt2);
+    return Astronomy_Search(moon_offset, &targetLon, t1, t2, 1.0);
+}
+
 #ifdef __cplusplus
 }
 #endif
@@ -1959,7 +2032,7 @@ astro_angle_result_t Astronomy_MoonPhase(astro_time_t time)
     X   SearchHourAngle
     X   SearchLunarApsis
     X   SearchMaxElongation
-    X   SearchMoonPhase
+    -   SearchMoonPhase
     X   SearchMoonQuarter
     X   SearchPeakMagnitude
     X   SearchRelativeLongitude
