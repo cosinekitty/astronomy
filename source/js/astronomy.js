@@ -61,7 +61,7 @@ const MEAN_SYNODIC_MONTH = 29.530588;       // average number of days for Moon t
 const SECONDS_PER_DAY = 24 * 3600;
 const MILLIS_PER_DAY = SECONDS_PER_DAY * 1000;
 const SOLAR_DAYS_PER_SIDEREAL_DAY = 0.9972695717592592;
-const SUN_RADIUS_AU   = 4.6505e-3;
+const SUN_RADIUS_AU  = 4.6505e-3;
 const MOON_RADIUS_AU = 1.15717e-5;
 const REFRACTION_NEAR_HORIZON = 34 / 60;        // degrees of refractive "lift" seen for objects near horizon
 let ob2000;   // lazy-evaluated mean obliquity of the ecliptic at J2000, in radians
@@ -3519,22 +3519,22 @@ Astronomy.SearchRiseSet = function(body, observer, direction, dateStart, limitDa
         return direction * alt;
     }
 
-    // See if object is currently above/below the horizon.
-    // If we are looking for next rise time and the object is below the horizon,
+    // See if the body is currently above/below the horizon.
+    // If we are looking for next rise time and the body is below the horizon,
     // we use the current time as the lower time bound and the next culmination
     // as the upper bound.
-    // If the object is above the horizon, we search for the next bottom and use it
+    // If the body is above the horizon, we search for the next bottom and use it
     // as the lower bound and the next culmination after that bottom as the upper bound.
     // The same logic applies for finding set times, only we swap the hour angles.
     // The peak_altitude() function already considers the 'direction' parameter.
 
     let ha_before, ha_after;
     if (direction === +1) {
-        ha_before = 12;     // reaching the minimum altitude (bottom) comes BEFORE the object rises.
-        ha_after = 0;       // reaching the maximum altitude (culmination) comes AFTER the object rises.
+        ha_before = 12;     // minimum altitude (bottom) happens BEFORE the body rises.
+        ha_after = 0;       // maximum altitude (culmination) happens AFTER the body rises.
     } else if (direction === -1) {
-        ha_before = 0;      // reaching culmination comes BEFORE the object sets.
-        ha_after = 12;      // reaching bottom comes AFTER the object sets.
+        ha_before = 0;      // culmination happens BEFORE the body sets.
+        ha_after = 12;      // bottom happens AFTER the body sets.
     } else {
         throw `Astronomy.SearchRiseSet: Invalid direction parameter ${direction} -- must be +1 or -1`;
     }
@@ -3557,10 +3557,7 @@ Astronomy.SearchRiseSet = function(body, observer, direction, dateStart, limitDa
     evt_after = Astronomy.SearchHourAngle(body, observer, ha_after, time_before);
     alt_after = peak_altitude(evt_after.time);
 
-    let iter = 0;
     while (true) {
-        ++iter;
-
         if (alt_before <= 0 && alt_after > 0) {
             // Search between evt_before and evt_after for the desired event.
             let tx = Astronomy.Search(peak_altitude, time_before, evt_after.time, {init_f1:alt_before, init_f2:alt_after});

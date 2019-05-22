@@ -45,7 +45,8 @@ typedef enum
     ASTRO_EARTH_NOT_ALLOWED,
     ASTRO_NO_MOON_QUARTER,
     ASTRO_WRONG_MOON_QUARTER,
-    ASTRO_INTERNAL_ERROR
+    ASTRO_INTERNAL_ERROR,
+    ASTRO_INVALID_PARAMETER
 }
 astro_status_t;
 
@@ -257,6 +258,13 @@ astro_hour_angle_t Astronomy_SearchHourAngle(
     astro_observer_t observer,
     double hourAngle,
     astro_time_t dateStart);
+
+astro_search_result_t Astronomy_SearchRiseSet(
+    astro_body_t body,
+    astro_observer_t observer,
+    int direction,
+    astro_time_t dateStart,
+    double limitDays);
 
 astro_seasons_t Astronomy_Seasons(int calendar_year);
 
