@@ -1029,7 +1029,12 @@ static int RiseSet(const char *filename)
     int error = 1;
     FILE *infile = NULL;
     char line[100];
-    int lnum;
+    char name[20];
+    double longitude, latitude;
+    int year, month, day, hour, minute;
+    char kind[2];       /* "r" or "s" for rise or set */
+    int direction;      /* +1 for rise, -1 for set */
+    int lnum, nscanned;
 
     infile = fopen(filename, "rt");
     if (infile == NULL)
@@ -1043,6 +1048,31 @@ static int RiseSet(const char *filename)
     while (fgets(line, sizeof(line), infile))
     {
         ++lnum;
+
+        // Moon  103 -61 1944-01-02T17:08Z s
+        // Moon  103 -61 1944-01-03T05:47Z r
+        nscanned = sscanf(line, "%9[A-Za-z] %lf %lf %d-%d-%dT%d:%dZ %1[rs]", 
+            name, &longitude, &latitude, &year, &month, &day, &hour, &minute, kind);
+
+        if (nscanned != 9)
+        {
+            fprintf(stderr, "RiseSet(%s line %d): invalid format\n", filename, lnum);
+            error = 1;
+            goto fail;
+        }
+
+        if (!strcmp(kind, "r"))
+            direction = +1;
+        else if (!strcmp(kind, "s"))
+            direction = -1;
+        else
+        {
+            fprintf(stderr, "RiseSet(%s line %d): invalid kind '%s'\n", filename, lnum, kind);
+            error = 1;
+            goto fail;
+        }        
+
+        (void)direction;    /* NOT YET FINISHED!!!!!!!!!! */
     }
 
     printf("RiseSet: passed %d lines\n", lnum);
