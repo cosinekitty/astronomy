@@ -1035,6 +1035,23 @@ static int RiseSet(const char *filename)
     char kind[2];       /* "r" or "s" for rise or set */
     int direction;      /* +1 for rise, -1 for set */
     int lnum, nscanned;
+    astro_time_t correct_date;
+    astro_body_t body, current_body;
+    astro_observer_t observer;
+    astro_time_t r_search_date;
+    astro_search_result_t r_evt, s_evt;     /* rise event, set event: search results */
+    astro_search_result_t a_evt, b_evt;     /* chronologically first and second events */
+    astro_time_t s_search_date;
+    int a_dir = 0, b_dir = 0;
+    double error_minutes, rms_minutes;
+    double sum_minutes = 0.0;
+    double max_minutes = 0.0;
+    const double nudge_days = 0.01;
+
+    observer.latitude = observer.longitude = observer.height = NAN;
+    current_body = BODY_INVALID;
+    a_evt.status = b_evt.status = r_evt.status = s_evt.status = ASTRO_NOT_INITIALIZED;
+    b_evt.time.tt = b_evt.time.ut = a_evt.time.tt = a_evt.time.ut = NAN;
 
     infile = fopen(filename, "rt");
     if (infile == NULL)
@@ -1061,6 +1078,8 @@ static int RiseSet(const char *filename)
             goto fail;
         }
 
+        correct_date = Astronomy_MakeTime(year, month, day, hour, minute, 0.0);
+
         if (!strcmp(kind, "r"))
             direction = +1;
         else if (!strcmp(kind, "s"))
@@ -1072,10 +1091,94 @@ static int RiseSet(const char *filename)
             goto fail;
         }        
 
-        (void)direction;    /* NOT YET FINISHED!!!!!!!!!! */
+        body = Astronomy_BodyCode(name);
+        if (body == BODY_INVALID)
+        {
+            fprintf(stderr, "RiseSet(%s line %d): invalid body name '%s'", filename, lnum, name);
+            error = 1;
+            goto fail;
+        }
+
+        /* Every time we see a new geographic location, start a new iteration */
+        /* of finding all rise/set times for that UTC calendar year. */
+        if (observer.latitude != latitude || observer.longitude != longitude || current_body != body)
+        {
+            current_body = body;
+            observer = Astronomy_MakeObserver(latitude, longitude, 0.0);
+            r_search_date = s_search_date = Astronomy_MakeTime(year, 1, 1, 0, 0, 0.0);
+            b_evt.time.tt = b_evt.time.ut = NAN;
+            b_evt.status = ASTRO_NOT_INITIALIZED;
+            printf("RiseSet: %-7s lat=%0.1lf lon=%0.1lf\n", name, latitude, longitude);
+        }
+
+        if (b_evt.status == ASTRO_SUCCESS)      /* has b_evt been initialized? (does it contain a valid event?) */
+        {
+            /* Recycle the second event from the previous iteration as the first event. */
+            a_evt = b_evt;
+            a_dir = b_dir;
+            b_evt.status = ASTRO_NOT_INITIALIZED;   /* invalidate b_evt for the next time around the loop */
+        }
+        else
+        {
+            r_evt = Astronomy_SearchRiseSet(body, observer, +1, r_search_date, 366.0);
+            if (r_evt.status != ASTRO_SUCCESS)
+            {
+                fprintf(stderr, "RiseSet(%s line %d): did not find %s rise event.\n", filename, lnum, name);
+                error = 1;
+                goto fail;
+            }
+
+            s_evt = Astronomy_SearchRiseSet(body, observer, -1, s_search_date, 366.0);
+            if (s_evt.status != ASTRO_SUCCESS)
+            {
+                fprintf(stderr, "RiseSet(%s line %d): did not find %s set event.\n", filename, lnum, name);
+                error = 1;
+                goto fail;
+            }
+
+            /* Expect the current event to match the earlier of the found dates. */
+            if (r_evt.time.tt < s_evt.time.tt)
+            {
+                a_evt = r_evt;
+                b_evt = s_evt;
+                a_dir = +1;
+                b_dir = -1;
+            }
+            else
+            {
+                a_evt = s_evt;
+                b_evt = r_evt;
+                a_dir = -1;
+                b_dir = +1;
+            }
+
+            /* Nudge the event times forward a tiny amount. */
+            r_search_date = Astronomy_AddDays(r_evt.time, nudge_days);
+            s_search_date = Astronomy_AddDays(s_evt.time, nudge_days);
+        }
+
+        if (a_dir != direction)
+        {
+            fprintf(stderr, "RiseSet(%s line %d): expected dir=%d but found %d\n", filename, lnum, a_dir, direction);
+            error = 1;
+            goto fail;
+        }
+
+        error_minutes = (24.0 * 60.0) * fabs(a_evt.time.tt - correct_date.tt);
+        sum_minutes += error_minutes * error_minutes;
+        if (error_minutes > max_minutes)
+            max_minutes = error_minutes;
+
+        if (error_minutes > 2.0)
+        {
+            fprintf(stderr, "RiseSet(%s line %d): excessive prediction time error = %lg minutes.\n", filename, lnum, error_minutes);
+            error = 1;
+            goto fail;
+        }
     }
 
-    printf("RiseSet: passed %d lines\n", lnum);
+    rms_minutes = sqrt(sum_minutes / lnum);
+    printf("RiseSet: passed %d lines: time errors in minutes: rms=%0.4lf, max=%0.4lf\n", lnum, rms_minutes, max_minutes);
     error = 0;
 fail:
     if (infile != NULL) fclose(infile);

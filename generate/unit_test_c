@@ -32,7 +32,7 @@ for file in temp/c_longitude_*.txt; do
     echo ""
 done
 
-./ctest riseset riseset/riseset.txt
+./ctest riseset riseset/riseset.txt || Fail "Failed C rise/set tests."
 
 echo "unit_test_c: success"
 exit 0

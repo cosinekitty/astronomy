@@ -87,7 +87,7 @@ function Test() {
         }
 
         let error_minutes = Math.abs(a_date.date - evt.date) / 60000;
-        sum_minutes += error_minutes;
+        sum_minutes += error_minutes * error_minutes;
         if (error_minutes > max_minutes) {
             max_minutes = error_minutes;
             console.log(`Line ${evt.lnum} : error = ${error_minutes.toFixed(4)}`);
@@ -102,7 +102,7 @@ function Test() {
     const after_date = new Date();
     const elapsed_seconds = (after_date - before_date) / 1000;
 
-    console.log(`Rise/set error in minutes: mean=${(sum_minutes/data.length).toFixed(4)}, max=${max_minutes.toFixed(4)}`);
+    console.log(`Rise/set error in minutes: rms=${Math.sqrt(sum_minutes/data.length).toFixed(4)}, max=${max_minutes.toFixed(4)}`);
 
     const perf = Astronomy.GetPerformanceMetrics();
     console.log(`Search metrics: elapsed=${elapsed_seconds.toFixed(3)}, searches=${perf.search}, samples=${perf.search_func}, ratio=${(perf.search_func/perf.search).toFixed(3)}`);

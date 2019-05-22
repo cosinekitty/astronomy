@@ -2696,8 +2696,6 @@ astro_search_result_t Astronomy_SearchRiseSet(
 
     X   Illumination
     X   NextLunarApsis
-    -   SearchHourAngle
     X   SearchLunarApsis
     X   SearchPeakMagnitude
-    -   SearchRiseSet
 */
