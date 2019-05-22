@@ -43,6 +43,7 @@ static int Diff(const char *c_filename, const char *js_filename);
 static int DiffLine(int lnum, const char *cline, const char *jline, double *maxdiff, int *worst_lnum);
 static int SeasonsTest(const char *filename);
 static int MoonPhase(const char *filename);
+static int RiseSet(const char *filename);
 static int ElongationTest(void);
 
 int main(int argc, const char *argv[])
@@ -80,6 +81,12 @@ int main(int argc, const char *argv[])
         if (!strcmp(verb, "moonphase"))
         {
             CHECK(MoonPhase(filename));
+            goto success;
+        }
+
+        if (!strcmp(verb, "riseset"))
+        {
+            CHECK(RiseSet(filename));
             goto success;
         }
     }
@@ -1017,3 +1024,32 @@ fail:
 
 /*-----------------------------------------------------------------------------------------------------------*/
 
+static int RiseSet(const char *filename)
+{
+    int error = 1;
+    FILE *infile = NULL;
+    char line[100];
+    int lnum;
+
+    infile = fopen(filename, "rt");
+    if (infile == NULL)
+    {
+        fprintf(stderr, "RiseSet: cannot open input file: %s\n", filename);
+        error = 1;
+        goto fail;
+    }
+
+    lnum = 0;
+    while (fgets(line, sizeof(line), infile))
+    {
+        ++lnum;
+    }
+
+    printf("RiseSet: passed %d lines\n", lnum);
+    error = 0;
+fail:
+    if (infile != NULL) fclose(infile);
+    return error;
+}
+
+/*-----------------------------------------------------------------------------------------------------------*/

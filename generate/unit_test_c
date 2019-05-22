@@ -32,5 +32,7 @@ for file in temp/c_longitude_*.txt; do
     echo ""
 done
 
+./ctest riseset riseset/riseset.txt
+
 echo "unit_test_c: success"
 exit 0
