@@ -187,9 +187,17 @@ typedef struct
     astro_visibility_t  visibility;
     double              elongation;
     double              relative_longitude;
-
 }
 astro_elongation_t;
+
+typedef struct
+{
+    astro_status_t      status;
+    astro_time_t        time;
+    astro_horizon_t     hor;
+    int                 iter;
+}
+astro_hour_angle_t;
 
 /*---------- functions ----------*/
 
@@ -202,6 +210,7 @@ astro_time_t Astronomy_AddDays(astro_time_t time, double days);
 astro_vector_t Astronomy_HelioVector(astro_body_t body, astro_time_t time);
 astro_vector_t Astronomy_GeoVector(astro_body_t body, astro_time_t time, int correct_aberration);
 astro_vector_t Astronomy_GeoMoon(astro_time_t time);
+
 astro_equatorial_t Astronomy_Equator(
     astro_body_t body, 
     astro_time_t time, 
@@ -209,10 +218,18 @@ astro_equatorial_t Astronomy_Equator(
     int ofdate,
     int aberration
 );
+
 astro_ecliptic_t Astronomy_SunPosition(astro_time_t time);
 astro_ecliptic_t Astronomy_Ecliptic(astro_vector_t equ);
 astro_angle_result_t Astronomy_EclipticLongitude(astro_body_t body, astro_time_t time);
-astro_horizon_t Astronomy_Horizon(astro_time_t time, astro_observer_t observer, double ra, double dec, astro_refraction_t refraction);
+
+astro_horizon_t Astronomy_Horizon(
+    astro_time_t time, 
+    astro_observer_t observer, 
+    double ra, 
+    double dec, 
+    astro_refraction_t refraction);
+
 astro_angle_result_t Astronomy_AngleFromSun(astro_body_t body, astro_time_t time);
 astro_elongation_t Astronomy_Elongation(astro_body_t body, astro_time_t time);
 astro_elongation_t Astronomy_SearchMaxElongation(astro_body_t body, astro_time_t startDate);
@@ -228,13 +245,18 @@ astro_search_result_t Astronomy_Search(
     void *context,
     astro_time_t t1,
     astro_time_t t2,
-    double dt_tolerance_seconds
-);
+    double dt_tolerance_seconds);
 
 astro_search_result_t Astronomy_SearchSunLongitude(
     double targetLon, 
     astro_time_t dateStart,
     double limitDays);
+
+astro_hour_angle_t Astronomy_SearchHourAngle(
+    astro_body_t body,
+    astro_observer_t observer,
+    double hourAngle,
+    astro_time_t dateStart);
 
 astro_seasons_t Astronomy_Seasons(int calendar_year);
 

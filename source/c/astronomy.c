@@ -53,6 +53,7 @@ static const double AU = 1.4959787069098932e+11;        /* astronomical unit in 
 static const double KM_PER_AU = 1.4959787069098932e+8;
 static const double ANGVEL = 7.2921150e-5;
 static const double SECONDS_PER_DAY = 24.0 * 3600.0;
+static const double SOLAR_DAYS_PER_SIDEREAL_DAY = 0.9972695717592592;
 static const double MEAN_SYNODIC_MONTH = 29.530588;     /* average number of days for Moon to return to the same phase */
 static const double EARTH_ORBITAL_PERIOD = 365.256;
 
@@ -228,6 +229,18 @@ static astro_elongation_t ElongError(astro_status_t status)
     result.relative_longitude = NAN;
     result.time.tt = result.time.ut = NAN;
     result.visibility = (astro_visibility_t)(-1);
+
+    return result;
+}
+
+static astro_hour_angle_t HourAngleError(astro_status_t status)
+{
+    astro_hour_angle_t result;
+
+    result.status = status;
+    result.time.tt = result.time.ut = NAN;
+    result.hor.altitude = result.hor.azimuth = result.hor.dec = result.hor.ra = NAN;
+    result.iter = -1;
 
     return result;
 }
@@ -3503,6 +3516,68 @@ astro_search_result_t Astronomy_SearchRelativeLongitude(astro_body_t body, doubl
     return SearchErr(ASTRO_NO_CONVERGE);
 }
 
+astro_hour_angle_t Astronomy_SearchHourAngle(
+    astro_body_t body,
+    astro_observer_t observer,
+    double hourAngle,
+    astro_time_t dateStart)
+{
+    int iter = 0;
+    astro_time_t time;
+    astro_equatorial_t ofdate;
+    astro_hour_angle_t result;
+    double delta_sidereal_hours, delta_days, gast;
+
+    time = dateStart;
+    for(;;) 
+    {
+        ++iter;
+
+        /* Calculate Greenwich Apparent Sidereal Time (GAST) at the given time. */
+        gast = sidereal_time(time);
+
+        /* Obtain equatorial coordinates of date for the body. */
+        ofdate = Astronomy_Equator(body, time, observer, 1, 1);
+        if (ofdate.status != ASTRO_SUCCESS)
+            return HourAngleError(ofdate.status);
+
+        /* Calculate the adjustment needed in sidereal time */
+        /* to bring the hour angle to the desired value. */
+
+        delta_sidereal_hours = fmod((hourAngle + ofdate.ra - observer.longitude/15) - gast, 24.0);
+        if (iter == 1) 
+        {
+            /* On the first iteration, always search forward in time. */
+            if (delta_sidereal_hours < 0)
+                delta_sidereal_hours += 24;
+        } 
+        else 
+        {
+            /* On subsequent iterations, we make the smallest possible adjustment, */
+            /* either forward or backward in time. */
+            if (delta_sidereal_hours < -12.0)
+                delta_sidereal_hours += 24.0;
+            else if (delta_sidereal_hours > +12.0)
+                delta_sidereal_hours -= 24.0;
+        }
+
+        /* If the error is tolerable (less than 0.1 seconds), the search has succeeded. */
+        if (fabs(delta_sidereal_hours) * 3600.0 < 0.1) 
+        {
+            result.hor = Astronomy_Horizon(time, observer, ofdate.ra, ofdate.dec, REFRACTION_NORMAL);
+            result.time = time;
+            result.iter = iter;
+            result.status = ASTRO_SUCCESS;
+            return result;
+        }
+
+        /* We need to loop another time to get more accuracy. */
+        /* Update the terrestrial time (in solar days) adjusting by sidereal time (sideareal hours). */
+        delta_days = (delta_sidereal_hours / 24.0) * SOLAR_DAYS_PER_SIDEREAL_DAY;
+        time = Astronomy_AddDays(time, delta_days);
+    }
+}
+
 #ifdef __cplusplus
 }
 #endif
@@ -3515,7 +3590,7 @@ astro_search_result_t Astronomy_SearchRelativeLongitude(astro_body_t body, doubl
 
     X   Illumination
     X   NextLunarApsis
-    X   SearchHourAngle
+    -   SearchHourAngle
     X   SearchLunarApsis
     X   SearchPeakMagnitude
     X   SearchRiseSet
