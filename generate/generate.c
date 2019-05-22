@@ -315,7 +315,7 @@ static int SearchVsop(int body)
         goto fail;
     }
 
-    printf("SearchVsop(WINNER): body=%d, terms=%d, arcmin=%lg, threshold=%lg\n", body, winner_terms, winner_arcmin, winner_threshold);
+    printf("SearchVsop(WINNER): body=%d, terms=%d, arcmin=%0.6lf, threshold=%0.4le\n", body, winner_terms, winner_arcmin, winner_threshold);
     fflush(stdout);
 
 fail:
@@ -558,7 +558,7 @@ static int ManualResample(int body, int npoly, int nsections, int startYear, int
         nsamples = 100*npoly;     /* but always oversample every segment beyond the polynomial count */
 
     CHECK(MeasureError(filename, nsamples, &stats));
-    printf("Chebyshev body=%d, RMS=%0.3lf, max=%0.3lf, data=%ld\n", body, stats.rmsArcminError, stats.maxArcminError, stats.dataCount);
+    printf("Chebyshev body=%d, rms=%0.6lf, max=%0.6lf, data=%ld\n", body, stats.rmsArcminError, stats.maxArcminError, stats.dataCount);
 
 fail:
     return error;
