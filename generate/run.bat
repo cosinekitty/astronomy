@@ -166,6 +166,18 @@ if errorlevel 1 (exit /b 1)
 !CTESTEXE! seasons seasons\seasons.txt
 if errorlevel 1 (exit /b 1)
 
+!CTESTEXE! moonphase moonphase\moonphases.txt
+if errorlevel 1 (exit /b 1)
+
+!CTESTEXE! elongation
+if errorlevel 1 (exit /b 1)
+
+for %%f in (temp\c_longitude_*.txt) do (
+    !GENEXE! check %%f
+    if errorlevel 1 (exit /b 1)
+    echo.
+)
+
 REM -----------------------------------------------------------------------------------------
 
 echo.
