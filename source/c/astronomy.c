@@ -3950,6 +3950,150 @@ astro_illum_t Astronomy_Illumination(astro_body_t body, astro_time_t time)
     return illum;
 }
 
+static astro_func_result_t mag_slope(void *context, astro_time_t time)
+{
+    /* 
+        The Search() function finds a transition from negative to positive values.
+        The derivative of magnitude y with respect to time t (dy/dt)
+        is negative as an object gets brighter, because the magnitude numbers
+        get smaller. At peak magnitude dy/dt = 0, then as the object gets dimmer,
+        dy/dt > 0.
+    */
+    static const double dt = 0.01;
+    astro_illum_t y1, y2;
+    astro_body_t body = *((astro_body_t *)context);
+    astro_time_t t1 = Astronomy_AddDays(time, -dt/2);
+    astro_time_t t2 = Astronomy_AddDays(time, +dt/2);
+    astro_func_result_t result;
+
+    y1 = Astronomy_Illumination(body, t1);
+    if (y1.status != ASTRO_SUCCESS)
+        return FuncError(y1.status);
+
+    y2 = Astronomy_Illumination(body, t2);
+    if (y2.status != ASTRO_SUCCESS)
+        return FuncError(y2.status);
+
+    result.value = (y2.mag - y1.mag) / dt;
+    result.status = ASTRO_SUCCESS;
+    return result;
+}
+
+astro_illum_t Astronomy_SearchPeakMagnitude(astro_body_t body, astro_time_t startDate)
+{
+    /* s1 and s2 are relative longitudes within which peak magnitude of Venus can occur. */
+    static const double s1 = 10.0;
+    static const double s2 = 30.0;
+    int iter;
+    astro_angle_result_t plon, elon;
+    astro_search_result_t t1, t2, tx;
+    astro_func_result_t syn, m1, m2;
+    astro_time_t t_start;
+    double rlon, rlon_lo, rlon_hi, adjust_days;
+
+    if (body != BODY_VENUS)
+        return IllumError(ASTRO_INVALID_BODY);
+
+    iter = 0;
+    while (++iter <= 2)
+    {
+        /* Find current heliocentric relative longitude between the */
+        /* inferior planet and the Earth. */
+        plon = Astronomy_EclipticLongitude(body, startDate);
+        if (plon.status != ASTRO_SUCCESS)
+            return IllumError(plon.status);
+
+        elon = Astronomy_EclipticLongitude(BODY_EARTH, startDate);
+        if (elon.status != ASTRO_SUCCESS)
+            return IllumError(elon.status);
+
+        rlon = LongitudeOffset(plon.angle - elon.angle);    /* clamp to (-180, +180]. */
+
+        /* The slope function is not well-behaved when rlon is near 0 degrees or 180 degrees */
+        /* because there is a cusp there that causes a discontinuity in the derivative. */
+        /* So we need to guard against searching near such times. */
+
+        if (rlon >= -s1 && rlon < +s1)
+        {
+            /* Seek to the window [+s1, +s2]. */
+            adjust_days = 0.0;
+            /* Search forward for the time t1 when rel lon = +s1. */
+            rlon_lo = +s1;
+            /* Search forward for the time t2 when rel lon = +s2. */
+            rlon_hi = +s2;
+        }
+        else if (rlon >= +s2 || rlon < -s2 ) 
+        {
+            /* Seek to the next search window at [-s2, -s1]. */
+            adjust_days = 0.0;
+            /* Search forward for the time t1 when rel lon = -s2. */
+            rlon_lo = -s2;
+            /* Search forward for the time t2 when rel lon = -s1. */
+            rlon_hi = -s1;
+        } 
+        else if (rlon >= 0) 
+        {
+            /* rlon must be in the middle of the window [+s1, +s2]. */
+            /* Search BACKWARD for the time t1 when rel lon = +s1. */
+            syn = SynodicPeriod(body);
+            if (syn.status != ASTRO_SUCCESS)
+                return IllumError(syn.status);
+            adjust_days = -syn.value / 4;
+            rlon_lo = +s1;
+            /* Search forward from t1 to find t2 such that rel lon = +s2. */
+            rlon_hi = +s2;
+        } 
+        else 
+        {
+            /* rlon must be in the middle of the window [-s2, -s1]. */
+            /* Search BACKWARD for the time t1 when rel lon = -s2. */
+            syn = SynodicPeriod(body);
+            if (syn.status != ASTRO_SUCCESS)
+                return IllumError(syn.status);
+            adjust_days = -syn.value / 4;
+            rlon_lo = -s2;
+            /* Search forward from t1 to find t2 such that rel lon = -s1. */
+            rlon_hi = -s1;
+        }
+        t_start = Astronomy_AddDays(startDate, adjust_days);
+        t1 = Astronomy_SearchRelativeLongitude(body, rlon_lo, t_start);
+        if (t1.status != ASTRO_SUCCESS)
+            return IllumError(t1.status);
+        t2 = Astronomy_SearchRelativeLongitude(body, rlon_hi, t1.time);
+        if (t2.status != ASTRO_SUCCESS)
+            return IllumError(t2.status);
+
+        /* Now we have a time range [t1,t2] that brackets a maximum magnitude event. */
+        /* Confirm the bracketing. */
+        m1 = mag_slope(&body, t1.time);
+        if (m1.status != ASTRO_SUCCESS)
+            return IllumError(m1.status);
+        if (m1.value >= 0.0) 
+            return IllumError(ASTRO_INTERNAL_ERROR);    /* should never happen! */
+
+        m2 = mag_slope(&body, t2.time);
+        if (m2.status != ASTRO_SUCCESS)
+            return IllumError(m2.status);
+        if (m2.value <= 0.0)
+            return IllumError(ASTRO_INTERNAL_ERROR);    /* should never happen! */
+
+        /* Use the generic search algorithm to home in on where the slope crosses from negative to positive. */
+        tx = Astronomy_Search(mag_slope, &body, t1.time, t2.time, 10.0);
+        if (tx.status != ASTRO_SUCCESS) 
+            return IllumError(tx.status);
+
+        if (tx.time.tt >= startDate.tt)
+            return Astronomy_Illumination(body, tx.time);
+
+        /* This event is in the past (earlier than startDate). */
+        /* We need to search forward from t2 to find the next possible window. */
+        /* We never need to search more than twice. */
+        startDate = Astronomy_AddDays(t2.time, 1.0);
+    }
+
+    return IllumError(ASTRO_SEARCH_FAILURE);
+}
+
 #ifdef __cplusplus
 }
 #endif
@@ -3962,5 +4106,5 @@ astro_illum_t Astronomy_Illumination(astro_body_t body, astro_time_t time)
 
     X   NextLunarApsis
     X   SearchLunarApsis
-    X   SearchPeakMagnitude
+    -   SearchPeakMagnitude
 */

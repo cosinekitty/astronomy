@@ -3178,7 +3178,7 @@ Astronomy.SearchPeakMagnitude = function(body, startDate) {
 
         let t1, t2;
         let rlon_lo, rlon_hi, adjust_days;
-        if (rlon >= -s1 && rlon < +s1 ) {
+        if (rlon >= -s1 && rlon < +s1) {
             // Seek to the window [+s1, +s2].
             adjust_days = 0;
             // Search forward for the time t1 when rel lon = +s1.
@@ -3197,8 +3197,8 @@ Astronomy.SearchPeakMagnitude = function(body, startDate) {
             // Search BACKWARD for the time t1 when rel lon = +s1.
             adjust_days = -SynodicPeriod(body) / 4;
             rlon_lo = +s1;
-            rlon_hi = +s2;
             // Search forward from t1 to find t2 such that rel lon = +s2.
+            rlon_hi = +s2;
         } else {
             // rlon must be in the middle of the window [-s2, -s1].
             // Search BACKWARD for the time t1 when rel lon = -s2.
