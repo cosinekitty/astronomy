@@ -1,8 +1,6 @@
 @echo off
 setlocal EnableDelayedExpansion
 
-REM OUTDIR is a magic variable that tells msbuild where to put executables.
-set OUTDIR=%cd%\bin\
 set GENEXE=bin\generate.exe
 set CTESTEXE=bin\ctest.exe
 if exist "!GENEXE!" (del "!GENEXE!")
@@ -177,6 +175,12 @@ for %%f in (temp\c_longitude_*.txt) do (
     if errorlevel 1 (exit /b 1)
     echo.
 )
+
+!CTESTEXE! riseset riseset\riseset.txt
+if errorlevel 1 (exit /b 1)
+
+!CTESTEXE! magnitude
+if errorlevel 1 (exit /b 1)
 
 REM -----------------------------------------------------------------------------------------
 

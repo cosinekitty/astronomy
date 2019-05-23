@@ -8,6 +8,7 @@ if not exist "!msbuild!" (
 
 echo.Building C code
 
+set OUTDIR=%cd%\bin\
 "!msbuild!" ..\windows\generate\generate.sln /p:Configuration=Release /v:quiet /nologo /p:clp=Summary
 if errorlevel 1 (
     echo.BUILD FAILED.

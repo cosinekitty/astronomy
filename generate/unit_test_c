@@ -25,14 +25,15 @@ echo "$0: Built 'ctest' program."
 ./ctest diff temp/c_check.txt temp/js_check.txt || Fail "Diff(C,JS) failure."
 ./ctest seasons seasons/seasons.txt || Fail "Failed C seasons test."
 ./ctest moonphase moonphase/moonphases.txt || Fail "Failed C moon phase test."
-./ctest elongation || Fail "Failed C elongation tests."
 
+./ctest elongation || Fail "Failed C elongation tests."
 for file in temp/c_longitude_*.txt; do
     ./generate check ${file} || Fail "Failed verification of file ${file}"
     echo ""
 done
 
 ./ctest riseset riseset/riseset.txt || Fail "Failed C rise/set tests."
+./ctest magnitude || Fail "Failed C magnitude tests."
 
 echo "unit_test_c: success"
 exit 0

@@ -60,7 +60,6 @@ static const double REFRACTION_NEAR_HORIZON = 34.0 / 60.0;   /* degrees of refra
 static const double SUN_RADIUS_AU  = 4.6505e-3;
 static const double MOON_RADIUS_AU = 1.15717e-5;
 static const double ASEC180 = 180.0 * 60.0 * 60.0;        /* arcseconds per 180 degrees (or pi radians) */
-#define ASEC360          (2.0 * ASEC180)            /* arcseconds per 360 degrees (or 2*pi radians) */
 #define AU_PER_PARSEC    (ASEC180 / PI)             /* exact definition of how many AU = one parsec */
 
 static astro_time_t UniversalTime(double ut);

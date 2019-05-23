@@ -45,6 +45,7 @@ static int SeasonsTest(const char *filename);
 static int MoonPhase(const char *filename);
 static int RiseSet(const char *filename);
 static int ElongationTest(void);
+static int MagnitudeTest(void);
 
 int main(int argc, const char *argv[])
 {
@@ -63,6 +64,12 @@ int main(int argc, const char *argv[])
         if (!strcmp(verb, "elongation"))
         {
             CHECK(ElongationTest());
+            goto success;
+        }
+
+        if (!strcmp(verb, "magnitude"))        
+        {
+            CHECK(MagnitudeTest());
             goto success;
         }
     }
@@ -1183,6 +1190,63 @@ static int RiseSet(const char *filename)
 fail:
     if (infile != NULL) fclose(infile);
     return error;
+}
+
+/*-----------------------------------------------------------------------------------------------------------*/
+
+static int CheckMagnitudeData(astro_body_t body, const char *filename)
+{
+    int error = 1;
+    int lnum, count;
+    FILE *infile = NULL;
+    char line[200];
+
+    infile = fopen(filename, "rt");
+    if (infile == NULL)
+    {
+        fprintf(stderr, "CheckMagnitudeData: cannot open input file: %s\n", filename);
+        error = 1;
+        goto fail;
+    }
+
+    count = lnum = 0;
+    while (fgets(line, sizeof(line), infile))
+    {
+        ++lnum;
+    }
+
+    printf("CheckMagnitudeData: processed %d rows from file: %s\n", count, filename);
+    error = 0;
+
+fail:
+    if (infile != NULL) fclose(infile);
+    return error;
+}
+
+static int CheckSaturn()
+{
+    return 0;   /* !!! FIXFIXFIX: not yet implemented */
+}
+
+static int MagnitudeTest(void)
+{
+    int nfailed = 0;
+
+    nfailed += CheckMagnitudeData(BODY_SUN,     "magnitude/Sun.txt");
+    nfailed += CheckMagnitudeData(BODY_MOON,    "magnitude/Moon.txt");
+    nfailed += CheckMagnitudeData(BODY_MERCURY, "magnitude/Mercury.txt");
+    nfailed += CheckMagnitudeData(BODY_VENUS,   "magnitude/Venus.txt");
+    nfailed += CheckMagnitudeData(BODY_MARS,    "magnitude/Mars.txt");
+    nfailed += CheckSaturn();
+    nfailed += CheckMagnitudeData(BODY_JUPITER, "magnitude/Jupiter.txt");
+    nfailed += CheckMagnitudeData(BODY_URANUS,  "magnitude/Uranus.txt");
+    nfailed += CheckMagnitudeData(BODY_NEPTUNE, "magnitude/Neptune.txt");
+    nfailed += CheckMagnitudeData(BODY_PLUTO,   "magnitude/Pluto.txt");
+
+    if (nfailed > 0)
+        fprintf(stderr, "MagnitudeTest: FAILED %d test(s).\n", nfailed);
+
+    return nfailed;
 }
 
 /*-----------------------------------------------------------------------------------------------------------*/
