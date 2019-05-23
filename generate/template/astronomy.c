@@ -2904,7 +2904,6 @@ astro_illum_t Astronomy_Illumination(astro_body_t body, astro_time_t time)
 
     -------------------------------------------
 
-    -   Illumination
     X   NextLunarApsis
     X   SearchLunarApsis
     X   SearchPeakMagnitude

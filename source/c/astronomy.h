@@ -280,6 +280,8 @@ astro_search_result_t Astronomy_SearchRiseSet(
     double limitDays);
 
 astro_seasons_t Astronomy_Seasons(int calendar_year);
+astro_illum_t Astronomy_Illumination(astro_body_t body, astro_time_t time);
+
 
 #ifdef __cplusplus
 }

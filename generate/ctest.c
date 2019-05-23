@@ -1203,6 +1203,11 @@ static int CheckMagnitudeData(astro_body_t body, const char *filename)
     char line[200];
     const char *rest;
     astro_time_t time;
+    astro_illum_t illum;
+    int nscanned;
+    double mag, sbrt, dist, rdot, delta, deldot, phase_angle;
+    double diff, diff_lo, diff_hi, sum_squared_diff = 0.0, rms;
+    const double limit = 0.012;
 
     infile = fopen(filename, "rt");
     if (infile == NULL)
@@ -1217,13 +1222,55 @@ static int CheckMagnitudeData(astro_body_t body, const char *filename)
     {
         ++lnum;
         rest = ParseJplHorizonsDateTime(line, &time);
-        if (rest != NULL)
+        /* Ignore non-data rows and data rows that contain "n.a." */
+        if (rest && !strstr(rest, "n.a."))
         {
+            nscanned = sscanf(rest, "%lf %lf %lf %lf %lf %lf %lf", 
+                &mag, &sbrt, &dist, &rdot, &delta, &deldot, &phase_angle);
+
+            if (nscanned != 7)
+            {
+                fprintf(stderr, "CheckMagnitudeData(%s line %d): invalid data format\n", filename, lnum);
+                error = 1;
+                goto fail;
+            }
+
+            illum = Astronomy_Illumination(body, time);
+            if (illum.status != ASTRO_SUCCESS)
+            {
+                fprintf(stderr, "CheckMagnitudeData(%s line %d): Astronomy_Illumination returned %d\n", filename, lnum, illum.status);
+                error = 1;
+                goto fail;
+            }
+
+            diff = illum.mag - mag;
+            if (fabs(diff) > limit)
+            {
+                fprintf(stderr, "CheckMagnitudeData(%s line %d): EXCESSIVE ERROR: correct mag=%lf, calc mag=%lf, diff=%lf\n", filename, lnum, mag, illum.mag, diff);
+                error = 1;
+                goto fail;
+            }
+
+            sum_squared_diff += diff * diff;
+            if (count == 0)
+            {
+                diff_lo = diff_hi = diff;
+            }
+            else
+            {
+                if (diff < diff_lo)
+                    diff_lo = diff;
+
+                if (diff > diff_hi)
+                    diff_hi = diff;
+            }            
+
             ++count;
         }
     }
 
-    printf("CheckMagnitudeData: processed %d rows from file: %s\n", count, filename);
+    rms = sqrt(sum_squared_diff / count);   
+    printf("CheckMagnitudeData: %-21s %5d rows diff_lo=%0.4lf diff_hi=%0.4lf rms=%0.4lf\n", filename, count, diff_lo, diff_hi, rms);
     error = 0;
 
 fail:
