@@ -59,6 +59,9 @@ static const double EARTH_ORBITAL_PERIOD = 365.256;
 static const double REFRACTION_NEAR_HORIZON = 34.0 / 60.0;   /* degrees of refractive "lift" seen for objects near horizon */
 static const double SUN_RADIUS_AU  = 4.6505e-3;
 static const double MOON_RADIUS_AU = 1.15717e-5;
+static const double ASEC180 = 180.0 * 60.0 * 60.0;        /* arcseconds per 180 degrees (or pi radians) */
+#define ASEC360          (2.0 * ASEC180)            /* arcseconds per 360 degrees (or 2*pi radians) */
+#define AU_PER_PARSEC    (ASEC180 / PI)             /* exact definition of how many AU = one parsec */
 
 static astro_time_t UniversalTime(double ut);
 static astro_ecliptic_t RotateEquatorialToEcliptic(const double pos[3], double obliq_radians);
@@ -244,6 +247,20 @@ static astro_hour_angle_t HourAngleError(astro_status_t status)
     result.time.tt = result.time.ut = NAN;
     result.hor.altitude = result.hor.azimuth = result.hor.dec = result.hor.ra = NAN;
     result.iter = -1;
+
+    return result;
+}
+
+static astro_illum_t IllumError(astro_status_t status)
+{
+    astro_illum_t result;
+
+    result.status = status;
+    result.time.tt = result.time.ut = NAN;
+    result.mag = NAN;
+    result.phase_angle = NAN;
+    result.helio_dist = NAN;
+    result.ring_tilt = NAN;
 
     return result;
 }
@@ -2684,6 +2701,200 @@ astro_search_result_t Astronomy_SearchRiseSet(
     }
 }
 
+static double MoonMagnitude(double phase, double helio_dist, double geo_dist) 
+{
+    /* https://astronomy.stackexchange.com/questions/10246/is-there-a-simple-analytical-formula-for-the-lunar-phase-brightness-curve */
+    double rad = phase * DEG2RAD;
+    double rad2 = rad * rad;
+    double rad4 = rad2 * rad2;
+    double mag = -12.717 + 1.49*fabs(rad) + 0.0431*rad4;
+    double moon_mean_distance_au = 385000.6 / KM_PER_AU;
+    double geo_au = geo_dist / moon_mean_distance_au;
+    mag += 5*log10(helio_dist * geo_au);
+    return mag;
+}
+
+static astro_status_t SaturnMagnitude(
+    double phase, 
+    double helio_dist, 
+    double geo_dist, 
+    astro_vector_t gc, 
+    astro_time_t time,
+    double *mag,
+    double *ring_tilt) 
+{
+    astro_ecliptic_t eclip;
+    double ir, Nr, lat, lon, tilt, sin_tilt;
+
+    *mag = *ring_tilt = NAN;
+
+    /* Based on formulas by Paul Schlyter found here: */
+    /* http://www.stjarnhimlen.se/comp/ppcomp.html#15 */
+
+    /* We must handle Saturn's rings as a major component of its visual magnitude. */
+    /* Find geocentric ecliptic coordinates of Saturn. */
+    eclip = Astronomy_Ecliptic(gc);
+    if (eclip.status != ASTRO_SUCCESS)
+        return eclip.status;
+
+    ir = DEG2RAD * 28.06;   /* tilt of Saturn's rings to the ecliptic, in radians */
+    Nr = DEG2RAD * (169.51 + (3.82e-5 * time.tt));    /* ascending node of Saturn's rings, in radians */
+
+    /* Find tilt of Saturn's rings, as seen from Earth. */
+    lat = DEG2RAD * eclip.elat;
+    lon = DEG2RAD * eclip.elon;
+    tilt = asin(sin(lat)*cos(ir) - cos(lat)*sin(ir)*sin(lon-Nr));
+    sin_tilt = sin(fabs(tilt));
+
+    *mag = -9.0 + 0.044*phase;
+    *mag += sin_tilt*(-2.6 + 1.2*sin_tilt);
+    *mag += 5.0 * log10(helio_dist * geo_dist);
+
+    *ring_tilt = RAD2DEG * tilt;
+
+    return ASTRO_SUCCESS;
+}
+
+static astro_status_t VisualMagnitude(
+    astro_body_t body, 
+    double phase, 
+    double helio_dist, 
+    double geo_dist, 
+    double *mag)
+{
+    /* For Mercury and Venus, see:  https://iopscience.iop.org/article/10.1086/430212 */
+    double c0, c1=0, c2=0, c3=0, x;
+    *mag = NAN;
+    switch (body) 
+    {
+    case BODY_MERCURY:  c0 = -0.60, c1 = +4.98, c2 = -4.88, c3 = +3.02; break;
+    case BODY_VENUS:
+        if (phase < 163.6)
+            c0 = -4.47, c1 = +1.03, c2 = +0.57, c3 = +0.13;
+        else
+            c0 = 0.98, c1 = -1.02;
+        break;
+    case BODY_MARS:        c0 = -1.52, c1 = +1.60;   break;
+    case BODY_JUPITER:     c0 = -9.40, c1 = +0.50;   break;
+    case BODY_URANUS:      c0 = -7.19, c1 = +0.25;   break;
+    case BODY_NEPTUNE:     c0 = -6.87;               break;
+    case BODY_PLUTO:       c0 = -1.00, c1 = +4.00;   break;
+    default: return ASTRO_INVALID_BODY;
+    }
+
+    x = phase / 100;
+    *mag = c0 + x*(c1 + x*(c2 + x*c3));
+    *mag += 5.0 * log10(helio_dist * geo_dist);
+    return ASTRO_SUCCESS;
+}
+
+astro_illum_t Astronomy_Illumination(astro_body_t body, astro_time_t time)
+{
+    astro_vector_t earth;   /* vector from Sun to Earth */
+    astro_vector_t hc;      /* vector from Sun to body */
+    astro_vector_t gc;      /* vector from Earth to body */
+    double mag;             /* visual magnitude */   
+    astro_angle_result_t phase;     /* phase angle in degrees between Earth and Sun as seen from body */
+    double helio_dist;      /* distance from Sun to body */
+    double geo_dist;        /* distance from Earth to body */
+    double ring_tilt = 0.0; /* Saturn's ring tilt (0 for all other bodies) */
+    astro_illum_t illum;
+    astro_status_t status;
+
+    if (body == BODY_EARTH)
+        return IllumError(ASTRO_EARTH_NOT_ALLOWED);
+
+    earth = CalcEarth(time);
+    if (earth.status != ASTRO_SUCCESS)
+        return IllumError(earth.status);
+
+    if (body == BODY_SUN)
+    {
+        gc.status = ASTRO_SUCCESS;
+        gc.t = time;
+        gc.x = -earth.x;
+        gc.y = -earth.y;
+        gc.z = -earth.z;
+
+        hc.status = ASTRO_SUCCESS;
+        hc.t = time;
+        hc.x = 0.0;
+        hc.y = 0.0;
+        hc.z = 0.0;
+
+        /* The Sun emits light instead of reflecting it, */
+        /* so we report a placeholder phase angle of 0. */
+        phase.status = ASTRO_SUCCESS;
+        phase.angle = 0.0;       
+    }
+    else
+    {
+        if (body == BODY_MOON)
+        {
+            /* For extra numeric precision, use geocentric Moon formula directly. */
+            gc = Astronomy_GeoMoon(time);
+            if (gc.status != ASTRO_SUCCESS)
+                return IllumError(gc.status);
+
+            hc.status = ASTRO_SUCCESS;
+            hc.t = time;
+            hc.x = earth.x + gc.x;
+            hc.y = earth.y + gc.y;
+            hc.z = earth.z + gc.z;
+        }
+        else
+        {
+            /* For planets, the heliocentric vector is more direct to calculate. */
+            hc = Astronomy_HelioVector(body, time);
+            if (hc.status != ASTRO_SUCCESS)
+                return IllumError(hc.status);
+
+            gc.status = ASTRO_SUCCESS;
+            gc.t = time;
+            gc.x = hc.x - earth.x;
+            gc.y = hc.y - earth.y;
+            gc.z = hc.z - earth.z;
+        }
+
+        phase = AngleBetween(gc, hc);
+        if (phase.status != ASTRO_SUCCESS)
+            return IllumError(phase.status);
+    }
+
+    geo_dist = Astronomy_VectorLength(gc);
+    helio_dist = Astronomy_VectorLength(hc);
+
+    switch (body)
+    {
+    case BODY_SUN:
+        mag = -0.17 + 5.0*log10(geo_dist / AU_PER_PARSEC);
+        break;
+
+    case BODY_MOON:
+        mag = MoonMagnitude(phase.angle, helio_dist, geo_dist);
+        break;
+
+    case BODY_SATURN:
+        status = SaturnMagnitude(phase.angle, helio_dist, geo_dist, gc, time, &mag, &ring_tilt);
+        if (status != ASTRO_SUCCESS)
+            return IllumError(status);
+        break;
+
+    default:
+        status = VisualMagnitude(body, phase.angle, helio_dist, geo_dist, &mag);
+        break;
+    }
+
+    illum.status = ASTRO_SUCCESS;
+    illum.time = time;
+    illum.mag = mag;
+    illum.phase_angle = phase.angle;
+    illum.helio_dist = helio_dist;
+    illum.ring_tilt = ring_tilt;
+
+    return illum;
+}
+
 #ifdef __cplusplus
 }
 #endif
@@ -2694,7 +2905,7 @@ astro_search_result_t Astronomy_SearchRiseSet(
 
     -------------------------------------------
 
-    X   Illumination
+    -   Illumination
     X   NextLunarApsis
     X   SearchLunarApsis
     X   SearchPeakMagnitude

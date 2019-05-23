@@ -201,6 +201,18 @@ typedef struct
 }
 astro_hour_angle_t;
 
+typedef struct
+{
+    astro_status_t      status;
+    astro_time_t        time;
+    double              mag;
+    double              phase_angle;
+    double              helio_dist;
+    double              ring_tilt;
+}
+astro_illum_t;
+
+
 /*---------- functions ----------*/
 
 double Astronomy_VectorLength(astro_vector_t vector);
