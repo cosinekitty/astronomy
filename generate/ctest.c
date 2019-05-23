@@ -46,6 +46,7 @@ static int MoonPhase(const char *filename);
 static int RiseSet(const char *filename);
 static int ElongationTest(void);
 static int MagnitudeTest(void);
+static const char *ParseJplHorizonsDateTime(const char *text, astro_time_t *time);
 
 int main(int argc, const char *argv[])
 {
@@ -1200,6 +1201,8 @@ static int CheckMagnitudeData(astro_body_t body, const char *filename)
     int lnum, count;
     FILE *infile = NULL;
     char line[200];
+    const char *rest;
+    astro_time_t time;
 
     infile = fopen(filename, "rt");
     if (infile == NULL)
@@ -1213,6 +1216,11 @@ static int CheckMagnitudeData(astro_body_t body, const char *filename)
     while (fgets(line, sizeof(line), infile))
     {
         ++lnum;
+        rest = ParseJplHorizonsDateTime(line, &time);
+        if (rest != NULL)
+        {
+            ++count;
+        }
     }
 
     printf("CheckMagnitudeData: processed %d rows from file: %s\n", count, filename);
@@ -1250,3 +1258,76 @@ static int MagnitudeTest(void)
 }
 
 /*-----------------------------------------------------------------------------------------------------------*/
+
+static const char *ParseJplHorizonsDateTime(const char *text, astro_time_t *time)
+{
+    int year, month, day, hour, minute;
+    int nscanned;
+    char mtext[4];
+    char verify[30];
+    size_t length;
+
+    time->ut = time->tt = NAN;
+
+    while (*text == ' ' && *text != '\0')
+        ++text;
+
+    nscanned = sscanf(text, "%d-%3[A-Za-z]-%d %d:%d", &year, mtext, &day, &hour, &minute);
+    if (nscanned != 5) 
+        return NULL;
+
+    if (year < 1000 || year > 9999)
+        return NULL;       /* if not a 4-digit year, we are skipping wrong number of chars */
+
+    if (day < 1 || day > 31)
+        return NULL;
+
+    if (hour < 0 || hour > 23)
+        return NULL;
+
+    if (minute < 0 || minute > 59)
+        return NULL;
+
+    if (!strcmp(mtext, "Jan"))  
+        month = 1;
+    else if (!strcmp(mtext, "Feb")) 
+        month = 2;
+    else if (!strcmp(mtext, "Mar"))
+        month = 3;
+    else if (!strcmp(mtext, "Apr"))
+        month = 4;
+    else if (!strcmp(mtext, "May"))
+        month = 5;
+    else if (!strcmp(mtext, "Jun"))
+        month = 6;
+    else if (!strcmp(mtext, "Jul"))
+        month = 7;
+    else if (!strcmp(mtext, "Aug"))
+        month = 8;
+    else if (!strcmp(mtext, "Sep"))
+        month = 9;
+    else if (!strcmp(mtext, "Oct"))
+        month = 10;
+    else if (!strcmp(mtext, "Nov"))
+        month = 11;
+    else if (!strcmp(mtext, "Dec"))
+        month = 12;
+    else
+        return NULL;
+
+    /* Make absolutely sure we know how many characters the date text is. */
+    /* If anything is fishy, fail! */
+    snprintf(verify, sizeof(verify), "%04d-%s-%02d %02d:%02d", year, mtext, day, hour, minute);
+    length = strlen(verify);
+    if (length != 17)
+        return NULL;
+    
+    if (memcmp(verify, text, length))
+        return NULL;
+
+    *time = Astronomy_MakeTime(year, month, day, hour, minute, 0.0);
+    return text + length;   /* return remaining portion of string */
+}
+
+/*-----------------------------------------------------------------------------------------------------------*/
+
