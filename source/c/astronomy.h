@@ -300,6 +300,7 @@ astro_seasons_t Astronomy_Seasons(int calendar_year);
 astro_illum_t Astronomy_Illumination(astro_body_t body, astro_time_t time);
 astro_illum_t Astronomy_SearchPeakMagnitude(astro_body_t body, astro_time_t startDate);
 astro_apsis_t Astronomy_SearchLunarApsis(astro_time_t startTime);
+astro_apsis_t Astronomy_NextLunarApsis(astro_apsis_t apsis);
 
 #ifdef __cplusplus
 }

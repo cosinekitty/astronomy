@@ -44,6 +44,7 @@ static int DiffLine(int lnum, const char *cline, const char *jline, double *maxd
 static int SeasonsTest(const char *filename);
 static int MoonPhase(const char *filename);
 static int RiseSet(const char *filename);
+static int LunarApsis(const char *filename);
 static int ElongationTest(void);
 static int MagnitudeTest(void);
 static int TestMaxMag(astro_body_t body, const char *filename);
@@ -96,6 +97,12 @@ int main(int argc, const char *argv[])
         if (!strcmp(verb, "riseset"))
         {
             CHECK(RiseSet(filename));
+            goto success;
+        }
+
+        if (!strcmp(verb, "apsis"))
+        {
+            CHECK(LunarApsis(filename));
             goto success;
         }
     }
@@ -1531,6 +1538,94 @@ static const char *ParseJplHorizonsDateTime(const char *text, astro_time_t *time
 
     *time = Astronomy_MakeTime(year, month, day, hour, minute, 0.0);
     return text + length;   /* return remaining portion of string */
+}
+
+/*-----------------------------------------------------------------------------------------------------------*/
+
+static int LunarApsis(const char *filename)
+{
+    int error = 1;
+    FILE *infile = NULL;
+    int lnum, nscanned;
+    char line[100];
+    int kind, year, month, day, hour, minute;
+    double dist_km;
+    astro_time_t start_time, correct_time;
+    astro_apsis_t apsis;
+    double diff_minutes, diff_km;
+    double max_minutes = 0.0, max_km = 0.0;
+
+    infile = fopen(filename, "rt");
+    if (infile == NULL)
+    {
+        fprintf(stderr, "LunarApsis: Cannot open input file: %s\n", filename);
+        error = 1;
+        goto fail;
+    }
+
+    /*
+        0 2001-01-10T08:59Z 357132
+        1 2001-01-24T19:02Z 406565
+    */
+
+    start_time = Astronomy_MakeTime(2001, 1, 1, 0, 0, 0.0);
+    lnum = 0;
+    while (fgets(line, sizeof(line), infile))
+    {
+        ++lnum;
+
+        if (lnum == 1)
+            apsis = Astronomy_SearchLunarApsis(start_time);
+        else
+            apsis = Astronomy_NextLunarApsis(apsis);
+
+        if (apsis.status != ASTRO_SUCCESS)
+        {
+            fprintf(stderr, "LunarApsis(%s line %d): Failed to find apsis.\n", filename, lnum);
+            error = 1;
+            goto fail;
+        }
+
+        nscanned = sscanf(line, "%d %d-%d-%dT%d:%dZ %lf", &kind, &year, &month, &day, &hour, &minute, &dist_km);
+        if (nscanned != 7)
+        {
+            fprintf(stderr, "LunarApsis(%s line %d): invalid data format\n", filename, lnum);
+            error = 1;
+            goto fail;
+        }
+
+        correct_time = Astronomy_MakeTime(year, month, day, hour, minute, 0.0);
+
+        diff_minutes = (24.0 * 60.0) * fabs(apsis.time.ut - correct_time.ut);
+        diff_km = fabs(apsis.dist_km - dist_km);
+
+        if (diff_minutes > 35.0)
+        {
+            fprintf(stderr, "LunarApsis(%s line %d): Excessive time error: %lf minutes.\n", filename, lnum, diff_minutes);
+            error = 1;
+            goto fail;
+        }
+
+        if (diff_km > 25.0)
+        {
+            fprintf(stderr, "LunarApsis(%s line %d): Excessive distance error: %lf km.\n", filename, lnum, diff_km);
+            error = 1;
+            goto fail;
+        }
+
+        if (diff_minutes > max_minutes)
+            max_minutes = diff_minutes;
+
+        if (diff_km > max_km)
+            max_km = diff_km;
+    }
+
+    printf("LunarApsis: found %d events, max time error = %0.3lf minutes, max distance error = %0.3lf km.\n", lnum, max_minutes, max_km);
+    error = 0;
+
+fail:
+    if (infile != NULL) fclose(infile);
+    return error;
 }
 
 /*-----------------------------------------------------------------------------------------------------------*/

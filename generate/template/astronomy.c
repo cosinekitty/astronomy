@@ -3150,16 +3150,42 @@ astro_apsis_t Astronomy_SearchLunarApsis(astro_time_t startTime)
     return ApsisError(ASTRO_INTERNAL_ERROR);
 }
 
+astro_apsis_t Astronomy_NextLunarApsis(astro_apsis_t apsis)
+{
+    static const double skip = 11.0;    /* number of days to skip to start looking for next apsis event */
+    astro_apsis_t next;
+    astro_time_t time;
+    astro_apsis_kind_t expected = APSIS_INVALID;
+
+    if (apsis.status != ASTRO_SUCCESS)
+        return ApsisError(ASTRO_INVALID_PARAMETER);
+
+    time = Astronomy_AddDays(apsis.time, skip);
+    next = Astronomy_SearchLunarApsis(time);
+    if (next.status == ASTRO_SUCCESS)
+    {
+        /* Verify that we found the opposite apsis from the previous one. */
+        switch (apsis.kind)
+        {
+        case APSIS_APOCENTER:
+            expected = APSIS_PERICENTER;
+            break;
+
+        case APSIS_PERICENTER:
+            expected = APSIS_APOCENTER;
+            break;
+
+        default:
+            /* The apsis passed in has an invalid kind. */
+            return ApsisError(ASTRO_INVALID_PARAMETER);
+        }
+
+        if (next.kind != expected)
+            return ApsisError(ASTRO_INTERNAL_ERROR);
+    }
+    return next;
+}
+
 #ifdef __cplusplus
 }
 #endif
-
-/*
-    X = not yet implemented
-    - = still needs testing
-
-    -------------------------------------------
-
-    X   NextLunarApsis
-    -   SearchLunarApsis
-*/
