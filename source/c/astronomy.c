@@ -2850,7 +2850,7 @@ astro_ecliptic_t Astronomy_Ecliptic(astro_vector_t equ)
         /* Lazy-evaluate and keep the mean obliquity of the ecliptic at J2000. */
         /* This way we don't need to crunch the numbers more than once. */
         /* This is not thread safe. */
-        ob2000 = DEG2RAD * e_tilt(Astronomy_MakeTime(2000, 1, 1, 0, 0, 0.0)).mobl;
+        ob2000 = DEG2RAD * e_tilt(Astronomy_MakeTime(2000, 1, 1, 12, 0, 0.0)).mobl;
     }
 
     pos[0] = equ.x;

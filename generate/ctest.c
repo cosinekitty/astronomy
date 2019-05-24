@@ -1280,7 +1280,65 @@ fail:
 
 static int CheckSaturn()
 {
-    return 0;   /* !!! FIXFIXFIX: not yet implemented */
+    /* JPL Horizons does not include Saturn's rings in its magnitude models. */
+    /* I still don't have authoritative test data for Saturn's magnitude. */
+    /* For now, I just test for consistency with Paul Schlyter's formulas at: */
+    /* http://www.stjarnhimlen.se/comp/ppcomp.html#15 */
+
+    static const struct test_case
+    {
+        const char *date;
+        double mag;
+        double tilt;
+    }
+    data[] =
+    {
+        { "1972-01-01T00:00Z", -0.31904865,  +24.50061220 },
+        { "1980-01-01T00:00Z", +0.85213663,   -1.85761461 },
+        { "2009-09-04T00:00Z", +1.01626809,   +0.08380716 },
+        { "2017-06-15T00:00Z", -0.12318790,  -26.60871409 },
+        { "2019-05-01T00:00Z", +0.32954097,  -23.53880802 },
+        { "2025-09-25T00:00Z", +0.51286575,   +1.52327932 },
+        { "2032-05-15T00:00Z", -0.04652109,  +26.95717765 }
+    };
+
+    static const int ncases = sizeof(data) / sizeof(data[0]);
+
+    int i;
+    astro_illum_t illum;
+    astro_time_t time;
+    double mag_diff, tilt_diff;
+
+    for (i=0; i < ncases; ++i)
+    {
+        int error = ParseDate(data[i].date, &time);
+        if (error) 
+            return 1;
+
+        illum = Astronomy_Illumination(BODY_SATURN, time);
+        if (illum.status != ASTRO_SUCCESS)
+        {
+            fprintf(stderr, "CheckSaturn(%d): Illumination returned %d\n", i, illum.status);
+            return 1;
+        }
+        printf("Saturn: date=%s  calc mag=%12.8lf  ring_tilt=%12.8lf\n", data[i].date, illum.mag, illum.ring_tilt);
+
+        mag_diff = fabs(illum.mag - data[i].mag);
+        if (mag_diff > 1.0e-8) 
+        {
+            fprintf(stderr, "ERROR: Excessive magnitude error %lg", mag_diff);
+            return 1;
+        }
+
+        tilt_diff = fabs(illum.ring_tilt - data[i].tilt);
+        if (tilt_diff > 1.0e-8) 
+        {
+            fprintf(stderr, "ERROR: Excessive ring tilt error %lg\n", tilt_diff);
+            return 1;
+        }
+    }
+
+    return 0;
 }
 
 static int MagnitudeTest(void)
