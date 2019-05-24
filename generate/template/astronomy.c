@@ -3082,6 +3082,7 @@ astro_apsis_t Astronomy_SearchLunarApsis(astro_time_t startTime)
     int negative_direction = -1;
     const double increment = 5.0;   /* number of days to skip in each iteration */
     astro_apsis_t result;
+    int iter;
 
     /*
         Check the rate of change of the distance dr/dt at the start time.
@@ -3097,7 +3098,7 @@ astro_apsis_t Astronomy_SearchLunarApsis(astro_time_t startTime)
     if (m1.status != ASTRO_SUCCESS)
         return ApsisError(m1.status);
 
-    for(;;)
+    for (iter=0; iter * increment < 2.0 * MEAN_SYNODIC_MONTH; ++iter)
     {
         t2 = Astronomy_AddDays(t1, increment);
         m2 = distance_slope(&positive_direction, t2);
@@ -3144,6 +3145,9 @@ astro_apsis_t Astronomy_SearchLunarApsis(astro_time_t startTime)
         t1 = t2;
         m1 = m2;
     }
+
+    /* It should not be possible to fail to find an apsis within 2 synodic months. */
+    return ApsisError(ASTRO_INTERNAL_ERROR);
 }
 
 #ifdef __cplusplus

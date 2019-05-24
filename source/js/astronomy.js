@@ -4149,7 +4149,7 @@ Astronomy.SearchLunarApsis = function(startDate) {
     const increment = 5;      // number of days to skip in each iteration
 
     ++Perf.lunar_apsis_calls;
-    while (true) {
+    for (var iter = 0; iter * increment < 2 * MEAN_SYNODIC_MONTH; ++iter) {
         ++Perf.lunar_apsis_iter;
         let t2 = t1.AddDays(increment);
         let m2 = distance_slope(t2);
@@ -4190,6 +4190,9 @@ Astronomy.SearchLunarApsis = function(startDate) {
         t1 = t2;
         m1 = m2;
     }
+
+    // It should not be possible to fail to find an apsis within 2 synodic months.
+    throw 'SearchLunarApsis INTERNAL ERROR: could not find apsis within 2 synodic months of start date.';
 }
 
 /**
