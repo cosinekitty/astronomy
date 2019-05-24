@@ -264,6 +264,18 @@ static astro_illum_t IllumError(astro_status_t status)
     return result;
 }
 
+static astro_apsis_t ApsisError(astro_status_t status)
+{
+    astro_apsis_t result;
+
+    result.status = status;
+    result.time.tt = result.time.ut = NAN;
+    result.kind = APSIS_INVALID;
+    result.dist_km = result.dist_au = NAN;
+
+    return result;
+}
+
 static astro_func_result_t SynodicPeriod(astro_body_t body)
 {
     static const double Te = 365.256;  /* Earth's orbital period in days */
@@ -4094,6 +4106,102 @@ astro_illum_t Astronomy_SearchPeakMagnitude(astro_body_t body, astro_time_t star
     return IllumError(ASTRO_SEARCH_FAILURE);
 }
 
+static double MoonDistance(astro_time_t t)
+{
+    double lon, lat, dist;
+    CalcMoon(t.tt / 36525.0, &lon, &lat, &dist);
+    return dist;
+}
+
+static astro_func_result_t distance_slope(void *context, astro_time_t time)
+{
+    static const double dt = 0.001;
+    astro_time_t t1 = Astronomy_AddDays(time, -dt/2.0);
+    astro_time_t t2 = Astronomy_AddDays(time, +dt/2.0);
+    double dist1, dist2;
+    int direction = *((int *)context);
+    astro_func_result_t result;
+
+    dist1 = MoonDistance(t1);
+    dist2 = MoonDistance(t2);
+    result.value = direction * (dist2 - dist1) / dt;
+    result.status = ASTRO_SUCCESS;
+    return result;
+}
+
+astro_apsis_t Astronomy_SearchLunarApsis(astro_time_t startTime)
+{
+    astro_time_t t1, t2;
+    astro_search_result_t search;
+    astro_func_result_t m1, m2;
+    int positive_direction = +1;
+    int negative_direction = -1;
+    const double increment = 5.0;   /* number of days to skip in each iteration */
+    astro_apsis_t result;
+
+    /*
+        Check the rate of change of the distance dr/dt at the start time.
+        If it is positive, the Moon is currently getting farther away,
+        so start looking for apogee.
+        Conversely, if dr/dt < 0, start looking for perigee.
+        Either way, the polarity of the slope will change, so the product will be negative.
+        Handle the crazy corner case of exactly touching zero by checking for m1*m2 <= 0.
+    */
+
+    t1 = startTime;
+    m1 = distance_slope(&positive_direction, t1);
+    if (m1.status != ASTRO_SUCCESS)
+        return ApsisError(m1.status);
+
+    for(;;)
+    {
+        t2 = Astronomy_AddDays(t1, increment);
+        m2 = distance_slope(&positive_direction, t2);
+        if (m2.status != ASTRO_SUCCESS)
+            return ApsisError(m2.status);
+
+        if (m1.value * m2.value <= 0.0)
+        {
+            /* There is a change of slope polarity within the time range [t1, t2]. */
+            /* Therefore this time range contains an apsis. */
+            /* Figure out whether it is perigee or apogee. */
+
+            if (m1.value < 0.0 || m2.value > 0.0)
+            {
+                /* We found a minimum-distance event: perigee. */
+                /* Search the time range for the time when the slope goes from negative to positive. */
+                search = Astronomy_Search(distance_slope, &positive_direction, t1, t2, 1.0);
+                result.kind = APSIS_PERICENTER;
+            }
+            else if (m1.value > 0.0 || m2.value < 0.0)
+            {
+                /* We found a maximum-distance event: apogee. */
+                /* Search the time range for the time when the slope goes from positive to negative. */
+                search = Astronomy_Search(distance_slope, &negative_direction, t1, t2, 1.0);
+                result.kind = APSIS_APOCENTER;
+            }
+            else
+            {
+                /* This should never happen. It should not be possible for both slopes to be zero. */
+                return ApsisError(ASTRO_INTERNAL_ERROR);
+            }
+
+            if (search.status != ASTRO_SUCCESS)
+                return ApsisError(search.status);
+
+            result.status = ASTRO_SUCCESS;
+            result.time = search.time;
+            result.dist_au = MoonDistance(search.time);
+            result.dist_km = result.dist_au * KM_PER_AU;
+            return result;
+        }
+
+        /* We have not yet found a slope polarity change. Keep searching. */
+        t1 = t2;
+        m1 = m2;
+    }
+}
+
 #ifdef __cplusplus
 }
 #endif
@@ -4105,5 +4213,5 @@ astro_illum_t Astronomy_SearchPeakMagnitude(astro_body_t body, astro_time_t star
     -------------------------------------------
 
     X   NextLunarApsis
-    X   SearchLunarApsis
+    -   SearchLunarApsis
 */

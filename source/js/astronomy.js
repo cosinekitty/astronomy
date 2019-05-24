@@ -4140,7 +4140,7 @@ Astronomy.SearchLunarApsis = function(startDate) {
     // Check the rate of change of the distance dr/dt at the start time.
     // If it is positive, the Moon is currently getting farther away,
     // so start looking for apogee.
-    // Conversely, if dr/dt < 0, start looking for apogee.
+    // Conversely, if dr/dt < 0, start looking for perigee.
     // Either way, the polarity of the slope will change, so the product will be negative.
     // Handle the crazy corner case of exactly touching zero by checking for m1*m2 <= 0.
 
