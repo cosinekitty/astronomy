@@ -1206,7 +1206,7 @@ static int CheckMagnitudeData(astro_body_t body, const char *filename)
     astro_illum_t illum;
     int nscanned;
     double mag, sbrt, dist, rdot, delta, deldot, phase_angle;
-    double diff, diff_lo, diff_hi, sum_squared_diff = 0.0, rms;
+    double diff, diff_lo = NAN, diff_hi = NAN, sum_squared_diff = 0.0, rms;
     const double limit = 0.012;
 
     infile = fopen(filename, "rt");
@@ -1267,6 +1267,13 @@ static int CheckMagnitudeData(astro_body_t body, const char *filename)
 
             ++count;
         }
+    }
+
+    if (count == 0)
+    {
+        fprintf(stderr, "CheckMagnitudeData: Did not find any data in file: %s\n", filename);
+        error = 1;
+        goto fail;
     }
 
     rms = sqrt(sum_squared_diff / count);   
