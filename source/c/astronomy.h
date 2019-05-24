@@ -281,7 +281,7 @@ astro_search_result_t Astronomy_SearchRiseSet(
 
 astro_seasons_t Astronomy_Seasons(int calendar_year);
 astro_illum_t Astronomy_Illumination(astro_body_t body, astro_time_t time);
-
+astro_illum_t Astronomy_SearchPeakMagnitude(astro_body_t body, astro_time_t startDate);
 
 #ifdef __cplusplus
 }

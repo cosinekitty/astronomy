@@ -4106,5 +4106,4 @@ astro_illum_t Astronomy_SearchPeakMagnitude(astro_body_t body, astro_time_t star
 
     X   NextLunarApsis
     X   SearchLunarApsis
-    -   SearchPeakMagnitude
 */

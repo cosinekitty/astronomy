@@ -46,6 +46,7 @@ static int MoonPhase(const char *filename);
 static int RiseSet(const char *filename);
 static int ElongationTest(void);
 static int MagnitudeTest(void);
+static int TestMaxMag(astro_body_t body, const char *filename);
 static const char *ParseJplHorizonsDateTime(const char *text, astro_time_t *time);
 
 int main(int argc, const char *argv[])
@@ -1363,10 +1364,101 @@ static int MagnitudeTest(void)
     nfailed += CheckMagnitudeData(BODY_NEPTUNE, "magnitude/Neptune.txt");
     nfailed += CheckMagnitudeData(BODY_PLUTO,   "magnitude/Pluto.txt");
 
+    nfailed += TestMaxMag(BODY_VENUS, "magnitude/maxmag_Venus.txt");
+
     if (nfailed > 0)
         fprintf(stderr, "MagnitudeTest: FAILED %d test(s).\n", nfailed);
 
     return nfailed;
+}
+
+static int TestMaxMag(astro_body_t body, const char *filename)
+{
+    int error = 1;
+    FILE *infile = NULL;
+    int lnum, nscanned;
+    int year1, month1, day1, hour1, minute1;
+    int year2, month2, day2, hour2, minute2;
+    double correct_mag, correct_angle1, correct_angle2;
+    char line[100];
+    astro_time_t search_time, time1, time2, center_time;
+    astro_illum_t illum;
+    double mag_diff, hours_diff;
+
+    /* 
+        Example of input data:
+
+        2001-02-21T08:00Z 2001-02-27T08:00Z 23.17 19.53 -4.84 
+
+        JPL Horizons test data has limited floating point precision in the magnitude values.
+        There is a pair of dates for the beginning and end of the max magnitude period,
+        given the limited precision. We pick the point halfway between as the supposed max magnitude time.
+    */
+
+    infile = fopen(filename, "rt");
+    if (infile == NULL)
+    {
+        fprintf(stderr, "TestMaxMag: Cannot open input file: %s\n", filename);
+        error = 1;
+        goto fail;
+    }
+
+    lnum = 0;
+    search_time = Astronomy_MakeTime(2001, 1, 1, 0, 0, 0.0);
+    while (fgets(line, sizeof(line), infile))
+    {
+        ++lnum;
+
+        nscanned = sscanf(line, "%d-%d-%dT%d:%dZ %d-%d-%dT%d:%dZ %lf %lf %lf\n", 
+            &year1, &month1, &day1, &hour1, &minute1, 
+            &year2, &month2, &day2, &hour2, &minute2, 
+            &correct_angle1, &correct_angle2, &correct_mag);
+
+        if (nscanned != 13)
+        {
+            fprintf(stderr, "TestMaxMag(%s line %d): invalid data format.\n", filename, lnum);
+            error = 1;
+            goto fail;
+        }
+
+        time1 = Astronomy_MakeTime(year1, month1, day1, hour1, minute1, 0.0);
+        time2 = Astronomy_MakeTime(year2, month2, day2, hour2, minute2, 0.0);
+        center_time = Astronomy_AddDays(time1, 0.5*(time2.ut - time1.ut));
+
+        illum = Astronomy_SearchPeakMagnitude(body, search_time);
+        if (illum.status != ASTRO_SUCCESS)
+        {
+            fprintf(stderr, "TestMaxMag(%s line %d): SearchPeakMagnitude returned %d\n", filename, lnum, illum.status);
+            error = 1;
+            goto fail;
+        }
+
+        mag_diff = fabs(illum.mag - correct_mag);
+        hours_diff = 24.0 * fabs(illum.time.ut - center_time.ut);
+        printf("TestMaxMag: mag_diff=%0.3lf, hours_diff=%0.3lf\n", mag_diff, hours_diff);
+        if (hours_diff > 7.1)
+        {
+            fprintf(stderr, "TestMaxMag(%s line %d): EXCESSIVE TIME DIFFERENCE.\n", filename, lnum);
+            error = 1;
+            goto fail;
+        }
+
+        if (mag_diff > 0.005)
+        {
+            fprintf(stderr, "TestMaxMag(%s line %d): EXCESSIVE MAGNITUDE DIFFERENCE.\n", filename, lnum);
+            error = 1;
+            goto fail;
+        }
+
+        search_time = time2;
+    }
+
+    printf("TestMaxMag: processed %d lines from file %s\n", lnum, filename);
+    error = 0;
+
+fail:
+    if (infile != NULL) fclose(infile);
+    return error;
 }
 
 /*-----------------------------------------------------------------------------------------------------------*/
