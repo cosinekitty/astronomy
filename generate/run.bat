@@ -182,6 +182,9 @@ if errorlevel 1 (exit /b 1)
 !CTESTEXE! magnitude
 if errorlevel 1 (exit /b 1)
 
+!CTESTEXE! apsis apsides\moon.txt
+if errorlevel 1 (exit /b 1)
+
 REM -----------------------------------------------------------------------------------------
 
 echo.
