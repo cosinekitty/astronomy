@@ -6,20 +6,29 @@
     <tr>
         <td style="text-align: center;">
             <div>Browser</div>
-            <div><img src="source/js/javascript.svg" width="100" height="100" alt="JavaScript" /></div>
+            <div><a href="https://github.com/cosinekitty/astronomy"><img src="source/js/javascript.svg" width="100" height="100" alt="JavaScript" /></a></div>
         </td>
         <td style="text-align: center;">
             <div>Node.js</div>
-            <div><img src="source/js/nodejs.svg" width="100" height="100" alt="Node.js" /></div>
+            <div><a href="https://github.com/cosinekitty/astronomy"><img src="source/js/nodejs.svg" width="100" height="100" alt="Node.js" /></a></div>
+        </td>
+        <td style="text-align: center;">
+            <div>C</div>
+            <div><a href="https://github.com/cosinekitty/astronomy"><img src="source/c/c_language.svg" width="100" height="100" alt="C" /></a></div>
         </td>
     </tr>
     <tr>
         <td style="text-align: center;"><a href="demo/browser/">Examples</a></td>
         <td style="text-align: center;"><a href="demo/nodejs/">Examples</a></td>
+        <td></td>
     </tr>
     <tr>
         <td style="text-align: center;"><a href="source/js/">Documentation</a></td>
         <td style="text-align: center;"><a href="source/js/">Documentation</a></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td colspan="3" style="text-align: center;"><a href="https://github.com/cosinekitty/astronomy">Source code for above languages</a></td>
     </tr>
 </table>
 
