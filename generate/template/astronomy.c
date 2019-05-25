@@ -426,6 +426,43 @@ astro_time_t Astronomy_AddDays(astro_time_t time, double days)
     return sum;   
 }
 
+astro_time_t Astronomy_TimeFromUtc(astro_utc_t utc)
+{
+    return Astronomy_MakeTime(utc.year, utc.month, utc.day, utc.hour, utc.minute, utc.second);
+}
+
+astro_utc_t Astronomy_UtcFromTime(astro_time_t time)
+{
+    /* Adapted from the NOVAS C 3.1 function cal_date() */
+    astro_utc_t utc;
+    long jd, k, m, n;
+    double djd, x;
+
+    djd = time.ut + 2451545.5;
+    jd = (long)djd;
+
+    x = 24.0 * fmod(djd, 1.0);
+    utc.hour = (int)x;
+    x = 60.0 * fmod(x, 1.0);
+    utc.minute = (int)x;
+    utc.second = 60.0 * fmod(x, 1.0);
+
+    k = jd + 68569L;
+    n = 4L * k / 146097L;
+    k = k - (146097L * n + 3L) / 4L;
+    m = 4000L * (k + 1L) / 1461001L;
+    k = k - 1461L * m / 4L + 31L;
+
+    utc.month = (int) (80L * k / 2447L);
+    utc.day = (int) (k - 2447L * (long)utc.month / 80L);
+    k = (long) utc.month / 11L;
+
+    utc.month = (int) ((long)utc.month + 2L - 12L * k);
+    utc.year = (int) (100L * (n - 49L) + m + k);
+
+    return utc;
+}
+
 astro_observer_t Astronomy_MakeObserver(double latitude, double longitude, double height)
 {
     astro_observer_t observer;

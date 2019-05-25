@@ -60,6 +60,17 @@ astro_time_t;
 
 typedef struct
 {
+    int     year;
+    int     month;
+    int     day;
+    int     hour;
+    int     minute;
+    double  second;
+}
+astro_utc_t;
+
+typedef struct
+{
     astro_status_t status;
     double x;
     double y;
@@ -237,6 +248,8 @@ const char *Astronomy_BodyName(astro_body_t body);
 astro_body_t Astronomy_BodyCode(const char *name);
 astro_observer_t Astronomy_MakeObserver(double latitude, double longitude, double height);
 astro_time_t Astronomy_MakeTime(int year, int month, int day, int hour, int minute, double second);
+astro_time_t Astronomy_TimeFromUtc(astro_utc_t utc);
+astro_utc_t  Astronomy_UtcFromTime(astro_time_t time);
 astro_time_t Astronomy_AddDays(astro_time_t time, double days);
 astro_vector_t Astronomy_HelioVector(astro_body_t body, astro_time_t time);
 astro_vector_t Astronomy_GeoVector(astro_body_t body, astro_time_t time, int correct_aberration);

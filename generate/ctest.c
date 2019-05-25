@@ -133,11 +133,19 @@ fail:
 static int Test_AstroTime(void)
 {
     astro_time_t time;
+    astro_utc_t utc;
     const double expected_ut = 6910.270978506945;
     const double expected_tt = 6910.271779431480;
     double diff;
 
-    time = Astronomy_MakeTime(2018, 12, 2, 18, 30, 12.543);
+    const int year = 2018;
+    const int month = 12;
+    const int day = 2;
+    const int hour = 18;
+    const int minute = 30;
+    const double second = 12.543;
+
+    time = Astronomy_MakeTime(year, month, day, hour, minute, second);
     printf("Test_AstroTime: ut=%0.6lf, tt=%0.6lf\n", time.ut, time.tt);
 
     diff = time.ut - expected_ut;
@@ -151,6 +159,22 @@ static int Test_AstroTime(void)
     if (fabs(diff) > 1.0e-12)
     {
         fprintf(stderr, "Test_AstroTime: excessive TT error %lg\n", diff);
+        return 1;
+    }
+
+    utc = Astronomy_UtcFromTime(time);
+    if (utc.year != year || utc.month != month || utc.day != day || utc.minute != minute || utc.hour != hour)
+    {
+        fprintf(stderr, "Test_AstroTime: UtcFromTime FAILURE - Expected %04d-%02d-%02dT%02d:%02dZ, found %04d-%02d-%02dT%02d:%02dZ\n",
+            year, month, day, hour, minute,
+            utc.year, utc.month, utc.day, utc.hour, utc.minute);
+        return 1;
+    }
+
+    diff = utc.second - second;
+    if (fabs(diff) > 2.0e-5)
+    {
+        fprintf(stderr, "Test_AstroTime: excessive UTC second error %lg\n", diff);
         return 1;
     }
 
