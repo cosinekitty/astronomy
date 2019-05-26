@@ -265,14 +265,7 @@ astro_apsis_t;
 /*---------- functions ----------*/
 
 double Astronomy_VectorLength(astro_vector_t vector);
-
-/**
- * @brief Finds the name of a celestial body.
- * @param body The celestial body whose name is to be found.
- * @return The English-language name of the celestial body, or "" if the body is not valid.
- */
 const char *Astronomy_BodyName(astro_body_t body);
-
 astro_body_t Astronomy_BodyCode(const char *name);
 astro_observer_t Astronomy_MakeObserver(double latitude, double longitude, double height);
 astro_time_t Astronomy_CurrentTime(void);

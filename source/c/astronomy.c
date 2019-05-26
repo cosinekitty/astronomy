@@ -36,12 +36,8 @@
 extern "C" {
 #endif
 
-#define ARRAYSIZE(x)    (sizeof(x) / sizeof(x[0]))
-
 static const double T0        = 2451545.0;
 static const double MJD_BASIS = 2400000.5;
-#define Y2000_IN_MJD        (T0 - MJD_BASIS)
-#define PI      3.14159265358979323846
 static const double DEG2RAD = 0.017453292519943296;
 static const double RAD2DEG = 57.295779513082321;
 static const double ASEC360 = 1296000.0;
@@ -61,7 +57,13 @@ static const double REFRACTION_NEAR_HORIZON = 34.0 / 60.0;   /* degrees of refra
 static const double SUN_RADIUS_AU  = 4.6505e-3;
 static const double MOON_RADIUS_AU = 1.15717e-5;
 static const double ASEC180 = 180.0 * 60.0 * 60.0;        /* arcseconds per 180 degrees (or pi radians) */
-#define AU_PER_PARSEC    (ASEC180 / PI)             /* exact definition of how many AU = one parsec */
+
+/** @cond DOXYGEN_SKIP */
+#define ARRAYSIZE(x)    (sizeof(x) / sizeof(x[0]))
+#define AU_PER_PARSEC   (ASEC180 / PI)             /* exact definition of how many AU = one parsec */
+#define Y2000_IN_MJD    (T0 - MJD_BASIS)
+#define PI              3.14159265358979323846
+/** @endcond */
 
 static astro_time_t UniversalTime(double ut);
 static astro_ecliptic_t RotateEquatorialToEcliptic(const double pos[3], double obliq_radians);
@@ -98,6 +100,11 @@ double Astronomy_VectorLength(astro_vector_t vector)
     return sqrt(vector.x*vector.x + vector.y*vector.y + vector.z*vector.z);
 }
 
+/**
+ * @brief Finds the name of a celestial body.
+ * @param body The celestial body whose name is to be found.
+ * @return The English-language name of the celestial body, or "" if the body is not valid.
+ */
 const char *Astronomy_BodyName(astro_body_t body)
 {
     switch (body)
@@ -325,12 +332,14 @@ static astro_angle_result_t AngleBetween(astro_vector_t a, astro_vector_t b)
     return result;
 }
 
+/** @cond DOXYGEN_SKIP */
 typedef struct
 {
     double mjd;
     double dt;
 }
 deltat_entry_t;
+/** @endcond */
 
 static const deltat_entry_t DT[] = {
 { -72638.0, 38 },
@@ -425,7 +434,9 @@ static const deltat_entry_t DT[] = {
 { 61680.0, 73.66 }
 };
 
+/** @cond DOXYGEN_SKIP */
 #define DT_LENGTH     (sizeof(DT) / sizeof(DT[0]))
+/** @endcond */
 
 static double DeltaT(double mjd)
 {
@@ -578,7 +589,7 @@ astro_observer_t Astronomy_MakeObserver(double latitude, double longitude, doubl
     return observer;
 }
 
-void iau2000b(astro_time_t time, double *dpsi, double *deps)
+static void iau2000b(astro_time_t time, double *dpsi, double *deps)
 {
     /* Adapted from the NOVAS C 3.1 function of the same name. */
 
@@ -781,6 +792,7 @@ static double mean_obliq(double tt)
     return asec / 3600.0;
 }
 
+/** @cond DOXYGEN_SKIP */
 typedef struct 
 {
     double tt;
@@ -791,6 +803,7 @@ typedef struct
     double tobl;
 }
 earth_tilt_t;
+/** @endcond */
 
 static earth_tilt_t e_tilt(astro_time_t time)
 {
@@ -1057,6 +1070,8 @@ static void ter2cel(astro_time_t time, const double vec1[3], double vec2[3])
 }
 
 /*------------------ CalcMoon ------------------*/
+
+/** @cond DOXYGEN_SKIP */
 
 #define DECLARE_PASCAL_ARRAY_1(elemtype,name,xmin,xmax) \
     elemtype name[(xmax)-(xmin)+1]
@@ -1414,6 +1429,8 @@ static void CalcMoon(
 #undef CO
 #undef SI
 
+/** @endcond */
+
 astro_vector_t Astronomy_GeoMoon(astro_time_t time)
 {
     double geo_eclip_lon, geo_eclip_lat, distance_au;
@@ -1447,6 +1464,7 @@ astro_vector_t Astronomy_GeoMoon(astro_time_t time)
 
 /*------------------ VSOP ------------------*/
 
+/** @cond DOXYGEN_SKIP */
 typedef struct 
 {
     double amplitude;
@@ -1474,6 +1492,7 @@ typedef struct
     const vsop_formula_t formula[3];
 }
 vsop_model_t;
+/** @endcond */
 
 static const vsop_term_t vsop_lat_Mercury_0[] = 
 {
@@ -2279,7 +2298,9 @@ static const vsop_series_t vsop_rad_Neptune[] =
 
 ;
 
+/** @cond DOXYGEN_SKIP */
 #define VSOPFORMULA(x)    { ARRAYSIZE(x), x }
+/** @endcond */
 
 static const vsop_model_t vsop[] = 
 {
@@ -2293,7 +2314,9 @@ static const vsop_model_t vsop[] =
     { { VSOPFORMULA(vsop_lat_Neptune),  VSOPFORMULA(vsop_lon_Neptune),  VSOPFORMULA(vsop_rad_Neptune) } }
 };
 
+/** @cond DOXYGEN_SKIP */
 #define CalcEarth(time)     CalcVsop(&vsop[BODY_EARTH], (time))
+/** @endcond */
 
 static astro_vector_t CalcVsop(const vsop_model_t *model, astro_time_t time)
 {
@@ -2341,6 +2364,7 @@ static astro_vector_t CalcVsop(const vsop_model_t *model, astro_time_t time)
 
 /*------------------ Chebyshev model for Pluto ------------------*/
 
+/** @cond DOXYGEN_SKIP */
 typedef struct
 {
     double data[3];
@@ -2355,6 +2379,7 @@ typedef struct
     const astro_cheb_coeff_t *coeff;
 }
 astro_cheb_record_t;
+/** @endcond */
 
 static const astro_cheb_coeff_t cheb_8_0[] =
 {
@@ -2576,8 +2601,9 @@ static astro_vector_t CalcChebyshev(const astro_cheb_record_t model[], int nrecs
     return VecError(ASTRO_BAD_TIME, time);
 }
 
+/** @cond DOXYGEN_SKIP */
 #define CalcPluto(time)    (CalcChebyshev(cheb_8, ARRAYSIZE(cheb_8), (time)))
-
+/** @endcond */
 
 /*------------------ end of generated code ------------------*/
 
@@ -2998,12 +3024,14 @@ static astro_search_result_t SearchErr(astro_status_t status)
     return result;
 }
 
+/** @cond DOXYGEN_SKIP */
 #define CALLFUNC(f,t)  \
     do { \
         funcres = func(context, (t)); \
         if (funcres.status != ASTRO_SUCCESS) return SearchErr(funcres.status); \
         (f) = funcres.value; \
     } while(0)
+/** @endcond */
 
 astro_search_result_t Astronomy_Search(
     astro_search_func_t func,
@@ -3238,7 +3266,7 @@ astro_elongation_t Astronomy_Elongation(astro_body_t body, astro_time_t time)
     return result;
 }
 
-astro_func_result_t neg_elong_slope(void *context, astro_time_t time)
+static astro_func_result_t neg_elong_slope(void *context, astro_time_t time)
 {
     static const double dt = 0.1;    
     astro_angle_result_t e1, e2;
@@ -3659,6 +3687,7 @@ astro_hour_angle_t Astronomy_SearchHourAngle(
     }
 }
 
+/** @cond DOXYGEN_SKIP */
 typedef struct
 {
     astro_body_t        body;
@@ -3667,6 +3696,7 @@ typedef struct
     double              body_radius_au;
 }
 context_peak_altitude_t;
+/** @endcond */
 
 static astro_func_result_t peak_altitude(void *context, astro_time_t time)
 {
