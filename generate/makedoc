@@ -19,15 +19,15 @@ else
     echo "(Skipping local HTML generation because html directory does not exist.)"
 fi
 
-echo "Generating C documentation"
-
-cd ../source/c || Fail "Error changing directory to ../source/c"
-rm -rf html xml latex
-doxygen Doxyfile > doxygen.log || Fail "Error in doxygen"
-moxygen -o README.md ./xml > moxygen.log || Fail "Error in moxygen"
-
-# Temporary hack to fix broken link in moxygen output.
-# See: https://github.com/sourcey/moxygen/issues/41
-sed -i 's,https://sourcey.com/moxygen,https://github.com/sourcey/moxygen,g' README.md || Fail "Error in sed command"
+if [[ -f generate_c_docs ]]; then
+    echo "Generating C documentation"
+    cd ../source/c || Fail "Error changing directory to ../source/c"
+    rm -rf html xml latex
+    doxygen Doxyfile > doxygen.log || Fail "Error in doxygen"
+    moxygen -o README.md ./xml > moxygen.log || Fail "Error in moxygen"
+    cd ../../generate || Fail "Error changing directory back"
+else
+    echo "(Skipping generation of C documentation because file generate_c_docs does not exist.)"
+fi
 
 exit 0

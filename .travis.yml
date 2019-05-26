@@ -12,12 +12,9 @@ addons:
       - ubuntu-toolchain-r-test
     packages:
       - gcc-6
-      - doxygen
-      - graphviz
       
 before_script:
   - npm install -g jsdoc-to-markdown@4.0.1
-  - npm install -g moxygen@0.8.0
 
 script:
   - export CC=/usr/bin/gcc-6
