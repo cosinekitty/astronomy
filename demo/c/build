@@ -1,0 +1,2 @@
+#!/bin/bash
+gcc -Wall -Werror -o moonphase -I../../source/c ../../source/c/astronomy.c moonphase.c -lm

@@ -28,6 +28,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <math.h>
 #include "astronomy.h"
 
@@ -382,6 +383,18 @@ static astro_time_t UniversalTime(double ut)
     time.ut = ut;
     time.tt = TerrestrialTime(ut);
     return time;
+}
+
+astro_time_t Astronomy_CurrentTime(void)
+{
+    astro_time_t t;
+
+    /* Get seconds since midnight January 1, 1970, divide to convert to days, */
+    /* then subtract to get days since noon on January 1, 2000. */
+    
+    t.ut = (time(NULL) / SECONDS_PER_DAY) - 10957.5;
+    t.tt = TerrestrialTime(t.ut);
+    return t;
 }
 
 astro_time_t Astronomy_MakeTime(int year, int month, int day, int hour, int minute, double second)
