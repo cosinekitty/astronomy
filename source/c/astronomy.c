@@ -98,11 +98,6 @@ double Astronomy_VectorLength(astro_vector_t vector)
     return sqrt(vector.x*vector.x + vector.y*vector.y + vector.z*vector.z);
 }
 
-/**
- * Finds the name of a celestial body.
- * @param body The celestial body whose name is to be found.
- * @return The English-language name of the celestial body, or "" if the body is not valid.
- */
 const char *Astronomy_BodyName(astro_body_t body)
 {
     switch (body)

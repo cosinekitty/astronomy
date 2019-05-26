@@ -14,10 +14,10 @@
 `struct `[`astro_hour_angle_t`](#structastro__hour__angle__t) | 
 `struct `[`astro_illum_t`](#structastro__illum__t) | 
 `struct `[`astro_moon_quarter_t`](#structastro__moon__quarter__t) | 
-`struct `[`astro_observer_t`](#structastro__observer__t) | 
+`struct `[`astro_observer_t`](#structastro__observer__t) | Represents a location of an observer on (or near) the surface of the Earth.
 `struct `[`astro_search_result_t`](#structastro__search__result__t) | 
 `struct `[`astro_seasons_t`](#structastro__seasons__t) | 
-`struct `[`astro_time_t`](#structastro__time__t) | 
+`struct `[`astro_time_t`](#structastro__time__t) | A date and time used for astronomical calculations.
 `struct `[`astro_utc_t`](#structastro__utc__t) | 
 `struct `[`astro_vector_t`](#structastro__vector__t) | 
 `struct `[`context_peak_altitude_t`](#structcontext__peak__altitude__t) | 
@@ -277,21 +277,29 @@
 
 # struct `astro_observer_t` 
 
+Represents a location of an observer on (or near) the surface of the Earth.
+
 ## Summary
 
  Members                        | Descriptions                                
 --------------------------------|---------------------------------------------
-`public double `[`latitude`](#structastro__observer__t_1a4ece76c5061138651f91cdc0a43fabea) | 
-`public double `[`longitude`](#structastro__observer__t_1aa54800e341dd1fcdd8ae257f702c3872) | 
-`public double `[`height`](#structastro__observer__t_1aed0ae0473aa7ad733819288803fbff0b) | 
+`public double `[`latitude`](#structastro__observer__t_1a4ece76c5061138651f91cdc0a43fabea) | Geographic latitude in degrees north (positive) or south (negative) of the equator.
+`public double `[`longitude`](#structastro__observer__t_1aa54800e341dd1fcdd8ae257f702c3872) | Geographic longitude in degrees east (positive) or west (negative) of the prime meridian at Greenwich, England.
+`public double `[`height`](#structastro__observer__t_1aed0ae0473aa7ad733819288803fbff0b) | The height above (positive) or below (negative) sea level, expressed in meters.
 
 ## Members
 
 #### `public double `[`latitude`](#structastro__observer__t_1a4ece76c5061138651f91cdc0a43fabea) 
 
+Geographic latitude in degrees north (positive) or south (negative) of the equator.
+
 #### `public double `[`longitude`](#structastro__observer__t_1aa54800e341dd1fcdd8ae257f702c3872) 
 
+Geographic longitude in degrees east (positive) or west (negative) of the prime meridian at Greenwich, England.
+
 #### `public double `[`height`](#structastro__observer__t_1aed0ae0473aa7ad733819288803fbff0b) 
+
+The height above (positive) or below (negative) sea level, expressed in meters.
 
 # struct `astro_search_result_t` 
 
@@ -337,18 +345,24 @@
 
 # struct `astro_time_t` 
 
+A date and time used for astronomical calculations.
+
 ## Summary
 
  Members                        | Descriptions                                
 --------------------------------|---------------------------------------------
-`public double `[`ut`](#structastro__time__t_1a0874edc886a134a3a09ed3c1e4c41d24) | 
-`public double `[`tt`](#structastro__time__t_1a7efe42a250b382ca1052fd4ae5da4d8d) | 
+`public double `[`ut`](#structastro__time__t_1a0874edc886a134a3a09ed3c1e4c41d24) | UT1/UTC number of days since noon on January 1, 2000
+`public double `[`tt`](#structastro__time__t_1a7efe42a250b382ca1052fd4ae5da4d8d) | Terrestrial Time days since noon on January 1, 2000
 
 ## Members
 
 #### `public double `[`ut`](#structastro__time__t_1a0874edc886a134a3a09ed3c1e4c41d24) 
 
+UT1/UTC number of days since noon on January 1, 2000
+
 #### `public double `[`tt`](#structastro__time__t_1a7efe42a250b382ca1052fd4ae5da4d8d) 
+
+Terrestrial Time days since noon on January 1, 2000
 
 # struct `astro_utc_t` 
 

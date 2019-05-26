@@ -34,27 +34,33 @@ extern "C" {
 
 /*---------- types ----------*/
 
+/**
+ * Indicates success/failure of an Astronomy Engine function call.
+ */
 typedef enum
 {
-    ASTRO_SUCCESS,
-    ASTRO_NOT_INITIALIZED,
-    ASTRO_INVALID_BODY,
-    ASTRO_NO_CONVERGE,
-    ASTRO_BAD_TIME,
-    ASTRO_BAD_VECTOR,
-    ASTRO_SEARCH_FAILURE,
-    ASTRO_EARTH_NOT_ALLOWED,
-    ASTRO_NO_MOON_QUARTER,
-    ASTRO_WRONG_MOON_QUARTER,
-    ASTRO_INTERNAL_ERROR,
-    ASTRO_INVALID_PARAMETER
+    ASTRO_SUCCESS,                  /**< The operation was successful. */
+    ASTRO_NOT_INITIALIZED,          /**< A placeholder that can be used for data that is not yet initialized. */
+    ASTRO_INVALID_BODY,             /**< The celestial body was not valid. Different sets of bodies are supported depending on the function. */
+    ASTRO_NO_CONVERGE,              /**< A numeric solver failed to converge. This should not happen unless there is a bug in Astronomy Engine. */
+    ASTRO_BAD_TIME,                 /**< Cannot calculate Pluto's position outside the year range 1700..2200. */
+    ASTRO_BAD_VECTOR,               /**< Vector magnitude is too small to be normalized into a unit vector. */
+    ASTRO_SEARCH_FAILURE,           /**< Search was not able to find an ascending root crossing of the function in the specified time interval. */
+    ASTRO_EARTH_NOT_ALLOWED,        /**< The Earth cannot be treated as a celestial body seen from an observer on the Earth itself. */
+    ASTRO_NO_MOON_QUARTER,          /**< No lunar quarter occurs inside the specified time range. */
+    ASTRO_WRONG_MOON_QUARTER,       /**< Internal error: Astronomy_NextMoonQuarter found the wrong moon quarter. */
+    ASTRO_INTERNAL_ERROR,           /**< A self-check failed inside the code somewhere, indicating a bug needs to be fixed. */
+    ASTRO_INVALID_PARAMETER         /**< A parameter value passed to a function was not valid. */
 }
 astro_status_t;
 
+/**
+ * A date and time used for astronomical calculations.
+ */
 typedef struct
 {
-    double ut;
-    double tt;
+    double ut;      /**< UT1/UTC number of days since noon on January 1, 2000 */
+    double tt;      /**< Terrestrial Time days since noon on January 1, 2000 */
 }
 astro_time_t;
 
@@ -88,29 +94,32 @@ astro_angle_result_t;
 
 typedef enum
 {
-    BODY_INVALID = -1,
-    BODY_MERCURY,
-    BODY_VENUS,
-    BODY_EARTH,
-    BODY_MARS,
-    BODY_JUPITER,
-    BODY_SATURN,
-    BODY_URANUS,
-    BODY_NEPTUNE,
-    BODY_PLUTO,
-    BODY_SUN,
-    BODY_MOON
+    BODY_INVALID = -1,      /**< An invalid or undefined celestial body. */
+    BODY_MERCURY,           /**< Mercury */
+    BODY_VENUS,             /**< Venus */
+    BODY_EARTH,             /**< Earth */
+    BODY_MARS,              /**< Mars */
+    BODY_JUPITER,           /**< Jupiter */
+    BODY_SATURN,            /**< Saturn */
+    BODY_URANUS,            /**< Uranus */
+    BODY_NEPTUNE,           /**< Neptune */
+    BODY_PLUTO,             /**< Pluto */
+    BODY_SUN,               /**< Sun */
+    BODY_MOON               /**< Moon */
 }
 astro_body_t;
 
 #define MIN_BODY    BODY_MERCURY
 #define MAX_BODY    BODY_MOON
 
+/**
+ * Represents a location of an observer on (or near) the surface of the Earth.
+ */
 typedef struct
 {
-    double latitude;
-    double longitude;
-    double height;
+    double latitude;        /**< Geographic latitude in degrees north (positive) or south (negative) of the equator. */
+    double longitude;       /**< Geographic longitude in degrees east (positive) or west (negative) of the prime meridian at Greenwich, England. */
+    double height;          /**< The height above (positive) or below (negative) sea level, expressed in meters. */
 }
 astro_observer_t;
 
@@ -244,7 +253,14 @@ astro_apsis_t;
 /*---------- functions ----------*/
 
 double Astronomy_VectorLength(astro_vector_t vector);
+
+/**
+ * Finds the name of a celestial body.
+ * @param body The celestial body whose name is to be found.
+ * @return The English-language name of the celestial body, or "" if the body is not valid.
+ */
 const char *Astronomy_BodyName(astro_body_t body);
+
 astro_body_t Astronomy_BodyCode(const char *name);
 astro_observer_t Astronomy_MakeObserver(double latitude, double longitude, double height);
 astro_time_t Astronomy_CurrentTime(void);
