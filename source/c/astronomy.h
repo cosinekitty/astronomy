@@ -35,7 +35,7 @@ extern "C" {
 /*---------- types ----------*/
 
 /**
- * Indicates success/failure of an Astronomy Engine function call.
+ * @brief Indicates success/failure of an Astronomy Engine function call.
  */
 typedef enum
 {
@@ -55,7 +55,7 @@ typedef enum
 astro_status_t;
 
 /**
- * A date and time used for astronomical calculations.
+ * @brief A date and time used for astronomical calculations.
  */
 typedef struct
 {
@@ -64,34 +64,46 @@ typedef struct
 }
 astro_time_t;
 
+/**
+ * @brief A calendar date and time expressed in UTC.
+ */
 typedef struct
 {
-    int     year;
-    int     month;
-    int     day;
-    int     hour;
-    int     minute;
-    double  second;
+    int     year;       /**< The year value, e.g. 2019. */
+    int     month;      /**< The month value: 1=January, 2=February, ..., 12=December. */
+    int     day;        /**< The day of the month in the range 1..31. */
+    int     hour;       /**< The hour of the day in the range 0..23. */
+    int     minute;     /**< The minute of the hour in the range 0..59. */
+    double  second;     /**< The floating point number of seconds in the range [0,60). */
 }
 astro_utc_t;
 
+/**
+ * @brief A 3D Cartesian vector whose components are expressed in Astronomical Units (AU).
+ */
 typedef struct
 {
-    astro_status_t status;
-    double x;
-    double y;
-    double z;
-    astro_time_t t;
+    astro_status_t status;  /**< ASTRO_SUCCESS if this struct is valid; otherwise an error code. */
+    double x;               /**< The Cartesian x-coordinate of the vector in AU. */
+    double y;               /**< The Cartesian y-coordinate of the vector in AU. */
+    double z;               /**< The Cartesian z-coordinate of the vector in AU. */
+    astro_time_t t;         /**< The date and time at which this vector is valid. */
 }
 astro_vector_t;
 
+/**
+ * @brief An angular value expressed in degrees.
+ */
 typedef struct
 {
-    astro_status_t status;
-    double angle;
+    astro_status_t status;  /**< ASTRO_SUCCESS if this struct is valid; otherwise an error code. */
+    double angle;           /**< An angle expressed in degrees. */
 }
 astro_angle_result_t;
 
+/**
+ * @brief A celestial body.
+ */
 typedef enum
 {
     BODY_INVALID = -1,      /**< An invalid or undefined celestial body. */
@@ -113,7 +125,7 @@ astro_body_t;
 #define MAX_BODY    BODY_MOON
 
 /**
- * Represents a location of an observer on (or near) the surface of the Earth.
+ * @brief Represents a location of an observer on (or near) the surface of the Earth.
  */
 typedef struct
 {
@@ -255,7 +267,7 @@ astro_apsis_t;
 double Astronomy_VectorLength(astro_vector_t vector);
 
 /**
- * Finds the name of a celestial body.
+ * @brief Finds the name of a celestial body.
  * @param body The celestial body whose name is to be found.
  * @return The English-language name of the celestial body, or "" if the body is not valid.
  */

@@ -2,7 +2,7 @@
 
  Members                        | Descriptions                                
 --------------------------------|---------------------------------------------
-`struct `[`astro_angle_result_t`](#structastro__angle__result__t) | 
+`struct `[`astro_angle_result_t`](#structastro__angle__result__t) | An angular value expressed in degrees.
 `struct `[`astro_apsis_t`](#structastro__apsis__t) | 
 `struct `[`astro_cheb_coeff_t`](#structastro__cheb__coeff__t) | 
 `struct `[`astro_cheb_record_t`](#structastro__cheb__record__t) | 
@@ -18,8 +18,8 @@
 `struct `[`astro_search_result_t`](#structastro__search__result__t) | 
 `struct `[`astro_seasons_t`](#structastro__seasons__t) | 
 `struct `[`astro_time_t`](#structastro__time__t) | A date and time used for astronomical calculations.
-`struct `[`astro_utc_t`](#structastro__utc__t) | 
-`struct `[`astro_vector_t`](#structastro__vector__t) | 
+`struct `[`astro_utc_t`](#structastro__utc__t) | A calendar date and time expressed in UTC.
+`struct `[`astro_vector_t`](#structastro__vector__t) | A 3D Cartesian vector whose components are expressed in Astronomical Units (AU).
 `struct `[`context_peak_altitude_t`](#structcontext__peak__altitude__t) | 
 `struct `[`deltat_entry_t`](#structdeltat__entry__t) | 
 `struct `[`earth_tilt_t`](#structearth__tilt__t) | 
@@ -31,18 +31,24 @@
 
 # struct `astro_angle_result_t` 
 
+An angular value expressed in degrees.
+
 ## Summary
 
  Members                        | Descriptions                                
 --------------------------------|---------------------------------------------
-`public `[`astro_status_t`](#astronomy_8h_1a3605f063314f858dec26db307c4e8214)` `[`status`](#structastro__angle__result__t_1aab07512f9f53b26cc2c863147f774e36) | 
-`public double `[`angle`](#structastro__angle__result__t_1af8536a6c9f69f165c2900bef800d7069) | 
+`public `[`astro_status_t`](#astronomy_8h_1a3605f063314f858dec26db307c4e8214)` `[`status`](#structastro__angle__result__t_1aab07512f9f53b26cc2c863147f774e36) | ASTRO_SUCCESS if this struct is valid; otherwise an error code.
+`public double `[`angle`](#structastro__angle__result__t_1af8536a6c9f69f165c2900bef800d7069) | An angle expressed in degrees.
 
 ## Members
 
 #### `public `[`astro_status_t`](#astronomy_8h_1a3605f063314f858dec26db307c4e8214)` `[`status`](#structastro__angle__result__t_1aab07512f9f53b26cc2c863147f774e36) 
 
+ASTRO_SUCCESS if this struct is valid; otherwise an error code.
+
 #### `public double `[`angle`](#structastro__angle__result__t_1af8536a6c9f69f165c2900bef800d7069) 
+
+An angle expressed in degrees.
 
 # struct `astro_apsis_t` 
 
@@ -366,54 +372,80 @@ Terrestrial Time days since noon on January 1, 2000
 
 # struct `astro_utc_t` 
 
+A calendar date and time expressed in UTC.
+
 ## Summary
 
  Members                        | Descriptions                                
 --------------------------------|---------------------------------------------
-`public int `[`year`](#structastro__utc__t_1aa636614dbe7bd040fdbdcac42f8b3069) | 
-`public int `[`month`](#structastro__utc__t_1a16d083a87186eb7a22a527127fba0574) | 
-`public int `[`day`](#structastro__utc__t_1a0c92aac85896c7b1f70630035dbcdaa8) | 
-`public int `[`hour`](#structastro__utc__t_1a126fe88a150a70a7c1644a2771dd6a31) | 
-`public int `[`minute`](#structastro__utc__t_1a1c503dad9736c86aed0630957e1f2646) | 
-`public double `[`second`](#structastro__utc__t_1a0cc18479f7a558050021acf9b32caadc) | 
+`public int `[`year`](#structastro__utc__t_1aa636614dbe7bd040fdbdcac42f8b3069) | The year value, e.g. 2019.
+`public int `[`month`](#structastro__utc__t_1a16d083a87186eb7a22a527127fba0574) | The month value: 1=January, 2=February, ..., 12=December.
+`public int `[`day`](#structastro__utc__t_1a0c92aac85896c7b1f70630035dbcdaa8) | The day of the month in the range 1..31.
+`public int `[`hour`](#structastro__utc__t_1a126fe88a150a70a7c1644a2771dd6a31) | The hour of the day in the range 0..23.
+`public int `[`minute`](#structastro__utc__t_1a1c503dad9736c86aed0630957e1f2646) | The minute of the hour in the range 0..59.
+`public double `[`second`](#structastro__utc__t_1a0cc18479f7a558050021acf9b32caadc) | The floating point number of seconds in the range [0,60).
 
 ## Members
 
 #### `public int `[`year`](#structastro__utc__t_1aa636614dbe7bd040fdbdcac42f8b3069) 
 
+The year value, e.g. 2019.
+
 #### `public int `[`month`](#structastro__utc__t_1a16d083a87186eb7a22a527127fba0574) 
+
+The month value: 1=January, 2=February, ..., 12=December.
 
 #### `public int `[`day`](#structastro__utc__t_1a0c92aac85896c7b1f70630035dbcdaa8) 
 
+The day of the month in the range 1..31.
+
 #### `public int `[`hour`](#structastro__utc__t_1a126fe88a150a70a7c1644a2771dd6a31) 
+
+The hour of the day in the range 0..23.
 
 #### `public int `[`minute`](#structastro__utc__t_1a1c503dad9736c86aed0630957e1f2646) 
 
+The minute of the hour in the range 0..59.
+
 #### `public double `[`second`](#structastro__utc__t_1a0cc18479f7a558050021acf9b32caadc) 
 
+The floating point number of seconds in the range [0,60).
+
 # struct `astro_vector_t` 
+
+A 3D Cartesian vector whose components are expressed in Astronomical Units (AU).
 
 ## Summary
 
  Members                        | Descriptions                                
 --------------------------------|---------------------------------------------
-`public `[`astro_status_t`](#astronomy_8h_1a3605f063314f858dec26db307c4e8214)` `[`status`](#structastro__vector__t_1a56282eb2bcf0dce0170952f9d1aa8b3c) | 
-`public double `[`x`](#structastro__vector__t_1a9519f6730bb6e466b810c9b5b053d7a5) | 
-`public double `[`y`](#structastro__vector__t_1a9f78a5f7f0320b6f5194e1006488baa5) | 
-`public double `[`z`](#structastro__vector__t_1aa96463d4940475e13e1df0fdaabbb955) | 
-`public `[`astro_time_t`](#structastro__time__t)` `[`t`](#structastro__vector__t_1ad90a34927631a1940ae0378574d42103) | 
+`public `[`astro_status_t`](#astronomy_8h_1a3605f063314f858dec26db307c4e8214)` `[`status`](#structastro__vector__t_1a56282eb2bcf0dce0170952f9d1aa8b3c) | ASTRO_SUCCESS if this struct is valid; otherwise an error code.
+`public double `[`x`](#structastro__vector__t_1a9519f6730bb6e466b810c9b5b053d7a5) | The Cartesian x-coordinate of the vector in AU.
+`public double `[`y`](#structastro__vector__t_1a9f78a5f7f0320b6f5194e1006488baa5) | The Cartesian y-coordinate of the vector in AU.
+`public double `[`z`](#structastro__vector__t_1aa96463d4940475e13e1df0fdaabbb955) | The Cartesian z-coordinate of the vector in AU.
+`public `[`astro_time_t`](#structastro__time__t)` `[`t`](#structastro__vector__t_1ad90a34927631a1940ae0378574d42103) | The date and time at which this vector is valid.
 
 ## Members
 
 #### `public `[`astro_status_t`](#astronomy_8h_1a3605f063314f858dec26db307c4e8214)` `[`status`](#structastro__vector__t_1a56282eb2bcf0dce0170952f9d1aa8b3c) 
 
+ASTRO_SUCCESS if this struct is valid; otherwise an error code.
+
 #### `public double `[`x`](#structastro__vector__t_1a9519f6730bb6e466b810c9b5b053d7a5) 
+
+The Cartesian x-coordinate of the vector in AU.
 
 #### `public double `[`y`](#structastro__vector__t_1a9f78a5f7f0320b6f5194e1006488baa5) 
 
+The Cartesian y-coordinate of the vector in AU.
+
 #### `public double `[`z`](#structastro__vector__t_1aa96463d4940475e13e1df0fdaabbb955) 
 
+The Cartesian z-coordinate of the vector in AU.
+
 #### `public `[`astro_time_t`](#structastro__time__t)` `[`t`](#structastro__vector__t_1ad90a34927631a1940ae0378574d42103) 
+
+The date and time at which this vector is valid.
 
 # struct `context_peak_altitude_t` 
 
