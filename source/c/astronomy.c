@@ -36,6 +36,10 @@
 extern "C" {
 #endif
 
+/** @cond DOXYGEN_SKIP */
+#define PI      3.14159265358979323846
+/** @endcond */
+
 static const double T0        = 2451545.0;
 static const double MJD_BASIS = 2400000.5;
 static const double DEG2RAD = 0.017453292519943296;
@@ -62,7 +66,6 @@ static const double ASEC180 = 180.0 * 60.0 * 60.0;        /* arcseconds per 180 
 #define ARRAYSIZE(x)    (sizeof(x) / sizeof(x[0]))
 #define AU_PER_PARSEC   (ASEC180 / PI)             /* exact definition of how many AU = one parsec */
 #define Y2000_IN_MJD    (T0 - MJD_BASIS)
-#define PI              3.14159265358979323846
 /** @endcond */
 
 static astro_time_t UniversalTime(double ut);
