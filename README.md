@@ -25,7 +25,7 @@
     <tr>
         <td style="text-align: center;"><a href="source/js/">Documentation</a></td>
         <td style="text-align: center;"><a href="source/js/">Documentation</a></td>
-        <td></td>
+        <td style="text-align: center;"><a href="source/c/">Documentation</a></td>
     </tr>
     <tr>
         <td colspan="3" style="text-align: center;"><a href="https://github.com/cosinekitty/astronomy">Source code for above languages</a></td>
