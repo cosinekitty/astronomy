@@ -8,15 +8,21 @@ Fail()
 echo "Generating target code."
 ./generate source || Fail "Problem generating target code."
 
-echo "Generating documentation in Markdown format."
+echo "Generating JS documentation in Markdown format."
 jsdoc2md --separators --template ../jsdoc2md/js.hbs --files ../source/js/astronomy.js > ../source/js/README.md || Fail "Error generating JS documentation."
 
 if [[ -d html ]]; then
-    echo "Generating documentation in HTML format for local viewing."
+    echo "Generating JS documentation in HTML format for local viewing."
     rm -rf html
     jsdoc ../source/js/astronomy.js --destination html || Fail "Error generating HTML preview"
 else
     echo "(Skipping local HTML generation because html directory does not exist.)"
 fi
+
+echo "Generating C documentation"
+
+cd ../source/c || Fail "Error changing directory to ../source/c"
+rm -rf html xml latex
+doxygen Doxyfile > doxygen.log || Fail "Error in doxygen"
 
 exit 0

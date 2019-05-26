@@ -98,6 +98,11 @@ double Astronomy_VectorLength(astro_vector_t vector)
     return sqrt(vector.x*vector.x + vector.y*vector.y + vector.z*vector.z);
 }
 
+/**
+ * Finds the name of a celestial body.
+ * @param body The celestial body whose name is to be found.
+ * @return The English-language name of the celestial body, or "" if the body is not valid.
+ */
 const char *Astronomy_BodyName(astro_body_t body)
 {
     switch (body)
@@ -482,7 +487,7 @@ astro_time_t Astronomy_CurrentTime(void)
 
     /* Get seconds since midnight January 1, 1970, divide to convert to days, */
     /* then subtract to get days since noon on January 1, 2000. */
-    
+
     t.ut = (time(NULL) / SECONDS_PER_DAY) - 10957.5;
     t.tt = TerrestrialTime(t.ut);
     return t;
