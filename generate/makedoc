@@ -24,7 +24,7 @@ if [[ -f generate_c_docs ]]; then
     cd ../source/c || Fail "Error changing directory to ../source/c"
     rm -rf html xml latex
     doxygen Doxyfile > doxygen.log || Fail "Error in doxygen"
-    moxygen -l c -t moxygen_templates -o README.md ./xml > moxygen.log || Fail "Error in moxygen"
+    moxygen -t moxygen_templates -o README.md ./xml > moxygen.log || Fail "Error in moxygen"
     cd ../../generate || Fail "Error changing directory back"
 else
     echo "(Skipping generation of C documentation because file generate_c_docs does not exist.)"
