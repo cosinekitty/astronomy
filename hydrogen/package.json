@@ -1,0 +1,11 @@
+{
+  "name": "hydrogen",
+  "version": "1.0.0",
+  "description": "Very simple doxygen to markdown converter.",
+  "main": "hydrogen.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Don Cross",
+  "license": "MIT"
+}
