@@ -25,21 +25,27 @@
 const fs = require('fs');
 const xml2js = require('xml2js');
 
-function run(headerXmlFileName, sourceXmlFileName) {
+function GenerateMarkdown(mdFileName, header, source) {
+    let text = '# Astronomy Engine\n';
+    text += '(Documentation coming soon...)\n';
+
+    fs.writeFileSync(mdFileName, text);
+}
+
+function run(headerXmlFileName, sourceXmlFileName, markdownFileName) {
     const headerXml = fs.readFileSync(headerXmlFileName);
     const sourceXml = fs.readFileSync(sourceXmlFileName);
     const headerParser = new xml2js.Parser();
     headerParser.parseString(headerXml, function(err, hresult) {
-        console.dir(hresult.doxygen.compounddef);
         const sourceParser = new xml2js.Parser();
         sourceParser.parseString(sourceXml, function(err, cresult) {
-            console.dir(cresult.doxygen.compounddef);
+            GenerateMarkdown(markdownFileName, hresult, cresult);
         });
     });
 }
 
 if (process.argv.length === 4) {
-    run(process.argv[2], process.argv[3]);
+    run(process.argv[2], process.argv[3], 'README.md');
     process.exit(0);
 } else {
     console.log('USAGE: node hydrogen.js header.xml source.xml');

@@ -20,11 +20,12 @@ else
 fi
 
 if [[ -f generate_c_docs ]]; then
-    echo "Generating C documentation"
+    echo "Generating C documentation."
     cd ../source/c || Fail "Error changing directory to ../source/c"
     rm -rf html xml latex
     doxygen Doxyfile > doxygen.log || Fail "Error in doxygen"
-    node ../../hydrogen/hydrogen.js xml/astronomy_8{h,c}.xml
+    echo "Translating doxygen XML to Markdown."
+    node ../../hydrogen/hydrogen.js xml/astronomy_8{h,c}.xml || Fail "Error in hydrogen.js"
     cd ../../generate || Fail "Error changing directory back"
 else
     echo "(Skipping generation of C documentation because file generate_c_docs does not exist.)"
