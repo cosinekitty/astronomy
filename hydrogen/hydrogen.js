@@ -86,6 +86,13 @@ class Item {
     
         throw `Item.Flat: don't know how to convert: ${x}`;    
     }
+
+    Render() {
+        const name = Item.Flat(this.name);
+        let md = `<a name="${name}"></a>\n`;
+        md += '`' + name + '`\n\n';
+        return md;
+    }
 }
 
 class Define extends Item {
@@ -214,31 +221,32 @@ class Transformer {
 
     Render() {
         // Generate Markdown text.
-        let md = '# Astronomy Engine\n';
-        md += '## Functions\n';
+        let md = '';
+
+        md += '## Functions\n\n';
         for (let f of this.funcs) {
-            md += Item.Flat(f.name) + '\n';
+            md += f.Render();
         }
 
-        md += '## Enumerated Types\n';
+        md += '## Enumerated Types\n\n';
         for (let e of this.enums) {
-            md += Item.Flat(e.name) + '\n';
+            md += e.Render();
         }
 
-        md += '## Structures\n';
+        md += '## Structures\n\n';
         for (let s of this.structs) {
-            md += Item.Flat(s.name) + '\n';
+            md += s.Render();
         }
 
-        md += '## Type Definitions\n';
+        md += '## Type Definitions\n\n';
         for (let t of this.typedefs) {
-            md += Item.Flat(t.name) + '\n';    
+            md += t.Render();
         }
         return md;
     }
 }
 
-function run(inXmlFileName, outMarkdownFileName) {
+function run(inPrefixFileName, inXmlFileName, outMarkdownFileName) {
     const headerXml = fs.readFileSync(inXmlFileName);
     const parser = new xml2js.Parser({
         explicitChildren: true,
@@ -257,15 +265,16 @@ function run(inXmlFileName, outMarkdownFileName) {
                 }
             }
         }
+        const prefix = fs.readFileSync(inPrefixFileName, {encoding: 'utf8'});
         const markdown = xform.Render();
-        fs.writeFileSync(outMarkdownFileName, markdown);
+        fs.writeFileSync(outMarkdownFileName, prefix + markdown);
     });
 }
 
-if (process.argv.length === 3) {
-    run(process.argv[2], 'README.md');
+if (process.argv.length === 4) {
+    run(process.argv[2], process.argv[3], 'README.md');
     process.exit(0);
 } else {
-    console.log('USAGE: node hydrogen.js header.xml');
+    console.log('USAGE: node hydrogen.js prefix.md header.xml');
     process.exit(1);
 }
