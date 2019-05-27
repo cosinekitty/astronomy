@@ -25,29 +25,64 @@
 const fs = require('fs');
 const xml2js = require('xml2js');
 
-function GenerateMarkdown(mdFileName, header, source) {
-    let text = '# Astronomy Engine\n';
-    text += '(Documentation coming soon...)\n';
-
-    fs.writeFileSync(mdFileName, text);
+class Parm {
+    constructor(name, type) {
+        this.name = name;
+        this.type = type;
+    }
 }
 
-function run(headerXmlFileName, sourceXmlFileName, markdownFileName) {
+class FuncInfo {
+    constructor(name, type, argtext, parmlist) {
+        this.name = name;
+        this.type = type;
+        this.argtext = argtext;
+        this.parmlist = parmlist;
+    }
+}
+
+class Transformer {
+    constructor(sectlist) {
+        for (let sect of sectlist) {
+            switch (sect.$.kind) {
+            case 'define':
+                console.log(`hydrogen: processing ${sect.memberdef.length} defines`);
+                break;
+            case 'enum':
+                console.log(`hydrogen: processing ${sect.memberdef.length} enums`);
+                break;
+            case 'typedef':
+                console.log(`hydrogen: processing ${sect.memberdef.length} typedefs`);
+                break;
+            case 'func':
+                console.log(`hydrogen: processing ${sect.memberdef.length} functions`);
+                break;
+            default:
+                console.log(`hydrogen: ignoring "${sect.$.kind}"`);
+                break;
+            }
+        }
+    }
+
+    Render() {
+        return '';
+    }
+}
+
+function run(headerXmlFileName, markdownFileName) {
     const headerXml = fs.readFileSync(headerXmlFileName);
-    const sourceXml = fs.readFileSync(sourceXmlFileName);
-    const headerParser = new xml2js.Parser();
-    headerParser.parseString(headerXml, function(err, hresult) {
-        const sourceParser = new xml2js.Parser();
-        sourceParser.parseString(sourceXml, function(err, cresult) {
-            GenerateMarkdown(markdownFileName, hresult, cresult);
-        });
+    const parser = new xml2js.Parser();
+    parser.parseString(headerXml, function(err, result) {
+        const xform = new Transformer(result.doxygen.compounddef[0].sectiondef);
+        const markdown = xform.Render();
+        fs.writeFileSync(markdownFileName, markdown);
     });
 }
 
-if (process.argv.length === 4) {
-    run(process.argv[2], process.argv[3], 'README.md');
+if (process.argv.length === 3) {
+    run(process.argv[2], 'README.md');
     process.exit(0);
 } else {
-    console.log('USAGE: node hydrogen.js header.xml source.xml');
+    console.log('USAGE: node hydrogen.js header.xml');
     process.exit(1);
 }
