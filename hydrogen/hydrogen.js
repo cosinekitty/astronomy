@@ -46,22 +46,46 @@ class Transformer {
         for (let sect of sectlist) {
             switch (sect.$.kind) {
             case 'define':
-                console.log(`hydrogen: processing ${sect.memberdef.length} defines`);
+                this.defines = this.ParseDefines(sect.memberdef);
                 break;
             case 'enum':
-                console.log(`hydrogen: processing ${sect.memberdef.length} enums`);
+                this.enums = this.ParseEnums(sect.memberdef);
                 break;
             case 'typedef':
-                console.log(`hydrogen: processing ${sect.memberdef.length} typedefs`);
+                this.typedefs = this.ParseTypesdefs(sect.memberdef);
                 break;
             case 'func':
-                console.log(`hydrogen: processing ${sect.memberdef.length} functions`);
+                this.funcs = this.ParseFuncs(sect.memberdef);
                 break;
             default:
                 console.log(`hydrogen: ignoring "${sect.$.kind}"`);
                 break;
             }
         }
+    }
+
+    ParseDefines(mlist) {
+        console.log(`hydrogen: processing ${mlist.length} defines`);
+        let dlist = [];
+        return dlist;
+    }
+
+    ParseEnums(mlist) {
+        console.log(`hydrogen: processing ${mlist.length} enums`);
+        let elist = [];
+        return elist;
+    }
+
+    ParseTypesdefs(mlist) {
+        console.log(`hydrogen: processing ${mlist.length} typedefs`);
+        let tlist = [];
+        return tlist;
+    }
+
+    ParseFuncs(mlist) {
+        console.log(`hydrogen: processing ${mlist.length} funcs`);
+        let flist = [];
+        return flist;
     }
 
     Render() {
