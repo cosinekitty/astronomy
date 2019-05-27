@@ -46,47 +46,54 @@ function MemberId(m) {
     return m.$.id;
 }
 
-function Flat(x) {
-    if (typeof x === 'string') {
-        return x;
-    } 
-
-    if (x instanceof Array) {
-        let s = '';
-        for (let e of x) {
-            s += Flat(e);
-        }
-        return s;
-    }     
-    
-    if (typeof x === 'object') {
-        if (x.$$) {
-            return Flat(x.$$);
-        }
-
-        if (x._) {
-            return Flat(x._);
-        }
-    }
-
-    throw `FlatText: don't know how to convert: ${x}`;
-}
-
-class Define {
+class Item {
     constructor(m) {
         this.id = MemberId(m);
         this.name = Find(m, 'name');
-        this.init = Find(m, 'initializer');
         this.detail = Look(m, 'detaileddescription');
         this.brief = Look(m, 'briefdescription');
-        console.log(`    #define ${Flat(this.name)} ${Flat(this.init)}  // ${Flat(this.detail)} // ${this.id}`);
+    }
+
+    static Flat(x) {
+        if (typeof x === 'string') {
+            return x;
+        } 
+    
+        if (x instanceof Array) {
+            let s = '';
+            for (let e of x) {
+                s += Item.Flat(e);
+            }
+            return s;
+        }     
+        
+        if (typeof x === 'object') {
+            if (x.$$) {
+                return Item.Flat(x.$$);
+            }
+    
+            if (x._) {
+                return Item.Flat(x._);
+            }
+
+            return '';
+        }
+    
+        throw `Item.Flat: don't know how to convert: ${x}`;    
     }
 }
 
-class EnumInfo {
+class Define extends Item {
     constructor(m) {
-        this.id = MemberId(m);
-        this.name = Find(m, 'name');
+        super(m);
+        this.init = Find(m, 'initializer');
+        console.log(`    #define ${Item.Flat(this.name)} ${Item.Flat(this.init)}  // ${Item.Flat(this.detail)} // ${this.id}`);
+    }
+}
+
+class EnumInfo extends Item {
+    constructor(m) {
+        super(m);
         this.enumValueList = []
         for (let e of m.$$) {
             switch (e['#name']) {
@@ -95,23 +102,26 @@ class EnumInfo {
                 break;
             }
         }
-        console.log(`   enum ${Flat(this.name)} : ${this.enumValueList.length} values.`);
+        console.log(`   enum ${Item.Flat(this.name)} : ${this.enumValueList.length} values.`);
     }
 }
 
-class Parm {
-    constructor(name, type) {
-        this.name = name;
-        this.type = type;
+class TypeDef extends Item {
+    constructor(m) {
+        super(m);
+        this.definition = Find(m, 'definition');
     }
 }
 
-class FuncInfo {
-    constructor(name, type, argtext, parmlist) {
-        this.name = name;
-        this.type = type;
-        this.argtext = argtext;
-        this.parmlist = parmlist;
+class Parm extends Item {
+    constructor(m) {
+        super(m);
+    }
+}
+
+class FuncInfo extends Item {
+    constructor(m) {
+        super(m);
     }
 }
 
@@ -126,7 +136,7 @@ class Transformer {
                 this.enums = this.ParseEnumList(sect.memberdef);
                 break;
             case 'typedef':
-                this.typedefs = this.ParseTypesdefList(sect.memberdef);
+                this.typedefs = this.ParseTypedefList(sect.memberdef);
                 break;
             case 'func':
                 this.funcs = this.ParseFuncList(sect.memberdef);
@@ -156,15 +166,21 @@ class Transformer {
         return elist;
     }
 
-    ParseTypesdefList(mlist) {
+    ParseTypedefList(mlist) {
         console.log(`hydrogen: processing ${mlist.length} typedefs`);
         let tlist = [];
+        for (let m of mlist) {
+            tlist.push(new TypeDef(m));
+        }
         return tlist;
     }
 
     ParseFuncList(mlist) {
         console.log(`hydrogen: processing ${mlist.length} funcs`);
         let flist = [];
+        for (let m of mlist) {
+            flist.push(new FuncInfo(m));
+        }
         return flist;
     }
 
