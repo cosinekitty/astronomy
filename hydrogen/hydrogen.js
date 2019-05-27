@@ -42,19 +42,7 @@ function MemberId(m) {
     return m.$.id;
 }
 
-function MemberName(m) {
-    return KeyText(m, 'name');
-}
-
-function MemberExpansion(m) {
-    return Find(m, 'initializer').$$[0]._;
-}
-
-function MemberDetail(m) {
-    return Find(m, 'detaileddescription').para[0].$$;
-}
-
-function FlatText(x) {
+function Flat(x) {
     if (typeof x === 'string') {
         return x;
     } 
@@ -62,18 +50,18 @@ function FlatText(x) {
     if (x instanceof Array) {
         let s = '';
         for (let e of x) {
-            s += FlatText(e);
+            s += Flat(e);
         }
         return s;
     }     
     
     if (typeof x === 'object') {
         if (x.$$) {
-            return FlatText(x.$$);
+            return Flat(x.$$);
         }
 
         if (x._) {
-            return FlatText(x._);
+            return Flat(x._);
         }
     }
 
@@ -83,10 +71,10 @@ function FlatText(x) {
 class Define {
     constructor(m) {
         this.id = MemberId(m);
-        this.name = MemberName(m);
-        this.expansion = MemberExpansion(m);
-        this.detail = MemberDetail(m);
-        console.log(`    #define ${this.name} ${this.expansion}  // ${FlatText(this.detail)} // ${this.id}`);
+        this.name = Find(m, 'name');
+        this.expansion = Find(m, 'initializer');
+        this.detail = Find(m, 'detaileddescription');
+        console.log(`    #define ${Flat(this.name)} ${Flat(this.expansion)}  // ${Flat(this.detail)} // ${this.id}`);
     }
 }
 
