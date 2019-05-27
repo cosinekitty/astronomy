@@ -24,8 +24,11 @@ if [[ -f generate_c_docs ]]; then
     cd ../source/c || Fail "Error changing directory to ../source/c"
     rm -rf html xml latex
     doxygen Doxyfile > doxygen.log || Fail "Error in doxygen"
+    cd xml || Fail "Error changinge to xml directory"
+    xsltproc combine.xslt index.xml > all.xml || Fail "Error merging doxygen xml"
+    cd .. || Fail "Error changing to parent directory"
     echo "Translating doxygen XML to Markdown."
-    node ../../hydrogen/hydrogen.js ./xml/astronomy_8h.xml || Fail "Error in hydrogen.js"
+    node ../../hydrogen/hydrogen.js ./xml/all.xml || Fail "Error in hydrogen.js"
     cd ../../generate || Fail "Error changing directory back"
 else
     echo "(Skipping generation of C documentation because file generate_c_docs does not exist.)"

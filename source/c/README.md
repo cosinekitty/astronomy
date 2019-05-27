@@ -1,0 +1,62 @@
+# Astronomy Engine
+## Functions
+Astronomy_AddDays
+Astronomy_AngleFromSun
+Astronomy_BodyCode
+Astronomy_BodyName
+Astronomy_CurrentTime
+Astronomy_Ecliptic
+Astronomy_EclipticLongitude
+Astronomy_Elongation
+Astronomy_Equator
+Astronomy_GeoMoon
+Astronomy_GeoVector
+Astronomy_HelioVector
+Astronomy_Horizon
+Astronomy_Illumination
+Astronomy_LongitudeFromSun
+Astronomy_MakeObserver
+Astronomy_MakeTime
+Astronomy_MoonPhase
+Astronomy_NextLunarApsis
+Astronomy_NextMoonQuarter
+Astronomy_Search
+Astronomy_SearchHourAngle
+Astronomy_SearchLunarApsis
+Astronomy_SearchMaxElongation
+Astronomy_SearchMoonPhase
+Astronomy_SearchMoonQuarter
+Astronomy_SearchPeakMagnitude
+Astronomy_SearchRelativeLongitude
+Astronomy_SearchRiseSet
+Astronomy_SearchSunLongitude
+Astronomy_Seasons
+Astronomy_SunPosition
+Astronomy_TimeFromUtc
+Astronomy_UtcFromTime
+Astronomy_VectorLength
+## Enumerated Types
+astro_apsis_kind_t
+astro_body_t
+astro_refraction_t
+astro_status_t
+astro_visibility_t
+## Structures
+astro_angle_result_t
+astro_apsis_t
+astro_ecliptic_t
+astro_elongation_t
+astro_equatorial_t
+astro_func_result_t
+astro_horizon_t
+astro_hour_angle_t
+astro_illum_t
+astro_moon_quarter_t
+astro_observer_t
+astro_search_result_t
+astro_seasons_t
+astro_time_t
+astro_utc_t
+astro_vector_t
+## Type Definitions
+astro_search_func_t

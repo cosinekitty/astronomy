@@ -34,10 +34,15 @@ function Look(m, key) {
     return null;
 }
 
-function Find(m, key) {
+function Find(m, key, altkey) {
     let x = Look(m, key);
     if (x === null) {
-        throw `Find: could not find key "${key}" in:\n${JSON.stringify(m,null,2)}`;
+        if (altkey) {
+            x = Look(m, altkey);
+        }
+        if (x === null) {
+            throw `Find: could not find key "${key}" in:\n${JSON.stringify(m,null,2)}`;
+        }
     }
     return x;
 }
@@ -49,7 +54,7 @@ function MemberId(m) {
 class Item {
     constructor(m) {
         this.id = MemberId(m);
-        this.name = Find(m, 'name');
+        this.name = Find(m, 'name', 'compoundname');
         this.detail = Look(m, 'detaileddescription');
         this.brief = Look(m, 'briefdescription');
     }
@@ -102,7 +107,7 @@ class EnumInfo extends Item {
                 break;
             }
         }
-        console.log(`   enum ${Item.Flat(this.name)} : ${this.enumValueList.length} values.`);
+        console.log(`    enum ${Item.Flat(this.name)} : ${this.enumValueList.length} values.`);
     }
 }
 
@@ -110,23 +115,34 @@ class TypeDef extends Item {
     constructor(m) {
         super(m);
         this.definition = Find(m, 'definition');
-    }
-}
-
-class Parm extends Item {
-    constructor(m) {
-        super(m);
+        console.log('    typedef ' + Item.Flat(this.name));
     }
 }
 
 class FuncInfo extends Item {
     constructor(m) {
         super(m);
+        console.log('    func ' + Item.Flat(this.name));
+    }
+}
+
+class StructInfo extends Item {
+    constructor(m) {
+        super(m);
+        console.log('    struct ' + Item.Flat(this.name));
     }
 }
 
 class Transformer {
-    constructor(sectlist) {
+    constructor() {
+        this.structs = [];
+    }
+
+    AddStruct(m) {
+        this.structs.push(new StructInfo(m));
+    }
+
+    AddSectList(sectlist) {
         for (let sect of sectlist) {
             switch (sect.$.kind) {
             case 'define':
@@ -148,13 +164,25 @@ class Transformer {
         }
     }
 
+    static SortList(list) {
+        return list.sort((a, b) => {
+            let fa = Item.Flat(a.name);
+            let fb = Item.Flat(b.name);
+            if (fa < fb)
+                return -1;
+            if (fa > fb)
+                return +1;
+            return 0;
+        });
+    }
+
     ParseDefineList(mlist) {
         console.log(`hydrogen: processing ${mlist.length} defines`);
         let dlist = [];
         for (let m of mlist) {
             dlist.push(new Define(m));
         }
-        return dlist;
+        return Transformer.SortList(dlist);
     }
 
     ParseEnumList(mlist) {
@@ -163,7 +191,7 @@ class Transformer {
         for (let m of mlist) {
             elist.push(new EnumInfo(m))
         }
-        return elist;
+        return Transformer.SortList(elist);
     }
 
     ParseTypedefList(mlist) {
@@ -172,7 +200,7 @@ class Transformer {
         for (let m of mlist) {
             tlist.push(new TypeDef(m));
         }
-        return tlist;
+        return Transformer.SortList(tlist);
     }
 
     ParseFuncList(mlist) {
@@ -181,16 +209,37 @@ class Transformer {
         for (let m of mlist) {
             flist.push(new FuncInfo(m));
         }
-        return flist;
+        return Transformer.SortList(flist);
     }
 
     Render() {
-        return '';
+        // Generate Markdown text.
+        let md = '# Astronomy Engine\n';
+        md += '## Functions\n';
+        for (let f of this.funcs) {
+            md += Item.Flat(f.name) + '\n';
+        }
+
+        md += '## Enumerated Types\n';
+        for (let e of this.enums) {
+            md += Item.Flat(e.name) + '\n';
+        }
+
+        md += '## Structures\n';
+        for (let s of this.structs) {
+            md += Item.Flat(s.name) + '\n';
+        }
+
+        md += '## Type Definitions\n';
+        for (let t of this.typedefs) {
+            md += Item.Flat(t.name) + '\n';    
+        }
+        return md;
     }
 }
 
-function run(headerXmlFileName, markdownFileName) {
-    const headerXml = fs.readFileSync(headerXmlFileName);
+function run(inXmlFileName, outMarkdownFileName) {
+    const headerXml = fs.readFileSync(inXmlFileName);
     const parser = new xml2js.Parser({
         explicitChildren: true,
         preserveChildrenOrder: true,
@@ -198,12 +247,18 @@ function run(headerXmlFileName, markdownFileName) {
     });
 
     parser.parseString(headerXml, function(err, result) {
-        const sectlist = result.doxygen.compounddef[0].sectiondef;
-        //const dump = JSON.stringify(sectlist, null, 2);
-        //fs.writeFileSync('dump.json', dump);
-        const xform = new Transformer(sectlist);
+        const xform = new Transformer();
+        for (let compound of result.doxygen.compounddef) {
+            if (compound.$.kind === 'struct') {
+                xform.AddStruct(compound);
+            } else if (compound.$.kind === 'file') {
+                if (compound.$.id === 'astronomy_8h') {
+                    xform.AddSectList(compound.sectiondef);
+                }
+            }
+        }
         const markdown = xform.Render();
-        fs.writeFileSync(markdownFileName, markdown);
+        fs.writeFileSync(outMarkdownFileName, markdown);
     });
 }
 
