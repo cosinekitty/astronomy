@@ -121,8 +121,8 @@ typedef enum
 }
 astro_body_t;
 
-#define MIN_BODY    BODY_MERCURY
-#define MAX_BODY    BODY_MOON
+#define MIN_BODY    BODY_MERCURY    /**< Minimum valid `astro_body_t` value; useful for iteration. */
+#define MAX_BODY    BODY_MOON       /**< Maximum valid astro_body_t value; useful for iteration. */
 
 /**
  * @brief Represents a location of an observer on (or near) the surface of the Earth.

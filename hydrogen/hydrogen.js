@@ -25,6 +25,71 @@
 const fs = require('fs');
 const xml2js = require('xml2js');
 
+function Find(m, key) {
+    for (let e of m.$$) {
+        if (e['#name'] === key) {
+            return e;
+        }
+    }
+    throw `Find: could not find key "${key}" in:\n${JSON.stringify(m,null,2)}`;
+}
+
+function KeyText(m, key) {
+    return Find(m, key)._;
+}
+
+function MemberId(m) {
+    return m.$.id;
+}
+
+function MemberName(m) {
+    return KeyText(m, 'name');
+}
+
+function MemberExpansion(m) {
+    return Find(m, 'initializer').$$[0]._;
+}
+
+function MemberDetail(m) {
+    return Find(m, 'detaileddescription').para[0].$$;
+}
+
+function FlatText(x) {
+    if (typeof x === 'string') {
+        return x;
+    } 
+
+    if (x instanceof Array) {
+        let s = '';
+        for (let e of x) {
+            s += FlatText(e);
+        }
+        return s;
+    }     
+    
+    if (typeof x === 'object') {
+        if (x.$$) {
+            return FlatText(x.$$);
+        }
+
+        if (x._) {
+            return FlatText(x._);
+        }
+    }
+
+    throw `FlatText: don't know how to convert: ${x}`;
+}
+
+class Define {
+    constructor(m) {
+        this.id = MemberId(m);
+        this.name = MemberName(m);
+        this.expansion = MemberExpansion(m);
+        this.detail = MemberDetail(m);
+        console.log(`    #define ${this.name} ${this.expansion}  // ${FlatText(this.detail)} // ${this.id}`);
+    }
+}
+
 class Parm {
     constructor(name, type) {
         this.name = name;
@@ -46,16 +111,16 @@ class Transformer {
         for (let sect of sectlist) {
             switch (sect.$.kind) {
             case 'define':
-                this.defines = this.ParseDefines(sect.memberdef);
+                this.defines = this.ParseDefineList(sect.memberdef);
                 break;
             case 'enum':
-                this.enums = this.ParseEnums(sect.memberdef);
+                this.enums = this.ParseEnumList(sect.memberdef);
                 break;
             case 'typedef':
-                this.typedefs = this.ParseTypesdefs(sect.memberdef);
+                this.typedefs = this.ParseTypesdefList(sect.memberdef);
                 break;
             case 'func':
-                this.funcs = this.ParseFuncs(sect.memberdef);
+                this.funcs = this.ParseFuncList(sect.memberdef);
                 break;
             default:
                 console.log(`hydrogen: ignoring "${sect.$.kind}"`);
@@ -64,25 +129,28 @@ class Transformer {
         }
     }
 
-    ParseDefines(mlist) {
+    ParseDefineList(mlist) {
         console.log(`hydrogen: processing ${mlist.length} defines`);
         let dlist = [];
+        for (let m of mlist) {
+            dlist.push(new Define(m));
+        }
         return dlist;
     }
 
-    ParseEnums(mlist) {
+    ParseEnumList(mlist) {
         console.log(`hydrogen: processing ${mlist.length} enums`);
         let elist = [];
         return elist;
     }
 
-    ParseTypesdefs(mlist) {
+    ParseTypesdefList(mlist) {
         console.log(`hydrogen: processing ${mlist.length} typedefs`);
         let tlist = [];
         return tlist;
     }
 
-    ParseFuncs(mlist) {
+    ParseFuncList(mlist) {
         console.log(`hydrogen: processing ${mlist.length} funcs`);
         let flist = [];
         return flist;
@@ -95,9 +163,17 @@ class Transformer {
 
 function run(headerXmlFileName, markdownFileName) {
     const headerXml = fs.readFileSync(headerXmlFileName);
-    const parser = new xml2js.Parser();
+    const parser = new xml2js.Parser({
+        explicitChildren: true,
+        preserveChildrenOrder: true,
+        charsAsChildren: true
+    });
+
     parser.parseString(headerXml, function(err, result) {
-        const xform = new Transformer(result.doxygen.compounddef[0].sectiondef);
+        const sectlist = result.doxygen.compounddef[0].sectiondef;
+        //const dump = JSON.stringify(sectlist, null, 2);
+        //fs.writeFileSync('dump.json', dump);
+        const xform = new Transformer(sectlist);
         const markdown = xform.Render();
         fs.writeFileSync(markdownFileName, markdown);
     });
