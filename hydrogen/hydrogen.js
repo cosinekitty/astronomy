@@ -25,17 +25,21 @@
 const fs = require('fs');
 const xml2js = require('xml2js');
 
-function Find(m, key) {
+function Look(m, key) {
     for (let e of m.$$) {
         if (e['#name'] === key) {
             return e;
         }
     }
-    throw `Find: could not find key "${key}" in:\n${JSON.stringify(m,null,2)}`;
+    return null;
 }
 
-function KeyText(m, key) {
-    return Find(m, key)._;
+function Find(m, key) {
+    let x = Look(m, key);
+    if (x === null) {
+        throw `Find: could not find key "${key}" in:\n${JSON.stringify(m,null,2)}`;
+    }
+    return x;
 }
 
 function MemberId(m) {
@@ -72,9 +76,26 @@ class Define {
     constructor(m) {
         this.id = MemberId(m);
         this.name = Find(m, 'name');
-        this.expansion = Find(m, 'initializer');
-        this.detail = Find(m, 'detaileddescription');
-        console.log(`    #define ${Flat(this.name)} ${Flat(this.expansion)}  // ${Flat(this.detail)} // ${this.id}`);
+        this.init = Find(m, 'initializer');
+        this.detail = Look(m, 'detaileddescription');
+        this.brief = Look(m, 'briefdescription');
+        console.log(`    #define ${Flat(this.name)} ${Flat(this.init)}  // ${Flat(this.detail)} // ${this.id}`);
+    }
+}
+
+class EnumInfo {
+    constructor(m) {
+        this.id = MemberId(m);
+        this.name = Find(m, 'name');
+        this.enumValueList = []
+        for (let e of m.$$) {
+            switch (e['#name']) {
+            case 'enumvalue':
+                this.enumValueList.push(e);
+                break;
+            }
+        }
+        console.log(`   enum ${Flat(this.name)} : ${this.enumValueList.length} values.`);
     }
 }
 
@@ -129,6 +150,9 @@ class Transformer {
     ParseEnumList(mlist) {
         console.log(`hydrogen: processing ${mlist.length} enums`);
         let elist = [];
+        for (let m of mlist) {
+            elist.push(new EnumInfo(m))
+        }
         return elist;
     }
 
