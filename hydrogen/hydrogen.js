@@ -87,10 +87,9 @@ class Item {
         throw `Item.Flat: don't know how to convert: ${x}`;    
     }
 
-    Render() {
+    MarkdownPrefix() {
         const name = Item.Flat(this.name);
-        let md = `<a name="${name}"></a>\n`;
-        md += '`' + name + '`\n\n';
+        let md = `\n\n---\n\n<a name="${name}"></a>\n`;
         return md;
     }
 }
@@ -100,6 +99,11 @@ class Define extends Item {
         super(m);
         this.init = Find(m, 'initializer');
         console.log(`    #define ${Item.Flat(this.name)} ${Item.Flat(this.init)}  // ${Item.Flat(this.detail)} // ${this.id}`);
+    }
+
+    Markdown() {
+        let md = this.MarkdownPrefix();
+        return md;
     }
 }
 
@@ -116,6 +120,11 @@ class EnumInfo extends Item {
         }
         console.log(`    enum ${Item.Flat(this.name)} : ${this.enumValueList.length} values.`);
     }
+
+    Markdown() {
+        let md = this.MarkdownPrefix();
+        return md;
+    }
 }
 
 class TypeDef extends Item {
@@ -124,6 +133,11 @@ class TypeDef extends Item {
         this.definition = Find(m, 'definition');
         console.log('    typedef ' + Item.Flat(this.name));
     }
+
+    Markdown() {
+        let md = this.MarkdownPrefix();
+        return md;
+    }
 }
 
 class FuncInfo extends Item {
@@ -131,12 +145,22 @@ class FuncInfo extends Item {
         super(m);
         console.log('    func ' + Item.Flat(this.name));
     }
+
+    Markdown() {
+        let md = this.MarkdownPrefix();
+        return md;
+    }
 }
 
 class StructInfo extends Item {
     constructor(m) {
         super(m);
         console.log('    struct ' + Item.Flat(this.name));
+    }
+    
+    Markdown() {
+        let md = this.MarkdownPrefix();
+        return md;
     }
 }
 
@@ -219,28 +243,27 @@ class Transformer {
         return Transformer.SortList(flist);
     }
 
-    Render() {
-        // Generate Markdown text.
+    Markdown() {
         let md = '';
 
         md += '## Functions\n\n';
         for (let f of this.funcs) {
-            md += f.Render();
+            md += f.Markdown();
         }
 
         md += '## Enumerated Types\n\n';
         for (let e of this.enums) {
-            md += e.Render();
+            md += e.Markdown();
         }
 
         md += '## Structures\n\n';
         for (let s of this.structs) {
-            md += s.Render();
+            md += s.Markdown();
         }
 
         md += '## Type Definitions\n\n';
         for (let t of this.typedefs) {
-            md += t.Render();
+            md += t.Markdown();
         }
         return md;
     }
@@ -266,7 +289,7 @@ function run(inPrefixFileName, inXmlFileName, outMarkdownFileName) {
             }
         }
         const prefix = fs.readFileSync(inPrefixFileName, {encoding: 'utf8'});
-        const markdown = xform.Render();
+        const markdown = xform.Markdown();
         fs.writeFileSync(outMarkdownFileName, prefix + markdown);
     });
 }
