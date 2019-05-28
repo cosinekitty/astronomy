@@ -125,7 +125,10 @@ astro_body_t;
 #define MAX_BODY    BODY_MOON       /**< Maximum valid astro_body_t value; useful for iteration. */
 
 /**
- * @brief Represents a location of an observer on (or near) the surface of the Earth.
+ * @brief The location of an observer on (or near) the surface of the Earth.
+ * 
+ * This structure is passed to functions that calculate phenomena as observed
+ * from a particular place on the Earth.
  */
 typedef struct
 {
@@ -135,48 +138,73 @@ typedef struct
 }
 astro_observer_t;
 
+/**
+ * @brief Equatorial angular coordinates.
+ * 
+ * Coordinates of a celestial body as seen from the Earth (geocentric or topocentric, depending on context),
+ * oriented with respect to the projection of the Earth's equator onto the sky.
+ */
 typedef struct
 {
-    astro_status_t status;
-    double ra;
-    double dec;
-    double dist;
+    astro_status_t status;  /**< ASTRO_SUCCESS if this struct is valid; otherwise an error code. */
+    double ra;              /**< right ascension in sidereal hours. */
+    double dec;             /**< declination in degrees */
+    double dist;            /**< distance to the celestial body in AU. */
 }
 astro_equatorial_t;
 
+/**
+ * @brief Ecliptic angular and Cartesian coordinates.
+ * 
+ * Coordinates of a celestial body as seen from the center of the Sun (heliocentric),
+ * oriented with respect to the plane of the Earth's orbit around the Sun (the ecliptic).
+ */
 typedef struct
 {
-    astro_status_t status;
-    double ex;
-    double ey;
-    double ez;
-    double elat;
-    double elon;
+    astro_status_t status;  /**< ASTRO_SUCCESS if this struct is valid; otherwise an error code. */
+    double ex;              /**< Cartesian x-coordinate: in the direction of the equinox along the ecliptic plane. */
+    double ey;              /**< Cartesian y-coordinate: in the ecliptic plane 90 degrees prograde from the equinox. */
+    double ez;              /**< Cartesian z-coordinate: perpendicular to the ecliptic plane. Positive is north. */
+    double elat;            /**< Latitude in degrees north (positive) or south (negative) of the ecliptic plane. */
+    double elon;            /**< Longitude in degrees around the ecliptic plane prograde from the equinox. */
 }
 astro_ecliptic_t;
 
+/**
+ * @brief Coordinates of a celestial body as seen by a topocentric observer.
+ * 
+ * Contains horizontal and equatorial coordinates seen by an observer on or near
+ * the surface of the Earth (a topocentric observer).
+ * Optionally corrected for atmospheric refraction.
+ */
 typedef struct
 {
-    double azimuth;
-    double altitude;
-    double ra;
-    double dec;
+    double azimuth;     /**< Compass direction around the horizon in degrees. 0=North, 90=East, 180=South, 270=West. */
+    double altitude;    /**< Angle in degrees above (positive) or below (negative) the observer's horizon. */
+    double ra;          /**< Right ascension in sidereal hours. */
+    double dec;         /**< Declination in degrees. */
 }
 astro_horizon_t;
 
+/**
+ * @brief Selects whether to correct for atmospheric refraction, and if so, how.
+ */
 typedef enum
 {
-    REFRACTION_NONE,
-    REFRACTION_NORMAL,
-    REFRACTION_JPLHOR
+    REFRACTION_NONE,    /**< No atmospheric refraction corection (airless). */
+    REFRACTION_NORMAL,  /**< Recommended correction for standard atmospheric refraction. */
+    REFRACTION_JPLHOR   /**< Used only for compatibility testing with JPL Horizons online tool. */
 }
 astro_refraction_t;
 
+/**
+ * @brief The result of a search for an astronomical event.
+ */
 typedef struct
 {
-    astro_status_t  status;
-    astro_time_t    time;
-    int             iter;
+    astro_status_t  status;     /**< ASTRO_SUCCESS if this struct is valid; otherwise an error code. */
+    astro_time_t    time;       /**< The time at which a searched-for event occurs. */
+    int             iter;       /**< The number of iterations required to numerically solve the search. */
 }
 astro_search_result_t;
 
