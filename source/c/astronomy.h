@@ -204,7 +204,6 @@ typedef struct
 {
     astro_status_t  status;     /**< ASTRO_SUCCESS if this struct is valid; otherwise an error code. */
     astro_time_t    time;       /**< The time at which a searched-for event occurs. */
-    int             iter;       /**< The number of iterations required to numerically solve the search. */
 }
 astro_search_result_t;
 
@@ -260,7 +259,6 @@ typedef struct
     astro_status_t      status;
     astro_time_t        time;
     astro_horizon_t     hor;
-    int                 iter;
 }
 astro_hour_angle_t;
 

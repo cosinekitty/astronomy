@@ -729,7 +729,7 @@ static int TestElongFile(const char *filename, double targetRelLon)
         }
 
         diff_minutes = (24.0 * 60.0) * (search_result.time.tt - expected_time.tt);
-        printf("TestElongFile: %-7s error = %6.3lf minutes, iterations = %3d\n", name, diff_minutes, search_result.iter);
+        printf("TestElongFile: %-7s error = %6.3lf minutes\n", name, diff_minutes);
         if (fabs(diff_minutes) > 15.0)
         {
             fprintf(stderr, "TestElongFile(%s line %d): EXCESSIVE ERROR\n", filename, lnum);

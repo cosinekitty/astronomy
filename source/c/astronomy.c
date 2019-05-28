@@ -256,7 +256,6 @@ static astro_hour_angle_t HourAngleError(astro_status_t status)
     result.status = status;
     result.time.tt = result.time.ut = NAN;
     result.hor.altitude = result.hor.azimuth = result.hor.dec = result.hor.ra = NAN;
-    result.iter = -1;
 
     return result;
 }
@@ -284,6 +283,14 @@ static astro_apsis_t ApsisError(astro_status_t status)
     result.kind = APSIS_INVALID;
     result.dist_km = result.dist_au = NAN;
 
+    return result;
+}
+
+static astro_search_result_t SearchError(astro_status_t status)
+{
+    astro_search_result_t result;
+    result.time.tt = result.time.ut = NAN;
+    result.status = status;
     return result;
 }
 
@@ -3019,19 +3026,11 @@ astro_search_result_t Astronomy_SearchSunLongitude(
     return Astronomy_Search(sun_offset, &targetLon, dateStart, t2, 1.0);
 }
 
-static astro_search_result_t SearchErr(astro_status_t status)
-{
-    astro_search_result_t result;
-    result.time.tt = result.time.ut = NAN;
-    result.status = status;
-    return result;
-}
-
 /** @cond DOXYGEN_SKIP */
 #define CALLFUNC(f,t)  \
     do { \
         funcres = func(context, (t)); \
-        if (funcres.status != ASTRO_SUCCESS) return SearchErr(funcres.status); \
+        if (funcres.status != ASTRO_SUCCESS) return SearchError(funcres.status); \
         (f) = funcres.value; \
     } while(0)
 /** @endcond */
@@ -3049,18 +3048,18 @@ astro_search_result_t Astronomy_Search(
     astro_func_result_t funcres;
     double f1, f2, fmid, fq, dt_days, dt, dt_guess;
     double q_x, q_ut, q_df_dt;
-    int iter_limit = 20;
+    const int iter_limit = 20;
+    int iter = 0;
     int calc_fmid = 1;
 
     dt_days = fabs(dt_tolerance_seconds / SECONDS_PER_DAY);
     CALLFUNC(f1, t1);
     CALLFUNC(f2, t2);
 
-    result.iter = 0;
     for(;;)
     {
-        if (++result.iter > iter_limit)
-            return SearchErr(ASTRO_NO_CONVERGE);
+        if (++iter > iter_limit)
+            return SearchError(ASTRO_NO_CONVERGE);
 
         dt = (t2.tt - t1.tt) / 2.0;
         tmid = Astronomy_AddDays(t1, dt);
@@ -3142,7 +3141,7 @@ astro_search_result_t Astronomy_Search(
 
         /* Either there is no ascending zero-crossing in this range */
         /* or the search window is too wide (more than one zero-crossing). */
-        return SearchErr(ASTRO_SEARCH_FAILURE);
+        return SearchError(ASTRO_SEARCH_FAILURE);
     }
 }
 
@@ -3485,14 +3484,14 @@ astro_search_result_t Astronomy_SearchMoonPhase(double targetLon, astro_time_t d
 
     funcres = moon_offset(&targetLon, dateStart);
     if (funcres.status != ASTRO_SUCCESS)
-        return SearchErr(funcres.status);
+        return SearchError(funcres.status);
 
     ya = funcres.value;
     if (ya > 0.0) ya -= 360.0;  /* force searching forward in time, not backward */
     est_dt = -(MEAN_SYNODIC_MONTH * ya) / 360.0;
     dt1 = est_dt - uncertainty;
     if (dt1 > limitDays)
-        return SearchErr(ASTRO_NO_MOON_QUARTER);    /* not possible for moon phase to occur within specified window (too short) */
+        return SearchError(ASTRO_NO_MOON_QUARTER);    /* not possible for moon phase to occur within specified window (too short) */
     dt2 = est_dt + uncertainty;
     if (limitDays < dt2)
         dt2 = limitDays;
@@ -3572,14 +3571,14 @@ astro_search_result_t Astronomy_SearchRelativeLongitude(astro_body_t body, doubl
     int iter, direction;
 
     if (body == BODY_EARTH)
-        return SearchErr(ASTRO_EARTH_NOT_ALLOWED);
+        return SearchError(ASTRO_EARTH_NOT_ALLOWED);
 
     if (body == BODY_MOON)
-        return SearchErr(ASTRO_INVALID_BODY);
+        return SearchError(ASTRO_INVALID_BODY);
 
     syn = SynodicPeriod(body);
     if (syn.status != ASTRO_SUCCESS)
-        return SearchErr(syn.status);
+        return SearchError(syn.status);
 
     direction = IsSuperiorPlanet(body) ? +1 : -1;
 
@@ -3589,7 +3588,7 @@ astro_search_result_t Astronomy_SearchRelativeLongitude(astro_body_t body, doubl
 
     error_angle = rlon_offset(body, startDate, direction, targetRelLon);
     if (error_angle.status != ASTRO_SUCCESS)
-        return SearchErr(error_angle.status);
+        return SearchError(error_angle.status);
 
     if (error_angle.value > 0) 
         error_angle.value -= 360;    /* force searching forward in time */
@@ -3603,7 +3602,6 @@ astro_search_result_t Astronomy_SearchRelativeLongitude(astro_body_t body, doubl
         time = Astronomy_AddDays(time, day_adjust);
         if (fabs(day_adjust) * SECONDS_PER_DAY < 1.0)
         {
-            result.iter = iter;
             result.time = time;
             result.status = ASTRO_SUCCESS;
             return result;
@@ -3612,7 +3610,7 @@ astro_search_result_t Astronomy_SearchRelativeLongitude(astro_body_t body, doubl
         prev_angle = error_angle.value;
         error_angle = rlon_offset(body, time, direction, targetRelLon);
         if (error_angle.status != ASTRO_SUCCESS)
-            return SearchErr(error_angle.status);
+            return SearchError(error_angle.status);
 
         if (fabs(prev_angle) < 30.0 && (prev_angle != error_angle.value))
         {
@@ -3625,7 +3623,7 @@ astro_search_result_t Astronomy_SearchRelativeLongitude(astro_body_t body, doubl
         }
     }
 
-    return SearchErr(ASTRO_NO_CONVERGE);
+    return SearchError(ASTRO_NO_CONVERGE);
 }
 
 astro_hour_angle_t Astronomy_SearchHourAngle(
@@ -3678,7 +3676,6 @@ astro_hour_angle_t Astronomy_SearchHourAngle(
         {
             result.hor = Astronomy_Horizon(time, observer, ofdate.ra, ofdate.dec, REFRACTION_NORMAL);
             result.time = time;
-            result.iter = iter;
             result.status = ASTRO_SUCCESS;
             return result;
         }
@@ -3756,7 +3753,7 @@ astro_search_result_t Astronomy_SearchRiseSet(
         break;
 
     default:
-        return SearchErr(ASTRO_INVALID_PARAMETER);
+        return SearchError(ASTRO_INVALID_PARAMETER);
     }
 
     /* Set up the context structure for the search function 'peak_altitude'. */
@@ -3784,20 +3781,20 @@ astro_search_result_t Astronomy_SearchRiseSet(
     time_start = dateStart;
     alt_before = peak_altitude(&context, time_start);
     if (alt_before.status != ASTRO_SUCCESS)
-        return SearchErr(alt_before.status);
+        return SearchError(alt_before.status);
 
     if (alt_before.value > 0.0)
     {
         /* We are past the sought event, so we have to wait for the next "before" event (culm/bottom). */
         evt_before = Astronomy_SearchHourAngle(body, observer, ha_before, time_start);
         if (evt_before.status != ASTRO_SUCCESS)
-            return SearchErr(evt_before.status);
+            return SearchError(evt_before.status);
 
         time_before = evt_before.time;
 
         alt_before = peak_altitude(&context, time_before);
         if (alt_before.status != ASTRO_SUCCESS)
-            return SearchErr(alt_before.status);
+            return SearchError(alt_before.status);
     }
     else
     {
@@ -3808,11 +3805,11 @@ astro_search_result_t Astronomy_SearchRiseSet(
     
     evt_after = Astronomy_SearchHourAngle(body, observer, ha_after, time_before);
     if (evt_after.status != ASTRO_SUCCESS)
-        return SearchErr(evt_after.status);
+        return SearchError(evt_after.status);
 
     alt_after = peak_altitude(&context, evt_after.time);
     if (alt_after.status != ASTRO_SUCCESS)
-        return SearchErr(alt_after.status);
+        return SearchError(alt_after.status);
 
     for(;;)
     {
@@ -3830,24 +3827,24 @@ astro_search_result_t Astronomy_SearchRiseSet(
         /* If we didn't find the desired event, use time_after to find the next before-event. */
         evt_before = Astronomy_SearchHourAngle(body, observer, ha_before, evt_after.time);
         if (evt_before.status != ASTRO_SUCCESS)
-            return SearchErr(evt_before.status);
+            return SearchError(evt_before.status);
 
         evt_after = Astronomy_SearchHourAngle(body, observer, ha_after, evt_before.time);
         if (evt_after.status != ASTRO_SUCCESS)
-            return SearchErr(evt_after.status);
+            return SearchError(evt_after.status);
 
         if (evt_before.time.ut >= time_start.ut + limitDays)
-            return SearchErr(ASTRO_SEARCH_FAILURE);
+            return SearchError(ASTRO_SEARCH_FAILURE);
 
         time_before = evt_before.time;
 
         alt_before = peak_altitude(&context, evt_before.time);
         if (alt_before.status != ASTRO_SUCCESS)
-            return SearchErr(alt_before.status);            
+            return SearchError(alt_before.status);            
 
         alt_after = peak_altitude(&context, evt_after.time);
         if (alt_after.status != ASTRO_SUCCESS)
-            return SearchErr(alt_after.status);        
+            return SearchError(alt_after.status);        
     }
 }
 
