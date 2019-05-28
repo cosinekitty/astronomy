@@ -56,11 +56,80 @@ astro_status_t;
 
 /**
  * @brief A date and time used for astronomical calculations.
+ * 
+ * This type is of fundamental importance to Astronomy Engine.
+ * It is used to represent dates and times for all astronomical calculations.
+ * It is also included in the values returned by many Astronomy Engine functions.
+ * 
+ * To create a valid `astro_time_t` value from scratch, call #Astronomy_MakeTime
+ * (for a given calendar date and time) or #Astronomy_CurrentTime (for the system's
+ * current date and time).
+ * 
+ * To adjust an existing `astro_time_t` by a certain real number of days,
+ * call #Astronomy_AddDays.
+ * 
+ * Thi `astro_time_t` type contains `ut` to represent Universal Time (UT1/UTC) and
+ * `tt` to represent Terrestrial Time (TT, also known as <i>ephemeris time</i>).
+ * The difference `tt-ut` is known as <i>&Delta;T</i>, and is obtained from
+ * a model provided by the 
+ * [United States Naval Observatory](http://maia.usno.navy.mil/ser7/).
+ * 
+ * Both `tt` and `ut` are necessary for performing different astronomical calculations.
+ * Indeed, certain calculations (such as rise/set times) require both time scales.
+ * See the documentation for the `ut` and `tt` fields for more detailed information.
+ * 
+ * In cases where `astro_time_t` is included in a structure returned by
+ * a function that can fail, the #astro_status_t field `status` will contain a value
+ * other than #ASTRO_SUCCESS; in that case the `ut` and `tt` will hold `NAN` (not a number).
+ * In general, when there is an error code stored in a struct field `status`, the
+ * caller should ignore all other values in that structure, including the `ut` and `tt`
+ * inside `astro_time_t`.
  */
 typedef struct
 {
-    double ut;      /**< UT1/UTC number of days since noon on January 1, 2000 */
-    double tt;      /**< Terrestrial Time days since noon on January 1, 2000 */
+    /**
+     * @brief   UT1/UTC number of days since noon on January 1, 2000.
+     * 
+     * The floating point number of days of Universal Time since noon UTC January 1, 2000.
+     * Astronomy Engine approximates UTC and UT1 as being the same thing, although they are
+     * not exactly equivalent; UTC and UT1 can disagree by up to &plusmn;0.9 seconds.  
+     * This approximation is sufficient for the accuracy requirements of Astronomy Engine.
+     * 
+     * Universal Time Coordinate (UTC) is the international standard for legal and civil 
+     * timekeeping and replaces the older Greenwich Mean Time (GMT) standard.
+     * UTC is kept in sync with unpredictable observed changes in the Earth's rotation
+     * by occasionally adding leap seconds as needed.
+     * 
+     * UT1 is an idealized time scale based on observed rotation of the Earth, which
+     * gradually slows down in an unpredictable way over time, due to tidal drag by the Moon and Sun,
+     * large scale weather events like hurricanes, and internal seismic and convection effects.
+     * Conceptually, UT1 drifts from atomic time continuously and erratically, whereas UTC
+     * is adjusted by a scheduled whole number of leap seconds as needed.
+     * 
+     * The value in `ut` is appropriate for any calculation involving the Earth's rotation,
+     * such as calculating rise/set times, culumination, and anything involving apparent
+     * sidereal time.
+     * 
+     * Before the era of atomic timekeeping, days based on the Earth's rotation 
+     * were often known as <i>mean solar days</i>.
+     */
+    double ut;
+
+    /**
+     * @brief   Terrestrial Time days since noon on January 1, 2000.
+     * 
+     * Terrestrial Time is an atomic time scale defined as a number of days since noon on January 1, 2000.
+     * In this system, days are not based on Earth rotations, but instead by 
+     * the number of elapsed [SI seconds](https://physics.nist.gov/cuu/Units/second.html)
+     * divided by 86400. Unlike `ut`, `tt` increases uniformly without adjustments
+     * for changes in the Earth's rotation.
+     * 
+     * The value in `tt` is used for calculations of movements not involving the Earth's rotation,
+     * such as the orbits of planets around the Sun, or the Moon around the Earth.
+     * 
+     * Historically, Terrestrial Time has also been known by the term <i>Ephemeris Time</i> (ET).
+     */
+    double tt;
 }
 astro_time_t;
 
@@ -122,7 +191,7 @@ typedef enum
 astro_body_t;
 
 #define MIN_BODY    BODY_MERCURY    /**< Minimum valid `astro_body_t` value; useful for iteration. */
-#define MAX_BODY    BODY_MOON       /**< Maximum valid astro_body_t value; useful for iteration. */
+#define MAX_BODY    BODY_MOON       /**< Maximum valid `astro_body_t` value; useful for iteration. */
 
 /**
  * @brief The location of an observer on (or near) the surface of the Earth.
@@ -220,74 +289,145 @@ typedef struct
 }
 astro_seasons_t;
 
+/**
+ * @brief A lunar quarter event (new moon, first quarter, full moon, or third quarter) along with its date and time.
+ */
 typedef struct
 {
-    astro_status_t  status;
-    int             quarter;
-    astro_time_t    time;
+    astro_status_t  status;     /**< ASTRO_SUCCESS if this struct is valid; otherwise an error code. */
+    int             quarter;    /**< 0=new moon, 1=first quarter, 2=full moon, 3=third quarter. */
+    astro_time_t    time;       /**< The date and time of the lunar quarter. */
 }
 astro_moon_quarter_t;
 
+/**
+ * @brief A real value returned by a function whose ascending root is to be found.
+ * 
+ * When calling #Astronomy_Search, the caller must pass in a callback function
+ * compatible with the function-pointer type #astro_search_func_t
+ * whose ascending root is to be found. That callback function must return `astro_func_result_t`.
+ * If the function call is successful, it will set `status` to #ASTRO_SUCCESS and `value`
+ * to the numeric value appropriate for the given date and time.
+ * If the call fails for some reason, it should set `status` to an appropriate error value
+ * other than `ASTRO_SUCCESS`; in the error case, to guard against any possible misuse of `value`, 
+ * it is recommended to set `value` to `NAN`, though this is not strictly necessary.
+ */
 typedef struct
 {
-    astro_status_t status;
-    double value;    
+    astro_status_t status;      /**< ASTRO_SUCCESS if this struct is valid; otherwise an error code. */
+    double value;               /**< The value returned by a function whose ascending root is to be found. */
 }
 astro_func_result_t;
 
+/**
+ * @brief A pointer to a function that is to be passed as a callback to #Astronomy_Search.
+ * 
+ * The function #Astronomy_Search numerically solves for the time that a given event occurs.
+ * An event is defined as the time when an arbitrary function transitions between having
+ * a negative value and a non-negative value. This transition is called an <i>ascending root</i>.
+ * 
+ * The type `astro_search_func_t` represents such a callback function that accepts a
+ * custom `context` pointer and an #astro_time_t representing the time to probe.
+ * The function returns an #astro_func_result_t that contains either a real
+ * number in `value` or an error code in `status` that aborts the search.
+ * 
+ * The `context` points to some data whose type varies depending on the callback function.
+ * It can contain any auxiliary parameters (other than time) needed to evaluate the function.
+ * For example, a function may pertain to a specific celestial body, in which case `context`
+ * may point to a value of type `astro_body_t`. The `context` parameter is supplied by
+ * the caller of `Astronomy_Search`, which passes it along to every call to the callback function.
+ * If the caller of `Astronomy_Search` knows that the callback function does not need a context,
+ * it is safe to pass `NULL` as the context pointer.
+ */
 typedef astro_func_result_t (* astro_search_func_t) (void *context, astro_time_t time);
 
+/**
+ * @brief Indicates whether a body (especially Mercury or Venus) is best seen in the morning or evening.
+ */
 typedef enum
 {
-    VISIBLE_MORNING,
-    VISIBLE_EVENING
+    VISIBLE_MORNING,    /**< The body is best visible in the morning, before sunrise. */
+    VISIBLE_EVENING     /**< The body is best visible in the evening, after sunset. */
 }
 astro_visibility_t;
 
+/**
+ * @brief Contains information about the visibility of a celestial body at a given date and time.
+ */
 typedef struct
 {
-    astro_status_t      status;
-    astro_time_t        time;
-    astro_visibility_t  visibility;
-    double              elongation;
-    double              relative_longitude;
+    astro_status_t      status;                 /**< ASTRO_SUCCESS if this struct is valid; otherwise an error code. */
+    astro_time_t        time;                   /**< The date and time of the observation. */
+    astro_visibility_t  visibility;             /**< Whether the body is best seen in the morning or the evening. */
+    double              elongation;             /**< The angle in degrees between the body and the Sun, as seen from the Earth. */
+    double              relative_longitude;     /**< The difference between the ecliptic longitudes of the body and the Sun. */
 }
 astro_elongation_t;
 
+/**
+ * @brief Information about a celestial body crossing a specific hour angle.
+ * 
+ * Returned by the function #Astronomy_SearchHourAngle to report information about
+ * a celestial body crossing a certain hour angle as seen by a specified topocentric observer.
+ */
 typedef struct
 {
-    astro_status_t      status;
-    astro_time_t        time;
-    astro_horizon_t     hor;
+    astro_status_t      status;     /**< ASTRO_SUCCESS if this struct is valid; otherwise an error code. */
+    astro_time_t        time;       /**< The date and time when the body crosses the specified hour angle. */
+    astro_horizon_t     hor;        /**< Apparent coordinates of the body at the time it crosses the specified hour angle. */
 }
 astro_hour_angle_t;
 
+/**
+ * @brief Information about the brightness and illuminated shape of a celestial body.
+ * 
+ * Returned by the functions #Astronomy_Illumination and #Astronomy_SearchPeakMagnitude
+ * to report the visual magnitude and illuminated fraction of a celestial body at a given date and time.
+ */
 typedef struct
 {
-    astro_status_t      status;
-    astro_time_t        time;
-    double              mag;
-    double              phase_angle;
-    double              helio_dist;
-    double              ring_tilt;
+    astro_status_t      status;         /**< ASTRO_SUCCESS if this struct is valid; otherwise an error code. */
+    astro_time_t        time;           /**< The date and time of the observation. */
+    double              mag;            /**< The visual magnitude of the body. Smaller values are brighter. */
+    double              phase_angle;    /**< The angle in degrees between the Sun and the Earth, as seen from the body. Indicates the body's phase as seen from the Earth. */
+    double              helio_dist;     /**< The distance between the Sun and the body at the observation time. */
+    double              ring_tilt;      /**< For Saturn, the tilt angle in degrees of its rings as seen from Earth. For all other bodies, 0. */
 }
 astro_illum_t;
 
+/**
+ * @brief The type of apsis: pericenter (closest approach) or apocenter (farthest distance).
+ */
 typedef enum
 {
-    APSIS_PERICENTER,
-    APSIS_APOCENTER,
-    APSIS_INVALID
+    APSIS_PERICENTER,   /**< The body is at its closest approach to the object it orbits. */
+    APSIS_APOCENTER,    /**< The body is at its farthest distance from the object it orbits. */
+    APSIS_INVALID       /**< Undefined or invalid apsis. */
 }
 astro_apsis_kind_t;
 
+/**
+ * @brief An apsis event: pericenter (closest approach) or apocenter (farthest distance).
+ * 
+ * For the Moon orbiting the Earth, or a planet orbiting the Sun, an <i>apsis</i> is an
+ * event where the orbiting body reaches its closest or farthest point from the primary body.
+ * The closest approach is called <i>pericenter</i> and the farthest point is <i>apocenter</i>.
+ * 
+ * More specific terminology is common for particular orbiting bodies.
+ * The Moon's closest approach to the earth is called <i>perigee</i> and its furthest
+ * point is called <i>apogee</i>. The closest approach of a planet to the Sun is called
+ * <i>perihelion</i> and the furthest point is called <i>aphelion</i>.
+ * 
+ * This data structure is returned by #Astronomy_SearchLunarApsis and #Astronomy_NextLunarApsis
+ * to iterate through consecutive alternating perigees and apogees.
+ */
 typedef struct
 {
-    astro_status_t      status;
-    astro_time_t        time;
-    astro_apsis_kind_t  kind;
-    double              dist_au;
-    double              dist_km;
+    astro_status_t      status;     /**< ASTRO_SUCCESS if this struct is valid; otherwise an error code. */
+    astro_time_t        time;       /**< The date and time of the apsis. */
+    astro_apsis_kind_t  kind;       /**< Whether this is a pericenter or apocenter event. */
+    double              dist_au;    /**< The distance between the centers of the bodies in astronomical units. */
+    double              dist_km;    /**< The distance between the centers of the bodies in kilometers. */
 }
 astro_apsis_t;
 

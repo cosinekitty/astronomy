@@ -98,6 +98,10 @@ static double NormalizeLongitude(double lon)
     return lon;
 }
 
+/**
+ * @brief Calculates the length of the given vector. 
+ * @param vector The vector whose length is to be calculated.
+ */
 double Astronomy_VectorLength(astro_vector_t vector)
 {
     return sqrt(vector.x*vector.x + vector.y*vector.y + vector.z*vector.z);
@@ -127,6 +131,11 @@ const char *Astronomy_BodyName(astro_body_t body)
     }
 }
 
+/**
+ * @brief Returns the #astro_body_t value corresponding to the given English name.
+ * @param name One of the following strings: Sun, Moon, Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune, Pluto.
+ * @return If `name` is one of the strings (case-sensitive) listed above, the returned value is the corresponding #astro_body_t value, otherwise it is #BODY_INVALID.
+ */
 astro_body_t Astronomy_BodyCode(const char *name)
 {
     if (name != NULL)
@@ -406,6 +415,14 @@ static astro_time_t UniversalTime(double ut)
     return time;
 }
 
+/**
+ * @brief Returns the computer's current date and time in the form of an #astro_time_t.
+ * 
+ * Uses the computer's system clock to find the current UTC date and time with 1-second granularity.
+ * Converts that date and time to an #astro_time_t value and returns the result.
+ * Callers can pass this value to other Astronomy Engine functions to calculate
+ * current observational conditions.
+ */
 astro_time_t Astronomy_CurrentTime(void)
 {
     astro_time_t t;
@@ -418,6 +435,27 @@ astro_time_t Astronomy_CurrentTime(void)
     return t;
 }
 
+/**
+ * @brief Creates an #astro_time_t value from a given calendar date and time.
+ * 
+ * Given a UTC calendar date and time, calculates an #astro_time_t value that can
+ * be passed to other Astronomy Engine functions for performing various calculations
+ * relating to that date and time.
+ * 
+ * It is the caller's responsibility to ensure that the parameter values are correct.
+ * The parameters are not checked for validity, 
+ * and this function never returns any indication of an error.
+ * Invalid values, for example passing in February 31, may cause unexpected return values.
+ * 
+ * @param year      The UTC calendar year, e.g. 2019.
+ * @param month     The UTC calendar month in the range 1..12.
+ * @param day       The UTC calendar day in the range 1..31.
+ * @param hour      The UTC hour of the day in the range 0..23.
+ * @param minute    The UTC minute in the range 0..59.
+ * @param second    The UTC floating-point second in the range [0, 60).
+ * 
+ * @return  An #astro_time_t value that represents the given calendar date and time.
+ */
 astro_time_t Astronomy_MakeTime(int year, int month, int day, int hour, int minute, double second)
 {
     astro_time_t time;
@@ -440,6 +478,23 @@ astro_time_t Astronomy_MakeTime(int year, int month, int day, int hour, int minu
     return time;
 }
 
+/**
+ * @brief   Calculates the sum or difference of an #astro_time_t with a specified floating point number of days.
+ * 
+ * Sometimes we need to adjust a given #astro_time_t value by a certain amount of time.
+ * This function adds the given real number of days in `days` to the date and time in `time`.
+ * 
+ * More precisely, the result's Universal Time field `ut` is exactly adjusted by `days` and
+ * the Terrestrial Time field `tt` is adjusted correctly for the resulting UTC date and time,
+ * according to the historical and predictive Delta-T model provided by the
+ * [United States Naval Observatory](http://maia.usno.navy.mil/ser7/).
+ * 
+ * The value stored in `time` will not be modified; it is passed by value.
+ * 
+ * @param time  A date and time for which to calculate an adjusted date and time.
+ * @param days  A floating point number of days by which to adjust `time`. May be negative, 0, or positive.
+ * @return  A date and time that is conceptually equal to `time + days`.
+ */
 astro_time_t Astronomy_AddDays(astro_time_t time, double days)
 {
     /* 
