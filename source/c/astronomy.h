@@ -208,13 +208,16 @@ typedef struct
 }
 astro_search_result_t;
 
+/**
+ * @brief The dates and times of changes of season for a given calendar year.
+ */
 typedef struct
 {
-    astro_status_t  status;
-    astro_time_t    mar_equinox;
-    astro_time_t    jun_solstice;
-    astro_time_t    sep_equinox;
-    astro_time_t    dec_solstice;
+    astro_status_t  status;         /**< ASTRO_SUCCESS if this struct is valid; otherwise an error code. */
+    astro_time_t    mar_equinox;    /**< The date and time of the March equinox for the specified year. */
+    astro_time_t    jun_solstice;   /**< The date and time of the June soltice for the specified year. */
+    astro_time_t    sep_equinox;    /**< The date and time of the September equinox for the specified year. */
+    astro_time_t    dec_solstice;   /**< The date and time of the December solstice for the specified year. */
 }
 astro_seasons_t;
 
