@@ -26,8 +26,8 @@ if [[ ! -f ${EPHFILE} ]]; then
         wget_success=false
         for attempt in {1..10}; do
             if [[ ${attempt} > 1 ]]; then
-                echo "wget failed (attempt ${attempt} of 10) -- will retry download in 10 seconds..."
-                sleep 10
+                echo "wget failed (attempt ${attempt} of 10) -- will retry download in 9 seconds..."
+                sleep 9
             fi
             if wget ${EPHURL}; then
                 echo "wget successfully downloaded the ephemeris file."

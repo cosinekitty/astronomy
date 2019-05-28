@@ -64,7 +64,7 @@ Calculations are also verified to be identical among all the supported programmi
   given that observer's latitude, longitude, and elevation in meters. 
   Optionally corrects for atmospheric refraction.
 
-- Calculates rise, set and culmination times of Sun, Moon, and planets.
+- Calculates rise, set, and culmination times of Sun, Moon, and planets.
 
 - Finds date and time of Moon phases: new, first quarter, full, third quarter 
   (or anywhere in between as expressed in degrees of ecliptic longitude).
