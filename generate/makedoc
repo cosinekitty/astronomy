@@ -25,6 +25,7 @@ if [[ -f generate_c_docs ]]; then
     rm -rf html xml latex
     doxygen Doxyfile > doxygen.log || Fail "Error in doxygen"
     cd xml || Fail "Error changinge to xml directory"
+    echo "Merging doxygen XML files."
     xsltproc combine.xslt index.xml > all.xml || Fail "Error merging doxygen xml"
     cd .. || Fail "Error changing to parent directory"
     echo "Translating doxygen XML to Markdown."

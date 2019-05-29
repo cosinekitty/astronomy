@@ -3,8 +3,7 @@ setlocal EnableDelayedExpansion
 
 echo.
 if not defined GENEXE (
-    call findgenexe.bat
-    if errorlevel 1 (exit /b 1)
+    set GENEXE=%cd%\bin\generate.exe
 )
 
 if not exist "!GENEXE!" (
@@ -40,6 +39,48 @@ if exist html (
 call jsdoc ../source/js/astronomy.js --destination html
 if errorlevel 1 (
     echo.FATAL: error in jsdoc
+)
+
+if exist generate_c_docs (
+    echo.Generating C documentation.
+    cd ..\source\c
+    for %%d in (html xml latex) do (
+        if exist %%d (
+            echo.Deleting directory: %%d
+            rd /s/q %%d
+        )
+    )
+    doxygen Doxyfile > doxygen.log
+    if errorlevel 1 (
+        echo.Error in doxygen
+        exit /b 1
+    )
+    if not exist xml (
+        echo.Missing directory xml. Was supposed to be created by doxygen.
+        exit /b 1
+    )
+    cd xml
+    echo.Merging doxygen xml files.
+    xsltproc combine.xslt index.xml > all.xml
+    if errorlevel 1 (
+        echo.Error in xsltproc. That means we could not merge doxygen xml files.
+        exit /b 1
+    )
+    cd ..
+    echo.Translating doxygen XML to Markdown.
+    node ..\..\hydrogen\hydrogen.js ..\..\hydrogen\c_prefix.md .\xml\all.xml
+    if errorlevel 1 (
+        echo.Error in hydrogen.js.
+        exit /b 1
+    )
+    cd ..\..\generate
+    node eol_hack.js ..\source\c\README.md
+    if errorlevel 1 (
+        echo.Error in eol_hack.js
+        exit /b 1
+    )
+) else (
+    echo.Skipping generation of C documentation because file generate_c_docs does not exist.
 )
 
 exit /b 0
