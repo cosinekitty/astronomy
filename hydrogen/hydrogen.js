@@ -90,6 +90,7 @@ class Item {
     MarkdownPrefix() {
         const name = Item.Flat(this.name);
         let md = `\n\n---\n\n<a name="${name}"></a>\n`;
+        md += '`' + name + '`\n\n';
         return md;
     }
 }
@@ -157,7 +158,7 @@ class StructInfo extends Item {
         super(m);
         console.log('    struct ' + Item.Flat(this.name));
     }
-    
+
     Markdown() {
         let md = this.MarkdownPrefix();
         return md;
