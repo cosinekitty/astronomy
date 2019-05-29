@@ -16,6 +16,8 @@ and some [Node.js examples](../../demo/nodejs/).
 
 ### Position of Sun, Moon, and planets
 
+| Function | Description |
+| -------- | ----------- |
 | [HelioVector](#Astronomy.HelioVector) | Calculates vector with respect to the center of the Sun.   |
 | [GeoVector](#Astronomy.GeoVector)     | Calculates vector with respect to the center of the Earth. |
 | [Equator](#Astronomy.Equator)         | Calculates right ascension and declination. |
@@ -24,22 +26,30 @@ and some [Node.js examples](../../demo/nodejs/).
 
 ### Rise, set, and culmination times
 
+| Function | Description |
+| -------- | ----------- |
 | [SearchRiseSet](#Astronomy.SearchRiseSet) | Finds time of rise or set for a body as seen by an observer on the Earth. |
 | [SearchHourAngle](#Astronomy.SearchHourAngle) | Finds when body reaches a given hour angle for an observer on the Earth. Hour angle = 0 finds culmination, the highest point in the sky. |
 
 ### Moon phases
 
+| Function | Description |
+| -------- | ----------- |
 | [MoonPhase](#Astronomy.MoonPhase) | Determines the Moon's phase expressed as an ecliptic longitude. |
 | [SearchMoonQuarter](#Astronomy.SearchMoonQuarter) | Find the first quarter moon phase after a given date and time. |
 | [NextMoonQuarter](#Astronomy.NextMoonQuarter) | Find the next quarter moon phase after a previous one that has been found. |
 
 ### Lunar perigee and apogee
 
+| Function | Description |
+| -------- | ----------- |
 | [SearchLunarApsis](#Astronomy.SearchLunarApsis) | Finds the next perigee or apogee of the Moon after a specified date. |
 | [NextLunarApsis](#Astronomy.NextLunarApsis) | Given an already-found apsis, find the next perigee or apogee of the Moon. |
 
 ### Visual magnitude and elongation
 
+| Function | Description |
+| -------- | ----------- |
 | [Illumination](#Astronomy.Illumination) | Calculates visual magnitude and phase angle of bodies as seen from the Earth. |
 | [SearchPeakMagnitude](#Astronomy.SearchPeakMagnitude) | Searches for the date and time Venus will next appear brightest as seen from the Earth. |
 | [AngleFromSun](#Astronomy.AngleFromSun) | Returns full angle seen from Earth between body and Sun. |
@@ -48,10 +58,14 @@ and some [Node.js examples](../../demo/nodejs/).
 
 ### Oppositions and conjunctions
 
+| Function | Description |
+| -------- | ----------- |
 | [SearchRelativeLongitude](#Astronomy.SearchRelativeLongitude) | Find oppositions and conjunctions of planets. |
 
 ### Equinoxes and solstices
 
+| Function | Description |
+| -------- | ----------- |
 | [Seasons](#Astronomy.Seasons) | Finds the equinoxes and solstices for a given calendar year. |
 
 ---
