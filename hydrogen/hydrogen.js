@@ -153,7 +153,7 @@ class Item {
         // Prevent gh-pages (kramdown) escaping html inside tables:
         // https://stackoverflow.com/questions/47262698/inline-html-is-escaped-by-jekyll
 
-        let md = '{::nomarkdown}';
+        let md = '<!--{::nomarkdown}-->';
 
         let btext = this.MdText(brief);
         if (btext) {
@@ -165,7 +165,7 @@ class Item {
             md += dtext;
         }
 
-        md += '{:/}';
+        md += '<!--{:/}-->';
 
         return md;
     }
