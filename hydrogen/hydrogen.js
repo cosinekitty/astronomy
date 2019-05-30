@@ -57,6 +57,7 @@ class Item {
         this.name = Find(m, 'name', 'compoundname');
         this.detail = Look(m, 'detaileddescription');
         this.brief = Look(m, 'briefdescription');
+        this.section = Look(m, 'sectiondef');
     }
 
     static Flat(x) {
@@ -87,10 +88,79 @@ class Item {
         throw `Item.Flat: don't know how to convert: ${x}`;    
     }
 
+    static Clean(s) {
+        if (s && typeof s === 'string') {
+            return s.replace(/\s+/g, ' ').trim();
+        }
+        return '';
+    }
+
     MarkdownPrefix() {
         const name = Item.Flat(this.name);
         let md = `\n\n---\n\n<a name="${name}"></a>\n`;
-        md += '`' + name + '`\n\n';
+        return md;
+    }
+
+    MdText(x) {
+        let md = '';
+        if (x && x.$$) {
+            for (let y of x.$$) {
+                switch (y['#name']) {
+                case 'para':
+                    md += this.MdText(y);
+                    break;
+
+                case '__text__':
+                    md += y._;
+                    break;
+
+                case 'plusmn':
+                    md += '&plusmn;';
+                    break;
+
+                case 'computeroutput':
+                    md += '`';
+                    md += this.MdText(y);
+                    md += '`';
+                    break;
+
+                case 'emphasis':
+                    md += '<i>';
+                    md += this.MdText(y);
+                    md += '</i>';
+                    break;
+
+                case 'ulink':
+                    md += '<a href="';
+                    md += y.$.url;
+                    md += '>';
+                    md += this.MdText(y);
+                    md += '</a>';
+                    break;
+
+                default:
+                    console.log(JSON.stringify(y, null, 2));
+                    console.log(`MdText: unknown element name: [${y['#name']}]`);
+                    break;
+                }
+            }
+        }
+        md = Item.Clean(md);
+        return md;
+    }
+
+    MdDescription(brief, detail) {
+        let md = '';
+
+        let btext = this.MdText(brief);
+        if (btext) {
+            md += '*' + btext + '*';
+        }
+
+        let dtext = this.MdText(detail);
+        if (dtext) {
+            md += dtext;
+        }
         return md;
     }
 }
@@ -160,7 +230,25 @@ class StructInfo extends Item {
     }
 
     Markdown() {
+        let name = Item.Flat(this.name);
         let md = this.MarkdownPrefix();
+        md += '#### `' + name + '` (structure type)\n';
+        md += '| member | type | description |\n';
+        md += '| ------ | ---- | ----------- |\n';
+        for (let member of this.section.$$) {
+            if (member.$.kind === 'variable' && member.$.prot === 'public') {
+                md += this.MdMember(member);
+            }
+        }
+        return md;
+    }
+
+    MdMember(member) {
+        let name = Find(member, 'name');
+        let type = Find(member, 'type');
+        let brief = Look(member, 'briefdescription');
+        let detail = Look(member, 'detaileddescription');
+        let md = '| `' + Item.Flat(name) + '` | `' + Item.Flat(type) + '` | ' + this.MdDescription(brief, detail) + ' |\n';
         return md;
     }
 }
