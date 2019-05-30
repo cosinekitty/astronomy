@@ -248,7 +248,7 @@ class StructInfo extends Item {
         let type = Find(member, 'type');
         let brief = Look(member, 'briefdescription');
         let detail = Look(member, 'detaileddescription');
-        let md = '| `' + Item.Flat(name) + '` | `' + Item.Flat(type) + '` | ' + this.MdDescription(brief, detail) + ' |\n';
+        let md = '\n| `' + Item.Flat(name) + '` | `' + Item.Flat(type) + '` | ' + this.MdDescription(brief, detail) + ' |\n';
         return md;
     }
 }
