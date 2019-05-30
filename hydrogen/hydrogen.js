@@ -150,7 +150,10 @@ class Item {
     }
 
     MdDescription(brief, detail) {
-        let md = '';
+        // Prevent gh-pages (kramdown) escaping html inside tables:
+        // https://stackoverflow.com/questions/47262698/inline-html-is-escaped-by-jekyll
+
+        let md = '{::nomarkdown}';
 
         let btext = this.MdText(brief);
         if (btext) {
@@ -161,6 +164,9 @@ class Item {
         if (dtext) {
             md += dtext;
         }
+
+        md += '{:/}';
+
         return md;
     }
 }
@@ -380,10 +386,8 @@ function run(inPrefixFileName, inXmlFileName, outMarkdownFileName) {
         }
 
         // https://stackoverflow.com/questions/47262698/inline-html-is-escaped-by-jekyll
-        let md = '<!-- {% raw %} -->\n\n';
-        md += fs.readFileSync(inPrefixFileName, {encoding: 'utf8'});
+        let md = fs.readFileSync(inPrefixFileName, {encoding: 'utf8'});
         md += xform.Markdown();
-        md += '\n<!-- {% endraw %}) -->\n';
         fs.writeFileSync(outMarkdownFileName, md);
     });
 }
