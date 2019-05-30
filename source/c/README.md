@@ -1,3 +1,5 @@
+<!-- {% raw %} -->
+
 # Astronomy Engine (C/C++)
 
 This is the complete programming reference for the C version of 
@@ -493,3 +495,5 @@ To get started quickly, here are some [examples](../../demo/c/).
 ---
 
 <a name="astro_search_func_t"></a>
+
+<!-- {% endraw %}) -->

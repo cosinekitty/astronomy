@@ -378,9 +378,13 @@ function run(inPrefixFileName, inXmlFileName, outMarkdownFileName) {
                 }
             }
         }
-        const prefix = fs.readFileSync(inPrefixFileName, {encoding: 'utf8'});
-        const markdown = xform.Markdown();
-        fs.writeFileSync(outMarkdownFileName, prefix + markdown);
+
+        // https://stackoverflow.com/questions/47262698/inline-html-is-escaped-by-jekyll
+        let md = '<!-- {% raw %} -->\n\n';
+        md += fs.readFileSync(inPrefixFileName, {encoding: 'utf8'});
+        md += xform.Markdown();
+        md += '\n<!-- {% endraw %}) -->\n';
+        fs.writeFileSync(outMarkdownFileName, md);
     });
 }
 
