@@ -90,7 +90,7 @@ class Item {
 
     static Clean(s) {
         if (s && typeof s === 'string') {
-            return s.replace(/\s+/g, ' ').trim();
+            return s.replace(/\s+/g, ' ');
         }
         return '';
     }
@@ -107,7 +107,7 @@ class Item {
             for (let y of x.$$) {
                 switch (y['#name']) {
                 case 'para':
-                    md += this.MdText(y);
+                    md += '<p>' + this.MdText(y) + '</p>';
                     break;
 
                 case '__text__':
@@ -154,7 +154,7 @@ class Item {
 
         let btext = this.MdText(brief);
         if (btext) {
-            md += '*' + btext + '*';
+            md += '<b>' + btext + '</b>';
         }
 
         let dtext = this.MdText(detail);
