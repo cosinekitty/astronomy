@@ -233,6 +233,7 @@ class StructInfo extends Item {
         let name = Item.Flat(this.name);
         let md = this.MarkdownPrefix();
         md += '#### `' + name + '` (structure type)\n';
+        md += '\n';
         md += '| member | type | description |\n';
         md += '| ------ | ---- | ----------- |\n';
         for (let member of this.section.$$) {
@@ -248,7 +249,7 @@ class StructInfo extends Item {
         let type = Find(member, 'type');
         let brief = Look(member, 'briefdescription');
         let detail = Look(member, 'detaileddescription');
-        let md = '\n| `' + Item.Flat(name) + '` | `' + Item.Flat(type) + '` | ' + this.MdDescription(brief, detail) + ' |\n';
+        let md = '| `' + Item.Flat(name) + '` | `' + Item.Flat(type) + '` | ' + this.MdDescription(brief, detail) + ' |\n';
         return md;
     }
 }
