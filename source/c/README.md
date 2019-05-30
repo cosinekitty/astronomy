@@ -69,6 +69,7 @@ To get started quickly, here are some [examples](../../demo/c/).
 
 ---
 
+
 ## Functions
 
 
@@ -246,6 +247,7 @@ To get started quickly, here are some [examples](../../demo/c/).
 ---
 
 <a name="Astronomy_VectorLength"></a>
+
 ## Enumerated Types
 
 
@@ -273,6 +275,7 @@ To get started quickly, here are some [examples](../../demo/c/).
 ---
 
 <a name="astro_visibility_t"></a>
+
 ## Structures
 
 
@@ -482,6 +485,7 @@ To get started quickly, here are some [examples](../../demo/c/).
 | `y` | `double` | The Cartesian y-coordinate of the vector in AU. |
 | `z` | `double` | The Cartesian z-coordinate of the vector in AU. |
 | `t` | `astro_time_t` | The date and time at which this vector is valid. |
+
 ## Type Definitions
 
 

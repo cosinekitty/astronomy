@@ -336,22 +336,22 @@ class Transformer {
     Markdown() {
         let md = '';
 
-        md += '## Functions\n\n';
+        md += '\n## Functions\n\n';
         for (let f of this.funcs) {
             md += f.Markdown();
         }
 
-        md += '## Enumerated Types\n\n';
+        md += '\n## Enumerated Types\n\n';
         for (let e of this.enums) {
             md += e.Markdown();
         }
 
-        md += '## Structures\n\n';
+        md += '\n## Structures\n\n';
         for (let s of this.structs) {
             md += s.Markdown();
         }
 
-        md += '## Type Definitions\n\n';
+        md += '\n## Type Definitions\n\n';
         for (let t of this.typedefs) {
             md += t.Markdown();
         }
