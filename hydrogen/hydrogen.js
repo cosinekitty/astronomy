@@ -234,7 +234,7 @@ class StructInfo extends Item {
         let md = this.MarkdownPrefix();
         md += '#### `' + name + '` (structure type)\n';
         md += '\n';
-        md += '| member | type | description |\n';
+        md += '| Member | Type | Description |\n';
         md += '| ------ | ---- | ----------- |\n';
         for (let member of this.section.$$) {
             if (member.$.kind === 'variable' && member.$.prot === 'public') {

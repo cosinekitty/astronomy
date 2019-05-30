@@ -282,7 +282,7 @@ To get started quickly, here are some [examples](../../demo/c/).
 <a name="astro_angle_result_t"></a>
 #### `astro_angle_result_t` (structure type)
 
-| member | type | description |
+| Member | Type | Description |
 | ------ | ---- | ----------- |
 | `status` | `astro_status_t` | ASTRO_SUCCESS if this struct is valid; otherwise an error code. |
 | `angle` | `double` | An angle expressed in degrees. |
@@ -293,7 +293,7 @@ To get started quickly, here are some [examples](../../demo/c/).
 <a name="astro_apsis_t"></a>
 #### `astro_apsis_t` (structure type)
 
-| member | type | description |
+| Member | Type | Description |
 | ------ | ---- | ----------- |
 | `status` | `astro_status_t` | ASTRO_SUCCESS if this struct is valid; otherwise an error code. |
 | `time` | `astro_time_t` | The date and time of the apsis. |
@@ -307,7 +307,7 @@ To get started quickly, here are some [examples](../../demo/c/).
 <a name="astro_ecliptic_t"></a>
 #### `astro_ecliptic_t` (structure type)
 
-| member | type | description |
+| Member | Type | Description |
 | ------ | ---- | ----------- |
 | `status` | `astro_status_t` | ASTRO_SUCCESS if this struct is valid; otherwise an error code. |
 | `ex` | `double` | Cartesian x-coordinate: in the direction of the equinox along the ecliptic plane. |
@@ -322,7 +322,7 @@ To get started quickly, here are some [examples](../../demo/c/).
 <a name="astro_elongation_t"></a>
 #### `astro_elongation_t` (structure type)
 
-| member | type | description |
+| Member | Type | Description |
 | ------ | ---- | ----------- |
 | `status` | `astro_status_t` | ASTRO_SUCCESS if this struct is valid; otherwise an error code. |
 | `time` | `astro_time_t` | The date and time of the observation. |
@@ -336,7 +336,7 @@ To get started quickly, here are some [examples](../../demo/c/).
 <a name="astro_equatorial_t"></a>
 #### `astro_equatorial_t` (structure type)
 
-| member | type | description |
+| Member | Type | Description |
 | ------ | ---- | ----------- |
 | `status` | `astro_status_t` | ASTRO_SUCCESS if this struct is valid; otherwise an error code. |
 | `ra` | `double` | right ascension in sidereal hours. |
@@ -349,7 +349,7 @@ To get started quickly, here are some [examples](../../demo/c/).
 <a name="astro_func_result_t"></a>
 #### `astro_func_result_t` (structure type)
 
-| member | type | description |
+| Member | Type | Description |
 | ------ | ---- | ----------- |
 | `status` | `astro_status_t` | ASTRO_SUCCESS if this struct is valid; otherwise an error code. |
 | `value` | `double` | The value returned by a function whose ascending root is to be found. |
@@ -360,7 +360,7 @@ To get started quickly, here are some [examples](../../demo/c/).
 <a name="astro_horizon_t"></a>
 #### `astro_horizon_t` (structure type)
 
-| member | type | description |
+| Member | Type | Description |
 | ------ | ---- | ----------- |
 | `azimuth` | `double` | Compass direction around the horizon in degrees. 0=North, 90=East, 180=South, 270=West. |
 | `altitude` | `double` | Angle in degrees above (positive) or below (negative) the observer's horizon. |
@@ -373,7 +373,7 @@ To get started quickly, here are some [examples](../../demo/c/).
 <a name="astro_hour_angle_t"></a>
 #### `astro_hour_angle_t` (structure type)
 
-| member | type | description |
+| Member | Type | Description |
 | ------ | ---- | ----------- |
 | `status` | `astro_status_t` | ASTRO_SUCCESS if this struct is valid; otherwise an error code. |
 | `time` | `astro_time_t` | The date and time when the body crosses the specified hour angle. |
@@ -385,7 +385,7 @@ To get started quickly, here are some [examples](../../demo/c/).
 <a name="astro_illum_t"></a>
 #### `astro_illum_t` (structure type)
 
-| member | type | description |
+| Member | Type | Description |
 | ------ | ---- | ----------- |
 | `status` | `astro_status_t` | ASTRO_SUCCESS if this struct is valid; otherwise an error code. |
 | `time` | `astro_time_t` | The date and time of the observation. |
@@ -400,7 +400,7 @@ To get started quickly, here are some [examples](../../demo/c/).
 <a name="astro_moon_quarter_t"></a>
 #### `astro_moon_quarter_t` (structure type)
 
-| member | type | description |
+| Member | Type | Description |
 | ------ | ---- | ----------- |
 | `status` | `astro_status_t` | ASTRO_SUCCESS if this struct is valid; otherwise an error code. |
 | `quarter` | `int` | 0=new moon, 1=first quarter, 2=full moon, 3=third quarter. |
@@ -412,7 +412,7 @@ To get started quickly, here are some [examples](../../demo/c/).
 <a name="astro_observer_t"></a>
 #### `astro_observer_t` (structure type)
 
-| member | type | description |
+| Member | Type | Description |
 | ------ | ---- | ----------- |
 | `latitude` | `double` | Geographic latitude in degrees north (positive) or south (negative) of the equator. |
 | `longitude` | `double` | Geographic longitude in degrees east (positive) or west (negative) of the prime meridian at Greenwich, England. |
@@ -424,7 +424,7 @@ To get started quickly, here are some [examples](../../demo/c/).
 <a name="astro_search_result_t"></a>
 #### `astro_search_result_t` (structure type)
 
-| member | type | description |
+| Member | Type | Description |
 | ------ | ---- | ----------- |
 | `status` | `astro_status_t` | ASTRO_SUCCESS if this struct is valid; otherwise an error code. |
 | `time` | `astro_time_t` | The time at which a searched-for event occurs. |
@@ -435,7 +435,7 @@ To get started quickly, here are some [examples](../../demo/c/).
 <a name="astro_seasons_t"></a>
 #### `astro_seasons_t` (structure type)
 
-| member | type | description |
+| Member | Type | Description |
 | ------ | ---- | ----------- |
 | `status` | `astro_status_t` | ASTRO_SUCCESS if this struct is valid; otherwise an error code. |
 | `mar_equinox` | `astro_time_t` | The date and time of the March equinox for the specified year. |
@@ -449,7 +449,7 @@ To get started quickly, here are some [examples](../../demo/c/).
 <a name="astro_time_t"></a>
 #### `astro_time_t` (structure type)
 
-| member | type | description |
+| Member | Type | Description |
 | ------ | ---- | ----------- |
 | `ut` | `double` | *UT1/UTC number of days since noon on January 1, 2000.*The floating point number of days of Universal Time since noon UTC January 1, 2000. Astronomy Engine approximates UTC and UT1 as being the same thing, although they are not exactly equivalent; UTC and UT1 can disagree by up to &plusmn;0.9 seconds. This approximation is sufficient for the accuracy requirements of Astronomy Engine.Universal Time Coordinate (UTC) is the international standard for legal and civil timekeeping and replaces the older Greenwich Mean Time (GMT) standard. UTC is kept in sync with unpredictable observed changes in the Earth's rotation by occasionally adding leap seconds as needed.UT1 is an idealized time scale based on observed rotation of the Earth, which gradually slows down in an unpredictable way over time, due to tidal drag by the Moon and Sun, large scale weather events like hurricanes, and internal seismic and convection effects. Conceptually, UT1 drifts from atomic time continuously and erratically, whereas UTC is adjusted by a scheduled whole number of leap seconds as needed.The value in `ut` is appropriate for any calculation involving the Earth's rotation, such as calculating rise/set times, culumination, and anything involving apparent sidereal time.Before the era of atomic timekeeping, days based on the Earth's rotation were often known as <i>mean solar days</i>. |
 | `tt` | `double` | *Terrestrial Time days since noon on January 1, 2000.*Terrestrial Time is an atomic time scale defined as a number of days since noon on January 1, 2000. In this system, days are not based on Earth rotations, but instead by the number of elapsed <a href="https://physics.nist.gov/cuu/Units/second.html>SI seconds</a> divided by 86400. Unlike `ut`, `tt` increases uniformly without adjustments for changes in the Earth's rotation.The value in `tt` is used for calculations of movements not involving the Earth's rotation, such as the orbits of planets around the Sun, or the Moon around the Earth.Historically, Terrestrial Time has also been known by the term <i>Ephemeris Time</i> (ET). |
@@ -460,7 +460,7 @@ To get started quickly, here are some [examples](../../demo/c/).
 <a name="astro_utc_t"></a>
 #### `astro_utc_t` (structure type)
 
-| member | type | description |
+| Member | Type | Description |
 | ------ | ---- | ----------- |
 | `year` | `int` | The year value, e.g. 2019. |
 | `month` | `int` | The month value: 1=January, 2=February, ..., 12=December. |
@@ -475,7 +475,7 @@ To get started quickly, here are some [examples](../../demo/c/).
 <a name="astro_vector_t"></a>
 #### `astro_vector_t` (structure type)
 
-| member | type | description |
+| Member | Type | Description |
 | ------ | ---- | ----------- |
 | `status` | `astro_status_t` | ASTRO_SUCCESS if this struct is valid; otherwise an error code. |
 | `x` | `double` | The Cartesian x-coordinate of the vector in AU. |
