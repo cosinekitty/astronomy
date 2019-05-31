@@ -61,14 +61,14 @@ astro_status_t;
  * It is used to represent dates and times for all astronomical calculations.
  * It is also included in the values returned by many Astronomy Engine functions.
  * 
- * To create a valid `astro_time_t` value from scratch, call #Astronomy_MakeTime
+ * To create a valid astro_time_t value from scratch, call #Astronomy_MakeTime
  * (for a given calendar date and time) or #Astronomy_CurrentTime (for the system's
  * current date and time).
  * 
- * To adjust an existing `astro_time_t` by a certain real number of days,
+ * To adjust an existing astro_time_t by a certain real number of days,
  * call #Astronomy_AddDays.
  * 
- * The `astro_time_t` type contains `ut` to represent Universal Time (UT1/UTC) and
+ * The astro_time_t type contains `ut` to represent Universal Time (UT1/UTC) and
  * `tt` to represent Terrestrial Time (TT, also known as <i>ephemeris time</i>).
  * The difference `tt-ut` is known as <i>&Delta;T</i>, and is obtained from
  * a model provided by the 
@@ -78,12 +78,12 @@ astro_status_t;
  * Indeed, certain calculations (such as rise/set times) require both time scales.
  * See the documentation for the `ut` and `tt` fields for more detailed information.
  * 
- * In cases where `astro_time_t` is included in a structure returned by
- * a function that can fail, the #astro_status_t field `status` will contain a value
+ * In cases where astro_time_t is included in a structure returned by
+ * a function that can fail, the astro_status_t field `status` will contain a value
  * other than #ASTRO_SUCCESS; in that case the `ut` and `tt` will hold `NAN` (not a number).
  * In general, when there is an error code stored in a struct field `status`, the
  * caller should ignore all other values in that structure, including the `ut` and `tt`
- * inside `astro_time_t`.
+ * inside astro_time_t.
  */
 typedef struct
 {
@@ -190,8 +190,8 @@ typedef enum
 }
 astro_body_t;
 
-#define MIN_BODY    BODY_MERCURY    /**< Minimum valid `astro_body_t` value; useful for iteration. */
-#define MAX_BODY    BODY_MOON       /**< Maximum valid `astro_body_t` value; useful for iteration. */
+#define MIN_BODY    BODY_MERCURY    /**< Minimum valid astro_body_t value; useful for iteration. */
+#define MAX_BODY    BODY_MOON       /**< Maximum valid astro_body_t value; useful for iteration. */
 
 /**
  * @brief The location of an observer on (or near) the surface of the Earth.
@@ -303,9 +303,9 @@ astro_moon_quarter_t;
 /**
  * @brief A real value returned by a function whose ascending root is to be found.
  * 
- * When calling `#Astronomy_Search`, the caller must pass in a callback function
- * compatible with the function-pointer type `#astro_search_func_t`
- * whose ascending root is to be found. That callback function must return `astro_func_result_t`.
+ * When calling #Astronomy_Search, the caller must pass in a callback function
+ * compatible with the function-pointer type astro_search_func_t
+ * whose ascending root is to be found. That callback function must return astro_func_result_t.
  * If the function call is successful, it will set `status` to #ASTRO_SUCCESS and `value`
  * to the numeric value appropriate for the given date and time.
  * If the call fails for some reason, it should set `status` to an appropriate error value
@@ -326,16 +326,16 @@ astro_func_result_t;
  * An event is defined as the time when an arbitrary function transitions between having
  * a negative value and a non-negative value. This transition is called an <i>ascending root</i>.
  * 
- * The type `astro_search_func_t` represents such a callback function that accepts a
- * custom `context` pointer and an #astro_time_t representing the time to probe.
- * The function returns an #astro_func_result_t that contains either a real
+ * The type astro_search_func_t represents such a callback function that accepts a
+ * custom `context` pointer and an astro_time_t representing the time to probe.
+ * The function returns an astro_func_result_t that contains either a real
  * number in `value` or an error code in `status` that aborts the search.
  * 
  * The `context` points to some data whose type varies depending on the callback function.
  * It can contain any auxiliary parameters (other than time) needed to evaluate the function.
  * For example, a function may pertain to a specific celestial body, in which case `context`
- * may point to a value of type `astro_body_t`. The `context` parameter is supplied by
- * the caller of `Astronomy_Search`, which passes it along to every call to the callback function.
+ * may point to a value of type astro_body_t. The `context` parameter is supplied by
+ * the caller of #Astronomy_Search, which passes it along to every call to the callback function.
  * If the caller of `Astronomy_Search` knows that the callback function does not need a context,
  * it is safe to pass `NULL` as the context pointer.
  */

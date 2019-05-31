@@ -137,7 +137,7 @@ class Item {
                     break;
 
                 case 'ref':
-                    md += `[${y._}](#${y._})`;
+                    md += '[`' + y._ + '`](#' + y._ + ')';
                     break;
 
                 default:
