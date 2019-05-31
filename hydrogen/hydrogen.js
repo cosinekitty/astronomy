@@ -227,7 +227,7 @@ class FuncInfo extends Item {
 
     Markdown() {
         let md = this.MarkdownPrefix();
-        md += '\n`' + this.decl + '`\n\n';
+        md += '\n' + this.decl + '\n\n';
         return md;
     }
 }
