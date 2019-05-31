@@ -107,7 +107,7 @@ class Item {
             for (let y of x.$$) {
                 switch (y['#name']) {
                 case 'para':
-                    md += this.MdText(y);
+                    md += ' ' + this.MdText(y);
                     break;
 
                 case '__text__':
@@ -146,8 +146,9 @@ class Item {
     }
 
     MdDescription(brief, detail) {
-        // Prevent gh-pages (kramdown) escaping html inside tables:
+        // I could prevent gh-pages (kramdown) escaping html inside tables:
         // https://stackoverflow.com/questions/47262698/inline-html-is-escaped-by-jekyll
+        // But then it doesn't render correctly on github.com!  Ya just can't win.
 
         let md = '';
 

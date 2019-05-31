@@ -287,8 +287,8 @@ To get started quickly, here are some [examples](../../demo/c/).
 
 | Type | Member | Description |
 | ---- | ------ | ----------- |
-| `astro_status_t` | `status` | ASTRO_SUCCESS if this struct is valid; otherwise an error code.  |
-| `double` | `angle` | An angle expressed in degrees.  |
+| `astro_status_t` | `status` |  ASTRO_SUCCESS if this struct is valid; otherwise an error code.  |
+| `double` | `angle` |  An angle expressed in degrees.  |
 
 
 ---
@@ -298,11 +298,11 @@ To get started quickly, here are some [examples](../../demo/c/).
 
 | Type | Member | Description |
 | ---- | ------ | ----------- |
-| `astro_status_t` | `status` | ASTRO_SUCCESS if this struct is valid; otherwise an error code.  |
-| `astro_time_t` | `time` | The date and time of the apsis.  |
-| `astro_apsis_kind_t` | `kind` | Whether this is a pericenter or apocenter event.  |
-| `double` | `dist_au` | The distance between the centers of the bodies in astronomical units.  |
-| `double` | `dist_km` | The distance between the centers of the bodies in kilometers.  |
+| `astro_status_t` | `status` |  ASTRO_SUCCESS if this struct is valid; otherwise an error code.  |
+| `astro_time_t` | `time` |  The date and time of the apsis.  |
+| `astro_apsis_kind_t` | `kind` |  Whether this is a pericenter or apocenter event.  |
+| `double` | `dist_au` |  The distance between the centers of the bodies in astronomical units.  |
+| `double` | `dist_km` |  The distance between the centers of the bodies in kilometers.  |
 
 
 ---
@@ -312,12 +312,12 @@ To get started quickly, here are some [examples](../../demo/c/).
 
 | Type | Member | Description |
 | ---- | ------ | ----------- |
-| `astro_status_t` | `status` | ASTRO_SUCCESS if this struct is valid; otherwise an error code.  |
-| `double` | `ex` | Cartesian x-coordinate: in the direction of the equinox along the ecliptic plane.  |
-| `double` | `ey` | Cartesian y-coordinate: in the ecliptic plane 90 degrees prograde from the equinox.  |
-| `double` | `ez` | Cartesian z-coordinate: perpendicular to the ecliptic plane. Positive is north.  |
-| `double` | `elat` | Latitude in degrees north (positive) or south (negative) of the ecliptic plane.  |
-| `double` | `elon` | Longitude in degrees around the ecliptic plane prograde from the equinox.  |
+| `astro_status_t` | `status` |  ASTRO_SUCCESS if this struct is valid; otherwise an error code.  |
+| `double` | `ex` |  Cartesian x-coordinate: in the direction of the equinox along the ecliptic plane.  |
+| `double` | `ey` |  Cartesian y-coordinate: in the ecliptic plane 90 degrees prograde from the equinox.  |
+| `double` | `ez` |  Cartesian z-coordinate: perpendicular to the ecliptic plane. Positive is north.  |
+| `double` | `elat` |  Latitude in degrees north (positive) or south (negative) of the ecliptic plane.  |
+| `double` | `elon` |  Longitude in degrees around the ecliptic plane prograde from the equinox.  |
 
 
 ---
@@ -327,11 +327,11 @@ To get started quickly, here are some [examples](../../demo/c/).
 
 | Type | Member | Description |
 | ---- | ------ | ----------- |
-| `astro_status_t` | `status` | ASTRO_SUCCESS if this struct is valid; otherwise an error code.  |
-| `astro_time_t` | `time` | The date and time of the observation.  |
-| `astro_visibility_t` | `visibility` | Whether the body is best seen in the morning or the evening.  |
-| `double` | `elongation` | The angle in degrees between the body and the Sun, as seen from the Earth.  |
-| `double` | `relative_longitude` | The difference between the ecliptic longitudes of the body and the Sun.  |
+| `astro_status_t` | `status` |  ASTRO_SUCCESS if this struct is valid; otherwise an error code.  |
+| `astro_time_t` | `time` |  The date and time of the observation.  |
+| `astro_visibility_t` | `visibility` |  Whether the body is best seen in the morning or the evening.  |
+| `double` | `elongation` |  The angle in degrees between the body and the Sun, as seen from the Earth.  |
+| `double` | `relative_longitude` |  The difference between the ecliptic longitudes of the body and the Sun.  |
 
 
 ---
@@ -341,10 +341,10 @@ To get started quickly, here are some [examples](../../demo/c/).
 
 | Type | Member | Description |
 | ---- | ------ | ----------- |
-| `astro_status_t` | `status` | ASTRO_SUCCESS if this struct is valid; otherwise an error code.  |
-| `double` | `ra` | right ascension in sidereal hours.  |
-| `double` | `dec` | declination in degrees  |
-| `double` | `dist` | distance to the celestial body in AU.  |
+| `astro_status_t` | `status` |  ASTRO_SUCCESS if this struct is valid; otherwise an error code.  |
+| `double` | `ra` |  right ascension in sidereal hours.  |
+| `double` | `dec` |  declination in degrees  |
+| `double` | `dist` |  distance to the celestial body in AU.  |
 
 
 ---
@@ -354,8 +354,8 @@ To get started quickly, here are some [examples](../../demo/c/).
 
 | Type | Member | Description |
 | ---- | ------ | ----------- |
-| `astro_status_t` | `status` | ASTRO_SUCCESS if this struct is valid; otherwise an error code.  |
-| `double` | `value` | The value returned by a function whose ascending root is to be found.  |
+| `astro_status_t` | `status` |  ASTRO_SUCCESS if this struct is valid; otherwise an error code.  |
+| `double` | `value` |  The value returned by a function whose ascending root is to be found.  |
 
 
 ---
@@ -365,10 +365,10 @@ To get started quickly, here are some [examples](../../demo/c/).
 
 | Type | Member | Description |
 | ---- | ------ | ----------- |
-| `double` | `azimuth` | Compass direction around the horizon in degrees. 0=North, 90=East, 180=South, 270=West.  |
-| `double` | `altitude` | Angle in degrees above (positive) or below (negative) the observer's horizon.  |
-| `double` | `ra` | Right ascension in sidereal hours.  |
-| `double` | `dec` | Declination in degrees.  |
+| `double` | `azimuth` |  Compass direction around the horizon in degrees. 0=North, 90=East, 180=South, 270=West.  |
+| `double` | `altitude` |  Angle in degrees above (positive) or below (negative) the observer's horizon.  |
+| `double` | `ra` |  Right ascension in sidereal hours.  |
+| `double` | `dec` |  Declination in degrees.  |
 
 
 ---
@@ -378,9 +378,9 @@ To get started quickly, here are some [examples](../../demo/c/).
 
 | Type | Member | Description |
 | ---- | ------ | ----------- |
-| `astro_status_t` | `status` | ASTRO_SUCCESS if this struct is valid; otherwise an error code.  |
-| `astro_time_t` | `time` | The date and time when the body crosses the specified hour angle.  |
-| `astro_horizon_t` | `hor` | Apparent coordinates of the body at the time it crosses the specified hour angle.  |
+| `astro_status_t` | `status` |  ASTRO_SUCCESS if this struct is valid; otherwise an error code.  |
+| `astro_time_t` | `time` |  The date and time when the body crosses the specified hour angle.  |
+| `astro_horizon_t` | `hor` |  Apparent coordinates of the body at the time it crosses the specified hour angle.  |
 
 
 ---
@@ -390,12 +390,12 @@ To get started quickly, here are some [examples](../../demo/c/).
 
 | Type | Member | Description |
 | ---- | ------ | ----------- |
-| `astro_status_t` | `status` | ASTRO_SUCCESS if this struct is valid; otherwise an error code.  |
-| `astro_time_t` | `time` | The date and time of the observation.  |
-| `double` | `mag` | The visual magnitude of the body. Smaller values are brighter.  |
-| `double` | `phase_angle` | The angle in degrees between the Sun and the Earth, as seen from the body. Indicates the body's phase as seen from the Earth.  |
-| `double` | `helio_dist` | The distance between the Sun and the body at the observation time.  |
-| `double` | `ring_tilt` | For Saturn, the tilt angle in degrees of its rings as seen from Earth. For all other bodies, 0.  |
+| `astro_status_t` | `status` |  ASTRO_SUCCESS if this struct is valid; otherwise an error code.  |
+| `astro_time_t` | `time` |  The date and time of the observation.  |
+| `double` | `mag` |  The visual magnitude of the body. Smaller values are brighter.  |
+| `double` | `phase_angle` |  The angle in degrees between the Sun and the Earth, as seen from the body. Indicates the body's phase as seen from the Earth.  |
+| `double` | `helio_dist` |  The distance between the Sun and the body at the observation time.  |
+| `double` | `ring_tilt` |  For Saturn, the tilt angle in degrees of its rings as seen from Earth. For all other bodies, 0.  |
 
 
 ---
@@ -405,9 +405,9 @@ To get started quickly, here are some [examples](../../demo/c/).
 
 | Type | Member | Description |
 | ---- | ------ | ----------- |
-| `astro_status_t` | `status` | ASTRO_SUCCESS if this struct is valid; otherwise an error code.  |
-| `int` | `quarter` | 0=new moon, 1=first quarter, 2=full moon, 3=third quarter.  |
-| `astro_time_t` | `time` | The date and time of the lunar quarter.  |
+| `astro_status_t` | `status` |  ASTRO_SUCCESS if this struct is valid; otherwise an error code.  |
+| `int` | `quarter` |  0=new moon, 1=first quarter, 2=full moon, 3=third quarter.  |
+| `astro_time_t` | `time` |  The date and time of the lunar quarter.  |
 
 
 ---
@@ -417,9 +417,9 @@ To get started quickly, here are some [examples](../../demo/c/).
 
 | Type | Member | Description |
 | ---- | ------ | ----------- |
-| `double` | `latitude` | Geographic latitude in degrees north (positive) or south (negative) of the equator.  |
-| `double` | `longitude` | Geographic longitude in degrees east (positive) or west (negative) of the prime meridian at Greenwich, England.  |
-| `double` | `height` | The height above (positive) or below (negative) sea level, expressed in meters.  |
+| `double` | `latitude` |  Geographic latitude in degrees north (positive) or south (negative) of the equator.  |
+| `double` | `longitude` |  Geographic longitude in degrees east (positive) or west (negative) of the prime meridian at Greenwich, England.  |
+| `double` | `height` |  The height above (positive) or below (negative) sea level, expressed in meters.  |
 
 
 ---
@@ -429,8 +429,8 @@ To get started quickly, here are some [examples](../../demo/c/).
 
 | Type | Member | Description |
 | ---- | ------ | ----------- |
-| `astro_status_t` | `status` | ASTRO_SUCCESS if this struct is valid; otherwise an error code.  |
-| `astro_time_t` | `time` | The time at which a searched-for event occurs.  |
+| `astro_status_t` | `status` |  ASTRO_SUCCESS if this struct is valid; otherwise an error code.  |
+| `astro_time_t` | `time` |  The time at which a searched-for event occurs.  |
 
 
 ---
@@ -440,11 +440,11 @@ To get started quickly, here are some [examples](../../demo/c/).
 
 | Type | Member | Description |
 | ---- | ------ | ----------- |
-| `astro_status_t` | `status` | ASTRO_SUCCESS if this struct is valid; otherwise an error code.  |
-| `astro_time_t` | `mar_equinox` | The date and time of the March equinox for the specified year.  |
-| `astro_time_t` | `jun_solstice` | The date and time of the June soltice for the specified year.  |
-| `astro_time_t` | `sep_equinox` | The date and time of the September equinox for the specified year.  |
-| `astro_time_t` | `dec_solstice` | The date and time of the December solstice for the specified year.  |
+| `astro_status_t` | `status` |  ASTRO_SUCCESS if this struct is valid; otherwise an error code.  |
+| `astro_time_t` | `mar_equinox` |  The date and time of the March equinox for the specified year.  |
+| `astro_time_t` | `jun_solstice` |  The date and time of the June soltice for the specified year.  |
+| `astro_time_t` | `sep_equinox` |  The date and time of the September equinox for the specified year.  |
+| `astro_time_t` | `dec_solstice` |  The date and time of the December solstice for the specified year.  |
 
 
 ---
@@ -454,8 +454,8 @@ To get started quickly, here are some [examples](../../demo/c/).
 
 | Type | Member | Description |
 | ---- | ------ | ----------- |
-| `double` | `ut` | **UT1/UTC number of days since noon on January 1, 2000.** The floating point number of days of Universal Time since noon UTC January 1, 2000. Astronomy Engine approximates UTC and UT1 as being the same thing, although they are not exactly equivalent; UTC and UT1 can disagree by up to &plusmn;0.9 seconds. This approximation is sufficient for the accuracy requirements of Astronomy Engine.Universal Time Coordinate (UTC) is the international standard for legal and civil timekeeping and replaces the older Greenwich Mean Time (GMT) standard. UTC is kept in sync with unpredictable observed changes in the Earth's rotation by occasionally adding leap seconds as needed.UT1 is an idealized time scale based on observed rotation of the Earth, which gradually slows down in an unpredictable way over time, due to tidal drag by the Moon and Sun, large scale weather events like hurricanes, and internal seismic and convection effects. Conceptually, UT1 drifts from atomic time continuously and erratically, whereas UTC is adjusted by a scheduled whole number of leap seconds as needed.The value in `ut` is appropriate for any calculation involving the Earth's rotation, such as calculating rise/set times, culumination, and anything involving apparent sidereal time.Before the era of atomic timekeeping, days based on the Earth's rotation were often known as *mean solar days*.  |
-| `double` | `tt` | **Terrestrial Time days since noon on January 1, 2000.** Terrestrial Time is an atomic time scale defined as a number of days since noon on January 1, 2000. In this system, days are not based on Earth rotations, but instead by the number of elapsed [SI seconds](https://physics.nist.gov/cuu/Units/second.html) divided by 86400. Unlike `ut`, `tt` increases uniformly without adjustments for changes in the Earth's rotation.The value in `tt` is used for calculations of movements not involving the Earth's rotation, such as the orbits of planets around the Sun, or the Moon around the Earth.Historically, Terrestrial Time has also been known by the term *Ephemeris Time* (ET).  |
+| `double` | `ut` | **UT1/UTC number of days since noon on January 1, 2000.**  The floating point number of days of Universal Time since noon UTC January 1, 2000. Astronomy Engine approximates UTC and UT1 as being the same thing, although they are not exactly equivalent; UTC and UT1 can disagree by up to &plusmn;0.9 seconds. This approximation is sufficient for the accuracy requirements of Astronomy Engine. Universal Time Coordinate (UTC) is the international standard for legal and civil timekeeping and replaces the older Greenwich Mean Time (GMT) standard. UTC is kept in sync with unpredictable observed changes in the Earth's rotation by occasionally adding leap seconds as needed. UT1 is an idealized time scale based on observed rotation of the Earth, which gradually slows down in an unpredictable way over time, due to tidal drag by the Moon and Sun, large scale weather events like hurricanes, and internal seismic and convection effects. Conceptually, UT1 drifts from atomic time continuously and erratically, whereas UTC is adjusted by a scheduled whole number of leap seconds as needed. The value in `ut` is appropriate for any calculation involving the Earth's rotation, such as calculating rise/set times, culumination, and anything involving apparent sidereal time. Before the era of atomic timekeeping, days based on the Earth's rotation were often known as *mean solar days*.  |
+| `double` | `tt` | **Terrestrial Time days since noon on January 1, 2000.**  Terrestrial Time is an atomic time scale defined as a number of days since noon on January 1, 2000. In this system, days are not based on Earth rotations, but instead by the number of elapsed [SI seconds](https://physics.nist.gov/cuu/Units/second.html) divided by 86400. Unlike `ut`, `tt` increases uniformly without adjustments for changes in the Earth's rotation. The value in `tt` is used for calculations of movements not involving the Earth's rotation, such as the orbits of planets around the Sun, or the Moon around the Earth. Historically, Terrestrial Time has also been known by the term *Ephemeris Time* (ET).  |
 
 
 ---
@@ -465,12 +465,12 @@ To get started quickly, here are some [examples](../../demo/c/).
 
 | Type | Member | Description |
 | ---- | ------ | ----------- |
-| `int` | `year` | The year value, e.g. 2019.  |
-| `int` | `month` | The month value: 1=January, 2=February, ..., 12=December.  |
-| `int` | `day` | The day of the month in the range 1..31.  |
-| `int` | `hour` | The hour of the day in the range 0..23.  |
-| `int` | `minute` | The minute of the hour in the range 0..59.  |
-| `double` | `second` | The floating point number of seconds in the range [0,60).  |
+| `int` | `year` |  The year value, e.g. 2019.  |
+| `int` | `month` |  The month value: 1=January, 2=February, ..., 12=December.  |
+| `int` | `day` |  The day of the month in the range 1..31.  |
+| `int` | `hour` |  The hour of the day in the range 0..23.  |
+| `int` | `minute` |  The minute of the hour in the range 0..59.  |
+| `double` | `second` |  The floating point number of seconds in the range [0,60).  |
 
 
 ---
@@ -480,11 +480,11 @@ To get started quickly, here are some [examples](../../demo/c/).
 
 | Type | Member | Description |
 | ---- | ------ | ----------- |
-| `astro_status_t` | `status` | ASTRO_SUCCESS if this struct is valid; otherwise an error code.  |
-| `double` | `x` | The Cartesian x-coordinate of the vector in AU.  |
-| `double` | `y` | The Cartesian y-coordinate of the vector in AU.  |
-| `double` | `z` | The Cartesian z-coordinate of the vector in AU.  |
-| `astro_time_t` | `t` | The date and time at which this vector is valid.  |
+| `astro_status_t` | `status` |  ASTRO_SUCCESS if this struct is valid; otherwise an error code.  |
+| `double` | `x` |  The Cartesian x-coordinate of the vector in AU.  |
+| `double` | `y` |  The Cartesian y-coordinate of the vector in AU.  |
+| `double` | `z` |  The Cartesian z-coordinate of the vector in AU.  |
+| `astro_time_t` | `t` |  The date and time at which this vector is valid.  |
 
 ## Type Definitions
 
