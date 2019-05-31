@@ -68,7 +68,7 @@ astro_status_t;
  * To adjust an existing `astro_time_t` by a certain real number of days,
  * call #Astronomy_AddDays.
  * 
- * Thi `astro_time_t` type contains `ut` to represent Universal Time (UT1/UTC) and
+ * The `astro_time_t` type contains `ut` to represent Universal Time (UT1/UTC) and
  * `tt` to represent Terrestrial Time (TT, also known as <i>ephemeris time</i>).
  * The difference `tt-ut` is known as <i>&Delta;T</i>, and is obtained from
  * a model provided by the 
@@ -414,7 +414,7 @@ astro_apsis_kind_t;
  * The closest approach is called <i>pericenter</i> and the farthest point is <i>apocenter</i>.
  * 
  * More specific terminology is common for particular orbiting bodies.
- * The Moon's closest approach to the earth is called <i>perigee</i> and its furthest
+ * The Moon's closest approach to the Earth is called <i>perigee</i> and its furthest
  * point is called <i>apogee</i>. The closest approach of a planet to the Sun is called
  * <i>perihelion</i> and the furthest point is called <i>aphelion</i>.
  * 
