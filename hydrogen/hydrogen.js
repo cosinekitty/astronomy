@@ -153,7 +153,7 @@ class Item {
 
         let btext = this.MdText(brief);
         if (btext) {
-            md += '**' + btext + '**';
+            md += '**' + btext + '** ';
         }
 
         let dtext = this.MdText(detail);
