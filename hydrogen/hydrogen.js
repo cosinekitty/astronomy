@@ -107,7 +107,7 @@ class Item {
             for (let y of x.$$) {
                 switch (y['#name']) {
                 case 'para':
-                    md += '<p>' + this.MdText(y) + '</p>';
+                    md += this.MdText(y);
                     break;
 
                 case '__text__':
