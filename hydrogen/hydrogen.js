@@ -125,17 +125,13 @@ class Item {
                     break;
 
                 case 'emphasis':
-                    md += '<i>';
+                    md += '*';
                     md += this.MdText(y);
-                    md += '</i>';
+                    md += '*';
                     break;
 
                 case 'ulink':
-                    md += '<a href="';
-                    md += y.$.url;
-                    md += '>';
-                    md += this.MdText(y);
-                    md += '</a>';
+                    md += '[' + this.MdText(y) + '](' + y.$.url + ')';
                     break;
 
                 default:
@@ -153,19 +149,17 @@ class Item {
         // Prevent gh-pages (kramdown) escaping html inside tables:
         // https://stackoverflow.com/questions/47262698/inline-html-is-escaped-by-jekyll
 
-        let md = '<!--{::nomarkdown}-->';
+        let md = '';
 
         let btext = this.MdText(brief);
         if (btext) {
-            md += '<b>' + btext + '</b>';
+            md += '**' + btext + '**';
         }
 
         let dtext = this.MdText(detail);
         if (dtext) {
             md += dtext;
         }
-
-        md += '<!--{:/}-->';
 
         return md;
     }

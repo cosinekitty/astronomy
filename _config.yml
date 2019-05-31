@@ -1,1 +1,2 @@
 theme: jekyll-theme-slate
+parse_block_html: true
