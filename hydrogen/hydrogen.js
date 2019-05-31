@@ -105,7 +105,8 @@ class Item {
         let md = '';
         if (x && x.$$) {
             for (let y of x.$$) {
-                switch (y['#name']) {
+                let n = y['#name'];
+                switch (n) {
                 case 'para':
                     md += ' ' + this.MdText(y);
                     break;
@@ -115,7 +116,8 @@ class Item {
                     break;
 
                 case 'plusmn':
-                    md += '&plusmn;';
+                case 'Delta':
+                    md += `&${n};`;
                     break;
 
                 case 'computeroutput':
@@ -134,9 +136,13 @@ class Item {
                     md += '[' + this.MdText(y) + '](' + y.$.url + ')';
                     break;
 
+                case 'ref':
+                    md += '#' + y._;
+                    break;
+
                 default:
                     console.log(JSON.stringify(y, null, 2));
-                    console.log(`MdText: unknown element name: [${y['#name']}]`);
+                    console.log(`MdText: unknown element name: [${n}]`);
                     break;
                 }
             }
@@ -170,7 +176,7 @@ class Define extends Item {
     constructor(m) {
         super(m);
         this.init = Find(m, 'initializer');
-        console.log(`    #define ${Item.Flat(this.name)} ${Item.Flat(this.init)}  // ${Item.Flat(this.detail)} // ${this.id}`);
+        //console.log(`    #define ${Item.Flat(this.name)} ${Item.Flat(this.init)}  // ${Item.Flat(this.detail)} // ${this.id}`);
     }
 
     Markdown() {
@@ -190,7 +196,7 @@ class EnumInfo extends Item {
                 break;
             }
         }
-        console.log(`    enum ${Item.Flat(this.name)} : ${this.enumValueList.length} values.`);
+        //console.log(`    enum ${Item.Flat(this.name)} : ${this.enumValueList.length} values.`);
     }
 
     Markdown() {
@@ -203,7 +209,7 @@ class TypeDef extends Item {
     constructor(m) {
         super(m);
         this.definition = Find(m, 'definition');
-        console.log('    typedef ' + Item.Flat(this.name));
+        //console.log('    typedef ' + Item.Flat(this.name));
     }
 
     Markdown() {
@@ -215,7 +221,7 @@ class TypeDef extends Item {
 class FuncInfo extends Item {
     constructor(m) {
         super(m);
-        console.log('    func ' + Item.Flat(this.name));
+        //console.log('    func ' + Item.Flat(this.name));
     }
 
     Markdown() {
@@ -227,14 +233,15 @@ class FuncInfo extends Item {
 class StructInfo extends Item {
     constructor(m) {
         super(m);
-        console.log('    struct ' + Item.Flat(this.name));
+        //console.log('    struct ' + Item.Flat(this.name));
     }
 
     Markdown() {
         let name = Item.Flat(this.name);
         let md = this.MarkdownPrefix();
-        md += '#### `' + name + '`\n';
-        md += '\n';
+        md += '#### `' + name + '`\n\n';
+        md += this.MdDescription(this.brief, this.detail);
+        md += '\n\n';
         md += '| Type | Member | Description |\n';
         md += '| ---- | ------ | ----------- |\n';
         for (let member of this.section.$$) {

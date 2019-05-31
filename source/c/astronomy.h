@@ -303,8 +303,8 @@ astro_moon_quarter_t;
 /**
  * @brief A real value returned by a function whose ascending root is to be found.
  * 
- * When calling #Astronomy_Search, the caller must pass in a callback function
- * compatible with the function-pointer type #astro_search_func_t
+ * When calling `#Astronomy_Search`, the caller must pass in a callback function
+ * compatible with the function-pointer type `#astro_search_func_t`
  * whose ascending root is to be found. That callback function must return `astro_func_result_t`.
  * If the function call is successful, it will set `status` to #ASTRO_SUCCESS and `value`
  * to the numeric value appropriate for the given date and time.

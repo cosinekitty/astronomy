@@ -285,6 +285,8 @@ To get started quickly, here are some [examples](../../demo/c/).
 <a name="astro_angle_result_t"></a>
 #### `astro_angle_result_t`
 
+**An angular value expressed in degrees.** 
+
 | Type | Member | Description |
 | ---- | ------ | ----------- |
 | `astro_status_t` | `status` |  ASTRO_SUCCESS if this struct is valid; otherwise an error code.  |
@@ -295,6 +297,8 @@ To get started quickly, here are some [examples](../../demo/c/).
 
 <a name="astro_apsis_t"></a>
 #### `astro_apsis_t`
+
+**An apsis event: pericenter (closest approach) or apocenter (farthest distance).**  For the Moon orbiting the Earth, or a planet orbiting the Sun, an *apsis* is an event where the orbiting body reaches its closest or farthest point from the primary body. The closest approach is called *pericenter* and the farthest point is *apocenter*. More specific terminology is common for particular orbiting bodies. The Moon's closest approach to the earth is called *perigee* and its furthest point is called *apogee*. The closest approach of a planet to the Sun is called *perihelion* and the furthest point is called *aphelion*. This data structure is returned by #Astronomy_SearchLunarApsis and #Astronomy_NextLunarApsis to iterate through consecutive alternating perigees and apogees. 
 
 | Type | Member | Description |
 | ---- | ------ | ----------- |
@@ -309,6 +313,8 @@ To get started quickly, here are some [examples](../../demo/c/).
 
 <a name="astro_ecliptic_t"></a>
 #### `astro_ecliptic_t`
+
+**Ecliptic angular and Cartesian coordinates.**  Coordinates of a celestial body as seen from the center of the Sun (heliocentric), oriented with respect to the plane of the Earth's orbit around the Sun (the ecliptic). 
 
 | Type | Member | Description |
 | ---- | ------ | ----------- |
@@ -325,6 +331,8 @@ To get started quickly, here are some [examples](../../demo/c/).
 <a name="astro_elongation_t"></a>
 #### `astro_elongation_t`
 
+**Contains information about the visibility of a celestial body at a given date and time.** 
+
 | Type | Member | Description |
 | ---- | ------ | ----------- |
 | `astro_status_t` | `status` |  ASTRO_SUCCESS if this struct is valid; otherwise an error code.  |
@@ -339,6 +347,8 @@ To get started quickly, here are some [examples](../../demo/c/).
 <a name="astro_equatorial_t"></a>
 #### `astro_equatorial_t`
 
+**Equatorial angular coordinates.**  Coordinates of a celestial body as seen from the Earth (geocentric or topocentric, depending on context), oriented with respect to the projection of the Earth's equator onto the sky. 
+
 | Type | Member | Description |
 | ---- | ------ | ----------- |
 | `astro_status_t` | `status` |  ASTRO_SUCCESS if this struct is valid; otherwise an error code.  |
@@ -352,6 +362,8 @@ To get started quickly, here are some [examples](../../demo/c/).
 <a name="astro_func_result_t"></a>
 #### `astro_func_result_t`
 
+**A real value returned by a function whose ascending root is to be found.**  When calling `#Astronomy_Search`, the caller must pass in a callback function compatible with the function-pointer type `#astro_search_func_t` whose ascending root is to be found. That callback function must return `#astro_func_result_t`. If the function call is successful, it will set `status` to #ASTRO_SUCCESS and `value` to the numeric value appropriate for the given date and time. If the call fails for some reason, it should set `status` to an appropriate error value other than `ASTRO_SUCCESS`; in the error case, to guard against any possible misuse of `value`, it is recommended to set `value` to `NAN`, though this is not strictly necessary. 
+
 | Type | Member | Description |
 | ---- | ------ | ----------- |
 | `astro_status_t` | `status` |  ASTRO_SUCCESS if this struct is valid; otherwise an error code.  |
@@ -362,6 +374,8 @@ To get started quickly, here are some [examples](../../demo/c/).
 
 <a name="astro_horizon_t"></a>
 #### `astro_horizon_t`
+
+**Coordinates of a celestial body as seen by a topocentric observer.**  Contains horizontal and equatorial coordinates seen by an observer on or near the surface of the Earth (a topocentric observer). Optionally corrected for atmospheric refraction. 
 
 | Type | Member | Description |
 | ---- | ------ | ----------- |
@@ -376,6 +390,8 @@ To get started quickly, here are some [examples](../../demo/c/).
 <a name="astro_hour_angle_t"></a>
 #### `astro_hour_angle_t`
 
+**Information about a celestial body crossing a specific hour angle.**  Returned by the function #Astronomy_SearchHourAngle to report information about a celestial body crossing a certain hour angle as seen by a specified topocentric observer. 
+
 | Type | Member | Description |
 | ---- | ------ | ----------- |
 | `astro_status_t` | `status` |  ASTRO_SUCCESS if this struct is valid; otherwise an error code.  |
@@ -387,6 +403,8 @@ To get started quickly, here are some [examples](../../demo/c/).
 
 <a name="astro_illum_t"></a>
 #### `astro_illum_t`
+
+**Information about the brightness and illuminated shape of a celestial body.**  Returned by the functions #Astronomy_Illumination and #Astronomy_SearchPeakMagnitude to report the visual magnitude and illuminated fraction of a celestial body at a given date and time. 
 
 | Type | Member | Description |
 | ---- | ------ | ----------- |
@@ -403,6 +421,8 @@ To get started quickly, here are some [examples](../../demo/c/).
 <a name="astro_moon_quarter_t"></a>
 #### `astro_moon_quarter_t`
 
+**A lunar quarter event (new moon, first quarter, full moon, or third quarter) along with its date and time.** 
+
 | Type | Member | Description |
 | ---- | ------ | ----------- |
 | `astro_status_t` | `status` |  ASTRO_SUCCESS if this struct is valid; otherwise an error code.  |
@@ -414,6 +434,8 @@ To get started quickly, here are some [examples](../../demo/c/).
 
 <a name="astro_observer_t"></a>
 #### `astro_observer_t`
+
+**The location of an observer on (or near) the surface of the Earth.**  This structure is passed to functions that calculate phenomena as observed from a particular place on the Earth. 
 
 | Type | Member | Description |
 | ---- | ------ | ----------- |
@@ -427,6 +449,8 @@ To get started quickly, here are some [examples](../../demo/c/).
 <a name="astro_search_result_t"></a>
 #### `astro_search_result_t`
 
+**The result of a search for an astronomical event.** 
+
 | Type | Member | Description |
 | ---- | ------ | ----------- |
 | `astro_status_t` | `status` |  ASTRO_SUCCESS if this struct is valid; otherwise an error code.  |
@@ -437,6 +461,8 @@ To get started quickly, here are some [examples](../../demo/c/).
 
 <a name="astro_seasons_t"></a>
 #### `astro_seasons_t`
+
+**The dates and times of changes of season for a given calendar year.** 
 
 | Type | Member | Description |
 | ---- | ------ | ----------- |
@@ -452,6 +478,8 @@ To get started quickly, here are some [examples](../../demo/c/).
 <a name="astro_time_t"></a>
 #### `astro_time_t`
 
+**A date and time used for astronomical calculations.**  This type is of fundamental importance to Astronomy Engine. It is used to represent dates and times for all astronomical calculations. It is also included in the values returned by many Astronomy Engine functions. To create a valid `#astro_time_t` value from scratch, call #Astronomy_MakeTime (for a given calendar date and time) or #Astronomy_CurrentTime (for the system's current date and time). To adjust an existing `#astro_time_t` by a certain real number of days, call #Astronomy_AddDays. Thi `#astro_time_t` type contains `ut` to represent Universal Time (UT1/UTC) and `tt` to represent Terrestrial Time (TT, also known as *ephemeris time*). The difference `tt-ut` is known as *&Delta;T*, and is obtained from a model provided by the [United States Naval Observatory](http://maia.usno.navy.mil/ser7/). Both `tt` and `ut` are necessary for performing different astronomical calculations. Indeed, certain calculations (such as rise/set times) require both time scales. See the documentation for the `ut` and `tt` fields for more detailed information. In cases where `#astro_time_t` is included in a structure returned by a function that can fail, the #astro_status_t field `status` will contain a value other than #ASTRO_SUCCESS; in that case the `ut` and `tt` will hold `NAN` (not a number). In general, when there is an error code stored in a struct field `status`, the caller should ignore all other values in that structure, including the `ut` and `tt` inside `#astro_time_t`. 
+
 | Type | Member | Description |
 | ---- | ------ | ----------- |
 | `double` | `ut` | **UT1/UTC number of days since noon on January 1, 2000.**  The floating point number of days of Universal Time since noon UTC January 1, 2000. Astronomy Engine approximates UTC and UT1 as being the same thing, although they are not exactly equivalent; UTC and UT1 can disagree by up to &plusmn;0.9 seconds. This approximation is sufficient for the accuracy requirements of Astronomy Engine. Universal Time Coordinate (UTC) is the international standard for legal and civil timekeeping and replaces the older Greenwich Mean Time (GMT) standard. UTC is kept in sync with unpredictable observed changes in the Earth's rotation by occasionally adding leap seconds as needed. UT1 is an idealized time scale based on observed rotation of the Earth, which gradually slows down in an unpredictable way over time, due to tidal drag by the Moon and Sun, large scale weather events like hurricanes, and internal seismic and convection effects. Conceptually, UT1 drifts from atomic time continuously and erratically, whereas UTC is adjusted by a scheduled whole number of leap seconds as needed. The value in `ut` is appropriate for any calculation involving the Earth's rotation, such as calculating rise/set times, culumination, and anything involving apparent sidereal time. Before the era of atomic timekeeping, days based on the Earth's rotation were often known as *mean solar days*.  |
@@ -462,6 +490,8 @@ To get started quickly, here are some [examples](../../demo/c/).
 
 <a name="astro_utc_t"></a>
 #### `astro_utc_t`
+
+**A calendar date and time expressed in UTC.** 
 
 | Type | Member | Description |
 | ---- | ------ | ----------- |
@@ -477,6 +507,8 @@ To get started quickly, here are some [examples](../../demo/c/).
 
 <a name="astro_vector_t"></a>
 #### `astro_vector_t`
+
+**A 3D Cartesian vector whose components are expressed in Astronomical Units (AU).** 
 
 | Type | Member | Description |
 | ---- | ------ | ----------- |
