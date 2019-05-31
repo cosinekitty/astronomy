@@ -289,7 +289,7 @@ To get started quickly, here are some [examples](../../demo/c/).
 
 | Type | Member | Description |
 | ---- | ------ | ----------- |
-| `astro_status_t` | `status` |  ASTRO_SUCCESS if this struct is valid; otherwise an error code.  |
+| [`astro_status_t`](#astro_status_t) | `status` |  ASTRO_SUCCESS if this struct is valid; otherwise an error code.  |
 | `double` | `angle` |  An angle expressed in degrees.  |
 
 
@@ -302,9 +302,9 @@ To get started quickly, here are some [examples](../../demo/c/).
 
 | Type | Member | Description |
 | ---- | ------ | ----------- |
-| `astro_status_t` | `status` |  ASTRO_SUCCESS if this struct is valid; otherwise an error code.  |
-| `astro_time_t` | `time` |  The date and time of the apsis.  |
-| `astro_apsis_kind_t` | `kind` |  Whether this is a pericenter or apocenter event.  |
+| [`astro_status_t`](#astro_status_t) | `status` |  ASTRO_SUCCESS if this struct is valid; otherwise an error code.  |
+| [`astro_time_t`](#astro_time_t) | `time` |  The date and time of the apsis.  |
+| [`astro_apsis_kind_t`](#astro_apsis_kind_t) | `kind` |  Whether this is a pericenter or apocenter event.  |
 | `double` | `dist_au` |  The distance between the centers of the bodies in astronomical units.  |
 | `double` | `dist_km` |  The distance between the centers of the bodies in kilometers.  |
 
@@ -318,7 +318,7 @@ To get started quickly, here are some [examples](../../demo/c/).
 
 | Type | Member | Description |
 | ---- | ------ | ----------- |
-| `astro_status_t` | `status` |  ASTRO_SUCCESS if this struct is valid; otherwise an error code.  |
+| [`astro_status_t`](#astro_status_t) | `status` |  ASTRO_SUCCESS if this struct is valid; otherwise an error code.  |
 | `double` | `ex` |  Cartesian x-coordinate: in the direction of the equinox along the ecliptic plane.  |
 | `double` | `ey` |  Cartesian y-coordinate: in the ecliptic plane 90 degrees prograde from the equinox.  |
 | `double` | `ez` |  Cartesian z-coordinate: perpendicular to the ecliptic plane. Positive is north.  |
@@ -335,9 +335,9 @@ To get started quickly, here are some [examples](../../demo/c/).
 
 | Type | Member | Description |
 | ---- | ------ | ----------- |
-| `astro_status_t` | `status` |  ASTRO_SUCCESS if this struct is valid; otherwise an error code.  |
-| `astro_time_t` | `time` |  The date and time of the observation.  |
-| `astro_visibility_t` | `visibility` |  Whether the body is best seen in the morning or the evening.  |
+| [`astro_status_t`](#astro_status_t) | `status` |  ASTRO_SUCCESS if this struct is valid; otherwise an error code.  |
+| [`astro_time_t`](#astro_time_t) | `time` |  The date and time of the observation.  |
+| [`astro_visibility_t`](#astro_visibility_t) | `visibility` |  Whether the body is best seen in the morning or the evening.  |
 | `double` | `elongation` |  The angle in degrees between the body and the Sun, as seen from the Earth.  |
 | `double` | `relative_longitude` |  The difference between the ecliptic longitudes of the body and the Sun.  |
 
@@ -351,7 +351,7 @@ To get started quickly, here are some [examples](../../demo/c/).
 
 | Type | Member | Description |
 | ---- | ------ | ----------- |
-| `astro_status_t` | `status` |  ASTRO_SUCCESS if this struct is valid; otherwise an error code.  |
+| [`astro_status_t`](#astro_status_t) | `status` |  ASTRO_SUCCESS if this struct is valid; otherwise an error code.  |
 | `double` | `ra` |  right ascension in sidereal hours.  |
 | `double` | `dec` |  declination in degrees  |
 | `double` | `dist` |  distance to the celestial body in AU.  |
@@ -366,7 +366,7 @@ To get started quickly, here are some [examples](../../demo/c/).
 
 | Type | Member | Description |
 | ---- | ------ | ----------- |
-| `astro_status_t` | `status` |  ASTRO_SUCCESS if this struct is valid; otherwise an error code.  |
+| [`astro_status_t`](#astro_status_t) | `status` |  ASTRO_SUCCESS if this struct is valid; otherwise an error code.  |
 | `double` | `value` |  The value returned by a function whose ascending root is to be found.  |
 
 
@@ -394,9 +394,9 @@ To get started quickly, here are some [examples](../../demo/c/).
 
 | Type | Member | Description |
 | ---- | ------ | ----------- |
-| `astro_status_t` | `status` |  ASTRO_SUCCESS if this struct is valid; otherwise an error code.  |
-| `astro_time_t` | `time` |  The date and time when the body crosses the specified hour angle.  |
-| `astro_horizon_t` | `hor` |  Apparent coordinates of the body at the time it crosses the specified hour angle.  |
+| [`astro_status_t`](#astro_status_t) | `status` |  ASTRO_SUCCESS if this struct is valid; otherwise an error code.  |
+| [`astro_time_t`](#astro_time_t) | `time` |  The date and time when the body crosses the specified hour angle.  |
+| [`astro_horizon_t`](#astro_horizon_t) | `hor` |  Apparent coordinates of the body at the time it crosses the specified hour angle.  |
 
 
 ---
@@ -408,8 +408,8 @@ To get started quickly, here are some [examples](../../demo/c/).
 
 | Type | Member | Description |
 | ---- | ------ | ----------- |
-| `astro_status_t` | `status` |  ASTRO_SUCCESS if this struct is valid; otherwise an error code.  |
-| `astro_time_t` | `time` |  The date and time of the observation.  |
+| [`astro_status_t`](#astro_status_t) | `status` |  ASTRO_SUCCESS if this struct is valid; otherwise an error code.  |
+| [`astro_time_t`](#astro_time_t) | `time` |  The date and time of the observation.  |
 | `double` | `mag` |  The visual magnitude of the body. Smaller values are brighter.  |
 | `double` | `phase_angle` |  The angle in degrees between the Sun and the Earth, as seen from the body. Indicates the body's phase as seen from the Earth.  |
 | `double` | `helio_dist` |  The distance between the Sun and the body at the observation time.  |
@@ -425,9 +425,9 @@ To get started quickly, here are some [examples](../../demo/c/).
 
 | Type | Member | Description |
 | ---- | ------ | ----------- |
-| `astro_status_t` | `status` |  ASTRO_SUCCESS if this struct is valid; otherwise an error code.  |
+| [`astro_status_t`](#astro_status_t) | `status` |  ASTRO_SUCCESS if this struct is valid; otherwise an error code.  |
 | `int` | `quarter` |  0=new moon, 1=first quarter, 2=full moon, 3=third quarter.  |
-| `astro_time_t` | `time` |  The date and time of the lunar quarter.  |
+| [`astro_time_t`](#astro_time_t) | `time` |  The date and time of the lunar quarter.  |
 
 
 ---
@@ -453,8 +453,8 @@ To get started quickly, here are some [examples](../../demo/c/).
 
 | Type | Member | Description |
 | ---- | ------ | ----------- |
-| `astro_status_t` | `status` |  ASTRO_SUCCESS if this struct is valid; otherwise an error code.  |
-| `astro_time_t` | `time` |  The time at which a searched-for event occurs.  |
+| [`astro_status_t`](#astro_status_t) | `status` |  ASTRO_SUCCESS if this struct is valid; otherwise an error code.  |
+| [`astro_time_t`](#astro_time_t) | `time` |  The time at which a searched-for event occurs.  |
 
 
 ---
@@ -466,11 +466,11 @@ To get started quickly, here are some [examples](../../demo/c/).
 
 | Type | Member | Description |
 | ---- | ------ | ----------- |
-| `astro_status_t` | `status` |  ASTRO_SUCCESS if this struct is valid; otherwise an error code.  |
-| `astro_time_t` | `mar_equinox` |  The date and time of the March equinox for the specified year.  |
-| `astro_time_t` | `jun_solstice` |  The date and time of the June soltice for the specified year.  |
-| `astro_time_t` | `sep_equinox` |  The date and time of the September equinox for the specified year.  |
-| `astro_time_t` | `dec_solstice` |  The date and time of the December solstice for the specified year.  |
+| [`astro_status_t`](#astro_status_t) | `status` |  ASTRO_SUCCESS if this struct is valid; otherwise an error code.  |
+| [`astro_time_t`](#astro_time_t) | `mar_equinox` |  The date and time of the March equinox for the specified year.  |
+| [`astro_time_t`](#astro_time_t) | `jun_solstice` |  The date and time of the June soltice for the specified year.  |
+| [`astro_time_t`](#astro_time_t) | `sep_equinox` |  The date and time of the September equinox for the specified year.  |
+| [`astro_time_t`](#astro_time_t) | `dec_solstice` |  The date and time of the December solstice for the specified year.  |
 
 
 ---
@@ -512,11 +512,11 @@ To get started quickly, here are some [examples](../../demo/c/).
 
 | Type | Member | Description |
 | ---- | ------ | ----------- |
-| `astro_status_t` | `status` |  ASTRO_SUCCESS if this struct is valid; otherwise an error code.  |
+| [`astro_status_t`](#astro_status_t) | `status` |  ASTRO_SUCCESS if this struct is valid; otherwise an error code.  |
 | `double` | `x` |  The Cartesian x-coordinate of the vector in AU.  |
 | `double` | `y` |  The Cartesian y-coordinate of the vector in AU.  |
 | `double` | `z` |  The Cartesian z-coordinate of the vector in AU.  |
-| `astro_time_t` | `t` |  The date and time at which this vector is valid.  |
+| [`astro_time_t`](#astro_time_t) | `t` |  The date and time at which this vector is valid.  |
 
 ## Type Definitions
 

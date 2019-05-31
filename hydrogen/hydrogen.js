@@ -257,7 +257,16 @@ class StructInfo extends Item {
         let type = Find(member, 'type');
         let brief = Look(member, 'briefdescription');
         let detail = Look(member, 'detaileddescription');
-        let md = '| `' + Item.Flat(type) + '` | `' + Item.Flat(name) + '` | ' + this.MdDescription(brief, detail) + ' |\n';
+        let ntext = Item.Flat(name);
+        let ttext = Item.Flat(type);
+        if (ttext.indexOf('astro_') === 0) {
+            // create a link to our custom type
+            ttext = '[`' + ttext + '`](#' + ttext + ')';
+        } else {
+            // assume built-in type that we can't link to
+            ttext = '`' + ttext + '`';
+        }
+        let md = '| ' + ttext + ' | `' + ntext + '` | ' + this.MdDescription(brief, detail) + ' |\n';
         return md;
     }
 }
