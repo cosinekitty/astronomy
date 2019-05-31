@@ -78,175 +78,280 @@ To get started quickly, here are some [examples](../../demo/c/).
 
 <a name="Astronomy_AddDays"></a>
 
+`astro_time_t Astronomy_AddDays(astro_time_t time, double days);`
+
+
 
 ---
 
 <a name="Astronomy_AngleFromSun"></a>
+
+`astro_angle_result_t Astronomy_AngleFromSun(astro_body_t body, astro_time_t time);`
+
 
 
 ---
 
 <a name="Astronomy_BodyCode"></a>
 
+`astro_body_t Astronomy_BodyCode(const char *name);`
+
+
 
 ---
 
 <a name="Astronomy_BodyName"></a>
+
+`const char* Astronomy_BodyName(astro_body_t body);`
+
 
 
 ---
 
 <a name="Astronomy_CurrentTime"></a>
 
+`astro_time_t Astronomy_CurrentTime(void);`
+
+
 
 ---
 
 <a name="Astronomy_Ecliptic"></a>
+
+`astro_ecliptic_t Astronomy_Ecliptic(astro_vector_t equ);`
+
 
 
 ---
 
 <a name="Astronomy_EclipticLongitude"></a>
 
+`astro_angle_result_t Astronomy_EclipticLongitude(astro_body_t body, astro_time_t time);`
+
+
 
 ---
 
 <a name="Astronomy_Elongation"></a>
+
+`astro_elongation_t Astronomy_Elongation(astro_body_t body, astro_time_t time);`
+
 
 
 ---
 
 <a name="Astronomy_Equator"></a>
 
+`astro_equatorial_t Astronomy_Equator(astro_body_t body, astro_time_t time, astro_observer_t observer, int ofdate, int aberration);`
+
+
 
 ---
 
 <a name="Astronomy_GeoMoon"></a>
+
+`astro_vector_t Astronomy_GeoMoon(astro_time_t time);`
+
 
 
 ---
 
 <a name="Astronomy_GeoVector"></a>
 
+`astro_vector_t Astronomy_GeoVector(astro_body_t body, astro_time_t time, int correct_aberration);`
+
+
 
 ---
 
 <a name="Astronomy_HelioVector"></a>
+
+`astro_vector_t Astronomy_HelioVector(astro_body_t body, astro_time_t time);`
+
 
 
 ---
 
 <a name="Astronomy_Horizon"></a>
 
+`astro_horizon_t Astronomy_Horizon(astro_time_t time, astro_observer_t observer, double ra, double dec, astro_refraction_t refraction);`
+
+
 
 ---
 
 <a name="Astronomy_Illumination"></a>
+
+`astro_illum_t Astronomy_Illumination(astro_body_t body, astro_time_t time);`
+
 
 
 ---
 
 <a name="Astronomy_LongitudeFromSun"></a>
 
+`astro_angle_result_t Astronomy_LongitudeFromSun(astro_body_t body, astro_time_t time);`
+
+
 
 ---
 
 <a name="Astronomy_MakeObserver"></a>
+
+`astro_observer_t Astronomy_MakeObserver(double latitude, double longitude, double height);`
+
 
 
 ---
 
 <a name="Astronomy_MakeTime"></a>
 
+`astro_time_t Astronomy_MakeTime(int year, int month, int day, int hour, int minute, double second);`
+
+
 
 ---
 
 <a name="Astronomy_MoonPhase"></a>
+
+`astro_angle_result_t Astronomy_MoonPhase(astro_time_t time);`
+
 
 
 ---
 
 <a name="Astronomy_NextLunarApsis"></a>
 
+`astro_apsis_t Astronomy_NextLunarApsis(astro_apsis_t apsis);`
+
+
 
 ---
 
 <a name="Astronomy_NextMoonQuarter"></a>
+
+`astro_moon_quarter_t Astronomy_NextMoonQuarter(astro_moon_quarter_t mq);`
+
 
 
 ---
 
 <a name="Astronomy_Search"></a>
 
+`astro_search_result_t Astronomy_Search(astro_search_func_t func, void *context, astro_time_t t1, astro_time_t t2, double dt_tolerance_seconds);`
+
+
 
 ---
 
 <a name="Astronomy_SearchHourAngle"></a>
+
+`astro_hour_angle_t Astronomy_SearchHourAngle(astro_body_t body, astro_observer_t observer, double hourAngle, astro_time_t dateStart);`
+
 
 
 ---
 
 <a name="Astronomy_SearchLunarApsis"></a>
 
+`astro_apsis_t Astronomy_SearchLunarApsis(astro_time_t startTime);`
+
+
 
 ---
 
 <a name="Astronomy_SearchMaxElongation"></a>
+
+`astro_elongation_t Astronomy_SearchMaxElongation(astro_body_t body, astro_time_t startDate);`
+
 
 
 ---
 
 <a name="Astronomy_SearchMoonPhase"></a>
 
+`astro_search_result_t Astronomy_SearchMoonPhase(double targetLon, astro_time_t dateStart, double limitDays);`
+
+
 
 ---
 
 <a name="Astronomy_SearchMoonQuarter"></a>
+
+`astro_moon_quarter_t Astronomy_SearchMoonQuarter(astro_time_t dateStart);`
+
 
 
 ---
 
 <a name="Astronomy_SearchPeakMagnitude"></a>
 
+`astro_illum_t Astronomy_SearchPeakMagnitude(astro_body_t body, astro_time_t startDate);`
+
+
 
 ---
 
 <a name="Astronomy_SearchRelativeLongitude"></a>
+
+`astro_search_result_t Astronomy_SearchRelativeLongitude(astro_body_t body, double targetRelLon, astro_time_t startDate);`
+
 
 
 ---
 
 <a name="Astronomy_SearchRiseSet"></a>
 
+`astro_search_result_t Astronomy_SearchRiseSet(astro_body_t body, astro_observer_t observer, int direction, astro_time_t dateStart, double limitDays);`
+
+
 
 ---
 
 <a name="Astronomy_SearchSunLongitude"></a>
+
+`astro_search_result_t Astronomy_SearchSunLongitude(double targetLon, astro_time_t dateStart, double limitDays);`
+
 
 
 ---
 
 <a name="Astronomy_Seasons"></a>
 
+`astro_seasons_t Astronomy_Seasons(int calendar_year);`
+
+
 
 ---
 
 <a name="Astronomy_SunPosition"></a>
+
+`astro_ecliptic_t Astronomy_SunPosition(astro_time_t time);`
+
 
 
 ---
 
 <a name="Astronomy_TimeFromUtc"></a>
 
+`astro_time_t Astronomy_TimeFromUtc(astro_utc_t utc);`
+
+
 
 ---
 
 <a name="Astronomy_UtcFromTime"></a>
 
+`astro_utc_t Astronomy_UtcFromTime(astro_time_t time);`
+
+
 
 ---
 
 <a name="Astronomy_VectorLength"></a>
+
+`double Astronomy_VectorLength(astro_vector_t vector);`
+
 
 ## Enumerated Types
 

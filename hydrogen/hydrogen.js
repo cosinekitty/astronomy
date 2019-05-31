@@ -221,11 +221,13 @@ class TypeDef extends Item {
 class FuncInfo extends Item {
     constructor(m) {
         super(m);
+        this.decl = Item.Flat(Find(m, 'definition')) + Item.Flat(Find(m, 'argsstring')) + ';';
         //console.log('    func ' + Item.Flat(this.name));
     }
 
     Markdown() {
         let md = this.MarkdownPrefix();
+        md += '\n`' + this.decl + '`\n\n';
         return md;
     }
 }
