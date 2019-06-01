@@ -95,7 +95,7 @@ The value stored in `time` will not be modified; it is passed by value.
 
 
 
-| type | name | description |
+| Type | Parameter | Description |
 | --- | --- | --- |
 | [`astro_time_t`](#astro_time_t) | time |  A date and time for which to calculate an adjusted date and time.  | 
 | `double` | days |  A floating point number of days by which to adjust `time`. May be negative, 0, or positive.  | 
@@ -125,7 +125,7 @@ The value stored in `time` will not be modified; it is passed by value.
 
 
 
-| type | name | description |
+| Type | Parameter | Description |
 | --- | --- | --- |
 | `const char *` | name |  One of the following strings: Sun, Moon, Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune, Pluto.  | 
 
@@ -147,7 +147,7 @@ The value stored in `time` will not be modified; it is passed by value.
 
 
 
-| type | name | description |
+| Type | Parameter | Description |
 | --- | --- | --- |
 | [`astro_body_t`](#astro_body_t) | body |  The celestial body whose name is to be found.  | 
 
@@ -261,7 +261,7 @@ It is the caller's responsibility to ensure that the parameter values are correc
 
 
 
-| type | name | description |
+| Type | Parameter | Description |
 | --- | --- | --- |
 | `int` | year |  The UTC calendar year, e.g. 2019.  | 
 | `int` | month |  The UTC calendar month in the range 1..12.  | 
@@ -403,7 +403,7 @@ It is the caller's responsibility to ensure that the parameter values are correc
 
 
 
-| type | name | description |
+| Type | Parameter | Description |
 | --- | --- | --- |
 | [`astro_vector_t`](#astro_vector_t) | vector |  The vector whose length is to be calculated.  | 
 

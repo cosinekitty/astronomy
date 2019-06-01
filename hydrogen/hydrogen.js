@@ -301,7 +301,7 @@ class FuncInfo extends Item {
         md += this.MdDescription(this.brief, this.detail, true);
 
         if (this.paramdocs) {
-            md += '\n\n| type | name | description |\n';
+            md += '\n\n| Type | Parameter | Description |\n';
             md += '| --- | --- | --- |\n';
             for (let p of this.paramdocs.$$) {
                 if (p['#name'] === 'parameteritem') {
