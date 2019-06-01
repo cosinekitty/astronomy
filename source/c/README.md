@@ -81,7 +81,19 @@ To get started quickly, here are some [examples](../../demo/c/).
 
 **Calculates the sum or difference of an [`astro_time_t`](#astro_time_t) with a specified floating point number of days.** 
 
- Sometimes we need to adjust a given [`astro_time_t`](#astro_time_t) value by a certain amount of time. This function adds the given real number of days in `days` to the date and time in `time`. More precisely, the result's Universal Time field `ut` is exactly adjusted by `days` and the Terrestrial Time field `tt` is adjusted correctly for the resulting UTC date and time, according to the historical and predictive Delta-T model provided by the [United States Naval Observatory](http://maia.usno.navy.mil/ser7/). The value stored in `time` will not be modified; it is passed by value. 
+
+
+Sometimes we need to adjust a given [`astro_time_t`](#astro_time_t) value by a certain amount of time. This function adds the given real number of days in `days` to the date and time in `time`.
+
+More precisely, the result's Universal Time field `ut` is exactly adjusted by `days` and the Terrestrial Time field `tt` is adjusted correctly for the resulting UTC date and time, according to the historical and predictive Delta-T model provided by the [United States Naval Observatory](http://maia.usno.navy.mil/ser7/).
+
+The value stored in `time` will not be modified; it is passed by value.
+
+
+
+**Returns:**  A date and time that is conceptually equal to `time + days`. 
+
+
 
 ---
 
@@ -97,7 +109,13 @@ To get started quickly, here are some [examples](../../demo/c/).
 
 **Returns the [`astro_body_t`](#astro_body_t) value corresponding to the given English name.** 
 
- 
+
+
+
+
+**Returns:**  If `name` is one of the strings (case-sensitive) listed above, the returned value is the corresponding [`astro_body_t`](#astro_body_t) value, otherwise it is [`BODY_INVALID`](#BODY_INVALID). 
+
+
 
 ---
 
@@ -106,7 +124,13 @@ To get started quickly, here are some [examples](../../demo/c/).
 
 **Finds the name of a celestial body.** 
 
- 
+
+
+
+
+**Returns:**  The English-language name of the celestial body, or "" if the body is not valid. 
+
+
 
 ---
 
@@ -115,7 +139,9 @@ To get started quickly, here are some [examples](../../demo/c/).
 
 **Returns the computer's current date and time in the form of an [`astro_time_t`](#astro_time_t).** 
 
- Uses the computer's system clock to find the current UTC date and time with 1-second granularity. Converts that date and time to an [`astro_time_t`](#astro_time_t) value and returns the result. Callers can pass this value to other Astronomy Engine functions to calculate current observational conditions. 
+
+
+Uses the computer's system clock to find the current UTC date and time with 1-second granularity. Converts that date and time to an [`astro_time_t`](#astro_time_t) value and returns the result. Callers can pass this value to other Astronomy Engine functions to calculate current observational conditions. 
 
 ---
 
@@ -201,7 +227,17 @@ To get started quickly, here are some [examples](../../demo/c/).
 
 **Creates an [`astro_time_t`](#astro_time_t) value from a given calendar date and time.** 
 
- Given a UTC calendar date and time, calculates an [`astro_time_t`](#astro_time_t) value that can be passed to other Astronomy Engine functions for performing various calculations relating to that date and time. It is the caller's responsibility to ensure that the parameter values are correct. The parameters are not checked for validity, and this function never returns any indication of an error. Invalid values, for example passing in February 31, may cause unexpected return values. 
+
+
+Given a UTC calendar date and time, calculates an [`astro_time_t`](#astro_time_t) value that can be passed to other Astronomy Engine functions for performing various calculations relating to that date and time.
+
+It is the caller's responsibility to ensure that the parameter values are correct. The parameters are not checked for validity, and this function never returns any indication of an error. Invalid values, for example passing in February 31, may cause unexpected return values.
+
+
+
+**Returns:**  An [`astro_time_t`](#astro_time_t) value that represents the given calendar date and time. 
+
+
 
 ---
 
@@ -329,7 +365,9 @@ To get started quickly, here are some [examples](../../demo/c/).
 
 **Calculates the length of the given vector.** 
 
- 
+
+
+
 ## Enumerated Types
 
 
@@ -384,7 +422,13 @@ To get started quickly, here are some [examples](../../demo/c/).
 
 **An apsis event: pericenter (closest approach) or apocenter (farthest distance).** 
 
- For the Moon orbiting the Earth, or a planet orbiting the Sun, an *apsis* is an event where the orbiting body reaches its closest or farthest point from the primary body. The closest approach is called *pericenter* and the farthest point is *apocenter*. More specific terminology is common for particular orbiting bodies. The Moon's closest approach to the Earth is called *perigee* and its furthest point is called *apogee*. The closest approach of a planet to the Sun is called *perihelion* and the furthest point is called *aphelion*. This data structure is returned by [`Astronomy_SearchLunarApsis`](#Astronomy_SearchLunarApsis) and [`Astronomy_NextLunarApsis`](#Astronomy_NextLunarApsis) to iterate through consecutive alternating perigees and apogees. 
+
+
+For the Moon orbiting the Earth, or a planet orbiting the Sun, an *apsis* is an event where the orbiting body reaches its closest or farthest point from the primary body. The closest approach is called *pericenter* and the farthest point is *apocenter*.
+
+More specific terminology is common for particular orbiting bodies. The Moon's closest approach to the Earth is called *perigee* and its furthest point is called *apogee*. The closest approach of a planet to the Sun is called *perihelion* and the furthest point is called *aphelion*.
+
+This data structure is returned by [`Astronomy_SearchLunarApsis`](#Astronomy_SearchLunarApsis) and [`Astronomy_NextLunarApsis`](#Astronomy_NextLunarApsis) to iterate through consecutive alternating perigees and apogees. 
 
 | Type | Member | Description |
 | ---- | ------ | ----------- |
@@ -402,7 +446,9 @@ To get started quickly, here are some [examples](../../demo/c/).
 
 **Ecliptic angular and Cartesian coordinates.** 
 
- Coordinates of a celestial body as seen from the center of the Sun (heliocentric), oriented with respect to the plane of the Earth's orbit around the Sun (the ecliptic). 
+
+
+Coordinates of a celestial body as seen from the center of the Sun (heliocentric), oriented with respect to the plane of the Earth's orbit around the Sun (the ecliptic). 
 
 | Type | Member | Description |
 | ---- | ------ | ----------- |
@@ -439,7 +485,9 @@ To get started quickly, here are some [examples](../../demo/c/).
 
 **Equatorial angular coordinates.** 
 
- Coordinates of a celestial body as seen from the Earth (geocentric or topocentric, depending on context), oriented with respect to the projection of the Earth's equator onto the sky. 
+
+
+Coordinates of a celestial body as seen from the Earth (geocentric or topocentric, depending on context), oriented with respect to the projection of the Earth's equator onto the sky. 
 
 | Type | Member | Description |
 | ---- | ------ | ----------- |
@@ -456,7 +504,9 @@ To get started quickly, here are some [examples](../../demo/c/).
 
 **A real value returned by a function whose ascending root is to be found.** 
 
- When calling [`Astronomy_Search`](#Astronomy_Search), the caller must pass in a callback function compatible with the function-pointer type astro_search_func_t whose ascending root is to be found. That callback function must return [`astro_func_result_t`](#astro_func_result_t). If the function call is successful, it will set `status` to [`ASTRO_SUCCESS`](#ASTRO_SUCCESS) and `value` to the numeric value appropriate for the given date and time. If the call fails for some reason, it should set `status` to an appropriate error value other than `ASTRO_SUCCESS`; in the error case, to guard against any possible misuse of `value`, it is recommended to set `value` to `NAN`, though this is not strictly necessary. 
+
+
+When calling [`Astronomy_Search`](#Astronomy_Search), the caller must pass in a callback function compatible with the function-pointer type astro_search_func_t whose ascending root is to be found. That callback function must return [`astro_func_result_t`](#astro_func_result_t). If the function call is successful, it will set `status` to [`ASTRO_SUCCESS`](#ASTRO_SUCCESS) and `value` to the numeric value appropriate for the given date and time. If the call fails for some reason, it should set `status` to an appropriate error value other than `ASTRO_SUCCESS`; in the error case, to guard against any possible misuse of `value`, it is recommended to set `value` to `NAN`, though this is not strictly necessary. 
 
 | Type | Member | Description |
 | ---- | ------ | ----------- |
@@ -471,7 +521,9 @@ To get started quickly, here are some [examples](../../demo/c/).
 
 **Coordinates of a celestial body as seen by a topocentric observer.** 
 
- Contains horizontal and equatorial coordinates seen by an observer on or near the surface of the Earth (a topocentric observer). Optionally corrected for atmospheric refraction. 
+
+
+Contains horizontal and equatorial coordinates seen by an observer on or near the surface of the Earth (a topocentric observer). Optionally corrected for atmospheric refraction. 
 
 | Type | Member | Description |
 | ---- | ------ | ----------- |
@@ -488,7 +540,9 @@ To get started quickly, here are some [examples](../../demo/c/).
 
 **Information about a celestial body crossing a specific hour angle.** 
 
- Returned by the function [`Astronomy_SearchHourAngle`](#Astronomy_SearchHourAngle) to report information about a celestial body crossing a certain hour angle as seen by a specified topocentric observer. 
+
+
+Returned by the function [`Astronomy_SearchHourAngle`](#Astronomy_SearchHourAngle) to report information about a celestial body crossing a certain hour angle as seen by a specified topocentric observer. 
 
 | Type | Member | Description |
 | ---- | ------ | ----------- |
@@ -504,7 +558,9 @@ To get started quickly, here are some [examples](../../demo/c/).
 
 **Information about the brightness and illuminated shape of a celestial body.** 
 
- Returned by the functions [`Astronomy_Illumination`](#Astronomy_Illumination) and [`Astronomy_SearchPeakMagnitude`](#Astronomy_SearchPeakMagnitude) to report the visual magnitude and illuminated fraction of a celestial body at a given date and time. 
+
+
+Returned by the functions [`Astronomy_Illumination`](#Astronomy_Illumination) and [`Astronomy_SearchPeakMagnitude`](#Astronomy_SearchPeakMagnitude) to report the visual magnitude and illuminated fraction of a celestial body at a given date and time. 
 
 | Type | Member | Description |
 | ---- | ------ | ----------- |
@@ -539,7 +595,9 @@ To get started quickly, here are some [examples](../../demo/c/).
 
 **The location of an observer on (or near) the surface of the Earth.** 
 
- This structure is passed to functions that calculate phenomena as observed from a particular place on the Earth. 
+
+
+This structure is passed to functions that calculate phenomena as observed from a particular place on the Earth. 
 
 | Type | Member | Description |
 | ---- | ------ | ----------- |
@@ -588,7 +646,19 @@ To get started quickly, here are some [examples](../../demo/c/).
 
 **A date and time used for astronomical calculations.** 
 
- This type is of fundamental importance to Astronomy Engine. It is used to represent dates and times for all astronomical calculations. It is also included in the values returned by many Astronomy Engine functions. To create a valid [`astro_time_t`](#astro_time_t) value from scratch, call [`Astronomy_MakeTime`](#Astronomy_MakeTime) (for a given calendar date and time) or [`Astronomy_CurrentTime`](#Astronomy_CurrentTime) (for the system's current date and time). To adjust an existing [`astro_time_t`](#astro_time_t) by a certain real number of days, call [`Astronomy_AddDays`](#Astronomy_AddDays). The [`astro_time_t`](#astro_time_t) type contains `ut` to represent Universal Time (UT1/UTC) and `tt` to represent Terrestrial Time (TT, also known as *ephemeris time*). The difference `tt-ut` is known as *&Delta;T*, and is obtained from a model provided by the [United States Naval Observatory](http://maia.usno.navy.mil/ser7/). Both `tt` and `ut` are necessary for performing different astronomical calculations. Indeed, certain calculations (such as rise/set times) require both time scales. See the documentation for the `ut` and `tt` fields for more detailed information. In cases where [`astro_time_t`](#astro_time_t) is included in a structure returned by a function that can fail, the astro_status_t field `status` will contain a value other than [`ASTRO_SUCCESS`](#ASTRO_SUCCESS); in that case the `ut` and `tt` will hold `NAN` (not a number). In general, when there is an error code stored in a struct field `status`, the caller should ignore all other values in that structure, including the `ut` and `tt` inside [`astro_time_t`](#astro_time_t). 
+
+
+This type is of fundamental importance to Astronomy Engine. It is used to represent dates and times for all astronomical calculations. It is also included in the values returned by many Astronomy Engine functions.
+
+To create a valid [`astro_time_t`](#astro_time_t) value from scratch, call [`Astronomy_MakeTime`](#Astronomy_MakeTime) (for a given calendar date and time) or [`Astronomy_CurrentTime`](#Astronomy_CurrentTime) (for the system's current date and time).
+
+To adjust an existing [`astro_time_t`](#astro_time_t) by a certain real number of days, call [`Astronomy_AddDays`](#Astronomy_AddDays).
+
+The [`astro_time_t`](#astro_time_t) type contains `ut` to represent Universal Time (UT1/UTC) and `tt` to represent Terrestrial Time (TT, also known as *ephemeris time*). The difference `tt-ut` is known as *&Delta;T*, and is obtained from a model provided by the [United States Naval Observatory](http://maia.usno.navy.mil/ser7/).
+
+Both `tt` and `ut` are necessary for performing different astronomical calculations. Indeed, certain calculations (such as rise/set times) require both time scales. See the documentation for the `ut` and `tt` fields for more detailed information.
+
+In cases where [`astro_time_t`](#astro_time_t) is included in a structure returned by a function that can fail, the astro_status_t field `status` will contain a value other than [`ASTRO_SUCCESS`](#ASTRO_SUCCESS); in that case the `ut` and `tt` will hold `NAN` (not a number). In general, when there is an error code stored in a struct field `status`, the caller should ignore all other values in that structure, including the `ut` and `tt` inside [`astro_time_t`](#astro_time_t). 
 
 | Type | Member | Description |
 | ---- | ------ | ----------- |

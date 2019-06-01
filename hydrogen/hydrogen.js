@@ -122,13 +122,13 @@ class Item {
 
     MdText(x, allow_paragraphs) {
         let md = '';
+        let para_sep = allow_paragraphs ? '\n\n' : ' ';
         if (x && x.$$) {
             for (let y of x.$$) {
                 let n = y['#name'];
                 switch (n) {
                 case 'para':
-                    md += allow_paragraphs ? '\n\n' : ' ';
-                    md += this.MdText(y, allow_paragraphs);
+                    md += para_sep + this.MdText(y, allow_paragraphs);
                     break;
 
                 case '__text__':
@@ -161,8 +161,16 @@ class Item {
                     break;
 
                 case 'parameterlist':
+                    break;  // parameter list rendered separately
+
                 case 'simplesect':
-                    break;  // ignore here; these are treated separately
+                    if (y.$.kind === 'return') {
+                        // documentation about return value of a function.
+                        md += para_sep + '**Returns:** ' + this.MdText(y, false) + para_sep;
+                    } else {
+                        console.log(`MdText: interesting simplesect kind = ${y.$.kind}`);
+                    }
+                    break;
 
                 default:
                     console.log(JSON.stringify(y, null, 2));
@@ -171,7 +179,10 @@ class Item {
                 }
             }
         }
-        md = Item.Clean(md);
+
+        if (!allow_paragraphs) {
+            md = Item.Clean(md);
+        }
         return md;
     }
 
