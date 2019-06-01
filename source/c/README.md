@@ -416,26 +416,103 @@ It is the caller's responsibility to ensure that the parameter values are correc
 ---
 
 <a name="astro_apsis_kind_t"></a>
+### astro_apsis_kind_t
+
+**The type of apsis: pericenter (closest approach) or apocenter (farthest distance).** 
+
+
+
+| Enum Value | Description |
+| --- | --- |
+| APSIS_PERICENTER |  The body is at its closest approach to the object it orbits.  |
+| APSIS_APOCENTER |  The body is at its farthest distance from the object it orbits.  |
+| APSIS_INVALID |  Undefined or invalid apsis.  |
+
 
 
 ---
 
 <a name="astro_body_t"></a>
+### astro_body_t
+
+**A celestial body.** 
+
+
+
+| Enum Value | Description |
+| --- | --- |
+| BODY_INVALID |  An invalid or undefined celestial body.  |
+| BODY_MERCURY |  Mercury  |
+| BODY_VENUS |  Venus  |
+| BODY_EARTH |  Earth  |
+| BODY_MARS |  Mars  |
+| BODY_JUPITER |  Jupiter  |
+| BODY_SATURN |  Saturn  |
+| BODY_URANUS |  Uranus  |
+| BODY_NEPTUNE |  Neptune  |
+| BODY_PLUTO |  Pluto  |
+| BODY_SUN |  Sun  |
+| BODY_MOON |  Moon  |
+
 
 
 ---
 
 <a name="astro_refraction_t"></a>
+### astro_refraction_t
+
+**Selects whether to correct for atmospheric refraction, and if so, how.** 
+
+
+
+| Enum Value | Description |
+| --- | --- |
+| REFRACTION_NONE |  No atmospheric refraction corection (airless).  |
+| REFRACTION_NORMAL |  Recommended correction for standard atmospheric refraction.  |
+| REFRACTION_JPLHOR |  Used only for compatibility testing with JPL Horizons online tool.  |
+
 
 
 ---
 
 <a name="astro_status_t"></a>
+### astro_status_t
+
+**Indicates success/failure of an Astronomy Engine function call.** 
+
+
+
+| Enum Value | Description |
+| --- | --- |
+| ASTRO_SUCCESS |  The operation was successful.  |
+| ASTRO_NOT_INITIALIZED |  A placeholder that can be used for data that is not yet initialized.  |
+| ASTRO_INVALID_BODY |  The celestial body was not valid. Different sets of bodies are supported depending on the function.  |
+| ASTRO_NO_CONVERGE |  A numeric solver failed to converge. This should not happen unless there is a bug in Astronomy Engine.  |
+| ASTRO_BAD_TIME |  Cannot calculate Pluto's position outside the year range 1700..2200.  |
+| ASTRO_BAD_VECTOR |  Vector magnitude is too small to be normalized into a unit vector.  |
+| ASTRO_SEARCH_FAILURE |  Search was not able to find an ascending root crossing of the function in the specified time interval.  |
+| ASTRO_EARTH_NOT_ALLOWED |  The Earth cannot be treated as a celestial body seen from an observer on the Earth itself.  |
+| ASTRO_NO_MOON_QUARTER |  No lunar quarter occurs inside the specified time range.  |
+| ASTRO_WRONG_MOON_QUARTER |  Internal error: Astronomy_NextMoonQuarter found the wrong moon quarter.  |
+| ASTRO_INTERNAL_ERROR |  A self-check failed inside the code somewhere, indicating a bug needs to be fixed.  |
+| ASTRO_INVALID_PARAMETER |  A parameter value passed to a function was not valid.  |
+
 
 
 ---
 
 <a name="astro_visibility_t"></a>
+### astro_visibility_t
+
+**Indicates whether a body (especially Mercury or Venus) is best seen in the morning or evening.** 
+
+
+
+| Enum Value | Description |
+| --- | --- |
+| VISIBLE_MORNING |  The body is best visible in the morning, before sunrise.  |
+| VISIBLE_EVENING |  The body is best visible in the evening, after sunset.  |
+
 
 ## Structures
 

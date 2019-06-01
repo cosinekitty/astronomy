@@ -250,7 +250,22 @@ class EnumInfo extends Item {
     }
 
     Markdown() {
+        let name = Item.Flat(this.name);
         let md = this.MarkdownPrefix();
+        md += '### ' + name + '\n\n';
+        md += this.MdDescription(this.brief, this.detail, true);
+        if (this.enumValueList instanceof Array && this.enumValueList.length > 0) {
+            md += '\n\n| Enum Value | Description |\n';
+            md += '| --- | --- |\n';
+            for (let e of this.enumValueList) {
+                let ename = Find(e, 'name');
+                let ebrief = Look(e, 'briefdescription');
+                let edetail = Look(e, 'detaileddescription');
+                let desc = this.MdDescription(ebrief, edetail, false);
+                md += '| ' + Item.Flat(ename) + ' | ' + desc + ' |\n';
+            }
+            md += '\n';
+        }
         return md;
     }
 }
@@ -295,7 +310,7 @@ class FuncInfo extends Item {
     Markdown() {
         let name = Item.Flat(this.name);
         let md = this.MarkdownPrefix();
-        md += '### ' + name ;
+        md += '### ' + name;
         md += this.MdParamNameList();
         md += ' &#8658; ' + Item.MdType(this.rettype) + '\n\n';
         md += this.MdDescription(this.brief, this.detail, true);
