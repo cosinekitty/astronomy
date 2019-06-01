@@ -77,7 +77,7 @@ To get started quickly, here are some [examples](../../demo/c/).
 ---
 
 <a name="Astronomy_AddDays"></a>
-#### `Astronomy_AddDays()`  &#8658; [`astro_time_t`](#astro_time_t)
+### Astronomy_AddDays()  &#8658; [`astro_time_t`](#astro_time_t)
 
 **Calculates the sum or difference of an [`astro_time_t`](#astro_time_t) with a specified floating point number of days.** 
 
@@ -86,14 +86,14 @@ To get started quickly, here are some [examples](../../demo/c/).
 ---
 
 <a name="Astronomy_AngleFromSun"></a>
-#### `Astronomy_AngleFromSun()`  &#8658; [`astro_angle_result_t`](#astro_angle_result_t)
+### Astronomy_AngleFromSun()  &#8658; [`astro_angle_result_t`](#astro_angle_result_t)
 
 
 
 ---
 
 <a name="Astronomy_BodyCode"></a>
-#### `Astronomy_BodyCode()`  &#8658; [`astro_body_t`](#astro_body_t)
+### Astronomy_BodyCode()  &#8658; [`astro_body_t`](#astro_body_t)
 
 **Returns the [`astro_body_t`](#astro_body_t) value corresponding to the given English name.** 
 
@@ -102,7 +102,7 @@ To get started quickly, here are some [examples](../../demo/c/).
 ---
 
 <a name="Astronomy_BodyName"></a>
-#### `Astronomy_BodyName()`  &#8658; `const char *`
+### Astronomy_BodyName()  &#8658; `const char *`
 
 **Finds the name of a celestial body.** 
 
@@ -111,7 +111,7 @@ To get started quickly, here are some [examples](../../demo/c/).
 ---
 
 <a name="Astronomy_CurrentTime"></a>
-#### `Astronomy_CurrentTime()`  &#8658; [`astro_time_t`](#astro_time_t)
+### Astronomy_CurrentTime()  &#8658; [`astro_time_t`](#astro_time_t)
 
 **Returns the computer's current date and time in the form of an [`astro_time_t`](#astro_time_t).** 
 
@@ -120,84 +120,84 @@ To get started quickly, here are some [examples](../../demo/c/).
 ---
 
 <a name="Astronomy_Ecliptic"></a>
-#### `Astronomy_Ecliptic()`  &#8658; [`astro_ecliptic_t`](#astro_ecliptic_t)
+### Astronomy_Ecliptic()  &#8658; [`astro_ecliptic_t`](#astro_ecliptic_t)
 
 
 
 ---
 
 <a name="Astronomy_EclipticLongitude"></a>
-#### `Astronomy_EclipticLongitude()`  &#8658; [`astro_angle_result_t`](#astro_angle_result_t)
+### Astronomy_EclipticLongitude()  &#8658; [`astro_angle_result_t`](#astro_angle_result_t)
 
 
 
 ---
 
 <a name="Astronomy_Elongation"></a>
-#### `Astronomy_Elongation()`  &#8658; [`astro_elongation_t`](#astro_elongation_t)
+### Astronomy_Elongation()  &#8658; [`astro_elongation_t`](#astro_elongation_t)
 
 
 
 ---
 
 <a name="Astronomy_Equator"></a>
-#### `Astronomy_Equator()`  &#8658; [`astro_equatorial_t`](#astro_equatorial_t)
+### Astronomy_Equator()  &#8658; [`astro_equatorial_t`](#astro_equatorial_t)
 
 
 
 ---
 
 <a name="Astronomy_GeoMoon"></a>
-#### `Astronomy_GeoMoon()`  &#8658; [`astro_vector_t`](#astro_vector_t)
+### Astronomy_GeoMoon()  &#8658; [`astro_vector_t`](#astro_vector_t)
 
 
 
 ---
 
 <a name="Astronomy_GeoVector"></a>
-#### `Astronomy_GeoVector()`  &#8658; [`astro_vector_t`](#astro_vector_t)
+### Astronomy_GeoVector()  &#8658; [`astro_vector_t`](#astro_vector_t)
 
 
 
 ---
 
 <a name="Astronomy_HelioVector"></a>
-#### `Astronomy_HelioVector()`  &#8658; [`astro_vector_t`](#astro_vector_t)
+### Astronomy_HelioVector()  &#8658; [`astro_vector_t`](#astro_vector_t)
 
 
 
 ---
 
 <a name="Astronomy_Horizon"></a>
-#### `Astronomy_Horizon()`  &#8658; [`astro_horizon_t`](#astro_horizon_t)
+### Astronomy_Horizon()  &#8658; [`astro_horizon_t`](#astro_horizon_t)
 
 
 
 ---
 
 <a name="Astronomy_Illumination"></a>
-#### `Astronomy_Illumination()`  &#8658; [`astro_illum_t`](#astro_illum_t)
+### Astronomy_Illumination()  &#8658; [`astro_illum_t`](#astro_illum_t)
 
 
 
 ---
 
 <a name="Astronomy_LongitudeFromSun"></a>
-#### `Astronomy_LongitudeFromSun()`  &#8658; [`astro_angle_result_t`](#astro_angle_result_t)
+### Astronomy_LongitudeFromSun()  &#8658; [`astro_angle_result_t`](#astro_angle_result_t)
 
 
 
 ---
 
 <a name="Astronomy_MakeObserver"></a>
-#### `Astronomy_MakeObserver()`  &#8658; [`astro_observer_t`](#astro_observer_t)
+### Astronomy_MakeObserver()  &#8658; [`astro_observer_t`](#astro_observer_t)
 
 
 
 ---
 
 <a name="Astronomy_MakeTime"></a>
-#### `Astronomy_MakeTime()`  &#8658; [`astro_time_t`](#astro_time_t)
+### Astronomy_MakeTime()  &#8658; [`astro_time_t`](#astro_time_t)
 
 **Creates an [`astro_time_t`](#astro_time_t) value from a given calendar date and time.** 
 
@@ -206,126 +206,126 @@ To get started quickly, here are some [examples](../../demo/c/).
 ---
 
 <a name="Astronomy_MoonPhase"></a>
-#### `Astronomy_MoonPhase()`  &#8658; [`astro_angle_result_t`](#astro_angle_result_t)
+### Astronomy_MoonPhase()  &#8658; [`astro_angle_result_t`](#astro_angle_result_t)
 
 
 
 ---
 
 <a name="Astronomy_NextLunarApsis"></a>
-#### `Astronomy_NextLunarApsis()`  &#8658; [`astro_apsis_t`](#astro_apsis_t)
+### Astronomy_NextLunarApsis()  &#8658; [`astro_apsis_t`](#astro_apsis_t)
 
 
 
 ---
 
 <a name="Astronomy_NextMoonQuarter"></a>
-#### `Astronomy_NextMoonQuarter()`  &#8658; [`astro_moon_quarter_t`](#astro_moon_quarter_t)
+### Astronomy_NextMoonQuarter()  &#8658; [`astro_moon_quarter_t`](#astro_moon_quarter_t)
 
 
 
 ---
 
 <a name="Astronomy_Search"></a>
-#### `Astronomy_Search()`  &#8658; [`astro_search_result_t`](#astro_search_result_t)
+### Astronomy_Search()  &#8658; [`astro_search_result_t`](#astro_search_result_t)
 
 
 
 ---
 
 <a name="Astronomy_SearchHourAngle"></a>
-#### `Astronomy_SearchHourAngle()`  &#8658; [`astro_hour_angle_t`](#astro_hour_angle_t)
+### Astronomy_SearchHourAngle()  &#8658; [`astro_hour_angle_t`](#astro_hour_angle_t)
 
 
 
 ---
 
 <a name="Astronomy_SearchLunarApsis"></a>
-#### `Astronomy_SearchLunarApsis()`  &#8658; [`astro_apsis_t`](#astro_apsis_t)
+### Astronomy_SearchLunarApsis()  &#8658; [`astro_apsis_t`](#astro_apsis_t)
 
 
 
 ---
 
 <a name="Astronomy_SearchMaxElongation"></a>
-#### `Astronomy_SearchMaxElongation()`  &#8658; [`astro_elongation_t`](#astro_elongation_t)
+### Astronomy_SearchMaxElongation()  &#8658; [`astro_elongation_t`](#astro_elongation_t)
 
 
 
 ---
 
 <a name="Astronomy_SearchMoonPhase"></a>
-#### `Astronomy_SearchMoonPhase()`  &#8658; [`astro_search_result_t`](#astro_search_result_t)
+### Astronomy_SearchMoonPhase()  &#8658; [`astro_search_result_t`](#astro_search_result_t)
 
 
 
 ---
 
 <a name="Astronomy_SearchMoonQuarter"></a>
-#### `Astronomy_SearchMoonQuarter()`  &#8658; [`astro_moon_quarter_t`](#astro_moon_quarter_t)
+### Astronomy_SearchMoonQuarter()  &#8658; [`astro_moon_quarter_t`](#astro_moon_quarter_t)
 
 
 
 ---
 
 <a name="Astronomy_SearchPeakMagnitude"></a>
-#### `Astronomy_SearchPeakMagnitude()`  &#8658; [`astro_illum_t`](#astro_illum_t)
+### Astronomy_SearchPeakMagnitude()  &#8658; [`astro_illum_t`](#astro_illum_t)
 
 
 
 ---
 
 <a name="Astronomy_SearchRelativeLongitude"></a>
-#### `Astronomy_SearchRelativeLongitude()`  &#8658; [`astro_search_result_t`](#astro_search_result_t)
+### Astronomy_SearchRelativeLongitude()  &#8658; [`astro_search_result_t`](#astro_search_result_t)
 
 
 
 ---
 
 <a name="Astronomy_SearchRiseSet"></a>
-#### `Astronomy_SearchRiseSet()`  &#8658; [`astro_search_result_t`](#astro_search_result_t)
+### Astronomy_SearchRiseSet()  &#8658; [`astro_search_result_t`](#astro_search_result_t)
 
 
 
 ---
 
 <a name="Astronomy_SearchSunLongitude"></a>
-#### `Astronomy_SearchSunLongitude()`  &#8658; [`astro_search_result_t`](#astro_search_result_t)
+### Astronomy_SearchSunLongitude()  &#8658; [`astro_search_result_t`](#astro_search_result_t)
 
 
 
 ---
 
 <a name="Astronomy_Seasons"></a>
-#### `Astronomy_Seasons()`  &#8658; [`astro_seasons_t`](#astro_seasons_t)
+### Astronomy_Seasons()  &#8658; [`astro_seasons_t`](#astro_seasons_t)
 
 
 
 ---
 
 <a name="Astronomy_SunPosition"></a>
-#### `Astronomy_SunPosition()`  &#8658; [`astro_ecliptic_t`](#astro_ecliptic_t)
+### Astronomy_SunPosition()  &#8658; [`astro_ecliptic_t`](#astro_ecliptic_t)
 
 
 
 ---
 
 <a name="Astronomy_TimeFromUtc"></a>
-#### `Astronomy_TimeFromUtc()`  &#8658; [`astro_time_t`](#astro_time_t)
+### Astronomy_TimeFromUtc()  &#8658; [`astro_time_t`](#astro_time_t)
 
 
 
 ---
 
 <a name="Astronomy_UtcFromTime"></a>
-#### `Astronomy_UtcFromTime()`  &#8658; [`astro_utc_t`](#astro_utc_t)
+### Astronomy_UtcFromTime()  &#8658; [`astro_utc_t`](#astro_utc_t)
 
 
 
 ---
 
 <a name="Astronomy_VectorLength"></a>
-#### `Astronomy_VectorLength()`  &#8658; `double`
+### Astronomy_VectorLength()  &#8658; `double`
 
 **Calculates the length of the given vector.** 
 

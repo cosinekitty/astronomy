@@ -267,7 +267,7 @@ class FuncInfo extends Item {
     Markdown() {
         let name = Item.Flat(this.name);
         let md = this.MarkdownPrefix();
-        md += '#### `' + name + '()` ';
+        md += '### ' + name + '() ';
         md += ' &#8658; ';      // right arrow before return type
         md += Item.MdType(this.rettype);
         md += '\n\n';
