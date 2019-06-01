@@ -271,18 +271,48 @@ class TypeDef extends Item {
 class FuncInfo extends Item {
     constructor(m) {
         super(m);
-        this.parmlist = Item.Search(m, 'parameterlist');
+        this.paramlist = this.ParamList(m);
         this.rettype = Find(m, 'type');
+    }
+
+    ParamList(m) {
+        var plist = [];
+        if (m.$$ instanceof Array) {
+            for (let e of m.$$) {
+                if (e['#name'] === 'param') {
+                    let type = Item.Flat(Find(e, 'type'));
+                    if (type !== 'void') {      // special case: func(void) has no parameters.
+                        let name = Item.Flat(Find(e, 'declname'));
+                        plist.push({type:type, name:name});
+                    }
+                }
+            }
+        }
+        return plist;
     }
 
     Markdown() {
         let name = Item.Flat(this.name);
         let md = this.MarkdownPrefix();
-        md += '### ' + name + '() ';
-        md += ' &#8658; ';      // right arrow before return type
-        md += Item.MdType(this.rettype);
-        md += '\n\n';
+        md += '### ' + name ;
+        md += this.MdParamNameList();
+        md += ' &#8658; ' + Item.MdType(this.rettype) + '\n\n';
         md += this.MdDescription(this.brief, this.detail, true);
+        return md;
+    }
+
+    MdParamNameList() {
+        // Generate a comma-delimited list of the parameter names.
+        let md = '(';
+        if (this.paramlist) {
+            let count = 0;
+            for (let p of this.paramlist) {
+                if (++count > 1)
+                    md += ', ';
+                md += p.name;
+            }
+        }
+        md += ')';
         return md;
     }
 }
