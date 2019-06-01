@@ -88,6 +88,25 @@ class Item {
         throw `Item.Flat: don't know how to convert: ${x}`;    
     }
 
+    static Search(x, key, kind) {
+        let queue = [x];
+        while (queue.length > 0) {
+            let e = queue.shift();
+            if (e['#name'] === key) {
+                if (!kind || e.$.kind === kind) {
+                    return e;
+                }                
+            }
+
+            if (e.$$ instanceof Array) {
+                for (let c of e.$$) {
+                    queue.push(c);
+                }
+            }
+        }
+        return null;    
+    }
+
     static Clean(s) {
         if (s && typeof s === 'string') {
             return s.replace(/\s+/g, ' ');
@@ -101,14 +120,15 @@ class Item {
         return md;
     }
 
-    MdText(x) {
+    MdText(x, allow_paragraphs) {
         let md = '';
         if (x && x.$$) {
             for (let y of x.$$) {
                 let n = y['#name'];
                 switch (n) {
                 case 'para':
-                    md += ' ' + this.MdText(y);
+                    md += allow_paragraphs ? '\n\n' : ' ';
+                    md += this.MdText(y, allow_paragraphs);
                     break;
 
                 case '__text__':
@@ -122,23 +142,27 @@ class Item {
 
                 case 'computeroutput':
                     md += '`';
-                    md += this.MdText(y);
+                    md += this.MdText(y, allow_paragraphs);
                     md += '`';
                     break;
 
                 case 'emphasis':
                     md += '*';
-                    md += this.MdText(y);
+                    md += this.MdText(y, allow_paragraphs);
                     md += '*';
                     break;
 
                 case 'ulink':
-                    md += '[' + this.MdText(y) + '](' + y.$.url + ')';
+                    md += '[' + this.MdText(y, allow_paragraphs) + '](' + y.$.url + ')';
                     break;
 
                 case 'ref':
                     md += '[`' + y._ + '`](#' + y._ + ')';
                     break;
+
+                case 'parameterlist':
+                case 'simplesect':
+                    break;  // ignore here; these are treated separately
 
                 default:
                     console.log(JSON.stringify(y, null, 2));
@@ -151,7 +175,7 @@ class Item {
         return md;
     }
 
-    MdDescription(brief, detail) {
+    MdDescription(brief, detail, allow_paragraphs) {
         // I could prevent gh-pages (kramdown) escaping html inside tables:
         // https://stackoverflow.com/questions/47262698/inline-html-is-escaped-by-jekyll
         // But then it doesn't render correctly on github.com!  Ya just can't win.
@@ -161,13 +185,28 @@ class Item {
         let btext = this.MdText(brief);
         if (btext) {
             md += '**' + btext.trim() + '** ';
+            if (allow_paragraphs)
+                md += '\n\n';
         }
 
-        let dtext = this.MdText(detail);
+        let dtext = this.MdText(detail, allow_paragraphs);
         if (dtext) {
             md += dtext;
         }
 
+        return md;
+    }
+
+    static MdType(type) {
+        let name = Item.Flat(type);
+        let md;
+        if (name.indexOf('astro_') === 0) {
+            // create a link to our custom type
+            md = '[`' + name + '`](#' + name + ')';
+        } else {
+            // assume built-in type that we can't link to
+            md = '`' + name + '`';
+        }
         return md;
     }
 }
@@ -221,13 +260,18 @@ class TypeDef extends Item {
 class FuncInfo extends Item {
     constructor(m) {
         super(m);
-        this.decl = Item.Flat(Find(m, 'definition')) + Item.Flat(Find(m, 'argsstring')) + ';';
-        //console.log('    func ' + Item.Flat(this.name));
+        this.parmlist = Item.Search(m, 'parameterlist');
+        this.rettype = Find(m, 'type');
     }
 
     Markdown() {
+        let name = Item.Flat(this.name);
         let md = this.MarkdownPrefix();
-        md += '\n' + this.decl + '\n\n';
+        md += '#### `' + name + '()` ';
+        md += ' &#8658; ';      // right arrow before return type
+        md += Item.MdType(this.rettype);
+        md += '\n\n';
+        md += this.MdDescription(this.brief, this.detail, true);
         return md;
     }
 }
@@ -235,7 +279,6 @@ class FuncInfo extends Item {
 class StructInfo extends Item {
     constructor(m) {
         super(m);
-        //console.log('    struct ' + Item.Flat(this.name));
     }
 
     Markdown() {
@@ -260,14 +303,7 @@ class StructInfo extends Item {
         let brief = Look(member, 'briefdescription');
         let detail = Look(member, 'detaileddescription');
         let ntext = Item.Flat(name);
-        let ttext = Item.Flat(type);
-        if (ttext.indexOf('astro_') === 0) {
-            // create a link to our custom type
-            ttext = '[`' + ttext + '`](#' + ttext + ')';
-        } else {
-            // assume built-in type that we can't link to
-            ttext = '`' + ttext + '`';
-        }
+        let ttext = Item.MdType(type);
         let md = '| ' + ttext + ' | `' + ntext + '` | ' + this.MdDescription(brief, detail) + ' |\n';
         return md;
     }

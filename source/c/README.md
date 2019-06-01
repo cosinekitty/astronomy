@@ -77,282 +77,259 @@ To get started quickly, here are some [examples](../../demo/c/).
 ---
 
 <a name="Astronomy_AddDays"></a>
+#### `Astronomy_AddDays()`  &#8658; [`astro_time_t`](#astro_time_t)
 
-astro_time_t Astronomy_AddDays(astro_time_t time, double days);
+**Calculates the sum or difference of an [`astro_time_t`](#astro_time_t) with a specified floating point number of days.** 
 
-
+ Sometimes we need to adjust a given [`astro_time_t`](#astro_time_t) value by a certain amount of time. This function adds the given real number of days in `days` to the date and time in `time`. More precisely, the result's Universal Time field `ut` is exactly adjusted by `days` and the Terrestrial Time field `tt` is adjusted correctly for the resulting UTC date and time, according to the historical and predictive Delta-T model provided by the [United States Naval Observatory](http://maia.usno.navy.mil/ser7/). The value stored in `time` will not be modified; it is passed by value. 
 
 ---
 
 <a name="Astronomy_AngleFromSun"></a>
-
-astro_angle_result_t Astronomy_AngleFromSun(astro_body_t body, astro_time_t time);
+#### `Astronomy_AngleFromSun()`  &#8658; [`astro_angle_result_t`](#astro_angle_result_t)
 
 
 
 ---
 
 <a name="Astronomy_BodyCode"></a>
+#### `Astronomy_BodyCode()`  &#8658; [`astro_body_t`](#astro_body_t)
 
-astro_body_t Astronomy_BodyCode(const char *name);
+**Returns the [`astro_body_t`](#astro_body_t) value corresponding to the given English name.** 
 
-
+ 
 
 ---
 
 <a name="Astronomy_BodyName"></a>
+#### `Astronomy_BodyName()`  &#8658; `const char *`
 
-const char* Astronomy_BodyName(astro_body_t body);
+**Finds the name of a celestial body.** 
 
-
+ 
 
 ---
 
 <a name="Astronomy_CurrentTime"></a>
+#### `Astronomy_CurrentTime()`  &#8658; [`astro_time_t`](#astro_time_t)
 
-astro_time_t Astronomy_CurrentTime(void);
+**Returns the computer's current date and time in the form of an [`astro_time_t`](#astro_time_t).** 
 
-
+ Uses the computer's system clock to find the current UTC date and time with 1-second granularity. Converts that date and time to an [`astro_time_t`](#astro_time_t) value and returns the result. Callers can pass this value to other Astronomy Engine functions to calculate current observational conditions. 
 
 ---
 
 <a name="Astronomy_Ecliptic"></a>
-
-astro_ecliptic_t Astronomy_Ecliptic(astro_vector_t equ);
+#### `Astronomy_Ecliptic()`  &#8658; [`astro_ecliptic_t`](#astro_ecliptic_t)
 
 
 
 ---
 
 <a name="Astronomy_EclipticLongitude"></a>
-
-astro_angle_result_t Astronomy_EclipticLongitude(astro_body_t body, astro_time_t time);
+#### `Astronomy_EclipticLongitude()`  &#8658; [`astro_angle_result_t`](#astro_angle_result_t)
 
 
 
 ---
 
 <a name="Astronomy_Elongation"></a>
-
-astro_elongation_t Astronomy_Elongation(astro_body_t body, astro_time_t time);
+#### `Astronomy_Elongation()`  &#8658; [`astro_elongation_t`](#astro_elongation_t)
 
 
 
 ---
 
 <a name="Astronomy_Equator"></a>
-
-astro_equatorial_t Astronomy_Equator(astro_body_t body, astro_time_t time, astro_observer_t observer, int ofdate, int aberration);
+#### `Astronomy_Equator()`  &#8658; [`astro_equatorial_t`](#astro_equatorial_t)
 
 
 
 ---
 
 <a name="Astronomy_GeoMoon"></a>
-
-astro_vector_t Astronomy_GeoMoon(astro_time_t time);
+#### `Astronomy_GeoMoon()`  &#8658; [`astro_vector_t`](#astro_vector_t)
 
 
 
 ---
 
 <a name="Astronomy_GeoVector"></a>
-
-astro_vector_t Astronomy_GeoVector(astro_body_t body, astro_time_t time, int correct_aberration);
+#### `Astronomy_GeoVector()`  &#8658; [`astro_vector_t`](#astro_vector_t)
 
 
 
 ---
 
 <a name="Astronomy_HelioVector"></a>
-
-astro_vector_t Astronomy_HelioVector(astro_body_t body, astro_time_t time);
+#### `Astronomy_HelioVector()`  &#8658; [`astro_vector_t`](#astro_vector_t)
 
 
 
 ---
 
 <a name="Astronomy_Horizon"></a>
-
-astro_horizon_t Astronomy_Horizon(astro_time_t time, astro_observer_t observer, double ra, double dec, astro_refraction_t refraction);
+#### `Astronomy_Horizon()`  &#8658; [`astro_horizon_t`](#astro_horizon_t)
 
 
 
 ---
 
 <a name="Astronomy_Illumination"></a>
-
-astro_illum_t Astronomy_Illumination(astro_body_t body, astro_time_t time);
+#### `Astronomy_Illumination()`  &#8658; [`astro_illum_t`](#astro_illum_t)
 
 
 
 ---
 
 <a name="Astronomy_LongitudeFromSun"></a>
-
-astro_angle_result_t Astronomy_LongitudeFromSun(astro_body_t body, astro_time_t time);
+#### `Astronomy_LongitudeFromSun()`  &#8658; [`astro_angle_result_t`](#astro_angle_result_t)
 
 
 
 ---
 
 <a name="Astronomy_MakeObserver"></a>
-
-astro_observer_t Astronomy_MakeObserver(double latitude, double longitude, double height);
+#### `Astronomy_MakeObserver()`  &#8658; [`astro_observer_t`](#astro_observer_t)
 
 
 
 ---
 
 <a name="Astronomy_MakeTime"></a>
+#### `Astronomy_MakeTime()`  &#8658; [`astro_time_t`](#astro_time_t)
 
-astro_time_t Astronomy_MakeTime(int year, int month, int day, int hour, int minute, double second);
+**Creates an [`astro_time_t`](#astro_time_t) value from a given calendar date and time.** 
 
-
+ Given a UTC calendar date and time, calculates an [`astro_time_t`](#astro_time_t) value that can be passed to other Astronomy Engine functions for performing various calculations relating to that date and time. It is the caller's responsibility to ensure that the parameter values are correct. The parameters are not checked for validity, and this function never returns any indication of an error. Invalid values, for example passing in February 31, may cause unexpected return values. 
 
 ---
 
 <a name="Astronomy_MoonPhase"></a>
-
-astro_angle_result_t Astronomy_MoonPhase(astro_time_t time);
+#### `Astronomy_MoonPhase()`  &#8658; [`astro_angle_result_t`](#astro_angle_result_t)
 
 
 
 ---
 
 <a name="Astronomy_NextLunarApsis"></a>
-
-astro_apsis_t Astronomy_NextLunarApsis(astro_apsis_t apsis);
+#### `Astronomy_NextLunarApsis()`  &#8658; [`astro_apsis_t`](#astro_apsis_t)
 
 
 
 ---
 
 <a name="Astronomy_NextMoonQuarter"></a>
-
-astro_moon_quarter_t Astronomy_NextMoonQuarter(astro_moon_quarter_t mq);
+#### `Astronomy_NextMoonQuarter()`  &#8658; [`astro_moon_quarter_t`](#astro_moon_quarter_t)
 
 
 
 ---
 
 <a name="Astronomy_Search"></a>
-
-astro_search_result_t Astronomy_Search(astro_search_func_t func, void *context, astro_time_t t1, astro_time_t t2, double dt_tolerance_seconds);
+#### `Astronomy_Search()`  &#8658; [`astro_search_result_t`](#astro_search_result_t)
 
 
 
 ---
 
 <a name="Astronomy_SearchHourAngle"></a>
-
-astro_hour_angle_t Astronomy_SearchHourAngle(astro_body_t body, astro_observer_t observer, double hourAngle, astro_time_t dateStart);
+#### `Astronomy_SearchHourAngle()`  &#8658; [`astro_hour_angle_t`](#astro_hour_angle_t)
 
 
 
 ---
 
 <a name="Astronomy_SearchLunarApsis"></a>
-
-astro_apsis_t Astronomy_SearchLunarApsis(astro_time_t startTime);
+#### `Astronomy_SearchLunarApsis()`  &#8658; [`astro_apsis_t`](#astro_apsis_t)
 
 
 
 ---
 
 <a name="Astronomy_SearchMaxElongation"></a>
-
-astro_elongation_t Astronomy_SearchMaxElongation(astro_body_t body, astro_time_t startDate);
+#### `Astronomy_SearchMaxElongation()`  &#8658; [`astro_elongation_t`](#astro_elongation_t)
 
 
 
 ---
 
 <a name="Astronomy_SearchMoonPhase"></a>
-
-astro_search_result_t Astronomy_SearchMoonPhase(double targetLon, astro_time_t dateStart, double limitDays);
+#### `Astronomy_SearchMoonPhase()`  &#8658; [`astro_search_result_t`](#astro_search_result_t)
 
 
 
 ---
 
 <a name="Astronomy_SearchMoonQuarter"></a>
-
-astro_moon_quarter_t Astronomy_SearchMoonQuarter(astro_time_t dateStart);
+#### `Astronomy_SearchMoonQuarter()`  &#8658; [`astro_moon_quarter_t`](#astro_moon_quarter_t)
 
 
 
 ---
 
 <a name="Astronomy_SearchPeakMagnitude"></a>
-
-astro_illum_t Astronomy_SearchPeakMagnitude(astro_body_t body, astro_time_t startDate);
+#### `Astronomy_SearchPeakMagnitude()`  &#8658; [`astro_illum_t`](#astro_illum_t)
 
 
 
 ---
 
 <a name="Astronomy_SearchRelativeLongitude"></a>
-
-astro_search_result_t Astronomy_SearchRelativeLongitude(astro_body_t body, double targetRelLon, astro_time_t startDate);
+#### `Astronomy_SearchRelativeLongitude()`  &#8658; [`astro_search_result_t`](#astro_search_result_t)
 
 
 
 ---
 
 <a name="Astronomy_SearchRiseSet"></a>
-
-astro_search_result_t Astronomy_SearchRiseSet(astro_body_t body, astro_observer_t observer, int direction, astro_time_t dateStart, double limitDays);
+#### `Astronomy_SearchRiseSet()`  &#8658; [`astro_search_result_t`](#astro_search_result_t)
 
 
 
 ---
 
 <a name="Astronomy_SearchSunLongitude"></a>
-
-astro_search_result_t Astronomy_SearchSunLongitude(double targetLon, astro_time_t dateStart, double limitDays);
+#### `Astronomy_SearchSunLongitude()`  &#8658; [`astro_search_result_t`](#astro_search_result_t)
 
 
 
 ---
 
 <a name="Astronomy_Seasons"></a>
-
-astro_seasons_t Astronomy_Seasons(int calendar_year);
+#### `Astronomy_Seasons()`  &#8658; [`astro_seasons_t`](#astro_seasons_t)
 
 
 
 ---
 
 <a name="Astronomy_SunPosition"></a>
-
-astro_ecliptic_t Astronomy_SunPosition(astro_time_t time);
+#### `Astronomy_SunPosition()`  &#8658; [`astro_ecliptic_t`](#astro_ecliptic_t)
 
 
 
 ---
 
 <a name="Astronomy_TimeFromUtc"></a>
-
-astro_time_t Astronomy_TimeFromUtc(astro_utc_t utc);
+#### `Astronomy_TimeFromUtc()`  &#8658; [`astro_time_t`](#astro_time_t)
 
 
 
 ---
 
 <a name="Astronomy_UtcFromTime"></a>
-
-astro_utc_t Astronomy_UtcFromTime(astro_time_t time);
+#### `Astronomy_UtcFromTime()`  &#8658; [`astro_utc_t`](#astro_utc_t)
 
 
 
 ---
 
 <a name="Astronomy_VectorLength"></a>
+#### `Astronomy_VectorLength()`  &#8658; `double`
 
-double Astronomy_VectorLength(astro_vector_t vector);
+**Calculates the length of the given vector.** 
 
-
+ 
 ## Enumerated Types
 
 
