@@ -424,11 +424,8 @@ It is the caller's responsibility to ensure that the parameter values are correc
 
 | Enum Value | Description |
 | --- | --- |
-<a name="APSIS_PERICENTER"></a>
 | `APSIS_PERICENTER` |  The body is at its closest approach to the object it orbits.  |
-<a name="APSIS_APOCENTER"></a>
 | `APSIS_APOCENTER` |  The body is at its farthest distance from the object it orbits.  |
-<a name="APSIS_INVALID"></a>
 | `APSIS_INVALID` |  Undefined or invalid apsis.  |
 
 
@@ -444,29 +441,17 @@ It is the caller's responsibility to ensure that the parameter values are correc
 
 | Enum Value | Description |
 | --- | --- |
-<a name="BODY_INVALID"></a>
 | `BODY_INVALID` |  An invalid or undefined celestial body.  |
-<a name="BODY_MERCURY"></a>
 | `BODY_MERCURY` |  Mercury  |
-<a name="BODY_VENUS"></a>
 | `BODY_VENUS` |  Venus  |
-<a name="BODY_EARTH"></a>
 | `BODY_EARTH` |  Earth  |
-<a name="BODY_MARS"></a>
 | `BODY_MARS` |  Mars  |
-<a name="BODY_JUPITER"></a>
 | `BODY_JUPITER` |  Jupiter  |
-<a name="BODY_SATURN"></a>
 | `BODY_SATURN` |  Saturn  |
-<a name="BODY_URANUS"></a>
 | `BODY_URANUS` |  Uranus  |
-<a name="BODY_NEPTUNE"></a>
 | `BODY_NEPTUNE` |  Neptune  |
-<a name="BODY_PLUTO"></a>
 | `BODY_PLUTO` |  Pluto  |
-<a name="BODY_SUN"></a>
 | `BODY_SUN` |  Sun  |
-<a name="BODY_MOON"></a>
 | `BODY_MOON` |  Moon  |
 
 
@@ -482,11 +467,8 @@ It is the caller's responsibility to ensure that the parameter values are correc
 
 | Enum Value | Description |
 | --- | --- |
-<a name="REFRACTION_NONE"></a>
 | `REFRACTION_NONE` |  No atmospheric refraction corection (airless).  |
-<a name="REFRACTION_NORMAL"></a>
 | `REFRACTION_NORMAL` |  Recommended correction for standard atmospheric refraction.  |
-<a name="REFRACTION_JPLHOR"></a>
 | `REFRACTION_JPLHOR` |  Used only for compatibility testing with JPL Horizons online tool.  |
 
 
@@ -502,29 +484,17 @@ It is the caller's responsibility to ensure that the parameter values are correc
 
 | Enum Value | Description |
 | --- | --- |
-<a name="ASTRO_SUCCESS"></a>
 | `ASTRO_SUCCESS` |  The operation was successful.  |
-<a name="ASTRO_NOT_INITIALIZED"></a>
 | `ASTRO_NOT_INITIALIZED` |  A placeholder that can be used for data that is not yet initialized.  |
-<a name="ASTRO_INVALID_BODY"></a>
 | `ASTRO_INVALID_BODY` |  The celestial body was not valid. Different sets of bodies are supported depending on the function.  |
-<a name="ASTRO_NO_CONVERGE"></a>
 | `ASTRO_NO_CONVERGE` |  A numeric solver failed to converge. This should not happen unless there is a bug in Astronomy Engine.  |
-<a name="ASTRO_BAD_TIME"></a>
 | `ASTRO_BAD_TIME` |  Cannot calculate Pluto's position outside the year range 1700..2200.  |
-<a name="ASTRO_BAD_VECTOR"></a>
 | `ASTRO_BAD_VECTOR` |  Vector magnitude is too small to be normalized into a unit vector.  |
-<a name="ASTRO_SEARCH_FAILURE"></a>
 | `ASTRO_SEARCH_FAILURE` |  Search was not able to find an ascending root crossing of the function in the specified time interval.  |
-<a name="ASTRO_EARTH_NOT_ALLOWED"></a>
 | `ASTRO_EARTH_NOT_ALLOWED` |  The Earth cannot be treated as a celestial body seen from an observer on the Earth itself.  |
-<a name="ASTRO_NO_MOON_QUARTER"></a>
 | `ASTRO_NO_MOON_QUARTER` |  No lunar quarter occurs inside the specified time range.  |
-<a name="ASTRO_WRONG_MOON_QUARTER"></a>
 | `ASTRO_WRONG_MOON_QUARTER` |  Internal error: Astronomy_NextMoonQuarter found the wrong moon quarter.  |
-<a name="ASTRO_INTERNAL_ERROR"></a>
 | `ASTRO_INTERNAL_ERROR` |  A self-check failed inside the code somewhere, indicating a bug needs to be fixed.  |
-<a name="ASTRO_INVALID_PARAMETER"></a>
 | `ASTRO_INVALID_PARAMETER` |  A parameter value passed to a function was not valid.  |
 
 
@@ -540,9 +510,7 @@ It is the caller's responsibility to ensure that the parameter values are correc
 
 | Enum Value | Description |
 | --- | --- |
-<a name="VISIBLE_MORNING"></a>
 | `VISIBLE_MORNING` |  The body is best visible in the morning, before sunrise.  |
-<a name="VISIBLE_EVENING"></a>
 | `VISIBLE_EVENING` |  The body is best visible in the evening, after sunset.  |
 
 

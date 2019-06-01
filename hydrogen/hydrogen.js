@@ -262,7 +262,6 @@ class EnumInfo extends Item {
                 let ebrief = Look(e, 'briefdescription');
                 let edetail = Look(e, 'detaileddescription');
                 let desc = this.MdDescription(ebrief, edetail, false);
-                md += '<a name="' + ename + '"></a>\n';
                 md += '| `' + ename + '` | ' + desc + ' |\n';
             }
             md += '\n';
