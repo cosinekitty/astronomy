@@ -258,11 +258,12 @@ class EnumInfo extends Item {
             md += '\n\n| Enum Value | Description |\n';
             md += '| --- | --- |\n';
             for (let e of this.enumValueList) {
-                let ename = Find(e, 'name');
+                let ename = Item.Flat(Find(e, 'name'));
                 let ebrief = Look(e, 'briefdescription');
                 let edetail = Look(e, 'detaileddescription');
                 let desc = this.MdDescription(ebrief, edetail, false);
-                md += '| ' + Item.Flat(ename) + ' | ' + desc + ' |\n';
+                md += '<a name="' + ename + '"></a>\n';
+                md += '| `' + ename + '` | ' + desc + ' |\n';
             }
             md += '\n';
         }
