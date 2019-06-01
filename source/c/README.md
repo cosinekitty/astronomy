@@ -95,6 +95,14 @@ The value stored in `time` will not be modified; it is passed by value.
 
 
 
+| type | name | description |
+| --- | --- | --- |
+| [`astro_time_t`](#astro_time_t) | time |  A date and time for which to calculate an adjusted date and time.  | 
+| `double` | days |  A floating point number of days by which to adjust `time`. May be negative, 0, or positive.  | 
+
+
+
+
 ---
 
 <a name="Astronomy_AngleFromSun"></a>
@@ -117,6 +125,13 @@ The value stored in `time` will not be modified; it is passed by value.
 
 
 
+| type | name | description |
+| --- | --- | --- |
+| `const char *` | name |  One of the following strings: Sun, Moon, Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune, Pluto.  | 
+
+
+
+
 ---
 
 <a name="Astronomy_BodyName"></a>
@@ -129,6 +144,13 @@ The value stored in `time` will not be modified; it is passed by value.
 
 
 **Returns:**  The English-language name of the celestial body, or "" if the body is not valid. 
+
+
+
+| type | name | description |
+| --- | --- | --- |
+| [`astro_body_t`](#astro_body_t) | body |  The celestial body whose name is to be found.  | 
+
 
 
 
@@ -236,6 +258,18 @@ It is the caller's responsibility to ensure that the parameter values are correc
 
 
 **Returns:**  An [`astro_time_t`](#astro_time_t) value that represents the given calendar date and time. 
+
+
+
+| type | name | description |
+| --- | --- | --- |
+| `int` | year |  The UTC calendar year, e.g. 2019.  | 
+| `int` | month |  The UTC calendar month in the range 1..12.  | 
+| `int` | day |  The UTC calendar day in the range 1..31.  | 
+| `int` | hour |  The UTC hour of the day in the range 0..23.  | 
+| `int` | minute |  The UTC minute in the range 0..59.  | 
+| `double` | second |  The UTC floating-point second in the range [0, 60). | 
+
 
 
 
@@ -365,6 +399,13 @@ It is the caller's responsibility to ensure that the parameter values are correc
 
 **Calculates the length of the given vector.** 
 
+
+
+
+
+| type | name | description |
+| --- | --- | --- |
+| [`astro_vector_t`](#astro_vector_t) | vector |  The vector whose length is to be calculated.  | 
 
 
 

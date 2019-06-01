@@ -271,7 +271,8 @@ class TypeDef extends Item {
 class FuncInfo extends Item {
     constructor(m) {
         super(m);
-        this.paramlist = this.ParamList(m);
+        this.paramlist = this.ParamList(m);     // actual declared parameters and types in code (not doxygen comments)
+        this.paramdocs = Item.Search(this.detail, 'parameterlist', 'param');        // documentation about parameters in doxygen comments
         this.rettype = Find(m, 'type');
     }
 
@@ -298,7 +299,35 @@ class FuncInfo extends Item {
         md += this.MdParamNameList();
         md += ' &#8658; ' + Item.MdType(this.rettype) + '\n\n';
         md += this.MdDescription(this.brief, this.detail, true);
+
+        if (this.paramdocs) {
+            md += '\n\n| type | name | description |\n';
+            md += '| --- | --- | --- |\n';
+            for (let p of this.paramdocs.$$) {
+                if (p['#name'] === 'parameteritem') {
+                    let nameElem = Item.Search(p, 'parametername');
+                    let name = nameElem ? Item.Flat(nameElem) : '';
+                    let descElem = Item.Search(p, 'parameterdescription');
+                    let desc = descElem ? this.MdDescription(null, descElem, false) : '';
+                    let type = this.MdTypeForName(name);
+                    md += '| ' + type + ' | ' + name + ' | ' + desc + ' | \n';
+                }
+            }
+            md += '\n\n';    
+        }
+
         return md;
+    }
+
+    MdTypeForName(name) {
+        if (name && typeof name === 'string') {
+            for (let p of this.paramlist) {
+                if (p.name === name) {
+                    return Item.MdType(p.type);
+                }
+            }
+        }
+        return '';
     }
 
     MdParamNameList() {
