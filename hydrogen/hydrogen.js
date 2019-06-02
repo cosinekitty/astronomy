@@ -278,7 +278,13 @@ class TypeDef extends Item {
     }
 
     Markdown() {
+        let name = Item.Flat(this.name);
+        let defn = Item.Flat(this.definition);
+
         let md = this.MarkdownPrefix();
+        md += '#### `' + name + '`\n\n';
+        md += '`' + defn + ';`\n\n';
+        md += this.MdDescription(this.brief, this.detail, true);
         return md;
     }
 }

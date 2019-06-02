@@ -842,3 +842,16 @@ In cases where [`astro_time_t`](#astro_time_t) is included in a structure return
 ---
 
 <a name="astro_search_func_t"></a>
+#### `astro_search_func_t`
+
+`typedef astro_func_result_t(*  astro_search_func_t) (void *context, astro_time_t time);`
+
+**A pointer to a function that is to be passed as a callback to [`Astronomy_Search`](#Astronomy_Search).** 
+
+
+
+The function [`Astronomy_Search`](#Astronomy_Search) numerically solves for the time that a given event occurs. An event is defined as the time when an arbitrary function transitions between having a negative value and a non-negative value. This transition is called an *ascending root*.
+
+The type astro_search_func_t represents such a callback function that accepts a custom `context` pointer and an [`astro_time_t`](#astro_time_t) representing the time to probe. The function returns an [`astro_func_result_t`](#astro_func_result_t) that contains either a real number in `value` or an error code in `status` that aborts the search.
+
+The `context` points to some data whose type varies depending on the callback function. It can contain any auxiliary parameters (other than time) needed to evaluate the function. For example, a function may pertain to a specific celestial body, in which case `context` may point to a value of type astro_body_t. The `context` parameter is supplied by the caller of [`Astronomy_Search`](#Astronomy_Search), which passes it along to every call to the callback function. If the caller of `Astronomy_Search` knows that the callback function does not need a context, it is safe to pass `NULL` as the context pointer. 
