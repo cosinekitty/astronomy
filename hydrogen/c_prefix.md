@@ -11,6 +11,17 @@ To get started quickly, here are some [examples](../../demo/c/).
 
 ---
 
+## Contents
+
+- [Topic Index](#topics)
+- [Functions](#functions)
+- [Enumerated Types](#enums)
+- [Structures](#structs)
+- [Type Definitions](#typedefs)
+
+---
+
+<a name="topics"></a>
 ## Topic Index
 
 ### Position of Sun, Moon, and planets

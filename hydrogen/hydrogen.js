@@ -252,7 +252,7 @@ class EnumInfo extends Item {
     Markdown() {
         let name = Item.Flat(this.name);
         let md = this.MarkdownPrefix();
-        md += '### `' + name + '`\n\n';
+        md += '#### `' + name + '`\n\n';
         md += this.MdDescription(this.brief, this.detail, true);
         if (this.enumValueList instanceof Array && this.enumValueList.length > 0) {
             md += '\n\n| Enum Value | Description |\n';
@@ -476,22 +476,26 @@ class Transformer {
     Markdown() {
         let md = '';
 
-        md += '\n## Functions\n\n';
+        md += '\n<a name="functions"></a>\n';
+        md += '## Functions\n\n';
         for (let f of this.funcs) {
             md += f.Markdown();
         }
 
-        md += '\n## Enumerated Types\n\n';
+        md += '\n<a name="enums"></a>\n';
+        md += '## Enumerated Types\n\n';
         for (let e of this.enums) {
             md += e.Markdown();
         }
 
-        md += '\n## Structures\n\n';
+        md += '\n<a name="structs"></a>\n';
+        md += '## Structures\n\n';
         for (let s of this.structs) {
             md += s.Markdown();
         }
 
-        md += '\n## Type Definitions\n\n';
+        md += '\n<a name="typedefs"></a>\n';
+        md += '## Type Definitions\n\n';
         for (let t of this.typedefs) {
             md += t.Markdown();
         }

@@ -11,6 +11,17 @@ To get started quickly, here are some [examples](../../demo/c/).
 
 ---
 
+## Contents
+
+- [Topic Index](#topics)
+- [Functions](#functions)
+- [Enumerated Types](#enums)
+- [Structures](#structs)
+- [Type Definitions](#typedefs)
+
+---
+
+<a name="topics"></a>
 ## Topic Index
 
 ### Position of Sun, Moon, and planets
@@ -70,6 +81,7 @@ To get started quickly, here are some [examples](../../demo/c/).
 ---
 
 
+<a name="functions"></a>
 ## Functions
 
 
@@ -409,6 +421,7 @@ It is the caller's responsibility to ensure that the parameter values are correc
 
 
 
+<a name="enums"></a>
 ## Enumerated Types
 
 
@@ -416,7 +429,7 @@ It is the caller's responsibility to ensure that the parameter values are correc
 ---
 
 <a name="astro_apsis_kind_t"></a>
-### `astro_apsis_kind_t`
+#### `astro_apsis_kind_t`
 
 **The type of apsis: pericenter (closest approach) or apocenter (farthest distance).** 
 
@@ -433,7 +446,7 @@ It is the caller's responsibility to ensure that the parameter values are correc
 ---
 
 <a name="astro_body_t"></a>
-### `astro_body_t`
+#### `astro_body_t`
 
 **A celestial body.** 
 
@@ -459,7 +472,7 @@ It is the caller's responsibility to ensure that the parameter values are correc
 ---
 
 <a name="astro_refraction_t"></a>
-### `astro_refraction_t`
+#### `astro_refraction_t`
 
 **Selects whether to correct for atmospheric refraction, and if so, how.** 
 
@@ -476,7 +489,7 @@ It is the caller's responsibility to ensure that the parameter values are correc
 ---
 
 <a name="astro_status_t"></a>
-### `astro_status_t`
+#### `astro_status_t`
 
 **Indicates success/failure of an Astronomy Engine function call.** 
 
@@ -502,7 +515,7 @@ It is the caller's responsibility to ensure that the parameter values are correc
 ---
 
 <a name="astro_visibility_t"></a>
-### `astro_visibility_t`
+#### `astro_visibility_t`
 
 **Indicates whether a body (especially Mercury or Venus) is best seen in the morning or evening.** 
 
@@ -514,6 +527,7 @@ It is the caller's responsibility to ensure that the parameter values are correc
 | `VISIBLE_EVENING` |  The body is best visible in the evening, after sunset.  |
 
 
+<a name="structs"></a>
 ## Structures
 
 
@@ -820,6 +834,7 @@ In cases where [`astro_time_t`](#astro_time_t) is included in a structure return
 | `double` | `z` |  The Cartesian z-coordinate of the vector in AU.  |
 | [`astro_time_t`](#astro_time_t) | `t` |  The date and time at which this vector is valid.  |
 
+<a name="typedefs"></a>
 ## Type Definitions
 
 
