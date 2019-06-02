@@ -2138,6 +2138,20 @@ astro_ecliptic_t Astronomy_SunPosition(astro_time_t time)
     return RotateEquatorialToEcliptic(sun_ofdate, true_obliq);
 }
 
+/**
+ * @brief Converts J2000 equatorial Cartesian coordinates to J2000 ecliptic coordinates.
+ * 
+ * Given coordinates relative to the Earth's equator at J2000 (the instant of noon UTC
+ * on 1 January 2000), this function converts those coordinates to J2000 ecliptic coordinates,
+ * which are relative to the plane of the Earth's orbit around the Sun.
+ * 
+ * @param equ
+ *      Equatorial coordinates in the J2000 frame of reference.
+ *      You can call #Astronomy_GeoVector to obtain suitable equatorial coordinates.
+ * 
+ * @return
+ *      Ecliptic coordinates in the J2000 frame of reference.
+ */
 astro_ecliptic_t Astronomy_Ecliptic(astro_vector_t equ)
 {
     /* Based on NOVAS functions equ2ecl() and equ2ecl_vec(). */

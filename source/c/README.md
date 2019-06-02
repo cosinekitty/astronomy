@@ -182,6 +182,23 @@ Uses the computer's system clock to find the current UTC date and time with 1-se
 <a name="Astronomy_Ecliptic"></a>
 ### Astronomy_Ecliptic(equ) &#8658; [`astro_ecliptic_t`](#astro_ecliptic_t)
 
+**Converts J2000 equatorial Cartesian coordinates to J2000 ecliptic coordinates.** 
+
+
+
+Given coordinates relative to the Earth's equator at J2000 (the instant of noon UTC on 1 January 2000), this function converts those coordinates to J2000 ecliptic coordinates, which are relative to the plane of the Earth's orbit around the Sun.
+
+
+
+**Returns:**  Ecliptic coordinates in the J2000 frame of reference. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_vector_t`](#astro_vector_t) | equ |  Equatorial coordinates in the J2000 frame of reference. You can call [`Astronomy_GeoVector`](#Astronomy_GeoVector) to obtain suitable equatorial coordinates. | 
+
+
 
 
 ---
