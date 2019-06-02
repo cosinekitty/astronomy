@@ -416,7 +416,7 @@ It is the caller's responsibility to ensure that the parameter values are correc
 ---
 
 <a name="astro_apsis_kind_t"></a>
-### astro_apsis_kind_t
+### `astro_apsis_kind_t`
 
 **The type of apsis: pericenter (closest approach) or apocenter (farthest distance).** 
 
@@ -433,7 +433,7 @@ It is the caller's responsibility to ensure that the parameter values are correc
 ---
 
 <a name="astro_body_t"></a>
-### astro_body_t
+### `astro_body_t`
 
 **A celestial body.** 
 
@@ -459,7 +459,7 @@ It is the caller's responsibility to ensure that the parameter values are correc
 ---
 
 <a name="astro_refraction_t"></a>
-### astro_refraction_t
+### `astro_refraction_t`
 
 **Selects whether to correct for atmospheric refraction, and if so, how.** 
 
@@ -476,7 +476,7 @@ It is the caller's responsibility to ensure that the parameter values are correc
 ---
 
 <a name="astro_status_t"></a>
-### astro_status_t
+### `astro_status_t`
 
 **Indicates success/failure of an Astronomy Engine function call.** 
 
@@ -502,7 +502,7 @@ It is the caller's responsibility to ensure that the parameter values are correc
 ---
 
 <a name="astro_visibility_t"></a>
-### astro_visibility_t
+### `astro_visibility_t`
 
 **Indicates whether a body (especially Mercury or Venus) is best seen in the morning or evening.** 
 

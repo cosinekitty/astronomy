@@ -252,7 +252,7 @@ class EnumInfo extends Item {
     Markdown() {
         let name = Item.Flat(this.name);
         let md = this.MarkdownPrefix();
-        md += '### ' + name + '\n\n';
+        md += '### `' + name + '`\n\n';
         md += this.MdDescription(this.brief, this.detail, true);
         if (this.enumValueList instanceof Array && this.enumValueList.length > 0) {
             md += '\n\n| Enum Value | Description |\n';
