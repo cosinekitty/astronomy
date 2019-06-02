@@ -3224,6 +3224,25 @@ astro_ecliptic_t Astronomy_Ecliptic(astro_vector_t equ)
     return RotateEquatorialToEcliptic(pos, ob2000);
 }
 
+/**
+ * @brief   Calculates heliocentric ecliptic longitude of a body based on the J2000 equinox.
+ * 
+ * This function calculates the angle around the plane of the Earth's orbit
+ * of a celestial body, as seen from the center of the Sun.
+ * The angle is measured prograde (in the direction of the Earth's orbit around the Sun)
+ * in degrees from the J2000 equinox. The ecliptic longitude is always in the range [0, 360).
+ * 
+ * @param body
+ *      A body other than the Sun.
+ * 
+ * @param time
+ *      The date and time at which the body's ecliptic longitude is to be calculated.
+ * 
+ * @return
+ *      On success, returns a structure whose `status` is `ASTRO_SUCCESS` and whose
+ *      `angle` holds the ecliptic longitude in degrees.
+ *      On failure, `status` holds a value other than `ASTRO_SUCCESS`.
+ */
 astro_angle_result_t Astronomy_EclipticLongitude(astro_body_t body, astro_time_t time)
 {
     astro_vector_t hv;

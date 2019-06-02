@@ -206,6 +206,24 @@ Given coordinates relative to the Earth's equator at J2000 (the instant of noon 
 <a name="Astronomy_EclipticLongitude"></a>
 ### Astronomy_EclipticLongitude(body, time) &#8658; [`astro_angle_result_t`](#astro_angle_result_t)
 
+**Calculates heliocentric ecliptic longitude of a body based on the J2000 equinox.** 
+
+
+
+This function calculates the angle around the plane of the Earth's orbit of a celestial body, as seen from the center of the Sun. The angle is measured prograde (in the direction of the Earth's orbit around the Sun) in degrees from the J2000 equinox. The ecliptic longitude is always in the range [0, 360).
+
+
+
+**Returns:**  On success, returns a structure whose `status` is `ASTRO_SUCCESS` and whose `angle` holds the ecliptic longitude in degrees. On failure, `status` holds a value other than `ASTRO_SUCCESS`. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_body_t`](#astro_body_t) | body |  A body other than the Sun. | 
+| [`astro_time_t`](#astro_time_t) | time |  The date and time at which the body's ecliptic longitude is to be calculated. | 
+
+
 
 
 ---
