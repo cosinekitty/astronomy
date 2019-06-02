@@ -3197,19 +3197,11 @@ astro_ecliptic_t Astronomy_SunPosition(astro_time_t time)
 astro_ecliptic_t Astronomy_Ecliptic(astro_vector_t equ)
 {
     /* Based on NOVAS functions equ2ecl() and equ2ecl_vec(). */
-    static double ob2000;
+    static const double ob2000 = 0.40909260059599012;   /* mean obliquity of the J2000 ecliptic in radians */
     double pos[3];
 
     if (equ.status != ASTRO_SUCCESS)
         return EclError(equ.status);
-
-    if (ob2000 == 0.0)
-    {
-        /* Lazy-evaluate and keep the mean obliquity of the ecliptic at J2000. */
-        /* This way we don't need to crunch the numbers more than once. */
-        /* This is not thread safe. */
-        ob2000 = DEG2RAD * e_tilt(Astronomy_MakeTime(2000, 1, 1, 12, 0, 0.0)).mobl;
-    }
 
     pos[0] = equ.x;
     pos[1] = equ.y;
