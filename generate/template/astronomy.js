@@ -1291,8 +1291,8 @@ function ter2cel(time, vec1) {
 
 /**
  * Given a date and time, a geographic location of an observer on the Earth, and
- * equatorial coordinates (right ascension and declination) of a celestial object,
- * returns horizontal coordinates (azimuth and altitude angles) for that object
+ * equatorial coordinates (right ascension and declination) of a celestial body,
+ * returns horizontal coordinates (azimuth and altitude angles) for that body
  * as seen by that observer. Allows optional correction for atmospheric refraction.
  * 
  * @param {(Date|number|Astronomy.AstroTime)} date

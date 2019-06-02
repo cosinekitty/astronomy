@@ -2972,6 +2972,53 @@ astro_equatorial_t Astronomy_Equator(
     }
 }
 
+/**
+ * @brief Calculates the apparent location of a body relative to the local horizon of an observer on the Earth.
+ * 
+ * Given a date and time, the geographic location of an observer on the Earth, and
+ * equatorial coordinates (right ascension and declination) of a celestial body,
+ * this function returns horizontal coordinates (azimuth and altitude angles) for the body
+ * relative to the horizon at the geographic location.
+ * 
+ * The right ascension `ra` and declination `dec` passed in must be *equator of date*
+ * coordinates, based on the Earth's true equator at the date and time of the observation.
+ * Otherwise the resulting horizontal coordinates will be inaccurate.
+ * Equator of date coordinates can be obtained by calling #Astronomy_Equator, passing in 
+ * `EQUATOR_OF_DATE` as its `equdate` parameter. It is also recommended to enable 
+ * aberration correction by passing in `ABERRATION` as the `aberration` parameter.
+ * 
+ * This function optionally corrects for atmospheric refraction.
+ * For most uses, it is recommended to pass `REFRACTION_NORMAL` in the `refraction` parameter to
+ * correct for optical lensing of the Earth's atmosphere that causes objects 
+ * to appear somewhat higher above the horizon than they actually are.
+ * However, callers may choose to avoid this correction by passing in `REFRACTION_NONE`.
+ * If refraction correction is enabled, the azimuth, altitude, right ascension, and declination
+ * in the #astro_horizon_t structure returned by this function will all be corrected for refraction.
+ * If refraction is disabled, none of these four coordinates will be corrected; in that case, 
+ * the right ascension and declination in the returned structure will be numerically identical
+ * to the respective `ra` and `dec` values passed in.
+ * 
+ * @param time          
+ *      The date and time of the observation.
+ * 
+ * @param observer      
+ *      The geographic location of the observer.
+ * 
+ * @param ra            
+ *      The right ascension of the body in sidereal hours.
+ *      See remarks above for more details.
+ * 
+ * @param dec           
+ *      The declination of the body in degrees. See remarks above for more details.
+ * 
+ * @param refraction    
+ *      Selects whether to correct for atmospheric refraction, and if so, which model to use.
+ *      The recommended value for most uses is `REFRACTION_NORMAL`.
+ *      See remarks above for more details.
+ * 
+ * @return  
+ *      The body's apparent horizontal coordinates and equatorial coordinates, both optionally corrected for refraction.
+ */
 astro_horizon_t Astronomy_Horizon(
     astro_time_t time, astro_observer_t observer, double ra, double dec, astro_refraction_t refraction)
 {
@@ -3870,7 +3917,7 @@ astro_hour_angle_t Astronomy_SearchHourAngle(
         }
 
         /* We need to loop another time to get more accuracy. */
-        /* Update the terrestrial time (in solar days) adjusting by sidereal time (sideareal hours). */
+        /* Update the terrestrial time (in solar days) adjusting by sidereal time (sidereal hours). */
         delta_days = (delta_sidereal_hours / 24.0) * SOLAR_DAYS_PER_SIDEREAL_DAY;
         time = Astronomy_AddDays(time, delta_days);
     }

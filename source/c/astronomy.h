@@ -263,7 +263,7 @@ astro_horizon_t;
  */
 typedef enum
 {
-    REFRACTION_NONE,    /**< No atmospheric refraction corection (airless). */
+    REFRACTION_NONE,    /**< No atmospheric refraction correction (airless). */
     REFRACTION_NORMAL,  /**< Recommended correction for standard atmospheric refraction. */
     REFRACTION_JPLHOR   /**< Used only for compatibility testing with JPL Horizons online tool. */
 }

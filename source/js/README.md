@@ -478,8 +478,8 @@ function calls may be more efficient than passing in native JavaScript Date obje
 
 ### Astronomy.Horizon(date, observer, ra, dec, refraction) ⇒ [<code>HorizontalCoordinates</code>](#Astronomy.HorizontalCoordinates)
 Given a date and time, a geographic location of an observer on the Earth, and
-equatorial coordinates (right ascension and declination) of a celestial object,
-returns horizontal coordinates (azimuth and altitude angles) for that object
+equatorial coordinates (right ascension and declination) of a celestial body,
+returns horizontal coordinates (azimuth and altitude angles) for that body
 as seen by that observer. Allows optional correction for atmospheric refraction.
 
 **Kind**: static method of [<code>Astronomy</code>](#Astronomy)  

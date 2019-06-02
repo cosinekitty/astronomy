@@ -320,6 +320,31 @@ If given an invalid value for `body`, or the body is `BODY_PLUTO` and the `time`
 <a name="Astronomy_Horizon"></a>
 ### Astronomy_Horizon(time, observer, ra, dec, refraction) &#8658; [`astro_horizon_t`](#astro_horizon_t)
 
+**Calculates the apparent location of a body relative to the local horizon of an observer on the Earth.** 
+
+
+
+Given a date and time, the geographic location of an observer on the Earth, and equatorial coordinates (right ascension and declination) of a celestial body, this function returns horizontal coordinates (azimuth and altitude angles) for the body relative to the horizon at the geographic location.
+
+The right ascension `ra` and declination `dec` passed in must be *equator of date* coordinates, based on the Earth's true equator at the date and time of the observation. Otherwise the resulting horizontal coordinates will be inaccurate. Equator of date coordinates can be obtained by calling [`Astronomy_Equator`](#Astronomy_Equator), passing in `EQUATOR_OF_DATE` as its `equdate` parameter. It is also recommended to enable aberration correction by passing in `ABERRATION` as the `aberration` parameter.
+
+This function optionally corrects for atmospheric refraction. For most uses, it is recommended to pass `REFRACTION_NORMAL` in the `refraction` parameter to correct for optical lensing of the Earth's atmosphere that causes objects to appear somewhat higher above the horizon than they actually are. However, callers may choose to avoid this correction by passing in `REFRACTION_NONE`. If refraction correction is enabled, the azimuth, altitude, right ascension, and declination in the [`astro_horizon_t`](#astro_horizon_t) structure returned by this function will all be corrected for refraction. If refraction is disabled, none of these four coordinates will be corrected; in that case, the right ascension and declination in the returned structure will be numerically identical to the respective `ra` and `dec` values passed in.
+
+
+
+**Returns:**  The body's apparent horizontal coordinates and equatorial coordinates, both optionally corrected for refraction. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_time_t`](#astro_time_t) | time |  The date and time of the observation. | 
+| [`astro_observer_t`](#astro_observer_t) | observer |  The geographic location of the observer. | 
+| `double` | ra |  The right ascension of the body in sidereal hours. See remarks above for more details. | 
+| `double` | dec |  The declination of the body in degrees. See remarks above for more details. | 
+| [`astro_refraction_t`](#astro_refraction_t) | refraction |  Selects whether to correct for atmospheric refraction, and if so, which model to use. The recommended value for most uses is `REFRACTION_NORMAL`. See remarks above for more details. | 
+
+
 
 
 ---
@@ -690,7 +715,7 @@ For some other purposes, it is more helpful to represent coordinates using the E
 
 | Enum Value | Description |
 | --- | --- |
-| `REFRACTION_NONE` |  No atmospheric refraction corection (airless).  |
+| `REFRACTION_NONE` |  No atmospheric refraction correction (airless).  |
 | `REFRACTION_NORMAL` |  Recommended correction for standard atmospheric refraction.  |
 | `REFRACTION_JPLHOR` |  Used only for compatibility testing with JPL Horizons online tool.  |
 
