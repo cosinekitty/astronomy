@@ -515,11 +515,34 @@ astro_time_t Astronomy_AddDays(astro_time_t time, double days)
     return sum;   
 }
 
+/**
+ * @brief   Creates an #astro_time_t value from a given calendar date and time.
+ * 
+ * This function is similar to #Astronomy_MakeTime, only it receives a
+ * UTC calendar date and time in the form of an #astro_utc_t structure instead of
+ * as separate numeric parameters.  Astronomy_TimeFromUtc is the inverse of
+ * #Astronomy_UtcFromTime.
+ * 
+ * @param utc   The UTC calendar date and time to be converted to #astro_time_t.
+ * @return  A value that can be used for astronomical calculations for the given date and time.
+ */
 astro_time_t Astronomy_TimeFromUtc(astro_utc_t utc)
 {
     return Astronomy_MakeTime(utc.year, utc.month, utc.day, utc.hour, utc.minute, utc.second);
 }
 
+/**
+ * @brief Determines the calendar year, month, day, and time from an #astro_time_t value.
+ * 
+ * After calculating the date and time of an astronomical event in the form of
+ * an #astro_time_t value, it is often useful to display the result in a human-readable
+ * form. This function converts the linear time scales in the `ut` field of #astro_time_t
+ * into a calendar date and time: year, month, day, hours, minutes, and seconds, expressed
+ * in UTC.
+ * 
+ * @param time  The astronomical time value to be converted to calendar date and time.
+ * @return  A date and time broken out into conventional year, month, day, hour, minute, and second.
+ */
 astro_utc_t Astronomy_UtcFromTime(astro_time_t time)
 {
     /* Adapted from the NOVAS C 3.1 function cal_date() */
@@ -552,6 +575,18 @@ astro_utc_t Astronomy_UtcFromTime(astro_time_t time)
     return utc;
 }
 
+/**
+ * @brief   Creates an observer object that represents a location on or near the surface of the Earth.
+ * 
+ * Some Astronomy Engine functions calculate values pertaining to an observer on the Earth.
+ * These functions require a value of type #astro_observer_t that represents the location
+ * of such an observer.
+ * 
+ * @param latitude      The geographic latitude of the observer in degrees north (positive) or south (negative) of the equator.
+ * @param longitude     The geographic longitude of the observer in degrees east (positive) or west (negative) of the prime meridian at Greenwich, England.
+ * @param height        The height of the observer in meters above mean sea level.
+ * @return An observer object that can be passed to astronomy functions that require a geographic location.
+ */
 astro_observer_t Astronomy_MakeObserver(double latitude, double longitude, double height)
 {
     astro_observer_t observer;
@@ -1405,6 +1440,16 @@ static void CalcMoon(
 
 /** @endcond */
 
+/**
+ * @brief Calculates the geocentric position of the Moon at a given time.
+ * 
+ * Given a time of observation, calculates the Moon's position as a vector.
+ * The vector gives the location of the Moon's center relative to the Earth's center
+ * with x-, y-, and z-components measured in astronomical units.
+ * 
+ * @param time  The date and time for which to calculate the Moon's position.
+ * @return The Moon's position as a vector in J2000 Cartesian equatorial coordinates.
+ */
 astro_vector_t Astronomy_GeoMoon(astro_time_t time)
 {
     double geo_eclip_lon, geo_eclip_lat, distance_au;

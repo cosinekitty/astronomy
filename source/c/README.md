@@ -210,6 +210,23 @@ Uses the computer's system clock to find the current UTC date and time with 1-se
 <a name="Astronomy_GeoMoon"></a>
 ### Astronomy_GeoMoon(time) &#8658; [`astro_vector_t`](#astro_vector_t)
 
+**Calculates the geocentric position of the Moon at a given time.** 
+
+
+
+Given a time of observation, calculates the Moon's position as a vector. The vector gives the location of the Moon's center relative to the Earth's center with x-, y-, and z-components measured in astronomical units.
+
+
+
+**Returns:**  The Moon's position as a vector in J2000 Cartesian equatorial coordinates. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_time_t`](#astro_time_t) | time |  The date and time for which to calculate the Moon's position.  | 
+
+
 
 
 ---
@@ -251,6 +268,25 @@ Uses the computer's system clock to find the current UTC date and time with 1-se
 
 <a name="Astronomy_MakeObserver"></a>
 ### Astronomy_MakeObserver(latitude, longitude, height) &#8658; [`astro_observer_t`](#astro_observer_t)
+
+**Creates an observer object that represents a location on or near the surface of the Earth.** 
+
+
+
+Some Astronomy Engine functions calculate values pertaining to an observer on the Earth. These functions require a value of type [`astro_observer_t`](#astro_observer_t) that represents the location of such an observer.
+
+
+
+**Returns:**  An observer object that can be passed to astronomy functions that require a geographic location. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| `double` | latitude |  The geographic latitude of the observer in degrees north (positive) or south (negative) of the equator.  | 
+| `double` | longitude |  The geographic longitude of the observer in degrees east (positive) or west (negative) of the prime meridian at Greenwich, England.  | 
+| `double` | height |  The height of the observer in meters above mean sea level.  | 
+
 
 
 
@@ -395,12 +431,46 @@ It is the caller's responsibility to ensure that the parameter values are correc
 <a name="Astronomy_TimeFromUtc"></a>
 ### Astronomy_TimeFromUtc(utc) &#8658; [`astro_time_t`](#astro_time_t)
 
+**Creates an [`astro_time_t`](#astro_time_t) value from a given calendar date and time.** 
+
+
+
+This function is similar to [`Astronomy_MakeTime`](#Astronomy_MakeTime), only it receives a UTC calendar date and time in the form of an [`astro_utc_t`](#astro_utc_t) structure instead of as separate numeric parameters. Astronomy_TimeFromUtc is the inverse of [`Astronomy_UtcFromTime`](#Astronomy_UtcFromTime).
+
+
+
+**Returns:**  A value that can be used for astronomical calculations for the given date and time. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_utc_t`](#astro_utc_t) | utc |  The UTC calendar date and time to be converted to [`astro_time_t`](#astro_time_t).  | 
+
+
 
 
 ---
 
 <a name="Astronomy_UtcFromTime"></a>
 ### Astronomy_UtcFromTime(time) &#8658; [`astro_utc_t`](#astro_utc_t)
+
+**Determines the calendar year, month, day, and time from an [`astro_time_t`](#astro_time_t) value.** 
+
+
+
+After calculating the date and time of an astronomical event in the form of an [`astro_time_t`](#astro_time_t) value, it is often useful to display the result in a human-readable form. This function converts the linear time scales in the `ut` field of [`astro_time_t`](#astro_time_t) into a calendar date and time: year, month, day, hours, minutes, and seconds, expressed in UTC.
+
+
+
+**Returns:**  A date and time broken out into conventional year, month, day, hour, minute, and second. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_time_t`](#astro_time_t) | time |  The astronomical time value to be converted to calendar date and time.  | 
+
 
 
 
