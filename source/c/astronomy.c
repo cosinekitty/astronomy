@@ -3139,9 +3139,33 @@ astro_horizon_t Astronomy_Horizon(
     return hor;
 }
 
-astro_ecliptic_t Astronomy_SunPosition(astro_time_t observation_time)
+/**
+ * @brief Calculates geocentric ecliptic coordinates for the Sun.
+ * 
+ * This function calculates the position of the Sun as seen from the Earth.
+ * The returned value includes both Cartesian and spherical coordinates.
+ * The x-coordinate and longitude values in the returned structure are based
+ * on the *true equinox of date*: one of two points in the sky where the instantaneous
+ * plane of the Earth's equator at the given date and time (the *equatorial plane*) 
+ * intersects with the plane of the Earth's orbit around the Sun (the *ecliptic plane*).
+ * By convention, the apparent location of the Sun at the March equinox is chosen
+ * as the longitude origin and x-axis direction, instead of the one for September.
+ * 
+ * `Astronomy_SunPosition` corrects for precession and nutation of the Earth's axis
+ * in order to obtain the exact equatorial plane at the given time.
+ * 
+ * This function can be used for calculating changes of seasons: equinoxes and solstices.
+ * In fact, the function #Astronomy_Seasons does use this function for that purpose.
+ * 
+ * @param time  
+ *      The date and time for which to calculate the Sun's position.
+ * 
+ * @return
+ *      The ecliptic coordinates of the Sun using the Earth's true equator of date.
+ */
+astro_ecliptic_t Astronomy_SunPosition(astro_time_t time)
 {
-    astro_time_t time;
+    astro_time_t adjusted_time;
     astro_vector_t earth2000;
     double sun2000[3];
     double stemp[3];
@@ -3150,9 +3174,9 @@ astro_ecliptic_t Astronomy_SunPosition(astro_time_t observation_time)
 
     /* Correct for light travel time from the Sun. */
     /* Otherwise season calculations (equinox, solstice) will all be early by about 8 minutes! */
-    time = Astronomy_AddDays(observation_time, -1.0 / C_AUDAY);
+    adjusted_time = Astronomy_AddDays(time, -1.0 / C_AUDAY);
 
-    earth2000 = CalcEarth(time);
+    earth2000 = CalcEarth(adjusted_time);
     if (earth2000.status != ASTRO_SUCCESS)
         return EclError(earth2000.status);
 
@@ -3162,11 +3186,11 @@ astro_ecliptic_t Astronomy_SunPosition(astro_time_t observation_time)
     sun2000[2] = -earth2000.z;
 
     /* Convert to equatorial Cartesian coordinates of date. */
-    precession(0.0, sun2000, time.tt, stemp);
-    nutation(time, 0, stemp, sun_ofdate);
+    precession(0.0, sun2000, adjusted_time.tt, stemp);
+    nutation(adjusted_time, 0, stemp, sun_ofdate);
 
     /* Convert equatorial coordinates to ecliptic coordinates. */
-    true_obliq = DEG2RAD * e_tilt(time).tobl;
+    true_obliq = DEG2RAD * e_tilt(adjusted_time).tobl;
     return RotateEquatorialToEcliptic(sun_ofdate, true_obliq);
 }
 

@@ -521,6 +521,27 @@ It is the caller's responsibility to ensure that the parameter values are correc
 <a name="Astronomy_SunPosition"></a>
 ### Astronomy_SunPosition(time) &#8658; [`astro_ecliptic_t`](#astro_ecliptic_t)
 
+**Calculates geocentric ecliptic coordinates for the Sun.** 
+
+
+
+This function calculates the position of the Sun as seen from the Earth. The returned value includes both Cartesian and spherical coordinates. The x-coordinate and longitude values in the returned structure are based on the *true equinox of date*: one of two points in the sky where the instantaneous plane of the Earth's equator at the given date and time (the *equatorial plane*) intersects with the plane of the Earth's orbit around the Sun (the *ecliptic plane*). By convention, the apparent location of the Sun at the March equinox is chosen as the longitude origin and x-axis direction, instead of the one for September.
+
+`Astronomy_SunPosition` corrects for precession and nutation of the Earth's axis in order to obtain the exact equatorial plane at the given time.
+
+This function can be used for calculating changes of seasons: equinoxes and solstices. In fact, the function [`Astronomy_Seasons`](#Astronomy_Seasons) does use this function for that purpose.
+
+
+
+**Returns:**  The ecliptic coordinates of the Sun using the Earth's true equator of date. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_time_t`](#astro_time_t) | time |  The date and time for which to calculate the Sun's position. | 
+
+
 
 
 ---
