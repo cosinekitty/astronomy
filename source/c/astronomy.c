@@ -2809,15 +2809,15 @@ astro_vector_t Astronomy_HelioVector(astro_body_t body, astro_time_t time)
  * 
  * Also, the position can optionally be corrected for
  * [aberration](https://en.wikipedia.org/wiki/Aberration_of_light), an effect
- * causing the apparent direction of the body to be shifted based on transverse
+ * causing the apparent direction of the body to be shifted due to transverse
  * movement of the Earth with respect to the rays of light coming from that body.
  * 
  * @param body          A body for which to calculate a heliocentric position: the Sun, Moon, or any of the planets.
  * @param time          The date and time for which to calculate the position.
- * @param aberration    Any nonzero value to correct for aberration, or 0 to leave uncorrected.
- * @return      A heliocentric position vector of the center of the given body.
+ * @param aberration    `ABERRATION` to correct for aberration, or `NO_ABERRATION` to leave uncorrected.
+ * @return              A heliocentric position vector of the center of the given body.
  */
-astro_vector_t Astronomy_GeoVector(astro_body_t body, astro_time_t time, int aberration)
+astro_vector_t Astronomy_GeoVector(astro_body_t body, astro_time_t time, astro_aberration_t aberration)
 {
     astro_vector_t vector;
     astro_vector_t earth;
@@ -2825,6 +2825,9 @@ astro_vector_t Astronomy_GeoVector(astro_body_t body, astro_time_t time, int abe
     astro_time_t ltime2;
     double dt;
     int iter;
+
+    if (aberration != ABERRATION && aberration != NO_ABERRATION)
+        return VecError(ASTRO_INVALID_PARAMETER, time);
 
     switch (body)
     {
@@ -2851,7 +2854,7 @@ astro_vector_t Astronomy_GeoVector(astro_body_t body, astro_time_t time, int abe
     default:
         /* For all other bodies, apply light travel time correction. */
 
-        if (!aberration)
+        if (aberration == NO_ABERRATION)
         {
             /* No aberration, so calculate Earth's position once, at the time of observation. */
             earth = CalcEarth(time);
@@ -2866,7 +2869,7 @@ astro_vector_t Astronomy_GeoVector(astro_body_t body, astro_time_t time, int abe
             if (vector.status != ASTRO_SUCCESS)
                 return vector;
 
-            if (aberration)
+            if (aberration == ABERRATION)
             {
                 /* 
                     Include aberration, so make a good first-order approximation
@@ -2906,12 +2909,35 @@ finished:
     return vector;
 }
 
+/**
+ * @brief   Calculates equatorial coordinates of a celestial body as seen by an observer on the Earth's surface.
+ * 
+ * Calculates topocentric equatorial coordinates in one of two different systems:
+ * J2000 or true-equator-of-date, depending on the value of the `equdate` parameter.
+ * Equatorial coordinates include right ascension, declination, and distance in astronomical units.
+ * 
+ * This function corrects for light travel time: it adjusts the apparent location
+ * of the observed body based on how long it takes for light to travel from the body to the Earth.
+ * 
+ * This function corrects for *topocentric parallax*, meaning that it adjusts for the
+ * angular shift depending on where the observer is located on the Earth. This is most
+ * significant for the Moon, because it is so close to the Earth. However, parallax corection 
+ * has a small effect on the apparent positions of other bodies.
+ * 
+ * Correction for aberration is optional, using the `aberration` parameter.
+ * 
+ * @param body          The celestial body to be observed. Not allowed to be `BODY_EARTH`.
+ * @param time          The date and time at which the observation takes place.
+ * @param observer      A location on or near the surface of the Earth.
+ * @param equdate       Selects the date of the Earth's equator in which to express the equatorial coordinates.
+ * @param aberration    Selects whether or not to correct for aberration.
+ */
 astro_equatorial_t Astronomy_Equator(
     astro_body_t body, 
     astro_time_t time, 
     astro_observer_t observer,
-    int ofdate,
-    int aberration)
+    astro_equator_date_t equdate,
+    astro_aberration_t aberration)
 {
     astro_equatorial_t equ;
     astro_vector_t gc;
@@ -2929,18 +2955,21 @@ astro_equatorial_t Astronomy_Equator(
     j2000[1] = gc.y - gc_observer[1];
     j2000[2] = gc.z - gc_observer[2];
 
-    if (ofdate)
+    switch (equdate)
     {
+    case EQUATOR_OF_DATE:
         precession(0.0, j2000, time.tt, temp);
         nutation(time, 0, temp, datevect);
         equ = vector2radec(datevect);
-    }
-    else
-    {
-        equ = vector2radec(j2000);
-    }    
+        return equ;
 
-    return equ;
+    case EQUATOR_J2000:
+        equ = vector2radec(j2000);
+        return equ;
+
+    default:
+        return EquError(ASTRO_INVALID_PARAMETER);
+    }
 }
 
 astro_horizon_t Astronomy_Horizon(
@@ -3386,11 +3415,11 @@ astro_angle_result_t Astronomy_AngleFromSun(astro_body_t body, astro_time_t time
 {
     astro_vector_t sv, bv;
 
-    sv = Astronomy_GeoVector(BODY_SUN, time, 0);    /* FIXFIXFIX: use aberration or not? */
+    sv = Astronomy_GeoVector(BODY_SUN, time, NO_ABERRATION);    /* FIXFIXFIX: use aberration or not? */
     if (sv.status != ASTRO_SUCCESS)
         return AngleError(sv.status);
 
-    bv = Astronomy_GeoVector(body, time, 0);        /* FIXFIXFIX: use aberration or not? */
+    bv = Astronomy_GeoVector(body, time, NO_ABERRATION);        /* FIXFIXFIX: use aberration or not? */
     if (bv.status != ASTRO_SUCCESS)
         return AngleError(bv.status);
 
@@ -3591,12 +3620,12 @@ astro_angle_result_t Astronomy_LongitudeFromSun(astro_body_t body, astro_time_t 
     if (body == BODY_EARTH)
         return AngleError(ASTRO_EARTH_NOT_ALLOWED);
 
-    sv = Astronomy_GeoVector(BODY_SUN, time, 0);    /* FIXFIXFIX: use aberration or not? */
+    sv = Astronomy_GeoVector(BODY_SUN, time, NO_ABERRATION);    /* FIXFIXFIX: use aberration or not? */
     se = Astronomy_Ecliptic(sv);        /* checks for errors in sv */
     if (se.status != ASTRO_SUCCESS)
         return AngleError(se.status);
 
-    bv = Astronomy_GeoVector(body, time, 0);        /* FIXFIXFIX: use aberration or not? */
+    bv = Astronomy_GeoVector(body, time, NO_ABERRATION);        /* FIXFIXFIX: use aberration or not? */
     be = Astronomy_Ecliptic(bv);        /* checks for errors in bv */
     if (be.status != ASTRO_SUCCESS)
         return AngleError(be.status);
@@ -3807,7 +3836,7 @@ astro_hour_angle_t Astronomy_SearchHourAngle(
         gast = sidereal_time(time);
 
         /* Obtain equatorial coordinates of date for the body. */
-        ofdate = Astronomy_Equator(body, time, observer, 1, 1);
+        ofdate = Astronomy_Equator(body, time, observer, EQUATOR_OF_DATE, ABERRATION);
         if (ofdate.status != ASTRO_SUCCESS)
             return HourAngleError(ofdate.status);
 
@@ -3875,7 +3904,7 @@ static astro_func_result_t peak_altitude(void *context, astro_time_t time)
         depending on whether the caller wants rise times or set times, respectively.
     */
 
-    ofdate = Astronomy_Equator(p->body, time, p->observer, 1, 1);
+    ofdate = Astronomy_Equator(p->body, time, p->observer, EQUATOR_OF_DATE, ABERRATION);
     if (ofdate.status != ASTRO_SUCCESS)
         return FuncError(ofdate.status);
 
@@ -3890,7 +3919,7 @@ static astro_func_result_t peak_altitude(void *context, astro_time_t time)
 astro_search_result_t Astronomy_SearchRiseSet(
     astro_body_t body,
     astro_observer_t observer,
-    int direction,
+    astro_direction_t direction,
     astro_time_t dateStart,
     double limitDays)
 {    
@@ -3902,12 +3931,12 @@ astro_search_result_t Astronomy_SearchRiseSet(
 
     switch (direction)
     {
-    case +1:
+    case DIRECTION_RISE:
         ha_before = 12.0;   /* minimum altitude (bottom) happens BEFORE the body rises. */
         ha_after = 0.0;     /* maximum altitude (culmination) happens AFTER the body rises. */
         break;
 
-    case -1:
+    case DIRECTION_SET:
         ha_before = 0.0;    /* culmination happens BEFORE the body sets. */
         ha_after = 12.0;    /* bottom happens AFTER the body sets. */
         break;
@@ -3918,7 +3947,7 @@ astro_search_result_t Astronomy_SearchRiseSet(
 
     /* Set up the context structure for the search function 'peak_altitude'. */
     context.body = body;
-    context.direction = direction;
+    context.direction = (int)direction;
     context.observer = observer;
     switch (body)
     {

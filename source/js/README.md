@@ -553,7 +553,7 @@ However, it can have a small effect on the apparent positions of other bodies.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| body | <code>string</code> | The name of the body for which to find equatorial coordinates. |
+| body | <code>string</code> | The name of the body for which to find equatorial coordinates.      Not allowed to be <code>"Earth"</code>. |
 | date | <code>Date</code> \| <code>number</code> \| <code>Astronomy.Time</code> | Specifies the date and time at which the body is to be observed. |
 | observer | [<code>Observer</code>](#Astronomy.Observer) | The location on the Earth of the observer.      Call [MakeObserver](#Astronomy.MakeObserver) to create an observer object. |
 | ofdate | <code>bool</code> | Pass <code>true</code> to return equatorial coordinates of date,      i.e. corrected for precession and nutation at the given date.      This is needed to get correct horizontal coordinates when you call      [Horizon](#Astronomy.Horizon).      Pass <code>false</code> to return equatorial coordinates in the J2000 system. |

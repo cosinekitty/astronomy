@@ -224,19 +224,19 @@ static int AstroCheck(void)
 
             if (body != BODY_EARTH)
             {
-                CHECK_EQU(j2000, Astronomy_Equator(body, time, observer, 0, 0));
-                CHECK_EQU(ofdate, Astronomy_Equator(body, time, observer, 1, 1));
+                CHECK_EQU(j2000, Astronomy_Equator(body, time, observer, EQUATOR_J2000, NO_ABERRATION));
+                CHECK_EQU(ofdate, Astronomy_Equator(body, time, observer, EQUATOR_OF_DATE, ABERRATION));
                 hor = Astronomy_Horizon(time, observer, ofdate.ra, ofdate.dec, REFRACTION_NONE);
                 fprintf(outfile, "s %s %0.16lf %0.16lf %0.16lf %0.16lf %0.16lf %0.16lf %0.16lf\n", 
                     Astronomy_BodyName(body), time.tt, time.ut, j2000.ra, j2000.dec, j2000.dist, hor.azimuth, hor.altitude);
             }
         }
 
-        CHECK_VECTOR(pos, Astronomy_GeoVector(BODY_MOON, time, 0));
+        CHECK_VECTOR(pos, Astronomy_GeoVector(BODY_MOON, time, NO_ABERRATION));
         fprintf(outfile, "v GM %0.16lf %0.16lf %0.16lf %0.16lf\n", pos.t.tt, pos.x, pos.y, pos.z);
 
-        CHECK_EQU(j2000, Astronomy_Equator(BODY_MOON, time, observer, 0, 0));
-        CHECK_EQU(ofdate, Astronomy_Equator(BODY_MOON, time, observer, 1, 1));
+        CHECK_EQU(j2000, Astronomy_Equator(BODY_MOON, time, observer, EQUATOR_J2000, NO_ABERRATION));
+        CHECK_EQU(ofdate, Astronomy_Equator(BODY_MOON, time, observer, EQUATOR_OF_DATE, ABERRATION));
         hor = Astronomy_Horizon(time, observer, ofdate.ra, ofdate.dec, REFRACTION_NONE);
         fprintf(outfile, "s GM %0.16lf %0.16lf %0.16lf %0.16lf %0.16lf %0.16lf %0.16lf\n", 
             time.tt, time.ut, j2000.ra, j2000.dec, j2000.dist, hor.azimuth, hor.altitude);
@@ -1003,7 +1003,7 @@ static int TestPlanetLongitudes(
             }
         }
 
-        geo = Astronomy_GeoVector(body, search_result.time, 0);
+        geo = Astronomy_GeoVector(body, search_result.time, NO_ABERRATION);
         if (geo.status != ASTRO_SUCCESS)
         {
             fprintf(stderr, "TestPlanetLongitudes(%s): GeoVector returned %d\n", name, geo.status);
@@ -1160,7 +1160,7 @@ static int RiseSet(const char *filename)
         }
         else
         {
-            r_evt = Astronomy_SearchRiseSet(body, observer, +1, r_search_date, 366.0);
+            r_evt = Astronomy_SearchRiseSet(body, observer, DIRECTION_RISE, r_search_date, 366.0);
             if (r_evt.status != ASTRO_SUCCESS)
             {
                 fprintf(stderr, "RiseSet(%s line %d): did not find %s rise event.\n", filename, lnum, name);
@@ -1168,7 +1168,7 @@ static int RiseSet(const char *filename)
                 goto fail;
             }
 
-            s_evt = Astronomy_SearchRiseSet(body, observer, -1, s_search_date, 366.0);
+            s_evt = Astronomy_SearchRiseSet(body, observer, DIRECTION_SET, s_search_date, 366.0);
             if (s_evt.status != ASTRO_SUCCESS)
             {
                 fprintf(stderr, "RiseSet(%s line %d): did not find %s set event.\n", filename, lnum, name);

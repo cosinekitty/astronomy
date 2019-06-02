@@ -198,6 +198,9 @@ astro_body_t;
  * 
  * This structure is passed to functions that calculate phenomena as observed
  * from a particular place on the Earth.
+ * 
+ * You can create this structure directly, or you can call the convenience function
+ * #Astronomy_MakeObserver# to create one for you.
  */
 typedef struct
 {
@@ -431,6 +434,68 @@ typedef struct
 }
 astro_apsis_t;
 
+/**
+ * @brief   Aberration calculation options.
+ * 
+ * [Aberration](https://en.wikipedia.org/wiki/Aberration_of_light) is an effect
+ * causing the apparent direction of an observed body to be shifted due to transverse
+ * movement of the Earth with respect to the rays of light coming from that body.
+ * This angular correction can be anywhere from 0 to about 20 arcseconds,
+ * depending on the position of the observed body relative to the instantaneous
+ * velocity vector of the Earth.
+ * 
+ * Some Astronomy Engine functions allow optional correction for aberration by
+ * passing in a value of this enumerated type.
+ * 
+ * Aberration correction is useful to improve accuracy of coordinates of
+ * apparent locations of bodies seen from the Earth.
+ * However, because aberration affects not only the observed body (such as a planet)
+ * but the surrounding stars, aberration may be unhelpful (for example) 
+ * for determining exactly when a planet crosses from one constellation to another.
+ */
+typedef enum
+{
+    ABERRATION,     /**< Request correction for aberration. */
+    NO_ABERRATION   /**< Do not correct for aberration. */
+}
+astro_aberration_t;
+
+/**
+ * @brief   Selects the date on which the Earth's equator to be used for representing equatorial coordinates.
+ * 
+ * The Earth's equator is not always in the same plane due to precession and nutation.
+ * 
+ * Sometimes it is useful to have a fixed plane of reference for equatorial coordinates
+ * across different calendar dates.  In these cases, a fixed *epoch*, or reference time,
+ * is helpful. Astronomy Engine provides the J2000 epoch for such cases.  This refers
+ * to the plane of the Earth's orbit as it was on noon UTC on 1 January 2000.
+ * 
+ * For some other purposes, it is more helpful to represent coordinates using the Earth's
+ * equator exactly as it is on that date. For example, when calculating rise/set times
+ * or horizontal coordinates, it is most accurate to use the orientation of the Earth's
+ * equator at that same date and time. For these uses, Astronomy Engine allows *of-date*
+ * calculations.
+ */
+typedef enum
+{
+    EQUATOR_J2000,      /**< Represent equatorial coordinates in the J2000 epoch. */
+    EQUATOR_OF_DATE     /**< Represent equatorial coordinates using the Earth's equator at the given date and time. */
+}
+astro_equator_date_t;
+
+/**
+ * @brief Selects whether to search for a rise time or a set time.
+ * 
+ * The #Astronomy_SearchRiseSet function finds the rise or set time of a body
+ * depending on the value of its `direction` parameter.
+ */
+typedef enum
+{
+    DIRECTION_RISE = +1,    /**< Search for the time a body begins to rise above the horizon. */
+    DIRECTION_SET  = -1,    /**< Search for the time a body finishes sinking below the horizon. */
+}
+astro_direction_t;
+
 /*---------- functions ----------*/
 
 double Astronomy_VectorLength(astro_vector_t vector);
@@ -443,15 +508,15 @@ astro_time_t Astronomy_TimeFromUtc(astro_utc_t utc);
 astro_utc_t  Astronomy_UtcFromTime(astro_time_t time);
 astro_time_t Astronomy_AddDays(astro_time_t time, double days);
 astro_vector_t Astronomy_HelioVector(astro_body_t body, astro_time_t time);
-astro_vector_t Astronomy_GeoVector(astro_body_t body, astro_time_t time, int aberration);
+astro_vector_t Astronomy_GeoVector(astro_body_t body, astro_time_t time, astro_aberration_t aberration);
 astro_vector_t Astronomy_GeoMoon(astro_time_t time);
 
 astro_equatorial_t Astronomy_Equator(
     astro_body_t body, 
     astro_time_t time, 
     astro_observer_t observer,
-    int ofdate,
-    int aberration
+    astro_equator_date_t equdate,
+    astro_aberration_t aberration
 );
 
 astro_ecliptic_t Astronomy_SunPosition(astro_time_t time);
@@ -496,7 +561,7 @@ astro_hour_angle_t Astronomy_SearchHourAngle(
 astro_search_result_t Astronomy_SearchRiseSet(
     astro_body_t body,
     astro_observer_t observer,
-    int direction,
+    astro_direction_t direction,
     astro_time_t dateStart,
     double limitDays);
 

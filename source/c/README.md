@@ -201,7 +201,30 @@ Uses the computer's system clock to find the current UTC date and time with 1-se
 ---
 
 <a name="Astronomy_Equator"></a>
-### Astronomy_Equator(body, time, observer, ofdate, aberration) &#8658; [`astro_equatorial_t`](#astro_equatorial_t)
+### Astronomy_Equator(body, time, observer, equdate, aberration) &#8658; [`astro_equatorial_t`](#astro_equatorial_t)
+
+**Calculates equatorial coordinates of a celestial body as seen by an observer on the Earth's surface.** 
+
+
+
+Calculates topocentric equatorial coordinates in one of two different systems: J2000 or true-equator-of-date, depending on the value of the `equdate` parameter. Equatorial coordinates include right ascension, declination, and distance in astronomical units.
+
+This function corrects for light travel time: it adjusts the apparent location of the observed body based on how long it takes for light to travel from the body to the Earth.
+
+This function corrects for *topocentric parallax*, meaning that it adjusts for the angular shift depending on where the observer is located on the Earth. This is most significant for the Moon, because it is so close to the Earth. However, parallax corection has a small effect on the apparent positions of other bodies.
+
+Correction for aberration is optional, using the `aberration` parameter.
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_body_t`](#astro_body_t) | body |  The celestial body to be observed. Not allowed to be `BODY_EARTH`.  | 
+| [`astro_time_t`](#astro_time_t) | time |  The date and time at which the observation takes place.  | 
+| [`astro_observer_t`](#astro_observer_t) | observer |  A location on or near the surface of the Earth.  | 
+| [`astro_equator_date_t`](#astro_equator_date_t) | equdate |  Selects the date of the Earth's equator in which to express the equatorial coordinates.  | 
+| [`astro_aberration_t`](#astro_aberration_t) | aberration |  Selects whether or not to correct for aberration.  | 
+
 
 
 
@@ -246,7 +269,7 @@ If given an invalid value for `body`, or the body is `BODY_PLUTO` and the `time`
 
 Unlike [`Astronomy_HelioVector`](#Astronomy_HelioVector), this function always corrects for light travel time. This means the position of the body is "back-dated" by the amount of time it takes light to travel from that body to an observer on the Earth.
 
-Also, the position can optionally be corrected for [aberration](https://en.wikipedia.org/wiki/Aberration_of_light), an effect causing the apparent direction of the body to be shifted based on transverse movement of the Earth with respect to the rays of light coming from that body.
+Also, the position can optionally be corrected for [aberration](https://en.wikipedia.org/wiki/Aberration_of_light), an effect causing the apparent direction of the body to be shifted due to transverse movement of the Earth with respect to the rays of light coming from that body.
 
 
 
@@ -258,7 +281,7 @@ Also, the position can optionally be corrected for [aberration](https://en.wikip
 | --- | --- | --- |
 | [`astro_body_t`](#astro_body_t) | body |  A body for which to calculate a heliocentric position: the Sun, Moon, or any of the planets.  | 
 | [`astro_time_t`](#astro_time_t) | time |  The date and time for which to calculate the position.  | 
-| `int` | aberration |  Any nonzero value to correct for aberration, or 0 to leave uncorrected.  | 
+| [`astro_aberration_t`](#astro_aberration_t) | aberration |  `ABERRATION` to correct for aberration, or `NO_ABERRATION` to leave uncorrected.  | 
 
 
 
@@ -553,6 +576,28 @@ Calculates the non-negative length of the given vector. The length is expressed 
 
 ---
 
+<a name="astro_aberration_t"></a>
+#### `astro_aberration_t`
+
+**Aberration calculation options.** 
+
+
+
+[Aberration](https://en.wikipedia.org/wiki/Aberration_of_light) is an effect causing the apparent direction of an observed body to be shifted due to transverse movement of the Earth with respect to the rays of light coming from that body. This angular correction can be anywhere from 0 to about 20 arcseconds, depending on the position of the observed body relative to the instantaneous velocity vector of the Earth.
+
+Some Astronomy Engine functions allow optional correction for aberration by passing in a value of this enumerated type.
+
+Aberration correction is useful to improve accuracy of coordinates of apparent locations of bodies seen from the Earth. However, because aberration affects not only the observed body (such as a planet) but the surrounding stars, aberration may be unhelpful (for example) for determining exactly when a planet crosses from one constellation to another. 
+
+| Enum Value | Description |
+| --- | --- |
+| `ABERRATION` |  Request correction for aberration.  |
+| `NO_ABERRATION` |  Do not correct for aberration.  |
+
+
+
+---
+
 <a name="astro_apsis_kind_t"></a>
 #### `astro_apsis_kind_t`
 
@@ -591,6 +636,46 @@ Calculates the non-negative length of the given vector. The length is expressed 
 | `BODY_PLUTO` |  Pluto  |
 | `BODY_SUN` |  Sun  |
 | `BODY_MOON` |  Moon  |
+
+
+
+---
+
+<a name="astro_direction_t"></a>
+#### `astro_direction_t`
+
+**Selects whether to search for a rise time or a set time.** 
+
+
+
+The [`Astronomy_SearchRiseSet`](#Astronomy_SearchRiseSet) function finds the rise or set time of a body depending on the value of its `direction` parameter. 
+
+| Enum Value | Description |
+| --- | --- |
+| `DIRECTION_RISE` |  Search for the time a body begins to rise above the horizon.  |
+| `DIRECTION_SET` |  Search for the time a body finishes sinking below the horizon.  |
+
+
+
+---
+
+<a name="astro_equator_date_t"></a>
+#### `astro_equator_date_t`
+
+**Selects the date on which the Earth's equator to be used for representing equatorial coordinates.** 
+
+
+
+The Earth's equator is not always in the same plane due to precession and nutation.
+
+Sometimes it is useful to have a fixed plane of reference for equatorial coordinates across different calendar dates. In these cases, a fixed *epoch*, or reference time, is helpful. Astronomy Engine provides the J2000 epoch for such cases. This refers to the plane of the Earth's orbit as it was on noon UTC on 1 January 2000.
+
+For some other purposes, it is more helpful to represent coordinates using the Earth's equator exactly as it is on that date. For example, when calculating rise/set times or horizontal coordinates, it is most accurate to use the orientation of the Earth's equator at that same date and time. For these uses, Astronomy Engine allows *of-date* calculations. 
+
+| Enum Value | Description |
+| --- | --- |
+| `EQUATOR_J2000` |  Represent equatorial coordinates in the J2000 epoch.  |
+| `EQUATOR_OF_DATE` |  Represent equatorial coordinates using the Earth's equator at the given date and time.  |
 
 
 
@@ -854,7 +939,9 @@ Returned by the functions [`Astronomy_Illumination`](#Astronomy_Illumination) an
 
 
 
-This structure is passed to functions that calculate phenomena as observed from a particular place on the Earth. 
+This structure is passed to functions that calculate phenomena as observed from a particular place on the Earth.
+
+You can create this structure directly, or you can call the convenience function [`Astronomy_MakeObserver`](#Astronomy_MakeObserver)# to create one for you. 
 
 | Type | Member | Description |
 | ---- | ------ | ----------- |

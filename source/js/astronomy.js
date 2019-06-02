@@ -2370,6 +2370,7 @@ Astronomy.SunPosition = function(date) {
  * 
  * @param {string} body
  *      The name of the body for which to find equatorial coordinates.
+ *      Not allowed to be <code>"Earth"</code>.
  * 
  * @param {(Date | number | Astronomy.Time)} date
  *      Specifies the date and time at which the body is to be observed.
