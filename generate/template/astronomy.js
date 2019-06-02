@@ -162,8 +162,7 @@ function Frac(x) {
 
 /**
  * Calculates the angle in degrees between two vectors.
- * The angle is measured in the plane that contains both vectors
- * emanating from the same point.
+ * The angle is measured in the plane that contains both vectors.
  * 
  * @param {Astronomy.Vector} a
  *      The first of a pair of vectors between which to measure an angle.
@@ -1723,7 +1722,7 @@ function CalcChebyshev(model, time) {
 /**
  * Calculates heliocentric (i.e., with respect to the center of the Sun)
  * Cartesian coordinates in the J2000 equatorial system of a celestial
- * body at a specified time.
+ * body at a specified time. The position is not corrected for light travel time or aberration.
  * 
  * @param {string} body
  *      One of the strings 
@@ -1758,7 +1757,13 @@ Astronomy.HelioVector = function(body, date) {
 /**
  * Calculates geocentric (i.e., with respect to the center of the Earth)
  * Cartesian coordinates in the J2000 equatorial system of a celestial
- * body at a specified time.
+ * body at a specified time. The position is always corrected for light travel time:
+ * this means the position of the body is "back-dated" based on how long it
+ * takes light to travel from the body to an observer on the Earth.
+ * Also, the position can optionally be corrected for aberration, an effect
+ * causing the apparent direction of the body to be shifted based on 
+ * transverse movement of the Earth with respect to the rays of light
+ * coming from that body.
  * 
  * @param {string} body
  *      One of the strings 

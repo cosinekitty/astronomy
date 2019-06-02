@@ -216,6 +216,8 @@ Uses the computer's system clock to find the current UTC date and time with 1-se
 
 Given a time of observation, calculates the Moon's position as a vector. The vector gives the location of the Moon's center relative to the Earth's center with x-, y-, and z-components measured in astronomical units.
 
+This algorithm is based on Nautical Almanac Office's *Improved Lunar Ephemeris* of 1954, which in turn derives from E. W. Brown's lunar theories from the early twentieth century. It is adapted from Turbo Pascal code from the book [Astronomy on the Personal Computer](https://www.springer.com/us/book/9783540672210) by Montenbruck and Pfleger.
+
 
 
 **Returns:**  The Moon's position as a vector in J2000 Cartesian equatorial coordinates. 
@@ -232,7 +234,32 @@ Given a time of observation, calculates the Moon's position as a vector. The vec
 ---
 
 <a name="Astronomy_GeoVector"></a>
-### Astronomy_GeoVector(body, time, correct_aberration) &#8658; [`astro_vector_t`](#astro_vector_t)
+### Astronomy_GeoVector(body, time, aberration) &#8658; [`astro_vector_t`](#astro_vector_t)
+
+**Calculates geocentric Cartesian coordinates of a body in the J2000 equatorial system.** 
+
+
+
+This function calculates the position of the given celestial body as a vector, using the center of the Earth as the origin. The result is expressed as a Cartesian vector in the J2000 equatorial system: the coordinates are based on the mean equator of the Earth at noon UTC on 1 January 2000.
+
+If given an invalid value for `body`, or the body is `BODY_PLUTO` and the `time` is outside the year range 1700..2200, this function will fail. The caller should always check the `status` field inside the returned [`astro_vector_t`](#astro_vector_t) for `ASTRO_SUCCESS` (success) or any other value (failure) before trusting the resulting vector.
+
+Unlike [`Astronomy_HelioVector`](#Astronomy_HelioVector), this function always corrects for light travel time. This means the position of the body is "back-dated" by the amount of time it takes light to travel from that body to an observer on the Earth.
+
+Also, the position can optionally be corrected for [aberration](https://en.wikipedia.org/wiki/Aberration_of_light), an effect causing the apparent direction of the body to be shifted based on transverse movement of the Earth with respect to the rays of light coming from that body.
+
+
+
+**Returns:**  A heliocentric position vector of the center of the given body. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_body_t`](#astro_body_t) | body |  A body for which to calculate a heliocentric position: the Sun, Moon, or any of the planets.  | 
+| [`astro_time_t`](#astro_time_t) | time |  The date and time for which to calculate the position.  | 
+| `int` | aberration |  Any nonzero value to correct for aberration, or 0 to leave uncorrected.  | 
+
 
 
 
@@ -240,6 +267,28 @@ Given a time of observation, calculates the Moon's position as a vector. The vec
 
 <a name="Astronomy_HelioVector"></a>
 ### Astronomy_HelioVector(body, time) &#8658; [`astro_vector_t`](#astro_vector_t)
+
+**Calculates heliocentric Cartesian coordinates of a body in the J2000 equatorial system.** 
+
+
+
+This function calculates the position of the given celestial body as a vector, using the center of the Sun as the origin. The result is expressed as a Cartesian vector in the J2000 equatorial system: the coordinates are based on the mean equator of the Earth at noon UTC on 1 January 2000.
+
+The position is not corrected for light travel time or aberration. This is different from the behavior of [`Astronomy_GeoVector`](#Astronomy_GeoVector).
+
+If given an invalid value for `body`, or the body is `BODY_PLUTO` and the `time` is outside the year range 1700..2200, this function will fail. The caller should always check the `status` field inside the returned [`astro_vector_t`](#astro_vector_t) for `ASTRO_SUCCESS` (success) or any other value (failure) before trusting the resulting vector.
+
+
+
+**Returns:**  A heliocentric position vector of the center of the given body. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_body_t`](#astro_body_t) | body |  A body for which to calculate a heliocentric position: the Sun, Moon, or any of the planets.  | 
+| [`astro_time_t`](#astro_time_t) | time |  The date and time for which to calculate the position.  | 
+
 
 
 
@@ -482,6 +531,12 @@ After calculating the date and time of an astronomical event in the form of an [
 **Calculates the length of the given vector.** 
 
 
+
+Calculates the non-negative length of the given vector. The length is expressed in the same units as the vector's components, usually astronomical units (AU).
+
+
+
+**Returns:**  The length of the vector. 
 
 
 

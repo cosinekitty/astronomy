@@ -605,7 +605,7 @@ by Montenbruck and Pfleger.
 ### Astronomy.HelioVector(body, date) ⇒ [<code>Vector</code>](#Astronomy.Vector)
 Calculates heliocentric (i.e., with respect to the center of the Sun)
 Cartesian coordinates in the J2000 equatorial system of a celestial
-body at a specified time.
+body at a specified time. The position is not corrected for light travel time or aberration.
 
 **Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
 
@@ -622,7 +622,13 @@ body at a specified time.
 ### Astronomy.GeoVector(body, date, aberration) ⇒ [<code>Vector</code>](#Astronomy.Vector)
 Calculates geocentric (i.e., with respect to the center of the Earth)
 Cartesian coordinates in the J2000 equatorial system of a celestial
-body at a specified time.
+body at a specified time. The position is always corrected for light travel time:
+this means the position of the body is "back-dated" based on how long it
+takes light to travel from the body to an observer on the Earth.
+Also, the position can optionally be corrected for aberration, an effect
+causing the apparent direction of the body to be shifted based on 
+transverse movement of the Earth with respect to the rays of light
+coming from that body.
 
 **Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
 

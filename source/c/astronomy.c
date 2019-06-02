@@ -100,7 +100,13 @@ static double NormalizeLongitude(double lon)
 
 /**
  * @brief Calculates the length of the given vector. 
+ * 
+ * Calculates the non-negative length of the given vector.
+ * The length is expressed in the same units as the vector's components,
+ * usually astronomical units (AU).
+ * 
  * @param vector The vector whose length is to be calculated.
+ * @return The length of the vector.
  */
 double Astronomy_VectorLength(astro_vector_t vector)
 {
@@ -1538,6 +1544,12 @@ static void CalcMoon(
  * The vector gives the location of the Moon's center relative to the Earth's center
  * with x-, y-, and z-components measured in astronomical units.
  * 
+ * This algorithm is based on Nautical Almanac Office's <i>Improved Lunar Ephemeris</i> of 1954,
+ * which in turn derives from E. W. Brown's lunar theories from the early twentieth century.
+ * It is adapted from Turbo Pascal code from the book
+ * [Astronomy on the Personal Computer](https://www.springer.com/us/book/9783540672210)
+ * by Montenbruck and Pfleger.
+ * 
  * @param time  The date and time for which to calculate the Moon's position.
  * @return The Moon's position as a vector in J2000 Cartesian equatorial coordinates.
  */
@@ -2437,6 +2449,7 @@ static astro_vector_t CalcVsop(const vsop_model_t *model, astro_time_t time)
     double eclip[3];
     astro_vector_t vector;
 
+    /* Calculate the VSOP "B" trigonometric series to obtain ecliptic spherical coordinates. */
     for (k=0; k < 3; ++k)
     {
         double tpower = 1.0;
@@ -2717,6 +2730,26 @@ static astro_vector_t CalcChebyshev(const astro_cheb_record_t model[], int nrecs
 
 /*------------------ end of generated code ------------------*/
 
+/**
+ * @brief Calculates heliocentric Cartesian coordinates of a body in the J2000 equatorial system.
+ * 
+ * This function calculates the position of the given celestial body as a vector,
+ * using the center of the Sun as the origin.  The result is expressed as a Cartesian
+ * vector in the J2000 equatorial system: the coordinates are based on the mean equator
+ * of the Earth at noon UTC on 1 January 2000.
+ * 
+ * The position is not corrected for light travel time or aberration. 
+ * This is different from the behavior of #Astronomy_GeoVector.
+ * 
+ * If given an invalid value for `body`, or the body is `BODY_PLUTO` and the `time` is outside
+ * the year range 1700..2200, this function will fail. The caller should always check
+ * the `status` field inside the returned #astro_vector_t for `ASTRO_SUCCESS` (success)
+ * or any other value (failure) before trusting the resulting vector.
+ * 
+ * @param body  A body for which to calculate a heliocentric position: the Sun, Moon, or any of the planets.
+ * @param time  The date and time for which to calculate the position.
+ * @return      A heliocentric position vector of the center of the given body.
+ */
 astro_vector_t Astronomy_HelioVector(astro_body_t body, astro_time_t time)
 {
     astro_vector_t vector, earth;
@@ -2757,6 +2790,33 @@ astro_vector_t Astronomy_HelioVector(astro_body_t body, astro_time_t time)
     }
 }
 
+/**
+ * @brief Calculates geocentric Cartesian coordinates of a body in the J2000 equatorial system.
+ * 
+ * This function calculates the position of the given celestial body as a vector,
+ * using the center of the Earth as the origin.  The result is expressed as a Cartesian
+ * vector in the J2000 equatorial system: the coordinates are based on the mean equator
+ * of the Earth at noon UTC on 1 January 2000.
+ * 
+ * If given an invalid value for `body`, or the body is `BODY_PLUTO` and the `time` is outside
+ * the year range 1700..2200, this function will fail. The caller should always check
+ * the `status` field inside the returned #astro_vector_t for `ASTRO_SUCCESS` (success)
+ * or any other value (failure) before trusting the resulting vector.
+ * 
+ * Unlike #Astronomy_HelioVector, this function always corrects for light travel time.
+ * This means the position of the body is "back-dated" by the amount of time it takes
+ * light to travel from that body to an observer on the Earth.
+ * 
+ * Also, the position can optionally be corrected for
+ * [aberration](https://en.wikipedia.org/wiki/Aberration_of_light), an effect
+ * causing the apparent direction of the body to be shifted based on transverse
+ * movement of the Earth with respect to the rays of light coming from that body.
+ * 
+ * @param body          A body for which to calculate a heliocentric position: the Sun, Moon, or any of the planets.
+ * @param time          The date and time for which to calculate the position.
+ * @param aberration    Any nonzero value to correct for aberration, or 0 to leave uncorrected.
+ * @return      A heliocentric position vector of the center of the given body.
+ */
 astro_vector_t Astronomy_GeoVector(astro_body_t body, astro_time_t time, int aberration)
 {
     astro_vector_t vector;

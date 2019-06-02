@@ -347,8 +347,9 @@ class FuncInfo extends Item {
                     return Item.MdType(p.type);
                 }
             }
+            throw `Cannot find parameter called ${name} in function ${Item.Flat(this.name)}`;
         }
-        return '';
+        throw `Invalid/missing parameter name in function ${Item.Flat(this.name)}`;
     }
 
     MdParamNameList() {
