@@ -280,7 +280,9 @@ typedef struct
 astro_search_result_t;
 
 /**
- * @brief The dates and times of changes of season for a given calendar year.
+ * @brief 
+ *      The dates and times of changes of season for a given calendar year.
+ *      Call #Astronomy_Seasons to calculate this data structure for a given year.
  */
 typedef struct
 {
@@ -565,7 +567,7 @@ astro_search_result_t Astronomy_SearchRiseSet(
     astro_time_t dateStart,
     double limitDays);
 
-astro_seasons_t Astronomy_Seasons(int calendar_year);
+astro_seasons_t Astronomy_Seasons(int year);
 astro_illum_t Astronomy_Illumination(astro_body_t body, astro_time_t time);
 astro_illum_t Astronomy_SearchPeakMagnitude(astro_body_t body, astro_time_t startDate);
 astro_apsis_t Astronomy_SearchLunarApsis(astro_time_t startTime);

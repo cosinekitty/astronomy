@@ -331,7 +331,7 @@ class FuncInfo extends Item {
                     let descElem = Item.Search(p, 'parameterdescription');
                     let desc = descElem ? this.MdDescription(null, descElem, false) : '';
                     let type = this.MdTypeForName(name);
-                    md += '| ' + type + ' | ' + name + ' | ' + desc + ' | \n';
+                    md += '| ' + type + ' | `' + name + '` | ' + desc + ' | \n';
                 }
             }
             md += '\n\n';    

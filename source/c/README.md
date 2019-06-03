@@ -109,8 +109,8 @@ The value stored in `time` will not be modified; it is passed by value.
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| [`astro_time_t`](#astro_time_t) | time |  A date and time for which to calculate an adjusted date and time.  | 
-| `double` | days |  A floating point number of days by which to adjust `time`. May be negative, 0, or positive.  | 
+| [`astro_time_t`](#astro_time_t) | `time` |  A date and time for which to calculate an adjusted date and time.  | 
+| `double` | `days` |  A floating point number of days by which to adjust `time`. May be negative, 0, or positive.  | 
 
 
 
@@ -139,7 +139,7 @@ The value stored in `time` will not be modified; it is passed by value.
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| `const char *` | name |  One of the following strings: Sun, Moon, Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune, Pluto.  | 
+| `const char *` | `name` |  One of the following strings: Sun, Moon, Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune, Pluto.  | 
 
 
 
@@ -161,7 +161,7 @@ The value stored in `time` will not be modified; it is passed by value.
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| [`astro_body_t`](#astro_body_t) | body |  The celestial body whose name is to be found.  | 
+| [`astro_body_t`](#astro_body_t) | `body` |  The celestial body whose name is to be found.  | 
 
 
 
@@ -196,7 +196,7 @@ Given coordinates relative to the Earth's equator at J2000 (the instant of noon 
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| [`astro_vector_t`](#astro_vector_t) | equ |  Equatorial coordinates in the J2000 frame of reference. You can call [`Astronomy_GeoVector`](#Astronomy_GeoVector) to obtain suitable equatorial coordinates. | 
+| [`astro_vector_t`](#astro_vector_t) | `equ` |  Equatorial coordinates in the J2000 frame of reference. You can call [`Astronomy_GeoVector`](#Astronomy_GeoVector) to obtain suitable equatorial coordinates. | 
 
 
 
@@ -220,8 +220,8 @@ This function calculates the angle around the plane of the Earth's orbit of a ce
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| [`astro_body_t`](#astro_body_t) | body |  A body other than the Sun. | 
-| [`astro_time_t`](#astro_time_t) | time |  The date and time at which the body's ecliptic longitude is to be calculated. | 
+| [`astro_body_t`](#astro_body_t) | `body` |  A body other than the Sun. | 
+| [`astro_time_t`](#astro_time_t) | `time` |  The date and time at which the body's ecliptic longitude is to be calculated. | 
 
 
 
@@ -254,11 +254,11 @@ Correction for aberration is optional, using the `aberration` parameter.
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| [`astro_body_t`](#astro_body_t) | body |  The celestial body to be observed. Not allowed to be `BODY_EARTH`.  | 
-| [`astro_time_t`](#astro_time_t) | time |  The date and time at which the observation takes place.  | 
-| [`astro_observer_t`](#astro_observer_t) | observer |  A location on or near the surface of the Earth.  | 
-| [`astro_equator_date_t`](#astro_equator_date_t) | equdate |  Selects the date of the Earth's equator in which to express the equatorial coordinates.  | 
-| [`astro_aberration_t`](#astro_aberration_t) | aberration |  Selects whether or not to correct for aberration.  | 
+| [`astro_body_t`](#astro_body_t) | `body` |  The celestial body to be observed. Not allowed to be `BODY_EARTH`.  | 
+| [`astro_time_t`](#astro_time_t) | `time` |  The date and time at which the observation takes place.  | 
+| [`astro_observer_t`](#astro_observer_t) | `observer` |  A location on or near the surface of the Earth.  | 
+| [`astro_equator_date_t`](#astro_equator_date_t) | `equdate` |  Selects the date of the Earth's equator in which to express the equatorial coordinates.  | 
+| [`astro_aberration_t`](#astro_aberration_t) | `aberration` |  Selects whether or not to correct for aberration.  | 
 
 
 
@@ -284,7 +284,7 @@ This algorithm is based on Nautical Almanac Office's *Improved Lunar Ephemeris* 
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| [`astro_time_t`](#astro_time_t) | time |  The date and time for which to calculate the Moon's position.  | 
+| [`astro_time_t`](#astro_time_t) | `time` |  The date and time for which to calculate the Moon's position.  | 
 
 
 
@@ -314,9 +314,9 @@ Also, the position can optionally be corrected for [aberration](https://en.wikip
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| [`astro_body_t`](#astro_body_t) | body |  A body for which to calculate a heliocentric position: the Sun, Moon, or any of the planets.  | 
-| [`astro_time_t`](#astro_time_t) | time |  The date and time for which to calculate the position.  | 
-| [`astro_aberration_t`](#astro_aberration_t) | aberration |  `ABERRATION` to correct for aberration, or `NO_ABERRATION` to leave uncorrected.  | 
+| [`astro_body_t`](#astro_body_t) | `body` |  A body for which to calculate a heliocentric position: the Sun, Moon, or any of the planets.  | 
+| [`astro_time_t`](#astro_time_t) | `time` |  The date and time for which to calculate the position.  | 
+| [`astro_aberration_t`](#astro_aberration_t) | `aberration` |  `ABERRATION` to correct for aberration, or `NO_ABERRATION` to leave uncorrected.  | 
 
 
 
@@ -344,8 +344,8 @@ If given an invalid value for `body`, or the body is `BODY_PLUTO` and the `time`
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| [`astro_body_t`](#astro_body_t) | body |  A body for which to calculate a heliocentric position: the Sun, Moon, or any of the planets.  | 
-| [`astro_time_t`](#astro_time_t) | time |  The date and time for which to calculate the position.  | 
+| [`astro_body_t`](#astro_body_t) | `body` |  A body for which to calculate a heliocentric position: the Sun, Moon, or any of the planets.  | 
+| [`astro_time_t`](#astro_time_t) | `time` |  The date and time for which to calculate the position.  | 
 
 
 
@@ -373,11 +373,11 @@ This function optionally corrects for atmospheric refraction. For most uses, it 
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| [`astro_time_t`](#astro_time_t) | time |  The date and time of the observation. | 
-| [`astro_observer_t`](#astro_observer_t) | observer |  The geographic location of the observer. | 
-| `double` | ra |  The right ascension of the body in sidereal hours. See remarks above for more details. | 
-| `double` | dec |  The declination of the body in degrees. See remarks above for more details. | 
-| [`astro_refraction_t`](#astro_refraction_t) | refraction |  Selects whether to correct for atmospheric refraction, and if so, which model to use. The recommended value for most uses is `REFRACTION_NORMAL`. See remarks above for more details. | 
+| [`astro_time_t`](#astro_time_t) | `time` |  The date and time of the observation. | 
+| [`astro_observer_t`](#astro_observer_t) | `observer` |  The geographic location of the observer. | 
+| `double` | `ra` |  The right ascension of the body in sidereal hours. See remarks above for more details. | 
+| `double` | `dec` |  The declination of the body in degrees. See remarks above for more details. | 
+| [`astro_refraction_t`](#astro_refraction_t) | `refraction` |  Selects whether to correct for atmospheric refraction, and if so, which model to use. The recommended value for most uses is `REFRACTION_NORMAL`. See remarks above for more details. | 
 
 
 
@@ -415,9 +415,9 @@ Some Astronomy Engine functions calculate values pertaining to an observer on th
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| `double` | latitude |  The geographic latitude of the observer in degrees north (positive) or south (negative) of the equator.  | 
-| `double` | longitude |  The geographic longitude of the observer in degrees east (positive) or west (negative) of the prime meridian at Greenwich, England.  | 
-| `double` | height |  The height of the observer in meters above mean sea level.  | 
+| `double` | `latitude` |  The geographic latitude of the observer in degrees north (positive) or south (negative) of the equator.  | 
+| `double` | `longitude` |  The geographic longitude of the observer in degrees east (positive) or west (negative) of the prime meridian at Greenwich, England.  | 
+| `double` | `height` |  The height of the observer in meters above mean sea level.  | 
 
 
 
@@ -443,12 +443,12 @@ It is the caller's responsibility to ensure that the parameter values are correc
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| `int` | year |  The UTC calendar year, e.g. 2019.  | 
-| `int` | month |  The UTC calendar month in the range 1..12.  | 
-| `int` | day |  The UTC calendar day in the range 1..31.  | 
-| `int` | hour |  The UTC hour of the day in the range 0..23.  | 
-| `int` | minute |  The UTC minute in the range 0..59.  | 
-| `double` | second |  The UTC floating-point second in the range [0, 60). | 
+| `int` | `year` |  The UTC calendar year, e.g. 2019.  | 
+| `int` | `month` |  The UTC calendar month in the range 1..12.  | 
+| `int` | `day` |  The UTC calendar day in the range 1..31.  | 
+| `int` | `hour` |  The UTC hour of the day in the range 0..23.  | 
+| `int` | `minute` |  The UTC minute in the range 0..59.  | 
+| `double` | `second` |  The UTC floating-point second in the range [0, 60). | 
 
 
 
@@ -507,11 +507,11 @@ If the search does not converge within 20 iterations, it will fail with status c
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| [`astro_search_func_t`](#astro_search_func_t) | func |  The function for which to find the time of an ascending root. See remarks above for more details. | 
-| `void *` | context |  Any ancillary data needed by the function `func` to calculate a value. The data type varies depending on the function passed in. For example, the function may involve a specific celestial body that must be specified somehow. | 
-| [`astro_time_t`](#astro_time_t) | t1 |  The lower time bound of the search window. See remarks above for more details. | 
-| [`astro_time_t`](#astro_time_t) | t2 |  The upper time bound of the search window. See remarks above for more details. | 
-| `double` | dt_tolerance_seconds |  Specifies an amount of time in seconds within which a bounded ascending root is considered accurate enough to stop. A typical value is 1 second. | 
+| [`astro_search_func_t`](#astro_search_func_t) | `func` |  The function for which to find the time of an ascending root. See remarks above for more details. | 
+| `void *` | `context` |  Any ancillary data needed by the function `func` to calculate a value. The data type varies depending on the function passed in. For example, the function may involve a specific celestial body that must be specified somehow. | 
+| [`astro_time_t`](#astro_time_t) | `t1` |  The lower time bound of the search window. See remarks above for more details. | 
+| [`astro_time_t`](#astro_time_t) | `t2` |  The upper time bound of the search window. See remarks above for more details. | 
+| `double` | `dt_tolerance_seconds` |  Specifies an amount of time in seconds within which a bounded ascending root is considered accurate enough to stop. A typical value is 1 second. | 
 
 
 
@@ -582,7 +582,28 @@ If the search does not converge within 20 iterations, it will fail with status c
 ---
 
 <a name="Astronomy_Seasons"></a>
-### Astronomy_Seasons(calendar_year) &#8658; [`astro_seasons_t`](#astro_seasons_t)
+### Astronomy_Seasons(year) &#8658; [`astro_seasons_t`](#astro_seasons_t)
+
+**Finds both equinoxes and both solstices for a given calendar year.** 
+
+
+
+The changes of seasons are defined by soltices and equinoxes. Given a calendar year number, this function calculates the March and September equinoxes and the June and December solstices.
+
+The equinoxes are the moments twice each year when the plane of the Earth's equator passes through the center of the Sun. In other words, the Sun's declination is zero at both equinoxes. The March equinox defines the beginning of spring in the northern hemisphere and the beginning of autumn in the southern hemisphere. The September equinox defines the beginning of autumn in the northern hemisphere and the beginning of spring in the southern hemisphere.
+
+The solstices are the moments twice each year when one of the Earth's poles is most tilted toward the Sun. More precisely, the Sun's declination reaches its minimum value at the December solstice, which defines the beginning of winter in the northern hemisphere and the beginning of summer in the southern hemisphere. The Sun's declination reaches its maximum value at the June solstice, which defines the beginning of summer in the northern hemisphere and the beginning of winter in the southern hemisphere.
+
+
+
+**Returns:**  The times of the four seasonal changes in the given calendar year. This function should always succeed. However, to be safe, callers should check the `status` field of the returned structure to make sure it contains `ASTRO_SUCCESS`. Any failures indicate a bug in the algorithm and should be [reported as an issue](https://github.com/cosinekitty/astronomy/issues). 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| `int` | `year` |  The calendar year number for which to calculate equinoxes and solstices. The value may be any integer, but only the years 1800 through 2100 have been validated for accuracy: unit testing against data from the United States Naval Observatory confirms that all equinoxes and solstices for that range of years are within 2 minutes of the correct time. | 
+
 
 
 
@@ -609,7 +630,7 @@ This function can be used for calculating changes of seasons: equinoxes and sols
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| [`astro_time_t`](#astro_time_t) | time |  The date and time for which to calculate the Sun's position. | 
+| [`astro_time_t`](#astro_time_t) | `time` |  The date and time for which to calculate the Sun's position. | 
 
 
 
@@ -633,7 +654,7 @@ This function is similar to [`Astronomy_MakeTime`](#Astronomy_MakeTime), only it
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| [`astro_utc_t`](#astro_utc_t) | utc |  The UTC calendar date and time to be converted to [`astro_time_t`](#astro_time_t).  | 
+| [`astro_utc_t`](#astro_utc_t) | `utc` |  The UTC calendar date and time to be converted to [`astro_time_t`](#astro_time_t).  | 
 
 
 
@@ -657,7 +678,7 @@ After calculating the date and time of an astronomical event in the form of an [
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| [`astro_time_t`](#astro_time_t) | time |  The astronomical time value to be converted to calendar date and time.  | 
+| [`astro_time_t`](#astro_time_t) | `time` |  The astronomical time value to be converted to calendar date and time.  | 
 
 
 
@@ -681,7 +702,7 @@ Calculates the non-negative length of the given vector. The length is expressed 
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| [`astro_vector_t`](#astro_vector_t) | vector |  The vector whose length is to be calculated.  | 
+| [`astro_vector_t`](#astro_vector_t) | `vector` |  The vector whose length is to be calculated.  | 
 
 
 
@@ -1086,7 +1107,7 @@ You can create this structure directly, or you can call the convenience function
 <a name="astro_seasons_t"></a>
 #### `astro_seasons_t`
 
-**The dates and times of changes of season for a given calendar year.** 
+**The dates and times of changes of season for a given calendar year. Call [`Astronomy_Seasons`](#Astronomy_Seasons) to calculate this data structure for a given year.** 
 
 
 
