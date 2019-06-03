@@ -80,7 +80,7 @@ static double LongitudeOffset(double diff)
 
     while (offset <= -180.0)
         offset += 360.0;
-    
+
     while (offset > 180.0)
         offset -= 360.0;
 
@@ -99,12 +99,12 @@ static double NormalizeLongitude(double lon)
 }
 
 /**
- * @brief Calculates the length of the given vector. 
- * 
+ * @brief Calculates the length of the given vector.
+ *
  * Calculates the non-negative length of the given vector.
  * The length is expressed in the same units as the vector's components,
  * usually astronomical units (AU).
- * 
+ *
  * @param vector The vector whose length is to be calculated.
  * @return The length of the vector.
  */
@@ -352,7 +352,7 @@ static astro_angle_result_t AngleBetween(astro_vector_t a, astro_vector_t b)
         result.angle = 0.0;
     else
         result.angle = RAD2DEG * acos(dot);
-    
+
     result.status = ASTRO_SUCCESS;
     return result;
 }
@@ -514,7 +514,7 @@ static astro_time_t UniversalTime(double ut)
 
 /**
  * @brief Returns the computer's current date and time in the form of an #astro_time_t.
- * 
+ *
  * Uses the computer's system clock to find the current UTC date and time with 1-second granularity.
  * Converts that date and time to an #astro_time_t value and returns the result.
  * Callers can pass this value to other Astronomy Engine functions to calculate
@@ -534,23 +534,23 @@ astro_time_t Astronomy_CurrentTime(void)
 
 /**
  * @brief Creates an #astro_time_t value from a given calendar date and time.
- * 
+ *
  * Given a UTC calendar date and time, calculates an #astro_time_t value that can
  * be passed to other Astronomy Engine functions for performing various calculations
  * relating to that date and time.
- * 
+ *
  * It is the caller's responsibility to ensure that the parameter values are correct.
- * The parameters are not checked for validity, 
+ * The parameters are not checked for validity,
  * and this function never returns any indication of an error.
  * Invalid values, for example passing in February 31, may cause unexpected return values.
- * 
+ *
  * @param year      The UTC calendar year, e.g. 2019.
  * @param month     The UTC calendar month in the range 1..12.
  * @param day       The UTC calendar day in the range 1..31.
  * @param hour      The UTC hour of the day in the range 0..23.
  * @param minute    The UTC minute in the range 0..59.
  * @param second    The UTC floating-point second in the range [0, 60).
- * 
+ *
  * @return  An #astro_time_t value that represents the given calendar date and time.
  */
 astro_time_t Astronomy_MakeTime(int year, int month, int day, int hour, int minute, double second)
@@ -564,7 +564,7 @@ astro_time_t Astronomy_MakeTime(int year, int month, int day, int hour, int minu
         + ((long) month - 14L) / 12L) / 4L
         + 367L * ((long) month - 2L - ((long) month - 14L) / 12L * 12L)
         / 12L - 3L * (((long) year + 4900L + ((long) month - 14L) / 12L)
-        / 100L) / 4L;    
+        / 100L) / 4L;
 
     y2000 = jd12h - 2451545L;
 
@@ -577,24 +577,24 @@ astro_time_t Astronomy_MakeTime(int year, int month, int day, int hour, int minu
 
 /**
  * @brief   Calculates the sum or difference of an #astro_time_t with a specified floating point number of days.
- * 
+ *
  * Sometimes we need to adjust a given #astro_time_t value by a certain amount of time.
  * This function adds the given real number of days in `days` to the date and time in `time`.
- * 
+ *
  * More precisely, the result's Universal Time field `ut` is exactly adjusted by `days` and
  * the Terrestrial Time field `tt` is adjusted correctly for the resulting UTC date and time,
  * according to the historical and predictive Delta-T model provided by the
  * [United States Naval Observatory](http://maia.usno.navy.mil/ser7/).
- * 
+ *
  * The value stored in `time` will not be modified; it is passed by value.
- * 
+ *
  * @param time  A date and time for which to calculate an adjusted date and time.
  * @param days  A floating point number of days by which to adjust `time`. May be negative, 0, or positive.
  * @return  A date and time that is conceptually equal to `time + days`.
  */
 astro_time_t Astronomy_AddDays(astro_time_t time, double days)
 {
-    /* 
+    /*
         This is slightly wrong, but the error is tiny.
         We really should be adding to TT, not to UT.
         But using TT would require creating an inverse function for DeltaT,
@@ -609,17 +609,17 @@ astro_time_t Astronomy_AddDays(astro_time_t time, double days)
     sum.ut = time.ut + days;
     sum.tt = TerrestrialTime(sum.ut);
 
-    return sum;   
+    return sum;
 }
 
 /**
  * @brief   Creates an #astro_time_t value from a given calendar date and time.
- * 
+ *
  * This function is similar to #Astronomy_MakeTime, only it receives a
  * UTC calendar date and time in the form of an #astro_utc_t structure instead of
  * as separate numeric parameters.  Astronomy_TimeFromUtc is the inverse of
  * #Astronomy_UtcFromTime.
- * 
+ *
  * @param utc   The UTC calendar date and time to be converted to #astro_time_t.
  * @return  A value that can be used for astronomical calculations for the given date and time.
  */
@@ -630,13 +630,13 @@ astro_time_t Astronomy_TimeFromUtc(astro_utc_t utc)
 
 /**
  * @brief Determines the calendar year, month, day, and time from an #astro_time_t value.
- * 
+ *
  * After calculating the date and time of an astronomical event in the form of
  * an #astro_time_t value, it is often useful to display the result in a human-readable
  * form. This function converts the linear time scales in the `ut` field of #astro_time_t
  * into a calendar date and time: year, month, day, hours, minutes, and seconds, expressed
  * in UTC.
- * 
+ *
  * @param time  The astronomical time value to be converted to calendar date and time.
  * @return  A date and time broken out into conventional year, month, day, hour, minute, and second.
  */
@@ -674,11 +674,11 @@ astro_utc_t Astronomy_UtcFromTime(astro_time_t time)
 
 /**
  * @brief   Creates an observer object that represents a location on or near the surface of the Earth.
- * 
+ *
  * Some Astronomy Engine functions calculate values pertaining to an observer on the Earth.
  * These functions require a value of type #astro_observer_t that represents the location
  * of such an observer.
- * 
+ *
  * @param latitude      The geographic latitude of the observer in degrees north (positive) or south (negative) of the equator.
  * @param longitude     The geographic longitude of the observer in degrees east (positive) or west (negative) of the prime meridian at Greenwich, England.
  * @param height        The height of the observer in meters above mean sea level.
@@ -699,7 +699,7 @@ static void iau2000b(astro_time_t time, double *dpsi, double *deps)
 {
     /* Adapted from the NOVAS C 3.1 function of the same name. */
 
-    static const short int nals_t[77][5] = 
+    static const short int nals_t[77][5] =
     {
         { 0,    0,    0,    0,    1},
         { 0,    0,    2,   -2,    2},
@@ -780,7 +780,7 @@ static void iau2000b(astro_time_t time, double *dpsi, double *deps)
         { 1,    1,    2,   -2,    2}
     };
 
-   static const double cls_t[77][6] = 
+   static const double cls_t[77][6] =
    {
         {-172064161.0, -174666.0,  33386.0, 92052331.0,  9086.0, 15377.0},
         { -13170906.0,   -1675.0, -13696.0,  5730336.0, -3015.0, -4587.0},
@@ -872,7 +872,7 @@ static void iau2000b(astro_time_t time, double *dpsi, double *deps)
     om  = fmod(450160.398036 - t * 6962890.5431,    ASEC360) * ASEC2RAD;
     dp = 0;
     de = 0;
-    for (i=76; i >= 0; --i) 
+    for (i=76; i >= 0; --i)
     {
         arg = fmod((nals_t[i][0]*el + nals_t[i][1]*elp + nals_t[i][2]*f + nals_t[i][3]*d + nals_t[i][4]*om), PI2);
         sarg = sin(arg);
@@ -888,7 +888,7 @@ static void iau2000b(astro_time_t time, double *dpsi, double *deps)
 static double mean_obliq(double tt)
 {
     double t = tt / 36525.0;
-    double asec = 
+    double asec =
         (((( -  0.0000000434   * t
              -  0.000000576  ) * t
              +  0.00200340   ) * t
@@ -899,7 +899,7 @@ static double mean_obliq(double tt)
 }
 
 /** @cond DOXYGEN_SKIP */
-typedef struct 
+typedef struct
 {
     double tt;
     double dpsi;
@@ -943,7 +943,7 @@ static void precession(double tt1, const double pos1[3], double tt2, double pos2
 
     if ((tt1 != 0.0) && (tt2 != 0.0))
         FatalError("precession: one of (tt1, tt2) must be zero.");
-    
+
     t = (tt2 - tt1) / 36525;
     if (tt2 == 0)
         t = -t;
@@ -991,7 +991,7 @@ static void precession(double tt1, const double pos1[3], double tt2, double pos2
     zz = -sc * cb * sa + cc * ca;
 
     if (tt2 == 0.0)
-    { 
+    {
         /* Perform rotation from other epoch to J2000.0. */
         pos2[0] = xx * pos1[0] + xy * pos1[1] + xz * pos1[2];
         pos2[1] = yx * pos1[0] + yy * pos1[1] + yz * pos1[2];
@@ -1030,7 +1030,7 @@ static astro_equatorial_t vector2radec(const double pos[3])
         {
             equ.ra = 0.0;
             equ.dec = +90.0;
-        }        
+        }
     }
     else
     {
@@ -1039,7 +1039,7 @@ static astro_equatorial_t vector2radec(const double pos[3])
             equ.ra += 24.0;
 
         equ.dec = RAD2DEG * atan2(pos[2], sqrt(xyproj));
-    }    
+    }
 
     return equ;
 }
@@ -1065,9 +1065,9 @@ static void nutation(astro_time_t time, int direction, const double inpos[3], do
     double zy = cpsi * sobm * cobt - cobm * sobt;
     double xz = spsi * sobt;
     double yz = cpsi * cobm * sobt - sobm * cobt;
-    double zz = cpsi * sobm * sobt + cobm * cobt; 
+    double zz = cpsi * sobm * sobt + cobm * cobt;
 
-    if (direction == 0) 
+    if (direction == 0)
     {
         /* forward rotation */
         outpos[0] = xx * inpos[0] + yx * inpos[1] + zx * inpos[2];
@@ -1107,13 +1107,13 @@ static double sidereal_time(astro_time_t time)
             + 4612.156534     ) * t);
 
     double gst = fmod(st/3600.0 + theta, 360.0) / 15.0;
-    if (gst < 0.0) 
+    if (gst < 0.0)
         gst += 24.0;
 
     return gst;
 }
 
-static void terra(astro_observer_t observer, double st, double pos[3], double vel[3]) 
+static void terra(astro_observer_t observer, double st, double pos[3], double vel[3])
 {
     double erad_km = ERAD / 1000.0;
     double df = 1.0 - 0.003352819697896;    /* flattening of the Earth */
@@ -1149,7 +1149,7 @@ static void geo_pos(astro_time_t time, astro_observer_t observer, double outpos[
     precession(time.tt, pos2, 0.0, outpos);
 }
 
-static void spin(double angle, const double pos1[3], double vec2[3]) 
+static void spin(double angle, const double pos1[3], double vec2[3])
 {
     double angr = angle * DEG2RAD;
     double cosang = cos(angr);
@@ -1191,7 +1191,7 @@ static void ter2cel(astro_time_t time, const double vec1[3], double vec2[3])
 #define ACCESS_PASCAL_ARRAY_2(name,xmin,ymin,x,y) \
     ((name)[(x)-(xmin)][(y)-(ymin)])
 
-typedef struct 
+typedef struct
 {
     double t;
     double dgam;
@@ -1245,11 +1245,11 @@ static double Sine(double phi)
 
 static void LongPeriodic(MoonContext *ctx)
 {
-    double S1 = Sine(0.19833+0.05611*T); 
+    double S1 = Sine(0.19833+0.05611*T);
     double S2 = Sine(0.27869+0.04508*T);
-    double S3 = Sine(0.16827-0.36903*T); 
+    double S3 = Sine(0.16827-0.36903*T);
     double S4 = Sine(0.34734-5.37261*T);
-    double S5 = Sine(0.10498-5.37899*T); 
+    double S5 = Sine(0.10498-5.37899*T);
     double S6 = Sine(0.42681-0.41855*T);
     double S7 = Sine(0.14943-5.37511*T);
 
@@ -1269,9 +1269,9 @@ static void Init(MoonContext *ctx)
     double T2, ARG, FAC;
 
     T2 = T*T;
-    DLAM = 0; 
-    DS = 0; 
-    GAM1C = 0; 
+    DLAM = 0;
+    DS = 0;
+    GAM1C = 0;
     SINPI = 3422.7000;
     LongPeriodic(ctx);
     L0 = PI2*Frac(0.60643382+1336.85522467*T-0.00000313*T2) + DL0/ARC;
@@ -1288,9 +1288,9 @@ static void Init(MoonContext *ctx)
             case 3: ARG=F;  MAX=4; FAC=1.000002708+139.978*DGAM;  break;
             case 4: ARG=D;  MAX=6; FAC=1.0;                       break;
         }
-        CO(0,1) = 1.0; 
+        CO(0,1) = 1.0;
         CO(1,I) = cos(ARG)*FAC;
-        SI(0,I) = 0.0; 
+        SI(0,I) = 0.0;
         SI(1,I) = sin(ARG)*FAC;
         for (J=2; J<=MAX; ++J)
             AddThe(CO(J-1,I), SI(J-1,I), CO(1,I), SI(1,I), &CO(J,I), &SI(J,I));
@@ -1324,7 +1324,7 @@ static void Term(MoonContext *ctx, int p, int q, int r, int s, double *x, double
 }
 
 static void AddSol(
-    MoonContext *ctx, 
+    MoonContext *ctx,
     double coeffl,
     double coeffs,
     double coeffg,
@@ -1465,15 +1465,15 @@ static void SolarN(MoonContext *ctx)
     double x, y;
 
     N = 0.0;
-    ADDN(-526.069, 0, 0,1,-2); 
+    ADDN(-526.069, 0, 0,1,-2);
     ADDN(  -3.352, 0, 0,1,-4);
-    ADDN( +44.297,+1, 0,1,-2); 
+    ADDN( +44.297,+1, 0,1,-2);
     ADDN(  -6.000,+1, 0,1,-4);
-    ADDN( +20.599,-1, 0,1, 0); 
+    ADDN( +20.599,-1, 0,1, 0);
     ADDN( -30.598,-1, 0,1,-2);
-    ADDN( -24.649,-2, 0,1, 0); 
+    ADDN( -24.649,-2, 0,1, 0);
     ADDN(  -2.000,-2, 0,1,-2);
-    ADDN( -22.571, 0,+1,1,-2); 
+    ADDN( -22.571, 0,+1,1,-2);
     ADDN( +10.985, 0,-1,1,-2);
 }
 
@@ -1539,17 +1539,17 @@ static void CalcMoon(
 
 /**
  * @brief Calculates the geocentric position of the Moon at a given time.
- * 
+ *
  * Given a time of observation, calculates the Moon's position as a vector.
  * The vector gives the location of the Moon's center relative to the Earth's center
  * with x-, y-, and z-components measured in astronomical units.
- * 
+ *
  * This algorithm is based on Nautical Almanac Office's <i>Improved Lunar Ephemeris</i> of 1954,
  * which in turn derives from E. W. Brown's lunar theories from the early twentieth century.
  * It is adapted from Turbo Pascal code from the book
  * [Astronomy on the Personal Computer](https://www.springer.com/us/book/9783540672210)
  * by Montenbruck and Pfleger.
- * 
+ *
  * @param time  The date and time for which to calculate the Moon's position.
  * @return The Moon's position as a vector in J2000 Cartesian equatorial coordinates.
  */
@@ -1587,7 +1587,7 @@ astro_vector_t Astronomy_GeoMoon(astro_time_t time)
 /*------------------ VSOP ------------------*/
 
 /** @cond DOXYGEN_SKIP */
-typedef struct 
+typedef struct
 {
     double amplitude;
     double phase;
@@ -1595,10 +1595,10 @@ typedef struct
 }
 vsop_term_t;
 
-typedef struct 
+typedef struct
 {
     int nterms;
-    const vsop_term_t *term; 
+    const vsop_term_t *term;
 }
 vsop_series_t;
 
@@ -1609,7 +1609,7 @@ typedef struct
 }
 vsop_formula_t;
 
-typedef struct 
+typedef struct
 {
     const vsop_formula_t formula[3];
 }
@@ -2424,7 +2424,7 @@ static const vsop_series_t vsop_rad_Neptune[] =
 #define VSOPFORMULA(x)    { ARRAYSIZE(x), x }
 /** @endcond */
 
-static const vsop_model_t vsop[] = 
+static const vsop_model_t vsop[] =
 {
     { { VSOPFORMULA(vsop_lat_Mercury),  VSOPFORMULA(vsop_lon_Mercury),  VSOPFORMULA(vsop_rad_Mercury) } },
     { { VSOPFORMULA(vsop_lat_Venus),    VSOPFORMULA(vsop_lon_Venus),    VSOPFORMULA(vsop_rad_Venus)   } },
@@ -2676,7 +2676,7 @@ static const astro_cheb_record_t cheb_8[] =
     {    47272.5, 26141.0, ARRAYSIZE(cheb_8_6), cheb_8_6 }
 };
 
-static double ChebScale(double t_min, double t_max, double t) 
+static double ChebScale(double t_min, double t_max, double t)
 {
     return (2*t - (t_max + t_min)) / (t_max - t_min);
 }
@@ -2689,18 +2689,18 @@ static astro_vector_t CalcChebyshev(const astro_cheb_record_t model[], int nrecs
     astro_vector_t vector;
 
     /* Search for a record that overlaps the given time value. */
-    for (i=0; i < nrecs; ++i) 
+    for (i=0; i < nrecs; ++i)
     {
         double x = ChebScale(model[i].tt, model[i].tt + model[i].ndays, time.tt);
         if (-1.0 <= x && x <= +1.0)
         {
-            for (d=0; d < 3; ++d) 
+            for (d=0; d < 3; ++d)
             {
                 p0 = 1.0;
                 sum = model[i].coeff[0].data[d];
                 p1 = x;
                 sum += model[i].coeff[1].data[d] * p1;
-                for (k=2; k < model[i].ncoeff; ++k) 
+                for (k=2; k < model[i].ncoeff; ++k)
                 {
                     p2 = (2 * x * p1) - p0;
                     sum += model[i].coeff[k].data[d] * p2;
@@ -2732,20 +2732,20 @@ static astro_vector_t CalcChebyshev(const astro_cheb_record_t model[], int nrecs
 
 /**
  * @brief Calculates heliocentric Cartesian coordinates of a body in the J2000 equatorial system.
- * 
+ *
  * This function calculates the position of the given celestial body as a vector,
  * using the center of the Sun as the origin.  The result is expressed as a Cartesian
  * vector in the J2000 equatorial system: the coordinates are based on the mean equator
  * of the Earth at noon UTC on 1 January 2000.
- * 
- * The position is not corrected for light travel time or aberration. 
+ *
+ * The position is not corrected for light travel time or aberration.
  * This is different from the behavior of #Astronomy_GeoVector.
- * 
+ *
  * If given an invalid value for `body`, or the body is `BODY_PLUTO` and the `time` is outside
  * the year range 1700..2200, this function will fail. The caller should always check
  * the `status` field inside the returned #astro_vector_t for `ASTRO_SUCCESS` (success)
  * or any other value (failure) before trusting the resulting vector.
- * 
+ *
  * @param body  A body for which to calculate a heliocentric position: the Sun, Moon, or any of the planets.
  * @param time  The date and time for which to calculate the position.
  * @return      A heliocentric position vector of the center of the given body.
@@ -2776,7 +2776,7 @@ astro_vector_t Astronomy_HelioVector(astro_body_t body, astro_time_t time)
 
     case BODY_PLUTO:
         return CalcPluto(time);
-        
+
     case BODY_MOON:
         vector = Astronomy_GeoMoon(time);
         earth = CalcEarth(time);
@@ -2792,26 +2792,26 @@ astro_vector_t Astronomy_HelioVector(astro_body_t body, astro_time_t time)
 
 /**
  * @brief Calculates geocentric Cartesian coordinates of a body in the J2000 equatorial system.
- * 
+ *
  * This function calculates the position of the given celestial body as a vector,
  * using the center of the Earth as the origin.  The result is expressed as a Cartesian
  * vector in the J2000 equatorial system: the coordinates are based on the mean equator
  * of the Earth at noon UTC on 1 January 2000.
- * 
+ *
  * If given an invalid value for `body`, or the body is `BODY_PLUTO` and the `time` is outside
  * the year range 1700..2200, this function will fail. The caller should always check
  * the `status` field inside the returned #astro_vector_t for `ASTRO_SUCCESS` (success)
  * or any other value (failure) before trusting the resulting vector.
- * 
+ *
  * Unlike #Astronomy_HelioVector, this function always corrects for light travel time.
  * This means the position of the body is "back-dated" by the amount of time it takes
  * light to travel from that body to an observer on the Earth.
- * 
+ *
  * Also, the position can optionally be corrected for
  * [aberration](https://en.wikipedia.org/wiki/Aberration_of_light), an effect
  * causing the apparent direction of the body to be shifted due to transverse
  * movement of the Earth with respect to the rays of light coming from that body.
- * 
+ *
  * @param body          A body for which to calculate a heliocentric position: the Sun, Moon, or any of the planets.
  * @param time          The date and time for which to calculate the position.
  * @param aberration    `ABERRATION` to correct for aberration, or `NO_ABERRATION` to leave uncorrected.
@@ -2864,14 +2864,14 @@ astro_vector_t Astronomy_GeoVector(astro_body_t body, astro_time_t time, astro_a
 
         ltime = time;
         for (iter=0; iter < 10; ++iter)
-        {            
+        {
             vector = Astronomy_HelioVector(body, ltime);
             if (vector.status != ASTRO_SUCCESS)
                 return vector;
 
             if (aberration == ABERRATION)
             {
-                /* 
+                /*
                     Include aberration, so make a good first-order approximation
                     by backdating the Earth's position also.
                     This is confusing, but it works for objects within the Solar System
@@ -2911,21 +2911,21 @@ finished:
 
 /**
  * @brief   Calculates equatorial coordinates of a celestial body as seen by an observer on the Earth's surface.
- * 
+ *
  * Calculates topocentric equatorial coordinates in one of two different systems:
  * J2000 or true-equator-of-date, depending on the value of the `equdate` parameter.
  * Equatorial coordinates include right ascension, declination, and distance in astronomical units.
- * 
+ *
  * This function corrects for light travel time: it adjusts the apparent location
  * of the observed body based on how long it takes for light to travel from the body to the Earth.
- * 
+ *
  * This function corrects for *topocentric parallax*, meaning that it adjusts for the
  * angular shift depending on where the observer is located on the Earth. This is most
- * significant for the Moon, because it is so close to the Earth. However, parallax corection 
+ * significant for the Moon, because it is so close to the Earth. However, parallax corection
  * has a small effect on the apparent positions of other bodies.
- * 
+ *
  * Correction for aberration is optional, using the `aberration` parameter.
- * 
+ *
  * @param body          The celestial body to be observed. Not allowed to be `BODY_EARTH`.
  * @param time          The date and time at which the observation takes place.
  * @param observer      A location on or near the surface of the Earth.
@@ -2933,8 +2933,8 @@ finished:
  * @param aberration    Selects whether or not to correct for aberration.
  */
 astro_equatorial_t Astronomy_Equator(
-    astro_body_t body, 
-    astro_time_t time, 
+    astro_body_t body,
+    astro_time_t time,
     astro_observer_t observer,
     astro_equator_date_t equdate,
     astro_aberration_t aberration)
@@ -2974,49 +2974,49 @@ astro_equatorial_t Astronomy_Equator(
 
 /**
  * @brief Calculates the apparent location of a body relative to the local horizon of an observer on the Earth.
- * 
+ *
  * Given a date and time, the geographic location of an observer on the Earth, and
  * equatorial coordinates (right ascension and declination) of a celestial body,
  * this function returns horizontal coordinates (azimuth and altitude angles) for the body
  * relative to the horizon at the geographic location.
- * 
+ *
  * The right ascension `ra` and declination `dec` passed in must be *equator of date*
  * coordinates, based on the Earth's true equator at the date and time of the observation.
  * Otherwise the resulting horizontal coordinates will be inaccurate.
- * Equator of date coordinates can be obtained by calling #Astronomy_Equator, passing in 
- * `EQUATOR_OF_DATE` as its `equdate` parameter. It is also recommended to enable 
+ * Equator of date coordinates can be obtained by calling #Astronomy_Equator, passing in
+ * `EQUATOR_OF_DATE` as its `equdate` parameter. It is also recommended to enable
  * aberration correction by passing in `ABERRATION` as the `aberration` parameter.
- * 
+ *
  * This function optionally corrects for atmospheric refraction.
  * For most uses, it is recommended to pass `REFRACTION_NORMAL` in the `refraction` parameter to
- * correct for optical lensing of the Earth's atmosphere that causes objects 
+ * correct for optical lensing of the Earth's atmosphere that causes objects
  * to appear somewhat higher above the horizon than they actually are.
  * However, callers may choose to avoid this correction by passing in `REFRACTION_NONE`.
  * If refraction correction is enabled, the azimuth, altitude, right ascension, and declination
  * in the #astro_horizon_t structure returned by this function will all be corrected for refraction.
- * If refraction is disabled, none of these four coordinates will be corrected; in that case, 
+ * If refraction is disabled, none of these four coordinates will be corrected; in that case,
  * the right ascension and declination in the returned structure will be numerically identical
  * to the respective `ra` and `dec` values passed in.
- * 
- * @param time          
+ *
+ * @param time
  *      The date and time of the observation.
- * 
- * @param observer      
+ *
+ * @param observer
  *      The geographic location of the observer.
- * 
- * @param ra            
+ *
+ * @param ra
  *      The right ascension of the body in sidereal hours.
  *      See remarks above for more details.
- * 
- * @param dec           
+ *
+ * @param dec
  *      The declination of the body in degrees. See remarks above for more details.
- * 
- * @param refraction    
+ *
+ * @param refraction
  *      Selects whether to correct for atmospheric refraction, and if so, which model to use.
  *      The recommended value for most uses is `REFRACTION_NORMAL`.
  *      See remarks above for more details.
- * 
- * @return  
+ *
+ * @return
  *      The body's apparent horizontal coordinates and equatorial coordinates, both optionally corrected for refraction.
  */
 astro_horizon_t Astronomy_Horizon(
@@ -3065,16 +3065,16 @@ astro_horizon_t Astronomy_Horizon(
     az = 0.0;
     if (proj > 0.0) {
         az = -atan2(pw, pn) * RAD2DEG;
-        if (az < 0) 
+        if (az < 0)
             az += 360;
-        if (az >= 360) 
+        if (az >= 360)
             az -= 360;
     }
     zd = atan2(proj, pz) * RAD2DEG;
     hor.ra = ra;
     hor.dec = dec;
 
-    if (refraction == REFRACTION_NORMAL || refraction == REFRACTION_JPLHOR) 
+    if (refraction == REFRACTION_NORMAL || refraction == REFRACTION_JPLHOR)
     {
         double zd0, refr, hd;
         int j;
@@ -3082,7 +3082,7 @@ astro_horizon_t Astronomy_Horizon(
         zd0 = zd;
 
         // http://extras.springer.com/1999/978-1-4471-0555-8/chap4/horizons/horizons.pdf
-        // JPL Horizons says it uses refraction algorithm from 
+        // JPL Horizons says it uses refraction algorithm from
         // Meeus "Astronomical Algorithms", 1991, p. 101-102.
         // I found the following Go implementation:
         // https://github.com/soniakeys/meeus/blob/master/v3/refraction/refract.go
@@ -3095,7 +3095,7 @@ astro_horizon_t Astronomy_Horizon(
 
         refr = (1.02 / tan((hd+10.3/(hd+5.11))*DEG2RAD)) / 60.0;
 
-        if (refraction == REFRACTION_NORMAL && zd > 91.0) 
+        if (refraction == REFRACTION_NORMAL && zd > 91.0)
         {
             // In "normal" mode we gradually reduce refraction toward the nadir
             // so that we never get an altitude angle less than -90 degrees.
@@ -3106,7 +3106,7 @@ astro_horizon_t Astronomy_Horizon(
 
         zd -= refr;
 
-        if (refr > 0.0 && zd > 3.0e-4) 
+        if (refr > 0.0 && zd > 3.0e-4)
         {
             double sinzd = sin(zd * DEG2RAD);
             double coszd = cos(zd * DEG2RAD);
@@ -3118,15 +3118,15 @@ astro_horizon_t Astronomy_Horizon(
                 pr[j] = ((p[j] - coszd0 * uz[j]) / sinzd0)*sinzd + uz[j]*coszd;
 
             proj = sqrt(pr[0]*pr[0] + pr[1]*pr[1]);
-            if (proj > 0) 
+            if (proj > 0)
             {
                 hor.ra = atan2(pr[1], pr[0]) * RAD2DEG / 15;
                 if (hor.ra < 0)
                     hor.ra += 24;
                 if (hor.ra >= 24)
                     hor.ra -= 24;
-            } 
-            else 
+            }
+            else
             {
                 hor.ra = 0;
             }
@@ -3141,25 +3141,25 @@ astro_horizon_t Astronomy_Horizon(
 
 /**
  * @brief Calculates geocentric ecliptic coordinates for the Sun.
- * 
+ *
  * This function calculates the position of the Sun as seen from the Earth.
  * The returned value includes both Cartesian and spherical coordinates.
  * The x-coordinate and longitude values in the returned structure are based
  * on the *true equinox of date*: one of two points in the sky where the instantaneous
- * plane of the Earth's equator at the given date and time (the *equatorial plane*) 
+ * plane of the Earth's equator at the given date and time (the *equatorial plane*)
  * intersects with the plane of the Earth's orbit around the Sun (the *ecliptic plane*).
  * By convention, the apparent location of the Sun at the March equinox is chosen
  * as the longitude origin and x-axis direction, instead of the one for September.
- * 
+ *
  * `Astronomy_SunPosition` corrects for precession and nutation of the Earth's axis
  * in order to obtain the exact equatorial plane at the given time.
- * 
+ *
  * This function can be used for calculating changes of seasons: equinoxes and solstices.
  * In fact, the function #Astronomy_Seasons does use this function for that purpose.
- * 
- * @param time  
+ *
+ * @param time
  *      The date and time for which to calculate the Sun's position.
- * 
+ *
  * @return
  *      The ecliptic coordinates of the Sun using the Earth's true equator of date.
  */
@@ -3196,15 +3196,15 @@ astro_ecliptic_t Astronomy_SunPosition(astro_time_t time)
 
 /**
  * @brief Converts J2000 equatorial Cartesian coordinates to J2000 ecliptic coordinates.
- * 
+ *
  * Given coordinates relative to the Earth's equator at J2000 (the instant of noon UTC
  * on 1 January 2000), this function converts those coordinates to J2000 ecliptic coordinates,
  * which are relative to the plane of the Earth's orbit around the Sun.
- * 
+ *
  * @param equ
  *      Equatorial coordinates in the J2000 frame of reference.
  *      You can call #Astronomy_GeoVector to obtain suitable equatorial coordinates.
- * 
+ *
  * @return
  *      Ecliptic coordinates in the J2000 frame of reference.
  */
@@ -3226,18 +3226,18 @@ astro_ecliptic_t Astronomy_Ecliptic(astro_vector_t equ)
 
 /**
  * @brief   Calculates heliocentric ecliptic longitude of a body based on the J2000 equinox.
- * 
+ *
  * This function calculates the angle around the plane of the Earth's orbit
  * of a celestial body, as seen from the center of the Sun.
  * The angle is measured prograde (in the direction of the Earth's orbit around the Sun)
  * in degrees from the J2000 equinox. The ecliptic longitude is always in the range [0, 360).
- * 
+ *
  * @param body
  *      A body other than the Sun.
- * 
+ *
  * @param time
  *      The date and time at which the body's ecliptic longitude is to be calculated.
- * 
+ *
  * @return
  *      On success, returns a structure whose `status` is `ASTRO_SUCCESS` and whose
  *      `angle` holds the ecliptic longitude in degrees.
@@ -3303,7 +3303,7 @@ static astro_func_result_t sun_offset(void *context, astro_time_t time)
 }
 
 astro_search_result_t Astronomy_SearchSunLongitude(
-    double targetLon, 
+    double targetLon,
     astro_time_t dateStart,
     double limitDays)
 {
@@ -3322,16 +3322,16 @@ astro_search_result_t Astronomy_SearchSunLongitude(
 
 /**
  * @brief Searches for a time at which a function's value increases through zero.
- * 
+ *
  * Certain astronomy calculations involve finding a time when an event occurs.
  * Often such events can be defined as the root of a function:
  * the time at which the function's value becomes zero.
- * 
+ *
  * `Astronomy_Search` finds the *ascending root* of a function: the time at which
  * the function's value becomes zero while having a positive slope. That is, as time increases,
  * the function transitions from a negative value, through zero at a specific moment,
  * to a positive value later. The goal of the search is to find that specific moment.
- * 
+ *
  * The search function is specified by two parameters: `func` and `context`.
  * The `func` parameter is a pointer to the function itself, which accepts a time
  * and a context containing any other arguments needed to evaluate the function.
@@ -3343,54 +3343,54 @@ astro_search_result_t Astronomy_SearchSunLongitude(
  * It could subtract the target longitude from the actual longitude at a given time;
  * thus the difference would equal zero at the moment in time the planet reaches the
  * desired longitude.
- * 
+ *
  * The `func` returns an #astro_func_result_t structure every time it is called.
  * If the returned strcture has a value of `status` other than `ASTRO_SUCCESS`,
  * the search immediately fails and reports that same error code in the `status`
  * returned by `Astronomy_Search`. Otherwise, `status` is `ASTRO_SUCCESS` and
- * `value` is the value of the function, and the search proceeds until it either 
+ * `value` is the value of the function, and the search proceeds until it either
  * finds the ascending root or fails for some reason.
- * 
+ *
  * The search calls `func` repeatedly to rapidly narrow in on any ascending
  * root within the time window specified by `t1` and `t2`. The search never
- * reports a solution outside this time window.  
- * 
- * `Astronomy_Search` uses a combination of bisection and quadratic interpolation 
- * to minimize the number of function calls. However, it is critical that the 
- * supplied time window be small enough that there cannot be more than one root 
- * (ascedning or descending) within it; otherwise the search can fail.  
- * Beyond that, it helps to make the time window as small as possible, ideally 
+ * reports a solution outside this time window.
+ *
+ * `Astronomy_Search` uses a combination of bisection and quadratic interpolation
+ * to minimize the number of function calls. However, it is critical that the
+ * supplied time window be small enough that there cannot be more than one root
+ * (ascedning or descending) within it; otherwise the search can fail.
+ * Beyond that, it helps to make the time window as small as possible, ideally
  * such that the function itself resembles a smooth parabolic curve within that window.
- * 
+ *
  * If an ascending root is not found, or more than one root
- * (ascending and/or descending) exists within the window `t1`..`t2`, 
+ * (ascending and/or descending) exists within the window `t1`..`t2`,
  * the search will fail with status code `ASTRO_SEARCH_FAILURE`.
- * 
+ *
  * If the search does not converge within 20 iterations, it will fail
  * with status code `ASTRO_NO_CONVERGE`.
- * 
+ *
  * @param func
  *      The function for which to find the time of an ascending root.
  *      See remarks above for more details.
- * 
+ *
  * @param context
  *      Any ancillary data needed by the function `func` to calculate a value.
  *      The data type varies depending on the function passed in.
  *      For example, the function may involve a specific celestial body that
  *      must be specified somehow.
- * 
+ *
  * @param t1
  *      The lower time bound of the search window.
  *      See remarks above for more details.
- * 
+ *
  * @param t2
  *      The upper time bound of the search window.
  *      See remarks above for more details.
- * 
+ *
  * @param dt_tolerance_seconds
- *      Specifies an amount of time in seconds within which a bounded ascending root 
+ *      Specifies an amount of time in seconds within which a bounded ascending root
  *      is considered accurate enough to stop. A typical value is 1 second.
- * 
+ *
  * @return
  *      If successful, the returned structure has `status` equal to `ASTRO_SUCCESS`
  *      and `time` set to a value within `dt_tolerance_seconds` of an ascending root.
@@ -3463,9 +3463,9 @@ astro_search_result_t Astronomy_Search(
                 {
                     astro_time_t tleft = Astronomy_AddDays(tq, -dt_guess);
                     astro_time_t tright = Astronomy_AddDays(tq, +dt_guess);
-                    if ((tleft.ut - t1.ut)*(tleft.ut - t2.ut) < 0) 
+                    if ((tleft.ut - t1.ut)*(tleft.ut - t2.ut) < 0)
                     {
-                        if ((tright.ut - t1.ut)*(tright.ut - t2.ut) < 0) 
+                        if ((tright.ut - t1.ut)*(tright.ut - t2.ut) < 0)
                         {
                             double fleft, fright;
                             CALLFUNC(fleft, tleft);
@@ -3526,7 +3526,7 @@ static int QuadInterp(
             return 0;       /* This is a HORIZONTAL line... can't make progress! */
         *out_x = -S / R;
         if (*out_x < -1.0 || *out_x > +1.0)
-            return 0;   /* out of bounds */            
+            return 0;   /* out of bounds */
     }
     else
     {
@@ -3565,19 +3565,19 @@ static astro_status_t FindSeasonChange(double targetLon, int year, int month, in
 
 /**
  * @brief Finds both equinoxes and both solstices for a given calendar year.
- * 
+ *
  * The changes of seasons are defined by solstices and equinoxes.
  * Given a calendar year number, this function calculates the
  * March and September equinoxes and the June and December solstices.
- * 
- * The equinoxes are the moments twice each year when the plane of the 
+ *
+ * The equinoxes are the moments twice each year when the plane of the
  * Earth's equator passes through the center of the Sun. In other words,
- * the Sun's declination is zero at both equinoxes. 
- * The March equinox defines the beginning of spring in the northern hemisphere 
- * and the beginning of autumn in the southern hemisphere.  
+ * the Sun's declination is zero at both equinoxes.
+ * The March equinox defines the beginning of spring in the northern hemisphere
+ * and the beginning of autumn in the southern hemisphere.
  * The September equinox defines the beginning of autumn in the northern hemisphere
  * and the beginning of spring in the southern hemisphere.
- * 
+ *
  * The solstices are the moments twice each year when one of the Earth's poles
  * is most tilted toward the Sun. More precisely, the Sun's declination reaches
  * its minimum value at the December solstice, which defines the beginning of
@@ -3585,15 +3585,15 @@ static astro_status_t FindSeasonChange(double targetLon, int year, int month, in
  * hemisphere. The Sun's declination reaches its maximum value at the June solstice,
  * which defines the beginning of summer in the northern hemisphere and the beginning
  * of winter in the southern hemisphere.
- * 
+ *
  * @param year
  *      The calendar year number for which to calculate equinoxes and solstices.
  *      The value may be any integer, but only the years 1800 through 2100 have been
- *      validated for accuracy: unit testing against data from the 
+ *      validated for accuracy: unit testing against data from the
  *      United States Naval Observatory confirms that all equinoxes and solstices
  *      for that range of years are within 2 minutes of the correct time.
- * 
- * @return  
+ *
+ * @return
  *      The times of the four seasonal changes in the given calendar year.
  *      This function should always succeed. However, to be safe, callers
  *      should check the `status` field of the returned structure to make sure
@@ -3670,7 +3670,7 @@ astro_elongation_t Astronomy_Elongation(astro_body_t body, astro_time_t time)
 
 static astro_func_result_t neg_elong_slope(void *context, astro_time_t time)
 {
-    static const double dt = 0.1;    
+    static const double dt = 0.1;
     astro_angle_result_t e1, e2;
     astro_func_result_t result;
     astro_body_t body = *((astro_body_t *)context);
@@ -3990,7 +3990,7 @@ astro_search_result_t Astronomy_SearchRelativeLongitude(astro_body_t body, doubl
     if (error_angle.status != ASTRO_SUCCESS)
         return SearchError(error_angle.status);
 
-    if (error_angle.value > 0) 
+    if (error_angle.value > 0)
         error_angle.value -= 360;    /* force searching forward in time */
 
     time = startDate;
@@ -4039,7 +4039,7 @@ astro_hour_angle_t Astronomy_SearchHourAngle(
     double delta_sidereal_hours, delta_days, gast;
 
     time = dateStart;
-    for(;;) 
+    for(;;)
     {
         ++iter;
 
@@ -4055,13 +4055,13 @@ astro_hour_angle_t Astronomy_SearchHourAngle(
         /* to bring the hour angle to the desired value. */
 
         delta_sidereal_hours = fmod((hourAngle + ofdate.ra - observer.longitude/15) - gast, 24.0);
-        if (iter == 1) 
+        if (iter == 1)
         {
             /* On the first iteration, always search forward in time. */
             if (delta_sidereal_hours < 0)
                 delta_sidereal_hours += 24;
-        } 
-        else 
+        }
+        else
         {
             /* On subsequent iterations, we make the smallest possible adjustment, */
             /* either forward or backward in time. */
@@ -4072,7 +4072,7 @@ astro_hour_angle_t Astronomy_SearchHourAngle(
         }
 
         /* If the error is tolerable (less than 0.1 seconds), the search has succeeded. */
-        if (fabs(delta_sidereal_hours) * 3600.0 < 0.1) 
+        if (fabs(delta_sidereal_hours) * 3600.0 < 0.1)
         {
             result.hor = Astronomy_Horizon(time, observer, ofdate.ra, ofdate.dec, REFRACTION_NORMAL);
             result.time = time;
@@ -4110,8 +4110,8 @@ static astro_func_result_t peak_altitude(void *context, astro_time_t time)
         of the highest part (the peak) of the given object.
         This is defined as the apparent altitude of the center of the body plus
         the body's angular radius.
-        The 'direction' parameter controls whether the angle is measured 
-        positive above the horizon or positive below the horizon, 
+        The 'direction' parameter controls whether the angle is measured
+        positive above the horizon or positive below the horizon,
         depending on whether the caller wants rise times or set times, respectively.
     */
 
@@ -4133,7 +4133,7 @@ astro_search_result_t Astronomy_SearchRiseSet(
     astro_direction_t direction,
     astro_time_t dateStart,
     double limitDays)
-{    
+{
     context_peak_altitude_t context;
     double ha_before, ha_after;
     astro_time_t time_start, time_before;
@@ -4202,7 +4202,7 @@ astro_search_result_t Astronomy_SearchRiseSet(
         /* and use the current time as the "before" event. */
         time_before = time_start;
     }
-    
+
     evt_after = Astronomy_SearchHourAngle(body, observer, ha_after, time_before);
     if (evt_after.status != ASTRO_SUCCESS)
         return SearchError(evt_after.status);
@@ -4220,10 +4220,10 @@ astro_search_result_t Astronomy_SearchRiseSet(
 
             /* ASTRO_SEARCH_FAILURE is a special error that indicates a normal lack of finding a solution. */
             /* If successful, or any other error, return immediately. */
-            if (result.status != ASTRO_SEARCH_FAILURE) 
+            if (result.status != ASTRO_SEARCH_FAILURE)
                 return result;
         }
-        
+
         /* If we didn't find the desired event, use time_after to find the next before-event. */
         evt_before = Astronomy_SearchHourAngle(body, observer, ha_before, evt_after.time);
         if (evt_before.status != ASTRO_SUCCESS)
@@ -4240,15 +4240,15 @@ astro_search_result_t Astronomy_SearchRiseSet(
 
         alt_before = peak_altitude(&context, evt_before.time);
         if (alt_before.status != ASTRO_SUCCESS)
-            return SearchError(alt_before.status);            
+            return SearchError(alt_before.status);
 
         alt_after = peak_altitude(&context, evt_after.time);
         if (alt_after.status != ASTRO_SUCCESS)
-            return SearchError(alt_after.status);        
+            return SearchError(alt_after.status);
     }
 }
 
-static double MoonMagnitude(double phase, double helio_dist, double geo_dist) 
+static double MoonMagnitude(double phase, double helio_dist, double geo_dist)
 {
     /* https://astronomy.stackexchange.com/questions/10246/is-there-a-simple-analytical-formula-for-the-lunar-phase-brightness-curve */
     double rad = phase * DEG2RAD;
@@ -4262,13 +4262,13 @@ static double MoonMagnitude(double phase, double helio_dist, double geo_dist)
 }
 
 static astro_status_t SaturnMagnitude(
-    double phase, 
-    double helio_dist, 
-    double geo_dist, 
-    astro_vector_t gc, 
+    double phase,
+    double helio_dist,
+    double geo_dist,
+    astro_vector_t gc,
     astro_time_t time,
     double *mag,
-    double *ring_tilt) 
+    double *ring_tilt)
 {
     astro_ecliptic_t eclip;
     double ir, Nr, lat, lon, tilt, sin_tilt;
@@ -4303,16 +4303,16 @@ static astro_status_t SaturnMagnitude(
 }
 
 static astro_status_t VisualMagnitude(
-    astro_body_t body, 
-    double phase, 
-    double helio_dist, 
-    double geo_dist, 
+    astro_body_t body,
+    double phase,
+    double helio_dist,
+    double geo_dist,
     double *mag)
 {
     /* For Mercury and Venus, see:  https://iopscience.iop.org/article/10.1086/430212 */
     double c0, c1=0, c2=0, c3=0, x;
     *mag = NAN;
-    switch (body) 
+    switch (body)
     {
     case BODY_MERCURY:  c0 = -0.60, c1 = +4.98, c2 = -4.88, c3 = +3.02; break;
     case BODY_VENUS:
@@ -4340,7 +4340,7 @@ astro_illum_t Astronomy_Illumination(astro_body_t body, astro_time_t time)
     astro_vector_t earth;   /* vector from Sun to Earth */
     astro_vector_t hc;      /* vector from Sun to body */
     astro_vector_t gc;      /* vector from Earth to body */
-    double mag;             /* visual magnitude */   
+    double mag;             /* visual magnitude */
     astro_angle_result_t phase;     /* phase angle in degrees between Earth and Sun as seen from body */
     double helio_dist;      /* distance from Sun to body */
     double geo_dist;        /* distance from Earth to body */
@@ -4372,7 +4372,7 @@ astro_illum_t Astronomy_Illumination(astro_body_t body, astro_time_t time)
         /* The Sun emits light instead of reflecting it, */
         /* so we report a placeholder phase angle of 0. */
         phase.status = ASTRO_SUCCESS;
-        phase.angle = 0.0;       
+        phase.angle = 0.0;
     }
     else
     {
@@ -4444,7 +4444,7 @@ astro_illum_t Astronomy_Illumination(astro_body_t body, astro_time_t time)
 
 static astro_func_result_t mag_slope(void *context, astro_time_t time)
 {
-    /* 
+    /*
         The Search() function finds a transition from negative to positive values.
         The derivative of magnitude y with respect to time t (dy/dt)
         is negative as an object gets brighter, because the magnitude numbers
@@ -4514,7 +4514,7 @@ astro_illum_t Astronomy_SearchPeakMagnitude(astro_body_t body, astro_time_t star
             /* Search forward for the time t2 when rel lon = +s2. */
             rlon_hi = +s2;
         }
-        else if (rlon >= +s2 || rlon < -s2 ) 
+        else if (rlon >= +s2 || rlon < -s2 )
         {
             /* Seek to the next search window at [-s2, -s1]. */
             adjust_days = 0.0;
@@ -4522,8 +4522,8 @@ astro_illum_t Astronomy_SearchPeakMagnitude(astro_body_t body, astro_time_t star
             rlon_lo = -s2;
             /* Search forward for the time t2 when rel lon = -s1. */
             rlon_hi = -s1;
-        } 
-        else if (rlon >= 0) 
+        }
+        else if (rlon >= 0)
         {
             /* rlon must be in the middle of the window [+s1, +s2]. */
             /* Search BACKWARD for the time t1 when rel lon = +s1. */
@@ -4534,8 +4534,8 @@ astro_illum_t Astronomy_SearchPeakMagnitude(astro_body_t body, astro_time_t star
             rlon_lo = +s1;
             /* Search forward from t1 to find t2 such that rel lon = +s2. */
             rlon_hi = +s2;
-        } 
-        else 
+        }
+        else
         {
             /* rlon must be in the middle of the window [-s2, -s1]. */
             /* Search BACKWARD for the time t1 when rel lon = -s2. */
@@ -4560,7 +4560,7 @@ astro_illum_t Astronomy_SearchPeakMagnitude(astro_body_t body, astro_time_t star
         m1 = mag_slope(&body, t1.time);
         if (m1.status != ASTRO_SUCCESS)
             return IllumError(m1.status);
-        if (m1.value >= 0.0) 
+        if (m1.value >= 0.0)
             return IllumError(ASTRO_INTERNAL_ERROR);    /* should never happen! */
 
         m2 = mag_slope(&body, t2.time);
@@ -4571,7 +4571,7 @@ astro_illum_t Astronomy_SearchPeakMagnitude(astro_body_t body, astro_time_t star
 
         /* Use the generic search algorithm to home in on where the slope crosses from negative to positive. */
         tx = Astronomy_Search(mag_slope, &body, t1.time, t2.time, 10.0);
-        if (tx.status != ASTRO_SUCCESS) 
+        if (tx.status != ASTRO_SUCCESS)
             return IllumError(tx.status);
 
         if (tx.time.tt >= startDate.tt)
