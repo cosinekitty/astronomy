@@ -5,6 +5,11 @@ Fail()
     exit 1
 }
 
+echo "Trimming trailing whitespace in source code."
+for file in template/astronomy.c ../source/c/astronomy.h; do
+    node trimspace.js ${file}
+done
+
 echo "Generating target code."
 ./generate source || Fail "Problem generating target code."
 

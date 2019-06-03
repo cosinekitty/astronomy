@@ -56,28 +56,28 @@ astro_status_t;
 
 /**
  * @brief A date and time used for astronomical calculations.
- * 
+ *
  * This type is of fundamental importance to Astronomy Engine.
  * It is used to represent dates and times for all astronomical calculations.
  * It is also included in the values returned by many Astronomy Engine functions.
- * 
+ *
  * To create a valid astro_time_t value from scratch, call #Astronomy_MakeTime
  * (for a given calendar date and time) or #Astronomy_CurrentTime (for the system's
  * current date and time).
- * 
+ *
  * To adjust an existing astro_time_t by a certain real number of days,
  * call #Astronomy_AddDays.
- * 
+ *
  * The astro_time_t type contains `ut` to represent Universal Time (UT1/UTC) and
  * `tt` to represent Terrestrial Time (TT, also known as <i>ephemeris time</i>).
  * The difference `tt-ut` is known as <i>&Delta;T</i>, and is obtained from
- * a model provided by the 
+ * a model provided by the
  * [United States Naval Observatory](http://maia.usno.navy.mil/ser7/).
- * 
+ *
  * Both `tt` and `ut` are necessary for performing different astronomical calculations.
  * Indeed, certain calculations (such as rise/set times) require both time scales.
  * See the documentation for the `ut` and `tt` fields for more detailed information.
- * 
+ *
  * In cases where astro_time_t is included in a structure returned by
  * a function that can fail, the astro_status_t field `status` will contain a value
  * other than #ASTRO_SUCCESS; in that case the `ut` and `tt` will hold `NAN` (not a number).
@@ -89,44 +89,44 @@ typedef struct
 {
     /**
      * @brief   UT1/UTC number of days since noon on January 1, 2000.
-     * 
+     *
      * The floating point number of days of Universal Time since noon UTC January 1, 2000.
      * Astronomy Engine approximates UTC and UT1 as being the same thing, although they are
-     * not exactly equivalent; UTC and UT1 can disagree by up to &plusmn;0.9 seconds.  
+     * not exactly equivalent; UTC and UT1 can disagree by up to &plusmn;0.9 seconds.
      * This approximation is sufficient for the accuracy requirements of Astronomy Engine.
-     * 
-     * Universal Time Coordinate (UTC) is the international standard for legal and civil 
+     *
+     * Universal Time Coordinate (UTC) is the international standard for legal and civil
      * timekeeping and replaces the older Greenwich Mean Time (GMT) standard.
      * UTC is kept in sync with unpredictable observed changes in the Earth's rotation
      * by occasionally adding leap seconds as needed.
-     * 
+     *
      * UT1 is an idealized time scale based on observed rotation of the Earth, which
      * gradually slows down in an unpredictable way over time, due to tidal drag by the Moon and Sun,
      * large scale weather events like hurricanes, and internal seismic and convection effects.
      * Conceptually, UT1 drifts from atomic time continuously and erratically, whereas UTC
      * is adjusted by a scheduled whole number of leap seconds as needed.
-     * 
+     *
      * The value in `ut` is appropriate for any calculation involving the Earth's rotation,
      * such as calculating rise/set times, culumination, and anything involving apparent
      * sidereal time.
-     * 
-     * Before the era of atomic timekeeping, days based on the Earth's rotation 
+     *
+     * Before the era of atomic timekeeping, days based on the Earth's rotation
      * were often known as <i>mean solar days</i>.
      */
     double ut;
 
     /**
      * @brief   Terrestrial Time days since noon on January 1, 2000.
-     * 
+     *
      * Terrestrial Time is an atomic time scale defined as a number of days since noon on January 1, 2000.
-     * In this system, days are not based on Earth rotations, but instead by 
+     * In this system, days are not based on Earth rotations, but instead by
      * the number of elapsed [SI seconds](https://physics.nist.gov/cuu/Units/second.html)
      * divided by 86400. Unlike `ut`, `tt` increases uniformly without adjustments
      * for changes in the Earth's rotation.
-     * 
+     *
      * The value in `tt` is used for calculations of movements not involving the Earth's rotation,
      * such as the orbits of planets around the Sun, or the Moon around the Earth.
-     * 
+     *
      * Historically, Terrestrial Time has also been known by the term <i>Ephemeris Time</i> (ET).
      */
     double tt;
@@ -195,10 +195,10 @@ astro_body_t;
 
 /**
  * @brief The location of an observer on (or near) the surface of the Earth.
- * 
+ *
  * This structure is passed to functions that calculate phenomena as observed
  * from a particular place on the Earth.
- * 
+ *
  * You can create this structure directly, or you can call the convenience function
  * #Astronomy_MakeObserver# to create one for you.
  */
@@ -212,7 +212,7 @@ astro_observer_t;
 
 /**
  * @brief Equatorial angular coordinates.
- * 
+ *
  * Coordinates of a celestial body as seen from the Earth (geocentric or topocentric, depending on context),
  * oriented with respect to the projection of the Earth's equator onto the sky.
  */
@@ -227,7 +227,7 @@ astro_equatorial_t;
 
 /**
  * @brief Ecliptic angular and Cartesian coordinates.
- * 
+ *
  * Coordinates of a celestial body as seen from the center of the Sun (heliocentric),
  * oriented with respect to the plane of the Earth's orbit around the Sun (the ecliptic).
  */
@@ -244,7 +244,7 @@ astro_ecliptic_t;
 
 /**
  * @brief Coordinates of a celestial body as seen by a topocentric observer.
- * 
+ *
  * Contains horizontal and equatorial coordinates seen by an observer on or near
  * the surface of the Earth (a topocentric observer).
  * Optionally corrected for atmospheric refraction.
@@ -280,7 +280,7 @@ typedef struct
 astro_search_result_t;
 
 /**
- * @brief 
+ * @brief
  *      The dates and times of changes of season for a given calendar year.
  *      Call #Astronomy_Seasons to calculate this data structure for a given year.
  */
@@ -307,14 +307,14 @@ astro_moon_quarter_t;
 
 /**
  * @brief A real value returned by a function whose ascending root is to be found.
- * 
+ *
  * When calling #Astronomy_Search, the caller must pass in a callback function
  * compatible with the function-pointer type astro_search_func_t
  * whose ascending root is to be found. That callback function must return astro_func_result_t.
  * If the function call is successful, it will set `status` to #ASTRO_SUCCESS and `value`
  * to the numeric value appropriate for the given date and time.
  * If the call fails for some reason, it should set `status` to an appropriate error value
- * other than `ASTRO_SUCCESS`; in the error case, to guard against any possible misuse of `value`, 
+ * other than `ASTRO_SUCCESS`; in the error case, to guard against any possible misuse of `value`,
  * it is recommended to set `value` to `NAN`, though this is not strictly necessary.
  */
 typedef struct
@@ -326,16 +326,16 @@ astro_func_result_t;
 
 /**
  * @brief A pointer to a function that is to be passed as a callback to #Astronomy_Search.
- * 
+ *
  * The function #Astronomy_Search numerically solves for the time that a given event occurs.
  * An event is defined as the time when an arbitrary function transitions between having
  * a negative value and a non-negative value. This transition is called an <i>ascending root</i>.
- * 
+ *
  * The type astro_search_func_t represents such a callback function that accepts a
  * custom `context` pointer and an astro_time_t representing the time to probe.
  * The function returns an astro_func_result_t that contains either a real
  * number in `value` or an error code in `status` that aborts the search.
- * 
+ *
  * The `context` points to some data whose type varies depending on the callback function.
  * It can contain any auxiliary parameters (other than time) needed to evaluate the function.
  * For example, a function may pertain to a specific celestial body, in which case `context`
@@ -371,7 +371,7 @@ astro_elongation_t;
 
 /**
  * @brief Information about a celestial body crossing a specific hour angle.
- * 
+ *
  * Returned by the function #Astronomy_SearchHourAngle to report information about
  * a celestial body crossing a certain hour angle as seen by a specified topocentric observer.
  */
@@ -385,7 +385,7 @@ astro_hour_angle_t;
 
 /**
  * @brief Information about the brightness and illuminated shape of a celestial body.
- * 
+ *
  * Returned by the functions #Astronomy_Illumination and #Astronomy_SearchPeakMagnitude
  * to report the visual magnitude and illuminated fraction of a celestial body at a given date and time.
  */
@@ -413,16 +413,16 @@ astro_apsis_kind_t;
 
 /**
  * @brief An apsis event: pericenter (closest approach) or apocenter (farthest distance).
- * 
+ *
  * For the Moon orbiting the Earth, or a planet orbiting the Sun, an <i>apsis</i> is an
  * event where the orbiting body reaches its closest or farthest point from the primary body.
  * The closest approach is called <i>pericenter</i> and the farthest point is <i>apocenter</i>.
- * 
+ *
  * More specific terminology is common for particular orbiting bodies.
  * The Moon's closest approach to the Earth is called <i>perigee</i> and its furthest
  * point is called <i>apogee</i>. The closest approach of a planet to the Sun is called
  * <i>perihelion</i> and the furthest point is called <i>aphelion</i>.
- * 
+ *
  * This data structure is returned by #Astronomy_SearchLunarApsis and #Astronomy_NextLunarApsis
  * to iterate through consecutive alternating perigees and apogees.
  */
@@ -438,21 +438,21 @@ astro_apsis_t;
 
 /**
  * @brief   Aberration calculation options.
- * 
+ *
  * [Aberration](https://en.wikipedia.org/wiki/Aberration_of_light) is an effect
  * causing the apparent direction of an observed body to be shifted due to transverse
  * movement of the Earth with respect to the rays of light coming from that body.
  * This angular correction can be anywhere from 0 to about 20 arcseconds,
  * depending on the position of the observed body relative to the instantaneous
  * velocity vector of the Earth.
- * 
+ *
  * Some Astronomy Engine functions allow optional correction for aberration by
  * passing in a value of this enumerated type.
- * 
+ *
  * Aberration correction is useful to improve accuracy of coordinates of
  * apparent locations of bodies seen from the Earth.
  * However, because aberration affects not only the observed body (such as a planet)
- * but the surrounding stars, aberration may be unhelpful (for example) 
+ * but the surrounding stars, aberration may be unhelpful (for example)
  * for determining exactly when a planet crosses from one constellation to another.
  */
 typedef enum
@@ -464,14 +464,14 @@ astro_aberration_t;
 
 /**
  * @brief   Selects the date on which the Earth's equator to be used for representing equatorial coordinates.
- * 
+ *
  * The Earth's equator is not always in the same plane due to precession and nutation.
- * 
+ *
  * Sometimes it is useful to have a fixed plane of reference for equatorial coordinates
  * across different calendar dates.  In these cases, a fixed *epoch*, or reference time,
  * is helpful. Astronomy Engine provides the J2000 epoch for such cases.  This refers
  * to the plane of the Earth's orbit as it was on noon UTC on 1 January 2000.
- * 
+ *
  * For some other purposes, it is more helpful to represent coordinates using the Earth's
  * equator exactly as it is on that date. For example, when calculating rise/set times
  * or horizontal coordinates, it is most accurate to use the orientation of the Earth's
@@ -487,7 +487,7 @@ astro_equator_date_t;
 
 /**
  * @brief Selects whether to search for a rise time or a set time.
- * 
+ *
  * The #Astronomy_SearchRiseSet function finds the rise or set time of a body
  * depending on the value of its `direction` parameter.
  */
@@ -514,8 +514,8 @@ astro_vector_t Astronomy_GeoVector(astro_body_t body, astro_time_t time, astro_a
 astro_vector_t Astronomy_GeoMoon(astro_time_t time);
 
 astro_equatorial_t Astronomy_Equator(
-    astro_body_t body, 
-    astro_time_t time, 
+    astro_body_t body,
+    astro_time_t time,
     astro_observer_t observer,
     astro_equator_date_t equdate,
     astro_aberration_t aberration
@@ -526,10 +526,10 @@ astro_ecliptic_t Astronomy_Ecliptic(astro_vector_t equ);
 astro_angle_result_t Astronomy_EclipticLongitude(astro_body_t body, astro_time_t time);
 
 astro_horizon_t Astronomy_Horizon(
-    astro_time_t time, 
-    astro_observer_t observer, 
-    double ra, 
-    double dec, 
+    astro_time_t time,
+    astro_observer_t observer,
+    double ra,
+    double dec,
     astro_refraction_t refraction);
 
 astro_angle_result_t Astronomy_AngleFromSun(astro_body_t body, astro_time_t time);
@@ -550,7 +550,7 @@ astro_search_result_t Astronomy_Search(
     double dt_tolerance_seconds);
 
 astro_search_result_t Astronomy_SearchSunLongitude(
-    double targetLon, 
+    double targetLon,
     astro_time_t dateStart,
     double limitDays);
 

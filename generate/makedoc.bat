@@ -11,6 +11,12 @@ if not exist "!GENEXE!" (
     exit /b 1
 )
 
+echo.Trimming trailing whitespace in source code.
+for %%f in (template\astronomy.c ..\source\c\astronomy.h) do (
+    node trimspace.js %%f
+    if errorlevel 1 (exit /b 1)
+)
+
 echo.Generating target code.
 !GENEXE! source
 if errorlevel 1 (
