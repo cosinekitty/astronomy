@@ -2264,6 +2264,84 @@ astro_search_result_t Astronomy_SearchSunLongitude(
     } while(0)
 /** @endcond */
 
+/**
+ * @brief Searches for a time at which a function's value increases through zero.
+ * 
+ * Certain astronomy calculations involve finding a time when an event occurs.
+ * Often such events can be defined as the root of a function:
+ * the time at which the function's value becomes zero.
+ * 
+ * `Astronomy_Search` finds the *ascending root* of a function: the time at which
+ * the function's value becomes zero while having a positive slope. That is, as time increases,
+ * the function transitions from a negative value, through zero at a specific moment,
+ * to a positive value later. The goal of the search is to find that specific moment.
+ * 
+ * The search function is specified by two parameters: `func` and `context`.
+ * The `func` parameter is a pointer to the function itself, which accepts a time
+ * and a context containing any other arguments needed to evaluate the function.
+ * The `context` parameter supplies that context for the given search.
+ * As an example, a caller may wish to find the moment a celestial body reaches a certain
+ * ecliptic longitude. In that case, the caller might create a structure that contains
+ * an #astro_body_t member to specify the body and a `double` to hold the target longitude.
+ * The function would cast the pointer `context` passed in as a pointer to that structure type.
+ * It could subtract the target longitude from the actual longitude at a given time;
+ * thus the difference would equal zero at the moment in time the planet reaches the
+ * desired longitude.
+ * 
+ * The `func` returns an #astro_func_result_t structure every time it is called.
+ * If the returned strcture has a value of `status` other than `ASTRO_SUCCESS`,
+ * the search immediately fails and reports that same error code in the `status`
+ * returned by `Astronomy_Search`. Otherwise, `status` is `ASTRO_SUCCESS` and
+ * `value` is the value of the function, and the search proceeds until it either 
+ * finds the ascending root or fails for some reason.
+ * 
+ * The search calls `func` repeatedly to rapidly narrow in on any ascending
+ * root within the time window specified by `t1` and `t2`. The search never
+ * reports a solution outside this time window.  
+ * 
+ * `Astronomy_Search` uses a combination of bisection and quadratic interpolation 
+ * to minimize the number of function calls. However, it is critical that the 
+ * supplied time window be small enough that there cannot be more than one root 
+ * (ascedning or descending) within it; otherwise the search can fail.  
+ * Beyond that, it helps to make the time window as small as possible, ideally 
+ * such that the function itself resembles a smooth parabolic curve within that window.
+ * 
+ * If an ascending root is not found, or more than one root
+ * (ascending and/or descending) exists within the window `t1`..`t2`, 
+ * the search will fail with status code `ASTRO_SEARCH_FAILURE`.
+ * 
+ * If the search does not converge within 20 iterations, it will fail
+ * with status code `ASTRO_NO_CONVERGE`.
+ * 
+ * @param func
+ *      The function for which to find the time of an ascending root.
+ *      See remarks above for more details.
+ * 
+ * @param context
+ *      Any ancillary data needed by the function `func` to calculate a value.
+ *      The data type varies depending on the function passed in.
+ *      For example, the function may involve a specific celestial body that
+ *      must be specified somehow.
+ * 
+ * @param t1
+ *      The lower time bound of the search window.
+ *      See remarks above for more details.
+ * 
+ * @param t2
+ *      The upper time bound of the search window.
+ *      See remarks above for more details.
+ * 
+ * @param dt_tolerance_seconds
+ *      Specifies an amount of time in seconds within which a bounded ascending root 
+ *      is considered accurate enough to stop. A typical value is 1 second.
+ * 
+ * @return
+ *      If successful, the returned structure has `status` equal to `ASTRO_SUCCESS`
+ *      and `time` set to a value within `dt_tolerance_seconds` of an ascending root.
+ *      On success, the `time` value will always be in the inclusive range [`t1`, `t2`].
+ *      If the search fails, `status` will be set to a value other than `ASTRO_SUCCESS`.
+ *      See the remarks above for more details.
+ */
 astro_search_result_t Astronomy_Search(
     astro_search_func_t func,
     void *context,
