@@ -2510,7 +2510,7 @@ static astro_status_t FindSeasonChange(double targetLon, int year, int month, in
 /**
  * @brief Finds both equinoxes and both solstices for a given calendar year.
  * 
- * The changes of seasons are defined by soltices and equinoxes.
+ * The changes of seasons are defined by solstices and equinoxes.
  * Given a calendar year number, this function calculates the
  * March and September equinoxes and the June and December solstices.
  * 

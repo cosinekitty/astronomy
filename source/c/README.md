@@ -588,7 +588,7 @@ If the search does not converge within 20 iterations, it will fail with status c
 
 
 
-The changes of seasons are defined by soltices and equinoxes. Given a calendar year number, this function calculates the March and September equinoxes and the June and December solstices.
+The changes of seasons are defined by solstices and equinoxes. Given a calendar year number, this function calculates the March and September equinoxes and the June and December solstices.
 
 The equinoxes are the moments twice each year when the plane of the Earth's equator passes through the center of the Sun. In other words, the Sun's declination is zero at both equinoxes. The March equinox defines the beginning of spring in the northern hemisphere and the beginning of autumn in the southern hemisphere. The September equinox defines the beginning of autumn in the northern hemisphere and the beginning of spring in the southern hemisphere.
 
