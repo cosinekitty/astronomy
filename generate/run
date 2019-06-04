@@ -72,7 +72,7 @@ mkdir -pv output temp || Fail "Error creating directories."
 rm -f temp/*
 
 FASTMODE=true
-for file in output/vsop_{0,1,3,4,5,6,7,11} output/08.eph; do
+for file in output/vsop_{0,1,3,4,5,6,7,11}.txt output/08.eph; do
     if [[ ! -f ${file} ]]; then
         echo "Missing required planet model file: ${file}"
         FASTMODE=false        
