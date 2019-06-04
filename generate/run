@@ -68,11 +68,15 @@ echo ""
 echo "Building C source code for 'generate' program."
 ./build || Fail "Could not build 'generate' program from source."
 
-echo ""
-echo "Generating planet models."
 mkdir -pv output temp || Fail "Error creating directories."
-rm -f output/vsop_*.txt temp/*
-./generate planets || Fail "Could not generate planet models."
+rm -f temp/*
+
+if [[ "$1" != "fast" ]]; then
+    echo ""
+    echo "Generating planet models."
+    rm -f output/vsop_*.txt output/*.eph
+    ./generate planets || Fail "Could not generate planet models."
+fi
 
 ./unit_test_js || exit $?
 ./unit_test_c || exit $?

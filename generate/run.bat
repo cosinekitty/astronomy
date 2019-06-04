@@ -1,6 +1,13 @@
 @echo off
 setlocal EnableDelayedExpansion
 
+if "%1" == "fast" (
+    set FASTMODE=true
+    shift
+) else (
+    set FASTMODE=false
+)
+
 set GENEXE=bin\generate.exe
 set CTESTEXE=bin\ctest.exe
 if exist "!GENEXE!" (del "!GENEXE!")
@@ -72,15 +79,18 @@ for %%d in (output temp) do (
     )
 )
 
-if exist output\vsop_*.txt (del /q output\vsop_*.txt)
 if exist temp\* (del /q temp\*)
 
-echo.
-echo.Generating planet models.
-!GENEXE! planets
-if errorlevel 1 (
-    echo.FATAL: !GENEXE! planets
-    exit /b 1
+if !FASTMODE! == false (
+    if exist output\vsop_*.txt (del /q output\vsop_*.txt)
+    if exist output\*.eph (del /q output\*.eph)
+    echo.
+    echo.Generating planet models.
+    !GENEXE! planets
+    if errorlevel 1 (
+        echo.FATAL: !GENEXE! planets
+        exit /b 1
+    )
 )
 
 call makedoc.bat
