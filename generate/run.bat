@@ -1,13 +1,7 @@
 @echo off
 setlocal EnableDelayedExpansion
 
-if "%1" == "fast" (
-    set FASTMODE=true
-    shift
-) else (
-    set FASTMODE=false
-)
-
+set FASTMODE=true
 set GENEXE=bin\generate.exe
 set CTESTEXE=bin\ctest.exe
 if exist "!GENEXE!" (del "!GENEXE!")
@@ -80,6 +74,26 @@ for %%d in (output temp) do (
 )
 
 if exist temp\* (del /q temp\*)
+
+if !FASTMODE! == true (
+    REM *** Override fast mode if any of the required files are missing.
+    for %%f in (
+        output\08.eph
+        output\vsop_0.txt
+        output\vsop_1.txt
+        output\vsop_3.txt
+        output\vsop_4.txt
+        output\vsop_5.txt
+        output\vsop_6.txt
+        output\vsop_7.txt
+        output\vsop_11.txt
+    ) do (
+        if not exist %%f (
+            echo.Missing required planet model file: %%f
+            set FASTMODE=false
+        )
+    )
+)
 
 if !FASTMODE! == false (
     if exist output\vsop_*.txt (del /q output\vsop_*.txt)
