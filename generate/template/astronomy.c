@@ -2582,7 +2582,8 @@ astro_seasons_t Astronomy_Seasons(int year)
  * 
  * @return
  *      If successful, the returned structure contains `ASTRO_SUCCESS` in the `status` field
- *      and the angle in degrees between the Sun and the specified body.
+ *      and `angle` holds the angle in degrees between the Sun and the specified body as
+ *      seen from the center of the Earth.
  *      If an error occurs, the `status` field contains a value other than `ASTRO_SUCCESS`
  *      that indicates the error condition.
  */
@@ -2604,6 +2605,37 @@ astro_angle_result_t Astronomy_AngleFromSun(astro_body_t body, astro_time_t time
     return AngleBetween(sv, bv);
 }
 
+/**
+ * @brief 
+ *      Determines visibility of a celestial body relative to the Sun, as seen from the Earth.
+ * 
+ * This function returns an #astro_elongation_t structure, which provides the following
+ * information about the given celestial body at the given time:
+ * 
+ * - `visibility` is an enumerated type that specifies whether the body is more easily seen
+ *    in the morning before sunrise, or in the evening after sunset.
+ * 
+ * - `elongation` is the angle in degrees between two vectors: one from the center of the Earth to the
+ *    center of the Sun, the other from the center of the Earth to the center of the specified body.
+ *    This angle indicates how far away the body is from the glare of the Sun. This elongation angle
+ *    is always in the range [0, 180].
+ * 
+ * - `relative_longitude` is the absolute value of the difference between the body's ecliptic longitude
+ *   and the Sun's ecliptic longitude, both as seen from the center of the Earth. This angle measures
+ *   around the plane of the Earth's orbit, and ignores how far above or below that plane the body is.
+ *   The relative longitude is measured in degrees and is always in the range [0, 180].
+ * 
+ * @param body
+ *      The celestial body whose visibility is to be calculated.
+ * 
+ * @param time
+ *      The date and time of the observation.
+ * 
+ * @return  
+ *      If successful, the `status` field in the returned structure contains `ASTRO_SUCCESS`
+ *      and all the other fields in the structure are valid. On failure, `status` contains
+ *      some other value as an error code and the other fields contain invalid values.
+ */
 astro_elongation_t Astronomy_Elongation(astro_body_t body, astro_time_t time)
 {
     astro_elongation_t result;

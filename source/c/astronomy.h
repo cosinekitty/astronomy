@@ -357,7 +357,9 @@ typedef enum
 astro_visibility_t;
 
 /**
- * @brief Contains information about the visibility of a celestial body at a given date and time.
+ * @brief 
+ *      Contains information about the visibility of a celestial body at a given date and time.
+ *      See #Astronomy_Elongation for more information.
  */
 typedef struct
 {

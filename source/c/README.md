@@ -128,7 +128,7 @@ This function calculates the angular separation between the given body and the S
 
 
 
-**Returns:**  If successful, the returned structure contains `ASTRO_SUCCESS` in the `status` field and the angle in degrees between the Sun and the specified body. If an error occurs, the `status` field contains a value other than `ASTRO_SUCCESS` that indicates the error condition. 
+**Returns:**  If successful, the returned structure contains `ASTRO_SUCCESS` in the `status` field and `angle` holds the angle in degrees between the Sun and the specified body as seen from the center of the Earth. If an error occurs, the `status` field contains a value other than `ASTRO_SUCCESS` that indicates the error condition. 
 
 
 
@@ -248,6 +248,31 @@ This function calculates the angle around the plane of the Earth's orbit of a ce
 
 <a name="Astronomy_Elongation"></a>
 ### Astronomy_Elongation(body, time) &#8658; [`astro_elongation_t`](#astro_elongation_t)
+
+**Determines visibility of a celestial body relative to the Sun, as seen from the Earth.** 
+
+
+
+This function returns an [`astro_elongation_t`](#astro_elongation_t) structure, which provides the following information about the given celestial body at the given time:
+
+
+
+- `visibility` is an enumerated type that specifies whether the body is more easily seen in the morning before sunrise, or in the evening after sunset.
+- `elongation` is the angle in degrees between two vectors: one from the center of the Earth to the center of the Sun, the other from the center of the Earth to the center of the specified body. This angle indicates how far away the body is from the glare of the Sun. This elongation angle is always in the range [0, 180].
+- `relative_longitude` is the absolute value of the difference between the body's ecliptic longitude and the Sun's ecliptic longitude, both as seen from the center of the Earth. This angle measures around the plane of the Earth's orbit, and ignores how far above or below that plane the body is. The relative longitude is measured in degrees and is always in the range [0, 180].
+
+
+
+
+**Returns:**  If successful, the `status` field in the returned structure contains `ASTRO_SUCCESS` and all the other fields in the structure are valid. On failure, `status` contains some other value as an error code and the other fields contain invalid values. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_body_t`](#astro_body_t) | `body` |  The celestial body whose visibility is to be calculated. | 
+| [`astro_time_t`](#astro_time_t) | `time` |  The date and time of the observation. | 
+
 
 
 
@@ -962,7 +987,7 @@ Coordinates of a celestial body as seen from the center of the Sun (heliocentric
 <a name="astro_elongation_t"></a>
 #### `astro_elongation_t`
 
-**Contains information about the visibility of a celestial body at a given date and time.** 
+**Contains information about the visibility of a celestial body at a given date and time. See [`Astronomy_Elongation`](#Astronomy_Elongation) for more information.** 
 
 
 

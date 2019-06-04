@@ -172,6 +172,20 @@ class Item {
                     }
                     break;
 
+                case 'itemizedlist':
+                    if (!allow_paragraphs)
+                        throw 'Cannot include an itemized list inside a table cell.';
+
+                    md += para_sep + this.MdText(y, true);
+                    break;
+
+                case 'listitem':
+                    if (!allow_paragraphs)
+                        throw 'Cannot include a list item inside a table cell.';
+
+                    md += '- ' + this.MdText(y, true).trimLeft() + '\n';
+                    break;
+
                 default:
                     console.log(JSON.stringify(y, null, 2));
                     console.log(`MdText: unknown element name: [${n}]`);
