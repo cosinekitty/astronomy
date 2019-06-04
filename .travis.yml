@@ -19,7 +19,7 @@ before_script:
 script:
   - export CC=/usr/bin/gcc-6
   - ls -l ${CC} && ${CC} --version
-  - cd generate && ./run && ./verify_clean
+  - cd generate && rm -f output/* && ./run && ./verify_clean
 
 branches:
     only:
