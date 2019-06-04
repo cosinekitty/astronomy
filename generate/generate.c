@@ -722,7 +722,7 @@ static int Resample(int body, const char *outFileName, int npoly, int startYear,
         for (k=0; k < npoly; k++)
         {
             for (i=0; i < 3; ++i)
-                fprintf(outfile, "%22.18lf", coeff[i][k]);
+                fprintf(outfile, " %22.15lf", coeff[i][k]);
             fprintf(outfile, "\n");
         }
     }
