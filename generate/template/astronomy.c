@@ -2566,9 +2566,32 @@ astro_seasons_t Astronomy_Seasons(int year)
     return seasons;
 }
 
+/**
+ * @brief   Returns the angle between the given body and the Sun, as seen from the Earth.
+ * 
+ * This function calculates the angular separation between the given body and the Sun,
+ * as seen from the center of the Earth. This angle is helpful for determining how
+ * easy it is to see the body away from the glare of the Sun.
+ * 
+ * @param body
+ *      The celestial body whose angle from the Sun is to be measured.
+ *      Not allowed to be `BODY_EARTH`.
+ * 
+ * @param time
+ *      The time at which the observation is made.
+ * 
+ * @return
+ *      If successful, the returned structure contains `ASTRO_SUCCESS` in the `status` field
+ *      and the angle in degrees between the Sun and the specified body.
+ *      If an error occurs, the `status` field contains a value other than `ASTRO_SUCCESS`
+ *      that indicates the error condition.
+ */
 astro_angle_result_t Astronomy_AngleFromSun(astro_body_t body, astro_time_t time)
 {
     astro_vector_t sv, bv;
+
+    if (body == BODY_EARTH)
+        return AngleError(ASTRO_EARTH_NOT_ALLOWED);
 
     sv = Astronomy_GeoVector(BODY_SUN, time, NO_ABERRATION);    /* FIXFIXFIX: use aberration or not? */
     if (sv.status != ASTRO_SUCCESS)

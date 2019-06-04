@@ -120,6 +120,24 @@ The value stored in `time` will not be modified; it is passed by value.
 <a name="Astronomy_AngleFromSun"></a>
 ### Astronomy_AngleFromSun(body, time) &#8658; [`astro_angle_result_t`](#astro_angle_result_t)
 
+**Returns the angle between the given body and the Sun, as seen from the Earth.** 
+
+
+
+This function calculates the angular separation between the given body and the Sun, as seen from the center of the Earth. This angle is helpful for determining how easy it is to see the body away from the glare of the Sun.
+
+
+
+**Returns:**  If successful, the returned structure contains `ASTRO_SUCCESS` in the `status` field and the angle in degrees between the Sun and the specified body. If an error occurs, the `status` field contains a value other than `ASTRO_SUCCESS` that indicates the error condition. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_body_t`](#astro_body_t) | `body` |  The celestial body whose angle from the Sun is to be measured. Not allowed to be `BODY_EARTH`. | 
+| [`astro_time_t`](#astro_time_t) | `time` |  The time at which the observation is made. | 
+
+
 
 
 ---
