@@ -11,7 +11,7 @@ const fs = require('fs');
 
 function FixFile(filename) {
     const inText = fs.readFileSync(filename, 'utf8');
-    const outText = inText.replace(/[ \t]+(\r\n?)/g, '$1');
+    const outText = inText.replace(/[ \t]+(\r?\n)/g, '$1');
     
     if (inText === outText) {
         console.log(`trimspace.js: Leaving file as-is: ${filename}`);
