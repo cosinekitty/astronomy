@@ -3650,11 +3650,11 @@ astro_angle_result_t Astronomy_AngleFromSun(astro_body_t body, astro_time_t time
     if (body == BODY_EARTH)
         return AngleError(ASTRO_EARTH_NOT_ALLOWED);
 
-    sv = Astronomy_GeoVector(BODY_SUN, time, NO_ABERRATION);    /* FIXFIXFIX: use aberration or not? */
+    sv = Astronomy_GeoVector(BODY_SUN, time, ABERRATION);
     if (sv.status != ASTRO_SUCCESS)
         return AngleError(sv.status);
 
-    bv = Astronomy_GeoVector(body, time, NO_ABERRATION);        /* FIXFIXFIX: use aberration or not? */
+    bv = Astronomy_GeoVector(body, time, ABERRATION);
     if (bv.status != ASTRO_SUCCESS)
         return AngleError(bv.status);
 
@@ -3950,12 +3950,12 @@ astro_angle_result_t Astronomy_LongitudeFromSun(astro_body_t body, astro_time_t 
     if (body == BODY_EARTH)
         return AngleError(ASTRO_EARTH_NOT_ALLOWED);
 
-    sv = Astronomy_GeoVector(BODY_SUN, time, NO_ABERRATION);    /* FIXFIXFIX: use aberration or not? */
+    sv = Astronomy_GeoVector(BODY_SUN, time, ABERRATION);
     se = Astronomy_Ecliptic(sv);        /* checks for errors in sv */
     if (se.status != ASTRO_SUCCESS)
         return AngleError(se.status);
 
-    bv = Astronomy_GeoVector(body, time, NO_ABERRATION);        /* FIXFIXFIX: use aberration or not? */
+    bv = Astronomy_GeoVector(body, time, ABERRATION);
     be = Astronomy_Ecliptic(bv);        /* checks for errors in bv */
     if (be.status != ASTRO_SUCCESS)
         return AngleError(be.status);

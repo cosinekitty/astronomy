@@ -907,7 +907,7 @@ static int TestMaxElong(const elong_test_t *test)
         goto fail;
     }
 
-    if (arcmin_diff > 3.1)
+    if (arcmin_diff > 3.4)
     {
         fprintf(stderr, "TestMaxElong(%s %s): excessive arcmin error.\n", name, test->searchDate);
         error = 1;
@@ -1003,7 +1003,7 @@ static int TestPlanetLongitudes(
             }
         }
 
-        geo = Astronomy_GeoVector(body, search_result.time, NO_ABERRATION);
+        geo = Astronomy_GeoVector(body, search_result.time, ABERRATION);
         if (geo.status != ASTRO_SUCCESS)
         {
             fprintf(stderr, "TestPlanetLongitudes(%s): GeoVector returned %d\n", name, geo.status);

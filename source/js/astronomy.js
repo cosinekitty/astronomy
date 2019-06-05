@@ -2963,10 +2963,10 @@ Astronomy.LongitudeFromSun = function(body, date) {
         throw 'The Earth does not have a longitude as seen from itself.';
 
     const t = Astronomy.MakeTime(date);    
-    let gb = Astronomy.GeoVector(body, t);  // FIXFIXFIX: use aberration or not? 
+    let gb = Astronomy.GeoVector(body, t, true);
     const eb = Astronomy.Ecliptic(gb.x, gb.y, gb.z);
 
-    let gs = Astronomy.GeoVector('Sun', t); // FIXFIXFIX: use aberration or not? 
+    let gs = Astronomy.GeoVector('Sun', t, true);
     const es = Astronomy.Ecliptic(gs.x, gs.y, gs.z);
 
     return NormalizeLongitude(eb.elon - es.elon);
@@ -2994,8 +2994,8 @@ Astronomy.AngleFromSun = function(body, date) {
         throw 'The Earth does not have an angle as seen from itself.';
 
     const t = Astronomy.MakeTime(date);
-    let sv = Astronomy.GeoVector('Sun', date);  // FIXFIXFIX: use aberration or not? 
-    let bv = Astronomy.GeoVector(body, date);   // FIXFIXFIX: use aberration or not? 
+    let sv = Astronomy.GeoVector('Sun', date, true);
+    let bv = Astronomy.GeoVector(body, date, true);
     let angle = AngleBetween(sv, bv);
     return angle;
 }
