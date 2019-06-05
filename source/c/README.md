@@ -576,7 +576,27 @@ If the search does not converge within 20 iterations, it will fail with status c
 ---
 
 <a name="Astronomy_SearchMaxElongation"></a>
-### Astronomy_SearchMaxElongation(body, startDate) &#8658; [`astro_elongation_t`](#astro_elongation_t)
+### Astronomy_SearchMaxElongation(body, startTime) &#8658; [`astro_elongation_t`](#astro_elongation_t)
+
+**Finds a date and time when Mercury or Venus reaches its maximum angle from the Sun as seen from the Earth.** 
+
+
+
+Mercury and Venus are are often difficult to observe because they are closer to the Sun than the Earth is. Mercury especially is almost always impossible to see because it gets lost in the Sun's glare. The best opportunities for spotting Mercury, and the best opportunities for viewing Venus through a telescope without atmospheric interference, are when these planets reach maximum elongation. These are events where the planets reach the maximum angle from the Sun as seen from the Earth.
+
+This function solves for those times, reporting the next maximum elongation event's date and time, the elongation value itself, the relative longitude with the Sun, and whether the planet is best observed in the morning or evening. See [`Astronomy_Elongation`](#Astronomy_Elongation) for more details about the returned structure.
+
+
+
+**Returns:**  If successful, the `status` field of the returned structure will be `ASTRO_SUCCESS` and the other structure fields will be valid. Otherwise, `status` will contain some other value indicating an error. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_body_t`](#astro_body_t) | `body` |  Either `BODY_MERCURY` or `BODY_VENUS`. Any other value will fail with the error `ASTRO_INVALID_BODY`. To find the best viewing opportunites for planets farther from the Sun than the Earth is (Mars through Pluto) use [`Astronomy_SearchRelativeLongitude`](#Astronomy_SearchRelativeLongitude) to find the next opposition event. | 
+| [`astro_time_t`](#astro_time_t) | `startTime` |  The date and time at which to begin the search. The maximum elongation event found will always be the first one that occurs after this date and time. | 
+
 
 
 
@@ -597,14 +617,14 @@ If the search does not converge within 20 iterations, it will fail with status c
 ---
 
 <a name="Astronomy_SearchPeakMagnitude"></a>
-### Astronomy_SearchPeakMagnitude(body, startDate) &#8658; [`astro_illum_t`](#astro_illum_t)
+### Astronomy_SearchPeakMagnitude(body, startTime) &#8658; [`astro_illum_t`](#astro_illum_t)
 
 
 
 ---
 
 <a name="Astronomy_SearchRelativeLongitude"></a>
-### Astronomy_SearchRelativeLongitude(body, targetRelLon, startDate) &#8658; [`astro_search_result_t`](#astro_search_result_t)
+### Astronomy_SearchRelativeLongitude(body, targetRelLon, startTime) &#8658; [`astro_search_result_t`](#astro_search_result_t)
 
 
 
@@ -987,7 +1007,7 @@ Coordinates of a celestial body as seen from the center of the Sun (heliocentric
 <a name="astro_elongation_t"></a>
 #### `astro_elongation_t`
 
-**Contains information about the visibility of a celestial body at a given date and time. See [`Astronomy_Elongation`](#Astronomy_Elongation) for more information.** 
+**Contains information about the visibility of a celestial body at a given date and time. See [`Astronomy_Elongation`](#Astronomy_Elongation) for more detailed information about the members of this structure. See also [`Astronomy_SearchMaxElongation`](#Astronomy_SearchMaxElongation) for how to search for maximum elongation events.** 
 
 
 

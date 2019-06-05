@@ -2501,8 +2501,8 @@ static int QuadInterp(
 
 static astro_status_t FindSeasonChange(double targetLon, int year, int month, int day, astro_time_t *time)
 {
-    astro_time_t startDate = Astronomy_MakeTime(year, month, day, 0, 0, 0.0);
-    astro_search_result_t result = Astronomy_SearchSunLongitude(targetLon, startDate, 4.0);
+    astro_time_t startTime = Astronomy_MakeTime(year, month, day, 0, 0, 0.0);
+    astro_search_result_t result = Astronomy_SearchSunLongitude(targetLon, startTime, 4.0);
     *time = result.time;
     return result.status;
 }
@@ -2689,7 +2689,35 @@ static astro_func_result_t neg_elong_slope(void *context, astro_time_t time)
     return result;
 }
 
-astro_elongation_t Astronomy_SearchMaxElongation(astro_body_t body, astro_time_t startDate)
+/**
+ * @brief
+ *      Finds a date and time when Mercury or Venus reaches its maximum angle from the Sun as seen from the Earth.
+ *
+ * Mercury and Venus are are often difficult to observe because they are closer to the Sun than the Earth is.
+ * Mercury especially is almost always impossible to see because it gets lost in the Sun's glare.
+ * The best opportunities for spotting Mercury, and the best opportunities for viewing Venus through
+ * a telescope without atmospheric interference, are when these planets reach maximum elongation.
+ * These are events where the planets reach the maximum angle from the Sun as seen from the Earth.
+ *
+ * This function solves for those times, reporting the next maximum elongation event's date and time,
+ * the elongation value itself, the relative longitude with the Sun, and whether the planet is best
+ * observed in the morning or evening. See #Astronomy_Elongation for more details about the returned structure.
+ *
+ * @param body
+ *      Either `BODY_MERCURY` or `BODY_VENUS`. Any other value will fail with the error `ASTRO_INVALID_BODY`.
+ *      To find the best viewing opportunites for planets farther from the Sun than the Earth is (Mars through Pluto)
+ *      use #Astronomy_SearchRelativeLongitude to find the next opposition event.
+ *
+ * @param startTime
+ *      The date and time at which to begin the search. The maximum elongation event found will always
+ *      be the first one that occurs after this date and time.
+ *
+ * @return
+ *      If successful, the `status` field of the returned structure will be `ASTRO_SUCCESS`
+ *      and the other structure fields will be valid. Otherwise, `status` will contain
+ *      some other value indicating an error.
+ */
+astro_elongation_t Astronomy_SearchMaxElongation(astro_body_t body, astro_time_t startTime)
 {
     double s1, s2;
     int iter;
@@ -2726,11 +2754,11 @@ astro_elongation_t Astronomy_SearchMaxElongation(astro_body_t body, astro_time_t
     iter = 0;
     while (++iter <= 2)
     {
-        plon = Astronomy_EclipticLongitude(body, startDate);
+        plon = Astronomy_EclipticLongitude(body, startTime);
         if (plon.status != ASTRO_SUCCESS)
             return ElongError(plon.status);
 
-        elon = Astronomy_EclipticLongitude(BODY_EARTH, startDate);
+        elon = Astronomy_EclipticLongitude(BODY_EARTH, startTime);
         if (elon.status != ASTRO_SUCCESS)
             return ElongError(elon.status);
 
@@ -2776,7 +2804,7 @@ astro_elongation_t Astronomy_SearchMaxElongation(astro_body_t body, astro_time_t
             rlon_hi = -s1;
         }
 
-        t_start = Astronomy_AddDays(startDate, adjust_days);
+        t_start = Astronomy_AddDays(startTime, adjust_days);
 
         search1 = Astronomy_SearchRelativeLongitude(body, rlon_lo, t_start);
         if (search1.status != ASTRO_SUCCESS)
@@ -2809,13 +2837,13 @@ astro_elongation_t Astronomy_SearchMaxElongation(astro_body_t body, astro_time_t
         if (searchx.status != ASTRO_SUCCESS)
             return ElongError(searchx.status);
 
-        if (searchx.time.tt >= startDate.tt)
+        if (searchx.time.tt >= startTime.tt)
             return Astronomy_Elongation(body, searchx.time);
 
-        /* This event is in the past (earlier than startDate). */
+        /* This event is in the past (earlier than startTime). */
         /* We need to search forward from t2 to find the next possible window. */
         /* We never need to search more than twice. */
-        startDate = Astronomy_AddDays(t2, 1.0);
+        startTime = Astronomy_AddDays(t2, 1.0);
     }
 
     return ElongError(ASTRO_SEARCH_FAILURE);
@@ -2960,7 +2988,7 @@ static astro_func_result_t rlon_offset(astro_body_t body, astro_time_t time, int
     return result;
 }
 
-astro_search_result_t Astronomy_SearchRelativeLongitude(astro_body_t body, double targetRelLon, astro_time_t startDate)
+astro_search_result_t Astronomy_SearchRelativeLongitude(astro_body_t body, double targetRelLon, astro_time_t startTime)
 {
     astro_search_result_t result;
     astro_func_result_t syn;
@@ -2985,14 +3013,14 @@ astro_search_result_t Astronomy_SearchRelativeLongitude(astro_body_t body, doubl
     /* Calculate the error angle, which will be a negative number of degrees, */
     /* meaning we are "behind" the target relative longitude. */
 
-    error_angle = rlon_offset(body, startDate, direction, targetRelLon);
+    error_angle = rlon_offset(body, startTime, direction, targetRelLon);
     if (error_angle.status != ASTRO_SUCCESS)
         return SearchError(error_angle.status);
 
     if (error_angle.value > 0)
         error_angle.value -= 360;    /* force searching forward in time */
 
-    time = startDate;
+    time = startTime;
     for (iter = 0; iter < 100; ++iter)
     {
         /* Estimate how many days in the future (positive) or past (negative) */
@@ -3470,7 +3498,7 @@ static astro_func_result_t mag_slope(void *context, astro_time_t time)
     return result;
 }
 
-astro_illum_t Astronomy_SearchPeakMagnitude(astro_body_t body, astro_time_t startDate)
+astro_illum_t Astronomy_SearchPeakMagnitude(astro_body_t body, astro_time_t startTime)
 {
     /* s1 and s2 are relative longitudes within which peak magnitude of Venus can occur. */
     static const double s1 = 10.0;
@@ -3490,11 +3518,11 @@ astro_illum_t Astronomy_SearchPeakMagnitude(astro_body_t body, astro_time_t star
     {
         /* Find current heliocentric relative longitude between the */
         /* inferior planet and the Earth. */
-        plon = Astronomy_EclipticLongitude(body, startDate);
+        plon = Astronomy_EclipticLongitude(body, startTime);
         if (plon.status != ASTRO_SUCCESS)
             return IllumError(plon.status);
 
-        elon = Astronomy_EclipticLongitude(BODY_EARTH, startDate);
+        elon = Astronomy_EclipticLongitude(BODY_EARTH, startTime);
         if (elon.status != ASTRO_SUCCESS)
             return IllumError(elon.status);
 
@@ -3546,7 +3574,7 @@ astro_illum_t Astronomy_SearchPeakMagnitude(astro_body_t body, astro_time_t star
             /* Search forward from t1 to find t2 such that rel lon = -s1. */
             rlon_hi = -s1;
         }
-        t_start = Astronomy_AddDays(startDate, adjust_days);
+        t_start = Astronomy_AddDays(startTime, adjust_days);
         t1 = Astronomy_SearchRelativeLongitude(body, rlon_lo, t_start);
         if (t1.status != ASTRO_SUCCESS)
             return IllumError(t1.status);
@@ -3573,13 +3601,13 @@ astro_illum_t Astronomy_SearchPeakMagnitude(astro_body_t body, astro_time_t star
         if (tx.status != ASTRO_SUCCESS)
             return IllumError(tx.status);
 
-        if (tx.time.tt >= startDate.tt)
+        if (tx.time.tt >= startTime.tt)
             return Astronomy_Illumination(body, tx.time);
 
-        /* This event is in the past (earlier than startDate). */
+        /* This event is in the past (earlier than startTime). */
         /* We need to search forward from t2 to find the next possible window. */
         /* We never need to search more than twice. */
-        startDate = Astronomy_AddDays(t2.time, 1.0);
+        startTime = Astronomy_AddDays(t2.time, 1.0);
     }
 
     return IllumError(ASTRO_SEARCH_FAILURE);

@@ -359,7 +359,8 @@ astro_visibility_t;
 /**
  * @brief
  *      Contains information about the visibility of a celestial body at a given date and time.
- *      See #Astronomy_Elongation for more information.
+ *      See #Astronomy_Elongation for more detailed information about the members of this structure.
+ *      See also #Astronomy_SearchMaxElongation for how to search for maximum elongation events.
  */
 typedef struct
 {
@@ -536,9 +537,9 @@ astro_horizon_t Astronomy_Horizon(
 
 astro_angle_result_t Astronomy_AngleFromSun(astro_body_t body, astro_time_t time);
 astro_elongation_t Astronomy_Elongation(astro_body_t body, astro_time_t time);
-astro_elongation_t Astronomy_SearchMaxElongation(astro_body_t body, astro_time_t startDate);
+astro_elongation_t Astronomy_SearchMaxElongation(astro_body_t body, astro_time_t startTime);
 astro_angle_result_t Astronomy_LongitudeFromSun(astro_body_t body, astro_time_t time);
-astro_search_result_t Astronomy_SearchRelativeLongitude(astro_body_t body, double targetRelLon, astro_time_t startDate);
+astro_search_result_t Astronomy_SearchRelativeLongitude(astro_body_t body, double targetRelLon, astro_time_t startTime);
 astro_angle_result_t Astronomy_MoonPhase(astro_time_t time);
 astro_search_result_t Astronomy_SearchMoonPhase(double targetLon, astro_time_t dateStart, double limitDays);
 astro_moon_quarter_t Astronomy_SearchMoonQuarter(astro_time_t dateStart);
@@ -571,7 +572,7 @@ astro_search_result_t Astronomy_SearchRiseSet(
 
 astro_seasons_t Astronomy_Seasons(int year);
 astro_illum_t Astronomy_Illumination(astro_body_t body, astro_time_t time);
-astro_illum_t Astronomy_SearchPeakMagnitude(astro_body_t body, astro_time_t startDate);
+astro_illum_t Astronomy_SearchPeakMagnitude(astro_body_t body, astro_time_t startTime);
 astro_apsis_t Astronomy_SearchLunarApsis(astro_time_t startTime);
 astro_apsis_t Astronomy_NextLunarApsis(astro_apsis_t apsis);
 
