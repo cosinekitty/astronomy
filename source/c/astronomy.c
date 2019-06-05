@@ -3905,6 +3905,42 @@ astro_elongation_t Astronomy_SearchMaxElongation(astro_body_t body, astro_time_t
     return ElongError(ASTRO_SEARCH_FAILURE);
 }
 
+/**
+ * @brief
+ *      Returns a body's ecliptic longitude with respect to the Sun, as seen from the Earth.
+ *
+ * This function can be used to determine where a planet appears around the ecliptic plane
+ * (the plane of the Earth's orbit around the Sun) as seen from the Earth,
+ * relative to the Sun's apparent position.
+ *
+ * The angle starts at 0 when the body and the Sun are at the same ecliptic longitude
+ * as seen from the Earth. The angle increases in the prograde direction
+ * (the direction that the planets orbit the Sun and the Moon orbits the Earth).
+ *
+ * When the angle is 180 degrees, it means the Sun and the body appear on opposite sides
+ * of the sky for an Earthly observer. When `body` is a planet whose orbit around the
+ * Sun is farther than the Earth's, 180 degrees indicates opposition. For the moon, it indicates
+ * a full moon.
+ *
+ * The angle keeps increasing up to 360 degrees as the body's apparent prograde
+ * motion continues relative to the Sun. When the angle reaches 360 degrees, it starts
+ * over at 0 degrees.
+ *
+ * Values between 0 and 180 degrees indicate that the body is visible in the evening sky
+ * after sunset.  Values between 180 degrees and 360 degrees indicate that the body
+ * is visible in the morning sky before sunrise.
+ *
+ * @param body
+ *      The celestial body for which to find longitude from the Sun.
+ *
+ * @param time
+ *      The date and time of the observation.
+ *
+ * @return
+ *      On success, the `status` field in the returned structure holds `ASTRO_SUCCESS` and
+ *      the `angle` field holds a value in the range [0, 360).
+ *      On failure, the `status` field contains some other value indicating an error condition.
+ */
 astro_angle_result_t Astronomy_LongitudeFromSun(astro_body_t body, astro_time_t time)
 {
     astro_vector_t sv, bv;
@@ -3929,6 +3965,30 @@ astro_angle_result_t Astronomy_LongitudeFromSun(astro_body_t body, astro_time_t 
     return result;
 }
 
+/**
+ * @brief
+ *      Returns the Moon's phase as an angle from 0 to 360 degrees.
+ *
+ * This function determines the phase of the Moon using its apparent
+ * ecliptic longitude relative to the Sun, as seen from the center of the Earth.
+ * Certain values of the angle have conventional definitions:
+ *
+ * - 0 = new moon
+ * - 90 = first quarter
+ * - 180 = full moon
+ * - 270 = third quarter
+ *
+ * @param time
+ *      The date and time of the observation.
+ *
+ * @return
+ *      On success, the function returns the angle as described above in the `angle`
+ *      field and `ASTRO_SUCCESS` in the `status` field.
+ *      The function should always succeed, but it is a good idea for callers to check
+ *      the `status` field in the returned structure.
+ *      Any other value in `status` indicates a failure that should be
+ *      [reported as an issue](https://github.com/cosinekitty/astronomy/issues).
+ */
 astro_angle_result_t Astronomy_MoonPhase(astro_time_t time)
 {
     return Astronomy_LongitudeFromSun(BODY_MOON, time);
