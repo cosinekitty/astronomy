@@ -716,13 +716,13 @@ static int Resample(int body, const char *outFileName, int npoly, int startYear,
         }
 
         /* Prefix each block of polynomial coefficients with the time range and the number of polynomials. */
-        fprintf(outfile, "%0.18lf %0.18lf %d\n", jd, jdDelta, npoly);
+        fprintf(outfile, "%0.1lf %0.1lf %d\n", jd, jdDelta, npoly);
 
         /* Write the Chebyshev coordinates we obtained for the position function. */
         for (k=0; k < npoly; k++)
         {
             for (i=0; i < 3; ++i)
-                fprintf(outfile, " %18.14lf", coeff[i][k]);
+                fprintf(outfile, " %16.12lf", coeff[i][k]);
             fprintf(outfile, "\n");
         }
     }
