@@ -3777,44 +3777,36 @@ Astronomy.Seasons = function(year) {
  * @class
  * @memberof Astronomy
  *
- * @property {Astronomy.AstroTime} time  When the event occurs.
+ * @property {Astronomy.AstroTime} time  
+ *      The date and time of the observation.
+ * 
  * @property {string}  visibility
  *      Either <code>"morning"</code> or <code>"evening"</code>,
  *      indicating when the body is most easily seen.
+ * 
  * @property {number}  elongation
  *      The angle in degrees, as seen from the center of the Earth,
  *      of the apparent separation between the body and the Sun.
  *      This angle is measured in 3D space and is not projected onto the ecliptic plane.
  *      When <code>elongation</code> is less than a few degrees, the body is very
- *      difficult to see from the Earth because it is lost in the Sun's glare, 
- * @property {number}  relative_longitude
- *      The angle in degrees, as seen from the Sun, between the
- *      observed body and the Earth, as projected onto the ecliptic plane. 
- *      This value is in the range [0, 180). More precisely, 
- *      <code>relative_longitude</code> is the absolute value of the
- *      difference between the heliocentric ecliptic longitudes of
- *      the centers of the observed body and the Earth.
- *      The relative longitude is used to find oppositions and conjunctions.
- *      For example, Jupiter is at opposition when its relative longitude is 0,
- *      because the Earth and Jupiter are along the same ecliptic longitude line
- *      as seen from the Sun at that moment.
- *      Another example: Venus is at superior conjunction when its relative longitude is 180,
- *      at which time the Earth and Venus lie on opposite sides of the Sun.
- *      It is important to note that the same relative longitude means different things
- *      from the Earth's point of view, depending on whether the observed body is
- *      an inferior planet (closer to the Sun than the Earth) or a superior planet
- *      (farther from the Sun than the Earth). For example, as mentioned above, Jupiter is at
- *      opposition when its relative longitude is 0, but Venus is at inferior conjunction
- *      when its relative longitude is 0.
+ *      difficult to see from the Earth because it is lost in the Sun's glare.
+ *      The elongation is always in the range [0, 180].
+ * 
+ * @property {number}  ecliptic_separation
+ *      The absolute value of the difference between the body's ecliptic longitude
+ *      and the Sun's ecliptic longitude, both as seen from the center of the Earth.
+ *      This angle measures around the plane of the Earth's orbit (the ecliptic),
+ *      and ignores how far above or below that plane the body is.
+ *      The ecliptic separation is measured in degrees and is always in the range [0, 180].
  *
  * @see {@link Astronomy.Elongation}
  */
 class ElongationEvent {
-    constructor(time, visibility, elongation, relative_longitude) {
+    constructor(time, visibility, elongation, ecliptic_separation) {
         this.time = time;
         this.visibility = visibility;
         this.elongation = elongation;
-        this.relative_longitude = relative_longitude;
+        this.ecliptic_separation = ecliptic_separation;
     }
 }
 

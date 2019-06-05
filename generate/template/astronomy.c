@@ -257,7 +257,7 @@ static astro_elongation_t ElongError(astro_status_t status)
 
     result.status = status;
     result.elongation = NAN;
-    result.relative_longitude = NAN;
+    result.ecliptic_separation = NAN;
     result.time.tt = result.time.ut = NAN;
     result.visibility = (astro_visibility_t)(-1);
 
@@ -2617,13 +2617,13 @@ astro_angle_result_t Astronomy_AngleFromSun(astro_body_t body, astro_time_t time
  *
  * - `elongation` is the angle in degrees between two vectors: one from the center of the Earth to the
  *    center of the Sun, the other from the center of the Earth to the center of the specified body.
- *    This angle indicates how far away the body is from the glare of the Sun. This elongation angle
- *    is always in the range [0, 180].
+ *    This angle indicates how far away the body is from the glare of the Sun.
+ *    The elongation angle is always in the range [0, 180].
  *
- * - `relative_longitude` is the absolute value of the difference between the body's ecliptic longitude
+ * - `ecliptic_separation` is the absolute value of the difference between the body's ecliptic longitude
  *   and the Sun's ecliptic longitude, both as seen from the center of the Earth. This angle measures
  *   around the plane of the Earth's orbit, and ignores how far above or below that plane the body is.
- *   The relative longitude is measured in degrees and is always in the range [0, 180].
+ *   The ecliptic separation is measured in degrees and is always in the range [0, 180].
  *
  * @param body
  *      The celestial body whose visibility is to be calculated.
@@ -2648,12 +2648,12 @@ astro_elongation_t Astronomy_Elongation(astro_body_t body, astro_time_t time)
     if (angres.angle > 180.0)
     {
         result.visibility = VISIBLE_MORNING;
-        result.relative_longitude = 360.0 - angres.angle;
+        result.ecliptic_separation = 360.0 - angres.angle;
     }
     else
     {
         result.visibility = VISIBLE_EVENING;
-        result.relative_longitude = angres.angle;
+        result.ecliptic_separation = angres.angle;
     }
 
     angres = Astronomy_AngleFromSun(body, time);

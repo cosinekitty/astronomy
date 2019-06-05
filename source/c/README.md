@@ -258,8 +258,8 @@ This function returns an [`astro_elongation_t`](#astro_elongation_t) structure, 
 
 
 - `visibility` is an enumerated type that specifies whether the body is more easily seen in the morning before sunrise, or in the evening after sunset.
-- `elongation` is the angle in degrees between two vectors: one from the center of the Earth to the center of the Sun, the other from the center of the Earth to the center of the specified body. This angle indicates how far away the body is from the glare of the Sun. This elongation angle is always in the range [0, 180].
-- `relative_longitude` is the absolute value of the difference between the body's ecliptic longitude and the Sun's ecliptic longitude, both as seen from the center of the Earth. This angle measures around the plane of the Earth's orbit, and ignores how far above or below that plane the body is. The relative longitude is measured in degrees and is always in the range [0, 180].
+- `elongation` is the angle in degrees between two vectors: one from the center of the Earth to the center of the Sun, the other from the center of the Earth to the center of the specified body. This angle indicates how far away the body is from the glare of the Sun. The elongation angle is always in the range [0, 180].
+- `ecliptic_separation` is the absolute value of the difference between the body's ecliptic longitude and the Sun's ecliptic longitude, both as seen from the center of the Earth. This angle measures around the plane of the Earth's orbit, and ignores how far above or below that plane the body is. The ecliptic separation is measured in degrees and is always in the range [0, 180].
 
 
 
@@ -1017,7 +1017,7 @@ Coordinates of a celestial body as seen from the center of the Sun (heliocentric
 | [`astro_time_t`](#astro_time_t) | `time` |  The date and time of the observation.  |
 | [`astro_visibility_t`](#astro_visibility_t) | `visibility` |  Whether the body is best seen in the morning or the evening.  |
 | `double` | `elongation` |  The angle in degrees between the body and the Sun, as seen from the Earth.  |
-| `double` | `relative_longitude` |  The difference between the ecliptic longitudes of the body and the Sun.  |
+| `double` | `ecliptic_separation` |  The difference between the ecliptic longitudes of the body and the Sun, as seen from the Earth.  |
 
 
 ---
