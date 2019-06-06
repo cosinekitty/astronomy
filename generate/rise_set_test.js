@@ -1,6 +1,6 @@
 'use strict';
 const fs = require('fs');
-const Astronomy = require('../source/js/astronomy.js');
+const Astronomy = require('../source/js/astronomy.min.js');
 
 function Fail(message) {
     console.log(`FATAL(rise_set_test.js): ${message}`);

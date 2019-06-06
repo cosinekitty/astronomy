@@ -31,7 +31,7 @@
 */
 
 const fs = require('fs');
-const Astronomy = require('../source/js/astronomy.js');
+const Astronomy = require('../source/js/astronomy.min.js');
 
 const DEG2RAD = 0.017453292519943296;
 

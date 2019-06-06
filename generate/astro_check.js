@@ -1,4 +1,4 @@
-var Astronomy = require('../source/js/astronomy.js');
+var Astronomy = require('../source/js/astronomy.min.js');
 
 var date = Astronomy.MakeTime(new Date('1700-01-01T00:00:00Z'));
 var stop = Astronomy.MakeTime(new Date('2200-01-01T00:00:00Z'));

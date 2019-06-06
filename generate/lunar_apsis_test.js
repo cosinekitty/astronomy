@@ -7,7 +7,7 @@
 
 'use strict';
 const fs = require('fs');
-const Astronomy = require('../source/js/astronomy.js');
+const Astronomy = require('../source/js/astronomy.min.js');
 
 function Test() {
     const filename = 'apsides/moon.txt';

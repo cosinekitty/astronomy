@@ -1,6 +1,6 @@
 'use strict';
 const fs = require('fs');
-const Astronomy = require('../source/js/astronomy.js');
+const Astronomy = require('../source/js/astronomy.min.js');
 
 function LoadMoonPhaseData(filename) {
     // Load known moon phase times from US Naval Observatory.
