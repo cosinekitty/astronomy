@@ -24,6 +24,35 @@ if errorlevel 1 (
     exit /b 1
 )
 
+if not defined CLOSURE (
+    REM     You can customize where the Google Closure Compiler jar file
+    REM     is located by setting the environment variable CLOSURE
+    REM     before running this batch file.
+    
+    set CLOSURE=c:\closure\closure-compiler-v20190528.jar
+)
+
+if not exist !CLOSURE! (
+    echo.FATAL ERROR - cannot find Google Closure Compiler jar file: !CLOSURE!
+    exit /b 1
+)
+
+echo.Minifying JavaScript code.
+if exist ..\source\js\astronomy.min.js (
+    del ..\source\js\astronomy.min.js
+)
+java -jar !CLOSURE! --js ..\source\js\astronomy.js --js_output_file ..\source\js\astronomy.min.js
+if errorlevel 1 (
+    echo.Error minifying astronomy.js
+    exit /b 1
+)
+
+node eol_hack.js ..\source\js\astronomy.min.js
+if errorlevel 1 (
+    echo.Error fixing line endings for Windows in astronomy.min.js
+    exit /b 1
+)
+
 echo.
 echo.Making documentation files in Markdown format.
 call jsdoc2md --separators --template ../jsdoc2md/js.hbs --files ..\source\js\astronomy.js > ..\source\js\README.md
