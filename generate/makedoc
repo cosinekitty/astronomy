@@ -6,12 +6,15 @@ Fail()
 }
 
 echo "Trimming trailing whitespace in source code."
-for file in template/astronomy.c ../source/c/astronomy.h; do
+for file in template/astronomy.js template/astronomy.c ../source/c/astronomy.h; do
     node trimspace.js ${file}
 done
 
 echo "Generating target code."
 ./generate source || Fail "Problem generating target code."
+
+echo "Minifying JavaScript code."
+google-closure-compiler --js ../source/js/astronomy.js --js_output_file ../source/js/astronomy.min.js || Fail "Error minifying astronomy.js"
 
 echo "Generating JS documentation in Markdown format."
 jsdoc2md --separators --template ../jsdoc2md/js.hbs --files ../source/js/astronomy.js > ../source/js/README.md || Fail "Error generating JS documentation."

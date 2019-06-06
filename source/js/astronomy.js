@@ -1,4 +1,6 @@
-/*
+/**
+    @preserve
+
     Astronomy library for JavaScript (browser and Node.js).
     https://github.com/cosinekitty/astronomy
 
@@ -27,7 +29,7 @@
 
 /**
  * @fileoverview Astronomy calculation library for browser scripting and Node.js.
- * 
+ *
  * @author Don Cross <cosinekitty@gmail.com>
  * @license MIT
  */
@@ -74,29 +76,29 @@ let sin_ob2000;
 /**
  * Holds performance metrics for developers to optimize execution speed.
  * Most users can safely ignore this class.
- * 
+ *
  * @class
- * 
+ *
  * @memberof Astronomy
- * 
- * @property {number} search_func   
+ *
+ * @property {number} search_func
  *      Number of times {@link Astronomy.Search} called a <code>func</code> passed to it.
- * 
+ *
  * @property {number} search
  *      Number of times {@link Astronomy.Search} was called.
- * 
+ *
  * @property {number} longitude_search
  *      Number of times {@link Astronomy.SearchRelativeLongitude} was called.
- * 
+ *
  * @property {number} longitude_iter
  *      The total number of iterations executed inside {@link Astronomy.SearchRelativeLongitude}.
- * 
+ *
  * @property {number} lunar_apsis_calls
  *      The number of times {@link Astronomy.SearchLunarApsis} was called.
- * 
+ *
  * @property {number} lunar_apsis_iter
  *      The number of search iterations inside {@link Astronomy.SearchLunarApsis}.
- * 
+ *
  * @property {number} calcmoon
  *      The number of times the Moon's position was calculated. (This is an expensive operation.)
  */
@@ -116,7 +118,7 @@ class PerformanceInfo {
      * This allows us to create a snapshot of the performance metrics
      * that can be handed back to outside code that will not change
      * as the Astronomy code continues to execute and change the metrics.
-     * 
+     *
      * @returns {Astronomy.PerformanceInfo}
      */
     Clone() {
@@ -138,7 +140,7 @@ let Perf = new PerformanceInfo();
  * Takes a snapshot of the current state of the performance metrics.
  * The metrics inside the returned object will not change and can be retained by calling code
  * to be compared with later snapshots.
- * 
+ *
  * @returns {Astronomy.PerformanceInfo}
  */
 Astronomy.GetPerformanceMetrics = function() {
@@ -163,15 +165,15 @@ function Frac(x) {
 /**
  * Calculates the angle in degrees between two vectors.
  * The angle is measured in the plane that contains both vectors.
- * 
+ *
  * @param {Astronomy.Vector} a
  *      The first of a pair of vectors between which to measure an angle.
- * 
+ *
  * @param {Astronomy.Vector} b
  *      The second of a pair of vectors between which to measure an angle.
- * 
- * @returns {number} 
- *      The angle between the two vectors expressed in degrees. 
+ *
+ * @returns {number}
+ *      The angle between the two vectors expressed in degrees.
  *      The value is in the range [0, 180].
  */
 function AngleBetween(a, b) {
@@ -196,7 +198,7 @@ function AngleBetween(a, b) {
 }
 
 /**
- * @constant {string[]} Astronomy.Bodies 
+ * @constant {string[]} Astronomy.Bodies
  *      An array of strings, each a name of a supported astronomical body.
  *      Not all bodies are valid for all functions, but any string not in this
  *      list is not supported at all.
@@ -1085,11 +1087,11 @@ const DT = [
 /**
  * Calculates the difference TT-UT for the given date/time, expressed
  * as a Modified Julian Date.
- * 
+ *
  * @param {number} mjd
  *      A date and time expressed as a
  *      <a href="http://scienceworld.wolfram.com/astronomy/ModifiedJulianDate.html">Modified Julian Date</a>.
- * 
+ *
  * @returns {number}
  *      The difference TT-UT in seconds for the given date and time.
  */
@@ -1106,7 +1108,7 @@ function DeltaT(mjd) {
     }
 
     // Do a binary search to find the pair of indexes this mjd lies between.
-    
+
     let lo = 0;
     let hi = DT.length-2;   // make sure there is always an array element after the one we are looking at
     while (lo <= hi) {
@@ -1127,10 +1129,10 @@ function DeltaT(mjd) {
 
 /**
  * Calculates Terrestrial Time (TT) from Universal Time (UT).
- * 
+ *
  * @param {number} ut
  *      The Universal Time expressed as a floating point number of days since the 2000.0 epoch.
- * 
+ *
  * @returns {number}
  *      A Terrestrial Time expressed as a floating point number of days since the 2000.0 epoch.
  */
@@ -1145,21 +1147,21 @@ function TerrestrialTime(ut) {
  * The constructor is not accessible outside the Astronomy library;
  * outside users should call the {@link Astronomy.MakeTime} function
  * to create an <code>AstroTime</code> object.
- * 
+ *
  * @class
  * @memberof Astronomy
- * 
- * @property {Date} date  
+ *
+ * @property {Date} date
  *      The JavaScript Date object for the given date and time.
  *      This Date corresponds to the numeric day value stored in the <code>ut</code> property.
- * 
- * @property {number} ut  
+ *
+ * @property {number} ut
  *      Universal Time (UT1/UTC) in fractional days since the J2000 epoch.
  *      Universal Time represents time measured with respect to the Earth's rotation,
  *      tracking mean solar days.
  *      The Astronomy library approximates UT1 and UTC as being the same thing.
  *      This gives sufficient accuracy for the precision requirements of this project.
- * 
+ *
  * @property {number} tt
  *      Terrestrial Time in fractional days since the J2000 epoch.
  *      TT represents a continuously flowing ephemeris timescale independent of
@@ -1168,8 +1170,6 @@ function TerrestrialTime(ut) {
  */
 class AstroTime {
     /**
-     * @constructor
-     * 
      * @param {(Date|number)} date
      *      A JavaScript Date object or a numeric UTC value expressed in J2000 days.
      */
@@ -1182,22 +1182,22 @@ class AstroTime {
             this.tt = TerrestrialTime(this.ut);
             return;
         }
-    
+
         if (typeof date === 'number') {
             this.date = new Date(J2000 - (-date)*MillisPerDay);
             this.ut = date;
             this.tt = TerrestrialTime(this.ut);
             return;
         }
-    
+
         throw 'Argument must be a Date object, an AstroTime object, or a numeric UTC Julian date.';
     }
 
     /**
-     * Formats an <code>AstroTime</code> object as an 
+     * Formats an <code>AstroTime</code> object as an
      * <a href="https://en.wikipedia.org/wiki/ISO_8601">ISO 8601</a>
      * date/time string in UTC, to millisecond resolution.
-     * Example: 
+     * Example:
      * <pre>
      * <code>2018-08-17T17:22:04.050Z</code>
      * </pre>
@@ -1210,12 +1210,12 @@ class AstroTime {
     /**
      * Returns a new <code>AstroTime</code> object adjusted by the floating point number of days.
      * Does NOT modify the original <code>AstroTime</code> object.
-     * 
+     *
      * @param {number} days
      *      The floating point number of days by which to adjust the given date and time.
      *      Positive values adjust the date toward the future, and
      *      negative values adjust the date toward the past.
-     * 
+     *
      * @returns {Astronomy.AstroTime}
      */
     AddDays(days) {
@@ -1244,11 +1244,11 @@ function InterpolateTime(time1, time2, fraction) {
  * the difference between UTC and TT (Terrestrial Time). In some use cases,
  * converting once to Astronomy.AstroTime format and passing the result into multiple
  * function calls may be more efficient than passing in native JavaScript Date objects.
- * 
+ *
  * @param {(Date | number | Astronomy.AstroTime)} date
  *      A Date object, a number of UTC days since the J2000 epoch (noon on January 1, 2000),
  *      or an Astronomy.AstroTime object. See remarks above.
- * 
+ *
  * @returns {Astronomy.AstroTime}
  */
 Astronomy.MakeTime = function(date) {
@@ -1555,16 +1555,16 @@ function CalcMoon(time) {
     }
 
     T2 = T*T;
-    DLAM = 0; 
-    DS = 0; 
-    GAM1C = 0; 
+    DLAM = 0;
+    DS = 0;
+    GAM1C = 0;
     SINPI = 3422.7000;
 
-    var S1 = Sine(0.19833+0.05611*T); 
+    var S1 = Sine(0.19833+0.05611*T);
     var S2 = Sine(0.27869+0.04508*T);
-    var S3 = Sine(0.16827-0.36903*T); 
+    var S3 = Sine(0.16827-0.36903*T);
     var S4 = Sine(0.34734-5.37261*T);
-    var S5 = Sine(0.10498-5.37899*T); 
+    var S5 = Sine(0.10498-5.37899*T);
     var S6 = Sine(0.42681-0.41855*T);
     var S7 = Sine(0.14943-5.37511*T);
     DL0 = 0.84*S1+0.31*S2+14.27*S3+ 7.26*S4+ 0.28*S5+0.24*S6;
@@ -1607,7 +1607,7 @@ function CalcMoon(time) {
         var result = { x:1, y:0 };
         var I = [ null, p, q, r, s ];
         for (var k=1; k <= 4; ++k)
-            if (I[k] !== 0) 
+            if (I[k] !== 0)
                 AddThe(result.x, result.y, CO(I[k], k), SI(I[k], k), (c, s) => (result.x=c, result.y=s));
         return result;
     }
@@ -1732,15 +1732,15 @@ function CalcMoon(time) {
     }
 
     N = 0;
-    N += ADDN(-526.069, 0, 0,1,-2); 
+    N += ADDN(-526.069, 0, 0,1,-2);
     N += ADDN(  -3.352, 0, 0,1,-4);
-    N += ADDN( +44.297,+1, 0,1,-2); 
+    N += ADDN( +44.297,+1, 0,1,-2);
     N += ADDN(  -6.000,+1, 0,1,-4);
-    N += ADDN( +20.599,-1, 0,1, 0); 
+    N += ADDN( +20.599,-1, 0,1, 0);
     N += ADDN( -30.598,-1, 0,1,-2);
-    N += ADDN( -24.649,-2, 0,1, 0); 
+    N += ADDN( -24.649,-2, 0,1, 0);
     N += ADDN(  -2.000,-2, 0,1,-2);
-    N += ADDN( -22.571, 0,+1,1,-2); 
+    N += ADDN( -22.571, 0,+1,1,-2);
     N += ADDN( +10.985, 0,-1,1,-2);
 
     DLAM += (
@@ -1817,7 +1817,7 @@ function precession(tt1, pos1, tt2) {
     yz = -sc * cb * ca - sa * cc;
     zz = -sc * cb * sa + cc * ca;
 
-    if (tt2 == 0) { 
+    if (tt2 == 0) {
         // Perform rotation from epoch to J2000.0.
         return [
             xx * pos1[0] + xy * pos1[1] + xz * pos1[2],
@@ -1831,7 +1831,7 @@ function precession(tt1, pos1, tt2) {
         xx * pos1[0] + yx * pos1[1] + zx * pos1[2],
         xy * pos1[0] + yy * pos1[1] + zy * pos1[2],
         xz * pos1[0] + yz * pos1[1] + zz * pos1[2]
-    ]; 
+    ];
 }
 
 function era(time) {    // Earth Rotation Angle
@@ -1846,7 +1846,7 @@ function era(time) {    // Earth Rotation Angle
 
 function sidereal_time(time) {          // calculates Greenwich Apparent Sidereal Time (GAST)
     const t = time.tt / 36525;
-    let eqeq = 15 * e_tilt(time).ee;    // Replace with eqeq=0 to get GMST instead of GAST (if we ever need it) 
+    let eqeq = 15 * e_tilt(time).ee;    // Replace with eqeq=0 to get GMST instead of GAST (if we ever need it)
     const theta = era(time);
     const st = (eqeq + 0.014506 +
         (((( -    0.0000000368   * t
@@ -1903,7 +1903,7 @@ function nutation(time, direction, pos) {
     const zy = cpsi * sobm * cobt - cobm * sobt;
     const xz = spsi * sobt;
     const yz = cpsi * cobm * sobt - sobm * cobt;
-    const zz = cpsi * sobm * sobt + cobm * cobt; 
+    const zz = cpsi * sobm * sobt + cobm * cobt;
 
     if (direction === 0) {
         // forward rotation
@@ -1933,10 +1933,10 @@ function geo_pos(time, observer) {
 /**
  * Holds the Cartesian coordinates of a vector in 3D space,
  * along with the time at which the vector is valid.
- * 
+ *
  * @class
  * @memberof Astronomy
- * 
+ *
  * @property {number} x             The x-coordinate expressed in astronomical units (AU).
  * @property {number} y             The y-coordinate expressed in astronomical units (AU).
  * @property {number} z             The z-coordinate expressed in astronomical units (AU).
@@ -1961,18 +1961,18 @@ class Vector {
 
 /**
  * Holds right ascension, declination, and distance of a celestial object.
- * 
+ *
  * @class
  * @memberof Astronomy
- * 
+ *
  * @property {number} ra
  *      Right ascension in sidereal hours: [0, 24).
- * 
+ *
  * @property {number} dec
  *      Declination in degrees: [-90, +90].
- * 
+ *
  * @property {number} dist
- *      Distance to the celestial object expressed in 
+ *      Distance to the celestial object expressed in
  *      <a href="https://en.wikipedia.org/wiki/Astronomical_unit">astronomical units</a> (AU).
  */
 class EquatorialCoordinates {
@@ -1980,7 +1980,7 @@ class EquatorialCoordinates {
         this.ra = ra;
         this.dec = dec;
         this.dist = dist;
-    }    
+    }
 }
 
 /**
@@ -1990,27 +1990,27 @@ class EquatorialCoordinates {
  * All of these coordinates are optionally adjusted for atmospheric refraction;
  * therefore the right ascension and declination values may not exactly match
  * those found inside a corresponding {@link Astronomy.EquatorialCoordinates} object.
- * 
+ *
  * @class
  * @memberof Astronomy
- * 
+ *
  * @property {number} azimuth
- *      A horizontal compass direction angle in degrees measured starting at north 
+ *      A horizontal compass direction angle in degrees measured starting at north
  *      and increasing positively toward the east.
  *      The value is in the range [0, 360).
  *      North = 0, east = 90, south = 180, west = 270.
- * 
+ *
  * @property {number} altitude
  *      A vertical angle in degrees above (positive) or below (negative) the horizon.
  *      The value is in the range [-90, +90].
  *      The altitude angle is optionally adjusted upward due to atmospheric refraction.
- * 
+ *
  * @property {number} ra
  *      The right ascension of the celestial body in sidereal hours.
  *      The value is in the reange [0, 24).
  *      If <code>altitude</code> was adjusted for atmospheric reaction, <code>ra</code>
  *      is likewise adjusted.
- * 
+ *
  * @property {number} dec
  *      The declination of of the celestial body in degrees.
  *      The value in the range [-90, +90].
@@ -2029,36 +2029,36 @@ class HorizontalCoordinates {
 /**
  * Holds ecliptic coordinates of a celestial body.
  * The origin and date of the coordinate system may vary depending on the caller's usage.
- * In general, ecliptic coordinates are measured with respect to the mean plane of the Earth's 
+ * In general, ecliptic coordinates are measured with respect to the mean plane of the Earth's
  * orbit around the Sun.
- * Includes Cartesian coordinates <code>(ex, ey, ez)</code> measured in 
+ * Includes Cartesian coordinates <code>(ex, ey, ez)</code> measured in
  * <a href="https://en.wikipedia.org/wiki/Astronomical_unit">astronomical units</a> (AU)
  * and spherical coordinates <code>(elon, elat)</code> measured in degrees.
- * 
+ *
  * @class
  * @memberof Astronomy
- * 
+ *
  * @property {number} ex
  *      The Cartesian x-coordinate of the body in astronomical units (AU).
- *      The x-axis is within the ecliptic plane and is oriented in the direction of the 
+ *      The x-axis is within the ecliptic plane and is oriented in the direction of the
  *      <a href="https://en.wikipedia.org/wiki/Equinox_(celestial_coordinates)">equinox</a>.
- * 
+ *
  * @property {number} ey
  *      The Cartesian y-coordinate of the body in astronomical units (AU).
- *      The y-axis is within the ecliptic plane and is oriented 90 degrees 
+ *      The y-axis is within the ecliptic plane and is oriented 90 degrees
  *      counterclockwise from the equinox, as seen from above the Sun's north pole.
- * 
+ *
  * @property {number} ez
  *      The Cartesian z-coordinate of the body in astronomical units (AU).
  *      The z-axis is oriented perpendicular to the ecliptic plane,
  *      along the direction of the Sun's north pole.
- * 
+ *
  * @property {number} elat
  *      The ecliptic latitude of the body in degrees.
  *      This is the angle north or south of the ecliptic plane.
  *      The value is in the range [-90, +90].
  *      Positive values are north and negative values are south.
- * 
+ *
  * @property {number} elon
  *      The ecliptic longitude of the body in degrees.
  *      This is the angle measured counterclockwise around the ecliptic plane,
@@ -2132,22 +2132,22 @@ function ter2cel(time, vec1) {
  * equatorial coordinates (right ascension and declination) of a celestial body,
  * returns horizontal coordinates (azimuth and altitude angles) for that body
  * as seen by that observer. Allows optional correction for atmospheric refraction.
- * 
+ *
  * @param {(Date|number|Astronomy.AstroTime)} date
  *      The date and time for which to find horizontal coordinates.
- * 
+ *
  * @param {Astronomy.Observer} observer
  *      The location of the observer for which to find horizontal coordinates.
- * 
+ *
  * @param {number} ra
- *      Right ascension in sidereal hours of the celestial object, 
+ *      Right ascension in sidereal hours of the celestial object,
  *      referred to the mean equinox of date for the J2000 epoch.
- * 
+ *
  * @param {number} dec
- *      Declination in degrees of the celestial object, 
+ *      Declination in degrees of the celestial object,
  *      referred to the mean equator of date for the J2000 epoch.
  *      Positive values are north of the celestial equator and negative values are south.
- * 
+ *
  * @param {string} refraction
  *      If omitted or has a false-like value (false, null, undefined, etc.)
  *      the calculations are performed without any correction for atmospheric
@@ -2157,12 +2157,12 @@ function ter2cel(time, vec1) {
  *      taper causes the refraction to linearly approach 0 as the altitude of the
  *      body approaches the nadir (-90 degrees).
  *      If the value is the string <code>"jplhor"</code>, uses a JPL Horizons
- *      compatible formula. This is the same algorithm as <code>"normal"</code>, 
+ *      compatible formula. This is the same algorithm as <code>"normal"</code>,
  *      only without linear tapering; this can result in physically impossible
  *      altitudes of less than -90 degrees, which may cause problems for some applications.
  *      (The <code>"jplhor"</code> option was created for unit testing against data
  *      generated by JPL Horizons, and is otherwise not recommended for use.)
- * 
+ *
  * @returns {Astronomy.HorizontalCoordinates}
  */
 Astronomy.Horizon = function(date, observer, ra, dec, refraction) {     // based on NOVAS equ2hor()
@@ -2207,7 +2207,7 @@ Astronomy.Horizon = function(date, observer, ra, dec, refraction) {     // based
 
         if (refraction === 'normal' || refraction === 'jplhor') {
             // http://extras.springer.com/1999/978-1-4471-0555-8/chap4/horizons/horizons.pdf
-            // JPL Horizons says it uses refraction algorithm from 
+            // JPL Horizons says it uses refraction algorithm from
             // Meeus "Astronomical Algorithms", 1991, p. 101-102.
             // I found the following Go implementation:
             // https://github.com/soniakeys/meeus/blob/master/v3/refraction/refract.go
@@ -2260,21 +2260,21 @@ Astronomy.Horizon = function(date, observer, ra, dec, refraction) {     // based
 
 /**
  * Represents the geographic location of an observer on the surface of the Earth.
- * 
+ *
  * @class
  * @memberof Astronomy
- * 
- * @property {number} latitude_degrees 
+ *
+ * @property {number} latitude_degrees
  *      The observer's geographic latitude in degrees north of the Earth's equator.
  *      The value is negative for observers south of the equator.
  *      Must be in the range -90 to +90.
- * 
+ *
  * @property {number} longitude_degrees
- *      The observer's geographic longitude in degrees east of the prime meridian 
+ *      The observer's geographic longitude in degrees east of the prime meridian
  *      passing through Greenwich, England.
  *      The value is negative for observers west of the prime meridian.
  *      The value should be kept in the range -180 to +180 to minimize floating point errors.
- * 
+ *
  * @property {number} height_in_meters
  *      The observer's elevation above mean sea level, expressed in meters.
  */
@@ -2290,18 +2290,18 @@ class Observer {
 /**
  * Creates an {@link Astronomy.Observer} object that represents a location
  * on the surface of the Earth from which observations are made.
- * 
- * @param {number} latitude_degrees 
+ *
+ * @param {number} latitude_degrees
  *      The observer's geographic latitude in degrees north of the Earth's equator.
  *      The value is negative for observers south of the equator.
  *      Must be in the range -90 to +90.
- * 
+ *
  * @param {number} longitude_degrees
- *      The observer's geographic longitude in degrees east of the prime meridian 
+ *      The observer's geographic longitude in degrees east of the prime meridian
  *      passing through Greenwich, England.
  *      The value is negative for observers west of the prime meridian.
  *      The value should be kept in the range -180 to +180 to minimize floating point errors.
- * 
+ *
  * @param {number} height_in_meters
  *      The observer's elevation above mean sea level, expressed in meters.
  *      If omitted, the elevation is assumed to be 0 meters.
@@ -2315,15 +2315,15 @@ Astronomy.MakeObserver = function(latitude_degrees, longitude_degrees, height_in
  * <i>Geocentric</i> means coordinates as the Sun would appear to a hypothetical observer
  * at the center of the Earth.
  * <i>Ecliptic coordinates of date</i> are measured along the plane of the Earth's mean
- * orbit around the Sun, using the 
+ * orbit around the Sun, using the
  * <a href="https://en.wikipedia.org/wiki/Equinox_(celestial_coordinates)">equinox</a>
  * of the Earth as adjusted for precession and nutation of the Earth's
  * axis of rotation on the given date.
- * 
+ *
  * @param {(Date | number | Astronomy.AstroTime)} date
  *      The date and time at which to calculate the Sun's apparent location as seen from
  *      the center of the Earth.
- * 
+ *
  * @returns {Astronomy.EclipticCoordinates}
  */
 Astronomy.SunPosition = function(date) {
@@ -2363,34 +2363,34 @@ Astronomy.SunPosition = function(date) {
  * with light traveling to the Earth at finite speed, not where the object is right now).
  * <i>Topocentric</i> refers to a position as seen by an observer on the surface of the Earth.
  * This function corrects for
- * <a href="https://en.wikipedia.org/wiki/Parallax">parallax</a> 
+ * <a href="https://en.wikipedia.org/wiki/Parallax">parallax</a>
  * of the object between a geocentric observer and a topocentric observer.
  * This is most significant for the Moon, because it is so close to the Earth.
  * However, it can have a small effect on the apparent positions of other bodies.
- * 
+ *
  * @param {string} body
  *      The name of the body for which to find equatorial coordinates.
  *      Not allowed to be <code>"Earth"</code>.
- * 
+ *
  * @param {(Date | number | Astronomy.Time)} date
  *      Specifies the date and time at which the body is to be observed.
- * 
+ *
  * @param {Astronomy.Observer} observer
  *      The location on the Earth of the observer.
  *      Call {@link Astronomy.MakeObserver} to create an observer object.
- * 
+ *
  * @param {bool} ofdate
  *      Pass <code>true</code> to return equatorial coordinates of date,
  *      i.e. corrected for precession and nutation at the given date.
  *      This is needed to get correct horizontal coordinates when you call
  *      {@link Astronomy.Horizon}.
  *      Pass <code>false</code> to return equatorial coordinates in the J2000 system.
- * 
+ *
  * @param {bool} aberration
- *      Pass <code>true</code> to correct for 
+ *      Pass <code>true</code> to correct for
  *      <a href="https://en.wikipedia.org/wiki/Aberration_of_light">aberration</a>,
  *      or <code>false</code> to leave uncorrected.
- * 
+ *
  * @returns {Astronomy.EquatorialCoordinates}
  *      The topocentric coordinates of the body as adjusted for the given observer.
  */
@@ -2429,20 +2429,20 @@ function RotateEquatorialToEcliptic(gx, gy, gz, cos_ob, sin_ob) {
 }
 
 /**
- * Given J2000 equatorial Cartesian coordinates, 
+ * Given J2000 equatorial Cartesian coordinates,
  * returns J2000 ecliptic latitude, longitude, and cartesian coordinates.
  * You can call {@link Astronomy.GeoVector} and use its (x, y, z) return values
  * to pass into this function.
- * 
+ *
  * @param {number} gx
  *      The x-coordinate of a 3D vector in the J2000 equatorial coordinate system.
- * 
+ *
  * @param {number} gy
  *      The y-coordinate of a 3D vector in the J2000 equatorial coordinate system.
- * 
+ *
  * @param {number} gz
  *      The z-coordinate of a 3D vector in the J2000 equatorial coordinate system.
- * 
+ *
  * @returns {Astronomy.EclipticCoordinates}
  */
 Astronomy.Ecliptic = function(gx, gy, gz) {
@@ -2453,7 +2453,7 @@ Astronomy.Ecliptic = function(gx, gy, gz) {
         ob2000 = DEG2RAD * e_tilt(Astronomy.MakeTime(J2000)).mobl;
         cos_ob2000 = Math.cos(ob2000);
         sin_ob2000 = Math.sin(ob2000);
-    }    
+    }
 
     return RotateEquatorialToEcliptic(gx, gy, gz, cos_ob2000, sin_ob2000);
 }
@@ -2462,13 +2462,13 @@ Astronomy.Ecliptic = function(gx, gy, gz) {
  * Calculates the geocentric Cartesian coordinates for the Moon in the J2000 equatorial system.
  * Based on the Nautical Almanac Office's <i>Improved Lunar Ephemeris</i> of 1954,
  * which in turn derives from E. W. Brown's lunar theories.
- * Adapted from Turbo Pascal code from the book 
- * <a href="https://www.springer.com/us/book/9783540672210">Astronomy on the Personal Computer</a> 
+ * Adapted from Turbo Pascal code from the book
+ * <a href="https://www.springer.com/us/book/9783540672210">Astronomy on the Personal Computer</a>
  * by Montenbruck and Pfleger.
- * 
+ *
  * @param {(Date|number|Astronomy.AstroTime)} date
  *      The date and time for which to calculate the Moon's geocentric position.
- * 
+ *
  * @returns {Astronomy.Vector}
  */
 Astronomy.GeoMoon = function(date) {
@@ -2476,7 +2476,7 @@ Astronomy.GeoMoon = function(date) {
     var moon = CalcMoon(time);
 
     // Convert geocentric ecliptic spherical coords to cartesian coords.
-    var dist_cos_lat = moon.distance_au * Math.cos(moon.geo_eclip_lat);    
+    var dist_cos_lat = moon.distance_au * Math.cos(moon.geo_eclip_lat);
     var gepos = [
         dist_cos_lat * Math.cos(moon.geo_eclip_lon),
         dist_cos_lat * Math.sin(moon.geo_eclip_lon),
@@ -2562,16 +2562,16 @@ function CalcChebyshev(model, time) {
  * Calculates heliocentric (i.e., with respect to the center of the Sun)
  * Cartesian coordinates in the J2000 equatorial system of a celestial
  * body at a specified time. The position is not corrected for light travel time or aberration.
- * 
+ *
  * @param {string} body
- *      One of the strings 
- *      <code>"Sun"</code>, <code>"Moon"</code>, <code>"Mercury"</code>, <code>"Venus"</code>, 
- *      <code>"Earth"</code>, <code>"Mars"</code>, <code>"Jupiter"</code>, <code>"Saturn"</code>, 
+ *      One of the strings
+ *      <code>"Sun"</code>, <code>"Moon"</code>, <code>"Mercury"</code>, <code>"Venus"</code>,
+ *      <code>"Earth"</code>, <code>"Mars"</code>, <code>"Jupiter"</code>, <code>"Saturn"</code>,
  *      <code>"Uranus"</code>, <code>"Neptune"</code>, or <code>"Pluto"</code>.
- *  
+ *
  * @param {(Date | number | Astronomy.AstroTime)} date
  *      The date and time for which the body's position is to be calculated.
- * 
+ *
  * @returns {Astronomy.Vector}
  */
 Astronomy.HelioVector = function(body, date) {
@@ -2600,24 +2600,24 @@ Astronomy.HelioVector = function(body, date) {
  * this means the position of the body is "back-dated" based on how long it
  * takes light to travel from the body to an observer on the Earth.
  * Also, the position can optionally be corrected for aberration, an effect
- * causing the apparent direction of the body to be shifted based on 
+ * causing the apparent direction of the body to be shifted based on
  * transverse movement of the Earth with respect to the rays of light
  * coming from that body.
- * 
+ *
  * @param {string} body
- *      One of the strings 
- *      <code>"Sun"</code>, <code>"Moon"</code>, <code>"Mercury"</code>, <code>"Venus"</code>, 
- *      <code>"Earth"</code>, <code>"Mars"</code>, <code>"Jupiter"</code>, <code>"Saturn"</code>, 
+ *      One of the strings
+ *      <code>"Sun"</code>, <code>"Moon"</code>, <code>"Mercury"</code>, <code>"Venus"</code>,
+ *      <code>"Earth"</code>, <code>"Mars"</code>, <code>"Jupiter"</code>, <code>"Saturn"</code>,
  *      <code>"Uranus"</code>, <code>"Neptune"</code>, or <code>"Pluto"</code>.
- *  
+ *
  * @param {(Date | number | Astronomy.AstroTime)} date
  *      The date and time for which the body's position is to be calculated.
- * 
+ *
  * @param {bool} aberration
- *      Pass <code>true</code> to correct for 
+ *      Pass <code>true</code> to correct for
  *      <a href="https://en.wikipedia.org/wiki/Aberration_of_light">aberration</a>,
  *      or <code>false</code> to leave uncorrected.
- * 
+ *
  * @returns {Astronomy.Vector}
  */
 Astronomy.GeoVector = function(body, date, aberration) {
@@ -2642,7 +2642,7 @@ Astronomy.GeoVector = function(body, date, aberration) {
         h = Astronomy.HelioVector(body, ltime);
 
         if (aberration) {
-            /* 
+            /*
                 Include aberration, so make a good first-order approximation
                 by backdating the Earth's position also.
                 This is confusing, but it works for objects within the Solar System
@@ -2685,7 +2685,7 @@ function QuadInterp(tm, dt, fa, fm, fb) {
             return null;
         }
         x = -S / R;
-        if (x < -1 || x > +1) return null;  // out of bounds        
+        if (x < -1 || x > +1) return null;  // out of bounds
     } else {
         // It really is a parabola. Find roots x1, x2.
         let u = R*R - 4*Q*S;
@@ -2711,7 +2711,7 @@ function QuadInterp(tm, dt, fa, fm, fb) {
 
 /**
  * A continuous function of time used in a call to the <code>Search</code> function.
- * 
+ *
  * @callback ContinuousFunction
  * @memberof Astronomy
  * @param {Astronomy.AstroTime} t        The time at which to evaluate the function.
@@ -2722,20 +2722,20 @@ function QuadInterp(tm, dt, fa, fm, fb) {
  * Options for the {@link Astronomy.Search} function.
  * @typedef {Object} SearchOptions
  * @memberof Astronomy
- * 
+ *
  * @property {(number|null)} dt_tolerance_seconds
  *      The number of seconds for a time window smaller than which the search
  *      is considered successful.  Using too large a tolerance can result in
  *      an inaccurate time estimate.  Using too small a tolerance can cause
  *      excessive computation, or can even cause the search to fail because of
  *      limited floating-point resolution.  Defaults to 1 second.
- * 
+ *
  * @property {(number|null)} init_f1
- *      As an optimization, if the caller of {@link Astronomy.Search} 
- *      has already calculated the value of the function being searched (the parameter <code>func</code>) 
+ *      As an optimization, if the caller of {@link Astronomy.Search}
+ *      has already calculated the value of the function being searched (the parameter <code>func</code>)
  *      at the time coordinate <code>t1</code>, it can pass in that value as <code>init_f1</code>.
  *      For very expensive calculations, this can measurably improve performance.
- * 
+ *
  * @property {(number|null)} init_f2
  *      The same as <code>init_f1</code>, except this is the optional initial value of <code>func(t2)</code>
  *      instead of <code>func(t1)</code>.
@@ -2746,28 +2746,28 @@ function QuadInterp(tm, dt, fa, fm, fb) {
  * that <code>func(t)</code> crosses from a negative value to a non-negative value.
  * The given function must have "smooth" behavior over the entire inclusive range [<code>t1</code>, <code>t2</code>],
  * meaning that it behaves like a continuous differentiable function.
- * It is not required that <code>t1</code> &lt; <code>t2</code>; <code>t1</code> &gt; <code>t2</code> 
+ * It is not required that <code>t1</code> &lt; <code>t2</code>; <code>t1</code> &gt; <code>t2</code>
  * allows searching backward in time.
  * Note: <code>t1</code> and <code>t2</code> must be chosen such that there is no possibility
  * of more than one zero-crossing (ascending or descending), or it is possible
  * that the "wrong" event will be found (i.e. not the first event after t1)
  * or even that the function will return null, indicating that no event was found.
- * 
+ *
  * @param {Astronomy.ContinuousFunction} func
  *      The function to find an ascending zero crossing for.
  *      The function must accept a single parameter of type {@link Astronomy.AstroTime}
  *      and return a numeric value.
- * 
+ *
  * @param {Astronomy.AstroTime} t1
  *      The lower time bound of a search window.
- * 
- * @param {Astronomy.AstroTime} t2 
+ *
+ * @param {Astronomy.AstroTime} t2
  *      The upper time bound of a search window.
- * 
- * @param {(null | Astronomy.SearchOptions)} options 
+ *
+ * @param {(null | Astronomy.SearchOptions)} options
  *      Options that can tune the behavior of the search.
  *      Most callers can omit this argument or pass in <code>null</code>.
- * 
+ *
  * @returns {(null | Astronomy.AstroTime)}
  *      If the search is successful, returns the date and time of the solution.
  *      If the search fails, returns null.
@@ -2824,7 +2824,7 @@ Astronomy.Search = function(func, t1, t2, options) {
                     // The estimated time error is small enough that we can quit now.
                     return tq;
                 }
-    
+
                 // Try guessing a tighter boundary with the interpolated root at the center.
                 let dt_guess = 1.2 * Math.abs(fq / q.df_dt);
                 if (dt_guess < dt/10) {
@@ -2853,8 +2853,8 @@ Astronomy.Search = function(func, t1, t2, options) {
             t2 = tmid;
             f2 = fmid;
             continue;
-        } 
-        
+        }
+
         if (fmid<0 && f2>=0) {
             t1 = tmid;
             f1 = fmid;
@@ -2884,38 +2884,38 @@ function NormalizeLongitude(lon) {
  * Searches for the moment in time when the center of the Sun reaches a given apparent
  * ecliptic longitude, as seen from the center of the Earth, within a given range of dates.
  * This function can be used to determine equinoxes and solstices.
- * However, it is usually more convenient and efficient to call {@link Astronomy.Seasons} 
+ * However, it is usually more convenient and efficient to call {@link Astronomy.Seasons}
  * to calculate equinoxes and solstices for a given calendar year.
  * <code>SearchSunLongitude</code> is more general in that it allows searching for arbitrary longitude values.
- * 
+ *
  * @param {number} targetLon
  *      The desired ecliptic longitude of date in degrees.
  *      This may be any value in the range [0, 360), although certain
  *      values have conventional meanings:
- * 
+ *
  *      When <code>targetLon</code> is 0, finds the March equinox,
  *      which is the moment spring begins in the northern hemisphere
  *      and the beginning of autumn in the southern hemisphere.
- * 
+ *
  *      When <code>targetLon</code> is 180, finds the September equinox,
  *      which is the moment autumn begins in the northern hemisphere and
  *      spring begins in the southern hemisphere.
- * 
+ *
  *      When <code>targetLon</code> is 90, finds the northern solstice, which is the
  *      moment summer begins in the northern hemisphere and winter
  *      begins in the southern hemisphere.
- * 
+ *
  *      When <code>targetLon</code> is 270, finds the southern solstice, which is the
  *      moment winter begins in the northern hemisphere and summer
  *      begins in the southern hemisphere.
- * 
+ *
  * @param {(Date | number | Astronomy.AstroTime)} dateStart
  *      A date and time known to be earlier than the desired longitude event.
- * 
+ *
  * @param {number} limitDays
  *      A floating point number of days, which when added to <code>dateStart</code>,
  *      yields a date and time known to be after the desired longitude event.
- * 
+ *
  * @returns {Astronomy.AstroTime | null}
  *      The date and time when the Sun reaches the apparent ecliptic longitude <code>targetLon</code>
  *      within the range of times specified by <code>dateStart</code> and <code>limitDays</code>.
@@ -2935,21 +2935,21 @@ Astronomy.SearchSunLongitude = function(targetLon, dateStart, limitDays) {
 }
 
 /**
- * Calculates the ecliptic longitude difference 
- * between the given body and the Sun as seen from 
+ * Calculates the ecliptic longitude difference
+ * between the given body and the Sun as seen from
  * the Earth at a given moment in time.
  * The returned value ranges [0, 360) degrees.
  * By definition, the Earth and the Sun are both in the plane of the ecliptic.
  * Ignores the height of the <code>body</code> above or below the ecliptic plane;
  * the resulting angle is measured around the ecliptic plane for the "shadow"
  * of the body onto that plane.
- * 
+ *
  * @param {string} body
  *      The name of a supported celestial body other than the Earth.
- * 
+ *
  * @param {(Date|number|Astronomy.AstroTime)} date
  *      The time at which the relative longitude is to be found.
- * 
+ *
  * @returns {number}
  *      An angle in degrees in the range [0, 360).
  *      Values less than 180 indicate that the body is to the east
@@ -2962,7 +2962,7 @@ Astronomy.LongitudeFromSun = function(body, date) {
     if (body === 'Earth')
         throw 'The Earth does not have a longitude as seen from itself.';
 
-    const t = Astronomy.MakeTime(date);    
+    const t = Astronomy.MakeTime(date);
     let gb = Astronomy.GeoVector(body, t, true);
     const eb = Astronomy.Ecliptic(gb.x, gb.y, gb.z);
 
@@ -2976,16 +2976,16 @@ Astronomy.LongitudeFromSun = function(body, date) {
  * Returns the full angle seen from
  * the Earth, between the given body and the Sun.
  * Unlike {@link Astronomy.LongitudeFromSun}, this function does not
- * project the body's "shadow" onto the ecliptic; 
- * the angle is measured in 3D space around the plane that 
+ * project the body's "shadow" onto the ecliptic;
+ * the angle is measured in 3D space around the plane that
  * contains the centers of the Earth, the Sun, and <code>body</code>.
- * 
+ *
  * @param {string} body
  *      The name of a supported celestial body other than the Earth.
- * 
+ *
  * @param {(Date|number|Astronomy.AstroTime)} date
  *      The time at which the angle from the Sun is to be found.
- * 
+ *
  * @returns {number}
  *      An angle in degrees in the range [0, 180].
  */
@@ -3002,13 +3002,13 @@ Astronomy.AngleFromSun = function(body, date) {
 
 /**
  * Calculates heliocentric ecliptic longitude based on the J2000 equinox.
- * 
+ *
  * @param {string} body
  *      The name of a celestial body other than the Sun.
- * 
+ *
  * @param {(Date | number | Astronomy.AstroTime)} date
  *      The date and time for which to calculate the ecliptic longitude.
- * 
+ *
  * @returns {number}
  *      The ecliptic longitude angle of the body in degrees measured counterclockwise around the mean
  *      plane of the Earth's orbit, as seen from above the Sun's north pole.
@@ -3018,7 +3018,7 @@ Astronomy.AngleFromSun = function(body, date) {
  *      The returned value is always in the range [0, 360).
  */
 Astronomy.EclipticLongitude = function(body, date) {
-    if (body === 'Sun') 
+    if (body === 'Sun')
         throw 'Cannot calculate heliocentric longitude of the Sun.';
 
     let hv = Astronomy.HelioVector(body, date);
@@ -3089,57 +3089,57 @@ function MoonMagnitude(phase, helio_dist, geo_dist) {
 
 /**
  * Contains information about the apparent brightness and sunlit phase of a celestial object.
- * 
+ *
  * @class
  * @memberof Astronomy
- * 
- * @property {Astronomy.AstroTime} time 
+ *
+ * @property {Astronomy.AstroTime} time
  *      The date and time pertaining to the other calculated values in this object.
- * 
- * @property {number} mag 
+ *
+ * @property {number} mag
  *      The <a href="https://en.wikipedia.org/wiki/Apparent_magnitude">apparent visual magnitude</a> of the celestial body.
- * 
+ *
  * @property {number} phase_angle
  *      The angle in degrees as seen from the center of the celestial body between the Sun and the Earth.
  *      The value is always in the range 0 to 180.
- *      The phase angle provides a measure of what fraction of the body's face appears 
+ *      The phase angle provides a measure of what fraction of the body's face appears
  *      illuminated by the Sun as seen from the Earth.
  *      When the observed body is the Sun, the <code>phase</code> property is set to 0,
  *      although this has no physical meaning because the Sun emits, rather than reflects, light.
  *      When the phase is near 0 degrees, the body appears "full".
- *      When it is 90 degrees, the body appears "half full". 
+ *      When it is 90 degrees, the body appears "half full".
  *      And when it is 180 degrees, the body appears "new" and is very difficult to see
  *      because it is both dim and lost in the Sun's glare as seen from the Earth.
- * 
+ *
  * @property {number} phase_fraction
  *      The fraction of the body's face that is illuminated by the Sun, as seen from the Earth.
  *      Calculated from <code>phase_angle</code> for convenience.
  *      This value ranges from 0 to 1.
- * 
- * @property {number} helio_dist 
- *      The distance between the center of the Sun and the center of the body in 
+ *
+ * @property {number} helio_dist
+ *      The distance between the center of the Sun and the center of the body in
  *      <a href="https://en.wikipedia.org/wiki/Astronomical_unit">astronomical units</a> (AU).
- * 
- * @property {number} geo_dist 
+ *
+ * @property {number} geo_dist
  *      The distance between the center of the Earth and the center of the body in AU.
- * 
- * @property {Astronomy.Vector} gc 
+ *
+ * @property {Astronomy.Vector} gc
  *      Geocentric coordinates: the 3D vector from the center of the Earth to the center of the body.
  *      The components are in expressed in AU and are oriented with respect to the J2000 equatorial plane.
- * 
+ *
  * @property {Astronomy.Vector} hc
  *      Heliocentric coordinates: The 3D vector from the center of the Sun to the center of the body.
  *      Like <code>gc</code>, <code>hc</code> is expressed in AU and oriented with respect
  *      to the J2000 equatorial plane.
- * 
- * @property {number | null} ring_tilt 
+ *
+ * @property {number | null} ring_tilt
  *      For Saturn, this is the angular tilt of the planet's rings in degrees away
  *      from the line of sight from the Earth. When the value is near 0, the rings
  *      appear edge-on from the Earth and are therefore difficult to see.
  *      When <code>ring_tilt</code> approaches its maximum value (about 27 degrees),
  *      the rings appear widest and brightest from the Earth.
- *      Unlike the <a href="https://ssd.jpl.nasa.gov/horizons.cgi">JPL Horizons</a> online tool, 
- *      this library includes the effect of the ring tilt angle in the calculated value 
+ *      Unlike the <a href="https://ssd.jpl.nasa.gov/horizons.cgi">JPL Horizons</a> online tool,
+ *      this library includes the effect of the ring tilt angle in the calculated value
  *      for Saturn's visual magnitude.
  *      For all bodies other than Saturn, the value of <code>ring_tilt</code> is <code>null</code>.
  */
@@ -3154,21 +3154,21 @@ class IlluminationInfo {
         this.gc = gc;
         this.hc = hc;
         this.ring_tilt = ring_tilt;
-    }    
+    }
 }
 
 /**
- * Calculates the phase angle, visual maginitude, 
+ * Calculates the phase angle, visual maginitude,
  * and other values relating to the body's illumination
  * at the given date and time, as seen from the Earth.
- * 
+ *
  * @param {string} body
  *      The name of the celestial body being observed.
  *      Not allowed to be <code>"Earth"</code>.
- * 
+ *
  * @param {Date | number | Astronomy.AstroTime} date
  *      The date and time for which to calculate the illumination data for the given body.
- * 
+ *
  * @returns {Astronomy.IlluminationInfo}
  */
 Astronomy.Illumination = function(body, date) {
@@ -3255,18 +3255,18 @@ function SynodicPeriod(body) {
  * distance above or below the plane of the Earth's orbit.
  * For superior conjunctions, call with <code>targetRelLon</code> = 180.
  * This means the Earth and the other planet are on opposite sides of the Sun.
- * 
+ *
  * @param {string} body
  *      The name of a planet other than the Earth.
- * 
+ *
  * @param {number} targetRelLon
  *      The desired angular difference in degrees between the ecliptic longitudes
  *      of <code>body</code> and the Earth. Must be in the range (-180, +180].
- * 
+ *
  * @param {(Date | number | Astronomy.AstroTime)} startDate
  *      The date and time after which to find the next occurrence of the
  *      body and the Earth reaching the desired relative longitude.
- * 
+ *
  * @returns {Astronomy.AstroTime}
  *      The time when the Earth and the body next reach the specified relative longitudes.
  */
@@ -3314,7 +3314,7 @@ Astronomy.SearchRelativeLongitude = function(body, targetRelLon, startDate) {
         error_angle = offset(time);
 
         if (Math.abs(prev_angle) < 30) {
-            // Improve convergence for Mercury/Mars (eccentric orbits) 
+            // Improve convergence for Mercury/Mars (eccentric orbits)
             // by adjusting the synodic period to more closely match the
             // variable speed of both planets in this part of their respective orbits.
             if (prev_angle !== error_angle) {
@@ -3330,10 +3330,10 @@ Astronomy.SearchRelativeLongitude = function(body, targetRelLon, startDate) {
 
 /**
  * Determines the moon's phase expressed as an ecliptic longitude.
- * 
+ *
  * @param {Date | number | Astronomy.AstroTime} date
  *      The date and time for which to calculate the moon's phase.
- * 
+ *
  * @returns {number}
  *      A value in the range [0, 360) indicating the difference
  *      in ecliptic longitude between the center of the Sun and the
@@ -3359,23 +3359,23 @@ Astronomy.MoonPhase = function(date) {
  * {@link Astronomy.SearchMoonQuarter} once, followed by repeatedly calling
  * {@link Astronomy.NextMoonQuarter}. <code>SearchMoonPhase</code> is only
  * necessary for finding other lunar phases than the usual quarter phases.
- * 
+ *
  * @param {number} targetLon
  *      The difference in geocentric ecliptic longitude between the Sun and Moon
  *      that specifies the lunar phase being sought. This can be any value
  *      in the range [0, 360). Here are some helpful examples:
  *      0 = new moon,
  *      90 = first quarter,
- *      180 = full moon, 
+ *      180 = full moon,
  *      270 = third quarter.
- * 
+ *
  * @param {(Date|number|Astronomy.AstroTime)} dateStart
  *      The beginning of the window of time in which to search.
- * 
+ *
  * @param {number} limitDays
  *      The floating point number of days after <code>dateStart</code>
  *      that limits the window of time in which to search.
- * 
+ *
  * @returns {(Astronomy.AstroTime|null)}
  *      If the specified lunar phase occurs after <code>dateStart</code>
  *      and before <code>limitDays</code> days after <code>dateStart</code>,
@@ -3414,18 +3414,18 @@ Astronomy.SearchMoonPhase = function(targetLon, dateStart, limitDays) {
 
 /**
  * Represents a quarter lunar phase, along with when it occurs.
- * 
+ *
  * @class
  * @memberof Astronomy
- * 
- * @property {number} quarter 
+ *
+ * @property {number} quarter
  *      An integer as follows:
- *      0 = new moon, 
+ *      0 = new moon,
  *      1 = first quarter,
  *      2 = full moon,
  *      3 = third quarter.
- * 
- * @property {Astronomy.AstroTime} time 
+ *
+ * @property {Astronomy.AstroTime} time
  *      The date and time of the quarter lunar phase.
  */
 class MoonQuarter {
@@ -3442,10 +3442,10 @@ class MoonQuarter {
  * then pass its return value to {@link Astronomy.NextMoonQuarter} to find the next
  * <code>MoonQuarter</code>. Keep calling <code>NextMoonQuarter</code> in a loop,
  * passing the previous return value as the argument to the next call.
- * 
+ *
  * @param {(Date|number|Astronomy.AstroTime)} dateStart
  *      The date and time after which to find the first quarter lunar phase.
- * 
+ *
  * @returns {Astronomy.MoonQuarter}
  */
 Astronomy.SearchMoonQuarter = function(dateStart) {
@@ -3461,7 +3461,7 @@ Astronomy.SearchMoonQuarter = function(dateStart) {
  * Given a {@link Astronomy.MoonQuarter} object, finds the next consecutive
  * quarter lunar phase. See remarks in {@link Astronomy.SearchMoonQuarter}
  * for explanation of usage.
- * 
+ *
  * @param {Astronomy.MoonQuarter} mq
  *      The return value of a prior call to {@link Astronomy.MoonQuarter} or <code>NextMoonQuarter</code>.
  */
@@ -3474,38 +3474,38 @@ Astronomy.NextMoonQuarter = function(mq) {
 }
 
 /**
- * Finds a rise or set time for the given body as 
+ * Finds a rise or set time for the given body as
  * seen by an observer at the specified location on the Earth.
  * Rise time is defined as the moment when the top of the body
  * is observed to first appear above the horizon in the east.
  * Set time is defined as the moment the top of the body
  * is observed to sink below the horizon in the west.
  * The times are adjusted for typical atmospheric refraction conditions.
- * 
+ *
  * @param {string} body
  *      The name of the body to find the rise or set time for.
- * 
+ *
  * @param {Astronomy.Observer} observer
  *      Specifies the geographic coordinates and elevation above sea level of the observer.
  *      Call {@link Astronomy.MakeObserver} to create an observer object.
- * 
+ *
  * @param {number} direction
  *      Either +1 to find rise time or -1 to find set time.
  *      Any other value will cause an exception to be thrown.
- * 
+ *
  * @param {(Date|number|Astronomy.AstroTime)} dateStart
  *      The date and time after which the specified rise or set time is to be found.
- * 
+ *
  * @param {number} limitDays
  *      The fractional number of days after <code>dateStart</code> that limits
  *      when the rise or set time is to be found.
- * 
+ *
  * @returns {(Astronomy.AstroTime|null)}
  *      The date and time of the rise or set event, or null if no such event
  *      occurs within the specified time window.
  */
 Astronomy.SearchRiseSet = function(body, observer, direction, dateStart, limitDays) {
-    // We calculate the apparent angular radius of the Sun and Moon, 
+    // We calculate the apparent angular radius of the Sun and Moon,
     // but treat all other bodies as points.
     let body_radius_au = { Sun:SUN_RADIUS_AU, Moon:MOON_RADIUS_AU }[body] || 0;
 
@@ -3520,7 +3520,7 @@ Astronomy.SearchRiseSet = function(body, observer, direction, dateStart, limitDa
         // wants rise times or set times, respectively.
 
         const ofdate = Astronomy.Equator(body, t, observer, true, true);
-        const hor = Astronomy.Horizon(t, observer, ofdate.ra, ofdate.dec);        
+        const hor = Astronomy.Horizon(t, observer, ofdate.ra, ofdate.dec);
         const alt = hor.altitude + RAD2DEG*(body_radius_au / ofdate.dist) + REFRACTION_NEAR_HORIZON;
         return direction * alt;
     }
@@ -3567,7 +3567,7 @@ Astronomy.SearchRiseSet = function(body, observer, direction, dateStart, limitDa
         if (alt_before <= 0 && alt_after > 0) {
             // Search between evt_before and evt_after for the desired event.
             let tx = Astronomy.Search(peak_altitude, time_before, evt_after.time, {init_f1:alt_before, init_f2:alt_after});
-            if (tx) 
+            if (tx)
                 return tx;
         }
 
@@ -3587,17 +3587,17 @@ Astronomy.SearchRiseSet = function(body, observer, direction, dateStart, limitDa
  * Returns information about an occurrence of a celestial body
  * reaching a given hour angle as seen by an observer at a given
  * location on the surface of the Earth.
- * 
+ *
  * @class
  * @memberof Astronomy
- * 
+ *
  * @property {Astronomy.AstroTime} time
  *      The date and time of the celestial body reaching the hour angle.
- * 
+ *
  * @property {Astronomy.HorizontalCoordinates} hor
  *      Topocentric horizontal coordinates for the body
  *      at the time indicated by the <code>time</code> property.
- * 
+ *
  * @property {number} iter
  *      The positive integer number of iterations required by
  *      <code>SearchHourAngle</code> to converge on the hour angle
@@ -3612,7 +3612,7 @@ class HourAngleEvent {
 }
 
 /**
- * Finds the next time the given body is seen to reach the specified 
+ * Finds the next time the given body is seen to reach the specified
  * <a href="https://en.wikipedia.org/wiki/Hour_angle">hour angle</a>
  * by the given observer.
  * Providing <code>hourAngle</code> = 0 finds the next maximum altitude event (culmination).
@@ -3621,29 +3621,29 @@ class HourAngleEvent {
  * may always be above the horizon or always below the horizon, so the caller cannot
  * assume that a culminating object is visible nor that an object is below the horizon
  * at its minimum altitude.
- * 
+ *
  * @param {string} body
  *      The name of a celestial body other than the Earth.
- * 
+ *
  * @param {Astronomy.Observer} observer
  *      Specifies the geographic coordinates and elevation above sea level of the observer.
  *      Call {@link Astronomy.MakeObserver} to create an observer object.
- * 
+ *
  * @param {number} hourAngle
- *      The hour angle expressed in 
- *      <a href="https://en.wikipedia.org/wiki/Sidereal_time">sidereal</a> 
- *      hours for which the caller seeks to find the body attain. 
+ *      The hour angle expressed in
+ *      <a href="https://en.wikipedia.org/wiki/Sidereal_time">sidereal</a>
+ *      hours for which the caller seeks to find the body attain.
  *      The value must be in the range [0, 24).
- *      The hour angle represents the number of sidereal hours that have 
+ *      The hour angle represents the number of sidereal hours that have
  *      elapsed since the most recent time the body crossed the observer's local
  *      <a href="https://en.wikipedia.org/wiki/Meridian_(astronomy)">meridian</a>.
  *      This specifying <code>hourAngle</code> = 0 finds the moment in time
  *      the body reaches the highest angular altitude in a given sidereal day.
- * 
+ *
  * @param {(Date|number|Astronomy.AstroTime)} dateStart
  *      The date and time after which the desired hour angle crossing event
- *      is to be found.     
- * 
+ *      is to be found.
+ *
  * @returns {Astronomy.HourAngleEvent}
  */
 Astronomy.SearchHourAngle = function(body, observer, hourAngle, dateStart) {
@@ -3695,7 +3695,7 @@ Astronomy.SearchHourAngle = function(body, observer, hourAngle, dateStart) {
  * @class
  * @memberof Astronomy
  *
- * @param {Astronomy.AstroTime} mar_equinox
+ * @property {Astronomy.AstroTime} mar_equinox
  *      The date and time of the March equinox in the given calendar year.
  *      This is the moment in March that the plane of the Earth's equator passes
  *      through the center of the Sun; thus the Sun's declination
@@ -3704,7 +3704,7 @@ Astronomy.SearchHourAngle = function(body, observer, hourAngle, dateStart) {
  *      the beginning of spring in the northern hemisphere and
  *      the beginning of autumn in the southern hemisphere.
  *
- * @param {Astronomy.AstroTime} jun_solstice
+ * @property {Astronomy.AstroTime} jun_solstice
  *      The date and time of the June solstice in the given calendar year.
  *      This is the moment in June that the Sun reaches its most positive
  *      declination value.
@@ -3713,7 +3713,7 @@ Astronomy.SearchHourAngle = function(body, observer, hourAngle, dateStart) {
  *      the beginning of summer in the northern hemisphere and
  *      the beginning of winter in the southern hemisphere.
  *
- * @param {Astronomy.AstroTime} sep_equinox
+ * @property {Astronomy.AstroTime} sep_equinox
  *      The date and time of the September equinox in the given calendar year.
  *      This is the moment in September that the plane of the Earth's equator passes
  *      through the center of the Sun; thus the Sun's declination
@@ -3722,7 +3722,7 @@ Astronomy.SearchHourAngle = function(body, observer, hourAngle, dateStart) {
  *      the beginning of autumn in the northern hemisphere and
  *      the beginning of spring in the southern hemisphere.
  *
- * @param {Astronomy.AstroTime} dec_solstice
+ * @property {Astronomy.AstroTime} dec_solstice
  *      The date and time of the December solstice in the given calendar year.
  *      This is the moment in December that the Sun reaches its most negative
  *      declination value.
@@ -3742,11 +3742,11 @@ class SeasonInfo {
 
 /**
  * Finds the equinoxes and solstices for a given calendar year.
- * 
+ *
  * @param {(number | Astronomy.AstroTime)} year
  *      The integer value or <code>AstroTime</code> object that specifies
  *      the UTC calendar year for which to find equinoxes and solstices.
- * 
+ *
  * @returns {Astronomy.SeasonInfo}
  */
 Astronomy.Seasons = function(year) {
@@ -3777,13 +3777,13 @@ Astronomy.Seasons = function(year) {
  * @class
  * @memberof Astronomy
  *
- * @property {Astronomy.AstroTime} time  
+ * @property {Astronomy.AstroTime} time
  *      The date and time of the observation.
- * 
+ *
  * @property {string}  visibility
  *      Either <code>"morning"</code> or <code>"evening"</code>,
  *      indicating when the body is most easily seen.
- * 
+ *
  * @property {number}  elongation
  *      The angle in degrees, as seen from the center of the Earth,
  *      of the apparent separation between the body and the Sun.
@@ -3791,7 +3791,7 @@ Astronomy.Seasons = function(year) {
  *      When <code>elongation</code> is less than a few degrees, the body is very
  *      difficult to see from the Earth because it is lost in the Sun's glare.
  *      The elongation is always in the range [0, 180].
- * 
+ *
  * @property {number}  ecliptic_separation
  *      The absolute value of the difference between the body's ecliptic longitude
  *      and the Sun's ecliptic longitude, both as seen from the center of the Earth.
@@ -3814,19 +3814,19 @@ class ElongationEvent {
  * Calculates angular separation of a body from the Sun as seen from the Earth
  * and the relative ecliptic longitudes between that body and the Earth as seen from the Sun.
  * See the return type {@link Astronomy.ElongationEvent} for details.
- * 
- * This function is helpful for determining how easy 
+ *
+ * This function is helpful for determining how easy
  * it is to view a planet away from the Sun's glare on a given date.
- * It also determines whether the object is visible in the morning or evening; 
+ * It also determines whether the object is visible in the morning or evening;
  * this is more important the smaller the elongation is.
  * It is also used to determine how far a planet is from opposition, conjunction, or quadrature.
- * 
+ *
  * @param {string} body
  *      The name of the observed body. Not allowed to be <code>"Earth"</code>.
- * 
+ *
  * @returns {Astronomy.ElongationEvent}
  */
-Astronomy.Elongation = function(body, date) {    
+Astronomy.Elongation = function(body, date) {
     let time = Astronomy.MakeTime(date);
 
     let lon = Astronomy.LongitudeFromSun(body, time);
@@ -3841,19 +3841,19 @@ Astronomy.Elongation = function(body, date) {
     return new ElongationEvent(time, vis, angle, lon);
 }
 
-/** 
- * Searches for the next maximum elongation event for Mercury or Venus 
- * that occurs after the given start date. Calling with other values 
+/**
+ * Searches for the next maximum elongation event for Mercury or Venus
+ * that occurs after the given start date. Calling with other values
  * of <code>body</code> will result in an exception.
  * Maximum elongation occurs when the body has the greatest
  * angular separation from the Sun, as seen from the Earth.
  * Returns an <code>ElongationEvent</code> object containing the date and time of the next
  * maximum elongation, the elongation in degrees, and whether
  * the body is visible in the morning or evening.
- * 
+ *
  * @param {string} body     Either <code>"Mercury"</code> or <code>"Venus"</code>.
  * @param {Date} startDate  The date and time after which to search for the next maximum elongation event.
- * 
+ *
  * @returns {Astronomy.ElongationEvent}
  */
 Astronomy.SearchMaxElongation = function(body, startDate) {
@@ -3933,16 +3933,16 @@ Astronomy.SearchMaxElongation = function(body, startDate) {
         // Now we have a time range [t1,t2] that brackets a maximum elongation event.
         // Confirm the bracketing.
         let m1 = neg_slope(t1);
-        if (m1 >= 0) 
+        if (m1 >= 0)
             throw `SearchMaxElongation: internal error: m1 = ${m1}`;
 
         let m2 = neg_slope(t2);
-        if (m2 <= 0) 
+        if (m2 <= 0)
             throw `SearchMaxElongation: internal error: m2 = ${m2}`;
 
         // Use the generic search algorithm to home in on where the slope crosses from negative to positive.
         let tx = Astronomy.Search(neg_slope, t1, t2, {init_f1:m1, init_f2:m2, dt_tolerance_seconds:10});
-        if (!tx) 
+        if (!tx)
             throw `SearchMaxElongation: failed search iter ${iter} (t1=${t1.toString()}, t2=${t2.toString()})`;
 
         if (tx.tt >= startTime.tt)
@@ -3959,19 +3959,19 @@ Astronomy.SearchMaxElongation = function(body, startDate) {
 
 /**
  * Searches for the date and time Venus will next appear brightest as seen from the Earth.
- * 
+ *
  * @param {string} body
  *      Currently only <code>"Venus"</code> is supported.
  *      Mercury's peak magnitude occurs at superior conjunction, when it is virtually impossible to see from Earth,
  *      so peak magnitude events have little practical value for that planet.
- *      The Moon reaches peak magnitude very close to full moon, which can be found using 
+ *      The Moon reaches peak magnitude very close to full moon, which can be found using
  *      {@link Astronomy.SearchMoonQuarter} or {@link Astronomy.SearchMoonPhase}.
- *      The other planets reach peak magnitude very close to opposition, 
+ *      The other planets reach peak magnitude very close to opposition,
  *      which can be found using {@link Astronomy.SearchRelativeLongitude}.
- * 
+ *
  * @param {(Date | number | Astronomy.AstroTime)} startDate
  *      The date and time after which to find the next peak magnitude event.
- * 
+ *
  * @returns {Astronomy.IlluminationInfo}
  */
 Astronomy.SearchPeakMagnitude = function(body, startDate) {
@@ -4051,16 +4051,16 @@ Astronomy.SearchPeakMagnitude = function(body, startDate) {
         // Now we have a time range [t1,t2] that brackets a maximum magnitude event.
         // Confirm the bracketing.
         let m1 = slope(t1);
-        if (m1 >= 0) 
+        if (m1 >= 0)
             throw `SearchPeakMagnitude: internal error: m1 = ${m1}`;
 
         let m2 = slope(t2);
-        if (m2 <= 0) 
+        if (m2 <= 0)
             throw `SearchPeakMagnitude: internal error: m2 = ${m2}`;
 
         // Use the generic search algorithm to home in on where the slope crosses from negative to positive.
         let tx = Astronomy.Search(slope, t1, t2, {init_f1:m1, init_f2:m2, dt_tolerance_seconds:10});
-        if (!tx) 
+        if (!tx)
             throw `SearchPeakMagnitude: failed search iter ${iter} (t1=${t1.toString()}, t2=${t2.toString()})`;
 
         if (tx.tt >= startTime.tt)
@@ -4079,23 +4079,23 @@ Astronomy.SearchPeakMagnitude = function(body, startDate) {
  * Represents a closest or farthest point in a body's orbit around its primary.
  * For a planet orbiting the Sun, this is a perihelion or aphelion, respectively.
  * For the Moon orbiting the Earth, this is a perigee or apogee, respectively.
- * 
+ *
  * @class
  * @memberof Astronomy
- * 
+ *
  * @property {Astronomy.AstroTime} time
  *      The date and time of the apsis.
- * 
+ *
  * @property {number} apsisType
  *      For a closest approach (perigee or perihelion), <code>apsisType</code> is 0.
  *      For a farthest distance event (apogee or aphelion), <code>apsisType</code> is 1.
- * 
+ *
  * @property {number} dist_au
  *      The distance between the centers of the two bodies in astronomical units (AU).
- * 
+ *
  * @property {number} dist_km
  *      The distance between the centers of the two bodies in kilometers.
- * 
+ *
  * @see {@link Astronomy.SearchLunarApsis}
  * @see {@link Astronomy.NextLunarApsis}
  */
@@ -4111,10 +4111,10 @@ class Apsis {
 /**
  * Finds the next perigee (closest approach) or apogee (farthest remove) of the Moon
  * that occurs after the specified date and time.
- * 
+ *
  * @param {(Date | number | Astronomy.AstroTime)} startDate
  *      The date and time after which to find the next perigee or apogee.
- * 
+ *
  * @returns {Astronomy.Apsis}
  */
 Astronomy.SearchLunarApsis = function(startDate) {
@@ -4194,13 +4194,13 @@ Astronomy.SearchLunarApsis = function(startDate) {
 }
 
 /**
- * Given a lunar apsis returned by an initial call to {@link SearchLunarApsis}, 
+ * Given a lunar apsis returned by an initial call to {@link SearchLunarApsis},
  * or a previous call to <code>NextLunarApsis</code>, finds the next lunar apsis.
  * If the given apsis is a perigee, this function finds the next apogee, and vice versa.
- * 
+ *
  * @param {Astronomy.Apsis} apsis
  *      A lunar perigee or apogee event.
- * 
+ *
  * @returns {Astronomy.Apsis}
  *      The successor apogee for the given perigee, or the successor perigee for the given apogee.
  */
