@@ -691,6 +691,29 @@ This function solves for those times, reporting the next maximum elongation even
 <a name="Astronomy_SearchSunLongitude"></a>
 ### Astronomy_SearchSunLongitude(targetLon, dateStart, limitDays) &#8658; [`astro_search_result_t`](#astro_search_result_t)
 
+**Searches for the time when the Sun reaches an apparent ecliptic longitude as seen from the Earth.** 
+
+
+
+This function finds the moment in time, if any exists in the given time window, that the center of the Sun reaches a specific ecliptic longitude as seen from the center of the Earth.
+
+This function can be used to determine equinoxes and solstices. However, it is usually more convenient and efficient to call [`Astronomy_Seasons`](#Astronomy_Seasons) to calculate all equinoxes and solstices for a given calendar year.
+
+The function searches the window of time specified by `dateStart` and `dateStart+limitDays`. The search will return an error if the Sun never reaches the longitude `targetLon` or if the window is so large that the longitude ranges more than 180 degrees within it. It is recommended to keep the window smaller than 10 days when possible.
+
+
+
+**Returns:**  If successful, the `status` field in the returned structure will contain `ASTRO_SUCCESS` and the `time` field will contain the date and time the Sun reaches the target longitude. Any other value indicates an error. See remarks in [`Astronomy_Search`](#Astronomy_Search) (which this function calls) for more information about possible error codes. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| `double` | `targetLon` |  The desired ecliptic longitude in degrees, relative to the true equinox of date. This may be any value in the range [0, 360), although certain values have conventional meanings: 0 = March equinox, 90 = June solstice, 180 = September equinox, 270 = December solstice. | 
+| [`astro_time_t`](#astro_time_t) | `dateStart` |  The date and time for starting the search for the desired longitude event. | 
+| `double` | `limitDays` |  The real-valued number of days, which when added to `dateStart`, limits the range of time over which the search looks. It is recommended to keep this value between 1 and 10 days. See remarks above for more details. | 
+
+
 
 
 ---
