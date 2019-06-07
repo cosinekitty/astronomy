@@ -566,6 +566,23 @@ This function determines the phase of the Moon using its apparent ecliptic longi
 <a name="Astronomy_NextMoonQuarter"></a>
 ### Astronomy_NextMoonQuarter(mq) &#8658; [`astro_moon_quarter_t`](#astro_moon_quarter_t)
 
+**Continues searching for lunar quarters from a previous search.** 
+
+
+
+After calling [`Astronomy_SearchMoonQuarter`](#Astronomy_SearchMoonQuarter), this function can be called one or more times to continue finding consecutive lunar quarters. This function finds the next consecutive moon quarter event after the one passed in as the parameter `mq`.
+
+
+
+**Returns:**  If `mq` is valid, this function should always succeed, indicated by the `status` field in the returned structure holding `ASTRO_SUCCESS`. Any other value indicates an internal error, which (after confirming that `mq` is valid) should be [reported as an issue](https://github.com/cosinekitty/astronomy/issues). To be safe, calling code should always check the `status` field for errors. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_moon_quarter_t`](#astro_moon_quarter_t) | `mq` |  A value returned by a prior call to [`Astronomy_SearchMoonQuarter`](#Astronomy_SearchMoonQuarter) or [`Astronomy_NextMoonQuarter`](#Astronomy_NextMoonQuarter). | 
+
+
 
 
 ---
@@ -583,7 +600,7 @@ Certain astronomy calculations involve finding a time when an event occurs. Ofte
 
 The search function is specified by two parameters: `func` and `context`. The `func` parameter is a pointer to the function itself, which accepts a time and a context containing any other arguments needed to evaluate the function. The `context` parameter supplies that context for the given search. As an example, a caller may wish to find the moment a celestial body reaches a certain ecliptic longitude. In that case, the caller might create a structure that contains an [`astro_body_t`](#astro_body_t) member to specify the body and a `double` to hold the target longitude. The function would cast the pointer `context` passed in as a pointer to that structure type. It could subtract the target longitude from the actual longitude at a given time; thus the difference would equal zero at the moment in time the planet reaches the desired longitude.
 
-The `func` returns an [`astro_func_result_t`](#astro_func_result_t) structure every time it is called. If the returned strcture has a value of `status` other than `ASTRO_SUCCESS`, the search immediately fails and reports that same error code in the `status` returned by `Astronomy_Search`. Otherwise, `status` is `ASTRO_SUCCESS` and `value` is the value of the function, and the search proceeds until it either finds the ascending root or fails for some reason.
+The `func` returns an [`astro_func_result_t`](#astro_func_result_t) structure every time it is called. If the returned structure has a value of `status` other than `ASTRO_SUCCESS`, the search immediately fails and reports that same error code in the `status` returned by `Astronomy_Search`. Otherwise, `status` is `ASTRO_SUCCESS` and `value` is the value of the function, and the search proceeds until it either finds the ascending root or fails for some reason.
 
 The search calls `func` repeatedly to rapidly narrow in on any ascending root within the time window specified by `t1` and `t2`. The search never reports a solution outside this time window.
 
@@ -656,12 +673,54 @@ This function solves for those times, reporting the next maximum elongation even
 <a name="Astronomy_SearchMoonPhase"></a>
 ### Astronomy_SearchMoonPhase(targetLon, dateStart, limitDays) &#8658; [`astro_search_result_t`](#astro_search_result_t)
 
+**Searches for the time that the Moon reaches a specified phase.** 
+
+
+
+Lunar phases are conventionally defined in terms of the Moon's geocentric ecliptic longitude with respect to the Sun's geocentric ecliptic longitude. When the Moon and the Sun have the same longitude, that is defined as a new moon. When their longitudes are 180 degrees apart, that is defined as a full moon.
+
+This function searches for any value of the lunar phase expressed as an angle in degrees in the range [0, 360).
+
+If you want to iterate through lunar quarters (new moon, first quarter, full moon, third quarter) it is much easier to call the functions [`Astronomy_SearchMoonQuarter`](#Astronomy_SearchMoonQuarter) and [`Astronomy_NextMoonQuarter`](#Astronomy_NextMoonQuarter). This function is useful for finding general phase angles outside those four quarters.
+
+
+
+**Returns:**  On success, the `status` field in the returned structure holds `ASTRO_SUCCESS` and the `time` field holds the date and time when the Moon reaches the target longitude. On failure, `status` holds some other value as an error code. One possible error code is `ASTRO_NO_MOON_QUARTER` if `dateStart` and `limitDays` do not enclose the desired event. See remarks in [`Astronomy_Search`](#Astronomy_Search) for other possible error codes. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| `double` | `targetLon` |  The difference in geocentric longitude between the Sun and Moon that specifies the lunar phase being sought. This can be any value in the range [0, 360). Certain values have conventional names: 0 = new moon, 90 = first quarter, 180 = full moon, 270 = third quarter. | 
+| [`astro_time_t`](#astro_time_t) | `dateStart` |  The beginning of the time window in which to search for the Moon reaching the specified phase. | 
+| `double` | `limitDays` |  The number of days after `dateStart` that limits the time window for the search. | 
+
+
 
 
 ---
 
 <a name="Astronomy_SearchMoonQuarter"></a>
 ### Astronomy_SearchMoonQuarter(dateStart) &#8658; [`astro_moon_quarter_t`](#astro_moon_quarter_t)
+
+**Finds the first lunar quarter after the specified date and time.** 
+
+
+
+A lunar quarter is one of the following four lunar phase events: new moon, first quarter, full moon, third quarter. This function finds the lunar quarter that happens soonest after the specified date and time.
+
+To continue iterating through consecutive lunar quarters, call this function once, followed by calls to [`Astronomy_NextMoonQuarter`](#Astronomy_NextMoonQuarter) as many times as desired.
+
+
+
+**Returns:**  This function should always succeed, indicated by the `status` field in the returned structure holding `ASTRO_SUCCESS`. Any other value indicates an internal error, which should be [reported as an issue](https://github.com/cosinekitty/astronomy/issues). To be safe, calling code should always check the `status` field for errors. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_time_t`](#astro_time_t) | `dateStart` |  The date and time at which to start the search. | 
+
 
 
 

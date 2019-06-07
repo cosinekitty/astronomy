@@ -3382,7 +3382,7 @@ astro_search_result_t Astronomy_SearchSunLongitude(
  * desired longitude.
  *
  * The `func` returns an #astro_func_result_t structure every time it is called.
- * If the returned strcture has a value of `status` other than `ASTRO_SUCCESS`,
+ * If the returned structure has a value of `status` other than `ASTRO_SUCCESS`,
  * the search immediately fails and reports that same error code in the `status`
  * returned by `Astronomy_Search`. Otherwise, `status` is `ASTRO_SUCCESS` and
  * `value` is the value of the function, and the search proceeds until it either
@@ -4043,6 +4043,42 @@ static astro_func_result_t moon_offset(void *context, astro_time_t time)
     return result;
 }
 
+/**
+ * @brief
+ *      Searches for the time that the Moon reaches a specified phase.
+ *
+ * Lunar phases are conventionally defined in terms of the Moon's geocentric ecliptic
+ * longitude with respect to the Sun's geocentric ecliptic longitude.
+ * When the Moon and the Sun have the same longitude, that is defined as a new moon.
+ * When their longitudes are 180 degrees apart, that is defined as a full moon.
+ *
+ * This function searches for any value of the lunar phase expressed as an
+ * angle in degrees in the range [0, 360).
+ *
+ * If you want to iterate through lunar quarters (new moon, first quarter, full moon, third quarter)
+ * it is much easier to call the functions #Astronomy_SearchMoonQuarter and #Astronomy_NextMoonQuarter.
+ * This function is useful for finding general phase angles outside those four quarters.
+ *
+ * @param targetLon
+ *      The difference in geocentric longitude between the Sun and Moon
+ *      that specifies the lunar phase being sought. This can be any value
+ *      in the range [0, 360).  Certain values have conventional names:
+ *      0 = new moon, 90 = first quarter, 180 = full moon, 270 = third quarter.
+ *
+ * @param dateStart
+ *      The beginning of the time window in which to search for the Moon reaching the specified phase.
+ *
+ * @param limitDays
+ *      The number of days after `dateStart` that limits the time window for the search.
+ *
+ * @return
+ *      On success, the `status` field in the returned structure holds `ASTRO_SUCCESS` and
+ *      the `time` field holds the date and time when the Moon reaches the target longitude.
+ *      On failure, `status` holds some other value as an error code.
+ *      One possible error code is `ASTRO_NO_MOON_QUARTER` if `dateStart` and `limitDays`
+ *      do not enclose the desired event. See remarks in #Astronomy_Search for other possible
+ *      error codes.
+ */
 astro_search_result_t Astronomy_SearchMoonPhase(double targetLon, astro_time_t dateStart, double limitDays)
 {
     /*
@@ -4080,6 +4116,27 @@ astro_search_result_t Astronomy_SearchMoonPhase(double targetLon, astro_time_t d
     return Astronomy_Search(moon_offset, &targetLon, t1, t2, 1.0);
 }
 
+/**
+ * @brief
+ *      Finds the first lunar quarter after the specified date and time.
+ *
+ * A lunar quarter is one of the following four lunar phase events:
+ * new moon, first quarter, full moon, third quarter.
+ * This function finds the lunar quarter that happens soonest
+ * after the specified date and time.
+ *
+ * To continue iterating through consecutive lunar quarters, call this function once,
+ * followed by calls to #Astronomy_NextMoonQuarter as many times as desired.
+ *
+ * @param dateStart
+ *      The date and time at which to start the search.
+ *
+ * @return
+ *      This function should always succeed, indicated by the `status` field
+ *      in the returned structure holding `ASTRO_SUCCESS`. Any other value indicates
+ *      an internal error, which should be [reported as an issue](https://github.com/cosinekitty/astronomy/issues).
+ *      To be safe, calling code should always check the `status` field for errors.
+ */
 astro_moon_quarter_t Astronomy_SearchMoonQuarter(astro_time_t dateStart)
 {
     astro_moon_quarter_t mq;
@@ -4101,10 +4158,31 @@ astro_moon_quarter_t Astronomy_SearchMoonQuarter(astro_time_t dateStart)
     return mq;
 }
 
+/**
+ * @brief
+ *      Continues searching for lunar quarters from a previous search.
+ *
+ * After calling #Astronomy_SearchMoonQuarter, this function can be called
+ * one or more times to continue finding consecutive lunar quarters.
+ * This function finds the next consecutive moon quarter event after the one passed in as the parameter `mq`.
+ *
+ * @param mq
+ *      A value returned by a prior call to #Astronomy_SearchMoonQuarter or #Astronomy_NextMoonQuarter.
+ *
+ * @return
+ *      If `mq` is valid, this function should always succeed, indicated by the `status` field
+ *      in the returned structure holding `ASTRO_SUCCESS`. Any other value indicates
+ *      an internal error, which (after confirming that `mq` is valid) should be
+ *      [reported as an issue](https://github.com/cosinekitty/astronomy/issues).
+ *      To be safe, calling code should always check the `status` field for errors.
+ */
 astro_moon_quarter_t Astronomy_NextMoonQuarter(astro_moon_quarter_t mq)
 {
     astro_time_t time;
     astro_moon_quarter_t next_mq;
+
+    if (mq.status != ASTRO_SUCCESS)
+        return MoonQuarterError(ASTRO_INVALID_PARAMETER);
 
     /* Skip 6 days past the previous found moon quarter to find the next one. */
     /* This is less than the minimum possible increment. */
