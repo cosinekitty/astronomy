@@ -2812,6 +2812,12 @@ Astronomy.SearchHourAngle = function(body, observer, hourAngle, dateStart) {
     let time = Astronomy.MakeTime(dateStart);
     let iter = 0;
 
+    if (body === 'Earth')
+        throw 'Cannot search for hour angle of the Earth.';
+
+    if (hourAngle < 0.0 || hourAngle >= 24.0)
+        throw `Invalid hour angle ${hourAngle}`;
+
     while (true) {
         ++iter;
 

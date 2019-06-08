@@ -4329,6 +4329,45 @@ astro_search_result_t Astronomy_SearchRelativeLongitude(astro_body_t body, doubl
     return SearchError(ASTRO_NO_CONVERGE);
 }
 
+/**
+ * @brief
+ *      Searches for the time when a celestial body reaches a specified hour angle as seen by an observer on the Earth.
+ *
+ * The *hour angle* of a celestial body indicates its position in the sky with respect
+ * to the Earth's rotation. The hour angle depends on the location of the observer on the Earth.
+ * The hour angle is 0 when the body reaches its highest angle above the horizon in a given day.
+ * The hour angle increases by 1 unit for every sidereal hour that passes after that point, up
+ * to 24 sidereal hours when it reaches the highest point again. So the hour angle indicates
+ * the number of hours that have passed since the most recent time that the body has culminated,
+ * or reached its highest point.
+ *
+ * This function searches for the next time a celestial body reaches the given hour angle
+ * after the date and time specified by `startTime`.
+ * To find when a body culminates, pass 0 for `startTime`.
+ * To find when a body reaches its lowest point in the sky, pass 12 for `startTime`.
+ *
+ * On success, the function reports the date and time, along with the horizontal coordinates
+ * of the body at that time, as seen by the given observer.
+ *
+ * @param body
+ *      The celestial body, which can the Sun, the Moon, or any planet other than the Earth.
+ *
+ * @param observer
+ *      Indicates a location on or near the surface of the Earth where the observer is located.
+ *      Call #Astronomy_MakeObserver to create an observer structure.
+ *
+ * @param hourAngle
+ *      An hour angle value in the range [0, 24) indicating the number of sidereal hours after the
+ *      body's most recent culmination.
+ *
+ * @param startTime
+ *      The date and time at which to start the search.
+ *
+ * @return
+ *      If successful, the `status` field in the returned structure holds `ASTRO_SUCCESS`
+ *      and the other structure fields are valid. Otherwise, `status` holds some other value
+ *      that indicates an error condition.
+ */
 astro_hour_angle_t Astronomy_SearchHourAngle(
     astro_body_t body,
     astro_observer_t observer,
@@ -4340,6 +4379,15 @@ astro_hour_angle_t Astronomy_SearchHourAngle(
     astro_equatorial_t ofdate;
     astro_hour_angle_t result;
     double delta_sidereal_hours, delta_days, gast;
+
+    if (body < MIN_BODY || body > MAX_BODY)
+        return HourAngleError(ASTRO_INVALID_BODY);
+
+    if (body == BODY_EARTH)
+        return HourAngleError(ASTRO_EARTH_NOT_ALLOWED);
+
+    if (hourAngle < 0.0 || hourAngle >= 24.0)
+        return HourAngleError(ASTRO_INVALID_PARAMETER);
 
     time = startTime;
     for(;;)
