@@ -541,8 +541,8 @@ astro_elongation_t Astronomy_SearchMaxElongation(astro_body_t body, astro_time_t
 astro_angle_result_t Astronomy_LongitudeFromSun(astro_body_t body, astro_time_t time);
 astro_search_result_t Astronomy_SearchRelativeLongitude(astro_body_t body, double targetRelLon, astro_time_t startTime);
 astro_angle_result_t Astronomy_MoonPhase(astro_time_t time);
-astro_search_result_t Astronomy_SearchMoonPhase(double targetLon, astro_time_t dateStart, double limitDays);
-astro_moon_quarter_t Astronomy_SearchMoonQuarter(astro_time_t dateStart);
+astro_search_result_t Astronomy_SearchMoonPhase(double targetLon, astro_time_t startTime, double limitDays);
+astro_moon_quarter_t Astronomy_SearchMoonQuarter(astro_time_t startTime);
 astro_moon_quarter_t Astronomy_NextMoonQuarter(astro_moon_quarter_t mq);
 
 astro_search_result_t Astronomy_Search(
@@ -554,20 +554,20 @@ astro_search_result_t Astronomy_Search(
 
 astro_search_result_t Astronomy_SearchSunLongitude(
     double targetLon,
-    astro_time_t dateStart,
+    astro_time_t startTime,
     double limitDays);
 
 astro_hour_angle_t Astronomy_SearchHourAngle(
     astro_body_t body,
     astro_observer_t observer,
     double hourAngle,
-    astro_time_t dateStart);
+    astro_time_t startTime);
 
 astro_search_result_t Astronomy_SearchRiseSet(
     astro_body_t body,
     astro_observer_t observer,
     astro_direction_t direction,
-    astro_time_t dateStart,
+    astro_time_t startTime,
     double limitDays);
 
 astro_seasons_t Astronomy_Seasons(int year);

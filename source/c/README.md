@@ -630,7 +630,7 @@ If the search does not converge within 20 iterations, it will fail with status c
 ---
 
 <a name="Astronomy_SearchHourAngle"></a>
-### Astronomy_SearchHourAngle(body, observer, hourAngle, dateStart) &#8658; [`astro_hour_angle_t`](#astro_hour_angle_t)
+### Astronomy_SearchHourAngle(body, observer, hourAngle, startTime) &#8658; [`astro_hour_angle_t`](#astro_hour_angle_t)
 
 
 
@@ -671,7 +671,7 @@ This function solves for those times, reporting the next maximum elongation even
 ---
 
 <a name="Astronomy_SearchMoonPhase"></a>
-### Astronomy_SearchMoonPhase(targetLon, dateStart, limitDays) &#8658; [`astro_search_result_t`](#astro_search_result_t)
+### Astronomy_SearchMoonPhase(targetLon, startTime, limitDays) &#8658; [`astro_search_result_t`](#astro_search_result_t)
 
 **Searches for the time that the Moon reaches a specified phase.** 
 
@@ -685,15 +685,15 @@ If you want to iterate through lunar quarters (new moon, first quarter, full moo
 
 
 
-**Returns:**  On success, the `status` field in the returned structure holds `ASTRO_SUCCESS` and the `time` field holds the date and time when the Moon reaches the target longitude. On failure, `status` holds some other value as an error code. One possible error code is `ASTRO_NO_MOON_QUARTER` if `dateStart` and `limitDays` do not enclose the desired event. See remarks in [`Astronomy_Search`](#Astronomy_Search) for other possible error codes. 
+**Returns:**  On success, the `status` field in the returned structure holds `ASTRO_SUCCESS` and the `time` field holds the date and time when the Moon reaches the target longitude. On failure, `status` holds some other value as an error code. One possible error code is `ASTRO_NO_MOON_QUARTER` if `startTime` and `limitDays` do not enclose the desired event. See remarks in [`Astronomy_Search`](#Astronomy_Search) for other possible error codes. 
 
 
 
 | Type | Parameter | Description |
 | --- | --- | --- |
 | `double` | `targetLon` |  The difference in geocentric longitude between the Sun and Moon that specifies the lunar phase being sought. This can be any value in the range [0, 360). Certain values have conventional names: 0 = new moon, 90 = first quarter, 180 = full moon, 270 = third quarter. | 
-| [`astro_time_t`](#astro_time_t) | `dateStart` |  The beginning of the time window in which to search for the Moon reaching the specified phase. | 
-| `double` | `limitDays` |  The number of days after `dateStart` that limits the time window for the search. | 
+| [`astro_time_t`](#astro_time_t) | `startTime` |  The beginning of the time window in which to search for the Moon reaching the specified phase. | 
+| `double` | `limitDays` |  The number of days after `startTime` that limits the time window for the search. | 
 
 
 
@@ -701,7 +701,7 @@ If you want to iterate through lunar quarters (new moon, first quarter, full moo
 ---
 
 <a name="Astronomy_SearchMoonQuarter"></a>
-### Astronomy_SearchMoonQuarter(dateStart) &#8658; [`astro_moon_quarter_t`](#astro_moon_quarter_t)
+### Astronomy_SearchMoonQuarter(startTime) &#8658; [`astro_moon_quarter_t`](#astro_moon_quarter_t)
 
 **Finds the first lunar quarter after the specified date and time.** 
 
@@ -719,7 +719,7 @@ To continue iterating through consecutive lunar quarters, call this function onc
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| [`astro_time_t`](#astro_time_t) | `dateStart` |  The date and time at which to start the search. | 
+| [`astro_time_t`](#astro_time_t) | `startTime` |  The date and time at which to start the search. | 
 
 
 
@@ -736,19 +736,49 @@ To continue iterating through consecutive lunar quarters, call this function onc
 <a name="Astronomy_SearchRelativeLongitude"></a>
 ### Astronomy_SearchRelativeLongitude(body, targetRelLon, startTime) &#8658; [`astro_search_result_t`](#astro_search_result_t)
 
+**Searches for the time when the Earth and another planet are separated by a specified angle in ecliptic longitude, as seen from the Sun.** 
+
+
+
+A relative longitude is the angle between two bodies measured in the plane of the Earth's orbit (the ecliptic plane). The distance of the bodies above or below the ecliptic plane is ignored. If you imagine the shadow of the body cast onto the ecliptic plane, and the angle measured around that plane from one body to the other in the direction the planets orbit the Sun, you will get an angle somewhere between 0 and 360 degrees. This is the relative longitude.
+
+Given a planet other than the Earth in `body` and a time to start the search in `startTime`, this function searches for the next time that the relative longitude measured from the planet to the Earth is `targetRelLon`.
+
+Certain astronomical events are defined in terms of relative longitude between the Earth and another planet:
+
+
+
+- When the relative longitude is 0 degrees, it means both planets are in the same direction from the Sun. For planets that orbit closer to the Sun (Mercury and Venus), this is known as *inferior conjunction*, a time when the other planet becomes very difficult to see because of being lost in the Sun's glare. (The only exception is in the rare event of a transit, when we see the silhouette of the planet passing between the Earth and the Sun.)
+- When the relative longitude is 0 degrees and the other planet orbits farther from the Sun, this is known as *opposition*. Opposition is when the planet is closest to the Earth, and also when it is visible for most of the night, so it is considered the best time to observe the planet.
+- When the relative longitude is 180 degrees, it means the other planet is on the opposite side of the Sun from the Earth. This is called *superior conjunction*. Like inferior conjunction, the planet is very difficult to see from the Earth. Superior conjunction is possible for any planet other than the Earth.
+
+
+
+
+**Returns:**  If successful, the `status` field in the returned structure will contain `ASTRO_SUCCESS` and `time` will hold the date and time of the relative longitude event. Otherwise `status` will hold some other value that indicates an error condition. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_body_t`](#astro_body_t) | `body` |  A planet other than the Earth. If `body` is not a planet other than the Earth, an error occurs. | 
+| `double` | `targetRelLon` |  The desired relative longitude, expressed in degrees. Must be in the range [0, 360). | 
+| [`astro_time_t`](#astro_time_t) | `startTime` |  The date and time at which to begin the search. | 
+
+
 
 
 ---
 
 <a name="Astronomy_SearchRiseSet"></a>
-### Astronomy_SearchRiseSet(body, observer, direction, dateStart, limitDays) &#8658; [`astro_search_result_t`](#astro_search_result_t)
+### Astronomy_SearchRiseSet(body, observer, direction, startTime, limitDays) &#8658; [`astro_search_result_t`](#astro_search_result_t)
 
 
 
 ---
 
 <a name="Astronomy_SearchSunLongitude"></a>
-### Astronomy_SearchSunLongitude(targetLon, dateStart, limitDays) &#8658; [`astro_search_result_t`](#astro_search_result_t)
+### Astronomy_SearchSunLongitude(targetLon, startTime, limitDays) &#8658; [`astro_search_result_t`](#astro_search_result_t)
 
 **Searches for the time when the Sun reaches an apparent ecliptic longitude as seen from the Earth.** 
 
@@ -758,7 +788,7 @@ This function finds the moment in time, if any exists in the given time window, 
 
 This function can be used to determine equinoxes and solstices. However, it is usually more convenient and efficient to call [`Astronomy_Seasons`](#Astronomy_Seasons) to calculate all equinoxes and solstices for a given calendar year.
 
-The function searches the window of time specified by `dateStart` and `dateStart+limitDays`. The search will return an error if the Sun never reaches the longitude `targetLon` or if the window is so large that the longitude ranges more than 180 degrees within it. It is recommended to keep the window smaller than 10 days when possible.
+The function searches the window of time specified by `startTime` and `startTime+limitDays`. The search will return an error if the Sun never reaches the longitude `targetLon` or if the window is so large that the longitude ranges more than 180 degrees within it. It is recommended to keep the window smaller than 10 days when possible.
 
 
 
@@ -769,8 +799,8 @@ The function searches the window of time specified by `dateStart` and `dateStart
 | Type | Parameter | Description |
 | --- | --- | --- |
 | `double` | `targetLon` |  The desired ecliptic longitude in degrees, relative to the true equinox of date. This may be any value in the range [0, 360), although certain values have conventional meanings: 0 = March equinox, 90 = June solstice, 180 = September equinox, 270 = December solstice. | 
-| [`astro_time_t`](#astro_time_t) | `dateStart` |  The date and time for starting the search for the desired longitude event. | 
-| `double` | `limitDays` |  The real-valued number of days, which when added to `dateStart`, limits the range of time over which the search looks. It is recommended to keep this value between 1 and 10 days. See remarks above for more details. | 
+| [`astro_time_t`](#astro_time_t) | `startTime` |  The date and time for starting the search for the desired longitude event. | 
+| `double` | `limitDays` |  The real-valued number of days, which when added to `startTime`, limits the range of time over which the search looks. It is recommended to keep this value between 1 and 10 days. See remarks above for more details. | 
 
 
 
