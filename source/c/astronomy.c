@@ -4478,6 +4478,54 @@ static astro_func_result_t peak_altitude(void *context, astro_time_t time)
     return result;
 }
 
+/**
+ * @brief
+ *      Searches for the next time a celestial body rises or sets as seen by an observer on the Earth.
+ *
+ * This function finds the next rise or set time of the Sun, Moon, or planet other than the Earth.
+ * Rise time is when the body first starts to be visible above the horizon.
+ * For example, sunrise is the moment that the top of the Sun first appears to peek above the horizon.
+ * Set time is the moment when the body appears to vanish below the horizon.
+ *
+ * This function corrects for typical atmospheric refraction, which causes celestial
+ * bodies to appear higher above the horizon than they would if the Earth had no atmosphere.
+ * It also adjusts for the apparent angular radius of the observed body (significant only for the Sun and Moon).
+ *
+ * Note that rise or set may not occur in every 24 hour period.
+ * For example, near the Earth's poles, there are long periods of time where
+ * the Sun stays below the horizon, never rising.
+ * Also, it is possible for the Moon to rise just before midnight but not set during the subsequent 24-hour day.
+ * This is because the Moon sets nearly an hour later each day due to orbiting the Earth a
+ * significant amount during each rotation of the Earth.
+ * Therefore callers must not assume that the function will always succeed.
+ *
+ * @param body
+ *      The Sun, Moon, or any planet other than the Earth.
+ *
+ * @param observer
+ *      The location where observation takes places.
+ *      You can create an observer structure by calling #Astronomy_MakeObserver.
+ *
+ * @param direction
+ *      Either `DIRECTION_RISE` to find a rise time or `DIRECTION_SET` to find a set time.
+ *
+ * @param startTime
+ *      The date and time at which to start the search.
+ *
+ * @param limitDays
+ *      Limits how many days to search for a rise or set time.
+ *      To limit a rise or set time to the same day, you can use a value of 1 day.
+ *      In cases where you want to find the next rise or set time no matter how far
+ *      in the future (for example, for an observer near the south pole), you can
+ *      pass in a larger value like 365.
+ *
+ * @return
+ *      On success, the `status` field in the returned structure contains `ASTRO_SUCCESS`
+ *      and the `time` field contains the date and time of the rise or set time as requested.
+ *      If the `status` field contains `ASTRO_SEARCH_FAILURE`, it means the rise or set
+ *      event does not occur within `limitDays` days of `startTime`. This is a normal condition,
+ *      not an error. Any other value of `status` indicates an error of some kind.
+ */
 astro_search_result_t Astronomy_SearchRiseSet(
     astro_body_t body,
     astro_observer_t observer,
@@ -4490,6 +4538,9 @@ astro_search_result_t Astronomy_SearchRiseSet(
     astro_time_t time_start, time_before;
     astro_func_result_t alt_before, alt_after;
     astro_hour_angle_t evt_before, evt_after;
+
+    if (body == BODY_EARTH)
+        return SearchError(ASTRO_EARTH_NOT_ALLOWED);
 
     switch (direction)
     {
@@ -4526,7 +4577,6 @@ astro_search_result_t Astronomy_SearchRiseSet(
         If the body is above the horizon, we search for the next bottom and use it
         as the lower bound and the next culmination after that bottom as the upper bound.
         The same logic applies for finding set times, only we swap the hour angles.
-        The peak_altitude() function already considers the 'direction' parameter.
     */
 
     time_start = startTime;

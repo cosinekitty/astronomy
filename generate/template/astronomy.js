@@ -2687,6 +2687,9 @@ Astronomy.SearchRiseSet = function(body, observer, direction, dateStart, limitDa
         return direction * alt;
     }
 
+    if (body === 'Earth')
+        throw 'Cannot find rise or set time of the Earth.';
+
     // See if the body is currently above/below the horizon.
     // If we are looking for next rise time and the body is below the horizon,
     // we use the current time as the lower time bound and the next culmination
