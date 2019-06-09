@@ -581,6 +581,25 @@ This function determines the phase of the Moon using its apparent ecliptic longi
 <a name="Astronomy_NextLunarApsis"></a>
 ### Astronomy_NextLunarApsis(apsis) &#8658; [`astro_apsis_t`](#astro_apsis_t)
 
+**Finds the next lunar perigee or apogee event in a series.** 
+
+
+
+This function requires an [`astro_apsis_t`](#astro_apsis_t) value obtained from a call to [`Astronomy_SearchLunarApsis`](#Astronomy_SearchLunarApsis) or `Astronomy_NextLunarApsis`. Given an apogee event, this function finds the next perigee event, and vice versa.
+
+See [`Astronomy_SearchLunarApsis`](#Astronomy_SearchLunarApsis) for more details.
+
+
+
+**Returns:**  Same as the return value for [`Astronomy_SearchLunarApsis`](#Astronomy_SearchLunarApsis). 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_apsis_t`](#astro_apsis_t) | `apsis` |  An apsis event obtained from a call to [`Astronomy_SearchLunarApsis`](#Astronomy_SearchLunarApsis) or `Astronomy_NextLunarApsis`. See [`Astronomy_SearchLunarApsis`](#Astronomy_SearchLunarApsis) for more details. | 
+
+
 
 
 ---
@@ -684,6 +703,27 @@ On success, the function reports the date and time, along with the horizontal co
 
 <a name="Astronomy_SearchLunarApsis"></a>
 ### Astronomy_SearchLunarApsis(startTime) &#8658; [`astro_apsis_t`](#astro_apsis_t)
+
+**Finds the date and time of the Moon's closest distance (perigee) or farthest distance (apogee) with respect to the Earth.** 
+
+
+
+Given a date and time to start the search in `startTime`, this function finds the next date and time that the center of the Moon reaches the closest or farthest point in its orbit with respect to the center of the Earth, whichever comes first after `startTime`.
+
+The closest point is called *perigee* and the farthest point is called *apogee*. The word *apsis* refers to either event.
+
+To iterate through consecutive alternating perigee and apogee events, call `Astronomy_SearchLunarApsis` once, then use the return value to call [`Astronomy_NextLunarApsis`](#Astronomy_NextLunarApsis). After that, keep feeding the previous return value from `Astronomy_NextLunarApsis` into another call of `Astronomy_NextLunarApsis` as many times as desired.
+
+
+
+**Returns:**  If successful, the `status` field in the returned structure holds `ASTRO_SUCCESS`, `time` holds the date and time of the next lunar apsis, `kind` holds either `APSIS_PERICENTER` for perigee or `APSIS_APOCENTER` for apogee, and the distance values `dist_au` (astronomical units) and `dist_km` (kilometers) are valid. If the function fails, `status` holds some value other than `ASTRO_SUCCESS` that indicates what went wrong, and the other structure fields are invalid. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_time_t`](#astro_time_t) | `startTime` |  The date and time at which to start searching for the next perigee or apogee. | 
+
 
 
 

@@ -4012,6 +4012,35 @@ static astro_func_result_t distance_slope(void *context, astro_time_t time)
     return result;
 }
 
+/**
+ * @brief
+ *      Finds the date and time of the Moon's closest distance (perigee)
+ *      or farthest distance (apogee) with respect to the Earth.
+ *
+ * Given a date and time to start the search in `startTime`, this function finds the
+ * next date and time that the center of the Moon reaches the closest or farthest point
+ * in its orbit with respect to the center of the Earth, whichever comes first
+ * after `startTime`.
+ *
+ * The closest point is called *perigee* and the farthest point is called *apogee*.
+ * The word *apsis* refers to either event.
+ *
+ * To iterate through consecutive alternating perigee and apogee events, call `Astronomy_SearchLunarApsis`
+ * once, then use the return value to call #Astronomy_NextLunarApsis. After that,
+ * keep feeding the previous return value from `Astronomy_NextLunarApsis` into another
+ * call of `Astronomy_NextLunarApsis` as many times as desired.
+ *
+ * @param startTime
+ *      The date and time at which to start searching for the next perigee or apogee.
+ *
+ * @return
+ *      If successful, the `status` field in the returned structure holds `ASTRO_SUCCESS`,
+ *      `time` holds the date and time of the next lunar apsis, `kind` holds either
+ *      `APSIS_PERICENTER` for perigee or `APSIS_APOCENTER` for apogee, and the distance
+ *      values `dist_au` (astronomical units) and `dist_km` (kilometers) are valid.
+ *      If the function fails, `status` holds some value other than `ASTRO_SUCCESS` that
+ *      indicates what went wrong, and the other structure fields are invalid.
+ */
 astro_apsis_t Astronomy_SearchLunarApsis(astro_time_t startTime)
 {
     astro_time_t t1, t2;
@@ -4089,6 +4118,23 @@ astro_apsis_t Astronomy_SearchLunarApsis(astro_time_t startTime)
     return ApsisError(ASTRO_INTERNAL_ERROR);
 }
 
+/**
+ * @brief
+ *      Finds the next lunar perigee or apogee event in a series.
+ *
+ * This function requires an #astro_apsis_t value obtained from a call
+ * to #Astronomy_SearchLunarApsis or `Astronomy_NextLunarApsis`. Given
+ * an apogee event, this function finds the next perigee event, and vice versa.
+ *
+ * See #Astronomy_SearchLunarApsis for more details.
+ *
+ * @param apsis
+ *      An apsis event obtained from a call to #Astronomy_SearchLunarApsis or `Astronomy_NextLunarApsis`.
+ *      See #Astronomy_SearchLunarApsis for more details.
+ *
+ * @return
+ *      Same as the return value for #Astronomy_SearchLunarApsis.
+ */
 astro_apsis_t Astronomy_NextLunarApsis(astro_apsis_t apsis)
 {
     static const double skip = 11.0;    /* number of days to skip to start looking for next apsis event */
