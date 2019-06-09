@@ -1091,7 +1091,7 @@ Calculates the non-negative length of the given vector. The length is expressed 
 ---
 
 <a name="astro_aberration_t"></a>
-#### `astro_aberration_t`
+### `astro_aberration_t`
 
 **Aberration calculation options.** 
 
@@ -1113,7 +1113,7 @@ Aberration correction is useful to improve accuracy of coordinates of apparent l
 ---
 
 <a name="astro_apsis_kind_t"></a>
-#### `astro_apsis_kind_t`
+### `astro_apsis_kind_t`
 
 **The type of apsis: pericenter (closest approach) or apocenter (farthest distance).** 
 
@@ -1130,7 +1130,7 @@ Aberration correction is useful to improve accuracy of coordinates of apparent l
 ---
 
 <a name="astro_body_t"></a>
-#### `astro_body_t`
+### `astro_body_t`
 
 **A celestial body.** 
 
@@ -1156,7 +1156,7 @@ Aberration correction is useful to improve accuracy of coordinates of apparent l
 ---
 
 <a name="astro_direction_t"></a>
-#### `astro_direction_t`
+### `astro_direction_t`
 
 **Selects whether to search for a rise time or a set time.** 
 
@@ -1174,7 +1174,7 @@ The [`Astronomy_SearchRiseSet`](#Astronomy_SearchRiseSet) function finds the ris
 ---
 
 <a name="astro_equator_date_t"></a>
-#### `astro_equator_date_t`
+### `astro_equator_date_t`
 
 **Selects the date on which the Earth's equator to be used for representing equatorial coordinates.** 
 
@@ -1196,7 +1196,7 @@ For some other purposes, it is more helpful to represent coordinates using the E
 ---
 
 <a name="astro_refraction_t"></a>
-#### `astro_refraction_t`
+### `astro_refraction_t`
 
 **Selects whether to correct for atmospheric refraction, and if so, how.** 
 
@@ -1213,7 +1213,7 @@ For some other purposes, it is more helpful to represent coordinates using the E
 ---
 
 <a name="astro_status_t"></a>
-#### `astro_status_t`
+### `astro_status_t`
 
 **Indicates success/failure of an Astronomy Engine function call.** 
 
@@ -1239,7 +1239,7 @@ For some other purposes, it is more helpful to represent coordinates using the E
 ---
 
 <a name="astro_visibility_t"></a>
-#### `astro_visibility_t`
+### `astro_visibility_t`
 
 **Indicates whether a body (especially Mercury or Venus) is best seen in the morning or evening.** 
 
@@ -1259,7 +1259,7 @@ For some other purposes, it is more helpful to represent coordinates using the E
 ---
 
 <a name="astro_angle_result_t"></a>
-#### `astro_angle_result_t`
+### `astro_angle_result_t`
 
 **An angular value expressed in degrees.** 
 
@@ -1274,7 +1274,7 @@ For some other purposes, it is more helpful to represent coordinates using the E
 ---
 
 <a name="astro_apsis_t"></a>
-#### `astro_apsis_t`
+### `astro_apsis_t`
 
 **An apsis event: pericenter (closest approach) or apocenter (farthest distance).** 
 
@@ -1298,7 +1298,7 @@ This data structure is returned by [`Astronomy_SearchLunarApsis`](#Astronomy_Sea
 ---
 
 <a name="astro_ecliptic_t"></a>
-#### `astro_ecliptic_t`
+### `astro_ecliptic_t`
 
 **Ecliptic angular and Cartesian coordinates.** 
 
@@ -1319,7 +1319,7 @@ Coordinates of a celestial body as seen from the center of the Sun (heliocentric
 ---
 
 <a name="astro_elongation_t"></a>
-#### `astro_elongation_t`
+### `astro_elongation_t`
 
 **Contains information about the visibility of a celestial body at a given date and time. See [`Astronomy_Elongation`](#Astronomy_Elongation) for more detailed information about the members of this structure. See also [`Astronomy_SearchMaxElongation`](#Astronomy_SearchMaxElongation) for how to search for maximum elongation events.** 
 
@@ -1337,7 +1337,7 @@ Coordinates of a celestial body as seen from the center of the Sun (heliocentric
 ---
 
 <a name="astro_equatorial_t"></a>
-#### `astro_equatorial_t`
+### `astro_equatorial_t`
 
 **Equatorial angular coordinates.** 
 
@@ -1356,7 +1356,7 @@ Coordinates of a celestial body as seen from the Earth (geocentric or topocentri
 ---
 
 <a name="astro_func_result_t"></a>
-#### `astro_func_result_t`
+### `astro_func_result_t`
 
 **A real value returned by a function whose ascending root is to be found.** 
 
@@ -1373,7 +1373,7 @@ When calling [`Astronomy_Search`](#Astronomy_Search), the caller must pass in a 
 ---
 
 <a name="astro_horizon_t"></a>
-#### `astro_horizon_t`
+### `astro_horizon_t`
 
 **Coordinates of a celestial body as seen by a topocentric observer.** 
 
@@ -1392,7 +1392,7 @@ Contains horizontal and equatorial coordinates seen by an observer on or near th
 ---
 
 <a name="astro_hour_angle_t"></a>
-#### `astro_hour_angle_t`
+### `astro_hour_angle_t`
 
 **Information about a celestial body crossing a specific hour angle.** 
 
@@ -1410,7 +1410,7 @@ Returned by the function [`Astronomy_SearchHourAngle`](#Astronomy_SearchHourAngl
 ---
 
 <a name="astro_illum_t"></a>
-#### `astro_illum_t`
+### `astro_illum_t`
 
 **Information about the brightness and illuminated shape of a celestial body.** 
 
@@ -1431,7 +1431,7 @@ Returned by the functions [`Astronomy_Illumination`](#Astronomy_Illumination) an
 ---
 
 <a name="astro_moon_quarter_t"></a>
-#### `astro_moon_quarter_t`
+### `astro_moon_quarter_t`
 
 **A lunar quarter event (new moon, first quarter, full moon, or third quarter) along with its date and time.** 
 
@@ -1447,7 +1447,7 @@ Returned by the functions [`Astronomy_Illumination`](#Astronomy_Illumination) an
 ---
 
 <a name="astro_observer_t"></a>
-#### `astro_observer_t`
+### `astro_observer_t`
 
 **The location of an observer on (or near) the surface of the Earth.** 
 
@@ -1467,7 +1467,7 @@ You can create this structure directly, or you can call the convenience function
 ---
 
 <a name="astro_search_result_t"></a>
-#### `astro_search_result_t`
+### `astro_search_result_t`
 
 **The result of a search for an astronomical event.** 
 
@@ -1482,7 +1482,7 @@ You can create this structure directly, or you can call the convenience function
 ---
 
 <a name="astro_seasons_t"></a>
-#### `astro_seasons_t`
+### `astro_seasons_t`
 
 **The dates and times of changes of season for a given calendar year. Call [`Astronomy_Seasons`](#Astronomy_Seasons) to calculate this data structure for a given year.** 
 
@@ -1500,7 +1500,7 @@ You can create this structure directly, or you can call the convenience function
 ---
 
 <a name="astro_time_t"></a>
-#### `astro_time_t`
+### `astro_time_t`
 
 **A date and time used for astronomical calculations.** 
 
@@ -1527,7 +1527,7 @@ In cases where [`astro_time_t`](#astro_time_t) is included in a structure return
 ---
 
 <a name="astro_utc_t"></a>
-#### `astro_utc_t`
+### `astro_utc_t`
 
 **A calendar date and time expressed in UTC.** 
 
@@ -1546,7 +1546,7 @@ In cases where [`astro_time_t`](#astro_time_t) is included in a structure return
 ---
 
 <a name="astro_vector_t"></a>
-#### `astro_vector_t`
+### `astro_vector_t`
 
 **A 3D Cartesian vector whose components are expressed in Astronomical Units (AU).** 
 
@@ -1568,7 +1568,7 @@ In cases where [`astro_time_t`](#astro_time_t) is included in a structure return
 ---
 
 <a name="astro_search_func_t"></a>
-#### `astro_search_func_t`
+### `astro_search_func_t`
 
 `typedef astro_func_result_t(*  astro_search_func_t) (void *context, astro_time_t time);`
 

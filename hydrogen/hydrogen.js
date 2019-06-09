@@ -240,7 +240,6 @@ class Define extends Item {
     constructor(m) {
         super(m);
         this.init = Find(m, 'initializer');
-        //console.log(`    #define ${Item.Flat(this.name)} ${Item.Flat(this.init)}  // ${Item.Flat(this.detail)} // ${this.id}`);
     }
 
     Markdown() {
@@ -260,13 +259,12 @@ class EnumInfo extends Item {
                 break;
             }
         }
-        //console.log(`    enum ${Item.Flat(this.name)} : ${this.enumValueList.length} values.`);
     }
 
     Markdown() {
         let name = Item.Flat(this.name);
         let md = this.MarkdownPrefix();
-        md += '#### `' + name + '`\n\n';
+        md += '### `' + name + '`\n\n';
         md += this.MdDescription(this.brief, this.detail, true);
         if (this.enumValueList instanceof Array && this.enumValueList.length > 0) {
             md += '\n\n| Enum Value | Description |\n';
@@ -288,7 +286,6 @@ class TypeDef extends Item {
     constructor(m) {
         super(m);
         this.definition = Find(m, 'definition');
-        //console.log('    typedef ' + Item.Flat(this.name));
     }
 
     Markdown() {
@@ -296,7 +293,7 @@ class TypeDef extends Item {
         let defn = Item.Flat(this.definition);
 
         let md = this.MarkdownPrefix();
-        md += '#### `' + name + '`\n\n';
+        md += '### `' + name + '`\n\n';
         md += '`' + defn + ';`\n\n';
         md += this.MdDescription(this.brief, this.detail, true);
         return md;
@@ -390,7 +387,7 @@ class StructInfo extends Item {
     Markdown() {
         let name = Item.Flat(this.name);
         let md = this.MarkdownPrefix();
-        md += '#### `' + name + '`\n\n';
+        md += '### `' + name + '`\n\n';
         md += this.MdDescription(this.brief, this.detail, true);
         md += '\n\n';
         md += '| Type | Member | Description |\n';
