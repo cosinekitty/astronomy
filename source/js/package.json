@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "Astronomy calculation for Sun, Moon, and planets.",
   "main": "astronomy.js",
+  "files": [
+    "astronomy.js"
+  ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
