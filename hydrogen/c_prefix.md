@@ -41,7 +41,6 @@ To get started quickly, here are some [examples](../../demo/c/).
 | [BodyCode](#Astronomy_BodyCode) | Converts the English name of a celestial body to its equivalent #astro_body_t enumeration value. |
 | [BodyName](#Astronomy_BodyName) | Converts an #astro_body_t enumeration value to its equivalent English name as a string. |
 
-
 ### Position of Sun, Moon, and planets
 
 | Function | Description |
@@ -49,8 +48,10 @@ To get started quickly, here are some [examples](../../demo/c/).
 | [HelioVector](#Astronomy_HelioVector) | Calculates vector with respect to the center of the Sun. |
 | [GeoVector](#Astronomy_GeoVector)     | Calculates vector with respect to the center of the Earth. |
 | [Equator](#Astronomy_Equator)         | Calculates right ascension and declination. |
-| [Ecliptic](#Astronomy_Ecliptic)       | Calculates ecliptic latitude, longitude, and Cartesian coordinates. |
+| [Ecliptic](#Astronomy_Ecliptic)       | Converts J2000 equatorial coordinates to J2000 ecliptic coordinates. |
+| [EclipticLongitude](#Astronomy_EclipticLongitude) | Calculates ecliptic longitude of a body in the J2000 system. |
 | [Horizon](#Astronomy_Horizon)         | Calculates horizontal coordinates (azimuth, altitude) for a given observer on the Earth. |
+| [LongitudeFromSun](#Astronomy_LongitudeFromSun) | Calculates a body's apparent ecliptic longitude difference from the Sun, as seen by an observer on the Earth. |
 
 ### Rise, set, and culmination times
 
@@ -64,15 +65,16 @@ To get started quickly, here are some [examples](../../demo/c/).
 | Function | Description |
 | -------- | ----------- |
 | [MoonPhase](#Astronomy_MoonPhase) | Determines the Moon's phase expressed as an ecliptic longitude. |
-| [SearchMoonQuarter](#Astronomy_SearchMoonQuarter) | Find the first quarter moon phase after a given date and time. |
-| [NextMoonQuarter](#Astronomy_NextMoonQuarter) | Find the next quarter moon phase after a previous one that has been found. |
+| [SearchMoonPhase](#Astronomy_SearchMoonPhase) | Finds the next instance of the Moon reaching a specific ecliptic longitude separation from the Sun. |
+| [SearchMoonQuarter](#Astronomy_SearchMoonQuarter) | Finds the first quarter moon phase after a given date and time. |
+| [NextMoonQuarter](#Astronomy_NextMoonQuarter) | Finds the next quarter moon phase after a previous one that has been found. |
 
 ### Lunar perigee and apogee
 
 | Function | Description |
 | -------- | ----------- |
 | [SearchLunarApsis](#Astronomy_SearchLunarApsis) | Finds the next perigee or apogee of the Moon after a specified date. |
-| [NextLunarApsis](#Astronomy_NextLunarApsis) | Given an already-found apsis, find the next perigee or apogee of the Moon. |
+| [NextLunarApsis](#Astronomy_NextLunarApsis) | Given an already-found apsis, finds the next perigee or apogee of the Moon. |
 
 ### Visual magnitude and elongation
 
@@ -88,13 +90,15 @@ To get started quickly, here are some [examples](../../demo/c/).
 
 | Function | Description |
 | -------- | ----------- |
-| [SearchRelativeLongitude](#Astronomy_SearchRelativeLongitude) | Find oppositions and conjunctions of planets. |
+| [SearchRelativeLongitude](#Astronomy_SearchRelativeLongitude) | Finds oppositions and conjunctions of planets. |
 
-### Equinoxes and solstices
+### Equinoxes, solstices, and apparent solar motion
 
 | Function | Description |
 | -------- | ----------- |
+| [SearchSunLongitude](#Astronomy_SearchSunLongitude) | Finds the next time the Sun reaches a specified apparent ecliptic longitude in the *true equator of date* system. |
 | [Seasons](#Astronomy_Seasons) | Finds the equinoxes and solstices for a given calendar year. |
+| [SunPosition](#Astronomy_SunPosition) | Calculates the Sun's apparent ecliptic coordinates as seen from the Earth. |
 
 ---
 
