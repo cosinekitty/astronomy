@@ -3680,6 +3680,39 @@ static astro_status_t VisualMagnitude(
     return ASTRO_SUCCESS;
 }
 
+/**
+ * @brief
+ *      Finds visual magnitude, phase angle, and other illumination information about a celestial body.
+ *
+ * This function calculates information about how bright a celestial body appears from the Earth,
+ * reported as visual magnitude, which is a smaller (or even negative) number for brighter objects
+ * and a larger number for dimmer objects.
+ *
+ * For bodies other than the Sun, it reports a phase angle, which is the angle in degrees between
+ * the Sun and the Earth, as seen from the center of the body. Phase angle indicates what fraction
+ * of the body appears illuminated as seen from the Earth. For example, when the phase angle is
+ * near zero, it means the body appears "full" as seen from the Earth.  A phase angle approaching
+ * 180 degrees means the body appears as a thin crescent as seen from the Earth.  A phase angle
+ * of 90 degrees means the body appears "half full".
+ * For the Sun, the phase angle is always reported as 0; the Sun emits light rather than reflecting it,
+ * so it doesn't have a phase angle.
+ *
+ * When the body is Saturn, the returned structure contains a field `ring_tilt` that holds
+ * the tilt angle in degrees of Saturn's rings as seen from the Earth. A value of 0 means
+ * the rings appear edge-on, and are thus nearly invisible from the Earth. The `ring_tilt` holds
+ * 0 for all bodies other than Saturn.
+ *
+ * @param body
+ *      The Sun, Moon, or any planet other than the Earth.
+ *
+ * @param time
+ *      The date and time of the observation.
+ *
+ * @return
+ *      On success, the `status` field of the return structure holds `ASTRO_SUCCESS`
+ *      and the other structure fields are valid.
+ *      Any other value indicates an error, in which case the remaining structure fields are not valid.
+ */
 astro_illum_t Astronomy_Illumination(astro_body_t body, astro_time_t time)
 {
     astro_vector_t earth;   /* vector from Sun to Earth */
@@ -3816,6 +3849,31 @@ static astro_func_result_t mag_slope(void *context, astro_time_t time)
     return result;
 }
 
+/**
+ * @brief
+ *      Searches for the date and time Venus will next appear brightest as seen from the Earth.
+ *
+ * This function searches for the date and time Venus appears brightest as seen from the Earth.
+ * Currently only Venus is supported for the `body` parameter, though this could change in the future.
+ * Mercury's peak magnitude occurs at superior conjunction, when it is virtually impossible to see from the Earth,
+ * so peak magnitude events have little practical value for that planet.
+ * Planets other than Venus and Mercury reach peak magnitude at opposition, which can
+ * be found using #Astronomy_SearchRelativeLongitude.
+ * The Moon reaches peak magnitude at full moon, which can be found using
+ * #Astronomy_SearchMoonQuarter or #Astronomy_SearchMoonPhase.
+ * The Sun reaches peak magnitude at perihelion, which occurs each year in January.
+ * However, the difference is minor and has little practical value.
+ *
+ * @param body
+ *      Currently only `BODY_VENUS` is allowed. Any other value results in the error `ASTRO_INVALID_BODY`.
+ *      See remarks above for more details.
+ *
+ * @param startTime
+ *      The date and time to start searching for the next peak magnitude event.
+ *
+ * @return
+ *      See documentation about the return value from #Astronomy_Illumination.
+ */
 astro_illum_t Astronomy_SearchPeakMagnitude(astro_body_t body, astro_time_t startTime)
 {
     /* s1 and s2 are relative longitudes within which peak magnitude of Venus can occur. */
