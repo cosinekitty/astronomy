@@ -15,15 +15,15 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\demo\c\moonphase.c">
+    <ClCompile Include="..\..\..\demo\c\moonphase.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\source\c\astronomy.c">
+    <ClCompile Include="..\..\..\source\c\astronomy.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\source\c\astronomy.h">
+    <ClInclude Include="..\..\..\source\c\astronomy.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

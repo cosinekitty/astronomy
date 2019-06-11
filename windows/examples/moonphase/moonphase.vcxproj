@@ -115,11 +115,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\demo\c\moonphase.c" />
-    <ClCompile Include="..\..\source\c\astronomy.c" />
+    <ClCompile Include="..\..\..\demo\c\moonphase.c" />
+    <ClCompile Include="..\..\..\source\c\astronomy.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\source\c\astronomy.h" />
+    <ClInclude Include="..\..\..\source\c\astronomy.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
