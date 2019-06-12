@@ -3,6 +3,9 @@
 
     Example C program for Astronomy Engine:
     https://cosinekitty.github.io/astronomy/
+
+    This program calculates the Moon's phase for the current date and time.
+    It also finds the dates and times of the next 10 quarter phase changes.
 */
 
 #include <stdio.h>

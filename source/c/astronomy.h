@@ -193,6 +193,9 @@ astro_body_t;
 #define MIN_BODY    BODY_MERCURY    /**< Minimum valid astro_body_t value; useful for iteration. */
 #define MAX_BODY    BODY_MOON       /**< Maximum valid astro_body_t value; useful for iteration. */
 
+#define MIN_YEAR    1700    /**< Minimum year value supported by Astronomy Engine. */
+#define MAX_YEAR    2200    /**< Maximum year value supported by Astronomy Engine. */
+
 /**
  * @brief The location of an observer on (or near) the surface of the Earth.
  *

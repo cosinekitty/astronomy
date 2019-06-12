@@ -206,7 +206,6 @@
 
                     for (let body of Astronomy.Bodies) {
                         if (body !== 'Earth') {
-                            let gv = Astronomy.GeoVector(body, date);
                             let equ_2000 = Astronomy.Equator(body, date, observer, false, true);
                             let equ_ofdate = Astronomy.Equator(body, date, observer, true, true);
                             let hor = Astronomy.Horizon(date, observer, equ_ofdate.ra, equ_ofdate.dec, 'normal');
