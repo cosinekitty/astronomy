@@ -5,5 +5,5 @@ Fail()
     exit 1
 }
 
-gcc -Wall -Werror -o moonphase -I../../source/c ../../source/c/astronomy.c moonphase.c -lm || Fail "Error building moonphase.c"
+gcc -Wall -Werror -o moonphase -I../../source/c ../../source/c/astronomy.c astro_demo_common.c moonphase.c -lm || Fail "Error building moonphase.c"
 gcc -Wall -Werror -o positions -I../../source/c ../../source/c/astronomy.c astro_demo_common.c positions.c -lm || Fail "Error building positions.c"

@@ -4,8 +4,12 @@
     Example Node.js program for Astronomy Engine:
     https://cosinekitty.github.io/astronomy/
 
+    This program calculates the Moon's phase for a given date and time,
+    or the computer's current date and time if none is given.
+    It also finds the dates and times of the subsequent 10 quarter phase changes.
+
     To execute, run the command:
-    node moonphase
+    node moonphase [date]
 */
 
 const Astronomy = require('../../source/js/astronomy.js');      // adjust path as needed for your system
@@ -19,17 +23,18 @@ function Pad(s, w) {
 }
 
 function FormatDate(date) {
-    var year = Pad(date.getFullYear(), 4);
-    var month = Pad(1 + date.getMonth(), 2);
-    var day = Pad(date.getDate(), 2);
-    var hour = Pad(date.getHours(), 2);
-    var minute = Pad(date.getMinutes(), 2);
-    var second = Pad(date.getSeconds(), 2);
-    return `${year}-${month}-${day} ${hour}:${minute}:${second}`;
+    var year = Pad(date.getUTCFullYear(), 4);
+    var month = Pad(1 + date.getUTCMonth(), 2);
+    var day = Pad(date.getUTCDate(), 2);
+    var hour = Pad(date.getUTCHours(), 2);
+    var minute = Pad(date.getUTCMinutes(), 2);
+    var svalue = date.getUTCSeconds() + (date.getUTCMilliseconds() / 1000);
+    var second = Pad(Math.round(svalue), 2);
+    return `${year}-${month}-${day} ${hour}:${minute}:${second} UTC`;
 }
 
 function Demo() {
-    const now = new Date();
+    const date = (process.argv.length === 3) ? new Date(process.argv[2]) : new Date();
 
     // Calculate the Moon's current phase angle, 
     // which ranges from 0 to 360 degrees.
@@ -37,8 +42,8 @@ function Demo() {
     //  90 degrees = first quarter,
     // 180 degrees = full moon,
     // 270 degrees = third quarter.
-    const phase = Astronomy.MoonPhase(now);     // https://cosinekitty.github.io/astronomy/source/js/#Astronomy.MoonPhase
-    console.log(`${FormatDate(now)} : Moon's phase angle = ${phase.toFixed(6)} degrees.`);        
+    const phase = Astronomy.MoonPhase(date);     // https://cosinekitty.github.io/astronomy/source/js/#Astronomy.MoonPhase
+    console.log(`${FormatDate(date)} : Moon's phase angle = ${phase.toFixed(6)} degrees.`);        
     console.log('');
 
     // Now we predict when the next 10 lunar quarter phases will happen.
@@ -51,7 +56,7 @@ function Demo() {
             // from the current date and time to find the next quarter
             // phase, whatever it might be.
             // https://cosinekitty.github.io/astronomy/source/js/#Astronomy.SearchMoonQuarter
-            mq = Astronomy.SearchMoonQuarter(now);
+            mq = Astronomy.SearchMoonQuarter(date);
 
             // The object now stored in 'mq' is documented here:
             // https://cosinekitty.github.io/astronomy/source/js/#Astronomy.MoonQuarter
@@ -65,3 +70,4 @@ function Demo() {
 }
 
 Demo();
+process.exit(0);

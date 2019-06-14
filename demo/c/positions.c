@@ -12,7 +12,6 @@
 */
 
 #include <stdio.h>
-#include "astronomy.h"
 #include "astro_demo_common.h"
 
 int main(int argc, const char *argv[])

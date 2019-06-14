@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "astronomy.h"
+#include "astro_demo_common.h"
 
 int ParseArgs(int argc, const char *argv[], astro_observer_t *observer, astro_time_t *time)
 {
@@ -26,28 +26,31 @@ int ParseArgs(int argc, const char *argv[], astro_observer_t *observer, astro_ti
         if (argc == 4)
         {
             /* Time is present on command line, so use it. */
-
-            astro_utc_t utc;
-            int nscanned = sscanf(argv[3], "%d-%d-%dT%d:%d:%lfZ",
-                &utc.year, &utc.month, &utc.day,
-                &utc.hour, &utc.minute, &utc.second);
-
-            if (nscanned != 6)
-            {
-                fprintf(stderr, "ERROR: Invalid date/time format in '%s'\n", argv[3]);
-                return 1;
-            }
-
-            *time = Astronomy_TimeFromUtc(utc);
+            return ParseTime(argv[3], time);
         }
-        else
-        {
-            /* Time is absent on command line, so use current time. */
-            *time = Astronomy_CurrentTime();
-        }
+
+        /* Time is absent on command line, so use current time. */
+        *time = Astronomy_CurrentTime();
         return 0;
     }
 
     fprintf(stderr, "USAGE: %s latitude longitude [yyyy-mm-ddThh:mm:ssZ]\n", argv[0]);
     return 1;
+}
+
+int ParseTime(const char *text, astro_time_t *time)
+{
+    astro_utc_t utc;
+    int nscanned = sscanf(text, "%d-%d-%dT%d:%d:%lfZ",
+        &utc.year, &utc.month, &utc.day,
+        &utc.hour, &utc.minute, &utc.second);
+
+    if (nscanned != 6)
+    {
+        fprintf(stderr, "ERROR: Invalid date/time format in '%s'\n", text);
+        return 1;
+    }
+
+    *time = Astronomy_TimeFromUtc(utc);
+    return 0;
 }

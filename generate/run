@@ -86,18 +86,15 @@ if [[ "${FASTMODE}" == "false" ]]; then
     ./generate planets || Fail "Could not generate planet models."
 fi
 
+./unit_test_js || exit $?
+./unit_test_c || exit $?
+
 echo ""
-echo "Building example programs."
+echo "Testing example programs."
 cd ../demo/c || Fail "Cannot change directory to ../demo/c"
-rm -f moonphase positions
-./build || Fail "Error building example programs."
-./moonphase || Fail "Error running moonphase.c program."
 test/test || Fail "Error testing C examples"
 cd ../nodejs || Fail "Cannot change directory to ../nodejs"
 test/test || Fail "Error testing nodejs examples."
 cd ../../generate || Fail "Cannot change back to generate directory."
-
-./unit_test_js || exit $?
-./unit_test_c || exit $?
 
 exit 0

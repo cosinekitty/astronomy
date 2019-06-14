@@ -4,21 +4,22 @@
     Example C program for Astronomy Engine:
     https://cosinekitty.github.io/astronomy/
 
-    This program calculates the Moon's phase for the current date and time.
-    It also finds the dates and times of the next 10 quarter phase changes.
+    This program calculates the Moon's phase for a given date and time,
+    or the computer's current date and time if none is given.
+    It also finds the dates and times of the subsequent 10 quarter phase changes.
 */
 
 #include <stdio.h>
-#include "astronomy.h"
+#include "astro_demo_common.h"
 
 static const char *QuarterName(int quarter)
 {
     switch (quarter)
     {
-    case 0:   return "new moon";
-    case 1:   return "first quarter";
-    case 2:   return "full moon";
-    case 3:   return "third quarter";
+    case 0:   return "New Moon";
+    case 1:   return "First Quarter";
+    case 2:   return "Full Moon";
+    case 3:   return "Third Quarter";
     default:  return "INVALID QUARTER";
     }
 }
@@ -29,9 +30,9 @@ static void PrintTime(astro_time_t time)
     printf("%04d-%02d-%02d %02d:%02d:%02.0lf UTC", utc.year, utc.month, utc.day, utc.hour, utc.minute, utc.second);
 }
 
-int main()
+int main(int argc, const char *argv[])
 {
-    astro_time_t now;
+    astro_time_t time;
     astro_angle_result_t phase;
     astro_moon_quarter_t mq;
     int i;
@@ -46,26 +47,38 @@ int main()
         270 = third quarter.
     */
 
-    now = Astronomy_CurrentTime();
-    printf("Current date/time  = ");
-    PrintTime(now);
-    printf("\n");
+    switch (argc)
+    {
+    case 1:
+        time = Astronomy_CurrentTime();
+        break;
 
-    phase = Astronomy_MoonPhase(now);
+    case 2:
+        if (ParseTime(argv[1], &time))
+            return 1;
+        break;
+
+    default:
+        fprintf(stderr, "USAGE: moonphase [date]\n");
+        return 1;
+    }
+
+    phase = Astronomy_MoonPhase(time);
     if (phase.status != ASTRO_SUCCESS)
     {
         printf("Astronomy_MoonPhase error %d\n", phase.status);
         return 1;
     }
 
-    printf("Moon's phase angle = %0.6lf degrees.\n", phase.angle);
+    PrintTime(time);
+    printf(" : Moon's phase angle = %0.6lf degrees.\n", phase.angle);
 
     /* Find the next 10 lunar quarter phases. */
     printf("\nThe next 10 lunar quarters are:\n");
     for (i=0; i < 10; ++i)
     {
         if (i == 0)
-            mq = Astronomy_SearchMoonQuarter(now);
+            mq = Astronomy_SearchMoonQuarter(time);
         else
             mq = Astronomy_NextMoonQuarter(mq);
 
