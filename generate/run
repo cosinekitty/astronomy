@@ -88,12 +88,14 @@ fi
 
 echo ""
 echo "Building example programs."
-pushd ../demo/c > /dev/null || Fail "Cannot change directory to ../demo/c"
+cd ../demo/c || Fail "Cannot change directory to ../demo/c"
 rm -f moonphase positions
 ./build || Fail "Error building example programs."
 ./moonphase || Fail "Error running moonphase.c program."
 ./postest || Fail "Error validating positions.c output."
-popd > /dev/null || Fail "Cannot pop directory."
+cd ../nodejs || Fail "Cannot change directory to ../nodejs"
+test/test || Fail "Error testing nodejs examples."
+cd ../../generate || Fail "Cannot change back to generate directory."
 
 ./unit_test_js || exit $?
 ./unit_test_c || exit $?

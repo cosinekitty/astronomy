@@ -23,6 +23,11 @@ and how to predict when the next few quarter phases will occur.
 
 ---
 
+### [Planet Positions](positions.js)
+Calculates equatorial and horizontal coordinates of the Sun, Moon, and planets.
+
+---
+
 # [API Reference](../../source/js/)
 Complete documentation for all the functions and types available
 in the JavaScript version of Astronomy Engine.
