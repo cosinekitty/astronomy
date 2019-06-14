@@ -5,7 +5,7 @@ Fail()
     exit 1
 }
 
-node positions.js 45 -90 2019-02-28T14:50:30.567Z > test/positions.txt || Fail "Error testing positions.js"
+node positions.js +45.6 -90.7 2018-11-30T17:55:07.234Z > test/positions.txt || Fail "Error testing positions.js"
 diff test/positions.txt test/positions_correct.txt || Fail "Error comparing positions.txt to positions_correct.txt"
 echo "PASS: nodejs examples"
 exit 0

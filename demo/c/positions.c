@@ -17,39 +17,47 @@
 
 int main(int argc, const char *argv[])
 {
+    static const astro_body_t body[] = {
+        BODY_SUN, BODY_MOON, BODY_MERCURY, BODY_VENUS, BODY_MARS,
+        BODY_JUPITER, BODY_SATURN, BODY_URANUS, BODY_NEPTUNE, BODY_PLUTO
+    };
+
     int error;
     astro_observer_t observer;
     astro_time_t time;
-    astro_body_t body;
     astro_equatorial_t equ_2000, equ_ofdate;
     astro_horizon_t hor;
+    astro_utc_t utc;
+    int i;
+    int num_bodies = sizeof(body) / sizeof(body[0]);
 
     error = ParseArgs(argc, argv, &observer, &time);
     if (error)
         return error;
 
-    printf("body        RA    DEC azimuth altitude\n");
-    for (body = MIN_BODY; body <= MAX_BODY; ++body)
+    utc = Astronomy_UtcFromTime(time);
+    printf("UTC date = %04d-%02d-%02dT%02d:%02d:%06.3lfZ\n\n", 
+        utc.year, utc.month, utc.day, utc.hour, utc.minute, utc.second);
+
+    printf("BODY           RA      DEC       AZ      ALT\n");
+    for (i=0; i < num_bodies; ++i)
     {
-        if (body != BODY_EARTH)
+        equ_2000 = Astronomy_Equator(body[i], time, observer, EQUATOR_J2000, ABERRATION);
+        if (equ_2000.status != ASTRO_SUCCESS)
         {
-            equ_2000 = Astronomy_Equator(body, time, observer, EQUATOR_J2000, ABERRATION);
-            if (equ_2000.status != ASTRO_SUCCESS)
-            {
-                fprintf(stderr, "ERROR: Astronomy_Equator returned status %d trying to get J2000 coordinates.\n", equ_2000.status);
-                return 1;
-            }
-
-            equ_ofdate = Astronomy_Equator(body, time, observer, EQUATOR_OF_DATE, ABERRATION);
-            if (equ_ofdate.status != ASTRO_SUCCESS)
-            {
-                fprintf(stderr, "ERROR: Astronomy_Equator returned status %d trying to get coordinates of date.\n", equ_ofdate.status);
-                return 1;
-            }
-
-            hor = Astronomy_Horizon(time, observer, equ_ofdate.ra, equ_ofdate.dec, REFRACTION_NORMAL);
-            printf("%-7s %6.2lf %6.2lf %7.2lf %8.2lf\n", Astronomy_BodyName(body), equ_2000.ra, equ_2000.dec, hor.azimuth, hor.altitude);
+            fprintf(stderr, "ERROR: Astronomy_Equator returned status %d trying to get J2000 coordinates.\n", equ_2000.status);
+            return 1;
         }
+
+        equ_ofdate = Astronomy_Equator(body[i], time, observer, EQUATOR_OF_DATE, ABERRATION);
+        if (equ_ofdate.status != ASTRO_SUCCESS)
+        {
+            fprintf(stderr, "ERROR: Astronomy_Equator returned status %d trying to get coordinates of date.\n", equ_ofdate.status);
+            return 1;
+        }
+
+        hor = Astronomy_Horizon(time, observer, equ_ofdate.ra, equ_ofdate.dec, REFRACTION_NORMAL);
+        printf("%-8s %8.2lf %8.2lf %8.2lf %8.2lf\n", Astronomy_BodyName(body[i]), equ_2000.ra, equ_2000.dec, hor.azimuth, hor.altitude);
     }
 
     return 0;

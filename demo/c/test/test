@@ -1,0 +1,16 @@
+#!/bin/bash
+Fail()
+{
+    echo "FATAL($(realpath $0)): $1"
+    exit 1
+}
+
+rm -f moonphase positions
+./build || Fail "Error building example programs."
+
+./moonphase || Fail "Error running moonphase.c program."
+
+./positions +45.6 -90.7 2018-11-30T17:55:07.234Z > test/positions.txt || Fail "Error running positions test"
+diff test/positions.txt test/positions_correct.txt || Fail "Error comparing positions output"
+echo "PASS: C examples"
+exit 0

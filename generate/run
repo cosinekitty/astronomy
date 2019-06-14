@@ -92,7 +92,7 @@ cd ../demo/c || Fail "Cannot change directory to ../demo/c"
 rm -f moonphase positions
 ./build || Fail "Error building example programs."
 ./moonphase || Fail "Error running moonphase.c program."
-./postest || Fail "Error validating positions.c output."
+test/test || Fail "Error testing C examples"
 cd ../nodejs || Fail "Cannot change directory to ../nodejs"
 test/test || Fail "Error testing nodejs examples."
 cd ../../generate || Fail "Cannot change back to generate directory."

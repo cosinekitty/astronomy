@@ -1,3 +1,0 @@
-#!/bin/bash
-./positions +45.6 -90.7 2018-11-30T17:55:07.234Z > positions.txt || exit 1
-diff positions.txt positions_correct.txt || exit 1

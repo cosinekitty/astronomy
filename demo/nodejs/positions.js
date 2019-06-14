@@ -37,14 +37,12 @@ function Demo() {
         const date = (process.argv.length === 5) ? new Date(process.argv[4]) : new Date();
         console.log(`UTC date = ${date.toISOString()}`);
         console.log('');
-        console.log(`${'BODY'.padEnd(7)} ${'RA'.padStart(8)} ${'DEC'.padStart(8)} ${'AZ'.padStart(8)} ${'ALT'.padStart(8)}`);
-        for (let body of Astronomy.Bodies) {
-            if (body !== 'Earth') {
-                let equ_2000 = Astronomy.Equator(body, date, observer, false, true);
-                let equ_ofdate = Astronomy.Equator(body, date, observer, true, true);
-                let hor = Astronomy.Horizon(date, observer, equ_ofdate.ra, equ_ofdate.dec, 'normal');
-                console.log(`${body.padEnd(7)} ${Format(equ_2000.ra)} ${Format(equ_2000.dec)} ${Format(hor.azimuth)} ${Format(hor.altitude)}`);
-            }
+        console.log(`${'BODY'.padEnd(8)} ${'RA'.padStart(8)} ${'DEC'.padStart(8)} ${'AZ'.padStart(8)} ${'ALT'.padStart(8)}`);
+        for (let body of ['Sun', 'Moon', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Pluto']) {
+            let equ_2000 = Astronomy.Equator(body, date, observer, false, true);
+            let equ_ofdate = Astronomy.Equator(body, date, observer, true, true);
+            let hor = Astronomy.Horizon(date, observer, equ_ofdate.ra, equ_ofdate.dec, 'normal');
+            console.log(`${body.padEnd(8)} ${Format(equ_2000.ra)} ${Format(equ_2000.dec)} ${Format(hor.azimuth)} ${Format(hor.altitude)}`);
         }
         process.exit(0);
     }
