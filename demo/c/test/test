@@ -8,12 +8,15 @@ Fail()
 rm -f moonphase positions
 ./build || Fail "Error building example programs."
 
+echo "Testing: moonphase.c example"
 ./moonphase 2019-06-15T09:15:32.987Z > test/moonphase.txt || Fail "Error running moonphase.c program."
 diff test/moonphase.txt test/moonphase_correct.txt || Fail "Error comparing moonphase.c output."
 
+echo "Testing: positions.c example"
 ./positions +45.6 -90.7 2018-11-30T17:55:07.234Z > test/positions.txt || Fail "Error running positions test."
 diff test/positions.txt test/positions_correct.txt || Fail "Error comparing positions.c output."
 
+echo "Testing: riseset.c example"
 ./riseset 45 -90 2019-06-14T21:45:25Z > test/riseset.txt || Fail "Error running riseset test."
 diff test/riseset.txt test/riseset_correct.txt || Fail "Error comparing riseset.c output."
 
