@@ -29,10 +29,11 @@ Here are some example web pages using Astronomy Engine in a web browser.
 Determines the Moon's current phase and
 predicts when the next few quarter phases will occur.
 
----
-
 ### [Planet Positions](positions.html)
 Calculates equatorial and horizontal coordinates of the Sun, Moon, and planets.
+
+### [Rise/Set](riseset.html)
+Shows how to calculate sunrise, sunset, moonrise, and moonset times.
 
 ---
 

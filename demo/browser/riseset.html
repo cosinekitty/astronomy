@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>Celestial Body Positions</title>
+        <title>Rise/Set Times</title>
         <meta name="viewport" content="width=device-width,maximum-scale=2">
         <link rel="stylesheet" href="https://cosinekitty.github.io/astronomy/assets/css/style.css?v=dc7aa5afbbb667af90528a28f566641e207c7a85" />
         <link rel="stylesheet" href="astro_demo.css" />
     </head>
     <body id="main_content_wrap" class="inner">
-        <h1>Celestial Body Positions</h1>
+        <h1>Rise/Set Times</h1>
 
         <h2>Observer</h2>
         <table cellpadding="5" cellspacing="0">
@@ -29,84 +29,27 @@
             </tr>            
         </table>
 
-        <h2>Body Positions</h2>
+        <h2>Rise/Set Times</h2>
         <table cellpadding="5" cellspacing="0" id="CalcTable">
             <tr>
-                <td>body</td>
-                <td class="NumHeader">RA</td>
-                <td class="NumHeader">DEC</td>
-                <td class="NumHeader">Az</td>
-                <td class="NumHeader">Alt</td>
+                <td class="NumHeader">Event</td>
+                <td class="NumHeader">Date/Time</td>
             </tr>
             <tr>
-                <td>Sun</td>
-                <td id="Sun_ra" class="Numeric"></td>
-                <td id="Sun_dec" class="Numeric"></td>
-                <td id="Sun_az" class="Numeric"></td>
-                <td id="Sun_alt" class="Numeric"></td>
+                <td>Sunrise</td>
+                <td id="Sunrise" class="Numeric"></td>
             </tr>
             <tr>
-                <td>Moon</td>
-                <td id="Moon_ra" class="Numeric"></td>
-                <td id="Moon_dec" class="Numeric"></td>
-                <td id="Moon_az" class="Numeric"></td>
-                <td id="Moon_alt" class="Numeric"></td>
+                <td>Sunset</td>
+                <td id="Sunset" class="Numeric"></td>
             </tr>
             <tr>
-                <td>Mercury</td>
-                <td id="Mercury_ra" class="Numeric"></td>
-                <td id="Mercury_dec" class="Numeric"></td>
-                <td id="Mercury_az" class="Numeric"></td>
-                <td id="Mercury_alt" class="Numeric"></td>
+                <td>Moonrise</td>
+                <td id="Moonrise" class="Numeric"></td>
             </tr>
             <tr>
-                <td>Venus</td>
-                <td id="Venus_ra" class="Numeric"></td>
-                <td id="Venus_dec" class="Numeric"></td>
-                <td id="Venus_az" class="Numeric"></td>
-                <td id="Venus_alt" class="Numeric"></td>
-            </tr>
-            <tr>
-                <td>Mars</td>
-                <td id="Mars_ra" class="Numeric"></td>
-                <td id="Mars_dec" class="Numeric"></td>
-                <td id="Mars_az" class="Numeric"></td>
-                <td id="Mars_alt" class="Numeric"></td>
-            </tr>
-            <tr>
-                <td>Jupiter</td>
-                <td id="Jupiter_ra" class="Numeric"></td>
-                <td id="Jupiter_dec" class="Numeric"></td>
-                <td id="Jupiter_az" class="Numeric"></td>
-                <td id="Jupiter_alt" class="Numeric"></td>
-            </tr>
-            <tr>
-                <td>Saturn</td>
-                <td id="Saturn_ra" class="Numeric"></td>
-                <td id="Saturn_dec" class="Numeric"></td>
-                <td id="Saturn_az" class="Numeric"></td>
-                <td id="Saturn_alt" class="Numeric"></td>
-            </tr>
-            <tr>
-                <td>Uranus</td>
-                <td id="Uranus_ra" class="Numeric"></td>
-                <td id="Uranus_dec" class="Numeric"></td>
-                <td id="Uranus_az" class="Numeric"></td>
-                <td id="Uranus_alt" class="Numeric"></td>
-            </tr>
-            <tr>
-                <td>Neptune</td>
-                <td id="Neptune_ra" class="Numeric"></td>
-                <td id="Neptune_dec" class="Numeric"></td>
-                <td id="Neptune_az" class="Numeric"></td>
-                <td id="Neptune_alt" class="Numeric"></td>
-            </tr>
-            <tr>
-                <td>Pluto</td>
-                <td id="Pluto_ra" class="Numeric"></td>
-                <td id="Pluto_dec" class="Numeric"></td>
-                <td id="Pluto_az" class="Numeric"></td>
-                <td id="Pluto_alt" class="Numeric"></td>
+                <td>Moonset</td>
+                <td id="Moonset" class="Numeric"></td>
             </tr>
         </table>
 
@@ -178,8 +121,9 @@
                 return `${year}-${month}-${day} ${hour}:${minute}:${second}`;
             }
 
-            function FormatCoord(x) {
-                return x.toFixed(2);
+            function DisplayEvent(name, evt) {
+                let text = evt ? FormatDate(evt.date) : '';
+                document.getElementById(name).innerText = text;
             }
 
             function UpdateScreen() {
@@ -204,18 +148,15 @@
                     }
                     let observer = Astronomy.MakeObserver(latitude, longitude, elevation);
 
-                    for (let body of Astronomy.Bodies) {
-                        if (body !== 'Earth') {
-                            let equ_2000 = Astronomy.Equator(body, date, observer, false, true);
-                            let equ_ofdate = Astronomy.Equator(body, date, observer, true, true);
-                            let hor = Astronomy.Horizon(date, observer, equ_ofdate.ra, equ_ofdate.dec, 'normal');
-                            document.getElementById(`${body}_ra`).innerText = FormatCoord(equ_2000.ra);
-                            document.getElementById(`${body}_dec`).innerText = FormatCoord(equ_2000.dec);
-                            document.getElementById(`${body}_az`).innerText = FormatCoord(hor.azimuth);
-                            document.getElementById(`${body}_alt`).innerText = FormatCoord(hor.altitude);
-                        }
-                    }
+                    let sunrise  = Astronomy.SearchRiseSet('Sun',  observer, +1, date, 300);
+                    let sunset   = Astronomy.SearchRiseSet('Sun',  observer, -1, date, 300);
+                    let moonrise = Astronomy.SearchRiseSet('Moon', observer, +1, date, 300);
+                    let moonset  = Astronomy.SearchRiseSet('Moon', observer, -1, date, 300);
 
+                    DisplayEvent('Sunrise',  sunrise);
+                    DisplayEvent('Sunset',   sunset);
+                    DisplayEvent('Moonrise', moonrise);
+                    DisplayEvent('Moonset',  moonset);
                 }
 
                 setTimeout(UpdateScreen, 1000);
