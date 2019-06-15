@@ -13,5 +13,9 @@ diff test/moonphase.txt test/moonphase_correct.txt || Fail "Error comparing moon
 
 ./positions +45.6 -90.7 2018-11-30T17:55:07.234Z > test/positions.txt || Fail "Error running positions test."
 diff test/positions.txt test/positions_correct.txt || Fail "Error comparing positions.c output."
+
+./riseset 45 -90 2019-06-14T21:45:25Z > test/riseset.txt || Fail "Error running riseset test."
+diff test/riseset.txt test/riseset_correct.txt || Fail "Error comparing riseset.c output."
+
 echo "PASS: C examples"
 exit 0
