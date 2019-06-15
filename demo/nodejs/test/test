@@ -5,11 +5,17 @@ Fail()
     exit 1
 }
 
+echo "Testing example: moonphase.js"
 node moonphase.js 2019-06-15T09:15:32.987Z > test/moonphase.txt || Fail "Error running moonphase.js."
 diff test/moonphase.txt test/moonphase_correct.txt || Fail "Error comparing moonphase.js output."
 
+echo "Testing example: positions.js"
 node positions.js +45.6 -90.7 2018-11-30T17:55:07.234Z > test/positions.txt || Fail "Error running positions.js."
 diff test/positions.txt test/positions_correct.txt || Fail "Error comparing positions.js output."
+
+echo "Testing example: riseset.js"
+node riseset.js +45.6 -90.7 2018-11-30T17:55:07.234Z > test/riseset.txt || Fail "Error running riseset.js."
+diff test/riseset.txt test/riseset_correct.txt || Fail "Error comparing riseset.js output."
 
 echo "PASS: nodejs examples"
 exit 0
