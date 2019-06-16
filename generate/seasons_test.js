@@ -2,11 +2,6 @@
 const fs = require('fs');
 const Astronomy = require('../source/js/astronomy.min.js');
 
-function Fail(message) {
-    console.log(`FATAL(seasons_test.js): ${message}`);
-    process.exit(1);
-}
-
 function LoadTestData(filename) {
     // Moon  150 -45 2050-03-07T19:13Z s
     const text = fs.readFileSync(filename, {encoding:'utf8'});
@@ -43,7 +38,6 @@ function LoadTestData(filename) {
 
 function Test() {
     const data = LoadTestData('seasons/seasons.txt');
-    let index = 0;
     let current_year;
     let seasons;
     let calc_date;

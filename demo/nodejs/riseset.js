@@ -13,14 +13,6 @@
 
 const Astronomy = require('../../source/js/astronomy.js');      // adjust path as needed for your system
 
-function Pad(s, w) {
-    s = s.toFixed(0);
-    while (s.length < w) {
-        s = '0' + s;
-    }
-    return s;
-}
-
 function DisplayEvent(name, evt) {
     let text = evt ? evt.date.toISOString() : '';
     console.log(name.padEnd(8) + ' : ' + text);

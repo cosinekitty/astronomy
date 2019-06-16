@@ -182,5 +182,5 @@ for (let body of ['Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Pluto'])
 
 SearchElongTest();
 
-console.log('elong_test.js: SUCCESS')
+console.log('elong_test.js: SUCCESS');
 process.exit(0);

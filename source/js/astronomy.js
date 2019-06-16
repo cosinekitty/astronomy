@@ -2993,7 +2993,6 @@ Astronomy.AngleFromSun = function(body, date) {
     if (body == 'Earth')
         throw 'The Earth does not have an angle as seen from itself.';
 
-    const t = Astronomy.MakeTime(date);
     let sv = Astronomy.GeoVector('Sun', date, true);
     let bv = Astronomy.GeoVector(body, date, true);
     let angle = AngleBetween(sv, bv);
