@@ -161,6 +161,9 @@ astro_body_t Astronomy_BodyCode(const char *name)
     return BODY_INVALID;
 }
 
+/**
+ * @brief Returns 1 for planets that are farther from the Sun than the Earth is, 0 otherwise.
+ */
 static int IsSuperiorPlanet(astro_body_t body)
 {
     switch (body)
@@ -178,6 +181,9 @@ static int IsSuperiorPlanet(astro_body_t body)
     }
 }
 
+/**
+ * @brief Returns the number of days it takes for a planet to orbit the Sun.
+ */
 static double PlanetOrbitalPeriod(astro_body_t body)
 {
     switch (body)
