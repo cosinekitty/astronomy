@@ -17,5 +17,9 @@ echo "Testing example: riseset.js"
 node riseset.js +45.6 -90.7 2018-11-30T17:55:07.234Z > test/riseset.txt || Fail "Error running riseset.js."
 diff test/riseset.txt test/riseset_correct.txt || Fail "Error comparing riseset.js output."
 
+echo "Testing example: seasons.js"
+node seasons.js 2019 > test/seasons.txt || Fail "Error running seasons.js."
+diff test/seasons.txt test/seasons_correct.txt || Fail "Error comparing seasons.js output."
+
 echo "PASS: nodejs examples"
 exit 0

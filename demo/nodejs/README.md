@@ -24,8 +24,11 @@ and how to predict when the next few quarter phases will occur.
 ### [Planet Positions](positions.js)
 Calculates equatorial and horizontal coordinates of the Sun, Moon, and planets.
 
-### [Rise/Set](riseset.html)
+### [Rise/Set](riseset.js)
 Shows how to calculate sunrise, sunset, moonrise, and moonset times.
+
+### [Seasons](seasons.js)
+Calculates the equinoxes and solstices for a given calendar year.
 
 ---
 
