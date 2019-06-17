@@ -2,7 +2,7 @@
     positions.c  -  by Don Cross - 2019-06-11
 
     Example C program for Astronomy Engine:
-    https://cosinekitty.github.io/astronomy/
+    https://github.com/cosinekitty/astronomy
 
     Given an observer's geographic latitude and longitude,
     and an optional date and time, this program displays the 

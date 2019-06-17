@@ -12,6 +12,9 @@ An example of how to calculate equatorial and horizontal coordinates for all of 
 ### [Rise/Set](riseset.c)
 Shows how to calculate sunrise, sunset, moonrise, and moonset times.
 
+### [Seasons](seasons.c)
+Calculates the equinoxes and solstices for a given calendar year.
+
 ---
 
 # [API Reference](../../source/c/)

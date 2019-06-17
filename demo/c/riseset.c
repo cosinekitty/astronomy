@@ -2,7 +2,7 @@
     riseset.c  -  by Don Cross - 2019-06-14
 
     Example C program for Astronomy Engine:
-    https://cosinekitty.github.io/astronomy/
+    https://github.com/cosinekitty/astronomy
 
     This program calculates sunrise, sunset, moonrise, and moonset
     times for an observer at a given latitude and longitude.
@@ -10,14 +10,6 @@
 
 #include <stdio.h>
 #include "astro_demo_common.h"
-
-void PrintTime(astro_time_t time)
-{
-    astro_utc_t utc;
-
-    utc = Astronomy_UtcFromTime(time);
-    printf("%04d-%02d-%02dT%02d:%02d:%06.3lfZ", utc.year, utc.month, utc.day, utc.hour, utc.minute, utc.second);
-}
 
 int PrintEvent(const char *name, astro_search_result_t evt)
 {

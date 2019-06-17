@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <math.h>
 #include "astro_demo_common.h"
 
 int ParseArgs(int argc, const char *argv[], astro_observer_t *observer, astro_time_t *time)
@@ -54,3 +55,12 @@ int ParseTime(const char *text, astro_time_t *time)
     *time = Astronomy_TimeFromUtc(utc);
     return 0;
 }
+
+void PrintTime(astro_time_t time)
+{
+    astro_utc_t utc;
+
+    utc = Astronomy_UtcFromTime(time);
+    printf("%04d-%02d-%02d %02d:%02d:%02.0lf UTC", utc.year, utc.month, utc.day, utc.hour, utc.minute, floor(utc.second));
+}
+

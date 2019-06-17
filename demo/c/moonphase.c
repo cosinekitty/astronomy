@@ -2,7 +2,7 @@
     moonphase.c  -  by Don Cross - 2019-05-25
 
     Example C program for Astronomy Engine:
-    https://cosinekitty.github.io/astronomy/
+    https://github.com/cosinekitty/astronomy
 
     This program calculates the Moon's phase for a given date and time,
     or the computer's current date and time if none is given.
@@ -22,12 +22,6 @@ static const char *QuarterName(int quarter)
     case 3:   return "Third Quarter";
     default:  return "INVALID QUARTER";
     }
-}
-
-static void PrintTime(astro_time_t time)
-{
-    astro_utc_t utc = Astronomy_UtcFromTime(time);
-    printf("%04d-%02d-%02d %02d:%02d:%02.0lf UTC", utc.year, utc.month, utc.day, utc.hour, utc.minute, utc.second);
 }
 
 int main(int argc, const char *argv[])
