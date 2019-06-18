@@ -8,7 +8,13 @@
     the Sun, Moon, and planets will next reach their highest point in the sky
     as seen by an observer at a given location on the Earth.
     This is called culmination, and is found by finding when
-    each object's "hour angle" is 0.
+    each body's "hour angle" is 0.
+
+    Having an hour angle of 0 is another way of saying that the body is
+    crossing the meridian, the imaginary semicircle in the sky that passes 
+    from due north on the horizon, through the zenith (straight up), 
+    toward due south on the horizon. At this moment the body appears to 
+    have an azimuth of either 180 degrees (due south) or 0 (due north).
 
     To execute, run the command:
     node culminate latitude longitude [date]
