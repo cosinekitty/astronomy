@@ -35,6 +35,10 @@ Calculates equatorial and horizontal coordinates of the Sun, Moon, and planets.
 ### [Rise/Set](riseset.html)
 Shows how to calculate sunrise, sunset, moonrise, and moonset times.
 
+### [More JavaScript examples](../nodejs/)
+The Node.js examples page has additional JavaScript examples that can be adapted to the browser environment,
+using the same Astronomy Engine source code.
+
 ---
 
 # [API Reference](../../source/js/)

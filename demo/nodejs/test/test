@@ -21,5 +21,9 @@ echo "Testing example: seasons.js"
 node seasons.js 2019 > test/seasons.txt || Fail "Error running seasons.js."
 diff test/seasons.txt test/seasons_correct.txt || Fail "Error comparing seasons.js output."
 
+echo "Testing example: culminate.js"
+node culminate +30 -90 2015-02-28T00:00Z > test/culminate.txt || Fail "Error running culminate.js."
+diff test/culminate.txt test/culminate_correct.txt || Fail "Error comparing culminate.js output."
+
 echo "PASS: nodejs examples"
 exit 0
