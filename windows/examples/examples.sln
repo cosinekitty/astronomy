@@ -11,6 +11,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "riseset", "riseset\riseset.
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "seasons", "seasons\seasons.vcxproj", "{2DE332E0-4135-4325-88FA-D1EDAB6746A5}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "culminate", "culminate\culminate.vcxproj", "{D460EC2E-5FCD-487C-A102-283D70F76A07}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -51,6 +53,14 @@ Global
 		{2DE332E0-4135-4325-88FA-D1EDAB6746A5}.Release|x64.Build.0 = Release|x64
 		{2DE332E0-4135-4325-88FA-D1EDAB6746A5}.Release|x86.ActiveCfg = Release|Win32
 		{2DE332E0-4135-4325-88FA-D1EDAB6746A5}.Release|x86.Build.0 = Release|Win32
+		{D460EC2E-5FCD-487C-A102-283D70F76A07}.Debug|x64.ActiveCfg = Debug|x64
+		{D460EC2E-5FCD-487C-A102-283D70F76A07}.Debug|x64.Build.0 = Debug|x64
+		{D460EC2E-5FCD-487C-A102-283D70F76A07}.Debug|x86.ActiveCfg = Debug|Win32
+		{D460EC2E-5FCD-487C-A102-283D70F76A07}.Debug|x86.Build.0 = Debug|Win32
+		{D460EC2E-5FCD-487C-A102-283D70F76A07}.Release|x64.ActiveCfg = Release|x64
+		{D460EC2E-5FCD-487C-A102-283D70F76A07}.Release|x64.Build.0 = Release|x64
+		{D460EC2E-5FCD-487C-A102-283D70F76A07}.Release|x86.ActiveCfg = Release|Win32
+		{D460EC2E-5FCD-487C-A102-283D70F76A07}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
