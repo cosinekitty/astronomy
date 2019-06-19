@@ -24,5 +24,9 @@ echo "Testing example: seasons.c"
 ./seasons 2020 > test/seasons.txt || Fail "Error testing seasons.c."
 diff test/seasons.txt test/seasons_correct.txt || Fail "Error comparing seasons.c output."
 
+echo "Testing example: culminate.c"
+./culminate +30 -90 2015-02-28T00:00:00Z > test/culminate.txt || Fail "Error testing culminate.c."
+diff test/culminate.txt test/culminate_correct.txt || Fail "Error comparing culminate.c output."
+
 echo "PASS: C examples"
 exit 0
