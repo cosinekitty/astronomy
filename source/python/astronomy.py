@@ -5,6 +5,7 @@ import datetime
 
 _T0 = 2451545.0
 _MJD_BASIS = 2400000.5
+_Y2000_IN_MJD = _T0 - _MJD_BASIS
 _DEG2RAD = 0.017453292519943296
 _RAD2DEG = 57.295779513082321
 _ASEC360 = 1296000.0
@@ -243,7 +244,7 @@ def _DeltaT(mjd):
             return _DT[c].dt + frac*(_DT[c+1].dt - _DT[c].dt)
 
 def _TerrestrialTime(ut):
-    return ut + _DeltaT(ut + Y2000_IN_MJD) / 86400.0
+    return ut + _DeltaT(ut + _Y2000_IN_MJD) / 86400.0
 
 class astro_time_t:
     def __init__(self, ut):
