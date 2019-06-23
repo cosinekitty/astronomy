@@ -405,7 +405,8 @@ static int GenerateSource(void)
 {
     int error;
     CHECK(GenerateCode(CODEGEN_LANGUAGE_JS, "../source/js/astronomy.js", "template/astronomy.js", "output"));
-    CHECK(GenerateCode(CODEGEN_LANGUAGE_C,  "../source/c/astronomy.c",   "template/astronomy.c",  "output"));
+    CHECK(GenerateCode(CODEGEN_LANGUAGE_C, "../source/c/astronomy.c", "template/astronomy.c",  "output"));
+    CHECK(GenerateCode(CODEGEN_LANGUAGE_PYTHON, "../source/python/astronomy.py", "template/astronomy.py", "output"));
 fail:
     return error;
 }

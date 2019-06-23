@@ -495,6 +495,10 @@ static int GenArrayEnd(cg_context_t *context)
         fprintf(context->outfile, "\n}");
         return 0;
 
+    case CODEGEN_LANGUAGE_PYTHON:
+        fprintf(context->outfile, "\n]");
+        return 0;
+
     default:
         return LogError(context, "GenArrayEnd: Unknown language type %d", context->language);
     }
@@ -512,6 +516,11 @@ static int GenDeltaTArrayEntry(cg_context_t *context, int count, double mjd, con
     case CODEGEN_LANGUAGE_JS:
         fprintf(context->outfile, "%s\n", (count==1) ? "[" : ",");
         fprintf(context->outfile, "{ mjd:%0.1lf, dt:%s }", mjd, dt_text);
+        return 0;
+
+    case CODEGEN_LANGUAGE_PYTHON:
+        fprintf(context->outfile, "%s\n", (count==1) ? "[" : ",");
+        fprintf(context->outfile, "_delta_t_entry_t(%0.1lf, %s)", mjd, dt_text);
         return 0;
 
     default:

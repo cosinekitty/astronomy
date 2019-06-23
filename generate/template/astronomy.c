@@ -317,7 +317,6 @@ static astro_search_result_t SearchError(astro_status_t status)
 
 static astro_func_result_t SynodicPeriod(astro_body_t body)
 {
-    static const double Te = 365.256;  /* Earth's orbital period in days */
     double Tp;                         /* planet's orbital period in days */
     astro_func_result_t result;
 
@@ -337,7 +336,7 @@ static astro_func_result_t SynodicPeriod(astro_body_t body)
         return FuncError(ASTRO_INVALID_BODY);
 
     result.status = ASTRO_SUCCESS;
-    result.value = fabs(Te / (Te/Tp - 1.0));
+    result.value = fabs(EARTH_ORBITAL_PERIOD / (EARTH_ORBITAL_PERIOD/Tp - 1.0));
     return result;
 }
 
