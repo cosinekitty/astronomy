@@ -1,0 +1,10 @@
+#!/bin/bash
+Fail()
+{
+    echo "ERROR($0): $1"
+    exit 1
+}
+
+python3 --version || Fail "Cannot print python version"
+python3 test.py time || Fail "Failure reported by test.py"
+exit 0

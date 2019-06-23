@@ -166,20 +166,12 @@ class astro_time_t:
 _EPOCH = datetime.datetime(2000, 1, 1, 12)
 
 def CurrentTime():
-    now = datetime.datetime.utcnow()
-    dt = now - _EPOCH
-    ut = dt.total_seconds() / 86400.0
+    ut = (datetime.datetime.utcnow() - _EPOCH).total_seconds() / 86400.0
     return astro_time_t(ut)
 
 def MakeTime(year, month, day, hour, minute, second):
-    # This formula is adapted from NOVAS C 3.1 function julian_date().
-    jd12h = (
-        day - 32075 + 1461 * (year + 4800
-        + (month - 14) / 12) / 4
-        + 367 * (month - 2 - (month - 14) / 12 * 12)
-        / 12 - 3 * ((year + 4900 + (month - 14) / 12)
-        / 100) / 4)
-    y2000 = jd12h - 2451545
-    ut = y2000 - 0.5 + (hour / 24.0) + (minute / (24.0 * 60.0)) + (second / (24.0 * 3600.0))
+    micro = round((second % 1) * 1000000)
+    second = math.floor(second - micro/1000000)
+    d = datetime.datetime(year, month, day, hour, minute, second, micro)
+    ut = (d - _EPOCH).total_seconds() / 86400
     return astro_time_t(ut)
-
