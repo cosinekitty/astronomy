@@ -251,6 +251,9 @@ class astro_time_t:
         self.ut = ut
         self.tt = _TerrestrialTime(ut)
 
+    def AddDays(self, days):
+        return astro_time_t(self.ut + days)
+
 _EPOCH = datetime.datetime(2000, 1, 1, 12)
 
 def CurrentTime():
