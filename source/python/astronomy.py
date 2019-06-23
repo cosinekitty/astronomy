@@ -225,7 +225,7 @@ def _DeltaT(mjd):
     if mjd <= _DT[0].mjd:
         return _DT[0].dt
     if mjd >= _DT[-1].mjd:
-        return _DT[-1].dt    
+        return _DT[-1].dt
     # Do a binary search to find the pair of indexes this mjd lies between.
     lo = 0
     hi = len(_DT) - 2   # Make sure there is always an array element after the one we are looking at.

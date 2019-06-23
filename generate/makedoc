@@ -6,7 +6,7 @@ Fail()
 }
 
 echo "Trimming trailing whitespace in source code."
-for file in template/astronomy.js template/astronomy.c ../source/c/astronomy.h; do
+for file in template/astronomy.{js,c,py} ../source/c/astronomy.h; do
     node trimspace.js ${file}
 done
 
