@@ -163,6 +163,11 @@ class astro_time_t:
     def AddDays(self, days):
         return astro_time_t(self.ut + days)
 
+    def __str__(self):
+        millis = round(self.ut * 86400000.0)
+        n = _EPOCH + datetime.timedelta(milliseconds=millis)
+        return '{:04d}-{:02d}-{:02d}T{:02d}:{:02d}:{:02d}.{:03d}Z'.format(n.year, n.month, n.day, n.hour, n.minute, n.second, math.floor(n.microsecond / 1000))
+
 _EPOCH = datetime.datetime(2000, 1, 1, 12)
 
 def CurrentTime():
