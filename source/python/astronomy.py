@@ -3,6 +3,7 @@
 import math
 import datetime
 
+_EPOCH = datetime.datetime(2000, 1, 1, 12)
 _T0 = 2451545.0
 _MJD_BASIS = 2400000.5
 _Y2000_IN_MJD = _T0 - _MJD_BASIS
@@ -246,13 +247,26 @@ def _DeltaT(mjd):
 def _TerrestrialTime(ut):
     return ut + _DeltaT(ut + _Y2000_IN_MJD) / 86400.0
 
-class astro_time_t:
+class Time:
     def __init__(self, ut):
         self.ut = ut
         self.tt = _TerrestrialTime(ut)
 
+    @staticmethod
+    def Make(year, month, day, hour, minute, second):
+        micro = round((second % 1) * 1000000)
+        second = math.floor(second - micro/1000000)
+        d = datetime.datetime(year, month, day, hour, minute, second, micro)
+        ut = (d - _EPOCH).total_seconds() / 86400
+        return Time(ut)
+
+    @staticmethod
+    def Now():
+        ut = (datetime.datetime.utcnow() - _EPOCH).total_seconds() / 86400.0
+        return Time(ut)
+
     def AddDays(self, days):
-        return astro_time_t(self.ut + days)
+        return Time(self.ut + days)
 
     def __str__(self):
         millis = round(self.ut * 86400000.0)
@@ -261,16 +275,3 @@ class astro_time_t:
 
     def Utc(self):
         return _EPOCH + datetime.timedelta(days=self.ut)
-
-_EPOCH = datetime.datetime(2000, 1, 1, 12)
-
-def CurrentTime():
-    ut = (datetime.datetime.utcnow() - _EPOCH).total_seconds() / 86400.0
-    return astro_time_t(ut)
-
-def MakeTime(year, month, day, hour, minute, second):
-    micro = round((second % 1) * 1000000)
-    second = math.floor(second - micro/1000000)
-    d = datetime.datetime(year, month, day, hour, minute, second, micro)
-    ut = (d - _EPOCH).total_seconds() / 86400
-    return astro_time_t(ut)
