@@ -32,9 +32,20 @@ def Test_AstroTime():
         sys.exit(1)
     print('Current time =', astronomy.Time.Now())
 
+
+def Test_GeoMoon():
+    time = astronomy.Time.Make(2019, 6, 24, 15, 45, 37)
+    vec = astronomy.GeoMoon(time)
+    print('Test_GeoMoon: vec = {:0.10f}, {:0.10f}, {:0.10f}'.format(vec.x, vec.y, vec.z))
+
+
 if len(sys.argv) == 2:
     if sys.argv[1] == 'time':
         Test_AstroTime()
+        sys.exit(0)
+
+    if sys.argv[1] == 'moon':
+        Test_GeoMoon()
         sys.exit(0)
 
 print('test.py: Invalid command line arguments.')

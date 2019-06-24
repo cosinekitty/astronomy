@@ -42,8 +42,15 @@ def _NormalizeLongitude(lon):
         lon -= 360.0
     return lon
 
-def VectorLength(vector):
-    return math.sqrt(vector.x**2 + vector.y**2 + vector.z**2)
+class Vector:
+    def __init__(self, x, y, z, t):
+        self.x = x
+        self.y = y
+        self.z = z
+        self.t = t
+
+    def Length(self):
+        return math.sqrt(self.x**2 + self.y**2 + self.z**2)
 
 BODY_INVALID = -1
 BODY_MERCURY = 0
@@ -116,7 +123,7 @@ def _SynodicPeriod(body):
     return abs(_EARTH_ORBITAL_PERIOD / (_EARTH_ORBITAL_PERIOD/_PlanetOrbitalPeriod[body] - 1.0))
 
 def _AngleBetween(a, b):
-    r = VectorLength(a) * VectorLength(b)
+    r = a.Length() * b.Length()
     if r < 1.0e-8:
         return BadVectorError()
     dot = (a.x*b.x + a.y*b.y + a.z*b.z) / r
@@ -395,7 +402,7 @@ class _e_tilt:
         self.tt = time.tt
         self.ee = e.dpsi * math.cos(self.mobl * _DEG2RAD) / 15.0
 
-def _ecl2equ_vec(time, ecl, equ):
+def _ecl2equ_vec(time, ecl):
     obl = _mean_obliq(time.tt) * _DEG2RAD
     cos_obl = math.cos(obl)
     sin_obl = math.sin(obl)
@@ -603,7 +610,7 @@ def _ter2cel(time, vec1):
 # BEGIN CalcMoon
 
 class _Array1:
-    def __init__(xmin, xmax):
+    def __init__(self, xmin, xmax):
         self.min = xmin
         self.array = [0] * (xmax - xmin + 1)
 
@@ -614,7 +621,7 @@ class _Array1:
         self.array[key - self.min] = value
 
 class _Array2:
-    def __init__(xmin, xmax, ymin, ymax):
+    def __init__(self, xmin, xmax, ymin, ymax):
         self.min = xmin
         self.array = [_Array1(ymin, ymax) for i in range(xmax - xmin + 1)]
 
@@ -665,11 +672,11 @@ def _CalcMoon(time):
                -539E-9 * Sine(0.35498-5.37899*T)
                 -64E-9 * Sine(0.39943-5.37511*T)))
 
-    L0 = PI2*Frac(0.60643382+1336.85522467*T-0.00000313*T2) + DL0/ARC
-    L  = PI2*Frac(0.37489701+1325.55240982*T+0.00002565*T2) + DL /ARC
-    LS = PI2*Frac(0.99312619+  99.99735956*T-0.00000044*T2) + DLS/ARC
-    F  = PI2*Frac(0.25909118+1342.22782980*T-0.00000892*T2) + DF /ARC
-    D  = PI2*Frac(0.82736186+1236.85308708*T-0.00000397*T2) + DD /ARC
+    L0 = _PI2*Frac(0.60643382+1336.85522467*T-0.00000313*T2) + DL0/_ARC
+    L  = _PI2*Frac(0.37489701+1325.55240982*T+0.00002565*T2) + DL /_ARC
+    LS = _PI2*Frac(0.99312619+  99.99735956*T-0.00000044*T2) + DLS/_ARC
+    F  = _PI2*Frac(0.25909118+1342.22782980*T-0.00000892*T2) + DF /_ARC
+    D  = _PI2*Frac(0.82736186+1236.85308708*T-0.00000397*T2) + DD /_ARC
 
     I = 1
     while I <= 4:
@@ -702,7 +709,7 @@ def _CalcMoon(time):
 
     def Term(p, q, r, s):
         result = (1, 0)
-        I = [null, p, q, r, s]
+        I = [None, p, q, r, s]
         k = 1
         while k <= 4:
             if I[k] != 0:
@@ -848,14 +855,32 @@ def _CalcMoon(time):
         +0.24*Sine(0.2275   -5.7374*T)+0.28*Sine(0.2965   +2.6929*T)
         +0.33*Sine(0.3132   +6.3368*T)
     )
-    S = F + DS/ARC
+    S = F + DS/_ARC
     lat_seconds = (1.000002708 + 139.978*DGAM)*(18518.511+1.189+GAM1C)*math.sin(S) - 6.24*math.sin(3*S) + N
     return _moonpos(
-        _PI2 * Frac((L0+DLAM/ARC) / _PI2),
+        _PI2 * Frac((L0+DLAM/_ARC) / _PI2),
         (math.pi / (180 * 3600)) * lat_seconds,
-        (ARC * (ERAD / AU)) / (0.999953253 * SINPI)
+        (_ARC * (_ERAD / _AU)) / (0.999953253 * SINPI)
     )
 
 # END CalcMoon
 #----------------------------------------------------------------------------
+
+def GeoMoon(time):
+    m = _CalcMoon(time)
+
+    # Convert geocentric ecliptic spherical coordinates to Cartesian coordinates.
+    dist_cos_lat = m.distance_au * math.cos(m.geo_eclip_lat)
+    gepos = [
+        dist_cos_lat * math.cos(m.geo_eclip_lon),
+        dist_cos_lat * math.sin(m.geo_eclip_lon),
+        m.distance_au * math.sin(m.geo_eclip_lat)
+    ]
+
+    # Convert ecliptic coordinates to equatorial coordinates, both in mean equinox of date.
+    mpos1 = _ecl2equ_vec(time, gepos)
+
+    # Convert from mean equinox of date to J2000.
+    mpos2 = _precession(time.tt, mpos1, 0)
+    return Vector(mpos2[0], mpos2[1], mpos2[2], time)
 
