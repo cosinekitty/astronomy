@@ -3,6 +3,7 @@
 import math
 import datetime
 
+_PI2 = 2.0 * math.pi
 _EPOCH = datetime.datetime(2000, 1, 1, 12)
 _T0 = 2451545.0
 _MJD_BASIS = 2400000.5
@@ -184,3 +185,402 @@ class Time:
 
     def Utc(self):
         return _EPOCH + datetime.timedelta(days=self.ut)
+
+
+class Observer:
+    def __init__(self, latitude, longitude, height=0):
+        self.latitude = latitude
+        self.longitude = longitude
+        self.height = height
+
+_nals_t = [
+    [ 0,    0,    0,    0,    1],
+    [ 0,    0,    2,   -2,    2],
+    [ 0,    0,    2,    0,    2],
+    [ 0,    0,    0,    0,    2],
+    [ 0,    1,    0,    0,    0],
+    [ 0,    1,    2,   -2,    2],
+    [ 1,    0,    0,    0,    0],
+    [ 0,    0,    2,    0,    1],
+    [ 1,    0,    2,    0,    2],
+    [ 0,   -1,    2,   -2,    2],
+    [ 0,    0,    2,   -2,    1],
+    [-1,    0,    2,    0,    2],
+    [-1,    0,    0,    2,    0],
+    [ 1,    0,    0,    0,    1],
+    [-1,    0,    0,    0,    1],
+    [-1,    0,    2,    2,    2],
+    [ 1,    0,    2,    0,    1],
+    [-2,    0,    2,    0,    1],
+    [ 0,    0,    0,    2,    0],
+    [ 0,    0,    2,    2,    2],
+    [ 0,   -2,    2,   -2,    2],
+    [-2,    0,    0,    2,    0],
+    [ 2,    0,    2,    0,    2],
+    [ 1,    0,    2,   -2,    2],
+    [-1,    0,    2,    0,    1],
+    [ 2,    0,    0,    0,    0],
+    [ 0,    0,    2,    0,    0],
+    [ 0,    1,    0,    0,    1],
+    [-1,    0,    0,    2,    1],
+    [ 0,    2,    2,   -2,    2],
+    [ 0,    0,   -2,    2,    0],
+    [ 1,    0,    0,   -2,    1],
+    [ 0,   -1,    0,    0,    1],
+    [-1,    0,    2,    2,    1],
+    [ 0,    2,    0,    0,    0],
+    [ 1,    0,    2,    2,    2],
+    [-2,    0,    2,    0,    0],
+    [ 0,    1,    2,    0,    2],
+    [ 0,    0,    2,    2,    1],
+    [ 0,   -1,    2,    0,    2],
+    [ 0,    0,    0,    2,    1],
+    [ 1,    0,    2,   -2,    1],
+    [ 2,    0,    2,   -2,    2],
+    [-2,    0,    0,    2,    1],
+    [ 2,    0,    2,    0,    1],
+    [ 0,   -1,    2,   -2,    1],
+    [ 0,    0,    0,   -2,    1],
+    [-1,   -1,    0,    2,    0],
+    [ 2,    0,    0,   -2,    1],
+    [ 1,    0,    0,    2,    0],
+    [ 0,    1,    2,   -2,    1],
+    [ 1,   -1,    0,    0,    0],
+    [-2,    0,    2,    0,    2],
+    [ 3,    0,    2,    0,    2],
+    [ 0,   -1,    0,    2,    0],
+    [ 1,   -1,    2,    0,    2],
+    [ 0,    0,    0,    1,    0],
+    [-1,   -1,    2,    2,    2],
+    [-1,    0,    2,    0,    0],
+    [ 0,   -1,    2,    2,    2],
+    [-2,    0,    0,    0,    1],
+    [ 1,    1,    2,    0,    2],
+    [ 2,    0,    0,    0,    1],
+    [-1,    1,    0,    1,    0],
+    [ 1,    1,    0,    0,    0],
+    [ 1,    0,    2,    0,    0],
+    [-1,    0,    2,   -2,    1],
+    [ 1,    0,    0,    0,    2],
+    [-1,    0,    0,    1,    0],
+    [ 0,    0,    2,    1,    2],
+    [-1,    0,    2,    4,    2],
+    [-1,    1,    0,    1,    1],
+    [ 0,   -2,    2,   -2,    1],
+    [ 1,    0,    2,    2,    1],
+    [-2,    0,    2,    2,    2],
+    [-1,    0,    0,    0,    2],
+    [ 1,    1,    2,   -2,    2]
+]
+
+_cls_t = [
+    [-172064161.0, -174666.0,  33386.0, 92052331.0,  9086.0, 15377.0],
+    [ -13170906.0,   -1675.0, -13696.0,  5730336.0, -3015.0, -4587.0],
+    [  -2276413.0,    -234.0,   2796.0,   978459.0,  -485.0,  1374.0],
+    [   2074554.0,     207.0,   -698.0,  -897492.0,   470.0,  -291.0],
+    [   1475877.0,   -3633.0,  11817.0,    73871.0,  -184.0, -1924.0],
+    [   -516821.0,    1226.0,   -524.0,   224386.0,  -677.0,  -174.0],
+    [    711159.0,      73.0,   -872.0,    -6750.0,     0.0,   358.0],
+    [   -387298.0,    -367.0,    380.0,   200728.0,    18.0,   318.0],
+    [   -301461.0,     -36.0,    816.0,   129025.0,   -63.0,   367.0],
+    [    215829.0,    -494.0,    111.0,   -95929.0,   299.0,   132.0],
+    [    128227.0,     137.0,    181.0,   -68982.0,    -9.0,    39.0],
+    [    123457.0,      11.0,     19.0,   -53311.0,    32.0,    -4.0],
+    [    156994.0,      10.0,   -168.0,    -1235.0,     0.0,    82.0],
+    [     63110.0,      63.0,     27.0,   -33228.0,     0.0,    -9.0],
+    [    -57976.0,     -63.0,   -189.0,    31429.0,     0.0,   -75.0],
+    [    -59641.0,     -11.0,    149.0,    25543.0,   -11.0,    66.0],
+    [    -51613.0,     -42.0,    129.0,    26366.0,     0.0,    78.0],
+    [     45893.0,      50.0,     31.0,   -24236.0,   -10.0,    20.0],
+    [     63384.0,      11.0,   -150.0,    -1220.0,     0.0,    29.0],
+    [    -38571.0,      -1.0,    158.0,    16452.0,   -11.0,    68.0],
+    [     32481.0,       0.0,      0.0,   -13870.0,     0.0,     0.0],
+    [    -47722.0,       0.0,    -18.0,      477.0,     0.0,   -25.0],
+    [    -31046.0,      -1.0,    131.0,    13238.0,   -11.0,    59.0],
+    [     28593.0,       0.0,     -1.0,   -12338.0,    10.0,    -3.0],
+    [     20441.0,      21.0,     10.0,   -10758.0,     0.0,    -3.0],
+    [     29243.0,       0.0,    -74.0,     -609.0,     0.0,    13.0],
+    [     25887.0,       0.0,    -66.0,     -550.0,     0.0,    11.0],
+    [    -14053.0,     -25.0,     79.0,     8551.0,    -2.0,   -45.0],
+    [     15164.0,      10.0,     11.0,    -8001.0,     0.0,    -1.0],
+    [    -15794.0,      72.0,    -16.0,     6850.0,   -42.0,    -5.0],
+    [     21783.0,       0.0,     13.0,     -167.0,     0.0,    13.0],
+    [    -12873.0,     -10.0,    -37.0,     6953.0,     0.0,   -14.0],
+    [    -12654.0,      11.0,     63.0,     6415.0,     0.0,    26.0],
+    [    -10204.0,       0.0,     25.0,     5222.0,     0.0,    15.0],
+    [     16707.0,     -85.0,    -10.0,      168.0,    -1.0,    10.0],
+    [     -7691.0,       0.0,     44.0,     3268.0,     0.0,    19.0],
+    [    -11024.0,       0.0,    -14.0,      104.0,     0.0,     2.0],
+    [      7566.0,     -21.0,    -11.0,    -3250.0,     0.0,    -5.0],
+    [     -6637.0,     -11.0,     25.0,     3353.0,     0.0,    14.0],
+    [     -7141.0,      21.0,      8.0,     3070.0,     0.0,     4.0],
+    [     -6302.0,     -11.0,      2.0,     3272.0,     0.0,     4.0],
+    [      5800.0,      10.0,      2.0,    -3045.0,     0.0,    -1.0],
+    [      6443.0,       0.0,     -7.0,    -2768.0,     0.0,    -4.0],
+    [     -5774.0,     -11.0,    -15.0,     3041.0,     0.0,    -5.0],
+    [     -5350.0,       0.0,     21.0,     2695.0,     0.0,    12.0],
+    [     -4752.0,     -11.0,     -3.0,     2719.0,     0.0,    -3.0],
+    [     -4940.0,     -11.0,    -21.0,     2720.0,     0.0,    -9.0],
+    [      7350.0,       0.0,     -8.0,      -51.0,     0.0,     4.0],
+    [      4065.0,       0.0,      6.0,    -2206.0,     0.0,     1.0],
+    [      6579.0,       0.0,    -24.0,     -199.0,     0.0,     2.0],
+    [      3579.0,       0.0,      5.0,    -1900.0,     0.0,     1.0],
+    [      4725.0,       0.0,     -6.0,      -41.0,     0.0,     3.0],
+    [     -3075.0,       0.0,     -2.0,     1313.0,     0.0,    -1.0],
+    [     -2904.0,       0.0,     15.0,     1233.0,     0.0,     7.0],
+    [      4348.0,       0.0,    -10.0,      -81.0,     0.0,     2.0],
+    [     -2878.0,       0.0,      8.0,     1232.0,     0.0,     4.0],
+    [     -4230.0,       0.0,      5.0,      -20.0,     0.0,    -2.0],
+    [     -2819.0,       0.0,      7.0,     1207.0,     0.0,     3.0],
+    [     -4056.0,       0.0,      5.0,       40.0,     0.0,    -2.0],
+    [     -2647.0,       0.0,     11.0,     1129.0,     0.0,     5.0],
+    [     -2294.0,       0.0,    -10.0,     1266.0,     0.0,    -4.0],
+    [      2481.0,       0.0,     -7.0,    -1062.0,     0.0,    -3.0],
+    [      2179.0,       0.0,     -2.0,    -1129.0,     0.0,    -2.0],
+    [      3276.0,       0.0,      1.0,       -9.0,     0.0,     0.0],
+    [     -3389.0,       0.0,      5.0,       35.0,     0.0,    -2.0],
+    [      3339.0,       0.0,    -13.0,     -107.0,     0.0,     1.0],
+    [     -1987.0,       0.0,     -6.0,     1073.0,     0.0,    -2.0],
+    [     -1981.0,       0.0,      0.0,      854.0,     0.0,     0.0],
+    [      4026.0,       0.0,   -353.0,     -553.0,     0.0,  -139.0],
+    [      1660.0,       0.0,     -5.0,     -710.0,     0.0,    -2.0],
+    [     -1521.0,       0.0,      9.0,      647.0,     0.0,     4.0],
+    [      1314.0,       0.0,      0.0,     -700.0,     0.0,     0.0],
+    [     -1283.0,       0.0,      0.0,      672.0,     0.0,     0.0],
+    [     -1331.0,       0.0,      8.0,      663.0,     0.0,     4.0],
+    [      1383.0,       0.0,     -2.0,     -594.0,     0.0,    -2.0],
+    [      1405.0,       0.0,      4.0,     -610.0,     0.0,     2.0],
+    [      1290.0,       0.0,      0.0,     -556.0,     0.0,     0.0]
+]
+
+class _iau2000b:
+    def __init__(self, time):
+        t = time.tt / 36525
+        el  = ((485868.249036 + t * 1717915923.2178) % ASEC360) * ASEC2RAD
+        elp = ((1287104.79305 + t * 129596581.0481)  % ASEC360) * ASEC2RAD
+        f   = ((335779.526232 + t * 1739527262.8478) % ASEC360) * ASEC2RAD
+        d   = ((1072260.70369 + t * 1602961601.2090) % ASEC360) * ASEC2RAD
+        om  = ((450160.398036 - t * 6962890.5431)    % ASEC360) * ASEC2RAD
+        dp = 0
+        de = 0
+        i = 76
+        while i >= 0:
+            arg = (_nals_t[i][0]*el + _nals_t[i][1]*elp + _nals_t[i][2]*f + _nals_t[i][3]*d + _nals_t[i][4]*om) % _PI2
+            sarg = math.sin(arg)
+            carg = math.cos(arg)
+            dp += (_cls_t[i][0] + _cls_t[i][1] * t)*sarg + _cls_t[i][2]*carg
+            de += (_cls_t[i][3] + _cls_t[i][4] * t)*carg + _cls_t[i][5]*sarg
+            i -= 1
+        self.dpsi = -0.000135 + (dp * 1.0e-7)
+        self.deps = +0.000388 + (de * 1.0e-7)
+
+def _mean_obliq(tt):
+    t = tt / 36525
+    asec = (
+        (((( -  0.0000000434   * t
+             -  0.000000576  ) * t
+             +  0.00200340   ) * t
+             -  0.0001831    ) * t
+             - 46.836769     ) * t + 84381.406
+    )
+    return asec / 3600.0
+
+class _e_tilt:
+    def __init__(self, time):
+        e = _iau2000b(time)
+        self.dpsi = e.dpsi
+        self.deps = e.deps
+        self.mobl = _mean_obliq(time.tt)
+        self.tobl = self.mobl + (e.deps / 3600.0)
+        self.tt = time.tt
+        self.ee = e.dpsi * math.cos(self.mobl * _DEG2RAD) / 15.0
+
+def _ecl2equ_vec(time, ecl, equ):
+    obl = _mean_obliq(time.tt) * _DEG2RAD
+    cos_obl = math.cos(obl)
+    sin_obl = math.sin(obl)
+    return [
+        ecl[0],
+        ecl[1]*cos_obl - ecl[2]*sin_obl,
+        ecl[1]*sin_obl + ecl[2]*cos_obl
+    ]
+
+def _precession(tt1, pos1, tt2):
+    eps0 = 84381.406
+    if tt1 != 0 and tt2 != 0:
+        raise Error('One of (tt1, tt2) must be zero.')
+    t = (tt2 - tt1) / 36525
+    if tt2 == 0:
+        t = -t
+
+    psia  = (((((-    0.0000000951  * t
+                 +    0.000132851 ) * t
+                 -    0.00114045  ) * t
+                 -    1.0790069   ) * t
+                 + 5038.481507    ) * t)
+
+    omegaa = (((((+   0.0000003337  * t
+                 -    0.000000467 ) * t
+                 -    0.00772503  ) * t
+                 +    0.0512623   ) * t
+                 -    0.025754    ) * t + eps0)
+
+    chia  = (((((-    0.0000000560  * t
+                 +    0.000170663 ) * t
+                 -    0.00121197  ) * t
+                 -    2.3814292   ) * t
+                 +   10.556403    ) * t)
+
+    eps0 *= _ASEC2RAD
+    psia *= _ASEC2RAD
+    omegaa *= _ASEC2RAD
+    chia *= _ASEC2RAD
+
+    sa = math.sin(eps0)
+    ca = math.cos(eps0)
+    sb = math.sin(-psia)
+    cb = math.cos(-psia)
+    sc = math.sin(-omegaa)
+    cc = math.cos(-omegaa)
+    sd = math.sin(chia)
+    cd = math.cos(chia)
+
+    xx =  cd * cb - sb * sd * cc
+    yx =  cd * sb * ca + sd * cc * cb * ca - sa * sd * sc
+    zx =  cd * sb * sa + sd * cc * cb * sa + ca * sd * sc
+    xy = -sd * cb - sb * cd * cc
+    yy = -sd * sb * ca + cd * cc * cb * ca - sa * cd * sc
+    zy = -sd * sb * sa + cd * cc * cb * sa + ca * cd * sc
+    xz =  sb * sc
+    yz = -sc * cb * ca - sa * cc
+    zz = -sc * cb * sa + cc * ca
+    if tt2 == 0.0:
+        # Perform rotation from other epoch to J2000.0.
+        return [
+            xx * pos1[0] + xy * pos1[1] + xz * pos1[2],
+            yx * pos1[0] + yy * pos1[1] + yz * pos1[2],
+            zx * pos1[0] + zy * pos1[1] + zz * pos1[2]
+        ]
+
+    # Perform rotation from J2000.0 to other epoch.
+    return [
+        xx * pos1[0] + yx * pos1[1] + zx * pos1[2],
+        xy * pos1[0] + yy * pos1[1] + zy * pos1[2],
+        xz * pos1[0] + yz * pos1[1] + zz * pos1[2]
+    ]
+
+class Equatorial:
+    def __init__(self, ra, dec, dist):
+        self.ra = ra
+        self.dec = dec
+        self.dist = dist
+
+def _vector2radec(pos):
+    xyproj = pos[0]*pos[0] + pos[1]*pos[1]
+    dist = math.sqrt(xyproj + pos[2]*pos[2])
+    if xyproj == 0.0:
+        if pos[2] == 0.0:
+            # Indeterminate coordinates: pos vector has zero length.
+            raise Error('Cannot convert vector to polar coordinates')
+        ra = 0.0
+        if pos[2] < 0.0:
+            dec = -90.0
+        else:
+            dec = +90.0
+    else:
+        ra = math.atan2(pos[1], pos[0]) / (_DEG2RAD * 15)
+        if ra < 0:
+            ra += 24
+        dec = _RAD2DEG * math.atan2(pos[2], math.sqrt(xyproj))
+    return Equatorial(ra, dec, dist)
+
+
+def _nutation(time, direction, inpos):
+    tilt = _e_tilt(time)
+    oblm = tilt.mobl * _DEG2RAD
+    oblt = tilt.tobl * _DEG2RAD
+    psi = tilt.dpsi * _ASEC2RAD
+    cobm = math.cos(oblm)
+    sobm = math.sin(oblm)
+    cobt = math.cos(oblt)
+    sobt = math.sin(oblt)
+    cpsi = math.cos(psi)
+    spsi = math.sin(psi)
+
+    xx = cpsi
+    yx = -spsi * cobm
+    zx = -spsi * sobm
+    xy = spsi * cobt
+    yy = cpsi * cobm * cobt + sobm * sobt
+    zy = cpsi * sobm * cobt - cobm * sobt
+    xz = spsi * sobt
+    yz = cpsi * cobm * sobt - sobm * cobt
+    zz = cpsi * sobm * sobt + cobm * cobt
+
+    if direction == 0:
+        # forward rotation
+        return [
+            xx * inpos[0] + yx * inpos[1] + zx * inpos[2],
+            xy * inpos[0] + yy * inpos[1] + zy * inpos[2],
+            xz * inpos[0] + yz * inpos[1] + zz * inpos[2]
+        ]
+
+    # inverse rotation
+    return [
+        xx * inpos[0] + xy * inpos[1] + xz * inpos[2],
+        yx * inpos[0] + yy * inpos[1] + yz * inpos[2],
+        zx * inpos[0] + zy * inpos[1] + zz * inpos[2]
+    ]
+
+def _era(time):        # Earth Rotation Angle
+    thet1 = 0.7790572732640 + 0.00273781191135448 * time.ut
+    thet3 = time.ut % 1.0
+    theta = 360.0 * ((thet1 + thet3) % 1.0)
+    if theta < 0.0:
+        theta += 360.0
+    return theta
+
+
+def _sidereal_time(time):
+    t = time.tt / 36525.0
+    eqeq = 15.0 * _e_tilt(time).ee    # Replace with eqeq=0 to get GMST instead of GAST (if we ever need it)
+    theta = _era(time)
+    st = (eqeq + 0.014506 +
+        (((( -    0.0000000368   * t
+            -    0.000029956  ) * t
+            -    0.00000044   ) * t
+            +    1.3915817    ) * t
+            + 4612.156534     ) * t)
+    gst = ((st/3600.0 + theta) % 360.0) / 15.0
+    if gst < 0.0:
+        gst += 24.0
+    return gst
+
+
+def _terra(observer, st):
+    erad_km = _ERAD / 1000.0
+    df = 1.0 - 0.003352819697896    # flattening of the Earth
+    df2 = df * df
+    phi = observer.latitude * _DEG2RAD
+    sinphi = math.sin(phi)
+    cosphi = math.cos(phi)
+    c = 1.0 / math.sqrt(cosphi*cosphi + df2*sinphi*sinphi)
+    s = df2 * c
+    ht_km = observer.height / 1000.0
+    ach = erad_km*c + ht_km
+    ash = erad_km*s + ht_km
+    stlocl = (15.0*st + observer.longitude) * _DEG2RAD
+    sinst = math.sin(stlocl)
+    cosst = math.cos(stlocl)
+    return [
+        ach * cosphi * cosst / _KM_PER_AU,
+        ach * cosphi * sinst / _KM_PER_AU,
+        ash * sinphi / _KM_PER_AU
+    ]
+
+def _geo_pos(time, observer):
+    gast = _sidereal_time(time)
+    pos1 = _terra(observer, gast)
+    pos2 = _nutation(time, -1, pos1)
+    outpos = _precession(time.tt, pos2, 0.0)
+    return outpos
