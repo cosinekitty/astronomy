@@ -47,6 +47,7 @@ static int RiseSet(const char *filename);
 static int LunarApsis(const char *filename);
 static int ElongationTest(void);
 static int MagnitudeTest(void);
+static int MoonTest(void);
 static int TestMaxMag(astro_body_t body, const char *filename);
 static const char *ParseJplHorizonsDateTime(const char *text, astro_time_t *time);
 
@@ -73,6 +74,12 @@ int main(int argc, const char *argv[])
         if (!strcmp(verb, "magnitude"))        
         {
             CHECK(MagnitudeTest());
+            goto success;
+        }
+
+        if (!strcmp(verb, "moon"))
+        {
+            CHECK(MoonTest());
             goto success;
         }
     }
@@ -1375,6 +1382,34 @@ static int CheckSaturn()
             fprintf(stderr, "ERROR: Excessive ring tilt error %lg\n", tilt_diff);
             return 1;
         }
+    }
+
+    return 0;
+}
+
+static int MoonTest(void)
+{
+    astro_time_t time = Astronomy_MakeTime(2019, 6, 24, 15, 45, 37.0);
+    astro_vector_t vec = Astronomy_GeoMoon(time);
+    double dx, dy, dz, diff;
+
+    if (vec.status != ASTRO_SUCCESS)
+    {
+        fprintf(stderr, "MoonTest: ERROR: vec.status = %d\n", vec.status);
+        return 1;
+    }
+    printf("MoonTest: %0.16lg %0.16lg %0.16lg\n", vec.x, vec.y, vec.z);
+
+    
+    dx = vec.x - (+0.002674036155459549);
+    dy = vec.y - (-0.0001531716308218381);
+    dz = vec.z - (-0.0003150201604895409);
+    diff = sqrt(dx*dx + dy*dy + dz*dz);
+    printf("MoonTest: diff = %lg\n", diff);
+    if (diff > 4.34e-19)
+    {
+        fprintf(stderr, "MoonTest: EXCESSIVE ERROR\n");
+        return 1;
     }
 
     return 0;

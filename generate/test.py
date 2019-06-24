@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import sys
+import math
 sys.path.append('../source/python')
 import astronomy
 
@@ -36,8 +37,15 @@ def Test_AstroTime():
 def Test_GeoMoon():
     time = astronomy.Time.Make(2019, 6, 24, 15, 45, 37)
     vec = astronomy.GeoMoon(time)
-    print('Test_GeoMoon: vec = {:0.10f}, {:0.10f}, {:0.10f}'.format(vec.x, vec.y, vec.z))
-
+    print('Test_GeoMoon: vec = {:0.16f}, {:0.16f}, {:0.16f}'.format(vec.x, vec.y, vec.z))
+    # Correct values obtained from C version of GeoMoon calculation
+    cx, cy, cz = 0.002674036155459549, -0.0001531716308218381, -0.0003150201604895409
+    dx, dy, dz = vec.x - cx, vec.y - cy, vec.z - cz
+    diff = math.sqrt(dx*dx + dy*dy + dz*dz)
+    print('Test_GeoMoon: diff = {}'.format(diff))    
+    if diff > 4.34e-19:
+        print('Test_GeoMoon: EXCESSIVE ERROR')
+        sys.exit(1)
 
 if len(sys.argv) == 2:
     if sys.argv[1] == 'time':
