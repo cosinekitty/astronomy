@@ -584,3 +584,113 @@ def _geo_pos(time, observer):
     pos2 = _nutation(time, -1, pos1)
     outpos = _precession(time.tt, pos2, 0.0)
     return outpos
+
+def _spin(angle, pos1):
+    angr = angle * _DEG2RAD
+    cosang = math.cos(angr)
+    sinang = math.sin(angr)
+    return [
+        +cosang*pos1[0] + sinang*pos1[1],
+        -sinang*pos1[0] + cosang*pos1[1],
+        pos1[2]
+    ]
+
+def _ter2cel(time, vec1):
+    gast = _sidereal_time(time)
+    return _spin(-15.0 * gast, vec1)
+
+#----------------------------------------------------------------------------
+# CalcMoon
+
+class _Array1:
+    def __init__(xmin, xmax):
+        self.min = xmin
+        self.array = [0] * (xmax - xmin + 1)
+
+    def __getitem__(self, key):
+        return self.array[key - self.min]
+
+    def __setitem__(self, key, value):
+        self.array[key - self.min] = value
+
+class _Array2:
+    def __init__(xmin, xmax, ymin, ymax):
+        self.min = xmin
+        self.array = [_Array1(ymin, ymax) for i in range(xmax - xmin + 1)]
+
+    def __getitem__(self, key):
+        return self.array[key - self.min]
+
+    def __setitem__(self, key, value):
+        self.array[key - self.min] = value
+
+def _CalcMoon(time):
+    T = time.tt / 36525
+    co = _Array2(-6, 6, 1, 4)
+    si = _Array2(-6, 6, 1, 4)
+
+    def AddThe(c1, s1, c2, s2):
+        return (c1*c2 - s1*s2, s1*c2 + c1*s2)
+
+    def Sine(phi):
+        return math.sin(_PI2 * phi)
+
+    def Frac(x):
+        return x - math.floor(x)
+
+    T2 = T*T
+    DLAM = 0
+    DS = 0
+    GAM1C = 0
+    SINPI = 3422.7000
+    S1 = Sine(0.19833+0.05611*T)
+    S2 = Sine(0.27869+0.04508*T)
+    S3 = Sine(0.16827-0.36903*T)
+    S4 = Sine(0.34734-5.37261*T)
+    S5 = Sine(0.10498-5.37899*T)
+    S6 = Sine(0.42681-0.41855*T)
+    S7 = Sine(0.14943-5.37511*T)
+    DL0 = 0.84*S1+0.31*S2+14.27*S3+ 7.26*S4+ 0.28*S5+0.24*S6
+    DL  = 2.94*S1+0.31*S2+14.27*S3+ 9.34*S4+ 1.12*S5+0.83*S6
+    DLS =-6.40*S1                                   -1.89*S6
+    DF  = 0.21*S1+0.31*S2+14.27*S3-88.70*S4-15.30*S5+0.24*S6-1.86*S7
+    DD  = DL0-DLS
+    DGAM  = ((-3332E-9 * Sine(0.59734-5.37261*T)
+               -539E-9 * Sine(0.35498-5.37899*T)
+                -64E-9 * Sine(0.39943-5.37511*T)))
+
+    L0 = PI2*Frac(0.60643382+1336.85522467*T-0.00000313*T2) + DL0/ARC
+    L  = PI2*Frac(0.37489701+1325.55240982*T+0.00002565*T2) + DL /ARC
+    LS = PI2*Frac(0.99312619+  99.99735956*T-0.00000044*T2) + DLS/ARC
+    F  = PI2*Frac(0.25909118+1342.22782980*T-0.00000892*T2) + DF /ARC
+    D  = PI2*Frac(0.82736186+1236.85308708*T-0.00000397*T2) + DD /ARC
+
+    I = 1
+    while I <= 4:
+        if I == 1:
+            ARG=L; MAX=4; FAC=1.000002208
+        elif I == 2:
+            ARG=LS; MAX=3; FAC=0.997504612-0.002495388*T
+        elif I == 3:
+            ARG=F; MAX=4; FAC=1.000002708+139.978*DGAM
+        else:
+            ARG=D; MAX=6; FAC=1.0
+
+        co[0][I] = 1
+        co[1][I] = math.cos(ARG) * FAC
+        si[0][I] = 0
+        si[1][I] = math.sin(ARG) * FAC
+
+        J = 2
+        while J <= MAX:
+            co[J][I], si[J][I] = AddThe(CO(J-1,I), SI(J-1,I), CO(1,I), SI(1,I))
+            J += 1
+
+        J = 1
+        while J <= MAX:
+            co[-J][I] = +co[J][I]
+            si[-J][I] = -si[J][I]
+            J += 1
+
+        I += 1
+

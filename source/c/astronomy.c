@@ -1159,19 +1159,9 @@ static void spin(double angle, const double pos1[3], double vec2[3])
     double angr = angle * DEG2RAD;
     double cosang = cos(angr);
     double sinang = sin(angr);
-    double xx = cosang;
-    double yx = sinang;
-    double zx = 0;
-    double xy = -sinang;
-    double yy = cosang;
-    double zy = 0;
-    double xz = 0;
-    double yz = 0;
-    double zz = 1;
-
-    vec2[0] = xx*pos1[0] + yx*pos1[1] + zx*pos1[2];
-    vec2[1] = xy*pos1[0] + yy*pos1[1] + zy*pos1[2];
-    vec2[2] = xz*pos1[0] + yz*pos1[1] + zz*pos1[2];
+    vec2[0] = +cosang*pos1[0] + sinang*pos1[1];
+    vec2[1] = -sinang*pos1[0] + cosang*pos1[1];
+    vec2[2] = pos1[2];
 }
 
 static void ter2cel(astro_time_t time, const double vec1[3], double vec2[3])
@@ -1293,7 +1283,7 @@ static void Init(MoonContext *ctx)
             case 3: ARG=F;  MAX=4; FAC=1.000002708+139.978*DGAM;  break;
             case 4: ARG=D;  MAX=6; FAC=1.0;                       break;
         }
-        CO(0,1) = 1.0;
+        CO(0,I) = 1.0;
         CO(1,I) = cos(ARG)*FAC;
         SI(0,I) = 0.0;
         SI(1,I) = sin(ARG)*FAC;

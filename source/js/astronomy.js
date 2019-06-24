@@ -1590,7 +1590,7 @@ function CalcMoon(time) {
             case 3: ARG=F;  MAX=4; FAC=1.000002708+139.978*DGAM;  break;
             case 4: ARG=D;  MAX=6; FAC=1.0;                       break;
         }
-        SetCO(0, 1, 1);
+        SetCO(0, I, 1);
         SetCO(1, I, Math.cos(ARG) * FAC);
         SetSI(0, I, 0);
         SetSI(1, I, Math.sin(ARG) * FAC);
