@@ -1942,7 +1942,7 @@ Astronomy.Search = function(func, t1, t2, options) {
         return func(t);
     }
 
-    const dt_days = dt_tolerance_seconds / SECONDS_PER_DAY;
+    const dt_days = Math.abs(dt_tolerance_seconds / SECONDS_PER_DAY);
 
     ++Perf.search;
 

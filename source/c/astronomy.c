@@ -3481,7 +3481,8 @@ astro_search_result_t Astronomy_Search(
             CALLFUNC(fq, tq);
             if (q_df_dt != 0.0)
             {
-                if (fabs(fq / q_df_dt) < dt_days)
+                dt_guess = fabs(fq / q_df_dt);
+                if (dt_guess < dt_days)
                 {
                     /* The estimated time error is small enough that we can quit now. */
                     result.time = tq;
@@ -3490,7 +3491,7 @@ astro_search_result_t Astronomy_Search(
                 }
 
                 /* Try guessing a tighter boundary with the interpolated root at the center. */
-                dt_guess = 1.2 * fabs(fq / q_df_dt);
+                dt_guess *= 1.2;
                 if (dt_guess < dt/10.0)
                 {
                     astro_time_t tleft = Astronomy_AddDays(tq, -dt_guess);

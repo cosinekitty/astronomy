@@ -1007,6 +1007,78 @@ def _QuadInterp(tm, dt, fa, fm, fb):
     df_dt = (2*Q*x + R) / dt
     return (x, t, df_dt)
 
+def Search(func, t1, t2, dt_tolerance_seconds):
+    dt_days = abs(dt_tolerance_seconds / _SECONDS_PER_DAY)
+    f1 = func(t1)
+    f2 = func(t2)
+    iter = 0
+    iter_limit = 20
+    calc_fmid = True
+    while True:
+        iter += 1
+        if iter > iter_limit:
+            raise Error('Excessive iteration in Search')
+
+        dt = (t2.tt - t1.tt) / 2.0
+        tmid = t1.AddDays(dt)
+        if abs(dt) < dt_days:
+            # We are close enough to the event to stop the search.
+            return tmid
+
+        if calc_fmid:
+            fmid = func(tmid)
+        else:
+            # We already have the correct value of fmid from the previous loop.
+            calc_fmid = True
+
+        # Quadratic interpolation:
+        # Try to find a parabola that passes through the 3 points we have sampled:
+        # (t1,f1), (tmid,fmid), (t2,f2).
+        q = _QuadInterp(tmid.ut, t2.ut - tmid.ut, f1, fmid, f2)
+        if q:
+            (q_x, q_ut, q_df_dt) = q
+            tq = Time(q_ut)
+            fq = func(tq)
+            if q_df_dt != 0.0:
+                dt_guess = abs(fq / q_df_dt)
+                if dt_guess < dt_days:
+                    # The estimated time error is small enough that we can quit now.
+                    return tq
+
+                # Try guessing a tighter boundary with the interpolated root at the center.
+                dt_guess *= 1.2
+                if dt_guess < dt / 10.0:
+                    tleft = tq.AddDays(-dt_guess)
+                    tright = tq.AddDays(+dt_guess)
+                    if (tleft.ut - t1.ut)*(tleft.ut - t2.ut) < 0.0:
+                        if (tright.ut - t1.ut)*(tright.ut - t2.ut) < 0.0:
+                            fleft = func(tleft)
+                            fright = func(tright)
+                            if fleft < 0.0 and fright >= 0.0:
+                                f1 = fleft
+                                f2 = fright
+                                t1 = tleft
+                                t2 = tright
+                                fmid = fq
+                                calc_fmid = False
+                                continue
+
+        # Quadratic interpolation attempt did not work out.
+        # Just divide the region in two parts and pick whichever one appears to contain a root.
+        if f1 < 0.0 and fmid >= 0.0:
+            t2 = tmid
+            f2 = fmid
+            continue
+
+        if fmid < 0.0 and f2 >= 0.0:
+            t1 = tmid
+            f1 = fmid
+            continue
+
+        # Either there is no ascending zero-crossing in this range
+        # or the search window is too wide (more than one zero-crossing).
+        return None
+
 # END Search
 #----------------------------------------------------------------------------
 
