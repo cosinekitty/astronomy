@@ -988,3 +988,46 @@ def HelioVector(body, time):
     raise InvalidBodyError()
 
 
+def GeoVector(body, time, aberration):
+    if body == BODY_MOON:
+        return GeoMoon(time)
+
+    if body == BODY_EARTH:
+        return Vector(0.0, 0.0, 0.0, time)
+
+    if not aberration:
+        # No aberration, so calculate Earth's position once, at the time of observation.
+        earth = _CalcEarth(time)
+
+    # Correct for light-travel time, to get position of body as seen from Earth's center.
+    ltime = time
+    for iter in range(10):
+        h = HelioVector(body, ltime)
+        if aberration:
+            # Include aberration, so make a good first-order approximation
+            # by backdating the Earth's position also.
+            # This is confusing, but it works for objects within the Solar System
+            # because the distance the Earth moves in that small amount of light
+            # travel time (a few minutes to a few hours) is well approximated
+            # by a line segment that substends the angle seen from the remote
+            # body viewing Earth. That angle is pretty close to the aberration
+            # angle of the moving Earth viewing the remote body.
+            # In other words, both of the following approximate the aberration angle:
+            #    (transverse distance Earth moves) / (distance to body)
+            #    (transverse speed of Earth) / (speed of light).
+            earth = _CalcEarth(ltime)
+
+        geo = Vector(h.x-earth.x, h.y-earth.y, h.z-earth.z, time)
+        if body == BODY_SUN:
+            # The Sun's heliocentric coordinates are always (0,0,0). No need to correct.
+            return geo
+
+        ltime2 = time.AddDays(-geo.Length() / _C_AUDAY)
+        dt = abs(ltime2.tt - ltime.tt)
+        if dt < 1.0e-9:
+            return geo
+
+        ltime = ltime2
+
+    raise Error('Light-travel time solver did not converge: dt={}'.format(dt))
+
