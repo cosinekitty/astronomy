@@ -230,14 +230,14 @@ const Planet = {
 };
 
 const vsop = {
-    Mercury: $ASTRO_JS_VSOP(Mercury),
-    Venus:   $ASTRO_JS_VSOP(Venus),
-    Earth:   $ASTRO_JS_VSOP(Earth),
-    Mars:    $ASTRO_JS_VSOP(Mars),
-    Jupiter: $ASTRO_JS_VSOP(Jupiter),
-    Saturn:  $ASTRO_JS_VSOP(Saturn),
-    Uranus:  $ASTRO_JS_VSOP(Uranus),
-    Neptune: $ASTRO_JS_VSOP(Neptune)
+    Mercury: $ASTRO_LIST_VSOP(Mercury),
+    Venus:   $ASTRO_LIST_VSOP(Venus),
+    Earth:   $ASTRO_LIST_VSOP(Earth),
+    Mars:    $ASTRO_LIST_VSOP(Mars),
+    Jupiter: $ASTRO_LIST_VSOP(Jupiter),
+    Saturn:  $ASTRO_LIST_VSOP(Saturn),
+    Uranus:  $ASTRO_LIST_VSOP(Uranus),
+    Neptune: $ASTRO_LIST_VSOP(Neptune)
 };
 
 const cheb = {

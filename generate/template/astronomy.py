@@ -884,3 +884,36 @@ def GeoMoon(time):
     mpos2 = _precession(time.tt, mpos1, 0)
     return Vector(mpos2[0], mpos2[1], mpos2[2], time)
 
+
+#----------------------------------------------------------------------------
+# BEGIN VSOP
+
+_vsop = [
+    # Mercury
+    $ASTRO_LIST_VSOP(Mercury),
+
+    # Venus
+    $ASTRO_LIST_VSOP(Venus),
+
+    # Earth
+    $ASTRO_LIST_VSOP(Earth),
+
+    # Mars
+    $ASTRO_LIST_VSOP(Mars),
+
+    # Jupiter
+    $ASTRO_LIST_VSOP(Jupiter),
+
+    # Saturn
+    $ASTRO_LIST_VSOP(Saturn),
+
+    # Uranus
+    $ASTRO_LIST_VSOP(Uranus),
+
+    # Neptune
+    $ASTRO_LIST_VSOP(Neptune),
+]
+
+# END VSOP
+#----------------------------------------------------------------------------
+

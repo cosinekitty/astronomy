@@ -342,7 +342,7 @@ fail:
     return error;
 }
 
-static int JsVsop(cg_context_t *context)
+static int ListVsop(cg_context_t *context)
 {
     int error;
     const char *name;
@@ -658,8 +658,8 @@ static int LogError(const cg_context_t *context, const char *format, ...)
 
 static const cg_directive_entry DirectiveTable[] =
 {
-    { "JS_VSOP", JsVsop },
     { "C_VSOP", CVsop },
+    { "LIST_VSOP", ListVsop },
     { "JS_CHEBYSHEV", JsChebyshev },
     { "C_CHEBYSHEV", CChebyshev },
     { "DELTA_T", GenDeltaT },
