@@ -1625,6 +1625,9 @@ def _CalcVsop(model, time):
     vz = 0.397776982902*ey + 0.917482137087*ez
     return Vector(vx, vy, vz, time)
 
+def _CalcEarth(time):
+    return _CalcVsop(_vsop[BODY_EARTH], time)
+
 # END VSOP
 #----------------------------------------------------------------------------
 # BEGIN CHEBYSHEV
@@ -1804,3 +1807,22 @@ def _CalcChebyshev(model, time):
 
 # END CHEBYSHEV
 #----------------------------------------------------------------------------
+
+def HelioVector(body, time):
+    if body == BODY_PLUTO:
+        return _CalcChebyshev(_pluto, time)
+
+    if 0 <= body <= len(_vsop):
+        return _CalcVsop(_vsop[body], time)
+
+    if body == BODY_SUN:
+        return Vector(0.0, 0.0, 0.0, time)
+
+    if body == BODY_MOON:
+        e = _CalcEarth(time)
+        m = GeoMoon(time)
+        return Vector(e.x+m.x, e.y+m.y, e.z+m.z, time)
+
+    raise InvalidBodyError()
+
+
