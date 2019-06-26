@@ -4,7 +4,6 @@ import math
 sys.path.append('../source/python')
 import astronomy
 
-
 def Test_AstroTime():
     expected_ut = 6910.270978506945
     expected_tt = 6910.271779431480
@@ -47,6 +46,30 @@ def Test_GeoMoon():
         print('Test_GeoMoon: EXCESSIVE ERROR')
         sys.exit(1)
 
+def Test_AstroCheck():
+    time = astronomy.Time.Make(1700, 1, 1, 0, 0, 0)
+    stop = astronomy.Time.Make(2200, 1, 1, 0, 0, 0)
+    observer = astronomy.Observer(29, -81, 10)
+    print('o {:0.6f} {:0.6f} {:0.6f}'.format(observer.latitude, observer.longitude, observer.height))
+    dt = 10 + math.pi/100
+    bodylist = [
+        astronomy.BODY_SUN, astronomy.BODY_MOON, astronomy.BODY_MERCURY, astronomy.BODY_VENUS, 
+        astronomy.BODY_EARTH, astronomy.BODY_MARS, astronomy.BODY_JUPITER, astronomy.BODY_SATURN, 
+        astronomy.BODY_URANUS, astronomy.BODY_NEPTUNE, astronomy.BODY_PLUTO
+    ]
+
+    while time.tt < stop.tt:
+        for body in bodylist:
+            name = astronomy.BodyName[body]
+            if body != astronomy.BODY_MOON:
+                pos = astronomy.HelioVector(body, time)                
+                print('v {} {:0.16f} {:0.16f} {:0.16f} {:0.16f}'.format(name, pos.t.tt, pos.x, pos.y, pos.z))
+                if body != astronomy.BODY_EARTH:
+                    pass
+        pos = astronomy.GeoMoon(time)
+        print('v GM {:0.16f} {:0.16f} {:0.16f} {:0.16f}'.format(pos.t.tt, pos.x, pos.y, pos.z))
+        time = time.AddDays(dt)
+
 if len(sys.argv) == 2:
     if sys.argv[1] == 'time':
         Test_AstroTime()
@@ -54,6 +77,10 @@ if len(sys.argv) == 2:
 
     if sys.argv[1] == 'moon':
         Test_GeoMoon()
+        sys.exit(0)
+
+    if sys.argv[1] == 'astro_check':
+        Test_AstroCheck()
         sys.exit(0)
 
 print('test.py: Invalid command line arguments.')

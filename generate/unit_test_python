@@ -8,4 +8,5 @@ Fail()
 python3 --version || Fail "Cannot print python version"
 python3 test.py time || Fail "Failure reported by test.py (time)"
 python3 test.py moon || Fail "Failure reported by test.py (moon)"
+python3 test.py astro_check > temp/py_check.txt || Fail "Failure in Python astro_check"
 exit 0
