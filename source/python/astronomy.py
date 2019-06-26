@@ -1807,6 +1807,46 @@ def _CalcChebyshev(model, time):
 
 # END CHEBYSHEV
 #----------------------------------------------------------------------------
+# BEGIN Search
+
+def _QuadInterp(tm, dt, fa, fm, fb):
+    Q = (fb + fa)/2 - fm
+    R = (fb - fa)/2
+    S = fm
+
+    if Q == 0:
+        # This is a line, not a parabola.
+        if R == 0:
+            # This is a HORIZONTAL line... can't make progress!
+            return None
+        x = -S / R
+        if not (-1 <= x <= +1):
+            return None  # out of bounds
+    else:
+        # It really is a parabola. Find roots x1, x2.
+        u = R*R - 4*Q*S
+        if u <= 0:
+            return None
+        ru = math.sqrt(u)
+        x1 = (-R + ru) / (2 * Q)
+        x2 = (-R - ru) / (2 * Q)
+
+        if -1 <= x1 <= +1:
+            if -1 <= x2 <= +1:
+                # Two solutions... so parabola intersects twice.
+                return None
+            x = x1
+        elif -1 <= x2 <= +1:
+            x = x2
+        else:
+            return None
+
+    t = tm + x*dt
+    df_dt = (2*Q*x + R) / dt
+    return (x, t, df_dt)
+
+# END Search
+#----------------------------------------------------------------------------
 
 def HelioVector(body, time):
     if body == BODY_PLUTO:
