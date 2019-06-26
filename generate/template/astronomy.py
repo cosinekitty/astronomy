@@ -911,11 +911,58 @@ _vsop = [
     $ASTRO_LIST_VSOP(Neptune),
 ]
 
+def _CalcVsop(model, time):
+    spher = []
+    t = time.tt / 365250
+    for formula in model:
+        tpower = 1.0
+        coord = 0.0
+        for series in formula:
+            coord += tpower * sum(term[0] * math.cos(term[1] + (t * term[2])) for term in series)
+            tpower *= t
+        spher.append(coord)
+
+    # Convert spherical coordinates to ecliptic cartesian coordinates.
+    r_coslat = spher[2] * math.cos(spher[1])
+    ex = r_coslat * math.cos(spher[0])
+    ey = r_coslat * math.sin(spher[0])
+    ez = spher[2] * math.sin(spher[1])
+
+    # Convert ecliptic cartesian coordinates to equatorial cartesian coordinates.
+    vx = ex + 0.000000440360*ey - 0.000000190919*ez
+    vy = -0.000000479966*ex + 0.917482137087*ey - 0.397776982902*ez
+    vz = 0.397776982902*ey + 0.917482137087*ez
+    return Vector(vx, vy, vz, time)
+
 # END VSOP
 #----------------------------------------------------------------------------
 # BEGIN CHEBYSHEV
 
 _pluto = $ASTRO_LIST_CHEBYSHEV(8)
+
+def _ChebScale(t_min, t_max, t):
+    return (2*t - (t_max + t_min)) / (t_max - t_min)
+
+def _CalcChebyshev(model, time):
+    # Search for a record that overlaps the given time value.
+    for record in model:
+        x = _ChebScale(record['tt'], record['tt'] + record['ndays'], time.tt)
+        if -1 <= x <= +1:
+            coeff = record['coeff']
+            pos = []
+            for d in range(3):
+                p0 = 1
+                sum = coeff[0][d]
+                p1 = x
+                sum += coeff[1][d] * p1
+                for k in range(2, len(coeff)):
+                    p2 = (2 * x * p1) - p0
+                    sum += coeff[k][d] * p2
+                    p0 = p1
+                    p1 = p2
+                pos.append(sum - coeff[0][d]/2)
+            return Vector(pos[0], pos[1], pos[2], time)
+    raise Error('Cannot extrapolate Chebyshev model for given Terrestrial Time: {}'.format(time.tt))
 
 # END CHEBYSHEV
 #----------------------------------------------------------------------------
