@@ -863,9 +863,6 @@ def _CalcMoon(time):
         (_ARC * (_ERAD / _AU)) / (0.999953253 * SINPI)
     )
 
-# END CalcMoon
-#----------------------------------------------------------------------------
-
 def GeoMoon(time):
     m = _CalcMoon(time)
 
@@ -884,7 +881,7 @@ def GeoMoon(time):
     mpos2 = _precession(time.tt, mpos1, 0)
     return Vector(mpos2[0], mpos2[1], mpos2[2], time)
 
-
+# END CalcMoon
 #----------------------------------------------------------------------------
 # BEGIN VSOP
 
@@ -916,4 +913,9 @@ _vsop = [
 
 # END VSOP
 #----------------------------------------------------------------------------
+# BEGIN CHEBYSHEV
 
+_pluto = $ASTRO_LIST_CHEBYSHEV(8)
+
+# END CHEBYSHEV
+#----------------------------------------------------------------------------

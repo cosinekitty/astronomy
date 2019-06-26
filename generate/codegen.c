@@ -210,7 +210,7 @@ static int ParseVsopBodyName(const cg_context_t *context, const char *name, vsop
     return LogError(context, "Unknown VSOP body name '%s'", name);
 }
 
-static int JsChebyshev(cg_context_t *context)
+static int ListChebyshev(cg_context_t *context)
 {
     int error = 1;
     int body, i, record_index;
@@ -238,7 +238,7 @@ static int JsChebyshev(cg_context_t *context)
         if (record_index > 0)
             fprintf(context->outfile, ",\n");
             
-        fprintf(context->outfile, "{ tt:%lf, ndays:%lf, coeff:[\n", record.jdStart - T0, record.jdDelta);
+        fprintf(context->outfile, "{ 'tt':%lf, 'ndays':%lf, 'coeff':[\n", record.jdStart - T0, record.jdDelta);
         for (i=0; i < record.numpoly; ++i)
         {
             fprintf(context->outfile, "    [%0.12lf, %0.12lf, %0.12lf]%s\n", 
@@ -660,7 +660,7 @@ static const cg_directive_entry DirectiveTable[] =
 {
     { "C_VSOP", CVsop },
     { "LIST_VSOP", ListVsop },
-    { "JS_CHEBYSHEV", JsChebyshev },
+    { "LIST_CHEBYSHEV", ListChebyshev },
     { "C_CHEBYSHEV", CChebyshev },
     { "DELTA_T", GenDeltaT },
     { NULL, NULL }

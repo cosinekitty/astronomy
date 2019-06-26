@@ -241,7 +241,7 @@ const vsop = {
 };
 
 const cheb = {
-    Pluto:  $ASTRO_JS_CHEBYSHEV(8)
+    Pluto:  $ASTRO_LIST_CHEBYSHEV(8)
 };
 
 const DT = $ASTRO_DELTA_T();
