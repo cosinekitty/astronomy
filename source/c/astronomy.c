@@ -1164,12 +1164,6 @@ static void spin(double angle, const double pos1[3], double vec2[3])
     vec2[2] = pos1[2];
 }
 
-static void ter2cel(astro_time_t time, const double vec1[3], double vec2[3])
-{
-    double gast = sidereal_time(time);
-    spin(-15.0 * gast, vec1, vec2);
-}
-
 /*------------------ CalcMoon ------------------*/
 
 /** @cond DOXYGEN_SKIP */
@@ -3022,6 +3016,7 @@ astro_horizon_t Astronomy_Horizon(
     double uz[3], un[3], uw[3];
     double p[3], pz, pn, pw, proj;
     double az, zd;
+    double spin_angle;
 
     double sinlat = sin(observer.latitude * DEG2RAD);
     double coslat = cos(observer.latitude * DEG2RAD);
@@ -3044,9 +3039,10 @@ astro_horizon_t Astronomy_Horizon(
     uwe[1] = -coslon;
     uwe[2] = 0.0;
 
-    ter2cel(time, uze, uz);
-    ter2cel(time, une, un);
-    ter2cel(time, uwe, uw);
+    spin_angle = -15.0 * sidereal_time(time);
+    spin(spin_angle, uze, uz);
+    spin(spin_angle, une, un);
+    spin(spin_angle, uwe, uw);
 
     p[0] = cosdc * cosra;
     p[1] = cosdc * sinra;

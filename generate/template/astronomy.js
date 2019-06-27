@@ -1283,12 +1283,6 @@ function spin(angle, pos1) {
     return pos2;
 }
 
-function ter2cel(time, vec1) {
-    const gast = sidereal_time(time);
-    let vec2 = spin(-15 * gast, vec1);
-    return vec2;
-}
-
 /**
  * Given a date and time, a geographic location of an observer on the Earth, and
  * equatorial coordinates (right ascension and declination) of a celestial body,
@@ -1342,9 +1336,10 @@ Astronomy.Horizon = function(date, observer, ra, dec, refraction) {     // based
     let une = [-sinlat*coslon, -sinlat*sinlon, coslat];
     let uwe = [sinlon, -coslon, 0];
 
-    let uz = ter2cel(time, uze);
-    let un = ter2cel(time, une);
-    let uw = ter2cel(time, uwe);
+    const spin_angle = -15 * sidereal_time(time);
+    let uz = spin(spin_angle, uze);
+    let un = spin(spin_angle, une);
+    let uw = spin(spin_angle, uwe);
 
     let p = [cosdc*cosra, cosdc*sinra, sindc];
 
