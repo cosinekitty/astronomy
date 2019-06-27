@@ -693,10 +693,6 @@ def _spin(angle, pos1):
         pos1[2]
     ]
 
-def _ter2cel(time, vec1):
-    gast = _sidereal_time(time)
-    return _spin(-15.0 * gast, vec1)
-
 #----------------------------------------------------------------------------
 # BEGIN CalcMoon
 
@@ -2024,9 +2020,10 @@ def Horizon(time, observer, ra, dec, refraction):
     une = [-sinlat*coslon, -sinlat*sinlon, coslat]
     uwe = [sinlon, -coslon, 0.0]
 
-    uz = _ter2cel(time, uze)
-    un = _ter2cel(time, une)
-    uw = _ter2cel(time, uwe)
+    angle = -15.0 * _sidereal_time(time)
+    uz = _spin(angle, uze)
+    un = _spin(angle, une)
+    uw = _spin(angle, uwe)
 
     p = [cosdc*cosra, cosdc*sinra, sindc]
 

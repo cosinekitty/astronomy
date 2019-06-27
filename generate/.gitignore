@@ -6,3 +6,4 @@ html/
 .ipynb_checkpoints
 ctest
 bin/
+profile/

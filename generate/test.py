@@ -46,11 +46,12 @@ def Test_GeoMoon():
         print('Test_GeoMoon: EXCESSIVE ERROR')
         sys.exit(1)
 
-def Test_AstroCheck():
+def Test_AstroCheck(printflag):
     time = astronomy.Time.Make(1700, 1, 1, 0, 0, 0)
     stop = astronomy.Time.Make(2200, 1, 1, 0, 0, 0)
     observer = astronomy.Observer(29, -81, 10)
-    print('o {:0.6f} {:0.6f} {:0.6f}'.format(observer.latitude, observer.longitude, observer.height))
+    if printflag:
+        print('o {:0.6f} {:0.6f} {:0.6f}'.format(observer.latitude, observer.longitude, observer.height))
     dt = 10 + math.pi/100
     bodylist = [
         astronomy.BODY_SUN, astronomy.BODY_MOON, astronomy.BODY_MERCURY, astronomy.BODY_VENUS, 
@@ -63,18 +64,22 @@ def Test_AstroCheck():
             name = astronomy.BodyName[body]
             if body != astronomy.BODY_MOON:
                 pos = astronomy.HelioVector(body, time)                
-                print('v {} {:0.16f} {:0.16f} {:0.16f} {:0.16f}'.format(name, pos.t.tt, pos.x, pos.y, pos.z))
+                if printflag:
+                    print('v {} {:0.16f} {:0.16f} {:0.16f} {:0.16f}'.format(name, pos.t.tt, pos.x, pos.y, pos.z))
                 if body != astronomy.BODY_EARTH:
                     j2000 = astronomy.Equator(body, time, observer, False, False)
                     ofdate = astronomy.Equator(body, time, observer, True, True)
                     hor = astronomy.Horizon(time, observer, ofdate.ra, ofdate.dec, astronomy.REFRACTION_NONE)
-                    print('s {} {:0.16f} {:0.16f} {:0.16f} {:0.16f} {:0.16f} {:0.16f} {:0.16f}'.format(name, time.tt, time.ut, j2000.ra, j2000.dec, j2000.dist, hor.azimuth, hor.altitude))
+                    if printflag:
+                        print('s {} {:0.16f} {:0.16f} {:0.16f} {:0.16f} {:0.16f} {:0.16f} {:0.16f}'.format(name, time.tt, time.ut, j2000.ra, j2000.dec, j2000.dist, hor.azimuth, hor.altitude))
         pos = astronomy.GeoMoon(time)
-        print('v GM {:0.16f} {:0.16f} {:0.16f} {:0.16f}'.format(pos.t.tt, pos.x, pos.y, pos.z))
+        if printflag:
+            print('v GM {:0.16f} {:0.16f} {:0.16f} {:0.16f}'.format(pos.t.tt, pos.x, pos.y, pos.z))
         j2000 = astronomy.Equator(astronomy.BODY_MOON, time, observer, False, False)
         ofdate = astronomy.Equator(astronomy.BODY_MOON, time, observer, True, True)
         hor = astronomy.Horizon(time, observer, ofdate.ra, ofdate.dec, astronomy.REFRACTION_NONE)
-        print('s GM {:0.16f} {:0.16f} {:0.16f} {:0.16f} {:0.16f} {:0.16f} {:0.16f}'.format(time.tt, time.ut, j2000.ra, j2000.dec, j2000.dist, hor.azimuth, hor.altitude))
+        if printflag:
+            print('s GM {:0.16f} {:0.16f} {:0.16f} {:0.16f} {:0.16f} {:0.16f} {:0.16f}'.format(time.tt, time.ut, j2000.ra, j2000.dec, j2000.dist, hor.azimuth, hor.altitude))
         time = time.AddDays(dt)
 
 if len(sys.argv) == 2:
@@ -86,8 +91,8 @@ if len(sys.argv) == 2:
         Test_GeoMoon()
         sys.exit(0)
 
-    if sys.argv[1] == 'astro_check':
-        Test_AstroCheck()
+    if sys.argv[1] == 'astro_check' or sys.argv[1] == 'astro_profile':
+        Test_AstroCheck(sys.argv[1] == 'astro_check')
         sys.exit(0)
 
 print('test.py: Invalid command line arguments.')
