@@ -168,6 +168,7 @@ class Time:
     def __init__(self, ut):
         self.ut = ut
         self.tt = _TerrestrialTime(ut)
+        self.etilt = None
 
     @staticmethod
     def Make(year, month, day, hour, minute, second):
@@ -192,6 +193,14 @@ class Time:
 
     def Utc(self):
         return _EPOCH + datetime.timedelta(days=self.ut)
+
+    def _etilt(self):
+        # Calculates precession and nutation of the Earth's axis.
+        # The calculations are very expensive, so lazy-evaluate and cache
+        # the result inside this Time object.
+        if self.etilt is None:
+            self.etilt = _e_tilt(self)
+        return self.etilt
 
 
 class Observer:
@@ -503,7 +512,7 @@ def _vector2radec(pos):
 
 
 def _nutation(time, direction, inpos):
-    tilt = _e_tilt(time)
+    tilt = time._etilt()
     oblm = tilt.mobl * _DEG2RAD
     oblt = tilt.tobl * _DEG2RAD
     psi = tilt.dpsi * _ASEC2RAD
@@ -550,7 +559,7 @@ def _era(time):        # Earth Rotation Angle
 
 def _sidereal_time(time):
     t = time.tt / 36525.0
-    eqeq = 15.0 * _e_tilt(time).ee    # Replace with eqeq=0 to get GMST instead of GAST (if we ever need it)
+    eqeq = 15.0 * time._etilt().ee    # Replace with eqeq=0 to get GMST instead of GAST (if we ever need it)
     theta = _era(time)
     st = (eqeq + 0.014506 +
         (((( -    0.0000000368   * t
