@@ -363,11 +363,11 @@ _cls_t = [
 class _iau2000b:
     def __init__(self, time):
         t = time.tt / 36525
-        el  = ((485868.249036 + t * 1717915923.2178) % ASEC360) * ASEC2RAD
-        elp = ((1287104.79305 + t * 129596581.0481)  % ASEC360) * ASEC2RAD
-        f   = ((335779.526232 + t * 1739527262.8478) % ASEC360) * ASEC2RAD
-        d   = ((1072260.70369 + t * 1602961601.2090) % ASEC360) * ASEC2RAD
-        om  = ((450160.398036 - t * 6962890.5431)    % ASEC360) * ASEC2RAD
+        el  = ((485868.249036 + t * 1717915923.2178) % _ASEC360) * _ASEC2RAD
+        elp = ((1287104.79305 + t * 129596581.0481)  % _ASEC360) * _ASEC2RAD
+        f   = ((335779.526232 + t * 1739527262.8478) % _ASEC360) * _ASEC2RAD
+        d   = ((1072260.70369 + t * 1602961601.2090) % _ASEC360) * _ASEC2RAD
+        om  = ((450160.398036 - t * 6962890.5431)    % _ASEC360) * _ASEC2RAD
         dp = 0
         de = 0
         i = 76
@@ -1143,3 +1143,114 @@ def GeoVector(body, time, aberration):
 
     raise Error('Light-travel time solver did not converge: dt={}'.format(dt))
 
+
+def Equator(body, time, observer, ofdate, aberration):
+    gc_observer = _geo_pos(time, observer)
+    gc = GeoVector(body, time, aberration)
+    j2000 = [
+        gc.x - gc_observer[0],
+        gc.y - gc_observer[1],
+        gc.z - gc_observer[2]
+    ]
+    if not ofdate:
+        return _vector2radec(j2000)
+    temp = _precession(0, j2000, time.tt)
+    datevect = _nutation(time, 0, temp)
+    return _vector2radec(datevect)
+
+REFRACTION_NONE = 0
+REFRACTION_NORMAL = 1
+REFRACTION_JPLHOR = 2
+
+class HorizontalCoordinates:
+    def __init__(self, azimuth, altitude, ra, dec):
+        self.azimuth = azimuth
+        self.altitude = altitude
+        self.ra = ra
+        self.dec = dec
+
+def Horizon(time, observer, ra, dec, refraction):
+    if not (REFRACTION_NONE <= refraction <= REFRACTION_JPLHOR):
+        raise Error('Invalid refraction type: ' + str(refraction))
+
+    sinlat = math.sin(observer.latitude * _DEG2RAD)
+    coslat = math.cos(observer.latitude * _DEG2RAD)
+    sinlon = math.sin(observer.longitude * _DEG2RAD)
+    coslon = math.cos(observer.longitude * _DEG2RAD)
+    sindc = math.sin(dec * _DEG2RAD)
+    cosdc = math.cos(dec * _DEG2RAD)
+    sinra = math.sin(ra * 15 * _DEG2RAD)
+    cosra = math.cos(ra * 15 * _DEG2RAD)
+
+    uze = [coslat*coslon, coslat*sinlon, sinlat]
+    une = [-sinlat*coslon, -sinlat*sinlon, coslat]
+    uwe = [sinlon, -coslon, 0.0]
+
+    uz = _ter2cel(time, uze)
+    un = _ter2cel(time, une)
+    uw = _ter2cel(time, uwe)
+
+    p = [cosdc*cosra, cosdc*sinra, sindc]
+
+    pz = p[0]*uz[0] + p[1]*uz[1] + p[2]*uz[2]
+    pn = p[0]*un[0] + p[1]*un[1] + p[2]*un[2]
+    pw = p[0]*uw[0] + p[1]*uw[1] + p[2]*uw[2]
+
+    proj = math.sqrt(pn*pn + pw*pw)
+    az = 0.0
+    if proj > 0.0:
+        az = -math.atan2(pw, pn) * _RAD2DEG
+        if az < 0:
+            az += 360
+        if az >= 360:
+            az -= 360
+    zd = math.atan2(proj, pz) * _RAD2DEG
+    hor_ra = ra
+    hor_dec = dec
+
+    if refraction != REFRACTION_NONE:
+        zd0 = zd
+
+        # http://extras.springer.com/1999/978-1-4471-0555-8/chap4/horizons/horizons.pdf
+        # JPL Horizons says it uses refraction algorithm from
+        # Meeus "Astronomical Algorithms", 1991, p. 101-102.
+        # I found the following Go implementation:
+        # https://github.com/soniakeys/meeus/blob/master/v3/refraction/refract.go
+        # This is a translation from the function "Saemundsson" there.
+        # I found experimentally that JPL Horizons clamps the angle to 1 degree below the horizon.
+        # This is important because the 'refr' formula below goes crazy near hd = -5.11.
+        hd = 90.0 - zd
+        if hd < -1.0:
+            hd = -1.0
+
+        refr = (1.02 / math.tan((hd+10.3/(hd+5.11))*_DEG2RAD)) / 60.0
+
+        if refraction == REFRACTION_NORMAL and zd > 91.0:
+            # In "normal" mode we gradually reduce refraction toward the nadir
+            # so that we never get an altitude angle less than -90 degrees.
+            # When horizon angle is -1 degrees, zd = 91, and the factor is exactly 1.
+            # As zd approaches 180 (the nadir), the fraction approaches 0 linearly.
+            refr *= (180.0 - zd) / 89.0
+
+        zd -= refr
+
+        if refr > 0.0 and zd > 3.0e-4:
+            sinzd = math.sin(zd * _DEG2RAD)
+            coszd = math.cos(zd * _DEG2RAD)
+            sinzd0 = math.sin(zd0 * _DEG2RAD)
+            coszd0 = math.cos(zd0 * _DEG2RAD)
+
+            pr = [(((p[j] - coszd0 * uz[j]) / sinzd0)*sinzd + uz[j]*coszd) for j in range(3)]
+            proj = math.sqrt(pr[0]*pr[0] + pr[1]*pr[1])
+            if proj > 0:
+                hor_ra = math.atan2(pr[1], pr[0]) * _RAD2DEG / 15
+                if hor_ra < 0:
+                    hor_ra += 24
+                if hor_ra >= 24:
+                    hor_ra -= 24
+            else:
+                hor_ra = 0
+            hor_dec = math.atan2(pr[2], proj) * _RAD2DEG
+
+    return HorizontalCoordinates(az, 90.0 - zd, hor_ra, hor_dec)
+    

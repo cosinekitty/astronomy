@@ -65,9 +65,16 @@ def Test_AstroCheck():
                 pos = astronomy.HelioVector(body, time)                
                 print('v {} {:0.16f} {:0.16f} {:0.16f} {:0.16f}'.format(name, pos.t.tt, pos.x, pos.y, pos.z))
                 if body != astronomy.BODY_EARTH:
-                    pass
+                    j2000 = astronomy.Equator(body, time, observer, False, False)
+                    ofdate = astronomy.Equator(body, time, observer, True, True)
+                    hor = astronomy.Horizon(time, observer, ofdate.ra, ofdate.dec, astronomy.REFRACTION_NONE)
+                    print('s {} {:0.16f} {:0.16f} {:0.16f} {:0.16f} {:0.16f} {:0.16f} {:0.16f}'.format(name, time.tt, time.ut, j2000.ra, j2000.dec, j2000.dist, hor.azimuth, hor.altitude))
         pos = astronomy.GeoMoon(time)
         print('v GM {:0.16f} {:0.16f} {:0.16f} {:0.16f}'.format(pos.t.tt, pos.x, pos.y, pos.z))
+        j2000 = astronomy.Equator(astronomy.BODY_MOON, time, observer, False, False)
+        ofdate = astronomy.Equator(astronomy.BODY_MOON, time, observer, True, True)
+        hor = astronomy.Horizon(time, observer, ofdate.ra, ofdate.dec, astronomy.REFRACTION_NONE)
+        print('s GM {:0.16f} {:0.16f} {:0.16f} {:0.16f} {:0.16f} {:0.16f} {:0.16f}'.format(time.tt, time.ut, j2000.ra, j2000.dec, j2000.dist, hor.azimuth, hor.altitude))
         time = time.AddDays(dt)
 
 if len(sys.argv) == 2:
