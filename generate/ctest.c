@@ -231,9 +231,9 @@ static int AstroCheck(void)
 
             if (body != BODY_EARTH)
             {
-                CHECK_EQU(j2000, Astronomy_Equator(body, time, observer, EQUATOR_J2000, NO_ABERRATION));
-                CHECK_EQU(ofdate, Astronomy_Equator(body, time, observer, EQUATOR_OF_DATE, ABERRATION));
-                hor = Astronomy_Horizon(time, observer, ofdate.ra, ofdate.dec, REFRACTION_NONE);
+                CHECK_EQU(j2000, Astronomy_Equator(body, &time, observer, EQUATOR_J2000, NO_ABERRATION));
+                CHECK_EQU(ofdate, Astronomy_Equator(body, &time, observer, EQUATOR_OF_DATE, ABERRATION));
+                hor = Astronomy_Horizon(&time, observer, ofdate.ra, ofdate.dec, REFRACTION_NONE);
                 fprintf(outfile, "s %s %0.16lf %0.16lf %0.16lf %0.16lf %0.16lf %0.16lf %0.16lf\n", 
                     Astronomy_BodyName(body), time.tt, time.ut, j2000.ra, j2000.dec, j2000.dist, hor.azimuth, hor.altitude);
             }
@@ -242,9 +242,9 @@ static int AstroCheck(void)
         CHECK_VECTOR(pos, Astronomy_GeoVector(BODY_MOON, time, NO_ABERRATION));
         fprintf(outfile, "v GM %0.16lf %0.16lf %0.16lf %0.16lf\n", pos.t.tt, pos.x, pos.y, pos.z);
 
-        CHECK_EQU(j2000, Astronomy_Equator(BODY_MOON, time, observer, EQUATOR_J2000, NO_ABERRATION));
-        CHECK_EQU(ofdate, Astronomy_Equator(BODY_MOON, time, observer, EQUATOR_OF_DATE, ABERRATION));
-        hor = Astronomy_Horizon(time, observer, ofdate.ra, ofdate.dec, REFRACTION_NONE);
+        CHECK_EQU(j2000, Astronomy_Equator(BODY_MOON, &time, observer, EQUATOR_J2000, NO_ABERRATION));
+        CHECK_EQU(ofdate, Astronomy_Equator(BODY_MOON, &time, observer, EQUATOR_OF_DATE, ABERRATION));
+        hor = Astronomy_Horizon(&time, observer, ofdate.ra, ofdate.dec, REFRACTION_NONE);
         fprintf(outfile, "s GM %0.16lf %0.16lf %0.16lf %0.16lf %0.16lf %0.16lf %0.16lf\n", 
             time.tt, time.ut, j2000.ra, j2000.dec, j2000.dist, hor.azimuth, hor.altitude);
 

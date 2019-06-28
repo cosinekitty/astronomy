@@ -62,6 +62,8 @@ static const double SUN_RADIUS_AU  = 4.6505e-3;
 static const double MOON_RADIUS_AU = 1.15717e-5;
 static const double ASEC180 = 180.0 * 60.0 * 60.0;        /* arcseconds per 180 degrees (or pi radians) */
 
+static const double ETILT_INVALID = 1.0e+99;
+
 /** @cond DOXYGEN_SKIP */
 #define ARRAYSIZE(x)    (sizeof(x) / sizeof(x[0]))
 #define AU_PER_PARSEC   (ASEC180 / PI)             /* exact definition of how many AU = one parsec */
@@ -248,12 +250,19 @@ static astro_func_result_t FuncError(astro_status_t status)
     return result;
 }
 
+static astro_time_t TimeError(void)
+{
+    astro_time_t time;
+    time.tt = time.ut = time.eps = time.psi = NAN;
+    return time;
+}
+
 static astro_moon_quarter_t MoonQuarterError(astro_status_t status)
 {
     astro_moon_quarter_t result;
     result.status = status;
     result.quarter = -1;
-    result.time.tt = result.time.ut = NAN;
+    result.time = TimeError();
     return result;
 }
 
@@ -264,7 +273,7 @@ static astro_elongation_t ElongError(astro_status_t status)
     result.status = status;
     result.elongation = NAN;
     result.ecliptic_separation = NAN;
-    result.time.tt = result.time.ut = NAN;
+    result.time = TimeError();
     result.visibility = (astro_visibility_t)(-1);
 
     return result;
@@ -275,7 +284,7 @@ static astro_hour_angle_t HourAngleError(astro_status_t status)
     astro_hour_angle_t result;
 
     result.status = status;
-    result.time.tt = result.time.ut = NAN;
+    result.time = TimeError();
     result.hor.altitude = result.hor.azimuth = result.hor.dec = result.hor.ra = NAN;
 
     return result;
@@ -286,7 +295,7 @@ static astro_illum_t IllumError(astro_status_t status)
     astro_illum_t result;
 
     result.status = status;
-    result.time.tt = result.time.ut = NAN;
+    result.time = TimeError();
     result.mag = NAN;
     result.phase_angle = NAN;
     result.helio_dist = NAN;
@@ -300,7 +309,7 @@ static astro_apsis_t ApsisError(astro_status_t status)
     astro_apsis_t result;
 
     result.status = status;
-    result.time.tt = result.time.ut = NAN;
+    result.time = TimeError();
     result.kind = APSIS_INVALID;
     result.dist_km = result.dist_au = NAN;
 
@@ -310,7 +319,7 @@ static astro_apsis_t ApsisError(astro_status_t status)
 static astro_search_result_t SearchError(astro_status_t status)
 {
     astro_search_result_t result;
-    result.time.tt = result.time.ut = NAN;
+    result.time = TimeError();
     result.status = status;
     return result;
 }
@@ -514,6 +523,7 @@ static astro_time_t UniversalTime(double ut)
     astro_time_t  time;
     time.ut = ut;
     time.tt = TerrestrialTime(ut);
+    time.psi = time.eps = ETILT_INVALID;
     return time;
 }
 
@@ -534,6 +544,7 @@ astro_time_t Astronomy_CurrentTime(void)
 
     t.ut = (time(NULL) / SECONDS_PER_DAY) - 10957.5;
     t.tt = TerrestrialTime(t.ut);
+    t.psi = t.eps = ETILT_INVALID;
     return t;
 }
 
@@ -574,8 +585,8 @@ astro_time_t Astronomy_MakeTime(int year, int month, int day, int hour, int minu
     y2000 = jd12h - 2451545L;
 
     time.ut = (double)y2000 - 0.5 + (hour / 24.0) + (minute / (24.0 * 60.0)) + (second / (24.0 * 3600.0));
-
     time.tt = TerrestrialTime(time.ut);
+    time.psi = time.eps = ETILT_INVALID;
 
     return time;
 }
@@ -613,6 +624,7 @@ astro_time_t Astronomy_AddDays(astro_time_t time, double days)
 
     sum.ut = time.ut + days;
     sum.tt = TerrestrialTime(sum.ut);
+    sum.eps = sum.psi = ETILT_INVALID;
 
     return sum;
 }
@@ -700,7 +712,7 @@ astro_observer_t Astronomy_MakeObserver(double latitude, double longitude, doubl
     return observer;
 }
 
-static void iau2000b(astro_time_t time, double *dpsi, double *deps)
+static void iau2000b(astro_time_t *time)
 {
     /* Adapted from the NOVAS C 3.1 function of the same name. */
 
@@ -869,25 +881,28 @@ static void iau2000b(astro_time_t time, double *dpsi, double *deps)
     double t, el, elp, f, d, om, arg, dp, de, sarg, carg;
     int i;
 
-    t = time.tt / 36525;
-    el  = fmod(485868.249036 + t * 1717915923.2178, ASEC360) * ASEC2RAD;
-    elp = fmod(1287104.79305 + t * 129596581.0481,  ASEC360) * ASEC2RAD;
-    f   = fmod(335779.526232 + t * 1739527262.8478, ASEC360) * ASEC2RAD;
-    d   = fmod(1072260.70369 + t * 1602961601.2090, ASEC360) * ASEC2RAD;
-    om  = fmod(450160.398036 - t * 6962890.5431,    ASEC360) * ASEC2RAD;
-    dp = 0;
-    de = 0;
-    for (i=76; i >= 0; --i)
+    if (time->psi == ETILT_INVALID)
     {
-        arg = fmod((nals_t[i][0]*el + nals_t[i][1]*elp + nals_t[i][2]*f + nals_t[i][3]*d + nals_t[i][4]*om), PI2);
-        sarg = sin(arg);
-        carg = cos(arg);
-        dp += (cls_t[i][0] + cls_t[i][1] * t) * sarg + cls_t[i][2] * carg;
-        de += (cls_t[i][3] + cls_t[i][4] * t) * carg + cls_t[i][5] * sarg;
-    }
+        t = time->tt / 36525;
+        el  = fmod(485868.249036 + t * 1717915923.2178, ASEC360) * ASEC2RAD;
+        elp = fmod(1287104.79305 + t * 129596581.0481,  ASEC360) * ASEC2RAD;
+        f   = fmod(335779.526232 + t * 1739527262.8478, ASEC360) * ASEC2RAD;
+        d   = fmod(1072260.70369 + t * 1602961601.2090, ASEC360) * ASEC2RAD;
+        om  = fmod(450160.398036 - t * 6962890.5431,    ASEC360) * ASEC2RAD;
+        dp = 0;
+        de = 0;
+        for (i=76; i >= 0; --i)
+        {
+            arg = fmod((nals_t[i][0]*el + nals_t[i][1]*elp + nals_t[i][2]*f + nals_t[i][3]*d + nals_t[i][4]*om), PI2);
+            sarg = sin(arg);
+            carg = cos(arg);
+            dp += (cls_t[i][0] + cls_t[i][1] * t) * sarg + cls_t[i][2] * carg;
+            de += (cls_t[i][3] + cls_t[i][4] * t) * carg + cls_t[i][5] * sarg;
+        }
 
-    *dpsi = -0.000135 + (dp * 1.0e-7);
-    *deps = +0.000388 + (de * 1.0e-7);
+        time->psi = -0.000135 + (dp * 1.0e-7);
+        time->eps = +0.000388 + (de * 1.0e-7);
+    }
 }
 
 static double mean_obliq(double tt)
@@ -916,14 +931,16 @@ typedef struct
 earth_tilt_t;
 /** @endcond */
 
-static earth_tilt_t e_tilt(astro_time_t time)
+static earth_tilt_t e_tilt(astro_time_t *time)
 {
     earth_tilt_t et;
 
-    iau2000b(time, &et.dpsi, &et.deps);
-    et.mobl = mean_obliq(time.tt);
+    iau2000b(time);
+    et.dpsi = time->psi;
+    et.deps = time->eps;
+    et.mobl = mean_obliq(time->tt);
     et.tobl = et.mobl + (et.deps / 3600.0);
-    et.tt = time.tt;
+    et.tt = time->tt;
     et.ee = et.dpsi * cos(et.mobl * DEG2RAD) / 15.0;
 
     return et;
@@ -1049,7 +1066,7 @@ static astro_equatorial_t vector2radec(const double pos[3])
     return equ;
 }
 
-static void nutation(astro_time_t time, int direction, const double inpos[3], double outpos[3])
+static void nutation(astro_time_t *time, int direction, const double inpos[3], double outpos[3])
 {
     earth_tilt_t tilt = e_tilt(time);
     double oblm = tilt.mobl * DEG2RAD;
@@ -1088,10 +1105,10 @@ static void nutation(astro_time_t time, int direction, const double inpos[3], do
     }
 }
 
-static double era(astro_time_t time)        /* Earth Rotation Angle */
+static double era(double ut)        /* Earth Rotation Angle */
 {
-    double thet1 = 0.7790572732640 + 0.00273781191135448 * time.ut;
-    double thet3 = fmod(time.ut, 1.0);
+    double thet1 = 0.7790572732640 + 0.00273781191135448 * ut;
+    double thet3 = fmod(ut, 1.0);
     double theta = 360.0 * fmod(thet1 + thet3, 1.0);
     if (theta < 0.0)
         theta += 360.0;
@@ -1099,11 +1116,11 @@ static double era(astro_time_t time)        /* Earth Rotation Angle */
     return theta;
 }
 
-static double sidereal_time(astro_time_t time)
+static double sidereal_time(astro_time_t *time)
 {
-    double t = time.tt / 36525.0;
+    double t = time->tt / 36525.0;
     double eqeq = 15.0 * e_tilt(time).ee;    /* Replace with eqeq=0 to get GMST instead of GAST (if we ever need it) */
-    double theta = era(time);
+    double theta = era(time->ut);
     double st = (eqeq + 0.014506 +
         (((( -    0.0000000368   * t
             -    0.000029956  ) * t
@@ -1144,14 +1161,14 @@ static void terra(astro_observer_t observer, double st, double pos[3], double ve
     vel[2] = 0.0;
 }
 
-static void geo_pos(astro_time_t time, astro_observer_t observer, double outpos[3])
+static void geo_pos(astro_time_t *time, astro_observer_t observer, double outpos[3])
 {
     double gast, vel[3], pos1[3], pos2[3];
 
     gast = sidereal_time(time);
     terra(observer, gast, pos1, vel);
     nutation(time, -1, pos1, pos2);
-    precession(time.tt, pos2, 0.0, outpos);
+    precession(time->tt, pos2, 0.0, outpos);
 }
 
 static void spin(double angle, const double pos1[3], double vec2[3])
@@ -2923,7 +2940,7 @@ finished:
  */
 astro_equatorial_t Astronomy_Equator(
     astro_body_t body,
-    astro_time_t time,
+    astro_time_t *time,
     astro_observer_t observer,
     astro_equator_date_t equdate,
     astro_aberration_t aberration)
@@ -2936,7 +2953,7 @@ astro_equatorial_t Astronomy_Equator(
     double datevect[3];
 
     geo_pos(time, observer, gc_observer);
-    gc = Astronomy_GeoVector(body, time, aberration);
+    gc = Astronomy_GeoVector(body, *time, aberration);
     if (gc.status != ASTRO_SUCCESS)
         return EquError(gc.status);
 
@@ -2947,7 +2964,7 @@ astro_equatorial_t Astronomy_Equator(
     switch (equdate)
     {
     case EQUATOR_OF_DATE:
-        precession(0.0, j2000, time.tt, temp);
+        precession(0.0, j2000, time->tt, temp);
         nutation(time, 0, temp, datevect);
         equ = vector2radec(datevect);
         return equ;
@@ -3009,7 +3026,7 @@ astro_equatorial_t Astronomy_Equator(
  *      The body's apparent horizontal coordinates and equatorial coordinates, both optionally corrected for refraction.
  */
 astro_horizon_t Astronomy_Horizon(
-    astro_time_t time, astro_observer_t observer, double ra, double dec, astro_refraction_t refraction)
+    astro_time_t *time, astro_observer_t observer, double ra, double dec, astro_refraction_t refraction)
 {
     astro_horizon_t hor;
     double uze[3], une[3], uwe[3];
@@ -3178,10 +3195,10 @@ astro_ecliptic_t Astronomy_SunPosition(astro_time_t time)
 
     /* Convert to equatorial Cartesian coordinates of date. */
     precession(0.0, sun2000, adjusted_time.tt, stemp);
-    nutation(adjusted_time, 0, stemp, sun_ofdate);
+    nutation(&adjusted_time, 0, stemp, sun_ofdate);
 
     /* Convert equatorial coordinates to ecliptic coordinates. */
-    true_obliq = DEG2RAD * e_tilt(adjusted_time).tobl;
+    true_obliq = DEG2RAD * e_tilt(&adjusted_time).tobl;
     return RotateEquatorialToEcliptic(sun_ofdate, true_obliq);
 }
 
@@ -4387,10 +4404,10 @@ astro_hour_angle_t Astronomy_SearchHourAngle(
         ++iter;
 
         /* Calculate Greenwich Apparent Sidereal Time (GAST) at the given time. */
-        gast = sidereal_time(time);
+        gast = sidereal_time(&time);
 
         /* Obtain equatorial coordinates of date for the body. */
-        ofdate = Astronomy_Equator(body, time, observer, EQUATOR_OF_DATE, ABERRATION);
+        ofdate = Astronomy_Equator(body, &time, observer, EQUATOR_OF_DATE, ABERRATION);
         if (ofdate.status != ASTRO_SUCCESS)
             return HourAngleError(ofdate.status);
 
@@ -4417,7 +4434,7 @@ astro_hour_angle_t Astronomy_SearchHourAngle(
         /* If the error is tolerable (less than 0.1 seconds), the search has succeeded. */
         if (fabs(delta_sidereal_hours) * 3600.0 < 0.1)
         {
-            result.hor = Astronomy_Horizon(time, observer, ofdate.ra, ofdate.dec, REFRACTION_NORMAL);
+            result.hor = Astronomy_Horizon(&time, observer, ofdate.ra, ofdate.dec, REFRACTION_NORMAL);
             result.time = time;
             result.status = ASTRO_SUCCESS;
             return result;
@@ -4458,13 +4475,13 @@ static astro_func_result_t peak_altitude(void *context, astro_time_t time)
         depending on whether the caller wants rise times or set times, respectively.
     */
 
-    ofdate = Astronomy_Equator(p->body, time, p->observer, EQUATOR_OF_DATE, ABERRATION);
+    ofdate = Astronomy_Equator(p->body, &time, p->observer, EQUATOR_OF_DATE, ABERRATION);
     if (ofdate.status != ASTRO_SUCCESS)
         return FuncError(ofdate.status);
 
     /* We calculate altitude without refraction, then subtract fixed refraction near the horizon. */
     /* This gives us the time of rise/set without the extra work. */
-    hor = Astronomy_Horizon(time, p->observer, ofdate.ra, ofdate.dec, REFRACTION_NONE);
+    hor = Astronomy_Horizon(&time, p->observer, ofdate.ra, ofdate.dec, REFRACTION_NONE);
     result.value = p->direction * (hor.altitude + RAD2DEG*(p->body_radius_au / ofdate.dist) + REFRACTION_NEAR_HORIZON);
     result.status = ASTRO_SUCCESS;
     return result;

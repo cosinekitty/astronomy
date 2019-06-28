@@ -41,21 +41,21 @@ int main(int argc, const char *argv[])
     printf("BODY           RA      DEC       AZ      ALT\n");
     for (i=0; i < num_bodies; ++i)
     {
-        equ_2000 = Astronomy_Equator(body[i], time, observer, EQUATOR_J2000, ABERRATION);
+        equ_2000 = Astronomy_Equator(body[i], &time, observer, EQUATOR_J2000, ABERRATION);
         if (equ_2000.status != ASTRO_SUCCESS)
         {
             fprintf(stderr, "ERROR: Astronomy_Equator returned status %d trying to get J2000 coordinates.\n", equ_2000.status);
             return 1;
         }
 
-        equ_ofdate = Astronomy_Equator(body[i], time, observer, EQUATOR_OF_DATE, ABERRATION);
+        equ_ofdate = Astronomy_Equator(body[i], &time, observer, EQUATOR_OF_DATE, ABERRATION);
         if (equ_ofdate.status != ASTRO_SUCCESS)
         {
             fprintf(stderr, "ERROR: Astronomy_Equator returned status %d trying to get coordinates of date.\n", equ_ofdate.status);
             return 1;
         }
 
-        hor = Astronomy_Horizon(time, observer, equ_ofdate.ra, equ_ofdate.dec, REFRACTION_NORMAL);
+        hor = Astronomy_Horizon(&time, observer, equ_ofdate.ra, equ_ofdate.dec, REFRACTION_NORMAL);
         printf("%-8s %8.2lf %8.2lf %8.2lf %8.2lf\n", Astronomy_BodyName(body[i]), equ_2000.ra, equ_2000.dec, hor.azimuth, hor.altitude);
     }
 

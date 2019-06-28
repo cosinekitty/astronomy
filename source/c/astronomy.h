@@ -130,6 +130,16 @@ typedef struct
      * Historically, Terrestrial Time has also been known by the term <i>Ephemeris Time</i> (ET).
      */
     double tt;
+
+    /**
+     * @brief   For internal use only. Used to optimize Earth tilt calculations.
+     */
+    double psi;
+
+    /**
+     * @brief   For internal use only.  Used to optimize Earth tilt calculations.
+     */
+    double eps;
 }
 astro_time_t;
 
@@ -521,7 +531,7 @@ astro_vector_t Astronomy_GeoMoon(astro_time_t time);
 
 astro_equatorial_t Astronomy_Equator(
     astro_body_t body,
-    astro_time_t time,
+    astro_time_t *time,
     astro_observer_t observer,
     astro_equator_date_t equdate,
     astro_aberration_t aberration
@@ -532,7 +542,7 @@ astro_ecliptic_t Astronomy_Ecliptic(astro_vector_t equ);
 astro_angle_result_t Astronomy_EclipticLongitude(astro_body_t body, astro_time_t time);
 
 astro_horizon_t Astronomy_Horizon(
-    astro_time_t time,
+    astro_time_t *time,
     astro_observer_t observer,
     double ra,
     double dec,
