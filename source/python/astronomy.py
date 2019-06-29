@@ -113,6 +113,14 @@ class BadVectorError(Error):
     def __init__(self):
         Error.__init__(self, 'Vector is too small to have a direction.')
 
+class InternalError(Error):
+    def __init__(self):
+        Error.__init__(self, 'Internal error - please report issue at https://github.com/cosinekitty/astronomy/issues')
+
+class NoConvergeError(Error):
+    def __init__(self):
+        Error.__init__(self, 'Numeric solver did not converge - please report issue at https://github.com/cosinekitty/astronomy/issues')
+
 def _SynodicPeriod(body):
     if body == BODY_EARTH:
         raise EarthNotAllowedError()
@@ -1850,10 +1858,10 @@ def _QuadInterp(tm, dt, fa, fm, fb):
     df_dt = (2*Q*x + R) / dt
     return (x, t, df_dt)
 
-def Search(func, t1, t2, dt_tolerance_seconds):
+def Search(func, context, t1, t2, dt_tolerance_seconds):
     dt_days = abs(dt_tolerance_seconds / _SECONDS_PER_DAY)
-    f1 = func(t1)
-    f2 = func(t2)
+    f1 = func(context, t1)
+    f2 = func(context, t2)
     iter = 0
     iter_limit = 20
     calc_fmid = True
@@ -1869,7 +1877,7 @@ def Search(func, t1, t2, dt_tolerance_seconds):
             return tmid
 
         if calc_fmid:
-            fmid = func(tmid)
+            fmid = func(context, tmid)
         else:
             # We already have the correct value of fmid from the previous loop.
             calc_fmid = True
@@ -1881,7 +1889,7 @@ def Search(func, t1, t2, dt_tolerance_seconds):
         if q:
             (q_x, q_ut, q_df_dt) = q
             tq = Time(q_ut)
-            fq = func(tq)
+            fq = func(context, tq)
             if q_df_dt != 0.0:
                 dt_guess = abs(fq / q_df_dt)
                 if dt_guess < dt_days:
@@ -1895,8 +1903,8 @@ def Search(func, t1, t2, dt_tolerance_seconds):
                     tright = tq.AddDays(+dt_guess)
                     if (tleft.ut - t1.ut)*(tleft.ut - t2.ut) < 0.0:
                         if (tright.ut - t1.ut)*(tright.ut - t2.ut) < 0.0:
-                            fleft = func(tleft)
-                            fright = func(tright)
+                            fleft = func(context, tleft)
+                            fright = func(context, tright)
                             if fleft < 0.0 and fright >= 0.0:
                                 f1 = fleft
                                 f2 = fright
@@ -2156,25 +2164,194 @@ def AngleFromSun(body, time):
     bv = GeoVector(body, time, True)
     return _AngleBetween(sv, bv)
 
-    # - SearchSunLongitude
-    #       - sun_offset
-    #       + SunPosition
-    #           + RotateEquatorialToEcliptic
-    # + Ecliptic
-    # + EclipticLongitude
-    # + AngleFromSun
-    # - Elongation
-    # - SearchMaxElongation
-    # - LongitudeFromSun
-    # - SearchRelativeLongitude
-    # - MoonPhase
-    # - SearchMoonPhase
-    # - SearchMoonQuarter
-    # - NextMoonQuarter
-    # - SearchHourAngle
-    # - SearchRiseSet
-    # - Seasons
-    # - Illumination
-    # - SearchPeakMagnitude
-    # - SearchLunarApsis
-    # - NextLunarApsis
+def LongitudeFromSun(body, time):
+    if body == EARTH:
+        raise EarthNotAllowedError()
+    sv = GeoVector(BODY_SUN, time, True)
+    se = Ecliptic(sv)
+    bv = GeoVector(body, time, True)
+    be = Ecliptic(bv)
+    return _NormalizeLongitude(be.elon - se.elon)
+
+class ElongationEvent:
+    def __init__(self, time, visibility, elongation, ecliptic_separation):
+        self.time = time
+        self.visibility = visibility
+        self.elongation = elongation
+        self.ecliptic_separation = ecliptic_separation
+
+def Elongation(body, time):
+    angle = LongitudeFromSun(body, time)
+    if angle > 180.0:
+        visibility = 'morning'
+        esep = 360.0 - angle
+    else:
+        visibility = 'evening'
+        esep = angle
+    angle = AngleFromSun(body, time)
+    return ElongationEvent(time, visibility, angle, esep)
+
+def _rlon_offset(body, time, direction, targetRelLon):
+    plon = EclipticLongitude(body, time)
+    elon = EclipticLongitude(BODY_EARTH, time)
+    diff = direction * (elon - plon)
+    return _LongitudeOffset(diff - targetRelLon)
+
+def SearchRelativeLongitude(body, targetRelLon, startTime):
+    if body == BODY_EARTH:
+        raise EarthNotAllowedError()
+    if body == BODY_MOON or body == BODY_SUN:
+        raise InvalidBodyError()
+    syn = _SynodicPeriod(body)
+    direction = +1 if _IsSuperiorPlanet(body) else -1
+    # Iterate until we converge on the desired event.
+    # Calculate the error angle, which will be a negative number of degrees,
+    # meaning we are "behind" the target relative longitude.
+    error_angle = _rlon_offset(body, startTime, direction, targetRelLon)
+    if error_angle > 0.0:
+        error_angle -= 360.0    # force searching forward in time
+    time = startTime
+    iter = 0
+    while iter < 100:
+        # Estimate how many days in the future (positive) or past (negative)
+        # we have to go to get closer to the target relative longitude.
+        day_adjust = (-error_angle/360.0) * syn
+        time = time.AddDays(day_adjust)
+        if abs(day_adjust) * _SECONDS_PER_DAY < 1.0:
+            return time
+        prev_angle = error_angle
+        error_angle = _rlon_offset(body, time, direction, targetRelLon)
+        if abs(prev_angle) < 30.0 and prev_angle != error_angle:
+            # Improve convergence for Mercury/Mars (eccentric orbits)
+            # by adjusting the synodic period to more closely match the
+            # variable speed of both planets in this part of their respective orbits.
+            ratio = prev_angle / (prev_angle - error_angle)
+            if 0.5 < ratio < 2.0:
+                syn *= ratio
+        iter += 1
+    raise NoConvergeError()
+
+def _neg_elong_slope(body, time):
+    dt = 0.1
+    t1 = time.AddDays(-dt/2.0)
+    t2 = time.AddDays(+dt/2.0)
+    e1 = AngleFromSun(body, t1)
+    e2 = AngleFromSun(body, t2)
+    return (e1 - e2)/dt
+
+def SearchMaxElongation(body, startTime):
+    if body == BODY_MERCURY:
+        s1 = 50.0
+        s2 = 85.0
+    elif body == BODY_VENUS:
+        s1 = 40.0
+        s2 = 50.0
+    else:
+        raise InvalidBodyError()
+    syn = _SynodicPeriod(body)
+    iter = 1
+    while iter <= 2:
+        plon = EclipticLongitude(body, startTime)
+        elon = EclipticLongitude(BODY_EARTH, startTime)
+        rlon = _LongitudeOffset(plon - elon)    # clamp to (-180, +180]
+
+        # The slope function is not well-behaved when rlon is near 0 degrees or 180 degrees
+        # because there is a cusp there that causes a discontinuity in the derivative.
+        # So we need to guard against searching near such times.
+        if rlon >= -s1 and rlon < +s1:
+            # Seek to the window [+s1, +s2].
+            adjust_days = 0.0
+            # Search forward for the time t1 when rel lon = +s1.
+            rlon_lo = +s1
+            # Search forward for the time t2 when rel lon = +s2.
+            rlon_hi = +s2
+        elif rlon > +s2 or rlon < -s2:
+            # Seek to the next search window at [-s2, -s1].
+            adjust_days = 0.0
+            # Search forward for the time t1 when rel lon = -s2.
+            rlon_lo = -s2
+            # Search forward for the time t2 when rel lon = -s1.
+            rlon_hi = -s1
+        elif rlon >= 0.0:
+            # rlon must be in the middle of the window [+s1, +s2].
+            # Search BACKWARD for the time t1 when rel lon = +s1.
+            adjust_days = -syn / 4.0
+            rlon_lo = +s1
+            rlon_hi = +s2
+            # Search forward from t1 to find t2 such that rel lon = +s2.
+        else:
+            # rlon must be in the middle of the window [-s2, -s1].
+            # Search BACKWARD for the time t1 when rel lon = -s2.
+            adjust_days = -syn / 4.0
+            rlon_lo = -s2
+            # Search forward from t1 to find t2 such that rel lon = -s1.
+            rlon_hi = -s1
+
+        t_start = startTime.AddDays(adjust_days)
+        search1 = SearchRelativeLongitude(body, rlon_lo, t_start)
+        if not search1:
+            return None
+        t1 = search1.time
+
+        search2 = SearchRelativeLongitude(body, rlon_hi, t1)
+        if not search2:
+            return None
+        t2 = search2.time
+
+        # Now we have a time range [t1,t2] that brackets a maximum elongation event.
+        # Confirm the bracketing.
+        m1 = _neg_elong_slope(body, t1)
+        if m1 >= 0.0:
+            raise InternalError()   # there is a bug in the bracketing algorithm!
+
+        m2 = _neg_elong_slope(body, t2)
+        if m2 <= 0.0:
+            raise InternalError()   # there is a bug in the bracketing algorithm!
+
+        # Use the generic search algorithm to home in on where the slope crosses from negative to positive.
+        searchx = Search(neg_elong_slope, body, t1, t2, 10.0)
+        if not searchx:
+            return None
+
+        if searchx.time.tt >= startTime.tt:
+            return Elongation(body, searchx.time)
+
+        # This event is in the past (earlier than startTime).
+        # We need to search forward from t2 to find the next possible window.
+        # We never need to search more than twice.
+        startTime = t2.AddDays(1.0)
+        iter += 1
+
+
+def _sun_offset(targetLon, time):
+    ecl = SunPosition(time)
+    return _LongitudeOffset(ecl.elon - targetLon)
+
+def SearchSunLongitude(targetLon, startTime, limitDays):
+    t2 = startTime.Add(limitDays)
+    return Search(_sun_offset, targetLon, startTime, t2, 1.0)
+
+#==================================================================================================
+# + SearchSunLongitude
+#       + _sun_offset
+#       + SunPosition
+#           + RotateEquatorialToEcliptic
+# + Ecliptic
+# + EclipticLongitude
+# + AngleFromSun
+# + SearchMaxElongation
+#       + _neg_elong_slope
+#       + SearchRelativeLongitude
+#       + Elongation
+#           + LongitudeFromSun
+# - MoonPhase
+# - SearchMoonPhase
+# - SearchMoonQuarter
+# - NextMoonQuarter
+# - SearchHourAngle
+# - SearchRiseSet
+# - Seasons
+# - Illumination
+# - SearchPeakMagnitude
+# - SearchLunarApsis
+# - NextLunarApsis
