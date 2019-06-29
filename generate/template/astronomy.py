@@ -26,6 +26,7 @@ _REFRACTION_NEAR_HORIZON = 34.0 / 60.0
 _SUN_RADIUS_AU  = 4.6505e-3
 _MOON_RADIUS_AU = 1.15717e-5
 _ASEC180 = 180.0 * 60.0 * 60.0
+_AU_PER_PARSEC = _ASEC180 / math.pi
 
 def _LongitudeOffset(diff):
     offset = diff
@@ -1524,6 +1525,108 @@ def SearchMoonPhase(targetLon, startTime, limitDays):
     t2 = startTime.AddDays(dt2)
     return Search(_moon_offset, targetLon, t1, t2, 1.0)
 
+class IlluminationInfo:
+    def __init__(self, time, mag, phase, helio_dist, geo_dist, gc, hc, ring_tilt):
+        self.time = time
+        self.mag = mag
+        self.phase_angle = phase
+        self.phase_fraction = (1.0 + math.cos(_DEG2RAD * phase)) / 2.0
+        self.helio_dist = helio_dist
+        self.geo_dist = geo_dist
+        self.gc = gc
+        self.hc = hc
+        self.ring_tilt = ring_tilt
+
+def _MoonMagnitude(phase, helio_dist, geo_dist):
+    # https://astronomy.stackexchange.com/questions/10246/is-there-a-simple-analytical-formula-for-the-lunar-phase-brightness-curve
+    rad = phase * _DEG2RAD
+    mag = -12.717 + 1.49*abs(rad) + 0.0431*(rad**4)
+    moon_mean_distance_au = 385000.6 / _KM_PER_AU
+    geo_au = geo_dist / moon_mean_distance_au
+    mag += 5.0 * math.log10(helio_dist * geo_au)
+    return mag
+
+def _SaturnMagnitude(phase, helio_dist, geo_dist, gc, time):
+    # Based on formulas by Paul Schlyter found here:
+    # http://www.stjarnhimlen.se/comp/ppcomp.html#15
+
+    # We must handle Saturn's rings as a major component of its visual magnitude.
+    # Find geocentric ecliptic coordinates of Saturn.
+    eclip = Ecliptic(gc)
+
+    ir = DEG2RAD * 28.06   # tilt of Saturn's rings to the ecliptic, in radians
+    Nr = DEG2RAD * (169.51 + (3.82e-5 * time.tt))    # ascending node of Saturn's rings, in radians
+
+    # Find tilt of Saturn's rings, as seen from Earth.
+    lat = _DEG2RAD * eclip.elat
+    lon = _DEG2RAD * eclip.elon
+    tilt = math.asin(math.sin(lat)*math.cos(ir) - math.cos(lat)*math.sin(ir)*math.sin(lon-Nr))
+    sin_tilt = math.sin(abs(tilt))
+
+    mag = -9.0 + 0.044*phase
+    mag += sin_tilt*(-2.6 + 1.2*sin_tilt)
+    mag += 5.0 * math.log10(helio_dist * geo_dist)
+    ring_tilt = _RAD2DEG * tilt
+    return (mag, ring_tilt)
+
+def _VisualMagnitude(body, phase, helio_dist, geo_dist):
+    # For Mercury and Venus, see:  https://iopscience.iop.org/article/10.1086/430212
+    c0 = c1 = c2 = c3 = 0
+    if body == BODY_MERCURY:
+        c0 = -0.60; c1 = +4.98; c2 = -4.88; c3 = +3.02
+    elif body == BODY_VENUS:
+        if phase < 163.6:
+            c0 = -4.47; c1 = +1.03; c2 = +0.57; c3 = +0.13
+        else:
+            c0 = +0.98; c1 = -1.02
+    elif body == BODY_MARS:
+        c0 = -1.52; c1 = +1.60
+    elif body == BODY_JUPITER:
+        c0 = -9.40; c1 = +0.50
+    elif body == BODY_URANUS:
+        c0 = -7.19; c1 = +0.25
+    elif body == BODY_NEPTUNE:
+        c0 = -6.87
+    elif body == BODY_PLUTO:
+        c0 = -1.00; c1 = +4.00
+    else:
+        raise InvalidBodyError()
+
+    x = phase / 100.0
+    mag = c0 + x*(c1 + x*(c2 + x*c3))
+    mag += 5.0 * math.log10(helio_dist * geo_dist)
+    return mag
+
+def Illumination(body, time):
+    if body == BODY_EARTH:
+        raise EarthNotAllowedError()
+    earth = _CalcEarth(time)
+    if body == BODY_SUN:
+        gc = Vector(-earth.x, -earth.y, -earth.z, time)
+        phase = 0.0     # placeholder value; the Sun does not have a phase angle.
+    else:
+        if body == BODY_MOON:
+            # For extra numeric precision, use geocentric moon formula directly.
+            gc = GeoMoon(time)
+            hc = Vector(earth.x + gc.x, earth.y + gc.y, earth.z + gc.z, time)
+        else:
+            # For planets, heliocentric vector is most direct to calculate.
+            hc = HelioVector(body, time)
+            gc = Vector(hc.x - earth.x, hc.y - earth.y, hc.z - earth.z, time)
+        phase = _AngleBetween(gc, hc)
+
+    geo_dist = gc.Length()      # distance from body to center of Earth
+    helio_dist = hc.Length()    # distance from body to center of Sun
+    ring_tilt = None            # only reported for Saturn
+    if body == BODY_SUN:
+        mag = -0.17 + 5.0*math.log10(geo_dist / _AU_PER_PARSEC)
+    elif body == BODY_MOON:
+        mag = _MoonMagnitude(phase, helio_dist, geo_dist)
+    elif body == BODY_SATURN:
+        mag, ring_tilt = _SaturnMagnitude(phase, helio_dist, geo_dist, gc, time)
+    else:
+        mag = _VisualMagnitude(body, phase, helio_dist, geo_dist)
+    return IlluminationInfo(time, mag, phase, helio_dist, geo_dist, gc, hc, ring_tilt)
 
 #==================================================================================================
 # + SearchSunLongitude
@@ -1546,7 +1649,7 @@ def SearchMoonPhase(targetLon, startTime, limitDays):
 # - SearchHourAngle
 # - SearchRiseSet
 # - Seasons
-# - Illumination
+# + Illumination
 # - SearchPeakMagnitude
 # - SearchLunarApsis
 # - NextLunarApsis
