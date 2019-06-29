@@ -2331,6 +2331,38 @@ def SearchSunLongitude(targetLon, startTime, limitDays):
     t2 = startTime.Add(limitDays)
     return Search(_sun_offset, targetLon, startTime, t2, 1.0)
 
+def MoonPhase(time):
+    return LongitudeFromSun(BODY_MOON, time)
+
+def _moon_offset(targetLon, time):
+    angle = MoonPhase(time)
+    return _LongitudeOffset(angle - targetLon)
+
+def SearchMoonPhase(targetLon, startTime, limitDays):
+    # To avoid discontinuities in the _moon_offset function causing problems,
+    # we need to approximate when that function will next return 0.
+    # We probe it with the start time and take advantage of the fact
+    # that every lunar phase repeats roughly every 29.5 days.
+    # There is a surprising uncertainty in the quarter timing,
+    # due to the eccentricity of the moon's orbit.
+    # I have seen up to 0.826 days away from the simple prediction.
+    # To be safe, we take the predicted time of the event and search
+    # +/-0.9 days around it (a 1.8-day wide window).
+    # But we must return None if the final result goes beyond limitDays after startTime.
+    uncertainty = 0.9
+    ya = _moon_offset(targetLon, startTime)
+    if ya > 0.0:
+        ya -= 360.0     # force searching forward in time, not backward
+    est_dt = -(_MEAN_SYNODIC_MONTH * ya) / 360.0
+    dt1 = est_dt - uncertainty
+    if dt1 > limitDays:
+        return None     # not possible for moon phase to occur within the specified window
+    dt2 = min(limitDays, est_dt + uncertainty)
+    t1 = startTime.AddDays(dt1)
+    t2 = startTime.AddDays(dt2)
+    return Search(_moon_offset, targetLon, t1, t2, 1.0)
+
+
 #==================================================================================================
 # + SearchSunLongitude
 #       + _sun_offset
@@ -2344,8 +2376,9 @@ def SearchSunLongitude(targetLon, startTime, limitDays):
 #       + SearchRelativeLongitude
 #       + Elongation
 #           + LongitudeFromSun
-# - MoonPhase
-# - SearchMoonPhase
+# + MoonPhase
+# + SearchMoonPhase
+#       + _moon_offset
 # - SearchMoonQuarter
 # - NextMoonQuarter
 # - SearchHourAngle

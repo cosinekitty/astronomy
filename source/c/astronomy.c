@@ -4100,7 +4100,7 @@ astro_search_result_t Astronomy_SearchMoonPhase(double targetLon, astro_time_t s
         I have seen up to 0.826 days away from the simple prediction.
         To be safe, we take the predicted time of the event and search
         +/-0.9 days around it (a 1.8-day wide window).
-        But we must return null if the final result goes beyond limitDays after startTime.
+        Return ASTRO_NO_MOON_QUARTER if the final result goes beyond limitDays after startTime.
     */
     const double uncertainty = 0.9;
     astro_func_result_t funcres;
