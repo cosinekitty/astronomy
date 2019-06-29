@@ -1259,25 +1259,84 @@ def Horizon(time, observer, ra, dec, refraction):
             hor_dec = math.atan2(pr[2], proj) * _RAD2DEG
 
     return HorizontalCoordinates(az, 90.0 - zd, hor_ra, hor_dec)
-    
-    # SunPosition
-    #       RotateEquatorialToEcliptic
-    # Ecliptic
-    # EclipticLongitude
-    # AngleFromSun
-    # Elongation
-    # SearchMaxElongation
-    # LongitudeFromSun
-    # SearchRelativeLongitude
-    # MoonPhase
-    # SearchMoonPhase
-    # SearchMoonQuarter
-    # NextMoonQuarter
-    # SearchSunLongitude
-    # SearchHourAngle
-    # SearchRiseSet
-    # Seasons
-    # Illumination
-    # SearchPeakMagnitude
-    # SearchLunarApsis
-    # NextLunarApsis
+
+class EclipticCoordinates:
+    def __init__(self, ex, ey, ez, elat, elon):
+        self.ex = ex
+        self.ey = ey
+        self.ez = ez
+        self.elat = elat
+        self.elon = elon
+
+def _RotateEquatorialToEcliptic(pos, obliq_radians):
+    cos_ob = math.cos(obliq_radians)
+    sin_ob = math.sin(obliq_radians)
+    ex = +pos[0]
+    ey = +pos[1]*cos_ob + pos[2]*sin_ob
+    ez = -pos[1]*sin_ob + pos[2]*cos_ob
+    xyproj = math.sqrt(ex*ex + ey*ey)
+    if xyproj > 0.0:
+        elon = _RAD2DEG * math.atan(ey, ex)
+        if elon < 0.0:
+            elon += 360.0
+    else:
+        elon = 0.0
+    elat = _RAD2DEG * math.atan(ez, xyproj)
+    return EclipticCoordinates(ex, ey, ez, elat, elon)
+
+def SunPosition(time):
+    # Correct for light travel time from the Sun.
+    # Otherwise season calculations (equinox, solstice) will all be early by about 8 minutes!
+    adjusted_time = time.AddDays(-1.0 / _C_AUDAY)
+    earth2000 = CalcEarth(adjusted_time)
+    sun2000 = [-earth2000.x, -earth2000.y, -earth2000.z]
+
+    # Convert to equatorial Cartesian coordinates of date.
+    stemp = _precession(0.0, sun2000, adjusted_time.tt)
+    sun_ofdate = _nutation(adjusted_time, 0, stemp)
+
+    # Convert equatorial coordinates to ecliptic coordinates.
+    true_obliq = _DEG2RAD * adjusted_time._etilt().tobl
+    return RotateEquatorialToEcliptic(sun_ofdate, true_obliq)
+
+def Ecliptic(equ):
+    # Based on NOVAS functions equ2ecl() and equ2ecl_vec().
+    ob2000 = 0.40909260059599012   # mean obliquity of the J2000 ecliptic in radians
+    return RotateEquatorialToEcliptic([equ.x, equ.y, equ.z], ob2000)
+
+def EclipticLongitude(body, time):
+    if body == BODY_SUN:
+        raise InvalidBodyError()
+    hv = HelioVector(body, time)
+    eclip = Ecliptic(hv)
+    return eclip.elon
+
+def AngleFromSun(body, time):
+    if body == EARTH:
+        raise EarthNotAllowedError()
+    sv = GeoVector(BODY_SUN, time, True)
+    bv = GeoVector(body, time, True)
+    return _AngleBetween(sv, bv)
+
+    # - SearchSunLongitude
+    #       - sun_offset
+    #       + SunPosition
+    #           + RotateEquatorialToEcliptic
+    # + Ecliptic
+    # + EclipticLongitude
+    # + AngleFromSun
+    # - Elongation
+    # - SearchMaxElongation
+    # - LongitudeFromSun
+    # - SearchRelativeLongitude
+    # - MoonPhase
+    # - SearchMoonPhase
+    # - SearchMoonQuarter
+    # - NextMoonQuarter
+    # - SearchHourAngle
+    # - SearchRiseSet
+    # - Seasons
+    # - Illumination
+    # - SearchPeakMagnitude
+    # - SearchLunarApsis
+    # - NextLunarApsis
