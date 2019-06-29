@@ -2578,6 +2578,50 @@ def SearchPeakMagnitude(body, startTime):
         startTime = t2.AddDays(1.0)
         iter += 1
 
+class HourAngleEvent:
+    def __init__(self, time, hor):
+        self.time = time
+        self.hor = hor
+
+def SearchHourAngle(body, observer, hourAngle, startTime):
+    if body == BODY_EARTH:
+        raise EarthNotAllowedError()
+
+    if hourAngle < 0.0 or hourAngle >= 24.0:
+        raise Error('Invalid hour angle.')
+
+    iter = 0
+    time = startTime
+    while True:
+        iter += 1
+        # Calculate Greenwich Apparent Sidereal Time (GAST) at the given time.
+        gast = _sidereal_time(time)
+        ofdate = Equator(body, time, observer, True, True)
+
+        # Calculate the adjustment needed in sidereal time to bring
+        # the hour angle to the desired value.
+        delta_sidereal_hours = ((hourAngle + ofdate.ra - observer.longitude/15) - gast) % 24
+        if iter == 1:
+            # On the first iteration, always search forward in time.
+            if delta_sidereal_hours < 0.0:
+                delta_sidereal_hours += 24.0
+        else:
+            # On subsequent iterations, we make the smallest possible adjustment,
+            # either forward or backward in time.
+            if delta_sidereal_hours < -12.0:
+                delta_sidereal_hours += 24.0
+            elif delta_sidereal_hours > +12.0:
+                delta_sidereal_hours -= 24.0
+
+        # If the error is tolerable (less than 0.1 seconds), stop searching.
+        if abs(delta_sidereal_hours) * 3600.0 < 0.1:
+            hor = Horizon(time, observer, ofdate.ra, ofdate.dec, REFRACTION_NORMAL)
+            return HourAngleEvent(time, hor)
+
+        # We need to loop another time to get more accuracy.
+        # Update the terrestrial time (in solar days) adjusting by sidereal time.
+        delta_days = (delta_sidereal_hours / 24.0) * _SOLAR_DAYS_PER_SIDEREAL_DAY
+        time = time.AddDays(delta_days)
 
 #==================================================================================================
 # + SearchSunLongitude
@@ -2597,7 +2641,7 @@ def SearchPeakMagnitude(body, startTime):
 #       + _moon_offset
 # + SearchMoonQuarter
 # + NextMoonQuarter
-# - SearchHourAngle
+# + SearchHourAngle
 # - SearchRiseSet
 # - Seasons
 # + Illumination
