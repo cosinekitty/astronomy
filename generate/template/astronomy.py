@@ -1785,6 +1785,98 @@ def SearchHourAngle(body, observer, hourAngle, startTime):
         delta_days = (delta_sidereal_hours / 24.0) * _SOLAR_DAYS_PER_SIDEREAL_DAY
         time = time.AddDays(delta_days)
 
+DIRECTION_RISE = +1
+DIRECTION_SET  = -1
+
+class _peak_altitude_context:
+    def __init__(self, body, direction, observer, body_radius_au):
+        self.body = body
+        self.direction = direction
+        self.observer = observer
+        self.body_radius_au = body_radius_au
+
+def _peak_altitude(context, time):
+    # Return the angular altitude above or below the horizon
+    # of the highest part (the peak) of the given object.
+    # This is defined as the apparent altitude of the center of the body plus
+    # the body's angular radius.
+    # The 'direction' parameter controls whether the angle is measured
+    # positive above the horizon or positive below the horizon,
+    # depending on whether the caller wants rise times or set times, respectively.
+
+    ofdate = Equator(context.body, time, context.observer, True, True)
+
+    # We calculate altitude without refraction, then add fixed refraction near the horizon.
+    # This gives us the time of rise/set without the extra work.
+    hor = Horizon(time, context.observer, ofdate.ra, ofdate.dec, REFRACTION_NONE)
+    return context.direction*(hor.altitude + _RAD2DEG*(context.body_radius_au / ofdate.dist)) + _REFRACTION_NEAR_HORIZON
+
+def SearchRiseSet(body, observer, direction, startTime, limitDays):
+    if body == BODY_EARTH:
+        raise EarthNotAllowedError()
+    elif body == BODY_SUN:
+        body_radius = _SUN_RADIUS_AU
+    elif body == BODY_MOON:
+        body_radius = _MOON_RADIUS_AU
+    else:
+        body_radius = 0.0
+
+    if direction == DIRECTION_RISE:
+        ha_before = 12.0    # minimum altitude (bottom) happens BEFORE the body rises.
+        ha_after  =  0.0    # maximum altitude (culmination) happens AFTER the body rises.
+    elif direction == DIRECTION_SET:
+        ha_before =  0.0    # culmination happens BEFORE the body sets.
+        ha_after  = 12.0    # bottom happens AFTER the body sets.
+    else:
+        raise Error('Invalid value for direction parameter')
+
+    context = _peak_altitude_context(body, direction, observer, body_radius)
+
+    # See if the body is currently above/below the horizon.
+    # If we are looking for next rise time and the body is below the horizon,
+    # we use the current time as the lower time bound and the next culmination
+    # as the upper bound.
+    # If the body is above the horizon, we search for the next bottom and use it
+    # as the lower bound and the next culmination after that bottom as the upper bound.
+    # The same logic applies for finding set times, only we swap the hour angles.
+    time_start = startTime
+    alt_before = _peak_altitude(context, time_start)
+    if alt_before > 0.0:
+        # We are past the sought event, so we have to wait for the next "before" event (culm/bottom).
+        time_before = SearchHourAngle(body, observer, ha_before, time_start)
+        if time_before is None:
+            return None
+        alt_before = _peak_altitude(context, time_before)
+    else:
+        # We are before or at the sought ebvent, so we find the next "after" event (bottom/culm),
+        # and use the current time as the "before" event.
+        time_before = time_start
+
+    time_after = SearchHourAngle(body, observer, ha_after, time_before)
+    if time_after is None:
+        return None
+    alt_after = _peak_altitude(context, time_after)
+
+    while True:
+        if alt_before <= 0.0 and alt_after > 0.0:
+            # Search between time_before and time_after for the desired event.
+            event_time = Search(_peak_altitude, context, time_before, time_after, 1.0)
+            if event_time is not None:
+                return event_time
+
+        # We didn't find the desired event, so use time_after to find the next "before" event.
+        time_before = SearchHourAngle(body, observer, ha_before, time_after)
+        if time_before is None:
+            return None
+
+        time_after = SearchHourAngle(body, observer, ha_after, time_before)
+        if time_after is None:
+            return None
+
+        alt_before = _peak_altitude(context, time_before)
+        alt_after = _peak_altitude(context, time_after)
+
+
 #==================================================================================================
 # + SearchSunLongitude
 #       + _sun_offset
@@ -1804,7 +1896,7 @@ def SearchHourAngle(body, observer, hourAngle, startTime):
 # + SearchMoonQuarter
 # + NextMoonQuarter
 # + SearchHourAngle
-# - SearchRiseSet
+# + SearchRiseSet
 # - Seasons
 # + Illumination
 # + SearchPeakMagnitude

@@ -4479,7 +4479,7 @@ static astro_func_result_t peak_altitude(void *context, astro_time_t time)
     if (ofdate.status != ASTRO_SUCCESS)
         return FuncError(ofdate.status);
 
-    /* We calculate altitude without refraction, then subtract fixed refraction near the horizon. */
+    /* We calculate altitude without refraction, then add fixed refraction near the horizon. */
     /* This gives us the time of rise/set without the extra work. */
     hor = Astronomy_Horizon(&time, p->observer, ofdate.ra, ofdate.dec, REFRACTION_NONE);
     result.value = p->direction * (hor.altitude + RAD2DEG*(p->body_radius_au / ofdate.dist) + REFRACTION_NEAR_HORIZON);
