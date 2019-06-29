@@ -1452,12 +1452,12 @@ def SearchMaxElongation(body, startTime):
 
         t_start = startTime.AddDays(adjust_days)
         search1 = SearchRelativeLongitude(body, rlon_lo, t_start)
-        if not search1:
+        if search1 is None:
             return None
         t1 = search1.time
 
         search2 = SearchRelativeLongitude(body, rlon_hi, t1)
-        if not search2:
+        if search2 is None:
             return None
         t2 = search2.time
 
@@ -1473,7 +1473,7 @@ def SearchMaxElongation(body, startTime):
 
         # Use the generic search algorithm to home in on where the slope crosses from negative to positive.
         searchx = Search(neg_elong_slope, body, t1, t2, 10.0)
-        if not searchx:
+        if searchx is None:
             return None
 
         if searchx.time.tt >= startTime.tt:
@@ -1524,6 +1524,32 @@ def SearchMoonPhase(targetLon, startTime, limitDays):
     t1 = startTime.AddDays(dt1)
     t2 = startTime.AddDays(dt2)
     return Search(_moon_offset, targetLon, t1, t2, 1.0)
+
+class MoonQuarter:
+    def __init__(self, quarter, time):
+        self.quarter = quarter
+        self.time = time
+
+def SearchMoonQuarter(startTime):
+    angle = MoonPhase(startTime)
+    quarter = (1 + math.floor(angle / 90.0)) % 4
+    time = SearchMoonPhase(90.0 * quarter, startTime, 10.0)
+    if time is None:
+        # The search should never fail. We should always find another lunar quarter.
+        raise InternalError()
+    return MoonQuarter(quarter, time)
+
+def NextMoonQuarter(mq):
+    # Skip 6 days past the previous found moon quarter to find the next one.
+    # This is less than the minimum possible increment.
+    # So far I have seen the interval well contained by the range (6.5, 8.3) days.
+    time = mq.time.AddDays(6.0)
+    next_mq = SearchMoonQuarter(time)
+    # Verify that we found the expected moon quarter.
+    if next_mq.quarter != (1 + mq.quarter) % 4:
+        raise InternalError()
+    return next_mq
+
 
 class IlluminationInfo:
     def __init__(self, time, mag, phase, helio_dist, geo_dist, gc, hc, ring_tilt):
@@ -1731,8 +1757,8 @@ def SearchPeakMagnitude(body, startTime):
 # + MoonPhase
 # + SearchMoonPhase
 #       + _moon_offset
-# - SearchMoonQuarter
-# - NextMoonQuarter
+# + SearchMoonQuarter
+# + NextMoonQuarter
 # - SearchHourAngle
 # - SearchRiseSet
 # - Seasons
