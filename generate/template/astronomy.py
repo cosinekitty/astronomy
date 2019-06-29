@@ -1260,3 +1260,24 @@ def Horizon(time, observer, ra, dec, refraction):
 
     return HorizontalCoordinates(az, 90.0 - zd, hor_ra, hor_dec)
     
+    # SunPosition
+    #       RotateEquatorialToEcliptic
+    # Ecliptic
+    # EclipticLongitude
+    # AngleFromSun
+    # Elongation
+    # SearchMaxElongation
+    # LongitudeFromSun
+    # SearchRelativeLongitude
+    # MoonPhase
+    # SearchMoonPhase
+    # SearchMoonQuarter
+    # NextMoonQuarter
+    # SearchSunLongitude
+    # SearchHourAngle
+    # SearchRiseSet
+    # Seasons
+    # Illumination
+    # SearchPeakMagnitude
+    # SearchLunarApsis
+    # NextLunarApsis
