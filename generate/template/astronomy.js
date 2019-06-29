@@ -2756,17 +2756,11 @@ Astronomy.SearchRiseSet = function(body, observer, direction, dateStart, limitDa
  * @property {Astronomy.HorizontalCoordinates} hor
  *      Topocentric horizontal coordinates for the body
  *      at the time indicated by the <code>time</code> property.
- *
- * @property {number} iter
- *      The positive integer number of iterations required by
- *      <code>SearchHourAngle</code> to converge on the hour angle
- *      solution.
  */
 class HourAngleEvent {
-    constructor(time, hor, iter) {
+    constructor(time, hor) {
         this.time = time;
         this.hor = hor;
-        this.iter = iter;
     }
 }
 
@@ -2842,7 +2836,7 @@ Astronomy.SearchHourAngle = function(body, observer, hourAngle, dateStart) {
         // If the error is tolerable (less than 0.1 seconds), stop searching.
         if (Math.abs(delta_sidereal_hours) * 3600 < 0.1) {
             const hor = Astronomy.Horizon(time, observer, ofdate.ra, ofdate.dec, 'normal');
-            return new HourAngleEvent(time, hor, iter);
+            return new HourAngleEvent(time, hor);
         }
 
         // We need to loop another time to get more accuracy.

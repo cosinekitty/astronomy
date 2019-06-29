@@ -345,7 +345,6 @@ location on the surface of the Earth.
 | --- | --- | --- |
 | time | [<code>AstroTime</code>](#Astronomy.AstroTime) | The date and time of the celestial body reaching the hour angle. |
 | hor | [<code>HorizontalCoordinates</code>](#Astronomy.HorizontalCoordinates) | Topocentric horizontal coordinates for the body      at the time indicated by the <code>time</code> property. |
-| iter | <code>number</code> | The positive integer number of iterations required by      <code>SearchHourAngle</code> to converge on the hour angle      solution. |
 
 
 * * *
