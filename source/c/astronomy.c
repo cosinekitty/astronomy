@@ -4982,7 +4982,7 @@ astro_illum_t Astronomy_SearchPeakMagnitude(astro_body_t body, astro_time_t star
             /* Search forward for the time t2 when rel lon = +s2. */
             rlon_hi = +s2;
         }
-        else if (rlon >= +s2 || rlon < -s2 )
+        else if (rlon >= +s2 || rlon < -s2)
         {
             /* Seek to the next search window at [-s2, -s1]. */
             adjust_days = 0.0;

@@ -1628,6 +1628,93 @@ def Illumination(body, time):
         mag = _VisualMagnitude(body, phase, helio_dist, geo_dist)
     return IlluminationInfo(time, mag, phase, helio_dist, geo_dist, gc, hc, ring_tilt)
 
+def _mag_slope(body, time):
+    # The Search() function finds a transition from negative to positive values.
+    # The derivative of magnitude y with respect to time t (dy/dt)
+    # is negative as an object gets brighter, because the magnitude numbers
+    # get smaller. At peak magnitude dy/dt = 0, then as the object gets dimmer,
+    # dy/dt > 0.
+    dt = 0.01
+    t1 = time.AddDays(-dt/2)
+    t2 = time.AddDays(+dt/2)
+    y1 = Astronomy_Illumination(body, t1)
+    y2 = Astronomy_Illumination(body, t2)
+    return (y2.mag - y1.mag) / dt
+
+def SearchPeakMagnitude(body, startTime):
+    # s1 and s2 are relative longitudes within which peak magnitude of Venus can occur.
+    s1 = 10.0
+    s2 = 30.0
+    if body != BODY_VENUS:
+        raise InvalidBodyError()
+
+    iter = 1
+    while iter <= 2:
+        # Find current heliocentric relative longitude between the
+        # inferior planet and the Earth.
+        plon = EclipticLongitude(body, startTime)
+        elon = EclipticLongitude(BODY_EARTH, startTime)
+        rlon = _LongitudeOffset(plon - elon)
+        # The slope function is not well-behaved when rlon is near 0 degrees or 180 degrees
+        # because there is a cusp there that causes a discontinuity in the derivative.
+        # So we need to guard against searching near such times.
+        if -s1 <= rlon < +s1:
+            # Seek to the window [+s1, +s2].
+            adjust_days = 0.0
+            # Search forward for the time t1 when rel lon = +s1.
+            rlon_lo = +s1
+            # Search forward for the time t2 when rel lon = +s2.
+            rlon_hi = +s2
+        elif rlon >= +s2 or rlon < -s2:
+            # Seek to the next search window at [-s2, -s1].
+            adjust_days = 0.0
+            # Search forward for the time t1 when rel lon = -s2.
+            rlon_lo = -s2
+            # Search forward for the time t2 when rel lon = -s1.
+            rlon_hi = -s1
+        elif rlon >= 0:
+            # rlon must be in the middle of the window [+s1, +s2].
+            # Search BACKWARD for the time t1 when rel lon = +s1.
+            syn = _SynodicPeriod(body)
+            adjust_days = -syn / 4
+            rlon_lo = +s1
+            # Search forward from t1 to find t2 such that rel lon = +s2.
+            rlon_hi = +s2
+        else:
+            # rlon must be in the middle of the window [-s2, -s1].
+            # Search BACKWARD for the time t1 when rel lon = -s2.
+            syn = _SynodicPeriod(body)
+            adjust_days = -syn / 4
+            rlon_lo = -s2
+            # Search forward from t1 to find t2 such that rel lon = -s1.
+            rlon_hi = -s1
+
+        t_start = starTime.AddDays(adjust_days)
+        t1 = SearchRelativeLongitude(body, rlon_lo, t_start)
+        t2 = SearchRelativeLongitude(body, rlon_hi, t1.time)
+
+        # Now we have a time range [t1,t2] that brackets a maximum magnitude event.
+        # Confirm the bracketing.
+        m1 = _mag_slope(body, t1.time)
+        if m1 >= 0.0:
+            raise InternalError()
+
+        m2 = _mag_slope(body, t2.time)
+        if m2 <= 0.0:
+            raise InternalError()
+
+        # Use the generic search algorithm to home in on where the slope crosses from negative to positive.
+        tx = Search(mag_slope, body, t1.time, t2.time, 10.0)
+        if tx.time.tt >= startTime.tt:
+            return Illumination(body, tx.time)
+
+        # This event is in the past (earlier than startTime).
+        # We need to search forward from t2 to find the next possible window.
+        # We never need to search more than twice.
+        startTime = t2.AddDays(1.0)
+        iter += 1
+
+
 #==================================================================================================
 # + SearchSunLongitude
 #       + _sun_offset
@@ -1650,6 +1737,6 @@ def Illumination(body, time):
 # - SearchRiseSet
 # - Seasons
 # + Illumination
-# - SearchPeakMagnitude
+# + SearchPeakMagnitude
 # - SearchLunarApsis
 # - NextLunarApsis
