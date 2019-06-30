@@ -1451,15 +1451,13 @@ def SearchMaxElongation(body, startTime):
             rlon_hi = -s1
 
         t_start = startTime.AddDays(adjust_days)
-        search1 = SearchRelativeLongitude(body, rlon_lo, t_start)
-        if search1 is None:
+        t1 = SearchRelativeLongitude(body, rlon_lo, t_start)
+        if t1 is None:
             return None
-        t1 = search1.time
 
-        search2 = SearchRelativeLongitude(body, rlon_hi, t1)
-        if search2 is None:
+        t2 = SearchRelativeLongitude(body, rlon_hi, t1)
+        if t2 is None:
             return None
-        t2 = search2.time
 
         # Now we have a time range [t1,t2] that brackets a maximum elongation event.
         # Confirm the bracketing.
@@ -1472,12 +1470,12 @@ def SearchMaxElongation(body, startTime):
             raise InternalError()   # there is a bug in the bracketing algorithm!
 
         # Use the generic search algorithm to home in on where the slope crosses from negative to positive.
-        searchx = Search(neg_elong_slope, body, t1, t2, 10.0)
-        if searchx is None:
+        tx = Search(_neg_elong_slope, body, t1, t2, 10.0)
+        if tx is None:
             return None
 
-        if searchx.time.tt >= startTime.tt:
-            return Elongation(body, searchx.time)
+        if tx.tt >= startTime.tt:
+            return Elongation(body, tx)
 
         # This event is in the past (earlier than startTime).
         # We need to search forward from t2 to find the next possible window.
@@ -1982,15 +1980,9 @@ def NextLunarApsis(apsis):
 # + Ecliptic
 # + EclipticLongitude
 # + AngleFromSun
-# + SearchMaxElongation
-#       + _neg_elong_slope
-#       + SearchRelativeLongitude
-#       + Elongation
 # + SearchHourAngle
 # + SearchRiseSet
 # + Illumination
 # + SearchPeakMagnitude
 # + SearchLunarApsis
-#       + _distance_slope
-#       + _MoonDistance
 # + NextLunarApsis
