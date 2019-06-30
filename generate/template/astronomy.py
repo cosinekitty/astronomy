@@ -1807,7 +1807,8 @@ def _peak_altitude(context, time):
     # We calculate altitude without refraction, then add fixed refraction near the horizon.
     # This gives us the time of rise/set without the extra work.
     hor = Horizon(time, context.observer, ofdate.ra, ofdate.dec, REFRACTION_NONE)
-    return context.direction*(hor.altitude + _RAD2DEG*(context.body_radius_au / ofdate.dist)) + _REFRACTION_NEAR_HORIZON
+    alt = hor.altitude + _RAD2DEG*(context.body_radius_au / ofdate.dist)
+    return context.direction * (alt + _REFRACTION_NEAR_HORIZON)
 
 def SearchRiseSet(body, observer, direction, startTime, limitDays):
     if body == BODY_EARTH:
@@ -1841,38 +1842,31 @@ def SearchRiseSet(body, observer, direction, startTime, limitDays):
     alt_before = _peak_altitude(context, time_start)
     if alt_before > 0.0:
         # We are past the sought event, so we have to wait for the next "before" event (culm/bottom).
-        time_before = SearchHourAngle(body, observer, ha_before, time_start)
-        if time_before is None:
-            return None
+        evt_before = SearchHourAngle(body, observer, ha_before, time_start)
+        time_before = evt_before.time
         alt_before = _peak_altitude(context, time_before)
     else:
         # We are before or at the sought ebvent, so we find the next "after" event (bottom/culm),
         # and use the current time as the "before" event.
         time_before = time_start
 
-    time_after = SearchHourAngle(body, observer, ha_after, time_before)
-    if time_after is None:
-        return None
-    alt_after = _peak_altitude(context, time_after)
+    evt_after = SearchHourAngle(body, observer, ha_after, time_before)
+    alt_after = _peak_altitude(context, evt_after.time)
 
     while True:
         if alt_before <= 0.0 and alt_after > 0.0:
-            # Search between time_before and time_after for the desired event.
-            event_time = Search(_peak_altitude, context, time_before, time_after, 1.0)
+            # Search between the "before time" and the "after time" for the desired event.
+            event_time = Search(_peak_altitude, context, time_before, evt_after.time, 1.0)
             if event_time is not None:
                 return event_time
-
-        # We didn't find the desired event, so use time_after to find the next "before" event.
-        time_before = SearchHourAngle(body, observer, ha_before, time_after)
-        if time_before is None:
+        # We didn't find the desired event, so use the "after" time to find the next "before" event.
+        evt_before = SearchHourAngle(body, observer, ha_before, evt_after.time)
+        evt_after = SearchHourAngle(body, observer, ha_after, evt_before.time)
+        if evt_before.time.ut >= time_start.ut + limitDays:
             return None
-
-        time_after = SearchHourAngle(body, observer, ha_after, time_before)
-        if time_after is None:
-            return None
-
-        alt_before = _peak_altitude(context, time_before)
-        alt_after = _peak_altitude(context, time_after)
+        time_before = evt_before.time
+        alt_before = _peak_altitude(context, evt_before.time)
+        alt_after = _peak_altitude(context, evt_after.time)
 
 class SeasonInfo:
     def __init__(self, mar_equinox, jun_solstice, sep_equinox, dec_solstice):

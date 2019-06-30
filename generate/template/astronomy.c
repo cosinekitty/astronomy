@@ -3578,7 +3578,7 @@ astro_search_result_t Astronomy_SearchRiseSet(
                 return result;
         }
 
-        /* If we didn't find the desired event, use time_after to find the next before-event. */
+        /* If we didn't find the desired event, use evt_after.time to find the next before-event. */
         evt_before = Astronomy_SearchHourAngle(body, observer, ha_before, evt_after.time);
         if (evt_before.status != ASTRO_SUCCESS)
             return SearchError(evt_before.status);

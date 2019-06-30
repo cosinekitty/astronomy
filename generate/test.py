@@ -436,6 +436,97 @@ def Test_Elongation():
 
 #-----------------------------------------------------------------------------------------------------------
 
+def Test_RiseSet(filename):
+    sum_minutes = 0.0
+    max_minutes = 0.0
+    nudge_days = 0.01
+    observer = None
+    current_body = None
+    a_dir = 0
+    b_dir = 0
+    with open(filename, 'rt') as infile:
+        lnum = 0
+        for line in infile:
+            lnum += 1
+            line = line.strip()
+            # Moon  103 -61 1944-01-02T17:08Z s
+            # Moon  103 -61 1944-01-03T05:47Z r
+            m = re.match(r'^([A-Za-z]+)\s+(-?[0-9\.]+)\s+(-?[0-9\.]+)\s+(\d+)-(\d+)-(\d+)T(\d+):(\d+)Z\s+([sr])$', line)
+            if not m:
+                print('Test_RiseSet({} line {}): invalid data format'.format(filename, lnum))
+                return 1
+            name = m.group(1)
+            longitude = float(m.group(2))
+            latitude = float(m.group(3))
+            year = int(m.group(4))
+            month = int(m.group(5))
+            day = int(m.group(6))
+            hour = int(m.group(7))
+            minute = int(m.group(8))
+            kind = m.group(9)
+            correct_time = astronomy.Time.Make(year, month, day, hour, minute, 0)
+            direction = astronomy.DIRECTION_RISE if kind == 'r' else astronomy.DIRECTION_SET
+            body = astronomy.BodyCode(name)
+            if body < 0:
+                print('Test_RiseSet({} line {}): invalid body name "{}"'.format(filename, lnum, name))
+                return 1
+
+            # Every time we see a new geographic location, start a new iteration
+            # of finding all rise/set times for that UTC calendar year.
+            if (observer is None) or (observer.latitude != latitude) or (observer.longitude != longitude) or (current_body != body):
+                current_body = body
+                observer = astronomy.Observer(latitude, longitude, 0)
+                r_search_date = s_search_date = astronomy.Time.Make(year, 1, 1, 0, 0, 0)
+                b_evt = None
+                print('Test_RiseSet: {:<7s} lat={:0.1f} lon={:0.1f}'.format(name, latitude, longitude))
+
+            if b_evt is not None:
+                # Recycle the second event from the previous iteration as the first event.
+                a_evt = b_evt
+                a_dir = b_dir
+                b_evt = None
+            else:
+                r_evt = astronomy.SearchRiseSet(body, observer, astronomy.DIRECTION_RISE, r_search_date, 366.0)
+                if r_evt is None:
+                    print('Test_RiseSet({} line {}): rise search failed'.format(filename, lnum))
+                    return 1
+                s_evt = astronomy.SearchRiseSet(body, observer, astronomy.DIRECTION_SET, s_search_date, 366.0)
+                if s_evt is None:
+                    print('Test_RiseSet({} line {}): set search failed'.format(filename, lnum))
+                    return 1
+                # Expect the current event to match the earlier of the found times.
+                if r_evt.tt < s_evt.tt:
+                    a_evt = r_evt
+                    b_evt = s_evt
+                    a_dir = astronomy.DIRECTION_RISE
+                    b_dir = astronomy.DIRECTION_SET
+                else:
+                    a_evt = s_evt
+                    b_evt = r_evt
+                    a_dir = astronomy.DIRECTION_SET
+                    b_dir = astronomy.DIRECTION_RISE                
+                # Nudge the event times forward a tiny amount.
+                r_search_date = r_evt.AddDays(nudge_days)
+                s_search_date = s_evt.AddDays(nudge_days)
+
+            if a_dir != direction:
+                print('Test_RiseSet({} line {}): expected dir={} but found {}'.format(filename, lnum, a_dir, direction))
+                return 1
+
+            error_minutes = (24.0 * 60.0) * abs(a_evt.tt - correct_time.tt)
+            sum_minutes += error_minutes ** 2
+            max_minutes = max(max_minutes, error_minutes)
+            if error_minutes > 0.56:
+                print('Test_RiseSet({} line {}): excessive prediction time error = {} minutes.'.format(filename, lnum, error_minutes))
+                print('    correct = {}, calculated = {}'.format(correct_time, a_evt))
+                return 1
+
+    rms_minutes = math.sqrt(sum_minutes / lnum)
+    print('Test_RiseSet: passed {} lines: time errors in minutes: rms={:0.4f}, max={:0.4f}'.format(lnum, rms_minutes, max_minutes))
+    return 0
+
+#-----------------------------------------------------------------------------------------------------------
+
 if len(sys.argv) == 2:
     if sys.argv[1] == 'time':
         Test_AstroTime()
@@ -454,6 +545,8 @@ if len(sys.argv) == 3:
         sys.exit(Test_Seasons(sys.argv[2]))
     if sys.argv[1] == 'moonphase':
         sys.exit(Test_MoonPhase(sys.argv[2]))
+    if sys.argv[1] == 'riseset':
+        sys.exit(Test_RiseSet(sys.argv[2]))
 
 print('test.py: Invalid command line arguments.')
 sys.exit(1)
