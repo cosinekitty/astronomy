@@ -5,6 +5,8 @@ import re
 sys.path.append('../source/python')
 import astronomy
 
+#-----------------------------------------------------------------------------------------------------------
+
 def Test_AstroTime():
     expected_ut = 6910.270978506945
     expected_tt = 6910.271779431480
@@ -33,6 +35,7 @@ def Test_AstroTime():
         sys.exit(1)
     print('Current time =', astronomy.Time.Now())
 
+#-----------------------------------------------------------------------------------------------------------
 
 def Test_GeoMoon():
     time = astronomy.Time.Make(2019, 6, 24, 15, 45, 37)
@@ -46,6 +49,8 @@ def Test_GeoMoon():
     if diff > 4.34e-19:
         print('Test_GeoMoon: EXCESSIVE ERROR')
         sys.exit(1)
+
+#-----------------------------------------------------------------------------------------------------------
 
 def Test_AstroCheck(printflag):
     time = astronomy.Time.Make(1700, 1, 1, 0, 0, 0)
@@ -82,6 +87,8 @@ def Test_AstroCheck(printflag):
         if printflag:
             print('s GM {:0.16f} {:0.16f} {:0.16f} {:0.16f} {:0.16f} {:0.16f} {:0.16f}'.format(time.tt, time.ut, j2000.ra, j2000.dec, j2000.dist, hor.azimuth, hor.altitude))
         time = time.AddDays(dt)
+
+#-----------------------------------------------------------------------------------------------------------
 
 def Test_Seasons(filename):
     with open(filename, 'rt') as infile:
@@ -148,6 +155,75 @@ def Test_Seasons(filename):
 
 #-----------------------------------------------------------------------------------------------------------
 
+def Test_MoonPhase(filename):
+    threshold_seconds = 120.0       # max tolerable prediction error in seconds
+    max_arcmin = 0.0
+    maxdiff = 0.0
+    quarter_count = 0
+
+    with open(filename, 'rt') as infile:
+        lnum = 0
+        prev_year = 0
+        for line in infile:
+            lnum += 1
+            line = line.strip()
+            m = re.match(r'^([0-3]) (\d+)-(\d+)-(\d+)T(\d+):(\d+):(\d+\.\d+)Z$', line)
+            if not m:
+                print('Test_MoonPhase: invalid data format in {} line {}'.format(filename, lnum))
+                return 1
+
+            quarter = int(m.group(1))
+            year = int(m.group(2))
+            month = int(m.group(3))
+            day = int(m.group(4))
+            hour = int(m.group(5))
+            minute = int(m.group(6))
+            second = float(m.group(7))
+
+            expected_elong = 90.0 * quarter
+            expected_time = astronomy.Time.Make(year, month, day, hour, minute, second)
+            angle = astronomy.MoonPhase(expected_time)
+            degree_error = abs(angle - expected_elong)
+            if degree_error > 180.0:
+                degree_error = 360.0 - degree_error
+            arcmin = 60.0 * degree_error
+            if arcmin > 1.0:
+                print('Test_MoonPhase({} line {}): EXCESSIVE ANGULAR ERROR: {} arcmin'.format(filename, lnum, arcmin))
+                return 1
+            max_arcmin = max(max_arcmin, arcmin)
+
+            if year != prev_year:
+                prev_year = year
+                # The test data contains a single year's worth of data for every 10 years.
+                # Every time we see the year value change, it breaks continuity of the phases.
+                # Start the search over again.
+                start_time = astronomy.Time.Make(year, 1, 1, 0, 0, 0.0)
+                mq = astronomy.SearchMoonQuarter(start_time)
+            else:
+                # Yet another lunar quarter in the same year.
+                expected_quarter = (1 + mq.quarter) % 4
+                mq = astronomy.NextMoonQuarter(mq)
+                # Expect the next consecutive quarter.
+                if expected_quarter != mq.quarter:
+                    print('Test_MoonPhase({} line {}): SearchMoonQuarter returned quarter {}, but expected {}.'.format(filename, lnum, mq.quarter, expected_quarter))
+                    return 1
+
+            quarter_count += 1
+
+            # Make sure the time matches what we expect.
+            diff_seconds = abs(mq.time.tt - expected_time.tt) * (24.0 * 3600.0)
+            if diff_seconds > threshold_seconds:
+                print('Test_MoonPhase({} line {}): excessive time error {:0.3f} seconds.'.format(filename, lnum, diff_seconds))
+                return 1
+
+            maxdiff = max(maxdiff, diff_seconds)
+
+    print('Test_MoonPhase: passed {} lines for file {} : max_arcmin = {:0.6f}, maxdiff = {:0.3f} seconds, {} quarters.'
+        .format(lnum, filename, max_arcmin, maxdiff, quarter_count))
+    return 0
+
+#-----------------------------------------------------------------------------------------------------------
+
 if len(sys.argv) == 2:
     if sys.argv[1] == 'time':
         Test_AstroTime()
@@ -164,6 +240,9 @@ if len(sys.argv) == 2:
 if len(sys.argv) == 3:
     if sys.argv[1] == 'seasons':
         sys.exit(Test_Seasons(sys.argv[2]))
+
+    if sys.argv[1] == 'moonphase':
+        sys.exit(Test_MoonPhase(sys.argv[2]))
 
 print('test.py: Invalid command line arguments.')
 sys.exit(1)

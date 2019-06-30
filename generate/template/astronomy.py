@@ -1321,14 +1321,14 @@ def EclipticLongitude(body, time):
     return eclip.elon
 
 def AngleFromSun(body, time):
-    if body == EARTH:
+    if body == BODY_EARTH:
         raise EarthNotAllowedError()
     sv = GeoVector(BODY_SUN, time, True)
     bv = GeoVector(body, time, True)
     return _AngleBetween(sv, bv)
 
 def LongitudeFromSun(body, time):
-    if body == EARTH:
+    if body == BODY_EARTH:
         raise EarthNotAllowedError()
     sv = GeoVector(BODY_SUN, time, True)
     se = Ecliptic(sv)
