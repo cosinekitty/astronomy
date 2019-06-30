@@ -2123,19 +2123,19 @@ def _RotateEquatorialToEcliptic(pos, obliq_radians):
     ez = -pos[1]*sin_ob + pos[2]*cos_ob
     xyproj = math.sqrt(ex*ex + ey*ey)
     if xyproj > 0.0:
-        elon = _RAD2DEG * math.atan(ey, ex)
+        elon = _RAD2DEG * math.atan2(ey, ex)
         if elon < 0.0:
             elon += 360.0
     else:
         elon = 0.0
-    elat = _RAD2DEG * math.atan(ez, xyproj)
+    elat = _RAD2DEG * math.atan2(ez, xyproj)
     return EclipticCoordinates(ex, ey, ez, elat, elon)
 
 def SunPosition(time):
     # Correct for light travel time from the Sun.
     # Otherwise season calculations (equinox, solstice) will all be early by about 8 minutes!
     adjusted_time = time.AddDays(-1.0 / _C_AUDAY)
-    earth2000 = CalcEarth(adjusted_time)
+    earth2000 = _CalcEarth(adjusted_time)
     sun2000 = [-earth2000.x, -earth2000.y, -earth2000.z]
 
     # Convert to equatorial Cartesian coordinates of date.
@@ -2144,12 +2144,12 @@ def SunPosition(time):
 
     # Convert equatorial coordinates to ecliptic coordinates.
     true_obliq = _DEG2RAD * adjusted_time._etilt().tobl
-    return RotateEquatorialToEcliptic(sun_ofdate, true_obliq)
+    return _RotateEquatorialToEcliptic(sun_ofdate, true_obliq)
 
 def Ecliptic(equ):
     # Based on NOVAS functions equ2ecl() and equ2ecl_vec().
     ob2000 = 0.40909260059599012   # mean obliquity of the J2000 ecliptic in radians
-    return RotateEquatorialToEcliptic([equ.x, equ.y, equ.z], ob2000)
+    return _RotateEquatorialToEcliptic([equ.x, equ.y, equ.z], ob2000)
 
 def EclipticLongitude(body, time):
     if body == BODY_SUN:
@@ -2329,7 +2329,7 @@ def _sun_offset(targetLon, time):
     return _LongitudeOffset(ecl.elon - targetLon)
 
 def SearchSunLongitude(targetLon, startTime, limitDays):
-    t2 = startTime.Add(limitDays)
+    t2 = startTime.AddDays(limitDays)
     return Search(_sun_offset, targetLon, startTime, t2, 1.0)
 
 def MoonPhase(time):
@@ -2715,7 +2715,7 @@ def SearchRiseSet(body, observer, direction, startTime, limitDays):
         alt_after = _peak_altitude(context, time_after)
 
 class SeasonInfo:
-    def __init__(mar_equinox, jun_solstice, sep_equinox, dec_solstice):
+    def __init__(self, mar_equinox, jun_solstice, sep_equinox, dec_solstice):
         self.mar_equinox = mar_equinox
         self.jun_solstice = jun_solstice
         self.sep_equinox = sep_equinox
@@ -2723,14 +2723,18 @@ class SeasonInfo:
 
 def _FindSeasonChange(targetLon, year, month, day):
     startTime = Time.Make(year, month, day, 0, 0, 0)
-    return SearchSunLongitude(targetLon, startTime, 4.0)
+    time = SearchSunLongitude(targetLon, startTime, 4.0)
+    if time is None:
+        # We should always be able to find a season change.
+        raise InternalError()
+    return time
 
 def Seasons(year):
     mar_equinox = _FindSeasonChange(0, year, 3, 19)
     jun_solstice = _FindSeasonChange(90, year, 6, 19)
     sep_equinox = _FindSeasonChange(180, year, 9, 21)
     dec_solstice = _FindSeasonChange(270, year, 12, 20)
-    return SeasonInfo(mar_equinox, jun_solsitce, sep_equinox, dec_solstice)
+    return SeasonInfo(mar_equinox, jun_solstice, sep_equinox, dec_solstice)
 
 def _MoonDistance(time):
     return _CalcMoon(time).distance_au
@@ -2813,10 +2817,6 @@ def NextLunarApsis(apsis):
     return next
 
 #==================================================================================================
-# + SearchSunLongitude
-#       + _sun_offset
-#       + SunPosition
-#           + RotateEquatorialToEcliptic
 # + Ecliptic
 # + EclipticLongitude
 # + AngleFromSun
@@ -2832,8 +2832,6 @@ def NextLunarApsis(apsis):
 # + NextMoonQuarter
 # + SearchHourAngle
 # + SearchRiseSet
-# + Seasons
-#       + _FindSeasonChange
 # + Illumination
 # + SearchPeakMagnitude
 # + SearchLunarApsis

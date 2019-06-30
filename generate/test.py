@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import sys
 import math
+import re
 sys.path.append('../source/python')
 import astronomy
 
@@ -82,6 +83,71 @@ def Test_AstroCheck(printflag):
             print('s GM {:0.16f} {:0.16f} {:0.16f} {:0.16f} {:0.16f} {:0.16f} {:0.16f}'.format(time.tt, time.ut, j2000.ra, j2000.dec, j2000.dist, hor.azimuth, hor.altitude))
         time = time.AddDays(dt)
 
+def Test_Seasons(filename):
+    with open(filename, 'rt') as infile:
+        lnum = 0
+        current_year = 0
+        mar_count = sep_count = jun_count = dec_count = 0
+        max_minutes = 0.0
+        for line in infile:
+            lnum += 1
+            line = line.strip()
+            m = re.match(r'^(\d+)-(\d+)-(\d+)T(\d+):(\d+)Z\s+([A-Za-z]+)$', line)
+            if not m:
+                print('Test_Seasons: Invalid data on line {} of file {}'.format(lnum, filename))
+                return 1
+            year = int(m.group(1))
+            month = int(m.group(2))
+            day = int(m.group(3))
+            hour = int(m.group(4))
+            minute = int(m.group(5))
+            name = m.group(6)
+            if year != current_year:
+                current_year = current_year
+                seasons = astronomy.Seasons(year)
+            correct_time = astronomy.Time.Make(year, month, day, hour, minute, 0)
+            if name == 'Equinox':
+                if month == 3:
+                    calc_time = seasons.mar_equinox
+                    mar_count += 1
+                elif month == 9:
+                    calc_time = seasons.sep_equinox
+                    sep_count += 1
+                else:
+                    print('Test_Seasons: {} line {}: Invalid equinox date in test data'.format(filename, lnum))
+                    return 1
+            elif name == 'Solstice':
+                if month == 6:
+                    calc_time = seasons.jun_solstice
+                    jun_count += 1
+                elif month == 12:
+                    calc_time = seasons.dec_solstice
+                    dec_count += 1
+                else:
+                    print('Test_Seasons: {} line {}: Invalid solstice date in test data'.format(filename, lnum))
+                    return 1
+            elif name == 'Aphelion':
+                continue # not yet calculated
+            elif name == 'Perihelion':
+                continue # not yet calculated
+            else:
+                print('Test_Seasons: {} line {}: unknown event type {}'.format(filename, lnum, name))
+                return 1
+
+            # Verify that the calculated time matches the correct time for this event.
+            diff_minutes = (24.0 * 60.0) * abs(calc_time.tt - correct_time.tt)
+            if diff_minutes > max_minutes:
+                max_minutes = diff_minutes
+            
+            if diff_minutes > 1.7:
+                print('Test_Seasons: {} line {}: excessive error ({}): {} minutes.'.format(filename, lnum, name, diff_minutes))
+                return 1
+    print('Test_Seasons: verified {} lines from file {} : max error minutes = {:0.3f}'.format(lnum, filename, max_minutes))
+    print('Test_Seasons: Event counts: mar={}, jun={}, sep={}, dec={}'.format(mar_count, jun_count, sep_count, dec_count))
+    return 0
+
+#-----------------------------------------------------------------------------------------------------------
+
 if len(sys.argv) == 2:
     if sys.argv[1] == 'time':
         Test_AstroTime()
@@ -94,6 +160,10 @@ if len(sys.argv) == 2:
     if sys.argv[1] == 'astro_check' or sys.argv[1] == 'astro_profile':
         Test_AstroCheck(sys.argv[1] == 'astro_check')
         sys.exit(0)
+
+if len(sys.argv) == 3:
+    if sys.argv[1] == 'seasons':
+        sys.exit(Test_Seasons(sys.argv[2]))
 
 print('test.py: Invalid command line arguments.')
 sys.exit(1)
