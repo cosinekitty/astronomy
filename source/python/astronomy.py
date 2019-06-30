@@ -2824,12 +2824,6 @@ def NextLunarApsis(apsis):
 #       + _neg_elong_slope
 #       + SearchRelativeLongitude
 #       + Elongation
-#           + LongitudeFromSun
-# + MoonPhase
-# + SearchMoonPhase
-#       + _moon_offset
-# + SearchMoonQuarter
-# + NextMoonQuarter
 # + SearchHourAngle
 # + SearchRiseSet
 # + Illumination

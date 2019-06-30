@@ -407,7 +407,7 @@ For the Moon orbiting the Earth, this is a perigee or apogee, respectively.
 | Name | Type | Description |
 | --- | --- | --- |
 | time | [<code>AstroTime</code>](#Astronomy.AstroTime) | The date and time of the apsis. |
-| apsisType | <code>number</code> | For a closest approach (perigee or perihelion), <code>apsisType</code> is 0.      For a farthest distance event (apogee or aphelion), <code>apsisType</code> is 1. |
+| kind | <code>number</code> | For a closest approach (perigee or perihelion), <code>kind</code> is 0.      For a farthest distance event (apogee or aphelion), <code>kind</code> is 1. |
 | dist_au | <code>number</code> | The distance between the centers of the two bodies in astronomical units (AU). |
 | dist_km | <code>number</code> | The distance between the centers of the two bodies in kilometers. |
 

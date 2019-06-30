@@ -3245,9 +3245,9 @@ Astronomy.SearchPeakMagnitude = function(body, startDate) {
  * @property {Astronomy.AstroTime} time
  *      The date and time of the apsis.
  *
- * @property {number} apsisType
- *      For a closest approach (perigee or perihelion), <code>apsisType</code> is 0.
- *      For a farthest distance event (apogee or aphelion), <code>apsisType</code> is 1.
+ * @property {number} kind
+ *      For a closest approach (perigee or perihelion), <code>kind</code> is 0.
+ *      For a farthest distance event (apogee or aphelion), <code>kind</code> is 1.
  *
  * @property {number} dist_au
  *      The distance between the centers of the two bodies in astronomical units (AU).
@@ -3259,9 +3259,9 @@ Astronomy.SearchPeakMagnitude = function(body, startDate) {
  * @see {@link Astronomy.NextLunarApsis}
  */
 class Apsis {
-    constructor(time, apsisType, dist_au) {
+    constructor(time, kind, dist_au) {
         this.time = time;
-        this.apsisType = apsisType;
+        this.kind = kind;
         this.dist_au = dist_au;
         this.dist_km = dist_au * KM_PER_AU;
     }
@@ -3366,8 +3366,8 @@ Astronomy.SearchLunarApsis = function(startDate) {
 Astronomy.NextLunarApsis = function(apsis) {
     const skip = 11;    // number of days to skip to start looking for next apsis event
     let next = Astronomy.SearchLunarApsis(apsis.time.AddDays(skip));
-    if (next.apsisType + apsis.apsisType !== 1) {
-        throw `NextLunarApsis INTERNAL ERROR: did not find alternating apogee/perigee: prev=${apsis.apsisType} @ ${apsis.time.toString()}, next=${next.apsisType} @ ${next.time.toString()}`;
+    if (next.kind + apsis.kind !== 1) {
+        throw `NextLunarApsis INTERNAL ERROR: did not find alternating apogee/perigee: prev=${apsis.kind} @ ${apsis.time.toString()}, next=${next.kind} @ ${next.time.toString()}`;
     }
     return next;
 }

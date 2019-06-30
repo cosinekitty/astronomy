@@ -32,9 +32,9 @@ function Test() {
         let date = new Date(token[1]);
         let dist = parseInt(token[2]);
 
-        if (evt.apsisType !== kind) {
+        if (evt.kind !== kind) {
             console.log('line = ', line);
-            throw `${filename} line ${lnum}: Expected apsis type ${kind}, found ${evt.apsisType}`;
+            throw `${filename} line ${lnum}: Expected apsis type ${kind}, found ${evt.kind}`;
         }
 
         let diff_minutes = Math.abs(evt.time.date - date) / (1000 * 60);
