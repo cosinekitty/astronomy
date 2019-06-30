@@ -2714,6 +2714,103 @@ def SearchRiseSet(body, observer, direction, startTime, limitDays):
         alt_before = _peak_altitude(context, time_before)
         alt_after = _peak_altitude(context, time_after)
 
+class SeasonInfo:
+    def __init__(mar_equinox, jun_solstice, sep_equinox, dec_solstice):
+        self.mar_equinox = mar_equinox
+        self.jun_solstice = jun_solstice
+        self.sep_equinox = sep_equinox
+        self.dec_solstice = dec_solstice
+
+def _FindSeasonChange(targetLon, year, month, day):
+    startTime = Time.Make(year, month, day, 0, 0, 0)
+    return SearchSunLongitude(targetLon, startTime, 4.0)
+
+def Seasons(year):
+    mar_equinox = _FindSeasonChange(0, year, 3, 19)
+    jun_solstice = _FindSeasonChange(90, year, 6, 19)
+    sep_equinox = _FindSeasonChange(180, year, 9, 21)
+    dec_solstice = _FindSeasonChange(270, year, 12, 20)
+    return SeasonInfo(mar_equinox, jun_solsitce, sep_equinox, dec_solstice)
+
+def _MoonDistance(time):
+    return _CalcMoon(time).distance_au
+
+def _distance_slope(direction, time):
+    dt = 0.001
+    t1 = time.AddDays(-dt/2.0)
+    t2 = time.AddDays(+dt/2.0)
+    dist1 = _MoonDistance(t1)
+    dist2 = _MoonDistance(t2)
+    return direction * (dist2 - dist1) / dt
+
+APSIS_PERICENTER = 0
+APSIS_APOCENTER  = 1
+APSIS_INVALID    = 2
+
+class Apsis:
+    def __init__(self, time, kind, dist_au):
+        self.time = time
+        self.kind = kind
+        self.dist_au = dist_au
+        self.dist_km = dist_au * _KM_PER_AU
+
+def SearchLunarApsis(startTime):
+    increment = 5.0     # number of days to skip on each iteration
+    t1 = startTime
+    m1 = _distance_slope(+1, t1)
+    iter = 0
+    while iter * increment < 2.0 * _MEAN_SYNODIC_MONTH:
+        t2 = t1.AddDays(increment)
+        m2 = _distance_slope(+1, t2)
+        if m1 * m2 <= 0.0:
+            # There is a change of slope polarity within the time range [t1, t2].
+            # Therefore this time range contains an apsis.
+            # Figure out whether it is perigee or apogee.
+            if m1 < 0.0 or m2 > 0.0:
+                # We found a minimum-distance event: perigee.
+                # Search the time range for the time when the slope goes from negative to positive.
+                apsis_time = Search(_distance_slope, +1, t1, t2, 1.0)
+                kind = APSIS_PERICENTER
+            elif m1 > 0.0 or m2 < 0.0:
+                # We found a maximum-distance event: apogee.
+                # Search the time range for the time when the slope goes from positive to negative.
+                apsis_time = Search(_distance_slope, -1, t1, t2, 1.0)
+                kind = APSIS_APOCENTER
+            else:
+                # This should never happen. It should not be possible for both slopes to be zero.
+                raise InternalError()
+
+            if apsis_time is None:
+                # We should always be able to find a lunar apsis!
+                raise InternalError()
+
+            dist = _MoonDistance(apsis_time)
+            return Apsis(apsis_time, kind, dist)
+
+        # We have not yet found a slope polarity change. Keep searching.
+        t1 = t2
+        m1 = m2
+        iter += 1
+
+    # It should not be possible to fail to find an apsis within 2 synodic months.
+    raise InternalError()
+
+
+def NextLunarApsis(apsis):
+    skip = 11.0     # number of days to skip to start looking for next apsis event
+    expected = APSIS_INVALID
+    apsis.time = apsis.time.AddDays(skip)
+    next = SearchLunarApsis(time)
+    # Verify that we found the opposite apsis from the previous one.
+    if apsis.kind == APSIS_APOCENTER:
+        expected = APSIS_PERICENTER
+    elif apsis.kind == APSIS_PERICENTER:
+        expected = APSIS_APOCENTER
+    else:
+        raise Error('Parameter "apsis" contains an invalid "kind" value.')
+    if next.kind != expected:
+        raise InternalError()
+    return next
 
 #==================================================================================================
 # + SearchSunLongitude
@@ -2735,8 +2832,11 @@ def SearchRiseSet(body, observer, direction, startTime, limitDays):
 # + NextMoonQuarter
 # + SearchHourAngle
 # + SearchRiseSet
-# - Seasons
+# + Seasons
+#       + _FindSeasonChange
 # + Illumination
 # + SearchPeakMagnitude
-# - SearchLunarApsis
-# - NextLunarApsis
+# + SearchLunarApsis
+#       + _distance_slope
+#       + _MoonDistance
+# + NextLunarApsis
