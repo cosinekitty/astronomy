@@ -247,7 +247,7 @@ def TestElongFile(filename, targetRelLon):
             search_time = astronomy.Time.Make(year, 1, 1, 0, 0, 0)
             expected_time = astronomy.Time.Make(year, month, day, hour, minute, 0)
             found_time = astronomy.SearchRelativeLongitude(body, targetRelLon, search_time)
-            if not found_time:
+            if found_time is None:
                 print('TestElongFile({} line {}): SearchRelativeLongitude failed.'.format(filename, lnum))
                 return 1
             diff_minutes = (24.0 * 60.0) * (found_time.tt - expected_time.tt)
@@ -259,8 +259,50 @@ def TestElongFile(filename, targetRelLon):
     return 0
 
 def TestPlanetLongitudes(body, outFileName, zeroLonEventName):
-    print('TestPlanetLongitudes: not yet implemented')
-    return 1
+    startYear = 1700
+    stopYear = 2200
+    rlon = 0.0
+    sum_diff = 0.0
+    count = 0
+    name = astronomy.BodyName[body]
+    with open(outFileName, 'wt') as outfile:
+        time = astronomy.Time.Make(startYear, 1, 1, 0, 0, 0)
+        stopTime = astronomy.Time.Make(stopYear, 1, 1, 0, 0, 0)
+        while time.tt < stopTime.tt:
+            count += 1
+            event = zeroLonEventName if rlon == 0.0 else 'sup'
+            found_time = astronomy.SearchRelativeLongitude(body, rlon, time)
+            if found_time is None:
+                print('TestPlanetLongitudes({}): SearchRelativeLongitudes failed'.format(name))
+                return 1
+            if count >= 2:
+                # Check for consistent intervals.
+                # Mainly I don't want to skip over an event!
+                day_diff = found_time.tt - time.tt
+                sum_diff += day_diff
+                if count == 2:
+                    min_diff = max_diff = day_diff
+                else:
+                    min_diff = min(min_diff, day_diff)
+                    max_diff = max(max_diff, day_diff)
+            geo = astronomy.GeoVector(body, found_time, True)
+            dist = geo.Length()
+            outfile.write('e {} {} {:0.16f} {:0.16f}\n'.format(name, event, found_time.tt, dist))
+            # Search for the opposite longitude vent next time.
+            time = found_time
+            rlon = 180.0 - rlon
+    if body == astronomy.BODY_MERCURY:
+        thresh = 1.65
+    elif body == astronomy.BODY_MARS:
+        thresh = 1.30
+    else:
+        thresh = 1.07
+    ratio = max_diff / min_diff
+    print('TestPlanetLongitudes({:<7s}): {:5d} events, ratio={:5.3f}, file: {}'.format(name, count, ratio, outFileName))
+    if ratio > thresh:
+        print('TestPlanetLongitudes({}): EXCESSIVE EVENT INTERVAL RATIO'.format(name))
+        return 1
+    return 0
 
 def SearchElongTest():
     print('SearchElongTest: not yet implemented')
