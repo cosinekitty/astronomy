@@ -224,23 +224,79 @@ def Test_MoonPhase(filename):
 
 #-----------------------------------------------------------------------------------------------------------
 
+def TestElongFile(filename, targetRelLon):
+    with open(filename, 'rt') as infile:
+        lnum = 0
+        for line in infile:
+            lnum += 1
+            line = line.strip()
+            m = re.match(r'^(\d+)-(\d+)-(\d+)T(\d+):(\d+)Z ([A-Za-z]+)$', line)
+            if not m:
+                print('TestElongFile({} line {}): invalid data format'.format(filename, lnum))
+                return 1
+            year = int(m.group(1))
+            month = int(m.group(2))
+            day = int(m.group(3))
+            hour = int(m.group(4))
+            minute = int(m.group(5))
+            name = m.group(6)
+            body = astronomy.BodyCode(name)
+            if body < 0:
+                print('TestElongFile({} line {}): invalid body name "{}"'.format(filename, lnum, name))
+                return 1
+            search_time = astronomy.Time.Make(year, 1, 1, 0, 0, 0)
+            expected_time = astronomy.Time.Make(year, month, day, hour, minute, 0)
+            found_time = astronomy.SearchRelativeLongitude(body, targetRelLon, search_time)
+            if not found_time:
+                print('TestElongFile({} line {}): SearchRelativeLongitude failed.'.format(filename, lnum))
+                return 1
+            diff_minutes = (24.0 * 60.0) * (found_time.tt - expected_time.tt)
+            print('TestElongFile: {:<7s} error = {:6.3} minutes'.format(name, diff_minutes))
+            if abs(diff_minutes) > 15.0:
+                print('TestElongFile({} line {}): EXCESSIVE ERROR.'.format(filename, lnum))
+                return 1
+    print('TestElongFile: passed {} rows of data'.format(lnum))
+    return 0
+
+def TestPlanetLongitudes(body, outFileName, zeroLonEventName):
+    print('TestPlanetLongitudes: not yet implemented')
+    return 1
+
+def SearchElongTest():
+    print('SearchElongTest: not yet implemented')
+    return 1
+
+def Test_Elongation():
+    if 0 != TestElongFile('longitude/opposition_2018.txt', 0.0): return 1
+    if 0 != TestPlanetLongitudes(astronomy.BODY_MERCURY, "temp/c_longitude_Mercury.txt", "inf"): return 1
+    if 0 != TestPlanetLongitudes(astronomy.BODY_VENUS,   "temp/c_longitude_Venus.txt",   "inf"): return 1
+    if 0 != TestPlanetLongitudes(astronomy.BODY_MARS,    "temp/c_longitude_Mars.txt",    "opp"): return 1
+    if 0 != TestPlanetLongitudes(astronomy.BODY_JUPITER, "temp/c_longitude_Jupiter.txt", "opp"): return 1
+    if 0 != TestPlanetLongitudes(astronomy.BODY_SATURN,  "temp/c_longitude_Saturn.txt",  "opp"): return 1
+    if 0 != TestPlanetLongitudes(astronomy.BODY_URANUS,  "temp/c_longitude_Uranus.txt",  "opp"): return 1
+    if 0 != TestPlanetLongitudes(astronomy.BODY_NEPTUNE, "temp/c_longitude_Neptune.txt", "opp"): return 1
+    if 0 != TestPlanetLongitudes(astronomy.BODY_PLUTO,   "temp/c_longitude_Pluto.txt",   "opp"): return 1
+    if 0 != SearchElongTest(): return 1
+    return 0
+
+#-----------------------------------------------------------------------------------------------------------
+
 if len(sys.argv) == 2:
     if sys.argv[1] == 'time':
         Test_AstroTime()
         sys.exit(0)
-
     if sys.argv[1] == 'moon':
         Test_GeoMoon()
         sys.exit(0)
-
     if sys.argv[1] == 'astro_check' or sys.argv[1] == 'astro_profile':
         Test_AstroCheck(sys.argv[1] == 'astro_check')
         sys.exit(0)
+    if sys.argv[1] == 'elongation':
+        sys.exit(Test_Elongation())
 
 if len(sys.argv) == 3:
     if sys.argv[1] == 'seasons':
         sys.exit(Test_Seasons(sys.argv[2]))
-
     if sys.argv[1] == 'moonphase':
         sys.exit(Test_MoonPhase(sys.argv[2]))
 
