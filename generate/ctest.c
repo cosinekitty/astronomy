@@ -635,8 +635,16 @@ static int MoonPhase(const char *filename)
         else
         {
             /* Yet another lunar quarter in the same year. */
-            expected_quarter = (1 + mq.quarter) % 4;        /* expect the next consecutive quarter */
+            expected_quarter = (1 + mq.quarter) % 4;
             mq = Astronomy_NextMoonQuarter(mq);
+
+            /* Make sure we find the next expected quarter. */
+            if (expected_quarter != mq.quarter)
+            {
+                fprintf(stderr, "MoonPhase(%s line %d): Astronomy_SearchMoonQuarter returned quarter %d, but expected %d\n", filename, lnum, mq.quarter, expected_quarter);
+                error = 1;
+                goto fail;
+            }
         }
 
         if (mq.status != ASTRO_SUCCESS)
@@ -645,18 +653,7 @@ static int MoonPhase(const char *filename)
             error = 1;
             goto fail;
         }
-
-        /* Make sure we find the next expected quarter. */
-        if (expected_quarter != -1)
-        {
-            if (expected_quarter != mq.quarter)
-            {
-                fprintf(stderr, "MoonPhase(%s line %d): Astronomy_SearchMoonQuarter returned quarter %d, but expected %d\n", filename, lnum, quarter, expected_quarter);
-                error = 1;
-                goto fail;
-            }
-            ++quarter_count;
-        }
+        ++quarter_count;
 
         /* Make sure the time matches what we expect. */
         diff_seconds = fabs(mq.time.tt - expected_time.tt) * (24.0 * 3600.0);
