@@ -436,6 +436,101 @@ def Test_Elongation():
 
 #-----------------------------------------------------------------------------------------------------------
 
+def ParseJplHorizonsDateTime(line):
+    m = re.match(r'^\s*(\d{4})-(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)-(\d{2})\s(\d{2}):(\d{2})\s+(.*)$', line)
+    if not m:
+        return None, None
+    year = int(m.group(1))
+    month = 1 + ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].index(m.group(2))
+    day = int(m.group(3))
+    hour = int(m.group(4))
+    minute = int(m.group(5))
+    rest = m.group(6)
+    time = astronomy.Time.Make(year, month, day, hour, minute, 0)
+    return time, rest
+
+def CheckMagnitudeData(body, filename):
+    limit = 0.012
+    sum_squared_diff = 0.0
+    with open(filename, 'rt') as infile:
+        count = lnum = 0
+        for line in infile:
+            lnum += 1
+            line = line.strip()
+            (time, rest) = ParseJplHorizonsDateTime(line)
+            if (time is not None) and (rest is not None) and not ('n.a.' in rest):
+                data = [float(t) for t in rest.split()]
+                if len(data) != 7:
+                    print('CheckMagnitudeData({} line {}): invalid data format'.format(filename, lnum))
+                    return 1
+                (mag, sbrt, dist, rdot, delta, deldot, phase_angle) = data
+                illum = astronomy.Illumination(body, time)
+                diff = illum.mag - mag
+                if abs(diff) > limit:
+                    print('CheckMagnitudeData({} line {}): EXCESSIVE ERROR: correct mag={}, calc mag={}'.format(filename, lnum, mag, illum.mag))
+                    return 1
+                sum_squared_diff += diff * diff
+                if count == 0:
+                    diff_lo = diff_hi = diff
+                else:
+                    diff_lo = min(diff_lo, diff)
+                    diff_hi = max(diff_hi, diff)
+                count += 1
+
+        if count == 0:
+            print('CheckMagnitudeData: Did not find any data in file: {}'.format(filename))
+            return 1
+    rms = math.sqrt(sum_squared_diff / count)
+    print('CheckMagnitudeData: {:<21s} {:5d} rows diff_lo={:0.4f} diff_hi={:0.4f} rms={:0.4f}'.format(filename, count, diff_lo, diff_hi, rms))
+    return 0
+
+def CheckSaturn():
+    # JPL Horizons does not include Saturn's rings in its magnitude models.
+    # I still don't have authoritative test data for Saturn's magnitude.
+    # For now, I just test for consistency with Paul Schlyter's formulas at:
+    # http://www.stjarnhimlen.se/comp/ppcomp.html#15
+    data = [
+        ( "1972-01-01T00:00Z", -0.31904865,  +24.50061220 ),
+        ( "1980-01-01T00:00Z", +0.85213663,   -1.85761461 ),
+        ( "2009-09-04T00:00Z", +1.01626809,   +0.08380716 ),
+        ( "2017-06-15T00:00Z", -0.12318790,  -26.60871409 ),
+        ( "2019-05-01T00:00Z", +0.32954097,  -23.53880802 ),
+        ( "2025-09-25T00:00Z", +0.51286575,   +1.52327932 ),
+        ( "2032-05-15T00:00Z", -0.04652109,  +26.95717765 )
+    ]
+    for (dtext, mag, tilt) in data:
+        time = ParseDate(dtext)
+        illum = astronomy.Illumination(astronomy.BODY_SATURN, time)
+        print('Saturn: date={}  calc mag={:12.8f}  ring_tilt={:12.8f}'.format(dtext, illum.mag, illum.ring_tilt))
+        mag_diff = abs(illum.mag - mag)
+        if mag_diff > 1.0e-8:
+            print('CheckSaturn: Excessive magnitude error {}'.format(mag_diff))
+            return 1
+        tilt_diff = abs(illum.ring_tilt - tilt)
+        if (tilt_diff > 1.0e-8):
+            print('CheckSaturn: Excessive ring tilt error {}'.format(tilt_diff))
+            return 1
+    return 0
+
+def Test_Magnitude():
+    nfailed = 0
+    nfailed += CheckMagnitudeData(astronomy.BODY_SUN,     'magnitude/Sun.txt')
+    nfailed += CheckMagnitudeData(astronomy.BODY_MOON,    'magnitude/Moon.txt')
+    nfailed += CheckMagnitudeData(astronomy.BODY_MERCURY, 'magnitude/Mercury.txt')
+    nfailed += CheckMagnitudeData(astronomy.BODY_VENUS,   'magnitude/Venus.txt')
+    nfailed += CheckMagnitudeData(astronomy.BODY_MARS,    'magnitude/Mars.txt')
+    nfailed += CheckMagnitudeData(astronomy.BODY_JUPITER, 'magnitude/Jupiter.txt')
+    nfailed += CheckSaturn()
+    nfailed += CheckMagnitudeData(astronomy.BODY_URANUS,  'magnitude/Uranus.txt')
+    nfailed += CheckMagnitudeData(astronomy.BODY_NEPTUNE, 'magnitude/Neptune.txt')
+    nfailed += CheckMagnitudeData(astronomy.BODY_PLUTO,   'magnitude/Pluto.txt')
+    if nfailed > 0:
+        print('Test_Magnitude: failed {} test(s).'.format(nfailed))
+        return 1
+    return 0
+
+#-----------------------------------------------------------------------------------------------------------
+
 def Test_RiseSet(filename):
     sum_minutes = 0.0
     max_minutes = 0.0
@@ -539,6 +634,8 @@ if len(sys.argv) == 2:
         sys.exit(0)
     if sys.argv[1] == 'elongation':
         sys.exit(Test_Elongation())
+    if sys.argv[1] == 'magnitude':
+        sys.exit(Test_Magnitude())
 
 if len(sys.argv) == 3:
     if sys.argv[1] == 'seasons':

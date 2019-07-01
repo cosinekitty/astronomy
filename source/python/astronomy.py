@@ -2416,8 +2416,8 @@ def _SaturnMagnitude(phase, helio_dist, geo_dist, gc, time):
     # Find geocentric ecliptic coordinates of Saturn.
     eclip = Ecliptic(gc)
 
-    ir = DEG2RAD * 28.06   # tilt of Saturn's rings to the ecliptic, in radians
-    Nr = DEG2RAD * (169.51 + (3.82e-5 * time.tt))    # ascending node of Saturn's rings, in radians
+    ir = _DEG2RAD * 28.06   # tilt of Saturn's rings to the ecliptic, in radians
+    Nr = _DEG2RAD * (169.51 + (3.82e-5 * time.tt))    # ascending node of Saturn's rings, in radians
 
     # Find tilt of Saturn's rings, as seen from Earth.
     lat = _DEG2RAD * eclip.elat
@@ -2465,6 +2465,7 @@ def Illumination(body, time):
     earth = _CalcEarth(time)
     if body == BODY_SUN:
         gc = Vector(-earth.x, -earth.y, -earth.z, time)
+        hc = Vector(0.0, 0.0, 0.0, time)
         phase = 0.0     # placeholder value; the Sun does not have a phase angle.
     else:
         if body == BODY_MOON:
@@ -2795,7 +2796,7 @@ def SearchLunarApsis(startTime):
 def NextLunarApsis(apsis):
     skip = 11.0     # number of days to skip to start looking for next apsis event
     expected = APSIS_INVALID
-    apsis.time = apsis.time.AddDays(skip)
+    time = apsis.time.AddDays(skip)
     next = SearchLunarApsis(time)
     # Verify that we found the opposite apsis from the previous one.
     if apsis.kind == APSIS_APOCENTER:
@@ -2809,12 +2810,6 @@ def NextLunarApsis(apsis):
     return next
 
 #==================================================================================================
-# + Ecliptic
-# + EclipticLongitude
-# + AngleFromSun
-# + SearchHourAngle
-# + SearchRiseSet
-# + Illumination
 # + SearchPeakMagnitude
 # + SearchLunarApsis
 # + NextLunarApsis
