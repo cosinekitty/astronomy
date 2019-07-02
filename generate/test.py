@@ -512,6 +512,42 @@ def CheckSaturn():
             return 1
     return 0
 
+def TestMaxMag(body, filename):
+    # Example of input data:
+    #
+    # 2001-02-21T08:00Z 2001-02-27T08:00Z 23.17 19.53 -4.84 
+    #
+    # JPL Horizons test data has limited floating point precision in the magnitude values.
+    # There is a pair of dates for the beginning and end of the max magnitude period,
+    # given the limited precision. We pick the point halfway between as the supposed max magnitude time.
+    with open(filename, 'rt') as infile:
+        lnum = 0
+        search_time = astronomy.Time.Make(2001, 1, 1, 0, 0, 0)
+        for line in infile:
+            lnum += 1
+            line = line.strip()
+            tokenlist = line.split()
+            if len(tokenlist) == 5:
+                time1 = ParseDate(tokenlist[0])
+                time2 = ParseDate(tokenlist[1])
+                if time1 and time2:
+                    center_time = time1.AddDays(0.5*(time2.ut - time1.ut))
+                    correct_mag = float(tokenlist[4])
+                    illum = astronomy.SearchPeakMagnitude(body, search_time)
+                    mag_diff = abs(illum.mag - correct_mag)
+                    hours_diff = 24.0 * abs(illum.time.ut - center_time.ut)
+                    print('TestMaxMag: mag_diff={:0.3f}, hours_diff={:0.3f}'.format(mag_diff, hours_diff))
+                    if hours_diff > 7.1:
+                        print('TestMaxMag({} line {}): EXCESSIVE TIME DIFFERENCE.'.format(filename, lnum))
+                        return 1
+                    if mag_diff > 0.005:
+                        print('TestMaxMag({} line {}): EXCESSIVE MAGNITUDE DIFFERENCE.'.format(filename, lnum))
+                        return 1
+                    search_time = time2
+    print('TestMaxMag: processed {} lines from file {}'.format(lnum, filename))
+    return 0
+
+
 def Test_Magnitude():
     nfailed = 0
     nfailed += CheckMagnitudeData(astronomy.BODY_SUN,     'magnitude/Sun.txt')
@@ -524,6 +560,7 @@ def Test_Magnitude():
     nfailed += CheckMagnitudeData(astronomy.BODY_URANUS,  'magnitude/Uranus.txt')
     nfailed += CheckMagnitudeData(astronomy.BODY_NEPTUNE, 'magnitude/Neptune.txt')
     nfailed += CheckMagnitudeData(astronomy.BODY_PLUTO,   'magnitude/Pluto.txt')
+    nfailed += TestMaxMag(astronomy.BODY_VENUS, 'magnitude/maxmag_Venus.txt')
     if nfailed > 0:
         print('Test_Magnitude: failed {} test(s).'.format(nfailed))
         return 1

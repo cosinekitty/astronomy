@@ -2500,8 +2500,8 @@ def _mag_slope(body, time):
     dt = 0.01
     t1 = time.AddDays(-dt/2)
     t2 = time.AddDays(+dt/2)
-    y1 = Astronomy_Illumination(body, t1)
-    y2 = Astronomy_Illumination(body, t2)
+    y1 = Illumination(body, t1)
+    y2 = Illumination(body, t2)
     return (y2.mag - y1.mag) / dt
 
 def SearchPeakMagnitude(body, startTime):
@@ -2552,30 +2552,37 @@ def SearchPeakMagnitude(body, startTime):
             # Search forward from t1 to find t2 such that rel lon = -s1.
             rlon_hi = -s1
 
-        t_start = starTime.AddDays(adjust_days)
+        t_start = startTime.AddDays(adjust_days)
         t1 = SearchRelativeLongitude(body, rlon_lo, t_start)
-        t2 = SearchRelativeLongitude(body, rlon_hi, t1.time)
+        t2 = SearchRelativeLongitude(body, rlon_hi, t1)
 
         # Now we have a time range [t1,t2] that brackets a maximum magnitude event.
         # Confirm the bracketing.
-        m1 = _mag_slope(body, t1.time)
+        m1 = _mag_slope(body, t1)
         if m1 >= 0.0:
             raise InternalError()
 
-        m2 = _mag_slope(body, t2.time)
+        m2 = _mag_slope(body, t2)
         if m2 <= 0.0:
             raise InternalError()
 
         # Use the generic search algorithm to home in on where the slope crosses from negative to positive.
-        tx = Search(mag_slope, body, t1.time, t2.time, 10.0)
-        if tx.time.tt >= startTime.tt:
-            return Illumination(body, tx.time)
+        tx = Search(_mag_slope, body, t1, t2, 10.0)
+        if tx is None:
+            # The search should have found the ascending root in the interval [t1, t2].
+            raise InternalError()
+
+        if tx.tt >= startTime.tt:
+            return Illumination(body, tx)
 
         # This event is in the past (earlier than startTime).
         # We need to search forward from t2 to find the next possible window.
         # We never need to search more than twice.
         startTime = t2.AddDays(1.0)
         iter += 1
+
+    # We should have found the peak magnitude in at most 2 iterations.
+    raise InternalError()
 
 class HourAngleEvent:
     def __init__(self, time, hor):
@@ -2805,6 +2812,5 @@ def NextLunarApsis(apsis):
     return next
 
 #==================================================================================================
-# + SearchPeakMagnitude
 # + SearchLunarApsis
 # + NextLunarApsis
