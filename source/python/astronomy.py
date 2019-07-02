@@ -2795,17 +2795,12 @@ def SearchLunarApsis(startTime):
 
 def NextLunarApsis(apsis):
     skip = 11.0     # number of days to skip to start looking for next apsis event
-    expected = APSIS_INVALID
     time = apsis.time.AddDays(skip)
     next = SearchLunarApsis(time)
     # Verify that we found the opposite apsis from the previous one.
-    if apsis.kind == APSIS_APOCENTER:
-        expected = APSIS_PERICENTER
-    elif apsis.kind == APSIS_PERICENTER:
-        expected = APSIS_APOCENTER
-    else:
+    if apsis.kind not in [APSIS_APOCENTER, APSIS_PERICENTER]:
         raise Error('Parameter "apsis" contains an invalid "kind" value.')
-    if next.kind != expected:
+    if next.kind + apsis.kind != 1:
         raise InternalError()
     return next
 
