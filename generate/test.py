@@ -659,6 +659,49 @@ def Test_RiseSet(filename):
 
 #-----------------------------------------------------------------------------------------------------------
 
+def LunarApsis(filename):
+    max_minutes = 0.0
+    max_km = 0.0
+    with open(filename, 'rt') as infile:
+        start_time = astronomy.Time.Make(2001, 1, 1, 0, 0, 0)
+        lnum = 0
+        for line in infile:
+            lnum += 1
+            if lnum == 1:
+                apsis = astronomy.SearchLunarApsis(start_time)
+            else:
+                apsis = astronomy.NextLunarApsis(apsis)
+            tokenlist = line.split()
+            if len(tokenlist) != 3:
+                print('LunarApsis({} line {}): invalid data format'.format(filename, lnum))
+                return 1
+            correct_time = ParseDate(tokenlist[1])
+            if not correct_time:
+                print('LunarApsis({} line {}): invalid time'.format(filename, lnum))
+                return 1
+            kind = int(tokenlist[0])
+            dist_km = float(tokenlist[2])
+            diff_minutes = (24.0 * 60.0) * abs(apsis.time.ut - correct_time.ut)
+            diff_km = abs(apsis.dist_km - dist_km)
+            if diff_minutes > 35.0:
+                print('LunarApsis({} line {}): Excessive time error = {} minutes.'.format(filename, lnum, diff_minutes))
+                return 1
+            if diff_km > 25.0:
+                print('LunarApsis({} line {}): Excessive distance error = {} km.'.format(filename, lnum, diff_km))
+                return 1
+            max_minutes = max(max_minutes, diff_minutes)
+            max_km = max(max_km, diff_km)
+    print('LunarApsis: found {} events, max time error = {:0.3f} minutes, max distance error = {:0.3f} km.'.format(lnum, max_minutes, max_km))
+    return 0
+            
+
+def Test_Apsis():
+    if 0 != LunarApsis('apsides/moon.txt'):
+        return 1
+    return 0
+
+#-----------------------------------------------------------------------------------------------------------
+
 if len(sys.argv) == 2:
     if sys.argv[1] == 'time':
         Test_AstroTime()
@@ -673,6 +716,8 @@ if len(sys.argv) == 2:
         sys.exit(Test_Elongation())
     if sys.argv[1] == 'magnitude':
         sys.exit(Test_Magnitude())
+    if sys.argv[1] == 'apsis':
+        sys.exit(Test_Apsis())
 
 if len(sys.argv) == 3:
     if sys.argv[1] == 'seasons':

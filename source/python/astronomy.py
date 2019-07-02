@@ -2810,7 +2810,3 @@ def NextLunarApsis(apsis):
     if next.kind + apsis.kind != 1:
         raise InternalError()
     return next
-
-#==================================================================================================
-# + SearchLunarApsis
-# + NextLunarApsis
