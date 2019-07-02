@@ -37,6 +37,7 @@ static int CheckEquator(int lnum, astro_equatorial_t equ)
 #define CHECK_VECTOR(var,expr)   CHECK(CheckVector(__LINE__, ((var) = (expr))))
 #define CHECK_EQU(var,expr)      CHECK(CheckEquator(__LINE__, ((var) = (expr))))
 
+static int Issue46(void);
 static int Test_AstroTime(void);
 static int AstroCheck(void);
 static int Diff(const char *c_filename, const char *js_filename);
@@ -81,6 +82,12 @@ int main(int argc, const char *argv[])
         {
             CHECK(MoonTest());
             goto success;
+        }
+
+        if (!strcmp(verb, "issue46"))
+        {
+            CHECK(Issue46());
+            return 0;       /* prevent extra "ctest exiting with 0" output. */
         }
     }
 
@@ -1681,6 +1688,38 @@ static int LunarApsis(const char *filename)
 
 fail:
     if (infile != NULL) fclose(infile);
+    return error;
+}
+
+/*-----------------------------------------------------------------------------------------------------------*/
+
+static int Issue46(void)
+{
+    /* https://github.com/cosinekitty/astronomy/issues/46 */
+    astro_observer_t observer = Astronomy_MakeObserver(29, -81, 10);
+    astro_time_t time = Astronomy_TimeFromDays(-93692.7685882873047376);
+    astro_equatorial_t j2000;
+    astro_equatorial_t ofdate;
+    astro_horizon_t hor;
+    int error = 1;
+
+    printf("time.ut     = %0.16lf\n", time.ut);
+    printf("time.tt     = %0.16lf\n", time.tt);
+
+    CHECK_EQU(j2000, Astronomy_Equator(BODY_SUN, &time, observer, EQUATOR_J2000, NO_ABERRATION));
+    printf("j2000  ra   = %0.16lf\n", j2000.ra);
+    printf("j2000  dec  = %0.16lf\n", j2000.dec);
+
+    CHECK_EQU(ofdate, Astronomy_Equator(BODY_SUN, &time, observer, EQUATOR_OF_DATE, ABERRATION));
+    printf("ofdate ra   = %0.16lf\n", ofdate.ra);
+    printf("ofdate dec  = %0.16lf\n", ofdate.dec);
+    
+    hor = Astronomy_Horizon(&time, observer, ofdate.ra, ofdate.dec, REFRACTION_NONE);
+    printf("azimuth     = %0.16lf\n", hor.azimuth);
+    printf("altitude    = %0.16lf\n", hor.altitude);
+
+    error = 0;
+fail:
     return error;
 }
 

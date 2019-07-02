@@ -52,6 +52,26 @@ def Test_GeoMoon():
 
 #-----------------------------------------------------------------------------------------------------------
 
+def Test_Issue46():
+    # https://github.com/cosinekitty/astronomy/issues/46
+    observer = astronomy.Observer(29, -81, 10)
+    time = astronomy.Time(-93692.7685882873047376)
+    print('time.ut     = {:0.16f}'.format(time.ut))
+    print('time.tt     = {:0.16f}'.format(time.tt))
+    body = astronomy.BODY_SUN
+    j2000 = astronomy.Equator(body, time, observer, False, False)
+    print('j2000  ra   = {:0.16f}'.format(j2000.ra))
+    print('j2000  dec  = {:0.16f}'.format(j2000.dec))
+    ofdate = astronomy.Equator(body, time, observer, True, True)
+    print('ofdate ra   = {:0.16f}'.format(ofdate.ra))
+    print('ofdate dec  = {:0.16f}'.format(ofdate.dec))
+    hor = astronomy.Horizon(time, observer, ofdate.ra, ofdate.dec, astronomy.REFRACTION_NONE)
+    print('azimuth     = {:0.16f}'.format(hor.azimuth))
+    print('altitude    = {:0.16f}'.format(hor.altitude))
+    return 0
+
+#-----------------------------------------------------------------------------------------------------------
+
 def Test_AstroCheck(printflag):
     time = astronomy.Time.Make(1700, 1, 1, 0, 0, 0)
     stop = astronomy.Time.Make(2200, 1, 1, 0, 0, 0)
@@ -718,6 +738,8 @@ if len(sys.argv) == 2:
         sys.exit(Test_Magnitude())
     if sys.argv[1] == 'apsis':
         sys.exit(Test_Apsis())
+    if sys.argv[1] == 'issue46':
+        sys.exit(Test_Issue46())
 
 if len(sys.argv) == 3:
     if sys.argv[1] == 'seasons':

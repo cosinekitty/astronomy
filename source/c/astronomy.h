@@ -524,6 +524,7 @@ astro_time_t Astronomy_CurrentTime(void);
 astro_time_t Astronomy_MakeTime(int year, int month, int day, int hour, int minute, double second);
 astro_time_t Astronomy_TimeFromUtc(astro_utc_t utc);
 astro_utc_t  Astronomy_UtcFromTime(astro_time_t time);
+astro_time_t Astronomy_TimeFromDays(double ut);
 astro_time_t Astronomy_AddDays(astro_time_t time, double days);
 astro_vector_t Astronomy_HelioVector(astro_body_t body, astro_time_t time);
 astro_vector_t Astronomy_GeoVector(astro_body_t body, astro_time_t time, astro_aberration_t aberration);

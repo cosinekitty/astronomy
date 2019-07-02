@@ -70,7 +70,6 @@ static const double ETILT_INVALID = 1.0e+99;
 #define Y2000_IN_MJD    (T0 - MJD_BASIS)
 /** @endcond */
 
-static astro_time_t UniversalTime(double ut);
 static astro_ecliptic_t RotateEquatorialToEcliptic(const double pos[3], double obliq_radians);
 static int QuadInterp(
     double tm, double dt, double fa, double fm, double fb,
@@ -427,7 +426,20 @@ static double TerrestrialTime(double ut)
     return ut + DeltaT(ut + Y2000_IN_MJD)/86400.0;
 }
 
-static astro_time_t UniversalTime(double ut)
+/**
+ * @brief
+ *      Converts a J2000 day value to an #astro_time_t value.
+ *
+ * This function can be useful for reproducing an #astro_time_t structure
+ * from its `ut` field only.
+ *
+ * @param ut
+ *      The floating point number of days since noon UTC on January 1, 2000.
+ *
+ * @returns
+ *      An #astro_time_t value for the given `ut` value.
+ */
+astro_time_t Astronomy_TimeFromDays(double ut)
 {
     astro_time_t  time;
     time.ut = ut;
@@ -2434,7 +2446,7 @@ astro_search_result_t Astronomy_Search(
 
         if (QuadInterp(tmid.ut, t2.ut - tmid.ut, f1, fmid, f2, &q_x, &q_ut, &q_df_dt))
         {
-            tq = UniversalTime(q_ut);
+            tq = Astronomy_TimeFromDays(q_ut);
             CALLFUNC(fq, tq);
             if (q_df_dt != 0.0)
             {

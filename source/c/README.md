@@ -1014,6 +1014,30 @@ This function can be used for calculating changes of seasons: equinoxes and sols
 
 ---
 
+<a name="Astronomy_TimeFromDays"></a>
+### Astronomy_TimeFromDays(ut) &#8658; [`astro_time_t`](#astro_time_t)
+
+**Converts a J2000 day value to an [`astro_time_t`](#astro_time_t) value.** 
+
+
+
+This function can be useful for reproducing an [`astro_time_t`](#astro_time_t) structure from its `ut` field only.
+
+
+
+**Returns:**  An [`astro_time_t`](#astro_time_t) value for the given `ut` value. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| `double` | `ut` |  The floating point number of days since noon UTC on January 1, 2000. | 
+
+
+
+
+---
+
 <a name="Astronomy_TimeFromUtc"></a>
 ### Astronomy_TimeFromUtc(utc) &#8658; [`astro_time_t`](#astro_time_t)
 
