@@ -211,6 +211,51 @@ if errorlevel 1 (exit /b 1)
 
 REM -----------------------------------------------------------------------------------------
 
+echo.Running Python tests.
+test.py time
+if errorlevel 1 (exit /b 1)
+
+test.py apsis
+if errorlevel 1 (exit /b 1)
+
+test.py magnitude
+if errorlevel 1 (exit /b 1)
+
+test.py moon
+if errorlevel 1 (exit /b 1)
+
+test.py seasons seasons\seasons.txt
+if errorlevel 1 (exit /b 1)
+
+test.py moonphase moonphase\moonphases.txt
+if errorlevel 1 (exit /b 1)
+
+test.py riseset riseset\riseset.txt
+if errorlevel 1 (exit /b 1)
+
+test.py elongation
+if errorlevel 1 (exit /b 1)
+
+for %%f in (temp\py_longitude_*.txt) do (
+    !GENEXE! check %%f
+    if errorlevel 1 (exit /b 1)
+    echo .
+)
+
+echo.Generating Python test output.
+test.py astro_check > temp\py_check.txt
+if errorlevel 1 (exit /b 1)
+
+echo.Verifying Python test output.
+!GENEXE! check temp\py_check.txt
+if errorlevel 1 (exit /b 1)
+
 echo.
-echo.ALL TESTS PASSED.
+echo.           _ _   _______        _         _____                       _ 
+echo.     /\   ^| ^| ^| ^|__   __^|      ^| ^|       ^|  __ \                     ^| ^|
+echo.    /  \  ^| ^| ^|    ^| ^| ___  ___^| ^|_ ___  ^| ^|__) ^|_ _ ___ ___  ___  __^| ^|
+echo.   / /\ \ ^| ^| ^|    ^| ^|/ _ \/ __^| __/ __^| ^|  ___/ _` / __/ __^|/ _ \/ _` ^|
+echo.  / ____ \^| ^| ^|    ^| ^|  __/\__ \ ^|_\__ \ ^| ^|  ^| (_^| \__ \__ \  __/ (_^| ^|
+echo. /_/    \_\_^|_^|    ^|_^|\___^|^|___/\__^|___/ ^|_^|   \__,_^|___/___/\___^|\__,_^|
+echo.
 exit /b 0
