@@ -272,7 +272,7 @@ class Time:
 
     @staticmethod
     def Make(year, month, day, hour, minute, second):
-        micro = round((second % 1) * 1000000)
+        micro = round(math.fmod(second, 1.0) * 1000000)
         second = math.floor(second - micro/1000000)
         d = datetime.datetime(year, month, day, hour, minute, second, micro)
         ut = (d - _EPOCH).total_seconds() / 86400
@@ -472,16 +472,16 @@ _cls_t = [
 class _iau2000b:
     def __init__(self, time):
         t = time.tt / 36525
-        el  = ((485868.249036 + t * 1717915923.2178) % _ASEC360) * _ASEC2RAD
-        elp = ((1287104.79305 + t * 129596581.0481)  % _ASEC360) * _ASEC2RAD
-        f   = ((335779.526232 + t * 1739527262.8478) % _ASEC360) * _ASEC2RAD
-        d   = ((1072260.70369 + t * 1602961601.2090) % _ASEC360) * _ASEC2RAD
-        om  = ((450160.398036 - t * 6962890.5431)    % _ASEC360) * _ASEC2RAD
+        el  = math.fmod((485868.249036 + t * 1717915923.2178), _ASEC360) * _ASEC2RAD
+        elp = math.fmod((1287104.79305 + t * 129596581.0481),  _ASEC360) * _ASEC2RAD
+        f   = math.fmod((335779.526232 + t * 1739527262.8478), _ASEC360) * _ASEC2RAD
+        d   = math.fmod((1072260.70369 + t * 1602961601.2090), _ASEC360) * _ASEC2RAD
+        om  = math.fmod((450160.398036 - t * 6962890.5431),    _ASEC360) * _ASEC2RAD
         dp = 0
         de = 0
         i = 76
         while i >= 0:
-            arg = (_nals_t[i][0]*el + _nals_t[i][1]*elp + _nals_t[i][2]*f + _nals_t[i][3]*d + _nals_t[i][4]*om) % _PI2
+            arg = math.fmod((_nals_t[i][0]*el + _nals_t[i][1]*elp + _nals_t[i][2]*f + _nals_t[i][3]*d + _nals_t[i][4]*om), _PI2)
             sarg = math.sin(arg)
             carg = math.cos(arg)
             dp += (_cls_t[i][0] + _cls_t[i][1] * t)*sarg + _cls_t[i][2]*carg
@@ -650,8 +650,8 @@ def _nutation(time, direction, inpos):
 
 def _era(time):        # Earth Rotation Angle
     thet1 = 0.7790572732640 + 0.00273781191135448 * time.ut
-    thet3 = time.ut % 1.0
-    theta = 360.0 * ((thet1 + thet3) % 1.0)
+    thet3 = math.fmod(time.ut, 1.0)
+    theta = 360.0 * math.fmod((thet1 + thet3), 1.0)
     if theta < 0.0:
         theta += 360.0
     return theta
@@ -667,7 +667,7 @@ def _sidereal_time(time):
             -    0.00000044   ) * t
             +    1.3915817    ) * t
             + 4612.156534     ) * t)
-    gst = ((st/3600.0 + theta) % 360.0) / 15.0
+    gst = math.fmod((st/3600.0 + theta), 360.0) / 15.0
     if gst < 0.0:
         gst += 24.0
     return gst
@@ -2368,7 +2368,7 @@ class MoonQuarter:
 
 def SearchMoonQuarter(startTime):
     angle = MoonPhase(startTime)
-    quarter = (1 + math.floor(angle / 90.0)) % 4
+    quarter = int(1 + math.floor(angle / 90.0)) % 4
     time = SearchMoonPhase(90.0 * quarter, startTime, 10.0)
     if time is None:
         # The search should never fail. We should always find another lunar quarter.
@@ -2606,7 +2606,7 @@ def SearchHourAngle(body, observer, hourAngle, startTime):
 
         # Calculate the adjustment needed in sidereal time to bring
         # the hour angle to the desired value.
-        delta_sidereal_hours = ((hourAngle + ofdate.ra - observer.longitude/15) - gast) % 24
+        delta_sidereal_hours = math.fmod(((hourAngle + ofdate.ra - observer.longitude/15) - gast), 24.0)
         if iter == 1:
             # On the first iteration, always search forward in time.
             if delta_sidereal_hours < 0.0:

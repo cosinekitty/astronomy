@@ -250,6 +250,9 @@ echo.Verifying Python test output.
 !GENEXE! check temp\py_check.txt
 if errorlevel 1 (exit /b 1)
 
+!CTESTEXE! diff temp\py_check.txt temp\c_check.txt
+if errorlevel 1 (exit /b 1)
+
 echo.
 echo.           _ _   _______        _         _____                       _ 
 echo.     /\   ^| ^| ^| ^|__   __^|      ^| ^|       ^|  __ \                     ^| ^|

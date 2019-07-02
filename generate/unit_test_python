@@ -23,9 +23,6 @@ done
 echo "$0: Generating Python test output."
 time python3 test.py astro_check > temp/py_check.txt || Fail "Failure in Python astro_check"
 ./generate check temp/py_check.txt || Fail "Verification failure for Python unit test output."
-if false; then
-    # For some reason (alt, az) calculations are a tiny bit off (8e-11) in Python.
-    ./ctest diff temp/{py,js}_check.txt || Fail "Diff(py,js) failure."
-fi
+./ctest diff temp/{py,js}_check.txt || Fail "Diff(py,js) failure."
 
 exit 0
