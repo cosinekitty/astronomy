@@ -23,6 +23,6 @@ done
 echo "$0: Generating Python test output."
 time python3 test.py astro_check > temp/py_check.txt || Fail "Failure in Python astro_check"
 ./generate check temp/py_check.txt || Fail "Verification failure for Python unit test output."
-./ctest diff temp/{py,js}_check.txt || Fail "Diff(py,js) failure."
+./ctest diff temp/{py,c}_check.txt || Fail "Diff(py,js) failure."
 
 exit 0
