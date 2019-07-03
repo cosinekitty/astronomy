@@ -4,22 +4,7 @@ Fail()
     echo "ERROR($0): $1"
     exit 1
 }
-
-[[ -z "${CC}" ]] && CC=gcc
-echo "$0: C compiler = ${CC}"
-
-if [[ "$1" == "debug" ]]; then
-    BUILDOPT='-g -O0'
-elif [[ -z "$1" ]]; then
-    BUILDOPT='-O3'
-else
-    Fail "unrecognized command line option"
-fi
-
-${CC} ${BUILDOPT} -Wall -Werror -o ctest -I ../source/c/ ../source/c/astronomy.c ctest.c -lm || Fail "Error building ctest"
-
-echo "$0: Built 'ctest' program."
-
+./ctbuild $1 || exit 1
 ./ctest moon || Fail "Failure in ctest moon"
 time ./ctest || Fail "Failure reported by ctest."
 ./generate check temp/c_check.txt || Fail "Verification failure for C unit test output."
