@@ -814,12 +814,14 @@ def _CalcMoon(time):
 
     def Term(p, q, r, s):
         result = (1, 0)
-        I = [None, p, q, r, s]
-        k = 1
-        while k <= 4:
-            if I[k] != 0:
-                result = AddThe(result[0], result[1], co[I[k]][k], si[I[k]][k])
-            k += 1
+        if p != 0:
+            result = AddThe(result[0], result[1], co[p][1], si[p][1])
+        if q != 0:
+            result = AddThe(result[0], result[1], co[q][2], si[q][2])
+        if r != 0:
+            result = AddThe(result[0], result[1], co[r][3], si[r][3])
+        if s != 0:
+            result = AddThe(result[0], result[1], co[s][4], si[s][4])
         return result
 
     def AddSol(coeffl, coeffs, coeffg, coeffp, p, q, r, s):

@@ -722,32 +722,33 @@ def Test_Apsis():
 
 #-----------------------------------------------------------------------------------------------------------
 
-if len(sys.argv) == 2:
-    if sys.argv[1] == 'time':
-        Test_AstroTime()
-        sys.exit(0)
-    if sys.argv[1] == 'moon':
-        Test_GeoMoon()
-        sys.exit(0)
-    if sys.argv[1] == 'astro_check' or sys.argv[1] == 'astro_profile':
-        Test_AstroCheck(sys.argv[1] == 'astro_check')
-        sys.exit(0)
-    if sys.argv[1] == 'elongation':
-        sys.exit(Test_Elongation())
-    if sys.argv[1] == 'magnitude':
-        sys.exit(Test_Magnitude())
-    if sys.argv[1] == 'apsis':
-        sys.exit(Test_Apsis())
-    if sys.argv[1] == 'issue46':
-        sys.exit(Test_Issue46())
+if __name__ == '__main__':
+    if len(sys.argv) == 2:
+        if sys.argv[1] == 'time':
+            Test_AstroTime()
+            sys.exit(0)
+        if sys.argv[1] == 'moon':
+            Test_GeoMoon()
+            sys.exit(0)
+        if sys.argv[1] == 'astro_check' or sys.argv[1] == 'astro_profile':
+            Test_AstroCheck(sys.argv[1] == 'astro_check')
+            sys.exit(0)
+        if sys.argv[1] == 'elongation':
+            sys.exit(Test_Elongation())
+        if sys.argv[1] == 'magnitude':
+            sys.exit(Test_Magnitude())
+        if sys.argv[1] == 'apsis':
+            sys.exit(Test_Apsis())
+        if sys.argv[1] == 'issue46':
+            sys.exit(Test_Issue46())
 
-if len(sys.argv) == 3:
-    if sys.argv[1] == 'seasons':
-        sys.exit(Test_Seasons(sys.argv[2]))
-    if sys.argv[1] == 'moonphase':
-        sys.exit(Test_MoonPhase(sys.argv[2]))
-    if sys.argv[1] == 'riseset':
-        sys.exit(Test_RiseSet(sys.argv[2]))
+    if len(sys.argv) == 3:
+        if sys.argv[1] == 'seasons':
+            sys.exit(Test_Seasons(sys.argv[2]))
+        if sys.argv[1] == 'moonphase':
+            sys.exit(Test_MoonPhase(sys.argv[2]))
+        if sys.argv[1] == 'riseset':
+            sys.exit(Test_RiseSet(sys.argv[2]))
 
-print('test.py: Invalid command line arguments.')
-sys.exit(1)
+    print('test.py: Invalid command line arguments.')
+    sys.exit(1)
