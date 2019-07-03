@@ -38,6 +38,7 @@ static int CheckEquator(int lnum, astro_equatorial_t equ)
 #define CHECK_EQU(var,expr)      CHECK(CheckEquator(__LINE__, ((var) = (expr))))
 
 static int Issue46(void);
+static int Issue48(void);
 static int Test_AstroTime(void);
 static int AstroCheck(void);
 static int Diff(const char *c_filename, const char *js_filename);
@@ -88,6 +89,12 @@ int main(int argc, const char *argv[])
         {
             CHECK(Issue46());
             return 0;       /* prevent extra "ctest exiting with 0" output. */
+        }
+
+        if (!strcmp(verb, "issue48"))
+        {
+            CHECK(Issue48());
+            return 0;       /* prevent extra "ctest exiting with 0" output. */            
         }
     }
 
@@ -1693,11 +1700,10 @@ fail:
 
 /*-----------------------------------------------------------------------------------------------------------*/
 
-static int Issue46(void)
+static int MathCheck(astro_body_t body, double ut)
 {
-    /* https://github.com/cosinekitty/astronomy/issues/46 */
     astro_observer_t observer = Astronomy_MakeObserver(29, -81, 10);
-    astro_time_t time = Astronomy_TimeFromDays(-93692.7685882873047376);
+    astro_time_t time = Astronomy_TimeFromDays(ut);
     astro_equatorial_t j2000;
     astro_equatorial_t ofdate;
     astro_horizon_t hor;
@@ -1706,11 +1712,11 @@ static int Issue46(void)
     printf("time.ut     = %0.16lf\n", time.ut);
     printf("time.tt     = %0.16lf\n", time.tt);
 
-    CHECK_EQU(j2000, Astronomy_Equator(BODY_SUN, &time, observer, EQUATOR_J2000, NO_ABERRATION));
+    CHECK_EQU(j2000, Astronomy_Equator(body, &time, observer, EQUATOR_J2000, NO_ABERRATION));
     printf("j2000  ra   = %0.16lf\n", j2000.ra);
     printf("j2000  dec  = %0.16lf\n", j2000.dec);
 
-    CHECK_EQU(ofdate, Astronomy_Equator(BODY_SUN, &time, observer, EQUATOR_OF_DATE, ABERRATION));
+    CHECK_EQU(ofdate, Astronomy_Equator(body, &time, observer, EQUATOR_OF_DATE, ABERRATION));
     printf("ofdate ra   = %0.16lf\n", ofdate.ra);
     printf("ofdate dec  = %0.16lf\n", ofdate.dec);
     
@@ -1721,6 +1727,18 @@ static int Issue46(void)
     error = 0;
 fail:
     return error;
+}
+
+static int Issue46(void)
+{
+    /* https://github.com/cosinekitty/astronomy/issues/46 */
+    return MathCheck(BODY_SUN, -93692.7685882873047376);
+}
+
+static int Issue48(void)
+{
+    /* https://github.com/cosinekitty/astronomy/issues/48 */
+    return MathCheck(BODY_VENUS, -39864.1907264927140204);
 }
 
 /*-----------------------------------------------------------------------------------------------------------*/
