@@ -722,24 +722,24 @@ def _CalcMoon(time):
         I += 1
 
     def Term(p, q, r, s):
-        result = (1, 0)
+        (a, b) = (1, 0)
         if p != 0:
-            result = AddThe(result[0], result[1], co[p][1], si[p][1])
+            (a, b) = AddThe(a, b, co[p][1], si[p][1])
         if q != 0:
-            result = AddThe(result[0], result[1], co[q][2], si[q][2])
+            (a, b) = AddThe(a, b, co[q][2], si[q][2])
         if r != 0:
-            result = AddThe(result[0], result[1], co[r][3], si[r][3])
+            (a, b) = AddThe(a, b, co[r][3], si[r][3])
         if s != 0:
-            result = AddThe(result[0], result[1], co[s][4], si[s][4])
-        return result
+            (a, b) = AddThe(a, b, co[s][4], si[s][4])
+        return (a, b)
 
     def AddSol(coeffl, coeffs, coeffg, coeffp, p, q, r, s):
         nonlocal DLAM, DS, GAM1C, SINPI
-        result = Term(p, q, r, s)
-        DLAM += coeffl * result[1]
-        DS += coeffs * result[1]
-        GAM1C += coeffg * result[0]
-        SINPI += coeffp * result[0]
+        (a, b) = Term(p, q, r, s)
+        DLAM  += coeffl * b
+        DS    += coeffs * b
+        GAM1C += coeffg * a
+        SINPI += coeffp * a
 
     AddSol(    13.902,   14.06,-0.001,   0.2607,0, 0, 0, 4)
     AddSol(     0.403,   -4.01,+0.394,   0.0023,0, 0, 0, 3)
