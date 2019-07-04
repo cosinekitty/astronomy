@@ -812,34 +812,6 @@ def _CalcMoon(time):
 
         I += 1
 
-    def Term(p, q, r, s):
-        (a, b) = (1, 0)
-        if p != 0:
-            (a, b) = AddThe(a, b, co[p][1], si[p][1])
-        if q != 0:
-            (a, b) = AddThe(a, b, co[q][2], si[q][2])
-        if r != 0:
-            (a, b) = AddThe(a, b, co[r][3], si[r][3])
-        if s != 0:
-            (a, b) = AddThe(a, b, co[s][4], si[s][4])
-        return (a, b)
-
-    def AddSol(coeffl, coeffs, coeffg, coeffp, p, q, r, s):
-        nonlocal DLAM, DS, GAM1C, SINPI
-        (a, b) = (1, 0)
-        if p != 0:
-            (a, b) = AddThe(a, b, co[p][1], si[p][1])
-        if q != 0:
-            (a, b) = AddThe(a, b, co[q][2], si[q][2])
-        if r != 0:
-            (a, b) = AddThe(a, b, co[r][3], si[r][3])
-        if s != 0:
-            (a, b) = AddThe(a, b, co[s][4], si[s][4])
-        DLAM  += coeffl * b
-        DS    += coeffs * b
-        GAM1C += coeffg * a
-        SINPI += coeffp * a
-
 
     # AddSol(13.902, 14.06, -0.001, 0.2607, 0, 0, 0, 4)
     (a, b) = (co[4][4], si[4][4])
@@ -1666,7 +1638,16 @@ def _CalcMoon(time):
     DS    += -0.04 * b
 
     def ADDN(coeffn, p, q, r, s):
-        return coeffn * Term(p, q, r, s)[1]
+        (a, b) = (1, 0)
+        if p != 0:
+            (a, b) = AddThe(a, b, co[p][1], si[p][1])
+        if q != 0:
+            (a, b) = AddThe(a, b, co[q][2], si[q][2])
+        if r != 0:
+            (a, b) = AddThe(a, b, co[r][3], si[r][3])
+        if s != 0:
+            (a, b) = AddThe(a, b, co[s][4], si[s][4])
+        return coeffn * b
 
     N = 0
     N += ADDN(-526.069, 0, 0,1,-2)
