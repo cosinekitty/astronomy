@@ -1615,17 +1615,7 @@ def _CalcMoon(time):
     DS    += -0.04 * z.imag
 
     def ADDN(coeffn, p, q, r, s):
-        #z = ex[p][1] * ex[q][2] * ex[r][3] * ex[s][4]
-        z = complex(1, 0)
-        if p != 0:
-            z *= ex[p][1]
-        if q != 0:
-            z *= ex[q][2]
-        if r != 0:
-            z *= ex[r][3]
-        if s != 0:
-            z *= ex[s][4]
-        return coeffn * z.imag
+        return coeffn * (ex[p][1] * ex[q][2] * ex[r][3] * ex[s][4]).imag
 
     N = 0
     N += ADDN(-526.069, 0, 0,1,-2)
