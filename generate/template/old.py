@@ -624,7 +624,7 @@ def _spin(angle, pos1):
 # BEGIN CalcMoon
 
 def _Array1(xmin, xmax):
-    return dict((key, 0) for key in range(xmin, 1+xmax))
+    return dict((key, 0j) for key in range(xmin, 1+xmax))
 
 def _Array2(xmin, xmax, ymin, ymax):
     return dict((key, _Array1(ymin, ymax)) for key in range(xmin, 1+xmax))
@@ -637,11 +637,7 @@ class _moonpos:
 
 def _CalcMoon(time):
     T = time.tt / 36525
-    co = _Array2(-6, 6, 1, 4)
-    si = _Array2(-6, 6, 1, 4)
-
-    def AddThe(c1, s1, c2, s2):
-        return (c1*c2 - s1*s2, s1*c2 + c1*s2)
+    ex = _Array2(-6, 6, 1, 4)
 
     def Sine(phi):
         return math.sin(_PI2 * phi)
@@ -687,20 +683,17 @@ def _CalcMoon(time):
         else:
             ARG=D; MAX=6; FAC=1.0
 
-        co[0][I] = 1
-        co[1][I] = math.cos(ARG) * FAC
-        si[0][I] = 0
-        si[1][I] = math.sin(ARG) * FAC
+        ex[0][I] = complex(1, 0)
+        ex[1][I] = complex(FAC * math.cos(ARG), FAC * math.sin(ARG))
 
         J = 2
         while J <= MAX:
-            co[J][I], si[J][I] = AddThe(co[J-1][I], si[J-1][I], co[1][I], si[1][I])
+            ex[J][I] = ex[J-1][I] * ex[1][I]
             J += 1
 
         J = 1
         while J <= MAX:
-            co[-J][I] = +co[J][I]
-            si[-J][I] = -si[J][I]
+            ex[-J][I] = ex[J][I].conjugate()
             J += 1
 
         I += 1
@@ -813,16 +806,17 @@ def _CalcMoon(time):
     AddSol(    -0.330,   -0.04, 0.0  ,  0.0   ,3, 0, 2, 0)
 
     def ADDN(coeffn, p, q, r, s):
-        (a, b) = (1, 0)
+        #z = ex[p][1] * ex[q][2] * ex[r][3] * ex[s][4]
+        z = complex(1, 0)
         if p != 0:
-            (a, b) = AddThe(a, b, co[p][1], si[p][1])
+            z *= ex[p][1]
         if q != 0:
-            (a, b) = AddThe(a, b, co[q][2], si[q][2])
+            z *= ex[q][2]
         if r != 0:
-            (a, b) = AddThe(a, b, co[r][3], si[r][3])
+            z *= ex[r][3]
         if s != 0:
-            (a, b) = AddThe(a, b, co[s][4], si[s][4])
-        return coeffn * b
+            z *= ex[s][4]
+        return coeffn * z.imag
 
     N = 0
     N += ADDN(-526.069, 0, 0,1,-2)

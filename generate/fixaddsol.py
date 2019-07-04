@@ -5,13 +5,12 @@ import re
 def AddThe(first, text, p, i):
     # AddThe(a, b, c, d) = (a*c - b*d, b*c + a*d)
     if p != 0:
-        sub = '[{0}][{1}]'.format(p, i)
-        cd = '(co{0}, si{0})'.format(sub)
+        ex = 'ex[{0}][{1}]'.format(p, i)
         if first:
             first = False
-            text += '    (a, b) = {0}\n'.format(cd)
+            text += '    z = {0}\n'.format(ex)
         else:
-            text += '    (c, d) = {0}; (a, b) = (a*c - b*d, b*c + a*d)\n'.format(cd)
+            text += '    z *= {0}\n'.format(ex)
     return first, text
 
 def Translate(line):
@@ -36,16 +35,16 @@ def Translate(line):
         first, text = AddThe(first, text, s, 4)
 
         if cl != 0:
-            text += '    DLAM  += {} * b\n'.format(cl)
+            text += '    DLAM  += {} * z.imag\n'.format(cl)
 
         if cs != 0:
-            text += '    DS    += {} * b\n'.format(cs)
+            text += '    DS    += {} * z.imag\n'.format(cs)
 
         if cg != 0:
-            text += '    GAM1C += {} * a\n'.format(cg)
+            text += '    GAM1C += {} * z.real\n'.format(cg)
 
         if cp != 0:
-            text += '    SINPI += {} * a\n'.format(cp)
+            text += '    SINPI += {} * z.real\n'.format(cp)
         
         return text
     return line

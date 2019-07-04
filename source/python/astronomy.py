@@ -715,7 +715,7 @@ def _spin(angle, pos1):
 # BEGIN CalcMoon
 
 def _Array1(xmin, xmax):
-    return dict((key, 0) for key in range(xmin, 1+xmax))
+    return dict((key, 0j) for key in range(xmin, 1+xmax))
 
 def _Array2(xmin, xmax, ymin, ymax):
     return dict((key, _Array1(ymin, ymax)) for key in range(xmin, 1+xmax))
@@ -728,11 +728,7 @@ class _moonpos:
 
 def _CalcMoon(time):
     T = time.tt / 36525
-    co = _Array2(-6, 6, 1, 4)
-    si = _Array2(-6, 6, 1, 4)
-
-    def AddThe(c1, s1, c2, s2):
-        return (c1*c2 - s1*s2, s1*c2 + c1*s2)
+    ex = _Array2(-6, 6, 1, 4)
 
     def Sine(phi):
         return math.sin(_PI2 * phi)
@@ -778,860 +774,858 @@ def _CalcMoon(time):
         else:
             ARG=D; MAX=6; FAC=1.0
 
-        co[0][I] = 1
-        co[1][I] = math.cos(ARG) * FAC
-        si[0][I] = 0
-        si[1][I] = math.sin(ARG) * FAC
+        ex[0][I] = complex(1, 0)
+        ex[1][I] = complex(FAC * math.cos(ARG), FAC * math.sin(ARG))
 
         J = 2
         while J <= MAX:
-            co[J][I], si[J][I] = AddThe(co[J-1][I], si[J-1][I], co[1][I], si[1][I])
+            ex[J][I] = ex[J-1][I] * ex[1][I]
             J += 1
 
         J = 1
         while J <= MAX:
-            co[-J][I] = +co[J][I]
-            si[-J][I] = -si[J][I]
+            ex[-J][I] = ex[J][I].conjugate()
             J += 1
 
         I += 1
 
 
     # AddSol(13.902, 14.06, -0.001, 0.2607, 0, 0, 0, 4)
-    (a, b) = (co[4][4], si[4][4])
-    DLAM  += 13.902 * b
-    DS    += 14.06 * b
-    GAM1C += -0.001 * a
-    SINPI += 0.2607 * a
+    z = ex[4][4]
+    DLAM  += 13.902 * z.imag
+    DS    += 14.06 * z.imag
+    GAM1C += -0.001 * z.real
+    SINPI += 0.2607 * z.real
 
     # AddSol(0.403, -4.01, 0.394, 0.0023, 0, 0, 0, 3)
-    (a, b) = (co[3][4], si[3][4])
-    DLAM  += 0.403 * b
-    DS    += -4.01 * b
-    GAM1C += 0.394 * a
-    SINPI += 0.0023 * a
+    z = ex[3][4]
+    DLAM  += 0.403 * z.imag
+    DS    += -4.01 * z.imag
+    GAM1C += 0.394 * z.real
+    SINPI += 0.0023 * z.real
 
     # AddSol(2369.912, 2373.36, 0.601, 28.2333, 0, 0, 0, 2)
-    (a, b) = (co[2][4], si[2][4])
-    DLAM  += 2369.912 * b
-    DS    += 2373.36 * b
-    GAM1C += 0.601 * a
-    SINPI += 28.2333 * a
+    z = ex[2][4]
+    DLAM  += 2369.912 * z.imag
+    DS    += 2373.36 * z.imag
+    GAM1C += 0.601 * z.real
+    SINPI += 28.2333 * z.real
 
     # AddSol(-125.154, -112.79, -0.725, -0.9781, 0, 0, 0, 1)
-    (a, b) = (co[1][4], si[1][4])
-    DLAM  += -125.154 * b
-    DS    += -112.79 * b
-    GAM1C += -0.725 * a
-    SINPI += -0.9781 * a
+    z = ex[1][4]
+    DLAM  += -125.154 * z.imag
+    DS    += -112.79 * z.imag
+    GAM1C += -0.725 * z.real
+    SINPI += -0.9781 * z.real
 
     # AddSol(1.979, 6.98, -0.445, 0.0433, 1, 0, 0, 4)
-    (a, b) = (co[1][1], si[1][1])
-    (c, d) = (co[4][4], si[4][4]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += 1.979 * b
-    DS    += 6.98 * b
-    GAM1C += -0.445 * a
-    SINPI += 0.0433 * a
+    z = ex[1][1]
+    z *= ex[4][4]
+    DLAM  += 1.979 * z.imag
+    DS    += 6.98 * z.imag
+    GAM1C += -0.445 * z.real
+    SINPI += 0.0433 * z.real
 
     # AddSol(191.953, 192.72, 0.029, 3.0861, 1, 0, 0, 2)
-    (a, b) = (co[1][1], si[1][1])
-    (c, d) = (co[2][4], si[2][4]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += 191.953 * b
-    DS    += 192.72 * b
-    GAM1C += 0.029 * a
-    SINPI += 3.0861 * a
+    z = ex[1][1]
+    z *= ex[2][4]
+    DLAM  += 191.953 * z.imag
+    DS    += 192.72 * z.imag
+    GAM1C += 0.029 * z.real
+    SINPI += 3.0861 * z.real
 
     # AddSol(-8.466, -13.51, 0.455, -0.1093, 1, 0, 0, 1)
-    (a, b) = (co[1][1], si[1][1])
-    (c, d) = (co[1][4], si[1][4]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += -8.466 * b
-    DS    += -13.51 * b
-    GAM1C += 0.455 * a
-    SINPI += -0.1093 * a
+    z = ex[1][1]
+    z *= ex[1][4]
+    DLAM  += -8.466 * z.imag
+    DS    += -13.51 * z.imag
+    GAM1C += 0.455 * z.real
+    SINPI += -0.1093 * z.real
 
     # AddSol(22639.5, 22609.07, 0.079, 186.5398, 1, 0, 0, 0)
-    (a, b) = (co[1][1], si[1][1])
-    DLAM  += 22639.5 * b
-    DS    += 22609.07 * b
-    GAM1C += 0.079 * a
-    SINPI += 186.5398 * a
+    z = ex[1][1]
+    DLAM  += 22639.5 * z.imag
+    DS    += 22609.07 * z.imag
+    GAM1C += 0.079 * z.real
+    SINPI += 186.5398 * z.real
 
     # AddSol(18.609, 3.59, -0.094, 0.0118, 1, 0, 0, -1)
-    (a, b) = (co[1][1], si[1][1])
-    (c, d) = (co[-1][4], si[-1][4]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += 18.609 * b
-    DS    += 3.59 * b
-    GAM1C += -0.094 * a
-    SINPI += 0.0118 * a
+    z = ex[1][1]
+    z *= ex[-1][4]
+    DLAM  += 18.609 * z.imag
+    DS    += 3.59 * z.imag
+    GAM1C += -0.094 * z.real
+    SINPI += 0.0118 * z.real
 
     # AddSol(-4586.465, -4578.13, -0.077, 34.3117, 1, 0, 0, -2)
-    (a, b) = (co[1][1], si[1][1])
-    (c, d) = (co[-2][4], si[-2][4]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += -4586.465 * b
-    DS    += -4578.13 * b
-    GAM1C += -0.077 * a
-    SINPI += 34.3117 * a
+    z = ex[1][1]
+    z *= ex[-2][4]
+    DLAM  += -4586.465 * z.imag
+    DS    += -4578.13 * z.imag
+    GAM1C += -0.077 * z.real
+    SINPI += 34.3117 * z.real
 
     # AddSol(3.215, 5.44, 0.192, -0.0386, 1, 0, 0, -3)
-    (a, b) = (co[1][1], si[1][1])
-    (c, d) = (co[-3][4], si[-3][4]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += 3.215 * b
-    DS    += 5.44 * b
-    GAM1C += 0.192 * a
-    SINPI += -0.0386 * a
+    z = ex[1][1]
+    z *= ex[-3][4]
+    DLAM  += 3.215 * z.imag
+    DS    += 5.44 * z.imag
+    GAM1C += 0.192 * z.real
+    SINPI += -0.0386 * z.real
 
     # AddSol(-38.428, -38.64, 0.001, 0.6008, 1, 0, 0, -4)
-    (a, b) = (co[1][1], si[1][1])
-    (c, d) = (co[-4][4], si[-4][4]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += -38.428 * b
-    DS    += -38.64 * b
-    GAM1C += 0.001 * a
-    SINPI += 0.6008 * a
+    z = ex[1][1]
+    z *= ex[-4][4]
+    DLAM  += -38.428 * z.imag
+    DS    += -38.64 * z.imag
+    GAM1C += 0.001 * z.real
+    SINPI += 0.6008 * z.real
 
     # AddSol(-0.393, -1.43, -0.092, 0.0086, 1, 0, 0, -6)
-    (a, b) = (co[1][1], si[1][1])
-    (c, d) = (co[-6][4], si[-6][4]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += -0.393 * b
-    DS    += -1.43 * b
-    GAM1C += -0.092 * a
-    SINPI += 0.0086 * a
+    z = ex[1][1]
+    z *= ex[-6][4]
+    DLAM  += -0.393 * z.imag
+    DS    += -1.43 * z.imag
+    GAM1C += -0.092 * z.real
+    SINPI += 0.0086 * z.real
 
     # AddSol(-0.289, -1.59, 0.123, -0.0053, 0, 1, 0, 4)
-    (a, b) = (co[1][2], si[1][2])
-    (c, d) = (co[4][4], si[4][4]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += -0.289 * b
-    DS    += -1.59 * b
-    GAM1C += 0.123 * a
-    SINPI += -0.0053 * a
+    z = ex[1][2]
+    z *= ex[4][4]
+    DLAM  += -0.289 * z.imag
+    DS    += -1.59 * z.imag
+    GAM1C += 0.123 * z.real
+    SINPI += -0.0053 * z.real
 
     # AddSol(-24.42, -25.1, 0.04, -0.3, 0, 1, 0, 2)
-    (a, b) = (co[1][2], si[1][2])
-    (c, d) = (co[2][4], si[2][4]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += -24.42 * b
-    DS    += -25.1 * b
-    GAM1C += 0.04 * a
-    SINPI += -0.3 * a
+    z = ex[1][2]
+    z *= ex[2][4]
+    DLAM  += -24.42 * z.imag
+    DS    += -25.1 * z.imag
+    GAM1C += 0.04 * z.real
+    SINPI += -0.3 * z.real
 
     # AddSol(18.023, 17.93, 0.007, 0.1494, 0, 1, 0, 1)
-    (a, b) = (co[1][2], si[1][2])
-    (c, d) = (co[1][4], si[1][4]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += 18.023 * b
-    DS    += 17.93 * b
-    GAM1C += 0.007 * a
-    SINPI += 0.1494 * a
+    z = ex[1][2]
+    z *= ex[1][4]
+    DLAM  += 18.023 * z.imag
+    DS    += 17.93 * z.imag
+    GAM1C += 0.007 * z.real
+    SINPI += 0.1494 * z.real
 
     # AddSol(-668.146, -126.98, -1.302, -0.3997, 0, 1, 0, 0)
-    (a, b) = (co[1][2], si[1][2])
-    DLAM  += -668.146 * b
-    DS    += -126.98 * b
-    GAM1C += -1.302 * a
-    SINPI += -0.3997 * a
+    z = ex[1][2]
+    DLAM  += -668.146 * z.imag
+    DS    += -126.98 * z.imag
+    GAM1C += -1.302 * z.real
+    SINPI += -0.3997 * z.real
 
     # AddSol(0.56, 0.32, -0.001, -0.0037, 0, 1, 0, -1)
-    (a, b) = (co[1][2], si[1][2])
-    (c, d) = (co[-1][4], si[-1][4]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += 0.56 * b
-    DS    += 0.32 * b
-    GAM1C += -0.001 * a
-    SINPI += -0.0037 * a
+    z = ex[1][2]
+    z *= ex[-1][4]
+    DLAM  += 0.56 * z.imag
+    DS    += 0.32 * z.imag
+    GAM1C += -0.001 * z.real
+    SINPI += -0.0037 * z.real
 
     # AddSol(-165.145, -165.06, 0.054, 1.9178, 0, 1, 0, -2)
-    (a, b) = (co[1][2], si[1][2])
-    (c, d) = (co[-2][4], si[-2][4]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += -165.145 * b
-    DS    += -165.06 * b
-    GAM1C += 0.054 * a
-    SINPI += 1.9178 * a
+    z = ex[1][2]
+    z *= ex[-2][4]
+    DLAM  += -165.145 * z.imag
+    DS    += -165.06 * z.imag
+    GAM1C += 0.054 * z.real
+    SINPI += 1.9178 * z.real
 
     # AddSol(-1.877, -6.46, -0.416, 0.0339, 0, 1, 0, -4)
-    (a, b) = (co[1][2], si[1][2])
-    (c, d) = (co[-4][4], si[-4][4]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += -1.877 * b
-    DS    += -6.46 * b
-    GAM1C += -0.416 * a
-    SINPI += 0.0339 * a
+    z = ex[1][2]
+    z *= ex[-4][4]
+    DLAM  += -1.877 * z.imag
+    DS    += -6.46 * z.imag
+    GAM1C += -0.416 * z.real
+    SINPI += 0.0339 * z.real
 
     # AddSol(0.213, 1.02, -0.074, 0.0054, 2, 0, 0, 4)
-    (a, b) = (co[2][1], si[2][1])
-    (c, d) = (co[4][4], si[4][4]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += 0.213 * b
-    DS    += 1.02 * b
-    GAM1C += -0.074 * a
-    SINPI += 0.0054 * a
+    z = ex[2][1]
+    z *= ex[4][4]
+    DLAM  += 0.213 * z.imag
+    DS    += 1.02 * z.imag
+    GAM1C += -0.074 * z.real
+    SINPI += 0.0054 * z.real
 
     # AddSol(14.387, 14.78, -0.017, 0.2833, 2, 0, 0, 2)
-    (a, b) = (co[2][1], si[2][1])
-    (c, d) = (co[2][4], si[2][4]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += 14.387 * b
-    DS    += 14.78 * b
-    GAM1C += -0.017 * a
-    SINPI += 0.2833 * a
+    z = ex[2][1]
+    z *= ex[2][4]
+    DLAM  += 14.387 * z.imag
+    DS    += 14.78 * z.imag
+    GAM1C += -0.017 * z.real
+    SINPI += 0.2833 * z.real
 
     # AddSol(-0.586, -1.2, 0.054, -0.01, 2, 0, 0, 1)
-    (a, b) = (co[2][1], si[2][1])
-    (c, d) = (co[1][4], si[1][4]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += -0.586 * b
-    DS    += -1.2 * b
-    GAM1C += 0.054 * a
-    SINPI += -0.01 * a
+    z = ex[2][1]
+    z *= ex[1][4]
+    DLAM  += -0.586 * z.imag
+    DS    += -1.2 * z.imag
+    GAM1C += 0.054 * z.real
+    SINPI += -0.01 * z.real
 
     # AddSol(769.016, 767.96, 0.107, 10.1657, 2, 0, 0, 0)
-    (a, b) = (co[2][1], si[2][1])
-    DLAM  += 769.016 * b
-    DS    += 767.96 * b
-    GAM1C += 0.107 * a
-    SINPI += 10.1657 * a
+    z = ex[2][1]
+    DLAM  += 769.016 * z.imag
+    DS    += 767.96 * z.imag
+    GAM1C += 0.107 * z.real
+    SINPI += 10.1657 * z.real
 
     # AddSol(1.75, 2.01, -0.018, 0.0155, 2, 0, 0, -1)
-    (a, b) = (co[2][1], si[2][1])
-    (c, d) = (co[-1][4], si[-1][4]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += 1.75 * b
-    DS    += 2.01 * b
-    GAM1C += -0.018 * a
-    SINPI += 0.0155 * a
+    z = ex[2][1]
+    z *= ex[-1][4]
+    DLAM  += 1.75 * z.imag
+    DS    += 2.01 * z.imag
+    GAM1C += -0.018 * z.real
+    SINPI += 0.0155 * z.real
 
     # AddSol(-211.656, -152.53, 5.679, -0.3039, 2, 0, 0, -2)
-    (a, b) = (co[2][1], si[2][1])
-    (c, d) = (co[-2][4], si[-2][4]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += -211.656 * b
-    DS    += -152.53 * b
-    GAM1C += 5.679 * a
-    SINPI += -0.3039 * a
+    z = ex[2][1]
+    z *= ex[-2][4]
+    DLAM  += -211.656 * z.imag
+    DS    += -152.53 * z.imag
+    GAM1C += 5.679 * z.real
+    SINPI += -0.3039 * z.real
 
     # AddSol(1.225, 0.91, -0.03, -0.0088, 2, 0, 0, -3)
-    (a, b) = (co[2][1], si[2][1])
-    (c, d) = (co[-3][4], si[-3][4]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += 1.225 * b
-    DS    += 0.91 * b
-    GAM1C += -0.03 * a
-    SINPI += -0.0088 * a
+    z = ex[2][1]
+    z *= ex[-3][4]
+    DLAM  += 1.225 * z.imag
+    DS    += 0.91 * z.imag
+    GAM1C += -0.03 * z.real
+    SINPI += -0.0088 * z.real
 
     # AddSol(-30.773, -34.07, -0.308, 0.3722, 2, 0, 0, -4)
-    (a, b) = (co[2][1], si[2][1])
-    (c, d) = (co[-4][4], si[-4][4]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += -30.773 * b
-    DS    += -34.07 * b
-    GAM1C += -0.308 * a
-    SINPI += 0.3722 * a
+    z = ex[2][1]
+    z *= ex[-4][4]
+    DLAM  += -30.773 * z.imag
+    DS    += -34.07 * z.imag
+    GAM1C += -0.308 * z.real
+    SINPI += 0.3722 * z.real
 
     # AddSol(-0.57, -1.4, -0.074, 0.0109, 2, 0, 0, -6)
-    (a, b) = (co[2][1], si[2][1])
-    (c, d) = (co[-6][4], si[-6][4]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += -0.57 * b
-    DS    += -1.4 * b
-    GAM1C += -0.074 * a
-    SINPI += 0.0109 * a
+    z = ex[2][1]
+    z *= ex[-6][4]
+    DLAM  += -0.57 * z.imag
+    DS    += -1.4 * z.imag
+    GAM1C += -0.074 * z.real
+    SINPI += 0.0109 * z.real
 
     # AddSol(-2.921, -11.75, 0.787, -0.0484, 1, 1, 0, 2)
-    (a, b) = (co[1][1], si[1][1])
-    (c, d) = (co[1][2], si[1][2]); (a, b) = (a*c - b*d, b*c + a*d)
-    (c, d) = (co[2][4], si[2][4]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += -2.921 * b
-    DS    += -11.75 * b
-    GAM1C += 0.787 * a
-    SINPI += -0.0484 * a
+    z = ex[1][1]
+    z *= ex[1][2]
+    z *= ex[2][4]
+    DLAM  += -2.921 * z.imag
+    DS    += -11.75 * z.imag
+    GAM1C += 0.787 * z.real
+    SINPI += -0.0484 * z.real
 
     # AddSol(1.267, 1.52, -0.022, 0.0164, 1, 1, 0, 1)
-    (a, b) = (co[1][1], si[1][1])
-    (c, d) = (co[1][2], si[1][2]); (a, b) = (a*c - b*d, b*c + a*d)
-    (c, d) = (co[1][4], si[1][4]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += 1.267 * b
-    DS    += 1.52 * b
-    GAM1C += -0.022 * a
-    SINPI += 0.0164 * a
+    z = ex[1][1]
+    z *= ex[1][2]
+    z *= ex[1][4]
+    DLAM  += 1.267 * z.imag
+    DS    += 1.52 * z.imag
+    GAM1C += -0.022 * z.real
+    SINPI += 0.0164 * z.real
 
     # AddSol(-109.673, -115.18, 0.461, -0.949, 1, 1, 0, 0)
-    (a, b) = (co[1][1], si[1][1])
-    (c, d) = (co[1][2], si[1][2]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += -109.673 * b
-    DS    += -115.18 * b
-    GAM1C += 0.461 * a
-    SINPI += -0.949 * a
+    z = ex[1][1]
+    z *= ex[1][2]
+    DLAM  += -109.673 * z.imag
+    DS    += -115.18 * z.imag
+    GAM1C += 0.461 * z.real
+    SINPI += -0.949 * z.real
 
     # AddSol(-205.962, -182.36, 2.056, 1.4437, 1, 1, 0, -2)
-    (a, b) = (co[1][1], si[1][1])
-    (c, d) = (co[1][2], si[1][2]); (a, b) = (a*c - b*d, b*c + a*d)
-    (c, d) = (co[-2][4], si[-2][4]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += -205.962 * b
-    DS    += -182.36 * b
-    GAM1C += 2.056 * a
-    SINPI += 1.4437 * a
+    z = ex[1][1]
+    z *= ex[1][2]
+    z *= ex[-2][4]
+    DLAM  += -205.962 * z.imag
+    DS    += -182.36 * z.imag
+    GAM1C += 2.056 * z.real
+    SINPI += 1.4437 * z.real
 
     # AddSol(0.233, 0.36, 0.012, -0.0025, 1, 1, 0, -3)
-    (a, b) = (co[1][1], si[1][1])
-    (c, d) = (co[1][2], si[1][2]); (a, b) = (a*c - b*d, b*c + a*d)
-    (c, d) = (co[-3][4], si[-3][4]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += 0.233 * b
-    DS    += 0.36 * b
-    GAM1C += 0.012 * a
-    SINPI += -0.0025 * a
+    z = ex[1][1]
+    z *= ex[1][2]
+    z *= ex[-3][4]
+    DLAM  += 0.233 * z.imag
+    DS    += 0.36 * z.imag
+    GAM1C += 0.012 * z.real
+    SINPI += -0.0025 * z.real
 
     # AddSol(-4.391, -9.66, -0.471, 0.0673, 1, 1, 0, -4)
-    (a, b) = (co[1][1], si[1][1])
-    (c, d) = (co[1][2], si[1][2]); (a, b) = (a*c - b*d, b*c + a*d)
-    (c, d) = (co[-4][4], si[-4][4]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += -4.391 * b
-    DS    += -9.66 * b
-    GAM1C += -0.471 * a
-    SINPI += 0.0673 * a
+    z = ex[1][1]
+    z *= ex[1][2]
+    z *= ex[-4][4]
+    DLAM  += -4.391 * z.imag
+    DS    += -9.66 * z.imag
+    GAM1C += -0.471 * z.real
+    SINPI += 0.0673 * z.real
 
 
     # AddSol(0.283, 1.53, -0.111, 0.006, 1, -1, 0, 4)
-    (a, b) = (co[1][1], si[1][1])
-    (c, d) = (co[-1][2], si[-1][2]); (a, b) = (a*c - b*d, b*c + a*d)
-    (c, d) = (co[4][4], si[4][4]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += 0.283 * b
-    DS    += 1.53 * b
-    GAM1C += -0.111 * a
-    SINPI += 0.006 * a
+    z = ex[1][1]
+    z *= ex[-1][2]
+    z *= ex[4][4]
+    DLAM  += 0.283 * z.imag
+    DS    += 1.53 * z.imag
+    GAM1C += -0.111 * z.real
+    SINPI += 0.006 * z.real
 
     # AddSol(14.577, 31.7, -1.54, 0.2302, 1, -1, 0, 2)
-    (a, b) = (co[1][1], si[1][1])
-    (c, d) = (co[-1][2], si[-1][2]); (a, b) = (a*c - b*d, b*c + a*d)
-    (c, d) = (co[2][4], si[2][4]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += 14.577 * b
-    DS    += 31.7 * b
-    GAM1C += -1.54 * a
-    SINPI += 0.2302 * a
+    z = ex[1][1]
+    z *= ex[-1][2]
+    z *= ex[2][4]
+    DLAM  += 14.577 * z.imag
+    DS    += 31.7 * z.imag
+    GAM1C += -1.54 * z.real
+    SINPI += 0.2302 * z.real
 
     # AddSol(147.687, 138.76, 0.679, 1.1528, 1, -1, 0, 0)
-    (a, b) = (co[1][1], si[1][1])
-    (c, d) = (co[-1][2], si[-1][2]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += 147.687 * b
-    DS    += 138.76 * b
-    GAM1C += 0.679 * a
-    SINPI += 1.1528 * a
+    z = ex[1][1]
+    z *= ex[-1][2]
+    DLAM  += 147.687 * z.imag
+    DS    += 138.76 * z.imag
+    GAM1C += 0.679 * z.real
+    SINPI += 1.1528 * z.real
 
     # AddSol(-1.089, 0.55, 0.021, 0.0, 1, -1, 0, -1)
-    (a, b) = (co[1][1], si[1][1])
-    (c, d) = (co[-1][2], si[-1][2]); (a, b) = (a*c - b*d, b*c + a*d)
-    (c, d) = (co[-1][4], si[-1][4]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += -1.089 * b
-    DS    += 0.55 * b
-    GAM1C += 0.021 * a
+    z = ex[1][1]
+    z *= ex[-1][2]
+    z *= ex[-1][4]
+    DLAM  += -1.089 * z.imag
+    DS    += 0.55 * z.imag
+    GAM1C += 0.021 * z.real
 
     # AddSol(28.475, 23.59, -0.443, -0.2257, 1, -1, 0, -2)
-    (a, b) = (co[1][1], si[1][1])
-    (c, d) = (co[-1][2], si[-1][2]); (a, b) = (a*c - b*d, b*c + a*d)
-    (c, d) = (co[-2][4], si[-2][4]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += 28.475 * b
-    DS    += 23.59 * b
-    GAM1C += -0.443 * a
-    SINPI += -0.2257 * a
+    z = ex[1][1]
+    z *= ex[-1][2]
+    z *= ex[-2][4]
+    DLAM  += 28.475 * z.imag
+    DS    += 23.59 * z.imag
+    GAM1C += -0.443 * z.real
+    SINPI += -0.2257 * z.real
 
     # AddSol(-0.276, -0.38, -0.006, -0.0036, 1, -1, 0, -3)
-    (a, b) = (co[1][1], si[1][1])
-    (c, d) = (co[-1][2], si[-1][2]); (a, b) = (a*c - b*d, b*c + a*d)
-    (c, d) = (co[-3][4], si[-3][4]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += -0.276 * b
-    DS    += -0.38 * b
-    GAM1C += -0.006 * a
-    SINPI += -0.0036 * a
+    z = ex[1][1]
+    z *= ex[-1][2]
+    z *= ex[-3][4]
+    DLAM  += -0.276 * z.imag
+    DS    += -0.38 * z.imag
+    GAM1C += -0.006 * z.real
+    SINPI += -0.0036 * z.real
 
     # AddSol(0.636, 2.27, 0.146, -0.0102, 1, -1, 0, -4)
-    (a, b) = (co[1][1], si[1][1])
-    (c, d) = (co[-1][2], si[-1][2]); (a, b) = (a*c - b*d, b*c + a*d)
-    (c, d) = (co[-4][4], si[-4][4]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += 0.636 * b
-    DS    += 2.27 * b
-    GAM1C += 0.146 * a
-    SINPI += -0.0102 * a
+    z = ex[1][1]
+    z *= ex[-1][2]
+    z *= ex[-4][4]
+    DLAM  += 0.636 * z.imag
+    DS    += 2.27 * z.imag
+    GAM1C += 0.146 * z.real
+    SINPI += -0.0102 * z.real
 
     # AddSol(-0.189, -1.68, 0.131, -0.0028, 0, 2, 0, 2)
-    (a, b) = (co[2][2], si[2][2])
-    (c, d) = (co[2][4], si[2][4]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += -0.189 * b
-    DS    += -1.68 * b
-    GAM1C += 0.131 * a
-    SINPI += -0.0028 * a
+    z = ex[2][2]
+    z *= ex[2][4]
+    DLAM  += -0.189 * z.imag
+    DS    += -1.68 * z.imag
+    GAM1C += 0.131 * z.real
+    SINPI += -0.0028 * z.real
 
     # AddSol(-7.486, -0.66, -0.037, -0.0086, 0, 2, 0, 0)
-    (a, b) = (co[2][2], si[2][2])
-    DLAM  += -7.486 * b
-    DS    += -0.66 * b
-    GAM1C += -0.037 * a
-    SINPI += -0.0086 * a
+    z = ex[2][2]
+    DLAM  += -7.486 * z.imag
+    DS    += -0.66 * z.imag
+    GAM1C += -0.037 * z.real
+    SINPI += -0.0086 * z.real
 
     # AddSol(-8.096, -16.35, -0.74, 0.0918, 0, 2, 0, -2)
-    (a, b) = (co[2][2], si[2][2])
-    (c, d) = (co[-2][4], si[-2][4]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += -8.096 * b
-    DS    += -16.35 * b
-    GAM1C += -0.74 * a
-    SINPI += 0.0918 * a
+    z = ex[2][2]
+    z *= ex[-2][4]
+    DLAM  += -8.096 * z.imag
+    DS    += -16.35 * z.imag
+    GAM1C += -0.74 * z.real
+    SINPI += 0.0918 * z.real
 
     # AddSol(-5.741, -0.04, 0.0, -0.0009, 0, 0, 2, 2)
-    (a, b) = (co[2][3], si[2][3])
-    (c, d) = (co[2][4], si[2][4]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += -5.741 * b
-    DS    += -0.04 * b
-    SINPI += -0.0009 * a
+    z = ex[2][3]
+    z *= ex[2][4]
+    DLAM  += -5.741 * z.imag
+    DS    += -0.04 * z.imag
+    SINPI += -0.0009 * z.real
 
     # AddSol(0.255, 0.0, 0.0, 0.0, 0, 0, 2, 1)
-    (a, b) = (co[2][3], si[2][3])
-    (c, d) = (co[1][4], si[1][4]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += 0.255 * b
+    z = ex[2][3]
+    z *= ex[1][4]
+    DLAM  += 0.255 * z.imag
 
     # AddSol(-411.608, -0.2, 0.0, -0.0124, 0, 0, 2, 0)
-    (a, b) = (co[2][3], si[2][3])
-    DLAM  += -411.608 * b
-    DS    += -0.2 * b
-    SINPI += -0.0124 * a
+    z = ex[2][3]
+    DLAM  += -411.608 * z.imag
+    DS    += -0.2 * z.imag
+    SINPI += -0.0124 * z.real
 
     # AddSol(0.584, 0.84, 0.0, 0.0071, 0, 0, 2, -1)
-    (a, b) = (co[2][3], si[2][3])
-    (c, d) = (co[-1][4], si[-1][4]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += 0.584 * b
-    DS    += 0.84 * b
-    SINPI += 0.0071 * a
+    z = ex[2][3]
+    z *= ex[-1][4]
+    DLAM  += 0.584 * z.imag
+    DS    += 0.84 * z.imag
+    SINPI += 0.0071 * z.real
 
     # AddSol(-55.173, -52.14, 0.0, -0.1052, 0, 0, 2, -2)
-    (a, b) = (co[2][3], si[2][3])
-    (c, d) = (co[-2][4], si[-2][4]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += -55.173 * b
-    DS    += -52.14 * b
-    SINPI += -0.1052 * a
+    z = ex[2][3]
+    z *= ex[-2][4]
+    DLAM  += -55.173 * z.imag
+    DS    += -52.14 * z.imag
+    SINPI += -0.1052 * z.real
 
     # AddSol(0.254, 0.25, 0.0, -0.0017, 0, 0, 2, -3)
-    (a, b) = (co[2][3], si[2][3])
-    (c, d) = (co[-3][4], si[-3][4]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += 0.254 * b
-    DS    += 0.25 * b
-    SINPI += -0.0017 * a
+    z = ex[2][3]
+    z *= ex[-3][4]
+    DLAM  += 0.254 * z.imag
+    DS    += 0.25 * z.imag
+    SINPI += -0.0017 * z.real
 
     # AddSol(0.025, -1.67, 0.0, 0.0031, 0, 0, 2, -4)
-    (a, b) = (co[2][3], si[2][3])
-    (c, d) = (co[-4][4], si[-4][4]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += 0.025 * b
-    DS    += -1.67 * b
-    SINPI += 0.0031 * a
+    z = ex[2][3]
+    z *= ex[-4][4]
+    DLAM  += 0.025 * z.imag
+    DS    += -1.67 * z.imag
+    SINPI += 0.0031 * z.real
 
     # AddSol(1.06, 2.96, -0.166, 0.0243, 3, 0, 0, 2)
-    (a, b) = (co[3][1], si[3][1])
-    (c, d) = (co[2][4], si[2][4]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += 1.06 * b
-    DS    += 2.96 * b
-    GAM1C += -0.166 * a
-    SINPI += 0.0243 * a
+    z = ex[3][1]
+    z *= ex[2][4]
+    DLAM  += 1.06 * z.imag
+    DS    += 2.96 * z.imag
+    GAM1C += -0.166 * z.real
+    SINPI += 0.0243 * z.real
 
     # AddSol(36.124, 50.64, -1.3, 0.6215, 3, 0, 0, 0)
-    (a, b) = (co[3][1], si[3][1])
-    DLAM  += 36.124 * b
-    DS    += 50.64 * b
-    GAM1C += -1.3 * a
-    SINPI += 0.6215 * a
+    z = ex[3][1]
+    DLAM  += 36.124 * z.imag
+    DS    += 50.64 * z.imag
+    GAM1C += -1.3 * z.real
+    SINPI += 0.6215 * z.real
 
     # AddSol(-13.193, -16.4, 0.258, -0.1187, 3, 0, 0, -2)
-    (a, b) = (co[3][1], si[3][1])
-    (c, d) = (co[-2][4], si[-2][4]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += -13.193 * b
-    DS    += -16.4 * b
-    GAM1C += 0.258 * a
-    SINPI += -0.1187 * a
+    z = ex[3][1]
+    z *= ex[-2][4]
+    DLAM  += -13.193 * z.imag
+    DS    += -16.4 * z.imag
+    GAM1C += 0.258 * z.real
+    SINPI += -0.1187 * z.real
 
     # AddSol(-1.187, -0.74, 0.042, 0.0074, 3, 0, 0, -4)
-    (a, b) = (co[3][1], si[3][1])
-    (c, d) = (co[-4][4], si[-4][4]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += -1.187 * b
-    DS    += -0.74 * b
-    GAM1C += 0.042 * a
-    SINPI += 0.0074 * a
+    z = ex[3][1]
+    z *= ex[-4][4]
+    DLAM  += -1.187 * z.imag
+    DS    += -0.74 * z.imag
+    GAM1C += 0.042 * z.real
+    SINPI += 0.0074 * z.real
 
     # AddSol(-0.293, -0.31, -0.002, 0.0046, 3, 0, 0, -6)
-    (a, b) = (co[3][1], si[3][1])
-    (c, d) = (co[-6][4], si[-6][4]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += -0.293 * b
-    DS    += -0.31 * b
-    GAM1C += -0.002 * a
-    SINPI += 0.0046 * a
+    z = ex[3][1]
+    z *= ex[-6][4]
+    DLAM  += -0.293 * z.imag
+    DS    += -0.31 * z.imag
+    GAM1C += -0.002 * z.real
+    SINPI += 0.0046 * z.real
 
     # AddSol(-0.29, -1.45, 0.116, -0.0051, 2, 1, 0, 2)
-    (a, b) = (co[2][1], si[2][1])
-    (c, d) = (co[1][2], si[1][2]); (a, b) = (a*c - b*d, b*c + a*d)
-    (c, d) = (co[2][4], si[2][4]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += -0.29 * b
-    DS    += -1.45 * b
-    GAM1C += 0.116 * a
-    SINPI += -0.0051 * a
+    z = ex[2][1]
+    z *= ex[1][2]
+    z *= ex[2][4]
+    DLAM  += -0.29 * z.imag
+    DS    += -1.45 * z.imag
+    GAM1C += 0.116 * z.real
+    SINPI += -0.0051 * z.real
 
     # AddSol(-7.649, -10.56, 0.259, -0.1038, 2, 1, 0, 0)
-    (a, b) = (co[2][1], si[2][1])
-    (c, d) = (co[1][2], si[1][2]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += -7.649 * b
-    DS    += -10.56 * b
-    GAM1C += 0.259 * a
-    SINPI += -0.1038 * a
+    z = ex[2][1]
+    z *= ex[1][2]
+    DLAM  += -7.649 * z.imag
+    DS    += -10.56 * z.imag
+    GAM1C += 0.259 * z.real
+    SINPI += -0.1038 * z.real
 
     # AddSol(-8.627, -7.59, 0.078, -0.0192, 2, 1, 0, -2)
-    (a, b) = (co[2][1], si[2][1])
-    (c, d) = (co[1][2], si[1][2]); (a, b) = (a*c - b*d, b*c + a*d)
-    (c, d) = (co[-2][4], si[-2][4]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += -8.627 * b
-    DS    += -7.59 * b
-    GAM1C += 0.078 * a
-    SINPI += -0.0192 * a
+    z = ex[2][1]
+    z *= ex[1][2]
+    z *= ex[-2][4]
+    DLAM  += -8.627 * z.imag
+    DS    += -7.59 * z.imag
+    GAM1C += 0.078 * z.real
+    SINPI += -0.0192 * z.real
 
     # AddSol(-2.74, -2.54, 0.022, 0.0324, 2, 1, 0, -4)
-    (a, b) = (co[2][1], si[2][1])
-    (c, d) = (co[1][2], si[1][2]); (a, b) = (a*c - b*d, b*c + a*d)
-    (c, d) = (co[-4][4], si[-4][4]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += -2.74 * b
-    DS    += -2.54 * b
-    GAM1C += 0.022 * a
-    SINPI += 0.0324 * a
+    z = ex[2][1]
+    z *= ex[1][2]
+    z *= ex[-4][4]
+    DLAM  += -2.74 * z.imag
+    DS    += -2.54 * z.imag
+    GAM1C += 0.022 * z.real
+    SINPI += 0.0324 * z.real
 
     # AddSol(1.181, 3.32, -0.212, 0.0213, 2, -1, 0, 2)
-    (a, b) = (co[2][1], si[2][1])
-    (c, d) = (co[-1][2], si[-1][2]); (a, b) = (a*c - b*d, b*c + a*d)
-    (c, d) = (co[2][4], si[2][4]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += 1.181 * b
-    DS    += 3.32 * b
-    GAM1C += -0.212 * a
-    SINPI += 0.0213 * a
+    z = ex[2][1]
+    z *= ex[-1][2]
+    z *= ex[2][4]
+    DLAM  += 1.181 * z.imag
+    DS    += 3.32 * z.imag
+    GAM1C += -0.212 * z.real
+    SINPI += 0.0213 * z.real
 
     # AddSol(9.703, 11.67, -0.151, 0.1268, 2, -1, 0, 0)
-    (a, b) = (co[2][1], si[2][1])
-    (c, d) = (co[-1][2], si[-1][2]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += 9.703 * b
-    DS    += 11.67 * b
-    GAM1C += -0.151 * a
-    SINPI += 0.1268 * a
+    z = ex[2][1]
+    z *= ex[-1][2]
+    DLAM  += 9.703 * z.imag
+    DS    += 11.67 * z.imag
+    GAM1C += -0.151 * z.real
+    SINPI += 0.1268 * z.real
 
     # AddSol(-0.352, -0.37, 0.001, -0.0028, 2, -1, 0, -1)
-    (a, b) = (co[2][1], si[2][1])
-    (c, d) = (co[-1][2], si[-1][2]); (a, b) = (a*c - b*d, b*c + a*d)
-    (c, d) = (co[-1][4], si[-1][4]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += -0.352 * b
-    DS    += -0.37 * b
-    GAM1C += 0.001 * a
-    SINPI += -0.0028 * a
+    z = ex[2][1]
+    z *= ex[-1][2]
+    z *= ex[-1][4]
+    DLAM  += -0.352 * z.imag
+    DS    += -0.37 * z.imag
+    GAM1C += 0.001 * z.real
+    SINPI += -0.0028 * z.real
 
     # AddSol(-2.494, -1.17, -0.003, -0.0017, 2, -1, 0, -2)
-    (a, b) = (co[2][1], si[2][1])
-    (c, d) = (co[-1][2], si[-1][2]); (a, b) = (a*c - b*d, b*c + a*d)
-    (c, d) = (co[-2][4], si[-2][4]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += -2.494 * b
-    DS    += -1.17 * b
-    GAM1C += -0.003 * a
-    SINPI += -0.0017 * a
+    z = ex[2][1]
+    z *= ex[-1][2]
+    z *= ex[-2][4]
+    DLAM  += -2.494 * z.imag
+    DS    += -1.17 * z.imag
+    GAM1C += -0.003 * z.real
+    SINPI += -0.0017 * z.real
 
     # AddSol(0.36, 0.2, -0.012, -0.0043, 2, -1, 0, -4)
-    (a, b) = (co[2][1], si[2][1])
-    (c, d) = (co[-1][2], si[-1][2]); (a, b) = (a*c - b*d, b*c + a*d)
-    (c, d) = (co[-4][4], si[-4][4]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += 0.36 * b
-    DS    += 0.2 * b
-    GAM1C += -0.012 * a
-    SINPI += -0.0043 * a
+    z = ex[2][1]
+    z *= ex[-1][2]
+    z *= ex[-4][4]
+    DLAM  += 0.36 * z.imag
+    DS    += 0.2 * z.imag
+    GAM1C += -0.012 * z.real
+    SINPI += -0.0043 * z.real
 
     # AddSol(-1.167, -1.25, 0.008, -0.0106, 1, 2, 0, 0)
-    (a, b) = (co[1][1], si[1][1])
-    (c, d) = (co[2][2], si[2][2]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += -1.167 * b
-    DS    += -1.25 * b
-    GAM1C += 0.008 * a
-    SINPI += -0.0106 * a
+    z = ex[1][1]
+    z *= ex[2][2]
+    DLAM  += -1.167 * z.imag
+    DS    += -1.25 * z.imag
+    GAM1C += 0.008 * z.real
+    SINPI += -0.0106 * z.real
 
     # AddSol(-7.412, -6.12, 0.117, 0.0484, 1, 2, 0, -2)
-    (a, b) = (co[1][1], si[1][1])
-    (c, d) = (co[2][2], si[2][2]); (a, b) = (a*c - b*d, b*c + a*d)
-    (c, d) = (co[-2][4], si[-2][4]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += -7.412 * b
-    DS    += -6.12 * b
-    GAM1C += 0.117 * a
-    SINPI += 0.0484 * a
+    z = ex[1][1]
+    z *= ex[2][2]
+    z *= ex[-2][4]
+    DLAM  += -7.412 * z.imag
+    DS    += -6.12 * z.imag
+    GAM1C += 0.117 * z.real
+    SINPI += 0.0484 * z.real
 
     # AddSol(-0.311, -0.65, -0.032, 0.0044, 1, 2, 0, -4)
-    (a, b) = (co[1][1], si[1][1])
-    (c, d) = (co[2][2], si[2][2]); (a, b) = (a*c - b*d, b*c + a*d)
-    (c, d) = (co[-4][4], si[-4][4]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += -0.311 * b
-    DS    += -0.65 * b
-    GAM1C += -0.032 * a
-    SINPI += 0.0044 * a
+    z = ex[1][1]
+    z *= ex[2][2]
+    z *= ex[-4][4]
+    DLAM  += -0.311 * z.imag
+    DS    += -0.65 * z.imag
+    GAM1C += -0.032 * z.real
+    SINPI += 0.0044 * z.real
 
     # AddSol(0.757, 1.82, -0.105, 0.0112, 1, -2, 0, 2)
-    (a, b) = (co[1][1], si[1][1])
-    (c, d) = (co[-2][2], si[-2][2]); (a, b) = (a*c - b*d, b*c + a*d)
-    (c, d) = (co[2][4], si[2][4]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += 0.757 * b
-    DS    += 1.82 * b
-    GAM1C += -0.105 * a
-    SINPI += 0.0112 * a
+    z = ex[1][1]
+    z *= ex[-2][2]
+    z *= ex[2][4]
+    DLAM  += 0.757 * z.imag
+    DS    += 1.82 * z.imag
+    GAM1C += -0.105 * z.real
+    SINPI += 0.0112 * z.real
 
     # AddSol(2.58, 2.32, 0.027, 0.0196, 1, -2, 0, 0)
-    (a, b) = (co[1][1], si[1][1])
-    (c, d) = (co[-2][2], si[-2][2]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += 2.58 * b
-    DS    += 2.32 * b
-    GAM1C += 0.027 * a
-    SINPI += 0.0196 * a
+    z = ex[1][1]
+    z *= ex[-2][2]
+    DLAM  += 2.58 * z.imag
+    DS    += 2.32 * z.imag
+    GAM1C += 0.027 * z.real
+    SINPI += 0.0196 * z.real
 
     # AddSol(2.533, 2.4, -0.014, -0.0212, 1, -2, 0, -2)
-    (a, b) = (co[1][1], si[1][1])
-    (c, d) = (co[-2][2], si[-2][2]); (a, b) = (a*c - b*d, b*c + a*d)
-    (c, d) = (co[-2][4], si[-2][4]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += 2.533 * b
-    DS    += 2.4 * b
-    GAM1C += -0.014 * a
-    SINPI += -0.0212 * a
+    z = ex[1][1]
+    z *= ex[-2][2]
+    z *= ex[-2][4]
+    DLAM  += 2.533 * z.imag
+    DS    += 2.4 * z.imag
+    GAM1C += -0.014 * z.real
+    SINPI += -0.0212 * z.real
 
     # AddSol(-0.344, -0.57, -0.025, 0.0036, 0, 3, 0, -2)
-    (a, b) = (co[3][2], si[3][2])
-    (c, d) = (co[-2][4], si[-2][4]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += -0.344 * b
-    DS    += -0.57 * b
-    GAM1C += -0.025 * a
-    SINPI += 0.0036 * a
+    z = ex[3][2]
+    z *= ex[-2][4]
+    DLAM  += -0.344 * z.imag
+    DS    += -0.57 * z.imag
+    GAM1C += -0.025 * z.real
+    SINPI += 0.0036 * z.real
 
     # AddSol(-0.992, -0.02, 0.0, 0.0, 1, 0, 2, 2)
-    (a, b) = (co[1][1], si[1][1])
-    (c, d) = (co[2][3], si[2][3]); (a, b) = (a*c - b*d, b*c + a*d)
-    (c, d) = (co[2][4], si[2][4]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += -0.992 * b
-    DS    += -0.02 * b
+    z = ex[1][1]
+    z *= ex[2][3]
+    z *= ex[2][4]
+    DLAM  += -0.992 * z.imag
+    DS    += -0.02 * z.imag
 
     # AddSol(-45.099, -0.02, 0.0, -0.001, 1, 0, 2, 0)
-    (a, b) = (co[1][1], si[1][1])
-    (c, d) = (co[2][3], si[2][3]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += -45.099 * b
-    DS    += -0.02 * b
-    SINPI += -0.001 * a
+    z = ex[1][1]
+    z *= ex[2][3]
+    DLAM  += -45.099 * z.imag
+    DS    += -0.02 * z.imag
+    SINPI += -0.001 * z.real
 
     # AddSol(-0.179, -9.52, 0.0, -0.0833, 1, 0, 2, -2)
-    (a, b) = (co[1][1], si[1][1])
-    (c, d) = (co[2][3], si[2][3]); (a, b) = (a*c - b*d, b*c + a*d)
-    (c, d) = (co[-2][4], si[-2][4]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += -0.179 * b
-    DS    += -9.52 * b
-    SINPI += -0.0833 * a
+    z = ex[1][1]
+    z *= ex[2][3]
+    z *= ex[-2][4]
+    DLAM  += -0.179 * z.imag
+    DS    += -9.52 * z.imag
+    SINPI += -0.0833 * z.real
 
     # AddSol(-0.301, -0.33, 0.0, 0.0014, 1, 0, 2, -4)
-    (a, b) = (co[1][1], si[1][1])
-    (c, d) = (co[2][3], si[2][3]); (a, b) = (a*c - b*d, b*c + a*d)
-    (c, d) = (co[-4][4], si[-4][4]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += -0.301 * b
-    DS    += -0.33 * b
-    SINPI += 0.0014 * a
+    z = ex[1][1]
+    z *= ex[2][3]
+    z *= ex[-4][4]
+    DLAM  += -0.301 * z.imag
+    DS    += -0.33 * z.imag
+    SINPI += 0.0014 * z.real
 
     # AddSol(-6.382, -3.37, 0.0, -0.0481, 1, 0, -2, 2)
-    (a, b) = (co[1][1], si[1][1])
-    (c, d) = (co[-2][3], si[-2][3]); (a, b) = (a*c - b*d, b*c + a*d)
-    (c, d) = (co[2][4], si[2][4]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += -6.382 * b
-    DS    += -3.37 * b
-    SINPI += -0.0481 * a
+    z = ex[1][1]
+    z *= ex[-2][3]
+    z *= ex[2][4]
+    DLAM  += -6.382 * z.imag
+    DS    += -3.37 * z.imag
+    SINPI += -0.0481 * z.real
 
     # AddSol(39.528, 85.13, 0.0, -0.7136, 1, 0, -2, 0)
-    (a, b) = (co[1][1], si[1][1])
-    (c, d) = (co[-2][3], si[-2][3]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += 39.528 * b
-    DS    += 85.13 * b
-    SINPI += -0.7136 * a
+    z = ex[1][1]
+    z *= ex[-2][3]
+    DLAM  += 39.528 * z.imag
+    DS    += 85.13 * z.imag
+    SINPI += -0.7136 * z.real
 
     # AddSol(9.366, 0.71, 0.0, -0.0112, 1, 0, -2, -2)
-    (a, b) = (co[1][1], si[1][1])
-    (c, d) = (co[-2][3], si[-2][3]); (a, b) = (a*c - b*d, b*c + a*d)
-    (c, d) = (co[-2][4], si[-2][4]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += 9.366 * b
-    DS    += 0.71 * b
-    SINPI += -0.0112 * a
+    z = ex[1][1]
+    z *= ex[-2][3]
+    z *= ex[-2][4]
+    DLAM  += 9.366 * z.imag
+    DS    += 0.71 * z.imag
+    SINPI += -0.0112 * z.real
 
     # AddSol(0.202, 0.02, 0.0, 0.0, 1, 0, -2, -4)
-    (a, b) = (co[1][1], si[1][1])
-    (c, d) = (co[-2][3], si[-2][3]); (a, b) = (a*c - b*d, b*c + a*d)
-    (c, d) = (co[-4][4], si[-4][4]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += 0.202 * b
-    DS    += 0.02 * b
+    z = ex[1][1]
+    z *= ex[-2][3]
+    z *= ex[-4][4]
+    DLAM  += 0.202 * z.imag
+    DS    += 0.02 * z.imag
 
 
     # AddSol(0.415, 0.1, 0.0, 0.0013, 0, 1, 2, 0)
-    (a, b) = (co[1][2], si[1][2])
-    (c, d) = (co[2][3], si[2][3]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += 0.415 * b
-    DS    += 0.1 * b
-    SINPI += 0.0013 * a
+    z = ex[1][2]
+    z *= ex[2][3]
+    DLAM  += 0.415 * z.imag
+    DS    += 0.1 * z.imag
+    SINPI += 0.0013 * z.real
 
     # AddSol(-2.152, -2.26, 0.0, -0.0066, 0, 1, 2, -2)
-    (a, b) = (co[1][2], si[1][2])
-    (c, d) = (co[2][3], si[2][3]); (a, b) = (a*c - b*d, b*c + a*d)
-    (c, d) = (co[-2][4], si[-2][4]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += -2.152 * b
-    DS    += -2.26 * b
-    SINPI += -0.0066 * a
+    z = ex[1][2]
+    z *= ex[2][3]
+    z *= ex[-2][4]
+    DLAM  += -2.152 * z.imag
+    DS    += -2.26 * z.imag
+    SINPI += -0.0066 * z.real
 
     # AddSol(-1.44, -1.3, 0.0, 0.0014, 0, 1, -2, 2)
-    (a, b) = (co[1][2], si[1][2])
-    (c, d) = (co[-2][3], si[-2][3]); (a, b) = (a*c - b*d, b*c + a*d)
-    (c, d) = (co[2][4], si[2][4]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += -1.44 * b
-    DS    += -1.3 * b
-    SINPI += 0.0014 * a
+    z = ex[1][2]
+    z *= ex[-2][3]
+    z *= ex[2][4]
+    DLAM  += -1.44 * z.imag
+    DS    += -1.3 * z.imag
+    SINPI += 0.0014 * z.real
 
     # AddSol(0.384, -0.04, 0.0, 0.0, 0, 1, -2, -2)
-    (a, b) = (co[1][2], si[1][2])
-    (c, d) = (co[-2][3], si[-2][3]); (a, b) = (a*c - b*d, b*c + a*d)
-    (c, d) = (co[-2][4], si[-2][4]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += 0.384 * b
-    DS    += -0.04 * b
+    z = ex[1][2]
+    z *= ex[-2][3]
+    z *= ex[-2][4]
+    DLAM  += 0.384 * z.imag
+    DS    += -0.04 * z.imag
 
     # AddSol(1.938, 3.6, -0.145, 0.0401, 4, 0, 0, 0)
-    (a, b) = (co[4][1], si[4][1])
-    DLAM  += 1.938 * b
-    DS    += 3.6 * b
-    GAM1C += -0.145 * a
-    SINPI += 0.0401 * a
+    z = ex[4][1]
+    DLAM  += 1.938 * z.imag
+    DS    += 3.6 * z.imag
+    GAM1C += -0.145 * z.real
+    SINPI += 0.0401 * z.real
 
     # AddSol(-0.952, -1.58, 0.052, -0.013, 4, 0, 0, -2)
-    (a, b) = (co[4][1], si[4][1])
-    (c, d) = (co[-2][4], si[-2][4]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += -0.952 * b
-    DS    += -1.58 * b
-    GAM1C += 0.052 * a
-    SINPI += -0.013 * a
+    z = ex[4][1]
+    z *= ex[-2][4]
+    DLAM  += -0.952 * z.imag
+    DS    += -1.58 * z.imag
+    GAM1C += 0.052 * z.real
+    SINPI += -0.013 * z.real
 
     # AddSol(-0.551, -0.94, 0.032, -0.0097, 3, 1, 0, 0)
-    (a, b) = (co[3][1], si[3][1])
-    (c, d) = (co[1][2], si[1][2]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += -0.551 * b
-    DS    += -0.94 * b
-    GAM1C += 0.032 * a
-    SINPI += -0.0097 * a
+    z = ex[3][1]
+    z *= ex[1][2]
+    DLAM  += -0.551 * z.imag
+    DS    += -0.94 * z.imag
+    GAM1C += 0.032 * z.real
+    SINPI += -0.0097 * z.real
 
     # AddSol(-0.482, -0.57, 0.005, -0.0045, 3, 1, 0, -2)
-    (a, b) = (co[3][1], si[3][1])
-    (c, d) = (co[1][2], si[1][2]); (a, b) = (a*c - b*d, b*c + a*d)
-    (c, d) = (co[-2][4], si[-2][4]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += -0.482 * b
-    DS    += -0.57 * b
-    GAM1C += 0.005 * a
-    SINPI += -0.0045 * a
+    z = ex[3][1]
+    z *= ex[1][2]
+    z *= ex[-2][4]
+    DLAM  += -0.482 * z.imag
+    DS    += -0.57 * z.imag
+    GAM1C += 0.005 * z.real
+    SINPI += -0.0045 * z.real
 
     # AddSol(0.681, 0.96, -0.026, 0.0115, 3, -1, 0, 0)
-    (a, b) = (co[3][1], si[3][1])
-    (c, d) = (co[-1][2], si[-1][2]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += 0.681 * b
-    DS    += 0.96 * b
-    GAM1C += -0.026 * a
-    SINPI += 0.0115 * a
+    z = ex[3][1]
+    z *= ex[-1][2]
+    DLAM  += 0.681 * z.imag
+    DS    += 0.96 * z.imag
+    GAM1C += -0.026 * z.real
+    SINPI += 0.0115 * z.real
 
     # AddSol(-0.297, -0.27, 0.002, -0.0009, 2, 2, 0, -2)
-    (a, b) = (co[2][1], si[2][1])
-    (c, d) = (co[2][2], si[2][2]); (a, b) = (a*c - b*d, b*c + a*d)
-    (c, d) = (co[-2][4], si[-2][4]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += -0.297 * b
-    DS    += -0.27 * b
-    GAM1C += 0.002 * a
-    SINPI += -0.0009 * a
+    z = ex[2][1]
+    z *= ex[2][2]
+    z *= ex[-2][4]
+    DLAM  += -0.297 * z.imag
+    DS    += -0.27 * z.imag
+    GAM1C += 0.002 * z.real
+    SINPI += -0.0009 * z.real
 
     # AddSol(0.254, 0.21, -0.003, 0.0, 2, -2, 0, -2)
-    (a, b) = (co[2][1], si[2][1])
-    (c, d) = (co[-2][2], si[-2][2]); (a, b) = (a*c - b*d, b*c + a*d)
-    (c, d) = (co[-2][4], si[-2][4]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += 0.254 * b
-    DS    += 0.21 * b
-    GAM1C += -0.003 * a
+    z = ex[2][1]
+    z *= ex[-2][2]
+    z *= ex[-2][4]
+    DLAM  += 0.254 * z.imag
+    DS    += 0.21 * z.imag
+    GAM1C += -0.003 * z.real
 
     # AddSol(-0.25, -0.22, 0.004, 0.0014, 1, 3, 0, -2)
-    (a, b) = (co[1][1], si[1][1])
-    (c, d) = (co[3][2], si[3][2]); (a, b) = (a*c - b*d, b*c + a*d)
-    (c, d) = (co[-2][4], si[-2][4]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += -0.25 * b
-    DS    += -0.22 * b
-    GAM1C += 0.004 * a
-    SINPI += 0.0014 * a
+    z = ex[1][1]
+    z *= ex[3][2]
+    z *= ex[-2][4]
+    DLAM  += -0.25 * z.imag
+    DS    += -0.22 * z.imag
+    GAM1C += 0.004 * z.real
+    SINPI += 0.0014 * z.real
 
     # AddSol(-3.996, 0.0, 0.0, 0.0004, 2, 0, 2, 0)
-    (a, b) = (co[2][1], si[2][1])
-    (c, d) = (co[2][3], si[2][3]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += -3.996 * b
-    SINPI += 0.0004 * a
+    z = ex[2][1]
+    z *= ex[2][3]
+    DLAM  += -3.996 * z.imag
+    SINPI += 0.0004 * z.real
 
     # AddSol(0.557, -0.75, 0.0, -0.009, 2, 0, 2, -2)
-    (a, b) = (co[2][1], si[2][1])
-    (c, d) = (co[2][3], si[2][3]); (a, b) = (a*c - b*d, b*c + a*d)
-    (c, d) = (co[-2][4], si[-2][4]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += 0.557 * b
-    DS    += -0.75 * b
-    SINPI += -0.009 * a
+    z = ex[2][1]
+    z *= ex[2][3]
+    z *= ex[-2][4]
+    DLAM  += 0.557 * z.imag
+    DS    += -0.75 * z.imag
+    SINPI += -0.009 * z.real
 
     # AddSol(-0.459, -0.38, 0.0, -0.0053, 2, 0, -2, 2)
-    (a, b) = (co[2][1], si[2][1])
-    (c, d) = (co[-2][3], si[-2][3]); (a, b) = (a*c - b*d, b*c + a*d)
-    (c, d) = (co[2][4], si[2][4]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += -0.459 * b
-    DS    += -0.38 * b
-    SINPI += -0.0053 * a
+    z = ex[2][1]
+    z *= ex[-2][3]
+    z *= ex[2][4]
+    DLAM  += -0.459 * z.imag
+    DS    += -0.38 * z.imag
+    SINPI += -0.0053 * z.real
 
     # AddSol(-1.298, 0.74, 0.0, 0.0004, 2, 0, -2, 0)
-    (a, b) = (co[2][1], si[2][1])
-    (c, d) = (co[-2][3], si[-2][3]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += -1.298 * b
-    DS    += 0.74 * b
-    SINPI += 0.0004 * a
+    z = ex[2][1]
+    z *= ex[-2][3]
+    DLAM  += -1.298 * z.imag
+    DS    += 0.74 * z.imag
+    SINPI += 0.0004 * z.real
 
     # AddSol(0.538, 1.14, 0.0, -0.0141, 2, 0, -2, -2)
-    (a, b) = (co[2][1], si[2][1])
-    (c, d) = (co[-2][3], si[-2][3]); (a, b) = (a*c - b*d, b*c + a*d)
-    (c, d) = (co[-2][4], si[-2][4]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += 0.538 * b
-    DS    += 1.14 * b
-    SINPI += -0.0141 * a
+    z = ex[2][1]
+    z *= ex[-2][3]
+    z *= ex[-2][4]
+    DLAM  += 0.538 * z.imag
+    DS    += 1.14 * z.imag
+    SINPI += -0.0141 * z.real
 
     # AddSol(0.263, 0.02, 0.0, 0.0, 1, 1, 2, 0)
-    (a, b) = (co[1][1], si[1][1])
-    (c, d) = (co[1][2], si[1][2]); (a, b) = (a*c - b*d, b*c + a*d)
-    (c, d) = (co[2][3], si[2][3]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += 0.263 * b
-    DS    += 0.02 * b
+    z = ex[1][1]
+    z *= ex[1][2]
+    z *= ex[2][3]
+    DLAM  += 0.263 * z.imag
+    DS    += 0.02 * z.imag
 
     # AddSol(0.426, 0.07, 0.0, -0.0006, 1, 1, -2, -2)
-    (a, b) = (co[1][1], si[1][1])
-    (c, d) = (co[1][2], si[1][2]); (a, b) = (a*c - b*d, b*c + a*d)
-    (c, d) = (co[-2][3], si[-2][3]); (a, b) = (a*c - b*d, b*c + a*d)
-    (c, d) = (co[-2][4], si[-2][4]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += 0.426 * b
-    DS    += 0.07 * b
-    SINPI += -0.0006 * a
+    z = ex[1][1]
+    z *= ex[1][2]
+    z *= ex[-2][3]
+    z *= ex[-2][4]
+    DLAM  += 0.426 * z.imag
+    DS    += 0.07 * z.imag
+    SINPI += -0.0006 * z.real
 
     # AddSol(-0.304, 0.03, 0.0, 0.0003, 1, -1, 2, 0)
-    (a, b) = (co[1][1], si[1][1])
-    (c, d) = (co[-1][2], si[-1][2]); (a, b) = (a*c - b*d, b*c + a*d)
-    (c, d) = (co[2][3], si[2][3]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += -0.304 * b
-    DS    += 0.03 * b
-    SINPI += 0.0003 * a
+    z = ex[1][1]
+    z *= ex[-1][2]
+    z *= ex[2][3]
+    DLAM  += -0.304 * z.imag
+    DS    += 0.03 * z.imag
+    SINPI += 0.0003 * z.real
 
     # AddSol(-0.372, -0.19, 0.0, -0.0027, 1, -1, -2, 2)
-    (a, b) = (co[1][1], si[1][1])
-    (c, d) = (co[-1][2], si[-1][2]); (a, b) = (a*c - b*d, b*c + a*d)
-    (c, d) = (co[-2][3], si[-2][3]); (a, b) = (a*c - b*d, b*c + a*d)
-    (c, d) = (co[2][4], si[2][4]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += -0.372 * b
-    DS    += -0.19 * b
-    SINPI += -0.0027 * a
+    z = ex[1][1]
+    z *= ex[-1][2]
+    z *= ex[-2][3]
+    z *= ex[2][4]
+    DLAM  += -0.372 * z.imag
+    DS    += -0.19 * z.imag
+    SINPI += -0.0027 * z.real
 
     # AddSol(0.418, 0.0, 0.0, 0.0, 0, 0, 4, 0)
-    (a, b) = (co[4][3], si[4][3])
-    DLAM  += 0.418 * b
+    z = ex[4][3]
+    DLAM  += 0.418 * z.imag
 
     # AddSol(-0.33, -0.04, 0.0, 0.0, 3, 0, 2, 0)
-    (a, b) = (co[3][1], si[3][1])
-    (c, d) = (co[2][3], si[2][3]); (a, b) = (a*c - b*d, b*c + a*d)
-    DLAM  += -0.33 * b
-    DS    += -0.04 * b
+    z = ex[3][1]
+    z *= ex[2][3]
+    DLAM  += -0.33 * z.imag
+    DS    += -0.04 * z.imag
 
     def ADDN(coeffn, p, q, r, s):
-        (a, b) = (1, 0)
+        #z = ex[p][1] * ex[q][2] * ex[r][3] * ex[s][4]
+        z = complex(1, 0)
         if p != 0:
-            (a, b) = AddThe(a, b, co[p][1], si[p][1])
+            z *= ex[p][1]
         if q != 0:
-            (a, b) = AddThe(a, b, co[q][2], si[q][2])
+            z *= ex[q][2]
         if r != 0:
-            (a, b) = AddThe(a, b, co[r][3], si[r][3])
+            z *= ex[r][3]
         if s != 0:
-            (a, b) = AddThe(a, b, co[s][4], si[s][4])
-        return coeffn * b
+            z *= ex[s][4]
+        return coeffn * z.imag
 
     N = 0
     N += ADDN(-526.069, 0, 0,1,-2)
