@@ -301,19 +301,19 @@ _iaudata = (
 class _iau2000b:
     def __init__(self, time):
         t = time.tt / 36525
-        el  = math.fmod((485868.249036 + t * 1717915923.2178), _ASEC360) * _ASEC2RAD
-        elp = math.fmod((1287104.79305 + t * 129596581.0481),  _ASEC360) * _ASEC2RAD
-        f   = math.fmod((335779.526232 + t * 1739527262.8478), _ASEC360) * _ASEC2RAD
-        d   = math.fmod((1072260.70369 + t * 1602961601.2090), _ASEC360) * _ASEC2RAD
-        om  = math.fmod((450160.398036 - t * 6962890.5431),    _ASEC360) * _ASEC2RAD
+        el  = math.fmod((485868.249036 + t*1717915923.2178), _ASEC360) * _ASEC2RAD
+        elp = math.fmod((1287104.79305 + t*129596581.0481),  _ASEC360) * _ASEC2RAD
+        f   = math.fmod((335779.526232 + t*1739527262.8478), _ASEC360) * _ASEC2RAD
+        d   = math.fmod((1072260.70369 + t*1602961601.2090), _ASEC360) * _ASEC2RAD
+        om  = math.fmod((450160.398036 - t*6962890.5431),    _ASEC360) * _ASEC2RAD
         dp = 0
         de = 0
-        for n, c in _iaudata:
-            arg = math.fmod((n[0]*el + n[1]*elp + n[2]*f + n[3]*d + n[4]*om), _PI2)
+        for (n0, n1, n2, n3, n4), (c0, c1, c2, c3, c4, c5) in _iaudata:
+            arg = math.fmod((n0*el + n1*elp + n2*f + n3*d + n4*om), _PI2)
             sarg = math.sin(arg)
             carg = math.cos(arg)
-            dp += (c[0] + c[1] * t)*sarg + c[2]*carg
-            de += (c[3] + c[4] * t)*carg + c[5]*sarg
+            dp += (c0 + c1*t)*sarg + c2*carg
+            de += (c3 + c4*t)*carg + c5*sarg
         self.dpsi = -0.000135 + (dp * 1.0e-7)
         self.deps = +0.000388 + (de * 1.0e-7)
 
