@@ -47,10 +47,17 @@ def Translate(line):
             else:
                 text += '    (a, b) = AddThe(a, b, co[{0:d}][4], si[{0:d}][4])\n'.format(s)
 
-        text += '    DLAM  += {} * b\n'.format(cl)
-        text += '    DS    += {} * b\n'.format(cs)
-        text += '    GAM1C += {} * a\n'.format(cg)
-        text += '    SINPI += {} * a\n'.format(cp)
+        if cl != 0:
+            text += '    DLAM  += {} * b\n'.format(cl)
+
+        if cs != 0:
+            text += '    DS    += {} * b\n'.format(cs)
+
+        if cg != 0:
+            text += '    GAM1C += {} * a\n'.format(cg)
+
+        if cp != 0:
+            text += '    SINPI += {} * a\n'.format(cp)
         
         return text
     return line
