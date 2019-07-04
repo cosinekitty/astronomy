@@ -3,13 +3,15 @@ import sys
 import re
 
 def AddThe(first, text, p, i):
+    # AddThe(a, b, c, d) = (a*c - b*d, b*c + a*d)
     if p != 0:
-        cosi = 'co[{0}][{1}], si[{0}][{1}]'.format(p, i)
+        sub = '[{0}][{1}]'.format(p, i)
+        cd = '(co{0}, si{0})'.format(sub)
         if first:
             first = False
-            text += '    (a, b) = ({0})\n'.format(cosi)
+            text += '    (a, b) = {0}\n'.format(cd)
         else:
-            text += '    (a, b) = AddThe(a, b, {0})\n'.format(cosi)
+            text += '    (c, d) = {0}; (a, b) = (a*c - b*d, b*c + a*d)\n'.format(cd)
     return first, text
 
 def Translate(line):
