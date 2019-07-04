@@ -842,40 +842,35 @@ def _CalcMoon(time):
 
 
     # AddSol(13.902, 14.06, -0.001, 0.2607, 0, 0, 0, 4)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[4][4], si[4][4])
+    (a, b) = AddThe(1, 0, co[4][4], si[4][4])
     DLAM  += 13.902 * b
     DS    += 14.06 * b
     GAM1C += -0.001 * a
     SINPI += 0.2607 * a
 
     # AddSol(0.403, -4.01, 0.394, 0.0023, 0, 0, 0, 3)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[3][4], si[3][4])
+    (a, b) = AddThe(1, 0, co[3][4], si[3][4])
     DLAM  += 0.403 * b
     DS    += -4.01 * b
     GAM1C += 0.394 * a
     SINPI += 0.0023 * a
 
     # AddSol(2369.912, 2373.36, 0.601, 28.2333, 0, 0, 0, 2)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[2][4], si[2][4])
+    (a, b) = AddThe(1, 0, co[2][4], si[2][4])
     DLAM  += 2369.912 * b
     DS    += 2373.36 * b
     GAM1C += 0.601 * a
     SINPI += 28.2333 * a
 
     # AddSol(-125.154, -112.79, -0.725, -0.9781, 0, 0, 0, 1)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[1][4], si[1][4])
+    (a, b) = AddThe(1, 0, co[1][4], si[1][4])
     DLAM  += -125.154 * b
     DS    += -112.79 * b
     GAM1C += -0.725 * a
     SINPI += -0.9781 * a
 
     # AddSol(1.979, 6.98, -0.445, 0.0433, 1, 0, 0, 4)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[1][1], si[1][1])
+    (a, b) = AddThe(1, 0, co[1][1], si[1][1])
     (a, b) = AddThe(a, b, co[4][4], si[4][4])
     DLAM  += 1.979 * b
     DS    += 6.98 * b
@@ -883,8 +878,7 @@ def _CalcMoon(time):
     SINPI += 0.0433 * a
 
     # AddSol(191.953, 192.72, 0.029, 3.0861, 1, 0, 0, 2)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[1][1], si[1][1])
+    (a, b) = AddThe(1, 0, co[1][1], si[1][1])
     (a, b) = AddThe(a, b, co[2][4], si[2][4])
     DLAM  += 191.953 * b
     DS    += 192.72 * b
@@ -892,8 +886,7 @@ def _CalcMoon(time):
     SINPI += 3.0861 * a
 
     # AddSol(-8.466, -13.51, 0.455, -0.1093, 1, 0, 0, 1)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[1][1], si[1][1])
+    (a, b) = AddThe(1, 0, co[1][1], si[1][1])
     (a, b) = AddThe(a, b, co[1][4], si[1][4])
     DLAM  += -8.466 * b
     DS    += -13.51 * b
@@ -901,16 +894,14 @@ def _CalcMoon(time):
     SINPI += -0.1093 * a
 
     # AddSol(22639.5, 22609.07, 0.079, 186.5398, 1, 0, 0, 0)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[1][1], si[1][1])
+    (a, b) = AddThe(1, 0, co[1][1], si[1][1])
     DLAM  += 22639.5 * b
     DS    += 22609.07 * b
     GAM1C += 0.079 * a
     SINPI += 186.5398 * a
 
     # AddSol(18.609, 3.59, -0.094, 0.0118, 1, 0, 0, -1)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[1][1], si[1][1])
+    (a, b) = AddThe(1, 0, co[1][1], si[1][1])
     (a, b) = AddThe(a, b, co[-1][4], si[-1][4])
     DLAM  += 18.609 * b
     DS    += 3.59 * b
@@ -918,8 +909,7 @@ def _CalcMoon(time):
     SINPI += 0.0118 * a
 
     # AddSol(-4586.465, -4578.13, -0.077, 34.3117, 1, 0, 0, -2)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[1][1], si[1][1])
+    (a, b) = AddThe(1, 0, co[1][1], si[1][1])
     (a, b) = AddThe(a, b, co[-2][4], si[-2][4])
     DLAM  += -4586.465 * b
     DS    += -4578.13 * b
@@ -927,8 +917,7 @@ def _CalcMoon(time):
     SINPI += 34.3117 * a
 
     # AddSol(3.215, 5.44, 0.192, -0.0386, 1, 0, 0, -3)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[1][1], si[1][1])
+    (a, b) = AddThe(1, 0, co[1][1], si[1][1])
     (a, b) = AddThe(a, b, co[-3][4], si[-3][4])
     DLAM  += 3.215 * b
     DS    += 5.44 * b
@@ -936,8 +925,7 @@ def _CalcMoon(time):
     SINPI += -0.0386 * a
 
     # AddSol(-38.428, -38.64, 0.001, 0.6008, 1, 0, 0, -4)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[1][1], si[1][1])
+    (a, b) = AddThe(1, 0, co[1][1], si[1][1])
     (a, b) = AddThe(a, b, co[-4][4], si[-4][4])
     DLAM  += -38.428 * b
     DS    += -38.64 * b
@@ -945,8 +933,7 @@ def _CalcMoon(time):
     SINPI += 0.6008 * a
 
     # AddSol(-0.393, -1.43, -0.092, 0.0086, 1, 0, 0, -6)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[1][1], si[1][1])
+    (a, b) = AddThe(1, 0, co[1][1], si[1][1])
     (a, b) = AddThe(a, b, co[-6][4], si[-6][4])
     DLAM  += -0.393 * b
     DS    += -1.43 * b
@@ -954,8 +941,7 @@ def _CalcMoon(time):
     SINPI += 0.0086 * a
 
     # AddSol(-0.289, -1.59, 0.123, -0.0053, 0, 1, 0, 4)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[1][2], si[1][2])
+    (a, b) = AddThe(1, 0, co[1][2], si[1][2])
     (a, b) = AddThe(a, b, co[4][4], si[4][4])
     DLAM  += -0.289 * b
     DS    += -1.59 * b
@@ -963,8 +949,7 @@ def _CalcMoon(time):
     SINPI += -0.0053 * a
 
     # AddSol(-24.42, -25.1, 0.04, -0.3, 0, 1, 0, 2)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[1][2], si[1][2])
+    (a, b) = AddThe(1, 0, co[1][2], si[1][2])
     (a, b) = AddThe(a, b, co[2][4], si[2][4])
     DLAM  += -24.42 * b
     DS    += -25.1 * b
@@ -972,8 +957,7 @@ def _CalcMoon(time):
     SINPI += -0.3 * a
 
     # AddSol(18.023, 17.93, 0.007, 0.1494, 0, 1, 0, 1)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[1][2], si[1][2])
+    (a, b) = AddThe(1, 0, co[1][2], si[1][2])
     (a, b) = AddThe(a, b, co[1][4], si[1][4])
     DLAM  += 18.023 * b
     DS    += 17.93 * b
@@ -981,16 +965,14 @@ def _CalcMoon(time):
     SINPI += 0.1494 * a
 
     # AddSol(-668.146, -126.98, -1.302, -0.3997, 0, 1, 0, 0)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[1][2], si[1][2])
+    (a, b) = AddThe(1, 0, co[1][2], si[1][2])
     DLAM  += -668.146 * b
     DS    += -126.98 * b
     GAM1C += -1.302 * a
     SINPI += -0.3997 * a
 
     # AddSol(0.56, 0.32, -0.001, -0.0037, 0, 1, 0, -1)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[1][2], si[1][2])
+    (a, b) = AddThe(1, 0, co[1][2], si[1][2])
     (a, b) = AddThe(a, b, co[-1][4], si[-1][4])
     DLAM  += 0.56 * b
     DS    += 0.32 * b
@@ -998,8 +980,7 @@ def _CalcMoon(time):
     SINPI += -0.0037 * a
 
     # AddSol(-165.145, -165.06, 0.054, 1.9178, 0, 1, 0, -2)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[1][2], si[1][2])
+    (a, b) = AddThe(1, 0, co[1][2], si[1][2])
     (a, b) = AddThe(a, b, co[-2][4], si[-2][4])
     DLAM  += -165.145 * b
     DS    += -165.06 * b
@@ -1007,8 +988,7 @@ def _CalcMoon(time):
     SINPI += 1.9178 * a
 
     # AddSol(-1.877, -6.46, -0.416, 0.0339, 0, 1, 0, -4)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[1][2], si[1][2])
+    (a, b) = AddThe(1, 0, co[1][2], si[1][2])
     (a, b) = AddThe(a, b, co[-4][4], si[-4][4])
     DLAM  += -1.877 * b
     DS    += -6.46 * b
@@ -1016,8 +996,7 @@ def _CalcMoon(time):
     SINPI += 0.0339 * a
 
     # AddSol(0.213, 1.02, -0.074, 0.0054, 2, 0, 0, 4)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[2][1], si[2][1])
+    (a, b) = AddThe(1, 0, co[2][1], si[2][1])
     (a, b) = AddThe(a, b, co[4][4], si[4][4])
     DLAM  += 0.213 * b
     DS    += 1.02 * b
@@ -1025,8 +1004,7 @@ def _CalcMoon(time):
     SINPI += 0.0054 * a
 
     # AddSol(14.387, 14.78, -0.017, 0.2833, 2, 0, 0, 2)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[2][1], si[2][1])
+    (a, b) = AddThe(1, 0, co[2][1], si[2][1])
     (a, b) = AddThe(a, b, co[2][4], si[2][4])
     DLAM  += 14.387 * b
     DS    += 14.78 * b
@@ -1034,8 +1012,7 @@ def _CalcMoon(time):
     SINPI += 0.2833 * a
 
     # AddSol(-0.586, -1.2, 0.054, -0.01, 2, 0, 0, 1)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[2][1], si[2][1])
+    (a, b) = AddThe(1, 0, co[2][1], si[2][1])
     (a, b) = AddThe(a, b, co[1][4], si[1][4])
     DLAM  += -0.586 * b
     DS    += -1.2 * b
@@ -1043,16 +1020,14 @@ def _CalcMoon(time):
     SINPI += -0.01 * a
 
     # AddSol(769.016, 767.96, 0.107, 10.1657, 2, 0, 0, 0)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[2][1], si[2][1])
+    (a, b) = AddThe(1, 0, co[2][1], si[2][1])
     DLAM  += 769.016 * b
     DS    += 767.96 * b
     GAM1C += 0.107 * a
     SINPI += 10.1657 * a
 
     # AddSol(1.75, 2.01, -0.018, 0.0155, 2, 0, 0, -1)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[2][1], si[2][1])
+    (a, b) = AddThe(1, 0, co[2][1], si[2][1])
     (a, b) = AddThe(a, b, co[-1][4], si[-1][4])
     DLAM  += 1.75 * b
     DS    += 2.01 * b
@@ -1060,8 +1035,7 @@ def _CalcMoon(time):
     SINPI += 0.0155 * a
 
     # AddSol(-211.656, -152.53, 5.679, -0.3039, 2, 0, 0, -2)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[2][1], si[2][1])
+    (a, b) = AddThe(1, 0, co[2][1], si[2][1])
     (a, b) = AddThe(a, b, co[-2][4], si[-2][4])
     DLAM  += -211.656 * b
     DS    += -152.53 * b
@@ -1069,8 +1043,7 @@ def _CalcMoon(time):
     SINPI += -0.3039 * a
 
     # AddSol(1.225, 0.91, -0.03, -0.0088, 2, 0, 0, -3)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[2][1], si[2][1])
+    (a, b) = AddThe(1, 0, co[2][1], si[2][1])
     (a, b) = AddThe(a, b, co[-3][4], si[-3][4])
     DLAM  += 1.225 * b
     DS    += 0.91 * b
@@ -1078,8 +1051,7 @@ def _CalcMoon(time):
     SINPI += -0.0088 * a
 
     # AddSol(-30.773, -34.07, -0.308, 0.3722, 2, 0, 0, -4)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[2][1], si[2][1])
+    (a, b) = AddThe(1, 0, co[2][1], si[2][1])
     (a, b) = AddThe(a, b, co[-4][4], si[-4][4])
     DLAM  += -30.773 * b
     DS    += -34.07 * b
@@ -1087,8 +1059,7 @@ def _CalcMoon(time):
     SINPI += 0.3722 * a
 
     # AddSol(-0.57, -1.4, -0.074, 0.0109, 2, 0, 0, -6)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[2][1], si[2][1])
+    (a, b) = AddThe(1, 0, co[2][1], si[2][1])
     (a, b) = AddThe(a, b, co[-6][4], si[-6][4])
     DLAM  += -0.57 * b
     DS    += -1.4 * b
@@ -1096,8 +1067,7 @@ def _CalcMoon(time):
     SINPI += 0.0109 * a
 
     # AddSol(-2.921, -11.75, 0.787, -0.0484, 1, 1, 0, 2)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[1][1], si[1][1])
+    (a, b) = AddThe(1, 0, co[1][1], si[1][1])
     (a, b) = AddThe(a, b, co[1][2], si[1][2])
     (a, b) = AddThe(a, b, co[2][4], si[2][4])
     DLAM  += -2.921 * b
@@ -1106,8 +1076,7 @@ def _CalcMoon(time):
     SINPI += -0.0484 * a
 
     # AddSol(1.267, 1.52, -0.022, 0.0164, 1, 1, 0, 1)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[1][1], si[1][1])
+    (a, b) = AddThe(1, 0, co[1][1], si[1][1])
     (a, b) = AddThe(a, b, co[1][2], si[1][2])
     (a, b) = AddThe(a, b, co[1][4], si[1][4])
     DLAM  += 1.267 * b
@@ -1116,8 +1085,7 @@ def _CalcMoon(time):
     SINPI += 0.0164 * a
 
     # AddSol(-109.673, -115.18, 0.461, -0.949, 1, 1, 0, 0)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[1][1], si[1][1])
+    (a, b) = AddThe(1, 0, co[1][1], si[1][1])
     (a, b) = AddThe(a, b, co[1][2], si[1][2])
     DLAM  += -109.673 * b
     DS    += -115.18 * b
@@ -1125,8 +1093,7 @@ def _CalcMoon(time):
     SINPI += -0.949 * a
 
     # AddSol(-205.962, -182.36, 2.056, 1.4437, 1, 1, 0, -2)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[1][1], si[1][1])
+    (a, b) = AddThe(1, 0, co[1][1], si[1][1])
     (a, b) = AddThe(a, b, co[1][2], si[1][2])
     (a, b) = AddThe(a, b, co[-2][4], si[-2][4])
     DLAM  += -205.962 * b
@@ -1135,8 +1102,7 @@ def _CalcMoon(time):
     SINPI += 1.4437 * a
 
     # AddSol(0.233, 0.36, 0.012, -0.0025, 1, 1, 0, -3)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[1][1], si[1][1])
+    (a, b) = AddThe(1, 0, co[1][1], si[1][1])
     (a, b) = AddThe(a, b, co[1][2], si[1][2])
     (a, b) = AddThe(a, b, co[-3][4], si[-3][4])
     DLAM  += 0.233 * b
@@ -1145,8 +1111,7 @@ def _CalcMoon(time):
     SINPI += -0.0025 * a
 
     # AddSol(-4.391, -9.66, -0.471, 0.0673, 1, 1, 0, -4)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[1][1], si[1][1])
+    (a, b) = AddThe(1, 0, co[1][1], si[1][1])
     (a, b) = AddThe(a, b, co[1][2], si[1][2])
     (a, b) = AddThe(a, b, co[-4][4], si[-4][4])
     DLAM  += -4.391 * b
@@ -1156,8 +1121,7 @@ def _CalcMoon(time):
 
 
     # AddSol(0.283, 1.53, -0.111, 0.006, 1, -1, 0, 4)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[1][1], si[1][1])
+    (a, b) = AddThe(1, 0, co[1][1], si[1][1])
     (a, b) = AddThe(a, b, co[-1][2], si[-1][2])
     (a, b) = AddThe(a, b, co[4][4], si[4][4])
     DLAM  += 0.283 * b
@@ -1166,8 +1130,7 @@ def _CalcMoon(time):
     SINPI += 0.006 * a
 
     # AddSol(14.577, 31.7, -1.54, 0.2302, 1, -1, 0, 2)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[1][1], si[1][1])
+    (a, b) = AddThe(1, 0, co[1][1], si[1][1])
     (a, b) = AddThe(a, b, co[-1][2], si[-1][2])
     (a, b) = AddThe(a, b, co[2][4], si[2][4])
     DLAM  += 14.577 * b
@@ -1176,8 +1139,7 @@ def _CalcMoon(time):
     SINPI += 0.2302 * a
 
     # AddSol(147.687, 138.76, 0.679, 1.1528, 1, -1, 0, 0)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[1][1], si[1][1])
+    (a, b) = AddThe(1, 0, co[1][1], si[1][1])
     (a, b) = AddThe(a, b, co[-1][2], si[-1][2])
     DLAM  += 147.687 * b
     DS    += 138.76 * b
@@ -1185,8 +1147,7 @@ def _CalcMoon(time):
     SINPI += 1.1528 * a
 
     # AddSol(-1.089, 0.55, 0.021, 0.0, 1, -1, 0, -1)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[1][1], si[1][1])
+    (a, b) = AddThe(1, 0, co[1][1], si[1][1])
     (a, b) = AddThe(a, b, co[-1][2], si[-1][2])
     (a, b) = AddThe(a, b, co[-1][4], si[-1][4])
     DLAM  += -1.089 * b
@@ -1195,8 +1156,7 @@ def _CalcMoon(time):
     SINPI += 0.0 * a
 
     # AddSol(28.475, 23.59, -0.443, -0.2257, 1, -1, 0, -2)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[1][1], si[1][1])
+    (a, b) = AddThe(1, 0, co[1][1], si[1][1])
     (a, b) = AddThe(a, b, co[-1][2], si[-1][2])
     (a, b) = AddThe(a, b, co[-2][4], si[-2][4])
     DLAM  += 28.475 * b
@@ -1205,8 +1165,7 @@ def _CalcMoon(time):
     SINPI += -0.2257 * a
 
     # AddSol(-0.276, -0.38, -0.006, -0.0036, 1, -1, 0, -3)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[1][1], si[1][1])
+    (a, b) = AddThe(1, 0, co[1][1], si[1][1])
     (a, b) = AddThe(a, b, co[-1][2], si[-1][2])
     (a, b) = AddThe(a, b, co[-3][4], si[-3][4])
     DLAM  += -0.276 * b
@@ -1215,8 +1174,7 @@ def _CalcMoon(time):
     SINPI += -0.0036 * a
 
     # AddSol(0.636, 2.27, 0.146, -0.0102, 1, -1, 0, -4)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[1][1], si[1][1])
+    (a, b) = AddThe(1, 0, co[1][1], si[1][1])
     (a, b) = AddThe(a, b, co[-1][2], si[-1][2])
     (a, b) = AddThe(a, b, co[-4][4], si[-4][4])
     DLAM  += 0.636 * b
@@ -1225,8 +1183,7 @@ def _CalcMoon(time):
     SINPI += -0.0102 * a
 
     # AddSol(-0.189, -1.68, 0.131, -0.0028, 0, 2, 0, 2)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[2][2], si[2][2])
+    (a, b) = AddThe(1, 0, co[2][2], si[2][2])
     (a, b) = AddThe(a, b, co[2][4], si[2][4])
     DLAM  += -0.189 * b
     DS    += -1.68 * b
@@ -1234,16 +1191,14 @@ def _CalcMoon(time):
     SINPI += -0.0028 * a
 
     # AddSol(-7.486, -0.66, -0.037, -0.0086, 0, 2, 0, 0)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[2][2], si[2][2])
+    (a, b) = AddThe(1, 0, co[2][2], si[2][2])
     DLAM  += -7.486 * b
     DS    += -0.66 * b
     GAM1C += -0.037 * a
     SINPI += -0.0086 * a
 
     # AddSol(-8.096, -16.35, -0.74, 0.0918, 0, 2, 0, -2)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[2][2], si[2][2])
+    (a, b) = AddThe(1, 0, co[2][2], si[2][2])
     (a, b) = AddThe(a, b, co[-2][4], si[-2][4])
     DLAM  += -8.096 * b
     DS    += -16.35 * b
@@ -1251,8 +1206,7 @@ def _CalcMoon(time):
     SINPI += 0.0918 * a
 
     # AddSol(-5.741, -0.04, 0.0, -0.0009, 0, 0, 2, 2)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[2][3], si[2][3])
+    (a, b) = AddThe(1, 0, co[2][3], si[2][3])
     (a, b) = AddThe(a, b, co[2][4], si[2][4])
     DLAM  += -5.741 * b
     DS    += -0.04 * b
@@ -1260,8 +1214,7 @@ def _CalcMoon(time):
     SINPI += -0.0009 * a
 
     # AddSol(0.255, 0.0, 0.0, 0.0, 0, 0, 2, 1)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[2][3], si[2][3])
+    (a, b) = AddThe(1, 0, co[2][3], si[2][3])
     (a, b) = AddThe(a, b, co[1][4], si[1][4])
     DLAM  += 0.255 * b
     DS    += 0.0 * b
@@ -1269,16 +1222,14 @@ def _CalcMoon(time):
     SINPI += 0.0 * a
 
     # AddSol(-411.608, -0.2, 0.0, -0.0124, 0, 0, 2, 0)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[2][3], si[2][3])
+    (a, b) = AddThe(1, 0, co[2][3], si[2][3])
     DLAM  += -411.608 * b
     DS    += -0.2 * b
     GAM1C += 0.0 * a
     SINPI += -0.0124 * a
 
     # AddSol(0.584, 0.84, 0.0, 0.0071, 0, 0, 2, -1)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[2][3], si[2][3])
+    (a, b) = AddThe(1, 0, co[2][3], si[2][3])
     (a, b) = AddThe(a, b, co[-1][4], si[-1][4])
     DLAM  += 0.584 * b
     DS    += 0.84 * b
@@ -1286,8 +1237,7 @@ def _CalcMoon(time):
     SINPI += 0.0071 * a
 
     # AddSol(-55.173, -52.14, 0.0, -0.1052, 0, 0, 2, -2)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[2][3], si[2][3])
+    (a, b) = AddThe(1, 0, co[2][3], si[2][3])
     (a, b) = AddThe(a, b, co[-2][4], si[-2][4])
     DLAM  += -55.173 * b
     DS    += -52.14 * b
@@ -1295,8 +1245,7 @@ def _CalcMoon(time):
     SINPI += -0.1052 * a
 
     # AddSol(0.254, 0.25, 0.0, -0.0017, 0, 0, 2, -3)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[2][3], si[2][3])
+    (a, b) = AddThe(1, 0, co[2][3], si[2][3])
     (a, b) = AddThe(a, b, co[-3][4], si[-3][4])
     DLAM  += 0.254 * b
     DS    += 0.25 * b
@@ -1304,8 +1253,7 @@ def _CalcMoon(time):
     SINPI += -0.0017 * a
 
     # AddSol(0.025, -1.67, 0.0, 0.0031, 0, 0, 2, -4)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[2][3], si[2][3])
+    (a, b) = AddThe(1, 0, co[2][3], si[2][3])
     (a, b) = AddThe(a, b, co[-4][4], si[-4][4])
     DLAM  += 0.025 * b
     DS    += -1.67 * b
@@ -1313,8 +1261,7 @@ def _CalcMoon(time):
     SINPI += 0.0031 * a
 
     # AddSol(1.06, 2.96, -0.166, 0.0243, 3, 0, 0, 2)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[3][1], si[3][1])
+    (a, b) = AddThe(1, 0, co[3][1], si[3][1])
     (a, b) = AddThe(a, b, co[2][4], si[2][4])
     DLAM  += 1.06 * b
     DS    += 2.96 * b
@@ -1322,16 +1269,14 @@ def _CalcMoon(time):
     SINPI += 0.0243 * a
 
     # AddSol(36.124, 50.64, -1.3, 0.6215, 3, 0, 0, 0)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[3][1], si[3][1])
+    (a, b) = AddThe(1, 0, co[3][1], si[3][1])
     DLAM  += 36.124 * b
     DS    += 50.64 * b
     GAM1C += -1.3 * a
     SINPI += 0.6215 * a
 
     # AddSol(-13.193, -16.4, 0.258, -0.1187, 3, 0, 0, -2)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[3][1], si[3][1])
+    (a, b) = AddThe(1, 0, co[3][1], si[3][1])
     (a, b) = AddThe(a, b, co[-2][4], si[-2][4])
     DLAM  += -13.193 * b
     DS    += -16.4 * b
@@ -1339,8 +1284,7 @@ def _CalcMoon(time):
     SINPI += -0.1187 * a
 
     # AddSol(-1.187, -0.74, 0.042, 0.0074, 3, 0, 0, -4)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[3][1], si[3][1])
+    (a, b) = AddThe(1, 0, co[3][1], si[3][1])
     (a, b) = AddThe(a, b, co[-4][4], si[-4][4])
     DLAM  += -1.187 * b
     DS    += -0.74 * b
@@ -1348,8 +1292,7 @@ def _CalcMoon(time):
     SINPI += 0.0074 * a
 
     # AddSol(-0.293, -0.31, -0.002, 0.0046, 3, 0, 0, -6)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[3][1], si[3][1])
+    (a, b) = AddThe(1, 0, co[3][1], si[3][1])
     (a, b) = AddThe(a, b, co[-6][4], si[-6][4])
     DLAM  += -0.293 * b
     DS    += -0.31 * b
@@ -1357,8 +1300,7 @@ def _CalcMoon(time):
     SINPI += 0.0046 * a
 
     # AddSol(-0.29, -1.45, 0.116, -0.0051, 2, 1, 0, 2)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[2][1], si[2][1])
+    (a, b) = AddThe(1, 0, co[2][1], si[2][1])
     (a, b) = AddThe(a, b, co[1][2], si[1][2])
     (a, b) = AddThe(a, b, co[2][4], si[2][4])
     DLAM  += -0.29 * b
@@ -1367,8 +1309,7 @@ def _CalcMoon(time):
     SINPI += -0.0051 * a
 
     # AddSol(-7.649, -10.56, 0.259, -0.1038, 2, 1, 0, 0)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[2][1], si[2][1])
+    (a, b) = AddThe(1, 0, co[2][1], si[2][1])
     (a, b) = AddThe(a, b, co[1][2], si[1][2])
     DLAM  += -7.649 * b
     DS    += -10.56 * b
@@ -1376,8 +1317,7 @@ def _CalcMoon(time):
     SINPI += -0.1038 * a
 
     # AddSol(-8.627, -7.59, 0.078, -0.0192, 2, 1, 0, -2)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[2][1], si[2][1])
+    (a, b) = AddThe(1, 0, co[2][1], si[2][1])
     (a, b) = AddThe(a, b, co[1][2], si[1][2])
     (a, b) = AddThe(a, b, co[-2][4], si[-2][4])
     DLAM  += -8.627 * b
@@ -1386,8 +1326,7 @@ def _CalcMoon(time):
     SINPI += -0.0192 * a
 
     # AddSol(-2.74, -2.54, 0.022, 0.0324, 2, 1, 0, -4)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[2][1], si[2][1])
+    (a, b) = AddThe(1, 0, co[2][1], si[2][1])
     (a, b) = AddThe(a, b, co[1][2], si[1][2])
     (a, b) = AddThe(a, b, co[-4][4], si[-4][4])
     DLAM  += -2.74 * b
@@ -1396,8 +1335,7 @@ def _CalcMoon(time):
     SINPI += 0.0324 * a
 
     # AddSol(1.181, 3.32, -0.212, 0.0213, 2, -1, 0, 2)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[2][1], si[2][1])
+    (a, b) = AddThe(1, 0, co[2][1], si[2][1])
     (a, b) = AddThe(a, b, co[-1][2], si[-1][2])
     (a, b) = AddThe(a, b, co[2][4], si[2][4])
     DLAM  += 1.181 * b
@@ -1406,8 +1344,7 @@ def _CalcMoon(time):
     SINPI += 0.0213 * a
 
     # AddSol(9.703, 11.67, -0.151, 0.1268, 2, -1, 0, 0)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[2][1], si[2][1])
+    (a, b) = AddThe(1, 0, co[2][1], si[2][1])
     (a, b) = AddThe(a, b, co[-1][2], si[-1][2])
     DLAM  += 9.703 * b
     DS    += 11.67 * b
@@ -1415,8 +1352,7 @@ def _CalcMoon(time):
     SINPI += 0.1268 * a
 
     # AddSol(-0.352, -0.37, 0.001, -0.0028, 2, -1, 0, -1)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[2][1], si[2][1])
+    (a, b) = AddThe(1, 0, co[2][1], si[2][1])
     (a, b) = AddThe(a, b, co[-1][2], si[-1][2])
     (a, b) = AddThe(a, b, co[-1][4], si[-1][4])
     DLAM  += -0.352 * b
@@ -1425,8 +1361,7 @@ def _CalcMoon(time):
     SINPI += -0.0028 * a
 
     # AddSol(-2.494, -1.17, -0.003, -0.0017, 2, -1, 0, -2)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[2][1], si[2][1])
+    (a, b) = AddThe(1, 0, co[2][1], si[2][1])
     (a, b) = AddThe(a, b, co[-1][2], si[-1][2])
     (a, b) = AddThe(a, b, co[-2][4], si[-2][4])
     DLAM  += -2.494 * b
@@ -1435,8 +1370,7 @@ def _CalcMoon(time):
     SINPI += -0.0017 * a
 
     # AddSol(0.36, 0.2, -0.012, -0.0043, 2, -1, 0, -4)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[2][1], si[2][1])
+    (a, b) = AddThe(1, 0, co[2][1], si[2][1])
     (a, b) = AddThe(a, b, co[-1][2], si[-1][2])
     (a, b) = AddThe(a, b, co[-4][4], si[-4][4])
     DLAM  += 0.36 * b
@@ -1445,8 +1379,7 @@ def _CalcMoon(time):
     SINPI += -0.0043 * a
 
     # AddSol(-1.167, -1.25, 0.008, -0.0106, 1, 2, 0, 0)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[1][1], si[1][1])
+    (a, b) = AddThe(1, 0, co[1][1], si[1][1])
     (a, b) = AddThe(a, b, co[2][2], si[2][2])
     DLAM  += -1.167 * b
     DS    += -1.25 * b
@@ -1454,8 +1387,7 @@ def _CalcMoon(time):
     SINPI += -0.0106 * a
 
     # AddSol(-7.412, -6.12, 0.117, 0.0484, 1, 2, 0, -2)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[1][1], si[1][1])
+    (a, b) = AddThe(1, 0, co[1][1], si[1][1])
     (a, b) = AddThe(a, b, co[2][2], si[2][2])
     (a, b) = AddThe(a, b, co[-2][4], si[-2][4])
     DLAM  += -7.412 * b
@@ -1464,8 +1396,7 @@ def _CalcMoon(time):
     SINPI += 0.0484 * a
 
     # AddSol(-0.311, -0.65, -0.032, 0.0044, 1, 2, 0, -4)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[1][1], si[1][1])
+    (a, b) = AddThe(1, 0, co[1][1], si[1][1])
     (a, b) = AddThe(a, b, co[2][2], si[2][2])
     (a, b) = AddThe(a, b, co[-4][4], si[-4][4])
     DLAM  += -0.311 * b
@@ -1474,8 +1405,7 @@ def _CalcMoon(time):
     SINPI += 0.0044 * a
 
     # AddSol(0.757, 1.82, -0.105, 0.0112, 1, -2, 0, 2)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[1][1], si[1][1])
+    (a, b) = AddThe(1, 0, co[1][1], si[1][1])
     (a, b) = AddThe(a, b, co[-2][2], si[-2][2])
     (a, b) = AddThe(a, b, co[2][4], si[2][4])
     DLAM  += 0.757 * b
@@ -1484,8 +1414,7 @@ def _CalcMoon(time):
     SINPI += 0.0112 * a
 
     # AddSol(2.58, 2.32, 0.027, 0.0196, 1, -2, 0, 0)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[1][1], si[1][1])
+    (a, b) = AddThe(1, 0, co[1][1], si[1][1])
     (a, b) = AddThe(a, b, co[-2][2], si[-2][2])
     DLAM  += 2.58 * b
     DS    += 2.32 * b
@@ -1493,8 +1422,7 @@ def _CalcMoon(time):
     SINPI += 0.0196 * a
 
     # AddSol(2.533, 2.4, -0.014, -0.0212, 1, -2, 0, -2)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[1][1], si[1][1])
+    (a, b) = AddThe(1, 0, co[1][1], si[1][1])
     (a, b) = AddThe(a, b, co[-2][2], si[-2][2])
     (a, b) = AddThe(a, b, co[-2][4], si[-2][4])
     DLAM  += 2.533 * b
@@ -1503,8 +1431,7 @@ def _CalcMoon(time):
     SINPI += -0.0212 * a
 
     # AddSol(-0.344, -0.57, -0.025, 0.0036, 0, 3, 0, -2)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[3][2], si[3][2])
+    (a, b) = AddThe(1, 0, co[3][2], si[3][2])
     (a, b) = AddThe(a, b, co[-2][4], si[-2][4])
     DLAM  += -0.344 * b
     DS    += -0.57 * b
@@ -1512,8 +1439,7 @@ def _CalcMoon(time):
     SINPI += 0.0036 * a
 
     # AddSol(-0.992, -0.02, 0.0, 0.0, 1, 0, 2, 2)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[1][1], si[1][1])
+    (a, b) = AddThe(1, 0, co[1][1], si[1][1])
     (a, b) = AddThe(a, b, co[2][3], si[2][3])
     (a, b) = AddThe(a, b, co[2][4], si[2][4])
     DLAM  += -0.992 * b
@@ -1522,8 +1448,7 @@ def _CalcMoon(time):
     SINPI += 0.0 * a
 
     # AddSol(-45.099, -0.02, 0.0, -0.001, 1, 0, 2, 0)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[1][1], si[1][1])
+    (a, b) = AddThe(1, 0, co[1][1], si[1][1])
     (a, b) = AddThe(a, b, co[2][3], si[2][3])
     DLAM  += -45.099 * b
     DS    += -0.02 * b
@@ -1531,8 +1456,7 @@ def _CalcMoon(time):
     SINPI += -0.001 * a
 
     # AddSol(-0.179, -9.52, 0.0, -0.0833, 1, 0, 2, -2)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[1][1], si[1][1])
+    (a, b) = AddThe(1, 0, co[1][1], si[1][1])
     (a, b) = AddThe(a, b, co[2][3], si[2][3])
     (a, b) = AddThe(a, b, co[-2][4], si[-2][4])
     DLAM  += -0.179 * b
@@ -1541,8 +1465,7 @@ def _CalcMoon(time):
     SINPI += -0.0833 * a
 
     # AddSol(-0.301, -0.33, 0.0, 0.0014, 1, 0, 2, -4)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[1][1], si[1][1])
+    (a, b) = AddThe(1, 0, co[1][1], si[1][1])
     (a, b) = AddThe(a, b, co[2][3], si[2][3])
     (a, b) = AddThe(a, b, co[-4][4], si[-4][4])
     DLAM  += -0.301 * b
@@ -1551,8 +1474,7 @@ def _CalcMoon(time):
     SINPI += 0.0014 * a
 
     # AddSol(-6.382, -3.37, 0.0, -0.0481, 1, 0, -2, 2)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[1][1], si[1][1])
+    (a, b) = AddThe(1, 0, co[1][1], si[1][1])
     (a, b) = AddThe(a, b, co[-2][3], si[-2][3])
     (a, b) = AddThe(a, b, co[2][4], si[2][4])
     DLAM  += -6.382 * b
@@ -1561,8 +1483,7 @@ def _CalcMoon(time):
     SINPI += -0.0481 * a
 
     # AddSol(39.528, 85.13, 0.0, -0.7136, 1, 0, -2, 0)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[1][1], si[1][1])
+    (a, b) = AddThe(1, 0, co[1][1], si[1][1])
     (a, b) = AddThe(a, b, co[-2][3], si[-2][3])
     DLAM  += 39.528 * b
     DS    += 85.13 * b
@@ -1570,8 +1491,7 @@ def _CalcMoon(time):
     SINPI += -0.7136 * a
 
     # AddSol(9.366, 0.71, 0.0, -0.0112, 1, 0, -2, -2)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[1][1], si[1][1])
+    (a, b) = AddThe(1, 0, co[1][1], si[1][1])
     (a, b) = AddThe(a, b, co[-2][3], si[-2][3])
     (a, b) = AddThe(a, b, co[-2][4], si[-2][4])
     DLAM  += 9.366 * b
@@ -1580,8 +1500,7 @@ def _CalcMoon(time):
     SINPI += -0.0112 * a
 
     # AddSol(0.202, 0.02, 0.0, 0.0, 1, 0, -2, -4)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[1][1], si[1][1])
+    (a, b) = AddThe(1, 0, co[1][1], si[1][1])
     (a, b) = AddThe(a, b, co[-2][3], si[-2][3])
     (a, b) = AddThe(a, b, co[-4][4], si[-4][4])
     DLAM  += 0.202 * b
@@ -1591,8 +1510,7 @@ def _CalcMoon(time):
 
 
     # AddSol(0.415, 0.1, 0.0, 0.0013, 0, 1, 2, 0)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[1][2], si[1][2])
+    (a, b) = AddThe(1, 0, co[1][2], si[1][2])
     (a, b) = AddThe(a, b, co[2][3], si[2][3])
     DLAM  += 0.415 * b
     DS    += 0.1 * b
@@ -1600,8 +1518,7 @@ def _CalcMoon(time):
     SINPI += 0.0013 * a
 
     # AddSol(-2.152, -2.26, 0.0, -0.0066, 0, 1, 2, -2)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[1][2], si[1][2])
+    (a, b) = AddThe(1, 0, co[1][2], si[1][2])
     (a, b) = AddThe(a, b, co[2][3], si[2][3])
     (a, b) = AddThe(a, b, co[-2][4], si[-2][4])
     DLAM  += -2.152 * b
@@ -1610,8 +1527,7 @@ def _CalcMoon(time):
     SINPI += -0.0066 * a
 
     # AddSol(-1.44, -1.3, 0.0, 0.0014, 0, 1, -2, 2)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[1][2], si[1][2])
+    (a, b) = AddThe(1, 0, co[1][2], si[1][2])
     (a, b) = AddThe(a, b, co[-2][3], si[-2][3])
     (a, b) = AddThe(a, b, co[2][4], si[2][4])
     DLAM  += -1.44 * b
@@ -1620,8 +1536,7 @@ def _CalcMoon(time):
     SINPI += 0.0014 * a
 
     # AddSol(0.384, -0.04, 0.0, 0.0, 0, 1, -2, -2)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[1][2], si[1][2])
+    (a, b) = AddThe(1, 0, co[1][2], si[1][2])
     (a, b) = AddThe(a, b, co[-2][3], si[-2][3])
     (a, b) = AddThe(a, b, co[-2][4], si[-2][4])
     DLAM  += 0.384 * b
@@ -1630,16 +1545,14 @@ def _CalcMoon(time):
     SINPI += 0.0 * a
 
     # AddSol(1.938, 3.6, -0.145, 0.0401, 4, 0, 0, 0)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[4][1], si[4][1])
+    (a, b) = AddThe(1, 0, co[4][1], si[4][1])
     DLAM  += 1.938 * b
     DS    += 3.6 * b
     GAM1C += -0.145 * a
     SINPI += 0.0401 * a
 
     # AddSol(-0.952, -1.58, 0.052, -0.013, 4, 0, 0, -2)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[4][1], si[4][1])
+    (a, b) = AddThe(1, 0, co[4][1], si[4][1])
     (a, b) = AddThe(a, b, co[-2][4], si[-2][4])
     DLAM  += -0.952 * b
     DS    += -1.58 * b
@@ -1647,8 +1560,7 @@ def _CalcMoon(time):
     SINPI += -0.013 * a
 
     # AddSol(-0.551, -0.94, 0.032, -0.0097, 3, 1, 0, 0)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[3][1], si[3][1])
+    (a, b) = AddThe(1, 0, co[3][1], si[3][1])
     (a, b) = AddThe(a, b, co[1][2], si[1][2])
     DLAM  += -0.551 * b
     DS    += -0.94 * b
@@ -1656,8 +1568,7 @@ def _CalcMoon(time):
     SINPI += -0.0097 * a
 
     # AddSol(-0.482, -0.57, 0.005, -0.0045, 3, 1, 0, -2)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[3][1], si[3][1])
+    (a, b) = AddThe(1, 0, co[3][1], si[3][1])
     (a, b) = AddThe(a, b, co[1][2], si[1][2])
     (a, b) = AddThe(a, b, co[-2][4], si[-2][4])
     DLAM  += -0.482 * b
@@ -1666,8 +1577,7 @@ def _CalcMoon(time):
     SINPI += -0.0045 * a
 
     # AddSol(0.681, 0.96, -0.026, 0.0115, 3, -1, 0, 0)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[3][1], si[3][1])
+    (a, b) = AddThe(1, 0, co[3][1], si[3][1])
     (a, b) = AddThe(a, b, co[-1][2], si[-1][2])
     DLAM  += 0.681 * b
     DS    += 0.96 * b
@@ -1675,8 +1585,7 @@ def _CalcMoon(time):
     SINPI += 0.0115 * a
 
     # AddSol(-0.297, -0.27, 0.002, -0.0009, 2, 2, 0, -2)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[2][1], si[2][1])
+    (a, b) = AddThe(1, 0, co[2][1], si[2][1])
     (a, b) = AddThe(a, b, co[2][2], si[2][2])
     (a, b) = AddThe(a, b, co[-2][4], si[-2][4])
     DLAM  += -0.297 * b
@@ -1685,8 +1594,7 @@ def _CalcMoon(time):
     SINPI += -0.0009 * a
 
     # AddSol(0.254, 0.21, -0.003, 0.0, 2, -2, 0, -2)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[2][1], si[2][1])
+    (a, b) = AddThe(1, 0, co[2][1], si[2][1])
     (a, b) = AddThe(a, b, co[-2][2], si[-2][2])
     (a, b) = AddThe(a, b, co[-2][4], si[-2][4])
     DLAM  += 0.254 * b
@@ -1695,8 +1603,7 @@ def _CalcMoon(time):
     SINPI += 0.0 * a
 
     # AddSol(-0.25, -0.22, 0.004, 0.0014, 1, 3, 0, -2)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[1][1], si[1][1])
+    (a, b) = AddThe(1, 0, co[1][1], si[1][1])
     (a, b) = AddThe(a, b, co[3][2], si[3][2])
     (a, b) = AddThe(a, b, co[-2][4], si[-2][4])
     DLAM  += -0.25 * b
@@ -1705,8 +1612,7 @@ def _CalcMoon(time):
     SINPI += 0.0014 * a
 
     # AddSol(-3.996, 0.0, 0.0, 0.0004, 2, 0, 2, 0)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[2][1], si[2][1])
+    (a, b) = AddThe(1, 0, co[2][1], si[2][1])
     (a, b) = AddThe(a, b, co[2][3], si[2][3])
     DLAM  += -3.996 * b
     DS    += 0.0 * b
@@ -1714,8 +1620,7 @@ def _CalcMoon(time):
     SINPI += 0.0004 * a
 
     # AddSol(0.557, -0.75, 0.0, -0.009, 2, 0, 2, -2)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[2][1], si[2][1])
+    (a, b) = AddThe(1, 0, co[2][1], si[2][1])
     (a, b) = AddThe(a, b, co[2][3], si[2][3])
     (a, b) = AddThe(a, b, co[-2][4], si[-2][4])
     DLAM  += 0.557 * b
@@ -1724,8 +1629,7 @@ def _CalcMoon(time):
     SINPI += -0.009 * a
 
     # AddSol(-0.459, -0.38, 0.0, -0.0053, 2, 0, -2, 2)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[2][1], si[2][1])
+    (a, b) = AddThe(1, 0, co[2][1], si[2][1])
     (a, b) = AddThe(a, b, co[-2][3], si[-2][3])
     (a, b) = AddThe(a, b, co[2][4], si[2][4])
     DLAM  += -0.459 * b
@@ -1734,8 +1638,7 @@ def _CalcMoon(time):
     SINPI += -0.0053 * a
 
     # AddSol(-1.298, 0.74, 0.0, 0.0004, 2, 0, -2, 0)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[2][1], si[2][1])
+    (a, b) = AddThe(1, 0, co[2][1], si[2][1])
     (a, b) = AddThe(a, b, co[-2][3], si[-2][3])
     DLAM  += -1.298 * b
     DS    += 0.74 * b
@@ -1743,8 +1646,7 @@ def _CalcMoon(time):
     SINPI += 0.0004 * a
 
     # AddSol(0.538, 1.14, 0.0, -0.0141, 2, 0, -2, -2)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[2][1], si[2][1])
+    (a, b) = AddThe(1, 0, co[2][1], si[2][1])
     (a, b) = AddThe(a, b, co[-2][3], si[-2][3])
     (a, b) = AddThe(a, b, co[-2][4], si[-2][4])
     DLAM  += 0.538 * b
@@ -1753,8 +1655,7 @@ def _CalcMoon(time):
     SINPI += -0.0141 * a
 
     # AddSol(0.263, 0.02, 0.0, 0.0, 1, 1, 2, 0)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[1][1], si[1][1])
+    (a, b) = AddThe(1, 0, co[1][1], si[1][1])
     (a, b) = AddThe(a, b, co[1][2], si[1][2])
     (a, b) = AddThe(a, b, co[2][3], si[2][3])
     DLAM  += 0.263 * b
@@ -1763,8 +1664,7 @@ def _CalcMoon(time):
     SINPI += 0.0 * a
 
     # AddSol(0.426, 0.07, 0.0, -0.0006, 1, 1, -2, -2)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[1][1], si[1][1])
+    (a, b) = AddThe(1, 0, co[1][1], si[1][1])
     (a, b) = AddThe(a, b, co[1][2], si[1][2])
     (a, b) = AddThe(a, b, co[-2][3], si[-2][3])
     (a, b) = AddThe(a, b, co[-2][4], si[-2][4])
@@ -1774,8 +1674,7 @@ def _CalcMoon(time):
     SINPI += -0.0006 * a
 
     # AddSol(-0.304, 0.03, 0.0, 0.0003, 1, -1, 2, 0)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[1][1], si[1][1])
+    (a, b) = AddThe(1, 0, co[1][1], si[1][1])
     (a, b) = AddThe(a, b, co[-1][2], si[-1][2])
     (a, b) = AddThe(a, b, co[2][3], si[2][3])
     DLAM  += -0.304 * b
@@ -1784,8 +1683,7 @@ def _CalcMoon(time):
     SINPI += 0.0003 * a
 
     # AddSol(-0.372, -0.19, 0.0, -0.0027, 1, -1, -2, 2)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[1][1], si[1][1])
+    (a, b) = AddThe(1, 0, co[1][1], si[1][1])
     (a, b) = AddThe(a, b, co[-1][2], si[-1][2])
     (a, b) = AddThe(a, b, co[-2][3], si[-2][3])
     (a, b) = AddThe(a, b, co[2][4], si[2][4])
@@ -1795,16 +1693,14 @@ def _CalcMoon(time):
     SINPI += -0.0027 * a
 
     # AddSol(0.418, 0.0, 0.0, 0.0, 0, 0, 4, 0)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[4][3], si[4][3])
+    (a, b) = AddThe(1, 0, co[4][3], si[4][3])
     DLAM  += 0.418 * b
     DS    += 0.0 * b
     GAM1C += 0.0 * a
     SINPI += 0.0 * a
 
     # AddSol(-0.33, -0.04, 0.0, 0.0, 3, 0, 2, 0)
-    (a, b) = (1, 0)
-    (a, b) = AddThe(a, b, co[3][1], si[3][1])
+    (a, b) = AddThe(1, 0, co[3][1], si[3][1])
     (a, b) = AddThe(a, b, co[2][3], si[2][3])
     DLAM  += -0.33 * b
     DS    += -0.04 * b

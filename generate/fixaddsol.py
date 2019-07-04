@@ -16,15 +16,29 @@ def Translate(line):
 
         text = '\n'
         text += '    # AddSol({}, {}, {}, {}, {}, {}, {}, {})\n'.format(cl, cs, cg, cp, p, q, r, s)
-        text += '    (a, b) = (1, 0)\n'
+        
+        a = '1'
+        b = '0'
+
         if p != 0:
-            text += '    (a, b) = AddThe(a, b, co[{0:d}][1], si[{0:d}][1])\n'.format(p)
+            text += '    (a, b) = AddThe({1}, {2}, co[{0:d}][1], si[{0:d}][1])\n'.format(p, a, b)
+            a = 'a'
+            b = 'b'
+
         if q != 0:
-            text += '    (a, b) = AddThe(a, b, co[{0:d}][2], si[{0:d}][2])\n'.format(q)
+            text += '    (a, b) = AddThe({1}, {2}, co[{0:d}][2], si[{0:d}][2])\n'.format(q, a, b)
+            a = 'a'
+            b = 'b'
+
         if r != 0:
-            text += '    (a, b) = AddThe(a, b, co[{0:d}][3], si[{0:d}][3])\n'.format(r)
+            text += '    (a, b) = AddThe({1}, {2}, co[{0:d}][3], si[{0:d}][3])\n'.format(r, a, b)
+            a = 'a'
+            b = 'b'
+
         if s != 0:
-            text += '    (a, b) = AddThe(a, b, co[{0:d}][4], si[{0:d}][4])\n'.format(s)
+            text += '    (a, b) = AddThe({1}, {2}, co[{0:d}][4], si[{0:d}][4])\n'.format(s, a, b)
+            a = 'a'
+            b = 'b'
 
         text += '    DLAM  += {} * b\n'.format(cl)
         text += '    DS    += {} * b\n'.format(cs)
