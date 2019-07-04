@@ -16,29 +16,36 @@ def Translate(line):
 
         text = '\n'
         text += '    # AddSol({}, {}, {}, {}, {}, {}, {}, {})\n'.format(cl, cs, cg, cp, p, q, r, s)
-        
-        a = '1'
-        b = '0'
+
+        first = True
 
         if p != 0:
-            text += '    (a, b) = AddThe({1}, {2}, co[{0:d}][1], si[{0:d}][1])\n'.format(p, a, b)
-            a = 'a'
-            b = 'b'
+            if first:
+                first = False
+                text += '    (a, b) = (co[{0:d}][1], si[{0:d}][1])\n'.format(p)
+            else:
+                text += '    (a, b) = AddThe(a, b, co[{0:d}][1], si[{0:d}][1])\n'.format(p)
 
         if q != 0:
-            text += '    (a, b) = AddThe({1}, {2}, co[{0:d}][2], si[{0:d}][2])\n'.format(q, a, b)
-            a = 'a'
-            b = 'b'
+            if first:
+                first = False
+                text += '    (a, b) = (co[{0:d}][2], si[{0:d}][2])\n'.format(q)
+            else:
+                text += '    (a, b) = AddThe(a, b, co[{0:d}][2], si[{0:d}][2])\n'.format(q)
 
         if r != 0:
-            text += '    (a, b) = AddThe({1}, {2}, co[{0:d}][3], si[{0:d}][3])\n'.format(r, a, b)
-            a = 'a'
-            b = 'b'
+            if first:
+                first = False
+                text += '    (a, b) = (co[{0:d}][3], si[{0:d}][3])\n'.format(r)
+            else:
+                text += '    (a, b) = AddThe(a, b, co[{0:d}][3], si[{0:d}][3])\n'.format(r)
 
         if s != 0:
-            text += '    (a, b) = AddThe({1}, {2}, co[{0:d}][4], si[{0:d}][4])\n'.format(s, a, b)
-            a = 'a'
-            b = 'b'
+            if first:
+                first = False
+                text += '    (a, b) = (co[{0:d}][4], si[{0:d}][4])\n'.format(s)
+            else:
+                text += '    (a, b) = AddThe(a, b, co[{0:d}][4], si[{0:d}][4])\n'.format(s)
 
         text += '    DLAM  += {} * b\n'.format(cl)
         text += '    DS    += {} * b\n'.format(cs)
