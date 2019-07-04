@@ -819,24 +819,21 @@ def _CalcMoon(time):
     SINPI += -0.9781 * z.real
 
     # AddSol(1.979, 6.98, -0.445, 0.0433, 1, 0, 0, 4)
-    z = ex[1][1]
-    z *= ex[4][4]
+    z = ex[1][1] * ex[4][4]
     DLAM  += 1.979 * z.imag
     DS    += 6.98 * z.imag
     GAM1C += -0.445 * z.real
     SINPI += 0.0433 * z.real
 
     # AddSol(191.953, 192.72, 0.029, 3.0861, 1, 0, 0, 2)
-    z = ex[1][1]
-    z *= ex[2][4]
+    z = ex[1][1] * ex[2][4]
     DLAM  += 191.953 * z.imag
     DS    += 192.72 * z.imag
     GAM1C += 0.029 * z.real
     SINPI += 3.0861 * z.real
 
     # AddSol(-8.466, -13.51, 0.455, -0.1093, 1, 0, 0, 1)
-    z = ex[1][1]
-    z *= ex[1][4]
+    z = ex[1][1] * ex[1][4]
     DLAM  += -8.466 * z.imag
     DS    += -13.51 * z.imag
     GAM1C += 0.455 * z.real
@@ -850,64 +847,56 @@ def _CalcMoon(time):
     SINPI += 186.5398 * z.real
 
     # AddSol(18.609, 3.59, -0.094, 0.0118, 1, 0, 0, -1)
-    z = ex[1][1]
-    z *= ex[-1][4]
+    z = ex[1][1] * ex[-1][4]
     DLAM  += 18.609 * z.imag
     DS    += 3.59 * z.imag
     GAM1C += -0.094 * z.real
     SINPI += 0.0118 * z.real
 
     # AddSol(-4586.465, -4578.13, -0.077, 34.3117, 1, 0, 0, -2)
-    z = ex[1][1]
-    z *= ex[-2][4]
+    z = ex[1][1] * ex[-2][4]
     DLAM  += -4586.465 * z.imag
     DS    += -4578.13 * z.imag
     GAM1C += -0.077 * z.real
     SINPI += 34.3117 * z.real
 
     # AddSol(3.215, 5.44, 0.192, -0.0386, 1, 0, 0, -3)
-    z = ex[1][1]
-    z *= ex[-3][4]
+    z = ex[1][1] * ex[-3][4]
     DLAM  += 3.215 * z.imag
     DS    += 5.44 * z.imag
     GAM1C += 0.192 * z.real
     SINPI += -0.0386 * z.real
 
     # AddSol(-38.428, -38.64, 0.001, 0.6008, 1, 0, 0, -4)
-    z = ex[1][1]
-    z *= ex[-4][4]
+    z = ex[1][1] * ex[-4][4]
     DLAM  += -38.428 * z.imag
     DS    += -38.64 * z.imag
     GAM1C += 0.001 * z.real
     SINPI += 0.6008 * z.real
 
     # AddSol(-0.393, -1.43, -0.092, 0.0086, 1, 0, 0, -6)
-    z = ex[1][1]
-    z *= ex[-6][4]
+    z = ex[1][1] * ex[-6][4]
     DLAM  += -0.393 * z.imag
     DS    += -1.43 * z.imag
     GAM1C += -0.092 * z.real
     SINPI += 0.0086 * z.real
 
     # AddSol(-0.289, -1.59, 0.123, -0.0053, 0, 1, 0, 4)
-    z = ex[1][2]
-    z *= ex[4][4]
+    z = ex[1][2] * ex[4][4]
     DLAM  += -0.289 * z.imag
     DS    += -1.59 * z.imag
     GAM1C += 0.123 * z.real
     SINPI += -0.0053 * z.real
 
     # AddSol(-24.42, -25.1, 0.04, -0.3, 0, 1, 0, 2)
-    z = ex[1][2]
-    z *= ex[2][4]
+    z = ex[1][2] * ex[2][4]
     DLAM  += -24.42 * z.imag
     DS    += -25.1 * z.imag
     GAM1C += 0.04 * z.real
     SINPI += -0.3 * z.real
 
     # AddSol(18.023, 17.93, 0.007, 0.1494, 0, 1, 0, 1)
-    z = ex[1][2]
-    z *= ex[1][4]
+    z = ex[1][2] * ex[1][4]
     DLAM  += 18.023 * z.imag
     DS    += 17.93 * z.imag
     GAM1C += 0.007 * z.real
@@ -921,48 +910,42 @@ def _CalcMoon(time):
     SINPI += -0.3997 * z.real
 
     # AddSol(0.56, 0.32, -0.001, -0.0037, 0, 1, 0, -1)
-    z = ex[1][2]
-    z *= ex[-1][4]
+    z = ex[1][2] * ex[-1][4]
     DLAM  += 0.56 * z.imag
     DS    += 0.32 * z.imag
     GAM1C += -0.001 * z.real
     SINPI += -0.0037 * z.real
 
     # AddSol(-165.145, -165.06, 0.054, 1.9178, 0, 1, 0, -2)
-    z = ex[1][2]
-    z *= ex[-2][4]
+    z = ex[1][2] * ex[-2][4]
     DLAM  += -165.145 * z.imag
     DS    += -165.06 * z.imag
     GAM1C += 0.054 * z.real
     SINPI += 1.9178 * z.real
 
     # AddSol(-1.877, -6.46, -0.416, 0.0339, 0, 1, 0, -4)
-    z = ex[1][2]
-    z *= ex[-4][4]
+    z = ex[1][2] * ex[-4][4]
     DLAM  += -1.877 * z.imag
     DS    += -6.46 * z.imag
     GAM1C += -0.416 * z.real
     SINPI += 0.0339 * z.real
 
     # AddSol(0.213, 1.02, -0.074, 0.0054, 2, 0, 0, 4)
-    z = ex[2][1]
-    z *= ex[4][4]
+    z = ex[2][1] * ex[4][4]
     DLAM  += 0.213 * z.imag
     DS    += 1.02 * z.imag
     GAM1C += -0.074 * z.real
     SINPI += 0.0054 * z.real
 
     # AddSol(14.387, 14.78, -0.017, 0.2833, 2, 0, 0, 2)
-    z = ex[2][1]
-    z *= ex[2][4]
+    z = ex[2][1] * ex[2][4]
     DLAM  += 14.387 * z.imag
     DS    += 14.78 * z.imag
     GAM1C += -0.017 * z.real
     SINPI += 0.2833 * z.real
 
     # AddSol(-0.586, -1.2, 0.054, -0.01, 2, 0, 0, 1)
-    z = ex[2][1]
-    z *= ex[1][4]
+    z = ex[2][1] * ex[1][4]
     DLAM  += -0.586 * z.imag
     DS    += -1.2 * z.imag
     GAM1C += 0.054 * z.real
@@ -976,93 +959,77 @@ def _CalcMoon(time):
     SINPI += 10.1657 * z.real
 
     # AddSol(1.75, 2.01, -0.018, 0.0155, 2, 0, 0, -1)
-    z = ex[2][1]
-    z *= ex[-1][4]
+    z = ex[2][1] * ex[-1][4]
     DLAM  += 1.75 * z.imag
     DS    += 2.01 * z.imag
     GAM1C += -0.018 * z.real
     SINPI += 0.0155 * z.real
 
     # AddSol(-211.656, -152.53, 5.679, -0.3039, 2, 0, 0, -2)
-    z = ex[2][1]
-    z *= ex[-2][4]
+    z = ex[2][1] * ex[-2][4]
     DLAM  += -211.656 * z.imag
     DS    += -152.53 * z.imag
     GAM1C += 5.679 * z.real
     SINPI += -0.3039 * z.real
 
     # AddSol(1.225, 0.91, -0.03, -0.0088, 2, 0, 0, -3)
-    z = ex[2][1]
-    z *= ex[-3][4]
+    z = ex[2][1] * ex[-3][4]
     DLAM  += 1.225 * z.imag
     DS    += 0.91 * z.imag
     GAM1C += -0.03 * z.real
     SINPI += -0.0088 * z.real
 
     # AddSol(-30.773, -34.07, -0.308, 0.3722, 2, 0, 0, -4)
-    z = ex[2][1]
-    z *= ex[-4][4]
+    z = ex[2][1] * ex[-4][4]
     DLAM  += -30.773 * z.imag
     DS    += -34.07 * z.imag
     GAM1C += -0.308 * z.real
     SINPI += 0.3722 * z.real
 
     # AddSol(-0.57, -1.4, -0.074, 0.0109, 2, 0, 0, -6)
-    z = ex[2][1]
-    z *= ex[-6][4]
+    z = ex[2][1] * ex[-6][4]
     DLAM  += -0.57 * z.imag
     DS    += -1.4 * z.imag
     GAM1C += -0.074 * z.real
     SINPI += 0.0109 * z.real
 
     # AddSol(-2.921, -11.75, 0.787, -0.0484, 1, 1, 0, 2)
-    z = ex[1][1]
-    z *= ex[1][2]
-    z *= ex[2][4]
+    z = ex[1][1] * ex[1][2] * ex[2][4]
     DLAM  += -2.921 * z.imag
     DS    += -11.75 * z.imag
     GAM1C += 0.787 * z.real
     SINPI += -0.0484 * z.real
 
     # AddSol(1.267, 1.52, -0.022, 0.0164, 1, 1, 0, 1)
-    z = ex[1][1]
-    z *= ex[1][2]
-    z *= ex[1][4]
+    z = ex[1][1] * ex[1][2] * ex[1][4]
     DLAM  += 1.267 * z.imag
     DS    += 1.52 * z.imag
     GAM1C += -0.022 * z.real
     SINPI += 0.0164 * z.real
 
     # AddSol(-109.673, -115.18, 0.461, -0.949, 1, 1, 0, 0)
-    z = ex[1][1]
-    z *= ex[1][2]
+    z = ex[1][1] * ex[1][2]
     DLAM  += -109.673 * z.imag
     DS    += -115.18 * z.imag
     GAM1C += 0.461 * z.real
     SINPI += -0.949 * z.real
 
     # AddSol(-205.962, -182.36, 2.056, 1.4437, 1, 1, 0, -2)
-    z = ex[1][1]
-    z *= ex[1][2]
-    z *= ex[-2][4]
+    z = ex[1][1] * ex[1][2] * ex[-2][4]
     DLAM  += -205.962 * z.imag
     DS    += -182.36 * z.imag
     GAM1C += 2.056 * z.real
     SINPI += 1.4437 * z.real
 
     # AddSol(0.233, 0.36, 0.012, -0.0025, 1, 1, 0, -3)
-    z = ex[1][1]
-    z *= ex[1][2]
-    z *= ex[-3][4]
+    z = ex[1][1] * ex[1][2] * ex[-3][4]
     DLAM  += 0.233 * z.imag
     DS    += 0.36 * z.imag
     GAM1C += 0.012 * z.real
     SINPI += -0.0025 * z.real
 
     # AddSol(-4.391, -9.66, -0.471, 0.0673, 1, 1, 0, -4)
-    z = ex[1][1]
-    z *= ex[1][2]
-    z *= ex[-4][4]
+    z = ex[1][1] * ex[1][2] * ex[-4][4]
     DLAM  += -4.391 * z.imag
     DS    += -9.66 * z.imag
     GAM1C += -0.471 * z.real
@@ -1070,69 +1037,55 @@ def _CalcMoon(time):
 
 
     # AddSol(0.283, 1.53, -0.111, 0.006, 1, -1, 0, 4)
-    z = ex[1][1]
-    z *= ex[-1][2]
-    z *= ex[4][4]
+    z = ex[1][1] * ex[-1][2] * ex[4][4]
     DLAM  += 0.283 * z.imag
     DS    += 1.53 * z.imag
     GAM1C += -0.111 * z.real
     SINPI += 0.006 * z.real
 
     # AddSol(14.577, 31.7, -1.54, 0.2302, 1, -1, 0, 2)
-    z = ex[1][1]
-    z *= ex[-1][2]
-    z *= ex[2][4]
+    z = ex[1][1] * ex[-1][2] * ex[2][4]
     DLAM  += 14.577 * z.imag
     DS    += 31.7 * z.imag
     GAM1C += -1.54 * z.real
     SINPI += 0.2302 * z.real
 
     # AddSol(147.687, 138.76, 0.679, 1.1528, 1, -1, 0, 0)
-    z = ex[1][1]
-    z *= ex[-1][2]
+    z = ex[1][1] * ex[-1][2]
     DLAM  += 147.687 * z.imag
     DS    += 138.76 * z.imag
     GAM1C += 0.679 * z.real
     SINPI += 1.1528 * z.real
 
     # AddSol(-1.089, 0.55, 0.021, 0.0, 1, -1, 0, -1)
-    z = ex[1][1]
-    z *= ex[-1][2]
-    z *= ex[-1][4]
+    z = ex[1][1] * ex[-1][2] * ex[-1][4]
     DLAM  += -1.089 * z.imag
     DS    += 0.55 * z.imag
     GAM1C += 0.021 * z.real
 
     # AddSol(28.475, 23.59, -0.443, -0.2257, 1, -1, 0, -2)
-    z = ex[1][1]
-    z *= ex[-1][2]
-    z *= ex[-2][4]
+    z = ex[1][1] * ex[-1][2] * ex[-2][4]
     DLAM  += 28.475 * z.imag
     DS    += 23.59 * z.imag
     GAM1C += -0.443 * z.real
     SINPI += -0.2257 * z.real
 
     # AddSol(-0.276, -0.38, -0.006, -0.0036, 1, -1, 0, -3)
-    z = ex[1][1]
-    z *= ex[-1][2]
-    z *= ex[-3][4]
+    z = ex[1][1] * ex[-1][2] * ex[-3][4]
     DLAM  += -0.276 * z.imag
     DS    += -0.38 * z.imag
     GAM1C += -0.006 * z.real
     SINPI += -0.0036 * z.real
 
     # AddSol(0.636, 2.27, 0.146, -0.0102, 1, -1, 0, -4)
-    z = ex[1][1]
-    z *= ex[-1][2]
-    z *= ex[-4][4]
+    z = ex[1][1] * ex[-1][2] * ex[-4][4]
     DLAM  += 0.636 * z.imag
     DS    += 2.27 * z.imag
     GAM1C += 0.146 * z.real
     SINPI += -0.0102 * z.real
 
     # AddSol(-0.189, -1.68, 0.131, -0.0028, 0, 2, 0, 2)
-    z = ex[2][2]
-    z *= ex[2][4]
+    z = ex[2][2] * ex[2][4]
     DLAM  += -0.189 * z.imag
     DS    += -1.68 * z.imag
     GAM1C += 0.131 * z.real
@@ -1146,23 +1099,20 @@ def _CalcMoon(time):
     SINPI += -0.0086 * z.real
 
     # AddSol(-8.096, -16.35, -0.74, 0.0918, 0, 2, 0, -2)
-    z = ex[2][2]
-    z *= ex[-2][4]
+    z = ex[2][2] * ex[-2][4]
     DLAM  += -8.096 * z.imag
     DS    += -16.35 * z.imag
     GAM1C += -0.74 * z.real
     SINPI += 0.0918 * z.real
 
     # AddSol(-5.741, -0.04, 0.0, -0.0009, 0, 0, 2, 2)
-    z = ex[2][3]
-    z *= ex[2][4]
+    z = ex[2][3] * ex[2][4]
     DLAM  += -5.741 * z.imag
     DS    += -0.04 * z.imag
     SINPI += -0.0009 * z.real
 
     # AddSol(0.255, 0.0, 0.0, 0.0, 0, 0, 2, 1)
-    z = ex[2][3]
-    z *= ex[1][4]
+    z = ex[2][3] * ex[1][4]
     DLAM  += 0.255 * z.imag
 
     # AddSol(-411.608, -0.2, 0.0, -0.0124, 0, 0, 2, 0)
@@ -1172,36 +1122,31 @@ def _CalcMoon(time):
     SINPI += -0.0124 * z.real
 
     # AddSol(0.584, 0.84, 0.0, 0.0071, 0, 0, 2, -1)
-    z = ex[2][3]
-    z *= ex[-1][4]
+    z = ex[2][3] * ex[-1][4]
     DLAM  += 0.584 * z.imag
     DS    += 0.84 * z.imag
     SINPI += 0.0071 * z.real
 
     # AddSol(-55.173, -52.14, 0.0, -0.1052, 0, 0, 2, -2)
-    z = ex[2][3]
-    z *= ex[-2][4]
+    z = ex[2][3] * ex[-2][4]
     DLAM  += -55.173 * z.imag
     DS    += -52.14 * z.imag
     SINPI += -0.1052 * z.real
 
     # AddSol(0.254, 0.25, 0.0, -0.0017, 0, 0, 2, -3)
-    z = ex[2][3]
-    z *= ex[-3][4]
+    z = ex[2][3] * ex[-3][4]
     DLAM  += 0.254 * z.imag
     DS    += 0.25 * z.imag
     SINPI += -0.0017 * z.real
 
     # AddSol(0.025, -1.67, 0.0, 0.0031, 0, 0, 2, -4)
-    z = ex[2][3]
-    z *= ex[-4][4]
+    z = ex[2][3] * ex[-4][4]
     DLAM  += 0.025 * z.imag
     DS    += -1.67 * z.imag
     SINPI += 0.0031 * z.real
 
     # AddSol(1.06, 2.96, -0.166, 0.0243, 3, 0, 0, 2)
-    z = ex[3][1]
-    z *= ex[2][4]
+    z = ex[3][1] * ex[2][4]
     DLAM  += 1.06 * z.imag
     DS    += 2.96 * z.imag
     GAM1C += -0.166 * z.real
@@ -1215,256 +1160,205 @@ def _CalcMoon(time):
     SINPI += 0.6215 * z.real
 
     # AddSol(-13.193, -16.4, 0.258, -0.1187, 3, 0, 0, -2)
-    z = ex[3][1]
-    z *= ex[-2][4]
+    z = ex[3][1] * ex[-2][4]
     DLAM  += -13.193 * z.imag
     DS    += -16.4 * z.imag
     GAM1C += 0.258 * z.real
     SINPI += -0.1187 * z.real
 
     # AddSol(-1.187, -0.74, 0.042, 0.0074, 3, 0, 0, -4)
-    z = ex[3][1]
-    z *= ex[-4][4]
+    z = ex[3][1] * ex[-4][4]
     DLAM  += -1.187 * z.imag
     DS    += -0.74 * z.imag
     GAM1C += 0.042 * z.real
     SINPI += 0.0074 * z.real
 
     # AddSol(-0.293, -0.31, -0.002, 0.0046, 3, 0, 0, -6)
-    z = ex[3][1]
-    z *= ex[-6][4]
+    z = ex[3][1] * ex[-6][4]
     DLAM  += -0.293 * z.imag
     DS    += -0.31 * z.imag
     GAM1C += -0.002 * z.real
     SINPI += 0.0046 * z.real
 
     # AddSol(-0.29, -1.45, 0.116, -0.0051, 2, 1, 0, 2)
-    z = ex[2][1]
-    z *= ex[1][2]
-    z *= ex[2][4]
+    z = ex[2][1] * ex[1][2] * ex[2][4]
     DLAM  += -0.29 * z.imag
     DS    += -1.45 * z.imag
     GAM1C += 0.116 * z.real
     SINPI += -0.0051 * z.real
 
     # AddSol(-7.649, -10.56, 0.259, -0.1038, 2, 1, 0, 0)
-    z = ex[2][1]
-    z *= ex[1][2]
+    z = ex[2][1] * ex[1][2]
     DLAM  += -7.649 * z.imag
     DS    += -10.56 * z.imag
     GAM1C += 0.259 * z.real
     SINPI += -0.1038 * z.real
 
     # AddSol(-8.627, -7.59, 0.078, -0.0192, 2, 1, 0, -2)
-    z = ex[2][1]
-    z *= ex[1][2]
-    z *= ex[-2][4]
+    z = ex[2][1] * ex[1][2] * ex[-2][4]
     DLAM  += -8.627 * z.imag
     DS    += -7.59 * z.imag
     GAM1C += 0.078 * z.real
     SINPI += -0.0192 * z.real
 
     # AddSol(-2.74, -2.54, 0.022, 0.0324, 2, 1, 0, -4)
-    z = ex[2][1]
-    z *= ex[1][2]
-    z *= ex[-4][4]
+    z = ex[2][1] * ex[1][2] * ex[-4][4]
     DLAM  += -2.74 * z.imag
     DS    += -2.54 * z.imag
     GAM1C += 0.022 * z.real
     SINPI += 0.0324 * z.real
 
     # AddSol(1.181, 3.32, -0.212, 0.0213, 2, -1, 0, 2)
-    z = ex[2][1]
-    z *= ex[-1][2]
-    z *= ex[2][4]
+    z = ex[2][1] * ex[-1][2] * ex[2][4]
     DLAM  += 1.181 * z.imag
     DS    += 3.32 * z.imag
     GAM1C += -0.212 * z.real
     SINPI += 0.0213 * z.real
 
     # AddSol(9.703, 11.67, -0.151, 0.1268, 2, -1, 0, 0)
-    z = ex[2][1]
-    z *= ex[-1][2]
+    z = ex[2][1] * ex[-1][2]
     DLAM  += 9.703 * z.imag
     DS    += 11.67 * z.imag
     GAM1C += -0.151 * z.real
     SINPI += 0.1268 * z.real
 
     # AddSol(-0.352, -0.37, 0.001, -0.0028, 2, -1, 0, -1)
-    z = ex[2][1]
-    z *= ex[-1][2]
-    z *= ex[-1][4]
+    z = ex[2][1] * ex[-1][2] * ex[-1][4]
     DLAM  += -0.352 * z.imag
     DS    += -0.37 * z.imag
     GAM1C += 0.001 * z.real
     SINPI += -0.0028 * z.real
 
     # AddSol(-2.494, -1.17, -0.003, -0.0017, 2, -1, 0, -2)
-    z = ex[2][1]
-    z *= ex[-1][2]
-    z *= ex[-2][4]
+    z = ex[2][1] * ex[-1][2] * ex[-2][4]
     DLAM  += -2.494 * z.imag
     DS    += -1.17 * z.imag
     GAM1C += -0.003 * z.real
     SINPI += -0.0017 * z.real
 
     # AddSol(0.36, 0.2, -0.012, -0.0043, 2, -1, 0, -4)
-    z = ex[2][1]
-    z *= ex[-1][2]
-    z *= ex[-4][4]
+    z = ex[2][1] * ex[-1][2] * ex[-4][4]
     DLAM  += 0.36 * z.imag
     DS    += 0.2 * z.imag
     GAM1C += -0.012 * z.real
     SINPI += -0.0043 * z.real
 
     # AddSol(-1.167, -1.25, 0.008, -0.0106, 1, 2, 0, 0)
-    z = ex[1][1]
-    z *= ex[2][2]
+    z = ex[1][1] * ex[2][2]
     DLAM  += -1.167 * z.imag
     DS    += -1.25 * z.imag
     GAM1C += 0.008 * z.real
     SINPI += -0.0106 * z.real
 
     # AddSol(-7.412, -6.12, 0.117, 0.0484, 1, 2, 0, -2)
-    z = ex[1][1]
-    z *= ex[2][2]
-    z *= ex[-2][4]
+    z = ex[1][1] * ex[2][2] * ex[-2][4]
     DLAM  += -7.412 * z.imag
     DS    += -6.12 * z.imag
     GAM1C += 0.117 * z.real
     SINPI += 0.0484 * z.real
 
     # AddSol(-0.311, -0.65, -0.032, 0.0044, 1, 2, 0, -4)
-    z = ex[1][1]
-    z *= ex[2][2]
-    z *= ex[-4][4]
+    z = ex[1][1] * ex[2][2] * ex[-4][4]
     DLAM  += -0.311 * z.imag
     DS    += -0.65 * z.imag
     GAM1C += -0.032 * z.real
     SINPI += 0.0044 * z.real
 
     # AddSol(0.757, 1.82, -0.105, 0.0112, 1, -2, 0, 2)
-    z = ex[1][1]
-    z *= ex[-2][2]
-    z *= ex[2][4]
+    z = ex[1][1] * ex[-2][2] * ex[2][4]
     DLAM  += 0.757 * z.imag
     DS    += 1.82 * z.imag
     GAM1C += -0.105 * z.real
     SINPI += 0.0112 * z.real
 
     # AddSol(2.58, 2.32, 0.027, 0.0196, 1, -2, 0, 0)
-    z = ex[1][1]
-    z *= ex[-2][2]
+    z = ex[1][1] * ex[-2][2]
     DLAM  += 2.58 * z.imag
     DS    += 2.32 * z.imag
     GAM1C += 0.027 * z.real
     SINPI += 0.0196 * z.real
 
     # AddSol(2.533, 2.4, -0.014, -0.0212, 1, -2, 0, -2)
-    z = ex[1][1]
-    z *= ex[-2][2]
-    z *= ex[-2][4]
+    z = ex[1][1] * ex[-2][2] * ex[-2][4]
     DLAM  += 2.533 * z.imag
     DS    += 2.4 * z.imag
     GAM1C += -0.014 * z.real
     SINPI += -0.0212 * z.real
 
     # AddSol(-0.344, -0.57, -0.025, 0.0036, 0, 3, 0, -2)
-    z = ex[3][2]
-    z *= ex[-2][4]
+    z = ex[3][2] * ex[-2][4]
     DLAM  += -0.344 * z.imag
     DS    += -0.57 * z.imag
     GAM1C += -0.025 * z.real
     SINPI += 0.0036 * z.real
 
     # AddSol(-0.992, -0.02, 0.0, 0.0, 1, 0, 2, 2)
-    z = ex[1][1]
-    z *= ex[2][3]
-    z *= ex[2][4]
+    z = ex[1][1] * ex[2][3] * ex[2][4]
     DLAM  += -0.992 * z.imag
     DS    += -0.02 * z.imag
 
     # AddSol(-45.099, -0.02, 0.0, -0.001, 1, 0, 2, 0)
-    z = ex[1][1]
-    z *= ex[2][3]
+    z = ex[1][1] * ex[2][3]
     DLAM  += -45.099 * z.imag
     DS    += -0.02 * z.imag
     SINPI += -0.001 * z.real
 
     # AddSol(-0.179, -9.52, 0.0, -0.0833, 1, 0, 2, -2)
-    z = ex[1][1]
-    z *= ex[2][3]
-    z *= ex[-2][4]
+    z = ex[1][1] * ex[2][3] * ex[-2][4]
     DLAM  += -0.179 * z.imag
     DS    += -9.52 * z.imag
     SINPI += -0.0833 * z.real
 
     # AddSol(-0.301, -0.33, 0.0, 0.0014, 1, 0, 2, -4)
-    z = ex[1][1]
-    z *= ex[2][3]
-    z *= ex[-4][4]
+    z = ex[1][1] * ex[2][3] * ex[-4][4]
     DLAM  += -0.301 * z.imag
     DS    += -0.33 * z.imag
     SINPI += 0.0014 * z.real
 
     # AddSol(-6.382, -3.37, 0.0, -0.0481, 1, 0, -2, 2)
-    z = ex[1][1]
-    z *= ex[-2][3]
-    z *= ex[2][4]
+    z = ex[1][1] * ex[-2][3] * ex[2][4]
     DLAM  += -6.382 * z.imag
     DS    += -3.37 * z.imag
     SINPI += -0.0481 * z.real
 
     # AddSol(39.528, 85.13, 0.0, -0.7136, 1, 0, -2, 0)
-    z = ex[1][1]
-    z *= ex[-2][3]
+    z = ex[1][1] * ex[-2][3]
     DLAM  += 39.528 * z.imag
     DS    += 85.13 * z.imag
     SINPI += -0.7136 * z.real
 
     # AddSol(9.366, 0.71, 0.0, -0.0112, 1, 0, -2, -2)
-    z = ex[1][1]
-    z *= ex[-2][3]
-    z *= ex[-2][4]
+    z = ex[1][1] * ex[-2][3] * ex[-2][4]
     DLAM  += 9.366 * z.imag
     DS    += 0.71 * z.imag
     SINPI += -0.0112 * z.real
 
     # AddSol(0.202, 0.02, 0.0, 0.0, 1, 0, -2, -4)
-    z = ex[1][1]
-    z *= ex[-2][3]
-    z *= ex[-4][4]
+    z = ex[1][1] * ex[-2][3] * ex[-4][4]
     DLAM  += 0.202 * z.imag
     DS    += 0.02 * z.imag
 
 
     # AddSol(0.415, 0.1, 0.0, 0.0013, 0, 1, 2, 0)
-    z = ex[1][2]
-    z *= ex[2][3]
+    z = ex[1][2] * ex[2][3]
     DLAM  += 0.415 * z.imag
     DS    += 0.1 * z.imag
     SINPI += 0.0013 * z.real
 
     # AddSol(-2.152, -2.26, 0.0, -0.0066, 0, 1, 2, -2)
-    z = ex[1][2]
-    z *= ex[2][3]
-    z *= ex[-2][4]
+    z = ex[1][2] * ex[2][3] * ex[-2][4]
     DLAM  += -2.152 * z.imag
     DS    += -2.26 * z.imag
     SINPI += -0.0066 * z.real
 
     # AddSol(-1.44, -1.3, 0.0, 0.0014, 0, 1, -2, 2)
-    z = ex[1][2]
-    z *= ex[-2][3]
-    z *= ex[2][4]
+    z = ex[1][2] * ex[-2][3] * ex[2][4]
     DLAM  += -1.44 * z.imag
     DS    += -1.3 * z.imag
     SINPI += 0.0014 * z.real
 
     # AddSol(0.384, -0.04, 0.0, 0.0, 0, 1, -2, -2)
-    z = ex[1][2]
-    z *= ex[-2][3]
-    z *= ex[-2][4]
+    z = ex[1][2] * ex[-2][3] * ex[-2][4]
     DLAM  += 0.384 * z.imag
     DS    += -0.04 * z.imag
 
@@ -1476,130 +1370,101 @@ def _CalcMoon(time):
     SINPI += 0.0401 * z.real
 
     # AddSol(-0.952, -1.58, 0.052, -0.013, 4, 0, 0, -2)
-    z = ex[4][1]
-    z *= ex[-2][4]
+    z = ex[4][1] * ex[-2][4]
     DLAM  += -0.952 * z.imag
     DS    += -1.58 * z.imag
     GAM1C += 0.052 * z.real
     SINPI += -0.013 * z.real
 
     # AddSol(-0.551, -0.94, 0.032, -0.0097, 3, 1, 0, 0)
-    z = ex[3][1]
-    z *= ex[1][2]
+    z = ex[3][1] * ex[1][2]
     DLAM  += -0.551 * z.imag
     DS    += -0.94 * z.imag
     GAM1C += 0.032 * z.real
     SINPI += -0.0097 * z.real
 
     # AddSol(-0.482, -0.57, 0.005, -0.0045, 3, 1, 0, -2)
-    z = ex[3][1]
-    z *= ex[1][2]
-    z *= ex[-2][4]
+    z = ex[3][1] * ex[1][2] * ex[-2][4]
     DLAM  += -0.482 * z.imag
     DS    += -0.57 * z.imag
     GAM1C += 0.005 * z.real
     SINPI += -0.0045 * z.real
 
     # AddSol(0.681, 0.96, -0.026, 0.0115, 3, -1, 0, 0)
-    z = ex[3][1]
-    z *= ex[-1][2]
+    z = ex[3][1] * ex[-1][2]
     DLAM  += 0.681 * z.imag
     DS    += 0.96 * z.imag
     GAM1C += -0.026 * z.real
     SINPI += 0.0115 * z.real
 
     # AddSol(-0.297, -0.27, 0.002, -0.0009, 2, 2, 0, -2)
-    z = ex[2][1]
-    z *= ex[2][2]
-    z *= ex[-2][4]
+    z = ex[2][1] * ex[2][2] * ex[-2][4]
     DLAM  += -0.297 * z.imag
     DS    += -0.27 * z.imag
     GAM1C += 0.002 * z.real
     SINPI += -0.0009 * z.real
 
     # AddSol(0.254, 0.21, -0.003, 0.0, 2, -2, 0, -2)
-    z = ex[2][1]
-    z *= ex[-2][2]
-    z *= ex[-2][4]
+    z = ex[2][1] * ex[-2][2] * ex[-2][4]
     DLAM  += 0.254 * z.imag
     DS    += 0.21 * z.imag
     GAM1C += -0.003 * z.real
 
     # AddSol(-0.25, -0.22, 0.004, 0.0014, 1, 3, 0, -2)
-    z = ex[1][1]
-    z *= ex[3][2]
-    z *= ex[-2][4]
+    z = ex[1][1] * ex[3][2] * ex[-2][4]
     DLAM  += -0.25 * z.imag
     DS    += -0.22 * z.imag
     GAM1C += 0.004 * z.real
     SINPI += 0.0014 * z.real
 
     # AddSol(-3.996, 0.0, 0.0, 0.0004, 2, 0, 2, 0)
-    z = ex[2][1]
-    z *= ex[2][3]
+    z = ex[2][1] * ex[2][3]
     DLAM  += -3.996 * z.imag
     SINPI += 0.0004 * z.real
 
     # AddSol(0.557, -0.75, 0.0, -0.009, 2, 0, 2, -2)
-    z = ex[2][1]
-    z *= ex[2][3]
-    z *= ex[-2][4]
+    z = ex[2][1] * ex[2][3] * ex[-2][4]
     DLAM  += 0.557 * z.imag
     DS    += -0.75 * z.imag
     SINPI += -0.009 * z.real
 
     # AddSol(-0.459, -0.38, 0.0, -0.0053, 2, 0, -2, 2)
-    z = ex[2][1]
-    z *= ex[-2][3]
-    z *= ex[2][4]
+    z = ex[2][1] * ex[-2][3] * ex[2][4]
     DLAM  += -0.459 * z.imag
     DS    += -0.38 * z.imag
     SINPI += -0.0053 * z.real
 
     # AddSol(-1.298, 0.74, 0.0, 0.0004, 2, 0, -2, 0)
-    z = ex[2][1]
-    z *= ex[-2][3]
+    z = ex[2][1] * ex[-2][3]
     DLAM  += -1.298 * z.imag
     DS    += 0.74 * z.imag
     SINPI += 0.0004 * z.real
 
     # AddSol(0.538, 1.14, 0.0, -0.0141, 2, 0, -2, -2)
-    z = ex[2][1]
-    z *= ex[-2][3]
-    z *= ex[-2][4]
+    z = ex[2][1] * ex[-2][3] * ex[-2][4]
     DLAM  += 0.538 * z.imag
     DS    += 1.14 * z.imag
     SINPI += -0.0141 * z.real
 
     # AddSol(0.263, 0.02, 0.0, 0.0, 1, 1, 2, 0)
-    z = ex[1][1]
-    z *= ex[1][2]
-    z *= ex[2][3]
+    z = ex[1][1] * ex[1][2] * ex[2][3]
     DLAM  += 0.263 * z.imag
     DS    += 0.02 * z.imag
 
     # AddSol(0.426, 0.07, 0.0, -0.0006, 1, 1, -2, -2)
-    z = ex[1][1]
-    z *= ex[1][2]
-    z *= ex[-2][3]
-    z *= ex[-2][4]
+    z = ex[1][1] * ex[1][2] * ex[-2][3] * ex[-2][4]
     DLAM  += 0.426 * z.imag
     DS    += 0.07 * z.imag
     SINPI += -0.0006 * z.real
 
     # AddSol(-0.304, 0.03, 0.0, 0.0003, 1, -1, 2, 0)
-    z = ex[1][1]
-    z *= ex[-1][2]
-    z *= ex[2][3]
+    z = ex[1][1] * ex[-1][2] * ex[2][3]
     DLAM  += -0.304 * z.imag
     DS    += 0.03 * z.imag
     SINPI += 0.0003 * z.real
 
     # AddSol(-0.372, -0.19, 0.0, -0.0027, 1, -1, -2, 2)
-    z = ex[1][1]
-    z *= ex[-1][2]
-    z *= ex[-2][3]
-    z *= ex[2][4]
+    z = ex[1][1] * ex[-1][2] * ex[-2][3] * ex[2][4]
     DLAM  += -0.372 * z.imag
     DS    += -0.19 * z.imag
     SINPI += -0.0027 * z.real
@@ -1609,8 +1474,7 @@ def _CalcMoon(time):
     DLAM  += 0.418 * z.imag
 
     # AddSol(-0.33, -0.04, 0.0, 0.0, 3, 0, 2, 0)
-    z = ex[3][1]
-    z *= ex[2][3]
+    z = ex[3][1] * ex[2][3]
     DLAM  += -0.33 * z.imag
     DS    += -0.04 * z.imag
 
