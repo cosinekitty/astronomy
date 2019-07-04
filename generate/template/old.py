@@ -388,14 +388,12 @@ class _iau2000b:
         om  = math.fmod((450160.398036 - t * 6962890.5431),    _ASEC360) * _ASEC2RAD
         dp = 0
         de = 0
-        i = 76
-        while i >= 0:
+        for i in range(77):
             arg = math.fmod((_nals_t[i][0]*el + _nals_t[i][1]*elp + _nals_t[i][2]*f + _nals_t[i][3]*d + _nals_t[i][4]*om), _PI2)
             sarg = math.sin(arg)
             carg = math.cos(arg)
             dp += (_cls_t[i][0] + _cls_t[i][1] * t)*sarg + _cls_t[i][2]*carg
             de += (_cls_t[i][3] + _cls_t[i][4] * t)*carg + _cls_t[i][5]*sarg
-            i -= 1
         self.dpsi = -0.000135 + (dp * 1.0e-7)
         self.deps = +0.000388 + (de * 1.0e-7)
 
