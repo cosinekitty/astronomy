@@ -623,27 +623,11 @@ def _spin(angle, pos1):
 #----------------------------------------------------------------------------
 # BEGIN CalcMoon
 
-class _Array1:
-    def __init__(self, xmin, xmax):
-        self.min = xmin
-        self.array = [0] * (xmax - xmin + 1)
+def _Array1(xmin, xmax):
+    return dict((key, 0) for key in range(xmin, 1+xmax))
 
-    def __getitem__(self, key):
-        return self.array[key - self.min]
-
-    def __setitem__(self, key, value):
-        self.array[key - self.min] = value
-
-class _Array2:
-    def __init__(self, xmin, xmax, ymin, ymax):
-        self.min = xmin
-        self.array = [_Array1(ymin, ymax) for i in range(xmax - xmin + 1)]
-
-    def __getitem__(self, key):
-        return self.array[key - self.min]
-
-    def __setitem__(self, key, value):
-        self.array[key - self.min] = value
+def _Array2(xmin, xmax, ymin, ymax):
+    return dict((key, _Array1(ymin, ymax)) for key in range(xmin, 1+xmax))
 
 class _moonpos:
     def __init__(self, lon, lat, dist):
