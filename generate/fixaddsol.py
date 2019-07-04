@@ -2,6 +2,16 @@
 import sys
 import re
 
+def AddThe(first, text, p, i):
+    if p != 0:
+        cosi = 'co[{0}][{1}], si[{0}][{1}]'.format(p, i)
+        if first:
+            first = False
+            text += '    (a, b) = ({0})\n'.format(cosi)
+        else:
+            text += '    (a, b) = AddThe(a, b, {0})\n'.format(cosi)
+    return first, text
+
 def Translate(line):
     m = re.match(r'^    AddSol\(\s*([0-9\+\-\.]+)\s*,\s*([0-9\+\-\.]+)\s*,\s*([0-9\+\-\.]+)\s*,\s*([0-9\+\-\.]+)\s*,\s*([\+\-]?\d+)\s*,\s*([\+\-]?\d+)\s*,\s*([\+\-]?\d+)\s*,\s*([\+\-]?\d+)\s*\)\s*$', line)
     if m:
@@ -18,34 +28,10 @@ def Translate(line):
         text += '    # AddSol({}, {}, {}, {}, {}, {}, {}, {})\n'.format(cl, cs, cg, cp, p, q, r, s)
 
         first = True
-
-        if p != 0:
-            if first:
-                first = False
-                text += '    (a, b) = (co[{0:d}][1], si[{0:d}][1])\n'.format(p)
-            else:
-                text += '    (a, b) = AddThe(a, b, co[{0:d}][1], si[{0:d}][1])\n'.format(p)
-
-        if q != 0:
-            if first:
-                first = False
-                text += '    (a, b) = (co[{0:d}][2], si[{0:d}][2])\n'.format(q)
-            else:
-                text += '    (a, b) = AddThe(a, b, co[{0:d}][2], si[{0:d}][2])\n'.format(q)
-
-        if r != 0:
-            if first:
-                first = False
-                text += '    (a, b) = (co[{0:d}][3], si[{0:d}][3])\n'.format(r)
-            else:
-                text += '    (a, b) = AddThe(a, b, co[{0:d}][3], si[{0:d}][3])\n'.format(r)
-
-        if s != 0:
-            if first:
-                first = False
-                text += '    (a, b) = (co[{0:d}][4], si[{0:d}][4])\n'.format(s)
-            else:
-                text += '    (a, b) = AddThe(a, b, co[{0:d}][4], si[{0:d}][4])\n'.format(s)
+        first, text = AddThe(first, text, p, 1)
+        first, text = AddThe(first, text, q, 2)
+        first, text = AddThe(first, text, r, 3)
+        first, text = AddThe(first, text, s, 4)
 
         if cl != 0:
             text += '    DLAM  += {} * b\n'.format(cl)
