@@ -391,7 +391,7 @@ _iaudata = (
 
 class _iau2000b:
     def __init__(self, time):
-        t = time.tt / 36525
+        t = time.tt / 36525.0
         el  = math.fmod((485868.249036 + t*1717915923.2178), _ASEC360) * _ASEC2RAD
         elp = math.fmod((1287104.79305 + t*129596581.0481),  _ASEC360) * _ASEC2RAD
         f   = math.fmod((335779.526232 + t*1739527262.8478), _ASEC360) * _ASEC2RAD
@@ -2077,12 +2077,12 @@ _vsop = [
 
 def _CalcVsop(model, time):
     spher = []
-    t = time.tt / 365250
+    t = time.tt / 365250.0
     for formula in model:
         tpower = 1.0
         coord = 0.0
         for series in formula:
-            coord += tpower * sum(term[0] * math.cos(term[1] + (t * term[2])) for term in series)
+            coord += tpower * sum(A * math.cos(B + C*t) for (A, B, C) in series)
             tpower *= t
         spher.append(coord)
 
