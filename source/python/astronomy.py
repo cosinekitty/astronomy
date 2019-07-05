@@ -309,86 +309,6 @@ class Observer:
         self.longitude = longitude
         self.height = height
 
-_iaudata = (
-    (( 0.0,  0.0,  0.0,  0.0,  1.0), (-172064161.0,    -174666.0,      33386.0,   92052331.0,       9086.0,      15377.0)),
-    (( 0.0,  0.0,  2.0, -2.0,  2.0), ( -13170906.0,      -1675.0,     -13696.0,    5730336.0,      -3015.0,      -4587.0)),
-    (( 0.0,  0.0,  2.0,  0.0,  2.0), (  -2276413.0,       -234.0,       2796.0,     978459.0,       -485.0,       1374.0)),
-    (( 0.0,  0.0,  0.0,  0.0,  2.0), (   2074554.0,        207.0,       -698.0,    -897492.0,        470.0,       -291.0)),
-    (( 0.0,  1.0,  0.0,  0.0,  0.0), (   1475877.0,      -3633.0,      11817.0,      73871.0,       -184.0,      -1924.0)),
-    (( 0.0,  1.0,  2.0, -2.0,  2.0), (   -516821.0,       1226.0,       -524.0,     224386.0,       -677.0,       -174.0)),
-    (( 1.0,  0.0,  0.0,  0.0,  0.0), (    711159.0,         73.0,       -872.0,      -6750.0,          0.0,        358.0)),
-    (( 0.0,  0.0,  2.0,  0.0,  1.0), (   -387298.0,       -367.0,        380.0,     200728.0,         18.0,        318.0)),
-    (( 1.0,  0.0,  2.0,  0.0,  2.0), (   -301461.0,        -36.0,        816.0,     129025.0,        -63.0,        367.0)),
-    (( 0.0, -1.0,  2.0, -2.0,  2.0), (    215829.0,       -494.0,        111.0,     -95929.0,        299.0,        132.0)),
-    (( 0.0,  0.0,  2.0, -2.0,  1.0), (    128227.0,        137.0,        181.0,     -68982.0,         -9.0,         39.0)),
-    ((-1.0,  0.0,  2.0,  0.0,  2.0), (    123457.0,         11.0,         19.0,     -53311.0,         32.0,         -4.0)),
-    ((-1.0,  0.0,  0.0,  2.0,  0.0), (    156994.0,         10.0,       -168.0,      -1235.0,          0.0,         82.0)),
-    (( 1.0,  0.0,  0.0,  0.0,  1.0), (     63110.0,         63.0,         27.0,     -33228.0,          0.0,         -9.0)),
-    ((-1.0,  0.0,  0.0,  0.0,  1.0), (    -57976.0,        -63.0,       -189.0,      31429.0,          0.0,        -75.0)),
-    ((-1.0,  0.0,  2.0,  2.0,  2.0), (    -59641.0,        -11.0,        149.0,      25543.0,        -11.0,         66.0)),
-    (( 1.0,  0.0,  2.0,  0.0,  1.0), (    -51613.0,        -42.0,        129.0,      26366.0,          0.0,         78.0)),
-    ((-2.0,  0.0,  2.0,  0.0,  1.0), (     45893.0,         50.0,         31.0,     -24236.0,        -10.0,         20.0)),
-    (( 0.0,  0.0,  0.0,  2.0,  0.0), (     63384.0,         11.0,       -150.0,      -1220.0,          0.0,         29.0)),
-    (( 0.0,  0.0,  2.0,  2.0,  2.0), (    -38571.0,         -1.0,        158.0,      16452.0,        -11.0,         68.0)),
-    (( 0.0, -2.0,  2.0, -2.0,  2.0), (     32481.0,          0.0,          0.0,     -13870.0,          0.0,          0.0)),
-    ((-2.0,  0.0,  0.0,  2.0,  0.0), (    -47722.0,          0.0,        -18.0,        477.0,          0.0,        -25.0)),
-    (( 2.0,  0.0,  2.0,  0.0,  2.0), (    -31046.0,         -1.0,        131.0,      13238.0,        -11.0,         59.0)),
-    (( 1.0,  0.0,  2.0, -2.0,  2.0), (     28593.0,          0.0,         -1.0,     -12338.0,         10.0,         -3.0)),
-    ((-1.0,  0.0,  2.0,  0.0,  1.0), (     20441.0,         21.0,         10.0,     -10758.0,          0.0,         -3.0)),
-    (( 2.0,  0.0,  0.0,  0.0,  0.0), (     29243.0,          0.0,        -74.0,       -609.0,          0.0,         13.0)),
-    (( 0.0,  0.0,  2.0,  0.0,  0.0), (     25887.0,          0.0,        -66.0,       -550.0,          0.0,         11.0)),
-    (( 0.0,  1.0,  0.0,  0.0,  1.0), (    -14053.0,        -25.0,         79.0,       8551.0,         -2.0,        -45.0)),
-    ((-1.0,  0.0,  0.0,  2.0,  1.0), (     15164.0,         10.0,         11.0,      -8001.0,          0.0,         -1.0)),
-    (( 0.0,  2.0,  2.0, -2.0,  2.0), (    -15794.0,         72.0,        -16.0,       6850.0,        -42.0,         -5.0)),
-    (( 0.0,  0.0, -2.0,  2.0,  0.0), (     21783.0,          0.0,         13.0,       -167.0,          0.0,         13.0)),
-    (( 1.0,  0.0,  0.0, -2.0,  1.0), (    -12873.0,        -10.0,        -37.0,       6953.0,          0.0,        -14.0)),
-    (( 0.0, -1.0,  0.0,  0.0,  1.0), (    -12654.0,         11.0,         63.0,       6415.0,          0.0,         26.0)),
-    ((-1.0,  0.0,  2.0,  2.0,  1.0), (    -10204.0,          0.0,         25.0,       5222.0,          0.0,         15.0)),
-    (( 0.0,  2.0,  0.0,  0.0,  0.0), (     16707.0,        -85.0,        -10.0,        168.0,         -1.0,         10.0)),
-    (( 1.0,  0.0,  2.0,  2.0,  2.0), (     -7691.0,          0.0,         44.0,       3268.0,          0.0,         19.0)),
-    ((-2.0,  0.0,  2.0,  0.0,  0.0), (    -11024.0,          0.0,        -14.0,        104.0,          0.0,          2.0)),
-    (( 0.0,  1.0,  2.0,  0.0,  2.0), (      7566.0,        -21.0,        -11.0,      -3250.0,          0.0,         -5.0)),
-    (( 0.0,  0.0,  2.0,  2.0,  1.0), (     -6637.0,        -11.0,         25.0,       3353.0,          0.0,         14.0)),
-    (( 0.0, -1.0,  2.0,  0.0,  2.0), (     -7141.0,         21.0,          8.0,       3070.0,          0.0,          4.0)),
-    (( 0.0,  0.0,  0.0,  2.0,  1.0), (     -6302.0,        -11.0,          2.0,       3272.0,          0.0,          4.0)),
-    (( 1.0,  0.0,  2.0, -2.0,  1.0), (      5800.0,         10.0,          2.0,      -3045.0,          0.0,         -1.0)),
-    (( 2.0,  0.0,  2.0, -2.0,  2.0), (      6443.0,          0.0,         -7.0,      -2768.0,          0.0,         -4.0)),
-    ((-2.0,  0.0,  0.0,  2.0,  1.0), (     -5774.0,        -11.0,        -15.0,       3041.0,          0.0,         -5.0)),
-    (( 2.0,  0.0,  2.0,  0.0,  1.0), (     -5350.0,          0.0,         21.0,       2695.0,          0.0,         12.0)),
-    (( 0.0, -1.0,  2.0, -2.0,  1.0), (     -4752.0,        -11.0,         -3.0,       2719.0,          0.0,         -3.0)),
-    (( 0.0,  0.0,  0.0, -2.0,  1.0), (     -4940.0,        -11.0,        -21.0,       2720.0,          0.0,         -9.0)),
-    ((-1.0, -1.0,  0.0,  2.0,  0.0), (      7350.0,          0.0,         -8.0,        -51.0,          0.0,          4.0)),
-    (( 2.0,  0.0,  0.0, -2.0,  1.0), (      4065.0,          0.0,          6.0,      -2206.0,          0.0,          1.0)),
-    (( 1.0,  0.0,  0.0,  2.0,  0.0), (      6579.0,          0.0,        -24.0,       -199.0,          0.0,          2.0)),
-    (( 0.0,  1.0,  2.0, -2.0,  1.0), (      3579.0,          0.0,          5.0,      -1900.0,          0.0,          1.0)),
-    (( 1.0, -1.0,  0.0,  0.0,  0.0), (      4725.0,          0.0,         -6.0,        -41.0,          0.0,          3.0)),
-    ((-2.0,  0.0,  2.0,  0.0,  2.0), (     -3075.0,          0.0,         -2.0,       1313.0,          0.0,         -1.0)),
-    (( 3.0,  0.0,  2.0,  0.0,  2.0), (     -2904.0,          0.0,         15.0,       1233.0,          0.0,          7.0)),
-    (( 0.0, -1.0,  0.0,  2.0,  0.0), (      4348.0,          0.0,        -10.0,        -81.0,          0.0,          2.0)),
-    (( 1.0, -1.0,  2.0,  0.0,  2.0), (     -2878.0,          0.0,          8.0,       1232.0,          0.0,          4.0)),
-    (( 0.0,  0.0,  0.0,  1.0,  0.0), (     -4230.0,          0.0,          5.0,        -20.0,          0.0,         -2.0)),
-    ((-1.0, -1.0,  2.0,  2.0,  2.0), (     -2819.0,          0.0,          7.0,       1207.0,          0.0,          3.0)),
-    ((-1.0,  0.0,  2.0,  0.0,  0.0), (     -4056.0,          0.0,          5.0,         40.0,          0.0,         -2.0)),
-    (( 0.0, -1.0,  2.0,  2.0,  2.0), (     -2647.0,          0.0,         11.0,       1129.0,          0.0,          5.0)),
-    ((-2.0,  0.0,  0.0,  0.0,  1.0), (     -2294.0,          0.0,        -10.0,       1266.0,          0.0,         -4.0)),
-    (( 1.0,  1.0,  2.0,  0.0,  2.0), (      2481.0,          0.0,         -7.0,      -1062.0,          0.0,         -3.0)),
-    (( 2.0,  0.0,  0.0,  0.0,  1.0), (      2179.0,          0.0,         -2.0,      -1129.0,          0.0,         -2.0)),
-    ((-1.0,  1.0,  0.0,  1.0,  0.0), (      3276.0,          0.0,          1.0,         -9.0,          0.0,          0.0)),
-    (( 1.0,  1.0,  0.0,  0.0,  0.0), (     -3389.0,          0.0,          5.0,         35.0,          0.0,         -2.0)),
-    (( 1.0,  0.0,  2.0,  0.0,  0.0), (      3339.0,          0.0,        -13.0,       -107.0,          0.0,          1.0)),
-    ((-1.0,  0.0,  2.0, -2.0,  1.0), (     -1987.0,          0.0,         -6.0,       1073.0,          0.0,         -2.0)),
-    (( 1.0,  0.0,  0.0,  0.0,  2.0), (     -1981.0,          0.0,          0.0,        854.0,          0.0,          0.0)),
-    ((-1.0,  0.0,  0.0,  1.0,  0.0), (      4026.0,          0.0,       -353.0,       -553.0,          0.0,       -139.0)),
-    (( 0.0,  0.0,  2.0,  1.0,  2.0), (      1660.0,          0.0,         -5.0,       -710.0,          0.0,         -2.0)),
-    ((-1.0,  0.0,  2.0,  4.0,  2.0), (     -1521.0,          0.0,          9.0,        647.0,          0.0,          4.0)),
-    ((-1.0,  1.0,  0.0,  1.0,  1.0), (      1314.0,          0.0,          0.0,       -700.0,          0.0,          0.0)),
-    (( 0.0, -2.0,  2.0, -2.0,  1.0), (     -1283.0,          0.0,          0.0,        672.0,          0.0,          0.0)),
-    (( 1.0,  0.0,  2.0,  2.0,  1.0), (     -1331.0,          0.0,          8.0,        663.0,          0.0,          4.0)),
-    ((-2.0,  0.0,  2.0,  2.0,  2.0), (      1383.0,          0.0,         -2.0,       -594.0,          0.0,         -2.0)),
-    ((-1.0,  0.0,  0.0,  0.0,  2.0), (      1405.0,          0.0,          4.0,       -610.0,          0.0,          2.0)),
-    (( 1.0,  1.0,  2.0, -2.0,  2.0), (      1290.0,          0.0,          0.0,       -556.0,          0.0,          0.0)),
-)
-
 class _iau2000b:
     def __init__(self, time):
         t = time.tt / 36525.0
@@ -399,12 +319,391 @@ class _iau2000b:
         om  = math.fmod((450160.398036 - t*6962890.5431),    _ASEC360) * _ASEC2RAD
         dp = 0
         de = 0
-        for (n0, n1, n2, n3, n4), (c0, c1, c2, c3, c4, c5) in _iaudata:
-            arg = math.fmod((n0*el + n1*elp + n2*f + n3*d + n4*om), _PI2)
-            sarg = math.sin(arg)
-            carg = math.cos(arg)
-            dp += (c0 + c1*t)*sarg + c2*carg
-            de += (c3 + c4*t)*carg + c5*sarg
+        arg = math.fmod((0.0*el + 0.0*elp + 0.0*f + 0.0*d + 1.0*om), _PI2)
+        sarg = math.sin(arg)
+        carg = math.cos(arg)
+        dp += (-172064161.0 + -174666.0*t)*sarg + 33386.0*carg
+        de += (92052331.0 + 9086.0*t)*carg + 15377.0*sarg
+        arg = math.fmod((0.0*el + 0.0*elp + 2.0*f + -2.0*d + 2.0*om), _PI2)
+        sarg = math.sin(arg)
+        carg = math.cos(arg)
+        dp += (-13170906.0 + -1675.0*t)*sarg + -13696.0*carg
+        de += (5730336.0 + -3015.0*t)*carg + -4587.0*sarg
+        arg = math.fmod((0.0*el + 0.0*elp + 2.0*f + 0.0*d + 2.0*om), _PI2)
+        sarg = math.sin(arg)
+        carg = math.cos(arg)
+        dp += (-2276413.0 + -234.0*t)*sarg + 2796.0*carg
+        de += (978459.0 + -485.0*t)*carg + 1374.0*sarg
+        arg = math.fmod((0.0*el + 0.0*elp + 0.0*f + 0.0*d + 2.0*om), _PI2)
+        sarg = math.sin(arg)
+        carg = math.cos(arg)
+        dp += (2074554.0 + 207.0*t)*sarg + -698.0*carg
+        de += (-897492.0 + 470.0*t)*carg + -291.0*sarg
+        arg = math.fmod((0.0*el + 1.0*elp + 0.0*f + 0.0*d + 0.0*om), _PI2)
+        sarg = math.sin(arg)
+        carg = math.cos(arg)
+        dp += (1475877.0 + -3633.0*t)*sarg + 11817.0*carg
+        de += (73871.0 + -184.0*t)*carg + -1924.0*sarg
+        arg = math.fmod((0.0*el + 1.0*elp + 2.0*f + -2.0*d + 2.0*om), _PI2)
+        sarg = math.sin(arg)
+        carg = math.cos(arg)
+        dp += (-516821.0 + 1226.0*t)*sarg + -524.0*carg
+        de += (224386.0 + -677.0*t)*carg + -174.0*sarg
+        arg = math.fmod((1.0*el + 0.0*elp + 0.0*f + 0.0*d + 0.0*om), _PI2)
+        sarg = math.sin(arg)
+        carg = math.cos(arg)
+        dp += (711159.0 + 73.0*t)*sarg + -872.0*carg
+        de += (-6750.0 + 0.0*t)*carg + 358.0*sarg
+        arg = math.fmod((0.0*el + 0.0*elp + 2.0*f + 0.0*d + 1.0*om), _PI2)
+        sarg = math.sin(arg)
+        carg = math.cos(arg)
+        dp += (-387298.0 + -367.0*t)*sarg + 380.0*carg
+        de += (200728.0 + 18.0*t)*carg + 318.0*sarg
+        arg = math.fmod((1.0*el + 0.0*elp + 2.0*f + 0.0*d + 2.0*om), _PI2)
+        sarg = math.sin(arg)
+        carg = math.cos(arg)
+        dp += (-301461.0 + -36.0*t)*sarg + 816.0*carg
+        de += (129025.0 + -63.0*t)*carg + 367.0*sarg
+        arg = math.fmod((0.0*el + -1.0*elp + 2.0*f + -2.0*d + 2.0*om), _PI2)
+        sarg = math.sin(arg)
+        carg = math.cos(arg)
+        dp += (215829.0 + -494.0*t)*sarg + 111.0*carg
+        de += (-95929.0 + 299.0*t)*carg + 132.0*sarg
+        arg = math.fmod((0.0*el + 0.0*elp + 2.0*f + -2.0*d + 1.0*om), _PI2)
+        sarg = math.sin(arg)
+        carg = math.cos(arg)
+        dp += (128227.0 + 137.0*t)*sarg + 181.0*carg
+        de += (-68982.0 + -9.0*t)*carg + 39.0*sarg
+        arg = math.fmod((-1.0*el + 0.0*elp + 2.0*f + 0.0*d + 2.0*om), _PI2)
+        sarg = math.sin(arg)
+        carg = math.cos(arg)
+        dp += (123457.0 + 11.0*t)*sarg + 19.0*carg
+        de += (-53311.0 + 32.0*t)*carg + -4.0*sarg
+        arg = math.fmod((-1.0*el + 0.0*elp + 0.0*f + 2.0*d + 0.0*om), _PI2)
+        sarg = math.sin(arg)
+        carg = math.cos(arg)
+        dp += (156994.0 + 10.0*t)*sarg + -168.0*carg
+        de += (-1235.0 + 0.0*t)*carg + 82.0*sarg
+        arg = math.fmod((1.0*el + 0.0*elp + 0.0*f + 0.0*d + 1.0*om), _PI2)
+        sarg = math.sin(arg)
+        carg = math.cos(arg)
+        dp += (63110.0 + 63.0*t)*sarg + 27.0*carg
+        de += (-33228.0 + 0.0*t)*carg + -9.0*sarg
+        arg = math.fmod((-1.0*el + 0.0*elp + 0.0*f + 0.0*d + 1.0*om), _PI2)
+        sarg = math.sin(arg)
+        carg = math.cos(arg)
+        dp += (-57976.0 + -63.0*t)*sarg + -189.0*carg
+        de += (31429.0 + 0.0*t)*carg + -75.0*sarg
+        arg = math.fmod((-1.0*el + 0.0*elp + 2.0*f + 2.0*d + 2.0*om), _PI2)
+        sarg = math.sin(arg)
+        carg = math.cos(arg)
+        dp += (-59641.0 + -11.0*t)*sarg + 149.0*carg
+        de += (25543.0 + -11.0*t)*carg + 66.0*sarg
+        arg = math.fmod((1.0*el + 0.0*elp + 2.0*f + 0.0*d + 1.0*om), _PI2)
+        sarg = math.sin(arg)
+        carg = math.cos(arg)
+        dp += (-51613.0 + -42.0*t)*sarg + 129.0*carg
+        de += (26366.0 + 0.0*t)*carg + 78.0*sarg
+        arg = math.fmod((-2.0*el + 0.0*elp + 2.0*f + 0.0*d + 1.0*om), _PI2)
+        sarg = math.sin(arg)
+        carg = math.cos(arg)
+        dp += (45893.0 + 50.0*t)*sarg + 31.0*carg
+        de += (-24236.0 + -10.0*t)*carg + 20.0*sarg
+        arg = math.fmod((0.0*el + 0.0*elp + 0.0*f + 2.0*d + 0.0*om), _PI2)
+        sarg = math.sin(arg)
+        carg = math.cos(arg)
+        dp += (63384.0 + 11.0*t)*sarg + -150.0*carg
+        de += (-1220.0 + 0.0*t)*carg + 29.0*sarg
+        arg = math.fmod((0.0*el + 0.0*elp + 2.0*f + 2.0*d + 2.0*om), _PI2)
+        sarg = math.sin(arg)
+        carg = math.cos(arg)
+        dp += (-38571.0 + -1.0*t)*sarg + 158.0*carg
+        de += (16452.0 + -11.0*t)*carg + 68.0*sarg
+        arg = math.fmod((0.0*el + -2.0*elp + 2.0*f + -2.0*d + 2.0*om), _PI2)
+        sarg = math.sin(arg)
+        carg = math.cos(arg)
+        dp += (32481.0 + 0.0*t)*sarg + 0.0*carg
+        de += (-13870.0 + 0.0*t)*carg + 0.0*sarg
+        arg = math.fmod((-2.0*el + 0.0*elp + 0.0*f + 2.0*d + 0.0*om), _PI2)
+        sarg = math.sin(arg)
+        carg = math.cos(arg)
+        dp += (-47722.0 + 0.0*t)*sarg + -18.0*carg
+        de += (477.0 + 0.0*t)*carg + -25.0*sarg
+        arg = math.fmod((2.0*el + 0.0*elp + 2.0*f + 0.0*d + 2.0*om), _PI2)
+        sarg = math.sin(arg)
+        carg = math.cos(arg)
+        dp += (-31046.0 + -1.0*t)*sarg + 131.0*carg
+        de += (13238.0 + -11.0*t)*carg + 59.0*sarg
+        arg = math.fmod((1.0*el + 0.0*elp + 2.0*f + -2.0*d + 2.0*om), _PI2)
+        sarg = math.sin(arg)
+        carg = math.cos(arg)
+        dp += (28593.0 + 0.0*t)*sarg + -1.0*carg
+        de += (-12338.0 + 10.0*t)*carg + -3.0*sarg
+        arg = math.fmod((-1.0*el + 0.0*elp + 2.0*f + 0.0*d + 1.0*om), _PI2)
+        sarg = math.sin(arg)
+        carg = math.cos(arg)
+        dp += (20441.0 + 21.0*t)*sarg + 10.0*carg
+        de += (-10758.0 + 0.0*t)*carg + -3.0*sarg
+        arg = math.fmod((2.0*el + 0.0*elp + 0.0*f + 0.0*d + 0.0*om), _PI2)
+        sarg = math.sin(arg)
+        carg = math.cos(arg)
+        dp += (29243.0 + 0.0*t)*sarg + -74.0*carg
+        de += (-609.0 + 0.0*t)*carg + 13.0*sarg
+        arg = math.fmod((0.0*el + 0.0*elp + 2.0*f + 0.0*d + 0.0*om), _PI2)
+        sarg = math.sin(arg)
+        carg = math.cos(arg)
+        dp += (25887.0 + 0.0*t)*sarg + -66.0*carg
+        de += (-550.0 + 0.0*t)*carg + 11.0*sarg
+        arg = math.fmod((0.0*el + 1.0*elp + 0.0*f + 0.0*d + 1.0*om), _PI2)
+        sarg = math.sin(arg)
+        carg = math.cos(arg)
+        dp += (-14053.0 + -25.0*t)*sarg + 79.0*carg
+        de += (8551.0 + -2.0*t)*carg + -45.0*sarg
+        arg = math.fmod((-1.0*el + 0.0*elp + 0.0*f + 2.0*d + 1.0*om), _PI2)
+        sarg = math.sin(arg)
+        carg = math.cos(arg)
+        dp += (15164.0 + 10.0*t)*sarg + 11.0*carg
+        de += (-8001.0 + 0.0*t)*carg + -1.0*sarg
+        arg = math.fmod((0.0*el + 2.0*elp + 2.0*f + -2.0*d + 2.0*om), _PI2)
+        sarg = math.sin(arg)
+        carg = math.cos(arg)
+        dp += (-15794.0 + 72.0*t)*sarg + -16.0*carg
+        de += (6850.0 + -42.0*t)*carg + -5.0*sarg
+        arg = math.fmod((0.0*el + 0.0*elp + -2.0*f + 2.0*d + 0.0*om), _PI2)
+        sarg = math.sin(arg)
+        carg = math.cos(arg)
+        dp += (21783.0 + 0.0*t)*sarg + 13.0*carg
+        de += (-167.0 + 0.0*t)*carg + 13.0*sarg
+        arg = math.fmod((1.0*el + 0.0*elp + 0.0*f + -2.0*d + 1.0*om), _PI2)
+        sarg = math.sin(arg)
+        carg = math.cos(arg)
+        dp += (-12873.0 + -10.0*t)*sarg + -37.0*carg
+        de += (6953.0 + 0.0*t)*carg + -14.0*sarg
+        arg = math.fmod((0.0*el + -1.0*elp + 0.0*f + 0.0*d + 1.0*om), _PI2)
+        sarg = math.sin(arg)
+        carg = math.cos(arg)
+        dp += (-12654.0 + 11.0*t)*sarg + 63.0*carg
+        de += (6415.0 + 0.0*t)*carg + 26.0*sarg
+        arg = math.fmod((-1.0*el + 0.0*elp + 2.0*f + 2.0*d + 1.0*om), _PI2)
+        sarg = math.sin(arg)
+        carg = math.cos(arg)
+        dp += (-10204.0 + 0.0*t)*sarg + 25.0*carg
+        de += (5222.0 + 0.0*t)*carg + 15.0*sarg
+        arg = math.fmod((0.0*el + 2.0*elp + 0.0*f + 0.0*d + 0.0*om), _PI2)
+        sarg = math.sin(arg)
+        carg = math.cos(arg)
+        dp += (16707.0 + -85.0*t)*sarg + -10.0*carg
+        de += (168.0 + -1.0*t)*carg + 10.0*sarg
+        arg = math.fmod((1.0*el + 0.0*elp + 2.0*f + 2.0*d + 2.0*om), _PI2)
+        sarg = math.sin(arg)
+        carg = math.cos(arg)
+        dp += (-7691.0 + 0.0*t)*sarg + 44.0*carg
+        de += (3268.0 + 0.0*t)*carg + 19.0*sarg
+        arg = math.fmod((-2.0*el + 0.0*elp + 2.0*f + 0.0*d + 0.0*om), _PI2)
+        sarg = math.sin(arg)
+        carg = math.cos(arg)
+        dp += (-11024.0 + 0.0*t)*sarg + -14.0*carg
+        de += (104.0 + 0.0*t)*carg + 2.0*sarg
+        arg = math.fmod((0.0*el + 1.0*elp + 2.0*f + 0.0*d + 2.0*om), _PI2)
+        sarg = math.sin(arg)
+        carg = math.cos(arg)
+        dp += (7566.0 + -21.0*t)*sarg + -11.0*carg
+        de += (-3250.0 + 0.0*t)*carg + -5.0*sarg
+        arg = math.fmod((0.0*el + 0.0*elp + 2.0*f + 2.0*d + 1.0*om), _PI2)
+        sarg = math.sin(arg)
+        carg = math.cos(arg)
+        dp += (-6637.0 + -11.0*t)*sarg + 25.0*carg
+        de += (3353.0 + 0.0*t)*carg + 14.0*sarg
+        arg = math.fmod((0.0*el + -1.0*elp + 2.0*f + 0.0*d + 2.0*om), _PI2)
+        sarg = math.sin(arg)
+        carg = math.cos(arg)
+        dp += (-7141.0 + 21.0*t)*sarg + 8.0*carg
+        de += (3070.0 + 0.0*t)*carg + 4.0*sarg
+        arg = math.fmod((0.0*el + 0.0*elp + 0.0*f + 2.0*d + 1.0*om), _PI2)
+        sarg = math.sin(arg)
+        carg = math.cos(arg)
+        dp += (-6302.0 + -11.0*t)*sarg + 2.0*carg
+        de += (3272.0 + 0.0*t)*carg + 4.0*sarg
+        arg = math.fmod((1.0*el + 0.0*elp + 2.0*f + -2.0*d + 1.0*om), _PI2)
+        sarg = math.sin(arg)
+        carg = math.cos(arg)
+        dp += (5800.0 + 10.0*t)*sarg + 2.0*carg
+        de += (-3045.0 + 0.0*t)*carg + -1.0*sarg
+        arg = math.fmod((2.0*el + 0.0*elp + 2.0*f + -2.0*d + 2.0*om), _PI2)
+        sarg = math.sin(arg)
+        carg = math.cos(arg)
+        dp += (6443.0 + 0.0*t)*sarg + -7.0*carg
+        de += (-2768.0 + 0.0*t)*carg + -4.0*sarg
+        arg = math.fmod((-2.0*el + 0.0*elp + 0.0*f + 2.0*d + 1.0*om), _PI2)
+        sarg = math.sin(arg)
+        carg = math.cos(arg)
+        dp += (-5774.0 + -11.0*t)*sarg + -15.0*carg
+        de += (3041.0 + 0.0*t)*carg + -5.0*sarg
+        arg = math.fmod((2.0*el + 0.0*elp + 2.0*f + 0.0*d + 1.0*om), _PI2)
+        sarg = math.sin(arg)
+        carg = math.cos(arg)
+        dp += (-5350.0 + 0.0*t)*sarg + 21.0*carg
+        de += (2695.0 + 0.0*t)*carg + 12.0*sarg
+        arg = math.fmod((0.0*el + -1.0*elp + 2.0*f + -2.0*d + 1.0*om), _PI2)
+        sarg = math.sin(arg)
+        carg = math.cos(arg)
+        dp += (-4752.0 + -11.0*t)*sarg + -3.0*carg
+        de += (2719.0 + 0.0*t)*carg + -3.0*sarg
+        arg = math.fmod((0.0*el + 0.0*elp + 0.0*f + -2.0*d + 1.0*om), _PI2)
+        sarg = math.sin(arg)
+        carg = math.cos(arg)
+        dp += (-4940.0 + -11.0*t)*sarg + -21.0*carg
+        de += (2720.0 + 0.0*t)*carg + -9.0*sarg
+        arg = math.fmod((-1.0*el + -1.0*elp + 0.0*f + 2.0*d + 0.0*om), _PI2)
+        sarg = math.sin(arg)
+        carg = math.cos(arg)
+        dp += (7350.0 + 0.0*t)*sarg + -8.0*carg
+        de += (-51.0 + 0.0*t)*carg + 4.0*sarg
+        arg = math.fmod((2.0*el + 0.0*elp + 0.0*f + -2.0*d + 1.0*om), _PI2)
+        sarg = math.sin(arg)
+        carg = math.cos(arg)
+        dp += (4065.0 + 0.0*t)*sarg + 6.0*carg
+        de += (-2206.0 + 0.0*t)*carg + 1.0*sarg
+        arg = math.fmod((1.0*el + 0.0*elp + 0.0*f + 2.0*d + 0.0*om), _PI2)
+        sarg = math.sin(arg)
+        carg = math.cos(arg)
+        dp += (6579.0 + 0.0*t)*sarg + -24.0*carg
+        de += (-199.0 + 0.0*t)*carg + 2.0*sarg
+        arg = math.fmod((0.0*el + 1.0*elp + 2.0*f + -2.0*d + 1.0*om), _PI2)
+        sarg = math.sin(arg)
+        carg = math.cos(arg)
+        dp += (3579.0 + 0.0*t)*sarg + 5.0*carg
+        de += (-1900.0 + 0.0*t)*carg + 1.0*sarg
+        arg = math.fmod((1.0*el + -1.0*elp + 0.0*f + 0.0*d + 0.0*om), _PI2)
+        sarg = math.sin(arg)
+        carg = math.cos(arg)
+        dp += (4725.0 + 0.0*t)*sarg + -6.0*carg
+        de += (-41.0 + 0.0*t)*carg + 3.0*sarg
+        arg = math.fmod((-2.0*el + 0.0*elp + 2.0*f + 0.0*d + 2.0*om), _PI2)
+        sarg = math.sin(arg)
+        carg = math.cos(arg)
+        dp += (-3075.0 + 0.0*t)*sarg + -2.0*carg
+        de += (1313.0 + 0.0*t)*carg + -1.0*sarg
+        arg = math.fmod((3.0*el + 0.0*elp + 2.0*f + 0.0*d + 2.0*om), _PI2)
+        sarg = math.sin(arg)
+        carg = math.cos(arg)
+        dp += (-2904.0 + 0.0*t)*sarg + 15.0*carg
+        de += (1233.0 + 0.0*t)*carg + 7.0*sarg
+        arg = math.fmod((0.0*el + -1.0*elp + 0.0*f + 2.0*d + 0.0*om), _PI2)
+        sarg = math.sin(arg)
+        carg = math.cos(arg)
+        dp += (4348.0 + 0.0*t)*sarg + -10.0*carg
+        de += (-81.0 + 0.0*t)*carg + 2.0*sarg
+        arg = math.fmod((1.0*el + -1.0*elp + 2.0*f + 0.0*d + 2.0*om), _PI2)
+        sarg = math.sin(arg)
+        carg = math.cos(arg)
+        dp += (-2878.0 + 0.0*t)*sarg + 8.0*carg
+        de += (1232.0 + 0.0*t)*carg + 4.0*sarg
+        arg = math.fmod((0.0*el + 0.0*elp + 0.0*f + 1.0*d + 0.0*om), _PI2)
+        sarg = math.sin(arg)
+        carg = math.cos(arg)
+        dp += (-4230.0 + 0.0*t)*sarg + 5.0*carg
+        de += (-20.0 + 0.0*t)*carg + -2.0*sarg
+        arg = math.fmod((-1.0*el + -1.0*elp + 2.0*f + 2.0*d + 2.0*om), _PI2)
+        sarg = math.sin(arg)
+        carg = math.cos(arg)
+        dp += (-2819.0 + 0.0*t)*sarg + 7.0*carg
+        de += (1207.0 + 0.0*t)*carg + 3.0*sarg
+        arg = math.fmod((-1.0*el + 0.0*elp + 2.0*f + 0.0*d + 0.0*om), _PI2)
+        sarg = math.sin(arg)
+        carg = math.cos(arg)
+        dp += (-4056.0 + 0.0*t)*sarg + 5.0*carg
+        de += (40.0 + 0.0*t)*carg + -2.0*sarg
+        arg = math.fmod((0.0*el + -1.0*elp + 2.0*f + 2.0*d + 2.0*om), _PI2)
+        sarg = math.sin(arg)
+        carg = math.cos(arg)
+        dp += (-2647.0 + 0.0*t)*sarg + 11.0*carg
+        de += (1129.0 + 0.0*t)*carg + 5.0*sarg
+        arg = math.fmod((-2.0*el + 0.0*elp + 0.0*f + 0.0*d + 1.0*om), _PI2)
+        sarg = math.sin(arg)
+        carg = math.cos(arg)
+        dp += (-2294.0 + 0.0*t)*sarg + -10.0*carg
+        de += (1266.0 + 0.0*t)*carg + -4.0*sarg
+        arg = math.fmod((1.0*el + 1.0*elp + 2.0*f + 0.0*d + 2.0*om), _PI2)
+        sarg = math.sin(arg)
+        carg = math.cos(arg)
+        dp += (2481.0 + 0.0*t)*sarg + -7.0*carg
+        de += (-1062.0 + 0.0*t)*carg + -3.0*sarg
+        arg = math.fmod((2.0*el + 0.0*elp + 0.0*f + 0.0*d + 1.0*om), _PI2)
+        sarg = math.sin(arg)
+        carg = math.cos(arg)
+        dp += (2179.0 + 0.0*t)*sarg + -2.0*carg
+        de += (-1129.0 + 0.0*t)*carg + -2.0*sarg
+        arg = math.fmod((-1.0*el + 1.0*elp + 0.0*f + 1.0*d + 0.0*om), _PI2)
+        sarg = math.sin(arg)
+        carg = math.cos(arg)
+        dp += (3276.0 + 0.0*t)*sarg + 1.0*carg
+        de += (-9.0 + 0.0*t)*carg + 0.0*sarg
+        arg = math.fmod((1.0*el + 1.0*elp + 0.0*f + 0.0*d + 0.0*om), _PI2)
+        sarg = math.sin(arg)
+        carg = math.cos(arg)
+        dp += (-3389.0 + 0.0*t)*sarg + 5.0*carg
+        de += (35.0 + 0.0*t)*carg + -2.0*sarg
+        arg = math.fmod((1.0*el + 0.0*elp + 2.0*f + 0.0*d + 0.0*om), _PI2)
+        sarg = math.sin(arg)
+        carg = math.cos(arg)
+        dp += (3339.0 + 0.0*t)*sarg + -13.0*carg
+        de += (-107.0 + 0.0*t)*carg + 1.0*sarg
+        arg = math.fmod((-1.0*el + 0.0*elp + 2.0*f + -2.0*d + 1.0*om), _PI2)
+        sarg = math.sin(arg)
+        carg = math.cos(arg)
+        dp += (-1987.0 + 0.0*t)*sarg + -6.0*carg
+        de += (1073.0 + 0.0*t)*carg + -2.0*sarg
+        arg = math.fmod((1.0*el + 0.0*elp + 0.0*f + 0.0*d + 2.0*om), _PI2)
+        sarg = math.sin(arg)
+        carg = math.cos(arg)
+        dp += (-1981.0 + 0.0*t)*sarg + 0.0*carg
+        de += (854.0 + 0.0*t)*carg + 0.0*sarg
+        arg = math.fmod((-1.0*el + 0.0*elp + 0.0*f + 1.0*d + 0.0*om), _PI2)
+        sarg = math.sin(arg)
+        carg = math.cos(arg)
+        dp += (4026.0 + 0.0*t)*sarg + -353.0*carg
+        de += (-553.0 + 0.0*t)*carg + -139.0*sarg
+        arg = math.fmod((0.0*el + 0.0*elp + 2.0*f + 1.0*d + 2.0*om), _PI2)
+        sarg = math.sin(arg)
+        carg = math.cos(arg)
+        dp += (1660.0 + 0.0*t)*sarg + -5.0*carg
+        de += (-710.0 + 0.0*t)*carg + -2.0*sarg
+        arg = math.fmod((-1.0*el + 0.0*elp + 2.0*f + 4.0*d + 2.0*om), _PI2)
+        sarg = math.sin(arg)
+        carg = math.cos(arg)
+        dp += (-1521.0 + 0.0*t)*sarg + 9.0*carg
+        de += (647.0 + 0.0*t)*carg + 4.0*sarg
+        arg = math.fmod((-1.0*el + 1.0*elp + 0.0*f + 1.0*d + 1.0*om), _PI2)
+        sarg = math.sin(arg)
+        carg = math.cos(arg)
+        dp += (1314.0 + 0.0*t)*sarg + 0.0*carg
+        de += (-700.0 + 0.0*t)*carg + 0.0*sarg
+        arg = math.fmod((0.0*el + -2.0*elp + 2.0*f + -2.0*d + 1.0*om), _PI2)
+        sarg = math.sin(arg)
+        carg = math.cos(arg)
+        dp += (-1283.0 + 0.0*t)*sarg + 0.0*carg
+        de += (672.0 + 0.0*t)*carg + 0.0*sarg
+        arg = math.fmod((1.0*el + 0.0*elp + 2.0*f + 2.0*d + 1.0*om), _PI2)
+        sarg = math.sin(arg)
+        carg = math.cos(arg)
+        dp += (-1331.0 + 0.0*t)*sarg + 8.0*carg
+        de += (663.0 + 0.0*t)*carg + 4.0*sarg
+        arg = math.fmod((-2.0*el + 0.0*elp + 2.0*f + 2.0*d + 2.0*om), _PI2)
+        sarg = math.sin(arg)
+        carg = math.cos(arg)
+        dp += (1383.0 + 0.0*t)*sarg + -2.0*carg
+        de += (-594.0 + 0.0*t)*carg + -2.0*sarg
+        arg = math.fmod((-1.0*el + 0.0*elp + 0.0*f + 0.0*d + 2.0*om), _PI2)
+        sarg = math.sin(arg)
+        carg = math.cos(arg)
+        dp += (1405.0 + 0.0*t)*sarg + 4.0*carg
+        de += (-610.0 + 0.0*t)*carg + 2.0*sarg
+        arg = math.fmod((1.0*el + 1.0*elp + 2.0*f + -2.0*d + 2.0*om), _PI2)
+        sarg = math.sin(arg)
+        carg = math.cos(arg)
+        dp += (1290.0 + 0.0*t)*sarg + 0.0*carg
+        de += (-556.0 + 0.0*t)*carg + 0.0*sarg
         self.dpsi = -0.000135 + (dp * 1.0e-7)
         self.deps = +0.000388 + (de * 1.0e-7)
 
