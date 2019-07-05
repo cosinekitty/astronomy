@@ -87,11 +87,23 @@ def OptimizeDotProduct(nlist, vlist):
     first = True
     for n, v in zip(nlist, vlist):
         if n != 0.0:
-            prod = '({:0.1f}*{})'.format(n, v)
+            if n < 0.0:
+                n *= -1.0
+                op = ' - '
+            else:
+                op = ' + '
+
+            if n == 1.0:                
+                prod = v
+            else:
+                prod = '({:0.1f}*{})'.format(n, v)
+
             if first:
+                if op == ' - ':
+                    text += '-'
                 text += prod
             else:
-                text += ' + ' + prod
+                text += op + prod
             first = False
     return text
 
