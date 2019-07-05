@@ -109,6 +109,22 @@ def OptimizeLinear(a, b):
         return '{:0.1f}*t'.format(b)
     return '{:0.1f} + {:0.1f}*t'.format(a, b)
 
+def OptimizeConst(c, v):
+    if c == 0.0:
+        return ''
+    if c < 0.0:
+        op = ' - '
+        c *= -1.0
+    else:
+        op = ' + '
+
+    if c == 1.0:
+        term = v
+    else:
+        term = '{:0.1f}'.format(c) + '*' + v
+
+    return op + term
+
 def UnrollIauLoop():
     text = ''
     nv = ['el', 'elp', 'f', 'd', 'om']
@@ -117,8 +133,9 @@ def UnrollIauLoop():
         text += '        arg = math.fmod({}, _PI2)\n'.format(dotprod)
         text += '        sarg = math.sin(arg)\n'
         text += '        carg = math.cos(arg)\n'
-        text += '        dp += ({})*sarg + {:0.1f}*carg\n'.format(OptimizeLinear(c0, c1), c2)
-        text += '        de += ({})*carg + {:0.1f}*sarg\n'.format(OptimizeLinear(c3, c4), c5)
+        text += '        dp += ({})*sarg{}\n'.format(OptimizeLinear(c0, c1), OptimizeConst(c2, 'carg'))
+        text += '        de += ({})*carg{}\n'.format(OptimizeLinear(c3, c4), OptimizeConst(c5, 'sarg'))
+        text += '\n'
 
     return text
 
