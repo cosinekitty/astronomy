@@ -82,6 +82,18 @@ _iaudata = (
     (( 1.0,  1.0,  2.0, -2.0,  2.0), (      1290.0,          0.0,          0.0,       -556.0,          0.0,          0.0)),
 )
 
+def OptimizeDotProduct(nlist, vlist):
+    text = ''
+    first = True
+    for n, v in zip(nlist, vlist):
+        if n != 0.0:
+            prod = '({:0.1f}*{})'.format(n, v)
+            if first:
+                text += prod
+            else:
+                text += ' + ' + prod
+            first = False
+    return text
 
 def UnrollIauLoop():
     text = ''
@@ -94,7 +106,8 @@ def UnrollIauLoop():
         #      de += (c3 + c4*t)*carg + c5*sarg
 
         # Form optmized dot product of n*nv.
-        text += '        arg = math.fmod(({:0.1f}*el + {:0.1f}*elp + {:0.1f}*f + {:0.1f}*d + {:0.1f}*om), _PI2)\n'.format(n[0], n[1], n[2], n[3], n[4])
+        dotprod = OptimizeDotProduct(n, nv)
+        text += '        arg = math.fmod({}, _PI2)\n'.format(dotprod)
         text += '        sarg = math.sin(arg)\n'
         text += '        carg = math.cos(arg)\n'
         text += '        dp += ({:0.1f} + {:0.1f}*t)*sarg + {:0.1f}*carg\n'.format(c0, c1, c2)
