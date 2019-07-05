@@ -228,9 +228,8 @@ class _iau2000b:
         om  = math.fmod((450160.398036 - t*6962890.5431),    _ASEC360) * _ASEC2RAD
         dp = 0
         de = 0
-        arg = om
-        sarg = math.sin(arg)
-        carg = math.cos(arg)
+        sarg = math.sin(om)
+        carg = math.cos(om)
         dp += (-172064161.0 + -174666.0*t)*sarg + 33386.0*carg
         de += (92052331.0 + 9086.0*t)*carg + 15377.0*sarg
 
@@ -252,9 +251,8 @@ class _iau2000b:
         dp += (2074554.0 + 207.0*t)*sarg - 698.0*carg
         de += (-897492.0 + 470.0*t)*carg - 291.0*sarg
 
-        arg = elp
-        sarg = math.sin(arg)
-        carg = math.cos(arg)
+        sarg = math.sin(elp)
+        carg = math.cos(elp)
         dp += (1475877.0 + -3633.0*t)*sarg + 11817.0*carg
         de += (73871.0 + -184.0*t)*carg - 1924.0*sarg
 
@@ -264,9 +262,8 @@ class _iau2000b:
         dp += (-516821.0 + 1226.0*t)*sarg - 524.0*carg
         de += (224386.0 + -677.0*t)*carg - 174.0*sarg
 
-        arg = el
-        sarg = math.sin(arg)
-        carg = math.cos(arg)
+        sarg = math.sin(el)
+        carg = math.cos(el)
         dp += (711159.0 + 73.0*t)*sarg - 872.0*carg
         de += (-6750.0)*carg + 358.0*sarg
 
@@ -564,9 +561,8 @@ class _iau2000b:
         dp += (-2878.0)*sarg + 8.0*carg
         de += (1232.0)*carg + 4.0*sarg
 
-        arg = d
-        sarg = math.sin(arg)
-        carg = math.cos(arg)
+        sarg = math.sin(d)
+        carg = math.cos(d)
         dp += (-4230.0)*sarg + 5.0*carg
         de += (-20.0)*carg - 2.0*sarg
 
