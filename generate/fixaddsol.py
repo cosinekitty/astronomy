@@ -130,7 +130,7 @@ def UnrollIauLoop():
     nv = ['el', 'elp', 'f', 'd', 'om']
     for n, (c0, c1, c2, c3, c4, c5) in _iaudata:
         dotprod = OptimizeDotProduct(n, nv)
-        text += '        arg = math.fmod({}, _PI2)\n'.format(dotprod)
+        text += '        arg = {}\n'.format(dotprod)
         text += '        sarg = math.sin(arg)\n'
         text += '        carg = math.cos(arg)\n'
         text += '        dp += ({})*sarg{}\n'.format(OptimizeLinear(c0, c1), OptimizeConst(c2, 'carg'))

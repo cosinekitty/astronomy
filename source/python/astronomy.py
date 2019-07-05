@@ -319,463 +319,463 @@ class _iau2000b:
         om  = math.fmod((450160.398036 - t*6962890.5431),    _ASEC360) * _ASEC2RAD
         dp = 0
         de = 0
-        arg = math.fmod(om, _PI2)
+        arg = om
         sarg = math.sin(arg)
         carg = math.cos(arg)
         dp += (-172064161.0 + -174666.0*t)*sarg + 33386.0*carg
         de += (92052331.0 + 9086.0*t)*carg + 15377.0*sarg
 
-        arg = math.fmod(2.0*f - 2.0*d + 2.0*om, _PI2)
+        arg = 2.0*f - 2.0*d + 2.0*om
         sarg = math.sin(arg)
         carg = math.cos(arg)
         dp += (-13170906.0 + -1675.0*t)*sarg - 13696.0*carg
         de += (5730336.0 + -3015.0*t)*carg - 4587.0*sarg
 
-        arg = math.fmod(2.0*f + 2.0*om, _PI2)
+        arg = 2.0*f + 2.0*om
         sarg = math.sin(arg)
         carg = math.cos(arg)
         dp += (-2276413.0 + -234.0*t)*sarg + 2796.0*carg
         de += (978459.0 + -485.0*t)*carg + 1374.0*sarg
 
-        arg = math.fmod(2.0*om, _PI2)
+        arg = 2.0*om
         sarg = math.sin(arg)
         carg = math.cos(arg)
         dp += (2074554.0 + 207.0*t)*sarg - 698.0*carg
         de += (-897492.0 + 470.0*t)*carg - 291.0*sarg
 
-        arg = math.fmod(elp, _PI2)
+        arg = elp
         sarg = math.sin(arg)
         carg = math.cos(arg)
         dp += (1475877.0 + -3633.0*t)*sarg + 11817.0*carg
         de += (73871.0 + -184.0*t)*carg - 1924.0*sarg
 
-        arg = math.fmod(elp + 2.0*f - 2.0*d + 2.0*om, _PI2)
+        arg = elp + 2.0*f - 2.0*d + 2.0*om
         sarg = math.sin(arg)
         carg = math.cos(arg)
         dp += (-516821.0 + 1226.0*t)*sarg - 524.0*carg
         de += (224386.0 + -677.0*t)*carg - 174.0*sarg
 
-        arg = math.fmod(el, _PI2)
+        arg = el
         sarg = math.sin(arg)
         carg = math.cos(arg)
         dp += (711159.0 + 73.0*t)*sarg - 872.0*carg
         de += (-6750.0)*carg + 358.0*sarg
 
-        arg = math.fmod(2.0*f + om, _PI2)
+        arg = 2.0*f + om
         sarg = math.sin(arg)
         carg = math.cos(arg)
         dp += (-387298.0 + -367.0*t)*sarg + 380.0*carg
         de += (200728.0 + 18.0*t)*carg + 318.0*sarg
 
-        arg = math.fmod(el + 2.0*f + 2.0*om, _PI2)
+        arg = el + 2.0*f + 2.0*om
         sarg = math.sin(arg)
         carg = math.cos(arg)
         dp += (-301461.0 + -36.0*t)*sarg + 816.0*carg
         de += (129025.0 + -63.0*t)*carg + 367.0*sarg
 
-        arg = math.fmod(-elp + 2.0*f - 2.0*d + 2.0*om, _PI2)
+        arg = -elp + 2.0*f - 2.0*d + 2.0*om
         sarg = math.sin(arg)
         carg = math.cos(arg)
         dp += (215829.0 + -494.0*t)*sarg + 111.0*carg
         de += (-95929.0 + 299.0*t)*carg + 132.0*sarg
 
-        arg = math.fmod(2.0*f - 2.0*d + om, _PI2)
+        arg = 2.0*f - 2.0*d + om
         sarg = math.sin(arg)
         carg = math.cos(arg)
         dp += (128227.0 + 137.0*t)*sarg + 181.0*carg
         de += (-68982.0 + -9.0*t)*carg + 39.0*sarg
 
-        arg = math.fmod(-el + 2.0*f + 2.0*om, _PI2)
+        arg = -el + 2.0*f + 2.0*om
         sarg = math.sin(arg)
         carg = math.cos(arg)
         dp += (123457.0 + 11.0*t)*sarg + 19.0*carg
         de += (-53311.0 + 32.0*t)*carg - 4.0*sarg
 
-        arg = math.fmod(-el + 2.0*d, _PI2)
+        arg = -el + 2.0*d
         sarg = math.sin(arg)
         carg = math.cos(arg)
         dp += (156994.0 + 10.0*t)*sarg - 168.0*carg
         de += (-1235.0)*carg + 82.0*sarg
 
-        arg = math.fmod(el + om, _PI2)
+        arg = el + om
         sarg = math.sin(arg)
         carg = math.cos(arg)
         dp += (63110.0 + 63.0*t)*sarg + 27.0*carg
         de += (-33228.0)*carg - 9.0*sarg
 
-        arg = math.fmod(-el + om, _PI2)
+        arg = -el + om
         sarg = math.sin(arg)
         carg = math.cos(arg)
         dp += (-57976.0 + -63.0*t)*sarg - 189.0*carg
         de += (31429.0)*carg - 75.0*sarg
 
-        arg = math.fmod(-el + 2.0*f + 2.0*d + 2.0*om, _PI2)
+        arg = -el + 2.0*f + 2.0*d + 2.0*om
         sarg = math.sin(arg)
         carg = math.cos(arg)
         dp += (-59641.0 + -11.0*t)*sarg + 149.0*carg
         de += (25543.0 + -11.0*t)*carg + 66.0*sarg
 
-        arg = math.fmod(el + 2.0*f + om, _PI2)
+        arg = el + 2.0*f + om
         sarg = math.sin(arg)
         carg = math.cos(arg)
         dp += (-51613.0 + -42.0*t)*sarg + 129.0*carg
         de += (26366.0)*carg + 78.0*sarg
 
-        arg = math.fmod(-2.0*el + 2.0*f + om, _PI2)
+        arg = -2.0*el + 2.0*f + om
         sarg = math.sin(arg)
         carg = math.cos(arg)
         dp += (45893.0 + 50.0*t)*sarg + 31.0*carg
         de += (-24236.0 + -10.0*t)*carg + 20.0*sarg
 
-        arg = math.fmod(2.0*d, _PI2)
+        arg = 2.0*d
         sarg = math.sin(arg)
         carg = math.cos(arg)
         dp += (63384.0 + 11.0*t)*sarg - 150.0*carg
         de += (-1220.0)*carg + 29.0*sarg
 
-        arg = math.fmod(2.0*f + 2.0*d + 2.0*om, _PI2)
+        arg = 2.0*f + 2.0*d + 2.0*om
         sarg = math.sin(arg)
         carg = math.cos(arg)
         dp += (-38571.0 + -1.0*t)*sarg + 158.0*carg
         de += (16452.0 + -11.0*t)*carg + 68.0*sarg
 
-        arg = math.fmod(-2.0*elp + 2.0*f - 2.0*d + 2.0*om, _PI2)
+        arg = -2.0*elp + 2.0*f - 2.0*d + 2.0*om
         sarg = math.sin(arg)
         carg = math.cos(arg)
         dp += (32481.0)*sarg
         de += (-13870.0)*carg
 
-        arg = math.fmod(-2.0*el + 2.0*d, _PI2)
+        arg = -2.0*el + 2.0*d
         sarg = math.sin(arg)
         carg = math.cos(arg)
         dp += (-47722.0)*sarg - 18.0*carg
         de += (477.0)*carg - 25.0*sarg
 
-        arg = math.fmod(2.0*el + 2.0*f + 2.0*om, _PI2)
+        arg = 2.0*el + 2.0*f + 2.0*om
         sarg = math.sin(arg)
         carg = math.cos(arg)
         dp += (-31046.0 + -1.0*t)*sarg + 131.0*carg
         de += (13238.0 + -11.0*t)*carg + 59.0*sarg
 
-        arg = math.fmod(el + 2.0*f - 2.0*d + 2.0*om, _PI2)
+        arg = el + 2.0*f - 2.0*d + 2.0*om
         sarg = math.sin(arg)
         carg = math.cos(arg)
         dp += (28593.0)*sarg - carg
         de += (-12338.0 + 10.0*t)*carg - 3.0*sarg
 
-        arg = math.fmod(-el + 2.0*f + om, _PI2)
+        arg = -el + 2.0*f + om
         sarg = math.sin(arg)
         carg = math.cos(arg)
         dp += (20441.0 + 21.0*t)*sarg + 10.0*carg
         de += (-10758.0)*carg - 3.0*sarg
 
-        arg = math.fmod(2.0*el, _PI2)
+        arg = 2.0*el
         sarg = math.sin(arg)
         carg = math.cos(arg)
         dp += (29243.0)*sarg - 74.0*carg
         de += (-609.0)*carg + 13.0*sarg
 
-        arg = math.fmod(2.0*f, _PI2)
+        arg = 2.0*f
         sarg = math.sin(arg)
         carg = math.cos(arg)
         dp += (25887.0)*sarg - 66.0*carg
         de += (-550.0)*carg + 11.0*sarg
 
-        arg = math.fmod(elp + om, _PI2)
+        arg = elp + om
         sarg = math.sin(arg)
         carg = math.cos(arg)
         dp += (-14053.0 + -25.0*t)*sarg + 79.0*carg
         de += (8551.0 + -2.0*t)*carg - 45.0*sarg
 
-        arg = math.fmod(-el + 2.0*d + om, _PI2)
+        arg = -el + 2.0*d + om
         sarg = math.sin(arg)
         carg = math.cos(arg)
         dp += (15164.0 + 10.0*t)*sarg + 11.0*carg
         de += (-8001.0)*carg - sarg
 
-        arg = math.fmod(2.0*elp + 2.0*f - 2.0*d + 2.0*om, _PI2)
+        arg = 2.0*elp + 2.0*f - 2.0*d + 2.0*om
         sarg = math.sin(arg)
         carg = math.cos(arg)
         dp += (-15794.0 + 72.0*t)*sarg - 16.0*carg
         de += (6850.0 + -42.0*t)*carg - 5.0*sarg
 
-        arg = math.fmod(-2.0*f + 2.0*d, _PI2)
+        arg = -2.0*f + 2.0*d
         sarg = math.sin(arg)
         carg = math.cos(arg)
         dp += (21783.0)*sarg + 13.0*carg
         de += (-167.0)*carg + 13.0*sarg
 
-        arg = math.fmod(el - 2.0*d + om, _PI2)
+        arg = el - 2.0*d + om
         sarg = math.sin(arg)
         carg = math.cos(arg)
         dp += (-12873.0 + -10.0*t)*sarg - 37.0*carg
         de += (6953.0)*carg - 14.0*sarg
 
-        arg = math.fmod(-elp + om, _PI2)
+        arg = -elp + om
         sarg = math.sin(arg)
         carg = math.cos(arg)
         dp += (-12654.0 + 11.0*t)*sarg + 63.0*carg
         de += (6415.0)*carg + 26.0*sarg
 
-        arg = math.fmod(-el + 2.0*f + 2.0*d + om, _PI2)
+        arg = -el + 2.0*f + 2.0*d + om
         sarg = math.sin(arg)
         carg = math.cos(arg)
         dp += (-10204.0)*sarg + 25.0*carg
         de += (5222.0)*carg + 15.0*sarg
 
-        arg = math.fmod(2.0*elp, _PI2)
+        arg = 2.0*elp
         sarg = math.sin(arg)
         carg = math.cos(arg)
         dp += (16707.0 + -85.0*t)*sarg - 10.0*carg
         de += (168.0 + -1.0*t)*carg + 10.0*sarg
 
-        arg = math.fmod(el + 2.0*f + 2.0*d + 2.0*om, _PI2)
+        arg = el + 2.0*f + 2.0*d + 2.0*om
         sarg = math.sin(arg)
         carg = math.cos(arg)
         dp += (-7691.0)*sarg + 44.0*carg
         de += (3268.0)*carg + 19.0*sarg
 
-        arg = math.fmod(-2.0*el + 2.0*f, _PI2)
+        arg = -2.0*el + 2.0*f
         sarg = math.sin(arg)
         carg = math.cos(arg)
         dp += (-11024.0)*sarg - 14.0*carg
         de += (104.0)*carg + 2.0*sarg
 
-        arg = math.fmod(elp + 2.0*f + 2.0*om, _PI2)
+        arg = elp + 2.0*f + 2.0*om
         sarg = math.sin(arg)
         carg = math.cos(arg)
         dp += (7566.0 + -21.0*t)*sarg - 11.0*carg
         de += (-3250.0)*carg - 5.0*sarg
 
-        arg = math.fmod(2.0*f + 2.0*d + om, _PI2)
+        arg = 2.0*f + 2.0*d + om
         sarg = math.sin(arg)
         carg = math.cos(arg)
         dp += (-6637.0 + -11.0*t)*sarg + 25.0*carg
         de += (3353.0)*carg + 14.0*sarg
 
-        arg = math.fmod(-elp + 2.0*f + 2.0*om, _PI2)
+        arg = -elp + 2.0*f + 2.0*om
         sarg = math.sin(arg)
         carg = math.cos(arg)
         dp += (-7141.0 + 21.0*t)*sarg + 8.0*carg
         de += (3070.0)*carg + 4.0*sarg
 
-        arg = math.fmod(2.0*d + om, _PI2)
+        arg = 2.0*d + om
         sarg = math.sin(arg)
         carg = math.cos(arg)
         dp += (-6302.0 + -11.0*t)*sarg + 2.0*carg
         de += (3272.0)*carg + 4.0*sarg
 
-        arg = math.fmod(el + 2.0*f - 2.0*d + om, _PI2)
+        arg = el + 2.0*f - 2.0*d + om
         sarg = math.sin(arg)
         carg = math.cos(arg)
         dp += (5800.0 + 10.0*t)*sarg + 2.0*carg
         de += (-3045.0)*carg - sarg
 
-        arg = math.fmod(2.0*el + 2.0*f - 2.0*d + 2.0*om, _PI2)
+        arg = 2.0*el + 2.0*f - 2.0*d + 2.0*om
         sarg = math.sin(arg)
         carg = math.cos(arg)
         dp += (6443.0)*sarg - 7.0*carg
         de += (-2768.0)*carg - 4.0*sarg
 
-        arg = math.fmod(-2.0*el + 2.0*d + om, _PI2)
+        arg = -2.0*el + 2.0*d + om
         sarg = math.sin(arg)
         carg = math.cos(arg)
         dp += (-5774.0 + -11.0*t)*sarg - 15.0*carg
         de += (3041.0)*carg - 5.0*sarg
 
-        arg = math.fmod(2.0*el + 2.0*f + om, _PI2)
+        arg = 2.0*el + 2.0*f + om
         sarg = math.sin(arg)
         carg = math.cos(arg)
         dp += (-5350.0)*sarg + 21.0*carg
         de += (2695.0)*carg + 12.0*sarg
 
-        arg = math.fmod(-elp + 2.0*f - 2.0*d + om, _PI2)
+        arg = -elp + 2.0*f - 2.0*d + om
         sarg = math.sin(arg)
         carg = math.cos(arg)
         dp += (-4752.0 + -11.0*t)*sarg - 3.0*carg
         de += (2719.0)*carg - 3.0*sarg
 
-        arg = math.fmod(-2.0*d + om, _PI2)
+        arg = -2.0*d + om
         sarg = math.sin(arg)
         carg = math.cos(arg)
         dp += (-4940.0 + -11.0*t)*sarg - 21.0*carg
         de += (2720.0)*carg - 9.0*sarg
 
-        arg = math.fmod(-el - elp + 2.0*d, _PI2)
+        arg = -el - elp + 2.0*d
         sarg = math.sin(arg)
         carg = math.cos(arg)
         dp += (7350.0)*sarg - 8.0*carg
         de += (-51.0)*carg + 4.0*sarg
 
-        arg = math.fmod(2.0*el - 2.0*d + om, _PI2)
+        arg = 2.0*el - 2.0*d + om
         sarg = math.sin(arg)
         carg = math.cos(arg)
         dp += (4065.0)*sarg + 6.0*carg
         de += (-2206.0)*carg + sarg
 
-        arg = math.fmod(el + 2.0*d, _PI2)
+        arg = el + 2.0*d
         sarg = math.sin(arg)
         carg = math.cos(arg)
         dp += (6579.0)*sarg - 24.0*carg
         de += (-199.0)*carg + 2.0*sarg
 
-        arg = math.fmod(elp + 2.0*f - 2.0*d + om, _PI2)
+        arg = elp + 2.0*f - 2.0*d + om
         sarg = math.sin(arg)
         carg = math.cos(arg)
         dp += (3579.0)*sarg + 5.0*carg
         de += (-1900.0)*carg + sarg
 
-        arg = math.fmod(el - elp, _PI2)
+        arg = el - elp
         sarg = math.sin(arg)
         carg = math.cos(arg)
         dp += (4725.0)*sarg - 6.0*carg
         de += (-41.0)*carg + 3.0*sarg
 
-        arg = math.fmod(-2.0*el + 2.0*f + 2.0*om, _PI2)
+        arg = -2.0*el + 2.0*f + 2.0*om
         sarg = math.sin(arg)
         carg = math.cos(arg)
         dp += (-3075.0)*sarg - 2.0*carg
         de += (1313.0)*carg - sarg
 
-        arg = math.fmod(3.0*el + 2.0*f + 2.0*om, _PI2)
+        arg = 3.0*el + 2.0*f + 2.0*om
         sarg = math.sin(arg)
         carg = math.cos(arg)
         dp += (-2904.0)*sarg + 15.0*carg
         de += (1233.0)*carg + 7.0*sarg
 
-        arg = math.fmod(-elp + 2.0*d, _PI2)
+        arg = -elp + 2.0*d
         sarg = math.sin(arg)
         carg = math.cos(arg)
         dp += (4348.0)*sarg - 10.0*carg
         de += (-81.0)*carg + 2.0*sarg
 
-        arg = math.fmod(el - elp + 2.0*f + 2.0*om, _PI2)
+        arg = el - elp + 2.0*f + 2.0*om
         sarg = math.sin(arg)
         carg = math.cos(arg)
         dp += (-2878.0)*sarg + 8.0*carg
         de += (1232.0)*carg + 4.0*sarg
 
-        arg = math.fmod(d, _PI2)
+        arg = d
         sarg = math.sin(arg)
         carg = math.cos(arg)
         dp += (-4230.0)*sarg + 5.0*carg
         de += (-20.0)*carg - 2.0*sarg
 
-        arg = math.fmod(-el - elp + 2.0*f + 2.0*d + 2.0*om, _PI2)
+        arg = -el - elp + 2.0*f + 2.0*d + 2.0*om
         sarg = math.sin(arg)
         carg = math.cos(arg)
         dp += (-2819.0)*sarg + 7.0*carg
         de += (1207.0)*carg + 3.0*sarg
 
-        arg = math.fmod(-el + 2.0*f, _PI2)
+        arg = -el + 2.0*f
         sarg = math.sin(arg)
         carg = math.cos(arg)
         dp += (-4056.0)*sarg + 5.0*carg
         de += (40.0)*carg - 2.0*sarg
 
-        arg = math.fmod(-elp + 2.0*f + 2.0*d + 2.0*om, _PI2)
+        arg = -elp + 2.0*f + 2.0*d + 2.0*om
         sarg = math.sin(arg)
         carg = math.cos(arg)
         dp += (-2647.0)*sarg + 11.0*carg
         de += (1129.0)*carg + 5.0*sarg
 
-        arg = math.fmod(-2.0*el + om, _PI2)
+        arg = -2.0*el + om
         sarg = math.sin(arg)
         carg = math.cos(arg)
         dp += (-2294.0)*sarg - 10.0*carg
         de += (1266.0)*carg - 4.0*sarg
 
-        arg = math.fmod(el + elp + 2.0*f + 2.0*om, _PI2)
+        arg = el + elp + 2.0*f + 2.0*om
         sarg = math.sin(arg)
         carg = math.cos(arg)
         dp += (2481.0)*sarg - 7.0*carg
         de += (-1062.0)*carg - 3.0*sarg
 
-        arg = math.fmod(2.0*el + om, _PI2)
+        arg = 2.0*el + om
         sarg = math.sin(arg)
         carg = math.cos(arg)
         dp += (2179.0)*sarg - 2.0*carg
         de += (-1129.0)*carg - 2.0*sarg
 
-        arg = math.fmod(-el + elp + d, _PI2)
+        arg = -el + elp + d
         sarg = math.sin(arg)
         carg = math.cos(arg)
         dp += (3276.0)*sarg + carg
         de += (-9.0)*carg
 
-        arg = math.fmod(el + elp, _PI2)
+        arg = el + elp
         sarg = math.sin(arg)
         carg = math.cos(arg)
         dp += (-3389.0)*sarg + 5.0*carg
         de += (35.0)*carg - 2.0*sarg
 
-        arg = math.fmod(el + 2.0*f, _PI2)
+        arg = el + 2.0*f
         sarg = math.sin(arg)
         carg = math.cos(arg)
         dp += (3339.0)*sarg - 13.0*carg
         de += (-107.0)*carg + sarg
 
-        arg = math.fmod(-el + 2.0*f - 2.0*d + om, _PI2)
+        arg = -el + 2.0*f - 2.0*d + om
         sarg = math.sin(arg)
         carg = math.cos(arg)
         dp += (-1987.0)*sarg - 6.0*carg
         de += (1073.0)*carg - 2.0*sarg
 
-        arg = math.fmod(el + 2.0*om, _PI2)
+        arg = el + 2.0*om
         sarg = math.sin(arg)
         carg = math.cos(arg)
         dp += (-1981.0)*sarg
         de += (854.0)*carg
 
-        arg = math.fmod(-el + d, _PI2)
+        arg = -el + d
         sarg = math.sin(arg)
         carg = math.cos(arg)
         dp += (4026.0)*sarg - 353.0*carg
         de += (-553.0)*carg - 139.0*sarg
 
-        arg = math.fmod(2.0*f + d + 2.0*om, _PI2)
+        arg = 2.0*f + d + 2.0*om
         sarg = math.sin(arg)
         carg = math.cos(arg)
         dp += (1660.0)*sarg - 5.0*carg
         de += (-710.0)*carg - 2.0*sarg
 
-        arg = math.fmod(-el + 2.0*f + 4.0*d + 2.0*om, _PI2)
+        arg = -el + 2.0*f + 4.0*d + 2.0*om
         sarg = math.sin(arg)
         carg = math.cos(arg)
         dp += (-1521.0)*sarg + 9.0*carg
         de += (647.0)*carg + 4.0*sarg
 
-        arg = math.fmod(-el + elp + d + om, _PI2)
+        arg = -el + elp + d + om
         sarg = math.sin(arg)
         carg = math.cos(arg)
         dp += (1314.0)*sarg
         de += (-700.0)*carg
 
-        arg = math.fmod(-2.0*elp + 2.0*f - 2.0*d + om, _PI2)
+        arg = -2.0*elp + 2.0*f - 2.0*d + om
         sarg = math.sin(arg)
         carg = math.cos(arg)
         dp += (-1283.0)*sarg
         de += (672.0)*carg
 
-        arg = math.fmod(el + 2.0*f + 2.0*d + om, _PI2)
+        arg = el + 2.0*f + 2.0*d + om
         sarg = math.sin(arg)
         carg = math.cos(arg)
         dp += (-1331.0)*sarg + 8.0*carg
         de += (663.0)*carg + 4.0*sarg
 
-        arg = math.fmod(-2.0*el + 2.0*f + 2.0*d + 2.0*om, _PI2)
+        arg = -2.0*el + 2.0*f + 2.0*d + 2.0*om
         sarg = math.sin(arg)
         carg = math.cos(arg)
         dp += (1383.0)*sarg - 2.0*carg
         de += (-594.0)*carg - 2.0*sarg
 
-        arg = math.fmod(-el + 2.0*om, _PI2)
+        arg = -el + 2.0*om
         sarg = math.sin(arg)
         carg = math.cos(arg)
         dp += (1405.0)*sarg + 4.0*carg
         de += (-610.0)*carg + 2.0*sarg
 
-        arg = math.fmod(el + elp + 2.0*f - 2.0*d + 2.0*om, _PI2)
+        arg = el + elp + 2.0*f - 2.0*d + 2.0*om
         sarg = math.sin(arg)
         carg = math.cos(arg)
         dp += (1290.0)*sarg
