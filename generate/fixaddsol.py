@@ -107,6 +107,8 @@ def OptimizeLinear(a, b):
         return '{:0.1f}'.format(a)
     if a == 0.0:
         return '{:0.1f}*t'.format(b)
+    if b < 0:
+        return '{:0.1f} - {:0.1f}*t'.format(a, -b)
     return '{:0.1f} + {:0.1f}*t'.format(a, b)
 
 def OptimizeConst(c, v):

@@ -321,20 +321,20 @@ class _iau2000b:
         de = 0
         sarg = math.sin(om)
         carg = math.cos(om)
-        dp += (-172064161.0 + -174666.0*t)*sarg + 33386.0*carg
+        dp += (-172064161.0 - 174666.0*t)*sarg + 33386.0*carg
         de += (92052331.0 + 9086.0*t)*carg + 15377.0*sarg
 
         arg = 2.0*f - 2.0*d + 2.0*om
         sarg = math.sin(arg)
         carg = math.cos(arg)
-        dp += (-13170906.0 + -1675.0*t)*sarg - 13696.0*carg
-        de += (5730336.0 + -3015.0*t)*carg - 4587.0*sarg
+        dp += (-13170906.0 - 1675.0*t)*sarg - 13696.0*carg
+        de += (5730336.0 - 3015.0*t)*carg - 4587.0*sarg
 
         arg = 2.0*f + 2.0*om
         sarg = math.sin(arg)
         carg = math.cos(arg)
-        dp += (-2276413.0 + -234.0*t)*sarg + 2796.0*carg
-        de += (978459.0 + -485.0*t)*carg + 1374.0*sarg
+        dp += (-2276413.0 - 234.0*t)*sarg + 2796.0*carg
+        de += (978459.0 - 485.0*t)*carg + 1374.0*sarg
 
         arg = 2.0*om
         sarg = math.sin(arg)
@@ -344,14 +344,14 @@ class _iau2000b:
 
         sarg = math.sin(elp)
         carg = math.cos(elp)
-        dp += (1475877.0 + -3633.0*t)*sarg + 11817.0*carg
-        de += (73871.0 + -184.0*t)*carg - 1924.0*sarg
+        dp += (1475877.0 - 3633.0*t)*sarg + 11817.0*carg
+        de += (73871.0 - 184.0*t)*carg - 1924.0*sarg
 
         arg = elp + 2.0*f - 2.0*d + 2.0*om
         sarg = math.sin(arg)
         carg = math.cos(arg)
         dp += (-516821.0 + 1226.0*t)*sarg - 524.0*carg
-        de += (224386.0 + -677.0*t)*carg - 174.0*sarg
+        de += (224386.0 - 677.0*t)*carg - 174.0*sarg
 
         sarg = math.sin(el)
         carg = math.cos(el)
@@ -361,26 +361,26 @@ class _iau2000b:
         arg = 2.0*f + om
         sarg = math.sin(arg)
         carg = math.cos(arg)
-        dp += (-387298.0 + -367.0*t)*sarg + 380.0*carg
+        dp += (-387298.0 - 367.0*t)*sarg + 380.0*carg
         de += (200728.0 + 18.0*t)*carg + 318.0*sarg
 
         arg = el + 2.0*f + 2.0*om
         sarg = math.sin(arg)
         carg = math.cos(arg)
-        dp += (-301461.0 + -36.0*t)*sarg + 816.0*carg
-        de += (129025.0 + -63.0*t)*carg + 367.0*sarg
+        dp += (-301461.0 - 36.0*t)*sarg + 816.0*carg
+        de += (129025.0 - 63.0*t)*carg + 367.0*sarg
 
         arg = -elp + 2.0*f - 2.0*d + 2.0*om
         sarg = math.sin(arg)
         carg = math.cos(arg)
-        dp += (215829.0 + -494.0*t)*sarg + 111.0*carg
+        dp += (215829.0 - 494.0*t)*sarg + 111.0*carg
         de += (-95929.0 + 299.0*t)*carg + 132.0*sarg
 
         arg = 2.0*f - 2.0*d + om
         sarg = math.sin(arg)
         carg = math.cos(arg)
         dp += (128227.0 + 137.0*t)*sarg + 181.0*carg
-        de += (-68982.0 + -9.0*t)*carg + 39.0*sarg
+        de += (-68982.0 - 9.0*t)*carg + 39.0*sarg
 
         arg = -el + 2.0*f + 2.0*om
         sarg = math.sin(arg)
@@ -403,26 +403,26 @@ class _iau2000b:
         arg = -el + om
         sarg = math.sin(arg)
         carg = math.cos(arg)
-        dp += (-57976.0 + -63.0*t)*sarg - 189.0*carg
+        dp += (-57976.0 - 63.0*t)*sarg - 189.0*carg
         de += (31429.0)*carg - 75.0*sarg
 
         arg = -el + 2.0*f + 2.0*d + 2.0*om
         sarg = math.sin(arg)
         carg = math.cos(arg)
-        dp += (-59641.0 + -11.0*t)*sarg + 149.0*carg
-        de += (25543.0 + -11.0*t)*carg + 66.0*sarg
+        dp += (-59641.0 - 11.0*t)*sarg + 149.0*carg
+        de += (25543.0 - 11.0*t)*carg + 66.0*sarg
 
         arg = el + 2.0*f + om
         sarg = math.sin(arg)
         carg = math.cos(arg)
-        dp += (-51613.0 + -42.0*t)*sarg + 129.0*carg
+        dp += (-51613.0 - 42.0*t)*sarg + 129.0*carg
         de += (26366.0)*carg + 78.0*sarg
 
         arg = -2.0*el + 2.0*f + om
         sarg = math.sin(arg)
         carg = math.cos(arg)
         dp += (45893.0 + 50.0*t)*sarg + 31.0*carg
-        de += (-24236.0 + -10.0*t)*carg + 20.0*sarg
+        de += (-24236.0 - 10.0*t)*carg + 20.0*sarg
 
         arg = 2.0*d
         sarg = math.sin(arg)
@@ -433,8 +433,8 @@ class _iau2000b:
         arg = 2.0*f + 2.0*d + 2.0*om
         sarg = math.sin(arg)
         carg = math.cos(arg)
-        dp += (-38571.0 + -1.0*t)*sarg + 158.0*carg
-        de += (16452.0 + -11.0*t)*carg + 68.0*sarg
+        dp += (-38571.0 - 1.0*t)*sarg + 158.0*carg
+        de += (16452.0 - 11.0*t)*carg + 68.0*sarg
 
         arg = -2.0*elp + 2.0*f - 2.0*d + 2.0*om
         sarg = math.sin(arg)
@@ -451,8 +451,8 @@ class _iau2000b:
         arg = 2.0*el + 2.0*f + 2.0*om
         sarg = math.sin(arg)
         carg = math.cos(arg)
-        dp += (-31046.0 + -1.0*t)*sarg + 131.0*carg
-        de += (13238.0 + -11.0*t)*carg + 59.0*sarg
+        dp += (-31046.0 - 1.0*t)*sarg + 131.0*carg
+        de += (13238.0 - 11.0*t)*carg + 59.0*sarg
 
         arg = el + 2.0*f - 2.0*d + 2.0*om
         sarg = math.sin(arg)
@@ -481,8 +481,8 @@ class _iau2000b:
         arg = elp + om
         sarg = math.sin(arg)
         carg = math.cos(arg)
-        dp += (-14053.0 + -25.0*t)*sarg + 79.0*carg
-        de += (8551.0 + -2.0*t)*carg - 45.0*sarg
+        dp += (-14053.0 - 25.0*t)*sarg + 79.0*carg
+        de += (8551.0 - 2.0*t)*carg - 45.0*sarg
 
         arg = -el + 2.0*d + om
         sarg = math.sin(arg)
@@ -494,7 +494,7 @@ class _iau2000b:
         sarg = math.sin(arg)
         carg = math.cos(arg)
         dp += (-15794.0 + 72.0*t)*sarg - 16.0*carg
-        de += (6850.0 + -42.0*t)*carg - 5.0*sarg
+        de += (6850.0 - 42.0*t)*carg - 5.0*sarg
 
         arg = -2.0*f + 2.0*d
         sarg = math.sin(arg)
@@ -505,7 +505,7 @@ class _iau2000b:
         arg = el - 2.0*d + om
         sarg = math.sin(arg)
         carg = math.cos(arg)
-        dp += (-12873.0 + -10.0*t)*sarg - 37.0*carg
+        dp += (-12873.0 - 10.0*t)*sarg - 37.0*carg
         de += (6953.0)*carg - 14.0*sarg
 
         arg = -elp + om
@@ -523,8 +523,8 @@ class _iau2000b:
         arg = 2.0*elp
         sarg = math.sin(arg)
         carg = math.cos(arg)
-        dp += (16707.0 + -85.0*t)*sarg - 10.0*carg
-        de += (168.0 + -1.0*t)*carg + 10.0*sarg
+        dp += (16707.0 - 85.0*t)*sarg - 10.0*carg
+        de += (168.0 - 1.0*t)*carg + 10.0*sarg
 
         arg = el + 2.0*f + 2.0*d + 2.0*om
         sarg = math.sin(arg)
@@ -541,13 +541,13 @@ class _iau2000b:
         arg = elp + 2.0*f + 2.0*om
         sarg = math.sin(arg)
         carg = math.cos(arg)
-        dp += (7566.0 + -21.0*t)*sarg - 11.0*carg
+        dp += (7566.0 - 21.0*t)*sarg - 11.0*carg
         de += (-3250.0)*carg - 5.0*sarg
 
         arg = 2.0*f + 2.0*d + om
         sarg = math.sin(arg)
         carg = math.cos(arg)
-        dp += (-6637.0 + -11.0*t)*sarg + 25.0*carg
+        dp += (-6637.0 - 11.0*t)*sarg + 25.0*carg
         de += (3353.0)*carg + 14.0*sarg
 
         arg = -elp + 2.0*f + 2.0*om
@@ -559,7 +559,7 @@ class _iau2000b:
         arg = 2.0*d + om
         sarg = math.sin(arg)
         carg = math.cos(arg)
-        dp += (-6302.0 + -11.0*t)*sarg + 2.0*carg
+        dp += (-6302.0 - 11.0*t)*sarg + 2.0*carg
         de += (3272.0)*carg + 4.0*sarg
 
         arg = el + 2.0*f - 2.0*d + om
@@ -577,7 +577,7 @@ class _iau2000b:
         arg = -2.0*el + 2.0*d + om
         sarg = math.sin(arg)
         carg = math.cos(arg)
-        dp += (-5774.0 + -11.0*t)*sarg - 15.0*carg
+        dp += (-5774.0 - 11.0*t)*sarg - 15.0*carg
         de += (3041.0)*carg - 5.0*sarg
 
         arg = 2.0*el + 2.0*f + om
@@ -589,13 +589,13 @@ class _iau2000b:
         arg = -elp + 2.0*f - 2.0*d + om
         sarg = math.sin(arg)
         carg = math.cos(arg)
-        dp += (-4752.0 + -11.0*t)*sarg - 3.0*carg
+        dp += (-4752.0 - 11.0*t)*sarg - 3.0*carg
         de += (2719.0)*carg - 3.0*sarg
 
         arg = -2.0*d + om
         sarg = math.sin(arg)
         carg = math.cos(arg)
-        dp += (-4940.0 + -11.0*t)*sarg - 21.0*carg
+        dp += (-4940.0 - 11.0*t)*sarg - 21.0*carg
         de += (2720.0)*carg - 9.0*sarg
 
         arg = -el - elp + 2.0*d
