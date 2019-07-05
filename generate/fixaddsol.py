@@ -102,23 +102,23 @@ def OptimizeDotProduct(nlist, vlist):
             first = False
     return text
 
+def OptimizeLinear(a, b):
+    if b == 0.0:
+        return '{:0.1f}'.format(a)
+    if a == 0.0:
+        return '{:0.1f}*t'.format(b)
+    return '{:0.1f} + {:0.1f}*t'.format(a, b)
+
 def UnrollIauLoop():
     text = ''
     nv = ['el', 'elp', 'f', 'd', 'om']
     for n, (c0, c1, c2, c3, c4, c5) in _iaudata:
-        #      arg = math.fmod((n0*el + n1*elp + n2*f + n3*d + n4*om), _PI2)
-        #      sarg = math.sin(arg)
-        #      carg = math.cos(arg)
-        #      dp += (c0 + c1*t)*sarg + c2*carg
-        #      de += (c3 + c4*t)*carg + c5*sarg
-
-        # Form optmized dot product of n*nv.
         dotprod = OptimizeDotProduct(n, nv)
         text += '        arg = math.fmod({}, _PI2)\n'.format(dotprod)
         text += '        sarg = math.sin(arg)\n'
         text += '        carg = math.cos(arg)\n'
-        text += '        dp += ({:0.1f} + {:0.1f}*t)*sarg + {:0.1f}*carg\n'.format(c0, c1, c2)
-        text += '        de += ({:0.1f} + {:0.1f}*t)*carg + {:0.1f}*sarg\n'.format(c3, c4, c5)
+        text += '        dp += ({})*sarg + {:0.1f}*carg\n'.format(OptimizeLinear(c0, c1), c2)
+        text += '        de += ({})*carg + {:0.1f}*sarg\n'.format(OptimizeLinear(c3, c4), c5)
 
     return text
 
