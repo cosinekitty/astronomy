@@ -31,8 +31,9 @@
 #include "ephfile.h"
 
 #define CG_MAX_LINE_LENGTH  200
-#define MAX_DATA_PER_LINE   20
-#define IAU_DATA_PER_ROW    11
+#define MAX_DATA_PER_LINE    20
+#define IAU_DATA_PER_ROW     11
+#define ADDSOL_DATA_PER_ROW   8
 
 static const double MJD_BASIS = 2400000.5;
 
@@ -870,17 +871,13 @@ fail:
     return error;
 }
 
-static int OptAddSol(cg_context_t *context)
+static int OptAddSolPython(
+    cg_context_t *context, 
+    double cl, double cs, double cg, double cp, double p, double q, double r, double s)
 {
-    int nscanned;
-    double cl, cs, cg, cp, p, q, r, s;
     const char *op;
 
-    nscanned = sscanf(context->args, "%lf , %lf , %lf , %lf , %lf , %lf , %lf , %lf", &cl, &cs, &cg, &cp, &p, &q, &r, &s);
-    if (nscanned != 8)
-        return LogError(context, "OptAddSol: invalid arguments: '%s'", context->args);
-
-    fprintf(context->outfile, "\n    # AddSol(%s)\n", context->args);
+    fprintf(context->outfile, "\n    # AddSol(%lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf)\n", cl, cs, cg, cp, p, q, r, s);
 
     op = "";
     fprintf(context->outfile, "    z = ");
@@ -918,6 +915,45 @@ static int OptAddSol(cg_context_t *context)
         fprintf(context->outfile, "    SINPI += %0.4lf * z.real\n", cp);
 
     return 0;
+}
+
+static int OptAddSol(cg_context_t *context)
+{
+    int error;
+    FILE *infile;
+    int lnum;
+    const char *filename = "model_data/addsol.txt";
+    char line[200];
+    double data[ADDSOL_DATA_PER_ROW];
+
+    infile = fopen(filename, "rt");
+    if (infile == NULL) goto fail;
+
+    lnum = 0;
+    while (fgets(line, sizeof(line), infile))
+    {
+        ++lnum;
+        CHECK(ScanRealArray(context, filename, lnum, line, ADDSOL_DATA_PER_ROW, data));
+        switch (context->language)
+        {
+        case CODEGEN_LANGUAGE_PYTHON:
+            CHECK(OptAddSolPython(context, data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7]));
+            break;
+
+        default:
+            error = LogError(context, "OptAddSol: Unsupported language %d\n", context->language);
+            goto fail;
+        }
+    }
+
+    error = 0;
+fail:
+    if (infile == NULL)
+        error = LogError(context, "Cannot open input file: %s", filename);
+    else
+        fclose(infile);
+
+    return error;
 }
 
 static int LogError(const cg_context_t *context, const char *format, ...)
