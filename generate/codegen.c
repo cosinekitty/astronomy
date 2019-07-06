@@ -917,6 +917,22 @@ static int OptAddSolPython(
     return 0;
 }
 
+static int OptAddSolC(cg_context_t *context, const double *data)
+{
+    int i;
+
+    fprintf(context->outfile, "    AddSol(ctx");
+
+    for (i=0; i < 4; ++i)
+        fprintf(context->outfile, ",%11.4lf", data[i]);
+
+    for(; i < 8; ++i)
+        fprintf(context->outfile, ",%2.0lf", data[i]);
+
+    fprintf(context->outfile, ");\n");
+    return 0;
+}
+
 static int OptAddSol(cg_context_t *context)
 {
     int error;
@@ -929,6 +945,8 @@ static int OptAddSol(cg_context_t *context)
     infile = fopen(filename, "rt");
     if (infile == NULL) goto fail;
 
+    fprintf(context->outfile, "\n");
+
     lnum = 0;
     while (fgets(line, sizeof(line), infile))
     {
@@ -938,6 +956,10 @@ static int OptAddSol(cg_context_t *context)
         {
         case CODEGEN_LANGUAGE_PYTHON:
             CHECK(OptAddSolPython(context, data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7]));
+            break;
+
+        case CODEGEN_LANGUAGE_C:
+            CHECK(OptAddSolC(context, data));
             break;
 
         default:
