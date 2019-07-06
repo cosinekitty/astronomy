@@ -147,10 +147,10 @@ def UnrollIauLoop():
 
 
 def Translate(line):
-    if line.strip() == '__IAULOOP__':
+    if line.strip() == '$ASTRO_IAULOOP()':
         return UnrollIauLoop()
 
-    m = re.match(r'^    AddSol\(\s*([0-9\+\-\.]+)\s*,\s*([0-9\+\-\.]+)\s*,\s*([0-9\+\-\.]+)\s*,\s*([0-9\+\-\.]+)\s*,\s*([\+\-]?\d+)\s*,\s*([\+\-]?\d+)\s*,\s*([\+\-]?\d+)\s*,\s*([\+\-]?\d+)\s*\)\s*$', line)
+    m = re.match(r'^    \$ASTRO_ADDSOL\(\s*([0-9\+\-\.]+)\s*,\s*([0-9\+\-\.]+)\s*,\s*([0-9\+\-\.]+)\s*,\s*([0-9\+\-\.]+)\s*,\s*([\+\-]?\d+)\s*,\s*([\+\-]?\d+)\s*,\s*([\+\-]?\d+)\s*,\s*([\+\-]?\d+)\s*\)\s*$', line)
     if m:
         cl = float(m.group(1))
         cs = float(m.group(2))
