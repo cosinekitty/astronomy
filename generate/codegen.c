@@ -31,6 +31,8 @@
 #include "ephfile.h"
 
 #define CG_MAX_LINE_LENGTH  200
+#define MAX_DATA_PER_LINE   20
+#define IAU_DATA_PER_ROW    11
 
 static const double MJD_BASIS = 2400000.5;
 
@@ -645,6 +647,279 @@ fail:
     return error;
 }
 
+static int ScanRealArray(
+    cg_context_t *context, 
+    const char *filename, 
+    int lnum, 
+    char *line, 
+    int numExpected, 
+    double *data)
+{
+    int i, t, len, inspace;
+    char *token[MAX_DATA_PER_LINE];
+
+    if (numExpected < 1 || numExpected > MAX_DATA_PER_LINE)
+        return LogError(context, "Invalid value for numExpected=%d\n", numExpected);
+
+    /* Split the line into space delimited tokens. */
+    len = strlen(line);
+    inspace = 1;
+    t = 0;
+    for (i=0; i < len; ++i)
+    {
+        if (line[i] == ' ' || line[i] == '\t' || line[i] == '\r' || line[i] == '\n')
+        {
+            if (!inspace)
+            {
+                line[i] = '\0';     /* terminate the previous token */
+                inspace = 1;
+            }
+        }
+        else
+        {
+            if (inspace)
+            {
+                /* we just found the beginning of a new token. */
+                if (t < IAU_DATA_PER_ROW)
+                {
+                    token[t++] = &line[i];
+                    inspace = 0;
+                }
+                else
+                    return LogError(context, "ScanRealArray(%s %d): too many data on line.", filename, lnum);
+            }
+        }
+    }
+
+    /* Verify there are the correct number of tokens. */
+    if (t != numExpected)
+        return LogError(context, "ScanRealArray(%s %d): found %d data, but expected %d\n", filename, lnum, t, numExpected);
+
+    /* Parse each token as a floating point number. */
+    for (t=0; t < numExpected; ++t)
+        if (1 != sscanf(token[t], "%lf", &data[t]))
+            return LogError(context, "ScanRealArray(%s %d): invalid floating point token '%s'\n", filename, lnum, token[t]);
+
+    return 0;   /* successful parse */
+}
+
+static int OptimizeConst(cg_context_t *context, char *buffer, size_t size, double c, const char *v)
+{
+    int nprinted;
+    const char *op;
+
+    if (c == 0.0)
+    {
+        buffer[0] = '\0';
+        return 0;
+    }
+
+    if (c < 0.0)
+    {
+        op = " - ";
+        c *= -1.0;
+    }
+    else
+        op = " + ";
+
+    if (c == 1.0)
+        nprinted = snprintf(buffer, size, "%s%s", op, v);
+    else
+        nprinted = snprintf(buffer, size, "%s%0.1lf*%s", op, c, v);
+
+    if (nprinted >= (int)size)
+        return LogError(context, "OptimizeConst: print buffer overflowed.");
+
+    return 0;
+}
+
+static int OptimizeLinear(cg_context_t *context, char *buffer, size_t size, double a, double b)
+{
+    int nprinted;
+
+    if (b == 0.0)
+        nprinted = snprintf(buffer, size, "%0.1lf", a);
+    else if (a == 0.0)
+        nprinted = snprintf(buffer, size, "%0.1lf*t", b);
+    else if (b < 0.0)
+        nprinted = snprintf(buffer, size, "%0.1lf - %0.1lf*t", a, -b);
+    else
+        nprinted = snprintf(buffer, size, "%0.1lf + %0.1lf*t", a, b);
+
+    if (nprinted >= size)
+        return LogError(context, "OptimizeLinear: print buffer overflowed.");
+
+    return 0;
+}
+
+static int OptIauPython(cg_context_t *context, const double *data)
+{
+    static const char * const nv[] = {"el", "elp", "f", "d", "om"};    /* variable names */
+    int first;
+    double n;
+    int i;
+    const char *op;
+    char dotprod[200];
+    char term[40];
+    char linear[100];
+    char cpart[100];
+    int nprinted;
+    int lonevar;
+
+    fprintf(context->outfile, "\n");    /* must start on new line to maintain correct indentation in Python source. */
+
+    /* Optimize dot product of data[0]..data[4] with nv[]. */
+    first = 1;
+    dotprod[0] = '\0';
+    for (i=0; i<5; ++i)
+    {
+        n = data[i];
+        if (n != 0.0)
+        {
+            if (n < 0.0)
+            {
+                n *= -1.0;
+                op = first ? "-" : " - ";
+            }
+            else
+                op = first ? "" : " + ";
+
+            if (n == 1.0)
+                nprinted = snprintf(term, sizeof(term), "%s%s", op, nv[i]);
+            else
+                nprinted = snprintf(term, sizeof(term), "%s%0.1lf*%s", op, n, nv[i]);
+
+            if (nprinted >= sizeof(term))
+                return LogError(context, "Truncated iau2000b term.");
+
+            if (nprinted + strlen(dotprod) >= sizeof(dotprod))
+                return LogError(context, "Dot product overflow in iau2000b formula.");
+
+            strcat(dotprod, term);
+            first = 0;
+        }
+    }
+
+    /* Did we print a lone variable, e.g. "elp"? */
+    lonevar = 0;
+    for (i=0; i<5 && !lonevar; ++i)
+        if (!strcmp(dotprod, nv[i]))
+            lonevar = 1;
+
+    if (lonevar)
+    {
+        fprintf(context->outfile, "        sarg = math.sin(%s)\n", dotprod);
+        fprintf(context->outfile, "        carg = math.cos(%s)\n", dotprod);
+    }
+    else 
+    {
+        fprintf(context->outfile, "        arg = %s\n", dotprod);
+        fprintf(context->outfile, "        sarg = math.sin(arg)\n");
+        fprintf(context->outfile, "        carg = math.cos(arg)\n");
+    }
+
+    if (OptimizeLinear(context, linear, sizeof(linear), data[5], data[6])) return 1;
+    if (OptimizeConst(context, cpart, sizeof(cpart), data[7], "carg")) return 1;
+    fprintf(context->outfile, "        dp += (%s)*sarg%s\n", linear, cpart);
+
+    if (OptimizeLinear(context, linear, sizeof(linear), data[8], data[9])) return 1;
+    if (OptimizeConst(context, cpart, sizeof(cpart), data[10], "sarg")) return 1;
+    fprintf(context->outfile, "        de += (%s)*carg%s\n", linear, cpart);
+    
+    fprintf(context->outfile, "\n");
+    return 0;
+}
+
+static int OptIauData(cg_context_t *context)
+{
+    int error = 1;
+    int lnum;
+    FILE *infile;
+    const char *filename;
+    char line[100];
+    double data[IAU_DATA_PER_ROW];
+
+    filename = "model_data/iau2000b.txt";
+    infile = fopen(filename, "rt");
+    if (infile == NULL) goto fail;
+
+    lnum = 0;
+    while (fgets(line, sizeof(line), infile))
+    {
+        ++lnum;
+        CHECK(ScanRealArray(context, filename, lnum, line, IAU_DATA_PER_ROW, data));
+        switch (context->language)
+        {
+        case CODEGEN_LANGUAGE_PYTHON:
+            CHECK(OptIauPython(context, data));
+            break;
+
+        default:
+            error = LogError(context, "OptIauData: Unsupported language %d", context->language);
+            goto fail;
+        }
+    }
+
+    error = 0;
+fail:
+    if (infile == NULL)
+        error = LogError(context, "Cannot open input file: %s", filename);
+    else
+        fclose(infile);
+
+    return error;
+}
+
+static int OptAddSol(cg_context_t *context)
+{
+    int nscanned;
+    double cl, cs, cg, cp, p, q, r, s;
+    const char *op;
+
+    nscanned = sscanf(context->args, "%lf , %lf , %lf , %lf , %lf , %lf , %lf , %lf", &cl, &cs, &cg, &cp, &p, &q, &r, &s);
+    if (nscanned != 8)
+        return LogError(context, "OptAddSol: invalid arguments: '%s'", context->args);
+
+    fprintf(context->outfile, "\n    # AddSol(%s)\n", context->args);
+
+    op = "";
+    fprintf(context->outfile, "    z = ");
+    if (p != 0.0)
+    {
+        fprintf(context->outfile, "ex[%0.0lf][1]", p);
+        op = " * ";
+    }
+    if (q != 0.0)
+    {
+        fprintf(context->outfile, "%sex[%0.0lf][2]", op, q);
+        op = " * ";
+    }
+    if (r != 0.0)
+    {
+        fprintf(context->outfile, "%sex[%0.0lf][3]", op, r);
+        op = " * ";
+    }
+    if (s != 0.0)
+    {
+        fprintf(context->outfile, "%sex[%0.0lf][4]", op, s);
+    }
+    fprintf(context->outfile, "\n");
+
+    if (cl != 0.0)
+        fprintf(context->outfile, "    DLAM  += %0.3lf * z.imag\n", cl);
+
+    if (cs != 0.0)
+        fprintf(context->outfile, "    DS    += %0.2lf * z.imag\n", cs);
+
+    if (cg != 0.0)
+        fprintf(context->outfile, "    GAM1C += %0.3lf * z.real\n", cg);
+
+    if (cp != 0.0)
+        fprintf(context->outfile, "    SINPI += %0.4lf * z.real\n", cp);
+
+    return 0;
+}
+
 static int LogError(const cg_context_t *context, const char *format, ...)
 {
     va_list v;
@@ -663,6 +938,8 @@ static const cg_directive_entry DirectiveTable[] =
     { "LIST_CHEBYSHEV", ListChebyshev },
     { "C_CHEBYSHEV", CChebyshev },
     { "DELTA_T", GenDeltaT },
+    { "IAU_DATA", OptIauData },
+    { "ADDSOL", OptAddSol },
     { NULL, NULL }
 };
 
