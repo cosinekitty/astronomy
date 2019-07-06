@@ -933,6 +933,22 @@ static int OptAddSolC(cg_context_t *context, const double *data)
     return 0;
 }
 
+static int OptAddSolJS(cg_context_t *context, const double *data)
+{
+    int i;
+
+    fprintf(context->outfile, "    AddSol(%11.4lf", data[0]);
+
+    for (i=1; i < 4; ++i)
+        fprintf(context->outfile, ",%11.4lf", data[i]);
+
+    for(; i < 8; ++i)
+        fprintf(context->outfile, ",%2.0lf", data[i]);
+
+    fprintf(context->outfile, ");\n");
+    return 0;
+}
+
 static int OptAddSol(cg_context_t *context)
 {
     int error;
@@ -960,6 +976,10 @@ static int OptAddSol(cg_context_t *context)
 
         case CODEGEN_LANGUAGE_C:
             CHECK(OptAddSolC(context, data));
+            break;
+
+        case CODEGEN_LANGUAGE_JS:
+            CHECK(OptAddSolJS(context, data));
             break;
 
         default:
