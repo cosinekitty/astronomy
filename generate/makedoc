@@ -48,9 +48,11 @@ else
     echo "(Skipping generation of C documentation because file generate_c_docs does not exist.)"
 fi
 
-echo "Generating Python documentation."
-cd ../source/python || Fail "Error changing directory to ../source/python"
-pydocmd simple astronomy+ > README.md || Fail "Error in pydocmd"
-cd ../../generate || Fail "Error changing directory back"
+if [[ -f generate_py_docs ]]; then
+    echo "Generating Python documentation."
+    cd ../source/python || Fail "Error changing directory to ../source/python"
+    pydocmd simple astronomy+ > README.md || Fail "Error in pydocmd"
+    cd ../../generate || Fail "Error changing directory back"
+fi
 
 exit 0
