@@ -62,8 +62,6 @@ static const double SUN_RADIUS_AU  = 4.6505e-3;
 static const double MOON_RADIUS_AU = 1.15717e-5;
 static const double ASEC180 = 180.0 * 60.0 * 60.0;        /* arcseconds per 180 degrees (or pi radians) */
 
-static const double ETILT_INVALID = 1.0e+99;
-
 /** @cond DOXYGEN_SKIP */
 #define ARRAYSIZE(x)    (sizeof(x) / sizeof(x[0]))
 #define AU_PER_PARSEC   (ASEC180 / PI)             /* exact definition of how many AU = one parsec */
@@ -535,7 +533,7 @@ astro_time_t Astronomy_TimeFromDays(double ut)
     astro_time_t  time;
     time.ut = ut;
     time.tt = TerrestrialTime(ut);
-    time.psi = time.eps = ETILT_INVALID;
+    time.psi = time.eps = NAN;
     return time;
 }
 
@@ -556,7 +554,7 @@ astro_time_t Astronomy_CurrentTime(void)
 
     t.ut = (time(NULL) / SECONDS_PER_DAY) - 10957.5;
     t.tt = TerrestrialTime(t.ut);
-    t.psi = t.eps = ETILT_INVALID;
+    t.psi = t.eps = NAN;
     return t;
 }
 
@@ -598,7 +596,7 @@ astro_time_t Astronomy_MakeTime(int year, int month, int day, int hour, int minu
 
     time.ut = (double)y2000 - 0.5 + (hour / 24.0) + (minute / (24.0 * 60.0)) + (second / (24.0 * 3600.0));
     time.tt = TerrestrialTime(time.ut);
-    time.psi = time.eps = ETILT_INVALID;
+    time.psi = time.eps = NAN;
 
     return time;
 }
@@ -636,7 +634,7 @@ astro_time_t Astronomy_AddDays(astro_time_t time, double days)
 
     sum.ut = time.ut + days;
     sum.tt = TerrestrialTime(sum.ut);
-    sum.eps = sum.psi = ETILT_INVALID;
+    sum.eps = sum.psi = NAN;
 
     return sum;
 }
@@ -820,7 +818,7 @@ static void iau2000b(astro_time_t *time)
     double t, el, elp, f, d, om, arg, dp, de, sarg, carg;
     int i;
 
-    if (time->psi == ETILT_INVALID)
+    if (isnan(time->psi))
     {
         t = time->tt / 36525;
         el  = fmod(485868.249036 + t * 1717915923.2178, ASEC360) * ASEC2RAD;
