@@ -33,6 +33,7 @@
 #define CG_MAX_LINE_LENGTH  200
 #define MAX_DATA_PER_LINE    20
 #define IAU_DATA_PER_ROW     11
+#define IAU_DATA_NUM_ROWS    77
 #define ADDSOL_DATA_PER_ROW   8
 
 static const double MJD_BASIS = 2400000.5;
@@ -831,6 +832,27 @@ static int OptIauPython(cg_context_t *context, const double *data)
     return 0;
 }
 
+static int OptIauC(cg_context_t *context, int lnum, const double *data)
+{
+    int i;
+
+    fprintf(context->outfile, "        { { %2.0lf", data[0]);
+
+    for (i=1; i < 5; ++i)
+        fprintf(context->outfile, ", %2.0lf", data[i]);
+
+    fprintf(context->outfile, " }, { %12.0lf", data[i]);
+    for (++i; i < 11; ++i)
+        fprintf(context->outfile, ", %12.0lf", data[i]);
+
+    fprintf(context->outfile, " } }");
+    if (lnum != IAU_DATA_NUM_ROWS)
+        fprintf(context->outfile, ",");
+    fprintf(context->outfile, "\n");
+
+    return 0;
+}
+
 static int OptIauData(cg_context_t *context)
 {
     int error = 1;
@@ -844,6 +866,8 @@ static int OptIauData(cg_context_t *context)
     infile = fopen(filename, "rt");
     if (infile == NULL) goto fail;
 
+    fprintf(context->outfile, "\n");
+
     lnum = 0;
     while (fgets(line, sizeof(line), infile))
     {
@@ -855,11 +879,17 @@ static int OptIauData(cg_context_t *context)
             CHECK(OptIauPython(context, data));
             break;
 
+        case CODEGEN_LANGUAGE_C:
+            CHECK(OptIauC(context, lnum, data));
+            break;
+
         default:
-            error = LogError(context, "OptIauData: Unsupported language %d", context->language);
-            goto fail;
+            CHECK(LogError(context, "OptIauData: Unsupported language %d", context->language));
         }
     }
+
+    if (lnum != IAU_DATA_NUM_ROWS)
+        CHECK(LogError(context, "OptIauData: expected %d rows, found %d\n", IAU_DATA_NUM_ROWS, lnum));
 
     error = 0;
 fail:
