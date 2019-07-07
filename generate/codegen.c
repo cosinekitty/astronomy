@@ -853,6 +853,27 @@ static int OptIauC(cg_context_t *context, int lnum, const double *data)
     return 0;
 }
 
+static int OptIauJS(cg_context_t *context, int lnum, const double *data)
+{
+    int i;
+
+    fprintf(context->outfile, "    { nals:[ %2.0lf", data[0]);
+
+    for (i=1; i < 5; ++i)
+        fprintf(context->outfile, ", %2.0lf", data[i]);
+
+    fprintf(context->outfile, " ], cls:[ %12.0lf", data[i]);
+    for (++i; i < 11; ++i)
+        fprintf(context->outfile, ", %12.0lf", data[i]);
+
+    fprintf(context->outfile, " ] }");
+    if (lnum != IAU_DATA_NUM_ROWS)
+        fprintf(context->outfile, ",");
+    fprintf(context->outfile, "\n");
+
+    return 0;
+}
+
 static int OptIauData(cg_context_t *context)
 {
     int error = 1;
@@ -881,6 +902,10 @@ static int OptIauData(cg_context_t *context)
 
         case CODEGEN_LANGUAGE_C:
             CHECK(OptIauC(context, lnum, data));
+            break;
+
+        case CODEGEN_LANGUAGE_JS:
+            CHECK(OptIauJS(context, lnum, data));
             break;
 
         default:
