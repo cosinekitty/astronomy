@@ -319,7 +319,7 @@ class _iau2000b:
         om  = math.fmod((450160.398036 - t*6962890.5431),    _ASEC360) * _ASEC2RAD
         dp = 0
         de = 0
-        
+
 
         sarg = math.sin(om)
         carg = math.cos(om)
@@ -1158,7 +1158,7 @@ def _CalcMoon(time):
 
         I += 1
 
-    
+
 
     # AddSol(13.902000, 14.060000, -0.001000, 0.260700, 0.000000, 0.000000, 0.000000, 4.000000)
     z = ex[4][4]

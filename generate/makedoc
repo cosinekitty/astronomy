@@ -13,6 +13,11 @@ done
 echo "Generating target code."
 ./generate source || Fail "Problem generating target code."
 
+echo "Trimming trailing whitespace in target code."
+for file in ../source/c/astronomy.{h,c} ../source/js/astronomy.js ../source/python/astronomy.py; do
+    node trimspace.js ${file}
+done
+
 echo "Minifying JavaScript code."
 google-closure-compiler --js ../source/js/astronomy.js --js_output_file ../source/js/astronomy.min.js || Fail "Error minifying astronomy.js"
 
