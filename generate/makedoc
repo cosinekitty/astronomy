@@ -14,7 +14,7 @@ echo "Generating target code."
 ./generate source || Fail "Problem generating target code."
 
 echo "Trimming trailing whitespace in target code."
-for file in ../source/c/astronomy.{h,c} ../source/js/astronomy.js ../source/python/astronomy.py; do
+for file in ../source/c/astronomy.c ../source/js/astronomy.js ../source/python/astronomy.py; do
     node trimspace.js ${file}
 done
 
