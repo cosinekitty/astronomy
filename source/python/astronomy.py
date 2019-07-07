@@ -265,6 +265,8 @@ def _TerrestrialTime(ut):
     return ut + _DeltaT(ut + _Y2000_IN_MJD) / 86400.0
 
 class Time:
+    """Represents a date and time used for performing astronomy calculations.
+    """
     def __init__(self, ut):
         self.ut = ut
         self.tt = _TerrestrialTime(ut)
@@ -272,6 +274,16 @@ class Time:
 
     @staticmethod
     def Make(year, month, day, hour, minute, second):
+        """Creates a #Time object from a UTC calendar date and time.
+
+        :param year: The UTC 4-digit year value, e.g. 2019.
+        :param month: The UTC month in the range 1..12.
+        :param day: The UTC day of the month, in the range 1..31.
+        :param hour: The UTC hour, in the range 0..23.
+        :param minute: The UTC minute, in the range 0..59.
+        :param second: The real-valued UTC second, in the range [0, 60).
+        :rtype: #Time
+        """
         micro = round(math.fmod(second, 1.0) * 1000000)
         second = math.floor(second - micro/1000000)
         d = datetime.datetime(year, month, day, hour, minute, second, micro)
@@ -304,6 +316,8 @@ class Time:
 
 
 class Observer:
+    """Represents the geographic location of an observer on the surface of the Earth.
+    """
     def __init__(self, latitude, longitude, height=0):
         self.latitude = latitude
         self.longitude = longitude

@@ -16,6 +16,7 @@ addons:
 before_script:
   - npm install -g jsdoc-to-markdown@4.0.1
   - npm install -g google-closure-compiler@20190528.0.0
+  - pip install pydoc-markdown
 
 script:
   - export CC=/usr/bin/gcc-6
