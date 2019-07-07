@@ -6,6 +6,20 @@ Time(self, ut)
 ```
 Represents a date and time used for performing astronomy calculations.
 
+### Make
+```python
+Time.Make(year, month, day, hour, minute, second)
+```
+Creates a `Time` object from a UTC calendar date and time.
+
+:param year: The UTC 4-digit year value, e.g. 2019.
+:param month: The UTC month in the range 1..12.
+:param day: The UTC day of the month, in the range 1..31.
+:param hour: The UTC hour, in the range 0..23.
+:param minute: The UTC minute, in the range 0..59.
+:param second: The real-valued UTC second, in the range [0, 60).
+:rtype: `Time`
+
 ## Observer
 ```python
 Observer(self, latitude, longitude, height=0)

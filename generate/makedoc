@@ -51,7 +51,7 @@ fi
 if [[ -f generate_py_docs ]]; then
     echo "Generating Python documentation."
     cd ../source/python || Fail "Error changing directory to ../source/python"
-    pydocmd simple astronomy+ > README.md || Fail "Error in pydocmd"
+    pydocmd simple astronomy++ > README.md || Fail "Error in pydocmd"
     cd ../../generate || Fail "Error changing directory back"
 fi
 
