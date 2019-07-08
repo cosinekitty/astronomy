@@ -617,7 +617,7 @@ def Test_RiseSet(filename):
             minute = int(m.group(8))
             kind = m.group(9)
             correct_time = astronomy.Time.Make(year, month, day, hour, minute, 0)
-            direction = astronomy.DIRECTION_RISE if kind == 'r' else astronomy.DIRECTION_SET
+            direction = astronomy.Direction.Rise if kind == 'r' else astronomy.Direction.Set
             body = astronomy.BodyCode(name)
             if body < 0:
                 print('Test_RiseSet({} line {}): invalid body name "{}"'.format(filename, lnum, name))
@@ -638,11 +638,11 @@ def Test_RiseSet(filename):
                 a_dir = b_dir
                 b_evt = None
             else:
-                r_evt = astronomy.SearchRiseSet(body, observer, astronomy.DIRECTION_RISE, r_search_date, 366.0)
+                r_evt = astronomy.SearchRiseSet(body, observer, astronomy.Direction.Rise, r_search_date, 366.0)
                 if r_evt is None:
                     print('Test_RiseSet({} line {}): rise search failed'.format(filename, lnum))
                     return 1
-                s_evt = astronomy.SearchRiseSet(body, observer, astronomy.DIRECTION_SET, s_search_date, 366.0)
+                s_evt = astronomy.SearchRiseSet(body, observer, astronomy.Direction.Set, s_search_date, 366.0)
                 if s_evt is None:
                     print('Test_RiseSet({} line {}): set search failed'.format(filename, lnum))
                     return 1
@@ -650,13 +650,13 @@ def Test_RiseSet(filename):
                 if r_evt.tt < s_evt.tt:
                     a_evt = r_evt
                     b_evt = s_evt
-                    a_dir = astronomy.DIRECTION_RISE
-                    b_dir = astronomy.DIRECTION_SET
+                    a_dir = astronomy.Direction.Rise
+                    b_dir = astronomy.Direction.Set
                 else:
                     a_evt = s_evt
                     b_evt = r_evt
-                    a_dir = astronomy.DIRECTION_SET
-                    b_dir = astronomy.DIRECTION_RISE                
+                    a_dir = astronomy.Direction.Set
+                    b_dir = astronomy.Direction.Rise
                 # Nudge the event times forward a tiny amount.
                 r_search_date = r_evt.AddDays(nudge_days)
                 s_search_date = s_evt.AddDays(nudge_days)

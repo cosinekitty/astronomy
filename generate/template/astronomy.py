@@ -1637,8 +1637,10 @@ def SearchHourAngle(body, observer, hourAngle, startTime):
         delta_days = (delta_sidereal_hours / 24.0) * _SOLAR_DAYS_PER_SIDEREAL_DAY
         time = time.AddDays(delta_days)
 
-DIRECTION_RISE = +1
-DIRECTION_SET  = -1
+@unique
+class Direction(IntEnum):
+    Rise = +1
+    Set  = -1
 
 class _peak_altitude_context:
     def __init__(self, body, direction, observer, body_radius_au):
@@ -1674,10 +1676,10 @@ def SearchRiseSet(body, observer, direction, startTime, limitDays):
     else:
         body_radius = 0.0
 
-    if direction == DIRECTION_RISE:
+    if direction == Direction.Rise:
         ha_before = 12.0    # minimum altitude (bottom) happens BEFORE the body rises.
         ha_after  =  0.0    # maximum altitude (culmination) happens AFTER the body rises.
-    elif direction == DIRECTION_SET:
+    elif direction == Direction.Set:
         ha_before =  0.0    # culmination happens BEFORE the body sets.
         ha_after  = 12.0    # bottom happens AFTER the body sets.
     else:
