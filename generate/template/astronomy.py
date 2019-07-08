@@ -1755,9 +1755,11 @@ def _distance_slope(direction, time):
     dist2 = _MoonDistance(t2)
     return direction * (dist2 - dist1) / dt
 
-APSIS_PERICENTER = 0
-APSIS_APOCENTER  = 1
-APSIS_INVALID    = 2
+@unique
+class ApsisKind(IntEnum):
+    Pericenter = 0
+    Apocenter  = 1
+    Invalid    = 2
 
 class Apsis:
     def __init__(self, time, kind, dist_au):
@@ -1782,12 +1784,12 @@ def SearchLunarApsis(startTime):
                 # We found a minimum-distance event: perigee.
                 # Search the time range for the time when the slope goes from negative to positive.
                 apsis_time = Search(_distance_slope, +1, t1, t2, 1.0)
-                kind = APSIS_PERICENTER
+                kind = ApsisKind.Pericenter
             elif m1 > 0.0 or m2 < 0.0:
                 # We found a maximum-distance event: apogee.
                 # Search the time range for the time when the slope goes from positive to negative.
                 apsis_time = Search(_distance_slope, -1, t1, t2, 1.0)
-                kind = APSIS_APOCENTER
+                kind = ApsisKind.Apocenter
             else:
                 # This should never happen. It should not be possible for both slopes to be zero.
                 raise InternalError()
@@ -1813,7 +1815,7 @@ def NextLunarApsis(apsis):
     time = apsis.time.AddDays(skip)
     next = SearchLunarApsis(time)
     # Verify that we found the opposite apsis from the previous one.
-    if apsis.kind not in [APSIS_APOCENTER, APSIS_PERICENTER]:
+    if apsis.kind not in [ApsisKind.Apocenter, ApsisKind.Pericenter]:
         raise Error('Parameter "apsis" contains an invalid "kind" value.')
     if next.kind + apsis.kind != 1:
         raise InternalError()

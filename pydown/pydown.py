@@ -33,7 +33,7 @@ def Markdown(module):
             elif inspect.ismodule(obj):
                 pass # ignore other modules pulled in
             else:
-                print('other', name)
+                print('pydown.py WARNING: ignoring', name)
     return ''
 
 def main():
