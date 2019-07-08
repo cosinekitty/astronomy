@@ -1,4 +1,35 @@
 #!/usr/bin/env python3
+#
+#    MIT License
+#
+#    Copyright (c) 2019 Don Cross <cosinekitty@gmail.com>
+#
+#    Permission is hereby granted, free of charge, to any person obtaining a copy
+#    of this software and associated documentation files (the "Software"), to deal
+#    in the Software without restriction, including without limitation the rights
+#    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+#    copies of the Software, and to permit persons to whom the Software is
+#    furnished to do so, subject to the following conditions:
+#
+#    The above copyright notice and this permission notice shall be included in all
+#    copies or substantial portions of the Software.
+#
+#    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+#    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+#    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+#    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+#    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+#    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+#    SOFTWARE.
+#
+"""Astronomy Engine by Don Cross
+
+See the GitHub project page for full documentation, examples,
+and other information:
+
+https://github.com/cosinekitty/astronomy
+
+"""
 
 import math
 import datetime
@@ -54,17 +85,39 @@ class Vector:
         return math.sqrt(self.x**2 + self.y**2 + self.z**2)
 
 BODY_INVALID = -1
+
 BODY_MERCURY = 0
+"""The body code for the planet Mercury."""
+
 BODY_VENUS = 1
+"""The body code for the planet Venus."""
+
 BODY_EARTH = 2
+"""The body code for the planet Earth."""
+
 BODY_MARS = 3
+"""The body code for the planet Mars."""
+
 BODY_JUPITER = 4
+"""The body code for the planet Jupiter."""
+
 BODY_SATURN = 5
+"""The body code for the planet Saturn."""
+
 BODY_URANUS = 6
+"""The body code for the planet Uranus."""
+
 BODY_NEPTUNE = 7
+"""The body code for the planet Neptune."""
+
 BODY_PLUTO = 8
+"""The body code for the planet Pluto."""
+
 BODY_SUN = 9
+"""The body code for the Sun."""
+
 BODY_MOON = 10
+"""The body code for the Moon."""
 
 BodyName = [
     'Mercury',
@@ -79,8 +132,42 @@ BodyName = [
     'Sun',
     'Moon',
 ]
+"""The English names of the supported celestial bodies.
+
+The list `BodyName` is indexed using one of the `BODY_...` constants.
+
+Example
+-------
+
+>>> astronomy.BodyName[astronomy.BODY_JUPITER]
+'Jupiter'
+
+"""
 
 def BodyCode(name):
+    """Finds the integer body code given the name of a body.
+
+    Parameters
+    ----------
+    name: str
+        The common English name of a supported celestial body.
+
+    Returns
+    -------
+    int
+        If `name` is a valid body name, returns the integer value
+        of the body code associated with that body.
+        Otherwise, returns `BODY_INVALID`.
+
+    Example
+    -------
+
+    >>> astronomy.BodyCode('Mars')
+    3
+
+    """
+    if name not in BodyName:
+        return BODY_INVALID
     return BodyName.index(name)
 
 def _IsSuperiorPlanet(body):
@@ -175,6 +262,47 @@ def _TerrestrialTime(ut):
 
 class Time:
     """Represents a date and time used for performing astronomy calculations.
+
+    All calculations performed by Astronomy Engine are based on
+    dates and times represented by `Time` objects.
+
+    Parameters
+    ----------
+    ut : float
+        UT1/UTC number of days since noon on January 1, 2000.
+        See the `ut` attribute of this class for more details.
+
+    Attributes
+    ----------
+    ut : float
+        The floating point number of days of Universal Time since noon UTC January 1, 2000.
+        Astronomy Engine approximates UTC and UT1 as being the same thing, although they are
+        not exactly equivalent; UTC and UT1 can disagree by up to 0.9 seconds.
+        This approximation is sufficient for the accuracy requirements of Astronomy Engine.
+        Universal Time Coordinate (UTC) is the international standard for legal and civil
+        timekeeping and replaces the older Greenwich Mean Time (GMT) standard.
+        UTC is kept in sync with unpredictable observed changes in the Earth's rotation
+        by occasionally adding leap seconds as needed.
+        UT1 is an idealized time scale based on observed rotation of the Earth, which
+        gradually slows down in an unpredictable way over time, due to tidal drag by the Moon and Sun,
+        large scale weather events like hurricanes, and internal seismic and convection effects.
+        Conceptually, UT1 drifts from atomic time continuously and erratically, whereas UTC
+        is adjusted by a scheduled whole number of leap seconds as needed.
+        The value in `ut` is appropriate for any calculation involving the Earth's rotation,
+        such as calculating rise/set times, culumination, and anything involving apparent
+        sidereal time.
+        Before the era of atomic timekeeping, days based on the Earth's rotation
+        were often known as <i>mean solar days</i>.
+    tt : float
+        Terrestrial Time days since noon on January 1, 2000.
+        Terrestrial Time is an atomic time scale defined as a number of days since noon on January 1, 2000.
+        In this system, days are not based on Earth rotations, but instead by
+        the number of elapsed [SI seconds](https://physics.nist.gov/cuu/Units/second.html)
+        divided by 86400. Unlike `ut`, `tt` increases uniformly without adjustments
+        for changes in the Earth's rotation.
+        The value in `tt` is used for calculations of movements not involving the Earth's rotation,
+        such as the orbits of planets around the Sun, or the Moon around the Earth.
+        Historically, Terrestrial Time has also been known by the term <i>Ephemeris Time</i> (ET).
     """
     def __init__(self, ut):
         self.ut = ut
@@ -185,13 +313,24 @@ class Time:
     def Make(year, month, day, hour, minute, second):
         """Creates a #Time object from a UTC calendar date and time.
 
-        :param year: The UTC 4-digit year value, e.g. 2019.
-        :param month: The UTC month in the range 1..12.
-        :param day: The UTC day of the month, in the range 1..31.
-        :param hour: The UTC hour, in the range 0..23.
-        :param minute: The UTC minute, in the range 0..59.
-        :param second: The real-valued UTC second, in the range [0, 60).
-        :rtype: #Time
+        Parameters
+        ----------
+        year : int
+            The UTC 4-digit year value, e.g. 2019.
+        month : int
+            The UTC month in the range 1..12.
+        day : int
+            The UTC day of the month, in the range 1..31.
+        hour : int
+            The UTC hour, in the range 0..23.
+        minute : int
+            The UTC minute, in the range 0..59.
+        second : float
+            The real-valued UTC second, in the range [0, 60).
+
+        Returns
+        -------
+        Time
         """
         micro = round(math.fmod(second, 1.0) * 1000000)
         second = math.floor(second - micro/1000000)
@@ -595,9 +734,16 @@ def GeoMoon(time):
     [Astronomy on the Personal Computer](https://www.springer.com/us/book/9783540672210)
     by Montenbruck and Pfleger.
 
-    :param time:  The date and time for which to calculate the Moon's position.
-    :return The Moon's position as a vector in J2000 Cartesian equatorial coordinates.
-    :rtype Vector
+    Parameters
+    ----------
+    time : Time
+        The date and time for which to calculate the Moon's position.
+
+    Returns
+    -------
+    Vector
+        The Moon's position as a vector in J2000 Cartesian equatorial coordinates.
+
     """
     m = _CalcMoon(time)
 

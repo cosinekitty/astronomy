@@ -1,5 +1,5 @@
 /*
-    Astronomy library for C/C++.
+    Astronomy Engine for C/C++.
     https://github.com/cosinekitty/astronomy
 
     MIT License
