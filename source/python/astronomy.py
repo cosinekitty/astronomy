@@ -3079,9 +3079,11 @@ def Equator(body, time, observer, ofdate, aberration):
     datevect = _nutation(time, 0, temp)
     return _vector2radec(datevect)
 
-REFRACTION_NONE = 0
-REFRACTION_NORMAL = 1
-REFRACTION_JPLHOR = 2
+@unique
+class Refraction(IntEnum):
+    Airless = 0
+    Normal = 1
+    JplHorizons = 2
 
 class HorizontalCoordinates:
     def __init__(self, azimuth, altitude, ra, dec):
@@ -3091,7 +3093,7 @@ class HorizontalCoordinates:
         self.dec = dec
 
 def Horizon(time, observer, ra, dec, refraction):
-    if not (REFRACTION_NONE <= refraction <= REFRACTION_JPLHOR):
+    if not (Refraction.Airless <= refraction <= Refraction.JplHorizons):
         raise Error('Invalid refraction type: ' + str(refraction))
 
     sinlat = math.sin(observer.latitude * _DEG2RAD)
@@ -3130,7 +3132,7 @@ def Horizon(time, observer, ra, dec, refraction):
     hor_ra = ra
     hor_dec = dec
 
-    if refraction != REFRACTION_NONE:
+    if refraction != Refraction.Airless:
         zd0 = zd
 
         # http://extras.springer.com/1999/978-1-4471-0555-8/chap4/horizons/horizons.pdf
@@ -3147,7 +3149,7 @@ def Horizon(time, observer, ra, dec, refraction):
 
         refr = (1.02 / math.tan((hd+10.3/(hd+5.11))*_DEG2RAD)) / 60.0
 
-        if refraction == REFRACTION_NORMAL and zd > 91.0:
+        if refraction == Refraction.Normal and zd > 91.0:
             # In "normal" mode we gradually reduce refraction toward the nadir
             # so that we never get an altitude angle less than -90 degrees.
             # When horizon angle is -1 degrees, zd = 91, and the factor is exactly 1.
@@ -3690,7 +3692,7 @@ def SearchHourAngle(body, observer, hourAngle, startTime):
 
         # If the error is tolerable (less than 0.1 seconds), stop searching.
         if abs(delta_sidereal_hours) * 3600.0 < 0.1:
-            hor = Horizon(time, observer, ofdate.ra, ofdate.dec, REFRACTION_NORMAL)
+            hor = Horizon(time, observer, ofdate.ra, ofdate.dec, Refraction.Normal)
             return HourAngleEvent(time, hor)
 
         # We need to loop another time to get more accuracy.
@@ -3723,7 +3725,7 @@ def _peak_altitude(context, time):
 
     # We calculate altitude without refraction, then add fixed refraction near the horizon.
     # This gives us the time of rise/set without the extra work.
-    hor = Horizon(time, context.observer, ofdate.ra, ofdate.dec, REFRACTION_NONE)
+    hor = Horizon(time, context.observer, ofdate.ra, ofdate.dec, Refraction.Airless)
     alt = hor.altitude + _RAD2DEG*(context.body_radius_au / ofdate.dist)
     return context.direction * (alt + _REFRACTION_NEAR_HORIZON)
 

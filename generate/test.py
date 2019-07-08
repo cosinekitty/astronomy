@@ -65,7 +65,7 @@ def Test_Issue46():
     ofdate = astronomy.Equator(body, time, observer, True, True)
     print('ofdate ra   = {:0.16f}'.format(ofdate.ra))
     print('ofdate dec  = {:0.16f}'.format(ofdate.dec))
-    hor = astronomy.Horizon(time, observer, ofdate.ra, ofdate.dec, astronomy.REFRACTION_NONE)
+    hor = astronomy.Horizon(time, observer, ofdate.ra, ofdate.dec, astronomy.Refraction.Airless)
     print('azimuth     = {:0.16f}'.format(hor.azimuth))
     print('altitude    = {:0.16f}'.format(hor.altitude))
     return 0
@@ -95,7 +95,7 @@ def Test_AstroCheck(printflag):
                 if body != astronomy.Body.Earth:
                     j2000 = astronomy.Equator(body, time, observer, False, False)
                     ofdate = astronomy.Equator(body, time, observer, True, True)
-                    hor = astronomy.Horizon(time, observer, ofdate.ra, ofdate.dec, astronomy.REFRACTION_NONE)
+                    hor = astronomy.Horizon(time, observer, ofdate.ra, ofdate.dec, astronomy.Refraction.Airless)
                     if printflag:
                         print('s {} {:0.16f} {:0.16f} {:0.16f} {:0.16f} {:0.16f} {:0.16f} {:0.16f}'.format(name, time.tt, time.ut, j2000.ra, j2000.dec, j2000.dist, hor.azimuth, hor.altitude))
         pos = astronomy.GeoMoon(time)
@@ -103,7 +103,7 @@ def Test_AstroCheck(printflag):
             print('v GM {:0.16f} {:0.16f} {:0.16f} {:0.16f}'.format(pos.t.tt, pos.x, pos.y, pos.z))
         j2000 = astronomy.Equator(astronomy.Body.Moon, time, observer, False, False)
         ofdate = astronomy.Equator(astronomy.Body.Moon, time, observer, True, True)
-        hor = astronomy.Horizon(time, observer, ofdate.ra, ofdate.dec, astronomy.REFRACTION_NONE)
+        hor = astronomy.Horizon(time, observer, ofdate.ra, ofdate.dec, astronomy.Refraction.Airless)
         if printflag:
             print('s GM {:0.16f} {:0.16f} {:0.16f} {:0.16f} {:0.16f} {:0.16f} {:0.16f}'.format(time.tt, time.ut, j2000.ra, j2000.dec, j2000.dist, hor.azimuth, hor.altitude))
         time = time.AddDays(dt)
