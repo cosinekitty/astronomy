@@ -87,7 +87,7 @@ def Test_AstroCheck(printflag):
 
     while time.tt < stop.tt:
         for body in bodylist:
-            name = astronomy.BodyName[body]
+            name = body.name
             if body != astronomy.Body.Moon:
                 pos = astronomy.HelioVector(body, time)                
                 if printflag:
@@ -284,7 +284,7 @@ def TestPlanetLongitudes(body, outFileName, zeroLonEventName):
     rlon = 0.0
     sum_diff = 0.0
     count = 0
-    name = astronomy.BodyName[body]
+    name = body.name
     with open(outFileName, 'wt') as outfile:
         time = astronomy.Time.Make(startYear, 1, 1, 0, 0, 0)
         stopTime = astronomy.Time.Make(stopYear, 1, 1, 0, 0, 0)
@@ -417,7 +417,7 @@ def ParseDate(text):
     return astronomy.Time.Make(year, month, day, hour, minute, 0)
 
 def TestMaxElong(body, searchText, eventText, angle, visiblity):
-    name = astronomy.BodyName[body]
+    name = body.name
     searchTime = ParseDate(searchText)
     eventTime = ParseDate(eventText)
     evt = astronomy.SearchMaxElongation(body, searchTime)

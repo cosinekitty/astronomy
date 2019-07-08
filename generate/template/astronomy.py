@@ -123,31 +123,6 @@ class Body(IntEnum):
     Moon = 10
     """The body code for the Moon."""
 
-BodyName = [
-    'Mercury',
-    'Venus',
-    'Earth',
-    'Mars',
-    'Jupiter',
-    'Saturn',
-    'Uranus',
-    'Neptune',
-    'Pluto',
-    'Sun',
-    'Moon',
-]
-"""The English names of the supported celestial bodies.
-
-The list `BodyName` is indexed using one of the `Body....` constants.
-
-Example
--------
-
->>> astronomy.BodyName[astronomy.Body.Jupiter]
-'Jupiter'
-
-"""
-
 def BodyCode(name):
     """Finds the integer body code given the name of a body.
 
@@ -170,7 +145,7 @@ def BodyCode(name):
     3
 
     """
-    if name not in BodyName:
+    if name not in Body.__members__:
         return Body.Invalid
     return Body[name]
 
