@@ -33,6 +33,7 @@ https://github.com/cosinekitty/astronomy
 
 import math
 import datetime
+from enum import IntEnum, unique
 
 _PI2 = 2.0 * math.pi
 _EPOCH = datetime.datetime(2000, 1, 1, 12)
@@ -84,40 +85,43 @@ class Vector:
     def Length(self):
         return math.sqrt(self.x**2 + self.y**2 + self.z**2)
 
-BODY_INVALID = -1
+@unique
+class Body(IntEnum):
+    Invalid = -1
+    """A placeholder value for an unknown, undefined, or invalid body."""
 
-BODY_MERCURY = 0
-"""The body code for the planet Mercury."""
+    Mercury = 0
+    """The body code for the planet Mercury."""
 
-BODY_VENUS = 1
-"""The body code for the planet Venus."""
+    Venus = 1
+    """The body code for the planet Venus."""
 
-BODY_EARTH = 2
-"""The body code for the planet Earth."""
+    Earth = 2
+    """The body code for the planet Earth."""
 
-BODY_MARS = 3
-"""The body code for the planet Mars."""
+    Mars = 3
+    """The body code for the planet Mars."""
 
-BODY_JUPITER = 4
-"""The body code for the planet Jupiter."""
+    Jupiter = 4
+    """The body code for the planet Jupiter."""
 
-BODY_SATURN = 5
-"""The body code for the planet Saturn."""
+    Saturn = 5
+    """The body code for the planet Saturn."""
 
-BODY_URANUS = 6
-"""The body code for the planet Uranus."""
+    Uranus = 6
+    """The body code for the planet Uranus."""
 
-BODY_NEPTUNE = 7
-"""The body code for the planet Neptune."""
+    Neptune = 7
+    """The body code for the planet Neptune."""
 
-BODY_PLUTO = 8
-"""The body code for the planet Pluto."""
+    Pluto = 8
+    """The body code for the planet Pluto."""
 
-BODY_SUN = 9
-"""The body code for the Sun."""
+    Sun = 9
+    """The body code for the Sun."""
 
-BODY_MOON = 10
-"""The body code for the Moon."""
+    Moon = 10
+    """The body code for the Moon."""
 
 BodyName = [
     'Mercury',
@@ -134,12 +138,12 @@ BodyName = [
 ]
 """The English names of the supported celestial bodies.
 
-The list `BodyName` is indexed using one of the `BODY_...` constants.
+The list `BodyName` is indexed using one of the `Body....` constants.
 
 Example
 -------
 
->>> astronomy.BodyName[astronomy.BODY_JUPITER]
+>>> astronomy.BodyName[astronomy.Body.Jupiter]
 'Jupiter'
 
 """
@@ -157,7 +161,7 @@ def BodyCode(name):
     int
         If `name` is a valid body name, returns the integer value
         of the body code associated with that body.
-        Otherwise, returns `BODY_INVALID`.
+        Otherwise, returns `Body.Invalid`.
 
     Example
     -------
@@ -167,11 +171,11 @@ def BodyCode(name):
 
     """
     if name not in BodyName:
-        return BODY_INVALID
-    return BodyName.index(name)
+        return Body.Invalid
+    return Body[name]
 
 def _IsSuperiorPlanet(body):
-    return body in [BODY_MARS, BODY_JUPITER, BODY_SATURN, BODY_URANUS, BODY_NEPTUNE, BODY_PLUTO]
+    return body in [Body.Mars, Body.Jupiter, Body.Saturn, Body.Uranus, Body.Neptune, Body.Pluto]
 
 _PlanetOrbitalPeriod = [
     87.969,
@@ -210,11 +214,11 @@ class NoConvergeError(Error):
         Error.__init__(self, 'Numeric solver did not converge - please report issue at https://github.com/cosinekitty/astronomy/issues')
 
 def _SynodicPeriod(body):
-    if body == BODY_EARTH:
+    if body == Body.Earth:
         raise EarthNotAllowedError()
     if body < 0 or body >= len(_PlanetOrbitalPeriod):
         raise InvalidBodyError()
-    if body == BODY_MOON:
+    if body == Body.Moon:
         return _MEAN_SYNODIC_MONTH
     return abs(_EARTH_ORBITAL_PERIOD / (_EARTH_ORBITAL_PERIOD/_PlanetOrbitalPeriod[body] - 1.0))
 
@@ -816,7 +820,7 @@ def _CalcVsop(model, time):
     return Vector(vx, vy, vz, time)
 
 def _CalcEarth(time):
-    return _CalcVsop(_vsop[BODY_EARTH], time)
+    return _CalcVsop(_vsop[Body.Earth], time)
 
 # END VSOP
 #----------------------------------------------------------------------------
@@ -964,16 +968,16 @@ def Search(func, context, t1, t2, dt_tolerance_seconds):
 #----------------------------------------------------------------------------
 
 def HelioVector(body, time):
-    if body == BODY_PLUTO:
+    if body == Body.Pluto:
         return _CalcChebyshev(_pluto, time)
 
     if 0 <= body <= len(_vsop):
         return _CalcVsop(_vsop[body], time)
 
-    if body == BODY_SUN:
+    if body == Body.Sun:
         return Vector(0.0, 0.0, 0.0, time)
 
-    if body == BODY_MOON:
+    if body == Body.Moon:
         e = _CalcEarth(time)
         m = GeoMoon(time)
         return Vector(e.x+m.x, e.y+m.y, e.z+m.z, time)
@@ -982,10 +986,10 @@ def HelioVector(body, time):
 
 
 def GeoVector(body, time, aberration):
-    if body == BODY_MOON:
+    if body == Body.Moon:
         return GeoMoon(time)
 
-    if body == BODY_EARTH:
+    if body == Body.Earth:
         return Vector(0.0, 0.0, 0.0, time)
 
     if not aberration:
@@ -1011,7 +1015,7 @@ def GeoVector(body, time, aberration):
             earth = _CalcEarth(ltime)
 
         geo = Vector(h.x-earth.x, h.y-earth.y, h.z-earth.z, time)
-        if body == BODY_SUN:
+        if body == Body.Sun:
             # The Sun's heliocentric coordinates are always (0,0,0). No need to correct.
             return geo
 
@@ -1181,23 +1185,23 @@ def Ecliptic(equ):
     return _RotateEquatorialToEcliptic([equ.x, equ.y, equ.z], ob2000)
 
 def EclipticLongitude(body, time):
-    if body == BODY_SUN:
+    if body == Body.Sun:
         raise InvalidBodyError()
     hv = HelioVector(body, time)
     eclip = Ecliptic(hv)
     return eclip.elon
 
 def AngleFromSun(body, time):
-    if body == BODY_EARTH:
+    if body == Body.Earth:
         raise EarthNotAllowedError()
-    sv = GeoVector(BODY_SUN, time, True)
+    sv = GeoVector(Body.Sun, time, True)
     bv = GeoVector(body, time, True)
     return _AngleBetween(sv, bv)
 
 def LongitudeFromSun(body, time):
-    if body == BODY_EARTH:
+    if body == Body.Earth:
         raise EarthNotAllowedError()
-    sv = GeoVector(BODY_SUN, time, True)
+    sv = GeoVector(Body.Sun, time, True)
     se = Ecliptic(sv)
     bv = GeoVector(body, time, True)
     be = Ecliptic(bv)
@@ -1223,14 +1227,14 @@ def Elongation(body, time):
 
 def _rlon_offset(body, time, direction, targetRelLon):
     plon = EclipticLongitude(body, time)
-    elon = EclipticLongitude(BODY_EARTH, time)
+    elon = EclipticLongitude(Body.Earth, time)
     diff = direction * (elon - plon)
     return _LongitudeOffset(diff - targetRelLon)
 
 def SearchRelativeLongitude(body, targetRelLon, startTime):
-    if body == BODY_EARTH:
+    if body == Body.Earth:
         raise EarthNotAllowedError()
-    if body == BODY_MOON or body == BODY_SUN:
+    if body == Body.Moon or body == Body.Sun:
         raise InvalidBodyError()
     syn = _SynodicPeriod(body)
     direction = +1 if _IsSuperiorPlanet(body) else -1
@@ -1270,10 +1274,10 @@ def _neg_elong_slope(body, time):
     return (e1 - e2)/dt
 
 def SearchMaxElongation(body, startTime):
-    if body == BODY_MERCURY:
+    if body == Body.Mercury:
         s1 = 50.0
         s2 = 85.0
-    elif body == BODY_VENUS:
+    elif body == Body.Venus:
         s1 = 40.0
         s2 = 50.0
     else:
@@ -1282,7 +1286,7 @@ def SearchMaxElongation(body, startTime):
     iter = 1
     while iter <= 2:
         plon = EclipticLongitude(body, startTime)
-        elon = EclipticLongitude(BODY_EARTH, startTime)
+        elon = EclipticLongitude(Body.Earth, startTime)
         rlon = _LongitudeOffset(plon - elon)    # clamp to (-180, +180]
 
         # The slope function is not well-behaved when rlon is near 0 degrees or 180 degrees
@@ -1360,7 +1364,7 @@ def SearchSunLongitude(targetLon, startTime, limitDays):
     return Search(_sun_offset, targetLon, startTime, t2, 1.0)
 
 def MoonPhase(time):
-    return LongitudeFromSun(BODY_MOON, time)
+    return LongitudeFromSun(Body.Moon, time)
 
 def _moon_offset(targetLon, time):
     angle = MoonPhase(time)
@@ -1463,22 +1467,22 @@ def _SaturnMagnitude(phase, helio_dist, geo_dist, gc, time):
 def _VisualMagnitude(body, phase, helio_dist, geo_dist):
     # For Mercury and Venus, see:  https://iopscience.iop.org/article/10.1086/430212
     c0 = c1 = c2 = c3 = 0
-    if body == BODY_MERCURY:
+    if body == Body.Mercury:
         c0 = -0.60; c1 = +4.98; c2 = -4.88; c3 = +3.02
-    elif body == BODY_VENUS:
+    elif body == Body.Venus:
         if phase < 163.6:
             c0 = -4.47; c1 = +1.03; c2 = +0.57; c3 = +0.13
         else:
             c0 = +0.98; c1 = -1.02
-    elif body == BODY_MARS:
+    elif body == Body.Mars:
         c0 = -1.52; c1 = +1.60
-    elif body == BODY_JUPITER:
+    elif body == Body.Jupiter:
         c0 = -9.40; c1 = +0.50
-    elif body == BODY_URANUS:
+    elif body == Body.Uranus:
         c0 = -7.19; c1 = +0.25
-    elif body == BODY_NEPTUNE:
+    elif body == Body.Neptune:
         c0 = -6.87
-    elif body == BODY_PLUTO:
+    elif body == Body.Pluto:
         c0 = -1.00; c1 = +4.00
     else:
         raise InvalidBodyError()
@@ -1489,15 +1493,15 @@ def _VisualMagnitude(body, phase, helio_dist, geo_dist):
     return mag
 
 def Illumination(body, time):
-    if body == BODY_EARTH:
+    if body == Body.Earth:
         raise EarthNotAllowedError()
     earth = _CalcEarth(time)
-    if body == BODY_SUN:
+    if body == Body.Sun:
         gc = Vector(-earth.x, -earth.y, -earth.z, time)
         hc = Vector(0.0, 0.0, 0.0, time)
         phase = 0.0     # placeholder value; the Sun does not have a phase angle.
     else:
-        if body == BODY_MOON:
+        if body == Body.Moon:
             # For extra numeric precision, use geocentric moon formula directly.
             gc = GeoMoon(time)
             hc = Vector(earth.x + gc.x, earth.y + gc.y, earth.z + gc.z, time)
@@ -1510,11 +1514,11 @@ def Illumination(body, time):
     geo_dist = gc.Length()      # distance from body to center of Earth
     helio_dist = hc.Length()    # distance from body to center of Sun
     ring_tilt = None            # only reported for Saturn
-    if body == BODY_SUN:
+    if body == Body.Sun:
         mag = -0.17 + 5.0*math.log10(geo_dist / _AU_PER_PARSEC)
-    elif body == BODY_MOON:
+    elif body == Body.Moon:
         mag = _MoonMagnitude(phase, helio_dist, geo_dist)
-    elif body == BODY_SATURN:
+    elif body == Body.Saturn:
         mag, ring_tilt = _SaturnMagnitude(phase, helio_dist, geo_dist, gc, time)
     else:
         mag = _VisualMagnitude(body, phase, helio_dist, geo_dist)
@@ -1537,7 +1541,7 @@ def SearchPeakMagnitude(body, startTime):
     # s1 and s2 are relative longitudes within which peak magnitude of Venus can occur.
     s1 = 10.0
     s2 = 30.0
-    if body != BODY_VENUS:
+    if body != Body.Venus:
         raise InvalidBodyError()
 
     iter = 1
@@ -1545,7 +1549,7 @@ def SearchPeakMagnitude(body, startTime):
         # Find current heliocentric relative longitude between the
         # inferior planet and the Earth.
         plon = EclipticLongitude(body, startTime)
-        elon = EclipticLongitude(BODY_EARTH, startTime)
+        elon = EclipticLongitude(Body.Earth, startTime)
         rlon = _LongitudeOffset(plon - elon)
         # The slope function is not well-behaved when rlon is near 0 degrees or 180 degrees
         # because there is a cusp there that causes a discontinuity in the derivative.
@@ -1619,7 +1623,7 @@ class HourAngleEvent:
         self.hor = hor
 
 def SearchHourAngle(body, observer, hourAngle, startTime):
-    if body == BODY_EARTH:
+    if body == Body.Earth:
         raise EarthNotAllowedError()
 
     if hourAngle < 0.0 or hourAngle >= 24.0:
@@ -1686,11 +1690,11 @@ def _peak_altitude(context, time):
     return context.direction * (alt + _REFRACTION_NEAR_HORIZON)
 
 def SearchRiseSet(body, observer, direction, startTime, limitDays):
-    if body == BODY_EARTH:
+    if body == Body.Earth:
         raise EarthNotAllowedError()
-    elif body == BODY_SUN:
+    elif body == Body.Sun:
         body_radius = _SUN_RADIUS_AU
-    elif body == BODY_MOON:
+    elif body == Body.Moon:
         body_radius = _MOON_RADIUS_AU
     else:
         body_radius = 0.0
