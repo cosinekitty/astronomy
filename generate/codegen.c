@@ -664,7 +664,7 @@ static int ScanRealArray(
         return LogError(context, "Invalid value for numExpected=%d\n", numExpected);
 
     /* Split the line into space delimited tokens. */
-    len = strlen(line);
+    len = (int)strlen(line);
     inspace = 1;
     t = 0;
     for (i=0; i < len; ++i)
@@ -1006,7 +1006,7 @@ static int OptAddSolJS(cg_context_t *context, const double *data)
 
 static int OptAddSol(cg_context_t *context)
 {
-    int error;
+    int error = 1;
     FILE *infile;
     int lnum;
     const char *filename = "model_data/addsol.txt";

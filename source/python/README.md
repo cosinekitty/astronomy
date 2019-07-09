@@ -32,7 +32,7 @@ Example
 ---
 
 <a name="GeoMoon"></a>
-### GeoMoon(time:astronomy.Time) -> astronomy.Vector
+### GeoMoon(time: astronomy.Time) -> astronomy.Vector
 Calculates the geocentric position of the Moon at a given time.
 
 Given a time of observation, calculates the Moon's position as a vector.

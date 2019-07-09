@@ -24,6 +24,12 @@ if errorlevel 1 (
     exit /b 1
 )
 
+echo.Trimming trailing whitespace in target code.
+for %%f in (..\source\c\astronomy.c ..\source\js\astronomy.js ..\source\python\astronomy.py) do (
+    node trimspace.js %%f
+    if errorlevel 1 (exit /b 1)
+)
+
 if not defined CLOSURE (
     REM     You can customize where the Google Closure Compiler jar file
     REM     is located by setting the environment variable CLOSURE
@@ -117,5 +123,9 @@ if exist generate_c_docs (
 ) else (
     echo.Skipping generation of C documentation because file generate_c_docs does not exist.
 )
+
+echo.Generating Python documentation.
+..\pydown\pydown.py ..\source\python\astronomy.py ..\source\python\README.md
+if errorlevel 1 (exit /b 1)
 
 exit /b 0
