@@ -7,7 +7,7 @@
 ---
 
 <a name="BodyCode"></a>
-### BodyCode(name) &#8658; astronomy.Body
+### BodyCode(name)
 Finds the Body enumeration value, given the name of a body.
 
 name: str
@@ -27,7 +27,7 @@ Body
 ---
 
 <a name="GeoMoon"></a>
-### GeoMoon(time: astronomy.Time) &#8658; astronomy.Vector
+### GeoMoon(time)
 Calculates the geocentric position of the Moon at a given time.
 
 Given a time of observation, calculates the Moon's position as a vector.

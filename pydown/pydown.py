@@ -24,7 +24,6 @@ def LoadModule(inPythonFileName):
 
 def HtmlEscape(text):
     text = text.replace('&', '&amp;')
-    text = text.replace('->', '&#8658;')
     text = text.replace('<', '&lt;')
     text = text.replace('>', '&gt;')
     return text

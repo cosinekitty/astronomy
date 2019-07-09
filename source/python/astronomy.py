@@ -123,7 +123,7 @@ class Body(IntEnum):
     Moon = 10
     """The body code for the Moon."""
 
-def BodyCode(name) -> Body:
+def BodyCode(name):
     """Finds the Body enumeration value, given the name of a body.
 
     Parameters
@@ -2014,7 +2014,7 @@ def _CalcMoon(time):
         (_ARC * (_ERAD / _AU)) / (0.999953253 * SINPI)
     )
 
-def GeoMoon(time:Time) -> Vector:
+def GeoMoon(time):
     """Calculates the geocentric position of the Moon at a given time.
 
     Given a time of observation, calculates the Moon's position as a vector.
