@@ -21,7 +21,25 @@ def LoadModule(inPythonFileName):
     module = importlib.import_module(modname)
     return module
 
+def MdDocString(doc):
+    return doc
+
+def MdFunction(func):
+    md = ''
+    doc = inspect.getdoc(func)
+    if doc:
+        sig = inspect.signature(func)
+        md += '\n'
+        md += '---\n'
+        md += '\n'
+        md += '<a name="{}"></a>\n'.format(func.__name__)
+        md += '### ' + func.__name__ + str(sig) + '\n'
+        md += MdDocString(doc) + '\n'
+        md += '\n'
+    return md
+
 def Markdown(module):
+    md = ''
     funclist = []
     classlist = []
     for name, obj in inspect.getmembers(module):
@@ -34,7 +52,17 @@ def Markdown(module):
                 pass # ignore other modules pulled in
             else:
                 print('pydown.py WARNING: ignoring', name)
-    return ''
+
+    md += '---\n'
+    md += '\n'
+    md += '<a name="functions"></a>\n'
+    md += '## Functions\n'
+    md += '\n'
+
+    for func in funclist:
+        md += MdFunction(func)
+    
+    return md
 
 def main():
     if len(sys.argv) != 3:

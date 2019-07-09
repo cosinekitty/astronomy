@@ -123,8 +123,8 @@ class Body(IntEnum):
     Moon = 10
     """The body code for the Moon."""
 
-def BodyCode(name):
-    """Finds the integer body code given the name of a body.
+def BodyCode(name) -> Body:
+    """Finds the Body enumeration value, given the name of a body.
 
     Parameters
     ----------
@@ -133,16 +133,16 @@ def BodyCode(name):
 
     Returns
     -------
-    int
-        If `name` is a valid body name, returns the integer value
-        of the body code associated with that body.
+    Body
+        If `name` is a valid body name, returns the enumeration
+        value associated with that body.
         Otherwise, returns `Body.Invalid`.
 
     Example
     -------
 
     >>> astronomy.BodyCode('Mars')
-    3
+    <Body.Mars: 3>
 
     """
     if name not in Body.__members__:
@@ -700,7 +700,7 @@ def _CalcMoon(time):
         (_ARC * (_ERAD / _AU)) / (0.999953253 * SINPI)
     )
 
-def GeoMoon(time):
+def GeoMoon(time:Time) -> Vector:
     """Calculates the geocentric position of the Moon at a given time.
 
     Given a time of observation, calculates the Moon's position as a vector.
