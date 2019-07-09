@@ -362,7 +362,7 @@ class Time:
         such as calculating rise/set times, culumination, and anything involving apparent
         sidereal time.
         Before the era of atomic timekeeping, days based on the Earth's rotation
-        were often known as <i>mean solar days</i>.
+        were often known as *mean solar days*.
     tt : float
         Terrestrial Time days since noon on January 1, 2000.
         Terrestrial Time is an atomic time scale defined as a number of days since noon on January 1, 2000.
@@ -372,7 +372,7 @@ class Time:
         for changes in the Earth's rotation.
         The value in `tt` is used for calculations of movements not involving the Earth's rotation,
         such as the orbits of planets around the Sun, or the Moon around the Earth.
-        Historically, Terrestrial Time has also been known by the term <i>Ephemeris Time</i> (ET).
+        Historically, Terrestrial Time has also been known by the term *Ephemeris Time* (ET).
     """
     def __init__(self, ut):
         self.ut = ut
@@ -2021,7 +2021,7 @@ def GeoMoon(time:Time) -> Vector:
     The vector gives the location of the Moon's center relative to the Earth's center
     with x-, y-, and z-components measured in astronomical units.
 
-    This algorithm is based on Nautical Almanac Office's <i>Improved Lunar Ephemeris</i> of 1954,
+    This algorithm is based on Nautical Almanac Office's *Improved Lunar Ephemeris* of 1954,
     which in turn derives from E. W. Brown's lunar theories from the early twentieth century.
     It is adapted from Turbo Pascal code from the book
     [Astronomy on the Personal Computer](https://www.springer.com/us/book/9783540672210)

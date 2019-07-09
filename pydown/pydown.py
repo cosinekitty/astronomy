@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import sys
 import os
+import re
 import importlib
 import inspect
 
@@ -21,8 +22,35 @@ def LoadModule(inPythonFileName):
     module = importlib.import_module(modname)
     return module
 
+def HtmlEscape(text):
+    text = text.replace('&', '&amp;')
+    text = text.replace('->', '&#8658;')
+    text = text.replace('<', '&lt;')
+    text = text.replace('>', '&gt;')
+    return text
+
 def MdDocString(doc):
-    return doc
+    lines = doc.split('\n')
+    md = ''
+    mode = ''    
+    for line in lines:
+        if re.match(r'^\-+$', line):
+            continue
+        if line in ['Parameters', 'Returns', 'Example', 'Properties']:
+            mode = line
+            continue
+        if line.strip() == '':
+            mode = ''
+            md += '\n'
+            continue
+        text = HtmlEscape(line)
+        md += text + '\n'
+    return md
+
+def MdSignature(sig):
+    text = str(sig)
+    text = HtmlEscape(text)
+    return text
 
 def MdFunction(func):
     md = ''
@@ -33,7 +61,7 @@ def MdFunction(func):
         md += '---\n'
         md += '\n'
         md += '<a name="{}"></a>\n'.format(func.__name__)
-        md += '### ' + func.__name__ + str(sig) + '\n'
+        md += '### ' + func.__name__ + MdSignature(sig) + '\n'
         md += MdDocString(doc) + '\n'
         md += '\n'
     return md
