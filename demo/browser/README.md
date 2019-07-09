@@ -1,6 +1,5 @@
 # JavaScript examples for the browser
-You can use the JavaScript version of 
-[Astronomy Engine](https://cosinekitty.github.io/astronomy)
+You can use the JavaScript version of Astronomy Engine
 to perform client-side astronomy calculations in a web browser.
 Calculations are offloaded to the visitor's computer.
 

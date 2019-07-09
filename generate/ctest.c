@@ -2,7 +2,7 @@
     ctest.c  -  Don Cross <cosinekitty.com>
 
     C langauge unit test for Astronomy Engine project.
-    https://cosinekitty.github.io/astronomy
+    https://github.com/cosinekitty/astronomy
 */
 
 #include <stdio.h>

@@ -2,7 +2,7 @@
     positions.js  -  by Don Cross - 2019-06-12
 
     Example Node.js program for Astronomy Engine:
-    https://cosinekitty.github.io/astronomy/
+    https://github.com/cosinekitty/astronomy
 
     This program calculates the equatorial and horizontal coordinates
     of the Sun, Moon, and planets, as seen by an observer at a specified

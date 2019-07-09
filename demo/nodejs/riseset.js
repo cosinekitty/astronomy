@@ -2,7 +2,7 @@
     riseset.js  -  by Don Cross - 2019-06-15
 
     Example Node.js program for Astronomy Engine:
-    https://cosinekitty.github.io/astronomy/
+    https://github.com/cosinekitty/astronomy
 
     This program calculates the time of the next
     sunrise, sunset, moonrise, and moonset.
