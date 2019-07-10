@@ -98,13 +98,5 @@ cd ../nodejs || Fail "Cannot change directory to ../nodejs"
 test/test || Fail "Error testing nodejs examples."
 cd ../../generate || Fail "Cannot change back to generate directory."
 
-echo '
-           _ _   _______        _         _____                       _ 
-     /\   | | | |__   __|      | |       |  __ \                     | |
-    /  \  | | |    | | ___  ___| |_ ___  | |__) |_ _ ___ ___  ___  __| |
-   / /\ \ | | |    | |/ _ \/ __| __/ __| |  ___/ _` / __/ __|/ _ \/ _` |
-  / ____ \| | |    | |  __/\__ \ |_\__ \ | |  | (_| \__ \__ \  __/ (_| |
- /_/    \_\_|_|    |_|\___||___/\__|___/ |_|   \__,_|___/___/\___|\__,_|
-
-'
+cat pass.txt
 exit 0
