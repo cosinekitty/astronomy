@@ -9,27 +9,27 @@
         <h1>Celestial Body Positions</h1>
 
         <h2>Observer</h2>
-        <table cellpadding="5" cellspacing="0">
+        <table cellpadding="5" cellspacing="0" border="1">
             <tr>
                 <td>Date and Time:</td>
                 <td id="DateTimeBox" class="Numeric"></td>
             </tr>
             <tr>
                 <td>Latitude:</td>
-                <td><input type="text" id="EditLatitude" pattern="[\-\+]?\d+(\.\d*)?"></td>
+                <td><input type="text" id="EditLatitude" pattern="[\-\+]?\d+(\.\d*)?" size="10"></td>
             </tr>
             <tr>
                 <td>Longitude:</td>
-                <td><input type="text" id="EditLongitude" pattern="[\-\+]?\d+(\.\d*)?"></td>
+                <td><input type="text" id="EditLongitude" pattern="[\-\+]?\d+(\.\d*)?" size="10"></td>
             </tr>
             <tr>
                 <td>Elevation (m):</td>
-                <td><input type="text" id="EditElevation" pattern="[\-\+]?\d+(\.\d*)?"></td>
+                <td><input type="text" id="EditElevation" pattern="[\-\+]?\d+(\.\d*)?" size="10"></td>
             </tr>            
         </table>
 
         <h2>Body Positions</h2>
-        <table cellpadding="5" cellspacing="0" id="CalcTable">
+        <table cellpadding="5" cellspacing="0" id="CalcTable" border="1">
             <tr>
                 <td>body</td>
                 <td class="NumHeader">RA</td>
