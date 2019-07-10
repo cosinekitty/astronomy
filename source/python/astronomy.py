@@ -40,8 +40,6 @@ _EPOCH = datetime.datetime(2000, 1, 1, 12)
 _T0 = 2451545.0
 _MJD_BASIS = 2400000.5
 _Y2000_IN_MJD = _T0 - _MJD_BASIS
-_DEG2RAD = 0.017453292519943296
-_RAD2DEG = 57.295779513082321
 _ASEC360 = 1296000.0
 _ASEC2RAD = 4.848136811095359935899141e-6
 _ARC = 3600.0 * 180.0 / math.pi     # arcseconds per radian
@@ -206,7 +204,7 @@ def _AngleBetween(a, b):
         return 180.0
     if dot >= +1.0:
         return 0.0
-    return _RAD2DEG * math.acos(dot)
+    return math.degrees(math.acos(dot))
 
 class _delta_t_entry_t:
     def __init__(self, mjd, dt):
@@ -1014,10 +1012,10 @@ class _e_tilt:
         self.mobl = _mean_obliq(time.tt)
         self.tobl = self.mobl + (e.deps / 3600.0)
         self.tt = time.tt
-        self.ee = e.dpsi * math.cos(self.mobl * _DEG2RAD) / 15.0
+        self.ee = e.dpsi * math.cos(math.radians(self.mobl)) / 15.0
 
 def _ecl2equ_vec(time, ecl):
-    obl = _mean_obliq(time.tt) * _DEG2RAD
+    obl = math.radians(_mean_obliq(time.tt))
     cos_obl = math.cos(obl)
     sin_obl = math.sin(obl)
     return [
@@ -1109,17 +1107,17 @@ def _vector2radec(pos):
         else:
             dec = +90.0
     else:
-        ra = math.atan2(pos[1], pos[0]) / (_DEG2RAD * 15)
+        ra = math.degrees(math.atan2(pos[1], pos[0])) / 15.0
         if ra < 0:
             ra += 24
-        dec = _RAD2DEG * math.atan2(pos[2], math.sqrt(xyproj))
+        dec = math.degrees(math.atan2(pos[2], math.sqrt(xyproj)))
     return Equatorial(ra, dec, dist)
 
 
 def _nutation(time, direction, inpos):
     tilt = time._etilt()
-    oblm = tilt.mobl * _DEG2RAD
-    oblt = tilt.tobl * _DEG2RAD
+    oblm = math.radians(tilt.mobl)
+    oblt = math.radians(tilt.tobl)
     psi = tilt.dpsi * _ASEC2RAD
     cobm = math.cos(oblm)
     sobm = math.sin(oblm)
@@ -1182,7 +1180,7 @@ def _terra(observer, st):
     erad_km = _ERAD / 1000.0
     df = 1.0 - 0.003352819697896    # flattening of the Earth
     df2 = df * df
-    phi = observer.latitude * _DEG2RAD
+    phi = math.radians(observer.latitude)
     sinphi = math.sin(phi)
     cosphi = math.cos(phi)
     c = 1.0 / math.sqrt(cosphi*cosphi + df2*sinphi*sinphi)
@@ -1190,7 +1188,7 @@ def _terra(observer, st):
     ht_km = observer.height / 1000.0
     ach = erad_km*c + ht_km
     ash = erad_km*s + ht_km
-    stlocl = (15.0*st + observer.longitude) * _DEG2RAD
+    stlocl = math.radians(15.0*st + observer.longitude)
     sinst = math.sin(stlocl)
     cosst = math.cos(stlocl)
     return [
@@ -1207,7 +1205,7 @@ def _geo_pos(time, observer):
     return outpos
 
 def _spin(angle, pos1):
-    angr = angle * _DEG2RAD
+    angr = math.radians(angle)
     cosang = math.cos(angr)
     sinang = math.sin(angr)
     return [
@@ -3096,14 +3094,19 @@ def Horizon(time, observer, ra, dec, refraction):
     if not (Refraction.Airless <= refraction <= Refraction.JplHorizons):
         raise Error('Invalid refraction type: ' + str(refraction))
 
-    sinlat = math.sin(observer.latitude * _DEG2RAD)
-    coslat = math.cos(observer.latitude * _DEG2RAD)
-    sinlon = math.sin(observer.longitude * _DEG2RAD)
-    coslon = math.cos(observer.longitude * _DEG2RAD)
-    sindc = math.sin(dec * _DEG2RAD)
-    cosdc = math.cos(dec * _DEG2RAD)
-    sinra = math.sin(ra * 15 * _DEG2RAD)
-    cosra = math.cos(ra * 15 * _DEG2RAD)
+    latrad = math.radians(observer.latitude)
+    lonrad = math.radians(observer.longitude)
+    decrad = math.radians(dec)
+    rarad = math.radians(ra * 15.0)
+
+    sinlat = math.sin(latrad)
+    coslat = math.cos(latrad)
+    sinlon = math.sin(lonrad)
+    coslon = math.cos(lonrad)
+    sindc = math.sin(decrad)
+    cosdc = math.cos(decrad)
+    sinra = math.sin(rarad)
+    cosra = math.cos(rarad)
 
     uze = [coslat*coslon, coslat*sinlon, sinlat]
     une = [-sinlat*coslon, -sinlat*sinlon, coslat]
@@ -3123,12 +3126,12 @@ def Horizon(time, observer, ra, dec, refraction):
     proj = math.sqrt(pn*pn + pw*pw)
     az = 0.0
     if proj > 0.0:
-        az = -math.atan2(pw, pn) * _RAD2DEG
+        az = math.degrees(-math.atan2(pw, pn))
         if az < 0:
             az += 360
         if az >= 360:
             az -= 360
-    zd = math.atan2(proj, pz) * _RAD2DEG
+    zd = math.degrees(math.atan2(proj, pz))
     hor_ra = ra
     hor_dec = dec
 
@@ -3147,7 +3150,7 @@ def Horizon(time, observer, ra, dec, refraction):
         if hd < -1.0:
             hd = -1.0
 
-        refr = (1.02 / math.tan((hd+10.3/(hd+5.11))*_DEG2RAD)) / 60.0
+        refr = (1.02 / math.tan(math.radians(hd+10.3/(hd+5.11)))) / 60.0
 
         if refraction == Refraction.Normal and zd > 91.0:
             # In "normal" mode we gradually reduce refraction toward the nadir
@@ -3159,22 +3162,24 @@ def Horizon(time, observer, ra, dec, refraction):
         zd -= refr
 
         if refr > 0.0 and zd > 3.0e-4:
-            sinzd = math.sin(zd * _DEG2RAD)
-            coszd = math.cos(zd * _DEG2RAD)
-            sinzd0 = math.sin(zd0 * _DEG2RAD)
-            coszd0 = math.cos(zd0 * _DEG2RAD)
+            zdrad = math.radians(zd)
+            sinzd = math.sin(zdrad)
+            coszd = math.cos(zdrad)
+            zd0rad = math.radians(zd0)
+            sinzd0 = math.sin(zd0rad)
+            coszd0 = math.cos(zd0rad)
 
             pr = [(((p[j] - coszd0 * uz[j]) / sinzd0)*sinzd + uz[j]*coszd) for j in range(3)]
             proj = math.sqrt(pr[0]*pr[0] + pr[1]*pr[1])
             if proj > 0:
-                hor_ra = math.atan2(pr[1], pr[0]) * _RAD2DEG / 15
+                hor_ra = math.degrees(math.atan2(pr[1], pr[0])) / 15
                 if hor_ra < 0:
                     hor_ra += 24
                 if hor_ra >= 24:
                     hor_ra -= 24
             else:
                 hor_ra = 0
-            hor_dec = math.atan2(pr[2], proj) * _RAD2DEG
+            hor_dec = math.degrees(math.atan2(pr[2], proj))
 
     return HorizontalCoordinates(az, 90.0 - zd, hor_ra, hor_dec)
 
@@ -3194,12 +3199,12 @@ def _RotateEquatorialToEcliptic(pos, obliq_radians):
     ez = -pos[1]*sin_ob + pos[2]*cos_ob
     xyproj = math.sqrt(ex*ex + ey*ey)
     if xyproj > 0.0:
-        elon = _RAD2DEG * math.atan2(ey, ex)
+        elon = math.degrees(math.atan2(ey, ex))
         if elon < 0.0:
             elon += 360.0
     else:
         elon = 0.0
-    elat = _RAD2DEG * math.atan2(ez, xyproj)
+    elat = math.degrees(math.atan2(ez, xyproj))
     return EclipticCoordinates(ex, ey, ez, elat, elon)
 
 def SunPosition(time):
@@ -3214,7 +3219,7 @@ def SunPosition(time):
     sun_ofdate = _nutation(adjusted_time, 0, stemp)
 
     # Convert equatorial coordinates to ecliptic coordinates.
-    true_obliq = _DEG2RAD * adjusted_time._etilt().tobl
+    true_obliq = math.radians(adjusted_time._etilt().tobl)
     return _RotateEquatorialToEcliptic(sun_ofdate, true_obliq)
 
 def Ecliptic(equ):
@@ -3463,7 +3468,7 @@ class IlluminationInfo:
         self.time = time
         self.mag = mag
         self.phase_angle = phase
-        self.phase_fraction = (1.0 + math.cos(_DEG2RAD * phase)) / 2.0
+        self.phase_fraction = (1.0 + math.cos(math.radians(phase))) / 2.0
         self.helio_dist = helio_dist
         self.geo_dist = geo_dist
         self.gc = gc
@@ -3472,7 +3477,7 @@ class IlluminationInfo:
 
 def _MoonMagnitude(phase, helio_dist, geo_dist):
     # https://astronomy.stackexchange.com/questions/10246/is-there-a-simple-analytical-formula-for-the-lunar-phase-brightness-curve
-    rad = phase * _DEG2RAD
+    rad = math.radians(phase)
     mag = -12.717 + 1.49*abs(rad) + 0.0431*(rad**4)
     moon_mean_distance_au = 385000.6 / _KM_PER_AU
     geo_au = geo_dist / moon_mean_distance_au
@@ -3487,19 +3492,19 @@ def _SaturnMagnitude(phase, helio_dist, geo_dist, gc, time):
     # Find geocentric ecliptic coordinates of Saturn.
     eclip = Ecliptic(gc)
 
-    ir = _DEG2RAD * 28.06   # tilt of Saturn's rings to the ecliptic, in radians
-    Nr = _DEG2RAD * (169.51 + (3.82e-5 * time.tt))    # ascending node of Saturn's rings, in radians
+    ir = math.radians(28.06)   # tilt of Saturn's rings to the ecliptic, in radians
+    Nr = math.radians(169.51 + (3.82e-5 * time.tt))    # ascending node of Saturn's rings, in radians
 
     # Find tilt of Saturn's rings, as seen from Earth.
-    lat = _DEG2RAD * eclip.elat
-    lon = _DEG2RAD * eclip.elon
+    lat = math.radians(eclip.elat)
+    lon = math.radians(eclip.elon)
     tilt = math.asin(math.sin(lat)*math.cos(ir) - math.cos(lat)*math.sin(ir)*math.sin(lon-Nr))
     sin_tilt = math.sin(abs(tilt))
 
     mag = -9.0 + 0.044*phase
     mag += sin_tilt*(-2.6 + 1.2*sin_tilt)
     mag += 5.0 * math.log10(helio_dist * geo_dist)
-    ring_tilt = _RAD2DEG * tilt
+    ring_tilt = math.degrees(tilt)
     return (mag, ring_tilt)
 
 def _VisualMagnitude(body, phase, helio_dist, geo_dist):
@@ -3726,7 +3731,7 @@ def _peak_altitude(context, time):
     # We calculate altitude without refraction, then add fixed refraction near the horizon.
     # This gives us the time of rise/set without the extra work.
     hor = Horizon(time, context.observer, ofdate.ra, ofdate.dec, Refraction.Airless)
-    alt = hor.altitude + _RAD2DEG*(context.body_radius_au / ofdate.dist)
+    alt = hor.altitude + math.degrees(context.body_radius_au / ofdate.dist)
     return context.direction * (alt + _REFRACTION_NEAR_HORIZON)
 
 def SearchRiseSet(body, observer, direction, startTime, limitDays):
