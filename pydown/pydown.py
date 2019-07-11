@@ -28,23 +28,91 @@ def HtmlEscape(text):
     text = text.replace('>', '&gt;')
     return text
 
-def MdDocString(doc):
-    lines = doc.split('\n')
-    md = ''
-    mode = ''    
-    for line in lines:
-        if re.match(r'^\-+$', line):
-            continue
-        if line in ['Parameters', 'Returns', 'Example', 'Properties']:
-            mode = line
-            continue
-        if line.strip() == '':
-            mode = ''
+def SymbolLink(name):
+    if 'a' <= name[0] <= 'z':
+        # Assume built-in Python identifier, so do not link
+        return '`{0}`'.format(name)
+    # [`astro_time_t`](#astro_time_t)
+    return '[`{0}`](#{0})'.format(name)
+
+class ParmInfo:
+    def __init__(self, name, type):
+        self.name = name
+        self.type = type
+        self.description = ''
+
+    def AppendDescriptionLine(self, line):
+        self.description += line.strip() + ' '
+
+class DocInfo:
+    def __init__(self, doc):
+        self.description = ''
+        self.parameters = []
+        self.attributes = []
+
+        lines = doc.split('\n')
+
+        # First line is boldfaced if followed by blank line.
+        if len(lines) >= 2 and lines[0].strip() != '' and lines[1].strip() == '':
+            self.summary = lines[0]
+            lines = lines[2:]
+        else:
+            self.summary = ''
+
+        currentAttr = None
+        currentParm = None
+        mode = ''    
+        for line in lines:
+            if re.match(r'^\-+$', line):
+                continue
+            if line in ['Parameters', 'Returns', 'Example', 'Examples', 'Properties']:
+                mode = line
+                continue
+            if line.strip() == '':
+                mode = ''
+                continue
+            if mode == 'Parameters':
+                currentParm = self.ProcessParmAttrLine(line, currentParm, self.parameters)
+            elif mode == 'Properties':
+                currentAttr = self.ProcessParmAttrLine(line, currentAttr, self.attributes)
+            elif mode == 'Returns':
+                pass
+            elif mode == 'Example' or mode == 'Examples':
+                pass
+
+    def ProcessParmAttrLine(self, line, item, itemlist):
+        if line.startswith(' '):
+            # The first line of description, or another line of description.
+            item.AppendDescriptionLine(line)
+        else:
+            # name : type
+            token = line.split(':')
+            if len(token) != 2:
+                raise Exception('Expected name:type but found: "{}"'.format(line))
+            item = ParmInfo(token[0].strip(), token[1].strip())
+            itemlist.append(item)
+        return item
+
+    def Table(self, itemlist, tag):
+        md = ''
+        if itemlist:
+            md += '| Type | {} | Description |\n'.format(tag)
+            md += '| --- | --- | --- |\n'
+            for p in itemlist:
+                md += '| {} | {} | {} |\n'.format(SymbolLink(p.type), '`' + p.name + '`', p.description.strip())
             md += '\n'
-            continue
-        text = HtmlEscape(line)
-        md += text + '\n'
-    return md
+        return md
+
+    def Markdown(self):
+        md = '\n'
+        if self.summary:
+            md += '**' + self.summary + '**\n\n'
+        if self.description:
+            md += self.description + '\n\n'
+        md += self.Table(self.parameters, 'Parameter')
+        md += self.Table(self.attributes, 'Attribute')
+        md += '\n'
+        return md
 
 def MdSignature(sig):
     text = str(sig)
@@ -61,7 +129,22 @@ def MdFunction(func):
         md += '\n'
         md += '<a name="{}"></a>\n'.format(func.__name__)
         md += '### ' + func.__name__ + MdSignature(sig) + '\n'
-        md += MdDocString(doc) + '\n'
+        info = DocInfo(doc)
+        md += info.Markdown()
+        md += '\n'
+    return md
+
+def MdClass(c):
+    md = ''
+    doc = inspect.getdoc(c)
+    if doc:
+        md += '\n'
+        md += '---\n'
+        md += '\n'
+        md += '<a name="{}"></a>\n'.format(c.__name__)
+        md += '### class ' + c.__name__ + '\n'
+        info = DocInfo(doc)
+        md += info.Markdown()
         md += '\n'
     return md
 
@@ -85,6 +168,9 @@ def Markdown(module):
     md += '<a name="functions"></a>\n'
     md += '## Functions\n'
     md += '\n'
+
+    for c in classlist:
+        md += MdClass(c)
 
     for func in funclist:
         md += MdFunction(func)

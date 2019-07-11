@@ -6,21 +6,127 @@
 
 ---
 
+<a name="ApsisKind"></a>
+### class ApsisKind
+
+
+
+
+---
+
+<a name="BadVectorError"></a>
+### class BadVectorError
+
+
+
+
+---
+
+<a name="Body"></a>
+### class Body
+
+
+
+
+---
+
+<a name="Direction"></a>
+### class Direction
+
+
+
+
+---
+
+<a name="EarthNotAllowedError"></a>
+### class EarthNotAllowedError
+
+
+
+
+---
+
+<a name="Error"></a>
+### class Error
+
+
+
+
+---
+
+<a name="IntEnum"></a>
+### class IntEnum
+
+
+
+
+---
+
+<a name="InternalError"></a>
+### class InternalError
+
+
+
+
+---
+
+<a name="InvalidBodyError"></a>
+### class InvalidBodyError
+
+
+
+
+---
+
+<a name="NoConvergeError"></a>
+### class NoConvergeError
+
+
+
+
+---
+
+<a name="Observer"></a>
+### class Observer
+
+**Represents the geographic location of an observer on the surface of the Earth.**
+
+
+
+
+---
+
+<a name="Refraction"></a>
+### class Refraction
+
+
+
+
+---
+
+<a name="Time"></a>
+### class Time
+
+**Represents a date and time used for performing astronomy calculations.**
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| `float` | `ut` | UT1/UTC number of days since noon on January 1, 2000. See the `ut` attribute of this class for more details. |
+
+
+
+
+---
+
 <a name="BodyCode"></a>
 ### BodyCode(name)
-Finds the Body enumeration value, given the name of a body.
 
-name: str
-    The common English name of a supported celestial body.
+**Finds the Body enumeration value, given the name of a body.**
 
-Body
-    If `name` is a valid body name, returns the enumeration
-    value associated with that body.
-    Otherwise, returns `Body.Invalid`.
+| Type | Parameter | Description |
+| --- | --- | --- |
+| `str` | `name` | The common English name of a supported celestial body. |
 
-
-&gt;&gt;&gt; astronomy.BodyCode('Mars')
-&lt;Body.Mars: 3&gt;
 
 
 
@@ -28,23 +134,13 @@ Body
 
 <a name="GeoMoon"></a>
 ### GeoMoon(time)
-Calculates the geocentric position of the Moon at a given time.
 
-Given a time of observation, calculates the Moon's position as a vector.
-The vector gives the location of the Moon's center relative to the Earth's center
-with x-, y-, and z-components measured in astronomical units.
+**Calculates the geocentric position of the Moon at a given time.**
 
-This algorithm is based on Nautical Almanac Office's *Improved Lunar Ephemeris* of 1954,
-which in turn derives from E. W. Brown's lunar theories from the early twentieth century.
-It is adapted from Turbo Pascal code from the book
-[Astronomy on the Personal Computer](https://www.springer.com/us/book/9783540672210)
-by Montenbruck and Pfleger.
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Time`](#Time) | `time` | The date and time for which to calculate the Moon's position. |
 
-time : Time
-    The date and time for which to calculate the Moon's position.
-
-Vector
-    The Moon's position as a vector in J2000 Cartesian equatorial coordinates.
 
 
 
@@ -52,6 +148,6 @@ Vector
 
 <a name="unique"></a>
 ### unique(enumeration)
-Class decorator for enumerations ensuring unique member values.
+
 
 
