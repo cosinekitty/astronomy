@@ -4,6 +4,7 @@ import os
 import re
 import importlib
 import inspect
+import enum
 
 def PrintUsage():
     print("""
@@ -65,7 +66,7 @@ class DocInfo:
         for line in lines:
             if re.match(r'^\-+$', line):
                 continue
-            if line in ['Parameters', 'Returns', 'Example', 'Examples', 'Properties']:
+            if line in ['Parameters', 'Returns', 'Example', 'Examples', 'Attributes']:
                 mode = line
                 continue
             if line.strip() == '':
@@ -73,7 +74,7 @@ class DocInfo:
                 continue
             if mode == 'Parameters':
                 currentParm = self.ProcessParmAttrLine(line, currentParm, self.parameters)
-            elif mode == 'Properties':
+            elif mode == 'Attributes':
                 currentAttr = self.ProcessParmAttrLine(line, currentAttr, self.attributes)
             elif mode == 'Returns':
                 pass
@@ -152,12 +153,19 @@ def Markdown(module):
     md = ''
     funclist = []
     classlist = []
+    enumlist = []
+    errlist = []
     for name, obj in inspect.getmembers(module):
         if not name.startswith('_'):
             if inspect.isfunction(obj):
                 funclist.append(obj)
             elif inspect.isclass(obj):
-                classlist.append(obj)
+                if issubclass(obj, enum.Enum):
+                    enumlist.append(obj)
+                elif issubclass(obj, Exception):
+                    errlist.append(obj)
+                else:
+                    classlist.append(obj)
             elif inspect.ismodule(obj):
                 pass # ignore other modules pulled in
             else:
@@ -165,13 +173,35 @@ def Markdown(module):
 
     md += '---\n'
     md += '\n'
-    md += '<a name="functions"></a>\n'
-    md += '## Functions\n'
+    md += '<a name="classes"></a>\n'
+    md += '## Classes\n'
     md += '\n'
-
     for c in classlist:
         md += MdClass(c)
 
+    if False:   # not yet ready to generate Markdown for enumerated types
+        md += '---\n'
+        md += '\n'
+        md += '<a name="enumerations"></a>\n'
+        md += '## Enumerated Types\n'
+        md += '\n'
+        for c in enumlist:
+            md += MdEnumType(c)
+
+    if False:   # not yet ready to generate Markdown for error types
+        md += '---\n'
+        md += '\n'
+        md += '<a name="errors"></a>\n'
+        md += '## Error Types\n'
+        md += '\n'
+        for c in errlist:
+            md += MdErrType(c)
+
+    md += '---\n'
+    md += '\n'
+    md += '<a name="functions"></a>\n'
+    md += '## Functions\n'
+    md += '\n'
     for func in funclist:
         md += MdFunction(func)
     

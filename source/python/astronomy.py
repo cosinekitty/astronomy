@@ -33,7 +33,7 @@ https://github.com/cosinekitty/astronomy
 
 import math
 import datetime
-from enum import IntEnum, unique
+import enum
 
 _PI2 = 2.0 * math.pi
 _EPOCH = datetime.datetime(2000, 1, 1, 12)
@@ -83,8 +83,8 @@ class Vector:
     def Length(self):
         return math.sqrt(self.x**2 + self.y**2 + self.z**2)
 
-@unique
-class Body(IntEnum):
+@enum.unique
+class Body(enum.IntEnum):
     Invalid = -1
     """A placeholder value for an unknown, undefined, or invalid body."""
 
@@ -3077,8 +3077,8 @@ def Equator(body, time, observer, ofdate, aberration):
     datevect = _nutation(time, 0, temp)
     return _vector2radec(datevect)
 
-@unique
-class Refraction(IntEnum):
+@enum.unique
+class Refraction(enum.IntEnum):
     Airless = 0
     Normal = 1
     JplHorizons = 2
@@ -3705,8 +3705,8 @@ def SearchHourAngle(body, observer, hourAngle, startTime):
         delta_days = (delta_sidereal_hours / 24.0) * _SOLAR_DAYS_PER_SIDEREAL_DAY
         time = time.AddDays(delta_days)
 
-@unique
-class Direction(IntEnum):
+@enum.unique
+class Direction(enum.IntEnum):
     Rise = +1
     Set  = -1
 
@@ -3825,8 +3825,8 @@ def _distance_slope(direction, time):
     dist2 = _MoonDistance(t2)
     return direction * (dist2 - dist1) / dt
 
-@unique
-class ApsisKind(IntEnum):
+@enum.unique
+class ApsisKind(enum.IntEnum):
     Pericenter = 0
     Apocenter  = 1
     Invalid    = 2
