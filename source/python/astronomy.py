@@ -85,41 +85,35 @@ class Vector:
 
 @enum.unique
 class Body(enum.IntEnum):
+    """The celestial bodies supported by Astronomy Engine calculations.
+
+    Values
+    ------
+    Invalid: An unknown, invalid, or undefined celestial body.
+    Mercury: The planet Mercury.
+    Venus: The planet Venus.
+    Earth: The planet Earth.
+    Mars: The planet Mars.
+    Jupiter: The planet Jupiter.
+    Saturn: The planet Saturn.
+    Uranus: The planet Uranus.
+    Neptune: The planet Neptune.
+    Pluto: The planet Pluto.
+    Sun: The Sun.
+    Moon: The Earth's moon.
+    """
     Invalid = -1
-    """A placeholder value for an unknown, undefined, or invalid body."""
-
     Mercury = 0
-    """The body code for the planet Mercury."""
-
     Venus = 1
-    """The body code for the planet Venus."""
-
     Earth = 2
-    """The body code for the planet Earth."""
-
     Mars = 3
-    """The body code for the planet Mars."""
-
     Jupiter = 4
-    """The body code for the planet Jupiter."""
-
     Saturn = 5
-    """The body code for the planet Saturn."""
-
     Uranus = 6
-    """The body code for the planet Uranus."""
-
     Neptune = 7
-    """The body code for the planet Neptune."""
-
     Pluto = 8
-    """The body code for the planet Pluto."""
-
     Sun = 9
-    """The body code for the Sun."""
-
     Moon = 10
-    """The body code for the Moon."""
 
 def BodyCode(name):
     """Finds the Body enumeration value, given the name of a body.
@@ -434,9 +428,14 @@ class Time:
 class Observer:
     """Represents the geographic location of an observer on the surface of the Earth.
 
-    :param latitude: Geographic latitude in degrees north of the equator.
-    :param longitude: Geographic longitude in degrees east of the prime meridian at Greenwich, England.
-    :param height: Elevation above sea level in meters.
+    Parameters
+    ----------
+    latitude : float
+        Geographic latitude in degrees north of the equator.
+    longitude : float
+        Geographic longitude in degrees east of the prime meridian at Greenwich, England.
+    height : float
+        Elevation above sea level in meters.
     """
     def __init__(self, latitude, longitude, height=0):
         self.latitude = latitude
@@ -3079,6 +3078,18 @@ def Equator(body, time, observer, ofdate, aberration):
 
 @enum.unique
 class Refraction(enum.IntEnum):
+    """Selects if/how to correct for atmospheric refraction.
+
+    Some functions allow enabling or disabling atmospheric refraction
+    for the calculated apparent position of a celestial body
+    as seen by an observer on the surface of the Earth.
+
+    Values
+    ------
+    Airless:      No atmospheric refraction correction.
+    Normal:       Recommended correction for standard atmospheric refraction.
+    JplHorizons:  Used only for compatibility testing with JPL Horizons online tool.
+    """
     Airless = 0
     Normal = 1
     JplHorizons = 2
@@ -3707,6 +3718,17 @@ def SearchHourAngle(body, observer, hourAngle, startTime):
 
 @enum.unique
 class Direction(enum.IntEnum):
+    """Indicates whether a body is rising above or setting below the horizon.
+
+    Specifies the direction of a rising or setting event for a body.
+    For example, `Direction.Rise` is used to find sunrise times,
+    and `Direction.Set` is used to find sunset times.
+
+    Values
+    ------
+    Rise:   First appearance of a body as it rises above the horizon.
+    Set:    Last appearance of a body as it sinks below the horizon.
+    """
     Rise = +1
     Set  = -1
 
@@ -3827,6 +3849,19 @@ def _distance_slope(direction, time):
 
 @enum.unique
 class ApsisKind(enum.IntEnum):
+    """Represents whether a satellite is at a closest or farthest point in its orbit.
+
+    An apsis is a point in a satellite's orbit that is closest to,
+    or farthest from, the body it orbits (its primary).
+    `ApsisKind` is an enumerated type that indicates which of these
+    two cases applies to a particular apsis event.
+
+    Values
+    ------
+    Pericenter: The satellite is at its closest point to its primary.
+    Apocenter: The satellite is at its farthest point from its primary.
+    Invalid: A placeholder for an undefined, unknown, or invalid apsis.
+    """
     Pericenter = 0
     Apocenter  = 1
     Invalid    = 2

@@ -50,6 +50,7 @@ class DocInfo:
         self.description = ''
         self.parameters = []
         self.attributes = []
+        self.enumValues = []
 
         lines = doc.split('\n')
 
@@ -66,7 +67,7 @@ class DocInfo:
         for line in lines:
             if re.match(r'^\-+$', line):
                 continue
-            if line in ['Parameters', 'Returns', 'Example', 'Examples', 'Attributes']:
+            if line in ['Parameters', 'Returns', 'Example', 'Examples', 'Attributes', 'Values']:
                 mode = line
                 continue
             if line.strip() == '':
@@ -80,6 +81,19 @@ class DocInfo:
                 pass
             elif mode == 'Example' or mode == 'Examples':
                 pass
+            elif mode == 'Values':
+                self.ProcessEnumValue(line)
+            elif mode == '':
+                self.description += line + '\n'
+            else:
+                raise Exception('Unknown mode = "{}"'.format(mode))
+
+    def ProcessEnumValue(self, line):
+        m = re.match(r'^\s*([A-Za-z][A-Za-z0-9_]+)\s*:\s*(.*)$', line)
+        if not m:
+            raise Exception('Invalid enum documentation: "{}"'.format(line))
+        pair = (m.group(1), m.group(2).strip())
+        self.enumValues.append(pair)
 
     def ProcessParmAttrLine(self, line, item, itemlist):
         if line.startswith(' '):
@@ -104,6 +118,15 @@ class DocInfo:
             md += '\n'
         return md
 
+    def EnumTable(self):
+        md = ''
+        if self.enumValues:
+            md += '| Value | Description |\n'
+            md += '| --- | --- |\n'
+            for (name, desc) in self.enumValues:
+                md += '| {} | {} |\n'.format('`' + name + '`', desc)
+        return md
+
     def Markdown(self):
         md = '\n'
         if self.summary:
@@ -112,8 +135,16 @@ class DocInfo:
             md += self.description + '\n\n'
         md += self.Table(self.parameters, 'Parameter')
         md += self.Table(self.attributes, 'Attribute')
+        md += self.EnumTable()
         md += '\n'
         return md
+
+    def VerifyEnum(self, members):
+        defs = set(name for (name, _) in self.enumValues)
+        if defs != members:
+            print('Actual enums: [' + ', '.join(members) + ']')
+            print('Documented enums: [' + ', '.join(defs) + ']')
+            raise Exception('Documented enums do not match actual enums.')
 
 def MdSignature(sig):
     text = str(sig)
@@ -149,6 +180,21 @@ def MdClass(c):
         md += '\n'
     return md
 
+def MdEnumType(c):
+    md = ''
+    doc = inspect.getdoc(c)
+    if doc:
+        md += '\n'
+        md += '---\n'
+        md += '\n'
+        md += '<a name="{}"></a>\n'.format(c.__name__)
+        md += '### ' + c.__name__ + '\n'
+        info = DocInfo(doc)
+        info.VerifyEnum(set(c.__members__))
+        md += info.Markdown()
+        md += '\n'
+    return md
+
 def Markdown(module):
     md = ''
     funclist = []
@@ -179,14 +225,13 @@ def Markdown(module):
     for c in classlist:
         md += MdClass(c)
 
-    if False:   # not yet ready to generate Markdown for enumerated types
-        md += '---\n'
-        md += '\n'
-        md += '<a name="enumerations"></a>\n'
-        md += '## Enumerated Types\n'
-        md += '\n'
-        for c in enumlist:
-            md += MdEnumType(c)
+    md += '---\n'
+    md += '\n'
+    md += '<a name="enumerations"></a>\n'
+    md += '## Enumerated Types\n'
+    md += '\n'
+    for c in enumlist:
+        md += MdEnumType(c)
 
     if False:   # not yet ready to generate Markdown for error types
         md += '---\n'
