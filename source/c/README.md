@@ -373,7 +373,7 @@ Also, the position can optionally be corrected for [aberration](https://en.wikip
 
 
 
-**Returns:**  A heliocentric position vector of the center of the given body. 
+**Returns:**  A geocentric position vector of the center of the given body. 
 
 
 
@@ -489,7 +489,7 @@ This function can be used to determine where a planet appears around the eclipti
 
 The angle starts at 0 when the body and the Sun are at the same ecliptic longitude as seen from the Earth. The angle increases in the prograde direction (the direction that the planets orbit the Sun and the Moon orbits the Earth).
 
-When the angle is 180 degrees, it means the Sun and the body appear on opposite sides of the sky for an Earthly observer. When `body` is a planet whose orbit around the Sun is farther than the Earth's, 180 degrees indicates opposition. For the moon, it indicates a full moon.
+When the angle is 180 degrees, it means the Sun and the body appear on opposite sides of the sky for an Earthly observer. When `body` is a planet whose orbit around the Sun is farther than the Earth's, 180 degrees indicates opposition. For the Moon, it indicates a full moon.
 
 The angle keeps increasing up to 360 degrees as the body's apparent prograde motion continues relative to the Sun. When the angle reaches 360 degrees, it starts over at 0 degrees.
 

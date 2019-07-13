@@ -2745,7 +2745,7 @@ astro_vector_t Astronomy_HelioVector(astro_body_t body, astro_time_t time)
  * @param body          A body for which to calculate a heliocentric position: the Sun, Moon, or any of the planets.
  * @param time          The date and time for which to calculate the position.
  * @param aberration    `ABERRATION` to correct for aberration, or `NO_ABERRATION` to leave uncorrected.
- * @return              A heliocentric position vector of the center of the given body.
+ * @return              A geocentric position vector of the center of the given body.
  */
 astro_vector_t Astronomy_GeoVector(astro_body_t body, astro_time_t time, astro_aberration_t aberration)
 {
@@ -3889,8 +3889,8 @@ astro_elongation_t Astronomy_SearchMaxElongation(astro_body_t body, astro_time_t
  *
  * When the angle is 180 degrees, it means the Sun and the body appear on opposite sides
  * of the sky for an Earthly observer. When `body` is a planet whose orbit around the
- * Sun is farther than the Earth's, 180 degrees indicates opposition. For the moon, it indicates
- * a full moon.
+ * Sun is farther than the Earth's, 180 degrees indicates opposition. For the Moon,
+ * it indicates a full moon.
  *
  * The angle keeps increasing up to 360 degrees as the body's apparent prograde
  * motion continues relative to the Sun. When the angle reaches 360 degrees, it starts

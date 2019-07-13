@@ -416,7 +416,7 @@ def ParseDate(text):
     minute = int(m.group(5))
     return astronomy.Time.Make(year, month, day, hour, minute, 0)
 
-def TestMaxElong(body, searchText, eventText, angle, visiblity):
+def TestMaxElong(body, searchText, eventText, angle, visibility):
     name = body.name
     searchTime = ParseDate(searchText)
     eventTime = ParseDate(eventText)
@@ -424,9 +424,12 @@ def TestMaxElong(body, searchText, eventText, angle, visiblity):
     if evt is None:
         print('TestMaxElong({} {}): SearchMaxElongation failed.'.format(name, searchText))
         return 1
+    if evt.visibility != visibility:
+        print('TestMaxElong({} {}): SearchMaxElongation returned visibility {}, but expected {}'.format(name, searchText, evt.visibility.name, visibility.name))
+        return 1
     hour_diff = 24.0 * abs(evt.time.tt - eventTime.tt)
     arcmin_diff = 60.0 * abs(evt.elongation - angle)
-    print('TestMaxElong: {:<7s} {:<7s} elong={:5.2f} ({:4.2f} arcmin, {:5.3f} hours)'.format(name, visiblity, evt.elongation, arcmin_diff, hour_diff))
+    print('TestMaxElong: {:<7s} {:<7s} elong={:5.2f} ({:4.2f} arcmin, {:5.3f} hours)'.format(name, visibility.name, evt.elongation, arcmin_diff, hour_diff))
     if hour_diff > 0.6:
         print('TestMaxElong({} {}): EXCESSIVE HOUR ERROR.'.format(name, searchText))
         return 1
@@ -437,7 +440,7 @@ def TestMaxElong(body, searchText, eventText, angle, visiblity):
 
 def SearchElongTest():
     for (body, searchText, eventText, angle, visibility) in ElongTestData:
-        if 0 != TestMaxElong(body, searchText, eventText, angle, visibility):
+        if 0 != TestMaxElong(body, searchText, eventText, angle, astronomy.Visibility[visibility.title()]):
             return 1
     return 0
 

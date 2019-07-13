@@ -381,7 +381,7 @@ typedef struct
     astro_time_t        time;                   /**< The date and time of the observation. */
     astro_visibility_t  visibility;             /**< Whether the body is best seen in the morning or the evening. */
     double              elongation;             /**< The angle in degrees between the body and the Sun, as seen from the Earth. */
-    double              ecliptic_separation;     /**< The difference between the ecliptic longitudes of the body and the Sun, as seen from the Earth. */
+    double              ecliptic_separation;    /**< The difference between the ecliptic longitudes of the body and the Sun, as seen from the Earth. */
 }
 astro_elongation_t;
 
