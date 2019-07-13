@@ -51,7 +51,7 @@ dates and times represented by `Time` objects.
 ---
 
 <a name="ApsisKind"></a>
-### ApsisKind
+### enum ApsisKind
 
 **Represents whether a satellite is at a closest or farthest point in its orbit.**
 
@@ -72,7 +72,7 @@ two cases applies to a particular apsis event.
 ---
 
 <a name="Body"></a>
-### Body
+### enum Body
 
 **The celestial bodies supported by Astronomy Engine calculations.**
 
@@ -96,7 +96,7 @@ two cases applies to a particular apsis event.
 ---
 
 <a name="Direction"></a>
-### Direction
+### enum Direction
 
 **Indicates whether a body is rising above or setting below the horizon.**
 
@@ -115,7 +115,7 @@ and `Direction.Set` is used to find sunset times.
 ---
 
 <a name="Refraction"></a>
-### Refraction
+### enum Refraction
 
 **Selects if/how to correct for atmospheric refraction.**
 
@@ -129,6 +129,91 @@ as seen by an observer on the surface of the Earth.
 | `Airless` | No atmospheric refraction correction. |
 | `Normal` | Recommended correction for standard atmospheric refraction. |
 | `JplHorizons` | Used only for compatibility testing with JPL Horizons online tool. |
+
+
+---
+
+<a name="errors"></a>
+## Error Types
+
+
+---
+
+<a name="BadVectorError"></a>
+### BadVectorError
+
+A vector magnitude is too small to have a direction in space.
+
+
+
+
+
+---
+
+<a name="EarthNotAllowedError"></a>
+### EarthNotAllowedError
+
+The Earth is not allowed as the celestial body in this calculation.
+
+
+
+
+
+---
+
+<a name="Error"></a>
+### Error
+
+Indicates an error in an astronomical calculation.
+
+
+
+
+
+---
+
+<a name="InternalError"></a>
+### InternalError
+
+**An internal error occured that should be reported as a bug.**
+
+Indicates an unexpected and unrecoverable condition occurred.
+If you encounter this error using Astronomy Engine, it would be very
+helpful to report it at the [Issues](https://github.com/cosinekitty/astronomy/issues)
+page on GitHub. Please include a copy of the stack trace, along with a description
+of how to reproduce the error. This will help improve the quality of
+Astronomy Engine for everyone! (Thank you in advance from the author.)
+
+
+
+
+
+---
+
+<a name="InvalidBodyError"></a>
+### InvalidBodyError
+
+The celestial body is not allowed for this calculation.
+
+
+
+
+
+---
+
+<a name="NoConvergeError"></a>
+### NoConvergeError
+
+**A numeric solver did not converge.**
+
+Indicates that there was a failure of a numeric solver to converge.
+If you encounter this error using Astronomy Engine, it would be very
+helpful to report it at the [Issues](https://github.com/cosinekitty/astronomy/issues)
+page on GitHub. Please include a copy of the stack trace, along with a description
+of how to reproduce the error. This will help improve the quality of
+Astronomy Engine for everyone! (Thank you in advance from the author.)
+
+
 
 
 ---

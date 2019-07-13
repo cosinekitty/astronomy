@@ -157,26 +157,48 @@ _PlanetOrbitalPeriod = [
 ]
 
 class Error(Exception):
+    """Indicates an error in an astronomical calculation."""
     def __init__(self, message):
         Exception.__init__(self, message)
 
 class EarthNotAllowedError(Error):
+    """The Earth is not allowed as the celestial body in this calculation."""
     def __init__(self):
         Error.__init__(self, 'The Earth is not allowed as the body.')
 
 class InvalidBodyError(Error):
+    """The celestial body is not allowed for this calculation."""
     def __init__(self):
         Error.__init__(self, 'Invalid astronomical body.')
 
 class BadVectorError(Error):
+    """A vector magnitude is too small to have a direction in space."""
     def __init__(self):
         Error.__init__(self, 'Vector is too small to have a direction.')
 
 class InternalError(Error):
+    """An internal error occured that should be reported as a bug.
+
+    Indicates an unexpected and unrecoverable condition occurred.
+    If you encounter this error using Astronomy Engine, it would be very
+    helpful to report it at the [Issues](https://github.com/cosinekitty/astronomy/issues)
+    page on GitHub. Please include a copy of the stack trace, along with a description
+    of how to reproduce the error. This will help improve the quality of
+    Astronomy Engine for everyone! (Thank you in advance from the author.)
+    """
     def __init__(self):
         Error.__init__(self, 'Internal error - please report issue at https://github.com/cosinekitty/astronomy/issues')
 
 class NoConvergeError(Error):
+    """A numeric solver did not converge.
+
+    Indicates that there was a failure of a numeric solver to converge.
+    If you encounter this error using Astronomy Engine, it would be very
+    helpful to report it at the [Issues](https://github.com/cosinekitty/astronomy/issues)
+    page on GitHub. Please include a copy of the stack trace, along with a description
+    of how to reproduce the error. This will help improve the quality of
+    Astronomy Engine for everyone! (Thank you in advance from the author.)
+    """
     def __init__(self):
         Error.__init__(self, 'Numeric solver did not converge - please report issue at https://github.com/cosinekitty/astronomy/issues')
 
@@ -1099,7 +1121,7 @@ def _vector2radec(pos):
     if xyproj == 0.0:
         if pos[2] == 0.0:
             # Indeterminate coordinates: pos vector has zero length.
-            raise Error('Cannot convert vector to polar coordinates')
+            raise BadVectorError()
         ra = 0.0
         if pos[2] < 0.0:
             dec = -90.0

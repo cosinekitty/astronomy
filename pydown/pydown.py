@@ -197,9 +197,23 @@ def MdEnumType(c):
         md += '---\n'
         md += '\n'
         md += '<a name="{}"></a>\n'.format(c.__name__)
-        md += '### ' + c.__name__ + '\n'
+        md += '### enum ' + c.__name__ + '\n'
         info = DocInfo(doc)
         info.VerifyEnum(set(c.__members__))
+        md += info.Markdown()
+        md += '\n'
+    return md
+
+def MdErrType(c):
+    md = ''
+    doc = inspect.getdoc(c)
+    if doc:
+        md += '\n'
+        md += '---\n'
+        md += '\n'
+        md += '<a name="{}"></a>\n'.format(c.__name__)
+        md += '### ' + c.__name__ + '\n'
+        info = DocInfo(doc)
         md += info.Markdown()
         md += '\n'
     return md
@@ -242,14 +256,13 @@ def Markdown(module):
     for c in enumlist:
         md += MdEnumType(c)
 
-    if False:   # not yet ready to generate Markdown for error types
-        md += '---\n'
-        md += '\n'
-        md += '<a name="errors"></a>\n'
-        md += '## Error Types\n'
-        md += '\n'
-        for c in errlist:
-            md += MdErrType(c)
+    md += '---\n'
+    md += '\n'
+    md += '<a name="errors"></a>\n'
+    md += '## Error Types\n'
+    md += '\n'
+    for c in errlist:
+        md += MdErrType(c)
 
     md += '---\n'
     md += '\n'
