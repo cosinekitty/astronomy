@@ -144,8 +144,10 @@ as seen by an observer on the surface of the Earth.
 
 **Finds the Body enumeration value, given the name of a body.**
 
+```
 >>> astronomy.BodyCode('Mars')
 <Body.Mars: 3>
+```
 
 
 | Type | Parameter | Description |

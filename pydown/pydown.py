@@ -71,6 +71,8 @@ class DocInfo:
                 mode = line
                 continue
             if line.strip() == '':
+                if mode == 'code':
+                    self.description += '```\n'
                 mode = ''
                 continue
             if mode == 'Parameters':
@@ -84,9 +86,16 @@ class DocInfo:
             elif mode == 'Values':
                 self.ProcessEnumValue(line)
             elif mode == '':
+                if re.match(r'^\s*>>>', line):
+                    mode = 'code'
+                    self.description += '```\n'
+                self.description += line + '\n'
+            elif mode == 'code':
                 self.description += line + '\n'
             else:
                 raise Exception('Unknown mode = "{}"'.format(mode))
+        if mode == 'code':
+            self.description += '```\n'
 
     def ProcessEnumValue(self, line):
         m = re.match(r'^\s*([A-Za-z][A-Za-z0-9_]+)\s*:\s*(.*)$', line)
