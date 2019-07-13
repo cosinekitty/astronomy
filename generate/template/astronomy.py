@@ -143,7 +143,7 @@ def BodyCode(name):
 
     Returns
     -------
-    Body
+    #Body
         If `name` is a valid body name, returns the enumeration
         value associated with that body.
         Otherwise, returns `Body.Invalid`.
@@ -341,6 +341,7 @@ class Time:
 
         Returns
         -------
+        #Time
         """
         micro = round(math.fmod(second, 1.0) * 1000000)
         second = math.floor(second - micro/1000000)
@@ -772,7 +773,7 @@ def GeoMoon(time):
 
     Returns
     -------
-    Vector
+    #Vector
         The Moon's position as a vector in J2000 Cartesian equatorial coordinates.
 
     """
@@ -1146,7 +1147,7 @@ def GeoVector(body, time, aberration):
 
     Returns
     -------
-    Vector
+    #Vector
         A geocentric position vector of the center of the given body.
     """
     if body == Body.Moon:
@@ -1228,7 +1229,7 @@ def Equator(body, time, observer, ofdate, aberration):
 
     Returns
     -------
-    Equatorial
+    #EquatorialCoordinates
         Equatorial coordinates in the specified frame of reference.
     """
     gc_observer = _geo_pos(time, observer)
@@ -1316,7 +1317,7 @@ def Horizon(time, observer, ra, dec, refraction):
 
     Returns
     -------
-    HorizontalCoordinates
+    #HorizontalCoordinates
         The horizontal coordinates (altitude and azimuth), along with
         equatorial coordinates (right ascension and declination), all
         optionally corrected for atmospheric refraction. See remarks above
@@ -1481,7 +1482,7 @@ def SunPosition(time):
 
     Returns
     -------
-    EclipticCoordinates
+    #EclipticCoordinates
         The ecliptic coordinates of the Sun using the Earth's true equator of date.
     """
     # Correct for light travel time from the Sun.
@@ -1510,7 +1511,7 @@ def Ecliptic(equ):
 
     Returns
     -------
-    EclipticCoordinates
+    #EclipticCoordinates
         Ecliptic coordinates in the J2000 frame of reference.
     """
     # Based on NOVAS functions equ2ecl() and equ2ecl_vec().
@@ -1535,7 +1536,7 @@ def EclipticLongitude(body, time):
 
     Returns
     -------
-    float
+    `float`
         An angular value in degrees indicating the ecliptic longitude of the body.
     """
     if body == Body.Sun:
@@ -1561,7 +1562,7 @@ def AngleFromSun(body, time):
 
     Returns
     -------
-    float
+    `float`
         A numeric value indicating the angle in degrees between the Sun
         and the specified body as seen from the center of the Earth.
     """
@@ -1605,7 +1606,7 @@ def LongitudeFromSun(body, time):
 
     Returns
     -------
-    float
+    `float`
         An angle in degrees in the range [0, 360).
     """
     if body == Body.Earth:
@@ -1680,7 +1681,7 @@ def Elongation(body, time):
 
     Returns
     -------
-    ElongationEvent
+    #ElongationEvent
     """
     angle = LongitudeFromSun(body, time)
     if angle > 180.0:
@@ -1746,7 +1747,7 @@ def SearchRelativeLongitude(body, targetRelLon, startTime):
 
     Returns
     -------
-    Time
+    #Time
         The date and time of the relative longitude event.
     """
     if body == Body.Earth:

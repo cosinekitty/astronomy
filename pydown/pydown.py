@@ -51,6 +51,8 @@ class DocInfo:
         self.parameters = []
         self.attributes = []
         self.enumValues = []
+        self.returnType = None
+        self.returns = ''
 
         lines = doc.split('\n')
 
@@ -80,7 +82,10 @@ class DocInfo:
             elif mode == 'Attributes':
                 currentAttr = self.ProcessParmAttrLine(line, currentAttr, self.attributes)
             elif mode == 'Returns':
-                pass
+                if line.startswith(' '):
+                    self.returns += line.strip() + '\n'
+                else:
+                    self.returnType = line.strip()
             elif mode == 'Example' or mode == 'Examples':
                 pass
             elif mode == 'Values':
@@ -145,6 +150,13 @@ class DocInfo:
         md += self.Table(self.parameters, 'Parameter')
         md += self.Table(self.attributes, 'Attribute')
         md += self.EnumTable()
+        if self.returns or self.returnType:
+            md += '### Returns'
+            if self.returnType:
+                md += ': ' + self.returnType
+            md += '\n'
+            md += self.returns + '\n'
+            md += '\n'
         md += '\n'
         return md
 

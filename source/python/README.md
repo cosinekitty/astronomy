@@ -146,6 +146,9 @@ dates and times represented by `Time` objects.
 | `int` | `minute` | The UTC minute, in the range 0..59. |
 | `float` | `second` | The real-valued UTC second, in the range [0, 60). |
 
+### Returns: #Time
+
+
 
 
 
@@ -392,6 +395,11 @@ easy it is to see the body away from the glare of the Sun.
 | [`Body`](#Body) | `body` | The celestial body whose angle from the Sun is to be measured. Not allowed to be `Body.Earth`. |
 | [`Time`](#Time) | `time` | The time at which the observation is made. |
 
+### Returns: `float`
+A numeric value indicating the angle in degrees between the Sun
+and the specified body as seen from the center of the Earth.
+
+
 
 
 
@@ -412,6 +420,12 @@ easy it is to see the body away from the glare of the Sun.
 | --- | --- | --- |
 | `str` | `name` | The common English name of a supported celestial body. |
 
+### Returns: #Body
+If `name` is a valid body name, returns the enumeration
+value associated with that body.
+Otherwise, returns `Body.Invalid`.
+
+
 
 
 
@@ -427,6 +441,10 @@ on 1 January 2000), this function converts those coordinates to J2000 ecliptic c
 which are relative to the plane of the Earth's orbit around the Sun.
 equ : EquatorialCoordinates
     Equatorial coordinates in the J2000 frame of reference.
+
+
+### Returns: #EclipticCoordinates
+Ecliptic coordinates in the J2000 frame of reference.
 
 
 
@@ -450,6 +468,10 @@ time : Time
 | Type | Parameter | Description |
 | --- | --- | --- |
 | [`Body`](#Body) | `body` | A body other than the Sun. |
+
+### Returns: `float`
+An angular value in degrees indicating the ecliptic longitude of the body.
+
 
 
 
@@ -482,6 +504,9 @@ time : Time
 | --- | --- | --- |
 | [`Body`](#Body) | `body` | The celestial body whose visibility is to be calculated. |
 
+### Returns: #ElongationEvent
+
+
 
 
 
@@ -512,6 +537,10 @@ Correction for aberration is optional, using the `aberration` parameter.
 | `bool` | `ofdate` | Selects the date of the Earth's equator in which to express the equatorial coordinates. If `True`, returns coordinates using the equator and equinox of date. If `False`, returns coordinates converted to the J2000 system. |
 | `bool` | `aberration` | If `True`, corrects for aberration of light based on the motion of the Earth with respect to the heliocentric origin. If `False`, does not correct for aberration. |
 
+### Returns: #EquatorialCoordinates
+Equatorial coordinates in the specified frame of reference.
+
+
 
 
 
@@ -535,6 +564,10 @@ by Montenbruck and Pfleger.
 | Type | Parameter | Description |
 | --- | --- | --- |
 | [`Time`](#Time) | `time` | The date and time for which to calculate the Moon's position. |
+
+### Returns: #Vector
+The Moon's position as a vector in J2000 Cartesian equatorial coordinates.
+
 
 
 
@@ -567,6 +600,10 @@ movement of the Earth with respect to the rays of light coming from that body.
 | [`Time`](#Time) | `time` | The date and time for which to calculate the position. |
 | `bool` | `aberration` | A boolean value indicating whether to correct for aberration. |
 
+### Returns: #Vector
+A geocentric position vector of the center of the given body.
+
+
 
 
 
@@ -591,6 +628,11 @@ the year range 1700..2200, this function raise an exception.
 | --- | --- | --- |
 | [`Body`](#Body) | `body` | The celestial body whose heliocentric position is to be calculated: The Sun, Moon, or any of the planets. |
 | [`Time`](#Time) | `time` | The time at which to calculate the heliocentric position. |
+
+### Returns: #Vector
+A heliocentric position vector of the center of the given body
+at the given time.
+
 
 
 
@@ -622,6 +664,13 @@ in the #HorizontalCoordinates object returned by this function will all be corre
 If refraction is disabled, none of these four coordinates will be corrected; in that case,
 the right ascension and declination in the returned object will be numerically identical
 to the respective `ra` and `dec` values passed in.
+
+
+### Returns: #HorizontalCoordinates
+The horizontal coordinates (altitude and azimuth), along with
+equatorial coordinates (right ascension and declination), all
+optionally corrected for atmospheric refraction. See remarks above
+for more details.
 
 
 
@@ -657,6 +706,10 @@ time : Time
 | Type | Parameter | Description |
 | --- | --- | --- |
 | [`Body`](#Body) | `body` | The celestial body for which to find longitude from the Sun. |
+
+### Returns: `float`
+An angle in degrees in the range [0, 360).
+
 
 
 
@@ -719,6 +772,15 @@ dt_tolerance_seconds : float
 | --- | --- | --- |
 | `function(context, Time)` | `func` | A function that takes an arbitrary context parameter and a #Time parameter. Returns a float value.  See remarks above for more details. |
 
+### Returns: #Time or `None`
+If the search is successful, returns a #Time object that is within
+`dt_tolerance_seconds` of an ascending root.
+In this case, the returned time value will always be within the
+inclusive range [`t1`, `t2`].
+If there is no ascending root, or there is more than one ascending root,
+the function returns `None`.
+
+
 
 
 
@@ -764,6 +826,10 @@ the Earth and another planet:
 | `float` | `targetRelLon` | The desired relative longitude, expressed in degrees. Must be in the range [0, 360). |
 | [`Time`](#Time) | `startTime` | The date and time at which to begin the search. |
 
+### Returns: #Time
+The date and time of the relative longitude event.
+
+
 
 
 
@@ -791,6 +857,10 @@ In fact, the function #Seasons does use this function for that purpose.
 | Type | Parameter | Description |
 | --- | --- | --- |
 | [`Time`](#Time) | `time` | The date and time for which to calculate the Sun's position. |
+
+### Returns: #EclipticCoordinates
+The ecliptic coordinates of the Sun using the Earth's true equator of date.
+
 
 
 
