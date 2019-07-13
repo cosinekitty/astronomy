@@ -74,6 +74,23 @@ def _NormalizeLongitude(lon):
     return lon
 
 class Vector:
+    """A Cartesian vector with 3 space coordinates and 1 time coordinate.
+
+    The vector's space coordinates are measured in astronomical units (AU).
+    The coordinate system varies and depends on context.
+    The vector also includes a time stamp.
+
+    Properties
+    ----------
+    x : float
+        The x-coordinate of the vector, measured in AU.
+    y : float
+        The y-coordinate of the vector, measured in AU.
+    z : float
+        The z-coordinate of the vector, measured in AU.
+    t : Time
+        The date and time at which the coordinate is valid.
+    """
     def __init__(self, x, y, z, t):
         self.x = x
         self.y = y
@@ -81,6 +98,7 @@ class Vector:
         self.t = t
 
     def Length(self):
+        """Returns the length of the vector in AU."""
         return math.sqrt(self.x**2 + self.y**2 + self.z**2)
 
 @enum.unique

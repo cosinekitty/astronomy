@@ -160,16 +160,20 @@ def MdSignature(sig):
     text = HtmlEscape(text)
     return text
 
-def MdFunction(func):
+def MdFunction(func, parent=None):
     md = ''
     doc = inspect.getdoc(func)
     if doc:
         sig = inspect.signature(func)
         md += '\n'
-        md += '---\n'
-        md += '\n'
-        md += '<a name="{}"></a>\n'.format(func.__name__)
-        md += '### ' + func.__name__ + MdSignature(sig) + '\n'
+        if parent:
+            name = parent.__name__ + '.' + func.__name__
+        else:
+            name = func.__name__
+            md += '---\n'
+            md += '\n'
+        md += '<a name="{}"></a>\n'.format(name)
+        md += '### ' + name + MdSignature(sig) + '\n'
         info = DocInfo(doc)
         md += info.Markdown()
         md += '\n'
@@ -187,6 +191,14 @@ def MdClass(c):
         info = DocInfo(doc)
         md += info.Markdown()
         md += '\n'
+        
+        firstMemberFunc = True
+        for name, obj in inspect.getmembers(c):
+            if not name.startswith('_'):
+                if firstMemberFunc:
+                    firstMemberFunc = False
+                    md += '#### member functions\n\n'
+                md += MdFunction(obj, parent=c)
     return md
 
 def MdEnumType(c):

@@ -42,6 +42,60 @@ dates and times represented by `Time` objects.
 
 
 
+#### member functions
+
+
+<a name="Time.Make"></a>
+### Time.Make(year, month, day, hour, minute, second)
+
+**Creates a #Time object from a UTC calendar date and time.**
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| `int` | `year` | The UTC 4-digit year value, e.g. 2019. |
+| `int` | `month` | The UTC month in the range 1..12. |
+| `int` | `day` | The UTC day of the month, in the range 1..31. |
+| `int` | `hour` | The UTC hour, in the range 0..23. |
+| `int` | `minute` | The UTC minute, in the range 0..59. |
+| `float` | `second` | The real-valued UTC second, in the range [0, 60). |
+
+
+
+
+---
+
+<a name="Vector"></a>
+### class Vector
+
+**A Cartesian vector with 3 space coordinates and 1 time coordinate.**
+
+The vector's space coordinates are measured in astronomical units (AU).
+The coordinate system varies and depends on context.
+The vector also includes a time stamp.
+Properties
+x : float
+    The x-coordinate of the vector, measured in AU.
+y : float
+    The y-coordinate of the vector, measured in AU.
+z : float
+    The z-coordinate of the vector, measured in AU.
+t : Time
+    The date and time at which the coordinate is valid.
+
+
+
+
+#### member functions
+
+
+<a name="Vector.Length"></a>
+### Vector.Length(self)
+
+Returns the length of the vector in AU.
+
+
+
+
 ---
 
 <a name="enumerations"></a>
