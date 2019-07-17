@@ -69,8 +69,8 @@ astro_status_t;
  * call #Astronomy_AddDays.
  *
  * The astro_time_t type contains `ut` to represent Universal Time (UT1/UTC) and
- * `tt` to represent Terrestrial Time (TT, also known as <i>ephemeris time</i>).
- * The difference `tt-ut` is known as <i>&Delta;T</i>, and is obtained from
+ * `tt` to represent Terrestrial Time (TT, also known as *ephemeris time*).
+ * The difference `tt-ut` is known as *&Delta;T*, and is obtained from
  * a model provided by the
  * [United States Naval Observatory](http://maia.usno.navy.mil/ser7/).
  *
@@ -111,7 +111,7 @@ typedef struct
      * sidereal time.
      *
      * Before the era of atomic timekeeping, days based on the Earth's rotation
-     * were often known as <i>mean solar days</i>.
+     * were often known as *mean solar days*.
      */
     double ut;
 
@@ -127,7 +127,7 @@ typedef struct
      * The value in `tt` is used for calculations of movements not involving the Earth's rotation,
      * such as the orbits of planets around the Sun, or the Moon around the Earth.
      *
-     * Historically, Terrestrial Time has also been known by the term <i>Ephemeris Time</i> (ET).
+     * Historically, Terrestrial Time has also been known by the term *Ephemeris Time* (ET).
      */
     double tt;
 
@@ -342,7 +342,7 @@ astro_func_result_t;
  *
  * The function #Astronomy_Search numerically solves for the time that a given event occurs.
  * An event is defined as the time when an arbitrary function transitions between having
- * a negative value and a non-negative value. This transition is called an <i>ascending root</i>.
+ * a negative value and a non-negative value. This transition is called an *ascending root*.
  *
  * The type astro_search_func_t represents such a callback function that accepts a
  * custom `context` pointer and an astro_time_t representing the time to probe.
@@ -430,14 +430,14 @@ astro_apsis_kind_t;
 /**
  * @brief An apsis event: pericenter (closest approach) or apocenter (farthest distance).
  *
- * For the Moon orbiting the Earth, or a planet orbiting the Sun, an <i>apsis</i> is an
+ * For the Moon orbiting the Earth, or a planet orbiting the Sun, an *apsis* is an
  * event where the orbiting body reaches its closest or farthest point from the primary body.
- * The closest approach is called <i>pericenter</i> and the farthest point is <i>apocenter</i>.
+ * The closest approach is called *pericenter* and the farthest point is *apocenter*.
  *
  * More specific terminology is common for particular orbiting bodies.
- * The Moon's closest approach to the Earth is called <i>perigee</i> and its furthest
- * point is called <i>apogee</i>. The closest approach of a planet to the Sun is called
- * <i>perihelion</i> and the furthest point is called <i>aphelion</i>.
+ * The Moon's closest approach to the Earth is called *perigee* and its furthest
+ * point is called *apogee*. The closest approach of a planet to the Sun is called
+ * *perihelion* and the furthest point is called *aphelion*.
  *
  * This data structure is returned by #Astronomy_SearchLunarApsis and #Astronomy_NextLunarApsis
  * to iterate through consecutive alternating perigees and apogees.

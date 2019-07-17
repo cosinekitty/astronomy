@@ -6,6 +6,34 @@
 
 ---
 
+<a name="Apsis"></a>
+### class Apsis
+
+**An event where a satellite is closest to or farthest from the body it orbits.**
+
+For the Moon orbiting the Earth, or a planet orbiting the Sun, an *apsis* is an
+event where the orbiting body reaches its closest or farthest point from the primary body.
+The closest approach is called *pericenter* and the farthest point is *apocenter*.
+More specific terminology is common for particular orbiting bodies.
+The Moon's closest approach to the Earth is called *perigee* and its furthest
+point is called *apogee*. The closest approach of a planet to the Sun is called
+*perihelion* and the furthest point is called *aphelion*.
+This data structure is returned by #SearchLunarApsis and #NextLunarApsis
+to iterate through consecutive alternating perigees and apogees.
+
+
+| Type | Attribute | Description |
+| --- | --- | --- |
+| [`Time`](#Time) | `time` | The date and time of the apsis. |
+| [`ApsisKind`](#ApsisKind) | `kind` | Whether this is a pericenter or apocenter event. |
+| `float` | `dist_au` | The distance between the centers of the bodies in astronomical units. |
+| `float` | `dist_km` | The distance between the centers of the bodies in kilometers. |
+
+
+
+
+---
+
 <a name="EclipticCoordinates"></a>
 ### class EclipticCoordinates
 

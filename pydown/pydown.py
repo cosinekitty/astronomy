@@ -189,6 +189,8 @@ def MdFunction(func, parent=None):
         info = DocInfo(doc)
         md += info.Markdown()
         md += '\n'
+    else:
+        print('pydown: WARNING - no documentation for function', func.__name__)
     return md
 
 def MdClass(c):
@@ -211,6 +213,8 @@ def MdClass(c):
                     firstMemberFunc = False
                     md += '#### member functions\n\n'
                 md += MdFunction(obj, parent=c)
+    else:
+        print('pydown: WARNING - no documentation for class', c.__name__)
     return md
 
 def MdEnumType(c):
@@ -226,6 +230,8 @@ def MdEnumType(c):
         info.VerifyEnum(set(c.__members__))
         md += info.Markdown()
         md += '\n'
+    else:
+        print('pydown: WARNING - no documentation for enumeration class', c.__name__)
     return md
 
 def MdErrType(c):
@@ -240,6 +246,8 @@ def MdErrType(c):
         info = DocInfo(doc)
         md += info.Markdown()
         md += '\n'
+    else:
+        print('pydown: WARNING - no documentation for exception class', c.__name__)
     return md
 
 def Markdown(module):

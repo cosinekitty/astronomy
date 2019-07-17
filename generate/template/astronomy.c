@@ -1200,7 +1200,7 @@ static void CalcMoon(
  * The vector gives the location of the Moon's center relative to the Earth's center
  * with x-, y-, and z-components measured in astronomical units.
  *
- * This algorithm is based on Nautical Almanac Office's <i>Improved Lunar Ephemeris</i> of 1954,
+ * This algorithm is based on Nautical Almanac Office's *Improved Lunar Ephemeris* of 1954,
  * which in turn derives from E. W. Brown's lunar theories from the early twentieth century.
  * It is adapted from Turbo Pascal code from the book
  * [Astronomy on the Personal Computer](https://www.springer.com/us/book/9783540672210)
