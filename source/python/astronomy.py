@@ -3853,6 +3853,32 @@ def _neg_elong_slope(body, time):
     return (e1 - e2)/dt
 
 def SearchMaxElongation(body, startTime):
+    """Finds a date and time when Mercury or Venus reaches its maximum angle from the Sun as seen from the Earth.
+
+    Mercury and Venus are are often difficult to observe because they are closer to the Sun than the Earth is.
+    Mercury especially is almost always impossible to see because it gets lost in the Sun's glare.
+    The best opportunities for spotting Mercury, and the best opportunities for viewing Venus through
+    a telescope without atmospheric interference, are when these planets reach maximum elongation.
+    These are events where the planets reach the maximum angle from the Sun as seen from the Earth.
+
+    This function solves for those times, reporting the next maximum elongation event's date and time,
+    the elongation value itself, the relative longitude with the Sun, and whether the planet is best
+    observed in the morning or evening. See #ElongationEvent for more details about the returned object.
+
+    Parameters
+    ----------
+    body : Body
+        Either `Body.Mercury` or `Body.Venus`. Any other value will result in an exception.
+        To find the best viewing opportunities for planets farther from the Sun than the
+        Earth is (Mars through Pluto), use #SearchRelativeLongitude to find the next opposition event.
+    startTime : Time
+        The date and time at which to begin the search. The maximum elongation event
+        found will always be the first one that occurs after this date and time.
+
+    Returns
+    -------
+    #ElongationEvent
+    """
     if body == Body.Mercury:
         s1 = 50.0
         s2 = 85.0
@@ -3939,10 +3965,64 @@ def _sun_offset(targetLon, time):
     return _LongitudeOffset(ecl.elon - targetLon)
 
 def SearchSunLongitude(targetLon, startTime, limitDays):
+    """Searches for the time when the Sun reaches an apparent ecliptic longitude as seen from the Earth.
+
+    This function finds the moment in time, if any exists in the given time window,
+    that the center of the Sun reaches a specific ecliptic longitude as seen from the center of the Earth.
+
+    This function can be used to determine equinoxes and solstices.
+    However, it is usually more convenient and efficient to call #Seasons
+    to calculate all equinoxes and solstices for a given calendar year.
+
+    The function searches the window of time specified by `startTime` and `startTime+limitDays`.
+    The search will return `None` if the Sun never reaches the longitude `targetLon` or
+    if the window is so large that the longitude ranges more than 180 degrees within it.
+    It is recommended to keep the window smaller than 10 days when possible.
+
+    Parameters
+    ----------
+
+    targetLon : float
+         The desired ecliptic longitude in degrees, relative to the true equinox of date.
+         This may be any value in the range [0, 360), although certain values have
+         conventional meanings:
+         0 = March equinox, 90 = June solstice, 180 = September equinox, 270 = December solstice.
+    startTime : Time
+         The date and time for starting the search for the desired longitude event.
+    limitDays : float
+         The real-valued number of days, which when added to `startTime`, limits the
+         range of time over which the search looks.
+         It is recommended to keep this value between 1 and 10 days.
+         See remarks above for more details.
+
+    Returns
+    -------
+    #Time or `None`
+    """
     t2 = startTime.AddDays(limitDays)
     return Search(_sun_offset, targetLon, startTime, t2, 1.0)
 
 def MoonPhase(time):
+    """Returns the Moon's phase as an angle from 0 to 360 degrees.
+
+    This function determines the phase of the Moon using its apparent
+    ecliptic longitude relative to the Sun, as seen from the center of the Earth.
+    Certain values of the angle have conventional definitions:
+
+    - 0 = new moon
+    - 90 = first quarter
+    - 180 = full moon
+    - 270 = third quarter
+
+    Parameters
+    ----------
+    time : Time
+         The date and time of the observation.
+
+    Returns
+    -------
+    `float`
+    """
     return LongitudeFromSun(Body.Moon, time)
 
 def _moon_offset(targetLon, time):
@@ -3950,6 +4030,36 @@ def _moon_offset(targetLon, time):
     return _LongitudeOffset(angle - targetLon)
 
 def SearchMoonPhase(targetLon, startTime, limitDays):
+    """Searches for the time that the Moon reaches a specified phase.
+
+    Lunar phases are conventionally defined in terms of the Moon's geocentric ecliptic
+    longitude with respect to the Sun's geocentric ecliptic longitude.
+    When the Moon and the Sun have the same longitude, that is defined as a new moon.
+    When their longitudes are 180 degrees apart, that is defined as a full moon.
+
+    This function searches for any value of the lunar phase expressed as an
+    angle in degrees in the range [0, 360).
+
+    If you want to iterate through lunar quarters (new moon, first quarter, full moon, third quarter)
+    it is much easier to call the functions #SearchMoonQuarter and #NextMoonQuarter.
+    This function is useful for finding general phase angles outside those four quarters.
+
+    Parameters
+    ----------
+    targetLon : float
+         The difference in geocentric longitude between the Sun and Moon
+         that specifies the lunar phase being sought. This can be any value
+         in the range [0, 360).  Certain values have conventional names:
+         0 = new moon, 90 = first quarter, 180 = full moon, 270 = third quarter.
+    startTime : Time
+         The beginning of the time window in which to search for the Moon reaching the specified phase.
+    limitDays : float
+         The number of days after `startTime` that limits the time window for the search.
+
+    Returns
+    -------
+    #Time or `None`
+    """
     # To avoid discontinuities in the _moon_offset function causing problems,
     # we need to approximate when that function will next return 0.
     # We probe it with the start time and take advantage of the fact
@@ -4197,6 +4307,18 @@ def SearchPeakMagnitude(body, startTime):
     raise InternalError()
 
 class HourAngleEvent:
+    """Information about a celestial body crossing a specific hour angle.
+
+    Returned by the function #Astronomy_SearchHourAngle to report information about
+    a celestial body crossing a certain hour angle as seen by a specified topocentric observer.
+
+    Attributes
+    ----------
+    time : Time
+        The date and time when the body crosses the specified hour angle.
+    hor : HorizontalCoordinates
+        Apparent coordinates of the body at the time it crosses the specified hour angle.
+    """
     def __init__(self, time, hor):
         self.time = time
         self.hor = hor
