@@ -140,6 +140,29 @@ a celestial body crossing a certain hour angle as seen by a specified topocentri
 
 ---
 
+<a name="MoonQuarter"></a>
+### class MoonQuarter
+
+**A lunar quarter event along with its date and time.**
+
+An object of this type represents one of the four major
+lunar phases that appear on calendars:
+new moon, first quarter, full moon, or third quarter.
+Along with the `quarter` attribute that specifies the
+type of quarter, it contains a `time` field that indicates
+when the lunar quarter event happens.
+
+
+| Type | Attribute | Description |
+| --- | --- | --- |
+| `int` | `quarter` | 0=new moon, 1=first quarter, 2=full moon, 3=third quarter. |
+| [`Time`](#Time) | `time` | The date and time of the lunar quarter. |
+
+
+
+
+---
+
 <a name="Observer"></a>
 ### class Observer
 
@@ -789,6 +812,29 @@ Certain values of the angle have conventional definitions:
 
 ---
 
+<a name="NextMoonQuarter"></a>
+### NextMoonQuarter(mq)
+
+**Continues searching for lunar quarters from a previous search.**
+
+After calling #Astronomy_SearchMoonQuarter, this function can be called
+one or more times to continue finding consecutive lunar quarters.
+This function finds the next consecutive moon quarter event after
+the one passed in as the parameter `mq`.
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`MoonQuarter`](#MoonQuarter) | `mq` | A value returned by a prior call to #SearchMoonQuarter or #NextMoonQuarter. |
+
+### Returns: #MoonQuarter
+
+
+
+
+
+---
+
 <a name="Search"></a>
 ### Search(func, context, t1, t2, dt_tolerance_seconds)
 
@@ -910,6 +956,31 @@ This function is useful for finding general phase angles outside those four quar
 | `float` | `limitDays` | The number of days after `startTime` that limits the time window for the search. |
 
 ### Returns: #Time or `None`
+
+
+
+
+
+---
+
+<a name="SearchMoonQuarter"></a>
+### SearchMoonQuarter(startTime)
+
+**Finds the first lunar quarter after the specified date and time.**
+
+A lunar quarter is one of the following four lunar phase events:
+new moon, first quarter, full moon, third quarter.
+This function finds the lunar quarter that happens soonest
+after the specified date and time.
+To continue iterating through consecutive lunar quarters, call this function once,
+followed by calls to #NextMoonQuarter as many times as desired.
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Time`](#Time) | `startTime` | The date and time at which to start the search. |
+
+### Returns: #MoonQuarter
 
 
 

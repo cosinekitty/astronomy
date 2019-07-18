@@ -2023,11 +2023,46 @@ def SearchMoonPhase(targetLon, startTime, limitDays):
     return Search(_moon_offset, targetLon, t1, t2, 1.0)
 
 class MoonQuarter:
+    """A lunar quarter event along with its date and time.
+
+    An object of this type represents one of the four major
+    lunar phases that appear on calendars:
+    new moon, first quarter, full moon, or third quarter.
+    Along with the `quarter` attribute that specifies the
+    type of quarter, it contains a `time` field that indicates
+    when the lunar quarter event happens.
+
+    Attributes
+    ----------
+    quarter : int
+        0=new moon, 1=first quarter, 2=full moon, 3=third quarter.
+    time : Time
+        The date and time of the lunar quarter.
+    """
     def __init__(self, quarter, time):
         self.quarter = quarter
         self.time = time
 
 def SearchMoonQuarter(startTime):
+    """Finds the first lunar quarter after the specified date and time.
+
+    A lunar quarter is one of the following four lunar phase events:
+    new moon, first quarter, full moon, third quarter.
+    This function finds the lunar quarter that happens soonest
+    after the specified date and time.
+
+    To continue iterating through consecutive lunar quarters, call this function once,
+    followed by calls to #NextMoonQuarter as many times as desired.
+
+    Parameters
+    ----------
+    startTime : Time
+        The date and time at which to start the search.
+
+    Returns
+    -------
+    #MoonQuarter
+    """
     angle = MoonPhase(startTime)
     quarter = int(1 + math.floor(angle / 90.0)) % 4
     time = SearchMoonPhase(90.0 * quarter, startTime, 10.0)
@@ -2037,6 +2072,22 @@ def SearchMoonQuarter(startTime):
     return MoonQuarter(quarter, time)
 
 def NextMoonQuarter(mq):
+    """Continues searching for lunar quarters from a previous search.
+
+    After calling #Astronomy_SearchMoonQuarter, this function can be called
+    one or more times to continue finding consecutive lunar quarters.
+    This function finds the next consecutive moon quarter event after
+    the one passed in as the parameter `mq`.
+
+    Parameters
+    ----------
+    mq : MoonQuarter
+        A value returned by a prior call to #SearchMoonQuarter or #NextMoonQuarter.
+
+    Returns
+    -------
+    #MoonQuarter
+    """
     # Skip 6 days past the previous found moon quarter to find the next one.
     # This is less than the minimum possible increment.
     # So far I have seen the interval well contained by the range (6.5, 8.3) days.
