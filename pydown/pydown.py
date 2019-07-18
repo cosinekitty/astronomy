@@ -304,6 +304,10 @@ def Markdown(module):
     for func in funclist:
         md += MdFunction(func)
     
+    # Remove extraneous blank lines.
+    # We never need more than 2 consecutive newline characters.
+    md = re.sub('\n{3,}', '\n\n', md)
+
     return md
 
 def main():

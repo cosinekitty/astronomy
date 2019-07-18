@@ -3,7 +3,6 @@
 <a name="classes"></a>
 ## Classes
 
-
 ---
 
 <a name="Apsis"></a>
@@ -21,16 +20,12 @@ point is called *apogee*. The closest approach of a planet to the Sun is called
 This data structure is returned by #SearchLunarApsis and #NextLunarApsis
 to iterate through consecutive alternating perigees and apogees.
 
-
 | Type | Attribute | Description |
 | --- | --- | --- |
 | [`Time`](#Time) | `time` | The date and time of the apsis. |
 | [`ApsisKind`](#ApsisKind) | `kind` | Whether this is a pericenter or apocenter event. |
 | `float` | `dist_au` | The distance between the centers of the bodies in astronomical units. |
 | `float` | `dist_km` | The distance between the centers of the bodies in kilometers. |
-
-
-
 
 ---
 
@@ -42,7 +37,6 @@ to iterate through consecutive alternating perigees and apogees.
 Coordinates of a celestial body as seen from the center of the Sun (heliocentric),
 oriented with respect to the plane of the Earth's orbit around the Sun (the ecliptic).
 
-
 | Type | Attribute | Description |
 | --- | --- | --- |
 | `float` | `ex` | Cartesian x-coordinate: in the direction of the equinox along the ecliptic plane. |
@@ -50,9 +44,6 @@ oriented with respect to the plane of the Earth's orbit around the Sun (the ecli
 | `float` | `ez` | Cartesian z-coordinate: perpendicular to the ecliptic plane. Positive is north. |
 | `float` | `elat` | Latitude in degrees north (positive) or south (negative) of the ecliptic plane. |
 | `float` | `elon` | Longitude in degrees around the ecliptic plane prograde from the equinox. |
-
-
-
 
 ---
 
@@ -64,16 +55,12 @@ oriented with respect to the plane of the Earth's orbit around the Sun (the ecli
 See the #Elongation function for more detailed information about the members of this class.
 See also #SearchMaxElongation for how to search for maximum elongation events.
 
-
 | Type | Attribute | Description |
 | --- | --- | --- |
 | [`Time`](#Time) | `time` | The date and time of the observation. |
 | [`Visibility`](#Visibility) | `visibility` | Whether the body is best seen in the morning or the evening. |
 | `float` | `elongation` | The angle in degrees between the body and the Sun, as seen from the Earth. |
 | `float` | `ecliptic_separation` | The difference between the ecliptic longitudes of the body and the Sun, as seen from the Earth. |
-
-
-
 
 ---
 
@@ -87,15 +74,11 @@ Can be geocentric or topocentric, depending on context.
 The coordinates are oriented with respect to the Earth's
 equator projected onto the sky.
 
-
 | Type | Attribute | Description |
 | --- | --- | --- |
 | `float` | `ra` | Right ascension in sidereal hours. |
 | `float` | `dec` | Declination in degrees. |
 | `float` | `dist` | Distance to the celestial body in AU. |
-
-
-
 
 ---
 
@@ -108,16 +91,12 @@ Contains horizontal and equatorial coordinates as seen by an observer
 on or near the surface of the Earth (a topocentric observer).
 All coordinates are optionally corrected for atmospheric refraction.
 
-
 | Type | Attribute | Description |
 | --- | --- | --- |
 | `float` | `azimuth` | The compass direction laterally around the observer's horizon, measured in degrees. North is 0 degrees, east is 90 degrees, south is 180 degrees, etc. |
 | `float` | `altitude` | The angle in degrees above (positive) or below (negative) the observer's horizon. |
 | `float` | `ra` | The right ascension in sidereal hours. |
 | `float` | `dec` | The declination in degrees. |
-
-
-
 
 ---
 
@@ -129,14 +108,10 @@ All coordinates are optionally corrected for atmospheric refraction.
 Returned by the function #Astronomy_SearchHourAngle to report information about
 a celestial body crossing a certain hour angle as seen by a specified topocentric observer.
 
-
 | Type | Attribute | Description |
 | --- | --- | --- |
 | [`Time`](#Time) | `time` | The date and time when the body crosses the specified hour angle. |
 | [`HorizontalCoordinates`](#HorizontalCoordinates) | `hor` | Apparent coordinates of the body at the time it crosses the specified hour angle. |
-
-
-
 
 ---
 
@@ -152,14 +127,10 @@ Along with the `quarter` attribute that specifies the
 type of quarter, it contains a `time` field that indicates
 when the lunar quarter event happens.
 
-
 | Type | Attribute | Description |
 | --- | --- | --- |
 | `int` | `quarter` | 0=new moon, 1=first quarter, 2=full moon, 3=third quarter. |
 | [`Time`](#Time) | `time` | The date and time of the lunar quarter. |
-
-
-
 
 ---
 
@@ -174,9 +145,6 @@ when the lunar quarter event happens.
 | `float` | `longitude` | Geographic longitude in degrees east of the prime meridian at Greenwich, England. |
 | `float` | `height` | Elevation above sea level in meters. |
 
-
-
-
 ---
 
 <a name="Time"></a>
@@ -187,7 +155,6 @@ when the lunar quarter event happens.
 All calculations performed by Astronomy Engine are based on
 dates and times represented by `Time` objects.
 
-
 | Type | Parameter | Description |
 | --- | --- | --- |
 | `float` | `ut` | UT1/UTC number of days since noon on January 1, 2000. See the `ut` attribute of this class for more details. |
@@ -197,10 +164,7 @@ dates and times represented by `Time` objects.
 | `float` | `ut` | The floating point number of days of Universal Time since noon UTC January 1, 2000. Astronomy Engine approximates UTC and UT1 as being the same thing, although they are not exactly equivalent; UTC and UT1 can disagree by up to 0.9 seconds. This approximation is sufficient for the accuracy requirements of Astronomy Engine. Universal Time Coordinate (UTC) is the international standard for legal and civil timekeeping and replaces the older Greenwich Mean Time (GMT) standard. UTC is kept in sync with unpredictable observed changes in the Earth's rotation by occasionally adding leap seconds as needed. UT1 is an idealized time scale based on observed rotation of the Earth, which gradually slows down in an unpredictable way over time, due to tidal drag by the Moon and Sun, large scale weather events like hurricanes, and internal seismic and convection effects. Conceptually, UT1 drifts from atomic time continuously and erratically, whereas UTC is adjusted by a scheduled whole number of leap seconds as needed. The value in `ut` is appropriate for any calculation involving the Earth's rotation, such as calculating rise/set times, culumination, and anything involving apparent sidereal time. Before the era of atomic timekeeping, days based on the Earth's rotation were often known as *mean solar days*. |
 | `float` | `tt` | Terrestrial Time days since noon on January 1, 2000. Terrestrial Time is an atomic time scale defined as a number of days since noon on January 1, 2000. In this system, days are not based on Earth rotations, but instead by the number of elapsed [SI seconds](https://physics.nist.gov/cuu/Units/second.html) divided by 86400. Unlike `ut`, `tt` increases uniformly without adjustments for changes in the Earth's rotation. The value in `tt` is used for calculations of movements not involving the Earth's rotation, such as the orbits of planets around the Sun, or the Moon around the Earth. Historically, Terrestrial Time has also been known by the term *Ephemeris Time* (ET). |
 
-
-
 #### member functions
-
 
 <a name="Time.Make"></a>
 ### Time.Make(year, month, day, hour, minute, second)
@@ -218,10 +182,6 @@ dates and times represented by `Time` objects.
 
 ### Returns: #Time
 
-
-
-
-
 ---
 
 <a name="Vector"></a>
@@ -233,7 +193,6 @@ The vector's space coordinates are measured in astronomical units (AU).
 The coordinate system varies and depends on context.
 The vector also includes a time stamp.
 
-
 | Type | Attribute | Description |
 | --- | --- | --- |
 | `float` | `x` | The x-coordinate of the vector, measured in AU. |
@@ -241,24 +200,17 @@ The vector also includes a time stamp.
 | `float` | `z` | The z-coordinate of the vector, measured in AU. |
 | [`Time`](#Time) | `t` | The date and time at which the coordinate is valid. |
 
-
-
 #### member functions
-
 
 <a name="Vector.Length"></a>
 ### Vector.Length(self)
 
 Returns the length of the vector in AU.
 
-
-
-
 ---
 
 <a name="enumerations"></a>
 ## Enumerated Types
-
 
 ---
 
@@ -272,14 +224,11 @@ or farthest from, the body it orbits (its primary).
 `ApsisKind` is an enumerated type that indicates which of these
 two cases applies to a particular apsis event.
 
-
 | Value | Description |
 | --- | --- |
 | `Pericenter` | The satellite is at its closest point to its primary. |
 | `Apocenter` | The satellite is at its farthest point from its primary. |
 | `Invalid` | A placeholder for an undefined, unknown, or invalid apsis. |
-
-
 
 ---
 
@@ -303,8 +252,6 @@ two cases applies to a particular apsis event.
 | `Sun` | The Sun. |
 | `Moon` | The Earth's moon. |
 
-
-
 ---
 
 <a name="Direction"></a>
@@ -316,13 +263,10 @@ Specifies the direction of a rising or setting event for a body.
 For example, `Direction.Rise` is used to find sunrise times,
 and `Direction.Set` is used to find sunset times.
 
-
 | Value | Description |
 | --- | --- |
 | `Rise` | First appearance of a body as it rises above the horizon. |
 | `Set` | Last appearance of a body as it sinks below the horizon. |
-
-
 
 ---
 
@@ -335,14 +279,11 @@ Some functions allow enabling or disabling atmospheric refraction
 for the calculated apparent position of a celestial body
 as seen by an observer on the surface of the Earth.
 
-
 | Value | Description |
 | --- | --- |
 | `Airless` | No atmospheric refraction correction. |
 | `Normal` | Recommended correction for standard atmospheric refraction. |
 | `JplHorizons` | Used only for compatibility testing with JPL Horizons online tool. |
-
-
 
 ---
 
@@ -356,12 +297,10 @@ as seen by an observer on the surface of the Earth.
 | `Morning` | The body is best visible in the morning, before sunrise. |
 | `Evening` | The body is best visible in the evening, after sunset. |
 
-
 ---
 
 <a name="errors"></a>
 ## Error Types
-
 
 ---
 
@@ -370,10 +309,6 @@ as seen by an observer on the surface of the Earth.
 
 A vector magnitude is too small to have a direction in space.
 
-
-
-
-
 ---
 
 <a name="EarthNotAllowedError"></a>
@@ -381,20 +316,12 @@ A vector magnitude is too small to have a direction in space.
 
 The Earth is not allowed as the celestial body in this calculation.
 
-
-
-
-
 ---
 
 <a name="Error"></a>
 ### Error
 
 Indicates an error in an astronomical calculation.
-
-
-
-
 
 ---
 
@@ -410,20 +337,12 @@ page on GitHub. Please include a copy of the stack trace, along with a descripti
 of how to reproduce the error. This will help improve the quality of
 Astronomy Engine for everyone! (Thank you in advance from the author.)
 
-
-
-
-
 ---
 
 <a name="InvalidBodyError"></a>
 ### InvalidBodyError
 
 The celestial body is not allowed for this calculation.
-
-
-
-
 
 ---
 
@@ -439,14 +358,10 @@ page on GitHub. Please include a copy of the stack trace, along with a descripti
 of how to reproduce the error. This will help improve the quality of
 Astronomy Engine for everyone! (Thank you in advance from the author.)
 
-
-
-
 ---
 
 <a name="functions"></a>
 ## Functions
-
 
 ---
 
@@ -459,7 +374,6 @@ This function calculates the angular separation between the given body and the S
 as seen from the center of the Earth. This angle is helpful for determining how
 easy it is to see the body away from the glare of the Sun.
 
-
 | Type | Parameter | Description |
 | --- | --- | --- |
 | [`Body`](#Body) | `body` | The celestial body whose angle from the Sun is to be measured. Not allowed to be `Body.Earth`. |
@@ -468,10 +382,6 @@ easy it is to see the body away from the glare of the Sun.
 ### Returns: `float`
 A numeric value indicating the angle in degrees between the Sun
 and the specified body as seen from the center of the Earth.
-
-
-
-
 
 ---
 
@@ -485,7 +395,6 @@ and the specified body as seen from the center of the Earth.
 <Body.Mars: 3>
 ```
 
-
 | Type | Parameter | Description |
 | --- | --- | --- |
 | `str` | `name` | The common English name of a supported celestial body. |
@@ -494,10 +403,6 @@ and the specified body as seen from the center of the Earth.
 If `name` is a valid body name, returns the enumeration
 value associated with that body.
 Otherwise, returns `Body.Invalid`.
-
-
-
-
 
 ---
 
@@ -512,13 +417,8 @@ which are relative to the plane of the Earth's orbit around the Sun.
 equ : EquatorialCoordinates
     Equatorial coordinates in the J2000 frame of reference.
 
-
 ### Returns: #EclipticCoordinates
 Ecliptic coordinates in the J2000 frame of reference.
-
-
-
-
 
 ---
 
@@ -534,17 +434,12 @@ in degrees from the J2000 equinox. The ecliptic longitude is always in the range
 time : Time
     The date and time at which the body's ecliptic longitude is to be calculated.
 
-
 | Type | Parameter | Description |
 | --- | --- | --- |
 | [`Body`](#Body) | `body` | A body other than the Sun. |
 
 ### Returns: `float`
 An angular value in degrees indicating the ecliptic longitude of the body.
-
-
-
-
 
 ---
 
@@ -569,16 +464,11 @@ information about the given celestial body at the given time:
 time : Time
     The date and time of the observation.
 
-
 | Type | Parameter | Description |
 | --- | --- | --- |
 | [`Body`](#Body) | `body` | The celestial body whose visibility is to be calculated. |
 
 ### Returns: #ElongationEvent
-
-
-
-
 
 ---
 
@@ -598,7 +488,6 @@ significant for the Moon, because it is so close to the Earth. However, parallax
 has a small effect on the apparent positions of other bodies.
 Correction for aberration is optional, using the `aberration` parameter.
 
-
 | Type | Parameter | Description |
 | --- | --- | --- |
 | [`Body`](#Body) | `body` | The celestial body to be observed. Not allowed to be `Body.Earth`. |
@@ -609,10 +498,6 @@ Correction for aberration is optional, using the `aberration` parameter.
 
 ### Returns: #EquatorialCoordinates
 Equatorial coordinates in the specified frame of reference.
-
-
-
-
 
 ---
 
@@ -630,17 +515,12 @@ It is adapted from Turbo Pascal code from the book
 [Astronomy on the Personal Computer](https://www.springer.com/us/book/9783540672210)
 by Montenbruck and Pfleger.
 
-
 | Type | Parameter | Description |
 | --- | --- | --- |
 | [`Time`](#Time) | `time` | The date and time for which to calculate the Moon's position. |
 
 ### Returns: #Vector
 The Moon's position as a vector in J2000 Cartesian equatorial coordinates.
-
-
-
-
 
 ---
 
@@ -663,7 +543,6 @@ Also, the position can optionally be corrected for
 causing the apparent direction of the body to be shifted due to transverse
 movement of the Earth with respect to the rays of light coming from that body.
 
-
 | Type | Parameter | Description |
 | --- | --- | --- |
 | [`Body`](#Body) | `body` | A body for which to calculate a heliocentric position: the Sun, Moon, or any of the planets. |
@@ -672,10 +551,6 @@ movement of the Earth with respect to the rays of light coming from that body.
 
 ### Returns: #Vector
 A geocentric position vector of the center of the given body.
-
-
-
-
 
 ---
 
@@ -693,7 +568,6 @@ This is different from the behavior of #GeoVector.
 If given an invalid value for `body`, or the body is `Body.Pluto` and `time` is outside
 the year range 1700..2200, this function raise an exception.
 
-
 | Type | Parameter | Description |
 | --- | --- | --- |
 | [`Body`](#Body) | `body` | The celestial body whose heliocentric position is to be calculated: The Sun, Moon, or any of the planets. |
@@ -702,10 +576,6 @@ the year range 1700..2200, this function raise an exception.
 ### Returns: #Vector
 A heliocentric position vector of the center of the given body
 at the given time.
-
-
-
-
 
 ---
 
@@ -735,16 +605,11 @@ If refraction is disabled, none of these four coordinates will be corrected; in 
 the right ascension and declination in the returned object will be numerically identical
 to the respective `ra` and `dec` values passed in.
 
-
 ### Returns: #HorizontalCoordinates
 The horizontal coordinates (altitude and azimuth), along with
 equatorial coordinates (right ascension and declination), all
 optionally corrected for atmospheric refraction. See remarks above
 for more details.
-
-
-
-
 
 ---
 
@@ -772,17 +637,12 @@ is visible in the morning sky before sunrise.
 time : Time
     The date and time of the observation.
 
-
 | Type | Parameter | Description |
 | --- | --- | --- |
 | [`Body`](#Body) | `body` | The celestial body for which to find longitude from the Sun. |
 
 ### Returns: `float`
 An angle in degrees in the range [0, 360).
-
-
-
-
 
 ---
 
@@ -799,16 +659,11 @@ Certain values of the angle have conventional definitions:
 - 180 = full moon
 - 270 = third quarter
 
-
 | Type | Parameter | Description |
 | --- | --- | --- |
 | [`Time`](#Time) | `time` | The date and time of the observation. |
 
 ### Returns: `float`
-
-
-
-
 
 ---
 
@@ -822,16 +677,11 @@ one or more times to continue finding consecutive lunar quarters.
 This function finds the next consecutive moon quarter event after
 the one passed in as the parameter `mq`.
 
-
 | Type | Parameter | Description |
 | --- | --- | --- |
 | [`MoonQuarter`](#MoonQuarter) | `mq` | A value returned by a prior call to #SearchMoonQuarter or #NextMoonQuarter. |
 
 ### Returns: #MoonQuarter
-
-
-
-
 
 ---
 
@@ -886,7 +736,6 @@ dt_tolerance_seconds : float
     Specifies an amount of time in seconds within which a bounded ascending root
     is considered accurate enough to stop. A typical value is 1 second.
 
-
 | Type | Parameter | Description |
 | --- | --- | --- |
 | `function(context, Time)` | `func` | A function that takes an arbitrary context parameter and a #Time parameter. Returns a float value.  See remarks above for more details. |
@@ -898,10 +747,6 @@ In this case, the returned time value will always be within the
 inclusive range [`t1`, `t2`].
 If there is no ascending root, or there is more than one ascending root,
 the function returns `None`.
-
-
-
-
 
 ---
 
@@ -919,17 +764,12 @@ This function solves for those times, reporting the next maximum elongation even
 the elongation value itself, the relative longitude with the Sun, and whether the planet is best
 observed in the morning or evening. See #ElongationEvent for more details about the returned object.
 
-
 | Type | Parameter | Description |
 | --- | --- | --- |
 | [`Body`](#Body) | `body` | Either `Body.Mercury` or `Body.Venus`. Any other value will result in an exception. To find the best viewing opportunities for planets farther from the Sun than the Earth is (Mars through Pluto), use #SearchRelativeLongitude to find the next opposition event. |
 | [`Time`](#Time) | `startTime` | The date and time at which to begin the search. The maximum elongation event found will always be the first one that occurs after this date and time. |
 
 ### Returns: #ElongationEvent
-
-
-
-
 
 ---
 
@@ -948,7 +788,6 @@ If you want to iterate through lunar quarters (new moon, first quarter, full moo
 it is much easier to call the functions #SearchMoonQuarter and #NextMoonQuarter.
 This function is useful for finding general phase angles outside those four quarters.
 
-
 | Type | Parameter | Description |
 | --- | --- | --- |
 | `float` | `targetLon` | The difference in geocentric longitude between the Sun and Moon that specifies the lunar phase being sought. This can be any value in the range [0, 360).  Certain values have conventional names: 0 = new moon, 90 = first quarter, 180 = full moon, 270 = third quarter. |
@@ -956,10 +795,6 @@ This function is useful for finding general phase angles outside those four quar
 | `float` | `limitDays` | The number of days after `startTime` that limits the time window for the search. |
 
 ### Returns: #Time or `None`
-
-
-
-
 
 ---
 
@@ -975,16 +810,11 @@ after the specified date and time.
 To continue iterating through consecutive lunar quarters, call this function once,
 followed by calls to #NextMoonQuarter as many times as desired.
 
-
 | Type | Parameter | Description |
 | --- | --- | --- |
 | [`Time`](#Time) | `startTime` | The date and time at which to start the search. |
 
 ### Returns: #MoonQuarter
-
-
-
-
 
 ---
 
@@ -1021,7 +851,6 @@ the Earth and another planet:
   conjunction, the planet is very difficult to see from the Earth.
   Superior conjunction is possible for any planet other than the Earth.
 
-
 | Type | Parameter | Description |
 | --- | --- | --- |
 | [`Body`](#Body) | `body` | A planet other than the Earth. If `body` is not a planet, or if it is `Body.Earth`, an error occurs. |
@@ -1030,10 +859,6 @@ the Earth and another planet:
 
 ### Returns: #Time
 The date and time of the relative longitude event.
-
-
-
-
 
 ---
 
@@ -1064,12 +889,7 @@ limitDays : float
      It is recommended to keep this value between 1 and 10 days.
      See remarks above for more details.
 
-
 ### Returns: #Time or `None`
-
-
-
-
 
 ---
 
@@ -1091,14 +911,10 @@ in order to obtain the exact equatorial plane at the given time.
 This function can be used for calculating changes of seasons: equinoxes and solstices.
 In fact, the function #Seasons does use this function for that purpose.
 
-
 | Type | Parameter | Description |
 | --- | --- | --- |
 | [`Time`](#Time) | `time` | The date and time for which to calculate the Sun's position. |
 
 ### Returns: #EclipticCoordinates
 The ecliptic coordinates of the Sun using the Earth's true equator of date.
-
-
-
 
