@@ -4276,8 +4276,13 @@ astro_search_result_t Astronomy_SearchRelativeLongitude(astro_body_t body, doubl
  *
  * This function searches for the next time a celestial body reaches the given hour angle
  * after the date and time specified by `startTime`.
- * To find when a body culminates, pass 0 for `startTime`.
- * To find when a body reaches its lowest point in the sky, pass 12 for `startTime`.
+ * To find when a body culminates, pass 0 for `hourAngle`.
+ * To find when a body reaches its lowest point in the sky, pass 12 for `hourAngle`.
+ *
+ * Note that, especially close to the Earth's poles, a body as seen on a given day
+ * may always be above the horizon or always below the horizon, so the caller cannot
+ * assume that a culminating object is visible nor that an object is below the horizon
+ * at its minimum altitude.
  *
  * On success, the function reports the date and time, along with the horizontal coordinates
  * of the body at that time, as seen by the given observer.
