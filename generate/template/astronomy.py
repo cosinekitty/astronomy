@@ -2100,6 +2100,32 @@ def NextMoonQuarter(mq):
 
 
 class IlluminationInfo:
+    """Information about the brightness and illuminated shape of a celestial body.
+
+    Returned by functions #Illumination and #SearchPeakMagnitude
+    to report the visual magnitude and illuminated fraction of a celestial
+    body at a given date and time.
+
+    Attributes
+    ----------
+    time : Time
+        The date and time of the observation.
+    mag : float
+        The visual magnitude of the body. Smaller values are brighter.
+    phase_angle : float
+        The angle in degrees between the Sun and the Earth, as seen from the body.
+        Indicates the body's phase as seen from the Earth.
+    phase_fraction : float
+        A value in the range [0.0, 1.0] indicating what fraction of the
+        body's apparent disc is illuminated, as seen from the Earth.
+    helio_dist : float
+        The distance between the Sun and the body at the observation time, in AU.
+    ring_tilt : float
+        For Saturn, the tilt angle in degrees of its rings as seen from Earth.
+        When the `ring_tilt` is very close to 0, it means the rings are edge-on
+        as seen from observers on the Earth, and are thus very difficult to see.
+        For bodies other than Saturn, `ring_tilt` is `None`.
+    """
     def __init__(self, time, mag, phase, helio_dist, geo_dist, gc, hc, ring_tilt):
         self.time = time
         self.mag = mag

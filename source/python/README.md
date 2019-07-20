@@ -115,6 +115,26 @@ a celestial body crossing a certain hour angle as seen by a specified topocentri
 
 ---
 
+<a name="IlluminationInfo"></a>
+### class IlluminationInfo
+
+**Information about the brightness and illuminated shape of a celestial body.**
+
+Returned by functions #Illumination and #SearchPeakMagnitude
+to report the visual magnitude and illuminated fraction of a celestial
+body at a given date and time.
+
+| Type | Attribute | Description |
+| --- | --- | --- |
+| [`Time`](#Time) | `time` | The date and time of the observation. |
+| `float` | `mag` | The visual magnitude of the body. Smaller values are brighter. |
+| `float` | `phase_angle` | The angle in degrees between the Sun and the Earth, as seen from the body. Indicates the body's phase as seen from the Earth. |
+| `float` | `phase_fraction` | A value in the range [0.0, 1.0] indicating what fraction of the body's apparent disc is illuminated, as seen from the Earth. |
+| `float` | `helio_dist` | The distance between the Sun and the body at the observation time, in AU. |
+| `float` | `ring_tilt` | For Saturn, the tilt angle in degrees of its rings as seen from Earth. When the `ring_tilt` is very close to 0, it means the rings are edge-on as seen from observers on the Earth, and are thus very difficult to see. For bodies other than Saturn, `ring_tilt` is `None`. |
+
+---
+
 <a name="MoonQuarter"></a>
 ### class MoonQuarter
 
