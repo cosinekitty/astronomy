@@ -167,6 +167,22 @@ when the lunar quarter event happens.
 
 ---
 
+<a name="SeasonInfo"></a>
+### class SeasonInfo
+
+**The dates and times of changes of season for a given calendar year.**
+
+Call #Seasons to calculate this data structure for a given year.
+
+| Type | Attribute | Description |
+| --- | --- | --- |
+| [`Time`](#Time) | `mar_equinox` | The date and time of the March equinox for the specified year. |
+| [`Time`](#Time) | `jun_solstice` | The date and time of the June solstice for the specified year. |
+| [`Time`](#Time) | `sep_equinox` | The date and time of the September equinox for the specified year. |
+| [`Time`](#Time) | `dec_solstice` | The date and time of the December solstice for the specified year. |
+
+---
+
 <a name="Time"></a>
 ### class Time
 
@@ -186,6 +202,27 @@ dates and times represented by `Time` objects.
 
 #### member functions
 
+<a name="Time.AddDays"></a>
+### Time.AddDays(self, days)
+
+**Calculates the sum or difference of a #Time with a specified real-valued number of days.**
+
+Sometimes we need to adjust a given #Time value by a certain amount of time.
+This function adds the given real number of days in `days` to the date and time
+in the calling object.
+More precisely, the result's Universal Time field `ut` is exactly adjusted by `days`
+and the Terrestrial Time field `tt` is adjusted correctly for the resulting UTC date and time,
+according to the historical and predictive Delta-T model provided by the
+[United States Naval Observatory](http://maia.usno.navy.mil/ser7/).
+The value of the calling object is not modified. This function creates a brand new
+#Time object and returns it.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| `float` | `days` | A floating point number of days by which to adjust `time`. May be negative, 0, or positive. |
+
+### Returns: #Time
+
 <a name="Time.Make"></a>
 ### Time.Make(year, month, day, hour, minute, second)
 
@@ -199,6 +236,18 @@ dates and times represented by `Time` objects.
 | `int` | `hour` | The UTC hour, in the range 0..23. |
 | `int` | `minute` | The UTC minute, in the range 0..59. |
 | `float` | `second` | The real-valued UTC second, in the range [0, 60). |
+
+### Returns: #Time
+
+<a name="Time.Now"></a>
+### Time.Now()
+
+**Returns the computer's current date and time in the form of a #Time object.**
+
+Uses the computer's system clock to find the current UTC date and time.
+Converts that date and time to a #Time value and returns the result.
+Callers can pass this value to other Astronomy Engine functions to
+calculate current observational conditions.
 
 ### Returns: #Time
 

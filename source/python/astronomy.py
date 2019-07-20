@@ -442,10 +442,45 @@ class Time:
 
     @staticmethod
     def Now():
+        """Returns the computer's current date and time in the form of a #Time object.
+
+        Uses the computer's system clock to find the current UTC date and time.
+        Converts that date and time to a #Time value and returns the result.
+        Callers can pass this value to other Astronomy Engine functions to
+        calculate current observational conditions.
+
+        Returns
+        -------
+        #Time
+        """
         ut = (datetime.datetime.utcnow() - _EPOCH).total_seconds() / 86400.0
         return Time(ut)
 
     def AddDays(self, days):
+        """Calculates the sum or difference of a #Time with a specified real-valued number of days.
+
+        Sometimes we need to adjust a given #Time value by a certain amount of time.
+        This function adds the given real number of days in `days` to the date and time
+        in the calling object.
+
+        More precisely, the result's Universal Time field `ut` is exactly adjusted by `days`
+        and the Terrestrial Time field `tt` is adjusted correctly for the resulting UTC date and time,
+        according to the historical and predictive Delta-T model provided by the
+        [United States Naval Observatory](http://maia.usno.navy.mil/ser7/).
+
+        The value of the calling object is not modified. This function creates a brand new
+        #Time object and returns it.
+
+        Parameters
+        ----------
+        days : float
+            A floating point number of days by which to adjust `time`.
+            May be negative, 0, or positive.
+
+        Returns
+        -------
+        #Time
+        """
         return Time(self.ut + days)
 
     def __str__(self):
@@ -4676,6 +4711,21 @@ def SearchRiseSet(body, observer, direction, startTime, limitDays):
         alt_after = _peak_altitude(context, evt_after.time)
 
 class SeasonInfo:
+    """The dates and times of changes of season for a given calendar year.
+
+    Call #Seasons to calculate this data structure for a given year.
+
+    Attributes
+    ----------
+    mar_equinox : Time
+        The date and time of the March equinox for the specified year.
+    jun_solstice : Time
+        The date and time of the June solstice for the specified year.
+    sep_equinox : Time
+        The date and time of the September equinox for the specified year.
+    dec_solstice : Time
+        The date and time of the December solstice for the specified year.
+    """
     def __init__(self, mar_equinox, jun_solstice, sep_equinox, dec_solstice):
         self.mar_equinox = mar_equinox
         self.jun_solstice = jun_solstice
