@@ -868,6 +868,31 @@ followed by calls to #NextMoonQuarter as many times as desired.
 
 ---
 
+<a name="SearchPeakMagnitude"></a>
+### SearchPeakMagnitude(body, startTime)
+
+**Searches for the date and time Venus will next appear brightest as seen from the Earth.**
+
+This function searches for the date and time Venus appears brightest as seen from the Earth.
+Currently only Venus is supported for the `body` parameter, though this could change in the future.
+Mercury's peak magnitude occurs at superior conjunction, when it is virtually impossible to see
+from the Earth, so peak magnitude events have little practical value for that planet.
+Planets other than Venus and Mercury reach peak magnitude at opposition, which can
+be found using #SearchRelativeLongitude.
+The Moon reaches peak magnitude at full moon, which can be found using
+#SearchMoonQuarter or #SearchMoonPhase.
+The Sun reaches peak magnitude at perihelion, which occurs each year in January.
+However, the difference is minor and has little practical value.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Body`](#Body) | `body` | Currently only `Body.Venus` is allowed. Any other value results in an exception. See remarks above for more details. |
+| [`Time`](#Time) | `startTime` | The date and time to start searching for the next peak magnitude event. |
+
+### Returns: #IlluminationInfo
+
+---
+
 <a name="SearchRelativeLongitude"></a>
 ### SearchRelativeLongitude(body, targetRelLon, startTime)
 
