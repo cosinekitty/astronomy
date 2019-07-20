@@ -920,7 +920,7 @@ Note that rise or set may not occur in every 24 hour period. For example, near t
 | Type | Parameter | Description |
 | --- | --- | --- |
 | [`astro_body_t`](#astro_body_t) | `body` |  The Sun, Moon, or any planet other than the Earth. | 
-| [`astro_observer_t`](#astro_observer_t) | `observer` |  The location where observation takes places. You can create an observer structure by calling [`Astronomy_MakeObserver`](#Astronomy_MakeObserver). | 
+| [`astro_observer_t`](#astro_observer_t) | `observer` |  The location where observation takes place. You can create an observer structure by calling [`Astronomy_MakeObserver`](#Astronomy_MakeObserver). | 
 | [`astro_direction_t`](#astro_direction_t) | `direction` |  Either `DIRECTION_RISE` to find a rise time or `DIRECTION_SET` to find a set time. | 
 | [`astro_time_t`](#astro_time_t) | `startTime` |  The date and time at which to start the search. | 
 | `double` | `limitDays` |  Limits how many days to search for a rise or set time. To limit a rise or set time to the same day, you can use a value of 1 day. In cases where you want to find the next rise or set time no matter how far in the future (for example, for an observer near the south pole), you can pass in a larger value like 365. | 

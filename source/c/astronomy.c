@@ -4441,7 +4441,7 @@ static astro_func_result_t peak_altitude(void *context, astro_time_t time)
  *      The Sun, Moon, or any planet other than the Earth.
  *
  * @param observer
- *      The location where observation takes places.
+ *      The location where observation takes place.
  *      You can create an observer structure by calling #Astronomy_MakeObserver.
  *
  * @param direction

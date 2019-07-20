@@ -4486,7 +4486,6 @@ def SearchHourAngle(body, observer, hourAngle, startTime):
          The celestial body, which can the Sun, the Moon, or any planet other than the Earth.
     observer : Observer
          Indicates a location on or near the surface of the Earth where the observer is located.
-         Call #Astronomy_MakeObserver to create an observer structure.
     hourAngle : float
          An hour angle value in the range [0.0, 24.0) indicating the number of sidereal hours after the
          body's most recent culmination.
@@ -4577,6 +4576,48 @@ def _peak_altitude(context, time):
     return context.direction * (alt + _REFRACTION_NEAR_HORIZON)
 
 def SearchRiseSet(body, observer, direction, startTime, limitDays):
+    """Searches for the next time a celestial body rises or sets as seen by an observer on the Earth.
+
+    This function finds the next rise or set time of the Sun, Moon, or planet other than the Earth.
+    Rise time is when the body first starts to be visible above the horizon.
+    For example, sunrise is the moment that the top of the Sun first appears to peek above the horizon.
+    Set time is the moment when the body appears to vanish below the horizon.
+
+    This function corrects for typical atmospheric refraction, which causes celestial
+    bodies to appear higher above the horizon than they would if the Earth had no atmosphere.
+    It also adjusts for the apparent angular radius of the observed body (significant only for the Sun and Moon).
+
+    Note that rise or set may not occur in every 24 hour period.
+    For example, near the Earth's poles, there are long periods of time where
+    the Sun stays below the horizon, never rising.
+    Also, it is possible for the Moon to rise just before midnight but not set during the subsequent 24-hour day.
+    This is because the Moon sets nearly an hour later each day due to orbiting the Earth a
+    significant amount during each rotation of the Earth.
+    Therefore callers must not assume that the function will always succeed.
+
+    Parameters
+    ----------
+    body : Body
+        The Sun, Moon, or any planet other than the Earth.
+    observer : Observer
+        The location where observation takes place.
+    direction : Direction
+        Either `Direction.Rise` to find a rise time or `Direction.Set` to find a set time.
+    startTime : Time
+        The date and time at which to start the search.
+    limitDays : float
+        Limits how many days to search for a rise or set time.
+        To limit a rise or set time to the same day, you can use a value of 1 day.
+        In cases where you want to find the next rise or set time no matter how far
+        in the future (for example, for an observer near the south pole), you can pass
+        in a larger value like 365.
+
+    Returns
+    -------
+    #Time or `None`
+        If the rise or set time is found within the specified time window,
+        this function returns that time. Otherwise, it returns `None`.
+    """
     if body == Body.Earth:
         raise EarthNotAllowedError()
     elif body == Body.Sun:
