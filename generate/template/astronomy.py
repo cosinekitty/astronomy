@@ -398,6 +398,15 @@ class Time:
         return '{:04d}-{:02d}-{:02d}T{:02d}:{:02d}:{:02d}.{:03d}Z'.format(n.year, n.month, n.day, n.hour, n.minute, n.second, math.floor(n.microsecond / 1000))
 
     def Utc(self):
+        """Returns the UTC date and time as a `datetime` object.
+
+        Uses the standard [`datetime`](https://docs.python.org/3/library/datetime.html) class
+        to represent the date and time in this Time object.
+
+        Returns
+        -------
+        `datetime`
+        """
         return _EPOCH + datetime.timedelta(days=self.ut)
 
     def _etilt(self):
@@ -2680,6 +2689,41 @@ def _FindSeasonChange(targetLon, year, month, day):
     return time
 
 def Seasons(year):
+    """Finds both equinoxes and both solstices for a given calendar year.
+
+    The changes of seasons are defined by solstices and equinoxes.
+    Given a calendar year number, this function calculates the
+    March and September equinoxes and the June and December solstices.
+
+    The equinoxes are the moments twice each year when the plane of the
+    Earth's equator passes through the center of the Sun. In other words,
+    the Sun's declination is zero at both equinoxes.
+    The March equinox defines the beginning of spring in the northern hemisphere
+    and the beginning of autumn in the southern hemisphere.
+    The September equinox defines the beginning of autumn in the northern hemisphere
+    and the beginning of spring in the southern hemisphere.
+
+    The solstices are the moments twice each year when one of the Earth's poles
+    is most tilted toward the Sun. More precisely, the Sun's declination reaches
+    its minimum value at the December solstice, which defines the beginning of
+    winter in the northern hemisphere and the beginning of summer in the southern
+    hemisphere. The Sun's declination reaches its maximum value at the June solstice,
+    which defines the beginning of summer in the northern hemisphere and the beginning
+    of winter in the southern hemisphere.
+
+    Parameters
+    ----------
+    year : int
+        The calendar year number for which to calculate equinoxes and solstices.
+        The value may be any integer, but only the years 1800 through 2100 have
+        been validated for accuracy: unit testing against data from the
+        United States Naval Observatory confirms that all equinoxes and solstices
+        for that range of years are within 2 minutes of the correct time.
+
+    Returns
+    -------
+    #SeasonInfo
+    """
     mar_equinox = _FindSeasonChange(0, year, 3, 19)
     jun_solstice = _FindSeasonChange(90, year, 6, 19)
     sep_equinox = _FindSeasonChange(180, year, 9, 21)
@@ -2749,6 +2793,31 @@ class Apsis:
         self.dist_km = dist_au * _KM_PER_AU
 
 def SearchLunarApsis(startTime):
+    """Finds the time of the first lunar apogee or perigee after the given time.
+
+    Given a date and time to start the search in `startTime`, this function finds
+    the next date and time that the center of the Moon reaches the closest or
+    farthest point in its orbit with respect to the center of the Earth, whichever
+    comes first after `startTime`.  The return value (of type #Apsis) also
+    contains an indicator of whether the event is apogee or perigee.
+
+    The closest point is called *perigee* and the farthest point is called *apogee*.
+    The word *apsis* refers to either event.
+
+    To iterate through consecutive alternating perigee and apogee events,
+    call #SearchLunarApsis once, then use the return value to call #NextLunarApsis.
+    After that, keep feeding the previous return value from `NextLunarApsis` into
+    another call of `NextLunarApsis` as many times as desired.
+
+    Parameters
+    ----------
+    startTime : Time
+        The date and time at which to start searching for the next perigee or apogee.
+
+    Returns
+    -------
+    #Apsis
+    """
     increment = 5.0     # number of days to skip on each iteration
     t1 = startTime
     m1 = _distance_slope(+1, t1)
@@ -2791,6 +2860,23 @@ def SearchLunarApsis(startTime):
 
 
 def NextLunarApsis(apsis):
+    """Finds the next lunar perigee or apogee in a series.
+
+    This function requires an #Apsis value obtained from a call to
+    #SearchLunarApsis or `NextLunarApsis`.
+    Given an apogee event, this function finds the next perigee event,
+    and vice versa.
+
+    See #SearchLunarApsis for more details.
+
+    Parameters
+    ----------
+    apsis : Apsis
+
+    Returns
+    -------
+    #Apsis
+    """
     skip = 11.0     # number of days to skip to start looking for next apsis event
     time = apsis.time.AddDays(skip)
     next = SearchLunarApsis(time)

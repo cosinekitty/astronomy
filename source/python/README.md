@@ -251,6 +251,16 @@ calculate current observational conditions.
 
 ### Returns: #Time
 
+<a name="Time.Utc"></a>
+### Time.Utc(self)
+
+**Returns the UTC date and time as a `datetime` object.**
+
+Uses the standard [`datetime`](https://docs.python.org/3/library/datetime.html) class
+to represent the date and time in this Time object.
+
+### Returns: `datetime`
+
 ---
 
 <a name="Vector"></a>
@@ -766,6 +776,25 @@ Certain values of the angle have conventional definitions:
 
 ---
 
+<a name="NextLunarApsis"></a>
+### NextLunarApsis(apsis)
+
+**Finds the next lunar perigee or apogee in a series.**
+
+This function requires an #Apsis value obtained from a call to
+#SearchLunarApsis or `NextLunarApsis`.
+Given an apogee event, this function finds the next perigee event,
+and vice versa.
+See #SearchLunarApsis for more details.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Apsis`](#Apsis) | `apsis` |  |
+
+### Returns: #Apsis
+
+---
+
 <a name="NextMoonQuarter"></a>
 ### NextMoonQuarter(mq)
 
@@ -880,6 +909,31 @@ of the body at that time, as seen by the given observer.
 | [`Time`](#Time) | `startTime` | The date and time at which to start the search. |
 
 ### Returns: #HourAngleEvent
+
+---
+
+<a name="SearchLunarApsis"></a>
+### SearchLunarApsis(startTime)
+
+**Finds the time of the first lunar apogee or perigee after the given time.**
+
+Given a date and time to start the search in `startTime`, this function finds
+the next date and time that the center of the Moon reaches the closest or
+farthest point in its orbit with respect to the center of the Earth, whichever
+comes first after `startTime`.  The return value (of type #Apsis) also
+contains an indicator of whether the event is apogee or perigee.
+The closest point is called *perigee* and the farthest point is called *apogee*.
+The word *apsis* refers to either event.
+To iterate through consecutive alternating perigee and apogee events,
+call #SearchLunarApsis once, then use the return value to call #NextLunarApsis.
+After that, keep feeding the previous return value from `NextLunarApsis` into
+another call of `NextLunarApsis` as many times as desired.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Time`](#Time) | `startTime` | The date and time at which to start searching for the next perigee or apogee. |
+
+### Returns: #Apsis
 
 ---
 
@@ -1082,6 +1136,37 @@ limitDays : float
      See remarks above for more details.
 
 ### Returns: #Time or `None`
+
+---
+
+<a name="Seasons"></a>
+### Seasons(year)
+
+**Finds both equinoxes and both solstices for a given calendar year.**
+
+The changes of seasons are defined by solstices and equinoxes.
+Given a calendar year number, this function calculates the
+March and September equinoxes and the June and December solstices.
+The equinoxes are the moments twice each year when the plane of the
+Earth's equator passes through the center of the Sun. In other words,
+the Sun's declination is zero at both equinoxes.
+The March equinox defines the beginning of spring in the northern hemisphere
+and the beginning of autumn in the southern hemisphere.
+The September equinox defines the beginning of autumn in the northern hemisphere
+and the beginning of spring in the southern hemisphere.
+The solstices are the moments twice each year when one of the Earth's poles
+is most tilted toward the Sun. More precisely, the Sun's declination reaches
+its minimum value at the December solstice, which defines the beginning of
+winter in the northern hemisphere and the beginning of summer in the southern
+hemisphere. The Sun's declination reaches its maximum value at the June solstice,
+which defines the beginning of summer in the northern hemisphere and the beginning
+of winter in the southern hemisphere.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| `int` | `year` | The calendar year number for which to calculate equinoxes and solstices. The value may be any integer, but only the years 1800 through 2100 have been validated for accuracy: unit testing against data from the United States Naval Observatory confirms that all equinoxes and solstices for that range of years are within 2 minutes of the correct time. |
+
+### Returns: #SeasonInfo
 
 ---
 

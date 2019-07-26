@@ -12,6 +12,10 @@ USAGE:  pydown.py infile.py outfile.md
 """)
     return 1
 
+def Fail(message):
+    print('FATAL(pydown):', message)
+    sys.exit(1)
+
 def LoadModule(inPythonFileName):
     dir = os.path.dirname(inPythonFileName)
     if not dir:
@@ -190,7 +194,7 @@ def MdFunction(func, parent=None):
         md += info.Markdown()
         md += '\n'
     else:
-        print('pydown: WARNING - no documentation for function', func.__name__)
+        Fail('No documentation for function ' + func.__name__)
     return md
 
 def MdClass(c):
@@ -214,7 +218,7 @@ def MdClass(c):
                     md += '#### member functions\n\n'
                 md += MdFunction(obj, parent=c)
     else:
-        print('pydown: WARNING - no documentation for class', c.__name__)
+        Fail('No documentation for class ' + c.__name__)
     return md
 
 def MdEnumType(c):
@@ -231,7 +235,7 @@ def MdEnumType(c):
         md += info.Markdown()
         md += '\n'
     else:
-        print('pydown: WARNING - no documentation for enumeration class', c.__name__)
+        Fail('No documentation for enumeration class ' + c.__name__)
     return md
 
 def MdErrType(c):
@@ -247,7 +251,7 @@ def MdErrType(c):
         md += info.Markdown()
         md += '\n'
     else:
-        print('pydown: WARNING - no documentation for exception class', c.__name__)
+        Fail('No documentation for exception class ' + c.__name__)
     return md
 
 def Markdown(module):
