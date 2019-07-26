@@ -1,0 +1,31 @@
+#!/bin/bash
+Fail()
+{
+    echo "FATAL($(realpath $0)): $1"
+    exit 1
+}
+
+echo "Testing example: moonphase.py"
+./moonphase.py 2019-06-15T09:15:32.987Z > test/moonphase.txt || Fail "Error running moonphase.py."
+diff test/moonphase.txt test/moonphase_correct.txt || Fail "Error comparing moonphase.py output."
+
+if false; then
+    echo "Testing example: positions.py"
+    ./positions.py +45.6 -90.7 2018-11-30T17:55:07.234Z > test/positions.txt || Fail "Error running positions.py."
+    diff test/positions.txt test/positions_correct.txt || Fail "Error comparing positions.py output."
+
+    echo "Testing example: riseset.py"
+    ./riseset.py +45.6 -90.7 2018-11-30T17:55:07.234Z > test/riseset.txt || Fail "Error running riseset.py."
+    diff test/riseset.txt test/riseset_correct.txt || Fail "Error comparing riseset.py output."
+
+    echo "Testing example: seasons.py"
+    ./seasons.py 2019 > test/seasons.txt || Fail "Error running seasons.py."
+    diff test/seasons.txt test/seasons_correct.txt || Fail "Error comparing seasons.py output."
+
+    echo "Testing example: culminate.py"
+    ./culminate +30 -90 2015-02-28T00:00Z > test/culminate.txt || Fail "Error running culminate.py."
+    diff test/culminate.txt test/culminate_correct.txt || Fail "Error comparing culminate.py output."
+fi
+
+echo "PASS: Python examples"
+exit 0

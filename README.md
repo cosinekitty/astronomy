@@ -16,16 +16,22 @@
             <div>C</div>
             <div><a href="https://github.com/cosinekitty/astronomy"><img src="source/c/c_language.svg" width="100" height="100" alt="C" /></a></div>
         </td>
+        <td style="text-align: center;">
+            <div>Python</div>
+            <div><a href="https://github.com/cosinekitty/astronomy"><img src="source/python/python_language.svg" width="100" height="100" alt="Python" /></a></div>
+        </td>
     </tr>
     <tr>
         <td style="text-align: center;"><a href="demo/browser/">Examples</a></td>
         <td style="text-align: center;"><a href="demo/nodejs/">Examples</a></td>
         <td style="text-align: center;"><a href="demo/c/">Examples</a></td>
+        <td style="text-align: center;"><a href="demo/python/">Examples</a></td>
     </tr>
     <tr>
         <td style="text-align: center;"><a href="source/js/">Documentation</a></td>
         <td style="text-align: center;"><a href="source/js/">Documentation</a></td>
         <td style="text-align: center;"><a href="source/c/">Documentation</a></td>
+        <td style="text-align: center;"><a href="source/python/">Documentation</a></td>
     </tr>
 </table>
 

@@ -96,6 +96,8 @@ cd ../demo/c || Fail "Cannot change directory to ../demo/c"
 test/test || Fail "Error testing C examples"
 cd ../nodejs || Fail "Cannot change directory to ../nodejs"
 test/test || Fail "Error testing nodejs examples."
+cd ../python || Fail "Cannot change directory to ../python"
+test/test || Fail "Error testing Python examples."
 cd ../../generate || Fail "Cannot change back to generate directory."
 
 cat pass.txt

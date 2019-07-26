@@ -5,7 +5,7 @@
     https://github.com/cosinekitty/astronomy
 
     This program calculates the Moon's phase for a given date and time,
-    or the computer's current date and time if none is given.
+    or for the computer's current date and time if none is given.
     It also finds the dates and times of the subsequent 10 quarter phase changes.
 
     To execute, run the command:
