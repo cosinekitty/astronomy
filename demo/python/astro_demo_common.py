@@ -21,12 +21,14 @@ def ParseTime(text):
     return astronomy.Time.Make(year, month, day, hour, minute, second)
 
 def ParseArgs(args):
-    # [demo].py latitude longitude [utc]
     if len(args) not in [3, 4]:
         print('USAGE: {} latitude longitude [yyyy-mm-ddThh:mm:ssZ]'.format(args[0]))
         sys.exit(1)
     latitude = float(args[1])
     longitude = float(args[2])
-    time = ParseTime(args[3])
+    if len(args) == 4:
+        time = ParseTime(args[3])
+    else:
+        time = astronomy.Time.Now()
     observer = astronomy.Observer(latitude, longitude)
     return (observer, time)
