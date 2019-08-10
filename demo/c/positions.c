@@ -5,7 +5,7 @@
     https://github.com/cosinekitty/astronomy
 
     Given an observer's geographic latitude and longitude,
-    and an optional date and time, this program displays the 
+    and an optional date and time, this program displays the
     equatorial and horizontal coordinates of the Sun, Moon, and planets.
     If the date and time is omitted from the command line, the
     program uses the computer's current date and time.
@@ -35,7 +35,7 @@ int main(int argc, const char *argv[])
         return error;
 
     utc = Astronomy_UtcFromTime(time);
-    printf("UTC date = %04d-%02d-%02dT%02d:%02d:%06.3lfZ\n\n", 
+    printf("UTC date = %04d-%02d-%02dT%02d:%02d:%06.3lfZ\n\n",
         utc.year, utc.month, utc.day, utc.hour, utc.minute, utc.second);
 
     printf("BODY           RA      DEC       AZ      ALT\n");

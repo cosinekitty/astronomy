@@ -6,12 +6,10 @@
 This example shows how to determine the Moon's current phase,
 and how to predict when the next few quarter phases will occur.
 
-<!--
 ### [Body Positions](positions.py)
 An example of how to calculate equatorial and horizontal coordinates for all of the major solar system bodies.
--->
 
-### [Rise/Set](riseset.c)
+### [Rise/Set](riseset.py)
 Shows how to calculate sunrise, sunset, moonrise, and moonset times.
 
 <!--
