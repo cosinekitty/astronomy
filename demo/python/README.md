@@ -12,13 +12,11 @@ An example of how to calculate equatorial and horizontal coordinates for all of 
 ### [Rise/Set](riseset.py)
 Shows how to calculate sunrise, sunset, moonrise, and moonset times.
 
-<!--
-### [Seasons](seasons.c)
+### [Seasons](seasons.py)
 Calculates the equinoxes and solstices for a given calendar year.
--->
 
 <!--
-### [Culmination](culminate.c)
+### [Culmination](culminate.py)
 Finds when the Sun, Moon, and planets reach their highest position in the sky on a given date,
 as seen by an observer at a specified location on the Earth.
 Culmination is also the moment a body crosses the *meridian*, the imaginary semicircle

@@ -17,11 +17,11 @@ echo "Testing example: positions.py"
 ./positions.py +45.6 -90.7 2018-11-30T17:55:07.234Z > test/positions.txt || Fail "Error running positions.py."
 diff test/positions.txt test/positions_correct.txt || Fail "Error comparing positions.py output."
 
-if false; then
+echo "Testing example: seasons.py"
+./seasons.py 2019 > test/seasons.txt || Fail "Error running seasons.py."
+diff test/seasons.txt test/seasons_correct.txt || Fail "Error comparing seasons.py output."
 
-    echo "Testing example: seasons.py"
-    ./seasons.py 2019 > test/seasons.txt || Fail "Error running seasons.py."
-    diff test/seasons.txt test/seasons_correct.txt || Fail "Error comparing seasons.py output."
+if false; then
 
     echo "Testing example: culminate.py"
     ./culminate +30 -90 2015-02-28T00:00Z > test/culminate.txt || Fail "Error running culminate.py."
