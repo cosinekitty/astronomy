@@ -11,9 +11,9 @@
     each body's "hour angle" is 0.
 
     Having an hour angle of 0 is another way of saying that the body is
-    crossing the meridian, the imaginary semicircle in the sky that passes 
-    from due north on the horizon, through the zenith (straight up), 
-    toward due south on the horizon. At this moment the body appears to 
+    crossing the meridian, the imaginary semicircle in the sky that passes
+    from due north on the horizon, through the zenith (straight up),
+    toward due south on the horizon. At this moment the body appears to
     have an azimuth of either 180 degrees (due south) or 0 (due north).
 */
 
@@ -38,7 +38,7 @@ int PrintEvent(const char *name, astro_hour_angle_t evt)
 
 int main(int argc, const char *argv[])
 {
-    static const astro_body_t bodies[] = 
+    static const astro_body_t bodies[] =
     {
         BODY_SUN, BODY_MOON, BODY_MERCURY, BODY_VENUS, BODY_MARS,
         BODY_JUPITER, BODY_SATURN, BODY_URANUS, BODY_NEPTUNE, BODY_PLUTO
