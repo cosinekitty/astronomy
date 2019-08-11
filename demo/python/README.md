@@ -15,14 +15,12 @@ Shows how to calculate sunrise, sunset, moonrise, and moonset times.
 ### [Seasons](seasons.py)
 Calculates the equinoxes and solstices for a given calendar year.
 
-<!--
 ### [Culmination](culminate.py)
 Finds when the Sun, Moon, and planets reach their highest position in the sky on a given date,
 as seen by an observer at a specified location on the Earth.
 Culmination is also the moment a body crosses the *meridian*, the imaginary semicircle
 in the sky that passes from due north on the horizon, through the zenith (straight up),
 and then toward due south on the horizon.
--->
 
 ---
 
