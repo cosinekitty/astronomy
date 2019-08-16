@@ -1,8 +1,9 @@
 # Astronomy Engine (C/C++)
 
-This is the complete programming reference for the C version of 
-[Astronomy Engine](../../). It can be used directly from C++ programs also.
-Other programming languages are supported. See the [home page](../../) for more info.
+This is the complete programming reference for the C version of
+Astronomy Engine. It can be used directly from C++ programs also.
+Other programming languages are supported.
+See the [home page](https://github.com/cosinekitty/astronomy) for more info.
 
 ---
 
