@@ -86,6 +86,7 @@ if [[ "${FASTMODE}" == "false" ]]; then
     ./generate planets || Fail "Could not generate planet models."
 fi
 
+./unit_test_csharp || exit $?
 ./unit_test_js || exit $?
 ./unit_test_c || exit $?
 ./unit_test_python || exit $?

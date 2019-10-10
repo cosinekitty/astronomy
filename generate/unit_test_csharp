@@ -5,7 +5,9 @@ Fail()
     exit 1
 }
 
+echo "unit_test_csharp: Starting."
 cd dotnet/csharp_test || "Cannot change to directory dotnet/csharp_test"
 dotnet restore || Fail "Error in dotnet restore"
 dotnet run || Fail "Error in dotnet run of csharp unit test"
+echo "unit_test_csharp: PASS."
 exit 0
