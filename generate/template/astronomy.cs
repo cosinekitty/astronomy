@@ -29,9 +29,27 @@ using System;
 
 namespace CosineKitty
 {
+    public class AstroTime
+    {
+        public readonly double ut;
+        public readonly double tt;
+        internal double psi;
+        internal double eps;
+
+        public AstroTime(double ut)
+        {
+            this.ut = ut;
+            this.tt = Astronomy.TerrestrialTime(ut);
+            this.psi = this.eps = double.NaN;
+        }
+    }
+
     public static class Astronomy
     {
         private static readonly deltat_entry_t[] DT = $ASTRO_DELTA_T();
+        private const double T0 = 2451545.0;
+        private const double MJD_BASIS = 2400000.5;
+        private const double Y2000_IN_MJD  =  T0 - MJD_BASIS;
 
         private static double DeltaT(double mjd)
         {
@@ -67,6 +85,11 @@ namespace CosineKitty
                     return DT[c].dt + frac*(DT[c+1].dt - DT[c].dt);
                 }
             }
+        }
+
+        internal static double TerrestrialTime(double ut)
+        {
+            return ut + DeltaT(ut + Y2000_IN_MJD)/86400.0;
         }
     }
 

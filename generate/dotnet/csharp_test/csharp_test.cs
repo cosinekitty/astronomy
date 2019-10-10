@@ -1,4 +1,5 @@
 ﻿using System;
+using CosineKitty;
 
 namespace csharp_test
 {
@@ -6,7 +7,8 @@ namespace csharp_test
     {
         static int Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
+            AstroTime time = new AstroTime(0.0);
+            Console.WriteLine("ut={0:0.000000}, tt={1:0.000000}", time.ut, time.tt);
             return 0;
         }
     }
