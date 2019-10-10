@@ -25,11 +25,13 @@
     SOFTWARE.
 */
 
+using System;
+
 namespace CosineKitty
 {
     public static class Astronomy
     {
-        private readonly deltat_entry_t[] DT = $ASTRO_DELTA_T();
+        private static readonly deltat_entry_t[] DT = $ASTRO_DELTA_T();
 
         private static double DeltaT(double mjd)
         {
@@ -39,13 +41,13 @@ namespace CosineKitty
             if (mjd <= DT[0].mjd)
                 return DT[0].dt;
 
-            if (mjd >= DT[DT_LENGTH-1].mjd)
-                return DT[DT_LENGTH-1].dt;
+            if (mjd >= DT[DT.Length-1].mjd)
+                return DT[DT.Length-1].dt;
 
             // Do a binary search to find the pair of indexes this mjd lies between.
 
             lo = 0;
-            hi = DT_LENGTH-2;   // make sure there is always an array element after the one we are looking at.
+            hi = DT.Length-2;   // make sure there is always an array element after the one we are looking at.
             for(;;)
             {
                 if (lo > hi)

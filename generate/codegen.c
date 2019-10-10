@@ -60,8 +60,8 @@ typedef struct
 cg_directive_entry;
 
 static int ScanDirective(
-    char *line, 
-    const char **verb_text, 
+    char *line,
+    const char **verb_text,
     const char **args_text,
     const char **tail_text);
 
@@ -137,8 +137,8 @@ static int IndexOf(const char *text, int offset, const char *pattern)
 }
 
 static int ScanDirective(
-    char *line, 
-    const char **verb_text, 
+    char *line,
+    const char **verb_text,
     const char **args_text,
     const char **tail_text)
 {
@@ -166,7 +166,7 @@ static int ScanDirective(
 
     /* Search for the front of the directive in the line. */
     prefix_index = IndexOf(line, 0, prefix);
-    if (prefix_index < 0) 
+    if (prefix_index < 0)
         return 0;    /* Not found, so bail out. */
 
     /* Search for the delimiter between the verb and the arguments. */
@@ -179,7 +179,7 @@ static int ScanDirective(
     if (suffix_index < 0)
         return 0;   /* Not a pattern match, so bail out. */
 
-    /* We have found a directive, so now we are allowed to change the contents of the line. */    
+    /* We have found a directive, so now we are allowed to change the contents of the line. */
 
     line[prefix_index] = '\0';     /* terminate any leading text in the line */
     line[delim_index] = '\0';      /* terminate the prefix string */
@@ -241,11 +241,11 @@ static int ListChebyshev(cg_context_t *context)
     {
         if (record_index > 0)
             fprintf(context->outfile, ",\n");
-            
+
         fprintf(context->outfile, "{ 'tt':%lf, 'ndays':%lf, 'coeff':[\n", record.jdStart - T0, record.jdDelta);
         for (i=0; i < record.numpoly; ++i)
         {
-            fprintf(context->outfile, "    [%0.12lf, %0.12lf, %0.12lf]%s\n", 
+            fprintf(context->outfile, "    [%0.12lf, %0.12lf, %0.12lf]%s\n",
                 record.coeff[0][i],
                 record.coeff[1][i],
                 record.coeff[2][i],
@@ -324,7 +324,7 @@ static int CChebyshev(cg_context_t *context)
     for (record_index=0; EphReadRecord(&reader, &record); ++record_index)
     {
         fprintf(context->outfile, "    { %10.1lf, %7.1lf, ARRAYSIZE(cheb_%d_%d), cheb_%d_%d }%s\n",
-            record.jdStart - T0, 
+            record.jdStart - T0,
             record.jdDelta,
             body,
             record_index,
@@ -386,7 +386,7 @@ static int ListVsop(cg_context_t *context)
             for (i=0; i < series->nterms_total; ++i)
             {
                 const vsop_term_t *term = &series->term[i];
-                fprintf(context->outfile, "      [%0.11lf, %0.11lf, %0.11lf]%s\n", 
+                fprintf(context->outfile, "      [%0.11lf, %0.11lf, %0.11lf]%s\n",
                     term->amplitude,
                     term->phase,
                     term->frequency,
@@ -446,8 +446,8 @@ static int CVsop_Formula(cg_context_t *context, const vsop_formula_t *formula, c
         else
             snprintf(sname, sizeof(sname), "%s_%d", varprefix, s);
 
-        fprintf(context->outfile, "    { %d, %s }%s\n", 
-            formula->series[s].nterms_total, 
+        fprintf(context->outfile, "    { %d, %s }%s\n",
+            formula->series[s].nterms_total,
             sname,
             (s+1 < formula->nseries_total) ? "," : "");
     }
@@ -514,9 +514,13 @@ static int GenDeltaTArrayEntry(cg_context_t *context, int count, double mjd, con
     switch (context->language)
     {
     case CODEGEN_LANGUAGE_C:
-    case CODEGEN_LANGUAGE_CSHARP:
         fprintf(context->outfile, "%s\n", (count==1) ? "{" : ",");
         fprintf(context->outfile, "{ %0.1lf, %s }", mjd, dt_text);
+        return 0;
+
+    case CODEGEN_LANGUAGE_CSHARP:
+        fprintf(context->outfile, "%s\n", (count==1) ? "new deltat_entry_t[] {" : ",");
+        fprintf(context->outfile, "new deltat_entry_t { mjd=%0.1lf, dt=%s }", mjd, dt_text);
         return 0;
 
     case CODEGEN_LANGUAGE_JS:
@@ -568,7 +572,7 @@ static int GenDeltaT(cg_context_t *context)
             if (year % 5 != 0) continue;
 
             mjd = julian_date((short)year, 1, 1, 0.0) - MJD_BASIS;
-            ++count;            
+            ++count;
             CHECK(GenDeltaTArrayEntry(context, count, mjd, dt_text));
         }
     }
@@ -652,11 +656,11 @@ fail:
 }
 
 static int ScanRealArray(
-    cg_context_t *context, 
-    const char *filename, 
-    int lnum, 
-    char *line, 
-    int numExpected, 
+    cg_context_t *context,
+    const char *filename,
+    int lnum,
+    char *line,
+    int numExpected,
     double *data)
 {
     int i, t, len, inspace;
@@ -815,7 +819,7 @@ static int OptIauPython(cg_context_t *context, const double *data)
         fprintf(context->outfile, "        sarg = math.sin(%s)\n", dotprod);
         fprintf(context->outfile, "        carg = math.cos(%s)\n", dotprod);
     }
-    else 
+    else
     {
         fprintf(context->outfile, "        arg = %s\n", dotprod);
         fprintf(context->outfile, "        sarg = math.sin(arg)\n");
@@ -829,7 +833,7 @@ static int OptIauPython(cg_context_t *context, const double *data)
     if (OptimizeLinear(context, linear, sizeof(linear), data[8], data[9])) return 1;
     if (OptimizeConst(context, cpart, sizeof(cpart), data[10], "sarg")) return 1;
     fprintf(context->outfile, "        de += (%s)*carg%s\n", linear, cpart);
-    
+
     fprintf(context->outfile, "\n");
     return 0;
 }
@@ -929,7 +933,7 @@ fail:
 }
 
 static int OptAddSolPython(
-    cg_context_t *context, 
+    cg_context_t *context,
     double cl, double cs, double cg, double cp, double p, double q, double r, double s)
 {
     const char *op;
