@@ -19,7 +19,7 @@ before_script:
   - npm install -g jsdoc-to-markdown@4.0.1
   - npm install -g google-closure-compiler@20190528.0.0
   - wget -q https://packages.microsoft.com/config/ubuntu/16.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
-  - sudo dpkg -i packages-microsoft-prod.deb
+  - sudo dpkg -i packages-microsoft-prod.deb && rm -f packages-microsoft-prod.deb
   - sudo apt-get update
   - sudo apt-get install apt-transport-https
   - sudo apt-get update
