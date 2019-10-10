@@ -40,7 +40,7 @@ if [[ ! -f ${EPHFILE} ]]; then
         curl -L -o ${EPHFILE} ${EPHURL} || Fail "Could not download using curl: ${EPHFILE}"
     else
         echo "Neither wget nor curl is installed. Use your browser to download"
-        echo "the above file from the NASA ftp site into this directory."
+        echo "the file at the URL above into this directory."
         echo "Then run this script again to continue."
         exit 1
     fi
@@ -86,6 +86,7 @@ if [[ "${FASTMODE}" == "false" ]]; then
     ./generate planets || Fail "Could not generate planet models."
 fi
 
+./makedoc || exit $?
 ./unit_test_csharp || exit $?
 ./unit_test_js || exit $?
 ./unit_test_c || exit $?

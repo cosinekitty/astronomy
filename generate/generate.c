@@ -97,14 +97,14 @@ static int UnitTestChebyshev(void);
 #define NEPTUNE_PERIHELION  29.81
 #define PLUTO_PERIHELION    29.658
 
-/* 
-    ErrorRadius[body] is the worst-case (smallest) distance 
-    in AU over which a position error affects Earth-based observations. 
+/*
+    ErrorRadius[body] is the worst-case (smallest) distance
+    in AU over which a position error affects Earth-based observations.
     For example, an error in the Earth/Moon Barycenter (EMB) affects
     observations of Venus the most, because that planet comes closest
     to Earth at 0.277 AU.
 */
-const double ErrorRadius[] =    
+const double ErrorRadius[] =
 {
     EARTH_PERIHELION - MERCURY_APHELION,    /*  0 = Mercury */
     EARTH_PERIHELION - VENUS_APHELION,      /*  1 = Venus */
@@ -138,7 +138,7 @@ int main(int argc, const char *argv[])
 
 static int PrintUsage(void)
 {
-    fprintf(stderr, 
+    fprintf(stderr,
         "\n"
         "USAGE:\n"
         "\n"
@@ -188,8 +188,8 @@ static int NovasBodyPos(double jd, int body, double pos[3])
     {
         double factor;
 
-        /* 
-            The caller is asking for the Earth's position or the Moon's position. 
+        /*
+            The caller is asking for the Earth's position or the Moon's position.
             NOVAS does not directly represent either body.
             Instead, we have to calculate the Earth or Moon using
             the Earth/Moon Barycenter (EMB) and the Geocentric Moon (GM).
@@ -301,7 +301,7 @@ static int SearchVsop(int body)
                 winner_terms = trunc_terms;
                 winner_arcmin = max_arcmin;
                 winner_threshold = threshold;
-                
+
                 error = SaveVsopFile(&model);
                 if (error) goto fail;
             }
@@ -326,7 +326,7 @@ fail:
 static int SaveVsopFile(const vsop_model_t *model)
 {
     char filename[100];
-    
+
     snprintf(filename, sizeof(filename), "output/vsop_%d.txt", (int)model->body);
     return VsopWriteTrunc(model, filename);
 }
@@ -404,8 +404,9 @@ fail:
 static int GenerateSource(void)
 {
     int error;
-    CHECK(GenerateCode(CODEGEN_LANGUAGE_JS, "../source/js/astronomy.js", "template/astronomy.js", "output"));
     CHECK(GenerateCode(CODEGEN_LANGUAGE_C, "../source/c/astronomy.c", "template/astronomy.c",  "output"));
+    CHECK(GenerateCode(CODEGEN_LANGUAGE_CSHARP, "../source/csharp/astronomy.cs", "template/astronomy.cs",  "output"));
+    CHECK(GenerateCode(CODEGEN_LANGUAGE_JS, "../source/js/astronomy.js", "template/astronomy.js", "output"));
     CHECK(GenerateCode(CODEGEN_LANGUAGE_PYTHON, "../source/python/astronomy.py", "template/astronomy.py", "output"));
 fail:
     return error;
@@ -436,13 +437,13 @@ static int PositionArcminError(int body, double jd, const double a[3], const dou
         return 0;
     }
 
-    if (body == BODY_MOON) 
+    if (body == BODY_MOON)
     {
         /*
             Measure the position of the moon as seen from the *SURFACE* of the Earth,
             at the point along a line from the geocenter to the object.
             This is closer than the geocenter or the barycenter, so the anglular error is larger.
-            For other bodies, there is no significant difference between 
+            For other bodies, there is no significant difference between
             topocentric error and geocentric error.
         */
         const double scale = (ERAD / AU) / VectorLength(a);
@@ -465,7 +466,7 @@ static int PositionArcminError(int body, double jd, const double a[3], const dou
         adiff.v[0] = a[0];
         adiff.v[1] = a[1];
         adiff.v[2] = a[2];
-        
+
         bdiff.t = jd;   /* doesn't matter, but I don't like leaving undefined memory */
         bdiff.v[0] = b[0];
         bdiff.v[1] = b[1];
@@ -477,7 +478,7 @@ static int PositionArcminError(int body, double jd, const double a[3], const dou
 
     if (body == BODY_EMB || body == BODY_EARTH)
     {
-        /* 
+        /*
             For the Earth/Moon Barycenter (EMB=2), or Earth=11, we use a special estimate
             of angular error. An error in the Earth's position affects the observed
             position of all other bodies in the solar system.
@@ -528,7 +529,7 @@ calc:
     adiff.v[0] = a[0] - epos[0];
     adiff.v[1] = a[1] - epos[1];
     adiff.v[2] = a[2] - epos[2];
-    
+
     bdiff.t = jd;   /* doesn't matter, but I don't like leaving undefined memory */
     bdiff.v[0] = b[0] - epos[0];
     bdiff.v[1] = b[1] - epos[1];
@@ -578,7 +579,7 @@ static int MeasureError(const char *inFileName, int nsamples, error_stats_t *sta
 
     memset(stats, 0, sizeof(error_stats_t));
     error = EphFileOpen(&reader, inFileName);
-    if (error) 
+    if (error)
     {
         fprintf(stderr, "MeasureError: Error %d trying to open file: %s\n", error, inFileName);
         goto fail;
@@ -614,7 +615,7 @@ static int MeasureError(const char *inFileName, int nsamples, error_stats_t *sta
             /* Calculate "correct" position at the time 'jd' (according to NOVAS). */
             error = NovasBodyPos(jd, reader.body, npos);
             if (error) goto fail;
-            
+
             /* Calculate our approximation of the position at the time 'jd'. */
             x = ChebScale(record.jdStart, record.jdStart + record.jdDelta, jd);
             ChebApprox(record.numpoly, 3, record.coeff, x, apos);
@@ -682,7 +683,7 @@ static int Resample(int body, const char *outFileName, int npoly, int startYear,
     }
 
     error = ChebInit(&encoder, npoly, VECTOR_DIM);
-    if (error) 
+    if (error)
     {
         fprintf(stderr, "ERROR %d returned by ChebInit()\n", error);
         goto fail;
@@ -745,7 +746,7 @@ static int SampleFunc(const void *context, double jd, double pos[CHEB_MAX_DIM])
     double jed[2];
     double sun_pos[3];
     double vel[3];      /* we don't care about velocities... ignored */
-    
+
     jed[0] = jd;
     jed[1] = 0.0;
     error = state(jed, (short)c->body, pos, vel);
@@ -839,9 +840,9 @@ static int CheckEcliptic(const char *filename, int lnum, const char *line, doubl
     double earth_ecl[3];
     double geo[3];
     double tt, jd, lon, dist, blon, elon, diff;
-    
+
     *arcmin = 99999.0;
-    *outbody = VSOP_INVALID_BODY;    
+    *outbody = VSOP_INVALID_BODY;
 
     /* Example line: "e Jupiter opp <tt> <au>" */
     if (4 != sscanf(line, "e %9[A-Za-z] %9[a-z] %lf %lf", name, event, &tt, &dist))
@@ -883,7 +884,7 @@ static int CheckEcliptic(const char *filename, int lnum, const char *line, doubl
         {
             fprintf(stderr, "CheckEcliptic: Invalid distance %0.3lf AU for inferior conjunction; line %d file %s\n", dist, lnum, filename);
             return 1;
-        }        
+        }
     }
     else if (!strcmp(event, "sup"))
     {
@@ -895,16 +896,16 @@ static int CheckEcliptic(const char *filename, int lnum, const char *line, doubl
         {
             fprintf(stderr, "CheckEcliptic: Invalid distance %0.3lf AU for superior conjunction; line %d file %s\n", dist, lnum, filename);
             return 1;
-        }        
+        }
     }
     else
     {
         fprintf(stderr, "CheckEcliptic: Invalid event code '%s' on line %d of file %s\n", event, lnum, filename);
         return 1;
-    }    
+    }
 
     blon = EclipticLongitude(body_ecl);
-    elon = EclipticLongitude(earth_ecl);    
+    elon = EclipticLongitude(earth_ecl);
     diff = LongitudeOffset((elon - blon) - lon);
 
     *arcmin = fabs(diff * 60.0);
@@ -943,14 +944,14 @@ static int CheckTestVector(const char *filename, int lnum, const char *line, dou
     }
 
     error = NovasBodyPos(jd, body, npos);
-    if (error) 
+    if (error)
     {
         fprintf(stderr, "CheckTestVector: NovasBodyPos returned %d on line %d of file %s\n", error, lnum, filename);
         return error;
     }
 
     error = PositionArcminError(body, jd, npos, xpos, arcmin);
-    if (error) 
+    if (error)
     {
         fprintf(stderr, "CheckTestVector: PositionArcminError returned %d on line %d of file %s\n", error, lnum, filename);
         return error;
@@ -996,7 +997,7 @@ static int CheckSkyPos(observer *location, const char *filename, int lnum, const
         return 1;
     }
 
-    if (body == BODY_EARTH || body == BODY_EMB) 
+    if (body == BODY_EARTH || body == BODY_EMB)
     {
         fprintf(stderr, "CheckSkyPos: Cannot calculate sky position of body '%s'\n", name);
         return 1;
@@ -1007,7 +1008,7 @@ static int CheckSkyPos(observer *location, const char *filename, int lnum, const
     else if (body == BODY_SUN)
         bodyIndex = 10;
     else
-        bodyIndex = 1 + body;    
+        bodyIndex = 1 + body;
 
     error = make_object(0, (short)bodyIndex, name, NULL, &obj);
     if (error)
@@ -1031,12 +1032,12 @@ static int CheckSkyPos(observer *location, const char *filename, int lnum, const
     delta_ra = fabs(sky_ast.ra - ra);
     if (delta_ra > 12.0)
     {
-        /* 
+        /*
             Sometimes the two RA values can straddle the 24-hour mark.
             For example, one of them is 0.001 and the other 23.999.
             The actual error is then 0.002 hours, not 23.998.
             In general, it is never "fair" to call the error greater than
-            12 hours or 180 degrees. 
+            12 hours or 180 degrees.
         */
         delta_ra = 24.0 - delta_ra;
     }
@@ -1065,10 +1066,10 @@ static int CheckSkyPos(observer *location, const char *filename, int lnum, const
         return error;
     }
 
-    equ2hor(jd_utc, jd_tt-jd_utc, 1, 0.0, 0.0, 
-        &location->on_surf, sky_dat.ra, sky_dat.dec, 0, 
+    equ2hor(jd_utc, jd_tt-jd_utc, 1, 0.0, 0.0,
+        &location->on_surf, sky_dat.ra, sky_dat.dec, 0,
         &check_zenith, &check_azimuth, &check_ra, &check_dec);
-        
+
     check_altitude = 90.0 - check_zenith;
 
     delta_az = fabs(azimuth - check_azimuth);
@@ -1077,10 +1078,10 @@ static int CheckSkyPos(observer *location, const char *filename, int lnum, const
     delta_az *= 60.0;
     /* Just like RA, diminish the azimuth error as altitude approaches zenith/nadir... */
     delta_az *= cos(check_altitude * DEG2RAD);
-    
+
     delta_alt = 60.0 * (altitude - check_altitude);
 
-    *arcmin_hor = sqrt(delta_az*delta_az + delta_alt*delta_alt);   
+    *arcmin_hor = sqrt(delta_az*delta_az + delta_alt*delta_alt);
 
     if (*arcmin_hor > 0.9)
     {
@@ -1211,7 +1212,7 @@ static int CheckTestOutput(const char *filename)
             CHECK(ParseObserver(filename, lnum, line, &location));
             break;
 
-        case 'v':   /* heliocentric cartesian vector represented in J2000 equatorial plane */            
+        case 'v':   /* heliocentric cartesian vector represented in J2000 equatorial plane */
             CHECK(CheckTestVector(filename, lnum, line, &arcmin_helio, &body));
             UpdateErrorStats(&bundle[body].helio, arcmin_helio);
             break;
@@ -1226,7 +1227,7 @@ static int CheckTestOutput(const char *filename)
             CHECK(CheckEcliptic(filename, lnum, line, &arcmin_eclip, &body));
             UpdateErrorStats(&bundle[body].eclip, arcmin_eclip);
             break;
-        
+
         default:
             fprintf(stderr, "CheckTestOutput: Invalid first character on line %d of file %s\n", lnum, filename);
             error = 1;

@@ -6,9 +6,6 @@ Fail()
 }
 
 echo ""
-./makedoc || exit $?
-
-echo ""
 echo "Running astro_check."
 time node astro_check.js > temp/js_check.txt || Fail "Problem running JavaScript unit test."
 echo "Verifying astro_check output."

@@ -496,6 +496,7 @@ static int GenArrayEnd(cg_context_t *context)
         return 0;
 
     case CODEGEN_LANGUAGE_C:
+    case CODEGEN_LANGUAGE_CSHARP:
         fprintf(context->outfile, "\n}");
         return 0;
 
@@ -513,6 +514,7 @@ static int GenDeltaTArrayEntry(cg_context_t *context, int count, double mjd, con
     switch (context->language)
     {
     case CODEGEN_LANGUAGE_C:
+    case CODEGEN_LANGUAGE_CSHARP:
         fprintf(context->outfile, "%s\n", (count==1) ? "{" : ",");
         fprintf(context->outfile, "{ %0.1lf, %s }", mjd, dt_text);
         return 0;
