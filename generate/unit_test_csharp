@@ -1,0 +1,11 @@
+#!/bin/bash
+Fail()
+{
+    echo "ERROR($0): $1"
+    exit 1
+}
+
+cd dotnet/csharp_test || "Cannot change to directory dotnet/csharp_test"
+dotnet restore || Fail "Error in dotnet restore"
+dotnet run || Fail "Error in dotnet run of csharp unit test"
+exit 0

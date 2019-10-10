@@ -1,0 +1,3 @@
+dotnet new sln -n csharp_test
+dotnet new console -n csharp_test
+dotnet sln csharp_test.sln add csharp_test

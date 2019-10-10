@@ -1,7 +1,11 @@
-dist: trusty
+dist: xenial
+mono: none
+sudo: required
+dotnet: 2.2
 
 language:
   - c
+  - csharp
 
 compiler:
   - gcc
@@ -12,7 +16,7 @@ addons:
       - ubuntu-toolchain-r-test
     packages:
       - gcc-6
-      
+
 before_script:
   - npm install -g jsdoc-to-markdown@4.0.1
   - npm install -g google-closure-compiler@20190528.0.0
@@ -26,3 +30,7 @@ branches:
     only:
         - gh-pages
         - /.*/
+
+global:
+  - DOTNET_SKIP_FIRST_TIME_EXPERIENCE=true
+  - DOTNET_CLI_TELEMETRY_OPTOUT=1
