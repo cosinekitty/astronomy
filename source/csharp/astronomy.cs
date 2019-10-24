@@ -31,6 +31,8 @@ namespace CosineKitty
 {
     public class AstroTime
     {
+        private static readonly DateTime Origin = new DateTime(2000, 1, 1, 12, 0, 0, DateTimeKind.Utc);
+
         public readonly double ut;
         public readonly double tt;
         internal double psi;
@@ -41,6 +43,21 @@ namespace CosineKitty
             this.ut = ut;
             this.tt = Astronomy.TerrestrialTime(ut);
             this.psi = this.eps = double.NaN;
+        }
+
+        public AstroTime(DateTime d)
+            : this((d - Origin).TotalDays)
+        {
+        }
+
+        public DateTime ToUtcDateTime()
+        {
+            return Origin.AddDays(ut).ToUniversalTime();
+        }
+
+        public override string ToString()
+        {
+            return ToUtcDateTime().ToString("yyyy-MM-ddThh:mm:ss.fffZ");
         }
     }
 
