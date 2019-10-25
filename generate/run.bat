@@ -124,7 +124,16 @@ if not exist "!CTESTEXE!" (
     exit /b 1
 )
 REM -----------------------------------------------------------------------------------------
+echo.
+echo.Running C# tests.
+pushd dotnet\csharp_test
+dotnet restore
+if errorlevel 1 (exit /b 1)
+dotnet run
+if errorlevel 1 (exit /b 1)
+popd
 
+REM -----------------------------------------------------------------------------------------
 echo.
 echo.Running longitude tests.
 node elong_test.js
