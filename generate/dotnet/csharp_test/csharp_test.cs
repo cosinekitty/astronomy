@@ -80,6 +80,11 @@ namespace csharp_test
                     foreach (Body body in bodylist)
                     {
                         AstroVector pos = Astronomy.HelioVector(body, time);
+                        outfile.WriteLine("v {0} {1:0.0000000000000000} {2:0.0000000000000000} {3:0.0000000000000000} {4:0.0000000000000000}", body, pos.t.tt, pos.x, pos.y, pos.z);
+                        if (body != Body.Earth)
+                        {
+
+                        }
                     }
 
                     time = time.AddDays(10.0 + Math.PI/100.0);

@@ -9,5 +9,7 @@ echo "unit_test_csharp: Starting."
 cd dotnet/csharp_test || "Cannot change to directory dotnet/csharp_test"
 dotnet restore || Fail "Error in dotnet restore"
 dotnet run || Fail "Error in dotnet run of csharp unit test"
+cd ../..
+./generate check dotnet/csharp_test/csharp_check.txt || Fail "Verification failure for C# unit test output."
 echo "unit_test_csharp: PASS."
 exit 0
