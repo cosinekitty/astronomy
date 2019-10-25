@@ -346,6 +346,83 @@ fail:
     return error;
 }
 
+static int CsharpChebyshev(cg_context_t *context)
+{
+    int error = 1;
+    int body, i, record_index, record_count;
+    char filename[100];
+    eph_file_reader_t reader;
+    eph_record_t record;
+
+    if (1 != sscanf(context->args, "%d", &body) || body < 0 || body > 8)
+    {
+        error = LogError(context, "Chebyshev body name is invalid.");
+        goto fail;
+    }
+
+    snprintf(filename, sizeof(filename), "output/%02d.eph", body);
+    error = EphFileOpen(&reader, filename);
+    if (error)
+    {
+        LogError(context, "EphFileOpen #1 returned error %d for file: %s", error, filename);
+        goto fail;
+    }
+
+    for (record_index=0; EphReadRecord(&reader, &record); ++record_index)
+    {
+        fprintf(context->outfile, "        private static readonly astro_cheb_coeff_t[] cheb_%d_%d =\n", body, record_index);
+        fprintf(context->outfile, "        {\n");
+        for (i=0; i < record.numpoly; ++i)
+        {
+            fprintf(context->outfile, "            new astro_cheb_coeff_t(%16.12lf, %16.12lf, %16.12lf)%s\n",
+                record.coeff[0][i],
+                record.coeff[1][i],
+                record.coeff[2][i],
+                (i+1 < record.numpoly) ? "," : "");
+        }
+        fprintf(context->outfile, "        };\n\n");
+    }
+    record_count = record_index;
+
+    if (record.error)
+    {
+        LogError(context, "Error %d in EphReadRecord#1 for line %d in file %s", record.error, reader.lnum, filename);
+        error = record.error;
+        goto fail;
+    }
+
+    EphFileClose(&reader);
+    error = EphFileOpen(&reader, filename);
+    if (error)
+    {
+        LogError(context, "EphFileOpen #2 returned error %d for file: %s", error, filename);
+        goto fail;
+    }
+
+    fprintf(context->outfile, "        private static readonly astro_cheb_record_t[] cheb_%d =\n        {\n", body);
+    for (record_index=0; EphReadRecord(&reader, &record); ++record_index)
+    {
+        fprintf(context->outfile, "            new astro_cheb_record_t(%10.1lf, %7.1lf, cheb_%d_%d)%s\n",
+            record.jdStart - T0,
+            record.jdDelta,
+            body,
+            record_index,
+            (record_index+1 < record_count) ? "," : "");
+    }
+    fprintf(context->outfile, "        }");
+
+    if (record.error)
+    {
+        LogError(context, "Error %d in EphReadRecord#2 for line %d in file %s", record.error, reader.lnum, filename);
+        error = record.error;
+        goto fail;
+    }
+
+fail:
+    EphFileClose(&reader);
+    return error;
+}
+
 static int ListVsop(cg_context_t *context)
 {
     int error;
@@ -491,21 +568,18 @@ static int CsharpVsop_Series(cg_context_t *context, const vsop_series_t *series,
 {
     int i;
 
-    if (series->nterms_total > 0)
+    fprintf(context->outfile, "        private static readonly vsop_term_t[] %s_%d = new vsop_term_t[]\n        {\n", varprefix, s);
+    for (i = 0; i < series->nterms_total; ++i)
     {
-        fprintf(context->outfile, "        private static readonly vsop_term_t[] %s_%d = new vsop_term_t[]\n        {\n", varprefix, s);
-        for (i = 0; i < series->nterms_total; ++i)
-        {
-            const vsop_term_t *term = &series->term[i];
+        const vsop_term_t *term = &series->term[i];
 
-            fprintf(context->outfile, "            new vsop_term_t(%0.11lf, %0.11lf, %0.11lf)%s\n",
-                term->amplitude,
-                term->phase,
-                term->frequency,
-                (i + 1 < series->nterms_total) ? "," : "");
-        }
-        fprintf(context->outfile, "        };\n\n");
+        fprintf(context->outfile, "            new vsop_term_t(%0.11lf, %0.11lf, %0.11lf)%s\n",
+            term->amplitude,
+            term->phase,
+            term->frequency,
+            (i + 1 < series->nterms_total) ? "," : "");
     }
+    fprintf(context->outfile, "        };\n\n");
 
     return 0;
 }
@@ -525,10 +599,7 @@ static int CsharpVsop_Formula(cg_context_t *context, const vsop_formula_t *formu
     fprintf(context->outfile, "        private static readonly vsop_series_t[] %s = new vsop_series_t[]\n        {\n", varprefix);
     for (s=0; s < formula->nseries_total; ++s)
     {
-        if (formula->series[s].nterms_total == 0)
-            strcpy(sname, "null");
-        else
-            snprintf(sname, sizeof(sname), "%s_%d", varprefix, s);
+        snprintf(sname, sizeof(sname), "%s_%d", varprefix, s);
 
         fprintf(context->outfile, "            new vsop_series_t(%s)%s\n",
             sname,
@@ -1163,6 +1234,7 @@ static const cg_directive_entry DirectiveTable[] =
     { "LIST_VSOP", ListVsop },
     { "LIST_CHEBYSHEV", ListChebyshev },
     { "C_CHEBYSHEV", CChebyshev },
+    { "CSHARP_CHEBYSHEV", CsharpChebyshev },
     { "DELTA_T", GenDeltaT },
     { "IAU_DATA", OptIauData },
     { "ADDSOL", OptAddSol },

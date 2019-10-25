@@ -191,6 +191,25 @@ namespace CosineKitty
         {
             return ToUtcDateTime().ToString("yyyy-MM-ddThh:mm:ss.fffZ");
         }
+
+        /// <summary>
+        /// Calculates the sum or difference of an #AstroTime with a specified floating point number of days.
+        /// </summary>
+        /// <remarks>
+        /// Sometimes we need to adjust a given #astro_time_t value by a certain amount of time.
+        /// This function adds the given real number of days in `days` to the date and time in this object.
+        ///
+        /// More precisely, the result's Universal Time field `ut` is exactly adjusted by `days` and
+        /// the Terrestrial Time field `tt` is adjusted correctly for the resulting UTC date and time,
+        /// according to the historical and predictive Delta-T model provided by the
+        /// [United States Naval Observatory](http://maia.usno.navy.mil/ser7/).
+        /// </remarks>
+        /// <param name="days">A floating point number of days by which to adjust `time`. May be negative, 0, or positive.</param>
+        /// <returns>A date and time that is conceptually equal to `time + days`.</returns>
+        public AstroTime AddDays(double days)
+        {
+            return new AstroTime(this.ut + days);
+        }
     }
 
     /// <summary>
@@ -525,6 +544,73 @@ $ASTRO_CSHARP_VSOP(Neptune)
             return new AstroVector(x, y, z, time);
         }
 
+        private struct astro_cheb_coeff_t
+        {
+            public double[] data;
+
+            public astro_cheb_coeff_t(double x, double y, double z)
+            {
+                this.data = new double[] { x, y, z };
+            }
+        }
+
+        private struct astro_cheb_record_t
+        {
+            public double tt;
+            public double ndays;
+            public astro_cheb_coeff_t[] coeff;
+
+            public astro_cheb_record_t(double tt, double ndays, astro_cheb_coeff_t[] coeff)
+            {
+                this.tt = tt;
+                this.ndays = ndays;
+                this.coeff = coeff;
+            }
+        }
+
+$ASTRO_CSHARP_CHEBYSHEV(8);
+
+        private static double ChebScale(double t_min, double t_max, double t)
+        {
+            return (2*t - (t_max + t_min)) / (t_max - t_min);
+        }
+
+        private static AstroVector CalcChebyshev(astro_cheb_record_t[] model, AstroTime time)
+        {
+            var pos = new double[3];
+            double p0, p1, p2, sum;
+
+            /* Search for a record that overlaps the given time value. */
+            for (int i=0; i < model.Length; ++i)
+            {
+                double x = ChebScale(model[i].tt, model[i].tt + model[i].ndays, time.tt);
+                if (-1.0 <= x && x <= +1.0)
+                {
+                    for (int d=0; d < 3; ++d)
+                    {
+                        p0 = 1.0;
+                        sum = model[i].coeff[0].data[d];
+                        p1 = x;
+                        sum += model[i].coeff[1].data[d] * p1;
+                        for (int k=2; k < model[i].coeff.Length; ++k)
+                        {
+                            p2 = (2.0 * x * p1) - p0;
+                            sum += model[i].coeff[k].data[d] * p2;
+                            p0 = p1;
+                            p1 = p2;
+                        }
+                        pos[d] = sum - model[i].coeff[0].data[d] / 2.0;
+                    }
+
+                    /* We found the position of the body. */
+                    return new AstroVector(pos[0], pos[1], pos[2], time);
+                }
+            }
+
+            /* The Chebyshev model does not cover this time value. */
+            throw new ArgumentException(string.Format("Time argument is out of bounds: {0}", time));
+        }
+
 
         /// <summary>
         /// Calculates heliocentric Cartesian coordinates of a body in the J2000 equatorial system.
@@ -560,6 +646,9 @@ $ASTRO_CSHARP_VSOP(Neptune)
                 case Body.Uranus:
                 case Body.Neptune:
                     return CalcVsop(vsop[(int)body], time);
+
+                case Body.Pluto:
+                    return CalcChebyshev(cheb_8, time);
 
                 default:
                     throw new ArgumentException(string.Format("Invalid body: {0}", body));

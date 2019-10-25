@@ -191,6 +191,25 @@ namespace CosineKitty
         {
             return ToUtcDateTime().ToString("yyyy-MM-ddThh:mm:ss.fffZ");
         }
+
+        /// <summary>
+        /// Calculates the sum or difference of an #AstroTime with a specified floating point number of days.
+        /// </summary>
+        /// <remarks>
+        /// Sometimes we need to adjust a given #astro_time_t value by a certain amount of time.
+        /// This function adds the given real number of days in `days` to the date and time in this object.
+        ///
+        /// More precisely, the result's Universal Time field `ut` is exactly adjusted by `days` and
+        /// the Terrestrial Time field `tt` is adjusted correctly for the resulting UTC date and time,
+        /// according to the historical and predictive Delta-T model provided by the
+        /// [United States Naval Observatory](http://maia.usno.navy.mil/ser7/).
+        /// </remarks>
+        /// <param name="days">A floating point number of days by which to adjust `time`. May be negative, 0, or positive.</param>
+        /// <returns>A date and time that is conceptually equal to `time + days`.</returns>
+        public AstroTime AddDays(double days)
+        {
+            return new AstroTime(this.ut + days);
+        }
     }
 
     /// <summary>
@@ -686,6 +705,10 @@ namespace CosineKitty
             new vsop_series_t(vsop_lat_Earth_2)
         };
 
+        private static readonly vsop_term_t[] vsop_lon_Earth_0 = new vsop_term_t[]
+        {
+        };
+
         private static readonly vsop_term_t[] vsop_lon_Earth_1 = new vsop_term_t[]
         {
             new vsop_term_t(0.00227777722, 3.41376620530, 6283.07584999140),
@@ -694,7 +717,7 @@ namespace CosineKitty
 
         private static readonly vsop_series_t[] vsop_lon_Earth = new vsop_series_t[]
         {
-            new vsop_series_t(null),
+            new vsop_series_t(vsop_lon_Earth_0),
             new vsop_series_t(vsop_lon_Earth_1)
         };
 
@@ -1412,6 +1435,243 @@ namespace CosineKitty
             return new AstroVector(x, y, z, time);
         }
 
+        private struct astro_cheb_coeff_t
+        {
+            public double[] data;
+
+            public astro_cheb_coeff_t(double x, double y, double z)
+            {
+                this.data = new double[] { x, y, z };
+            }
+        }
+
+        private struct astro_cheb_record_t
+        {
+            public double tt;
+            public double ndays;
+            public astro_cheb_coeff_t[] coeff;
+
+            public astro_cheb_record_t(double tt, double ndays, astro_cheb_coeff_t[] coeff)
+            {
+                this.tt = tt;
+                this.ndays = ndays;
+                this.coeff = coeff;
+            }
+        }
+
+        private static readonly astro_cheb_coeff_t[] cheb_8_0 =
+        {
+            new astro_cheb_coeff_t(-30.303124711144, -18.980368465705,   3.206649343866),
+            new astro_cheb_coeff_t( 20.092745278347, -27.533908687219, -14.641121965990),
+            new astro_cheb_coeff_t(  9.137264744925,   6.513103657467,  -0.720732357468),
+            new astro_cheb_coeff_t( -1.201554708717,   2.149917852301,   1.032022293526),
+            new astro_cheb_coeff_t( -0.566068170022,  -0.285737361191,   0.081379987808),
+            new astro_cheb_coeff_t(  0.041678527795,  -0.143363105040,  -0.057534475984),
+            new astro_cheb_coeff_t(  0.041087908142,   0.007911321580,  -0.010270655537),
+            new astro_cheb_coeff_t(  0.001611769878,   0.011409821837,   0.003679980733),
+            new astro_cheb_coeff_t( -0.002536458296,  -0.000145632543,   0.000949924030),
+            new astro_cheb_coeff_t(  0.001167651969,  -0.000049912680,   0.000115867710),
+            new astro_cheb_coeff_t( -0.000196953286,   0.000420406270,   0.000110147171),
+            new astro_cheb_coeff_t(  0.001073825784,   0.000442658285,   0.000146985332),
+            new astro_cheb_coeff_t( -0.000906160087,   0.001702360394,   0.000758987924),
+            new astro_cheb_coeff_t( -0.001467464335,  -0.000622191266,  -0.000231866243),
+            new astro_cheb_coeff_t( -0.000008986691,   0.000004086384,   0.000001442956),
+            new astro_cheb_coeff_t( -0.001099078039,  -0.000544633529,  -0.000205534708),
+            new astro_cheb_coeff_t(  0.001259974751,  -0.002178533187,  -0.000965315934),
+            new astro_cheb_coeff_t(  0.001695288316,   0.000768480768,   0.000287916141),
+            new astro_cheb_coeff_t( -0.001428026702,   0.002707551594,   0.001195955756)
+        };
+
+        private static readonly astro_cheb_coeff_t[] cheb_8_1 =
+        {
+            new astro_cheb_coeff_t( 67.049456204563,  -9.279626603192, -23.091941092128),
+            new astro_cheb_coeff_t( 14.860676672314,  26.594121136143,   3.819668867047),
+            new astro_cheb_coeff_t( -6.254409044120,   1.408757903538,   2.323726101433),
+            new astro_cheb_coeff_t(  0.114416381092,  -0.942273228585,  -0.328566335886),
+            new astro_cheb_coeff_t(  0.074973631246,   0.106749156044,   0.010806547171),
+            new astro_cheb_coeff_t( -0.018627741964,  -0.009983491157,   0.002589955906),
+            new astro_cheb_coeff_t(  0.006167206174,  -0.001042430439,  -0.001521881831),
+            new astro_cheb_coeff_t( -0.000471293617,   0.002337935239,   0.001060879763),
+            new astro_cheb_coeff_t( -0.000240627462,  -0.001380351742,  -0.000546042590),
+            new astro_cheb_coeff_t(  0.001872140444,   0.000679876620,   0.000240384842),
+            new astro_cheb_coeff_t( -0.000334705177,   0.000693528330,   0.000301138309),
+            new astro_cheb_coeff_t(  0.000796124758,   0.000653183163,   0.000259527079),
+            new astro_cheb_coeff_t( -0.001276116664,   0.001393959948,   0.000629574865),
+            new astro_cheb_coeff_t( -0.001235158458,  -0.000889985319,  -0.000351392687),
+            new astro_cheb_coeff_t( -0.000019881944,   0.000048339979,   0.000021342186),
+            new astro_cheb_coeff_t( -0.000987113745,  -0.000748420747,  -0.000296503569),
+            new astro_cheb_coeff_t(  0.001721891782,  -0.001893675502,  -0.000854270937),
+            new astro_cheb_coeff_t(  0.001505145187,   0.001081653337,   0.000426723640),
+            new astro_cheb_coeff_t( -0.002019479384,   0.002375617497,   0.001068258925)
+        };
+
+        private static readonly astro_cheb_coeff_t[] cheb_8_2 =
+        {
+            new astro_cheb_coeff_t( 46.038290912405,  73.773759757856,   9.148670950706),
+            new astro_cheb_coeff_t(-22.354364534703,  10.217143138926,   9.921247676076),
+            new astro_cheb_coeff_t( -2.696282001399,  -4.440843715929,  -0.572373037840),
+            new astro_cheb_coeff_t(  0.385475818800,  -0.287872688575,  -0.205914693555),
+            new astro_cheb_coeff_t(  0.020994433095,   0.004256602589,  -0.004817361041),
+            new astro_cheb_coeff_t(  0.003212255378,   0.000574875698,  -0.000764464370),
+            new astro_cheb_coeff_t( -0.000158619286,  -0.001035559544,  -0.000535612316),
+            new astro_cheb_coeff_t(  0.000967952107,  -0.000653111849,  -0.000292019750),
+            new astro_cheb_coeff_t(  0.001763494906,  -0.000370815938,  -0.000224698363),
+            new astro_cheb_coeff_t(  0.001157990330,   0.001849810828,   0.000759641577),
+            new astro_cheb_coeff_t( -0.000883535516,   0.000384038162,   0.000191242192),
+            new astro_cheb_coeff_t(  0.000709486562,   0.000655810827,   0.000265431131),
+            new astro_cheb_coeff_t( -0.001525810419,   0.001126870468,   0.000520202001),
+            new astro_cheb_coeff_t( -0.000983210860,  -0.001116073455,  -0.000456026382),
+            new astro_cheb_coeff_t( -0.000015655450,   0.000069184008,   0.000029796623),
+            new astro_cheb_coeff_t( -0.000815102021,  -0.000900597010,  -0.000365274209),
+            new astro_cheb_coeff_t(  0.002090300438,  -0.001536778673,  -0.000709827438),
+            new astro_cheb_coeff_t(  0.001234661297,   0.001342978436,   0.000545313112),
+            new astro_cheb_coeff_t( -0.002517963678,   0.001941826791,   0.000893859860)
+        };
+
+        private static readonly astro_cheb_coeff_t[] cheb_8_3 =
+        {
+            new astro_cheb_coeff_t(-39.074661990988,  30.963513412373,  21.431709298065),
+            new astro_cheb_coeff_t(-12.033639281924, -31.693679132310,  -6.263961539568),
+            new astro_cheb_coeff_t(  7.233936758611,  -3.979157072767,  -3.421027935569),
+            new astro_cheb_coeff_t(  1.383182539917,   1.090729793400,  -0.076771771448),
+            new astro_cheb_coeff_t( -0.009894394996,   0.313614402007,   0.101180677344),
+            new astro_cheb_coeff_t( -0.055459383449,   0.031782406403,   0.026374448864),
+            new astro_cheb_coeff_t( -0.011074105991,  -0.007176759494,   0.001896208351),
+            new astro_cheb_coeff_t( -0.000263363398,  -0.001145329444,   0.000215471838),
+            new astro_cheb_coeff_t(  0.000405700185,  -0.000839229891,  -0.000418571366),
+            new astro_cheb_coeff_t(  0.001004921401,   0.001135118493,   0.000406734549),
+            new astro_cheb_coeff_t( -0.000473938695,   0.000282751002,   0.000114911593),
+            new astro_cheb_coeff_t(  0.000528685886,   0.000966635293,   0.000401955197),
+            new astro_cheb_coeff_t( -0.001838869845,   0.000806432189,   0.000394594478),
+            new astro_cheb_coeff_t( -0.000713122169,  -0.001334810971,  -0.000554511235),
+            new astro_cheb_coeff_t(  0.000006449359,   0.000060730000,   0.000024513230),
+            new astro_cheb_coeff_t( -0.000596025142,  -0.000999492770,  -0.000413930406),
+            new astro_cheb_coeff_t(  0.002364904429,  -0.001099236865,  -0.000528480902),
+            new astro_cheb_coeff_t(  0.000907458104,   0.001537243912,   0.000637001965),
+            new astro_cheb_coeff_t( -0.002909908764,   0.001413648354,   0.000677030924)
+        };
+
+        private static readonly astro_cheb_coeff_t[] cheb_8_4 =
+        {
+            new astro_cheb_coeff_t( 23.380075041204, -38.969338804442, -19.204762094135),
+            new astro_cheb_coeff_t( 33.437140696536,   8.735194448531,  -7.348352917314),
+            new astro_cheb_coeff_t( -3.127251304544,   8.324311848708,   3.540122328502),
+            new astro_cheb_coeff_t( -1.491354030154,  -1.350371407475,   0.028214278544),
+            new astro_cheb_coeff_t(  0.361398480996,  -0.118420687058,  -0.145375605480),
+            new astro_cheb_coeff_t( -0.011771350229,   0.085880588309,   0.030665997197),
+            new astro_cheb_coeff_t( -0.015839541688,  -0.014165128211,   0.000523465951),
+            new astro_cheb_coeff_t(  0.004213218926,  -0.001426373728,  -0.001906412496),
+            new astro_cheb_coeff_t(  0.001465150002,   0.000451513538,   0.000081936194),
+            new astro_cheb_coeff_t(  0.000640069511,   0.001886692235,   0.000884675556),
+            new astro_cheb_coeff_t( -0.000883554940,   0.000301907356,   0.000127310183),
+            new astro_cheb_coeff_t(  0.000245524038,   0.000910362686,   0.000385555148),
+            new astro_cheb_coeff_t( -0.001942010476,   0.000438682280,   0.000237124027),
+            new astro_cheb_coeff_t( -0.000425455660,  -0.001442138768,  -0.000607751390),
+            new astro_cheb_coeff_t(  0.000004168433,   0.000033856562,   0.000013881811),
+            new astro_cheb_coeff_t( -0.000337920193,  -0.001074290356,  -0.000452503056),
+            new astro_cheb_coeff_t(  0.002544755354,  -0.000620356219,  -0.000327246228),
+            new astro_cheb_coeff_t(  0.000534534110,   0.001670320887,   0.000702775941),
+            new astro_cheb_coeff_t( -0.003169380270,   0.000816186705,   0.000427213817)
+        };
+
+        private static readonly astro_cheb_coeff_t[] cheb_8_5 =
+        {
+            new astro_cheb_coeff_t( 74.130449310804,  43.372111541004,  -8.799489207171),
+            new astro_cheb_coeff_t( -8.705941488523,  23.344631690845,   9.908006472122),
+            new astro_cheb_coeff_t( -4.614752911564,  -2.587334376729,   0.583321715294),
+            new astro_cheb_coeff_t(  0.316219286624,  -0.395448970181,  -0.219217574801),
+            new astro_cheb_coeff_t(  0.004593734664,   0.027528474371,   0.007736197280),
+            new astro_cheb_coeff_t( -0.001192268851,  -0.004987723997,  -0.001599399192),
+            new astro_cheb_coeff_t(  0.003051998429,  -0.001287028653,  -0.000780744058),
+            new astro_cheb_coeff_t(  0.001482572043,   0.001613554244,   0.000635747068),
+            new astro_cheb_coeff_t(  0.000581965277,   0.000788286674,   0.000315285159),
+            new astro_cheb_coeff_t( -0.000311830730,   0.001622369930,   0.000714817617),
+            new astro_cheb_coeff_t( -0.000711275723,  -0.000160014561,  -0.000050445901),
+            new astro_cheb_coeff_t(  0.000177159088,   0.001032713853,   0.000435835541),
+            new astro_cheb_coeff_t( -0.002032280820,   0.000144281331,   0.000111910344),
+            new astro_cheb_coeff_t( -0.000148463759,  -0.001495212309,  -0.000635892081),
+            new astro_cheb_coeff_t( -0.000009629403,  -0.000013678407,  -0.000006187457),
+            new astro_cheb_coeff_t( -0.000061196084,  -0.001119783520,  -0.000479221572),
+            new astro_cheb_coeff_t(  0.002630993795,  -0.000113042927,  -0.000112115452),
+            new astro_cheb_coeff_t(  0.000132867113,   0.001741417484,   0.000743224630),
+            new astro_cheb_coeff_t( -0.003293498893,   0.000182437998,   0.000158073228)
+        };
+
+        private static readonly astro_cheb_coeff_t[] cheb_8_6 =
+        {
+            new astro_cheb_coeff_t( -5.727994625506,  71.194823351703,  23.946198176031),
+            new astro_cheb_coeff_t(-26.767323214686, -12.264949302780,   4.238297122007),
+            new astro_cheb_coeff_t(  0.890596204250,  -5.970227904551,  -2.131444078785),
+            new astro_cheb_coeff_t(  0.808383708156,  -0.143104108476,  -0.288102517987),
+            new astro_cheb_coeff_t(  0.089303327519,   0.049290470655,  -0.010970501667),
+            new astro_cheb_coeff_t(  0.010197195705,   0.012879721400,   0.001317586740),
+            new astro_cheb_coeff_t(  0.001795282629,   0.004482403780,   0.001563326157),
+            new astro_cheb_coeff_t( -0.001974716105,   0.001278073933,   0.000652735133),
+            new astro_cheb_coeff_t(  0.000906544715,  -0.000805502229,  -0.000336200833),
+            new astro_cheb_coeff_t(  0.000283816745,   0.001799099064,   0.000756827653),
+            new astro_cheb_coeff_t( -0.000784971304,   0.000123081220,   0.000068812133),
+            new astro_cheb_coeff_t( -0.000237033406,   0.000980100466,   0.000427758498),
+            new astro_cheb_coeff_t( -0.001976846386,  -0.000280421081,  -0.000072417045),
+            new astro_cheb_coeff_t(  0.000195628511,  -0.001446079585,  -0.000624011074),
+            new astro_cheb_coeff_t( -0.000044622337,  -0.000035865046,  -0.000013581236),
+            new astro_cheb_coeff_t(  0.000204397832,  -0.001127474894,  -0.000488668673),
+            new astro_cheb_coeff_t(  0.002625373003,   0.000389300123,   0.000102756139),
+            new astro_cheb_coeff_t( -0.000277321614,   0.001732818354,   0.000749576471),
+            new astro_cheb_coeff_t( -0.003280537764,  -0.000457571669,  -0.000116383655)
+        };
+
+        private static readonly astro_cheb_record_t[] cheb_8 =
+        {
+            new astro_cheb_record_t( -109573.5, 26141.0, cheb_8_0),
+            new astro_cheb_record_t(  -83432.5, 26141.0, cheb_8_1),
+            new astro_cheb_record_t(  -57291.5, 26141.0, cheb_8_2),
+            new astro_cheb_record_t(  -31150.5, 26141.0, cheb_8_3),
+            new astro_cheb_record_t(   -5009.5, 26141.0, cheb_8_4),
+            new astro_cheb_record_t(   21131.5, 26141.0, cheb_8_5),
+            new astro_cheb_record_t(   47272.5, 26141.0, cheb_8_6)
+        };
+
+        private static double ChebScale(double t_min, double t_max, double t)
+        {
+            return (2*t - (t_max + t_min)) / (t_max - t_min);
+        }
+
+        private static AstroVector CalcChebyshev(astro_cheb_record_t[] model, AstroTime time)
+        {
+            var pos = new double[3];
+            double p0, p1, p2, sum;
+
+            /* Search for a record that overlaps the given time value. */
+            for (int i=0; i < model.Length; ++i)
+            {
+                double x = ChebScale(model[i].tt, model[i].tt + model[i].ndays, time.tt);
+                if (-1.0 <= x && x <= +1.0)
+                {
+                    for (int d=0; d < 3; ++d)
+                    {
+                        p0 = 1.0;
+                        sum = model[i].coeff[0].data[d];
+                        p1 = x;
+                        sum += model[i].coeff[1].data[d] * p1;
+                        for (int k=2; k < model[i].coeff.Length; ++k)
+                        {
+                            p2 = (2.0 * x * p1) - p0;
+                            sum += model[i].coeff[k].data[d] * p2;
+                            p0 = p1;
+                            p1 = p2;
+                        }
+                        pos[d] = sum - model[i].coeff[0].data[d] / 2.0;
+                    }
+
+                    /* We found the position of the body. */
+                    return new AstroVector(pos[0], pos[1], pos[2], time);
+                }
+            }
+
+            /* The Chebyshev model does not cover this time value. */
+            throw new ArgumentException(string.Format("Time argument is out of bounds: {0}", time));
+        }
+
 
         /// <summary>
         /// Calculates heliocentric Cartesian coordinates of a body in the J2000 equatorial system.
@@ -1447,6 +1707,9 @@ namespace CosineKitty
                 case Body.Uranus:
                 case Body.Neptune:
                     return CalcVsop(vsop[(int)body], time);
+
+                case Body.Pluto:
+                    return CalcChebyshev(cheb_8, time);
 
                 default:
                     throw new ArgumentException(string.Format("Invalid body: {0}", body));

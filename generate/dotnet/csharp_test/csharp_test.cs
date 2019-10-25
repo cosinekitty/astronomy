@@ -11,7 +11,7 @@ namespace csharp_test
             try
             {
                 if (TestTime() != 0) return 1;
-                //if (AstroCheck() != 0) return 1;
+                if (AstroCheck() != 0) return 1;
                 return 0;
             }
             catch (Exception ex)
@@ -81,6 +81,8 @@ namespace csharp_test
                     {
                         AstroVector pos = Astronomy.HelioVector(body, time);
                     }
+
+                    time = time.AddDays(10.0 + Math.PI/100.0);
                 }
             }
             return 0;
