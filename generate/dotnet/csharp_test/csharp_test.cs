@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using CosineKitty;
 
 namespace csharp_test
@@ -10,6 +11,7 @@ namespace csharp_test
             try
             {
                 if (TestTime() != 0) return 1;
+                if (AstroCheck() != 0) return 1;
                 return 0;
             }
             catch (Exception ex)
@@ -56,6 +58,31 @@ namespace csharp_test
                 return 1;
             }
 
+            return 0;
+        }
+
+        static int AstroCheck()
+        {
+            const string filename = "csharp_check.txt";
+            using (StreamWriter outfile = File.CreateText(filename))
+            {
+                var bodylist = new Body[]
+                {
+                    Body.Sun, Body.Mercury, Body.Venus, Body.Earth, Body.Mars,
+                    Body.Jupiter, Body.Saturn, Body.Uranus, Body.Neptune, Body.Pluto
+                };
+
+                var observer = new Observer(29.0, -81.0, 10.0);
+                var time = new AstroTime(new DateTime(1700, 1, 1, 0, 0, 0, DateTimeKind.Utc));
+                var stop = new AstroTime(new DateTime(2200, 1, 1, 0, 0, 0, DateTimeKind.Utc));
+                while (time.tt < stop.tt)
+                {
+                    foreach (Body body in bodylist)
+                    {
+                        AstroVector pos = Astronomy.HelioVector(body, time);
+                    }
+                }
+            }
             return 0;
         }
     }

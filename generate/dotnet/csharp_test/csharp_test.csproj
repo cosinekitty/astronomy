@@ -6,6 +6,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <TargetFramework>netcoreapp2.2</TargetFramework>
   </PropertyGroup>
 

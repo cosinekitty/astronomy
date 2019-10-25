@@ -29,6 +29,22 @@ using System;
 
 namespace CosineKitty
 {
+    public enum Body
+    {
+        Invalid = -1,
+        Mercury,
+        Venus,
+        Earth,
+        Mars,
+        Jupiter,
+        Saturn,
+        Uranus,
+        Neptune,
+        Pluto,
+        Sun,
+        Moon,
+    }
+
     public class AstroTime
     {
         private static readonly DateTime Origin = new DateTime(2000, 1, 1, 12, 0, 0, DateTimeKind.Utc);
@@ -58,6 +74,36 @@ namespace CosineKitty
         public override string ToString()
         {
             return ToUtcDateTime().ToString("yyyy-MM-ddThh:mm:ss.fffZ");
+        }
+    }
+
+    public class AstroVector
+    {
+        public readonly double x;
+        public readonly double y;
+        public readonly double z;
+        public readonly AstroTime t;
+
+        public AstroVector(double x, double y, double z, AstroTime t)
+        {
+            this.x = x;
+            this.y = y;
+            this.z = z;
+            this.t = t;
+        }
+    }
+
+    public class Observer
+    {
+        public readonly double Latitude;
+        public readonly double Longitude;
+        public readonly double Height;
+
+        public Observer(double latitude, double longitude, double height)
+        {
+            Latitude = latitude;
+            Longitude = longitude;
+            Height = height;
         }
     }
 
@@ -198,6 +244,19 @@ new deltat_entry_t { mjd=61680.0, dt=73.66 }
         internal static double TerrestrialTime(double ut)
         {
             return ut + DeltaT(ut + Y2000_IN_MJD)/86400.0;
+        }
+
+        /// <summary>Calculates heliocentric Cartesian coordinates of a body in the J2000 equatorial system.</summary>
+        public static AstroVector HelioVector(Body body, AstroTime time)
+        {
+            switch (body)
+            {
+                case Body.Sun:
+                    return new AstroVector(0.0, 0.0, 0.0, time);
+
+                default:
+                    throw new ArgumentException(string.Format("Invalid body: {0}", body));
+            }
         }
     }
 

@@ -184,7 +184,7 @@ static int Test_AstroTime(void)
     }
 
     utc = Astronomy_UtcFromTime(time);
-    if (utc.year != year || utc.month != month || utc.day != day || utc.minute != minute || utc.hour != hour)
+    if (utc.year != year || utc.month != month || utc.day != day || utc.hour != hour || utc.minute != minute)
     {
         fprintf(stderr, "Test_AstroTime: UtcFromTime FAILURE - Expected %04d-%02d-%02dT%02d:%02dZ, found %04d-%02d-%02dT%02d:%02dZ\n",
             year, month, day, hour, minute,
