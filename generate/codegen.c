@@ -493,18 +493,18 @@ static int CsharpVsop_Series(cg_context_t *context, const vsop_series_t *series,
 
     if (series->nterms_total > 0)
     {
-        fprintf(context->outfile, "private static readonly vsop_term_t[] %s_%d = new vsop_term_t[]\n{\n", varprefix, s);
+        fprintf(context->outfile, "        private static readonly vsop_term_t[] %s_%d = new vsop_term_t[]\n        {\n", varprefix, s);
         for (i = 0; i < series->nterms_total; ++i)
         {
             const vsop_term_t *term = &series->term[i];
 
-            fprintf(context->outfile, "    new vsop_term_t(%0.11lf, %0.11lf, %0.11lf)%s\n",
+            fprintf(context->outfile, "            new vsop_term_t(%0.11lf, %0.11lf, %0.11lf)%s\n",
                 term->amplitude,
                 term->phase,
                 term->frequency,
                 (i + 1 < series->nterms_total) ? "," : "");
         }
-        fprintf(context->outfile, "};\n\n");
+        fprintf(context->outfile, "        };\n\n");
     }
 
     return 0;
@@ -522,7 +522,7 @@ static int CsharpVsop_Formula(cg_context_t *context, const vsop_formula_t *formu
     for (s=0; s < formula->nseries_total; ++s)
         CHECK(CsharpVsop_Series(context, &formula->series[s], varprefix, s));
 
-    fprintf(context->outfile, "private static readonly vsop_series_t[] %s = new vsop_series_t[]\n{\n", varprefix);
+    fprintf(context->outfile, "        private static readonly vsop_series_t[] %s = new vsop_series_t[]\n        {\n", varprefix);
     for (s=0; s < formula->nseries_total; ++s)
     {
         if (formula->series[s].nterms_total == 0)
@@ -530,11 +530,11 @@ static int CsharpVsop_Formula(cg_context_t *context, const vsop_formula_t *formu
         else
             snprintf(sname, sizeof(sname), "%s_%d", varprefix, s);
 
-        fprintf(context->outfile, "    new vsop_series_t(%s)%s\n",
+        fprintf(context->outfile, "            new vsop_series_t(%s)%s\n",
             sname,
             (s+1 < formula->nseries_total) ? "," : "");
     }
-    fprintf(context->outfile, "};\n\n");
+    fprintf(context->outfile, "        };\n\n");
 
 fail:
     return error;
@@ -579,8 +579,11 @@ static int GenArrayEnd(cg_context_t *context)
         return 0;
 
     case CODEGEN_LANGUAGE_C:
-    case CODEGEN_LANGUAGE_CSHARP:
         fprintf(context->outfile, "\n}");
+        return 0;
+
+    case CODEGEN_LANGUAGE_CSHARP:
+        fprintf(context->outfile, "\n        }");
         return 0;
 
     case CODEGEN_LANGUAGE_PYTHON:
@@ -602,8 +605,8 @@ static int GenDeltaTArrayEntry(cg_context_t *context, int count, double mjd, con
         return 0;
 
     case CODEGEN_LANGUAGE_CSHARP:
-        fprintf(context->outfile, "%s\n", (count==1) ? "new deltat_entry_t[] {" : ",");
-        fprintf(context->outfile, "new deltat_entry_t { mjd=%0.1lf, dt=%s }", mjd, dt_text);
+        fprintf(context->outfile, "%s\n", (count==1) ? "new deltat_entry_t[]\n        {" : ",");
+        fprintf(context->outfile, "            new deltat_entry_t { mjd=%0.1lf, dt=%s }", mjd, dt_text);
         return 0;
 
     case CODEGEN_LANGUAGE_JS:

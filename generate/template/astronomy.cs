@@ -407,14 +407,14 @@ namespace CosineKitty
             }
         };
 
-        $ASTRO_CSHARP_VSOP(Mercury)
-        $ASTRO_CSHARP_VSOP(Venus)
-        $ASTRO_CSHARP_VSOP(Earth)
-        $ASTRO_CSHARP_VSOP(Mars)
-        $ASTRO_CSHARP_VSOP(Jupiter)
-        $ASTRO_CSHARP_VSOP(Saturn)
-        $ASTRO_CSHARP_VSOP(Uranus)
-        $ASTRO_CSHARP_VSOP(Neptune)
+$ASTRO_CSHARP_VSOP(Mercury)
+$ASTRO_CSHARP_VSOP(Venus)
+$ASTRO_CSHARP_VSOP(Earth)
+$ASTRO_CSHARP_VSOP(Mars)
+$ASTRO_CSHARP_VSOP(Jupiter)
+$ASTRO_CSHARP_VSOP(Saturn)
+$ASTRO_CSHARP_VSOP(Uranus)
+$ASTRO_CSHARP_VSOP(Neptune)
 
         private static readonly vsop_model_t[] vsop = new vsop_model_t[]
         {
