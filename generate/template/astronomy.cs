@@ -50,7 +50,10 @@ namespace CosineKitty
         Venus,
 
         /// <summary>
-        /// The planet Earth. Not allowed for many functions for Earth-based observers.
+        /// The planet Earth.
+        /// Some functions that accept a `Body` parameter will fail if passed this value
+        /// because they assume that an observation is being made from the Earth,
+        /// and therefore the Earth is not a target of observation.
         /// </summary>
         Earth,
 
@@ -104,6 +107,8 @@ namespace CosineKitty
 
         /// <summary>
         /// UT1/UTC number of days since noon on January 1, 2000.
+        /// </summary>
+        /// <remarks>
         /// The floating point number of days of Universal Time since noon UTC January 1, 2000.
         /// Astronomy Engine approximates UTC and UT1 as being the same thing, although they are
         /// not exactly equivalent; UTC and UT1 can disagree by up to plus or minus 0.9 seconds.
@@ -126,16 +131,28 @@ namespace CosineKitty
         ///
         /// Before the era of atomic timekeeping, days based on the Earth's rotation
         /// were often known as *mean solar days*.
-        /// </summary>
+        /// </remarks>
         public readonly double ut;
 
         /// <summary>
         /// Terrestrial Time days since noon on January 1, 2000.
         /// </summary>
+        /// <remarks>
+        /// Terrestrial Time is an atomic time scale defined as a number of days since noon on January 1, 2000.
+        /// In this system, days are not based on Earth rotations, but instead by
+        /// the number of elapsed [SI seconds](https://physics.nist.gov/cuu/Units/second.html)
+        /// divided by 86400. Unlike `ut`, `tt` increases uniformly without adjustments
+        /// for changes in the Earth's rotation.
+        ///
+        /// The value in `tt` is used for calculations of movements not involving the Earth's rotation,
+        /// such as the orbits of planets around the Sun, or the Moon around the Earth.
+        ///
+        /// Historically, Terrestrial Time has also been known by the term *Ephemeris Time* (ET).
+        /// </remarks>
         public readonly double tt;
 
-        internal double psi;
-        internal double eps;
+        internal double psi;    // For internal use only. Used to optimize Earth tilt calculations.
+        internal double eps;    // For internal use only. Used to optimize Earth tilt calculations.
 
         /// <summary>
         /// Creates an `AstroTime` object from a Universal Time day value.
@@ -220,22 +237,26 @@ namespace CosineKitty
     /// <summary>
     /// The location of an observer on (or near) the surface of the Earth.
     /// </summary>
+    /// <remarks>
+    /// This structure is passed to functions that calculate phenomena as observed
+    /// from a particular place on the Earth.
+    /// </remarks>
     public class Observer
     {
         /// <summary>
         /// Geographic latitude in degrees north (positive) or south (negative) of the equator.
         /// </summary>
-        public readonly double Latitude;
+        public readonly double latitude;
 
         /// <summary>
         /// Geographic longitude in degrees east (positive) or west (negative) of the prime meridian at Greenwich, England.
         /// </summary>
-        public readonly double Longitude;
+        public readonly double longitude;
 
         /// <summary>
         /// The height above (positive) or below (negative) sea level, expressed in meters.
         /// </summary>
-        public readonly double Height;
+        public readonly double height;
 
         /// <summary>
         /// Creates an Observer object.
@@ -245,10 +266,84 @@ namespace CosineKitty
         /// <param name="height">The height above (positive) or below (negative) sea level, expressed in meters.</param>
         public Observer(double latitude, double longitude, double height)
         {
-            Latitude = latitude;
-            Longitude = longitude;
-            Height = height;
+            this.latitude = latitude;
+            this.longitude = longitude;
+            this.height = height;
         }
+    }
+
+    /// <summary>
+    /// Equatorial angular coordinates.
+    /// </summary>
+    /// <remarks>
+    /// Coordinates of a celestial body as seen from the Earth
+    /// (geocentric or topocentric, depending on context),
+    /// oriented with respect to the projection of the Earth's equator onto the sky.
+    /// </remarks>
+    public class Equatorial
+    {
+        /// <summary>
+        /// Right ascension in sidereal hours.
+        /// </summary>
+        public readonly double ra;
+
+        /// <summary>
+        /// Declination in degrees.
+        /// </summary>
+        public readonly double dec;
+
+        /// <summary>
+        /// Distance to the celestial body in AU.
+        /// </summary>
+        public readonly double dist;
+
+        /// <summary>
+        /// Creates an equatorial coordinates object.
+        /// </summary>
+        /// <param name="ra">Right ascension in sidereal hours.</param>
+        /// <param name="dec">Declination in degrees.</param>
+        /// <param name="dist">Distance to the celestial body in AU.</param>
+        public Equatorial(double ra, double dec, double dist)
+        {
+            this.ra = ra;
+            this.dec = dec;
+            this.dist = dist;
+        }
+    }
+
+    /// <summary>
+    /// Ecliptic angular and Cartesian coordinates.
+    /// </summary>
+    /// <remarks>
+    /// Coordinates of a celestial body as seen from the center of the Sun (heliocentric),
+    /// oriented with respect to the plane of the Earth's orbit around the Sun (the ecliptic).
+    /// </remarks>
+    public class Ecliptic
+    {
+        /// <summary>
+        /// Cartesian x-coordinate: in the direction of the equinox along the ecliptic plane.
+        /// </summary>
+        public readonly double ex;
+
+        /// <summary>
+        /// Cartesian y-coordinate: in the ecliptic plane 90 degrees prograde from the equinox.
+        /// </summary>
+        public readonly double ey;
+
+        /// <summary>
+        /// Cartesian z-coordinate: perpendicular to the ecliptic plane. Positive is north.
+        /// </summary>
+        public readonly double ez;
+
+        /// <summary>
+        /// Latitude in degrees north (positive) or south (negative) of the ecliptic plane.
+        /// </summary>
+        public readonly double elat;
+
+        /// <summary>
+        /// Longitude in degrees around the ecliptic plane prograde from the equinox.
+        /// </summary>
+        public readonly double elon;
     }
 
     /// <summary>
@@ -256,10 +351,26 @@ namespace CosineKitty
     /// </summary>
     public static class Astronomy
     {
+        private struct deltat_entry_t
+        {
+            public double mjd;
+            public double dt;
+        }
+
         private static readonly deltat_entry_t[] DT = $ASTRO_DELTA_T();
         private const double T0 = 2451545.0;
         private const double MJD_BASIS = 2400000.5;
         private const double Y2000_IN_MJD  =  T0 - MJD_BASIS;
+
+        /// <summary>
+        /// The minimum year value supported by Astronomy Engine.
+        /// </summary>
+        public const int MinYear = 1700;
+
+        /// <summary>
+        /// The maximum year value supported by Astronomy Engine.
+        /// </summary>
+        public const int MaxYear = 2200;
 
         private static double DeltaT(double mjd)
         {
@@ -302,7 +413,24 @@ namespace CosineKitty
             return ut + DeltaT(ut + Y2000_IN_MJD)/86400.0;
         }
 
-        /// <summary>Calculates heliocentric Cartesian coordinates of a body in the J2000 equatorial system.</summary>
+        /// <summary>
+        /// Calculates heliocentric Cartesian coordinates of a body in the J2000 equatorial system.
+        /// </summary>
+        /// <remarks>
+        /// This function calculates the position of the given celestial body as a vector,
+        /// using the center of the Sun as the origin.  The result is expressed as a Cartesian
+        /// vector in the J2000 equatorial system: the coordinates are based on the mean equator
+        /// of the Earth at noon UTC on 1 January 2000.
+        ///
+        /// The position is not corrected for light travel time or aberration.
+        /// This is different from the behavior of #GeoVector.
+        ///
+        /// If given an invalid value for `body`, or the body is `Body.Pluto` and the `time` is outside
+        /// the year range 1700..2200, this function will throw an `ArgumentException`.
+        /// </remarks>
+        /// <param name="body">A body for which to calculate a heliocentric position: the Sun, Moon, or any of the planets.</param>
+        /// <param name="time">The date and time for which to calculate the position.</param>
+        /// <returns>A heliocentric position vector of the center of the given body.</returns>
         public static AstroVector HelioVector(Body body, AstroTime time)
         {
             switch (body)
@@ -314,11 +442,5 @@ namespace CosineKitty
                     throw new ArgumentException(string.Format("Invalid body: {0}", body));
             }
         }
-    }
-
-    internal struct deltat_entry_t
-    {
-        public double mjd;
-        public double dt;
     }
 }
