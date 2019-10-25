@@ -487,6 +487,89 @@ fail:
     return error;
 }
 
+static int CsharpVsop_Series(cg_context_t *context, const vsop_series_t *series, const char *varprefix, int s)
+{
+    int i;
+
+    if (series->nterms_total > 0)
+    {
+        fprintf(context->outfile, "private static readonly vsop_term_t[] %s_%d = new vsop_term_t[]\n{\n", varprefix, s);
+        for (i = 0; i < series->nterms_total; ++i)
+        {
+            const vsop_term_t *term = &series->term[i];
+
+            fprintf(context->outfile, "    new vsop_term_t(%0.11lf, %0.11lf, %0.11lf)%s\n",
+                term->amplitude,
+                term->phase,
+                term->frequency,
+                (i + 1 < series->nterms_total) ? "," : "");
+        }
+        fprintf(context->outfile, "};\n\n");
+    }
+
+    return 0;
+}
+
+static int CsharpVsop_Formula(cg_context_t *context, const vsop_formula_t *formula, const char *coord_name, const char *body_name)
+{
+    int error = 0;
+    int s;
+    char varprefix[100];
+    char sname[100];
+
+    snprintf(varprefix, sizeof(varprefix), "vsop_%s_%s", coord_name, body_name);
+
+    for (s=0; s < formula->nseries_total; ++s)
+        CHECK(CsharpVsop_Series(context, &formula->series[s], varprefix, s));
+
+    fprintf(context->outfile, "private static readonly vsop_series_t[] %s = new vsop_series_t[]\n{\n", varprefix);
+    for (s=0; s < formula->nseries_total; ++s)
+    {
+        if (formula->series[s].nterms_total == 0)
+            strcpy(sname, "null");
+        else
+            snprintf(sname, sizeof(sname), "%s_%d", varprefix, s);
+
+        fprintf(context->outfile, "    new vsop_series_t(%s)%s\n",
+            sname,
+            (s+1 < formula->nseries_total) ? "," : "");
+    }
+    fprintf(context->outfile, "};\n\n");
+
+fail:
+    return error;
+}
+
+static int CsharpVsop(cg_context_t *context)
+{
+    int error;
+    const char *name;
+    vsop_body_t body;
+    vsop_model_t model;
+    int check_length;
+    int k;
+    char filename[100];
+    const char *coord_name[3] = { "lat", "lon", "rad" };
+
+    VsopInit(&model);
+
+    name = context->args;
+    CHECK(ParseVsopBodyName(context, name, &body));
+
+    check_length = snprintf(filename, sizeof(filename), "%s/vsop_%d.txt", context->datapath, (int)body);
+    if (check_length < 0 || check_length != (int)strlen(filename))
+        CHECK(LogError(context, "VSOP model filename is too long!"));
+
+    CHECK(VsopReadTrunc(&model, filename));
+
+    for (k=0; k < model.ncoords; ++k)
+        CHECK(CsharpVsop_Formula(context, &model.formula[k], coord_name[k], name));
+
+fail:
+    VsopFreeModel(&model);
+    return error;
+}
+
 static int GenArrayEnd(cg_context_t *context)
 {
     switch (context->language)
@@ -1073,6 +1156,7 @@ static int LogError(const cg_context_t *context, const char *format, ...)
 static const cg_directive_entry DirectiveTable[] =
 {
     { "C_VSOP", CVsop },
+    { "CSHARP_VSOP", CsharpVsop },
     { "LIST_VSOP", ListVsop },
     { "LIST_CHEBYSHEV", ListChebyshev },
     { "C_CHEBYSHEV", CChebyshev },

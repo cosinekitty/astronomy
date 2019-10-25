@@ -358,6 +358,76 @@ namespace CosineKitty
         }
 
         private static readonly deltat_entry_t[] DT = $ASTRO_DELTA_T();
+
+        private struct vsop_term_t
+        {
+            public double amplitude;
+            public double phase;
+            public double frequency;
+
+            public vsop_term_t(double amplitude, double phase, double frequency)
+            {
+                this.amplitude = amplitude;
+                this.phase = phase;
+                this.frequency = frequency;
+            }
+        }
+
+        private struct vsop_series_t
+        {
+            public vsop_term_t[] term;
+
+            public vsop_series_t(vsop_term_t[] term)
+            {
+                this.term = term;
+            }
+        }
+
+        private struct vsop_formula_t
+        {
+            public vsop_series_t[] series;
+
+            public vsop_formula_t(vsop_series_t[] series)
+            {
+                this.series = series;
+            }
+        }
+
+        private struct vsop_model_t
+        {
+            public vsop_formula_t lat;
+            public vsop_formula_t lon;
+            public vsop_formula_t rad;
+
+            public vsop_model_t(vsop_series_t[] lat, vsop_series_t[] lon, vsop_series_t[] rad)
+            {
+                this.lat = new vsop_formula_t(lat);
+                this.lon = new vsop_formula_t(lon);
+                this.rad = new vsop_formula_t(rad);
+            }
+        };
+
+        $ASTRO_CSHARP_VSOP(Mercury)
+        $ASTRO_CSHARP_VSOP(Venus)
+        $ASTRO_CSHARP_VSOP(Earth)
+        $ASTRO_CSHARP_VSOP(Mars)
+        $ASTRO_CSHARP_VSOP(Jupiter)
+        $ASTRO_CSHARP_VSOP(Saturn)
+        $ASTRO_CSHARP_VSOP(Uranus)
+        $ASTRO_CSHARP_VSOP(Neptune)
+
+        private static readonly vsop_model_t[] vsop = new vsop_model_t[]
+        {
+            new vsop_model_t(vsop_lat_Mercury,  vsop_lon_Mercury,   vsop_rad_Mercury),
+            new vsop_model_t(vsop_lat_Venus,    vsop_lon_Venus,     vsop_rad_Venus  ),
+            new vsop_model_t(vsop_lat_Earth,    vsop_lon_Earth,     vsop_rad_Earth  ),
+            new vsop_model_t(vsop_lat_Mars,     vsop_lon_Mars,      vsop_rad_Mars   ),
+            new vsop_model_t(vsop_lat_Jupiter,  vsop_lon_Jupiter,   vsop_rad_Jupiter),
+            new vsop_model_t(vsop_lat_Saturn,   vsop_lon_Saturn,    vsop_rad_Saturn ),
+            new vsop_model_t(vsop_lat_Uranus,   vsop_lon_Uranus,    vsop_rad_Uranus ),
+            new vsop_model_t(vsop_lat_Neptune,  vsop_lon_Neptune,   vsop_rad_Neptune)
+        };
+
         private const double T0 = 2451545.0;
         private const double MJD_BASIS = 2400000.5;
         private const double Y2000_IN_MJD  =  T0 - MJD_BASIS;
@@ -413,6 +483,49 @@ namespace CosineKitty
             return ut + DeltaT(ut + Y2000_IN_MJD)/86400.0;
         }
 
+        private static double VsopFormulaCalc(vsop_formula_t formula, double t)
+        {
+            double coord = 0.0;
+            double tpower = 1.0;
+            for (int s=0; s < formula.series.Length; ++s)
+            {
+                double sum = 0.0;
+                vsop_series_t series = formula.series[s];
+                for (int i=0; i < series.term.Length; ++i)
+                {
+                    vsop_term_t term = series.term[i];
+                    sum += term.amplitude * Math.Cos(term.phase + (t * term.frequency));
+                }
+                coord += tpower * sum;
+                tpower *= t;
+            }
+            return coord;
+        }
+
+        private static AstroVector CalcVsop(vsop_model_t model, AstroTime time)
+        {
+            double t = time.tt / 365250;    /* millennia since 2000 */
+
+            /* Calculate the VSOP "B" trigonometric series to obtain ecliptic spherical coordinates. */
+            double sphere0 = VsopFormulaCalc(model.lat, t);
+            double sphere1 = VsopFormulaCalc(model.lon, t);
+            double sphere2 = VsopFormulaCalc(model.rad, t);
+
+            /* Convert ecliptic spherical coordinates to ecliptic Cartesian coordinates. */
+            double r_coslat = sphere2 * Math.Cos(sphere1);
+            double eclip0 = r_coslat * Math.Cos(sphere0);
+            double eclip1 = r_coslat * Math.Sin(sphere0);
+            double eclip2 = sphere2 * Math.Sin(sphere1);
+
+            /* Convert ecliptic Cartesian coordinates to equatorial Cartesian coordinates. */
+            double x = eclip0 + 0.000000440360*eclip1 - 0.000000190919*eclip2;
+            double y = -0.000000479966*eclip0 + 0.917482137087*eclip1 - 0.397776982902*eclip2;
+            double z = 0.397776982902*eclip1 + 0.917482137087*eclip2;
+
+            return new AstroVector(x, y, z, time);
+        }
+
+
         /// <summary>
         /// Calculates heliocentric Cartesian coordinates of a body in the J2000 equatorial system.
         /// </summary>
@@ -437,6 +550,16 @@ namespace CosineKitty
             {
                 case Body.Sun:
                     return new AstroVector(0.0, 0.0, 0.0, time);
+
+                case Body.Mercury:
+                case Body.Venus:
+                case Body.Earth:
+                case Body.Mars:
+                case Body.Jupiter:
+                case Body.Saturn:
+                case Body.Uranus:
+                case Body.Neptune:
+                    return CalcVsop(vsop[(int)body], time);
 
                 default:
                     throw new ArgumentException(string.Format("Invalid body: {0}", body));
