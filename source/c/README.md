@@ -1203,7 +1203,7 @@ The [`Astronomy_SearchRiseSet`](#Astronomy_SearchRiseSet) function finds the ris
 <a name="astro_equator_date_t"></a>
 ### `astro_equator_date_t`
 
-**Selects the date on which the Earth's equator to be used for representing equatorial coordinates.** 
+**Selects the date for which the Earth's equator is to be used for representing equatorial coordinates.** 
 
 
 

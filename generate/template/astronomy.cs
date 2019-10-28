@@ -215,7 +215,7 @@ namespace CosineKitty
     /// <summary>
     /// A 3D Cartesian vector whose components are expressed in Astronomical Units (AU).
     /// </summary>
-    public class AstroVector
+    public struct AstroVector
     {
         /// <summary>
         /// The Cartesian x-coordinate of the vector in AU.
@@ -250,6 +250,15 @@ namespace CosineKitty
             this.y = y;
             this.z = z;
             this.t = t;
+        }
+
+        /// <summary>
+        /// Calculates the total distance in AU represented by this vector.
+        /// </summary>
+        /// <returns>The nonnegative length of the Cartisian vector in AU.</returns>
+        public double Length()
+        {
+            return Math.Sqrt(x*x + y*y + z*z);
         }
     }
 
@@ -289,6 +298,69 @@ namespace CosineKitty
             this.longitude = longitude;
             this.height = height;
         }
+    }
+
+    /// <summary>
+    /// Selects the date for which the Earth's equator is to be used for representing equatorial coordinates.
+    /// </summary>
+    /// <remarks>
+    /// The Earth's equator is not always in the same plane due to precession and nutation.
+    ///
+    /// Sometimes it is useful to have a fixed plane of reference for equatorial coordinates
+    /// across different calendar dates.  In these cases, a fixed *epoch*, or reference time,
+    /// is helpful. Astronomy Engine provides the J2000 epoch for such cases.  This refers
+    /// to the plane of the Earth's orbit as it was on noon UTC on 1 January 2000.
+    ///
+    /// For some other purposes, it is more helpful to represent coordinates using the Earth's
+    /// equator exactly as it is on that date. For example, when calculating rise/set times
+    /// or horizontal coordinates, it is most accurate to use the orientation of the Earth's
+    /// equator at that same date and time. For these uses, Astronomy Engine allows *of-date*
+    /// calculations.
+    /// </remarks>
+    public enum EquatorEpoch
+    {
+        /// <summary>
+        /// Represent equatorial coordinates in the J2000 epoch.
+        /// </summary>
+        J2000,
+
+        /// <summary>
+        /// Represent equatorial coordinates using the Earth's equator at the given date and time.
+        /// </summary>
+        OfDate,
+    }
+
+    /// <summary>
+    /// Aberration calculation options.
+    /// </summary>
+    /// <remarks>
+    /// [Aberration](https://en.wikipedia.org/wiki/Aberration_of_light) is an effect
+    /// causing the apparent direction of an observed body to be shifted due to transverse
+    /// movement of the Earth with respect to the rays of light coming from that body.
+    /// This angular correction can be anywhere from 0 to about 20 arcseconds,
+    /// depending on the position of the observed body relative to the instantaneous
+    /// velocity vector of the Earth.
+    ///
+    /// Some Astronomy Engine functions allow optional correction for aberration by
+    /// passing in a value of this enumerated type.
+    ///
+    /// Aberration correction is useful to improve accuracy of coordinates of
+    /// apparent locations of bodies seen from the Earth.
+    /// However, because aberration affects not only the observed body (such as a planet)
+    /// but the surrounding stars, aberration may be unhelpful (for example)
+    /// for determining exactly when a planet crosses from one constellation to another.
+    /// </remarks>
+    public enum Aberration
+    {
+        /// <summary>
+        /// Request correction for aberration.
+        /// </summary>
+        Corrected,
+
+        /// <summary>
+        /// Do not correct for aberration.
+        /// </summary>
+        None,
     }
 
     /// <summary>
@@ -370,6 +442,29 @@ namespace CosineKitty
     /// </summary>
     public static class Astronomy
     {
+        private const double T0 = 2451545.0;
+        private const double MJD_BASIS = 2400000.5;
+        private const double Y2000_IN_MJD  =  T0 - MJD_BASIS;
+        private const double DEG2RAD = 0.017453292519943296;
+        private const double RAD2DEG = 57.295779513082321;
+        private const double ASEC360 = 1296000.0;
+        private const double ASEC2RAD = 4.848136811095359935899141e-6;
+        private const double PI2 = 2.0 * Math.PI;
+        private const double ARC = 3600.0 * 180.0 / Math.PI;     /* arcseconds per radian */
+        private const double C_AUDAY = 173.1446326846693;        /* speed of light in AU/day */
+        private const double ERAD = 6378136.6;                   /* mean earth radius in meters */
+        private const double AU = 1.4959787069098932e+11;        /* astronomical unit in meters */
+        private const double KM_PER_AU = 1.4959787069098932e+8;
+        private const double ANGVEL = 7.2921150e-5;
+        private const double SECONDS_PER_DAY = 24.0 * 3600.0;
+        private const double SOLAR_DAYS_PER_SIDEREAL_DAY = 0.9972695717592592;
+        private const double MEAN_SYNODIC_MONTH = 29.530588;     /* average number of days for Moon to return to the same phase */
+        private const double EARTH_ORBITAL_PERIOD = 365.256;
+        private const double REFRACTION_NEAR_HORIZON = 34.0 / 60.0;   /* degrees of refractive "lift" seen for objects near horizon */
+        private const double SUN_RADIUS_AU  = 4.6505e-3;
+        private const double MOON_RADIUS_AU = 1.15717e-5;
+        private const double ASEC180 = 180.0 * 60.0 * 60.0;        /* arcseconds per 180 degrees (or pi radians) */
+
         private struct deltat_entry_t
         {
             public double mjd;
@@ -446,10 +541,6 @@ $ASTRO_CSHARP_VSOP(Neptune)
             new vsop_model_t(vsop_lat_Uranus,   vsop_lon_Uranus,    vsop_rad_Uranus ),
             new vsop_model_t(vsop_lat_Neptune,  vsop_lon_Neptune,   vsop_rad_Neptune)
         };
-
-        private const double T0 = 2451545.0;
-        private const double MJD_BASIS = 2400000.5;
-        private const double Y2000_IN_MJD  =  T0 - MJD_BASIS;
 
         /// <summary>
         /// The minimum year value supported by Astronomy Engine.
@@ -611,6 +702,324 @@ $ASTRO_CSHARP_CHEBYSHEV(8);
             throw new ArgumentException(string.Format("Time argument is out of bounds: {0}", time));
         }
 
+        private static AstroVector precession(double tt1, AstroVector pos1, double tt2)
+        {
+            double xx, yx, zx, xy, yy, zy, xz, yz, zz;
+            double t, psia, omegaa, chia, sa, ca, sb, cb, sc, cc, sd, cd;
+            double eps0 = 84381.406;
+
+            if ((tt1 != 0.0) && (tt2 != 0.0))
+                throw new ArgumentException("precession: one of (tt1, tt2) must be zero.");
+
+            t = (tt2 - tt1) / 36525;
+            if (tt2 == 0)
+                t = -t;
+
+            psia   = (((((-    0.0000000951  * t
+                        +    0.000132851 ) * t
+                        -    0.00114045  ) * t
+                        -    1.0790069   ) * t
+                        + 5038.481507    ) * t);
+
+            omegaa = (((((+    0.0000003337  * t
+                        -    0.000000467 ) * t
+                        -    0.00772503  ) * t
+                        +    0.0512623   ) * t
+                        -    0.025754    ) * t + eps0);
+
+            chia   = (((((-    0.0000000560  * t
+                        +    0.000170663 ) * t
+                        -    0.00121197  ) * t
+                        -    2.3814292   ) * t
+                        +   10.556403    ) * t);
+
+            eps0 = eps0 * ASEC2RAD;
+            psia = psia * ASEC2RAD;
+            omegaa = omegaa * ASEC2RAD;
+            chia = chia * ASEC2RAD;
+
+            sa = Math.Sin(eps0);
+            ca = Math.Cos(eps0);
+            sb = Math.Sin(-psia);
+            cb = Math.Cos(-psia);
+            sc = Math.Sin(-omegaa);
+            cc = Math.Cos(-omegaa);
+            sd = Math.Sin(chia);
+            cd = Math.Cos(chia);
+
+            xx =  cd * cb - sb * sd * cc;
+            yx =  cd * sb * ca + sd * cc * cb * ca - sa * sd * sc;
+            zx =  cd * sb * sa + sd * cc * cb * sa + ca * sd * sc;
+            xy = -sd * cb - sb * cd * cc;
+            yy = -sd * sb * ca + cd * cc * cb * ca - sa * cd * sc;
+            zy = -sd * sb * sa + cd * cc * cb * sa + ca * cd * sc;
+            xz =  sb * sc;
+            yz = -sc * cb * ca - sa * cc;
+            zz = -sc * cb * sa + cc * ca;
+
+            double x, y, z;
+
+            if (tt2 == 0.0)
+            {
+                /* Perform rotation from other epoch to J2000.0. */
+                x = xx * pos1.x + xy * pos1.y + xz * pos1.z;
+                y = yx * pos1.x + yy * pos1.y + yz * pos1.z;
+                z = zx * pos1.x + zy * pos1.y + zz * pos1.z;
+            }
+            else
+            {
+                /* Perform rotation from J2000.0 to other epoch. */
+                x = xx * pos1.x + yx * pos1.y + zx * pos1.z;
+                y = xy * pos1.x + yy * pos1.y + zy * pos1.z;
+                z = xz * pos1.x + yz * pos1.y + zz * pos1.z;
+            }
+
+            return new AstroVector(x, y, z, null);
+        }
+
+        private struct earth_tilt_t
+        {
+            public double tt;
+            public double dpsi;
+            public double deps;
+            public double ee;
+            public double mobl;
+            public double tobl;
+
+            public earth_tilt_t(double tt, double dpsi, double deps, double ee, double mobl, double tobl)
+            {
+                this.tt = tt;
+                this.dpsi = dpsi;
+                this.deps = deps;
+                this.ee = ee;
+                this.mobl = mobl;
+                this.tobl = tobl;
+            }
+        }
+
+        private struct iau_row_t
+        {
+            public int nals0;
+            public int nals1;
+            public int nals2;
+            public int nals3;
+            public int nals4;
+
+            public double cls0;
+            public double cls1;
+            public double cls2;
+            public double cls3;
+            public double cls4;
+            public double cls5;
+        }
+
+        private static readonly iau_row_t[] iau_row = new iau_row_t[]
+        {
+            $ASTRO_IAU_DATA()
+        };
+
+        private static void iau2000b(AstroTime time)
+        {
+            /* Adapted from the NOVAS C 3.1 function of the same name. */
+
+            double t, el, elp, f, d, om, arg, dp, de, sarg, carg;
+            int i;
+
+            if (double.IsNaN(time.psi))
+            {
+                t = time.tt / 36525.0;
+                el  = ((485868.249036 + t * 1717915923.2178) % ASEC360) * ASEC2RAD;
+                elp = ((1287104.79305 + t * 129596581.0481)  % ASEC360) * ASEC2RAD;
+                f   = ((335779.526232 + t * 1739527262.8478) % ASEC360) * ASEC2RAD;
+                d   = ((1072260.70369 + t * 1602961601.2090) % ASEC360) * ASEC2RAD;
+                om  = ((450160.398036 - t * 6962890.5431)    % ASEC360) * ASEC2RAD;
+                dp = 0;
+                de = 0;
+                for (i=76; i >= 0; --i)
+                {
+                    arg = (iau_row[i].nals0*el + iau_row[i].nals1*elp + iau_row[i].nals2*f + iau_row[i].nals3*d + iau_row[i].nals4*om) % PI2;
+                    sarg = Math.Sin(arg);
+                    carg = Math.Cos(arg);
+                    dp += (iau_row[i].cls0 + iau_row[i].cls1*t) * sarg + iau_row[i].cls2*carg;
+                    de += (iau_row[i].cls3 + iau_row[i].cls4*t) * carg + iau_row[i].cls5*sarg;
+                }
+
+                time.psi = -0.000135 + (dp * 1.0e-7);
+                time.eps = +0.000388 + (de * 1.0e-7);
+            }
+        }
+
+        private static double mean_obliq(double tt)
+        {
+            double t = tt / 36525.0;
+            double asec =
+                (((( -  0.0000000434   * t
+                    -  0.000000576  ) * t
+                    +  0.00200340   ) * t
+                    -  0.0001831    ) * t
+                    - 46.836769     ) * t + 84381.406;
+
+            return asec / 3600.0;
+        }
+
+        private static earth_tilt_t e_tilt(AstroTime time)
+        {
+            iau2000b(time);
+
+            double mobl = mean_obliq(time.tt);
+            double tobl = mobl + (time.eps / 3600.0);
+            double ee = time.psi * Math.Cos(mobl * DEG2RAD) / 15.0;
+            return new earth_tilt_t(time.tt, time.psi, time.eps, ee, mobl, tobl);
+        }
+
+        private static double era(double ut)        /* Earth Rotation Angle */
+        {
+            double thet1 = 0.7790572732640 + 0.00273781191135448 * ut;
+            double thet3 = ut % 1.0;
+            double theta = 360.0 *((thet1 + thet3) % 1.0);
+            if (theta < 0.0)
+                theta += 360.0;
+
+            return theta;
+        }
+
+        private static double sidereal_time(AstroTime time)
+        {
+            double t = time.tt / 36525.0;
+            double eqeq = 15.0 * e_tilt(time).ee;    /* Replace with eqeq=0 to get GMST instead of GAST (if we ever need it) */
+            double theta = era(time.ut);
+            double st = (eqeq + 0.014506 +
+                (((( -    0.0000000368   * t
+                    -    0.000029956  ) * t
+                    -    0.00000044   ) * t
+                    +    1.3915817    ) * t
+                    + 4612.156534     ) * t);
+
+            double gst = ((st/3600.0 + theta) % 360.0) / 15.0;
+            if (gst < 0.0)
+                gst += 24.0;
+
+            return gst;
+        }
+
+        private static AstroVector terra(Observer observer, double st)
+        {
+            double erad_km = ERAD / 1000.0;
+            double df = 1.0 - 0.003352819697896;    /* flattening of the Earth */
+            double df2 = df * df;
+            double phi = observer.latitude * DEG2RAD;
+            double sinphi = Math.Sin(phi);
+            double cosphi = Math.Cos(phi);
+            double c = 1.0 / Math.Sqrt(cosphi*cosphi + df2*sinphi*sinphi);
+            double s = df2 * c;
+            double ht_km = observer.height / 1000.0;
+            double ach = erad_km*c + ht_km;
+            double ash = erad_km*s + ht_km;
+            double stlocl = (15.0*st + observer.longitude) * DEG2RAD;
+            double sinst = Math.Sin(stlocl);
+            double cosst = Math.Cos(stlocl);
+
+            return new AstroVector(
+                ach * cosphi * cosst / KM_PER_AU,
+                ach * cosphi * sinst / KM_PER_AU,
+                ash * sinphi / KM_PER_AU,
+                null
+            );
+        }
+
+        private static AstroVector nutation(AstroTime time, int direction, AstroVector inpos)
+        {
+            earth_tilt_t tilt = e_tilt(time);
+            double oblm = tilt.mobl * DEG2RAD;
+            double oblt = tilt.tobl * DEG2RAD;
+            double psi = tilt.dpsi * ASEC2RAD;
+            double cobm = Math.Cos(oblm);
+            double sobm = Math.Sin(oblm);
+            double cobt = Math.Cos(oblt);
+            double sobt = Math.Sin(oblt);
+            double cpsi = Math.Cos(psi);
+            double spsi = Math.Sin(psi);
+
+            double xx = cpsi;
+            double yx = -spsi * cobm;
+            double zx = -spsi * sobm;
+            double xy = spsi * cobt;
+            double yy = cpsi * cobm * cobt + sobm * sobt;
+            double zy = cpsi * sobm * cobt - cobm * sobt;
+            double xz = spsi * sobt;
+            double yz = cpsi * cobm * sobt - sobm * cobt;
+            double zz = cpsi * sobm * sobt + cobm * cobt;
+
+            double x, y, z;
+
+            if (direction == 0)
+            {
+                /* forward rotation */
+                x = xx * inpos.z + yx * inpos.y + zx * inpos.z;
+                y = xy * inpos.z + yy * inpos.y + zy * inpos.z;
+                z = xz * inpos.z + yz * inpos.y + zz * inpos.z;
+            }
+            else
+            {
+                /* inverse rotation */
+                x = xx * inpos.z + xy * inpos.y + xz * inpos.z;
+                y = yx * inpos.z + yy * inpos.y + yz * inpos.z;
+                z = zx * inpos.z + zy * inpos.y + zz * inpos.z;
+            }
+
+            return new AstroVector(x, y, z, time);
+        }
+
+        private static Equatorial vector2radec(AstroVector pos)
+        {
+            double ra, dec, dist;
+            double xyproj;
+
+            xyproj = pos.x*pos.x + pos.y*pos.y;
+            dist = Math.Sqrt(xyproj + pos.z*pos.z);
+            if (xyproj == 0.0)
+            {
+                if (pos.z == 0.0)
+                {
+                    /* Indeterminate coordinates; pos vector has zero length. */
+                    throw new ArgumentException("Bad vector");
+                }
+
+                if (pos.z < 0)
+                {
+                    ra = 0.0;
+                    dec = -90.0;
+                }
+                else
+                {
+                    ra = 0.0;
+                    dec = +90.0;
+                }
+            }
+            else
+            {
+                ra = Math.Atan2(pos.y, pos.x) / (DEG2RAD * 15.0);
+                if (ra < 0)
+                    ra += 24.0;
+
+                dec = RAD2DEG * Math.Atan2(pos.z, Math.Sqrt(xyproj));
+            }
+
+            return new Equatorial(ra, dec, dist);
+        }
+
+        private static AstroVector geo_pos(AstroTime time, Observer observer)
+        {
+            double gast = sidereal_time(time);
+            AstroVector pos1 = terra(observer, gast);
+            AstroVector pos2 = nutation(time, -1, pos1);
+            return precession(time.tt, pos2, 0.0);
+        }
+
+        private static AstroVector GeoMoon(AstroTime time)
+        {
+            throw new NotImplementedException();
+        }
 
         /// <summary>
         /// Calculates heliocentric Cartesian coordinates of a body in the J2000 equatorial system.
@@ -652,6 +1061,160 @@ $ASTRO_CSHARP_CHEBYSHEV(8);
 
                 default:
                     throw new ArgumentException(string.Format("Invalid body: {0}", body));
+            }
+        }
+
+        private static AstroVector CalcEarth(AstroTime time)
+        {
+            return CalcVsop(vsop[(int)Body.Earth], time);
+        }
+
+        ///
+        /// <summary>
+        /// Calculates geocentric Cartesian coordinates of a body in the J2000 equatorial system.
+        /// </summary>
+        /// <remarks>
+        /// This function calculates the position of the given celestial body as a vector,
+        /// using the center of the Earth as the origin.  The result is expressed as a Cartesian
+        /// vector in the J2000 equatorial system: the coordinates are based on the mean equator
+        /// of the Earth at noon UTC on 1 January 2000.
+        ///
+        /// If given an invalid value for `body`, or the body is `Body.Pluto` and the `time` is outside
+        /// the year range 1700..2200, this function will throw an exception.
+        ///
+        /// Unlike #HelioVector, this function always corrects for light travel time.
+        /// This means the position of the body is "back-dated" by the amount of time it takes
+        /// light to travel from that body to an observer on the Earth.
+        ///
+        /// Also, the position can optionally be corrected for
+        /// [aberration](https://en.wikipedia.org/wiki/Aberration_of_light), an effect
+        /// causing the apparent direction of the body to be shifted due to transverse
+        /// movement of the Earth with respect to the rays of light coming from that body.
+        /// </remarks>
+        /// <param name="body">A body for which to calculate a heliocentric position: the Sun, Moon, or any of the planets.</param>
+        /// <param name="time">The date and time for which to calculate the position.</param>
+        /// <param name="aberration">`Aberration.Corrected` to correct for aberration, or `Aberration.None` to leave uncorrected.</param>
+        /// <returns>A geocentric position vector of the center of the given body.</returns>
+        private static AstroVector GeoVector(
+            Body body,
+            AstroTime time,
+            Aberration aberration)
+        {
+            AstroVector vector;
+            AstroVector earth = new AstroVector(0.0, 0.0, 0.0, null);
+            AstroTime ltime;
+            AstroTime ltime2;
+            double dt;
+            int iter;
+
+            if (aberration != Aberration.Corrected && aberration != Aberration.None)
+                throw new ArgumentException(string.Format("Unsupported aberration option {0}", aberration));
+
+            switch (body)
+            {
+            case Body.Earth:
+                /* The Earth's geocentric coordinates are always (0,0,0). */
+                return new AstroVector(0.0, 0.0, 0.0, time);
+
+            case Body.Sun:
+                /* The Sun's heliocentric coordinates are always (0,0,0). No need for light travel correction. */
+                vector = CalcEarth(time);
+                return new AstroVector(-vector.x, -vector.y, -vector.z, time);
+
+            case Body.Moon:
+                return GeoMoon(time);
+
+            default:
+                /* For all other bodies, apply light travel time correction. */
+
+                if (aberration == Aberration.None)
+                {
+                    /* No aberration, so calculate Earth's position once, at the time of observation. */
+                    earth = CalcEarth(time);
+                }
+
+                ltime = time;
+                for (iter=0; iter < 10; ++iter)
+                {
+                    vector = HelioVector(body, ltime);
+                    if (aberration == Aberration.Corrected)
+                    {
+                        /*
+                            Include aberration, so make a good first-order approximation
+                            by backdating the Earth's position also.
+                            This is confusing, but it works for objects within the Solar System
+                            because the distance the Earth moves in that small amount of light
+                            travel time (a few minutes to a few hours) is well approximated
+                            by a line segment that substends the angle seen from the remote
+                            body viewing Earth. That angle is pretty close to the aberration
+                            angle of the moving Earth viewing the remote body.
+                            In other words, both of the following approximate the aberration angle:
+                                (transverse distance Earth moves) / (distance to body)
+                                (transverse speed of Earth) / (speed of light).
+                        */
+                        earth = CalcEarth(ltime);
+                    }
+
+                    /* Convert heliocentric vector to geocentric vector. */
+                    vector = new AstroVector(vector.x - earth.x, vector.y - earth.y, vector.z - earth.z, time);
+                    ltime2 = time.AddDays(-vector.Length() / C_AUDAY);
+                    dt = Math.Abs(ltime2.tt - ltime.tt);
+                    if (dt < 1.0e-9)
+                        return vector;
+
+                    ltime = ltime2;
+                }
+                throw new Exception("Light travel time correction did not converge");
+            }
+        }
+
+
+        /// <summary>
+        /// Calculates equatorial coordinates of a celestial body as seen by an observer on the Earth's surface.
+        /// </summary>
+        /// <remarks>
+        /// Calculates topocentric equatorial coordinates in one of two different systems:
+        /// J2000 or true-equator-of-date, depending on the value of the `equdate` parameter.
+        /// Equatorial coordinates include right ascension, declination, and distance in astronomical units.
+        ///
+        /// This function corrects for light travel time: it adjusts the apparent location
+        /// of the observed body based on how long it takes for light to travel from the body to the Earth.
+        ///
+        /// This function corrects for *topocentric parallax*, meaning that it adjusts for the
+        /// angular shift depending on where the observer is located on the Earth. This is most
+        /// significant for the Moon, because it is so close to the Earth. However, parallax corection
+        /// has a small effect on the apparent positions of other bodies.
+        ///
+        /// Correction for aberration is optional, using the `aberration` parameter.
+        /// </remarks>
+        /// <param name="body">The celestial body to be observed. Not allowed to be `Body.Earth`.</param>
+        /// <param name="time">The date and time at which the observation takes place.</param>
+        /// <param name="observer">A location on or near the surface of the Earth.</param>
+        /// <param name="equdate">Selects the date of the Earth's equator in which to express the equatorial coordinates.</param>
+        /// <param name="aberration">Selects whether or not to correct for aberration.</param>
+        public static Equatorial Equator(
+            Body body,
+            AstroTime time,
+            Observer observer,
+            EquatorEpoch equdate,
+            Aberration aberration)
+        {
+            AstroVector gc_observer = geo_pos(time, observer);
+            AstroVector gc = GeoVector(body, time, aberration);
+            AstroVector j2000 = new AstroVector(gc.x - gc_observer.x, gc.y - gc_observer.y, gc.z - gc_observer.z, time);
+
+            switch (equdate)
+            {
+                case EquatorEpoch.OfDate:
+                    AstroVector temp = precession(0.0, j2000, time.tt);
+                    AstroVector datevect = nutation(time, 0, temp);
+                    return vector2radec(datevect);
+
+                case EquatorEpoch.J2000:
+                    return vector2radec(j2000);
+
+                default:
+                    throw new ArgumentException(string.Format("Unsupported equator epoch {0}", equdate));
             }
         }
     }

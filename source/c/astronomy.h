@@ -479,7 +479,7 @@ typedef enum
 astro_aberration_t;
 
 /**
- * @brief   Selects the date on which the Earth's equator to be used for representing equatorial coordinates.
+ * @brief   Selects the date for which the Earth's equator is to be used for representing equatorial coordinates.
  *
  * The Earth's equator is not always in the same plane due to precession and nutation.
  *
