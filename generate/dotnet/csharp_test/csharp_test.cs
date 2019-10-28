@@ -76,22 +76,34 @@ namespace csharp_test
                 var time = new AstroTime(new DateTime(1700, 1, 1, 0, 0, 0, DateTimeKind.Utc));
                 var stop = new AstroTime(new DateTime(2200, 1, 1, 0, 0, 0, DateTimeKind.Utc));
 
+                AstroVector pos;
+                Equatorial j2000, ofdate;
+                Topocentric hor;
+
                 outfile.WriteLine("o {0} {1} {2}", observer.latitude, observer.longitude, observer.height);
                 while (time.tt < stop.tt)
                 {
                     foreach (Body body in bodylist)
                     {
-                        AstroVector pos = Astronomy.HelioVector(body, time);
+                        pos = Astronomy.HelioVector(body, time);
                         outfile.WriteLine("v {0} {1:0.0000000000000000} {2:0.0000000000000000} {3:0.0000000000000000} {4:0.0000000000000000}", body, pos.t.tt, pos.x, pos.y, pos.z);
                         if (body != Body.Earth)
                         {
-                            Equatorial j2000 = Astronomy.Equator(body, time, observer, EquatorEpoch.J2000, Aberration.None);
-                            Equatorial ofdate = Astronomy.Equator(body, time, observer, EquatorEpoch.OfDate, Aberration.Corrected);
-                            Topocentric hor = Astronomy.Horizon(time, observer, ofdate.ra, ofdate.dec, Refraction.None);
+                            j2000 = Astronomy.Equator(body, time, observer, EquatorEpoch.J2000, Aberration.None);
+                            ofdate = Astronomy.Equator(body, time, observer, EquatorEpoch.OfDate, Aberration.Corrected);
+                            hor = Astronomy.Horizon(time, observer, ofdate.ra, ofdate.dec, Refraction.None);
                             outfile.WriteLine("s {0} {1:0.0000000000000000} {2:0.0000000000000000} {3:0.0000000000000000} {4:0.0000000000000000} {5:0.0000000000000000} {6:0.0000000000000000} {7:0.0000000000000000}",
                                 body, time.tt, time.ut, j2000.ra, j2000.dec, j2000.dist, hor.azimuth, hor.altitude);
                         }
                     }
+
+                    pos = Astronomy.GeoVector(Body.Moon, time, Aberration.None);
+                    outfile.WriteLine("v GM {0:0.0000000000000000} {1:0.0000000000000000} {2:0.0000000000000000} {3:0.0000000000000000}", pos.t.tt, pos.x, pos.y, pos.z);
+                    j2000 = Astronomy.Equator(Body.Moon, time, observer, EquatorEpoch.J2000, Aberration.None);
+                    ofdate = Astronomy.Equator(Body.Moon, time, observer, EquatorEpoch.OfDate, Aberration.Corrected);
+                    hor = Astronomy.Horizon(time, observer, ofdate.ra, ofdate.dec, Refraction.None);
+                    outfile.WriteLine("s GM {0:0.0000000000000000} {1:0.0000000000000000} {2:0.0000000000000000} {3:0.0000000000000000} {4:0.0000000000000000} {5:0.0000000000000000} {6:0.0000000000000000}",
+                        time.tt, time.ut, j2000.ra, j2000.dec, j2000.dist, hor.azimuth, hor.altitude);
 
                     time = time.AddDays(10.0 + Math.PI/100.0);
                 }

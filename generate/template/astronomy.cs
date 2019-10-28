@@ -512,15 +512,15 @@ namespace CosineKitty
         private const double T0 = 2451545.0;
         private const double MJD_BASIS = 2400000.5;
         private const double Y2000_IN_MJD  =  T0 - MJD_BASIS;
-        private const double DEG2RAD = 0.017453292519943296;
+        internal const double DEG2RAD = 0.017453292519943296;
         private const double RAD2DEG = 57.295779513082321;
         private const double ASEC360 = 1296000.0;
         private const double ASEC2RAD = 4.848136811095359935899141e-6;
-        private const double PI2 = 2.0 * Math.PI;
-        private const double ARC = 3600.0 * 180.0 / Math.PI;     /* arcseconds per radian */
+        internal const double PI2 = 2.0 * Math.PI;
+        internal const double ARC = 3600.0 * 180.0 / Math.PI;     /* arcseconds per radian */
         private const double C_AUDAY = 173.1446326846693;        /* speed of light in AU/day */
-        private const double ERAD = 6378136.6;                   /* mean earth radius in meters */
-        private const double AU = 1.4959787069098932e+11;        /* astronomical unit in meters */
+        internal const double ERAD = 6378136.6;                   /* mean earth radius in meters */
+        internal const double AU = 1.4959787069098932e+11;        /* astronomical unit in meters */
         private const double KM_PER_AU = 1.4959787069098932e+8;
         private const double ANGVEL = 7.2921150e-5;
         private const double SECONDS_PER_DAY = 24.0 * 3600.0;
@@ -1096,9 +1096,43 @@ $ASTRO_CSHARP_CHEBYSHEV(8);
             );
         }
 
+        private static AstroVector ecl2equ_vec(AstroTime time, AstroVector ecl)
+        {
+            double obl = mean_obliq(time.tt) * DEG2RAD;
+            double cos_obl = Math.Cos(obl);
+            double sin_obl = Math.Sin(obl);
+
+            return new AstroVector(
+                ecl.x,
+                ecl.y*cos_obl - ecl.z*sin_obl,
+                ecl.y*sin_obl + ecl.z*cos_obl,
+                time
+            );
+        }
+
         private static AstroVector GeoMoon(AstroTime time)
         {
-            throw new NotImplementedException();
+            var context = new MoonContext(time.tt / 36525.0);
+            MoonResult moon = context.CalcMoon();
+
+            /* Convert geocentric ecliptic spherical coordinates to Cartesian coordinates. */
+            double dist_cos_lat = moon.distance_au * Math.Cos(moon.geo_eclip_lat);
+
+            var gepos = new AstroVector(
+                dist_cos_lat * Math.Cos(moon.geo_eclip_lon),
+                dist_cos_lat * Math.Sin(moon.geo_eclip_lon),
+                moon.distance_au * Math.Sin(moon.geo_eclip_lat),
+                null
+            );
+
+            /* Convert ecliptic coordinates to equatorial coordinates, both in mean equinox of date. */
+            AstroVector mpos1 = ecl2equ_vec(time, gepos);
+
+            /* Convert from mean equinox of date to J2000. */
+            AstroVector mpos2 = precession(time.tt, mpos1, 0);
+
+            /* Patch in the correct time value into the returned vector. */
+            return new AstroVector(mpos2.x, mpos2.y, mpos2.z, time);
         }
 
         /// <summary>
@@ -1175,7 +1209,7 @@ $ASTRO_CSHARP_CHEBYSHEV(8);
         /// <param name="time">The date and time for which to calculate the position.</param>
         /// <param name="aberration">`Aberration.Corrected` to correct for aberration, or `Aberration.None` to leave uncorrected.</param>
         /// <returns>A geocentric position vector of the center of the given body.</returns>
-        private static AstroVector GeoVector(
+        public static AstroVector GeoVector(
             Body body,
             AstroTime time,
             Aberration aberration)
@@ -1439,6 +1473,224 @@ $ASTRO_CSHARP_CHEBYSHEV(8);
                 throw new ArgumentException(string.Format("Unsupported refraction option {0}", refraction));
 
             return new Topocentric(az, 90.0 - zd, hor_ra, hor_dec);
+        }
+    }
+
+    internal class PascalArray2<ElemType>
+    {
+        private readonly int xmin;
+        private readonly int xmax;
+        private readonly int ymin;
+        private readonly int ymax;
+        private readonly ElemType[,] array;
+
+        public PascalArray2(int xmin, int xmax, int ymin, int ymax)
+        {
+            this.xmin = xmin;
+            this.xmax = xmax;
+            this.ymin = ymin;
+            this.ymax = ymax;
+            this.array = new ElemType[(xmax - xmin) + 1, (ymax - ymin) + 1];
+        }
+
+        public ElemType this[int x, int y]
+        {
+            get { return array[x - xmin, y - ymin]; }
+            set { array[x - xmin, y - ymin] = value; }
+        }
+    }
+
+    internal class MoonContext
+    {
+        double T;
+        double DGAM;
+        double DLAM, N, GAM1C, SINPI;
+        double L0, L, LS, F, D, S;
+        double DL0, DL, DLS, DF, DD, DS;
+        PascalArray2<double> CO = new PascalArray2<double>(-6, 6, 1, 4);
+        PascalArray2<double> SI = new PascalArray2<double>(-6, 6, 1, 4);
+
+        static double Frac(double x)
+        {
+            return x - Math.Floor(x);
+        }
+
+        static void AddThe(
+            double c1, double s1, double c2, double s2,
+            out double c, out double s)
+        {
+            c = c1*c2 - s1*s2;
+            s = s1*c2 + c1*s2;
+        }
+
+        static double Sine(double phi)
+        {
+            /* sine, of phi in revolutions, not radians */
+            return Math.Sin(2.0 * Math.PI * phi);
+        }
+
+        void LongPeriodic()
+        {
+            double S1 = Sine(0.19833+0.05611*T);
+            double S2 = Sine(0.27869+0.04508*T);
+            double S3 = Sine(0.16827-0.36903*T);
+            double S4 = Sine(0.34734-5.37261*T);
+            double S5 = Sine(0.10498-5.37899*T);
+            double S6 = Sine(0.42681-0.41855*T);
+            double S7 = Sine(0.14943-5.37511*T);
+
+            DL0 = 0.84*S1+0.31*S2+14.27*S3+ 7.26*S4+ 0.28*S5+0.24*S6;
+            DL  = 2.94*S1+0.31*S2+14.27*S3+ 9.34*S4+ 1.12*S5+0.83*S6;
+            DLS =-6.40*S1                                   -1.89*S6;
+            DF  = 0.21*S1+0.31*S2+14.27*S3-88.70*S4-15.30*S5+0.24*S6-1.86*S7;
+            DD  = DL0-DLS;
+            DGAM  = -3332E-9 * Sine(0.59734-5.37261*T)
+                    -539E-9 * Sine(0.35498-5.37899*T)
+                    -64E-9 * Sine(0.39943-5.37511*T);
+        }
+
+        private readonly int[] I = new int[4];
+
+        void Term(int p, int q, int r, int s, out double x, out double y)
+        {
+            I[0] = p;
+            I[1] = q;
+            I[2] = r;
+            I[3] = s;
+            x = 1.0;
+            y = 0.0;
+
+            for (int k=1; k<=4; ++k)
+                if (I[k-1] != 0.0)
+                    AddThe(x, y, CO[I[k-1], k], SI[I[k-1], k], out x, out y);
+        }
+
+        void AddSol(
+            double coeffl,
+            double coeffs,
+            double coeffg,
+            double coeffp,
+            int p,
+            int q,
+            int r,
+            int s)
+        {
+            double x, y;
+            Term(p, q, r, s, out x, out y);
+            DLAM += coeffl*y;
+            DS += coeffs*y;
+            GAM1C += coeffg*x;
+            SINPI += coeffp*x;
+        }
+
+        void ADDN(double coeffn, int p, int q, int r, int s, out double x, out double y)
+        {
+            Term(p, q, r, s, out x, out y);
+            N += coeffn * y;
+        }
+
+        void SolarN()
+        {
+            double x, y;
+
+            N = 0.0;
+            ADDN(-526.069, 0, 0,1,-2, out x, out y);
+            ADDN(  -3.352, 0, 0,1,-4, out x, out y);
+            ADDN( +44.297,+1, 0,1,-2, out x, out y);
+            ADDN(  -6.000,+1, 0,1,-4, out x, out y);
+            ADDN( +20.599,-1, 0,1, 0, out x, out y);
+            ADDN( -30.598,-1, 0,1,-2, out x, out y);
+            ADDN( -24.649,-2, 0,1, 0, out x, out y);
+            ADDN(  -2.000,-2, 0,1,-2, out x, out y);
+            ADDN( -22.571, 0,+1,1,-2, out x, out y);
+            ADDN( +10.985, 0,-1,1,-2, out x, out y);
+        }
+
+        void Planetary()
+        {
+            DLAM +=
+                +0.82*Sine(0.7736  -62.5512*T)+0.31*Sine(0.0466 -125.1025*T)
+                +0.35*Sine(0.5785  -25.1042*T)+0.66*Sine(0.4591+1335.8075*T)
+                +0.64*Sine(0.3130  -91.5680*T)+1.14*Sine(0.1480+1331.2898*T)
+                +0.21*Sine(0.5918+1056.5859*T)+0.44*Sine(0.5784+1322.8595*T)
+                +0.24*Sine(0.2275   -5.7374*T)+0.28*Sine(0.2965   +2.6929*T)
+                +0.33*Sine(0.3132   +6.3368*T);
+        }
+
+        internal MoonContext(double centuries_since_j2000)
+        {
+            int I, J, MAX;
+            double T2, ARG, FAC;
+            double c, s;
+
+            T = centuries_since_j2000;
+            T2 = T*T;
+            DLAM = 0;
+            DS = 0;
+            GAM1C = 0;
+            SINPI = 3422.7000;
+            LongPeriodic();
+            L0 = Astronomy.PI2*Frac(0.60643382+1336.85522467*T-0.00000313*T2) + DL0/Astronomy.ARC;
+            L  = Astronomy.PI2*Frac(0.37489701+1325.55240982*T+0.00002565*T2) + DL /Astronomy.ARC;
+            LS = Astronomy.PI2*Frac(0.99312619+  99.99735956*T-0.00000044*T2) + DLS/Astronomy.ARC;
+            F  = Astronomy.PI2*Frac(0.25909118+1342.22782980*T-0.00000892*T2) + DF /Astronomy.ARC;
+            D  = Astronomy.PI2*Frac(0.82736186+1236.85308708*T-0.00000397*T2) + DD /Astronomy.ARC;
+            for (I=1; I<=4; ++I)
+            {
+                switch(I)
+                {
+                    case 1:  ARG=L;  MAX=4; FAC=1.000002208;               break;
+                    case 2:  ARG=LS; MAX=3; FAC=0.997504612-0.002495388*T; break;
+                    case 3:  ARG=F;  MAX=4; FAC=1.000002708+139.978*DGAM;  break;
+                    default: ARG=D;  MAX=6; FAC=1.0;                       break;
+                }
+                CO[0,I] = 1.0;
+                CO[1,I] = Math.Cos(ARG)*FAC;
+                SI[0,I] = 0.0;
+                SI[1,I] = Math.Sin(ARG)*FAC;
+                for (J=2; J<=MAX; ++J)
+                {
+                    AddThe(CO[J-1,I], SI[J-1,I], CO[1,I], SI[1,I], out c, out s);
+                    CO[J,I] = c;
+                    SI[J,I] = s;
+                }
+
+                for (J=1; J<=MAX; ++J)
+                {
+                    CO[-J,I] =  CO[J,I];
+                    SI[-J,I] = -SI[J,I];
+                }
+            }
+        }
+
+        internal MoonResult CalcMoon()
+        {
+$ASTRO_ADDSOL()
+            SolarN();
+            Planetary();
+            S = F + DS/Astronomy.ARC;
+
+            double lat_seconds = (1.000002708 + 139.978*DGAM)*(18518.511+1.189+GAM1C)*Math.Sin(S)-6.24*Math.Sin(3*S) + N;
+
+            return new MoonResult(
+                Astronomy.PI2 * Frac((L0+DLAM/Astronomy.ARC) / Astronomy.PI2),
+                lat_seconds * (Astronomy.DEG2RAD / 3600.0),
+                (Astronomy.ARC * (Astronomy.ERAD / Astronomy.AU)) / (0.999953253 * SINPI)
+            );
+        }
+    }
+
+    internal struct MoonResult
+    {
+        public readonly double geo_eclip_lon;
+        public readonly double geo_eclip_lat;
+        public readonly double distance_au;
+
+        public MoonResult(double lon, double lat, double dist)
+        {
+            this.geo_eclip_lon = lon;
+            this.geo_eclip_lat = lat;
+            this.distance_au = dist;
         }
     }
 }
