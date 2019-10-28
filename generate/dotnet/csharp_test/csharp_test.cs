@@ -75,6 +75,8 @@ namespace csharp_test
                 var observer = new Observer(29.0, -81.0, 10.0);
                 var time = new AstroTime(new DateTime(1700, 1, 1, 0, 0, 0, DateTimeKind.Utc));
                 var stop = new AstroTime(new DateTime(2200, 1, 1, 0, 0, 0, DateTimeKind.Utc));
+
+                outfile.WriteLine("o {0} {1} {2}", observer.latitude, observer.longitude, observer.height);
                 while (time.tt < stop.tt)
                 {
                     foreach (Body body in bodylist)
@@ -85,7 +87,9 @@ namespace csharp_test
                         {
                             Equatorial j2000 = Astronomy.Equator(body, time, observer, EquatorEpoch.J2000, Aberration.None);
                             Equatorial ofdate = Astronomy.Equator(body, time, observer, EquatorEpoch.OfDate, Aberration.Corrected);
-                            Topocentric topo = Astronomy.Horizon(time, observer, ofdate.ra, ofdate.dec, Refraction.None);
+                            Topocentric hor = Astronomy.Horizon(time, observer, ofdate.ra, ofdate.dec, Refraction.None);
+                            outfile.WriteLine("s {0} {1:0.0000000000000000} {2:0.0000000000000000} {3:0.0000000000000000} {4:0.0000000000000000} {5:0.0000000000000000} {6:0.0000000000000000} {7:0.0000000000000000}",
+                                body, time.tt, time.ut, j2000.ra, j2000.dec, j2000.dist, hor.azimuth, hor.altitude);
                         }
                     }
 

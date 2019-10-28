@@ -1022,16 +1022,16 @@ $ASTRO_CSHARP_CHEBYSHEV(8);
             if (direction == 0)
             {
                 /* forward rotation */
-                x = xx * inpos.z + yx * inpos.y + zx * inpos.z;
-                y = xy * inpos.z + yy * inpos.y + zy * inpos.z;
-                z = xz * inpos.z + yz * inpos.y + zz * inpos.z;
+                x = xx * inpos.x + yx * inpos.y + zx * inpos.z;
+                y = xy * inpos.x + yy * inpos.y + zy * inpos.z;
+                z = xz * inpos.x + yz * inpos.y + zz * inpos.z;
             }
             else
             {
                 /* inverse rotation */
-                x = xx * inpos.z + xy * inpos.y + xz * inpos.z;
-                y = yx * inpos.z + yy * inpos.y + yz * inpos.z;
-                z = zx * inpos.z + zy * inpos.y + zz * inpos.z;
+                x = xx * inpos.x + xy * inpos.y + xz * inpos.z;
+                y = yx * inpos.x + yy * inpos.y + yz * inpos.z;
+                z = zx * inpos.x + zy * inpos.y + zz * inpos.z;
             }
 
             return new AstroVector(x, y, z, time);
@@ -1248,7 +1248,6 @@ $ASTRO_CSHARP_CHEBYSHEV(8);
             }
         }
 
-
         /// <summary>
         /// Calculates equatorial coordinates of a celestial body as seen by an observer on the Earth's surface.
         /// </summary>
@@ -1415,11 +1414,10 @@ $ASTRO_CSHARP_CHEBYSHEV(8);
                     double coszd = Math.Cos(zd * DEG2RAD);
                     double sinzd0 = Math.Sin(zd0 * DEG2RAD);
                     double coszd0 = Math.Cos(zd0 * DEG2RAD);
-                    double prx, pry, prz;
 
-                    prx = ((p.x - coszd0 * uz.x) / sinzd0)*sinzd + uz.x*coszd;
-                    pry = ((p.y - coszd0 * uz.y) / sinzd0)*sinzd + uz.y*coszd;
-                    prz = ((p.z - coszd0 * uz.z) / sinzd0)*sinzd + uz.z*coszd;
+                    double prx = ((p.x - coszd0 * uz.x) / sinzd0)*sinzd + uz.x*coszd;
+                    double pry = ((p.y - coszd0 * uz.y) / sinzd0)*sinzd + uz.y*coszd;
+                    double prz = ((p.z - coszd0 * uz.z) / sinzd0)*sinzd + uz.z*coszd;
 
                     proj = Math.Sqrt(prx*prx + pry*pry);
                     if (proj > 0.0)
