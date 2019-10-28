@@ -364,6 +364,27 @@ namespace CosineKitty
     }
 
     /// <summary>
+    /// Selects whether to correct for atmospheric refraction, and if so, how.
+    /// </summary>
+    public enum Refraction
+    {
+        /// <summary>
+        /// No atmospheric refraction correction (airless).
+        /// </summary>
+        None,
+
+        /// <summary>
+        /// Recommended correction for standard atmospheric refraction.
+        /// </summary>
+        Normal,
+
+        /// <summary>
+        /// Used only for compatibility testing with JPL Horizons online tool.
+        /// </summary>
+        JplHor,
+    }
+
+    /// <summary>
     /// Equatorial angular coordinates.
     /// </summary>
     /// <remarks>
@@ -435,6 +456,52 @@ namespace CosineKitty
         /// Longitude in degrees around the ecliptic plane prograde from the equinox.
         /// </summary>
         public readonly double elon;
+    }
+
+    /// <summary>
+    /// Coordinates of a celestial body as seen by a topocentric observer.
+    /// </summary>
+    /// <remarks>
+    /// Contains horizontal and equatorial coordinates seen by an observer on or near
+    /// the surface of the Earth (a topocentric observer).
+    /// Optionally corrected for atmospheric refraction.
+    /// </remarks>
+    public struct Topocentric
+    {
+        /// <summary>
+        /// Compass direction around the horizon in degrees. 0=North, 90=East, 180=South, 270=West.
+        /// </summary>
+        public readonly double azimuth;
+
+        /// <summary>
+        /// Angle in degrees above (positive) or below (negative) the observer's horizon.
+        /// </summary>
+        public readonly double altitude;
+
+        /// <summary>
+        /// Right ascension in sidereal hours.
+        /// </summary>
+        public readonly double ra;
+
+        /// <summary>
+        /// Declination in degrees.
+        /// </summary>
+        public readonly double dec;
+
+        /// <summary>
+        /// Creates a topocentric position object.
+        /// </summary>
+        /// <param name="azimuth">Compass direction around the horizon in degrees. 0=North, 90=East, 180=South, 270=West.</param>
+        /// <param name="altitude">Angle in degrees above (positive) or below (negative) the observer's horizon.</param>
+        /// <param name="ra">Right ascension in sidereal hours.</param>
+        /// <param name="dec">Declination in degrees.</param>
+        public Topocentric(double azimuth, double altitude, double ra, double dec)
+        {
+            this.azimuth = azimuth;
+            this.altitude = altitude;
+            this.ra = ra;
+            this.dec = dec;
+        }
     }
 
     /// <summary>
@@ -2155,6 +2222,19 @@ namespace CosineKitty
             return precession(time.tt, pos2, 0.0);
         }
 
+        private static AstroVector spin(double angle, AstroVector pos)
+        {
+            double angr = angle * DEG2RAD;
+            double cosang = Math.Cos(angr);
+            double sinang = Math.Sin(angr);
+            return new AstroVector(
+                +cosang*pos.x + sinang*pos.y,
+                -sinang*pos.x + cosang*pos.y,
+                pos.z,
+                null
+            );
+        }
+
         private static AstroVector GeoMoon(AstroTime time)
         {
             throw new NotImplementedException();
@@ -2355,6 +2435,151 @@ namespace CosineKitty
                 default:
                     throw new ArgumentException(string.Format("Unsupported equator epoch {0}", equdate));
             }
+        }
+
+        /// <summary>
+        /// Calculates the apparent location of a body relative to the local horizon of an observer on the Earth.
+        /// </summary>
+        /// <remarks>
+        /// Given a date and time, the geographic location of an observer on the Earth, and
+        /// equatorial coordinates (right ascension and declination) of a celestial body,
+        /// this function returns horizontal coordinates (azimuth and altitude angles) for the body
+        /// relative to the horizon at the geographic location.
+        ///
+        /// The right ascension `ra` and declination `dec` passed in must be *equator of date*
+        /// coordinates, based on the Earth's true equator at the date and time of the observation.
+        /// Otherwise the resulting horizontal coordinates will be inaccurate.
+        /// Equator of date coordinates can be obtained by calling #Equator, passing in
+        /// `EquatorEpoch.OfDate` as its `equdate` parameter. It is also recommended to enable
+        /// aberration correction by passing in `Aberration.Corrected` as the `aberration` parameter.
+        ///
+        /// This function optionally corrects for atmospheric refraction.
+        /// For most uses, it is recommended to pass `Refraction.Normal` in the `refraction` parameter to
+        /// correct for optical lensing of the Earth's atmosphere that causes objects
+        /// to appear somewhat higher above the horizon than they actually are.
+        /// However, callers may choose to avoid this correction by passing in `Refraction.None`.
+        /// If refraction correction is enabled, the azimuth, altitude, right ascension, and declination
+        /// in the #Topocentric structure returned by this function will all be corrected for refraction.
+        /// If refraction is disabled, none of these four coordinates will be corrected; in that case,
+        /// the right ascension and declination in the returned structure will be numerically identical
+        /// to the respective `ra` and `dec` values passed in.
+        /// </remarks>
+        /// <param name="time">The date and time of the observation.</param>
+        /// <param name="observer">The geographic location of the observer.</param>
+        /// <param name="ra">The right ascension of the body in sidereal hours. See remarks above for more details.</param>
+        /// <param name="dec">The declination of the body in degrees. See remarks above for more details.</param>
+        /// <param name="refraction">
+        /// Selects whether to correct for atmospheric refraction, and if so, which model to use.
+        /// The recommended value for most uses is `Refraction.Normal`.
+        /// See remarks above for more details.
+        /// </param>
+        /// <returns>
+        /// The body's apparent horizontal coordinates and equatorial coordinates, both optionally corrected for refraction.
+        /// </returns>
+        public static Topocentric Horizon(
+            AstroTime time,
+            Observer observer,
+            double ra,
+            double dec,
+            Refraction refraction)
+        {
+            double sinlat = Math.Sin(observer.latitude * DEG2RAD);
+            double coslat = Math.Cos(observer.latitude * DEG2RAD);
+            double sinlon = Math.Sin(observer.longitude * DEG2RAD);
+            double coslon = Math.Cos(observer.longitude * DEG2RAD);
+            double sindc = Math.Sin(dec * DEG2RAD);
+            double cosdc = Math.Cos(dec * DEG2RAD);
+            double sinra = Math.Sin(ra * 15 * DEG2RAD);
+            double cosra = Math.Cos(ra * 15 * DEG2RAD);
+
+            var uze = new AstroVector(coslat * coslon, coslat * sinlon, sinlat, null);
+            var une = new AstroVector(-sinlat * coslon, -sinlat * sinlon, coslat, null);
+            var uwe = new AstroVector(sinlon, -coslon, 0.0, null);
+
+            double spin_angle = -15.0 * sidereal_time(time);
+            AstroVector uz = spin(spin_angle, uze);
+            AstroVector un = spin(spin_angle, une);
+            AstroVector uw = spin(spin_angle, uwe);
+
+            var p = new AstroVector(cosdc * cosra, cosdc * sinra, sindc, null);
+            double pz = p.x*uz.x + p.y*uz.y + p.z*uz.z;
+            double pn = p.x*un.x + p.y*un.y + p.z*un.z;
+            double pw = p.x*uw.x + p.y*uw.y + p.z*uw.z;
+
+            double proj = Math.Sqrt(pn*pn + pw*pw);
+            double az = 0.0;
+            if (proj > 0.0)
+            {
+                az = -Math.Atan2(pw, pn) * RAD2DEG;
+                if (az < 0.0)
+                    az += 360.0;
+                else if (az >= 360.0)
+                    az -= 360.0;
+            }
+            double zd = Math.Atan2(proj, pz) * RAD2DEG;
+            double hor_ra = ra;
+            double hor_dec = dec;
+
+            if (refraction == Refraction.Normal || refraction == Refraction.JplHor)
+            {
+                double zd0 = zd;
+                // http://extras.springer.com/1999/978-1-4471-0555-8/chap4/horizons/horizons.pdf
+                // JPL Horizons says it uses refraction algorithm from
+                // Meeus "Astronomical Algorithms", 1991, p. 101-102.
+                // I found the following Go implementation:
+                // https://github.com/soniakeys/meeus/blob/master/v3/refraction/refract.go
+                // This is a translation from the function "Saemundsson" there.
+                // I found experimentally that JPL Horizons clamps the angle to 1 degree below the horizon.
+                // This is important because the 'refr' formula below goes crazy near hd = -5.11.
+                double hd = 90.0 - zd;
+                if (hd < -1.0)
+                    hd = -1.0;
+
+                double refr = (1.02 / Math.Tan((hd+10.3/(hd+5.11))*DEG2RAD)) / 60.0;
+
+                if (refraction == Refraction.Normal && zd > 91.0)
+                {
+                    // In "normal" mode we gradually reduce refraction toward the nadir
+                    // so that we never get an altitude angle less than -90 degrees.
+                    // When horizon angle is -1 degrees, zd = 91, and the factor is exactly 1.
+                    // As zd approaches 180 (the nadir), the fraction approaches 0 linearly.
+                    refr *= (180.0 - zd) / 89.0;
+                }
+
+                zd -= refr;
+
+                if (refr > 0.0 && zd > 3.0e-4)
+                {
+                    double sinzd = Math.Sin(zd * DEG2RAD);
+                    double coszd = Math.Cos(zd * DEG2RAD);
+                    double sinzd0 = Math.Sin(zd0 * DEG2RAD);
+                    double coszd0 = Math.Cos(zd0 * DEG2RAD);
+                    double prx, pry, prz;
+
+                    prx = ((p.x - coszd0 * uz.x) / sinzd0)*sinzd + uz.x*coszd;
+                    pry = ((p.y - coszd0 * uz.y) / sinzd0)*sinzd + uz.y*coszd;
+                    prz = ((p.z - coszd0 * uz.z) / sinzd0)*sinzd + uz.z*coszd;
+
+                    proj = Math.Sqrt(prx*prx + pry*pry);
+                    if (proj > 0.0)
+                    {
+                        hor_ra = Math.Atan2(pry, prx) * (RAD2DEG / 15.0);
+                        if (hor_ra < 0.0)
+                            hor_ra += 24.0;
+                        else if (hor_ra >= 24.0)
+                            hor_ra -= 24.0;
+                    }
+                    else
+                    {
+                        hor_ra = 0.0;
+                    }
+                    hor_dec = Math.Atan2(prz, proj) * RAD2DEG;
+                }
+            }
+            else if (refraction != Refraction.None)
+                throw new ArgumentException(string.Format("Unsupported refraction option {0}", refraction));
+
+            return new Topocentric(az, 90.0 - zd, hor_ra, hor_dec);
         }
     }
 }

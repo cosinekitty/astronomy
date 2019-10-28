@@ -1756,11 +1756,12 @@ astro_horizon_t Astronomy_Horizon(
 
     proj = sqrt(pn*pn + pw*pw);
     az = 0.0;
-    if (proj > 0.0) {
+    if (proj > 0.0)
+    {
         az = -atan2(pw, pn) * RAD2DEG;
         if (az < 0)
             az += 360;
-        if (az >= 360)
+        else if (az >= 360)
             az -= 360;
     }
     zd = atan2(proj, pz) * RAD2DEG;
@@ -1774,14 +1775,16 @@ astro_horizon_t Astronomy_Horizon(
 
         zd0 = zd;
 
-        // http://extras.springer.com/1999/978-1-4471-0555-8/chap4/horizons/horizons.pdf
-        // JPL Horizons says it uses refraction algorithm from
-        // Meeus "Astronomical Algorithms", 1991, p. 101-102.
-        // I found the following Go implementation:
-        // https://github.com/soniakeys/meeus/blob/master/v3/refraction/refract.go
-        // This is a translation from the function "Saemundsson" there.
-        // I found experimentally that JPL Horizons clamps the angle to 1 degree below the horizon.
-        // This is important because the 'refr' formula below goes crazy near hd = -5.11.
+        /*
+            http://extras.springer.com/1999/978-1-4471-0555-8/chap4/horizons/horizons.pdf
+            JPL Horizons says it uses refraction algorithm from
+            Meeus "Astronomical Algorithms", 1991, p. 101-102.
+            I found the following Go implementation:
+            https://github.com/soniakeys/meeus/blob/master/v3/refraction/refract.go
+            This is a translation from the function "Saemundsson" there.
+            I found experimentally that JPL Horizons clamps the angle to 1 degree below the horizon.
+            This is important because the 'refr' formula below goes crazy near hd = -5.11.
+        */
         hd = 90.0 - zd;
         if (hd < -1.0)
             hd = -1.0;
@@ -1790,10 +1793,12 @@ astro_horizon_t Astronomy_Horizon(
 
         if (refraction == REFRACTION_NORMAL && zd > 91.0)
         {
-            // In "normal" mode we gradually reduce refraction toward the nadir
-            // so that we never get an altitude angle less than -90 degrees.
-            // When horizon angle is -1 degrees, zd = 91, and the factor is exactly 1.
-            // As zd approaches 180 (the nadir), the fraction approaches 0 linearly.
+            /*
+                In "normal" mode we gradually reduce refraction toward the nadir
+                so that we never get an altitude angle less than -90 degrees.
+                When horizon angle is -1 degrees, zd = 91, and the factor is exactly 1.
+                As zd approaches 180 (the nadir), the fraction approaches 0 linearly.
+            */
             refr *= (180.0 - zd) / 89.0;
         }
 
@@ -1813,15 +1818,15 @@ astro_horizon_t Astronomy_Horizon(
             proj = sqrt(pr[0]*pr[0] + pr[1]*pr[1]);
             if (proj > 0)
             {
-                hor.ra = atan2(pr[1], pr[0]) * RAD2DEG / 15;
-                if (hor.ra < 0)
-                    hor.ra += 24;
-                if (hor.ra >= 24)
-                    hor.ra -= 24;
+                hor.ra = atan2(pr[1], pr[0]) * (RAD2DEG / 15.0);
+                if (hor.ra < 0.0)
+                    hor.ra += 24.0;
+                else if (hor.ra >= 24.0)
+                    hor.ra -= 24.0;
             }
             else
             {
-                hor.ra = 0;
+                hor.ra = 0.0;
             }
             hor.dec = atan2(pr[2], proj) * RAD2DEG;
         }

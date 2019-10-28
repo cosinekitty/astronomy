@@ -84,6 +84,8 @@ namespace csharp_test
                         if (body != Body.Earth)
                         {
                             Equatorial j2000 = Astronomy.Equator(body, time, observer, EquatorEpoch.J2000, Aberration.None);
+                            Equatorial ofdate = Astronomy.Equator(body, time, observer, EquatorEpoch.OfDate, Aberration.Corrected);
+                            Topocentric topo = Astronomy.Horizon(time, observer, ofdate.ra, ofdate.dec, Refraction.None);
                         }
                     }
 
