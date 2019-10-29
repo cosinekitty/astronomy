@@ -9,6 +9,7 @@ Fail()
 time ./ctest || Fail "Failure reported by ctest."
 ./generate check temp/c_check.txt || Fail "Verification failure for C unit test output."
 ./ctest diff temp/c_check.txt temp/js_check.txt || Fail "Diff(C,JS) failure."
+./ctest diff temp/c_check.txt dotnet/csharp_test/csharp_check.txt || Fail "Diff(C,C#) failure."
 ./ctest seasons seasons/seasons.txt || Fail "Failed C seasons test."
 ./ctest moonphase moonphase/moonphases.txt || Fail "Failed C moon phase test."
 
