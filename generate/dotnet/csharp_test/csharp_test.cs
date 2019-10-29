@@ -1,5 +1,7 @@
 ﻿using System;
 using System.IO;
+using System.Text.RegularExpressions;
+
 using CosineKitty;
 
 namespace csharp_test
@@ -10,8 +12,11 @@ namespace csharp_test
         {
             try
             {
+                Console.WriteLine("csharp_test: starting");
                 if (TestTime() != 0) return 1;
                 if (AstroCheck() != 0) return 1;
+                if (SeasonsTest("../../seasons/seasons.txt") != 0) return 1;
+                Console.WriteLine("csharp_test: PASS");
                 return 0;
             }
             catch (Exception ex)
@@ -113,6 +118,37 @@ namespace csharp_test
                     time = time.AddDays(10.0 + Math.PI/100.0);
                 }
             }
+            Console.WriteLine("AstroCheck: finished");
+            return 0;
+        }
+
+        static int SeasonsTest(string filename)
+        {
+            var re = new Regex(@"^(\d+)-(\d+)-(\d+)T(\d+):(\d+)Z\s+([A-Za-z]+)\s*$");
+            using (StreamReader infile = File.OpenText(filename))
+            {
+                string line;
+                int lnum = 0;
+                while (null != (line = infile.ReadLine()))
+                {
+                    ++lnum;
+                    /*
+                        2019-01-03T05:20Z Perihelion
+                        2019-03-20T21:58Z Equinox
+                        2019-06-21T15:54Z Solstice
+                        2019-07-04T22:11Z Aphelion
+                        2019-09-23T07:50Z Equinox
+                        2019-12-22T04:19Z Solstice
+                    */
+                    Match m = re.Match(line);
+                    if (!m.Success)
+                    {
+                        Console.WriteLine("SeasonsTest: ERROR {0} line {1}: cannot parse", filename, lnum);
+                        return 1;
+                    }
+                }
+            }
+            Console.WriteLine("SeasonsTest: finished");
             return 0;
         }
     }
