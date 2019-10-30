@@ -175,6 +175,20 @@ namespace CosineKitty
         }
 
         /// <summary>
+        /// Creates an `AstroTime` object from a UTC year, month, day, hour, minute and second.
+        /// </summary>
+        /// <param name="year">The UTC year value.</param>
+        /// <param name="month">The UTC month value 1..12.</param>
+        /// <param name="day">The UTC day of the month 1..31.</param>
+        /// <param name="hour">The UTC hour value 0..23.</param>
+        /// <param name="minute">The UTC minute value 0..59.</param>
+        /// <param name="second">The UTC second value 0..59.</param>
+        public AstroTime(int year, int month, int day, int hour, int minute, int second)
+            : this(new DateTime(year, month, day, hour, minute, second, DateTimeKind.Utc))
+        {
+        }
+
+        /// <summary>
         /// Converts this object to .NET `DateTime` format.
         /// </summary>
         /// <returns>a UTC `DateTime` object for this `AstroTime` value.</returns>
@@ -456,6 +470,23 @@ namespace CosineKitty
         /// Longitude in degrees around the ecliptic plane prograde from the equinox.
         /// </summary>
         public readonly double elon;
+
+        /// <summary>
+        /// Creates an object that holds Cartesian and angular ecliptic coordinates.
+        /// </summary>
+        /// <param name="ex">x-coordinate of the ecliptic position</param>
+        /// <param name="ey">y-coordinate of the ecliptic position</param>
+        /// <param name="ez">z-coordinate of the ecliptic position</param>
+        /// <param name="elat">ecliptic latitude</param>
+        /// <param name="elon">ecliptic longitude</param>
+        public Ecliptic(double ex, double ey, double ez, double elat, double elon)
+        {
+            this.ex = ex;
+            this.ey = ey;
+            this.ez = ez;
+            this.elat = elat;
+            this.elon = elon;
+        }
     }
 
     /// <summary>
@@ -505,6 +536,41 @@ namespace CosineKitty
     }
 
     /// <summary>
+    /// The dates and times of changes of season for a given calendar year.
+    /// Call #Seasons to calculate this data structure for a given year.
+    /// </summary>
+    public struct SeasonsInfo
+    {
+        /// <summary>
+        /// The date and time of the March equinox for the specified year.
+        /// </summary>
+        public readonly AstroTime mar_equinox;
+
+        /// <summary>
+        /// The date and time of the June soltice for the specified year.
+        /// </summary>
+        public readonly AstroTime jun_solstice;
+
+        /// <summary>
+        /// The date and time of the September equinox for the specified year.
+        /// </summary>
+        public readonly AstroTime sep_equinox;
+
+        /// <summary>
+        /// The date and time of the December solstice for the specified year.
+        /// </summary>
+        public readonly AstroTime dec_solstice;
+
+        internal SeasonsInfo(AstroTime mar_equinox, AstroTime jun_solstice, AstroTime sep_equinox, AstroTime dec_solstice)
+        {
+            this.mar_equinox = mar_equinox;
+            this.jun_solstice = jun_solstice;
+            this.sep_equinox = sep_equinox;
+            this.dec_solstice = dec_solstice;
+        }
+    }
+
+    /// <summary>
     /// The wrapper class that holds Astronomy Engine functions.
     /// </summary>
     public static class Astronomy
@@ -531,6 +597,30 @@ namespace CosineKitty
         private const double SUN_RADIUS_AU  = 4.6505e-3;
         private const double MOON_RADIUS_AU = 1.15717e-5;
         private const double ASEC180 = 180.0 * 60.0 * 60.0;        /* arcseconds per 180 degrees (or pi radians) */
+
+        internal static double LongitudeOffset(double diff)
+        {
+            double offset = diff;
+
+            while (offset <= -180.0)
+                offset += 360.0;
+
+            while (offset > 180.0)
+                offset -= 360.0;
+
+            return offset;
+        }
+
+        internal static double NormalizeLongitude(double lon)
+        {
+            while (lon < 0.0)
+                lon += 360.0;
+
+            while (lon >= 360.0)
+                lon -= 360.0;
+
+            return lon;
+        }
 
         private struct deltat_entry_t
         {
@@ -1473,6 +1563,408 @@ $ASTRO_CSHARP_CHEBYSHEV(8);
                 throw new ArgumentException(string.Format("Unsupported refraction option {0}", refraction));
 
             return new Topocentric(az, 90.0 - zd, hor_ra, hor_dec);
+        }
+
+        /// <summary>
+        /// Calculates geocentric ecliptic coordinates for the Sun.
+        /// </summary>
+        /// <remarks>
+        /// This function calculates the position of the Sun as seen from the Earth.
+        /// The returned value includes both Cartesian and spherical coordinates.
+        /// The x-coordinate and longitude values in the returned structure are based
+        /// on the *true equinox of date*: one of two points in the sky where the instantaneous
+        /// plane of the Earth's equator at the given date and time (the *equatorial plane*)
+        /// intersects with the plane of the Earth's orbit around the Sun (the *ecliptic plane*).
+        /// By convention, the apparent location of the Sun at the March equinox is chosen
+        /// as the longitude origin and x-axis direction, instead of the one for September.
+        ///
+        /// `SunPosition` corrects for precession and nutation of the Earth's axis
+        /// in order to obtain the exact equatorial plane at the given time.
+        ///
+        /// This function can be used for calculating changes of seasons: equinoxes and solstices.
+        /// In fact, the function #Seasons does use this function for that purpose.
+        /// </remarks>
+        /// <param name="time">
+        /// The date and time for which to calculate the Sun's position.
+        /// </param>
+        /// <returns>
+        /// The ecliptic coordinates of the Sun using the Earth's true equator of date.
+        /// </returns>
+        public static Ecliptic SunPosition(AstroTime time)
+        {
+            /* Correct for light travel time from the Sun. */
+            /* Otherwise season calculations (equinox, solstice) will all be early by about 8 minutes! */
+            AstroTime adjusted_time = time.AddDays(-1.0 / C_AUDAY);
+
+            AstroVector earth2000 = CalcEarth(adjusted_time);
+
+            /* Convert heliocentric location of Earth to geocentric location of Sun. */
+            AstroVector sun2000 = new AstroVector(-earth2000.x, -earth2000.y, -earth2000.z, adjusted_time);
+
+            /* Convert to equatorial Cartesian coordinates of date. */
+            AstroVector stemp = precession(0.0, sun2000, adjusted_time.tt);
+            AstroVector sun_ofdate = nutation(adjusted_time, 0, stemp);
+
+            /* Convert equatorial coordinates to ecliptic coordinates. */
+            double true_obliq = DEG2RAD * e_tilt(adjusted_time).tobl;
+            return RotateEquatorialToEcliptic(sun_ofdate, true_obliq);
+        }
+
+        private static Ecliptic RotateEquatorialToEcliptic(AstroVector pos, double obliq_radians)
+        {
+            double cos_ob = Math.Cos(obliq_radians);
+            double sin_ob = Math.Sin(obliq_radians);
+
+            double ex = +pos.x;
+            double ey = +pos.y*cos_ob + pos.z*sin_ob;
+            double ez = -pos.y*sin_ob + pos.z*cos_ob;
+
+            double xyproj = Math.Sqrt(ex*ex + ey*ey);
+            double elon = 0.0;
+            if (xyproj > 0.0)
+            {
+                elon = RAD2DEG * Math.Atan2(ey, ex);
+                if (elon < 0.0)
+                    elon += 360.0;
+            }
+
+            double elat = RAD2DEG * Math.Atan2(ez, xyproj);
+
+            return new Ecliptic(ex, ey, ez, elat, elon);
+        }
+
+        /// <summary>
+        /// Finds both equinoxes and both solstices for a given calendar year.
+        /// </summary>
+        /// <remarks>
+        /// The changes of seasons are defined by solstices and equinoxes.
+        /// Given a calendar year number, this function calculates the
+        /// March and September equinoxes and the June and December solstices.
+        ///
+        /// The equinoxes are the moments twice each year when the plane of the
+        /// Earth's equator passes through the center of the Sun. In other words,
+        /// the Sun's declination is zero at both equinoxes.
+        /// The March equinox defines the beginning of spring in the northern hemisphere
+        /// and the beginning of autumn in the southern hemisphere.
+        /// The September equinox defines the beginning of autumn in the northern hemisphere
+        /// and the beginning of spring in the southern hemisphere.
+        ///
+        /// The solstices are the moments twice each year when one of the Earth's poles
+        /// is most tilted toward the Sun. More precisely, the Sun's declination reaches
+        /// its minimum value at the December solstice, which defines the beginning of
+        /// winter in the northern hemisphere and the beginning of summer in the southern
+        /// hemisphere. The Sun's declination reaches its maximum value at the June solstice,
+        /// which defines the beginning of summer in the northern hemisphere and the beginning
+        /// of winter in the southern hemisphere.
+        /// </remarks>
+        /// <param name="year">
+        /// The calendar year number for which to calculate equinoxes and solstices.
+        /// The value may be any integer, but only the years 1800 through 2100 have been
+        /// validated for accuracy: unit testing against data from the
+        /// United States Naval Observatory confirms that all equinoxes and solstices
+        /// for that range of years are within 2 minutes of the correct time.
+        /// </param>
+        /// <returns>
+        /// A #SeasonsInfo structure that contains four #AstroTime values:
+        /// the March and September equinoxes and the June and December solstices.
+        /// </returns>
+        public static SeasonsInfo Seasons(int year)
+        {
+            return new SeasonsInfo(
+                FindSeasonChange(  0, year,  3, 19),
+                FindSeasonChange( 90, year,  6, 19),
+                FindSeasonChange(180, year,  9, 21),
+                FindSeasonChange(270, year, 12, 20)
+            );
+        }
+
+        private static AstroTime FindSeasonChange(double targetLon, int year, int month, int day)
+        {
+            var startTime = new AstroTime(year, month, day, 0, 0, 0);
+            return SearchSunLongitude(targetLon, startTime, 4.0);
+        }
+
+        /// <summary>
+        /// Searches for the time when the Sun reaches an apparent ecliptic longitude as seen from the Earth.
+        /// </summary>
+        /// <remarks>
+        /// This function finds the moment in time, if any exists in the given time window,
+        /// that the center of the Sun reaches a specific ecliptic longitude as seen from the center of the Earth.
+        ///
+        /// This function can be used to determine equinoxes and solstices.
+        /// However, it is usually more convenient and efficient to call #Seasons
+        /// to calculate all equinoxes and solstices for a given calendar year.
+        ///
+        /// The function searches the window of time specified by `startTime` and `startTime+limitDays`.
+        /// The search will return an error if the Sun never reaches the longitude `targetLon` or
+        /// if the window is so large that the longitude ranges more than 180 degrees within it.
+        /// It is recommended to keep the window smaller than 10 days when possible.
+        /// </remarks>
+        /// <param name="targetLon">
+        /// The desired ecliptic longitude in degrees, relative to the true equinox of date.
+        /// This may be any value in the range [0, 360), although certain values have
+        /// conventional meanings:
+        /// 0 = March equinox, 90 = June solstice, 180 = September equinox, 270 = December solstice.
+        /// </param>
+        /// <param name="startTime">
+        /// The date and time for starting the search for the desired longitude event.
+        /// </param>
+        /// <param name="limitDays">
+        /// The real-valued number of days, which when added to `startTime`, limits the
+        /// range of time over which the search looks.
+        /// It is recommended to keep this value between 1 and 10 days.
+        /// See remarks above for more details.
+        /// </param>
+        /// <returns>
+        /// The date and time when the Sun reaches the specified apparent ecliptic longitude.
+        /// </returns>
+        public static AstroTime SearchSunLongitude(double targetLon, AstroTime startTime, double limitDays)
+        {
+            var sun_offset = new SearchContext_SunOffset(targetLon);
+            AstroTime t2 = startTime.AddDays(limitDays);
+            return Search(sun_offset, startTime, t2, 1.0);
+        }
+
+        /// <summary>
+        /// Searches for a time at which a function's value increases through zero.
+        /// </summary>
+        /// <remarks>
+        /// Certain astronomy calculations involve finding a time when an event occurs.
+        /// Often such events can be defined as the root of a function:
+        /// the time at which the function's value becomes zero.
+        ///
+        /// `Search` finds the *ascending root* of a function: the time at which
+        /// the function's value becomes zero while having a positive slope. That is, as time increases,
+        /// the function transitions from a negative value, through zero at a specific moment,
+        /// to a positive value later. The goal of the search is to find that specific moment.
+        ///
+        /// The `func` parameter is an instance of the abstract class #SearchContext.
+        /// As an example, a caller may wish to find the moment a celestial body reaches a certain
+        /// ecliptic longitude. In that case, the caller might derive a class that contains
+        /// a #Body member to specify the body and a `double` to hold the target longitude.
+        /// It could subtract the target longitude from the actual longitude at a given time;
+        /// thus the difference would equal zero at the moment in time the planet reaches the
+        /// desired longitude.
+        ///
+        /// Every call to `func.Eval` must either return a valid #AstroTime or throw an exception.
+        ///
+        /// The search calls `func.Eval` repeatedly to rapidly narrow in on any ascending
+        /// root within the time window specified by `t1` and `t2`. The search never
+        /// reports a solution outside this time window.
+        ///
+        /// `Search` uses a combination of bisection and quadratic interpolation
+        /// to minimize the number of function calls. However, it is critical that the
+        /// supplied time window be small enough that there cannot be more than one root
+        /// (ascedning or descending) within it; otherwise the search can fail.
+        /// Beyond that, it helps to make the time window as small as possible, ideally
+        /// such that the function itself resembles a smooth parabolic curve within that window.
+        ///
+        /// If an ascending root is not found, or more than one root
+        /// (ascending and/or descending) exists within the window `t1`..`t2`,
+        /// the search will return `null`.
+        ///
+        /// If the search does not converge within 20 iterations, it will throw an exception.
+        /// </remarks>
+        /// <param name="func">
+        /// The function for which to find the time of an ascending root.
+        /// See remarks above for more details.
+        /// </param>
+        /// <param name="t1">
+        /// The lower time bound of the search window.
+        /// See remarks above for more details.
+        /// </param>
+        /// <param name="t2">
+        /// The upper time bound of the search window.
+        /// See remarks above for more details.
+        /// </param>
+        /// <param name="dt_tolerance_seconds">
+        /// Specifies an amount of time in seconds within which a bounded ascending root
+        /// is considered accurate enough to stop. A typical value is 1 second.
+        /// </param>
+        /// <returns>
+        /// If successful, returns an #AstroTime value indicating a date and time
+        /// that is within `dt_tolerance_seconds` of an ascending root.
+        /// If no ascending root is found, or more than one root exists in the time
+        /// window `t1`..`t2`, the function returns `null`.
+        /// If the search does not converge within 20 iterations, an exception is thrown.
+        /// </returns>
+        public static AstroTime Search(
+            SearchContext func,
+            AstroTime t1,
+            AstroTime t2,
+            double dt_tolerance_seconds)
+        {
+            const int iter_limit = 20;
+            double dt_days = Math.Abs(dt_tolerance_seconds / SECONDS_PER_DAY);
+            double f1 = func.Eval(t1);
+            double f2 = func.Eval(t2);
+            int iter = 0;
+            bool calc_fmid = true;
+            double fmid = 0.0;
+            for(;;)
+            {
+                if (++iter > iter_limit)
+                    throw new Exception(string.Format("Search did not converge within {0} iterations.", iter_limit));
+
+                double dt = (t2.tt - t1.tt) / 2.0;
+                AstroTime tmid = t1.AddDays(dt);
+                if (Math.Abs(dt) < dt_days)
+                {
+                    /* We are close enough to the event to stop the search. */
+                    return tmid;
+                }
+
+                if (calc_fmid)
+                    fmid = func.Eval(tmid);
+                else
+                    calc_fmid = true;   /* we already have the correct value of fmid from the previous loop */
+
+                /* Quadratic interpolation: */
+                /* Try to find a parabola that passes through the 3 points we have sampled: */
+                /* (t1,f1), (tmid,fmid), (t2,f2) */
+
+                double q_x, q_ut, q_df_dt;
+                if (QuadInterp(tmid.ut, t2.ut - tmid.ut, f1, fmid, f2, out q_x, out q_ut, out q_df_dt))
+                {
+                    var tq = new AstroTime(q_ut);
+                    double fq = func.Eval(tq);
+                    if (q_df_dt != 0.0)
+                    {
+                        double dt_guess = Math.Abs(fq / q_df_dt);
+                        if (dt_guess < dt_days)
+                        {
+                            /* The estimated time error is small enough that we can quit now. */
+                            return tq;
+                        }
+
+                        /* Try guessing a tighter boundary with the interpolated root at the center. */
+                        dt_guess *= 1.2;
+                        if (dt_guess < dt/10.0)
+                        {
+                            AstroTime tleft = tq.AddDays(-dt_guess);
+                            AstroTime tright = tq.AddDays(+dt_guess);
+                            if ((tleft.ut - t1.ut)*(tleft.ut - t2.ut) < 0.0)
+                            {
+                                if ((tright.ut - t1.ut)*(tright.ut - t2.ut) < 0.0)
+                                {
+                                    double fleft, fright;
+                                    fleft = func.Eval(tleft);
+                                    fright = func.Eval(tright);
+                                    if (fleft<0.0 && fright>=0.0)
+                                    {
+                                        f1 = fleft;
+                                        f2 = fright;
+                                        t1 = tleft;
+                                        t2 = tright;
+                                        fmid = fq;
+                                        calc_fmid = false;  /* save a little work -- no need to re-calculate fmid next time around the loop */
+                                        continue;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                /* After quadratic interpolation attempt. */
+                /* Now just divide the region in two parts and pick whichever one appears to contain a root. */
+                if (f1 < 0.0 && fmid >= 0.0)
+                {
+                    t2 = tmid;
+                    f2 = fmid;
+                    continue;
+                }
+
+                if (fmid < 0.0 && f2 >= 0.0)
+                {
+                    t1 = tmid;
+                    f1 = fmid;
+                    continue;
+                }
+
+                /* Either there is no ascending zero-crossing in this range */
+                /* or the search window is too wide (more than one zero-crossing). */
+                return null;
+            }
+        }
+
+        private static bool QuadInterp(
+            double tm, double dt, double fa, double fm, double fb,
+            out double out_x, out double out_t, out double out_df_dt)
+        {
+            double Q, R, S;
+            double u, ru, x1, x2;
+
+            out_x = out_t = out_df_dt = 0.0;
+
+            Q = (fb + fa)/2.0 - fm;
+            R = (fb - fa)/2.0;
+            S = fm;
+
+            if (Q == 0.0)
+            {
+                /* This is a line, not a parabola. */
+                if (R == 0.0)
+                    return false;       /* This is a HORIZONTAL line... can't make progress! */
+                out_x = -S / R;
+                if (out_x < -1.0 || out_x > +1.0)
+                    return false;   /* out of bounds */
+            }
+            else
+            {
+                /* This really is a parabola. Find roots x1, x2. */
+                u = R*R - 4*Q*S;
+                if (u <= 0.0)
+                    return false;   /* can't solve if imaginary, or if vertex of parabola is tangent. */
+
+                ru = Math.Sqrt(u);
+                x1 = (-R + ru) / (2.0 * Q);
+                x2 = (-R - ru) / (2.0 * Q);
+                if (-1.0 <= x1 && x1 <= +1.0)
+                {
+                    if (-1.0 <= x2 && x2 <= +1.0)
+                        return false;   /* two roots are within bounds; we require a unique zero-crossing. */
+                    out_x = x1;
+                }
+                else if (-1.0 <= x2 && x2 <= +1.0)
+                    out_x = x2;
+                else
+                    return false;   /* neither root is within bounds */
+            }
+
+            out_t = tm + out_x*dt;
+            out_df_dt = (2*Q*out_x + R) / dt;
+            return true;   /* success */
+        }
+    }
+
+    /// <summary>
+    /// Represents a function whose ascending root is to be found.
+    /// See #Search.
+    /// </summary>
+    public abstract class SearchContext
+    {
+        /// <summary>
+        /// Evaluates the function at a given time
+        /// </summary>
+        /// <param name="time">The time at which to evaluate the function.</param>
+        /// <returns>The floating point value of the function at the specified time.</returns>
+        public abstract double Eval(AstroTime time);
+    }
+
+    internal class SearchContext_SunOffset: SearchContext
+    {
+        private readonly double targetLon;
+
+        public SearchContext_SunOffset(double targetLon)
+        {
+            this.targetLon = targetLon;
+        }
+
+        public override double Eval(AstroTime time)
+        {
+            Ecliptic ecl = Astronomy.SunPosition(time);
+            return Astronomy.LongitudeOffset(ecl.elon - targetLon);
         }
     }
 

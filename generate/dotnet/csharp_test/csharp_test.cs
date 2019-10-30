@@ -129,6 +129,8 @@ namespace csharp_test
             {
                 string line;
                 int lnum = 0;
+                int current_year = 0;
+                SeasonsInfo seasons;
                 while (null != (line = infile.ReadLine()))
                 {
                     ++lnum;
@@ -145,6 +147,19 @@ namespace csharp_test
                     {
                         Console.WriteLine("SeasonsTest: ERROR {0} line {1}: cannot parse", filename, lnum);
                         return 1;
+                    }
+
+                    int year = int.Parse(m.Groups[1].Value);
+                    int month = int.Parse(m.Groups[2].Value);
+                    int day = int.Parse(m.Groups[3].Value);
+                    int hour = int.Parse(m.Groups[4].Value);
+                    int minute = int.Parse(m.Groups[5].Value);
+                    string name = m.Groups[5].Value;
+
+                    if (year != current_year)
+                    {
+                        current_year = year;
+                        seasons = Astronomy.Seasons(year);
                     }
                 }
             }
