@@ -130,7 +130,9 @@ namespace csharp_test
                 string line;
                 int lnum = 0;
                 int current_year = 0;
-                SeasonsInfo seasons;
+                int mar_count=0, jun_count=0, sep_count=0, dec_count=0;
+                double max_minutes = 0.0;
+                SeasonsInfo seasons = new SeasonsInfo();
                 while (null != (line = infile.ReadLine()))
                 {
                     ++lnum;
@@ -154,17 +156,85 @@ namespace csharp_test
                     int day = int.Parse(m.Groups[3].Value);
                     int hour = int.Parse(m.Groups[4].Value);
                     int minute = int.Parse(m.Groups[5].Value);
-                    string name = m.Groups[5].Value;
+                    string name = m.Groups[6].Value;
+                    var correct_time = new AstroTime(year, month, day, hour, minute, 0);
 
                     if (year != current_year)
                     {
                         current_year = year;
                         seasons = Astronomy.Seasons(year);
                     }
+
+                    AstroTime calc_time = null;
+                    if (name == "Equinox")
+                    {
+                        switch (month)
+                        {
+                            case 3:
+                                calc_time = seasons.mar_equinox;
+                                ++mar_count;
+                                break;
+
+                            case 9:
+                                calc_time = seasons.sep_equinox;
+                                ++sep_count;
+                                break;
+
+                            default:
+                                Console.WriteLine("SeasonsTest: {0} line {1}: Invalid equinox date in test data.", filename, lnum);
+                                return 1;
+                        }
+                    }
+                    else if (name == "Solstice")
+                    {
+                        switch (month)
+                        {
+                            case 6:
+                                calc_time = seasons.jun_solstice;
+                                ++jun_count;
+                                break;
+
+                            case 12:
+                                calc_time = seasons.dec_solstice;
+                                ++dec_count;
+                                break;
+
+                            default:
+                                Console.WriteLine("SeasonsTest: {0} line {1}: Invalid solstice date in test data.", filename, lnum);
+                                return 1;
+                        }
+                    }
+                    else if (name == "Aphelion")
+                    {
+                        /* not yet calculated */
+                        continue;
+                    }
+                    else if (name == "Perihelion")
+                    {
+                        /* not yet calculated */
+                        continue;
+                    }
+                    else
+                    {
+                        Console.WriteLine("SeasonsTest: {0} line {1}: unknown event type {2}", filename, lnum, name);
+                        return 1;
+                    }
+
+                    /* Verify that the calculated time matches the correct time for this event. */
+                    double diff_minutes = (24.0 * 60.0) * Math.Abs(calc_time.tt - correct_time.tt);
+                    if (diff_minutes > max_minutes)
+                        max_minutes = diff_minutes;
+
+                    if (diff_minutes > 1.7)
+                    {
+                        Console.WriteLine("SeasonsTest: %s line %d: excessive error (%s): %lf minutes.\n", filename, lnum, name, diff_minutes);
+                        return 1;
+                    }
                 }
+                Console.WriteLine("SeasonsTest: verified {0} lines from file {1} : max error minutes = {2:0.000}", lnum, filename, max_minutes);
+                Console.WriteLine("SeasonsTest: Event counts: mar={0}, jun={1}, sep={2}, dec={3}", mar_count, jun_count, sep_count, dec_count);
+                return 0;
             }
-            Console.WriteLine("SeasonsTest: finished");
-            return 0;
         }
     }
 }
