@@ -16,6 +16,7 @@ namespace csharp_test
                 if (TestTime() != 0) return 1;
                 if (AstroCheck() != 0) return 1;
                 if (SeasonsTest("../../seasons/seasons.txt") != 0) return 1;
+                if (MoonPhaseTest("../../moonphase/moonphases.txt") != 0) return 1;
                 Console.WriteLine("csharp_test: PASS");
                 return 0;
             }
@@ -233,6 +234,101 @@ namespace csharp_test
                 }
                 Console.WriteLine("SeasonsTest: verified {0} lines from file {1} : max error minutes = {2:0.000}", lnum, filename, max_minutes);
                 Console.WriteLine("SeasonsTest: Event counts: mar={0}, jun={1}, sep={2}, dec={3}", mar_count, jun_count, sep_count, dec_count);
+                return 0;
+            }
+        }
+
+        static int MoonPhaseTest(string filename)
+        {
+            using (StreamReader infile = File.OpenText(filename))
+            {
+                const double threshold_seconds = 120.0;
+                int lnum = 0;
+                string line;
+                double max_arcmin = 0.0;
+                int prev_year = 0;
+                int expected_quarter = 0;
+                int quarter_count = 0;
+                double maxdiff = 0.0;
+                MoonQuarterInfo mq = new MoonQuarterInfo();
+                var re = new Regex(@"^([0-3])\s+(\d+)-(\d+)-(\d+)T(\d+):(\d+):(\d+)\.000Z$");
+                while (null != (line = infile.ReadLine()))
+                {
+                    ++lnum;
+                    /*
+                        0 1800-01-25T03:21:00.000Z
+                        1 1800-02-01T20:40:00.000Z
+                        2 1800-02-09T17:26:00.000Z
+                        3 1800-02-16T15:49:00.000Z
+                    */
+                    Match m = re.Match(line);
+                    if (!m.Success)
+                    {
+                        Console.WriteLine("MoonPhaseTest: ERROR {0} line {1}: cannot parse", filename, lnum);
+                        return 1;
+                    }
+                    int quarter = int.Parse(m.Groups[1].Value);
+                    int year = int.Parse(m.Groups[2].Value);
+                    int month = int.Parse(m.Groups[3].Value);
+                    int day = int.Parse(m.Groups[4].Value);
+                    int hour = int.Parse(m.Groups[5].Value);
+                    int minute = int.Parse(m.Groups[6].Value);
+                    int second = int.Parse(m.Groups[7].Value);
+
+                    double expected_elong = 90.0 * quarter;
+                    AstroTime expected_time = new AstroTime(year, month, day, hour, minute, second);
+                    double calc_elong = Astronomy.MoonPhase(expected_time);
+                    double degree_error = Math.Abs(calc_elong - expected_elong);
+                    if (degree_error > 180.0)
+                        degree_error = 360.0 - degree_error;
+                    double arcmin = 60.0 * degree_error;
+                    if (arcmin > 1.0)
+                    {
+                        Console.WriteLine("MoonPhaseTest({0} line {1}): EXCESSIVE ANGULAR ERROR: {2} arcmin", filename, lnum, arcmin);
+                        return 1;
+                    }
+                    if (arcmin > max_arcmin)
+                        max_arcmin = arcmin;
+
+                    if (year != prev_year)
+                    {
+                        prev_year = year;
+                        /* The test data contains a single year's worth of data for every 10 years. */
+                        /* Every time we see the year value change, it breaks continuity of the phases. */
+                        /* Start the search over again. */
+                        AstroTime start_time = new AstroTime(year, 1, 1, 0, 0, 0);
+                        mq = Astronomy.SearchMoonQuarter(start_time);
+                        expected_quarter = -1;  /* we have no idea what the quarter should be */
+                    }
+                    else
+                    {
+                        /* Yet another lunar quarter in the same year. */
+                        expected_quarter = (1 + mq.quarter) % 4;
+                        mq = Astronomy.NextMoonQuarter(mq);
+
+                        /* Make sure we find the next expected quarter. */
+                        if (expected_quarter != mq.quarter)
+                        {
+                            Console.WriteLine("MoonPhaseTest({0} line {1}): SearchMoonQuarter returned quarter {2}, but expected {3}", filename, lnum, mq.quarter, expected_quarter);
+                            return 1;
+                        }
+                    }
+                    ++quarter_count;
+                    /* Make sure the time matches what we expect. */
+                    double diff_seconds = Math.Abs(mq.time.tt - expected_time.tt) * (24.0 * 3600.0);
+                    if (diff_seconds > threshold_seconds)
+                    {
+                        Console.WriteLine("MoonPhaseTest({0} line {1}): excessive time error {2:0.000} seconds", filename, lnum, diff_seconds);
+                        return 1;
+                    }
+
+                    if (diff_seconds > maxdiff)
+                        maxdiff = diff_seconds;
+                }
+
+                Console.WriteLine("MoonPhaseTest: passed {0} lines for file {1} : max_arcmin = {2:0.000000}, maxdiff = {3:0.000} seconds, {4} quarters",
+                    lnum, filename, max_arcmin, maxdiff, quarter_count);
+
                 return 0;
             }
         }

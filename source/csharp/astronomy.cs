@@ -571,6 +571,28 @@ namespace CosineKitty
     }
 
     /// <summary>
+    /// A lunar quarter event (new moon, first quarter, full moon, or third quarter) along with its date and time.
+    /// </summary>
+    public struct MoonQuarterInfo
+    {
+        /// <summary>
+        /// 0=new moon, 1=first quarter, 2=full moon, 3=third quarter.
+        /// </summary>
+        public readonly int quarter;
+
+        /// <summary>
+        /// The date and time of the lunar quarter.
+        /// </summary>
+        public readonly AstroTime time;
+
+        internal MoonQuarterInfo(int quarter, AstroTime time)
+        {
+            this.quarter = quarter;
+            this.time = time;
+        }
+    }
+
+    /// <summary>
     /// The wrapper class that holds Astronomy Engine functions.
     /// </summary>
     public static class Astronomy
@@ -2773,6 +2795,26 @@ namespace CosineKitty
         }
 
         /// <summary>
+        /// Converts J2000 equatorial Cartesian coordinates to J2000 ecliptic coordinates.
+        /// </summary>
+        /// <remarks>
+        /// Given coordinates relative to the Earth's equator at J2000 (the instant of noon UTC
+        /// on 1 January 2000), this function converts those coordinates to J2000 ecliptic coordinates,
+        /// which are relative to the plane of the Earth's orbit around the Sun.
+        /// </remarks>
+        /// <param name="equ">
+        /// Equatorial coordinates in the J2000 frame of reference.
+        /// You can call #GeoVector to obtain suitable equatorial coordinates.
+        /// </param>
+        /// <returns>Ecliptic coordinates in the J2000 frame of reference.</returns>
+        public static Ecliptic EquatorialToEcliptic(AstroVector equ)
+        {
+            /* Based on NOVAS functions equ2ecl() and equ2ecl_vec(). */
+            const double ob2000 = 0.40909260059599012;   /* mean obliquity of the J2000 ecliptic in radians */
+            return RotateEquatorialToEcliptic(equ, ob2000);
+        }
+
+        /// <summary>
         /// Finds both equinoxes and both solstices for a given calendar year.
         /// </summary>
         /// <remarks>
@@ -3075,6 +3117,186 @@ namespace CosineKitty
             out_df_dt = (2*Q*out_x + R) / dt;
             return true;   /* success */
         }
+
+        ///
+        /// <summary>
+        /// Returns a body's ecliptic longitude with respect to the Sun, as seen from the Earth.
+        /// </summary>
+        /// <remarks>
+        /// This function can be used to determine where a planet appears around the ecliptic plane
+        /// (the plane of the Earth's orbit around the Sun) as seen from the Earth,
+        /// relative to the Sun's apparent position.
+        ///
+        /// The angle starts at 0 when the body and the Sun are at the same ecliptic longitude
+        /// as seen from the Earth. The angle increases in the prograde direction
+        /// (the direction that the planets orbit the Sun and the Moon orbits the Earth).
+        ///
+        /// When the angle is 180 degrees, it means the Sun and the body appear on opposite sides
+        /// of the sky for an Earthly observer. When `body` is a planet whose orbit around the
+        /// Sun is farther than the Earth's, 180 degrees indicates opposition. For the Moon,
+        /// it indicates a full moon.
+        ///
+        /// The angle keeps increasing up to 360 degrees as the body's apparent prograde
+        /// motion continues relative to the Sun. When the angle reaches 360 degrees, it starts
+        /// over at 0 degrees.
+        ///
+        /// Values between 0 and 180 degrees indicate that the body is visible in the evening sky
+        /// after sunset.  Values between 180 degrees and 360 degrees indicate that the body
+        /// is visible in the morning sky before sunrise.
+        /// </remarks>
+        /// <param name="body">The celestial body for which to find longitude from the Sun.</param>
+        /// <param name="time">The date and time of the observation.</param>
+        /// <returns>
+        /// A value in the range [0, 360), expressed in degrees.
+        /// </returns>
+        public static double LongitudeFromSun(Body body, AstroTime time)
+        {
+            if (body == Body.Earth)
+                throw new ArgumentException("Earth not allowed as the observed body.");
+
+            AstroVector sv = GeoVector(Body.Sun, time, Aberration.Corrected);
+            Ecliptic se = EquatorialToEcliptic(sv);
+
+            AstroVector bv = GeoVector(body, time, Aberration.Corrected);
+            Ecliptic be = EquatorialToEcliptic(bv);
+
+            return NormalizeLongitude(be.elon - se.elon);
+        }
+
+        /// <summary>
+        /// Returns the Moon's phase as an angle from 0 to 360 degrees.
+        /// </summary>
+        /// <remarks>
+        /// This function determines the phase of the Moon using its apparent
+        /// ecliptic longitude relative to the Sun, as seen from the center of the Earth.
+        /// Certain values of the angle have conventional definitions:
+        ///
+        /// - 0 = new moon
+        /// - 90 = first quarter
+        /// - 180 = full moon
+        /// - 270 = third quarter
+        /// </remarks>
+        /// <param name="time">The date and time of the observation.</param>
+        /// <returns>The angle as described above, a value in the range 0..360 degrees.</returns>
+        public static double MoonPhase(AstroTime time)
+        {
+            return LongitudeFromSun(Body.Moon, time);
+        }
+
+        /// <summary>
+        /// Finds the first lunar quarter after the specified date and time.
+        /// </summary>
+        /// <remarks>
+        /// A lunar quarter is one of the following four lunar phase events:
+        /// new moon, first quarter, full moon, third quarter.
+        /// This function finds the lunar quarter that happens soonest
+        /// after the specified date and time.
+        ///
+        /// To continue iterating through consecutive lunar quarters, call this function once,
+        /// followed by calls to #NextMoonQuarter as many times as desired.
+        /// </remarks>
+        /// <param name="startTime">The date and time at which to start the search.</param>
+        /// <returns>
+        /// A #MoonQuarterInfo structure reporting the next quarter phase and the time it will occur.
+        /// </returns>
+        public static MoonQuarterInfo SearchMoonQuarter(AstroTime startTime)
+        {
+            double angres = MoonPhase(startTime);
+            int quarter = (1 + (int)Math.Floor(angres / 90.0)) % 4;
+            AstroTime qtime = SearchMoonPhase(90.0 * quarter, startTime, 10.0);
+            if (qtime == null)
+                throw new Exception(string.Format("Internal error: could not find moon quarter {0} after {1}", quarter, startTime));
+            return new MoonQuarterInfo(quarter, qtime);
+        }
+
+        /// <summary>
+        /// Continues searching for lunar quarters from a previous search.
+        /// </summary>
+        /// <remarks>
+        /// After calling #SearchMoonQuarter, this function can be called
+        /// one or more times to continue finding consecutive lunar quarters.
+        /// This function finds the next consecutive moon quarter event after
+        /// the one passed in as the parameter `mq`.
+        /// </remarks>
+        /// <param name="mq">The previous moon quarter found by a call to #SearchMoonQuarter or NextMoonQuarter.</param>
+        /// <returns>The moon quarter that occurs next in time after the one passed in `mq`.</returns>
+        public static MoonQuarterInfo NextMoonQuarter(MoonQuarterInfo mq)
+        {
+            /* Skip 6 days past the previous found moon quarter to find the next one. */
+            /* This is less than the minimum possible increment. */
+            /* So far I have seen the interval well contained by the range (6.5, 8.3) days. */
+
+            AstroTime time = mq.time.AddDays(6.0);
+            MoonQuarterInfo next_mq = SearchMoonQuarter(time);
+            /* Verify that we found the expected moon quarter. */
+            if (next_mq.quarter != (1 + mq.quarter) % 4)
+                throw new Exception("Internal error: found the wrong moon quarter.");
+            return next_mq;
+        }
+
+        ///
+        /// <summary>Searches for the time that the Moon reaches a specified phase.</summary>
+        /// <remarks>
+        /// Lunar phases are conventionally defined in terms of the Moon's geocentric ecliptic
+        /// longitude with respect to the Sun's geocentric ecliptic longitude.
+        /// When the Moon and the Sun have the same longitude, that is defined as a new moon.
+        /// When their longitudes are 180 degrees apart, that is defined as a full moon.
+        ///
+        /// This function searches for any value of the lunar phase expressed as an
+        /// angle in degrees in the range [0, 360).
+        ///
+        /// If you want to iterate through lunar quarters (new moon, first quarter, full moon, third quarter)
+        /// it is much easier to call the functions #SearchMoonQuarter and #NextMoonQuarter.
+        /// This function is useful for finding general phase angles outside those four quarters.
+        /// </remarks>
+        /// <param name="targetLon">
+        /// The difference in geocentric longitude between the Sun and Moon
+        /// that specifies the lunar phase being sought. This can be any value
+        /// in the range [0, 360).  Certain values have conventional names:
+        /// 0 = new moon, 90 = first quarter, 180 = full moon, 270 = third quarter.
+        /// </param>
+        /// <param name="startTime">
+        /// The beginning of the time window in which to search for the Moon reaching the specified phase.
+        /// </param>
+        /// <param name="limitDays">
+        /// The number of days after `startTime` that limits the time window for the search.
+        /// </param>
+        /// <returns>
+        /// If successful, returns the date and time the moon reaches the phase specified by
+        /// `targetlon`. This function will return null if the phase does not occur within
+        /// `limitDays` of `startTime`; that is, if the search window is too small.
+        /// </returns>
+        public static AstroTime SearchMoonPhase(double targetLon, AstroTime startTime, double limitDays)
+        {
+            /*
+                To avoid discontinuities in the moon_offset function causing problems,
+                we need to approximate when that function will next return 0.
+                We probe it with the start time and take advantage of the fact
+                that every lunar phase repeats roughly every 29.5 days.
+                There is a surprising uncertainty in the quarter timing,
+                due to the eccentricity of the moon's orbit.
+                I have seen up to 0.826 days away from the simple prediction.
+                To be safe, we take the predicted time of the event and search
+                +/-0.9 days around it (a 1.8-day wide window).
+                Return null if the final result goes beyond limitDays after startTime.
+            */
+
+            const double uncertainty = 0.9;
+            var moon_offset = new SearchContext_MoonOffset(targetLon);
+
+            double ya = moon_offset.Eval(startTime);
+            if (ya > 0.0) ya -= 360.0;  /* force searching forward in time, not backward */
+            double est_dt = -(MEAN_SYNODIC_MONTH * ya) / 360.0;
+            double dt1 = est_dt - uncertainty;
+            if (dt1 > limitDays)
+                return null;    /* not possible for moon phase to occur within specified window (too short) */
+            double dt2 = est_dt + uncertainty;
+            if (limitDays < dt2)
+                dt2 = limitDays;
+            AstroTime t1 = startTime.AddDays(dt1);
+            AstroTime t2 = startTime.AddDays(dt2);
+            return Search(moon_offset, t1, t2, 1.0);
+        }
     }
 
     /// <summary>
@@ -3104,6 +3326,22 @@ namespace CosineKitty
         {
             Ecliptic ecl = Astronomy.SunPosition(time);
             return Astronomy.LongitudeOffset(ecl.elon - targetLon);
+        }
+    }
+
+    internal class SearchContext_MoonOffset: SearchContext
+    {
+        private readonly double targetLon;
+
+        public SearchContext_MoonOffset(double targetLon)
+        {
+            this.targetLon = targetLon;
+        }
+
+        public override double Eval(AstroTime time)
+        {
+            double angle = Astronomy.MoonPhase(time);
+            return Astronomy.LongitudeOffset(angle - targetLon);
         }
     }
 
