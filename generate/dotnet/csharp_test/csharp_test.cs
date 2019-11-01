@@ -14,6 +14,7 @@ namespace csharp_test
             {
                 Console.WriteLine("csharp_test: starting");
                 if (TestTime() != 0) return 1;
+                if (MoonTest() != 0) return 1;
                 if (AstroCheck() != 0) return 1;
                 if (SeasonsTest("../../seasons/seasons.txt") != 0) return 1;
                 if (MoonPhaseTest("../../moonphase/moonphases.txt") != 0) return 1;
@@ -61,6 +62,26 @@ namespace csharp_test
             if (utc.Year != year || utc.Month != month || utc.Day != day || utc.Hour != hour || utc.Minute != minute || utc.Second != second || utc.Millisecond != milli)
             {
                 Console.WriteLine("TestTime: ERROR - Expected {0:o}, found {1:o}", d, utc);
+                return 1;
+            }
+
+            return 0;
+        }
+
+        static int MoonTest()
+        {
+            var time = new AstroTime(2019, 6, 24, 15, 45, 37);
+            AstroVector vec = Astronomy.GeoVector(Body.Moon, time, Aberration.None);
+            Console.WriteLine("MoonTest: {0} {1} {2}", vec.x.ToString("f17"), vec.y.ToString("f17"), vec.z.ToString("f17"));
+
+            double dx = vec.x - (+0.002674036155459549);
+            double dy = vec.y - (-0.0001531716308218381);
+            double dz = vec.z - (-0.0003150201604895409);
+            double diff = Math.Sqrt(dx*dx + dy*dy + dz*dz);
+            Console.WriteLine("MoonTest: diff = {0}", diff.ToString("g5"));
+            if (diff > 4.34e-19)
+            {
+                Console.WriteLine("MoonTest: EXCESSIVE ERROR");
                 return 1;
             }
 
