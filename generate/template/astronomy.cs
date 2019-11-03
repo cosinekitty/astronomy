@@ -30,6 +30,20 @@ using System;
 namespace CosineKitty
 {
     /// <summary>
+    /// This exception is thrown by certain Astronomy Engine functions
+    /// when an invalid attempt is made to use the Earth as the observed
+    /// celestial body. Usually this happens for cases where the Earth itself
+    /// is the location of the observer.
+    /// </summary>
+    public class EarthNotAllowedException: ArgumentException
+    {
+        /// <summary>Creates an exception indicating that the Earth is not allowed as a target body.</summary>
+        public EarthNotAllowedException():
+            base("The Earth is not allowed as the body parameter.")
+            {}
+    }
+
+    /// <summary>
     /// The enumeration of celestial bodies supported by Astronomy Engine.
     /// </summary>
     public enum Body
@@ -399,6 +413,22 @@ namespace CosineKitty
     }
 
     /// <summary>
+    /// Selects whether to search for a rising event or a setting event for a celestial body.
+    /// </summary>
+    public enum Direction
+    {
+        /// <summary>
+        /// Indicates a rising event: a celestial body is observed to rise above the horizon by an observer on the Earth.
+        /// </summary>
+        Rise = +1,
+
+        /// <summary>
+        /// Indicates a setting event: a celestial body is observed to sink below the horizon by an observer on the Earth.
+        /// </summary>
+        Set = -1,
+    }
+
+    /// <summary>
     /// Equatorial angular coordinates.
     /// </summary>
     /// <remarks>
@@ -593,6 +623,33 @@ namespace CosineKitty
     }
 
     /// <summary>
+    /// Information about a celestial body crossing a specific hour angle.
+    /// </summary>
+    /// <remarks>
+    /// Returned by the function #SearchHourAngle to report information about
+    /// a celestial body crossing a certain hour angle as seen by a specified topocentric observer.
+    /// </remarks>
+    public struct HourAngleInfo
+    {
+        /// <summary>The date and time when the body crosses the specified hour angle.</summary>
+        public readonly AstroTime time;
+
+        /// <summary>Apparent coordinates of the body at the time it crosses the specified hour angle.</summary>
+        public readonly Topocentric hor;
+
+        /// <summary>
+        /// Creates a struct that represents a celestial body crossing a specific hour angle.
+        /// </summary>
+        /// <param name="time">The date and time when the body crosses the specified hour angle.</param>
+        /// <param name="hor">Apparent coordinates of the body at the time it crosses the specified hour angle.</param>
+        public HourAngleInfo(AstroTime time, Topocentric hor)
+        {
+            this.time = time;
+            this.hor = hor;
+        }
+    }
+
+    /// <summary>
     /// The wrapper class that holds Astronomy Engine functions.
     /// </summary>
     public static class Astronomy
@@ -601,7 +658,7 @@ namespace CosineKitty
         private const double MJD_BASIS = 2400000.5;
         private const double Y2000_IN_MJD  =  T0 - MJD_BASIS;
         internal const double DEG2RAD = 0.017453292519943296;
-        private const double RAD2DEG = 57.295779513082321;
+        internal const double RAD2DEG = 57.295779513082321;
         private const double ASEC360 = 1296000.0;
         private const double ASEC2RAD = 4.848136811095359935899141e-6;
         internal const double PI2 = 2.0 * Math.PI;
@@ -615,9 +672,9 @@ namespace CosineKitty
         private const double SOLAR_DAYS_PER_SIDEREAL_DAY = 0.9972695717592592;
         private const double MEAN_SYNODIC_MONTH = 29.530588;     /* average number of days for Moon to return to the same phase */
         private const double EARTH_ORBITAL_PERIOD = 365.256;
-        private const double REFRACTION_NEAR_HORIZON = 34.0 / 60.0;   /* degrees of refractive "lift" seen for objects near horizon */
-        private const double SUN_RADIUS_AU  = 4.6505e-3;
-        private const double MOON_RADIUS_AU = 1.15717e-5;
+        internal const double REFRACTION_NEAR_HORIZON = 34.0 / 60.0;   /* degrees of refractive "lift" seen for objects near horizon */
+        internal const double SUN_RADIUS_AU  = 4.6505e-3;
+        internal const double MOON_RADIUS_AU = 1.15717e-5;
         private const double ASEC180 = 180.0 * 60.0 * 60.0;        /* arcseconds per 180 degrees (or pi radians) */
 
         internal static double LongitudeOffset(double diff)
@@ -2013,7 +2070,7 @@ $ASTRO_CSHARP_CHEBYSHEV(8);
         public static double LongitudeFromSun(Body body, AstroTime time)
         {
             if (body == Body.Earth)
-                throw new ArgumentException("Earth not allowed as the observed body.");
+                throw new EarthNotAllowedException();
 
             AstroVector sv = GeoVector(Body.Sun, time, Aberration.Corrected);
             Ecliptic se = EquatorialToEcliptic(sv);
@@ -2158,6 +2215,242 @@ $ASTRO_CSHARP_CHEBYSHEV(8);
             AstroTime t2 = startTime.AddDays(dt2);
             return Search(moon_offset, t1, t2, 1.0);
         }
+
+        /// <summary>
+        /// Searches for the next time a celestial body rises or sets as seen by an observer on the Earth.
+        /// </summary>
+        /// <remarks>
+        /// This function finds the next rise or set time of the Sun, Moon, or planet other than the Earth.
+        /// Rise time is when the body first starts to be visible above the horizon.
+        /// For example, sunrise is the moment that the top of the Sun first appears to peek above the horizon.
+        /// Set time is the moment when the body appears to vanish below the horizon.
+        ///
+        /// This function corrects for typical atmospheric refraction, which causes celestial
+        /// bodies to appear higher above the horizon than they would if the Earth had no atmosphere.
+        /// It also adjusts for the apparent angular radius of the observed body (significant only for the Sun and Moon).
+        ///
+        /// Note that rise or set may not occur in every 24 hour period.
+        /// For example, near the Earth's poles, there are long periods of time where
+        /// the Sun stays below the horizon, never rising.
+        /// Also, it is possible for the Moon to rise just before midnight but not set during the subsequent 24-hour day.
+        /// This is because the Moon sets nearly an hour later each day due to orbiting the Earth a
+        /// significant amount during each rotation of the Earth.
+        /// Therefore callers must not assume that the function will always succeed.
+        /// </remarks>
+        ///
+        /// <param name="body">The Sun, Moon, or any planet other than the Earth.</param>
+        ///
+        /// <param name="observer">The location where observation takes place.</param>
+        ///
+        /// <param name="direction">
+        ///      Either `Direction.Rise` to find a rise time or `Direction.Set` to find a set time.
+        /// </param>
+        ///
+        /// <param name="startTime">The date and time at which to start the search.</param>
+        ///
+        /// <param name="limitDays">
+        /// Limits how many days to search for a rise or set time.
+        /// To limit a rise or set time to the same day, you can use a value of 1 day.
+        /// In cases where you want to find the next rise or set time no matter how far
+        /// in the future (for example, for an observer near the south pole), you can
+        /// pass in a larger value like 365.
+        /// </param>
+        ///
+        /// <returns>
+        /// On success, returns the date and time of the rise or set time as requested.
+        /// If the function returns `null`, it means the rise or set event does not occur
+        /// within `limitDays` days of `startTime`. This is a normal condition,
+        /// not an error.
+        /// </returns>
+        public static AstroTime SearchRiseSet(
+            Body body,
+            Observer observer,
+            Direction direction,
+            AstroTime startTime,
+            double limitDays)
+        {
+            if (body == Body.Earth)
+                throw new EarthNotAllowedException();
+
+            double ha_before, ha_after;
+            switch (direction)
+            {
+                case Direction.Rise:
+                    ha_before = 12.0;   /* minimum altitude (bottom) happens BEFORE the body rises. */
+                    ha_after = 0.0;     /* maximum altitude (culmination) happens AFTER the body rises. */
+                    break;
+
+                case Direction.Set:
+                    ha_before = 0.0;    /* culmination happens BEFORE the body sets. */
+                    ha_after = 12.0;    /* bottom happens AFTER the body sets. */
+                    break;
+
+                default:
+                    throw new ArgumentException(string.Format("Unsupported direction value {0}", direction));
+            }
+
+            var peak_altitude = new SearchContext_PeakAltitude(body, direction, observer);
+            /*
+                See if the body is currently above/below the horizon.
+                If we are looking for next rise time and the body is below the horizon,
+                we use the current time as the lower time bound and the next culmination
+                as the upper bound.
+                If the body is above the horizon, we search for the next bottom and use it
+                as the lower bound and the next culmination after that bottom as the upper bound.
+                The same logic applies for finding set times, only we swap the hour angles.
+            */
+
+            HourAngleInfo evt_before, evt_after;
+            AstroTime time_start = startTime;
+            double alt_before = peak_altitude.Eval(time_start);
+            AstroTime time_before;
+            if (alt_before > 0.0)
+            {
+                /* We are past the sought event, so we have to wait for the next "before" event (culm/bottom). */
+                evt_before = SearchHourAngle(body, observer, ha_before, time_start);
+                time_before = evt_before.time;
+                alt_before = peak_altitude.Eval(time_before);
+            }
+            else
+            {
+                /* We are before or at the sought event, so we find the next "after" event (bottom/culm), */
+                /* and use the current time as the "before" event. */
+                time_before = time_start;
+            }
+
+            evt_after = SearchHourAngle(body, observer, ha_after, time_before);
+            double alt_after = peak_altitude.Eval(evt_after.time);
+
+            for(;;)
+            {
+                if (alt_before <= 0.0 && alt_after > 0.0)
+                {
+                    /* Search between evt_before and evt_after for the desired event. */
+                    AstroTime result = Search(peak_altitude, time_before, evt_after.time, 1.0);
+                    if (result != null)
+                        return result;
+                }
+
+                /* If we didn't find the desired event, use evt_after.time to find the next before-event. */
+                evt_before = SearchHourAngle(body, observer, ha_before, evt_after.time);
+                evt_after = SearchHourAngle(body, observer, ha_after, evt_before.time);
+
+                if (evt_before.time.ut >= time_start.ut + limitDays)
+                    return null;
+
+                time_before = evt_before.time;
+
+                alt_before = peak_altitude.Eval(evt_before.time);
+                alt_after = peak_altitude.Eval(evt_after.time);
+            }
+        }
+
+        /// <summary>
+        /// Searches for the time when a celestial body reaches a specified hour angle as seen by an observer on the Earth.
+        /// </summary>
+        ///
+        /// <remarks>
+        /// The *hour angle* of a celestial body indicates its position in the sky with respect
+        /// to the Earth's rotation. The hour angle depends on the location of the observer on the Earth.
+        /// The hour angle is 0 when the body reaches its highest angle above the horizon in a given day.
+        /// The hour angle increases by 1 unit for every sidereal hour that passes after that point, up
+        /// to 24 sidereal hours when it reaches the highest point again. So the hour angle indicates
+        /// the number of hours that have passed since the most recent time that the body has culminated,
+        /// or reached its highest point.
+        ///
+        /// This function searches for the next time a celestial body reaches the given hour angle
+        /// after the date and time specified by `startTime`.
+        /// To find when a body culminates, pass 0 for `hourAngle`.
+        /// To find when a body reaches its lowest point in the sky, pass 12 for `hourAngle`.
+        ///
+        /// Note that, especially close to the Earth's poles, a body as seen on a given day
+        /// may always be above the horizon or always below the horizon, so the caller cannot
+        /// assume that a culminating object is visible nor that an object is below the horizon
+        /// at its minimum altitude.
+        ///
+        /// On success, the function reports the date and time, along with the horizontal coordinates
+        /// of the body at that time, as seen by the given observer.
+        /// </remarks>
+        ///
+        /// <param name="body">
+        /// The celestial body, which can the Sun, the Moon, or any planet other than the Earth.
+        /// </param>
+        ///
+        /// <param name="observer">
+        /// Indicates a location on or near the surface of the Earth where the observer is located.
+        /// </param>
+        ///
+        /// <param name="hourAngle">
+        /// An hour angle value in the range [0, 24) indicating the number of sidereal hours after the
+        /// body's most recent culmination.
+        /// </param>
+        ///
+        /// <param name="startTime">
+        /// The date and time at which to start the search.
+        /// </param>
+        ///
+        /// <returns>
+        /// This function returns a valid #HourAngleInfo object on success.
+        /// If any error occurs, it throws an exception.
+        /// It never returns a null value.
+        /// </returns>
+        public static HourAngleInfo SearchHourAngle(
+            Body body,
+            Observer observer,
+            double hourAngle,
+            AstroTime startTime)
+        {
+            int iter = 0;
+
+            if (body == Body.Earth)
+                throw new EarthNotAllowedException();
+
+            if (hourAngle < 0.0 || hourAngle >= 24.0)
+                throw new ArgumentException("hourAngle is out of the allowed range [0, 24).");
+
+            AstroTime time = startTime;
+            for(;;)
+            {
+                ++iter;
+
+                /* Calculate Greenwich Apparent Sidereal Time (GAST) at the given time. */
+                double gast = sidereal_time(time);
+
+                /* Obtain equatorial coordinates of date for the body. */
+                Equatorial ofdate = Equator(body, time, observer, EquatorEpoch.OfDate, Aberration.Corrected);
+
+                /* Calculate the adjustment needed in sidereal time */
+                /* to bring the hour angle to the desired value. */
+
+                double delta_sidereal_hours = ((hourAngle + ofdate.ra - observer.longitude/15.0) - gast) % 24.0;
+                if (iter == 1)
+                {
+                    /* On the first iteration, always search forward in time. */
+                    if (delta_sidereal_hours < 0.0)
+                        delta_sidereal_hours += 24.0;
+                }
+                else
+                {
+                    /* On subsequent iterations, we make the smallest possible adjustment, */
+                    /* either forward or backward in time. */
+                    if (delta_sidereal_hours < -12.0)
+                        delta_sidereal_hours += 24.0;
+                    else if (delta_sidereal_hours > +12.0)
+                        delta_sidereal_hours -= 24.0;
+                }
+
+                /* If the error is tolerable (less than 0.1 seconds), the search has succeeded. */
+                if (Math.Abs(delta_sidereal_hours) * 3600.0 < 0.1)
+                {
+                    Topocentric hor = Horizon(time, observer, ofdate.ra, ofdate.dec, Refraction.Normal);
+                    return new HourAngleInfo(time, hor);
+                }
+
+                /* We need to loop another time to get more accuracy. */
+                /* Update the terrestrial time (in solar days) adjusting by sidereal time (sidereal hours). */
+                time = time.AddDays((delta_sidereal_hours / 24.0) * SOLAR_DAYS_PER_SIDEREAL_DAY);
+            }
+        }
     }
 
     /// <summary>
@@ -2203,6 +2496,57 @@ $ASTRO_CSHARP_CHEBYSHEV(8);
         {
             double angle = Astronomy.MoonPhase(time);
             return Astronomy.LongitudeOffset(angle - targetLon);
+        }
+    }
+
+    internal class SearchContext_PeakAltitude: SearchContext
+    {
+        private readonly Body body;
+        private readonly int direction;
+        private readonly Observer observer;
+        private readonly double body_radius_au;
+
+        public SearchContext_PeakAltitude(Body body, Direction direction, Observer observer)
+        {
+            this.body = body;
+            this.direction = (int)direction;
+            this.observer = observer;
+
+            switch (body)
+            {
+                case Body.Sun:
+                    this.body_radius_au = Astronomy.SUN_RADIUS_AU;
+                    break;
+
+                case Body.Moon:
+                    this.body_radius_au = Astronomy.MOON_RADIUS_AU;
+                    break;
+
+                default:
+                    this.body_radius_au = 0.0;
+                    break;
+            }
+        }
+
+        public override double Eval(AstroTime time)
+        {
+            /*
+                Return the angular altitude above or below the horizon
+                of the highest part (the peak) of the given object.
+                This is defined as the apparent altitude of the center of the body plus
+                the body's angular radius.
+                The 'direction' parameter controls whether the angle is measured
+                positive above the horizon or positive below the horizon,
+                depending on whether the caller wants rise times or set times, respectively.
+            */
+
+            Equatorial ofdate = Astronomy.Equator(body, time, observer, EquatorEpoch.OfDate, Aberration.Corrected);
+
+            /* We calculate altitude without refraction, then add fixed refraction near the horizon. */
+            /* This gives us the time of rise/set without the extra work. */
+            Topocentric hor = Astronomy.Horizon(time, observer, ofdate.ra, ofdate.dec, Refraction.None);
+
+            return direction * (hor.altitude + Astronomy.RAD2DEG*(body_radius_au / ofdate.dist) + Astronomy.REFRACTION_NEAR_HORIZON);
         }
     }
 

@@ -15,6 +15,7 @@ namespace csharp_test
                 Console.WriteLine("csharp_test: starting");
                 if (TestTime() != 0) return 1;
                 if (MoonTest() != 0) return 1;
+                if (RiseSetTest("../../riseset/riseset.txt") != 0) return 1;
                 if (AstroCheck() != 0) return 1;
                 if (SeasonsTest("../../seasons/seasons.txt") != 0) return 1;
                 if (MoonPhaseTest("../../moonphase/moonphases.txt") != 0) return 1;
@@ -350,6 +351,123 @@ namespace csharp_test
                 Console.WriteLine("MoonPhaseTest: passed {0} lines for file {1} : max_arcmin = {2:0.000000}, maxdiff = {3:0.000} seconds, {4} quarters",
                     lnum, filename, max_arcmin, maxdiff, quarter_count);
 
+                return 0;
+            }
+        }
+
+        static int RiseSetTest(string filename)
+        {
+            using (StreamReader infile = File.OpenText(filename))
+            {
+                int lnum = 0;
+                string line;
+                var re = new Regex(@"^([A-Za-z]+)\s+([\-\+]?\d+\.?\d*)\s+([\-\+]?\d+\.?\d*)\s+(\d+)-(\d+)-(\d+)T(\d+):(\d+)Z\s+([rs])\s*$");
+                Body current_body = Body.Invalid;
+                Observer observer = null;
+                AstroTime r_search_date = null, s_search_date = null;
+                AstroTime r_evt = null, s_evt = null;     /* rise event, set event: search results */
+                AstroTime a_evt = null, b_evt = null;     /* chronologically first and second events */
+                Direction a_dir = Direction.Rise, b_dir = Direction.Rise;
+                const double nudge_days = 0.01;
+                double sum_minutes = 0.0;
+                double max_minutes = 0.0;
+
+                while (null != (line = infile.ReadLine()))
+                {
+                    ++lnum;
+
+                    // Moon  103 -61 1944-01-02T17:08Z s
+                    // Moon  103 -61 1944-01-03T05:47Z r
+                    Match m = re.Match(line);
+                    if (!m.Success)
+                    {
+                        Console.WriteLine("RiseSetTest({0} line {1}): invalid input format", filename, lnum);
+                        return 1;
+                    }
+                    Body body = Enum.Parse<Body>(m.Groups[1].Value);
+                    double longitude = double.Parse(m.Groups[2].Value);
+                    double latitude = double.Parse(m.Groups[3].Value);
+                    int year = int.Parse(m.Groups[4].Value);
+                    int month = int.Parse(m.Groups[5].Value);
+                    int day = int.Parse(m.Groups[6].Value);
+                    int hour = int.Parse(m.Groups[7].Value);
+                    int minute = int.Parse(m.Groups[8].Value);
+                    Direction direction = (m.Groups[9].Value == "r") ? Direction.Rise : Direction.Set;
+                    var correct_date = new AstroTime(year, month, day, hour, minute, 0);
+
+                    /* Every time we see a new geographic location or body, start a new iteration */
+                    /* of finding all rise/set times for that UTC calendar year. */
+                    if (observer == null || observer.latitude != latitude || observer.longitude != longitude || current_body != body)
+                    {
+                        current_body = body;
+                        observer = new Observer(latitude, longitude, 0.0);
+                        r_search_date = s_search_date = new AstroTime(year, 1, 1, 0, 0, 0);
+                        b_evt = null;
+                        Console.WriteLine("RiseSetTest: {0} lat={1} lon={2}", body, latitude, longitude);
+                    }
+
+                    if (b_evt != null)
+                    {
+                        a_evt = b_evt;
+                        a_dir = b_dir;
+                        b_evt = null;
+                    }
+                    else
+                    {
+                        r_evt = Astronomy.SearchRiseSet(body, observer, Direction.Rise, r_search_date, 366.0);
+                        if (r_evt == null)
+                        {
+                            Console.WriteLine("RiseSetTest({0} line {1}): Did not find {2} rise event.", filename, lnum, body);
+                            return 1;
+                        }
+
+                        s_evt = Astronomy.SearchRiseSet(body, observer, Direction.Set, s_search_date, 366.0);
+                        if (s_evt == null)
+                        {
+                            Console.WriteLine("RiseSetTest({0} line {1}): Did not find {2} rise event.", filename, lnum, body);
+                            return 1;
+                        }
+
+                        /* Expect the current event to match the earlier of the found dates. */
+                        if (r_evt.tt < s_evt.tt)
+                        {
+                            a_evt = r_evt;
+                            b_evt = s_evt;
+                            a_dir = Direction.Rise;
+                            b_dir = Direction.Set;
+                        }
+                        else
+                        {
+                            a_evt = s_evt;
+                            b_evt = r_evt;
+                            a_dir = Direction.Set;
+                            b_dir = Direction.Rise;
+                        }
+
+                        /* Nudge the event times forward a tiny amount. */
+                        r_search_date = r_evt.AddDays(nudge_days);
+                        s_search_date = s_evt.AddDays(nudge_days);
+                    }
+
+                    if (a_dir != direction)
+                    {
+                        Console.WriteLine("RiseSetTest({0} line {1}): expected dir={2} but found {3}", filename, lnum, a_dir, direction);
+                        return 1;
+                    }
+                    double error_minutes = (24.0 * 60.0) * Math.Abs(a_evt.tt - correct_date.tt);
+                    sum_minutes += error_minutes * error_minutes;
+                    if (error_minutes > max_minutes)
+                        max_minutes = error_minutes;
+
+                    if (error_minutes > 0.56)
+                    {
+                        Console.WriteLine("RiseSetTest({0} line {1}): excessive prediction time error = {2} minutes.\n", filename, lnum, error_minutes);
+                        return 1;
+                    }
+                }
+
+                double rms_minutes = Math.Sqrt(sum_minutes / lnum);
+                Console.WriteLine("RiseSetTest: passed {0} lines: time errors in minutes: rms={1}, max={2}", lnum, rms_minutes, max_minutes);
                 return 0;
             }
         }

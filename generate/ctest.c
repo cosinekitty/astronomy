@@ -1124,8 +1124,8 @@ static int RiseSet(const char *filename)
     {
         ++lnum;
 
-        // Moon  103 -61 1944-01-02T17:08Z s
-        // Moon  103 -61 1944-01-03T05:47Z r
+        /* Moon  103 -61 1944-01-02T17:08Z s */
+        /* Moon  103 -61 1944-01-03T05:47Z r */
         nscanned = sscanf(line, "%9[A-Za-z] %lf %lf %d-%d-%dT%d:%dZ %1[rs]",
             name, &longitude, &latitude, &year, &month, &day, &hour, &minute, kind);
 
