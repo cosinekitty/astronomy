@@ -16,9 +16,10 @@ namespace csharp_test
                 if (TestTime() != 0) return 1;
                 if (MoonTest() != 0) return 1;
                 if (RiseSetTest("../../riseset/riseset.txt") != 0) return 1;
-                if (AstroCheck() != 0) return 1;
                 if (SeasonsTest("../../seasons/seasons.txt") != 0) return 1;
                 if (MoonPhaseTest("../../moonphase/moonphases.txt") != 0) return 1;
+                if (ElongationTest() != 0) return 1;
+                if (AstroCheck() != 0) return 1;
                 Console.WriteLine("csharp_test: PASS");
                 return 0;
             }
@@ -470,6 +471,56 @@ namespace csharp_test
                 Console.WriteLine("RiseSetTest: passed {0} lines: time errors in minutes: rms={1}, max={2}", lnum, rms_minutes, max_minutes);
                 return 0;
             }
+        }
+
+        static int TestElongFile(string filename, double targetRelLon)
+        {
+            using (StreamReader infile = File.OpenText(filename))
+            {
+                int lnum = 0;
+                string line;
+                var re = new Regex(@"^(\d+)-(\d+)-(\d+)T(\d+):(\d+)Z\s+([A-Z][a-z]+)\s*$");
+                while (null != (line = infile.ReadLine()))
+                {
+                    ++lnum;
+                    /* 2018-05-09T00:28Z Jupiter */
+                    Match m = re.Match(line);
+                    if (!m.Success)
+                    {
+                        Console.WriteLine("C# TestElongFile({0} line {1}): invalid data format.", filename, lnum);
+                        return 1;
+                    }
+                    int year = int.Parse(m.Groups[1].Value);
+                    int month = int.Parse(m.Groups[2].Value);
+                    int day = int.Parse(m.Groups[3].Value);
+                    int hour = int.Parse(m.Groups[4].Value);
+                    int minute = int.Parse(m.Groups[5].Value);
+                    Body body = Enum.Parse<Body>(m.Groups[6].Value);
+                    var search_date = new AstroTime(year, 1, 1, 0, 0, 0);
+                    var expected_time = new AstroTime(year, month, day, hour, minute, 0);
+                    AstroTime search_result = Astronomy.SearchRelativeLongitude(body, targetRelLon, search_date);
+                    if (search_result == null)
+                    {
+                        Console.WriteLine("C# TestElongFile({0} line {1}): SearchRelativeLongitude returned null.", filename, lnum);
+                        return 1;
+                    }
+                    double diff_minutes = (24.0 * 60.0) * (search_result.tt - expected_time.tt);
+                    Console.WriteLine("{0} error = {1} minutes.", body, diff_minutes.ToString("f3"));
+                    if (Math.Abs(diff_minutes) > 15.0)
+                    {
+                        Console.WriteLine("C# TestElongFile({0} line {1}): EXCESSIVE ERROR.", filename, lnum);
+                        return 1;
+                    }
+                }
+                Console.WriteLine("C# TestElongFile: passed {0} rows of data.", lnum);
+                return 0;
+            }
+        }
+
+        static int ElongationTest()
+        {
+            if (0 != TestElongFile("../../longitude/opposition_2018.txt", 0.0)) return 1;
+            return 0;
         }
     }
 }

@@ -2451,6 +2451,180 @@ $ASTRO_CSHARP_CHEBYSHEV(8);
                 time = time.AddDays((delta_sidereal_hours / 24.0) * SOLAR_DAYS_PER_SIDEREAL_DAY);
             }
         }
+
+        /// <summary>
+        ///      Searches for the time when the Earth and another planet are separated by a specified angle
+        ///      in ecliptic longitude, as seen from the Sun.
+        /// </summary>
+        ///
+        /// <remarks>
+        /// A relative longitude is the angle between two bodies measured in the plane of the Earth's orbit
+        /// (the ecliptic plane). The distance of the bodies above or below the ecliptic plane is ignored.
+        /// If you imagine the shadow of the body cast onto the ecliptic plane, and the angle measured around
+        /// that plane from one body to the other in the direction the planets orbit the Sun, you will get an
+        /// angle somewhere between 0 and 360 degrees. This is the relative longitude.
+        ///
+        /// Given a planet other than the Earth in `body` and a time to start the search in `startTime`,
+        /// this function searches for the next time that the relative longitude measured from the planet
+        /// to the Earth is `targetRelLon`.
+        ///
+        /// Certain astronomical events are defined in terms of relative longitude between the Earth and another planet:
+        ///
+        /// - When the relative longitude is 0 degrees, it means both planets are in the same direction from the Sun.
+        ///   For planets that orbit closer to the Sun (Mercury and Venus), this is known as *inferior conjunction*,
+        ///   a time when the other planet becomes very difficult to see because of being lost in the Sun's glare.
+        ///   (The only exception is in the rare event of a transit, when we see the silhouette of the planet passing
+        ///   between the Earth and the Sun.)
+        ///
+        /// - When the relative longitude is 0 degrees and the other planet orbits farther from the Sun,
+        ///   this is known as *opposition*.  Opposition is when the planet is closest to the Earth, and
+        ///   also when it is visible for most of the night, so it is considered the best time to observe the planet.
+        ///
+        /// - When the relative longitude is 180 degrees, it means the other planet is on the opposite side of the Sun
+        ///   from the Earth. This is called *superior conjunction*. Like inferior conjunction, the planet is
+        ///   very difficult to see from the Earth. Superior conjunction is possible for any planet other than the Earth.
+        /// </remarks>
+        ///
+        /// <param name="body">
+        ///      A planet other than the Earth.
+        ///      If `body` is `Body.Earth`, `Body.Sun`, or `Body.Moon`, this function throws an exception.
+        /// </param>
+        ///
+        /// <param name="targetRelLon">
+        ///      The desired relative longitude, expressed in degrees. Must be in the range [0, 360).
+        /// </param>
+        ///
+        /// <param name="startTime">
+        ///      The date and time at which to begin the search.
+        /// </param>
+        ///
+        /// <returns>
+        ///      If successful, returns the date and time of the relative longitude event.
+        ///      Otherwise this function returns null.
+        /// </returns>
+        public static AstroTime SearchRelativeLongitude(Body body, double targetRelLon, AstroTime startTime)
+        {
+            if (body == Body.Earth || body == Body.Sun || body == Body.Moon)
+                throw new ArgumentException(string.Format("{0} is not a valid body. Must be a planet other than the Earth.", body));
+
+            double syn = SynodicPeriod(body);
+            int direction = IsSuperiorPlanet(body) ? +1 : -1;
+
+            /* Iterate until we converge on the desired event. */
+            /* Calculate the error angle, which will be a negative number of degrees, */
+            /* meaning we are "behind" the target relative longitude. */
+
+            double error_angle = rlon_offset(body, startTime, direction, targetRelLon);
+            if (error_angle > 0.0)
+                error_angle -= 360.0;    /* force searching forward in time */
+
+            AstroTime time = startTime;
+            for (int iter = 0; iter < 100; ++iter)
+            {
+                /* Estimate how many days in the future (positive) or past (negative) */
+                /* we have to go to get closer to the target relative longitude. */
+                double day_adjust = (-error_angle/360.0) * syn;
+                time = time.AddDays(day_adjust);
+                if (Math.Abs(day_adjust) * SECONDS_PER_DAY < 1.0)
+                    return time;
+
+                double prev_angle = error_angle;
+                error_angle = rlon_offset(body, time, direction, targetRelLon);
+                if (Math.Abs(prev_angle) < 30.0 && (prev_angle != error_angle))
+                {
+                    /* Improve convergence for Mercury/Mars (eccentric orbits) */
+                    /* by adjusting the synodic period to more closely match the */
+                    /* variable speed of both planets in this part of their respective orbits. */
+                    double ratio = prev_angle / (prev_angle - error_angle);
+                    if (ratio > 0.5 && ratio < 2.0)
+                        syn *= ratio;
+                }
+            }
+
+            return null;    /* failed to converge */
+        }
+
+        private static double rlon_offset(Body body, AstroTime time, int direction, double targetRelLon)
+        {
+            double plon = EclipticLongitude(body, time);
+            double elon = EclipticLongitude(Body.Earth, time);
+            double diff = direction * (elon - plon);
+            return LongitudeOffset(diff - targetRelLon);
+        }
+
+        private static double SynodicPeriod(Body body)
+        {
+            /* The Earth does not have a synodic period as seen from itself. */
+            if (body == Body.Earth)
+                throw new EarthNotAllowedException();
+
+            if (body == Body.Moon)
+                return MEAN_SYNODIC_MONTH;
+
+            double Tp = PlanetOrbitalPeriod(body);
+            return Math.Abs(EARTH_ORBITAL_PERIOD / (EARTH_ORBITAL_PERIOD/Tp - 1.0));
+        }
+
+        /// <summary>Calculates heliocentric ecliptic longitude of a body based on the J2000 equinox.</summary>
+        /// <remarks>
+        /// This function calculates the angle around the plane of the Earth's orbit
+        /// of a celestial body, as seen from the center of the Sun.
+        /// The angle is measured prograde (in the direction of the Earth's orbit around the Sun)
+        /// in degrees from the J2000 equinox. The ecliptic longitude is always in the range [0, 360).
+        /// </remarks>
+        ///
+        /// <param name="body">A body other than the Sun.</param>
+        ///
+        /// <param name="time">The date and time at which the body's ecliptic longitude is to be calculated.</param>
+        ///
+        /// <returns>
+        ///      Returns the ecliptic longitude in degrees of the given body at the given time.
+        /// </returns>
+        public static double EclipticLongitude(Body body, AstroTime time)
+        {
+            if (body == Body.Sun)
+                throw new ArgumentException("Cannot calculate heliocentric longitude of the Sun.");
+
+            AstroVector hv = HelioVector(body, time);
+            Ecliptic eclip = EquatorialToEcliptic(hv);
+            return eclip.elon;
+        }
+
+        private static double PlanetOrbitalPeriod(Body body)
+        {
+            /* Returns the number of days it takes for a planet to orbit the Sun. */
+            switch (body)
+            {
+                case Body.Mercury:  return     87.969;
+                case Body.Venus:    return    224.701;
+                case Body.Earth:    return    EARTH_ORBITAL_PERIOD;
+                case Body.Mars:     return    686.980;
+                case Body.Jupiter:  return   4332.589;
+                case Body.Saturn:   return  10759.22;
+                case Body.Uranus:   return  30685.4;
+                case Body.Neptune:  return  60189.0;
+                case Body.Pluto:    return  90560.0;
+                default:
+                    throw new ArgumentException(string.Format("Invalid body {0}. Must be a planet.", body));
+            }
+        }
+
+        private static bool IsSuperiorPlanet(Body body)
+        {
+            switch (body)
+            {
+                case Body.Mars:
+                case Body.Jupiter:
+                case Body.Saturn:
+                case Body.Uranus:
+                case Body.Neptune:
+                case Body.Pluto:
+                    return true;
+
+                default:
+                    return false;
+            }
+        }
     }
 
     /// <summary>
