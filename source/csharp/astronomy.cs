@@ -429,6 +429,22 @@ namespace CosineKitty
     }
 
     /// <summary>
+    /// Indicates whether a body (especially Mercury or Venus) is best seen in the morning or evening.
+    /// </summary>
+    public enum Visibility
+    {
+        /// <summary>
+        /// The body is best visible in the morning, before sunrise.
+        /// </summary>
+        Morning,
+
+        /// <summary>
+        /// The body is best visible in the evening, after sunset.
+        /// </summary>
+        Evening,
+    }
+
+    /// <summary>
     /// Equatorial angular coordinates.
     /// </summary>
     /// <remarks>
@@ -646,6 +662,41 @@ namespace CosineKitty
         {
             this.time = time;
             this.hor = hor;
+        }
+    }
+
+    /// <summary>
+    /// Contains information about the visibility of a celestial body at a given date and time.
+    /// See #Elongation for more detailed information about the members of this structure.
+    /// See also #SearchMaxElongation for how to search for maximum elongation events.
+    /// </summary>
+    public struct ElongationInfo
+    {
+        /// <summary>The date and time of the observation.</summary>
+        public readonly AstroTime time;
+
+        /// <summary>Whether the body is best seen in the morning or the evening.</summary>
+        public readonly Visibility visibility;
+
+        /// <summary>The angle in degrees between the body and the Sun, as seen from the Earth.</summary>
+        public readonly double elongation;
+
+        /// <summary>The difference between the ecliptic longitudes of the body and the Sun, as seen from the Earth.</summary>
+        public readonly double ecliptic_separation;
+
+        /// <summary>
+        /// Creates a structure that represents an elongation event.
+        /// </summary>
+        /// <param name="time">The date and time of the observation.</param>
+        /// <param name="visibility">Whether the body is best seen in the morning or the evening.</param>
+        /// <param name="elongation">The angle in degrees between the body and the Sun, as seen from the Earth.</param>
+        /// <param name="ecliptic_separation">The difference between the ecliptic longitudes of the body and the Sun, as seen from the Earth.</param>
+        public ElongationInfo(AstroTime time, Visibility visibility, double elongation, double ecliptic_separation)
+        {
+            this.time = time;
+            this.visibility = visibility;
+            this.elongation = elongation;
+            this.ecliptic_separation = ecliptic_separation;
         }
     }
 
@@ -3764,6 +3815,238 @@ namespace CosineKitty
                     return false;
             }
         }
+
+        /// <summary>
+        /// Determines visibility of a celestial body relative to the Sun, as seen from the Earth.
+        /// </summary>
+        ///
+        /// <remarks>
+        /// This function returns an #ElongationInfo structure, which provides the following
+        /// information about the given celestial body at the given time:
+        ///
+        /// - `visibility` is an enumerated type that specifies whether the body is more easily seen
+        ///    in the morning before sunrise, or in the evening after sunset.
+        ///
+        /// - `elongation` is the angle in degrees between two vectors: one from the center of the Earth to the
+        ///    center of the Sun, the other from the center of the Earth to the center of the specified body.
+        ///    This angle indicates how far away the body is from the glare of the Sun.
+        ///    The elongation angle is always in the range [0, 180].
+        ///
+        /// - `ecliptic_separation` is the absolute value of the difference between the body's ecliptic longitude
+        ///   and the Sun's ecliptic longitude, both as seen from the center of the Earth. This angle measures
+        ///   around the plane of the Earth's orbit, and ignores how far above or below that plane the body is.
+        ///   The ecliptic separation is measured in degrees and is always in the range [0, 180].
+        /// </remarks>
+        ///
+        /// <param name="body">
+        ///      The celestial body whose visibility is to be calculated.
+        /// </param>
+        ///
+        /// <param name="time">
+        ///      The date and time of the observation.
+        /// </param>
+        ///
+        /// <returns>
+        /// Returns a valid #ElongationInfo structure, or throws an exception if there is an error.
+        /// </returns>
+
+        public static ElongationInfo Elongation(Body body, AstroTime time)
+        {
+            Visibility visibility;
+            double ecliptic_separation = LongitudeFromSun(body, time);
+            if (ecliptic_separation > 180.0)
+            {
+                visibility = Visibility.Morning;
+                ecliptic_separation = 360.0 - ecliptic_separation;
+            }
+            else
+            {
+                visibility = Visibility.Evening;
+            }
+
+            double elongation = AngleFromSun(body, time);
+            return new ElongationInfo(time, visibility, elongation, ecliptic_separation);
+        }
+
+        /// <summary>
+        /// Finds a date and time when Mercury or Venus reaches its maximum angle from the Sun as seen from the Earth.
+        /// </summary>
+        ///
+        /// <remarks>
+        /// Mercury and Venus are are often difficult to observe because they are closer to the Sun than the Earth is.
+        /// Mercury especially is almost always impossible to see because it gets lost in the Sun's glare.
+        /// The best opportunities for spotting Mercury, and the best opportunities for viewing Venus through
+        /// a telescope without atmospheric interference, are when these planets reach maximum elongation.
+        /// These are events where the planets reach the maximum angle from the Sun as seen from the Earth.
+        ///
+        /// This function solves for those times, reporting the next maximum elongation event's date and time,
+        /// the elongation value itself, the relative longitude with the Sun, and whether the planet is best
+        /// observed in the morning or evening. See #Astronomy_Elongation for more details about the returned structure.
+        /// </remarks>
+        ///
+        /// <param name="body">
+        /// Either `Body.Mercury` or `Body.Venus`. Any other value will result in an exception.
+        /// To find the best viewing opportunites for planets farther from the Sun than the Earth is (Mars through Pluto)
+        /// use #SearchRelativeLongitude to find the next opposition event.
+        /// </param>
+        ///
+        /// <param name="startTime">
+        /// The date and time at which to begin the search. The maximum elongation event found will always
+        /// be the first one that occurs after this date and time.
+        /// </param>
+        ///
+        /// <returns>
+        /// Either an exception will be thrown, or the function will return a valid value.
+        /// </returns>
+        public static ElongationInfo SearchMaxElongation(Body body, AstroTime startTime)
+        {
+            double s1, s2;
+            switch (body)
+            {
+                case Body.Mercury:
+                    s1 = 50.0;
+                    s2 = 85.0;
+                    break;
+
+                case Body.Venus:
+                    s1 = 40.0;
+                    s2 = 50.0;
+                    break;
+
+                default:
+                    throw new ArgumentException(string.Format("Invalid body {0}. Must be either Mercury or Venus.", body));
+            }
+
+            double syn = SynodicPeriod(body);
+            var neg_elong_slope = new SearchContext_NegElongSlope(body);
+
+            for (int iter=0; ++iter <= 2;)
+            {
+                double plon = EclipticLongitude(body, startTime);
+                double elon = EclipticLongitude(Body.Earth, startTime);
+                double rlon = LongitudeOffset(plon - elon);     /* clamp to (-180, +180] */
+
+                /* The slope function is not well-behaved when rlon is near 0 degrees or 180 degrees */
+                /* because there is a cusp there that causes a discontinuity in the derivative. */
+                /* So we need to guard against searching near such times. */
+                double adjust_days, rlon_lo, rlon_hi;
+                if (rlon >= -s1 && rlon < +s1)
+                {
+                    /* Seek to the window [+s1, +s2]. */
+                    adjust_days = 0.0;
+                    /* Search forward for the time t1 when rel lon = +s1. */
+                    rlon_lo = +s1;
+                    /* Search forward for the time t2 when rel lon = +s2. */
+                    rlon_hi = +s2;
+                }
+                else if (rlon > +s2 || rlon < -s2)
+                {
+                    /* Seek to the next search window at [-s2, -s1]. */
+                    adjust_days = 0.0;
+                    /* Search forward for the time t1 when rel lon = -s2. */
+                    rlon_lo = -s2;
+                    /* Search forward for the time t2 when rel lon = -s1. */
+                    rlon_hi = -s1;
+                }
+                else if (rlon >= 0.0)
+                {
+                    /* rlon must be in the middle of the window [+s1, +s2]. */
+                    /* Search BACKWARD for the time t1 when rel lon = +s1. */
+                    adjust_days = -syn / 4.0;
+                    rlon_lo = +s1;
+                    rlon_hi = +s2;
+                    /* Search forward from t1 to find t2 such that rel lon = +s2. */
+                }
+                else
+                {
+                    /* rlon must be in the middle of the window [-s2, -s1]. */
+                    /* Search BACKWARD for the time t1 when rel lon = -s2. */
+                    adjust_days = -syn / 4.0;
+                    rlon_lo = -s2;
+                    /* Search forward from t1 to find t2 such that rel lon = -s1. */
+                    rlon_hi = -s1;
+                }
+
+                AstroTime t_start = startTime.AddDays(adjust_days);
+
+                AstroTime t1 = SearchRelativeLongitude(body, rlon_lo, t_start);
+                AstroTime t2 = SearchRelativeLongitude(body, rlon_hi, t1);
+
+                /* Now we have a time range [t1,t2] that brackets a maximum elongation event. */
+                /* Confirm the bracketing. */
+                double m1 = neg_elong_slope.Eval(t1);
+                if (m1 >= 0.0)
+                    throw new Exception("There is a bug in the bracketing algorithm! m1 = " + m1);
+
+                double m2 = neg_elong_slope.Eval(t2);
+                if (m2 <= 0.0)
+                    throw new Exception("There is a bug in the bracketing algorithm! m2 = " + m2);
+
+                /* Use the generic search algorithm to home in on where the slope crosses from negative to positive. */
+                AstroTime searchx = Search(neg_elong_slope, t1, t2, 10.0);
+                if (searchx == null)
+                    throw new Exception("Maximum elongation search failed.");
+
+                if (searchx.tt >= startTime.tt)
+                    return Elongation(body, searchx);
+
+                /* This event is in the past (earlier than startTime). */
+                /* We need to search forward from t2 to find the next possible window. */
+                /* We never need to search more than twice. */
+                startTime = t2.AddDays(1.0);
+            }
+
+            throw new Exception("Maximum elongation search iterated too many times.");
+        }
+
+        ///
+        /// <summary>Returns the angle between the given body and the Sun, as seen from the Earth.</summary>
+        ///
+        /// <remarks>
+        /// This function calculates the angular separation between the given body and the Sun,
+        /// as seen from the center of the Earth. This angle is helpful for determining how
+        /// easy it is to see the body away from the glare of the Sun.
+        /// </remarks>
+        ///
+        /// <param name="body">
+        /// The celestial body whose angle from the Sun is to be measured.
+        /// Not allowed to be `Body.Earth`.
+        /// </param>
+        ///
+        /// <param name="time">
+        /// The time at which the observation is made.
+        /// </param>
+        ///
+        /// <returns>
+        /// Returns the angle in degrees between the Sun and the specified body as
+        /// seen from the center of the Earth.
+        /// </returns>
+        public static double AngleFromSun(Body body, AstroTime time)
+        {
+            if (body == Body.Earth)
+                throw new EarthNotAllowedException();
+
+            AstroVector sv = GeoVector(Body.Sun, time, Aberration.Corrected);
+            AstroVector bv = GeoVector(body, time, Aberration.Corrected);
+            return AngleBetween(sv, bv);
+        }
+
+        private static double AngleBetween(AstroVector a, AstroVector b)
+        {
+            double r = a.Length() * b.Length();
+            if (r < 1.0e-8)
+                throw new Exception("Cannot find angle between vectors because they are too short.");
+
+            double dot = (a.x*b.x + a.y*b.y + a.z*b.z) / r;
+
+            if (dot <= -1.0)
+                return 180.0;
+
+            if (dot >= +1.0)
+                return 0.0;
+
+            return RAD2DEG * Math.Acos(dot);
+        }
     }
 
     /// <summary>
@@ -3778,6 +4061,27 @@ namespace CosineKitty
         /// <param name="time">The time at which to evaluate the function.</param>
         /// <returns>The floating point value of the function at the specified time.</returns>
         public abstract double Eval(AstroTime time);
+    }
+
+    internal class SearchContext_NegElongSlope: SearchContext
+    {
+        private readonly Body body;
+
+        public SearchContext_NegElongSlope(Body body)
+        {
+            this.body = body;
+        }
+
+        public override double Eval(AstroTime time)
+        {
+            const double dt = 0.1;
+            AstroTime t1 = time.AddDays(-dt/2.0);
+            AstroTime t2 = time.AddDays(+dt/2.0);
+
+            double e1 = Astronomy.AngleFromSun(body, t1);
+            double e2 = Astronomy.AngleFromSun(body, t2);
+            return (e1 - e2)/dt;
+        }
     }
 
     internal class SearchContext_SunOffset: SearchContext
