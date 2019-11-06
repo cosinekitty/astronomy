@@ -11,5 +11,9 @@ dotnet restore || Fail "Error in dotnet restore"
 dotnet run || Fail "Error in dotnet run of csharp unit test"
 cd ../..
 ./generate check dotnet/csharp_test/csharp_check.txt || Fail "Verification failure for C# unit test output."
+for file in dotnet/csharp_test/csharp_longitude_*.txt; do
+    ./generate check ${file} || Fail "Failed verification of file ${file}"
+    echo ""
+done
 echo "unit_test_csharp: PASS."
 exit 0

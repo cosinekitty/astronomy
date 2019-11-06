@@ -517,9 +517,91 @@ namespace csharp_test
             }
         }
 
+        static int TestPlanetLongitudes(Body body, string outFileName, string zeroLonEventName)
+        {
+            const int startYear = 1700;
+            const int stopYear = 2200;
+            int count = 0;
+            double rlon = 0.0;
+            double min_diff = 1.0e+99;
+            double max_diff = 1.0e+99;
+            double sum_diff = 0.0;
+
+            using (StreamWriter outfile = File.CreateText(outFileName))
+            {
+                var time = new AstroTime(startYear, 1, 1, 0, 0, 0);
+                var stopTime = new AstroTime(stopYear, 1, 1, 0, 0, 0);
+                while (time.tt < stopTime.tt)
+                {
+                    ++count;
+                    string event_name = (rlon == 0.0) ? zeroLonEventName : "sup";
+                    AstroTime search_result = Astronomy.SearchRelativeLongitude(body, rlon, time);
+                    if (search_result == null)
+                    {
+                        Console.WriteLine("C# TestPlanetLongitudes({0}): SearchRelativeLongitude returned null.", body);
+                        return 1;
+                    }
+
+                    if (count >= 2)
+                    {
+                        /* Check for consistent intervals. */
+                        /* Mainly I don't want to skip over an event! */
+                        double day_diff = search_result.tt - time.tt;
+                        sum_diff += day_diff;
+                        if (count == 2)
+                        {
+                            min_diff = max_diff = day_diff;
+                        }
+                        else
+                        {
+                            if (day_diff < min_diff)
+                                min_diff = day_diff;
+
+                            if (day_diff > max_diff)
+                                max_diff = day_diff;
+                        }
+                    }
+
+                    AstroVector geo = Astronomy.GeoVector(body, search_result, Aberration.Corrected);
+                    double dist = geo.Length();
+                    outfile.WriteLine("e {0} {1} {2} {3}", body, event_name, search_result.tt.ToString("g17"), dist.ToString("g17"));
+
+                    /* Search for the opposite longitude event next time. */
+                    time = search_result;
+                    rlon = 180.0 - rlon;
+                }
+            }
+
+            double thresh;
+            switch (body)
+            {
+                case Body.Mercury:  thresh = 1.65;  break;
+                case Body.Mars:     thresh = 1.30;  break;
+                default:            thresh = 1.07;  break;
+            }
+
+            double ratio = max_diff / min_diff;
+            Console.WriteLine("TestPlanetLongitudes({0,7}): {1,5} events, ratio={2,5}, file: {3}", body, count, ratio.ToString("f3"), outFileName);
+
+            if (ratio > thresh)
+            {
+                Console.WriteLine("TestPlanetLongitudes({0}): excessive event interval ratio.\n", body);
+                return 1;
+            }
+            return 0;
+        }
+
         static int ElongationTest()
         {
             if (0 != TestElongFile("../../longitude/opposition_2018.txt", 0.0)) return 1;
+            if (0 != TestPlanetLongitudes(Body.Mercury, "csharp_longitude_Mercury.txt", "inf")) return 1;
+            if (0 != TestPlanetLongitudes(Body.Venus,   "csharp_longitude_Venus.txt",   "inf")) return 1;
+            if (0 != TestPlanetLongitudes(Body.Mars,    "csharp_longitude_Mars.txt",    "opp")) return 1;
+            if (0 != TestPlanetLongitudes(Body.Jupiter, "csharp_longitude_Jupiter.txt", "opp")) return 1;
+            if (0 != TestPlanetLongitudes(Body.Saturn,  "csharp_longitude_Saturn.txt",  "opp")) return 1;
+            if (0 != TestPlanetLongitudes(Body.Uranus,  "csharp_longitude_Uranus.txt",  "opp")) return 1;
+            if (0 != TestPlanetLongitudes(Body.Neptune, "csharp_longitude_Neptune.txt", "opp")) return 1;
+            if (0 != TestPlanetLongitudes(Body.Pluto,   "csharp_longitude_Pluto.txt",   "opp")) return 1;
             return 0;
         }
     }
