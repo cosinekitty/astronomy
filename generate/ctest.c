@@ -1664,6 +1664,13 @@ static int LunarApsis(const char *filename)
             goto fail;
         }
 
+        if (kind != apsis.kind)
+        {
+            fprintf(stderr, "LunarApsis(%s line %d): expected apsis kind %d but found %d\n", filename, lnum, kind, apsis.kind);
+            error = 1;
+            goto fail;
+        }
+
         correct_time = Astronomy_MakeTime(year, month, day, hour, minute, 0.0);
 
         diff_minutes = (24.0 * 60.0) * fabs(apsis.time.ut - correct_time.ut);
