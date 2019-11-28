@@ -435,7 +435,7 @@ astro_apsis_kind_t;
  * The closest approach is called *pericenter* and the farthest point is *apocenter*.
  *
  * More specific terminology is common for particular orbiting bodies.
- * The Moon's closest approach to the Earth is called *perigee* and its furthest
+ * The Moon's closest approach to the Earth is called *perigee* and its farthest
  * point is called *apogee*. The closest approach of a planet to the Sun is called
  * *perihelion* and the furthest point is called *aphelion*.
  *

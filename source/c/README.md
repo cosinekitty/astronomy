@@ -1309,7 +1309,7 @@ For some other purposes, it is more helpful to represent coordinates using the E
 
 For the Moon orbiting the Earth, or a planet orbiting the Sun, an *apsis* is an event where the orbiting body reaches its closest or farthest point from the primary body. The closest approach is called *pericenter* and the farthest point is *apocenter*.
 
-More specific terminology is common for particular orbiting bodies. The Moon's closest approach to the Earth is called *perigee* and its furthest point is called *apogee*. The closest approach of a planet to the Sun is called *perihelion* and the furthest point is called *aphelion*.
+More specific terminology is common for particular orbiting bodies. The Moon's closest approach to the Earth is called *perigee* and its farthest point is called *apogee*. The closest approach of a planet to the Sun is called *perihelion* and the furthest point is called *aphelion*.
 
 This data structure is returned by [`Astronomy_SearchLunarApsis`](#Astronomy_SearchLunarApsis) and [`Astronomy_NextLunarApsis`](#Astronomy_NextLunarApsis) to iterate through consecutive alternating perigees and apogees. 
 

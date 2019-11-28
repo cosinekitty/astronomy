@@ -701,6 +701,57 @@ namespace CosineKitty
     }
 
     /// <summary>
+    /// The type of apsis: pericenter (closest approach) or apocenter (farthest distance).
+    /// </summary>
+    public enum ApsisKind
+    {
+        /// <summary>The body is at its closest approach to the object it orbits.</summary>
+        Pericenter,
+
+        /// <summary>The body is at its farthest distance from the object it orbits.</summary>
+        Apocenter,
+    }
+
+    /// <summary>
+    /// An apsis event: pericenter (closest approach) or apocenter (farthest distance).
+    /// </summary>
+    /// <remarks>
+    /// For the Moon orbiting the Earth, or a planet orbiting the Sun, an *apsis* is an
+    /// event where the orbiting body reaches its closest or farthest point from the primary body.
+    /// The closest approach is called *pericenter* and the farthest point is *apocenter*.
+    ///
+    /// More specific terminology is common for particular orbiting bodies.
+    /// The Moon's closest approach to the Earth is called *perigee* and its farthest
+    /// point is called *apogee*. The closest approach of a planet to the Sun is called
+    /// *perihelion* and the furthest point is called *aphelion*.
+    ///
+    /// This data structure is returned by #Astronomy.SearchLunarApsis and #Astronomy.NextLunarApsis
+    /// to iterate through consecutive alternating perigees and apogees.
+    /// </remarks>
+    public struct ApsisInfo
+    {
+        /// <summary>The date and time of the apsis.</summary>
+        public readonly AstroTime time;
+
+        /// <summary>Whether this is a pericenter or apocenter event.</summary>
+        public readonly ApsisKind kind;
+
+        /// <summary>The distance between the centers of the bodies in astronomical units.</summary>
+        public readonly double dist_au;
+
+        /// <summary>The distance between the centers of the bodies in kilometers.</summary>
+        public readonly double dist_km;
+
+        internal ApsisInfo(AstroTime time, ApsisKind kind, double dist_au)
+        {
+            this.time = time;
+            this.kind = kind;
+            this.dist_au = dist_au;
+            this.dist_km = dist_au * Astronomy.KM_PER_AU;
+        }
+    }
+
+    /// <summary>
     /// The wrapper class that holds Astronomy Engine functions.
     /// </summary>
     public static class Astronomy
@@ -717,7 +768,7 @@ namespace CosineKitty
         private const double C_AUDAY = 173.1446326846693;        /* speed of light in AU/day */
         internal const double ERAD = 6378136.6;                   /* mean earth radius in meters */
         internal const double AU = 1.4959787069098932e+11;        /* astronomical unit in meters */
-        private const double KM_PER_AU = 1.4959787069098932e+8;
+        internal const double KM_PER_AU = 1.4959787069098932e+8;
         private const double ANGVEL = 7.2921150e-5;
         private const double SECONDS_PER_DAY = 24.0 * 3600.0;
         private const double SOLAR_DAYS_PER_SIDEREAL_DAY = 0.9972695717592592;
@@ -4047,6 +4098,125 @@ namespace CosineKitty
 
             return RAD2DEG * Math.Acos(dot);
         }
+
+        /// <summary>
+        ///      Finds the date and time of the Moon's closest distance (perigee)
+        ///      or farthest distance (apogee) with respect to the Earth.
+        /// </summary>
+        /// <remarks>
+        /// Given a date and time to start the search in `startTime`, this function finds the
+        /// next date and time that the center of the Moon reaches the closest or farthest point
+        /// in its orbit with respect to the center of the Earth, whichever comes first
+        /// after `startTime`.
+        ///
+        /// The closest point is called *perigee* and the farthest point is called *apogee*.
+        /// The word *apsis* refers to either event.
+        ///
+        /// To iterate through consecutive alternating perigee and apogee events, call `Astronomy.SearchLunarApsis`
+        /// once, then use the return value to call #Astronomy.NextLunarApsis. After that,
+        /// keep feeding the previous return value from `Astronomy_NextLunarApsis` into another
+        /// call of `Astronomy_NextLunarApsis` as many times as desired.
+        /// </remarks>
+        /// <param name="startTime">
+        ///      The date and time at which to start searching for the next perigee or apogee.
+        /// </param>
+        /// <returns>
+        /// Returns an #ApsisInfo structure containing information about the next lunar apsis.
+        /// </returns>
+        public static ApsisInfo SearchLunarApsis(AstroTime startTime)
+        {
+            const double increment = 5.0;   /* number of days to skip in each iteration */
+            var positive_slope = new SearchContext_MoonDistanceSlope(+1);
+            var negative_slope = new SearchContext_MoonDistanceSlope(-1);
+
+            /*
+                Check the rate of change of the distance dr/dt at the start time.
+                If it is positive, the Moon is currently getting farther away,
+                so start looking for apogee.
+                Conversely, if dr/dt < 0, start looking for perigee.
+                Either way, the polarity of the slope will change, so the product will be negative.
+                Handle the crazy corner case of exactly touching zero by checking for m1*m2 <= 0.
+            */
+            AstroTime t1 = startTime;
+            double m1 = positive_slope.Eval(t1);
+            for (int iter=0; iter * increment < 2.0 * Astronomy.MEAN_SYNODIC_MONTH; ++iter)
+            {
+                AstroTime t2 = t1.AddDays(increment);
+                double m2 = positive_slope.Eval(t2);
+                if (m1 * m2 <= 0.0)
+                {
+                    /* There is a change of slope polarity within the time range [t1, t2]. */
+                    /* Therefore this time range contains an apsis. */
+                    /* Figure out whether it is perigee or apogee. */
+
+                    AstroTime search;
+                    ApsisKind kind;
+                    if (m1 < 0.0 || m2 > 0.0)
+                    {
+                        /* We found a minimum-distance event: perigee. */
+                        /* Search the time range for the time when the slope goes from negative to positive. */
+                        search = Search(positive_slope, t1, t2, 1.0);
+                        kind = ApsisKind.Pericenter;
+                    }
+                    else if (m1 > 0.0 || m2 < 0.0)
+                    {
+                        /* We found a maximum-distance event: apogee. */
+                        /* Search the time range for the time when the slope goes from positive to negative. */
+                        search = Search(negative_slope, t1, t2, 1.0);
+                        kind = ApsisKind.Apocenter;
+                    }
+                    else
+                    {
+                        /* This should never happen. It should not be possible for both slopes to be zero. */
+                        throw new Exception("Internal error with slopes in SearchLunarApsis");
+                    }
+
+                    if (search == null)
+                        throw new Exception("Failed to find slope transition in lunar apsis search.");
+
+                    double dist_au = SearchContext_MoonDistanceSlope.MoonDistance(search);
+                    return new ApsisInfo(search, kind, dist_au);
+                }
+                /* We have not yet found a slope polarity change. Keep searching. */
+                t1 = t2;
+                m1 = m2;
+            }
+
+            /* It should not be possible to fail to find an apsis within 2 synodic months. */
+            throw new Exception("Internal error: should have found lunar apsis within 2 synodic months.");
+        }
+
+        /// <summary>
+        /// Finds the next lunar perigee or apogee event in a series.
+        /// </summary>
+        /// <remarks>
+        /// This function requires an #ApsisInfo value obtained from a call
+        /// to #Astronomy.SearchLunarApsis or `Astronomy.NextLunarApsis`. Given
+        /// an apogee event, this function finds the next perigee event, and vice versa.
+        ///
+        /// See #Astronomy_SearchLunarApsis for more details.
+        /// </remarks>
+        /// <param name="apsis">
+        /// An apsis event obtained from a call to #Astronomy.SearchLunarApsis or `Astronomy.NextLunarApsis`.
+        /// See #Astronomy.SearchLunarApsis for more details.
+        /// </param>
+        /// <returns>
+        /// Same as the return value for #Astronomy_SearchLunarApsis.
+        /// </returns>
+
+        public static ApsisInfo NextLunarApsis(ApsisInfo apsis)
+        {
+            const double skip = 11.0;   // number of days to skip to start looking for next apsis event
+
+            if (apsis.kind != ApsisKind.Pericenter && apsis.kind != ApsisKind.Apocenter)
+                throw new ArgumentException("Invalid apsis kind");
+
+            AstroTime time = apsis.time.AddDays(skip);
+            ApsisInfo next =  SearchLunarApsis(time);
+            if ((int)next.kind + (int)apsis.kind != 1)
+                throw new Exception(string.Format("Internal error: previous apsis was {0}, but found {1} for next apsis.", apsis.kind, next.kind));
+            return next;
+        }
     }
 
     /// <summary>
@@ -4164,6 +4334,33 @@ namespace CosineKitty
             Topocentric hor = Astronomy.Horizon(time, observer, ofdate.ra, ofdate.dec, Refraction.None);
 
             return direction * (hor.altitude + Astronomy.RAD2DEG*(body_radius_au / ofdate.dist) + Astronomy.REFRACTION_NEAR_HORIZON);
+        }
+    }
+
+    internal class SearchContext_MoonDistanceSlope: SearchContext
+    {
+        private readonly int direction;
+
+        public SearchContext_MoonDistanceSlope(int direction)
+        {
+            this.direction = direction;
+        }
+
+        public static double MoonDistance(AstroTime time)
+        {
+            var context = new MoonContext(time.tt / 36525.0);
+            MoonResult moon = context.CalcMoon();
+            return moon.distance_au;
+        }
+
+        public override double Eval(AstroTime time)
+        {
+            const double dt = 0.001;
+            AstroTime t1 = time.AddDays(-dt/2.0);
+            AstroTime t2 = time.AddDays(+dt/2.0);
+            double dist1 = MoonDistance(t1);
+            double dist2 = MoonDistance(t2);
+            return direction * (dist2 - dist1)/dt;
         }
     }
 

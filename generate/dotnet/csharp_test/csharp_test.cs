@@ -19,6 +19,7 @@ namespace csharp_test
                 if (SeasonsTest("../../seasons/seasons.txt") != 0) return 1;
                 if (MoonPhaseTest("../../moonphase/moonphases.txt") != 0) return 1;
                 if (ElongationTest() != 0) return 1;
+                if (LunarApsisTest("../../apsides/moon.txt") != 0) return 1;
                 if (AstroCheck() != 0) return 1;
                 Console.WriteLine("csharp_test: PASS");
                 return 0;
@@ -746,5 +747,74 @@ namespace csharp_test
             new elong_test_t( Body.Venus,   "2017-01-02T13:19Z", "2017-01-12T13:19Z", 47.10, Visibility.Evening ),
             new elong_test_t( Body.Venus,   "2018-08-07T17:02Z", "2018-08-17T17:02Z", 45.90, Visibility.Evening )
         };
+
+        static int LunarApsisTest(string inFileName)
+        {
+            using (StreamReader infile = File.OpenText(inFileName))
+            {
+                int lnum = 0;
+                string line;
+                var start_time = new AstroTime(2001,1, 1, 0, 0, 0);
+                ApsisInfo apsis = new ApsisInfo();
+                double max_minutes = 0.0;
+                double max_km = 0.0;
+                /*
+                    0 2001-01-10T08:59Z 357132
+                    1 2001-01-24T19:02Z 406565
+                */
+                var regex = new Regex(@"^\s*([01])\s+(\d+)-(\d+)-(\d+)T(\d+):(\d+)Z\s+(\d+)\s*$");
+                while (null != (line = infile.ReadLine()))
+                {
+                    ++lnum;
+                    Match m = regex.Match(line);
+                    if (!m.Success)
+                    {
+                        Console.WriteLine("LunarApsisTest({0} line {1}): invalid data format.", inFileName, lnum);
+                        return 1;
+                    }
+                    ApsisKind kind = (m.Groups[1].Value == "0") ? ApsisKind.Pericenter : ApsisKind.Apocenter;
+
+                    int year = int.Parse(m.Groups[2].Value);
+                    int month = int.Parse(m.Groups[3].Value);
+                    int day = int.Parse(m.Groups[4].Value);
+                    int hour = int.Parse(m.Groups[5].Value);
+                    int minute = int.Parse(m.Groups[6].Value);
+                    double dist_km = double.Parse(m.Groups[7].Value);
+
+                    var correct_time = new AstroTime(year, month, day, hour, minute, 0);
+
+                    if (lnum == 1)
+                        apsis = Astronomy.SearchLunarApsis(start_time);
+                    else
+                        apsis = Astronomy.NextLunarApsis(apsis);
+
+                    if (kind != apsis.kind)
+                    {
+                        Console.WriteLine("LunarApsisTest({0} line {1}): expected apsis kind {2} but found {3}", inFileName, lnum, kind, apsis.kind);
+                        return 1;
+                    }
+                    double diff_minutes = (24.0 * 60.0) * Math.Abs(apsis.time.ut - correct_time.ut);
+                    if (diff_minutes > 35.0)
+                    {
+                        Console.WriteLine("LunarApsisTest({0} line {1}): excessive time error: {2} minutes", inFileName, lnum, diff_minutes);
+                        return 1;
+                    }
+                    double diff_km =  Math.Abs(apsis.dist_km - dist_km);
+                    if (diff_km > 25.0)
+                    {
+                        Console.WriteLine("LunarApsisTest({0} line {1}): excessive distance error: {2} km", inFileName, lnum, diff_km);
+                        return 1;
+                    }
+
+                    if (diff_minutes > max_minutes)
+                        max_minutes = diff_minutes;
+
+                    if (diff_km > max_km)
+                        max_km = diff_km;
+                }
+                Console.WriteLine("C# LunarApsisTest: Found {0} events, max time error = {1} minutes, max distance error = {2} km.", lnum, max_minutes, max_km);
+                return 0;
+            }
+        }
     }
 }
