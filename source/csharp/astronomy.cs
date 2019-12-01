@@ -752,6 +752,40 @@ namespace CosineKitty
     }
 
     /// <summary>
+    /// Information about the brightness and illuminated shape of a celestial body.
+    /// </summary>
+    /// <remarks>
+    /// Returned by the functions #Astronomy.Illumination and #Astronomy.SearchPeakMagnitude
+    /// to report the visual magnitude and illuminated fraction of a celestial body at a given date and time.
+    /// </remarks>
+    public struct IllumInfo
+    {
+        /// <summary>The date and time of the observation.</summary>
+        public readonly AstroTime time;
+
+        /// <summary>The visual magnitude of the body. Smaller values are brighter.</summary>
+        public readonly double  mag;
+
+        /// <summary>The angle in degrees between the Sun and the Earth, as seen from the body. Indicates the body's phase as seen from the Earth.</summary>
+        public readonly double phase_angle;
+
+        /// <summary>The distance between the Sun and the body at the observation time.</summary>
+        public readonly double helio_dist;
+
+        /// <summary>For Saturn, the tilt angle in degrees of its rings as seen from Earth. For all other bodies, 0.</summary>
+        public readonly double ring_tilt;
+
+        internal IllumInfo(AstroTime time, double mag, double phase_angle, double helio_dist, double ring_tilt)
+        {
+            this.time = time;
+            this.mag = mag;
+            this.phase_angle = phase_angle;
+            this.helio_dist = helio_dist;
+            this.ring_tilt = ring_tilt;
+        }
+    }
+
+    /// <summary>
     /// The wrapper class that holds Astronomy Engine functions.
     /// </summary>
     public static class Astronomy
@@ -777,7 +811,8 @@ namespace CosineKitty
         internal const double REFRACTION_NEAR_HORIZON = 34.0 / 60.0;   /* degrees of refractive "lift" seen for objects near horizon */
         internal const double SUN_RADIUS_AU  = 4.6505e-3;
         internal const double MOON_RADIUS_AU = 1.15717e-5;
-        private const double ASEC180 = 180.0 * 60.0 * 60.0;        /* arcseconds per 180 degrees (or pi radians) */
+        private const double ASEC180 = 180.0 * 60.0 * 60.0;         /* arcseconds per 180 degrees (or pi radians) */
+        private const double AU_PER_PARSEC = (ASEC180 / Math.PI);   /* exact definition of how many AU = one parsec */
 
         internal static double LongitudeOffset(double diff)
         {
@@ -4217,6 +4252,178 @@ namespace CosineKitty
                 throw new Exception(string.Format("Internal error: previous apsis was {0}, but found {1} for next apsis.", apsis.kind, next.kind));
             return next;
         }
+
+        /// <summary>
+        /// Finds visual magnitude, phase angle, and other illumination information about a celestial body.
+        /// </summary>
+        /// <remarks>
+        /// This function calculates information about how bright a celestial body appears from the Earth,
+        /// reported as visual magnitude, which is a smaller (or even negative) number for brighter objects
+        /// and a larger number for dimmer objects.
+        ///
+        /// For bodies other than the Sun, it reports a phase angle, which is the angle in degrees between
+        /// the Sun and the Earth, as seen from the center of the body. Phase angle indicates what fraction
+        /// of the body appears illuminated as seen from the Earth. For example, when the phase angle is
+        /// near zero, it means the body appears "full" as seen from the Earth.  A phase angle approaching
+        /// 180 degrees means the body appears as a thin crescent as seen from the Earth.  A phase angle
+        /// of 90 degrees means the body appears "half full".
+        /// For the Sun, the phase angle is always reported as 0; the Sun emits light rather than reflecting it,
+        /// so it doesn't have a phase angle.
+        ///
+        /// When the body is Saturn, the returned structure contains a field `ring_tilt` that holds
+        /// the tilt angle in degrees of Saturn's rings as seen from the Earth. A value of 0 means
+        /// the rings appear edge-on, and are thus nearly invisible from the Earth. The `ring_tilt` holds
+        /// 0 for all bodies other than Saturn.
+        /// </remarks>
+        /// <param name="body">The Sun, Moon, or any planet other than the Earth.</param>
+        /// <param name="time">The date and time of the observation.</param>
+        /// <returns>An #IllumInfo structure with fields as documented above.</returns>
+        public static IllumInfo Illumination(Body body, AstroTime time)
+        {
+            if (body == Body.Earth)
+                throw new EarthNotAllowedException();
+
+            AstroVector earth = CalcEarth(time);
+
+            AstroVector gc;
+            AstroVector hc;
+            double phase_angle;
+            if (body == Body.Sun)
+            {
+                gc = new AstroVector(-earth.x, -earth.y, -earth.z, time);
+                hc = new AstroVector(0.0, 0.0, 0.0, time);
+                // The Sun emits light instead of reflecting it,
+                // so we report a placeholder phase angle of 0.
+                phase_angle = 0.0;
+            }
+            else
+            {
+                if (body == Body.Moon)
+                {
+                    // For extra numeric precision, use geocentric Moon formula directly.
+                    gc = GeoMoon(time);
+                    hc = new AstroVector(earth.x + gc.x, earth.y + gc.y, earth.z + gc.z, time);
+                }
+                else
+                {
+                    // For planets, the heliocentric vector is more direct to calculate.
+                    hc = HelioVector(body, time);
+                    gc = new AstroVector(hc.x - earth.x, hc.y - earth.y, hc.z - earth.z, time);
+                }
+
+                phase_angle = AngleBetween(gc, hc);
+            }
+
+            double geo_dist = gc.Length();
+            double helio_dist = hc.Length();
+            double ring_tilt = 0.0;
+
+            double mag;
+            switch (body)
+            {
+                case Body.Sun:
+                    mag = -0.17 + 5.0*Math.Log10(geo_dist / AU_PER_PARSEC);
+                    break;
+
+                case Body.Moon:
+                    mag = MoonMagnitude(phase_angle, helio_dist, geo_dist);
+                    break;
+
+                case Body.Saturn:
+                    mag = SaturnMagnitude(phase_angle, helio_dist, geo_dist, gc, time, out ring_tilt);
+                    break;
+
+                default:
+                    mag = VisualMagnitude(body, phase_angle, helio_dist, geo_dist);
+                    break;
+            }
+
+            return new IllumInfo(time, mag, phase_angle, helio_dist, ring_tilt);
+        }
+
+        private static double MoonMagnitude(double phase, double helio_dist, double geo_dist)
+        {
+            /* https://astronomy.stackexchange.com/questions/10246/is-there-a-simple-analytical-formula-for-the-lunar-phase-brightness-curve */
+            double rad = phase * DEG2RAD;
+            double rad2 = rad * rad;
+            double rad4 = rad2 * rad2;
+            double mag = -12.717 + 1.49*Math.Abs(rad) + 0.0431*rad4;
+            double moon_mean_distance_au = 385000.6 / KM_PER_AU;
+            double geo_au = geo_dist / moon_mean_distance_au;
+            mag += 5.0 * Math.Log10(helio_dist * geo_au);
+            return mag;
+        }
+
+        private static double VisualMagnitude(
+            Body body,
+            double phase,
+            double helio_dist,
+            double geo_dist)
+        {
+            /* For Mercury and Venus, see:  https://iopscience.iop.org/article/10.1086/430212 */
+            double c0, c1=0, c2=0, c3=0;
+            switch (body)
+            {
+                case Body.Mercury:
+                    c0 = -0.60; c1 = +4.98; c2 = -4.88; c3 = +3.02; break;
+                case Body.Venus:
+                    if (phase < 163.6)
+                    {
+                        c0 = -4.47; c1 = +1.03; c2 = +0.57; c3 = +0.13;
+                    }
+                    else
+                    {
+                        c0 = 0.98; c1 = -1.02;
+                    }
+                    break;
+                case Body.Mars:        c0 = -1.52; c1 = +1.60;   break;
+                case Body.Jupiter:     c0 = -9.40; c1 = +0.50;   break;
+                case Body.Uranus:      c0 = -7.19; c1 = +0.25;   break;
+                case Body.Neptune:     c0 = -6.87;               break;
+                case Body.Pluto:       c0 = -1.00; c1 = +4.00;   break;
+                default:
+                    throw new ArgumentException(string.Format("Unsupported body {0}", body));
+            }
+
+            double x = phase / 100;
+            double mag = c0 + x*(c1 + x*(c2 + x*c3));
+            mag += 5.0 * Math.Log10(helio_dist * geo_dist);
+            return mag;
+        }
+
+        private static double SaturnMagnitude(
+            double phase,
+            double helio_dist,
+            double geo_dist,
+            AstroVector gc,
+            AstroTime time,
+            out double ring_tilt)
+        {
+            /* Based on formulas by Paul Schlyter found here: */
+            /* http://www.stjarnhimlen.se/comp/ppcomp.html#15 */
+
+            /* We must handle Saturn's rings as a major component of its visual magnitude. */
+            /* Find geocentric ecliptic coordinates of Saturn. */
+            Ecliptic eclip = EquatorialToEcliptic(gc);
+
+            double ir = DEG2RAD * 28.06;   /* tilt of Saturn's rings to the ecliptic, in radians */
+            double Nr = DEG2RAD * (169.51 + (3.82e-5 * time.tt));    /* ascending node of Saturn's rings, in radians */
+
+            /* Find tilt of Saturn's rings, as seen from Earth. */
+            double lat = DEG2RAD * eclip.elat;
+            double lon = DEG2RAD * eclip.elon;
+            double tilt = Math.Asin(Math.Sin(lat)*Math.Cos(ir) - Math.Cos(lat)*Math.Sin(ir)*Math.Sin(lon-Nr));
+            double sin_tilt = Math.Sin(Math.Abs(tilt));
+
+            double mag = -9.0 + 0.044*phase;
+            mag += sin_tilt*(-2.6 + 1.2*sin_tilt);
+            mag += 5.0 * Math.Log10(helio_dist * geo_dist);
+
+            ring_tilt = RAD2DEG * tilt;
+
+            return mag;
+        }
+
     }
 
     /// <summary>

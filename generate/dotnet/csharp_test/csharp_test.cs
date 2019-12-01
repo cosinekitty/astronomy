@@ -20,6 +20,7 @@ namespace csharp_test
                 if (MoonPhaseTest("../../moonphase/moonphases.txt") != 0) return 1;
                 if (ElongationTest() != 0) return 1;
                 if (LunarApsisTest("../../apsides/moon.txt") != 0) return 1;
+                if (MagnitudeTest() != 0) return 1;
                 if (AstroCheck() != 0) return 1;
                 Console.WriteLine("csharp_test: PASS");
                 return 0;
@@ -815,6 +816,143 @@ namespace csharp_test
                 Console.WriteLine("C# LunarApsisTest: Found {0} events, max time error = {1} minutes, max distance error = {2} km.", lnum, max_minutes, max_km);
                 return 0;
             }
+        }
+
+        class JplDateTime
+        {
+            public string Rest;
+            public AstroTime Time;
+        }
+
+        static readonly Regex JplRegex = new Regex(@"^\s*(\d{4})-(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)-(\d{2})\s+(\d{2}):(\d{2})\s+(.*)");
+
+        static JplDateTime ParseJplHorizonsDateTime(string line)
+        {
+            Match m = JplRegex.Match(line);
+            if (!m.Success)
+                return null;
+            int year = int.Parse(m.Groups[1].Value);
+            string mtext = m.Groups[2].Value;
+            int day = int.Parse(m.Groups[3].Value);
+            int hour = int.Parse(m.Groups[4].Value);
+            int minute = int.Parse(m.Groups[5].Value);
+            string rest = m.Groups[6].Value;
+            int month;
+            switch (mtext)
+            {
+                case "Jan": month =  1;  break;
+                case "Feb": month =  2;  break;
+                case "Mar": month =  3;  break;
+                case "Apr": month =  4;  break;
+                case "May": month =  5;  break;
+                case "Jun": month =  6;  break;
+                case "Jul": month =  7;  break;
+                case "Aug": month =  8;  break;
+                case "Sep": month =  9;  break;
+                case "Oct": month = 10;  break;
+                case "Nov": month = 11;  break;
+                case "Dec": month = 12;  break;
+                default:
+                    throw new Exception(string.Format("Internal error: unexpected month name '{0}'", mtext));
+            }
+            AstroTime time = new AstroTime(year, month, day, hour, minute, 0);
+            return new JplDateTime { Rest=rest, Time=time };
+        }
+
+        static int CheckMagnitudeData(Body body, string filename)
+        {
+            using (StreamReader infile = File.OpenText(filename))
+            {
+                const double limit = 0.012;
+                double diff_lo = 0.0;
+                double diff_hi = 0.0;
+                double sum_squared_diff = 0.0;
+                int lnum = 0;
+                int count = 0;
+                string line;
+                char[] separators = new char[] { ' ', '\t', '\r', '\n' };
+                while (null != (line = infile.ReadLine()))
+                {
+                    ++lnum;
+                    JplDateTime jpl = ParseJplHorizonsDateTime(line);
+                    if (jpl == null)
+                        continue;
+
+                    string[] token = jpl.Rest.Split(separators, StringSplitOptions.RemoveEmptyEntries);
+                    if (token.Length > 0 && token[0] == "n.a.")
+                        continue;
+
+                    if (token.Length != 7)
+                    {
+                        Console.WriteLine("CheckMagnitudeData({0} line {1}): invalid data format", lnum, filename);
+                        return 1;
+                    }
+                    double mag;
+                    if (!double.TryParse(token[0], out mag))
+                    {
+                        Console.WriteLine("CheckMagnitudeData({0} line {1}): cannot parse number from '{2}'", filename, lnum, token[0]);
+                        return 1;
+                    }
+                    var illum = Astronomy.Illumination(body, jpl.Time);
+                    double diff = illum.mag - mag;
+                    if (Math.Abs(diff) > limit)
+                    {
+                        Console.WriteLine("CheckMagnitudeData({0} line {1}): EXCESSIVE ERROR: correct mag={0}, calc mag={1}, diff={2}", mag, illum.mag, diff);
+                        return 1;
+                    }
+                    sum_squared_diff += diff * diff;
+                    if (count == 0)
+                    {
+                        diff_lo = diff_hi = diff;
+                    }
+                    else
+                    {
+                        if (diff < diff_lo)
+                            diff_lo = diff;
+
+                        if (diff > diff_hi)
+                            diff_hi = diff;
+                    }
+                    ++count;
+                }
+                if (count == 0)
+                {
+                    Console.WriteLine("CheckMagnitudeData: Data not find any data in file: {0}", filename);
+                    return 1;
+                }
+                double rms = Math.Sqrt(sum_squared_diff / count);
+                Console.WriteLine("CheckMagnitudeData: {0} {1} rows diff_lo={2} diff_hi={3} rms={4}", filename, count, diff_lo, diff_hi, rms);
+                return 0;
+            }
+        }
+
+        static int CheckSaturn()
+        {
+            return 1;
+        }
+
+        static int TestMaxMag(Body body, string filename)
+        {
+            return 1;
+        }
+
+        static int MagnitudeTest()
+        {
+            int nfailed = 0;
+            nfailed += CheckMagnitudeData(Body.Sun, "../../magnitude/Sun.txt");
+            nfailed += CheckMagnitudeData(Body.Moon, "../../magnitude/Moon.txt");
+            nfailed += CheckMagnitudeData(Body.Mercury, "../../magnitude/Mercury.txt");
+            nfailed += CheckMagnitudeData(Body.Venus, "../../magnitude/Venus.txt");
+            nfailed += CheckMagnitudeData(Body.Mars, "../../magnitude/Mars.txt");
+            nfailed += CheckMagnitudeData(Body.Jupiter, "../../magnitude/Jupiter.txt");
+            //nfailed += CheckSaturn();
+            nfailed += CheckMagnitudeData(Body.Uranus, "../../magnitude/Uranus.txt");
+            nfailed += CheckMagnitudeData(Body.Neptune, "../../magnitude/Neptune.txt");
+            nfailed += CheckMagnitudeData(Body.Pluto, "../../magnitude/Pluto.txt");
+            //nfailed += TestMaxMag(Body.Venus, "../../magnitude/maxmag_Venus.txt");
+            if (nfailed > 0)
+                Console.WriteLine("MagnitudeTest: FAILED {0} test(s).", nfailed);
+            return nfailed;
         }
     }
 }

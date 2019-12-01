@@ -1435,8 +1435,8 @@ static int MagnitudeTest(void)
     nfailed += CheckMagnitudeData(BODY_MERCURY, "magnitude/Mercury.txt");
     nfailed += CheckMagnitudeData(BODY_VENUS,   "magnitude/Venus.txt");
     nfailed += CheckMagnitudeData(BODY_MARS,    "magnitude/Mars.txt");
-    nfailed += CheckSaturn();
     nfailed += CheckMagnitudeData(BODY_JUPITER, "magnitude/Jupiter.txt");
+    nfailed += CheckSaturn();
     nfailed += CheckMagnitudeData(BODY_URANUS,  "magnitude/Uranus.txt");
     nfailed += CheckMagnitudeData(BODY_NEPTUNE, "magnitude/Neptune.txt");
     nfailed += CheckMagnitudeData(BODY_PLUTO,   "magnitude/Pluto.txt");
