@@ -826,6 +826,13 @@ namespace csharp_test
 
         static readonly Regex JplRegex = new Regex(@"^\s*(\d{4})-(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)-(\d{2})\s+(\d{2}):(\d{2})\s+(.*)");
 
+        static readonly char[] TokenSeparators = new char[] { ' ', '\t', '\r', '\n' };
+
+        static string[] Tokenize(string line)
+        {
+            return line.Split(TokenSeparators, StringSplitOptions.RemoveEmptyEntries);
+        }
+
         static JplDateTime ParseJplHorizonsDateTime(string line)
         {
             Match m = JplRegex.Match(line);
@@ -870,7 +877,6 @@ namespace csharp_test
                 int lnum = 0;
                 int count = 0;
                 string line;
-                char[] separators = new char[] { ' ', '\t', '\r', '\n' };
                 while (null != (line = infile.ReadLine()))
                 {
                     ++lnum;
@@ -878,7 +884,7 @@ namespace csharp_test
                     if (jpl == null)
                         continue;
 
-                    string[] token = jpl.Rest.Split(separators, StringSplitOptions.RemoveEmptyEntries);
+                    string[] token = Tokenize(jpl.Rest);
                     if (token.Length > 0 && token[0] == "n.a.")
                         continue;
 
@@ -984,7 +990,55 @@ namespace csharp_test
 
         static int TestMaxMag(Body body, string filename)
         {
-            return 1;
+            /*
+                Example of input data:
+
+                2001-02-21T08:00Z 2001-02-27T08:00Z 23.17 19.53 -4.84
+
+                JPL Horizons test data has limited floating point precision in the magnitude values.
+                There is a pair of dates for the beginning and end of the max magnitude period,
+                given the limited precision.
+                We pick the point halfway between as the supposed max magnitude time.
+            */
+            using (StreamReader infile = File.OpenText(filename))
+            {
+                int lnum = 0;
+                string line;
+                var search_time = new AstroTime(2001, 1, 1, 0, 0, 0);
+                while (null != (line = infile.ReadLine()))
+                {
+                    ++lnum;
+                    string[] token = Tokenize(line);
+                    if (token.Length != 5)
+                    {
+                        Console.WriteLine("TestMaxMag({0} line {1}): invalid data format", filename, lnum);
+                        return 1;
+                    }
+                    AstroTime time1 = ParseDate(token[0]);
+                    AstroTime time2 = ParseDate(token[1]);
+                    double correct_angle1 = double.Parse(token[2]);
+                    double correct_angle2 = double.Parse(token[3]);
+                    double correct_mag = double.Parse(token[4]);
+                    AstroTime center_time = time1.AddDays(0.5*(time2.ut - time1.ut));
+                    IllumInfo illum = Astronomy.SearchPeakMagnitude(body, search_time);
+                    double mag_diff = Math.Abs(illum.mag - correct_mag);
+                    double hours_diff = 24.0 * Math.Abs(illum.time.ut - center_time.ut);
+                    Console.WriteLine("C# TestMaxMag: mag_diff={0}, hours_diff={1}", mag_diff, hours_diff);
+                    if (hours_diff > 7.1)
+                    {
+                        Console.WriteLine("TestMaxMag({0} line {1}): EXCESSIVE TIME DIFFERENCE.", filename, lnum);
+                        return 1;
+                    }
+                    if (mag_diff > 0.005)
+                    {
+                        Console.WriteLine("TestMaxMag({0} line {1}): EXCESSIVE MAGNITUDE DIFFERENCE.", filename, lnum);
+                        return 1;
+                    }
+                    search_time = time2;
+                }
+                Console.WriteLine("TestMaxMag: Processed {0} lines from file {1}", lnum, filename);
+                return 0;
+            }
         }
 
         static int MagnitudeTest()
@@ -1000,7 +1054,7 @@ namespace csharp_test
             nfailed += CheckMagnitudeData(Body.Uranus, "../../magnitude/Uranus.txt");
             nfailed += CheckMagnitudeData(Body.Neptune, "../../magnitude/Neptune.txt");
             nfailed += CheckMagnitudeData(Body.Pluto, "../../magnitude/Pluto.txt");
-            //nfailed += TestMaxMag(Body.Venus, "../../magnitude/maxmag_Venus.txt");
+            nfailed += TestMaxMag(Body.Venus, "../../magnitude/maxmag_Venus.txt");
             if (nfailed > 0)
                 Console.WriteLine("MagnitudeTest: FAILED {0} test(s).", nfailed);
             return nfailed;

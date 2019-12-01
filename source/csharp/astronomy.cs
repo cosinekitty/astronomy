@@ -4424,6 +4424,127 @@ namespace CosineKitty
             return mag;
         }
 
+        /// <summary>Searches for the date and time Venus will next appear brightest as seen from the Earth.</summary>
+        /// <remarks>
+        /// This function searches for the date and time Venus appears brightest as seen from the Earth.
+        /// Currently only Venus is supported for the `body` parameter, though this could change in the future.
+        /// Mercury's peak magnitude occurs at superior conjunction, when it is virtually impossible to see from the Earth,
+        /// so peak magnitude events have little practical value for that planet.
+        /// Planets other than Venus and Mercury reach peak magnitude at opposition, which can
+        /// be found using #Astronomy.SearchRelativeLongitude.
+        /// The Moon reaches peak magnitude at full moon, which can be found using
+        /// #Astronomy.SearchMoonQuarter or #Astronomy.SearchMoonPhase.
+        /// The Sun reaches peak magnitude at perihelion, which occurs each year in January.
+        /// However, the difference is minor and has little practical value.
+        /// </remarks>
+        ///
+        /// <param name="body">
+        ///      Currently only `Body.Venus` is allowed. Any other value causes an exception.
+        ///      See remarks above for more details.
+        /// </param>
+        /// <param name="startTime">
+        ///     The date and time to start searching for the next peak magnitude event.
+        /// </param>
+        /// <returns>
+        ///      See documentation about the return value from #Astronomy.Illumination.
+        /// </returns>
+        public static IllumInfo SearchPeakMagnitude(Body body, AstroTime startTime)
+        {
+            /* s1 and s2 are relative longitudes within which peak magnitude of Venus can occur. */
+            const double s1 = 10.0;
+            const double s2 = 30.0;
+
+            if (body != Body.Venus)
+                throw new ArgumentException("Peak magnitude currently is supported for Venus only.");
+
+            var mag_slope = new SearchContext_MagnitudeSlope(body);
+
+            int iter = 0;
+            while (++iter <= 2)
+            {
+                /* Find current heliocentric relative longitude between the */
+                /* inferior planet and the Earth. */
+                double plon = EclipticLongitude(body, startTime);
+                double elon = EclipticLongitude(Body.Earth, startTime);
+                double rlon = LongitudeOffset(plon - elon);     // clamp to (-180, +180].
+
+                /* The slope function is not well-behaved when rlon is near 0 degrees or 180 degrees */
+                /* because there is a cusp there that causes a discontinuity in the derivative. */
+                /* So we need to guard against searching near such times. */
+
+                double rlon_lo, rlon_hi, adjust_days, syn;
+                if (rlon >= -s1 && rlon < +s1)
+                {
+                    /* Seek to the window [+s1, +s2]. */
+                    adjust_days = 0.0;
+                    /* Search forward for the time t1 when rel lon = +s1. */
+                    rlon_lo = +s1;
+                    /* Search forward for the time t2 when rel lon = +s2. */
+                    rlon_hi = +s2;
+                }
+                else if (rlon >= +s2 || rlon < -s2)
+                {
+                    /* Seek to the next search window at [-s2, -s1]. */
+                    adjust_days = 0.0;
+                    /* Search forward for the time t1 when rel lon = -s2. */
+                    rlon_lo = -s2;
+                    /* Search forward for the time t2 when rel lon = -s1. */
+                    rlon_hi = -s1;
+                }
+                else if (rlon >= 0)
+                {
+                    /* rlon must be in the middle of the window [+s1, +s2]. */
+                    /* Search BACKWARD for the time t1 when rel lon = +s1. */
+                    syn = SynodicPeriod(body);
+                    adjust_days = -syn / 4;
+                    rlon_lo = +s1;
+                    /* Search forward from t1 to find t2 such that rel lon = +s2. */
+                    rlon_hi = +s2;
+                }
+                else
+                {
+                    /* rlon must be in the middle of the window [-s2, -s1]. */
+                    /* Search BACKWARD for the time t1 when rel lon = -s2. */
+                    syn = SynodicPeriod(body);
+                    adjust_days = -syn / 4;
+                    rlon_lo = -s2;
+                    /* Search forward from t1 to find t2 such that rel lon = -s1. */
+                    rlon_hi = -s1;
+                }
+                AstroTime t_start = startTime.AddDays(adjust_days);
+                AstroTime t1 = SearchRelativeLongitude(body, rlon_lo, t_start);
+                if (t1 == null)
+                    throw new Exception("Relative longitude search #1 failed.");
+                AstroTime t2 = SearchRelativeLongitude(body, rlon_hi, t1);
+                if (t2 == null)
+                    throw new Exception("Relative longitude search #2 failed.");
+
+                /* Now we have a time range [t1,t2] that brackets a maximum magnitude event. */
+                /* Confirm the bracketing. */
+                double m1 = mag_slope.Eval(t1);
+                if (m1 >= 0.0)
+                    throw new Exception("Internal error: m1 >= 0");    /* should never happen! */
+
+                double m2 = mag_slope.Eval(t2);
+                if (m2 <= 0.0)
+                    throw new Exception("Internal error: m2 <= 0");    /* should never happen! */
+
+                /* Use the generic search algorithm to home in on where the slope crosses from negative to positive. */
+                AstroTime tx = Search(mag_slope, t1, t2, 10.0);
+                if (tx == null)
+                    throw new Exception("Failed to find magnitude slope transition.");
+
+                if (tx.tt >= startTime.tt)
+                    return Illumination(body, tx);
+
+                /* This event is in the past (earlier than startTime). */
+                /* We need to search forward from t2 to find the next possible window. */
+                /* We never need to search more than twice. */
+                startTime = t2.AddDays(1.0);
+            }
+            // This should never happen. If it does, please report as a bug in Astronomy Engine.
+            throw new Exception("Peak magnitude search failed.");
+        }
     }
 
     /// <summary>
@@ -4438,6 +4559,33 @@ namespace CosineKitty
         /// <param name="time">The time at which to evaluate the function.</param>
         /// <returns>The floating point value of the function at the specified time.</returns>
         public abstract double Eval(AstroTime time);
+    }
+
+    internal class SearchContext_MagnitudeSlope: SearchContext
+    {
+        private readonly Body body;
+
+        public SearchContext_MagnitudeSlope(Body body)
+        {
+            this.body = body;
+        }
+
+        public override double Eval(AstroTime time)
+        {
+            /*
+                The Search() function finds a transition from negative to positive values.
+                The derivative of magnitude y with respect to time t (dy/dt)
+                is negative as an object gets brighter, because the magnitude numbers
+                get smaller. At peak magnitude dy/dt = 0, then as the object gets dimmer,
+                dy/dt > 0.
+            */
+            const double dt = 0.01;
+            AstroTime t1 = time.AddDays(-dt/2);
+            AstroTime t2 = time.AddDays(+dt/2);
+            IllumInfo y1 = Astronomy.Illumination(body, t1);
+            IllumInfo y2 = Astronomy.Illumination(body, t2);
+            return (y2.mag - y1.mag) / dt;
+        }
     }
 
     internal class SearchContext_NegElongSlope: SearchContext
