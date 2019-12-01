@@ -926,9 +926,60 @@ namespace csharp_test
             }
         }
 
+        struct saturn_test_case
+        {
+            public readonly string date;
+            public readonly double mag;
+            public readonly double tilt;
+
+            public saturn_test_case(string date, double mag, double tilt)
+            {
+                this.date = date;
+                this.mag = mag;
+                this.tilt = tilt;
+            }
+        }
+
+        /* JPL Horizons does not include Saturn's rings in its magnitude models. */
+        /* I still don't have authoritative test data for Saturn's magnitude. */
+        /* For now, I just test for consistency with Paul Schlyter's formulas at: */
+        /* http://www.stjarnhimlen.se/comp/ppcomp.html#15 */
+        static saturn_test_case[] saturn_data = new saturn_test_case[]
+        {
+            new saturn_test_case("1972-01-01T00:00Z", -0.31904865,  +24.50061220),
+            new saturn_test_case("1980-01-01T00:00Z", +0.85213663,   -1.85761461),
+            new saturn_test_case("2009-09-04T00:00Z", +1.01626809,   +0.08380716),
+            new saturn_test_case("2017-06-15T00:00Z", -0.12318790,  -26.60871409),
+            new saturn_test_case("2019-05-01T00:00Z", +0.32954097,  -23.53880802),
+            new saturn_test_case("2025-09-25T00:00Z", +0.51286575,   +1.52327932),
+            new saturn_test_case("2032-05-15T00:00Z", -0.04652109,  +26.95717765)
+        };
+
         static int CheckSaturn()
         {
-            return 1;
+            foreach (saturn_test_case data in saturn_data)
+            {
+                AstroTime time = ParseDate(data.date);
+
+                IllumInfo illum = Astronomy.Illumination(Body.Saturn, time);
+                Console.WriteLine("Saturn: date={0}  calc mag={1}  ring_tilt={2}\n", data.date, illum.mag, illum.ring_tilt);
+
+                double mag_diff = Math.Abs(illum.mag - data.mag);
+                if (mag_diff > 1.0e-8)
+                {
+                    Console.WriteLine("ERROR: Excessive magnitude error {0}", mag_diff);
+                    return 1;
+                }
+
+                double tilt_diff = Math.Abs(illum.ring_tilt - data.tilt);
+                if (tilt_diff > 1.0e-8)
+                {
+                    Console.WriteLine("ERROR: Excessive ring tilt error {0}\n", tilt_diff);
+                    return 1;
+                }
+            }
+
+            return 0;
         }
 
         static int TestMaxMag(Body body, string filename)
@@ -945,7 +996,7 @@ namespace csharp_test
             nfailed += CheckMagnitudeData(Body.Venus, "../../magnitude/Venus.txt");
             nfailed += CheckMagnitudeData(Body.Mars, "../../magnitude/Mars.txt");
             nfailed += CheckMagnitudeData(Body.Jupiter, "../../magnitude/Jupiter.txt");
-            //nfailed += CheckSaturn();
+            nfailed += CheckSaturn();
             nfailed += CheckMagnitudeData(Body.Uranus, "../../magnitude/Uranus.txt");
             nfailed += CheckMagnitudeData(Body.Neptune, "../../magnitude/Neptune.txt");
             nfailed += CheckMagnitudeData(Body.Pluto, "../../magnitude/Pluto.txt");
