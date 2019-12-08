@@ -4294,6 +4294,32 @@ astro_rotation_t Astronomy_MakeRotation_EQD_EQJ(astro_time_t time)
 }
 #endif
 
+/**
+ * @brief
+ *      Calculates a rotation matrix from equatorial J2000 (EQJ) to ecliptic J2000 (ECL).
+ *
+ * This is one of the family of MakeRotation functions that convert
+ * from one orientation system to another.
+ * Source: EQJ = equatorial system, using equator at J2000 epoch.
+ * Target: ECL = ecliptic system, using equator at J2000 epoch.
+ *
+ * @return
+ *      A rotation matrix that converts EQJ to ECL.
+ */
+astro_rotation_t Astronomy_Rotation_EQJ_ECL(void)
+{
+    /* ob = mean obliquity of the J2000 ecliptic = 0.40909260059599012 radians. */
+    static const double c = 0.9174821430670688;    /* cos(ob) */
+    static const double s = 0.3977769691083922;    /* sin(ob) */
+    astro_rotation_t r;
+
+    r.status = ASTRO_SUCCESS;
+    r.rot[0][0] = 1.0;  r.rot[1][0] = 0.0;  r.rot[2][0] = 0.0;
+    r.rot[0][1] = 0.0;  r.rot[1][1] = +c;   r.rot[2][1] = +s;
+    r.rot[0][2] = 0.0;  r.rot[1][2] = -s;   r.rot[2][2] = +c;
+    return r;
+}
+
 #ifdef __cplusplus
 }
 #endif

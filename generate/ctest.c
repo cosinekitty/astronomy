@@ -2018,6 +2018,66 @@ static int TestSpin(
     return 0;
 }
 
+static int Test_EQJ_ECL(void)
+{
+    astro_rotation_t r;
+    astro_time_t time;
+    astro_vector_t ev;      /* Earth vector in equatorial J2000 */
+    astro_ecliptic_t ecl;
+    astro_vector_t ee;      /* Earth vector in ecliptic J2000 */
+    double diff, dx, dy, dz;
+
+    r = Astronomy_Rotation_EQJ_ECL();
+    if (r.status != ASTRO_SUCCESS)
+    {
+        fprintf(stderr, "ERROR(Test_EQJ_ECL): r.status = %d\n", r.status);
+        return 1;
+    }
+
+    printf("Test_EQJ_ECL:\n[%0.18lf  %0.18lf  %0.18lf]\n[%0.18lf  %0.18lf  %0.18lf]\n[%0.18lf  %0.18lf  %0.18lf]\n",
+        r.rot[0][0], r.rot[1][0], r.rot[2][0],
+        r.rot[0][1], r.rot[1][1], r.rot[2][1],
+        r.rot[0][2], r.rot[1][2], r.rot[2][2]);
+
+    /* Calculate heliocentric Earth position at a test time (when I wrote this code). */
+    time = Astronomy_MakeTime(2019, 12, 8, 19, 39, 15.0);
+    ev = Astronomy_HelioVector(BODY_EARTH, time);
+    if (ev.status != ASTRO_SUCCESS)
+    {
+        fprintf(stderr, "Test_EQJ_ECL: Astronomy_HelioVector returned error %d\n", ev.status);
+        return 1;
+    }
+
+    /* Use the existing Astronomy_Ecliptic() to calculate ecliptic vector and angles. */
+    ecl = Astronomy_Ecliptic(ev);
+    if (ecl.status != ASTRO_SUCCESS)
+    {
+        fprintf(stderr, "Test_EQJ_ECL: Astronomy_Ecliptic returned error %d\n", ecl.status);
+        return 1;
+    }
+    printf("Test_EQJ_ECL ecl = (%0.18lf, %0.18lf,%0.18lf)\n", ecl.ex, ecl.ey, ecl.ez);
+
+    /* Now compute the same vector via rotation matrix. */
+    ee = Astronomy_RotateVector(r, ev);
+    if (ee.status != ASTRO_SUCCESS)
+    {
+        fprintf(stderr, "Test_EQJ_ECL: Astronomy_RotateVector returned error %d\n", ee.status);
+        return 1;
+    }
+    dx = ee.x - ecl.ex;
+    dy = ee.y - ecl.ey;
+    dz = ee.z - ecl.ez;
+    diff = sqrt(dx*dx + dy*dy + dz*dz);
+    printf("Test_EQJ_ECL  ee = (%0.18lf, %0.18lf,%0.18lf);  diff=%lg\n", ee.x, ee.y, ee.z, diff);
+    if (diff > 1.0e-16)
+    {
+        fprintf(stderr, "Test_EQJ_ECL: EXCESSIVE VECTOR ERROR\n");
+        return 1;
+    }
+
+    return 0;
+}
+
 static int RotationTest(void)
 {
     int error;
@@ -2049,6 +2109,8 @@ static int RotationTest(void)
     CHECK(TestSpin(0.0, 90.0, 0.0, +1, +2, +3, +3, +2, -1));
     CHECK(TestSpin(180.0, 180.0, 180.0, +1, +2, +3, +1, +2, +3));
     CHECK(TestSpin(0.0, 0.0, -45.0, +1, 0, 0, +0.7071067811865476, -0.7071067811865476, 0));
+
+    CHECK(Test_EQJ_ECL());
 
     error = 0;
 fail:
