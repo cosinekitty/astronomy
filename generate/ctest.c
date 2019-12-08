@@ -1750,10 +1750,25 @@ static int Issue48(void)
 
 /*-----------------------------------------------------------------------------------------------------------*/
 
+static int CompareMatrices(const char *caller, astro_rotation_t a, astro_rotation_t b)
+{
+    int i, j;
+
+    for (i=0; i < 3; ++i)
+        for (j=0; j < 3; ++j)
+            if (a.rot[i][j] != b.rot[i][j])
+            {
+                fprintf(stderr, "ERROR(%s): matrix[%d][%d]=%lf, expected %lf\n", caller, i, j, a.rot[i][j], b.rot[i][j]);
+                return 1;
+            }
+
+    return 0;
+}
+
 static int Rotation_MatrixMultiply(void)
 {
     astro_rotation_t  a, b, c, v;
-    int i, j;
+    int error;
 
     a.status = ASTRO_SUCCESS;
     a.rot[0][0] = 1.0; a.rot[1][0] = 2.0; a.rot[2][0] = 3.0;
@@ -1772,23 +1787,15 @@ static int Rotation_MatrixMultiply(void)
 
     /* Let c = a*b */
     c = Astronomy_CombineRotation(a, b);
-    if (c.status != ASTRO_SUCCESS)
-    {
-        fprintf(stderr, "Rotation_MatrixMultiply: ERROR: c.status = %d\n", c.status);
-        return 1;
-    }
 
     /* Verify that c = v. */
-    for (i=0; i < 3; ++i)
-        for (j=0; j < 3; ++j)
-            if (c.rot[i][j] != v.rot[i][j])
-            {
-                fprintf(stderr, "Rotation_MatrixMultiply: ERROR: c[%d][%d]=%lf, expected %lf\n", i, j, c.rot[i][j], v.rot[i][j]);
-                return 1;
-            }
+    CHECK(CompareMatrices("Rotation_MatrixMultiply", c, v));
 
     printf("Rotation_MatrixMultiply: PASS\n");
-    return 0;
+    error = 0;
+
+fail:
+    return error;
 }
 
 static int RotationTest(void)
