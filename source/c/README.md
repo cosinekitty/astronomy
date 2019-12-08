@@ -725,6 +725,23 @@ This function transforms a vector in one orientation to a vector in another orie
 
 ---
 
+<a name="Astronomy_Rotation_ECL_EQJ"></a>
+### Astronomy_Rotation_ECL_EQJ() &#8658; [`astro_rotation_t`](#astro_rotation_t)
+
+**Calculates a rotation matrix from ecliptic J2000 (ECL) to equatorial J2000 (EQJ).** 
+
+
+
+This is one of the family of functions that returns a rotation matrix for converting from one orientation to another. Source: ECL = ecliptic system, using equator at J2000 epoch. Target: EQJ = equatorial system, using equator at J2000 epoch.
+
+
+
+**Returns:**  A rotation matrix that converts ECL to EQJ. 
+
+
+
+---
+
 <a name="Astronomy_Rotation_EQJ_ECL"></a>
 ### Astronomy_Rotation_EQJ_ECL() &#8658; [`astro_rotation_t`](#astro_rotation_t)
 
@@ -732,7 +749,7 @@ This function transforms a vector in one orientation to a vector in another orie
 
 
 
-This is one of the family of MakeRotation functions that convert from one orientation system to another. Source: EQJ = equatorial system, using equator at J2000 epoch. Target: ECL = ecliptic system, using equator at J2000 epoch.
+This is one of the family of functions that returns a rotation matrix for converting from one orientation to another. Source: EQJ = equatorial system, using equator at J2000 epoch. Target: ECL = ecliptic system, using equator at J2000 epoch.
 
 
 

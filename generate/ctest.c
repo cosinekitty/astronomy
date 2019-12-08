@@ -2025,6 +2025,7 @@ static int Test_EQJ_ECL(void)
     astro_vector_t ev;      /* Earth vector in equatorial J2000 */
     astro_ecliptic_t ecl;
     astro_vector_t ee;      /* Earth vector in ecliptic J2000 */
+    astro_vector_t et;      /* Test of reconstructing original Earth vector in equatorial J2000 */
     double diff, dx, dy, dz;
 
     r = Astronomy_Rotation_EQJ_ECL();
@@ -2072,6 +2073,20 @@ static int Test_EQJ_ECL(void)
     if (diff > 1.0e-16)
     {
         fprintf(stderr, "Test_EQJ_ECL: EXCESSIVE VECTOR ERROR\n");
+        return 1;
+    }
+
+    /* Reverse the test: go from ecliptic back to equatorial. */
+    r = Astronomy_Rotation_ECL_EQJ();
+    et = Astronomy_RotateVector(r, ee);
+    dx = et.x - ev.x;
+    dy = et.y - ev.y;
+    dz = et.z - ev.z;
+    diff = sqrt(dx*dx + dy*dy + dz*dz);
+    printf("Test_EQJ_ECL  ev diff=%lg\n", diff);
+    if (diff > 1.0e-16)
+    {
+        fprintf(stderr, "Test_EQJ_ECL: EXCESSIVE REVERSE ROTATION ERROR\n");
         return 1;
     }
 
