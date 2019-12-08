@@ -1754,6 +1754,18 @@ static int CompareMatrices(const char *caller, astro_rotation_t a, astro_rotatio
 {
     int i, j;
 
+    if (a.status != ASTRO_SUCCESS)
+    {
+        fprintf(stderr, "ERROR(%s): a.status = %d\n", caller, a.status);
+        return 1;
+    }
+
+    if (b.status != ASTRO_SUCCESS)
+    {
+        fprintf(stderr, "ERROR(%s): b.status = %d\n", caller, b.status);
+        return 1;
+    }
+
     for (i=0; i < 3; ++i)
         for (j=0; j < 3; ++j)
             if (a.rot[i][j] != b.rot[i][j])
@@ -1763,6 +1775,31 @@ static int CompareMatrices(const char *caller, astro_rotation_t a, astro_rotatio
             }
 
     return 0;
+}
+
+static int Rotation_MatrixInverse(void)
+{
+    astro_rotation_t a, b, v;
+    int error;
+
+    a.status = ASTRO_SUCCESS;
+    a.rot[0][0] = 1.0; a.rot[1][0] = 2.0; a.rot[2][0] = 3.0;
+    a.rot[0][1] = 4.0; a.rot[1][1] = 5.0; a.rot[2][1] = 6.0;
+    a.rot[0][2] = 7.0; a.rot[1][2] = 8.0; a.rot[2][2] = 9.0;
+
+    v.status = ASTRO_SUCCESS;
+    v.rot[0][0] = 1.0; v.rot[1][0] = 4.0; v.rot[2][0] = 7.0;
+    v.rot[0][1] = 2.0; v.rot[1][1] = 5.0; v.rot[2][1] = 8.0;
+    v.rot[0][2] = 3.0; v.rot[1][2] = 6.0; v.rot[2][2] = 9.0;
+
+    b = Astronomy_InverseRotation(a);
+    CHECK(CompareMatrices("Rotation_MatrixInverse", b, v));
+
+    printf("Rotation_MatrixInverse: PASS\n");
+    error = 0;
+
+fail:
+    return error;
 }
 
 static int Rotation_MatrixMultiply(void)
@@ -1801,6 +1838,7 @@ fail:
 static int RotationTest(void)
 {
     int error;
+    CHECK(Rotation_MatrixInverse());
     CHECK(Rotation_MatrixMultiply());
     error = 0;
 fail:
