@@ -11,6 +11,7 @@
 #include "astronomy.h"
 
 #define PI      3.14159265358979323846
+static const double DEG2RAD = 0.017453292519943296;
 
 #define CHECK(x)            do{if(0 != (error = (x))) goto fail;}while(0)
 
@@ -1917,6 +1918,106 @@ static int TestAnglesFromVector(double lat, double lon, double x, double y, doub
     return 0;
 }
 
+static astro_rotation_t RotateX(double rot)
+{
+    astro_rotation_t m;
+    double ca, sa;
+
+    /* https://en.wikipedia.org/wiki/Rotation_matrix */
+
+    ca = cos(rot * DEG2RAD);
+    sa = sin(rot * DEG2RAD);
+    m.status = ASTRO_SUCCESS;
+    m.rot[0][0] = 1.0;  m.rot[1][0] = 0.0;  m.rot[2][0] = 0.0;
+    m.rot[0][1] = 0.0;  m.rot[1][1] = +ca;  m.rot[2][1] = -sa;
+    m.rot[0][2] = 0.0;  m.rot[1][2] = +sa;  m.rot[2][2] = +ca;
+
+    return m;
+}
+
+static astro_rotation_t RotateY(double rot)
+{
+    astro_rotation_t m;
+    double ca, sa;
+
+    /* https://en.wikipedia.org/wiki/Rotation_matrix */
+
+    ca = cos(rot * DEG2RAD);
+    sa = sin(rot * DEG2RAD);
+    m.status = ASTRO_SUCCESS;
+    m.rot[0][0] = +ca;  m.rot[1][0] = 0.0;  m.rot[2][0] = +sa;
+    m.rot[0][1] = 0.0;  m.rot[1][1] = 1.0;  m.rot[2][1] = 0.0;
+    m.rot[0][2] = -sa;  m.rot[1][2] = 0.0;  m.rot[2][2] = +ca;
+
+    return m;
+}
+
+static astro_rotation_t RotateZ(double rot)
+{
+    astro_rotation_t m;
+    double ca, sa;
+
+    /* https://en.wikipedia.org/wiki/Rotation_matrix */
+
+    ca = cos(rot * DEG2RAD);
+    sa = sin(rot * DEG2RAD);
+    m.status = ASTRO_SUCCESS;
+    m.rot[0][0] = +ca;  m.rot[1][0] = -sa;  m.rot[2][0] = 0.0;
+    m.rot[0][1] = +sa;  m.rot[1][1] = +ca;  m.rot[2][1] = 0.0;
+    m.rot[0][2] = 0.0;  m.rot[1][2] = 0.0;  m.rot[2][2] = 1.0;
+
+    return m;
+}
+
+static int TestSpin(
+    double xrot, double yrot, double zrot,
+    double sx, double sy, double sz,
+    double tx, double ty, double tz)
+{
+    astro_rotation_t mx, my, mz, m;
+    astro_vector_t sv, tv;
+    double diff, dx, dy, dz;
+
+    /* https://en.wikipedia.org/wiki/Rotation_matrix */
+
+    mx = RotateX(xrot);
+    my = RotateY(yrot);
+    mz = RotateZ(zrot);
+    m = Astronomy_CombineRotation(mx, my);
+    m = Astronomy_CombineRotation(m, mz);
+
+    sv.status = ASTRO_SUCCESS;
+    sv.x = sx;
+    sv.y = sy;
+    sv.z = sz;
+    sv.t = Astronomy_MakeTime(2019, 5, 5, 12, 30, 0.0);
+
+    tv = Astronomy_RotateVector(m, sv);
+    if (tv.status != ASTRO_SUCCESS)
+    {
+        fprintf(stderr, "ERROR(TestSpin): tv.status = %d\n", tv.status);
+        return 1;
+    }
+
+    if (tv.t.ut != sv.t.ut)
+    {
+        fprintf(stderr, "ERROR(TestSpin): tv time != sv time\n");
+        return 1;
+    }
+
+    dx = tx - tv.x;
+    dy = ty - tv.y;
+    dz = tz - tv.z;
+    diff = sqrt(dx*dx + dy*dy + dz*dz);
+    printf("TestSpin(xrot=%0.0lf, yrot=%0.0lf, zrot=%0.0lf, sx=%0.0lf, sy=%0.0lf, sz=%0.0lf): diff = %lg\n", xrot, yrot, zrot, sx, sy, sz, diff);
+    if (diff > 1.0e-15)
+    {
+        fprintf(stderr, "TestSpin: EXCESSIVE ERROR\n");
+        return 1;
+    }
+    return 0;
+}
+
 static int RotationTest(void)
 {
     int error;
@@ -1940,6 +2041,14 @@ static int RotationTest(void)
     CHECK(TestAnglesFromVector(+90.0, 0.0, 0.0, 0.0, 1.0));
     CHECK(TestAnglesFromVector(-90.0, 0.0, 0.0, 0.0, -1.0));
     CHECK(TestAnglesFromVector(-30.0, +60.0, 0.43301270189221946, 0.75, -0.5));
+
+    /* Verify rotation of vectors */
+    CHECK(TestSpin(0.0, 0.0, 90.0, +1, +2, +3, -2, +1, +3));
+    CHECK(TestSpin(0.0, 0.0, 0.0, 1.0, 2.0, -3.0, 1.0, 2.0, -3.0));
+    CHECK(TestSpin(90.0, 0.0, 0.0, +1, +2, +3, +1, -3, +2));
+    CHECK(TestSpin(0.0, 90.0, 0.0, +1, +2, +3, +3, +2, -1));
+    CHECK(TestSpin(180.0, 180.0, 180.0, +1, +2, +3, +1, +2, +3));
+    CHECK(TestSpin(0.0, 0.0, -45.0, +1, 0, 0, +0.7071067811865476, -0.7071067811865476, 0));
 
     error = 0;
 fail:

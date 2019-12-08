@@ -700,6 +700,31 @@ After calling [`Astronomy_SearchMoonQuarter`](#Astronomy_SearchMoonQuarter), thi
 
 ---
 
+<a name="Astronomy_RotateVector"></a>
+### Astronomy_RotateVector(rotation, vector) &#8658; [`astro_vector_t`](#astro_vector_t)
+
+**Applies a rotation to a vector, yielding a rotated vector.** 
+
+
+
+This function transforms a vector in one orientation to a vector in another orientation.
+
+
+
+**Returns:**  A vector in the orientation specified by `rotation`. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_rotation_t`](#astro_rotation_t) | `rotation` |  A rotation matrix that specifies how the orientation of the vector is to be changed. | 
+| [`astro_vector_t`](#astro_vector_t) | `vector` |  The vector whose orientation is to be changed. | 
+
+
+
+
+---
+
 <a name="Astronomy_Search"></a>
 ### Astronomy_Search(func, context, t1, t2, dt_tolerance_seconds) &#8658; [`astro_search_result_t`](#astro_search_result_t)
 

@@ -5478,6 +5478,37 @@ astro_spherical_t Astronomy_SphereFromVector(astro_vector_t vector)
     return sphere;
 }
 
+/**
+ * @brief
+ *      Applies a rotation to a vector, yielding a rotated vector.
+ *
+ * This function transforms a vector in one orientation to a vector
+ * in another orientation.
+ *
+ * @param rotation
+ *      A rotation matrix that specifies how the orientation of the vector is to be changed.
+ *
+ * @param vector
+ *      The vector whose orientation is to be changed.
+ *
+ * @return
+ *      A vector in the orientation specified by `rotation`.
+ */
+astro_vector_t Astronomy_RotateVector(astro_rotation_t rotation, astro_vector_t vector)
+{
+    astro_vector_t target;
+
+    if (rotation.status != ASTRO_SUCCESS || vector.status != ASTRO_SUCCESS)
+        return VecError(ASTRO_INVALID_PARAMETER, vector.t);
+
+    target.status = ASTRO_SUCCESS;
+    target.t = vector.t;
+    target.x = rotation.rot[0][0]*vector.x + rotation.rot[1][0]*vector.y + rotation.rot[2][0]*vector.z;
+    target.y = rotation.rot[0][1]*vector.x + rotation.rot[1][1]*vector.y + rotation.rot[2][1]*vector.z;
+    target.z = rotation.rot[0][2]*vector.x + rotation.rot[1][2]*vector.y + rotation.rot[2][2]*vector.z;
+
+    return target;
+}
 
 
 #if 0
