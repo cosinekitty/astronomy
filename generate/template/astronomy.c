@@ -254,6 +254,19 @@ static astro_time_t TimeError(void)
     return time;
 }
 
+static astro_rotation_t RotationErr(astro_status_t status)
+{
+    astro_rotation_t rotation;
+    int i, j;
+
+    rotation.status = status;
+    for (i=0; i<3; ++i)
+        for (j=0; j<3; ++j)
+            rotation.rot[i][j] = NAN;
+
+    return rotation;
+}
+
 static astro_moon_quarter_t MoonQuarterError(astro_status_t status)
 {
     astro_moon_quarter_t result;
@@ -796,6 +809,95 @@ static void precession(double tt1, const double pos1[3], double tt2, double pos2
     }
 }
 
+#if 0
+static astro_rotation_t precession_rot(double tt1, const double pos1[3], double tt2)
+{
+    astro_rotation_t rotation;
+    double xx, yx, zx, xy, yy, zy, xz, yz, zz;
+    double t, psia, omegaa, chia, sa, ca, sb, cb, sc, cc, sd, cd;
+    double eps0 = 84381.406;
+
+    if ((tt1 != 0.0) && (tt2 != 0.0))
+        FatalError("precession_rot: one of (tt1, tt2) must be zero.");
+
+    t = (tt2 - tt1) / 36525;
+    if (tt2 == 0)
+        t = -t;
+
+    psia   = (((((-    0.0000000951  * t
+                 +    0.000132851 ) * t
+                 -    0.00114045  ) * t
+                 -    1.0790069   ) * t
+                 + 5038.481507    ) * t);
+
+    omegaa = (((((+    0.0000003337  * t
+                 -    0.000000467 ) * t
+                 -    0.00772503  ) * t
+                 +    0.0512623   ) * t
+                 -    0.025754    ) * t + eps0);
+
+    chia   = (((((-    0.0000000560  * t
+                 +    0.000170663 ) * t
+                 -    0.00121197  ) * t
+                 -    2.3814292   ) * t
+                 +   10.556403    ) * t);
+
+    eps0 = eps0 * ASEC2RAD;
+    psia = psia * ASEC2RAD;
+    omegaa = omegaa * ASEC2RAD;
+    chia = chia * ASEC2RAD;
+
+    sa = sin(eps0);
+    ca = cos(eps0);
+    sb = sin(-psia);
+    cb = cos(-psia);
+    sc = sin(-omegaa);
+    cc = cos(-omegaa);
+    sd = sin(chia);
+    cd = cos(chia);
+
+    xx =  cd * cb - sb * sd * cc;
+    yx =  cd * sb * ca + sd * cc * cb * ca - sa * sd * sc;
+    zx =  cd * sb * sa + sd * cc * cb * sa + ca * sd * sc;
+    xy = -sd * cb - sb * cd * cc;
+    yy = -sd * sb * ca + cd * cc * cb * ca - sa * cd * sc;
+    zy = -sd * sb * sa + cd * cc * cb * sa + ca * cd * sc;
+    xz =  sb * sc;
+    yz = -sc * cb * ca - sa * cc;
+    zz = -sc * cb * sa + cc * ca;
+
+    if (tt2 == 0.0)
+    {
+        /* Perform rotation from other epoch to J2000.0. */
+        rotation.rot[0][0] = xx;
+        rotation.rot[0][1] = yx;
+        rotation.rot[0][2] = zx;
+        rotation.rot[1][0] = xy;
+        rotation.rot[1][1] = yy;
+        rotation.rot[1][2] = zy;
+        rotation.rot[2][0] = xz;
+        rotation.rot[2][1] = yz;
+        rotation.rot[2][2] = zz;
+    }
+    else
+    {
+        /* Perform rotation from J2000.0 to other epoch. */
+        rotation.rot[0][0] = xx;
+        rotation.rot[0][1] = xy;
+        rotation.rot[0][2] = xz;
+        rotation.rot[1][0] = yx;
+        rotation.rot[1][1] = yy;
+        rotation.rot[1][2] = yz;
+        rotation.rot[2][0] = zx;
+        rotation.rot[2][1] = zy;
+        rotation.rot[2][2] = zz;
+    }
+
+    rotation.status = ASTRO_SUCCESS;
+    return rotation;
+}
+#endif
+
 static astro_equatorial_t vector2radec(const double pos[3])
 {
     astro_equatorial_t equ;
@@ -872,6 +974,63 @@ static void nutation(astro_time_t *time, int direction, const double inpos[3], d
         outpos[2] = zx * inpos[0] + zy * inpos[1] + zz * inpos[2];
     }
 }
+
+#if 0
+static astro_rotation_t nutation_rot(astro_time_t *time, int direction)
+{
+    astro_rotation_t rotation;
+    earth_tilt_t tilt = e_tilt(time);
+    double oblm = tilt.mobl * DEG2RAD;
+    double oblt = tilt.tobl * DEG2RAD;
+    double psi = tilt.dpsi * ASEC2RAD;
+    double cobm = cos(oblm);
+    double sobm = sin(oblm);
+    double cobt = cos(oblt);
+    double sobt = sin(oblt);
+    double cpsi = cos(psi);
+    double spsi = sin(psi);
+
+    double xx = cpsi;
+    double yx = -spsi * cobm;
+    double zx = -spsi * sobm;
+    double xy = spsi * cobt;
+    double yy = cpsi * cobm * cobt + sobm * sobt;
+    double zy = cpsi * sobm * cobt - cobm * sobt;
+    double xz = spsi * sobt;
+    double yz = cpsi * cobm * sobt - sobm * cobt;
+    double zz = cpsi * sobm * sobt + cobm * cobt;
+
+    if (direction == 0)
+    {
+        /* forward rotation */
+        rotation.rot[0][0] = xx;
+        rotation.rot[0][1] = xy;
+        rotation.rot[0][2] = xz;
+        rotation.rot[1][0] = yx;
+        rotation.rot[1][1] = yy;
+        rotation.rot[1][2] = yz;
+        rotation.rot[2][0] = zx;
+        rotation.rot[2][1] = zy;
+        rotation.rot[2][2] = zz;
+    }
+    else
+    {
+        /* inverse rotation */
+        rotation.rot[0][0] = xx;
+        rotation.rot[0][1] = yx;
+        rotation.rot[0][2] = zx;
+        rotation.rot[1][0] = xy;
+        rotation.rot[1][1] = yy;
+        rotation.rot[1][2] = zy;
+        rotation.rot[2][0] = xz;
+        rotation.rot[2][1] = yz;
+        rotation.rot[2][2] = zz;
+    }
+
+    rotation.status = ASTRO_SUCCESS;
+    return rotation;
+}
+#endif
 
 static double era(double ut)        /* Earth Rotation Angle */
 {
@@ -1756,7 +1915,8 @@ astro_horizon_t Astronomy_Horizon(
 
     proj = sqrt(pn*pn + pw*pw);
     az = 0.0;
-    if (proj > 0.0) {
+    if (proj > 0.0)
+    {
         az = -atan2(pw, pn) * RAD2DEG;
         if (az < 0)
             az += 360;
@@ -3912,6 +4072,98 @@ astro_apsis_t Astronomy_NextLunarApsis(astro_apsis_t apsis)
     }
     return next;
 }
+
+/**
+ * @brief Calculates the inverse of a rotation matrix.
+ *
+ * Given a rotation matrix that performs some coordinate transform,
+ * this function returns the matrix that reverses that trasnform.
+ *
+ * @param rotation
+ *      The rotation matrix to be inverted.
+ *
+ * @return
+ *      A rotation matrix that performs the opposite transformation.
+ */
+astro_rotation_t Astronomy_InverseRotation(astro_rotation_t rotation)
+{
+    astro_rotation_t inverse;
+
+    if (rotation.status != ASTRO_SUCCESS)
+        return RotationErr(ASTRO_INVALID_PARAMETER);
+
+    inverse.status = ASTRO_SUCCESS;
+    inverse.rot[0][0] = rotation.rot[0][0];
+    inverse.rot[0][1] = rotation.rot[1][0];
+    inverse.rot[0][2] = rotation.rot[2][0];
+    inverse.rot[1][0] = rotation.rot[0][1];
+    inverse.rot[1][1] = rotation.rot[1][1];
+    inverse.rot[1][2] = rotation.rot[2][1];
+    inverse.rot[2][0] = rotation.rot[0][2];
+    inverse.rot[2][1] = rotation.rot[1][2];
+    inverse.rot[2][2] = rotation.rot[2][2];
+
+    return inverse;
+}
+
+/**
+ * @brief Creates a rotation based on applying one rotation followed by another.
+ *
+ * Given two rotation matrices, returns a combined rotation matrix that is
+ * equivalent to rotating based on the first matrix, followed by the second.
+ *
+ * @param a
+ *      The first rotation to apply.
+ *
+ * @param b
+ *      The second rotation to apply.
+ *
+ * @return
+ *      The combined rotation matrix.
+ */
+astro_rotation_t Astronomy_CombineRotation(astro_rotation_t a, astro_rotation_t b)
+{
+    astro_rotation_t c;
+
+    if (a.status != ASTRO_SUCCESS || b.status != ASTRO_SUCCESS)
+        return RotationErr(ASTRO_INVALID_PARAMETER);
+
+    /* Use matrix multiplication: c = a*b */
+    c.rot[0][0] = a.rot[0][0]*b.rot[0][0] + a.rot[1][0]*b.rot[0][1] + a.rot[2][0]*b.rot[0][2];
+    c.rot[1][0] = a.rot[0][0]*b.rot[1][0] + a.rot[1][0]*b.rot[1][1] + a.rot[2][0]*b.rot[1][2];
+    c.rot[2][0] = a.rot[0][0]*b.rot[2][0] + a.rot[1][0]*b.rot[2][1] + a.rot[2][0]*b.rot[2][2];
+    c.rot[0][1] = a.rot[0][1]*b.rot[0][0] + a.rot[1][1]*b.rot[0][1] + a.rot[2][1]*b.rot[0][2];
+    c.rot[1][1] = a.rot[0][1]*b.rot[1][0] + a.rot[1][1]*b.rot[1][1] + a.rot[2][1]*b.rot[1][2];
+    c.rot[2][1] = a.rot[0][1]*b.rot[2][0] + a.rot[1][1]*b.rot[2][1] + a.rot[2][1]*b.rot[2][2];
+    c.rot[0][2] = a.rot[0][2]*b.rot[0][0] + a.rot[1][2]*b.rot[0][1] + a.rot[2][2]*b.rot[0][2];
+    c.rot[1][2] = a.rot[0][2]*b.rot[1][0] + a.rot[1][2]*b.rot[1][1] + a.rot[2][2]*b.rot[1][2];
+    c.rot[2][2] = a.rot[0][2]*b.rot[2][0] + a.rot[1][2]*b.rot[2][1] + a.rot[2][2]*b.rot[2][2];
+
+    c.status = ASTRO_SUCCESS;
+    return c;
+}
+
+#if 0
+/**
+ * @brief
+ *      Calculates a rotation matrix from equatorial of-date system to equatorial J2000.
+ *
+ * This is one of the family of MakeRotation functions that convert
+ * from one orientation system to another.
+ * Source: EQD = equatorial system, using equator of date.
+ * Target: EQJ = equatorial system, using equator at J2000 epoch.
+ *
+ * @param time
+ *      The date and time defining the equator of the source orientation.
+ *
+ * @return
+ *      A rotation matrix that converts EQD to EQJ.
+ */
+astro_rotation_t Astronomy_MakeRotation_EQD_EQJ(astro_time_t time)
+{
+
+}
+#endif
 
 #ifdef __cplusplus
 }

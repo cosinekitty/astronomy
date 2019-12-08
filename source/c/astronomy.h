@@ -272,6 +272,16 @@ typedef struct
 astro_horizon_t;
 
 /**
+ * @brief Contains a rotation matrix that can be used to transform one coordinate system to another.
+ */
+typedef struct
+{
+    astro_status_t status;  /**< ASTRO_SUCCESS if this struct is valid; otherwise an error code. */
+    double rot[3][3];       /**< A normalized 3x3 rotation matrix. */
+}
+astro_rotation_t;
+
+/**
  * @brief Selects whether to correct for atmospheric refraction, and if so, how.
  */
 typedef enum
@@ -589,6 +599,24 @@ astro_illum_t Astronomy_Illumination(astro_body_t body, astro_time_t time);
 astro_illum_t Astronomy_SearchPeakMagnitude(astro_body_t body, astro_time_t startTime);
 astro_apsis_t Astronomy_SearchLunarApsis(astro_time_t startTime);
 astro_apsis_t Astronomy_NextLunarApsis(astro_apsis_t apsis);
+
+astro_rotation_t Astronomy_InverseRotation(astro_rotation_t rotation);
+astro_rotation_t Astronomy_CombineRotation(astro_rotation_t a, astro_rotation_t b);
+
+#if 0
+astro_rotation_t Astronomy_Rotation_EQD_EQJ(astro_time_t time);
+astro_rotation_t Astronomy_Rotation_EQD_ECL(astro_time_t time);
+astro_rotation_t Astronomy_Rotation_EQD_HOR(astro_time_t time, astro_observer_t observer);
+astro_rotation_t Astronomy_Rotation_EQJ_EQD(astro_time_t time);
+astro_rotation_t Astronomy_Rotation_EQJ_ECL(void);
+astro_rotation_t Astronomy_Rotation_EQJ_HOR(astro_time_t time, astro_observer_t observer);
+astro_rotation_t Astronomy_Rotation_ECL_EQD(astro_time_t time);
+astro_rotation_t Astronomy_Rotation_ECL_EQJ(void);
+astro_rotation_t Astronomy_Rotation_ECL_HOR(astro_time_t time, astro_observer_t observer);
+astro_rotation_t Astronomy_Rotation_HOR_EQD(astro_time_t time, astro_observer_t observer);
+astro_rotation_t Astronomy_Rotation_HOR_EQJ(astro_time_t time, astro_observer_t observer);
+astro_rotation_t Astronomy_Rotation_HOR_ECL(astro_time_t time, astro_observer_t observer);
+#endif
 
 #ifdef __cplusplus
 }

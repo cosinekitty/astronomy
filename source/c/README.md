@@ -209,6 +209,31 @@ This function calculates the angular separation between the given body and the S
 
 ---
 
+<a name="Astronomy_CombineRotation"></a>
+### Astronomy_CombineRotation(a, b) &#8658; [`astro_rotation_t`](#astro_rotation_t)
+
+**Creates a rotation based on applying one rotation followed by another.** 
+
+
+
+Given two rotation matrices, returns a combined rotation matrix that is equivalent to rotating based on the first matrix, followed by the second.
+
+
+
+**Returns:**  The combined rotation matrix. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_rotation_t`](#astro_rotation_t) | `a` |  The first rotation to apply. | 
+| [`astro_rotation_t`](#astro_rotation_t) | `b` |  The second rotation to apply. | 
+
+
+
+
+---
+
 <a name="Astronomy_CurrentTime"></a>
 ### Astronomy_CurrentTime() &#8658; [`astro_time_t`](#astro_time_t)
 
@@ -473,6 +498,30 @@ When the body is Saturn, the returned structure contains a field `ring_tilt` tha
 | --- | --- | --- |
 | [`astro_body_t`](#astro_body_t) | `body` |  The Sun, Moon, or any planet other than the Earth. | 
 | [`astro_time_t`](#astro_time_t) | `time` |  The date and time of the observation. | 
+
+
+
+
+---
+
+<a name="Astronomy_InverseRotation"></a>
+### Astronomy_InverseRotation(rotation) &#8658; [`astro_rotation_t`](#astro_rotation_t)
+
+**Calculates the inverse of a rotation matrix.** 
+
+
+
+Given a rotation matrix that performs some coordinate transform, this function returns the matrix that reverses that trasnform.
+
+
+
+**Returns:**  A rotation matrix that performs the opposite transformation. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_rotation_t`](#astro_rotation_t) | `rotation` |  The rotation matrix to be inverted. | 
 
 
 
@@ -1489,6 +1538,21 @@ You can create this structure directly, or you can call the convenience function
 | `double` | `latitude` |  Geographic latitude in degrees north (positive) or south (negative) of the equator.  |
 | `double` | `longitude` |  Geographic longitude in degrees east (positive) or west (negative) of the prime meridian at Greenwich, England.  |
 | `double` | `height` |  The height above (positive) or below (negative) sea level, expressed in meters.  |
+
+
+---
+
+<a name="astro_rotation_t"></a>
+### `astro_rotation_t`
+
+**Contains a rotation matrix that can be used to transform one coordinate system to another.** 
+
+
+
+| Type | Member | Description |
+| ---- | ------ | ----------- |
+| [`astro_status_t`](#astro_status_t) | `status` |  ASTRO_SUCCESS if this struct is valid; otherwise an error code.  |
+| `double` | `rot` |  A normalized 3x3 rotation matrix.  |
 
 
 ---

@@ -50,6 +50,7 @@ static int LunarApsis(const char *filename);
 static int ElongationTest(void);
 static int MagnitudeTest(void);
 static int MoonTest(void);
+static int RotationTest(void);
 static int TestMaxMag(astro_body_t body, const char *filename);
 static const char *ParseJplHorizonsDateTime(const char *text, astro_time_t *time);
 
@@ -73,7 +74,7 @@ int main(int argc, const char *argv[])
             goto success;
         }
 
-        if (!strcmp(verb, "magnitude"))        
+        if (!strcmp(verb, "magnitude"))
         {
             CHECK(MagnitudeTest());
             goto success;
@@ -82,6 +83,12 @@ int main(int argc, const char *argv[])
         if (!strcmp(verb, "moon"))
         {
             CHECK(MoonTest());
+            goto success;
+        }
+
+        if (!strcmp(verb, "rotation"))
+        {
+            CHECK(RotationTest());
             goto success;
         }
 
@@ -94,7 +101,7 @@ int main(int argc, const char *argv[])
         if (!strcmp(verb, "issue48"))
         {
             CHECK(Issue48());
-            return 0;       /* prevent extra "ctest exiting with 0" output. */            
+            return 0;       /* prevent extra "ctest exiting with 0" output. */
         }
     }
 
@@ -218,7 +225,7 @@ static int AstroCheck(void)
     int b;
     static const astro_body_t bodylist[] =  /* match the order in the JavaScript unit test */
     {
-        BODY_SUN, BODY_MERCURY, BODY_VENUS, BODY_EARTH, BODY_MARS, 
+        BODY_SUN, BODY_MERCURY, BODY_VENUS, BODY_EARTH, BODY_MARS,
         BODY_JUPITER, BODY_SATURN, BODY_URANUS, BODY_NEPTUNE, BODY_PLUTO
     };
     static int nbodies = sizeof(bodylist) / sizeof(bodylist[0]);
@@ -248,7 +255,7 @@ static int AstroCheck(void)
                 CHECK_EQU(j2000, Astronomy_Equator(body, &time, observer, EQUATOR_J2000, NO_ABERRATION));
                 CHECK_EQU(ofdate, Astronomy_Equator(body, &time, observer, EQUATOR_OF_DATE, ABERRATION));
                 hor = Astronomy_Horizon(&time, observer, ofdate.ra, ofdate.dec, REFRACTION_NONE);
-                fprintf(outfile, "s %s %0.16lf %0.16lf %0.16lf %0.16lf %0.16lf %0.16lf %0.16lf\n", 
+                fprintf(outfile, "s %s %0.16lf %0.16lf %0.16lf %0.16lf %0.16lf %0.16lf %0.16lf\n",
                     Astronomy_BodyName(body), time.tt, time.ut, j2000.ra, j2000.dec, j2000.dist, hor.azimuth, hor.altitude);
             }
         }
@@ -259,7 +266,7 @@ static int AstroCheck(void)
         CHECK_EQU(j2000, Astronomy_Equator(BODY_MOON, &time, observer, EQUATOR_J2000, NO_ABERRATION));
         CHECK_EQU(ofdate, Astronomy_Equator(BODY_MOON, &time, observer, EQUATOR_OF_DATE, ABERRATION));
         hor = Astronomy_Horizon(&time, observer, ofdate.ra, ofdate.dec, REFRACTION_NONE);
-        fprintf(outfile, "s GM %0.16lf %0.16lf %0.16lf %0.16lf %0.16lf %0.16lf %0.16lf\n", 
+        fprintf(outfile, "s GM %0.16lf %0.16lf %0.16lf %0.16lf %0.16lf %0.16lf %0.16lf\n",
             time.tt, time.ut, j2000.ra, j2000.dec, j2000.dist, hor.azimuth, hor.altitude);
 
         time = Astronomy_AddDays(time, 10.0 + PI/100.0);
@@ -309,7 +316,7 @@ static int Diff(const char *c_filename, const char *js_filename)
         jread = fgets(jline, sizeof(jline), jfile);
         if (cread==NULL && jread==NULL)
             break;      /* normal end of both files */
-        
+
         if (cread==NULL || jread==NULL)
         {
             fprintf(stderr, "ctest(Diff): Files do not have same number of lines: %s and %s\n", c_filename, js_filename);
@@ -447,7 +454,7 @@ static int SeasonsTest(const char *filename)
     double diff_minutes, max_minutes = 0.0;
     int mar_count=0, jun_count=0, sep_count=0, dec_count=0;
 
-    memset(&seasons, 0, sizeof(seasons));    
+    memset(&seasons, 0, sizeof(seasons));
 
     infile = fopen(filename, "rt");
     if (infile == NULL)
@@ -583,7 +590,7 @@ static int MoonPhase(const char *filename)
     double diff_seconds, maxdiff = 0.0;
     const double threshold_seconds = 120.0; /* max tolerable prediction error in seconds */
     astro_moon_quarter_t mq;
-    char line[200];    
+    char line[200];
 
     memset(&mq, 0xcd, sizeof(mq));
 
@@ -640,7 +647,7 @@ static int MoonPhase(const char *filename)
         {
             prev_year = year;
             /* The test data contains a single year's worth of data for every 10 years. */
-            /* Every time we see the year value change, it breaks continuity of the phases. */            
+            /* Every time we see the year value change, it breaks continuity of the phases. */
             /* Start the search over again. */
             start_time = Astronomy_MakeTime(year, 1, 1, 0, 0, 0.0);
             mq = Astronomy_SearchMoonQuarter(start_time);
@@ -952,8 +959,8 @@ fail:
 }
 
 static int TestPlanetLongitudes(
-    astro_body_t body, 
-    const char *outFileName, 
+    astro_body_t body,
+    const char *outFileName,
     const char *zeroLonEventName)
 {
     int error = 1;
@@ -1013,10 +1020,10 @@ static int TestPlanetLongitudes(
             }
             else
             {
-                if (day_diff < min_diff) 
+                if (day_diff < min_diff)
                     min_diff = day_diff;
 
-                if (day_diff > max_diff) 
+                if (day_diff > max_diff)
                     max_diff = day_diff;
             }
         }
@@ -1126,7 +1133,7 @@ static int RiseSet(const char *filename)
 
         // Moon  103 -61 1944-01-02T17:08Z s
         // Moon  103 -61 1944-01-03T05:47Z r
-        nscanned = sscanf(line, "%9[A-Za-z] %lf %lf %d-%d-%dT%d:%dZ %1[rs]", 
+        nscanned = sscanf(line, "%9[A-Za-z] %lf %lf %d-%d-%dT%d:%dZ %1[rs]",
             name, &longitude, &latitude, &year, &month, &day, &hour, &minute, kind);
 
         if (nscanned != 9)
@@ -1147,7 +1154,7 @@ static int RiseSet(const char *filename)
             fprintf(stderr, "RiseSet(%s line %d): invalid kind '%s'\n", filename, lnum, kind);
             error = 1;
             goto fail;
-        }        
+        }
 
         body = Astronomy_BodyCode(name);
         if (body == BODY_INVALID)
@@ -1275,7 +1282,7 @@ static int CheckMagnitudeData(astro_body_t body, const char *filename)
         /* Ignore non-data rows and data rows that contain "n.a." */
         if (rest && !strstr(rest, "n.a."))
         {
-            nscanned = sscanf(rest, "%lf %lf %lf %lf %lf %lf %lf", 
+            nscanned = sscanf(rest, "%lf %lf %lf %lf %lf %lf %lf",
                 &mag, &sbrt, &dist, &rdot, &delta, &deldot, &phase_angle);
 
             if (nscanned != 7)
@@ -1313,7 +1320,7 @@ static int CheckMagnitudeData(astro_body_t body, const char *filename)
 
                 if (diff > diff_hi)
                     diff_hi = diff;
-            }            
+            }
 
             ++count;
         }
@@ -1326,7 +1333,7 @@ static int CheckMagnitudeData(astro_body_t body, const char *filename)
         goto fail;
     }
 
-    rms = sqrt(sum_squared_diff / count);   
+    rms = sqrt(sum_squared_diff / count);
     printf("CheckMagnitudeData: %-21s %5d rows diff_lo=%0.4lf diff_hi=%0.4lf rms=%0.4lf\n", filename, count, diff_lo, diff_hi, rms);
     error = 0;
 
@@ -1369,7 +1376,7 @@ static int CheckSaturn()
     for (i=0; i < ncases; ++i)
     {
         int error = ParseDate(data[i].date, &time);
-        if (error) 
+        if (error)
             return 1;
 
         illum = Astronomy_Illumination(BODY_SATURN, time);
@@ -1381,14 +1388,14 @@ static int CheckSaturn()
         printf("Saturn: date=%s  calc mag=%12.8lf  ring_tilt=%12.8lf\n", data[i].date, illum.mag, illum.ring_tilt);
 
         mag_diff = fabs(illum.mag - data[i].mag);
-        if (mag_diff > 1.0e-8) 
+        if (mag_diff > 1.0e-8)
         {
             fprintf(stderr, "ERROR: Excessive magnitude error %lg", mag_diff);
             return 1;
         }
 
         tilt_diff = fabs(illum.ring_tilt - data[i].tilt);
-        if (tilt_diff > 1.0e-8) 
+        if (tilt_diff > 1.0e-8)
         {
             fprintf(stderr, "ERROR: Excessive ring tilt error %lg\n", tilt_diff);
             return 1;
@@ -1411,7 +1418,7 @@ static int MoonTest(void)
     }
     printf("MoonTest: %0.16lg %0.16lg %0.16lg\n", vec.x, vec.y, vec.z);
 
-    
+
     dx = vec.x - (+0.002674036155459549);
     dy = vec.y - (-0.0001531716308218381);
     dz = vec.z - (-0.0003150201604895409);
@@ -1462,10 +1469,10 @@ static int TestMaxMag(astro_body_t body, const char *filename)
     astro_illum_t illum;
     double mag_diff, hours_diff;
 
-    /* 
+    /*
         Example of input data:
 
-        2001-02-21T08:00Z 2001-02-27T08:00Z 23.17 19.53 -4.84 
+        2001-02-21T08:00Z 2001-02-27T08:00Z 23.17 19.53 -4.84
 
         JPL Horizons test data has limited floating point precision in the magnitude values.
         There is a pair of dates for the beginning and end of the max magnitude period,
@@ -1486,9 +1493,9 @@ static int TestMaxMag(astro_body_t body, const char *filename)
     {
         ++lnum;
 
-        nscanned = sscanf(line, "%d-%d-%dT%d:%dZ %d-%d-%dT%d:%dZ %lf %lf %lf\n", 
-            &year1, &month1, &day1, &hour1, &minute1, 
-            &year2, &month2, &day2, &hour2, &minute2, 
+        nscanned = sscanf(line, "%d-%d-%dT%d:%dZ %d-%d-%dT%d:%dZ %lf %lf %lf\n",
+            &year1, &month1, &day1, &hour1, &minute1,
+            &year2, &month2, &day2, &hour2, &minute2,
             &correct_angle1, &correct_angle2, &correct_mag);
 
         if (nscanned != 13)
@@ -1554,7 +1561,7 @@ static const char *ParseJplHorizonsDateTime(const char *text, astro_time_t *time
         ++text;
 
     nscanned = sscanf(text, "%d-%3[A-Za-z]-%d %d:%d", &year, mtext, &day, &hour, &minute);
-    if (nscanned != 5) 
+    if (nscanned != 5)
         return NULL;
 
     if (year < 1000 || year > 9999)
@@ -1569,9 +1576,9 @@ static const char *ParseJplHorizonsDateTime(const char *text, astro_time_t *time
     if (minute < 0 || minute > 59)
         return NULL;
 
-    if (!strcmp(mtext, "Jan"))  
+    if (!strcmp(mtext, "Jan"))
         month = 1;
-    else if (!strcmp(mtext, "Feb")) 
+    else if (!strcmp(mtext, "Feb"))
         month = 2;
     else if (!strcmp(mtext, "Mar"))
         month = 3;
@@ -1602,7 +1609,7 @@ static const char *ParseJplHorizonsDateTime(const char *text, astro_time_t *time
     length = strlen(verify);
     if (length != 17)
         return NULL;
-    
+
     if (memcmp(verify, text, length))
         return NULL;
 
@@ -1719,7 +1726,7 @@ static int MathCheck(astro_body_t body, double ut)
     CHECK_EQU(ofdate, Astronomy_Equator(body, &time, observer, EQUATOR_OF_DATE, ABERRATION));
     printf("ofdate ra   = %0.16lf\n", ofdate.ra);
     printf("ofdate dec  = %0.16lf\n", ofdate.dec);
-    
+
     hor = Astronomy_Horizon(&time, observer, ofdate.ra, ofdate.dec, REFRACTION_NONE);
     printf("azimuth     = %0.16lf\n", hor.azimuth);
     printf("altitude    = %0.16lf\n", hor.altitude);
@@ -1743,3 +1750,54 @@ static int Issue48(void)
 
 /*-----------------------------------------------------------------------------------------------------------*/
 
+static int Rotation_MatrixMultiply(void)
+{
+    astro_rotation_t  a, b, c, v;
+    int i, j;
+
+    a.status = ASTRO_SUCCESS;
+    a.rot[0][0] = 1.0; a.rot[1][0] = 2.0; a.rot[2][0] = 3.0;
+    a.rot[0][1] = 4.0; a.rot[1][1] = 5.0; a.rot[2][1] = 6.0;
+    a.rot[0][2] = 7.0; a.rot[1][2] = 8.0; a.rot[2][2] = 9.0;
+
+    b.status = ASTRO_SUCCESS;
+    b.rot[0][0] = 10.0; b.rot[1][0] = 11.0; b.rot[2][0] = 12.0;
+    b.rot[0][1] = 13.0; b.rot[1][1] = 14.0; b.rot[2][1] = 15.0;
+    b.rot[0][2] = 16.0; b.rot[1][2] = 17.0; b.rot[2][2] = 18.0;
+
+    v.status = ASTRO_SUCCESS;
+    v.rot[0][0] =  84.0; v.rot[1][0] =  90.0; v.rot[2][0] =  96.0;
+    v.rot[0][1] = 201.0; v.rot[1][1] = 216.0; v.rot[2][1] = 231.0;
+    v.rot[0][2] = 318.0; v.rot[1][2] = 342.0; v.rot[2][2] = 366.0;
+
+    /* Let c = a*b */
+    c = Astronomy_CombineRotation(a, b);
+    if (c.status != ASTRO_SUCCESS)
+    {
+        fprintf(stderr, "Rotation_MatrixMultiply: ERROR: c.status = %d\n", c.status);
+        return 1;
+    }
+
+    /* Verify that c = v. */
+    for (i=0; i < 3; ++i)
+        for (j=0; j < 3; ++j)
+            if (c.rot[i][j] != v.rot[i][j])
+            {
+                fprintf(stderr, "Rotation_MatrixMultiply: ERROR: c[%d][%d]=%lf, expected %lf\n", i, j, c.rot[i][j], v.rot[i][j]);
+                return 1;
+            }
+
+    printf("Rotation_MatrixMultiply: PASS\n");
+    return 0;
+}
+
+static int RotationTest(void)
+{
+    int error;
+    CHECK(Rotation_MatrixMultiply());
+    error = 0;
+fail:
+    return error;
+}
+
+/*-----------------------------------------------------------------------------------------------------------*/
