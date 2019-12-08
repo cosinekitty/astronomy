@@ -215,6 +215,14 @@ static astro_vector_t VecError(astro_status_t status, astro_time_t time)
     return vec;
 }
 
+static astro_spherical_t SphereError(astro_status_t status)
+{
+    astro_spherical_t sphere;
+    sphere.status = status;
+    sphere.dist = sphere.lat = sphere.lon = NAN;
+    return sphere;
+}
+
 static astro_equatorial_t EquError(astro_status_t status)
 {
     astro_equatorial_t equ;
@@ -4179,6 +4187,58 @@ astro_vector_t Astronomy_VectorFromSphere(astro_spherical_t sphere, astro_time_t
 
     return vector;
 }
+
+
+/**
+ * @brief Converts Cartesian coordinates to spherical coordinates.
+ *
+ * Given a Cartesian vector, returns latitude, longitude, and distance.
+ *
+ * @param vector
+ *      Cartesian vector to be converted to spherical coordinates
+ *
+ * @return
+ *      Spherical coordinates that are equivalent to the given vector.
+ */
+astro_spherical_t Astronomy_SphereFromVector(astro_vector_t vector)
+{
+    double xyproj;
+    astro_spherical_t sphere;
+
+    xyproj = vector.x*vector.x + vector.y*vector.y;
+    sphere.dist = sqrt(xyproj + vector.z*vector.z);
+    if (xyproj == 0.0)
+    {
+        if (vector.z == 0.0)
+        {
+            /* Indeterminate coordinates; pos vector has zero length. */
+            return SphereError(ASTRO_INVALID_PARAMETER);
+        }
+
+        if (vector.z < 0.0)
+        {
+            sphere.lon = 0.0;
+            sphere.lat = -90.0;
+        }
+        else  /* vector.z > 0.0 */
+        {
+            sphere.lon = 0.0;
+            sphere.lat = +90.0;
+        }
+    }
+    else
+    {
+        sphere.lon = RAD2DEG * atan2(vector.y, vector.x);
+        if (sphere.lon < 0.0)
+            sphere.lon += 360.0;
+
+        sphere.lat = RAD2DEG * atan2(vector.z, sqrt(xyproj));
+    }
+
+    sphere.status = ASTRO_SUCCESS;
+    return sphere;
+}
+
 
 
 #if 0

@@ -615,6 +615,7 @@ astro_apsis_t Astronomy_NextLunarApsis(astro_apsis_t apsis);
 astro_rotation_t Astronomy_InverseRotation(astro_rotation_t rotation);
 astro_rotation_t Astronomy_CombineRotation(astro_rotation_t a, astro_rotation_t b);
 astro_vector_t Astronomy_VectorFromSphere(astro_spherical_t sphere, astro_time_t time);
+astro_spherical_t Astronomy_SphereFromVector(astro_vector_t vector);
 
 #if 0
 astro_rotation_t Astronomy_Rotation_EQD_EQJ(astro_time_t time);

@@ -1038,6 +1038,30 @@ The solstices are the moments twice each year when one of the Earth's poles is m
 
 ---
 
+<a name="Astronomy_SphereFromVector"></a>
+### Astronomy_SphereFromVector(vector) &#8658; [`astro_spherical_t`](#astro_spherical_t)
+
+**Converts Cartesian coordinates to spherical coordinates.** 
+
+
+
+Given a Cartesian vector, returns latitude, longitude, and distance.
+
+
+
+**Returns:**  Spherical coordinates that are equivalent to the given vector. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_vector_t`](#astro_vector_t) | `vector` |  Cartesian vector to be converted to spherical coordinates | 
+
+
+
+
+---
+
 <a name="Astronomy_SunPosition"></a>
 ### Astronomy_SunPosition(time) &#8658; [`astro_ecliptic_t`](#astro_ecliptic_t)
 

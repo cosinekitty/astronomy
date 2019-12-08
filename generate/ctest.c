@@ -1878,11 +1878,52 @@ static int TestVectorFromAngles(double lat, double lon, double x, double y, doub
     return 0;
 }
 
+static int TestAnglesFromVector(double lat, double lon, double x, double y, double z)
+{
+    astro_vector_t vector;
+    astro_spherical_t sphere;
+    double diff, latdiff, londiff;
+
+    /* Confirm the expected vector really is a unit vector. */
+    diff = fabs((x*x + y*y + z*z) - 1.0);
+    if (diff > 1.0e-16)
+    {
+        fprintf(stderr, "TestAnglesFromVector(lat=%lf, lon=%lf, x=%lf, y=%lf, z=%lf): EXCESSIVE unit error = %lg\n", lat, lon, x, y, z, diff);
+        return 1;
+    }
+
+    vector.status = ASTRO_SUCCESS;
+    vector.t = Astronomy_MakeTime(2015, 3, 5, 12, 0, 0.0);
+    vector.x = x;
+    vector.y = y;
+    vector.z = z;
+
+    sphere = Astronomy_SphereFromVector(vector);
+    if (sphere.status != ASTRO_SUCCESS)
+    {
+        fprintf(stderr, "ERROR TestAnglesFromVector(lat=%lf, lon=%lf, x=%lf, y=%lf, z=%lf): sphere.status = %d\n", lat, lon, x, y, z, sphere.status);
+        return 1;
+    }
+
+    latdiff = fabs(sphere.lat - lat);
+    londiff = fabs(sphere.lon - lon);
+    printf("TestAnglesFromVector(x=%lf, y=%lf, z=%lf): latdiff=%lg, londiff=%lg\n", x, y, z, latdiff, londiff);
+    if (latdiff > 8.0e-15 || londiff > 8.0e-15)
+    {
+        fprintf(stderr, "TestAnglesFromVector: EXCESSIVE ERROR\n");
+        return 1;
+    }
+
+    return 0;
+}
+
 static int RotationTest(void)
 {
     int error;
     CHECK(Rotation_MatrixInverse());
     CHECK(Rotation_MatrixMultiply());
+
+    /* Verify conversion of spherical coordinates to vector. */
     CHECK(TestVectorFromAngles(0.0, 0.0, 1.0, 0.0, 0.0));
     CHECK(TestVectorFromAngles(0.0, 90.0, 0.0, 1.0, 0.0));
     CHECK(TestVectorFromAngles(0.0, 180.0, -1.0, 0.0, 0.0));
@@ -1890,6 +1931,16 @@ static int RotationTest(void)
     CHECK(TestVectorFromAngles(+90.0, 0.0, 0.0, 0.0, 1.0));
     CHECK(TestVectorFromAngles(-90.0, 0.0, 0.0, 0.0, -1.0));
     CHECK(TestVectorFromAngles(-30.0, +60.0, 0.43301270189221946, 0.75, -0.5));
+
+    /* Verify conversion of vector to spherical coordinates. */
+    CHECK(TestAnglesFromVector(0.0, 0.0, 1.0, 0.0, 0.0));
+    CHECK(TestAnglesFromVector(0.0, 90.0, 0.0, 1.0, 0.0));
+    CHECK(TestAnglesFromVector(0.0, 180.0, -1.0, 0.0, 0.0));
+    CHECK(TestAnglesFromVector(0.0, 270.0, 0.0, -1.0, 0.0));
+    CHECK(TestAnglesFromVector(+90.0, 0.0, 0.0, 0.0, 1.0));
+    CHECK(TestAnglesFromVector(-90.0, 0.0, 0.0, 0.0, -1.0));
+    CHECK(TestAnglesFromVector(-30.0, +60.0, 0.43301270189221946, 0.75, -0.5));
+
     error = 0;
 fail:
     return error;
