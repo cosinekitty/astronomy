@@ -1138,6 +1138,31 @@ After calculating the date and time of an astronomical event in the form of an [
 
 ---
 
+<a name="Astronomy_VectorFromSphere"></a>
+### Astronomy_VectorFromSphere(sphere, time) &#8658; [`astro_vector_t`](#astro_vector_t)
+
+**Converts spherical coordinates to Cartesian coordinates.** 
+
+
+
+Given spherical coordinates and a time at which they are valid, returns a vector of Cartesian coordinates. The returned value includes the time, as required by the type [`astro_vector_t`](#astro_vector_t).
+
+
+
+**Returns:**  The vector form of the supplied spherical coordinates. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_spherical_t`](#astro_spherical_t) | `sphere` |  Spherical coordinates to be converted. | 
+| [`astro_time_t`](#astro_time_t) | `time` |  The time that should be included in the return value. | 
+
+
+
+
+---
+
 <a name="Astronomy_VectorLength"></a>
 ### Astronomy_VectorLength(vector) &#8658; `double`
 
@@ -1586,6 +1611,23 @@ You can create this structure directly, or you can call the convenience function
 | [`astro_time_t`](#astro_time_t) | `jun_solstice` |  The date and time of the June soltice for the specified year.  |
 | [`astro_time_t`](#astro_time_t) | `sep_equinox` |  The date and time of the September equinox for the specified year.  |
 | [`astro_time_t`](#astro_time_t) | `dec_solstice` |  The date and time of the December solstice for the specified year.  |
+
+
+---
+
+<a name="astro_spherical_t"></a>
+### `astro_spherical_t`
+
+**Spherical coordinates: latitude, longitude, distance.** 
+
+
+
+| Type | Member | Description |
+| ---- | ------ | ----------- |
+| [`astro_status_t`](#astro_status_t) | `status` |  ASTRO_SUCCESS if this struct is valid; otherwise an error code.  |
+| `double` | `lat` |  The latitude angle: -90..+90 degrees.  |
+| `double` | `lon` |  The longitude angle: 0..360 degrees.  |
+| `double` | `dist` |  Distance in AU.  |
 
 
 ---

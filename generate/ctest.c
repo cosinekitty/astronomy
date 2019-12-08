@@ -1835,11 +1835,61 @@ fail:
     return error;
 }
 
+static int TestVectorFromAngles(double lat, double lon, double x, double y, double z)
+{
+    astro_spherical_t sphere;
+    astro_vector_t vector;
+    astro_time_t time;
+    double diff, dx, dy, dz;
+
+    /* Confirm the expected vector really is a unit vector. */
+    diff = fabs((x*x + y*y + z*z) - 1.0);
+    if (diff > 1.0e-16)
+    {
+        fprintf(stderr, "TestVectorFromAngles: EXCESSIVE unit error = %lg\n", diff);
+        return 1;
+    }
+
+    sphere.status = ASTRO_SUCCESS;
+    sphere.lat = lat;
+    sphere.lon = lon;
+    sphere.dist = 1.0;
+
+    time = Astronomy_MakeTime(2015, 3, 5, 12, 0, 0.0);
+    vector = Astronomy_VectorFromSphere(sphere, time);
+
+    if (vector.status != ASTRO_SUCCESS)
+    {
+        fprintf(stderr, "ERROR(TestVectorFromAngles): vector.status = %d\n", vector.status);
+        return 1;
+    }
+
+    dx = x - vector.x;
+    dy = y - vector.y;
+    dz = z - vector.z;
+    diff = sqrt(dx*dx + dy*dy + dz*dz);
+
+    printf("TestVectorFromAngles(%lf, %lf): diff = %lg\n", lat, lon, diff);
+    if (diff > 2.0e-16)
+    {
+        fprintf(stderr, "TestVectorFromAngles: EXCESSIVE ERROR.\n");
+        return 1;
+    }
+    return 0;
+}
+
 static int RotationTest(void)
 {
     int error;
     CHECK(Rotation_MatrixInverse());
     CHECK(Rotation_MatrixMultiply());
+    CHECK(TestVectorFromAngles(0.0, 0.0, 1.0, 0.0, 0.0));
+    CHECK(TestVectorFromAngles(0.0, 90.0, 0.0, 1.0, 0.0));
+    CHECK(TestVectorFromAngles(0.0, 180.0, -1.0, 0.0, 0.0));
+    CHECK(TestVectorFromAngles(0.0, 270.0, 0.0, -1.0, 0.0));
+    CHECK(TestVectorFromAngles(+90.0, 0.0, 0.0, 0.0, 1.0));
+    CHECK(TestVectorFromAngles(-90.0, 0.0, 0.0, 0.0, -1.0));
+    CHECK(TestVectorFromAngles(-30.0, +60.0, 0.43301270189221946, 0.75, -0.5));
     error = 0;
 fail:
     return error;

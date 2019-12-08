@@ -171,6 +171,18 @@ typedef struct
 astro_vector_t;
 
 /**
+ * @brief Spherical coordinates: latitude, longitude, distance.
+ */
+typedef struct
+{
+    astro_status_t status;  /**< ASTRO_SUCCESS if this struct is valid; otherwise an error code. */
+    double lat;             /**< The latitude angle: -90..+90 degrees. */
+    double lon;             /**< The longitude angle: 0..360 degrees. */
+    double dist;            /**< Distance in AU. */
+}
+astro_spherical_t;
+
+/**
  * @brief An angular value expressed in degrees.
  */
 typedef struct
@@ -602,6 +614,7 @@ astro_apsis_t Astronomy_NextLunarApsis(astro_apsis_t apsis);
 
 astro_rotation_t Astronomy_InverseRotation(astro_rotation_t rotation);
 astro_rotation_t Astronomy_CombineRotation(astro_rotation_t a, astro_rotation_t b);
+astro_vector_t Astronomy_VectorFromSphere(astro_spherical_t sphere, astro_time_t time);
 
 #if 0
 astro_rotation_t Astronomy_Rotation_EQD_EQJ(astro_time_t time);

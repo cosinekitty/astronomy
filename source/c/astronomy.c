@@ -5382,6 +5382,44 @@ astro_rotation_t Astronomy_CombineRotation(astro_rotation_t a, astro_rotation_t 
     return c;
 }
 
+/**
+ * @brief Converts spherical coordinates to Cartesian coordinates.
+ *
+ * Given spherical coordinates and a time at which they are valid,
+ * returns a vector of Cartesian coordinates. The returned value
+ * includes the time, as required by the type #astro_vector_t.
+ *
+ * @param sphere
+ *      Spherical coordinates to be converted.
+ *
+ * @param time
+ *      The time that should be included in the return value.
+ *
+ * @return
+ *      The vector form of the supplied spherical coordinates.
+ */
+astro_vector_t Astronomy_VectorFromSphere(astro_spherical_t sphere, astro_time_t time)
+{
+    astro_vector_t vector;
+    double radlat, radlon, rcoslat;
+
+    if (sphere.status != ASTRO_SUCCESS)
+        return VecError(ASTRO_INVALID_PARAMETER, time);
+
+    radlat = sphere.lat * DEG2RAD;
+    radlon = sphere.lon * DEG2RAD;
+    rcoslat = sphere.dist * cos(radlat);
+
+    vector.status = ASTRO_SUCCESS;
+    vector.t = time;
+    vector.x = rcoslat * cos(radlon);
+    vector.y = rcoslat * sin(radlon);
+    vector.z = sphere.dist * sin(radlat);
+
+    return vector;
+}
+
+
 #if 0
 /**
  * @brief
