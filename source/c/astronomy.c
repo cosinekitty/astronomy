@@ -986,8 +986,7 @@ static void precession(double tt1, const double pos1[3], double tt2, double pos2
     }
 }
 
-#if 0
-static astro_rotation_t precession_rot(double tt1, const double pos1[3], double tt2)
+static astro_rotation_t precession_rot(double tt1, double tt2)
 {
     astro_rotation_t rotation;
     double xx, yx, zx, xy, yy, zy, xz, yz, zz;
@@ -1073,7 +1072,6 @@ static astro_rotation_t precession_rot(double tt1, const double pos1[3], double 
     rotation.status = ASTRO_SUCCESS;
     return rotation;
 }
-#endif
 
 static astro_equatorial_t vector2radec(const double pos[3])
 {
@@ -1152,7 +1150,6 @@ static void nutation(astro_time_t *time, int direction, const double inpos[3], d
     }
 }
 
-#if 0
 static astro_rotation_t nutation_rot(astro_time_t *time, int direction)
 {
     astro_rotation_t rotation;
@@ -1207,7 +1204,6 @@ static astro_rotation_t nutation_rot(astro_time_t *time, int direction)
     rotation.status = ASTRO_SUCCESS;
     return rotation;
 }
-#endif
 
 static double era(double ut)        /* Earth Rotation Angle */
 {
@@ -5583,6 +5579,30 @@ astro_rotation_t Astronomy_Rotation_ECL_EQJ(void)
     r.rot[0][1] = 0.0;  r.rot[1][1] = +c;   r.rot[2][1] = -s;
     r.rot[0][2] = 0.0;  r.rot[1][2] = +s;   r.rot[2][2] = +c;
     return r;
+}
+
+/**
+ * @brief
+ *      Calculates a rotation matrix from equatorial J2000 (EQJ) to equatorial of-date (EQD).
+ *
+ * This is one of the family of functions that returns a rotation matrix
+ * for converting from one orientation to another.
+ * Source: EQJ = equatorial system, using equator at J2000 epoch.
+ * Target: EQD = equatorial system, using equator of the specified date/time.
+ *
+ * @param time
+ *      The date and time at which the Earth's equator defines the target orientation.
+ *
+ * @return
+ *      A rotation matrix that converts EQJ to EQD at `time`.
+ */
+astro_rotation_t Astronomy_Rotation_EQJ_EQD(astro_time_t time)
+{
+    astro_rotation_t prec, nut;
+
+    prec = precession_rot(0.0, time.tt);
+    nut = nutation_rot(&time, 0);
+    return Astronomy_CombineRotation(prec, nut);
 }
 
 #ifdef __cplusplus

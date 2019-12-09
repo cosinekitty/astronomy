@@ -15,6 +15,16 @@ static const double DEG2RAD = 0.017453292519943296;
 
 #define CHECK(x)            do{if(0 != (error = (x))) goto fail;}while(0)
 
+static int CheckStatus(int lnum, const char *varname, astro_status_t status)
+{
+    if (status != ASTRO_SUCCESS)
+    {
+        fprintf(stderr, "FAILURE at ctest.c[%d]: %s.status = %d\n", lnum, varname, status);
+        return 1;
+    }
+    return 0;
+}
+
 static int CheckVector(int lnum, astro_vector_t v)
 {
     if (v.status != ASTRO_SUCCESS)
@@ -37,6 +47,7 @@ static int CheckEquator(int lnum, astro_equatorial_t equ)
 
 #define CHECK_VECTOR(var,expr)   CHECK(CheckVector(__LINE__, ((var) = (expr))))
 #define CHECK_EQU(var,expr)      CHECK(CheckEquator(__LINE__, ((var) = (expr))))
+#define CHECK_STATUS(expr)       CHECK(CheckStatus(__LINE__, #expr, (expr).status))
 
 static int Issue46(void);
 static int Issue48(void);
@@ -2093,6 +2104,66 @@ static int Test_EQJ_ECL(void)
     return 0;
 }
 
+static int Test_EQJ_EQD(astro_body_t body)
+{
+    astro_time_t time;
+    astro_observer_t observer;
+    astro_equatorial_t eq2000, eqdate;
+    astro_spherical_t sphere;
+    astro_vector_t v2000, vdate;
+    astro_rotation_t r;
+    double ra_diff, dec_diff, dist_diff;
+    int error;
+
+    /* Verify conversion of equatorial J2000 to equatorial of-date, and back. */
+
+    /* Use established functions to calculate spherical coordinates for the body, in both EQJ and EQD. */
+    time = Astronomy_MakeTime(2019, 12, 8, 20, 50, 0.0);
+    observer = Astronomy_MakeObserver(35, -85, 0);
+    eq2000 = Astronomy_Equator(body, &time, observer, EQUATOR_J2000, ABERRATION);
+    CHECK_STATUS(eq2000);
+    eqdate = Astronomy_Equator(body, &time, observer, EQUATOR_OF_DATE, ABERRATION);
+    CHECK_STATUS(eqdate);
+
+    /* Convert EQJ spherical coordinates to vector. */
+    sphere.status = ASTRO_SUCCESS;
+    sphere.lat = eq2000.dec;
+    sphere.lon = 15.0 * eq2000.ra;
+    sphere.dist = eq2000.dist;
+    v2000 = Astronomy_VectorFromSphere(sphere, time);
+    CHECK_STATUS(v2000);
+
+    /* Find rotation matrix. */
+    r = Astronomy_Rotation_EQJ_EQD(time);
+    CHECK_STATUS(r);
+
+    /* Rotate EQJ vector to EQD vector. */
+    vdate = Astronomy_RotateVector(r, v2000);
+    CHECK_STATUS(vdate);
+
+    /* Convert vector back to spherical coordinates. */
+    sphere = Astronomy_SphereFromVector(vdate);
+    CHECK_STATUS(sphere);
+
+    /* Compare the result with the eqdate. */
+    ra_diff = fabs((sphere.lon / 15.0) - eqdate.ra);
+    dec_diff = fabs(sphere.lat - eqdate.dec);
+    dist_diff = fabs(sphere.dist - eqdate.dist);
+    printf("Test_EQJ_EQD: %s ra=%0.3lf, dec=%0.3lf, dist=%0.3lf, ra_diff=%lg, dec_diff=%lg, dist_diff=%lg\n", Astronomy_BodyName(body), eqdate.ra, eqdate.dec, eqdate.dist, ra_diff, dec_diff, dist_diff);
+
+    /* FIXFIXFIX: why do we see angular errors this large? */
+    if (ra_diff > 5.0e-8 || dec_diff > 2.0e-6 || dist_diff > 4.0e-15)
+    {
+        fprintf(stderr, "Test_EQJ_EQD: EXCESSIVE ERROR\n");
+        return 1;
+    }
+
+    error = 0;
+
+fail:
+    return error;
+}
+
 static int RotationTest(void)
 {
     int error;
@@ -2126,6 +2197,11 @@ static int RotationTest(void)
     CHECK(TestSpin(0.0, 0.0, -45.0, +1, 0, 0, +0.7071067811865476, -0.7071067811865476, 0));
 
     CHECK(Test_EQJ_ECL());
+    CHECK(Test_EQJ_EQD(BODY_MERCURY));
+    CHECK(Test_EQJ_EQD(BODY_VENUS));
+    CHECK(Test_EQJ_EQD(BODY_MARS));
+    CHECK(Test_EQJ_EQD(BODY_JUPITER));
+    CHECK(Test_EQJ_EQD(BODY_SATURN));
 
     error = 0;
 fail:

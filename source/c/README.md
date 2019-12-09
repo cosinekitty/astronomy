@@ -759,6 +759,30 @@ This is one of the family of functions that returns a rotation matrix for conver
 
 ---
 
+<a name="Astronomy_Rotation_EQJ_EQD"></a>
+### Astronomy_Rotation_EQJ_EQD(time) &#8658; [`astro_rotation_t`](#astro_rotation_t)
+
+**Calculates a rotation matrix from equatorial J2000 (EQJ) to equatorial of-date (EQD).** 
+
+
+
+This is one of the family of functions that returns a rotation matrix for converting from one orientation to another. Source: EQJ = equatorial system, using equator at J2000 epoch. Target: EQD = equatorial system, using equator of the specified date/time.
+
+
+
+**Returns:**  A rotation matrix that converts EQJ to EQD at `time`. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_time_t`](#astro_time_t) | `time` |  The date and time at which the Earth's equator defines the target orientation. | 
+
+
+
+
+---
+
 <a name="Astronomy_Search"></a>
 ### Astronomy_Search(func, context, t1, t2, dt_tolerance_seconds) &#8658; [`astro_search_result_t`](#astro_search_result_t)
 
