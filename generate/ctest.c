@@ -1803,7 +1803,7 @@ static int CheckRotationMatrix(int lnum, const char *name, astro_rotation_t r)
 
 #define CHECK_ROTMAT(r)   CHECK(CheckRotationMatrix(__LINE__, #r, (r)))
 
-static int CompareMatrices(const char *caller, astro_rotation_t a, astro_rotation_t b)
+static int CompareMatrices(const char *caller, astro_rotation_t a, astro_rotation_t b, double tolerance)
 {
     int i, j;
 
@@ -1820,12 +1820,17 @@ static int CompareMatrices(const char *caller, astro_rotation_t a, astro_rotatio
     }
 
     for (i=0; i < 3; ++i)
+    {
         for (j=0; j < 3; ++j)
-            if (a.rot[i][j] != b.rot[i][j])
+        {
+            double diff = fabs(a.rot[i][j] - b.rot[i][j]);
+            if (diff > tolerance)
             {
-                fprintf(stderr, "ERROR(%s): matrix[%d][%d]=%lf, expected %lf\n", caller, i, j, a.rot[i][j], b.rot[i][j]);
+                fprintf(stderr, "ERROR(%s): matrix[%d][%d]=%lg, expected %lg, diff %lg\n", caller, i, j, a.rot[i][j], b.rot[i][j], diff);
                 return 1;
             }
+        }
+    }
 
     return 0;
 }
@@ -1846,7 +1851,7 @@ static int Rotation_MatrixInverse(void)
     v.rot[0][2] = 3.0; v.rot[1][2] = 6.0; v.rot[2][2] = 9.0;
 
     b = Astronomy_InverseRotation(a);
-    CHECK(CompareMatrices("Rotation_MatrixInverse", b, v));
+    CHECK(CompareMatrices("Rotation_MatrixInverse", b, v, 0.0));
 
     printf("Rotation_MatrixInverse: PASS\n");
     error = 0;
@@ -1879,7 +1884,7 @@ static int Rotation_MatrixMultiply(void)
     c = Astronomy_CombineRotation(b, a);
 
     /* Verify that c = v. */
-    CHECK(CompareMatrices("Rotation_MatrixMultiply", c, v));
+    CHECK(CompareMatrices("Rotation_MatrixMultiply", c, v, 0.0));
 
     printf("Rotation_MatrixMultiply: PASS\n");
     error = 0;
@@ -2318,6 +2323,91 @@ fail:
     return error;
 }
 
+static int CheckInverse(const char *aname, const char *bname, astro_rotation_t arot, astro_rotation_t brot)
+{
+    int error;
+    astro_rotation_t crot;
+    astro_rotation_t identity;
+
+    CHECK(CheckRotationMatrix(__LINE__, aname, arot));
+    CHECK(CheckRotationMatrix(__LINE__, bname, brot));
+
+    crot = Astronomy_CombineRotation(arot, brot);
+    CHECK_ROTMAT(crot);
+
+    identity.status = ASTRO_SUCCESS;
+    identity.rot[0][0] = 1; identity.rot[1][0] = 0; identity.rot[2][0] = 0;
+    identity.rot[0][1] = 0; identity.rot[1][1] = 1; identity.rot[2][1] = 0;
+    identity.rot[0][2] = 0; identity.rot[1][2] = 0; identity.rot[2][2] = 1;
+
+    CHECK(CompareMatrices("CheckInverse", crot, identity, 2.0e-15));
+
+    error = 0;
+fail:
+    return error;
+}
+
+#define CHECK_INVERSE(a,b)   CHECK(CheckInverse(#a, #b, a, b))
+
+static int Test_RotRoundTrip(void)
+{
+    int error;
+    astro_time_t time;
+    astro_observer_t observer;
+    astro_rotation_t eqj_ecl, ecl_eqj;
+    astro_rotation_t eqj_hor, hor_eqj;
+    astro_rotation_t eqj_eqd, eqd_eqj;
+    astro_rotation_t hor_eqd, eqd_hor;
+    //astro_rotation_t eqd_ecl, ecl_eqd;
+    //astro_rotation_t hor_ecl, ecl_hor;
+
+    time = Astronomy_MakeTime(2067, 5, 30, 14, 45, 0.0);
+    observer = Astronomy_MakeObserver(+28.0, -82.0, 0.0);
+
+    /*
+        In each round trip, we calculate a forward rotation and a backward rotation.
+        Verify the two are inverse matrices.
+        Then verify that combining different sequences of rotations result
+        in the expected combination.
+        For example, (EQJ ==> HOR ==> ECL) must be the same matrix as (EQJ ==> ECL).
+    */
+
+    /* Round trip #1: EQJ <==> EQD. */
+    eqj_eqd = Astronomy_Rotation_EQJ_EQD(time);
+    eqd_eqj = Astronomy_Rotation_EQD_EQJ(time);
+    CHECK_INVERSE(eqj_eqd, eqd_eqj);
+
+    /* Round trip #2: EQJ <==> ECL. */
+    eqj_ecl = Astronomy_Rotation_EQJ_ECL();
+    ecl_eqj = Astronomy_Rotation_ECL_EQJ();
+    CHECK_INVERSE(eqj_ecl, ecl_eqj);
+
+    /* Round trip #3: EQJ <==> HOR. */
+    eqj_hor = Astronomy_Rotation_EQJ_HOR(time, observer);
+    hor_eqj = Astronomy_Rotation_HOR_EQJ(time, observer);
+    CHECK_INVERSE(eqj_hor, hor_eqj);
+
+    /* Round trip #4: EQD <==> HOR. */
+    eqd_hor = Astronomy_Rotation_EQD_HOR(time, observer);
+    hor_eqd = Astronomy_Rotation_HOR_EQD(time, observer);
+    CHECK_INVERSE(eqd_hor, hor_eqd);
+
+    /* Round trip #5: EQD <==> ECL. */
+    //eqd_ecl = Astronomy_Rotation_EQD_ECL(time, observer);
+    //ecl_eqd = Astronomy_Rotation_ECL_EQD(time, observer);
+    //CHECK_INVERSE(eqd_ecl, ecl_eqd);
+
+    /* Round trip #6: HOR <==> ECL. */
+    //hor_ecl = Astronomy_Rotation_HOR_ECL(time, observer);
+    //ecl_hor = Astronomy_Rotation_ECL_HOR(time, observer);
+    //CHECK_INVERSE(hor_ecl, ecl_hor);
+
+    printf("Test_RotRoundTrip: PASS\n");
+    error = 0;
+fail:
+    return error;
+}
+
 static int RotationTest(void)
 {
     int error;
@@ -2363,6 +2453,8 @@ static int RotationTest(void)
     CHECK(Test_EQD_HOR(BODY_MARS));
     CHECK(Test_EQD_HOR(BODY_JUPITER));
     CHECK(Test_EQD_HOR(BODY_SATURN));
+
+    CHECK(Test_RotRoundTrip());
 
     error = 0;
 fail:
