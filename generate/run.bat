@@ -185,6 +185,9 @@ if errorlevel 1 (exit /b 1)
 !CTESTEXE! diff temp\c_check.txt temp\js_check.txt
 if errorlevel 1 (exit /b 1)
 
+!CTESTEXE! rotation
+if errorlevel 1 (exit /b 1)
+
 !CTESTEXE! seasons seasons\seasons.txt
 if errorlevel 1 (exit /b 1)
 
