@@ -4617,6 +4617,110 @@ astro_rotation_t Astronomy_Rotation_EQJ_HOR(astro_time_t time, astro_observer_t 
 }
 
 
+/**
+ * @brief
+ *      Calculates a rotation matrix from equatorial of-date (EQD) to ecliptic J2000 (ECL).
+ *
+ * This is one of the family of functions that returns a rotation matrix
+ * for converting from one orientation to another.
+ * Source: EQD = equatorial system, using equator of date.
+ * Target: ECL = ecliptic system, using equator at J2000 epoch.
+ *
+ * @param time
+ *      The date and time of the source equator.
+ *
+ * @return
+ *      A rotation matrix that converts EQD to ECL.
+ */
+astro_rotation_t Astronomy_Rotation_EQD_ECL(astro_time_t time)
+{
+    astro_rotation_t eqd_eqj;
+    astro_rotation_t eqj_ecl;
+
+    eqd_eqj = Astronomy_Rotation_EQD_EQJ(time);
+    eqj_ecl = Astronomy_Rotation_EQJ_ECL();
+    return Astronomy_CombineRotation(eqd_eqj, eqj_ecl);
+}
+
+
+/**
+ * @brief
+ *      Calculates a rotation matrix from ecliptic J2000 (ECL) to equatorial of-date (EQD).
+ *
+ * This is one of the family of functions that returns a rotation matrix
+ * for converting from one orientation to another.
+ * Source: ECL = ecliptic system, using equator at J2000 epoch.
+ * Target: EQD = equatorial system, using equator of date.
+ *
+ * @param time
+ *      The date and time of the desired equator.
+ *
+ * @return
+ *      A rotation matrix that converts ECL to EQD.
+ */
+astro_rotation_t Astronomy_Rotation_ECL_EQD(astro_time_t time)
+{
+    astro_rotation_t rot = Astronomy_Rotation_EQD_ECL(time);
+    return Astronomy_InverseRotation(rot);
+}
+
+/**
+ * @brief
+ *      Calculates a rotation matrix from ecliptic J2000 (ECL) to horizontal (HOR).
+ *
+ * This is one of the family of functions that returns a rotation matrix
+ * for converting from one orientation to another.
+ * Source: ECL = ecliptic system, using equator at J2000 epoch.
+ * Target: HOR = horizontal system.
+ *
+ * Use #Astronomy_HorizonFromVector to convert the return value
+ * to a traditional altitude/azimuth pair.
+ *
+ * @param time
+ *      The date and time of the desired horizontal orientation.
+ *
+ * @param observer
+ *      A location near the Earth's mean sea level that defines the observer's horizon.
+ *
+ * @return
+ *      A rotation matrix that converts ECL to HOR at `time` and for `observer`.
+ *      The components of the horizontal vector are:
+ *      x = north, y = west, z = zenith (straight up from the observer).
+ *      These components are chosen so that the "right-hand rule" works for the vector
+ *      and so that north represents the direction where azimuth = 0.
+ */
+astro_rotation_t Astronomy_Rotation_ECL_HOR(astro_time_t time, astro_observer_t observer)
+{
+    astro_rotation_t ecl_eqd = Astronomy_Rotation_ECL_EQD(time);
+    astro_rotation_t eqd_hor = Astronomy_Rotation_EQD_HOR(time, observer);
+    return Astronomy_CombineRotation(ecl_eqd, eqd_hor);
+}
+
+/**
+ * @brief
+ *      Calculates a rotation matrix from horizontal (HOR) to ecliptic J2000 (ECL).
+ *
+ * This is one of the family of functions that returns a rotation matrix
+ * for converting from one orientation to another.
+ * Source: HOR = horizontal system.
+ * Target: ECL = ecliptic system, using equator at J2000 epoch.
+ *
+ * @param time
+ *      The date and time of the horizontal observation.
+ *
+ * @param observer
+ *      The location of the horizontal observer.
+ *
+ * @return
+ *      A rotation matrix that converts HOR to ECL.
+ */
+astro_rotation_t Astronomy_Rotation_HOR_ECL(astro_time_t time, astro_observer_t observer)
+{
+    astro_rotation_t rot = Astronomy_Rotation_ECL_HOR(time, observer);
+    return Astronomy_InverseRotation(rot);
+}
+
+
 #ifdef __cplusplus
 }
 #endif
