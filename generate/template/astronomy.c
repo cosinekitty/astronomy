@@ -4585,6 +4585,38 @@ astro_rotation_t Astronomy_Rotation_HOR_EQJ(astro_time_t time, astro_observer_t 
 }
 
 
+/**
+ * @brief
+ *      Calculates a rotation matrix from equatorial J2000 (EQJ) to horizontal (HOR).
+ *
+ * This is one of the family of functions that returns a rotation matrix
+ * for converting from one orientation to another.
+ * Source: EQJ = equatorial system, using the equator at the J2000 epoch.
+ * Target: HOR = horizontal system.
+ *
+ * Use #Astronomy_HorizonFromVector to convert the return value
+ * to a traditional altitude/azimuth pair.
+ *
+ * @param time
+ *      The date and time of the desired horizontal orientation.
+ *
+ * @param observer
+ *      A location near the Earth's mean sea level that defines the observer's horizon.
+ *
+ * @return
+ *      A rotation matrix that converts EQJ to HOR at `time` and for `observer`.
+ *      The components of the horizontal vector are:
+ *      x = north, y = west, z = zenith (straight up from the observer).
+ *      These components are chosen so that the "right-hand rule" works for the vector
+ *      and so that north represents the direction where azimuth = 0.
+ */
+astro_rotation_t Astronomy_Rotation_EQJ_HOR(astro_time_t time, astro_observer_t observer)
+{
+    astro_rotation_t rot = Astronomy_Rotation_HOR_EQJ(time, observer);
+    return Astronomy_InverseRotation(rot);
+}
+
+
 #ifdef __cplusplus
 }
 #endif

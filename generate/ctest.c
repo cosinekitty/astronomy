@@ -2228,7 +2228,7 @@ static int Test_EQD_HOR(astro_body_t body)
     astro_equatorial_t eqd, eqj;
     astro_horizon_t hor;
     astro_rotation_t rot;
-    astro_vector_t vec_eqd, vec_eqj, vec_hor, check_eqd, check_eqj;
+    astro_vector_t vec_eqd, vec_eqj, vec_hor, check_eqd, check_eqj, check_hor;
     astro_spherical_t sphere;
     double diff_az, diff_alt, diff;
     int error;
@@ -2298,6 +2298,18 @@ static int Test_EQD_HOR(astro_body_t body)
     if (diff > 2.0e-15)
     {
         fprintf(stderr, "Test_EQD_HOR: EXCESSIVE J2000 INVERSE HORIZONTAL ERROR.\n");
+        return 1;
+    }
+
+    /* Verify the inverse translation: EQJ to HOR. */
+    rot = Astronomy_Rotation_EQJ_HOR(time, observer);
+    CHECK_ROTMAT(rot);
+    CHECK_VECTOR(check_hor, Astronomy_RotateVector(rot, vec_eqj));
+    CHECK(VectorDiff(check_hor, vec_hor, &diff));
+    printf("Test_EQD_HOR %s: EQJ inverse rotation diff = %lg\n", Astronomy_BodyName(body), diff);
+    if (diff > 2.0e-15)
+    {
+        fprintf(stderr, "Test_EQD_HOR: EXCESSIVE EQJ INVERSE HORIZONTAL ERROR.\n");
         return 1;
     }
 
