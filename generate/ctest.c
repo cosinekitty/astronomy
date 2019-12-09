@@ -2236,9 +2236,10 @@ static int Test_EQD_HOR(astro_body_t body)
     astro_equatorial_t eqd;
     astro_horizon_t hor;
     astro_rotation_t rot;
-    astro_vector_t vec_eqd, vec_hor;
+    astro_vector_t vec_eqd, vec_hor, check_eqd;
     astro_spherical_t sphere;
     double diff_az, diff_alt;
+    double dx, dy, dz, diff;
     int error;
 
     /* Use existing functions to calculate horizontal coordinates of the body for the time+observer. */
@@ -2257,6 +2258,7 @@ static int Test_EQD_HOR(astro_body_t body)
 
     /* Calculate rotation matrix to convert equatorial J2000 vector to horizontal vector. */
     rot = Astronomy_Rotation_EQD_HOR(time, observer);
+    CHECK_ROTMAT(rot);
 
     /* Rotate the equator of date vector to a horizontal vector. */
     CHECK_VECTOR(vec_hor, Astronomy_RotateVector(rot, vec_eqd));
@@ -2274,6 +2276,21 @@ static int Test_EQD_HOR(astro_body_t body)
     if (diff_alt > 2.0e-14)
     {
         fprintf(stderr, "Test_EQD_HOR: EXCESSIVE HORIZONTAL ERROR.\n");
+        return 1;
+    }
+
+    /* Verify the inverse translation from horizontal vector to equatorial of-date vector. */
+    rot = Astronomy_Rotation_HOR_EQD(time, observer);
+    CHECK_ROTMAT(rot);
+    CHECK_VECTOR(check_eqd, Astronomy_RotateVector(rot, vec_hor));
+    dx = check_eqd.x - vec_eqd.x;
+    dy = check_eqd.y - vec_eqd.y;
+    dz = check_eqd.z - vec_eqd.z;
+    diff = sqrt(dx*dx + dy*dy + dz*dz);
+    printf("Test_EQD_HOR %s: inverse rotation diff = %lg\n", Astronomy_BodyName(body), diff);
+    if (diff > 1.0e-15)
+    {
+        fprintf(stderr, "Test_EQD_HOR: EXCESSIVE INVERSE HORIZONTAL ERROR.\n");
         return 1;
     }
 

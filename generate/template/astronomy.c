@@ -4526,6 +4526,31 @@ astro_rotation_t Astronomy_Rotation_EQD_HOR(astro_time_t time, astro_observer_t 
 }
 
 
+/**
+ * @brief
+ *      Calculates a rotation matrix from horizontal (HOR) to equatorial of-date (EQD).
+ *
+ * This is one of the family of functions that returns a rotation matrix
+ * for converting from one orientation to another.
+ * Source: HOR = horizontal system (x=North, y=West, z=Zenith).
+ * Source: EQD = equatorial system, using equator of the specified date/time.
+ *
+ * @param time
+ *      The date and time at which the Earth's equator applies.
+ *
+ * @param observer
+ *      A location near the Earth's mean sea level that defines the observer's horizon.
+ *
+ * @return
+ *      A rotation matrix that converts HOR to EQD at `time` and for `observer`.
+ */
+astro_rotation_t Astronomy_Rotation_HOR_EQD(astro_time_t time, astro_observer_t observer)
+{
+    astro_rotation_t rot = Astronomy_Rotation_EQD_HOR(time, observer);
+    return Astronomy_InverseRotation(rot);
+}
+
+
 #ifdef __cplusplus
 }
 #endif
