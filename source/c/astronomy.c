@@ -5430,7 +5430,7 @@ astro_vector_t Astronomy_VectorFromSphere(astro_spherical_t sphere, astro_time_t
  * Given a Cartesian vector, returns latitude, longitude, and distance.
  *
  * @param vector
- *      Cartesian vector to be converted to spherical coordinates
+ *      Cartesian vector to be converted to spherical coordinates.
  *
  * @return
  *      Spherical coordinates that are equivalent to the given vector.
@@ -5475,6 +5475,100 @@ astro_spherical_t Astronomy_SphereFromVector(astro_vector_t vector)
 }
 
 /**
+ * @brief Converts Cartesian coordinates to horizontal coordinates.
+ *
+ * Given a horizontal Cartesian vector, returns horizontal azimuth and altitude.
+ *
+ * *IMPORTANT:* This function differs from #Astronomy_SphereFromVector in two ways:
+ * - `Astronomy_SphereFromVector` returns a `lon` value that represents azimuth defined counterclockwise
+ *   from north (e.g., west = +90), but this function represents a clockwise rotation
+ *   (e.g., east = +90). The difference is because `Astronomy_SphereFromVector` is intended
+ *   to preserve the vector "right-hand rule", while this function defines azimuth in a more
+ *   traditional way as used in navigation and cartography.
+ * - This function optionally corrects for atmospheric refraction, while `Astronomy_SphereFromVector`
+ *   does not.
+ *
+ * The returned structure will contain the azimuth in `lon`.
+ * It is measured in degrees clockwise from north: east = +90 degrees, west = +270 degrees.
+ *
+ * The altitude will be stored in `lat`.
+ *
+ * The distance to the observed object is stored in `dist`,
+ * and is expressed in astronomical units (AU).
+ *
+ * @param vector
+ *      Cartesian vector to be converted to horizontal coordinates.
+ *
+ * @param refraction
+ *      `REFRACTION_NORMAL`: correct altitude for atmospheric refraction (recommended).
+ *      `REFRACTION_NONE`: no atmospheric refraction correction is performed.
+ *      `REFRACTION_JPLHOR`: for JPL Horizons compatibility testing only; not recommended for normal use.
+ *
+ * @return
+ *      If successful, `status` hold `ASTRO_SUCCESS` and the other fields are valid as described above.
+ *      Otherwise `status` holds an error code and the other fields are undefined.
+ */
+astro_spherical_t Astronomy_HorizonFromVector(astro_vector_t vector, astro_refraction_t refraction)
+{
+    astro_spherical_t sphere;
+
+    sphere = Astronomy_SphereFromVector(vector);
+    if (sphere.status == ASTRO_SUCCESS)
+    {
+        /* Convert azimuth from counterclockwise-from-north to clockwise-from-north. */
+        sphere.lon = 360.0 - sphere.lon;
+        if (sphere.lon >= 360.0)
+            sphere.lon -= 360.0;
+        else if (sphere.lon < 0.0)
+            sphere.lon += 360.0;
+
+        if (refraction == REFRACTION_NONE)
+        {
+            /* No atmospheric correction needed; do nothing. */
+        }
+        else if (refraction == REFRACTION_NORMAL || refraction == REFRACTION_JPLHOR)
+        {
+            double zd, refr, hd;
+
+            zd = 90.0 - sphere.lat;
+
+            // http://extras.springer.com/1999/978-1-4471-0555-8/chap4/horizons/horizons.pdf
+            // JPL Horizons says it uses refraction algorithm from
+            // Meeus "Astronomical Algorithms", 1991, p. 101-102.
+            // I found the following Go implementation:
+            // https://github.com/soniakeys/meeus/blob/master/v3/refraction/refract.go
+            // This is a translation from the function "Saemundsson" there.
+            // I found experimentally that JPL Horizons clamps the angle to 1 degree below the horizon.
+            // This is important because the 'refr' formula below goes crazy near hd = -5.11.
+            hd = sphere.lat;
+            if (hd < -1.0)
+                hd = -1.0;
+
+            refr = (1.02 / tan((hd+10.3/(hd+5.11))*DEG2RAD)) / 60.0;
+
+            if (refraction == REFRACTION_NORMAL && zd > 91.0)
+            {
+                // In "normal" mode we gradually reduce refraction toward the nadir
+                // so that we never get an altitude angle less than -90 degrees.
+                // When horizon angle is -1 degrees, zd = 91, and the factor is exactly 1.
+                // As zd approaches 180 (the nadir), the fraction approaches 0 linearly.
+                refr *= (180.0 - zd) / 89.0;
+            }
+
+            sphere.lat += refr;
+        }
+        else
+        {
+            /* Invalid refraction option. */
+            return SphereError(ASTRO_INVALID_PARAMETER);
+        }
+    }
+
+    return sphere;
+}
+
+
+/**
  * @brief
  *      Applies a rotation to a vector, yielding a rotated vector.
  *
@@ -5506,28 +5600,6 @@ astro_vector_t Astronomy_RotateVector(astro_rotation_t rotation, astro_vector_t 
     return target;
 }
 
-
-#if 0
-/**
- * @brief
- *      Calculates a rotation matrix from equatorial of-date system to equatorial J2000.
- *
- * This is one of the family of MakeRotation functions that convert
- * from one orientation system to another.
- * Source: EQD = equatorial system, using equator of date.
- * Target: EQJ = equatorial system, using equator at J2000 epoch.
- *
- * @param time
- *      The date and time defining the equator of the source orientation.
- *
- * @return
- *      A rotation matrix that converts EQD to EQJ.
- */
-astro_rotation_t Astronomy_MakeRotation_EQD_EQJ(astro_time_t time)
-{
-
-}
-#endif
 
 /**
  * @brief
@@ -5628,6 +5700,70 @@ astro_rotation_t Astronomy_Rotation_EQD_EQJ(astro_time_t time)
     prec = precession_rot(time.tt, 0.0);
     return Astronomy_CombineRotation(nut, prec);
 }
+
+
+/**
+ * @brief
+ *      Calculates a rotation matrix from equatorial of-date (EQD) to horizontal (HOR).
+ *
+ * This is one of the family of functions that returns a rotation matrix
+ * for converting from one orientation to another.
+ * Source: EQD = equatorial system, using equator of the specified date/time.
+ * Target: HOR = horizontal system.
+ *
+ * Use #Astronomy_HorizonFromVector to convert the return value
+ * to a traditional altitude/azimuth pair.
+ *
+ * @param time
+ *      The date and time at which the Earth's equator applies.
+ *
+ * @param observer
+ *      A location near the Earth's mean sea level that defines the observer's horizon.
+ *
+ * @return
+ *      A rotation matrix that converts EQD to HOR at `time` and for `observer`.
+ *      The components of the horizontal vector are:
+ *      x = north, y = west, z = zenith (straight up from the observer).
+ *      These components are chosen so that the "right-hand rule" works for the vector
+ *      and so that north represents the direction where azimuth = 0.
+ */
+astro_rotation_t Astronomy_Rotation_EQD_HOR(astro_time_t time, astro_observer_t observer)
+{
+    astro_rotation_t rot;
+    double uze[3], une[3], uwe[3];
+    double uz[3], un[3], uw[3];
+    double spin_angle;
+
+    double sinlat = sin(observer.latitude * DEG2RAD);
+    double coslat = cos(observer.latitude * DEG2RAD);
+    double sinlon = sin(observer.longitude * DEG2RAD);
+    double coslon = cos(observer.longitude * DEG2RAD);
+
+    uze[0] = coslat * coslon;
+    uze[1] = coslat * sinlon;
+    uze[2] = sinlat;
+
+    une[0] = -sinlat * coslon;
+    une[1] = -sinlat * sinlon;
+    une[2] = coslat;
+
+    uwe[0] = sinlon;
+    uwe[1] = -coslon;
+    uwe[2] = 0.0;
+
+    spin_angle = -15.0 * sidereal_time(&time);
+    spin(spin_angle, uze, uz);
+    spin(spin_angle, une, un);
+    spin(spin_angle, uwe, uw);
+
+    rot.rot[0][0] = un[0]; rot.rot[1][0] = un[1]; rot.rot[2][0] = un[2];
+    rot.rot[0][1] = uw[0]; rot.rot[1][1] = uw[1]; rot.rot[2][1] = uw[2];
+    rot.rot[0][2] = uz[0]; rot.rot[1][2] = uz[1]; rot.rot[2][2] = uz[2];
+
+    rot.status = ASTRO_SUCCESS;
+    return rot;
+}
+
 
 #ifdef __cplusplus
 }

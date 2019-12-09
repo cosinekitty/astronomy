@@ -616,11 +616,12 @@ astro_rotation_t Astronomy_InverseRotation(astro_rotation_t rotation);
 astro_rotation_t Astronomy_CombineRotation(astro_rotation_t a, astro_rotation_t b);
 astro_vector_t Astronomy_VectorFromSphere(astro_spherical_t sphere, astro_time_t time);
 astro_spherical_t Astronomy_SphereFromVector(astro_vector_t vector);
+astro_spherical_t Astronomy_HorizonFromVector(astro_vector_t vector, astro_refraction_t refraction);
 astro_vector_t Astronomy_RotateVector(astro_rotation_t rotation, astro_vector_t vector);
 
 astro_rotation_t Astronomy_Rotation_EQD_EQJ(astro_time_t time);
 //astro_rotation_t Astronomy_Rotation_EQD_ECL(astro_time_t time);
-//astro_rotation_t Astronomy_Rotation_EQD_HOR(astro_time_t time, astro_observer_t observer);
+astro_rotation_t Astronomy_Rotation_EQD_HOR(astro_time_t time, astro_observer_t observer);
 astro_rotation_t Astronomy_Rotation_EQJ_EQD(astro_time_t time);
 astro_rotation_t Astronomy_Rotation_EQJ_ECL(void);
 //astro_rotation_t Astronomy_Rotation_EQJ_HOR(astro_time_t time, astro_observer_t observer);

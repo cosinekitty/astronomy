@@ -475,6 +475,43 @@ This function optionally corrects for atmospheric refraction. For most uses, it 
 
 ---
 
+<a name="Astronomy_HorizonFromVector"></a>
+### Astronomy_HorizonFromVector(vector, refraction) &#8658; [`astro_spherical_t`](#astro_spherical_t)
+
+**Converts Cartesian coordinates to horizontal coordinates.** 
+
+
+
+Given a horizontal Cartesian vector, returns horizontal azimuth and altitude.
+
+*IMPORTANT:* This function differs from [`Astronomy_SphereFromVector`](#Astronomy_SphereFromVector) in two ways:
+
+- `Astronomy_SphereFromVector` returns a `lon` value that represents azimuth defined counterclockwise from north (e.g., west = +90), but this function represents a clockwise rotation (e.g., east = +90). The difference is because `Astronomy_SphereFromVector` is intended to preserve the vector "right-hand rule", while this function defines azimuth in a more traditional way as used in navigation and cartography.
+- This function optionally corrects for atmospheric refraction, while `Astronomy_SphereFromVector` does not.
+
+
+The returned structure will contain the azimuth in `lon`. It is measured in degrees clockwise from north: east = +90 degrees, west = +270 degrees.
+
+The altitude will be stored in `lat`.
+
+The distance to the observed object is stored in `dist`, and is expressed in astronomical units (AU).
+
+
+
+**Returns:**  If successful, `status` hold `ASTRO_SUCCESS` and the other fields are valid as described above. Otherwise `status` holds an error code and the other fields are undefined. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_vector_t`](#astro_vector_t) | `vector` |  Cartesian vector to be converted to horizontal coordinates. | 
+| [`astro_refraction_t`](#astro_refraction_t) | `refraction` |  `REFRACTION_NORMAL`: correct altitude for atmospheric refraction (recommended). `REFRACTION_NONE`: no atmospheric refraction correction is performed. `REFRACTION_JPLHOR`: for JPL Horizons compatibility testing only; not recommended for normal use. | 
+
+
+
+
+---
+
 <a name="Astronomy_Illumination"></a>
 ### Astronomy_Illumination(body, time) &#8658; [`astro_illum_t`](#astro_illum_t)
 
@@ -760,6 +797,33 @@ This is one of the family of functions that returns a rotation matrix for conver
 | Type | Parameter | Description |
 | --- | --- | --- |
 | [`astro_time_t`](#astro_time_t) | `time` |  The date and time at which the Earth's equator defines the source orientation. | 
+
+
+
+
+---
+
+<a name="Astronomy_Rotation_EQD_HOR"></a>
+### Astronomy_Rotation_EQD_HOR(time, observer) &#8658; [`astro_rotation_t`](#astro_rotation_t)
+
+**Calculates a rotation matrix from equatorial of-date (EQD) to horizontal (HOR).** 
+
+
+
+This is one of the family of functions that returns a rotation matrix for converting from one orientation to another. Source: EQD = equatorial system, using equator of the specified date/time. Target: HOR = horizontal system.
+
+Use [`Astronomy_HorizonFromVector`](#Astronomy_HorizonFromVector) to convert the return value to a traditional altitude/azimuth pair.
+
+
+
+**Returns:**  A rotation matrix that converts EQD to HOR at `time` and for `observer`. The components of the horizontal vector are: x = north, y = west, z = zenith (straight up from the observer). These components are chosen so that the "right-hand rule" works for the vector and so that north represents the direction where azimuth = 0. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_time_t`](#astro_time_t) | `time` |  The date and time at which the Earth's equator applies. | 
+| [`astro_observer_t`](#astro_observer_t) | `observer` |  A location near the Earth's mean sea level that defines the observer's horizon. | 
 
 
 
@@ -1162,7 +1226,7 @@ Given a Cartesian vector, returns latitude, longitude, and distance.
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| [`astro_vector_t`](#astro_vector_t) | `vector` |  Cartesian vector to be converted to spherical coordinates | 
+| [`astro_vector_t`](#astro_vector_t) | `vector` |  Cartesian vector to be converted to spherical coordinates. | 
 
 
 

@@ -2229,6 +2229,59 @@ fail:
     return error;
 }
 
+static int Test_EQD_HOR(astro_body_t body)
+{
+    astro_time_t time;
+    astro_observer_t observer;
+    astro_equatorial_t eqd;
+    astro_horizon_t hor;
+    astro_rotation_t rot;
+    astro_vector_t vec_eqd, vec_hor;
+    astro_spherical_t sphere;
+    double diff_az, diff_alt;
+    int error;
+
+    /* Use existing functions to calculate horizontal coordinates of the body for the time+observer. */
+    time = Astronomy_MakeTime(1970, 12, 13, 5, 15, 0.0);
+    observer = Astronomy_MakeObserver(-37.0, +45.0, 0.0);
+    CHECK_EQU(eqd, Astronomy_Equator(body, &time, observer, EQUATOR_OF_DATE, ABERRATION));
+    printf("Test_EQD_HOR %s: OFDATE ra=%0.3lf, dec=%0.3lf\n", Astronomy_BodyName(body), eqd.ra, eqd.dec);
+    hor = Astronomy_Horizon(&time, observer, eqd.ra, eqd.dec, REFRACTION_NORMAL);
+
+    /* Calculate the position of the body as an equatorial vector of date. */
+    sphere.status = ASTRO_SUCCESS;
+    sphere.dist = eqd.dist;
+    sphere.lat = eqd.dec;
+    sphere.lon = 15.0 * eqd.ra;
+    CHECK_VECTOR(vec_eqd, Astronomy_VectorFromSphere(sphere, time));
+
+    /* Calculate rotation matrix to convert equatorial J2000 vector to horizontal vector. */
+    rot = Astronomy_Rotation_EQD_HOR(time, observer);
+
+    /* Rotate the equator of date vector to a horizontal vector. */
+    CHECK_VECTOR(vec_hor, Astronomy_RotateVector(rot, vec_eqd));
+
+    /* Convert the horizontal vector to horizontal angular coordinates. */
+    sphere = Astronomy_HorizonFromVector(vec_hor, REFRACTION_NORMAL);
+    CHECK_STATUS(sphere);
+
+    diff_alt = fabs(sphere.lat - hor.altitude);
+    diff_az = fabs(sphere.lon - hor.azimuth);
+
+    printf("Test_EQD_HOR %s: trusted alt=%0.3lf, az=%0.3lf; test alt=%0.3lf, az=%0.3lf; diff_alt=%lg, diff_az=%lg\n",
+        Astronomy_BodyName(body), hor.altitude, hor.azimuth, sphere.lat, sphere.lon, diff_alt, diff_az);
+
+    if (diff_alt > 2.0e-14)
+    {
+        fprintf(stderr, "Test_EQD_HOR: EXCESSIVE HORIZONTAL ERROR.\n");
+        return 1;
+    }
+
+    error = 0;
+fail:
+    return error;
+}
+
 static int RotationTest(void)
 {
     int error;
@@ -2262,11 +2315,18 @@ static int RotationTest(void)
     CHECK(TestSpin(0.0, 0.0, -45.0, +1, 0, 0, +0.7071067811865476, -0.7071067811865476, 0));
 
     CHECK(Test_EQJ_ECL());
+
     CHECK(Test_EQJ_EQD(BODY_MERCURY));
     CHECK(Test_EQJ_EQD(BODY_VENUS));
     CHECK(Test_EQJ_EQD(BODY_MARS));
     CHECK(Test_EQJ_EQD(BODY_JUPITER));
     CHECK(Test_EQJ_EQD(BODY_SATURN));
+
+    CHECK(Test_EQD_HOR(BODY_MERCURY));
+    CHECK(Test_EQD_HOR(BODY_VENUS));
+    CHECK(Test_EQD_HOR(BODY_MARS));
+    CHECK(Test_EQD_HOR(BODY_JUPITER));
+    CHECK(Test_EQD_HOR(BODY_SATURN));
 
     error = 0;
 fail:
