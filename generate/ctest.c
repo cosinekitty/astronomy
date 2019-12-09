@@ -1762,6 +1762,46 @@ static int Issue48(void)
 
 /*-----------------------------------------------------------------------------------------------------------*/
 
+static int CheckUnitVector(int lnum, const char *name, astro_rotation_t r, int i0, int j0, int di, int dj)
+{
+    int k;
+    double x;
+    double sum = 0.0;
+
+    for (k=0; k<3; ++k)
+    {
+        x = r.rot[i0+k*di][j0+k*dj];
+        sum += x*x;
+    }
+    x = fabs(sum - 1.0);
+    if (x > 5e-16)
+    {
+        fprintf(stderr, "ERROR(%s line %d): unit error = %lg for i0=%d, j0=%d, di=%d, dj=%d\n", name, lnum, x, i0, j0, di, dj);
+        return 1;
+    }
+    return 0;
+}
+
+static int CheckRotationMatrix(int lnum, const char *name, astro_rotation_t r)
+{
+    if (r.status != ASTRO_SUCCESS)
+    {
+        fprintf(stderr, "ERROR(%s line %d): status = %d\n", name, lnum, r.status);
+        return 1;
+    }
+
+    /* Verify that every row and every column is a unit vector. */
+    if (CheckUnitVector(lnum, name, r, 0, 0, 1, 0)) return 1;
+    if (CheckUnitVector(lnum, name, r, 0, 1, 1, 0)) return 1;
+    if (CheckUnitVector(lnum, name, r, 0, 2, 1, 0)) return 1;
+    if (CheckUnitVector(lnum, name, r, 0, 0, 0, 1)) return 1;
+    if (CheckUnitVector(lnum, name, r, 1, 0, 0, 1)) return 1;
+    if (CheckUnitVector(lnum, name, r, 2, 0, 0, 1)) return 1;
+    return 0;
+}
+
+#define CHECK_ROTMAT(r)   CHECK(CheckRotationMatrix(__LINE__, #r, (r)))
+
 static int CompareMatrices(const char *caller, astro_rotation_t a, astro_rotation_t b)
 {
     int i, j;
@@ -1988,14 +2028,20 @@ static int TestSpin(
     astro_rotation_t mx, my, mz, m;
     astro_vector_t sv, tv;
     double diff, dx, dy, dz;
+    int error;
 
     /* https://en.wikipedia.org/wiki/Rotation_matrix */
 
     mx = RotateX(xrot);
+    CHECK_ROTMAT(mx);
     my = RotateY(yrot);
+    CHECK_ROTMAT(my);
     mz = RotateZ(zrot);
+    CHECK_ROTMAT(mz);
     m = Astronomy_CombineRotation(mx, my);
+    CHECK_ROTMAT(m);
     m = Astronomy_CombineRotation(m, mz);
+    CHECK_ROTMAT(m);
 
     sv.status = ASTRO_SUCCESS;
     sv.x = sx;
@@ -2026,7 +2072,10 @@ static int TestSpin(
         fprintf(stderr, "TestSpin: EXCESSIVE ERROR\n");
         return 1;
     }
-    return 0;
+
+    error = 0;
+fail:
+    return error;
 }
 
 static int Test_EQJ_ECL(void)
@@ -2038,13 +2087,10 @@ static int Test_EQJ_ECL(void)
     astro_vector_t ee;      /* Earth vector in ecliptic J2000 */
     astro_vector_t et;      /* Test of reconstructing original Earth vector in equatorial J2000 */
     double diff, dx, dy, dz;
+    int error;
 
     r = Astronomy_Rotation_EQJ_ECL();
-    if (r.status != ASTRO_SUCCESS)
-    {
-        fprintf(stderr, "ERROR(Test_EQJ_ECL): r.status = %d\n", r.status);
-        return 1;
-    }
+    CHECK_ROTMAT(r);
 
     printf("Test_EQJ_ECL:\n[%0.18lf  %0.18lf  %0.18lf]\n[%0.18lf  %0.18lf  %0.18lf]\n[%0.18lf  %0.18lf  %0.18lf]\n",
         r.rot[0][0], r.rot[1][0], r.rot[2][0],
@@ -2089,6 +2135,7 @@ static int Test_EQJ_ECL(void)
 
     /* Reverse the test: go from ecliptic back to equatorial. */
     r = Astronomy_Rotation_ECL_EQJ();
+    CHECK_ROTMAT(r);
     et = Astronomy_RotateVector(r, ee);
     dx = et.x - ev.x;
     dy = et.y - ev.y;
@@ -2101,7 +2148,9 @@ static int Test_EQJ_ECL(void)
         return 1;
     }
 
-    return 0;
+    error = 0;
+fail:
+    return error;
 }
 
 static int Test_EQJ_EQD(astro_body_t body)
@@ -2135,7 +2184,7 @@ static int Test_EQJ_EQD(astro_body_t body)
 
     /* Find rotation matrix. */
     r = Astronomy_Rotation_EQJ_EQD(time);
-    CHECK_STATUS(r);
+    CHECK_ROTMAT(r);
 
     /* Rotate EQJ vector to EQD vector. */
     vdate = Astronomy_RotateVector(r, v2000);
@@ -2159,7 +2208,6 @@ static int Test_EQJ_EQD(astro_body_t body)
     }
 
     error = 0;
-
 fail:
     return error;
 }
