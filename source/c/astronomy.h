@@ -629,7 +629,7 @@ astro_rotation_t Astronomy_Rotation_EQJ_ECL(void);
 astro_rotation_t Astronomy_Rotation_ECL_EQJ(void);
 //astro_rotation_t Astronomy_Rotation_ECL_HOR(astro_time_t time, astro_observer_t observer);
 astro_rotation_t Astronomy_Rotation_HOR_EQD(astro_time_t time, astro_observer_t observer);
-//astro_rotation_t Astronomy_Rotation_HOR_EQJ(astro_time_t time, astro_observer_t observer);
+astro_rotation_t Astronomy_Rotation_HOR_EQJ(astro_time_t time, astro_observer_t observer);
 //astro_rotation_t Astronomy_Rotation_HOR_ECL(astro_time_t time, astro_observer_t observer);
 
 #ifdef __cplusplus

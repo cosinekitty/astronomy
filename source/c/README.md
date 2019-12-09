@@ -896,6 +896,31 @@ This is one of the family of functions that returns a rotation matrix for conver
 
 ---
 
+<a name="Astronomy_Rotation_HOR_EQJ"></a>
+### Astronomy_Rotation_HOR_EQJ(time, observer) &#8658; [`astro_rotation_t`](#astro_rotation_t)
+
+**Calculates a rotation matrix from horizontal (HOR) to J2000 equatorial (EQJ).** 
+
+
+
+This is one of the family of functions that returns a rotation matrix for converting from one orientation to another. Source: HOR = horizontal system (x=North, y=West, z=Zenith). Source: EQJ = equatorial system, using equator at the J2000 epoch.
+
+
+
+**Returns:**  A rotation matrix that converts HOR to EQD at `time` and for `observer`. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_time_t`](#astro_time_t) | `time` |  The date and time of the observation. | 
+| [`astro_observer_t`](#astro_observer_t) | `observer` |  A location near the Earth's mean sea level that defines the observer's horizon. | 
+
+
+
+
+---
+
 <a name="Astronomy_Search"></a>
 ### Astronomy_Search(func, context, t1, t2, dt_tolerance_seconds) &#8658; [`astro_search_result_t`](#astro_search_result_t)
 

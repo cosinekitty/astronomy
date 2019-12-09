@@ -5371,16 +5371,22 @@ astro_rotation_t Astronomy_CombineRotation(astro_rotation_t a, astro_rotation_t 
     if (a.status != ASTRO_SUCCESS || b.status != ASTRO_SUCCESS)
         return RotationErr(ASTRO_INVALID_PARAMETER);
 
-    /* Use matrix multiplication: c = a*b */
-    c.rot[0][0] = a.rot[0][0]*b.rot[0][0] + a.rot[1][0]*b.rot[0][1] + a.rot[2][0]*b.rot[0][2];
-    c.rot[1][0] = a.rot[0][0]*b.rot[1][0] + a.rot[1][0]*b.rot[1][1] + a.rot[2][0]*b.rot[1][2];
-    c.rot[2][0] = a.rot[0][0]*b.rot[2][0] + a.rot[1][0]*b.rot[2][1] + a.rot[2][0]*b.rot[2][2];
-    c.rot[0][1] = a.rot[0][1]*b.rot[0][0] + a.rot[1][1]*b.rot[0][1] + a.rot[2][1]*b.rot[0][2];
-    c.rot[1][1] = a.rot[0][1]*b.rot[1][0] + a.rot[1][1]*b.rot[1][1] + a.rot[2][1]*b.rot[1][2];
-    c.rot[2][1] = a.rot[0][1]*b.rot[2][0] + a.rot[1][1]*b.rot[2][1] + a.rot[2][1]*b.rot[2][2];
-    c.rot[0][2] = a.rot[0][2]*b.rot[0][0] + a.rot[1][2]*b.rot[0][1] + a.rot[2][2]*b.rot[0][2];
-    c.rot[1][2] = a.rot[0][2]*b.rot[1][0] + a.rot[1][2]*b.rot[1][1] + a.rot[2][2]*b.rot[1][2];
-    c.rot[2][2] = a.rot[0][2]*b.rot[2][0] + a.rot[1][2]*b.rot[2][1] + a.rot[2][2]*b.rot[2][2];
+    /*
+        Use matrix multiplication: c = b*a.
+        We put 'b' on the left and 'a' on the right because,
+        just like when you use a matrix M to rotate a vector V,
+        you put the M on the left in the product M*V.
+        We can think of this as 'b' rotating all the 3 column vectors in 'a'.
+    */
+    c.rot[0][0] = b.rot[0][0]*a.rot[0][0] + b.rot[1][0]*a.rot[0][1] + b.rot[2][0]*a.rot[0][2];
+    c.rot[1][0] = b.rot[0][0]*a.rot[1][0] + b.rot[1][0]*a.rot[1][1] + b.rot[2][0]*a.rot[1][2];
+    c.rot[2][0] = b.rot[0][0]*a.rot[2][0] + b.rot[1][0]*a.rot[2][1] + b.rot[2][0]*a.rot[2][2];
+    c.rot[0][1] = b.rot[0][1]*a.rot[0][0] + b.rot[1][1]*a.rot[0][1] + b.rot[2][1]*a.rot[0][2];
+    c.rot[1][1] = b.rot[0][1]*a.rot[1][0] + b.rot[1][1]*a.rot[1][1] + b.rot[2][1]*a.rot[1][2];
+    c.rot[2][1] = b.rot[0][1]*a.rot[2][0] + b.rot[1][1]*a.rot[2][1] + b.rot[2][1]*a.rot[2][2];
+    c.rot[0][2] = b.rot[0][2]*a.rot[0][0] + b.rot[1][2]*a.rot[0][1] + b.rot[2][2]*a.rot[0][2];
+    c.rot[1][2] = b.rot[0][2]*a.rot[1][0] + b.rot[1][2]*a.rot[1][1] + b.rot[2][2]*a.rot[1][2];
+    c.rot[2][2] = b.rot[0][2]*a.rot[2][0] + b.rot[1][2]*a.rot[2][1] + b.rot[2][2]*a.rot[2][2];
 
     c.status = ASTRO_SUCCESS;
     return c;
@@ -5787,6 +5793,34 @@ astro_rotation_t Astronomy_Rotation_HOR_EQD(astro_time_t time, astro_observer_t 
 {
     astro_rotation_t rot = Astronomy_Rotation_EQD_HOR(time, observer);
     return Astronomy_InverseRotation(rot);
+}
+
+
+/**
+ * @brief
+ *      Calculates a rotation matrix from horizontal (HOR) to J2000 equatorial (EQJ).
+ *
+ * This is one of the family of functions that returns a rotation matrix
+ * for converting from one orientation to another.
+ * Source: HOR = horizontal system (x=North, y=West, z=Zenith).
+ * Source: EQJ = equatorial system, using equator at the J2000 epoch.
+ *
+ * @param time
+ *      The date and time of the observation.
+ *
+ * @param observer
+ *      A location near the Earth's mean sea level that defines the observer's horizon.
+ *
+ * @return
+ *      A rotation matrix that converts HOR to EQD at `time` and for `observer`.
+ */
+astro_rotation_t Astronomy_Rotation_HOR_EQJ(astro_time_t time, astro_observer_t observer)
+{
+    astro_rotation_t hor_eqd, eqd_eqj;
+
+    hor_eqd = Astronomy_Rotation_HOR_EQD(time, observer);
+    eqd_eqj = Astronomy_Rotation_EQD_EQJ(time);
+    return Astronomy_CombineRotation(hor_eqd, eqd_eqj);
 }
 
 
