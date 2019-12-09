@@ -2159,9 +2159,10 @@ static int Test_EQJ_EQD(astro_body_t body)
     astro_observer_t observer;
     astro_equatorial_t eq2000, eqdate;
     astro_spherical_t sphere;
-    astro_vector_t v2000, vdate;
+    astro_vector_t v2000, vdate, t2000;
     astro_rotation_t r;
     double ra_diff, dec_diff, dist_diff;
+    double diff, dx, dy, dz;
     int error;
 
     /* Verify conversion of equatorial J2000 to equatorial of-date, and back. */
@@ -2204,6 +2205,22 @@ static int Test_EQJ_EQD(astro_body_t body)
     if (ra_diff > 5.0e-8 || dec_diff > 2.0e-6 || dist_diff > 4.0e-15)
     {
         fprintf(stderr, "Test_EQJ_EQD: EXCESSIVE ERROR\n");
+        return 1;
+    }
+
+    /* Perform the inverse conversion back to equatorial J2000 coordinates. */
+    r = Astronomy_Rotation_EQD_EQJ(time);
+    CHECK_ROTMAT(r);
+    t2000 = Astronomy_RotateVector(r, vdate);
+    CHECK_STATUS(t2000);
+    dx = t2000.x - v2000.x;
+    dy = t2000.y - v2000.y;
+    dz = t2000.z - v2000.z;
+    diff = sqrt(dx*dx + dy*dy + dz*dz);
+    printf("Test_EQJ_EQD: %s inverse diff = %lg\n", Astronomy_BodyName(body), diff);
+    if (diff > 2.0e-15)
+    {
+        fprintf(stderr, "Test_EQJ_EQD: EXCESSIVE INVERSE ERROR\n");
         return 1;
     }
 
