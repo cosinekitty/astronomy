@@ -5571,6 +5571,12 @@ double Astronomy_Refraction(astro_refraction_t refraction, double altitude)
 }
 
 
+double Astronomy_InverseRefraction(astro_refraction_t refraction, double altitude)
+{
+    /* Find the pre-adjusted altitude whose refarction correction leads to 'altitude'. */
+    return 0.0;
+}
+
 /**
  * @brief
  *      Applies a rotation to a vector, yielding a rotated vector.

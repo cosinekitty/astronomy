@@ -541,6 +541,13 @@ When the body is Saturn, the returned structure contains a field `ring_tilt` tha
 
 ---
 
+<a name="Astronomy_InverseRefraction"></a>
+### Astronomy_InverseRefraction(refraction, altitude) &#8658; `double`
+
+
+
+---
+
 <a name="Astronomy_InverseRotation"></a>
 ### Astronomy_InverseRotation(rotation) &#8658; [`astro_rotation_t`](#astro_rotation_t)
 

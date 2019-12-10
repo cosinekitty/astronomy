@@ -66,6 +66,7 @@ static int RotationTest(void);
 static int TestMaxMag(astro_body_t body, const char *filename);
 static const char *ParseJplHorizonsDateTime(const char *text, astro_time_t *time);
 static int VectorDiff(astro_vector_t a, astro_vector_t b, double *diff);
+static int RefractionTest(void);
 
 int main(int argc, const char *argv[])
 {
@@ -102,6 +103,12 @@ int main(int argc, const char *argv[])
         if (!strcmp(verb, "rotation"))
         {
             CHECK(RotationTest());
+            goto success;
+        }
+
+        if (!strcmp(verb, "refraction"))
+        {
+            CHECK(RefractionTest());
             goto success;
         }
 
@@ -2511,6 +2518,26 @@ static int VectorDiff(astro_vector_t a, astro_vector_t b, double *diff)
     dy = a.y - b.y;
     dz = a.z - b.z;
     *diff = sqrt(dx*dx + dy*dy + dz*dz);
+    return 0;
+}
+
+/*-----------------------------------------------------------------------------------------------------------*/
+
+static int RefractionTest(void)
+{
+    int alt;
+    double corrected, refr, inv_refr, check_alt, diff;
+
+    for (alt = -90; alt <= +90; ++alt)
+    {
+        refr = Astronomy_Refraction(REFRACTION_NORMAL, (double)alt);
+        corrected = alt + refr;
+        inv_refr = Astronomy_InverseRefraction(REFRACTION_NORMAL, corrected);
+        check_alt = corrected + inv_refr;
+        diff = fabs(check_alt - alt);
+        printf("RefractionTest: alt=%3d, refr=%10.6lf, diff=%lg\n", alt, refr, diff);
+    }
+
     return 0;
 }
 
