@@ -3172,38 +3172,15 @@ astro_horizon_t Astronomy_Horizon(
 
     if (refraction == REFRACTION_NORMAL || refraction == REFRACTION_JPLHOR)
     {
-        double zd0, refr, hd;
-        int j;
+        double zd0, refr;
 
         zd0 = zd;
-
-        // http://extras.springer.com/1999/978-1-4471-0555-8/chap4/horizons/horizons.pdf
-        // JPL Horizons says it uses refraction algorithm from
-        // Meeus "Astronomical Algorithms", 1991, p. 101-102.
-        // I found the following Go implementation:
-        // https://github.com/soniakeys/meeus/blob/master/v3/refraction/refract.go
-        // This is a translation from the function "Saemundsson" there.
-        // I found experimentally that JPL Horizons clamps the angle to 1 degree below the horizon.
-        // This is important because the 'refr' formula below goes crazy near hd = -5.11.
-        hd = 90.0 - zd;
-        if (hd < -1.0)
-            hd = -1.0;
-
-        refr = (1.02 / tan((hd+10.3/(hd+5.11))*DEG2RAD)) / 60.0;
-
-        if (refraction == REFRACTION_NORMAL && zd > 91.0)
-        {
-            // In "normal" mode we gradually reduce refraction toward the nadir
-            // so that we never get an altitude angle less than -90 degrees.
-            // When horizon angle is -1 degrees, zd = 91, and the factor is exactly 1.
-            // As zd approaches 180 (the nadir), the fraction approaches 0 linearly.
-            refr *= (180.0 - zd) / 89.0;
-        }
-
+        refr = Astronomy_Refraction(refraction, 90.0 - zd);
         zd -= refr;
 
         if (refr > 0.0 && zd > 3.0e-4)
         {
+            int j;
             double sinzd = sin(zd * DEG2RAD);
             double coszd = cos(zd * DEG2RAD);
             double sinzd0 = sin(zd0 * DEG2RAD);
@@ -5528,49 +5505,69 @@ astro_spherical_t Astronomy_HorizonFromVector(astro_vector_t vector, astro_refra
         else if (sphere.lon < 0.0)
             sphere.lon += 360.0;
 
-        if (refraction == REFRACTION_NONE)
-        {
-            /* No atmospheric correction needed; do nothing. */
-        }
-        else if (refraction == REFRACTION_NORMAL || refraction == REFRACTION_JPLHOR)
-        {
-            double zd, refr, hd;
-
-            zd = 90.0 - sphere.lat;
-
-            // http://extras.springer.com/1999/978-1-4471-0555-8/chap4/horizons/horizons.pdf
-            // JPL Horizons says it uses refraction algorithm from
-            // Meeus "Astronomical Algorithms", 1991, p. 101-102.
-            // I found the following Go implementation:
-            // https://github.com/soniakeys/meeus/blob/master/v3/refraction/refract.go
-            // This is a translation from the function "Saemundsson" there.
-            // I found experimentally that JPL Horizons clamps the angle to 1 degree below the horizon.
-            // This is important because the 'refr' formula below goes crazy near hd = -5.11.
-            hd = sphere.lat;
-            if (hd < -1.0)
-                hd = -1.0;
-
-            refr = (1.02 / tan((hd+10.3/(hd+5.11))*DEG2RAD)) / 60.0;
-
-            if (refraction == REFRACTION_NORMAL && zd > 91.0)
-            {
-                // In "normal" mode we gradually reduce refraction toward the nadir
-                // so that we never get an altitude angle less than -90 degrees.
-                // When horizon angle is -1 degrees, zd = 91, and the factor is exactly 1.
-                // As zd approaches 180 (the nadir), the fraction approaches 0 linearly.
-                refr *= (180.0 - zd) / 89.0;
-            }
-
-            sphere.lat += refr;
-        }
-        else
-        {
-            /* Invalid refraction option. */
-            return SphereError(ASTRO_INVALID_PARAMETER);
-        }
+        sphere.lat += Astronomy_Refraction(refraction, sphere.lat);
     }
 
     return sphere;
+}
+
+
+/**
+ * @brief
+ *      Calculates the amount of "lift" to an altitude angle caused by atmospheric refraction.
+ *
+ * @param refraction
+ *      The option selecting which refraction correction to use.
+ *      If `REFRACTION_NORMAL`, uses a well-behaved refraction model that works well for
+ *      all valid values (-90 to +90) of `altitude`.
+ *      If `REFRACTION_JPLHOR`, this function returns a compatible value with the JPL Horizons tool.
+ *      If any other value (including `REFRACTION_NONE`), this function returns 0.
+ *
+ * @param altitude
+ *      An altitude angle in a horizontal coordinate system. Must be a value between -90 and +90.
+ *
+ * @return
+ *      The angular adjustment in degrees to be added to the altitude angle to correct for atmospheric lensing.
+ */
+double Astronomy_Refraction(astro_refraction_t refraction, double altitude)
+{
+    double refr, hd;
+
+    if (altitude < -90.0 || altitude > +90.0)
+        return 0.0;     /* no attempt to correct an invalid altitude */
+
+    if (refraction == REFRACTION_NORMAL || refraction == REFRACTION_JPLHOR)
+    {
+        // http://extras.springer.com/1999/978-1-4471-0555-8/chap4/horizons/horizons.pdf
+        // JPL Horizons says it uses refraction algorithm from
+        // Meeus "Astronomical Algorithms", 1991, p. 101-102.
+        // I found the following Go implementation:
+        // https://github.com/soniakeys/meeus/blob/master/v3/refraction/refract.go
+        // This is a translation from the function "Saemundsson" there.
+        // I found experimentally that JPL Horizons clamps the angle to 1 degree below the horizon.
+        // This is important because the 'refr' formula below goes crazy near hd = -5.11.
+        hd = altitude;
+        if (hd < -1.0)
+            hd = -1.0;
+
+        refr = (1.02 / tan((hd+10.3/(hd+5.11))*DEG2RAD)) / 60.0;
+
+        if (refraction == REFRACTION_NORMAL && altitude < -1.0)
+        {
+            // In "normal" mode we gradually reduce refraction toward the nadir
+            // so that we never get an altitude angle less than -90 degrees.
+            // When horizon angle is -1 degrees, the factor is exactly 1.
+            // As altitude approaches -90 (the nadir), the fraction approaches 0 linearly.
+            refr *= (altitude + 90.0) / 89.0;
+        }
+    }
+    else
+    {
+        /* No refraction, or the refraction option is invalid. */
+        refr = 0.0;
+    }
+
+    return refr;
 }
 
 

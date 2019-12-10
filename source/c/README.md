@@ -737,6 +737,29 @@ After calling [`Astronomy_SearchMoonQuarter`](#Astronomy_SearchMoonQuarter), thi
 
 ---
 
+<a name="Astronomy_Refraction"></a>
+### Astronomy_Refraction(refraction, altitude) &#8658; `double`
+
+**Calculates the amount of "lift" to an altitude angle caused by atmospheric refraction.** 
+
+
+
+
+
+**Returns:**  The angular adjustment in degrees to be added to the altitude angle to correct for atmospheric lensing. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_refraction_t`](#astro_refraction_t) | `refraction` |  The option selecting which refraction correction to use. If `REFRACTION_NORMAL`, uses a well-behaved refraction model that works well for all valid values (-90 to +90) of `altitude`. If `REFRACTION_JPLHOR`, this function returns a compatible value with the JPL Horizons tool. If any other value (including `REFRACTION_NONE`), this function returns 0. | 
+| `double` | `altitude` |  An altitude angle in a horizontal coordinate system. Must be a value between -90 and +90. | 
+
+
+
+
+---
+
 <a name="Astronomy_RotateVector"></a>
 ### Astronomy_RotateVector(rotation, vector) &#8658; [`astro_vector_t`](#astro_vector_t)
 
