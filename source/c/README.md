@@ -542,7 +542,25 @@ When the body is Saturn, the returned structure contains a field `ring_tilt` tha
 ---
 
 <a name="Astronomy_InverseRefraction"></a>
-### Astronomy_InverseRefraction(refraction, altitude) &#8658; `double`
+### Astronomy_InverseRefraction(refraction, bent_altitude) &#8658; `double`
+
+**Calculates the amount of "lift" to an altitude angle caused by atmospheric refraction.** 
+
+
+
+Given an observed altitude angle that includes atmospheric refraction, calculate the negative angular correction to obtain the unrefracted altitude. This is useful for cases where observed horizontal coordinates are to be converted to another orientation system, but refraction first must be removed from the observed position.
+
+
+
+**Returns:**  The angular adjustment in degrees to be added to the altitude angle to correct for atmospheric lensing. This will be less than or equal to zero. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_refraction_t`](#astro_refraction_t) | `refraction` |  The option selecting which refraction correction to use. See [`Astronomy_Refraction`](#Astronomy_Refraction). | 
+| `double` | `bent_altitude` |  The apparent altitude that includes atmospheric refraction. | 
+
 
 
 
@@ -750,6 +768,8 @@ After calling [`Astronomy_SearchMoonQuarter`](#Astronomy_SearchMoonQuarter), thi
 **Calculates the amount of "lift" to an altitude angle caused by atmospheric refraction.** 
 
 
+
+Given an altitude angle and a refraction option, calculates the amount of "lift" caused by atmospheric refraction. This is the number of degrees higher in the sky an object appears due to the lensing of the Earth's atmosphere.
 
 
 

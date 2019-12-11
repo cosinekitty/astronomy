@@ -4277,6 +4277,11 @@ astro_spherical_t Astronomy_HorizonFromVector(astro_vector_t vector, astro_refra
  * @brief
  *      Calculates the amount of "lift" to an altitude angle caused by atmospheric refraction.
  *
+ * Given an altitude angle and a refraction option, calculates
+ * the amount of "lift" caused by atmospheric refraction.
+ * This is the number of degrees higher in the sky an object appears
+ * due to the lensing of the Earth's atmosphere.
+ *
  * @param refraction
  *      The option selecting which refraction correction to use.
  *      If `REFRACTION_NORMAL`, uses a well-behaved refraction model that works well for
@@ -4332,10 +4337,46 @@ double Astronomy_Refraction(astro_refraction_t refraction, double altitude)
 }
 
 
-double Astronomy_InverseRefraction(astro_refraction_t refraction, double altitude)
+/**
+ * @brief
+ *      Calculates the amount of "lift" to an altitude angle caused by atmospheric refraction.
+ *
+ * Given an observed altitude angle that includes atmospheric refraction,
+ * calculate the negative angular correction to obtain the unrefracted
+ * altitude. This is useful for cases where observed horizontal
+ * coordinates are to be converted to another orientation system,
+ * but refraction first must be removed from the observed position.
+ *
+ * @param refraction
+ *      The option selecting which refraction correction to use.
+ *      See #Astronomy_Refraction.
+ *
+ * @param bent_altitude
+ *      The apparent altitude that includes atmospheric refraction.
+ *
+ * @return
+ *      The angular adjustment in degrees to be added to the
+ *      altitude angle to correct for atmospheric lensing.
+ *      This will be less than or equal to zero.
+ */
+double Astronomy_InverseRefraction(astro_refraction_t refraction, double bent_altitude)
 {
-    /* Find the pre-adjusted altitude whose refarction correction leads to 'altitude'. */
-    return 0.0;
+    double altitude, diff;
+
+    if (bent_altitude < -90.0 || bent_altitude > +90.0)
+        return 0.0;     /* no attempt to correct an invalid altitude */
+
+    /* Find the pre-adjusted altitude whose refraction correction leads to 'altitude'. */
+    altitude = bent_altitude - Astronomy_Refraction(refraction, bent_altitude);
+    for(;;)
+    {
+        /* See how close we got. */
+        diff = (altitude + Astronomy_Refraction(refraction, altitude)) - bent_altitude;
+        if (fabs(diff) < 1.0e-14)
+            return altitude - bent_altitude;
+
+        altitude -= diff;
+    }
 }
 
 /**

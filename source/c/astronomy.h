@@ -634,7 +634,7 @@ astro_rotation_t Astronomy_Rotation_HOR_EQJ(astro_time_t time, astro_observer_t 
 astro_rotation_t Astronomy_Rotation_HOR_ECL(astro_time_t time, astro_observer_t observer);
 
 double Astronomy_Refraction(astro_refraction_t refraction, double altitude);
-double Astronomy_InverseRefraction(astro_refraction_t refraction, double altitude);
+double Astronomy_InverseRefraction(astro_refraction_t refraction, double bent_altitude);
 
 #ifdef __cplusplus
 }

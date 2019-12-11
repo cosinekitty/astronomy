@@ -2525,19 +2525,23 @@ static int VectorDiff(astro_vector_t a, astro_vector_t b, double *diff)
 
 static int RefractionTest(void)
 {
-    int alt;
-    double corrected, refr, inv_refr, check_alt, diff;
+    double alt, corrected, refr, inv_refr, check_alt, diff;
 
-    for (alt = -90; alt <= +90; ++alt)
+    for (alt = -90.1; alt <= +90.1; alt += 0.001)
     {
         refr = Astronomy_Refraction(REFRACTION_NORMAL, (double)alt);
         corrected = alt + refr;
         inv_refr = Astronomy_InverseRefraction(REFRACTION_NORMAL, corrected);
         check_alt = corrected + inv_refr;
         diff = fabs(check_alt - alt);
-        printf("RefractionTest: alt=%3d, refr=%10.6lf, diff=%lg\n", alt, refr, diff);
+        if (diff > 1.0e+14)
+        {
+            printf("ERROR(RefractionTest): alt=%8.3lf, refr=%10.6lf, diff=%lg\n", alt, refr, diff);
+            return 1;
+        }
     }
 
+    printf("RefractionTest: PASS\n");
     return 0;
 }
 
