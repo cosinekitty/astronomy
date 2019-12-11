@@ -1560,6 +1560,30 @@ After calculating the date and time of an astronomical event in the form of an [
 
 ---
 
+<a name="Astronomy_VectorFromHorizon"></a>
+### Astronomy_VectorFromHorizon(sphere, time, refraction) &#8658; [`astro_vector_t`](#astro_vector_t)
+
+**Given apparent angular horizontal coordinates in `sphere`, calculate horizontal vector.** 
+
+
+
+
+
+**Returns:**  A vector in the horizontal system: `x` = north, `y` = west, and `z` = zenith (up). 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_spherical_t`](#astro_spherical_t) | `sphere` |  A structure that contains apparent horizontal coordinates: `lat` holds the refracted azimuth angle, `lon` holds the azimuth in degrees clockwise from north, and `dist` holds the distance from the observer to the object in AU. | 
+| [`astro_time_t`](#astro_time_t) | `time` |  The date and time of the observation. This is needed because the returned [`astro_vector_t`](#astro_vector_t) structure requires a valid time value when passed to certain other functions. | 
+| [`astro_refraction_t`](#astro_refraction_t) | `refraction` |  The refraction option used to model atmospheric lensing. See [`Astronomy_Refraction`](#Astronomy_Refraction). This specifies how refraction is to be removed from the altitude stored in `sphere.lat`. | 
+
+
+
+
+---
+
 <a name="Astronomy_VectorFromSphere"></a>
 ### Astronomy_VectorFromSphere(sphere, time) &#8658; [`astro_vector_t`](#astro_vector_t)
 

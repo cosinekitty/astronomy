@@ -4218,6 +4218,16 @@ astro_spherical_t Astronomy_SphereFromVector(astro_vector_t vector)
     return sphere;
 }
 
+static double ToggleAzimuthDirection(double az)
+{
+    az = 360.0 - az;
+    if (az >= 360.0)
+        az -= 360.0;
+    else if (az < 0.0)
+        az += 360.0;
+    return az;
+}
+
 /**
  * @brief Converts Cartesian coordinates to horizontal coordinates.
  *
@@ -4260,16 +4270,47 @@ astro_spherical_t Astronomy_HorizonFromVector(astro_vector_t vector, astro_refra
     if (sphere.status == ASTRO_SUCCESS)
     {
         /* Convert azimuth from counterclockwise-from-north to clockwise-from-north. */
-        sphere.lon = 360.0 - sphere.lon;
-        if (sphere.lon >= 360.0)
-            sphere.lon -= 360.0;
-        else if (sphere.lon < 0.0)
-            sphere.lon += 360.0;
-
+        sphere.lon = ToggleAzimuthDirection(sphere.lon);
         sphere.lat += Astronomy_Refraction(refraction, sphere.lat);
     }
 
     return sphere;
+}
+
+
+/**
+ * @brief
+ *      Given apparent angular horizontal coordinates in `sphere`, calculate horizontal vector.
+ *
+ * @param sphere
+ *      A structure that contains apparent horizontal coordinates:
+ *      `lat` holds the refracted azimuth angle,
+ *      `lon` holds the azimuth in degrees clockwise from north,
+ *      and `dist` holds the distance from the observer to the object in AU.
+ *
+ * @param time
+ *      The date and time of the observation. This is needed because the returned
+ *      #astro_vector_t structure requires a valid time value when passed to certain other functions.
+ *
+ * @param refraction
+ *      The refraction option used to model atmospheric lensing. See #Astronomy_Refraction.
+ *      This specifies how refraction is to be removed from the altitude stored in `sphere.lat`.
+ *
+ * @return
+ *      A vector in the horizontal system: `x` = north, `y` = west, and `z` = zenith (up).
+ */
+astro_vector_t Astronomy_VectorFromHorizon(astro_spherical_t sphere, astro_time_t time, astro_refraction_t refraction)
+{
+    if (sphere.status != ASTRO_SUCCESS)
+        return VecError(ASTRO_INVALID_PARAMETER, time);
+
+    /* Convert azimuth from clockwise-from-north to counterclockwise-from-north. */
+    sphere.lon = ToggleAzimuthDirection(sphere.lon);
+
+    /* Reverse any applied refraction. */
+    sphere.lat += Astronomy_InverseRefraction(refraction, sphere.lat);
+
+    return Astronomy_VectorFromSphere(sphere, time);
 }
 
 

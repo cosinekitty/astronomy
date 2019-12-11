@@ -2282,6 +2282,16 @@ static int Test_EQD_HOR(astro_body_t body)
         return 1;
     }
 
+    /* Confirm that we can convert back to horizontal vector. */
+    CHECK_VECTOR(check_hor, Astronomy_VectorFromHorizon(sphere, time, REFRACTION_NORMAL));
+    CHECK(VectorDiff(check_hor, vec_hor, &diff));
+    printf("Test_EQD_HOR %s: horizontal recovery: diff = %lg\n", Astronomy_BodyName(body), diff);
+    if (diff > 1.0e-15)
+    {
+        fprintf(stderr, "Test_EQD_HOR: EXCESSIVE ERROR IN HORIZONTAL RECOVERY.\n");
+        return 1;
+    }
+
     /* Verify the inverse translation from horizontal vector to equatorial of-date vector. */
     rot = Astronomy_Rotation_HOR_EQD(time, observer);
     CHECK_ROTMAT(rot);
