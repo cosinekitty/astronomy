@@ -24,8 +24,8 @@ and then toward due south on the horizon.
 
 ### [Horizon Intersection](horizon.c)
 This is a more advanced example. It shows how to use coordinate
-transforms and the search mechanism to find where the
-ecliptic intersects with an observer's horizon at a given date and time.
+transforms to find where the ecliptic intersects with an observer's
+horizon at a given date and time.
 
 ---
 
