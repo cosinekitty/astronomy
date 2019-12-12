@@ -69,7 +69,7 @@ class DocInfo:
 
         currentAttr = None
         currentParm = None
-        mode = ''    
+        mode = ''
         for line in lines:
             if re.match(r'^\-+$', line):
                 continue
@@ -209,7 +209,7 @@ def MdClass(c):
         info = DocInfo(doc)
         md += info.Markdown()
         md += '\n'
-        
+
         firstMemberFunc = True
         for name, obj in inspect.getmembers(c):
             if not name.startswith('_'):
@@ -307,7 +307,7 @@ def Markdown(module):
     md += '\n'
     for func in funclist:
         md += MdFunction(func)
-    
+
     # Remove extraneous blank lines.
     # We never need more than 2 consecutive newline characters.
     md = re.sub('\n{3,}', '\n\n', md)
