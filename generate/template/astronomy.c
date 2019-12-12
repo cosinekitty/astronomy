@@ -4194,16 +4194,8 @@ astro_spherical_t Astronomy_SphereFromVector(astro_vector_t vector)
             return SphereError(ASTRO_INVALID_PARAMETER);
         }
 
-        if (vector.z < 0.0)
-        {
-            sphere.lon = 0.0;
-            sphere.lat = -90.0;
-        }
-        else  /* vector.z > 0.0 */
-        {
-            sphere.lon = 0.0;
-            sphere.lat = +90.0;
-        }
+        sphere.lon = 0.0;
+        sphere.lat = (vector.z < 0.0) ? -90.0 : +90.0;
     }
     else
     {
@@ -4242,10 +4234,10 @@ static double ToggleAzimuthDirection(double az)
  * - This function optionally corrects for atmospheric refraction, while `Astronomy_SphereFromVector`
  *   does not.
  *
- * The returned structure will contain the azimuth in `lon`.
+ * The returned structure contains the azimuth in `lon`.
  * It is measured in degrees clockwise from north: east = +90 degrees, west = +270 degrees.
  *
- * The altitude will be stored in `lat`.
+ * The altitude is stored in `lat`.
  *
  * The distance to the observed object is stored in `dist`,
  * and is expressed in astronomical units (AU).
@@ -4380,7 +4372,7 @@ double Astronomy_Refraction(astro_refraction_t refraction, double altitude)
 
 /**
  * @brief
- *      Calculates the amount of "lift" to an altitude angle caused by atmospheric refraction.
+ *      Calculates the inverse of an atmospheric refraction angle.
  *
  * Given an observed altitude angle that includes atmospheric refraction,
  * calculate the negative angular correction to obtain the unrefracted

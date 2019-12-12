@@ -490,9 +490,9 @@ Given a horizontal Cartesian vector, returns horizontal azimuth and altitude.
 - This function optionally corrects for atmospheric refraction, while `Astronomy_SphereFromVector` does not.
 
 
-The returned structure will contain the azimuth in `lon`. It is measured in degrees clockwise from north: east = +90 degrees, west = +270 degrees.
+The returned structure contains the azimuth in `lon`. It is measured in degrees clockwise from north: east = +90 degrees, west = +270 degrees.
 
-The altitude will be stored in `lat`.
+The altitude is stored in `lat`.
 
 The distance to the observed object is stored in `dist`, and is expressed in astronomical units (AU).
 
@@ -544,7 +544,7 @@ When the body is Saturn, the returned structure contains a field `ring_tilt` tha
 <a name="Astronomy_InverseRefraction"></a>
 ### Astronomy_InverseRefraction(refraction, bent_altitude) &#8658; `double`
 
-**Calculates the amount of "lift" to an altitude angle caused by atmospheric refraction.** 
+**Calculates the inverse of an atmospheric refraction angle.** 
 
 
 

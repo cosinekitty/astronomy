@@ -211,6 +211,23 @@ Returns the length of the vector in astronomical units (AU).
 
 * * *
 
+<a name="Astronomy.Spherical"></a>
+
+### Astronomy.Spherical
+Holds spherical coordinates: latitude, longitude, distance.
+
+**Kind**: static class of [<code>Astronomy</code>](#Astronomy)  
+**Properties**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| lat | <code>number</code> | The latitude angle: -90..+90 degrees. |
+| lon | <code>number</code> | The longitude angle: 0..360 degrees. |
+| dist | <code>number</code> | Distance in AU. |
+
+
+* * *
+
 <a name="Astronomy.EquatorialCoordinates"></a>
 
 ### Astronomy.EquatorialCoordinates
@@ -224,6 +241,21 @@ Holds right ascension, declination, and distance of a celestial object.
 | ra | <code>number</code> | Right ascension in sidereal hours: [0, 24). |
 | dec | <code>number</code> | Declination in degrees: [-90, +90]. |
 | dist | <code>number</code> | Distance to the celestial object expressed in      <a href="https://en.wikipedia.org/wiki/Astronomical_unit">astronomical units</a> (AU). |
+
+
+* * *
+
+<a name="Astronomy.RotationMatrix"></a>
+
+### Astronomy.RotationMatrix
+Contains a rotation matrix that can be used to transform one coordinate system to another.
+
+**Kind**: static class of [<code>Astronomy</code>](#Astronomy)  
+**Properties**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| rot | <code>Array.&lt;Array.&lt;number&gt;&gt;</code> | A normalized 3x3 rotation matrix. |
 
 
 * * *
@@ -1042,6 +1074,191 @@ If the given apsis is a perigee, this function finds the next apogee, and vice v
 | Param | Type | Description |
 | --- | --- | --- |
 | apsis | [<code>Apsis</code>](#Astronomy.Apsis) | A lunar perigee or apogee event. |
+
+
+* * *
+
+<a name="Astronomy.InverseRotation"></a>
+
+### Astronomy.InverseRotation(rotation) ⇒ [<code>RotationMatrix</code>](#Astronomy.RotationMatrix)
+Calculates the inverse of a rotation matrix.
+Given a rotation matrix that performs some coordinate transform,
+this function returns the matrix that reverses that trasnform.
+
+**Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
+**Returns**: [<code>RotationMatrix</code>](#Astronomy.RotationMatrix) - The inverse rotation matrix.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| rotation | [<code>RotationMatrix</code>](#Astronomy.RotationMatrix) | The rotation matrix to be inverted. |
+
+
+* * *
+
+<a name="Astronomy.CombineRotation"></a>
+
+### Astronomy.CombineRotation(a, b) ⇒ [<code>RotationMatrix</code>](#Astronomy.RotationMatrix)
+Creates a rotation based on applying one rotation followed by another.
+Given two rotation matrices, returns a combined rotation matrix that is
+equivalent to rotating based on the first matrix, followed by the second.
+
+**Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
+**Returns**: [<code>RotationMatrix</code>](#Astronomy.RotationMatrix) - The combined rotation matrix.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| a | [<code>RotationMatrix</code>](#Astronomy.RotationMatrix) | The first rotation to apply. |
+| b | [<code>RotationMatrix</code>](#Astronomy.RotationMatrix) | The second rotation to apply. |
+
+
+* * *
+
+<a name="Astronomy.VectorFromSphere"></a>
+
+### Astronomy.VectorFromSphere(sphere, time) ⇒ [<code>Vector</code>](#Astronomy.Vector)
+Converts spherical coordinates to Cartesian coordinates.
+Given spherical coordinates and a time at which they are valid,
+returns a vector of Cartesian coordinates. The returned value
+includes the time, as required by <code>AstroTime</code>.
+
+**Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
+**Returns**: [<code>Vector</code>](#Astronomy.Vector) - The vector form of the supplied spherical coordinates.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| sphere | [<code>Spherical</code>](#Astronomy.Spherical) | Spherical coordinates to be converted. |
+| time | [<code>AstroTime</code>](#Astronomy.AstroTime) | The time that should be included in the returned vector. |
+
+
+* * *
+
+<a name="Astronomy.SphereFromVector"></a>
+
+### Astronomy.SphereFromVector(vector) ⇒ [<code>Spherical</code>](#Astronomy.Spherical)
+Converts Cartesian coordinates to spherical coordinates.
+
+Given a Cartesian vector, returns latitude, longitude, and distance.
+
+**Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
+**Returns**: [<code>Spherical</code>](#Astronomy.Spherical) - Spherical coordinates that are equivalent to the given vector.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| vector | [<code>Vector</code>](#Astronomy.Vector) | Cartesian vector to be converted to spherical coordinates. |
+
+
+* * *
+
+<a name="Astronomy.HorizonFromVector"></a>
+
+### Astronomy.HorizonFromVector(vector, refraction) ⇒ [<code>Spherical</code>](#Astronomy.Spherical)
+Converts Cartesian coordinates to horizontal coordinates.
+
+Given a horizontal Cartesian vector, returns horizontal azimuth and altitude.
+
+*IMPORTANT:* This function differs from `SphereFromVector` in two ways:
+- `SphereFromVector` returns a `lon` value that represents azimuth defined counterclockwise
+  from north (e.g., west = +90), but this function represents a clockwise rotation
+  (e.g., east = +90). The difference is because `Astronomy_SphereFromVector` is intended
+  to preserve the vector "right-hand rule", while this function defines azimuth in a more
+  traditional way as used in navigation and cartography.
+- This function optionally corrects for atmospheric refraction, while `SphereFromVector` does not.
+
+The returned object contains the azimuth in `lon`.
+It is measured in degrees clockwise from north: east = +90 degrees, west = +270 degrees.
+
+The altitude is stored in `lat`.
+
+The distance to the observed object is stored in `dist`,
+and is expressed in astronomical units (AU).
+
+**Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| vector | [<code>Vector</code>](#Astronomy.Vector) | Cartesian vector to be converted to horizontal coordinates. |
+| refraction | <code>string</code> | `"normal"`: correct altitude for atmospheric refraction (recommended).      `"jplhor"`: for JPL Horizons compatibility testing only; not recommended for normal use.      `null`: no atmospheric refraction correction is performed. |
+
+
+* * *
+
+<a name="Astronomy.VectorFromHorizon"></a>
+
+### Astronomy.VectorFromHorizon(sphere, time, refraction) ⇒ [<code>Vector</code>](#Astronomy.Vector)
+Given apparent angular horizontal coordinates in `sphere`, calculate horizontal vector.
+
+**Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
+**Returns**: [<code>Vector</code>](#Astronomy.Vector) - A vector in the horizontal system: `x` = north, `y` = west, and `z` = zenith (up).  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| sphere | [<code>Spherical</code>](#Astronomy.Spherical) | A structure that contains apparent horizontal coordinates:      `lat` holds the refracted azimuth angle,      `lon` holds the azimuth in degrees clockwise from north,      and `dist` holds the distance from the observer to the object in AU. |
+| time | [<code>AstroTime</code>](#Astronomy.AstroTime) | The date and time of the observation. This is needed because the returned      vector object requires a valid time value when passed to certain other functions. |
+| refraction | <code>string</code> | `"normal"`: correct altitude for atmospheric refraction (recommended).      `"jplhor"`: for JPL Horizons compatibility testing only; not recommended for normal use.      `null`: no atmospheric refraction correction is performed. |
+
+
+* * *
+
+<a name="Astronomy.Refraction"></a>
+
+### Astronomy.Refraction(refraction, altitude) ⇒ <code>number</code>
+Calculates the amount of "lift" to an altitude angle caused by atmospheric refraction.
+
+Given an altitude angle and a refraction option, calculates
+the amount of "lift" caused by atmospheric refraction.
+This is the number of degrees higher in the sky an object appears
+due to the lensing of the Earth's atmosphere.
+
+**Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
+**Returns**: <code>number</code> - The angular adjustment in degrees to be added to the altitude angle to correct for atmospheric lensing.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| refraction | <code>string</code> | `"normal"`: correct altitude for atmospheric refraction (recommended).      `"jplhor"`: for JPL Horizons compatibility testing only; not recommended for normal use.      `null`: no atmospheric refraction correction is performed. |
+| altitude | <code>number</code> | An altitude angle in a horizontal coordinate system. Must be a value between -90 and +90. |
+
+
+* * *
+
+<a name="Astronomy.InverseRefraction"></a>
+
+### Astronomy.InverseRefraction(refraction, bent_altitude) ⇒ <code>number</code>
+Calculates the inverse of an atmospheric refraction angle.
+
+Given an observed altitude angle that includes atmospheric refraction,
+calculate the negative angular correction to obtain the unrefracted
+altitude. This is useful for cases where observed horizontal
+coordinates are to be converted to another orientation system,
+but refraction first must be removed from the observed position.
+
+**Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
+**Returns**: <code>number</code> - The angular adjustment in degrees to be added to the
+     altitude angle to correct for atmospheric lensing.
+     This will be less than or equal to zero.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| refraction | <code>string</code> | `"normal"`: correct altitude for atmospheric refraction (recommended).      `"jplhor"`: for JPL Horizons compatibility testing only; not recommended for normal use.      `null`: no atmospheric refraction correction is performed. |
+| bent_altitude | <code>number</code> | The apparent altitude that includes atmospheric refraction. |
+
+
+* * *
+
+<a name="Astronomy.RotateVector"></a>
+
+### Astronomy.RotateVector(rotation, vector) ⇒ [<code>Vector</code>](#Astronomy.Vector)
+Applies a rotation to a vector, yielding a rotated vector.
+
+This function transforms a vector in one orientation to a vector
+in another orientation.
+
+**Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
+**Returns**: [<code>Vector</code>](#Astronomy.Vector) - A vector in the orientation specified by `rotation`.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| rotation | [<code>RotationMatrix</code>](#Astronomy.RotationMatrix) | A rotation matrix that specifies how the orientation of the vector is to be changed. |
+| vector | [<code>Vector</code>](#Astronomy.Vector) | The vector whose orientation is to be changed. |
 
 
 * * *

@@ -1742,7 +1742,7 @@ function precession(tt1, pos1, tt2) {
     yz = -sc * cb * ca - sa * cc;
     zz = -sc * cb * sa + cc * ca;
 
-    if (tt2 == 0) {
+    if (tt2 === 0) {
         // Perform rotation from epoch to J2000.0.
         return [
             xx * pos1[0] + xy * pos1[1] + xz * pos1[2],
@@ -1756,6 +1756,77 @@ function precession(tt1, pos1, tt2) {
         xx * pos1[0] + yx * pos1[1] + zx * pos1[2],
         xy * pos1[0] + yy * pos1[1] + zy * pos1[2],
         xz * pos1[0] + yz * pos1[1] + zz * pos1[2]
+    ];
+}
+
+function precession_rot(tt1, tt2) {
+    var xx, yx, zx, xy, yy, zy, xz, yz, zz;
+    var eps0 = 84381.406;
+    var t, psia, omegaa, chia, sa, ca, sb, cb, sc, cc, sd, cd;
+
+    if ((tt1 !== 0) && (tt2 !== 0))
+        throw 'One of (tt1, tt2) must be 0.';
+
+    t = (tt2 - tt1) / 36525;
+    if (tt2 === 0)
+        t = -t;
+
+    psia   = (((((-    0.0000000951  * t
+                 +    0.000132851 ) * t
+                 -    0.00114045  ) * t
+                 -    1.0790069   ) * t
+                 + 5038.481507    ) * t);
+
+    omegaa = (((((+    0.0000003337  * t
+                 -    0.000000467 ) * t
+                 -    0.00772503  ) * t
+                 +    0.0512623   ) * t
+                 -    0.025754    ) * t + eps0);
+
+    chia   = (((((-    0.0000000560  * t
+                 +    0.000170663 ) * t
+                 -    0.00121197  ) * t
+                 -    2.3814292   ) * t
+                 +   10.556403    ) * t);
+
+    eps0 = eps0 * ASEC2RAD;
+    psia = psia * ASEC2RAD;
+    omegaa = omegaa * ASEC2RAD;
+    chia = chia * ASEC2RAD;
+
+    sa = Math.sin(eps0);
+    ca = Math.cos(eps0);
+    sb = Math.sin(-psia);
+    cb = Math.cos(-psia);
+    sc = Math.sin(-omegaa);
+    cc = Math.cos(-omegaa);
+    sd = Math.sin(chia);
+    cd = Math.cos(chia);
+
+    xx =  cd * cb - sb * sd * cc;
+    yx =  cd * sb * ca + sd * cc * cb * ca - sa * sd * sc;
+    zx =  cd * sb * sa + sd * cc * cb * sa + ca * sd * sc;
+    xy = -sd * cb - sb * cd * cc;
+    yy = -sd * sb * ca + cd * cc * cb * ca - sa * cd * sc;
+    zy = -sd * sb * sa + cd * cc * cb * sa + ca * cd * sc;
+    xz =  sb * sc;
+    yz = -sc * cb * ca - sa * cc;
+    zz = -sc * cb * sa + cc * ca;
+
+    if (tt2 === 0) {
+        // Perform rotation from epoch to J2000.0.
+        return [
+            [xx, yx, zx],
+            [xy, yy, zy],
+            [xz, yz, zz]
+        ];
+    }
+
+    // Perform rotation from J2000.0 to epoch.
+    return [
+        [xx, xy, xz],
+        [yx, yy, yz],
+        [zx, zy, zz]
     ];
 }
 
@@ -1847,6 +1918,45 @@ function nutation(time, direction, pos) {
     ];
 }
 
+function nutation_rot(time, direction) {
+    const tilt = e_tilt(time);
+    const oblm = tilt.mobl * DEG2RAD;
+    const oblt = tilt.tobl * DEG2RAD;
+    const psi = tilt.dpsi * ASEC2RAD;
+    const cobm = Math.cos(oblm);
+    const sobm = Math.sin(oblm);
+    const cobt = Math.cos(oblt);
+    const sobt = Math.sin(oblt);
+    const cpsi = Math.cos(psi);
+    const spsi = Math.sin(psi);
+
+    const xx = cpsi;
+    const yx = -spsi * cobm;
+    const zx = -spsi * sobm;
+    const xy = spsi * cobt;
+    const yy = cpsi * cobm * cobt + sobm * sobt;
+    const zy = cpsi * sobm * cobt - cobm * sobt;
+    const xz = spsi * sobt;
+    const yz = cpsi * cobm * sobt - sobm * cobt;
+    const zz = cpsi * sobm * sobt + cobm * cobt;
+
+    if (direction === 0) {
+        // forward rotation
+        return [
+            [xx, xy, xz],
+            [yx, yy, yz],
+            [zx, zy, zz]
+        ];
+    }
+
+    // inverse rotation
+    return [
+        [xx, yx, zx],
+        [xy, yy, zy],
+        [xz, yz, zz]
+    ];
+}
+
 function geo_pos(time, observer) {
     const gast = sidereal_time(time);
     const pos1 = terra(observer, gast).pos;
@@ -1885,6 +1995,24 @@ class Vector {
 }
 
 /**
+ * Holds spherical coordinates: latitude, longitude, distance.
+ *
+ * @class
+ * @memberof Astronomy
+ *
+ * @property {number} lat       The latitude angle: -90..+90 degrees.
+ * @property {number} lon       The longitude angle: 0..360 degrees.
+ * @property {number} dist      Distance in AU.
+ */
+class Spherical {
+    constructor(lat, lon, dist) {
+        this.lat = lat;
+        this.lon = lon;
+        this.dist = dist;
+    }
+}
+
+/**
  * Holds right ascension, declination, and distance of a celestial object.
  *
  * @class
@@ -1905,6 +2033,21 @@ class EquatorialCoordinates {
         this.ra = ra;
         this.dec = dec;
         this.dist = dist;
+    }
+}
+
+/**
+ * Contains a rotation matrix that can be used to transform one coordinate system to another.
+ *
+ * @class
+ * @memberof Astronomy
+ *
+ * @property {Array<Array<number>>} rot
+ *      A normalized 3x3 rotation matrix.
+ */
+class RotationMatrix {
+    constructor(rot) {
+        this.rot = rot;
     }
 }
 
@@ -2122,41 +2265,16 @@ Astronomy.Horizon = function(date, observer, ra, dec, refraction) {     // based
     let out_dec = dec;
 
     if (refraction) {
-        let refr, j;
         let zd0 = zd;
-
-        if (refraction === 'normal' || refraction === 'jplhor') {
-            // http://extras.springer.com/1999/978-1-4471-0555-8/chap4/horizons/horizons.pdf
-            // JPL Horizons says it uses refraction algorithm from
-            // Meeus "Astronomical Algorithms", 1991, p. 101-102.
-            // I found the following Go implementation:
-            // https://github.com/soniakeys/meeus/blob/master/v3/refraction/refract.go
-            // This is a translation from the function "Saemundsson" there.
-            // I found experimentally that JPL Horizons clamps the angle to 1 degree below the horizon.
-            // This is important because the 'refr' formula below goes crazy near hd = -5.11.
-            let hd = Math.max(-1, 90 - zd);
-            refr = (1.02 / Math.tan((hd+10.3/(hd+5.11))*DEG2RAD)) / 60;
-
-            if (refraction === 'normal' && zd > 91) {
-                // In "normal" mode we gradually reduce refraction toward the nadir
-                // so that we never get an altitude angle less than -90 degrees.
-                // When horizon angle is -1 degrees, zd = 91, and the factor is exactly 1.
-                // As zd approaches 180 (the nadir), the fraction approaches 0 linearly.
-                refr *= (180 - zd) / 89;
-            }
-
-            zd -= refr;
-        } else {
-            throw 'If specified, refraction must be one of: "normal", "jplhor".';
-        }
-
+        let refr = Astronomy.Refraction(refraction, 90-zd);
+        zd -= refr;
         if (refr > 0.0 && zd > 3.0e-4) {
             const sinzd = Math.sin(zd * DEG2RAD);
             const coszd = Math.cos(zd * DEG2RAD);
             const sinzd0 = Math.sin(zd0 * DEG2RAD);
             const coszd0 = Math.cos(zd0 * DEG2RAD);
             var pr = [];
-            for (j=0; j<3; ++j) {
+            for (let j=0; j<3; ++j) {
                 pr.push(((p[j] - coszd0 * uz[j]) / sinzd0)*sinzd + uz[j]*coszd);
             }
             proj = Math.sqrt(pr[0]*pr[0] + pr[1]*pr[1]);
@@ -4134,5 +4252,326 @@ Astronomy.NextLunarApsis = function(apsis) {
     }
     return next;
 }
+
+/**
+ * Calculates the inverse of a rotation matrix.
+ * Given a rotation matrix that performs some coordinate transform,
+ * this function returns the matrix that reverses that trasnform.
+ *
+ * @param {Astronomy.RotationMatrix} rotation
+ *      The rotation matrix to be inverted.
+ *
+ * @returns {Astronomy.RotationMatrix}
+ *      The inverse rotation matrix.
+ */
+Astronomy.InverseRotation = function(rotation) {
+    return [
+        [rotation.rot[0][0], rotation.rot[1][0], rotation.rot[2][0]],
+        [rotation.rot[0][1], rotation.rot[1][1], rotation.rot[2][1]],
+        [rotation.rot[0][2], rotation.rot[1][2], rotation.rot[2][2]]
+    ];
+}
+
+/**
+ * Creates a rotation based on applying one rotation followed by another.
+ * Given two rotation matrices, returns a combined rotation matrix that is
+ * equivalent to rotating based on the first matrix, followed by the second.
+ *
+ * @param {Astronomy.RotationMatrix} a
+ *      The first rotation to apply.
+ *
+ * @param {Astronomy.RotationMatrix} b
+ *      The second rotation to apply.
+ *
+ * @returns {Astronomy.RotationMatrix}
+ *      The combined rotation matrix.
+ */
+Astronomy.CombineRotation = function(a, b) {
+    /*
+        Use matrix multiplication: c = b*a.
+        We put 'b' on the left and 'a' on the right because,
+        just like when you use a matrix M to rotate a vector V,
+        you put the M on the left in the product M*V.
+        We can think of this as 'b' rotating all the 3 column vectors in 'a'.
+    */
+
+    return [
+        [
+            b.rot[0][0]*a.rot[0][0] + b.rot[1][0]*a.rot[0][1] + b.rot[2][0]*a.rot[0][2],
+            b.rot[0][1]*a.rot[0][0] + b.rot[1][1]*a.rot[0][1] + b.rot[2][1]*a.rot[0][2],
+            b.rot[0][2]*a.rot[0][0] + b.rot[1][2]*a.rot[0][1] + b.rot[2][2]*a.rot[0][2]
+        ],
+        [
+            b.rot[0][0]*a.rot[1][0] + b.rot[1][0]*a.rot[1][1] + b.rot[2][0]*a.rot[1][2],
+            b.rot[0][1]*a.rot[1][0] + b.rot[1][1]*a.rot[1][1] + b.rot[2][1]*a.rot[1][2],
+            b.rot[0][2]*a.rot[1][0] + b.rot[1][2]*a.rot[1][1] + b.rot[2][2]*a.rot[1][2]
+        ],
+        [
+            b.rot[0][0]*a.rot[2][0] + b.rot[1][0]*a.rot[2][1] + b.rot[2][0]*a.rot[2][2],
+            b.rot[0][1]*a.rot[2][0] + b.rot[1][1]*a.rot[2][1] + b.rot[2][1]*a.rot[2][2],
+            b.rot[0][2]*a.rot[2][0] + b.rot[1][2]*a.rot[2][1] + b.rot[2][2]*a.rot[2][2]
+        ]
+    ];
+}
+
+/**
+ * Converts spherical coordinates to Cartesian coordinates.
+ * Given spherical coordinates and a time at which they are valid,
+ * returns a vector of Cartesian coordinates. The returned value
+ * includes the time, as required by <code>AstroTime</code>.
+ *
+ * @param {Astronomy.Spherical} sphere
+ *      Spherical coordinates to be converted.
+ *
+ * @param {Astronomy.AstroTime} time
+ *      The time that should be included in the returned vector.
+ *
+ * @returns {Astronomy.Vector}
+ *      The vector form of the supplied spherical coordinates.
+ */
+Astronomy.VectorFromSphere = function(sphere, time) {
+    const radlat = sphere.lat * DEG2RAD;
+    const radlon = sphere.lon * DEG2RAD;
+    const rcoslat = sphere.dist * Math.cos(radlat);
+    return new Vector(
+        rcoslat * Math.cos(radlon),
+        rcoslat * Math.sin(radlon),
+        sphere.dist * Math.sin(radlat),
+        time
+    );
+}
+
+/**
+ * Converts Cartesian coordinates to spherical coordinates.
+ *
+ * Given a Cartesian vector, returns latitude, longitude, and distance.
+ *
+ * @param {Astronomy.Vector} vector
+ *      Cartesian vector to be converted to spherical coordinates.
+ *
+ * @returns {Astronomy.Spherical}
+ *      Spherical coordinates that are equivalent to the given vector.
+ */
+Astronomy.SphereFromVector = function(vector) {
+    const xyproj = vector.x*vector.x + vector.y*vector.y;
+    const dist = Math.sqrt(xyproj + vector.z*vector.z);
+    let lat, lon;
+    if (xyproj === 0.0) {
+        if (vector.z === 0.0) {
+            throw 'Zero-length vector not allowed.';
+        }
+        lon = 0.0;
+        lat = (vector.z < 0.0) ? -90.0 : +90.0;
+    } else {
+        lon = RAD2DEG * Math.atan2(vector.y, vector.x);
+        if (lon < 0.0) {
+            lon += 360.0;
+        }
+        lat = RAD2DEG * Math.atan2(vector.z, Math.sqrt(xyproj));
+    }
+    return new Spherical(lat, lon, dist);
+}
+
+function ToggleAzimuthDirection(az) {
+    az = 360.0 - az;
+    if (az >= 360.0)
+        az -= 360.0;
+    else if (az < 0.0)
+        az += 360.0;
+    return az;
+}
+
+/**
+ * Converts Cartesian coordinates to horizontal coordinates.
+ *
+ * Given a horizontal Cartesian vector, returns horizontal azimuth and altitude.
+ *
+ * *IMPORTANT:* This function differs from `SphereFromVector` in two ways:
+ * - `SphereFromVector` returns a `lon` value that represents azimuth defined counterclockwise
+ *   from north (e.g., west = +90), but this function represents a clockwise rotation
+ *   (e.g., east = +90). The difference is because `Astronomy_SphereFromVector` is intended
+ *   to preserve the vector "right-hand rule", while this function defines azimuth in a more
+ *   traditional way as used in navigation and cartography.
+ * - This function optionally corrects for atmospheric refraction, while `SphereFromVector` does not.
+ *
+ * The returned object contains the azimuth in `lon`.
+ * It is measured in degrees clockwise from north: east = +90 degrees, west = +270 degrees.
+ *
+ * The altitude is stored in `lat`.
+ *
+ * The distance to the observed object is stored in `dist`,
+ * and is expressed in astronomical units (AU).
+ *
+ * @param {Astronomy.Vector} vector
+ *      Cartesian vector to be converted to horizontal coordinates.
+ *
+ * @param {string} refraction
+ *      `"normal"`: correct altitude for atmospheric refraction (recommended).
+ *      `"jplhor"`: for JPL Horizons compatibility testing only; not recommended for normal use.
+ *      `null`: no atmospheric refraction correction is performed.
+ *
+ * @returns {Astronomy.Spherical}
+ */
+Astronomy.HorizonFromVector = function(vector, refraction) {
+    const sphere = Astronomy.SphereFromVector(vector);
+    sphere.lon = ToggleAzimuthDirection(sphere.lon);
+    sphere.lat += Astronomy.Refraction(refraction, sphere.lat);
+    return sphere;
+}
+
+
+/**
+ * Given apparent angular horizontal coordinates in `sphere`, calculate horizontal vector.
+ *
+ * @param {Astronomy.Spherical} sphere
+ *      A structure that contains apparent horizontal coordinates:
+ *      `lat` holds the refracted azimuth angle,
+ *      `lon` holds the azimuth in degrees clockwise from north,
+ *      and `dist` holds the distance from the observer to the object in AU.
+ *
+ * @param {Astronomy.AstroTime} time
+ *      The date and time of the observation. This is needed because the returned
+ *      vector object requires a valid time value when passed to certain other functions.
+ *
+ * @param {string} refraction
+ *      `"normal"`: correct altitude for atmospheric refraction (recommended).
+ *      `"jplhor"`: for JPL Horizons compatibility testing only; not recommended for normal use.
+ *      `null`: no atmospheric refraction correction is performed.
+ *
+ * @returns {Astronomy.Vector}
+ *      A vector in the horizontal system: `x` = north, `y` = west, and `z` = zenith (up).
+ */
+Astronomy.VectorFromHorizon = function(sphere, time, refraction) {
+    /* Convert azimuth from clockwise-from-north to counterclockwise-from-north. */
+    const lon = ToggleAzimuthDirection(sphere.lon);
+
+    /* Reverse any applied refraction. */
+    const lat = sphere.lat + Astronomy.InverseRefraction(refraction, sphere.lat);
+
+    const xsphere = new Spherical(lat, lon, sphere.dist);
+    return Astronomy.VectorFromSphere(xsphere, time);
+}
+
+
+/**
+ * Calculates the amount of "lift" to an altitude angle caused by atmospheric refraction.
+ *
+ * Given an altitude angle and a refraction option, calculates
+ * the amount of "lift" caused by atmospheric refraction.
+ * This is the number of degrees higher in the sky an object appears
+ * due to the lensing of the Earth's atmosphere.
+ *
+ * @param {string} refraction
+ *      `"normal"`: correct altitude for atmospheric refraction (recommended).
+ *      `"jplhor"`: for JPL Horizons compatibility testing only; not recommended for normal use.
+ *      `null`: no atmospheric refraction correction is performed.
+ *
+ * @param {number} altitude
+ *      An altitude angle in a horizontal coordinate system. Must be a value between -90 and +90.
+ *
+ * @returns {number}
+ *      The angular adjustment in degrees to be added to the altitude angle to correct for atmospheric lensing.
+ */
+Astronomy.Refraction = function(refraction, altitude) {
+    let refr;
+
+    if (altitude < -90.0 || altitude > +90.0)
+        return 0.0;     /* no attempt to correct an invalid altitude */
+
+    if (refraction === 'normal' || refraction === 'jplhor') {
+        // http://extras.springer.com/1999/978-1-4471-0555-8/chap4/horizons/horizons.pdf
+        // JPL Horizons says it uses refraction algorithm from
+        // Meeus "Astronomical Algorithms", 1991, p. 101-102.
+        // I found the following Go implementation:
+        // https://github.com/soniakeys/meeus/blob/master/v3/refraction/refract.go
+        // This is a translation from the function "Saemundsson" there.
+        // I found experimentally that JPL Horizons clamps the angle to 1 degree below the horizon.
+        // This is important because the 'refr' formula below goes crazy near hd = -5.11.
+        let hd = altitude;
+        if (hd < -1.0)
+            hd = -1.0;
+
+        refr = (1.02 / Math.tan((hd+10.3/(hd+5.11))*DEG2RAD)) / 60.0;
+
+        if (refraction === 'normal' && altitude < -1.0) {
+            // In "normal" mode we gradually reduce refraction toward the nadir
+            // so that we never get an altitude angle less than -90 degrees.
+            // When horizon angle is -1 degrees, the factor is exactly 1.
+            // As altitude approaches -90 (the nadir), the fraction approaches 0 linearly.
+            refr *= (altitude + 90.0) / 89.0;
+        }
+    } else {
+        /* No refraction, or the refraction option is invalid. */
+        refr = 0.0;
+    }
+
+    return refr;
+}
+
+/**
+ * Calculates the inverse of an atmospheric refraction angle.
+ *
+ * Given an observed altitude angle that includes atmospheric refraction,
+ * calculate the negative angular correction to obtain the unrefracted
+ * altitude. This is useful for cases where observed horizontal
+ * coordinates are to be converted to another orientation system,
+ * but refraction first must be removed from the observed position.
+ *
+ * @param {string} refraction
+ *      `"normal"`: correct altitude for atmospheric refraction (recommended).
+ *      `"jplhor"`: for JPL Horizons compatibility testing only; not recommended for normal use.
+ *      `null`: no atmospheric refraction correction is performed.
+ *
+ * @param {number} bent_altitude
+ *      The apparent altitude that includes atmospheric refraction.
+ *
+ * @returns {number}
+ *      The angular adjustment in degrees to be added to the
+ *      altitude angle to correct for atmospheric lensing.
+ *      This will be less than or equal to zero.
+ */
+Astronomy.InverseRefraction = function(refraction, bent_altitude) {
+    if (bent_altitude < -90.0 || bent_altitude > +90.0) {
+        return 0.0;     /* no attempt to correct an invalid altitude */
+    }
+
+    /* Find the pre-adjusted altitude whose refraction correction leads to 'altitude'. */
+    let altitude = bent_altitude - Astronomy.Refraction(refraction, bent_altitude);
+
+    for(;;) {
+        /* See how close we got. */
+        let diff = (altitude + Astronomy.Refraction(refraction, altitude)) - bent_altitude;
+        if (Math.abs(diff) < 1.0e-14)
+            return altitude - bent_altitude;
+
+        altitude -= diff;
+    }
+}
+
+/**
+ * Applies a rotation to a vector, yielding a rotated vector.
+ *
+ * This function transforms a vector in one orientation to a vector
+ * in another orientation.
+ *
+ * @param {Astronomy.RotationMatrix} rotation
+ *      A rotation matrix that specifies how the orientation of the vector is to be changed.
+ *
+ * @param {Astronomy.Vector} vector
+ *      The vector whose orientation is to be changed.
+ *
+ * @returns {Astronomy.Vector}
+ *      A vector in the orientation specified by `rotation`.
+ */
+Astronomy.RotateVector = function(rotation, vector)
+{
+    return new Vector(
+        rotation.rot[0][0]*vector.x + rotation.rot[1][0]*vector.y + rotation.rot[2][0]*vector.z,
+        rotation.rot[0][1]*vector.x + rotation.rot[1][1]*vector.y + rotation.rot[2][1]*vector.z,
+        rotation.rot[0][2]*vector.x + rotation.rot[1][2]*vector.y + rotation.rot[2][2]*vector.z,
+        vector.t
+    );
+}
+
 
 })(typeof exports==='undefined' ? (this.Astronomy={}) : exports);
