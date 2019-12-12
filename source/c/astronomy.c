@@ -3519,7 +3519,7 @@ astro_search_result_t Astronomy_Search(
     astro_time_t tmid;
     astro_time_t tq;
     astro_func_result_t funcres;
-    double f1, f2, fmid, fq, dt_days, dt, dt_guess;
+    double f1, f2, fmid=0.0, fq, dt_days, dt, dt_guess;
     double q_x, q_ut, q_df_dt;
     const int iter_limit = 20;
     int iter = 0;
