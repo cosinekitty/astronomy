@@ -22,6 +22,11 @@ Culmination is also the moment a body crosses the *meridian*, the imaginary semi
 in the sky that passes from due north on the horizon, through the zenith (straight up),
 and then toward due south on the horizon.
 
+### [Horizon Intersection](horizon.c)
+This is a more advanced example. It shows how to use coordinate
+transforms and the search mechanism to find where the
+ecliptic intersects with an observer's horizon at a given date and time.
+
 ---
 
 # [API Reference](../../source/c/)

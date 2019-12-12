@@ -5,8 +5,16 @@ Fail()
     exit 1
 }
 
-for name in moonphase positions riseset seasons culminate; do
-    gcc -Wall -Werror -o ${name} -I../../source/c ../../source/c/astronomy.c astro_demo_common.c ${name}.c -lm ||
+if [[ "$1" == "debug" ]]; then
+    BUILDOPT='-g -O0'
+elif [[ -z "$1" ]]; then
+    BUILDOPT='-O3'
+else
+    Fail "unrecognized command line option"
+fi
+
+for name in moonphase positions riseset seasons culminate horizon; do
+    gcc ${BUILDOPT} -Wall -Werror -o ${name} -I../../source/c ../../source/c/astronomy.c astro_demo_common.c ${name}.c -lm ||
         Fail "Error building ${name}.c"
 done
 
