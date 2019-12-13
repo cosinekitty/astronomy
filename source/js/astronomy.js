@@ -4574,4 +4574,311 @@ Astronomy.RotateVector = function(rotation, vector)
 }
 
 
+/**
+ * Calculates a rotation matrix from equatorial J2000 (EQJ) to ecliptic J2000 (ECL).
+ *
+ * This is one of the family of functions that returns a rotation matrix
+ * for converting from one orientation to another.
+ * Source: EQJ = equatorial system, using equator at J2000 epoch.
+ * Target: ECL = ecliptic system, using equator at J2000 epoch.
+ *
+ * @returns {Astronomy.RotationMatrix}
+ *      A rotation matrix that converts EQJ to ECL.
+ */
+Astronomy.Rotation_EQJ_ECL = function() {
+    /* ob = mean obliquity of the J2000 ecliptic = 0.40909260059599012 radians. */
+    const c = 0.9174821430670688;    /* cos(ob) */
+    const s = 0.3977769691083922;    /* sin(ob) */
+    return new RotationMatrix([
+        [ 1,  0,  0],
+        [ 0, +c, -s],
+        [ 0, +s, +c]
+    ]);
+}
+
+
+/**
+ * Calculates a rotation matrix from ecliptic J2000 (ECL) to equatorial J2000 (EQJ).
+ *
+ * This is one of the family of functions that returns a rotation matrix
+ * for converting from one orientation to another.
+ * Source: ECL = ecliptic system, using equator at J2000 epoch.
+ * Target: EQJ = equatorial system, using equator at J2000 epoch.
+ *
+ * @returns {Astronomy.RotationMatrix}
+ *      A rotation matrix that converts ECL to EQJ.
+ */
+Astronomy.Rotation_ECL_EQJ = function() {
+    /* ob = mean obliquity of the J2000 ecliptic = 0.40909260059599012 radians. */
+    const c = 0.9174821430670688;    /* cos(ob) */
+    const s = 0.3977769691083922;    /* sin(ob) */
+    return new RotationMatrix([
+        [ 1,  0,  0],
+        [ 0, +c, +s],
+        [ 0, -s, +c]
+    ]);
+}
+
+
+/**
+ * Calculates a rotation matrix from equatorial J2000 (EQJ) to equatorial of-date (EQD).
+ *
+ * This is one of the family of functions that returns a rotation matrix
+ * for converting from one orientation to another.
+ * Source: EQJ = equatorial system, using equator at J2000 epoch.
+ * Target: EQD = equatorial system, using equator of the specified date/time.
+ *
+ * @param {Astronomy.AstroTime} time
+ *      The date and time at which the Earth's equator defines the target orientation.
+ *
+ * @returns {Astronomy.RotationMatrix}
+ *      A rotation matrix that converts EQJ to EQD at `time`.
+ */
+Astronomy.Rotation_EQJ_EQD = function(time) {
+    const prec = precession_rot(0.0, time.tt);
+    const nut = nutation_rot(time, 0);
+    return Astronomy.CombineRotation(prec, nut);
+}
+
+
+/**
+ * Calculates a rotation matrix from equatorial of-date (EQD) to equatorial J2000 (EQJ).
+ *
+ * This is one of the family of functions that returns a rotation matrix
+ * for converting from one orientation to another.
+ * Source: EQD = equatorial system, using equator of the specified date/time.
+ * Target: EQJ = equatorial system, using equator at J2000 epoch.
+ *
+ * @param {Astronomy.AstroTime} time
+ *      The date and time at which the Earth's equator defines the source orientation.
+ *
+ * @returns {Astronomy.RotationMatrix}
+ *      A rotation matrix that converts EQD at `time` to EQJ.
+ */
+Astronomy.Rotation_EQD_EQJ = function(time) {
+    const nut = nutation_rot(time, 1);
+    const prec = precession_rot(time.tt, 0.0);
+    return Astronomy.CombineRotation(nut, prec);
+}
+
+
+/**
+ * Calculates a rotation matrix from equatorial of-date (EQD) to horizontal (HOR).
+ *
+ * This is one of the family of functions that returns a rotation matrix
+ * for converting from one orientation to another.
+ * Source: EQD = equatorial system, using equator of the specified date/time.
+ * Target: HOR = horizontal system.
+ *
+ * Use <code>HorizonFromVector</code> to convert the return value
+ * to a traditional altitude/azimuth pair.
+ *
+ * @param {Astronomy.AstroTime} time
+ *      The date and time at which the Earth's equator applies.
+ *
+ * @param {Astronomy.Observer} observer
+ *      A location near the Earth's mean sea level that defines the observer's horizon.
+ *
+ * @returns {Astronomy.RotationMatrix}
+ *      A rotation matrix that converts EQD to HOR at <code>time</code> and for <code>observer</code>.
+ *      The components of the horizontal vector are:
+ *      x = north, y = west, z = zenith (straight up from the observer).
+ *      These components are chosen so that the "right-hand rule" works for the vector
+ *      and so that north represents the direction where azimuth = 0.
+ */
+Astronomy.Rotation_EQD_HOR = function(time, observer) {
+    const sinlat = Math.sin(observer.latitude * DEG2RAD);
+    const coslat = Math.cos(observer.latitude * DEG2RAD);
+    const sinlon = Math.sin(observer.longitude * DEG2RAD);
+    const coslon = Math.cos(observer.longitude * DEG2RAD);
+
+    const uze = [coslat * coslon, coslat * sinlon, sinlat];
+    const une = [-sinlat * coslon, -sinlat * sinlon, coslat];
+    const uwe = [sinlon, -coslon, 0];
+
+    const spin_angle = -15 * sidereal_time(time);
+    const uz = spin(spin_angle, uze);
+    const un = spin(spin_angle, une);
+    const uw = spin(spin_angle, uwe);
+
+    return new RotationMatrix([
+        [un[0], uw[0], uz[0]],
+        [un[1], uw[1], uz[1]],
+        [un[2], uw[2], uz[2]],
+    ]);
+}
+
+
+/**
+ * Calculates a rotation matrix from horizontal (HOR) to equatorial of-date (EQD).
+ *
+ * This is one of the family of functions that returns a rotation matrix
+ * for converting from one orientation to another.
+ * Source: HOR = horizontal system (x=North, y=West, z=Zenith).
+ * Source: EQD = equatorial system, using equator of the specified date/time.
+ *
+ * @param {Astronomy.AstroTime} time
+ *      The date and time at which the Earth's equator applies.
+ *
+ * @param {Astronomy.Observer} observer
+ *      A location near the Earth's mean sea level that defines the observer's horizon.
+ *
+ * @returns {Astronomy.RotationMatrix}
+ *      A rotation matrix that converts HOR to EQD at `time` and for `observer`.
+ */
+Astronomy.Rotation_HOR_EQD = function(time, observer) {
+    const rot = Astronomy.Rotation_EQD_HOR(time, observer);
+    return Astronomy.InverseRotation(rot);
+}
+
+
+/**
+ * Calculates a rotation matrix from horizontal (HOR) to J2000 equatorial (EQJ).
+ *
+ * This is one of the family of functions that returns a rotation matrix
+ * for converting from one orientation to another.
+ * Source: HOR = horizontal system (x=North, y=West, z=Zenith).
+ * Source: EQJ = equatorial system, using equator at the J2000 epoch.
+ *
+ * @param {Astronomy.AstroTime} time
+ *      The date and time of the observation.
+ *
+ * @param {Astronomy.Observer} observer
+ *      A location near the Earth's mean sea level that defines the observer's horizon.
+ *
+ * @returns {Astronomy.RotationMatrix}
+ *      A rotation matrix that converts HOR to EQD at <code>time</code> and for <code>observer</code>.
+ */
+Astronomy.Rotation_HOR_EQJ = function(time, observer) {
+    const hor_eqd = Astronomy.Rotation_HOR_EQD(time, observer);
+    const eqd_eqj = Astronomy.Rotation_EQD_EQJ(time);
+    return Astronomy.CombineRotation(hor_eqd, eqd_eqj);
+}
+
+
+/**
+ * Calculates a rotation matrix from equatorial J2000 (EQJ) to horizontal (HOR).
+ *
+ * This is one of the family of functions that returns a rotation matrix
+ * for converting from one orientation to another.
+ * Source: EQJ = equatorial system, using the equator at the J2000 epoch.
+ * Target: HOR = horizontal system.
+ *
+ * Use <code>Astronomy.HorizonFromVector</code> to convert the return value
+ * to a traditional altitude/azimuth pair.
+ *
+ * @param time
+ *      The date and time of the desired horizontal orientation.
+ *
+ * @param observer
+ *      A location near the Earth's mean sea level that defines the observer's horizon.
+ *
+ * @return
+ *      A rotation matrix that converts EQJ to HOR at `time` and for `observer`.
+ *      The components of the horizontal vector are:
+ *      x = north, y = west, z = zenith (straight up from the observer).
+ *      These components are chosen so that the "right-hand rule" works for the vector
+ *      and so that north represents the direction where azimuth = 0.
+ */
+Astronomy.Rotation_EQJ_HOR = function(time, observer) {
+    const rot = Astronomy_Rotation_HOR_EQJ(time, observer);
+    return Astronomy_InverseRotation(rot);
+}
+
+
+/**
+ * Calculates a rotation matrix from equatorial of-date (EQD) to ecliptic J2000 (ECL).
+ *
+ * This is one of the family of functions that returns a rotation matrix
+ * for converting from one orientation to another.
+ * Source: EQD = equatorial system, using equator of date.
+ * Target: ECL = ecliptic system, using equator at J2000 epoch.
+ *
+ * @param {Astronomy.AstroTime} time
+ *      The date and time of the source equator.
+ *
+ * @returns {Astronomy.RotationMatrix}
+ *      A rotation matrix that converts EQD to ECL.
+ */
+Astronomy.Rotation_EQD_ECL = function(time) {
+    const eqd_eqj = Astronomy.Rotation_EQD_EQJ(time);
+    const eqj_ecl = Astronomy.Rotation_EQJ_ECL();
+    return Astronomy.CombineRotation(eqd_eqj, eqj_ecl);
+}
+
+
+/**
+ * Calculates a rotation matrix from ecliptic J2000 (ECL) to equatorial of-date (EQD).
+ *
+ * This is one of the family of functions that returns a rotation matrix
+ * for converting from one orientation to another.
+ * Source: ECL = ecliptic system, using equator at J2000 epoch.
+ * Target: EQD = equatorial system, using equator of date.
+ *
+ * @param {Astronomy.AstroTime} time
+ *      The date and time of the desired equator.
+ *
+ * @returns {Astronomy.RotationMatrix}
+ *      A rotation matrix that converts ECL to EQD.
+ */
+Astronomy.Rotation_ECL_EQD = function(time) {
+    const rot = Astronomy.Rotation_EQD_ECL(time);
+    return Astronomy.InverseRotation(rot);
+}
+
+
+/**
+ * Calculates a rotation matrix from ecliptic J2000 (ECL) to horizontal (HOR).
+ *
+ * This is one of the family of functions that returns a rotation matrix
+ * for converting from one orientation to another.
+ * Source: ECL = ecliptic system, using equator at J2000 epoch.
+ * Target: HOR = horizontal system.
+ *
+ * Use <code>Astronomy.HorizonFromVector</code> to convert the return value
+ * to a traditional altitude/azimuth pair.
+ *
+ * @param {Astronomy.AstroTime} time
+ *      The date and time of the desired horizontal orientation.
+ *
+ * @param {Astronomy.Observer} observer
+ *      A location near the Earth's mean sea level that defines the observer's horizon.
+ *
+ * @returns {Astronomy.RotationMatrix}
+ *      A rotation matrix that converts ECL to HOR at <code>time</code> and for <code>observer</code>.
+ *      The components of the horizontal vector are:
+ *      x = north, y = west, z = zenith (straight up from the observer).
+ *      These components are chosen so that the "right-hand rule" works for the vector
+ *      and so that north represents the direction where azimuth = 0.
+ */
+Astronomy.Rotation_ECL_HOR = function(time, observer) {
+    const ecl_eqd = Astronomy.Rotation_ECL_EQD(time);
+    const eqd_hor = Astronomy.Rotation_EQD_HOR(time, observer);
+    return Astronomy.CombineRotation(ecl_eqd, eqd_hor);
+}
+
+
+/**
+ * Calculates a rotation matrix from horizontal (HOR) to ecliptic J2000 (ECL).
+ *
+ * This is one of the family of functions that returns a rotation matrix
+ * for converting from one orientation to another.
+ * Source: HOR = horizontal system.
+ * Target: ECL = ecliptic system, using equator at J2000 epoch.
+ *
+ * @param {Astronomy.AstroTime} time
+ *      The date and time of the horizontal observation.
+ *
+ * @param {Astronomy.Observer} observer
+ *      The location of the horizontal observer.
+ *
+ * @returns {Astronomy.RotationMatrix}
+ *      A rotation matrix that converts HOR to ECL.
+ */
+Astronomy.Rotation_HOR_ECL = function(time, observer) {
+    const rot = Astronomy.Rotation_ECL_HOR(time, observer);
+    return Astronomy.InverseRotation(rot);
+}
+
+
 })(typeof exports==='undefined' ? (this.Astronomy={}) : exports);
