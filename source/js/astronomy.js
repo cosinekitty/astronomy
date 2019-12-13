@@ -4265,11 +4265,11 @@ Astronomy.NextLunarApsis = function(apsis) {
  *      The inverse rotation matrix.
  */
 Astronomy.InverseRotation = function(rotation) {
-    return [
+    return new RotationMatrix([
         [rotation.rot[0][0], rotation.rot[1][0], rotation.rot[2][0]],
         [rotation.rot[0][1], rotation.rot[1][1], rotation.rot[2][1]],
         [rotation.rot[0][2], rotation.rot[1][2], rotation.rot[2][2]]
-    ];
+    ]);
 }
 
 /**
@@ -4295,7 +4295,7 @@ Astronomy.CombineRotation = function(a, b) {
         We can think of this as 'b' rotating all the 3 column vectors in 'a'.
     */
 
-    return [
+    return new RotationMatrix([
         [
             b.rot[0][0]*a.rot[0][0] + b.rot[1][0]*a.rot[0][1] + b.rot[2][0]*a.rot[0][2],
             b.rot[0][1]*a.rot[0][0] + b.rot[1][1]*a.rot[0][1] + b.rot[2][1]*a.rot[0][2],
@@ -4311,7 +4311,7 @@ Astronomy.CombineRotation = function(a, b) {
             b.rot[0][1]*a.rot[2][0] + b.rot[1][1]*a.rot[2][1] + b.rot[2][1]*a.rot[2][2],
             b.rot[0][2]*a.rot[2][0] + b.rot[1][2]*a.rot[2][1] + b.rot[2][2]*a.rot[2][2]
         ]
-    ];
+    ]);
 }
 
 /**

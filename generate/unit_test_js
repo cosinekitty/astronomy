@@ -49,5 +49,9 @@ echo "Running magnitude tests."
 node mag_test.js || Fail "Failed magnitude tests."
 
 echo ""
+echo "Running rotation tests."
+node rotation.js || Fail "Failed rotation tests."
+
+echo ""
 echo "SUCCESS."
 exit 0
