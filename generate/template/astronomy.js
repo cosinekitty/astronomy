@@ -3368,7 +3368,7 @@ function ToggleAzimuthDirection(az) {
  * *IMPORTANT:* This function differs from `SphereFromVector` in two ways:
  * - `SphereFromVector` returns a `lon` value that represents azimuth defined counterclockwise
  *   from north (e.g., west = +90), but this function represents a clockwise rotation
- *   (e.g., east = +90). The difference is because `Astronomy_SphereFromVector` is intended
+ *   (e.g., east = +90). The difference is because `SphereFromVector` is intended
  *   to preserve the vector "right-hand rule", while this function defines azimuth in a more
  *   traditional way as used in navigation and cartography.
  * - This function optionally corrects for atmospheric refraction, while `SphereFromVector` does not.
@@ -3760,8 +3760,8 @@ Astronomy.Rotation_HOR_EQJ = function(time, observer) {
  *      and so that north represents the direction where azimuth = 0.
  */
 Astronomy.Rotation_EQJ_HOR = function(time, observer) {
-    const rot = Astronomy_Rotation_HOR_EQJ(time, observer);
-    return Astronomy_InverseRotation(rot);
+    const rot = Astronomy.Rotation_HOR_EQJ(time, observer);
+    return Astronomy.InverseRotation(rot);
 }
 
 

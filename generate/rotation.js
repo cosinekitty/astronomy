@@ -133,15 +133,83 @@ function Test_EQJ_EQD(body) {
         throw 'Test_EQJ_EQD: EXCESSIVE INVERSE ERROR';
 }
 
+function Test_EQD_HOR(body) {
+    /* Use existing functions to calculate horizontal coordinates of the body for the time+observer. */
+    const time = Astronomy.MakeTime(new Date('1970-12-13T05:15:00Z'));
+    const observer = Astronomy.MakeObserver(-37, +45, 0);
+    const eqd = Astronomy.Equator(body, time, observer, true, true);
+    console.log(`Test_EQD_HOR ${body}: OFDATE ra=${eqd.ra}, dec=${eqd.dec}`);
+    const hor = Astronomy.Horizon(time, observer, eqd.ra, eqd.dec, 'normal');
+
+    /* Calculate the position of the body as an equatorial vector of date. */
+    // FIXFIXFIX: add method to construct Spherical object
+    const vec_eqd = Astronomy.VectorFromSphere({lat:eqd.dec, lon:15*eqd.ra, dist:eqd.dist}, time);
+
+    /* Calculate rotation matrix to convert equatorial J2000 vector to horizontal vector. */
+    const rot = Astronomy.Rotation_EQD_HOR(time, observer);
+
+    /* Rotate the equator of date vector to a horizontal vector. */
+    const vec_hor = Astronomy.RotateVector(rot, vec_eqd);
+
+    /* Convert the horizontal vector to horizontal angular coordinates. */
+    const xsphere = Astronomy.HorizonFromVector(vec_hor, 'normal');
+    const diff_alt = Math.abs(xsphere.lat - hor.altitude);
+    const diff_az = Math.abs(xsphere.lon - hor.azimuth);
+
+    console.log(`Test_EQD_HOR ${body}: trusted alt=${hor.altitude}, az=${hor.azimuth}; test alt=${xsphere.lat}, az=${xsphere.lon}; diff_alt=${diff_alt}, diff_az=${diff_az}`);
+    if (diff_alt > 4.0e-14 || diff_az > 1.0e-13)
+        throw 'Test_EQD_HOR: EXCESSIVE HORIZONTAL ERROR.';
+
+    /* Confirm that we can convert back to horizontal vector. */
+    const check_hor = Astronomy.VectorFromHorizon(xsphere, time, 'normal');
+    let diff = VectorDiff(check_hor, vec_hor);
+    console.log(`Test_EQD_HOR ${body}: horizontal recovery: diff = ${diff}`);
+    if (diff > 1.0e-15)
+        throw 'Test_EQD_HOR: EXCESSIVE ERROR IN HORIZONTAL RECOVERY.';
+
+    /* Verify the inverse translation from horizontal vector to equatorial of-date vector. */
+    const irot = Astronomy.Rotation_HOR_EQD(time, observer);
+    const check_eqd = Astronomy.RotateVector(irot, vec_hor);
+    diff = VectorDiff(check_eqd, vec_eqd);
+    console.log(`Test_EQD_HOR ${body}: OFDATE inverse rotation diff = ${diff}`);
+    if (diff > 1.0e-15)
+        throw 'Test_EQD_HOR: EXCESSIVE OFDATE INVERSE HORIZONTAL ERROR.';
+
+    /* Exercise HOR to EQJ translation. */
+    const eqj = Astronomy.Equator(body, time, observer, false, true);
+    const vec_eqj = Astronomy.VectorFromSphere({lat:eqj.dec, lon:15*eqj.ra, dist:eqj.dist}, time);
+    const yrot = Astronomy.Rotation_HOR_EQJ(time, observer);
+    const check_eqj = Astronomy.RotateVector(yrot, vec_hor);
+    diff = VectorDiff(check_eqj, vec_eqj);
+    console.log(`Test_EQD_HOR ${body}: J2000 inverse rotation diff = ${diff}`);
+    if (diff > 3.0e-15)
+        throw 'Test_EQD_HOR: EXCESSIVE J2000 INVERSE HORIZONTAL ERROR.';
+
+    /* Verify the inverse translation: EQJ to HOR. */
+    const zrot = Astronomy.Rotation_EQJ_HOR(time, observer);
+    const another_hor = Astronomy.RotateVector(zrot, vec_eqj);
+    diff = VectorDiff(another_hor, vec_hor);
+    console.log(`Test_EQD_HOR ${body}: EQJ inverse rotation diff = ${diff}`);
+    if (diff > 2.0e-15)
+        throw 'Test_EQD_HOR: EXCESSIVE EQJ INVERSE HORIZONTAL ERROR.';
+}
+
 function RotationTest() {
     Rotation_MatrixInverse();
     Rotation_MatrixMultiply();
     Test_EQJ_ECL();
+
     Test_EQJ_EQD('Mercury');
     Test_EQJ_EQD('Venus');
     Test_EQJ_EQD('Mars');
     Test_EQJ_EQD('Jupiter');
     Test_EQJ_EQD('Saturn');
+
+    Test_EQD_HOR('Mercury');
+    Test_EQD_HOR('Venus');
+    Test_EQD_HOR('Mars');
+    Test_EQD_HOR('Jupiter');
+    Test_EQD_HOR('Saturn');
 }
 
 RotationTest();
