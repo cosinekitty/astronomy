@@ -199,6 +199,12 @@ function CheckInverse(aname, bname, arot, brot) {
     CompareMatrices(`CheckInverse(${aname},${bname})`, crot, IdentityMatrix, 2.0e-15);
 }
 
+function CheckCycle(cyclename, arot, brot, crot) {
+    const xrot = Astronomy.CombineRotation(arot, brot);
+    const irot = Astronomy.InverseRotation(xrot);
+    CompareMatrices(cyclename, crot, irot, 2.0e-15);
+}
+
 function Test_RotRoundTrip() {
     const time = Astronomy.MakeTime(new Date('2067-05-30T14:45:00Z'));
     const observer = Astronomy.MakeObserver(+28, -82, 0);
@@ -237,6 +243,22 @@ function Test_RotRoundTrip() {
     const hor_ecl = Astronomy.Rotation_HOR_ECL(time, observer);
     const ecl_hor = Astronomy.Rotation_ECL_HOR(time, observer);
     CheckInverse('hor_ecl', 'ecl_hor', hor_ecl, ecl_hor);
+
+    /*
+        Verify that combining different sequences of rotations result
+        in the expected combination.
+        For example, (EQJ ==> HOR ==> ECL) must be the same matrix as (EQJ ==> ECL).
+        Each of these is a "triangle" of relationships between 3 orientations.
+        There are 4 possible ways to pick 3 orientations from the 4 to form a triangle.
+        Because we have just proved that each transformation is reversible,
+        we only need to verify the triangle in one cyclic direction.
+    */
+   CheckCycle('eqj_ecl, ecl_eqd, eqd_eqj', eqj_ecl, ecl_eqd, eqd_eqj);     /* excluded corner = HOR */
+   CheckCycle('eqj_hor, hor_ecl, ecl_eqj', eqj_hor, hor_ecl, ecl_eqj);     /* excluded corner = EQD */
+   CheckCycle('eqj_hor, hor_eqd, eqd_eqj', eqj_hor, hor_eqd, eqd_eqj);     /* excluded corner = ECL */
+   CheckCycle('ecl_eqd, eqd_hor, hor_ecl', ecl_eqd, eqd_hor, hor_ecl);     /* excluded corner = EQJ */
+
+   console.log('Test_RotRoundTrip: PASS');
 }
 
 function RotationTest() {
