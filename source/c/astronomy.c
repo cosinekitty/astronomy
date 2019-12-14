@@ -5452,14 +5452,14 @@ astro_spherical_t Astronomy_SphereFromVector(astro_vector_t vector)
 
 /**
  * @brief
- *  Given angular equatorial coordinates in `equ`, calculates equatorial vector.
+ *      Given angular equatorial coordinates in `equ`, calculates equatorial vector.
  *
  * @param equ
- *      An object that contains angular equatorial coordinates to be converted to a vector.
+ *      Angular equatorial coordinates to be converted to a vector.
  *
  * @param time
  *      The date and time of the observation. This is needed because the returned
- *      vector object requires a valid time value when passed to certain other functions.
+ *      vector requires a valid time value when passed to certain other functions.
  *
  * @return
  *      A vector in the equatorial system.
@@ -5481,13 +5481,14 @@ astro_vector_t Astronomy_VectorFromEquator(astro_equatorial_t equ, astro_time_t 
 
 
 /**
- * Given an equatorial vector, calculates equatorial angular coordinates.
+ * @brief
+ *      Given an equatorial vector, calculates equatorial angular coordinates.
  *
  * @param vector
  *      A vector in an equatorial coordinate system.
  *
  * @return
- *      Angular coordinates expressed in the same equatorial system as `vec`.
+ *      Angular coordinates expressed in the same equatorial system as `vector`.
  */
 astro_equatorial_t Astronomy_EquatorFromVector(astro_vector_t vector)
 {

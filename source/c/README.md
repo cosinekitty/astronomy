@@ -359,13 +359,13 @@ Correction for aberration is optional, using the `aberration` parameter.
 <a name="Astronomy_EquatorFromVector"></a>
 ### Astronomy_EquatorFromVector(vector) &#8658; [`astro_equatorial_t`](#astro_equatorial_t)
 
+**Given an equatorial vector, calculates equatorial angular coordinates.** 
 
 
-Given an equatorial vector, calculates equatorial angular coordinates.
 
 
 
-**Returns:**  Angular coordinates expressed in the same equatorial system as `vec`. 
+**Returns:**  Angular coordinates expressed in the same equatorial system as `vector`. 
 
 
 
@@ -1597,8 +1597,8 @@ After calculating the date and time of an astronomical event in the form of an [
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| [`astro_equatorial_t`](#astro_equatorial_t) | `equ` |  An object that contains angular equatorial coordinates to be converted to a vector. | 
-| [`astro_time_t`](#astro_time_t) | `time` |  The date and time of the observation. This is needed because the returned vector object requires a valid time value when passed to certain other functions. | 
+| [`astro_equatorial_t`](#astro_equatorial_t) | `equ` |  Angular equatorial coordinates to be converted to a vector. | 
+| [`astro_time_t`](#astro_time_t) | `time` |  The date and time of the observation. This is needed because the returned vector requires a valid time value when passed to certain other functions. | 
 
 
 
