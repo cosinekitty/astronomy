@@ -942,44 +942,6 @@ static astro_equatorial_t vector2radec(const double pos[3])
     return equ;
 }
 
-static void nutation(astro_time_t *time, int direction, const double inpos[3], double outpos[3])
-{
-    earth_tilt_t tilt = e_tilt(time);
-    double oblm = tilt.mobl * DEG2RAD;
-    double oblt = tilt.tobl * DEG2RAD;
-    double psi = tilt.dpsi * ASEC2RAD;
-    double cobm = cos(oblm);
-    double sobm = sin(oblm);
-    double cobt = cos(oblt);
-    double sobt = sin(oblt);
-    double cpsi = cos(psi);
-    double spsi = sin(psi);
-
-    double xx = cpsi;
-    double yx = -spsi * cobm;
-    double zx = -spsi * sobm;
-    double xy = spsi * cobt;
-    double yy = cpsi * cobm * cobt + sobm * sobt;
-    double zy = cpsi * sobm * cobt - cobm * sobt;
-    double xz = spsi * sobt;
-    double yz = cpsi * cobm * sobt - sobm * cobt;
-    double zz = cpsi * sobm * sobt + cobm * cobt;
-
-    if (direction == 0)
-    {
-        /* forward rotation */
-        outpos[0] = xx * inpos[0] + yx * inpos[1] + zx * inpos[2];
-        outpos[1] = xy * inpos[0] + yy * inpos[1] + zy * inpos[2];
-        outpos[2] = xz * inpos[0] + yz * inpos[1] + zz * inpos[2];
-    }
-    else
-    {
-        /* inverse rotation */
-        outpos[0] = xx * inpos[0] + xy * inpos[1] + xz * inpos[2];
-        outpos[1] = yx * inpos[0] + yy * inpos[1] + yz * inpos[2];
-        outpos[2] = zx * inpos[0] + zy * inpos[1] + zz * inpos[2];
-    }
-}
 
 static astro_rotation_t nutation_rot(astro_time_t *time, int direction)
 {
@@ -1034,6 +996,14 @@ static astro_rotation_t nutation_rot(astro_time_t *time, int direction)
 
     rotation.status = ASTRO_SUCCESS;
     return rotation;
+}
+
+static void nutation(astro_time_t *time, int direction, const double inpos[3], double outpos[3])
+{
+    astro_rotation_t r = nutation_rot(time, direction);
+    outpos[0] = r.rot[0][0]*inpos[0] + r.rot[1][0]*inpos[1] + r.rot[2][0]*inpos[2];
+    outpos[1] = r.rot[0][1]*inpos[0] + r.rot[1][1]*inpos[1] + r.rot[2][1]*inpos[2];
+    outpos[2] = r.rot[0][2]*inpos[0] + r.rot[1][2]*inpos[1] + r.rot[2][2]*inpos[2];
 }
 
 static double era(double ut)        /* Earth Rotation Angle */
