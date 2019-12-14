@@ -4392,6 +4392,20 @@ Astronomy.VectorFromEquator = function(equ, time) {
 }
 
 /**
+ * Given an equatorial vector, calculates equatorial angular coordinates.
+ *
+ * @param {Astronomy.Vector} vec
+ *      A vector in an equatorial coordinate system.
+ *
+ * @returns {Astronomy.EquatorialCoordinates}
+ *      Angular coordinates expressed in the same equatorial system as `vec`.
+ */
+Astronomy.EquatorFromVector = function(vec) {
+    const sphere = Astronomy.SphereFromVector(vec);
+    return new EquatorialCoordinates(sphere.lon / 15, sphere.lat, sphere.dist);
+}
+
+/**
  * Converts Cartesian coordinates to spherical coordinates.
  *
  * Given a Cartesian vector, returns latitude, longitude, and distance.

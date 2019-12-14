@@ -1162,6 +1162,21 @@ Given angular equatorial coordinates in `sphere`, calculates equatorial vector.
 
 * * *
 
+<a name="Astronomy.EquatorFromVector"></a>
+
+### Astronomy.EquatorFromVector(vec) ⇒ [<code>EquatorialCoordinates</code>](#Astronomy.EquatorialCoordinates)
+Given an equatorial vector, calculates equatorial angular coordinates.
+
+**Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
+**Returns**: [<code>EquatorialCoordinates</code>](#Astronomy.EquatorialCoordinates) - Angular coordinates expressed in the same equatorial system as `vec`.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| vec | [<code>Vector</code>](#Astronomy.Vector) | A vector in an equatorial coordinate system. |
+
+
+* * *
+
 <a name="Astronomy.SphereFromVector"></a>
 
 ### Astronomy.SphereFromVector(vector) ⇒ [<code>Spherical</code>](#Astronomy.Spherical)

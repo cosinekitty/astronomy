@@ -112,13 +112,13 @@ function Test_EQJ_EQD(body) {
     /* Rotate EQJ vector to EQD vector. */
     const vdate = Astronomy.RotateVector(r, v2000);
 
-    /* Convert vector back to spherical coordinates. */
-    let xsphere = Astronomy.SphereFromVector(vdate);
+    /* Convert vector back to angular equatorial coordinates. */
+    let equcheck = Astronomy.EquatorFromVector(vdate);
 
     /* Compare the result with the eqdate. */
-    const ra_diff = Math.abs((xsphere.lon / 15) - eqdate.ra);
-    const dec_diff = Math.abs(xsphere.lat - eqdate.dec);
-    const dist_diff = Math.abs(xsphere.dist - eqdate.dist);
+    const ra_diff = Math.abs(equcheck.ra - eqdate.ra);
+    const dec_diff = Math.abs(equcheck.dec - eqdate.dec);
+    const dist_diff = Math.abs(equcheck.dist - eqdate.dist);
     console.log(`Test_EQJ_EQD: ${body} ra=${eqdate.ra}, dec=${eqdate.dec}, dist=${eqdate.dist}, ra_diff=${ra_diff}, dec_diff=${dec_diff}, dist_diff=${dist_diff}`);
     if (ra_diff > 1.0e-14 || dec_diff > 1.0e-14 || dist_diff > 4.0e-15)
         throw 'Test_EQJ_EQD: EXCESSIVE ERROR';
