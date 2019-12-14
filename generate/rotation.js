@@ -19,40 +19,40 @@ function CompareMatrices(caller, a, b, tolerance) {
 }
 
 function Rotation_MatrixInverse() {
-    const a = {rot:[
+    const a = Astronomy.MakeRotation([
         [1, 4, 7],
         [2, 5, 8],
         [3, 6, 9]
-    ]};
+    ]);
 
-    const v = {rot:[
+    const v = Astronomy.MakeRotation([
         [1, 2, 3],
         [4, 5, 6],
         [7, 8, 9]
-    ]};
+    ]);
 
     const b = Astronomy.InverseRotation(a);
     CompareMatrices('Rotation_MatrixInverse', b, v, 0);
 }
 
 function Rotation_MatrixMultiply() {
-    const a = {rot:[
+    const a = Astronomy.MakeRotation([
         [1, 4, 7],
         [2, 5, 8],
         [3, 6, 9]
-    ]};
+    ]);
 
-    const b = {rot:[
+    const b = Astronomy.MakeRotation([
         [10, 13, 16],
         [11, 14, 17],
         [12, 15, 18]
-    ]};
+    ]);
 
-    const v = {rot:[
+    const v = Astronomy.MakeRotation([
         [84, 201, 318],
         [90, 216, 342],
         [96, 231, 366]
-    ]};
+    ]);
 
     const c = Astronomy.CombineRotation(b, a);
     CompareMatrices('Rotation_MatrixMultiply', c, v, 0);

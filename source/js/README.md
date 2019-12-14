@@ -501,6 +501,20 @@ function calls may be more efficient than passing in native JavaScript Date obje
 
 * * *
 
+<a name="Astronomy.MakeRotation"></a>
+
+### Astronomy.MakeRotation(rot) ⇒ [<code>RotationMatrix</code>](#Astronomy.RotationMatrix)
+Creates a rotation matrix that can be used to transform one coordinate system to another.
+
+**Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| rot | <code>Array.&lt;Array.&lt;number&gt;&gt;</code> | An array [3][3] of numbers. Defines a rotation matrix used to premultiply      a 3D vector to reorient it into another coordinate system. |
+
+
+* * *
+
 <a name="Astronomy.Horizon"></a>
 
 ### Astronomy.Horizon(date, observer, ra, dec, refraction) ⇒ [<code>HorizontalCoordinates</code>](#Astronomy.HorizontalCoordinates)

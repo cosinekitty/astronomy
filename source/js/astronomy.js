@@ -2036,6 +2036,23 @@ class EquatorialCoordinates {
     }
 }
 
+function IsValidRotationArray(rot) {
+    if (!(rot instanceof Array) || (rot.length !== 3))
+        return false;
+
+    for (let i=0; i < 3; ++i) {
+        if (!(rot[i] instanceof Array) || (rot[i].length !== 3))
+            return false;
+
+        for (let j=0; j < 3; ++j)
+            if (typeof rot[i][j] !== 'number')
+                return false;
+    }
+
+    return true;
+}
+
+
 /**
  * Contains a rotation matrix that can be used to transform one coordinate system to another.
  *
@@ -2049,6 +2066,22 @@ class RotationMatrix {
     constructor(rot) {
         this.rot = rot;
     }
+}
+
+/**
+ * Creates a rotation matrix that can be used to transform one coordinate system to another.
+ *
+ * @param {Array<Array<number>>} rot
+ *      An array [3][3] of numbers. Defines a rotation matrix used to premultiply
+ *      a 3D vector to reorient it into another coordinate system.
+ *
+ * @returns {Astronomy.RotationMatrix}
+ */
+Astronomy.MakeRotation = function(rot) {
+    if (!IsValidRotationArray(rot))
+        throw 'Argument must be a [3][3] array of numbers';
+
+    return new RotationMatrix(rot);
 }
 
 /**
