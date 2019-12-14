@@ -12,7 +12,7 @@ function CompareMatrices(caller, a, b, tolerance) {
         for (let j=0; j<3; ++j) {
             const diff = Math.abs(a.rot[i][j] - b.rot[i][j]);
             if (diff > tolerance) {
-                throw `ERROR(${caller}): matrix[${i}][${j}] = ${a[i][j]}, expected ${b[i][j]}, diff ${diff}`;
+                throw `ERROR(${caller}): matrix[${i}][${j}] = ${a.rot[i][j]}, expected ${b.rot[i][j]}, diff ${diff}`;
             }
         }
     }
@@ -35,8 +35,32 @@ function Rotation_MatrixInverse() {
     CompareMatrices('Rotation_MatrixInverse', b, v, 0);
 }
 
+function Rotation_MatrixMultiply() {
+    const a = {rot:[
+        [1, 4, 7],
+        [2, 5, 8],
+        [3, 6, 9]
+    ]};
+
+    const b = {rot:[
+        [10, 13, 16],
+        [11, 14, 17],
+        [12, 15, 18]
+    ]};
+
+    const v = {rot:[
+        [84, 201, 318],
+        [90, 216, 342],
+        [96, 231, 366]
+    ]};
+
+    const c = Astronomy.CombineRotation(b, a);
+    CompareMatrices('Rotation_MatrixMultiply', c, v, 0);
+}
+
 function RotationTest() {
     Rotation_MatrixInverse();
+    Rotation_MatrixMultiply();
 }
 
 RotationTest();
