@@ -2276,7 +2276,7 @@ static int Test_EQD_HOR(astro_body_t body)
     printf("Test_EQD_HOR %s: trusted alt=%0.3lf, az=%0.3lf; test alt=%0.3lf, az=%0.3lf; diff_alt=%lg, diff_az=%lg\n",
         Astronomy_BodyName(body), hor.altitude, hor.azimuth, sphere.lat, sphere.lon, diff_alt, diff_az);
 
-    if (diff_alt > 2.0e-14)
+    if (diff_alt > 2.0e-14 || diff_az > 2.0e-14)
     {
         fprintf(stderr, "Test_EQD_HOR: EXCESSIVE HORIZONTAL ERROR.\n");
         return 1;
