@@ -4375,7 +4375,7 @@ Astronomy.VectorFromSphere = function(sphere, time) {
 }
 
 /**
- * Given angular equatorial coordinates in `sphere`, calculates equatorial vector.
+ * Given angular equatorial coordinates in `equ`, calculates equatorial vector.
  *
  * @param {Astronomy.EquatorialCoordinates} equ
  *      An object that contains angular equatorial coordinates to be converted to a vector.

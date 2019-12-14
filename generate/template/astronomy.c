@@ -4210,6 +4210,64 @@ astro_spherical_t Astronomy_SphereFromVector(astro_vector_t vector)
     return sphere;
 }
 
+
+/**
+ * @brief
+ *  Given angular equatorial coordinates in `equ`, calculates equatorial vector.
+ *
+ * @param equ
+ *      An object that contains angular equatorial coordinates to be converted to a vector.
+ *
+ * @param time
+ *      The date and time of the observation. This is needed because the returned
+ *      vector object requires a valid time value when passed to certain other functions.
+ *
+ * @return
+ *      A vector in the equatorial system.
+ */
+astro_vector_t Astronomy_VectorFromEquator(astro_equatorial_t equ, astro_time_t time)
+{
+    astro_spherical_t sphere;
+
+    if (equ.status != ASTRO_SUCCESS)
+        return VecError(ASTRO_INVALID_PARAMETER, time);
+
+    sphere.status = ASTRO_SUCCESS;
+    sphere.lat = equ.dec;
+    sphere.lon = 15.0 * equ.ra;     /* convert sidereal hours to degrees */
+    sphere.dist = equ.dist;
+
+    return Astronomy_VectorFromSphere(sphere, time);
+}
+
+
+/**
+ * Given an equatorial vector, calculates equatorial angular coordinates.
+ *
+ * @param vector
+ *      A vector in an equatorial coordinate system.
+ *
+ * @return
+ *      Angular coordinates expressed in the same equatorial system as `vec`.
+ */
+astro_equatorial_t Astronomy_EquatorFromVector(astro_vector_t vector)
+{
+    astro_equatorial_t equ;
+    astro_spherical_t sphere;
+
+    sphere = Astronomy_SphereFromVector(vector);
+    if (sphere.status != ASTRO_SUCCESS)
+        return EquError(sphere.status);
+
+    equ.status = ASTRO_SUCCESS;
+    equ.dec = sphere.lat;
+    equ.ra = sphere.lon / 15.0;     /* convert degrees to sidereal hours */
+    equ.dist = sphere.dist;
+
+    return equ;
+}
+
+
 static double ToggleAzimuthDirection(double az)
 {
     az = 360.0 - az;

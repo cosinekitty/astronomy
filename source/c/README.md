@@ -356,6 +356,28 @@ Correction for aberration is optional, using the `aberration` parameter.
 
 ---
 
+<a name="Astronomy_EquatorFromVector"></a>
+### Astronomy_EquatorFromVector(vector) &#8658; [`astro_equatorial_t`](#astro_equatorial_t)
+
+
+
+Given an equatorial vector, calculates equatorial angular coordinates.
+
+
+
+**Returns:**  Angular coordinates expressed in the same equatorial system as `vec`. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_vector_t`](#astro_vector_t) | `vector` |  A vector in an equatorial coordinate system. | 
+
+
+
+
+---
+
 <a name="Astronomy_GeoMoon"></a>
 ### Astronomy_GeoMoon(time) &#8658; [`astro_vector_t`](#astro_vector_t)
 
@@ -1554,6 +1576,29 @@ After calculating the date and time of an astronomical event in the form of an [
 | Type | Parameter | Description |
 | --- | --- | --- |
 | [`astro_time_t`](#astro_time_t) | `time` |  The astronomical time value to be converted to calendar date and time.  | 
+
+
+
+
+---
+
+<a name="Astronomy_VectorFromEquator"></a>
+### Astronomy_VectorFromEquator(equ, time) &#8658; [`astro_vector_t`](#astro_vector_t)
+
+**Given angular equatorial coordinates in `equ`, calculates equatorial vector.** 
+
+
+
+
+
+**Returns:**  A vector in the equatorial system. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_equatorial_t`](#astro_equatorial_t) | `equ` |  An object that contains angular equatorial coordinates to be converted to a vector. | 
+| [`astro_time_t`](#astro_time_t) | `time` |  The date and time of the observation. This is needed because the returned vector object requires a valid time value when passed to certain other functions. | 
 
 
 

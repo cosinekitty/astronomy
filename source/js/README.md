@@ -1149,7 +1149,7 @@ includes the time, as required by <code>AstroTime</code>.
 <a name="Astronomy.VectorFromEquator"></a>
 
 ### Astronomy.VectorFromEquator(equ, time) ⇒ [<code>Vector</code>](#Astronomy.Vector)
-Given angular equatorial coordinates in `sphere`, calculates equatorial vector.
+Given angular equatorial coordinates in `equ`, calculates equatorial vector.
 
 **Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
 **Returns**: [<code>Vector</code>](#Astronomy.Vector) - A vector in the equatorial system.  

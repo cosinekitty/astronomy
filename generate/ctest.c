@@ -2167,8 +2167,7 @@ static int Test_EQJ_EQD(astro_body_t body)
 {
     astro_time_t time;
     astro_observer_t observer;
-    astro_equatorial_t eq2000, eqdate;
-    astro_spherical_t sphere;
+    astro_equatorial_t eq2000, eqdate, eqcheck;
     astro_vector_t v2000, vdate, t2000;
     astro_rotation_t r;
     double ra_diff, dec_diff, dist_diff, diff;
@@ -2184,12 +2183,8 @@ static int Test_EQJ_EQD(astro_body_t body)
     eqdate = Astronomy_Equator(body, &time, observer, EQUATOR_OF_DATE, ABERRATION);
     CHECK_STATUS(eqdate);
 
-    /* Convert EQJ spherical coordinates to vector. */
-    sphere.status = ASTRO_SUCCESS;
-    sphere.lat = eq2000.dec;
-    sphere.lon = 15.0 * eq2000.ra;
-    sphere.dist = eq2000.dist;
-    v2000 = Astronomy_VectorFromSphere(sphere, time);
+    /* Convert EQJ angular coordinates to vector. */
+    v2000 = Astronomy_VectorFromEquator(eq2000, time);
     CHECK_STATUS(v2000);
 
     /* Find rotation matrix. */
@@ -2200,14 +2195,14 @@ static int Test_EQJ_EQD(astro_body_t body)
     vdate = Astronomy_RotateVector(r, v2000);
     CHECK_STATUS(vdate);
 
-    /* Convert vector back to spherical coordinates. */
-    sphere = Astronomy_SphereFromVector(vdate);
-    CHECK_STATUS(sphere);
+    /* Convert vector back to angular coordinates. */
+    eqcheck = Astronomy_EquatorFromVector(vdate);
+    CHECK_STATUS(eqcheck);
 
     /* Compare the result with the eqdate. */
-    ra_diff = fabs((sphere.lon / 15.0) - eqdate.ra);
-    dec_diff = fabs(sphere.lat - eqdate.dec);
-    dist_diff = fabs(sphere.dist - eqdate.dist);
+    ra_diff = fabs(eqcheck.ra - eqdate.ra);
+    dec_diff = fabs(eqcheck.dec - eqdate.dec);
+    dist_diff = fabs(eqcheck.dist - eqdate.dist);
     printf("Test_EQJ_EQD: %s ra=%0.3lf, dec=%0.3lf, dist=%0.3lf, ra_diff=%lg, dec_diff=%lg, dist_diff=%lg\n", Astronomy_BodyName(body), eqdate.ra, eqdate.dec, eqdate.dist, ra_diff, dec_diff, dist_diff);
     if (ra_diff > 1.0e-14 || dec_diff > 1.0e-14 || dist_diff > 4.0e-15)
     {
@@ -2240,8 +2235,8 @@ static int Test_EQD_HOR(astro_body_t body)
     astro_equatorial_t eqd, eqj;
     astro_horizon_t hor;
     astro_rotation_t rot;
-    astro_vector_t vec_eqd, vec_eqj, vec_hor, check_eqd, check_eqj, check_hor;
     astro_spherical_t sphere;
+    astro_vector_t vec_eqd, vec_eqj, vec_hor, check_eqd, check_eqj, check_hor;
     double diff_az, diff_alt, diff;
     int error;
 
@@ -2253,11 +2248,7 @@ static int Test_EQD_HOR(astro_body_t body)
     hor = Astronomy_Horizon(&time, observer, eqd.ra, eqd.dec, REFRACTION_NORMAL);
 
     /* Calculate the position of the body as an equatorial vector of date. */
-    sphere.status = ASTRO_SUCCESS;
-    sphere.dist = eqd.dist;
-    sphere.lat = eqd.dec;
-    sphere.lon = 15.0 * eqd.ra;
-    CHECK_VECTOR(vec_eqd, Astronomy_VectorFromSphere(sphere, time));
+    CHECK_VECTOR(vec_eqd, Astronomy_VectorFromEquator(eqd, time));
 
     /* Calculate rotation matrix to convert equatorial J2000 vector to horizontal vector. */
     rot = Astronomy_Rotation_EQD_HOR(time, observer);
@@ -2306,11 +2297,7 @@ static int Test_EQD_HOR(astro_body_t body)
 
     /* Exercise HOR to EQJ translation. */
     CHECK_EQU(eqj, Astronomy_Equator(body, &time, observer, EQUATOR_J2000, ABERRATION));
-    sphere.status = ASTRO_SUCCESS;
-    sphere.dist = eqj.dist;
-    sphere.lat = eqj.dec;
-    sphere.lon = 15.0 * eqj.ra;
-    CHECK_VECTOR(vec_eqj, Astronomy_VectorFromSphere(sphere, time));
+    CHECK_VECTOR(vec_eqj, Astronomy_VectorFromEquator(eqj, time));
 
     rot = Astronomy_Rotation_HOR_EQJ(time, observer);
     CHECK_ROTMAT(rot);
