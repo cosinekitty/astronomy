@@ -2544,7 +2544,7 @@ static int RefractionTest(void)
         inv_refr = Astronomy_InverseRefraction(REFRACTION_NORMAL, corrected);
         check_alt = corrected + inv_refr;
         diff = fabs(check_alt - alt);
-        if (diff > 1.0e+14)
+        if (diff > 2.0e-14)
         {
             printf("ERROR(RefractionTest): alt=%8.3lf, refr=%10.6lf, diff=%lg\n", alt, refr, diff);
             return 1;
