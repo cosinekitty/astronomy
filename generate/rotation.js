@@ -192,6 +192,53 @@ function Test_EQD_HOR(body) {
         throw 'Test_EQD_HOR: EXCESSIVE EQJ INVERSE HORIZONTAL ERROR.';
 }
 
+const IdentityMatrix = Astronomy.MakeRotation([[1, 0, 0], [0, 1, 0], [0, 0, 1]]);
+
+function CheckInverse(aname, bname, arot, brot) {
+    const crot = Astronomy.CombineRotation(arot, brot);
+    CompareMatrices(`CheckInverse(${aname},${bname})`, crot, IdentityMatrix, 2.0e-15);
+}
+
+function Test_RotRoundTrip() {
+    const time = Astronomy.MakeTime(new Date('2067-05-30T14:45:00Z'));
+    const observer = Astronomy.MakeObserver(+28, -82, 0);
+
+    /*
+        In each round trip, calculate a forward rotation and a backward rotation.
+        Verify the two are inverse matrices.
+    */
+
+    /* Round trip #1: EQJ <==> EQD. */
+    const eqj_eqd = Astronomy.Rotation_EQJ_EQD(time);
+    const eqd_eqj = Astronomy.Rotation_EQD_EQJ(time);
+    CheckInverse('eqj_eqd', 'eqd_eqj', eqj_eqd, eqd_eqj);
+
+    /* Round trip #2: EQJ <==> ECL. */
+    const eqj_ecl = Astronomy.Rotation_EQJ_ECL();
+    const ecl_eqj = Astronomy.Rotation_ECL_EQJ();
+    CheckInverse('eqj_ecl', 'ecl_eqj', eqj_ecl, ecl_eqj);
+
+    /* Round trip #3: EQJ <==> HOR. */
+    const eqj_hor = Astronomy.Rotation_EQJ_HOR(time, observer);
+    const hor_eqj = Astronomy.Rotation_HOR_EQJ(time, observer);
+    CheckInverse('eqj_hor', 'hor_eqj', eqj_hor, hor_eqj);
+
+    /* Round trip #4: EQD <==> HOR. */
+    const eqd_hor = Astronomy.Rotation_EQD_HOR(time, observer);
+    const hor_eqd = Astronomy.Rotation_HOR_EQD(time, observer);
+    CheckInverse('eqd_hor', 'hor_eqd', eqd_hor, hor_eqd);
+
+    /* Round trip #5: EQD <==> ECL. */
+    const eqd_ecl = Astronomy.Rotation_EQD_ECL(time);
+    const ecl_eqd = Astronomy.Rotation_ECL_EQD(time);
+    CheckInverse('eqd_ecl', 'ecl_eqd', eqd_ecl, ecl_eqd);
+
+    /* Round trip #6: HOR <==> ECL. */
+    const hor_ecl = Astronomy.Rotation_HOR_ECL(time, observer);
+    const ecl_hor = Astronomy.Rotation_ECL_HOR(time, observer);
+    CheckInverse('hor_ecl', 'ecl_hor', hor_ecl, ecl_hor);
+}
+
 function RotationTest() {
     Rotation_MatrixInverse();
     Rotation_MatrixMultiply();
@@ -208,6 +255,8 @@ function RotationTest() {
     Test_EQD_HOR('Mars');
     Test_EQD_HOR('Jupiter');
     Test_EQD_HOR('Saturn');
+
+    Test_RotRoundTrip();
 }
 
 RotationTest();
