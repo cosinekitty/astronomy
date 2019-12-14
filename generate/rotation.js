@@ -104,8 +104,7 @@ function Test_EQJ_EQD(body) {
     const eqdate = Astronomy.Equator(body, time, observer, true, true);
 
     /* Convert EQJ spherical coordinates to vector. */
-    const sphere = {lat:eq2000.dec, lon:15*eq2000.ra, dist:eq2000.dist};
-    const v2000 = Astronomy.VectorFromSphere(sphere, time);
+    const v2000 = Astronomy.VectorFromEquator(eq2000, time);
 
     /* Find rotation matrix. */
     const r = Astronomy.Rotation_EQJ_EQD(time);
@@ -142,8 +141,7 @@ function Test_EQD_HOR(body) {
     const hor = Astronomy.Horizon(time, observer, eqd.ra, eqd.dec, 'normal');
 
     /* Calculate the position of the body as an equatorial vector of date. */
-    // FIXFIXFIX: add method to construct Spherical object
-    const vec_eqd = Astronomy.VectorFromSphere({lat:eqd.dec, lon:15*eqd.ra, dist:eqd.dist}, time);
+    const vec_eqd = Astronomy.VectorFromEquator(eqd, time);
 
     /* Calculate rotation matrix to convert equatorial J2000 vector to horizontal vector. */
     const rot = Astronomy.Rotation_EQD_HOR(time, observer);
@@ -177,7 +175,7 @@ function Test_EQD_HOR(body) {
 
     /* Exercise HOR to EQJ translation. */
     const eqj = Astronomy.Equator(body, time, observer, false, true);
-    const vec_eqj = Astronomy.VectorFromSphere({lat:eqj.dec, lon:15*eqj.ra, dist:eqj.dist}, time);
+    const vec_eqj = Astronomy.VectorFromEquator(eqj, time);
     const yrot = Astronomy.Rotation_HOR_EQJ(time, observer);
     const check_eqj = Astronomy.RotateVector(yrot, vec_hor);
     diff = VectorDiff(check_eqj, vec_eqj);

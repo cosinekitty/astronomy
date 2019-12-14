@@ -1146,6 +1146,22 @@ includes the time, as required by <code>AstroTime</code>.
 
 * * *
 
+<a name="Astronomy.VectorFromEquator"></a>
+
+### Astronomy.VectorFromEquator(equ, time) ⇒ [<code>Vector</code>](#Astronomy.Vector)
+Given angular equatorial coordinates in `sphere`, calculates equatorial vector.
+
+**Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
+**Returns**: [<code>Vector</code>](#Astronomy.Vector) - A vector in the equatorial system.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| equ | [<code>EquatorialCoordinates</code>](#Astronomy.EquatorialCoordinates) | An object that contains angular equatorial coordinates to be converted to a vector. |
+| time | [<code>AstroTime</code>](#Astronomy.AstroTime) | The date and time of the observation. This is needed because the returned      vector object requires a valid time value when passed to certain other functions. |
+
+
+* * *
+
 <a name="Astronomy.SphereFromVector"></a>
 
 ### Astronomy.SphereFromVector(vector) ⇒ [<code>Spherical</code>](#Astronomy.Spherical)

@@ -4375,6 +4375,23 @@ Astronomy.VectorFromSphere = function(sphere, time) {
 }
 
 /**
+ * Given angular equatorial coordinates in `sphere`, calculates equatorial vector.
+ *
+ * @param {Astronomy.EquatorialCoordinates} equ
+ *      An object that contains angular equatorial coordinates to be converted to a vector.
+ *
+ * @param {Astronomy.AstroTime} time
+ *      The date and time of the observation. This is needed because the returned
+ *      vector object requires a valid time value when passed to certain other functions.
+ *
+ * @returns {Astronomy.Vector}
+ *      A vector in the equatorial system.
+ */
+Astronomy.VectorFromEquator = function(equ, time) {
+    return Astronomy.VectorFromSphere(new Spherical(equ.dec, 15 * equ.ra, equ.dist), time);
+}
+
+/**
  * Converts Cartesian coordinates to spherical coordinates.
  *
  * Given a Cartesian vector, returns latitude, longitude, and distance.
