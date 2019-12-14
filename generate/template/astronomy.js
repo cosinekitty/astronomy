@@ -794,19 +794,19 @@ function precession_rot(tt1, tt2) {
 
     if (tt2 === 0) {
         // Perform rotation from epoch to J2000.0.
-        return [
+        return new RotationMatrix([
             [xx, yx, zx],
             [xy, yy, zy],
             [xz, yz, zz]
-        ];
+        ]);
     }
 
     // Perform rotation from J2000.0 to epoch.
-    return [
+    return new RotationMatrix([
         [xx, xy, xz],
         [yx, yy, yz],
         [zx, zy, zz]
-    ];
+    ]);
 }
 
 function era(time) {    // Earth Rotation Angle
@@ -921,19 +921,19 @@ function nutation_rot(time, direction) {
 
     if (direction === 0) {
         // forward rotation
-        return [
+        return new RotationMatrix([
             [xx, xy, xz],
             [yx, yy, yz],
             [zx, zy, zz]
-        ];
+        ]);
     }
 
     // inverse rotation
-    return [
+    return new RotationMatrix([
         [xx, yx, zx],
         [xy, yy, zy],
         [xz, yz, zz]
-    ];
+    ]);
 }
 
 function geo_pos(time, observer) {
