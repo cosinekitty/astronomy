@@ -281,6 +281,20 @@ function RotationTest() {
     Test_RotRoundTrip();
 }
 
+function RefractionTest() {
+    for (let alt = -90.1; alt <= +90.1; alt += 0.001) {
+        const refr = Astronomy.Refraction('normal', alt);
+        const corrected = alt + refr;
+        const inv_refr = Astronomy.InverseRefraction('normal', corrected);
+        const check_alt = corrected + inv_refr;
+        const diff = Math.abs(check_alt - alt);
+        if (diff > 2.0e-14)
+            throw `JS RefractionTest: alt=${alt}, refr=${refr}, diff=${diff}`;
+    }
+    console.log('RefractionTest: PASS');
+}
+
 RotationTest();
+RefractionTest();
 console.log('rotation.js: success');
 process.exit(0);

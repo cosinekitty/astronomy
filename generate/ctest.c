@@ -2539,7 +2539,7 @@ static int RefractionTest(void)
 
     for (alt = -90.1; alt <= +90.1; alt += 0.001)
     {
-        refr = Astronomy_Refraction(REFRACTION_NORMAL, (double)alt);
+        refr = Astronomy_Refraction(REFRACTION_NORMAL, alt);
         corrected = alt + refr;
         inv_refr = Astronomy_InverseRefraction(REFRACTION_NORMAL, corrected);
         check_alt = corrected + inv_refr;
