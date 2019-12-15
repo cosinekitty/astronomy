@@ -83,3 +83,9 @@ Calculations are also verified to be identical among all the supported programmi
 - Predicts dates of Venus' peak visual magnitude.
 
 - Predicts dates of maximum elongation for Mercury and Venus.
+
+- Converts angular and vector coordinates among the following orientations:
+    - Equatorial J2000
+    - Equatorial equator-of-date
+    - Ecliptic J2000
+    - Horizontal

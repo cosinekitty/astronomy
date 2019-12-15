@@ -101,5 +101,42 @@ To get started quickly, here are some [examples](../../demo/c/).
 | [Seasons](#Astronomy_Seasons) | Finds the equinoxes and solstices for a given calendar year. |
 | [SunPosition](#Astronomy_SunPosition) | Calculates the Sun's apparent ecliptic coordinates as seen from the Earth. |
 
+### Coordinate transforms
+
+The following four orientation systems are supported.
+Astronomy Engine can convert a vector from any of these orientations to any of the others.
+It also allows converting from a vector to spherical (angular) coordinates and back,
+within a given orientation. Note the 3-letter codes for each of the orientation systems;
+these are used in function and type names.
+
+- **EQJ = Equatorial J2000**: Uses the Earth's equator on January 1, 2000, at noon UTC.
+- **EQD = Equator of-date***: Uses the Earth's equator on a given date and time, adjusted for precession and nutation.
+- **ECL = Ecliptic**: Uses the mean plane of the Earth's orbit around the Sun. The x-axis is referenced against the J2000 equinox.
+- **HOR = Horizontal**: Uses the viewpoint of an observer at a specific location on the Earth at a given date and time.
+
+| Function | Description |
+| -------- | ----------- |
+| [RotateVector](#Astronomy_RotateVector) | Applies a rotation matrix to a vector, yielding a vector in another orientation system. |
+| [InverseRotation](#Astronomy_InverseRotation) | Given a rotation matrix, finds the inverse rotation matrix that does the opposite transformation. |
+| [CombineRotation](#Astronomy_CombineRotation) | Given two rotation matrices, returns a rotation matrix that combines them into a net transformation. |
+| [VectorFromSphere](#Astronomy_VectorFromSphere) | Converts spherical coordinates to Cartesian coordinates. |
+| [SphereFromVector](#Astronomy_SphereFromVector) | Converts Cartesian coordinates to spherical coordinates. |
+| [VectorFromEquator](#Astronomy_VectorFromEquator) | Given angular equatorial coordinates, calculates equatorial vector. |
+| [EquatorFromVector](#Astronomy_EquatorFromVector) | Given an equatorial vector, calculates equatorial angular coordinates. |
+| [VectorFromHorizon](#Astronomy_VectorFromHorizon) | Given apparent angular horizontal coordinates, calculates horizontal vector. |
+| [HorizonFromVector](#Astronomy_HorizonFromVector) | Given a vector in horizontal orientation, calculates horizontal angular coordinates. |
+| [Rotation_EQD_EQJ](#Astronomy_Rotation_EQD_EQJ) | Calculates a rotation matrix from equatorial of-date (EQD) to equatorial J2000 (EQJ). |
+| [Rotation_EQD_ECL](#Astronomy_Rotation_EQD_ECL) | Calculates a rotation matrix from equatorial of-date (EQD) to ecliptic J2000 (ECL). |
+| [Rotation_EQD_HOR](#Astronomy_Rotation_EQD_HOR) | Calculates a rotation matrix from equatorial of-date (EQD) to horizontal (HOR). |
+| [Rotation_EQJ_EQD](#Astronomy_Rotation_EQJ_EQD) | Calculates a rotation matrix from equatorial J2000 (EQJ) to equatorial of-date (EQD). |
+| [Rotation_EQJ_ECL](#Astronomy_Rotation_EQJ_ECL) | Calculates a rotation matrix from equatorial J2000 (EQJ) to ecliptic J2000 (ECL). |
+| [Rotation_EQJ_HOR](#Astronomy_Rotation_EQJ_HOR) | Calculates a rotation matrix from equatorial J2000 (EQJ) to horizontal (HOR). |
+| [Rotation_ECL_EQD](#Astronomy_Rotation_ECL_EQD) | Calculates a rotation matrix from ecliptic J2000 (ECL) to equatorial of-date (EQD). |
+| [Rotation_ECL_EQJ](#Astronomy_Rotation_ECL_EQJ) | Calculates a rotation matrix from ecliptic J2000 (ECL) to equatorial J2000 (EQJ). |
+| [Rotation_ECL_HOR](#Astronomy_Rotation_ECL_HOR) | Calculates a rotation matrix from ecliptic J2000 (ECL) to horizontal (HOR). |
+| [Rotation_HOR_EQD](#Astronomy_Rotation_HOR_EQD) | Calculates a rotation matrix from horizontal (HOR) to equatorial of-date (EQD). |
+| [Rotation_HOR_EQJ](#Astronomy_Rotation_HOR_EQJ) | Calculates a rotation matrix from horizontal (HOR) to J2000 equatorial (EQJ). |
+| [Rotation_HOR_ECL](#Astronomy_Rotation_HOR_ECL) | Calculates a rotation matrix from horizontal (HOR) to ecliptic J2000 (ECL). |
+
 ---
 
