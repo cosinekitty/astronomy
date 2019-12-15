@@ -167,6 +167,18 @@ when the lunar quarter event happens.
 
 ---
 
+<a name="RotationMatrix"></a>
+### class RotationMatrix
+
+Contains a rotation matrix that can be used to transform one
+coordinate system into another.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| `float[3][3]` | `rot` | A normalized 3x3 rotation matrix. |
+
+---
+
 <a name="SeasonInfo"></a>
 ### class SeasonInfo
 

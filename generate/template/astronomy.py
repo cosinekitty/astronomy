@@ -435,6 +435,18 @@ class Observer:
         self.longitude = longitude
         self.height = height
 
+class RotationMatrix:
+    """Contains a rotation matrix that can be used to transform one
+    coordinate system into another.
+
+    Parameters
+    ----------
+    rot : float[3][3]
+        A normalized 3x3 rotation matrix.
+    """
+    def __init__(self, rot):
+        self.rot = rot
+
 class _iau2000b:
     def __init__(self, time):
         t = time.tt / 36525.0
@@ -480,7 +492,7 @@ def _ecl2equ_vec(time, ecl):
         ecl[1]*sin_obl + ecl[2]*cos_obl
     ]
 
-def _precession(tt1, pos1, tt2):
+def _precession_rot(tt1, tt2):
     eps0 = 84381.406
     if tt1 != 0 and tt2 != 0:
         raise Error('One of (tt1, tt2) must be zero.')
@@ -531,17 +543,25 @@ def _precession(tt1, pos1, tt2):
     zz = -sc * cb * sa + cc * ca
     if tt2 == 0.0:
         # Perform rotation from other epoch to J2000.0.
-        return [
-            xx * pos1[0] + xy * pos1[1] + xz * pos1[2],
-            yx * pos1[0] + yy * pos1[1] + yz * pos1[2],
-            zx * pos1[0] + zy * pos1[1] + zz * pos1[2]
-        ]
+        return RotationMatrix([
+            [xx, yx, zx],
+            [xy, yy, zy],
+            [xz, yz, zz]
+        ])
 
     # Perform rotation from J2000.0 to other epoch.
+    return RotationMatrix([
+        [xx, xy, xz],
+        [yx, yy, yz],
+        [zx, zy, zz]
+    ])
+
+def _precession(tt1, pos1, tt2):
+    r = _precession_rot(tt1, tt2)
     return [
-        xx * pos1[0] + yx * pos1[1] + zx * pos1[2],
-        xy * pos1[0] + yy * pos1[1] + zy * pos1[2],
-        xz * pos1[0] + yz * pos1[1] + zz * pos1[2]
+        r.rot[0][0]*pos1[0] + r.rot[1][0]*pos1[1] + r.rot[2][0]*pos1[2],
+        r.rot[0][1]*pos1[0] + r.rot[1][1]*pos1[1] + r.rot[2][1]*pos1[2],
+        r.rot[0][2]*pos1[0] + r.rot[1][2]*pos1[1] + r.rot[2][2]*pos1[2]
     ]
 
 class Equatorial:
@@ -586,7 +606,7 @@ def _vector2radec(pos):
     return Equatorial(ra, dec, dist)
 
 
-def _nutation(time, direction, inpos):
+def _nutation_rot(time, direction):
     tilt = time._etilt()
     oblm = math.radians(tilt.mobl)
     oblt = math.radians(tilt.tobl)
@@ -610,17 +630,25 @@ def _nutation(time, direction, inpos):
 
     if direction == 0:
         # forward rotation
-        return [
-            xx * inpos[0] + yx * inpos[1] + zx * inpos[2],
-            xy * inpos[0] + yy * inpos[1] + zy * inpos[2],
-            xz * inpos[0] + yz * inpos[1] + zz * inpos[2]
-        ]
+        return RotationMatrix([
+            [xx, xy, xz],
+            [yx, yy, yz],
+            [zx, zy, zz]
+        ])
 
     # inverse rotation
+    return RotationMatrix([
+        [xx, yx, zx],
+        [xy, yy, zy],
+        [xz, yz, zz]
+    ])
+
+def _nutation(time, direction, pos):
+    r = _nutation_rot(time, direction)
     return [
-        xx * inpos[0] + xy * inpos[1] + xz * inpos[2],
-        yx * inpos[0] + yy * inpos[1] + yz * inpos[2],
-        zx * inpos[0] + zy * inpos[1] + zz * inpos[2]
+        r.rot[0][0]*pos[0] + r.rot[1][0]*pos[1] + r.rot[2][0]*pos[2],
+        r.rot[0][1]*pos[0] + r.rot[1][1]*pos[1] + r.rot[2][1]*pos[2],
+        r.rot[0][2]*pos[0] + r.rot[1][2]*pos[1] + r.rot[2][2]*pos[2]
     ]
 
 def _era(time):        # Earth Rotation Angle

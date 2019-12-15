@@ -37,7 +37,7 @@
 
 ### Overview
 
-The Astronomy Engine is a suite of open source libraries for calculating positions of 
+The Astronomy Engine is a suite of open source libraries for calculating positions of
 the Sun, Moon, and planets, and for predicting interesting events like oppositions,
 conjunctions, rise and set times, lunar phases, and more.
 
@@ -47,10 +47,10 @@ Function and type names are uniform across all the supported languages.
 The Astronomy Engine is designed to be small, fast, and accurate to within &plusmn;1 arcminute.
 It is based on the authoritative and well-tested models
 [VSOP87](https://en.wikipedia.org/wiki/VSOP_(planets))
-and 
+and
 [NOVAS C 3.1](https://aa.usno.navy.mil/software/novas/novas_c/novasc_info.php).
 
-These libraries are rigorously unit-tested against NOVAS, 
+These libraries are rigorously unit-tested against NOVAS,
 [JPL Horizons](https://ssd.jpl.nasa.gov/horizons.cgi),
 and other reliable sources of ephemeris data.
 Calculations are also verified to be identical among all the supported programming languages.
@@ -63,13 +63,13 @@ Calculations are also verified to be identical among all the supported programmi
 
 - Provides heliocentric and geocentric Cartesian vectors of all the above bodies.
 
-- Determines apparent horizon-based positions for an observer anywhere on the Earth, 
-  given that observer's latitude, longitude, and elevation in meters. 
+- Determines apparent horizon-based positions for an observer anywhere on the Earth,
+  given that observer's latitude, longitude, and elevation in meters.
   Optionally corrects for atmospheric refraction.
 
 - Calculates rise, set, and culmination times of Sun, Moon, and planets.
 
-- Finds date and time of Moon phases: new, first quarter, full, third quarter 
+- Finds date and time of Moon phases: new, first quarter, full, third quarter
   (or anywhere in between as expressed in degrees of ecliptic longitude).
 
 - Predicts lunar apogee and perigee dates, times, and distances.
