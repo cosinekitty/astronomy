@@ -1921,6 +1921,24 @@ class Spherical {
 }
 
 /**
+ * Create spherical coordinates.
+ *
+ * @param {number} lat
+ *      The angular distance above or below the reference plane, in degrees.
+ *
+ * @param {number} lon
+ *      The angular distance around the reference plane, in degrees.
+ *
+ * @param {number} dist
+ *      A radial distance in AU.
+ *
+ * @returns {Astronomy.Spherical}
+ */
+Astronomy.MakeSpherical = function(lat, lon, dist) {
+    return new Spherical(lat, lon, dist);
+}
+
+/**
  * Holds right ascension, declination, and distance of a celestial object.
  *
  * @class

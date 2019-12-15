@@ -501,6 +501,22 @@ function calls may be more efficient than passing in native JavaScript Date obje
 
 * * *
 
+<a name="Astronomy.MakeSpherical"></a>
+
+### Astronomy.MakeSpherical(lat, lon, dist) ⇒ [<code>Spherical</code>](#Astronomy.Spherical)
+Create spherical coordinates.
+
+**Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| lat | <code>number</code> | The angular distance above or below the reference plane, in degrees. |
+| lon | <code>number</code> | The angular distance around the reference plane, in degrees. |
+| dist | <code>number</code> | A radial distance in AU. |
+
+
+* * *
+
 <a name="Astronomy.MakeRotation"></a>
 
 ### Astronomy.MakeRotation(rot) ⇒ [<code>RotationMatrix</code>](#Astronomy.RotationMatrix)
