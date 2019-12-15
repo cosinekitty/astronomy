@@ -110,7 +110,7 @@ within a given orientation. Note the 3-letter codes for each of the orientation 
 these are used in function and type names.
 
 - **EQJ = Equatorial J2000**: Uses the Earth's equator on January 1, 2000, at noon UTC.
-- **EQD = Equator of-date***: Uses the Earth's equator on a given date and time, adjusted for precession and nutation.
+- **EQD = Equator of-date**: Uses the Earth's equator on a given date and time, adjusted for precession and nutation.
 - **ECL = Ecliptic**: Uses the mean plane of the Earth's orbit around the Sun. The x-axis is referenced against the J2000 equinox.
 - **HOR = Horizontal**: Uses the viewpoint of an observer at a specific location on the Earth at a given date and time.
 
