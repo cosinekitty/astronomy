@@ -1689,73 +1689,11 @@ function CalcMoon(time) {
 }
 
 function precession(tt1, pos1, tt2) {
-    var xx, yx, zx, xy, yy, zy, xz, yz, zz;
-    var eps0 = 84381.406;
-    var t, psia, omegaa, chia, sa, ca, sb, cb, sc, cc, sd, cd;
-
-    if ((tt1 !== 0) && (tt2 !== 0))
-        throw 'One of (tt1, tt2) must be 0.';
-
-    t = (tt2 - tt1) / 36525;
-    if (tt2 === 0)
-        t = -t;
-
-    psia   = (((((-    0.0000000951  * t
-                 +    0.000132851 ) * t
-                 -    0.00114045  ) * t
-                 -    1.0790069   ) * t
-                 + 5038.481507    ) * t);
-
-    omegaa = (((((+    0.0000003337  * t
-                 -    0.000000467 ) * t
-                 -    0.00772503  ) * t
-                 +    0.0512623   ) * t
-                 -    0.025754    ) * t + eps0);
-
-    chia   = (((((-    0.0000000560  * t
-                 +    0.000170663 ) * t
-                 -    0.00121197  ) * t
-                 -    2.3814292   ) * t
-                 +   10.556403    ) * t);
-
-    eps0 = eps0 * ASEC2RAD;
-    psia = psia * ASEC2RAD;
-    omegaa = omegaa * ASEC2RAD;
-    chia = chia * ASEC2RAD;
-
-    sa = Math.sin(eps0);
-    ca = Math.cos(eps0);
-    sb = Math.sin(-psia);
-    cb = Math.cos(-psia);
-    sc = Math.sin(-omegaa);
-    cc = Math.cos(-omegaa);
-    sd = Math.sin(chia);
-    cd = Math.cos(chia);
-
-    xx =  cd * cb - sb * sd * cc;
-    yx =  cd * sb * ca + sd * cc * cb * ca - sa * sd * sc;
-    zx =  cd * sb * sa + sd * cc * cb * sa + ca * sd * sc;
-    xy = -sd * cb - sb * cd * cc;
-    yy = -sd * sb * ca + cd * cc * cb * ca - sa * cd * sc;
-    zy = -sd * sb * sa + cd * cc * cb * sa + ca * cd * sc;
-    xz =  sb * sc;
-    yz = -sc * cb * ca - sa * cc;
-    zz = -sc * cb * sa + cc * ca;
-
-    if (tt2 === 0) {
-        // Perform rotation from epoch to J2000.0.
-        return [
-            xx * pos1[0] + xy * pos1[1] + xz * pos1[2],
-            yx * pos1[0] + yy * pos1[1] + yz * pos1[2],
-            zx * pos1[0] + zy * pos1[1] + zz * pos1[2]
-        ];
-    }
-
-    // Perform rotation from J2000.0 to epoch.
+    const r = precession_rot(tt1, tt2);
     return [
-        xx * pos1[0] + yx * pos1[1] + zx * pos1[2],
-        xy * pos1[0] + yy * pos1[1] + zy * pos1[2],
-        xz * pos1[0] + yz * pos1[1] + zz * pos1[2]
+        r.rot[0][0]*pos1[0] + r.rot[1][0]*pos1[1] + r.rot[2][0]*pos1[2],
+        r.rot[0][1]*pos1[0] + r.rot[1][1]*pos1[1] + r.rot[2][1]*pos1[2],
+        r.rot[0][2]*pos1[0] + r.rot[1][2]*pos1[1] + r.rot[2][2]*pos1[2]
     ];
 }
 
@@ -1880,41 +1818,11 @@ function terra(observer, st) {
 }
 
 function nutation(time, direction, pos) {
-    const tilt = e_tilt(time);
-    const oblm = tilt.mobl * DEG2RAD;
-    const oblt = tilt.tobl * DEG2RAD;
-    const psi = tilt.dpsi * ASEC2RAD;
-    const cobm = Math.cos(oblm);
-    const sobm = Math.sin(oblm);
-    const cobt = Math.cos(oblt);
-    const sobt = Math.sin(oblt);
-    const cpsi = Math.cos(psi);
-    const spsi = Math.sin(psi);
-
-    const xx = cpsi;
-    const yx = -spsi * cobm;
-    const zx = -spsi * sobm;
-    const xy = spsi * cobt;
-    const yy = cpsi * cobm * cobt + sobm * sobt;
-    const zy = cpsi * sobm * cobt - cobm * sobt;
-    const xz = spsi * sobt;
-    const yz = cpsi * cobm * sobt - sobm * cobt;
-    const zz = cpsi * sobm * sobt + cobm * cobt;
-
-    if (direction === 0) {
-        // forward rotation
-        return [
-            xx * pos[0] + yx * pos[1] + zx * pos[2],
-            xy * pos[0] + yy * pos[1] + zy * pos[2],
-            xz * pos[0] + yz * pos[1] + zz * pos[2]
-        ];
-    }
-
-    // inverse rotation
+    const r = nutation_rot(time, direction);
     return [
-        xx * pos[0] + xy * pos[1] + xz * pos[2],
-        yx * pos[0] + yy * pos[1] + yz * pos[2],
-        zx * pos[0] + zy * pos[1] + zz * pos[2]
+        r.rot[0][0]*pos[0] + r.rot[1][0]*pos[1] + r.rot[2][0]*pos[2],
+        r.rot[0][1]*pos[0] + r.rot[1][1]*pos[1] + r.rot[2][1]*pos[2],
+        r.rot[0][2]*pos[0] + r.rot[1][2]*pos[1] + r.rot[2][2]*pos[2]
     ];
 }
 

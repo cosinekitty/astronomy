@@ -746,76 +746,6 @@ static void ecl2equ_vec(astro_time_t time, const double ecl[3], double equ[3])
     equ[2] = ecl[1]*sin_obl + ecl[2]*cos_obl;
 }
 
-static void precession(double tt1, const double pos1[3], double tt2, double pos2[3])
-{
-    double xx, yx, zx, xy, yy, zy, xz, yz, zz;
-    double t, psia, omegaa, chia, sa, ca, sb, cb, sc, cc, sd, cd;
-    double eps0 = 84381.406;
-
-    if ((tt1 != 0.0) && (tt2 != 0.0))
-        FatalError("precession: one of (tt1, tt2) must be zero.");
-
-    t = (tt2 - tt1) / 36525;
-    if (tt2 == 0)
-        t = -t;
-
-    psia   = (((((-    0.0000000951  * t
-                 +    0.000132851 ) * t
-                 -    0.00114045  ) * t
-                 -    1.0790069   ) * t
-                 + 5038.481507    ) * t);
-
-    omegaa = (((((+    0.0000003337  * t
-                 -    0.000000467 ) * t
-                 -    0.00772503  ) * t
-                 +    0.0512623   ) * t
-                 -    0.025754    ) * t + eps0);
-
-    chia   = (((((-    0.0000000560  * t
-                 +    0.000170663 ) * t
-                 -    0.00121197  ) * t
-                 -    2.3814292   ) * t
-                 +   10.556403    ) * t);
-
-    eps0 = eps0 * ASEC2RAD;
-    psia = psia * ASEC2RAD;
-    omegaa = omegaa * ASEC2RAD;
-    chia = chia * ASEC2RAD;
-
-    sa = sin(eps0);
-    ca = cos(eps0);
-    sb = sin(-psia);
-    cb = cos(-psia);
-    sc = sin(-omegaa);
-    cc = cos(-omegaa);
-    sd = sin(chia);
-    cd = cos(chia);
-
-    xx =  cd * cb - sb * sd * cc;
-    yx =  cd * sb * ca + sd * cc * cb * ca - sa * sd * sc;
-    zx =  cd * sb * sa + sd * cc * cb * sa + ca * sd * sc;
-    xy = -sd * cb - sb * cd * cc;
-    yy = -sd * sb * ca + cd * cc * cb * ca - sa * cd * sc;
-    zy = -sd * sb * sa + cd * cc * cb * sa + ca * cd * sc;
-    xz =  sb * sc;
-    yz = -sc * cb * ca - sa * cc;
-    zz = -sc * cb * sa + cc * ca;
-
-    if (tt2 == 0.0)
-    {
-        /* Perform rotation from other epoch to J2000.0. */
-        pos2[0] = xx * pos1[0] + xy * pos1[1] + xz * pos1[2];
-        pos2[1] = yx * pos1[0] + yy * pos1[1] + yz * pos1[2];
-        pos2[2] = zx * pos1[0] + zy * pos1[1] + zz * pos1[2];
-    }
-    else
-    {
-        /* Perform rotation from J2000.0 to other epoch. */
-        pos2[0] = xx * pos1[0] + yx * pos1[1] + zx * pos1[2];
-        pos2[1] = xy * pos1[0] + yy * pos1[1] + zy * pos1[2];
-        pos2[2] = xz * pos1[0] + yz * pos1[1] + zz * pos1[2];
-    }
-}
 
 static astro_rotation_t precession_rot(double tt1, double tt2)
 {
@@ -903,6 +833,16 @@ static astro_rotation_t precession_rot(double tt1, double tt2)
     rotation.status = ASTRO_SUCCESS;
     return rotation;
 }
+
+
+static void precession(double tt1, const double pos1[3], double tt2, double pos2[3])
+{
+    astro_rotation_t r = precession_rot(tt1, tt2);
+    pos2[0] = r.rot[0][0]*pos1[0] + r.rot[1][0]*pos1[1] + r.rot[2][0]*pos1[2];
+    pos2[1] = r.rot[0][1]*pos1[0] + r.rot[1][1]*pos1[1] + r.rot[2][1]*pos1[2];
+    pos2[2] = r.rot[0][2]*pos1[0] + r.rot[1][2]*pos1[1] + r.rot[2][2]*pos1[2];
+}
+
 
 static astro_equatorial_t vector2radec(const double pos[3])
 {
