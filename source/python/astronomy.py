@@ -538,6 +538,23 @@ class RotationMatrix:
     def __init__(self, rot):
         self.rot = rot
 
+class Spherical:
+    """Holds spherical coordinates: latitude, longitude, distance.
+
+    Parameters
+    ----------
+    lat : float
+        The latitude angle: -90..+90 degrees.
+    lon : float
+        The longitude angle: 0..360 degrees.
+    dist : float
+        Distance in AU.
+    """
+    def __init__(self, lat, lon, dist):
+        self.lat = lat
+        self.lon = lon
+        self.dist = dist
+
 class _iau2000b:
     def __init__(self, time):
         t = time.tt / 36525.0
@@ -3448,6 +3465,27 @@ def Horizon(time, observer, ra, dec, refraction):
     the right ascension and declination in the returned object will be numerically identical
     to the respective `ra` and `dec` values passed in.
 
+    Parameters
+    ----------
+    time : Time
+        The date and time for which to find horizontal coordinates.
+    observer : Observer
+        The location of the observer for which to find horizontal coordinates.
+    ra : float
+        Right ascension in sidereal hours of the celestial object,
+        referred to the mean equinox of date for the J2000 epoch.
+    dec : float
+        Declination in degrees of the celestial object,
+        referred to the mean equator of date for the J2000 epoch.
+        Positive values are north of the celestial equator
+        and negative values are south of it.
+    refraction : Refraction
+        The option for selecting whether to correct for atmospheric lensing.
+        If `Refraction.Normal`, a well-behaved refraction model is used.
+        If `Refraction.None`, no refraction correct is performed.
+        `Refraction.JplHorizons` is used only for compatibility testing
+        with the JPL Horizons online tool.
+
     Returns
     -------
     #HorizontalCoordinates
@@ -3502,30 +3540,8 @@ def Horizon(time, observer, ra, dec, refraction):
 
     if refraction != Refraction.Airless:
         zd0 = zd
-
-        # http://extras.springer.com/1999/978-1-4471-0555-8/chap4/horizons/horizons.pdf
-        # JPL Horizons says it uses refraction algorithm from
-        # Meeus "Astronomical Algorithms", 1991, p. 101-102.
-        # I found the following Go implementation:
-        # https://github.com/soniakeys/meeus/blob/master/v3/refraction/refract.go
-        # This is a translation from the function "Saemundsson" there.
-        # I found experimentally that JPL Horizons clamps the angle to 1 degree below the horizon.
-        # This is important because the 'refr' formula below goes crazy near hd = -5.11.
-        hd = 90.0 - zd
-        if hd < -1.0:
-            hd = -1.0
-
-        refr = (1.02 / math.tan(math.radians(hd+10.3/(hd+5.11)))) / 60.0
-
-        if refraction == Refraction.Normal and zd > 91.0:
-            # In "normal" mode we gradually reduce refraction toward the nadir
-            # so that we never get an altitude angle less than -90 degrees.
-            # When horizon angle is -1 degrees, zd = 91, and the factor is exactly 1.
-            # As zd approaches 180 (the nadir), the fraction approaches 0 linearly.
-            refr *= (180.0 - zd) / 89.0
-
+        refr = RefractionAngle(refraction, 90.0 - zd)
         zd -= refr
-
         if refr > 0.0 and zd > 3.0e-4:
             zdrad = math.radians(zd)
             sinzd = math.sin(zdrad)
@@ -3547,6 +3563,59 @@ def Horizon(time, observer, ra, dec, refraction):
             hor_dec = math.degrees(math.atan2(pr[2], proj))
 
     return HorizontalCoordinates(az, 90.0 - zd, hor_ra, hor_dec)
+
+def RefractionAngle(refraction, altitude):
+    """Calculates the amount of "lift" to an altitude angle caused by atmospheric refraction.
+
+    Given an altitude angle and a refraction option, calculates
+    the amount of "lift" caused by atmospheric refraction.
+    This is the number of degrees higher in the sky an object appears
+    due to lensing of the Earth's atmosphere.
+
+    Parameters
+    ----------
+    refraction : Refraction
+        The option for selecting whether to correct for atmospheric lensing.
+        If `Refraction.Normal`, a well-behaved refraction model is used.
+        If `Refraction.Airless`, no refraction correct is performed.
+        `Refraction.JplHorizons` is used only for compatibility testing
+        with the JPL Horizons online tool.
+    altitude : float
+        The number of degrees above (positive) or below (negative) the
+        horizon an object is, before being corrected for refraction.
+
+    Returns
+    -------
+    float
+        The number of additional degrees of altitude an object appears
+        to have, due to atmospheric refraction, depending on the
+        option selected by the `refraction` parameter.
+    """
+    if altitude < -90.0 or altitude > +90.0:
+        return 0.0      # No attempt to correct an invalid altitude
+
+    if refraction == Refraction.Normal or refraction == Refraction.JplHorizons:
+        # http://extras.springer.com/1999/978-1-4471-0555-8/chap4/horizons/horizons.pdf
+        # JPL Horizons says it uses refraction algorithm from
+        # Meeus "Astronomical Algorithms", 1991, p. 101-102.
+        # I found the following Go implementation:
+        # https://github.com/soniakeys/meeus/blob/master/v3/refraction/refract.go
+        # This is a translation from the function "Saemundsson" there.
+        # I found experimentally that JPL Horizons clamps the angle to 1 degree below the horizon.
+        # This is important because the 'refr' formula below goes crazy near hd = -5.11.
+        hd = max(altitude, -1.0)
+        refr = (1.02 / math.tan(math.radians((hd+10.3/(hd+5.11))))) / 60.0
+
+        if refraction == Refraction.Normal and altitude < -1.0:
+            # In "normal" mode we gradually reduce refraction toward the nadir
+            # so that we never get an altitude angle less than -90 degrees.
+            # When horizon angle is -1 degrees, the factor is exactly 1.
+            # As altitude approaches -90 (the nadir), the fraction approaches 0 linearly.
+            refr *= (altitude + 90.0) / 89.0
+    else:
+        # No refraction, or the refraction option is invalid.
+        refr = 0.0
+    return refr
 
 class EclipticCoordinates:
     """Ecliptic angular and Cartesian coordinates.

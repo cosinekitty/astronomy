@@ -195,6 +195,19 @@ Call #Seasons to calculate this data structure for a given year.
 
 ---
 
+<a name="Spherical"></a>
+### class Spherical
+
+**Holds spherical coordinates: latitude, longitude, distance.**
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| `float` | `lat` | The latitude angle: -90..+90 degrees. |
+| `float` | `lon` | The longitude angle: 0..360 degrees. |
+| `float` | `dist` | Distance in AU. |
+
+---
+
 <a name="Time"></a>
 ### class Time
 
@@ -696,6 +709,14 @@ If refraction is disabled, none of these four coordinates will be corrected; in 
 the right ascension and declination in the returned object will be numerically identical
 to the respective `ra` and `dec` values passed in.
 
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Time`](#Time) | `time` | The date and time for which to find horizontal coordinates. |
+| [`Observer`](#Observer) | `observer` | The location of the observer for which to find horizontal coordinates. |
+| `float` | `ra` | Right ascension in sidereal hours of the celestial object, referred to the mean equinox of date for the J2000 epoch. |
+| `float` | `dec` | Declination in degrees of the celestial object, referred to the mean equator of date for the J2000 epoch. Positive values are north of the celestial equator and negative values are south of it. |
+| [`Refraction`](#Refraction) | `refraction` | The option for selecting whether to correct for atmospheric lensing. If `Refraction.Normal`, a well-behaved refraction model is used. If `Refraction.None`, no refraction correct is performed. `Refraction.JplHorizons` is used only for compatibility testing with the JPL Horizons online tool. |
+
 ### Returns: #HorizontalCoordinates
 The horizontal coordinates (altitude and azimuth), along with
 equatorial coordinates (right ascension and declination), all
@@ -822,6 +843,28 @@ the one passed in as the parameter `mq`.
 | [`MoonQuarter`](#MoonQuarter) | `mq` | A value returned by a prior call to #SearchMoonQuarter or #NextMoonQuarter. |
 
 ### Returns: #MoonQuarter
+
+---
+
+<a name="RefractionAngle"></a>
+### RefractionAngle(refraction, altitude)
+
+**Calculates the amount of "lift" to an altitude angle caused by atmospheric refraction.**
+
+Given an altitude angle and a refraction option, calculates
+the amount of "lift" caused by atmospheric refraction.
+This is the number of degrees higher in the sky an object appears
+due to lensing of the Earth's atmosphere.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Refraction`](#Refraction) | `refraction` | The option for selecting whether to correct for atmospheric lensing. If `Refraction.Normal`, a well-behaved refraction model is used. If `Refraction.Airless`, no refraction correct is performed. `Refraction.JplHorizons` is used only for compatibility testing with the JPL Horizons online tool. |
+| `float` | `altitude` | The number of degrees above (positive) or below (negative) the horizon an object is, before being corrected for refraction. |
+
+### Returns: float
+The number of additional degrees of altitude an object appears
+to have, due to atmospheric refraction, depending on the
+option selected by the `refraction` parameter.
 
 ---
 
