@@ -3617,6 +3617,42 @@ def RefractionAngle(refraction, altitude):
         refr = 0.0
     return refr
 
+def InverseRefractionAngle(refraction, bent_altitude):
+    """Calculates the inverse of an atmospheric refraction angle.
+
+    Given an observed altitude angle that includes atmospheric refraction,
+    calculate the negative angular correction to obtain the unrefracted
+    altitude. This is useful for cases where observed horizontal
+    coordinates are to be converted to another orientation system,
+    but refraction first must be removed from the observed position.
+
+    Parameters
+    ----------
+    refraction : Refraction
+        `Refraction.Normal` - corrects for atmospheric refraction (recommended).
+        `Refraction.Airless` - no correction is performed.
+        `Refraction.JplHorizons` - For JPL Horizons compatibility testing only.
+    bent_altitude : float
+        The apparent altitude that includes atmospheric refraction.
+
+    Returns
+    -------
+    float
+        The angular adjustment in degrees, to be added to the
+        altitude angle to correct for atmospheric lensing.
+        This will be less than or equal to zero.
+    """
+    if bent_altitude < -90.0 or bent_altitude > +90.0:
+        return 0.0      # No attempt to correct an invalid altitude
+    # Find the pre-adjusted altitude whose refraction correction leads to 'altitude'.
+    altitude = bent_altitude - RefractionAngle(refraction, bent_altitude)
+    while True:
+        # See how close we got. Keep iterating until the solution converges.
+        diff = (altitude + RefractionAngle(refraction, altitude)) - bent_altitude
+        if abs(diff) < 1.0e-14:
+            return altitude - bent_altitude
+        altitude -= diff
+
 class EclipticCoordinates:
     """Ecliptic angular and Cartesian coordinates.
 
@@ -3708,6 +3744,8 @@ def Ecliptic(equ):
     on 1 January 2000), this function converts those coordinates to J2000 ecliptic coordinates,
     which are relative to the plane of the Earth's orbit around the Sun.
 
+    Parameters
+    ----------
     equ : EquatorialCoordinates
         Equatorial coordinates in the J2000 frame of reference.
 
@@ -5044,3 +5082,28 @@ def NextLunarApsis(apsis):
     if next.kind + apsis.kind != 1:
         raise InternalError()
     return next
+
+def RotateVector(rotation, vector):
+    """Applies a rotation to a vector, yielding a rotated vector.
+
+    This function transforms a vector in one orientation to a vector
+    in another orientation.
+
+    Parameters
+    ----------
+    rotation : RotationMatrix
+        A rotation matrix that specifies how the orientation of the vector is to be changed.
+    vector : Vector
+        The vector whose orientation is to be changed.
+
+    Returns
+    -------
+    Vector
+        A vector in the orientation specified by `rotation`.
+    """
+    return Vector(
+        rotation.rot[0][0]*vector.x + rotation.rot[1][0]*vector.y + rotation.rot[2][0]*vector.z,
+        rotation.rot[0][1]*vector.x + rotation.rot[1][1]*vector.y + rotation.rot[2][1]*vector.z,
+        rotation.rot[0][2]*vector.x + rotation.rot[1][2]*vector.y + rotation.rot[2][2]*vector.z,
+        vector.t
+    )

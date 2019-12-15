@@ -518,8 +518,10 @@ Otherwise, returns `Body.Invalid`.
 Given coordinates relative to the Earth's equator at J2000 (the instant of noon UTC
 on 1 January 2000), this function converts those coordinates to J2000 ecliptic coordinates,
 which are relative to the plane of the Earth's orbit around the Sun.
-equ : EquatorialCoordinates
-    Equatorial coordinates in the J2000 frame of reference.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`EquatorialCoordinates`](#EquatorialCoordinates) | `equ` | Equatorial coordinates in the J2000 frame of reference. |
 
 ### Returns: #EclipticCoordinates
 Ecliptic coordinates in the J2000 frame of reference.
@@ -755,6 +757,29 @@ the rings appear edge-on, and are thus nearly invisible from the Earth. The `rin
 
 ---
 
+<a name="InverseRefractionAngle"></a>
+### InverseRefractionAngle(refraction, bent_altitude)
+
+**Calculates the inverse of an atmospheric refraction angle.**
+
+Given an observed altitude angle that includes atmospheric refraction,
+calculate the negative angular correction to obtain the unrefracted
+altitude. This is useful for cases where observed horizontal
+coordinates are to be converted to another orientation system,
+but refraction first must be removed from the observed position.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Refraction`](#Refraction) | `refraction` | `Refraction.Normal` - corrects for atmospheric refraction (recommended). `Refraction.Airless` - no correction is performed. `Refraction.JplHorizons` - For JPL Horizons compatibility testing only. |
+| `float` | `bent_altitude` | The apparent altitude that includes atmospheric refraction. |
+
+### Returns: float
+The angular adjustment in degrees, to be added to the
+altitude angle to correct for atmospheric lensing.
+This will be less than or equal to zero.
+
+---
+
 <a name="LongitudeFromSun"></a>
 ### LongitudeFromSun(body, time)
 
@@ -865,6 +890,24 @@ due to lensing of the Earth's atmosphere.
 The number of additional degrees of altitude an object appears
 to have, due to atmospheric refraction, depending on the
 option selected by the `refraction` parameter.
+
+---
+
+<a name="RotateVector"></a>
+### RotateVector(rotation, vector)
+
+**Applies a rotation to a vector, yielding a rotated vector.**
+
+This function transforms a vector in one orientation to a vector
+in another orientation.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`RotationMatrix`](#RotationMatrix) | `rotation` | A rotation matrix that specifies how the orientation of the vector is to be changed. |
+| [`Vector`](#Vector) | `vector` | The vector whose orientation is to be changed. |
+
+### Returns: Vector
+A vector in the orientation specified by `rotation`.
 
 ---
 
