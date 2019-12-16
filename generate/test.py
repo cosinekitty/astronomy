@@ -812,10 +812,57 @@ def Test_EQJ_ECL():
         print('Test_EQJ_ECL: EXCESSIVE REVERSE ROTATION ERROR')
         sys.exit(1)
 
+
+def Test_EQJ_EQD(body):
+    # Verify conversion of equatorial J2000 to equatorial of-date, and back.
+    # Use established functions to calculate spherical coordinates for the body, in both EQJ and EQD.
+    time = astronomy.Time.Make(2019, 12, 8, 20, 50, 0)
+    observer = astronomy.Observer(+35, -85, 0)
+    eq2000 = astronomy.Equator(body, time, observer, False, True)
+    eqdate = astronomy.Equator(body, time, observer, True, True)
+
+    # Convert EQJ spherical coordinates to vector.
+    v2000 = astronomy.VectorFromEquator(eq2000, time)
+
+    # Find rotation matrix.
+    r = astronomy.Rotation_EQJ_EQD(time)
+
+    # Rotate EQJ vector to EQD vector.
+    vdate = astronomy.RotateVector(r, v2000)
+
+    # Convert vector back to angular equatorial coordinates.
+    equcheck = astronomy.EquatorFromVector(vdate)
+
+    # Compare the result with the eqdate.
+    ra_diff = abs(equcheck.ra - eqdate.ra)
+    dec_diff = abs(equcheck.dec - eqdate.dec)
+    dist_diff = abs(equcheck.dist - eqdate.dist)
+    print('Test_EQJ_EQD: {} ra={}, dec={}, dist={}, ra_diff={}, dec_diff={}, dist_diff={}'.format(
+        body.name, eqdate.ra, eqdate.dec, eqdate.dist, ra_diff, dec_diff, dist_diff
+    ))
+    if ra_diff > 1.0e-14 or dec_diff > 1.0e-14 or dist_diff > 4.0e-15:
+        print('Test_EQJ_EQD: EXCESSIVE ERROR')
+        sys.exit(1)
+
+    # Perform the inverse conversion back to equatorial J2000 coordinates.
+    ir = astronomy.Rotation_EQD_EQJ(time)
+    t2000 = astronomy.RotateVector(ir, vdate)
+    diff = VectorDiff(t2000, v2000)
+    print('Test_EQJ_EQD: {} inverse diff = {}'.format(body.name, diff))
+    if diff > 3.0e-15:
+        print('Test_EQJ_EQD: EXCESSIVE INVERSE ERROR')
+        sys.exit(1)
+
+
 def Test_Rotation():
     Rotation_MatrixInverse()
     Rotation_MatrixMultiply()
     Test_EQJ_ECL()
+    Test_EQJ_EQD(astronomy.Body.Mercury)
+    Test_EQJ_EQD(astronomy.Body.Venus)
+    Test_EQJ_EQD(astronomy.Body.Mars)
+    Test_EQJ_EQD(astronomy.Body.Jupiter)
+    Test_EQJ_EQD(astronomy.Body.Saturn)
     print('Python Test_Rotation: PASS')
     return 0
 

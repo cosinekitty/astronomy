@@ -3022,6 +3022,107 @@ def NextLunarApsis(apsis):
         raise InternalError()
     return next
 
+
+def VectorFromSphere(sphere, time):
+    """Converts spherical coordinates to Cartesian coordinates.
+
+    Given spherical coordinates and a time at which they are valid,
+    returns a vector of Cartesian coordinates. The returned value
+    includes the time, as required by all `Time` objects.
+
+    Parameters
+    ----------
+    sphere : Spherical
+        Spherical coordinates to be converted.
+    time : Time
+        The time that should be included in the returned vector.
+
+    Returns
+    -------
+    Vector
+        The vector form of the supplied spherical coordinates.
+    """
+    radlat = math.radians(sphere.lat)
+    radlon = math.radians(sphere.lon)
+    rcoslat = sphere.dist * math.cos(radlat)
+    return Vector(
+        rcoslat * math.cos(radlon),
+        rcoslat * math.sin(radlon),
+        sphere.dist * math.sin(radlat),
+        time
+    )
+
+
+def VectorFromEquator(equ, time):
+    """Given angular equatorial coordinates in `equ`, calculates equatorial vector.
+
+    Parameters
+    ----------
+    equ : Equatorial
+        Angular equatorial coordinates to be converted to a vector.
+    time : Time
+        The date and time of the observation. This is needed because the returned
+        vector object requires a valid time value when passed to certain other functions.
+
+    Returns
+    -------
+    Vector
+        A vector in the equatorial system.
+    """
+    return VectorFromSphere(Spherical(equ.dec, 15.0 * equ.ra, equ.dist), time)
+
+
+def EquatorFromVector(vec):
+    """Given an equatorial vector, calculates equatorial angular coordinates.
+
+    Parameters
+    ----------
+    vec : Vector
+        A vector in an equatorial coordinate system.
+
+    Returns
+    -------
+    Equatorial
+        Angular coordinates expressed in the same equatorial system as `vec`.
+    """
+    sphere = SphereFromVector(vec)
+    return Equatorial(sphere.lon / 15.0, sphere.lat, sphere.dist)
+
+
+def SphereFromVector(vector):
+    """Converts Cartesian coordinates to spherical coordinates.
+
+    Given a Cartesian vector, returns latitude, longitude, and distance.
+
+    Parameters
+    ----------
+    vector : Vector
+        Cartesian vector to be converted to spherical coordinates.
+
+    Returns
+    -------
+    Spherical
+        Spherical coordinates that are equivalent to the given vector.
+    """
+    xyproj = vector.x*vector.x + vector.y*vector.y
+    dist = math.sqrt(xyproj + vector.z*vector.z)
+    if xyproj == 0.0:
+        if vector.z == 0.0:
+            raise Exception('Zero-length vector not allowed.')
+        lon = 0.0
+        if vector.z < 0.0:
+            lat = -90.0
+        else:
+            lat = +90.0
+    else:
+        lon = math.degrees(math.atan2(vector.y, vector.x))
+        if lon < 0.0:
+            lon += 360.0
+        lat = math.degrees(math.atan2(vector.z, math.sqrt(xyproj)))
+    return Spherical(lat, lon, dist)
+
+
+
 def InverseRotation(rotation):
     """Calculates the inverse of a rotation matrix.
 
@@ -3159,3 +3260,48 @@ def Rotation_ECL_EQJ():
         [ 0, +c, +s],
         [ 0, -s, +c]
     ])
+
+def Rotation_EQJ_EQD(time):
+    """Calculates a rotation matrix from equatorial J2000 (EQJ) to equatorial of-date (EQD).
+
+    This is one of the family of functions that returns a rotation matrix
+    for converting from one orientation to another.
+    Source: EQJ = equatorial system, using equator at J2000 epoch.
+    Target: EQD = equatorial system, using equator of the specified date/time.
+
+    Parameters
+    ----------
+    time : Time
+        The date and time at which the Earth's equator defines the target orientation.
+
+    Returns
+    -------
+    RotationMatrix
+        A rotation matrix that converts EQJ to EQD at `time`.
+    """
+    prec = _precession_rot(0.0, time.tt)
+    nut = _nutation_rot(time, 0)
+    return CombineRotation(prec, nut)
+
+
+def Rotation_EQD_EQJ(time):
+    """Calculates a rotation matrix from equatorial of-date (EQD) to equatorial J2000 (EQJ).
+
+    This is one of the family of functions that returns a rotation matrix
+    for converting from one orientation to another.
+    Source: EQD = equatorial system, using equator of the specified date/time.
+    Target: EQJ = equatorial system, using equator at J2000 epoch.
+
+    Parameters
+    ----------
+    time : Time
+        The date and time at which the Earth's equator defines the source orientation.
+
+    Returns
+    -------
+    RotationMatrix
+        A rotation matrix that converts EQD at `time` to EQJ.
+    """
+    nut = _nutation_rot(time, 1)
+    prec = _precession_rot(time.tt, 0.0)
+    return CombineRotation(nut, prec)

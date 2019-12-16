@@ -626,6 +626,20 @@ Equatorial coordinates in the specified frame of reference.
 
 ---
 
+<a name="EquatorFromVector"></a>
+### EquatorFromVector(vec)
+
+**Given an equatorial vector, calculates equatorial angular coordinates.**
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Vector`](#Vector) | `vec` | A vector in an equatorial coordinate system. |
+
+### Returns: Equatorial
+Angular coordinates expressed in the same equatorial system as `vec`.
+
+---
+
 <a name="GeoMoon"></a>
 ### GeoMoon(time)
 
@@ -962,6 +976,25 @@ A rotation matrix that converts ECL to EQJ.
 
 ---
 
+<a name="Rotation_EQD_EQJ"></a>
+### Rotation_EQD_EQJ(time)
+
+**Calculates a rotation matrix from equatorial of-date (EQD) to equatorial J2000 (EQJ).**
+
+This is one of the family of functions that returns a rotation matrix
+for converting from one orientation to another.
+Source: EQD = equatorial system, using equator of the specified date/time.
+Target: EQJ = equatorial system, using equator at J2000 epoch.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Time`](#Time) | `time` | The date and time at which the Earth's equator defines the source orientation. |
+
+### Returns: RotationMatrix
+A rotation matrix that converts EQD at `time` to EQJ.
+
+---
+
 <a name="Rotation_EQJ_ECL"></a>
 ### Rotation_EQJ_ECL()
 
@@ -974,6 +1007,25 @@ Target: ECL = ecliptic system, using equator at J2000 epoch.
 
 ### Returns: RotationMatrix
 A rotation matrix that converts EQJ to ECL.
+
+---
+
+<a name="Rotation_EQJ_EQD"></a>
+### Rotation_EQJ_EQD(time)
+
+**Calculates a rotation matrix from equatorial J2000 (EQJ) to equatorial of-date (EQD).**
+
+This is one of the family of functions that returns a rotation matrix
+for converting from one orientation to another.
+Source: EQJ = equatorial system, using equator at J2000 epoch.
+Target: EQD = equatorial system, using equator of the specified date/time.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Time`](#Time) | `time` | The date and time at which the Earth's equator defines the target orientation. |
+
+### Returns: RotationMatrix
+A rotation matrix that converts EQJ to EQD at `time`.
 
 ---
 
@@ -1334,6 +1386,22 @@ of winter in the southern hemisphere.
 
 ---
 
+<a name="SphereFromVector"></a>
+### SphereFromVector(vector)
+
+**Converts Cartesian coordinates to spherical coordinates.**
+
+Given a Cartesian vector, returns latitude, longitude, and distance.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Vector`](#Vector) | `vector` | Cartesian vector to be converted to spherical coordinates. |
+
+### Returns: Spherical
+Spherical coordinates that are equivalent to the given vector.
+
+---
+
 <a name="SunPosition"></a>
 ### SunPosition(time)
 
@@ -1358,4 +1426,38 @@ In fact, the function #Seasons does use this function for that purpose.
 
 ### Returns: #EclipticCoordinates
 The ecliptic coordinates of the Sun using the Earth's true equator of date.
+
+---
+
+<a name="VectorFromEquator"></a>
+### VectorFromEquator(equ, time)
+
+**Given angular equatorial coordinates in `equ`, calculates equatorial vector.**
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Equatorial`](#Equatorial) | `equ` | Angular equatorial coordinates to be converted to a vector. |
+| [`Time`](#Time) | `time` | The date and time of the observation. This is needed because the returned vector object requires a valid time value when passed to certain other functions. |
+
+### Returns: Vector
+A vector in the equatorial system.
+
+---
+
+<a name="VectorFromSphere"></a>
+### VectorFromSphere(sphere, time)
+
+**Converts spherical coordinates to Cartesian coordinates.**
+
+Given spherical coordinates and a time at which they are valid,
+returns a vector of Cartesian coordinates. The returned value
+includes the time, as required by all `Time` objects.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Spherical`](#Spherical) | `sphere` | Spherical coordinates to be converted. |
+| [`Time`](#Time) | `time` | The time that should be included in the returned vector. |
+
+### Returns: Vector
+The vector form of the supplied spherical coordinates.
 
