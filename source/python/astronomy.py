@@ -5105,6 +5105,51 @@ def InverseRotation(rotation):
         [rotation.rot[0][2], rotation.rot[1][2], rotation.rot[2][2]]
     ])
 
+
+def CombineRotation(a, b):
+    """Creates a rotation based on applying one rotation followed by another.
+
+    Given two rotation matrices, returns a combined rotation matrix that is
+    equivalent to rotating based on the first matrix, followed by the second.
+
+    Parameters
+    ----------
+    a : RotationMatrix
+        The first rotation to apply.
+
+    b : RotationMatrix
+        The second rotation to apply.
+
+    Returns
+    -------
+    RotationMatrix
+        The combined rotation matrix.
+    """
+    # Use matrix multiplication: c = b*a.
+    # We put 'b' on the left and 'a' on the right because,
+    # just like when you use a matrix M to rotate a vector V,
+    # you put the M on the left in the product M*V.
+    # We can think of this as 'b' rotating all the 3 column vectors in 'a'.
+
+    return RotationMatrix([
+        [
+            b.rot[0][0]*a.rot[0][0] + b.rot[1][0]*a.rot[0][1] + b.rot[2][0]*a.rot[0][2],
+            b.rot[0][1]*a.rot[0][0] + b.rot[1][1]*a.rot[0][1] + b.rot[2][1]*a.rot[0][2],
+            b.rot[0][2]*a.rot[0][0] + b.rot[1][2]*a.rot[0][1] + b.rot[2][2]*a.rot[0][2]
+        ],
+        [
+            b.rot[0][0]*a.rot[1][0] + b.rot[1][0]*a.rot[1][1] + b.rot[2][0]*a.rot[1][2],
+            b.rot[0][1]*a.rot[1][0] + b.rot[1][1]*a.rot[1][1] + b.rot[2][1]*a.rot[1][2],
+            b.rot[0][2]*a.rot[1][0] + b.rot[1][2]*a.rot[1][1] + b.rot[2][2]*a.rot[1][2]
+        ],
+        [
+            b.rot[0][0]*a.rot[2][0] + b.rot[1][0]*a.rot[2][1] + b.rot[2][0]*a.rot[2][2],
+            b.rot[0][1]*a.rot[2][0] + b.rot[1][1]*a.rot[2][1] + b.rot[2][1]*a.rot[2][2],
+            b.rot[0][2]*a.rot[2][0] + b.rot[1][2]*a.rot[2][1] + b.rot[2][2]*a.rot[2][2]
+        ]
+    ])
+
+
 def RotateVector(rotation, vector):
     """Applies a rotation to a vector, yielding a rotated vector.
 

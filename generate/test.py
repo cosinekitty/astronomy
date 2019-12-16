@@ -750,8 +750,31 @@ def Rotation_MatrixInverse():
     b = astronomy.InverseRotation(a)
     CompareMatrices('Rotation_MatrixInverse', b, v, 0)
 
+def Rotation_MatrixMultiply():
+    a = astronomy.RotationMatrix([
+        [1, 4, 7],
+        [2, 5, 8],
+        [3, 6, 9]
+    ])
+
+    b = astronomy.RotationMatrix([
+        [10, 13, 16],
+        [11, 14, 17],
+        [12, 15, 18]
+    ])
+
+    v = astronomy.RotationMatrix([
+        [84, 201, 318],
+        [90, 216, 342],
+        [96, 231, 366]
+    ])
+
+    c = astronomy.CombineRotation(b, a)
+    CompareMatrices('Rotation_MatrixMultiply', c, v, 0)
+
 def Test_Rotation():
     Rotation_MatrixInverse()
+    Rotation_MatrixMultiply()
     print('Python Test_Rotation: PASS')
     return 0
 

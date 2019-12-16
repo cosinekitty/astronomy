@@ -510,6 +510,25 @@ Otherwise, returns `Body.Invalid`.
 
 ---
 
+<a name="CombineRotation"></a>
+### CombineRotation(a, b)
+
+**Creates a rotation based on applying one rotation followed by another.**
+
+Given two rotation matrices, returns a combined rotation matrix that is
+equivalent to rotating based on the first matrix, followed by the second.
+b : RotationMatrix
+    The second rotation to apply.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`RotationMatrix`](#RotationMatrix) | `a` | The first rotation to apply. |
+
+### Returns: RotationMatrix
+The combined rotation matrix.
+
+---
+
 <a name="Ecliptic"></a>
 ### Ecliptic(equ)
 
