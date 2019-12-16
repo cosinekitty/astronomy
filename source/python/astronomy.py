@@ -5107,3 +5107,26 @@ def RotateVector(rotation, vector):
         rotation.rot[0][2]*vector.x + rotation.rot[1][2]*vector.y + rotation.rot[2][2]*vector.z,
         vector.t
     )
+
+
+def Rotation_EQJ_ECL():
+    """Calculates a rotation matrix from equatorial J2000 (EQJ) to ecliptic J2000 (ECL).
+
+    This is one of the family of functions that returns a rotation matrix
+    for converting from one orientation to another.
+    Source: EQJ = equatorial system, using equator at J2000 epoch.
+    Target: ECL = ecliptic system, using equator at J2000 epoch.
+
+    Returns
+    -------
+    RotationMatrix
+        A rotation matrix that converts EQJ to ECL.
+    """
+    # ob = mean obliquity of the J2000 ecliptic = 0.40909260059599012 radians.
+    c = 0.9174821430670688;    # cos(ob)
+    s = 0.3977769691083922;    # sin(ob)
+    return RotationMatrix([
+        [ 1,  0,  0],
+        [ 0, +c, -s],
+        [ 0, +s, +c]
+    ])

@@ -6,6 +6,8 @@ Fail()
 }
 
 python3 --version || Fail "Cannot print python version"
+python3 test.py rotation || Fail "Failed Python rotation tests."
+python3 test.py refraction || Fail "Failed Python refraction tests."
 python3 test.py time || Fail "Failure reported by test.py (time)"
 python3 test.py apsis || Fail "Failed Python apsis tests."
 python3 test.py magnitude || Fail "Failed Python magnitude tests."

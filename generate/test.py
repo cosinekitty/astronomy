@@ -45,7 +45,7 @@ def Test_GeoMoon():
     cx, cy, cz = 0.002674036155459549, -0.0001531716308218381, -0.0003150201604895409
     dx, dy, dz = vec.x - cx, vec.y - cy, vec.z - cz
     diff = math.sqrt(dx*dx + dy*dy + dz*dz)
-    print('Test_GeoMoon: diff = {}'.format(diff))    
+    print('Test_GeoMoon: diff = {}'.format(diff))
     if diff > 4.34e-19:
         print('Test_GeoMoon: EXCESSIVE ERROR')
         sys.exit(1)
@@ -80,8 +80,8 @@ def Test_AstroCheck(printflag):
         print('o {:0.6f} {:0.6f} {:0.6f}'.format(observer.latitude, observer.longitude, observer.height))
     dt = 10 + math.pi/100
     bodylist = [
-        astronomy.Body.Sun, astronomy.Body.Moon, astronomy.Body.Mercury, astronomy.Body.Venus, 
-        astronomy.Body.Earth, astronomy.Body.Mars, astronomy.Body.Jupiter, astronomy.Body.Saturn, 
+        astronomy.Body.Sun, astronomy.Body.Moon, astronomy.Body.Mercury, astronomy.Body.Venus,
+        astronomy.Body.Earth, astronomy.Body.Mars, astronomy.Body.Jupiter, astronomy.Body.Saturn,
         astronomy.Body.Uranus, astronomy.Body.Neptune, astronomy.Body.Pluto
     ]
 
@@ -89,7 +89,7 @@ def Test_AstroCheck(printflag):
         for body in bodylist:
             name = body.name
             if body != astronomy.Body.Moon:
-                pos = astronomy.HelioVector(body, time)                
+                pos = astronomy.HelioVector(body, time)
                 if printflag:
                     print('v {} {:0.16f} {:0.16f} {:0.16f} {:0.16f}'.format(name, pos.t.tt, pos.x, pos.y, pos.z))
                 if body != astronomy.Body.Earth:
@@ -165,7 +165,7 @@ def Test_Seasons(filename):
             diff_minutes = (24.0 * 60.0) * abs(calc_time.tt - correct_time.tt)
             if diff_minutes > max_minutes:
                 max_minutes = diff_minutes
-            
+
             if diff_minutes > 1.7:
                 print('Test_Seasons: {} line {}: excessive error ({}): {} minutes.'.format(filename, lnum, name, diff_minutes))
                 return 1
@@ -538,7 +538,7 @@ def CheckSaturn():
 def TestMaxMag(body, filename):
     # Example of input data:
     #
-    # 2001-02-21T08:00Z 2001-02-27T08:00Z 23.17 19.53 -4.84 
+    # 2001-02-21T08:00Z 2001-02-27T08:00Z 23.17 19.53 -4.84
     #
     # JPL Horizons test data has limited floating point precision in the magnitude values.
     # There is a pair of dates for the beginning and end of the max magnitude period,
@@ -716,11 +716,23 @@ def LunarApsis(filename):
             max_km = max(max_km, diff_km)
     print('LunarApsis: found {} events, max time error = {:0.3f} minutes, max distance error = {:0.3f} km.'.format(lnum, max_minutes, max_km))
     return 0
-            
+
 
 def Test_Apsis():
     if 0 != LunarApsis('apsides/moon.txt'):
         return 1
+    return 0
+
+#-----------------------------------------------------------------------------------------------------------
+
+def Test_Rotation():
+    print('Python Test_Rotation: PASS')
+    return 0
+
+#-----------------------------------------------------------------------------------------------------------
+
+def Test_Refraction():
+    print('Python Test_Refraction: PASS')
     return 0
 
 #-----------------------------------------------------------------------------------------------------------
@@ -744,6 +756,10 @@ if __name__ == '__main__':
             sys.exit(Test_Apsis())
         if sys.argv[1] == 'issue46':
             sys.exit(Test_Issue46())
+        if sys.argv[1] == 'rotation':
+            sys.exit(Test_Rotation())
+        if sys.argv[1] == 'refraction':
+            sys.exit(Test_Refraction())
 
     if len(sys.argv) == 3:
         if sys.argv[1] == 'seasons':
