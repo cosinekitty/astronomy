@@ -732,6 +732,17 @@ def Test_Rotation():
 #-----------------------------------------------------------------------------------------------------------
 
 def Test_Refraction():
+    alt = -90.1
+    while alt <= +90.1:
+        refr = astronomy.RefractionAngle(astronomy.Refraction.Normal, alt)
+        corrected = alt + refr
+        inv_refr = astronomy.InverseRefractionAngle(astronomy.Refraction.Normal, corrected)
+        check_alt = corrected + inv_refr
+        diff = abs(check_alt - alt)
+        if diff > 2.0e-14:
+            print('Test_Refraction: ERROR - excessive error: alt={}, refr={}, diff={}'.format(alt, refr, diff))
+            return 1
+        alt += 0.001
     print('Python Test_Refraction: PASS')
     return 0
 
