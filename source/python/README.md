@@ -947,6 +947,21 @@ A vector in the orientation specified by `rotation`.
 
 ---
 
+<a name="Rotation_ECL_EQJ"></a>
+### Rotation_ECL_EQJ()
+
+**Calculates a rotation matrix from ecliptic J2000 (ECL) to equatorial J2000 (EQJ).**
+
+This is one of the family of functions that returns a rotation matrix
+for converting from one orientation to another.
+Source: ECL = ecliptic system, using equator at J2000 epoch.
+Target: EQJ = equatorial system, using equator at J2000 epoch.
+
+### Returns: RotationMatrix
+A rotation matrix that converts ECL to EQJ.
+
+---
+
 <a name="Rotation_EQJ_ECL"></a>
 ### Rotation_EQJ_ECL()
 

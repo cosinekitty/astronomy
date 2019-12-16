@@ -3136,3 +3136,26 @@ def Rotation_EQJ_ECL():
         [ 0, +c, -s],
         [ 0, +s, +c]
     ])
+
+
+def Rotation_ECL_EQJ():
+    """Calculates a rotation matrix from ecliptic J2000 (ECL) to equatorial J2000 (EQJ).
+
+    This is one of the family of functions that returns a rotation matrix
+    for converting from one orientation to another.
+    Source: ECL = ecliptic system, using equator at J2000 epoch.
+    Target: EQJ = equatorial system, using equator at J2000 epoch.
+
+    Returns
+    -------
+    RotationMatrix
+        A rotation matrix that converts ECL to EQJ.
+    """
+    # ob = mean obliquity of the J2000 ecliptic = 0.40909260059599012 radians.
+    c = 0.9174821430670688    # cos(ob)
+    s = 0.3977769691083922    # sin(ob)
+    return RotationMatrix([
+        [ 1,  0,  0],
+        [ 0, +c, +s],
+        [ 0, -s, +c]
+    ])

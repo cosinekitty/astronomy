@@ -736,6 +736,7 @@ def CompareMatrices(caller, a, b, tolerance):
                 print('ERROR({}): matrix[{}][{}] = {}, expected {}, diff {}'.format(caller, i, j, a.rot[i][j], b.rot[i][j], diff))
                 sys.exit(1)
 
+
 def Rotation_MatrixInverse():
     a = astronomy.RotationMatrix([
         [1, 4, 7],
@@ -749,6 +750,7 @@ def Rotation_MatrixInverse():
     ])
     b = astronomy.InverseRotation(a)
     CompareMatrices('Rotation_MatrixInverse', b, v, 0)
+
 
 def Rotation_MatrixMultiply():
     a = astronomy.RotationMatrix([
@@ -772,9 +774,48 @@ def Rotation_MatrixMultiply():
     c = astronomy.CombineRotation(b, a)
     CompareMatrices('Rotation_MatrixMultiply', c, v, 0)
 
+
+def VectorDiff(a, b):
+    dx = a.x - b.x
+    dy = a.y - b.y
+    dz = a.z - b.z
+    return math.sqrt(dx*dx + dy*dy + dz*dz)
+
+
+def Test_EQJ_ECL():
+    r = astronomy.Rotation_EQJ_ECL()
+    # Calculate heliocentric Earth position at a test time.
+    time = astronomy.Time.Make(2019, 12, 8, 19, 39, 15)
+    ev = astronomy.HelioVector(astronomy.Body.Earth, time)
+
+    # Use the existing astronomy.Ecliptic() to calculate ecliptic vector and angles.
+    ecl = astronomy.Ecliptic(ev)
+    print('Test_EQJ_ECL ecl = ({}, {}, {})'.format(ecl.ex, ecl.ey, ecl.ez))
+
+    # Now compute the same vector via rotation matrix.
+    ee = astronomy.RotateVector(r, ev)
+    dx = ee.x - ecl.ex
+    dy = ee.y - ecl.ey
+    dz = ee.z - ecl.ez
+    diff = math.sqrt(dx*dx + dy*dy + dz*dz)
+    print('Test_EQJ_ECL ee = ({}, {}, {}); diff = {}'.format(ee.x, ee.y, ee.z, diff))
+    if diff > 1.0e-16:
+        print('Test_EQJ_ECL: EXCESSIVE VECTOR ERROR')
+        sys.exit(1)
+
+    # Reverse the test: go from ecliptic back to equatorial.
+    ir = astronomy.Rotation_ECL_EQJ()
+    et = astronomy.RotateVector(ir, ee)
+    idiff = VectorDiff(et, ev)
+    print('Test_EQJ_ECL ev diff = {}'.format(idiff))
+    if idiff > 1.0e-16:
+        print('Test_EQJ_ECL: EXCESSIVE REVERSE ROTATION ERROR')
+        sys.exit(1)
+
 def Test_Rotation():
     Rotation_MatrixInverse()
     Rotation_MatrixMultiply()
+    Test_EQJ_ECL()
     print('Python Test_Rotation: PASS')
     return 0
 
