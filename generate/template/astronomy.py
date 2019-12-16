@@ -3022,6 +3022,28 @@ def NextLunarApsis(apsis):
         raise InternalError()
     return next
 
+def InverseRotation(rotation):
+    """Calculates the inverse of a rotation matrix.
+
+    Given a rotation matrix that performs some coordinate transform,
+    this function returns the matrix that reverses that trasnform.
+
+    Parameters
+    ----------
+    rotation : RotationMatrix
+        The rotation matrix to be inverted.
+
+    Returns
+    -------
+    RotationMatrix
+        The inverse rotation matrix.
+    """
+    return RotationMatrix([
+        [rotation.rot[0][0], rotation.rot[1][0], rotation.rot[2][0]],
+        [rotation.rot[0][1], rotation.rot[1][1], rotation.rot[2][1]],
+        [rotation.rot[0][2], rotation.rot[1][2], rotation.rot[2][2]]
+    ])
+
 def RotateVector(rotation, vector):
     """Applies a rotation to a vector, yielding a rotated vector.
 

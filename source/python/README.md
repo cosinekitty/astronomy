@@ -780,6 +780,23 @@ This will be less than or equal to zero.
 
 ---
 
+<a name="InverseRotation"></a>
+### InverseRotation(rotation)
+
+**Calculates the inverse of a rotation matrix.**
+
+Given a rotation matrix that performs some coordinate transform,
+this function returns the matrix that reverses that trasnform.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`RotationMatrix`](#RotationMatrix) | `rotation` | The rotation matrix to be inverted. |
+
+### Returns: RotationMatrix
+The inverse rotation matrix.
+
+---
+
 <a name="LongitudeFromSun"></a>
 ### LongitudeFromSun(body, time)
 

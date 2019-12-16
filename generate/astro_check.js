@@ -1,3 +1,4 @@
+'use strict';
 var Astronomy = require('../source/js/astronomy.min.js');
 
 var date = Astronomy.MakeTime(new Date('1700-01-01T00:00:00Z'));
@@ -15,8 +16,8 @@ while (date.tt < stop.tt) {
         if (body !== 'Moon') {
             pos = Astronomy.HelioVector(body, date);
             console.log(`v ${body} ${pos.t.tt.toFixed(16)} ${pos.x.toFixed(16)} ${pos.y.toFixed(16)} ${pos.z.toFixed(16)}`);
-    
-            if (body !== 'Earth') {                
+
+            if (body !== 'Earth') {
                 j2000 = Astronomy.Equator(body, date, observer, false, false);
                 ofdate = Astronomy.Equator(body, date, observer, true, true);
                 hor = Astronomy.Horizon(date, observer, ofdate.ra, ofdate.dec);

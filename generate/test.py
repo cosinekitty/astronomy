@@ -702,7 +702,10 @@ def LunarApsis(filename):
             if not correct_time:
                 print('LunarApsis({} line {}): invalid time'.format(filename, lnum))
                 return 1
-            kind = int(tokenlist[0])
+            kind = astronomy.ApsisKind(int(tokenlist[0]))
+            if apsis.kind != kind:
+                print('LunarApsis({} line {}): Expected kind {} but found {}'.format(filename, lnum, kind, apsis.kind))
+                return 1
             dist_km = float(tokenlist[2])
             diff_minutes = (24.0 * 60.0) * abs(apsis.time.ut - correct_time.ut)
             diff_km = abs(apsis.dist_km - dist_km)
@@ -725,7 +728,30 @@ def Test_Apsis():
 
 #-----------------------------------------------------------------------------------------------------------
 
+def CompareMatrices(caller, a, b, tolerance):
+    for i in range(3):
+        for j in range(3):
+            diff = abs(a.rot[i][j] - b.rot[i][j])
+            if diff > tolerance:
+                print('ERROR({}): matrix[{}][{}] = {}, expected {}, diff {}'.format(caller, i, j, a.rot[i][j], b.rot[i][j], diff))
+                sys.exit(1)
+
+def Rotation_MatrixInverse():
+    a = astronomy.RotationMatrix([
+        [1, 4, 7],
+        [2, 5, 8],
+        [3, 6, 9]
+    ])
+    v = astronomy.RotationMatrix([
+        [1, 2, 3],
+        [4, 5, 6],
+        [7, 8, 9]
+    ])
+    b = astronomy.InverseRotation(a)
+    CompareMatrices('Rotation_MatrixInverse', b, v, 0)
+
 def Test_Rotation():
+    Rotation_MatrixInverse()
     print('Python Test_Rotation: PASS')
     return 0
 

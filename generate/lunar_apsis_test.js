@@ -56,7 +56,7 @@ function Test() {
     const elapsed = (time_after - time_before) / 1000;
 
     console.log(`lunar_apsis_test: verified ${count} lines, max time error = ${max_minute_error.toFixed(3)} minutes, max dist error = ${max_dist_error.toFixed(3)} km.`);
-    
+
     if (count !== 2651)
         throw 'FATAL: Did not process the expected number of data rows!';
 

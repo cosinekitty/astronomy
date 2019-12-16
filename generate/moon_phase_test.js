@@ -7,7 +7,7 @@ function LoadMoonPhaseData(filename) {
     const text = fs.readFileSync(filename, {encoding:'utf8'});
     const lines = text.trimRight().split('\n');
     let data = [];
-    for (let row of lines) {        
+    for (let row of lines) {
         let token = row.split(' ');
         data.push({quarter:parseInt(token[0]), date:new Date(token[1])});
     }
@@ -68,7 +68,7 @@ function SearchYear(year, data, index) {
         ++index;
         ++count;
         mq = Astronomy.NextMoonQuarter(mq);
-        date = mq.time.date;        
+        date = mq.time.date;
     }
     console.log(`SearchYear(${year}): count=${count}, maxdiff=${maxdiff.toFixed(3)}`);
     return 0;

@@ -13,7 +13,7 @@ function LoadTestData(filename) {
     const lines = text.trimRight().split('\n');
     let data = [];
     let lnum = 0;
-    for (let row of lines) {        
+    for (let row of lines) {
         let token = row.split(/\s+/g);
         data.push({
             lnum: ++lnum,
@@ -38,7 +38,7 @@ function Test() {
     let body;
     let observer;
     let r_search_date, r_date;
-    let s_search_date, s_date;    
+    let s_search_date, s_date;
     let a_date, b_date, a_dir, b_dir;
     let sum_minutes = 0;
     let max_minutes = 0;

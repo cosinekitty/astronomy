@@ -116,7 +116,7 @@ function ProcessRow(context, row) {
     const hour = parseInt(m[4]);
     const minute = parseInt(m[5]);
     const date = new Date(Date.UTC(year, month, day, hour, minute));
-    
+
     const jpl = {
         m_ra:  ParseRightAscension(m[6]),
         m_dec: ParseDeclination(m[7]),
@@ -203,7 +203,7 @@ function ProcessFile(inFileName) {
                     throw `Missing refraction option in file: ${inFileName}`;
                 }
             }
-        } else if (row === '$$EOE') {            
+        } else if (row === '$$EOE') {
             return PrintSummary(context);
         } else {
             ProcessRow(context, row);
