@@ -218,6 +218,12 @@ echo.Running Python tests.
 test.py time
 if errorlevel 1 (exit /b 1)
 
+test.py refraction
+if errorlevel 1 (exit /b 1)
+
+test.py rotation
+if errorlevel 1 (exit /b 1)
+
 test.py apsis
 if errorlevel 1 (exit /b 1)
 

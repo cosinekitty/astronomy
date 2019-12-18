@@ -896,7 +896,7 @@ def Test_EQD_HOR(body):
     check_eqd = astronomy.RotateVector(irot, vec_hor)
     diff = VectorDiff(check_eqd, vec_eqd)
     print('Test_EQD_HOR {}: OFDATE inverse rotation diff = {}'.format(body.name, diff))
-    if diff > 1.0e-15:
+    if diff > 2.0e-15:
         print('Test_EQD_HOR: EXCESSIVE OFDATE INVERSE HORIZONTAL ERROR.')
         sys.exit(1)
 
@@ -907,7 +907,7 @@ def Test_EQD_HOR(body):
     check_eqj = astronomy.RotateVector(yrot, vec_hor)
     diff = VectorDiff(check_eqj, vec_eqj)
     print('Test_EQD_HOR {}: J2000 inverse rotation diff = {}'.format(body.name, diff))
-    if diff > 3.0e-15:
+    if diff > 4.0e-15:
         print('Test_EQD_HOR: EXCESSIVE J2000 INVERSE HORIZONTAL ERROR.')
         sys.exit(1)
 
