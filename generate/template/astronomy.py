@@ -2253,7 +2253,7 @@ def SearchMoonQuarter(startTime):
 def NextMoonQuarter(mq):
     """Continues searching for lunar quarters from a previous search.
 
-    After calling #Astronomy_SearchMoonQuarter, this function can be called
+    After calling #SearchMoonQuarter, this function can be called
     one or more times to continue finding consecutive lunar quarters.
     This function finds the next consecutive moon quarter event after
     the one passed in as the parameter `mq`.
@@ -2560,7 +2560,7 @@ def SearchPeakMagnitude(body, startTime):
 class HourAngleEvent:
     """Information about a celestial body crossing a specific hour angle.
 
-    Returned by the function #Astronomy_SearchHourAngle to report information about
+    Returned by the function #SearchHourAngle to report information about
     a celestial body crossing a certain hour angle as seen by a specified topocentric observer.
 
     Attributes

@@ -44,6 +44,10 @@ def SymbolLink(name):
     # [`astro_time_t`](#astro_time_t)
     return '[`{0}`](#{0})'.format(name)
 
+def FixText(s):
+    # Expand "#Body" to "[`Body`](#Body)".
+    return re.sub(r'#([A-Z][A-Za-z0-9_]*)', r'[`\1`](#\1)', s)
+
 class ParmInfo:
     def __init__(self, name, type):
         self.name = name
@@ -138,7 +142,7 @@ class DocInfo:
             for p in itemlist:
                 if not p.type:
                     raise Exception('Symbol "{}" has missing type declaration.'.format(p.name))
-                md += '| {} | {} | {} |\n'.format(SymbolLink(p.type), '`' + p.name + '`', p.description.strip())
+                md += '| {} | {} | {} |\n'.format(SymbolLink(p.type), '`' + p.name + '`', FixText(p.description.strip()))
             md += '\n'
         return md
 
@@ -154,9 +158,9 @@ class DocInfo:
     def Markdown(self):
         md = '\n'
         if self.summary:
-            md += '**' + self.summary + '**\n\n'
+            md += '**' + FixText(self.summary) + '**\n\n'
         if self.description:
-            md += self.description + '\n\n'
+            md += FixText(self.description) + '\n\n'
         md += self.Table(self.parameters, 'Parameter')
         md += self.Table(self.attributes, 'Attribute')
         md += self.EnumTable()
