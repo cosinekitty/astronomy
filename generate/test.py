@@ -854,6 +854,73 @@ def Test_EQJ_EQD(body):
         sys.exit(1)
 
 
+def Test_EQD_HOR(body):
+    # Use existing functions to calculate horizontal coordinates of the body for the time+observer.
+    time = astronomy.Time.Make(1970, 12, 13, 5, 15, 0)
+    observer = astronomy.Observer(-37, +45, 0)
+    eqd = astronomy.Equator(body, time, observer, True, True)
+    print('Test_EQD_HOR {}: OFDATE ra={}, dec={}'.format(body.name, eqd.ra, eqd.dec))
+    hor = astronomy.Horizon(time, observer, eqd.ra, eqd.dec, astronomy.Refraction.Normal)
+
+    # Calculate the position of the body as an equatorial vector of date.
+    vec_eqd = astronomy.VectorFromEquator(eqd, time)
+
+    # Calculate rotation matrix to convert equatorial J2000 vector to horizontal vector.
+    rot = astronomy.Rotation_EQD_HOR(time, observer)
+
+    # Rotate the equator of date vector to a horizontal vector.
+    vec_hor = astronomy.RotateVector(rot, vec_eqd)
+
+    # Convert the horizontal vector to horizontal angular coordinates.
+    xsphere = astronomy.HorizonFromVector(vec_hor, astronomy.Refraction.Normal)
+    diff_alt = abs(xsphere.lat - hor.altitude)
+    diff_az = abs(xsphere.lon - hor.azimuth)
+
+    print('Test_EQD_HOR {}: trusted alt={}, az={}; test alt={}, az={}; diff_alt={}, diff_az={}'.format(
+        body.name, hor.altitude, hor.azimuth, xsphere.lat, xsphere.lon, diff_alt, diff_az))
+
+    if diff_alt > 4.0e-14 or diff_az > 1.0e-13:
+        print('Test_EQD_HOR: EXCESSIVE HORIZONTAL ERROR.')
+        sys.exit(1)
+
+    # Confirm that we can convert back to horizontal vector.
+    check_hor = astronomy.VectorFromHorizon(xsphere, time, astronomy.Refraction.Normal)
+    diff = VectorDiff(check_hor, vec_hor)
+    print('Test_EQD_HOR {}: horizontal recovery: diff = {}'.format(body.name, diff))
+    if diff > 2.0e-15:
+        print('Test_EQD_HOR: EXCESSIVE ERROR IN HORIZONTAL RECOVERY.')
+        sys.exit(1)
+
+    # Verify the inverse translation from horizontal vector to equatorial of-date vector.
+    irot = astronomy.Rotation_HOR_EQD(time, observer)
+    check_eqd = astronomy.RotateVector(irot, vec_hor)
+    diff = VectorDiff(check_eqd, vec_eqd)
+    print('Test_EQD_HOR {}: OFDATE inverse rotation diff = {}'.format(body.name, diff))
+    if diff > 1.0e-15:
+        print('Test_EQD_HOR: EXCESSIVE OFDATE INVERSE HORIZONTAL ERROR.')
+        sys.exit(1)
+
+    # Exercise HOR to EQJ translation.
+    eqj = astronomy.Equator(body, time, observer, False, True)
+    vec_eqj = astronomy.VectorFromEquator(eqj, time)
+    yrot = astronomy.Rotation_HOR_EQJ(time, observer)
+    check_eqj = astronomy.RotateVector(yrot, vec_hor)
+    diff = VectorDiff(check_eqj, vec_eqj)
+    print('Test_EQD_HOR {}: J2000 inverse rotation diff = {}'.format(body.name, diff))
+    if diff > 3.0e-15:
+        print('Test_EQD_HOR: EXCESSIVE J2000 INVERSE HORIZONTAL ERROR.')
+        sys.exit(1)
+
+    # Verify the inverse translation: EQJ to HOR.
+    zrot = astronomy.Rotation_EQJ_HOR(time, observer)
+    another_hor = astronomy.RotateVector(zrot, vec_eqj)
+    diff = VectorDiff(another_hor, vec_hor)
+    print('Test_EQD_HOR {}: EQJ inverse rotation diff = {}'.format(body.name, diff))
+    if diff > 3.0e-15:
+        print('Test_EQD_HOR: EXCESSIVE EQJ INVERSE HORIZONTAL ERROR.')
+        sys.exit(1)
+
+
 def Test_Rotation():
     Rotation_MatrixInverse()
     Rotation_MatrixMultiply()
@@ -863,6 +930,11 @@ def Test_Rotation():
     Test_EQJ_EQD(astronomy.Body.Mars)
     Test_EQJ_EQD(astronomy.Body.Jupiter)
     Test_EQJ_EQD(astronomy.Body.Saturn)
+    Test_EQD_HOR(astronomy.Body.Mercury)
+    Test_EQD_HOR(astronomy.Body.Venus)
+    Test_EQD_HOR(astronomy.Body.Mars)
+    Test_EQD_HOR(astronomy.Body.Jupiter)
+    Test_EQD_HOR(astronomy.Body.Saturn)
     print('Python Test_Rotation: PASS')
     return 0
 

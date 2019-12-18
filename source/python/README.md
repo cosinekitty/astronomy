@@ -760,6 +760,32 @@ for more details.
 
 ---
 
+<a name="HorizonFromVector"></a>
+### HorizonFromVector(vector, refraction)
+
+**Converts Cartesian coordinates to horizontal coordinates.**
+
+Given a horizontal Cartesian vector, returns horizontal azimuth and altitude.
+*IMPORTANT:* This function differs from `SphereFromVector` in two ways:
+- `SphereFromVector` returns a `lon` value that represents azimuth defined counterclockwise
+  from north (e.g., west = +90), but this function represents a clockwise rotation
+  (e.g., east = +90). The difference is because `SphereFromVector` is intended
+  to preserve the vector "right-hand rule", while this function defines azimuth in a more
+  traditional way as used in navigation and cartography.
+- This function optionally corrects for atmospheric refraction, while `SphereFromVector` does not.
+The returned object contains the azimuth in `lon`.
+It is measured in degrees clockwise from north: east = +90 degrees, west = +270 degrees.
+The altitude is stored in `lat`.
+The distance to the observed object is stored in `dist`,
+and is expressed in astronomical units (AU).
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Vector`](#Vector) | `vector` | Cartesian vector to be converted to horizontal angular coordinates. |
+| [`Refraction`](#Refraction) | `refraction` | See comments in the #RefractionAngle function. |
+
+---
+
 <a name="Illumination"></a>
 ### Illumination(body, time)
 
@@ -976,6 +1002,25 @@ A rotation matrix that converts ECL to EQJ.
 
 ---
 
+<a name="Rotation_EQD_ECL"></a>
+### Rotation_EQD_ECL(time)
+
+**Calculates a rotation matrix from equatorial of-date (EQD) to ecliptic J2000 (ECL).**
+
+This is one of the family of functions that returns a rotation matrix
+for converting from one orientation to another.
+Source: EQD = equatorial system, using equator of date.
+Target: ECL = ecliptic system, using equator at J2000 epoch.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Time`](#Time) | `time` | The date and time of the source equator. |
+
+### Returns
+A rotation matrix that converts EQD to ECL.
+
+---
+
 <a name="Rotation_EQD_EQJ"></a>
 ### Rotation_EQD_EQJ(time)
 
@@ -992,6 +1037,32 @@ Target: EQJ = equatorial system, using equator at J2000 epoch.
 
 ### Returns: RotationMatrix
 A rotation matrix that converts EQD at `time` to EQJ.
+
+---
+
+<a name="Rotation_EQD_HOR"></a>
+### Rotation_EQD_HOR(time, observer)
+
+**Calculates a rotation matrix from equatorial of-date (EQD) to horizontal (HOR).**
+
+This is one of the family of functions that returns a rotation matrix
+for converting from one orientation to another.
+Source: EQD = equatorial system, using equator of the specified date/time.
+Target: HOR = horizontal system.
+Use #HorizonFromVector to convert the return value
+to a traditional altitude/azimuth pair.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Time`](#Time) | `time` | The date and time at which the Earth's equator applies. |
+| [`Observer`](#Observer) | `observer` | A location near the Earth's mean sea level that defines the observer's location. |
+
+### Returns: RotationMatrix
+A rotation matrix that converts EQD to HOR at `time` and for `observer`.
+The components of the horizontal vector are:
+x = north, y = west, z = zenith (straight up from the observer).
+These components are chosen so that the "right-hand rule" works for the vector
+and so that north represents the direction where azimuth = 0.
 
 ---
 
@@ -1026,6 +1097,72 @@ Target: EQD = equatorial system, using equator of the specified date/time.
 
 ### Returns: RotationMatrix
 A rotation matrix that converts EQJ to EQD at `time`.
+
+---
+
+<a name="Rotation_EQJ_HOR"></a>
+### Rotation_EQJ_HOR(time, observer)
+
+**Calculates a rotation matrix from equatorial J2000 (EQJ) to horizontal (HOR).**
+
+This is one of the family of functions that returns a rotation matrix
+for converting from one orientation to another.
+Source: EQJ = equatorial system, using the equator at the J2000 epoch.
+Target: HOR = horizontal system.
+Use #HorizonFromVector to convert the return value to
+a traditional altitude/azimuth pair.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Time`](#Time) | `time` | The date and time of the desired horizontal orientation. |
+| [`Observer`](#Observer) | `observer` | A location near the Earth's mean sea level that defines the observer's horizon. |
+
+### Returns: RotationMatrix
+A rotation matrix that converts EQJ to HOR at `time` and for `observer`.
+The components of the horizontal vector are:
+x = north, y = west, z = zenith (straight up from the observer).
+These components are chosen so that the "right-hand rule" works for the vector
+and so that north represents the direction where azimuth = 0.
+
+---
+
+<a name="Rotation_HOR_EQD"></a>
+### Rotation_HOR_EQD(time, observer)
+
+**Calculates a rotation matrix from horizontal (HOR) to equatorial of-date (EQD).**
+
+This is one of the family of functions that returns a rotation matrix
+for converting from one orientation to another.
+Source: HOR = horizontal system (x=North, y=West, z=Zenith).
+Target: EQD = equatorial system, using equator of the specified date/time.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Time`](#Time) | `time` | The date and time at which the Earth's equator applies. |
+| [`Observer`](#Observer) | `observer` | A location near the Earth's mean sea level that defines the observer's horizon. |
+
+### Returns: RotationMatrix
+A rotation matrix that converts HOR to EQD at `time` and for `observer`.
+
+---
+
+<a name="Rotation_HOR_EQJ"></a>
+### Rotation_HOR_EQJ(time, observer)
+
+**Calculates a rotation matrix from horizontal (HOR) to J2000 equatorial (EQJ).**
+
+This is one of the family of functions that returns a rotation matrix
+for converting from one orientation to another.
+Source: HOR = horizontal system (x=North, y=West, z=Zenith).
+Target: EQJ = equatorial system, using equator at the J2000 epoch.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Time`](#Time) | `time` | The date and time of the observation. |
+| [`Observer`](#Observer) | `observer` | A location near the Earth's mean sea level that define's the observer's horizon. |
+
+### Returns: RotationMatrix
+A rotation matrix that converts HOR to EQD at `time` and for `observer`.
 
 ---
 
@@ -1441,6 +1578,22 @@ The ecliptic coordinates of the Sun using the Earth's true equator of date.
 
 ### Returns: Vector
 A vector in the equatorial system.
+
+---
+
+<a name="VectorFromHorizon"></a>
+### VectorFromHorizon(sphere, time, refraction)
+
+**Given apparent angular horizontal coordinates in `sphere`, calculate horizontal vector.**
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Spherical`](#Spherical) | `sphere` | A structure that contains apparent horizontal coordinates: `lat` holds the refracted azimuth angle, `lon` holds the azimuth in degrees clockwise from north, and `dist` holds the distance from the observer to the object in AU. |
+| [`Time`](#Time) | `time` | The date and time of the observation. This is needed because the returned vector object requires a valid time value when passed to certain other functions. |
+| [`Refraction`](#Refraction) | `refraction` | See remarks in function #RefractionAngle. |
+
+### Returns: Vector
+A vector in the horizontal system: `x` = north, `y` = west, and `z` = zenith (up).
 
 ---
 

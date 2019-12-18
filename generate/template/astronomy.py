@@ -3122,6 +3122,75 @@ def SphereFromVector(vector):
     return Spherical(lat, lon, dist)
 
 
+def _ToggleAzimuthDirection(az):
+    az = 360.0 - az
+    if az >= 360.0:
+        az -= 360.0
+    elif az < 0.0:
+        az += 360.0
+    return az
+
+
+def VectorFromHorizon(sphere, time, refraction):
+    """Given apparent angular horizontal coordinates in `sphere`, calculate horizontal vector.
+
+    Parameters
+    ----------
+    sphere : Spherical
+        A structure that contains apparent horizontal coordinates:
+        `lat` holds the refracted azimuth angle,
+        `lon` holds the azimuth in degrees clockwise from north,
+        and `dist` holds the distance from the observer to the object in AU.
+    time : Time
+        The date and time of the observation. This is needed because the returned
+        vector object requires a valid time value when passed to certain other functions.
+    refraction : Refraction
+        See remarks in function #RefractionAngle.
+
+    Returns
+    -------
+    Vector
+        A vector in the horizontal system: `x` = north, `y` = west, and `z` = zenith (up).
+    """
+    lon = _ToggleAzimuthDirection(sphere.lon)
+    lat = sphere.lat + InverseRefractionAngle(refraction, sphere.lat)
+    xsphere = Spherical(lat, lon, sphere.dist)
+    return VectorFromSphere(xsphere, time)
+
+
+def HorizonFromVector(vector, refraction):
+    """Converts Cartesian coordinates to horizontal coordinates.
+
+    Given a horizontal Cartesian vector, returns horizontal azimuth and altitude.
+
+    *IMPORTANT:* This function differs from `SphereFromVector` in two ways:
+    - `SphereFromVector` returns a `lon` value that represents azimuth defined counterclockwise
+      from north (e.g., west = +90), but this function represents a clockwise rotation
+      (e.g., east = +90). The difference is because `SphereFromVector` is intended
+      to preserve the vector "right-hand rule", while this function defines azimuth in a more
+      traditional way as used in navigation and cartography.
+    - This function optionally corrects for atmospheric refraction, while `SphereFromVector` does not.
+
+    The returned object contains the azimuth in `lon`.
+    It is measured in degrees clockwise from north: east = +90 degrees, west = +270 degrees.
+
+    The altitude is stored in `lat`.
+
+    The distance to the observed object is stored in `dist`,
+    and is expressed in astronomical units (AU).
+
+    Parameters
+    ----------
+    vector : Vector
+        Cartesian vector to be converted to horizontal angular coordinates.
+    refraction : Refraction
+        See comments in the #RefractionAngle function.
+    """
+    sphere = SphereFromVector(vector)
+    sphere.lon = _ToggleAzimuthDirection(sphere.lon)
+    sphere.lat += RefractionAngle(refraction, sphere.lat)
+    return sphere
+
 
 def InverseRotation(rotation):
     """Calculates the inverse of a rotation matrix.
@@ -3305,3 +3374,151 @@ def Rotation_EQD_EQJ(time):
     nut = _nutation_rot(time, 1)
     prec = _precession_rot(time.tt, 0.0)
     return CombineRotation(nut, prec)
+
+
+def Rotation_EQD_HOR(time, observer):
+    """Calculates a rotation matrix from equatorial of-date (EQD) to horizontal (HOR).
+
+    This is one of the family of functions that returns a rotation matrix
+    for converting from one orientation to another.
+    Source: EQD = equatorial system, using equator of the specified date/time.
+    Target: HOR = horizontal system.
+
+    Use #HorizonFromVector to convert the return value
+    to a traditional altitude/azimuth pair.
+
+    Parameters
+    ----------
+    time : Time
+        The date and time at which the Earth's equator applies.
+    observer: Observer
+        A location near the Earth's mean sea level that defines the observer's location.
+
+    Returns
+    -------
+    RotationMatrix
+        A rotation matrix that converts EQD to HOR at `time` and for `observer`.
+        The components of the horizontal vector are:
+        x = north, y = west, z = zenith (straight up from the observer).
+        These components are chosen so that the "right-hand rule" works for the vector
+        and so that north represents the direction where azimuth = 0.
+    """
+    sinlat = math.sin(math.radians(observer.latitude))
+    coslat = math.cos(math.radians(observer.latitude))
+    sinlon = math.sin(math.radians(observer.longitude))
+    coslon = math.cos(math.radians(observer.longitude))
+    uze = [coslat * coslon, coslat * sinlon, sinlat]
+    une = [-sinlat * coslon, -sinlat * sinlon, coslat]
+    uwe = [sinlon, -coslon, 0.0]
+    spin_angle = -15.0 * _sidereal_time(time)
+    uz = _spin(spin_angle, uze)
+    un = _spin(spin_angle, une)
+    uw = _spin(spin_angle, uwe)
+    return RotationMatrix([
+        [un[0], uw[0], uz[0]],
+        [un[1], uw[1], uz[1]],
+        [un[2], uw[2], uz[2]],
+    ])
+
+
+def Rotation_HOR_EQD(time, observer):
+    """Calculates a rotation matrix from horizontal (HOR) to equatorial of-date (EQD).
+
+    This is one of the family of functions that returns a rotation matrix
+    for converting from one orientation to another.
+    Source: HOR = horizontal system (x=North, y=West, z=Zenith).
+    Target: EQD = equatorial system, using equator of the specified date/time.
+
+    Parameters
+    ----------
+    time : Time
+        The date and time at which the Earth's equator applies.
+    observer : Observer
+        A location near the Earth's mean sea level that defines the observer's horizon.
+
+    Returns
+    -------
+    RotationMatrix
+        A rotation matrix that converts HOR to EQD at `time` and for `observer`.
+    """
+    rot = Rotation_EQD_HOR(time, observer)
+    return InverseRotation(rot)
+
+
+def Rotation_HOR_EQJ(time, observer):
+    """Calculates a rotation matrix from horizontal (HOR) to J2000 equatorial (EQJ).
+
+    This is one of the family of functions that returns a rotation matrix
+    for converting from one orientation to another.
+    Source: HOR = horizontal system (x=North, y=West, z=Zenith).
+    Target: EQJ = equatorial system, using equator at the J2000 epoch.
+
+    Parameters
+    ----------
+    time : Time
+        The date and time of the observation.
+    observer : Observer
+        A location near the Earth's mean sea level that define's the observer's horizon.
+
+    Returns
+    -------
+    RotationMatrix
+        A rotation matrix that converts HOR to EQD at `time` and for `observer`.
+    """
+    hor_eqd = Rotation_HOR_EQD(time, observer)
+    eqd_eqj = Rotation_EQD_EQJ(time)
+    return CombineRotation(hor_eqd, eqd_eqj)
+
+
+def Rotation_EQJ_HOR(time, observer):
+    """Calculates a rotation matrix from equatorial J2000 (EQJ) to horizontal (HOR).
+
+    This is one of the family of functions that returns a rotation matrix
+    for converting from one orientation to another.
+    Source: EQJ = equatorial system, using the equator at the J2000 epoch.
+    Target: HOR = horizontal system.
+
+    Use #HorizonFromVector to convert the return value to
+    a traditional altitude/azimuth pair.
+
+    Parameters
+    ----------
+    time : Time
+        The date and time of the desired horizontal orientation.
+    observer : Observer
+        A location near the Earth's mean sea level that defines the observer's horizon.
+
+    Returns
+    -------
+    RotationMatrix
+        A rotation matrix that converts EQJ to HOR at `time` and for `observer`.
+        The components of the horizontal vector are:
+        x = north, y = west, z = zenith (straight up from the observer).
+        These components are chosen so that the "right-hand rule" works for the vector
+        and so that north represents the direction where azimuth = 0.
+    """
+    rot = Rotation_HOR_EQJ(time, observer)
+    return InverseRotation(rot)
+
+
+def Rotation_EQD_ECL(time):
+    """Calculates a rotation matrix from equatorial of-date (EQD) to ecliptic J2000 (ECL).
+
+    This is one of the family of functions that returns a rotation matrix
+    for converting from one orientation to another.
+    Source: EQD = equatorial system, using equator of date.
+    Target: ECL = ecliptic system, using equator at J2000 epoch.
+
+    Parameters
+    ----------
+    time : Time
+        The date and time of the source equator.
+
+    Returns
+    -------
+        A rotation matrix that converts EQD to ECL.
+    """
+    eqd_eqj = Rotation_EQD_EQJ(time)
+    eqj_ecl = Rotation_EQJ_ECL()
+    return CombineRotation(eqd_eqj, eqj_ecl)
+

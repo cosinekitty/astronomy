@@ -132,6 +132,8 @@ class DocInfo:
             md += '| Type | {} | Description |\n'.format(tag)
             md += '| --- | --- | --- |\n'
             for p in itemlist:
+                if not p.type:
+                    raise Exception('Symbol "{}" has missing type declaration.'.format(p.name))
                 md += '| {} | {} | {} |\n'.format(SymbolLink(p.type), '`' + p.name + '`', p.description.strip())
             md += '\n'
         return md
