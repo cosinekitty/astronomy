@@ -143,7 +143,7 @@ def BodyCode(name):
 
     Returns
     -------
-    #Body
+    Body
         If `name` is a valid body name, returns the enumeration
         value associated with that body.
         Otherwise, returns `Body.Invalid`.
@@ -341,7 +341,7 @@ class Time:
 
         Returns
         -------
-        #Time
+        Time
         """
         micro = round(math.fmod(second, 1.0) * 1000000)
         second = math.floor(second - micro/1000000)
@@ -360,7 +360,7 @@ class Time:
 
         Returns
         -------
-        #Time
+        Time
         """
         ut = (datetime.datetime.utcnow() - _EPOCH).total_seconds() / 86400.0
         return Time(ut)
@@ -388,7 +388,7 @@ class Time:
 
         Returns
         -------
-        #Time
+        Time
         """
         return Time(self.ut + days)
 
@@ -405,7 +405,7 @@ class Time:
 
         Returns
         -------
-        `datetime`
+        datetime
         """
         return _EPOCH + datetime.timedelta(days=self.ut)
 
@@ -862,7 +862,7 @@ def GeoMoon(time):
 
     Returns
     -------
-    #Vector
+    Vector
         The Moon's position as a vector in J2000 Cartesian equatorial coordinates.
 
     """
@@ -1077,7 +1077,7 @@ def Search(func, context, t1, t2, dt_tolerance_seconds):
 
     Returns
     -------
-    #Time or `None`
+    Time or `None`
         If the search is successful, returns a #Time object that is within
         `dt_tolerance_seconds` of an ascending root.
         In this case, the returned time value will always be within the
@@ -1184,7 +1184,7 @@ def HelioVector(body, time):
 
     Returns
     -------
-    #Vector
+    Vector
         A heliocentric position vector of the center of the given body
         at the given time.
     """
@@ -1236,7 +1236,7 @@ def GeoVector(body, time, aberration):
 
     Returns
     -------
-    #Vector
+    Vector
         A geocentric position vector of the center of the given body.
     """
     if body == Body.Moon:
@@ -1318,7 +1318,7 @@ def Equator(body, time, observer, ofdate, aberration):
 
     Returns
     -------
-    #EquatorialCoordinates
+    EquatorialCoordinates
         Equatorial coordinates in the specified frame of reference.
     """
     gc_observer = _geo_pos(time, observer)
@@ -1427,7 +1427,7 @@ def Horizon(time, observer, ra, dec, refraction):
 
     Returns
     -------
-    #HorizontalCoordinates
+    HorizontalCoordinates
         The horizontal coordinates (altitude and azimuth), along with
         equatorial coordinates (right ascension and declination), all
         optionally corrected for atmospheric refraction. See remarks above
@@ -1659,7 +1659,7 @@ def SunPosition(time):
 
     Returns
     -------
-    #EclipticCoordinates
+    EclipticCoordinates
         The ecliptic coordinates of the Sun using the Earth's true equator of date.
     """
     # Correct for light travel time from the Sun.
@@ -1690,7 +1690,7 @@ def Ecliptic(equ):
 
     Returns
     -------
-    #EclipticCoordinates
+    EclipticCoordinates
         Ecliptic coordinates in the J2000 frame of reference.
     """
     # Based on NOVAS functions equ2ecl() and equ2ecl_vec().
@@ -1715,7 +1715,7 @@ def EclipticLongitude(body, time):
 
     Returns
     -------
-    `float`
+    float
         An angular value in degrees indicating the ecliptic longitude of the body.
     """
     if body == Body.Sun:
@@ -1741,7 +1741,7 @@ def AngleFromSun(body, time):
 
     Returns
     -------
-    `float`
+    float
         A numeric value indicating the angle in degrees between the Sun
         and the specified body as seen from the center of the Earth.
     """
@@ -1785,7 +1785,7 @@ def LongitudeFromSun(body, time):
 
     Returns
     -------
-    `float`
+    float
         An angle in degrees in the range [0, 360).
     """
     if body == Body.Earth:
@@ -1860,7 +1860,7 @@ def Elongation(body, time):
 
     Returns
     -------
-    #ElongationEvent
+    ElongationEvent
     """
     angle = LongitudeFromSun(body, time)
     if angle > 180.0:
@@ -1926,7 +1926,7 @@ def SearchRelativeLongitude(body, targetRelLon, startTime):
 
     Returns
     -------
-    #Time
+    Time
         The date and time of the relative longitude event.
     """
     if body == Body.Earth:
@@ -1995,7 +1995,7 @@ def SearchMaxElongation(body, startTime):
 
     Returns
     -------
-    #ElongationEvent
+    ElongationEvent
     """
     if body == Body.Mercury:
         s1 = 50.0
@@ -2115,7 +2115,7 @@ def SearchSunLongitude(targetLon, startTime, limitDays):
 
     Returns
     -------
-    #Time or `None`
+    Time or `None`
     """
     t2 = startTime.AddDays(limitDays)
     return Search(_sun_offset, targetLon, startTime, t2, 1.0)
@@ -2139,7 +2139,7 @@ def MoonPhase(time):
 
     Returns
     -------
-    `float`
+    float
     """
     return LongitudeFromSun(Body.Moon, time)
 
@@ -2176,7 +2176,7 @@ def SearchMoonPhase(targetLon, startTime, limitDays):
 
     Returns
     -------
-    #Time or `None`
+    Time or `None`
     """
     # To avoid discontinuities in the _moon_offset function causing problems,
     # we need to approximate when that function will next return 0.
@@ -2240,7 +2240,7 @@ def SearchMoonQuarter(startTime):
 
     Returns
     -------
-    #MoonQuarter
+    MoonQuarter
     """
     angle = MoonPhase(startTime)
     quarter = int(1 + math.floor(angle / 90.0)) % 4
@@ -2265,7 +2265,7 @@ def NextMoonQuarter(mq):
 
     Returns
     -------
-    #MoonQuarter
+    MoonQuarter
     """
     # Skip 6 days past the previous found moon quarter to find the next one.
     # This is less than the minimum possible increment.
@@ -2406,7 +2406,7 @@ def Illumination(body, time):
 
     Returns
     -------
-    #IlluminationInfo
+    IlluminationInfo
     """
     if body == Body.Earth:
         raise EarthNotAllowedError()
@@ -2476,7 +2476,7 @@ def SearchPeakMagnitude(body, startTime):
 
     Returns
     -------
-    #IlluminationInfo
+    IlluminationInfo
     """
     # s1 and s2 are relative longitudes within which peak magnitude of Venus can occur.
     s1 = 10.0
@@ -2612,7 +2612,7 @@ def SearchHourAngle(body, observer, hourAngle, startTime):
 
     Returns
     -------
-    #HourAngleEvent
+    HourAngleEvent
     """
     if body == Body.Earth:
         raise EarthNotAllowedError()
@@ -2732,7 +2732,7 @@ def SearchRiseSet(body, observer, direction, startTime, limitDays):
 
     Returns
     -------
-    #Time or `None`
+    Time or `None`
         If the rise or set time is found within the specified time window,
         this function returns that time. Otherwise, it returns `None`.
     """
@@ -2857,7 +2857,7 @@ def Seasons(year):
 
     Returns
     -------
-    #SeasonInfo
+    SeasonInfo
     """
     mar_equinox = _FindSeasonChange(0, year, 3, 19)
     jun_solstice = _FindSeasonChange(90, year, 6, 19)
@@ -2951,7 +2951,7 @@ def SearchLunarApsis(startTime):
 
     Returns
     -------
-    #Apsis
+    Apsis
     """
     increment = 5.0     # number of days to skip on each iteration
     t1 = startTime
@@ -3010,7 +3010,7 @@ def NextLunarApsis(apsis):
 
     Returns
     -------
-    #Apsis
+    Apsis
     """
     skip = 11.0     # number of days to skip to start looking for next apsis event
     time = apsis.time.AddDays(skip)
@@ -3516,6 +3516,7 @@ def Rotation_EQD_ECL(time):
 
     Returns
     -------
+    RotationMatrix
         A rotation matrix that converts EQD to ECL.
     """
     eqd_eqj = Rotation_EQD_EQJ(time)

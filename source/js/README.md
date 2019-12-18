@@ -1467,7 +1467,7 @@ Calculates a rotation matrix from horizontal (HOR) to equatorial of-date (EQD).
 This is one of the family of functions that returns a rotation matrix
 for converting from one orientation to another.
 Source: HOR = horizontal system (x=North, y=West, z=Zenith).
-Source: EQD = equatorial system, using equator of the specified date/time.
+Target: EQD = equatorial system, using equator of the specified date/time.
 
 **Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
 **Returns**: [<code>RotationMatrix</code>](#Astronomy.RotationMatrix) - A rotation matrix that converts HOR to EQD at `time` and for `observer`.  
@@ -1488,7 +1488,7 @@ Calculates a rotation matrix from horizontal (HOR) to J2000 equatorial (EQJ).
 This is one of the family of functions that returns a rotation matrix
 for converting from one orientation to another.
 Source: HOR = horizontal system (x=North, y=West, z=Zenith).
-Source: EQJ = equatorial system, using equator at the J2000 epoch.
+Target: EQJ = equatorial system, using equator at the J2000 epoch.
 
 **Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
 **Returns**: [<code>RotationMatrix</code>](#Astronomy.RotationMatrix) - A rotation matrix that converts HOR to EQD at <code>time</code> and for <code>observer</code>.  

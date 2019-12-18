@@ -34,6 +34,10 @@ def HtmlEscape(text):
     return text
 
 def SymbolLink(name):
+    # Special case: Search and related functions have return type = "Time or `None`"
+    m = re.match(r'^\s*([a-zA-Z0-9_]+)\s+or\s+`None`\s*$', name)
+    if m:
+        return SymbolLink(m.group(1)) + ' or `None`'
     if 'a' <= name[0] <= 'z':
         # Assume built-in Python identifier, so do not link
         return '`{0}`'.format(name)
@@ -159,7 +163,7 @@ class DocInfo:
         if self.returns or self.returnType:
             md += '### Returns'
             if self.returnType:
-                md += ': ' + self.returnType
+                md += ': ' + SymbolLink(self.returnType)
             md += '\n'
             md += self.returns + '\n'
             md += '\n'

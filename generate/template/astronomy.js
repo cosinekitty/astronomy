@@ -3684,7 +3684,7 @@ Astronomy.Rotation_EQD_HOR = function(time, observer) {
  * This is one of the family of functions that returns a rotation matrix
  * for converting from one orientation to another.
  * Source: HOR = horizontal system (x=North, y=West, z=Zenith).
- * Source: EQD = equatorial system, using equator of the specified date/time.
+ * Target: EQD = equatorial system, using equator of the specified date/time.
  *
  * @param {Astronomy.AstroTime} time
  *      The date and time at which the Earth's equator applies.
@@ -3707,7 +3707,7 @@ Astronomy.Rotation_HOR_EQD = function(time, observer) {
  * This is one of the family of functions that returns a rotation matrix
  * for converting from one orientation to another.
  * Source: HOR = horizontal system (x=North, y=West, z=Zenith).
- * Source: EQJ = equatorial system, using equator at the J2000 epoch.
+ * Target: EQJ = equatorial system, using equator at the J2000 epoch.
  *
  * @param {Astronomy.AstroTime} time
  *      The date and time of the observation.
