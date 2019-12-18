@@ -2267,7 +2267,7 @@ static int Test_EQD_HOR(astro_body_t body)
     printf("Test_EQD_HOR %s: trusted alt=%0.3lf, az=%0.3lf; test alt=%0.3lf, az=%0.3lf; diff_alt=%lg, diff_az=%lg\n",
         Astronomy_BodyName(body), hor.altitude, hor.azimuth, sphere.lat, sphere.lon, diff_alt, diff_az);
 
-    if (diff_alt > 2.0e-14 || diff_az > 2.0e-14)
+    if (diff_alt > 2.0e-14 || diff_az > 4e-14)
     {
         fprintf(stderr, "Test_EQD_HOR: EXCESSIVE HORIZONTAL ERROR.\n");
         return 1;
@@ -2277,7 +2277,7 @@ static int Test_EQD_HOR(astro_body_t body)
     CHECK_VECTOR(check_hor, Astronomy_VectorFromHorizon(sphere, time, REFRACTION_NORMAL));
     CHECK(VectorDiff(check_hor, vec_hor, &diff));
     printf("Test_EQD_HOR %s: horizontal recovery: diff = %lg\n", Astronomy_BodyName(body), diff);
-    if (diff > 1.0e-15)
+    if (diff > 2.0e-15)
     {
         fprintf(stderr, "Test_EQD_HOR: EXCESSIVE ERROR IN HORIZONTAL RECOVERY.\n");
         return 1;
@@ -2289,7 +2289,7 @@ static int Test_EQD_HOR(astro_body_t body)
     CHECK_VECTOR(check_eqd, Astronomy_RotateVector(rot, vec_hor));
     CHECK(VectorDiff(check_eqd, vec_eqd, &diff));
     printf("Test_EQD_HOR %s: OFDATE inverse rotation diff = %lg\n", Astronomy_BodyName(body), diff);
-    if (diff > 1.0e-15)
+    if (diff > 2.0e-15)
     {
         fprintf(stderr, "Test_EQD_HOR: EXCESSIVE OFDATE INVERSE HORIZONTAL ERROR.\n");
         return 1;
@@ -2304,7 +2304,7 @@ static int Test_EQD_HOR(astro_body_t body)
     CHECK_VECTOR(check_eqj, Astronomy_RotateVector(rot, vec_hor));
     CHECK(VectorDiff(check_eqj, vec_eqj, &diff));
     printf("Test_EQD_HOR %s: J2000 inverse rotation diff = %lg\n", Astronomy_BodyName(body), diff);
-    if (diff > 2.0e-15)
+    if (diff > 4.0e-15)
     {
         fprintf(stderr, "Test_EQD_HOR: EXCESSIVE J2000 INVERSE HORIZONTAL ERROR.\n");
         return 1;
