@@ -920,6 +920,70 @@ def Test_EQD_HOR(body):
         print('Test_EQD_HOR: EXCESSIVE EQJ INVERSE HORIZONTAL ERROR.')
         sys.exit(1)
 
+IdentityMatrix = astronomy.RotationMatrix([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+
+def CheckInverse(aname, bname, arot, brot):
+    crot = astronomy.CombineRotation(arot, brot)
+    caller = 'CheckInverse({},{})'.format(aname, bname)
+    CompareMatrices(caller, crot, IdentityMatrix, 2.0e-15)
+
+
+def CheckCycle(cyclename, arot, brot, crot):
+    xrot = astronomy.CombineRotation(arot, brot)
+    irot = astronomy.InverseRotation(xrot)
+    CompareMatrices(cyclename, crot, irot, 2.0e-15)
+
+
+def Test_RotRoundTrip():
+    # In each round trip, calculate a forward rotation and a backward rotation.
+    # Verify the two are inverse matrices.
+    time = astronomy.Time.Make(2067, 5, 30, 14, 45, 0)
+    observer = astronomy.Observer(+28, -82, 0)
+
+    # Round trip #1: EQJ <==> EQD.
+    eqj_eqd = astronomy.Rotation_EQJ_EQD(time)
+    eqd_eqj = astronomy.Rotation_EQD_EQJ(time)
+    CheckInverse('eqj_eqd', 'eqd_eqj', eqj_eqd, eqd_eqj)
+
+    # Round trip #2: EQJ <==> ECL.
+    eqj_ecl = astronomy.Rotation_EQJ_ECL()
+    ecl_eqj = astronomy.Rotation_ECL_EQJ()
+    CheckInverse('eqj_ecl', 'ecl_eqj', eqj_ecl, ecl_eqj)
+
+    # Round trip #3: EQJ <==> HOR.
+    eqj_hor = astronomy.Rotation_EQJ_HOR(time, observer)
+    hor_eqj = astronomy.Rotation_HOR_EQJ(time, observer)
+    CheckInverse('eqj_hor', 'hor_eqj', eqj_hor, hor_eqj)
+
+    # Round trip #4: EQD <==> HOR.
+    eqd_hor = astronomy.Rotation_EQD_HOR(time, observer)
+    hor_eqd = astronomy.Rotation_HOR_EQD(time, observer)
+    CheckInverse('eqd_hor', 'hor_eqd', eqd_hor, hor_eqd)
+
+    # Round trip #5: EQD <==> ECL.
+    eqd_ecl = astronomy.Rotation_EQD_ECL(time)
+    ecl_eqd = astronomy.Rotation_ECL_EQD(time)
+    CheckInverse('eqd_ecl', 'ecl_eqd', eqd_ecl, ecl_eqd)
+
+    # Round trip #6: HOR <==> ECL.
+    hor_ecl = astronomy.Rotation_HOR_ECL(time, observer)
+    ecl_hor = astronomy.Rotation_ECL_HOR(time, observer)
+    CheckInverse('hor_ecl', 'ecl_hor', hor_ecl, ecl_hor)
+
+    # Verify that combining different sequences of rotations result
+    # in the expected combination.
+    # For example, (EQJ ==> HOR ==> ECL) must be the same matrix as (EQJ ==> ECL).
+    # Each of these is a "triangle" of relationships between 3 orientations.
+    # There are 4 possible ways to pick 3 orientations from the 4 to form a triangle.
+    # Because we have just proved that each transformation is reversible,
+    # we only need to verify the triangle in one cyclic direction.
+    CheckCycle('eqj_ecl, ecl_eqd, eqd_eqj', eqj_ecl, ecl_eqd, eqd_eqj)     # excluded corner = HOR
+    CheckCycle('eqj_hor, hor_ecl, ecl_eqj', eqj_hor, hor_ecl, ecl_eqj)     # excluded corner = EQD
+    CheckCycle('eqj_hor, hor_eqd, eqd_eqj', eqj_hor, hor_eqd, eqd_eqj)     # excluded corner = ECL
+    CheckCycle('ecl_eqd, eqd_hor, hor_ecl', ecl_eqd, eqd_hor, hor_ecl)     # excluded corner = EQJ
+
+    print('Test_RotRoundTrip: PASS')
+
 
 def Test_Rotation():
     Rotation_MatrixInverse()
@@ -935,6 +999,7 @@ def Test_Rotation():
     Test_EQD_HOR(astronomy.Body.Mars)
     Test_EQD_HOR(astronomy.Body.Jupiter)
     Test_EQD_HOR(astronomy.Body.Saturn)
+    Test_RotRoundTrip()
     print('Python Test_Rotation: PASS')
     return 0
 

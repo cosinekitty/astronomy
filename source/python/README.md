@@ -987,6 +987,25 @@ A vector in the orientation specified by `rotation`.
 
 ---
 
+<a name="Rotation_ECL_EQD"></a>
+### Rotation_ECL_EQD(time)
+
+**Calculates a rotation matrix from ecliptic J2000 (ECL) to equatorial of-date (EQD).**
+
+This is one of the family of functions that returns a rotation matrix
+for converting from one orientation to another.
+Source: ECL = ecliptic system, using equator at J2000 epoch.
+Target: EQD = equatorial system, using equator of date.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Time`](#Time) | `time` | The date and time of the desired equator. |
+
+### Returns: RotationMatrix
+A rotation matrix that converts ECL to EQD.
+
+---
+
 <a name="Rotation_ECL_EQJ"></a>
 ### Rotation_ECL_EQJ()
 
@@ -999,6 +1018,32 @@ Target: EQJ = equatorial system, using equator at J2000 epoch.
 
 ### Returns: RotationMatrix
 A rotation matrix that converts ECL to EQJ.
+
+---
+
+<a name="Rotation_ECL_HOR"></a>
+### Rotation_ECL_HOR(time, observer)
+
+**Calculates a rotation matrix from ecliptic J2000 (ECL) to horizontal (HOR).**
+
+This is one of the family of functions that returns a rotation matrix
+for converting from one orientation to another.
+Source: ECL = ecliptic system, using equator at J2000 epoch.
+Target: HOR = horizontal system.
+Use #HorizonFromVector to convert the return value
+to a traditional altitude/azimuth pair.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Time`](#Time) | `time` | The date and time of the desired horizontal orientation. |
+| [`Observer`](#Observer) | `observer` | A location near the Earth's mean sea level that defines the observer's horizon. |
+
+### Returns: RotationMatrix
+A rotation matrix that converts ECL to HOR at `time` and for `observer`.
+The components of the horizontal vector are:
+x = north, y = west, z = zenith (straight up from the observer).
+These components are chosen so that the "right-hand rule" works for the vector
+and so that north represents the direction where azimuth = 0.
 
 ---
 
@@ -1123,6 +1168,26 @@ The components of the horizontal vector are:
 x = north, y = west, z = zenith (straight up from the observer).
 These components are chosen so that the "right-hand rule" works for the vector
 and so that north represents the direction where azimuth = 0.
+
+---
+
+<a name="Rotation_HOR_ECL"></a>
+### Rotation_HOR_ECL(time, observer)
+
+**Calculates a rotation matrix from horizontal (HOR) to ecliptic J2000 (ECL).**
+
+This is one of the family of functions that returns a rotation matrix
+for converting from one orientation to another.
+Source: HOR = horizontal system.
+Target: ECL = ecliptic system, using equator at J2000 epoch.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Time`](#Time) | `time` | The date and time of the horizontal observation. |
+| [`Observer`](#Observer) | `observer` | The location of the horizontal observer. |
+
+### Returns: RotationMatrix
+A rotation matrix that converts HOR to ECL.
 
 ---
 

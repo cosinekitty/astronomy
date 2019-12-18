@@ -5583,3 +5583,80 @@ def Rotation_EQD_ECL(time):
     eqj_ecl = Rotation_EQJ_ECL()
     return CombineRotation(eqd_eqj, eqj_ecl)
 
+
+def Rotation_ECL_EQD(time):
+    """Calculates a rotation matrix from ecliptic J2000 (ECL) to equatorial of-date (EQD).
+
+    This is one of the family of functions that returns a rotation matrix
+    for converting from one orientation to another.
+    Source: ECL = ecliptic system, using equator at J2000 epoch.
+    Target: EQD = equatorial system, using equator of date.
+
+    Parameters
+    ----------
+    time : Time
+        The date and time of the desired equator.
+
+    Returns
+    -------
+    RotationMatrix
+        A rotation matrix that converts ECL to EQD.
+    """
+    rot = Rotation_EQD_ECL(time)
+    return InverseRotation(rot)
+
+
+def Rotation_ECL_HOR(time, observer):
+    """Calculates a rotation matrix from ecliptic J2000 (ECL) to horizontal (HOR).
+
+    This is one of the family of functions that returns a rotation matrix
+    for converting from one orientation to another.
+    Source: ECL = ecliptic system, using equator at J2000 epoch.
+    Target: HOR = horizontal system.
+
+    Use #HorizonFromVector to convert the return value
+    to a traditional altitude/azimuth pair.
+
+    Parameters
+    ----------
+    time : Time
+        The date and time of the desired horizontal orientation.
+    observer : Observer
+        A location near the Earth's mean sea level that defines the observer's horizon.
+
+    Returns
+    -------
+    RotationMatrix
+        A rotation matrix that converts ECL to HOR at `time` and for `observer`.
+        The components of the horizontal vector are:
+        x = north, y = west, z = zenith (straight up from the observer).
+        These components are chosen so that the "right-hand rule" works for the vector
+        and so that north represents the direction where azimuth = 0.
+    """
+    ecl_eqd = Rotation_ECL_EQD(time)
+    eqd_hor = Rotation_EQD_HOR(time, observer)
+    return CombineRotation(ecl_eqd, eqd_hor)
+
+
+def Rotation_HOR_ECL(time, observer):
+    """Calculates a rotation matrix from horizontal (HOR) to ecliptic J2000 (ECL).
+
+    This is one of the family of functions that returns a rotation matrix
+    for converting from one orientation to another.
+    Source: HOR = horizontal system.
+    Target: ECL = ecliptic system, using equator at J2000 epoch.
+
+    Parameters
+    ----------
+    time : Time
+        The date and time of the horizontal observation.
+    observer : Observer
+        The location of the horizontal observer.
+
+    Returns
+    RotationMatrix
+        A rotation matrix that converts HOR to ECL.
+    -------
+    """
+    rot = Rotation_ECL_HOR(time, observer)
+    return InverseRotation(rot)
