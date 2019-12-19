@@ -8,7 +8,7 @@ import enum
 
 def PrintUsage():
     print("""
-USAGE:  pydown.py infile.py outfile.md
+USAGE:  pydown.py prefix.md infile.py outfile.md
 """)
     return 1
 
@@ -34,11 +34,19 @@ def HtmlEscape(text):
     return text
 
 def SymbolLink(name):
+    # Special case: Search and related functions have return type = "Time or `None`"
+    m = re.match(r'^\s*([a-zA-Z0-9_]+)\s+or\s+`None`\s*$', name)
+    if m:
+        return SymbolLink(m.group(1)) + ' or `None`'
     if 'a' <= name[0] <= 'z':
         # Assume built-in Python identifier, so do not link
         return '`{0}`'.format(name)
     # [`astro_time_t`](#astro_time_t)
     return '[`{0}`](#{0})'.format(name)
+
+def FixText(s):
+    # Expand "#Body" to "[`Body`](#Body)".
+    return re.sub(r'#([A-Z][A-Za-z0-9_]*)', r'[`\1`](#\1)', s)
 
 class ParmInfo:
     def __init__(self, name, type):
@@ -69,7 +77,7 @@ class DocInfo:
 
         currentAttr = None
         currentParm = None
-        mode = ''    
+        mode = ''
         for line in lines:
             if re.match(r'^\-+$', line):
                 continue
@@ -132,7 +140,9 @@ class DocInfo:
             md += '| Type | {} | Description |\n'.format(tag)
             md += '| --- | --- | --- |\n'
             for p in itemlist:
-                md += '| {} | {} | {} |\n'.format(SymbolLink(p.type), '`' + p.name + '`', p.description.strip())
+                if not p.type:
+                    raise Exception('Symbol "{}" has missing type declaration.'.format(p.name))
+                md += '| {} | {} | {} |\n'.format(SymbolLink(p.type), '`' + p.name + '`', FixText(p.description.strip()))
             md += '\n'
         return md
 
@@ -148,16 +158,16 @@ class DocInfo:
     def Markdown(self):
         md = '\n'
         if self.summary:
-            md += '**' + self.summary + '**\n\n'
+            md += '**' + FixText(self.summary) + '**\n\n'
         if self.description:
-            md += self.description + '\n\n'
+            md += FixText(self.description) + '\n\n'
         md += self.Table(self.parameters, 'Parameter')
         md += self.Table(self.attributes, 'Attribute')
         md += self.EnumTable()
         if self.returns or self.returnType:
             md += '### Returns'
             if self.returnType:
-                md += ': ' + self.returnType
+                md += ': ' + SymbolLink(self.returnType)
             md += '\n'
             md += self.returns + '\n'
             md += '\n'
@@ -209,7 +219,7 @@ def MdClass(c):
         info = DocInfo(doc)
         md += info.Markdown()
         md += '\n'
-        
+
         firstMemberFunc = True
         for name, obj in inspect.getmembers(c):
             if not name.startswith('_'):
@@ -307,7 +317,7 @@ def Markdown(module):
     md += '\n'
     for func in funclist:
         md += MdFunction(func)
-    
+
     # Remove extraneous blank lines.
     # We never need more than 2 consecutive newline characters.
     md = re.sub('\n{3,}', '\n\n', md)
@@ -315,19 +325,28 @@ def Markdown(module):
     return md
 
 def main():
-    if len(sys.argv) != 3:
+    if len(sys.argv) != 4:
         return PrintUsage()
-    inPythonFileName = sys.argv[1]
-    outMarkdownFileName = sys.argv[2]
+    prefixFileName = sys.argv[1]
+    inPythonFileName = sys.argv[2]
+    outMarkdownFileName = sys.argv[3]
     # Delete output file before we begin.
     # That way, if anything goes wrong, it won't exist,
     # and thus the error becomes conspicuous to scripts/tools.
     if os.access(outMarkdownFileName, os.F_OK):
         os.remove(outMarkdownFileName)
+
+    # Load the prefix text.
+    with open(prefixFileName, 'rt') as infile:
+        prefix = infile.read()
+
     module = LoadModule(inPythonFileName)
     md = Markdown(module)
+
     with open(outMarkdownFileName, 'wt') as outfile:
+        outfile.write(prefix)
         outfile.write(md)
+
     return 0
 
 if __name__ == '__main__':

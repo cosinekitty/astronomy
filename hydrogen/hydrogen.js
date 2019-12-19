@@ -63,29 +63,29 @@ class Item {
     static Flat(x) {
         if (typeof x === 'string') {
             return x;
-        } 
-    
+        }
+
         if (x instanceof Array) {
             let s = '';
             for (let e of x) {
                 s += Item.Flat(e);
             }
             return s;
-        }     
-        
+        }
+
         if (typeof x === 'object') {
             if (x.$$) {
                 return Item.Flat(x.$$);
             }
-    
+
             if (x._) {
                 return Item.Flat(x._);
             }
 
             return '';
         }
-    
-        throw `Item.Flat: don't know how to convert: ${x}`;    
+
+        throw `Item.Flat: don't know how to convert: ${x}`;
     }
 
     static Search(x, key, kind) {
@@ -95,7 +95,7 @@ class Item {
             if (e['#name'] === key) {
                 if (!kind || e.$.kind === kind) {
                     return e;
-                }                
+                }
             }
 
             if (e.$$ instanceof Array) {
@@ -104,7 +104,7 @@ class Item {
                 }
             }
         }
-        return null;    
+        return null;
     }
 
     static Clean(s) {
@@ -345,7 +345,7 @@ class FuncInfo extends Item {
                     md += '| ' + type + ' | `' + name + '` | ' + desc + ' | \n';
                 }
             }
-            md += '\n\n';    
+            md += '\n\n';
         }
 
         return md;

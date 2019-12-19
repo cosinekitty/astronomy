@@ -8,8 +8,8 @@ int ParseArgs(int argc, const char *argv[], astro_observer_t *observer, astro_ti
     {
         observer->height = 0.0;
 
-        if (1 != sscanf(argv[1], "%lf", &observer->latitude) || 
-            observer->latitude < -90.0 || 
+        if (1 != sscanf(argv[1], "%lf", &observer->latitude) ||
+            observer->latitude < -90.0 ||
             observer->latitude > +90.0)
         {
             fprintf(stderr, "ERROR: Invalid latitude '%s' on command line\n", argv[1]);

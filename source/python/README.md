@@ -1,3 +1,127 @@
+# Astronomy Engine (Python)
+
+This is the complete programming reference for the Python version of
+Astronomy Engine. Supports Python 3. Does NOT support Python 2.
+See the [home page](https://github.com/cosinekitty/astronomy) for more info.
+
+---
+
+## Quick Start
+To get started quickly, here are some [examples](../../demo/python/).
+
+---
+
+## Contents
+
+- [Topic Index](#topics)
+- [Classes](#classes)
+- [Enumerated Types](#enumerations)
+- [Error Types](#errors)
+- [Functions](#functions)
+
+---
+
+<a name="topics"></a>
+## Topic Index
+
+### Position of Sun, Moon, and planets
+
+| Function | Description |
+| -------- | ----------- |
+| [HelioVector](#HelioVector) | Calculates vector with respect to the center of the Sun. |
+| [GeoVector](#GeoVector)     | Calculates vector with respect to the center of the Earth. |
+| [Equator](#Equator)         | Calculates right ascension and declination. |
+| [Ecliptic](#Ecliptic)       | Converts J2000 equatorial coordinates to J2000 ecliptic coordinates. |
+| [EclipticLongitude](#EclipticLongitude) | Calculates ecliptic longitude of a body in the J2000 system. |
+| [Horizon](#Horizon)         | Calculates horizontal coordinates (azimuth, altitude) for a given observer on the Earth. |
+| [LongitudeFromSun](#LongitudeFromSun) | Calculates a body's apparent ecliptic longitude difference from the Sun, as seen by an observer on the Earth. |
+
+### Rise, set, and culmination times
+
+| Function | Description |
+| -------- | ----------- |
+| [SearchRiseSet](#SearchRiseSet) | Finds time of rise or set for a body as seen by an observer on the Earth. |
+| [SearchHourAngle](#SearchHourAngle) | Finds when body reaches a given hour angle for an observer on the Earth. Hour angle = 0 finds culmination, the highest point in the sky. |
+
+### Moon phases
+
+| Function | Description |
+| -------- | ----------- |
+| [MoonPhase](#MoonPhase) | Determines the Moon's phase expressed as an ecliptic longitude. |
+| [SearchMoonPhase](#SearchMoonPhase) | Finds the next instance of the Moon reaching a specific ecliptic longitude separation from the Sun. |
+| [SearchMoonQuarter](#SearchMoonQuarter) | Finds the first quarter moon phase after a given date and time. |
+| [NextMoonQuarter](#NextMoonQuarter) | Finds the next quarter moon phase after a previous one that has been found. |
+
+### Lunar perigee and apogee
+
+| Function | Description |
+| -------- | ----------- |
+| [SearchLunarApsis](#SearchLunarApsis) | Finds the next perigee or apogee of the Moon after a specified date. |
+| [NextLunarApsis](#NextLunarApsis) | Given an already-found apsis, finds the next perigee or apogee of the Moon. |
+
+### Visual magnitude and elongation
+
+| Function | Description |
+| -------- | ----------- |
+| [Illumination](#Illumination) | Calculates visual magnitude and phase angle of bodies as seen from the Earth. |
+| [SearchPeakMagnitude](#SearchPeakMagnitude) | Searches for the date and time Venus will next appear brightest as seen from the Earth. |
+| [AngleFromSun](#AngleFromSun) | Returns full angle seen from Earth between body and Sun. |
+| [Elongation](#Elongation) | Calculates ecliptic longitude angle between a body and the Sun, as seen from the Earth. |
+| [SearchMaxElongation](#SearchMaxElongation) | Searches for the next maximum elongation event for Mercury or Venus that occurs after the given date. |
+
+### Oppositions and conjunctions
+
+| Function | Description |
+| -------- | ----------- |
+| [SearchRelativeLongitude](#SearchRelativeLongitude) | Finds oppositions and conjunctions of planets. |
+
+### Equinoxes, solstices, and apparent solar motion
+
+| Function | Description |
+| -------- | ----------- |
+| [SearchSunLongitude](#SearchSunLongitude) | Finds the next time the Sun reaches a specified apparent ecliptic longitude in the *true equator of date* system. |
+| [Seasons](#Seasons) | Finds the equinoxes and solstices for a given calendar year. |
+| [SunPosition](#SunPosition) | Calculates the Sun's apparent ecliptic coordinates as seen from the Earth. |
+
+### Coordinate transforms
+
+The following four orientation systems are supported.
+Astronomy Engine can convert a vector from any of these orientations to any of the others.
+It also allows converting from a vector to spherical (angular) coordinates and back,
+within a given orientation. Note the 3-letter codes for each of the orientation systems;
+these are used in function and type names.
+
+- **EQJ = Equatorial J2000**: Uses the Earth's equator on January 1, 2000, at noon UTC.
+- **EQD = Equator of-date**: Uses the Earth's equator on a given date and time, adjusted for precession and nutation.
+- **ECL = Ecliptic**: Uses the mean plane of the Earth's orbit around the Sun. The x-axis is referenced against the J2000 equinox.
+- **HOR = Horizontal**: Uses the viewpoint of an observer at a specific location on the Earth at a given date and time.
+
+| Function | Description |
+| -------- | ----------- |
+| [RotateVector](#RotateVector) | Applies a rotation matrix to a vector, yielding a vector in another orientation system. |
+| [InverseRotation](#InverseRotation) | Given a rotation matrix, finds the inverse rotation matrix that does the opposite transformation. |
+| [CombineRotation](#CombineRotation) | Given two rotation matrices, returns a rotation matrix that combines them into a net transformation. |
+| [VectorFromSphere](#VectorFromSphere) | Converts spherical coordinates to Cartesian coordinates. |
+| [SphereFromVector](#SphereFromVector) | Converts Cartesian coordinates to spherical coordinates. |
+| [VectorFromEquator](#VectorFromEquator) | Given angular equatorial coordinates, calculates equatorial vector. |
+| [EquatorFromVector](#EquatorFromVector) | Given an equatorial vector, calculates equatorial angular coordinates. |
+| [VectorFromHorizon](#VectorFromHorizon) | Given apparent angular horizontal coordinates, calculates horizontal vector. |
+| [HorizonFromVector](#HorizonFromVector) | Given a vector in horizontal orientation, calculates horizontal angular coordinates. |
+| [Rotation_EQD_EQJ](#Rotation_EQD_EQJ) | Calculates a rotation matrix from equatorial of-date (EQD) to equatorial J2000 (EQJ). |
+| [Rotation_EQD_ECL](#Rotation_EQD_ECL) | Calculates a rotation matrix from equatorial of-date (EQD) to ecliptic J2000 (ECL). |
+| [Rotation_EQD_HOR](#Rotation_EQD_HOR) | Calculates a rotation matrix from equatorial of-date (EQD) to horizontal (HOR). |
+| [Rotation_EQJ_EQD](#Rotation_EQJ_EQD) | Calculates a rotation matrix from equatorial J2000 (EQJ) to equatorial of-date (EQD). |
+| [Rotation_EQJ_ECL](#Rotation_EQJ_ECL) | Calculates a rotation matrix from equatorial J2000 (EQJ) to ecliptic J2000 (ECL). |
+| [Rotation_EQJ_HOR](#Rotation_EQJ_HOR) | Calculates a rotation matrix from equatorial J2000 (EQJ) to horizontal (HOR). |
+| [Rotation_ECL_EQD](#Rotation_ECL_EQD) | Calculates a rotation matrix from ecliptic J2000 (ECL) to equatorial of-date (EQD). |
+| [Rotation_ECL_EQJ](#Rotation_ECL_EQJ) | Calculates a rotation matrix from ecliptic J2000 (ECL) to equatorial J2000 (EQJ). |
+| [Rotation_ECL_HOR](#Rotation_ECL_HOR) | Calculates a rotation matrix from ecliptic J2000 (ECL) to horizontal (HOR). |
+| [Rotation_HOR_EQD](#Rotation_HOR_EQD) | Calculates a rotation matrix from horizontal (HOR) to equatorial of-date (EQD). |
+| [Rotation_HOR_EQJ](#Rotation_HOR_EQJ) | Calculates a rotation matrix from horizontal (HOR) to J2000 equatorial (EQJ). |
+| [Rotation_HOR_ECL](#Rotation_HOR_ECL) | Calculates a rotation matrix from horizontal (HOR) to ecliptic J2000 (ECL). |
+
+---
+
 ---
 
 <a name="classes"></a>
@@ -17,7 +141,7 @@ More specific terminology is common for particular orbiting bodies.
 The Moon's closest approach to the Earth is called *perigee* and its furthest
 point is called *apogee*. The closest approach of a planet to the Sun is called
 *perihelion* and the furthest point is called *aphelion*.
-This data structure is returned by #SearchLunarApsis and #NextLunarApsis
+This data structure is returned by [`SearchLunarApsis`](#SearchLunarApsis) and [`NextLunarApsis`](#NextLunarApsis)
 to iterate through consecutive alternating perigees and apogees.
 
 | Type | Attribute | Description |
@@ -52,8 +176,8 @@ oriented with respect to the plane of the Earth's orbit around the Sun (the ecli
 
 **Contains information about the visibility of a celestial body at a given date and time.**
 
-See the #Elongation function for more detailed information about the members of this class.
-See also #SearchMaxElongation for how to search for maximum elongation events.
+See the [`Elongation`](#Elongation) function for more detailed information about the members of this class.
+See also [`SearchMaxElongation`](#SearchMaxElongation) for how to search for maximum elongation events.
 
 | Type | Attribute | Description |
 | --- | --- | --- |
@@ -105,7 +229,7 @@ All coordinates are optionally corrected for atmospheric refraction.
 
 **Information about a celestial body crossing a specific hour angle.**
 
-Returned by the function #Astronomy_SearchHourAngle to report information about
+Returned by the function [`SearchHourAngle`](#SearchHourAngle) to report information about
 a celestial body crossing a certain hour angle as seen by a specified topocentric observer.
 
 | Type | Attribute | Description |
@@ -120,7 +244,7 @@ a celestial body crossing a certain hour angle as seen by a specified topocentri
 
 **Information about the brightness and illuminated shape of a celestial body.**
 
-Returned by functions #Illumination and #SearchPeakMagnitude
+Returned by functions [`Illumination`](#Illumination) and [`SearchPeakMagnitude`](#SearchPeakMagnitude)
 to report the visual magnitude and illuminated fraction of a celestial
 body at a given date and time.
 
@@ -167,12 +291,24 @@ when the lunar quarter event happens.
 
 ---
 
+<a name="RotationMatrix"></a>
+### class RotationMatrix
+
+Contains a rotation matrix that can be used to transform one
+coordinate system into another.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| `float[3][3]` | `rot` | A normalized 3x3 rotation matrix. |
+
+---
+
 <a name="SeasonInfo"></a>
 ### class SeasonInfo
 
 **The dates and times of changes of season for a given calendar year.**
 
-Call #Seasons to calculate this data structure for a given year.
+Call [`Seasons`](#Seasons) to calculate this data structure for a given year.
 
 | Type | Attribute | Description |
 | --- | --- | --- |
@@ -180,6 +316,19 @@ Call #Seasons to calculate this data structure for a given year.
 | [`Time`](#Time) | `jun_solstice` | The date and time of the June solstice for the specified year. |
 | [`Time`](#Time) | `sep_equinox` | The date and time of the September equinox for the specified year. |
 | [`Time`](#Time) | `dec_solstice` | The date and time of the December solstice for the specified year. |
+
+---
+
+<a name="Spherical"></a>
+### class Spherical
+
+**Holds spherical coordinates: latitude, longitude, distance.**
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| `float` | `lat` | The latitude angle: -90..+90 degrees. |
+| `float` | `lon` | The longitude angle: 0..360 degrees. |
+| `float` | `dist` | Distance in AU. |
 
 ---
 
@@ -205,9 +354,9 @@ dates and times represented by `Time` objects.
 <a name="Time.AddDays"></a>
 ### Time.AddDays(self, days)
 
-**Calculates the sum or difference of a #Time with a specified real-valued number of days.**
+**Calculates the sum or difference of a [`Time`](#Time) with a specified real-valued number of days.**
 
-Sometimes we need to adjust a given #Time value by a certain amount of time.
+Sometimes we need to adjust a given [`Time`](#Time) value by a certain amount of time.
 This function adds the given real number of days in `days` to the date and time
 in the calling object.
 More precisely, the result's Universal Time field `ut` is exactly adjusted by `days`
@@ -215,18 +364,18 @@ and the Terrestrial Time field `tt` is adjusted correctly for the resulting UTC 
 according to the historical and predictive Delta-T model provided by the
 [United States Naval Observatory](http://maia.usno.navy.mil/ser7/).
 The value of the calling object is not modified. This function creates a brand new
-#Time object and returns it.
+[`Time`](#Time) object and returns it.
 
 | Type | Parameter | Description |
 | --- | --- | --- |
 | `float` | `days` | A floating point number of days by which to adjust `time`. May be negative, 0, or positive. |
 
-### Returns: #Time
+### Returns: [`Time`](#Time)
 
 <a name="Time.Make"></a>
 ### Time.Make(year, month, day, hour, minute, second)
 
-**Creates a #Time object from a UTC calendar date and time.**
+**Creates a [`Time`](#Time) object from a UTC calendar date and time.**
 
 | Type | Parameter | Description |
 | --- | --- | --- |
@@ -237,19 +386,19 @@ The value of the calling object is not modified. This function creates a brand n
 | `int` | `minute` | The UTC minute, in the range 0..59. |
 | `float` | `second` | The real-valued UTC second, in the range [0, 60). |
 
-### Returns: #Time
+### Returns: [`Time`](#Time)
 
 <a name="Time.Now"></a>
 ### Time.Now()
 
-**Returns the computer's current date and time in the form of a #Time object.**
+**Returns the computer's current date and time in the form of a [`Time`](#Time) object.**
 
 Uses the computer's system clock to find the current UTC date and time.
-Converts that date and time to a #Time value and returns the result.
+Converts that date and time to a [`Time`](#Time) value and returns the result.
 Callers can pass this value to other Astronomy Engine functions to
 calculate current observational conditions.
 
-### Returns: #Time
+### Returns: [`Time`](#Time)
 
 <a name="Time.Utc"></a>
 ### Time.Utc(self)
@@ -478,10 +627,29 @@ and the specified body as seen from the center of the Earth.
 | --- | --- | --- |
 | `str` | `name` | The common English name of a supported celestial body. |
 
-### Returns: #Body
+### Returns: [`Body`](#Body)
 If `name` is a valid body name, returns the enumeration
 value associated with that body.
 Otherwise, returns `Body.Invalid`.
+
+---
+
+<a name="CombineRotation"></a>
+### CombineRotation(a, b)
+
+**Creates a rotation based on applying one rotation followed by another.**
+
+Given two rotation matrices, returns a combined rotation matrix that is
+equivalent to rotating based on the first matrix, followed by the second.
+b : RotationMatrix
+    The second rotation to apply.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`RotationMatrix`](#RotationMatrix) | `a` | The first rotation to apply. |
+
+### Returns: [`RotationMatrix`](#RotationMatrix)
+The combined rotation matrix.
 
 ---
 
@@ -493,10 +661,12 @@ Otherwise, returns `Body.Invalid`.
 Given coordinates relative to the Earth's equator at J2000 (the instant of noon UTC
 on 1 January 2000), this function converts those coordinates to J2000 ecliptic coordinates,
 which are relative to the plane of the Earth's orbit around the Sun.
-equ : EquatorialCoordinates
-    Equatorial coordinates in the J2000 frame of reference.
 
-### Returns: #EclipticCoordinates
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`EquatorialCoordinates`](#EquatorialCoordinates) | `equ` | Equatorial coordinates in the J2000 frame of reference. |
+
+### Returns: [`EclipticCoordinates`](#EclipticCoordinates)
 Ecliptic coordinates in the J2000 frame of reference.
 
 ---
@@ -527,7 +697,7 @@ An angular value in degrees indicating the ecliptic longitude of the body.
 
 **Determines visibility of a celestial body relative to the Sun, as seen from the Earth.**
 
-This function returns an #ElongationEvent object, which provides the following
+This function returns an [`ElongationEvent`](#ElongationEvent) object, which provides the following
 information about the given celestial body at the given time:
 - `visibility` is an enumerated type that specifies whether the body is more
   easily seen in the morning before sunrise, or in the evening after sunset.
@@ -547,7 +717,7 @@ time : Time
 | --- | --- | --- |
 | [`Body`](#Body) | `body` | The celestial body whose visibility is to be calculated. |
 
-### Returns: #ElongationEvent
+### Returns: [`ElongationEvent`](#ElongationEvent)
 
 ---
 
@@ -575,8 +745,22 @@ Correction for aberration is optional, using the `aberration` parameter.
 | `bool` | `ofdate` | Selects the date of the Earth's equator in which to express the equatorial coordinates. If `True`, returns coordinates using the equator and equinox of date. If `False`, returns coordinates converted to the J2000 system. |
 | `bool` | `aberration` | If `True`, corrects for aberration of light based on the motion of the Earth with respect to the heliocentric origin. If `False`, does not correct for aberration. |
 
-### Returns: #EquatorialCoordinates
+### Returns: [`EquatorialCoordinates`](#EquatorialCoordinates)
 Equatorial coordinates in the specified frame of reference.
+
+---
+
+<a name="EquatorFromVector"></a>
+### EquatorFromVector(vec)
+
+**Given an equatorial vector, calculates equatorial angular coordinates.**
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Vector`](#Vector) | `vec` | A vector in an equatorial coordinate system. |
+
+### Returns: [`Equatorial`](#Equatorial)
+Angular coordinates expressed in the same equatorial system as `vec`.
 
 ---
 
@@ -598,7 +782,7 @@ by Montenbruck and Pfleger.
 | --- | --- | --- |
 | [`Time`](#Time) | `time` | The date and time for which to calculate the Moon's position. |
 
-### Returns: #Vector
+### Returns: [`Vector`](#Vector)
 The Moon's position as a vector in J2000 Cartesian equatorial coordinates.
 
 ---
@@ -614,7 +798,7 @@ vector in the J2000 equatorial system: the coordinates are based on the mean equ
 of the Earth at noon UTC on 1 January 2000.
 If given an invalid value for `body`, or the body is `Body.Pluto` and the `time` is outside
 the year range 1700..2200, this function will raise an exception.
-Unlike #HelioVector, this function always corrects for light travel time.
+Unlike [`HelioVector`](#HelioVector), this function always corrects for light travel time.
 This means the position of the body is "back-dated" by the amount of time it takes
 light to travel from that body to an observer on the Earth.
 Also, the position can optionally be corrected for
@@ -628,7 +812,7 @@ movement of the Earth with respect to the rays of light coming from that body.
 | [`Time`](#Time) | `time` | The date and time for which to calculate the position. |
 | `bool` | `aberration` | A boolean value indicating whether to correct for aberration. |
 
-### Returns: #Vector
+### Returns: [`Vector`](#Vector)
 A geocentric position vector of the center of the given body.
 
 ---
@@ -643,7 +827,7 @@ using the center of the Sun as the origin.  The result is expressed as a Cartesi
 vector in the J2000 equatorial system: the coordinates are based on the mean equator
 of the Earth at noon UTC on 1 January 2000.
 The position is not corrected for light travel time or aberration.
-This is different from the behavior of #GeoVector.
+This is different from the behavior of [`GeoVector`](#GeoVector).
 If given an invalid value for `body`, or the body is `Body.Pluto` and `time` is outside
 the year range 1700..2200, this function raise an exception.
 
@@ -652,7 +836,7 @@ the year range 1700..2200, this function raise an exception.
 | [`Body`](#Body) | `body` | The celestial body whose heliocentric position is to be calculated: The Sun, Moon, or any of the planets. |
 | [`Time`](#Time) | `time` | The time at which to calculate the heliocentric position. |
 
-### Returns: #Vector
+### Returns: [`Vector`](#Vector)
 A heliocentric position vector of the center of the given body
 at the given time.
 
@@ -670,7 +854,7 @@ relative to the horizon at the geographic location.
 The right ascension `ra` and declination `dec` passed in must be *equator of date*
 coordinates, based on the Earth's true equator at the date and time of the observation.
 Otherwise the resulting horizontal coordinates will be inaccurate.
-Equator of date coordinates can be obtained by calling #Equator, passing in
+Equator of date coordinates can be obtained by calling [`Equator`](#Equator), passing in
 `True` as its `ofdate` parameter. It is also recommended to enable
 aberration correction by passing in `True` for the `aberration` parameter.
 This function optionally corrects for atmospheric refraction.
@@ -679,16 +863,50 @@ correct for optical lensing of the Earth's atmosphere that causes objects
 to appear somewhat higher above the horizon than they actually are.
 However, callers may choose to avoid this correction by passing in `Refraction.Airless`.
 If refraction correction is enabled, the azimuth, altitude, right ascension, and declination
-in the #HorizontalCoordinates object returned by this function will all be corrected for refraction.
+in the [`HorizontalCoordinates`](#HorizontalCoordinates) object returned by this function will all be corrected for refraction.
 If refraction is disabled, none of these four coordinates will be corrected; in that case,
 the right ascension and declination in the returned object will be numerically identical
 to the respective `ra` and `dec` values passed in.
 
-### Returns: #HorizontalCoordinates
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Time`](#Time) | `time` | The date and time for which to find horizontal coordinates. |
+| [`Observer`](#Observer) | `observer` | The location of the observer for which to find horizontal coordinates. |
+| `float` | `ra` | Right ascension in sidereal hours of the celestial object, referred to the mean equinox of date for the J2000 epoch. |
+| `float` | `dec` | Declination in degrees of the celestial object, referred to the mean equator of date for the J2000 epoch. Positive values are north of the celestial equator and negative values are south of it. |
+| [`Refraction`](#Refraction) | `refraction` | The option for selecting whether to correct for atmospheric lensing. If `Refraction.Normal`, a well-behaved refraction model is used. If `Refraction.None`, no refraction correct is performed. `Refraction.JplHorizons` is used only for compatibility testing with the JPL Horizons online tool. |
+
+### Returns: [`HorizontalCoordinates`](#HorizontalCoordinates)
 The horizontal coordinates (altitude and azimuth), along with
 equatorial coordinates (right ascension and declination), all
 optionally corrected for atmospheric refraction. See remarks above
 for more details.
+
+---
+
+<a name="HorizonFromVector"></a>
+### HorizonFromVector(vector, refraction)
+
+**Converts Cartesian coordinates to horizontal coordinates.**
+
+Given a horizontal Cartesian vector, returns horizontal azimuth and altitude.
+*IMPORTANT:* This function differs from `SphereFromVector` in two ways:
+- `SphereFromVector` returns a `lon` value that represents azimuth defined counterclockwise
+  from north (e.g., west = +90), but this function represents a clockwise rotation
+  (e.g., east = +90). The difference is because `SphereFromVector` is intended
+  to preserve the vector "right-hand rule", while this function defines azimuth in a more
+  traditional way as used in navigation and cartography.
+- This function optionally corrects for atmospheric refraction, while `SphereFromVector` does not.
+The returned object contains the azimuth in `lon`.
+It is measured in degrees clockwise from north: east = +90 degrees, west = +270 degrees.
+The altitude is stored in `lat`.
+The distance to the observed object is stored in `dist`,
+and is expressed in astronomical units (AU).
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Vector`](#Vector) | `vector` | Cartesian vector to be converted to horizontal angular coordinates. |
+| [`Refraction`](#Refraction) | `refraction` | See comments in the [`RefractionAngle`](#RefractionAngle) function. |
 
 ---
 
@@ -718,7 +936,47 @@ the rings appear edge-on, and are thus nearly invisible from the Earth. The `rin
 | [`Body`](#Body) | `body` | The Sun, Moon, or any planet other than the Earth. |
 | [`Time`](#Time) | `time` | The date and time of the observation. |
 
-### Returns: #IlluminationInfo
+### Returns: [`IlluminationInfo`](#IlluminationInfo)
+
+---
+
+<a name="InverseRefractionAngle"></a>
+### InverseRefractionAngle(refraction, bent_altitude)
+
+**Calculates the inverse of an atmospheric refraction angle.**
+
+Given an observed altitude angle that includes atmospheric refraction,
+calculate the negative angular correction to obtain the unrefracted
+altitude. This is useful for cases where observed horizontal
+coordinates are to be converted to another orientation system,
+but refraction first must be removed from the observed position.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Refraction`](#Refraction) | `refraction` | `Refraction.Normal` - corrects for atmospheric refraction (recommended). `Refraction.Airless` - no correction is performed. `Refraction.JplHorizons` - For JPL Horizons compatibility testing only. |
+| `float` | `bent_altitude` | The apparent altitude that includes atmospheric refraction. |
+
+### Returns: `float`
+The angular adjustment in degrees, to be added to the
+altitude angle to correct for atmospheric lensing.
+This will be less than or equal to zero.
+
+---
+
+<a name="InverseRotation"></a>
+### InverseRotation(rotation)
+
+**Calculates the inverse of a rotation matrix.**
+
+Given a rotation matrix that performs some coordinate transform,
+this function returns the matrix that reverses that trasnform.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`RotationMatrix`](#RotationMatrix) | `rotation` | The rotation matrix to be inverted. |
+
+### Returns: [`RotationMatrix`](#RotationMatrix)
+The inverse rotation matrix.
 
 ---
 
@@ -781,17 +1039,17 @@ Certain values of the angle have conventional definitions:
 
 **Finds the next lunar perigee or apogee in a series.**
 
-This function requires an #Apsis value obtained from a call to
-#SearchLunarApsis or `NextLunarApsis`.
+This function requires an [`Apsis`](#Apsis) value obtained from a call to
+[`SearchLunarApsis`](#SearchLunarApsis) or `NextLunarApsis`.
 Given an apogee event, this function finds the next perigee event,
 and vice versa.
-See #SearchLunarApsis for more details.
+See [`SearchLunarApsis`](#SearchLunarApsis) for more details.
 
 | Type | Parameter | Description |
 | --- | --- | --- |
 | [`Apsis`](#Apsis) | `apsis` |  |
 
-### Returns: #Apsis
+### Returns: [`Apsis`](#Apsis)
 
 ---
 
@@ -800,16 +1058,300 @@ See #SearchLunarApsis for more details.
 
 **Continues searching for lunar quarters from a previous search.**
 
-After calling #Astronomy_SearchMoonQuarter, this function can be called
+After calling [`SearchMoonQuarter`](#SearchMoonQuarter), this function can be called
 one or more times to continue finding consecutive lunar quarters.
 This function finds the next consecutive moon quarter event after
 the one passed in as the parameter `mq`.
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| [`MoonQuarter`](#MoonQuarter) | `mq` | A value returned by a prior call to #SearchMoonQuarter or #NextMoonQuarter. |
+| [`MoonQuarter`](#MoonQuarter) | `mq` | A value returned by a prior call to [`SearchMoonQuarter`](#SearchMoonQuarter) or [`NextMoonQuarter`](#NextMoonQuarter). |
 
-### Returns: #MoonQuarter
+### Returns: [`MoonQuarter`](#MoonQuarter)
+
+---
+
+<a name="RefractionAngle"></a>
+### RefractionAngle(refraction, altitude)
+
+**Calculates the amount of "lift" to an altitude angle caused by atmospheric refraction.**
+
+Given an altitude angle and a refraction option, calculates
+the amount of "lift" caused by atmospheric refraction.
+This is the number of degrees higher in the sky an object appears
+due to lensing of the Earth's atmosphere.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Refraction`](#Refraction) | `refraction` | The option for selecting whether to correct for atmospheric lensing. If `Refraction.Normal`, a well-behaved refraction model is used. If `Refraction.Airless`, no refraction correct is performed. `Refraction.JplHorizons` is used only for compatibility testing with the JPL Horizons online tool. |
+| `float` | `altitude` | The number of degrees above (positive) or below (negative) the horizon an object is, before being corrected for refraction. |
+
+### Returns: `float`
+The number of additional degrees of altitude an object appears
+to have, due to atmospheric refraction, depending on the
+option selected by the `refraction` parameter.
+
+---
+
+<a name="RotateVector"></a>
+### RotateVector(rotation, vector)
+
+**Applies a rotation to a vector, yielding a rotated vector.**
+
+This function transforms a vector in one orientation to a vector
+in another orientation.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`RotationMatrix`](#RotationMatrix) | `rotation` | A rotation matrix that specifies how the orientation of the vector is to be changed. |
+| [`Vector`](#Vector) | `vector` | The vector whose orientation is to be changed. |
+
+### Returns: [`Vector`](#Vector)
+A vector in the orientation specified by `rotation`.
+
+---
+
+<a name="Rotation_ECL_EQD"></a>
+### Rotation_ECL_EQD(time)
+
+**Calculates a rotation matrix from ecliptic J2000 (ECL) to equatorial of-date (EQD).**
+
+This is one of the family of functions that returns a rotation matrix
+for converting from one orientation to another.
+Source: ECL = ecliptic system, using equator at J2000 epoch.
+Target: EQD = equatorial system, using equator of date.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Time`](#Time) | `time` | The date and time of the desired equator. |
+
+### Returns: [`RotationMatrix`](#RotationMatrix)
+A rotation matrix that converts ECL to EQD.
+
+---
+
+<a name="Rotation_ECL_EQJ"></a>
+### Rotation_ECL_EQJ()
+
+**Calculates a rotation matrix from ecliptic J2000 (ECL) to equatorial J2000 (EQJ).**
+
+This is one of the family of functions that returns a rotation matrix
+for converting from one orientation to another.
+Source: ECL = ecliptic system, using equator at J2000 epoch.
+Target: EQJ = equatorial system, using equator at J2000 epoch.
+
+### Returns: [`RotationMatrix`](#RotationMatrix)
+A rotation matrix that converts ECL to EQJ.
+
+---
+
+<a name="Rotation_ECL_HOR"></a>
+### Rotation_ECL_HOR(time, observer)
+
+**Calculates a rotation matrix from ecliptic J2000 (ECL) to horizontal (HOR).**
+
+This is one of the family of functions that returns a rotation matrix
+for converting from one orientation to another.
+Source: ECL = ecliptic system, using equator at J2000 epoch.
+Target: HOR = horizontal system.
+Use [`HorizonFromVector`](#HorizonFromVector) to convert the return value
+to a traditional altitude/azimuth pair.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Time`](#Time) | `time` | The date and time of the desired horizontal orientation. |
+| [`Observer`](#Observer) | `observer` | A location near the Earth's mean sea level that defines the observer's horizon. |
+
+### Returns: [`RotationMatrix`](#RotationMatrix)
+A rotation matrix that converts ECL to HOR at `time` and for `observer`.
+The components of the horizontal vector are:
+x = north, y = west, z = zenith (straight up from the observer).
+These components are chosen so that the "right-hand rule" works for the vector
+and so that north represents the direction where azimuth = 0.
+
+---
+
+<a name="Rotation_EQD_ECL"></a>
+### Rotation_EQD_ECL(time)
+
+**Calculates a rotation matrix from equatorial of-date (EQD) to ecliptic J2000 (ECL).**
+
+This is one of the family of functions that returns a rotation matrix
+for converting from one orientation to another.
+Source: EQD = equatorial system, using equator of date.
+Target: ECL = ecliptic system, using equator at J2000 epoch.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Time`](#Time) | `time` | The date and time of the source equator. |
+
+### Returns: [`RotationMatrix`](#RotationMatrix)
+A rotation matrix that converts EQD to ECL.
+
+---
+
+<a name="Rotation_EQD_EQJ"></a>
+### Rotation_EQD_EQJ(time)
+
+**Calculates a rotation matrix from equatorial of-date (EQD) to equatorial J2000 (EQJ).**
+
+This is one of the family of functions that returns a rotation matrix
+for converting from one orientation to another.
+Source: EQD = equatorial system, using equator of the specified date/time.
+Target: EQJ = equatorial system, using equator at J2000 epoch.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Time`](#Time) | `time` | The date and time at which the Earth's equator defines the source orientation. |
+
+### Returns: [`RotationMatrix`](#RotationMatrix)
+A rotation matrix that converts EQD at `time` to EQJ.
+
+---
+
+<a name="Rotation_EQD_HOR"></a>
+### Rotation_EQD_HOR(time, observer)
+
+**Calculates a rotation matrix from equatorial of-date (EQD) to horizontal (HOR).**
+
+This is one of the family of functions that returns a rotation matrix
+for converting from one orientation to another.
+Source: EQD = equatorial system, using equator of the specified date/time.
+Target: HOR = horizontal system.
+Use [`HorizonFromVector`](#HorizonFromVector) to convert the return value
+to a traditional altitude/azimuth pair.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Time`](#Time) | `time` | The date and time at which the Earth's equator applies. |
+| [`Observer`](#Observer) | `observer` | A location near the Earth's mean sea level that defines the observer's location. |
+
+### Returns: [`RotationMatrix`](#RotationMatrix)
+A rotation matrix that converts EQD to HOR at `time` and for `observer`.
+The components of the horizontal vector are:
+x = north, y = west, z = zenith (straight up from the observer).
+These components are chosen so that the "right-hand rule" works for the vector
+and so that north represents the direction where azimuth = 0.
+
+---
+
+<a name="Rotation_EQJ_ECL"></a>
+### Rotation_EQJ_ECL()
+
+**Calculates a rotation matrix from equatorial J2000 (EQJ) to ecliptic J2000 (ECL).**
+
+This is one of the family of functions that returns a rotation matrix
+for converting from one orientation to another.
+Source: EQJ = equatorial system, using equator at J2000 epoch.
+Target: ECL = ecliptic system, using equator at J2000 epoch.
+
+### Returns: [`RotationMatrix`](#RotationMatrix)
+A rotation matrix that converts EQJ to ECL.
+
+---
+
+<a name="Rotation_EQJ_EQD"></a>
+### Rotation_EQJ_EQD(time)
+
+**Calculates a rotation matrix from equatorial J2000 (EQJ) to equatorial of-date (EQD).**
+
+This is one of the family of functions that returns a rotation matrix
+for converting from one orientation to another.
+Source: EQJ = equatorial system, using equator at J2000 epoch.
+Target: EQD = equatorial system, using equator of the specified date/time.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Time`](#Time) | `time` | The date and time at which the Earth's equator defines the target orientation. |
+
+### Returns: [`RotationMatrix`](#RotationMatrix)
+A rotation matrix that converts EQJ to EQD at `time`.
+
+---
+
+<a name="Rotation_EQJ_HOR"></a>
+### Rotation_EQJ_HOR(time, observer)
+
+**Calculates a rotation matrix from equatorial J2000 (EQJ) to horizontal (HOR).**
+
+This is one of the family of functions that returns a rotation matrix
+for converting from one orientation to another.
+Source: EQJ = equatorial system, using the equator at the J2000 epoch.
+Target: HOR = horizontal system.
+Use [`HorizonFromVector`](#HorizonFromVector) to convert the return value to
+a traditional altitude/azimuth pair.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Time`](#Time) | `time` | The date and time of the desired horizontal orientation. |
+| [`Observer`](#Observer) | `observer` | A location near the Earth's mean sea level that defines the observer's horizon. |
+
+### Returns: [`RotationMatrix`](#RotationMatrix)
+A rotation matrix that converts EQJ to HOR at `time` and for `observer`.
+The components of the horizontal vector are:
+x = north, y = west, z = zenith (straight up from the observer).
+These components are chosen so that the "right-hand rule" works for the vector
+and so that north represents the direction where azimuth = 0.
+
+---
+
+<a name="Rotation_HOR_ECL"></a>
+### Rotation_HOR_ECL(time, observer)
+
+**Calculates a rotation matrix from horizontal (HOR) to ecliptic J2000 (ECL).**
+
+This is one of the family of functions that returns a rotation matrix
+for converting from one orientation to another.
+Source: HOR = horizontal system.
+Target: ECL = ecliptic system, using equator at J2000 epoch.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Time`](#Time) | `time` | The date and time of the horizontal observation. |
+| [`Observer`](#Observer) | `observer` | The location of the horizontal observer. |
+
+### Returns: [`RotationMatrix`](#RotationMatrix)
+A rotation matrix that converts HOR to ECL.
+
+---
+
+<a name="Rotation_HOR_EQD"></a>
+### Rotation_HOR_EQD(time, observer)
+
+**Calculates a rotation matrix from horizontal (HOR) to equatorial of-date (EQD).**
+
+This is one of the family of functions that returns a rotation matrix
+for converting from one orientation to another.
+Source: HOR = horizontal system (x=North, y=West, z=Zenith).
+Target: EQD = equatorial system, using equator of the specified date/time.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Time`](#Time) | `time` | The date and time at which the Earth's equator applies. |
+| [`Observer`](#Observer) | `observer` | A location near the Earth's mean sea level that defines the observer's horizon. |
+
+### Returns: [`RotationMatrix`](#RotationMatrix)
+A rotation matrix that converts HOR to EQD at `time` and for `observer`.
+
+---
+
+<a name="Rotation_HOR_EQJ"></a>
+### Rotation_HOR_EQJ(time, observer)
+
+**Calculates a rotation matrix from horizontal (HOR) to J2000 equatorial (EQJ).**
+
+This is one of the family of functions that returns a rotation matrix
+for converting from one orientation to another.
+Source: HOR = horizontal system (x=North, y=West, z=Zenith).
+Target: EQJ = equatorial system, using equator at the J2000 epoch.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Time`](#Time) | `time` | The date and time of the observation. |
+| [`Observer`](#Observer) | `observer` | A location near the Earth's mean sea level that define's the observer's horizon. |
+
+### Returns: [`RotationMatrix`](#RotationMatrix)
+A rotation matrix that converts HOR to EQD at `time` and for `observer`.
 
 ---
 
@@ -831,7 +1373,7 @@ and a context containing any other arguments needed to evaluate the function.
 The `context` parameter supplies that context for the given search.
 As an example, a caller may wish to find the moment a celestial body reaches a certain
 ecliptic longitude. In that case, the caller might create a type (class, tuple, whatever)
-that contains a #Body member to specify the body and a numeric value to hold the target longitude.
+that contains a [`Body`](#Body) member to specify the body and a numeric value to hold the target longitude.
 A different function might use a completely different context type.
 Every time it is called, `func` returns a `float` value or it raises an exception.
 If `func` raises an exception, the search immediately fails and the exception is
@@ -850,7 +1392,7 @@ If an ascending root is not found, or more than one root
 (ascending and/or descending) exists within the window `t1`..`t2`,
 `Search` will return `None` to indicate a normal search failure.
 If the search does not converge within 20 iterations, it will raise
-an #Error exception.
+an [`Error`](#Error) exception.
 context : object
     An arbitrary data structure needed to be passed to the function `func`
     every time it is called.
@@ -866,9 +1408,9 @@ dt_tolerance_seconds : float
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| `function(context, Time)` | `func` | A function that takes an arbitrary context parameter and a #Time parameter. Returns a float value.  See remarks above for more details. |
+| `function(context, Time)` | `func` | A function that takes an arbitrary context parameter and a [`Time`](#Time) parameter. Returns a float value.  See remarks above for more details. |
 
-### Returns: #Time or `None`
+### Returns: [`Time`](#Time) or `None`
 If the search is successful, returns a #Time object that is within
 `dt_tolerance_seconds` of an ascending root.
 In this case, the returned time value will always be within the
@@ -908,7 +1450,7 @@ of the body at that time, as seen by the given observer.
 | `float` | `hourAngle` | An hour angle value in the range [0.0, 24.0) indicating the number of sidereal hours after the body's most recent culmination. |
 | [`Time`](#Time) | `startTime` | The date and time at which to start the search. |
 
-### Returns: #HourAngleEvent
+### Returns: [`HourAngleEvent`](#HourAngleEvent)
 
 ---
 
@@ -920,12 +1462,12 @@ of the body at that time, as seen by the given observer.
 Given a date and time to start the search in `startTime`, this function finds
 the next date and time that the center of the Moon reaches the closest or
 farthest point in its orbit with respect to the center of the Earth, whichever
-comes first after `startTime`.  The return value (of type #Apsis) also
+comes first after `startTime`.  The return value (of type [`Apsis`](#Apsis)) also
 contains an indicator of whether the event is apogee or perigee.
 The closest point is called *perigee* and the farthest point is called *apogee*.
 The word *apsis* refers to either event.
 To iterate through consecutive alternating perigee and apogee events,
-call #SearchLunarApsis once, then use the return value to call #NextLunarApsis.
+call [`SearchLunarApsis`](#SearchLunarApsis) once, then use the return value to call [`NextLunarApsis`](#NextLunarApsis).
 After that, keep feeding the previous return value from `NextLunarApsis` into
 another call of `NextLunarApsis` as many times as desired.
 
@@ -933,7 +1475,7 @@ another call of `NextLunarApsis` as many times as desired.
 | --- | --- | --- |
 | [`Time`](#Time) | `startTime` | The date and time at which to start searching for the next perigee or apogee. |
 
-### Returns: #Apsis
+### Returns: [`Apsis`](#Apsis)
 
 ---
 
@@ -949,14 +1491,14 @@ a telescope without atmospheric interference, are when these planets reach maxim
 These are events where the planets reach the maximum angle from the Sun as seen from the Earth.
 This function solves for those times, reporting the next maximum elongation event's date and time,
 the elongation value itself, the relative longitude with the Sun, and whether the planet is best
-observed in the morning or evening. See #ElongationEvent for more details about the returned object.
+observed in the morning or evening. See [`ElongationEvent`](#ElongationEvent) for more details about the returned object.
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| [`Body`](#Body) | `body` | Either `Body.Mercury` or `Body.Venus`. Any other value will result in an exception. To find the best viewing opportunities for planets farther from the Sun than the Earth is (Mars through Pluto), use #SearchRelativeLongitude to find the next opposition event. |
+| [`Body`](#Body) | `body` | Either `Body.Mercury` or `Body.Venus`. Any other value will result in an exception. To find the best viewing opportunities for planets farther from the Sun than the Earth is (Mars through Pluto), use [`SearchRelativeLongitude`](#SearchRelativeLongitude) to find the next opposition event. |
 | [`Time`](#Time) | `startTime` | The date and time at which to begin the search. The maximum elongation event found will always be the first one that occurs after this date and time. |
 
-### Returns: #ElongationEvent
+### Returns: [`ElongationEvent`](#ElongationEvent)
 
 ---
 
@@ -972,7 +1514,7 @@ When their longitudes are 180 degrees apart, that is defined as a full moon.
 This function searches for any value of the lunar phase expressed as an
 angle in degrees in the range [0, 360).
 If you want to iterate through lunar quarters (new moon, first quarter, full moon, third quarter)
-it is much easier to call the functions #SearchMoonQuarter and #NextMoonQuarter.
+it is much easier to call the functions [`SearchMoonQuarter`](#SearchMoonQuarter) and [`NextMoonQuarter`](#NextMoonQuarter).
 This function is useful for finding general phase angles outside those four quarters.
 
 | Type | Parameter | Description |
@@ -981,7 +1523,7 @@ This function is useful for finding general phase angles outside those four quar
 | [`Time`](#Time) | `startTime` | The beginning of the time window in which to search for the Moon reaching the specified phase. |
 | `float` | `limitDays` | The number of days after `startTime` that limits the time window for the search. |
 
-### Returns: #Time or `None`
+### Returns: [`Time`](#Time) or `None`
 
 ---
 
@@ -995,13 +1537,13 @@ new moon, first quarter, full moon, third quarter.
 This function finds the lunar quarter that happens soonest
 after the specified date and time.
 To continue iterating through consecutive lunar quarters, call this function once,
-followed by calls to #NextMoonQuarter as many times as desired.
+followed by calls to [`NextMoonQuarter`](#NextMoonQuarter) as many times as desired.
 
 | Type | Parameter | Description |
 | --- | --- | --- |
 | [`Time`](#Time) | `startTime` | The date and time at which to start the search. |
 
-### Returns: #MoonQuarter
+### Returns: [`MoonQuarter`](#MoonQuarter)
 
 ---
 
@@ -1015,9 +1557,9 @@ Currently only Venus is supported for the `body` parameter, though this could ch
 Mercury's peak magnitude occurs at superior conjunction, when it is virtually impossible to see
 from the Earth, so peak magnitude events have little practical value for that planet.
 Planets other than Venus and Mercury reach peak magnitude at opposition, which can
-be found using #SearchRelativeLongitude.
+be found using [`SearchRelativeLongitude`](#SearchRelativeLongitude).
 The Moon reaches peak magnitude at full moon, which can be found using
-#SearchMoonQuarter or #SearchMoonPhase.
+[`SearchMoonQuarter`](#SearchMoonQuarter) or [`SearchMoonPhase`](#SearchMoonPhase).
 The Sun reaches peak magnitude at perihelion, which occurs each year in January.
 However, the difference is minor and has little practical value.
 
@@ -1026,7 +1568,7 @@ However, the difference is minor and has little practical value.
 | [`Body`](#Body) | `body` | Currently only `Body.Venus` is allowed. Any other value results in an exception. See remarks above for more details. |
 | [`Time`](#Time) | `startTime` | The date and time to start searching for the next peak magnitude event. |
 
-### Returns: #IlluminationInfo
+### Returns: [`IlluminationInfo`](#IlluminationInfo)
 
 ---
 
@@ -1069,7 +1611,7 @@ the Earth and another planet:
 | `float` | `targetRelLon` | The desired relative longitude, expressed in degrees. Must be in the range [0, 360). |
 | [`Time`](#Time) | `startTime` | The date and time at which to begin the search. |
 
-### Returns: #Time
+### Returns: [`Time`](#Time)
 The date and time of the relative longitude event.
 
 ---
@@ -1102,7 +1644,7 @@ Therefore callers must not assume that the function will always succeed.
 | [`Time`](#Time) | `startTime` | The date and time at which to start the search. |
 | `float` | `limitDays` | Limits how many days to search for a rise or set time. To limit a rise or set time to the same day, you can use a value of 1 day. In cases where you want to find the next rise or set time no matter how far in the future (for example, for an observer near the south pole), you can pass in a larger value like 365. |
 
-### Returns: #Time or `None`
+### Returns: [`Time`](#Time) or `None`
 If the rise or set time is found within the specified time window,
 this function returns that time. Otherwise, it returns `None`.
 
@@ -1116,7 +1658,7 @@ this function returns that time. Otherwise, it returns `None`.
 This function finds the moment in time, if any exists in the given time window,
 that the center of the Sun reaches a specific ecliptic longitude as seen from the center of the Earth.
 This function can be used to determine equinoxes and solstices.
-However, it is usually more convenient and efficient to call #Seasons
+However, it is usually more convenient and efficient to call [`Seasons`](#Seasons)
 to calculate all equinoxes and solstices for a given calendar year.
 The function searches the window of time specified by `startTime` and `startTime+limitDays`.
 The search will return `None` if the Sun never reaches the longitude `targetLon` or
@@ -1135,7 +1677,7 @@ limitDays : float
      It is recommended to keep this value between 1 and 10 days.
      See remarks above for more details.
 
-### Returns: #Time or `None`
+### Returns: [`Time`](#Time) or `None`
 
 ---
 
@@ -1166,7 +1708,23 @@ of winter in the southern hemisphere.
 | --- | --- | --- |
 | `int` | `year` | The calendar year number for which to calculate equinoxes and solstices. The value may be any integer, but only the years 1800 through 2100 have been validated for accuracy: unit testing against data from the United States Naval Observatory confirms that all equinoxes and solstices for that range of years are within 2 minutes of the correct time. |
 
-### Returns: #SeasonInfo
+### Returns: [`SeasonInfo`](#SeasonInfo)
+
+---
+
+<a name="SphereFromVector"></a>
+### SphereFromVector(vector)
+
+**Converts Cartesian coordinates to spherical coordinates.**
+
+Given a Cartesian vector, returns latitude, longitude, and distance.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Vector`](#Vector) | `vector` | Cartesian vector to be converted to spherical coordinates. |
+
+### Returns: [`Spherical`](#Spherical)
+Spherical coordinates that are equivalent to the given vector.
 
 ---
 
@@ -1186,12 +1744,62 @@ as the longitude origin and x-axis direction, instead of the one for September.
 `SunPosition` corrects for precession and nutation of the Earth's axis
 in order to obtain the exact equatorial plane at the given time.
 This function can be used for calculating changes of seasons: equinoxes and solstices.
-In fact, the function #Seasons does use this function for that purpose.
+In fact, the function [`Seasons`](#Seasons) does use this function for that purpose.
 
 | Type | Parameter | Description |
 | --- | --- | --- |
 | [`Time`](#Time) | `time` | The date and time for which to calculate the Sun's position. |
 
-### Returns: #EclipticCoordinates
+### Returns: [`EclipticCoordinates`](#EclipticCoordinates)
 The ecliptic coordinates of the Sun using the Earth's true equator of date.
+
+---
+
+<a name="VectorFromEquator"></a>
+### VectorFromEquator(equ, time)
+
+**Given angular equatorial coordinates in `equ`, calculates equatorial vector.**
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Equatorial`](#Equatorial) | `equ` | Angular equatorial coordinates to be converted to a vector. |
+| [`Time`](#Time) | `time` | The date and time of the observation. This is needed because the returned vector object requires a valid time value when passed to certain other functions. |
+
+### Returns: [`Vector`](#Vector)
+A vector in the equatorial system.
+
+---
+
+<a name="VectorFromHorizon"></a>
+### VectorFromHorizon(sphere, time, refraction)
+
+**Given apparent angular horizontal coordinates in `sphere`, calculate horizontal vector.**
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Spherical`](#Spherical) | `sphere` | A structure that contains apparent horizontal coordinates: `lat` holds the refracted azimuth angle, `lon` holds the azimuth in degrees clockwise from north, and `dist` holds the distance from the observer to the object in AU. |
+| [`Time`](#Time) | `time` | The date and time of the observation. This is needed because the returned vector object requires a valid time value when passed to certain other functions. |
+| [`Refraction`](#Refraction) | `refraction` | See remarks in function [`RefractionAngle`](#RefractionAngle). |
+
+### Returns: [`Vector`](#Vector)
+A vector in the horizontal system: `x` = north, `y` = west, and `z` = zenith (up).
+
+---
+
+<a name="VectorFromSphere"></a>
+### VectorFromSphere(sphere, time)
+
+**Converts spherical coordinates to Cartesian coordinates.**
+
+Given spherical coordinates and a time at which they are valid,
+returns a vector of Cartesian coordinates. The returned value
+includes the time, as required by all `Time` objects.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Spherical`](#Spherical) | `sphere` | Spherical coordinates to be converted. |
+| [`Time`](#Time) | `time` | The time that should be included in the returned vector. |
+
+### Returns: [`Vector`](#Vector)
+The vector form of the supplied spherical coordinates.
 

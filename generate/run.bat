@@ -197,6 +197,9 @@ if errorlevel 1 (exit /b 1)
 !CTESTEXE! diff temp\c_check.txt dotnet\csharp_test\csharp_check.txt
 if errorlevel 1 (exit /b 1)
 
+!CTESTEXE! rotation
+if errorlevel 1 (exit /b 1)
+
 !CTESTEXE! seasons seasons\seasons.txt
 if errorlevel 1 (exit /b 1)
 
@@ -225,6 +228,12 @@ REM ----------------------------------------------------------------------------
 
 echo.Running Python tests.
 test.py time
+if errorlevel 1 (exit /b 1)
+
+test.py refraction
+if errorlevel 1 (exit /b 1)
+
+test.py rotation
 if errorlevel 1 (exit /b 1)
 
 test.py apsis

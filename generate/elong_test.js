@@ -86,7 +86,7 @@ function LoadData(filename) {
     const text = fs.readFileSync(filename, {encoding:'utf8'});
     const lines = text.trimRight().split('\n');
     let data = [];
-    for (let row of lines) {        
+    for (let row of lines) {
         let token = row.split(/\s+/);
         data.push({date:new Date(token[0]), body:token[1]});
     }

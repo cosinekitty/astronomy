@@ -5,6 +5,8 @@ Fail()
     exit 1
 }
 ./ctbuild $1 || exit 1
+./ctest refraction || Fail "Failure in ctest refraction"
+./ctest rotation || Fail "Failure in ctest rotation"
 ./ctest moon || Fail "Failure in ctest moon"
 time ./ctest || Fail "Failure reported by ctest."
 ./generate check temp/c_check.txt || Fail "Verification failure for C unit test output."

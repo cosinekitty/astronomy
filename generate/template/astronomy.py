@@ -143,7 +143,7 @@ def BodyCode(name):
 
     Returns
     -------
-    #Body
+    Body
         If `name` is a valid body name, returns the enumeration
         value associated with that body.
         Otherwise, returns `Body.Invalid`.
@@ -341,7 +341,7 @@ class Time:
 
         Returns
         -------
-        #Time
+        Time
         """
         micro = round(math.fmod(second, 1.0) * 1000000)
         second = math.floor(second - micro/1000000)
@@ -360,7 +360,7 @@ class Time:
 
         Returns
         -------
-        #Time
+        Time
         """
         ut = (datetime.datetime.utcnow() - _EPOCH).total_seconds() / 86400.0
         return Time(ut)
@@ -388,7 +388,7 @@ class Time:
 
         Returns
         -------
-        #Time
+        Time
         """
         return Time(self.ut + days)
 
@@ -405,7 +405,7 @@ class Time:
 
         Returns
         -------
-        `datetime`
+        datetime
         """
         return _EPOCH + datetime.timedelta(days=self.ut)
 
@@ -434,6 +434,35 @@ class Observer:
         self.latitude = latitude
         self.longitude = longitude
         self.height = height
+
+class RotationMatrix:
+    """Contains a rotation matrix that can be used to transform one
+    coordinate system into another.
+
+    Parameters
+    ----------
+    rot : float[3][3]
+        A normalized 3x3 rotation matrix.
+    """
+    def __init__(self, rot):
+        self.rot = rot
+
+class Spherical:
+    """Holds spherical coordinates: latitude, longitude, distance.
+
+    Parameters
+    ----------
+    lat : float
+        The latitude angle: -90..+90 degrees.
+    lon : float
+        The longitude angle: 0..360 degrees.
+    dist : float
+        Distance in AU.
+    """
+    def __init__(self, lat, lon, dist):
+        self.lat = lat
+        self.lon = lon
+        self.dist = dist
 
 class _iau2000b:
     def __init__(self, time):
@@ -480,7 +509,7 @@ def _ecl2equ_vec(time, ecl):
         ecl[1]*sin_obl + ecl[2]*cos_obl
     ]
 
-def _precession(tt1, pos1, tt2):
+def _precession_rot(tt1, tt2):
     eps0 = 84381.406
     if tt1 != 0 and tt2 != 0:
         raise Error('One of (tt1, tt2) must be zero.')
@@ -531,17 +560,25 @@ def _precession(tt1, pos1, tt2):
     zz = -sc * cb * sa + cc * ca
     if tt2 == 0.0:
         # Perform rotation from other epoch to J2000.0.
-        return [
-            xx * pos1[0] + xy * pos1[1] + xz * pos1[2],
-            yx * pos1[0] + yy * pos1[1] + yz * pos1[2],
-            zx * pos1[0] + zy * pos1[1] + zz * pos1[2]
-        ]
+        return RotationMatrix([
+            [xx, yx, zx],
+            [xy, yy, zy],
+            [xz, yz, zz]
+        ])
 
     # Perform rotation from J2000.0 to other epoch.
+    return RotationMatrix([
+        [xx, xy, xz],
+        [yx, yy, yz],
+        [zx, zy, zz]
+    ])
+
+def _precession(tt1, pos1, tt2):
+    r = _precession_rot(tt1, tt2)
     return [
-        xx * pos1[0] + yx * pos1[1] + zx * pos1[2],
-        xy * pos1[0] + yy * pos1[1] + zy * pos1[2],
-        xz * pos1[0] + yz * pos1[1] + zz * pos1[2]
+        r.rot[0][0]*pos1[0] + r.rot[1][0]*pos1[1] + r.rot[2][0]*pos1[2],
+        r.rot[0][1]*pos1[0] + r.rot[1][1]*pos1[1] + r.rot[2][1]*pos1[2],
+        r.rot[0][2]*pos1[0] + r.rot[1][2]*pos1[1] + r.rot[2][2]*pos1[2]
     ]
 
 class Equatorial:
@@ -586,7 +623,7 @@ def _vector2radec(pos):
     return Equatorial(ra, dec, dist)
 
 
-def _nutation(time, direction, inpos):
+def _nutation_rot(time, direction):
     tilt = time._etilt()
     oblm = math.radians(tilt.mobl)
     oblt = math.radians(tilt.tobl)
@@ -610,17 +647,25 @@ def _nutation(time, direction, inpos):
 
     if direction == 0:
         # forward rotation
-        return [
-            xx * inpos[0] + yx * inpos[1] + zx * inpos[2],
-            xy * inpos[0] + yy * inpos[1] + zy * inpos[2],
-            xz * inpos[0] + yz * inpos[1] + zz * inpos[2]
-        ]
+        return RotationMatrix([
+            [xx, xy, xz],
+            [yx, yy, yz],
+            [zx, zy, zz]
+        ])
 
     # inverse rotation
+    return RotationMatrix([
+        [xx, yx, zx],
+        [xy, yy, zy],
+        [xz, yz, zz]
+    ])
+
+def _nutation(time, direction, pos):
+    r = _nutation_rot(time, direction)
     return [
-        xx * inpos[0] + xy * inpos[1] + xz * inpos[2],
-        yx * inpos[0] + yy * inpos[1] + yz * inpos[2],
-        zx * inpos[0] + zy * inpos[1] + zz * inpos[2]
+        r.rot[0][0]*pos[0] + r.rot[1][0]*pos[1] + r.rot[2][0]*pos[2],
+        r.rot[0][1]*pos[0] + r.rot[1][1]*pos[1] + r.rot[2][1]*pos[2],
+        r.rot[0][2]*pos[0] + r.rot[1][2]*pos[1] + r.rot[2][2]*pos[2]
     ]
 
 def _era(time):        # Earth Rotation Angle
@@ -817,7 +862,7 @@ def GeoMoon(time):
 
     Returns
     -------
-    #Vector
+    Vector
         The Moon's position as a vector in J2000 Cartesian equatorial coordinates.
 
     """
@@ -1032,7 +1077,7 @@ def Search(func, context, t1, t2, dt_tolerance_seconds):
 
     Returns
     -------
-    #Time or `None`
+    Time or `None`
         If the search is successful, returns a #Time object that is within
         `dt_tolerance_seconds` of an ascending root.
         In this case, the returned time value will always be within the
@@ -1139,7 +1184,7 @@ def HelioVector(body, time):
 
     Returns
     -------
-    #Vector
+    Vector
         A heliocentric position vector of the center of the given body
         at the given time.
     """
@@ -1191,7 +1236,7 @@ def GeoVector(body, time, aberration):
 
     Returns
     -------
-    #Vector
+    Vector
         A geocentric position vector of the center of the given body.
     """
     if body == Body.Moon:
@@ -1273,7 +1318,7 @@ def Equator(body, time, observer, ofdate, aberration):
 
     Returns
     -------
-    #EquatorialCoordinates
+    EquatorialCoordinates
         Equatorial coordinates in the specified frame of reference.
     """
     gc_observer = _geo_pos(time, observer)
@@ -1359,9 +1404,30 @@ def Horizon(time, observer, ra, dec, refraction):
     the right ascension and declination in the returned object will be numerically identical
     to the respective `ra` and `dec` values passed in.
 
+    Parameters
+    ----------
+    time : Time
+        The date and time for which to find horizontal coordinates.
+    observer : Observer
+        The location of the observer for which to find horizontal coordinates.
+    ra : float
+        Right ascension in sidereal hours of the celestial object,
+        referred to the mean equinox of date for the J2000 epoch.
+    dec : float
+        Declination in degrees of the celestial object,
+        referred to the mean equator of date for the J2000 epoch.
+        Positive values are north of the celestial equator
+        and negative values are south of it.
+    refraction : Refraction
+        The option for selecting whether to correct for atmospheric lensing.
+        If `Refraction.Normal`, a well-behaved refraction model is used.
+        If `Refraction.None`, no refraction correct is performed.
+        `Refraction.JplHorizons` is used only for compatibility testing
+        with the JPL Horizons online tool.
+
     Returns
     -------
-    #HorizontalCoordinates
+    HorizontalCoordinates
         The horizontal coordinates (altitude and azimuth), along with
         equatorial coordinates (right ascension and declination), all
         optionally corrected for atmospheric refraction. See remarks above
@@ -1413,30 +1479,8 @@ def Horizon(time, observer, ra, dec, refraction):
 
     if refraction != Refraction.Airless:
         zd0 = zd
-
-        # http://extras.springer.com/1999/978-1-4471-0555-8/chap4/horizons/horizons.pdf
-        # JPL Horizons says it uses refraction algorithm from
-        # Meeus "Astronomical Algorithms", 1991, p. 101-102.
-        # I found the following Go implementation:
-        # https://github.com/soniakeys/meeus/blob/master/v3/refraction/refract.go
-        # This is a translation from the function "Saemundsson" there.
-        # I found experimentally that JPL Horizons clamps the angle to 1 degree below the horizon.
-        # This is important because the 'refr' formula below goes crazy near hd = -5.11.
-        hd = 90.0 - zd
-        if hd < -1.0:
-            hd = -1.0
-
-        refr = (1.02 / math.tan(math.radians(hd+10.3/(hd+5.11)))) / 60.0
-
-        if refraction == Refraction.Normal and zd > 91.0:
-            # In "normal" mode we gradually reduce refraction toward the nadir
-            # so that we never get an altitude angle less than -90 degrees.
-            # When horizon angle is -1 degrees, zd = 91, and the factor is exactly 1.
-            # As zd approaches 180 (the nadir), the fraction approaches 0 linearly.
-            refr *= (180.0 - zd) / 89.0
-
+        refr = RefractionAngle(refraction, 90.0 - zd)
         zd -= refr
-
         if refr > 0.0 and zd > 3.0e-4:
             zdrad = math.radians(zd)
             sinzd = math.sin(zdrad)
@@ -1458,6 +1502,95 @@ def Horizon(time, observer, ra, dec, refraction):
             hor_dec = math.degrees(math.atan2(pr[2], proj))
 
     return HorizontalCoordinates(az, 90.0 - zd, hor_ra, hor_dec)
+
+def RefractionAngle(refraction, altitude):
+    """Calculates the amount of "lift" to an altitude angle caused by atmospheric refraction.
+
+    Given an altitude angle and a refraction option, calculates
+    the amount of "lift" caused by atmospheric refraction.
+    This is the number of degrees higher in the sky an object appears
+    due to lensing of the Earth's atmosphere.
+
+    Parameters
+    ----------
+    refraction : Refraction
+        The option for selecting whether to correct for atmospheric lensing.
+        If `Refraction.Normal`, a well-behaved refraction model is used.
+        If `Refraction.Airless`, no refraction correct is performed.
+        `Refraction.JplHorizons` is used only for compatibility testing
+        with the JPL Horizons online tool.
+    altitude : float
+        The number of degrees above (positive) or below (negative) the
+        horizon an object is, before being corrected for refraction.
+
+    Returns
+    -------
+    float
+        The number of additional degrees of altitude an object appears
+        to have, due to atmospheric refraction, depending on the
+        option selected by the `refraction` parameter.
+    """
+    if altitude < -90.0 or altitude > +90.0:
+        return 0.0      # No attempt to correct an invalid altitude
+
+    if refraction == Refraction.Normal or refraction == Refraction.JplHorizons:
+        # http://extras.springer.com/1999/978-1-4471-0555-8/chap4/horizons/horizons.pdf
+        # JPL Horizons says it uses refraction algorithm from
+        # Meeus "Astronomical Algorithms", 1991, p. 101-102.
+        # I found the following Go implementation:
+        # https://github.com/soniakeys/meeus/blob/master/v3/refraction/refract.go
+        # This is a translation from the function "Saemundsson" there.
+        # I found experimentally that JPL Horizons clamps the angle to 1 degree below the horizon.
+        # This is important because the 'refr' formula below goes crazy near hd = -5.11.
+        hd = max(altitude, -1.0)
+        refr = (1.02 / math.tan(math.radians((hd+10.3/(hd+5.11))))) / 60.0
+
+        if refraction == Refraction.Normal and altitude < -1.0:
+            # In "normal" mode we gradually reduce refraction toward the nadir
+            # so that we never get an altitude angle less than -90 degrees.
+            # When horizon angle is -1 degrees, the factor is exactly 1.
+            # As altitude approaches -90 (the nadir), the fraction approaches 0 linearly.
+            refr *= (altitude + 90.0) / 89.0
+    else:
+        # No refraction, or the refraction option is invalid.
+        refr = 0.0
+    return refr
+
+def InverseRefractionAngle(refraction, bent_altitude):
+    """Calculates the inverse of an atmospheric refraction angle.
+
+    Given an observed altitude angle that includes atmospheric refraction,
+    calculate the negative angular correction to obtain the unrefracted
+    altitude. This is useful for cases where observed horizontal
+    coordinates are to be converted to another orientation system,
+    but refraction first must be removed from the observed position.
+
+    Parameters
+    ----------
+    refraction : Refraction
+        `Refraction.Normal` - corrects for atmospheric refraction (recommended).
+        `Refraction.Airless` - no correction is performed.
+        `Refraction.JplHorizons` - For JPL Horizons compatibility testing only.
+    bent_altitude : float
+        The apparent altitude that includes atmospheric refraction.
+
+    Returns
+    -------
+    float
+        The angular adjustment in degrees, to be added to the
+        altitude angle to correct for atmospheric lensing.
+        This will be less than or equal to zero.
+    """
+    if bent_altitude < -90.0 or bent_altitude > +90.0:
+        return 0.0      # No attempt to correct an invalid altitude
+    # Find the pre-adjusted altitude whose refraction correction leads to 'altitude'.
+    altitude = bent_altitude - RefractionAngle(refraction, bent_altitude)
+    while True:
+        # See how close we got. Keep iterating until the solution converges.
+        diff = (altitude + RefractionAngle(refraction, altitude)) - bent_altitude
+        if abs(diff) < 1.0e-14:
+            return altitude - bent_altitude
+        altitude -= diff
 
 class EclipticCoordinates:
     """Ecliptic angular and Cartesian coordinates.
@@ -1526,7 +1659,7 @@ def SunPosition(time):
 
     Returns
     -------
-    #EclipticCoordinates
+    EclipticCoordinates
         The ecliptic coordinates of the Sun using the Earth's true equator of date.
     """
     # Correct for light travel time from the Sun.
@@ -1550,12 +1683,14 @@ def Ecliptic(equ):
     on 1 January 2000), this function converts those coordinates to J2000 ecliptic coordinates,
     which are relative to the plane of the Earth's orbit around the Sun.
 
+    Parameters
+    ----------
     equ : EquatorialCoordinates
         Equatorial coordinates in the J2000 frame of reference.
 
     Returns
     -------
-    #EclipticCoordinates
+    EclipticCoordinates
         Ecliptic coordinates in the J2000 frame of reference.
     """
     # Based on NOVAS functions equ2ecl() and equ2ecl_vec().
@@ -1580,7 +1715,7 @@ def EclipticLongitude(body, time):
 
     Returns
     -------
-    `float`
+    float
         An angular value in degrees indicating the ecliptic longitude of the body.
     """
     if body == Body.Sun:
@@ -1606,7 +1741,7 @@ def AngleFromSun(body, time):
 
     Returns
     -------
-    `float`
+    float
         A numeric value indicating the angle in degrees between the Sun
         and the specified body as seen from the center of the Earth.
     """
@@ -1650,7 +1785,7 @@ def LongitudeFromSun(body, time):
 
     Returns
     -------
-    `float`
+    float
         An angle in degrees in the range [0, 360).
     """
     if body == Body.Earth:
@@ -1725,7 +1860,7 @@ def Elongation(body, time):
 
     Returns
     -------
-    #ElongationEvent
+    ElongationEvent
     """
     angle = LongitudeFromSun(body, time)
     if angle > 180.0:
@@ -1791,7 +1926,7 @@ def SearchRelativeLongitude(body, targetRelLon, startTime):
 
     Returns
     -------
-    #Time
+    Time
         The date and time of the relative longitude event.
     """
     if body == Body.Earth:
@@ -1860,7 +1995,7 @@ def SearchMaxElongation(body, startTime):
 
     Returns
     -------
-    #ElongationEvent
+    ElongationEvent
     """
     if body == Body.Mercury:
         s1 = 50.0
@@ -1980,7 +2115,7 @@ def SearchSunLongitude(targetLon, startTime, limitDays):
 
     Returns
     -------
-    #Time or `None`
+    Time or `None`
     """
     t2 = startTime.AddDays(limitDays)
     return Search(_sun_offset, targetLon, startTime, t2, 1.0)
@@ -2004,7 +2139,7 @@ def MoonPhase(time):
 
     Returns
     -------
-    `float`
+    float
     """
     return LongitudeFromSun(Body.Moon, time)
 
@@ -2041,7 +2176,7 @@ def SearchMoonPhase(targetLon, startTime, limitDays):
 
     Returns
     -------
-    #Time or `None`
+    Time or `None`
     """
     # To avoid discontinuities in the _moon_offset function causing problems,
     # we need to approximate when that function will next return 0.
@@ -2105,7 +2240,7 @@ def SearchMoonQuarter(startTime):
 
     Returns
     -------
-    #MoonQuarter
+    MoonQuarter
     """
     angle = MoonPhase(startTime)
     quarter = int(1 + math.floor(angle / 90.0)) % 4
@@ -2118,7 +2253,7 @@ def SearchMoonQuarter(startTime):
 def NextMoonQuarter(mq):
     """Continues searching for lunar quarters from a previous search.
 
-    After calling #Astronomy_SearchMoonQuarter, this function can be called
+    After calling #SearchMoonQuarter, this function can be called
     one or more times to continue finding consecutive lunar quarters.
     This function finds the next consecutive moon quarter event after
     the one passed in as the parameter `mq`.
@@ -2130,7 +2265,7 @@ def NextMoonQuarter(mq):
 
     Returns
     -------
-    #MoonQuarter
+    MoonQuarter
     """
     # Skip 6 days past the previous found moon quarter to find the next one.
     # This is less than the minimum possible increment.
@@ -2271,7 +2406,7 @@ def Illumination(body, time):
 
     Returns
     -------
-    #IlluminationInfo
+    IlluminationInfo
     """
     if body == Body.Earth:
         raise EarthNotAllowedError()
@@ -2341,7 +2476,7 @@ def SearchPeakMagnitude(body, startTime):
 
     Returns
     -------
-    #IlluminationInfo
+    IlluminationInfo
     """
     # s1 and s2 are relative longitudes within which peak magnitude of Venus can occur.
     s1 = 10.0
@@ -2425,7 +2560,7 @@ def SearchPeakMagnitude(body, startTime):
 class HourAngleEvent:
     """Information about a celestial body crossing a specific hour angle.
 
-    Returned by the function #Astronomy_SearchHourAngle to report information about
+    Returned by the function #SearchHourAngle to report information about
     a celestial body crossing a certain hour angle as seen by a specified topocentric observer.
 
     Attributes
@@ -2477,7 +2612,7 @@ def SearchHourAngle(body, observer, hourAngle, startTime):
 
     Returns
     -------
-    #HourAngleEvent
+    HourAngleEvent
     """
     if body == Body.Earth:
         raise EarthNotAllowedError()
@@ -2597,7 +2732,7 @@ def SearchRiseSet(body, observer, direction, startTime, limitDays):
 
     Returns
     -------
-    #Time or `None`
+    Time or `None`
         If the rise or set time is found within the specified time window,
         this function returns that time. Otherwise, it returns `None`.
     """
@@ -2722,7 +2857,7 @@ def Seasons(year):
 
     Returns
     -------
-    #SeasonInfo
+    SeasonInfo
     """
     mar_equinox = _FindSeasonChange(0, year, 3, 19)
     jun_solstice = _FindSeasonChange(90, year, 6, 19)
@@ -2816,7 +2951,7 @@ def SearchLunarApsis(startTime):
 
     Returns
     -------
-    #Apsis
+    Apsis
     """
     increment = 5.0     # number of days to skip on each iteration
     t1 = startTime
@@ -2875,7 +3010,7 @@ def NextLunarApsis(apsis):
 
     Returns
     -------
-    #Apsis
+    Apsis
     """
     skip = 11.0     # number of days to skip to start looking for next apsis event
     time = apsis.time.AddDays(skip)
@@ -2886,3 +3021,582 @@ def NextLunarApsis(apsis):
     if next.kind + apsis.kind != 1:
         raise InternalError()
     return next
+
+
+def VectorFromSphere(sphere, time):
+    """Converts spherical coordinates to Cartesian coordinates.
+
+    Given spherical coordinates and a time at which they are valid,
+    returns a vector of Cartesian coordinates. The returned value
+    includes the time, as required by all `Time` objects.
+
+    Parameters
+    ----------
+    sphere : Spherical
+        Spherical coordinates to be converted.
+    time : Time
+        The time that should be included in the returned vector.
+
+    Returns
+    -------
+    Vector
+        The vector form of the supplied spherical coordinates.
+    """
+    radlat = math.radians(sphere.lat)
+    radlon = math.radians(sphere.lon)
+    rcoslat = sphere.dist * math.cos(radlat)
+    return Vector(
+        rcoslat * math.cos(radlon),
+        rcoslat * math.sin(radlon),
+        sphere.dist * math.sin(radlat),
+        time
+    )
+
+
+def VectorFromEquator(equ, time):
+    """Given angular equatorial coordinates in `equ`, calculates equatorial vector.
+
+    Parameters
+    ----------
+    equ : Equatorial
+        Angular equatorial coordinates to be converted to a vector.
+    time : Time
+        The date and time of the observation. This is needed because the returned
+        vector object requires a valid time value when passed to certain other functions.
+
+    Returns
+    -------
+    Vector
+        A vector in the equatorial system.
+    """
+    return VectorFromSphere(Spherical(equ.dec, 15.0 * equ.ra, equ.dist), time)
+
+
+def EquatorFromVector(vec):
+    """Given an equatorial vector, calculates equatorial angular coordinates.
+
+    Parameters
+    ----------
+    vec : Vector
+        A vector in an equatorial coordinate system.
+
+    Returns
+    -------
+    Equatorial
+        Angular coordinates expressed in the same equatorial system as `vec`.
+    """
+    sphere = SphereFromVector(vec)
+    return Equatorial(sphere.lon / 15.0, sphere.lat, sphere.dist)
+
+
+def SphereFromVector(vector):
+    """Converts Cartesian coordinates to spherical coordinates.
+
+    Given a Cartesian vector, returns latitude, longitude, and distance.
+
+    Parameters
+    ----------
+    vector : Vector
+        Cartesian vector to be converted to spherical coordinates.
+
+    Returns
+    -------
+    Spherical
+        Spherical coordinates that are equivalent to the given vector.
+    """
+    xyproj = vector.x*vector.x + vector.y*vector.y
+    dist = math.sqrt(xyproj + vector.z*vector.z)
+    if xyproj == 0.0:
+        if vector.z == 0.0:
+            raise Exception('Zero-length vector not allowed.')
+        lon = 0.0
+        if vector.z < 0.0:
+            lat = -90.0
+        else:
+            lat = +90.0
+    else:
+        lon = math.degrees(math.atan2(vector.y, vector.x))
+        if lon < 0.0:
+            lon += 360.0
+        lat = math.degrees(math.atan2(vector.z, math.sqrt(xyproj)))
+    return Spherical(lat, lon, dist)
+
+
+def _ToggleAzimuthDirection(az):
+    az = 360.0 - az
+    if az >= 360.0:
+        az -= 360.0
+    elif az < 0.0:
+        az += 360.0
+    return az
+
+
+def VectorFromHorizon(sphere, time, refraction):
+    """Given apparent angular horizontal coordinates in `sphere`, calculate horizontal vector.
+
+    Parameters
+    ----------
+    sphere : Spherical
+        A structure that contains apparent horizontal coordinates:
+        `lat` holds the refracted azimuth angle,
+        `lon` holds the azimuth in degrees clockwise from north,
+        and `dist` holds the distance from the observer to the object in AU.
+    time : Time
+        The date and time of the observation. This is needed because the returned
+        vector object requires a valid time value when passed to certain other functions.
+    refraction : Refraction
+        See remarks in function #RefractionAngle.
+
+    Returns
+    -------
+    Vector
+        A vector in the horizontal system: `x` = north, `y` = west, and `z` = zenith (up).
+    """
+    lon = _ToggleAzimuthDirection(sphere.lon)
+    lat = sphere.lat + InverseRefractionAngle(refraction, sphere.lat)
+    xsphere = Spherical(lat, lon, sphere.dist)
+    return VectorFromSphere(xsphere, time)
+
+
+def HorizonFromVector(vector, refraction):
+    """Converts Cartesian coordinates to horizontal coordinates.
+
+    Given a horizontal Cartesian vector, returns horizontal azimuth and altitude.
+
+    *IMPORTANT:* This function differs from `SphereFromVector` in two ways:
+    - `SphereFromVector` returns a `lon` value that represents azimuth defined counterclockwise
+      from north (e.g., west = +90), but this function represents a clockwise rotation
+      (e.g., east = +90). The difference is because `SphereFromVector` is intended
+      to preserve the vector "right-hand rule", while this function defines azimuth in a more
+      traditional way as used in navigation and cartography.
+    - This function optionally corrects for atmospheric refraction, while `SphereFromVector` does not.
+
+    The returned object contains the azimuth in `lon`.
+    It is measured in degrees clockwise from north: east = +90 degrees, west = +270 degrees.
+
+    The altitude is stored in `lat`.
+
+    The distance to the observed object is stored in `dist`,
+    and is expressed in astronomical units (AU).
+
+    Parameters
+    ----------
+    vector : Vector
+        Cartesian vector to be converted to horizontal angular coordinates.
+    refraction : Refraction
+        See comments in the #RefractionAngle function.
+    """
+    sphere = SphereFromVector(vector)
+    sphere.lon = _ToggleAzimuthDirection(sphere.lon)
+    sphere.lat += RefractionAngle(refraction, sphere.lat)
+    return sphere
+
+
+def InverseRotation(rotation):
+    """Calculates the inverse of a rotation matrix.
+
+    Given a rotation matrix that performs some coordinate transform,
+    this function returns the matrix that reverses that trasnform.
+
+    Parameters
+    ----------
+    rotation : RotationMatrix
+        The rotation matrix to be inverted.
+
+    Returns
+    -------
+    RotationMatrix
+        The inverse rotation matrix.
+    """
+    return RotationMatrix([
+        [rotation.rot[0][0], rotation.rot[1][0], rotation.rot[2][0]],
+        [rotation.rot[0][1], rotation.rot[1][1], rotation.rot[2][1]],
+        [rotation.rot[0][2], rotation.rot[1][2], rotation.rot[2][2]]
+    ])
+
+
+def CombineRotation(a, b):
+    """Creates a rotation based on applying one rotation followed by another.
+
+    Given two rotation matrices, returns a combined rotation matrix that is
+    equivalent to rotating based on the first matrix, followed by the second.
+
+    Parameters
+    ----------
+    a : RotationMatrix
+        The first rotation to apply.
+
+    b : RotationMatrix
+        The second rotation to apply.
+
+    Returns
+    -------
+    RotationMatrix
+        The combined rotation matrix.
+    """
+    # Use matrix multiplication: c = b*a.
+    # We put 'b' on the left and 'a' on the right because,
+    # just like when you use a matrix M to rotate a vector V,
+    # you put the M on the left in the product M*V.
+    # We can think of this as 'b' rotating all the 3 column vectors in 'a'.
+
+    return RotationMatrix([
+        [
+            b.rot[0][0]*a.rot[0][0] + b.rot[1][0]*a.rot[0][1] + b.rot[2][0]*a.rot[0][2],
+            b.rot[0][1]*a.rot[0][0] + b.rot[1][1]*a.rot[0][1] + b.rot[2][1]*a.rot[0][2],
+            b.rot[0][2]*a.rot[0][0] + b.rot[1][2]*a.rot[0][1] + b.rot[2][2]*a.rot[0][2]
+        ],
+        [
+            b.rot[0][0]*a.rot[1][0] + b.rot[1][0]*a.rot[1][1] + b.rot[2][0]*a.rot[1][2],
+            b.rot[0][1]*a.rot[1][0] + b.rot[1][1]*a.rot[1][1] + b.rot[2][1]*a.rot[1][2],
+            b.rot[0][2]*a.rot[1][0] + b.rot[1][2]*a.rot[1][1] + b.rot[2][2]*a.rot[1][2]
+        ],
+        [
+            b.rot[0][0]*a.rot[2][0] + b.rot[1][0]*a.rot[2][1] + b.rot[2][0]*a.rot[2][2],
+            b.rot[0][1]*a.rot[2][0] + b.rot[1][1]*a.rot[2][1] + b.rot[2][1]*a.rot[2][2],
+            b.rot[0][2]*a.rot[2][0] + b.rot[1][2]*a.rot[2][1] + b.rot[2][2]*a.rot[2][2]
+        ]
+    ])
+
+
+def RotateVector(rotation, vector):
+    """Applies a rotation to a vector, yielding a rotated vector.
+
+    This function transforms a vector in one orientation to a vector
+    in another orientation.
+
+    Parameters
+    ----------
+    rotation : RotationMatrix
+        A rotation matrix that specifies how the orientation of the vector is to be changed.
+    vector : Vector
+        The vector whose orientation is to be changed.
+
+    Returns
+    -------
+    Vector
+        A vector in the orientation specified by `rotation`.
+    """
+    return Vector(
+        rotation.rot[0][0]*vector.x + rotation.rot[1][0]*vector.y + rotation.rot[2][0]*vector.z,
+        rotation.rot[0][1]*vector.x + rotation.rot[1][1]*vector.y + rotation.rot[2][1]*vector.z,
+        rotation.rot[0][2]*vector.x + rotation.rot[1][2]*vector.y + rotation.rot[2][2]*vector.z,
+        vector.t
+    )
+
+
+def Rotation_EQJ_ECL():
+    """Calculates a rotation matrix from equatorial J2000 (EQJ) to ecliptic J2000 (ECL).
+
+    This is one of the family of functions that returns a rotation matrix
+    for converting from one orientation to another.
+    Source: EQJ = equatorial system, using equator at J2000 epoch.
+    Target: ECL = ecliptic system, using equator at J2000 epoch.
+
+    Returns
+    -------
+    RotationMatrix
+        A rotation matrix that converts EQJ to ECL.
+    """
+    # ob = mean obliquity of the J2000 ecliptic = 0.40909260059599012 radians.
+    c = 0.9174821430670688    # cos(ob)
+    s = 0.3977769691083922    # sin(ob)
+    return RotationMatrix([
+        [ 1,  0,  0],
+        [ 0, +c, -s],
+        [ 0, +s, +c]
+    ])
+
+
+def Rotation_ECL_EQJ():
+    """Calculates a rotation matrix from ecliptic J2000 (ECL) to equatorial J2000 (EQJ).
+
+    This is one of the family of functions that returns a rotation matrix
+    for converting from one orientation to another.
+    Source: ECL = ecliptic system, using equator at J2000 epoch.
+    Target: EQJ = equatorial system, using equator at J2000 epoch.
+
+    Returns
+    -------
+    RotationMatrix
+        A rotation matrix that converts ECL to EQJ.
+    """
+    # ob = mean obliquity of the J2000 ecliptic = 0.40909260059599012 radians.
+    c = 0.9174821430670688    # cos(ob)
+    s = 0.3977769691083922    # sin(ob)
+    return RotationMatrix([
+        [ 1,  0,  0],
+        [ 0, +c, +s],
+        [ 0, -s, +c]
+    ])
+
+def Rotation_EQJ_EQD(time):
+    """Calculates a rotation matrix from equatorial J2000 (EQJ) to equatorial of-date (EQD).
+
+    This is one of the family of functions that returns a rotation matrix
+    for converting from one orientation to another.
+    Source: EQJ = equatorial system, using equator at J2000 epoch.
+    Target: EQD = equatorial system, using equator of the specified date/time.
+
+    Parameters
+    ----------
+    time : Time
+        The date and time at which the Earth's equator defines the target orientation.
+
+    Returns
+    -------
+    RotationMatrix
+        A rotation matrix that converts EQJ to EQD at `time`.
+    """
+    prec = _precession_rot(0.0, time.tt)
+    nut = _nutation_rot(time, 0)
+    return CombineRotation(prec, nut)
+
+
+def Rotation_EQD_EQJ(time):
+    """Calculates a rotation matrix from equatorial of-date (EQD) to equatorial J2000 (EQJ).
+
+    This is one of the family of functions that returns a rotation matrix
+    for converting from one orientation to another.
+    Source: EQD = equatorial system, using equator of the specified date/time.
+    Target: EQJ = equatorial system, using equator at J2000 epoch.
+
+    Parameters
+    ----------
+    time : Time
+        The date and time at which the Earth's equator defines the source orientation.
+
+    Returns
+    -------
+    RotationMatrix
+        A rotation matrix that converts EQD at `time` to EQJ.
+    """
+    nut = _nutation_rot(time, 1)
+    prec = _precession_rot(time.tt, 0.0)
+    return CombineRotation(nut, prec)
+
+
+def Rotation_EQD_HOR(time, observer):
+    """Calculates a rotation matrix from equatorial of-date (EQD) to horizontal (HOR).
+
+    This is one of the family of functions that returns a rotation matrix
+    for converting from one orientation to another.
+    Source: EQD = equatorial system, using equator of the specified date/time.
+    Target: HOR = horizontal system.
+
+    Use #HorizonFromVector to convert the return value
+    to a traditional altitude/azimuth pair.
+
+    Parameters
+    ----------
+    time : Time
+        The date and time at which the Earth's equator applies.
+    observer: Observer
+        A location near the Earth's mean sea level that defines the observer's location.
+
+    Returns
+    -------
+    RotationMatrix
+        A rotation matrix that converts EQD to HOR at `time` and for `observer`.
+        The components of the horizontal vector are:
+        x = north, y = west, z = zenith (straight up from the observer).
+        These components are chosen so that the "right-hand rule" works for the vector
+        and so that north represents the direction where azimuth = 0.
+    """
+    sinlat = math.sin(math.radians(observer.latitude))
+    coslat = math.cos(math.radians(observer.latitude))
+    sinlon = math.sin(math.radians(observer.longitude))
+    coslon = math.cos(math.radians(observer.longitude))
+    uze = [coslat * coslon, coslat * sinlon, sinlat]
+    une = [-sinlat * coslon, -sinlat * sinlon, coslat]
+    uwe = [sinlon, -coslon, 0.0]
+    spin_angle = -15.0 * _sidereal_time(time)
+    uz = _spin(spin_angle, uze)
+    un = _spin(spin_angle, une)
+    uw = _spin(spin_angle, uwe)
+    return RotationMatrix([
+        [un[0], uw[0], uz[0]],
+        [un[1], uw[1], uz[1]],
+        [un[2], uw[2], uz[2]],
+    ])
+
+
+def Rotation_HOR_EQD(time, observer):
+    """Calculates a rotation matrix from horizontal (HOR) to equatorial of-date (EQD).
+
+    This is one of the family of functions that returns a rotation matrix
+    for converting from one orientation to another.
+    Source: HOR = horizontal system (x=North, y=West, z=Zenith).
+    Target: EQD = equatorial system, using equator of the specified date/time.
+
+    Parameters
+    ----------
+    time : Time
+        The date and time at which the Earth's equator applies.
+    observer : Observer
+        A location near the Earth's mean sea level that defines the observer's horizon.
+
+    Returns
+    -------
+    RotationMatrix
+        A rotation matrix that converts HOR to EQD at `time` and for `observer`.
+    """
+    rot = Rotation_EQD_HOR(time, observer)
+    return InverseRotation(rot)
+
+
+def Rotation_HOR_EQJ(time, observer):
+    """Calculates a rotation matrix from horizontal (HOR) to J2000 equatorial (EQJ).
+
+    This is one of the family of functions that returns a rotation matrix
+    for converting from one orientation to another.
+    Source: HOR = horizontal system (x=North, y=West, z=Zenith).
+    Target: EQJ = equatorial system, using equator at the J2000 epoch.
+
+    Parameters
+    ----------
+    time : Time
+        The date and time of the observation.
+    observer : Observer
+        A location near the Earth's mean sea level that define's the observer's horizon.
+
+    Returns
+    -------
+    RotationMatrix
+        A rotation matrix that converts HOR to EQD at `time` and for `observer`.
+    """
+    hor_eqd = Rotation_HOR_EQD(time, observer)
+    eqd_eqj = Rotation_EQD_EQJ(time)
+    return CombineRotation(hor_eqd, eqd_eqj)
+
+
+def Rotation_EQJ_HOR(time, observer):
+    """Calculates a rotation matrix from equatorial J2000 (EQJ) to horizontal (HOR).
+
+    This is one of the family of functions that returns a rotation matrix
+    for converting from one orientation to another.
+    Source: EQJ = equatorial system, using the equator at the J2000 epoch.
+    Target: HOR = horizontal system.
+
+    Use #HorizonFromVector to convert the return value to
+    a traditional altitude/azimuth pair.
+
+    Parameters
+    ----------
+    time : Time
+        The date and time of the desired horizontal orientation.
+    observer : Observer
+        A location near the Earth's mean sea level that defines the observer's horizon.
+
+    Returns
+    -------
+    RotationMatrix
+        A rotation matrix that converts EQJ to HOR at `time` and for `observer`.
+        The components of the horizontal vector are:
+        x = north, y = west, z = zenith (straight up from the observer).
+        These components are chosen so that the "right-hand rule" works for the vector
+        and so that north represents the direction where azimuth = 0.
+    """
+    rot = Rotation_HOR_EQJ(time, observer)
+    return InverseRotation(rot)
+
+
+def Rotation_EQD_ECL(time):
+    """Calculates a rotation matrix from equatorial of-date (EQD) to ecliptic J2000 (ECL).
+
+    This is one of the family of functions that returns a rotation matrix
+    for converting from one orientation to another.
+    Source: EQD = equatorial system, using equator of date.
+    Target: ECL = ecliptic system, using equator at J2000 epoch.
+
+    Parameters
+    ----------
+    time : Time
+        The date and time of the source equator.
+
+    Returns
+    -------
+    RotationMatrix
+        A rotation matrix that converts EQD to ECL.
+    """
+    eqd_eqj = Rotation_EQD_EQJ(time)
+    eqj_ecl = Rotation_EQJ_ECL()
+    return CombineRotation(eqd_eqj, eqj_ecl)
+
+
+def Rotation_ECL_EQD(time):
+    """Calculates a rotation matrix from ecliptic J2000 (ECL) to equatorial of-date (EQD).
+
+    This is one of the family of functions that returns a rotation matrix
+    for converting from one orientation to another.
+    Source: ECL = ecliptic system, using equator at J2000 epoch.
+    Target: EQD = equatorial system, using equator of date.
+
+    Parameters
+    ----------
+    time : Time
+        The date and time of the desired equator.
+
+    Returns
+    -------
+    RotationMatrix
+        A rotation matrix that converts ECL to EQD.
+    """
+    rot = Rotation_EQD_ECL(time)
+    return InverseRotation(rot)
+
+
+def Rotation_ECL_HOR(time, observer):
+    """Calculates a rotation matrix from ecliptic J2000 (ECL) to horizontal (HOR).
+
+    This is one of the family of functions that returns a rotation matrix
+    for converting from one orientation to another.
+    Source: ECL = ecliptic system, using equator at J2000 epoch.
+    Target: HOR = horizontal system.
+
+    Use #HorizonFromVector to convert the return value
+    to a traditional altitude/azimuth pair.
+
+    Parameters
+    ----------
+    time : Time
+        The date and time of the desired horizontal orientation.
+    observer : Observer
+        A location near the Earth's mean sea level that defines the observer's horizon.
+
+    Returns
+    -------
+    RotationMatrix
+        A rotation matrix that converts ECL to HOR at `time` and for `observer`.
+        The components of the horizontal vector are:
+        x = north, y = west, z = zenith (straight up from the observer).
+        These components are chosen so that the "right-hand rule" works for the vector
+        and so that north represents the direction where azimuth = 0.
+    """
+    ecl_eqd = Rotation_ECL_EQD(time)
+    eqd_hor = Rotation_EQD_HOR(time, observer)
+    return CombineRotation(ecl_eqd, eqd_hor)
+
+
+def Rotation_HOR_ECL(time, observer):
+    """Calculates a rotation matrix from horizontal (HOR) to ecliptic J2000 (ECL).
+
+    This is one of the family of functions that returns a rotation matrix
+    for converting from one orientation to another.
+    Source: HOR = horizontal system.
+    Target: ECL = ecliptic system, using equator at J2000 epoch.
+
+    Parameters
+    ----------
+    time : Time
+        The date and time of the horizontal observation.
+    observer : Observer
+        The location of the horizontal observer.
+
+    Returns
+    RotationMatrix
+        A rotation matrix that converts HOR to ECL.
+    -------
+    """
+    rot = Rotation_ECL_HOR(time, observer)
+    return InverseRotation(rot)

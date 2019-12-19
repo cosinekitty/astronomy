@@ -668,6 +668,15 @@ function CalcMoon(time) {
 }
 
 function precession(tt1, pos1, tt2) {
+    const r = precession_rot(tt1, tt2);
+    return [
+        r.rot[0][0]*pos1[0] + r.rot[1][0]*pos1[1] + r.rot[2][0]*pos1[2],
+        r.rot[0][1]*pos1[0] + r.rot[1][1]*pos1[1] + r.rot[2][1]*pos1[2],
+        r.rot[0][2]*pos1[0] + r.rot[1][2]*pos1[1] + r.rot[2][2]*pos1[2]
+    ];
+}
+
+function precession_rot(tt1, tt2) {
     var xx, yx, zx, xy, yy, zy, xz, yz, zz;
     var eps0 = 84381.406;
     var t, psia, omegaa, chia, sa, ca, sb, cb, sc, cc, sd, cd;
@@ -721,21 +730,21 @@ function precession(tt1, pos1, tt2) {
     yz = -sc * cb * ca - sa * cc;
     zz = -sc * cb * sa + cc * ca;
 
-    if (tt2 == 0) {
+    if (tt2 === 0) {
         // Perform rotation from epoch to J2000.0.
-        return [
-            xx * pos1[0] + xy * pos1[1] + xz * pos1[2],
-            yx * pos1[0] + yy * pos1[1] + yz * pos1[2],
-            zx * pos1[0] + zy * pos1[1] + zz * pos1[2]
-        ];
+        return new RotationMatrix([
+            [xx, yx, zx],
+            [xy, yy, zy],
+            [xz, yz, zz]
+        ]);
     }
 
     // Perform rotation from J2000.0 to epoch.
-    return [
-        xx * pos1[0] + yx * pos1[1] + zx * pos1[2],
-        xy * pos1[0] + yy * pos1[1] + zy * pos1[2],
-        xz * pos1[0] + yz * pos1[1] + zz * pos1[2]
-    ];
+    return new RotationMatrix([
+        [xx, xy, xz],
+        [yx, yy, yz],
+        [zx, zy, zz]
+    ]);
 }
 
 function era(time) {    // Earth Rotation Angle
@@ -788,6 +797,15 @@ function terra(observer, st) {
 }
 
 function nutation(time, direction, pos) {
+    const r = nutation_rot(time, direction);
+    return [
+        r.rot[0][0]*pos[0] + r.rot[1][0]*pos[1] + r.rot[2][0]*pos[2],
+        r.rot[0][1]*pos[0] + r.rot[1][1]*pos[1] + r.rot[2][1]*pos[2],
+        r.rot[0][2]*pos[0] + r.rot[1][2]*pos[1] + r.rot[2][2]*pos[2]
+    ];
+}
+
+function nutation_rot(time, direction) {
     const tilt = e_tilt(time);
     const oblm = tilt.mobl * DEG2RAD;
     const oblt = tilt.tobl * DEG2RAD;
@@ -811,19 +829,19 @@ function nutation(time, direction, pos) {
 
     if (direction === 0) {
         // forward rotation
-        return [
-            xx * pos[0] + yx * pos[1] + zx * pos[2],
-            xy * pos[0] + yy * pos[1] + zy * pos[2],
-            xz * pos[0] + yz * pos[1] + zz * pos[2]
-        ];
+        return new RotationMatrix([
+            [xx, xy, xz],
+            [yx, yy, yz],
+            [zx, zy, zz]
+        ]);
     }
 
     // inverse rotation
-    return [
-        xx * pos[0] + xy * pos[1] + xz * pos[2],
-        yx * pos[0] + yy * pos[1] + yz * pos[2],
-        zx * pos[0] + zy * pos[1] + zz * pos[2]
-    ];
+    return new RotationMatrix([
+        [xx, yx, zx],
+        [xy, yy, zy],
+        [xz, yz, zz]
+    ]);
 }
 
 function geo_pos(time, observer) {
@@ -864,6 +882,42 @@ class Vector {
 }
 
 /**
+ * Holds spherical coordinates: latitude, longitude, distance.
+ *
+ * @class
+ * @memberof Astronomy
+ *
+ * @property {number} lat       The latitude angle: -90..+90 degrees.
+ * @property {number} lon       The longitude angle: 0..360 degrees.
+ * @property {number} dist      Distance in AU.
+ */
+class Spherical {
+    constructor(lat, lon, dist) {
+        this.lat = lat;
+        this.lon = lon;
+        this.dist = dist;
+    }
+}
+
+/**
+ * Create spherical coordinates.
+ *
+ * @param {number} lat
+ *      The angular distance above or below the reference plane, in degrees.
+ *
+ * @param {number} lon
+ *      The angular distance around the reference plane, in degrees.
+ *
+ * @param {number} dist
+ *      A radial distance in AU.
+ *
+ * @returns {Astronomy.Spherical}
+ */
+Astronomy.MakeSpherical = function(lat, lon, dist) {
+    return new Spherical(lat, lon, dist);
+}
+
+/**
  * Holds right ascension, declination, and distance of a celestial object.
  *
  * @class
@@ -885,6 +939,54 @@ class EquatorialCoordinates {
         this.dec = dec;
         this.dist = dist;
     }
+}
+
+function IsValidRotationArray(rot) {
+    if (!(rot instanceof Array) || (rot.length !== 3))
+        return false;
+
+    for (let i=0; i < 3; ++i) {
+        if (!(rot[i] instanceof Array) || (rot[i].length !== 3))
+            return false;
+
+        for (let j=0; j < 3; ++j)
+            if (typeof rot[i][j] !== 'number')
+                return false;
+    }
+
+    return true;
+}
+
+
+/**
+ * Contains a rotation matrix that can be used to transform one coordinate system to another.
+ *
+ * @class
+ * @memberof Astronomy
+ *
+ * @property {Array<Array<number>>} rot
+ *      A normalized 3x3 rotation matrix.
+ */
+class RotationMatrix {
+    constructor(rot) {
+        this.rot = rot;
+    }
+}
+
+/**
+ * Creates a rotation matrix that can be used to transform one coordinate system to another.
+ *
+ * @param {Array<Array<number>>} rot
+ *      An array [3][3] of numbers. Defines a rotation matrix used to premultiply
+ *      a 3D vector to reorient it into another coordinate system.
+ *
+ * @returns {Astronomy.RotationMatrix}
+ */
+Astronomy.MakeRotation = function(rot) {
+    if (!IsValidRotationArray(rot))
+        throw 'Argument must be a [3][3] array of numbers';
+
+    return new RotationMatrix(rot);
 }
 
 /**
@@ -1101,41 +1203,16 @@ Astronomy.Horizon = function(date, observer, ra, dec, refraction) {     // based
     let out_dec = dec;
 
     if (refraction) {
-        let refr, j;
         let zd0 = zd;
-
-        if (refraction === 'normal' || refraction === 'jplhor') {
-            // http://extras.springer.com/1999/978-1-4471-0555-8/chap4/horizons/horizons.pdf
-            // JPL Horizons says it uses refraction algorithm from
-            // Meeus "Astronomical Algorithms", 1991, p. 101-102.
-            // I found the following Go implementation:
-            // https://github.com/soniakeys/meeus/blob/master/v3/refraction/refract.go
-            // This is a translation from the function "Saemundsson" there.
-            // I found experimentally that JPL Horizons clamps the angle to 1 degree below the horizon.
-            // This is important because the 'refr' formula below goes crazy near hd = -5.11.
-            let hd = Math.max(-1, 90 - zd);
-            refr = (1.02 / Math.tan((hd+10.3/(hd+5.11))*DEG2RAD)) / 60;
-
-            if (refraction === 'normal' && zd > 91) {
-                // In "normal" mode we gradually reduce refraction toward the nadir
-                // so that we never get an altitude angle less than -90 degrees.
-                // When horizon angle is -1 degrees, zd = 91, and the factor is exactly 1.
-                // As zd approaches 180 (the nadir), the fraction approaches 0 linearly.
-                refr *= (180 - zd) / 89;
-            }
-
-            zd -= refr;
-        } else {
-            throw 'If specified, refraction must be one of: "normal", "jplhor".';
-        }
-
+        let refr = Astronomy.Refraction(refraction, 90-zd);
+        zd -= refr;
         if (refr > 0.0 && zd > 3.0e-4) {
             const sinzd = Math.sin(zd * DEG2RAD);
             const coszd = Math.cos(zd * DEG2RAD);
             const sinzd0 = Math.sin(zd0 * DEG2RAD);
             const coszd0 = Math.cos(zd0 * DEG2RAD);
             var pr = [];
-            for (j=0; j<3; ++j) {
+            for (let j=0; j<3; ++j) {
                 pr.push(((p[j] - coszd0 * uz[j]) / sinzd0)*sinzd + uz[j]*coszd);
             }
             proj = Math.sqrt(pr[0]*pr[0] + pr[1]*pr[1]);
@@ -3113,5 +3190,664 @@ Astronomy.NextLunarApsis = function(apsis) {
     }
     return next;
 }
+
+/**
+ * Calculates the inverse of a rotation matrix.
+ * Given a rotation matrix that performs some coordinate transform,
+ * this function returns the matrix that reverses that trasnform.
+ *
+ * @param {Astronomy.RotationMatrix} rotation
+ *      The rotation matrix to be inverted.
+ *
+ * @returns {Astronomy.RotationMatrix}
+ *      The inverse rotation matrix.
+ */
+Astronomy.InverseRotation = function(rotation) {
+    return new RotationMatrix([
+        [rotation.rot[0][0], rotation.rot[1][0], rotation.rot[2][0]],
+        [rotation.rot[0][1], rotation.rot[1][1], rotation.rot[2][1]],
+        [rotation.rot[0][2], rotation.rot[1][2], rotation.rot[2][2]]
+    ]);
+}
+
+/**
+ * Creates a rotation based on applying one rotation followed by another.
+ * Given two rotation matrices, returns a combined rotation matrix that is
+ * equivalent to rotating based on the first matrix, followed by the second.
+ *
+ * @param {Astronomy.RotationMatrix} a
+ *      The first rotation to apply.
+ *
+ * @param {Astronomy.RotationMatrix} b
+ *      The second rotation to apply.
+ *
+ * @returns {Astronomy.RotationMatrix}
+ *      The combined rotation matrix.
+ */
+Astronomy.CombineRotation = function(a, b) {
+    /*
+        Use matrix multiplication: c = b*a.
+        We put 'b' on the left and 'a' on the right because,
+        just like when you use a matrix M to rotate a vector V,
+        you put the M on the left in the product M*V.
+        We can think of this as 'b' rotating all the 3 column vectors in 'a'.
+    */
+
+    return new RotationMatrix([
+        [
+            b.rot[0][0]*a.rot[0][0] + b.rot[1][0]*a.rot[0][1] + b.rot[2][0]*a.rot[0][2],
+            b.rot[0][1]*a.rot[0][0] + b.rot[1][1]*a.rot[0][1] + b.rot[2][1]*a.rot[0][2],
+            b.rot[0][2]*a.rot[0][0] + b.rot[1][2]*a.rot[0][1] + b.rot[2][2]*a.rot[0][2]
+        ],
+        [
+            b.rot[0][0]*a.rot[1][0] + b.rot[1][0]*a.rot[1][1] + b.rot[2][0]*a.rot[1][2],
+            b.rot[0][1]*a.rot[1][0] + b.rot[1][1]*a.rot[1][1] + b.rot[2][1]*a.rot[1][2],
+            b.rot[0][2]*a.rot[1][0] + b.rot[1][2]*a.rot[1][1] + b.rot[2][2]*a.rot[1][2]
+        ],
+        [
+            b.rot[0][0]*a.rot[2][0] + b.rot[1][0]*a.rot[2][1] + b.rot[2][0]*a.rot[2][2],
+            b.rot[0][1]*a.rot[2][0] + b.rot[1][1]*a.rot[2][1] + b.rot[2][1]*a.rot[2][2],
+            b.rot[0][2]*a.rot[2][0] + b.rot[1][2]*a.rot[2][1] + b.rot[2][2]*a.rot[2][2]
+        ]
+    ]);
+}
+
+/**
+ * Converts spherical coordinates to Cartesian coordinates.
+ * Given spherical coordinates and a time at which they are valid,
+ * returns a vector of Cartesian coordinates. The returned value
+ * includes the time, as required by <code>AstroTime</code>.
+ *
+ * @param {Astronomy.Spherical} sphere
+ *      Spherical coordinates to be converted.
+ *
+ * @param {Astronomy.AstroTime} time
+ *      The time that should be included in the returned vector.
+ *
+ * @returns {Astronomy.Vector}
+ *      The vector form of the supplied spherical coordinates.
+ */
+Astronomy.VectorFromSphere = function(sphere, time) {
+    const radlat = sphere.lat * DEG2RAD;
+    const radlon = sphere.lon * DEG2RAD;
+    const rcoslat = sphere.dist * Math.cos(radlat);
+    return new Vector(
+        rcoslat * Math.cos(radlon),
+        rcoslat * Math.sin(radlon),
+        sphere.dist * Math.sin(radlat),
+        time
+    );
+}
+
+/**
+ * Given angular equatorial coordinates in `equ`, calculates equatorial vector.
+ *
+ * @param {Astronomy.EquatorialCoordinates} equ
+ *      An object that contains angular equatorial coordinates to be converted to a vector.
+ *
+ * @param {Astronomy.AstroTime} time
+ *      The date and time of the observation. This is needed because the returned
+ *      vector object requires a valid time value when passed to certain other functions.
+ *
+ * @returns {Astronomy.Vector}
+ *      A vector in the equatorial system.
+ */
+Astronomy.VectorFromEquator = function(equ, time) {
+    return Astronomy.VectorFromSphere(new Spherical(equ.dec, 15 * equ.ra, equ.dist), time);
+}
+
+/**
+ * Given an equatorial vector, calculates equatorial angular coordinates.
+ *
+ * @param {Astronomy.Vector} vec
+ *      A vector in an equatorial coordinate system.
+ *
+ * @returns {Astronomy.EquatorialCoordinates}
+ *      Angular coordinates expressed in the same equatorial system as `vec`.
+ */
+Astronomy.EquatorFromVector = function(vec) {
+    const sphere = Astronomy.SphereFromVector(vec);
+    return new EquatorialCoordinates(sphere.lon / 15, sphere.lat, sphere.dist);
+}
+
+/**
+ * Converts Cartesian coordinates to spherical coordinates.
+ *
+ * Given a Cartesian vector, returns latitude, longitude, and distance.
+ *
+ * @param {Astronomy.Vector} vector
+ *      Cartesian vector to be converted to spherical coordinates.
+ *
+ * @returns {Astronomy.Spherical}
+ *      Spherical coordinates that are equivalent to the given vector.
+ */
+Astronomy.SphereFromVector = function(vector) {
+    const xyproj = vector.x*vector.x + vector.y*vector.y;
+    const dist = Math.sqrt(xyproj + vector.z*vector.z);
+    let lat, lon;
+    if (xyproj === 0.0) {
+        if (vector.z === 0.0) {
+            throw 'Zero-length vector not allowed.';
+        }
+        lon = 0.0;
+        lat = (vector.z < 0.0) ? -90.0 : +90.0;
+    } else {
+        lon = RAD2DEG * Math.atan2(vector.y, vector.x);
+        if (lon < 0.0) {
+            lon += 360.0;
+        }
+        lat = RAD2DEG * Math.atan2(vector.z, Math.sqrt(xyproj));
+    }
+    return new Spherical(lat, lon, dist);
+}
+
+function ToggleAzimuthDirection(az) {
+    az = 360.0 - az;
+    if (az >= 360.0)
+        az -= 360.0;
+    else if (az < 0.0)
+        az += 360.0;
+    return az;
+}
+
+/**
+ * Converts Cartesian coordinates to horizontal coordinates.
+ *
+ * Given a horizontal Cartesian vector, returns horizontal azimuth and altitude.
+ *
+ * *IMPORTANT:* This function differs from `SphereFromVector` in two ways:
+ * - `SphereFromVector` returns a `lon` value that represents azimuth defined counterclockwise
+ *   from north (e.g., west = +90), but this function represents a clockwise rotation
+ *   (e.g., east = +90). The difference is because `SphereFromVector` is intended
+ *   to preserve the vector "right-hand rule", while this function defines azimuth in a more
+ *   traditional way as used in navigation and cartography.
+ * - This function optionally corrects for atmospheric refraction, while `SphereFromVector` does not.
+ *
+ * The returned object contains the azimuth in `lon`.
+ * It is measured in degrees clockwise from north: east = +90 degrees, west = +270 degrees.
+ *
+ * The altitude is stored in `lat`.
+ *
+ * The distance to the observed object is stored in `dist`,
+ * and is expressed in astronomical units (AU).
+ *
+ * @param {Astronomy.Vector} vector
+ *      Cartesian vector to be converted to horizontal coordinates.
+ *
+ * @param {string} refraction
+ *      `"normal"`: correct altitude for atmospheric refraction (recommended).
+ *      `"jplhor"`: for JPL Horizons compatibility testing only; not recommended for normal use.
+ *      `null`: no atmospheric refraction correction is performed.
+ *
+ * @returns {Astronomy.Spherical}
+ */
+Astronomy.HorizonFromVector = function(vector, refraction) {
+    const sphere = Astronomy.SphereFromVector(vector);
+    sphere.lon = ToggleAzimuthDirection(sphere.lon);
+    sphere.lat += Astronomy.Refraction(refraction, sphere.lat);
+    return sphere;
+}
+
+
+/**
+ * Given apparent angular horizontal coordinates in `sphere`, calculate horizontal vector.
+ *
+ * @param {Astronomy.Spherical} sphere
+ *      A structure that contains apparent horizontal coordinates:
+ *      `lat` holds the refracted azimuth angle,
+ *      `lon` holds the azimuth in degrees clockwise from north,
+ *      and `dist` holds the distance from the observer to the object in AU.
+ *
+ * @param {Astronomy.AstroTime} time
+ *      The date and time of the observation. This is needed because the returned
+ *      vector object requires a valid time value when passed to certain other functions.
+ *
+ * @param {string} refraction
+ *      `"normal"`: correct altitude for atmospheric refraction (recommended).
+ *      `"jplhor"`: for JPL Horizons compatibility testing only; not recommended for normal use.
+ *      `null`: no atmospheric refraction correction is performed.
+ *
+ * @returns {Astronomy.Vector}
+ *      A vector in the horizontal system: `x` = north, `y` = west, and `z` = zenith (up).
+ */
+Astronomy.VectorFromHorizon = function(sphere, time, refraction) {
+    /* Convert azimuth from clockwise-from-north to counterclockwise-from-north. */
+    const lon = ToggleAzimuthDirection(sphere.lon);
+
+    /* Reverse any applied refraction. */
+    const lat = sphere.lat + Astronomy.InverseRefraction(refraction, sphere.lat);
+
+    const xsphere = new Spherical(lat, lon, sphere.dist);
+    return Astronomy.VectorFromSphere(xsphere, time);
+}
+
+
+/**
+ * Calculates the amount of "lift" to an altitude angle caused by atmospheric refraction.
+ *
+ * Given an altitude angle and a refraction option, calculates
+ * the amount of "lift" caused by atmospheric refraction.
+ * This is the number of degrees higher in the sky an object appears
+ * due to the lensing of the Earth's atmosphere.
+ *
+ * @param {string} refraction
+ *      `"normal"`: correct altitude for atmospheric refraction (recommended).
+ *      `"jplhor"`: for JPL Horizons compatibility testing only; not recommended for normal use.
+ *      `null`: no atmospheric refraction correction is performed.
+ *
+ * @param {number} altitude
+ *      An altitude angle in a horizontal coordinate system. Must be a value between -90 and +90.
+ *
+ * @returns {number}
+ *      The angular adjustment in degrees to be added to the altitude angle to correct for atmospheric lensing.
+ */
+Astronomy.Refraction = function(refraction, altitude) {
+    let refr;
+
+    if (altitude < -90.0 || altitude > +90.0)
+        return 0.0;     /* no attempt to correct an invalid altitude */
+
+    if (refraction === 'normal' || refraction === 'jplhor') {
+        // http://extras.springer.com/1999/978-1-4471-0555-8/chap4/horizons/horizons.pdf
+        // JPL Horizons says it uses refraction algorithm from
+        // Meeus "Astronomical Algorithms", 1991, p. 101-102.
+        // I found the following Go implementation:
+        // https://github.com/soniakeys/meeus/blob/master/v3/refraction/refract.go
+        // This is a translation from the function "Saemundsson" there.
+        // I found experimentally that JPL Horizons clamps the angle to 1 degree below the horizon.
+        // This is important because the 'refr' formula below goes crazy near hd = -5.11.
+        let hd = altitude;
+        if (hd < -1.0)
+            hd = -1.0;
+
+        refr = (1.02 / Math.tan((hd+10.3/(hd+5.11))*DEG2RAD)) / 60.0;
+
+        if (refraction === 'normal' && altitude < -1.0) {
+            // In "normal" mode we gradually reduce refraction toward the nadir
+            // so that we never get an altitude angle less than -90 degrees.
+            // When horizon angle is -1 degrees, the factor is exactly 1.
+            // As altitude approaches -90 (the nadir), the fraction approaches 0 linearly.
+            refr *= (altitude + 90.0) / 89.0;
+        }
+    } else {
+        /* No refraction, or the refraction option is invalid. */
+        refr = 0.0;
+    }
+
+    return refr;
+}
+
+/**
+ * Calculates the inverse of an atmospheric refraction angle.
+ *
+ * Given an observed altitude angle that includes atmospheric refraction,
+ * calculate the negative angular correction to obtain the unrefracted
+ * altitude. This is useful for cases where observed horizontal
+ * coordinates are to be converted to another orientation system,
+ * but refraction first must be removed from the observed position.
+ *
+ * @param {string} refraction
+ *      `"normal"`: correct altitude for atmospheric refraction (recommended).
+ *      `"jplhor"`: for JPL Horizons compatibility testing only; not recommended for normal use.
+ *      `null`: no atmospheric refraction correction is performed.
+ *
+ * @param {number} bent_altitude
+ *      The apparent altitude that includes atmospheric refraction.
+ *
+ * @returns {number}
+ *      The angular adjustment in degrees to be added to the
+ *      altitude angle to correct for atmospheric lensing.
+ *      This will be less than or equal to zero.
+ */
+Astronomy.InverseRefraction = function(refraction, bent_altitude) {
+    if (bent_altitude < -90.0 || bent_altitude > +90.0) {
+        return 0.0;     /* no attempt to correct an invalid altitude */
+    }
+
+    /* Find the pre-adjusted altitude whose refraction correction leads to 'altitude'. */
+    let altitude = bent_altitude - Astronomy.Refraction(refraction, bent_altitude);
+
+    for(;;) {
+        /* See how close we got. */
+        let diff = (altitude + Astronomy.Refraction(refraction, altitude)) - bent_altitude;
+        if (Math.abs(diff) < 1.0e-14)
+            return altitude - bent_altitude;
+
+        altitude -= diff;
+    }
+}
+
+/**
+ * Applies a rotation to a vector, yielding a rotated vector.
+ *
+ * This function transforms a vector in one orientation to a vector
+ * in another orientation.
+ *
+ * @param {Astronomy.RotationMatrix} rotation
+ *      A rotation matrix that specifies how the orientation of the vector is to be changed.
+ *
+ * @param {Astronomy.Vector} vector
+ *      The vector whose orientation is to be changed.
+ *
+ * @returns {Astronomy.Vector}
+ *      A vector in the orientation specified by `rotation`.
+ */
+Astronomy.RotateVector = function(rotation, vector)
+{
+    return new Vector(
+        rotation.rot[0][0]*vector.x + rotation.rot[1][0]*vector.y + rotation.rot[2][0]*vector.z,
+        rotation.rot[0][1]*vector.x + rotation.rot[1][1]*vector.y + rotation.rot[2][1]*vector.z,
+        rotation.rot[0][2]*vector.x + rotation.rot[1][2]*vector.y + rotation.rot[2][2]*vector.z,
+        vector.t
+    );
+}
+
+
+/**
+ * Calculates a rotation matrix from equatorial J2000 (EQJ) to ecliptic J2000 (ECL).
+ *
+ * This is one of the family of functions that returns a rotation matrix
+ * for converting from one orientation to another.
+ * Source: EQJ = equatorial system, using equator at J2000 epoch.
+ * Target: ECL = ecliptic system, using equator at J2000 epoch.
+ *
+ * @returns {Astronomy.RotationMatrix}
+ *      A rotation matrix that converts EQJ to ECL.
+ */
+Astronomy.Rotation_EQJ_ECL = function() {
+    /* ob = mean obliquity of the J2000 ecliptic = 0.40909260059599012 radians. */
+    const c = 0.9174821430670688;    /* cos(ob) */
+    const s = 0.3977769691083922;    /* sin(ob) */
+    return new RotationMatrix([
+        [ 1,  0,  0],
+        [ 0, +c, -s],
+        [ 0, +s, +c]
+    ]);
+}
+
+
+/**
+ * Calculates a rotation matrix from ecliptic J2000 (ECL) to equatorial J2000 (EQJ).
+ *
+ * This is one of the family of functions that returns a rotation matrix
+ * for converting from one orientation to another.
+ * Source: ECL = ecliptic system, using equator at J2000 epoch.
+ * Target: EQJ = equatorial system, using equator at J2000 epoch.
+ *
+ * @returns {Astronomy.RotationMatrix}
+ *      A rotation matrix that converts ECL to EQJ.
+ */
+Astronomy.Rotation_ECL_EQJ = function() {
+    /* ob = mean obliquity of the J2000 ecliptic = 0.40909260059599012 radians. */
+    const c = 0.9174821430670688;    /* cos(ob) */
+    const s = 0.3977769691083922;    /* sin(ob) */
+    return new RotationMatrix([
+        [ 1,  0,  0],
+        [ 0, +c, +s],
+        [ 0, -s, +c]
+    ]);
+}
+
+
+/**
+ * Calculates a rotation matrix from equatorial J2000 (EQJ) to equatorial of-date (EQD).
+ *
+ * This is one of the family of functions that returns a rotation matrix
+ * for converting from one orientation to another.
+ * Source: EQJ = equatorial system, using equator at J2000 epoch.
+ * Target: EQD = equatorial system, using equator of the specified date/time.
+ *
+ * @param {Astronomy.AstroTime} time
+ *      The date and time at which the Earth's equator defines the target orientation.
+ *
+ * @returns {Astronomy.RotationMatrix}
+ *      A rotation matrix that converts EQJ to EQD at `time`.
+ */
+Astronomy.Rotation_EQJ_EQD = function(time) {
+    const prec = precession_rot(0.0, time.tt);
+    const nut = nutation_rot(time, 0);
+    return Astronomy.CombineRotation(prec, nut);
+}
+
+
+/**
+ * Calculates a rotation matrix from equatorial of-date (EQD) to equatorial J2000 (EQJ).
+ *
+ * This is one of the family of functions that returns a rotation matrix
+ * for converting from one orientation to another.
+ * Source: EQD = equatorial system, using equator of the specified date/time.
+ * Target: EQJ = equatorial system, using equator at J2000 epoch.
+ *
+ * @param {Astronomy.AstroTime} time
+ *      The date and time at which the Earth's equator defines the source orientation.
+ *
+ * @returns {Astronomy.RotationMatrix}
+ *      A rotation matrix that converts EQD at `time` to EQJ.
+ */
+Astronomy.Rotation_EQD_EQJ = function(time) {
+    const nut = nutation_rot(time, 1);
+    const prec = precession_rot(time.tt, 0.0);
+    return Astronomy.CombineRotation(nut, prec);
+}
+
+
+/**
+ * Calculates a rotation matrix from equatorial of-date (EQD) to horizontal (HOR).
+ *
+ * This is one of the family of functions that returns a rotation matrix
+ * for converting from one orientation to another.
+ * Source: EQD = equatorial system, using equator of the specified date/time.
+ * Target: HOR = horizontal system.
+ *
+ * Use <code>HorizonFromVector</code> to convert the return value
+ * to a traditional altitude/azimuth pair.
+ *
+ * @param {Astronomy.AstroTime} time
+ *      The date and time at which the Earth's equator applies.
+ *
+ * @param {Astronomy.Observer} observer
+ *      A location near the Earth's mean sea level that defines the observer's horizon.
+ *
+ * @returns {Astronomy.RotationMatrix}
+ *      A rotation matrix that converts EQD to HOR at <code>time</code> and for <code>observer</code>.
+ *      The components of the horizontal vector are:
+ *      x = north, y = west, z = zenith (straight up from the observer).
+ *      These components are chosen so that the "right-hand rule" works for the vector
+ *      and so that north represents the direction where azimuth = 0.
+ */
+Astronomy.Rotation_EQD_HOR = function(time, observer) {
+    const sinlat = Math.sin(observer.latitude * DEG2RAD);
+    const coslat = Math.cos(observer.latitude * DEG2RAD);
+    const sinlon = Math.sin(observer.longitude * DEG2RAD);
+    const coslon = Math.cos(observer.longitude * DEG2RAD);
+
+    const uze = [coslat * coslon, coslat * sinlon, sinlat];
+    const une = [-sinlat * coslon, -sinlat * sinlon, coslat];
+    const uwe = [sinlon, -coslon, 0];
+
+    const spin_angle = -15 * sidereal_time(time);
+    const uz = spin(spin_angle, uze);
+    const un = spin(spin_angle, une);
+    const uw = spin(spin_angle, uwe);
+
+    return new RotationMatrix([
+        [un[0], uw[0], uz[0]],
+        [un[1], uw[1], uz[1]],
+        [un[2], uw[2], uz[2]],
+    ]);
+}
+
+
+/**
+ * Calculates a rotation matrix from horizontal (HOR) to equatorial of-date (EQD).
+ *
+ * This is one of the family of functions that returns a rotation matrix
+ * for converting from one orientation to another.
+ * Source: HOR = horizontal system (x=North, y=West, z=Zenith).
+ * Target: EQD = equatorial system, using equator of the specified date/time.
+ *
+ * @param {Astronomy.AstroTime} time
+ *      The date and time at which the Earth's equator applies.
+ *
+ * @param {Astronomy.Observer} observer
+ *      A location near the Earth's mean sea level that defines the observer's horizon.
+ *
+ * @returns {Astronomy.RotationMatrix}
+ *      A rotation matrix that converts HOR to EQD at `time` and for `observer`.
+ */
+Astronomy.Rotation_HOR_EQD = function(time, observer) {
+    const rot = Astronomy.Rotation_EQD_HOR(time, observer);
+    return Astronomy.InverseRotation(rot);
+}
+
+
+/**
+ * Calculates a rotation matrix from horizontal (HOR) to J2000 equatorial (EQJ).
+ *
+ * This is one of the family of functions that returns a rotation matrix
+ * for converting from one orientation to another.
+ * Source: HOR = horizontal system (x=North, y=West, z=Zenith).
+ * Target: EQJ = equatorial system, using equator at the J2000 epoch.
+ *
+ * @param {Astronomy.AstroTime} time
+ *      The date and time of the observation.
+ *
+ * @param {Astronomy.Observer} observer
+ *      A location near the Earth's mean sea level that defines the observer's horizon.
+ *
+ * @returns {Astronomy.RotationMatrix}
+ *      A rotation matrix that converts HOR to EQD at <code>time</code> and for <code>observer</code>.
+ */
+Astronomy.Rotation_HOR_EQJ = function(time, observer) {
+    const hor_eqd = Astronomy.Rotation_HOR_EQD(time, observer);
+    const eqd_eqj = Astronomy.Rotation_EQD_EQJ(time);
+    return Astronomy.CombineRotation(hor_eqd, eqd_eqj);
+}
+
+
+/**
+ * Calculates a rotation matrix from equatorial J2000 (EQJ) to horizontal (HOR).
+ *
+ * This is one of the family of functions that returns a rotation matrix
+ * for converting from one orientation to another.
+ * Source: EQJ = equatorial system, using the equator at the J2000 epoch.
+ * Target: HOR = horizontal system.
+ *
+ * Use <code>Astronomy.HorizonFromVector</code> to convert the return value
+ * to a traditional altitude/azimuth pair.
+ *
+ * @param time
+ *      The date and time of the desired horizontal orientation.
+ *
+ * @param observer
+ *      A location near the Earth's mean sea level that defines the observer's horizon.
+ *
+ * @return
+ *      A rotation matrix that converts EQJ to HOR at `time` and for `observer`.
+ *      The components of the horizontal vector are:
+ *      x = north, y = west, z = zenith (straight up from the observer).
+ *      These components are chosen so that the "right-hand rule" works for the vector
+ *      and so that north represents the direction where azimuth = 0.
+ */
+Astronomy.Rotation_EQJ_HOR = function(time, observer) {
+    const rot = Astronomy.Rotation_HOR_EQJ(time, observer);
+    return Astronomy.InverseRotation(rot);
+}
+
+
+/**
+ * Calculates a rotation matrix from equatorial of-date (EQD) to ecliptic J2000 (ECL).
+ *
+ * This is one of the family of functions that returns a rotation matrix
+ * for converting from one orientation to another.
+ * Source: EQD = equatorial system, using equator of date.
+ * Target: ECL = ecliptic system, using equator at J2000 epoch.
+ *
+ * @param {Astronomy.AstroTime} time
+ *      The date and time of the source equator.
+ *
+ * @returns {Astronomy.RotationMatrix}
+ *      A rotation matrix that converts EQD to ECL.
+ */
+Astronomy.Rotation_EQD_ECL = function(time) {
+    const eqd_eqj = Astronomy.Rotation_EQD_EQJ(time);
+    const eqj_ecl = Astronomy.Rotation_EQJ_ECL();
+    return Astronomy.CombineRotation(eqd_eqj, eqj_ecl);
+}
+
+
+/**
+ * Calculates a rotation matrix from ecliptic J2000 (ECL) to equatorial of-date (EQD).
+ *
+ * This is one of the family of functions that returns a rotation matrix
+ * for converting from one orientation to another.
+ * Source: ECL = ecliptic system, using equator at J2000 epoch.
+ * Target: EQD = equatorial system, using equator of date.
+ *
+ * @param {Astronomy.AstroTime} time
+ *      The date and time of the desired equator.
+ *
+ * @returns {Astronomy.RotationMatrix}
+ *      A rotation matrix that converts ECL to EQD.
+ */
+Astronomy.Rotation_ECL_EQD = function(time) {
+    const rot = Astronomy.Rotation_EQD_ECL(time);
+    return Astronomy.InverseRotation(rot);
+}
+
+
+/**
+ * Calculates a rotation matrix from ecliptic J2000 (ECL) to horizontal (HOR).
+ *
+ * This is one of the family of functions that returns a rotation matrix
+ * for converting from one orientation to another.
+ * Source: ECL = ecliptic system, using equator at J2000 epoch.
+ * Target: HOR = horizontal system.
+ *
+ * Use <code>Astronomy.HorizonFromVector</code> to convert the return value
+ * to a traditional altitude/azimuth pair.
+ *
+ * @param {Astronomy.AstroTime} time
+ *      The date and time of the desired horizontal orientation.
+ *
+ * @param {Astronomy.Observer} observer
+ *      A location near the Earth's mean sea level that defines the observer's horizon.
+ *
+ * @returns {Astronomy.RotationMatrix}
+ *      A rotation matrix that converts ECL to HOR at <code>time</code> and for <code>observer</code>.
+ *      The components of the horizontal vector are:
+ *      x = north, y = west, z = zenith (straight up from the observer).
+ *      These components are chosen so that the "right-hand rule" works for the vector
+ *      and so that north represents the direction where azimuth = 0.
+ */
+Astronomy.Rotation_ECL_HOR = function(time, observer) {
+    const ecl_eqd = Astronomy.Rotation_ECL_EQD(time);
+    const eqd_hor = Astronomy.Rotation_EQD_HOR(time, observer);
+    return Astronomy.CombineRotation(ecl_eqd, eqd_hor);
+}
+
+
+/**
+ * Calculates a rotation matrix from horizontal (HOR) to ecliptic J2000 (ECL).
+ *
+ * This is one of the family of functions that returns a rotation matrix
+ * for converting from one orientation to another.
+ * Source: HOR = horizontal system.
+ * Target: ECL = ecliptic system, using equator at J2000 epoch.
+ *
+ * @param {Astronomy.AstroTime} time
+ *      The date and time of the horizontal observation.
+ *
+ * @param {Astronomy.Observer} observer
+ *      The location of the horizontal observer.
+ *
+ * @returns {Astronomy.RotationMatrix}
+ *      A rotation matrix that converts HOR to ECL.
+ */
+Astronomy.Rotation_HOR_ECL = function(time, observer) {
+    const rot = Astronomy.Rotation_ECL_HOR(time, observer);
+    return Astronomy.InverseRotation(rot);
+}
+
 
 })(typeof exports==='undefined' ? (this.Astronomy={}) : exports);

@@ -69,6 +69,43 @@ and some [Node.js examples](../../demo/nodejs/).
 | -------- | ----------- |
 | [Seasons](#Astronomy.Seasons) | Finds the equinoxes and solstices for a given calendar year. |
 
+### Coordinate transforms
+
+The following four orientation systems are supported.
+Astronomy Engine can convert a vector from any of these orientations to any of the others.
+It also allows converting from a vector to spherical (angular) coordinates and back,
+within a given orientation. Note the 3-letter codes for each of the orientation systems;
+these are used in function and type names.
+
+- **EQJ = Equatorial J2000**: Uses the Earth's equator on January 1, 2000, at noon UTC.
+- **EQD = Equator of-date**: Uses the Earth's equator on a given date and time, adjusted for precession and nutation.
+- **ECL = Ecliptic**: Uses the mean plane of the Earth's orbit around the Sun. The x-axis is referenced against the J2000 equinox.
+- **HOR = Horizontal**: Uses the viewpoint of an observer at a specific location on the Earth at a given date and time.
+
+| Function | Description |
+| -------- | ----------- |
+| [RotateVector](#Astronomy.RotateVector) | Applies a rotation matrix to a vector, yielding a vector in another orientation system. |
+| [InverseRotation](#Astronomy.InverseRotation) | Given a rotation matrix, finds the inverse rotation matrix that does the opposite transformation. |
+| [CombineRotation](#Astronomy.CombineRotation) | Given two rotation matrices, returns a rotation matrix that combines them into a net transformation. |
+| [VectorFromSphere](#Astronomy.VectorFromSphere) | Converts spherical coordinates to Cartesian coordinates. |
+| [SphereFromVector](#Astronomy.SphereFromVector) | Converts Cartesian coordinates to spherical coordinates. |
+| [VectorFromEquator](#Astronomy.VectorFromEquator) | Given angular equatorial coordinates, calculates equatorial vector. |
+| [EquatorFromVector](#Astronomy.EquatorFromVector) | Given an equatorial vector, calculates equatorial angular coordinates. |
+| [VectorFromHorizon](#Astronomy.VectorFromHorizon) | Given apparent angular horizontal coordinates, calculates horizontal vector. |
+| [HorizonFromVector](#Astronomy.HorizonFromVector) | Given a vector in horizontal orientation, calculates horizontal angular coordinates. |
+| [Rotation_EQD_EQJ](#Astronomy.Rotation_EQD_EQJ) | Calculates a rotation matrix from equatorial of-date (EQD) to equatorial J2000 (EQJ). |
+| [Rotation_EQD_ECL](#Astronomy.Rotation_EQD_ECL) | Calculates a rotation matrix from equatorial of-date (EQD) to ecliptic J2000 (ECL). |
+| [Rotation_EQD_HOR](#Astronomy.Rotation_EQD_HOR) | Calculates a rotation matrix from equatorial of-date (EQD) to horizontal (HOR). |
+| [Rotation_EQJ_EQD](#Astronomy.Rotation_EQJ_EQD) | Calculates a rotation matrix from equatorial J2000 (EQJ) to equatorial of-date (EQD). |
+| [Rotation_EQJ_ECL](#Astronomy.Rotation_EQJ_ECL) | Calculates a rotation matrix from equatorial J2000 (EQJ) to ecliptic J2000 (ECL). |
+| [Rotation_EQJ_HOR](#Astronomy.Rotation_EQJ_HOR) | Calculates a rotation matrix from equatorial J2000 (EQJ) to horizontal (HOR). |
+| [Rotation_ECL_EQD](#Astronomy.Rotation_ECL_EQD) | Calculates a rotation matrix from ecliptic J2000 (ECL) to equatorial of-date (EQD). |
+| [Rotation_ECL_EQJ](#Astronomy.Rotation_ECL_EQJ) | Calculates a rotation matrix from ecliptic J2000 (ECL) to equatorial J2000 (EQJ). |
+| [Rotation_ECL_HOR](#Astronomy.Rotation_ECL_HOR) | Calculates a rotation matrix from ecliptic J2000 (ECL) to horizontal (HOR). |
+| [Rotation_HOR_EQD](#Astronomy.Rotation_HOR_EQD) | Calculates a rotation matrix from horizontal (HOR) to equatorial of-date (EQD). |
+| [Rotation_HOR_EQJ](#Astronomy.Rotation_HOR_EQJ) | Calculates a rotation matrix from horizontal (HOR) to J2000 equatorial (EQJ). |
+| [Rotation_HOR_ECL](#Astronomy.Rotation_HOR_ECL) | Calculates a rotation matrix from horizontal (HOR) to ecliptic J2000 (ECL). |
+
 ---
 
 ## API Reference
@@ -211,6 +248,23 @@ Returns the length of the vector in astronomical units (AU).
 
 * * *
 
+<a name="Astronomy.Spherical"></a>
+
+### Astronomy.Spherical
+Holds spherical coordinates: latitude, longitude, distance.
+
+**Kind**: static class of [<code>Astronomy</code>](#Astronomy)  
+**Properties**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| lat | <code>number</code> | The latitude angle: -90..+90 degrees. |
+| lon | <code>number</code> | The longitude angle: 0..360 degrees. |
+| dist | <code>number</code> | Distance in AU. |
+
+
+* * *
+
 <a name="Astronomy.EquatorialCoordinates"></a>
 
 ### Astronomy.EquatorialCoordinates
@@ -224,6 +278,21 @@ Holds right ascension, declination, and distance of a celestial object.
 | ra | <code>number</code> | Right ascension in sidereal hours: [0, 24). |
 | dec | <code>number</code> | Declination in degrees: [-90, +90]. |
 | dist | <code>number</code> | Distance to the celestial object expressed in      <a href="https://en.wikipedia.org/wiki/Astronomical_unit">astronomical units</a> (AU). |
+
+
+* * *
+
+<a name="Astronomy.RotationMatrix"></a>
+
+### Astronomy.RotationMatrix
+Contains a rotation matrix that can be used to transform one coordinate system to another.
+
+**Kind**: static class of [<code>Astronomy</code>](#Astronomy)  
+**Properties**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| rot | <code>Array.&lt;Array.&lt;number&gt;&gt;</code> | A normalized 3x3 rotation matrix. |
 
 
 * * *
@@ -465,6 +534,36 @@ function calls may be more efficient than passing in native JavaScript Date obje
 | Param | Type | Description |
 | --- | --- | --- |
 | date | <code>Date</code> \| <code>number</code> \| [<code>AstroTime</code>](#Astronomy.AstroTime) | A Date object, a number of UTC days since the J2000 epoch (noon on January 1, 2000),      or an Astronomy.AstroTime object. See remarks above. |
+
+
+* * *
+
+<a name="Astronomy.MakeSpherical"></a>
+
+### Astronomy.MakeSpherical(lat, lon, dist) ⇒ [<code>Spherical</code>](#Astronomy.Spherical)
+Create spherical coordinates.
+
+**Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| lat | <code>number</code> | The angular distance above or below the reference plane, in degrees. |
+| lon | <code>number</code> | The angular distance around the reference plane, in degrees. |
+| dist | <code>number</code> | A radial distance in AU. |
+
+
+* * *
+
+<a name="Astronomy.MakeRotation"></a>
+
+### Astronomy.MakeRotation(rot) ⇒ [<code>RotationMatrix</code>](#Astronomy.RotationMatrix)
+Creates a rotation matrix that can be used to transform one coordinate system to another.
+
+**Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| rot | <code>Array.&lt;Array.&lt;number&gt;&gt;</code> | An array [3][3] of numbers. Defines a rotation matrix used to premultiply      a 3D vector to reorient it into another coordinate system. |
 
 
 * * *
@@ -1042,6 +1141,479 @@ If the given apsis is a perigee, this function finds the next apogee, and vice v
 | Param | Type | Description |
 | --- | --- | --- |
 | apsis | [<code>Apsis</code>](#Astronomy.Apsis) | A lunar perigee or apogee event. |
+
+
+* * *
+
+<a name="Astronomy.InverseRotation"></a>
+
+### Astronomy.InverseRotation(rotation) ⇒ [<code>RotationMatrix</code>](#Astronomy.RotationMatrix)
+Calculates the inverse of a rotation matrix.
+Given a rotation matrix that performs some coordinate transform,
+this function returns the matrix that reverses that trasnform.
+
+**Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
+**Returns**: [<code>RotationMatrix</code>](#Astronomy.RotationMatrix) - The inverse rotation matrix.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| rotation | [<code>RotationMatrix</code>](#Astronomy.RotationMatrix) | The rotation matrix to be inverted. |
+
+
+* * *
+
+<a name="Astronomy.CombineRotation"></a>
+
+### Astronomy.CombineRotation(a, b) ⇒ [<code>RotationMatrix</code>](#Astronomy.RotationMatrix)
+Creates a rotation based on applying one rotation followed by another.
+Given two rotation matrices, returns a combined rotation matrix that is
+equivalent to rotating based on the first matrix, followed by the second.
+
+**Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
+**Returns**: [<code>RotationMatrix</code>](#Astronomy.RotationMatrix) - The combined rotation matrix.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| a | [<code>RotationMatrix</code>](#Astronomy.RotationMatrix) | The first rotation to apply. |
+| b | [<code>RotationMatrix</code>](#Astronomy.RotationMatrix) | The second rotation to apply. |
+
+
+* * *
+
+<a name="Astronomy.VectorFromSphere"></a>
+
+### Astronomy.VectorFromSphere(sphere, time) ⇒ [<code>Vector</code>](#Astronomy.Vector)
+Converts spherical coordinates to Cartesian coordinates.
+Given spherical coordinates and a time at which they are valid,
+returns a vector of Cartesian coordinates. The returned value
+includes the time, as required by <code>AstroTime</code>.
+
+**Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
+**Returns**: [<code>Vector</code>](#Astronomy.Vector) - The vector form of the supplied spherical coordinates.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| sphere | [<code>Spherical</code>](#Astronomy.Spherical) | Spherical coordinates to be converted. |
+| time | [<code>AstroTime</code>](#Astronomy.AstroTime) | The time that should be included in the returned vector. |
+
+
+* * *
+
+<a name="Astronomy.VectorFromEquator"></a>
+
+### Astronomy.VectorFromEquator(equ, time) ⇒ [<code>Vector</code>](#Astronomy.Vector)
+Given angular equatorial coordinates in `equ`, calculates equatorial vector.
+
+**Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
+**Returns**: [<code>Vector</code>](#Astronomy.Vector) - A vector in the equatorial system.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| equ | [<code>EquatorialCoordinates</code>](#Astronomy.EquatorialCoordinates) | An object that contains angular equatorial coordinates to be converted to a vector. |
+| time | [<code>AstroTime</code>](#Astronomy.AstroTime) | The date and time of the observation. This is needed because the returned      vector object requires a valid time value when passed to certain other functions. |
+
+
+* * *
+
+<a name="Astronomy.EquatorFromVector"></a>
+
+### Astronomy.EquatorFromVector(vec) ⇒ [<code>EquatorialCoordinates</code>](#Astronomy.EquatorialCoordinates)
+Given an equatorial vector, calculates equatorial angular coordinates.
+
+**Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
+**Returns**: [<code>EquatorialCoordinates</code>](#Astronomy.EquatorialCoordinates) - Angular coordinates expressed in the same equatorial system as `vec`.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| vec | [<code>Vector</code>](#Astronomy.Vector) | A vector in an equatorial coordinate system. |
+
+
+* * *
+
+<a name="Astronomy.SphereFromVector"></a>
+
+### Astronomy.SphereFromVector(vector) ⇒ [<code>Spherical</code>](#Astronomy.Spherical)
+Converts Cartesian coordinates to spherical coordinates.
+
+Given a Cartesian vector, returns latitude, longitude, and distance.
+
+**Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
+**Returns**: [<code>Spherical</code>](#Astronomy.Spherical) - Spherical coordinates that are equivalent to the given vector.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| vector | [<code>Vector</code>](#Astronomy.Vector) | Cartesian vector to be converted to spherical coordinates. |
+
+
+* * *
+
+<a name="Astronomy.HorizonFromVector"></a>
+
+### Astronomy.HorizonFromVector(vector, refraction) ⇒ [<code>Spherical</code>](#Astronomy.Spherical)
+Converts Cartesian coordinates to horizontal coordinates.
+
+Given a horizontal Cartesian vector, returns horizontal azimuth and altitude.
+
+*IMPORTANT:* This function differs from `SphereFromVector` in two ways:
+- `SphereFromVector` returns a `lon` value that represents azimuth defined counterclockwise
+  from north (e.g., west = +90), but this function represents a clockwise rotation
+  (e.g., east = +90). The difference is because `SphereFromVector` is intended
+  to preserve the vector "right-hand rule", while this function defines azimuth in a more
+  traditional way as used in navigation and cartography.
+- This function optionally corrects for atmospheric refraction, while `SphereFromVector` does not.
+
+The returned object contains the azimuth in `lon`.
+It is measured in degrees clockwise from north: east = +90 degrees, west = +270 degrees.
+
+The altitude is stored in `lat`.
+
+The distance to the observed object is stored in `dist`,
+and is expressed in astronomical units (AU).
+
+**Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| vector | [<code>Vector</code>](#Astronomy.Vector) | Cartesian vector to be converted to horizontal coordinates. |
+| refraction | <code>string</code> | `"normal"`: correct altitude for atmospheric refraction (recommended).      `"jplhor"`: for JPL Horizons compatibility testing only; not recommended for normal use.      `null`: no atmospheric refraction correction is performed. |
+
+
+* * *
+
+<a name="Astronomy.VectorFromHorizon"></a>
+
+### Astronomy.VectorFromHorizon(sphere, time, refraction) ⇒ [<code>Vector</code>](#Astronomy.Vector)
+Given apparent angular horizontal coordinates in `sphere`, calculate horizontal vector.
+
+**Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
+**Returns**: [<code>Vector</code>](#Astronomy.Vector) - A vector in the horizontal system: `x` = north, `y` = west, and `z` = zenith (up).  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| sphere | [<code>Spherical</code>](#Astronomy.Spherical) | A structure that contains apparent horizontal coordinates:      `lat` holds the refracted azimuth angle,      `lon` holds the azimuth in degrees clockwise from north,      and `dist` holds the distance from the observer to the object in AU. |
+| time | [<code>AstroTime</code>](#Astronomy.AstroTime) | The date and time of the observation. This is needed because the returned      vector object requires a valid time value when passed to certain other functions. |
+| refraction | <code>string</code> | `"normal"`: correct altitude for atmospheric refraction (recommended).      `"jplhor"`: for JPL Horizons compatibility testing only; not recommended for normal use.      `null`: no atmospheric refraction correction is performed. |
+
+
+* * *
+
+<a name="Astronomy.Refraction"></a>
+
+### Astronomy.Refraction(refraction, altitude) ⇒ <code>number</code>
+Calculates the amount of "lift" to an altitude angle caused by atmospheric refraction.
+
+Given an altitude angle and a refraction option, calculates
+the amount of "lift" caused by atmospheric refraction.
+This is the number of degrees higher in the sky an object appears
+due to the lensing of the Earth's atmosphere.
+
+**Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
+**Returns**: <code>number</code> - The angular adjustment in degrees to be added to the altitude angle to correct for atmospheric lensing.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| refraction | <code>string</code> | `"normal"`: correct altitude for atmospheric refraction (recommended).      `"jplhor"`: for JPL Horizons compatibility testing only; not recommended for normal use.      `null`: no atmospheric refraction correction is performed. |
+| altitude | <code>number</code> | An altitude angle in a horizontal coordinate system. Must be a value between -90 and +90. |
+
+
+* * *
+
+<a name="Astronomy.InverseRefraction"></a>
+
+### Astronomy.InverseRefraction(refraction, bent_altitude) ⇒ <code>number</code>
+Calculates the inverse of an atmospheric refraction angle.
+
+Given an observed altitude angle that includes atmospheric refraction,
+calculate the negative angular correction to obtain the unrefracted
+altitude. This is useful for cases where observed horizontal
+coordinates are to be converted to another orientation system,
+but refraction first must be removed from the observed position.
+
+**Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
+**Returns**: <code>number</code> - The angular adjustment in degrees to be added to the
+     altitude angle to correct for atmospheric lensing.
+     This will be less than or equal to zero.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| refraction | <code>string</code> | `"normal"`: correct altitude for atmospheric refraction (recommended).      `"jplhor"`: for JPL Horizons compatibility testing only; not recommended for normal use.      `null`: no atmospheric refraction correction is performed. |
+| bent_altitude | <code>number</code> | The apparent altitude that includes atmospheric refraction. |
+
+
+* * *
+
+<a name="Astronomy.RotateVector"></a>
+
+### Astronomy.RotateVector(rotation, vector) ⇒ [<code>Vector</code>](#Astronomy.Vector)
+Applies a rotation to a vector, yielding a rotated vector.
+
+This function transforms a vector in one orientation to a vector
+in another orientation.
+
+**Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
+**Returns**: [<code>Vector</code>](#Astronomy.Vector) - A vector in the orientation specified by `rotation`.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| rotation | [<code>RotationMatrix</code>](#Astronomy.RotationMatrix) | A rotation matrix that specifies how the orientation of the vector is to be changed. |
+| vector | [<code>Vector</code>](#Astronomy.Vector) | The vector whose orientation is to be changed. |
+
+
+* * *
+
+<a name="Astronomy.Rotation_EQJ_ECL"></a>
+
+### Astronomy.Rotation\_EQJ\_ECL() ⇒ [<code>RotationMatrix</code>](#Astronomy.RotationMatrix)
+Calculates a rotation matrix from equatorial J2000 (EQJ) to ecliptic J2000 (ECL).
+
+This is one of the family of functions that returns a rotation matrix
+for converting from one orientation to another.
+Source: EQJ = equatorial system, using equator at J2000 epoch.
+Target: ECL = ecliptic system, using equator at J2000 epoch.
+
+**Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
+**Returns**: [<code>RotationMatrix</code>](#Astronomy.RotationMatrix) - A rotation matrix that converts EQJ to ECL.  
+
+* * *
+
+<a name="Astronomy.Rotation_ECL_EQJ"></a>
+
+### Astronomy.Rotation\_ECL\_EQJ() ⇒ [<code>RotationMatrix</code>](#Astronomy.RotationMatrix)
+Calculates a rotation matrix from ecliptic J2000 (ECL) to equatorial J2000 (EQJ).
+
+This is one of the family of functions that returns a rotation matrix
+for converting from one orientation to another.
+Source: ECL = ecliptic system, using equator at J2000 epoch.
+Target: EQJ = equatorial system, using equator at J2000 epoch.
+
+**Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
+**Returns**: [<code>RotationMatrix</code>](#Astronomy.RotationMatrix) - A rotation matrix that converts ECL to EQJ.  
+
+* * *
+
+<a name="Astronomy.Rotation_EQJ_EQD"></a>
+
+### Astronomy.Rotation\_EQJ\_EQD(time) ⇒ [<code>RotationMatrix</code>](#Astronomy.RotationMatrix)
+Calculates a rotation matrix from equatorial J2000 (EQJ) to equatorial of-date (EQD).
+
+This is one of the family of functions that returns a rotation matrix
+for converting from one orientation to another.
+Source: EQJ = equatorial system, using equator at J2000 epoch.
+Target: EQD = equatorial system, using equator of the specified date/time.
+
+**Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
+**Returns**: [<code>RotationMatrix</code>](#Astronomy.RotationMatrix) - A rotation matrix that converts EQJ to EQD at `time`.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| time | [<code>AstroTime</code>](#Astronomy.AstroTime) | The date and time at which the Earth's equator defines the target orientation. |
+
+
+* * *
+
+<a name="Astronomy.Rotation_EQD_EQJ"></a>
+
+### Astronomy.Rotation\_EQD\_EQJ(time) ⇒ [<code>RotationMatrix</code>](#Astronomy.RotationMatrix)
+Calculates a rotation matrix from equatorial of-date (EQD) to equatorial J2000 (EQJ).
+
+This is one of the family of functions that returns a rotation matrix
+for converting from one orientation to another.
+Source: EQD = equatorial system, using equator of the specified date/time.
+Target: EQJ = equatorial system, using equator at J2000 epoch.
+
+**Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
+**Returns**: [<code>RotationMatrix</code>](#Astronomy.RotationMatrix) - A rotation matrix that converts EQD at `time` to EQJ.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| time | [<code>AstroTime</code>](#Astronomy.AstroTime) | The date and time at which the Earth's equator defines the source orientation. |
+
+
+* * *
+
+<a name="Astronomy.Rotation_EQD_HOR"></a>
+
+### Astronomy.Rotation\_EQD\_HOR(time, observer) ⇒ [<code>RotationMatrix</code>](#Astronomy.RotationMatrix)
+Calculates a rotation matrix from equatorial of-date (EQD) to horizontal (HOR).
+
+This is one of the family of functions that returns a rotation matrix
+for converting from one orientation to another.
+Source: EQD = equatorial system, using equator of the specified date/time.
+Target: HOR = horizontal system.
+
+Use <code>HorizonFromVector</code> to convert the return value
+to a traditional altitude/azimuth pair.
+
+**Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
+**Returns**: [<code>RotationMatrix</code>](#Astronomy.RotationMatrix) - A rotation matrix that converts EQD to HOR at <code>time</code> and for <code>observer</code>.
+     The components of the horizontal vector are:
+     x = north, y = west, z = zenith (straight up from the observer).
+     These components are chosen so that the "right-hand rule" works for the vector
+     and so that north represents the direction where azimuth = 0.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| time | [<code>AstroTime</code>](#Astronomy.AstroTime) | The date and time at which the Earth's equator applies. |
+| observer | [<code>Observer</code>](#Astronomy.Observer) | A location near the Earth's mean sea level that defines the observer's horizon. |
+
+
+* * *
+
+<a name="Astronomy.Rotation_HOR_EQD"></a>
+
+### Astronomy.Rotation\_HOR\_EQD(time, observer) ⇒ [<code>RotationMatrix</code>](#Astronomy.RotationMatrix)
+Calculates a rotation matrix from horizontal (HOR) to equatorial of-date (EQD).
+
+This is one of the family of functions that returns a rotation matrix
+for converting from one orientation to another.
+Source: HOR = horizontal system (x=North, y=West, z=Zenith).
+Target: EQD = equatorial system, using equator of the specified date/time.
+
+**Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
+**Returns**: [<code>RotationMatrix</code>](#Astronomy.RotationMatrix) - A rotation matrix that converts HOR to EQD at `time` and for `observer`.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| time | [<code>AstroTime</code>](#Astronomy.AstroTime) | The date and time at which the Earth's equator applies. |
+| observer | [<code>Observer</code>](#Astronomy.Observer) | A location near the Earth's mean sea level that defines the observer's horizon. |
+
+
+* * *
+
+<a name="Astronomy.Rotation_HOR_EQJ"></a>
+
+### Astronomy.Rotation\_HOR\_EQJ(time, observer) ⇒ [<code>RotationMatrix</code>](#Astronomy.RotationMatrix)
+Calculates a rotation matrix from horizontal (HOR) to J2000 equatorial (EQJ).
+
+This is one of the family of functions that returns a rotation matrix
+for converting from one orientation to another.
+Source: HOR = horizontal system (x=North, y=West, z=Zenith).
+Target: EQJ = equatorial system, using equator at the J2000 epoch.
+
+**Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
+**Returns**: [<code>RotationMatrix</code>](#Astronomy.RotationMatrix) - A rotation matrix that converts HOR to EQD at <code>time</code> and for <code>observer</code>.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| time | [<code>AstroTime</code>](#Astronomy.AstroTime) | The date and time of the observation. |
+| observer | [<code>Observer</code>](#Astronomy.Observer) | A location near the Earth's mean sea level that defines the observer's horizon. |
+
+
+* * *
+
+<a name="Astronomy.Rotation_EQJ_HOR"></a>
+
+### Astronomy.Rotation\_EQJ\_HOR(time, observer) ⇒
+Calculates a rotation matrix from equatorial J2000 (EQJ) to horizontal (HOR).
+
+This is one of the family of functions that returns a rotation matrix
+for converting from one orientation to another.
+Source: EQJ = equatorial system, using the equator at the J2000 epoch.
+Target: HOR = horizontal system.
+
+Use <code>Astronomy.HorizonFromVector</code> to convert the return value
+to a traditional altitude/azimuth pair.
+
+**Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
+**Returns**: A rotation matrix that converts EQJ to HOR at `time` and for `observer`.
+     The components of the horizontal vector are:
+     x = north, y = west, z = zenith (straight up from the observer).
+     These components are chosen so that the "right-hand rule" works for the vector
+     and so that north represents the direction where azimuth = 0.  
+
+| Param | Description |
+| --- | --- |
+| time | The date and time of the desired horizontal orientation. |
+| observer | A location near the Earth's mean sea level that defines the observer's horizon. |
+
+
+* * *
+
+<a name="Astronomy.Rotation_EQD_ECL"></a>
+
+### Astronomy.Rotation\_EQD\_ECL(time) ⇒ [<code>RotationMatrix</code>](#Astronomy.RotationMatrix)
+Calculates a rotation matrix from equatorial of-date (EQD) to ecliptic J2000 (ECL).
+
+This is one of the family of functions that returns a rotation matrix
+for converting from one orientation to another.
+Source: EQD = equatorial system, using equator of date.
+Target: ECL = ecliptic system, using equator at J2000 epoch.
+
+**Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
+**Returns**: [<code>RotationMatrix</code>](#Astronomy.RotationMatrix) - A rotation matrix that converts EQD to ECL.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| time | [<code>AstroTime</code>](#Astronomy.AstroTime) | The date and time of the source equator. |
+
+
+* * *
+
+<a name="Astronomy.Rotation_ECL_EQD"></a>
+
+### Astronomy.Rotation\_ECL\_EQD(time) ⇒ [<code>RotationMatrix</code>](#Astronomy.RotationMatrix)
+Calculates a rotation matrix from ecliptic J2000 (ECL) to equatorial of-date (EQD).
+
+This is one of the family of functions that returns a rotation matrix
+for converting from one orientation to another.
+Source: ECL = ecliptic system, using equator at J2000 epoch.
+Target: EQD = equatorial system, using equator of date.
+
+**Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
+**Returns**: [<code>RotationMatrix</code>](#Astronomy.RotationMatrix) - A rotation matrix that converts ECL to EQD.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| time | [<code>AstroTime</code>](#Astronomy.AstroTime) | The date and time of the desired equator. |
+
+
+* * *
+
+<a name="Astronomy.Rotation_ECL_HOR"></a>
+
+### Astronomy.Rotation\_ECL\_HOR(time, observer) ⇒ [<code>RotationMatrix</code>](#Astronomy.RotationMatrix)
+Calculates a rotation matrix from ecliptic J2000 (ECL) to horizontal (HOR).
+
+This is one of the family of functions that returns a rotation matrix
+for converting from one orientation to another.
+Source: ECL = ecliptic system, using equator at J2000 epoch.
+Target: HOR = horizontal system.
+
+Use <code>Astronomy.HorizonFromVector</code> to convert the return value
+to a traditional altitude/azimuth pair.
+
+**Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
+**Returns**: [<code>RotationMatrix</code>](#Astronomy.RotationMatrix) - A rotation matrix that converts ECL to HOR at <code>time</code> and for <code>observer</code>.
+     The components of the horizontal vector are:
+     x = north, y = west, z = zenith (straight up from the observer).
+     These components are chosen so that the "right-hand rule" works for the vector
+     and so that north represents the direction where azimuth = 0.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| time | [<code>AstroTime</code>](#Astronomy.AstroTime) | The date and time of the desired horizontal orientation. |
+| observer | [<code>Observer</code>](#Astronomy.Observer) | A location near the Earth's mean sea level that defines the observer's horizon. |
+
+
+* * *
+
+<a name="Astronomy.Rotation_HOR_ECL"></a>
+
+### Astronomy.Rotation\_HOR\_ECL(time, observer) ⇒ [<code>RotationMatrix</code>](#Astronomy.RotationMatrix)
+Calculates a rotation matrix from horizontal (HOR) to ecliptic J2000 (ECL).
+
+This is one of the family of functions that returns a rotation matrix
+for converting from one orientation to another.
+Source: HOR = horizontal system.
+Target: ECL = ecliptic system, using equator at J2000 epoch.
+
+**Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
+**Returns**: [<code>RotationMatrix</code>](#Astronomy.RotationMatrix) - A rotation matrix that converts HOR to ECL.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| time | [<code>AstroTime</code>](#Astronomy.AstroTime) | The date and time of the horizontal observation. |
+| observer | [<code>Observer</code>](#Astronomy.Observer) | The location of the horizontal observer. |
 
 
 * * *

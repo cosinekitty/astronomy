@@ -45,7 +45,7 @@ def Test_GeoMoon():
     cx, cy, cz = 0.002674036155459549, -0.0001531716308218381, -0.0003150201604895409
     dx, dy, dz = vec.x - cx, vec.y - cy, vec.z - cz
     diff = math.sqrt(dx*dx + dy*dy + dz*dz)
-    print('Test_GeoMoon: diff = {}'.format(diff))    
+    print('Test_GeoMoon: diff = {}'.format(diff))
     if diff > 4.34e-19:
         print('Test_GeoMoon: EXCESSIVE ERROR')
         sys.exit(1)
@@ -80,8 +80,8 @@ def Test_AstroCheck(printflag):
         print('o {:0.6f} {:0.6f} {:0.6f}'.format(observer.latitude, observer.longitude, observer.height))
     dt = 10 + math.pi/100
     bodylist = [
-        astronomy.Body.Sun, astronomy.Body.Moon, astronomy.Body.Mercury, astronomy.Body.Venus, 
-        astronomy.Body.Earth, astronomy.Body.Mars, astronomy.Body.Jupiter, astronomy.Body.Saturn, 
+        astronomy.Body.Sun, astronomy.Body.Moon, astronomy.Body.Mercury, astronomy.Body.Venus,
+        astronomy.Body.Earth, astronomy.Body.Mars, astronomy.Body.Jupiter, astronomy.Body.Saturn,
         astronomy.Body.Uranus, astronomy.Body.Neptune, astronomy.Body.Pluto
     ]
 
@@ -89,7 +89,7 @@ def Test_AstroCheck(printflag):
         for body in bodylist:
             name = body.name
             if body != astronomy.Body.Moon:
-                pos = astronomy.HelioVector(body, time)                
+                pos = astronomy.HelioVector(body, time)
                 if printflag:
                     print('v {} {:0.16f} {:0.16f} {:0.16f} {:0.16f}'.format(name, pos.t.tt, pos.x, pos.y, pos.z))
                 if body != astronomy.Body.Earth:
@@ -165,7 +165,7 @@ def Test_Seasons(filename):
             diff_minutes = (24.0 * 60.0) * abs(calc_time.tt - correct_time.tt)
             if diff_minutes > max_minutes:
                 max_minutes = diff_minutes
-            
+
             if diff_minutes > 1.7:
                 print('Test_Seasons: {} line {}: excessive error ({}): {} minutes.'.format(filename, lnum, name, diff_minutes))
                 return 1
@@ -538,7 +538,7 @@ def CheckSaturn():
 def TestMaxMag(body, filename):
     # Example of input data:
     #
-    # 2001-02-21T08:00Z 2001-02-27T08:00Z 23.17 19.53 -4.84 
+    # 2001-02-21T08:00Z 2001-02-27T08:00Z 23.17 19.53 -4.84
     #
     # JPL Horizons test data has limited floating point precision in the magnitude values.
     # There is a pair of dates for the beginning and end of the max magnitude period,
@@ -702,7 +702,10 @@ def LunarApsis(filename):
             if not correct_time:
                 print('LunarApsis({} line {}): invalid time'.format(filename, lnum))
                 return 1
-            kind = int(tokenlist[0])
+            kind = astronomy.ApsisKind(int(tokenlist[0]))
+            if apsis.kind != kind:
+                print('LunarApsis({} line {}): Expected kind {} but found {}'.format(filename, lnum, kind, apsis.kind))
+                return 1
             dist_km = float(tokenlist[2])
             diff_minutes = (24.0 * 60.0) * abs(apsis.time.ut - correct_time.ut)
             diff_km = abs(apsis.dist_km - dist_km)
@@ -716,11 +719,305 @@ def LunarApsis(filename):
             max_km = max(max_km, diff_km)
     print('LunarApsis: found {} events, max time error = {:0.3f} minutes, max distance error = {:0.3f} km.'.format(lnum, max_minutes, max_km))
     return 0
-            
+
 
 def Test_Apsis():
     if 0 != LunarApsis('apsides/moon.txt'):
         return 1
+    return 0
+
+#-----------------------------------------------------------------------------------------------------------
+
+def CompareMatrices(caller, a, b, tolerance):
+    for i in range(3):
+        for j in range(3):
+            diff = abs(a.rot[i][j] - b.rot[i][j])
+            if diff > tolerance:
+                print('ERROR({}): matrix[{}][{}] = {}, expected {}, diff {}'.format(caller, i, j, a.rot[i][j], b.rot[i][j], diff))
+                sys.exit(1)
+
+
+def Rotation_MatrixInverse():
+    a = astronomy.RotationMatrix([
+        [1, 4, 7],
+        [2, 5, 8],
+        [3, 6, 9]
+    ])
+    v = astronomy.RotationMatrix([
+        [1, 2, 3],
+        [4, 5, 6],
+        [7, 8, 9]
+    ])
+    b = astronomy.InverseRotation(a)
+    CompareMatrices('Rotation_MatrixInverse', b, v, 0)
+
+
+def Rotation_MatrixMultiply():
+    a = astronomy.RotationMatrix([
+        [1, 4, 7],
+        [2, 5, 8],
+        [3, 6, 9]
+    ])
+
+    b = astronomy.RotationMatrix([
+        [10, 13, 16],
+        [11, 14, 17],
+        [12, 15, 18]
+    ])
+
+    v = astronomy.RotationMatrix([
+        [84, 201, 318],
+        [90, 216, 342],
+        [96, 231, 366]
+    ])
+
+    c = astronomy.CombineRotation(b, a)
+    CompareMatrices('Rotation_MatrixMultiply', c, v, 0)
+
+
+def VectorDiff(a, b):
+    dx = a.x - b.x
+    dy = a.y - b.y
+    dz = a.z - b.z
+    return math.sqrt(dx*dx + dy*dy + dz*dz)
+
+
+def Test_EQJ_ECL():
+    r = astronomy.Rotation_EQJ_ECL()
+    # Calculate heliocentric Earth position at a test time.
+    time = astronomy.Time.Make(2019, 12, 8, 19, 39, 15)
+    ev = astronomy.HelioVector(astronomy.Body.Earth, time)
+
+    # Use the existing astronomy.Ecliptic() to calculate ecliptic vector and angles.
+    ecl = astronomy.Ecliptic(ev)
+    print('Test_EQJ_ECL ecl = ({}, {}, {})'.format(ecl.ex, ecl.ey, ecl.ez))
+
+    # Now compute the same vector via rotation matrix.
+    ee = astronomy.RotateVector(r, ev)
+    dx = ee.x - ecl.ex
+    dy = ee.y - ecl.ey
+    dz = ee.z - ecl.ez
+    diff = math.sqrt(dx*dx + dy*dy + dz*dz)
+    print('Test_EQJ_ECL ee = ({}, {}, {}); diff = {}'.format(ee.x, ee.y, ee.z, diff))
+    if diff > 1.0e-16:
+        print('Test_EQJ_ECL: EXCESSIVE VECTOR ERROR')
+        sys.exit(1)
+
+    # Reverse the test: go from ecliptic back to equatorial.
+    ir = astronomy.Rotation_ECL_EQJ()
+    et = astronomy.RotateVector(ir, ee)
+    idiff = VectorDiff(et, ev)
+    print('Test_EQJ_ECL ev diff = {}'.format(idiff))
+    if idiff > 1.0e-16:
+        print('Test_EQJ_ECL: EXCESSIVE REVERSE ROTATION ERROR')
+        sys.exit(1)
+
+
+def Test_EQJ_EQD(body):
+    # Verify conversion of equatorial J2000 to equatorial of-date, and back.
+    # Use established functions to calculate spherical coordinates for the body, in both EQJ and EQD.
+    time = astronomy.Time.Make(2019, 12, 8, 20, 50, 0)
+    observer = astronomy.Observer(+35, -85, 0)
+    eq2000 = astronomy.Equator(body, time, observer, False, True)
+    eqdate = astronomy.Equator(body, time, observer, True, True)
+
+    # Convert EQJ spherical coordinates to vector.
+    v2000 = astronomy.VectorFromEquator(eq2000, time)
+
+    # Find rotation matrix.
+    r = astronomy.Rotation_EQJ_EQD(time)
+
+    # Rotate EQJ vector to EQD vector.
+    vdate = astronomy.RotateVector(r, v2000)
+
+    # Convert vector back to angular equatorial coordinates.
+    equcheck = astronomy.EquatorFromVector(vdate)
+
+    # Compare the result with the eqdate.
+    ra_diff = abs(equcheck.ra - eqdate.ra)
+    dec_diff = abs(equcheck.dec - eqdate.dec)
+    dist_diff = abs(equcheck.dist - eqdate.dist)
+    print('Test_EQJ_EQD: {} ra={}, dec={}, dist={}, ra_diff={}, dec_diff={}, dist_diff={}'.format(
+        body.name, eqdate.ra, eqdate.dec, eqdate.dist, ra_diff, dec_diff, dist_diff
+    ))
+    if ra_diff > 1.0e-14 or dec_diff > 1.0e-14 or dist_diff > 4.0e-15:
+        print('Test_EQJ_EQD: EXCESSIVE ERROR')
+        sys.exit(1)
+
+    # Perform the inverse conversion back to equatorial J2000 coordinates.
+    ir = astronomy.Rotation_EQD_EQJ(time)
+    t2000 = astronomy.RotateVector(ir, vdate)
+    diff = VectorDiff(t2000, v2000)
+    print('Test_EQJ_EQD: {} inverse diff = {}'.format(body.name, diff))
+    if diff > 3.0e-15:
+        print('Test_EQJ_EQD: EXCESSIVE INVERSE ERROR')
+        sys.exit(1)
+
+
+def Test_EQD_HOR(body):
+    # Use existing functions to calculate horizontal coordinates of the body for the time+observer.
+    time = astronomy.Time.Make(1970, 12, 13, 5, 15, 0)
+    observer = astronomy.Observer(-37, +45, 0)
+    eqd = astronomy.Equator(body, time, observer, True, True)
+    print('Test_EQD_HOR {}: OFDATE ra={}, dec={}'.format(body.name, eqd.ra, eqd.dec))
+    hor = astronomy.Horizon(time, observer, eqd.ra, eqd.dec, astronomy.Refraction.Normal)
+
+    # Calculate the position of the body as an equatorial vector of date.
+    vec_eqd = astronomy.VectorFromEquator(eqd, time)
+
+    # Calculate rotation matrix to convert equatorial J2000 vector to horizontal vector.
+    rot = astronomy.Rotation_EQD_HOR(time, observer)
+
+    # Rotate the equator of date vector to a horizontal vector.
+    vec_hor = astronomy.RotateVector(rot, vec_eqd)
+
+    # Convert the horizontal vector to horizontal angular coordinates.
+    xsphere = astronomy.HorizonFromVector(vec_hor, astronomy.Refraction.Normal)
+    diff_alt = abs(xsphere.lat - hor.altitude)
+    diff_az = abs(xsphere.lon - hor.azimuth)
+
+    print('Test_EQD_HOR {}: trusted alt={}, az={}; test alt={}, az={}; diff_alt={}, diff_az={}'.format(
+        body.name, hor.altitude, hor.azimuth, xsphere.lat, xsphere.lon, diff_alt, diff_az))
+
+    if diff_alt > 4.0e-14 or diff_az > 1.0e-13:
+        print('Test_EQD_HOR: EXCESSIVE HORIZONTAL ERROR.')
+        sys.exit(1)
+
+    # Confirm that we can convert back to horizontal vector.
+    check_hor = astronomy.VectorFromHorizon(xsphere, time, astronomy.Refraction.Normal)
+    diff = VectorDiff(check_hor, vec_hor)
+    print('Test_EQD_HOR {}: horizontal recovery: diff = {}'.format(body.name, diff))
+    if diff > 2.0e-15:
+        print('Test_EQD_HOR: EXCESSIVE ERROR IN HORIZONTAL RECOVERY.')
+        sys.exit(1)
+
+    # Verify the inverse translation from horizontal vector to equatorial of-date vector.
+    irot = astronomy.Rotation_HOR_EQD(time, observer)
+    check_eqd = astronomy.RotateVector(irot, vec_hor)
+    diff = VectorDiff(check_eqd, vec_eqd)
+    print('Test_EQD_HOR {}: OFDATE inverse rotation diff = {}'.format(body.name, diff))
+    if diff > 2.0e-15:
+        print('Test_EQD_HOR: EXCESSIVE OFDATE INVERSE HORIZONTAL ERROR.')
+        sys.exit(1)
+
+    # Exercise HOR to EQJ translation.
+    eqj = astronomy.Equator(body, time, observer, False, True)
+    vec_eqj = astronomy.VectorFromEquator(eqj, time)
+    yrot = astronomy.Rotation_HOR_EQJ(time, observer)
+    check_eqj = astronomy.RotateVector(yrot, vec_hor)
+    diff = VectorDiff(check_eqj, vec_eqj)
+    print('Test_EQD_HOR {}: J2000 inverse rotation diff = {}'.format(body.name, diff))
+    if diff > 4.0e-15:
+        print('Test_EQD_HOR: EXCESSIVE J2000 INVERSE HORIZONTAL ERROR.')
+        sys.exit(1)
+
+    # Verify the inverse translation: EQJ to HOR.
+    zrot = astronomy.Rotation_EQJ_HOR(time, observer)
+    another_hor = astronomy.RotateVector(zrot, vec_eqj)
+    diff = VectorDiff(another_hor, vec_hor)
+    print('Test_EQD_HOR {}: EQJ inverse rotation diff = {}'.format(body.name, diff))
+    if diff > 3.0e-15:
+        print('Test_EQD_HOR: EXCESSIVE EQJ INVERSE HORIZONTAL ERROR.')
+        sys.exit(1)
+
+IdentityMatrix = astronomy.RotationMatrix([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+
+def CheckInverse(aname, bname, arot, brot):
+    crot = astronomy.CombineRotation(arot, brot)
+    caller = 'CheckInverse({},{})'.format(aname, bname)
+    CompareMatrices(caller, crot, IdentityMatrix, 2.0e-15)
+
+
+def CheckCycle(cyclename, arot, brot, crot):
+    xrot = astronomy.CombineRotation(arot, brot)
+    irot = astronomy.InverseRotation(xrot)
+    CompareMatrices(cyclename, crot, irot, 2.0e-15)
+
+
+def Test_RotRoundTrip():
+    # In each round trip, calculate a forward rotation and a backward rotation.
+    # Verify the two are inverse matrices.
+    time = astronomy.Time.Make(2067, 5, 30, 14, 45, 0)
+    observer = astronomy.Observer(+28, -82, 0)
+
+    # Round trip #1: EQJ <==> EQD.
+    eqj_eqd = astronomy.Rotation_EQJ_EQD(time)
+    eqd_eqj = astronomy.Rotation_EQD_EQJ(time)
+    CheckInverse('eqj_eqd', 'eqd_eqj', eqj_eqd, eqd_eqj)
+
+    # Round trip #2: EQJ <==> ECL.
+    eqj_ecl = astronomy.Rotation_EQJ_ECL()
+    ecl_eqj = astronomy.Rotation_ECL_EQJ()
+    CheckInverse('eqj_ecl', 'ecl_eqj', eqj_ecl, ecl_eqj)
+
+    # Round trip #3: EQJ <==> HOR.
+    eqj_hor = astronomy.Rotation_EQJ_HOR(time, observer)
+    hor_eqj = astronomy.Rotation_HOR_EQJ(time, observer)
+    CheckInverse('eqj_hor', 'hor_eqj', eqj_hor, hor_eqj)
+
+    # Round trip #4: EQD <==> HOR.
+    eqd_hor = astronomy.Rotation_EQD_HOR(time, observer)
+    hor_eqd = astronomy.Rotation_HOR_EQD(time, observer)
+    CheckInverse('eqd_hor', 'hor_eqd', eqd_hor, hor_eqd)
+
+    # Round trip #5: EQD <==> ECL.
+    eqd_ecl = astronomy.Rotation_EQD_ECL(time)
+    ecl_eqd = astronomy.Rotation_ECL_EQD(time)
+    CheckInverse('eqd_ecl', 'ecl_eqd', eqd_ecl, ecl_eqd)
+
+    # Round trip #6: HOR <==> ECL.
+    hor_ecl = astronomy.Rotation_HOR_ECL(time, observer)
+    ecl_hor = astronomy.Rotation_ECL_HOR(time, observer)
+    CheckInverse('hor_ecl', 'ecl_hor', hor_ecl, ecl_hor)
+
+    # Verify that combining different sequences of rotations result
+    # in the expected combination.
+    # For example, (EQJ ==> HOR ==> ECL) must be the same matrix as (EQJ ==> ECL).
+    # Each of these is a "triangle" of relationships between 3 orientations.
+    # There are 4 possible ways to pick 3 orientations from the 4 to form a triangle.
+    # Because we have just proved that each transformation is reversible,
+    # we only need to verify the triangle in one cyclic direction.
+    CheckCycle('eqj_ecl, ecl_eqd, eqd_eqj', eqj_ecl, ecl_eqd, eqd_eqj)     # excluded corner = HOR
+    CheckCycle('eqj_hor, hor_ecl, ecl_eqj', eqj_hor, hor_ecl, ecl_eqj)     # excluded corner = EQD
+    CheckCycle('eqj_hor, hor_eqd, eqd_eqj', eqj_hor, hor_eqd, eqd_eqj)     # excluded corner = ECL
+    CheckCycle('ecl_eqd, eqd_hor, hor_ecl', ecl_eqd, eqd_hor, hor_ecl)     # excluded corner = EQJ
+
+    print('Test_RotRoundTrip: PASS')
+
+
+def Test_Rotation():
+    Rotation_MatrixInverse()
+    Rotation_MatrixMultiply()
+    Test_EQJ_ECL()
+    Test_EQJ_EQD(astronomy.Body.Mercury)
+    Test_EQJ_EQD(astronomy.Body.Venus)
+    Test_EQJ_EQD(astronomy.Body.Mars)
+    Test_EQJ_EQD(astronomy.Body.Jupiter)
+    Test_EQJ_EQD(astronomy.Body.Saturn)
+    Test_EQD_HOR(astronomy.Body.Mercury)
+    Test_EQD_HOR(astronomy.Body.Venus)
+    Test_EQD_HOR(astronomy.Body.Mars)
+    Test_EQD_HOR(astronomy.Body.Jupiter)
+    Test_EQD_HOR(astronomy.Body.Saturn)
+    Test_RotRoundTrip()
+    print('Python Test_Rotation: PASS')
+    return 0
+
+#-----------------------------------------------------------------------------------------------------------
+
+def Test_Refraction():
+    alt = -90.1
+    while alt <= +90.1:
+        refr = astronomy.RefractionAngle(astronomy.Refraction.Normal, alt)
+        corrected = alt + refr
+        inv_refr = astronomy.InverseRefractionAngle(astronomy.Refraction.Normal, corrected)
+        check_alt = corrected + inv_refr
+        diff = abs(check_alt - alt)
+        if diff > 2.0e-14:
+            print('Test_Refraction: ERROR - excessive error: alt={}, refr={}, diff={}'.format(alt, refr, diff))
+            return 1
+        alt += 0.001
+    print('Python Test_Refraction: PASS')
     return 0
 
 #-----------------------------------------------------------------------------------------------------------
@@ -744,6 +1041,10 @@ if __name__ == '__main__':
             sys.exit(Test_Apsis())
         if sys.argv[1] == 'issue46':
             sys.exit(Test_Issue46())
+        if sys.argv[1] == 'rotation':
+            sys.exit(Test_Rotation())
+        if sys.argv[1] == 'refraction':
+            sys.exit(Test_Refraction())
 
     if len(sys.argv) == 3:
         if sys.argv[1] == 'seasons':

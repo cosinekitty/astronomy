@@ -11,8 +11,19 @@
 #include "astronomy.h"
 
 #define PI      3.14159265358979323846
+static const double DEG2RAD = 0.017453292519943296;
 
 #define CHECK(x)            do{if(0 != (error = (x))) goto fail;}while(0)
+
+static int CheckStatus(int lnum, const char *varname, astro_status_t status)
+{
+    if (status != ASTRO_SUCCESS)
+    {
+        fprintf(stderr, "FAILURE at ctest.c[%d]: %s.status = %d\n", lnum, varname, status);
+        return 1;
+    }
+    return 0;
+}
 
 static int CheckVector(int lnum, astro_vector_t v)
 {
@@ -36,6 +47,7 @@ static int CheckEquator(int lnum, astro_equatorial_t equ)
 
 #define CHECK_VECTOR(var,expr)   CHECK(CheckVector(__LINE__, ((var) = (expr))))
 #define CHECK_EQU(var,expr)      CHECK(CheckEquator(__LINE__, ((var) = (expr))))
+#define CHECK_STATUS(expr)       CHECK(CheckStatus(__LINE__, #expr, (expr).status))
 
 static int Issue46(void);
 static int Issue48(void);
@@ -50,8 +62,11 @@ static int LunarApsis(const char *filename);
 static int ElongationTest(void);
 static int MagnitudeTest(void);
 static int MoonTest(void);
+static int RotationTest(void);
 static int TestMaxMag(astro_body_t body, const char *filename);
 static const char *ParseJplHorizonsDateTime(const char *text, astro_time_t *time);
+static int VectorDiff(astro_vector_t a, astro_vector_t b, double *diff);
+static int RefractionTest(void);
 
 int main(int argc, const char *argv[])
 {
@@ -82,6 +97,18 @@ int main(int argc, const char *argv[])
         if (!strcmp(verb, "moon"))
         {
             CHECK(MoonTest());
+            goto success;
+        }
+
+        if (!strcmp(verb, "rotation"))
+        {
+            CHECK(RotationTest());
+            goto success;
+        }
+
+        if (!strcmp(verb, "refraction"))
+        {
+            CHECK(RefractionTest());
             goto success;
         }
 
@@ -1750,3 +1777,776 @@ static int Issue48(void)
 
 /*-----------------------------------------------------------------------------------------------------------*/
 
+static int CheckUnitVector(int lnum, const char *name, astro_rotation_t r, int i0, int j0, int di, int dj)
+{
+    int k;
+    double x;
+    double sum = 0.0;
+
+    for (k=0; k<3; ++k)
+    {
+        x = r.rot[i0+k*di][j0+k*dj];
+        sum += x*x;
+    }
+    x = fabs(sum - 1.0);
+    if (x > 1.0e-15)
+    {
+        fprintf(stderr, "ERROR(%s line %d): unit error = %lg for i0=%d, j0=%d, di=%d, dj=%d\n", name, lnum, x, i0, j0, di, dj);
+        return 1;
+    }
+    return 0;
+}
+
+static int CheckRotationMatrix(int lnum, const char *name, astro_rotation_t r)
+{
+    if (r.status != ASTRO_SUCCESS)
+    {
+        fprintf(stderr, "ERROR(%s line %d): status = %d\n", name, lnum, r.status);
+        return 1;
+    }
+
+    /* Verify that every row and every column is a unit vector. */
+    if (CheckUnitVector(lnum, name, r, 0, 0, 1, 0)) return 1;
+    if (CheckUnitVector(lnum, name, r, 0, 1, 1, 0)) return 1;
+    if (CheckUnitVector(lnum, name, r, 0, 2, 1, 0)) return 1;
+    if (CheckUnitVector(lnum, name, r, 0, 0, 0, 1)) return 1;
+    if (CheckUnitVector(lnum, name, r, 1, 0, 0, 1)) return 1;
+    if (CheckUnitVector(lnum, name, r, 2, 0, 0, 1)) return 1;
+    return 0;
+}
+
+#define CHECK_ROTMAT(r)   CHECK(CheckRotationMatrix(__LINE__, #r, (r)))
+
+static int CompareMatrices(const char *caller, astro_rotation_t a, astro_rotation_t b, double tolerance)
+{
+    int i, j;
+
+    if (a.status != ASTRO_SUCCESS)
+    {
+        fprintf(stderr, "ERROR(%s): a.status = %d\n", caller, a.status);
+        return 1;
+    }
+
+    if (b.status != ASTRO_SUCCESS)
+    {
+        fprintf(stderr, "ERROR(%s): b.status = %d\n", caller, b.status);
+        return 1;
+    }
+
+    for (i=0; i < 3; ++i)
+    {
+        for (j=0; j < 3; ++j)
+        {
+            double diff = fabs(a.rot[i][j] - b.rot[i][j]);
+            if (diff > tolerance)
+            {
+                fprintf(stderr, "ERROR(%s): matrix[%d][%d]=%lg, expected %lg, diff %lg\n", caller, i, j, a.rot[i][j], b.rot[i][j], diff);
+                return 1;
+            }
+        }
+    }
+
+    return 0;
+}
+
+static int Rotation_MatrixInverse(void)
+{
+    astro_rotation_t a, b, v;
+    int error;
+
+    a.status = ASTRO_SUCCESS;
+    a.rot[0][0] = 1.0; a.rot[1][0] = 2.0; a.rot[2][0] = 3.0;
+    a.rot[0][1] = 4.0; a.rot[1][1] = 5.0; a.rot[2][1] = 6.0;
+    a.rot[0][2] = 7.0; a.rot[1][2] = 8.0; a.rot[2][2] = 9.0;
+
+    v.status = ASTRO_SUCCESS;
+    v.rot[0][0] = 1.0; v.rot[1][0] = 4.0; v.rot[2][0] = 7.0;
+    v.rot[0][1] = 2.0; v.rot[1][1] = 5.0; v.rot[2][1] = 8.0;
+    v.rot[0][2] = 3.0; v.rot[1][2] = 6.0; v.rot[2][2] = 9.0;
+
+    b = Astronomy_InverseRotation(a);
+    CHECK(CompareMatrices("Rotation_MatrixInverse", b, v, 0.0));
+
+    printf("Rotation_MatrixInverse: PASS\n");
+    error = 0;
+
+fail:
+    return error;
+}
+
+static int Rotation_MatrixMultiply(void)
+{
+    astro_rotation_t  a, b, c, v;
+    int error;
+
+    a.status = ASTRO_SUCCESS;
+    a.rot[0][0] = 1.0; a.rot[1][0] = 2.0; a.rot[2][0] = 3.0;
+    a.rot[0][1] = 4.0; a.rot[1][1] = 5.0; a.rot[2][1] = 6.0;
+    a.rot[0][2] = 7.0; a.rot[1][2] = 8.0; a.rot[2][2] = 9.0;
+
+    b.status = ASTRO_SUCCESS;
+    b.rot[0][0] = 10.0; b.rot[1][0] = 11.0; b.rot[2][0] = 12.0;
+    b.rot[0][1] = 13.0; b.rot[1][1] = 14.0; b.rot[2][1] = 15.0;
+    b.rot[0][2] = 16.0; b.rot[1][2] = 17.0; b.rot[2][2] = 18.0;
+
+    v.status = ASTRO_SUCCESS;
+    v.rot[0][0] =  84.0; v.rot[1][0] =  90.0; v.rot[2][0] =  96.0;
+    v.rot[0][1] = 201.0; v.rot[1][1] = 216.0; v.rot[2][1] = 231.0;
+    v.rot[0][2] = 318.0; v.rot[1][2] = 342.0; v.rot[2][2] = 366.0;
+
+    /* Let c = a*b. The order looks backwards in the call to make rotation semantics more intuitive. */
+    c = Astronomy_CombineRotation(b, a);
+
+    /* Verify that c = v. */
+    CHECK(CompareMatrices("Rotation_MatrixMultiply", c, v, 0.0));
+
+    printf("Rotation_MatrixMultiply: PASS\n");
+    error = 0;
+
+fail:
+    return error;
+}
+
+static int TestVectorFromAngles(double lat, double lon, double x, double y, double z)
+{
+    astro_spherical_t sphere;
+    astro_vector_t vector;
+    astro_time_t time;
+    double diff, dx, dy, dz;
+
+    /* Confirm the expected vector really is a unit vector. */
+    diff = fabs((x*x + y*y + z*z) - 1.0);
+    if (diff > 1.0e-16)
+    {
+        fprintf(stderr, "TestVectorFromAngles: EXCESSIVE unit error = %lg\n", diff);
+        return 1;
+    }
+
+    sphere.status = ASTRO_SUCCESS;
+    sphere.lat = lat;
+    sphere.lon = lon;
+    sphere.dist = 1.0;
+
+    time = Astronomy_MakeTime(2015, 3, 5, 12, 0, 0.0);
+    vector = Astronomy_VectorFromSphere(sphere, time);
+
+    if (vector.status != ASTRO_SUCCESS)
+    {
+        fprintf(stderr, "ERROR(TestVectorFromAngles): vector.status = %d\n", vector.status);
+        return 1;
+    }
+
+    dx = x - vector.x;
+    dy = y - vector.y;
+    dz = z - vector.z;
+    diff = sqrt(dx*dx + dy*dy + dz*dz);
+
+    printf("TestVectorFromAngles(%lf, %lf): diff = %lg\n", lat, lon, diff);
+    if (diff > 2.0e-16)
+    {
+        fprintf(stderr, "TestVectorFromAngles: EXCESSIVE ERROR.\n");
+        return 1;
+    }
+    return 0;
+}
+
+static int TestAnglesFromVector(double lat, double lon, double x, double y, double z)
+{
+    astro_vector_t vector;
+    astro_spherical_t sphere;
+    double diff, latdiff, londiff;
+
+    /* Confirm the expected vector really is a unit vector. */
+    diff = fabs((x*x + y*y + z*z) - 1.0);
+    if (diff > 1.0e-16)
+    {
+        fprintf(stderr, "TestAnglesFromVector(lat=%lf, lon=%lf, x=%lf, y=%lf, z=%lf): EXCESSIVE unit error = %lg\n", lat, lon, x, y, z, diff);
+        return 1;
+    }
+
+    vector.status = ASTRO_SUCCESS;
+    vector.t = Astronomy_MakeTime(2015, 3, 5, 12, 0, 0.0);
+    vector.x = x;
+    vector.y = y;
+    vector.z = z;
+
+    sphere = Astronomy_SphereFromVector(vector);
+    if (sphere.status != ASTRO_SUCCESS)
+    {
+        fprintf(stderr, "ERROR TestAnglesFromVector(lat=%lf, lon=%lf, x=%lf, y=%lf, z=%lf): sphere.status = %d\n", lat, lon, x, y, z, sphere.status);
+        return 1;
+    }
+
+    latdiff = fabs(sphere.lat - lat);
+    londiff = fabs(sphere.lon - lon);
+    printf("TestAnglesFromVector(x=%lf, y=%lf, z=%lf): latdiff=%lg, londiff=%lg\n", x, y, z, latdiff, londiff);
+    if (latdiff > 8.0e-15 || londiff > 8.0e-15)
+    {
+        fprintf(stderr, "TestAnglesFromVector: EXCESSIVE ERROR\n");
+        return 1;
+    }
+
+    return 0;
+}
+
+static astro_rotation_t RotateX(double rot)
+{
+    astro_rotation_t m;
+    double ca, sa;
+
+    /* https://en.wikipedia.org/wiki/Rotation_matrix */
+
+    ca = cos(rot * DEG2RAD);
+    sa = sin(rot * DEG2RAD);
+    m.status = ASTRO_SUCCESS;
+    m.rot[0][0] = 1.0;  m.rot[1][0] = 0.0;  m.rot[2][0] = 0.0;
+    m.rot[0][1] = 0.0;  m.rot[1][1] = +ca;  m.rot[2][1] = -sa;
+    m.rot[0][2] = 0.0;  m.rot[1][2] = +sa;  m.rot[2][2] = +ca;
+
+    return m;
+}
+
+static astro_rotation_t RotateY(double rot)
+{
+    astro_rotation_t m;
+    double ca, sa;
+
+    /* https://en.wikipedia.org/wiki/Rotation_matrix */
+
+    ca = cos(rot * DEG2RAD);
+    sa = sin(rot * DEG2RAD);
+    m.status = ASTRO_SUCCESS;
+    m.rot[0][0] = +ca;  m.rot[1][0] = 0.0;  m.rot[2][0] = +sa;
+    m.rot[0][1] = 0.0;  m.rot[1][1] = 1.0;  m.rot[2][1] = 0.0;
+    m.rot[0][2] = -sa;  m.rot[1][2] = 0.0;  m.rot[2][2] = +ca;
+
+    return m;
+}
+
+static astro_rotation_t RotateZ(double rot)
+{
+    astro_rotation_t m;
+    double ca, sa;
+
+    /* https://en.wikipedia.org/wiki/Rotation_matrix */
+
+    ca = cos(rot * DEG2RAD);
+    sa = sin(rot * DEG2RAD);
+    m.status = ASTRO_SUCCESS;
+    m.rot[0][0] = +ca;  m.rot[1][0] = -sa;  m.rot[2][0] = 0.0;
+    m.rot[0][1] = +sa;  m.rot[1][1] = +ca;  m.rot[2][1] = 0.0;
+    m.rot[0][2] = 0.0;  m.rot[1][2] = 0.0;  m.rot[2][2] = 1.0;
+
+    return m;
+}
+
+static int TestSpin(
+    double xrot, double yrot, double zrot,
+    double sx, double sy, double sz,
+    double tx, double ty, double tz)
+{
+    astro_rotation_t mx, my, mz, m;
+    astro_vector_t sv, tv;
+    double diff, dx, dy, dz;
+    int error;
+
+    /* https://en.wikipedia.org/wiki/Rotation_matrix */
+
+    mx = RotateX(xrot);
+    CHECK_ROTMAT(mx);
+    my = RotateY(yrot);
+    CHECK_ROTMAT(my);
+    mz = RotateZ(zrot);
+    CHECK_ROTMAT(mz);
+    m = Astronomy_CombineRotation(mx, my);
+    CHECK_ROTMAT(m);
+    m = Astronomy_CombineRotation(m, mz);
+    CHECK_ROTMAT(m);
+
+    sv.status = ASTRO_SUCCESS;
+    sv.x = sx;
+    sv.y = sy;
+    sv.z = sz;
+    sv.t = Astronomy_MakeTime(2019, 5, 5, 12, 30, 0.0);
+
+    tv = Astronomy_RotateVector(m, sv);
+    if (tv.status != ASTRO_SUCCESS)
+    {
+        fprintf(stderr, "ERROR(TestSpin): tv.status = %d\n", tv.status);
+        return 1;
+    }
+
+    if (tv.t.ut != sv.t.ut)
+    {
+        fprintf(stderr, "ERROR(TestSpin): tv time != sv time\n");
+        return 1;
+    }
+
+    dx = tx - tv.x;
+    dy = ty - tv.y;
+    dz = tz - tv.z;
+    diff = sqrt(dx*dx + dy*dy + dz*dz);
+    printf("TestSpin(xrot=%0.0lf, yrot=%0.0lf, zrot=%0.0lf, sx=%0.0lf, sy=%0.0lf, sz=%0.0lf): diff = %lg\n", xrot, yrot, zrot, sx, sy, sz, diff);
+    if (diff > 1.0e-15)
+    {
+        fprintf(stderr, "TestSpin: EXCESSIVE ERROR\n");
+        return 1;
+    }
+
+    error = 0;
+fail:
+    return error;
+}
+
+static int Test_EQJ_ECL(void)
+{
+    astro_rotation_t r;
+    astro_time_t time;
+    astro_vector_t ev;      /* Earth vector in equatorial J2000 */
+    astro_ecliptic_t ecl;
+    astro_vector_t ee;      /* Earth vector in ecliptic J2000 */
+    astro_vector_t et;      /* Test of reconstructing original Earth vector in equatorial J2000 */
+    double diff, dx, dy, dz;
+    int error;
+
+    r = Astronomy_Rotation_EQJ_ECL();
+    CHECK_ROTMAT(r);
+
+    printf("Test_EQJ_ECL:\n[%0.18lf  %0.18lf  %0.18lf]\n[%0.18lf  %0.18lf  %0.18lf]\n[%0.18lf  %0.18lf  %0.18lf]\n",
+        r.rot[0][0], r.rot[1][0], r.rot[2][0],
+        r.rot[0][1], r.rot[1][1], r.rot[2][1],
+        r.rot[0][2], r.rot[1][2], r.rot[2][2]);
+
+    /* Calculate heliocentric Earth position at a test time (when I wrote this code). */
+    time = Astronomy_MakeTime(2019, 12, 8, 19, 39, 15.0);
+    ev = Astronomy_HelioVector(BODY_EARTH, time);
+    if (ev.status != ASTRO_SUCCESS)
+    {
+        fprintf(stderr, "Test_EQJ_ECL: Astronomy_HelioVector returned error %d\n", ev.status);
+        return 1;
+    }
+
+    /* Use the existing Astronomy_Ecliptic() to calculate ecliptic vector and angles. */
+    ecl = Astronomy_Ecliptic(ev);
+    if (ecl.status != ASTRO_SUCCESS)
+    {
+        fprintf(stderr, "Test_EQJ_ECL: Astronomy_Ecliptic returned error %d\n", ecl.status);
+        return 1;
+    }
+    printf("Test_EQJ_ECL ecl = (%0.18lf, %0.18lf,%0.18lf)\n", ecl.ex, ecl.ey, ecl.ez);
+
+    /* Now compute the same vector via rotation matrix. */
+    ee = Astronomy_RotateVector(r, ev);
+    if (ee.status != ASTRO_SUCCESS)
+    {
+        fprintf(stderr, "Test_EQJ_ECL: Astronomy_RotateVector returned error %d\n", ee.status);
+        return 1;
+    }
+    dx = ee.x - ecl.ex;
+    dy = ee.y - ecl.ey;
+    dz = ee.z - ecl.ez;
+    diff = sqrt(dx*dx + dy*dy + dz*dz);
+    printf("Test_EQJ_ECL  ee = (%0.18lf, %0.18lf,%0.18lf);  diff=%lg\n", ee.x, ee.y, ee.z, diff);
+    if (diff > 1.0e-16)
+    {
+        fprintf(stderr, "Test_EQJ_ECL: EXCESSIVE VECTOR ERROR\n");
+        return 1;
+    }
+
+    /* Reverse the test: go from ecliptic back to equatorial. */
+    r = Astronomy_Rotation_ECL_EQJ();
+    CHECK_ROTMAT(r);
+    et = Astronomy_RotateVector(r, ee);
+    CHECK(VectorDiff(et, ev, &diff));
+    printf("Test_EQJ_ECL  ev diff=%lg\n", diff);
+    if (diff > 1.0e-16)
+    {
+        fprintf(stderr, "Test_EQJ_ECL: EXCESSIVE REVERSE ROTATION ERROR\n");
+        return 1;
+    }
+
+    error = 0;
+fail:
+    return error;
+}
+
+static int Test_EQJ_EQD(astro_body_t body)
+{
+    astro_time_t time;
+    astro_observer_t observer;
+    astro_equatorial_t eq2000, eqdate, eqcheck;
+    astro_vector_t v2000, vdate, t2000;
+    astro_rotation_t r;
+    double ra_diff, dec_diff, dist_diff, diff;
+    int error;
+
+    /* Verify conversion of equatorial J2000 to equatorial of-date, and back. */
+
+    /* Use established functions to calculate spherical coordinates for the body, in both EQJ and EQD. */
+    time = Astronomy_MakeTime(2019, 12, 8, 20, 50, 0.0);
+    observer = Astronomy_MakeObserver(35, -85, 0);
+    eq2000 = Astronomy_Equator(body, &time, observer, EQUATOR_J2000, ABERRATION);
+    CHECK_STATUS(eq2000);
+    eqdate = Astronomy_Equator(body, &time, observer, EQUATOR_OF_DATE, ABERRATION);
+    CHECK_STATUS(eqdate);
+
+    /* Convert EQJ angular coordinates to vector. */
+    v2000 = Astronomy_VectorFromEquator(eq2000, time);
+    CHECK_STATUS(v2000);
+
+    /* Find rotation matrix. */
+    r = Astronomy_Rotation_EQJ_EQD(time);
+    CHECK_ROTMAT(r);
+
+    /* Rotate EQJ vector to EQD vector. */
+    vdate = Astronomy_RotateVector(r, v2000);
+    CHECK_STATUS(vdate);
+
+    /* Convert vector back to angular coordinates. */
+    eqcheck = Astronomy_EquatorFromVector(vdate);
+    CHECK_STATUS(eqcheck);
+
+    /* Compare the result with the eqdate. */
+    ra_diff = fabs(eqcheck.ra - eqdate.ra);
+    dec_diff = fabs(eqcheck.dec - eqdate.dec);
+    dist_diff = fabs(eqcheck.dist - eqdate.dist);
+    printf("Test_EQJ_EQD: %s ra=%0.3lf, dec=%0.3lf, dist=%0.3lf, ra_diff=%lg, dec_diff=%lg, dist_diff=%lg\n", Astronomy_BodyName(body), eqdate.ra, eqdate.dec, eqdate.dist, ra_diff, dec_diff, dist_diff);
+    if (ra_diff > 1.0e-14 || dec_diff > 1.0e-14 || dist_diff > 4.0e-15)
+    {
+        fprintf(stderr, "Test_EQJ_EQD: EXCESSIVE ERROR\n");
+        return 1;
+    }
+
+    /* Perform the inverse conversion back to equatorial J2000 coordinates. */
+    r = Astronomy_Rotation_EQD_EQJ(time);
+    CHECK_ROTMAT(r);
+    t2000 = Astronomy_RotateVector(r, vdate);
+    CHECK_STATUS(t2000);
+    CHECK(VectorDiff(t2000, v2000, &diff));
+    printf("Test_EQJ_EQD: %s inverse diff = %lg\n", Astronomy_BodyName(body), diff);
+    if (diff > 3.0e-15)
+    {
+        fprintf(stderr, "Test_EQJ_EQD: EXCESSIVE INVERSE ERROR\n");
+        return 1;
+    }
+
+    error = 0;
+fail:
+    return error;
+}
+
+static int Test_EQD_HOR(astro_body_t body)
+{
+    astro_time_t time;
+    astro_observer_t observer;
+    astro_equatorial_t eqd, eqj;
+    astro_horizon_t hor;
+    astro_rotation_t rot;
+    astro_spherical_t sphere;
+    astro_vector_t vec_eqd, vec_eqj, vec_hor, check_eqd, check_eqj, check_hor;
+    double diff_az, diff_alt, diff;
+    int error;
+
+    /* Use existing functions to calculate horizontal coordinates of the body for the time+observer. */
+    time = Astronomy_MakeTime(1970, 12, 13, 5, 15, 0.0);
+    observer = Astronomy_MakeObserver(-37.0, +45.0, 0.0);
+    CHECK_EQU(eqd, Astronomy_Equator(body, &time, observer, EQUATOR_OF_DATE, ABERRATION));
+    printf("Test_EQD_HOR %s: OFDATE ra=%0.3lf, dec=%0.3lf\n", Astronomy_BodyName(body), eqd.ra, eqd.dec);
+    hor = Astronomy_Horizon(&time, observer, eqd.ra, eqd.dec, REFRACTION_NORMAL);
+
+    /* Calculate the position of the body as an equatorial vector of date. */
+    CHECK_VECTOR(vec_eqd, Astronomy_VectorFromEquator(eqd, time));
+
+    /* Calculate rotation matrix to convert equatorial J2000 vector to horizontal vector. */
+    rot = Astronomy_Rotation_EQD_HOR(time, observer);
+    CHECK_ROTMAT(rot);
+
+    /* Rotate the equator of date vector to a horizontal vector. */
+    CHECK_VECTOR(vec_hor, Astronomy_RotateVector(rot, vec_eqd));
+
+    /* Convert the horizontal vector to horizontal angular coordinates. */
+    sphere = Astronomy_HorizonFromVector(vec_hor, REFRACTION_NORMAL);
+    CHECK_STATUS(sphere);
+
+    diff_alt = fabs(sphere.lat - hor.altitude);
+    diff_az = fabs(sphere.lon - hor.azimuth);
+
+    printf("Test_EQD_HOR %s: trusted alt=%0.3lf, az=%0.3lf; test alt=%0.3lf, az=%0.3lf; diff_alt=%lg, diff_az=%lg\n",
+        Astronomy_BodyName(body), hor.altitude, hor.azimuth, sphere.lat, sphere.lon, diff_alt, diff_az);
+
+    if (diff_alt > 2.0e-14 || diff_az > 4e-14)
+    {
+        fprintf(stderr, "Test_EQD_HOR: EXCESSIVE HORIZONTAL ERROR.\n");
+        return 1;
+    }
+
+    /* Confirm that we can convert back to horizontal vector. */
+    CHECK_VECTOR(check_hor, Astronomy_VectorFromHorizon(sphere, time, REFRACTION_NORMAL));
+    CHECK(VectorDiff(check_hor, vec_hor, &diff));
+    printf("Test_EQD_HOR %s: horizontal recovery: diff = %lg\n", Astronomy_BodyName(body), diff);
+    if (diff > 2.0e-15)
+    {
+        fprintf(stderr, "Test_EQD_HOR: EXCESSIVE ERROR IN HORIZONTAL RECOVERY.\n");
+        return 1;
+    }
+
+    /* Verify the inverse translation from horizontal vector to equatorial of-date vector. */
+    rot = Astronomy_Rotation_HOR_EQD(time, observer);
+    CHECK_ROTMAT(rot);
+    CHECK_VECTOR(check_eqd, Astronomy_RotateVector(rot, vec_hor));
+    CHECK(VectorDiff(check_eqd, vec_eqd, &diff));
+    printf("Test_EQD_HOR %s: OFDATE inverse rotation diff = %lg\n", Astronomy_BodyName(body), diff);
+    if (diff > 2.0e-15)
+    {
+        fprintf(stderr, "Test_EQD_HOR: EXCESSIVE OFDATE INVERSE HORIZONTAL ERROR.\n");
+        return 1;
+    }
+
+    /* Exercise HOR to EQJ translation. */
+    CHECK_EQU(eqj, Astronomy_Equator(body, &time, observer, EQUATOR_J2000, ABERRATION));
+    CHECK_VECTOR(vec_eqj, Astronomy_VectorFromEquator(eqj, time));
+
+    rot = Astronomy_Rotation_HOR_EQJ(time, observer);
+    CHECK_ROTMAT(rot);
+    CHECK_VECTOR(check_eqj, Astronomy_RotateVector(rot, vec_hor));
+    CHECK(VectorDiff(check_eqj, vec_eqj, &diff));
+    printf("Test_EQD_HOR %s: J2000 inverse rotation diff = %lg\n", Astronomy_BodyName(body), diff);
+    if (diff > 4.0e-15)
+    {
+        fprintf(stderr, "Test_EQD_HOR: EXCESSIVE J2000 INVERSE HORIZONTAL ERROR.\n");
+        return 1;
+    }
+
+    /* Verify the inverse translation: EQJ to HOR. */
+    rot = Astronomy_Rotation_EQJ_HOR(time, observer);
+    CHECK_ROTMAT(rot);
+    CHECK_VECTOR(check_hor, Astronomy_RotateVector(rot, vec_eqj));
+    CHECK(VectorDiff(check_hor, vec_hor, &diff));
+    printf("Test_EQD_HOR %s: EQJ inverse rotation diff = %lg\n", Astronomy_BodyName(body), diff);
+    if (diff > 2.0e-15)
+    {
+        fprintf(stderr, "Test_EQD_HOR: EXCESSIVE EQJ INVERSE HORIZONTAL ERROR.\n");
+        return 1;
+    }
+
+    error = 0;
+fail:
+    return error;
+}
+
+static int CheckInverse(const char *aname, const char *bname, astro_rotation_t arot, astro_rotation_t brot)
+{
+    int error;
+    astro_rotation_t crot;
+    astro_rotation_t identity;
+
+    CHECK(CheckRotationMatrix(__LINE__, aname, arot));
+    CHECK(CheckRotationMatrix(__LINE__, bname, brot));
+
+    crot = Astronomy_CombineRotation(arot, brot);
+    CHECK_ROTMAT(crot);
+
+    identity.status = ASTRO_SUCCESS;
+    identity.rot[0][0] = 1; identity.rot[1][0] = 0; identity.rot[2][0] = 0;
+    identity.rot[0][1] = 0; identity.rot[1][1] = 1; identity.rot[2][1] = 0;
+    identity.rot[0][2] = 0; identity.rot[1][2] = 0; identity.rot[2][2] = 1;
+
+    CHECK(CompareMatrices("CheckInverse", crot, identity, 2.0e-15));
+
+    error = 0;
+fail:
+    return error;
+}
+
+#define CHECK_INVERSE(a,b)   CHECK(CheckInverse(#a, #b, a, b))
+
+static int CheckCycle(
+    const char *cyclename,
+    astro_rotation_t arot, astro_rotation_t brot, astro_rotation_t crot)
+{
+    int error;
+    astro_rotation_t xrot;
+
+    xrot = Astronomy_CombineRotation(arot, brot);
+    CHECK_ROTMAT(xrot);
+    xrot = Astronomy_InverseRotation(xrot);
+    CHECK(CompareMatrices(cyclename, crot, xrot, 2.0e-15));
+    error = 0;
+fail:
+    return error;
+}
+
+#define CHECK_CYCLE(a,b,c)  CHECK(CheckCycle(("CheckCycle: " #a ", " #b ", " #c), a, b, c))
+
+static int Test_RotRoundTrip(void)
+{
+    int error;
+    astro_time_t time;
+    astro_observer_t observer;
+    astro_rotation_t eqj_ecl, ecl_eqj;
+    astro_rotation_t eqj_hor, hor_eqj;
+    astro_rotation_t eqj_eqd, eqd_eqj;
+    astro_rotation_t hor_eqd, eqd_hor;
+    astro_rotation_t eqd_ecl, ecl_eqd;
+    astro_rotation_t hor_ecl, ecl_hor;
+
+    time = Astronomy_MakeTime(2067, 5, 30, 14, 45, 0.0);
+    observer = Astronomy_MakeObserver(+28.0, -82.0, 0.0);
+
+    /*
+        In each round trip, calculate a forward rotation and a backward rotation.
+        Verify the two are inverse matrices.
+    */
+
+    /* Round trip #1: EQJ <==> EQD. */
+    eqj_eqd = Astronomy_Rotation_EQJ_EQD(time);
+    eqd_eqj = Astronomy_Rotation_EQD_EQJ(time);
+    CHECK_INVERSE(eqj_eqd, eqd_eqj);
+
+    /* Round trip #2: EQJ <==> ECL. */
+    eqj_ecl = Astronomy_Rotation_EQJ_ECL();
+    ecl_eqj = Astronomy_Rotation_ECL_EQJ();
+    CHECK_INVERSE(eqj_ecl, ecl_eqj);
+
+    /* Round trip #3: EQJ <==> HOR. */
+    eqj_hor = Astronomy_Rotation_EQJ_HOR(time, observer);
+    hor_eqj = Astronomy_Rotation_HOR_EQJ(time, observer);
+    CHECK_INVERSE(eqj_hor, hor_eqj);
+
+    /* Round trip #4: EQD <==> HOR. */
+    eqd_hor = Astronomy_Rotation_EQD_HOR(time, observer);
+    hor_eqd = Astronomy_Rotation_HOR_EQD(time, observer);
+    CHECK_INVERSE(eqd_hor, hor_eqd);
+
+    /* Round trip #5: EQD <==> ECL. */
+    eqd_ecl = Astronomy_Rotation_EQD_ECL(time);
+    ecl_eqd = Astronomy_Rotation_ECL_EQD(time);
+    CHECK_INVERSE(eqd_ecl, ecl_eqd);
+
+    /* Round trip #6: HOR <==> ECL. */
+    hor_ecl = Astronomy_Rotation_HOR_ECL(time, observer);
+    ecl_hor = Astronomy_Rotation_ECL_HOR(time, observer);
+    CHECK_INVERSE(hor_ecl, ecl_hor);
+
+    /*
+        Verify that combining different sequences of rotations result
+        in the expected combination.
+        For example, (EQJ ==> HOR ==> ECL) must be the same matrix as (EQJ ==> ECL).
+        Each of these is a "triangle" of relationships between 3 orientations.
+        There are 4 possible ways to pick 3 orientations from the 4 to form a triangle.
+        Because we have just proved that each transformation is reversible,
+        we only need to verify the triangle in one cyclic direction.
+    */
+    CHECK_CYCLE(eqj_ecl, ecl_eqd, eqd_eqj);     /* excluded corner = HOR */
+    CHECK_CYCLE(eqj_hor, hor_ecl, ecl_eqj);     /* excluded corner = EQD */
+    CHECK_CYCLE(eqj_hor, hor_eqd, eqd_eqj);     /* excluded corner = ECL */
+    CHECK_CYCLE(ecl_eqd, eqd_hor, hor_ecl);     /* excluded corner = EQJ */
+
+    printf("Test_RotRoundTrip: PASS\n");
+    error = 0;
+fail:
+    return error;
+}
+
+static int RotationTest(void)
+{
+    int error;
+    CHECK(Rotation_MatrixInverse());
+    CHECK(Rotation_MatrixMultiply());
+
+    /* Verify conversion of spherical coordinates to vector. */
+    CHECK(TestVectorFromAngles(0.0, 0.0, 1.0, 0.0, 0.0));
+    CHECK(TestVectorFromAngles(0.0, 90.0, 0.0, 1.0, 0.0));
+    CHECK(TestVectorFromAngles(0.0, 180.0, -1.0, 0.0, 0.0));
+    CHECK(TestVectorFromAngles(0.0, 270.0, 0.0, -1.0, 0.0));
+    CHECK(TestVectorFromAngles(+90.0, 0.0, 0.0, 0.0, 1.0));
+    CHECK(TestVectorFromAngles(-90.0, 0.0, 0.0, 0.0, -1.0));
+    CHECK(TestVectorFromAngles(-30.0, +60.0, 0.43301270189221946, 0.75, -0.5));
+
+    /* Verify conversion of vector to spherical coordinates. */
+    CHECK(TestAnglesFromVector(0.0, 0.0, 1.0, 0.0, 0.0));
+    CHECK(TestAnglesFromVector(0.0, 90.0, 0.0, 1.0, 0.0));
+    CHECK(TestAnglesFromVector(0.0, 180.0, -1.0, 0.0, 0.0));
+    CHECK(TestAnglesFromVector(0.0, 270.0, 0.0, -1.0, 0.0));
+    CHECK(TestAnglesFromVector(+90.0, 0.0, 0.0, 0.0, 1.0));
+    CHECK(TestAnglesFromVector(-90.0, 0.0, 0.0, 0.0, -1.0));
+    CHECK(TestAnglesFromVector(-30.0, +60.0, 0.43301270189221946, 0.75, -0.5));
+
+    /* Verify rotation of vectors */
+    CHECK(TestSpin(0.0, 0.0, 90.0, +1, +2, +3, -2, +1, +3));
+    CHECK(TestSpin(0.0, 0.0, 0.0, 1.0, 2.0, -3.0, 1.0, 2.0, -3.0));
+    CHECK(TestSpin(90.0, 0.0, 0.0, +1, +2, +3, +1, -3, +2));
+    CHECK(TestSpin(0.0, 90.0, 0.0, +1, +2, +3, +3, +2, -1));
+    CHECK(TestSpin(180.0, 180.0, 180.0, +1, +2, +3, +1, +2, +3));
+    CHECK(TestSpin(0.0, 0.0, -45.0, +1, 0, 0, +0.7071067811865476, -0.7071067811865476, 0));
+
+    CHECK(Test_EQJ_ECL());
+
+    CHECK(Test_EQJ_EQD(BODY_MERCURY));
+    CHECK(Test_EQJ_EQD(BODY_VENUS));
+    CHECK(Test_EQJ_EQD(BODY_MARS));
+    CHECK(Test_EQJ_EQD(BODY_JUPITER));
+    CHECK(Test_EQJ_EQD(BODY_SATURN));
+
+    CHECK(Test_EQD_HOR(BODY_MERCURY));
+    CHECK(Test_EQD_HOR(BODY_VENUS));
+    CHECK(Test_EQD_HOR(BODY_MARS));
+    CHECK(Test_EQD_HOR(BODY_JUPITER));
+    CHECK(Test_EQD_HOR(BODY_SATURN));
+
+    CHECK(Test_RotRoundTrip());
+
+    error = 0;
+fail:
+    return error;
+}
+
+static int VectorDiff(astro_vector_t a, astro_vector_t b, double *diff)
+{
+    double dx, dy, dz;
+
+    *diff = 1.0e+99;
+
+    if (a.status != ASTRO_SUCCESS)
+    {
+        fprintf(stderr, "VectorDiff: ERROR - first vector has status %d\n", a.status);
+        return 1;
+    }
+    if (b.status != ASTRO_SUCCESS)
+    {
+        fprintf(stderr, "VectorDiff: ERROR - second vector has status %d\n", b.status);
+        return 1;
+    }
+
+    dx = a.x - b.x;
+    dy = a.y - b.y;
+    dz = a.z - b.z;
+    *diff = sqrt(dx*dx + dy*dy + dz*dz);
+    return 0;
+}
+
+/*-----------------------------------------------------------------------------------------------------------*/
+
+static int RefractionTest(void)
+{
+    double alt, corrected, refr, inv_refr, check_alt, diff;
+
+    for (alt = -90.1; alt <= +90.1; alt += 0.001)
+    {
+        refr = Astronomy_Refraction(REFRACTION_NORMAL, alt);
+        corrected = alt + refr;
+        inv_refr = Astronomy_InverseRefraction(REFRACTION_NORMAL, corrected);
+        check_alt = corrected + inv_refr;
+        diff = fabs(check_alt - alt);
+        if (diff > 2.0e-14)
+        {
+            printf("ERROR(RefractionTest): alt=%8.3lf, refr=%10.6lf, diff=%lg\n", alt, refr, diff);
+            return 1;
+        }
+    }
+
+    printf("RefractionTest: PASS\n");
+    return 0;
+}
+
+/*-----------------------------------------------------------------------------------------------------------*/

@@ -101,6 +101,43 @@ To get started quickly, here are some [examples](../../demo/c/).
 | [Seasons](#Astronomy_Seasons) | Finds the equinoxes and solstices for a given calendar year. |
 | [SunPosition](#Astronomy_SunPosition) | Calculates the Sun's apparent ecliptic coordinates as seen from the Earth. |
 
+### Coordinate transforms
+
+The following four orientation systems are supported.
+Astronomy Engine can convert a vector from any of these orientations to any of the others.
+It also allows converting from a vector to spherical (angular) coordinates and back,
+within a given orientation. Note the 3-letter codes for each of the orientation systems;
+these are used in function and type names.
+
+- **EQJ = Equatorial J2000**: Uses the Earth's equator on January 1, 2000, at noon UTC.
+- **EQD = Equator of-date**: Uses the Earth's equator on a given date and time, adjusted for precession and nutation.
+- **ECL = Ecliptic**: Uses the mean plane of the Earth's orbit around the Sun. The x-axis is referenced against the J2000 equinox.
+- **HOR = Horizontal**: Uses the viewpoint of an observer at a specific location on the Earth at a given date and time.
+
+| Function | Description |
+| -------- | ----------- |
+| [RotateVector](#Astronomy_RotateVector) | Applies a rotation matrix to a vector, yielding a vector in another orientation system. |
+| [InverseRotation](#Astronomy_InverseRotation) | Given a rotation matrix, finds the inverse rotation matrix that does the opposite transformation. |
+| [CombineRotation](#Astronomy_CombineRotation) | Given two rotation matrices, returns a rotation matrix that combines them into a net transformation. |
+| [VectorFromSphere](#Astronomy_VectorFromSphere) | Converts spherical coordinates to Cartesian coordinates. |
+| [SphereFromVector](#Astronomy_SphereFromVector) | Converts Cartesian coordinates to spherical coordinates. |
+| [VectorFromEquator](#Astronomy_VectorFromEquator) | Given angular equatorial coordinates, calculates equatorial vector. |
+| [EquatorFromVector](#Astronomy_EquatorFromVector) | Given an equatorial vector, calculates equatorial angular coordinates. |
+| [VectorFromHorizon](#Astronomy_VectorFromHorizon) | Given apparent angular horizontal coordinates, calculates horizontal vector. |
+| [HorizonFromVector](#Astronomy_HorizonFromVector) | Given a vector in horizontal orientation, calculates horizontal angular coordinates. |
+| [Rotation_EQD_EQJ](#Astronomy_Rotation_EQD_EQJ) | Calculates a rotation matrix from equatorial of-date (EQD) to equatorial J2000 (EQJ). |
+| [Rotation_EQD_ECL](#Astronomy_Rotation_EQD_ECL) | Calculates a rotation matrix from equatorial of-date (EQD) to ecliptic J2000 (ECL). |
+| [Rotation_EQD_HOR](#Astronomy_Rotation_EQD_HOR) | Calculates a rotation matrix from equatorial of-date (EQD) to horizontal (HOR). |
+| [Rotation_EQJ_EQD](#Astronomy_Rotation_EQJ_EQD) | Calculates a rotation matrix from equatorial J2000 (EQJ) to equatorial of-date (EQD). |
+| [Rotation_EQJ_ECL](#Astronomy_Rotation_EQJ_ECL) | Calculates a rotation matrix from equatorial J2000 (EQJ) to ecliptic J2000 (ECL). |
+| [Rotation_EQJ_HOR](#Astronomy_Rotation_EQJ_HOR) | Calculates a rotation matrix from equatorial J2000 (EQJ) to horizontal (HOR). |
+| [Rotation_ECL_EQD](#Astronomy_Rotation_ECL_EQD) | Calculates a rotation matrix from ecliptic J2000 (ECL) to equatorial of-date (EQD). |
+| [Rotation_ECL_EQJ](#Astronomy_Rotation_ECL_EQJ) | Calculates a rotation matrix from ecliptic J2000 (ECL) to equatorial J2000 (EQJ). |
+| [Rotation_ECL_HOR](#Astronomy_Rotation_ECL_HOR) | Calculates a rotation matrix from ecliptic J2000 (ECL) to horizontal (HOR). |
+| [Rotation_HOR_EQD](#Astronomy_Rotation_HOR_EQD) | Calculates a rotation matrix from horizontal (HOR) to equatorial of-date (EQD). |
+| [Rotation_HOR_EQJ](#Astronomy_Rotation_HOR_EQJ) | Calculates a rotation matrix from horizontal (HOR) to J2000 equatorial (EQJ). |
+| [Rotation_HOR_ECL](#Astronomy_Rotation_HOR_ECL) | Calculates a rotation matrix from horizontal (HOR) to ecliptic J2000 (ECL). |
+
 ---
 
 
@@ -203,6 +240,31 @@ This function calculates the angular separation between the given body and the S
 | Type | Parameter | Description |
 | --- | --- | --- |
 | [`astro_body_t`](#astro_body_t) | `body` |  The celestial body whose name is to be found.  | 
+
+
+
+
+---
+
+<a name="Astronomy_CombineRotation"></a>
+### Astronomy_CombineRotation(a, b) &#8658; [`astro_rotation_t`](#astro_rotation_t)
+
+**Creates a rotation based on applying one rotation followed by another.** 
+
+
+
+Given two rotation matrices, returns a combined rotation matrix that is equivalent to rotating based on the first matrix, followed by the second.
+
+
+
+**Returns:**  The combined rotation matrix. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_rotation_t`](#astro_rotation_t) | `a` |  The first rotation to apply. | 
+| [`astro_rotation_t`](#astro_rotation_t) | `b` |  The second rotation to apply. | 
 
 
 
@@ -331,6 +393,28 @@ Correction for aberration is optional, using the `aberration` parameter.
 
 ---
 
+<a name="Astronomy_EquatorFromVector"></a>
+### Astronomy_EquatorFromVector(vector) &#8658; [`astro_equatorial_t`](#astro_equatorial_t)
+
+**Given an equatorial vector, calculates equatorial angular coordinates.** 
+
+
+
+
+
+**Returns:**  Angular coordinates expressed in the same equatorial system as `vector`. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_vector_t`](#astro_vector_t) | `vector` |  A vector in an equatorial coordinate system. | 
+
+
+
+
+---
+
 <a name="Astronomy_GeoMoon"></a>
 ### Astronomy_GeoMoon(time) &#8658; [`astro_vector_t`](#astro_vector_t)
 
@@ -450,6 +534,43 @@ This function optionally corrects for atmospheric refraction. For most uses, it 
 
 ---
 
+<a name="Astronomy_HorizonFromVector"></a>
+### Astronomy_HorizonFromVector(vector, refraction) &#8658; [`astro_spherical_t`](#astro_spherical_t)
+
+**Converts Cartesian coordinates to horizontal coordinates.** 
+
+
+
+Given a horizontal Cartesian vector, returns horizontal azimuth and altitude.
+
+*IMPORTANT:* This function differs from [`Astronomy_SphereFromVector`](#Astronomy_SphereFromVector) in two ways:
+
+- `Astronomy_SphereFromVector` returns a `lon` value that represents azimuth defined counterclockwise from north (e.g., west = +90), but this function represents a clockwise rotation (e.g., east = +90). The difference is because `Astronomy_SphereFromVector` is intended to preserve the vector "right-hand rule", while this function defines azimuth in a more traditional way as used in navigation and cartography.
+- This function optionally corrects for atmospheric refraction, while `Astronomy_SphereFromVector` does not.
+
+
+The returned structure contains the azimuth in `lon`. It is measured in degrees clockwise from north: east = +90 degrees, west = +270 degrees.
+
+The altitude is stored in `lat`.
+
+The distance to the observed object is stored in `dist`, and is expressed in astronomical units (AU).
+
+
+
+**Returns:**  If successful, `status` hold `ASTRO_SUCCESS` and the other fields are valid as described above. Otherwise `status` holds an error code and the other fields are undefined. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_vector_t`](#astro_vector_t) | `vector` |  Cartesian vector to be converted to horizontal coordinates. | 
+| [`astro_refraction_t`](#astro_refraction_t) | `refraction` |  `REFRACTION_NORMAL`: correct altitude for atmospheric refraction (recommended). `REFRACTION_NONE`: no atmospheric refraction correction is performed. `REFRACTION_JPLHOR`: for JPL Horizons compatibility testing only; not recommended for normal use. | 
+
+
+
+
+---
+
 <a name="Astronomy_Illumination"></a>
 ### Astronomy_Illumination(body, time) &#8658; [`astro_illum_t`](#astro_illum_t)
 
@@ -473,6 +594,55 @@ When the body is Saturn, the returned structure contains a field `ring_tilt` tha
 | --- | --- | --- |
 | [`astro_body_t`](#astro_body_t) | `body` |  The Sun, Moon, or any planet other than the Earth. | 
 | [`astro_time_t`](#astro_time_t) | `time` |  The date and time of the observation. | 
+
+
+
+
+---
+
+<a name="Astronomy_InverseRefraction"></a>
+### Astronomy_InverseRefraction(refraction, bent_altitude) &#8658; `double`
+
+**Calculates the inverse of an atmospheric refraction angle.** 
+
+
+
+Given an observed altitude angle that includes atmospheric refraction, calculate the negative angular correction to obtain the unrefracted altitude. This is useful for cases where observed horizontal coordinates are to be converted to another orientation system, but refraction first must be removed from the observed position.
+
+
+
+**Returns:**  The angular adjustment in degrees to be added to the altitude angle to correct for atmospheric lensing. This will be less than or equal to zero. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_refraction_t`](#astro_refraction_t) | `refraction` |  The option selecting which refraction correction to use. See [`Astronomy_Refraction`](#Astronomy_Refraction). | 
+| `double` | `bent_altitude` |  The apparent altitude that includes atmospheric refraction. | 
+
+
+
+
+---
+
+<a name="Astronomy_InverseRotation"></a>
+### Astronomy_InverseRotation(rotation) &#8658; [`astro_rotation_t`](#astro_rotation_t)
+
+**Calculates the inverse of a rotation matrix.** 
+
+
+
+Given a rotation matrix that performs some coordinate transform, this function returns the matrix that reverses that trasnform.
+
+
+
+**Returns:**  A rotation matrix that performs the opposite transformation. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_rotation_t`](#astro_rotation_t) | `rotation` |  The rotation matrix to be inverted. | 
 
 
 
@@ -645,6 +815,342 @@ After calling [`Astronomy_SearchMoonQuarter`](#Astronomy_SearchMoonQuarter), thi
 | Type | Parameter | Description |
 | --- | --- | --- |
 | [`astro_moon_quarter_t`](#astro_moon_quarter_t) | `mq` |  A value returned by a prior call to [`Astronomy_SearchMoonQuarter`](#Astronomy_SearchMoonQuarter) or [`Astronomy_NextMoonQuarter`](#Astronomy_NextMoonQuarter). | 
+
+
+
+
+---
+
+<a name="Astronomy_Refraction"></a>
+### Astronomy_Refraction(refraction, altitude) &#8658; `double`
+
+**Calculates the amount of "lift" to an altitude angle caused by atmospheric refraction.** 
+
+
+
+Given an altitude angle and a refraction option, calculates the amount of "lift" caused by atmospheric refraction. This is the number of degrees higher in the sky an object appears due to the lensing of the Earth's atmosphere.
+
+
+
+**Returns:**  The angular adjustment in degrees to be added to the altitude angle to correct for atmospheric lensing. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_refraction_t`](#astro_refraction_t) | `refraction` |  The option selecting which refraction correction to use. If `REFRACTION_NORMAL`, uses a well-behaved refraction model that works well for all valid values (-90 to +90) of `altitude`. If `REFRACTION_JPLHOR`, this function returns a compatible value with the JPL Horizons tool. If any other value (including `REFRACTION_NONE`), this function returns 0. | 
+| `double` | `altitude` |  An altitude angle in a horizontal coordinate system. Must be a value between -90 and +90. | 
+
+
+
+
+---
+
+<a name="Astronomy_RotateVector"></a>
+### Astronomy_RotateVector(rotation, vector) &#8658; [`astro_vector_t`](#astro_vector_t)
+
+**Applies a rotation to a vector, yielding a rotated vector.** 
+
+
+
+This function transforms a vector in one orientation to a vector in another orientation.
+
+
+
+**Returns:**  A vector in the orientation specified by `rotation`. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_rotation_t`](#astro_rotation_t) | `rotation` |  A rotation matrix that specifies how the orientation of the vector is to be changed. | 
+| [`astro_vector_t`](#astro_vector_t) | `vector` |  The vector whose orientation is to be changed. | 
+
+
+
+
+---
+
+<a name="Astronomy_Rotation_ECL_EQD"></a>
+### Astronomy_Rotation_ECL_EQD(time) &#8658; [`astro_rotation_t`](#astro_rotation_t)
+
+**Calculates a rotation matrix from ecliptic J2000 (ECL) to equatorial of-date (EQD).** 
+
+
+
+This is one of the family of functions that returns a rotation matrix for converting from one orientation to another. Source: ECL = ecliptic system, using equator at J2000 epoch. Target: EQD = equatorial system, using equator of date.
+
+
+
+**Returns:**  A rotation matrix that converts ECL to EQD. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_time_t`](#astro_time_t) | `time` |  The date and time of the desired equator. | 
+
+
+
+
+---
+
+<a name="Astronomy_Rotation_ECL_EQJ"></a>
+### Astronomy_Rotation_ECL_EQJ() &#8658; [`astro_rotation_t`](#astro_rotation_t)
+
+**Calculates a rotation matrix from ecliptic J2000 (ECL) to equatorial J2000 (EQJ).** 
+
+
+
+This is one of the family of functions that returns a rotation matrix for converting from one orientation to another. Source: ECL = ecliptic system, using equator at J2000 epoch. Target: EQJ = equatorial system, using equator at J2000 epoch.
+
+
+
+**Returns:**  A rotation matrix that converts ECL to EQJ. 
+
+
+
+---
+
+<a name="Astronomy_Rotation_ECL_HOR"></a>
+### Astronomy_Rotation_ECL_HOR(time, observer) &#8658; [`astro_rotation_t`](#astro_rotation_t)
+
+**Calculates a rotation matrix from ecliptic J2000 (ECL) to horizontal (HOR).** 
+
+
+
+This is one of the family of functions that returns a rotation matrix for converting from one orientation to another. Source: ECL = ecliptic system, using equator at J2000 epoch. Target: HOR = horizontal system.
+
+Use [`Astronomy_HorizonFromVector`](#Astronomy_HorizonFromVector) to convert the return value to a traditional altitude/azimuth pair.
+
+
+
+**Returns:**  A rotation matrix that converts ECL to HOR at `time` and for `observer`. The components of the horizontal vector are: x = north, y = west, z = zenith (straight up from the observer). These components are chosen so that the "right-hand rule" works for the vector and so that north represents the direction where azimuth = 0. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_time_t`](#astro_time_t) | `time` |  The date and time of the desired horizontal orientation. | 
+| [`astro_observer_t`](#astro_observer_t) | `observer` |  A location near the Earth's mean sea level that defines the observer's horizon. | 
+
+
+
+
+---
+
+<a name="Astronomy_Rotation_EQD_ECL"></a>
+### Astronomy_Rotation_EQD_ECL(time) &#8658; [`astro_rotation_t`](#astro_rotation_t)
+
+**Calculates a rotation matrix from equatorial of-date (EQD) to ecliptic J2000 (ECL).** 
+
+
+
+This is one of the family of functions that returns a rotation matrix for converting from one orientation to another. Source: EQD = equatorial system, using equator of date. Target: ECL = ecliptic system, using equator at J2000 epoch.
+
+
+
+**Returns:**  A rotation matrix that converts EQD to ECL. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_time_t`](#astro_time_t) | `time` |  The date and time of the source equator. | 
+
+
+
+
+---
+
+<a name="Astronomy_Rotation_EQD_EQJ"></a>
+### Astronomy_Rotation_EQD_EQJ(time) &#8658; [`astro_rotation_t`](#astro_rotation_t)
+
+**Calculates a rotation matrix from equatorial of-date (EQD) to equatorial J2000 (EQJ).** 
+
+
+
+This is one of the family of functions that returns a rotation matrix for converting from one orientation to another. Source: EQD = equatorial system, using equator of the specified date/time. Target: EQJ = equatorial system, using equator at J2000 epoch.
+
+
+
+**Returns:**  A rotation matrix that converts EQD at `time` to EQJ. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_time_t`](#astro_time_t) | `time` |  The date and time at which the Earth's equator defines the source orientation. | 
+
+
+
+
+---
+
+<a name="Astronomy_Rotation_EQD_HOR"></a>
+### Astronomy_Rotation_EQD_HOR(time, observer) &#8658; [`astro_rotation_t`](#astro_rotation_t)
+
+**Calculates a rotation matrix from equatorial of-date (EQD) to horizontal (HOR).** 
+
+
+
+This is one of the family of functions that returns a rotation matrix for converting from one orientation to another. Source: EQD = equatorial system, using equator of the specified date/time. Target: HOR = horizontal system.
+
+Use [`Astronomy_HorizonFromVector`](#Astronomy_HorizonFromVector) to convert the return value to a traditional altitude/azimuth pair.
+
+
+
+**Returns:**  A rotation matrix that converts EQD to HOR at `time` and for `observer`. The components of the horizontal vector are: x = north, y = west, z = zenith (straight up from the observer). These components are chosen so that the "right-hand rule" works for the vector and so that north represents the direction where azimuth = 0. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_time_t`](#astro_time_t) | `time` |  The date and time at which the Earth's equator applies. | 
+| [`astro_observer_t`](#astro_observer_t) | `observer` |  A location near the Earth's mean sea level that defines the observer's horizon. | 
+
+
+
+
+---
+
+<a name="Astronomy_Rotation_EQJ_ECL"></a>
+### Astronomy_Rotation_EQJ_ECL() &#8658; [`astro_rotation_t`](#astro_rotation_t)
+
+**Calculates a rotation matrix from equatorial J2000 (EQJ) to ecliptic J2000 (ECL).** 
+
+
+
+This is one of the family of functions that returns a rotation matrix for converting from one orientation to another. Source: EQJ = equatorial system, using equator at J2000 epoch. Target: ECL = ecliptic system, using equator at J2000 epoch.
+
+
+
+**Returns:**  A rotation matrix that converts EQJ to ECL. 
+
+
+
+---
+
+<a name="Astronomy_Rotation_EQJ_EQD"></a>
+### Astronomy_Rotation_EQJ_EQD(time) &#8658; [`astro_rotation_t`](#astro_rotation_t)
+
+**Calculates a rotation matrix from equatorial J2000 (EQJ) to equatorial of-date (EQD).** 
+
+
+
+This is one of the family of functions that returns a rotation matrix for converting from one orientation to another. Source: EQJ = equatorial system, using equator at J2000 epoch. Target: EQD = equatorial system, using equator of the specified date/time.
+
+
+
+**Returns:**  A rotation matrix that converts EQJ to EQD at `time`. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_time_t`](#astro_time_t) | `time` |  The date and time at which the Earth's equator defines the target orientation. | 
+
+
+
+
+---
+
+<a name="Astronomy_Rotation_EQJ_HOR"></a>
+### Astronomy_Rotation_EQJ_HOR(time, observer) &#8658; [`astro_rotation_t`](#astro_rotation_t)
+
+**Calculates a rotation matrix from equatorial J2000 (EQJ) to horizontal (HOR).** 
+
+
+
+This is one of the family of functions that returns a rotation matrix for converting from one orientation to another. Source: EQJ = equatorial system, using the equator at the J2000 epoch. Target: HOR = horizontal system.
+
+Use [`Astronomy_HorizonFromVector`](#Astronomy_HorizonFromVector) to convert the return value to a traditional altitude/azimuth pair.
+
+
+
+**Returns:**  A rotation matrix that converts EQJ to HOR at `time` and for `observer`. The components of the horizontal vector are: x = north, y = west, z = zenith (straight up from the observer). These components are chosen so that the "right-hand rule" works for the vector and so that north represents the direction where azimuth = 0. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_time_t`](#astro_time_t) | `time` |  The date and time of the desired horizontal orientation. | 
+| [`astro_observer_t`](#astro_observer_t) | `observer` |  A location near the Earth's mean sea level that defines the observer's horizon. | 
+
+
+
+
+---
+
+<a name="Astronomy_Rotation_HOR_ECL"></a>
+### Astronomy_Rotation_HOR_ECL(time, observer) &#8658; [`astro_rotation_t`](#astro_rotation_t)
+
+**Calculates a rotation matrix from horizontal (HOR) to ecliptic J2000 (ECL).** 
+
+
+
+This is one of the family of functions that returns a rotation matrix for converting from one orientation to another. Source: HOR = horizontal system. Target: ECL = ecliptic system, using equator at J2000 epoch.
+
+
+
+**Returns:**  A rotation matrix that converts HOR to ECL. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_time_t`](#astro_time_t) | `time` |  The date and time of the horizontal observation. | 
+| [`astro_observer_t`](#astro_observer_t) | `observer` |  The location of the horizontal observer. | 
+
+
+
+
+---
+
+<a name="Astronomy_Rotation_HOR_EQD"></a>
+### Astronomy_Rotation_HOR_EQD(time, observer) &#8658; [`astro_rotation_t`](#astro_rotation_t)
+
+**Calculates a rotation matrix from horizontal (HOR) to equatorial of-date (EQD).** 
+
+
+
+This is one of the family of functions that returns a rotation matrix for converting from one orientation to another. Source: HOR = horizontal system (x=North, y=West, z=Zenith). Source: EQD = equatorial system, using equator of the specified date/time.
+
+
+
+**Returns:**  A rotation matrix that converts HOR to EQD at `time` and for `observer`. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_time_t`](#astro_time_t) | `time` |  The date and time at which the Earth's equator applies. | 
+| [`astro_observer_t`](#astro_observer_t) | `observer` |  A location near the Earth's mean sea level that defines the observer's horizon. | 
+
+
+
+
+---
+
+<a name="Astronomy_Rotation_HOR_EQJ"></a>
+### Astronomy_Rotation_HOR_EQJ(time, observer) &#8658; [`astro_rotation_t`](#astro_rotation_t)
+
+**Calculates a rotation matrix from horizontal (HOR) to J2000 equatorial (EQJ).** 
+
+
+
+This is one of the family of functions that returns a rotation matrix for converting from one orientation to another. Source: HOR = horizontal system (x=North, y=West, z=Zenith). Source: EQJ = equatorial system, using equator at the J2000 epoch.
+
+
+
+**Returns:**  A rotation matrix that converts HOR to EQD at `time` and for `observer`. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_time_t`](#astro_time_t) | `time` |  The date and time of the observation. | 
+| [`astro_observer_t`](#astro_observer_t) | `observer` |  A location near the Earth's mean sea level that defines the observer's horizon. | 
 
 
 
@@ -989,6 +1495,30 @@ The solstices are the moments twice each year when one of the Earth's poles is m
 
 ---
 
+<a name="Astronomy_SphereFromVector"></a>
+### Astronomy_SphereFromVector(vector) &#8658; [`astro_spherical_t`](#astro_spherical_t)
+
+**Converts Cartesian coordinates to spherical coordinates.** 
+
+
+
+Given a Cartesian vector, returns latitude, longitude, and distance.
+
+
+
+**Returns:**  Spherical coordinates that are equivalent to the given vector. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_vector_t`](#astro_vector_t) | `vector` |  Cartesian vector to be converted to spherical coordinates. | 
+
+
+
+
+---
+
 <a name="Astronomy_SunPosition"></a>
 ### Astronomy_SunPosition(time) &#8658; [`astro_ecliptic_t`](#astro_ecliptic_t)
 
@@ -1083,6 +1613,78 @@ After calculating the date and time of an astronomical event in the form of an [
 | Type | Parameter | Description |
 | --- | --- | --- |
 | [`astro_time_t`](#astro_time_t) | `time` |  The astronomical time value to be converted to calendar date and time.  | 
+
+
+
+
+---
+
+<a name="Astronomy_VectorFromEquator"></a>
+### Astronomy_VectorFromEquator(equ, time) &#8658; [`astro_vector_t`](#astro_vector_t)
+
+**Given angular equatorial coordinates in `equ`, calculates equatorial vector.** 
+
+
+
+
+
+**Returns:**  A vector in the equatorial system. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_equatorial_t`](#astro_equatorial_t) | `equ` |  Angular equatorial coordinates to be converted to a vector. | 
+| [`astro_time_t`](#astro_time_t) | `time` |  The date and time of the observation. This is needed because the returned vector requires a valid time value when passed to certain other functions. | 
+
+
+
+
+---
+
+<a name="Astronomy_VectorFromHorizon"></a>
+### Astronomy_VectorFromHorizon(sphere, time, refraction) &#8658; [`astro_vector_t`](#astro_vector_t)
+
+**Given apparent angular horizontal coordinates in `sphere`, calculate horizontal vector.** 
+
+
+
+
+
+**Returns:**  A vector in the horizontal system: `x` = north, `y` = west, and `z` = zenith (up). 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_spherical_t`](#astro_spherical_t) | `sphere` |  A structure that contains apparent horizontal coordinates: `lat` holds the refracted azimuth angle, `lon` holds the azimuth in degrees clockwise from north, and `dist` holds the distance from the observer to the object in AU. | 
+| [`astro_time_t`](#astro_time_t) | `time` |  The date and time of the observation. This is needed because the returned [`astro_vector_t`](#astro_vector_t) structure requires a valid time value when passed to certain other functions. | 
+| [`astro_refraction_t`](#astro_refraction_t) | `refraction` |  The refraction option used to model atmospheric lensing. See [`Astronomy_Refraction`](#Astronomy_Refraction). This specifies how refraction is to be removed from the altitude stored in `sphere.lat`. | 
+
+
+
+
+---
+
+<a name="Astronomy_VectorFromSphere"></a>
+### Astronomy_VectorFromSphere(sphere, time) &#8658; [`astro_vector_t`](#astro_vector_t)
+
+**Converts spherical coordinates to Cartesian coordinates.** 
+
+
+
+Given spherical coordinates and a time at which they are valid, returns a vector of Cartesian coordinates. The returned value includes the time, as required by the type [`astro_vector_t`](#astro_vector_t).
+
+
+
+**Returns:**  The vector form of the supplied spherical coordinates. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_spherical_t`](#astro_spherical_t) | `sphere` |  Spherical coordinates to be converted. | 
+| [`astro_time_t`](#astro_time_t) | `time` |  The time that should be included in the return value. | 
 
 
 
@@ -1493,6 +2095,21 @@ You can create this structure directly, or you can call the convenience function
 
 ---
 
+<a name="astro_rotation_t"></a>
+### `astro_rotation_t`
+
+**Contains a rotation matrix that can be used to transform one coordinate system to another.** 
+
+
+
+| Type | Member | Description |
+| ---- | ------ | ----------- |
+| [`astro_status_t`](#astro_status_t) | `status` |  ASTRO_SUCCESS if this struct is valid; otherwise an error code.  |
+| `double` | `rot` |  A normalized 3x3 rotation matrix.  |
+
+
+---
+
 <a name="astro_search_result_t"></a>
 ### `astro_search_result_t`
 
@@ -1522,6 +2139,23 @@ You can create this structure directly, or you can call the convenience function
 | [`astro_time_t`](#astro_time_t) | `jun_solstice` |  The date and time of the June soltice for the specified year.  |
 | [`astro_time_t`](#astro_time_t) | `sep_equinox` |  The date and time of the September equinox for the specified year.  |
 | [`astro_time_t`](#astro_time_t) | `dec_solstice` |  The date and time of the December solstice for the specified year.  |
+
+
+---
+
+<a name="astro_spherical_t"></a>
+### `astro_spherical_t`
+
+**Spherical coordinates: latitude, longitude, distance.** 
+
+
+
+| Type | Member | Description |
+| ---- | ------ | ----------- |
+| [`astro_status_t`](#astro_status_t) | `status` |  ASTRO_SUCCESS if this struct is valid; otherwise an error code.  |
+| `double` | `lat` |  The latitude angle: -90..+90 degrees.  |
+| `double` | `lon` |  The longitude angle: 0..360 degrees.  |
+| `double` | `dist` |  Distance in AU.  |
 
 
 ---

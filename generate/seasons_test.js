@@ -10,10 +10,10 @@ function LoadTestData(filename) {
     let lnum = 0;
     let minByMonth = [];
     let maxByMonth = [];
-    for (let row of lines) {        
+    for (let row of lines) {
         let token = row.split(/\s+/g);
         let item = {
-            lnum: ++lnum,            
+            lnum: ++lnum,
             date: new Date(token[0]),
             name: token[1]  // Perihelion, Equinox, Solstice, Aphelion
         };
