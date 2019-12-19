@@ -14,10 +14,10 @@ To get started quickly, here are some [examples](../../demo/python/).
 ## Contents
 
 - [Topic Index](#topics)
+- [Classes](#classes)
+- [Enumerated Types](#enumerations)
+- [Error Types](#errors)
 - [Functions](#functions)
-- [Enumerated Types](#enums)
-- [Structures](#structs)
-- [Type Definitions](#typedefs)
 
 ---
 
