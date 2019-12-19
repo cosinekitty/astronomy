@@ -8,7 +8,7 @@ import enum
 
 def PrintUsage():
     print("""
-USAGE:  pydown.py infile.py outfile.md
+USAGE:  pydown.py prefix.md infile.py outfile.md
 """)
     return 1
 
@@ -325,19 +325,28 @@ def Markdown(module):
     return md
 
 def main():
-    if len(sys.argv) != 3:
+    if len(sys.argv) != 4:
         return PrintUsage()
-    inPythonFileName = sys.argv[1]
-    outMarkdownFileName = sys.argv[2]
+    prefixFileName = sys.argv[1]
+    inPythonFileName = sys.argv[2]
+    outMarkdownFileName = sys.argv[3]
     # Delete output file before we begin.
     # That way, if anything goes wrong, it won't exist,
     # and thus the error becomes conspicuous to scripts/tools.
     if os.access(outMarkdownFileName, os.F_OK):
         os.remove(outMarkdownFileName)
+
+    # Load the prefix text.
+    with open(prefixFileName, 'rt') as infile:
+        prefix = infile.read()
+
     module = LoadModule(inPythonFileName)
     md = Markdown(module)
+
     with open(outMarkdownFileName, 'wt') as outfile:
+        outfile.write(prefix)
         outfile.write(md)
+
     return 0
 
 if __name__ == '__main__':

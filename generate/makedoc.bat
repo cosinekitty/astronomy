@@ -34,7 +34,7 @@ if not defined CLOSURE (
     REM     You can customize where the Google Closure Compiler jar file
     REM     is located by setting the environment variable CLOSURE
     REM     before running this batch file.
-    
+
     set CLOSURE=c:\closure\closure-compiler-v20190528.jar
 )
 
@@ -125,7 +125,7 @@ if exist generate_c_docs (
 )
 
 echo.Generating Python documentation.
-..\pydown\pydown.py ..\source\python\astronomy.py ..\source\python\README.md
+..\pydown\pydown.py ..\pydown\py_prefix.md ..\source\python\astronomy.py ..\source\python\README.md
 if errorlevel 1 (exit /b 1)
 
 exit /b 0
