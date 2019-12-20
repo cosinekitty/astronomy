@@ -22,7 +22,10 @@ done
 echo "Building C# code to get documentation XML."
 cd dotnet/csharp_test || "Cannot change to directory dotnet/csharp_test"
 dotnet build --output ${PWD}/exe || Fail "Error building C# source code"
-cd ../..
+cd ../../../csdown || Fail "Error changing to csdown directory"
+./build || exit 1
+dotnet exe/csdown.dll csharp_prefix.md ../generate/dotnet/csharp_test/exe/astronomy.dll ../source/csharp/README.md || Fail "Error generating C# documentation."
+cd ../generate || Fail "Error changing back to generate directory"
 
 echo "Minifying JavaScript code."
 google-closure-compiler --js ../source/js/astronomy.js --js_output_file ../source/js/astronomy.min.js || Fail "Error minifying astronomy.js"
