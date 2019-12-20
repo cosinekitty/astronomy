@@ -38,7 +38,7 @@ if errorlevel 1 (exit /b 1)
 cd ..\..\..\csdown
 call build.bat
 if errorlevel 1 (exit /b 1)
-dotnet exe\csdown.dll csharp_prefix.md ..\generate\dotnet\csharp_test\exe\astronomy.dll ..\source\csharp\README.md
+dotnet exe\csdown.dll csharp_prefix.md ..\generate\dotnet\csharp_test\exe\astronomy.dll ..\generate\dotnet\csharp_test\exe\astronomy.xml ..\source\csharp\README.md
 if errorlevel 1 (
     echo.Error generating C# documentation.
     exit /b 1

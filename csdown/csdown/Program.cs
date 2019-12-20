@@ -1,4 +1,9 @@
 ﻿using System;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Text;
+using System.Xml.Linq;
 
 namespace csdown
 {
@@ -6,17 +11,18 @@ namespace csdown
     {
         static int Main(string[] args)
         {
-            if (args.Length != 3)
+            if (args.Length != 4)
             {
-                Console.WriteLine("USAGE: csdown prefix.md assembly.dll outfile.md");
+                Console.WriteLine("USAGE: csdown prefix.md assembly.dll assembly.xml outfile.md");
                 return 1;
             }
             string inPrefixFileName = args[0];
             string inAssemblyFileName = args[1];
-            string outMarkdownFileName = args[2];
+            string inXmlFileName = args[2];
+            string outMarkdownFileName = args[3];
             try
             {
-                return GenerateMarkdown(inPrefixFileName, inAssemblyFileName, outMarkdownFileName);
+                return GenerateMarkdown(inPrefixFileName, inAssemblyFileName, inXmlFileName, outMarkdownFileName);
             }
             catch (Exception ex)
             {
@@ -25,10 +31,60 @@ namespace csdown
             }
         }
 
-        static int GenerateMarkdown(string inPrefixFileName, string inAssemblyFileName, string outMarkdownFileName)
+        static int GenerateMarkdown(string inPrefixFileName, string inAssemblyFileName, string inXmlFileName, string outMarkdownFileName)
         {
-            Console.WriteLine("GenerateMarkdown");
+            Assembly asm = Assembly.LoadFile(Path.GetFullPath(inAssemblyFileName));
+            var sb = new StringBuilder(File.ReadAllText(inPrefixFileName));
+            XDocument doc = XDocument.Load(inXmlFileName);
+            AppendMarkdown(sb, doc, asm);
+            File.WriteAllText(outMarkdownFileName, sb.ToString());
             return 0;
+        }
+
+        private static void AppendMarkdown(StringBuilder sb, XDocument doc, Assembly asm)
+        {
+            Console.WriteLine("Generating C# documentation.");
+
+            sb.AppendLine("<a name=\"functions\"></a>");
+            sb.AppendLine("## Functions");
+            sb.AppendLine();
+            sb.AppendLine("---");
+            sb.AppendLine();
+
+            Type astro = asm.GetType("CosineKitty.Astronomy");
+            MethodInfo[] funcs = astro.GetMethods()
+                .Where(m => m.IsPublic && m.IsStatic)
+                .OrderBy(m => m.Name.ToUpperInvariant())
+                .ToArray();
+
+            foreach (MethodInfo f in funcs)
+            {
+                sb.AppendFormat("<a name=\"Astronomy.{0}\"></a>", f.Name);
+                sb.AppendLine();
+                sb.AppendFormat("### Astronomy.{0}(", f.Name);
+                sb.Append(string.Join(", ", f.GetParameters().Select(p => p.Name)));
+                sb.AppendFormat(") &#8658; {0}", TypeMarkdown(f.ReturnType));
+                sb.AppendLine();
+                sb.AppendLine();
+            }
+        }
+
+        private static string TypeMarkdown(Type t)
+        {
+            if (t.FullName.StartsWith("CosineKitty."))
+                return string.Format("[`{0}`](#{0})", t.Name);
+
+            switch (t.FullName)
+            {
+                case "System.Double":
+                    return "double";
+
+                case "System.String":
+                    return "string";
+
+                default:
+                    throw new NotImplementedException("Unhandled type " + t.FullName);
+            }
         }
     }
 }
