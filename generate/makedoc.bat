@@ -30,6 +30,21 @@ for %%f in (..\source\c\astronomy.c ..\source\js\astronomy.js ..\source\python\a
     if errorlevel 1 (exit /b 1)
 )
 
+REM   C# is a special case. We have to compile the code to get the documentation.
+echo.Building C# code to get documentation.
+cd dotnet\csharp_test
+dotnet build --output !CD!\exe
+if errorlevel 1 (exit /b 1)
+cd ..\..\..\csdown
+call build.bat
+if errorlevel 1 (exit /b 1)
+dotnet exe\csdown.dll csharp_prefix.md ..\generate\dotnet\csharp_test\exe\astronomy.dll ..\source\csharp\README.md
+if errorlevel 1 (
+    echo.Error generating C# documentation.
+    exit /b 1
+)
+cd ..\generate
+
 if not defined CLOSURE (
     REM     You can customize where the Google Closure Compiler jar file
     REM     is located by setting the environment variable CLOSURE
