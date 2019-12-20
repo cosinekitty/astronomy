@@ -14,9 +14,15 @@ echo "Generating target code."
 ./generate source || Fail "Problem generating target code."
 
 echo "Trimming trailing whitespace in target code."
-for file in ../source/c/astronomy.c ../source/js/astronomy.js ../source/python/astronomy.py; do
+for file in ../source/c/astronomy.c ../source/js/astronomy.js ../source/python/astronomy.py ../source/csharp/astronomy.cs; do
     node trimspace.js ${file}
 done
+
+# C# is a special case: we have to compile the code to get its documentation.
+echo "Building C# code to get documentation XML."
+cd dotnet/csharp_test || "Cannot change to directory dotnet/csharp_test"
+dotnet build --output ${PWD}/exe || Fail "Error building C# source code"
+cd ../..
 
 echo "Minifying JavaScript code."
 google-closure-compiler --js ../source/js/astronomy.js --js_output_file ../source/js/astronomy.min.js || Fail "Error minifying astronomy.js"
