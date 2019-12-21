@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Xml.Linq;
 
 namespace csdown
@@ -11,6 +12,7 @@ namespace csdown
     {
         public string Summary;
         public string Remarks;
+        public string Returns;
         public readonly Dictionary<string, string> Params = new Dictionary<string, string>();
     }
 
@@ -36,9 +38,12 @@ namespace csdown
                     if (child.Element("remarks") is XElement remarks)
                         item.Remarks = Clean(remarks.Value);
 
+                    if (child.Element("returns") is XElement returns)
+                        item.Returns = Linear(returns.Value);
+
                     foreach (XElement p in child.Elements("param"))
                         if (p.Attribute("name") is XAttribute pname)
-                            item.Params[pname.Value] = Clean(p.Value);
+                            item.Params[pname.Value] = Linear(p.Value);
                 }
             }
         }
@@ -53,6 +58,13 @@ namespace csdown
                     return i;
 
             return line.Length;
+        }
+
+        private static string Linear(string text)
+        {
+            if (text == null)
+                return "";
+            return Regex.Replace(text.Trim(), @"\s+", " ");
         }
 
         private static string Clean(string text)

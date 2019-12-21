@@ -61,11 +61,12 @@ namespace csdown
             foreach (MethodInfo f in funcs)
             {
                 CodeItem item = cinfo.FindMethod(f);
+                ParameterInfo[] parms = f.GetParameters();
 
                 sb.AppendFormat("<a name=\"Astronomy.{0}\"></a>", f.Name);
                 sb.AppendLine();
                 sb.AppendFormat("### Astronomy.{0}(", f.Name);
-                sb.Append(string.Join(", ", f.GetParameters().Select(p => p.Name)));
+                sb.Append(string.Join(", ", parms.Select(p => p.Name)));
                 sb.AppendFormat(") &#8658; {0}", TypeMarkdown(f.ReturnType));
                 sb.AppendLine();
                 sb.AppendLine();
@@ -80,21 +81,56 @@ namespace csdown
                     sb.AppendLine(item.Remarks);
                     sb.AppendLine();
                 }
+
+                if (parms.Length > 0)
+                {
+                    sb.AppendLine("| Type | Parameter | Description |");
+                    sb.AppendLine("| --- | --- | --- |");
+                    foreach (ParameterInfo p in parms)
+                    {
+                        // | [`astro_rotation_t`](#astro_rotation_t) | `a` |  The first rotation to apply. | 
+                        string t = TypeMarkdown(p.ParameterType);
+                        string n = "`" + p.Name + "`";
+                        string r = item.Params[p.Name];
+                        sb.Append("| ");
+                        sb.Append(t);
+                        sb.Append(" | ");
+                        sb.Append(n);
+                        sb.Append(" | ");
+                        sb.Append(r);
+                        sb.AppendLine(" |");
+                    }
+                    sb.AppendLine();
+                }
+
+                if (!string.IsNullOrWhiteSpace(item.Returns))
+                {
+                    sb.AppendLine("**Returns:** " + item.Returns);
+                    sb.AppendLine();
+                }
             }
+        }
+
+        private static string InternalLink(string s)
+        {
+            return string.Format("[`{0}`](#{0})", s);
         }
 
         private static string TypeMarkdown(Type t)
         {
             if (t.FullName.StartsWith("CosineKitty."))
-                return string.Format("[`{0}`](#{0})", t.Name);
+                return InternalLink(t.Name);
 
             switch (t.FullName)
             {
                 case "System.Double":
-                    return "double";
+                    return "`double`";
 
                 case "System.String":
-                    return "string";
+                    return "`string`";
+
+                case "System.Int32":
+                    return "`int`";
 
                 default:
                     throw new NotImplementedException("Unhandled type " + t.FullName);

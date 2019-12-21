@@ -145,7 +145,7 @@ these are used in function and type names.
 ---
 
 <a name="Astronomy.AngleFromSun"></a>
-### Astronomy.AngleFromSun(body, time) &#8658; double
+### Astronomy.AngleFromSun(body, time) &#8658; `double`
 
 **Returns the angle between the given body and the Sun, as seen from the Earth.**
 
@@ -153,8 +153,15 @@ This function calculates the angular separation between the given body and the S
 as seen from the center of the Earth. This angle is helpful for determining how
 easy it is to see the body away from the glare of the Sun.
 
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Body`](#Body) | `body` | The celestial body whose angle from the Sun is to be measured. Not allowed to be `Body.Earth`. |
+| [`AstroTime`](#AstroTime) | `time` | The time at which the observation is made. |
+
+**Returns:** Returns the angle in degrees between the Sun and the specified body as seen from the center of the Earth.
+
 <a name="Astronomy.EclipticLongitude"></a>
-### Astronomy.EclipticLongitude(body, time) &#8658; double
+### Astronomy.EclipticLongitude(body, time) &#8658; `double`
 
 **Calculates heliocentric ecliptic longitude of a body based on the J2000 equinox.**
 
@@ -162,6 +169,13 @@ This function calculates the angle around the plane of the Earth's orbit
 of a celestial body, as seen from the center of the Sun.
 The angle is measured prograde (in the direction of the Earth's orbit around the Sun)
 in degrees from the J2000 equinox. The ecliptic longitude is always in the range [0, 360).
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Body`](#Body) | `body` | A body other than the Sun. |
+| [`AstroTime`](#AstroTime) | `time` | The date and time at which the body's ecliptic longitude is to be calculated. |
+
+**Returns:** Returns the ecliptic longitude in degrees of the given body at the given time.
 
 <a name="Astronomy.Elongation"></a>
 ### Astronomy.Elongation(body, time) &#8658; [`ElongationInfo`](#ElongationInfo)
@@ -184,6 +198,13 @@ information about the given celestial body at the given time:
   around the plane of the Earth's orbit, and ignores how far above or below that plane the body is.
   The ecliptic separation is measured in degrees and is always in the range [0, 180].
 
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Body`](#Body) | `body` | The celestial body whose visibility is to be calculated. |
+| [`AstroTime`](#AstroTime) | `time` | The date and time of the observation. |
+
+**Returns:** Returns a valid #ElongationInfo structure, or throws an exception if there is an error.
+
 <a name="Astronomy.Equator"></a>
 ### Astronomy.Equator(body, time, observer, equdate, aberration) &#8658; [`Equatorial`](#Equatorial)
 
@@ -203,6 +224,14 @@ has a small effect on the apparent positions of other bodies.
 
 Correction for aberration is optional, using the `aberration` parameter.
 
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Body`](#Body) | `body` | The celestial body to be observed. Not allowed to be `Body.Earth`. |
+| [`AstroTime`](#AstroTime) | `time` | The date and time at which the observation takes place. |
+| [`Observer`](#Observer) | `observer` | A location on or near the surface of the Earth. |
+| [`EquatorEpoch`](#EquatorEpoch) | `equdate` | Selects the date of the Earth's equator in which to express the equatorial coordinates. |
+| [`Aberration`](#Aberration) | `aberration` | Selects whether or not to correct for aberration. |
+
 <a name="Astronomy.EquatorialToEcliptic"></a>
 ### Astronomy.EquatorialToEcliptic(equ) &#8658; [`Ecliptic`](#Ecliptic)
 
@@ -211,6 +240,12 @@ Correction for aberration is optional, using the `aberration` parameter.
 Given coordinates relative to the Earth's equator at J2000 (the instant of noon UTC
 on 1 January 2000), this function converts those coordinates to J2000 ecliptic coordinates,
 which are relative to the plane of the Earth's orbit around the Sun.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`AstroVector`](#AstroVector) | `equ` | Equatorial coordinates in the J2000 frame of reference. You can call #GeoVector to obtain suitable equatorial coordinates. |
+
+**Returns:** Ecliptic coordinates in the J2000 frame of reference.
 
 <a name="Astronomy.GeoVector"></a>
 ### Astronomy.GeoVector(body, time, aberration) &#8658; [`AstroVector`](#AstroVector)
@@ -234,6 +269,14 @@ Also, the position can optionally be corrected for
 causing the apparent direction of the body to be shifted due to transverse
 movement of the Earth with respect to the rays of light coming from that body.
 
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Body`](#Body) | `body` | A body for which to calculate a heliocentric position: the Sun, Moon, or any of the planets. |
+| [`AstroTime`](#AstroTime) | `time` | The date and time for which to calculate the position. |
+| [`Aberration`](#Aberration) | `aberration` | `Aberration.Corrected` to correct for aberration, or `Aberration.None` to leave uncorrected. |
+
+**Returns:** A geocentric position vector of the center of the given body.
+
 <a name="Astronomy.HelioVector"></a>
 ### Astronomy.HelioVector(body, time) &#8658; [`AstroVector`](#AstroVector)
 
@@ -249,6 +292,13 @@ This is different from the behavior of #GeoVector.
 
 If given an invalid value for `body`, or the body is `Body.Pluto` and the `time` is outside
 the year range 1700..2200, this function will throw an `ArgumentException`.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Body`](#Body) | `body` | A body for which to calculate a heliocentric position: the Sun, Moon, or any of the planets. |
+| [`AstroTime`](#AstroTime) | `time` | The date and time for which to calculate the position. |
+
+**Returns:** A heliocentric position vector of the center of the given body.
 
 <a name="Astronomy.Horizon"></a>
 ### Astronomy.Horizon(time, observer, ra, dec, refraction) &#8658; [`Topocentric`](#Topocentric)
@@ -278,6 +328,16 @@ If refraction is disabled, none of these four coordinates will be corrected; in 
 the right ascension and declination in the returned structure will be numerically identical
 to the respective `ra` and `dec` values passed in.
 
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`AstroTime`](#AstroTime) | `time` | The date and time of the observation. |
+| [`Observer`](#Observer) | `observer` | The geographic location of the observer. |
+| `double` | `ra` | The right ascension of the body in sidereal hours. See remarks above for more details. |
+| `double` | `dec` | The declination of the body in degrees. See remarks above for more details. |
+| [`Refraction`](#Refraction) | `refraction` | Selects whether to correct for atmospheric refraction, and if so, which model to use. The recommended value for most uses is `Refraction.Normal`. See remarks above for more details. |
+
+**Returns:** The body's apparent horizontal coordinates and equatorial coordinates, both optionally corrected for refraction.
+
 <a name="Astronomy.Illumination"></a>
 ### Astronomy.Illumination(body, time) &#8658; [`IllumInfo`](#IllumInfo)
 
@@ -301,8 +361,15 @@ the tilt angle in degrees of Saturn's rings as seen from the Earth. A value of 0
 the rings appear edge-on, and are thus nearly invisible from the Earth. The `ring_tilt` holds
 0 for all bodies other than Saturn.
 
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Body`](#Body) | `body` | The Sun, Moon, or any planet other than the Earth. |
+| [`AstroTime`](#AstroTime) | `time` | The date and time of the observation. |
+
+**Returns:** An #IllumInfo structure with fields as documented above.
+
 <a name="Astronomy.LongitudeFromSun"></a>
-### Astronomy.LongitudeFromSun(body, time) &#8658; double
+### Astronomy.LongitudeFromSun(body, time) &#8658; `double`
 
 **Returns a body's ecliptic longitude with respect to the Sun, as seen from the Earth.**
 
@@ -327,8 +394,15 @@ Values between 0 and 180 degrees indicate that the body is visible in the evenin
 after sunset.  Values between 180 degrees and 360 degrees indicate that the body
 is visible in the morning sky before sunrise.
 
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Body`](#Body) | `body` | The celestial body for which to find longitude from the Sun. |
+| [`AstroTime`](#AstroTime) | `time` | The date and time of the observation. |
+
+**Returns:** A value in the range [0, 360), expressed in degrees.
+
 <a name="Astronomy.MoonPhase"></a>
-### Astronomy.MoonPhase(time) &#8658; double
+### Astronomy.MoonPhase(time) &#8658; `double`
 
 **Returns the Moon's phase as an angle from 0 to 360 degrees.**
 
@@ -341,6 +415,12 @@ Certain values of the angle have conventional definitions:
 - 180 = full moon
 - 270 = third quarter
 
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`AstroTime`](#AstroTime) | `time` | The date and time of the observation. |
+
+**Returns:** The angle as described above, a value in the range 0..360 degrees.
+
 <a name="Astronomy.NextLunarApsis"></a>
 ### Astronomy.NextLunarApsis(apsis) &#8658; [`ApsisInfo`](#ApsisInfo)
 
@@ -352,6 +432,12 @@ an apogee event, this function finds the next perigee event, and vice versa.
 
 See #Astronomy_SearchLunarApsis for more details.
 
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`ApsisInfo`](#ApsisInfo) | `apsis` | An apsis event obtained from a call to #Astronomy.SearchLunarApsis or `Astronomy.NextLunarApsis`. See #Astronomy.SearchLunarApsis for more details. |
+
+**Returns:** Same as the return value for #Astronomy_SearchLunarApsis.
+
 <a name="Astronomy.NextMoonQuarter"></a>
 ### Astronomy.NextMoonQuarter(mq) &#8658; [`MoonQuarterInfo`](#MoonQuarterInfo)
 
@@ -361,6 +447,12 @@ After calling #SearchMoonQuarter, this function can be called
 one or more times to continue finding consecutive lunar quarters.
 This function finds the next consecutive moon quarter event after
 the one passed in as the parameter `mq`.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`MoonQuarterInfo`](#MoonQuarterInfo) | `mq` | The previous moon quarter found by a call to #SearchMoonQuarter or NextMoonQuarter. |
+
+**Returns:** The moon quarter that occurs next in time after the one passed in `mq`.
 
 <a name="Astronomy.Search"></a>
 ### Astronomy.Search(func, t1, t2, dt_tolerance_seconds) &#8658; [`AstroTime`](#AstroTime)
@@ -403,6 +495,15 @@ the search will return `null`.
 
 If the search does not converge within 20 iterations, it will throw an exception.
 
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`SearchContext`](#SearchContext) | `func` | The function for which to find the time of an ascending root. See remarks above for more details. |
+| [`AstroTime`](#AstroTime) | `t1` | The lower time bound of the search window. See remarks above for more details. |
+| [`AstroTime`](#AstroTime) | `t2` | The upper time bound of the search window. See remarks above for more details. |
+| `double` | `dt_tolerance_seconds` | Specifies an amount of time in seconds within which a bounded ascending root is considered accurate enough to stop. A typical value is 1 second. |
+
+**Returns:** If successful, returns an #AstroTime value indicating a date and time that is within `dt_tolerance_seconds` of an ascending root. If no ascending root is found, or more than one root exists in the time window `t1`..`t2`, the function returns `null`. If the search does not converge within 20 iterations, an exception is thrown.
+
 <a name="Astronomy.SearchHourAngle"></a>
 ### Astronomy.SearchHourAngle(body, observer, hourAngle, startTime) &#8658; [`HourAngleInfo`](#HourAngleInfo)
 
@@ -429,6 +530,15 @@ at its minimum altitude.
 On success, the function reports the date and time, along with the horizontal coordinates
 of the body at that time, as seen by the given observer.
 
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Body`](#Body) | `body` | The celestial body, which can the Sun, the Moon, or any planet other than the Earth. |
+| [`Observer`](#Observer) | `observer` | Indicates a location on or near the surface of the Earth where the observer is located. |
+| `double` | `hourAngle` | An hour angle value in the range [0, 24) indicating the number of sidereal hours after the body's most recent culmination. |
+| [`AstroTime`](#AstroTime) | `startTime` | The date and time at which to start the search. |
+
+**Returns:** This function returns a valid #HourAngleInfo object on success. If any error occurs, it throws an exception. It never returns a null value.
+
 <a name="Astronomy.SearchLunarApsis"></a>
 ### Astronomy.SearchLunarApsis(startTime) &#8658; [`ApsisInfo`](#ApsisInfo)
 
@@ -448,6 +558,12 @@ once, then use the return value to call #Astronomy.NextLunarApsis. After that,
 keep feeding the previous return value from `Astronomy_NextLunarApsis` into another
 call of `Astronomy_NextLunarApsis` as many times as desired.
 
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`AstroTime`](#AstroTime) | `startTime` | The date and time at which to start searching for the next perigee or apogee. |
+
+**Returns:** Returns an #ApsisInfo structure containing information about the next lunar apsis.
+
 <a name="Astronomy.SearchMaxElongation"></a>
 ### Astronomy.SearchMaxElongation(body, startTime) &#8658; [`ElongationInfo`](#ElongationInfo)
 
@@ -462,6 +578,13 @@ These are events where the planets reach the maximum angle from the Sun as seen 
 This function solves for those times, reporting the next maximum elongation event's date and time,
 the elongation value itself, the relative longitude with the Sun, and whether the planet is best
 observed in the morning or evening. See #Astronomy_Elongation for more details about the returned structure.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Body`](#Body) | `body` | Either `Body.Mercury` or `Body.Venus`. Any other value will result in an exception. To find the best viewing opportunites for planets farther from the Sun than the Earth is (Mars through Pluto) use #SearchRelativeLongitude to find the next opposition event. |
+| [`AstroTime`](#AstroTime) | `startTime` | The date and time at which to begin the search. The maximum elongation event found will always be the first one that occurs after this date and time. |
+
+**Returns:** Either an exception will be thrown, or the function will return a valid value.
 
 <a name="Astronomy.SearchMoonPhase"></a>
 ### Astronomy.SearchMoonPhase(targetLon, startTime, limitDays) &#8658; [`AstroTime`](#AstroTime)
@@ -480,6 +603,14 @@ If you want to iterate through lunar quarters (new moon, first quarter, full moo
 it is much easier to call the functions #SearchMoonQuarter and #NextMoonQuarter.
 This function is useful for finding general phase angles outside those four quarters.
 
+| Type | Parameter | Description |
+| --- | --- | --- |
+| `double` | `targetLon` | The difference in geocentric longitude between the Sun and Moon that specifies the lunar phase being sought. This can be any value in the range [0, 360). Certain values have conventional names: 0 = new moon, 90 = first quarter, 180 = full moon, 270 = third quarter. |
+| [`AstroTime`](#AstroTime) | `startTime` | The beginning of the time window in which to search for the Moon reaching the specified phase. |
+| `double` | `limitDays` | The number of days after `startTime` that limits the time window for the search. |
+
+**Returns:** If successful, returns the date and time the moon reaches the phase specified by `targetlon`. This function will return null if the phase does not occur within `limitDays` of `startTime`; that is, if the search window is too small.
+
 <a name="Astronomy.SearchMoonQuarter"></a>
 ### Astronomy.SearchMoonQuarter(startTime) &#8658; [`MoonQuarterInfo`](#MoonQuarterInfo)
 
@@ -492,6 +623,12 @@ after the specified date and time.
 
 To continue iterating through consecutive lunar quarters, call this function once,
 followed by calls to #NextMoonQuarter as many times as desired.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`AstroTime`](#AstroTime) | `startTime` | The date and time at which to start the search. |
+
+**Returns:** A #MoonQuarterInfo structure reporting the next quarter phase and the time it will occur.
 
 <a name="Astronomy.SearchPeakMagnitude"></a>
 ### Astronomy.SearchPeakMagnitude(body, startTime) &#8658; [`IllumInfo`](#IllumInfo)
@@ -508,6 +645,13 @@ The Moon reaches peak magnitude at full moon, which can be found using
 #Astronomy.SearchMoonQuarter or #Astronomy.SearchMoonPhase.
 The Sun reaches peak magnitude at perihelion, which occurs each year in January.
 However, the difference is minor and has little practical value.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Body`](#Body) | `body` | Currently only `Body.Venus` is allowed. Any other value causes an exception. See remarks above for more details. |
+| [`AstroTime`](#AstroTime) | `startTime` | The date and time to start searching for the next peak magnitude event. |
+
+**Returns:** See documentation about the return value from #Astronomy.Illumination.
 
 <a name="Astronomy.SearchRelativeLongitude"></a>
 ### Astronomy.SearchRelativeLongitude(body, targetRelLon, startTime) &#8658; [`AstroTime`](#AstroTime)
@@ -541,6 +685,14 @@ Certain astronomical events are defined in terms of relative longitude between t
   from the Earth. This is called *superior conjunction*. Like inferior conjunction, the planet is
   very difficult to see from the Earth. Superior conjunction is possible for any planet other than the Earth.
 
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Body`](#Body) | `body` | A planet other than the Earth. If `body` is `Body.Earth`, `Body.Sun`, or `Body.Moon`, this function throws an exception. |
+| `double` | `targetRelLon` | The desired relative longitude, expressed in degrees. Must be in the range [0, 360). |
+| [`AstroTime`](#AstroTime) | `startTime` | The date and time at which to begin the search. |
+
+**Returns:** If successful, returns the date and time of the relative longitude event. Otherwise this function returns null.
+
 <a name="Astronomy.SearchRiseSet"></a>
 ### Astronomy.SearchRiseSet(body, observer, direction, startTime, limitDays) &#8658; [`AstroTime`](#AstroTime)
 
@@ -563,6 +715,16 @@ This is because the Moon sets nearly an hour later each day due to orbiting the 
 significant amount during each rotation of the Earth.
 Therefore callers must not assume that the function will always succeed.
 
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Body`](#Body) | `body` | The Sun, Moon, or any planet other than the Earth. |
+| [`Observer`](#Observer) | `observer` | The location where observation takes place. |
+| [`Direction`](#Direction) | `direction` | Either `Direction.Rise` to find a rise time or `Direction.Set` to find a set time. |
+| [`AstroTime`](#AstroTime) | `startTime` | The date and time at which to start the search. |
+| `double` | `limitDays` | Limits how many days to search for a rise or set time. To limit a rise or set time to the same day, you can use a value of 1 day. In cases where you want to find the next rise or set time no matter how far in the future (for example, for an observer near the south pole), you can pass in a larger value like 365. |
+
+**Returns:** On success, returns the date and time of the rise or set time as requested. If the function returns `null`, it means the rise or set event does not occur within `limitDays` days of `startTime`. This is a normal condition, not an error.
+
 <a name="Astronomy.SearchSunLongitude"></a>
 ### Astronomy.SearchSunLongitude(targetLon, startTime, limitDays) &#8658; [`AstroTime`](#AstroTime)
 
@@ -579,6 +741,14 @@ The function searches the window of time specified by `startTime` and `startTime
 The search will return an error if the Sun never reaches the longitude `targetLon` or
 if the window is so large that the longitude ranges more than 180 degrees within it.
 It is recommended to keep the window smaller than 10 days when possible.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| `double` | `targetLon` | The desired ecliptic longitude in degrees, relative to the true equinox of date. This may be any value in the range [0, 360), although certain values have conventional meanings: 0 = March equinox, 90 = June solstice, 180 = September equinox, 270 = December solstice. |
+| [`AstroTime`](#AstroTime) | `startTime` | The date and time for starting the search for the desired longitude event. |
+| `double` | `limitDays` | The real-valued number of days, which when added to `startTime`, limits the range of time over which the search looks. It is recommended to keep this value between 1 and 10 days. See remarks above for more details. |
+
+**Returns:** The date and time when the Sun reaches the specified apparent ecliptic longitude.
 
 <a name="Astronomy.Seasons"></a>
 ### Astronomy.Seasons(year) &#8658; [`SeasonsInfo`](#SeasonsInfo)
@@ -605,6 +775,12 @@ hemisphere. The Sun's declination reaches its maximum value at the June solstice
 which defines the beginning of summer in the northern hemisphere and the beginning
 of winter in the southern hemisphere.
 
+| Type | Parameter | Description |
+| --- | --- | --- |
+| `int` | `year` | The calendar year number for which to calculate equinoxes and solstices. The value may be any integer, but only the years 1800 through 2100 have been validated for accuracy: unit testing against data from the United States Naval Observatory confirms that all equinoxes and solstices for that range of years are within 2 minutes of the correct time. |
+
+**Returns:** A #SeasonsInfo structure that contains four #AstroTime values: the March and September equinoxes and the June and December solstices.
+
 <a name="Astronomy.SunPosition"></a>
 ### Astronomy.SunPosition(time) &#8658; [`Ecliptic`](#Ecliptic)
 
@@ -624,4 +800,10 @@ in order to obtain the exact equatorial plane at the given time.
 
 This function can be used for calculating changes of seasons: equinoxes and solstices.
 In fact, the function #Seasons does use this function for that purpose.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`AstroTime`](#AstroTime) | `time` | The date and time for which to calculate the Sun's position. |
+
+**Returns:** The ecliptic coordinates of the Sun using the Earth's true equator of date.
 
