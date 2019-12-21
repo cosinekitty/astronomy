@@ -15,8 +15,7 @@ To get started quickly, here are some [examples](../../demo/csharp/).
 
 - [Topic Index](#topics)
 - [Functions](#functions)
-- [Classes](#classes)
-- [Enumerated Types](#enums)
+- [Types](#types)
 
 ---
 
@@ -791,8 +790,23 @@ In fact, the function #Seasons does use this function for that purpose.
 
 ---
 
-<a name="classes"></a>
-## Classes
+<a name="types"></a>
+## Types
+
+---
+
+<a name="Aberration"></a>
+## `enum Aberration`
+
+---
+
+<a name="ApsisInfo"></a>
+## `struct ApsisInfo`
+
+---
+
+<a name="ApsisKind"></a>
+## `enum ApsisKind`
 
 ---
 
@@ -836,6 +850,30 @@ according to the historical and predictive Delta-T model provided by the
 
 ---
 
+<a name="AstroVector"></a>
+## `struct AstroVector`
+
+### member functions
+
+<a name="AstroVector.Length"></a>
+### AstroVector.Length() &#8658; `double`
+
+**Calculates the total distance in AU represented by this vector.**
+
+**Returns:** The nonnegative length of the Cartisian vector in AU.
+
+---
+
+<a name="Body"></a>
+## `enum Body`
+
+---
+
+<a name="Direction"></a>
+## `enum Direction`
+
+---
+
 <a name="EarthNotAllowedException"></a>
 ## `class EarthNotAllowedException`
 
@@ -846,13 +884,43 @@ according to the historical and predictive Delta-T model provided by the
 
 ---
 
+<a name="ElongationInfo"></a>
+## `struct ElongationInfo`
+
+---
+
+<a name="EquatorEpoch"></a>
+## `enum EquatorEpoch`
+
+---
+
 <a name="Equatorial"></a>
 ## `class Equatorial`
 
 ---
 
+<a name="HourAngleInfo"></a>
+## `struct HourAngleInfo`
+
+---
+
+<a name="IllumInfo"></a>
+## `struct IllumInfo`
+
+---
+
+<a name="MoonQuarterInfo"></a>
+## `struct MoonQuarterInfo`
+
+---
+
 <a name="Observer"></a>
 ## `class Observer`
+
+---
+
+<a name="Refraction"></a>
+## `enum Refraction`
 
 ---
 
@@ -871,6 +939,21 @@ according to the historical and predictive Delta-T model provided by the
 | [`AstroTime`](#AstroTime) | `time` | The time at which to evaluate the function. |
 
 **Returns:** The floating point value of the function at the specified time.
+
+---
+
+<a name="SeasonsInfo"></a>
+## `struct SeasonsInfo`
+
+---
+
+<a name="Topocentric"></a>
+## `struct Topocentric`
+
+---
+
+<a name="Visibility"></a>
+## `enum Visibility`
 
 ---
 

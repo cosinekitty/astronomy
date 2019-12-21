@@ -15,8 +15,7 @@ To get started quickly, here are some [examples](../../demo/csharp/).
 
 - [Topic Index](#topics)
 - [Functions](#functions)
-- [Classes](#classes)
-- [Enumerated Types](#enums)
+- [Types](#types)
 
 ---
 

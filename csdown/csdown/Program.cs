@@ -65,24 +65,32 @@ namespace csdown
             // The classes other than "Astronomy" are listed one by one in the "classes" section.
             sb.AppendLine("---");
             sb.AppendLine();
-            AppendSectionHeader(sb, "Classes");
-            Type[] otherClassList = asm.GetExportedTypes()
-                .Where(c => c.Name != "Astronomy" && c.IsClass)
+            AppendSectionHeader(sb, "Types");
+            Type[] typeList = asm.GetExportedTypes()
+                .Where(c => c.Name != "Astronomy")
                 .OrderBy(c => c.Name.ToUpperInvariant())
                 .ToArray();
 
-            foreach (Type c in otherClassList)
-                AppendClassMarkdown(sb, cinfo, c);
+            foreach (Type c in typeList)
+                AppendTypeMarkdown(sb, cinfo, c);
         }
 
-        private static void AppendClassMarkdown(StringBuilder sb, CodeInfo cinfo, Type c)
+        private static void AppendTypeMarkdown(StringBuilder sb, CodeInfo cinfo, Type type)
         {
-            sb.AppendLine("<a name=\"" + c.Name + "\"></a>");
-            sb.AppendLine("## `class " + c.Name + "`");
+            string kind;
+            if (type.IsClass)
+                kind = "class";
+            else if (type.IsEnum)
+                kind = "enum";
+            else
+                kind = "struct";
+
+            sb.AppendLine("<a name=\"" + type.Name + "\"></a>");
+            sb.AppendLine("## `" + kind + " " + type.Name + "`");
             sb.AppendLine();
 
-            MethodInfo[] funcs = c.GetMethods()
-                .Where(m => m.IsPublic && m.DeclaringType == c)
+            MethodInfo[] funcs = type.GetMethods()
+                .Where(m => m.IsPublic && m.DeclaringType == type)
                 .OrderBy(m => m.Name.ToUpperInvariant())
                 .ToArray();
 
