@@ -127,10 +127,15 @@ namespace csdown
             return table[id];
         }
 
-        internal CodeItem FindField(FieldInfo f)
+        public CodeItem FindField(FieldInfo f)
         {
             string id = f.DeclaringType.FullName + "." + f.Name;
             return table[id];
+        }
+
+        public CodeItem FindType(Type t)
+        {
+            return table[t.FullName];
         }
     }
 }

@@ -73,11 +73,25 @@ namespace csdown
             else
                 kind = "struct";
 
+            CodeItem typeItem = cinfo.FindType(type);
+
             // Header
 
             sb.AppendLine("<a name=\"" + type.Name + "\"></a>");
             sb.AppendLine("## `" + kind + " " + type.Name + "`");
             sb.AppendLine();
+
+            if (!string.IsNullOrWhiteSpace(typeItem.Summary))
+            {
+                sb.AppendLine("**" + typeItem.Summary + "**");
+                sb.AppendLine();
+            }
+
+            if (!string.IsNullOrWhiteSpace(typeItem.Remarks))
+            {
+                sb.AppendLine(typeItem.Remarks);
+                sb.AppendLine();
+            }
 
             if (type.IsEnum)
             {

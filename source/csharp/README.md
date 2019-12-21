@@ -798,6 +798,24 @@ In fact, the function #Seasons does use this function for that purpose.
 <a name="Aberration"></a>
 ## `enum Aberration`
 
+**Aberration calculation options.**
+
+[Aberration](https://en.wikipedia.org/wiki/Aberration_of_light) is an effect
+causing the apparent direction of an observed body to be shifted due to transverse
+movement of the Earth with respect to the rays of light coming from that body.
+This angular correction can be anywhere from 0 to about 20 arcseconds,
+depending on the position of the observed body relative to the instantaneous
+velocity vector of the Earth.
+
+Some Astronomy Engine functions allow optional correction for aberration by
+passing in a value of this enumerated type.
+
+Aberration correction is useful to improve accuracy of coordinates of
+apparent locations of bodies seen from the Earth.
+However, because aberration affects not only the observed body (such as a planet)
+but the surrounding stars, aberration may be unhelpful (for example)
+for determining exactly when a planet crosses from one constellation to another.
+
 | Value | Description |
 | --- | --- |
 | `Corrected` | Request correction for aberration. |
@@ -807,6 +825,20 @@ In fact, the function #Seasons does use this function for that purpose.
 
 <a name="ApsisInfo"></a>
 ## `struct ApsisInfo`
+
+**An apsis event: pericenter (closest approach) or apocenter (farthest distance).**
+
+For the Moon orbiting the Earth, or a planet orbiting the Sun, an *apsis* is an
+event where the orbiting body reaches its closest or farthest point from the primary body.
+The closest approach is called *pericenter* and the farthest point is *apocenter*.
+
+More specific terminology is common for particular orbiting bodies.
+The Moon's closest approach to the Earth is called *perigee* and its farthest
+point is called *apogee*. The closest approach of a planet to the Sun is called
+*perihelion* and the furthest point is called *aphelion*.
+
+This data structure is returned by #Astronomy.SearchLunarApsis and #Astronomy.NextLunarApsis
+to iterate through consecutive alternating perigees and apogees.
 
 | Type | Name | Description |
 | --- | --- | --- |
@@ -820,6 +852,8 @@ In fact, the function #Seasons does use this function for that purpose.
 <a name="ApsisKind"></a>
 ## `enum ApsisKind`
 
+**The type of apsis: pericenter (closest approach) or apocenter (farthest distance).**
+
 | Value | Description |
 | --- | --- |
 | `Pericenter` | The body is at its closest approach to the object it orbits. |
@@ -829,6 +863,8 @@ In fact, the function #Seasons does use this function for that purpose.
 
 <a name="AstroTime"></a>
 ## `class AstroTime`
+
+**A date and time used for astronomical calculations.**
 
 | Type | Name | Description |
 | --- | --- | --- |
@@ -875,6 +911,8 @@ according to the historical and predictive Delta-T model provided by the
 <a name="AstroVector"></a>
 ## `struct AstroVector`
 
+**A 3D Cartesian vector whose components are expressed in Astronomical Units (AU).**
+
 | Type | Name | Description |
 | --- | --- | --- |
 | `double` | `x` | The Cartesian x-coordinate of the vector in AU. |
@@ -896,6 +934,8 @@ according to the historical and predictive Delta-T model provided by the
 <a name="Body"></a>
 ## `enum Body`
 
+**The enumeration of celestial bodies supported by Astronomy Engine.**
+
 | Value | Description |
 | --- | --- |
 | `Invalid` | A placeholder value representing an invalid or unknown celestial body. |
@@ -916,6 +956,8 @@ according to the historical and predictive Delta-T model provided by the
 <a name="Direction"></a>
 ## `enum Direction`
 
+**Selects whether to search for a rising event or a setting event for a celestial body.**
+
 | Value | Description |
 | --- | --- |
 | `Rise` | Indicates a rising event: a celestial body is observed to rise above the horizon by an observer on the Earth. |
@@ -926,10 +968,20 @@ according to the historical and predictive Delta-T model provided by the
 <a name="EarthNotAllowedException"></a>
 ## `class EarthNotAllowedException`
 
+**This exception is thrown by certain Astronomy Engine functions
+when an invalid attempt is made to use the Earth as the observed
+celestial body. Usually this happens for cases where the Earth itself
+is the location of the observer.**
+
 ---
 
 <a name="Ecliptic"></a>
 ## `class Ecliptic`
+
+**Ecliptic angular and Cartesian coordinates.**
+
+Coordinates of a celestial body as seen from the center of the Sun (heliocentric),
+oriented with respect to the plane of the Earth's orbit around the Sun (the ecliptic).
 
 | Type | Name | Description |
 | --- | --- | --- |
@@ -944,6 +996,10 @@ according to the historical and predictive Delta-T model provided by the
 <a name="ElongationInfo"></a>
 ## `struct ElongationInfo`
 
+**Contains information about the visibility of a celestial body at a given date and time.
+See #Elongation for more detailed information about the members of this structure.
+See also #SearchMaxElongation for how to search for maximum elongation events.**
+
 | Type | Name | Description |
 | --- | --- | --- |
 | [`AstroTime`](#AstroTime) | `time` | The date and time of the observation. |
@@ -956,6 +1012,21 @@ according to the historical and predictive Delta-T model provided by the
 <a name="EquatorEpoch"></a>
 ## `enum EquatorEpoch`
 
+**Selects the date for which the Earth's equator is to be used for representing equatorial coordinates.**
+
+The Earth's equator is not always in the same plane due to precession and nutation.
+
+Sometimes it is useful to have a fixed plane of reference for equatorial coordinates
+across different calendar dates.  In these cases, a fixed *epoch*, or reference time,
+is helpful. Astronomy Engine provides the J2000 epoch for such cases.  This refers
+to the plane of the Earth's orbit as it was on noon UTC on 1 January 2000.
+
+For some other purposes, it is more helpful to represent coordinates using the Earth's
+equator exactly as it is on that date. For example, when calculating rise/set times
+or horizontal coordinates, it is most accurate to use the orientation of the Earth's
+equator at that same date and time. For these uses, Astronomy Engine allows *of-date*
+calculations.
+
 | Value | Description |
 | --- | --- |
 | `J2000` | Represent equatorial coordinates in the J2000 epoch. |
@@ -965,6 +1036,12 @@ according to the historical and predictive Delta-T model provided by the
 
 <a name="Equatorial"></a>
 ## `class Equatorial`
+
+**Equatorial angular coordinates.**
+
+Coordinates of a celestial body as seen from the Earth
+(geocentric or topocentric, depending on context),
+oriented with respect to the projection of the Earth's equator onto the sky.
 
 | Type | Name | Description |
 | --- | --- | --- |
@@ -977,6 +1054,11 @@ according to the historical and predictive Delta-T model provided by the
 <a name="HourAngleInfo"></a>
 ## `struct HourAngleInfo`
 
+**Information about a celestial body crossing a specific hour angle.**
+
+Returned by the function #SearchHourAngle to report information about
+a celestial body crossing a certain hour angle as seen by a specified topocentric observer.
+
 | Type | Name | Description |
 | --- | --- | --- |
 | [`AstroTime`](#AstroTime) | `time` | The date and time when the body crosses the specified hour angle. |
@@ -986,6 +1068,11 @@ according to the historical and predictive Delta-T model provided by the
 
 <a name="IllumInfo"></a>
 ## `struct IllumInfo`
+
+**Information about the brightness and illuminated shape of a celestial body.**
+
+Returned by the functions #Astronomy.Illumination and #Astronomy.SearchPeakMagnitude
+to report the visual magnitude and illuminated fraction of a celestial body at a given date and time.
 
 | Type | Name | Description |
 | --- | --- | --- |
@@ -1000,6 +1087,8 @@ according to the historical and predictive Delta-T model provided by the
 <a name="MoonQuarterInfo"></a>
 ## `struct MoonQuarterInfo`
 
+**A lunar quarter event (new moon, first quarter, full moon, or third quarter) along with its date and time.**
+
 | Type | Name | Description |
 | --- | --- | --- |
 | `int` | `quarter` | 0=new moon, 1=first quarter, 2=full moon, 3=third quarter. |
@@ -1009,6 +1098,11 @@ according to the historical and predictive Delta-T model provided by the
 
 <a name="Observer"></a>
 ## `class Observer`
+
+**The location of an observer on (or near) the surface of the Earth.**
+
+This structure is passed to functions that calculate phenomena as observed
+from a particular place on the Earth.
 
 | Type | Name | Description |
 | --- | --- | --- |
@@ -1021,6 +1115,8 @@ according to the historical and predictive Delta-T model provided by the
 <a name="Refraction"></a>
 ## `enum Refraction`
 
+**Selects whether to correct for atmospheric refraction, and if so, how.**
+
 | Value | Description |
 | --- | --- |
 | `None` | No atmospheric refraction correction (airless). |
@@ -1031,6 +1127,9 @@ according to the historical and predictive Delta-T model provided by the
 
 <a name="SearchContext"></a>
 ## `class SearchContext`
+
+**Represents a function whose ascending root is to be found.
+See #Search.**
 
 ### member functions
 
@@ -1050,6 +1149,9 @@ according to the historical and predictive Delta-T model provided by the
 <a name="SeasonsInfo"></a>
 ## `struct SeasonsInfo`
 
+**The dates and times of changes of season for a given calendar year.
+Call #Seasons to calculate this data structure for a given year.**
+
 | Type | Name | Description |
 | --- | --- | --- |
 | [`AstroTime`](#AstroTime) | `mar_equinox` | The date and time of the March equinox for the specified year. |
@@ -1062,6 +1164,12 @@ according to the historical and predictive Delta-T model provided by the
 <a name="Topocentric"></a>
 ## `struct Topocentric`
 
+**Coordinates of a celestial body as seen by a topocentric observer.**
+
+Contains horizontal and equatorial coordinates seen by an observer on or near
+the surface of the Earth (a topocentric observer).
+Optionally corrected for atmospheric refraction.
+
 | Type | Name | Description |
 | --- | --- | --- |
 | `double` | `azimuth` | Compass direction around the horizon in degrees. 0=North, 90=East, 180=South, 270=West. |
@@ -1073,6 +1181,8 @@ according to the historical and predictive Delta-T model provided by the
 
 <a name="Visibility"></a>
 ## `enum Visibility`
+
+**Indicates whether a body (especially Mercury or Venus) is best seen in the morning or evening.**
 
 | Value | Description |
 | --- | --- |
