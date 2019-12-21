@@ -60,7 +60,7 @@ namespace csdown
             return line.Length;
         }
 
-        private static string Linear(string text)
+        internal static string Linear(string text)
         {
             if (text == null)
                 return "";
@@ -124,6 +124,12 @@ namespace csdown
             if (parms.Length > 0)
                 id += "(" + string.Join(",", parms.Select(p => p.ParameterType.FullName)) + ")";
 
+            return table[id];
+        }
+
+        internal CodeItem FindEnumValue(FieldInfo f)
+        {
+            string id = f.DeclaringType.FullName + "." + f.Name;
             return table[id];
         }
     }

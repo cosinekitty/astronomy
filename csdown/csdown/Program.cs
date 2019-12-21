@@ -85,9 +85,44 @@ namespace csdown
             else
                 kind = "struct";
 
+            // Header
+
             sb.AppendLine("<a name=\"" + type.Name + "\"></a>");
             sb.AppendLine("## `" + kind + " " + type.Name + "`");
             sb.AppendLine();
+
+            if (type.IsEnum)
+            {
+                FieldInfo[] fields = type.GetFields().Where(f => f.IsLiteral).ToArray();
+                if (fields.Length > 0)
+                {
+                    sb.AppendLine("| Value | Description |");
+                    sb.AppendLine("| --- | --- |");
+                    foreach (FieldInfo f in fields)
+                        AppendEnumValueMarkdown(sb, cinfo, f);
+                }
+            }
+            else
+            {
+                Console.Write("");
+            }
+
+            // Member variables
+
+#if false
+            foreach (MemberInfo m in type.GetFields()
+            {
+                if (m.DeclaringType == type)
+                {
+                    if (type.IsEnum)
+                        AppendEnumValueMarkdown(sb, cinfo, m);
+                    else
+                        AppendMemberVariableMarkdown(sb, cinfo, m);
+                }
+            }
+#endif
+
+            // Member functions
 
             MethodInfo[] funcs = type.GetMethods()
                 .Where(m => m.IsPublic && m.DeclaringType == type)
@@ -105,6 +140,21 @@ namespace csdown
 
             sb.AppendLine("---");
             sb.AppendLine();
+        }
+
+        private static void AppendMemberVariableMarkdown(StringBuilder sb, CodeInfo cinfo, MemberInfo m)
+        {
+            throw new NotImplementedException();
+        }
+
+        private static void AppendEnumValueMarkdown(StringBuilder sb, CodeInfo cinfo, FieldInfo f)
+        {
+            CodeItem item = cinfo.FindEnumValue(f);
+            sb.Append("| `");
+            sb.Append(f.Name);
+            sb.Append("` | ");
+            sb.Append(CodeInfo.Linear(item.Summary));
+            sb.AppendLine(" |");
         }
 
         private static void AppendSectionHeader(StringBuilder sb, string name)

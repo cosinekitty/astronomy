@@ -798,6 +798,10 @@ In fact, the function #Seasons does use this function for that purpose.
 <a name="Aberration"></a>
 ## `enum Aberration`
 
+| Value | Description |
+| --- | --- |
+| `Corrected` | Request correction for aberration. |
+| `None` | Do not correct for aberration. |
 ---
 
 <a name="ApsisInfo"></a>
@@ -808,6 +812,10 @@ In fact, the function #Seasons does use this function for that purpose.
 <a name="ApsisKind"></a>
 ## `enum ApsisKind`
 
+| Value | Description |
+| --- | --- |
+| `Pericenter` | The body is at its closest approach to the object it orbits. |
+| `Apocenter` | The body is at its farthest distance from the object it orbits. |
 ---
 
 <a name="AstroTime"></a>
@@ -867,11 +875,29 @@ according to the historical and predictive Delta-T model provided by the
 <a name="Body"></a>
 ## `enum Body`
 
+| Value | Description |
+| --- | --- |
+| `Invalid` | A placeholder value representing an invalid or unknown celestial body. |
+| `Mercury` | The planet Mercury. |
+| `Venus` | The planet Venus. |
+| `Earth` | The planet Earth. Some functions that accept a `Body` parameter will fail if passed this value because they assume that an observation is being made from the Earth, and therefore the Earth is not a target of observation. |
+| `Mars` | The planet Mars. |
+| `Jupiter` | The planet Jupiter. |
+| `Saturn` | The planet Saturn. |
+| `Uranus` | The planet Uranus. |
+| `Neptune` | The planet Neptune. |
+| `Pluto` | The planet Pluto. |
+| `Sun` | The Sun. |
+| `Moon` | The Earth's natural satellite, the Moon. |
 ---
 
 <a name="Direction"></a>
 ## `enum Direction`
 
+| Value | Description |
+| --- | --- |
+| `Rise` | Indicates a rising event: a celestial body is observed to rise above the horizon by an observer on the Earth. |
+| `Set` | Indicates a setting event: a celestial body is observed to sink below the horizon by an observer on the Earth. |
 ---
 
 <a name="EarthNotAllowedException"></a>
@@ -892,6 +918,10 @@ according to the historical and predictive Delta-T model provided by the
 <a name="EquatorEpoch"></a>
 ## `enum EquatorEpoch`
 
+| Value | Description |
+| --- | --- |
+| `J2000` | Represent equatorial coordinates in the J2000 epoch. |
+| `OfDate` | Represent equatorial coordinates using the Earth's equator at the given date and time. |
 ---
 
 <a name="Equatorial"></a>
@@ -922,6 +952,11 @@ according to the historical and predictive Delta-T model provided by the
 <a name="Refraction"></a>
 ## `enum Refraction`
 
+| Value | Description |
+| --- | --- |
+| `None` | No atmospheric refraction correction (airless). |
+| `Normal` | Recommended correction for standard atmospheric refraction. |
+| `JplHor` | Used only for compatibility testing with JPL Horizons online tool. |
 ---
 
 <a name="SearchContext"></a>
@@ -955,5 +990,9 @@ according to the historical and predictive Delta-T model provided by the
 <a name="Visibility"></a>
 ## `enum Visibility`
 
+| Value | Description |
+| --- | --- |
+| `Morning` | The body is best visible in the morning, before sunrise. |
+| `Evening` | The body is best visible in the evening, after sunset. |
 ---
 
