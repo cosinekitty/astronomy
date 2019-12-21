@@ -802,10 +802,18 @@ In fact, the function #Seasons does use this function for that purpose.
 | --- | --- |
 | `Corrected` | Request correction for aberration. |
 | `None` | Do not correct for aberration. |
+
 ---
 
 <a name="ApsisInfo"></a>
 ## `struct ApsisInfo`
+
+| Type | Name | Description |
+| --- | --- | --- |
+| [`AstroTime`](#AstroTime) | `time` | The date and time of the apsis. |
+| [`ApsisKind`](#ApsisKind) | `kind` | Whether this is a pericenter or apocenter event. |
+| `double` | `dist_au` | The distance between the centers of the bodies in astronomical units. |
+| `double` | `dist_km` | The distance between the centers of the bodies in kilometers. |
 
 ---
 
@@ -816,10 +824,16 @@ In fact, the function #Seasons does use this function for that purpose.
 | --- | --- |
 | `Pericenter` | The body is at its closest approach to the object it orbits. |
 | `Apocenter` | The body is at its farthest distance from the object it orbits. |
+
 ---
 
 <a name="AstroTime"></a>
 ## `class AstroTime`
+
+| Type | Name | Description |
+| --- | --- | --- |
+| `double` | `ut` | UT1/UTC number of days since noon on January 1, 2000. |
+| `double` | `tt` | Terrestrial Time days since noon on January 1, 2000. |
 
 ### member functions
 
@@ -861,6 +875,13 @@ according to the historical and predictive Delta-T model provided by the
 <a name="AstroVector"></a>
 ## `struct AstroVector`
 
+| Type | Name | Description |
+| --- | --- | --- |
+| `double` | `x` | The Cartesian x-coordinate of the vector in AU. |
+| `double` | `y` | The Cartesian y-coordinate of the vector in AU. |
+| `double` | `z` | The Cartesian z-coordinate of the vector in AU. |
+| [`AstroTime`](#AstroTime) | `t` | The date and time at which this vector is valid. |
+
 ### member functions
 
 <a name="AstroVector.Length"></a>
@@ -889,6 +910,7 @@ according to the historical and predictive Delta-T model provided by the
 | `Pluto` | The planet Pluto. |
 | `Sun` | The Sun. |
 | `Moon` | The Earth's natural satellite, the Moon. |
+
 ---
 
 <a name="Direction"></a>
@@ -898,6 +920,7 @@ according to the historical and predictive Delta-T model provided by the
 | --- | --- |
 | `Rise` | Indicates a rising event: a celestial body is observed to rise above the horizon by an observer on the Earth. |
 | `Set` | Indicates a setting event: a celestial body is observed to sink below the horizon by an observer on the Earth. |
+
 ---
 
 <a name="EarthNotAllowedException"></a>
@@ -908,10 +931,25 @@ according to the historical and predictive Delta-T model provided by the
 <a name="Ecliptic"></a>
 ## `class Ecliptic`
 
+| Type | Name | Description |
+| --- | --- | --- |
+| `double` | `ex` | Cartesian x-coordinate: in the direction of the equinox along the ecliptic plane. |
+| `double` | `ey` | Cartesian y-coordinate: in the ecliptic plane 90 degrees prograde from the equinox. |
+| `double` | `ez` | Cartesian z-coordinate: perpendicular to the ecliptic plane. Positive is north. |
+| `double` | `elat` | Latitude in degrees north (positive) or south (negative) of the ecliptic plane. |
+| `double` | `elon` | Longitude in degrees around the ecliptic plane prograde from the equinox. |
+
 ---
 
 <a name="ElongationInfo"></a>
 ## `struct ElongationInfo`
+
+| Type | Name | Description |
+| --- | --- | --- |
+| [`AstroTime`](#AstroTime) | `time` | The date and time of the observation. |
+| [`Visibility`](#Visibility) | `visibility` | Whether the body is best seen in the morning or the evening. |
+| `double` | `elongation` | The angle in degrees between the body and the Sun, as seen from the Earth. |
+| `double` | `ecliptic_separation` | The difference between the ecliptic longitudes of the body and the Sun, as seen from the Earth. |
 
 ---
 
@@ -922,30 +960,61 @@ according to the historical and predictive Delta-T model provided by the
 | --- | --- |
 | `J2000` | Represent equatorial coordinates in the J2000 epoch. |
 | `OfDate` | Represent equatorial coordinates using the Earth's equator at the given date and time. |
+
 ---
 
 <a name="Equatorial"></a>
 ## `class Equatorial`
+
+| Type | Name | Description |
+| --- | --- | --- |
+| `double` | `ra` | Right ascension in sidereal hours. |
+| `double` | `dec` | Declination in degrees. |
+| `double` | `dist` | Distance to the celestial body in AU. |
 
 ---
 
 <a name="HourAngleInfo"></a>
 ## `struct HourAngleInfo`
 
+| Type | Name | Description |
+| --- | --- | --- |
+| [`AstroTime`](#AstroTime) | `time` | The date and time when the body crosses the specified hour angle. |
+| [`Topocentric`](#Topocentric) | `hor` | Apparent coordinates of the body at the time it crosses the specified hour angle. |
+
 ---
 
 <a name="IllumInfo"></a>
 ## `struct IllumInfo`
+
+| Type | Name | Description |
+| --- | --- | --- |
+| [`AstroTime`](#AstroTime) | `time` | The date and time of the observation. |
+| `double` | `mag` | The visual magnitude of the body. Smaller values are brighter. |
+| `double` | `phase_angle` | The angle in degrees between the Sun and the Earth, as seen from the body. Indicates the body's phase as seen from the Earth. |
+| `double` | `helio_dist` | The distance between the Sun and the body at the observation time. |
+| `double` | `ring_tilt` | For Saturn, the tilt angle in degrees of its rings as seen from Earth. For all other bodies, 0. |
 
 ---
 
 <a name="MoonQuarterInfo"></a>
 ## `struct MoonQuarterInfo`
 
+| Type | Name | Description |
+| --- | --- | --- |
+| `int` | `quarter` | 0=new moon, 1=first quarter, 2=full moon, 3=third quarter. |
+| [`AstroTime`](#AstroTime) | `time` | The date and time of the lunar quarter. |
+
 ---
 
 <a name="Observer"></a>
 ## `class Observer`
+
+| Type | Name | Description |
+| --- | --- | --- |
+| `double` | `latitude` | Geographic latitude in degrees north (positive) or south (negative) of the equator. |
+| `double` | `longitude` | Geographic longitude in degrees east (positive) or west (negative) of the prime meridian at Greenwich, England. |
+| `double` | `height` | The height above (positive) or below (negative) sea level, expressed in meters. |
 
 ---
 
@@ -957,6 +1026,7 @@ according to the historical and predictive Delta-T model provided by the
 | `None` | No atmospheric refraction correction (airless). |
 | `Normal` | Recommended correction for standard atmospheric refraction. |
 | `JplHor` | Used only for compatibility testing with JPL Horizons online tool. |
+
 ---
 
 <a name="SearchContext"></a>
@@ -980,10 +1050,24 @@ according to the historical and predictive Delta-T model provided by the
 <a name="SeasonsInfo"></a>
 ## `struct SeasonsInfo`
 
+| Type | Name | Description |
+| --- | --- | --- |
+| [`AstroTime`](#AstroTime) | `mar_equinox` | The date and time of the March equinox for the specified year. |
+| [`AstroTime`](#AstroTime) | `jun_solstice` | The date and time of the June soltice for the specified year. |
+| [`AstroTime`](#AstroTime) | `sep_equinox` | The date and time of the September equinox for the specified year. |
+| [`AstroTime`](#AstroTime) | `dec_solstice` | The date and time of the December solstice for the specified year. |
+
 ---
 
 <a name="Topocentric"></a>
 ## `struct Topocentric`
+
+| Type | Name | Description |
+| --- | --- | --- |
+| `double` | `azimuth` | Compass direction around the horizon in degrees. 0=North, 90=East, 180=South, 270=West. |
+| `double` | `altitude` | Angle in degrees above (positive) or below (negative) the observer's horizon. |
+| `double` | `ra` | Right ascension in sidereal hours. |
+| `double` | `dec` | Declination in degrees. |
 
 ---
 
@@ -994,5 +1078,6 @@ according to the historical and predictive Delta-T model provided by the
 | --- | --- |
 | `Morning` | The body is best visible in the morning, before sunrise. |
 | `Evening` | The body is best visible in the evening, after sunset. |
+
 ---
 

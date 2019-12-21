@@ -127,7 +127,7 @@ namespace csdown
             return table[id];
         }
 
-        internal CodeItem FindEnumValue(FieldInfo f)
+        internal CodeItem FindField(FieldInfo f)
         {
             string id = f.DeclaringType.FullName + "." + f.Name;
             return table[id];

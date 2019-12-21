@@ -20,19 +20,7 @@ namespace csdown
             string inAssemblyFileName = args[1];
             string inXmlFileName = args[2];
             string outMarkdownFileName = args[3];
-#if true
             return GenerateMarkdown(inPrefixFileName, inAssemblyFileName, inXmlFileName, outMarkdownFileName);
-#else
-            try
-            {
-                return GenerateMarkdown(inPrefixFileName, inAssemblyFileName, inXmlFileName, outMarkdownFileName);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("EXCEPTION(csdown): {0}", ex);
-                return 1;
-            }
-#endif
         }
 
         static int GenerateMarkdown(string inPrefixFileName, string inAssemblyFileName, string inXmlFileName, string outMarkdownFileName)
@@ -93,6 +81,7 @@ namespace csdown
 
             if (type.IsEnum)
             {
+                // Dump enum values.
                 FieldInfo[] fields = type.GetFields().Where(f => f.IsLiteral).ToArray();
                 if (fields.Length > 0)
                 {
@@ -100,27 +89,23 @@ namespace csdown
                     sb.AppendLine("| --- | --- |");
                     foreach (FieldInfo f in fields)
                         AppendEnumValueMarkdown(sb, cinfo, f);
+                    sb.AppendLine();
                 }
             }
             else
             {
-                Console.Write("");
-            }
-
-            // Member variables
-
-#if false
-            foreach (MemberInfo m in type.GetFields()
-            {
-                if (m.DeclaringType == type)
+                // Dump struct/class fields.
+                FieldInfo[] fields = type.GetFields();
+                if (fields.Length > 0)
                 {
-                    if (type.IsEnum)
-                        AppendEnumValueMarkdown(sb, cinfo, m);
-                    else
-                        AppendMemberVariableMarkdown(sb, cinfo, m);
+                    sb.AppendLine("| Type | Name | Description |");
+                    sb.AppendLine("| --- | --- | --- |");
+                    foreach (FieldInfo f in fields)
+                        if (f.DeclaringType == type)
+                            AppendMemberVariableMarkdown(sb, cinfo, f);
+                    sb.AppendLine();
                 }
             }
-#endif
 
             // Member functions
 
@@ -142,14 +127,21 @@ namespace csdown
             sb.AppendLine();
         }
 
-        private static void AppendMemberVariableMarkdown(StringBuilder sb, CodeInfo cinfo, MemberInfo m)
+        private static void AppendMemberVariableMarkdown(StringBuilder sb, CodeInfo cinfo, FieldInfo f)
         {
-            throw new NotImplementedException();
+            CodeItem item = cinfo.FindField(f);
+            sb.Append("| ");
+            sb.Append(TypeMarkdown(f.FieldType));
+            sb.Append(" | `");
+            sb.Append(f.Name);
+            sb.Append("` | ");
+            sb.Append(CodeInfo.Linear(item.Summary));
+            sb.AppendLine(" |");
         }
 
         private static void AppendEnumValueMarkdown(StringBuilder sb, CodeInfo cinfo, FieldInfo f)
         {
-            CodeItem item = cinfo.FindEnumValue(f);
+            CodeItem item = cinfo.FindField(f);
             sb.Append("| `");
             sb.Append(f.Name);
             sb.Append("` | ");
