@@ -225,15 +225,10 @@ namespace csdown
             }
         }
 
-        private static string InternalLink(string s)
-        {
-            return string.Format("[`{0}`](#{0})", s);
-        }
-
         private static string TypeMarkdown(Type t)
         {
             if (t.FullName.StartsWith("CosineKitty."))
-                return InternalLink(t.Name);
+                return CodeInfo.InternalLink(t.Name);
 
             switch (t.FullName)
             {

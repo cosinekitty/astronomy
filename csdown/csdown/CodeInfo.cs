@@ -64,14 +64,26 @@ namespace csdown
         {
             if (text == null)
                 return "";
-            return Regex.Replace(text.Trim(), @"\s+", " ");
+            return Regex.Replace(FixLinks(text.Trim()), @"\s+", " ");
+        }
+
+        internal static string InternalLink(string s)
+        {
+            return string.Format("[`{0}`](#{0})", s);
+        }
+
+        private static string FixLinks(string text)
+        {
+            if (text == null)
+                return "";
+            return Regex.Replace(text, @"#([A-Za-z][A-Za-z0-9_]*)", m => InternalLink(m.Groups[1].Value));
         }
 
         private static string Clean(string text)
         {
             // Find the common amount of space on the left of each line.
             // Remove that amount of space from all lines, but no more.
-            string[] lines = text.Split('\n');
+            string[] lines = FixLinks(text).Split('\n');
 
             // Remove any blank leading lines and any blank trailing lines.
             // Leave blank interior lines intact.
