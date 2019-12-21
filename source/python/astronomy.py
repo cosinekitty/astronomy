@@ -3379,7 +3379,7 @@ def Equator(body, time, observer, ofdate, aberration):
 
     Returns
     -------
-    EquatorialCoordinates
+    Equatorial
         Equatorial coordinates in the specified frame of reference.
     """
     gc_observer = _geo_pos(time, observer)
@@ -3746,7 +3746,7 @@ def Ecliptic(equ):
 
     Parameters
     ----------
-    equ : EquatorialCoordinates
+    equ : Equatorial
         Equatorial coordinates in the J2000 frame of reference.
 
     Returns

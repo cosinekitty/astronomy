@@ -26,12 +26,14 @@ cd ../../../csdown || Fail "Error changing to csdown directory"
 ./build || exit 1
 dotnet exe/csdown.dll csharp_prefix.md ../generate/dotnet/csharp_test/exe/astronomy.dll ../generate/dotnet/csharp_test/exe/astronomy.xml ../source/csharp/README.md || Fail "Error generating C# documentation."
 cd ../generate || Fail "Error changing back to generate directory"
+./check_internal_links.py $(realpath ../source/csharp/README.md) #|| exit 1
 
 echo "Minifying JavaScript code."
 google-closure-compiler --js ../source/js/astronomy.js --js_output_file ../source/js/astronomy.min.js || Fail "Error minifying astronomy.js"
 
 echo "Generating JS documentation in Markdown format."
 jsdoc2md --separators --template ../jsdoc2md/js.hbs --files ../source/js/astronomy.js > ../source/js/README.md || Fail "Error generating JS documentation."
+./check_internal_links.py $(realpath ../source/js/README.md) || exit 1
 
 if [[ -d html ]]; then
     echo "Generating JS documentation in HTML format for local viewing."
@@ -53,11 +55,13 @@ if [[ -f generate_c_docs ]]; then
     echo "Translating doxygen XML to Markdown."
     node ../../hydrogen/hydrogen.js ../../hydrogen/c_prefix.md ./xml/all.xml || Fail "Error in hydrogen.js"
     cd ../../generate || Fail "Error changing directory back"
+    ./check_internal_links.py $(realpath ../source/c/README.md) || exit 1
 else
     echo "(Skipping generation of C documentation because file generate_c_docs does not exist.)"
 fi
 
 echo "Generating Python documentation."
 python3 ../pydown/pydown.py ../pydown/py_prefix.md ../source/python/astronomy.py ../source/python/README.md || Fail "Error generating Markdown from Python source."
+./check_internal_links.py $(realpath ../source/python/README.md) || exit 1
 
 exit 0

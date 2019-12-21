@@ -139,7 +139,7 @@ const char *Astronomy_BodyName(astro_body_t body)
 /**
  * @brief Returns the #astro_body_t value corresponding to the given English name.
  * @param name One of the following strings: Sun, Moon, Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune, Pluto.
- * @return If `name` is one of the strings (case-sensitive) listed above, the returned value is the corresponding #astro_body_t value, otherwise it is #BODY_INVALID.
+ * @return If `name` is one of the strings (case-sensitive) listed above, the returned value is the corresponding #astro_body_t value, otherwise it is `BODY_INVALID`.
  */
 astro_body_t Astronomy_BodyCode(const char *name)
 {

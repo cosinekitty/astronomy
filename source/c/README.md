@@ -211,7 +211,7 @@ This function calculates the angular separation between the given body and the S
 
 
 
-**Returns:**  If `name` is one of the strings (case-sensitive) listed above, the returned value is the corresponding [`astro_body_t`](#astro_body_t) value, otherwise it is [`BODY_INVALID`](#BODY_INVALID). 
+**Returns:**  If `name` is one of the strings (case-sensitive) listed above, the returned value is the corresponding [`astro_body_t`](#astro_body_t) value, otherwise it is `BODY_INVALID`. 
 
 
 
@@ -1896,7 +1896,7 @@ For some other purposes, it is more helpful to represent coordinates using the E
 
 | Type | Member | Description |
 | ---- | ------ | ----------- |
-| [`astro_status_t`](#astro_status_t) | `status` |  ASTRO_SUCCESS if this struct is valid; otherwise an error code.  |
+| [`astro_status_t`](#astro_status_t) | `status` |  `ASTRO_SUCCESS` if this struct is valid; otherwise an error code.  |
 | `double` | `angle` |  An angle expressed in degrees.  |
 
 
@@ -1917,7 +1917,7 @@ This data structure is returned by [`Astronomy_SearchLunarApsis`](#Astronomy_Sea
 
 | Type | Member | Description |
 | ---- | ------ | ----------- |
-| [`astro_status_t`](#astro_status_t) | `status` |  ASTRO_SUCCESS if this struct is valid; otherwise an error code.  |
+| [`astro_status_t`](#astro_status_t) | `status` |  `ASTRO_SUCCESS` if this struct is valid; otherwise an error code.  |
 | [`astro_time_t`](#astro_time_t) | `time` |  The date and time of the apsis.  |
 | [`astro_apsis_kind_t`](#astro_apsis_kind_t) | `kind` |  Whether this is a pericenter or apocenter event.  |
 | `double` | `dist_au` |  The distance between the centers of the bodies in astronomical units.  |
@@ -1937,7 +1937,7 @@ Coordinates of a celestial body as seen from the center of the Sun (heliocentric
 
 | Type | Member | Description |
 | ---- | ------ | ----------- |
-| [`astro_status_t`](#astro_status_t) | `status` |  ASTRO_SUCCESS if this struct is valid; otherwise an error code.  |
+| [`astro_status_t`](#astro_status_t) | `status` |  `ASTRO_SUCCESS` if this struct is valid; otherwise an error code.  |
 | `double` | `ex` |  Cartesian x-coordinate: in the direction of the equinox along the ecliptic plane.  |
 | `double` | `ey` |  Cartesian y-coordinate: in the ecliptic plane 90 degrees prograde from the equinox.  |
 | `double` | `ez` |  Cartesian z-coordinate: perpendicular to the ecliptic plane. Positive is north.  |
@@ -1956,7 +1956,7 @@ Coordinates of a celestial body as seen from the center of the Sun (heliocentric
 
 | Type | Member | Description |
 | ---- | ------ | ----------- |
-| [`astro_status_t`](#astro_status_t) | `status` |  ASTRO_SUCCESS if this struct is valid; otherwise an error code.  |
+| [`astro_status_t`](#astro_status_t) | `status` |  `ASTRO_SUCCESS` if this struct is valid; otherwise an error code.  |
 | [`astro_time_t`](#astro_time_t) | `time` |  The date and time of the observation.  |
 | [`astro_visibility_t`](#astro_visibility_t) | `visibility` |  Whether the body is best seen in the morning or the evening.  |
 | `double` | `elongation` |  The angle in degrees between the body and the Sun, as seen from the Earth.  |
@@ -1976,7 +1976,7 @@ Coordinates of a celestial body as seen from the Earth (geocentric or topocentri
 
 | Type | Member | Description |
 | ---- | ------ | ----------- |
-| [`astro_status_t`](#astro_status_t) | `status` |  ASTRO_SUCCESS if this struct is valid; otherwise an error code.  |
+| [`astro_status_t`](#astro_status_t) | `status` |  `ASTRO_SUCCESS` if this struct is valid; otherwise an error code.  |
 | `double` | `ra` |  right ascension in sidereal hours.  |
 | `double` | `dec` |  declination in degrees  |
 | `double` | `dist` |  distance to the celestial body in AU.  |
@@ -1991,11 +1991,11 @@ Coordinates of a celestial body as seen from the Earth (geocentric or topocentri
 
 
 
-When calling [`Astronomy_Search`](#Astronomy_Search), the caller must pass in a callback function compatible with the function-pointer type [`astro_search_func_t`](#astro_search_func_t) whose ascending root is to be found. That callback function must return [`astro_func_result_t`](#astro_func_result_t). If the function call is successful, it will set `status` to [`ASTRO_SUCCESS`](#ASTRO_SUCCESS) and `value` to the numeric value appropriate for the given date and time. If the call fails for some reason, it should set `status` to an appropriate error value other than `ASTRO_SUCCESS`; in the error case, to guard against any possible misuse of `value`, it is recommended to set `value` to `NAN`, though this is not strictly necessary. 
+When calling [`Astronomy_Search`](#Astronomy_Search), the caller must pass in a callback function compatible with the function-pointer type [`astro_search_func_t`](#astro_search_func_t) whose ascending root is to be found. That callback function must return [`astro_func_result_t`](#astro_func_result_t). If the function call is successful, it will set `status` to `ASTRO_SUCCESS` and `value` to the numeric value appropriate for the given date and time. If the call fails for some reason, it should set `status` to an appropriate error value other than `ASTRO_SUCCESS`; in the error case, to guard against any possible misuse of `value`, it is recommended to set `value` to `NAN`, though this is not strictly necessary. 
 
 | Type | Member | Description |
 | ---- | ------ | ----------- |
-| [`astro_status_t`](#astro_status_t) | `status` |  ASTRO_SUCCESS if this struct is valid; otherwise an error code.  |
+| [`astro_status_t`](#astro_status_t) | `status` |  `ASTRO_SUCCESS` if this struct is valid; otherwise an error code.  |
 | `double` | `value` |  The value returned by a function whose ascending root is to be found.  |
 
 
@@ -2031,7 +2031,7 @@ Returned by the function [`Astronomy_SearchHourAngle`](#Astronomy_SearchHourAngl
 
 | Type | Member | Description |
 | ---- | ------ | ----------- |
-| [`astro_status_t`](#astro_status_t) | `status` |  ASTRO_SUCCESS if this struct is valid; otherwise an error code.  |
+| [`astro_status_t`](#astro_status_t) | `status` |  `ASTRO_SUCCESS` if this struct is valid; otherwise an error code.  |
 | [`astro_time_t`](#astro_time_t) | `time` |  The date and time when the body crosses the specified hour angle.  |
 | [`astro_horizon_t`](#astro_horizon_t) | `hor` |  Apparent coordinates of the body at the time it crosses the specified hour angle.  |
 
@@ -2049,7 +2049,7 @@ Returned by the functions [`Astronomy_Illumination`](#Astronomy_Illumination) an
 
 | Type | Member | Description |
 | ---- | ------ | ----------- |
-| [`astro_status_t`](#astro_status_t) | `status` |  ASTRO_SUCCESS if this struct is valid; otherwise an error code.  |
+| [`astro_status_t`](#astro_status_t) | `status` |  `ASTRO_SUCCESS` if this struct is valid; otherwise an error code.  |
 | [`astro_time_t`](#astro_time_t) | `time` |  The date and time of the observation.  |
 | `double` | `mag` |  The visual magnitude of the body. Smaller values are brighter.  |
 | `double` | `phase_angle` |  The angle in degrees between the Sun and the Earth, as seen from the body. Indicates the body's phase as seen from the Earth.  |
@@ -2068,7 +2068,7 @@ Returned by the functions [`Astronomy_Illumination`](#Astronomy_Illumination) an
 
 | Type | Member | Description |
 | ---- | ------ | ----------- |
-| [`astro_status_t`](#astro_status_t) | `status` |  ASTRO_SUCCESS if this struct is valid; otherwise an error code.  |
+| [`astro_status_t`](#astro_status_t) | `status` |  `ASTRO_SUCCESS` if this struct is valid; otherwise an error code.  |
 | `int` | `quarter` |  0=new moon, 1=first quarter, 2=full moon, 3=third quarter.  |
 | [`astro_time_t`](#astro_time_t) | `time` |  The date and time of the lunar quarter.  |
 
@@ -2104,7 +2104,7 @@ You can create this structure directly, or you can call the convenience function
 
 | Type | Member | Description |
 | ---- | ------ | ----------- |
-| [`astro_status_t`](#astro_status_t) | `status` |  ASTRO_SUCCESS if this struct is valid; otherwise an error code.  |
+| [`astro_status_t`](#astro_status_t) | `status` |  `ASTRO_SUCCESS` if this struct is valid; otherwise an error code.  |
 | `double` | `rot` |  A normalized 3x3 rotation matrix.  |
 
 
@@ -2119,7 +2119,7 @@ You can create this structure directly, or you can call the convenience function
 
 | Type | Member | Description |
 | ---- | ------ | ----------- |
-| [`astro_status_t`](#astro_status_t) | `status` |  ASTRO_SUCCESS if this struct is valid; otherwise an error code.  |
+| [`astro_status_t`](#astro_status_t) | `status` |  `ASTRO_SUCCESS` if this struct is valid; otherwise an error code.  |
 | [`astro_time_t`](#astro_time_t) | `time` |  The time at which a searched-for event occurs.  |
 
 
@@ -2134,7 +2134,7 @@ You can create this structure directly, or you can call the convenience function
 
 | Type | Member | Description |
 | ---- | ------ | ----------- |
-| [`astro_status_t`](#astro_status_t) | `status` |  ASTRO_SUCCESS if this struct is valid; otherwise an error code.  |
+| [`astro_status_t`](#astro_status_t) | `status` |  `ASTRO_SUCCESS` if this struct is valid; otherwise an error code.  |
 | [`astro_time_t`](#astro_time_t) | `mar_equinox` |  The date and time of the March equinox for the specified year.  |
 | [`astro_time_t`](#astro_time_t) | `jun_solstice` |  The date and time of the June soltice for the specified year.  |
 | [`astro_time_t`](#astro_time_t) | `sep_equinox` |  The date and time of the September equinox for the specified year.  |
@@ -2152,7 +2152,7 @@ You can create this structure directly, or you can call the convenience function
 
 | Type | Member | Description |
 | ---- | ------ | ----------- |
-| [`astro_status_t`](#astro_status_t) | `status` |  ASTRO_SUCCESS if this struct is valid; otherwise an error code.  |
+| [`astro_status_t`](#astro_status_t) | `status` |  `ASTRO_SUCCESS` if this struct is valid; otherwise an error code.  |
 | `double` | `lat` |  The latitude angle: -90..+90 degrees.  |
 | `double` | `lon` |  The longitude angle: 0..360 degrees.  |
 | `double` | `dist` |  Distance in AU.  |
@@ -2177,7 +2177,7 @@ The [`astro_time_t`](#astro_time_t) type contains `ut` to represent Universal Ti
 
 Both `tt` and `ut` are necessary for performing different astronomical calculations. Indeed, certain calculations (such as rise/set times) require both time scales. See the documentation for the `ut` and `tt` fields for more detailed information.
 
-In cases where [`astro_time_t`](#astro_time_t) is included in a structure returned by a function that can fail, the astro_status_t field `status` will contain a value other than [`ASTRO_SUCCESS`](#ASTRO_SUCCESS); in that case the `ut` and `tt` will hold `NAN` (not a number). In general, when there is an error code stored in a struct field `status`, the caller should ignore all other values in that structure, including the `ut` and `tt` inside [`astro_time_t`](#astro_time_t). 
+In cases where [`astro_time_t`](#astro_time_t) is included in a structure returned by a function that can fail, the astro_status_t field `status` will contain a value other than `ASTRO_SUCCESS`; in that case the `ut` and `tt` will hold `NAN` (not a number). In general, when there is an error code stored in a struct field `status`, the caller should ignore all other values in that structure, including the `ut` and `tt` inside [`astro_time_t`](#astro_time_t). 
 
 | Type | Member | Description |
 | ---- | ------ | ----------- |
@@ -2217,7 +2217,7 @@ In cases where [`astro_time_t`](#astro_time_t) is included in a structure return
 
 | Type | Member | Description |
 | ---- | ------ | ----------- |
-| [`astro_status_t`](#astro_status_t) | `status` |  ASTRO_SUCCESS if this struct is valid; otherwise an error code.  |
+| [`astro_status_t`](#astro_status_t) | `status` |  `ASTRO_SUCCESS` if this struct is valid; otherwise an error code.  |
 | `double` | `x` |  The Cartesian x-coordinate of the vector in AU.  |
 | `double` | `y` |  The Cartesian y-coordinate of the vector in AU.  |
 | `double` | `z` |  The Cartesian z-coordinate of the vector in AU.  |

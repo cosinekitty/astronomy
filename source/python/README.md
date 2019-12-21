@@ -664,7 +664,7 @@ which are relative to the plane of the Earth's orbit around the Sun.
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| [`EquatorialCoordinates`](#EquatorialCoordinates) | `equ` | Equatorial coordinates in the J2000 frame of reference. |
+| [`Equatorial`](#Equatorial) | `equ` | Equatorial coordinates in the J2000 frame of reference. |
 
 ### Returns: [`EclipticCoordinates`](#EclipticCoordinates)
 Ecliptic coordinates in the J2000 frame of reference.
@@ -745,7 +745,7 @@ Correction for aberration is optional, using the `aberration` parameter.
 | `bool` | `ofdate` | Selects the date of the Earth's equator in which to express the equatorial coordinates. If `True`, returns coordinates using the equator and equinox of date. If `False`, returns coordinates converted to the J2000 system. |
 | `bool` | `aberration` | If `True`, corrects for aberration of light based on the motion of the Earth with respect to the heliocentric origin. If `False`, does not correct for aberration. |
 
-### Returns: [`EquatorialCoordinates`](#EquatorialCoordinates)
+### Returns: [`Equatorial`](#Equatorial)
 Equatorial coordinates in the specified frame of reference.
 
 ---

@@ -80,7 +80,7 @@ astro_status_t;
  *
  * In cases where astro_time_t is included in a structure returned by
  * a function that can fail, the astro_status_t field `status` will contain a value
- * other than #ASTRO_SUCCESS; in that case the `ut` and `tt` will hold `NAN` (not a number).
+ * other than `ASTRO_SUCCESS`; in that case the `ut` and `tt` will hold `NAN` (not a number).
  * In general, when there is an error code stored in a struct field `status`, the
  * caller should ignore all other values in that structure, including the `ut` and `tt`
  * inside astro_time_t.
@@ -162,7 +162,7 @@ astro_utc_t;
  */
 typedef struct
 {
-    astro_status_t status;  /**< ASTRO_SUCCESS if this struct is valid; otherwise an error code. */
+    astro_status_t status;  /**< `ASTRO_SUCCESS` if this struct is valid; otherwise an error code. */
     double x;               /**< The Cartesian x-coordinate of the vector in AU. */
     double y;               /**< The Cartesian y-coordinate of the vector in AU. */
     double z;               /**< The Cartesian z-coordinate of the vector in AU. */
@@ -175,7 +175,7 @@ astro_vector_t;
  */
 typedef struct
 {
-    astro_status_t status;  /**< ASTRO_SUCCESS if this struct is valid; otherwise an error code. */
+    astro_status_t status;  /**< `ASTRO_SUCCESS` if this struct is valid; otherwise an error code. */
     double lat;             /**< The latitude angle: -90..+90 degrees. */
     double lon;             /**< The longitude angle: 0..360 degrees. */
     double dist;            /**< Distance in AU. */
@@ -187,7 +187,7 @@ astro_spherical_t;
  */
 typedef struct
 {
-    astro_status_t status;  /**< ASTRO_SUCCESS if this struct is valid; otherwise an error code. */
+    astro_status_t status;  /**< `ASTRO_SUCCESS` if this struct is valid; otherwise an error code. */
     double angle;           /**< An angle expressed in degrees. */
 }
 astro_angle_result_t;
@@ -243,7 +243,7 @@ astro_observer_t;
  */
 typedef struct
 {
-    astro_status_t status;  /**< ASTRO_SUCCESS if this struct is valid; otherwise an error code. */
+    astro_status_t status;  /**< `ASTRO_SUCCESS` if this struct is valid; otherwise an error code. */
     double ra;              /**< right ascension in sidereal hours. */
     double dec;             /**< declination in degrees */
     double dist;            /**< distance to the celestial body in AU. */
@@ -258,7 +258,7 @@ astro_equatorial_t;
  */
 typedef struct
 {
-    astro_status_t status;  /**< ASTRO_SUCCESS if this struct is valid; otherwise an error code. */
+    astro_status_t status;  /**< `ASTRO_SUCCESS` if this struct is valid; otherwise an error code. */
     double ex;              /**< Cartesian x-coordinate: in the direction of the equinox along the ecliptic plane. */
     double ey;              /**< Cartesian y-coordinate: in the ecliptic plane 90 degrees prograde from the equinox. */
     double ez;              /**< Cartesian z-coordinate: perpendicular to the ecliptic plane. Positive is north. */
@@ -288,7 +288,7 @@ astro_horizon_t;
  */
 typedef struct
 {
-    astro_status_t status;  /**< ASTRO_SUCCESS if this struct is valid; otherwise an error code. */
+    astro_status_t status;  /**< `ASTRO_SUCCESS` if this struct is valid; otherwise an error code. */
     double rot[3][3];       /**< A normalized 3x3 rotation matrix. */
 }
 astro_rotation_t;
@@ -309,7 +309,7 @@ astro_refraction_t;
  */
 typedef struct
 {
-    astro_status_t  status;     /**< ASTRO_SUCCESS if this struct is valid; otherwise an error code. */
+    astro_status_t  status;     /**< `ASTRO_SUCCESS` if this struct is valid; otherwise an error code. */
     astro_time_t    time;       /**< The time at which a searched-for event occurs. */
 }
 astro_search_result_t;
@@ -321,7 +321,7 @@ astro_search_result_t;
  */
 typedef struct
 {
-    astro_status_t  status;         /**< ASTRO_SUCCESS if this struct is valid; otherwise an error code. */
+    astro_status_t  status;         /**< `ASTRO_SUCCESS` if this struct is valid; otherwise an error code. */
     astro_time_t    mar_equinox;    /**< The date and time of the March equinox for the specified year. */
     astro_time_t    jun_solstice;   /**< The date and time of the June soltice for the specified year. */
     astro_time_t    sep_equinox;    /**< The date and time of the September equinox for the specified year. */
@@ -334,7 +334,7 @@ astro_seasons_t;
  */
 typedef struct
 {
-    astro_status_t  status;     /**< ASTRO_SUCCESS if this struct is valid; otherwise an error code. */
+    astro_status_t  status;     /**< `ASTRO_SUCCESS` if this struct is valid; otherwise an error code. */
     int             quarter;    /**< 0=new moon, 1=first quarter, 2=full moon, 3=third quarter. */
     astro_time_t    time;       /**< The date and time of the lunar quarter. */
 }
@@ -346,7 +346,7 @@ astro_moon_quarter_t;
  * When calling #Astronomy_Search, the caller must pass in a callback function
  * compatible with the function-pointer type #astro_search_func_t
  * whose ascending root is to be found. That callback function must return astro_func_result_t.
- * If the function call is successful, it will set `status` to #ASTRO_SUCCESS and `value`
+ * If the function call is successful, it will set `status` to `ASTRO_SUCCESS` and `value`
  * to the numeric value appropriate for the given date and time.
  * If the call fails for some reason, it should set `status` to an appropriate error value
  * other than `ASTRO_SUCCESS`; in the error case, to guard against any possible misuse of `value`,
@@ -354,7 +354,7 @@ astro_moon_quarter_t;
  */
 typedef struct
 {
-    astro_status_t status;      /**< ASTRO_SUCCESS if this struct is valid; otherwise an error code. */
+    astro_status_t status;      /**< `ASTRO_SUCCESS` if this struct is valid; otherwise an error code. */
     double value;               /**< The value returned by a function whose ascending root is to be found. */
 }
 astro_func_result_t;
@@ -399,7 +399,7 @@ astro_visibility_t;
  */
 typedef struct
 {
-    astro_status_t      status;                 /**< ASTRO_SUCCESS if this struct is valid; otherwise an error code. */
+    astro_status_t      status;                 /**< `ASTRO_SUCCESS` if this struct is valid; otherwise an error code. */
     astro_time_t        time;                   /**< The date and time of the observation. */
     astro_visibility_t  visibility;             /**< Whether the body is best seen in the morning or the evening. */
     double              elongation;             /**< The angle in degrees between the body and the Sun, as seen from the Earth. */
@@ -415,7 +415,7 @@ astro_elongation_t;
  */
 typedef struct
 {
-    astro_status_t      status;     /**< ASTRO_SUCCESS if this struct is valid; otherwise an error code. */
+    astro_status_t      status;     /**< `ASTRO_SUCCESS` if this struct is valid; otherwise an error code. */
     astro_time_t        time;       /**< The date and time when the body crosses the specified hour angle. */
     astro_horizon_t     hor;        /**< Apparent coordinates of the body at the time it crosses the specified hour angle. */
 }
@@ -429,7 +429,7 @@ astro_hour_angle_t;
  */
 typedef struct
 {
-    astro_status_t      status;         /**< ASTRO_SUCCESS if this struct is valid; otherwise an error code. */
+    astro_status_t      status;         /**< `ASTRO_SUCCESS` if this struct is valid; otherwise an error code. */
     astro_time_t        time;           /**< The date and time of the observation. */
     double              mag;            /**< The visual magnitude of the body. Smaller values are brighter. */
     double              phase_angle;    /**< The angle in degrees between the Sun and the Earth, as seen from the body. Indicates the body's phase as seen from the Earth. */
@@ -466,7 +466,7 @@ astro_apsis_kind_t;
  */
 typedef struct
 {
-    astro_status_t      status;     /**< ASTRO_SUCCESS if this struct is valid; otherwise an error code. */
+    astro_status_t      status;     /**< `ASTRO_SUCCESS` if this struct is valid; otherwise an error code. */
     astro_time_t        time;       /**< The date and time of the apsis. */
     astro_apsis_kind_t  kind;       /**< Whether this is a pericenter or apocenter event. */
     double              dist_au;    /**< The distance between the centers of the bodies in astronomical units. */
