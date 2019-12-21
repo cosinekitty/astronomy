@@ -20,6 +20,9 @@ namespace csdown
             string inAssemblyFileName = args[1];
             string inXmlFileName = args[2];
             string outMarkdownFileName = args[3];
+#if true
+            return GenerateMarkdown(inPrefixFileName, inAssemblyFileName, inXmlFileName, outMarkdownFileName);
+#else
             try
             {
                 return GenerateMarkdown(inPrefixFileName, inAssemblyFileName, inXmlFileName, outMarkdownFileName);
@@ -29,6 +32,7 @@ namespace csdown
                 Console.WriteLine("EXCEPTION(csdown): {0}", ex);
                 return 1;
             }
+#endif
         }
 
         static int GenerateMarkdown(string inPrefixFileName, string inAssemblyFileName, string inXmlFileName, string outMarkdownFileName)
@@ -59,55 +63,59 @@ namespace csdown
                 .ToArray();
 
             foreach (MethodInfo f in funcs)
+                AppendFunctionMarkdown(sb, cinfo, f);
+        }
+
+        private static void AppendFunctionMarkdown(StringBuilder sb, CodeInfo cinfo, MethodInfo f)
+        {
+            CodeItem item = cinfo.FindMethod(f);
+            ParameterInfo[] parms = f.GetParameters();
+            string parentClassName = f.DeclaringType.Name;
+
+            sb.AppendFormat("<a name=\"{0}.{1}\"></a>", parentClassName, f.Name);
+            sb.AppendLine();
+            sb.AppendFormat("### {0}.{1}(", parentClassName, f.Name);
+            sb.Append(string.Join(", ", parms.Select(p => p.Name)));
+            sb.AppendFormat(") &#8658; {0}", TypeMarkdown(f.ReturnType));
+            sb.AppendLine();
+            sb.AppendLine();
+            if (!string.IsNullOrWhiteSpace(item.Summary))
             {
-                CodeItem item = cinfo.FindMethod(f);
-                ParameterInfo[] parms = f.GetParameters();
-
-                sb.AppendFormat("<a name=\"Astronomy.{0}\"></a>", f.Name);
+                sb.AppendLine("**" + item.Summary + "**");
                 sb.AppendLine();
-                sb.AppendFormat("### Astronomy.{0}(", f.Name);
-                sb.Append(string.Join(", ", parms.Select(p => p.Name)));
-                sb.AppendFormat(") &#8658; {0}", TypeMarkdown(f.ReturnType));
+            }
+
+            if (!string.IsNullOrWhiteSpace(item.Remarks))
+            {
+                sb.AppendLine(item.Remarks);
                 sb.AppendLine();
+            }
+
+            if (parms.Length > 0)
+            {
+                sb.AppendLine("| Type | Parameter | Description |");
+                sb.AppendLine("| --- | --- | --- |");
+                foreach (ParameterInfo p in parms)
+                {
+                    // | [`astro_rotation_t`](#astro_rotation_t) | `a` |  The first rotation to apply. | 
+                    string t = TypeMarkdown(p.ParameterType);
+                    string n = "`" + p.Name + "`";
+                    string r = item.Params[p.Name];
+                    sb.Append("| ");
+                    sb.Append(t);
+                    sb.Append(" | ");
+                    sb.Append(n);
+                    sb.Append(" | ");
+                    sb.Append(r);
+                    sb.AppendLine(" |");
+                }
                 sb.AppendLine();
-                if (!string.IsNullOrWhiteSpace(item.Summary))
-                {
-                    sb.AppendLine("**" + item.Summary + "**");
-                    sb.AppendLine();
-                }
+            }
 
-                if (!string.IsNullOrWhiteSpace(item.Remarks))
-                {
-                    sb.AppendLine(item.Remarks);
-                    sb.AppendLine();
-                }
-
-                if (parms.Length > 0)
-                {
-                    sb.AppendLine("| Type | Parameter | Description |");
-                    sb.AppendLine("| --- | --- | --- |");
-                    foreach (ParameterInfo p in parms)
-                    {
-                        // | [`astro_rotation_t`](#astro_rotation_t) | `a` |  The first rotation to apply. | 
-                        string t = TypeMarkdown(p.ParameterType);
-                        string n = "`" + p.Name + "`";
-                        string r = item.Params[p.Name];
-                        sb.Append("| ");
-                        sb.Append(t);
-                        sb.Append(" | ");
-                        sb.Append(n);
-                        sb.Append(" | ");
-                        sb.Append(r);
-                        sb.AppendLine(" |");
-                    }
-                    sb.AppendLine();
-                }
-
-                if (!string.IsNullOrWhiteSpace(item.Returns))
-                {
-                    sb.AppendLine("**Returns:** " + item.Returns);
-                    sb.AppendLine();
-                }
+            if (!string.IsNullOrWhiteSpace(item.Returns))
+            {
+                sb.AppendLine("**Returns:** " + item.Returns);
+                sb.AppendLine();
             }
         }
 
