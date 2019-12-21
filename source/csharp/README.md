@@ -29,7 +29,7 @@ To get started quickly, here are some [examples](../../demo/csharp/).
 | [HelioVector](#Astronomy.HelioVector) | Calculates vector with respect to the center of the Sun. |
 | [GeoVector](#Astronomy.GeoVector)     | Calculates vector with respect to the center of the Earth. |
 | [Equator](#Astronomy.Equator)         | Calculates right ascension and declination. |
-| [Ecliptic](#Astronomy.Ecliptic)       | Converts J2000 equatorial coordinates to J2000 ecliptic coordinates. |
+| [EquatorialToEcliptic](#Astronomy.EquatorialToEcliptic)       | Converts J2000 equatorial coordinates to J2000 ecliptic coordinates. |
 | [EclipticLongitude](#Astronomy.EclipticLongitude) | Calculates ecliptic longitude of a body in the J2000 system. |
 | [Horizon](#Astronomy.Horizon)         | Calculates horizontal coordinates (azimuth, altitude) for a given observer on the Earth. |
 | [LongitudeFromSun](#Astronomy.LongitudeFromSun) | Calculates a body's apparent ecliptic longitude difference from the Sun, as seen by an observer on the Earth. |
@@ -411,13 +411,13 @@ This function requires an [`ApsisInfo`](#ApsisInfo) value obtained from a call
 to [`Astronomy.SearchLunarApsis`](#Astronomy.SearchLunarApsis) or `Astronomy.NextLunarApsis`. Given
 an apogee event, this function finds the next perigee event, and vice versa.
 
-See [`Astronomy_SearchLunarApsis`](#Astronomy_SearchLunarApsis) for more details.
+See [`Astronomy.SearchLunarApsis`](#Astronomy.SearchLunarApsis) for more details.
 
 | Type | Parameter | Description |
 | --- | --- | --- |
 | [`ApsisInfo`](#ApsisInfo) | `apsis` | An apsis event obtained from a call to [`Astronomy.SearchLunarApsis`](#Astronomy.SearchLunarApsis) or `Astronomy.NextLunarApsis`. See [`Astronomy.SearchLunarApsis`](#Astronomy.SearchLunarApsis) for more details. |
 
-**Returns:** Same as the return value for [`Astronomy_SearchLunarApsis`](#Astronomy_SearchLunarApsis).
+**Returns:** Same as the return value for [`Astronomy.SearchLunarApsis`](#Astronomy.SearchLunarApsis).
 
 <a name="Astronomy.NextMoonQuarter"></a>
 ### Astronomy.NextMoonQuarter(mq) &#8658; [`MoonQuarterInfo`](#MoonQuarterInfo)
@@ -536,8 +536,8 @@ The word *apsis* refers to either event.
 
 To iterate through consecutive alternating perigee and apogee events, call `Astronomy.SearchLunarApsis`
 once, then use the return value to call [`Astronomy.NextLunarApsis`](#Astronomy.NextLunarApsis). After that,
-keep feeding the previous return value from `Astronomy_NextLunarApsis` into another
-call of `Astronomy_NextLunarApsis` as many times as desired.
+keep feeding the previous return value from `Astronomy.NextLunarApsis` into another
+call of `Astronomy.NextLunarApsis` as many times as desired.
 
 | Type | Parameter | Description |
 | --- | --- | --- |

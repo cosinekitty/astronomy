@@ -3009,8 +3009,8 @@ $ASTRO_CSHARP_CHEBYSHEV(8);
         ///
         /// To iterate through consecutive alternating perigee and apogee events, call `Astronomy.SearchLunarApsis`
         /// once, then use the return value to call #Astronomy.NextLunarApsis. After that,
-        /// keep feeding the previous return value from `Astronomy_NextLunarApsis` into another
-        /// call of `Astronomy_NextLunarApsis` as many times as desired.
+        /// keep feeding the previous return value from `Astronomy.NextLunarApsis` into another
+        /// call of `Astronomy.NextLunarApsis` as many times as desired.
         /// </remarks>
         /// <param name="startTime">
         ///      The date and time at which to start searching for the next perigee or apogee.
@@ -3089,14 +3089,14 @@ $ASTRO_CSHARP_CHEBYSHEV(8);
         /// to #Astronomy.SearchLunarApsis or `Astronomy.NextLunarApsis`. Given
         /// an apogee event, this function finds the next perigee event, and vice versa.
         ///
-        /// See #Astronomy_SearchLunarApsis for more details.
+        /// See #Astronomy.SearchLunarApsis for more details.
         /// </remarks>
         /// <param name="apsis">
         /// An apsis event obtained from a call to #Astronomy.SearchLunarApsis or `Astronomy.NextLunarApsis`.
         /// See #Astronomy.SearchLunarApsis for more details.
         /// </param>
         /// <returns>
-        /// Same as the return value for #Astronomy_SearchLunarApsis.
+        /// Same as the return value for #Astronomy.SearchLunarApsis.
         /// </returns>
         public static ApsisInfo NextLunarApsis(ApsisInfo apsis)
         {
