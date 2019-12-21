@@ -27,14 +27,14 @@
     </tr>
     <tr>
         <td style="text-align: center;"><a href="demo/c/">Examples</a></td>
-        <td style="text-align: center;">&nbsp;</td>
+        <td style="text-align: center;"><a href="demo/csharp/">Examples</a></td>
         <td style="text-align: center;"><a href="demo/browser/">Examples</a></td>
         <td style="text-align: center;"><a href="demo/nodejs/">Examples</a></td>
         <td style="text-align: center;"><a href="demo/python/">Examples</a></td>
     </tr>
     <tr>
         <td style="text-align: center;"><a href="source/c/">Documentation</a></td>
-        <td style="text-align: center;">&nbsp;</td>
+        <td style="text-align: center;"><a href="source/csharp/">Documentation</a></td>
         <td style="text-align: center;"><a href="source/js/">Documentation</a></td>
         <td style="text-align: center;"><a href="source/js/">Documentation</a></td>
         <td style="text-align: center;"><a href="source/python/">Documentation</a></td>
