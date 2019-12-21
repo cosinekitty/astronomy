@@ -15,31 +15,13 @@ To get started quickly, here are some [examples](../../demo/csharp/).
 
 - [Topic Index](#topics)
 - [Functions](#functions)
+- [Classes](#classes)
 - [Enumerated Types](#enums)
-- [Structures](#structs)
-- [Type Definitions](#typedefs)
 
 ---
 
 <a name="topics"></a>
 ## Topic Index
-
-### Dates and times
-
-| Function | Description |
-| -------- | ----------- |
-| [CurrentTime](#Astronomy.CurrentTime) | Obtains the current date and time of the computer's clock in the form of an [`astro_time_t`](#astro_time_t) that can be used for astronomy calculations. |
-| [MakeTime](#Astronomy.MakeTime) | Converts a UTC calendar date and time given as separate numeric parameters into an [`astro_time_t`](#astro_time_t) that can be used for astronomy calculations. |
-| [AddDays](#Astronomy.AddDays) | Adds or subtracts an amount of time to an [`astro_time_t`](#astro_time_t) to get another [`astro_time_t`](#astro_time_t). |
-| [TimeFromUtc](#Astronomy.TimeFromUtc) | Converts UTC calendar date and time from an [`astro_utc_t`](#astro_utc_t) structure to an [`astro_time_t`](#astro_time_t) structure that can be used for astronomy calculations. |
-| [UtcFromTime](#Astronomy.UtcFromTime) | Converts an astronomical [`astro_time_t`](#astro_time_t) time value to an [`astro_utc_t`](#astro_utc_t) structure that can be used for displaying a UTC calendar date and time. |
-
-### Celestial bodies
-
-| Function | Description |
-| -------- | ----------- |
-| [BodyCode](#Astronomy.BodyCode) | Converts the English name of a celestial body to its equivalent [`astro_body_t`](#astro_body_t) enumeration value. |
-| [BodyName](#Astronomy.BodyName) | Converts an [`astro_body_t`](#astro_body_t) enumeration value to its equivalent English name as a string. |
 
 ### Position of Sun, Moon, and planets
 

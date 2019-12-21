@@ -50,12 +50,9 @@ namespace csdown
         {
             Console.WriteLine("Generating C# documentation.");
 
-            sb.AppendLine("<a name=\"functions\"></a>");
-            sb.AppendLine("## Functions");
-            sb.AppendLine();
-            sb.AppendLine("---");
-            sb.AppendLine();
+            // All the member functions in the Astronomy class go in the "functions" section.
 
+            AppendSectionHeader(sb, "Functions");
             Type astro = asm.GetType("CosineKitty.Astronomy");
             MethodInfo[] funcs = astro.GetMethods()
                 .Where(m => m.IsPublic && m.IsStatic)
@@ -64,6 +61,51 @@ namespace csdown
 
             foreach (MethodInfo f in funcs)
                 AppendFunctionMarkdown(sb, cinfo, f);
+
+            // The classes other than "Astronomy" are listed one by one in the "classes" section.
+            sb.AppendLine("---");
+            sb.AppendLine();
+            AppendSectionHeader(sb, "Classes");
+            Type[] otherClassList = asm.GetExportedTypes()
+                .Where(c => c.Name != "Astronomy" && c.IsClass)
+                .OrderBy(c => c.Name.ToUpperInvariant())
+                .ToArray();
+
+            foreach (Type c in otherClassList)
+                AppendClassMarkdown(sb, cinfo, c);
+        }
+
+        private static void AppendClassMarkdown(StringBuilder sb, CodeInfo cinfo, Type c)
+        {
+            sb.AppendLine("<a name=\"" + c.Name + "\"></a>");
+            sb.AppendLine("## `class " + c.Name + "`");
+            sb.AppendLine();
+
+            MethodInfo[] funcs = c.GetMethods()
+                .Where(m => m.IsPublic && m.DeclaringType == c)
+                .OrderBy(m => m.Name.ToUpperInvariant())
+                .ToArray();
+
+            if (funcs.Length > 0)
+            {
+                sb.AppendLine("### member functions");
+                sb.AppendLine();
+
+                foreach (MethodInfo f in funcs)
+                    AppendFunctionMarkdown(sb, cinfo, f);
+            }
+
+            sb.AppendLine("---");
+            sb.AppendLine();
+        }
+
+        private static void AppendSectionHeader(StringBuilder sb, string name)
+        {
+            sb.AppendLine("<a name=\"" + name.ToLowerInvariant() + "\"></a>");
+            sb.AppendLine("## " + name);
+            sb.AppendLine();
+            sb.AppendLine("---");
+            sb.AppendLine();
         }
 
         private static void AppendFunctionMarkdown(StringBuilder sb, CodeInfo cinfo, MethodInfo f)
@@ -139,6 +181,9 @@ namespace csdown
 
                 case "System.Int32":
                     return "`int`";
+
+                case "System.DateTime":
+                    return "`DateTime`";
 
                 default:
                     throw new NotImplementedException("Unhandled type " + t.FullName);

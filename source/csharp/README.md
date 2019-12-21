@@ -15,31 +15,13 @@ To get started quickly, here are some [examples](../../demo/csharp/).
 
 - [Topic Index](#topics)
 - [Functions](#functions)
+- [Classes](#classes)
 - [Enumerated Types](#enums)
-- [Structures](#structs)
-- [Type Definitions](#typedefs)
 
 ---
 
 <a name="topics"></a>
 ## Topic Index
-
-### Dates and times
-
-| Function | Description |
-| -------- | ----------- |
-| [CurrentTime](#Astronomy.CurrentTime) | Obtains the current date and time of the computer's clock in the form of an [`astro_time_t`](#astro_time_t) that can be used for astronomy calculations. |
-| [MakeTime](#Astronomy.MakeTime) | Converts a UTC calendar date and time given as separate numeric parameters into an [`astro_time_t`](#astro_time_t) that can be used for astronomy calculations. |
-| [AddDays](#Astronomy.AddDays) | Adds or subtracts an amount of time to an [`astro_time_t`](#astro_time_t) to get another [`astro_time_t`](#astro_time_t). |
-| [TimeFromUtc](#Astronomy.TimeFromUtc) | Converts UTC calendar date and time from an [`astro_utc_t`](#astro_utc_t) structure to an [`astro_time_t`](#astro_time_t) structure that can be used for astronomy calculations. |
-| [UtcFromTime](#Astronomy.UtcFromTime) | Converts an astronomical [`astro_time_t`](#astro_time_t) time value to an [`astro_utc_t`](#astro_utc_t) structure that can be used for displaying a UTC calendar date and time. |
-
-### Celestial bodies
-
-| Function | Description |
-| -------- | ----------- |
-| [BodyCode](#Astronomy.BodyCode) | Converts the English name of a celestial body to its equivalent [`astro_body_t`](#astro_body_t) enumeration value. |
-| [BodyName](#Astronomy.BodyName) | Converts an [`astro_body_t`](#astro_body_t) enumeration value to its equivalent English name as a string. |
 
 ### Position of Sun, Moon, and planets
 
@@ -806,4 +788,89 @@ In fact, the function #Seasons does use this function for that purpose.
 | [`AstroTime`](#AstroTime) | `time` | The date and time for which to calculate the Sun's position. |
 
 **Returns:** The ecliptic coordinates of the Sun using the Earth's true equator of date.
+
+---
+
+<a name="classes"></a>
+## Classes
+
+---
+
+<a name="AstroTime"></a>
+## `class AstroTime`
+
+### member functions
+
+<a name="AstroTime.AddDays"></a>
+### AstroTime.AddDays(days) &#8658; [`AstroTime`](#AstroTime)
+
+**Calculates the sum or difference of an #AstroTime with a specified floating point number of days.**
+
+Sometimes we need to adjust a given #astro_time_t value by a certain amount of time.
+This function adds the given real number of days in `days` to the date and time in this object.
+
+More precisely, the result's Universal Time field `ut` is exactly adjusted by `days` and
+the Terrestrial Time field `tt` is adjusted correctly for the resulting UTC date and time,
+according to the historical and predictive Delta-T model provided by the
+[United States Naval Observatory](http://maia.usno.navy.mil/ser7/).
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| `double` | `days` | A floating point number of days by which to adjust `time`. May be negative, 0, or positive. |
+
+**Returns:** A date and time that is conceptually equal to `time + days`.
+
+<a name="AstroTime.ToString"></a>
+### AstroTime.ToString() &#8658; `string`
+
+**Converts this `AstroTime` to ISO 8601 format, expressed in UTC with millisecond resolution.**
+
+**Returns:** Example: "2019-08-30T17:45:22.763".
+
+<a name="AstroTime.ToUtcDateTime"></a>
+### AstroTime.ToUtcDateTime() &#8658; `DateTime`
+
+**Converts this object to .NET `DateTime` format.**
+
+**Returns:** a UTC `DateTime` object for this `AstroTime` value.
+
+---
+
+<a name="EarthNotAllowedException"></a>
+## `class EarthNotAllowedException`
+
+---
+
+<a name="Ecliptic"></a>
+## `class Ecliptic`
+
+---
+
+<a name="Equatorial"></a>
+## `class Equatorial`
+
+---
+
+<a name="Observer"></a>
+## `class Observer`
+
+---
+
+<a name="SearchContext"></a>
+## `class SearchContext`
+
+### member functions
+
+<a name="SearchContext.Eval"></a>
+### SearchContext.Eval(time) &#8658; `double`
+
+**Evaluates the function at a given time**
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`AstroTime`](#AstroTime) | `time` | The time at which to evaluate the function. |
+
+**Returns:** The floating point value of the function at the specified time.
+
+---
 
