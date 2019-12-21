@@ -76,7 +76,7 @@ namespace csdown
         {
             if (text == null)
                 return "";
-            return Regex.Replace(text, @"#([A-Za-z][A-Za-z0-9_]*)", m => InternalLink(m.Groups[1].Value));
+            return Regex.Replace(text, @"#([A-Za-z][A-Za-z0-9_]*(\.[A-Za-z][A-Za-z0-9_]*)?)", m => InternalLink(m.Groups[1].Value));
         }
 
         private static string Clean(string text)

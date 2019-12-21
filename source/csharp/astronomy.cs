@@ -224,7 +224,7 @@ namespace CosineKitty
         /// Calculates the sum or difference of an #AstroTime with a specified floating point number of days.
         /// </summary>
         /// <remarks>
-        /// Sometimes we need to adjust a given #astro_time_t value by a certain amount of time.
+        /// Sometimes we need to adjust a given #AstroTime value by a certain amount of time.
         /// This function adds the given real number of days in `days` to the date and time in this object.
         ///
         /// More precisely, the result's Universal Time field `ut` is exactly adjusted by `days` and
@@ -583,7 +583,7 @@ namespace CosineKitty
 
     /// <summary>
     /// The dates and times of changes of season for a given calendar year.
-    /// Call #Seasons to calculate this data structure for a given year.
+    /// Call #Astronomy.Seasons to calculate this data structure for a given year.
     /// </summary>
     public struct SeasonsInfo
     {
@@ -642,7 +642,7 @@ namespace CosineKitty
     /// Information about a celestial body crossing a specific hour angle.
     /// </summary>
     /// <remarks>
-    /// Returned by the function #SearchHourAngle to report information about
+    /// Returned by the function #Astronomy.SearchHourAngle to report information about
     /// a celestial body crossing a certain hour angle as seen by a specified topocentric observer.
     /// </remarks>
     public struct HourAngleInfo
@@ -667,8 +667,8 @@ namespace CosineKitty
 
     /// <summary>
     /// Contains information about the visibility of a celestial body at a given date and time.
-    /// See #Elongation for more detailed information about the members of this structure.
-    /// See also #SearchMaxElongation for how to search for maximum elongation events.
+    /// See #Astronomy.Elongation for more detailed information about the members of this structure.
+    /// See also #Astronomy.SearchMaxElongation for how to search for maximum elongation events.
     /// </summary>
     public struct ElongationInfo
     {
@@ -2590,7 +2590,7 @@ namespace CosineKitty
         /// of the Earth at noon UTC on 1 January 2000.
         ///
         /// The position is not corrected for light travel time or aberration.
-        /// This is different from the behavior of #GeoVector.
+        /// This is different from the behavior of #Astronomy.GeoVector.
         ///
         /// If given an invalid value for `body`, or the body is `Body.Pluto` and the `time` is outside
         /// the year range 1700..2200, this function will throw an `ArgumentException`.
@@ -2641,7 +2641,7 @@ namespace CosineKitty
         /// If given an invalid value for `body`, or the body is `Body.Pluto` and the `time` is outside
         /// the year range 1700..2200, this function will throw an exception.
         ///
-        /// Unlike #HelioVector, this function always corrects for light travel time.
+        /// Unlike #Astronomy.HelioVector, this function always corrects for light travel time.
         /// This means the position of the body is "back-dated" by the amount of time it takes
         /// light to travel from that body to an observer on the Earth.
         ///
@@ -2788,7 +2788,7 @@ namespace CosineKitty
         /// The right ascension `ra` and declination `dec` passed in must be *equator of date*
         /// coordinates, based on the Earth's true equator at the date and time of the observation.
         /// Otherwise the resulting horizontal coordinates will be inaccurate.
-        /// Equator of date coordinates can be obtained by calling #Equator, passing in
+        /// Equator of date coordinates can be obtained by calling #Astronomy.Equator, passing in
         /// `EquatorEpoch.OfDate` as its `equdate` parameter. It is also recommended to enable
         /// aberration correction by passing in `Aberration.Corrected` as the `aberration` parameter.
         ///
@@ -2937,7 +2937,7 @@ namespace CosineKitty
         /// in order to obtain the exact equatorial plane at the given time.
         ///
         /// This function can be used for calculating changes of seasons: equinoxes and solstices.
-        /// In fact, the function #Seasons does use this function for that purpose.
+        /// In fact, the function #Astronomy.Seasons does use this function for that purpose.
         /// </remarks>
         /// <param name="time">
         /// The date and time for which to calculate the Sun's position.
@@ -2998,7 +2998,7 @@ namespace CosineKitty
         /// </remarks>
         /// <param name="equ">
         /// Equatorial coordinates in the J2000 frame of reference.
-        /// You can call #GeoVector to obtain suitable equatorial coordinates.
+        /// You can call #Astronomy.GeoVector to obtain suitable equatorial coordinates.
         /// </param>
         /// <returns>Ecliptic coordinates in the J2000 frame of reference.</returns>
         public static Ecliptic EquatorialToEcliptic(AstroVector equ)
@@ -3067,7 +3067,7 @@ namespace CosineKitty
         /// that the center of the Sun reaches a specific ecliptic longitude as seen from the center of the Earth.
         ///
         /// This function can be used to determine equinoxes and solstices.
-        /// However, it is usually more convenient and efficient to call #Seasons
+        /// However, it is usually more convenient and efficient to call #Astronomy.Seasons
         /// to calculate all equinoxes and solstices for a given calendar year.
         ///
         /// The function searches the window of time specified by `startTime` and `startTime+limitDays`.
@@ -3387,7 +3387,7 @@ namespace CosineKitty
         /// after the specified date and time.
         ///
         /// To continue iterating through consecutive lunar quarters, call this function once,
-        /// followed by calls to #NextMoonQuarter as many times as desired.
+        /// followed by calls to #Astronomy.NextMoonQuarter as many times as desired.
         /// </remarks>
         /// <param name="startTime">The date and time at which to start the search.</param>
         /// <returns>
@@ -3407,12 +3407,12 @@ namespace CosineKitty
         /// Continues searching for lunar quarters from a previous search.
         /// </summary>
         /// <remarks>
-        /// After calling #SearchMoonQuarter, this function can be called
+        /// After calling #Astronomy.SearchMoonQuarter, this function can be called
         /// one or more times to continue finding consecutive lunar quarters.
         /// This function finds the next consecutive moon quarter event after
         /// the one passed in as the parameter `mq`.
         /// </remarks>
-        /// <param name="mq">The previous moon quarter found by a call to #SearchMoonQuarter or NextMoonQuarter.</param>
+        /// <param name="mq">The previous moon quarter found by a call to #Astronomy.SearchMoonQuarter or `Astronomy.NextMoonQuarter`.</param>
         /// <returns>The moon quarter that occurs next in time after the one passed in `mq`.</returns>
         public static MoonQuarterInfo NextMoonQuarter(MoonQuarterInfo mq)
         {
@@ -3440,7 +3440,7 @@ namespace CosineKitty
         /// angle in degrees in the range [0, 360).
         ///
         /// If you want to iterate through lunar quarters (new moon, first quarter, full moon, third quarter)
-        /// it is much easier to call the functions #SearchMoonQuarter and #NextMoonQuarter.
+        /// it is much easier to call the functions #Astronomy.SearchMoonQuarter and #Astronomy.NextMoonQuarter.
         /// This function is useful for finding general phase angles outside those four quarters.
         /// </remarks>
         /// <param name="targetLon">
@@ -3935,7 +3935,6 @@ namespace CosineKitty
         /// <returns>
         /// Returns a valid #ElongationInfo structure, or throws an exception if there is an error.
         /// </returns>
-
         public static ElongationInfo Elongation(Body body, AstroTime time)
         {
             Visibility visibility;
@@ -3967,13 +3966,13 @@ namespace CosineKitty
         ///
         /// This function solves for those times, reporting the next maximum elongation event's date and time,
         /// the elongation value itself, the relative longitude with the Sun, and whether the planet is best
-        /// observed in the morning or evening. See #Astronomy_Elongation for more details about the returned structure.
+        /// observed in the morning or evening. See #Astronomy.Elongation for more details about the returned structure.
         /// </remarks>
         ///
         /// <param name="body">
         /// Either `Body.Mercury` or `Body.Venus`. Any other value will result in an exception.
         /// To find the best viewing opportunites for planets farther from the Sun than the Earth is (Mars through Pluto)
-        /// use #SearchRelativeLongitude to find the next opposition event.
+        /// use #Astronomy.SearchRelativeLongitude to find the next opposition event.
         /// </param>
         ///
         /// <param name="startTime">
@@ -4238,7 +4237,6 @@ namespace CosineKitty
         /// <returns>
         /// Same as the return value for #Astronomy_SearchLunarApsis.
         /// </returns>
-
         public static ApsisInfo NextLunarApsis(ApsisInfo apsis)
         {
             const double skip = 11.0;   // number of days to skip to start looking for next apsis event
@@ -4549,7 +4547,7 @@ namespace CosineKitty
 
     /// <summary>
     /// Represents a function whose ascending root is to be found.
-    /// See #Search.
+    /// See #Astronomy.Search.
     /// </summary>
     public abstract class SearchContext
     {

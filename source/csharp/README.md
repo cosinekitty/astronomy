@@ -224,7 +224,7 @@ which are relative to the plane of the Earth's orbit around the Sun.
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| [`AstroVector`](#AstroVector) | `equ` | Equatorial coordinates in the J2000 frame of reference. You can call [`GeoVector`](#GeoVector) to obtain suitable equatorial coordinates. |
+| [`AstroVector`](#AstroVector) | `equ` | Equatorial coordinates in the J2000 frame of reference. You can call [`Astronomy.GeoVector`](#Astronomy.GeoVector) to obtain suitable equatorial coordinates. |
 
 **Returns:** Ecliptic coordinates in the J2000 frame of reference.
 
@@ -241,7 +241,7 @@ of the Earth at noon UTC on 1 January 2000.
 If given an invalid value for `body`, or the body is `Body.Pluto` and the `time` is outside
 the year range 1700..2200, this function will throw an exception.
 
-Unlike [`HelioVector`](#HelioVector), this function always corrects for light travel time.
+Unlike [`Astronomy.HelioVector`](#Astronomy.HelioVector), this function always corrects for light travel time.
 This means the position of the body is "back-dated" by the amount of time it takes
 light to travel from that body to an observer on the Earth.
 
@@ -269,7 +269,7 @@ vector in the J2000 equatorial system: the coordinates are based on the mean equ
 of the Earth at noon UTC on 1 January 2000.
 
 The position is not corrected for light travel time or aberration.
-This is different from the behavior of [`GeoVector`](#GeoVector).
+This is different from the behavior of [`Astronomy.GeoVector`](#Astronomy.GeoVector).
 
 If given an invalid value for `body`, or the body is `Body.Pluto` and the `time` is outside
 the year range 1700..2200, this function will throw an `ArgumentException`.
@@ -294,7 +294,7 @@ relative to the horizon at the geographic location.
 The right ascension `ra` and declination `dec` passed in must be *equator of date*
 coordinates, based on the Earth's true equator at the date and time of the observation.
 Otherwise the resulting horizontal coordinates will be inaccurate.
-Equator of date coordinates can be obtained by calling [`Equator`](#Equator), passing in
+Equator of date coordinates can be obtained by calling [`Astronomy.Equator`](#Astronomy.Equator), passing in
 `EquatorEpoch.OfDate` as its `equdate` parameter. It is also recommended to enable
 aberration correction by passing in `Aberration.Corrected` as the `aberration` parameter.
 
@@ -408,14 +408,14 @@ Certain values of the angle have conventional definitions:
 **Finds the next lunar perigee or apogee event in a series.**
 
 This function requires an [`ApsisInfo`](#ApsisInfo) value obtained from a call
-to [`Astronomy`](#Astronomy).SearchLunarApsis or `Astronomy.NextLunarApsis`. Given
+to [`Astronomy.SearchLunarApsis`](#Astronomy.SearchLunarApsis) or `Astronomy.NextLunarApsis`. Given
 an apogee event, this function finds the next perigee event, and vice versa.
 
 See [`Astronomy_SearchLunarApsis`](#Astronomy_SearchLunarApsis) for more details.
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| [`ApsisInfo`](#ApsisInfo) | `apsis` | An apsis event obtained from a call to [`Astronomy`](#Astronomy).SearchLunarApsis or `Astronomy.NextLunarApsis`. See [`Astronomy`](#Astronomy).SearchLunarApsis for more details. |
+| [`ApsisInfo`](#ApsisInfo) | `apsis` | An apsis event obtained from a call to [`Astronomy.SearchLunarApsis`](#Astronomy.SearchLunarApsis) or `Astronomy.NextLunarApsis`. See [`Astronomy.SearchLunarApsis`](#Astronomy.SearchLunarApsis) for more details. |
 
 **Returns:** Same as the return value for [`Astronomy_SearchLunarApsis`](#Astronomy_SearchLunarApsis).
 
@@ -424,14 +424,14 @@ See [`Astronomy_SearchLunarApsis`](#Astronomy_SearchLunarApsis) for more details
 
 **Continues searching for lunar quarters from a previous search.**
 
-After calling [`SearchMoonQuarter`](#SearchMoonQuarter), this function can be called
+After calling [`Astronomy.SearchMoonQuarter`](#Astronomy.SearchMoonQuarter), this function can be called
 one or more times to continue finding consecutive lunar quarters.
 This function finds the next consecutive moon quarter event after
 the one passed in as the parameter `mq`.
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| [`MoonQuarterInfo`](#MoonQuarterInfo) | `mq` | The previous moon quarter found by a call to [`SearchMoonQuarter`](#SearchMoonQuarter) or NextMoonQuarter. |
+| [`MoonQuarterInfo`](#MoonQuarterInfo) | `mq` | The previous moon quarter found by a call to [`Astronomy.SearchMoonQuarter`](#Astronomy.SearchMoonQuarter) or `Astronomy.NextMoonQuarter`. |
 
 **Returns:** The moon quarter that occurs next in time after the one passed in `mq`.
 
@@ -535,7 +535,7 @@ The closest point is called *perigee* and the farthest point is called *apogee*.
 The word *apsis* refers to either event.
 
 To iterate through consecutive alternating perigee and apogee events, call `Astronomy.SearchLunarApsis`
-once, then use the return value to call [`Astronomy`](#Astronomy).NextLunarApsis. After that,
+once, then use the return value to call [`Astronomy.NextLunarApsis`](#Astronomy.NextLunarApsis). After that,
 keep feeding the previous return value from `Astronomy_NextLunarApsis` into another
 call of `Astronomy_NextLunarApsis` as many times as desired.
 
@@ -558,11 +558,11 @@ These are events where the planets reach the maximum angle from the Sun as seen 
 
 This function solves for those times, reporting the next maximum elongation event's date and time,
 the elongation value itself, the relative longitude with the Sun, and whether the planet is best
-observed in the morning or evening. See [`Astronomy_Elongation`](#Astronomy_Elongation) for more details about the returned structure.
+observed in the morning or evening. See [`Astronomy.Elongation`](#Astronomy.Elongation) for more details about the returned structure.
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| [`Body`](#Body) | `body` | Either `Body.Mercury` or `Body.Venus`. Any other value will result in an exception. To find the best viewing opportunites for planets farther from the Sun than the Earth is (Mars through Pluto) use [`SearchRelativeLongitude`](#SearchRelativeLongitude) to find the next opposition event. |
+| [`Body`](#Body) | `body` | Either `Body.Mercury` or `Body.Venus`. Any other value will result in an exception. To find the best viewing opportunites for planets farther from the Sun than the Earth is (Mars through Pluto) use [`Astronomy.SearchRelativeLongitude`](#Astronomy.SearchRelativeLongitude) to find the next opposition event. |
 | [`AstroTime`](#AstroTime) | `startTime` | The date and time at which to begin the search. The maximum elongation event found will always be the first one that occurs after this date and time. |
 
 **Returns:** Either an exception will be thrown, or the function will return a valid value.
@@ -581,7 +581,7 @@ This function searches for any value of the lunar phase expressed as an
 angle in degrees in the range [0, 360).
 
 If you want to iterate through lunar quarters (new moon, first quarter, full moon, third quarter)
-it is much easier to call the functions [`SearchMoonQuarter`](#SearchMoonQuarter) and [`NextMoonQuarter`](#NextMoonQuarter).
+it is much easier to call the functions [`Astronomy.SearchMoonQuarter`](#Astronomy.SearchMoonQuarter) and [`Astronomy.NextMoonQuarter`](#Astronomy.NextMoonQuarter).
 This function is useful for finding general phase angles outside those four quarters.
 
 | Type | Parameter | Description |
@@ -603,7 +603,7 @@ This function finds the lunar quarter that happens soonest
 after the specified date and time.
 
 To continue iterating through consecutive lunar quarters, call this function once,
-followed by calls to [`NextMoonQuarter`](#NextMoonQuarter) as many times as desired.
+followed by calls to [`Astronomy.NextMoonQuarter`](#Astronomy.NextMoonQuarter) as many times as desired.
 
 | Type | Parameter | Description |
 | --- | --- | --- |
@@ -621,9 +621,9 @@ Currently only Venus is supported for the `body` parameter, though this could ch
 Mercury's peak magnitude occurs at superior conjunction, when it is virtually impossible to see from the Earth,
 so peak magnitude events have little practical value for that planet.
 Planets other than Venus and Mercury reach peak magnitude at opposition, which can
-be found using [`Astronomy`](#Astronomy).SearchRelativeLongitude.
+be found using [`Astronomy.SearchRelativeLongitude`](#Astronomy.SearchRelativeLongitude).
 The Moon reaches peak magnitude at full moon, which can be found using
-[`Astronomy`](#Astronomy).SearchMoonQuarter or [`Astronomy`](#Astronomy).SearchMoonPhase.
+[`Astronomy.SearchMoonQuarter`](#Astronomy.SearchMoonQuarter) or [`Astronomy.SearchMoonPhase`](#Astronomy.SearchMoonPhase).
 The Sun reaches peak magnitude at perihelion, which occurs each year in January.
 However, the difference is minor and has little practical value.
 
@@ -632,7 +632,7 @@ However, the difference is minor and has little practical value.
 | [`Body`](#Body) | `body` | Currently only `Body.Venus` is allowed. Any other value causes an exception. See remarks above for more details. |
 | [`AstroTime`](#AstroTime) | `startTime` | The date and time to start searching for the next peak magnitude event. |
 
-**Returns:** See documentation about the return value from [`Astronomy`](#Astronomy).Illumination.
+**Returns:** See documentation about the return value from [`Astronomy.Illumination`](#Astronomy.Illumination).
 
 <a name="Astronomy.SearchRelativeLongitude"></a>
 ### Astronomy.SearchRelativeLongitude(body, targetRelLon, startTime) &#8658; [`AstroTime`](#AstroTime)
@@ -715,7 +715,7 @@ This function finds the moment in time, if any exists in the given time window,
 that the center of the Sun reaches a specific ecliptic longitude as seen from the center of the Earth.
 
 This function can be used to determine equinoxes and solstices.
-However, it is usually more convenient and efficient to call [`Seasons`](#Seasons)
+However, it is usually more convenient and efficient to call [`Astronomy.Seasons`](#Astronomy.Seasons)
 to calculate all equinoxes and solstices for a given calendar year.
 
 The function searches the window of time specified by `startTime` and `startTime+limitDays`.
@@ -780,7 +780,7 @@ as the longitude origin and x-axis direction, instead of the one for September.
 in order to obtain the exact equatorial plane at the given time.
 
 This function can be used for calculating changes of seasons: equinoxes and solstices.
-In fact, the function [`Seasons`](#Seasons) does use this function for that purpose.
+In fact, the function [`Astronomy.Seasons`](#Astronomy.Seasons) does use this function for that purpose.
 
 | Type | Parameter | Description |
 | --- | --- | --- |
@@ -837,7 +837,7 @@ The Moon's closest approach to the Earth is called *perigee* and its farthest
 point is called *apogee*. The closest approach of a planet to the Sun is called
 *perihelion* and the furthest point is called *aphelion*.
 
-This data structure is returned by [`Astronomy`](#Astronomy).SearchLunarApsis and [`Astronomy`](#Astronomy).NextLunarApsis
+This data structure is returned by [`Astronomy.SearchLunarApsis`](#Astronomy.SearchLunarApsis) and [`Astronomy.NextLunarApsis`](#Astronomy.NextLunarApsis)
 to iterate through consecutive alternating perigees and apogees.
 
 | Type | Name | Description |
@@ -878,7 +878,7 @@ to iterate through consecutive alternating perigees and apogees.
 
 **Calculates the sum or difference of an [`AstroTime`](#AstroTime) with a specified floating point number of days.**
 
-Sometimes we need to adjust a given [`astro_time_t`](#astro_time_t) value by a certain amount of time.
+Sometimes we need to adjust a given [`AstroTime`](#AstroTime) value by a certain amount of time.
 This function adds the given real number of days in `days` to the date and time in this object.
 
 More precisely, the result's Universal Time field `ut` is exactly adjusted by `days` and
@@ -997,8 +997,8 @@ oriented with respect to the plane of the Earth's orbit around the Sun (the ecli
 ## `struct ElongationInfo`
 
 **Contains information about the visibility of a celestial body at a given date and time.
-See [`Elongation`](#Elongation) for more detailed information about the members of this structure.
-See also [`SearchMaxElongation`](#SearchMaxElongation) for how to search for maximum elongation events.**
+See [`Astronomy.Elongation`](#Astronomy.Elongation) for more detailed information about the members of this structure.
+See also [`Astronomy.SearchMaxElongation`](#Astronomy.SearchMaxElongation) for how to search for maximum elongation events.**
 
 | Type | Name | Description |
 | --- | --- | --- |
@@ -1056,7 +1056,7 @@ oriented with respect to the projection of the Earth's equator onto the sky.
 
 **Information about a celestial body crossing a specific hour angle.**
 
-Returned by the function [`SearchHourAngle`](#SearchHourAngle) to report information about
+Returned by the function [`Astronomy.SearchHourAngle`](#Astronomy.SearchHourAngle) to report information about
 a celestial body crossing a certain hour angle as seen by a specified topocentric observer.
 
 | Type | Name | Description |
@@ -1071,7 +1071,7 @@ a celestial body crossing a certain hour angle as seen by a specified topocentri
 
 **Information about the brightness and illuminated shape of a celestial body.**
 
-Returned by the functions [`Astronomy`](#Astronomy).Illumination and [`Astronomy`](#Astronomy).SearchPeakMagnitude
+Returned by the functions [`Astronomy.Illumination`](#Astronomy.Illumination) and [`Astronomy.SearchPeakMagnitude`](#Astronomy.SearchPeakMagnitude)
 to report the visual magnitude and illuminated fraction of a celestial body at a given date and time.
 
 | Type | Name | Description |
@@ -1129,7 +1129,7 @@ from a particular place on the Earth.
 ## `class SearchContext`
 
 **Represents a function whose ascending root is to be found.
-See [`Search`](#Search).**
+See [`Astronomy.Search`](#Astronomy.Search).**
 
 ### member functions
 
@@ -1150,7 +1150,7 @@ See [`Search`](#Search).**
 ## `struct SeasonsInfo`
 
 **The dates and times of changes of season for a given calendar year.
-Call [`Seasons`](#Seasons) to calculate this data structure for a given year.**
+Call [`Astronomy.Seasons`](#Astronomy.Seasons) to calculate this data structure for a given year.**
 
 | Type | Name | Description |
 | --- | --- | --- |
