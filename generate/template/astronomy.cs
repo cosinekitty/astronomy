@@ -1101,7 +1101,7 @@ $ASTRO_CSHARP_CHEBYSHEV(8);
             double eps0 = 84381.406;
 
             if ((tt1 != 0.0) && (tt2 != 0.0))
-                throw new ArgumentException("precession: one of (tt1, tt2) must be zero.");
+                throw new ArgumentException("precession_rot: one of (tt1, tt2) must be zero.");
 
             t = (tt2 - tt1) / 36525;
             if (tt2 == 0)
@@ -1180,13 +1180,13 @@ $ASTRO_CSHARP_CHEBYSHEV(8);
             return new RotationMatrix(rot);
         }
 
-        private static AstroVector precession(double tt1, AstroVector pos1, double tt2)
+        private static AstroVector precession(double tt1, AstroVector pos, double tt2)
         {
             RotationMatrix r = precession_rot(tt1, tt2);
             return new AstroVector(
-                r.rot[0, 0]*pos1.x + r.rot[1, 0]*pos1.y + r.rot[2, 0]*pos1.z,
-                r.rot[0, 1]*pos1.x + r.rot[1, 1]*pos1.y + r.rot[2, 1]*pos1.z,
-                r.rot[0, 2]*pos1.x + r.rot[1, 2]*pos1.y + r.rot[2, 2]*pos1.z,
+                r.rot[0, 0]*pos.x + r.rot[1, 0]*pos.y + r.rot[2, 0]*pos.z,
+                r.rot[0, 1]*pos.x + r.rot[1, 1]*pos.y + r.rot[2, 1]*pos.z,
+                r.rot[0, 2]*pos.x + r.rot[1, 2]*pos.y + r.rot[2, 2]*pos.z,
                 null
             );
         }
@@ -1341,7 +1341,7 @@ $ASTRO_CSHARP_CHEBYSHEV(8);
             );
         }
 
-        private static AstroVector nutation(AstroTime time, int direction, AstroVector inpos)
+        private static RotationMatrix nutation_rot(AstroTime time, int direction)
         {
             earth_tilt_t tilt = e_tilt(time);
             double oblm = tilt.mobl * DEG2RAD;
@@ -1364,25 +1364,50 @@ $ASTRO_CSHARP_CHEBYSHEV(8);
             double yz = cpsi * cobm * sobt - sobm * cobt;
             double zz = cpsi * sobm * sobt + cobm * cobt;
 
-            double x, y, z;
+            var rot = new double[3,3];
 
             if (direction == 0)
             {
                 /* forward rotation */
-                x = xx * inpos.x + yx * inpos.y + zx * inpos.z;
-                y = xy * inpos.x + yy * inpos.y + zy * inpos.z;
-                z = xz * inpos.x + yz * inpos.y + zz * inpos.z;
+                rot[0, 0] = xx;
+                rot[0, 1] = xy;
+                rot[0, 2] = xz;
+                rot[1, 0] = yx;
+                rot[1, 1] = yy;
+                rot[1, 2] = yz;
+                rot[2, 0] = zx;
+                rot[2, 1] = zy;
+                rot[2, 2] = zz;
             }
             else
             {
                 /* inverse rotation */
-                x = xx * inpos.x + xy * inpos.y + xz * inpos.z;
-                y = yx * inpos.x + yy * inpos.y + yz * inpos.z;
-                z = zx * inpos.x + zy * inpos.y + zz * inpos.z;
+                rot[0, 0] = xx;
+                rot[0, 1] = yx;
+                rot[0, 2] = zx;
+                rot[1, 0] = xy;
+                rot[1, 1] = yy;
+                rot[1, 2] = zy;
+                rot[2, 0] = xz;
+                rot[2, 1] = yz;
+                rot[2, 2] = zz;
             }
 
-            return new AstroVector(x, y, z, time);
+            return new RotationMatrix(rot);
         }
+
+
+        private static AstroVector nutation(AstroTime time, int direction, AstroVector pos)
+        {
+            RotationMatrix r = nutation_rot(time, direction);
+            return new AstroVector(
+                r.rot[0, 0]*pos.x + r.rot[1, 0]*pos.y + r.rot[2, 0]*pos.z,
+                r.rot[0, 1]*pos.x + r.rot[1, 1]*pos.y + r.rot[2, 1]*pos.z,
+                r.rot[0, 2]*pos.x + r.rot[1, 2]*pos.y + r.rot[2, 2]*pos.z,
+                time
+            );
+        }
+
 
         private static Equatorial vector2radec(AstroVector pos)
         {
