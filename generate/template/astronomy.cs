@@ -4323,5 +4323,134 @@ $ASTRO_CSHARP_CHEBYSHEV(8);
             RotationMatrix prec = precession_rot(time.tt, 0.0);
             return CombineRotation(nut, prec);
         }
+
+        /// <summary>
+        /// Calculates a rotation matrix from equatorial of-date (EQD) to horizontal (HOR).
+        /// </summary>
+        /// <remarks>
+        /// This is one of the family of functions that returns a rotation matrix
+        /// for converting from one orientation to another.
+        /// Source: EQD = equatorial system, using equator of the specified date/time.
+        /// Target: HOR = horizontal system.
+        ///
+        /// Use #Astronomy.HorizonFromVector to convert the return value
+        /// to a traditional altitude/azimuth pair.
+        /// </remarks>
+        /// <param name="time">
+        /// The date and time at which the Earth's equator applies.
+        /// </param>
+        /// <param name="observer">
+        /// A location near the Earth's mean sea level that defines the observer's horizon.
+        /// </param>
+        /// <returns>
+        /// A rotation matrix that converts EQD to HOR at `time` and for `observer`.
+        /// The components of the horizontal vector are:
+        /// x = north, y = west, z = zenith (straight up from the observer).
+        /// These components are chosen so that the "right-hand rule" works for the vector
+        /// and so that north represents the direction where azimuth = 0.
+        /// </returns>
+        public static RotationMatrix Rotation_EQD_HOR(AstroTime time, Observer observer)
+        {
+            double sinlat = Math.Sin(observer.latitude * DEG2RAD);
+            double coslat = Math.Cos(observer.latitude * DEG2RAD);
+            double sinlon = Math.Sin(observer.longitude * DEG2RAD);
+            double coslon = Math.Cos(observer.longitude * DEG2RAD);
+
+            var uze = new AstroVector(coslat * coslon, coslat * sinlon, sinlat, null);
+            var une = new AstroVector(-sinlat * coslon, -sinlat * sinlon, coslat, null);
+            var uwe = new AstroVector(sinlon, -coslon, 0.0, null);
+
+            double spin_angle = -15.0 * sidereal_time(time);
+            AstroVector uz = spin(spin_angle, uze);
+            AstroVector un = spin(spin_angle, une);
+            AstroVector uw = spin(spin_angle, uwe);
+
+            var rot = new double[3,3];
+            rot[0, 0] = un.x; rot[1, 0] = un.y; rot[2, 0] = un.z;
+            rot[0, 1] = uw.x; rot[1, 1] = uw.y; rot[2, 1] = uw.z;
+            rot[0, 2] = uz.x; rot[1, 2] = uz.y; rot[2, 2] = uz.z;
+
+            return new RotationMatrix(rot);
+        }
+
+        /// <summary>
+        /// Calculates a rotation matrix from horizontal (HOR) to equatorial of-date (EQD).
+        /// </summary>
+        /// <remarks>
+        /// This is one of the family of functions that returns a rotation matrix
+        /// for converting from one orientation to another.
+        /// Source: HOR = horizontal system (x=North, y=West, z=Zenith).
+        /// Target: EQD = equatorial system, using equator of the specified date/time.
+        /// </remarks>
+        /// <param name="time">
+        /// The date and time at which the Earth's equator applies.
+        /// </param>
+        /// <param name="observer">
+        /// A location near the Earth's mean sea level that defines the observer's horizon.
+        /// </param>
+        /// <returns>
+        ///  A rotation matrix that converts HOR to EQD at `time` and for `observer`.
+        /// </returns>
+        public static RotationMatrix Rotation_HOR_EQD(AstroTime time, Observer observer)
+        {
+            RotationMatrix rot = Rotation_EQD_HOR(time, observer);
+            return InverseRotation(rot);
+        }
+
+        /// <summary>
+        /// Calculates a rotation matrix from horizontal (HOR) to J2000 equatorial (EQJ).
+        /// </summary>
+        /// <remarks>
+        /// This is one of the family of functions that returns a rotation matrix
+        /// for converting from one orientation to another.
+        /// Source: HOR = horizontal system (x=North, y=West, z=Zenith).
+        /// Target: EQJ = equatorial system, using equator at the J2000 epoch.
+        /// </remarks>
+        /// <param name="time">
+        /// The date and time of the observation.
+        /// </param>
+        /// <param name="observer">
+        /// A location near the Earth's mean sea level that defines the observer's horizon.
+        /// </param>
+        /// <returns>
+        /// A rotation matrix that converts HOR to EQD at `time` and for `observer`.
+        /// </returns>
+        public static RotationMatrix Rotation_HOR_EQJ(AstroTime time, Observer observer)
+        {
+            RotationMatrix hor_eqd = Rotation_HOR_EQD(time, observer);
+            RotationMatrix eqd_eqj = Rotation_EQD_EQJ(time);
+            return CombineRotation(hor_eqd, eqd_eqj);
+        }
+
+        /// <summary>
+        /// Calculates a rotation matrix from equatorial J2000 (EQJ) to horizontal (HOR).
+        /// </summary>
+        /// <remarks>
+        /// This is one of the family of functions that returns a rotation matrix
+        /// for converting from one orientation to another.
+        /// Source: EQJ = equatorial system, using the equator at the J2000 epoch.
+        /// Target: HOR = horizontal system.
+        ///
+        /// Use #Astronomy.HorizonFromVector to convert the return value
+        /// to a traditional altitude/azimuth pair.
+        /// </remarks>
+        /// <param name="time">
+        /// The date and time of the desired horizontal orientation.
+        /// </param>
+        /// <param name="observer">
+        /// A location near the Earth's mean sea level that defines the observer's horizon.
+        /// </param>
+        /// <returns>
+        /// A rotation matrix that converts EQJ to HOR at `time` and for `observer`.
+        /// The components of the horizontal vector are:
+        /// x = north, y = west, z = zenith (straight up from the observer).
+        /// These components are chosen so that the "right-hand rule" works for the vector
+        /// and so that north represents the direction where azimuth = 0.
+        /// </returns>
+        public static RotationMatrix Rotation_EQJ_HOR(AstroTime time, Observer observer)
+        {
+            RotationMatrix rot = Rotation_HOR_EQJ(time, observer);
+            return InverseRotation(rot);
+        }
     }
 }

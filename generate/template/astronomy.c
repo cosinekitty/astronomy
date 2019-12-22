@@ -4585,7 +4585,7 @@ astro_rotation_t Astronomy_Rotation_EQD_HOR(astro_time_t time, astro_observer_t 
  * This is one of the family of functions that returns a rotation matrix
  * for converting from one orientation to another.
  * Source: HOR = horizontal system (x=North, y=West, z=Zenith).
- * Source: EQD = equatorial system, using equator of the specified date/time.
+ * Target: EQD = equatorial system, using equator of the specified date/time.
  *
  * @param time
  *      The date and time at which the Earth's equator applies.
@@ -4610,7 +4610,7 @@ astro_rotation_t Astronomy_Rotation_HOR_EQD(astro_time_t time, astro_observer_t 
  * This is one of the family of functions that returns a rotation matrix
  * for converting from one orientation to another.
  * Source: HOR = horizontal system (x=North, y=West, z=Zenith).
- * Source: EQJ = equatorial system, using equator at the J2000 epoch.
+ * Target: EQJ = equatorial system, using equator at the J2000 epoch.
  *
  * @param time
  *      The date and time of the observation.

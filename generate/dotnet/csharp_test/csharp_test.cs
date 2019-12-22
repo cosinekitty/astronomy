@@ -254,7 +254,7 @@ namespace csharp_test
 
                     if (diff_minutes > 1.7)
                     {
-                        Console.WriteLine("SeasonsTest: %s line %d: excessive error (%s): %lf minutes.\n", filename, lnum, name, diff_minutes);
+                        Console.WriteLine("SeasonsTest: %s line %d: excessive error (%s): %lf minutes.", filename, lnum, name, diff_minutes);
                         return 1;
                     }
                 }
@@ -467,7 +467,7 @@ namespace csharp_test
 
                     if (error_minutes > 0.56)
                     {
-                        Console.WriteLine("RiseSetTest({0} line {1}): excessive prediction time error = {2} minutes.\n", filename, lnum, error_minutes);
+                        Console.WriteLine("RiseSetTest({0} line {1}): excessive prediction time error = {2} minutes.", filename, lnum, error_minutes);
                         return 1;
                     }
                 }
@@ -590,7 +590,7 @@ namespace csharp_test
 
             if (ratio > thresh)
             {
-                Console.WriteLine("TestPlanetLongitudes({0}): excessive event interval ratio.\n", body);
+                Console.WriteLine("TestPlanetLongitudes({0}): excessive event interval ratio.", body);
                 return 1;
             }
             return 0;
@@ -971,7 +971,7 @@ namespace csharp_test
                 AstroTime time = ParseDate(data.date);
 
                 IllumInfo illum = Astronomy.Illumination(Body.Saturn, time);
-                Console.WriteLine("Saturn: date={0}  calc mag={1}  ring_tilt={2}\n", data.date, illum.mag, illum.ring_tilt);
+                Console.WriteLine("Saturn: date={0}  calc mag={1}  ring_tilt={2}", data.date, illum.mag, illum.ring_tilt);
 
                 double mag_diff = Math.Abs(illum.mag - data.mag);
                 if (mag_diff > 1.0e-8)
@@ -983,7 +983,7 @@ namespace csharp_test
                 double tilt_diff = Math.Abs(illum.ring_tilt - data.tilt);
                 if (tilt_diff > 1.0e-8)
                 {
-                    Console.WriteLine("ERROR: Excessive ring tilt error {0}\n", tilt_diff);
+                    Console.WriteLine("ERROR: Excessive ring tilt error {0}", tilt_diff);
                     return 1;
                 }
             }
@@ -1184,7 +1184,7 @@ namespace csharp_test
             double ra_diff = Math.Abs(eqcheck.ra - eqdate.ra);
             double dec_diff = Math.Abs(eqcheck.dec - eqdate.dec);
             double dist_diff = Math.Abs(eqcheck.dist - eqdate.dist);
-            Console.WriteLine("Test_EQJ_EQD: {0} ra={1}, dec={2}, dist={3}, ra_diff={4}, dec_diff={5}, dist_diff={6}\n",
+            Console.WriteLine("Test_EQJ_EQD: {0} ra={1}, dec={2}, dist={3}, ra_diff={4}, dec_diff={5}, dist_diff={6}",
                 body, eqdate.ra, eqdate.dec, eqdate.dist, ra_diff, dec_diff, dist_diff);
 
             if (ra_diff > 1.0e-14 || dec_diff > 1.0e-14 || dist_diff > 4.0e-15)
@@ -1206,16 +1206,96 @@ namespace csharp_test
             return 0;
         }
 
+        static int Test_EQD_HOR(Body body)
+        {
+            var time = new AstroTime(1970, 12, 13, 5, 15, 0);
+            var observer = new Observer(-37.0, +45.0, 0.0);
+            Equatorial eqd = Astronomy.Equator(body, time, observer, EquatorEpoch.OfDate, Aberration.Corrected);
+            Topocentric hor = Astronomy.Horizon(time, observer, eqd.ra, eqd.dec, Refraction.Normal);
+            AstroVector vec_eqd = Astronomy.VectorFromEquator(eqd, time);
+            RotationMatrix rot = Astronomy.Rotation_EQD_HOR(time, observer);
+            AstroVector vec_hor = Astronomy.RotateVector(rot, vec_eqd);
+            Spherical sphere = Astronomy.HorizonFromVector(vec_hor, Refraction.Normal);
+
+            double diff_alt = Math.Abs(sphere.lat - hor.altitude);
+            double diff_az = Math.Abs(sphere.lon - hor.azimuth);
+
+            Console.WriteLine("Test_EQD_HOR {0}: trusted alt={1}, az={2}; test alt={3}, az={4}; diff_alt={5}, diff_az={6}",
+                body, hor.altitude, hor.azimuth, sphere.lat, sphere.lon, diff_alt, diff_az);
+
+            if (diff_alt > 2.0e-14 || diff_az > 4e-14)
+            {
+                Console.WriteLine("Test_EQD_HOR: EXCESSIVE HORIZONTAL ERROR.");
+                return 1;
+            }
+
+            /* Confirm that we can convert back to horizontal vector. */
+            AstroVector check_hor = Astronomy.VectorFromHorizon(sphere, time, Refraction.Normal);
+            double diff = VectorDiff(check_hor, vec_hor);
+            Console.WriteLine("Test_EQD_HOR {0}: horizontal recovery: diff = {1}", body, diff);
+            if (diff > 2.0e-15)
+            {
+                Console.WriteLine("Test_EQD_HOR: EXCESSIVE ERROR IN HORIZONTAL RECOVERY.");
+                return 1;
+            }
+
+            /* Verify the inverse translation from horizontal vector to equatorial of-date vector. */
+            rot = Astronomy.Rotation_HOR_EQD(time, observer);
+            AstroVector check_eqd = Astronomy.RotateVector(rot, vec_hor);
+            diff = VectorDiff(check_eqd, vec_eqd);
+            Console.WriteLine("Test_EQD_HOR {0}: OFDATE inverse rotation diff = {1}", body, diff);
+            if (diff > 2.0e-15)
+            {
+                Console.WriteLine("Test_EQD_HOR: EXCESSIVE OFDATE INVERSE HORIZONTAL ERROR.");
+                return 1;
+            }
+
+            /* Exercise HOR to EQJ translation. */
+            Equatorial eqj = Astronomy.Equator(body, time, observer, EquatorEpoch.J2000, Aberration.Corrected);
+            AstroVector vec_eqj = Astronomy.VectorFromEquator(eqj, time);
+
+            rot = Astronomy.Rotation_HOR_EQJ(time, observer);
+            AstroVector check_eqj = Astronomy.RotateVector(rot, vec_hor);
+            diff = VectorDiff(check_eqj, vec_eqj);
+            Console.WriteLine("Test_EQD_HOR {0}: J2000 inverse rotation diff = {1}", body, diff);
+            if (diff > 4.0e-15)
+            {
+                Console.WriteLine("Test_EQD_HOR: EXCESSIVE J2000 INVERSE HORIZONTAL ERROR.");
+                return 1;
+            }
+
+            /* Verify the inverse translation: EQJ to HOR. */
+            rot = Astronomy.Rotation_EQJ_HOR(time, observer);
+            check_hor = Astronomy.RotateVector(rot, vec_eqj);
+            diff = VectorDiff(check_hor, vec_hor);
+            Console.WriteLine("Test_EQD_HOR {0}: EQJ inverse rotation diff = {1}", body, diff);
+            if (diff > 2.0e-15)
+            {
+                Console.WriteLine("Test_EQD_HOR: EXCESSIVE EQJ INVERSE HORIZONTAL ERROR.");
+                return 1;
+            }
+
+            return 0;
+        }
+
         static int RotationTest()
         {
             if (0 != Rotation_MatrixInverse()) return 1;
             if (0 != Rotation_MatrixMultiply()) return 1;
             if (0 != Test_EQJ_ECL()) return 1;
+
             if (0 != Test_EQJ_EQD(Body.Mercury)) return 1;
             if (0 != Test_EQJ_EQD(Body.Venus)) return 1;
             if (0 != Test_EQJ_EQD(Body.Mars)) return 1;
             if (0 != Test_EQJ_EQD(Body.Jupiter)) return 1;
             if (0 != Test_EQJ_EQD(Body.Saturn)) return 1;
+
+            if (0 != Test_EQD_HOR(Body.Mercury)) return 1;
+            if (0 != Test_EQD_HOR(Body.Venus)) return 1;
+            if (0 != Test_EQD_HOR(Body.Mars)) return 1;
+            if (0 != Test_EQD_HOR(Body.Jupiter)) return 1;
+            if (0 != Test_EQD_HOR(Body.Saturn)) return 1;
+
             Console.WriteLine("RotationTest: PASS");
             return 0;
         }

@@ -1114,7 +1114,7 @@ This is one of the family of functions that returns a rotation matrix for conver
 
 
 
-This is one of the family of functions that returns a rotation matrix for converting from one orientation to another. Source: HOR = horizontal system (x=North, y=West, z=Zenith). Source: EQD = equatorial system, using equator of the specified date/time.
+This is one of the family of functions that returns a rotation matrix for converting from one orientation to another. Source: HOR = horizontal system (x=North, y=West, z=Zenith). Target: EQD = equatorial system, using equator of the specified date/time.
 
 
 
@@ -1139,7 +1139,7 @@ This is one of the family of functions that returns a rotation matrix for conver
 
 
 
-This is one of the family of functions that returns a rotation matrix for converting from one orientation to another. Source: HOR = horizontal system (x=North, y=West, z=Zenith). Source: EQJ = equatorial system, using equator at the J2000 epoch.
+This is one of the family of functions that returns a rotation matrix for converting from one orientation to another. Source: HOR = horizontal system (x=North, y=West, z=Zenith). Target: EQJ = equatorial system, using equator at the J2000 epoch.
 
 
 
