@@ -26,7 +26,7 @@ cd ../../../csdown || Fail "Error changing to csdown directory"
 ./build || exit 1
 dotnet exe/csdown.dll csharp_prefix.md ../generate/dotnet/csharp_test/exe/astronomy.dll ../generate/dotnet/csharp_test/exe/astronomy.xml ../source/csharp/README.md || Fail "Error generating C# documentation."
 cd ../generate || Fail "Error changing back to generate directory"
-./check_internal_links.py $(realpath ../source/csharp/README.md) #|| exit 1
+./check_internal_links.py $(realpath ../source/csharp/README.md) || exit 1
 
 echo "Minifying JavaScript code."
 google-closure-compiler --js ../source/js/astronomy.js --js_output_file ../source/js/astronomy.min.js || Fail "Error minifying astronomy.js"

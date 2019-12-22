@@ -921,8 +921,6 @@ This is one of the family of functions that returns a rotation matrix for conver
 
 This is one of the family of functions that returns a rotation matrix for converting from one orientation to another. Source: ECL = ecliptic system, using equator at J2000 epoch. Target: HOR = horizontal system.
 
-Use [`Astronomy_HorizonFromVector`](#Astronomy_HorizonFromVector) to convert the return value to a traditional altitude/azimuth pair.
-
 
 
 **Returns:**  A rotation matrix that converts ECL to HOR at `time` and for `observer`. The components of the horizontal vector are: x = north, y = west, z = zenith (straight up from the observer). These components are chosen so that the "right-hand rule" works for the vector and so that north represents the direction where azimuth = 0. 
@@ -996,8 +994,6 @@ This is one of the family of functions that returns a rotation matrix for conver
 
 This is one of the family of functions that returns a rotation matrix for converting from one orientation to another. Source: EQD = equatorial system, using equator of the specified date/time. Target: HOR = horizontal system.
 
-Use [`Astronomy_HorizonFromVector`](#Astronomy_HorizonFromVector) to convert the return value to a traditional altitude/azimuth pair.
-
 
 
 **Returns:**  A rotation matrix that converts EQD to HOR at `time` and for `observer`. The components of the horizontal vector are: x = north, y = west, z = zenith (straight up from the observer). These components are chosen so that the "right-hand rule" works for the vector and so that north represents the direction where azimuth = 0. 
@@ -1063,8 +1059,6 @@ This is one of the family of functions that returns a rotation matrix for conver
 
 
 This is one of the family of functions that returns a rotation matrix for converting from one orientation to another. Source: EQJ = equatorial system, using the equator at the J2000 epoch. Target: HOR = horizontal system.
-
-Use [`Astronomy_HorizonFromVector`](#Astronomy_HorizonFromVector) to convert the return value to a traditional altitude/azimuth pair.
 
 
 

@@ -4524,9 +4524,6 @@ astro_rotation_t Astronomy_Rotation_EQD_EQJ(astro_time_t time)
  * Source: EQD = equatorial system, using equator of the specified date/time.
  * Target: HOR = horizontal system.
  *
- * Use #Astronomy_HorizonFromVector to convert the return value
- * to a traditional altitude/azimuth pair.
- *
  * @param time
  *      The date and time at which the Earth's equator applies.
  *
@@ -4640,9 +4637,6 @@ astro_rotation_t Astronomy_Rotation_HOR_EQJ(astro_time_t time, astro_observer_t 
  * Source: EQJ = equatorial system, using the equator at the J2000 epoch.
  * Target: HOR = horizontal system.
  *
- * Use #Astronomy_HorizonFromVector to convert the return value
- * to a traditional altitude/azimuth pair.
- *
  * @param time
  *      The date and time of the desired horizontal orientation.
  *
@@ -4718,9 +4712,6 @@ astro_rotation_t Astronomy_Rotation_ECL_EQD(astro_time_t time)
  * for converting from one orientation to another.
  * Source: ECL = ecliptic system, using equator at J2000 epoch.
  * Target: HOR = horizontal system.
- *
- * Use #Astronomy_HorizonFromVector to convert the return value
- * to a traditional altitude/azimuth pair.
  *
  * @param time
  *      The date and time of the desired horizontal orientation.

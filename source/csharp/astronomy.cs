@@ -5500,6 +5500,7 @@ namespace CosineKitty
             return r;
         }
 
+
         /// <summary>Calculates a rotation matrix from ecliptic J2000 (ECL) to equatorial J2000 (EQJ).</summary>
         /// <remarks>
         /// This is one of the family of functions that returns a rotation matrix
@@ -5568,6 +5569,7 @@ namespace CosineKitty
             return CombineRotation(nut, prec);
         }
 
+
         /// <summary>
         /// Calculates a rotation matrix from equatorial of-date (EQD) to horizontal (HOR).
         /// </summary>
@@ -5576,9 +5578,6 @@ namespace CosineKitty
         /// for converting from one orientation to another.
         /// Source: EQD = equatorial system, using equator of the specified date/time.
         /// Target: HOR = horizontal system.
-        ///
-        /// Use #Astronomy.HorizonFromVector to convert the return value
-        /// to a traditional altitude/azimuth pair.
         /// </remarks>
         /// <param name="time">
         /// The date and time at which the Earth's equator applies.
@@ -5617,6 +5616,7 @@ namespace CosineKitty
             return new RotationMatrix(rot);
         }
 
+
         /// <summary>
         /// Calculates a rotation matrix from horizontal (HOR) to equatorial of-date (EQD).
         /// </summary>
@@ -5640,6 +5640,7 @@ namespace CosineKitty
             RotationMatrix rot = Rotation_EQD_HOR(time, observer);
             return InverseRotation(rot);
         }
+
 
         /// <summary>
         /// Calculates a rotation matrix from horizontal (HOR) to J2000 equatorial (EQJ).
@@ -5666,6 +5667,7 @@ namespace CosineKitty
             return CombineRotation(hor_eqd, eqd_eqj);
         }
 
+
         /// <summary>
         /// Calculates a rotation matrix from equatorial J2000 (EQJ) to horizontal (HOR).
         /// </summary>
@@ -5674,9 +5676,6 @@ namespace CosineKitty
         /// for converting from one orientation to another.
         /// Source: EQJ = equatorial system, using the equator at the J2000 epoch.
         /// Target: HOR = horizontal system.
-        ///
-        /// Use #Astronomy.HorizonFromVector to convert the return value
-        /// to a traditional altitude/azimuth pair.
         /// </remarks>
         /// <param name="time">
         /// The date and time of the desired horizontal orientation.
@@ -5694,6 +5693,105 @@ namespace CosineKitty
         public static RotationMatrix Rotation_EQJ_HOR(AstroTime time, Observer observer)
         {
             RotationMatrix rot = Rotation_HOR_EQJ(time, observer);
+            return InverseRotation(rot);
+        }
+
+
+        /// <summary>
+        /// Calculates a rotation matrix from equatorial of-date (EQD) to ecliptic J2000 (ECL).
+        /// </summary>
+        /// <remarks>
+        /// This is one of the family of functions that returns a rotation matrix
+        /// for converting from one orientation to another.
+        /// Source: EQD = equatorial system, using equator of date.
+        /// Target: ECL = ecliptic system, using equator at J2000 epoch.
+        /// </remarks>
+        /// <param name="time">
+        /// The date and time of the source equator.
+        /// </param>
+        /// <returns>
+        /// A rotation matrix that converts EQD to ECL.
+        /// </returns>
+        public static RotationMatrix Rotation_EQD_ECL(AstroTime time)
+        {
+            RotationMatrix eqd_eqj = Rotation_EQD_EQJ(time);
+            RotationMatrix eqj_ecl = Rotation_EQJ_ECL();
+            return CombineRotation(eqd_eqj, eqj_ecl);
+        }
+
+
+        /// <summary>
+        /// Calculates a rotation matrix from ecliptic J2000 (ECL) to equatorial of-date (EQD).
+        /// </summary>
+        /// <remarks>
+        /// This is one of the family of functions that returns a rotation matrix
+        /// for converting from one orientation to another.
+        /// Source: ECL = ecliptic system, using equator at J2000 epoch.
+        /// Target: EQD = equatorial system, using equator of date.
+        /// </remarks>
+        /// <param name="time">
+        /// The date and time of the desired equator.
+        /// </param>
+        /// <returns>
+        /// A rotation matrix that converts ECL to EQD.
+        /// </returns>
+        public static RotationMatrix Rotation_ECL_EQD(AstroTime time)
+        {
+            RotationMatrix rot = Rotation_EQD_ECL(time);
+            return InverseRotation(rot);
+        }
+
+
+        /// <summary>
+        /// Calculates a rotation matrix from ecliptic J2000 (ECL) to horizontal (HOR).
+        /// </summary>
+        /// <remarks>
+        /// This is one of the family of functions that returns a rotation matrix
+        /// for converting from one orientation to another.
+        /// Source: ECL = ecliptic system, using equator at J2000 epoch.
+        /// Target: HOR = horizontal system.
+        /// </remarks>
+        /// <param name="time">
+        /// The date and time of the desired horizontal orientation.
+        /// </param>
+        /// <param name="observer">
+        /// A location near the Earth's mean sea level that defines the observer's horizon.
+        /// </param>
+        /// <returns>
+        /// A rotation matrix that converts ECL to HOR at `time` and for `observer`.
+        /// The components of the horizontal vector are:
+        /// x = north, y = west, z = zenith (straight up from the observer).
+        /// These components are chosen so that the "right-hand rule" works for the vector
+        /// and so that north represents the direction where azimuth = 0.
+        /// </returns>
+        public static RotationMatrix Rotation_ECL_HOR(AstroTime time, Observer observer)
+        {
+            RotationMatrix ecl_eqd = Rotation_ECL_EQD(time);
+            RotationMatrix eqd_hor = Rotation_EQD_HOR(time, observer);
+            return CombineRotation(ecl_eqd, eqd_hor);
+        }
+
+        /// <summary>
+        /// Calculates a rotation matrix from horizontal (HOR) to ecliptic J2000 (ECL).
+        /// </summary>
+        /// <remarks>
+        /// This is one of the family of functions that returns a rotation matrix
+        /// for converting from one orientation to another.
+        /// Source: HOR = horizontal system.
+        /// Target: ECL = ecliptic system, using equator at J2000 epoch.
+        /// </remarks>
+        /// <param name="time">
+        /// The date and time of the horizontal observation.
+        /// </param>
+        /// <param name="observer">
+        /// The location of the horizontal observer.
+        /// </param>
+        /// <returns>
+        /// A rotation matrix that converts HOR to ECL.
+        /// </returns>
+        public static RotationMatrix Rotation_HOR_ECL(AstroTime time, Observer observer)
+        {
+            RotationMatrix rot = Rotation_ECL_HOR(time, observer);
             return InverseRotation(rot);
         }
     }
