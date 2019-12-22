@@ -1125,6 +1125,17 @@ from a particular place on the Earth.
 
 ---
 
+<a name="RotationMatrix"></a>
+## `class RotationMatrix`
+
+**Contains a rotation matrix that can be used to transform one coordinate system to another.**
+
+| Type | Name | Description |
+| --- | --- | --- |
+| `double[3,3]` | `rot` | A normalized 3x3 rotation matrix. |
+
+---
+
 <a name="SearchContext"></a>
 ## `class SearchContext`
 

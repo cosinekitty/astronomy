@@ -235,6 +235,9 @@ namespace csdown
                 case "System.Double":
                     return "`double`";
 
+                case "System.Double[,]":
+                    return "`double[3,3]`";     // the two-dimensional arrays are all rotation matrices: 3x3
+
                 case "System.String":
                     return "`string`";
 

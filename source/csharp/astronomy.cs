@@ -291,6 +291,25 @@ namespace CosineKitty
     }
 
     /// <summary>
+    /// Contains a rotation matrix that can be used to transform one coordinate system to another.
+    /// </summary>
+    public class RotationMatrix
+    {
+        /// <summary>A normalized 3x3 rotation matrix.</summary>
+        public readonly double[,] rot;
+
+        /// <summary>Creates a rotation matrix.</summary>
+        /// <param name="rot">A 3x3 array of floating point numbers defining the rotation matrix.</param>
+        public RotationMatrix(double[,] rot)
+        {
+            if (rot == null || rot.GetLength(0) != 3 || rot.GetLength(1) != 3)
+                throw new ArgumentException("Rotation matrix must be given a 3x3 array.");
+
+            this.rot = rot;
+        }
+    }
+
+    /// <summary>
     /// The location of an observer on (or near) the surface of the Earth.
     /// </summary>
     /// <remarks>
@@ -2136,7 +2155,7 @@ namespace CosineKitty
             throw new ArgumentException(string.Format("Time argument is out of bounds: {0}", time));
         }
 
-        private static AstroVector precession(double tt1, AstroVector pos1, double tt2)
+        private static RotationMatrix precession_rot(double tt1, double tt2)
         {
             double xx, yx, zx, xy, yy, zy, xz, yz, zz;
             double t, psia, omegaa, chia, sa, ca, sb, cb, sc, cc, sd, cd;
@@ -2191,24 +2210,46 @@ namespace CosineKitty
             yz = -sc * cb * ca - sa * cc;
             zz = -sc * cb * sa + cc * ca;
 
-            double x, y, z;
-
+            var rot = new double[3,3];
             if (tt2 == 0.0)
             {
                 /* Perform rotation from other epoch to J2000.0. */
-                x = xx * pos1.x + xy * pos1.y + xz * pos1.z;
-                y = yx * pos1.x + yy * pos1.y + yz * pos1.z;
-                z = zx * pos1.x + zy * pos1.y + zz * pos1.z;
+                rot[0, 0] = xx;
+                rot[0, 1] = yx;
+                rot[0, 2] = zx;
+                rot[1, 0] = xy;
+                rot[1, 1] = yy;
+                rot[1, 2] = zy;
+                rot[2, 0] = xz;
+                rot[2, 1] = yz;
+                rot[2, 2] = zz;
             }
             else
             {
                 /* Perform rotation from J2000.0 to other epoch. */
-                x = xx * pos1.x + yx * pos1.y + zx * pos1.z;
-                y = xy * pos1.x + yy * pos1.y + zy * pos1.z;
-                z = xz * pos1.x + yz * pos1.y + zz * pos1.z;
+                rot[0, 0] = xx;
+                rot[0, 1] = xy;
+                rot[0, 2] = xz;
+                rot[1, 0] = yx;
+                rot[1, 1] = yy;
+                rot[1, 2] = yz;
+                rot[2, 0] = zx;
+                rot[2, 1] = zy;
+                rot[2, 2] = zz;
             }
 
-            return new AstroVector(x, y, z, null);
+            return new RotationMatrix(rot);
+        }
+
+        private static AstroVector precession(double tt1, AstroVector pos1, double tt2)
+        {
+            RotationMatrix r = precession_rot(tt1, tt2);
+            return new AstroVector(
+                r.rot[0, 0]*pos1.x + r.rot[1, 0]*pos1.y + r.rot[2, 0]*pos1.z,
+                r.rot[0, 1]*pos1.x + r.rot[1, 1]*pos1.y + r.rot[2, 1]*pos1.z,
+                r.rot[0, 2]*pos1.x + r.rot[1, 2]*pos1.y + r.rot[2, 2]*pos1.z,
+                null
+            );
         }
 
         private struct earth_tilt_t
