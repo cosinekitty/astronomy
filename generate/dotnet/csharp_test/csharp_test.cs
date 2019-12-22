@@ -1278,6 +1278,91 @@ namespace csharp_test
             return 0;
         }
 
+
+        static int CheckInverse(string aname, string bname, RotationMatrix arot, RotationMatrix brot)
+        {
+            RotationMatrix crot = Astronomy.CombineRotation(arot, brot);
+
+            var rot = new double[3,3];
+            rot[0, 0] = 1; rot[1, 0] = 0; rot[2, 0] = 0;
+            rot[0, 1] = 0; rot[1, 1] = 1; rot[2, 1] = 0;
+            rot[0, 2] = 0; rot[1, 2] = 0; rot[2, 2] = 1;
+            var identity = new RotationMatrix(rot);
+
+            string caller = "CheckInverse(" + aname + ", " + bname + ")";
+            return CompareMatrices(caller, crot, identity, 2.0e-15);
+        }
+
+
+        static int CheckCycle(
+            string aname, string bname, string cname,
+            RotationMatrix arot, RotationMatrix brot, RotationMatrix crot)
+        {
+            RotationMatrix xrot = Astronomy.CombineRotation(arot, brot);
+            RotationMatrix irot = Astronomy.InverseRotation(xrot);
+            string name = string.Format("CheckCycle({0}, {1}, {2})", aname, bname, cname);
+            return CompareMatrices(name, crot, irot, 2.0e-15);
+        }
+
+
+        static int Test_RotRoundTrip()
+        {
+            AstroTime time = new AstroTime(2067, 5, 30, 14, 45, 0);
+            Observer observer = new Observer(+28.0, -82.0, 0.0);
+
+            /*
+                In each round trip, calculate a forward rotation and a backward rotation.
+                Verify the two are inverse matrices.
+            */
+
+            /* Round trip #1: EQJ <==> EQD. */
+            RotationMatrix eqj_eqd = Astronomy.Rotation_EQJ_EQD(time);
+            RotationMatrix eqd_eqj = Astronomy.Rotation_EQD_EQJ(time);
+            if (0 != CheckInverse(nameof(eqj_eqd), nameof(eqd_eqj), eqj_eqd, eqd_eqj)) return 1;
+
+            /* Round trip #2: EQJ <==> ECL. */
+            RotationMatrix eqj_ecl = Astronomy.Rotation_EQJ_ECL();
+            RotationMatrix ecl_eqj = Astronomy.Rotation_ECL_EQJ();
+            if (0 != CheckInverse(nameof(eqj_ecl), nameof(ecl_eqj), eqj_ecl, ecl_eqj)) return 1;
+
+            /* Round trip #3: EQJ <==> HOR. */
+            RotationMatrix eqj_hor = Astronomy.Rotation_EQJ_HOR(time, observer);
+            RotationMatrix hor_eqj = Astronomy.Rotation_HOR_EQJ(time, observer);
+            if (0 != CheckInverse(nameof(eqj_hor), nameof(hor_eqj), eqj_hor, hor_eqj)) return 1;
+
+            /* Round trip #4: EQD <==> HOR. */
+            RotationMatrix eqd_hor = Astronomy.Rotation_EQD_HOR(time, observer);
+            RotationMatrix hor_eqd = Astronomy.Rotation_HOR_EQD(time, observer);
+            if (0 != CheckInverse(nameof(eqd_hor), nameof(hor_eqd), eqd_hor, hor_eqd)) return 1;
+
+            /* Round trip #5: EQD <==> ECL. */
+            RotationMatrix eqd_ecl = Astronomy.Rotation_EQD_ECL(time);
+            RotationMatrix ecl_eqd = Astronomy.Rotation_ECL_EQD(time);
+            if (0 != CheckInverse(nameof(eqd_ecl), nameof(ecl_eqd), eqd_ecl, ecl_eqd)) return 1;
+
+            /* Round trip #6: HOR <==> ECL. */
+            RotationMatrix hor_ecl = Astronomy.Rotation_HOR_ECL(time, observer);
+            RotationMatrix ecl_hor = Astronomy.Rotation_ECL_HOR(time, observer);
+            if (0 != CheckInverse(nameof(hor_ecl), nameof(ecl_hor), hor_ecl, ecl_hor)) return 1;
+
+            /*
+                Verify that combining different sequences of rotations result
+                in the expected combination.
+                For example, (EQJ ==> HOR ==> ECL) must be the same matrix as (EQJ ==> ECL).
+                Each of these is a "triangle" of relationships between 3 orientations.
+                There are 4 possible ways to pick 3 orientations from the 4 to form a triangle.
+                Because we have just proved that each transformation is reversible,
+                we only need to verify the triangle in one cyclic direction.
+            */
+            if (0 != CheckCycle(nameof(eqj_ecl), nameof(ecl_eqd), nameof(eqd_eqj), eqj_ecl, ecl_eqd, eqd_eqj)) return 1;     /* excluded corner = HOR */
+            if (0 != CheckCycle(nameof(eqj_hor), nameof(hor_ecl), nameof(ecl_eqj), eqj_hor, hor_ecl, ecl_eqj)) return 1;     /* excluded corner = EQD */
+            if (0 != CheckCycle(nameof(eqj_hor), nameof(hor_eqd), nameof(eqd_eqj), eqj_hor, hor_eqd, eqd_eqj)) return 1;     /* excluded corner = ECL */
+            if (0 != CheckCycle(nameof(ecl_eqd), nameof(eqd_hor), nameof(hor_ecl), ecl_eqd, eqd_hor, hor_ecl)) return 1;     /* excluded corner = EQJ */
+
+            Console.WriteLine("Test_RotRoundTrip: PASS");
+            return 0;
+        }
+
         static int RotationTest()
         {
             if (0 != Rotation_MatrixInverse()) return 1;
@@ -1295,6 +1380,8 @@ namespace csharp_test
             if (0 != Test_EQD_HOR(Body.Mars)) return 1;
             if (0 != Test_EQD_HOR(Body.Jupiter)) return 1;
             if (0 != Test_EQD_HOR(Body.Saturn)) return 1;
+
+            if (0 != Test_RotRoundTrip()) return 1;
 
             Console.WriteLine("RotationTest: PASS");
             return 0;
