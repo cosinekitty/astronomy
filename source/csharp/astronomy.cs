@@ -4609,6 +4609,37 @@ namespace CosineKitty
             // This should never happen. If it does, please report as a bug in Astronomy Engine.
             throw new Exception("Peak magnitude search failed.");
         }
+
+        /// <summary>Creates a rotation based on applying one rotation followed by another.</summary>
+        /// <remarks>
+        /// Given two rotation matrices, returns a combined rotation matrix that is
+        /// equivalent to rotating based on the first matrix, followed by the second.
+        /// </remarks>
+        /// <param name="a">The first rotation to apply.</param>
+        /// <param name="b">The second rotation to apply.</param>
+        /// <returns>The combined rotation matrix.</returns>
+        public static RotationMatrix CombineRotation(RotationMatrix a, RotationMatrix b)
+        {
+            var rot = new double[3,3];
+
+            // Use matrix multiplication: c = b*a.
+            // We put 'b' on the left and 'a' on the right because,
+            // just like when you use a matrix M to rotate a vector V,
+            // you put the M on the left in the product M*V.
+            // We can think of this as 'b' rotating all the 3 column vectors in 'a'.
+
+            rot[0, 0] = b.rot[0, 0]*a.rot[0, 0] + b.rot[1, 0]*a.rot[0, 1] + b.rot[2, 0]*a.rot[0, 2];
+            rot[1, 0] = b.rot[0, 0]*a.rot[1, 0] + b.rot[1, 0]*a.rot[1, 1] + b.rot[2, 0]*a.rot[1, 2];
+            rot[2, 0] = b.rot[0, 0]*a.rot[2, 0] + b.rot[1, 0]*a.rot[2, 1] + b.rot[2, 0]*a.rot[2, 2];
+            rot[0, 1] = b.rot[0, 1]*a.rot[0, 0] + b.rot[1, 1]*a.rot[0, 1] + b.rot[2, 1]*a.rot[0, 2];
+            rot[1, 1] = b.rot[0, 1]*a.rot[1, 0] + b.rot[1, 1]*a.rot[1, 1] + b.rot[2, 1]*a.rot[1, 2];
+            rot[2, 1] = b.rot[0, 1]*a.rot[2, 0] + b.rot[1, 1]*a.rot[2, 1] + b.rot[2, 1]*a.rot[2, 2];
+            rot[0, 2] = b.rot[0, 2]*a.rot[0, 0] + b.rot[1, 2]*a.rot[0, 1] + b.rot[2, 2]*a.rot[0, 2];
+            rot[1, 2] = b.rot[0, 2]*a.rot[1, 0] + b.rot[1, 2]*a.rot[1, 1] + b.rot[2, 2]*a.rot[1, 2];
+            rot[2, 2] = b.rot[0, 2]*a.rot[2, 0] + b.rot[1, 2]*a.rot[2, 1] + b.rot[2, 2]*a.rot[2, 2];
+
+            return new RotationMatrix(rot);
+        }
     }
 
     /// <summary>

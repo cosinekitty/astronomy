@@ -20,7 +20,7 @@ def FuncList_C(filename):
     funcset = set()
     with open(filename, 'rt') as infile:
         for line in infile:
-            m = re.match(r'^([a-z_]+).*?Astronomy_([A-Za-z]+)\s*\(', line)
+            m = re.match(r'^([a-z_]+).*?Astronomy_([A-Za-z_]+)\s*\(', line)
             if m:
                 if m.group(1) != 'static':
                     funcset.add(m.group(2))
@@ -37,7 +37,7 @@ def FuncList_Csharp(filename):
             else:
                 if line == '    }\n':
                     break
-                m = re.match(r'^        public static .*?([A-Za-z]+)\(', line)
+                m = re.match(r'^        public static .*?([A-Za-z_]+)\(', line)
                 if m:
                     funcset.add(m.group(1))
     return funcset
@@ -46,7 +46,7 @@ def Funclist_JavaScript(filename):
     funcset = set()
     with open(filename, 'rt') as infile:
         for line in infile:
-            m = re.match(r'^Astronomy\.([A-Za-z]+)\s*=\s*function\s*\(', line)
+            m = re.match(r'^Astronomy\.([A-Za-z_]+)\s*=\s*function\s*\(', line)
             if m:
                 funcset.add(m.group(1))
     return funcset

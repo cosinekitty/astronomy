@@ -15,6 +15,7 @@ namespace csharp_test
                 Console.WriteLine("csharp_test: starting");
                 if (TestTime() != 0) return 1;
                 if (MoonTest() != 0) return 1;
+                if (RotationTest() != 0) return 1;
                 if (RiseSetTest("../../riseset/riseset.txt") != 0) return 1;
                 if (SeasonsTest("../../seasons/seasons.txt") != 0) return 1;
                 if (MoonPhaseTest("../../moonphase/moonphases.txt") != 0) return 1;
@@ -1058,6 +1059,52 @@ namespace csharp_test
             if (nfailed > 0)
                 Console.WriteLine("MagnitudeTest: FAILED {0} test(s).", nfailed);
             return nfailed;
+        }
+
+        static int CompareMatrices(string caller, RotationMatrix a, RotationMatrix b, double tolerance)
+        {
+            for (int i=0; i<3; ++i)
+            {
+                for (int j=0; j<3; ++j)
+                {
+                    double diff = Math.Abs(a.rot[i,j] - b.rot[i,j]);
+                    if (diff > tolerance)
+                    {
+                        Console.WriteLine("ERROR({0}): matrix[{1},{2}]={3}, expected {4}, diff {5}", caller, i, j, a.rot[i,j], b.rot[i,j], diff);
+                        return 1;
+                    }
+                }
+            }
+            return 0;
+        }
+
+        static int Rotation_MatrixMultiply()
+        {
+            var a = new RotationMatrix(new double[3,3]);
+            a.rot[0, 0] = 1.0; a.rot[1, 0] = 2.0; a.rot[2, 0] = 3.0;
+            a.rot[0, 1] = 4.0; a.rot[1, 1] = 5.0; a.rot[2, 1] = 6.0;
+            a.rot[0, 2] = 7.0; a.rot[1, 2] = 8.0; a.rot[2, 2] = 9.0;
+
+            var b = new RotationMatrix(new double[3,3]);
+            b.rot[0, 0] = 10.0; b.rot[1, 0] = 11.0; b.rot[2, 0] = 12.0;
+            b.rot[0, 1] = 13.0; b.rot[1, 1] = 14.0; b.rot[2, 1] = 15.0;
+            b.rot[0, 2] = 16.0; b.rot[1, 2] = 17.0; b.rot[2, 2] = 18.0;
+
+            var v = new RotationMatrix(new double[3,3]);
+            v.rot[0, 0] =  84.0; v.rot[1, 0] =  90.0; v.rot[2, 0] =  96.0;
+            v.rot[0, 1] = 201.0; v.rot[1, 1] = 216.0; v.rot[2, 1] = 231.0;
+            v.rot[0, 2] = 318.0; v.rot[1, 2] = 342.0; v.rot[2, 2] = 366.0;
+
+            RotationMatrix c = Astronomy.CombineRotation(b, a);
+            if (0 != CompareMatrices("Rotation_MatrixMultiply", c, v, 0.0)) return 1;
+            Console.WriteLine("Rotation_MatrixMultiply: PASS");
+            return 0;
+        }
+
+        static int RotationTest()
+        {
+            if (0 != Rotation_MatrixMultiply()) return 1;
+            return 0;
         }
     }
 }

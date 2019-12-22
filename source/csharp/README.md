@@ -141,6 +141,21 @@ easy it is to see the body away from the glare of the Sun.
 
 **Returns:** Returns the angle in degrees between the Sun and the specified body as seen from the center of the Earth.
 
+<a name="Astronomy.CombineRotation"></a>
+### Astronomy.CombineRotation(a, b) &#8658; [`RotationMatrix`](#RotationMatrix)
+
+**Creates a rotation based on applying one rotation followed by another.**
+
+Given two rotation matrices, returns a combined rotation matrix that is
+equivalent to rotating based on the first matrix, followed by the second.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`RotationMatrix`](#RotationMatrix) | `a` | The first rotation to apply. |
+| [`RotationMatrix`](#RotationMatrix) | `b` | The second rotation to apply. |
+
+**Returns:** The combined rotation matrix.
+
 <a name="Astronomy.EclipticLongitude"></a>
 ### Astronomy.EclipticLongitude(body, time) &#8658; `double`
 
