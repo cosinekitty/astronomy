@@ -4610,6 +4610,30 @@ namespace CosineKitty
             throw new Exception("Peak magnitude search failed.");
         }
 
+        /// <summary>Calculates the inverse of a rotation matrix.</summary>
+        /// <remarks>
+        /// Given a rotation matrix that performs some coordinate transform,
+        /// this function returns the matrix that reverses that trasnform.
+        /// </remarks>
+        /// <param name="rotation">The rotation matrix to be inverted.</param>
+        /// <returns>A rotation matrix that performs the opposite transformation.</returns>
+        public static RotationMatrix InverseRotation(RotationMatrix rotation)
+        {
+            var inverse = new RotationMatrix(new double[3,3]);
+
+            inverse.rot[0, 0] = rotation.rot[0, 0];
+            inverse.rot[0, 1] = rotation.rot[1, 0];
+            inverse.rot[0, 2] = rotation.rot[2, 0];
+            inverse.rot[1, 0] = rotation.rot[0, 1];
+            inverse.rot[1, 1] = rotation.rot[1, 1];
+            inverse.rot[1, 2] = rotation.rot[2, 1];
+            inverse.rot[2, 0] = rotation.rot[0, 2];
+            inverse.rot[2, 1] = rotation.rot[1, 2];
+            inverse.rot[2, 2] = rotation.rot[2, 2];
+
+            return inverse;
+        }
+
         /// <summary>Creates a rotation based on applying one rotation followed by another.</summary>
         /// <remarks>
         /// Given two rotation matrices, returns a combined rotation matrix that is

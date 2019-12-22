@@ -364,6 +364,20 @@ the rings appear edge-on, and are thus nearly invisible from the Earth. The `rin
 
 **Returns:** An [`IllumInfo`](#IllumInfo) structure with fields as documented above.
 
+<a name="Astronomy.InverseRotation"></a>
+### Astronomy.InverseRotation(rotation) &#8658; [`RotationMatrix`](#RotationMatrix)
+
+**Calculates the inverse of a rotation matrix.**
+
+Given a rotation matrix that performs some coordinate transform,
+this function returns the matrix that reverses that trasnform.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`RotationMatrix`](#RotationMatrix) | `rotation` | The rotation matrix to be inverted. |
+
+**Returns:** A rotation matrix that performs the opposite transformation.
+
 <a name="Astronomy.LongitudeFromSun"></a>
 ### Astronomy.LongitudeFromSun(body, time) &#8658; `double`
 

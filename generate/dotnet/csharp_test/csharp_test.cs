@@ -1078,6 +1078,24 @@ namespace csharp_test
             return 0;
         }
 
+        static int Rotation_MatrixInverse()
+        {
+            var a = new RotationMatrix(new double[3,3]);
+            a.rot[0, 0] = 1.0; a.rot[1, 0] = 2.0; a.rot[2, 0] = 3.0;
+            a.rot[0, 1] = 4.0; a.rot[1, 1] = 5.0; a.rot[2, 1] = 6.0;
+            a.rot[0, 2] = 7.0; a.rot[1, 2] = 8.0; a.rot[2, 2] = 9.0;
+
+            var v = new RotationMatrix(new double[3,3]);
+            v.rot[0, 0] = 1.0; v.rot[1, 0] = 4.0; v.rot[2, 0] = 7.0;
+            v.rot[0, 1] = 2.0; v.rot[1, 1] = 5.0; v.rot[2, 1] = 8.0;
+            v.rot[0, 2] = 3.0; v.rot[1, 2] = 6.0; v.rot[2, 2] = 9.0;
+
+            RotationMatrix b = Astronomy.InverseRotation(a);
+            if (0 != CompareMatrices("Rotation_MatrixInverse", b, v, 0.0)) return 1;
+            Console.WriteLine("Rotation_MatrixInverse: PASS");
+            return 0;
+        }
+
         static int Rotation_MatrixMultiply()
         {
             var a = new RotationMatrix(new double[3,3]);
@@ -1103,6 +1121,7 @@ namespace csharp_test
 
         static int RotationTest()
         {
+            if (0 != Rotation_MatrixInverse()) return 1;
             if (0 != Rotation_MatrixMultiply()) return 1;
             return 0;
         }
