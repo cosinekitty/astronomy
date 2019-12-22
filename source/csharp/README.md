@@ -464,6 +464,45 @@ the one passed in as the parameter `mq`.
 
 **Returns:** The moon quarter that occurs next in time after the one passed in `mq`.
 
+<a name="Astronomy.RotateVector"></a>
+### Astronomy.RotateVector(rotation, vector) &#8658; [`AstroVector`](#AstroVector)
+
+**Applies a rotation to a vector, yielding a rotated vector.**
+
+This function transforms a vector in one orientation to a vector
+in another orientation.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`RotationMatrix`](#RotationMatrix) | `rotation` | A rotation matrix that specifies how the orientation of the vector is to be changed. |
+| [`AstroVector`](#AstroVector) | `vector` | The vector whose orientation is to be changed. |
+
+**Returns:** A vector in the orientation specified by `rotation`.
+
+<a name="Astronomy.Rotation_ECL_EQJ"></a>
+### Astronomy.Rotation_ECL_EQJ() &#8658; [`RotationMatrix`](#RotationMatrix)
+
+**Calculates a rotation matrix from ecliptic J2000 (ECL) to equatorial J2000 (EQJ).**
+
+This is one of the family of functions that returns a rotation matrix
+for converting from one orientation to another.
+Source: ECL = ecliptic system, using equator at J2000 epoch.
+Target: EQJ = equatorial system, using equator at J2000 epoch.
+
+**Returns:** A rotation matrix that converts ECL to EQJ.
+
+<a name="Astronomy.Rotation_EQJ_ECL"></a>
+### Astronomy.Rotation_EQJ_ECL() &#8658; [`RotationMatrix`](#RotationMatrix)
+
+**Calculates a rotation matrix from equatorial J2000 (EQJ) to ecliptic J2000 (ECL).**
+
+This is one of the family of functions that returns a rotation matrix
+for converting from one orientation to another.
+Source: EQJ = equatorial system, using equator at J2000 epoch.
+Target: ECL = ecliptic system, using equator at J2000 epoch.
+
+**Returns:** A rotation matrix that converts EQJ to ECL.
+
 <a name="Astronomy.Search"></a>
 ### Astronomy.Search(func, t1, t2, dt_tolerance_seconds) &#8658; [`AstroTime`](#AstroTime)
 

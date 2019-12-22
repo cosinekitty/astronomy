@@ -1061,6 +1061,14 @@ namespace csharp_test
             return nfailed;
         }
 
+        static double VectorDiff(AstroVector a, AstroVector b)
+        {
+            double dx = a.x - b.x;
+            double dy = a.y - b.y;
+            double dz = a.z - b.z;
+            return Math.Sqrt(dx*dx + dy*dy + dz*dz);
+        }
+
         static int CompareMatrices(string caller, RotationMatrix a, RotationMatrix b, double tolerance)
         {
             for (int i=0; i<3; ++i)
@@ -1119,10 +1127,51 @@ namespace csharp_test
             return 0;
         }
 
+        static int Test_EQJ_ECL()
+        {
+            RotationMatrix r = Astronomy.Rotation_EQJ_ECL();
+
+            /* Calculate heliocentric Earth position at a test time. */
+            var time = new AstroTime(2019, 12, 8, 19, 39, 15);
+            var ev = Astronomy.HelioVector(Body.Earth, time);
+
+            /* Use the older function to calculate ecliptic vector and angles. */
+            Ecliptic ecl = Astronomy.EquatorialToEcliptic(ev);
+            Console.WriteLine("Test_EQJ_ECL ecl = ({0}, {1}, {2})", ecl.ex, ecl.ey, ecl.ez);
+
+            /* Now compute the same vector via rotation matrix. */
+            AstroVector ee = Astronomy.RotateVector(r, ev);
+            double dx = ee.x - ecl.ex;
+            double dy = ee.y - ecl.ey;
+            double dz = ee.z - ecl.ez;
+            double diff = Math.Sqrt(dx*dx + dy*dy + dz*dz);
+            Console.WriteLine("Test_EQJ_ECL ee = ({0}, {1}, {2}); diff={3}", ee.x, ee.y, ee.z, diff);
+            if (diff > 1.0e-16)
+            {
+                Console.WriteLine("Test_EQJ_ECL: EXCESSIVE VECTOR ERROR");
+                return 1;
+            }
+
+            /* Reverse the test: go from ecliptic back to equatorial. */
+            r = Astronomy.Rotation_ECL_EQJ();
+            AstroVector et = Astronomy.RotateVector(r, ee);
+            diff = VectorDiff(et, ev);
+            Console.WriteLine("Test_EQJ_ECL  ev diff={0}", diff);
+            if (diff > 1.0e-16)
+            {
+                Console.WriteLine("Test_EQJ_ECL: EXCESSIVE REVERSE ROTATION ERROR");
+                return 1;
+            }
+
+            Console.WriteLine("Test_EQJ_ECL: PASS");
+            return 0;
+        }
+
         static int RotationTest()
         {
             if (0 != Rotation_MatrixInverse()) return 1;
             if (0 != Rotation_MatrixMultiply()) return 1;
+            if (0 != Test_EQJ_ECL()) return 1;
             return 0;
         }
     }
