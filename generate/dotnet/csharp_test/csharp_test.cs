@@ -367,7 +367,8 @@ namespace csharp_test
                 string line;
                 var re = new Regex(@"^([A-Za-z]+)\s+([\-\+]?\d+\.?\d*)\s+([\-\+]?\d+\.?\d*)\s+(\d+)-(\d+)-(\d+)T(\d+):(\d+)Z\s+([rs])\s*$");
                 Body current_body = Body.Invalid;
-                Observer observer = null;
+                Observer observer = new Observer();
+                bool foundObserver = false;
                 AstroTime r_search_date = null, s_search_date = null;
                 AstroTime r_evt = null, s_evt = null;     /* rise event, set event: search results */
                 AstroTime a_evt = null, b_evt = null;     /* chronologically first and second events */
@@ -401,10 +402,11 @@ namespace csharp_test
 
                     /* Every time we see a new geographic location or body, start a new iteration */
                     /* of finding all rise/set times for that UTC calendar year. */
-                    if (observer == null || observer.latitude != latitude || observer.longitude != longitude || current_body != body)
+                    if (!foundObserver || observer.latitude != latitude || observer.longitude != longitude || current_body != body)
                     {
                         current_body = body;
                         observer = new Observer(latitude, longitude, 0.0);
+                        foundObserver = true;
                         r_search_date = s_search_date = new AstroTime(year, 1, 1, 0, 0, 0);
                         b_evt = null;
                         Console.WriteLine("RiseSetTest: {0} lat={1} lon={2}", body, latitude, longitude);
@@ -1167,11 +1169,54 @@ namespace csharp_test
             return 0;
         }
 
+        static int Test_EQJ_EQD(Body body)
+        {
+            // Verify convresion of equatorial J2000 to equatorial of-date, and back.
+            var time = new AstroTime(2019, 12, 8, 20, 50, 0);
+            var observer = new Observer(35, -85, 0);
+            Equatorial eq2000 = Astronomy.Equator(body, time, observer, EquatorEpoch.J2000, Aberration.Corrected);
+            Equatorial eqdate = Astronomy.Equator(body, time, observer, EquatorEpoch.OfDate, Aberration.Corrected);
+            AstroVector v2000 = Astronomy.VectorFromEquator(eq2000, time);
+            RotationMatrix r = Astronomy.Rotation_EQJ_EQD(time);
+            AstroVector vdate = Astronomy.RotateVector(r, v2000);
+            Equatorial eqcheck = Astronomy.EquatorFromVector(vdate);
+
+            double ra_diff = Math.Abs(eqcheck.ra - eqdate.ra);
+            double dec_diff = Math.Abs(eqcheck.dec - eqdate.dec);
+            double dist_diff = Math.Abs(eqcheck.dist - eqdate.dist);
+            Console.WriteLine("Test_EQJ_EQD: {0} ra={1}, dec={2}, dist={3}, ra_diff={4}, dec_diff={5}, dist_diff={6}\n",
+                body, eqdate.ra, eqdate.dec, eqdate.dist, ra_diff, dec_diff, dist_diff);
+
+            if (ra_diff > 1.0e-14 || dec_diff > 1.0e-14 || dist_diff > 4.0e-15)
+            {
+                Console.WriteLine("Test_EQJ_EQD: EXCESSIVE ERROR");
+                return 1;
+            }
+
+            r = Astronomy.Rotation_EQD_EQJ(time);
+            AstroVector t2000 = Astronomy.RotateVector(r, vdate);
+            double diff = VectorDiff(t2000, v2000);
+            Console.WriteLine("Test_EQJ_EQD: {0} inverse diff = {1}", body, diff);
+            if (diff > 3.0e-15)
+            {
+                Console.WriteLine("Test_EQJ_EQD: EXCESSIVE INVERSE ERROR");
+                return 1;
+            }
+
+            return 0;
+        }
+
         static int RotationTest()
         {
             if (0 != Rotation_MatrixInverse()) return 1;
             if (0 != Rotation_MatrixMultiply()) return 1;
             if (0 != Test_EQJ_ECL()) return 1;
+            if (0 != Test_EQJ_EQD(Body.Mercury)) return 1;
+            if (0 != Test_EQJ_EQD(Body.Venus)) return 1;
+            if (0 != Test_EQJ_EQD(Body.Mars)) return 1;
+            if (0 != Test_EQJ_EQD(Body.Jupiter)) return 1;
+            if (0 != Test_EQJ_EQD(Body.Saturn)) return 1;
+            Console.WriteLine("RotationTest: PASS");
             return 0;
         }
     }

@@ -228,6 +228,17 @@ Correction for aberration is optional, using the `aberration` parameter.
 | [`EquatorEpoch`](#EquatorEpoch) | `equdate` | Selects the date of the Earth's equator in which to express the equatorial coordinates. |
 | [`Aberration`](#Aberration) | `aberration` | Selects whether or not to correct for aberration. |
 
+<a name="Astronomy.EquatorFromVector"></a>
+### Astronomy.EquatorFromVector(vector) &#8658; [`Equatorial`](#Equatorial)
+
+**Given an equatorial vector, calculates equatorial angular coordinates.**
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`AstroVector`](#AstroVector) | `vector` | A vector in an equatorial coordinate system. |
+
+**Returns:** Angular coordinates expressed in the same equatorial system as `vector`.
+
 <a name="Astronomy.EquatorialToEcliptic"></a>
 ### Astronomy.EquatorialToEcliptic(equ) &#8658; [`Ecliptic`](#Ecliptic)
 
@@ -334,6 +345,37 @@ to the respective `ra` and `dec` values passed in.
 
 **Returns:** The body's apparent horizontal coordinates and equatorial coordinates, both optionally corrected for refraction.
 
+<a name="Astronomy.HorizonFromVector"></a>
+### Astronomy.HorizonFromVector(vector, refraction) &#8658; [`Spherical`](#Spherical)
+
+**Converts Cartesian coordinates to horizontal coordinates.**
+
+Given a horizontal Cartesian vector, returns horizontal azimuth and altitude.
+
+*IMPORTANT:* This function differs from [`Astronomy.SphereFromVector`](#Astronomy.SphereFromVector) in two ways:
+- `Astronomy.SphereFromVector` returns a `lon` value that represents azimuth defined counterclockwise
+  from north (e.g., west = +90), but this function represents a clockwise rotation
+  (e.g., east = +90). The difference is because `Astronomy.SphereFromVector` is intended
+  to preserve the vector "right-hand rule", while this function defines azimuth in a more
+  traditional way as used in navigation and cartography.
+- This function optionally corrects for atmospheric refraction, while `Astronomy.SphereFromVector`
+  does not.
+
+The returned structure contains the azimuth in `lon`.
+It is measured in degrees clockwise from north: east = +90 degrees, west = +270 degrees.
+
+The altitude is stored in `lat`.
+
+The distance to the observed object is stored in `dist`,
+and is expressed in astronomical units (AU).
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`AstroVector`](#AstroVector) | `vector` | Cartesian vector to be converted to horizontal coordinates. |
+| [`Refraction`](#Refraction) | `refraction` | `Refraction.Normal`: correct altitude for atmospheric refraction (recommended). `Refraction.None`: no atmospheric refraction correction is performed. `Refraction.JplHor`: for JPL Horizons compatibility testing only; not recommended for normal use. |
+
+**Returns:** Horizontal spherical coordinates as described above.
+
 <a name="Astronomy.Illumination"></a>
 ### Astronomy.Illumination(body, time) &#8658; [`IllumInfo`](#IllumInfo)
 
@@ -363,6 +405,24 @@ the rings appear edge-on, and are thus nearly invisible from the Earth. The `rin
 | [`AstroTime`](#AstroTime) | `time` | The date and time of the observation. |
 
 **Returns:** An [`IllumInfo`](#IllumInfo) structure with fields as documented above.
+
+<a name="Astronomy.InverseRefractionAngle"></a>
+### Astronomy.InverseRefractionAngle(refraction, bent_altitude) &#8658; `double`
+
+**Calculates the inverse of an atmospheric refraction angle.**
+
+Given an observed altitude angle that includes atmospheric refraction,
+calculate the negative angular correction to obtain the unrefracted
+altitude. This is useful for cases where observed horizontal
+coordinates are to be converted to another orientation system,
+but refraction first must be removed from the observed position.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Refraction`](#Refraction) | `refraction` | The option selecting which refraction correction to use. See [`Astronomy.RefractionAngle`](#Astronomy.RefractionAngle). |
+| `double` | `bent_altitude` | The apparent altitude that includes atmospheric refraction. |
+
+**Returns:** The angular adjustment in degrees to be added to the altitude angle to correct for atmospheric lensing. This will be less than or equal to zero.
 
 <a name="Astronomy.InverseRotation"></a>
 ### Astronomy.InverseRotation(rotation) &#8658; [`RotationMatrix`](#RotationMatrix)
@@ -464,6 +524,23 @@ the one passed in as the parameter `mq`.
 
 **Returns:** The moon quarter that occurs next in time after the one passed in `mq`.
 
+<a name="Astronomy.RefractionAngle"></a>
+### Astronomy.RefractionAngle(refraction, altitude) &#8658; `double`
+
+**Calculates the amount of "lift" to an altitude angle caused by atmospheric refraction.**
+
+Given an altitude angle and a refraction option, calculates
+the amount of "lift" caused by atmospheric refraction.
+This is the number of degrees higher in the sky an object appears
+due to the lensing of the Earth's atmosphere.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Refraction`](#Refraction) | `refraction` | The option selecting which refraction correction to use. If `Refraction.Normal`, uses a well-behaved refraction model that works well for all valid values (-90 to +90) of `altitude`. If `Refraction.JplHor`, this function returns a compatible value with the JPL Horizons tool. If any other value (including `Refraction.None`), this function returns 0. |
+| `double` | `altitude` | An altitude angle in a horizontal coordinate system. Must be a value between -90 and +90. |
+
+**Returns:** The angular adjustment in degrees to be added to the altitude angle to correct for atmospheric lensing.
+
 <a name="Astronomy.RotateVector"></a>
 ### Astronomy.RotateVector(rotation, vector) &#8658; [`AstroVector`](#AstroVector)
 
@@ -491,6 +568,22 @@ Target: EQJ = equatorial system, using equator at J2000 epoch.
 
 **Returns:** A rotation matrix that converts ECL to EQJ.
 
+<a name="Astronomy.Rotation_EQD_EQJ"></a>
+### Astronomy.Rotation_EQD_EQJ(time) &#8658; [`RotationMatrix`](#RotationMatrix)
+
+**Calculates a rotation matrix from equatorial of-date (EQD) to equatorial J2000 (EQJ).**
+
+This is one of the family of functions that returns a rotation matrix
+for converting from one orientation to another.
+Source: EQD = equatorial system, using equator of the specified date/time.
+Target: EQJ = equatorial system, using equator at J2000 epoch.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`AstroTime`](#AstroTime) | `time` | The date and time at which the Earth's equator defines the source orientation. |
+
+**Returns:** A rotation matrix that converts EQD at `time` to EQJ.
+
 <a name="Astronomy.Rotation_EQJ_ECL"></a>
 ### Astronomy.Rotation_EQJ_ECL() &#8658; [`RotationMatrix`](#RotationMatrix)
 
@@ -502,6 +595,22 @@ Source: EQJ = equatorial system, using equator at J2000 epoch.
 Target: ECL = ecliptic system, using equator at J2000 epoch.
 
 **Returns:** A rotation matrix that converts EQJ to ECL.
+
+<a name="Astronomy.Rotation_EQJ_EQD"></a>
+### Astronomy.Rotation_EQJ_EQD(time) &#8658; [`RotationMatrix`](#RotationMatrix)
+
+**Calculates a rotation matrix from equatorial J2000 (EQJ) to equatorial of-date (EQD).**
+
+This is one of the family of functions that returns a rotation matrix
+for converting from one orientation to another.
+Source: EQJ = equatorial system, using equator at J2000 epoch.
+Target: EQD = equatorial system, using equator of the specified date/time.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`AstroTime`](#AstroTime) | `time` | The date and time at which the Earth's equator defines the target orientation. |
+
+**Returns:** A rotation matrix that converts EQJ to EQD at `time`.
 
 <a name="Astronomy.Search"></a>
 ### Astronomy.Search(func, t1, t2, dt_tolerance_seconds) &#8658; [`AstroTime`](#AstroTime)
@@ -830,6 +939,19 @@ of winter in the southern hemisphere.
 
 **Returns:** A [`SeasonsInfo`](#SeasonsInfo) structure that contains four [`AstroTime`](#AstroTime) values: the March and September equinoxes and the June and December solstices.
 
+<a name="Astronomy.SphereFromVector"></a>
+### Astronomy.SphereFromVector(vector) &#8658; [`Spherical`](#Spherical)
+
+**Converts Cartesian coordinates to spherical coordinates.**
+
+Given a Cartesian vector, returns latitude, longitude, and distance.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`AstroVector`](#AstroVector) | `vector` | Cartesian vector to be converted to spherical coordinates. |
+
+**Returns:** Spherical coordinates that are equivalent to the given vector.
+
 <a name="Astronomy.SunPosition"></a>
 ### Astronomy.SunPosition(time) &#8658; [`Ecliptic`](#Ecliptic)
 
@@ -855,6 +977,47 @@ In fact, the function [`Astronomy.Seasons`](#Astronomy.Seasons) does use this fu
 | [`AstroTime`](#AstroTime) | `time` | The date and time for which to calculate the Sun's position. |
 
 **Returns:** The ecliptic coordinates of the Sun using the Earth's true equator of date.
+
+<a name="Astronomy.VectorFromEquator"></a>
+### Astronomy.VectorFromEquator(equ, time) &#8658; [`AstroVector`](#AstroVector)
+
+**Given angular equatorial coordinates in `equ`, calculates equatorial vector.**
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Equatorial`](#Equatorial) | `equ` | Angular equatorial coordinates to be converted to a vector. |
+| [`AstroTime`](#AstroTime) | `time` | The date and time of the observation. This is needed because the returned vector requires a valid time value when passed to certain other functions. |
+
+**Returns:** A vector in the equatorial system.
+
+<a name="Astronomy.VectorFromHorizon"></a>
+### Astronomy.VectorFromHorizon(sphere, time, refraction) &#8658; [`AstroVector`](#AstroVector)
+
+**Given apparent angular horizontal coordinates in `sphere`, calculate horizontal vector.**
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Spherical`](#Spherical) | `sphere` | A structure that contains apparent horizontal coordinates: `lat` holds the refracted azimuth angle, `lon` holds the azimuth in degrees clockwise from north, and `dist` holds the distance from the observer to the object in AU. |
+| [`AstroTime`](#AstroTime) | `time` | The date and time of the observation. This is needed because the returned [`AstroVector`](#AstroVector) requires a valid time value when passed to certain other functions. |
+| [`Refraction`](#Refraction) | `refraction` | The refraction option used to model atmospheric lensing. See [`Astronomy.RefractionAngle`](#Astronomy.RefractionAngle). This specifies how refraction is to be removed from the altitude stored in `sphere.lat`. |
+
+**Returns:** A vector in the horizontal system: `x` = north, `y` = west, and `z` = zenith (up).
+
+<a name="Astronomy.VectorFromSphere"></a>
+### Astronomy.VectorFromSphere(sphere, time) &#8658; [`AstroVector`](#AstroVector)
+
+**Converts spherical coordinates to Cartesian coordinates.**
+
+Given spherical coordinates and a time at which they are valid,
+returns a vector of Cartesian coordinates. The returned value
+includes the time, as required by the type [`AstroVector`](#AstroVector).
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Spherical`](#Spherical) | `sphere` | Spherical coordinates to be converted. |
+| [`AstroTime`](#AstroTime) | `time` | The time that should be included in the return value. |
+
+**Returns:** The vector form of the supplied spherical coordinates.
 
 ---
 
@@ -1044,7 +1207,7 @@ is the location of the observer.**
 ---
 
 <a name="Ecliptic"></a>
-## `class Ecliptic`
+## `struct Ecliptic`
 
 **Ecliptic angular and Cartesian coordinates.**
 
@@ -1103,7 +1266,7 @@ calculations.
 ---
 
 <a name="Equatorial"></a>
-## `class Equatorial`
+## `struct Equatorial`
 
 **Equatorial angular coordinates.**
 
@@ -1165,7 +1328,7 @@ to report the visual magnitude and illuminated fraction of a celestial body at a
 ---
 
 <a name="Observer"></a>
-## `class Observer`
+## `struct Observer`
 
 **The location of an observer on (or near) the surface of the Earth.**
 
@@ -1194,7 +1357,7 @@ from a particular place on the Earth.
 ---
 
 <a name="RotationMatrix"></a>
-## `class RotationMatrix`
+## `struct RotationMatrix`
 
 **Contains a rotation matrix that can be used to transform one coordinate system to another.**
 
@@ -1237,6 +1400,19 @@ Call [`Astronomy.Seasons`](#Astronomy.Seasons) to calculate this data structure 
 | [`AstroTime`](#AstroTime) | `jun_solstice` | The date and time of the June soltice for the specified year. |
 | [`AstroTime`](#AstroTime) | `sep_equinox` | The date and time of the September equinox for the specified year. |
 | [`AstroTime`](#AstroTime) | `dec_solstice` | The date and time of the December solstice for the specified year. |
+
+---
+
+<a name="Spherical"></a>
+## `struct Spherical`
+
+**Spherical coordinates: latitude, longitude, distance.**
+
+| Type | Name | Description |
+| --- | --- | --- |
+| `double` | `lat` | The latitude angle: -90..+90 degrees. |
+| `double` | `lon` | The longitude angle: 0..360 degrees. |
+| `double` | `dist` | Distance in AU. |
 
 ---
 

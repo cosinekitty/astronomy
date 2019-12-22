@@ -557,7 +557,7 @@ The distance to the observed object is stored in `dist`, and is expressed in ast
 
 
 
-**Returns:**  If successful, `status` hold `ASTRO_SUCCESS` and the other fields are valid as described above. Otherwise `status` holds an error code and the other fields are undefined. 
+**Returns:**  If successful, `status` holds `ASTRO_SUCCESS` and the other fields are valid as described above. Otherwise `status` holds an error code and the other fields are undefined. 
 
 
 

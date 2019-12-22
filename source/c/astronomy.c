@@ -5459,7 +5459,7 @@ static double ToggleAzimuthDirection(double az)
  *      `REFRACTION_JPLHOR`: for JPL Horizons compatibility testing only; not recommended for normal use.
  *
  * @return
- *      If successful, `status` hold `ASTRO_SUCCESS` and the other fields are valid as described above.
+ *      If successful, `status` holds `ASTRO_SUCCESS` and the other fields are valid as described above.
  *      Otherwise `status` holds an error code and the other fields are undefined.
  */
 astro_spherical_t Astronomy_HorizonFromVector(astro_vector_t vector, astro_refraction_t refraction)

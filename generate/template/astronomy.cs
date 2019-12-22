@@ -293,7 +293,7 @@ namespace CosineKitty
     /// <summary>
     /// Contains a rotation matrix that can be used to transform one coordinate system to another.
     /// </summary>
-    public class RotationMatrix
+    public struct RotationMatrix
     {
         /// <summary>A normalized 3x3 rotation matrix.</summary>
         public readonly double[,] rot;
@@ -310,13 +310,41 @@ namespace CosineKitty
     }
 
     /// <summary>
+    /// Spherical coordinates: latitude, longitude, distance.
+    /// </summary>
+    public struct Spherical
+    {
+        /// <summary>The latitude angle: -90..+90 degrees.</summary>
+        public readonly double lat;
+
+        /// <summary>The longitude angle: 0..360 degrees.</summary>
+        public readonly double lon;
+
+        /// <summary>Distance in AU.</summary>
+        public readonly double dist;
+
+        /// <summary>
+        /// Creates a set of spherical coordinates.
+        /// </summary>
+        /// <param name="lat">The latitude angle: -90..+90 degrees.</param>
+        /// <param name="lon">The longitude angle: 0..360 degrees.</param>
+        /// <param name="dist">Distance in AU.</param>
+        public Spherical(double lat, double lon, double dist)
+        {
+            this.lat = lat;
+            this.lon = lon;
+            this.dist = dist;
+        }
+    }
+
+    /// <summary>
     /// The location of an observer on (or near) the surface of the Earth.
     /// </summary>
     /// <remarks>
     /// This structure is passed to functions that calculate phenomena as observed
     /// from a particular place on the Earth.
     /// </remarks>
-    public class Observer
+    public struct Observer
     {
         /// <summary>
         /// Geographic latitude in degrees north (positive) or south (negative) of the equator.
@@ -471,7 +499,7 @@ namespace CosineKitty
     /// (geocentric or topocentric, depending on context),
     /// oriented with respect to the projection of the Earth's equator onto the sky.
     /// </remarks>
-    public class Equatorial
+    public struct Equatorial
     {
         /// <summary>
         /// Right ascension in sidereal hours.
@@ -509,7 +537,7 @@ namespace CosineKitty
     /// Coordinates of a celestial body as seen from the center of the Sun (heliocentric),
     /// oriented with respect to the plane of the Earth's orbit around the Sun (the ecliptic).
     /// </remarks>
-    public class Ecliptic
+    public struct Ecliptic
     {
         /// <summary>
         /// Cartesian x-coordinate: in the direction of the equinox along the ecliptic plane.
@@ -801,6 +829,396 @@ namespace CosineKitty
             this.phase_angle = phase_angle;
             this.helio_dist = helio_dist;
             this.ring_tilt = ring_tilt;
+        }
+    }
+
+    /// <summary>
+    /// Represents a function whose ascending root is to be found.
+    /// See #Astronomy.Search.
+    /// </summary>
+    public abstract class SearchContext
+    {
+        /// <summary>
+        /// Evaluates the function at a given time
+        /// </summary>
+        /// <param name="time">The time at which to evaluate the function.</param>
+        /// <returns>The floating point value of the function at the specified time.</returns>
+        public abstract double Eval(AstroTime time);
+    }
+
+    internal class SearchContext_MagnitudeSlope: SearchContext
+    {
+        private readonly Body body;
+
+        public SearchContext_MagnitudeSlope(Body body)
+        {
+            this.body = body;
+        }
+
+        public override double Eval(AstroTime time)
+        {
+            /*
+                The Search() function finds a transition from negative to positive values.
+                The derivative of magnitude y with respect to time t (dy/dt)
+                is negative as an object gets brighter, because the magnitude numbers
+                get smaller. At peak magnitude dy/dt = 0, then as the object gets dimmer,
+                dy/dt > 0.
+            */
+            const double dt = 0.01;
+            AstroTime t1 = time.AddDays(-dt/2);
+            AstroTime t2 = time.AddDays(+dt/2);
+            IllumInfo y1 = Astronomy.Illumination(body, t1);
+            IllumInfo y2 = Astronomy.Illumination(body, t2);
+            return (y2.mag - y1.mag) / dt;
+        }
+    }
+
+    internal class SearchContext_NegElongSlope: SearchContext
+    {
+        private readonly Body body;
+
+        public SearchContext_NegElongSlope(Body body)
+        {
+            this.body = body;
+        }
+
+        public override double Eval(AstroTime time)
+        {
+            const double dt = 0.1;
+            AstroTime t1 = time.AddDays(-dt/2.0);
+            AstroTime t2 = time.AddDays(+dt/2.0);
+
+            double e1 = Astronomy.AngleFromSun(body, t1);
+            double e2 = Astronomy.AngleFromSun(body, t2);
+            return (e1 - e2)/dt;
+        }
+    }
+
+    internal class SearchContext_SunOffset: SearchContext
+    {
+        private readonly double targetLon;
+
+        public SearchContext_SunOffset(double targetLon)
+        {
+            this.targetLon = targetLon;
+        }
+
+        public override double Eval(AstroTime time)
+        {
+            Ecliptic ecl = Astronomy.SunPosition(time);
+            return Astronomy.LongitudeOffset(ecl.elon - targetLon);
+        }
+    }
+
+    internal class SearchContext_MoonOffset: SearchContext
+    {
+        private readonly double targetLon;
+
+        public SearchContext_MoonOffset(double targetLon)
+        {
+            this.targetLon = targetLon;
+        }
+
+        public override double Eval(AstroTime time)
+        {
+            double angle = Astronomy.MoonPhase(time);
+            return Astronomy.LongitudeOffset(angle - targetLon);
+        }
+    }
+
+    internal class SearchContext_PeakAltitude: SearchContext
+    {
+        private readonly Body body;
+        private readonly int direction;
+        private readonly Observer observer;
+        private readonly double body_radius_au;
+
+        public SearchContext_PeakAltitude(Body body, Direction direction, Observer observer)
+        {
+            this.body = body;
+            this.direction = (int)direction;
+            this.observer = observer;
+
+            switch (body)
+            {
+                case Body.Sun:
+                    this.body_radius_au = Astronomy.SUN_RADIUS_AU;
+                    break;
+
+                case Body.Moon:
+                    this.body_radius_au = Astronomy.MOON_RADIUS_AU;
+                    break;
+
+                default:
+                    this.body_radius_au = 0.0;
+                    break;
+            }
+        }
+
+        public override double Eval(AstroTime time)
+        {
+            /*
+                Return the angular altitude above or below the horizon
+                of the highest part (the peak) of the given object.
+                This is defined as the apparent altitude of the center of the body plus
+                the body's angular radius.
+                The 'direction' parameter controls whether the angle is measured
+                positive above the horizon or positive below the horizon,
+                depending on whether the caller wants rise times or set times, respectively.
+            */
+
+            Equatorial ofdate = Astronomy.Equator(body, time, observer, EquatorEpoch.OfDate, Aberration.Corrected);
+
+            /* We calculate altitude without refraction, then add fixed refraction near the horizon. */
+            /* This gives us the time of rise/set without the extra work. */
+            Topocentric hor = Astronomy.Horizon(time, observer, ofdate.ra, ofdate.dec, Refraction.None);
+
+            return direction * (hor.altitude + Astronomy.RAD2DEG*(body_radius_au / ofdate.dist) + Astronomy.REFRACTION_NEAR_HORIZON);
+        }
+    }
+
+    internal class SearchContext_MoonDistanceSlope: SearchContext
+    {
+        private readonly int direction;
+
+        public SearchContext_MoonDistanceSlope(int direction)
+        {
+            this.direction = direction;
+        }
+
+        public static double MoonDistance(AstroTime time)
+        {
+            var context = new MoonContext(time.tt / 36525.0);
+            MoonResult moon = context.CalcMoon();
+            return moon.distance_au;
+        }
+
+        public override double Eval(AstroTime time)
+        {
+            const double dt = 0.001;
+            AstroTime t1 = time.AddDays(-dt/2.0);
+            AstroTime t2 = time.AddDays(+dt/2.0);
+            double dist1 = MoonDistance(t1);
+            double dist2 = MoonDistance(t2);
+            return direction * (dist2 - dist1)/dt;
+        }
+    }
+
+    internal class PascalArray2<ElemType>
+    {
+        private readonly int xmin;
+        private readonly int xmax;
+        private readonly int ymin;
+        private readonly int ymax;
+        private readonly ElemType[,] array;
+
+        public PascalArray2(int xmin, int xmax, int ymin, int ymax)
+        {
+            this.xmin = xmin;
+            this.xmax = xmax;
+            this.ymin = ymin;
+            this.ymax = ymax;
+            this.array = new ElemType[(xmax - xmin) + 1, (ymax - ymin) + 1];
+        }
+
+        public ElemType this[int x, int y]
+        {
+            get { return array[x - xmin, y - ymin]; }
+            set { array[x - xmin, y - ymin] = value; }
+        }
+    }
+
+    internal class MoonContext
+    {
+        double T;
+        double DGAM;
+        double DLAM, N, GAM1C, SINPI;
+        double L0, L, LS, F, D, S;
+        double DL0, DL, DLS, DF, DD, DS;
+        PascalArray2<double> CO = new PascalArray2<double>(-6, 6, 1, 4);
+        PascalArray2<double> SI = new PascalArray2<double>(-6, 6, 1, 4);
+
+        static double Frac(double x)
+        {
+            return x - Math.Floor(x);
+        }
+
+        static void AddThe(
+            double c1, double s1, double c2, double s2,
+            out double c, out double s)
+        {
+            c = c1*c2 - s1*s2;
+            s = s1*c2 + c1*s2;
+        }
+
+        static double Sine(double phi)
+        {
+            /* sine, of phi in revolutions, not radians */
+            return Math.Sin(2.0 * Math.PI * phi);
+        }
+
+        void LongPeriodic()
+        {
+            double S1 = Sine(0.19833+0.05611*T);
+            double S2 = Sine(0.27869+0.04508*T);
+            double S3 = Sine(0.16827-0.36903*T);
+            double S4 = Sine(0.34734-5.37261*T);
+            double S5 = Sine(0.10498-5.37899*T);
+            double S6 = Sine(0.42681-0.41855*T);
+            double S7 = Sine(0.14943-5.37511*T);
+
+            DL0 = 0.84*S1+0.31*S2+14.27*S3+ 7.26*S4+ 0.28*S5+0.24*S6;
+            DL  = 2.94*S1+0.31*S2+14.27*S3+ 9.34*S4+ 1.12*S5+0.83*S6;
+            DLS =-6.40*S1                                   -1.89*S6;
+            DF  = 0.21*S1+0.31*S2+14.27*S3-88.70*S4-15.30*S5+0.24*S6-1.86*S7;
+            DD  = DL0-DLS;
+            DGAM  = -3332E-9 * Sine(0.59734-5.37261*T)
+                    -539E-9 * Sine(0.35498-5.37899*T)
+                    -64E-9 * Sine(0.39943-5.37511*T);
+        }
+
+        private readonly int[] I = new int[4];
+
+        void Term(int p, int q, int r, int s, out double x, out double y)
+        {
+            I[0] = p;
+            I[1] = q;
+            I[2] = r;
+            I[3] = s;
+            x = 1.0;
+            y = 0.0;
+
+            for (int k=1; k<=4; ++k)
+                if (I[k-1] != 0.0)
+                    AddThe(x, y, CO[I[k-1], k], SI[I[k-1], k], out x, out y);
+        }
+
+        void AddSol(
+            double coeffl,
+            double coeffs,
+            double coeffg,
+            double coeffp,
+            int p,
+            int q,
+            int r,
+            int s)
+        {
+            double x, y;
+            Term(p, q, r, s, out x, out y);
+            DLAM += coeffl*y;
+            DS += coeffs*y;
+            GAM1C += coeffg*x;
+            SINPI += coeffp*x;
+        }
+
+        void ADDN(double coeffn, int p, int q, int r, int s, out double x, out double y)
+        {
+            Term(p, q, r, s, out x, out y);
+            N += coeffn * y;
+        }
+
+        void SolarN()
+        {
+            double x, y;
+
+            N = 0.0;
+            ADDN(-526.069, 0, 0,1,-2, out x, out y);
+            ADDN(  -3.352, 0, 0,1,-4, out x, out y);
+            ADDN( +44.297,+1, 0,1,-2, out x, out y);
+            ADDN(  -6.000,+1, 0,1,-4, out x, out y);
+            ADDN( +20.599,-1, 0,1, 0, out x, out y);
+            ADDN( -30.598,-1, 0,1,-2, out x, out y);
+            ADDN( -24.649,-2, 0,1, 0, out x, out y);
+            ADDN(  -2.000,-2, 0,1,-2, out x, out y);
+            ADDN( -22.571, 0,+1,1,-2, out x, out y);
+            ADDN( +10.985, 0,-1,1,-2, out x, out y);
+        }
+
+        void Planetary()
+        {
+            DLAM +=
+                +0.82*Sine(0.7736  -62.5512*T)+0.31*Sine(0.0466 -125.1025*T)
+                +0.35*Sine(0.5785  -25.1042*T)+0.66*Sine(0.4591+1335.8075*T)
+                +0.64*Sine(0.3130  -91.5680*T)+1.14*Sine(0.1480+1331.2898*T)
+                +0.21*Sine(0.5918+1056.5859*T)+0.44*Sine(0.5784+1322.8595*T)
+                +0.24*Sine(0.2275   -5.7374*T)+0.28*Sine(0.2965   +2.6929*T)
+                +0.33*Sine(0.3132   +6.3368*T);
+        }
+
+        internal MoonContext(double centuries_since_j2000)
+        {
+            int I, J, MAX;
+            double T2, ARG, FAC;
+            double c, s;
+
+            T = centuries_since_j2000;
+            T2 = T*T;
+            DLAM = 0;
+            DS = 0;
+            GAM1C = 0;
+            SINPI = 3422.7000;
+            LongPeriodic();
+            L0 = Astronomy.PI2*Frac(0.60643382+1336.85522467*T-0.00000313*T2) + DL0/Astronomy.ARC;
+            L  = Astronomy.PI2*Frac(0.37489701+1325.55240982*T+0.00002565*T2) + DL /Astronomy.ARC;
+            LS = Astronomy.PI2*Frac(0.99312619+  99.99735956*T-0.00000044*T2) + DLS/Astronomy.ARC;
+            F  = Astronomy.PI2*Frac(0.25909118+1342.22782980*T-0.00000892*T2) + DF /Astronomy.ARC;
+            D  = Astronomy.PI2*Frac(0.82736186+1236.85308708*T-0.00000397*T2) + DD /Astronomy.ARC;
+            for (I=1; I<=4; ++I)
+            {
+                switch(I)
+                {
+                    case 1:  ARG=L;  MAX=4; FAC=1.000002208;               break;
+                    case 2:  ARG=LS; MAX=3; FAC=0.997504612-0.002495388*T; break;
+                    case 3:  ARG=F;  MAX=4; FAC=1.000002708+139.978*DGAM;  break;
+                    default: ARG=D;  MAX=6; FAC=1.0;                       break;
+                }
+                CO[0,I] = 1.0;
+                CO[1,I] = Math.Cos(ARG)*FAC;
+                SI[0,I] = 0.0;
+                SI[1,I] = Math.Sin(ARG)*FAC;
+                for (J=2; J<=MAX; ++J)
+                {
+                    AddThe(CO[J-1,I], SI[J-1,I], CO[1,I], SI[1,I], out c, out s);
+                    CO[J,I] = c;
+                    SI[J,I] = s;
+                }
+
+                for (J=1; J<=MAX; ++J)
+                {
+                    CO[-J,I] =  CO[J,I];
+                    SI[-J,I] = -SI[J,I];
+                }
+            }
+        }
+
+        internal MoonResult CalcMoon()
+        {
+$ASTRO_ADDSOL()
+            SolarN();
+            Planetary();
+            S = F + DS/Astronomy.ARC;
+
+            double lat_seconds = (1.000002708 + 139.978*DGAM)*(18518.511+1.189+GAM1C)*Math.Sin(S)-6.24*Math.Sin(3*S) + N;
+
+            return new MoonResult(
+                Astronomy.PI2 * Frac((L0+DLAM/Astronomy.ARC) / Astronomy.PI2),
+                lat_seconds * (Astronomy.DEG2RAD / 3600.0),
+                (Astronomy.ARC * (Astronomy.ERAD / Astronomy.AU)) / (0.999953253 * SINPI)
+            );
+        }
+    }
+
+    internal struct MoonResult
+    {
+        public readonly double geo_eclip_lon;
+        public readonly double geo_eclip_lat;
+        public readonly double distance_au;
+
+        public MoonResult(double lon, double lat, double dist)
+        {
+            this.geo_eclip_lon = lon;
+            this.geo_eclip_lat = lat;
+            this.distance_au = dist;
         }
     }
 
@@ -3544,6 +3962,278 @@ $ASTRO_CSHARP_CHEBYSHEV(8);
             );
         }
 
+        /// <summary>Converts spherical coordinates to Cartesian coordinates.</summary>
+        /// <remarks>
+        /// Given spherical coordinates and a time at which they are valid,
+        /// returns a vector of Cartesian coordinates. The returned value
+        /// includes the time, as required by the type #AstroVector.
+        /// </remarks>
+        /// <param name="sphere">Spherical coordinates to be converted.</param>
+        /// <param name="time">The time that should be included in the return value.</param>
+        /// <returns>The vector form of the supplied spherical coordinates.</returns>
+        public static AstroVector VectorFromSphere(Spherical sphere, AstroTime time)
+        {
+            double radlat = sphere.lat * DEG2RAD;
+            double radlon = sphere.lon * DEG2RAD;
+            double rcoslat = sphere.dist * Math.Cos(radlat);
+            return new AstroVector(
+                rcoslat * Math.Cos(radlon),
+                rcoslat * Math.Sin(radlon),
+                sphere.dist * Math.Sin(radlat),
+                time
+            );
+        }
+
+        /// <summary>Converts Cartesian coordinates to spherical coordinates.</summary>
+        /// <remarks>
+        /// Given a Cartesian vector, returns latitude, longitude, and distance.
+        /// </remarks>
+        /// <param name="vector">Cartesian vector to be converted to spherical coordinates.</param>
+        /// <returns>Spherical coordinates that are equivalent to the given vector.</returns>
+        public static Spherical SphereFromVector(AstroVector vector)
+        {
+            double xyproj = vector.x*vector.x + vector.y*vector.y;
+            double dist = Math.Sqrt(xyproj + vector.z*vector.z);
+            double lat, lon;
+            if (xyproj == 0.0)
+            {
+                if (vector.z == 0.0)
+                {
+                    /* Indeterminate coordinates; pos vector has zero length. */
+                    throw new ArgumentException("Cannot convert zero-length vector to spherical coordinates.");
+                }
+
+                lon = 0.0;
+                lat = (vector.z < 0.0) ? -90.0 : +90.0;
+            }
+            else
+            {
+                lon = RAD2DEG * Math.Atan2(vector.y, vector.x);
+                if (lon < 0.0)
+                    lon += 360.0;
+
+                lat = RAD2DEG * Math.Atan2(vector.z, Math.Sqrt(xyproj));
+            }
+
+            return new Spherical(lat, lon, dist);
+        }
+
+
+        /// <summary>Given angular equatorial coordinates in `equ`, calculates equatorial vector.</summary>
+        /// <param name="equ">Angular equatorial coordinates to be converted to a vector.</param>
+        /// <param name="time">
+        /// The date and time of the observation. This is needed because the returned
+        /// vector requires a valid time value when passed to certain other functions.
+        /// </param>
+        /// <returns>A vector in the equatorial system.</returns>
+        public static AstroVector VectorFromEquator(Equatorial equ, AstroTime time)
+        {
+            var sphere = new Spherical(equ.dec, 15.0 * equ.ra, equ.dist);
+            return VectorFromSphere(sphere, time);
+        }
+
+
+        /// <summary>Given an equatorial vector, calculates equatorial angular coordinates.</summary>
+        /// <param name="vector">A vector in an equatorial coordinate system.</param>
+        /// <returns>Angular coordinates expressed in the same equatorial system as `vector`.</returns>
+        public static Equatorial EquatorFromVector(AstroVector vector)
+        {
+            Spherical sphere = SphereFromVector(vector);
+            return new Equatorial(sphere.lon / 15.0, sphere.lat, sphere.dist);
+        }
+
+
+        private static double ToggleAzimuthDirection(double az)
+        {
+            az = 360.0 - az;
+            if (az >= 360.0)
+                az -= 360.0;
+            else if (az < 0.0)
+                az += 360.0;
+            return az;
+        }
+
+
+        /// <summary>
+        /// Converts Cartesian coordinates to horizontal coordinates.
+        /// </summary>
+        /// <remarks>
+        /// Given a horizontal Cartesian vector, returns horizontal azimuth and altitude.
+        ///
+        /// *IMPORTANT:* This function differs from #Astronomy.SphereFromVector in two ways:
+        /// - `Astronomy.SphereFromVector` returns a `lon` value that represents azimuth defined counterclockwise
+        ///   from north (e.g., west = +90), but this function represents a clockwise rotation
+        ///   (e.g., east = +90). The difference is because `Astronomy.SphereFromVector` is intended
+        ///   to preserve the vector "right-hand rule", while this function defines azimuth in a more
+        ///   traditional way as used in navigation and cartography.
+        /// - This function optionally corrects for atmospheric refraction, while `Astronomy.SphereFromVector`
+        ///   does not.
+        ///
+        /// The returned structure contains the azimuth in `lon`.
+        /// It is measured in degrees clockwise from north: east = +90 degrees, west = +270 degrees.
+        ///
+        /// The altitude is stored in `lat`.
+        ///
+        /// The distance to the observed object is stored in `dist`,
+        /// and is expressed in astronomical units (AU).
+        /// </remarks>
+        /// <param name="vector">Cartesian vector to be converted to horizontal coordinates.</param>
+        /// <param name="refraction">
+        /// `Refraction.Normal`: correct altitude for atmospheric refraction (recommended).
+        /// `Refraction.None`: no atmospheric refraction correction is performed.
+        /// `Refraction.JplHor`: for JPL Horizons compatibility testing only; not recommended for normal use.
+        /// </param>
+        /// <returns>
+        /// Horizontal spherical coordinates as described above.
+        /// </returns>
+        public static Spherical HorizonFromVector(AstroVector vector, Refraction refraction)
+        {
+            Spherical sphere = SphereFromVector(vector);
+            return new Spherical(
+                sphere.lat + RefractionAngle(refraction, sphere.lat),
+                ToggleAzimuthDirection(sphere.lon),
+                sphere.dist
+            );
+        }
+
+
+        /// <summary>
+        /// Given apparent angular horizontal coordinates in `sphere`, calculate horizontal vector.
+        /// </summary>
+        /// <param name="sphere">
+        /// A structure that contains apparent horizontal coordinates:
+        /// `lat` holds the refracted azimuth angle,
+        /// `lon` holds the azimuth in degrees clockwise from north,
+        /// and `dist` holds the distance from the observer to the object in AU.
+        /// </param>
+        /// <param name="time">
+        /// The date and time of the observation. This is needed because the returned
+        /// #AstroVector requires a valid time value when passed to certain other functions.
+        /// </param>
+        /// <param name="refraction">
+        /// The refraction option used to model atmospheric lensing. See #Astronomy.RefractionAngle.
+        /// This specifies how refraction is to be removed from the altitude stored in `sphere.lat`.
+        /// </param>
+        /// <returns>
+        /// A vector in the horizontal system: `x` = north, `y` = west, and `z` = zenith (up).
+        /// </returns>
+        public static AstroVector VectorFromHorizon(Spherical sphere, AstroTime time, Refraction refraction)
+        {
+            return VectorFromSphere(
+                new Spherical(
+                    sphere.lat + InverseRefractionAngle(refraction, sphere.lat),
+                    ToggleAzimuthDirection(sphere.lon),
+                    sphere.dist
+                ),
+                time
+            );
+        }
+
+
+        /// <summary>
+        /// Calculates the amount of "lift" to an altitude angle caused by atmospheric refraction.
+        /// </summary>
+        /// <remarks>
+        /// Given an altitude angle and a refraction option, calculates
+        /// the amount of "lift" caused by atmospheric refraction.
+        /// This is the number of degrees higher in the sky an object appears
+        /// due to the lensing of the Earth's atmosphere.
+        /// </remarks>
+        /// <param name="refraction">
+        /// The option selecting which refraction correction to use.
+        /// If `Refraction.Normal`, uses a well-behaved refraction model that works well for
+        /// all valid values (-90 to +90) of `altitude`.
+        /// If `Refraction.JplHor`, this function returns a compatible value with the JPL Horizons tool.
+        /// If any other value (including `Refraction.None`), this function returns 0.
+        /// </param>
+        /// <param name="altitude">
+        /// An altitude angle in a horizontal coordinate system. Must be a value between -90 and +90.
+        /// </param>
+        /// <returns>
+        /// The angular adjustment in degrees to be added to the altitude angle to correct for atmospheric lensing.
+        /// </returns>
+        public static double RefractionAngle(Refraction refraction, double altitude)
+        {
+            if (altitude < -90.0 || altitude > +90.0)
+                return 0.0;     /* no attempt to correct an invalid altitude */
+
+            double refr;
+            if (refraction == Refraction.Normal || refraction == Refraction.JplHor)
+            {
+                // http://extras.springer.com/1999/978-1-4471-0555-8/chap4/horizons/horizons.pdf
+                // JPL Horizons says it uses refraction algorithm from
+                // Meeus "Astronomical Algorithms", 1991, p. 101-102.
+                // I found the following Go implementation:
+                // https://github.com/soniakeys/meeus/blob/master/v3/refraction/refract.go
+                // This is a translation from the function "Saemundsson" there.
+                // I found experimentally that JPL Horizons clamps the angle to 1 degree below the horizon.
+                // This is important because the 'refr' formula below goes crazy near hd = -5.11.
+                double hd = altitude;
+                if (hd < -1.0)
+                    hd = -1.0;
+
+                refr = (1.02 / Math.Tan((hd+10.3/(hd+5.11))*DEG2RAD)) / 60.0;
+
+                if (refraction == Refraction.Normal && altitude < -1.0)
+                {
+                    // In "normal" mode we gradually reduce refraction toward the nadir
+                    // so that we never get an altitude angle less than -90 degrees.
+                    // When horizon angle is -1 degrees, the factor is exactly 1.
+                    // As altitude approaches -90 (the nadir), the fraction approaches 0 linearly.
+                    refr *= (altitude + 90.0) / 89.0;
+                }
+            }
+            else
+            {
+                /* No refraction, or the refraction option is invalid. */
+                refr = 0.0;
+            }
+
+            return refr;
+        }
+
+
+        /// <summary>
+        /// Calculates the inverse of an atmospheric refraction angle.
+        /// </summary>
+        /// <remarks>
+        /// Given an observed altitude angle that includes atmospheric refraction,
+        /// calculate the negative angular correction to obtain the unrefracted
+        /// altitude. This is useful for cases where observed horizontal
+        /// coordinates are to be converted to another orientation system,
+        /// but refraction first must be removed from the observed position.
+        /// </remarks>
+        /// <param name="refraction">
+        /// The option selecting which refraction correction to use.
+        /// See #Astronomy.RefractionAngle.
+        /// </param>
+        /// <param name="bent_altitude">
+        /// The apparent altitude that includes atmospheric refraction.
+        /// </param>
+        /// <returns>
+        /// The angular adjustment in degrees to be added to the
+        /// altitude angle to correct for atmospheric lensing.
+        /// This will be less than or equal to zero.
+        /// </returns>
+        public static double InverseRefractionAngle(Refraction refraction, double bent_altitude)
+        {
+            if (bent_altitude < -90.0 || bent_altitude > +90.0)
+                return 0.0;     /* no attempt to correct an invalid altitude */
+
+            /* Find the pre-adjusted altitude whose refraction correction leads to 'altitude'. */
+            double altitude = bent_altitude - RefractionAngle(refraction, bent_altitude);
+            for(;;)
+            {
+                /* See how close we got. */
+                double diff = (altitude + RefractionAngle(refraction, altitude)) - bent_altitude;
+                if (Math.Abs(diff) < 1.0e-14)
+                    return altitude - bent_altitude;
+
+                altitude -= diff;
+            }
+        }
+
+
         /// <summary>Calculates a rotation matrix from equatorial J2000 (EQJ) to ecliptic J2000 (ECL).</summary>
         /// <remarks>
         /// This is one of the family of functions that returns a rotation matrix
@@ -3587,396 +4277,51 @@ $ASTRO_CSHARP_CHEBYSHEV(8);
 
             return r;
         }
-    }
-    //==================================================================================================
 
-    /// <summary>
-    /// Represents a function whose ascending root is to be found.
-    /// See #Astronomy.Search.
-    /// </summary>
-    public abstract class SearchContext
-    {
+
         /// <summary>
-        /// Evaluates the function at a given time
+        /// Calculates a rotation matrix from equatorial J2000 (EQJ) to equatorial of-date (EQD).
         /// </summary>
-        /// <param name="time">The time at which to evaluate the function.</param>
-        /// <returns>The floating point value of the function at the specified time.</returns>
-        public abstract double Eval(AstroTime time);
-    }
-
-    internal class SearchContext_MagnitudeSlope: SearchContext
-    {
-        private readonly Body body;
-
-        public SearchContext_MagnitudeSlope(Body body)
+        /// <remarks>
+        /// This is one of the family of functions that returns a rotation matrix
+        /// for converting from one orientation to another.
+        /// Source: EQJ = equatorial system, using equator at J2000 epoch.
+        /// Target: EQD = equatorial system, using equator of the specified date/time.
+        /// </remarks>
+        /// <param name="time">
+        /// The date and time at which the Earth's equator defines the target orientation.
+        /// </param>
+        /// <returns>
+        /// A rotation matrix that converts EQJ to EQD at `time`.
+        /// </returns>
+        public static RotationMatrix Rotation_EQJ_EQD(AstroTime time)
         {
-            this.body = body;
+            RotationMatrix prec = precession_rot(0.0, time.tt);
+            RotationMatrix nut = nutation_rot(time, 0);
+            return CombineRotation(prec, nut);
         }
 
-        public override double Eval(AstroTime time)
+
+        /// <summary>
+        /// Calculates a rotation matrix from equatorial of-date (EQD) to equatorial J2000 (EQJ).
+        /// </summary>
+        /// <remarks>
+        /// This is one of the family of functions that returns a rotation matrix
+        /// for converting from one orientation to another.
+        /// Source: EQD = equatorial system, using equator of the specified date/time.
+        /// Target: EQJ = equatorial system, using equator at J2000 epoch.
+        /// </remarks>
+        /// <param name="time">
+        /// The date and time at which the Earth's equator defines the source orientation.
+        /// </param>
+        /// <returns>
+        /// A rotation matrix that converts EQD at `time` to EQJ.
+        /// </returns>
+        public static RotationMatrix Rotation_EQD_EQJ(AstroTime time)
         {
-            /*
-                The Search() function finds a transition from negative to positive values.
-                The derivative of magnitude y with respect to time t (dy/dt)
-                is negative as an object gets brighter, because the magnitude numbers
-                get smaller. At peak magnitude dy/dt = 0, then as the object gets dimmer,
-                dy/dt > 0.
-            */
-            const double dt = 0.01;
-            AstroTime t1 = time.AddDays(-dt/2);
-            AstroTime t2 = time.AddDays(+dt/2);
-            IllumInfo y1 = Astronomy.Illumination(body, t1);
-            IllumInfo y2 = Astronomy.Illumination(body, t2);
-            return (y2.mag - y1.mag) / dt;
-        }
-    }
-
-    internal class SearchContext_NegElongSlope: SearchContext
-    {
-        private readonly Body body;
-
-        public SearchContext_NegElongSlope(Body body)
-        {
-            this.body = body;
-        }
-
-        public override double Eval(AstroTime time)
-        {
-            const double dt = 0.1;
-            AstroTime t1 = time.AddDays(-dt/2.0);
-            AstroTime t2 = time.AddDays(+dt/2.0);
-
-            double e1 = Astronomy.AngleFromSun(body, t1);
-            double e2 = Astronomy.AngleFromSun(body, t2);
-            return (e1 - e2)/dt;
-        }
-    }
-
-    internal class SearchContext_SunOffset: SearchContext
-    {
-        private readonly double targetLon;
-
-        public SearchContext_SunOffset(double targetLon)
-        {
-            this.targetLon = targetLon;
-        }
-
-        public override double Eval(AstroTime time)
-        {
-            Ecliptic ecl = Astronomy.SunPosition(time);
-            return Astronomy.LongitudeOffset(ecl.elon - targetLon);
-        }
-    }
-
-    internal class SearchContext_MoonOffset: SearchContext
-    {
-        private readonly double targetLon;
-
-        public SearchContext_MoonOffset(double targetLon)
-        {
-            this.targetLon = targetLon;
-        }
-
-        public override double Eval(AstroTime time)
-        {
-            double angle = Astronomy.MoonPhase(time);
-            return Astronomy.LongitudeOffset(angle - targetLon);
-        }
-    }
-
-    internal class SearchContext_PeakAltitude: SearchContext
-    {
-        private readonly Body body;
-        private readonly int direction;
-        private readonly Observer observer;
-        private readonly double body_radius_au;
-
-        public SearchContext_PeakAltitude(Body body, Direction direction, Observer observer)
-        {
-            this.body = body;
-            this.direction = (int)direction;
-            this.observer = observer;
-
-            switch (body)
-            {
-                case Body.Sun:
-                    this.body_radius_au = Astronomy.SUN_RADIUS_AU;
-                    break;
-
-                case Body.Moon:
-                    this.body_radius_au = Astronomy.MOON_RADIUS_AU;
-                    break;
-
-                default:
-                    this.body_radius_au = 0.0;
-                    break;
-            }
-        }
-
-        public override double Eval(AstroTime time)
-        {
-            /*
-                Return the angular altitude above or below the horizon
-                of the highest part (the peak) of the given object.
-                This is defined as the apparent altitude of the center of the body plus
-                the body's angular radius.
-                The 'direction' parameter controls whether the angle is measured
-                positive above the horizon or positive below the horizon,
-                depending on whether the caller wants rise times or set times, respectively.
-            */
-
-            Equatorial ofdate = Astronomy.Equator(body, time, observer, EquatorEpoch.OfDate, Aberration.Corrected);
-
-            /* We calculate altitude without refraction, then add fixed refraction near the horizon. */
-            /* This gives us the time of rise/set without the extra work. */
-            Topocentric hor = Astronomy.Horizon(time, observer, ofdate.ra, ofdate.dec, Refraction.None);
-
-            return direction * (hor.altitude + Astronomy.RAD2DEG*(body_radius_au / ofdate.dist) + Astronomy.REFRACTION_NEAR_HORIZON);
-        }
-    }
-
-    internal class SearchContext_MoonDistanceSlope: SearchContext
-    {
-        private readonly int direction;
-
-        public SearchContext_MoonDistanceSlope(int direction)
-        {
-            this.direction = direction;
-        }
-
-        public static double MoonDistance(AstroTime time)
-        {
-            var context = new MoonContext(time.tt / 36525.0);
-            MoonResult moon = context.CalcMoon();
-            return moon.distance_au;
-        }
-
-        public override double Eval(AstroTime time)
-        {
-            const double dt = 0.001;
-            AstroTime t1 = time.AddDays(-dt/2.0);
-            AstroTime t2 = time.AddDays(+dt/2.0);
-            double dist1 = MoonDistance(t1);
-            double dist2 = MoonDistance(t2);
-            return direction * (dist2 - dist1)/dt;
-        }
-    }
-
-    internal class PascalArray2<ElemType>
-    {
-        private readonly int xmin;
-        private readonly int xmax;
-        private readonly int ymin;
-        private readonly int ymax;
-        private readonly ElemType[,] array;
-
-        public PascalArray2(int xmin, int xmax, int ymin, int ymax)
-        {
-            this.xmin = xmin;
-            this.xmax = xmax;
-            this.ymin = ymin;
-            this.ymax = ymax;
-            this.array = new ElemType[(xmax - xmin) + 1, (ymax - ymin) + 1];
-        }
-
-        public ElemType this[int x, int y]
-        {
-            get { return array[x - xmin, y - ymin]; }
-            set { array[x - xmin, y - ymin] = value; }
-        }
-    }
-
-    internal class MoonContext
-    {
-        double T;
-        double DGAM;
-        double DLAM, N, GAM1C, SINPI;
-        double L0, L, LS, F, D, S;
-        double DL0, DL, DLS, DF, DD, DS;
-        PascalArray2<double> CO = new PascalArray2<double>(-6, 6, 1, 4);
-        PascalArray2<double> SI = new PascalArray2<double>(-6, 6, 1, 4);
-
-        static double Frac(double x)
-        {
-            return x - Math.Floor(x);
-        }
-
-        static void AddThe(
-            double c1, double s1, double c2, double s2,
-            out double c, out double s)
-        {
-            c = c1*c2 - s1*s2;
-            s = s1*c2 + c1*s2;
-        }
-
-        static double Sine(double phi)
-        {
-            /* sine, of phi in revolutions, not radians */
-            return Math.Sin(2.0 * Math.PI * phi);
-        }
-
-        void LongPeriodic()
-        {
-            double S1 = Sine(0.19833+0.05611*T);
-            double S2 = Sine(0.27869+0.04508*T);
-            double S3 = Sine(0.16827-0.36903*T);
-            double S4 = Sine(0.34734-5.37261*T);
-            double S5 = Sine(0.10498-5.37899*T);
-            double S6 = Sine(0.42681-0.41855*T);
-            double S7 = Sine(0.14943-5.37511*T);
-
-            DL0 = 0.84*S1+0.31*S2+14.27*S3+ 7.26*S4+ 0.28*S5+0.24*S6;
-            DL  = 2.94*S1+0.31*S2+14.27*S3+ 9.34*S4+ 1.12*S5+0.83*S6;
-            DLS =-6.40*S1                                   -1.89*S6;
-            DF  = 0.21*S1+0.31*S2+14.27*S3-88.70*S4-15.30*S5+0.24*S6-1.86*S7;
-            DD  = DL0-DLS;
-            DGAM  = -3332E-9 * Sine(0.59734-5.37261*T)
-                    -539E-9 * Sine(0.35498-5.37899*T)
-                    -64E-9 * Sine(0.39943-5.37511*T);
-        }
-
-        private readonly int[] I = new int[4];
-
-        void Term(int p, int q, int r, int s, out double x, out double y)
-        {
-            I[0] = p;
-            I[1] = q;
-            I[2] = r;
-            I[3] = s;
-            x = 1.0;
-            y = 0.0;
-
-            for (int k=1; k<=4; ++k)
-                if (I[k-1] != 0.0)
-                    AddThe(x, y, CO[I[k-1], k], SI[I[k-1], k], out x, out y);
-        }
-
-        void AddSol(
-            double coeffl,
-            double coeffs,
-            double coeffg,
-            double coeffp,
-            int p,
-            int q,
-            int r,
-            int s)
-        {
-            double x, y;
-            Term(p, q, r, s, out x, out y);
-            DLAM += coeffl*y;
-            DS += coeffs*y;
-            GAM1C += coeffg*x;
-            SINPI += coeffp*x;
-        }
-
-        void ADDN(double coeffn, int p, int q, int r, int s, out double x, out double y)
-        {
-            Term(p, q, r, s, out x, out y);
-            N += coeffn * y;
-        }
-
-        void SolarN()
-        {
-            double x, y;
-
-            N = 0.0;
-            ADDN(-526.069, 0, 0,1,-2, out x, out y);
-            ADDN(  -3.352, 0, 0,1,-4, out x, out y);
-            ADDN( +44.297,+1, 0,1,-2, out x, out y);
-            ADDN(  -6.000,+1, 0,1,-4, out x, out y);
-            ADDN( +20.599,-1, 0,1, 0, out x, out y);
-            ADDN( -30.598,-1, 0,1,-2, out x, out y);
-            ADDN( -24.649,-2, 0,1, 0, out x, out y);
-            ADDN(  -2.000,-2, 0,1,-2, out x, out y);
-            ADDN( -22.571, 0,+1,1,-2, out x, out y);
-            ADDN( +10.985, 0,-1,1,-2, out x, out y);
-        }
-
-        void Planetary()
-        {
-            DLAM +=
-                +0.82*Sine(0.7736  -62.5512*T)+0.31*Sine(0.0466 -125.1025*T)
-                +0.35*Sine(0.5785  -25.1042*T)+0.66*Sine(0.4591+1335.8075*T)
-                +0.64*Sine(0.3130  -91.5680*T)+1.14*Sine(0.1480+1331.2898*T)
-                +0.21*Sine(0.5918+1056.5859*T)+0.44*Sine(0.5784+1322.8595*T)
-                +0.24*Sine(0.2275   -5.7374*T)+0.28*Sine(0.2965   +2.6929*T)
-                +0.33*Sine(0.3132   +6.3368*T);
-        }
-
-        internal MoonContext(double centuries_since_j2000)
-        {
-            int I, J, MAX;
-            double T2, ARG, FAC;
-            double c, s;
-
-            T = centuries_since_j2000;
-            T2 = T*T;
-            DLAM = 0;
-            DS = 0;
-            GAM1C = 0;
-            SINPI = 3422.7000;
-            LongPeriodic();
-            L0 = Astronomy.PI2*Frac(0.60643382+1336.85522467*T-0.00000313*T2) + DL0/Astronomy.ARC;
-            L  = Astronomy.PI2*Frac(0.37489701+1325.55240982*T+0.00002565*T2) + DL /Astronomy.ARC;
-            LS = Astronomy.PI2*Frac(0.99312619+  99.99735956*T-0.00000044*T2) + DLS/Astronomy.ARC;
-            F  = Astronomy.PI2*Frac(0.25909118+1342.22782980*T-0.00000892*T2) + DF /Astronomy.ARC;
-            D  = Astronomy.PI2*Frac(0.82736186+1236.85308708*T-0.00000397*T2) + DD /Astronomy.ARC;
-            for (I=1; I<=4; ++I)
-            {
-                switch(I)
-                {
-                    case 1:  ARG=L;  MAX=4; FAC=1.000002208;               break;
-                    case 2:  ARG=LS; MAX=3; FAC=0.997504612-0.002495388*T; break;
-                    case 3:  ARG=F;  MAX=4; FAC=1.000002708+139.978*DGAM;  break;
-                    default: ARG=D;  MAX=6; FAC=1.0;                       break;
-                }
-                CO[0,I] = 1.0;
-                CO[1,I] = Math.Cos(ARG)*FAC;
-                SI[0,I] = 0.0;
-                SI[1,I] = Math.Sin(ARG)*FAC;
-                for (J=2; J<=MAX; ++J)
-                {
-                    AddThe(CO[J-1,I], SI[J-1,I], CO[1,I], SI[1,I], out c, out s);
-                    CO[J,I] = c;
-                    SI[J,I] = s;
-                }
-
-                for (J=1; J<=MAX; ++J)
-                {
-                    CO[-J,I] =  CO[J,I];
-                    SI[-J,I] = -SI[J,I];
-                }
-            }
-        }
-
-        internal MoonResult CalcMoon()
-        {
-$ASTRO_ADDSOL()
-            SolarN();
-            Planetary();
-            S = F + DS/Astronomy.ARC;
-
-            double lat_seconds = (1.000002708 + 139.978*DGAM)*(18518.511+1.189+GAM1C)*Math.Sin(S)-6.24*Math.Sin(3*S) + N;
-
-            return new MoonResult(
-                Astronomy.PI2 * Frac((L0+DLAM/Astronomy.ARC) / Astronomy.PI2),
-                lat_seconds * (Astronomy.DEG2RAD / 3600.0),
-                (Astronomy.ARC * (Astronomy.ERAD / Astronomy.AU)) / (0.999953253 * SINPI)
-            );
-        }
-    }
-
-    internal struct MoonResult
-    {
-        public readonly double geo_eclip_lon;
-        public readonly double geo_eclip_lat;
-        public readonly double distance_au;
-
-        public MoonResult(double lon, double lat, double dist)
-        {
-            this.geo_eclip_lon = lon;
-            this.geo_eclip_lat = lat;
-            this.distance_au = dist;
+            RotationMatrix nut = nutation_rot(time, 1);
+            RotationMatrix prec = precession_rot(time.tt, 0.0);
+            return CombineRotation(nut, prec);
         }
     }
 }
