@@ -5,7 +5,7 @@ Fail()
     exit 1
 }
 
-rm -f moonphase positions riseset seasons culminate test/{moonphase,positions,riseset,seasons,culminate}.txt
+rm -f moonphase positions riseset seasons culminate horizon test/{moonphase,positions,riseset,seasons,culminate,horizon}.txt
 ./build || Fail "Error building example programs."
 
 echo "Testing example: moonphase.c"
