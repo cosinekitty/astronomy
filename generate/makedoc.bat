@@ -25,7 +25,7 @@ if errorlevel 1 (
 )
 
 echo.Trimming trailing whitespace in target code.
-for %%f in (..\source\c\astronomy.c ..\source\js\astronomy.js ..\source\python\astronomy.py) do (
+for %%f in (..\source\c\astronomy.c ..\source\js\astronomy.js ..\source\python\astronomy.py ..\source\csharp\astronomy.cs) do (
     node trimspace.js %%f
     if errorlevel 1 (exit /b 1)
 )
@@ -44,6 +44,11 @@ if errorlevel 1 (
     exit /b 1
 )
 cd ..\generate
+node eol_hack.js ..\source\csharp\README.md
+if errorlevel 1 (
+    echo.FATAL: error in eol_hack.js [C#]
+    exit /b 1
+)
 
 if not defined CLOSURE (
     REM     You can customize where the Google Closure Compiler jar file
@@ -84,7 +89,7 @@ if errorlevel 1 (
 
 node eol_hack.js ..\source\js\README.md
 if errorlevel 1 (
-    echo.FATAL: error in eol_hack.js
+    echo.FATAL: error in eol_hack.js [JS]
     exit /b 1
 )
 
