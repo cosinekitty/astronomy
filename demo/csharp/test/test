@@ -20,6 +20,10 @@ echo "Testing example: riseset.cs"
 dotnet exe/riseset.dll 45 -90 2019-06-14T21:45:25Z > test/riseset.txt || Fail "Error testing riseset.cs"
 diff test/riseset.txt test/riseset_correct.txt || Fail "Error comparing riseset.cs output."
 
+echo "Testing example: seasons.cs"
+dotnet exe/seasons.dll 2020 > test/seasons.txt || Fail "Error testing seasons.cs"
+diff test/seasons.txt test/seasons_correct.txt || Fail "Error comparing seasons.cs output."
+
 echo "Testing example: culminate.cs"
 dotnet exe/culminate.dll +30 -90 2015-02-28T00:00:00Z > test/culminate.txt || Fail "Error testing culminate.cs."
 diff test/culminate.txt test/culminate_correct.txt || Fail "Error comparing culminate.cs output."
