@@ -1,11 +1,11 @@
-search   : 2015-02-28 00:00:00 UTC
-Sun      : 2015-02-28 18:12:32 UTC  altitude= 52.13  azimuth=180.00
-Moon     : 2015-02-28 01:58:15 UTC  altitude= 77.88  azimuth=180.00
-Mercury  : 2015-02-28 16:31:18 UTC  altitude= 42.57  azimuth=180.00
-Venus    : 2015-02-28 20:03:56 UTC  altitude= 63.24  azimuth=180.00
-Mars     : 2015-02-28 19:52:21 UTC  altitude= 62.24  azimuth=180.00
-Jupiter  : 2015-02-28 04:40:04 UTC  altitude= 77.29  azimuth=180.00
-Saturn   : 2015-02-28 11:40:53 UTC  altitude= 40.96  azimuth=180.00
-Uranus   : 2015-02-28 20:20:51 UTC  altitude= 65.12  azimuth=180.00
-Neptune  : 2015-02-28 18:04:23 UTC  altitude= 50.53  azimuth=180.00
-Pluto    : 2015-02-28 14:31:39 UTC  altitude= 39.51  azimuth=180.00
+search   : 2015-02-28T00:00:00.000Z
+Sun      : 2015-02-28T18:12:32.330Z  altitude=52.13  azimuth=180.00
+Moon     : 2015-02-28T01:58:15.580Z  altitude=77.88  azimuth=180.00
+Mercury  : 2015-02-28T16:31:18.914Z  altitude=42.57  azimuth=180.00
+Venus    : 2015-02-28T20:03:56.864Z  altitude=63.24  azimuth=180.00
+Mars     : 2015-02-28T19:52:21.651Z  altitude=62.24  azimuth=180.00
+Jupiter  : 2015-02-28T04:40:04.005Z  altitude=77.29  azimuth=180.00
+Saturn   : 2015-02-28T11:40:53.867Z  altitude=40.96  azimuth=180.00
+Uranus   : 2015-02-28T20:20:51.251Z  altitude=65.12  azimuth=180.00
+Neptune  : 2015-02-28T18:04:23.942Z  altitude=50.53  azimuth=180.00
+Pluto    : 2015-02-28T14:31:39.411Z  altitude=39.51  azimuth=180.00

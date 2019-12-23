@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\source\csharp\astronomy.csproj" />
+    <ProjectReference Include="..\demo_helper\demo_helper.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

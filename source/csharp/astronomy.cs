@@ -184,7 +184,7 @@ namespace CosineKitty
         /// </summary>
         /// <param name="d">The date and time to be converted to AstroTime format.</param>
         public AstroTime(DateTime d)
-            : this((d - Origin).TotalDays)
+            : this((d.ToUniversalTime() - Origin).TotalDays)
         {
         }
 
@@ -217,7 +217,7 @@ namespace CosineKitty
         /// <returns>Example: "2019-08-30T17:45:22.763".</returns>
         public override string ToString()
         {
-            return ToUtcDateTime().ToString("yyyy-MM-ddThh:mm:ss.fffZ");
+            return ToUtcDateTime().ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
         }
 
         /// <summary>
