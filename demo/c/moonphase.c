@@ -31,16 +31,6 @@ int main(int argc, const char *argv[])
     astro_moon_quarter_t mq;
     int i;
 
-    /* 
-        Calculate the Moon's current phase angle,
-        which ranges from 0 to 360 degrees.
-
-          0 = new moon,
-         90 = first quarter,
-        180 = full moon,
-        270 = third quarter.
-    */
-
     switch (argc)
     {
     case 1:
@@ -57,6 +47,15 @@ int main(int argc, const char *argv[])
         return 1;
     }
 
+    /*
+        Calculate the Moon's current phase angle,
+        which ranges from 0 to 360 degrees.
+
+          0 = new moon,
+         90 = first quarter,
+        180 = full moon,
+        270 = third quarter.
+    */
     phase = Astronomy_MoonPhase(time);
     if (phase.status != ASTRO_SUCCESS)
     {

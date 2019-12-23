@@ -12,4 +12,9 @@ echo "Testing example: culminate.cs"
 dotnet exe/culminate.dll +30 -90 2015-02-28T00:00:00Z > test/culminate.txt || Fail "Error testing culminate.cs."
 diff test/culminate.txt test/culminate_correct.txt || Fail "Error comparing culminate.cs output."
 
+echo "Testing example: moonphase.cs"
+dotnet exe/moonphase.dll 2019-06-15T09:15:32.987Z > test/moonphase.txt || Fail "Error testing moonphase.cs"
+diff test/moonphase.txt test/moonphase_correct.txt || Fail "Error comparing moonphase.cs output."
+
+echo "PASS: C# examples"
 exit 0
