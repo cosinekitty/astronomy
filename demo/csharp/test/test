@@ -28,5 +28,9 @@ echo "Testing example: culminate.cs"
 dotnet exe/culminate.dll +30 -90 2015-02-28T00:00:00Z > test/culminate.txt || Fail "Error testing culminate.cs."
 diff test/culminate.txt test/culminate_correct.txt || Fail "Error comparing culminate.cs output."
 
+echo "Testing example: horizon.cs"
+dotnet exe/horizon.dll +25.5 -85.3 2016-12-25T12:30:45Z > test/horizon.txt || Fail "Error testing horizon.cs"
+diff test/horizon.txt test/horizon_correct.txt || Fail "Error comparing horizon.cs output."
+
 echo "PASS: C# examples"
 exit 0
