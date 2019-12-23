@@ -100,6 +100,8 @@ cd ../nodejs || Fail "Cannot change directory to ../nodejs"
 test/test || Fail "Error testing nodejs examples."
 cd ../python || Fail "Cannot change directory to ../python"
 test/test || Fail "Error testing Python examples."
+cd ../csharp || Fail "Cannot change directory to ../csharp"
+test/test || Fail "Error testing C# examples."
 cd ../../generate || Fail "Cannot change back to generate directory."
 
 cat pass.txt

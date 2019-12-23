@@ -4,4 +4,12 @@ Fail()
     echo "FATAL($0): $1"
     exit 1
 }
-dotnet build --output ${PWD}/exe
+rm -rf exe
+rm -f test/{moonphase,positions,riseset,seasons,culminate,horizon}.txt
+dotnet build --output ${PWD}/exe || Fail "Error building ${PWD}/demo.sln"
+
+echo "Testing example: culminate.cs"
+dotnet exe/culminate.dll +30 -90 2015-02-28T00:00:00Z > test/culminate.txt || Fail "Error testing culminate.cs."
+diff test/culminate.txt test/culminate_correct.txt || Fail "Error comparing culminate.cs output."
+
+exit 0
