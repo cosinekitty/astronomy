@@ -15,6 +15,7 @@ namespace csharp_test
                 Console.WriteLine("csharp_test: starting");
                 if (TestTime() != 0) return 1;
                 if (MoonTest() != 0) return 1;
+                if (RefractionTest() != 0) return 1;
                 if (RotationTest() != 0) return 1;
                 if (RiseSetTest("../../riseset/riseset.txt") != 0) return 1;
                 if (SeasonsTest("../../seasons/seasons.txt") != 0) return 1;
@@ -1384,6 +1385,26 @@ namespace csharp_test
             if (0 != Test_RotRoundTrip()) return 1;
 
             Console.WriteLine("RotationTest: PASS");
+            return 0;
+        }
+
+        static int RefractionTest()
+        {
+            for (double alt = -90.1; alt <= +90.1; alt += 0.001)
+            {
+                double refr = Astronomy.RefractionAngle(Refraction.Normal, alt);
+                double corrected = alt + refr;
+                double inv_refr = Astronomy.InverseRefractionAngle(Refraction.Normal, corrected);
+                double check_alt = corrected + inv_refr;
+                double diff = Math.Abs(check_alt - alt);
+                if (diff > 2.0e-14)
+                {
+                    Console.WriteLine("ERROR(RefractionTest): alt={0}, refr={1}, diff={2}", alt, refr, diff);
+                    return 1;
+                }
+            }
+
+            Console.WriteLine("RefractionTest: PASS");
             return 0;
         }
     }
