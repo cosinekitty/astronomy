@@ -3802,7 +3802,7 @@ static double MoonDistance(astro_time_t t)
     return dist;
 }
 
-static astro_func_result_t distance_slope(void *context, astro_time_t time)
+static astro_func_result_t moon_distance_slope(void *context, astro_time_t time)
 {
     static const double dt = 0.001;
     astro_time_t t1 = Astronomy_AddDays(time, -dt/2.0);
@@ -3868,14 +3868,14 @@ astro_apsis_t Astronomy_SearchLunarApsis(astro_time_t startTime)
     */
 
     t1 = startTime;
-    m1 = distance_slope(&positive_direction, t1);
+    m1 = moon_distance_slope(&positive_direction, t1);
     if (m1.status != ASTRO_SUCCESS)
         return ApsisError(m1.status);
 
     for (iter=0; iter * increment < 2.0 * MEAN_SYNODIC_MONTH; ++iter)
     {
         t2 = Astronomy_AddDays(t1, increment);
-        m2 = distance_slope(&positive_direction, t2);
+        m2 = moon_distance_slope(&positive_direction, t2);
         if (m2.status != ASTRO_SUCCESS)
             return ApsisError(m2.status);
 
@@ -3889,14 +3889,14 @@ astro_apsis_t Astronomy_SearchLunarApsis(astro_time_t startTime)
             {
                 /* We found a minimum-distance event: perigee. */
                 /* Search the time range for the time when the slope goes from negative to positive. */
-                search = Astronomy_Search(distance_slope, &positive_direction, t1, t2, 1.0);
+                search = Astronomy_Search(moon_distance_slope, &positive_direction, t1, t2, 1.0);
                 result.kind = APSIS_PERICENTER;
             }
             else if (m1.value > 0.0 || m2.value < 0.0)
             {
                 /* We found a maximum-distance event: apogee. */
                 /* Search the time range for the time when the slope goes from positive to negative. */
-                search = Astronomy_Search(distance_slope, &negative_direction, t1, t2, 1.0);
+                search = Astronomy_Search(moon_distance_slope, &negative_direction, t1, t2, 1.0);
                 result.kind = APSIS_APOCENTER;
             }
             else
@@ -3963,6 +3963,212 @@ astro_apsis_t Astronomy_NextLunarApsis(astro_apsis_t apsis)
     }
     return next;
 }
+
+
+typedef struct
+{
+    int direction;
+    astro_body_t body;
+}
+planet_distance_context_t;
+
+
+static astro_func_result_t planet_distance_slope(void *context, astro_time_t time)
+{
+    static const double dt = 0.001;
+    const planet_distance_context_t *pc = context;
+    astro_time_t t1 = Astronomy_AddDays(time, -dt/2.0);
+    astro_time_t t2 = Astronomy_AddDays(time, +dt/2.0);
+    astro_vector_t vec1, vec2;
+    double dist1, dist2;
+    astro_func_result_t result;
+
+    vec1 = Astronomy_HelioVector(pc->body, t1);
+    if (vec1.status != ASTRO_SUCCESS)
+        return FuncError(vec1.status);
+
+    vec2 = Astronomy_HelioVector(pc->body, t2);
+    if (vec2.status != ASTRO_SUCCESS)
+        return FuncError(vec2.status);
+
+    dist1 = Astronomy_VectorLength(vec1);
+    dist2 = Astronomy_VectorLength(vec2);
+    result.value = pc->direction * (dist2 - dist1) / dt;
+    result.status = ASTRO_SUCCESS;
+    return result;
+}
+
+
+/**
+ * @brief
+ *      Finds the date and time of a planet's perihelion (closest approach to the Sun)
+ *      or aphelion (farthest distance from the Sun) after a given time.
+ *
+ * Given a date and time to start the search in `startTime`, this function finds the
+ * next date and time that the center of the specified planet reaches the closest or farthest point
+ * in its orbit with respect to the center of the Sun, whichever comes first
+ * after `startTime`.
+ *
+ * The closest point is called *perihelion* and the farthest point is called *aphelion*.
+ * The word *apsis* refers to either event.
+ *
+ * To iterate through consecutive alternating perihelion and aphelion events, call `Astronomy_SearchPlanetApsis`
+ * once, then use the return value to call #Astronomy_NextPlanetApsis. After that,
+ * keep feeding the previous return value from `Astronomy_NextPlanetApsis` into another
+ * call of `Astronomy_NextPlanetApsis` as many times as desired.
+ *
+ * @param startTime
+ *      The date and time at which to start searching for the next perihelion or aphelion.
+ *
+ * @param body
+ *      The planet for which to find the next perihelion/aphelion event.
+ *      Not allowed to be `BODY_SUN` or `BODY_MOON`.
+ *
+ * @return
+ *      If successful, the `status` field in the returned structure holds `ASTRO_SUCCESS`,
+ *      `time` holds the date and time of the next planetary apsis, `kind` holds either
+ *      `APSIS_PERICENTER` for perihelion or `APSIS_APOCENTER` for aphelion, and the distance
+ *      values `dist_au` (astronomical units) and `dist_km` (kilometers) are valid.
+ *      If the function fails, `status` holds some value other than `ASTRO_SUCCESS` that
+ *      indicates what went wrong, and the other structure fields are invalid.
+ */
+astro_apsis_t Astronomy_SearchPlanetApsis(astro_time_t startTime, astro_body_t body)
+{
+    astro_time_t t1, t2;
+    astro_search_result_t search;
+    astro_func_result_t m1, m2;
+    planet_distance_context_t context;
+    astro_apsis_t result;
+    int iter;
+    double orbit_period_days;
+    double increment;   /* number of days to skip in each iteration */
+    astro_vector_t vec;
+
+    orbit_period_days = PlanetOrbitalPeriod(body);
+    if (orbit_period_days == 0.0)
+        return ApsisError(ASTRO_INVALID_BODY);      /* The body must be a planet. */
+
+    increment = orbit_period_days / 6.0;
+
+    context.body = body;
+
+    /*
+        Check the rate of change of the distance dr/dt at the start time.
+        If it is positive, the planet is currently getting farther away,
+        so start looking for apogee.
+        Conversely, if dr/dt < 0, start looking for perigee.
+        Either way, the polarity of the slope will change, so the product will be negative.
+        Handle the crazy corner case of exactly touching zero by checking for m1*m2 <= 0.
+    */
+
+    t1 = startTime;
+    context.direction = +1;
+    m1 = planet_distance_slope(&context, t1);
+    if (m1.status != ASTRO_SUCCESS)
+        return ApsisError(m1.status);
+
+    for (iter=0; iter * increment < 2.0 * orbit_period_days; ++iter)
+    {
+        t2 = Astronomy_AddDays(t1, increment);
+        context.direction = +1;
+        m2 = planet_distance_slope(&context, t2);
+        if (m2.status != ASTRO_SUCCESS)
+            return ApsisError(m2.status);
+
+        if (m1.value * m2.value <= 0.0)
+        {
+            /* There is a change of slope polarity within the time range [t1, t2]. */
+            /* Therefore this time range contains an apsis. */
+            /* Figure out whether it is perigee or apogee. */
+
+            if (m1.value < 0.0 || m2.value > 0.0)
+            {
+                /* We found a minimum-distance event: perigee. */
+                /* Search the time range for the time when the slope goes from negative to positive. */
+                context.direction = +1;
+                result.kind = APSIS_PERICENTER;
+            }
+            else if (m1.value > 0.0 || m2.value < 0.0)
+            {
+                /* We found a maximum-distance event: apogee. */
+                /* Search the time range for the time when the slope goes from positive to negative. */
+                context.direction = -1;
+                result.kind = APSIS_APOCENTER;
+            }
+            else
+            {
+                /* This should never happen. It should not be possible for both slopes to be zero. */
+                return ApsisError(ASTRO_INTERNAL_ERROR);
+            }
+
+            search = Astronomy_Search(planet_distance_slope, &context, t1, t2, 1.0);
+            if (search.status != ASTRO_SUCCESS)
+                return ApsisError(search.status);
+
+            vec = Astronomy_HelioVector(body, search.time);
+            if (vec.status != ASTRO_SUCCESS)
+                return ApsisError(vec.status);
+
+            result.status = ASTRO_SUCCESS;
+            result.time = search.time;
+            result.dist_au = Astronomy_VectorLength(vec);
+            result.dist_km = result.dist_au * KM_PER_AU;
+            return result;
+        }
+
+        /* We have not yet found a slope polarity change. Keep searching. */
+        t1 = t2;
+        m1 = m2;
+    }
+
+    /* It should not be possible to fail to find an apsis within 2 orbits. */
+    return ApsisError(ASTRO_INTERNAL_ERROR);
+}
+
+/**
+ * @brief
+ *      Finds the next planetary perihelion or aphelion event in a series.
+ *
+ * This function requires an #astro_apsis_t value obtained from a call
+ * to #Astronomy_SearchPlanetApsis or `Astronomy_NextPlanetApsis`. Given
+ * an aphelion event, this function finds the next perihelion event, and vice versa.
+ *
+ * See #Astronomy_SearchPlanetApsis for more details.
+ *
+ * @param apsis
+ *      An apsis event obtained from a call to #Astronomy_SearchPlanetApsis or `Astronomy_NextPlanetApsis`.
+ *
+ * @param body
+ *      The planet for which to find the next perihelion/aphelion event.
+ *      Not allowed to be `BODY_SUN` or `BODY_MOON`.
+ *      Must match the body passed into the call that produced the `apsis` parameter.
+ *
+ * @return
+ *      Same as the return value for #Astronomy_SearchPlanetApsis.
+ */
+astro_apsis_t Astronomy_NextPlanetApsis(astro_apsis_t apsis, astro_body_t body)
+{
+    static const double skip = 11.0;    /* number of days to skip to start looking for next apsis event */
+    astro_apsis_t next;
+    astro_time_t time;
+
+    if (apsis.status != ASTRO_SUCCESS)
+        return ApsisError(ASTRO_INVALID_PARAMETER);
+
+    if (apsis.kind != APSIS_APOCENTER && apsis.kind != APSIS_PERICENTER)
+        return ApsisError(ASTRO_INVALID_PARAMETER);
+
+    time = Astronomy_AddDays(apsis.time, skip);
+    next = Astronomy_SearchPlanetApsis(time, body);
+    if (next.status == ASTRO_SUCCESS)
+    {
+        /* Verify that we found the opposite apsis from the previous one. */
+        if (next.kind + apsis.kind != 1)
+            return ApsisError(ASTRO_INTERNAL_ERROR);
+    }
+    return next;
+}
+
 
 /**
  * @brief Calculates the inverse of a rotation matrix.

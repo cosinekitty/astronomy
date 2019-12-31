@@ -821,6 +821,33 @@ After calling [`Astronomy_SearchMoonQuarter`](#Astronomy_SearchMoonQuarter), thi
 
 ---
 
+<a name="Astronomy_NextPlanetApsis"></a>
+### Astronomy_NextPlanetApsis(apsis, body) &#8658; [`astro_apsis_t`](#astro_apsis_t)
+
+**Finds the next planetary perihelion or aphelion event in a series.** 
+
+
+
+This function requires an [`astro_apsis_t`](#astro_apsis_t) value obtained from a call to [`Astronomy_SearchPlanetApsis`](#Astronomy_SearchPlanetApsis) or `Astronomy_NextPlanetApsis`. Given an aphelion event, this function finds the next perihelion event, and vice versa.
+
+See [`Astronomy_SearchPlanetApsis`](#Astronomy_SearchPlanetApsis) for more details.
+
+
+
+**Returns:**  Same as the return value for [`Astronomy_SearchPlanetApsis`](#Astronomy_SearchPlanetApsis). 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_apsis_t`](#astro_apsis_t) | `apsis` |  An apsis event obtained from a call to [`Astronomy_SearchPlanetApsis`](#Astronomy_SearchPlanetApsis) or `Astronomy_NextPlanetApsis`. | 
+| [`astro_body_t`](#astro_body_t) | `body` |  The planet for which to find the next perihelion/aphelion event. Not allowed to be `BODY_SUN` or `BODY_MOON`. Must match the body passed into the call that produced the `apsis` parameter. | 
+
+
+
+
+---
+
 <a name="Astronomy_Refraction"></a>
 ### Astronomy_Refraction(refraction, altitude) &#8658; `double`
 
@@ -1356,6 +1383,35 @@ This function searches for the date and time Venus appears brightest as seen fro
 | --- | --- | --- |
 | [`astro_body_t`](#astro_body_t) | `body` |  Currently only `BODY_VENUS` is allowed. Any other value results in the error `ASTRO_INVALID_BODY`. See remarks above for more details. | 
 | [`astro_time_t`](#astro_time_t) | `startTime` |  The date and time to start searching for the next peak magnitude event. | 
+
+
+
+
+---
+
+<a name="Astronomy_SearchPlanetApsis"></a>
+### Astronomy_SearchPlanetApsis(startTime, body) &#8658; [`astro_apsis_t`](#astro_apsis_t)
+
+**Finds the date and time of a planet's perihelion (closest approach to the Sun) or aphelion (farthest distance from the Sun) after a given time.** 
+
+
+
+Given a date and time to start the search in `startTime`, this function finds the next date and time that the center of the specified planet reaches the closest or farthest point in its orbit with respect to the center of the Sun, whichever comes first after `startTime`.
+
+The closest point is called *perihelion* and the farthest point is called *aphelion*. The word *apsis* refers to either event.
+
+To iterate through consecutive alternating perihelion and aphelion events, call `Astronomy_SearchPlanetApsis` once, then use the return value to call [`Astronomy_NextPlanetApsis`](#Astronomy_NextPlanetApsis). After that, keep feeding the previous return value from `Astronomy_NextPlanetApsis` into another call of `Astronomy_NextPlanetApsis` as many times as desired.
+
+
+
+**Returns:**  If successful, the `status` field in the returned structure holds `ASTRO_SUCCESS`, `time` holds the date and time of the next planetary apsis, `kind` holds either `APSIS_PERICENTER` for perihelion or `APSIS_APOCENTER` for aphelion, and the distance values `dist_au` (astronomical units) and `dist_km` (kilometers) are valid. If the function fails, `status` holds some value other than `ASTRO_SUCCESS` that indicates what went wrong, and the other structure fields are invalid. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_time_t`](#astro_time_t) | `startTime` |  The date and time at which to start searching for the next perihelion or aphelion. | 
+| [`astro_body_t`](#astro_body_t) | `body` |  The planet for which to find the next perihelion/aphelion event. Not allowed to be `BODY_SUN` or `BODY_MOON`. | 
 
 
 
@@ -2216,6 +2272,19 @@ In cases where [`astro_time_t`](#astro_time_t) is included in a structure return
 | `double` | `y` |  The Cartesian y-coordinate of the vector in AU.  |
 | `double` | `z` |  The Cartesian z-coordinate of the vector in AU.  |
 | [`astro_time_t`](#astro_time_t) | `t` |  The date and time at which this vector is valid.  |
+
+
+---
+
+<a name="planet_distance_context_t"></a>
+### `planet_distance_context_t`
+
+
+
+| Type | Member | Description |
+| ---- | ------ | ----------- |
+| `int` | `direction` |  |
+| [`astro_body_t`](#astro_body_t) | `body` |  |
 
 <a name="typedefs"></a>
 ## Type Definitions

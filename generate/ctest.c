@@ -59,6 +59,7 @@ static int SeasonsTest(const char *filename);
 static int MoonPhase(const char *filename);
 static int RiseSet(const char *filename);
 static int LunarApsis(const char *filename);
+static int EarthApsis(const char *filename);
 static int ElongationTest(void);
 static int MagnitudeTest(void);
 static int MoonTest(void);
@@ -148,9 +149,15 @@ int main(int argc, const char *argv[])
             goto success;
         }
 
-        if (!strcmp(verb, "apsis"))
+        if (!strcmp(verb, "moon_apsis"))
         {
             CHECK(LunarApsis(filename));
+            goto success;
+        }
+
+        if (!strcmp(verb, "earth_apsis"))
+        {
+            CHECK(EarthApsis(filename));
             goto success;
         }
     }
@@ -1725,6 +1732,101 @@ static int LunarApsis(const char *filename)
     }
 
     printf("LunarApsis: found %d events, max time error = %0.3lf minutes, max distance error = %0.3lf km.\n", lnum, max_minutes, max_km);
+    error = 0;
+
+fail:
+    if (infile != NULL) fclose(infile);
+    return error;
+}
+
+/*-----------------------------------------------------------------------------------------------------------*/
+
+static int EarthApsis(const char *filename)
+{
+    int error = 1;
+    FILE *infile = NULL;
+    int lnum, nscanned;
+    char line[100];
+    int kind, year, month, day, hour, minute;
+    double dist_au;
+    astro_time_t start_time, correct_time;
+    astro_apsis_t apsis;
+    double diff_minutes, diff_au;
+    double max_minutes = 0.0, max_au = 0.0;
+
+    infile = fopen(filename, "rt");
+    if (infile == NULL)
+    {
+        fprintf(stderr, "EarthApsis: Cannot open input file: %s\n", filename);
+        error = 1;
+        goto fail;
+    }
+
+    /*
+        0 2001-01-04T08:52Z 0.9832860
+        1 2001-07-04T13:37Z 1.0166426
+    */
+
+    start_time = Astronomy_MakeTime(2001, 1, 1, 0, 0, 0.0);
+    lnum = 0;
+    while (fgets(line, sizeof(line), infile))
+    {
+        ++lnum;
+
+        if (lnum == 1)
+            apsis = Astronomy_SearchPlanetApsis(start_time, BODY_EARTH);
+        else
+            apsis = Astronomy_NextPlanetApsis(apsis, BODY_EARTH);
+
+        if (apsis.status != ASTRO_SUCCESS)
+        {
+            fprintf(stderr, "EarthApsis(%s line %d): Failed to find apsis.\n", filename, lnum);
+            error = 1;
+            goto fail;
+        }
+
+        nscanned = sscanf(line, "%d %d-%d-%dT%d:%dZ %lf", &kind, &year, &month, &day, &hour, &minute, &dist_au);
+        if (nscanned != 7)
+        {
+            fprintf(stderr, "EarthApsis(%s line %d): invalid data format\n", filename, lnum);
+            error = 1;
+            goto fail;
+        }
+
+        if (kind != apsis.kind)
+        {
+            fprintf(stderr, "EarthApsis(%s line %d): expected apsis kind %d but found %d\n", filename, lnum, kind, apsis.kind);
+            error = 1;
+            goto fail;
+        }
+
+        correct_time = Astronomy_MakeTime(year, month, day, hour, minute, 0.0);
+
+        diff_minutes = (24.0 * 60.0) * fabs(apsis.time.ut - correct_time.ut);
+        diff_au = fabs(apsis.dist_au - dist_au);
+
+        if (diff_minutes > 260.0)
+        {
+            fprintf(stderr, "EarthApsis(%s line %d): Excessive time error: %lf minutes.\n", filename, lnum, diff_minutes);
+            error = 1;
+            goto fail;
+        }
+
+        if (diff_au > 1.2e-5)
+        {
+            fprintf(stderr, "EarthApsis(%s line %d): Excessive distance error: %lg AU.\n", filename, lnum, diff_au);
+            error = 1;
+            goto fail;
+        }
+
+        if (diff_minutes > max_minutes)
+            max_minutes = diff_minutes;
+
+        if (diff_au > max_au)
+            max_au = diff_au;
+    }
+
+    printf("EarthApsis: found %d events, max time error = %0.3lf minutes, max distance error = %0.3lg AU.\n", lnum, max_minutes, max_au);
     error = 0;
 
 fail:
