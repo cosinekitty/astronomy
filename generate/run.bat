@@ -23,17 +23,17 @@ if not exist !EPHFILE! (
     echo.Trying to download for you from:
     echo.!EPHURL!
     echo.
-    
+
     for %%x in (wget.exe) do (set wgetexe=%%~$PATH:x)
     for %%x in (curl.exe) do (set curlexe=%%~$PATH:x)
     for %%x in (md5sum.exe) do (set md5exe=%%~$PATH:x)
-    
+
     if defined wgetexe (
         echo.Trying download using !wgetexe! ...
         !wgetexe! !EPHURL!
         if not errorlevel 1 goto verify_eph
-    ) 
-    
+    )
+
     if defined curlexe (
         echo.Trying download using !curlexe! ...
         !curlexe! -L -o !EPHFILE! !EPHURL!
@@ -49,7 +49,7 @@ if not exist !EPHFILE! (
     echo.Then run this batch file again to continue.
     exit /b 1
 
-:verify_eph    
+:verify_eph
     if defined md5exe (
         echo.Using !md5exe! to test integrity of downloaded !EPHFILE!
         !md5exe! -c ephemeris.md5
@@ -225,6 +225,9 @@ if errorlevel 1 (exit /b 1)
 if errorlevel 1 (exit /b 1)
 
 !CTESTEXE! earth_apsis apsides\earth.txt
+if errorlevel 1 (exit /b 1)
+
+!CTESTEXE! planet_apsis
 if errorlevel 1 (exit /b 1)
 
 REM -----------------------------------------------------------------------------------------

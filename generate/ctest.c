@@ -60,6 +60,7 @@ static int MoonPhase(const char *filename);
 static int RiseSet(const char *filename);
 static int LunarApsis(const char *filename);
 static int EarthApsis(const char *filename);
+static int PlanetApsis(void);
 static int ElongationTest(void);
 static int MagnitudeTest(void);
 static int MoonTest(void);
@@ -110,6 +111,12 @@ int main(int argc, const char *argv[])
         if (!strcmp(verb, "refraction"))
         {
             CHECK(RefractionTest());
+            goto success;
+        }
+
+        if (!strcmp(verb, "planet_apsis"))
+        {
+            CHECK(PlanetApsis());
             goto success;
         }
 
@@ -1833,6 +1840,76 @@ fail:
     if (infile != NULL) fclose(infile);
     return error;
 }
+
+
+static int PlanetApsis(void)
+{
+    astro_body_t body;
+    astro_time_t start_time, prev_time;
+    astro_apsis_t apsis;
+    astro_utc_t utc;
+    int count;
+    double interval, min_interval, max_interval;
+
+    start_time = Astronomy_MakeTime(MIN_YEAR, 1, 1, 0, 0, 0.0);
+
+    for (body = BODY_MERCURY; body <= BODY_PLUTO; ++body)
+    {
+        min_interval = max_interval = -1.0;
+        apsis = Astronomy_SearchPlanetApsis(start_time, body);
+        if (apsis.status != ASTRO_SUCCESS)
+        {
+            printf("PlanetApsis: ERROR %d finding first apsis for %s\n", apsis.status, Astronomy_BodyName(body));
+            return 1;
+        }
+        count = 1;
+        for(;;)
+        {
+            prev_time = apsis.time;
+            utc = Astronomy_UtcFromTime(apsis.time);
+            if (utc.year >= MAX_YEAR)
+                break;
+            apsis = Astronomy_NextPlanetApsis(apsis, body);
+            if (apsis.status == ASTRO_BAD_TIME && body == BODY_PLUTO)
+                break;      /* Pluto is limited by MAX_YEAR; OK for it to fail with this error. */
+
+            if (apsis.status != ASTRO_SUCCESS)
+            {
+                printf("PlanetApsis: ERROR %d finding apsis for %s after %04d-%02d-%02d\n",
+                    apsis.status, Astronomy_BodyName(body), utc.year, utc.month, utc.day);
+                return 1;
+            }
+
+            ++count;
+            interval = apsis.time.tt - prev_time.tt;
+            if (min_interval < 0.0)
+            {
+                min_interval = max_interval = interval;
+            }
+            else
+            {
+                if (interval < min_interval)
+                    min_interval = interval;
+                if (interval > max_interval)
+                    max_interval = interval;
+            }
+        }
+
+        if (count < 2)
+        {
+            printf("PlanetApsis: FAILED to find apsides for %s\n", Astronomy_BodyName(body));
+            return 1;
+        }
+
+        printf("PlanetApsis: %5d apsides for %-9s -- intervals: min=%9.2lf, max=%9.2lf, ratio=%8.6lf\n",
+            count, Astronomy_BodyName(body),
+            min_interval, max_interval, max_interval / min_interval);
+    }
+
+    printf("PlanetApsis: PASS\n");
+    return 0;
+}
+
 
 /*-----------------------------------------------------------------------------------------------------------*/
 
