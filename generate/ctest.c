@@ -1869,6 +1869,31 @@ static int PlanetApsis(void)
             utc = Astronomy_UtcFromTime(apsis.time);
             if (utc.year >= MAX_YEAR)
                 break;
+
+            if (body == BODY_MARS && utc.year >= 2016 && utc.year <= 2018)
+            {
+                /*
+                    The following agree with the following source:
+                    https://socratic.org/questions/what-are-the-mars-aphelion-and-perihelion-dates
+
+                    MARS APSIS: 0 2016-10-29 13:28 (tt=6146.062370970503)
+                    MARS APSIS: 1 2017-10-07 21:41 (tt=6489.404422476746)
+                    MARS APSIS: 0 2018-09-16 12:25 (tt=6833.018501969315)
+                */
+                printf("MARS APSIS: %d %04d-%02d-%02d %02d:%02d (tt=%0.12lf)\n", apsis.kind, utc.year, utc.month, utc.day, utc.hour, utc.minute, apsis.time.tt);
+                if (apsis.kind == APSIS_PERICENTER && apsis.time.tt > 6146.06237 && apsis.time.tt < 6146.06238)
+                    /* OK */;
+                else if (apsis.kind == APSIS_APOCENTER && apsis.time.tt > 6489.40442 && apsis.time.tt < 6489.40443)
+                    /* OK */;
+                else if (apsis.kind == APSIS_PERICENTER && apsis.time.tt > 6833.01850 && apsis.time.tt < 6833.01851)
+                    /* OK */;
+                else
+                {
+                    printf("MARS APSIS FAILURE\n");
+                    return 1;
+                }
+            }
+
             apsis = Astronomy_NextPlanetApsis(apsis, body);
             if (apsis.status == ASTRO_BAD_TIME && body == BODY_PLUTO)
                 break;      /* Pluto is limited by MAX_YEAR; OK for it to fail with this error. */
