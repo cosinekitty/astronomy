@@ -400,6 +400,24 @@ calculate current observational conditions.
 
 ### Returns: [`Time`](#Time)
 
+<a name="Time.Parse"></a>
+### Time.Parse(text)
+
+**Creates a [`Time`](#Time) object from a string of the form 'yyyy-mm-ddThh:mm:ss.sssZ'**
+
+Parses a UTC date and time from a string and returns a [`Time`](#Time) object.
+Permits a subset of ISO 8601 format.
+The year, month, and day are required.
+Hours, minutes, seconds, and fractions of a second are optional.
+If time is specified, there must be a 'T' between the date and the time
+and a 'Z' at the end of the time.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| `string` | `text` | A string of the following formats: `yyyy-mm-dd` `yyyy-mm-ddThh:mmZ` `yyyy-mm-ddThh:mm:ssZ` `yyyy-mm-ddThh:mm:ss.sssZ` |
+
+### Returns: [`Time`](#Time)
+
 <a name="Time.Utc"></a>
 ### Time.Utc(self)
 
@@ -536,6 +554,13 @@ as seen by an observer on the surface of the Earth.
 ### BadVectorError
 
 A vector magnitude is too small to have a direction in space.
+
+---
+
+<a name="DateTimeFormatError"></a>
+### DateTimeFormatError
+
+The syntax of a UTC date/time string was not valid, or it contains invalid values.
 
 ---
 

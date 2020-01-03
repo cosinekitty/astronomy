@@ -34,6 +34,7 @@ https://github.com/cosinekitty/astronomy
 import math
 import datetime
 import enum
+import re
 
 _PI2 = 2.0 * math.pi
 _EPOCH = datetime.datetime(2000, 1, 1, 12)
@@ -178,6 +179,11 @@ class Error(Exception):
     """Indicates an error in an astronomical calculation."""
     def __init__(self, message):
         Exception.__init__(self, message)
+
+class DateTimeFormatError(Error):
+    """The syntax of a UTC date/time string was not valid, or it contains invalid values."""
+    def __init__(self, text):
+        Error.__init__(self, 'The date/time string is not valid: "{}"'.format(text))
 
 class EarthNotAllowedError(Error):
     """The Earth is not allowed as the celestial body in this calculation."""
@@ -362,6 +368,8 @@ def _DeltaT(mjd):
 def _TerrestrialTime(ut):
     return ut + _DeltaT(ut + _Y2000_IN_MJD) / 86400.0
 
+_TimeRegex = re.compile(r'^([0-9]{1,4})-([0-9]{2})-([0-9]{2})(T([0-9]{2}):([0-9]{2})(:([0-9]{2}(\.[0-9]+)?))?Z)?$')
+
 class Time:
     """Represents a date and time used for performing astronomy calculations.
 
@@ -410,6 +418,51 @@ class Time:
         self.ut = ut
         self.tt = _TerrestrialTime(ut)
         self.etilt = None
+
+    @staticmethod
+    def Parse(text):
+        """Creates a #Time object from a string of the form 'yyyy-mm-ddThh:mm:ss.sssZ'
+
+        Parses a UTC date and time from a string and returns a #Time object.
+        Permits a subset of ISO 8601 format.
+        The year, month, and day are required.
+        Hours, minutes, seconds, and fractions of a second are optional.
+        If time is specified, there must be a 'T' between the date and the time
+        and a 'Z' at the end of the time.
+
+        Parameters
+        ----------
+        text : string
+            A string of the following formats:
+            `yyyy-mm-dd`
+            `yyyy-mm-ddThh:mmZ`
+            `yyyy-mm-ddThh:mm:ssZ`
+            `yyyy-mm-ddThh:mm:ss.sssZ`
+
+        Returns
+        -------
+        Time
+        """
+        m = _TimeRegex.match(text)
+        if m is None:
+            raise DateTimeFormatError(text)
+        year = int(m.group(1))
+        month = int(m.group(2))
+        if not (1 <= month <= 12):
+            raise DateTimeFormatError(text)
+        day = int(m.group(3))
+        if not (1 <= day <= 31):
+            raise DateTimeFormatError(text)
+        hour = int(m.group(5) or '0')
+        if not (0 <= hour <= 23):
+            raise DateTimeFormatError(text)
+        minute = int(m.group(6) or '0')
+        if not (0 <= minute <= 59):
+            raise DateTimeFormatError(text)
+        second = float(m.group(8) or '0')
+        if not (0.0 <= second < 60.0):
+            raise DateTimeFormatError(text)
+        return Time.Make(year, month, day, hour, minute, second)
 
     @staticmethod
     def Make(year, month, day, hour, minute, second):

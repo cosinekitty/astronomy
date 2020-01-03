@@ -7,6 +7,23 @@ import astronomy
 
 #-----------------------------------------------------------------------------------------------------------
 
+def AssertGoodTime(text, correct):
+    time = astronomy.Time.Parse(text)
+    check = str(time)
+    if check != correct:
+        print('Python AssertGoodTime FAILURE: parsed "{}", got "{}", expected "{}"'.format(text, check, correct))
+        sys.exit(1)
+    print('AssertGoodTime: "{}" OK'.format(text))
+
+def AssertBadTime(text):
+    try:
+        astronomy.Time.Parse(text)
+    except astronomy.DateTimeFormatError:
+        print('AssertBadTime: "{}" OK'.format(text))
+    else:
+        print('Python AssertBadTime FAILURE: should not have parsed "{}"'.format(text))
+        sys.exit(1)
+
 def Test_AstroTime():
     expected_ut = 6910.270978506945
     expected_tt = 6910.271779431480
@@ -34,6 +51,17 @@ def Test_AstroTime():
         print('Test_AstroTime: expected 2019-01-01T00:00:00.000Z but found {}'.format(s))
         sys.exit(1)
     print('Current time =', astronomy.Time.Now())
+    AssertGoodTime('2015-12-31', '2015-12-31T00:00:00.000Z')
+    AssertGoodTime('2015-12-31T23:45Z', '2015-12-31T23:45:00.000Z')
+    AssertGoodTime('2015-01-02T23:45:17Z', '2015-01-02T23:45:17.000Z')
+    AssertGoodTime('1971-03-17T03:30:55.976Z', '1971-03-17T03:30:55.976Z')
+    AssertBadTime('')
+    AssertBadTime('1971-13-01')
+    AssertBadTime('1971-12-32')
+    AssertBadTime('1971-12-31T24:00:00Z')
+    AssertBadTime('1971-12-31T23:60:00Z')
+    AssertBadTime('1971-12-31T23:00:60Z')
+    AssertBadTime('1971-03-17T03:30:55.976')
 
 #-----------------------------------------------------------------------------------------------------------
 
