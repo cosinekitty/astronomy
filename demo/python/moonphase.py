@@ -14,7 +14,6 @@
 #
 import sys
 import astronomy
-from astro_demo_common import ParseTime
 
 def QuarterName(quarter):
     return [
@@ -28,7 +27,7 @@ def main(args):
     if len(args) == 1:
         time = astronomy.Time.Now()
     elif len(args) == 2:
-        time = ParseTime(args[1])
+        time = astronomy.Time.Parse(args[1])
     else:
         print('USAGE: {} [yyyy-mm-ddThh:mm:ssZ]'.format(args[0]))
         return 1
