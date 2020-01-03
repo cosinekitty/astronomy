@@ -84,6 +84,7 @@ static int CheckTestOutput(const char *filename);
 static vsop_body_t LookupBody(const char *name);
 static int CheckSkyPos(observer *location, const char *filename, int lnum, const char *line, double *arcmin_equ, double *arcmin_hor, vsop_body_t *body);
 static int UnitTestChebyshev(void);
+static int DistancePlot(const char *name, double tt1, double tt2);
 
 #define MOON_PERIGEE        0.00238
 #define MERCURY_APHELION    0.466697
@@ -133,6 +134,9 @@ int main(int argc, const char *argv[])
     if (argc == 2 && !strcmp(argv[1], "chebyshev"))
         return UnitTestChebyshev();
 
+    if (argc == 5 && !strcmp(argv[1], "distplot"))
+        return DistancePlot(argv[2], atof(argv[3]), atof(argv[4]));
+
     return PrintUsage();
 }
 
@@ -153,6 +157,10 @@ static int PrintUsage(void)
         "\n"
         "generate chebyshev\n"
         "    Run unit test on Chebyshev interpolator.\n"
+        "\n"
+        "generate distplot planet tt1 tt2\n"
+        "    Generate a CSV plot of the given planet's heliocentric\n"
+        "    distance as a function of time.\n"
         "\n"
     );
 
@@ -1323,5 +1331,40 @@ static int UnitTestChebyshev(void)
     }
 
 fail:
+    return error;
+}
+
+
+static int DistancePlot(const char *name, double tt1, double tt2)
+{
+    int error;
+    vsop_body_t body;
+    double pos[3];
+    double tt, dist;
+    int i;
+    const int npoints = 1000;
+
+    CHECK(OpenEphem());
+
+    body = LookupBody(name);
+    if (body == BODY_INVALID)
+    {
+        error = 1;
+        fprintf(stderr, "DistancePlot: Invalid body name '%s'\n", name);
+        goto fail;
+    }
+
+    printf("\"tt\",\"distance\",\"x\",\"y\",\"z\"\n");
+    for (i=0; i < npoints; ++i)
+    {
+        tt = tt1 + (((double)i)/((double)(npoints-1)) * (tt2 - tt1));
+        CHECK(NovasBodyPos(tt + T0, body, pos));
+        dist = VectorLength(pos);
+        printf("%0.16lf,%0.16lg,%0.16lg,%0.16lg,%0.16lg\n", tt, dist, pos[0], pos[1], pos[2]);
+    }
+
+    error = 0;
+fail:
+    ephem_close();
     return error;
 }
