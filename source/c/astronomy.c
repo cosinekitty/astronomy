@@ -2488,6 +2488,35 @@ static astro_vector_t CalcVsop(const vsop_model_t *model, astro_time_t time)
     return vector;
 }
 
+static double VsopHelioDistance(const vsop_model_t *model, astro_time_t time)
+{
+    int s, i;
+    double t = time.tt / 365250;    /* millennia since 2000 */
+    double distance = 0.0;
+    double tpower = 1.0;
+    const vsop_formula_t *formula = &model->formula[2];     /* [2] is the distance part of the formula */
+
+    /*
+        The caller only wants to know the distance between the planet and the Sun.
+        So we only need to calculate the radial component of the spherical coordinates.
+    */
+
+    for (s=0; s < formula->nseries; ++s)
+    {
+        double sum = 0.0;
+        const vsop_series_t *series = &formula->series[s];
+        for (i=0; i < series->nterms; ++i)
+        {
+            const vsop_term_t *term = &series->term[i];
+            sum += term->amplitude * cos(term->phase + (t * term->frequency));
+        }
+        distance += tpower * sum;
+        tpower *= t;
+    }
+
+    return distance;
+}
+
 /*------------------ Chebyshev model for Pluto ------------------*/
 
 /** @cond DOXYGEN_SKIP */
@@ -2792,6 +2821,61 @@ astro_vector_t Astronomy_HelioVector(astro_body_t body, astro_time_t time)
         return VecError(ASTRO_INVALID_BODY, time);
     }
 }
+
+/**
+ * @brief Calculates the distance from the body to the Sun at a given time.
+ *
+ * Given a date and time, this function calculates the distance between
+ * the center of `body` and the center of the Sun.
+ * For the planets Mercury through Neptune, this function is significantly
+ * more efficient than calling #Astronomy_HelioVector followed by #Astronomy_VectorLength.
+ *
+ * @param body
+ *      A body for which to calculate a heliocentric distance: the Sun, Moon, or any of the planets.
+ *
+ * @param time
+ *      The date and time for which to calculate the heliocentric distance.
+ *
+ * @return
+ *      If successful, an #astro_func_result_t structure whose `status` is `ASTRO_SUCCESS`
+ *      and whose `value` holds the heliocentric distance in AU.
+ *      Otherwise, `status` reports an error condition.
+ */
+astro_func_result_t Astronomy_HelioDistance(astro_body_t body, astro_time_t time)
+{
+    astro_vector_t vector;
+    astro_func_result_t result;
+
+    switch (body)
+    {
+    case BODY_SUN:
+        result.status = ASTRO_SUCCESS;
+        result.value = 0.0;
+        return result;
+
+    case BODY_MERCURY:
+    case BODY_VENUS:
+    case BODY_EARTH:
+    case BODY_MARS:
+    case BODY_JUPITER:
+    case BODY_SATURN:
+    case BODY_URANUS:
+    case BODY_NEPTUNE:
+        result.status = ASTRO_SUCCESS;
+        result.value = VsopHelioDistance(&vsop[body], time);
+        return result;
+
+    default:
+        /* For non-VSOP objects, fall back to taking the length of the heliocentric vector. */
+        vector = Astronomy_HelioVector(body, time);
+        if (vector.status != ASTRO_SUCCESS)
+            return FuncError(vector.status);
+        result.status = ASTRO_SUCCESS;
+        result.value = Astronomy_VectorLength(vector);
+        return result;
+    }
+}
+
 
 /**
  * @brief Calculates geocentric Cartesian coordinates of a body in the J2000 equatorial system.
@@ -5218,21 +5302,17 @@ static astro_func_result_t planet_distance_slope(void *context, astro_time_t tim
     const planet_distance_context_t *pc = context;
     astro_time_t t1 = Astronomy_AddDays(time, -dt/2.0);
     astro_time_t t2 = Astronomy_AddDays(time, +dt/2.0);
-    astro_vector_t vec1, vec2;
-    double dist1, dist2;
-    astro_func_result_t result;
+    astro_func_result_t dist1, dist2, result;
 
-    vec1 = Astronomy_HelioVector(pc->body, t1);
-    if (vec1.status != ASTRO_SUCCESS)
-        return FuncError(vec1.status);
+    dist1 = Astronomy_HelioDistance(pc->body, t1);
+    if (dist1.status != ASTRO_SUCCESS)
+        return dist1;
 
-    vec2 = Astronomy_HelioVector(pc->body, t2);
-    if (vec2.status != ASTRO_SUCCESS)
-        return FuncError(vec2.status);
+    dist2 = Astronomy_HelioDistance(pc->body, t2);
+    if (dist2.status != ASTRO_SUCCESS)
+        return dist2;
 
-    dist1 = Astronomy_VectorLength(vec1);
-    dist2 = Astronomy_VectorLength(vec2);
-    result.value = pc->direction * (dist2 - dist1) / dt;
+    result.value = pc->direction * (dist2.value - dist1.value) / dt;
     result.status = ASTRO_SUCCESS;
     return result;
 }
@@ -5251,10 +5331,11 @@ static astro_func_result_t planet_distance_slope(void *context, astro_time_t tim
  * The closest point is called *perihelion* and the farthest point is called *aphelion*.
  * The word *apsis* refers to either event.
  *
- * To iterate through consecutive alternating perihelion and aphelion events, call `Astronomy_SearchPlanetApsis`
- * once, then use the return value to call #Astronomy_NextPlanetApsis. After that,
- * keep feeding the previous return value from `Astronomy_NextPlanetApsis` into another
- * call of `Astronomy_NextPlanetApsis` as many times as desired.
+ * To iterate through consecutive alternating perihelion and aphelion events,
+ * call `Astronomy_SearchPlanetApsis` once, then use the return value to call
+ * #Astronomy_NextPlanetApsis. After that, keep feeding the previous return value
+ * from `Astronomy_NextPlanetApsis` into another call of `Astronomy_NextPlanetApsis`
+ * as many times as desired.
  *
  * @param startTime
  *      The date and time at which to start searching for the next perihelion or aphelion.
@@ -5281,13 +5362,15 @@ astro_apsis_t Astronomy_SearchPlanetApsis(astro_time_t startTime, astro_body_t b
     int iter;
     double orbit_period_days;
     double increment;   /* number of days to skip in each iteration */
-    astro_vector_t vec;
+    astro_func_result_t dist;
 
     orbit_period_days = PlanetOrbitalPeriod(body);
     if (orbit_period_days == 0.0)
         return ApsisError(ASTRO_INVALID_BODY);      /* The body must be a planet. */
 
     increment = orbit_period_days / 6.0;
+    if (increment > 10.0)
+        increment = 10.0;
 
     context.body = body;
 
@@ -5344,14 +5427,14 @@ astro_apsis_t Astronomy_SearchPlanetApsis(astro_time_t startTime, astro_body_t b
             if (search.status != ASTRO_SUCCESS)
                 return ApsisError(search.status);
 
-            vec = Astronomy_HelioVector(body, search.time);
-            if (vec.status != ASTRO_SUCCESS)
-                return ApsisError(vec.status);
+            dist = Astronomy_HelioDistance(body, search.time);
+            if (dist.status != ASTRO_SUCCESS)
+                return ApsisError(dist.status);
 
             result.status = ASTRO_SUCCESS;
             result.time = search.time;
-            result.dist_au = Astronomy_VectorLength(vec);
-            result.dist_km = result.dist_au * KM_PER_AU;
+            result.dist_au = dist.value;
+            result.dist_km = dist.value * KM_PER_AU;
             return result;
         }
 

@@ -901,16 +901,21 @@ static const int ElongTestCount = sizeof(ElongTestData) / sizeof(ElongTestData[0
 static int ParseDate(const char *text, astro_time_t *time)
 {
     int year, month, day, hour, minute, nscanned;
+    double second = 0.0;
 
     nscanned = sscanf(text, "%d-%d-%dT%d:%dZ", &year, &month, &day, &hour, &minute);
     if (nscanned != 5)
     {
-        fprintf(stderr, "ParseDate: Invalid date text '%s'\n", text);
-        time->ut = time->tt = NAN;
-        return 1;
+        nscanned = sscanf(text, "%d-%d-%dT%d:%d:%lfZ", &year, &month, &day, &hour, &minute, &second);
+        if (nscanned != 6)
+        {
+            fprintf(stderr, "ParseDate: Invalid date text '%s'\n", text);
+            time->ut = time->tt = NAN;
+            return 1;
+        }
     }
 
-    *time = Astronomy_MakeTime(year, month, day, hour, minute, 0.0);
+    *time = Astronomy_MakeTime(year, month, day, hour, minute, second);
     return 0;
 }
 
@@ -1844,43 +1849,110 @@ fail:
 
 static int PlanetApsis(void)
 {
+    int error;
     astro_body_t body;
     astro_time_t start_time, prev_time;
     astro_apsis_t apsis;
     astro_utc_t utc;
     int count;
     double interval, min_interval, max_interval;
+    FILE *infile = NULL;
+    char filename[100];
+    char line[100];
+    char expected_time_text[100];
+    astro_time_t expected_time;
+    int expected_kind;
+    double expected_distance;
+    double diff_days, diff_dist_ratio;
+    double max_diff_days;
+    double max_dist_ratio;
 
     start_time = Astronomy_MakeTime(MIN_YEAR, 1, 1, 0, 0, 0.0);
 
     for (body = BODY_MERCURY; body <= BODY_PLUTO; ++body)
     {
+        max_dist_ratio = 0.0;
+        max_diff_days = 0.0;
+        snprintf(filename, sizeof(filename)-1, "apsides/apsis_%d.txt", (int)body);
+        if (infile) fclose(infile);
+        infile = fopen(filename, "rt");
+        if (infile == NULL)
+        {
+            fprintf(stderr, "PlanetApsis: ERROR - cannot open input file: %s\n", filename);
+            error = 1;
+            goto fail;
+        }
         min_interval = max_interval = -1.0;
         apsis = Astronomy_SearchPlanetApsis(start_time, body);
         if (apsis.status != ASTRO_SUCCESS)
         {
-            printf("PlanetApsis: ERROR %d finding first apsis for %s\n", apsis.status, Astronomy_BodyName(body));
-            return 1;
+            fprintf(stderr, "PlanetApsis: ERROR %d finding first apsis for %s\n", apsis.status, Astronomy_BodyName(body));
+            error = 1;
+            goto fail;
         }
         count = 1;
         for(;;)
         {
+            if (NULL == fgets(line, sizeof(line), infile))
+                break;  /* normal end of test data */
+
+            /* Parse the line of test data. */
+            if (   (3 != sscanf(line, "%d %s %lf", &expected_kind, expected_time_text, &expected_distance))
+                || (expected_kind & ~1)     /* must be either 0=perihelion or 1=aphelion */
+                || (expected_distance <= 0.0)
+                || ParseDate(expected_time_text, &expected_time))
+            {
+                fprintf(stderr, "PlanetApsis: INPUT SYNTAX ERROR (%s line %d): '%s'\n", filename, count, line);
+                error = 1;
+                goto fail;
+            }
+
+            /* Compare computed values against expected values. */
+            if (apsis.kind != expected_kind)
+            {
+                fprintf(stderr, "PlanetApsis: WRONG APSIS KIND (%s line %d)\n", filename, count);
+                error = 1;
+                goto fail;
+            }
+
+            diff_days = fabs(expected_time.tt - apsis.time.tt);
+            if (diff_days > max_diff_days) max_diff_days = diff_days;
+            if (diff_days > 20.0)
+            {
+                fprintf(stderr, "PlanetApsis: EXCESSIVE TIME ERROR for %s: %0.3lf days from %s\n",
+                    Astronomy_BodyName(body), diff_days, expected_time_text);
+                error = 1;
+                goto fail;
+            }
+
+            diff_dist_ratio = fabs(expected_distance - apsis.dist_au) / expected_distance;
+            if (diff_dist_ratio > max_dist_ratio) max_dist_ratio = diff_dist_ratio;
+            if (diff_dist_ratio > 1.0e-4)
+            {
+                fprintf(stderr, "PlanetApsis: EXCESSIVE DISTANCE ERROR for %s (%s line %d): expected=%0.16lf, calculated=%0.16lf, error ratio=%lg\n",
+                    Astronomy_BodyName(body), filename, count, expected_distance, apsis.dist_au, diff_dist_ratio);
+                error = 1;
+                goto fail;
+            }
+
+            /* Calculate the next apsis. */
             prev_time = apsis.time;
             utc = Astronomy_UtcFromTime(apsis.time);
-            if (utc.year >= MAX_YEAR)
-                break;
-
             apsis = Astronomy_NextPlanetApsis(apsis, body);
+#if 0
             if (apsis.status == ASTRO_BAD_TIME && body == BODY_PLUTO)
                 break;      /* Pluto is limited by MAX_YEAR; OK for it to fail with this error. */
+#endif
 
             if (apsis.status != ASTRO_SUCCESS)
             {
-                printf("PlanetApsis: ERROR %d finding apsis for %s after %04d-%02d-%02d\n",
+                fprintf(stderr, "PlanetApsis: ERROR %d finding apsis for %s after %04d-%02d-%02d\n",
                     apsis.status, Astronomy_BodyName(body), utc.year, utc.month, utc.day);
-                return 1;
+                error = 1;
+                goto fail;
             }
 
+            /* Update statistics. */
             ++count;
             interval = apsis.time.tt - prev_time.tt;
             if (min_interval < 0.0)
@@ -1898,17 +1970,22 @@ static int PlanetApsis(void)
 
         if (count < 2)
         {
-            printf("PlanetApsis: FAILED to find apsides for %s\n", Astronomy_BodyName(body));
-            return 1;
+            fprintf(stderr, "PlanetApsis: FAILED to find apsides for %s\n", Astronomy_BodyName(body));
+            error = 1;
+            goto fail;
         }
 
-        printf("PlanetApsis: %5d apsides for %-9s -- intervals: min=%9.2lf, max=%9.2lf, ratio=%8.6lf\n",
+        printf("PlanetApsis: %5d apsides for %-9s -- intervals: min=%9.2lf, max=%9.2lf, ratio=%8.6lf; max day=%lg, dist ratio=%lg\n",
             count, Astronomy_BodyName(body),
-            min_interval, max_interval, max_interval / min_interval);
+            min_interval, max_interval, max_interval / min_interval,
+            max_diff_days, max_dist_ratio);
     }
 
     printf("PlanetApsis: PASS\n");
-    return 0;
+    error = 0;
+fail:
+    if (infile) fclose(infile);
+    return error;
 }
 
 

@@ -473,6 +473,31 @@ Also, the position can optionally be corrected for [aberration](https://en.wikip
 
 ---
 
+<a name="Astronomy_HelioDistance"></a>
+### Astronomy_HelioDistance(body, time) &#8658; [`astro_func_result_t`](#astro_func_result_t)
+
+**Calculates the distance from the body to the Sun at a given time.** 
+
+
+
+Given a date and time, this function calculates the distance between the center of `body` and the center of the Sun. For the planets Mercury through Neptune, this function is significantly more efficient than calling [`Astronomy_HelioVector`](#Astronomy_HelioVector) followed by [`Astronomy_VectorLength`](#Astronomy_VectorLength).
+
+
+
+**Returns:**  If successful, an [`astro_func_result_t`](#astro_func_result_t) structure whose `status` is `ASTRO_SUCCESS` and whose `value` holds the heliocentric distance in AU. Otherwise, `status` reports an error condition. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_body_t`](#astro_body_t) | `body` |  A body for which to calculate a heliocentric distance: the Sun, Moon, or any of the planets. | 
+| [`astro_time_t`](#astro_time_t) | `time` |  The date and time for which to calculate the heliocentric distance. | 
+
+
+
+
+---
+
 <a name="Astronomy_HelioVector"></a>
 ### Astronomy_HelioVector(body, time) &#8658; [`astro_vector_t`](#astro_vector_t)
 
