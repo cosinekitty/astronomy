@@ -70,6 +70,7 @@ static short int de_number;
 static int OpenEphem(void);
 static int PrintUsage(void);
 static int GeneratePlanets(void);
+static int GenerateApsisTestData(void);
 static int GenerateSource(void);
 static int TestVsopModel(vsop_model_t *model, int body, double threshold, double *max_arcmin, int *trunc_terms);
 static int SaveVsopFile(const vsop_model_t *model);
@@ -124,6 +125,9 @@ int main(int argc, const char *argv[])
 {
     if (argc == 2 && !strcmp(argv[1], "planets"))
         return GeneratePlanets();
+
+    if (argc == 2 && !strcmp(argv[1], "apsis"))
+        return GenerateApsisTestData();
 
     if (argc == 2 && !strcmp(argv[1], "source"))
         return GenerateSource();
@@ -403,6 +407,235 @@ static int GeneratePlanets(void)
     CHECK(OpenEphem());
     CHECK(BuildVsopData());
     CHECK(ManualResample(8, 19, 7, MIN_YEAR, MAX_YEAR));
+
+fail:
+    ephem_close();
+    return error;
+}
+
+static double PlanetOrbitalPeriod(int body)
+{
+    switch (body)
+    {
+    case BODY_MERCURY:  return     87.969;
+    case BODY_VENUS:    return    224.701;
+    case BODY_EARTH:    return    365.256;
+    case BODY_MARS:     return    686.980;
+    case BODY_JUPITER:  return   4332.589;
+    case BODY_SATURN:   return  10759.22;
+    case BODY_URANUS:   return  30685.4;
+    case BODY_NEPTUNE:  return  60189.0;
+    case BODY_PLUTO:    return  90560.0;
+    default:            return  0.0;        /* invalid body */
+    }
+}
+
+static int SearchApsis(int body, double direction, double jd1, double jd2, double *jdx, double *xdist)
+{
+    int error;
+    const int npoints = 10;
+    int i, best_i;
+    double jd;
+    double pos[3];
+    double interval, dist, max_dist;
+
+    *xdist = *jdx = NAN;
+
+    /* Keep iterating until interval is within 1 second of uncertainty. */
+    while (jd2-jd1 > 1.0 / 86400.0)
+    {
+        interval = (jd2 - jd1) / (npoints - 1.0);
+        max_dist = NAN;
+        best_i = -1;
+        for (i=0; i < npoints; ++i)
+        {
+            jd = jd1 + (i*interval);
+            CHECK(NovasBodyPos(jd, body, pos));
+            dist = direction * VectorLength(pos);
+            if (i==0 || dist > max_dist)
+            {
+                best_i = i;
+                max_dist = dist;
+            }
+        }
+
+        /* Narrow in on +/- 1 interval around the extreme point. */
+        jd1 += (best_i - 1)*interval;
+        jd2 = jd1 + (2 * interval);
+    }
+
+    *jdx = (jd1 + jd2) / 2.0;
+    CHECK(NovasBodyPos(*jdx, body, pos));
+    *xdist = VectorLength(pos);
+    error = 0;
+fail:
+    return error;
+}
+
+static void PrintApsis(FILE *outfile, int kind, double jdx, double dist)
+{
+    short year, month, day;
+    int hour, minute, second;
+    double frac;
+
+    cal_date(jdx, &year, &month, &day, &frac);
+    hour = (int)floor(frac);
+    frac = 60.0 * (frac - hour);
+    minute = (int)floor(frac);
+    frac = 60.0 * (frac - minute);
+    second = (int)floor(frac);
+    fprintf(outfile, "%d %04d-%02d-%02dT%02d:%02d:%02dZ %12.7lf\n", kind, (int)year, (int)month, (int)day, hour, minute, second, dist);
+}
+
+static int GenerateApsisFile(int body, const char *outFileName)
+{
+    int error;
+    FILE *outfile = NULL;
+    double pos[3];
+    double dist[3];     /* dist[0]=current distance, dist[1]=previous distance, dist[2]=distance before that */
+    double jdStart, jdStop, jd;
+    double period, interval;
+    const double samples_per_orbit = 1000.0;
+    struct { double dist; double jd; int kind; } buffer[3];
+    int buflen = 0;
+
+    period = PlanetOrbitalPeriod(body);
+    if (period <= 0.0)
+    {
+        fprintf(stderr, "GenerateApsisFile: Invalid body %d\n", body);
+        error = 1;
+        goto fail;
+    }
+    interval = period / samples_per_orbit;
+
+    outfile = fopen(outFileName, "wt");
+    if (outfile == NULL)
+    {
+        fprintf(stderr, "GenerateApsisFile: Cannot open output file '%s'\n", outFileName);
+        error = 1;
+        goto fail;
+    }
+
+    jdStart = julian_date(MIN_YEAR, 1, 1, 0.0);
+    jdStop = julian_date(MAX_YEAR, 1, 1, 0.0);
+    dist[0] = dist[1] = dist[2] = -1.0;
+    for (jd=jdStart; jd <= jdStop; jd += interval)
+    {
+        CHECK(NovasBodyPos(jd, body, pos));
+        dist[0] = VectorLength(pos);
+        if (dist[2] > 0.0)
+        {
+            if (dist[1] >= dist[2] && dist[1] >= dist[0])
+            {
+                buffer[buflen].kind = 1;    /* aphelion */
+                CHECK(SearchApsis(body, +1.0, jd-2.0*interval, jd, &buffer[buflen].jd, &buffer[buflen].dist));
+                ++buflen;
+            }
+            else if (dist[1] <= dist[2] && dist[1] <= dist[0])
+            {
+                buffer[buflen].kind = 0;    /* perihelion */
+                CHECK(SearchApsis(body, -1.0, jd-2.0*interval, jd, &buffer[buflen].jd, &buffer[buflen].dist));
+                ++buflen;
+            }
+
+            /*
+                We have to handle weird special cases with Neptune.
+                It can have 3 local minima/maxima near perihelion and aphelion,
+                due to Sun wobbling around Solar System Barycenter.
+            */
+            if (buflen > 0)
+            {
+                if (body == BODY_NEPTUNE)
+                {
+                    const double mean_dist = 30.1;  /* mean orbital distance of Neptune in AU */
+
+                    if (buflen == 3)
+                    {
+                        /* If all 3 entries are on the same side of the mean distance, pick the extreme. */
+                        if (buffer[0].dist > mean_dist && buffer[1].dist > mean_dist && buffer[2].dist > mean_dist)
+                        {
+                            int imax = 0;
+                            if (buffer[1].dist > buffer[imax].dist) imax = 1;
+                            if (buffer[2].dist > buffer[imax].dist) imax = 2;
+                            if (buffer[imax].kind != 1)
+                            {
+                                fprintf(stderr, "FATAL(GenerateApsisFile): expected Neptune aphelion\n");
+                                error = 1;
+                                goto fail;
+                            }
+                            PrintApsis(outfile, buffer[imax].kind, buffer[imax].jd, buffer[imax].dist);
+                            buflen = 0;     /* empty the buffer */
+                        }
+                        else if (buffer[0].dist < mean_dist && buffer[1].dist < mean_dist && buffer[2].dist < mean_dist)
+                        {
+                            int imin = 0;
+                            if (buffer[1].dist < buffer[imin].dist) imin = 1;
+                            if (buffer[2].dist < buffer[imin].dist) imin = 2;
+                            if (buffer[imin].kind != 0)
+                            {
+                                fprintf(stderr, "FATAL(GenerateApsisFile): expected Neptune perihelion\n");
+                                error = 1;
+                                goto fail;
+                            }
+                            PrintApsis(outfile, buffer[imin].kind, buffer[imin].jd, buffer[imin].dist);
+                            buflen = 0;     /* empty the buffer */
+                        }
+                        else
+                        {
+                            /* We have to fail because the buffer is full and we don't know how to empty it. */
+                            fprintf(stderr, "FATAL(GenerateApsisFile): Unhandled special case with Neptune apsis\n");
+                            error = 1;
+                            goto fail;
+                        }
+                    }
+                }
+                else
+                {
+                    PrintApsis(outfile, buffer[0].kind, buffer[0].jd, buffer[0].dist);
+                    buflen = 0;
+                }
+            }
+        }
+        dist[2] = dist[1];
+        dist[1] = dist[0];
+    }
+
+    if (buflen > 0)
+    {
+        fprintf(stderr, "FATAL(GenerateApsisFile): buffer holds %d unhandled events.\n", buflen);
+        error = 1;
+        goto fail;
+    }
+
+fail:
+    if (outfile)
+    {
+        fclose(outfile);
+        if (error) remove(outFileName);
+    }
+    return error;
+}
+
+static int GenerateApsisTestData(void)
+{
+    int error;
+
+    CHECK(OpenEphem());
+
+    /*
+        Tricky: BODY_EARTH=11, but we write to output/apsis_2.txt.
+        The BODY_EARTH is my extension here for working around NOVAS,
+        but Astronomy Engine uses 2 to represent the Earth.
+    */
+    CHECK(GenerateApsisFile(BODY_MERCURY, "apsides/apsis_0.txt"));
+    CHECK(GenerateApsisFile(BODY_VENUS,   "apsides/apsis_1.txt"));
+    CHECK(GenerateApsisFile(BODY_EARTH,   "apsides/apsis_2.txt"));
+    CHECK(GenerateApsisFile(BODY_MARS,    "apsides/apsis_3.txt"));
+    CHECK(GenerateApsisFile(BODY_JUPITER, "apsides/apsis_4.txt"));
+    CHECK(GenerateApsisFile(BODY_SATURN,  "apsides/apsis_5.txt"));
+    CHECK(GenerateApsisFile(BODY_URANUS,  "apsides/apsis_6.txt"));
+    CHECK(GenerateApsisFile(BODY_NEPTUNE, "apsides/apsis_7.txt"));
+    CHECK(GenerateApsisFile(BODY_PLUTO,   "apsides/apsis_8.txt"));
 
 fail:
     ephem_close();

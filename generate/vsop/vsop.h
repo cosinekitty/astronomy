@@ -19,7 +19,7 @@ typedef enum
 }
 vsop_version_t;
 
-typedef struct 
+typedef struct
 {
     double amplitude;
     double phase;
@@ -27,11 +27,11 @@ typedef struct
 }
 vsop_term_t;
 
-typedef struct 
+typedef struct
 {
     int nterms_total;       /* total number of terms in the VSOP87 model */
     int nterms_calc;        /* number of terms at the front to actually calculate (allows faster, lower-res calc) */
-    vsop_term_t *term; 
+    vsop_term_t *term;
 }
 vsop_series_t;
 
@@ -67,7 +67,7 @@ vsop_body_t;
 
 #define VSOP_BODY_LIMIT 12
 
-typedef struct 
+typedef struct
 {
     vsop_version_t version;
     vsop_body_t body;

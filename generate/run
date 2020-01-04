@@ -68,7 +68,7 @@ echo ""
 echo "Building C source code for 'generate' program."
 ./build || Fail "Could not build 'generate' program from source."
 
-mkdir -pv output temp || Fail "Error creating directories."
+mkdir -pv output temp apsides || Fail "Error creating directories."
 rm -f temp/*
 
 FASTMODE=true
@@ -85,6 +85,11 @@ if [[ "${FASTMODE}" == "false" ]]; then
     rm -f output/vsop_*.txt output/*.eph
     ./generate planets || Fail "Could not generate planet models."
 fi
+
+echo ""
+echo "Generating apsis test data."
+rm -f apsides/apsis_*.txt
+./generate apsis || Fail "Could not generate apsis test data."
 
 ./makedoc || exit $?
 ./unit_test_csharp || exit $?
