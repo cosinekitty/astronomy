@@ -57,6 +57,7 @@ static const double SECONDS_PER_DAY = 24.0 * 3600.0;
 static const double SOLAR_DAYS_PER_SIDEREAL_DAY = 0.9972695717592592;
 static const double MEAN_SYNODIC_MONTH = 29.530588;     /* average number of days for Moon to return to the same phase */
 static const double EARTH_ORBITAL_PERIOD = 365.256;
+static const double NEPTUNE_ORBITAL_PERIOD = 60189.0;
 static const double REFRACTION_NEAR_HORIZON = 34.0 / 60.0;   /* degrees of refractive "lift" seen for objects near horizon */
 static const double SUN_RADIUS_AU  = 4.6505e-3;
 static const double MOON_RADIUS_AU = 1.15717e-5;
@@ -194,7 +195,7 @@ static double PlanetOrbitalPeriod(astro_body_t body)
     case BODY_JUPITER:  return   4332.589;
     case BODY_SATURN:   return  10759.22;
     case BODY_URANUS:   return  30685.4;
-    case BODY_NEPTUNE:  return  60189.0;
+    case BODY_NEPTUNE:  return  NEPTUNE_ORBITAL_PERIOD;
     case BODY_PLUTO:    return  90560.0;
     default:            return  0.0;        /* invalid body */
     }
@@ -4078,6 +4079,135 @@ static astro_func_result_t planet_distance_slope(void *context, astro_time_t tim
     return result;
 }
 
+#define NeptuneHelioDistance(time)      VsopHelioDistance(&vsop[BODY_NEPTUNE], (time))
+
+static astro_apsis_t NeptuneExtreme(astro_apsis_kind_t kind, astro_time_t start_time, double dayspan)
+{
+    astro_apsis_t apsis;
+    const double direction = (kind == APSIS_APOCENTER) ? +1.0 : -1.0;
+    const int npoints = 10;
+    int i, best_i;
+    double interval;
+    double dist, best_dist;
+    astro_time_t time;
+
+    for(;;)
+    {
+        interval = dayspan / (npoints - 1);
+
+        if (interval < 1.0 / 1440.0)    /* iterate until uncertainty is less than one minute */
+        {
+            apsis.status = ASTRO_SUCCESS;
+            apsis.kind = kind;
+            apsis.time = Astronomy_AddDays(start_time, interval / 2.0);
+            apsis.dist_au = NeptuneHelioDistance(apsis.time);
+            apsis.dist_km = apsis.dist_au * KM_PER_AU;
+            return apsis;
+        }
+
+        best_i = -1;
+        best_dist = 0.0;
+        for (i=0; i < npoints; ++i)
+        {
+            time = Astronomy_AddDays(start_time, i * interval);
+            dist = direction * NeptuneHelioDistance(time);
+            if (i==0 || dist > best_dist)
+            {
+                best_i = i;
+                best_dist = dist;
+            }
+        }
+
+        /* Narrow in on the extreme point. */
+        start_time = Astronomy_AddDays(start_time, (best_i - 1) * interval);
+        dayspan = 2.0 * interval;
+    }
+}
+
+
+static astro_apsis_t SearchNeptuneApsis(astro_time_t startTime)
+{
+    const int npoints = 1000;
+    int i;
+    astro_time_t t1, t2, time, t_min, t_max;
+    double dist, max_dist, min_dist;
+    astro_apsis_t perihelion, aphelion;
+    double interval;
+
+    /*
+        Neptune is a special case for two reasons:
+        1. Its orbit is nearly circular (low orbital eccentricity).
+        2. It is so distant from the Sun that the orbital period is very long.
+        Put together, this causes wobbling of the Sun around the Solar System Barycenter (SSB)
+        to be so significant that there are 3 local minima in the distance-vs-time curve
+        near each apsis. Therefore, unlike for other planets, we can't use an optimized
+        algorithm for finding dr/dt = 0.
+        Instead, we use a dumb, brute-force algorithm of sampling and finding min/max
+        heliocentric distance.
+    */
+
+    /*
+        Rewind approximately 30 degrees in the orbit,
+        then search forward for 270 degrees.
+        This is a very cautious way to prevent missing an apsis.
+        Typically we will find two apsides, and we pick whichever
+        apsis is ealier, but after startTime.
+        Sample points around this orbital arc and find when the distance
+        is greatest and smallest.
+    */
+    t1 = Astronomy_AddDays(startTime, NEPTUNE_ORBITAL_PERIOD * ( -30.0 / 360.0));
+    t2 = Astronomy_AddDays(startTime, NEPTUNE_ORBITAL_PERIOD * (+270.0 / 360.0));
+    t_min = t_max = t1;
+    min_dist = max_dist = -1.0;     /* prevent warning about uninitialized variables */
+    interval = (t2.ut - t1.ut) / (npoints - 1.0);
+
+    for (i=0; i < npoints; ++i)
+    {
+        double ut = t1.ut + (i * interval);
+        time = Astronomy_TimeFromDays(ut);
+        dist = NeptuneHelioDistance(time);
+        if (i == 0)
+        {
+            max_dist = min_dist = dist;
+        }
+        else
+        {
+            if (dist > max_dist)
+            {
+                max_dist = dist;
+                t_max = time;
+            }
+            if (dist < min_dist)
+            {
+                min_dist = dist;
+                t_min = time;
+            }
+        }
+    }
+
+    t1 = Astronomy_AddDays(t_min, -2 * interval);
+    perihelion = NeptuneExtreme(APSIS_PERICENTER, t1, 4 * interval);
+
+    t1 = Astronomy_AddDays(t_max, -2 * interval);
+    aphelion = NeptuneExtreme(APSIS_APOCENTER, t1, 4 * interval);
+
+    if (perihelion.status == ASTRO_SUCCESS && perihelion.time.tt >= startTime.tt)
+    {
+        if (aphelion.status == ASTRO_SUCCESS && aphelion.time.tt >= startTime.tt)
+        {
+            /* Perihelion and aphelion are both valid. Pick the one that comes first. */
+            if (aphelion.time.tt < perihelion.time.tt)
+                return aphelion;
+        }
+        return perihelion;
+    }
+
+    if (aphelion.status == ASTRO_SUCCESS && aphelion.time.tt >= startTime.tt)
+        return aphelion;
+
+    return ApsisError(ASTRO_FAIL_NEPTUNE_APSIS);
+}
+
 
 /**
  * @brief
@@ -4124,6 +4254,9 @@ astro_apsis_t Astronomy_SearchPlanetApsis(astro_time_t startTime, astro_body_t b
     double orbit_period_days;
     double increment;   /* number of days to skip in each iteration */
     astro_func_result_t dist;
+
+    if (body == BODY_NEPTUNE)
+        return SearchNeptuneApsis(startTime);
 
     orbit_period_days = PlanetOrbitalPeriod(body);
     if (orbit_period_days == 0.0)
@@ -4231,7 +4364,7 @@ astro_apsis_t Astronomy_SearchPlanetApsis(astro_time_t startTime, astro_body_t b
  */
 astro_apsis_t Astronomy_NextPlanetApsis(astro_apsis_t apsis, astro_body_t body)
 {
-    static const double skip = 11.0;    /* number of days to skip to start looking for next apsis event */
+    double skip;    /* number of days to skip to start looking for next apsis event */
     astro_apsis_t next;
     astro_time_t time;
 
@@ -4240,6 +4373,10 @@ astro_apsis_t Astronomy_NextPlanetApsis(astro_apsis_t apsis, astro_body_t body)
 
     if (apsis.kind != APSIS_APOCENTER && apsis.kind != APSIS_PERICENTER)
         return ApsisError(ASTRO_INVALID_PARAMETER);
+
+    skip = 0.25 * PlanetOrbitalPeriod(body);        /* skip 1/4 of an orbit before starting search again */
+    if (skip <= 0.0)
+        return ApsisError(ASTRO_INVALID_BODY);      /* body must be a planet */
 
     time = Astronomy_AddDays(apsis.time, skip);
     next = Astronomy_SearchPlanetApsis(time, body);

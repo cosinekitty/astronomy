@@ -50,7 +50,8 @@ typedef enum
     ASTRO_NO_MOON_QUARTER,          /**< No lunar quarter occurs inside the specified time range. */
     ASTRO_WRONG_MOON_QUARTER,       /**< Internal error: Astronomy_NextMoonQuarter found the wrong moon quarter. */
     ASTRO_INTERNAL_ERROR,           /**< A self-check failed inside the code somewhere, indicating a bug needs to be fixed. */
-    ASTRO_INVALID_PARAMETER         /**< A parameter value passed to a function was not valid. */
+    ASTRO_INVALID_PARAMETER,        /**< A parameter value passed to a function was not valid. */
+    ASTRO_FAIL_NEPTUNE_APSIS        /**< Special-case logic for finding Neptune apsis failed. */
 }
 astro_status_t;
 
