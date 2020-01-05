@@ -71,7 +71,7 @@ int VsopLoadModel(vsop_model_t *model, const char *inFileName)
         if (termcount == nterms)
         {
             /* expect first/another header record */
-            if (length < 67 || 
+            if (length < 67 ||
                 memcmp(line, " VSOP87 VERSION ", 16) ||
                 (line[17] < '0' || line[17] > '5') ||
                 (line[59] < '0' || line[59] > '9') ||
@@ -162,7 +162,7 @@ int VsopLoadModel(vsop_model_t *model, const char *inFileName)
             series->term[termcount].phase = B;
             series->term[termcount].frequency = C;
             ++termcount;
-        }        
+        }
     }
 
     if (model->version == VSOP_INVALID_VERSION)
@@ -171,7 +171,7 @@ int VsopLoadModel(vsop_model_t *model, const char *inFileName)
         goto fail;
     }
 
-    expected_ncoords = (model->version == VSOP_ELLIPTIC_J2000) ? 6 : 3; 
+    expected_ncoords = (model->version == VSOP_ELLIPTIC_J2000) ? 6 : 3;
     if (model->ncoords != expected_ncoords)
     {
         fprintf(stderr, "VsopLoadModel: expected %d coordinates but found %d in file %s\n", expected_ncoords, model->ncoords, inFileName);
@@ -200,7 +200,7 @@ void VsopFreeModel(vsop_model_t *model)
 {
     int k, s;
 
-    for (k=0; k < VSOP_MAX_COORDS; ++k)    
+    for (k=0; k < VSOP_MAX_COORDS; ++k)
         for (s=0; s < VSOP_MAX_SERIES; ++s)
             free(model->formula[k].series[s].term);
 
@@ -309,7 +309,7 @@ static int ModelTypeScaling(const vsop_model_t *model, int k, double *scaling)
     *scaling = 0.0;
 
     switch (model->version)
-    {    
+    {
     case VSOP_HELIO_RECT_J2000:
     case VSOP_HELIO_RECT_DATE:
         break;  /* fall through to AU distance metric */
@@ -360,7 +360,7 @@ int VsopTruncate(vsop_model_t *model, double jd1, double jd2, double amplitudeTh
     double t1 = fabs(Millennia(jd1));
     double t2 = fabs(Millennia(jd2));
     double t = (t1 > t2) ? t1 : t2;         /* maximum possible |t| over the given time span */
-    int k, s;    
+    int k, s;
 
     /* Reset all nterms_calc to nterms, undoing any previous truncation. */
     for (k=0; k < model->ncoords; ++k)
@@ -382,7 +382,7 @@ int VsopTruncate(vsop_model_t *model, double jd1, double jd2, double amplitudeTh
         if (ModelTypeScaling(model, k, &scaled_threshold)) return 1;
         scaled_threshold *= amplitudeThreshold;
         for(;;)
-        {            
+        {
             /* Search for smallest remaining term that can be removed without exceeding the amplitude threshold. */
             vsop_series_t *s_best = NULL;
             double incr_best = -1.0;
@@ -530,7 +530,7 @@ int VsopReadTrunc(vsop_model_t *model, const char *inFileName)
             vsop_series_t *series = &formula->series[s];
 
             PARSELINE(
-                2 == sscanf(line, " series=%d, nterms=%d", &check_s, &series->nterms_total) 
+                2 == sscanf(line, " series=%d, nterms=%d", &check_s, &series->nterms_total)
                 && check_s == s);
 
             series->nterms_calc = series->nterms_total;
