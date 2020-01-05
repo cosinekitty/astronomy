@@ -386,7 +386,6 @@ int VsopTruncate(vsop_model_t *model, double jd1, double jd2, double amplitudeTh
             /* Search for smallest remaining term that can be removed without exceeding the amplitude threshold. */
             vsop_series_t *s_best = NULL;
             double incr_best = -1.0;
-            int s_index_best = -1;
             for (s = 0; s < formula->nseries_calc; ++s)
             {
                 double tpower = Power(t, s);
@@ -398,7 +397,6 @@ int VsopTruncate(vsop_model_t *model, double jd1, double jd2, double amplitudeTh
                     if (s_best == NULL || increment < incr_best)
                     {
                         s_best = series;
-                        s_index_best = s;
                         incr_best = increment;
                     }
                 }
@@ -409,15 +407,30 @@ int VsopTruncate(vsop_model_t *model, double jd1, double jd2, double amplitudeTh
 
             accum += incr_best;
             --(s_best->nterms_calc);
-
-            /* If we emptied out the highest power series in a formula, delete the series. */
-            /* We can't delete any lower power series without messing up t**n calculations. */
-            if (s_best->nterms_calc==0 && s_index_best==formula->nseries_calc-1)
-                --(formula->nseries_calc);
         }
     }
 
     return 0;
+}
+
+void VsopTrim(vsop_model_t *model)
+{
+    int k;
+
+    /*
+        If there are any trailing empty series in a formula, remove them.
+        Cannot remove empty series that are not at the end, because
+        it messes up calculation of powers of t.
+        This used to be part of VsopTruncate, but now I want the ability
+        to re-expand parts of a VSOP model before trimming it.
+    */
+
+    for (k=0; k < model->ncoords; ++k)
+    {
+        vsop_formula_t *formula = &model->formula[k];
+        while (formula->nseries_calc > 0 && formula->series[formula->nseries_calc-1].nterms_calc == 0)
+            --(formula->nseries_calc);
+    }
 }
 
 int VsopTermCount(const vsop_model_t *model)

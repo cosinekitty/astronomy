@@ -82,6 +82,7 @@ void VsopFreeModel(vsop_model_t *model);
 int VsopLoadModel(vsop_model_t *model, const char *inFileName);
 int VsopCalc(const vsop_model_t *model, double jd, double rect_j2000_equatorial_pos[3]);
 int VsopTruncate(vsop_model_t *model, double jd1, double jd2, double amplitudeThreshold);
+void VsopTrim(vsop_model_t *model);      /* delete trailing empty series */
 int VsopTermCount(const vsop_model_t *model);
 int VsopWriteTrunc(const vsop_model_t *model, const char *outFileName);
 int VsopReadTrunc(vsop_model_t *model, const char *inFileName);

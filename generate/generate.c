@@ -367,6 +367,7 @@ static int TestVsopModel(vsop_model_t *model, int body, double threshold, double
 
     error = VsopTruncate(model, jdStart, jdStop, threshold);
     if (error) goto fail;
+    VsopTrim(model);
     *trunc_terms = VsopTermCount(model);
 
     for (jd = jdStart; jd <= jdStop; jd += jdDelta)
