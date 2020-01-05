@@ -1846,6 +1846,22 @@ fail:
     return error;
 }
 
+static double PlanetOrbitalPeriod(astro_body_t body)
+{
+    switch (body)
+    {
+    case BODY_MERCURY:  return     87.969;
+    case BODY_VENUS:    return    224.701;
+    case BODY_EARTH:    return    365.256;
+    case BODY_MARS:     return    686.980;
+    case BODY_JUPITER:  return   4332.589;
+    case BODY_SATURN:   return  10759.22;
+    case BODY_URANUS:   return  30685.4;
+    case BODY_NEPTUNE:  return  60189.0;
+    case BODY_PLUTO:    return  90560.0;
+    default:            return  0.0;        /* invalid body */
+    }
+}
 
 static int PlanetApsis(void)
 {
@@ -1863,7 +1879,8 @@ static int PlanetApsis(void)
     astro_time_t expected_time;
     int expected_kind;
     double expected_distance;
-    double diff_days, diff_dist_ratio;
+    double period;
+    double diff_days, diff_degrees, diff_dist_ratio;
     double max_diff_days;
     double max_dist_ratio;
 
@@ -1871,6 +1888,7 @@ static int PlanetApsis(void)
 
     for (body = BODY_MERCURY; body <= BODY_PLUTO; ++body)
     {
+        period = PlanetOrbitalPeriod(body);
         max_dist_ratio = 0.0;
         max_diff_days = 0.0;
         snprintf(filename, sizeof(filename)-1, "apsides/apsis_%d.txt", (int)body);
@@ -1917,10 +1935,11 @@ static int PlanetApsis(void)
 
             diff_days = fabs(expected_time.tt - apsis.time.tt);
             if (diff_days > max_diff_days) max_diff_days = diff_days;
-            if (diff_days > 120.0)      /* FIXFIXFIX: make tighter tolerance */
+            diff_degrees = (diff_days / period) * 360.0;
+            if (diff_degrees > 0.5)
             {
-                fprintf(stderr, "PlanetApsis: EXCESSIVE TIME ERROR for %s: %0.3lf days from %s\n",
-                    Astronomy_BodyName(body), diff_days, expected_time_text);
+                fprintf(stderr, "PlanetApsis: EXCESSIVE ANGULAR ERROR for %s: %lg degrees, %0.3lf days from %s\n",
+                    Astronomy_BodyName(body), diff_degrees, diff_days, expected_time_text);
                 error = 1;
                 goto fail;
             }
@@ -1973,10 +1992,12 @@ static int PlanetApsis(void)
             goto fail;
         }
 
-        printf("PlanetApsis: %5d apsides for %-9s -- intervals: min=%9.2lf, max=%9.2lf, ratio=%8.6lf; max day=%lg, dist ratio=%lg\n",
+        printf("PlanetApsis: %5d apsides for %-9s -- intervals: min=%9.2lf, max=%9.2lf, ratio=%8.6lf; max day=%lg, degrees=%0.3lf, dist ratio=%lg\n",
             count, Astronomy_BodyName(body),
             min_interval, max_interval, max_interval / min_interval,
-            max_diff_days, max_dist_ratio);
+            max_diff_days,
+            (max_diff_days / period) * 360.0,
+            max_dist_ratio);
     }
 
     printf("PlanetApsis: PASS\n");
