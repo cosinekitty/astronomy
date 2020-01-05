@@ -40,7 +40,7 @@ vsop_series_t;
 typedef struct
 {
     int nseries_total;      /* total number of series in the VSOP87 model */
-    int nseries_calc;       /* number of series at the front to actually calculate (allows faster, lower-rest calc) */
+    int nseries_calc;       /* number of series at the front to actually calculate (allows faster, lower-res calc) */
     vsop_series_t series[VSOP_MAX_SERIES];
 }
 vsop_formula_t;
