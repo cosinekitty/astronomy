@@ -4228,12 +4228,12 @@ static astro_apsis_t SearchNeptuneApsis(astro_time_t startTime)
  * from `Astronomy_NextPlanetApsis` into another call of `Astronomy_NextPlanetApsis`
  * as many times as desired.
  *
- * @param startTime
- *      The date and time at which to start searching for the next perihelion or aphelion.
- *
  * @param body
  *      The planet for which to find the next perihelion/aphelion event.
  *      Not allowed to be `BODY_SUN` or `BODY_MOON`.
+ *
+ * @param startTime
+ *      The date and time at which to start searching for the next perihelion or aphelion.
  *
  * @return
  *      If successful, the `status` field in the returned structure holds `ASTRO_SUCCESS`,
@@ -4243,7 +4243,7 @@ static astro_apsis_t SearchNeptuneApsis(astro_time_t startTime)
  *      If the function fails, `status` holds some value other than `ASTRO_SUCCESS` that
  *      indicates what went wrong, and the other structure fields are invalid.
  */
-astro_apsis_t Astronomy_SearchPlanetApsis(astro_time_t startTime, astro_body_t body)
+astro_apsis_t Astronomy_SearchPlanetApsis(astro_body_t body, astro_time_t startTime)
 {
     astro_time_t t1, t2;
     astro_search_result_t search;
@@ -4349,18 +4349,18 @@ astro_apsis_t Astronomy_SearchPlanetApsis(astro_time_t startTime, astro_body_t b
  *
  * See #Astronomy_SearchPlanetApsis for more details.
  *
- * @param apsis
- *      An apsis event obtained from a call to #Astronomy_SearchPlanetApsis or `Astronomy_NextPlanetApsis`.
- *
  * @param body
  *      The planet for which to find the next perihelion/aphelion event.
  *      Not allowed to be `BODY_SUN` or `BODY_MOON`.
  *      Must match the body passed into the call that produced the `apsis` parameter.
  *
+ * @param apsis
+ *      An apsis event obtained from a call to #Astronomy_SearchPlanetApsis or `Astronomy_NextPlanetApsis`.
+ *
  * @return
  *      Same as the return value for #Astronomy_SearchPlanetApsis.
  */
-astro_apsis_t Astronomy_NextPlanetApsis(astro_apsis_t apsis, astro_body_t body)
+astro_apsis_t Astronomy_NextPlanetApsis(astro_body_t body, astro_apsis_t apsis)
 {
     double skip;    /* number of days to skip to start looking for next apsis event */
     astro_apsis_t next;
@@ -4377,7 +4377,7 @@ astro_apsis_t Astronomy_NextPlanetApsis(astro_apsis_t apsis, astro_body_t body)
         return ApsisError(ASTRO_INVALID_BODY);      /* body must be a planet */
 
     time = Astronomy_AddDays(apsis.time, skip);
-    next = Astronomy_SearchPlanetApsis(time, body);
+    next = Astronomy_SearchPlanetApsis(body, time);
     if (next.status == ASTRO_SUCCESS)
     {
         /* Verify that we found the opposite apsis from the previous one. */

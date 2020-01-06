@@ -123,13 +123,13 @@ int main(int argc, const char *argv[])
         if (!strcmp(verb, "issue46"))
         {
             CHECK(Issue46());
-            return 0;       /* prevent extra "ctest exiting with 0" output. */
+            goto success;
         }
 
         if (!strcmp(verb, "issue48"))
         {
             CHECK(Issue48());
-            return 0;       /* prevent extra "ctest exiting with 0" output. */
+            goto success;
         }
     }
 
@@ -188,7 +188,6 @@ success:
     error = 0;
 
 fail:
-    fprintf(stderr, "ctest exiting with %d\n", error);
     return error;
 }
 
@@ -1786,9 +1785,9 @@ static int EarthApsis(const char *filename)
         ++lnum;
 
         if (lnum == 1)
-            apsis = Astronomy_SearchPlanetApsis(start_time, BODY_EARTH);
+            apsis = Astronomy_SearchPlanetApsis(BODY_EARTH, start_time);
         else
-            apsis = Astronomy_NextPlanetApsis(apsis, BODY_EARTH);
+            apsis = Astronomy_NextPlanetApsis(BODY_EARTH, apsis);
 
         if (apsis.status != ASTRO_SUCCESS)
         {
@@ -1902,7 +1901,7 @@ static int PlanetApsis(void)
             goto fail;
         }
         min_interval = max_interval = -1.0;
-        apsis = Astronomy_SearchPlanetApsis(start_time, body);
+        apsis = Astronomy_SearchPlanetApsis(body, start_time);
         if (apsis.status != ASTRO_SUCCESS)
         {
             fprintf(stderr, "PlanetApsis: ERROR %d finding first apsis for %s\n", apsis.status, Astronomy_BodyName(body));
@@ -1953,7 +1952,7 @@ static int PlanetApsis(void)
             /* Calculate the next apsis. */
             prev_time = apsis.time;
             utc = Astronomy_UtcFromTime(apsis.time);
-            apsis = Astronomy_NextPlanetApsis(apsis, body);
+            apsis = Astronomy_NextPlanetApsis(body, apsis);
             if (apsis.status == ASTRO_BAD_TIME && body == BODY_PLUTO)
                 break;      /* Pluto is limited by MAX_YEAR; OK for it to fail with this error. */
 

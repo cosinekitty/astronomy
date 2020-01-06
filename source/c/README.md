@@ -847,7 +847,7 @@ After calling [`Astronomy_SearchMoonQuarter`](#Astronomy_SearchMoonQuarter), thi
 ---
 
 <a name="Astronomy_NextPlanetApsis"></a>
-### Astronomy_NextPlanetApsis(apsis, body) &#8658; [`astro_apsis_t`](#astro_apsis_t)
+### Astronomy_NextPlanetApsis(body, apsis) &#8658; [`astro_apsis_t`](#astro_apsis_t)
 
 **Finds the next planetary perihelion or aphelion event in a series.** 
 
@@ -865,8 +865,8 @@ See [`Astronomy_SearchPlanetApsis`](#Astronomy_SearchPlanetApsis) for more detai
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| [`astro_apsis_t`](#astro_apsis_t) | `apsis` |  An apsis event obtained from a call to [`Astronomy_SearchPlanetApsis`](#Astronomy_SearchPlanetApsis) or `Astronomy_NextPlanetApsis`. | 
 | [`astro_body_t`](#astro_body_t) | `body` |  The planet for which to find the next perihelion/aphelion event. Not allowed to be `BODY_SUN` or `BODY_MOON`. Must match the body passed into the call that produced the `apsis` parameter. | 
+| [`astro_apsis_t`](#astro_apsis_t) | `apsis` |  An apsis event obtained from a call to [`Astronomy_SearchPlanetApsis`](#Astronomy_SearchPlanetApsis) or `Astronomy_NextPlanetApsis`. | 
 
 
 
@@ -1415,7 +1415,7 @@ This function searches for the date and time Venus appears brightest as seen fro
 ---
 
 <a name="Astronomy_SearchPlanetApsis"></a>
-### Astronomy_SearchPlanetApsis(startTime, body) &#8658; [`astro_apsis_t`](#astro_apsis_t)
+### Astronomy_SearchPlanetApsis(body, startTime) &#8658; [`astro_apsis_t`](#astro_apsis_t)
 
 **Finds the date and time of a planet's perihelion (closest approach to the Sun) or aphelion (farthest distance from the Sun) after a given time.** 
 
@@ -1435,8 +1435,8 @@ To iterate through consecutive alternating perihelion and aphelion events, call 
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| [`astro_time_t`](#astro_time_t) | `startTime` |  The date and time at which to start searching for the next perihelion or aphelion. | 
 | [`astro_body_t`](#astro_body_t) | `body` |  The planet for which to find the next perihelion/aphelion event. Not allowed to be `BODY_SUN` or `BODY_MOON`. | 
+| [`astro_time_t`](#astro_time_t) | `startTime` |  The date and time at which to start searching for the next perihelion or aphelion. | 
 
 
 

@@ -613,8 +613,8 @@ astro_illum_t Astronomy_Illumination(astro_body_t body, astro_time_t time);
 astro_illum_t Astronomy_SearchPeakMagnitude(astro_body_t body, astro_time_t startTime);
 astro_apsis_t Astronomy_SearchLunarApsis(astro_time_t startTime);
 astro_apsis_t Astronomy_NextLunarApsis(astro_apsis_t apsis);
-astro_apsis_t Astronomy_SearchPlanetApsis(astro_time_t startTime, astro_body_t body);
-astro_apsis_t Astronomy_NextPlanetApsis(astro_apsis_t apsis, astro_body_t body);
+astro_apsis_t Astronomy_SearchPlanetApsis(astro_body_t body, astro_time_t startTime);
+astro_apsis_t Astronomy_NextPlanetApsis(astro_body_t body, astro_apsis_t apsis);
 
 astro_rotation_t Astronomy_InverseRotation(astro_rotation_t rotation);
 astro_rotation_t Astronomy_CombineRotation(astro_rotation_t a, astro_rotation_t b);
