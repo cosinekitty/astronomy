@@ -476,7 +476,7 @@ Also, the position can optionally be corrected for [aberration](https://en.wikip
 <a name="Astronomy_HelioDistance"></a>
 ### Astronomy_HelioDistance(body, time) &#8658; [`astro_func_result_t`](#astro_func_result_t)
 
-**Calculates the distance from the body to the Sun at a given time.** 
+**Calculates the distance from a body to the Sun at a given time.** 
 
 
 

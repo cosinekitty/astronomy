@@ -2876,7 +2876,7 @@ astro_vector_t Astronomy_HelioVector(astro_body_t body, astro_time_t time)
 }
 
 /**
- * @brief Calculates the distance from the body to the Sun at a given time.
+ * @brief Calculates the distance from a body to the Sun at a given time.
  *
  * Given a date and time, this function calculates the distance between
  * the center of `body` and the center of the Sun.
@@ -5554,8 +5554,6 @@ astro_apsis_t Astronomy_SearchPlanetApsis(astro_time_t startTime, astro_body_t b
         return ApsisError(ASTRO_INVALID_BODY);      /* The body must be a planet. */
 
     increment = orbit_period_days / 6.0;
-    if (increment > 10.0)
-        increment = 10.0;
 
     context.body = body;
 
