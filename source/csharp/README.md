@@ -284,6 +284,24 @@ movement of the Earth with respect to the rays of light coming from that body.
 
 **Returns:** A geocentric position vector of the center of the given body.
 
+<a name="Astronomy.HelioDistance"></a>
+### Astronomy.HelioDistance(body, time) &#8658; `double`
+
+**Calculates the distance between a body and the Sun at a given time.**
+
+Given a date and time, this function calculates the distance between
+the center of `body` and the center of the Sun.
+For the planets Mercury through Neptune, this function is significantly
+more efficient than calling [`Astronomy.HelioVector`](#Astronomy.HelioVector) followed by taking the length
+of the resulting vector.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Body`](#Body) | `body` | A body for which to calculate a heliocentric distance: the Sun, Moon, or any of the planets. |
+| [`AstroTime`](#AstroTime) | `time` | The date and time for which to calculate the heliocentric distance. |
+
+**Returns:** The heliocentric distance in AU.
+
 <a name="Astronomy.HelioVector"></a>
 ### Astronomy.HelioVector(body, time) &#8658; [`AstroVector`](#AstroVector)
 
@@ -523,6 +541,23 @@ the one passed in as the parameter `mq`.
 | [`MoonQuarterInfo`](#MoonQuarterInfo) | `mq` | The previous moon quarter found by a call to [`Astronomy.SearchMoonQuarter`](#Astronomy.SearchMoonQuarter) or `Astronomy.NextMoonQuarter`. |
 
 **Returns:** The moon quarter that occurs next in time after the one passed in `mq`.
+
+<a name="Astronomy.NextPlanetApsis"></a>
+### Astronomy.NextPlanetApsis(body, apsis) &#8658; [`ApsisInfo`](#ApsisInfo)
+
+**Finds the next planetary perihelion or aphelion event in a series.**
+
+This function requires an [`ApsisInfo`](#ApsisInfo) value obtained from a call
+to [`Astronomy.SearchPlanetApsis`](#Astronomy.SearchPlanetApsis) or `Astronomy.NextPlanetApsis`.
+Given an aphelion event, this function finds the next perihelion event, and vice versa.
+See [`Astronomy.SearchPlanetApsis`](#Astronomy.SearchPlanetApsis) for more details.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Body`](#Body) | `body` | The planet for which to find the next perihelion/aphelion event. Not allowed to be `Body.Sun` or `Body.Moon`. Must match the body passed into the call that produced the `apsis` parameter. |
+| [`ApsisInfo`](#ApsisInfo) | `apsis` | An apsis event obtained from a call to [`Astronomy.SearchPlanetApsis`](#Astronomy.SearchPlanetApsis) or `Astronomy.NextPlanetApsis`. |
+
+**Returns:** Same as the return value for [`Astronomy.SearchPlanetApsis`](#Astronomy.SearchPlanetApsis).
 
 <a name="Astronomy.RefractionAngle"></a>
 ### Astronomy.RefractionAngle(refraction, altitude) &#8658; `double`
@@ -944,6 +979,33 @@ However, the difference is minor and has little practical value.
 | [`AstroTime`](#AstroTime) | `startTime` | The date and time to start searching for the next peak magnitude event. |
 
 **Returns:** See documentation about the return value from [`Astronomy.Illumination`](#Astronomy.Illumination).
+
+<a name="Astronomy.SearchPlanetApsis"></a>
+### Astronomy.SearchPlanetApsis(body, startTime) &#8658; [`ApsisInfo`](#ApsisInfo)
+
+**Finds the date and time of a planet's perihelion (closest approach to the Sun)
+or aphelion (farthest distance from the Sun) after a given time.**
+
+Given a date and time to start the search in `startTime`, this function finds the
+next date and time that the center of the specified planet reaches the closest or farthest point
+in its orbit with respect to the center of the Sun, whichever comes first
+after `startTime`.
+
+The closest point is called *perihelion* and the farthest point is called *aphelion*.
+The word *apsis* refers to either event.
+
+To iterate through consecutive alternating perihelion and aphelion events,
+call `Astronomy.SearchPlanetApsis` once, then use the return value to call
+[`Astronomy.NextPlanetApsis`](#Astronomy.NextPlanetApsis). After that, keep feeding the previous return value
+from `Astronomy.NextPlanetApsis` into another call of `Astronomy.NextPlanetApsis`
+as many times as desired.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Body`](#Body) | `body` | The planet for which to find the next perihelion/aphelion event. Not allowed to be `Body.Sun` or `Body.Moon`. |
+| [`AstroTime`](#AstroTime) | `startTime` | The date and time at which to start searching for the next perihelion or aphelion. |
+
+**Returns:** Returns a structure in which `time` holds the date and time of the next planetary apsis, `kind` holds either `ApsisKind.Pericenter` for perihelion or `ApsisKind.Apocenter` for aphelion. and distance values `dist_au` (astronomical units) and `dist_km` (kilometers).
 
 <a name="Astronomy.SearchRelativeLongitude"></a>
 ### Astronomy.SearchRelativeLongitude(body, targetRelLon, startTime) &#8658; [`AstroTime`](#AstroTime)

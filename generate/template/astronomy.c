@@ -4266,15 +4266,6 @@ astro_apsis_t Astronomy_SearchPlanetApsis(astro_body_t body, astro_time_t startT
 
     context.body = body;
 
-    /*
-        Check the rate of change of the distance dr/dt at the start time.
-        If it is positive, the planet is currently getting farther away,
-        so start looking for apogee.
-        Conversely, if dr/dt < 0, start looking for perigee.
-        Either way, the polarity of the slope will change, so the product will be negative.
-        Handle the crazy corner case of exactly touching zero by checking for m1*m2 <= 0.
-    */
-
     t1 = startTime;
     context.direction = +1;
     m1 = planet_distance_slope(&context, t1);
@@ -4293,18 +4284,18 @@ astro_apsis_t Astronomy_SearchPlanetApsis(astro_body_t body, astro_time_t startT
         {
             /* There is a change of slope polarity within the time range [t1, t2]. */
             /* Therefore this time range contains an apsis. */
-            /* Figure out whether it is perigee or apogee. */
+            /* Figure out whether it is perihelion or aphelion. */
 
             if (m1.value < 0.0 || m2.value > 0.0)
             {
-                /* We found a minimum-distance event: perigee. */
+                /* We found a minimum-distance event: perihelion. */
                 /* Search the time range for the time when the slope goes from negative to positive. */
                 context.direction = +1;
                 result.kind = APSIS_PERICENTER;
             }
             else if (m1.value > 0.0 || m2.value < 0.0)
             {
-                /* We found a maximum-distance event: apogee. */
+                /* We found a maximum-distance event: aphelion. */
                 /* Search the time range for the time when the slope goes from positive to negative. */
                 context.direction = -1;
                 result.kind = APSIS_APOCENTER;

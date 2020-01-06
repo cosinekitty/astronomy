@@ -1004,6 +1004,28 @@ namespace CosineKitty
         }
     }
 
+    internal class SearchContext_PlanetDistanceSlope: SearchContext
+    {
+        private readonly double direction;
+        private readonly Body body;
+
+        public SearchContext_PlanetDistanceSlope(double direction, Body body)
+        {
+            this.direction = direction;
+            this.body = body;
+        }
+
+        public override double Eval(AstroTime time)
+        {
+            const double dt = 0.001;
+            AstroTime t1 = time.AddDays(-dt/2.0);
+            AstroTime t2 = time.AddDays(+dt/2.0);
+            double r1 = Astronomy.HelioDistance(body, t1);
+            double r2 = Astronomy.HelioDistance(body, t2);
+            return direction * (r2 - r1) / dt;
+        }
+    }
+
     internal class PascalArray2<ElemType>
     {
         private readonly int xmin;
@@ -1245,6 +1267,7 @@ $ASTRO_ADDSOL()
         private const double SOLAR_DAYS_PER_SIDEREAL_DAY = 0.9972695717592592;
         private const double MEAN_SYNODIC_MONTH = 29.530588;     /* average number of days for Moon to return to the same phase */
         private const double EARTH_ORBITAL_PERIOD = 365.256;
+        private const double NEPTUNE_ORBITAL_PERIOD = 60189.0;
         internal const double REFRACTION_NEAR_HORIZON = 34.0 / 60.0;   /* degrees of refractive "lift" seen for objects near horizon */
         internal const double SUN_RADIUS_AU  = 4.6505e-3;
         internal const double MOON_RADIUS_AU = 1.15717e-5;
@@ -1443,6 +1466,17 @@ $ASTRO_CSHARP_VSOP(Neptune)
             double z = 0.397776982902*eclip1 + 0.917482137087*eclip2;
 
             return new AstroVector(x, y, z, time);
+        }
+
+        private static double VsopHelioDistance(vsop_model_t model, AstroTime time)
+        {
+            /*
+                The caller only wants to know the distance between the planet and the Sun.
+                So we only need to calculate the radial component of the spherical coordinates.
+            */
+
+            double t = time.tt / 365250;    /* millennia since 2000 */
+            return VsopFormulaCalc(model.rad, t);
         }
 
         private struct astro_cheb_coeff_t
@@ -1965,6 +1999,49 @@ $ASTRO_CSHARP_CHEBYSHEV(8);
 
                 default:
                     throw new ArgumentException(string.Format("Invalid body: {0}", body));
+            }
+        }
+
+        /// <summary>
+        /// Calculates the distance between a body and the Sun at a given time.
+        /// </summary>
+        /// <remarks>
+        /// Given a date and time, this function calculates the distance between
+        /// the center of `body` and the center of the Sun.
+        /// For the planets Mercury through Neptune, this function is significantly
+        /// more efficient than calling #Astronomy.HelioVector followed by taking the length
+        /// of the resulting vector.
+        /// </remarks>
+        /// <param name="body">
+        /// A body for which to calculate a heliocentric distance:
+        /// the Sun, Moon, or any of the planets.
+        /// </param>
+        /// <param name="time">
+        /// The date and time for which to calculate the heliocentric distance.
+        /// </param>
+        /// <returns>
+        /// The heliocentric distance in AU.
+        /// </returns>
+        public static double HelioDistance(Body body, AstroTime time)
+        {
+            switch (body)
+            {
+                case Body.Sun:
+                    return 0.0;
+
+                case Body.Mercury:
+                case Body.Venus:
+                case Body.Earth:
+                case Body.Mars:
+                case Body.Jupiter:
+                case Body.Saturn:
+                case Body.Uranus:
+                case Body.Neptune:
+                    return VsopHelioDistance(vsop[(int)body], time);
+
+                default:
+                    /* For non-VSOP objects, fall back to taking the length of the heliocentric vector. */
+                    return HelioVector(body, time).Length();
             }
         }
 
@@ -3201,7 +3278,7 @@ $ASTRO_CSHARP_CHEBYSHEV(8);
                 case Body.Jupiter:  return   4332.589;
                 case Body.Saturn:   return  10759.22;
                 case Body.Uranus:   return  30685.4;
-                case Body.Neptune:  return  60189.0;
+                case Body.Neptune:  return  NEPTUNE_ORBITAL_PERIOD;
                 case Body.Pluto:    return  90560.0;
                 default:
                     throw new ArgumentException(string.Format("Invalid body {0}. Must be a planet.", body));
@@ -3573,6 +3650,260 @@ $ASTRO_CSHARP_CHEBYSHEV(8);
                 throw new Exception(string.Format("Internal error: previous apsis was {0}, but found {1} for next apsis.", apsis.kind, next.kind));
             return next;
         }
+
+        private static double NeptuneHelioDistance(AstroTime time)
+        {
+            return VsopHelioDistance(vsop[(int)Body.Neptune], time);
+        }
+
+        private static ApsisInfo NeptuneExtreme(ApsisKind kind, AstroTime start_time, double dayspan)
+        {
+            double direction = (kind == ApsisKind.Apocenter) ? +1.0 : -1.0;
+            const int npoints = 10;
+
+            for(;;)
+            {
+                double interval = dayspan / (npoints - 1);
+
+                if (interval < 1.0 / 1440.0)    /* iterate until uncertainty is less than one minute */
+                {
+                    AstroTime apsis_time = start_time.AddDays(interval / 2.0);
+                    double dist_au = NeptuneHelioDistance(apsis_time);
+                    return new ApsisInfo(apsis_time, kind, dist_au);
+                }
+
+                int best_i = -1;
+                double best_dist = 0.0;
+                for (int i=0; i < npoints; ++i)
+                {
+                    AstroTime time = start_time.AddDays(i * interval);
+                    double dist = direction * NeptuneHelioDistance(time);
+                    if (i==0 || dist > best_dist)
+                    {
+                        best_i = i;
+                        best_dist = dist;
+                    }
+                }
+
+                /* Narrow in on the extreme point. */
+                start_time = start_time.AddDays((best_i - 1) * interval);
+                dayspan = 2.0 * interval;
+            }
+        }
+
+        private static ApsisInfo SearchNeptuneApsis(AstroTime startTime)
+        {
+            const int npoints = 1000;
+            int i;
+            var perihelion = new ApsisInfo();
+            var aphelion = new ApsisInfo();
+
+            /*
+                Neptune is a special case for two reasons:
+                1. Its orbit is nearly circular (low orbital eccentricity).
+                2. It is so distant from the Sun that the orbital period is very long.
+                Put together, this causes wobbling of the Sun around the Solar System Barycenter (SSB)
+                to be so significant that there are 3 local minima in the distance-vs-time curve
+                near each apsis. Therefore, unlike for other planets, we can't use an optimized
+                algorithm for finding dr/dt = 0.
+                Instead, we use a dumb, brute-force algorithm of sampling and finding min/max
+                heliocentric distance.
+            */
+
+            /*
+                Rewind approximately 30 degrees in the orbit,
+                then search forward for 270 degrees.
+                This is a very cautious way to prevent missing an apsis.
+                Typically we will find two apsides, and we pick whichever
+                apsis is ealier, but after startTime.
+                Sample points around this orbital arc and find when the distance
+                is greatest and smallest.
+            */
+            AstroTime t1 = startTime.AddDays(NEPTUNE_ORBITAL_PERIOD * ( -30.0 / 360.0));
+            AstroTime t2 = startTime.AddDays(NEPTUNE_ORBITAL_PERIOD * (+270.0 / 360.0));
+            AstroTime t_min = t1;
+            AstroTime t_max = t1;
+            double min_dist = -1.0;
+            double max_dist = -1.0;
+            double interval = (t2.ut - t1.ut) / (npoints - 1.0);
+
+            for (i=0; i < npoints; ++i)
+            {
+                double ut = t1.ut + (i * interval);
+                AstroTime time = new AstroTime(ut);
+                double dist = NeptuneHelioDistance(time);
+                if (i == 0)
+                {
+                    max_dist = min_dist = dist;
+                }
+                else
+                {
+                    if (dist > max_dist)
+                    {
+                        max_dist = dist;
+                        t_max = time;
+                    }
+                    if (dist < min_dist)
+                    {
+                        min_dist = dist;
+                        t_min = time;
+                    }
+                }
+            }
+
+            t1 = t_min.AddDays(-2 * interval);
+            perihelion = NeptuneExtreme(ApsisKind.Pericenter, t1, 4 * interval);
+
+            t1 = t_max.AddDays(-2 * interval);
+            aphelion = NeptuneExtreme(ApsisKind.Apocenter, t1, 4 * interval);
+
+            if (perihelion.time.tt >= startTime.tt)
+            {
+                if (aphelion.time.tt >= startTime.tt)
+                {
+                    /* Perihelion and aphelion are both valid. Pick the one that comes first. */
+                    if (aphelion.time.tt < perihelion.time.tt)
+                        return aphelion;
+                }
+                return perihelion;
+            }
+
+            if (aphelion.time.tt >= startTime.tt)
+                return aphelion;
+
+            throw new Exception("Internal error: failed to find Neptune apsis.");
+        }
+
+
+        /// <summary>
+        /// Finds the date and time of a planet's perihelion (closest approach to the Sun)
+        /// or aphelion (farthest distance from the Sun) after a given time.
+        /// </summary>
+        /// <remarks>
+        /// Given a date and time to start the search in `startTime`, this function finds the
+        /// next date and time that the center of the specified planet reaches the closest or farthest point
+        /// in its orbit with respect to the center of the Sun, whichever comes first
+        /// after `startTime`.
+        ///
+        /// The closest point is called *perihelion* and the farthest point is called *aphelion*.
+        /// The word *apsis* refers to either event.
+        ///
+        /// To iterate through consecutive alternating perihelion and aphelion events,
+        /// call `Astronomy.SearchPlanetApsis` once, then use the return value to call
+        /// #Astronomy.NextPlanetApsis. After that, keep feeding the previous return value
+        /// from `Astronomy.NextPlanetApsis` into another call of `Astronomy.NextPlanetApsis`
+        /// as many times as desired.
+        /// </remarks>
+        /// <param name="body">
+        /// The planet for which to find the next perihelion/aphelion event.
+        /// Not allowed to be `Body.Sun` or `Body.Moon`.
+        /// </param>
+        /// <param name="startTime">
+        /// The date and time at which to start searching for the next perihelion or aphelion.
+        /// </param>
+        /// <returns>
+        /// Returns a structure in which `time` holds the date and time of the next planetary apsis,
+        /// `kind` holds either `ApsisKind.Pericenter` for perihelion or `ApsisKind.Apocenter` for aphelion.
+        /// and distance values `dist_au` (astronomical units) and `dist_km` (kilometers).
+        /// </returns>
+        public static ApsisInfo SearchPlanetApsis(Body body, AstroTime startTime)
+        {
+            if (body == Body.Neptune)
+                return SearchNeptuneApsis(startTime);
+
+            var positive_slope = new SearchContext_PlanetDistanceSlope(+1.0, body);
+            var negative_slope = new SearchContext_PlanetDistanceSlope(-1.0, body);
+            double orbit_period_days = PlanetOrbitalPeriod(body);
+            double increment = orbit_period_days / 6.0;
+            AstroTime t1 = startTime;
+            double m1 = positive_slope.Eval(t1);
+            for (int iter = 0; iter * increment < 2.0 * orbit_period_days; ++iter)
+            {
+                AstroTime t2 = t1.AddDays(increment);
+                double m2 = positive_slope.Eval(t2);
+                if (m1 * m2 <= 0.0)
+                {
+                    /* There is a change of slope polarity within the time range [t1, t2]. */
+                    /* Therefore this time range contains an apsis. */
+                    /* Figure out whether it is perigee or apogee. */
+
+                    SearchContext_PlanetDistanceSlope slope_func;
+                    ApsisKind kind;
+                    if (m1 < 0.0 || m2 > 0.0)
+                    {
+                        /* We found a minimum-distance event: perihelion. */
+                        /* Search the time range for the time when the slope goes from negative to positive. */
+                        slope_func = positive_slope;
+                        kind = ApsisKind.Pericenter;
+                    }
+                    else if (m1 > 0.0 || m2 < 0.0)
+                    {
+                        /* We found a maximum-distance event: aphelion. */
+                        /* Search the time range for the time when the slope goes from positive to negative. */
+                        slope_func = negative_slope;
+                        kind = ApsisKind.Apocenter;
+                    }
+                    else
+                    {
+                        /* This should never happen. It should not be possible for both slopes to be zero. */
+                        throw new Exception("Internal error with slopes in SearchPlanetApsis");
+                    }
+
+                    AstroTime search = Search(slope_func, t1, t2, 1.0);
+                    if (search == null)
+                        throw new Exception("Failed to find slope transition in planetary apsis search.");
+
+                    double dist = HelioDistance(body, search);
+                    return new ApsisInfo(search, kind, dist);
+                }
+                /* We have not yet found a slope polarity change. Keep searching. */
+                t1 = t2;
+                m1 = m2;
+            }
+            /* It should not be possible to fail to find an apsis within 2 planet orbits. */
+            throw new Exception("Internal error: should have found planetary apsis within 2 orbital periods.");
+        }
+
+        /// <summary>
+        /// Finds the next planetary perihelion or aphelion event in a series.
+        /// </summary>
+        /// <remarks>
+        /// This function requires an #ApsisInfo value obtained from a call
+        /// to #Astronomy.SearchPlanetApsis or `Astronomy.NextPlanetApsis`.
+        /// Given an aphelion event, this function finds the next perihelion event, and vice versa.
+        /// See #Astronomy.SearchPlanetApsis for more details.
+        /// </remarks>
+        /// <param name="body">
+        /// The planet for which to find the next perihelion/aphelion event.
+        /// Not allowed to be `Body.Sun` or `Body.Moon`.
+        /// Must match the body passed into the call that produced the `apsis` parameter.
+        /// </param>
+        /// <param name="apsis">
+        /// An apsis event obtained from a call to #Astronomy.SearchPlanetApsis or `Astronomy.NextPlanetApsis`.
+        /// </param>
+        /// <returns>
+        /// Same as the return value for #Astronomy.SearchPlanetApsis.
+        /// </returns>
+        public static ApsisInfo NextPlanetApsis(Body body, ApsisInfo apsis)
+        {
+            if (apsis.kind != ApsisKind.Apocenter && apsis.kind != ApsisKind.Pericenter)
+                throw new ArgumentException("Invalid apsis kind");
+
+            /* skip 1/4 of an orbit before starting search again */
+            double skip = 0.25 * PlanetOrbitalPeriod(body);
+            if (skip <= 0.0)
+                throw new ArgumentException("Body must be a planet.");
+
+            AstroTime time = apsis.time.AddDays(skip);
+            ApsisInfo next = SearchPlanetApsis(body, time);
+
+            /* Verify that we found the opposite apsis from the previous one. */
+            if ((int)next.kind + (int)apsis.kind != 1)
+                throw new Exception(string.Format("Internal error: previous apsis was {0}, but found {1} for next apsis.", apsis.kind, next.kind));
+
+            return next;
+        }
+
 
         /// <summary>
         /// Finds visual magnitude, phase angle, and other illumination information about a celestial body.
