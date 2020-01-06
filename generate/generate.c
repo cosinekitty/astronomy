@@ -86,6 +86,7 @@ static vsop_body_t LookupBody(const char *name);
 static int CheckSkyPos(observer *location, const char *filename, int lnum, const char *line, double *arcmin_equ, double *arcmin_hor, vsop_body_t *body);
 static int UnitTestChebyshev(void);
 static int DistancePlot(const char *name, double tt1, double tt2);
+static int ImproveVsopApsides(vsop_model_t *model);
 
 #define MOON_PERIGEE        0.00238
 #define MERCURY_APHELION    0.466697
@@ -313,7 +314,9 @@ static int SearchVsop(int body)
                 winner_terms = trunc_terms;
                 winner_arcmin = max_arcmin;
                 winner_threshold = threshold;
-
+                error = ImproveVsopApsides(&model);
+                if (error) goto fail;
+                VsopTrim(&model);       /* shave off all trailing empty series right before saving */
                 error = SaveVsopFile(&model);
                 if (error) goto fail;
             }
@@ -367,7 +370,6 @@ static int TestVsopModel(vsop_model_t *model, int body, double threshold, double
 
     error = VsopTruncate(model, jdStart, jdStop, threshold);
     if (error) goto fail;
-    VsopTrim(model);
     *trunc_terms = VsopTermCount(model);
 
     for (jd = jdStart; jd <= jdStop; jd += jdDelta)
@@ -385,6 +387,134 @@ static int TestVsopModel(vsop_model_t *model, int body, double threshold, double
 
     error = 0;
 
+fail:
+    return error;
+}
+
+#if 0
+static void ExpandAllSeries(vsop_formula_t *formula, int nterms)
+{
+    int s;
+
+    for (s=0; s < formula->nseries_calc; ++s)
+    {
+        vsop_series_t *series = &formula->series[s];
+        series->nterms_calc += nterms;
+        if (series->nterms_calc > series->nterms_total)
+            series->nterms_calc = series->nterms_total;
+    }
+}
+#endif
+
+static int TermContribution(const vsop_term_t *term, int sindex, double *contrib)
+{
+    switch (sindex)
+    {
+    case 0:
+        /* t^0 term has derivative proprotional to amplitude*frequency */
+        *contrib = fabs(term->amplitude * term->frequency);
+        return 0;
+
+    default:
+        fprintf(stderr, "TermContribution: t^%d derivative rule not yet implemented.\n", sindex);
+        *contrib = NAN;
+        return 1;
+    }
+}
+
+static int ExpandSeries(vsop_formula_t *formula, int sindex, int n_top_terms)
+{
+    int error;
+    vsop_series_t *series;
+    int t, t_best, n;
+    double contrib, max_contrib;
+
+    /*
+        Examine the specified truncated series in the given formula.
+        Calculate an estimate of the contribution of every term's
+        first derivative. Pick n_top_terms of the most important ones.
+    */
+
+    if (sindex < 0 || sindex >= formula->nseries_calc)
+    {
+        fprintf(stderr, "ExpandSeries: Invalid series index %d\n", sindex);
+        return 1;
+    }
+
+    series = &formula->series[sindex];
+    if (series->nterms_calc + n_top_terms >= series->nterms_total)
+    {
+        fprintf(stderr, "ExpandSeries: series calc=%d, total=%d; cannot expand by %d\n",
+            series->nterms_calc, series->nterms_total, n_top_terms);
+        return 1;
+    }
+
+    for (n=0; n < n_top_terms; ++n)
+    {
+        /* Iterate through the truncated terms at the end of this series. */
+        /* Pick the one whose contribution is greatest and append it next. */
+        t_best = -1;
+        max_contrib = 0.0;
+        for (t = series->nterms_calc; t < series->nterms_total; ++t)
+        {
+            CHECK(TermContribution(&series->term[t], sindex, &contrib));
+            if (contrib > max_contrib)
+            {
+                t_best = t;
+                max_contrib = contrib;
+            }
+        }
+        if (t_best < 0)
+        {
+            fprintf(stderr, "ExpandSeries: Found only %d of %d top terms\n", n, n_top_terms);
+            return 1;
+        }
+        /* Like bubble sort: swap best with whatever is already just beyond the truncation. */
+        if (t_best != series->nterms_calc)
+        {
+            vsop_term_t swap = series->term[series->nterms_calc];
+            series->term[series->nterms_calc] = series->term[t_best];
+            series->term[t_best] = swap;
+        }
+        ++(series->nterms_calc);
+    }
+
+    error = 0;
+fail:
+    return error;
+}
+
+static int ImproveVsopApsides(vsop_model_t *model)
+{
+    int error;
+    vsop_formula_t *radform;        /* formula for calculating radial distance */
+
+    if (model->version != VSOP_HELIO_SPHER_DATE && model->version != VSOP_HELIO_SPHER_J2000)
+    {
+        fprintf(stderr, "ImproveVsopApsides: Cannot optimize VSOP version %d\n", model->version);
+        error = 1;
+        goto fail;
+    }
+
+    if (model->ncoords != 3)
+    {
+        fprintf(stderr, "ImproveVsopApsides: INTERNAL ERROR: model has incorrect number of coordinates: %d\n", model->ncoords);
+        error = 1;
+        goto fail;
+    }
+
+    radform = &model->formula[2];
+
+    switch (model->body)
+    {
+    case BODY_NEPTUNE:
+        CHECK(ExpandSeries(radform, 0, 5));
+        break;
+    default:
+        break;
+    }
+
+    error = 0;
 fail:
     return error;
 }

@@ -155,7 +155,7 @@ int VsopLoadModel(vsop_model_t *model, const char *inFileName)
             if (length < 131 ||
                 3 != sscanf(&line[79], "%lf %lf %lf", &A, &B, &C))
             {
-                fprintf(stderr, "VsopLoadModel: bad data record: line %d, flie '%s'\n", lnum, inFileName);
+                fprintf(stderr, "VsopLoadModel: bad data record: line %d, file '%s'\n", lnum, inFileName);
                 goto fail;
             }
             series->term[termcount].amplitude = A;

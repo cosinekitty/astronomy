@@ -977,14 +977,14 @@ namespace csharp_test
                 double mag_diff = Math.Abs(illum.mag - data.mag);
                 if (mag_diff > 1.0e-8)
                 {
-                    Console.WriteLine("ERROR: Excessive magnitude error {0}", mag_diff);
+                    Console.WriteLine("CheckSaturn ERROR: Excessive magnitude error {0}", mag_diff);
                     return 1;
                 }
 
                 double tilt_diff = Math.Abs(illum.ring_tilt - data.tilt);
                 if (tilt_diff > 1.0e-8)
                 {
-                    Console.WriteLine("ERROR: Excessive ring tilt error {0}", tilt_diff);
+                    Console.WriteLine("CheckSaturn ERROR: Excessive ring tilt error {0}", tilt_diff);
                     return 1;
                 }
             }

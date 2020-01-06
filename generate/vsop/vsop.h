@@ -59,7 +59,7 @@ typedef enum    /* values created for compatibility with NOVAS; these are *NOT* 
     VSOP_SATURN  =  5,
     VSOP_URANUS  =  6,
     VSOP_NEPTUNE =  7,
-    // NOTE: VSOP does not provide Pluto or Moon.
+    /* NOTE: VSOP does not provide Pluto or Moon. */
     VSOP_SUN     = 10,
     VSOP_EARTH   = 11,      /* weird value so as not to conflict with NOVAS body values */
 }
