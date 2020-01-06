@@ -44,6 +44,18 @@ namespace CosineKitty
     }
 
     /// <summary>
+    /// Pluto supports calculations only within the year range Astronomy.MinYear to Astronomy.MaxYear.
+    /// </summary>
+    public class BadTimeException : ArgumentException
+    {
+        /// <summary>Creates an exception indicating Astronomy Engine cannot calculate for this time.</summary>
+        public BadTimeException(AstroTime time):
+            base(string.Format("Pluto supports calculations only within the year range {0}..{1}. Given time {2} is out of bounds.",
+                Astronomy.MinYear, Astronomy.MaxYear, time))
+            {}
+    }
+
+    /// <summary>
     /// The enumeration of celestial bodies supported by Astronomy Engine.
     /// </summary>
     public enum Body
@@ -1543,7 +1555,7 @@ $ASTRO_CSHARP_CHEBYSHEV(8);
             }
 
             /* The Chebyshev model does not cover this time value. */
-            throw new ArgumentException(string.Format("Time argument is out of bounds: {0}", time));
+            throw new BadTimeException(time);
         }
 
         private static RotationMatrix precession_rot(double tt1, double tt2)

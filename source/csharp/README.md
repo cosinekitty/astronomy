@@ -1358,6 +1358,13 @@ according to the historical and predictive Delta-T model provided by the
 
 ---
 
+<a name="BadTimeException"></a>
+## `class BadTimeException`
+
+**Pluto supports calculations only within the year range Astronomy.MinYear to Astronomy.MaxYear.**
+
+---
+
 <a name="Body"></a>
 ## `enum Body`
 

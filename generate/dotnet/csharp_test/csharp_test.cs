@@ -22,6 +22,7 @@ namespace csharp_test
                 if (MoonPhaseTest("../../moonphase/moonphases.txt") != 0) return 1;
                 if (ElongationTest() != 0) return 1;
                 if (LunarApsisTest("../../apsides/moon.txt") != 0) return 1;
+                if (PlanetApsisTest("../../apsides") != 0) return 1;
                 if (MagnitudeTest() != 0) return 1;
                 if (AstroCheck() != 0) return 1;
                 Console.WriteLine("csharp_test: PASS");
@@ -616,7 +617,7 @@ namespace csharp_test
             return 0;
         }
 
-        static readonly Regex regexDate = new Regex(@"^(\d+)-(\d+)-(\d+)T(\d+):(\d+)Z$");
+        static readonly Regex regexDate = new Regex(@"^(\d+)-(\d+)-(\d+)T(\d+):(\d+)(:(\d+))?Z$");
 
         static AstroTime ParseDate(string text)
         {
@@ -628,7 +629,10 @@ namespace csharp_test
             int day = int.Parse(m.Groups[3].Value);
             int hour = int.Parse(m.Groups[4].Value);
             int minute = int.Parse(m.Groups[5].Value);
-            return new AstroTime(year, month, day, hour, minute, 0);
+            int second = 0;
+            if (!string.IsNullOrEmpty(m.Groups[7].Value))
+                second = int.Parse(m.Groups[7].Value);
+            return new AstroTime(year, month, day, hour, minute, second);
         }
 
         static int TestMaxElong(elong_test_t test)
@@ -752,6 +756,128 @@ namespace csharp_test
             new elong_test_t( Body.Venus,   "2017-01-02T13:19Z", "2017-01-12T13:19Z", 47.10, Visibility.Evening ),
             new elong_test_t( Body.Venus,   "2018-08-07T17:02Z", "2018-08-17T17:02Z", 45.90, Visibility.Evening )
         };
+
+        static double PlanetOrbitalPeriod(Body body)
+        {
+            switch (body)
+            {
+            case Body.Mercury:  return     87.969;
+            case Body.Venus:    return    224.701;
+            case Body.Earth:    return    365.256;
+            case Body.Mars:     return    686.980;
+            case Body.Jupiter:  return   4332.589;
+            case Body.Saturn:   return  10759.22;
+            case Body.Uranus:   return  30685.4;
+            case Body.Neptune:  return  60189.0;
+            case Body.Pluto:    return  90560.0;
+            default:
+                throw new ArgumentException(string.Format("Invalid body {0}", body));
+            }
+        }
+
+        static int PlanetApsisTest(string testDataPath)
+        {
+            const double degree_threshold = 0.1;
+            var start_time = new AstroTime(Astronomy.MinYear, 1, 1, 0, 0, 0);
+            bool found_bad_planet = false;
+            for (Body body = Body.Mercury; body <= Body.Pluto; ++body)
+            {
+                double period = PlanetOrbitalPeriod(body);
+                double max_dist_ratio = 0.0;
+                double max_diff_days = 0.0;
+                double min_interval = -1.0;
+                double max_interval = -1.0;
+                ApsisInfo apsis = Astronomy.SearchPlanetApsis(body, start_time);
+                int count = 1;
+
+                string filename = Path.Combine(testDataPath, string.Format("apsis_{0}.txt", (int)body));
+                using (StreamReader infile = File.OpenText(filename))
+                {
+                    string line;
+                    while (null != (line = infile.ReadLine()))
+                    {
+                        /* Parse the line of test data. */
+                        string[] token = line.Split(new char[]{' ', '\t', '\n', '\r'}, StringSplitOptions.RemoveEmptyEntries);
+                        if (token.Length != 3)
+                        {
+                            Console.WriteLine("PlanetApsisTest({0} line {1}): Invalid data format: {2} tokens", filename, count, token.Length);
+                            return 1;
+                        }
+                        int expected_kind = int.Parse(token[0]);
+                        AstroTime expected_time = ParseDate(token[1]);
+                        double expected_distance = double.Parse(token[2]);
+
+                        /* Compare computed values against expected values. */
+                        if ((int)apsis.kind != expected_kind)
+                        {
+                            Console.WriteLine("PlanetApsisTest({0} line {1}): WRONG APSIS KIND", filename, count);
+                            return 1;
+                        }
+
+                        double diff_days = Math.Abs(expected_time.tt - apsis.time.tt);
+                        max_diff_days = Math.Max(max_diff_days, diff_days);
+                        double diff_degrees = (diff_days / period) * 360.0;
+                        if (diff_degrees > degree_threshold)
+                            found_bad_planet = true;
+
+                        double diff_dist_ratio = Math.Abs(expected_distance - apsis.dist_au) / expected_distance;
+                        max_dist_ratio = Math.Max(max_dist_ratio, diff_dist_ratio);
+                        if (diff_dist_ratio > 1.0e-4)
+                        {
+                            Console.WriteLine("PlanetApsisTest({0} line {1}): distance ratio {2} is too large.", filename, count, diff_dist_ratio);
+                            return 1;
+                        }
+
+                        /* Calculate the next apsis. */
+                        AstroTime prev_time = apsis.time;
+                        try
+                        {
+                            apsis = Astronomy.NextPlanetApsis(body, apsis);
+                        }
+                        catch (BadTimeException) when (body == Body.Pluto)
+                        {
+                            // Correct behavior for Pluto: Chebyshev model has a limited time domain.
+                            break;
+                        }
+
+                        /* Update statistics. */
+                        ++count;
+                        double interval = apsis.time.tt - prev_time.tt;
+                        if (min_interval < 0.0)
+                        {
+                            min_interval = max_interval = interval;
+                        }
+                        else
+                        {
+                            min_interval = Math.Min(min_interval, interval);
+                            max_interval = Math.Max(max_interval, interval);
+                        }
+                    }
+                }
+
+                if (count < 2)
+                {
+                    Console.WriteLine("PlanetApsis: FAILED to find apsides for {0}", body);
+                    return 1;
+                }
+
+                Console.WriteLine("PlanetApsis: {0} apsides for {1,-9} -- intervals: min={2:0.00}, max={3:0.00}, ratio={4:0.000000}; max day={5}, degrees={6:0.000}, dist ratio={7}",
+                    count, body,
+                    min_interval, max_interval, max_interval / min_interval,
+                    max_diff_days,
+                    (max_diff_days / period) * 360.0,
+                    max_dist_ratio);
+            }
+
+            if (found_bad_planet)
+            {
+                Console.WriteLine("PlanetApsis: FAIL - planet(s) exceeded angular threshold ({0} degrees)", degree_threshold);
+                return 1;
+            }
+
+            Console.WriteLine("PlanetApsis: PASS");
+            return 0;
+        }
 
         static int LunarApsisTest(string inFileName)
         {

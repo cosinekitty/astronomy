@@ -5626,8 +5626,8 @@ astro_apsis_t Astronomy_SearchPlanetApsis(astro_body_t body, astro_time_t startT
  *      Finds the next planetary perihelion or aphelion event in a series.
  *
  * This function requires an #astro_apsis_t value obtained from a call
- * to #Astronomy_SearchPlanetApsis or `Astronomy_NextPlanetApsis`. Given
- * an aphelion event, this function finds the next perihelion event, and vice versa.
+ * to #Astronomy_SearchPlanetApsis or `Astronomy_NextPlanetApsis`.
+ * Given an aphelion event, this function finds the next perihelion event, and vice versa.
  *
  * See #Astronomy_SearchPlanetApsis for more details.
  *

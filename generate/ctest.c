@@ -1941,7 +1941,7 @@ static int PlanetApsis(void)
 
             diff_dist_ratio = fabs(expected_distance - apsis.dist_au) / expected_distance;
             if (diff_dist_ratio > max_dist_ratio) max_dist_ratio = diff_dist_ratio;
-            if (diff_dist_ratio > 1.0e-3)       /* FIXFIXFIX: make tighter tolerance */
+            if (diff_dist_ratio > 1.0e-4)
             {
                 fprintf(stderr, "PlanetApsis: EXCESSIVE DISTANCE ERROR for %s (%s line %d): expected=%0.16lf, calculated=%0.16lf, error ratio=%lg\n",
                     Astronomy_BodyName(body), filename, count, expected_distance, apsis.dist_au, diff_dist_ratio);
