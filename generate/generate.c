@@ -487,6 +487,7 @@ fail:
 static int ImproveVsopApsides(vsop_model_t *model)
 {
     int error;
+    int n_top_terms;
     vsop_formula_t *radform;        /* formula for calculating radial distance */
 
     if (model->version != VSOP_HELIO_SPHER_DATE && model->version != VSOP_HELIO_SPHER_J2000)
@@ -507,14 +508,36 @@ static int ImproveVsopApsides(vsop_model_t *model)
 
     switch (model->body)
     {
-    case BODY_NEPTUNE:
-        CHECK(ExpandSeries(radform, 0, 5));
+    case BODY_VENUS:
+        n_top_terms = 5;
         break;
+
+    case BODY_EARTH:
+        n_top_terms = 5;
+        break;
+
+    case BODY_JUPITER:
+        n_top_terms = 3;
+        break;
+
+    case BODY_SATURN:
+        n_top_terms = 7;
+        break;
+
+    case BODY_URANUS:
+        n_top_terms = 3;
+        break;
+
+    case BODY_NEPTUNE:
+        n_top_terms = 5;
+        break;
+
     default:
+        n_top_terms = 0;
         break;
     }
 
-    error = 0;
+    CHECK(ExpandSeries(radform, 0, n_top_terms));
 fail:
     return error;
 }

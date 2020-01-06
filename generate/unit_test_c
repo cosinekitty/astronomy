@@ -8,7 +8,7 @@ Fail()
 ./ctest refraction || Fail "Failure in ctest refraction"
 ./ctest rotation || Fail "Failure in ctest rotation"
 ./ctest moon || Fail "Failure in ctest moon"
-time ./ctest || Fail "Failure reported by ctest."
+time ./ctest check || Fail "Failure in ctest check"
 ./generate check temp/c_check.txt || Fail "Verification failure for C unit test output."
 ./ctest diff temp/c_check.txt temp/js_check.txt || Fail "Diff(C,JS) failure."
 ./ctest diff temp/c_check.txt dotnet/csharp_test/csharp_check.txt || Fail "Diff(C,C#) failure."

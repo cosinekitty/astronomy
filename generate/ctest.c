@@ -74,16 +74,16 @@ int main(int argc, const char *argv[])
 {
     int error = 1;
 
-    if (argc == 1)
-    {
-        CHECK(Test_AstroTime());
-        CHECK(AstroCheck());
-        goto success;
-    }
-
     if (argc == 2)
     {
         const char *verb = argv[1];
+        if (!strcmp(verb, "check"))
+        {
+            CHECK(Test_AstroTime());
+            CHECK(AstroCheck());
+            goto success;
+        }
+
         if (!strcmp(verb, "elongation"))
         {
             CHECK(ElongationTest());
@@ -1817,7 +1817,7 @@ static int EarthApsis(const char *filename)
         diff_minutes = (24.0 * 60.0) * fabs(apsis.time.ut - correct_time.ut);
         diff_au = fabs(apsis.dist_au - dist_au);
 
-        if (diff_minutes > 260.0)
+        if (diff_minutes > 120.5)
         {
             fprintf(stderr, "EarthApsis(%s line %d): Excessive time error: %lf minutes.\n", filename, lnum, diff_minutes);
             error = 1;
@@ -1866,11 +1866,13 @@ static double PlanetOrbitalPeriod(astro_body_t body)
 static int PlanetApsis(void)
 {
     int error;
+    const double degree_threshold = 0.1;
     astro_body_t body;
     astro_time_t start_time, prev_time;
     astro_apsis_t apsis;
     astro_utc_t utc;
     int count;
+    int bad_planets_found = 0;
     double interval, min_interval, max_interval;
     FILE *infile = NULL;
     char filename[100];
@@ -1881,8 +1883,7 @@ static int PlanetApsis(void)
     double expected_distance;
     double period;
     double diff_days, diff_degrees, diff_dist_ratio;
-    double max_diff_days;
-    double max_dist_ratio;
+    double max_diff_days, max_dist_ratio;
 
     start_time = Astronomy_MakeTime(MIN_YEAR, 1, 1, 0, 0, 0.0);
 
@@ -1936,13 +1937,8 @@ static int PlanetApsis(void)
             diff_days = fabs(expected_time.tt - apsis.time.tt);
             if (diff_days > max_diff_days) max_diff_days = diff_days;
             diff_degrees = (diff_days / period) * 360.0;
-            if (diff_degrees > 0.5)
-            {
-                fprintf(stderr, "PlanetApsis: EXCESSIVE ANGULAR ERROR for %s: %lg degrees, %0.3lf days from %s\n",
-                    Astronomy_BodyName(body), diff_degrees, diff_days, expected_time_text);
-                error = 1;
-                goto fail;
-            }
+            if (diff_degrees > degree_threshold)
+                bad_planets_found = 1;
 
             diff_dist_ratio = fabs(expected_distance - apsis.dist_au) / expected_distance;
             if (diff_dist_ratio > max_dist_ratio) max_dist_ratio = diff_dist_ratio;
@@ -1998,6 +1994,13 @@ static int PlanetApsis(void)
             max_diff_days,
             (max_diff_days / period) * 360.0,
             max_dist_ratio);
+    }
+
+    if (bad_planets_found)
+    {
+        fprintf(stderr, "PlanetApsis: FAIL - planet(s) exceeded angular threshold (%lg degrees)\n", degree_threshold);
+        error = 1;
+        goto fail;
     }
 
     printf("PlanetApsis: PASS\n");

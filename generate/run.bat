@@ -185,7 +185,7 @@ if errorlevel 1 (exit /b 1)
 REM -----------------------------------------------------------------------------------------
 
 echo.Running C unit tests.
-!CTESTEXE!
+!CTESTEXE! check
 if errorlevel 1 (exit /b 1)
 
 !GENEXE! check temp\c_check.txt
