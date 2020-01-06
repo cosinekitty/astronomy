@@ -57,6 +57,13 @@ To get started quickly, here are some [examples](../../demo/csharp/).
 | [SearchLunarApsis](#Astronomy.SearchLunarApsis) | Finds the next perigee or apogee of the Moon after a specified date. |
 | [NextLunarApsis](#Astronomy.NextLunarApsis) | Given an already-found apsis, finds the next perigee or apogee of the Moon. |
 
+### Planet perihelion and aphelion
+
+| Function | Description |
+| -------- | ----------- |
+| [SearchPlanetApsis](#Astronomy.SearchPlanetApsis) | Finds the next perihelion or aphelion of a planet after a specified date. |
+| [NextPlanetApsis](#Astronomy.NextPlanetApsis) | Given an already-found apsis, finds the next perihelion or aphelion of a planet. |
+
 ### Visual magnitude and elongation
 
 | Function | Description |

@@ -77,6 +77,13 @@ To get started quickly, here are some [examples](../../demo/c/).
 | [SearchLunarApsis](#Astronomy_SearchLunarApsis) | Finds the next perigee or apogee of the Moon after a specified date. |
 | [NextLunarApsis](#Astronomy_NextLunarApsis) | Given an already-found apsis, finds the next perigee or apogee of the Moon. |
 
+### Planet perihelion and aphelion
+
+| Function | Description |
+| -------- | ----------- |
+| [SearchPlanetApsis](#Astronomy_SearchPlanetApsis) | Finds the next perihelion or aphelion of a planet after a specified date. |
+| [NextPlanetApsis](#Astronomy_NextPlanetApsis) | Given an already-found apsis, finds the next perihelion or aphelion of a planet. |
+
 ### Visual magnitude and elongation
 
 | Function | Description |
