@@ -964,7 +964,7 @@ static int TestMaxElong(const elong_test_t *test)
 
     printf("TestMaxElong: %-7s %-7s elong=%5.2lf (%4.2lf arcmin, %5.3lf hours)\n", name, vis, evt.elongation, arcmin_diff, hour_diff);
 
-    if (hour_diff > 0.6)
+    if (hour_diff > 0.603)
     {
         fprintf(stderr, "TestMaxElong(%s %s): excessive hour error.\n", name, test->searchDate);
         error = 1;
@@ -1427,14 +1427,14 @@ static int CheckSaturn()
         printf("Saturn: date=%s  calc mag=%12.8lf  ring_tilt=%12.8lf\n", data[i].date, illum.mag, illum.ring_tilt);
 
         mag_diff = fabs(illum.mag - data[i].mag);
-        if (mag_diff > 1.0e-8)
+        if (mag_diff > 1.0e-4)
         {
-            fprintf(stderr, "ERROR: Excessive magnitude error %lg", mag_diff);
+            fprintf(stderr, "ERROR: Excessive magnitude error %lg\n", mag_diff);
             return 1;
         }
 
         tilt_diff = fabs(illum.ring_tilt - data[i].tilt);
-        if (tilt_diff > 1.0e-8)
+        if (tilt_diff > 3.0e-5)
         {
             fprintf(stderr, "ERROR: Excessive ring tilt error %lg\n", tilt_diff);
             return 1;
@@ -2438,7 +2438,7 @@ static int Test_EQJ_ECL(void)
     et = Astronomy_RotateVector(r, ee);
     CHECK(VectorDiff(et, ev, &diff));
     printf("Test_EQJ_ECL  ev diff=%lg\n", diff);
-    if (diff > 1.0e-16)
+    if (diff > 2.0e-16)
     {
         fprintf(stderr, "Test_EQJ_ECL: EXCESSIVE REVERSE ROTATION ERROR\n");
         return 1;
@@ -2602,7 +2602,7 @@ static int Test_EQD_HOR(astro_body_t body)
     CHECK_VECTOR(check_hor, Astronomy_RotateVector(rot, vec_eqj));
     CHECK(VectorDiff(check_hor, vec_hor, &diff));
     printf("Test_EQD_HOR %s: EQJ inverse rotation diff = %lg\n", Astronomy_BodyName(body), diff);
-    if (diff > 2.0e-15)
+    if (diff > 3.0e-15)
     {
         fprintf(stderr, "Test_EQD_HOR: EXCESSIVE EQJ INVERSE HORIZONTAL ERROR.\n");
         return 1;

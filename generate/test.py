@@ -458,7 +458,7 @@ def TestMaxElong(body, searchText, eventText, angle, visibility):
     hour_diff = 24.0 * abs(evt.time.tt - eventTime.tt)
     arcmin_diff = 60.0 * abs(evt.elongation - angle)
     print('TestMaxElong: {:<7s} {:<7s} elong={:5.2f} ({:4.2f} arcmin, {:5.3f} hours)'.format(name, visibility.name, evt.elongation, arcmin_diff, hour_diff))
-    if hour_diff > 0.6:
+    if hour_diff > 0.603:
         print('TestMaxElong({} {}): EXCESSIVE HOUR ERROR.'.format(name, searchText))
         return 1
     if arcmin_diff > 3.4:
@@ -549,19 +549,20 @@ def CheckSaturn():
         ( "2025-09-25T00:00Z", +0.51286575,   +1.52327932 ),
         ( "2032-05-15T00:00Z", -0.04652109,  +26.95717765 )
     ]
+    error = 0
     for (dtext, mag, tilt) in data:
         time = ParseDate(dtext)
         illum = astronomy.Illumination(astronomy.Body.Saturn, time)
         print('Saturn: date={}  calc mag={:12.8f}  ring_tilt={:12.8f}'.format(dtext, illum.mag, illum.ring_tilt))
         mag_diff = abs(illum.mag - mag)
-        if mag_diff > 1.0e-8:
+        if mag_diff > 1.0e-4:
             print('CheckSaturn: Excessive magnitude error {}'.format(mag_diff))
-            return 1
+            error = 1
         tilt_diff = abs(illum.ring_tilt - tilt)
-        if (tilt_diff > 1.0e-8):
+        if (tilt_diff > 3.0e-5):
             print('CheckSaturn: Excessive ring tilt error {}'.format(tilt_diff))
-            return 1
-    return 0
+            error = 1
+    return error
 
 def TestMaxMag(body, filename):
     # Example of input data:
@@ -836,7 +837,7 @@ def Test_EQJ_ECL():
     et = astronomy.RotateVector(ir, ee)
     idiff = VectorDiff(et, ev)
     print('Test_EQJ_ECL ev diff = {}'.format(idiff))
-    if idiff > 1.0e-16:
+    if idiff > 2.0e-16:
         print('Test_EQJ_ECL: EXCESSIVE REVERSE ROTATION ERROR')
         sys.exit(1)
 
@@ -935,7 +936,7 @@ def Test_EQD_HOR(body):
     check_eqj = astronomy.RotateVector(yrot, vec_hor)
     diff = VectorDiff(check_eqj, vec_eqj)
     print('Test_EQD_HOR {}: J2000 inverse rotation diff = {}'.format(body.name, diff))
-    if diff > 4.0e-15:
+    if diff > 5.0e-15:
         print('Test_EQD_HOR: EXCESSIVE J2000 INVERSE HORIZONTAL ERROR.')
         sys.exit(1)
 
@@ -944,7 +945,7 @@ def Test_EQD_HOR(body):
     another_hor = astronomy.RotateVector(zrot, vec_eqj)
     diff = VectorDiff(another_hor, vec_hor)
     print('Test_EQD_HOR {}: EQJ inverse rotation diff = {}'.format(body.name, diff))
-    if diff > 3.0e-15:
+    if diff > 6.0e-15:
         print('Test_EQD_HOR: EXCESSIVE EQJ INVERSE HORIZONTAL ERROR.')
         sys.exit(1)
 
