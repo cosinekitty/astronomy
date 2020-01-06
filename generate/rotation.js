@@ -91,7 +91,7 @@ function Test_EQJ_ECL() {
     const et = Astronomy.RotateVector(ir, ee);
     const idiff = VectorDiff(et, ev);
     console.log(`Test_EQJ_ECL ev diff = ${idiff}`);
-    if (idiff > 1.0e-16)
+    if (idiff > 2.0e-16)
         throw 'Test_EQJ_ECL: EXCESSIVE REVERSE ROTATION ERROR';
 }
 
@@ -162,7 +162,7 @@ function Test_EQD_HOR(body) {
     const check_hor = Astronomy.VectorFromHorizon(xsphere, time, 'normal');
     let diff = VectorDiff(check_hor, vec_hor);
     console.log(`Test_EQD_HOR ${body}: horizontal recovery: diff = ${diff}`);
-    if (diff > 1.0e-15)
+    if (diff > 2.0e-15)
         throw 'Test_EQD_HOR: EXCESSIVE ERROR IN HORIZONTAL RECOVERY.';
 
     /* Verify the inverse translation from horizontal vector to equatorial of-date vector. */
@@ -188,7 +188,7 @@ function Test_EQD_HOR(body) {
     const another_hor = Astronomy.RotateVector(zrot, vec_eqj);
     diff = VectorDiff(another_hor, vec_hor);
     console.log(`Test_EQD_HOR ${body}: EQJ inverse rotation diff = ${diff}`);
-    if (diff > 2.0e-15)
+    if (diff > 3.0e-15)
         throw 'Test_EQD_HOR: EXCESSIVE EQJ INVERSE HORIZONTAL ERROR.';
 }
 

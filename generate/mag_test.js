@@ -92,12 +92,12 @@ function TestSaturn() {
         let illum = Astronomy.Illumination('Saturn', new Date(item.date));
         console.log(`Saturn: date=${illum.time.date.toISOString()}  mag=${illum.mag.toFixed(8).padStart(12)}  ring_tilt=${illum.ring_tilt.toFixed(8).padStart(12)}`);
         const mag_diff = Math.abs(illum.mag - item.mag);
-        if (mag_diff > 1.0e-8) {
+        if (mag_diff > 1.0e-4) {
             console.log(`ERROR: Excessive magnitude error ${mag_diff}`);
             success = false;
         }
         const tilt_diff = Math.abs(illum.ring_tilt - item.tilt);
-        if (tilt_diff > 1.0e-8) {
+        if (tilt_diff > 3.0e-5) {
             console.log(`ERROR: Excessive ring tilt error ${tilt_diff}`);
             success = false;
         }
