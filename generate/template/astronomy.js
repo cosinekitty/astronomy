@@ -3204,7 +3204,7 @@ Astronomy.SearchLunarApsis = function(startDate) {
 }
 
 /**
- * Given a lunar apsis returned by an initial call to {@link SearchLunarApsis},
+ * Given a lunar apsis returned by an initial call to {@link Astronomy.SearchLunarApsis},
  * or a previous call to `NextLunarApsis`, finds the next lunar apsis.
  * If the given apsis is a perigee, this function finds the next apogee, and vice versa.
  *
@@ -3419,7 +3419,7 @@ Astronomy.SearchPlanetApsis = function(body, startTime) {
 /**
  * Finds the next planetary perihelion or aphelion event in a series.
  *
- * This function requires an {@link Apsis} value obtained from a call
+ * This function requires an {@link Astronomy.Apsis} value obtained from a call
  * to {@link Astronomy.SearchPlanetApsis} or `NextPlanetApsis`.
  * Given an aphelion event, this function finds the next perihelion event, and vice versa.
  * See {@link Astronomy.SearchPlanetApsis} for more details.
@@ -3429,10 +3429,10 @@ Astronomy.SearchPlanetApsis = function(body, startTime) {
  *      Not allowed to be `"Sun"` or `"Moon"`.
  *      Must match the body passed into the call that produced the `apsis` parameter.
  *
- * @param {Apsis} apsis
+ * @param {Astronomy.Apsis} apsis
  *      An apsis event obtained from a call to {@link Astronomy.SearchPlanetApsis} or `NextPlanetApsis`.
  *
- * @returns {Apsis}
+ * @returns {Astronomy.Apsis}
  *      Same as the return value for {@link Astronomy.SearchPlanetApsis}.
  */
 Astronomy.NextPlanetApsis = function(body, apsis) {

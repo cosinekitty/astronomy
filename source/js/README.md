@@ -1156,7 +1156,7 @@ that occurs after the specified date and time.
 <a name="Astronomy.NextLunarApsis"></a>
 
 ### Astronomy.NextLunarApsis(apsis) ⇒ [<code>Apsis</code>](#Astronomy.Apsis)
-Given a lunar apsis returned by an initial call to [SearchLunarApsis](SearchLunarApsis),
+Given a lunar apsis returned by an initial call to [SearchLunarApsis](#Astronomy.SearchLunarApsis),
 or a previous call to `NextLunarApsis`, finds the next lunar apsis.
 If the given apsis is a perigee, this function finds the next apogee, and vice versa.
 
@@ -1203,21 +1203,21 @@ as many times as desired.
 
 <a name="Astronomy.NextPlanetApsis"></a>
 
-### Astronomy.NextPlanetApsis(body, apsis) ⇒ <code>Apsis</code>
+### Astronomy.NextPlanetApsis(body, apsis) ⇒ [<code>Apsis</code>](#Astronomy.Apsis)
 Finds the next planetary perihelion or aphelion event in a series.
 
-This function requires an [Apsis](Apsis) value obtained from a call
+This function requires an [Apsis](#Astronomy.Apsis) value obtained from a call
 to [SearchPlanetApsis](#Astronomy.SearchPlanetApsis) or `NextPlanetApsis`.
 Given an aphelion event, this function finds the next perihelion event, and vice versa.
 See [SearchPlanetApsis](#Astronomy.SearchPlanetApsis) for more details.
 
 **Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
-**Returns**: <code>Apsis</code> - Same as the return value for [SearchPlanetApsis](#Astronomy.SearchPlanetApsis).  
+**Returns**: [<code>Apsis</code>](#Astronomy.Apsis) - Same as the return value for [SearchPlanetApsis](#Astronomy.SearchPlanetApsis).  
 
 | Param | Type | Description |
 | --- | --- | --- |
 | body | <code>string</code> | The planet for which to find the next perihelion/aphelion event.      Not allowed to be `"Sun"` or `"Moon"`.      Must match the body passed into the call that produced the `apsis` parameter. |
-| apsis | <code>Apsis</code> | An apsis event obtained from a call to [SearchPlanetApsis](#Astronomy.SearchPlanetApsis) or `NextPlanetApsis`. |
+| apsis | [<code>Apsis</code>](#Astronomy.Apsis) | An apsis event obtained from a call to [SearchPlanetApsis](#Astronomy.SearchPlanetApsis) or `NextPlanetApsis`. |
 
 
 * * *
