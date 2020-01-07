@@ -1398,7 +1398,7 @@ namespace csharp_test
             check_hor = Astronomy.RotateVector(rot, vec_eqj);
             diff = VectorDiff(check_hor, vec_hor);
             Console.WriteLine("Test_EQD_HOR {0}: EQJ inverse rotation diff = {1}", body, diff);
-            if (diff > 2.1e-15)
+            if (diff > 2.2e-15)
             {
                 Console.WriteLine("Test_EQD_HOR: EXCESSIVE EQJ INVERSE HORIZONTAL ERROR.");
                 return 1;

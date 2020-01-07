@@ -661,7 +661,7 @@ static void PrintApsis(FILE *outfile, int kind, double jdx, double dist)
 
 static int GenerateApsisFile(int body, const char *outFileName)
 {
-    int error;
+    int error = 1;
     FILE *outfile = NULL;
     double pos[3];
     double dist[3];     /* dist[0]=current distance, dist[1]=previous distance, dist[2]=distance before that */

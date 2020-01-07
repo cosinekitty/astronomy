@@ -107,6 +107,16 @@ if !FASTMODE! == false (
     )
 )
 
+echo.
+echo.Generating apsis test data.
+if exist apsides\apsis_*.txt (del apsides\apsis_*.txt)
+!GENEXE! apsis
+if errorlevel 1 (
+    echo.FATAL: !GENEXE! apsis
+    exit /b 1
+)
+
+
 call makedoc.bat
 if errorlevel 1 (exit /b 1)
 
