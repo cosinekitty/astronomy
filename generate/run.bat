@@ -178,6 +178,11 @@ node lunar_apsis_test.js
 if errorlevel 1 (exit /b 1)
 
 echo.
+echo.Running planet apsis tests.
+node planet_apsis_test.js
+if errorlevel 1 (exit /b 1)
+
+echo.
 echo.Running visual magnitude tests.
 node mag_test.js
 if errorlevel 1 (exit /b 1)
@@ -242,7 +247,10 @@ if errorlevel 1 (exit /b 1)
 test.py rotation
 if errorlevel 1 (exit /b 1)
 
-test.py apsis
+test.py lunar_apsis
+if errorlevel 1 (exit /b 1)
+
+test.py planet_apsis
 if errorlevel 1 (exit /b 1)
 
 test.py magnitude

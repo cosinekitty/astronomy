@@ -24,6 +24,10 @@ echo "Running lunar apsis tests."
 node lunar_apsis_test.js || Fail "Failed lunar apsis test."
 
 echo ""
+echo "Running planet apsis tests."
+node planet_apsis_test.js || Fail "Failed planet apsis test."
+
+echo ""
 echo "Running longitude tests."
 node elong_test.js || Fail "Failed longitude tests."
 

@@ -2538,27 +2538,30 @@ Astronomy.GeoMoon = function(date) {
     return new Vector(mpos2[0], mpos2[1], mpos2[2], time);
 }
 
-function CalcVsop(model, time) {
-    var spher = [], eclip, r_coslat;
-    var t = time.tt / 365250;   // millennia since 2000
-    var formula, series, term, tpower, sum, coord;
-    for (formula of model) {
-        tpower = 1;
-        coord = 0;
-        for (series of formula) {
-            sum = 0;
-            for (term of series) {
-                sum += term[0] * Math.cos(term[1] + (t * term[2]));
-            }
-            coord += tpower * sum;
-            tpower *= t;
+function VsopFormula(formula, t) {
+    let tpower = 1;
+    let coord = 0;
+    for (let series of formula) {
+        let sum = 0;
+        for (let term of series) {
+            sum += term[0] * Math.cos(term[1] + (t * term[2]));
         }
-        spher.push(coord);
+        coord += tpower * sum;
+        tpower *= t;
+    }
+    return coord;
+}
+
+function CalcVsop(model, time) {
+    const t = time.tt / 365250;   // millennia since 2000
+    const spher = [];
+    for (let formula of model) {
+        spher.push(VsopFormula(formula, t));
     }
 
     // Convert spherical coordinates to ecliptic cartesian coordinates.
-    r_coslat = spher[2] * Math.cos(spher[1]);
-    eclip = [
+    const r_coslat = spher[2] * Math.cos(spher[1]);
+    const eclip = [
         r_coslat * Math.cos(spher[0]),
         r_coslat * Math.sin(spher[0]),
         spher[2] * Math.sin(spher[1])
@@ -2571,6 +2574,12 @@ function CalcVsop(model, time) {
         0.397776982902*eclip[1] + 0.917482137087*eclip[2],
         time
     );
+}
+
+function VsopHelioDistance(model, time) {
+    // The caller only wants to know the distance between the planet and the Sun.
+    // So we only need to calculate the radial component of the spherical coordinates.
+    return VsopFormula(model[2], time.tt / 365250);
 }
 
 function ChebScale(t_min, t_max, t) {
@@ -2638,6 +2647,33 @@ Astronomy.HelioVector = function(body, date) {
     }
     throw `Astronomy.HelioVector: Unknown body "${body}"`;
 };
+
+/**
+ * Calculates the distance between a body and the Sun at a given time.
+ *
+ * Given a date and time, this function calculates the distance between
+ * the center of `body` and the center of the Sun.
+ * For the planets Mercury through Neptune, this function is significantly
+ * more efficient than calling #Astronomy.HelioVector followed by taking the length
+ * of the resulting vector.
+ *
+ * @param {string} body
+ *      A body for which to calculate a heliocentric distance:
+ *      the Sun, Moon, or any of the planets.
+ *
+ * @param {(Date | number | Astronomy.AstroTime)} date
+ *      The date and time for which to calculate the heliocentric distance.
+ *
+ * @returns {number}
+ *      The heliocentric distance in AU.
+ */
+Astronomy.HelioDistance = function(body, date) {
+    const time = Astronomy.MakeTime(date);
+    if (body in vsop) {
+        return VsopHelioDistance(vsop[body], time);
+    }
+    return Astronomy.HelioVector(body, time).Length();
+}
 
 /**
  * Calculates geocentric (i.e., with respect to the center of the Earth)
@@ -4258,6 +4294,236 @@ Astronomy.NextLunarApsis = function(apsis) {
     if (next.kind + apsis.kind !== 1) {
         throw `NextLunarApsis INTERNAL ERROR: did not find alternating apogee/perigee: prev=${apsis.kind} @ ${apsis.time.toString()}, next=${next.kind} @ ${next.time.toString()}`;
     }
+    return next;
+}
+
+function NeptuneHelioDistance(time) {
+    return VsopHelioDistance(vsop.Neptune, time);
+}
+
+function NeptuneExtreme(kind, start_time, dayspan) {
+    const direction = (kind === 1) ? +1.0 : -1.0;
+    const npoints = 10;
+
+    for(;;) {
+        const interval = dayspan / (npoints - 1);
+
+        if (interval < 1.0 / 1440.0)    /* iterate until uncertainty is less than one minute */
+        {
+            const apsis_time = start_time.AddDays(interval / 2.0);
+            const dist_au = NeptuneHelioDistance(apsis_time);
+            return new Apsis(apsis_time, kind, dist_au);
+        }
+
+        let best_i = -1;
+        let best_dist = 0.0;
+        for (let i=0; i < npoints; ++i) {
+            const time = start_time.AddDays(i * interval);
+            const dist = direction * NeptuneHelioDistance(time);
+            if (i==0 || dist > best_dist) {
+                best_i = i;
+                best_dist = dist;
+            }
+        }
+
+        /* Narrow in on the extreme point. */
+        start_time = start_time.AddDays((best_i - 1) * interval);
+        dayspan = 2.0 * interval;
+    }
+}
+
+function SearchNeptuneApsis(startTime) {
+    /*
+        Neptune is a special case for two reasons:
+        1. Its orbit is nearly circular (low orbital eccentricity).
+        2. It is so distant from the Sun that the orbital period is very long.
+        Put together, this causes wobbling of the Sun around the Solar System Barycenter (SSB)
+        to be so significant that there are 3 local minima in the distance-vs-time curve
+        near each apsis. Therefore, unlike for other planets, we can't use an optimized
+        algorithm for finding dr/dt = 0.
+        Instead, we use a dumb, brute-force algorithm of sampling and finding min/max
+        heliocentric distance.
+    */
+
+    /*
+        Rewind approximately 30 degrees in the orbit,
+        then search forward for 270 degrees.
+        This is a very cautious way to prevent missing an apsis.
+        Typically we will find two apsides, and we pick whichever
+        apsis is ealier, but after startTime.
+        Sample points around this orbital arc and find when the distance
+        is greatest and smallest.
+    */
+    const npoints = 100;
+    const t1 = startTime.AddDays(Planet.Neptune.OrbitalPeriod * ( -30 / 360));
+    const t2 = startTime.AddDays(Planet.Neptune.OrbitalPeriod * (+270 / 360));
+    let t_min = t1;
+    let t_max = t1;
+    let min_dist = -1.0;
+    let max_dist = -1.0;
+    const interval = (t2.ut - t1.ut) / (npoints - 1);
+
+    for (let i=0; i < npoints; ++i) {
+        const time = t1.AddDays(i * interval);
+        const dist = NeptuneHelioDistance(time);
+        if (i === 0) {
+            max_dist = min_dist = dist;
+        } else {
+            if (dist > max_dist) {
+                max_dist = dist;
+                t_max = time;
+            }
+            if (dist < min_dist) {
+                min_dist = dist;
+                t_min = time;
+            }
+        }
+    }
+
+    const perihelion = NeptuneExtreme(0, t_min.AddDays(-2*interval), 4*interval);
+    const aphelion   = NeptuneExtreme(1, t_max.AddDays(-2*interval), 4*interval);
+    if (perihelion.time.tt >= startTime.tt) {
+        if (aphelion.time.tt >= startTime.tt && aphelion.time.tt < perihelion.time.tt) {
+            return aphelion;
+        }
+        return perihelion;
+    }
+    if (aphelion.time.tt >= startTime.tt) {
+        return aphelion;
+    }
+    throw 'Internal error: failed to find Neptune apsis.';
+}
+
+/**
+ * Finds the date and time of a planet's perihelion (closest approach to the Sun)
+ * or aphelion (farthest distance from the Sun) after a given time.
+ *
+ * Given a date and time to start the search in `startTime`, this function finds the
+ * next date and time that the center of the specified planet reaches the closest or farthest point
+ * in its orbit with respect to the center of the Sun, whichever comes first
+ * after `startTime`.
+ *
+ * The closest point is called *perihelion* and the farthest point is called *aphelion*.
+ * The word *apsis* refers to either event.
+ *
+ * To iterate through consecutive alternating perihelion and aphelion events,
+ * call `Astronomy.SearchPlanetApsis` once, then use the return value to call
+ * #Astronomy.NextPlanetApsis. After that, keep feeding the previous return value
+ * from `Astronomy.NextPlanetApsis` into another call of `Astronomy.NextPlanetApsis`
+ * as many times as desired.
+ *
+ * @param {string} body
+ *      The planet for which to find the next perihelion/aphelion event.
+ *      Not allowed to be `"Sun"` or `"Moon"`.
+ *
+ * @param {Astronomy.AstroTime} startTime
+ *      The date and time at which to start searching for the next perihelion or aphelion.
+ *
+ * @returns {Astronomy.Apsis}
+ *      The next perihelion or aphelion that occurs after `startTime`.
+ */
+Astronomy.SearchPlanetApsis = function(body, startTime) {
+    if (body === 'Neptune') {
+        return SearchNeptuneApsis(startTime);
+    }
+
+    function positive_slope(t) {
+        const dt = 0.001;
+        let t1 = t.AddDays(-dt/2);
+        let t2 = t.AddDays(+dt/2);
+        let r1 = Astronomy.HelioDistance(body, t1);
+        let r2 = Astronomy.HelioDistance(body, t2);
+        let m = (r2-r1) / dt;
+        return m;
+    }
+
+    function negative_slope(t) {
+        return -positive_slope(t);
+    }
+
+    const orbit_period_days = Planet[body].OrbitalPeriod;
+    const increment = orbit_period_days / 6.0;
+    let t1 = startTime;
+    let m1 = positive_slope(t1);
+    for (let iter = 0; iter * increment < 2.0 * orbit_period_days; ++iter)
+    {
+        const t2 = t1.AddDays(increment);
+        const m2 = positive_slope(t2);
+        if (m1 * m2 <= 0.0)
+        {
+            /* There is a change of slope polarity within the time range [t1, t2]. */
+            /* Therefore this time range contains an apsis. */
+            /* Figure out whether it is perihelion or aphelion. */
+
+            let slope_func, kind;
+            if (m1 < 0.0 || m2 > 0.0)
+            {
+                /* We found a minimum-distance event: perihelion. */
+                /* Search the time range for the time when the slope goes from negative to positive. */
+                slope_func = positive_slope;
+                kind = 0;    // perihelion
+            }
+            else if (m1 > 0.0 || m2 < 0.0)
+            {
+                /* We found a maximum-distance event: aphelion. */
+                /* Search the time range for the time when the slope goes from positive to negative. */
+                slope_func = negative_slope;
+                kind = 1;   // aphelion
+            }
+            else
+            {
+                /* This should never happen. It should not be possible for both slopes to be zero. */
+                throw "Internal error with slopes in SearchPlanetApsis";
+            }
+
+            const search = Astronomy.Search(slope_func, t1, t2, 1.0);
+            if (search == null)
+                throw "Failed to find slope transition in planetary apsis search.";
+
+            const dist = Astronomy.HelioDistance(body, search);
+            return new Apsis(search, kind, dist);
+        }
+        /* We have not yet found a slope polarity change. Keep searching. */
+        t1 = t2;
+        m1 = m2;
+    }
+    throw "Internal error: should have found planetary apsis within 2 orbital periods.";
+}
+
+/**
+ * Finds the next planetary perihelion or aphelion event in a series.
+ *
+ * This function requires an #Apsis value obtained from a call
+ * to #Astronomy.SearchPlanetApsis or `Astronomy.NextPlanetApsis`.
+ * Given an aphelion event, this function finds the next perihelion event, and vice versa.
+ * See #Astronomy.SearchPlanetApsis for more details.
+ *
+ * @param {string} body
+ *      The planet for which to find the next perihelion/aphelion event.
+ *      Not allowed to be `"Sun"` or `"Moon"`.
+ *      Must match the body passed into the call that produced the `apsis` parameter.
+ *
+ * @param {Apsis} apsis
+ *      An apsis event obtained from a call to #Astronomy.SearchPlanetApsis or `Astronomy.NextPlanetApsis`.
+ *
+ * @returns {Apsis}
+ *      Same as the return value for #Astronomy.SearchPlanetApsis.
+ */
+Astronomy.NextPlanetApsis = function(body, apsis) {
+    if (apsis.kind !== 0 && apsis.kind !== 1) {
+        throw `Invalid apsis kind: ${apsis.kind}`;
+    }
+
+    /* skip 1/4 of an orbit before starting search again */
+    const skip = 0.25 * Planet[body].OrbitalPeriod;
+    const time = apsis.time.AddDays(skip);
+    const next = Astronomy.SearchPlanetApsis(body, time);
+
+    /* Verify that we found the opposite apsis from the previous one. */
+    if (next.kind + apsis.kind !== 1) {
+        throw `Internal error: previous apsis was ${apsis.kind}, but found ${next.kind} for next apsis.`;
+    }
+
     return next;
 }
 
