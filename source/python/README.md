@@ -59,6 +59,13 @@ To get started quickly, here are some [examples](../../demo/python/).
 | [SearchLunarApsis](#SearchLunarApsis) | Finds the next perigee or apogee of the Moon after a specified date. |
 | [NextLunarApsis](#NextLunarApsis) | Given an already-found apsis, finds the next perigee or apogee of the Moon. |
 
+### Planet perihelion and aphelion
+
+| Function | Description |
+| -------- | ----------- |
+| [SearchPlanetApsis](#SearchPlanetApsis) | Finds the next perihelion or aphelion of a planet after a specified date. |
+| [NextPlanetApsis](#NextPlanetApsis) | Given an already-found apsis, finds the next perihelion or aphelion of a planet. |
+
 ### Visual magnitude and elongation
 
 | Function | Description |
@@ -550,6 +557,13 @@ as seen by an observer on the surface of the Earth.
 
 ---
 
+<a name="BadTimeError"></a>
+### BadTimeError
+
+Cannot calculate Pluto position for this date/time.
+
+---
+
 <a name="BadVectorError"></a>
 ### BadVectorError
 
@@ -842,6 +856,27 @@ A geocentric position vector of the center of the given body.
 
 ---
 
+<a name="HelioDistance"></a>
+### HelioDistance(body, time)
+
+**Calculates the distance between a body and the Sun at a given time.**
+
+Given a date and time, this function calculates the distance between
+the center of `body` and the center of the Sun.
+For the planets Mercury through Neptune, this function is significantly
+more efficient than calling [`HelioVector`](#HelioVector) followed by taking the length
+of the resulting vector.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Body`](#Body) | `body` | A body for which to calculate a heliocentric distance: the Sun, Moon, or any of the planets. |
+| [`Time`](#Time) | `time` | The date and time for which to calculate the heliocentric distance. |
+
+### Returns: `float`
+The heliocentric distance in AU.
+
+---
+
 <a name="HelioVector"></a>
 ### HelioVector(body, time)
 
@@ -1093,6 +1128,25 @@ the one passed in as the parameter `mq`.
 | [`MoonQuarter`](#MoonQuarter) | `mq` | A value returned by a prior call to [`SearchMoonQuarter`](#SearchMoonQuarter) or [`NextMoonQuarter`](#NextMoonQuarter). |
 
 ### Returns: [`MoonQuarter`](#MoonQuarter)
+
+---
+
+<a name="NextPlanetApsis"></a>
+### NextPlanetApsis(body, apsis)
+
+**Finds the next planetary perihelion or aphelion event in a series.**
+
+This function requires an [`Apsis`](#Apsis) value obtained from a call
+to [`SearchPlanetApsis`](#SearchPlanetApsis) or `NextPlanetApsis`.
+Given an aphelion event, this function finds the next perihelion event, and vice versa.
+See [`SearchPlanetApsis`](#SearchPlanetApsis) for more details.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Body`](#Body) | `body` | The planet for which to find the next perihelion/aphelion event. Not allowed to be `Body.Sun` or `Body.Moon`. Must match the body passed into the call that produced the `apsis` parameter. |
+| [`Apsis`](#Apsis) | `apsis` | An apsis event obtained from a call to [`SearchPlanetApsis`](#SearchPlanetApsis) or `NextPlanetApsis`. |
+
+### Returns: [`Apsis`](#Apsis)
 
 ---
 
@@ -1594,6 +1648,30 @@ However, the difference is minor and has little practical value.
 | [`Time`](#Time) | `startTime` | The date and time to start searching for the next peak magnitude event. |
 
 ### Returns: [`IlluminationInfo`](#IlluminationInfo)
+
+---
+
+<a name="SearchPlanetApsis"></a>
+### SearchPlanetApsis(body, startTime)
+
+**Finds the next planet perihelion or aphelion, after a given time.**
+
+Given a date and time to start the search in `startTime`, this function finds the
+next date and time that the center of the specified planet reaches the closest or farthest point
+in its orbit with respect to the center of the Sun, whichever comes first after `startTime`.
+The closest point is called *perihelion* and the farthest point is called *aphelion*.
+The word *apsis* refers to either event.
+To iterate through consecutive alternating perihelion and aphelion events,
+call `SearchPlanetApsis` once, then use the return value to call [`NextPlanetApsis`](#NextPlanetApsis).
+After that, keep feeding the previous return value from `NextPlanetApsis`
+into another call of `NextPlanetApsis` as many times as desired.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Body`](#Body) | `body` | The planet for which to find the next perihelion/aphelion event. Not allowed to be `Body.Sun` or `Body.Moon`. |
+| [`Time`](#Time) | `startTime` | The date and time at which to start searching for the next perihelion or aphelion. |
+
+### Returns: [`Apsis`](#Apsis)
 
 ---
 

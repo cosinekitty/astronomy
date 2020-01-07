@@ -3741,8 +3741,7 @@ $ASTRO_CSHARP_CHEBYSHEV(8);
 
             for (i=0; i < npoints; ++i)
             {
-                double ut = t1.ut + (i * interval);
-                AstroTime time = new AstroTime(ut);
+                AstroTime time = t1.AddDays(i * interval);
                 double dist = NeptuneHelioDistance(time);
                 if (i == 0)
                 {
@@ -3837,7 +3836,7 @@ $ASTRO_CSHARP_CHEBYSHEV(8);
                 {
                     /* There is a change of slope polarity within the time range [t1, t2]. */
                     /* Therefore this time range contains an apsis. */
-                    /* Figure out whether it is perigee or apogee. */
+                    /* Figure out whether it is perihelion or aphelion. */
 
                     SearchContext_PlanetDistanceSlope slope_func;
                     ApsisKind kind;

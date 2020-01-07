@@ -2,6 +2,7 @@
 import sys
 import math
 import re
+import os
 sys.path.append('../source/python')
 import astronomy
 
@@ -432,22 +433,10 @@ ElongTestData = [
     ( astronomy.Body.Venus,   "2018-08-07T17:02Z", "2018-08-17T17:02Z", 45.90, 'evening' )
 ]
 
-def ParseDate(text):
-    m = re.match(r'^(\d+)-(\d+)-(\d+)T(\d+):(\d+)Z$', text)
-    if not m:
-        print('ParseDate: invalid date text "{}"'.format(text))
-        raise Exception('Bad elongation test data')
-    year = int(m.group(1))
-    month = int(m.group(2))
-    day = int(m.group(3))
-    hour = int(m.group(4))
-    minute = int(m.group(5))
-    return astronomy.Time.Make(year, month, day, hour, minute, 0)
-
 def TestMaxElong(body, searchText, eventText, angle, visibility):
     name = body.name
-    searchTime = ParseDate(searchText)
-    eventTime = ParseDate(eventText)
+    searchTime = astronomy.Time.Parse(searchText)
+    eventTime = astronomy.Time.Parse(eventText)
     evt = astronomy.SearchMaxElongation(body, searchTime)
     if evt is None:
         print('TestMaxElong({} {}): SearchMaxElongation failed.'.format(name, searchText))
@@ -551,7 +540,7 @@ def CheckSaturn():
     ]
     error = 0
     for (dtext, mag, tilt) in data:
-        time = ParseDate(dtext)
+        time = astronomy.Time.Parse(dtext)
         illum = astronomy.Illumination(astronomy.Body.Saturn, time)
         print('Saturn: date={}  calc mag={:12.8f}  ring_tilt={:12.8f}'.format(dtext, illum.mag, illum.ring_tilt))
         mag_diff = abs(illum.mag - mag)
@@ -580,8 +569,8 @@ def TestMaxMag(body, filename):
             line = line.strip()
             tokenlist = line.split()
             if len(tokenlist) == 5:
-                time1 = ParseDate(tokenlist[0])
-                time2 = ParseDate(tokenlist[1])
+                time1 = astronomy.Time.Parse(tokenlist[0])
+                time2 = astronomy.Time.Parse(tokenlist[1])
                 if time1 and time2:
                     center_time = time1.AddDays(0.5*(time2.ut - time1.ut))
                     correct_mag = float(tokenlist[4])
@@ -727,7 +716,7 @@ def LunarApsis(filename):
             if len(tokenlist) != 3:
                 print('LunarApsis({} line {}): invalid data format'.format(filename, lnum))
                 return 1
-            correct_time = ParseDate(tokenlist[1])
+            correct_time = astronomy.Time.Parse(tokenlist[1])
             if not correct_time:
                 print('LunarApsis({} line {}): invalid time'.format(filename, lnum))
                 return 1
@@ -747,12 +736,6 @@ def LunarApsis(filename):
             max_minutes = max(max_minutes, diff_minutes)
             max_km = max(max_km, diff_km)
     print('LunarApsis: found {} events, max time error = {:0.3f} minutes, max distance error = {:0.3f} km.'.format(lnum, max_minutes, max_km))
-    return 0
-
-
-def Test_Apsis():
-    if 0 != LunarApsis('apsides/moon.txt'):
-        return 1
     return 0
 
 #-----------------------------------------------------------------------------------------------------------
@@ -1051,6 +1034,78 @@ def Test_Refraction():
 
 #-----------------------------------------------------------------------------------------------------------
 
+def Test_PlanetApsis():
+    degree_threshold = 0.1
+    start_time = astronomy.Time.Make(1700, 1, 1, 0, 0, 0)
+    found_bad_planet = False
+    body = astronomy.Body.Mercury
+    while body <= astronomy.Body.Pluto:
+        count = 1
+        period = astronomy._PlanetOrbitalPeriod[body]
+        filename = os.path.join('apsides', 'apsis_{}.txt'.format(int(body)))
+        min_interval = -1.0
+        max_diff_days = 0.0
+        max_dist_ratio = 0.0
+        apsis = astronomy.SearchPlanetApsis(body, start_time)
+        with open(filename, 'rt') as infile:
+            for line in infile:
+                token = line.split()
+                if len(token) != 3:
+                    print('Test_PlanetApsis({} line {}): Invalid data format: {} tokens'.format(filename, count, len(token)))
+                    return 1
+                expected_kind = int(token[0])
+                expected_time = astronomy.Time.Parse(token[1])
+                expected_distance = float(token[2])
+                if apsis.kind != expected_kind:
+                    print('Test_PlanetApsis({} line {}): WRONG APSIS KIND: expected {}, found {}'.format(filename, count, expected_kind, apsis.kind))
+                    return 1
+                diff_days = abs(expected_time.tt - apsis.time.tt)
+                max_diff_days = max(max_diff_days, diff_days)
+                diff_degrees = (diff_days / period) * 360
+                if diff_degrees > degree_threshold:
+                    found_bad_planet = True
+                diff_dist_ratio = abs(expected_distance - apsis.dist_au) / expected_distance
+                max_dist_ratio = max(max_dist_ratio, diff_dist_ratio)
+                if diff_dist_ratio > 1.0e-4:
+                    print('Test_PlanetApsis({} line {}): distance ratio {} is too large.'.format(filename, count, diff_dist_ratio))
+                    return 1
+
+                # Calculate the next apsis.
+                prev_time = apsis.time
+                try:
+                    apsis = astronomy.NextPlanetApsis(body, apsis)
+                except astronomy.BadTimeError:
+                    if body != astronomy.Body.Pluto:
+                        raise
+                    break   # It is OK for us to go beyond Pluto calculation's time domain.
+                count += 1
+                interval = apsis.time.tt - prev_time.tt
+                if min_interval < 0.0:
+                    min_interval = max_interval = interval
+                else:
+                    min_interval = min(min_interval, interval)
+                    max_interval = max(max_interval, interval)
+            if count < 2:
+                print('Test_PlanetApsis: FAILED to find apsides for {}'.format(body))
+                return 1
+            print('Test_PlanetApsis: {:4d} apsides for {:<9s} -- intervals: min={:0.2f}, max={:0.2f}, ratio={:0.6f}; max day={:0.3f}, degrees={:0.3f}, dist ratio={:0.6f}'.format(
+                count,
+                body.name,
+                min_interval, max_interval, max_interval / min_interval,
+                max_diff_days,
+                (max_diff_days / period) * 360.0,
+                max_dist_ratio
+            ))
+        body = astronomy.Body(body + 1)
+
+    if found_bad_planet:
+        print('Test_PlanetApsis: FAIL - planet(s) exceeded angular threshold ({} degrees)'.format(degree_threshold))
+        return 1
+    print('Test_PlanetApsis: PASS')
+    return 0
+
+#-----------------------------------------------------------------------------------------------------------
+
 if __name__ == '__main__':
     if len(sys.argv) == 2:
         if sys.argv[1] == 'time':
@@ -1066,8 +1121,10 @@ if __name__ == '__main__':
             sys.exit(Test_Elongation())
         if sys.argv[1] == 'magnitude':
             sys.exit(Test_Magnitude())
-        if sys.argv[1] == 'apsis':
-            sys.exit(Test_Apsis())
+        if sys.argv[1] == 'lunar_apsis':
+            sys.exit(LunarApsis('apsides/moon.txt'))
+        if sys.argv[1] == 'planet_apsis':
+            sys.exit(Test_PlanetApsis())
         if sys.argv[1] == 'issue46':
             sys.exit(Test_Issue46())
         if sys.argv[1] == 'rotation':

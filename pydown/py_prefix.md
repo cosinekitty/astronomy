@@ -59,6 +59,13 @@ To get started quickly, here are some [examples](../../demo/python/).
 | [SearchLunarApsis](#SearchLunarApsis) | Finds the next perigee or apogee of the Moon after a specified date. |
 | [NextLunarApsis](#NextLunarApsis) | Given an already-found apsis, finds the next perigee or apogee of the Moon. |
 
+### Planet perihelion and aphelion
+
+| Function | Description |
+| -------- | ----------- |
+| [SearchPlanetApsis](#SearchPlanetApsis) | Finds the next perihelion or aphelion of a planet after a specified date. |
+| [NextPlanetApsis](#NextPlanetApsis) | Given an already-found apsis, finds the next perihelion or aphelion of a planet. |
+
 ### Visual magnitude and elongation
 
 | Function | Description |

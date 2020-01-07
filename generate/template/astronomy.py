@@ -53,6 +53,7 @@ _SECONDS_PER_DAY = 24.0 * 3600.0
 _SOLAR_DAYS_PER_SIDEREAL_DAY = 0.9972695717592592
 _MEAN_SYNODIC_MONTH = 29.530588
 _EARTH_ORBITAL_PERIOD = 365.256
+_NEPTUNE_ORBITAL_PERIOD = 60189.0
 _REFRACTION_NEAR_HORIZON = 34.0 / 60.0
 _SUN_RADIUS_AU  = 4.6505e-3
 _MOON_RADIUS_AU = 1.15717e-5
@@ -171,7 +172,7 @@ _PlanetOrbitalPeriod = [
     4332.589,
     10759.22,
     30685.4,
-    60189.0,
+    _NEPTUNE_ORBITAL_PERIOD,
     90560.0
 ]
 
@@ -199,6 +200,11 @@ class BadVectorError(Error):
     """A vector magnitude is too small to have a direction in space."""
     def __init__(self):
         Error.__init__(self, 'Vector is too small to have a direction.')
+
+class BadTimeError(Error):
+    """Cannot calculate Pluto position for this date/time."""
+    def __init__(self, time):
+        Error.__init__(self, 'Cannot calculate Pluto position for time: {}'.format(time))
 
 class InternalError(Error):
     """An internal error occured that should be reported as a bug.
@@ -966,16 +972,17 @@ _vsop = [
     $ASTRO_LIST_VSOP(Neptune),
 ]
 
+def _VsopFormula(formula, t):
+    tpower = 1.0
+    coord = 0.0
+    for series in formula:
+        coord += tpower * sum(A * math.cos(B + C*t) for (A, B, C) in series)
+        tpower *= t
+    return coord
+
 def _CalcVsop(model, time):
-    spher = []
     t = time.tt / 365250.0
-    for formula in model:
-        tpower = 1.0
-        coord = 0.0
-        for series in formula:
-            coord += tpower * sum(A * math.cos(B + C*t) for (A, B, C) in series)
-            tpower *= t
-        spher.append(coord)
+    spher = [_VsopFormula(formula, t) for formula in model]
 
     # Convert spherical coordinates to ecliptic cartesian coordinates.
     r_coslat = spher[2] * math.cos(spher[1])
@@ -988,6 +995,12 @@ def _CalcVsop(model, time):
     vy = -0.000000479966*ex + 0.917482137087*ey - 0.397776982902*ez
     vz = 0.397776982902*ey + 0.917482137087*ez
     return Vector(vx, vy, vz, time)
+
+def _VsopHelioDistance(model, time):
+    # The caller only wants to know the distance between the planet and the Sun.
+    # So we only need to calculate the radial component of the spherical coordinates.
+    # There is no need to translate coordinates.
+    return _VsopFormula(model[2], time.tt / 365250.0)
 
 def _CalcEarth(time):
     return _CalcVsop(_vsop[Body.Earth], time)
@@ -1020,7 +1033,7 @@ def _CalcChebyshev(model, time):
                     p1 = p2
                 pos.append(sum - coeff[0][d]/2)
             return Vector(pos[0], pos[1], pos[2], time)
-    raise Error('Cannot extrapolate Chebyshev model for given Terrestrial Time: {}'.format(time.tt))
+    raise BadTimeError(time)
 
 # END CHEBYSHEV
 #----------------------------------------------------------------------------
@@ -1244,7 +1257,7 @@ def HelioVector(body, time):
     if body == Body.Pluto:
         return _CalcChebyshev(_pluto, time)
 
-    if 0 <= body <= len(_vsop):
+    if 0 <= body < len(_vsop):
         return _CalcVsop(_vsop[body], time)
 
     if body == Body.Sun:
@@ -1256,6 +1269,37 @@ def HelioVector(body, time):
         return Vector(e.x+m.x, e.y+m.y, e.z+m.z, time)
 
     raise InvalidBodyError()
+
+
+def HelioDistance(body, time):
+    """Calculates the distance between a body and the Sun at a given time.
+
+    Given a date and time, this function calculates the distance between
+    the center of `body` and the center of the Sun.
+    For the planets Mercury through Neptune, this function is significantly
+    more efficient than calling #HelioVector followed by taking the length
+    of the resulting vector.
+
+    Parameters
+    ----------
+    body : Body
+        A body for which to calculate a heliocentric distance:
+        the Sun, Moon, or any of the planets.
+    time : Time
+        The date and time for which to calculate the heliocentric distance.
+
+    Returns
+    -------
+    float
+        The heliocentric distance in AU.
+    """
+    if body == Body.Sun:
+        return 0.0
+
+    if 0 <= body < len(_vsop):
+        return _VsopHelioDistance(_vsop[body], time)
+
+    return HelioVector(body, time).Length()
 
 
 def GeoVector(body, time, aberration):
@@ -2921,7 +2965,7 @@ def Seasons(year):
 def _MoonDistance(time):
     return _CalcMoon(time).distance_au
 
-def _distance_slope(direction, time):
+def _moon_distance_slope(direction, time):
     dt = 0.001
     t1 = time.AddDays(-dt/2.0)
     t2 = time.AddDays(+dt/2.0)
@@ -3008,11 +3052,11 @@ def SearchLunarApsis(startTime):
     """
     increment = 5.0     # number of days to skip on each iteration
     t1 = startTime
-    m1 = _distance_slope(+1, t1)
+    m1 = _moon_distance_slope(+1, t1)
     iter = 0
     while iter * increment < 2.0 * _MEAN_SYNODIC_MONTH:
         t2 = t1.AddDays(increment)
-        m2 = _distance_slope(+1, t2)
+        m2 = _moon_distance_slope(+1, t2)
         if m1 * m2 <= 0.0:
             # There is a change of slope polarity within the time range [t1, t2].
             # Therefore this time range contains an apsis.
@@ -3020,12 +3064,12 @@ def SearchLunarApsis(startTime):
             if m1 < 0.0 or m2 > 0.0:
                 # We found a minimum-distance event: perigee.
                 # Search the time range for the time when the slope goes from negative to positive.
-                apsis_time = Search(_distance_slope, +1, t1, t2, 1.0)
+                apsis_time = Search(_moon_distance_slope, +1, t1, t2, 1.0)
                 kind = ApsisKind.Pericenter
             elif m1 > 0.0 or m2 < 0.0:
                 # We found a maximum-distance event: apogee.
                 # Search the time range for the time when the slope goes from positive to negative.
-                apsis_time = Search(_distance_slope, -1, t1, t2, 1.0)
+                apsis_time = Search(_moon_distance_slope, -1, t1, t2, 1.0)
                 kind = ApsisKind.Apocenter
             else:
                 # This should never happen. It should not be possible for both slopes to be zero.
@@ -3072,9 +3116,188 @@ def NextLunarApsis(apsis):
     if apsis.kind not in [ApsisKind.Apocenter, ApsisKind.Pericenter]:
         raise Error('Parameter "apsis" contains an invalid "kind" value.')
     if next.kind + apsis.kind != 1:
-        raise InternalError()
+        raise InternalError()   # should have found opposite apsis kind
     return next
 
+
+def _planet_distance_slope(context, time):
+    (direction, body) = context
+    dt = 0.001
+    t1 = time.AddDays(-dt/2.0)
+    t2 = time.AddDays(+dt/2.0)
+    dist1 = HelioDistance(body, t1)
+    dist2 = HelioDistance(body, t2)
+    return direction * (dist2 - dist1) / dt
+
+
+def SearchPlanetApsis(body, startTime):
+    """Finds the next planet perihelion or aphelion, after a given time.
+
+    Given a date and time to start the search in `startTime`, this function finds the
+    next date and time that the center of the specified planet reaches the closest or farthest point
+    in its orbit with respect to the center of the Sun, whichever comes first after `startTime`.
+
+    The closest point is called *perihelion* and the farthest point is called *aphelion*.
+    The word *apsis* refers to either event.
+
+    To iterate through consecutive alternating perihelion and aphelion events,
+    call `SearchPlanetApsis` once, then use the return value to call #NextPlanetApsis.
+    After that, keep feeding the previous return value from `NextPlanetApsis`
+    into another call of `NextPlanetApsis` as many times as desired.
+
+    Parameters
+    ----------
+    body : Body
+        The planet for which to find the next perihelion/aphelion event.
+        Not allowed to be `Body.Sun` or `Body.Moon`.
+    startTime : Time
+        The date and time at which to start searching for the next perihelion or aphelion.
+
+    Returns
+    -------
+    Apsis
+    """
+    if body == Body.Neptune:
+        return _SearchNeptuneApsis(startTime)
+    positive_slope = (+1.0, body)
+    negative_slope = (-1.0, body)
+    orbit_period_days = _PlanetOrbitalPeriod[body]
+    increment = orbit_period_days / 6.0
+    t1 = startTime
+    m1 = _planet_distance_slope(positive_slope, t1)
+    iter = 0
+    while iter * increment < 2 * orbit_period_days:
+        t2 = t1.AddDays(increment)
+        m2 = _planet_distance_slope(positive_slope, t2)
+        if m1 * m2 <= 0.0:
+            # There is a change of slope polarity within the time range [t1, t2].
+            # Therefore this time range contains an apsis.
+            # Figure out whether it is perihelion or aphelion.
+            if m1 < 0.0 or m2 > 0.0:
+                # We found a minimum-distance event: perihelion.
+                # Search the time range for the time when the slope goes from negative to positive.
+                context = positive_slope
+                kind = ApsisKind.Pericenter
+            elif m1 > 0.0 or m2 < 0.0:
+                # We found a maximum-distance event: aphelion.
+                # Search the time range for the time when the slope goes from positive to negative.
+                context = negative_slope
+                kind = ApsisKind.Apocenter
+            else:
+                raise InternalError()   # at least one of the planet distance slopes should have been nonzero
+            search = Search(_planet_distance_slope, context, t1, t2, 1.0)
+            if search is None:
+                raise InternalError()   # failed to find where planet distance slope passed through zero
+
+            dist = HelioDistance(body, search)
+            return Apsis(search, kind, dist)
+        t1 = t2
+        m1 = m2
+        iter += 1
+    raise InternalError()   # should have found planet apsis within 2 planet orbits
+
+
+def NextPlanetApsis(body, apsis):
+    """Finds the next planetary perihelion or aphelion event in a series.
+
+    This function requires an #Apsis value obtained from a call
+    to #SearchPlanetApsis or `NextPlanetApsis`.
+    Given an aphelion event, this function finds the next perihelion event, and vice versa.
+    See #SearchPlanetApsis for more details.
+
+    Parameters
+    ----------
+    body : Body
+        The planet for which to find the next perihelion/aphelion event.
+        Not allowed to be `Body.Sun` or `Body.Moon`.
+        Must match the body passed into the call that produced the `apsis` parameter.
+    apsis : Apsis
+        An apsis event obtained from a call to #SearchPlanetApsis or `NextPlanetApsis`.
+
+    Returns
+    -------
+    Apsis
+    """
+    if apsis.kind not in [ApsisKind.Apocenter, ApsisKind.Pericenter]:
+        raise Error('Parameter "apsis" contains an invalid "kind" value.')
+    # Skip 1/4 of an orbit before starting search again.
+    skip = 0.25 * _PlanetOrbitalPeriod[body]
+    time = apsis.time.AddDays(skip)
+    next = SearchPlanetApsis(body, time)
+    # Verify that we found the opposite apsis from the previous one.
+    if next.kind + apsis.kind != 1:
+        raise InternalError()   # should have found opposite planetary apsis type
+    return next
+
+def _NeptuneHelioDistance(time):
+    return _VsopHelioDistance(_vsop[Body.Neptune], time)
+
+def _NeptuneExtreme(kind, start_time, dayspan):
+    direction = +1.0 if (kind == ApsisKind.Apocenter) else -1.0
+    npoints = 10
+    while True:
+        interval = dayspan / (npoints - 1)
+        # Iterate until uncertainty is less than one minute.
+        if interval < 1/1440:
+            apsis_time = start_time.AddDays(interval/2)
+            dist_au = _NeptuneHelioDistance(apsis_time)
+            return Apsis(apsis_time, kind, dist_au)
+        for i in range(npoints):
+            time = start_time.AddDays(i * interval)
+            dist = direction * _NeptuneHelioDistance(time)
+            if i==0 or dist > best_dist:
+                best_i = i
+                best_dist = dist
+        # Narrow in on the extreme point.
+        start_time = start_time.AddDays((best_i - 1) * interval)
+        dayspan = 2 * interval
+
+def _SearchNeptuneApsis(startTime):
+    # Neptune is a special case for two reasons:
+    # 1. Its orbit is nearly circular (low orbital eccentricity).
+    # 2. It is so distant from the Sun that the orbital period is very long.
+    # Put together, this causes wobbling of the Sun around the Solar System Barycenter (SSB)
+    # to be so significant that there are 3 local minima in the distance-vs-time curve
+    # near each apsis. Therefore, unlike for other planets, we can't use an optimized
+    # algorithm for finding dr/dt = 0.
+    # Instead, we use a dumb, brute-force algorithm of sampling and finding min/max
+    # heliocentric distance.
+    #
+    # Rewind approximately 30 degrees in the orbit,
+    # then search forward for 270 degrees.
+    # This is a very cautious way to prevent missing an apsis.
+    # Typically we will find two apsides, and we pick whichever
+    # apsis is ealier, but after startTime.
+    # Sample points around this orbital arc and find when the distance
+    # is greatest and smallest.
+    t1 = startTime.AddDays(_NEPTUNE_ORBITAL_PERIOD * ( -30 / 360))
+    t2 = startTime.AddDays(_NEPTUNE_ORBITAL_PERIOD * (+270 / 360))
+    t_min = t_max = t1
+    npoints = 1000
+    interval = (t2.ut - t1.ut) / (npoints - 1)
+
+    for i in range(npoints):
+        time = t1.AddDays(i * interval)
+        dist = _NeptuneHelioDistance(time)
+        if i == 0:
+            min_dist = max_dist = dist
+        else:
+            if dist > max_dist:
+                max_dist = dist
+                t_max = time
+            if dist < min_dist:
+                min_dist = dist
+                t_min = time
+
+    perihelion = _NeptuneExtreme(ApsisKind.Pericenter, t_min.AddDays(-2*interval), 4*interval)
+    aphelion = _NeptuneExtreme(ApsisKind.Apocenter, t_max.AddDays(-2*interval), 4*interval)
+    if perihelion.time.tt >= startTime.tt:
+        if startTime.tt <= aphelion.time.tt < perihelion.time.tt:
+            return aphelion
+        return perihelion
+    if aphelion.time.tt >= startTime.tt:
+        return aphelion
+    raise InternalError()   # failed to find Neptune apsis
 
 def VectorFromSphere(sphere, time):
     """Converts spherical coordinates to Cartesian coordinates.
