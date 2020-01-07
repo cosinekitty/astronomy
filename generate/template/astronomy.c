@@ -4127,7 +4127,7 @@ static astro_apsis_t NeptuneExtreme(astro_apsis_kind_t kind, astro_time_t start_
 
 static astro_apsis_t SearchNeptuneApsis(astro_time_t startTime)
 {
-    const int npoints = 1000;
+    const int npoints = 100;
     int i;
     astro_time_t t1, t2, time, t_min, t_max;
     double dist, max_dist, min_dist;

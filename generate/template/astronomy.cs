@@ -3705,7 +3705,7 @@ $ASTRO_CSHARP_CHEBYSHEV(8);
 
         private static ApsisInfo SearchNeptuneApsis(AstroTime startTime)
         {
-            const int npoints = 1000;
+            const int npoints = 100;
             int i;
             var perihelion = new ApsisInfo();
             var aphelion = new ApsisInfo();

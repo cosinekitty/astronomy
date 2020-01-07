@@ -3273,7 +3273,7 @@ def _SearchNeptuneApsis(startTime):
     t1 = startTime.AddDays(_NEPTUNE_ORBITAL_PERIOD * ( -30 / 360))
     t2 = startTime.AddDays(_NEPTUNE_ORBITAL_PERIOD * (+270 / 360))
     t_min = t_max = t1
-    npoints = 1000
+    npoints = 100
     interval = (t2.ut - t1.ut) / (npoints - 1)
 
     for i in range(npoints):
