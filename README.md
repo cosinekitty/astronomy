@@ -84,7 +84,7 @@ Calculations are also verified to be identical among all the supported programmi
 
 - Determines apparent visual magnitudes of all the supported celestial bodies.
 
-- Predicts dates of planetary conjunctions, oppositions, perihelia, and aphelia.
+- Predicts dates of planetary conjunctions, oppositions, and apsides.
 
 - Predicts dates of Venus' peak visual magnitude.
 
