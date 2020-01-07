@@ -47,6 +47,13 @@ and some [Node.js examples](../../demo/nodejs/).
 | [SearchLunarApsis](#Astronomy.SearchLunarApsis) | Finds the next perigee or apogee of the Moon after a specified date. |
 | [NextLunarApsis](#Astronomy.NextLunarApsis) | Given an already-found apsis, find the next perigee or apogee of the Moon. |
 
+### Planet perihelion and aphelion
+
+| Function | Description |
+| -------- | ----------- |
+| [SearchPlanetApsis](#Astronomy.SearchPlanetApsis) | Finds the next perihelion or aphelion of a planet after a specified date. |
+| [NextPlanetApsis](#Astronomy.NextPlanetApsis) | Given an already-found apsis, find the next perihelion or aphelion of a planet. |
+
 ### Visual magnitude and elongation
 
 | Function | Description |
@@ -128,7 +135,7 @@ Most users can safely ignore this class.
 
 | Name | Type | Description |
 | --- | --- | --- |
-| search_func | <code>number</code> | Number of times [Search](#Astronomy.Search) called a <code>func</code> passed to it. |
+| search_func | <code>number</code> | Number of times [Search](#Astronomy.Search) called a `func` passed to it. |
 | search | <code>number</code> | Number of times [Search](#Astronomy.Search) was called. |
 | longitude_search | <code>number</code> | Number of times [SearchRelativeLongitude](#Astronomy.SearchRelativeLongitude) was called. |
 | longitude_iter | <code>number</code> | The total number of iterations executed inside [SearchRelativeLongitude](#Astronomy.SearchRelativeLongitude). |
@@ -142,7 +149,7 @@ Most users can safely ignore this class.
 <a name="Astronomy.PerformanceInfo+Clone"></a>
 
 #### performanceInfo.Clone() ⇒ [<code>PerformanceInfo</code>](#Astronomy.PerformanceInfo)
-Creates a copy of a <code>PerformanceInfo</code> object.
+Creates a copy of a `PerformanceInfo` object.
 This allows us to create a snapshot of the performance metrics
 that can be handed back to outside code that will not change
 as the Astronomy code continues to execute and change the metrics.
@@ -159,14 +166,14 @@ Objects of this type are used throughout the internals
 of the Astronomy library, and are included in certain return objects.
 The constructor is not accessible outside the Astronomy library;
 outside users should call the [MakeTime](#Astronomy.MakeTime) function
-to create an <code>AstroTime</code> object.
+to create an `AstroTime` object.
 
 **Kind**: static class of [<code>Astronomy</code>](#Astronomy)  
 **Properties**
 
 | Name | Type | Description |
 | --- | --- | --- |
-| date | <code>Date</code> | The JavaScript Date object for the given date and time.      This Date corresponds to the numeric day value stored in the <code>ut</code> property. |
+| date | <code>Date</code> | The JavaScript Date object for the given date and time.      This Date corresponds to the numeric day value stored in the `ut` property. |
 | ut | <code>number</code> | Universal Time (UT1/UTC) in fractional days since the J2000 epoch.      Universal Time represents time measured with respect to the Earth's rotation,      tracking mean solar days.      The Astronomy library approximates UT1 and UTC as being the same thing.      This gives sufficient accuracy for the precision requirements of this project. |
 | tt | <code>number</code> | Terrestrial Time in fractional days since the J2000 epoch.      TT represents a continuously flowing ephemeris timescale independent of      any variations of the Earth's rotation, and is adjusted from UT      using historical and predictive models of those variations. |
 
@@ -193,13 +200,9 @@ to create an <code>AstroTime</code> object.
 <a name="Astronomy.AstroTime+toString"></a>
 
 #### astroTime.toString() ⇒ <code>string</code>
-Formats an <code>AstroTime</code> object as an
-<a href="https://en.wikipedia.org/wiki/ISO_8601">ISO 8601</a>
+Formats an `AstroTime` object as an [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601)
 date/time string in UTC, to millisecond resolution.
-Example:
-<pre>
-<code>2018-08-17T17:22:04.050Z</code>
-</pre>
+Example: `2018-08-17T17:22:04.050Z`
 
 **Kind**: instance method of [<code>AstroTime</code>](#Astronomy.AstroTime)  
 
@@ -208,8 +211,8 @@ Example:
 <a name="Astronomy.AstroTime+AddDays"></a>
 
 #### astroTime.AddDays(days) ⇒ [<code>AstroTime</code>](#Astronomy.AstroTime)
-Returns a new <code>AstroTime</code> object adjusted by the floating point number of days.
-Does NOT modify the original <code>AstroTime</code> object.
+Returns a new `AstroTime` object adjusted by the floating point number of days.
+Does NOT modify the original `AstroTime` object.
 
 **Kind**: instance method of [<code>AstroTime</code>](#Astronomy.AstroTime)  
 
@@ -314,8 +317,8 @@ those found inside a corresponding [EquatorialCoordinates](#Astronomy.Equatorial
 | --- | --- | --- |
 | azimuth | <code>number</code> | A horizontal compass direction angle in degrees measured starting at north      and increasing positively toward the east.      The value is in the range [0, 360).      North = 0, east = 90, south = 180, west = 270. |
 | altitude | <code>number</code> | A vertical angle in degrees above (positive) or below (negative) the horizon.      The value is in the range [-90, +90].      The altitude angle is optionally adjusted upward due to atmospheric refraction. |
-| ra | <code>number</code> | The right ascension of the celestial body in sidereal hours.      The value is in the reange [0, 24).      If <code>altitude</code> was adjusted for atmospheric reaction, <code>ra</code>      is likewise adjusted. |
-| dec | <code>number</code> | The declination of of the celestial body in degrees.      The value in the range [-90, +90].      If <code>altitude</code> was adjusted for atmospheric reaction, <code>dec</code>      is likewise adjusted. |
+| ra | <code>number</code> | The right ascension of the celestial body in sidereal hours.      The value is in the reange [0, 24).      If `altitude` was adjusted for atmospheric reaction, `ra`      is likewise adjusted. |
+| dec | <code>number</code> | The declination of of the celestial body in degrees.      The value in the range [-90, +90].      If `altitude` was adjusted for atmospheric reaction, `dec`      is likewise adjusted. |
 
 
 * * *
@@ -327,9 +330,9 @@ Holds ecliptic coordinates of a celestial body.
 The origin and date of the coordinate system may vary depending on the caller's usage.
 In general, ecliptic coordinates are measured with respect to the mean plane of the Earth's
 orbit around the Sun.
-Includes Cartesian coordinates <code>(ex, ey, ez)</code> measured in
+Includes Cartesian coordinates `(ex, ey, ez)` measured in
 <a href="https://en.wikipedia.org/wiki/Astronomical_unit">astronomical units</a> (AU)
-and spherical coordinates <code>(elon, elat)</code> measured in degrees.
+and spherical coordinates `(elon, elat)` measured in degrees.
 
 **Kind**: static class of [<code>Astronomy</code>](#Astronomy)  
 **Properties**
@@ -374,13 +377,13 @@ Contains information about the apparent brightness and sunlit phase of a celesti
 | --- | --- | --- |
 | time | [<code>AstroTime</code>](#Astronomy.AstroTime) | The date and time pertaining to the other calculated values in this object. |
 | mag | <code>number</code> | The <a href="https://en.wikipedia.org/wiki/Apparent_magnitude">apparent visual magnitude</a> of the celestial body. |
-| phase_angle | <code>number</code> | The angle in degrees as seen from the center of the celestial body between the Sun and the Earth.      The value is always in the range 0 to 180.      The phase angle provides a measure of what fraction of the body's face appears      illuminated by the Sun as seen from the Earth.      When the observed body is the Sun, the <code>phase</code> property is set to 0,      although this has no physical meaning because the Sun emits, rather than reflects, light.      When the phase is near 0 degrees, the body appears "full".      When it is 90 degrees, the body appears "half full".      And when it is 180 degrees, the body appears "new" and is very difficult to see      because it is both dim and lost in the Sun's glare as seen from the Earth. |
-| phase_fraction | <code>number</code> | The fraction of the body's face that is illuminated by the Sun, as seen from the Earth.      Calculated from <code>phase_angle</code> for convenience.      This value ranges from 0 to 1. |
+| phase_angle | <code>number</code> | The angle in degrees as seen from the center of the celestial body between the Sun and the Earth.      The value is always in the range 0 to 180.      The phase angle provides a measure of what fraction of the body's face appears      illuminated by the Sun as seen from the Earth.      When the observed body is the Sun, the `phase` property is set to 0,      although this has no physical meaning because the Sun emits, rather than reflects, light.      When the phase is near 0 degrees, the body appears "full".      When it is 90 degrees, the body appears "half full".      And when it is 180 degrees, the body appears "new" and is very difficult to see      because it is both dim and lost in the Sun's glare as seen from the Earth. |
+| phase_fraction | <code>number</code> | The fraction of the body's face that is illuminated by the Sun, as seen from the Earth.      Calculated from `phase_angle` for convenience.      This value ranges from 0 to 1. |
 | helio_dist | <code>number</code> | The distance between the center of the Sun and the center of the body in      <a href="https://en.wikipedia.org/wiki/Astronomical_unit">astronomical units</a> (AU). |
 | geo_dist | <code>number</code> | The distance between the center of the Earth and the center of the body in AU. |
 | gc | [<code>Vector</code>](#Astronomy.Vector) | Geocentric coordinates: the 3D vector from the center of the Earth to the center of the body.      The components are in expressed in AU and are oriented with respect to the J2000 equatorial plane. |
-| hc | [<code>Vector</code>](#Astronomy.Vector) | Heliocentric coordinates: The 3D vector from the center of the Sun to the center of the body.      Like <code>gc</code>, <code>hc</code> is expressed in AU and oriented with respect      to the J2000 equatorial plane. |
-| ring_tilt | <code>number</code> \| <code>null</code> | For Saturn, this is the angular tilt of the planet's rings in degrees away      from the line of sight from the Earth. When the value is near 0, the rings      appear edge-on from the Earth and are therefore difficult to see.      When <code>ring_tilt</code> approaches its maximum value (about 27 degrees),      the rings appear widest and brightest from the Earth.      Unlike the <a href="https://ssd.jpl.nasa.gov/horizons.cgi">JPL Horizons</a> online tool,      this library includes the effect of the ring tilt angle in the calculated value      for Saturn's visual magnitude.      For all bodies other than Saturn, the value of <code>ring_tilt</code> is <code>null</code>. |
+| hc | [<code>Vector</code>](#Astronomy.Vector) | Heliocentric coordinates: The 3D vector from the center of the Sun to the center of the body.      Like `gc`, `hc` is expressed in AU and oriented with respect      to the J2000 equatorial plane. |
+| ring_tilt | <code>number</code> \| <code>null</code> | For Saturn, this is the angular tilt of the planet's rings in degrees away      from the line of sight from the Earth. When the value is near 0, the rings      appear edge-on from the Earth and are therefore difficult to see.      When `ring_tilt` approaches its maximum value (about 27 degrees),      the rings appear widest and brightest from the Earth.      Unlike the <a href="https://ssd.jpl.nasa.gov/horizons.cgi">JPL Horizons</a> online tool,      this library includes the effect of the ring tilt angle in the calculated value      for Saturn's visual magnitude.      For all bodies other than Saturn, the value of `ring_tilt` is `null`. |
 
 
 * * *
@@ -414,7 +417,7 @@ location on the surface of the Earth.
 | Name | Type | Description |
 | --- | --- | --- |
 | time | [<code>AstroTime</code>](#Astronomy.AstroTime) | The date and time of the celestial body reaching the hour angle. |
-| hor | [<code>HorizontalCoordinates</code>](#Astronomy.HorizontalCoordinates) | Topocentric horizontal coordinates for the body      at the time indicated by the <code>time</code> property. |
+| hor | [<code>HorizontalCoordinates</code>](#Astronomy.HorizontalCoordinates) | Topocentric horizontal coordinates for the body      at the time indicated by the `time` property. |
 
 
 * * *
@@ -452,8 +455,8 @@ and the relative ecliptic longitudes between that body and the Earth as seen fro
 | Name | Type | Description |
 | --- | --- | --- |
 | time | [<code>AstroTime</code>](#Astronomy.AstroTime) | The date and time of the observation. |
-| visibility | <code>string</code> | Either <code>"morning"</code> or <code>"evening"</code>,      indicating when the body is most easily seen. |
-| elongation | <code>number</code> | The angle in degrees, as seen from the center of the Earth,      of the apparent separation between the body and the Sun.      This angle is measured in 3D space and is not projected onto the ecliptic plane.      When <code>elongation</code> is less than a few degrees, the body is very      difficult to see from the Earth because it is lost in the Sun's glare.      The elongation is always in the range [0, 180]. |
+| visibility | <code>string</code> | Either `"morning"` or `"evening"`,      indicating when the body is most easily seen. |
+| elongation | <code>number</code> | The angle in degrees, as seen from the center of the Earth,      of the apparent separation between the body and the Sun.      This angle is measured in 3D space and is not projected onto the ecliptic plane.      When `elongation` is less than a few degrees, the body is very      difficult to see from the Earth because it is lost in the Sun's glare.      The elongation is always in the range [0, 180]. |
 | ecliptic_separation | <code>number</code> | The absolute value of the difference between the body's ecliptic longitude      and the Sun's ecliptic longitude, both as seen from the center of the Earth.      This angle measures around the plane of the Earth's orbit (the ecliptic),      and ignores how far above or below that plane the body is.      The ecliptic separation is measured in degrees and is always in the range [0, 180]. |
 
 
@@ -477,7 +480,7 @@ For the Moon orbiting the Earth, this is a perigee or apogee, respectively.
 | Name | Type | Description |
 | --- | --- | --- |
 | time | [<code>AstroTime</code>](#Astronomy.AstroTime) | The date and time of the apsis. |
-| kind | <code>number</code> | For a closest approach (perigee or perihelion), <code>kind</code> is 0.      For a farthest distance event (apogee or aphelion), <code>kind</code> is 1. |
+| kind | <code>number</code> | For a closest approach (perigee or perihelion), `kind` is 0.      For a farthest distance event (apogee or aphelion), `kind` is 1. |
 | dist_au | <code>number</code> | The distance between the centers of the two bodies in astronomical units (AU). |
 | dist_km | <code>number</code> | The distance between the centers of the two bodies in kilometers. |
 
@@ -584,7 +587,7 @@ as seen by that observer. Allows optional correction for atmospheric refraction.
 | observer | [<code>Observer</code>](#Astronomy.Observer) | The location of the observer for which to find horizontal coordinates. |
 | ra | <code>number</code> | Right ascension in sidereal hours of the celestial object,      referred to the mean equinox of date for the J2000 epoch. |
 | dec | <code>number</code> | Declination in degrees of the celestial object,      referred to the mean equator of date for the J2000 epoch.      Positive values are north of the celestial equator and negative values are south. |
-| refraction | <code>string</code> | If omitted or has a false-like value (false, null, undefined, etc.)      the calculations are performed without any correction for atmospheric      refraction. If the value is the string <code>"normal"</code>,      uses the recommended refraction correction based on Meeus "Astronomical Algorithms"      with a linear taper more than 1 degree below the horizon. The linear      taper causes the refraction to linearly approach 0 as the altitude of the      body approaches the nadir (-90 degrees).      If the value is the string <code>"jplhor"</code>, uses a JPL Horizons      compatible formula. This is the same algorithm as <code>"normal"</code>,      only without linear tapering; this can result in physically impossible      altitudes of less than -90 degrees, which may cause problems for some applications.      (The <code>"jplhor"</code> option was created for unit testing against data      generated by JPL Horizons, and is otherwise not recommended for use.) |
+| refraction | <code>string</code> | If omitted or has a false-like value (false, null, undefined, etc.)      the calculations are performed without any correction for atmospheric      refraction. If the value is the string `"normal"`,      uses the recommended refraction correction based on Meeus "Astronomical Algorithms"      with a linear taper more than 1 degree below the horizon. The linear      taper causes the refraction to linearly approach 0 as the altitude of the      body approaches the nadir (-90 degrees).      If the value is the string `"jplhor"`, uses a JPL Horizons      compatible formula. This is the same algorithm as `"normal"`,      only without linear tapering; this can result in physically impossible      altitudes of less than -90 degrees, which may cause problems for some applications.      (The `"jplhor"` option was created for unit testing against data      generated by JPL Horizons, and is otherwise not recommended for use.) |
 
 
 * * *
@@ -647,11 +650,11 @@ However, it can have a small effect on the apparent positions of other bodies.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| body | <code>string</code> | The name of the body for which to find equatorial coordinates.      Not allowed to be <code>"Earth"</code>. |
+| body | <code>string</code> | The name of the body for which to find equatorial coordinates.      Not allowed to be `"Earth"`. |
 | date | <code>Date</code> \| <code>number</code> \| <code>Astronomy.Time</code> | Specifies the date and time at which the body is to be observed. |
 | observer | [<code>Observer</code>](#Astronomy.Observer) | The location on the Earth of the observer.      Call [MakeObserver](#Astronomy.MakeObserver) to create an observer object. |
-| ofdate | <code>bool</code> | Pass <code>true</code> to return equatorial coordinates of date,      i.e. corrected for precession and nutation at the given date.      This is needed to get correct horizontal coordinates when you call      [Horizon](#Astronomy.Horizon).      Pass <code>false</code> to return equatorial coordinates in the J2000 system. |
-| aberration | <code>bool</code> | Pass <code>true</code> to correct for      <a href="https://en.wikipedia.org/wiki/Aberration_of_light">aberration</a>,      or <code>false</code> to leave uncorrected. |
+| ofdate | <code>bool</code> | Pass `true` to return equatorial coordinates of date,      i.e. corrected for precession and nutation at the given date.      This is needed to get correct horizontal coordinates when you call      [Horizon](#Astronomy.Horizon).      Pass `false` to return equatorial coordinates in the J2000 system. |
+| aberration | <code>bool</code> | Pass `true` to correct for      <a href="https://en.wikipedia.org/wiki/Aberration_of_light">aberration</a>,      or `false` to leave uncorrected. |
 
 
 * * *
@@ -705,7 +708,7 @@ body at a specified time. The position is not corrected for light travel time or
 
 | Param | Type | Description |
 | --- | --- | --- |
-| body | <code>string</code> | One of the strings      <code>"Sun"</code>, <code>"Moon"</code>, <code>"Mercury"</code>, <code>"Venus"</code>,      <code>"Earth"</code>, <code>"Mars"</code>, <code>"Jupiter"</code>, <code>"Saturn"</code>,      <code>"Uranus"</code>, <code>"Neptune"</code>, or <code>"Pluto"</code>. |
+| body | <code>string</code> | One of the strings      `"Sun"`, `"Moon"`, `"Mercury"`, `"Venus"`,      `"Earth"`, `"Mars"`, `"Jupiter"`, `"Saturn"`,      `"Uranus"`, `"Neptune"`, or `"Pluto"`. |
 | date | <code>Date</code> \| <code>number</code> \| [<code>AstroTime</code>](#Astronomy.AstroTime) | The date and time for which the body's position is to be calculated. |
 
 
@@ -719,7 +722,7 @@ Calculates the distance between a body and the Sun at a given time.
 Given a date and time, this function calculates the distance between
 the center of `body` and the center of the Sun.
 For the planets Mercury through Neptune, this function is significantly
-more efficient than calling #Astronomy.HelioVector followed by taking the length
+more efficient than calling [HelioVector](#Astronomy.HelioVector) followed by taking the length
 of the resulting vector.
 
 **Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
@@ -750,9 +753,9 @@ coming from that body.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| body | <code>string</code> | One of the strings      <code>"Sun"</code>, <code>"Moon"</code>, <code>"Mercury"</code>, <code>"Venus"</code>,      <code>"Earth"</code>, <code>"Mars"</code>, <code>"Jupiter"</code>, <code>"Saturn"</code>,      <code>"Uranus"</code>, <code>"Neptune"</code>, or <code>"Pluto"</code>. |
+| body | <code>string</code> | One of the strings      `"Sun"`, `"Moon"`, `"Mercury"`, `"Venus"`,      `"Earth"`, `"Mars"`, `"Jupiter"`, `"Saturn"`,      `"Uranus"`, `"Neptune"`, or `"Pluto"`. |
 | date | <code>Date</code> \| <code>number</code> \| [<code>AstroTime</code>](#Astronomy.AstroTime) | The date and time for which the body's position is to be calculated. |
-| aberration | <code>bool</code> | Pass <code>true</code> to correct for      <a href="https://en.wikipedia.org/wiki/Aberration_of_light">aberration</a>,      or <code>false</code> to leave uncorrected. |
+| aberration | <code>bool</code> | Pass `true` to correct for      <a href="https://en.wikipedia.org/wiki/Aberration_of_light">aberration</a>,      or `false` to leave uncorrected. |
 
 
 * * *
@@ -760,13 +763,13 @@ coming from that body.
 <a name="Astronomy.Search"></a>
 
 ### Astronomy.Search(func, t1, t2, options) ⇒ <code>null</code> \| [<code>AstroTime</code>](#Astronomy.AstroTime)
-Search for next time <i>t</i> (such that <i>t</i> is between <code>t1</code> and <code>t2</code>)
-that <code>func(t)</code> crosses from a negative value to a non-negative value.
-The given function must have "smooth" behavior over the entire inclusive range [<code>t1</code>, <code>t2</code>],
+Search for next time <i>t</i> (such that <i>t</i> is between `t1` and `t2`)
+that `func(t)` crosses from a negative value to a non-negative value.
+The given function must have "smooth" behavior over the entire inclusive range [`t1`, `t2`],
 meaning that it behaves like a continuous differentiable function.
-It is not required that <code>t1</code> &lt; <code>t2</code>; <code>t1</code> &gt; <code>t2</code>
+It is not required that `t1` &lt; `t2`; `t1` &gt; `t2`
 allows searching backward in time.
-Note: <code>t1</code> and <code>t2</code> must be chosen such that there is no possibility
+Note: `t1` and `t2` must be chosen such that there is no possibility
 of more than one zero-crossing (ascending or descending), or it is possible
 that the "wrong" event will be found (i.e. not the first event after t1)
 or even that the function will return null, indicating that no event was found.
@@ -780,7 +783,7 @@ or even that the function will return null, indicating that no event was found.
 | func | [<code>ContinuousFunction</code>](#Astronomy.ContinuousFunction) | The function to find an ascending zero crossing for.      The function must accept a single parameter of type [AstroTime](#Astronomy.AstroTime)      and return a numeric value. |
 | t1 | [<code>AstroTime</code>](#Astronomy.AstroTime) | The lower time bound of a search window. |
 | t2 | [<code>AstroTime</code>](#Astronomy.AstroTime) | The upper time bound of a search window. |
-| options | <code>null</code> \| [<code>SearchOptions</code>](#Astronomy.SearchOptions) | Options that can tune the behavior of the search.      Most callers can omit this argument or pass in <code>null</code>. |
+| options | <code>null</code> \| [<code>SearchOptions</code>](#Astronomy.SearchOptions) | Options that can tune the behavior of the search.      Most callers can omit this argument or pass in `null`. |
 
 
 * * *
@@ -793,21 +796,21 @@ ecliptic longitude, as seen from the center of the Earth, within a given range o
 This function can be used to determine equinoxes and solstices.
 However, it is usually more convenient and efficient to call [Seasons](#Astronomy.Seasons)
 to calculate equinoxes and solstices for a given calendar year.
-<code>SearchSunLongitude</code> is more general in that it allows searching for arbitrary longitude values.
+`SearchSunLongitude` is more general in that it allows searching for arbitrary longitude values.
 
 **Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
-**Returns**: [<code>AstroTime</code>](#Astronomy.AstroTime) \| <code>null</code> - The date and time when the Sun reaches the apparent ecliptic longitude <code>targetLon</code>
-     within the range of times specified by <code>dateStart</code> and <code>limitDays</code>.
+**Returns**: [<code>AstroTime</code>](#Astronomy.AstroTime) \| <code>null</code> - The date and time when the Sun reaches the apparent ecliptic longitude `targetLon`
+     within the range of times specified by `dateStart` and `limitDays`.
      If the Sun does not reach the target longitude within the specified time range, or the
-     time range is excessively wide, the return value is <code>null</code>.
-     To avoid a <code>null</code> return value, the caller must pick a time window around
+     time range is excessively wide, the return value is `null`.
+     To avoid a `null` return value, the caller must pick a time window around
      the event that is within a few days but not so small that the event might fall outside the window.  
 
 | Param | Type | Description |
 | --- | --- | --- |
-| targetLon | <code>number</code> | The desired ecliptic longitude of date in degrees.      This may be any value in the range [0, 360), although certain      values have conventional meanings:      When <code>targetLon</code> is 0, finds the March equinox,      which is the moment spring begins in the northern hemisphere      and the beginning of autumn in the southern hemisphere.      When <code>targetLon</code> is 180, finds the September equinox,      which is the moment autumn begins in the northern hemisphere and      spring begins in the southern hemisphere.      When <code>targetLon</code> is 90, finds the northern solstice, which is the      moment summer begins in the northern hemisphere and winter      begins in the southern hemisphere.      When <code>targetLon</code> is 270, finds the southern solstice, which is the      moment winter begins in the northern hemisphere and summer      begins in the southern hemisphere. |
+| targetLon | <code>number</code> | The desired ecliptic longitude of date in degrees.      This may be any value in the range [0, 360), although certain      values have conventional meanings:      When `targetLon` is 0, finds the March equinox,      which is the moment spring begins in the northern hemisphere      and the beginning of autumn in the southern hemisphere.      When `targetLon` is 180, finds the September equinox,      which is the moment autumn begins in the northern hemisphere and      spring begins in the southern hemisphere.      When `targetLon` is 90, finds the northern solstice, which is the      moment summer begins in the northern hemisphere and winter      begins in the southern hemisphere.      When `targetLon` is 270, finds the southern solstice, which is the      moment winter begins in the northern hemisphere and summer      begins in the southern hemisphere. |
 | dateStart | <code>Date</code> \| <code>number</code> \| [<code>AstroTime</code>](#Astronomy.AstroTime) | A date and time known to be earlier than the desired longitude event. |
-| limitDays | <code>number</code> | A floating point number of days, which when added to <code>dateStart</code>,      yields a date and time known to be after the desired longitude event. |
+| limitDays | <code>number</code> | A floating point number of days, which when added to `dateStart`,      yields a date and time known to be after the desired longitude event. |
 
 
 * * *
@@ -820,7 +823,7 @@ between the given body and the Sun as seen from
 the Earth at a given moment in time.
 The returned value ranges [0, 360) degrees.
 By definition, the Earth and the Sun are both in the plane of the ecliptic.
-Ignores the height of the <code>body</code> above or below the ecliptic plane;
+Ignores the height of the `body` above or below the ecliptic plane;
 the resulting angle is measured around the ecliptic plane for the "shadow"
 of the body onto that plane.
 
@@ -848,7 +851,7 @@ the Earth, between the given body and the Sun.
 Unlike [LongitudeFromSun](#Astronomy.LongitudeFromSun), this function does not
 project the body's "shadow" onto the ecliptic;
 the angle is measured in 3D space around the plane that
-contains the centers of the Earth, the Sun, and <code>body</code>.
+contains the centers of the Earth, the Sun, and `body`.
 
 **Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
 **Returns**: <code>number</code> - An angle in degrees in the range [0, 180].  
@@ -893,7 +896,7 @@ at the given date and time, as seen from the Earth.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| body | <code>string</code> | The name of the celestial body being observed.      Not allowed to be <code>"Earth"</code>. |
+| body | <code>string</code> | The name of the celestial body being observed.      Not allowed to be `"Earth"`. |
 | date | <code>Date</code> \| <code>number</code> \| [<code>AstroTime</code>](#Astronomy.AstroTime) | The date and time for which to calculate the illumination data for the given body. |
 
 
@@ -907,10 +910,10 @@ the specified body and the Earth, as seen from the Sun, reach a certain
 difference. This function is useful for finding conjunctions and oppositions
 of the planets. For the opposition of a superior planet (Mars, Jupiter, ..., Pluto),
 or the inferior conjunction of an inferior planet (Mercury, Venus),
-call with <code>targetRelLon</code> = 0. The 0 value indicates that both
+call with `targetRelLon` = 0. The 0 value indicates that both
 planets are on the same ecliptic longitude line, ignoring the other planet's
 distance above or below the plane of the Earth's orbit.
-For superior conjunctions, call with <code>targetRelLon</code> = 180.
+For superior conjunctions, call with `targetRelLon` = 180.
 This means the Earth and the other planet are on opposite sides of the Sun.
 
 **Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
@@ -919,7 +922,7 @@ This means the Earth and the other planet are on opposite sides of the Sun.
 | Param | Type | Description |
 | --- | --- | --- |
 | body | <code>string</code> | The name of a planet other than the Earth. |
-| targetRelLon | <code>number</code> | The desired angular difference in degrees between the ecliptic longitudes      of <code>body</code> and the Earth. Must be in the range (-180, +180]. |
+| targetRelLon | <code>number</code> | The desired angular difference in degrees between the ecliptic longitudes      of `body` and the Earth. Must be in the range (-180, +180]. |
 | startDate | <code>Date</code> \| <code>number</code> \| [<code>AstroTime</code>](#Astronomy.AstroTime) | The date and time after which to find the next occurrence of the      body and the Earth reaching the desired relative longitude. |
 
 
@@ -958,20 +961,20 @@ longitude, that is defined as a new moon. When the two ecliptic longitudes
 are 180 degrees apart, that is defined as a full moon.
 To enumerate quarter lunar phases, it is simpler to call
 [SearchMoonQuarter](#Astronomy.SearchMoonQuarter) once, followed by repeatedly calling
-[NextMoonQuarter](#Astronomy.NextMoonQuarter). <code>SearchMoonPhase</code> is only
+[NextMoonQuarter](#Astronomy.NextMoonQuarter). `SearchMoonPhase` is only
 necessary for finding other lunar phases than the usual quarter phases.
 
 **Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
-**Returns**: [<code>AstroTime</code>](#Astronomy.AstroTime) \| <code>null</code> - If the specified lunar phase occurs after <code>dateStart</code>
-     and before <code>limitDays</code> days after <code>dateStart</code>,
+**Returns**: [<code>AstroTime</code>](#Astronomy.AstroTime) \| <code>null</code> - If the specified lunar phase occurs after `dateStart`
+     and before `limitDays` days after `dateStart`,
      this function returns the date and time of the first such occurrence.
-     Otherwise, it returns <code>null</code>.  
+     Otherwise, it returns `null`.  
 
 | Param | Type | Description |
 | --- | --- | --- |
 | targetLon | <code>number</code> | The difference in geocentric ecliptic longitude between the Sun and Moon      that specifies the lunar phase being sought. This can be any value      in the range [0, 360). Here are some helpful examples:      0 = new moon,      90 = first quarter,      180 = full moon,      270 = third quarter. |
 | dateStart | <code>Date</code> \| <code>number</code> \| [<code>AstroTime</code>](#Astronomy.AstroTime) | The beginning of the window of time in which to search. |
-| limitDays | <code>number</code> | The floating point number of days after <code>dateStart</code>      that limits the window of time in which to search. |
+| limitDays | <code>number</code> | The floating point number of days after `dateStart`      that limits the window of time in which to search. |
 
 
 * * *
@@ -981,9 +984,9 @@ necessary for finding other lunar phases than the usual quarter phases.
 ### Astronomy.SearchMoonQuarter(dateStart) ⇒ [<code>MoonQuarter</code>](#Astronomy.MoonQuarter)
 Finds the first quarter lunar phase after the specified date and time.
 The quarter lunar phases are: new moon, first quarter, full moon, and third quarter.
-To enumerate quarter lunar phases, call <code>SearchMoonQuarter</code> once,
+To enumerate quarter lunar phases, call `SearchMoonQuarter` once,
 then pass its return value to [NextMoonQuarter](#Astronomy.NextMoonQuarter) to find the next
-<code>MoonQuarter</code>. Keep calling <code>NextMoonQuarter</code> in a loop,
+`MoonQuarter`. Keep calling `NextMoonQuarter` in a loop,
 passing the previous return value as the argument to the next call.
 
 **Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
@@ -1006,7 +1009,7 @@ for explanation of usage.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| mq | [<code>MoonQuarter</code>](#Astronomy.MoonQuarter) | The return value of a prior call to [MoonQuarter](#Astronomy.MoonQuarter) or <code>NextMoonQuarter</code>. |
+| mq | [<code>MoonQuarter</code>](#Astronomy.MoonQuarter) | The return value of a prior call to [MoonQuarter](#Astronomy.MoonQuarter) or `NextMoonQuarter`. |
 
 
 * * *
@@ -1032,7 +1035,7 @@ The times are adjusted for typical atmospheric refraction conditions.
 | observer | [<code>Observer</code>](#Astronomy.Observer) | Specifies the geographic coordinates and elevation above sea level of the observer.      Call [MakeObserver](#Astronomy.MakeObserver) to create an observer object. |
 | direction | <code>number</code> | Either +1 to find rise time or -1 to find set time.      Any other value will cause an exception to be thrown. |
 | dateStart | <code>Date</code> \| <code>number</code> \| [<code>AstroTime</code>](#Astronomy.AstroTime) | The date and time after which the specified rise or set time is to be found. |
-| limitDays | <code>number</code> | The fractional number of days after <code>dateStart</code> that limits      when the rise or set time is to be found. |
+| limitDays | <code>number</code> | The fractional number of days after `dateStart` that limits      when the rise or set time is to be found. |
 
 
 * * *
@@ -1043,8 +1046,8 @@ The times are adjusted for typical atmospheric refraction conditions.
 Finds the next time the given body is seen to reach the specified
 <a href="https://en.wikipedia.org/wiki/Hour_angle">hour angle</a>
 by the given observer.
-Providing <code>hourAngle</code> = 0 finds the next maximum altitude event (culmination).
-Providing <code>hourAngle</code> = 12 finds the next minimum altitude event.
+Providing `hourAngle` = 0 finds the next maximum altitude event (culmination).
+Providing `hourAngle` = 12 finds the next minimum altitude event.
 Note that, especially close to the Earth's poles, a body as seen on a given day
 may always be above the horizon or always below the horizon, so the caller cannot
 assume that a culminating object is visible nor that an object is below the horizon
@@ -1056,7 +1059,7 @@ at its minimum altitude.
 | --- | --- | --- |
 | body | <code>string</code> | The name of a celestial body other than the Earth. |
 | observer | [<code>Observer</code>](#Astronomy.Observer) | Specifies the geographic coordinates and elevation above sea level of the observer.      Call [MakeObserver](#Astronomy.MakeObserver) to create an observer object. |
-| hourAngle | <code>number</code> | The hour angle expressed in      <a href="https://en.wikipedia.org/wiki/Sidereal_time">sidereal</a>      hours for which the caller seeks to find the body attain.      The value must be in the range [0, 24).      The hour angle represents the number of sidereal hours that have      elapsed since the most recent time the body crossed the observer's local      <a href="https://en.wikipedia.org/wiki/Meridian_(astronomy)">meridian</a>.      This specifying <code>hourAngle</code> = 0 finds the moment in time      the body reaches the highest angular altitude in a given sidereal day. |
+| hourAngle | <code>number</code> | The hour angle expressed in      <a href="https://en.wikipedia.org/wiki/Sidereal_time">sidereal</a>      hours for which the caller seeks to find the body attain.      The value must be in the range [0, 24).      The hour angle represents the number of sidereal hours that have      elapsed since the most recent time the body crossed the observer's local      <a href="https://en.wikipedia.org/wiki/Meridian_(astronomy)">meridian</a>.      This specifying `hourAngle` = 0 finds the moment in time      the body reaches the highest angular altitude in a given sidereal day. |
 | dateStart | <code>Date</code> \| <code>number</code> \| [<code>AstroTime</code>](#Astronomy.AstroTime) | The date and time after which the desired hour angle crossing event      is to be found. |
 
 
@@ -1071,7 +1074,7 @@ Finds the equinoxes and solstices for a given calendar year.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| year | <code>number</code> \| [<code>AstroTime</code>](#Astronomy.AstroTime) | The integer value or <code>AstroTime</code> object that specifies      the UTC calendar year for which to find equinoxes and solstices. |
+| year | <code>number</code> \| [<code>AstroTime</code>](#Astronomy.AstroTime) | The integer value or `AstroTime` object that specifies      the UTC calendar year for which to find equinoxes and solstices. |
 
 
 * * *
@@ -1093,7 +1096,7 @@ It is also used to determine how far a planet is from opposition, conjunction, o
 
 | Param | Type | Description |
 | --- | --- | --- |
-| body | <code>string</code> | The name of the observed body. Not allowed to be <code>"Earth"</code>. |
+| body | <code>string</code> | The name of the observed body. Not allowed to be `"Earth"`. |
 
 
 * * *
@@ -1103,10 +1106,10 @@ It is also used to determine how far a planet is from opposition, conjunction, o
 ### Astronomy.SearchMaxElongation(body, startDate) ⇒ [<code>ElongationEvent</code>](#Astronomy.ElongationEvent)
 Searches for the next maximum elongation event for Mercury or Venus
 that occurs after the given start date. Calling with other values
-of <code>body</code> will result in an exception.
+of `body` will result in an exception.
 Maximum elongation occurs when the body has the greatest
 angular separation from the Sun, as seen from the Earth.
-Returns an <code>ElongationEvent</code> object containing the date and time of the next
+Returns an `ElongationEvent` object containing the date and time of the next
 maximum elongation, the elongation in degrees, and whether
 the body is visible in the morning or evening.
 
@@ -1114,7 +1117,7 @@ the body is visible in the morning or evening.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| body | <code>string</code> | Either <code>"Mercury"</code> or <code>"Venus"</code>. |
+| body | <code>string</code> | Either `"Mercury"` or `"Venus"`. |
 | startDate | <code>Date</code> | The date and time after which to search for the next maximum elongation event. |
 
 
@@ -1129,7 +1132,7 @@ Searches for the date and time Venus will next appear brightest as seen from the
 
 | Param | Type | Description |
 | --- | --- | --- |
-| body | <code>string</code> | Currently only <code>"Venus"</code> is supported.      Mercury's peak magnitude occurs at superior conjunction, when it is virtually impossible to see from Earth,      so peak magnitude events have little practical value for that planet.      The Moon reaches peak magnitude very close to full moon, which can be found using      [SearchMoonQuarter](#Astronomy.SearchMoonQuarter) or [SearchMoonPhase](#Astronomy.SearchMoonPhase).      The other planets reach peak magnitude very close to opposition,      which can be found using [SearchRelativeLongitude](#Astronomy.SearchRelativeLongitude). |
+| body | <code>string</code> | Currently only `"Venus"` is supported.      Mercury's peak magnitude occurs at superior conjunction, when it is virtually impossible to see from Earth,      so peak magnitude events have little practical value for that planet.      The Moon reaches peak magnitude very close to full moon, which can be found using      [SearchMoonQuarter](#Astronomy.SearchMoonQuarter) or [SearchMoonPhase](#Astronomy.SearchMoonPhase).      The other planets reach peak magnitude very close to opposition,      which can be found using [SearchRelativeLongitude](#Astronomy.SearchRelativeLongitude). |
 | startDate | <code>Date</code> \| <code>number</code> \| [<code>AstroTime</code>](#Astronomy.AstroTime) | The date and time after which to find the next peak magnitude event. |
 
 
@@ -1154,7 +1157,7 @@ that occurs after the specified date and time.
 
 ### Astronomy.NextLunarApsis(apsis) ⇒ [<code>Apsis</code>](#Astronomy.Apsis)
 Given a lunar apsis returned by an initial call to [SearchLunarApsis](SearchLunarApsis),
-or a previous call to <code>NextLunarApsis</code>, finds the next lunar apsis.
+or a previous call to `NextLunarApsis`, finds the next lunar apsis.
 If the given apsis is a perigee, this function finds the next apogee, and vice versa.
 
 **Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
@@ -1182,9 +1185,9 @@ The closest point is called *perihelion* and the farthest point is called *aphel
 The word *apsis* refers to either event.
 
 To iterate through consecutive alternating perihelion and aphelion events,
-call `Astronomy.SearchPlanetApsis` once, then use the return value to call
-#Astronomy.NextPlanetApsis. After that, keep feeding the previous return value
-from `Astronomy.NextPlanetApsis` into another call of `Astronomy.NextPlanetApsis`
+call `SearchPlanetApsis` once, then use the return value to call
+[NextPlanetApsis](#Astronomy.NextPlanetApsis). After that, keep feeding the previous return value
+from `NextPlanetApsis` into another call of `NextPlanetApsis`
 as many times as desired.
 
 **Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
@@ -1203,18 +1206,18 @@ as many times as desired.
 ### Astronomy.NextPlanetApsis(body, apsis) ⇒ <code>Apsis</code>
 Finds the next planetary perihelion or aphelion event in a series.
 
-This function requires an #Apsis value obtained from a call
-to #Astronomy.SearchPlanetApsis or `Astronomy.NextPlanetApsis`.
+This function requires an [Apsis](Apsis) value obtained from a call
+to [SearchPlanetApsis](#Astronomy.SearchPlanetApsis) or `NextPlanetApsis`.
 Given an aphelion event, this function finds the next perihelion event, and vice versa.
-See #Astronomy.SearchPlanetApsis for more details.
+See [SearchPlanetApsis](#Astronomy.SearchPlanetApsis) for more details.
 
 **Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
-**Returns**: <code>Apsis</code> - Same as the return value for #Astronomy.SearchPlanetApsis.  
+**Returns**: <code>Apsis</code> - Same as the return value for [SearchPlanetApsis](#Astronomy.SearchPlanetApsis).  
 
 | Param | Type | Description |
 | --- | --- | --- |
 | body | <code>string</code> | The planet for which to find the next perihelion/aphelion event.      Not allowed to be `"Sun"` or `"Moon"`.      Must match the body passed into the call that produced the `apsis` parameter. |
-| apsis | <code>Apsis</code> | An apsis event obtained from a call to #Astronomy.SearchPlanetApsis or `Astronomy.NextPlanetApsis`. |
+| apsis | <code>Apsis</code> | An apsis event obtained from a call to [SearchPlanetApsis](#Astronomy.SearchPlanetApsis) or `NextPlanetApsis`. |
 
 
 * * *
@@ -1260,7 +1263,7 @@ equivalent to rotating based on the first matrix, followed by the second.
 Converts spherical coordinates to Cartesian coordinates.
 Given spherical coordinates and a time at which they are valid,
 returns a vector of Cartesian coordinates. The returned value
-includes the time, as required by <code>AstroTime</code>.
+includes the time, as required by `AstroTime`.
 
 **Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
 **Returns**: [<code>Vector</code>](#Astronomy.Vector) - The vector form of the supplied spherical coordinates.  
@@ -1328,7 +1331,7 @@ Converts Cartesian coordinates to horizontal coordinates.
 
 Given a horizontal Cartesian vector, returns horizontal azimuth and altitude.
 
-*IMPORTANT:* This function differs from `SphereFromVector` in two ways:
+*IMPORTANT:* This function differs from [SphereFromVector](#Astronomy.SphereFromVector) in two ways:
 - `SphereFromVector` returns a `lon` value that represents azimuth defined counterclockwise
   from north (e.g., west = +90), but this function represents a clockwise rotation
   (e.g., east = +90). The difference is because `SphereFromVector` is intended
@@ -1515,11 +1518,11 @@ for converting from one orientation to another.
 Source: EQD = equatorial system, using equator of the specified date/time.
 Target: HOR = horizontal system.
 
-Use <code>HorizonFromVector</code> to convert the return value
+Use `HorizonFromVector` to convert the return value
 to a traditional altitude/azimuth pair.
 
 **Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
-**Returns**: [<code>RotationMatrix</code>](#Astronomy.RotationMatrix) - A rotation matrix that converts EQD to HOR at <code>time</code> and for <code>observer</code>.
+**Returns**: [<code>RotationMatrix</code>](#Astronomy.RotationMatrix) - A rotation matrix that converts EQD to HOR at `time` and for `observer`.
      The components of the horizontal vector are:
      x = north, y = west, z = zenith (straight up from the observer).
      These components are chosen so that the "right-hand rule" works for the vector
@@ -1565,7 +1568,7 @@ Source: HOR = horizontal system (x=North, y=West, z=Zenith).
 Target: EQJ = equatorial system, using equator at the J2000 epoch.
 
 **Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
-**Returns**: [<code>RotationMatrix</code>](#Astronomy.RotationMatrix) - A rotation matrix that converts HOR to EQD at <code>time</code> and for <code>observer</code>.  
+**Returns**: [<code>RotationMatrix</code>](#Astronomy.RotationMatrix) - A rotation matrix that converts HOR to EQD at `time` and for `observer`.  
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -1585,7 +1588,7 @@ for converting from one orientation to another.
 Source: EQJ = equatorial system, using the equator at the J2000 epoch.
 Target: HOR = horizontal system.
 
-Use <code>Astronomy.HorizonFromVector</code> to convert the return value
+Use [HorizonFromVector](#Astronomy.HorizonFromVector) to convert the return value
 to a traditional altitude/azimuth pair.
 
 **Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
@@ -1653,11 +1656,11 @@ for converting from one orientation to another.
 Source: ECL = ecliptic system, using equator at J2000 epoch.
 Target: HOR = horizontal system.
 
-Use <code>Astronomy.HorizonFromVector</code> to convert the return value
+Use [HorizonFromVector](#Astronomy.HorizonFromVector) to convert the return value
 to a traditional altitude/azimuth pair.
 
 **Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
-**Returns**: [<code>RotationMatrix</code>](#Astronomy.RotationMatrix) - A rotation matrix that converts ECL to HOR at <code>time</code> and for <code>observer</code>.
+**Returns**: [<code>RotationMatrix</code>](#Astronomy.RotationMatrix) - A rotation matrix that converts ECL to HOR at `time` and for `observer`.
      The components of the horizontal vector are:
      x = north, y = west, z = zenith (straight up from the observer).
      These components are chosen so that the "right-hand rule" works for the vector
@@ -1695,7 +1698,7 @@ Target: ECL = ecliptic system, using equator at J2000 epoch.
 <a name="Astronomy.ContinuousFunction"></a>
 
 ### Astronomy.ContinuousFunction ⇒ <code>number</code>
-A continuous function of time used in a call to the <code>Search</code> function.
+A continuous function of time used in a call to the `Search` function.
 
 **Kind**: static typedef of [<code>Astronomy</code>](#Astronomy)  
 
@@ -1717,8 +1720,8 @@ Options for the [Search](#Astronomy.Search) function.
 | Name | Type | Description |
 | --- | --- | --- |
 | dt_tolerance_seconds | <code>number</code> \| <code>null</code> | The number of seconds for a time window smaller than which the search      is considered successful.  Using too large a tolerance can result in      an inaccurate time estimate.  Using too small a tolerance can cause      excessive computation, or can even cause the search to fail because of      limited floating-point resolution.  Defaults to 1 second. |
-| init_f1 | <code>number</code> \| <code>null</code> | As an optimization, if the caller of [Search](#Astronomy.Search)      has already calculated the value of the function being searched (the parameter <code>func</code>)      at the time coordinate <code>t1</code>, it can pass in that value as <code>init_f1</code>.      For very expensive calculations, this can measurably improve performance. |
-| init_f2 | <code>number</code> \| <code>null</code> | The same as <code>init_f1</code>, except this is the optional initial value of <code>func(t2)</code>      instead of <code>func(t1)</code>. |
+| init_f1 | <code>number</code> \| <code>null</code> | As an optimization, if the caller of [Search](#Astronomy.Search)      has already calculated the value of the function being searched (the parameter `func`)      at the time coordinate `t1`, it can pass in that value as `init_f1`.      For very expensive calculations, this can measurably improve performance. |
+| init_f2 | <code>number</code> \| <code>null</code> | The same as `init_f1`, except this is the optional initial value of `func(t2)`      instead of `func(t1)`. |
 
 
 * * *
