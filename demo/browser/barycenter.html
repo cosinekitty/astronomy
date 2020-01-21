@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Solar System Barycenter</title>
+        <link rel="stylesheet" href="barycenter.css">
+        <script src="astronomy.min.js"></script>
+        <script>
+            window.onload = function() {
+                const ReservedPixelsBottom = 70;
+                const graph = document.getElementById('GraphCanvas');
+                const context = graph.getContext('2d');
+                const timeSlider = document.getElementById('TimeSlider');
+                let animating = true;
+                let prevAnimationTime = null;
+                const PlanetOrbitScale = 35.0;     // radius in AU that corresponds to graph size.
+                const SimSpeed = 0.5;      // days of simulated time per millisecond of animation time
+                const SunMass     = 333054.25318;
+                const JupiterMass =    317.84997;
+                const SaturnMass  =     95.16745;
+                const UranusMass  =     14.53617;
+                const NeptuneMass =     17.14886;
+
+                function ResizeGraph() {
+                    // Make the canvas fit the available space inside the browser window.
+                    // Reserve some space below the graph for sliders.
+                    graph.width = window.innerWidth;
+                    graph.height = window.innerHeight - ReservedPixelsBottom;
+
+                    // Resize the sliders to fit in the reserved space beneath the graph.
+                    const yspace = 10;      // pixels of vertical "cushion" for sliders
+                    const sliderWidth = (graph.width - 20).toFixed() + 'px';
+                    const sliderHeight = (ReservedPixelsBottom - yspace).toFixed() + 'px';
+                    timeSlider.style.width = sliderWidth;
+                    timeSlider.style.height = sliderHeight;
+                }
+
+
+                function PlotPlanet(planet, symbol, radius) {
+                    const pixels = Math.min(graph.width, graph.height) / 2;
+                    const px = (graph.width/2)  + (planet.x/PlanetOrbitScale)*pixels;
+                    const py = (graph.height/2) - (planet.y/PlanetOrbitScale)*pixels;
+                    context.beginPath();
+                    context.arc(px, py, radius, 0, 2*Math.PI);
+                    context.style = 'rgb(0,0,0)';
+                    context.fillStyle = 'rgb(0,128,128)';
+                    context.fill();
+                }
+
+                function PlotSun(ssb) {
+                    const cx = graph.width / 2;
+                    const cy = graph.height / 2;
+                    const pixels = Math.min(graph.width, graph.height);
+                    const crossPixels = 8;
+                    context.beginPath();
+                    context.strokeStyle = 'rgb(255,255,255)';
+                    context.moveTo(cx - crossPixels, cy);
+                    context.lineTo(cx + crossPixels, cy);
+                    context.moveTo(cx, cy - crossPixels);
+                    context.lineTo(cx, cy + crossPixels);
+                    context.stroke();
+                }
+
+                function AdjustBarycenter(ssb, planet, pmass) {
+                    const shift = pmass / (pmass + SunMass);
+                    ssb.x += shift * planet.x;
+                    ssb.y += shift * planet.y;
+                    ssb.z += shift * planet.z;
+                }
+
+                function Render() {
+                    context.fillStyle = 'rgb(0,0,0)';
+                    context.fillRect(0, 0, graph.width, graph.height);
+                    const ut = parseFloat(timeSlider.value);
+                    const time = Astronomy.MakeTime(ut);
+
+                    // Calculate positions of the major planets.
+                    const jupiter = Astronomy.HelioVector('Jupiter', time);
+                    const saturn  = Astronomy.HelioVector('Saturn',  time);
+                    const uranus  = Astronomy.HelioVector('Uranus',  time);
+                    const neptune = Astronomy.HelioVector('Neptune', time);
+
+                    // Calculate the location of the Solar System Barycenter (SSB).
+                    let ssb = { x:0, y:0, z:0 };
+                    AdjustBarycenter(ssb, jupiter, JupiterMass);
+                    AdjustBarycenter(ssb, saturn,  SaturnMass);
+                    AdjustBarycenter(ssb, uranus,  UranusMass);
+                    AdjustBarycenter(ssb, neptune, NeptuneMass);
+
+                    // Convert heliocentric coordinates to barycentric coordinates.
+                    jupiter.x -= ssb.x;     jupiter.y -= ssb.y;
+                    saturn.x  -= ssb.x;     saturn.y  -= ssb.y;
+                    uranus.x  -= ssb.x;     uranus.y  -= ssb.y;
+                    neptune.x -= ssb.x;     neptune.y -= ssb.y;
+
+                    PlotPlanet(jupiter, 'J', 5);
+                    PlotPlanet(saturn,  'S', 3);
+                    PlotPlanet(uranus,  'U', 2);
+                    PlotPlanet(neptune, 'N', 2);
+                    PlotSun(ssb);
+
+                    // Draw the date corresponding to the slider position.
+                    context.font = '16px monospace';
+                    context.fillStyle = 'rgb(0,255,0)';
+                    const dateText = time.toString().substr(0, 10);
+                    context.fillText(dateText, 10, graph.height-8);
+                }
+
+                function OnAnimationFrame(time) {
+                    if (animating && prevAnimationTime !== null) {
+                        let ut = parseFloat(timeSlider.value);
+                        ut += (time - prevAnimationTime) * SimSpeed;
+                        if (ut > 40000) ut = -40000;   // start over
+                        timeSlider.value = ut.toFixed(8);
+                        Render();
+                    }
+                    prevAnimationTime = time;
+                    requestAnimationFrame(OnAnimationFrame);
+                }
+
+                ResizeGraph();
+                window.addEventListener('resize', ResizeGraph);
+                timeSlider.addEventListener('input', Render);
+                timeSlider.addEventListener('mouseover', function() {
+                    animating = false;
+                });
+                timeSlider.addEventListener('mouseout', function() {
+                    animating = true;
+                })
+                Render();
+                requestAnimationFrame(OnAnimationFrame);
+            }
+        </script>
+    </head>
+    <body>
+        <div>
+            <canvas id="GraphCanvas" class="PlotCanvas"></canvas>
+        </div>
+        <div>
+            <input id="TimeSlider" type="range" min="-40000" max="40000" value="7305" step="any">
+        </div>
+    </body>
+</html>
