@@ -12,8 +12,10 @@
                 const timeSlider = document.getElementById('TimeSlider');
                 let animating = true;
                 let prevAnimationTime = null;
-                const PlanetOrbitScale = 35.0;     // radius in AU that corresponds to graph size.
-                const SimSpeed = 0.5;      // days of simulated time per millisecond of animation time
+                const PlanetOrbitScale = 33.0;     // radius in AU that corresponds to graph size.
+                const SunOrbitScale    =  0.3;
+                const SimSpeed    = 0.5;      // days of simulated time per millisecond of animation time
+                const SunRadiusAU = 0.00465047;
                 const SunMass     = 333054.25318;
                 const JupiterMass =    317.84997;
                 const SaturnMass  =     95.16745;
@@ -42,17 +44,31 @@
                     context.beginPath();
                     context.arc(px, py, radius, 0, 2*Math.PI);
                     context.style = 'rgb(0,0,0)';
-                    context.fillStyle = 'rgb(0,128,128)';
+                    context.fillStyle = 'rgb(180,180,128)';
                     context.fill();
+                    context.font = '16px monospace';
+                    context.fillStyle = 'rgb(0,180,128)';
+                    context.fillText(symbol, px-5, py+radius+15);
                 }
 
                 function PlotSun(ssb) {
                     const cx = graph.width / 2;
                     const cy = graph.height / 2;
                     const pixels = Math.min(graph.width, graph.height);
+
+                    // Draw the Sun's position at a larger scale, to make its movement around the SSB visible.
+                    const SunPlotRadius = (SunRadiusAU/SunOrbitScale)*pixels;
+                    const bx = (graph.width/2)  + (-ssb.x/SunOrbitScale)*pixels;
+                    const by = (graph.height/2) - (-ssb.y/SunOrbitScale)*pixels;
+                    context.beginPath();
+                    context.arc(bx, by, SunPlotRadius, 0, 2*Math.PI);
+                    context.fillStyle = 'rgb(255,255,0)';
+                    context.fill();
+
+                    // Draw a cross at the SSB location.
                     const crossPixels = 8;
                     context.beginPath();
-                    context.strokeStyle = 'rgb(255,255,255)';
+                    context.strokeStyle = 'rgb(255,0,0)';
                     context.moveTo(cx - crossPixels, cy);
                     context.lineTo(cx + crossPixels, cy);
                     context.moveTo(cx, cy - crossPixels);
