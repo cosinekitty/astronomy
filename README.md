@@ -43,14 +43,14 @@
 
 ### Overview
 
-The Astronomy Engine is a suite of open source libraries for calculating positions of
+Astronomy Engine is a suite of open source libraries for calculating positions of
 the Sun, Moon, and planets, and for predicting interesting events like oppositions,
 conjunctions, rise and set times, lunar phases, and more.
 
 It supports several popular programming langauges with a consistent API.
 Function and type names are uniform across all the supported languages.
 
-The Astronomy Engine is designed to be small, fast, and accurate to within &plusmn;1 arcminute.
+Astronomy Engine is designed to be small, fast, and accurate to within &plusmn;1 arcminute.
 It is based on the authoritative and well-tested models
 [VSOP87](https://en.wikipedia.org/wiki/VSOP_(planets))
 and
