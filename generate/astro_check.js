@@ -17,7 +17,7 @@ while (date.tt < stop.tt) {
             pos = Astronomy.HelioVector(body, date);
             console.log(`v ${body} ${pos.t.tt.toFixed(16)} ${pos.x.toFixed(16)} ${pos.y.toFixed(16)} ${pos.z.toFixed(16)}`);
 
-            if (body !== 'Earth') {
+            if (body !== 'Earth' && body !== 'EMB' && body !== 'SSB') {
                 j2000 = Astronomy.Equator(body, date, observer, false, false);
                 ofdate = Astronomy.Equator(body, date, observer, true, true);
                 hor = Astronomy.Horizon(date, observer, ofdate.ra, ofdate.dec);

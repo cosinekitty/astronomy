@@ -111,7 +111,8 @@ def Test_AstroCheck(printflag):
     bodylist = [
         astronomy.Body.Sun, astronomy.Body.Moon, astronomy.Body.Mercury, astronomy.Body.Venus,
         astronomy.Body.Earth, astronomy.Body.Mars, astronomy.Body.Jupiter, astronomy.Body.Saturn,
-        astronomy.Body.Uranus, astronomy.Body.Neptune, astronomy.Body.Pluto
+        astronomy.Body.Uranus, astronomy.Body.Neptune, astronomy.Body.Pluto,
+        astronomy.Body.SSB, astronomy.Body.EMB
     ]
 
     while time.tt < stop.tt:
@@ -121,7 +122,7 @@ def Test_AstroCheck(printflag):
                 pos = astronomy.HelioVector(body, time)
                 if printflag:
                     print('v {} {:0.16f} {:0.16f} {:0.16f} {:0.16f}'.format(name, pos.t.tt, pos.x, pos.y, pos.z))
-                if body != astronomy.Body.Earth:
+                if body != astronomy.Body.Earth and body != astronomy.Body.EMB and body != astronomy.Body.SSB:
                     j2000 = astronomy.Equator(body, time, observer, False, False)
                     ofdate = astronomy.Equator(body, time, observer, True, True)
                     hor = astronomy.Horizon(time, observer, ofdate.ra, ofdate.dec, astronomy.Refraction.Airless)

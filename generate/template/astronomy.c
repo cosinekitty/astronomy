@@ -62,6 +62,12 @@ static const double REFRACTION_NEAR_HORIZON = 34.0 / 60.0;   /* degrees of refra
 static const double SUN_RADIUS_AU  = 4.6505e-3;
 static const double MOON_RADIUS_AU = 1.15717e-5;
 static const double ASEC180 = 180.0 * 60.0 * 60.0;        /* arcseconds per 180 degrees (or pi radians) */
+static const double EARTH_MOON_MASS_RATIO = 81.30056;
+static const double SUN_MASS     = 333054.25318;        /* Sun's mass relative to Earth. */
+static const double JUPITER_MASS =    317.84997;        /* Jupiter's mass relative to Earth. */
+static const double SATURN_MASS  =     95.16745;        /* Saturn's mass relative to Earth. */
+static const double URANUS_MASS  =     14.53617;        /* Uranus's mass relative to Earth. */
+static const double NEPTUNE_MASS =     17.14886;        /* Neptune's mass relative to Earth. */
 
 /** @cond DOXYGEN_SKIP */
 #define ARRAYSIZE(x)    (sizeof(x) / sizeof(x[0]))
@@ -133,13 +139,15 @@ const char *Astronomy_BodyName(astro_body_t body)
     case BODY_PLUTO:    return "Pluto";
     case BODY_SUN:      return "Sun";
     case BODY_MOON:     return "Moon";
+    case BODY_EMB:      return "EMB";
+    case BODY_SSB:      return "SSB";
     default:            return "";
     }
 }
 
 /**
  * @brief Returns the #astro_body_t value corresponding to the given English name.
- * @param name One of the following strings: Sun, Moon, Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune, Pluto.
+ * @param name One of the following strings: Sun, Moon, Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune, Pluto, EMB, SSB.
  * @return If `name` is one of the strings (case-sensitive) listed above, the returned value is the corresponding #astro_body_t value, otherwise it is `BODY_INVALID`.
  */
 astro_body_t Astronomy_BodyCode(const char *name)
@@ -157,6 +165,8 @@ astro_body_t Astronomy_BodyCode(const char *name)
         if (!strcmp(name, "Pluto"))     return BODY_PLUTO;
         if (!strcmp(name, "Sun"))       return BODY_SUN;
         if (!strcmp(name, "Moon"))      return BODY_MOON;
+        if (!strcmp(name, "EMB"))       return BODY_EMB;
+        if (!strcmp(name, "SSB"))       return BODY_SSB;
     }
     return BODY_INVALID;
 }
@@ -1524,6 +1534,34 @@ static astro_vector_t CalcChebyshev(const astro_cheb_record_t model[], int nrecs
 
 /*------------------ end of generated code ------------------*/
 
+static void AdjustBarycenter(astro_vector_t *ssb, astro_time_t time, astro_body_t body, double pmass)
+{
+    astro_vector_t planet;
+    double shift;
+
+    shift = pmass / (pmass + SUN_MASS);
+    planet = CalcVsop(&vsop[body], time);
+    ssb->x += shift * planet.x;
+    ssb->y += shift * planet.y;
+    ssb->z += shift * planet.z;
+}
+
+static astro_vector_t CalcSolarSystemBarycenter(astro_time_t time)
+{
+    astro_vector_t ssb;
+
+    ssb.status = ASTRO_SUCCESS;
+    ssb.t = time;
+    ssb.x = ssb.y = ssb.z = 0.0;
+
+    AdjustBarycenter(&ssb, time, BODY_JUPITER, JUPITER_MASS);
+    AdjustBarycenter(&ssb, time, BODY_SATURN,  SATURN_MASS);
+    AdjustBarycenter(&ssb, time, BODY_URANUS,  URANUS_MASS);
+    AdjustBarycenter(&ssb, time, BODY_NEPTUNE, NEPTUNE_MASS);
+
+    return ssb;
+}
+
 /**
  * @brief Calculates heliocentric Cartesian coordinates of a body in the J2000 equatorial system.
  *
@@ -1540,7 +1578,9 @@ static astro_vector_t CalcChebyshev(const astro_cheb_record_t model[], int nrecs
  * the `status` field inside the returned #astro_vector_t for `ASTRO_SUCCESS` (success)
  * or any other value (failure) before trusting the resulting vector.
  *
- * @param body  A body for which to calculate a heliocentric position: the Sun, Moon, or any of the planets.
+ * @param body
+ *      A body for which to calculate a heliocentric position: the Sun, Moon, any of the planets,
+ *      the Solar System Barycenter (SSB), or the Earth Moon Barycenter (EMB).
  * @param time  The date and time for which to calculate the position.
  * @return      A heliocentric position vector of the center of the given body.
  */
@@ -1578,6 +1618,17 @@ astro_vector_t Astronomy_HelioVector(astro_body_t body, astro_time_t time)
         vector.y += earth.y;
         vector.z += earth.z;
         return vector;
+
+    case BODY_EMB:
+        vector = Astronomy_GeoMoon(time);
+        earth = CalcEarth(time);
+        vector.x = earth.x + (vector.x / (1.0 + EARTH_MOON_MASS_RATIO));
+        vector.y = earth.y + (vector.y / (1.0 + EARTH_MOON_MASS_RATIO));
+        vector.z = earth.z + (vector.z / (1.0 + EARTH_MOON_MASS_RATIO));
+        return vector;
+
+    case BODY_SSB:
+        return CalcSolarSystemBarycenter(time);
 
     default:
         return VecError(ASTRO_INVALID_BODY, time);

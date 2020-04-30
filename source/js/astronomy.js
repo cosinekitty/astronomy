@@ -66,6 +66,12 @@ const SOLAR_DAYS_PER_SIDEREAL_DAY = 0.9972695717592592;
 const SUN_RADIUS_AU  = 4.6505e-3;
 const MOON_RADIUS_AU = 1.15717e-5;
 const REFRACTION_NEAR_HORIZON = 34 / 60;        // degrees of refractive "lift" seen for objects near horizon
+const EARTH_MOON_MASS_RATIO = 81.30056;
+const SUN_MASS     = 333054.25318;        /* Sun's mass relative to Earth. */
+const JUPITER_MASS =    317.84997;        /* Jupiter's mass relative to Earth. */
+const SATURN_MASS  =     95.16745;        /* Saturn's mass relative to Earth. */
+const URANUS_MASS  =     14.53617;        /* Uranus's mass relative to Earth. */
+const NEPTUNE_MASS =     17.14886;        /* Neptune's mass relative to Earth. */
 let ob2000;   // lazy-evaluated mean obliquity of the ecliptic at J2000, in radians
 let cos_ob2000;
 let sin_ob2000;
@@ -214,7 +220,9 @@ Astronomy.Bodies = [
     'Saturn',
     'Uranus',
     'Neptune',
-    'Pluto'
+    'Pluto',
+    'SSB',          // Solar System Barycenter
+    'EMB'           // Earth/Moon Barycenter
 ];
 
 const Planet = {
@@ -2609,6 +2617,23 @@ function CalcChebyshev(model, time) {
     throw `Cannot extrapolate Chebyshev model for given Terrestrial Time: ${time.tt}`;
 }
 
+function AdjustBarycenter(ssb, time, body, pmass) {
+    const shift = pmass / (pmass + SUN_MASS);
+    const planet = CalcVsop(vsop[body], time);
+    ssb.x += shift * planet.x;
+    ssb.y += shift * planet.y;
+    ssb.z += shift * planet.z;
+}
+
+function CalcSolarSystemBarycenter(time) {
+    const ssb = new Vector(0.0, 0.0, 0.0, time);
+    AdjustBarycenter(ssb, time, 'Jupiter', JUPITER_MASS);
+    AdjustBarycenter(ssb, time, 'Saturn',  SATURN_MASS);
+    AdjustBarycenter(ssb, time, 'Uranus',  URANUS_MASS);
+    AdjustBarycenter(ssb, time, 'Neptune', NEPTUNE_MASS);
+    return ssb;
+}
+
 /**
  * Calculates heliocentric (i.e., with respect to the center of the Sun)
  * Cartesian coordinates in the J2000 equatorial system of a celestial
@@ -2618,7 +2643,8 @@ function CalcChebyshev(model, time) {
  *      One of the strings
  *      `"Sun"`, `"Moon"`, `"Mercury"`, `"Venus"`,
  *      `"Earth"`, `"Mars"`, `"Jupiter"`, `"Saturn"`,
- *      `"Uranus"`, `"Neptune"`, or `"Pluto"`.
+ *      `"Uranus"`, `"Neptune"`, `"Pluto"`,
+ *      `"SSB"`, or `"EMB"`.
  *
  * @param {(Date | number | Astronomy.AstroTime)} date
  *      The date and time for which the body's position is to be calculated.
@@ -2640,6 +2666,15 @@ Astronomy.HelioVector = function(body, date) {
         var e = CalcVsop(vsop.Earth, time);
         var m = Astronomy.GeoMoon(time);
         return new Vector(e.x+m.x, e.y+m.y, e.z+m.z, time);
+    }
+    if (body === 'EMB') {
+        const e = CalcVsop(vsop.Earth, time);
+        const m = Astronomy.GeoMoon(time);
+        const denom = 1.0 + EARTH_MOON_MASS_RATIO;
+        return new Vector(e.x+(m.x/denom), e.y+(m.y/denom), e.z+(m.z/denom), time);
+    }
+    if (body === 'SSB') {
+        return CalcSolarSystemBarycenter(time);
     }
     throw `Astronomy.HelioVector: Unknown body "${body}"`;
 };

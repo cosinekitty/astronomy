@@ -708,7 +708,7 @@ body at a specified time. The position is not corrected for light travel time or
 
 | Param | Type | Description |
 | --- | --- | --- |
-| body | <code>string</code> | One of the strings      `"Sun"`, `"Moon"`, `"Mercury"`, `"Venus"`,      `"Earth"`, `"Mars"`, `"Jupiter"`, `"Saturn"`,      `"Uranus"`, `"Neptune"`, or `"Pluto"`. |
+| body | <code>string</code> | One of the strings      `"Sun"`, `"Moon"`, `"Mercury"`, `"Venus"`,      `"Earth"`, `"Mars"`, `"Jupiter"`, `"Saturn"`,      `"Uranus"`, `"Neptune"`, `"Pluto"`,      `"SSB"`, or `"EMB"`. |
 | date | <code>Date</code> \| <code>number</code> \| [<code>AstroTime</code>](#Astronomy.AstroTime) | The date and time for which the body's position is to be calculated. |
 
 

@@ -204,7 +204,17 @@ static int NovasBodyPos(double jd, int body, double pos[3])
     jed[0] = jd;
     jed[1] = 0.0;
 
-    if (body == BODY_EARTH || body == BODY_MOON)
+    if (body == BODY_SSB)
+    {
+        /*
+            The NOVAS state() function does everything with respect to
+            the Solar System Barycenter (SSB) already.
+            Below we will get the Sun's position relative to the SSB.
+            Negating that will result in the SSB position with respect to the Sun.
+        */
+        pos[0] = pos[1] = pos[2] = 0.0;
+    }
+    else if (body == BODY_EARTH || body == BODY_MOON)
     {
         double factor;
 
@@ -913,9 +923,7 @@ static int PositionArcminError(int body, double jd, const double a[3], const dou
         return 0;
     }
 
-    /* Exclude Sun and Geocentric Moon (GM) from error estimates. */
-    /* Can also use Earth position rather than EMB position. */
-    if (body < BODY_MERCURY || body > BODY_PLUTO)
+    if ((body != BODY_SSB) && (body < BODY_MERCURY || body > BODY_PLUTO))
     {
         fprintf(stderr, "PositionArcminError(FATAL): Invalid body = %d\n", body);
         return 1;
@@ -1520,6 +1528,7 @@ static vsop_body_t LookupBody(const char *name)
     if (!strcmp(name, "Sun"))       return BODY_SUN;
     if (!strcmp(name, "EMB"))       return BODY_EMB;
     if (!strcmp(name, "GM"))        return BODY_GM;
+    if (!strcmp(name, "SSB"))       return BODY_SSB;
     return BODY_INVALID;
 }
 
@@ -1564,9 +1573,11 @@ static int PrintErrorStats(vsop_body_t body, const char *tag, const error_stat_t
         case VSOP_SATURN:   name = "Saturn";    break;
         case VSOP_URANUS:   name = "Uranus";    break;
         case VSOP_NEPTUNE:  name = "Neptune";   break;
-        case 8:             name = "Pluto";     break;
-        case 9:             name = "Moon";      break;
+        case VSOP_PLUTO:    name = "Pluto";     break;
+        case VSOP_GM:       name = "GM";        break;
         case VSOP_SUN:      name = "Sun";       break;
+        case VSOP_MOON:     name = "Moon";      break;
+        case VSOP_SSB:      name = "SSB";       break;
         default:            name = "";          break;
         }
         printf("STATS(%-8s %s):  count= %6d  max= %10.8lf  rms= %10.8lf\n", name, tag, stats->count, stats->max, sqrt(stats->sum / stats->count));

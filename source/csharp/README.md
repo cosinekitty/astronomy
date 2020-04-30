@@ -327,7 +327,7 @@ the year range 1700..2200, this function will throw an `ArgumentException`.
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| [`Body`](#Body) | `body` | A body for which to calculate a heliocentric position: the Sun, Moon, or any of the planets. |
+| [`Body`](#Body) | `body` | A body for which to calculate a heliocentric position: the Sun, Moon, EMB, SSB, or any of the planets. |
 | [`AstroTime`](#AstroTime) | `time` | The date and time for which to calculate the position. |
 
 **Returns:** A heliocentric position vector of the center of the given body.
@@ -1391,6 +1391,8 @@ according to the historical and predictive Delta-T model provided by the
 | `Pluto` | The planet Pluto. |
 | `Sun` | The Sun. |
 | `Moon` | The Earth's natural satellite, the Moon. |
+| `EMB` | The Earth/Moon Barycenter. |
+| `SSB` | The Solar System Barycenter. |
 
 ---
 

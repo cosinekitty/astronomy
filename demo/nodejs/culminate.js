@@ -42,7 +42,7 @@ function Demo() {
         console.log('search   : ' + date.toISOString());
 
         for (let body of Astronomy.Bodies) {
-            if (body !== 'Earth') {
+            if (body !== 'Earth' && body !== 'EMB' && body !== 'SSB') {
                 let culm = Astronomy.SearchHourAngle(body, observer, 0, date);
                 DisplayEvent(body, culm);
             }

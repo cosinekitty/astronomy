@@ -51,6 +51,7 @@ vsop_formula_t;
 typedef enum    /* values created for compatibility with NOVAS; these are *NOT* the body codes used by VSOP! */
 {
     VSOP_INVALID_BODY = -1,
+
     VSOP_MERCURY =  0,
     VSOP_VENUS   =  1,
     VSOP_EMB     =  2,       /* Earth/Moon barycenter, to match NOVAS */
@@ -59,13 +60,21 @@ typedef enum    /* values created for compatibility with NOVAS; these are *NOT* 
     VSOP_SATURN  =  5,
     VSOP_URANUS  =  6,
     VSOP_NEPTUNE =  7,
-    /* NOTE: VSOP does not provide Pluto or Moon. */
+
+    /* Remaining values are not supported by VSOP. */
+    /* Placeholders for NOVAS. */
+    VSOP_PLUTO   =  8,
+    VSOP_GM      =  9,
     VSOP_SUN     = 10,
-    VSOP_EARTH   = 11,      /* weird value so as not to conflict with NOVAS body values */
+
+    /* Extensions beyond what NOVAS supports. */
+    VSOP_EARTH   = 11,
+    VSOP_MOON    = 12,
+    VSOP_SSB     = 13
 }
 vsop_body_t;
 
-#define VSOP_BODY_LIMIT 12
+#define VSOP_BODY_LIMIT 14
 
 typedef struct
 {

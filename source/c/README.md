@@ -224,7 +224,7 @@ This function calculates the angular separation between the given body and the S
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| `const char *` | `name` |  One of the following strings: Sun, Moon, Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune, Pluto.  | 
+| `const char *` | `name` |  One of the following strings: Sun, Moon, Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune, Pluto, EMB, SSB.  | 
 
 
 
@@ -526,7 +526,7 @@ If given an invalid value for `body`, or the body is `BODY_PLUTO` and the `time`
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| [`astro_body_t`](#astro_body_t) | `body` |  A body for which to calculate a heliocentric position: the Sun, Moon, or any of the planets.  | 
+| [`astro_body_t`](#astro_body_t) | `body` |  A body for which to calculate a heliocentric position: the Sun, Moon, any of the planets, the Solar System Barycenter (SSB), or the Earth Moon Barycenter (EMB).  | 
 | [`astro_time_t`](#astro_time_t) | `time` |  The date and time for which to calculate the position.  | 
 
 
@@ -1861,6 +1861,8 @@ Aberration correction is useful to improve accuracy of coordinates of apparent l
 | `BODY_PLUTO` |  Pluto  |
 | `BODY_SUN` |  Sun  |
 | `BODY_MOON` |  Moon  |
+| `BODY_EMB` |  Earth/Moon Barycenter  |
+| `BODY_SSB` |  Solar System Barycenter  |
 
 
 

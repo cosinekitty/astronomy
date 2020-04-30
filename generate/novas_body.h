@@ -48,5 +48,6 @@
 /* The following are extensions supported by my own code... */
 #define BODY_EARTH      11
 #define BODY_MOON       12
+#define BODY_SSB        13     /* Solar System Barycenter */
 
 #endif /* __DDC_NOVAS_H */

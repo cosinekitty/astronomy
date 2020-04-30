@@ -504,6 +504,8 @@ two cases applies to a particular apsis event.
 | `Pluto` | The planet Pluto. |
 | `Sun` | The Sun. |
 | `Moon` | The Earth's moon. |
+| `EMB` | The Earth/Moon Barycenter. |
+| `SSB` | The Solar System Barycenter. |
 
 ---
 
@@ -893,7 +895,7 @@ the year range 1700..2200, this function raise an exception.
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| [`Body`](#Body) | `body` | The celestial body whose heliocentric position is to be calculated: The Sun, Moon, or any of the planets. |
+| [`Body`](#Body) | `body` | The celestial body whose heliocentric position is to be calculated: The Sun, Moon, EMB, SSB, or any of the planets. |
 | [`Time`](#Time) | `time` | The time at which to calculate the heliocentric position. |
 
 ### Returns: [`Vector`](#Vector)

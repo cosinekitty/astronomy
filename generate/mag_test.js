@@ -140,12 +140,11 @@ function TestMaxMag(filename, body) {
 
 function Test() {
     let all_passed = true;
-    for (let body of Astronomy.Bodies) {
-        if (body !== 'Earth' && body !== 'Saturn') {
-            const data = LoadMagnitudeData(`magnitude/${body}.txt`);
-            if (!CheckMagnitudeData(body, data))
-                all_passed = false;
-        }
+    const bodies = ['Sun', 'Moon', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Uranus', 'Neptune', 'Pluto'];
+    for (let body of bodies) {
+        const data = LoadMagnitudeData(`magnitude/${body}.txt`);
+        if (!CheckMagnitudeData(body, data))
+            all_passed = false;
     }
 
     if (!TestSaturn())

@@ -122,6 +122,16 @@ namespace CosineKitty
         /// The Earth's natural satellite, the Moon.
         /// </summary>
         Moon,
+
+        /// <summary>
+        /// The Earth/Moon Barycenter.
+        /// </summary>
+        EMB,
+
+        /// <summary>
+        /// The Solar System Barycenter.
+        /// </summary>
+        SSB,
     }
 
     /// <summary>
@@ -1390,6 +1400,12 @@ namespace CosineKitty
         internal const double MOON_RADIUS_AU = 1.15717e-5;
         private const double ASEC180 = 180.0 * 60.0 * 60.0;         /* arcseconds per 180 degrees (or pi radians) */
         private const double AU_PER_PARSEC = (ASEC180 / Math.PI);   /* exact definition of how many AU = one parsec */
+        private const double EARTH_MOON_MASS_RATIO = 81.30056;
+        private const double SUN_MASS     = 333054.25318;        /* Sun's mass relative to Earth. */
+        private const double JUPITER_MASS =    317.84997;        /* Jupiter's mass relative to Earth. */
+        private const double SATURN_MASS  =     95.16745;        /* Saturn's mass relative to Earth. */
+        private const double URANUS_MASS  =     14.53617;        /* Uranus's mass relative to Earth. */
+        private const double NEPTUNE_MASS =     17.14886;        /* Neptune's mass relative to Earth. */
 
         internal static double LongitudeOffset(double diff)
         {
@@ -3267,6 +3283,32 @@ namespace CosineKitty
             return new AstroVector(mpos2.x, mpos2.y, mpos2.z, time);
         }
 
+        private static AstroVector BarycenterContrib(AstroTime time, Body body, double pmass)
+        {
+            double shift = pmass / (pmass + SUN_MASS);
+            AstroVector p = CalcVsop(vsop[(int)body], time);
+            return new AstroVector(
+                shift * p.x,
+                shift * p.y,
+                shift * p.z,
+                time
+            );
+        }
+
+        private static AstroVector CalcSolarSystemBarycenter(AstroTime time)
+        {
+            AstroVector j = BarycenterContrib(time, Body.Jupiter, JUPITER_MASS);
+            AstroVector s = BarycenterContrib(time, Body.Saturn,  SATURN_MASS);
+            AstroVector u = BarycenterContrib(time, Body.Uranus,  URANUS_MASS);
+            AstroVector n = BarycenterContrib(time, Body.Neptune, NEPTUNE_MASS);
+            return new AstroVector(
+                j.x + s.x + u.x + n.x,
+                j.y + s.y + u.y + n.y,
+                j.z + s.z + u.z + n.z,
+                time
+            );
+        }
+
         /// <summary>
         /// Calculates heliocentric Cartesian coordinates of a body in the J2000 equatorial system.
         /// </summary>
@@ -3282,11 +3324,13 @@ namespace CosineKitty
         /// If given an invalid value for `body`, or the body is `Body.Pluto` and the `time` is outside
         /// the year range 1700..2200, this function will throw an `ArgumentException`.
         /// </remarks>
-        /// <param name="body">A body for which to calculate a heliocentric position: the Sun, Moon, or any of the planets.</param>
+        /// <param name="body">A body for which to calculate a heliocentric position: the Sun, Moon, EMB, SSB, or any of the planets.</param>
         /// <param name="time">The date and time for which to calculate the position.</param>
         /// <returns>A heliocentric position vector of the center of the given body.</returns>
         public static AstroVector HelioVector(Body body, AstroTime time)
         {
+            AstroVector earth, geomoon;
+
             switch (body)
             {
                 case Body.Sun:
@@ -3304,6 +3348,30 @@ namespace CosineKitty
 
                 case Body.Pluto:
                     return CalcChebyshev(cheb_8, time);
+
+                case Body.Moon:
+                    geomoon = GeoMoon(time);
+                    earth = CalcEarth(time);
+                    return new AstroVector(
+                        earth.x + geomoon.x,
+                        earth.y + geomoon.y,
+                        earth.z + geomoon.z,
+                        time
+                    );
+
+                case Body.EMB:
+                    geomoon = GeoMoon(time);
+                    earth = CalcEarth(time);
+                    double denom = 1.0 + EARTH_MOON_MASS_RATIO;
+                    return new AstroVector(
+                        earth.x + (geomoon.x / denom),
+                        earth.y + (geomoon.y / denom),
+                        earth.z + (geomoon.z / denom),
+                        time
+                    );
+
+                case Body.SSB:
+                    return CalcSolarSystemBarycenter(time);
 
                 default:
                     throw new ArgumentException(string.Format("Invalid body: {0}", body));

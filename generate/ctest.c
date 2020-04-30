@@ -259,7 +259,8 @@ static int AstroCheck(void)
     static const astro_body_t bodylist[] =  /* match the order in the JavaScript unit test */
     {
         BODY_SUN, BODY_MERCURY, BODY_VENUS, BODY_EARTH, BODY_MARS,
-        BODY_JUPITER, BODY_SATURN, BODY_URANUS, BODY_NEPTUNE, BODY_PLUTO
+        BODY_JUPITER, BODY_SATURN, BODY_URANUS, BODY_NEPTUNE, BODY_PLUTO,
+        BODY_SSB, BODY_EMB
     };
     static int nbodies = sizeof(bodylist) / sizeof(bodylist[0]);
 
@@ -283,7 +284,7 @@ static int AstroCheck(void)
             CHECK_VECTOR(pos, Astronomy_HelioVector(body, time));
             fprintf(outfile, "v %s %0.16lf %0.16lf %0.16lf %0.16lf\n", Astronomy_BodyName(body), pos.t.tt, pos.x, pos.y, pos.z);
 
-            if (body != BODY_EARTH)
+            if (body != BODY_EARTH && body != BODY_EMB && body != BODY_SSB)
             {
                 CHECK_EQU(j2000, Astronomy_Equator(body, &time, observer, EQUATOR_J2000, NO_ABERRATION));
                 CHECK_EQU(ofdate, Astronomy_Equator(body, &time, observer, EQUATOR_OF_DATE, ABERRATION));

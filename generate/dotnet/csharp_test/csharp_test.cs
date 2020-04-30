@@ -103,7 +103,8 @@ namespace csharp_test
                 var bodylist = new Body[]
                 {
                     Body.Sun, Body.Mercury, Body.Venus, Body.Earth, Body.Mars,
-                    Body.Jupiter, Body.Saturn, Body.Uranus, Body.Neptune, Body.Pluto
+                    Body.Jupiter, Body.Saturn, Body.Uranus, Body.Neptune, Body.Pluto,
+                    Body.SSB, Body.EMB
                 };
 
                 var observer = new Observer(29.0, -81.0, 10.0);
@@ -121,7 +122,7 @@ namespace csharp_test
                     {
                         pos = Astronomy.HelioVector(body, time);
                         outfile.WriteLine("v {0} {1} {2} {3} {4}", body, pos.t.tt.ToString("G17"), pos.x.ToString("G17"), pos.y.ToString("G17"), pos.z.ToString("G17"));
-                        if (body != Body.Earth)
+                        if (body != Body.Earth && body != Body.SSB && body != Body.EMB)
                         {
                             j2000 = Astronomy.Equator(body, time, observer, EquatorEpoch.J2000, Aberration.None);
                             ofdate = Astronomy.Equator(body, time, observer, EquatorEpoch.OfDate, Aberration.Corrected);

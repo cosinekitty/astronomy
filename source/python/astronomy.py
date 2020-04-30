@@ -59,6 +59,13 @@ _SUN_RADIUS_AU  = 4.6505e-3
 _MOON_RADIUS_AU = 1.15717e-5
 _ASEC180 = 180.0 * 60.0 * 60.0
 _AU_PER_PARSEC = _ASEC180 / math.pi
+_EARTH_MOON_MASS_RATIO = 81.30056
+_SUN_MASS     = 333054.25318      # Sun's mass relative to Earth.
+_JUPITER_MASS =    317.84997      # Jupiter's mass relative to Earth.
+_SATURN_MASS  =     95.16745      # Saturn's mass relative to Earth.
+_URANUS_MASS  =     14.53617      # Uranus's mass relative to Earth.
+_NEPTUNE_MASS =     17.14886      # Neptune's mass relative to Earth.
+
 
 def _LongitudeOffset(diff):
     offset = diff
@@ -121,6 +128,8 @@ class Body(enum.IntEnum):
     Pluto: The planet Pluto.
     Sun: The Sun.
     Moon: The Earth's moon.
+    EMB: The Earth/Moon Barycenter.
+    SSB: The Solar System Barycenter.
     """
     Invalid = -1
     Mercury = 0
@@ -134,6 +143,8 @@ class Body(enum.IntEnum):
     Pluto = 8
     Sun = 9
     Moon = 10
+    EMB = 11
+    SSB = 12
 
 def BodyCode(name):
     """Finds the Body enumeration value, given the name of a body.
@@ -3336,6 +3347,21 @@ def Search(func, context, t1, t2, dt_tolerance_seconds):
 # END Search
 #----------------------------------------------------------------------------
 
+def _AdjustBarycenter(ssb, time, body, pmass):
+    shift = pmass / (pmass + _SUN_MASS)
+    planet = _CalcVsop(_vsop[body], time)
+    ssb.x += shift * planet.x
+    ssb.y += shift * planet.y
+    ssb.z += shift * planet.z
+
+def _CalcSolarSystemBarycenter(time):
+    ssb = Vector(0.0, 0.0, 0.0, time)
+    _AdjustBarycenter(ssb, time, Body.Jupiter, _JUPITER_MASS)
+    _AdjustBarycenter(ssb, time, Body.Saturn,  _SATURN_MASS)
+    _AdjustBarycenter(ssb, time, Body.Uranus,  _URANUS_MASS)
+    _AdjustBarycenter(ssb, time, Body.Neptune, _NEPTUNE_MASS)
+    return ssb
+
 def HelioVector(body, time):
     """Calculates heliocentric Cartesian coordinates of a body in the J2000 equatorial system.
 
@@ -3354,7 +3380,7 @@ def HelioVector(body, time):
     ----------
     body : Body
         The celestial body whose heliocentric position is to be calculated:
-        The Sun, Moon, or any of the planets.
+        The Sun, Moon, EMB, SSB, or any of the planets.
     time : Time
         The time at which to calculate the heliocentric position.
 
@@ -3377,6 +3403,15 @@ def HelioVector(body, time):
         e = _CalcEarth(time)
         m = GeoMoon(time)
         return Vector(e.x+m.x, e.y+m.y, e.z+m.z, time)
+
+    if body == Body.EMB:
+        e = _CalcEarth(time)
+        m = GeoMoon(time)
+        d = 1.0 + _EARTH_MOON_MASS_RATIO
+        return Vector(e.x+(m.x/d), e.y+(m.y/d), e.z+(m.z/d), time)
+
+    if body == Body.SSB:
+        return _CalcSolarSystemBarycenter(time)
 
     raise InvalidBodyError()
 
