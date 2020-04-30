@@ -64,6 +64,11 @@ if [[ ! -f ${EPHFILE} ]]; then
     fi
 fi
 
+cd .. || Fail "Cannot change to parent directory."
+python3 generate/update_copyrights.py $(git grep -l Copyright -- generate hydrogen LICENSE source/c/astronomy.h) ||
+    Fail "Error updating copyrights."
+cd generate || Fail "Cannot change back to generate directory."
+
 echo ""
 echo "Building C source code for 'generate' program."
 ./build || Fail "Could not build 'generate' program from source."
