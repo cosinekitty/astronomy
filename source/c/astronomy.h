@@ -539,6 +539,21 @@ typedef enum
 }
 astro_direction_t;
 
+
+/**
+ * @brief Reports the constellation that a given celestial point lies within.
+ *
+ * The #Astronomy_FindConstellation function returns this struct
+ * to report which constellation corresponds with a given point in the sky.
+ */
+typedef struct
+{
+    astro_status_t status;  /**< `ASTRO_SUCCESS` if this struct is valid; otherwise an error code. */
+    const char    *symbol;  /**< 3-character mnemonic symbol for the constellation, e.g. "Ori" */
+    const char    *name;    /**< Full name of constellation, e.g. "Orion" */
+}
+astro_constellation_t;
+
 /*---------- functions ----------*/
 
 double Astronomy_VectorLength(astro_vector_t vector);
@@ -643,6 +658,8 @@ astro_rotation_t Astronomy_Rotation_HOR_ECL(astro_time_t time, astro_observer_t 
 
 double Astronomy_Refraction(astro_refraction_t refraction, double altitude);
 double Astronomy_InverseRefraction(astro_refraction_t refraction, double bent_altitude);
+
+astro_constellation_t Astronomy_FindConstellation(double ra, double dec);
 
 #ifdef __cplusplus
 }

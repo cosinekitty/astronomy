@@ -353,6 +353,15 @@ static astro_search_result_t SearchError(astro_status_t status)
     return result;
 }
 
+static astro_constellation_t ConstelErr(astro_status_t status)
+{
+    astro_constellation_t constel;
+    constel.status = status;
+    constel.symbol = NULL;
+    constel.name = NULL;
+    return constel;
+}
+
 static astro_func_result_t SynodicPeriod(astro_body_t body)
 {
     double Tp;                         /* planet's orbital period in days */
@@ -5221,6 +5230,108 @@ astro_rotation_t Astronomy_Rotation_HOR_ECL(astro_time_t time, astro_observer_t 
 {
     astro_rotation_t rot = Astronomy_Rotation_ECL_HOR(time, observer);
     return Astronomy_InverseRotation(rot);
+}
+
+
+/** @cond DOXYGEN_SKIP */
+typedef struct
+{
+    const char *symbol;
+    const char *name;
+}
+constel_info_t;
+
+
+typedef struct
+{
+    double dec_lo;
+    double ra_lo;
+    double ra_hi;
+    int    index;
+}
+constel_boundary_t;
+/** @endcond */
+
+$ASTRO_CONSTEL()
+
+/**
+ * @brief
+ *      Determines the constellation that contains the given point in the sky.
+ *
+ * Given J2000 equatorial (EQJ) coordinates of a point in the sky, determines the
+ * constellation that contains that point.
+ *
+ * @param ra
+ *      The right ascension (RA) of a point in the sky, using the J2000 equatorial system.
+ *
+ * @param dec
+ *      The declination (DEC) of a point in the sky, using the J2000 equatorial system.
+ *
+ * @return
+ *      If successful, `status` holds `ASTRO_SUCCESS`,
+ *      `symbol` holds a pointer to a 3-character string like "Ori", and
+ *      `name` holds a pointer to the full constellation name like "Orion".
+ */
+astro_constellation_t Astronomy_FindConstellation(double ra, double dec)
+{
+    static astro_time_t epoch2000;
+    static astro_rotation_t rot = { ASTRO_NOT_INITIALIZED };
+    astro_constellation_t constel;
+    astro_equatorial_t j2000, b1875;
+    astro_vector_t vec2000, vec1875;
+    int i;
+
+    if (dec < -90.0 || dec > +90.0)
+        return ConstelErr(ASTRO_INVALID_PARAMETER);
+
+    /* Allow right ascension to "wrap around". Clamp to [0, 24) sidereal hours. */
+    ra = fmod(ra, 24.0);
+    if (ra < 0.0)
+        ra += 24.0;
+
+    /* Lazy-initialize the rotation matrix for converting J2000 to B1875. */
+    if (rot.status != ASTRO_SUCCESS)
+    {
+        astro_time_t time = Astronomy_MakeTime(1875, 1, 1, 12, 0, 0.0);     /* Not sure about exact date/time of 1875. */
+        rot = Astronomy_Rotation_EQJ_EQD(time);
+        if (rot.status != ASTRO_SUCCESS)
+            return ConstelErr(rot.status);
+
+        epoch2000 = Astronomy_TimeFromDays(0.0);
+    }
+
+    /* Convert coordinates from J2000 to year 1875. */
+    j2000.status = ASTRO_SUCCESS;
+    j2000.ra = ra;
+    j2000.dec = dec;
+    j2000.dist = 1.0;
+    vec2000 = Astronomy_VectorFromEquator(j2000, epoch2000);
+    if (vec2000.status != ASTRO_SUCCESS)
+        return ConstelErr(vec2000.status);
+
+    vec1875 = Astronomy_RotateVector(rot, vec2000);
+    if (vec1875.status != ASTRO_SUCCESS)
+        return ConstelErr(vec1875.status);
+
+    b1875 = Astronomy_EquatorFromVector(vec1875);
+    if (b1875.status != ASTRO_SUCCESS)
+        return ConstelErr(b1875.status);
+
+    /* Search for the constellation using the B1875 coordinates. */
+    for (i=0; i < NUM_CONSTELLATIONS; ++i)
+    {
+        const constel_boundary_t *b = &ConstelBounds[i];
+        if ((b->dec_lo <= b1875.dec) && (b->ra_hi > b1875.ra) && (b->ra_lo <= b1875.ra))
+            break;
+    }
+
+    if (i == NUM_CONSTELLATIONS)
+        return ConstelErr(ASTRO_INTERNAL_ERROR);    /* should have been able to find the constellation */
+
+    constel.status = ASTRO_SUCCESS;
+    constel.symbol = ConstelInfo[i].symbol;
+    constel.name = ConstelInfo[i].name;
+    return constel;
 }
 
 

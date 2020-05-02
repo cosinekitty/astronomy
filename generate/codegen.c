@@ -1260,6 +1260,134 @@ fail:
     return error;
 }
 
+#define NUM_CONSTELLATIONS 88
+
+static int ConstellationData(cg_context_t *context)
+{
+    int error;
+    const char *dictFileName   = "constellation/constellation.dictionary";
+    const char *borderFileName = "constellation/constellation.borders";
+    FILE *infile;
+    int lnum, len, index;
+    char line[100];
+    char dict[NUM_CONSTELLATIONS][25];
+    char *d;
+    double dec, ra_lo, ra_hi;
+    char symbol[4];
+
+    /* Generate the table of constellation symbols and names. */
+
+    infile = fopen(dictFileName, "rt");
+    if (infile == NULL)
+        CHECK(LogError(context, "Cannot open input file: %s", dictFileName));
+
+    lnum = 0;
+    while (fgets(line, sizeof(line), infile))
+    {
+        if (lnum == NUM_CONSTELLATIONS)
+            CHECK(LogError(context, "Too many constellations in file: %s", dictFileName));
+
+        d = dict[lnum++];
+        len = strlen(line);
+        if (len < 26)
+            CHECK(LogError(context, "File %s line %d is too short", dictFileName, lnum));
+
+        if (!isupper(line[0]) || !isalpha(line[1]) || !isalpha(line[2]) || (line[3] != ' '))
+            CHECK(LogError(context, "File %s line %d has invalid constellation symbol", dictFileName, lnum));
+
+        /* Tokenize the symbol and name and store them in the 'dict' array. */
+        /* We need 'dict' for symbol lookups when we process the boundary file below. */
+        memcpy(d, line, 24);
+        for (index=23; index >= 0 && d[index] == ' '; --index)
+            d[index] = '\0';
+        d[3] = '\0';
+
+        len = strlen(d+4);  /* capture variable length of constellation name for formatting columns nicely. */
+
+        switch (context->language)
+        {
+        case CODEGEN_LANGUAGE_C:
+            if (lnum == 1)
+            {
+                fprintf(context->outfile, "#define NUM_CONSTELLATIONS   %d\n\n", NUM_CONSTELLATIONS);
+                fprintf(context->outfile, "static const constel_info_t ConstelInfo[] = {\n    ");
+            }
+            else
+                fprintf(context->outfile, ",   ");
+            fprintf(context->outfile, "/* %2d */ { \"%s\", \"%s\"%*s }\n", lnum-1, d, d+4, (20-len), "");
+            break;
+
+        case CODEGEN_LANGUAGE_CSHARP:
+        case CODEGEN_LANGUAGE_JS:
+        case CODEGEN_LANGUAGE_PYTHON:
+        default:
+             CHECK(LogError(context, "ConstellationData(1): Unsupported language %d", context->language));
+        }
+    }
+
+    if (lnum != NUM_CONSTELLATIONS)
+        CHECK(LogError(context, "Not enough constellations in file %s : expected %d", dictFileName, NUM_CONSTELLATIONS));
+
+    fclose(infile);
+    infile = fopen(borderFileName, "rt");
+    if (infile == NULL)
+        CHECK(LogError(context, "Cannot open input file: %s", borderFileName));
+
+    /* End the name table. */
+    /* Generate the table of constellation boundary lines. */
+
+    switch (context->language)
+    {
+    case CODEGEN_LANGUAGE_C:
+        fprintf(context->outfile, "};\n\n");
+        fprintf(context->outfile, "static const constel_boundary_t ConstelBounds[] = {\n");
+        break;
+
+    case CODEGEN_LANGUAGE_CSHARP:
+    case CODEGEN_LANGUAGE_JS:
+    case CODEGEN_LANGUAGE_PYTHON:
+    default:
+        CHECK(LogError(context, "ConstellationData(2): Unsupported language %d", context->language));
+    }
+
+    lnum = 0;
+    while (fgets(line, sizeof(line), infile))
+    {
+        ++lnum;
+        if (4 != sscanf(line, "%lf %lf %lf %3s", &ra_lo, &ra_hi, &dec, symbol))
+            CHECK(LogError(context, "Invalid constellation data at %s line %d", borderFileName, lnum));
+
+        /* Search for the constellation symbol in the name table, to find its array index. */
+        for (index=0; index < NUM_CONSTELLATIONS; ++index)
+            if (0 == strcmp(symbol, dict[index]))
+                break;
+
+        if (index == NUM_CONSTELLATIONS)
+            CHECK(LogError(context, "Invalid constellation symbol '%s' at %s line %d", symbol, borderFileName, lnum));
+
+        switch (context->language)
+        {
+        case CODEGEN_LANGUAGE_C:
+            fprintf(context->outfile, "%c   { %2d, %7.4lf, %7.4lf, %8.4lf }    /* %s */\n",
+                ((lnum == 1) ? ' ' : ','),
+                index, ra_lo, ra_hi, dec, symbol);
+            break;
+
+        case CODEGEN_LANGUAGE_CSHARP:
+        case CODEGEN_LANGUAGE_JS:
+        case CODEGEN_LANGUAGE_PYTHON:
+        default:
+            CHECK(LogError(context, "ConstellationData(3): Unsupported language %d", context->language));
+        }
+    }
+
+    fprintf(context->outfile, "};\n\n");
+    error = 0;
+fail:
+    if (infile) fclose(infile);
+    return error;
+}
+
 static int LogError(const cg_context_t *context, const char *format, ...)
 {
     va_list v;
@@ -1282,6 +1410,7 @@ static const cg_directive_entry DirectiveTable[] =
     { "DELTA_T", GenDeltaT },
     { "IAU_DATA", OptIauData },
     { "ADDSOL", OptAddSol },
+    { "CONSTEL", ConstellationData },
     { NULL, NULL }
 };
 

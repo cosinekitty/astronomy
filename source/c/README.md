@@ -422,6 +422,31 @@ Correction for aberration is optional, using the `aberration` parameter.
 
 ---
 
+<a name="Astronomy_FindConstellation"></a>
+### Astronomy_FindConstellation(ra, dec) &#8658; [`astro_constellation_t`](#astro_constellation_t)
+
+**Determines the constellation that contains the given point in the sky.** 
+
+
+
+Given J2000 equatorial (EQJ) coordinates of a point in the sky, determines the constellation that contains that point.
+
+
+
+**Returns:**  If successful, `status` holds `ASTRO_SUCCESS`, `symbol` holds a pointer to a 3-character string like "Ori", and `name` holds a pointer to the full constellation name like "Orion". 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| `double` | `ra` |  The right ascension (RA) of a point in the sky, using the J2000 equatorial system. | 
+| `double` | `dec` |  The declination (DEC) of a point in the sky, using the J2000 equatorial system. | 
+
+
+
+
+---
+
 <a name="Astronomy_GeoMoon"></a>
 ### Astronomy_GeoMoon(time) &#8658; [`astro_vector_t`](#astro_vector_t)
 
@@ -2007,6 +2032,24 @@ This data structure is returned by [`Astronomy_SearchLunarApsis`](#Astronomy_Sea
 | [`astro_apsis_kind_t`](#astro_apsis_kind_t) | `kind` |  Whether this is a pericenter or apocenter event.  |
 | `double` | `dist_au` |  The distance between the centers of the bodies in astronomical units.  |
 | `double` | `dist_km` |  The distance between the centers of the bodies in kilometers.  |
+
+
+---
+
+<a name="astro_constellation_t"></a>
+### `astro_constellation_t`
+
+**Reports the constellation that a given celestial point lies within.** 
+
+
+
+The [`Astronomy_FindConstellation`](#Astronomy_FindConstellation) function returns this struct to report which constellation corresponds with a given point in the sky. 
+
+| Type | Member | Description |
+| ---- | ------ | ----------- |
+| [`astro_status_t`](#astro_status_t) | `status` |  `ASTRO_SUCCESS` if this struct is valid; otherwise an error code.  |
+| `const char *` | `symbol` |  3-character mnemonic symbol for the constellation, e.g. "Ori"  |
+| `const char *` | `name` |  Full name of constellation, e.g. "Orion"  |
 
 
 ---
