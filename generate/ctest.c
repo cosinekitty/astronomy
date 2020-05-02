@@ -2845,7 +2845,7 @@ static int ConstellationTest(void)
     char line[100];
     double ra, dec;
     char symbol[4];
-    int lnum;
+    int lnum, failcount, id;
     astro_constellation_t constel;
 
     infile = fopen(inFileName, "rt");
@@ -2857,10 +2857,11 @@ static int ConstellationTest(void)
     }
 
     lnum = 0;
+    failcount = 0;
     while (fgets(line, sizeof(line), infile))
     {
         ++lnum;
-        if (3 != sscanf(line, "%lf %lf %3s", &ra, &dec, symbol) || 3 != strlen(symbol))
+        if (4 != sscanf(line, "%d %lf %lf %3s", &id, &ra, &dec, symbol) || 3 != strlen(symbol))
         {
             fprintf(stderr, "ConstellationTest: Invalid test data in %s line %d\n", inFileName, lnum);
             error = 1;
@@ -2870,24 +2871,30 @@ static int ConstellationTest(void)
         constel = Astronomy_FindConstellation(ra, dec);
         if (constel.status != ASTRO_SUCCESS)
         {
-            fprintf(stderr, "ConstellationTest: FAILED with status %d: %s line %d\n", constel.status, inFileName, lnum);
+            fprintf(stderr, "ConstellationTest: FAILED star %d with status %d: %s line %d\n", id, constel.status, inFileName, lnum);
             error = 1;
             goto fail;
         }
 
         if (constel.symbol == NULL || constel.name == NULL)
         {
-            fprintf(stderr, "ConstellationTest: UNEXPECTED NULL name/symbol: %s line %d\n", inFileName, lnum);
+            fprintf(stderr, "ConstellationTest: UNEXPECTED NULL name/symbol: star %d, %s line %d\n", id, inFileName, lnum);
             error = 1;
             goto fail;
         }
 
         if (strcmp(constel.symbol, symbol))
         {
-            fprintf(stderr, "ConstellationTest: %s line %d: expected '%s', found '%s'\n", inFileName, lnum, symbol, constel.symbol);
-            error = 1;
-            goto fail;
+            fprintf(stderr, "Star %6d: expected %s, found %s at B1875 RA=%10.6lf, DEC=%10.6lf\n", id, symbol, constel.symbol, constel.ra_1875, constel.dec_1875);
+            ++failcount;
         }
+    }
+
+    if (failcount > 0)
+    {
+        fprintf(stderr, "ConstellationTest: %d failures\n", failcount);
+        error = 1;
+        goto fail;
     }
 
     printf("ConstellationTest: PASS (verified %d)\n", lnum);

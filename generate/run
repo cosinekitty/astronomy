@@ -44,25 +44,80 @@ if [[ ! -f ${EPHFILE} ]]; then
         echo "Then run this script again to continue."
         exit 1
     fi
+fi
 
-    if IsInstalled sha256sum; then
-        if sha256sum -c ephemeris.sha256; then
-            echo "Validated download using sha256 checksum."
-        else
-            rm -f ${EPHFILE}
-            Fail "Detected corrupt ephemeris file: failed sha256 check."
-        fi
-    elif IsInstalled md5sum; then
-        if md5sum -c ephemeris.md5; then
-            echo "Validated download using md5 checksum."
-        else
-            rm -f ${EPHFILE}
-            Fail "Detected corrupt ephemeris file: failed md5 check."
-        fi
+if IsInstalled sha256sum; then
+    if sha256sum -c ephemeris.sha256; then
+        echo "Validated ephemeris using sha256 checksum."
     else
-        echo "Warning: could not validate ephemeris file with md5 or sha256."
+        rm -f ${EPHFILE}
+        Fail "Detected corrupt ephemeris file: failed sha256 check."
+    fi
+elif IsInstalled md5sum; then
+    if md5sum -c ephemeris.md5; then
+        echo "Validated ephemeris using md5 checksum."
+    else
+        rm -f ${EPHFILE}
+        Fail "Detected corrupt ephemeris file: failed md5 check."
+    fi
+else
+    echo "Warning: could not validate ephemeris file with md5 or sha256."
+fi
+
+STARFILE=hygdata_v3.csv
+STARURL=https://raw.githubusercontent.com/astronexus/HYG-Database/master/hygdata_v3.csv
+STARMD5=hygdata_v3.md5
+STARSHA=hygdata_v3.sha256
+if [[ ! -f ${STARFILE} ]]; then
+    echo ""
+    echo "Star database not found: ${STARFILE}"
+    echo "Trying to download for you from:"
+    echo "${STARURL}"
+    echo ""
+    if IsInstalled wget; then
+        wget_success=false
+        for attempt in {1..10}; do
+            if [[ ${attempt} > 1 ]]; then
+                echo "wget failed (attempt ${attempt} of 10) -- will retry download in 9 seconds..."
+                sleep 9
+            fi
+            if wget ${STARURL}; then
+                echo "wget successfully downloaded the star database."
+                wget_success=true
+                break
+            fi
+        done
+        [[ ${wget_success} == true ]] || Fail "Could not download using wget: ${STARFILE}"
+    elif IsInstalled curl; then
+        curl -L -o ${STARFILE} ${STARURL} || Fail "Could not download using curl: ${STARFILE}"
+    else
+        echo "Neither wget nor curl is installed. Use your browser to download"
+        echo "the file at the URL above into this directory."
+        echo "Then run this script again to continue."
+        exit 1
     fi
 fi
+
+if IsInstalled sha256sum; then
+    if sha256sum -c ${STARSHA}; then
+        echo "Validated star database using sha256 checksum."
+    else
+        rm -f ${STARFILE}
+        Fail "Detected corrupt star database: failed sha256 check."
+    fi
+elif IsInstalled md5sum; then
+    if md5sum -c ${STARMD5}; then
+        echo "Validated star database using md5 checksum."
+    else
+        rm -f ${STARFILE}
+        Fail "Detected corrupt star database: failed md5 check."
+    fi
+else
+    echo "Warning: could not validate star database with md5 or sha256."
+fi
+
+rm -f constellation/test_input.txt
+./make_constellation_data.py || Fail "Error creating constellation test data."
 
 cd .. || Fail "Cannot change to parent directory."
 python3 generate/update_copyrights.py $(git grep -l Copyright -- generate hydrogen LICENSE source/c/astronomy.h) ||

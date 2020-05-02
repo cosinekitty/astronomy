@@ -548,9 +548,11 @@ astro_direction_t;
  */
 typedef struct
 {
-    astro_status_t status;  /**< `ASTRO_SUCCESS` if this struct is valid; otherwise an error code. */
-    const char    *symbol;  /**< 3-character mnemonic symbol for the constellation, e.g. "Ori" */
-    const char    *name;    /**< Full name of constellation, e.g. "Orion" */
+    astro_status_t status;      /**< `ASTRO_SUCCESS` if this struct is valid; otherwise an error code. */
+    const char    *symbol;      /**< 3-character mnemonic symbol for the constellation, e.g. "Ori" */
+    const char    *name;        /**< Full name of constellation, e.g. "Orion" */
+    double         ra_1875;     /**< Right ascension expressed in B1875 coordinates. */
+    double         dec_1875;    /**< Declination expressed in B1875 coordinates. */
 }
 astro_constellation_t;
 

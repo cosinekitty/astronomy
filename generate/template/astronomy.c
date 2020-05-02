@@ -357,8 +357,8 @@ static astro_constellation_t ConstelErr(astro_status_t status)
 {
     astro_constellation_t constel;
     constel.status = status;
-    constel.symbol = NULL;
-    constel.name = NULL;
+    constel.symbol = constel.name = NULL;
+    constel.ra_1875 = constel.dec_1875 = NAN;
     return constel;
 }
 
@@ -5335,6 +5335,8 @@ astro_constellation_t Astronomy_FindConstellation(double ra, double dec)
     constel.status = ASTRO_SUCCESS;
     constel.symbol = ConstelInfo[c].symbol;
     constel.name = ConstelInfo[c].name;
+    constel.ra_1875 = b1875.ra;
+    constel.dec_1875 = b1875.dec;
     return constel;
 }
 
