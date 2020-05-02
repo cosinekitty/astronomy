@@ -1318,6 +1318,17 @@ static int ConstellationData(cg_context_t *context)
             break;
 
         case CODEGEN_LANGUAGE_CSHARP:
+            if (lnum == 1)
+            {
+                fprintf(context->outfile, "        private static readonly constel_info_t[] ConstelNames = new constel_info_t[]\n");
+                fprintf(context->outfile, "        {\n");
+                fprintf(context->outfile, "            ");
+            }
+            else
+                fprintf(context->outfile, "        ,   ");
+            fprintf(context->outfile, "new constel_info_t(\"%s\", \"%s\"%*s)  // %2d\n", d, d+4, (20-len), "", lnum-1);
+            break;
+
         case CODEGEN_LANGUAGE_JS:
         case CODEGEN_LANGUAGE_PYTHON:
         default:
@@ -1344,6 +1355,11 @@ static int ConstellationData(cg_context_t *context)
         break;
 
     case CODEGEN_LANGUAGE_CSHARP:
+        fprintf(context->outfile, "        };\n\n");
+        fprintf(context->outfile, "        private static readonly constel_boundary_t[] ConstelBounds = new constel_boundary_t[]\n");
+        fprintf(context->outfile, "        {\n");
+        break;
+
     case CODEGEN_LANGUAGE_JS:
     case CODEGEN_LANGUAGE_PYTHON:
     default:
@@ -1374,6 +1390,11 @@ static int ConstellationData(cg_context_t *context)
             break;
 
         case CODEGEN_LANGUAGE_CSHARP:
+            fprintf(context->outfile, "        %c   new constel_boundary_t(%2d, %7.4lf, %7.4lf, %8.4lf)    // %s\n",
+                ((lnum == 1) ? ' ' : ','),
+                index, ra_lo, ra_hi, dec, symbol);
+            break;
+
         case CODEGEN_LANGUAGE_JS:
         case CODEGEN_LANGUAGE_PYTHON:
         default:
@@ -1389,6 +1410,9 @@ static int ConstellationData(cg_context_t *context)
         break;
 
     case CODEGEN_LANGUAGE_CSHARP:
+        fprintf(context->outfile, "        };\n\n");
+        break;
+
     case CODEGEN_LANGUAGE_JS:
     case CODEGEN_LANGUAGE_PYTHON:
     default:

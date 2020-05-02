@@ -4938,5 +4938,36 @@ $ASTRO_CSHARP_CHEBYSHEV(8);
             RotationMatrix rot = Rotation_ECL_HOR(time, observer);
             return InverseRotation(rot);
         }
+
+        private struct constel_info_t
+        {
+            public readonly string symbol;
+            public readonly string name;
+
+            public constel_info_t(string symbol, string name)
+            {
+                this.symbol = symbol;
+                this.name = name;
+            }
+        }
+
+        private struct constel_boundary_t
+        {
+            public readonly int index;
+            public readonly double ra_lo;
+            public readonly double ra_hi;
+            public readonly double dec_lo;
+
+            public constel_boundary_t(int index, double ra_lo, double ra_hi, double dec_lo)
+            {
+                this.index = index;
+                this.ra_lo = ra_lo;
+                this.ra_hi = ra_hi;
+                this.dec_lo = dec_lo;
+            }
+        }
+
+$ASTRO_CONSTEL()
+
     }
 }
