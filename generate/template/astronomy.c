@@ -5244,10 +5244,10 @@ constel_info_t;
 
 typedef struct
 {
-    double dec_lo;
+    int    index;
     double ra_lo;
     double ra_hi;
-    int    index;
+    double dec_lo;
 }
 constel_boundary_t;
 /** @endcond */
@@ -5279,7 +5279,7 @@ astro_constellation_t Astronomy_FindConstellation(double ra, double dec)
     astro_constellation_t constel;
     astro_equatorial_t j2000, b1875;
     astro_vector_t vec2000, vec1875;
-    int i;
+    int i, c;
 
     if (dec < -90.0 || dec > +90.0)
         return ConstelErr(ASTRO_INVALID_PARAMETER);
@@ -5318,19 +5318,23 @@ astro_constellation_t Astronomy_FindConstellation(double ra, double dec)
         return ConstelErr(b1875.status);
 
     /* Search for the constellation using the B1875 coordinates. */
-    for (i=0; i < NUM_CONSTELLATIONS; ++i)
+    c = -1;     /* constellation not (yet) found */
+    for (i=0; i < NUM_CONSTEL_BOUNDARIES; ++i)
     {
         const constel_boundary_t *b = &ConstelBounds[i];
         if ((b->dec_lo <= b1875.dec) && (b->ra_hi > b1875.ra) && (b->ra_lo <= b1875.ra))
+        {
+            c = b->index;
             break;
+        }
     }
 
-    if (i == NUM_CONSTELLATIONS)
+    if (c < 0 || c >= NUM_CONSTELLATIONS)
         return ConstelErr(ASTRO_INTERNAL_ERROR);    /* should have been able to find the constellation */
 
     constel.status = ASTRO_SUCCESS;
-    constel.symbol = ConstelInfo[i].symbol;
-    constel.name = ConstelInfo[i].name;
+    constel.symbol = ConstelInfo[c].symbol;
+    constel.name = ConstelInfo[c].name;
     return constel;
 }
 

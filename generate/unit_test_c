@@ -8,6 +8,7 @@ Fail()
 ./ctest refraction || Fail "Failure in ctest refraction"
 ./ctest rotation || Fail "Failure in ctest rotation"
 ./ctest moon || Fail "Failure in ctest moon"
+./ctest constellation || Fail "Failure in ctest constellation"
 time ./ctest check || Fail "Failure in ctest check"
 ./generate check temp/c_check.txt || Fail "Verification failure for C unit test output."
 ./ctest diff temp/c_check.txt temp/js_check.txt || Fail "Diff(C,JS) failure."

@@ -1381,7 +1381,20 @@ static int ConstellationData(cg_context_t *context)
         }
     }
 
-    fprintf(context->outfile, "};\n\n");
+    switch (context->language)
+    {
+    case CODEGEN_LANGUAGE_C:
+        fprintf(context->outfile, "};\n\n");
+        fprintf(context->outfile, "#define NUM_CONSTEL_BOUNDARIES  %d\n\n", lnum);
+        break;
+
+    case CODEGEN_LANGUAGE_CSHARP:
+    case CODEGEN_LANGUAGE_JS:
+    case CODEGEN_LANGUAGE_PYTHON:
+    default:
+        CHECK(LogError(context, "ConstellationData(4): Unsupported language %d", context->language));
+    }
+
     error = 0;
 fail:
     if (infile) fclose(infile);

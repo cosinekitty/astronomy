@@ -69,6 +69,7 @@ static int TestMaxMag(astro_body_t body, const char *filename);
 static const char *ParseJplHorizonsDateTime(const char *text, astro_time_t *time);
 static int VectorDiff(astro_vector_t a, astro_vector_t b, double *diff);
 static int RefractionTest(void);
+static int ConstellationTest(void);
 
 int main(int argc, const char *argv[])
 {
@@ -129,6 +130,12 @@ int main(int argc, const char *argv[])
         if (!strcmp(verb, "issue48"))
         {
             CHECK(Issue48());
+            goto success;
+        }
+
+        if (!strcmp(verb, "constellation"))
+        {
+            CHECK(ConstellationTest());
             goto success;
         }
     }
@@ -2826,6 +2833,68 @@ static int RefractionTest(void)
 
     printf("RefractionTest: PASS\n");
     return 0;
+}
+
+/*-----------------------------------------------------------------------------------------------------------*/
+
+static int ConstellationTest(void)
+{
+    int error = 1;
+    FILE *infile = NULL;
+    const char *inFileName = "constellation/test_input.txt";
+    char line[100];
+    double ra, dec;
+    char symbol[4];
+    int lnum;
+    astro_constellation_t constel;
+
+    infile = fopen(inFileName, "rt");
+    if (infile == NULL)
+    {
+        fprintf(stderr, "ConstellationTest: Cannot open input file: %s\n", inFileName);
+        error = 1;
+        goto fail;
+    }
+
+    lnum = 0;
+    while (fgets(line, sizeof(line), infile))
+    {
+        ++lnum;
+        if (3 != sscanf(line, "%lf %lf %3s", &ra, &dec, symbol) || 3 != strlen(symbol))
+        {
+            fprintf(stderr, "ConstellationTest: Invalid test data in %s line %d\n", inFileName, lnum);
+            error = 1;
+            goto fail;
+        }
+
+        constel = Astronomy_FindConstellation(ra, dec);
+        if (constel.status != ASTRO_SUCCESS)
+        {
+            fprintf(stderr, "ConstellationTest: FAILED with status %d: %s line %d\n", constel.status, inFileName, lnum);
+            error = 1;
+            goto fail;
+        }
+
+        if (constel.symbol == NULL || constel.name == NULL)
+        {
+            fprintf(stderr, "ConstellationTest: UNEXPECTED NULL name/symbol: %s line %d\n", inFileName, lnum);
+            error = 1;
+            goto fail;
+        }
+
+        if (strcmp(constel.symbol, symbol))
+        {
+            fprintf(stderr, "ConstellationTest: %s line %d: expected '%s', found '%s'\n", inFileName, lnum, symbol, constel.symbol);
+            error = 1;
+            goto fail;
+        }
+    }
+
+    printf("ConstellationTest: PASS (verified %d)\n", lnum);
+    error = 0;
+fail:
+    if (infile != NULL) fclose(infile);
+    return error;
 }
 
 /*-----------------------------------------------------------------------------------------------------------*/
