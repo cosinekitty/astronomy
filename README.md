@@ -96,3 +96,5 @@ Calculations are also verified to be identical among all the supported programmi
     - Equatorial equator-of-date
     - Ecliptic J2000
     - Topocentric Horizontal
+
+- Determines which constellation contains a given point in the sky.
