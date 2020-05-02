@@ -32,7 +32,6 @@ def Translate(inFileName, outFileName):
                     ra = float(token[columns['ra']])
                     dec = float(token[columns['dec']])
                     sym = token[columns['con']]
-                    mag = float(token[columns['mag']])
                     if sym != '':
                         if not re.match(r'^[A-Z][a-zA-Z]{2}$', sym):
                             print('make_constellation_data: bad symbol "{}" in {} line {}'.format(sym, inFileName, lnum))
@@ -40,7 +39,7 @@ def Translate(inFileName, outFileName):
 
                         if id not in ignore:
                             count += 1
-                            outfile.write('{:6d} {:10.6f} {:10.6f} {:3s} {:7.3f}\n'.format(id, ra, dec, sym, mag))
+                            outfile.write('{:6d} {:10.6f} {:10.6f} {:3s}\n'.format(id, ra, dec, sym))
     print('make_constellation_data: Wrote {:d} test cases.'.format(count))
     return 0
 
