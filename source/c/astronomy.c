@@ -7018,7 +7018,7 @@ static const constel_boundary_t ConstelBounds[] = {
  *      `symbol` holds a pointer to a 3-character string like "Ori", and
  *      `name` holds a pointer to the full constellation name like "Orion".
  */
-astro_constellation_t Astronomy_FindConstellation(double ra, double dec)
+astro_constellation_t Astronomy_Constellation(double ra, double dec)
 {
     static astro_time_t epoch2000;
     static astro_rotation_t rot = { ASTRO_NOT_INITIALIZED };

@@ -2868,7 +2868,7 @@ static int ConstellationTest(void)
             goto fail;
         }
 
-        constel = Astronomy_FindConstellation(ra, dec);
+        constel = Astronomy_Constellation(ra, dec);
         if (constel.status != ASTRO_SUCCESS)
         {
             fprintf(stderr, "ConstellationTest: FAILED star %d with status %d: %s line %d\n", id, constel.status, inFileName, lnum);

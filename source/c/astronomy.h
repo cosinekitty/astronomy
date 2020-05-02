@@ -543,7 +543,7 @@ astro_direction_t;
 /**
  * @brief Reports the constellation that a given celestial point lies within.
  *
- * The #Astronomy_FindConstellation function returns this struct
+ * The #Astronomy_Constellation function returns this struct
  * to report which constellation corresponds with a given point in the sky.
  */
 typedef struct
@@ -661,7 +661,7 @@ astro_rotation_t Astronomy_Rotation_HOR_ECL(astro_time_t time, astro_observer_t 
 double Astronomy_Refraction(astro_refraction_t refraction, double altitude);
 double Astronomy_InverseRefraction(astro_refraction_t refraction, double bent_altitude);
 
-astro_constellation_t Astronomy_FindConstellation(double ra, double dec);
+astro_constellation_t Astronomy_Constellation(double ra, double dec);
 
 #ifdef __cplusplus
 }

@@ -278,6 +278,31 @@ Given two rotation matrices, returns a combined rotation matrix that is equivale
 
 ---
 
+<a name="Astronomy_Constellation"></a>
+### Astronomy_Constellation(ra, dec) &#8658; [`astro_constellation_t`](#astro_constellation_t)
+
+**Determines the constellation that contains the given point in the sky.** 
+
+
+
+Given J2000 equatorial (EQJ) coordinates of a point in the sky, determines the constellation that contains that point.
+
+
+
+**Returns:**  If successful, `status` holds `ASTRO_SUCCESS`, `symbol` holds a pointer to a 3-character string like "Ori", and `name` holds a pointer to the full constellation name like "Orion". 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| `double` | `ra` |  The right ascension (RA) of a point in the sky, using the J2000 equatorial system. | 
+| `double` | `dec` |  The declination (DEC) of a point in the sky, using the J2000 equatorial system. | 
+
+
+
+
+---
+
 <a name="Astronomy_CurrentTime"></a>
 ### Astronomy_CurrentTime() &#8658; [`astro_time_t`](#astro_time_t)
 
@@ -416,31 +441,6 @@ Correction for aberration is optional, using the `aberration` parameter.
 | Type | Parameter | Description |
 | --- | --- | --- |
 | [`astro_vector_t`](#astro_vector_t) | `vector` |  A vector in an equatorial coordinate system. | 
-
-
-
-
----
-
-<a name="Astronomy_FindConstellation"></a>
-### Astronomy_FindConstellation(ra, dec) &#8658; [`astro_constellation_t`](#astro_constellation_t)
-
-**Determines the constellation that contains the given point in the sky.** 
-
-
-
-Given J2000 equatorial (EQJ) coordinates of a point in the sky, determines the constellation that contains that point.
-
-
-
-**Returns:**  If successful, `status` holds `ASTRO_SUCCESS`, `symbol` holds a pointer to a 3-character string like "Ori", and `name` holds a pointer to the full constellation name like "Orion". 
-
-
-
-| Type | Parameter | Description |
-| --- | --- | --- |
-| `double` | `ra` |  The right ascension (RA) of a point in the sky, using the J2000 equatorial system. | 
-| `double` | `dec` |  The declination (DEC) of a point in the sky, using the J2000 equatorial system. | 
 
 
 
@@ -2043,7 +2043,7 @@ This data structure is returned by [`Astronomy_SearchLunarApsis`](#Astronomy_Sea
 
 
 
-The [`Astronomy_FindConstellation`](#Astronomy_FindConstellation) function returns this struct to report which constellation corresponds with a given point in the sky. 
+The [`Astronomy_Constellation`](#Astronomy_Constellation) function returns this struct to report which constellation corresponds with a given point in the sky. 
 
 | Type | Member | Description |
 | ---- | ------ | ----------- |
