@@ -2043,13 +2043,13 @@ This data structure is returned by [`Astronomy_SearchLunarApsis`](#Astronomy_Sea
 
 
 
-The [`Astronomy_Constellation`](#Astronomy_Constellation) function returns this struct to report which constellation corresponds with a given point in the sky. 
+The [`Astronomy_Constellation`](#Astronomy_Constellation) function returns this struct to report which constellation corresponds with a given point in the sky. Constellations are defined with respect to the B1875 equatorial system per IAU standard. Although `Astronomy.Constellation` requires J2000 equatorial coordinates, the struct contains converted B1875 coordinates for reference. 
 
 | Type | Member | Description |
 | ---- | ------ | ----------- |
 | [`astro_status_t`](#astro_status_t) | `status` |  `ASTRO_SUCCESS` if this struct is valid; otherwise an error code.  |
-| `const char *` | `symbol` |  3-character mnemonic symbol for the constellation, e.g. "Ori"  |
-| `const char *` | `name` |  Full name of constellation, e.g. "Orion"  |
+| `const char *` | `symbol` |  3-character mnemonic symbol for the constellation, e.g. "Ori".  |
+| `const char *` | `name` |  Full name of constellation, e.g. "Orion".  |
 | `double` | `ra_1875` |  Right ascension expressed in B1875 coordinates.  |
 | `double` | `dec_1875` |  Declination expressed in B1875 coordinates.  |
 

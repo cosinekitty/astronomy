@@ -163,6 +163,21 @@ equivalent to rotating based on the first matrix, followed by the second.
 
 **Returns:** The combined rotation matrix.
 
+<a name="Astronomy.Constellation"></a>
+### Astronomy.Constellation(ra, dec) &#8658; [`ConstellationInfo`](#ConstellationInfo)
+
+**Determines the constellation that contains the given point in the sky.**
+
+Given J2000 equatorial (EQJ) coordinates of a point in the sky, determines the
+constellation that contains that point.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| `double` | `ra` | The right ascension (RA) of a point in the sky, using the J2000 equatorial system. |
+| `double` | `dec` | The declination (DEC) of a point in the sky, using the J2000 equatorial system. |
+
+**Returns:** A structure that contains the 3-letter abbreviation and full name of the constellation that contains the given (ra,dec), along with the converted B1875 (ra,dec) for that point.
+
 <a name="Astronomy.EclipticLongitude"></a>
 ### Astronomy.EclipticLongitude(body, time) &#8658; `double`
 
@@ -1393,6 +1408,26 @@ according to the historical and predictive Delta-T model provided by the
 | `Moon` | The Earth's natural satellite, the Moon. |
 | `EMB` | The Earth/Moon Barycenter. |
 | `SSB` | The Solar System Barycenter. |
+
+---
+
+<a name="ConstellationInfo"></a>
+## `struct ConstellationInfo`
+
+**Reports the constellation that a given celestial point lies within.**
+
+The [`Astronomy.Constellation`](#Astronomy.Constellation) function returns this struct
+to report which constellation corresponds with a given point in the sky.
+Constellations are defined with respect to the B1875 equatorial system
+per IAU standard. Although `Astronomy.Constellation` requires J2000 equatorial
+coordinates, the struct contains converted B1875 coordinates for reference.
+
+| Type | Name | Description |
+| --- | --- | --- |
+| `string` | `Symbol` | 3-character mnemonic symbol for the constellation, e.g. "Ori". |
+| `string` | `Name` | Full name of constellation, e.g. "Orion". |
+| `double` | `Ra1875` | Right ascension expressed in B1875 coordinates. |
+| `double` | `Dec1875` | Declination expressed in B1875 coordinates. |
 
 ---
 

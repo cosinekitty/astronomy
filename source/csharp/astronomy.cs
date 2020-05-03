@@ -1372,6 +1372,47 @@ namespace CosineKitty
     }
 
     /// <summary>
+    /// Reports the constellation that a given celestial point lies within.
+    /// </summary>
+    /// <remarks>
+    /// The #Astronomy.Constellation function returns this struct
+    /// to report which constellation corresponds with a given point in the sky.
+    /// Constellations are defined with respect to the B1875 equatorial system
+    /// per IAU standard. Although `Astronomy.Constellation` requires J2000 equatorial
+    /// coordinates, the struct contains converted B1875 coordinates for reference.
+    /// </remarks>
+    public struct ConstellationInfo
+    {
+        /// <summary>
+        /// 3-character mnemonic symbol for the constellation, e.g. "Ori".
+        /// </summary>
+        public readonly string Symbol;
+
+        /// <summary>
+        /// Full name of constellation, e.g. "Orion".
+        /// </summary>
+        public readonly string Name;
+
+        /// <summary>
+        /// Right ascension expressed in B1875 coordinates.
+        /// </summary>
+        public readonly double Ra1875;
+
+        /// <summary>
+        /// Declination expressed in B1875 coordinates.
+        /// </summary>
+        public readonly double Dec1875;
+
+        internal ConstellationInfo(string symbol, string name, double ra1875, double dec1875)
+        {
+            this.Symbol = symbol;
+            this.Name = name;
+            this.Ra1875 = ra1875;
+            this.Dec1875 = dec1875;
+        }
+    }
+
+    /// <summary>
     /// The wrapper class that holds Astronomy Engine functions.
     /// </summary>
     public static class Astronomy
@@ -6261,6 +6302,64 @@ namespace CosineKitty
                 this.ra_hi = ra_hi;
                 this.dec_lo = dec_lo;
             }
+        }
+
+        private static readonly object ConstelLock = new object();
+        private static RotationMatrix ConstelRot;
+        private static AstroTime Epoch2000;
+
+        /// <summary>
+        /// Determines the constellation that contains the given point in the sky.
+        /// </summary>
+        /// <remarks>
+        /// Given J2000 equatorial (EQJ) coordinates of a point in the sky, determines the
+        /// constellation that contains that point.
+        /// </remarks>
+        /// <param name="ra">
+        /// The right ascension (RA) of a point in the sky, using the J2000 equatorial system.
+        /// </param>
+        /// <param name="dec">
+        /// The declination (DEC) of a point in the sky, using the J2000 equatorial system.
+        /// </param>
+        /// <returns>
+        /// A structure that contains the 3-letter abbreviation and full name
+        /// of the constellation that contains the given (ra,dec), along with
+        /// the converted B1875 (ra,dec) for that point.
+        /// </returns>
+        public static ConstellationInfo Constellation(double ra, double dec)
+        {
+            if (dec < -90.0 || dec > +90.0)
+                throw new ArgumentException("Invalid declination angle. Must be -90..+90.");
+
+            // Allow right ascension to "wrap around". Clamp to [0, 24) sidereal hours.
+            ra %= 24.0;
+            if (ra < 0.0)
+                ra += 24.0;
+
+            lock (ConstelLock)
+            {
+                if (ConstelRot.rot == null)
+                {
+                    // Lazy-initialize the rotation matrix for converting J2000 to B1875.
+                    var time = new AstroTime(1875, 1, 1, 12, 0, 0);
+                    ConstelRot = Rotation_EQJ_EQD(time);
+                    Epoch2000 = new AstroTime(0.0);
+                }
+            }
+
+            // Convert coordinates from J2000 to B1875.
+            var equ2000 = new Equatorial(ra, dec, 1.0);
+            AstroVector vec2000 = VectorFromEquator(equ2000, Epoch2000);
+            AstroVector vec1875 = RotateVector(ConstelRot, vec2000);
+            Equatorial equ1875 = EquatorFromVector(vec1875);
+
+            // Search for the constellation using the B1875 coordinates.
+            foreach (constel_boundary_t b in ConstelBounds)
+                if ((b.dec_lo <= equ1875.dec) && (b.ra_hi > equ1875.ra) && (b.ra_lo <= equ1875.ra))
+                    return new ConstellationInfo(ConstelNames[b.index].symbol, ConstelNames[b.index].name, equ1875.dec, equ1875.dec);
+
+            // This should never happen!
+            throw new Exception("Unable to find constellation for given coordinates.");
         }
 
         private static readonly constel_info_t[] ConstelNames = new constel_info_t[]

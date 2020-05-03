@@ -24,6 +24,7 @@ namespace csharp_test
                 if (LunarApsisTest("../../apsides/moon.txt") != 0) return 1;
                 if (PlanetApsisTest("../../apsides") != 0) return 1;
                 if (MagnitudeTest() != 0) return 1;
+                if (ConstellationTest() != 0) return 1;
                 if (AstroCheck() != 0) return 1;
                 Console.WriteLine("csharp_test: PASS");
                 return 0;
@@ -1534,6 +1535,46 @@ namespace csharp_test
             }
 
             Console.WriteLine("RefractionTest: PASS");
+            return 0;
+        }
+
+        static int ConstellationTest()
+        {
+            const string inFileName = "../../constellation/test_input.txt";
+            int failcount = 0;
+            int lnum = 0;
+            using (StreamReader infile = File.OpenText(inFileName))
+            {
+                string line;
+                Regex reLine = new Regex(@"^\s*(\d+)\s+(\S+)\s+(\S+)\s+([A-Z][a-zA-Z]{2})\s*$");
+                while (null != (line = infile.ReadLine()))
+                {
+                    ++lnum;
+                    Match m = reLine.Match(line);
+                    if (!m.Success)
+                    {
+                        Console.WriteLine("ERROR(ConstellationTest): invalid line {0} in file {1}", lnum, inFileName);
+                        return 1;
+                    }
+                    int id = int.Parse(m.Groups[1].Value);
+                    double ra = double.Parse(m.Groups[2].Value);
+                    double dec = double.Parse(m.Groups[3].Value);
+                    string symbol = m.Groups[4].Value;
+                    ConstellationInfo constel = Astronomy.Constellation(ra, dec);
+                    if (constel.Symbol != symbol)
+                    {
+                        Console.WriteLine("Star {0,6}: expected {1}, found {2} at B1875 RA={3,10}, DEC={4,10}", id, symbol, constel.Symbol, constel.Ra1875, constel.Dec1875);
+                        ++failcount;
+                    }
+                }
+            }
+            if (failcount > 0)
+            {
+                Console.WriteLine("ConstellationTest: {0} failures", failcount);
+                return 1;
+            }
+
+            Console.WriteLine("ConstellationTest: PASS (verified {0})", lnum);
             return 0;
         }
     }
