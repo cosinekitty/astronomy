@@ -1366,12 +1366,16 @@ static int ConstellationData(cg_context_t *context)
         CHECK(LogError(context, "ConstellationData(2): Unsupported language %d", context->language));
     }
 
+    /* Translate the constellation boundaries. */
     lnum = 0;
     while (fgets(line, sizeof(line), infile))
     {
         ++lnum;
         if (4 != sscanf(line, "%lf %lf %lf %3s", &ra_lo, &ra_hi, &dec, symbol))
             CHECK(LogError(context, "Invalid constellation data at %s line %d", borderFileName, lnum));
+
+        ra_lo /= 15.0;      /* convert RA from degrees to sidereal hours */
+        ra_hi /= 15.0;      /* convert RA from degrees to sidereal hours */
 
         /* Search for the constellation symbol in the name table, to find its array index. */
         for (index=0; index < NUM_CONSTELLATIONS; ++index)
@@ -1384,13 +1388,13 @@ static int ConstellationData(cg_context_t *context)
         switch (context->language)
         {
         case CODEGEN_LANGUAGE_C:
-            fprintf(context->outfile, "%c   { %2d, %7.4lf, %7.4lf, %8.4lf }    /* %s */\n",
+            fprintf(context->outfile, "%c   { %2d, %17.14lf, %17.14lf, %17.14lf }    /* %s */\n",
                 ((lnum == 1) ? ' ' : ','),
                 index, ra_lo, ra_hi, dec, symbol);
             break;
 
         case CODEGEN_LANGUAGE_CSHARP:
-            fprintf(context->outfile, "        %c   new constel_boundary_t(%2d, %7.4lf, %7.4lf, %8.4lf)    // %s\n",
+            fprintf(context->outfile, "        %c   new constel_boundary_t(%2d, %17.14lf, %17.14lf, %17.14lf)    // %s\n",
                 ((lnum == 1) ? ' ' : ','),
                 index, ra_lo, ra_hi, dec, symbol);
             break;

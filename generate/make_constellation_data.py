@@ -9,14 +9,18 @@ import sys
 import re
 
 def Translate(inFileName, outFileName):
-    # Ignore 25 disagreements with hygdata_v3.
-    # See: https://github.com/astronexus/HYG-Database/issues/21
-    ignore = set([
-        3865, 7751, 10342, 19173, 22400, 27992, 29366,
-        30112, 52886, 58221, 59234, 67599, 72017, 74021,
-        84413, 85957, 87694, 89105, 91382, 92907, 93308,
-        95468, 100777, 101541, 105623
-    ])
+
+    if False:
+        ignore = set()
+    else:
+        # Ignore disagreements with hygdata_v3.
+        # See: https://github.com/astronexus/HYG-Database/issues/21
+        ignore = set([
+            3865, 7751, 10342, 19173, 22400, 27992, 29366,
+            30112, 52886, 58221, 59234, 67599, 72017, 74021, 78313,
+            84413, 85957, 87694, 89105, 91382, 92907, 93308,
+            95468, 100777, 101541, 105623
+        ])
 
     count = 0
     with open(inFileName, 'rt') as infile:

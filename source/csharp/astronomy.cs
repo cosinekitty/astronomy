@@ -6357,363 +6357,363 @@ namespace CosineKitty
 
         private static readonly constel_boundary_t[] ConstelBounds = new constel_boundary_t[]
         {
-            new constel_boundary_t(83,  0.0000, 24.0000,  88.0000)    // UMi
-        ,   new constel_boundary_t(83,  8.0000, 14.5000,  86.5000)    // UMi
-        ,   new constel_boundary_t(83, 21.0000, 23.0000,  86.1667)    // UMi
-        ,   new constel_boundary_t(83, 18.0000, 21.0000,  86.0000)    // UMi
-        ,   new constel_boundary_t(15,  0.0000,  8.0000,  85.0000)    // Cep
-        ,   new constel_boundary_t(10,  9.1667, 10.6667,  82.0000)    // Cam
-        ,   new constel_boundary_t(15,  0.0000,  5.0000,  80.0000)    // Cep
-        ,   new constel_boundary_t(10, 10.6667, 14.5000,  80.0000)    // Cam
-        ,   new constel_boundary_t(83, 17.5000, 18.0000,  80.0000)    // UMi
-        ,   new constel_boundary_t(33, 20.1667, 21.0000,  80.0000)    // Dra
-        ,   new constel_boundary_t(15,  0.0000,  3.5083,  77.0000)    // Cep
-        ,   new constel_boundary_t(10, 11.5000, 13.5833,  77.0000)    // Cam
-        ,   new constel_boundary_t(83, 16.5333, 17.5000,  75.0000)    // UMi
-        ,   new constel_boundary_t(15, 20.1667, 20.6667,  75.0000)    // Cep
-        ,   new constel_boundary_t(10,  7.9667,  9.1667,  73.5000)    // Cam
-        ,   new constel_boundary_t(33,  9.1667, 11.3333,  73.5000)    // Dra
-        ,   new constel_boundary_t(83, 13.0000, 16.5333,  70.0000)    // UMi
-        ,   new constel_boundary_t(13,  3.1000,  3.4167,  68.0000)    // Cas
-        ,   new constel_boundary_t(33, 20.4167, 20.6667,  67.0000)    // Dra
-        ,   new constel_boundary_t(33, 11.3333, 12.0000,  66.5000)    // Dra
-        ,   new constel_boundary_t(15,  0.0000,  0.3333,  66.0000)    // Cep
-        ,   new constel_boundary_t(83, 14.0000, 15.6667,  66.0000)    // UMi
-        ,   new constel_boundary_t(15, 23.5833, 24.0000,  66.0000)    // Cep
-        ,   new constel_boundary_t(33, 12.0000, 13.5000,  64.0000)    // Dra
-        ,   new constel_boundary_t(33, 13.5000, 14.4167,  63.0000)    // Dra
-        ,   new constel_boundary_t(15, 23.1667, 23.5833,  63.0000)    // Cep
-        ,   new constel_boundary_t(10,  6.1000,  7.0000,  62.0000)    // Cam
-        ,   new constel_boundary_t(33, 20.0000, 20.4167,  61.5000)    // Dra
-        ,   new constel_boundary_t(15, 20.5367, 20.6000,  60.9167)    // Cep
-        ,   new constel_boundary_t(10,  7.0000,  7.9667,  60.0000)    // Cam
-        ,   new constel_boundary_t(82,  7.9667,  8.4167,  60.0000)    // UMa
-        ,   new constel_boundary_t(33, 19.7667, 20.0000,  59.5000)    // Dra
-        ,   new constel_boundary_t(15, 20.0000, 20.5367,  59.5000)    // Cep
-        ,   new constel_boundary_t(15, 22.8667, 23.1667,  59.0833)    // Cep
-        ,   new constel_boundary_t(13,  0.0000,  2.4333,  58.5000)    // Cas
-        ,   new constel_boundary_t(33, 19.4167, 19.7667,  58.0000)    // Dra
-        ,   new constel_boundary_t(13,  1.7000,  1.9083,  57.5000)    // Cas
-        ,   new constel_boundary_t(13,  2.4333,  3.1000,  57.0000)    // Cas
-        ,   new constel_boundary_t(10,  3.1000,  3.1667,  57.0000)    // Cam
-        ,   new constel_boundary_t(15, 22.3167, 22.8667,  56.2500)    // Cep
-        ,   new constel_boundary_t(10,  5.0000,  6.1000,  56.0000)    // Cam
-        ,   new constel_boundary_t(82, 14.0333, 14.4167,  55.5000)    // UMa
-        ,   new constel_boundary_t(33, 14.4167, 19.4167,  55.5000)    // Dra
-        ,   new constel_boundary_t(10,  3.1667,  3.3333,  55.0000)    // Cam
-        ,   new constel_boundary_t(15, 22.1333, 22.3167,  55.0000)    // Cep
-        ,   new constel_boundary_t(15, 20.6000, 21.9667,  54.8333)    // Cep
-        ,   new constel_boundary_t(13,  0.0000,  1.7000,  54.0000)    // Cas
-        ,   new constel_boundary_t(50,  6.1000,  6.5000,  54.0000)    // Lyn
-        ,   new constel_boundary_t(82, 12.0833, 13.5000,  53.0000)    // UMa
-        ,   new constel_boundary_t(33, 15.2500, 15.7500,  53.0000)    // Dra
-        ,   new constel_boundary_t(15, 21.9667, 22.1333,  52.7500)    // Cep
-        ,   new constel_boundary_t(10,  3.3333,  5.0000,  52.5000)    // Cam
-        ,   new constel_boundary_t(13, 22.8667, 23.3333,  52.5000)    // Cas
-        ,   new constel_boundary_t(33, 15.7500, 17.0000,  51.5000)    // Dra
-        ,   new constel_boundary_t(62,  2.0417,  2.5167,  50.5000)    // Per
-        ,   new constel_boundary_t(33, 17.0000, 18.2333,  50.5000)    // Dra
-        ,   new constel_boundary_t(13,  0.0000,  1.3667,  50.0000)    // Cas
-        ,   new constel_boundary_t(62,  1.3667,  1.6667,  50.0000)    // Per
-        ,   new constel_boundary_t(50,  6.5000,  6.8000,  50.0000)    // Lyn
-        ,   new constel_boundary_t(13, 23.3333, 24.0000,  50.0000)    // Cas
-        ,   new constel_boundary_t(82, 13.5000, 14.0333,  48.5000)    // UMa
-        ,   new constel_boundary_t(13,  0.0000,  1.1167,  48.0000)    // Cas
-        ,   new constel_boundary_t(13, 23.5833, 24.0000,  48.0000)    // Cas
-        ,   new constel_boundary_t(39, 18.1750, 18.2333,  47.5000)    // Her
-        ,   new constel_boundary_t(33, 18.2333, 19.0833,  47.5000)    // Dra
-        ,   new constel_boundary_t(30, 19.0833, 19.1667,  47.5000)    // Cyg
-        ,   new constel_boundary_t(62,  1.6667,  2.0417,  47.0000)    // Per
-        ,   new constel_boundary_t(82,  8.4167,  9.1667,  47.0000)    // UMa
-        ,   new constel_boundary_t(13,  0.1667,  0.8667,  46.0000)    // Cas
-        ,   new constel_boundary_t(82, 12.0000, 12.0833,  45.0000)    // UMa
-        ,   new constel_boundary_t(50,  6.8000,  7.3667,  44.5000)    // Lyn
-        ,   new constel_boundary_t(30, 21.9083, 21.9667,  44.0000)    // Cyg
-        ,   new constel_boundary_t(30, 21.8750, 21.9083,  43.7500)    // Cyg
-        ,   new constel_boundary_t(30, 19.1667, 19.4000,  43.5000)    // Cyg
-        ,   new constel_boundary_t(82,  9.1667, 10.1667,  42.0000)    // UMa
-        ,   new constel_boundary_t(82, 10.1667, 10.7833,  40.0000)    // UMa
-        ,   new constel_boundary_t( 8, 15.4333, 15.7500,  40.0000)    // Boo
-        ,   new constel_boundary_t(39, 15.7500, 16.3333,  40.0000)    // Her
-        ,   new constel_boundary_t(50,  9.2500,  9.5833,  39.7500)    // Lyn
-        ,   new constel_boundary_t( 0,  0.0000,  2.5167,  36.7500)    // And
-        ,   new constel_boundary_t(62,  2.5167,  2.5667,  36.7500)    // Per
-        ,   new constel_boundary_t(51, 19.3583, 19.4000,  36.5000)    // Lyr
-        ,   new constel_boundary_t(62,  4.5000,  4.6917,  36.0000)    // Per
-        ,   new constel_boundary_t(30, 21.7333, 21.8750,  36.0000)    // Cyg
-        ,   new constel_boundary_t(44, 21.8750, 22.0000,  36.0000)    // Lac
-        ,   new constel_boundary_t( 7,  6.5333,  7.3667,  35.5000)    // Aur
-        ,   new constel_boundary_t(50,  7.3667,  7.7500,  35.5000)    // Lyn
-        ,   new constel_boundary_t( 0,  0.0000,  2.0000,  35.0000)    // And
-        ,   new constel_boundary_t(44, 22.0000, 22.8167,  35.0000)    // Lac
-        ,   new constel_boundary_t(44, 22.8167, 22.8667,  34.5000)    // Lac
-        ,   new constel_boundary_t( 0, 22.8667, 23.5000,  34.5000)    // And
-        ,   new constel_boundary_t(62,  2.5667,  2.7167,  34.0000)    // Per
-        ,   new constel_boundary_t(82, 10.7833, 11.0000,  34.0000)    // UMa
-        ,   new constel_boundary_t(29, 12.0000, 12.3333,  34.0000)    // CVn
-        ,   new constel_boundary_t(50,  7.7500,  9.2500,  33.5000)    // Lyn
-        ,   new constel_boundary_t(48,  9.2500,  9.8833,  33.5000)    // LMi
-        ,   new constel_boundary_t( 0,  0.7167,  1.4083,  33.0000)    // And
-        ,   new constel_boundary_t( 8, 15.1833, 15.4333,  33.0000)    // Boo
-        ,   new constel_boundary_t( 0, 23.5000, 23.7500,  32.0833)    // And
-        ,   new constel_boundary_t(29, 12.3333, 13.2500,  32.0000)    // CVn
-        ,   new constel_boundary_t( 0, 23.7500, 24.0000,  31.3333)    // And
-        ,   new constel_boundary_t(29, 13.9583, 14.0333,  30.7500)    // CVn
-        ,   new constel_boundary_t(80,  2.4167,  2.7167,  30.6667)    // Tri
-        ,   new constel_boundary_t(62,  2.7167,  4.5000,  30.6667)    // Per
-        ,   new constel_boundary_t( 7,  4.5000,  4.7500,  30.0000)    // Aur
-        ,   new constel_boundary_t(51, 18.1750, 19.3583,  30.0000)    // Lyr
-        ,   new constel_boundary_t(82, 11.0000, 12.0000,  29.0000)    // UMa
-        ,   new constel_boundary_t(30, 19.6667, 20.9167,  29.0000)    // Cyg
-        ,   new constel_boundary_t( 7,  4.7500,  5.8833,  28.5000)    // Aur
-        ,   new constel_boundary_t(48,  9.8833, 10.5000,  28.5000)    // LMi
-        ,   new constel_boundary_t(29, 13.2500, 13.9583,  28.5000)    // CVn
-        ,   new constel_boundary_t( 0,  0.0000,  0.0667,  28.0000)    // And
-        ,   new constel_boundary_t(80,  1.4083,  1.6667,  28.0000)    // Tri
-        ,   new constel_boundary_t( 7,  5.8833,  6.5333,  28.0000)    // Aur
-        ,   new constel_boundary_t(37,  7.8833,  8.0000,  28.0000)    // Gem
-        ,   new constel_boundary_t(30, 20.9167, 21.7333,  28.0000)    // Cyg
-        ,   new constel_boundary_t(30, 19.2583, 19.6667,  27.5000)    // Cyg
-        ,   new constel_boundary_t(80,  1.9167,  2.4167,  27.2500)    // Tri
-        ,   new constel_boundary_t(25, 16.1667, 16.3333,  27.0000)    // CrB
-        ,   new constel_boundary_t( 8, 15.0833, 15.1833,  26.0000)    // Boo
-        ,   new constel_boundary_t(25, 15.1833, 16.1667,  26.0000)    // CrB
-        ,   new constel_boundary_t(51, 18.3667, 18.8667,  26.0000)    // Lyr
-        ,   new constel_boundary_t(48, 10.7500, 11.0000,  25.5000)    // LMi
-        ,   new constel_boundary_t(51, 18.8667, 19.2583,  25.5000)    // Lyr
-        ,   new constel_boundary_t(80,  1.6667,  1.9167,  25.0000)    // Tri
-        ,   new constel_boundary_t(66,  0.7167,  0.8500,  23.7500)    // Psc
-        ,   new constel_boundary_t(48, 10.5000, 10.7500,  23.5000)    // LMi
-        ,   new constel_boundary_t(87, 21.2500, 21.4167,  23.5000)    // Vul
-        ,   new constel_boundary_t(77,  5.7000,  5.8833,  22.8333)    // Tau
-        ,   new constel_boundary_t( 0,  0.0667,  0.1417,  22.0000)    // And
-        ,   new constel_boundary_t(73, 15.9167, 16.0333,  22.0000)    // Ser
-        ,   new constel_boundary_t(37,  5.8833,  6.2167,  21.5000)    // Gem
-        ,   new constel_boundary_t(87, 19.8333, 20.2500,  21.2500)    // Vul
-        ,   new constel_boundary_t(87, 18.8667, 19.2500,  21.0833)    // Vul
-        ,   new constel_boundary_t( 0,  0.1417,  0.8500,  21.0000)    // And
-        ,   new constel_boundary_t(87, 20.2500, 20.5667,  20.5000)    // Vul
-        ,   new constel_boundary_t(37,  7.8083,  7.8833,  20.0000)    // Gem
-        ,   new constel_boundary_t(87, 20.5667, 21.2500,  19.5000)    // Vul
-        ,   new constel_boundary_t(87, 19.2500, 19.8333,  19.1667)    // Vul
-        ,   new constel_boundary_t( 6,  3.2833,  3.3667,  19.0000)    // Ari
-        ,   new constel_boundary_t(75, 18.8667, 19.0000,  18.5000)    // Sge
-        ,   new constel_boundary_t(59,  5.7000,  5.7667,  18.0000)    // Ori
-        ,   new constel_boundary_t(37,  6.2167,  6.3083,  17.5000)    // Gem
-        ,   new constel_boundary_t(75, 19.0000, 19.8333,  16.1667)    // Sge
-        ,   new constel_boundary_t(77,  4.9667,  5.3333,  16.0000)    // Tau
-        ,   new constel_boundary_t(39, 15.9167, 16.0833,  16.0000)    // Her
-        ,   new constel_boundary_t(75, 19.8333, 20.2500,  15.7500)    // Sge
-        ,   new constel_boundary_t(77,  4.6167,  4.9667,  15.5000)    // Tau
-        ,   new constel_boundary_t(77,  5.3333,  5.6000,  15.5000)    // Tau
-        ,   new constel_boundary_t(23, 12.8333, 13.5000,  15.0000)    // Com
-        ,   new constel_boundary_t(39, 17.2500, 18.2500,  14.3333)    // Her
-        ,   new constel_boundary_t(23, 11.8667, 12.8333,  14.0000)    // Com
-        ,   new constel_boundary_t(37,  7.5000,  7.8083,  13.5000)    // Gem
-        ,   new constel_boundary_t(39, 16.7500, 17.2500,  12.8333)    // Her
-        ,   new constel_boundary_t(61,  0.0000,  0.1417,  12.5000)    // Peg
-        ,   new constel_boundary_t(77,  5.6000,  5.7667,  12.5000)    // Tau
-        ,   new constel_boundary_t(37,  7.0000,  7.5000,  12.5000)    // Gem
-        ,   new constel_boundary_t(61, 21.1167, 21.3333,  12.5000)    // Peg
-        ,   new constel_boundary_t(37,  6.3083,  6.9333,  12.0000)    // Gem
-        ,   new constel_boundary_t(39, 18.2500, 18.8667,  12.0000)    // Her
-        ,   new constel_boundary_t(31, 20.8750, 21.0500,  11.8333)    // Del
-        ,   new constel_boundary_t(61, 21.0500, 21.1167,  11.8333)    // Peg
-        ,   new constel_boundary_t(45, 11.5167, 11.8667,  11.0000)    // Leo
-        ,   new constel_boundary_t(59,  6.2417,  6.3083,  10.0000)    // Ori
-        ,   new constel_boundary_t(37,  6.9333,  7.0000,  10.0000)    // Gem
-        ,   new constel_boundary_t(21,  7.8083,  7.9250,  10.0000)    // Cnc
-        ,   new constel_boundary_t(61, 23.8333, 24.0000,  10.0000)    // Peg
-        ,   new constel_boundary_t( 6,  1.6667,  3.2833,   9.9167)    // Ari
-        ,   new constel_boundary_t(31, 20.1417, 20.3000,   8.5000)    // Del
-        ,   new constel_boundary_t( 8, 13.5000, 15.0833,   8.0000)    // Boo
-        ,   new constel_boundary_t(61, 22.7500, 23.8333,   7.5000)    // Peg
-        ,   new constel_boundary_t(21,  7.9250,  9.2500,   7.0000)    // Cnc
-        ,   new constel_boundary_t(45,  9.2500, 10.7500,   7.0000)    // Leo
-        ,   new constel_boundary_t(58, 18.2500, 18.6622,   6.2500)    // Oph
-        ,   new constel_boundary_t( 3, 18.6622, 18.8667,   6.2500)    // Aql
-        ,   new constel_boundary_t(31, 20.8333, 20.8750,   6.0000)    // Del
-        ,   new constel_boundary_t(20,  7.0000,  7.0167,   5.5000)    // CMi
-        ,   new constel_boundary_t(73, 18.2500, 18.4250,   4.5000)    // Ser
-        ,   new constel_boundary_t(39, 16.0833, 16.7500,   4.0000)    // Her
-        ,   new constel_boundary_t(58, 18.2500, 18.4250,   3.0000)    // Oph
-        ,   new constel_boundary_t(61, 21.4667, 21.6667,   2.7500)    // Peg
-        ,   new constel_boundary_t(66,  0.0000,  2.0000,   2.0000)    // Psc
-        ,   new constel_boundary_t(73, 18.5833, 18.8667,   2.0000)    // Ser
-        ,   new constel_boundary_t(31, 20.3000, 20.8333,   2.0000)    // Del
-        ,   new constel_boundary_t(34, 20.8333, 21.3333,   2.0000)    // Equ
-        ,   new constel_boundary_t(61, 21.3333, 21.4667,   2.0000)    // Peg
-        ,   new constel_boundary_t(61, 22.0000, 22.7500,   2.0000)    // Peg
-        ,   new constel_boundary_t(61, 21.6667, 22.0000,   1.7500)    // Peg
-        ,   new constel_boundary_t(20,  7.0167,  7.2000,   1.5000)    // CMi
-        ,   new constel_boundary_t(77,  3.5833,  4.6167,   0.0000)    // Tau
-        ,   new constel_boundary_t(59,  4.6167,  4.6667,   0.0000)    // Ori
-        ,   new constel_boundary_t(20,  7.2000,  8.0833,   0.0000)    // CMi
-        ,   new constel_boundary_t(85, 14.6667, 15.0833,   0.0000)    // Vir
-        ,   new constel_boundary_t(58, 17.8333, 18.2500,   0.0000)    // Oph
-        ,   new constel_boundary_t(16,  2.6500,  3.2833,  -1.7500)    // Cet
-        ,   new constel_boundary_t(77,  3.2833,  3.5833,  -1.7500)    // Tau
-        ,   new constel_boundary_t(73, 15.0833, 16.2667,  -3.2500)    // Ser
-        ,   new constel_boundary_t(59,  4.6667,  5.0833,  -4.0000)    // Ori
-        ,   new constel_boundary_t(59,  5.8333,  6.2417,  -4.0000)    // Ori
-        ,   new constel_boundary_t(73, 17.8333, 17.9667,  -4.0000)    // Ser
-        ,   new constel_boundary_t(73, 18.2500, 18.5833,  -4.0000)    // Ser
-        ,   new constel_boundary_t( 3, 18.5833, 18.8667,  -4.0000)    // Aql
-        ,   new constel_boundary_t(66, 22.7500, 23.8333,  -4.0000)    // Psc
-        ,   new constel_boundary_t(45, 10.7500, 11.5167,  -6.0000)    // Leo
-        ,   new constel_boundary_t(85, 11.5167, 11.8333,  -6.0000)    // Vir
-        ,   new constel_boundary_t(66,  0.0000,  0.3333,  -7.0000)    // Psc
-        ,   new constel_boundary_t(66, 23.8333, 24.0000,  -7.0000)    // Psc
-        ,   new constel_boundary_t(85, 14.2500, 14.6667,  -8.0000)    // Vir
-        ,   new constel_boundary_t(58, 15.9167, 16.2667,  -8.0000)    // Oph
-        ,   new constel_boundary_t( 3, 20.0000, 20.5333,  -9.0000)    // Aql
-        ,   new constel_boundary_t( 4, 21.3333, 21.8667,  -9.0000)    // Aqr
-        ,   new constel_boundary_t(58, 17.1667, 17.9667, -10.0000)    // Oph
-        ,   new constel_boundary_t(54,  5.8333,  8.0833, -11.0000)    // Mon
-        ,   new constel_boundary_t(35,  4.9167,  5.0833, -11.0000)    // Eri
-        ,   new constel_boundary_t(59,  5.0833,  5.8333, -11.0000)    // Ori
-        ,   new constel_boundary_t(41,  8.0833,  8.3667, -11.0000)    // Hya
-        ,   new constel_boundary_t(74,  9.5833, 10.7500, -11.0000)    // Sex
-        ,   new constel_boundary_t(85, 11.8333, 12.8333, -11.0000)    // Vir
-        ,   new constel_boundary_t(58, 17.5833, 17.6667, -11.6667)    // Oph
-        ,   new constel_boundary_t( 3, 18.8667, 20.0000, -12.0333)    // Aql
-        ,   new constel_boundary_t(35,  4.8333,  4.9167, -14.5000)    // Eri
-        ,   new constel_boundary_t( 4, 20.5333, 21.3333, -15.0000)    // Aqr
-        ,   new constel_boundary_t(73, 17.1667, 18.2500, -16.0000)    // Ser
-        ,   new constel_boundary_t(72, 18.2500, 18.8667, -16.0000)    // Sct
-        ,   new constel_boundary_t(41,  8.3667,  8.5833, -17.0000)    // Hya
-        ,   new constel_boundary_t(58, 16.2667, 16.3750, -18.2500)    // Oph
-        ,   new constel_boundary_t(41,  8.5833,  9.0833, -19.0000)    // Hya
-        ,   new constel_boundary_t(26, 10.7500, 10.8333, -19.0000)    // Crt
-        ,   new constel_boundary_t(71, 16.2667, 16.3750, -19.2500)    // Sco
-        ,   new constel_boundary_t(47, 15.6667, 15.9167, -20.0000)    // Lib
-        ,   new constel_boundary_t(28, 12.5833, 12.8333, -22.0000)    // Crv
-        ,   new constel_boundary_t(85, 12.8333, 14.2500, -22.0000)    // Vir
-        ,   new constel_boundary_t(41,  9.0833,  9.7500, -24.0000)    // Hya
-        ,   new constel_boundary_t(16,  1.6667,  2.6500, -24.3833)    // Cet
-        ,   new constel_boundary_t(35,  2.6500,  3.7500, -24.3833)    // Eri
-        ,   new constel_boundary_t(26, 10.8333, 11.8333, -24.5000)    // Crt
-        ,   new constel_boundary_t(28, 11.8333, 12.5833, -24.5000)    // Crv
-        ,   new constel_boundary_t(47, 14.2500, 14.9167, -24.5000)    // Lib
-        ,   new constel_boundary_t(58, 16.2667, 16.7500, -24.5833)    // Oph
-        ,   new constel_boundary_t(16,  0.0000,  1.6667, -25.5000)    // Cet
-        ,   new constel_boundary_t(11, 21.3333, 21.8667, -25.5000)    // Cap
-        ,   new constel_boundary_t( 4, 21.8667, 23.8333, -25.5000)    // Aqr
-        ,   new constel_boundary_t(16, 23.8333, 24.0000, -25.5000)    // Cet
-        ,   new constel_boundary_t(41,  9.7500, 10.2500, -26.5000)    // Hya
-        ,   new constel_boundary_t(35,  4.7000,  4.8333, -27.2500)    // Eri
-        ,   new constel_boundary_t(46,  4.8333,  6.1167, -27.2500)    // Lep
-        ,   new constel_boundary_t(11, 20.0000, 21.3333, -28.0000)    // Cap
-        ,   new constel_boundary_t(41, 10.2500, 10.5833, -29.1667)    // Hya
-        ,   new constel_boundary_t(41, 12.5833, 14.9167, -29.5000)    // Hya
-        ,   new constel_boundary_t(47, 14.9167, 15.6667, -29.5000)    // Lib
-        ,   new constel_boundary_t(71, 15.6667, 16.0000, -29.5000)    // Sco
-        ,   new constel_boundary_t(35,  4.5833,  4.7000, -30.0000)    // Eri
-        ,   new constel_boundary_t(58, 16.7500, 17.6000, -30.0000)    // Oph
-        ,   new constel_boundary_t(76, 17.6000, 17.8333, -30.0000)    // Sgr
-        ,   new constel_boundary_t(41, 10.5833, 10.8333, -31.1667)    // Hya
-        ,   new constel_boundary_t(19,  6.1167,  7.3667, -33.0000)    // CMa
-        ,   new constel_boundary_t(41, 12.2500, 12.5833, -33.0000)    // Hya
-        ,   new constel_boundary_t(41, 10.8333, 12.2500, -35.0000)    // Hya
-        ,   new constel_boundary_t(36,  3.5000,  3.7500, -36.0000)    // For
-        ,   new constel_boundary_t(68,  8.3667,  9.3667, -36.7500)    // Pyx
-        ,   new constel_boundary_t(35,  4.2667,  4.5833, -37.0000)    // Eri
-        ,   new constel_boundary_t(76, 17.8333, 19.1667, -37.0000)    // Sgr
-        ,   new constel_boundary_t(65, 21.3333, 23.0000, -37.0000)    // PsA
-        ,   new constel_boundary_t(70, 23.0000, 23.3333, -37.0000)    // Scl
-        ,   new constel_boundary_t(36,  3.0000,  3.5000, -39.5833)    // For
-        ,   new constel_boundary_t( 1,  9.3667, 11.0000, -39.7500)    // Ant
-        ,   new constel_boundary_t(70,  0.0000,  1.6667, -40.0000)    // Scl
-        ,   new constel_boundary_t(36,  1.6667,  3.0000, -40.0000)    // For
-        ,   new constel_boundary_t(35,  3.8667,  4.2667, -40.0000)    // Eri
-        ,   new constel_boundary_t(70, 23.3333, 24.0000, -40.0000)    // Scl
-        ,   new constel_boundary_t(14, 14.1667, 14.9167, -42.0000)    // Cen
-        ,   new constel_boundary_t(49, 15.6667, 16.0000, -42.0000)    // Lup
-        ,   new constel_boundary_t(71, 16.0000, 16.4208, -42.0000)    // Sco
-        ,   new constel_boundary_t( 9,  4.8333,  5.0000, -43.0000)    // Cae
-        ,   new constel_boundary_t(22,  5.0000,  6.5833, -43.0000)    // Col
-        ,   new constel_boundary_t(67,  8.0000,  8.3667, -43.0000)    // Pup
-        ,   new constel_boundary_t(35,  3.4167,  3.8667, -44.0000)    // Eri
-        ,   new constel_boundary_t(71, 16.4208, 17.8333, -45.5000)    // Sco
-        ,   new constel_boundary_t(24, 17.8333, 19.1667, -45.5000)    // CrA
-        ,   new constel_boundary_t(76, 19.1667, 20.3333, -45.5000)    // Sgr
-        ,   new constel_boundary_t(53, 20.3333, 21.3333, -45.5000)    // Mic
-        ,   new constel_boundary_t(35,  3.0000,  3.4167, -46.0000)    // Eri
-        ,   new constel_boundary_t( 9,  4.5000,  4.8333, -46.5000)    // Cae
-        ,   new constel_boundary_t(49, 15.3333, 15.6667, -48.0000)    // Lup
-        ,   new constel_boundary_t(63,  0.0000,  2.3333, -48.1667)    // Phe
-        ,   new constel_boundary_t(35,  2.6667,  3.0000, -49.0000)    // Eri
-        ,   new constel_boundary_t(40,  4.0833,  4.2667, -49.0000)    // Hor
-        ,   new constel_boundary_t( 9,  4.2667,  4.5000, -49.0000)    // Cae
-        ,   new constel_boundary_t(38, 21.3333, 22.0000, -50.0000)    // Gru
-        ,   new constel_boundary_t(67,  6.0000,  8.0000, -50.7500)    // Pup
-        ,   new constel_boundary_t(84,  8.0000,  8.1667, -50.7500)    // Vel
-        ,   new constel_boundary_t(35,  2.4167,  2.6667, -51.0000)    // Eri
-        ,   new constel_boundary_t(40,  3.8333,  4.0833, -51.0000)    // Hor
-        ,   new constel_boundary_t(63,  0.0000,  1.8333, -51.5000)    // Phe
-        ,   new constel_boundary_t(12,  6.0000,  6.1667, -52.5000)    // Car
-        ,   new constel_boundary_t(84,  8.1667,  8.4500, -53.0000)    // Vel
-        ,   new constel_boundary_t(40,  3.5000,  3.8333, -53.1667)    // Hor
-        ,   new constel_boundary_t(32,  3.8333,  4.0000, -53.1667)    // Dor
-        ,   new constel_boundary_t(63,  0.0000,  1.5833, -53.5000)    // Phe
-        ,   new constel_boundary_t(35,  2.1667,  2.4167, -54.0000)    // Eri
-        ,   new constel_boundary_t(64,  4.5000,  5.0000, -54.0000)    // Pic
-        ,   new constel_boundary_t(49, 15.0500, 15.3333, -54.0000)    // Lup
-        ,   new constel_boundary_t(84,  8.4500,  8.8333, -54.5000)    // Vel
-        ,   new constel_boundary_t(12,  6.1667,  6.5000, -55.0000)    // Car
-        ,   new constel_boundary_t(14, 11.8333, 12.8333, -55.0000)    // Cen
-        ,   new constel_boundary_t(49, 14.1667, 15.0500, -55.0000)    // Lup
-        ,   new constel_boundary_t(56, 15.0500, 15.3333, -55.0000)    // Nor
-        ,   new constel_boundary_t(32,  4.0000,  4.3333, -56.5000)    // Dor
-        ,   new constel_boundary_t(84,  8.8333, 11.0000, -56.5000)    // Vel
-        ,   new constel_boundary_t(14, 11.0000, 11.2500, -56.5000)    // Cen
-        ,   new constel_boundary_t( 5, 17.5000, 18.0000, -57.0000)    // Ara
-        ,   new constel_boundary_t(78, 18.0000, 20.3333, -57.0000)    // Tel
-        ,   new constel_boundary_t(38, 22.0000, 23.3333, -57.0000)    // Gru
-        ,   new constel_boundary_t(40,  3.2000,  3.5000, -57.5000)    // Hor
-        ,   new constel_boundary_t(64,  5.0000,  5.5000, -57.5000)    // Pic
-        ,   new constel_boundary_t(12,  6.5000,  6.8333, -58.0000)    // Car
-        ,   new constel_boundary_t(63,  0.0000,  1.3333, -58.5000)    // Phe
-        ,   new constel_boundary_t(35,  1.3333,  2.1667, -58.5000)    // Eri
-        ,   new constel_boundary_t(63, 23.3333, 24.0000, -58.5000)    // Phe
-        ,   new constel_boundary_t(32,  4.3333,  4.5833, -59.0000)    // Dor
-        ,   new constel_boundary_t(56, 15.3333, 16.4208, -60.0000)    // Nor
-        ,   new constel_boundary_t(43, 20.3333, 21.3333, -60.0000)    // Ind
-        ,   new constel_boundary_t(64,  5.5000,  6.0000, -61.0000)    // Pic
-        ,   new constel_boundary_t(18, 15.1667, 15.3333, -61.0000)    // Cir
-        ,   new constel_boundary_t( 5, 16.4208, 16.5833, -61.0000)    // Ara
-        ,   new constel_boundary_t(18, 14.9167, 15.1667, -63.5833)    // Cir
-        ,   new constel_boundary_t( 5, 16.5833, 16.7500, -63.5833)    // Ara
-        ,   new constel_boundary_t(64,  6.0000,  6.8333, -64.0000)    // Pic
-        ,   new constel_boundary_t(12,  6.8333,  9.0333, -64.0000)    // Car
-        ,   new constel_boundary_t(14, 11.2500, 11.8333, -64.0000)    // Cen
-        ,   new constel_boundary_t(27, 11.8333, 12.8333, -64.0000)    // Cru
-        ,   new constel_boundary_t(14, 12.8333, 14.5333, -64.0000)    // Cen
-        ,   new constel_boundary_t(18, 13.5000, 13.6667, -65.0000)    // Cir
-        ,   new constel_boundary_t( 5, 16.7500, 16.8333, -65.0000)    // Ara
-        ,   new constel_boundary_t(40,  2.1667,  3.2000, -67.5000)    // Hor
-        ,   new constel_boundary_t(69,  3.2000,  4.5833, -67.5000)    // Ret
-        ,   new constel_boundary_t(18, 14.7500, 14.9167, -67.5000)    // Cir
-        ,   new constel_boundary_t( 5, 16.8333, 17.5000, -67.5000)    // Ara
-        ,   new constel_boundary_t(60, 17.5000, 18.0000, -67.5000)    // Pav
-        ,   new constel_boundary_t(81, 22.0000, 23.3333, -67.5000)    // Tuc
-        ,   new constel_boundary_t(32,  4.5833,  6.5833, -70.0000)    // Dor
-        ,   new constel_boundary_t(18, 13.6667, 14.7500, -70.0000)    // Cir
-        ,   new constel_boundary_t(79, 14.7500, 17.0000, -70.0000)    // TrA
-        ,   new constel_boundary_t(81,  0.0000,  1.3333, -75.0000)    // Tuc
-        ,   new constel_boundary_t(42,  3.5000,  4.5833, -75.0000)    // Hyi
-        ,   new constel_boundary_t(86,  6.5833,  9.0333, -75.0000)    // Vol
-        ,   new constel_boundary_t(12,  9.0333, 11.2500, -75.0000)    // Car
-        ,   new constel_boundary_t(55, 11.2500, 13.6667, -75.0000)    // Mus
-        ,   new constel_boundary_t(60, 18.0000, 21.3333, -75.0000)    // Pav
-        ,   new constel_boundary_t(43, 21.3333, 23.3333, -75.0000)    // Ind
-        ,   new constel_boundary_t(81, 23.3333, 24.0000, -75.0000)    // Tuc
-        ,   new constel_boundary_t(81,  0.7500,  1.3333, -76.0000)    // Tuc
-        ,   new constel_boundary_t(42,  0.0000,  3.5000, -82.5000)    // Hyi
-        ,   new constel_boundary_t(17,  7.6667, 13.6667, -82.5000)    // Cha
-        ,   new constel_boundary_t( 2, 13.6667, 18.0000, -82.5000)    // Aps
-        ,   new constel_boundary_t(52,  3.5000,  7.6667, -85.0000)    // Men
-        ,   new constel_boundary_t(57,  0.0000, 24.0000, -90.0000)    // Oct
+            new constel_boundary_t(83,  0.00000000000000, 24.00000000000000, 88.00000000000000)    // UMi
+        ,   new constel_boundary_t(83,  8.00000000000000, 14.50000000000000, 86.50000000000000)    // UMi
+        ,   new constel_boundary_t(83, 21.00000000000000, 23.00000000000000, 86.16666666666667)    // UMi
+        ,   new constel_boundary_t(83, 18.00000000000000, 21.00000000000000, 86.00000000000000)    // UMi
+        ,   new constel_boundary_t(15,  0.00000000000000,  8.00000000000000, 85.00000000000000)    // Cep
+        ,   new constel_boundary_t(10,  9.16666666666667, 10.66666666666667, 82.00000000000000)    // Cam
+        ,   new constel_boundary_t(15,  0.00000000000000,  5.00000000000000, 80.00000000000000)    // Cep
+        ,   new constel_boundary_t(10, 10.66666666666667, 14.50000000000000, 80.00000000000000)    // Cam
+        ,   new constel_boundary_t(83, 17.50000000000000, 18.00000000000000, 80.00000000000000)    // UMi
+        ,   new constel_boundary_t(33, 20.16666666666667, 21.00000000000000, 80.00000000000000)    // Dra
+        ,   new constel_boundary_t(15,  0.00000000000000,  3.50833333333333, 77.00000000000000)    // Cep
+        ,   new constel_boundary_t(10, 11.50000000000000, 13.58333333333333, 77.00000000000000)    // Cam
+        ,   new constel_boundary_t(83, 16.53333333333333, 17.50000000000000, 75.00000000000000)    // UMi
+        ,   new constel_boundary_t(15, 20.16666666666667, 20.66666666666667, 75.00000000000000)    // Cep
+        ,   new constel_boundary_t(10,  7.96666666666667,  9.16666666666667, 73.50000000000000)    // Cam
+        ,   new constel_boundary_t(33,  9.16666666666667, 11.33333333333333, 73.50000000000000)    // Dra
+        ,   new constel_boundary_t(83, 13.00000000000000, 16.53333333333333, 70.00000000000000)    // UMi
+        ,   new constel_boundary_t(13,  3.10000000000000,  3.41666666666667, 68.00000000000000)    // Cas
+        ,   new constel_boundary_t(33, 20.41666666666667, 20.66666666666667, 67.00000000000000)    // Dra
+        ,   new constel_boundary_t(33, 11.33333333333333, 12.00000000000000, 66.50000000000000)    // Dra
+        ,   new constel_boundary_t(15,  0.00000000000000,  0.33333333333333, 66.00000000000000)    // Cep
+        ,   new constel_boundary_t(83, 14.00000000000000, 15.66666666666667, 66.00000000000000)    // UMi
+        ,   new constel_boundary_t(15, 23.58333333333333, 24.00000000000000, 66.00000000000000)    // Cep
+        ,   new constel_boundary_t(33, 12.00000000000000, 13.50000000000000, 64.00000000000000)    // Dra
+        ,   new constel_boundary_t(33, 13.50000000000000, 14.41666666666667, 63.00000000000000)    // Dra
+        ,   new constel_boundary_t(15, 23.16666666666667, 23.58333333333333, 63.00000000000000)    // Cep
+        ,   new constel_boundary_t(10,  6.10000000000000,  7.00000000000000, 62.00000000000000)    // Cam
+        ,   new constel_boundary_t(33, 20.00000000000000, 20.41666666666667, 61.50000000000000)    // Dra
+        ,   new constel_boundary_t(15, 20.53666666666667, 20.60000000000000, 60.91666666666666)    // Cep
+        ,   new constel_boundary_t(10,  7.00000000000000,  7.96666666666667, 60.00000000000000)    // Cam
+        ,   new constel_boundary_t(82,  7.96666666666667,  8.41666666666667, 60.00000000000000)    // UMa
+        ,   new constel_boundary_t(33, 19.76666666666667, 20.00000000000000, 59.50000000000000)    // Dra
+        ,   new constel_boundary_t(15, 20.00000000000000, 20.53666666666667, 59.50000000000000)    // Cep
+        ,   new constel_boundary_t(15, 22.86666666666667, 23.16666666666667, 59.08333333333334)    // Cep
+        ,   new constel_boundary_t(13,  0.00000000000000,  2.43333333333333, 58.50000000000000)    // Cas
+        ,   new constel_boundary_t(33, 19.41666666666667, 19.76666666666667, 58.00000000000000)    // Dra
+        ,   new constel_boundary_t(13,  1.70000000000000,  1.90833333333333, 57.50000000000000)    // Cas
+        ,   new constel_boundary_t(13,  2.43333333333333,  3.10000000000000, 57.00000000000000)    // Cas
+        ,   new constel_boundary_t(10,  3.10000000000000,  3.16666666666667, 57.00000000000000)    // Cam
+        ,   new constel_boundary_t(15, 22.31666666666667, 22.86666666666667, 56.25000000000000)    // Cep
+        ,   new constel_boundary_t(10,  5.00000000000000,  6.10000000000000, 56.00000000000000)    // Cam
+        ,   new constel_boundary_t(82, 14.03333333333333, 14.41666666666667, 55.50000000000000)    // UMa
+        ,   new constel_boundary_t(33, 14.41666666666667, 19.41666666666667, 55.50000000000000)    // Dra
+        ,   new constel_boundary_t(10,  3.16666666666667,  3.33333333333333, 55.00000000000000)    // Cam
+        ,   new constel_boundary_t(15, 22.13333333333333, 22.31666666666667, 55.00000000000000)    // Cep
+        ,   new constel_boundary_t(15, 20.60000000000000, 21.96666666666667, 54.83333333333334)    // Cep
+        ,   new constel_boundary_t(13,  0.00000000000000,  1.70000000000000, 54.00000000000000)    // Cas
+        ,   new constel_boundary_t(50,  6.10000000000000,  6.50000000000000, 54.00000000000000)    // Lyn
+        ,   new constel_boundary_t(82, 12.08333333333333, 13.50000000000000, 53.00000000000000)    // UMa
+        ,   new constel_boundary_t(33, 15.25000000000000, 15.75000000000000, 53.00000000000000)    // Dra
+        ,   new constel_boundary_t(15, 21.96666666666667, 22.13333333333333, 52.75000000000000)    // Cep
+        ,   new constel_boundary_t(10,  3.33333333333333,  5.00000000000000, 52.50000000000000)    // Cam
+        ,   new constel_boundary_t(13, 22.86666666666667, 23.33333333333333, 52.50000000000000)    // Cas
+        ,   new constel_boundary_t(33, 15.75000000000000, 17.00000000000000, 51.50000000000000)    // Dra
+        ,   new constel_boundary_t(62,  2.04166666666667,  2.51666666666667, 50.50000000000000)    // Per
+        ,   new constel_boundary_t(33, 17.00000000000000, 18.23333333333333, 50.50000000000000)    // Dra
+        ,   new constel_boundary_t(13,  0.00000000000000,  1.36666666666667, 50.00000000000000)    // Cas
+        ,   new constel_boundary_t(62,  1.36666666666667,  1.66666666666667, 50.00000000000000)    // Per
+        ,   new constel_boundary_t(50,  6.50000000000000,  6.80000000000000, 50.00000000000000)    // Lyn
+        ,   new constel_boundary_t(13, 23.33333333333333, 24.00000000000000, 50.00000000000000)    // Cas
+        ,   new constel_boundary_t(82, 13.50000000000000, 14.03333333333333, 48.50000000000000)    // UMa
+        ,   new constel_boundary_t(13,  0.00000000000000,  1.11666666666667, 48.00000000000000)    // Cas
+        ,   new constel_boundary_t(13, 23.58333333333333, 24.00000000000000, 48.00000000000000)    // Cas
+        ,   new constel_boundary_t(39, 18.17500000000000, 18.23333333333333, 47.50000000000000)    // Her
+        ,   new constel_boundary_t(33, 18.23333333333333, 19.08333333333333, 47.50000000000000)    // Dra
+        ,   new constel_boundary_t(30, 19.08333333333333, 19.16666666666667, 47.50000000000000)    // Cyg
+        ,   new constel_boundary_t(62,  1.66666666666667,  2.04166666666667, 47.00000000000000)    // Per
+        ,   new constel_boundary_t(82,  8.41666666666667,  9.16666666666667, 47.00000000000000)    // UMa
+        ,   new constel_boundary_t(13,  0.16666666666667,  0.86666666666667, 46.00000000000000)    // Cas
+        ,   new constel_boundary_t(82, 12.00000000000000, 12.08333333333333, 45.00000000000000)    // UMa
+        ,   new constel_boundary_t(50,  6.80000000000000,  7.36666666666667, 44.50000000000000)    // Lyn
+        ,   new constel_boundary_t(30, 21.90833333333333, 21.96666666666667, 44.00000000000000)    // Cyg
+        ,   new constel_boundary_t(30, 21.87500000000000, 21.90833333333333, 43.75000000000000)    // Cyg
+        ,   new constel_boundary_t(30, 19.16666666666667, 19.40000000000000, 43.50000000000000)    // Cyg
+        ,   new constel_boundary_t(82,  9.16666666666667, 10.16666666666667, 42.00000000000000)    // UMa
+        ,   new constel_boundary_t(82, 10.16666666666667, 10.78333333333333, 40.00000000000000)    // UMa
+        ,   new constel_boundary_t( 8, 15.43333333333333, 15.75000000000000, 40.00000000000000)    // Boo
+        ,   new constel_boundary_t(39, 15.75000000000000, 16.33333333333333, 40.00000000000000)    // Her
+        ,   new constel_boundary_t(50,  9.25000000000000,  9.58333333333333, 39.75000000000000)    // Lyn
+        ,   new constel_boundary_t( 0,  0.00000000000000,  2.51666666666667, 36.75000000000000)    // And
+        ,   new constel_boundary_t(62,  2.51666666666667,  2.56666666666667, 36.75000000000000)    // Per
+        ,   new constel_boundary_t(51, 19.35833333333333, 19.40000000000000, 36.50000000000000)    // Lyr
+        ,   new constel_boundary_t(62,  4.50000000000000,  4.69166666666667, 36.00000000000000)    // Per
+        ,   new constel_boundary_t(30, 21.73333333333333, 21.87500000000000, 36.00000000000000)    // Cyg
+        ,   new constel_boundary_t(44, 21.87500000000000, 22.00000000000000, 36.00000000000000)    // Lac
+        ,   new constel_boundary_t( 7,  6.53333333333333,  7.36666666666667, 35.50000000000000)    // Aur
+        ,   new constel_boundary_t(50,  7.36666666666667,  7.75000000000000, 35.50000000000000)    // Lyn
+        ,   new constel_boundary_t( 0,  0.00000000000000,  2.00000000000000, 35.00000000000000)    // And
+        ,   new constel_boundary_t(44, 22.00000000000000, 22.81666666666667, 35.00000000000000)    // Lac
+        ,   new constel_boundary_t(44, 22.81666666666667, 22.86666666666667, 34.50000000000000)    // Lac
+        ,   new constel_boundary_t( 0, 22.86666666666667, 23.50000000000000, 34.50000000000000)    // And
+        ,   new constel_boundary_t(62,  2.56666666666667,  2.71666666666667, 34.00000000000000)    // Per
+        ,   new constel_boundary_t(82, 10.78333333333333, 11.00000000000000, 34.00000000000000)    // UMa
+        ,   new constel_boundary_t(29, 12.00000000000000, 12.33333333333333, 34.00000000000000)    // CVn
+        ,   new constel_boundary_t(50,  7.75000000000000,  9.25000000000000, 33.50000000000000)    // Lyn
+        ,   new constel_boundary_t(48,  9.25000000000000,  9.88333333333333, 33.50000000000000)    // LMi
+        ,   new constel_boundary_t( 0,  0.71666666666667,  1.40833333333333, 33.00000000000000)    // And
+        ,   new constel_boundary_t( 8, 15.18333333333333, 15.43333333333333, 33.00000000000000)    // Boo
+        ,   new constel_boundary_t( 0, 23.50000000000000, 23.75000000000000, 32.08333333333334)    // And
+        ,   new constel_boundary_t(29, 12.33333333333333, 13.25000000000000, 32.00000000000000)    // CVn
+        ,   new constel_boundary_t( 0, 23.75000000000000, 24.00000000000000, 31.33333333333333)    // And
+        ,   new constel_boundary_t(29, 13.95833333333333, 14.03333333333333, 30.75000000000000)    // CVn
+        ,   new constel_boundary_t(80,  2.41666666666667,  2.71666666666667, 30.66666666666667)    // Tri
+        ,   new constel_boundary_t(62,  2.71666666666667,  4.50000000000000, 30.66666666666667)    // Per
+        ,   new constel_boundary_t( 7,  4.50000000000000,  4.75000000000000, 30.00000000000000)    // Aur
+        ,   new constel_boundary_t(51, 18.17500000000000, 19.35833333333333, 30.00000000000000)    // Lyr
+        ,   new constel_boundary_t(82, 11.00000000000000, 12.00000000000000, 29.00000000000000)    // UMa
+        ,   new constel_boundary_t(30, 19.66666666666667, 20.91666666666667, 29.00000000000000)    // Cyg
+        ,   new constel_boundary_t( 7,  4.75000000000000,  5.88333333333333, 28.50000000000000)    // Aur
+        ,   new constel_boundary_t(48,  9.88333333333333, 10.50000000000000, 28.50000000000000)    // LMi
+        ,   new constel_boundary_t(29, 13.25000000000000, 13.95833333333333, 28.50000000000000)    // CVn
+        ,   new constel_boundary_t( 0,  0.00000000000000,  0.06666666666667, 28.00000000000000)    // And
+        ,   new constel_boundary_t(80,  1.40833333333333,  1.66666666666667, 28.00000000000000)    // Tri
+        ,   new constel_boundary_t( 7,  5.88333333333333,  6.53333333333333, 28.00000000000000)    // Aur
+        ,   new constel_boundary_t(37,  7.88333333333333,  8.00000000000000, 28.00000000000000)    // Gem
+        ,   new constel_boundary_t(30, 20.91666666666667, 21.73333333333333, 28.00000000000000)    // Cyg
+        ,   new constel_boundary_t(30, 19.25833333333333, 19.66666666666667, 27.50000000000000)    // Cyg
+        ,   new constel_boundary_t(80,  1.91666666666667,  2.41666666666667, 27.25000000000000)    // Tri
+        ,   new constel_boundary_t(25, 16.16666666666667, 16.33333333333333, 27.00000000000000)    // CrB
+        ,   new constel_boundary_t( 8, 15.08333333333333, 15.18333333333333, 26.00000000000000)    // Boo
+        ,   new constel_boundary_t(25, 15.18333333333333, 16.16666666666667, 26.00000000000000)    // CrB
+        ,   new constel_boundary_t(51, 18.36666666666667, 18.86666666666667, 26.00000000000000)    // Lyr
+        ,   new constel_boundary_t(48, 10.75000000000000, 11.00000000000000, 25.50000000000000)    // LMi
+        ,   new constel_boundary_t(51, 18.86666666666667, 19.25833333333333, 25.50000000000000)    // Lyr
+        ,   new constel_boundary_t(80,  1.66666666666667,  1.91666666666667, 25.00000000000000)    // Tri
+        ,   new constel_boundary_t(66,  0.71666666666667,  0.85000000000000, 23.75000000000000)    // Psc
+        ,   new constel_boundary_t(48, 10.50000000000000, 10.75000000000000, 23.50000000000000)    // LMi
+        ,   new constel_boundary_t(87, 21.25000000000000, 21.41666666666667, 23.50000000000000)    // Vul
+        ,   new constel_boundary_t(77,  5.70000000000000,  5.88333333333333, 22.83333333333333)    // Tau
+        ,   new constel_boundary_t( 0,  0.06666666666667,  0.14166666666667, 22.00000000000000)    // And
+        ,   new constel_boundary_t(73, 15.91666666666667, 16.03333333333333, 22.00000000000000)    // Ser
+        ,   new constel_boundary_t(37,  5.88333333333333,  6.21666666666667, 21.50000000000000)    // Gem
+        ,   new constel_boundary_t(87, 19.83333333333333, 20.25000000000000, 21.25000000000000)    // Vul
+        ,   new constel_boundary_t(87, 18.86666666666667, 19.25000000000000, 21.08333333333333)    // Vul
+        ,   new constel_boundary_t( 0,  0.14166666666667,  0.85000000000000, 21.00000000000000)    // And
+        ,   new constel_boundary_t(87, 20.25000000000000, 20.56666666666667, 20.50000000000000)    // Vul
+        ,   new constel_boundary_t(37,  7.80833333333333,  7.88333333333333, 20.00000000000000)    // Gem
+        ,   new constel_boundary_t(87, 20.56666666666667, 21.25000000000000, 19.50000000000000)    // Vul
+        ,   new constel_boundary_t(87, 19.25000000000000, 19.83333333333333, 19.16666666666667)    // Vul
+        ,   new constel_boundary_t( 6,  3.28333333333333,  3.36666666666667, 19.00000000000000)    // Ari
+        ,   new constel_boundary_t(75, 18.86666666666667, 19.00000000000000, 18.50000000000000)    // Sge
+        ,   new constel_boundary_t(59,  5.70000000000000,  5.76666666666667, 18.00000000000000)    // Ori
+        ,   new constel_boundary_t(37,  6.21666666666667,  6.30833333333333, 17.50000000000000)    // Gem
+        ,   new constel_boundary_t(75, 19.00000000000000, 19.83333333333333, 16.16666666666667)    // Sge
+        ,   new constel_boundary_t(77,  4.96666666666667,  5.33333333333333, 16.00000000000000)    // Tau
+        ,   new constel_boundary_t(39, 15.91666666666667, 16.08333333333333, 16.00000000000000)    // Her
+        ,   new constel_boundary_t(75, 19.83333333333333, 20.25000000000000, 15.75000000000000)    // Sge
+        ,   new constel_boundary_t(77,  4.61666666666667,  4.96666666666667, 15.50000000000000)    // Tau
+        ,   new constel_boundary_t(77,  5.33333333333333,  5.60000000000000, 15.50000000000000)    // Tau
+        ,   new constel_boundary_t(23, 12.83333333333333, 13.50000000000000, 15.00000000000000)    // Com
+        ,   new constel_boundary_t(39, 17.25000000000000, 18.25000000000000, 14.33333333333333)    // Her
+        ,   new constel_boundary_t(23, 11.86666666666667, 12.83333333333333, 14.00000000000000)    // Com
+        ,   new constel_boundary_t(37,  7.50000000000000,  7.80833333333333, 13.50000000000000)    // Gem
+        ,   new constel_boundary_t(39, 16.75000000000000, 17.25000000000000, 12.83333333333333)    // Her
+        ,   new constel_boundary_t(61,  0.00000000000000,  0.14166666666667, 12.50000000000000)    // Peg
+        ,   new constel_boundary_t(77,  5.60000000000000,  5.76666666666667, 12.50000000000000)    // Tau
+        ,   new constel_boundary_t(37,  7.00000000000000,  7.50000000000000, 12.50000000000000)    // Gem
+        ,   new constel_boundary_t(61, 21.11666666666667, 21.33333333333333, 12.50000000000000)    // Peg
+        ,   new constel_boundary_t(37,  6.30833333333333,  6.93333333333333, 12.00000000000000)    // Gem
+        ,   new constel_boundary_t(39, 18.25000000000000, 18.86666666666667, 12.00000000000000)    // Her
+        ,   new constel_boundary_t(31, 20.87500000000000, 21.05000000000000, 11.83333333333333)    // Del
+        ,   new constel_boundary_t(61, 21.05000000000000, 21.11666666666667, 11.83333333333333)    // Peg
+        ,   new constel_boundary_t(45, 11.51666666666667, 11.86666666666667, 11.00000000000000)    // Leo
+        ,   new constel_boundary_t(59,  6.24166666666667,  6.30833333333333, 10.00000000000000)    // Ori
+        ,   new constel_boundary_t(37,  6.93333333333333,  7.00000000000000, 10.00000000000000)    // Gem
+        ,   new constel_boundary_t(21,  7.80833333333333,  7.92500000000000, 10.00000000000000)    // Cnc
+        ,   new constel_boundary_t(61, 23.83333333333333, 24.00000000000000, 10.00000000000000)    // Peg
+        ,   new constel_boundary_t( 6,  1.66666666666667,  3.28333333333333,  9.91666666666667)    // Ari
+        ,   new constel_boundary_t(31, 20.14166666666667, 20.30000000000000,  8.50000000000000)    // Del
+        ,   new constel_boundary_t( 8, 13.50000000000000, 15.08333333333333,  8.00000000000000)    // Boo
+        ,   new constel_boundary_t(61, 22.75000000000000, 23.83333333333333,  7.50000000000000)    // Peg
+        ,   new constel_boundary_t(21,  7.92500000000000,  9.25000000000000,  7.00000000000000)    // Cnc
+        ,   new constel_boundary_t(45,  9.25000000000000, 10.75000000000000,  7.00000000000000)    // Leo
+        ,   new constel_boundary_t(58, 18.25000000000000, 18.66222222222222,  6.25000000000000)    // Oph
+        ,   new constel_boundary_t( 3, 18.66222222222222, 18.86666666666667,  6.25000000000000)    // Aql
+        ,   new constel_boundary_t(31, 20.83333333333333, 20.87500000000000,  6.00000000000000)    // Del
+        ,   new constel_boundary_t(20,  7.00000000000000,  7.01666666666667,  5.50000000000000)    // CMi
+        ,   new constel_boundary_t(73, 18.25000000000000, 18.42500000000000,  4.50000000000000)    // Ser
+        ,   new constel_boundary_t(39, 16.08333333333333, 16.75000000000000,  4.00000000000000)    // Her
+        ,   new constel_boundary_t(58, 18.25000000000000, 18.42500000000000,  3.00000000000000)    // Oph
+        ,   new constel_boundary_t(61, 21.46666666666667, 21.66666666666667,  2.75000000000000)    // Peg
+        ,   new constel_boundary_t(66,  0.00000000000000,  2.00000000000000,  2.00000000000000)    // Psc
+        ,   new constel_boundary_t(73, 18.58333333333333, 18.86666666666667,  2.00000000000000)    // Ser
+        ,   new constel_boundary_t(31, 20.30000000000000, 20.83333333333333,  2.00000000000000)    // Del
+        ,   new constel_boundary_t(34, 20.83333333333333, 21.33333333333333,  2.00000000000000)    // Equ
+        ,   new constel_boundary_t(61, 21.33333333333333, 21.46666666666667,  2.00000000000000)    // Peg
+        ,   new constel_boundary_t(61, 22.00000000000000, 22.75000000000000,  2.00000000000000)    // Peg
+        ,   new constel_boundary_t(61, 21.66666666666667, 22.00000000000000,  1.75000000000000)    // Peg
+        ,   new constel_boundary_t(20,  7.01666666666667,  7.20000000000000,  1.50000000000000)    // CMi
+        ,   new constel_boundary_t(77,  3.58333333333333,  4.61666666666667,  0.00000000000000)    // Tau
+        ,   new constel_boundary_t(59,  4.61666666666667,  4.66666666666667,  0.00000000000000)    // Ori
+        ,   new constel_boundary_t(20,  7.20000000000000,  8.08333333333333,  0.00000000000000)    // CMi
+        ,   new constel_boundary_t(85, 14.66666666666667, 15.08333333333333,  0.00000000000000)    // Vir
+        ,   new constel_boundary_t(58, 17.83333333333333, 18.25000000000000,  0.00000000000000)    // Oph
+        ,   new constel_boundary_t(16,  2.65000000000000,  3.28333333333333, -1.75000000000000)    // Cet
+        ,   new constel_boundary_t(77,  3.28333333333333,  3.58333333333333, -1.75000000000000)    // Tau
+        ,   new constel_boundary_t(73, 15.08333333333333, 16.26666666666667, -3.25000000000000)    // Ser
+        ,   new constel_boundary_t(59,  4.66666666666667,  5.08333333333333, -4.00000000000000)    // Ori
+        ,   new constel_boundary_t(59,  5.83333333333333,  6.24166666666667, -4.00000000000000)    // Ori
+        ,   new constel_boundary_t(73, 17.83333333333333, 17.96666666666667, -4.00000000000000)    // Ser
+        ,   new constel_boundary_t(73, 18.25000000000000, 18.58333333333333, -4.00000000000000)    // Ser
+        ,   new constel_boundary_t( 3, 18.58333333333333, 18.86666666666667, -4.00000000000000)    // Aql
+        ,   new constel_boundary_t(66, 22.75000000000000, 23.83333333333333, -4.00000000000000)    // Psc
+        ,   new constel_boundary_t(45, 10.75000000000000, 11.51666666666667, -6.00000000000000)    // Leo
+        ,   new constel_boundary_t(85, 11.51666666666667, 11.83333333333333, -6.00000000000000)    // Vir
+        ,   new constel_boundary_t(66,  0.00000000000000,  0.33333333333333, -7.00000000000000)    // Psc
+        ,   new constel_boundary_t(66, 23.83333333333333, 24.00000000000000, -7.00000000000000)    // Psc
+        ,   new constel_boundary_t(85, 14.25000000000000, 14.66666666666667, -8.00000000000000)    // Vir
+        ,   new constel_boundary_t(58, 15.91666666666667, 16.26666666666667, -8.00000000000000)    // Oph
+        ,   new constel_boundary_t( 3, 20.00000000000000, 20.53333333333333, -9.00000000000000)    // Aql
+        ,   new constel_boundary_t( 4, 21.33333333333333, 21.86666666666667, -9.00000000000000)    // Aqr
+        ,   new constel_boundary_t(58, 17.16666666666667, 17.96666666666667, -10.00000000000000)    // Oph
+        ,   new constel_boundary_t(54,  5.83333333333333,  8.08333333333333, -11.00000000000000)    // Mon
+        ,   new constel_boundary_t(35,  4.91666666666667,  5.08333333333333, -11.00000000000000)    // Eri
+        ,   new constel_boundary_t(59,  5.08333333333333,  5.83333333333333, -11.00000000000000)    // Ori
+        ,   new constel_boundary_t(41,  8.08333333333333,  8.36666666666667, -11.00000000000000)    // Hya
+        ,   new constel_boundary_t(74,  9.58333333333333, 10.75000000000000, -11.00000000000000)    // Sex
+        ,   new constel_boundary_t(85, 11.83333333333333, 12.83333333333333, -11.00000000000000)    // Vir
+        ,   new constel_boundary_t(58, 17.58333333333333, 17.66666666666667, -11.66666666666667)    // Oph
+        ,   new constel_boundary_t( 3, 18.86666666666667, 20.00000000000000, -12.03333333333333)    // Aql
+        ,   new constel_boundary_t(35,  4.83333333333333,  4.91666666666667, -14.50000000000000)    // Eri
+        ,   new constel_boundary_t( 4, 20.53333333333333, 21.33333333333333, -15.00000000000000)    // Aqr
+        ,   new constel_boundary_t(73, 17.16666666666667, 18.25000000000000, -16.00000000000000)    // Ser
+        ,   new constel_boundary_t(72, 18.25000000000000, 18.86666666666667, -16.00000000000000)    // Sct
+        ,   new constel_boundary_t(41,  8.36666666666667,  8.58333333333333, -17.00000000000000)    // Hya
+        ,   new constel_boundary_t(58, 16.26666666666667, 16.37500000000000, -18.25000000000000)    // Oph
+        ,   new constel_boundary_t(41,  8.58333333333333,  9.08333333333333, -19.00000000000000)    // Hya
+        ,   new constel_boundary_t(26, 10.75000000000000, 10.83333333333333, -19.00000000000000)    // Crt
+        ,   new constel_boundary_t(71, 16.26666666666667, 16.37500000000000, -19.25000000000000)    // Sco
+        ,   new constel_boundary_t(47, 15.66666666666667, 15.91666666666667, -20.00000000000000)    // Lib
+        ,   new constel_boundary_t(28, 12.58333333333333, 12.83333333333333, -22.00000000000000)    // Crv
+        ,   new constel_boundary_t(85, 12.83333333333333, 14.25000000000000, -22.00000000000000)    // Vir
+        ,   new constel_boundary_t(41,  9.08333333333333,  9.75000000000000, -24.00000000000000)    // Hya
+        ,   new constel_boundary_t(16,  1.66666666666667,  2.65000000000000, -24.38333333333333)    // Cet
+        ,   new constel_boundary_t(35,  2.65000000000000,  3.75000000000000, -24.38333333333333)    // Eri
+        ,   new constel_boundary_t(26, 10.83333333333333, 11.83333333333333, -24.50000000000000)    // Crt
+        ,   new constel_boundary_t(28, 11.83333333333333, 12.58333333333333, -24.50000000000000)    // Crv
+        ,   new constel_boundary_t(47, 14.25000000000000, 14.91666666666667, -24.50000000000000)    // Lib
+        ,   new constel_boundary_t(58, 16.26666666666667, 16.75000000000000, -24.58333333333333)    // Oph
+        ,   new constel_boundary_t(16,  0.00000000000000,  1.66666666666667, -25.50000000000000)    // Cet
+        ,   new constel_boundary_t(11, 21.33333333333333, 21.86666666666667, -25.50000000000000)    // Cap
+        ,   new constel_boundary_t( 4, 21.86666666666667, 23.83333333333333, -25.50000000000000)    // Aqr
+        ,   new constel_boundary_t(16, 23.83333333333333, 24.00000000000000, -25.50000000000000)    // Cet
+        ,   new constel_boundary_t(41,  9.75000000000000, 10.25000000000000, -26.50000000000000)    // Hya
+        ,   new constel_boundary_t(35,  4.70000000000000,  4.83333333333333, -27.25000000000000)    // Eri
+        ,   new constel_boundary_t(46,  4.83333333333333,  6.11666666666667, -27.25000000000000)    // Lep
+        ,   new constel_boundary_t(11, 20.00000000000000, 21.33333333333333, -28.00000000000000)    // Cap
+        ,   new constel_boundary_t(41, 10.25000000000000, 10.58333333333333, -29.16666666666667)    // Hya
+        ,   new constel_boundary_t(41, 12.58333333333333, 14.91666666666667, -29.50000000000000)    // Hya
+        ,   new constel_boundary_t(47, 14.91666666666667, 15.66666666666667, -29.50000000000000)    // Lib
+        ,   new constel_boundary_t(71, 15.66666666666667, 16.00000000000000, -29.50000000000000)    // Sco
+        ,   new constel_boundary_t(35,  4.58333333333333,  4.70000000000000, -30.00000000000000)    // Eri
+        ,   new constel_boundary_t(58, 16.75000000000000, 17.60000000000000, -30.00000000000000)    // Oph
+        ,   new constel_boundary_t(76, 17.60000000000000, 17.83333333333333, -30.00000000000000)    // Sgr
+        ,   new constel_boundary_t(41, 10.58333333333333, 10.83333333333333, -31.16666666666667)    // Hya
+        ,   new constel_boundary_t(19,  6.11666666666667,  7.36666666666667, -33.00000000000000)    // CMa
+        ,   new constel_boundary_t(41, 12.25000000000000, 12.58333333333333, -33.00000000000000)    // Hya
+        ,   new constel_boundary_t(41, 10.83333333333333, 12.25000000000000, -35.00000000000000)    // Hya
+        ,   new constel_boundary_t(36,  3.50000000000000,  3.75000000000000, -36.00000000000000)    // For
+        ,   new constel_boundary_t(68,  8.36666666666667,  9.36666666666667, -36.75000000000000)    // Pyx
+        ,   new constel_boundary_t(35,  4.26666666666667,  4.58333333333333, -37.00000000000000)    // Eri
+        ,   new constel_boundary_t(76, 17.83333333333333, 19.16666666666667, -37.00000000000000)    // Sgr
+        ,   new constel_boundary_t(65, 21.33333333333333, 23.00000000000000, -37.00000000000000)    // PsA
+        ,   new constel_boundary_t(70, 23.00000000000000, 23.33333333333333, -37.00000000000000)    // Scl
+        ,   new constel_boundary_t(36,  3.00000000000000,  3.50000000000000, -39.58333333333334)    // For
+        ,   new constel_boundary_t( 1,  9.36666666666667, 11.00000000000000, -39.75000000000000)    // Ant
+        ,   new constel_boundary_t(70,  0.00000000000000,  1.66666666666667, -40.00000000000000)    // Scl
+        ,   new constel_boundary_t(36,  1.66666666666667,  3.00000000000000, -40.00000000000000)    // For
+        ,   new constel_boundary_t(35,  3.86666666666667,  4.26666666666667, -40.00000000000000)    // Eri
+        ,   new constel_boundary_t(70, 23.33333333333333, 24.00000000000000, -40.00000000000000)    // Scl
+        ,   new constel_boundary_t(14, 14.16666666666667, 14.91666666666667, -42.00000000000000)    // Cen
+        ,   new constel_boundary_t(49, 15.66666666666667, 16.00000000000000, -42.00000000000000)    // Lup
+        ,   new constel_boundary_t(71, 16.00000000000000, 16.42083333333333, -42.00000000000000)    // Sco
+        ,   new constel_boundary_t( 9,  4.83333333333333,  5.00000000000000, -43.00000000000000)    // Cae
+        ,   new constel_boundary_t(22,  5.00000000000000,  6.58333333333333, -43.00000000000000)    // Col
+        ,   new constel_boundary_t(67,  8.00000000000000,  8.36666666666667, -43.00000000000000)    // Pup
+        ,   new constel_boundary_t(35,  3.41666666666667,  3.86666666666667, -44.00000000000000)    // Eri
+        ,   new constel_boundary_t(71, 16.42083333333333, 17.83333333333333, -45.50000000000000)    // Sco
+        ,   new constel_boundary_t(24, 17.83333333333333, 19.16666666666667, -45.50000000000000)    // CrA
+        ,   new constel_boundary_t(76, 19.16666666666667, 20.33333333333333, -45.50000000000000)    // Sgr
+        ,   new constel_boundary_t(53, 20.33333333333333, 21.33333333333333, -45.50000000000000)    // Mic
+        ,   new constel_boundary_t(35,  3.00000000000000,  3.41666666666667, -46.00000000000000)    // Eri
+        ,   new constel_boundary_t( 9,  4.50000000000000,  4.83333333333333, -46.50000000000000)    // Cae
+        ,   new constel_boundary_t(49, 15.33333333333333, 15.66666666666667, -48.00000000000000)    // Lup
+        ,   new constel_boundary_t(63,  0.00000000000000,  2.33333333333333, -48.16666666666666)    // Phe
+        ,   new constel_boundary_t(35,  2.66666666666667,  3.00000000000000, -49.00000000000000)    // Eri
+        ,   new constel_boundary_t(40,  4.08333333333333,  4.26666666666667, -49.00000000000000)    // Hor
+        ,   new constel_boundary_t( 9,  4.26666666666667,  4.50000000000000, -49.00000000000000)    // Cae
+        ,   new constel_boundary_t(38, 21.33333333333333, 22.00000000000000, -50.00000000000000)    // Gru
+        ,   new constel_boundary_t(67,  6.00000000000000,  8.00000000000000, -50.75000000000000)    // Pup
+        ,   new constel_boundary_t(84,  8.00000000000000,  8.16666666666667, -50.75000000000000)    // Vel
+        ,   new constel_boundary_t(35,  2.41666666666667,  2.66666666666667, -51.00000000000000)    // Eri
+        ,   new constel_boundary_t(40,  3.83333333333333,  4.08333333333333, -51.00000000000000)    // Hor
+        ,   new constel_boundary_t(63,  0.00000000000000,  1.83333333333333, -51.50000000000000)    // Phe
+        ,   new constel_boundary_t(12,  6.00000000000000,  6.16666666666667, -52.50000000000000)    // Car
+        ,   new constel_boundary_t(84,  8.16666666666667,  8.45000000000000, -53.00000000000000)    // Vel
+        ,   new constel_boundary_t(40,  3.50000000000000,  3.83333333333333, -53.16666666666666)    // Hor
+        ,   new constel_boundary_t(32,  3.83333333333333,  4.00000000000000, -53.16666666666666)    // Dor
+        ,   new constel_boundary_t(63,  0.00000000000000,  1.58333333333333, -53.50000000000000)    // Phe
+        ,   new constel_boundary_t(35,  2.16666666666667,  2.41666666666667, -54.00000000000000)    // Eri
+        ,   new constel_boundary_t(64,  4.50000000000000,  5.00000000000000, -54.00000000000000)    // Pic
+        ,   new constel_boundary_t(49, 15.05000000000000, 15.33333333333333, -54.00000000000000)    // Lup
+        ,   new constel_boundary_t(84,  8.45000000000000,  8.83333333333333, -54.50000000000000)    // Vel
+        ,   new constel_boundary_t(12,  6.16666666666667,  6.50000000000000, -55.00000000000000)    // Car
+        ,   new constel_boundary_t(14, 11.83333333333333, 12.83333333333333, -55.00000000000000)    // Cen
+        ,   new constel_boundary_t(49, 14.16666666666667, 15.05000000000000, -55.00000000000000)    // Lup
+        ,   new constel_boundary_t(56, 15.05000000000000, 15.33333333333333, -55.00000000000000)    // Nor
+        ,   new constel_boundary_t(32,  4.00000000000000,  4.33333333333333, -56.50000000000000)    // Dor
+        ,   new constel_boundary_t(84,  8.83333333333333, 11.00000000000000, -56.50000000000000)    // Vel
+        ,   new constel_boundary_t(14, 11.00000000000000, 11.25000000000000, -56.50000000000000)    // Cen
+        ,   new constel_boundary_t( 5, 17.50000000000000, 18.00000000000000, -57.00000000000000)    // Ara
+        ,   new constel_boundary_t(78, 18.00000000000000, 20.33333333333333, -57.00000000000000)    // Tel
+        ,   new constel_boundary_t(38, 22.00000000000000, 23.33333333333333, -57.00000000000000)    // Gru
+        ,   new constel_boundary_t(40,  3.20000000000000,  3.50000000000000, -57.50000000000000)    // Hor
+        ,   new constel_boundary_t(64,  5.00000000000000,  5.50000000000000, -57.50000000000000)    // Pic
+        ,   new constel_boundary_t(12,  6.50000000000000,  6.83333333333333, -58.00000000000000)    // Car
+        ,   new constel_boundary_t(63,  0.00000000000000,  1.33333333333333, -58.50000000000000)    // Phe
+        ,   new constel_boundary_t(35,  1.33333333333333,  2.16666666666667, -58.50000000000000)    // Eri
+        ,   new constel_boundary_t(63, 23.33333333333333, 24.00000000000000, -58.50000000000000)    // Phe
+        ,   new constel_boundary_t(32,  4.33333333333333,  4.58333333333333, -59.00000000000000)    // Dor
+        ,   new constel_boundary_t(56, 15.33333333333333, 16.42083333333333, -60.00000000000000)    // Nor
+        ,   new constel_boundary_t(43, 20.33333333333333, 21.33333333333333, -60.00000000000000)    // Ind
+        ,   new constel_boundary_t(64,  5.50000000000000,  6.00000000000000, -61.00000000000000)    // Pic
+        ,   new constel_boundary_t(18, 15.16666666666667, 15.33333333333333, -61.00000000000000)    // Cir
+        ,   new constel_boundary_t( 5, 16.42083333333333, 16.58333333333333, -61.00000000000000)    // Ara
+        ,   new constel_boundary_t(18, 14.91666666666667, 15.16666666666667, -63.58333333333334)    // Cir
+        ,   new constel_boundary_t( 5, 16.58333333333333, 16.75000000000000, -63.58333333333334)    // Ara
+        ,   new constel_boundary_t(64,  6.00000000000000,  6.83333333333333, -64.00000000000000)    // Pic
+        ,   new constel_boundary_t(12,  6.83333333333333,  9.03333333333333, -64.00000000000000)    // Car
+        ,   new constel_boundary_t(14, 11.25000000000000, 11.83333333333333, -64.00000000000000)    // Cen
+        ,   new constel_boundary_t(27, 11.83333333333333, 12.83333333333333, -64.00000000000000)    // Cru
+        ,   new constel_boundary_t(14, 12.83333333333333, 14.53333333333333, -64.00000000000000)    // Cen
+        ,   new constel_boundary_t(18, 13.50000000000000, 13.66666666666667, -65.00000000000000)    // Cir
+        ,   new constel_boundary_t( 5, 16.75000000000000, 16.83333333333333, -65.00000000000000)    // Ara
+        ,   new constel_boundary_t(40,  2.16666666666667,  3.20000000000000, -67.50000000000000)    // Hor
+        ,   new constel_boundary_t(69,  3.20000000000000,  4.58333333333333, -67.50000000000000)    // Ret
+        ,   new constel_boundary_t(18, 14.75000000000000, 14.91666666666667, -67.50000000000000)    // Cir
+        ,   new constel_boundary_t( 5, 16.83333333333333, 17.50000000000000, -67.50000000000000)    // Ara
+        ,   new constel_boundary_t(60, 17.50000000000000, 18.00000000000000, -67.50000000000000)    // Pav
+        ,   new constel_boundary_t(81, 22.00000000000000, 23.33333333333333, -67.50000000000000)    // Tuc
+        ,   new constel_boundary_t(32,  4.58333333333333,  6.58333333333333, -70.00000000000000)    // Dor
+        ,   new constel_boundary_t(18, 13.66666666666667, 14.75000000000000, -70.00000000000000)    // Cir
+        ,   new constel_boundary_t(79, 14.75000000000000, 17.00000000000000, -70.00000000000000)    // TrA
+        ,   new constel_boundary_t(81,  0.00000000000000,  1.33333333333333, -75.00000000000000)    // Tuc
+        ,   new constel_boundary_t(42,  3.50000000000000,  4.58333333333333, -75.00000000000000)    // Hyi
+        ,   new constel_boundary_t(86,  6.58333333333333,  9.03333333333333, -75.00000000000000)    // Vol
+        ,   new constel_boundary_t(12,  9.03333333333333, 11.25000000000000, -75.00000000000000)    // Car
+        ,   new constel_boundary_t(55, 11.25000000000000, 13.66666666666667, -75.00000000000000)    // Mus
+        ,   new constel_boundary_t(60, 18.00000000000000, 21.33333333333333, -75.00000000000000)    // Pav
+        ,   new constel_boundary_t(43, 21.33333333333333, 23.33333333333333, -75.00000000000000)    // Ind
+        ,   new constel_boundary_t(81, 23.33333333333333, 24.00000000000000, -75.00000000000000)    // Tuc
+        ,   new constel_boundary_t(81,  0.75000000000000,  1.33333333333333, -76.00000000000000)    // Tuc
+        ,   new constel_boundary_t(42,  0.00000000000000,  3.50000000000000, -82.50000000000000)    // Hyi
+        ,   new constel_boundary_t(17,  7.66666666666667, 13.66666666666667, -82.50000000000000)    // Cha
+        ,   new constel_boundary_t( 2, 13.66666666666667, 18.00000000000000, -82.50000000000000)    // Aps
+        ,   new constel_boundary_t(52,  3.50000000000000,  7.66666666666667, -85.00000000000000)    // Men
+        ,   new constel_boundary_t(57,  0.00000000000000, 24.00000000000000, -90.00000000000000)    // Oct
         };
 
 
