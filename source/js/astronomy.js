@@ -5218,94 +5218,94 @@ Astronomy.Rotation_HOR_ECL = function(time, observer) {
 
 
 const ConstelNames = [
-    {s:'And', n:'Andromeda'           }  //  0
-,   {s:'Ant', n:'Antila'              }  //  1
-,   {s:'Aps', n:'Apus'                }  //  2
-,   {s:'Aql', n:'Aquila'              }  //  3
-,   {s:'Aqr', n:'Aquarius'            }  //  4
-,   {s:'Ara', n:'Ara'                 }  //  5
-,   {s:'Ari', n:'Aries'               }  //  6
-,   {s:'Aur', n:'Auriga'              }  //  7
-,   {s:'Boo', n:'Bootes'              }  //  8
-,   {s:'Cae', n:'Caelum'              }  //  9
-,   {s:'Cam', n:'Camelopardis'        }  // 10
-,   {s:'Cap', n:'Capricornus'         }  // 11
-,   {s:'Car', n:'Carina'              }  // 12
-,   {s:'Cas', n:'Cassiopeia'          }  // 13
-,   {s:'Cen', n:'Centaurus'           }  // 14
-,   {s:'Cep', n:'Cepheus'             }  // 15
-,   {s:'Cet', n:'Cetus'               }  // 16
-,   {s:'Cha', n:'Chamaeleon'          }  // 17
-,   {s:'Cir', n:'Circinus'            }  // 18
-,   {s:'CMa', n:'Canis Major'         }  // 19
-,   {s:'CMi', n:'Canis Minor'         }  // 20
-,   {s:'Cnc', n:'Cancer'              }  // 21
-,   {s:'Col', n:'Columba'             }  // 22
-,   {s:'Com', n:'Coma Berenices'      }  // 23
-,   {s:'CrA', n:'Corona Australis'    }  // 24
-,   {s:'CrB', n:'Corona Borealis'     }  // 25
-,   {s:'Crt', n:'Crater'              }  // 26
-,   {s:'Cru', n:'Crux'                }  // 27
-,   {s:'Crv', n:'Corvus'              }  // 28
-,   {s:'CVn', n:'Canes Venatici'      }  // 29
-,   {s:'Cyg', n:'Cygnus'              }  // 30
-,   {s:'Del', n:'Delphinus'           }  // 31
-,   {s:'Dor', n:'Dorado'              }  // 32
-,   {s:'Dra', n:'Draco'               }  // 33
-,   {s:'Equ', n:'Equuleus'            }  // 34
-,   {s:'Eri', n:'Eridanus'            }  // 35
-,   {s:'For', n:'Fornax'              }  // 36
-,   {s:'Gem', n:'Gemini'              }  // 37
-,   {s:'Gru', n:'Grus'                }  // 38
-,   {s:'Her', n:'Hercules'            }  // 39
-,   {s:'Hor', n:'Horologium'          }  // 40
-,   {s:'Hya', n:'Hydra'               }  // 41
-,   {s:'Hyi', n:'Hydrus'              }  // 42
-,   {s:'Ind', n:'Indus'               }  // 43
-,   {s:'Lac', n:'Lacerta'             }  // 44
-,   {s:'Leo', n:'Leo'                 }  // 45
-,   {s:'Lep', n:'Lepus'               }  // 46
-,   {s:'Lib', n:'Libra'               }  // 47
-,   {s:'LMi', n:'Leo Minor'           }  // 48
-,   {s:'Lup', n:'Lupus'               }  // 49
-,   {s:'Lyn', n:'Lynx'                }  // 50
-,   {s:'Lyr', n:'Lyra'                }  // 51
-,   {s:'Men', n:'Mensa'               }  // 52
-,   {s:'Mic', n:'Microscopium'        }  // 53
-,   {s:'Mon', n:'Monoceros'           }  // 54
-,   {s:'Mus', n:'Musca'               }  // 55
-,   {s:'Nor', n:'Norma'               }  // 56
-,   {s:'Oct', n:'Octans'              }  // 57
-,   {s:'Oph', n:'Ophiuchus'           }  // 58
-,   {s:'Ori', n:'Orion'               }  // 59
-,   {s:'Pav', n:'Pavo'                }  // 60
-,   {s:'Peg', n:'Pegasus'             }  // 61
-,   {s:'Per', n:'Perseus'             }  // 62
-,   {s:'Phe', n:'Phoenix'             }  // 63
-,   {s:'Pic', n:'Pictor'              }  // 64
-,   {s:'PsA', n:'Pisces Austrinus'    }  // 65
-,   {s:'Psc', n:'Pisces'              }  // 66
-,   {s:'Pup', n:'Puppis'              }  // 67
-,   {s:'Pyx', n:'Pyxis'               }  // 68
-,   {s:'Ret', n:'Reticulum'           }  // 69
-,   {s:'Scl', n:'Sculptor'            }  // 70
-,   {s:'Sco', n:'Scorpius'            }  // 71
-,   {s:'Sct', n:'Scutum'              }  // 72
-,   {s:'Ser', n:'Serpens'             }  // 73
-,   {s:'Sex', n:'Sextans'             }  // 74
-,   {s:'Sge', n:'Sagitta'             }  // 75
-,   {s:'Sgr', n:'Sagittarius'         }  // 76
-,   {s:'Tau', n:'Taurus'              }  // 77
-,   {s:'Tel', n:'Telescopium'         }  // 78
-,   {s:'TrA', n:'Triangulum Australe' }  // 79
-,   {s:'Tri', n:'Triangulum'          }  // 80
-,   {s:'Tuc', n:'Tucana'              }  // 81
-,   {s:'UMa', n:'Ursa Major'          }  // 82
-,   {s:'UMi', n:'Ursa Minor'          }  // 83
-,   {s:'Vel', n:'Vela'                }  // 84
-,   {s:'Vir', n:'Virgo'               }  // 85
-,   {s:'Vol', n:'Volans'              }  // 86
-,   {s:'Vul', n:'Vulpecula'           }  // 87
+    ['And', 'Andromeda'           ]  //  0
+,   ['Ant', 'Antila'              ]  //  1
+,   ['Aps', 'Apus'                ]  //  2
+,   ['Aql', 'Aquila'              ]  //  3
+,   ['Aqr', 'Aquarius'            ]  //  4
+,   ['Ara', 'Ara'                 ]  //  5
+,   ['Ari', 'Aries'               ]  //  6
+,   ['Aur', 'Auriga'              ]  //  7
+,   ['Boo', 'Bootes'              ]  //  8
+,   ['Cae', 'Caelum'              ]  //  9
+,   ['Cam', 'Camelopardis'        ]  // 10
+,   ['Cap', 'Capricornus'         ]  // 11
+,   ['Car', 'Carina'              ]  // 12
+,   ['Cas', 'Cassiopeia'          ]  // 13
+,   ['Cen', 'Centaurus'           ]  // 14
+,   ['Cep', 'Cepheus'             ]  // 15
+,   ['Cet', 'Cetus'               ]  // 16
+,   ['Cha', 'Chamaeleon'          ]  // 17
+,   ['Cir', 'Circinus'            ]  // 18
+,   ['CMa', 'Canis Major'         ]  // 19
+,   ['CMi', 'Canis Minor'         ]  // 20
+,   ['Cnc', 'Cancer'              ]  // 21
+,   ['Col', 'Columba'             ]  // 22
+,   ['Com', 'Coma Berenices'      ]  // 23
+,   ['CrA', 'Corona Australis'    ]  // 24
+,   ['CrB', 'Corona Borealis'     ]  // 25
+,   ['Crt', 'Crater'              ]  // 26
+,   ['Cru', 'Crux'                ]  // 27
+,   ['Crv', 'Corvus'              ]  // 28
+,   ['CVn', 'Canes Venatici'      ]  // 29
+,   ['Cyg', 'Cygnus'              ]  // 30
+,   ['Del', 'Delphinus'           ]  // 31
+,   ['Dor', 'Dorado'              ]  // 32
+,   ['Dra', 'Draco'               ]  // 33
+,   ['Equ', 'Equuleus'            ]  // 34
+,   ['Eri', 'Eridanus'            ]  // 35
+,   ['For', 'Fornax'              ]  // 36
+,   ['Gem', 'Gemini'              ]  // 37
+,   ['Gru', 'Grus'                ]  // 38
+,   ['Her', 'Hercules'            ]  // 39
+,   ['Hor', 'Horologium'          ]  // 40
+,   ['Hya', 'Hydra'               ]  // 41
+,   ['Hyi', 'Hydrus'              ]  // 42
+,   ['Ind', 'Indus'               ]  // 43
+,   ['Lac', 'Lacerta'             ]  // 44
+,   ['Leo', 'Leo'                 ]  // 45
+,   ['Lep', 'Lepus'               ]  // 46
+,   ['Lib', 'Libra'               ]  // 47
+,   ['LMi', 'Leo Minor'           ]  // 48
+,   ['Lup', 'Lupus'               ]  // 49
+,   ['Lyn', 'Lynx'                ]  // 50
+,   ['Lyr', 'Lyra'                ]  // 51
+,   ['Men', 'Mensa'               ]  // 52
+,   ['Mic', 'Microscopium'        ]  // 53
+,   ['Mon', 'Monoceros'           ]  // 54
+,   ['Mus', 'Musca'               ]  // 55
+,   ['Nor', 'Norma'               ]  // 56
+,   ['Oct', 'Octans'              ]  // 57
+,   ['Oph', 'Ophiuchus'           ]  // 58
+,   ['Ori', 'Orion'               ]  // 59
+,   ['Pav', 'Pavo'                ]  // 60
+,   ['Peg', 'Pegasus'             ]  // 61
+,   ['Per', 'Perseus'             ]  // 62
+,   ['Phe', 'Phoenix'             ]  // 63
+,   ['Pic', 'Pictor'              ]  // 64
+,   ['PsA', 'Pisces Austrinus'    ]  // 65
+,   ['Psc', 'Pisces'              ]  // 66
+,   ['Pup', 'Puppis'              ]  // 67
+,   ['Pyx', 'Pyxis'               ]  // 68
+,   ['Ret', 'Reticulum'           ]  // 69
+,   ['Scl', 'Sculptor'            ]  // 70
+,   ['Sco', 'Scorpius'            ]  // 71
+,   ['Sct', 'Scutum'              ]  // 72
+,   ['Ser', 'Serpens'             ]  // 73
+,   ['Sex', 'Sextans'             ]  // 74
+,   ['Sge', 'Sagitta'             ]  // 75
+,   ['Sgr', 'Sagittarius'         ]  // 76
+,   ['Tau', 'Taurus'              ]  // 77
+,   ['Tel', 'Telescopium'         ]  // 78
+,   ['TrA', 'Triangulum Australe' ]  // 79
+,   ['Tri', 'Triangulum'          ]  // 80
+,   ['Tuc', 'Tucana'              ]  // 81
+,   ['UMa', 'Ursa Major'          ]  // 82
+,   ['UMi', 'Ursa Minor'          ]  // 83
+,   ['Vel', 'Vela'                ]  // 84
+,   ['Vir', 'Virgo'               ]  // 85
+,   ['Vol', 'Volans'              ]  // 86
+,   ['Vul', 'Vulpecula'           ]  // 87
 ];
 
 const ConstelBounds = [
@@ -5733,7 +5733,7 @@ Astronomy.Constellation = function(ra, dec) {
         const ra_hi = b[2] * fr;
         if (dec <= equ1875.dec && ra_lo <= equ1875.ra && equ1875.ra < ra_hi) {
             const c = ConstelNames[b[0]];
-            return new ConstellationInfo(c.s, c.n, equ1875.ra, equ1875.dec);
+            return new ConstellationInfo(c[0], c[1], equ1875.ra, equ1875.dec);
         }
     }
 

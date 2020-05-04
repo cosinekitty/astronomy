@@ -4212,7 +4212,7 @@ Astronomy.Constellation = function(ra, dec) {
         const ra_hi = b[2] * fr;
         if (dec <= equ1875.dec && ra_lo <= equ1875.ra && equ1875.ra < ra_hi) {
             const c = ConstelNames[b[0]];
-            return new ConstellationInfo(c.s, c.n, equ1875.ra, equ1875.dec);
+            return new ConstellationInfo(c[0], c[1], equ1875.ra, equ1875.dec);
         }
     }
 

@@ -1351,7 +1351,7 @@ static int ConstellationData(cg_context_t *context)
                 fprintf(context->outfile, "const ConstelNames = [\n ");
             else
                 fprintf(context->outfile, ",");
-            fprintf(context->outfile, "   {s:'%s', n:'%s'%*s}  // %2d\n", d, d+4, (20-len), "", lnum-1);
+            fprintf(context->outfile, "   ['%s', '%s'%*s]  // %2d\n", d, d+4, (20-len), "", lnum-1);
             break;
 
         case CODEGEN_LANGUAGE_PYTHON:
