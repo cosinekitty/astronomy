@@ -1305,7 +1305,7 @@ static int ConstellationData(cg_context_t *context)
             CHECK(LogError(context, "Too many constellations in file: %s", dictFileName));
 
         d = dict[lnum++];
-        len = strlen(line);
+        len = (int)strlen(line);
         if (len < 26)
             CHECK(LogError(context, "File %s line %d is too short", dictFileName, lnum));
 
@@ -1319,7 +1319,7 @@ static int ConstellationData(cg_context_t *context)
             d[index] = '\0';
         d[3] = '\0';
 
-        len = strlen(d+4);  /* capture variable length of constellation name for formatting columns nicely. */
+        len = (int)strlen(d+4);  /* capture variable length of constellation name for formatting columns nicely. */
 
         switch (context->language)
         {
