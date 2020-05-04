@@ -185,8 +185,6 @@ REM ----------------------------------------------------------------------------
 echo.
 echo.Running C# tests.
 pushd dotnet\csharp_test
-dotnet restore
-if errorlevel 1 (exit /b 1)
 dotnet run
 if errorlevel 1 (exit /b 1)
 popd
@@ -205,6 +203,11 @@ for %%f in (temp\longitude_*.txt) do (
 echo.
 echo Running seasons test.
 node seasons_test.js
+if errorlevel 1 (exit /b 1)
+
+echo.
+echo Running constellation tests.
+node constellation.js
 if errorlevel 1 (exit /b 1)
 
 echo.
@@ -272,6 +275,9 @@ if errorlevel 1 (exit /b 1)
 !CTESTEXE! elongation
 if errorlevel 1 (exit /b 1)
 
+!CTESTEXE! constellation
+if errorlevel 1 (exit /b 1)
+
 for %%f in (temp\c_longitude_*.txt) do (
     !GENEXE! check %%f
     if errorlevel 1 (exit /b 1)
@@ -327,6 +333,9 @@ test.py riseset riseset\riseset.txt
 if errorlevel 1 (exit /b 1)
 
 test.py elongation
+if errorlevel 1 (exit /b 1)
+
+test.py constellation
 if errorlevel 1 (exit /b 1)
 
 for %%f in (temp\py_longitude_*.txt) do (
