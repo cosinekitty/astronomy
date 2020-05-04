@@ -682,7 +682,7 @@ static int GenDeltaTArrayEntry(cg_context_t *context, int count, double mjd, con
 
     case CODEGEN_LANGUAGE_JS:
         fprintf(context->outfile, "%s\n", (count==1) ? "[" : ",");
-        fprintf(context->outfile, "{ mjd:%0.1lf, dt:%s }", mjd, dt_text);
+        fprintf(context->outfile, "[%7lg, %s]", mjd, dt_text);
         return 0;
 
     case CODEGEN_LANGUAGE_PYTHON:

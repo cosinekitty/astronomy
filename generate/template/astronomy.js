@@ -266,15 +266,15 @@ const DT = $ASTRO_DELTA_T();
  *      The difference TT-UT in seconds for the given date and time.
  */
 function DeltaT(mjd) {
-    // DT[i] = { mjd: 58484.0, dt: 69.34 }
+    // DT[i] = [mjd, dt].
     // Check end ranges. If outside the known bounds, clamp to the closest known value.
 
-    if (mjd <= DT[0].mjd) {
-        return DT[0].dt;
+    if (mjd <= DT[0][0]) {
+        return DT[0][1];
     }
 
-    if (mjd >= DT[DT.length-1].mjd) {
-        return DT[DT.length-1].dt;
+    if (mjd >= DT[DT.length-1][0]) {
+        return DT[DT.length-1][1];
     }
 
     // Do a binary search to find the pair of indexes this mjd lies between.
@@ -283,13 +283,13 @@ function DeltaT(mjd) {
     let hi = DT.length-2;   // make sure there is always an array element after the one we are looking at
     while (lo <= hi) {
         let c = (lo + hi) >> 1;
-        if (mjd < DT[c].mjd) {
+        if (mjd < DT[c][0]) {
             hi = c-1;
-        } else if (mjd > DT[c+1].mjd) {
+        } else if (mjd > DT[c+1][0]) {
             lo = c+1;
         } else {
-            let frac = (mjd - DT[c].mjd) / (DT[c+1].mjd - DT[c].mjd);
-            return DT[c].dt + frac*(DT[c+1].dt - DT[c].dt);
+            let frac = (mjd - DT[c][0]) / (DT[c+1][0] - DT[c][0]);
+            return DT[c][1] + frac*(DT[c+1][1] - DT[c][1]);
         }
     }
 
