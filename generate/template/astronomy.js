@@ -4203,8 +4203,14 @@ Astronomy.Constellation = function(ra, dec) {
     const equ1875 = Astronomy.EquatorFromVector(vec1875);
 
     // Search for the constellation using the B1875 coordinates.
+    const fd = 10 / (4 * 60);   // conversion factor from compact units to DEC degrees
+    const fr = fd / 15;         // conversion factor from compact units to RA  sidereal hours
     for (let b of ConstelBounds) {
-        if (b.d <= equ1875.dec && b.r1 <= equ1875.ra && equ1875.ra < b.r2) {
+        // Convert compact angular units to RA in hours, DEC in degrees.
+        const dec = b.d * fd;
+        const ra_lo = b.r1 * fr;
+        const ra_hi = b.r2 * fr;
+        if (dec <= equ1875.dec && ra_lo <= equ1875.ra && equ1875.ra < ra_hi) {
             const c = ConstelNames[b.i];
             return new ConstellationInfo(c.s, c.n, equ1875.ra, equ1875.dec);
         }

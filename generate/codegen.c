@@ -1260,6 +1260,23 @@ fail:
     return error;
 }
 
+static double RoundAngle(double x)
+{
+    /*
+        In the JavaScript code, it is more compact to store
+        (quarter arcminutes) / 10 than degrees and sidereal hours.
+
+        Before:
+            -rw-r--r-- 1 don don 249078 May  4 10:06 astronomy.js
+            -rw-r--r-- 1 don don  86423 May  4 10:06 astronomy.min.js
+
+        After:
+            -rw-r--r-- 1 don don 237503 May  4 12:17 astronomy.js
+            -rw-r--r-- 1 don don  80904 May  4 12:17 astronomy.min.js
+    */
+    return round((4.0 * 60.0) * x) / 10.0;
+}
+
 #define NUM_CONSTELLATIONS 88
 
 static int ConstellationData(cg_context_t *context)
@@ -1422,9 +1439,13 @@ static int ConstellationData(cg_context_t *context)
             break;
 
         case CODEGEN_LANGUAGE_JS:
-            fprintf(context->outfile, "%c   { i:%2d, r1:%17.14lf, r2:%17.14lf, d:%17.14lf }    // %s\n",
+            fprintf(context->outfile, "%c   { i:%2d, r1:%6lg, r2:%6lg, d:%6lg }    // %s\n",
                 ((lnum == 1) ? ' ' : ','),
-                index, ra_lo, ra_hi, dec, symbol);
+                index,
+                RoundAngle(15.0 * ra_lo),
+                RoundAngle(15.0 * ra_hi),
+                RoundAngle(dec),
+                symbol);
             break;
 
         case CODEGEN_LANGUAGE_PYTHON:
@@ -1480,17 +1501,17 @@ static int LogError(const cg_context_t *context, const char *format, ...)
 
 static const cg_directive_entry DirectiveTable[] =
 {
-    { "C_VSOP", CVsop },
-    { "CSHARP_VSOP", CsharpVsop },
-    { "LIST_VSOP", ListVsop },
-    { "LIST_CHEBYSHEV", ListChebyshev },
-    { "C_CHEBYSHEV", CChebyshev },
-    { "CSHARP_CHEBYSHEV", CsharpChebyshev },
-    { "DELTA_T", GenDeltaT },
-    { "IAU_DATA", OptIauData },
-    { "ADDSOL", OptAddSol },
-    { "CONSTEL", ConstellationData },
-    { NULL, NULL }
+    { "C_VSOP",             CVsop               },
+    { "CSHARP_VSOP",        CsharpVsop          },
+    { "LIST_VSOP",          ListVsop            },
+    { "LIST_CHEBYSHEV",     ListChebyshev       },
+    { "C_CHEBYSHEV",        CChebyshev          },
+    { "CSHARP_CHEBYSHEV",   CsharpChebyshev     },
+    { "DELTA_T",            GenDeltaT           },
+    { "IAU_DATA",           OptIauData          },
+    { "ADDSOL",             OptAddSol           },
+    { "CONSTEL",            ConstellationData   },
+    { NULL, NULL }  /* Marks end of list */
 };
 
 static int ProcessDirective(cg_context_t *context)
