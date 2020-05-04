@@ -54,5 +54,9 @@ echo "Running rotation tests."
 node rotation.js || Fail "Failed rotation tests."
 
 echo ""
+echo "Running constellation tests."
+node constellation.js || Fail "Failed constellation tests."
+
+echo ""
 echo "SUCCESS."
 exit 0

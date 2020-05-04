@@ -487,6 +487,24 @@ For the Moon orbiting the Earth, this is a perigee or apogee, respectively.
 
 * * *
 
+<a name="Astronomy.ConstellationInfo"></a>
+
+### Astronomy.ConstellationInfo
+Reports the constellation that a given celestial point lies within.
+
+**Kind**: static class of [<code>Astronomy</code>](#Astronomy)  
+**Properties**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| symbol | <code>string</code> | 3-character mnemonic symbol for the constellation, e.g. "Ori". |
+| name | <code>string</code> | Full name of constellation, e.g. "Orion". |
+| ra1875 | <code>number</code> | Right ascension expressed in B1875 coordinates. |
+| dec1875 | <code>number</code> | Declination expressed in B1875 coordinates. |
+
+
+* * *
+
 <a name="Astronomy.Bodies"></a>
 
 ### Astronomy.Bodies : <code>Array.&lt;string&gt;</code>

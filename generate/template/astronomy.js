@@ -4149,6 +4149,70 @@ Astronomy.Rotation_HOR_ECL = function(time, observer) {
 
 $ASTRO_CONSTEL()
 
+let ConstelRot;
+let Epoch2000;
+
+/**
+ * Reports the constellation that a given celestial point lies within.
+ *
+ * @class
+ * @memberof Astronomy
+ *
+ * @property {string} symbol
+ *      3-character mnemonic symbol for the constellation, e.g. "Ori".
+ *
+ * @property {string} name
+ *      Full name of constellation, e.g. "Orion".
+ *
+ * @property {number} ra1875
+ *      Right ascension expressed in B1875 coordinates.
+ *
+ * @property {number} dec1875
+ *      Declination expressed in B1875 coordinates.
+ */
+class ConstellationInfo {
+    constructor(symbol, name, ra1875, dec1875) {
+        this.symbol = symbol;
+        this.name = name;
+        this.ra1875 = ra1875;
+        this.dec1875 = dec1875;
+    }
+}
+
+
+Astronomy.Constellation = function(ra, dec) {
+    if (dec < -90 || dec > +90) {
+        throw 'Invalid declination angle. Must be -90..+90.';
+    }
+    // Clamp right ascension to [0, 24) sidereal hours.
+    ra %= 24.0;
+    if (ra < 0.0) {
+        ra += 24.0;
+    }
+
+    // Lazy-initialize rotation matrix.
+    if (!ConstelRot) {
+        ConstelRot = Astronomy.Rotation_EQJ_EQD(new AstroTime(new Date(Date.UTC(1875, 0, 1, 12))));
+        Epoch2000 = new AstroTime(0);
+    }
+
+    // Convert coordinates from J2000 to B1875.
+    const equ2000 = new EquatorialCoordinates(ra, dec, 1.0);
+    const vec2000 = Astronomy.VectorFromEquator(equ2000, Epoch2000);
+    const vec1875 = Astronomy.RotateVector(ConstelRot, vec2000);
+    const equ1875 = Astronomy.EquatorFromVector(vec1875);
+
+    // Search for the constellation using the B1875 coordinates.
+    for (let b of ConstelBounds) {
+        if (b.d <= equ1875.dec && b.r1 <= equ1875.ra && equ1875.ra < b.r2) {
+            const c = ConstelNames[b.i];
+            return new ConstellationInfo(c.s, c.n, equ1875.ra, equ1875.dec);
+        }
+    }
+
+    // This should never happen!
+    throw 'Unable to find constellation for given coordinates.';
+}
 
 
 })(typeof exports==='undefined' ? (this.Astronomy={}) : exports);
