@@ -4147,4 +4147,8 @@ Astronomy.Rotation_HOR_ECL = function(time, observer) {
 }
 
 
+$ASTRO_CONSTEL()
+
+
+
 })(typeof exports==='undefined' ? (this.Astronomy={}) : exports);

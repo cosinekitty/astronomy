@@ -1329,6 +1329,14 @@ static int ConstellationData(cg_context_t *context)
             fprintf(context->outfile, "new constel_info_t(\"%s\", \"%s\"%*s)  // %2d\n", d, d+4, (20-len), "", lnum-1);
             break;
 
+        case CODEGEN_LANGUAGE_JS:
+            if (lnum == 1)
+                fprintf(context->outfile, "const ConstelNames = [\n ");
+            else
+                fprintf(context->outfile, ",");
+            fprintf(context->outfile, "   {s:'%s', n:'%s'%*s}  // %2d\n", d, d+4, (20-len), "", lnum-1);
+            break;
+
         case CODEGEN_LANGUAGE_PYTHON:
             if (lnum == 1)
                 fprintf(context->outfile, "_ConstelNames = (\n ");
@@ -1337,7 +1345,6 @@ static int ConstellationData(cg_context_t *context)
             fprintf(context->outfile, "   ('%s', '%s'%*s)  # %2d\n", d, d+4, (20-len), "", lnum-1);
             break;
 
-        case CODEGEN_LANGUAGE_JS:
         default:
              CHECK(LogError(context, "ConstellationData(1): Unsupported language %d", context->language));
         }
@@ -1367,12 +1374,16 @@ static int ConstellationData(cg_context_t *context)
         fprintf(context->outfile, "        {\n");
         break;
 
+    case CODEGEN_LANGUAGE_JS:
+        fprintf(context->outfile, "];\n\n");
+        fprintf(context->outfile, "const ConstelBounds = [\n");
+        break;
+
     case CODEGEN_LANGUAGE_PYTHON:
         fprintf(context->outfile, ")\n\n");
         fprintf(context->outfile, "_ConstelBounds = (\n");
         break;
 
-    case CODEGEN_LANGUAGE_JS:
     default:
         CHECK(LogError(context, "ConstellationData(2): Unsupported language %d", context->language));
     }
@@ -1410,13 +1421,18 @@ static int ConstellationData(cg_context_t *context)
                 index, ra_lo, ra_hi, dec, symbol);
             break;
 
+        case CODEGEN_LANGUAGE_JS:
+            fprintf(context->outfile, "%c   { i:%2d, r1:%17.14lf, r2:%17.14lf, d:%17.14lf }    // %s\n",
+                ((lnum == 1) ? ' ' : ','),
+                index, ra_lo, ra_hi, dec, symbol);
+            break;
+
         case CODEGEN_LANGUAGE_PYTHON:
             fprintf(context->outfile, "%c   ( %2d, %17.14lf, %17.14lf, %17.14lf )    # %s\n",
                 ((lnum == 1) ? ' ' : ','),
                 index, ra_lo, ra_hi, dec, symbol);
             break;
 
-        case CODEGEN_LANGUAGE_JS:
         default:
             CHECK(LogError(context, "ConstellationData(3): Unsupported language %d", context->language));
         }
@@ -1433,11 +1449,14 @@ static int ConstellationData(cg_context_t *context)
         fprintf(context->outfile, "        };\n\n");
         break;
 
+    case CODEGEN_LANGUAGE_JS:
+        fprintf(context->outfile, "];\n\n");
+        break;
+
     case CODEGEN_LANGUAGE_PYTHON:
         fprintf(context->outfile, ")\n\n");
         break;
 
-    case CODEGEN_LANGUAGE_JS:
     default:
         CHECK(LogError(context, "ConstellationData(4): Unsupported language %d", context->language));
     }
