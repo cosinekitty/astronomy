@@ -4180,6 +4180,23 @@ class ConstellationInfo {
 }
 
 
+/**
+ * Determines the constellation that contains the given point in the sky.
+ *
+ * Given J2000 equatorial (EQJ) coordinates of a point in the sky,
+ * determines the constellation that contains that point.
+ *
+ * @param {number} ra
+ *      The right ascension (RA) of a point in the sky, using the J2000 equatorial system.
+ *
+ * @param {number} dec
+ *      The declination (DEC) of a point in the sky, using the J2000 equatorial system.
+ *
+ * @returns {Astronomy.ConstellationInfo}
+ *      An object that contains the 3-letter abbreviation and full name
+ *      of the constellation that contains the given (ra,dec), along with
+ *      the converted B1875 (ra,dec) for that point.
+ */
 Astronomy.Constellation = function(ra, dec) {
     if (dec < -90 || dec > +90) {
         throw 'Invalid declination angle. Must be -90..+90.';

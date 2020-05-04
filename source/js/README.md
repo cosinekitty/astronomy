@@ -1713,6 +1713,27 @@ Target: ECL = ecliptic system, using equator at J2000 epoch.
 
 * * *
 
+<a name="Astronomy.Constellation"></a>
+
+### Astronomy.Constellation(ra, dec) ⇒ [<code>ConstellationInfo</code>](#Astronomy.ConstellationInfo)
+Determines the constellation that contains the given point in the sky.
+
+Given J2000 equatorial (EQJ) coordinates of a point in the sky,
+determines the constellation that contains that point.
+
+**Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
+**Returns**: [<code>ConstellationInfo</code>](#Astronomy.ConstellationInfo) - An object that contains the 3-letter abbreviation and full name
+     of the constellation that contains the given (ra,dec), along with
+     the converted B1875 (ra,dec) for that point.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| ra | <code>number</code> | The right ascension (RA) of a point in the sky, using the J2000 equatorial system. |
+| dec | <code>number</code> | The declination (DEC) of a point in the sky, using the J2000 equatorial system. |
+
+
+* * *
+
 <a name="Astronomy.ContinuousFunction"></a>
 
 ### Astronomy.ContinuousFunction ⇒ <code>number</code>
