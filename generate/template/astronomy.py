@@ -3911,3 +3911,86 @@ def Rotation_HOR_ECL(time, observer):
     """
     rot = Rotation_ECL_HOR(time, observer)
     return InverseRotation(rot)
+
+class ConstellationInfo:
+    """Reports the constellation that a given celestial point lies within.
+
+    The #Constellation function returns this struct
+    to report which constellation corresponds with a given point in the sky.
+    Constellations are defined with respect to the B1875 equatorial system
+    per IAU standard. Although `Constellation` requires J2000 equatorial
+    coordinates, the struct contains converted B1875 coordinates for reference.
+
+    Attributes
+    ----------
+    symbol : string
+        3-character mnemonic symbol for the constellation, e.g. "Ori".
+    name : string
+        Full name of constellation, e.g. "Orion".
+    ra1875 : float
+        Right ascension expressed in B1875 coordinates.
+    dec1875 : float
+        Declination expressed in B1875 coordinates.
+    """
+    def __init__(self, symbol, name, ra1875, dec1875):
+        self.symbol = symbol
+        self.name = name
+        self.ra1875 = ra1875
+        self.dec1875 = dec1875
+
+
+_ConstelRot = None
+_Epoch2000 = None
+$ASTRO_CONSTEL()
+
+
+def Constellation(ra, dec):
+    """Determines the constellation that contains the given point in the sky.
+
+    Given J2000 equatorial (EQJ) coordinates of a point in the sky, determines the
+    constellation that contains that point.
+
+    Parameters
+    ----------
+    ra : float
+        The right ascension (RA) of a point in the sky, using the J2000 equatorial system.
+    dec : float
+        The declination (DEC) of a point in the sky, using the J2000 equatorial system.
+
+    Returns
+    -------
+    ConstellationInfo
+        A structure that contains the 3-letter abbreviation and full name
+        of the constellation that contains the given (ra,dec), along with
+        the converted B1875 (ra,dec) for that point.
+    """
+    global _ConstelRot, _Epoch2000
+
+    if dec < -90.0 or dec > +90.0:
+        raise Error('Invalid declination angle. Must be -90..+90.')
+
+    # Clamp right ascension to [0, 24) sidereal hours.
+    ra = math.fmod(ra, 24.0)
+    if ra < 0.0:
+        ra += 24.0
+
+    # Lazy-initialize rotation matrix.
+    if _ConstelRot is None:
+        _ConstelRot = Rotation_EQJ_EQD(Time.Make(1875, 1, 1, 12, 0, 0))
+        _Epoch2000 = Time(0.0)
+
+    # Convert coordinates from J2000 to B1875.
+    equ2000 = Equatorial(ra, dec, 1.0)
+    vec2000 = VectorFromEquator(equ2000, _Epoch2000)
+    vec1875 = RotateVector(_ConstelRot, vec2000)
+    equ1875 = EquatorFromVector(vec1875)
+
+    # Search for the constellation using the B1875 coordinates.
+    for b in _ConstelBounds:
+        index, ra_lo, ra_hi, dec = b
+        if (dec <= equ1875.dec) and (ra_lo <= equ1875.ra < ra_hi):
+            symbol, name = _ConstelNames[index]
+            return ConstellationInfo(symbol, name, equ1875.ra, equ1875.dec)
+
+    # This should never happen!
+    raise Error('Unable to find constellation for given coordinates.')

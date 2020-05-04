@@ -1107,6 +1107,33 @@ def Test_PlanetApsis():
 
 #-----------------------------------------------------------------------------------------------------------
 
+def Test_Constellation():
+    inFileName = 'constellation/test_input.txt'
+    lnum = 0
+    failcount = 0
+    with open(inFileName, 'rt') as infile:
+        for line in infile:
+            lnum += 1
+            m = re.match(r'^\s*(\d+)\s+(\S+)\s+(\S+)\s+([A-Z][a-zA-Z]{2})\s*$', line)
+            if not m:
+                print('Test_Constellation: invalid line {} in file {}'.format(lnum, inFileName))
+                return 1
+            id = int(m.group(1))
+            ra = float(m.group(2))
+            dec = float(m.group(3))
+            symbol = m.group(4)
+            constel = astronomy.Constellation(ra, dec)
+            if constel.symbol != symbol:
+                print('Star {:6d}: expected {}, found {} at B1875 RA={:10.6f}, DEC={:10.6f}'.format(id, symbol, constel.symbol, constel.ra1875, constel.dec1875))
+                failcount += 1
+    if failcount > 0:
+        print('Test_Constellation: {} failures'.format(failcount))
+        return 1
+    print('Test_Constellation: PASS (verified {})'.format(lnum))
+    return 0
+
+#-----------------------------------------------------------------------------------------------------------
+
 if __name__ == '__main__':
     if len(sys.argv) == 2:
         if sys.argv[1] == 'time':
@@ -1132,6 +1159,8 @@ if __name__ == '__main__':
             sys.exit(Test_Rotation())
         if sys.argv[1] == 'refraction':
             sys.exit(Test_Refraction())
+        if sys.argv[1] == 'constellation':
+            sys.exit(Test_Constellation())
 
     if len(sys.argv) == 3:
         if sys.argv[1] == 'seasons':

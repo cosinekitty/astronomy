@@ -5060,7 +5060,7 @@ $ASTRO_CSHARP_CHEBYSHEV(8);
             // Search for the constellation using the B1875 coordinates.
             foreach (constel_boundary_t b in ConstelBounds)
                 if ((b.dec_lo <= equ1875.dec) && (b.ra_hi > equ1875.ra) && (b.ra_lo <= equ1875.ra))
-                    return new ConstellationInfo(ConstelNames[b.index].symbol, ConstelNames[b.index].name, equ1875.dec, equ1875.dec);
+                    return new ConstellationInfo(ConstelNames[b.index].symbol, ConstelNames[b.index].name, equ1875.ra, equ1875.dec);
 
             // This should never happen!
             throw new Exception("Unable to find constellation for given coordinates.");

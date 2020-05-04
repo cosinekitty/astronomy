@@ -160,6 +160,26 @@ to iterate through consecutive alternating perigees and apogees.
 
 ---
 
+<a name="ConstellationInfo"></a>
+### class ConstellationInfo
+
+**Reports the constellation that a given celestial point lies within.**
+
+The [`Constellation`](#Constellation) function returns this struct
+to report which constellation corresponds with a given point in the sky.
+Constellations are defined with respect to the B1875 equatorial system
+per IAU standard. Although `Constellation` requires J2000 equatorial
+coordinates, the struct contains converted B1875 coordinates for reference.
+
+| Type | Attribute | Description |
+| --- | --- | --- |
+| `string` | `symbol` | 3-character mnemonic symbol for the constellation, e.g. "Ori". |
+| `string` | `name` | Full name of constellation, e.g. "Orion". |
+| `float` | `ra1875` | Right ascension expressed in B1875 coordinates. |
+| `float` | `dec1875` | Declination expressed in B1875 coordinates. |
+
+---
+
 <a name="EclipticCoordinates"></a>
 ### class EclipticCoordinates
 
@@ -691,6 +711,26 @@ b : RotationMatrix
 
 ### Returns: [`RotationMatrix`](#RotationMatrix)
 The combined rotation matrix.
+
+---
+
+<a name="Constellation"></a>
+### Constellation(ra, dec)
+
+**Determines the constellation that contains the given point in the sky.**
+
+Given J2000 equatorial (EQJ) coordinates of a point in the sky, determines the
+constellation that contains that point.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| `float` | `ra` | The right ascension (RA) of a point in the sky, using the J2000 equatorial system. |
+| `float` | `dec` | The declination (DEC) of a point in the sky, using the J2000 equatorial system. |
+
+### Returns: [`ConstellationInfo`](#ConstellationInfo)
+A structure that contains the 3-letter abbreviation and full name
+of the constellation that contains the given (ra,dec), along with
+the converted B1875 (ra,dec) for that point.
 
 ---
 
