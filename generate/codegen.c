@@ -1439,7 +1439,7 @@ static int ConstellationData(cg_context_t *context)
             break;
 
         case CODEGEN_LANGUAGE_JS:
-            fprintf(context->outfile, "%c   { i:%2d, r1:%6lg, r2:%6lg, d:%6lg }    // %s\n",
+            fprintf(context->outfile, "%c   [ %2d, %6lg, %6lg, %6lg ]    // %s\n",
                 ((lnum == 1) ? ' ' : ','),
                 index,
                 RoundAngle(15.0 * ra_lo),

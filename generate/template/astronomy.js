@@ -4207,11 +4207,11 @@ Astronomy.Constellation = function(ra, dec) {
     const fr = fd / 15;         // conversion factor from compact units to RA  sidereal hours
     for (let b of ConstelBounds) {
         // Convert compact angular units to RA in hours, DEC in degrees.
-        const dec = b.d * fd;
-        const ra_lo = b.r1 * fr;
-        const ra_hi = b.r2 * fr;
+        const dec = b[3] * fd;
+        const ra_lo = b[1] * fr;
+        const ra_hi = b[2] * fr;
         if (dec <= equ1875.dec && ra_lo <= equ1875.ra && equ1875.ra < ra_hi) {
-            const c = ConstelNames[b.i];
+            const c = ConstelNames[b[0]];
             return new ConstellationInfo(c.s, c.n, equ1875.ra, equ1875.dec);
         }
     }
