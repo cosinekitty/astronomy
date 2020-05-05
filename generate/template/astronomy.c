@@ -5292,7 +5292,20 @@ astro_constellation_t Astronomy_Constellation(double ra, double dec)
     /* Lazy-initialize the rotation matrix for converting J2000 to B1875. */
     if (rot.status != ASTRO_SUCCESS)
     {
-        astro_time_t time = Astronomy_MakeTime(1875, 1, 1, 12, 0, 0.0);     /* Not sure about exact date/time of 1875. */
+        /*
+            Need to calculate the B1875 epoch. Based on this:
+            https://en.wikipedia.org/wiki/Epoch_(astronomy)#Besselian_years
+            B = 1900 + (JD - 2415020.31352) / 365.242198781
+            I'm interested in using TT instead of JD, giving:
+            B = 1900 + ((TT+2451545) - 2415020.31352) / 365.242198781
+            B = 1900 + (TT + 36524.68648) / 365.242198781
+            TT = 365.242198781*(B - 1900) - 36524.68648 = -45655.741449525
+            But Astronomy_TimeFromDays() wants UT, not TT.
+            Near that date, I get a historical correction of ut-tt = 3.2 seconds.
+            That gives UT = -45655.74141261017 for the B1875 epoch,
+            or 1874-12-31T18:12:21.950Z.
+        */
+        astro_time_t time = Astronomy_TimeFromDays(-45655.74141261017);
         rot = Astronomy_Rotation_EQJ_EQD(time);
         if (rot.status != ASTRO_SUCCESS)
             return ConstelErr(rot.status);

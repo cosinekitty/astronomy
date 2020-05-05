@@ -5045,7 +5045,18 @@ $ASTRO_CSHARP_CHEBYSHEV(8);
                 if (ConstelRot.rot == null)
                 {
                     // Lazy-initialize the rotation matrix for converting J2000 to B1875.
-                    var time = new AstroTime(1875, 1, 1, 12, 0, 0);
+                    // Need to calculate the B1875 epoch. Based on this:
+                    // https://en.wikipedia.org/wiki/Epoch_(astronomy)#Besselian_years
+                    // B = 1900 + (JD - 2415020.31352) / 365.242198781
+                    // I'm interested in using TT instead of JD, giving:
+                    // B = 1900 + ((TT+2451545) - 2415020.31352) / 365.242198781
+                    // B = 1900 + (TT + 36524.68648) / 365.242198781
+                    // TT = 365.242198781*(B - 1900) - 36524.68648 = -45655.741449525
+                    // But the AstroTime constructor wants UT, not TT.
+                    // Near that date, I get a historical correction of ut-tt = 3.2 seconds.
+                    // That gives UT = -45655.74141261017 for the B1875 epoch,
+                    // or 1874-12-31T18:12:21.950Z.
+                    var time = new AstroTime(-45655.74141261017);
                     ConstelRot = Rotation_EQJ_EQD(time);
                     Epoch2000 = new AstroTime(0.0);
                 }
