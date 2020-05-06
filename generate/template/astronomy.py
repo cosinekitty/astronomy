@@ -462,6 +462,9 @@ class Time:
         """
         return Time(self.ut + days)
 
+    def __repr__(self):
+        return 'astronomy.Time(' + repr(self.ut) + ')'
+
     def __str__(self):
         millis = round(self.ut * 86400000.0)
         n = _EPOCH + datetime.timedelta(milliseconds=millis)
