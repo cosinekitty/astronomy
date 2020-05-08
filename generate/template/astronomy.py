@@ -111,7 +111,7 @@ class Vector:
         return math.sqrt(self.x**2 + self.y**2 + self.z**2)
 
 @enum.unique
-class Body(enum.IntEnum):
+class Body(enum.Enum):
     """The celestial bodies supported by Astronomy Engine calculations.
 
     Values
@@ -246,11 +246,11 @@ class NoConvergeError(Error):
 def _SynodicPeriod(body):
     if body == Body.Earth:
         raise EarthNotAllowedError()
-    if body < 0 or body >= len(_PlanetOrbitalPeriod):
+    if body.value < 0 or body.value >= len(_PlanetOrbitalPeriod):
         raise InvalidBodyError()
     if body == Body.Moon:
         return _MEAN_SYNODIC_MONTH
-    return abs(_EARTH_ORBITAL_PERIOD / (_EARTH_ORBITAL_PERIOD/_PlanetOrbitalPeriod[body] - 1.0))
+    return abs(_EARTH_ORBITAL_PERIOD / (_EARTH_ORBITAL_PERIOD/_PlanetOrbitalPeriod[body.value] - 1.0))
 
 def _AngleBetween(a, b):
     r = a.Length() * b.Length()
@@ -1017,7 +1017,7 @@ def _VsopHelioDistance(model, time):
     return _VsopFormula(model[2], time.tt / 365250.0)
 
 def _CalcEarth(time):
-    return _CalcVsop(_vsop[Body.Earth], time)
+    return _CalcVsop(_vsop[Body.Earth.value], time)
 
 # END VSOP
 #----------------------------------------------------------------------------
@@ -1242,7 +1242,7 @@ def Search(func, context, t1, t2, dt_tolerance_seconds):
 
 def _AdjustBarycenter(ssb, time, body, pmass):
     shift = pmass / (pmass + _SUN_MASS)
-    planet = _CalcVsop(_vsop[body], time)
+    planet = _CalcVsop(_vsop[body.value], time)
     ssb.x += shift * planet.x
     ssb.y += shift * planet.y
     ssb.z += shift * planet.z
@@ -1286,8 +1286,8 @@ def HelioVector(body, time):
     if body == Body.Pluto:
         return _CalcChebyshev(_pluto, time)
 
-    if 0 <= body < len(_vsop):
-        return _CalcVsop(_vsop[body], time)
+    if 0 <= body.value < len(_vsop):
+        return _CalcVsop(_vsop[body.value], time)
 
     if body == Body.Sun:
         return Vector(0.0, 0.0, 0.0, time)
@@ -1334,8 +1334,8 @@ def HelioDistance(body, time):
     if body == Body.Sun:
         return 0.0
 
-    if 0 <= body < len(_vsop):
-        return _VsopHelioDistance(_vsop[body], time)
+    if 0 <= body.value < len(_vsop):
+        return _VsopHelioDistance(_vsop[body.value], time)
 
     return HelioVector(body, time).Length()
 
@@ -3199,7 +3199,7 @@ def SearchPlanetApsis(body, startTime):
         return _SearchNeptuneApsis(startTime)
     positive_slope = (+1.0, body)
     negative_slope = (-1.0, body)
-    orbit_period_days = _PlanetOrbitalPeriod[body]
+    orbit_period_days = _PlanetOrbitalPeriod[body.value]
     increment = orbit_period_days / 6.0
     t1 = startTime
     m1 = _planet_distance_slope(positive_slope, t1)
@@ -3259,7 +3259,7 @@ def NextPlanetApsis(body, apsis):
     if apsis.kind not in [ApsisKind.Apocenter, ApsisKind.Pericenter]:
         raise Error('Parameter "apsis" contains an invalid "kind" value.')
     # Skip 1/4 of an orbit before starting search again.
-    skip = 0.25 * _PlanetOrbitalPeriod[body]
+    skip = 0.25 * _PlanetOrbitalPeriod[body.value]
     time = apsis.time.AddDays(skip)
     next = SearchPlanetApsis(body, time)
     # Verify that we found the opposite apsis from the previous one.
@@ -3268,7 +3268,7 @@ def NextPlanetApsis(body, apsis):
     return next
 
 def _NeptuneHelioDistance(time):
-    return _VsopHelioDistance(_vsop[Body.Neptune], time)
+    return _VsopHelioDistance(_vsop[Body.Neptune.value], time)
 
 def _NeptuneExtreme(kind, start_time, dayspan):
     direction = +1.0 if (kind == ApsisKind.Apocenter) else -1.0

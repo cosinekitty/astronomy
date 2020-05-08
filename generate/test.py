@@ -291,7 +291,7 @@ def TestElongFile(filename, targetRelLon):
             minute = int(m.group(5))
             name = m.group(6)
             body = astronomy.BodyCode(name)
-            if body < 0:
+            if body.value == astronomy.Body.Invalid:
                 print('TestElongFile({} line {}): invalid body name "{}"'.format(filename, lnum, name))
                 return 1
             search_time = astronomy.Time.Make(year, 1, 1, 0, 0, 0)
@@ -641,7 +641,7 @@ def Test_RiseSet(filename):
             correct_time = astronomy.Time.Make(year, month, day, hour, minute, 0)
             direction = astronomy.Direction.Rise if kind == 'r' else astronomy.Direction.Set
             body = astronomy.BodyCode(name)
-            if body < 0:
+            if body == astronomy.Body.Invalid:
                 print('Test_RiseSet({} line {}): invalid body name "{}"'.format(filename, lnum, name))
                 return 1
 
@@ -1040,10 +1040,10 @@ def Test_PlanetApsis():
     start_time = astronomy.Time.Make(1700, 1, 1, 0, 0, 0)
     found_bad_planet = False
     body = astronomy.Body.Mercury
-    while body <= astronomy.Body.Pluto:
+    while body.value <= astronomy.Body.Pluto.value:
         count = 1
-        period = astronomy._PlanetOrbitalPeriod[body]
-        filename = os.path.join('apsides', 'apsis_{}.txt'.format(int(body)))
+        period = astronomy._PlanetOrbitalPeriod[body.value]
+        filename = os.path.join('apsides', 'apsis_{}.txt'.format(body.value))
         min_interval = -1.0
         max_diff_days = 0.0
         max_dist_ratio = 0.0
@@ -1097,7 +1097,7 @@ def Test_PlanetApsis():
                 (max_diff_days / period) * 360.0,
                 max_dist_ratio
             ))
-        body = astronomy.Body(body + 1)
+        body = astronomy.Body(body.value + 1)
 
     if found_bad_planet:
         print('Test_PlanetApsis: FAIL - planet(s) exceeded angular threshold ({} degrees)'.format(degree_threshold))
