@@ -1470,7 +1470,7 @@ def Equator(body, time, observer, ofdate, aberration):
     return _vector2radec(datevect)
 
 @enum.unique
-class Refraction(enum.IntEnum):
+class Refraction(enum.Enum):
     """Selects if/how to correct for atmospheric refraction.
 
     Some functions allow enabling or disabling atmospheric refraction
@@ -1568,8 +1568,8 @@ def Horizon(time, observer, ra, dec, refraction):
         optionally corrected for atmospheric refraction. See remarks above
         for more details.
     """
-    if not (Refraction.Airless <= refraction <= Refraction.JplHorizons):
-        raise Error('Invalid refraction type: ' + str(refraction))
+    if not (Refraction.Airless.value <= refraction.value <= Refraction.JplHorizons.value):
+        raise Error('Invalid refraction type')
 
     latrad = math.radians(observer.latitude)
     lonrad = math.radians(observer.longitude)
@@ -1954,7 +1954,8 @@ class ElongationEvent:
         self.elongation = elongation
         self.ecliptic_separation = ecliptic_separation
 
-class Visibility(enum.IntEnum):
+@enum.unique
+class Visibility(enum.Enum):
     """Indicates whether a body (especially Mercury or Venus) is best seen in the morning or evening.
 
     Values
@@ -2789,7 +2790,7 @@ def SearchHourAngle(body, observer, hourAngle, startTime):
         time = time.AddDays(delta_days)
 
 @enum.unique
-class Direction(enum.IntEnum):
+class Direction(enum.Enum):
     """Indicates whether a body is rising above or setting below the horizon.
 
     Specifies the direction of a rising or setting event for a body.
@@ -2826,7 +2827,7 @@ def _peak_altitude(context, time):
     # This gives us the time of rise/set without the extra work.
     hor = Horizon(time, context.observer, ofdate.ra, ofdate.dec, Refraction.Airless)
     alt = hor.altitude + math.degrees(context.body_radius_au / ofdate.dist)
-    return context.direction * (alt + _REFRACTION_NEAR_HORIZON)
+    return context.direction.value * (alt + _REFRACTION_NEAR_HORIZON)
 
 def SearchRiseSet(body, observer, direction, startTime, limitDays):
     """Searches for the next time a celestial body rises or sets as seen by an observer on the Earth.
@@ -3012,7 +3013,7 @@ def _moon_distance_slope(direction, time):
     return direction * (dist2 - dist1) / dt
 
 @enum.unique
-class ApsisKind(enum.IntEnum):
+class ApsisKind(enum.Enum):
     """Represents whether a satellite is at a closest or farthest point in its orbit.
 
     An apsis is a point in a satellite's orbit that is closest to,
@@ -3153,7 +3154,7 @@ def NextLunarApsis(apsis):
     # Verify that we found the opposite apsis from the previous one.
     if apsis.kind not in [ApsisKind.Apocenter, ApsisKind.Pericenter]:
         raise Error('Parameter "apsis" contains an invalid "kind" value.')
-    if next.kind + apsis.kind != 1:
+    if next.kind.value + apsis.kind.value != 1:
         raise InternalError()   # should have found opposite apsis kind
     return next
 
@@ -3263,7 +3264,7 @@ def NextPlanetApsis(body, apsis):
     time = apsis.time.AddDays(skip)
     next = SearchPlanetApsis(body, time)
     # Verify that we found the opposite apsis from the previous one.
-    if next.kind + apsis.kind != 1:
+    if next.kind.value + apsis.kind.value != 1:
         raise InternalError()   # should have found opposite planetary apsis type
     return next
 

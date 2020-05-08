@@ -1054,7 +1054,7 @@ def Test_PlanetApsis():
                 if len(token) != 3:
                     print('Test_PlanetApsis({} line {}): Invalid data format: {} tokens'.format(filename, count, len(token)))
                     return 1
-                expected_kind = int(token[0])
+                expected_kind = astronomy.ApsisKind(int(token[0]))
                 expected_time = astronomy.Time.Parse(token[1])
                 expected_distance = float(token[2])
                 if apsis.kind != expected_kind:
