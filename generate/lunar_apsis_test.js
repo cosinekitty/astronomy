@@ -60,9 +60,7 @@ function Test() {
     if (count !== 2651)
         throw 'FATAL: Did not process the expected number of data rows!';
 
-    const perf = Astronomy.GetPerformanceMetrics();
-
-    console.log(`lunar_apsis_test PERFORMANCE: time=${elapsed.toFixed(3)}, iter=${perf.lunar_apsis_iter}, calcmoon=${perf.calcmoon}, calcmoon/call=${perf.calcmoon/perf.lunar_apsis_calls}`);
+    console.log(`lunar_apsis_test PERFORMANCE: time=${elapsed.toFixed(3)}`);
 }
 
 Test();

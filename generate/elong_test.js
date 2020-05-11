@@ -97,11 +97,9 @@ function TestFile(filename, startSearchYear, targetRelLon) {
     const data = LoadData(filename);
     const startDate = new Date(Date.UTC(startSearchYear, 0, 1));
     for (let item of data) {
-        Astronomy.ResetPerformanceMetrics();
         let time = Astronomy.SearchRelativeLongitude(item.body, targetRelLon, startDate);
-        const metrics = Astronomy.GetPerformanceMetrics();
         let diff_minutes = (time.date - item.date) / 60000;
-        console.log(`${item.body}: error = ${diff_minutes.toFixed(3)} minutes, iterations = ${metrics.longitude_iter}`);
+        console.log(`${item.body}: error = ${diff_minutes.toFixed(3)} minutes`);
         if (Math.abs(diff_minutes) > 15)
             throw `!!! Excessive error for body ${item.body}`;
     }
@@ -115,7 +113,6 @@ function TestPlanet(outFileName, body, startYear, stopYear, zeroLonEventName) {
     let count = 0;
     let prev_time, min_diff, max_diff, sum_diff=0;
 
-    Astronomy.ResetPerformanceMetrics();
     while (date < stopDate) {
         let event = (rlon === 0) ? zeroLonEventName : 'sup';
         let evt_time = Astronomy.SearchRelativeLongitude(body, rlon, date);
@@ -139,13 +136,11 @@ function TestPlanet(outFileName, body, startYear, stopYear, zeroLonEventName) {
         ++count;
         prev_time = evt_time;
     }
-    const metrics = Astronomy.GetPerformanceMetrics();
 
     fs.writeFileSync(outFileName, text);
 
     const ratio = max_diff / min_diff;
-    const iter_per_call = metrics.longitude_iter / metrics.longitude_search;
-    console.log(`TestPlanet(${body}): ${count} events, ${iter_per_call.toFixed(3)} iter/call, interval min=${min_diff.toFixed(1)}, max=${max_diff.toFixed(1)}, avg=${(sum_diff/count).toFixed(1)}, ratio=${ratio.toFixed(3)}`);
+    console.log(`TestPlanet(${body}): ${count} events, interval min=${min_diff.toFixed(1)}, max=${max_diff.toFixed(1)}, avg=${(sum_diff/count).toFixed(1)}, ratio=${ratio.toFixed(3)}`);
 
     let thresh = {Mercury:1.65, Mars:1.30}[body] || 1.07;
     if (ratio > thresh)

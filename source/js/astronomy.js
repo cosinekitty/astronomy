@@ -76,94 +76,6 @@ let ob2000;   // lazy-evaluated mean obliquity of the ecliptic at J2000, in radi
 let cos_ob2000;
 let sin_ob2000;
 
-//========================================================================================
-// BEGIN performance measurement
-
-/**
- * Holds performance metrics for developers to optimize execution speed.
- * Most users can safely ignore this class.
- *
- * @class
- *
- * @memberof Astronomy
- *
- * @property {number} search_func
- *      Number of times {@link Astronomy.Search} called a `func` passed to it.
- *
- * @property {number} search
- *      Number of times {@link Astronomy.Search} was called.
- *
- * @property {number} longitude_search
- *      Number of times {@link Astronomy.SearchRelativeLongitude} was called.
- *
- * @property {number} longitude_iter
- *      The total number of iterations executed inside {@link Astronomy.SearchRelativeLongitude}.
- *
- * @property {number} lunar_apsis_calls
- *      The number of times {@link Astronomy.SearchLunarApsis} was called.
- *
- * @property {number} lunar_apsis_iter
- *      The number of search iterations inside {@link Astronomy.SearchLunarApsis}.
- *
- * @property {number} calcmoon
- *      The number of times the Moon's position was calculated. (This is an expensive operation.)
- */
-class PerformanceInfo {
-    constructor() {
-        this.search_func = 0;
-        this.search = 0;
-        this.longitude_search = 0;
-        this.longitude_iter = 0;
-        this.lunar_apsis_calls = 0;
-        this.lunar_apsis_iter = 0;
-        this.calcmoon = 0;
-    }
-
-    /**
-     * Creates a copy of a `PerformanceInfo` object.
-     * This allows us to create a snapshot of the performance metrics
-     * that can be handed back to outside code that will not change
-     * as the Astronomy code continues to execute and change the metrics.
-     *
-     * @returns {Astronomy.PerformanceInfo}
-     */
-    Clone() {
-        const clone = new PerformanceInfo();
-        clone.search_func = this.search_func;
-        clone.search = this.search;
-        clone.longitude_search = this.longitude_search;
-        clone.longitude_iter = this.longitude_iter;
-        clone.lunar_apsis_calls = this.lunar_apsis_calls;
-        clone.lunar_apsis_iter = this.lunar_apsis_iter;
-        clone.calcmoon = this.calcmoon;
-        return clone;
-    }
-}
-
-let Perf = new PerformanceInfo();
-
-/**
- * Takes a snapshot of the current state of the performance metrics.
- * The metrics inside the returned object will not change and can be retained by calling code
- * to be compared with later snapshots.
- *
- * @returns {Astronomy.PerformanceInfo}
- */
-Astronomy.GetPerformanceMetrics = function() {
-    return Perf.Clone();
-}
-
-/**
- * Resets the internal performance metrics back to their initial states.
- * You can call this before starting a new series of performance tests.
- */
-Astronomy.ResetPerformanceMetrics = function() {
-    Perf = new PerformanceInfo();
-}
-
-// END performance measurement
-//========================================================================================
-
 function Frac(x) {
     return x - Math.floor(x);
 }
@@ -1472,8 +1384,6 @@ function ecl2equ_vec(time, pos) {
 }
 
 function CalcMoon(time) {
-    ++Perf.calcmoon;
-
     const T = time.tt / 36525;
 
     function DeclareArray1(xmin, xmax) {
@@ -2889,13 +2799,10 @@ Astronomy.Search = function(func, t1, t2, options) {
     const dt_tolerance_seconds = (options && options.dt_tolerance_seconds) || 1;
 
     function f(t) {
-        ++Perf.search_func;
         return func(t);
     }
 
     const dt_days = Math.abs(dt_tolerance_seconds / SECONDS_PER_DAY);
-
-    ++Perf.search;
 
     let f1 = (options && options.init_f1) || f(t1);
     let f2 = (options && options.init_f2) || f(t2);
@@ -3410,11 +3317,7 @@ Astronomy.SearchRelativeLongitude = function(body, targetRelLon, startDate) {
     let error_angle = offset(time);
     if (error_angle > 0) error_angle -= 360;    // force searching forward in time
 
-    ++Perf.longitude_search;
-
     for (let iter=0; iter < 100; ++iter) {
-        ++Perf.longitude_iter;
-
         // Estimate how many days in the future (positive) or past (negative)
         // we have to go to get closer to the target relative longitude.
         let day_adjust = (-error_angle/360) * syn;
@@ -4261,9 +4164,7 @@ Astronomy.SearchLunarApsis = function(startDate) {
     let m1 = distance_slope(t1);
     const increment = 5;      // number of days to skip in each iteration
 
-    ++Perf.lunar_apsis_calls;
     for (var iter = 0; iter * increment < 2 * MEAN_SYNODIC_MONTH; ++iter) {
-        ++Perf.lunar_apsis_iter;
         let t2 = t1.AddDays(increment);
         let m2 = distance_slope(t2);
 

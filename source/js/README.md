@@ -124,40 +124,6 @@ these are used in function and type names.
 
 * * *
 
-<a name="Astronomy.PerformanceInfo"></a>
-
-### Astronomy.PerformanceInfo
-Holds performance metrics for developers to optimize execution speed.
-Most users can safely ignore this class.
-
-**Kind**: static class of [<code>Astronomy</code>](#Astronomy)  
-**Properties**
-
-| Name | Type | Description |
-| --- | --- | --- |
-| search_func | <code>number</code> | Number of times [Search](#Astronomy.Search) called a `func` passed to it. |
-| search | <code>number</code> | Number of times [Search](#Astronomy.Search) was called. |
-| longitude_search | <code>number</code> | Number of times [SearchRelativeLongitude](#Astronomy.SearchRelativeLongitude) was called. |
-| longitude_iter | <code>number</code> | The total number of iterations executed inside [SearchRelativeLongitude](#Astronomy.SearchRelativeLongitude). |
-| lunar_apsis_calls | <code>number</code> | The number of times [SearchLunarApsis](#Astronomy.SearchLunarApsis) was called. |
-| lunar_apsis_iter | <code>number</code> | The number of search iterations inside [SearchLunarApsis](#Astronomy.SearchLunarApsis). |
-| calcmoon | <code>number</code> | The number of times the Moon's position was calculated. (This is an expensive operation.) |
-
-
-* * *
-
-<a name="Astronomy.PerformanceInfo+Clone"></a>
-
-#### performanceInfo.Clone() ⇒ [<code>PerformanceInfo</code>](#Astronomy.PerformanceInfo)
-Creates a copy of a `PerformanceInfo` object.
-This allows us to create a snapshot of the performance metrics
-that can be handed back to outside code that will not change
-as the Astronomy code continues to execute and change the metrics.
-
-**Kind**: instance method of [<code>PerformanceInfo</code>](#Astronomy.PerformanceInfo)  
-
-* * *
-
 <a name="Astronomy.AstroTime"></a>
 
 ### Astronomy.AstroTime
@@ -513,27 +479,6 @@ An array of strings, each a name of a supported astronomical body.
      list is not supported at all.
 
 **Kind**: static constant of [<code>Astronomy</code>](#Astronomy)  
-
-* * *
-
-<a name="Astronomy.GetPerformanceMetrics"></a>
-
-### Astronomy.GetPerformanceMetrics() ⇒ [<code>PerformanceInfo</code>](#Astronomy.PerformanceInfo)
-Takes a snapshot of the current state of the performance metrics.
-The metrics inside the returned object will not change and can be retained by calling code
-to be compared with later snapshots.
-
-**Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
-
-* * *
-
-<a name="Astronomy.ResetPerformanceMetrics"></a>
-
-### Astronomy.ResetPerformanceMetrics()
-Resets the internal performance metrics back to their initial states.
-You can call this before starting a new series of performance tests.
-
-**Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
 
 * * *
 
