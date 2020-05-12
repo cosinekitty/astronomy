@@ -13,7 +13,7 @@
 
 import sys
 import math
-from astronomy import Time, Body, HelioVector
+from astronomy import Time, Body, HelioVector, GeoMoon
 
 def main(text):
     time = Time.Parse(text)
@@ -21,16 +21,20 @@ def main(text):
     # Find heliocentric vector for Earth and Moon at this time.
     e = HelioVector(Body.Earth, time)
     print('Earth', e.x, e.y, e.z)
-    m = HelioVector(Body.Moon, time)
+
+    m = GeoMoon(time)
     print('Moon', m.x, m.y, m.z)
+
     # Find the parametric value u where the Earth's shadow ray
     # passes closest to the center of the Moon.
     u = (e.x*m.x + e.y*m.y + e.z*m.z) / (e.x*e.x + e.y*e.y + e.z*e.z)
     print('u=', u)
+
     # Find the distance between the shadow ray and the Moon.
-    r = math.sqrt((u*e.x-m.x)**2 + (u*e.y-m.y)**2 + (u*e.z-m.z)**2)
+    r = math.sqrt((u*e.x - m.x)**2 + (u*e.y - m.y)**2 + (u*e.z - m.z)**2)
     r *= 1.4959787069098932e+8      # convert AU to km
     print('r=', r, 'km')
+
     # TODO: Calculate the umbral and penumbral radii at the parametric location u.
     return 0
 
