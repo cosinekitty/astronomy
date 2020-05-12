@@ -151,6 +151,13 @@ echo "Generating apsis test data."
 rm -f apsides/apsis_*.txt
 ./generate apsis || Fail "Could not generate apsis test data."
 
+echo ""
+echo "Generating eclipse data."
+cd eclipse || Fail "Could not change to eclipse directory."
+rm -f lunar_eclipse.txt
+python3 norm.py || Fail "Error normalizing eclipse test data."
+cd .. || Fail "Could not change to parent directory."
+
 ./makedoc || exit $?
 ./unit_test_csharp || exit $?
 ./unit_test_js || exit $?
