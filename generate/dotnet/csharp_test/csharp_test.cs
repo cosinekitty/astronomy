@@ -48,13 +48,13 @@ namespace csharp_test
 
             DateTime d = new DateTime(year, month, day, hour, minute, second, milli, DateTimeKind.Utc);
             AstroTime time = new AstroTime(d);
-            Console.WriteLine("TestTime: text={0}, ut={1}, tt={2}", time.ToString(), time.ut.ToString("F6"), time.tt.ToString("F6"));
+            Console.WriteLine("C# TestTime: text={0}, ut={1}, tt={2}", time.ToString(), time.ut.ToString("F6"), time.tt.ToString("F6"));
 
             const double expected_ut = 6910.270978506945;
             double diff = time.ut - expected_ut;
             if (Math.Abs(diff) > 1.0e-12)
             {
-                Console.WriteLine("TestTime: ERROR - excessive UT error {0}", diff);
+                Console.WriteLine("C# TestTime: ERROR - excessive UT error {0}", diff);
                 return 1;
             }
 
@@ -62,14 +62,14 @@ namespace csharp_test
             diff = time.tt - expected_tt;
             if (Math.Abs(diff) > 1.0e-12)
             {
-                Console.WriteLine("TestTime: ERROR - excessive TT error {0}", diff);
+                Console.WriteLine("C# TestTime: ERROR - excessive TT error {0}", diff);
                 return 1;
             }
 
             DateTime utc = time.ToUtcDateTime();
             if (utc.Year != year || utc.Month != month || utc.Day != day || utc.Hour != hour || utc.Minute != minute || utc.Second != second || utc.Millisecond != milli)
             {
-                Console.WriteLine("TestTime: ERROR - Expected {0:o}, found {1:o}", d, utc);
+                Console.WriteLine("C# TestTime: ERROR - Expected {0:o}, found {1:o}", d, utc);
                 return 1;
             }
 
@@ -80,16 +80,16 @@ namespace csharp_test
         {
             var time = new AstroTime(2019, 6, 24, 15, 45, 37);
             AstroVector vec = Astronomy.GeoVector(Body.Moon, time, Aberration.None);
-            Console.WriteLine("MoonTest: {0} {1} {2}", vec.x.ToString("f17"), vec.y.ToString("f17"), vec.z.ToString("f17"));
+            Console.WriteLine("C# MoonTest: {0} {1} {2}", vec.x.ToString("f17"), vec.y.ToString("f17"), vec.z.ToString("f17"));
 
             double dx = vec.x - (+0.002674036155459549);
             double dy = vec.y - (-0.0001531716308218381);
             double dz = vec.z - (-0.0003150201604895409);
             double diff = Math.Sqrt(dx*dx + dy*dy + dz*dz);
-            Console.WriteLine("MoonTest: diff = {0}", diff.ToString("g5"));
+            Console.WriteLine("C# MoonTest: diff = {0}", diff.ToString("g5"));
             if (diff > 4.34e-19)
             {
-                Console.WriteLine("MoonTest: EXCESSIVE ERROR");
+                Console.WriteLine("C# MoonTest: EXCESSIVE ERROR");
                 return 1;
             }
 
@@ -149,7 +149,7 @@ namespace csharp_test
                     time = time.AddDays(10.0 + Math.PI/100.0);
                 }
             }
-            Console.WriteLine("AstroCheck: finished");
+            Console.WriteLine("C# AstroCheck: finished");
             return 0;
         }
 
@@ -178,7 +178,7 @@ namespace csharp_test
                     Match m = re.Match(line);
                     if (!m.Success)
                     {
-                        Console.WriteLine("SeasonsTest: ERROR {0} line {1}: cannot parse", filename, lnum);
+                        Console.WriteLine("C# SeasonsTest: ERROR {0} line {1}: cannot parse", filename, lnum);
                         return 1;
                     }
 
@@ -212,7 +212,7 @@ namespace csharp_test
                                 break;
 
                             default:
-                                Console.WriteLine("SeasonsTest: {0} line {1}: Invalid equinox date in test data.", filename, lnum);
+                                Console.WriteLine("C# SeasonsTest: {0} line {1}: Invalid equinox date in test data.", filename, lnum);
                                 return 1;
                         }
                     }
@@ -231,7 +231,7 @@ namespace csharp_test
                                 break;
 
                             default:
-                                Console.WriteLine("SeasonsTest: {0} line {1}: Invalid solstice date in test data.", filename, lnum);
+                                Console.WriteLine("C# SeasonsTest: {0} line {1}: Invalid solstice date in test data.", filename, lnum);
                                 return 1;
                         }
                     }
@@ -247,7 +247,7 @@ namespace csharp_test
                     }
                     else
                     {
-                        Console.WriteLine("SeasonsTest: {0} line {1}: unknown event type {2}", filename, lnum, name);
+                        Console.WriteLine("C# SeasonsTest: {0} line {1}: unknown event type {2}", filename, lnum, name);
                         return 1;
                     }
 
@@ -258,12 +258,12 @@ namespace csharp_test
 
                     if (diff_minutes > 1.7)
                     {
-                        Console.WriteLine("SeasonsTest: %s line %d: excessive error (%s): %lf minutes.", filename, lnum, name, diff_minutes);
+                        Console.WriteLine("C# SeasonsTest: %s line %d: excessive error (%s): %lf minutes.", filename, lnum, name, diff_minutes);
                         return 1;
                     }
                 }
-                Console.WriteLine("SeasonsTest: verified {0} lines from file {1} : max error minutes = {2:0.000}", lnum, filename, max_minutes);
-                Console.WriteLine("SeasonsTest: Event counts: mar={0}, jun={1}, sep={2}, dec={3}", mar_count, jun_count, sep_count, dec_count);
+                Console.WriteLine("C# SeasonsTest: verified {0} lines from file {1} : max error minutes = {2:0.000}", lnum, filename, max_minutes);
+                Console.WriteLine("C# SeasonsTest: Event counts: mar={0}, jun={1}, sep={2}, dec={3}", mar_count, jun_count, sep_count, dec_count);
                 return 0;
             }
         }
@@ -294,7 +294,7 @@ namespace csharp_test
                     Match m = re.Match(line);
                     if (!m.Success)
                     {
-                        Console.WriteLine("MoonPhaseTest: ERROR {0} line {1}: cannot parse", filename, lnum);
+                        Console.WriteLine("C# MoonPhaseTest: ERROR {0} line {1}: cannot parse", filename, lnum);
                         return 1;
                     }
                     int quarter = int.Parse(m.Groups[1].Value);
@@ -314,7 +314,7 @@ namespace csharp_test
                     double arcmin = 60.0 * degree_error;
                     if (arcmin > 1.0)
                     {
-                        Console.WriteLine("MoonPhaseTest({0} line {1}): EXCESSIVE ANGULAR ERROR: {2} arcmin", filename, lnum, arcmin);
+                        Console.WriteLine("C# MoonPhaseTest({0} line {1}): EXCESSIVE ANGULAR ERROR: {2} arcmin", filename, lnum, arcmin);
                         return 1;
                     }
                     if (arcmin > max_arcmin)
@@ -339,7 +339,7 @@ namespace csharp_test
                         /* Make sure we find the next expected quarter. */
                         if (expected_quarter != mq.quarter)
                         {
-                            Console.WriteLine("MoonPhaseTest({0} line {1}): SearchMoonQuarter returned quarter {2}, but expected {3}", filename, lnum, mq.quarter, expected_quarter);
+                            Console.WriteLine("C# MoonPhaseTest({0} line {1}): SearchMoonQuarter returned quarter {2}, but expected {3}", filename, lnum, mq.quarter, expected_quarter);
                             return 1;
                         }
                     }
@@ -348,7 +348,7 @@ namespace csharp_test
                     double diff_seconds = Math.Abs(mq.time.tt - expected_time.tt) * (24.0 * 3600.0);
                     if (diff_seconds > threshold_seconds)
                     {
-                        Console.WriteLine("MoonPhaseTest({0} line {1}): excessive time error {2:0.000} seconds", filename, lnum, diff_seconds);
+                        Console.WriteLine("C# MoonPhaseTest({0} line {1}): excessive time error {2:0.000} seconds", filename, lnum, diff_seconds);
                         return 1;
                     }
 
@@ -356,7 +356,7 @@ namespace csharp_test
                         maxdiff = diff_seconds;
                 }
 
-                Console.WriteLine("MoonPhaseTest: passed {0} lines for file {1} : max_arcmin = {2:0.000000}, maxdiff = {3:0.000} seconds, {4} quarters",
+                Console.WriteLine("C# MoonPhaseTest: passed {0} lines for file {1} : max_arcmin = {2:0.000000}, maxdiff = {3:0.000} seconds, {4} quarters",
                     lnum, filename, max_arcmin, maxdiff, quarter_count);
 
                 return 0;
@@ -390,7 +390,7 @@ namespace csharp_test
                     Match m = re.Match(line);
                     if (!m.Success)
                     {
-                        Console.WriteLine("RiseSetTest({0} line {1}): invalid input format", filename, lnum);
+                        Console.WriteLine("C# RiseSetTest({0} line {1}): invalid input format", filename, lnum);
                         return 1;
                     }
                     Body body = Enum.Parse<Body>(m.Groups[1].Value);
@@ -413,7 +413,7 @@ namespace csharp_test
                         foundObserver = true;
                         r_search_date = s_search_date = new AstroTime(year, 1, 1, 0, 0, 0);
                         b_evt = null;
-                        Console.WriteLine("RiseSetTest: {0} lat={1} lon={2}", body, latitude, longitude);
+                        Console.WriteLine("C# RiseSetTest: {0} lat={1} lon={2}", body, latitude, longitude);
                     }
 
                     if (b_evt != null)
@@ -427,14 +427,14 @@ namespace csharp_test
                         r_evt = Astronomy.SearchRiseSet(body, observer, Direction.Rise, r_search_date, 366.0);
                         if (r_evt == null)
                         {
-                            Console.WriteLine("RiseSetTest({0} line {1}): Did not find {2} rise event.", filename, lnum, body);
+                            Console.WriteLine("C# RiseSetTest({0} line {1}): Did not find {2} rise event.", filename, lnum, body);
                             return 1;
                         }
 
                         s_evt = Astronomy.SearchRiseSet(body, observer, Direction.Set, s_search_date, 366.0);
                         if (s_evt == null)
                         {
-                            Console.WriteLine("RiseSetTest({0} line {1}): Did not find {2} rise event.", filename, lnum, body);
+                            Console.WriteLine("C# RiseSetTest({0} line {1}): Did not find {2} rise event.", filename, lnum, body);
                             return 1;
                         }
 
@@ -461,7 +461,7 @@ namespace csharp_test
 
                     if (a_dir != direction)
                     {
-                        Console.WriteLine("RiseSetTest({0} line {1}): expected dir={2} but found {3}", filename, lnum, a_dir, direction);
+                        Console.WriteLine("C# RiseSetTest({0} line {1}): expected dir={2} but found {3}", filename, lnum, a_dir, direction);
                         return 1;
                     }
                     double error_minutes = (24.0 * 60.0) * Math.Abs(a_evt.tt - correct_date.tt);
@@ -471,13 +471,13 @@ namespace csharp_test
 
                     if (error_minutes > 0.56)
                     {
-                        Console.WriteLine("RiseSetTest({0} line {1}): excessive prediction time error = {2} minutes.", filename, lnum, error_minutes);
+                        Console.WriteLine("C# RiseSetTest({0} line {1}): excessive prediction time error = {2} minutes.", filename, lnum, error_minutes);
                         return 1;
                     }
                 }
 
                 double rms_minutes = Math.Sqrt(sum_minutes / lnum);
-                Console.WriteLine("RiseSetTest: passed {0} lines: time errors in minutes: rms={1}, max={2}", lnum, rms_minutes, max_minutes);
+                Console.WriteLine("C# RiseSetTest: passed {0} lines: time errors in minutes: rms={1}, max={2}", lnum, rms_minutes, max_minutes);
                 return 0;
             }
         }
@@ -590,11 +590,11 @@ namespace csharp_test
             }
 
             double ratio = max_diff / min_diff;
-            Console.WriteLine("TestPlanetLongitudes({0,7}): {1,5} events, ratio={2,5}, file: {3}", body, count, ratio.ToString("f3"), outFileName);
+            Console.WriteLine("C# TestPlanetLongitudes({0,7}): {1,5} events, ratio={2,5}, file: {3}", body, count, ratio.ToString("f3"), outFileName);
 
             if (ratio > thresh)
             {
-                Console.WriteLine("TestPlanetLongitudes({0}): excessive event interval ratio.", body);
+                Console.WriteLine("C# TestPlanetLongitudes({0}): excessive event interval ratio.", body);
                 return 1;
             }
             return 0;
@@ -802,7 +802,7 @@ namespace csharp_test
                         string[] token = line.Split(new char[]{' ', '\t', '\n', '\r'}, StringSplitOptions.RemoveEmptyEntries);
                         if (token.Length != 3)
                         {
-                            Console.WriteLine("PlanetApsisTest({0} line {1}): Invalid data format: {2} tokens", filename, count, token.Length);
+                            Console.WriteLine("C# PlanetApsisTest({0} line {1}): Invalid data format: {2} tokens", filename, count, token.Length);
                             return 1;
                         }
                         int expected_kind = int.Parse(token[0]);
@@ -812,7 +812,7 @@ namespace csharp_test
                         /* Compare computed values against expected values. */
                         if ((int)apsis.kind != expected_kind)
                         {
-                            Console.WriteLine("PlanetApsisTest({0} line {1}): WRONG APSIS KIND", filename, count);
+                            Console.WriteLine("C# PlanetApsisTest({0} line {1}): WRONG APSIS KIND", filename, count);
                             return 1;
                         }
 
@@ -826,7 +826,7 @@ namespace csharp_test
                         max_dist_ratio = Math.Max(max_dist_ratio, diff_dist_ratio);
                         if (diff_dist_ratio > 1.0e-4)
                         {
-                            Console.WriteLine("PlanetApsisTest({0} line {1}): distance ratio {2} is too large.", filename, count, diff_dist_ratio);
+                            Console.WriteLine("C# PlanetApsisTest({0} line {1}): distance ratio {2} is too large.", filename, count, diff_dist_ratio);
                             return 1;
                         }
 
@@ -859,11 +859,11 @@ namespace csharp_test
 
                 if (count < 2)
                 {
-                    Console.WriteLine("PlanetApsis: FAILED to find apsides for {0}", body);
+                    Console.WriteLine("C# PlanetApsis: FAILED to find apsides for {0}", body);
                     return 1;
                 }
 
-                Console.WriteLine("PlanetApsis: {0} apsides for {1,-9} -- intervals: min={2:0.00}, max={3:0.00}, ratio={4:0.000000}; max day={5}, degrees={6:0.000}, dist ratio={7}",
+                Console.WriteLine("C# PlanetApsis: {0} apsides for {1,-9} -- intervals: min={2:0.00}, max={3:0.00}, ratio={4:0.000000}; max day={5}, degrees={6:0.000}, dist ratio={7}",
                     count, body,
                     min_interval, max_interval, max_interval / min_interval,
                     max_diff_days,
@@ -873,11 +873,11 @@ namespace csharp_test
 
             if (found_bad_planet)
             {
-                Console.WriteLine("PlanetApsis: FAIL - planet(s) exceeded angular threshold ({0} degrees)", degree_threshold);
+                Console.WriteLine("C# PlanetApsis: FAIL - planet(s) exceeded angular threshold ({0} degrees)", degree_threshold);
                 return 1;
             }
 
-            Console.WriteLine("PlanetApsis: PASS");
+            Console.WriteLine("C# PlanetApsis: PASS");
             return 0;
         }
 
@@ -902,7 +902,7 @@ namespace csharp_test
                     Match m = regex.Match(line);
                     if (!m.Success)
                     {
-                        Console.WriteLine("LunarApsisTest({0} line {1}): invalid data format.", inFileName, lnum);
+                        Console.WriteLine("C# LunarApsisTest({0} line {1}): invalid data format.", inFileName, lnum);
                         return 1;
                     }
                     ApsisKind kind = (m.Groups[1].Value == "0") ? ApsisKind.Pericenter : ApsisKind.Apocenter;
@@ -923,19 +923,19 @@ namespace csharp_test
 
                     if (kind != apsis.kind)
                     {
-                        Console.WriteLine("LunarApsisTest({0} line {1}): expected apsis kind {2} but found {3}", inFileName, lnum, kind, apsis.kind);
+                        Console.WriteLine("C# LunarApsisTest({0} line {1}): expected apsis kind {2} but found {3}", inFileName, lnum, kind, apsis.kind);
                         return 1;
                     }
                     double diff_minutes = (24.0 * 60.0) * Math.Abs(apsis.time.ut - correct_time.ut);
                     if (diff_minutes > 35.0)
                     {
-                        Console.WriteLine("LunarApsisTest({0} line {1}): excessive time error: {2} minutes", inFileName, lnum, diff_minutes);
+                        Console.WriteLine("C# LunarApsisTest({0} line {1}): excessive time error: {2} minutes", inFileName, lnum, diff_minutes);
                         return 1;
                     }
                     double diff_km =  Math.Abs(apsis.dist_km - dist_km);
                     if (diff_km > 25.0)
                     {
-                        Console.WriteLine("LunarApsisTest({0} line {1}): excessive distance error: {2} km", inFileName, lnum, diff_km);
+                        Console.WriteLine("C# LunarApsisTest({0} line {1}): excessive distance error: {2} km", inFileName, lnum, diff_km);
                         return 1;
                     }
 
@@ -1022,20 +1022,20 @@ namespace csharp_test
 
                     if (token.Length != 7)
                     {
-                        Console.WriteLine("CheckMagnitudeData({0} line {1}): invalid data format", lnum, filename);
+                        Console.WriteLine("C# CheckMagnitudeData({0} line {1}): invalid data format", lnum, filename);
                         return 1;
                     }
                     double mag;
                     if (!double.TryParse(token[0], out mag))
                     {
-                        Console.WriteLine("CheckMagnitudeData({0} line {1}): cannot parse number from '{2}'", filename, lnum, token[0]);
+                        Console.WriteLine("C# CheckMagnitudeData({0} line {1}): cannot parse number from '{2}'", filename, lnum, token[0]);
                         return 1;
                     }
                     var illum = Astronomy.Illumination(body, jpl.Time);
                     double diff = illum.mag - mag;
                     if (Math.Abs(diff) > limit)
                     {
-                        Console.WriteLine("CheckMagnitudeData({0} line {1}): EXCESSIVE ERROR: correct mag={0}, calc mag={1}, diff={2}", mag, illum.mag, diff);
+                        Console.WriteLine("C# CheckMagnitudeData({0} line {1}): EXCESSIVE ERROR: correct mag={0}, calc mag={1}, diff={2}", mag, illum.mag, diff);
                         return 1;
                     }
                     sum_squared_diff += diff * diff;
@@ -1055,11 +1055,11 @@ namespace csharp_test
                 }
                 if (count == 0)
                 {
-                    Console.WriteLine("CheckMagnitudeData: Data not find any data in file: {0}", filename);
+                    Console.WriteLine("C# CheckMagnitudeData: Data not find any data in file: {0}", filename);
                     return 1;
                 }
                 double rms = Math.Sqrt(sum_squared_diff / count);
-                Console.WriteLine("CheckMagnitudeData: {0} {1} rows diff_lo={2} diff_hi={3} rms={4}", filename, count, diff_lo, diff_hi, rms);
+                Console.WriteLine("C# CheckMagnitudeData: {0} {1} rows diff_lo={2} diff_hi={3} rms={4}", filename, count, diff_lo, diff_hi, rms);
                 return 0;
             }
         }
@@ -1102,19 +1102,19 @@ namespace csharp_test
                 AstroTime time = ParseDate(data.date);
 
                 IllumInfo illum = Astronomy.Illumination(Body.Saturn, time);
-                Console.WriteLine("Saturn: date={0}  calc mag={1}  ring_tilt={2}", data.date, illum.mag, illum.ring_tilt);
+                Console.WriteLine("C# Saturn: date={0}  calc mag={1}  ring_tilt={2}", data.date, illum.mag, illum.ring_tilt);
 
                 double mag_diff = Math.Abs(illum.mag - data.mag);
                 if (mag_diff > 1.0e-4)
                 {
-                    Console.WriteLine("CheckSaturn ERROR: Excessive magnitude error {0}", mag_diff);
+                    Console.WriteLine("C# CheckSaturn ERROR: Excessive magnitude error {0}", mag_diff);
                     error = 1;      /* keep going -- print all errors before exiting */
                 }
 
                 double tilt_diff = Math.Abs(illum.ring_tilt - data.tilt);
                 if (tilt_diff > 3.0e-5)
                 {
-                    Console.WriteLine("CheckSaturn ERROR: Excessive ring tilt error {0}", tilt_diff);
+                    Console.WriteLine("C# CheckSaturn ERROR: Excessive ring tilt error {0}", tilt_diff);
                     error = 1;      /* keep going -- print all errors before exiting */
                 }
             }
@@ -1145,7 +1145,7 @@ namespace csharp_test
                     string[] token = Tokenize(line);
                     if (token.Length != 5)
                     {
-                        Console.WriteLine("TestMaxMag({0} line {1}): invalid data format", filename, lnum);
+                        Console.WriteLine("C# TestMaxMag({0} line {1}): invalid data format", filename, lnum);
                         return 1;
                     }
                     AstroTime time1 = ParseDate(token[0]);
@@ -1160,17 +1160,17 @@ namespace csharp_test
                     Console.WriteLine("C# TestMaxMag: mag_diff={0}, hours_diff={1}", mag_diff, hours_diff);
                     if (hours_diff > 7.1)
                     {
-                        Console.WriteLine("TestMaxMag({0} line {1}): EXCESSIVE TIME DIFFERENCE.", filename, lnum);
+                        Console.WriteLine("C# TestMaxMag({0} line {1}): EXCESSIVE TIME DIFFERENCE.", filename, lnum);
                         return 1;
                     }
                     if (mag_diff > 0.005)
                     {
-                        Console.WriteLine("TestMaxMag({0} line {1}): EXCESSIVE MAGNITUDE DIFFERENCE.", filename, lnum);
+                        Console.WriteLine("C# TestMaxMag({0} line {1}): EXCESSIVE MAGNITUDE DIFFERENCE.", filename, lnum);
                         return 1;
                     }
                     search_time = time2;
                 }
-                Console.WriteLine("TestMaxMag: Processed {0} lines from file {1}", lnum, filename);
+                Console.WriteLine("C# TestMaxMag: Processed {0} lines from file {1}", lnum, filename);
                 return 0;
             }
         }
@@ -1190,7 +1190,7 @@ namespace csharp_test
             nfailed += CheckMagnitudeData(Body.Pluto, "../../magnitude/Pluto.txt");
             nfailed += TestMaxMag(Body.Venus, "../../magnitude/maxmag_Venus.txt");
             if (nfailed > 0)
-                Console.WriteLine("MagnitudeTest: FAILED {0} test(s).", nfailed);
+                Console.WriteLine("C# MagnitudeTest: FAILED {0} test(s).", nfailed);
             return nfailed;
         }
 
@@ -1211,7 +1211,7 @@ namespace csharp_test
                     double diff = Math.Abs(a.rot[i,j] - b.rot[i,j]);
                     if (diff > tolerance)
                     {
-                        Console.WriteLine("ERROR({0}): matrix[{1},{2}]={3}, expected {4}, diff {5}", caller, i, j, a.rot[i,j], b.rot[i,j], diff);
+                        Console.WriteLine("C# CompareMatrices ERROR({0}): matrix[{1},{2}]={3}, expected {4}, diff {5}", caller, i, j, a.rot[i,j], b.rot[i,j], diff);
                         return 1;
                     }
                 }
@@ -1233,7 +1233,7 @@ namespace csharp_test
 
             RotationMatrix b = Astronomy.InverseRotation(a);
             if (0 != CompareMatrices("Rotation_MatrixInverse", b, v, 0.0)) return 1;
-            Console.WriteLine("Rotation_MatrixInverse: PASS");
+            Console.WriteLine("C# Rotation_MatrixInverse: PASS");
             return 0;
         }
 
@@ -1256,7 +1256,7 @@ namespace csharp_test
 
             RotationMatrix c = Astronomy.CombineRotation(b, a);
             if (0 != CompareMatrices("Rotation_MatrixMultiply", c, v, 0.0)) return 1;
-            Console.WriteLine("Rotation_MatrixMultiply: PASS");
+            Console.WriteLine("C# Rotation_MatrixMultiply: PASS");
             return 0;
         }
 
@@ -1270,7 +1270,7 @@ namespace csharp_test
 
             /* Use the older function to calculate ecliptic vector and angles. */
             Ecliptic ecl = Astronomy.EquatorialToEcliptic(ev);
-            Console.WriteLine("Test_EQJ_ECL ecl = ({0}, {1}, {2})", ecl.ex, ecl.ey, ecl.ez);
+            Console.WriteLine("C# Test_EQJ_ECL ecl = ({0}, {1}, {2})", ecl.ex, ecl.ey, ecl.ez);
 
             /* Now compute the same vector via rotation matrix. */
             AstroVector ee = Astronomy.RotateVector(r, ev);
@@ -1278,10 +1278,10 @@ namespace csharp_test
             double dy = ee.y - ecl.ey;
             double dz = ee.z - ecl.ez;
             double diff = Math.Sqrt(dx*dx + dy*dy + dz*dz);
-            Console.WriteLine("Test_EQJ_ECL ee = ({0}, {1}, {2}); diff={3}", ee.x, ee.y, ee.z, diff);
+            Console.WriteLine("C# Test_EQJ_ECL ee = ({0}, {1}, {2}); diff={3}", ee.x, ee.y, ee.z, diff);
             if (diff > 1.0e-16)
             {
-                Console.WriteLine("Test_EQJ_ECL: EXCESSIVE VECTOR ERROR");
+                Console.WriteLine("C# Test_EQJ_ECL: EXCESSIVE VECTOR ERROR");
                 return 1;
             }
 
@@ -1289,14 +1289,14 @@ namespace csharp_test
             r = Astronomy.Rotation_ECL_EQJ();
             AstroVector et = Astronomy.RotateVector(r, ee);
             diff = VectorDiff(et, ev);
-            Console.WriteLine("Test_EQJ_ECL  ev diff={0}", diff);
+            Console.WriteLine("C# Test_EQJ_ECL  ev diff={0}", diff);
             if (diff > 2.0e-16)
             {
-                Console.WriteLine("Test_EQJ_ECL: EXCESSIVE REVERSE ROTATION ERROR");
+                Console.WriteLine("C# Test_EQJ_ECL: EXCESSIVE REVERSE ROTATION ERROR");
                 return 1;
             }
 
-            Console.WriteLine("Test_EQJ_ECL: PASS");
+            Console.WriteLine("C# Test_EQJ_ECL: PASS");
             return 0;
         }
 
@@ -1315,22 +1315,22 @@ namespace csharp_test
             double ra_diff = Math.Abs(eqcheck.ra - eqdate.ra);
             double dec_diff = Math.Abs(eqcheck.dec - eqdate.dec);
             double dist_diff = Math.Abs(eqcheck.dist - eqdate.dist);
-            Console.WriteLine("Test_EQJ_EQD: {0} ra={1}, dec={2}, dist={3}, ra_diff={4}, dec_diff={5}, dist_diff={6}",
+            Console.WriteLine("C# Test_EQJ_EQD: {0} ra={1}, dec={2}, dist={3}, ra_diff={4}, dec_diff={5}, dist_diff={6}",
                 body, eqdate.ra, eqdate.dec, eqdate.dist, ra_diff, dec_diff, dist_diff);
 
             if (ra_diff > 1.0e-14 || dec_diff > 1.0e-14 || dist_diff > 4.0e-15)
             {
-                Console.WriteLine("Test_EQJ_EQD: EXCESSIVE ERROR");
+                Console.WriteLine("C# Test_EQJ_EQD: EXCESSIVE ERROR");
                 return 1;
             }
 
             r = Astronomy.Rotation_EQD_EQJ(time);
             AstroVector t2000 = Astronomy.RotateVector(r, vdate);
             double diff = VectorDiff(t2000, v2000);
-            Console.WriteLine("Test_EQJ_EQD: {0} inverse diff = {1}", body, diff);
+            Console.WriteLine("C# Test_EQJ_EQD: {0} inverse diff = {1}", body, diff);
             if (diff > 3.0e-15)
             {
-                Console.WriteLine("Test_EQJ_EQD: EXCESSIVE INVERSE ERROR");
+                Console.WriteLine("C# Test_EQJ_EQD: EXCESSIVE INVERSE ERROR");
                 return 1;
             }
 
@@ -1351,22 +1351,22 @@ namespace csharp_test
             double diff_alt = Math.Abs(sphere.lat - hor.altitude);
             double diff_az = Math.Abs(sphere.lon - hor.azimuth);
 
-            Console.WriteLine("Test_EQD_HOR {0}: trusted alt={1}, az={2}; test alt={3}, az={4}; diff_alt={5}, diff_az={6}",
+            Console.WriteLine("C# Test_EQD_HOR {0}: trusted alt={1}, az={2}; test alt={3}, az={4}; diff_alt={5}, diff_az={6}",
                 body, hor.altitude, hor.azimuth, sphere.lat, sphere.lon, diff_alt, diff_az);
 
             if (diff_alt > 2.0e-14 || diff_az > 4e-14)
             {
-                Console.WriteLine("Test_EQD_HOR: EXCESSIVE HORIZONTAL ERROR.");
+                Console.WriteLine("C# Test_EQD_HOR: EXCESSIVE HORIZONTAL ERROR.");
                 return 1;
             }
 
             /* Confirm that we can convert back to horizontal vector. */
             AstroVector check_hor = Astronomy.VectorFromHorizon(sphere, time, Refraction.Normal);
             double diff = VectorDiff(check_hor, vec_hor);
-            Console.WriteLine("Test_EQD_HOR {0}: horizontal recovery: diff = {1}", body, diff);
+            Console.WriteLine("C# Test_EQD_HOR {0}: horizontal recovery: diff = {1}", body, diff);
             if (diff > 2.0e-15)
             {
-                Console.WriteLine("Test_EQD_HOR: EXCESSIVE ERROR IN HORIZONTAL RECOVERY.");
+                Console.WriteLine("C# Test_EQD_HOR: EXCESSIVE ERROR IN HORIZONTAL RECOVERY.");
                 return 1;
             }
 
@@ -1374,10 +1374,10 @@ namespace csharp_test
             rot = Astronomy.Rotation_HOR_EQD(time, observer);
             AstroVector check_eqd = Astronomy.RotateVector(rot, vec_hor);
             diff = VectorDiff(check_eqd, vec_eqd);
-            Console.WriteLine("Test_EQD_HOR {0}: OFDATE inverse rotation diff = {1}", body, diff);
+            Console.WriteLine("C# Test_EQD_HOR {0}: OFDATE inverse rotation diff = {1}", body, diff);
             if (diff > 2.0e-15)
             {
-                Console.WriteLine("Test_EQD_HOR: EXCESSIVE OFDATE INVERSE HORIZONTAL ERROR.");
+                Console.WriteLine("C# Test_EQD_HOR: EXCESSIVE OFDATE INVERSE HORIZONTAL ERROR.");
                 return 1;
             }
 
@@ -1388,10 +1388,10 @@ namespace csharp_test
             rot = Astronomy.Rotation_HOR_EQJ(time, observer);
             AstroVector check_eqj = Astronomy.RotateVector(rot, vec_hor);
             diff = VectorDiff(check_eqj, vec_eqj);
-            Console.WriteLine("Test_EQD_HOR {0}: J2000 inverse rotation diff = {1}", body, diff);
+            Console.WriteLine("C# Test_EQD_HOR {0}: J2000 inverse rotation diff = {1}", body, diff);
             if (diff > 4.0e-15)
             {
-                Console.WriteLine("Test_EQD_HOR: EXCESSIVE J2000 INVERSE HORIZONTAL ERROR.");
+                Console.WriteLine("C# Test_EQD_HOR: EXCESSIVE J2000 INVERSE HORIZONTAL ERROR.");
                 return 1;
             }
 
@@ -1399,10 +1399,10 @@ namespace csharp_test
             rot = Astronomy.Rotation_EQJ_HOR(time, observer);
             check_hor = Astronomy.RotateVector(rot, vec_eqj);
             diff = VectorDiff(check_hor, vec_hor);
-            Console.WriteLine("Test_EQD_HOR {0}: EQJ inverse rotation diff = {1}", body, diff);
+            Console.WriteLine("C# Test_EQD_HOR {0}: EQJ inverse rotation diff = {1}", body, diff);
             if (diff > 2.2e-15)
             {
-                Console.WriteLine("Test_EQD_HOR: EXCESSIVE EQJ INVERSE HORIZONTAL ERROR.");
+                Console.WriteLine("C# Test_EQD_HOR: EXCESSIVE EQJ INVERSE HORIZONTAL ERROR.");
                 return 1;
             }
 
@@ -1490,7 +1490,7 @@ namespace csharp_test
             if (0 != CheckCycle(nameof(eqj_hor), nameof(hor_eqd), nameof(eqd_eqj), eqj_hor, hor_eqd, eqd_eqj)) return 1;     /* excluded corner = ECL */
             if (0 != CheckCycle(nameof(ecl_eqd), nameof(eqd_hor), nameof(hor_ecl), ecl_eqd, eqd_hor, hor_ecl)) return 1;     /* excluded corner = EQJ */
 
-            Console.WriteLine("Test_RotRoundTrip: PASS");
+            Console.WriteLine("C# Test_RotRoundTrip: PASS");
             return 0;
         }
 
@@ -1514,7 +1514,7 @@ namespace csharp_test
 
             if (0 != Test_RotRoundTrip()) return 1;
 
-            Console.WriteLine("RotationTest: PASS");
+            Console.WriteLine("C# RotationTest: PASS");
             return 0;
         }
 
@@ -1529,12 +1529,12 @@ namespace csharp_test
                 double diff = Math.Abs(check_alt - alt);
                 if (diff > 2.0e-14)
                 {
-                    Console.WriteLine("ERROR(RefractionTest): alt={0}, refr={1}, diff={2}", alt, refr, diff);
+                    Console.WriteLine("C# ERROR(RefractionTest): alt={0}, refr={1}, diff={2}", alt, refr, diff);
                     return 1;
                 }
             }
 
-            Console.WriteLine("RefractionTest: PASS");
+            Console.WriteLine("C# RefractionTest: PASS");
             return 0;
         }
 
@@ -1553,7 +1553,7 @@ namespace csharp_test
                     Match m = reLine.Match(line);
                     if (!m.Success)
                     {
-                        Console.WriteLine("ERROR(ConstellationTest): invalid line {0} in file {1}", lnum, inFileName);
+                        Console.WriteLine("C# ERROR(ConstellationTest): invalid line {0} in file {1}", lnum, inFileName);
                         return 1;
                     }
                     int id = int.Parse(m.Groups[1].Value);
@@ -1570,11 +1570,11 @@ namespace csharp_test
             }
             if (failcount > 0)
             {
-                Console.WriteLine("ConstellationTest: {0} failures", failcount);
+                Console.WriteLine("C# ConstellationTest: {0} failures", failcount);
                 return 1;
             }
 
-            Console.WriteLine("ConstellationTest: PASS (verified {0})", lnum);
+            Console.WriteLine("C# ConstellationTest: PASS (verified {0})", lnum);
             return 0;
         }
     }

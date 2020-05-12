@@ -24,11 +24,10 @@ function TestLongitudes(data) {
         if (degree_error > 180) degree_error = 360 - degree_error;
         let arcmin = 60 * degree_error;
         max_arcmin = Math.max(max_arcmin, arcmin);
-        //console.log(`${row.quarter} ${row.date.toISOString()} ${elong} ${arcmin}`);
     }
-    console.log(`TestLongitudes: nrows = ${data.length}, max_arcmin = ${max_arcmin}`);
+    console.log(`JS TestLongitudes: nrows = ${data.length}, max_arcmin = ${max_arcmin}`);
     if (max_arcmin > 1.0) {
-        console.log(`TestLongitudes: EXCESSIVE ANGULAR ERROR`);
+        console.log(`JS TestLongitudes: EXCESSIVE ANGULAR ERROR`);
         return 1;
     }
     return 0;
@@ -45,13 +44,13 @@ function SearchYear(year, data, index) {
 
         // Verify that we found anything at all.
         if (!mq) {
-            console.log(`SearchYear: could not find next moon quarter after ${date.toISOString()}`);
+            console.log(`JS SearchYear: could not find next moon quarter after ${date.toISOString()}`);
             return 1;
         }
 
         // Verify that we found the correct quarter.
         if (data[index].quarter !== mq.quarter) {
-            console.log(`SearchYear: predicted quarter ${mq.quarter} but correct is ${data[index].quarter} for ${date.toISOString()}`);
+            console.log(`JS SearchYear: predicted quarter ${mq.quarter} but correct is ${data[index].quarter} for ${date.toISOString()}`);
             return 1;
         }
 
@@ -60,7 +59,7 @@ function SearchYear(year, data, index) {
         // This is appropriate because the "correct" answers are only given to the minute.
         let diff = Math.abs(mq.time.date - data[index].date) / millis_per_minute;
         if (diff > threshold_minutes) {
-            console.log(`SearchYear: EXCESSIVE ERROR = ${diff.toFixed(3)} minutes, correct=${data[index].date.toISOString()}, calculated=${mq.time.toString()}`);
+            console.log(`JS SearchYear: EXCESSIVE ERROR = ${diff.toFixed(3)} minutes, correct=${data[index].date.toISOString()}, calculated=${mq.time.toString()}`);
             return 1;
         }
         maxdiff = Math.max(maxdiff, diff);
@@ -70,7 +69,7 @@ function SearchYear(year, data, index) {
         mq = Astronomy.NextMoonQuarter(mq);
         date = mq.time.date;
     }
-    console.log(`SearchYear(${year}): count=${count}, maxdiff=${maxdiff.toFixed(3)}`);
+    console.log(`JS SearchYear(${year}): count=${count}, maxdiff=${maxdiff.toFixed(3)}`);
     return 0;
 }
 
@@ -114,7 +113,7 @@ function Statistics(data) {
     for (let q=0; q < 4; ++q) {
         let s = stats[q];
         if (s) {
-            console.log(`Statistics: q=${q} min=${s.min.toFixed(3)} avg=${(s.sum/s.count).toFixed(3)} max=${s.max.toFixed(3)} span=${(s.max-s.min).toFixed(3)}`);
+            console.log(`JS Statistics: q=${q} min=${s.min.toFixed(3)} avg=${(s.sum/s.count).toFixed(3)} max=${s.max.toFixed(3)} span=${(s.max-s.min).toFixed(3)}`);
         }
     }
 }

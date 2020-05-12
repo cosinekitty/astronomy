@@ -49,7 +49,7 @@ function Test() {
             observer = Astronomy.MakeObserver(evt.lat, evt.lon, 0);
             r_search_date = s_search_date = new Date(Date.UTC(evt.date.getUTCFullYear(), 0, 1));
             b_date = null;
-            console.log(`${body} ${evt.lat} ${evt.lon}`);
+            console.log(`JS ${body} ${evt.lat} ${evt.lon}`);
         }
 
         if (b_date) {
@@ -101,8 +101,8 @@ function Test() {
     const after_date = new Date();
     const elapsed_seconds = (after_date - before_date) / 1000;
 
-    console.log(`Rise/set error in minutes: rms=${Math.sqrt(sum_minutes/data.length).toFixed(4)}, max=${max_minutes.toFixed(4)}`);
-    console.log(`Search metrics: elapsed=${elapsed_seconds.toFixed(3)}`);
+    console.log(`JS Rise/set error in minutes: rms=${Math.sqrt(sum_minutes/data.length).toFixed(4)}, max=${max_minutes.toFixed(4)}`);
+    console.log(`JS Search metrics: elapsed=${elapsed_seconds.toFixed(3)}`);
 }
 
 console.log(`rise_set_test: Beginning.`);

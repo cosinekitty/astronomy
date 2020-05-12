@@ -55,12 +55,12 @@ function Test() {
     const time_after = new Date();
     const elapsed = (time_after - time_before) / 1000;
 
-    console.log(`lunar_apsis_test: verified ${count} lines, max time error = ${max_minute_error.toFixed(3)} minutes, max dist error = ${max_dist_error.toFixed(3)} km.`);
+    console.log(`lunar_apsis_test.js: verified ${count} lines, max time error = ${max_minute_error.toFixed(3)} minutes, max dist error = ${max_dist_error.toFixed(3)} km.`);
 
     if (count !== 2651)
         throw 'FATAL: Did not process the expected number of data rows!';
 
-    console.log(`lunar_apsis_test PERFORMANCE: time=${elapsed.toFixed(3)}`);
+    console.log(`lunar_apsis_test.js PERFORMANCE: time=${elapsed.toFixed(3)}`);
 }
 
 Test();

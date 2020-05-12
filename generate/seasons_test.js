@@ -29,7 +29,7 @@ function LoadTestData(filename) {
         }
     }
 
-    console.log(`LoadTestData: count = ${data.length}`);
+    console.log(`JS LoadTestData: count = ${data.length}`);
     for (let month of [3, 6, 9, 12]) {
         console.log(`Month ${month}: earliest ${minByMonth[month]}, latest ${maxByMonth[month]}`);
     }
@@ -101,13 +101,13 @@ function Test() {
         ++count;
     }
 
-    console.log(`seasons_test: n=${count}, minute errors: min=${min_diff.toFixed(3)}, avg=${(sum_diff/count).toFixed(3)}, max=${max_diff.toFixed(3)}`);
+    console.log(`seasons_test.js: n=${count}, minute errors: min=${min_diff.toFixed(3)}, avg=${(sum_diff/count).toFixed(3)}, max=${max_diff.toFixed(3)}`);
     for (let month of [3, 6, 9, 12]) {
-        console.log(`seasons_test: max diff by month ${month} = ${month_max_diff[month].toFixed(3)}`);
+        console.log(`seasons_test.js: max diff by month ${month} = ${month_max_diff[month].toFixed(3)}`);
     }
 }
 
-console.log(`seasons_test: Beginning.`);
+console.log(`seasons_test.js: Beginning.`);
 Test();
-console.log(`seasons_test: Finished.`);
+console.log(`seasons_test.js: Finished.`);
 process.exit(0);

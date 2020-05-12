@@ -14,15 +14,15 @@ def AssertGoodTime(text, correct):
     if check != correct:
         print('Python AssertGoodTime FAILURE: parsed "{}", got "{}", expected "{}"'.format(text, check, correct))
         sys.exit(1)
-    print('AssertGoodTime: "{}" OK'.format(text))
+    print('PY AssertGoodTime: "{}" OK'.format(text))
 
 def AssertBadTime(text):
     try:
         astronomy.Time.Parse(text)
     except astronomy.DateTimeFormatError:
-        print('AssertBadTime: "{}" OK'.format(text))
+        print('PY AssertBadTime: "{}" OK'.format(text))
     else:
-        print('Python AssertBadTime FAILURE: should not have parsed "{}"'.format(text))
+        print('PY AssertBadTime FAILURE: should not have parsed "{}"'.format(text))
         sys.exit(1)
 
 def Test_AstroTime():
@@ -31,27 +31,27 @@ def Test_AstroTime():
     time = astronomy.Time.Make(2018, 12, 2, 18, 30, 12.543)
     diff = time.ut - expected_ut
     if abs(diff) > 1.0e-12:
-        print('Test_AstroTime: excessive UT error {}'.format(diff))
+        print('PY Test_AstroTime: excessive UT error {}'.format(diff))
         sys.exit(1)
     diff = time.tt - expected_tt
     if abs(diff) > 1.0e-12:
-        print('Test_AstroTime: excessive TT error {}'.format(diff))
+        print('PY Test_AstroTime: excessive TT error {}'.format(diff))
         sys.exit(1)
     s = str(time.Utc())
     if s != '2018-12-02 18:30:12.543000':
-        print('Test_AstroTime: Utc() returned incorrect string "{}"'.format(s))
+        print('PY Test_AstroTime: Utc() returned incorrect string "{}"'.format(s))
         sys.exit(1)
     time = astronomy.Time.Make(2018, 12, 31, 23, 59, 59.9994)
     s = str(time)
     if s != '2018-12-31T23:59:59.999Z':
-        print('Test_AstroTime: expected 2018-12-31T23:59:59.999Z but found {}'.format(s))
+        print('PY Test_AstroTime: expected 2018-12-31T23:59:59.999Z but found {}'.format(s))
         sys.exit(1)
     time = astronomy.Time.Make(2018, 12, 31, 23, 59, 59.9995)
     s = str(time)
     if s != '2019-01-01T00:00:00.000Z':
-        print('Test_AstroTime: expected 2019-01-01T00:00:00.000Z but found {}'.format(s))
+        print('PY Test_AstroTime: expected 2019-01-01T00:00:00.000Z but found {}'.format(s))
         sys.exit(1)
-    print('Current time =', astronomy.Time.Now())
+    print('PY Current time =', astronomy.Time.Now())
     AssertGoodTime('2015-12-31', '2015-12-31T00:00:00.000Z')
     AssertGoodTime('2015-12-31T23:45Z', '2015-12-31T23:45:00.000Z')
     AssertGoodTime('2015-01-02T23:45:17Z', '2015-01-02T23:45:17.000Z')
@@ -69,14 +69,14 @@ def Test_AstroTime():
 def Test_GeoMoon():
     time = astronomy.Time.Make(2019, 6, 24, 15, 45, 37)
     vec = astronomy.GeoMoon(time)
-    print('Test_GeoMoon: vec = {:0.16f}, {:0.16f}, {:0.16f}'.format(vec.x, vec.y, vec.z))
+    print('PY Test_GeoMoon: vec = {:0.16f}, {:0.16f}, {:0.16f}'.format(vec.x, vec.y, vec.z))
     # Correct values obtained from C version of GeoMoon calculation
     cx, cy, cz = 0.002674036155459549, -0.0001531716308218381, -0.0003150201604895409
     dx, dy, dz = vec.x - cx, vec.y - cy, vec.z - cz
     diff = math.sqrt(dx*dx + dy*dy + dz*dz)
-    print('Test_GeoMoon: diff = {}'.format(diff))
+    print('PY Test_GeoMoon: diff = {}'.format(diff))
     if diff > 4.34e-19:
-        print('Test_GeoMoon: EXCESSIVE ERROR')
+        print('PY Test_GeoMoon: EXCESSIVE ERROR')
         sys.exit(1)
 
 #-----------------------------------------------------------------------------------------------------------
@@ -151,7 +151,7 @@ def Test_Seasons(filename):
             line = line.strip()
             m = re.match(r'^(\d+)-(\d+)-(\d+)T(\d+):(\d+)Z\s+([A-Za-z]+)$', line)
             if not m:
-                print('Test_Seasons: Invalid data on line {} of file {}'.format(lnum, filename))
+                print('PY Test_Seasons: Invalid data on line {} of file {}'.format(lnum, filename))
                 return 1
             year = int(m.group(1))
             month = int(m.group(2))
@@ -171,7 +171,7 @@ def Test_Seasons(filename):
                     calc_time = seasons.sep_equinox
                     sep_count += 1
                 else:
-                    print('Test_Seasons: {} line {}: Invalid equinox date in test data'.format(filename, lnum))
+                    print('PY Test_Seasons: {} line {}: Invalid equinox date in test data'.format(filename, lnum))
                     return 1
             elif name == 'Solstice':
                 if month == 6:
@@ -181,14 +181,14 @@ def Test_Seasons(filename):
                     calc_time = seasons.dec_solstice
                     dec_count += 1
                 else:
-                    print('Test_Seasons: {} line {}: Invalid solstice date in test data'.format(filename, lnum))
+                    print('PY Test_Seasons: {} line {}: Invalid solstice date in test data'.format(filename, lnum))
                     return 1
             elif name == 'Aphelion':
                 continue # not yet calculated
             elif name == 'Perihelion':
                 continue # not yet calculated
             else:
-                print('Test_Seasons: {} line {}: unknown event type {}'.format(filename, lnum, name))
+                print('PY Test_Seasons: {} line {}: unknown event type {}'.format(filename, lnum, name))
                 return 1
 
             # Verify that the calculated time matches the correct time for this event.
@@ -197,10 +197,10 @@ def Test_Seasons(filename):
                 max_minutes = diff_minutes
 
             if diff_minutes > 1.7:
-                print('Test_Seasons: {} line {}: excessive error ({}): {} minutes.'.format(filename, lnum, name, diff_minutes))
+                print('PY Test_Seasons: {} line {}: excessive error ({}): {} minutes.'.format(filename, lnum, name, diff_minutes))
                 return 1
-    print('Test_Seasons: verified {} lines from file {} : max error minutes = {:0.3f}'.format(lnum, filename, max_minutes))
-    print('Test_Seasons: Event counts: mar={}, jun={}, sep={}, dec={}'.format(mar_count, jun_count, sep_count, dec_count))
+    print('PY Test_Seasons: verified {} lines from file {} : max error minutes = {:0.3f}'.format(lnum, filename, max_minutes))
+    print('PY Test_Seasons: Event counts: mar={}, jun={}, sep={}, dec={}'.format(mar_count, jun_count, sep_count, dec_count))
     return 0
 
 #-----------------------------------------------------------------------------------------------------------
@@ -219,7 +219,7 @@ def Test_MoonPhase(filename):
             line = line.strip()
             m = re.match(r'^([0-3]) (\d+)-(\d+)-(\d+)T(\d+):(\d+):(\d+\.\d+)Z$', line)
             if not m:
-                print('Test_MoonPhase: invalid data format in {} line {}'.format(filename, lnum))
+                print('PY Test_MoonPhase: invalid data format in {} line {}'.format(filename, lnum))
                 return 1
 
             quarter = int(m.group(1))
@@ -238,7 +238,7 @@ def Test_MoonPhase(filename):
                 degree_error = 360.0 - degree_error
             arcmin = 60.0 * degree_error
             if arcmin > 1.0:
-                print('Test_MoonPhase({} line {}): EXCESSIVE ANGULAR ERROR: {} arcmin'.format(filename, lnum, arcmin))
+                print('PY Test_MoonPhase({} line {}): EXCESSIVE ANGULAR ERROR: {} arcmin'.format(filename, lnum, arcmin))
                 return 1
             max_arcmin = max(max_arcmin, arcmin)
 
@@ -255,7 +255,7 @@ def Test_MoonPhase(filename):
                 mq = astronomy.NextMoonQuarter(mq)
                 # Expect the next consecutive quarter.
                 if expected_quarter != mq.quarter:
-                    print('Test_MoonPhase({} line {}): SearchMoonQuarter returned quarter {}, but expected {}.'.format(filename, lnum, mq.quarter, expected_quarter))
+                    print('PY Test_MoonPhase({} line {}): SearchMoonQuarter returned quarter {}, but expected {}.'.format(filename, lnum, mq.quarter, expected_quarter))
                     return 1
 
             quarter_count += 1
@@ -263,12 +263,12 @@ def Test_MoonPhase(filename):
             # Make sure the time matches what we expect.
             diff_seconds = abs(mq.time.tt - expected_time.tt) * (24.0 * 3600.0)
             if diff_seconds > threshold_seconds:
-                print('Test_MoonPhase({} line {}): excessive time error {:0.3f} seconds.'.format(filename, lnum, diff_seconds))
+                print('PY Test_MoonPhase({} line {}): excessive time error {:0.3f} seconds.'.format(filename, lnum, diff_seconds))
                 return 1
 
             maxdiff = max(maxdiff, diff_seconds)
 
-    print('Test_MoonPhase: passed {} lines for file {} : max_arcmin = {:0.6f}, maxdiff = {:0.3f} seconds, {} quarters.'
+    print('PY Test_MoonPhase: passed {} lines for file {} : max_arcmin = {:0.6f}, maxdiff = {:0.3f} seconds, {} quarters.'
         .format(lnum, filename, max_arcmin, maxdiff, quarter_count))
     return 0
 
@@ -282,7 +282,7 @@ def TestElongFile(filename, targetRelLon):
             line = line.strip()
             m = re.match(r'^(\d+)-(\d+)-(\d+)T(\d+):(\d+)Z ([A-Za-z]+)$', line)
             if not m:
-                print('TestElongFile({} line {}): invalid data format'.format(filename, lnum))
+                print('PY TestElongFile({} line {}): invalid data format'.format(filename, lnum))
                 return 1
             year = int(m.group(1))
             month = int(m.group(2))
@@ -292,20 +292,20 @@ def TestElongFile(filename, targetRelLon):
             name = m.group(6)
             body = astronomy.BodyCode(name)
             if body.value == astronomy.Body.Invalid:
-                print('TestElongFile({} line {}): invalid body name "{}"'.format(filename, lnum, name))
+                print('PY TestElongFile({} line {}): invalid body name "{}"'.format(filename, lnum, name))
                 return 1
             search_time = astronomy.Time.Make(year, 1, 1, 0, 0, 0)
             expected_time = astronomy.Time.Make(year, month, day, hour, minute, 0)
             found_time = astronomy.SearchRelativeLongitude(body, targetRelLon, search_time)
             if found_time is None:
-                print('TestElongFile({} line {}): SearchRelativeLongitude failed.'.format(filename, lnum))
+                print('PY TestElongFile({} line {}): SearchRelativeLongitude failed.'.format(filename, lnum))
                 return 1
             diff_minutes = (24.0 * 60.0) * (found_time.tt - expected_time.tt)
-            print('TestElongFile: {:<7s} error = {:6.3} minutes'.format(name, diff_minutes))
+            print('PY TestElongFile: {:<7s} error = {:6.3} minutes'.format(name, diff_minutes))
             if abs(diff_minutes) > 15.0:
-                print('TestElongFile({} line {}): EXCESSIVE ERROR.'.format(filename, lnum))
+                print('PY TestElongFile({} line {}): EXCESSIVE ERROR.'.format(filename, lnum))
                 return 1
-    print('TestElongFile: passed {} rows of data'.format(lnum))
+    print('PY TestElongFile: passed {} rows of data'.format(lnum))
     return 0
 
 def TestPlanetLongitudes(body, outFileName, zeroLonEventName):
@@ -323,7 +323,7 @@ def TestPlanetLongitudes(body, outFileName, zeroLonEventName):
             event = zeroLonEventName if rlon == 0.0 else 'sup'
             found_time = astronomy.SearchRelativeLongitude(body, rlon, time)
             if found_time is None:
-                print('TestPlanetLongitudes({}): SearchRelativeLongitudes failed'.format(name))
+                print('PY TestPlanetLongitudes({}): SearchRelativeLongitudes failed'.format(name))
                 return 1
             if count >= 2:
                 # Check for consistent intervals.
@@ -348,9 +348,9 @@ def TestPlanetLongitudes(body, outFileName, zeroLonEventName):
     else:
         thresh = 1.07
     ratio = max_diff / min_diff
-    print('TestPlanetLongitudes({:<7s}): {:5d} events, ratio={:5.3f}, file: {}'.format(name, count, ratio, outFileName))
+    print('PY TestPlanetLongitudes({:<7s}): {:5d} events, ratio={:5.3f}, file: {}'.format(name, count, ratio, outFileName))
     if ratio > thresh:
-        print('TestPlanetLongitudes({}): EXCESSIVE EVENT INTERVAL RATIO'.format(name))
+        print('PY TestPlanetLongitudes({}): EXCESSIVE EVENT INTERVAL RATIO'.format(name))
         return 1
     return 0
 
@@ -440,19 +440,19 @@ def TestMaxElong(body, searchText, eventText, angle, visibility):
     eventTime = astronomy.Time.Parse(eventText)
     evt = astronomy.SearchMaxElongation(body, searchTime)
     if evt is None:
-        print('TestMaxElong({} {}): SearchMaxElongation failed.'.format(name, searchText))
+        print('PY TestMaxElong({} {}): SearchMaxElongation failed.'.format(name, searchText))
         return 1
     if evt.visibility != visibility:
-        print('TestMaxElong({} {}): SearchMaxElongation returned visibility {}, but expected {}'.format(name, searchText, evt.visibility.name, visibility.name))
+        print('PY TestMaxElong({} {}): SearchMaxElongation returned visibility {}, but expected {}'.format(name, searchText, evt.visibility.name, visibility.name))
         return 1
     hour_diff = 24.0 * abs(evt.time.tt - eventTime.tt)
     arcmin_diff = 60.0 * abs(evt.elongation - angle)
-    print('TestMaxElong: {:<7s} {:<7s} elong={:5.2f} ({:4.2f} arcmin, {:5.3f} hours)'.format(name, visibility.name, evt.elongation, arcmin_diff, hour_diff))
+    print('PY TestMaxElong: {:<7s} {:<7s} elong={:5.2f} ({:4.2f} arcmin, {:5.3f} hours)'.format(name, visibility.name, evt.elongation, arcmin_diff, hour_diff))
     if hour_diff > 0.603:
-        print('TestMaxElong({} {}): EXCESSIVE HOUR ERROR.'.format(name, searchText))
+        print('PY TestMaxElong({} {}): EXCESSIVE HOUR ERROR.'.format(name, searchText))
         return 1
     if arcmin_diff > 3.4:
-        print('TestMaxElong({} {}): EXCESSIVE ARCMIN ERROR.'.format(name, searchText))
+        print('PY TestMaxElong({} {}): EXCESSIVE ARCMIN ERROR.'.format(name, searchText))
         return 1
     return 0
 
@@ -502,13 +502,13 @@ def CheckMagnitudeData(body, filename):
             if (time is not None) and (rest is not None) and not ('n.a.' in rest):
                 data = [float(t) for t in rest.split()]
                 if len(data) != 7:
-                    print('CheckMagnitudeData({} line {}): invalid data format'.format(filename, lnum))
+                    print('PY CheckMagnitudeData({} line {}): invalid data format'.format(filename, lnum))
                     return 1
                 (mag, sbrt, dist, rdot, delta, deldot, phase_angle) = data
                 illum = astronomy.Illumination(body, time)
                 diff = illum.mag - mag
                 if abs(diff) > limit:
-                    print('CheckMagnitudeData({} line {}): EXCESSIVE ERROR: correct mag={}, calc mag={}'.format(filename, lnum, mag, illum.mag))
+                    print('PY CheckMagnitudeData({} line {}): EXCESSIVE ERROR: correct mag={}, calc mag={}'.format(filename, lnum, mag, illum.mag))
                     return 1
                 sum_squared_diff += diff * diff
                 if count == 0:
@@ -519,10 +519,10 @@ def CheckMagnitudeData(body, filename):
                 count += 1
 
         if count == 0:
-            print('CheckMagnitudeData: Did not find any data in file: {}'.format(filename))
+            print('PY CheckMagnitudeData: Did not find any data in file: {}'.format(filename))
             return 1
     rms = math.sqrt(sum_squared_diff / count)
-    print('CheckMagnitudeData: {:<21s} {:5d} rows diff_lo={:0.4f} diff_hi={:0.4f} rms={:0.4f}'.format(filename, count, diff_lo, diff_hi, rms))
+    print('PY CheckMagnitudeData: {:<21s} {:5d} rows diff_lo={:0.4f} diff_hi={:0.4f} rms={:0.4f}'.format(filename, count, diff_lo, diff_hi, rms))
     return 0
 
 def CheckSaturn():
@@ -543,14 +543,14 @@ def CheckSaturn():
     for (dtext, mag, tilt) in data:
         time = astronomy.Time.Parse(dtext)
         illum = astronomy.Illumination(astronomy.Body.Saturn, time)
-        print('Saturn: date={}  calc mag={:12.8f}  ring_tilt={:12.8f}'.format(dtext, illum.mag, illum.ring_tilt))
+        print('PY Saturn: date={}  calc mag={:12.8f}  ring_tilt={:12.8f}'.format(dtext, illum.mag, illum.ring_tilt))
         mag_diff = abs(illum.mag - mag)
         if mag_diff > 1.0e-4:
-            print('CheckSaturn: Excessive magnitude error {}'.format(mag_diff))
+            print('PY CheckSaturn: Excessive magnitude error {}'.format(mag_diff))
             error = 1
         tilt_diff = abs(illum.ring_tilt - tilt)
         if (tilt_diff > 3.0e-5):
-            print('CheckSaturn: Excessive ring tilt error {}'.format(tilt_diff))
+            print('PY CheckSaturn: Excessive ring tilt error {}'.format(tilt_diff))
             error = 1
     return error
 
@@ -578,15 +578,15 @@ def TestMaxMag(body, filename):
                     illum = astronomy.SearchPeakMagnitude(body, search_time)
                     mag_diff = abs(illum.mag - correct_mag)
                     hours_diff = 24.0 * abs(illum.time.ut - center_time.ut)
-                    print('TestMaxMag: mag_diff={:0.3f}, hours_diff={:0.3f}'.format(mag_diff, hours_diff))
+                    print('PY TestMaxMag: mag_diff={:0.3f}, hours_diff={:0.3f}'.format(mag_diff, hours_diff))
                     if hours_diff > 7.1:
-                        print('TestMaxMag({} line {}): EXCESSIVE TIME DIFFERENCE.'.format(filename, lnum))
+                        print('PY TestMaxMag({} line {}): EXCESSIVE TIME DIFFERENCE.'.format(filename, lnum))
                         return 1
                     if mag_diff > 0.005:
-                        print('TestMaxMag({} line {}): EXCESSIVE MAGNITUDE DIFFERENCE.'.format(filename, lnum))
+                        print('PY TestMaxMag({} line {}): EXCESSIVE MAGNITUDE DIFFERENCE.'.format(filename, lnum))
                         return 1
                     search_time = time2
-    print('TestMaxMag: processed {} lines from file {}'.format(lnum, filename))
+    print('PY TestMaxMag: processed {} lines from file {}'.format(lnum, filename))
     return 0
 
 
@@ -604,7 +604,7 @@ def Test_Magnitude():
     nfailed += CheckMagnitudeData(astronomy.Body.Pluto,   'magnitude/Pluto.txt')
     nfailed += TestMaxMag(astronomy.Body.Venus, 'magnitude/maxmag_Venus.txt')
     if nfailed > 0:
-        print('Test_Magnitude: failed {} test(s).'.format(nfailed))
+        print('PY Test_Magnitude: failed {} test(s).'.format(nfailed))
         return 1
     return 0
 
@@ -627,7 +627,7 @@ def Test_RiseSet(filename):
             # Moon  103 -61 1944-01-03T05:47Z r
             m = re.match(r'^([A-Za-z]+)\s+(-?[0-9\.]+)\s+(-?[0-9\.]+)\s+(\d+)-(\d+)-(\d+)T(\d+):(\d+)Z\s+([sr])$', line)
             if not m:
-                print('Test_RiseSet({} line {}): invalid data format'.format(filename, lnum))
+                print('PY Test_RiseSet({} line {}): invalid data format'.format(filename, lnum))
                 return 1
             name = m.group(1)
             longitude = float(m.group(2))
@@ -642,7 +642,7 @@ def Test_RiseSet(filename):
             direction = astronomy.Direction.Rise if kind == 'r' else astronomy.Direction.Set
             body = astronomy.BodyCode(name)
             if body == astronomy.Body.Invalid:
-                print('Test_RiseSet({} line {}): invalid body name "{}"'.format(filename, lnum, name))
+                print('PY Test_RiseSet({} line {}): invalid body name "{}"'.format(filename, lnum, name))
                 return 1
 
             # Every time we see a new geographic location, start a new iteration
@@ -652,7 +652,7 @@ def Test_RiseSet(filename):
                 observer = astronomy.Observer(latitude, longitude, 0)
                 r_search_date = s_search_date = astronomy.Time.Make(year, 1, 1, 0, 0, 0)
                 b_evt = None
-                print('Test_RiseSet: {:<7s} lat={:0.1f} lon={:0.1f}'.format(name, latitude, longitude))
+                print('PY Test_RiseSet: {:<7s} lat={:0.1f} lon={:0.1f}'.format(name, latitude, longitude))
 
             if b_evt is not None:
                 # Recycle the second event from the previous iteration as the first event.
@@ -662,11 +662,11 @@ def Test_RiseSet(filename):
             else:
                 r_evt = astronomy.SearchRiseSet(body, observer, astronomy.Direction.Rise, r_search_date, 366.0)
                 if r_evt is None:
-                    print('Test_RiseSet({} line {}): rise search failed'.format(filename, lnum))
+                    print('PY Test_RiseSet({} line {}): rise search failed'.format(filename, lnum))
                     return 1
                 s_evt = astronomy.SearchRiseSet(body, observer, astronomy.Direction.Set, s_search_date, 366.0)
                 if s_evt is None:
-                    print('Test_RiseSet({} line {}): set search failed'.format(filename, lnum))
+                    print('PY Test_RiseSet({} line {}): set search failed'.format(filename, lnum))
                     return 1
                 # Expect the current event to match the earlier of the found times.
                 if r_evt.tt < s_evt.tt:
@@ -684,19 +684,19 @@ def Test_RiseSet(filename):
                 s_search_date = s_evt.AddDays(nudge_days)
 
             if a_dir != direction:
-                print('Test_RiseSet({} line {}): expected dir={} but found {}'.format(filename, lnum, a_dir, direction))
+                print('PY Test_RiseSet({} line {}): expected dir={} but found {}'.format(filename, lnum, a_dir, direction))
                 return 1
 
             error_minutes = (24.0 * 60.0) * abs(a_evt.tt - correct_time.tt)
             sum_minutes += error_minutes ** 2
             max_minutes = max(max_minutes, error_minutes)
             if error_minutes > 0.56:
-                print('Test_RiseSet({} line {}): excessive prediction time error = {} minutes.'.format(filename, lnum, error_minutes))
+                print('PY Test_RiseSet({} line {}): excessive prediction time error = {} minutes.'.format(filename, lnum, error_minutes))
                 print('    correct = {}, calculated = {}'.format(correct_time, a_evt))
                 return 1
 
     rms_minutes = math.sqrt(sum_minutes / lnum)
-    print('Test_RiseSet: passed {} lines: time errors in minutes: rms={:0.4f}, max={:0.4f}'.format(lnum, rms_minutes, max_minutes))
+    print('PY Test_RiseSet: passed {} lines: time errors in minutes: rms={:0.4f}, max={:0.4f}'.format(lnum, rms_minutes, max_minutes))
     return 0
 
 #-----------------------------------------------------------------------------------------------------------
@@ -715,28 +715,28 @@ def LunarApsis(filename):
                 apsis = astronomy.NextLunarApsis(apsis)
             tokenlist = line.split()
             if len(tokenlist) != 3:
-                print('LunarApsis({} line {}): invalid data format'.format(filename, lnum))
+                print('PY LunarApsis({} line {}): invalid data format'.format(filename, lnum))
                 return 1
             correct_time = astronomy.Time.Parse(tokenlist[1])
             if not correct_time:
-                print('LunarApsis({} line {}): invalid time'.format(filename, lnum))
+                print('PY LunarApsis({} line {}): invalid time'.format(filename, lnum))
                 return 1
             kind = astronomy.ApsisKind(int(tokenlist[0]))
             if apsis.kind != kind:
-                print('LunarApsis({} line {}): Expected kind {} but found {}'.format(filename, lnum, kind, apsis.kind))
+                print('PY LunarApsis({} line {}): Expected kind {} but found {}'.format(filename, lnum, kind, apsis.kind))
                 return 1
             dist_km = float(tokenlist[2])
             diff_minutes = (24.0 * 60.0) * abs(apsis.time.ut - correct_time.ut)
             diff_km = abs(apsis.dist_km - dist_km)
             if diff_minutes > 35.0:
-                print('LunarApsis({} line {}): Excessive time error = {} minutes.'.format(filename, lnum, diff_minutes))
+                print('PY LunarApsis({} line {}): Excessive time error = {} minutes.'.format(filename, lnum, diff_minutes))
                 return 1
             if diff_km > 25.0:
-                print('LunarApsis({} line {}): Excessive distance error = {} km.'.format(filename, lnum, diff_km))
+                print('PY LunarApsis({} line {}): Excessive distance error = {} km.'.format(filename, lnum, diff_km))
                 return 1
             max_minutes = max(max_minutes, diff_minutes)
             max_km = max(max_km, diff_km)
-    print('LunarApsis: found {} events, max time error = {:0.3f} minutes, max distance error = {:0.3f} km.'.format(lnum, max_minutes, max_km))
+    print('PY LunarApsis: found {} events, max time error = {:0.3f} minutes, max distance error = {:0.3f} km.'.format(lnum, max_minutes, max_km))
     return 0
 
 #-----------------------------------------------------------------------------------------------------------
@@ -746,7 +746,7 @@ def CompareMatrices(caller, a, b, tolerance):
         for j in range(3):
             diff = abs(a.rot[i][j] - b.rot[i][j])
             if diff > tolerance:
-                print('ERROR({}): matrix[{}][{}] = {}, expected {}, diff {}'.format(caller, i, j, a.rot[i][j], b.rot[i][j], diff))
+                print('PY CompareMatrices ERROR({}): matrix[{}][{}] = {}, expected {}, diff {}'.format(caller, i, j, a.rot[i][j], b.rot[i][j], diff))
                 sys.exit(1)
 
 
@@ -803,7 +803,7 @@ def Test_EQJ_ECL():
 
     # Use the existing astronomy.Ecliptic() to calculate ecliptic vector and angles.
     ecl = astronomy.Ecliptic(ev)
-    print('Test_EQJ_ECL ecl = ({}, {}, {})'.format(ecl.ex, ecl.ey, ecl.ez))
+    print('PY Test_EQJ_ECL ecl = ({}, {}, {})'.format(ecl.ex, ecl.ey, ecl.ez))
 
     # Now compute the same vector via rotation matrix.
     ee = astronomy.RotateVector(r, ev)
@@ -811,18 +811,18 @@ def Test_EQJ_ECL():
     dy = ee.y - ecl.ey
     dz = ee.z - ecl.ez
     diff = math.sqrt(dx*dx + dy*dy + dz*dz)
-    print('Test_EQJ_ECL ee = ({}, {}, {}); diff = {}'.format(ee.x, ee.y, ee.z, diff))
+    print('PY Test_EQJ_ECL ee = ({}, {}, {}); diff = {}'.format(ee.x, ee.y, ee.z, diff))
     if diff > 1.0e-16:
-        print('Test_EQJ_ECL: EXCESSIVE VECTOR ERROR')
+        print('PY Test_EQJ_ECL: EXCESSIVE VECTOR ERROR')
         sys.exit(1)
 
     # Reverse the test: go from ecliptic back to equatorial.
     ir = astronomy.Rotation_ECL_EQJ()
     et = astronomy.RotateVector(ir, ee)
     idiff = VectorDiff(et, ev)
-    print('Test_EQJ_ECL ev diff = {}'.format(idiff))
+    print('PY Test_EQJ_ECL ev diff = {}'.format(idiff))
     if idiff > 2.0e-16:
-        print('Test_EQJ_ECL: EXCESSIVE REVERSE ROTATION ERROR')
+        print('PY Test_EQJ_ECL: EXCESSIVE REVERSE ROTATION ERROR')
         sys.exit(1)
 
 
@@ -850,20 +850,20 @@ def Test_EQJ_EQD(body):
     ra_diff = abs(equcheck.ra - eqdate.ra)
     dec_diff = abs(equcheck.dec - eqdate.dec)
     dist_diff = abs(equcheck.dist - eqdate.dist)
-    print('Test_EQJ_EQD: {} ra={}, dec={}, dist={}, ra_diff={}, dec_diff={}, dist_diff={}'.format(
+    print('PY Test_EQJ_EQD: {} ra={}, dec={}, dist={}, ra_diff={}, dec_diff={}, dist_diff={}'.format(
         body.name, eqdate.ra, eqdate.dec, eqdate.dist, ra_diff, dec_diff, dist_diff
     ))
     if ra_diff > 1.0e-14 or dec_diff > 1.0e-14 or dist_diff > 4.0e-15:
-        print('Test_EQJ_EQD: EXCESSIVE ERROR')
+        print('PY Test_EQJ_EQD: EXCESSIVE ERROR')
         sys.exit(1)
 
     # Perform the inverse conversion back to equatorial J2000 coordinates.
     ir = astronomy.Rotation_EQD_EQJ(time)
     t2000 = astronomy.RotateVector(ir, vdate)
     diff = VectorDiff(t2000, v2000)
-    print('Test_EQJ_EQD: {} inverse diff = {}'.format(body.name, diff))
+    print('PY Test_EQJ_EQD: {} inverse diff = {}'.format(body.name, diff))
     if diff > 3.0e-15:
-        print('Test_EQJ_EQD: EXCESSIVE INVERSE ERROR')
+        print('PY Test_EQJ_EQD: EXCESSIVE INVERSE ERROR')
         sys.exit(1)
 
 
@@ -872,7 +872,7 @@ def Test_EQD_HOR(body):
     time = astronomy.Time.Make(1970, 12, 13, 5, 15, 0)
     observer = astronomy.Observer(-37, +45, 0)
     eqd = astronomy.Equator(body, time, observer, True, True)
-    print('Test_EQD_HOR {}: OFDATE ra={}, dec={}'.format(body.name, eqd.ra, eqd.dec))
+    print('PY Test_EQD_HOR {}: OFDATE ra={}, dec={}'.format(body.name, eqd.ra, eqd.dec))
     hor = astronomy.Horizon(time, observer, eqd.ra, eqd.dec, astronomy.Refraction.Normal)
 
     # Calculate the position of the body as an equatorial vector of date.
@@ -889,28 +889,28 @@ def Test_EQD_HOR(body):
     diff_alt = abs(xsphere.lat - hor.altitude)
     diff_az = abs(xsphere.lon - hor.azimuth)
 
-    print('Test_EQD_HOR {}: trusted alt={}, az={}; test alt={}, az={}; diff_alt={}, diff_az={}'.format(
+    print('PY Test_EQD_HOR {}: trusted alt={}, az={}; test alt={}, az={}; diff_alt={}, diff_az={}'.format(
         body.name, hor.altitude, hor.azimuth, xsphere.lat, xsphere.lon, diff_alt, diff_az))
 
     if diff_alt > 4.0e-14 or diff_az > 1.0e-13:
-        print('Test_EQD_HOR: EXCESSIVE HORIZONTAL ERROR.')
+        print('PY Test_EQD_HOR: EXCESSIVE HORIZONTAL ERROR.')
         sys.exit(1)
 
     # Confirm that we can convert back to horizontal vector.
     check_hor = astronomy.VectorFromHorizon(xsphere, time, astronomy.Refraction.Normal)
     diff = VectorDiff(check_hor, vec_hor)
-    print('Test_EQD_HOR {}: horizontal recovery: diff = {}'.format(body.name, diff))
+    print('PY Test_EQD_HOR {}: horizontal recovery: diff = {}'.format(body.name, diff))
     if diff > 2.0e-15:
-        print('Test_EQD_HOR: EXCESSIVE ERROR IN HORIZONTAL RECOVERY.')
+        print('PY Test_EQD_HOR: EXCESSIVE ERROR IN HORIZONTAL RECOVERY.')
         sys.exit(1)
 
     # Verify the inverse translation from horizontal vector to equatorial of-date vector.
     irot = astronomy.Rotation_HOR_EQD(time, observer)
     check_eqd = astronomy.RotateVector(irot, vec_hor)
     diff = VectorDiff(check_eqd, vec_eqd)
-    print('Test_EQD_HOR {}: OFDATE inverse rotation diff = {}'.format(body.name, diff))
+    print('PY Test_EQD_HOR {}: OFDATE inverse rotation diff = {}'.format(body.name, diff))
     if diff > 2.7e-15:
-        print('Test_EQD_HOR: EXCESSIVE OFDATE INVERSE HORIZONTAL ERROR.')
+        print('PY Test_EQD_HOR: EXCESSIVE OFDATE INVERSE HORIZONTAL ERROR.')
         sys.exit(1)
 
     # Exercise HOR to EQJ translation.
@@ -919,18 +919,18 @@ def Test_EQD_HOR(body):
     yrot = astronomy.Rotation_HOR_EQJ(time, observer)
     check_eqj = astronomy.RotateVector(yrot, vec_hor)
     diff = VectorDiff(check_eqj, vec_eqj)
-    print('Test_EQD_HOR {}: J2000 inverse rotation diff = {}'.format(body.name, diff))
+    print('PY Test_EQD_HOR {}: J2000 inverse rotation diff = {}'.format(body.name, diff))
     if diff > 5.0e-15:
-        print('Test_EQD_HOR: EXCESSIVE J2000 INVERSE HORIZONTAL ERROR.')
+        print('PY Test_EQD_HOR: EXCESSIVE J2000 INVERSE HORIZONTAL ERROR.')
         sys.exit(1)
 
     # Verify the inverse translation: EQJ to HOR.
     zrot = astronomy.Rotation_EQJ_HOR(time, observer)
     another_hor = astronomy.RotateVector(zrot, vec_eqj)
     diff = VectorDiff(another_hor, vec_hor)
-    print('Test_EQD_HOR {}: EQJ inverse rotation diff = {}'.format(body.name, diff))
+    print('PY Test_EQD_HOR {}: EQJ inverse rotation diff = {}'.format(body.name, diff))
     if diff > 6.0e-15:
-        print('Test_EQD_HOR: EXCESSIVE EQJ INVERSE HORIZONTAL ERROR.')
+        print('PY Test_EQD_HOR: EXCESSIVE EQJ INVERSE HORIZONTAL ERROR.')
         sys.exit(1)
 
 IdentityMatrix = astronomy.RotationMatrix([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
@@ -995,7 +995,7 @@ def Test_RotRoundTrip():
     CheckCycle('eqj_hor, hor_eqd, eqd_eqj', eqj_hor, hor_eqd, eqd_eqj)     # excluded corner = ECL
     CheckCycle('ecl_eqd, eqd_hor, hor_ecl', ecl_eqd, eqd_hor, hor_ecl)     # excluded corner = EQJ
 
-    print('Test_RotRoundTrip: PASS')
+    print('PY Test_RotRoundTrip: PASS')
 
 
 def Test_Rotation():
@@ -1013,7 +1013,7 @@ def Test_Rotation():
     Test_EQD_HOR(astronomy.Body.Jupiter)
     Test_EQD_HOR(astronomy.Body.Saturn)
     Test_RotRoundTrip()
-    print('Python Test_Rotation: PASS')
+    print('PY Test_Rotation: PASS')
     return 0
 
 #-----------------------------------------------------------------------------------------------------------
@@ -1027,10 +1027,10 @@ def Test_Refraction():
         check_alt = corrected + inv_refr
         diff = abs(check_alt - alt)
         if diff > 2.0e-14:
-            print('Test_Refraction: ERROR - excessive error: alt={}, refr={}, diff={}'.format(alt, refr, diff))
+            print('PY Test_Refraction: ERROR - excessive error: alt={}, refr={}, diff={}'.format(alt, refr, diff))
             return 1
         alt += 0.001
-    print('Python Test_Refraction: PASS')
+    print('PY Test_Refraction: PASS')
     return 0
 
 #-----------------------------------------------------------------------------------------------------------
@@ -1052,13 +1052,13 @@ def Test_PlanetApsis():
             for line in infile:
                 token = line.split()
                 if len(token) != 3:
-                    print('Test_PlanetApsis({} line {}): Invalid data format: {} tokens'.format(filename, count, len(token)))
+                    print('PY Test_PlanetApsis({} line {}): Invalid data format: {} tokens'.format(filename, count, len(token)))
                     return 1
                 expected_kind = astronomy.ApsisKind(int(token[0]))
                 expected_time = astronomy.Time.Parse(token[1])
                 expected_distance = float(token[2])
                 if apsis.kind != expected_kind:
-                    print('Test_PlanetApsis({} line {}): WRONG APSIS KIND: expected {}, found {}'.format(filename, count, expected_kind, apsis.kind))
+                    print('PY Test_PlanetApsis({} line {}): WRONG APSIS KIND: expected {}, found {}'.format(filename, count, expected_kind, apsis.kind))
                     return 1
                 diff_days = abs(expected_time.tt - apsis.time.tt)
                 max_diff_days = max(max_diff_days, diff_days)
@@ -1068,7 +1068,7 @@ def Test_PlanetApsis():
                 diff_dist_ratio = abs(expected_distance - apsis.dist_au) / expected_distance
                 max_dist_ratio = max(max_dist_ratio, diff_dist_ratio)
                 if diff_dist_ratio > 1.0e-4:
-                    print('Test_PlanetApsis({} line {}): distance ratio {} is too large.'.format(filename, count, diff_dist_ratio))
+                    print('PY Test_PlanetApsis({} line {}): distance ratio {} is too large.'.format(filename, count, diff_dist_ratio))
                     return 1
 
                 # Calculate the next apsis.
@@ -1087,9 +1087,9 @@ def Test_PlanetApsis():
                     min_interval = min(min_interval, interval)
                     max_interval = max(max_interval, interval)
             if count < 2:
-                print('Test_PlanetApsis: FAILED to find apsides for {}'.format(body))
+                print('PY Test_PlanetApsis: FAILED to find apsides for {}'.format(body))
                 return 1
-            print('Test_PlanetApsis: {:4d} apsides for {:<9s} -- intervals: min={:0.2f}, max={:0.2f}, ratio={:0.6f}; max day={:0.3f}, degrees={:0.3f}, dist ratio={:0.6f}'.format(
+            print('PY Test_PlanetApsis: {:4d} apsides for {:<9s} -- intervals: min={:0.2f}, max={:0.2f}, ratio={:0.6f}; max day={:0.3f}, degrees={:0.3f}, dist ratio={:0.6f}'.format(
                 count,
                 body.name,
                 min_interval, max_interval, max_interval / min_interval,
@@ -1100,9 +1100,9 @@ def Test_PlanetApsis():
         body = astronomy.Body(body.value + 1)
 
     if found_bad_planet:
-        print('Test_PlanetApsis: FAIL - planet(s) exceeded angular threshold ({} degrees)'.format(degree_threshold))
+        print('PY Test_PlanetApsis: FAIL - planet(s) exceeded angular threshold ({} degrees)'.format(degree_threshold))
         return 1
-    print('Test_PlanetApsis: PASS')
+    print('PY Test_PlanetApsis: PASS')
     return 0
 
 #-----------------------------------------------------------------------------------------------------------
@@ -1116,7 +1116,7 @@ def Test_Constellation():
             lnum += 1
             m = re.match(r'^\s*(\d+)\s+(\S+)\s+(\S+)\s+([A-Z][a-zA-Z]{2})\s*$', line)
             if not m:
-                print('Test_Constellation: invalid line {} in file {}'.format(lnum, inFileName))
+                print('PY Test_Constellation: invalid line {} in file {}'.format(lnum, inFileName))
                 return 1
             id = int(m.group(1))
             ra = float(m.group(2))
@@ -1127,9 +1127,9 @@ def Test_Constellation():
                 print('Star {:6d}: expected {}, found {} at B1875 RA={:10.6f}, DEC={:10.6f}'.format(id, symbol, constel.symbol, constel.ra1875, constel.dec1875))
                 failcount += 1
     if failcount > 0:
-        print('Test_Constellation: {} failures'.format(failcount))
+        print('PY Test_Constellation: {} failures'.format(failcount))
         return 1
-    print('Test_Constellation: PASS (verified {})'.format(lnum))
+    print('PY Test_Constellation: PASS (verified {})'.format(lnum))
     return 0
 
 #-----------------------------------------------------------------------------------------------------------

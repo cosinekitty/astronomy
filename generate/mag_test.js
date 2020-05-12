@@ -41,8 +41,6 @@ function LoadMagnitudeData(filename) {
         }
     }
 
-    //console.log(`${filename} : ${rows.length} rows`);
-
     return {
         filename: filename,
         rows: rows
@@ -66,7 +64,7 @@ function CheckMagnitudeData(body, data) {
     let rms = Math.sqrt(sum_squared_diff / data.rows.length);
     const limit = 0.012;
     const pass = (Math.abs(diff_lo) < limit && Math.abs(diff_hi) < limit);
-    console.log(`${body.padEnd(8)} ${pass?"    ":"FAIL"}  diff_lo=${diff_lo.toFixed(4).padStart(8)}, diff_hi=${diff_hi.toFixed(4).padStart(8)}, rms=${rms.toFixed(4).padStart(8)}`);
+    console.log(`JS ${body.padEnd(8)} ${pass?"    ":"FAIL"}  diff_lo=${diff_lo.toFixed(4).padStart(8)}, diff_hi=${diff_hi.toFixed(4).padStart(8)}, rms=${rms.toFixed(4).padStart(8)}`);
     return pass;
 }
 
@@ -90,7 +88,7 @@ function TestSaturn() {
 
     for (let item of data) {
         let illum = Astronomy.Illumination('Saturn', new Date(item.date));
-        console.log(`Saturn: date=${illum.time.date.toISOString()}  mag=${illum.mag.toFixed(8).padStart(12)}  ring_tilt=${illum.ring_tilt.toFixed(8).padStart(12)}`);
+        console.log(`JS Saturn: date=${illum.time.date.toISOString()}  mag=${illum.mag.toFixed(8).padStart(12)}  ring_tilt=${illum.ring_tilt.toFixed(8).padStart(12)}`);
         const mag_diff = Math.abs(illum.mag - item.mag);
         if (mag_diff > 1.0e-4) {
             console.log(`ERROR: Excessive magnitude error ${mag_diff}`);
@@ -111,13 +109,12 @@ function TestMaxMag(filename, body) {
     // ranges found using JPL Horizons ephemeris data that has been
     // pre-processed by magnitude/findmax.py.
 
-    console.log('TestMaxMag: entering');
+    console.log('JS TestMaxMag: entering');
     const text = fs.readFileSync(filename, 'utf8');
     const lines = text.trim().split(/[\r\n]+/);
     let date = new Date(Date.UTC(2000, 0, 1));
     let max_diff = 0;
     for (let line of lines) {
-        //console.log(`TestMaxMag: searching after ${date.toISOString()}`);
         let token = line.split(/\s+/);
         let date1 = new Date(token[0]);
         let date2 = new Date(token[1]);
@@ -134,7 +131,7 @@ function TestMaxMag(filename, body) {
         max_diff = Math.max(max_diff, diff_hours);
         date = date2;
     }
-    console.log(`TestMaxMag: ${lines.length} events, max error = ${max_diff.toFixed(3)} hours.`);
+    console.log(`JS TestMaxMag: ${lines.length} events, max error = ${max_diff.toFixed(3)} hours.`);
     return true;
 }
 
@@ -157,5 +154,5 @@ function Test() {
 }
 
 Test();
-console.log('mag_test: success');
+console.log('mag_test.js: PASS');
 process.exit(0);

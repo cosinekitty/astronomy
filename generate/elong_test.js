@@ -99,7 +99,7 @@ function TestFile(filename, startSearchYear, targetRelLon) {
     for (let item of data) {
         let time = Astronomy.SearchRelativeLongitude(item.body, targetRelLon, startDate);
         let diff_minutes = (time.date - item.date) / 60000;
-        console.log(`${item.body}: error = ${diff_minutes.toFixed(3)} minutes`);
+        console.log(`JS ${item.body}: error = ${diff_minutes.toFixed(3)} minutes`);
         if (Math.abs(diff_minutes) > 15)
             throw `!!! Excessive error for body ${item.body}`;
     }
@@ -140,7 +140,7 @@ function TestPlanet(outFileName, body, startYear, stopYear, zeroLonEventName) {
     fs.writeFileSync(outFileName, text);
 
     const ratio = max_diff / min_diff;
-    console.log(`TestPlanet(${body}): ${count} events, interval min=${min_diff.toFixed(1)}, max=${max_diff.toFixed(1)}, avg=${(sum_diff/count).toFixed(1)}, ratio=${ratio.toFixed(3)}`);
+    console.log(`JS TestPlanet(${body}): ${count} events, interval min=${min_diff.toFixed(1)}, max=${max_diff.toFixed(1)}, avg=${(sum_diff/count).toFixed(1)}, ratio=${ratio.toFixed(3)}`);
 
     let thresh = {Mercury:1.65, Mars:1.30}[body] || 1.07;
     if (ratio > thresh)
@@ -154,7 +154,7 @@ function TestMaxElong(body, startText, verifyText, verifyAngle, verifyVisibility
 
     let hour_diff = (verifyDate - evt.time.date) / (1000 * 3600);
     let arcmin_diff = 60.0 * Math.abs(evt.elongation - verifyAngle);
-    console.log(`TestMaxElong: ${body.padStart(8)} ${evt.visibility.padStart(8)} elong=${evt.elongation.toFixed(2).padStart(5)} (${arcmin_diff.toFixed(2).padStart(4)} arcmin)  ${evt.time.toString()} (err ${hour_diff.toFixed(2).padStart(5)} hours)`);
+    console.log(`JS TestMaxElong: ${body.padStart(8)} ${evt.visibility.padStart(8)} elong=${evt.elongation.toFixed(2).padStart(5)} (${arcmin_diff.toFixed(2).padStart(4)} arcmin)  ${evt.time.toString()} (err ${hour_diff.toFixed(2).padStart(5)} hours)`);
 
     if (evt.visibility !== verifyVisibility)
         throw `TestMaxElong: expected visibility ${verifyVisibility}, but found ${evt.visibility}`;
