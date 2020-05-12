@@ -12,6 +12,17 @@ def ParseDuration(s):
         return int(m.group(1))
     raise Exception('Invalid duration string "{}"'.format(s))
 
+def ParseMonth(s):
+    return 1 + ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].index(s)
+
+def ParseGeo(text, suffixes):
+    polarity = +1
+    for s in suffixes:
+        if text.endswith(s):
+            return polarity * float(text[:-1])
+        polarity *= -1
+    raise Exception('Invalid geographic coordinate "{}"'.format(text))
+
 #--------------------------------------------------------------------------------------
 
 def FixLunarEclipseData():
@@ -38,7 +49,7 @@ def FixLunarEclipseData():
                     m = r.match(line)
                     if m:
                         year = int(m.group(1))
-                        month = 1 + ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].index(m.group(2))
+                        month = ParseMonth(m.group(2))
                         day = int(m.group(3))
                         hour = int(m.group(4))
                         minute = int(m.group(5))
@@ -50,5 +61,60 @@ def FixLunarEclipseData():
 
 #--------------------------------------------------------------------------------------
 
+def FixSolarEclipseData():
+    # <a href="/web/20080228210550/http://sunearth.gsfc.nasa.gov/eclipse/5MCSEmap/1701-1800/1719-02-19.gif">08835</a>  
+    # 1719 Feb 19  06:52:57
+    # 10  -3474
+    # <a href="/web/20080228210550/http://sunearth.gsfc.nasa.gov/eclipse/SEsaros/SEsaros116.html">116</a>
+    # A    0.6856  0.9250  30.5N  68.6E  47 163  384  09m01s
+    r = re.compile(r'''^
+        <a\s+href="[^"]+">(\d+)</a>\s+                                # [ 1] eclipse number
+        (\d{4})\s+                                                  # [ 2] year
+        (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+        # [ 3] month name
+        (\d{2})\s+                                                  # [ 4] day
+        (\d{2}):                                                    # [ 5] hour
+        (\d{2}):                                                    # [ 6] minute
+        (\d{2})\s+                                                  # [ 7] second
+        (-?\d+)\s+                                                  # [ 8] Delta T
+        \S+\s+                                                      #      (ignore lunation number)
+        <a\s+href="[^"]+">\d+</a>\s+                                  #      (ignore Saros number)
+        ([PATH])\S?\s+                                              # [ 9] eclipse type
+        \S+\s+                                                      #      (ignore gamma number)
+        \S+\s+                                                      #      (ignore eclipse mag)
+        (\d+\.\d[NS])\s+                                            # [10] latitude of greatest eclipse
+        (\d+\.\d[EW])\s+                                            # [11] longitude of greatest eclipse
+    ''',
+        re.VERBOSE)
+
+    prev_eclnum = None
+    with open('solar_eclipse.txt', 'wt') as outfile:
+        for fn in['se1701.html', 'se1801.html', 'se1901.html', 'se2001.html', 'se2101.html']:
+            with open(fn, 'rt') as infile:
+                lnum = 0
+                for line in infile:
+                    lnum += 1
+                    m = r.match(line)
+                    if m:
+                        #print(line, end='')
+                        eclnum = int(m.group(1))
+                        if (prev_eclnum is not None) and (prev_eclnum + 1 != eclnum):
+                            print('norm.py FATAL(FixSolarEclipseData): Unexpected eclipse number {} (prev = {}) at {} line {}'.format(eclnum, prev_eclnum, fn, lnum))
+                            return 1
+                        prev_eclnum = eclnum
+                        year = int(m.group(2))
+                        month = ParseMonth(m.group(3))
+                        day = int(m.group(4))
+                        hour = int(m.group(5))
+                        minute = int(m.group(6))
+                        second = int(m.group(7))
+                        delta_t = int(m.group(8))
+                        ecltype = m.group(9)
+                        lat = ParseGeo(m.group(10), 'NS')
+                        lon = ParseGeo(m.group(11), 'EW')
+                        outfile.write('{:04d}-{:02d}-{:02d}T{:02d}:{:02d}:{:02d}Z {:4d} {:1s} {:7.1f} {:7.1f}\n'.format(year, month, day, hour, minute, second, delta_t, ecltype, lat, lon))
+    return 0
+
+#--------------------------------------------------------------------------------------
+
 if __name__ == '__main__':
-    sys.exit(FixLunarEclipseData())
+    sys.exit(FixLunarEclipseData() or FixSolarEclipseData())

@@ -4,7 +4,6 @@ Collected from:
 https://web.archive.org/web/20080226050949/http://sunearth.gsfc.nasa.gov/eclipse/LEcat/LEcatalog.html
 
 Key:
-
 https://web.archive.org/web/20070314015601/http://sunearth.gsfc.nasa.gov/eclipse/LEcat/LEcatkey.html
 
 Column     Heading     Definition/Description
