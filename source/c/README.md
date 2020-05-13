@@ -855,7 +855,24 @@ See [`Astronomy_SearchLunarApsis`](#Astronomy_SearchLunarApsis) for more details
 ---
 
 <a name="Astronomy_NextLunarEclipse"></a>
-### Astronomy_NextLunarEclipse(startTime) &#8658; [`astro_lunar_eclipse_t`](#astro_lunar_eclipse_t)
+### Astronomy_NextLunarEclipse(prevEclipseTime) &#8658; [`astro_lunar_eclipse_t`](#astro_lunar_eclipse_t)
+
+**Searches for the next lunar eclipse in a series.** 
+
+
+
+After using [`Astronomy_SearchLunarEclipse`](#Astronomy_SearchLunarEclipse) to find the first lunar eclipse in a series, you can call this function to find the next consecutive lunar eclipse. Pass in the `center` value from the [`astro_lunar_eclipse_t`](#astro_lunar_eclipse_t) returned by the previous call to `Astronomy_SearchLunarEclipse` or `Astronomy_NextLunarEclipse` to find the next lunar eclipse.
+
+
+
+**Returns:**  If successful, the `status` field in the returned structure will contain `ASTRO_SUCCESS` and the remaining structure fields will be valid. Any other value indicates an error. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_time_t`](#astro_time_t) | `prevEclipseTime` |  A date and time near a full moon. Lunar eclipse search will start at the next full moon. | 
+
 
 
 
@@ -1347,6 +1364,23 @@ To iterate through consecutive alternating perigee and apogee events, call `Astr
 
 <a name="Astronomy_SearchLunarEclipse"></a>
 ### Astronomy_SearchLunarEclipse(startTime) &#8658; [`astro_lunar_eclipse_t`](#astro_lunar_eclipse_t)
+
+**Searches for a lunar eclipse.** 
+
+
+
+This function finds the first lunar eclipse that occurs after `startTime`. A lunar eclipse found may be penumbral, partial, or total. See [`astro_lunar_eclipse_t`](#astro_lunar_eclipse_t) for more information. To find a series of lunar eclipses, call this function once, then keep calling [`Astronomy_NextLunarEclipse`](#Astronomy_NextLunarEclipse) as many times as desired, passing in the `center` value returned from the previous call.
+
+
+
+**Returns:**  If successful, the `status` field in the returned structure will contain `ASTRO_SUCCESS` and the remaining structure fields will be valid. Any other value indicates an error. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_time_t`](#astro_time_t) | `startTime` |  The date and time for starting the search for a lunar eclipse. | 
+
 
 
 

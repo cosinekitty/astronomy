@@ -2520,6 +2520,7 @@ static int LunarEclipseTest(void)
     double diff_minutes, max_diff_minutes = 0.0;
     double diff_days;
     int valid = 0;
+    int skip_count = 0;
     const double diff_limit = 8.0;
 
     infile = fopen(filename, "rt");
@@ -2576,7 +2577,10 @@ static int LunarEclipseTest(void)
 
         /* tolerate missing penumbral eclipses - skip to next input line without calculating next eclipse. */
         if (partial_minutes == 0.0 && diff_days > 20.0)
+        {
+            ++skip_count;
             continue;
+        }
 
         if (diff_minutes > diff_limit)
         {
@@ -2619,7 +2623,7 @@ static int LunarEclipseTest(void)
             FAIL("C LunarEclipseTest(%s line %d): Astronomy_NextLunarEclipse returned status %d\n", filename, lnum, eclipse.status);
     }
 
-    printf("C LunarEclipseTest: PASS (verified %d, max_diff_minutes = %0.2lf)\n", lnum, max_diff_minutes);
+    printf("C LunarEclipseTest: PASS (verified %d, skipped %d, max_diff_minutes = %0.2lf)\n", lnum, skip_count, max_diff_minutes);
     error = 0;
 fail:
     if (infile != NULL) fclose(infile);

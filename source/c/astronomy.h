@@ -654,7 +654,7 @@ astro_search_result_t Astronomy_SearchMoonPhase(double targetLon, astro_time_t s
 astro_moon_quarter_t Astronomy_SearchMoonQuarter(astro_time_t startTime);
 astro_moon_quarter_t Astronomy_NextMoonQuarter(astro_moon_quarter_t mq);
 astro_lunar_eclipse_t Astronomy_SearchLunarEclipse(astro_time_t startTime);
-astro_lunar_eclipse_t Astronomy_NextLunarEclipse(astro_time_t startTime);
+astro_lunar_eclipse_t Astronomy_NextLunarEclipse(astro_time_t prevEclipseTime);
 
 astro_search_result_t Astronomy_Search(
     astro_search_func_t func,

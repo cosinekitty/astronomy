@@ -5489,6 +5489,24 @@ static double ShadowSemiDurationMinutes(astro_time_t center_time, double radius_
 }
 
 
+/**
+ * @brief Searches for a lunar eclipse.
+ *
+ * This function finds the first lunar eclipse that occurs after `startTime`.
+ * A lunar eclipse found may be penumbral, partial, or total.
+ * See #astro_lunar_eclipse_t for more information.
+ * To find a series of lunar eclipses, call this function once,
+ * then keep calling #Astronomy_NextLunarEclipse as many times as desired,
+ * passing in the `center` value returned from the previous call.
+ *
+ * @param startTime
+ *      The date and time for starting the search for a lunar eclipse.
+ *
+ * @return
+ *      If successful, the `status` field in the returned structure will contain `ASTRO_SUCCESS`
+ *      and the remaining structure fields will be valid.
+ *      Any other value indicates an error.
+ */
 astro_lunar_eclipse_t Astronomy_SearchLunarEclipse(astro_time_t startTime)
 {
     astro_time_t fmtime;
@@ -5556,6 +5574,23 @@ astro_lunar_eclipse_t Astronomy_SearchLunarEclipse(astro_time_t startTime)
     return EclipseError(ASTRO_INTERNAL_ERROR);
 }
 
+/**
+ * @brief Searches for the next lunar eclipse in a series.
+ *
+ * After using #Astronomy_SearchLunarEclipse to find the first lunar eclipse
+ * in a series, you can call this function to find the next consecutive lunar eclipse.
+ * Pass in the `center` value from the #astro_lunar_eclipse_t returned by the
+ * previous call to `Astronomy_SearchLunarEclipse` or `Astronomy_NextLunarEclipse`
+ * to find the next lunar eclipse.
+ *
+ * @param prevEclipseTime
+ *      A date and time near a full moon. Lunar eclipse search will start at the next full moon.
+ *
+ * @return
+ *      If successful, the `status` field in the returned structure will contain `ASTRO_SUCCESS`
+ *      and the remaining structure fields will be valid.
+ *      Any other value indicates an error.
+ */
 astro_lunar_eclipse_t Astronomy_NextLunarEclipse(astro_time_t prevEclipseTime)
 {
     astro_time_t startTime = Astronomy_AddDays(prevEclipseTime, 10.0);
