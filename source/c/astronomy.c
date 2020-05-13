@@ -59,8 +59,13 @@ static const double MEAN_SYNODIC_MONTH = 29.530588;     /* average number of day
 static const double EARTH_ORBITAL_PERIOD = 365.256;
 static const double NEPTUNE_ORBITAL_PERIOD = 60189.0;
 static const double REFRACTION_NEAR_HORIZON = 34.0 / 60.0;   /* degrees of refractive "lift" seen for objects near horizon */
-static const double SUN_RADIUS_AU  = 4.6505e-3;
-static const double MOON_RADIUS_AU = 1.15717e-5;
+static const double SUN_RADIUS_KM  = 695700.0;
+#define             SUN_RADIUS_AU  (SUN_RADIUS_KM / KM_PER_AU)
+#define EARTH_RADIUS_KM             6371.0            /* mean radius of the Earth's geoid, without atmosphere */
+#define EARTH_ATMOSPHERE_KM           65.4            /* effective atmosphere thickness for lunar eclipses */
+#define EARTH_ECLIPSE_RADIUS_KM     (EARTH_RADIUS_KM + EARTH_ATMOSPHERE_KM)
+static const double MOON_RADIUS_KM = 1737.4;
+#define MOON_RADIUS_AU              (MOON_RADIUS_KM / KM_PER_AU)
 static const double ASEC180 = 180.0 * 60.0 * 60.0;        /* arcseconds per 180 degrees (or pi radians) */
 static const double EARTH_MOON_MASS_RATIO = 81.30056;
 static const double SUN_MASS     = 333054.25318;        /* Sun's mass relative to Earth. */
@@ -7099,6 +7104,209 @@ astro_constellation_t Astronomy_Constellation(double ra, double dec)
     return constel;
 }
 
+
+static astro_lunar_eclipse_t EclipseError(astro_status_t status)
+{
+    astro_lunar_eclipse_t eclipse;
+    eclipse.status = status;
+    eclipse.kind = ECLIPSE_NONE;
+    eclipse.center = TimeError();
+    eclipse.sd_penum = eclipse.sd_partial = eclipse.sd_total = NAN;
+    return eclipse;
+}
+
+
+/** @cond DOXYGEN_SKIP */
+typedef struct
+{
+    astro_status_t status;
+    astro_time_t time;
+    double  u;          /* dot product of (heliocentric earth) and (geocentric moon): defines the shadow plane where the Moon is */
+    double  r;          /* km distance between center of Moon and the line passing through the centers of the Sun and Earth. */
+    double  k;          /* umbra radius in km, at the shadow plane */
+    double  p;          /* penumbra radius in km, at the shadow plane */
+}
+earth_shadow_t;         /* Represents alignment of the Moon with the Earth's shadow, for finding eclipses. */
+
+typedef struct
+{
+    double radius_limit;
+    double direction;
+}
+shadow_context_t;
+/** @endcond */
+
+static earth_shadow_t EarthShadow(astro_time_t time)
+{
+    earth_shadow_t shadow;
+    astro_vector_t e, m;
+    double dx, dy, dz;
+
+    e = CalcEarth(time);            /* This function never fails; no need to check return value */
+    m = Astronomy_GeoMoon(time);    /* This function never fails; no need to check return value */
+
+    shadow.u = (e.x*m.x + e.y*m.y + e.z*m.z) / (e.x*e.x + e.y*e.y + e.z*e.z);
+
+    dx = (shadow.u * e.x) - m.x;
+    dy = (shadow.u * e.y) - m.y;
+    dz = (shadow.u * e.z) - m.z;
+    shadow.r = KM_PER_AU * sqrt(dx*dx + dy*dy + dz*dz);
+
+    shadow.k = +SUN_RADIUS_KM - (1.0 + shadow.u)*(SUN_RADIUS_KM - EARTH_ECLIPSE_RADIUS_KM);
+    shadow.p = -SUN_RADIUS_KM + (1.0 + shadow.u)*(SUN_RADIUS_KM + EARTH_ECLIPSE_RADIUS_KM);
+    shadow.status = ASTRO_SUCCESS;
+    shadow.time = time;
+
+    return shadow;
+}
+
+
+static earth_shadow_t PeakEarthShadow(astro_time_t search_center_time)
+{
+    earth_shadow_t best_shadow;
+    astro_time_t t1, t2;
+    const double window = 0.5;        /* initial search window, in days, before/after given time */
+    const double threshold = 1.0 / (24.0 * 3600.0);     /* stop when uncertainty is less than 1 second */
+    const int nsamples = 8;
+    int i;
+
+    t1 = Astronomy_AddDays(search_center_time, -window);
+    t2 = Astronomy_AddDays(search_center_time, +window);
+
+    /* Iteratively search for time when the Moon is closest to the Sun/Earth axis. */
+    for(;;)
+    {
+        double dt = (t2.ut - t1.ut) / (nsamples - 1);
+
+        /* In each pass, sample a series of points and pick the one with minimum axis distance. */
+        for (i=0; i < nsamples; ++i)
+        {
+            astro_time_t time = Astronomy_AddDays(t1, i*dt);
+            earth_shadow_t shadow = EarthShadow(time);
+            if ((i == 0) || (shadow.r < best_shadow.r))
+                best_shadow = shadow;
+        }
+
+        if (2.0 * dt < threshold)
+            return best_shadow;
+
+        t1 = Astronomy_AddDays(best_shadow.time, -dt);
+        t2 = Astronomy_AddDays(best_shadow.time, +dt);
+    }
+}
+
+
+static astro_func_result_t shadow_distance(void *context, astro_time_t time)
+{
+    astro_func_result_t result;
+    const shadow_context_t *p = context;
+    earth_shadow_t shadow = EarthShadow(time);
+    if (shadow.status != ASTRO_SUCCESS)
+        return FuncError(shadow.status);
+
+    result.value = p->direction * (shadow.r - p->radius_limit);
+    result.status = ASTRO_SUCCESS;
+    return result;
+}
+
+
+static double ShadowSemiDurationMinutes(astro_time_t center_time, double radius_limit)
+{
+    /* Search backwards and forwards from the center time until shadow axis distance crosses radius limit. */
+    const double window = 4.0 / 24.0;
+    shadow_context_t context;
+    astro_search_result_t s1, s2;
+    astro_time_t before, after;
+
+    before = Astronomy_AddDays(center_time, -window);
+    after  = Astronomy_AddDays(center_time, +window);
+
+    context.radius_limit = radius_limit;
+    context.direction = -1.0;
+    s1 = Astronomy_Search(shadow_distance, &context, before, center_time, 1.0);
+
+    context.direction = +1.0;
+    s2 = Astronomy_Search(shadow_distance, &context, center_time, after, 1.0);
+
+    if (s1.status != ASTRO_SUCCESS || s2.status != ASTRO_SUCCESS)
+        return -1.0;    /* something went wrong! */
+
+    return (s2.time.ut - s1.time.ut) * ((24.0 * 60.0) / 2.0);       /* convert days to minutes and average the semi-durations. */
+}
+
+
+astro_lunar_eclipse_t Astronomy_SearchLunarEclipse(astro_time_t startTime)
+{
+    astro_time_t fmtime;
+    astro_lunar_eclipse_t eclipse;
+    astro_search_result_t fullmoon;
+    earth_shadow_t shadow;
+    int fmcount;
+    double r1, r2;
+
+    /* Iterate through consecutive full moons until we find any kind of lunar eclipse. */
+    fmtime = startTime;
+    for (fmcount=0; fmcount < 12; ++fmcount)
+    {
+        /* Search for the next full moon. Any eclipse will be near it. */
+        fullmoon = Astronomy_SearchMoonPhase(180.0, fmtime, 40.0);
+        if (fullmoon.status != ASTRO_SUCCESS)
+            return EclipseError(fullmoon.status);
+
+        /* Search near the full moon for the time when the center of the Moon */
+        /* is closest to the line passing through the centers of the Sun and Earth. */
+        shadow = PeakEarthShadow(fullmoon.time);
+        if (shadow.status != ASTRO_SUCCESS)
+            return EclipseError(shadow.status);
+
+        r1 = fabs(shadow.r - MOON_RADIUS_KM);
+        r2 = fabs(shadow.r + MOON_RADIUS_KM);
+        if (r1 < shadow.p)
+        {
+            /* This is at least a penumbral eclipse. We will return a result. */
+            eclipse.status = ASTRO_SUCCESS;
+            eclipse.kind = ECLIPSE_PENUMBRAL;
+            eclipse.center = shadow.time;
+            eclipse.sd_total = 0.0;
+            eclipse.sd_partial = 0.0;
+            eclipse.sd_penum = ShadowSemiDurationMinutes(shadow.time, shadow.p + MOON_RADIUS_KM);
+            if (eclipse.sd_penum <= 0.0)
+                return EclipseError(ASTRO_SEARCH_FAILURE);
+
+            if (r1 < shadow.k)
+            {
+                /* This is at least a partial eclipse. */
+                eclipse.kind = ECLIPSE_PARTIAL;
+                eclipse.sd_partial = ShadowSemiDurationMinutes(shadow.time, shadow.k + MOON_RADIUS_KM);
+                if (eclipse.sd_partial <= 0.0)
+                    return EclipseError(ASTRO_SEARCH_FAILURE);
+
+                if (r2 < shadow.k)
+                {
+                    /* This is a total eclipse. */
+                    eclipse.kind = ECLIPSE_TOTAL;
+                    eclipse.sd_total = ShadowSemiDurationMinutes(shadow.time, shadow.k - MOON_RADIUS_KM);
+                    if (eclipse.sd_total <= 0.0)
+                        return EclipseError(ASTRO_SEARCH_FAILURE);
+                }
+            }
+            return eclipse;
+        }
+
+        /* We didn't find an eclipse on this full moon, so search for the next one. */
+        fmtime = Astronomy_AddDays(fullmoon.time, 10.0);
+    }
+
+    /* Safety valve to prevent infinite loop. */
+    /* This should never happen, because at least 2 lunar eclipses happen per year. */
+    return EclipseError(ASTRO_INTERNAL_ERROR);
+}
+
+astro_lunar_eclipse_t Astronomy_NextLunarEclipse(astro_time_t prevEclipseTime)
+{
+    astro_time_t startTime = Astronomy_AddDays(prevEclipseTime, 10.0);
+    return Astronomy_SearchLunarEclipse(startTime);
+}
 
 #ifdef __cplusplus
 }

@@ -854,6 +854,13 @@ See [`Astronomy_SearchLunarApsis`](#Astronomy_SearchLunarApsis) for more details
 
 ---
 
+<a name="Astronomy_NextLunarEclipse"></a>
+### Astronomy_NextLunarEclipse(startTime) &#8658; [`astro_lunar_eclipse_t`](#astro_lunar_eclipse_t)
+
+
+
+---
+
 <a name="Astronomy_NextMoonQuarter"></a>
 ### Astronomy_NextMoonQuarter(mq) &#8658; [`astro_moon_quarter_t`](#astro_moon_quarter_t)
 
@@ -1333,6 +1340,13 @@ To iterate through consecutive alternating perigee and apogee events, call `Astr
 | --- | --- | --- |
 | [`astro_time_t`](#astro_time_t) | `startTime` |  The date and time at which to start searching for the next perigee or apogee. | 
 
+
+
+
+---
+
+<a name="Astronomy_SearchLunarEclipse"></a>
+### Astronomy_SearchLunarEclipse(startTime) &#8658; [`astro_lunar_eclipse_t`](#astro_lunar_eclipse_t)
 
 
 
@@ -1911,6 +1925,25 @@ The [`Astronomy_SearchRiseSet`](#Astronomy_SearchRiseSet) function finds the ris
 
 ---
 
+<a name="astro_eclipse_kind_t"></a>
+### `astro_eclipse_kind_t`
+
+**The different kinds of lunar/solar eclipses.** 
+
+
+
+| Enum Value | Description |
+| --- | --- |
+| `ECLIPSE_NONE` |  No eclipse found.  |
+| `ECLIPSE_PENUMBRAL` |  A penumbral lunar eclipse. (Never used for a solar eclipse.)  |
+| `ECLIPSE_PARTIAL` |  A partial lunar/solar eclipse.  |
+| `ECLIPSE_ANNULAR` |  An annular solar eclipse. (Never used for a lunar eclipse.)  |
+| `ECLIPSE_TOTAL` |  A total lunar/solar eclipse.  |
+
+
+
+---
+
 <a name="astro_equator_date_t"></a>
 ### `astro_equator_date_t`
 
@@ -2185,6 +2218,35 @@ Returned by the functions [`Astronomy_Illumination`](#Astronomy_Illumination) an
 | `double` | `phase_angle` |  The angle in degrees between the Sun and the Earth, as seen from the body. Indicates the body's phase as seen from the Earth.  |
 | `double` | `helio_dist` |  The distance between the Sun and the body at the observation time.  |
 | `double` | `ring_tilt` |  For Saturn, the tilt angle in degrees of its rings as seen from Earth. For all other bodies, 0.  |
+
+
+---
+
+<a name="astro_lunar_eclipse_t"></a>
+### `astro_lunar_eclipse_t`
+
+**Information about a lunar eclipse.** 
+
+
+
+Returned by [`Astronomy_SearchLunarEclipse`](#Astronomy_SearchLunarEclipse) or [`Astronomy_NextLunarEclipse`](#Astronomy_NextLunarEclipse) to report information about a lunar eclipse event. If a lunar eclipse is found, `status` holds `ASTRO_SUCCESS` and the other fields are set. If `status` holds any other value, it is an error code and the other fields are undefined.
+
+When a lunar eclipse is found, it is classified as penumbral, partial, or total. Penumbral eclipses are difficult to observe, because the moon is only slightly dimmed by the Earth's penumbra; no part of the Moon touches the Earth's umbra. Partial eclipses occur when part, but not all, of the Moon touches the Earth's umbra. Total eclipses occur when the entire Moon passes into the Earth's umbra.
+
+The `kind` field thus holds `ECLIPSE_PENUMBRAL`, `ECLIPSE_PARTIAL`, or `ECLIPSE_TOTAL`, depending on the kind of lunar eclipse found.
+
+Field `center` holds the date and time of the center of the eclipse, when it is at its peak.
+
+Fields `sd_penum`, `sd_partial`, and `sd_total` hold the semi-duration of each phase of the eclipse, which is half of the amount of time the eclipse spends in each phase (expressed in minutes), or 0 if the eclipse never reaches that phase. By converting from minutes to days, and subtracting/adding with `center`, the caller may determine the date and time of the beginning/end of each eclipse phase. 
+
+| Type | Member | Description |
+| ---- | ------ | ----------- |
+| [`astro_status_t`](#astro_status_t) | `status` |  `ASTRO_SUCCESS` if this struct is valid; otherwise an error code.  |
+| [`astro_eclipse_kind_t`](#astro_eclipse_kind_t) | `kind` |  The type of lunar eclipse found.  |
+| [`astro_time_t`](#astro_time_t) | `center` |  The time of the eclipse at its peak.  |
+| `double` | `sd_penum` |  The semi-duration of the penumbral phase in minutes, or 0.0 if none.  |
+| `double` | `sd_partial` |  The semi-duration of the partial phase in minutes, or 0.0 if none.  |
+| `double` | `sd_total` |  The semi-duration of the total phase in minutes, or 0.0 if none.  |
 
 
 ---
