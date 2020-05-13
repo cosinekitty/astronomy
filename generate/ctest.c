@@ -1100,7 +1100,7 @@ static int RiseSet(const char *filename)
         if (error_minutes > max_minutes)
             max_minutes = error_minutes;
 
-        if (error_minutes > 0.56)
+        if (error_minutes > 0.57)
             FAIL("C RiseSet(%s line %d): excessive prediction time error = %lg minutes.\n", filename, lnum, error_minutes);
     }
 

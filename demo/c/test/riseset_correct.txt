@@ -2,4 +2,4 @@ search   : 2019-06-14 21:45:24 UTC
 sunrise  : 2019-06-15 10:12:44 UTC
 sunset   : 2019-06-15 01:48:01 UTC
 moonrise : 2019-06-14 23:02:43 UTC
-moonset  : 2019-06-15 09:12:24 UTC
+moonset  : 2019-06-15 09:12:25 UTC
