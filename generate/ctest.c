@@ -13,11 +13,9 @@
 #define PI      3.14159265358979323846
 static const double DEG2RAD = 0.017453292519943296;
 
-#define CHECK(x)                do{if(0 != (error = (x))) goto fail;}while(0)
-#define FAIL(format, ...)       do{fprintf(stderr, format, __VA_ARGS__); error = 1; goto fail;}while(0)
-#define FAILSTR(text)           do{fprintf(stderr, text); error = 1; goto fail;}while(0)
-#define FAILRET(format, ...)    do{fprintf(stderr, format, __VA_ARGS__); return 1;}while(0)
-#define FAILRETSTR(text)        do{fprintf(stderr, text); return 1;}while(0)
+#define CHECK(x)        do{if(0 != (error = (x))) goto fail;}while(0)
+#define FAIL(...)       do{fprintf(stderr, __VA_ARGS__); error = 1; goto fail;}while(0)
+#define FAILRET(...)    do{fprintf(stderr, __VA_ARGS__); return 1;}while(0)
 
 static int CheckStatus(int lnum, const char *varname, astro_status_t status)
 {
@@ -189,7 +187,7 @@ int main(int argc, const char *argv[])
         }
     }
 
-    FAILSTR("ctest: Invalid command line arguments.\n");
+    FAIL("ctest: Invalid command line arguments.\n");
 
 success:
     error = 0;
@@ -1903,7 +1901,7 @@ static int TestVectorFromAngles(double lat, double lon, double x, double y, doub
 
     printf("TestVectorFromAngles(%lf, %lf): diff = %lg\n", lat, lon, diff);
     if (diff > 2.0e-16)
-        FAILRETSTR("C TestVectorFromAngles: EXCESSIVE ERROR.\n");
+        FAILRET("C TestVectorFromAngles: EXCESSIVE ERROR.\n");
 
     return 0;
 }
@@ -1933,7 +1931,7 @@ static int TestAnglesFromVector(double lat, double lon, double x, double y, doub
     londiff = fabs(sphere.lon - lon);
     printf("TestAnglesFromVector(x=%lf, y=%lf, z=%lf): latdiff=%lg, londiff=%lg\n", x, y, z, latdiff, londiff);
     if (latdiff > 8.0e-15 || londiff > 8.0e-15)
-        FAILRETSTR("C TestAnglesFromVector: EXCESSIVE ERROR\n");
+        FAILRET("C TestAnglesFromVector: EXCESSIVE ERROR\n");
 
     return 0;
 }
@@ -2023,7 +2021,7 @@ static int TestSpin(
         FAIL("C ERROR(TestSpin): tv.status = %d\n", tv.status);
 
     if (tv.t.ut != sv.t.ut)
-        FAILSTR("C ERROR(TestSpin): tv time != sv time\n");
+        FAIL("C ERROR(TestSpin): tv time != sv time\n");
 
     dx = tx - tv.x;
     dy = ty - tv.y;
@@ -2031,7 +2029,7 @@ static int TestSpin(
     diff = sqrt(dx*dx + dy*dy + dz*dz);
     printf("C TestSpin(xrot=%0.0lf, yrot=%0.0lf, zrot=%0.0lf, sx=%0.0lf, sy=%0.0lf, sz=%0.0lf): diff = %lg\n", xrot, yrot, zrot, sx, sy, sz, diff);
     if (diff > 1.0e-15)
-        FAILSTR("C TestSpin: EXCESSIVE ERROR\n");
+        FAIL("C TestSpin: EXCESSIVE ERROR\n");
 
     error = 0;
 fail:
@@ -2081,7 +2079,7 @@ static int Test_EQJ_ECL(void)
     diff = sqrt(dx*dx + dy*dy + dz*dz);
     printf("C Test_EQJ_ECL  ee = (%0.18lf, %0.18lf,%0.18lf);  diff=%lg\n", ee.x, ee.y, ee.z, diff);
     if (diff > 1.0e-16)
-        FAILSTR("C Test_EQJ_ECL: EXCESSIVE VECTOR ERROR\n");
+        FAIL("C Test_EQJ_ECL: EXCESSIVE VECTOR ERROR\n");
 
     /* Reverse the test: go from ecliptic back to equatorial. */
     r = Astronomy_Rotation_ECL_EQJ();
@@ -2090,7 +2088,7 @@ static int Test_EQJ_ECL(void)
     CHECK(VectorDiff(et, ev, &diff));
     printf("C Test_EQJ_ECL  ev diff=%lg\n", diff);
     if (diff > 2.0e-16)
-        FAILSTR("C Test_EQJ_ECL: EXCESSIVE REVERSE ROTATION ERROR\n");
+        FAIL("C Test_EQJ_ECL: EXCESSIVE REVERSE ROTATION ERROR\n");
 
     error = 0;
 fail:
@@ -2139,7 +2137,7 @@ static int Test_EQJ_EQD(astro_body_t body)
     dist_diff = fabs(eqcheck.dist - eqdate.dist);
     printf("C Test_EQJ_EQD: %s ra=%0.3lf, dec=%0.3lf, dist=%0.3lf, ra_diff=%lg, dec_diff=%lg, dist_diff=%lg\n", Astronomy_BodyName(body), eqdate.ra, eqdate.dec, eqdate.dist, ra_diff, dec_diff, dist_diff);
     if (ra_diff > 1.0e-14 || dec_diff > 1.0e-14 || dist_diff > 4.0e-15)
-        FAILSTR("C Test_EQJ_EQD: EXCESSIVE ERROR\n");
+        FAIL("C Test_EQJ_EQD: EXCESSIVE ERROR\n");
 
     /* Perform the inverse conversion back to equatorial J2000 coordinates. */
     r = Astronomy_Rotation_EQD_EQJ(time);
@@ -2149,7 +2147,7 @@ static int Test_EQJ_EQD(astro_body_t body)
     CHECK(VectorDiff(t2000, v2000, &diff));
     printf("C Test_EQJ_EQD: %s inverse diff = %lg\n", Astronomy_BodyName(body), diff);
     if (diff > 3.0e-15)
-        FAILSTR("C Test_EQJ_EQD: EXCESSIVE INVERSE ERROR\n");
+        FAIL("C Test_EQJ_EQD: EXCESSIVE INVERSE ERROR\n");
 
     error = 0;
 fail:
@@ -2196,14 +2194,14 @@ static int Test_EQD_HOR(astro_body_t body)
         Astronomy_BodyName(body), hor.altitude, hor.azimuth, sphere.lat, sphere.lon, diff_alt, diff_az);
 
     if (diff_alt > 2.0e-14 || diff_az > 4e-14)
-        FAILSTR("C Test_EQD_HOR: EXCESSIVE HORIZONTAL ERROR.\n");
+        FAIL("C Test_EQD_HOR: EXCESSIVE HORIZONTAL ERROR.\n");
 
     /* Confirm that we can convert back to horizontal vector. */
     CHECK_VECTOR(check_hor, Astronomy_VectorFromHorizon(sphere, time, REFRACTION_NORMAL));
     CHECK(VectorDiff(check_hor, vec_hor, &diff));
     printf("C Test_EQD_HOR %s: horizontal recovery: diff = %lg\n", Astronomy_BodyName(body), diff);
     if (diff > 2.0e-15)
-        FAILSTR("C Test_EQD_HOR: EXCESSIVE ERROR IN HORIZONTAL RECOVERY.\n");
+        FAIL("C Test_EQD_HOR: EXCESSIVE ERROR IN HORIZONTAL RECOVERY.\n");
 
     /* Verify the inverse translation from horizontal vector to equatorial of-date vector. */
     rot = Astronomy_Rotation_HOR_EQD(time, observer);
@@ -2212,7 +2210,7 @@ static int Test_EQD_HOR(astro_body_t body)
     CHECK(VectorDiff(check_eqd, vec_eqd, &diff));
     printf("C Test_EQD_HOR %s: OFDATE inverse rotation diff = %lg\n", Astronomy_BodyName(body), diff);
     if (diff > 2.0e-15)
-        FAILSTR("C Test_EQD_HOR: EXCESSIVE OFDATE INVERSE HORIZONTAL ERROR.\n");
+        FAIL("C Test_EQD_HOR: EXCESSIVE OFDATE INVERSE HORIZONTAL ERROR.\n");
 
     /* Exercise HOR to EQJ translation. */
     CHECK_EQU(eqj, Astronomy_Equator(body, &time, observer, EQUATOR_J2000, ABERRATION));
@@ -2224,7 +2222,7 @@ static int Test_EQD_HOR(astro_body_t body)
     CHECK(VectorDiff(check_eqj, vec_eqj, &diff));
     printf("C Test_EQD_HOR %s: J2000 inverse rotation diff = %lg\n", Astronomy_BodyName(body), diff);
     if (diff > 4.0e-15)
-        FAILSTR("C Test_EQD_HOR: EXCESSIVE J2000 INVERSE HORIZONTAL ERROR.\n");
+        FAIL("C Test_EQD_HOR: EXCESSIVE J2000 INVERSE HORIZONTAL ERROR.\n");
 
     /* Verify the inverse translation: EQJ to HOR. */
     rot = Astronomy_Rotation_EQJ_HOR(time, observer);
@@ -2233,7 +2231,7 @@ static int Test_EQD_HOR(astro_body_t body)
     CHECK(VectorDiff(check_hor, vec_hor, &diff));
     printf("C Test_EQD_HOR %s: EQJ inverse rotation diff = %lg\n", Astronomy_BodyName(body), diff);
     if (diff > 3.0e-15)
-        FAILSTR("C Test_EQD_HOR: EXCESSIVE EQJ INVERSE HORIZONTAL ERROR.\n");
+        FAIL("C Test_EQD_HOR: EXCESSIVE EQJ INVERSE HORIZONTAL ERROR.\n");
 
     error = 0;
 fail:
