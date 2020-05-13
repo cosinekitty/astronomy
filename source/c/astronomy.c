@@ -62,7 +62,7 @@ static const double REFRACTION_NEAR_HORIZON = 34.0 / 60.0;   /* degrees of refra
 static const double SUN_RADIUS_KM  = 695700.0;
 #define             SUN_RADIUS_AU  (SUN_RADIUS_KM / KM_PER_AU)
 #define EARTH_RADIUS_KM             6371.0            /* mean radius of the Earth's geoid, without atmosphere */
-#define EARTH_ATMOSPHERE_KM           65.4            /* effective atmosphere thickness for lunar eclipses */
+#define EARTH_ATMOSPHERE_KM           85.0            /* effective atmosphere thickness for lunar eclipses */
 #define EARTH_ECLIPSE_RADIUS_KM     (EARTH_RADIUS_KM + EARTH_ATMOSPHERE_KM)
 static const double MOON_RADIUS_KM = 1737.4;
 #define MOON_RADIUS_AU              (MOON_RADIUS_KM / KM_PER_AU)

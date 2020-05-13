@@ -2517,11 +2517,12 @@ static int LunarEclipseTest(void)
     astro_time_t peak_time;
     astro_lunar_eclipse_t eclipse;
     double partial_minutes, total_minutes;
-    double diff_minutes, max_diff_minutes = 0.0;
+    double diff_minutes, max_diff_minutes = 0.0, sum_diff_minutes = 0.0;
+    int diff_count = 0;
     double diff_days;
     int valid = 0;
     int skip_count = 0;
-    const double diff_limit = 8.0;
+    const double diff_limit = 6.853;
 
     infile = fopen(filename, "rt");
     if (infile == NULL)
@@ -2573,14 +2574,16 @@ static int LunarEclipseTest(void)
         /* check eclipse center */
 
         diff_days = eclipse.center.ut - peak_time.ut;
-        diff_minutes = (24.0 * 60.0) * fabs(diff_days);
-
         /* tolerate missing penumbral eclipses - skip to next input line without calculating next eclipse. */
         if (partial_minutes == 0.0 && diff_days > 20.0)
         {
             ++skip_count;
             continue;
         }
+
+        diff_minutes = (24.0 * 60.0) * fabs(diff_days);
+        sum_diff_minutes += diff_minutes;
+        ++diff_count;
 
         if (diff_minutes > diff_limit)
         {
@@ -2599,6 +2602,8 @@ static int LunarEclipseTest(void)
         /* check partial eclipse duration */
 
         diff_minutes = fabs(partial_minutes - eclipse.sd_partial);
+        sum_diff_minutes += diff_minutes;
+        ++diff_count;
 
         if (diff_minutes > diff_limit)
             FAIL("C LunarEclipseTest(%s line %d): EXCESSIVE partial eclipse semiduration error: %lf minutes\n", filename, lnum, diff_minutes);
@@ -2609,6 +2614,8 @@ static int LunarEclipseTest(void)
         /* check total eclipse duration */
 
         diff_minutes = fabs(total_minutes - eclipse.sd_total);
+        sum_diff_minutes += diff_minutes;
+        ++diff_count;
 
         if (diff_minutes > diff_limit)
             FAIL("C LunarEclipseTest(%s line %d): EXCESSIVE total eclipse semiduration error: %lf minutes\n", filename, lnum, diff_minutes);
@@ -2623,7 +2630,7 @@ static int LunarEclipseTest(void)
             FAIL("C LunarEclipseTest(%s line %d): Astronomy_NextLunarEclipse returned status %d\n", filename, lnum, eclipse.status);
     }
 
-    printf("C LunarEclipseTest: PASS (verified %d, skipped %d, max_diff_minutes = %0.2lf)\n", lnum, skip_count, max_diff_minutes);
+    printf("C LunarEclipseTest: PASS (verified %d, skipped %d, max_diff_minutes = %0.3lf, avg_diff_minutes = %0.3lf)\n", lnum, skip_count, max_diff_minutes, (sum_diff_minutes / diff_count));
     error = 0;
 fail:
     if (infile != NULL) fclose(infile);
