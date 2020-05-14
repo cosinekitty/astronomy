@@ -7,10 +7,11 @@
 #   extremely large DeltaT value, so I can track down
 #   where the discrepancy comes from.
 #
+rm -f temp/c_gm_check.txt
 ./build debug || exit $?
 ./generate source || exit $?
 echo "Generated source code."
 ./ctbuild debug || exit $?
-./ctest gm_issue > temp/c_gm_check.txt || exit $?
+./ctest gm_issue || exit $?
 ./generate check temp/c_gm_check.txt || exit $?
 exit 0

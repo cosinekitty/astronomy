@@ -1399,6 +1399,7 @@ static int CheckSkyPos(observer *location, const char *filename, int lnum, const
     sky_pos sky_ast;    /* astrometric (RA,DEC) */
     sky_pos sky_dat;    /* (RA,DEC) using true equator and equinox of date*/
     double delta_ra, delta_dec, delta_az, delta_alt;
+    double delta_t_seconds;
 
     *outbody = VSOP_INVALID_BODY;
     *arcmin_equ = *arcmin_hor = 99999.0;
@@ -1408,6 +1409,8 @@ static int CheckSkyPos(observer *location, const char *filename, int lnum, const
         fprintf(stderr, "CheckSkyPos: Invalid format on line %d of file %s\n", lnum, filename);
         return 1;
     }
+
+    delta_t_seconds = (24.0 * 3600.0) * (tt - ut);
     jd_tt = tt + T0;
     jd_utc = ut + T0;
 
@@ -1439,7 +1442,7 @@ static int CheckSkyPos(observer *location, const char *filename, int lnum, const
     }
 
     /* First call to place: ask for astrometric coordinates (J2000) : coord_sys=3 */
-    error = place(jd_tt, &obj, location, jd_tt-jd_utc, 3, 1, &sky_ast);
+    error = place(jd_tt, &obj, location, delta_t_seconds, 3, 1, &sky_ast);
     if (error)
     {
         fprintf(stderr, "CheckSkyPos: place(3) returned %d on line %d of file %s\n", error, lnum, filename);
@@ -1480,7 +1483,7 @@ static int CheckSkyPos(observer *location, const char *filename, int lnum, const
 
     /* We have tested RA,DEC. Now measure the error in horizontal coordinates. */
     /* We have to call place() again, this time asking for equator and equinox of date (coord_sys=1). */
-    error = place(jd_tt, &obj, location, jd_tt-jd_utc, 1, 1, &sky_dat);
+    error = place(jd_tt, &obj, location, delta_t_seconds, 1, 1, &sky_dat);
     if (error)
     {
         fprintf(stderr, "CheckSkyPos: place(1) returned %d on line %d of file %s\n", error, lnum, filename);

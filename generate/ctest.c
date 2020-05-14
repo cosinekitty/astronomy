@@ -44,6 +44,7 @@ static int CheckEquator(int lnum, astro_equatorial_t equ)
 
 static int Issue46(void);
 static int Issue48(void);
+static int IssueGM(void);
 static int Test_AstroTime(void);
 static int AstroCheck(void);
 static int Diff(const char *c_filename, const char *js_filename);
@@ -124,6 +125,12 @@ int main(int argc, const char *argv[])
         if (!strcmp(verb, "issue48"))
         {
             CHECK(Issue48());
+            goto success;
+        }
+
+        if (!strcmp(verb, "gm_issue"))
+        {
+            CHECK(IssueGM());
             goto success;
         }
 
@@ -1751,6 +1758,51 @@ static int Issue48(void)
 {
     /* https://github.com/cosinekitty/astronomy/issues/48 */
     return MathCheck(BODY_VENUS, -39864.1907264927140204);
+}
+
+static int IssueGM_Body(FILE *outfile, astro_body_t body, const char *name)
+{
+    int error = 1;
+    astro_time_t time;
+    astro_equatorial_t j2000;
+    astro_equatorial_t ofdate;
+    astro_horizon_t hor;
+    astro_observer_t observer = Astronomy_MakeObserver(29.0, -81.0, 10.0);
+
+    /* Create an extremely exaggerated delta t value. */
+    time.ut = 0.0;
+    time.tt = 0.5;
+    time.eps = time.psi = NAN;
+
+    fprintf(outfile, "o %lf %lf %lf\n", observer.latitude, observer.longitude, observer.height);
+    CHECK_EQU(j2000, Astronomy_Equator(body, &time, observer, EQUATOR_J2000, NO_ABERRATION));
+    CHECK_EQU(ofdate, Astronomy_Equator(body, &time, observer, EQUATOR_OF_DATE, ABERRATION));
+    hor = Astronomy_Horizon(&time, observer, ofdate.ra, ofdate.dec, REFRACTION_NONE);
+    fprintf(outfile, "s %s %0.16lf %0.16lf %0.16lf %0.16lf %0.16lf %0.16lf %0.16lf\n",
+        name,
+        time.tt, time.ut, j2000.ra, j2000.dec, j2000.dist, hor.azimuth, hor.altitude);
+
+    error = 0;
+fail:
+    return error;
+}
+
+static int IssueGM(void)
+{
+    int error = 1;
+    const char *outFileName = "temp/c_gm_check.txt";
+    FILE *outfile = fopen(outFileName, "wt");
+
+    if (outfile == NULL)
+        FAIL("IssueGM: Cannot open output file: %s\n", outFileName);
+
+    /* CHECK(IssueGM_Body(outfile, BODY_JUPITER, "Jupiter")); */
+    CHECK(IssueGM_Body(outfile, BODY_MOON,    "GM"));
+
+    error = 0;
+fail:
+    if (outfile != NULL) fclose(outfile);
+    return error;
 }
 
 /*-----------------------------------------------------------------------------------------------------------*/
