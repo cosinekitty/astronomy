@@ -2574,7 +2574,7 @@ static int LunarEclipseTest(void)
     double diff_days;
     int valid = 0;
     int skip_count = 0;
-    const double diff_limit = 2.0;
+    const double diff_limit = 15.0;
 
     infile = fopen(filename, "rt");
     if (infile == NULL)

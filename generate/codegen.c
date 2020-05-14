@@ -695,6 +695,126 @@ static int GenDeltaTArrayEntry(cg_context_t *context, int count, double mjd, con
     }
 }
 
+#define MJD_FROM_DATE(year, month, day)     (julian_date((short)(year), (short)(month), (short)(day), 0.0) - MJD_BASIS)
+#define MJD_FROM_YEAR(year)                 MJD_FROM_DATE(year, 1, 1)
+
+#define UDEF(expr)  ((u = (expr)), (u2 = u*u), (u3 = u*u2), (u4 = u2*u2), (u5 = u2*u3), (u6 = u3*u3), (u7 = u3*u4))
+
+#ifdef EXTRAPOLATE_DT
+
+static double ExtrapolatedDeltaT(int year)
+{
+    double dt=NAN, y;
+    double u, u2, u3, u4, u5, u6, u7;
+
+    /*
+        Fred Espenak writes about Delta-T generically here:
+        https://eclipse.gsfc.nasa.gov/SEhelp/deltaT.html
+        https://eclipse.gsfc.nasa.gov/SEhelp/deltat2004.html
+
+        He provides polynomial approximations for distant years here:
+        https://eclipse.gsfc.nasa.gov/SEhelp/deltatpoly2004.html
+    */
+
+    y = (double)year + (0.5/12.0);      /* Espenak's "decimal year" value y for January of the given year. */
+
+    if (year < -500)
+    {
+        u = (year - 1820.0) / 100.0;
+        dt = -20.0 + (32.0 * u*u);
+    }
+    else if (year < 500)
+    {
+        UDEF(y / 100.0);
+        dt = 10583.6 - 1014.41*u + 33.78311*u2 - 5.952053*u3
+		    - 0.1798452*u4 + 0.022174192*u5 + 0.0090316521*u6;
+    }
+    else if (year < 1600)
+    {
+        UDEF((y - 1000.0) / 100.0);
+        dt = 1574.2 - 556.01*u + 71.23472*u2 + 0.319781*u3
+		     - 0.8503463*u4 - 0.005050998*u5 + 0.0083572073*u6;
+    }
+    else if (year < 1700)
+    {
+        UDEF(y - 1600);
+        dt = 120 - 0.9808*u - 0.01532*u2 + u3/7129.0;
+    }
+    else if (year < 1800)
+    {
+        UDEF(y - 1700);
+        dt = 8.83 + 0.1603*u - 0.0059285*u2 + 0.00013336*u3 - u4/1174000;
+    }
+    else if (year < 1860)
+    {
+        UDEF(y - 1800);
+        dt = 13.72 - 0.332447*u + 0.0068612*u2 + 0.0041116*u3 - 0.00037436*u4
+		     + 0.0000121272*u5 - 0.0000001699*u6 + 0.000000000875*u7;
+    }
+    else if (year < 1900)
+    {
+        UDEF(y - 1860);
+        dt = 7.62 + 0.5737*u - 0.251754*u2 + 0.01680668*u3
+		     -0.0004473624*u4 + u5/233174;
+    }
+    else if (year < 1920)
+    {
+        UDEF(y - 1900);
+        dt = -2.79 + 1.494119*u - 0.0598939*u2 + 0.0061966*u3 - 0.000197*u4;
+    }
+    else if (year < 1941)
+    {
+        UDEF(y - 1920);
+        dt = 21.20 + 0.84493*u - 0.076100*u2 + 0.0020936*u3;
+    }
+    else if (year < 1961)
+    {
+        UDEF(y - 1950);
+        dt = 29.07 + 0.407*u - u2/233 + u3/2547;
+    }
+    else if (year < 1986)
+    {
+        UDEF(y - 1975);
+        dt = 45.45 + 1.067*u - u2/260 - u3/718;
+    }
+    else if (year < 2005)
+    {
+        UDEF(y - 2000);
+        dt = 63.86 + 0.3345*u - 0.060374*u2 + 0.0017275*u3 + 0.000651814*u4
+		     + 0.00002373599*u5;
+    }
+    else if (year < 2050)
+    {
+        UDEF(y - 2000);
+        dt = 62.92 + 0.32217*u + 0.005589*u2;
+    }
+    else if (year < 2150)
+    {
+        u = (y-1820)/100;
+        dt = -20.0 + 32.0*u*u - 0.5628*(2150.0 - y);
+    }
+    else    /* all years after 2150 */
+    {
+        u = (year - 1820.0) / 100.0;
+        dt = -20.0 + 32.0*u*u;
+    }
+
+    return dt;
+}
+
+static int GenExtrapolatedDeltaT(cg_context_t *context, int year, int count)
+{
+    double  mjd, dt;
+    char    dt_text[20];
+
+    mjd = MJD_FROM_YEAR(year);
+    dt = ExtrapolatedDeltaT(year);
+    snprintf(dt_text, sizeof(dt_text), "%0.2lf", dt);
+    return GenDeltaTArrayEntry(context, count, mjd, dt_text);
+}
+
+#endif /* EXTRAPOLATE_DT */
+
 static int GenDeltaT(cg_context_t *context)
 {
     FILE *infile;
@@ -728,7 +848,7 @@ static int GenDeltaT(cg_context_t *context)
             if (year < 1850 && year % 10 != 0) continue;
             if (year % 5 != 0) continue;
 
-            mjd = julian_date((short)year, 1, 1, 0.0) - MJD_BASIS;
+            mjd = MJD_FROM_YEAR(year);
             ++count;
             CHECK(GenDeltaTArrayEntry(context, count, mjd, dt_text));
         }
@@ -752,7 +872,7 @@ static int GenDeltaT(cg_context_t *context)
         /* reduce the data size by keeping only 1 sample per year */
         if (month != 1) continue;
 
-        mjd = julian_date((short)year, (short)month, (short)day, 0.0) - MJD_BASIS;
+        mjd = MJD_FROM_DATE(year, month, day);
         if (mjd > last_mjd)
         {
             ++count;
@@ -793,6 +913,15 @@ static int GenDeltaT(cg_context_t *context)
         ++count;
         CHECK(GenDeltaTArrayEntry(context, count, mjd, dt_text));
     }
+
+#ifdef EXTRAPOLATE_DT
+    /* Add an extrapolated delta_t value for every decade 2030..2200. */
+    for (year = 2030; year <= 2200; year += 10)
+    {
+        ++count;
+        CHECK(GenExtrapolatedDeltaT(context, year, count));
+    }
+#endif
 
     CHECK(GenArrayEnd(context));
 
