@@ -2508,7 +2508,9 @@ static void PrintTime(astro_time_t time)
 static int LunarEclipseTest(void)
 {
     const char *filename = "eclipse/lunar_eclipse.txt";
+    const char *statsFileName = "eclipse/c_le_stats.csv";
     FILE *infile = NULL;
+    FILE *outfile = NULL;
     int lnum = 0;
     int error = 1;
     char line[100];
@@ -2520,15 +2522,20 @@ static int LunarEclipseTest(void)
     double diff_days;
     int valid = 0;
     int skip_count = 0;
-    const double diff_limit = 6.853;
+    const double diff_limit = 2.0;
 
     infile = fopen(filename, "rt");
     if (infile == NULL)
         FAIL("C LunarEclipseTest: Cannot open input file: %s\n", filename);
 
+    outfile = fopen(statsFileName, "wt");
+    if (outfile == NULL)
+        FAIL("C LunarEclipseTest: Cannot open output stats file: %s\n", statsFileName);
+
     eclipse = Astronomy_SearchLunarEclipse(Astronomy_MakeTime(1701, 1, 1, 0, 0, 0.0));
     CHECK_STATUS(eclipse);
 
+    fprintf(outfile, "\"utc\",\"center\",\"partial\",\"total\"\n");
     while (fgets(line, sizeof(line), infile))
     {
         ++lnum;
@@ -2539,8 +2546,9 @@ static int LunarEclipseTest(void)
         if (strlen(line) < 17)
             FAIL("C LunarEclipseTest(%s line %d): line is too short.\n", filename, lnum);
 
+        line[17] = '\0';
         CHECK(ParseDate(line, &peak_time));
-        if (2 != sscanf(line+17, "%lf %lf", &partial_minutes, &total_minutes))
+        if (2 != sscanf(line+18, "%lf %lf", &partial_minutes, &total_minutes))
             FAIL("C LunarEclipseTest(%s line %d): invalid data format.\n", filename, lnum);
 
         /* verify that the calculated eclipse semi-durations are consistent with the kind */
@@ -2578,6 +2586,13 @@ static int LunarEclipseTest(void)
             ++skip_count;
             continue;
         }
+
+        fprintf(outfile, "\"%s\",%lf,%lf,%lf\n",
+            line,   /* was already truncated at offset [17] above, so now has only UTC */
+            diff_days * (24.0 * 60.0),
+            eclipse.sd_partial - partial_minutes,
+            eclipse.sd_total - total_minutes
+        );
 
         diff_minutes = (24.0 * 60.0) * fabs(diff_days);
         sum_diff_minutes += diff_minutes;
@@ -2632,6 +2647,7 @@ static int LunarEclipseTest(void)
     error = 0;
 fail:
     if (infile != NULL) fclose(infile);
+    if (outfile != NULL) fclose(outfile);
     return error;
 }
 
