@@ -11,7 +11,7 @@ Fail()
 
 OUT_EXTRAP=delta_t/dt_extrapolate.csv
 OUT_ACTUAL=delta_t/dt_actual.csv
-JPL_DATA=horizons/airless_Moon_dt.txt
+JPL_DATA=delta_t/airless_Moon_dt.txt
 rm -f "${OUT_EXTRAP}" "${OUT_ACTUAL}"
 
 ./build || Fail "Cannot build generate program."
