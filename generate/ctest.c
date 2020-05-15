@@ -65,6 +65,7 @@ static int VectorDiff(astro_vector_t a, astro_vector_t b, double *diff);
 static int RefractionTest(void);
 static int ConstellationTest(void);
 static int LunarEclipseTest(void);
+static int PlotDeltaT(const char *outFileName);
 
 int main(int argc, const char *argv[])
 {
@@ -179,6 +180,12 @@ int main(int argc, const char *argv[])
         if (!strcmp(verb, "earth_apsis"))
         {
             CHECK(EarthApsis(filename));
+            goto success;
+        }
+
+        if (!strcmp(verb, "dtplot"))
+        {
+            CHECK(PlotDeltaT(filename));
             goto success;
         }
     }
@@ -2699,6 +2706,35 @@ static int LunarEclipseTest(void)
     error = 0;
 fail:
     if (infile != NULL) fclose(infile);
+    if (outfile != NULL) fclose(outfile);
+    return error;
+}
+
+/*-----------------------------------------------------------------------------------------------------------*/
+
+static int PlotDeltaT(const char *outFileName)
+{
+    int error = 1;
+    FILE *outfile = NULL;
+    int year;
+    double dt;
+    astro_time_t time;
+
+    outfile = fopen(outFileName, "wt");
+    if (outfile == NULL)
+        FAIL("ctest PlotDeltaT: Cannot open output file: %s\n", outFileName);
+
+    fprintf(outfile, "\"year\",\"delta_t\"\n");
+    for (year = 1500; year <= 2500; ++year)
+    {
+        time = Astronomy_MakeTime(year, 1, 1, 0, 0, 0.0);
+        dt = (24.0 * 3600.0) * (time.tt - time.ut);
+        fprintf(outfile, "%d,%lf\n", year, dt);
+    }
+
+    printf("ctest PlotDeltaT: Wrote file %s\n", outFileName);
+    error = 0;
+fail:
     if (outfile != NULL) fclose(outfile);
     return error;
 }

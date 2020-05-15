@@ -24,7 +24,8 @@
 #ifndef __DDC_ASTRO_CODEGEN_H
 #define __DDC_ASTRO_CODEGEN_H
 
-#define CHECK(x)   do{if(0 != (error = (x))) goto fail;}while(0)
+#define CHECK(x)    do{if(0 != (error = (x))) goto fail;}while(0)
+#define FAIL(...)   do{fprintf(stderr, __VA_ARGS__); error = 1; goto fail;}while(0)
 
 typedef enum
 {
@@ -41,5 +42,7 @@ int GenerateCode(
     const char *outCodeFileName,
     const char *inTemplateFileName,
     const char *dataPath);
+
+double ExtrapolatedDeltaT(int year);
 
 #endif /* __DDC_ASTRO_CODEGEN_H */

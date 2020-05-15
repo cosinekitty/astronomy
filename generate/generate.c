@@ -88,6 +88,7 @@ static int CheckSkyPos(observer *location, const char *filename, int lnum, const
 static int UnitTestChebyshev(void);
 static int DistancePlot(const char *name, double tt1, double tt2);
 static int ImproveVsopApsides(vsop_model_t *model);
+static int DeltaTimePlot(const char *outFileName);
 
 #define MOON_PERIGEE        0.00238
 #define MERCURY_APHELION    0.466697
@@ -146,6 +147,9 @@ int main(int argc, const char *argv[])
     if (argc == 5 && !strcmp(argv[1], "distplot"))
         return DistancePlot(argv[2], atof(argv[3]), atof(argv[4]));
 
+    if (argc == 3 && !strcmp(argv[1], "dtplot"))
+        return DeltaTimePlot(argv[2]);
+
     return PrintUsage();
 }
 
@@ -173,6 +177,9 @@ static int PrintUsage(void)
         "generate distplot planet tt1 tt2\n"
         "    Generate a CSV plot of the given planet's heliocentric\n"
         "    distance as a function of time.\n"
+        "\n"
+        "generate dtplot outfile.csv\n"
+        "   Generate a CSV plot of the Delta-T extrapolator.\n"
         "\n"
     );
 
@@ -1785,5 +1792,33 @@ static int DistancePlot(const char *name, double tt1, double tt2)
     error = 0;
 fail:
     ephem_close();
+    return error;
+}
+
+
+static int DeltaTimePlot(const char *outFileName)
+{
+    int error = 1;
+    FILE *outfile = NULL;
+    const int minYear = 1500;
+    const int maxYear = 2500;
+    int year;
+    double dt;
+
+    outfile = fopen(outFileName, "wt");
+    if (outfile == NULL)
+        FAIL("DeltaTimePlot: Cannot open output file: %s\n", outFileName);
+
+    fprintf(outfile, "\"year\",\"delta_t\"\n");
+    for (year=minYear; year <= maxYear; ++year)
+    {
+        dt = ExtrapolatedDeltaT(year);
+        fprintf(outfile, "%d,%lf\n", year, dt);
+    }
+
+    printf("DeltaTimePlot: Wrote file %s\n", outFileName);
+    error = 0;
+fail:
+    if (outfile != NULL) fclose(outfile);
     return error;
 }

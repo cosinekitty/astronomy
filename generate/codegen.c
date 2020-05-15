@@ -702,9 +702,7 @@ static int GenDeltaTArrayEntry(cg_context_t *context, int count, double mjd, con
 
 #define UDEF(expr)  ((u = (expr)), (u2 = u*u), (u3 = u*u2), (u4 = u2*u2), (u5 = u2*u3), (u6 = u3*u3), (u7 = u3*u4))
 
-#ifdef EXTRAPOLATE_DT
-
-static double ExtrapolatedDeltaT(int year)
+double ExtrapolatedDeltaT(int year)
 {
     double dt=NAN, y;
     double u, u2, u3, u4, u5, u6, u7;
@@ -803,6 +801,8 @@ static double ExtrapolatedDeltaT(int year)
 
     return dt;
 }
+
+#ifdef EXTRAPOLATE_DT
 
 static int GenExtrapolatedDeltaT(cg_context_t *context, int year, int count)
 {

@@ -1,0 +1,24 @@
+#!/bin/bash
+#
+#   Don Cross  -  2020-05-15
+#   Plot the Delta-T extrapolator versus the generated Delta-T function.
+#
+Fail()
+{
+    echo "FAIL($0): $1"
+    exit 1
+}
+
+OUT_EXTRAP=delta_t/dt_extrapolate.csv
+OUT_ACTUAL=delta_t/dt_actual.csv
+rm -f "${OUT_EXTRAP}" "${OUT_ACTUAL}"
+
+./build || Fail "Cannot build generate program."
+./generate source || Fail "Cannot generate source code."
+./ctbuild || Fail "Cannot build ctest program."
+
+./generate dtplot "${OUT_EXTRAP}" || Fail "Error writing extrapolated data."
+./ctest    dtplot "${OUT_ACTUAL}" || Fail "Error writing actual data."
+
+./plot_delta_t.py "${OUT_EXTRAP}" "${OUT_ACTUAL}" || Fail "Error displaying data."
+exit 0
