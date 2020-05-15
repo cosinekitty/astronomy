@@ -40,8 +40,7 @@ extern "C" {
 #define PI      3.14159265358979323846
 /** @endcond */
 
-static const double T0        = 2451545.0;
-static const double MJD_BASIS = 2400000.5;
+static const double DAYS_PER_TROPICAL_YEAR = 365.24217;
 static const double DEG2RAD = 0.017453292519943296;
 static const double RAD2DEG = 57.295779513082321;
 static const double ASEC360 = 1296000.0;
@@ -414,60 +413,173 @@ static astro_angle_result_t AngleBetween(astro_vector_t a, astro_vector_t b)
     return result;
 }
 
-/** @cond DOXYGEN_SKIP */
-typedef struct
+#define UDEF(expr)  ((u = (expr)), (u2 = u*u), (u3 = u*u2), (u4 = u2*u2), (u5 = u2*u3), (u6 = u3*u3), (u7 = u3*u4))
+
+/**
+ * @brief The default Delta T function used by Astronomy Engine.
+ *
+ * Espenak and Meeus use a series of piecewise polynomials to
+ * approximate DeltaT of the Earth in their "Five Millennium Canon of Solar Eclipses".
+ * See: https://eclipse.gsfc.nasa.gov/SEhelp/deltatpoly2004.html
+ * This is the default Delta T function used by Astronomy Engine.
+ *
+ * @param ut
+ *      The floating point number of days since noon UTC on January 1, 2000.
+ *
+ * @returns
+ *      The estimated difference TT-UT on the given date, expressed in seconds.
+ */
+double Astronomy_DeltaT_EspenakMeeus(double ut)
 {
-    double mjd;
-    double dt;
-}
-deltat_entry_t;
-/** @endcond */
+    double dt=NAN, y;
+    double u, u2, u3, u4, u5, u6, u7;
 
-static const deltat_entry_t DT[] = $ASTRO_DELTA_T();
+    /*
+        Fred Espenak writes about Delta-T generically here:
+        https://eclipse.gsfc.nasa.gov/SEhelp/deltaT.html
+        https://eclipse.gsfc.nasa.gov/SEhelp/deltat2004.html
 
-/** @cond DOXYGEN_SKIP */
-#define DT_LENGTH     (sizeof(DT) / sizeof(DT[0]))
-/** @endcond */
+        He provides polynomial approximations for distant years here:
+        https://eclipse.gsfc.nasa.gov/SEhelp/deltatpoly2004.html
 
-static double DeltaT(double mjd)
-{
-    int lo, hi, c;
-    double frac;
+        They start with a year value 'y' such that y=2000 corresponds
+        to the UTC Date 15-January-2000. Convert difference in days
+        to mean tropical years.
+    */
 
-    if (mjd <= DT[0].mjd)
-        return DT[0].dt;
+    y = 2000.0 + ((ut - 14.0) / DAYS_PER_TROPICAL_YEAR);
 
-    if (mjd >= DT[DT_LENGTH-1].mjd)
-        return DT[DT_LENGTH-1].dt;
-
-    /* Do a binary search to find the pair of indexes this mjd lies between. */
-
-    lo = 0;
-    hi = DT_LENGTH-2;   /* make sure there is always an array element after the one we are looking at. */
-    for(;;)
+    if (y < -500)
     {
-        if (lo > hi)
-        {
-            /* This should never happen unless there is a bug in the binary search. */
-            FatalError("DeltaT: could not find delta-t value");
-        }
-
-        c = (lo + hi) / 2;
-        if (mjd < DT[c].mjd)
-            hi = c-1;
-        else if (mjd > DT[c+1].mjd)
-            lo = c+1;
-        else
-        {
-            frac = (mjd - DT[c].mjd) / (DT[c+1].mjd - DT[c].mjd);
-            return DT[c].dt + frac*(DT[c+1].dt - DT[c].dt);
-        }
+        u = (y - 1820.0) / 100.0;
+        dt = -20.0 + (32.0 * u*u);
     }
+    else if (y < 500)
+    {
+        UDEF(y / 100.0);
+        dt = 10583.6 - 1014.41*u + 33.78311*u2 - 5.952053*u3
+		    - 0.1798452*u4 + 0.022174192*u5 + 0.0090316521*u6;
+    }
+    else if (y < 1600)
+    {
+        UDEF((y - 1000.0) / 100.0);
+        dt = 1574.2 - 556.01*u + 71.23472*u2 + 0.319781*u3
+		     - 0.8503463*u4 - 0.005050998*u5 + 0.0083572073*u6;
+    }
+    else if (y < 1700)
+    {
+        UDEF(y - 1600);
+        dt = 120 - 0.9808*u - 0.01532*u2 + u3/7129.0;
+    }
+    else if (y < 1800)
+    {
+        UDEF(y - 1700);
+        dt = 8.83 + 0.1603*u - 0.0059285*u2 + 0.00013336*u3 - u4/1174000;
+    }
+    else if (y < 1860)
+    {
+        UDEF(y - 1800);
+        dt = 13.72 - 0.332447*u + 0.0068612*u2 + 0.0041116*u3 - 0.00037436*u4
+		     + 0.0000121272*u5 - 0.0000001699*u6 + 0.000000000875*u7;
+    }
+    else if (y < 1900)
+    {
+        UDEF(y - 1860);
+        dt = 7.62 + 0.5737*u - 0.251754*u2 + 0.01680668*u3
+		     -0.0004473624*u4 + u5/233174;
+    }
+    else if (y < 1920)
+    {
+        UDEF(y - 1900);
+        dt = -2.79 + 1.494119*u - 0.0598939*u2 + 0.0061966*u3 - 0.000197*u4;
+    }
+    else if (y < 1941)
+    {
+        UDEF(y - 1920);
+        dt = 21.20 + 0.84493*u - 0.076100*u2 + 0.0020936*u3;
+    }
+    else if (y < 1961)
+    {
+        UDEF(y - 1950);
+        dt = 29.07 + 0.407*u - u2/233 + u3/2547;
+    }
+    else if (y < 1986)
+    {
+        UDEF(y - 1975);
+        dt = 45.45 + 1.067*u - u2/260 - u3/718;
+    }
+    else if (y < 2005)
+    {
+        UDEF(y - 2000);
+        dt = 63.86 + 0.3345*u - 0.060374*u2 + 0.0017275*u3 + 0.000651814*u4
+		     + 0.00002373599*u5;
+    }
+    else if (y < 2050)
+    {
+        UDEF(y - 2000);
+        dt = 62.92 + 0.32217*u + 0.005589*u2;
+    }
+    else if (y < 2150)
+    {
+        u = (y-1820)/100;
+        dt = -20.0 + 32.0*u*u - 0.5628*(2150.0 - y);
+    }
+    else    /* all years after 2150 */
+    {
+        u = (y - 1820.0) / 100.0;
+        dt = -20.0 + (32.0 * u*u);
+    }
+
+    return dt;
+}
+
+/**
+ * @brief A Delta T function that approximates the one used by the JPL Horizons tool.
+ *
+ * In order to support unit tests based on data generated by the JPL Horizons online
+ * tool, I had to reverse engineer their Delta T function by generating a table that
+ * contained it. The main difference between their tool and the Espenak/Meeus function
+ * is that they stop extrapolating the Earth's deceleration after the year 2017.
+ *
+ * @param ut
+ *      The floating point number of days since noon UTC on January 1, 2000.
+ *
+ * @returns
+ *      The estimated difference TT-UT on the given date, expressed in seconds.
+ */
+double Astronomy_DeltaT_JplHorizons(double ut)
+{
+    if (ut > 17.0 * DAYS_PER_TROPICAL_YEAR)
+        ut = 17.0 * DAYS_PER_TROPICAL_YEAR;
+
+    return Astronomy_DeltaT_EspenakMeeus(ut);
+}
+
+static astro_deltat_func DeltaTFunc = Astronomy_DeltaT_EspenakMeeus;
+
+/**
+ * @brief Changes the function Astronomy Engine uses to calculate Delta T.
+ *
+ * Most programs should not call this function. It is for advanced use cases only.
+ * By default, Astronomy Engine uses the function #Astronomy_DeltaT_EspenakMeeus
+ * to estimate changes in the Earth's rotation rate over time.
+ * However, for the sake of unit tests that compare calculations against
+ * external data sources that use alternative models for Delta T,
+ * it is sometimes useful to replace the Delta T model to match.
+ * This function allows replacing the Delta T model with any other
+ * desired model.
+ *
+ * @param func
+ *      A pointer to a function to convert UT values to DeltaT values.
+ */
+void Astronomy_SetDeltaTFunction(astro_deltat_func func)
+{
+    DeltaTFunc = func;
 }
 
 static double TerrestrialTime(double ut)
 {
-    return ut + DeltaT(ut + Y2000_IN_MJD)/86400.0;
+    return ut + DeltaTFunc(ut)/86400.0;
 }
 
 /**

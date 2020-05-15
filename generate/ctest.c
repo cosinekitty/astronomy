@@ -215,7 +215,7 @@ static int Test_AstroTime(void)
     astro_time_t time;
     astro_utc_t utc;
     const double expected_ut = 6910.270978506945;
-    const double expected_tt = 6910.271779431480;
+    const double expected_tt = 6910.271800214368;
     double diff;
 
     const int year = 2018;
@@ -226,7 +226,7 @@ static int Test_AstroTime(void)
     const double second = 12.543;
 
     time = Astronomy_MakeTime(year, month, day, hour, minute, second);
-    printf("C Test_AstroTime: ut=%0.6lf, tt=%0.6lf\n", time.ut, time.tt);
+    printf("C Test_AstroTime: ut=%0.12lf, tt=%0.12lf\n", time.ut, time.tt);
 
     diff = time.ut - expected_ut;
     if (fabs(diff) > 1.0e-12)
@@ -1263,9 +1263,9 @@ static int MoonTest(void)
     printf("C MoonTest: %0.16lg %0.16lg %0.16lg\n", vec.x, vec.y, vec.z);
 
 
-    dx = vec.x - (+0.002674036155459549);
-    dy = vec.y - (-0.0001531716308218381);
-    dz = vec.z - (-0.0003150201604895409);
+    dx = vec.x - (+0.002674037026701135);
+    dy = vec.y - (-0.0001531610316600666);
+    dz = vec.z - (-0.0003150159927069429);
     diff = sqrt(dx*dx + dy*dy + dz*dz);
     printf("C MoonTest: diff = %lg\n", diff);
     if (diff > 4.34e-19)
@@ -2205,7 +2205,7 @@ static int Test_EQJ_EQD(astro_body_t body)
     CHECK_STATUS(t2000);
     CHECK(VectorDiff(t2000, v2000, &diff));
     printf("C Test_EQJ_EQD: %s inverse diff = %lg\n", Astronomy_BodyName(body), diff);
-    if (diff > 3.0e-15)
+    if (diff > 5.0e-15)
         FAIL("C Test_EQJ_EQD: EXCESSIVE INVERSE ERROR\n");
 
     error = 0;
@@ -2280,7 +2280,7 @@ static int Test_EQD_HOR(astro_body_t body)
     CHECK_VECTOR(check_eqj, Astronomy_RotateVector(rot, vec_hor));
     CHECK(VectorDiff(check_eqj, vec_eqj, &diff));
     printf("C Test_EQD_HOR %s: J2000 inverse rotation diff = %lg\n", Astronomy_BodyName(body), diff);
-    if (diff > 4.0e-15)
+    if (diff > 6.0e-15)
         FAIL("C Test_EQD_HOR: EXCESSIVE J2000 INVERSE HORIZONTAL ERROR.\n");
 
     /* Verify the inverse translation: EQJ to HOR. */
