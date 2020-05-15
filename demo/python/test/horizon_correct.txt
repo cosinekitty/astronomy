@@ -1,2 +1,2 @@
-Ecliptic longitude 93.6460 descends through horizon az 296.3883, alt -1.733e-07
-Ecliptic longitude 274.9704 ascends through horizon az 115.7274, alt 2.1045e-07
+Ecliptic longitude 93.6460 descends through horizon az 296.3883, alt -1.7327e-07
+Ecliptic longitude 274.9704 ascends through horizon az 115.7274, alt 2.1042e-07

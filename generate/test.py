@@ -27,7 +27,7 @@ def AssertBadTime(text):
 
 def Test_AstroTime():
     expected_ut = 6910.270978506945
-    expected_tt = 6910.271779431480
+    expected_tt = 6910.271800214368
     time = astronomy.Time.Make(2018, 12, 2, 18, 30, 12.543)
     diff = time.ut - expected_ut
     if abs(diff) > 1.0e-12:
@@ -71,7 +71,7 @@ def Test_GeoMoon():
     vec = astronomy.GeoMoon(time)
     print('PY Test_GeoMoon: vec = {:0.16f}, {:0.16f}, {:0.16f}'.format(vec.x, vec.y, vec.z))
     # Correct values obtained from C version of GeoMoon calculation
-    cx, cy, cz = 0.002674036155459549, -0.0001531716308218381, -0.0003150201604895409
+    cx, cy, cz = +0.002674037026701135, -0.0001531610316600666, -0.0003150159927069429
     dx, dy, dz = vec.x - cx, vec.y - cy, vec.z - cz
     diff = math.sqrt(dx*dx + dy*dy + dz*dz)
     print('PY Test_GeoMoon: diff = {}'.format(diff))
@@ -862,7 +862,7 @@ def Test_EQJ_EQD(body):
     t2000 = astronomy.RotateVector(ir, vdate)
     diff = VectorDiff(t2000, v2000)
     print('PY Test_EQJ_EQD: {} inverse diff = {}'.format(body.name, diff))
-    if diff > 3.0e-15:
+    if diff > 5.0e-15:
         print('PY Test_EQJ_EQD: EXCESSIVE INVERSE ERROR')
         sys.exit(1)
 

@@ -36,11 +36,9 @@ import datetime
 import enum
 import re
 
+_DAYS_PER_TROPICAL_YEAR = 365.24217
 _PI2 = 2.0 * math.pi
 _EPOCH = datetime.datetime(2000, 1, 1, 12)
-_T0 = 2451545.0
-_MJD_BASIS = 2400000.5
-_Y2000_IN_MJD = _T0 - _MJD_BASIS
 _ASEC360 = 1296000.0
 _ASEC2RAD = 4.848136811095359935899141e-6
 _ARC = 3600.0 * 180.0 / math.pi     # arcseconds per radian
@@ -263,145 +261,113 @@ def _AngleBetween(a, b):
         return 0.0
     return math.degrees(math.acos(dot))
 
-class _delta_t_entry_t:
-    def __init__(self, mjd, dt):
-        self.mjd = mjd
-        self.dt = dt
 
-_DT = [
-_delta_t_entry_t(-72638.0, 38),
-_delta_t_entry_t(-65333.0, 26),
-_delta_t_entry_t(-58028.0, 21),
-_delta_t_entry_t(-50724.0, 21.1),
-_delta_t_entry_t(-43419.0, 13.5),
-_delta_t_entry_t(-39766.0, 13.7),
-_delta_t_entry_t(-36114.0, 14.8),
-_delta_t_entry_t(-32461.0, 15.7),
-_delta_t_entry_t(-28809.0, 15.6),
-_delta_t_entry_t(-25156.0, 13.3),
-_delta_t_entry_t(-21504.0, 12.6),
-_delta_t_entry_t(-17852.0, 11.2),
-_delta_t_entry_t(-14200.0, 11.13),
-_delta_t_entry_t(-10547.0, 7.95),
-_delta_t_entry_t(-6895.0, 6.22),
-_delta_t_entry_t(-3242.0, 6.55),
-_delta_t_entry_t(-1416.0, 7.26),
-_delta_t_entry_t(410.0, 7.35),
-_delta_t_entry_t(2237.0, 5.92),
-_delta_t_entry_t(4063.0, 1.04),
-_delta_t_entry_t(5889.0, -3.19),
-_delta_t_entry_t(7715.0, -5.36),
-_delta_t_entry_t(9542.0, -5.74),
-_delta_t_entry_t(11368.0, -5.86),
-_delta_t_entry_t(13194.0, -6.41),
-_delta_t_entry_t(15020.0, -2.70),
-_delta_t_entry_t(16846.0, 3.92),
-_delta_t_entry_t(18672.0, 10.38),
-_delta_t_entry_t(20498.0, 17.19),
-_delta_t_entry_t(22324.0, 21.41),
-_delta_t_entry_t(24151.0, 23.63),
-_delta_t_entry_t(25977.0, 24.02),
-_delta_t_entry_t(27803.0, 23.91),
-_delta_t_entry_t(29629.0, 24.35),
-_delta_t_entry_t(31456.0, 26.76),
-_delta_t_entry_t(33282.0, 29.15),
-_delta_t_entry_t(35108.0, 31.07),
-_delta_t_entry_t(36934.0, 33.150),
-_delta_t_entry_t(38761.0, 35.738),
-_delta_t_entry_t(40587.0, 40.182),
-_delta_t_entry_t(42413.0, 45.477),
-_delta_t_entry_t(44239.0, 50.540),
-_delta_t_entry_t(44605.0, 51.3808),
-_delta_t_entry_t(44970.0, 52.1668),
-_delta_t_entry_t(45335.0, 52.9565),
-_delta_t_entry_t(45700.0, 53.7882),
-_delta_t_entry_t(46066.0, 54.3427),
-_delta_t_entry_t(46431.0, 54.8712),
-_delta_t_entry_t(46796.0, 55.3222),
-_delta_t_entry_t(47161.0, 55.8197),
-_delta_t_entry_t(47527.0, 56.3000),
-_delta_t_entry_t(47892.0, 56.8553),
-_delta_t_entry_t(48257.0, 57.5653),
-_delta_t_entry_t(48622.0, 58.3092),
-_delta_t_entry_t(48988.0, 59.1218),
-_delta_t_entry_t(49353.0, 59.9845),
-_delta_t_entry_t(49718.0, 60.7853),
-_delta_t_entry_t(50083.0, 61.6287),
-_delta_t_entry_t(50449.0, 62.2950),
-_delta_t_entry_t(50814.0, 62.9659),
-_delta_t_entry_t(51179.0, 63.4673),
-_delta_t_entry_t(51544.0, 63.8285),
-_delta_t_entry_t(51910.0, 64.0908),
-_delta_t_entry_t(52275.0, 64.2998),
-_delta_t_entry_t(52640.0, 64.4734),
-_delta_t_entry_t(53005.0, 64.5736),
-_delta_t_entry_t(53371.0, 64.6876),
-_delta_t_entry_t(53736.0, 64.8452),
-_delta_t_entry_t(54101.0, 65.1464),
-_delta_t_entry_t(54466.0, 65.4573),
-_delta_t_entry_t(54832.0, 65.7768),
-_delta_t_entry_t(55197.0, 66.0699),
-_delta_t_entry_t(55562.0, 66.3246),
-_delta_t_entry_t(55927.0, 66.6030),
-_delta_t_entry_t(56293.0, 66.9069),
-_delta_t_entry_t(56658.0, 67.2810),
-_delta_t_entry_t(57023.0, 67.6439),
-_delta_t_entry_t(57388.0, 68.1024),
-_delta_t_entry_t(57754.0, 68.5927),
-_delta_t_entry_t(58119.0, 68.9676),
-_delta_t_entry_t(58484.0, 69.2201),
-_delta_t_entry_t(58849.0, 69.87),
-_delta_t_entry_t(59214.0, 70.39),
-_delta_t_entry_t(59580.0, 70.91),
-_delta_t_entry_t(59945.0, 71.40),
-_delta_t_entry_t(60310.0, 71.88),
-_delta_t_entry_t(60675.0, 72.36),
-_delta_t_entry_t(61041.0, 72.83),
-_delta_t_entry_t(61406.0, 73.32),
-_delta_t_entry_t(61680.0, 73.66),
-_delta_t_entry_t(62502.0, 77.64),
-_delta_t_entry_t(66154.0, 84.78),
-_delta_t_entry_t(69807.0, 93.08),
-_delta_t_entry_t(73459.0, 113.76),
-_delta_t_entry_t(77112.0, 135.07),
-_delta_t_entry_t(80764.0, 157.02),
-_delta_t_entry_t(84417.0, 179.61),
-_delta_t_entry_t(88069.0, 202.84),
-_delta_t_entry_t(91721.0, 226.71),
-_delta_t_entry_t(95373.0, 251.22),
-_delta_t_entry_t(99026.0, 276.37),
-_delta_t_entry_t(102678.0, 302.16),
-_delta_t_entry_t(106331.0, 328.48),
-_delta_t_entry_t(109983.0, 349.92),
-_delta_t_entry_t(113636.0, 372.00),
-_delta_t_entry_t(117288.0, 394.72),
-_delta_t_entry_t(120941.0, 418.08),
-_delta_t_entry_t(124593.0, 442.08)
-]
+def DeltaT_EspenakMeeus(ut):
+    """The default Delta T function used by Astronomy Engine.
 
-def _DeltaT(mjd):
-    if mjd <= _DT[0].mjd:
-        return _DT[0].dt
-    if mjd >= _DT[-1].mjd:
-        return _DT[-1].dt
-    # Do a binary search to find the pair of indexes this mjd lies between.
-    lo = 0
-    hi = len(_DT) - 2   # Make sure there is always an array element after the one we are looking at.
-    while True:
-        if lo > hi:
-            # This should never happen unless there is a bug in the binary search.
-            raise Error('Could not find delta-t value.')
-        c = (lo + hi) // 2
-        if mjd < _DT[c].mjd:
-            hi = c-1
-        elif mjd > _DT[c+1].mjd:
-            lo = c+1
-        else:
-            frac = (mjd - _DT[c].mjd) / (_DT[c+1].mjd - _DT[c].mjd)
-            return _DT[c].dt + frac*(_DT[c+1].dt - _DT[c].dt)
+    Espenak and Meeus use a series of piecewise polynomials to
+    approximate DeltaT of the Earth in their "Five Millennium Canon of Solar Eclipses".
+    See: https://eclipse.gsfc.nasa.gov/SEhelp/deltatpoly2004.html
+    This is the default Delta T function used by Astronomy Engine.
+
+    Parameters
+    ----------
+    ut: float
+        The floating point number of days since noon UTC on January 1, 2000.
+
+    Returns
+    -------
+    float
+        The estimated difference TT-UT on the given date, expressed in seconds.
+    """
+    # Fred Espenak writes about Delta-T generically here:
+    # https://eclipse.gsfc.nasa.gov/SEhelp/deltaT.html
+    # https://eclipse.gsfc.nasa.gov/SEhelp/deltat2004.html
+    # He provides polynomial approximations for distant years here:
+    # https://eclipse.gsfc.nasa.gov/SEhelp/deltatpoly2004.html
+    # They start with a year value 'y' such that y=2000 corresponds
+    # to the UTC Date 15-January-2000. Convert difference in days
+    # to mean tropical years.
+
+    y = 2000 + ((ut - 14) / _DAYS_PER_TROPICAL_YEAR)
+
+    if y < -500:
+        u = (y - 1820) / 100
+        return -20 + (32 * u*u)
+
+    if y < 500:
+        u = y / 100
+        u2 = u*u; u3 = u*u2; u4 = u2*u2; u5 = u2*u3; u6 = u3*u3
+        return 10583.6 - 1014.41*u + 33.78311*u2 - 5.952053*u3 - 0.1798452*u4 + 0.022174192*u5 + 0.0090316521*u6
+
+    if y < 1600:
+        u = (y - 1000) / 100
+        u2 = u*u; u3 = u*u2; u4 = u2*u2; u5 = u2*u3; u6 = u3*u3
+        return 1574.2 - 556.01*u + 71.23472*u2 + 0.319781*u3 - 0.8503463*u4 - 0.005050998*u5 + 0.0083572073*u6
+
+    if y < 1700:
+        u = y - 1600
+        u2 = u*u; u3 = u*u2
+        return 120 - 0.9808*u - 0.01532*u2 + u3/7129.0
+
+    if y < 1800:
+        u = y - 1700
+        u2 = u*u; u3 = u*u2; u4 = u2*u2
+        return 8.83 + 0.1603*u - 0.0059285*u2 + 0.00013336*u3 - u4/1174000
+
+    if y < 1860:
+        u = y - 1800
+        u2 = u*u; u3 = u*u2; u4 = u2*u2; u5 = u2*u3; u6 = u3*u3; u7 = u3*u4
+        return 13.72 - 0.332447*u + 0.0068612*u2 + 0.0041116*u3 - 0.00037436*u4 + 0.0000121272*u5 - 0.0000001699*u6 + 0.000000000875*u7
+
+    if y < 1900:
+        u = y - 1860
+        u2 = u*u; u3 = u*u2; u4 = u2*u2; u5 = u2*u3
+        return 7.62 + 0.5737*u - 0.251754*u2 + 0.01680668*u3 - 0.0004473624*u4 + u5/233174
+
+    if y < 1920:
+        u = y - 1900
+        u2 = u*u; u3 = u*u2; u4 = u2*u2
+        return -2.79 + 1.494119*u - 0.0598939*u2 + 0.0061966*u3 - 0.000197*u4
+
+    if y < 1941:
+        u = y - 1920
+        u2 = u*u; u3 = u*u2
+        return 21.20 + 0.84493*u - 0.076100*u2 + 0.0020936*u3
+
+    if y < 1961:
+        u = y - 1950
+        u2 = u*u; u3 = u*u2
+        return 29.07 + 0.407*u - u2/233 + u3/2547
+
+    if y < 1986:
+        u = y - 1975
+        u2 = u*u; u3 = u*u2
+        return 45.45 + 1.067*u - u2/260 - u3/718
+
+    if y < 2005:
+        u = y - 2000
+        u2 = u*u; u3 = u*u2; u4 = u2*u2; u5 = u2*u3
+        return 63.86 + 0.3345*u - 0.060374*u2 + 0.0017275*u3 + 0.000651814*u4 + 0.00002373599*u5
+
+    if y < 2050:
+        u = y - 2000
+        return 62.92 + 0.32217*u + 0.005589*u*u
+
+    if y < 2150:
+        u = (y-1820)/100
+        return -20 + 32*u*u - 0.5628*(2150 - y)
+
+    # all years after 2150
+    u = (y - 1820) / 100
+    return -20 + (32 * u*u)
+
+
+_DeltaT = DeltaT_EspenakMeeus
+
 
 def _TerrestrialTime(ut):
-    return ut + _DeltaT(ut + _Y2000_IN_MJD) / 86400.0
+    return ut + _DeltaT(ut) / 86400.0
 
 _TimeRegex = re.compile(r'^([0-9]{1,4})-([0-9]{2})-([0-9]{2})(T([0-9]{2}):([0-9]{2})(:([0-9]{2}(\.[0-9]+)?))?Z)?$')
 

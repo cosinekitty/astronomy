@@ -734,6 +734,25 @@ the converted B1875 (ra,dec) for that point.
 
 ---
 
+<a name="DeltaT_EspenakMeeus"></a>
+### DeltaT_EspenakMeeus(ut)
+
+**The default Delta T function used by Astronomy Engine.**
+
+Espenak and Meeus use a series of piecewise polynomials to
+approximate DeltaT of the Earth in their "Five Millennium Canon of Solar Eclipses".
+See: https://eclipse.gsfc.nasa.gov/SEhelp/deltatpoly2004.html
+This is the default Delta T function used by Astronomy Engine.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| `float` | `ut` | The floating point number of days since noon UTC on January 1, 2000. |
+
+### Returns: `float`
+The estimated difference TT-UT on the given date, expressed in seconds.
+
+---
+
 <a name="Ecliptic"></a>
 ### Ecliptic(equ)
 
