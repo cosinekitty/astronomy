@@ -178,6 +178,22 @@ constellation that contains that point.
 
 **Returns:** A structure that contains the 3-letter abbreviation and full name of the constellation that contains the given (ra,dec), along with the converted B1875 (ra,dec) for that point.
 
+<a name="Astronomy.DeltaT_EspenakMeeus"></a>
+### Astronomy.DeltaT_EspenakMeeus(ut) &#8658; `double`
+
+**The default Delta T function used by Astronomy Engine.**
+
+Espenak and Meeus use a series of piecewise polynomials to
+approximate DeltaT of the Earth in their "Five Millennium Canon of Solar Eclipses".
+See: https://eclipse.gsfc.nasa.gov/SEhelp/deltatpoly2004.html
+This is the default Delta T function used by Astronomy Engine.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| `double` | `ut` | The floating point number of days since noon UTC on January 1, 2000. |
+
+**Returns:** The estimated difference TT-UT on the given date, expressed in seconds.
+
 <a name="Astronomy.EclipticLongitude"></a>
 ### Astronomy.EclipticLongitude(body, time) &#8658; `double`
 
@@ -1428,6 +1444,24 @@ coordinates, the struct contains converted B1875 coordinates for reference.
 | `string` | `Name` | Full name of constellation, e.g. "Orion". |
 | `double` | `Ra1875` | Right ascension expressed in B1875 coordinates. |
 | `double` | `Dec1875` | Declination expressed in B1875 coordinates. |
+
+---
+
+<a name="DeltaTimeFunc"></a>
+## `class DeltaTimeFunc`
+
+**Defines a function type for calculating Delta T.**
+
+Delta T is the discrepancy between times measured using an atomic clock
+and times based on observations of the Earth's rotation, which is gradually
+slowing down over time. Delta T = TT - UT, where
+TT = Terrestrial Time, based on atomic time, and
+UT = Universal Time, civil time based on the Earth's rotation.
+Astronomy Engine defaults to using a Delta T function defined by
+Espenak and Meeus in their "Five Millennium Canon of Solar Eclipses".
+See: https://eclipse.gsfc.nasa.gov/SEhelp/deltatpoly2004.html
+
+### member functions
 
 ---
 

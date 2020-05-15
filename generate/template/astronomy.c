@@ -413,8 +413,6 @@ static astro_angle_result_t AngleBetween(astro_vector_t a, astro_vector_t b)
     return result;
 }
 
-#define UDEF(expr)  ((u = (expr)), (u2 = u*u), (u3 = u*u2), (u4 = u2*u2), (u5 = u2*u3), (u6 = u3*u3), (u7 = u3*u4))
-
 /**
  * @brief The default Delta T function used by Astronomy Engine.
  *
@@ -431,8 +429,7 @@ static astro_angle_result_t AngleBetween(astro_vector_t a, astro_vector_t b)
  */
 double Astronomy_DeltaT_EspenakMeeus(double ut)
 {
-    double dt=NAN, y;
-    double u, u2, u3, u4, u5, u6, u7;
+    double y, u, u2, u3, u4, u5, u6, u7;
 
     /*
         Fred Espenak writes about Delta-T generically here:
@@ -447,90 +444,93 @@ double Astronomy_DeltaT_EspenakMeeus(double ut)
         to mean tropical years.
     */
 
-    y = 2000.0 + ((ut - 14.0) / DAYS_PER_TROPICAL_YEAR);
+    y = 2000 + ((ut - 14) / DAYS_PER_TROPICAL_YEAR);
 
     if (y < -500)
     {
-        u = (y - 1820.0) / 100.0;
-        dt = -20.0 + (32.0 * u*u);
+        u = (y - 1820) / 100;
+        return -20 + (32 * u*u);
     }
-    else if (y < 500)
+    if (y < 500)
     {
-        UDEF(y / 100.0);
-        dt = 10583.6 - 1014.41*u + 33.78311*u2 - 5.952053*u3
-		    - 0.1798452*u4 + 0.022174192*u5 + 0.0090316521*u6;
+        u = y / 100;
+        u2 = u*u; u3 = u*u2; u4 = u2*u2; u5 = u2*u3; u6 = u3*u3;
+        return 10583.6 - 1014.41*u + 33.78311*u2 - 5.952053*u3 - 0.1798452*u4 + 0.022174192*u5 + 0.0090316521*u6;
     }
-    else if (y < 1600)
+    if (y < 1600)
     {
-        UDEF((y - 1000.0) / 100.0);
-        dt = 1574.2 - 556.01*u + 71.23472*u2 + 0.319781*u3
-		     - 0.8503463*u4 - 0.005050998*u5 + 0.0083572073*u6;
+        u = (y - 1000) / 100;
+        u2 = u*u; u3 = u*u2; u4 = u2*u2; u5 = u2*u3; u6 = u3*u3;
+        return 1574.2 - 556.01*u + 71.23472*u2 + 0.319781*u3 - 0.8503463*u4 - 0.005050998*u5 + 0.0083572073*u6;
     }
-    else if (y < 1700)
+    if (y < 1700)
     {
-        UDEF(y - 1600);
-        dt = 120 - 0.9808*u - 0.01532*u2 + u3/7129.0;
+        u = y - 1600;
+        u2 = u*u; u3 = u*u2;
+        return 120 - 0.9808*u - 0.01532*u2 + u3/7129.0;
     }
-    else if (y < 1800)
+    if (y < 1800)
     {
-        UDEF(y - 1700);
-        dt = 8.83 + 0.1603*u - 0.0059285*u2 + 0.00013336*u3 - u4/1174000;
+        u = y - 1700;
+        u2 = u*u; u3 = u*u2; u4 = u2*u2;
+        return 8.83 + 0.1603*u - 0.0059285*u2 + 0.00013336*u3 - u4/1174000;
     }
-    else if (y < 1860)
+    if (y < 1860)
     {
-        UDEF(y - 1800);
-        dt = 13.72 - 0.332447*u + 0.0068612*u2 + 0.0041116*u3 - 0.00037436*u4
-		     + 0.0000121272*u5 - 0.0000001699*u6 + 0.000000000875*u7;
+        u = y - 1800;
+        u2 = u*u; u3 = u*u2; u4 = u2*u2; u5 = u2*u3; u6 = u3*u3; u7 = u3*u4;
+        return 13.72 - 0.332447*u + 0.0068612*u2 + 0.0041116*u3 - 0.00037436*u4 + 0.0000121272*u5 - 0.0000001699*u6 + 0.000000000875*u7;
     }
-    else if (y < 1900)
+    if (y < 1900)
     {
-        UDEF(y - 1860);
-        dt = 7.62 + 0.5737*u - 0.251754*u2 + 0.01680668*u3
-		     -0.0004473624*u4 + u5/233174;
+        u = y - 1860;
+        u2 = u*u; u3 = u*u2; u4 = u2*u2; u5 = u2*u3;
+        return 7.62 + 0.5737*u - 0.251754*u2 + 0.01680668*u3 - 0.0004473624*u4 + u5/233174;
     }
-    else if (y < 1920)
+    if (y < 1920)
     {
-        UDEF(y - 1900);
-        dt = -2.79 + 1.494119*u - 0.0598939*u2 + 0.0061966*u3 - 0.000197*u4;
+        u = y - 1900;
+        u2 = u*u; u3 = u*u2; u4 = u2*u2;
+        return -2.79 + 1.494119*u - 0.0598939*u2 + 0.0061966*u3 - 0.000197*u4;
     }
-    else if (y < 1941)
+    if (y < 1941)
     {
-        UDEF(y - 1920);
-        dt = 21.20 + 0.84493*u - 0.076100*u2 + 0.0020936*u3;
+        u = y - 1920;
+        u2 = u*u; u3 = u*u2;
+        return 21.20 + 0.84493*u - 0.076100*u2 + 0.0020936*u3;
     }
-    else if (y < 1961)
+    if (y < 1961)
     {
-        UDEF(y - 1950);
-        dt = 29.07 + 0.407*u - u2/233 + u3/2547;
+        u = y - 1950;
+        u2 = u*u; u3 = u*u2;
+        return 29.07 + 0.407*u - u2/233 + u3/2547;
     }
-    else if (y < 1986)
+    if (y < 1986)
     {
-        UDEF(y - 1975);
-        dt = 45.45 + 1.067*u - u2/260 - u3/718;
+        u = y - 1975;
+        u2 = u*u; u3 = u*u2;
+        return 45.45 + 1.067*u - u2/260 - u3/718;
     }
-    else if (y < 2005)
+    if (y < 2005)
     {
-        UDEF(y - 2000);
-        dt = 63.86 + 0.3345*u - 0.060374*u2 + 0.0017275*u3 + 0.000651814*u4
-		     + 0.00002373599*u5;
+        u = y - 2000;
+        u2 = u*u; u3 = u*u2; u4 = u2*u2; u5 = u2*u3;
+        return 63.86 + 0.3345*u - 0.060374*u2 + 0.0017275*u3 + 0.000651814*u4 + 0.00002373599*u5;
     }
-    else if (y < 2050)
+    if (y < 2050)
     {
-        UDEF(y - 2000);
-        dt = 62.92 + 0.32217*u + 0.005589*u2;
+        u = y - 2000;
+        return 62.92 + 0.32217*u + 0.005589*u*u;
     }
-    else if (y < 2150)
+    if (y < 2150)
     {
         u = (y-1820)/100;
-        dt = -20.0 + 32.0*u*u - 0.5628*(2150.0 - y);
-    }
-    else    /* all years after 2150 */
-    {
-        u = (y - 1820.0) / 100.0;
-        dt = -20.0 + (32.0 * u*u);
+        return -20.0 + 32.0*u*u - 0.5628*(2150 - y);
     }
 
-    return dt;
+    /* all years after 2150 */
+    u = (y - 1820) / 100;
+    return -20 + (32 * u*u);
 }
 
 /**

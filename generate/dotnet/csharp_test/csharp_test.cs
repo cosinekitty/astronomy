@@ -58,7 +58,7 @@ namespace csharp_test
                 return 1;
             }
 
-            const double expected_tt = 6910.271779431480;
+            const double expected_tt = 6910.271800214368;
             diff = time.tt - expected_tt;
             if (Math.Abs(diff) > 1.0e-12)
             {
@@ -82,9 +82,9 @@ namespace csharp_test
             AstroVector vec = Astronomy.GeoVector(Body.Moon, time, Aberration.None);
             Console.WriteLine("C# MoonTest: {0} {1} {2}", vec.x.ToString("f17"), vec.y.ToString("f17"), vec.z.ToString("f17"));
 
-            double dx = vec.x - (+0.002674036155459549);
-            double dy = vec.y - (-0.0001531716308218381);
-            double dz = vec.z - (-0.0003150201604895409);
+            double dx = vec.x - (+0.002674037026701135);
+            double dy = vec.y - (-0.0001531610316600666);
+            double dz = vec.z - (-0.0003150159927069429);
             double diff = Math.Sqrt(dx*dx + dy*dy + dz*dz);
             Console.WriteLine("C# MoonTest: diff = {0}", diff.ToString("g5"));
             if (diff > 4.34e-19)
@@ -1328,7 +1328,7 @@ namespace csharp_test
             AstroVector t2000 = Astronomy.RotateVector(r, vdate);
             double diff = VectorDiff(t2000, v2000);
             Console.WriteLine("C# Test_EQJ_EQD: {0} inverse diff = {1}", body, diff);
-            if (diff > 3.0e-15)
+            if (diff > 5.0e-15)
             {
                 Console.WriteLine("C# Test_EQJ_EQD: EXCESSIVE INVERSE ERROR");
                 return 1;
@@ -1389,7 +1389,7 @@ namespace csharp_test
             AstroVector check_eqj = Astronomy.RotateVector(rot, vec_hor);
             diff = VectorDiff(check_eqj, vec_eqj);
             Console.WriteLine("C# Test_EQD_HOR {0}: J2000 inverse rotation diff = {1}", body, diff);
-            if (diff > 4.0e-15)
+            if (diff > 6.0e-15)
             {
                 Console.WriteLine("C# Test_EQD_HOR: EXCESSIVE J2000 INVERSE HORIZONTAL ERROR.");
                 return 1;
@@ -1400,7 +1400,7 @@ namespace csharp_test
             check_hor = Astronomy.RotateVector(rot, vec_eqj);
             diff = VectorDiff(check_hor, vec_hor);
             Console.WriteLine("C# Test_EQD_HOR {0}: EQJ inverse rotation diff = {1}", body, diff);
-            if (diff > 2.2e-15)
+            if (diff > 3e-15)
             {
                 Console.WriteLine("C# Test_EQD_HOR: EXCESSIVE EQJ INVERSE HORIZONTAL ERROR.");
                 return 1;

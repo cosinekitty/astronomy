@@ -175,6 +175,9 @@ namespace csdown
         private static void AppendFunctionMarkdown(StringBuilder sb, CodeInfo cinfo, MethodInfo f)
         {
             CodeItem item = cinfo.FindMethod(f);
+            if (item == null)
+                return;
+
             ParameterInfo[] parms = f.GetParameters();
             string parentClassName = f.DeclaringType.Name;
 

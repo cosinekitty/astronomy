@@ -136,7 +136,9 @@ namespace csdown
             if (parms.Length > 0)
                 id += "(" + string.Join(",", parms.Select(p => p.ParameterType.FullName)) + ")";
 
-            return table[id];
+            CodeItem item;
+            table.TryGetValue(id, out item);
+            return item;
         }
 
         public CodeItem FindField(FieldInfo f)
