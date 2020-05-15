@@ -30,15 +30,11 @@
 #include "vsop.h"
 #include "ephfile.h"
 
-#define EXTRAPOLATE_DT
-
 #define CG_MAX_LINE_LENGTH  200
 #define MAX_DATA_PER_LINE    20
 #define IAU_DATA_PER_ROW     11
 #define IAU_DATA_NUM_ROWS    77
 #define ADDSOL_DATA_PER_ROW   8
-
-static const double MJD_BASIS = 2400000.5;
 
 typedef struct
 {
@@ -643,63 +639,6 @@ fail:
     return error;
 }
 
-static int GenArrayEnd(cg_context_t *context)
-{
-    switch (context->language)
-    {
-    case CODEGEN_LANGUAGE_JS:
-        fprintf(context->outfile, "\n]");
-        return 0;
-
-    case CODEGEN_LANGUAGE_C:
-        fprintf(context->outfile, "\n}");
-        return 0;
-
-    case CODEGEN_LANGUAGE_CSHARP:
-        fprintf(context->outfile, "\n        }");
-        return 0;
-
-    case CODEGEN_LANGUAGE_PYTHON:
-        fprintf(context->outfile, "\n]");
-        return 0;
-
-    default:
-        return LogError(context, "GenArrayEnd: Unknown language type %d", context->language);
-    }
-}
-
-static int GenDeltaTArrayEntry(cg_context_t *context, int count, double mjd, const char *dt_text)
-{
-    switch (context->language)
-    {
-    case CODEGEN_LANGUAGE_C:
-        fprintf(context->outfile, "%s\n", (count==1) ? "{" : ",");
-        fprintf(context->outfile, "{ %0.1lf, %s }", mjd, dt_text);
-        return 0;
-
-    case CODEGEN_LANGUAGE_CSHARP:
-        fprintf(context->outfile, "%s\n", (count==1) ? "new deltat_entry_t[]\n        {" : ",");
-        fprintf(context->outfile, "            new deltat_entry_t { mjd=%0.1lf, dt=%s }", mjd, dt_text);
-        return 0;
-
-    case CODEGEN_LANGUAGE_JS:
-        fprintf(context->outfile, "%s\n", (count==1) ? "[" : ",");
-        fprintf(context->outfile, "[%7lg, %s]", mjd, dt_text);
-        return 0;
-
-    case CODEGEN_LANGUAGE_PYTHON:
-        fprintf(context->outfile, "%s\n", (count==1) ? "[" : ",");
-        fprintf(context->outfile, "_delta_t_entry_t(%0.1lf, %s)", mjd, dt_text);
-        return 0;
-
-    default:
-        return LogError(context, "GenDeltaTArrayEntry: Unknown language type %d", context->language);
-    }
-}
-
-#define MJD_FROM_DATE(year, month, day)     (julian_date((short)(year), (short)(month), (short)(day), 0.0) - MJD_BASIS)
-#define MJD_FROM_YEAR(year)                 MJD_FROM_DATE(year, 1, 1)
-
 #define UDEF(expr)  ((u = (expr)), (u2 = u*u), (u3 = u*u2), (u4 = u2*u2), (u5 = u2*u3), (u6 = u3*u3), (u7 = u3*u4))
 
 double ExtrapolatedDeltaT(int year)
@@ -802,146 +741,6 @@ double ExtrapolatedDeltaT(int year)
     return dt;
 }
 
-#ifdef EXTRAPOLATE_DT
-
-static int GenExtrapolatedDeltaT(cg_context_t *context, int year, int count)
-{
-    double  mjd, dt;
-    char    dt_text[20];
-
-    mjd = MJD_FROM_YEAR(year);
-    dt = ExtrapolatedDeltaT(year);
-    snprintf(dt_text, sizeof(dt_text), "%0.2lf", dt);
-    return GenDeltaTArrayEntry(context, count, mjd, dt_text);
-}
-
-#endif /* EXTRAPOLATE_DT */
-
-static int GenDeltaT(cg_context_t *context)
-{
-    FILE *infile;
-    int error=1, lnum, count=0;
-    const char *filename;
-    char line[100];
-    char dt_text[20];
-    int year, frac_year, month, day;
-    double dt, float_year;
-    double mjd = 0.0;
-    double last_mjd;
-
-    filename = "delta_t/historic.txt";
-    infile = fopen(filename, "rt");
-    if (infile == NULL) goto fail;
-    lnum = 0;
-    while (fgets(line, sizeof(line), infile))
-    {
-        ++lnum;
-        if (lnum < 3) continue;     /* first 2 lines are headers */
-        if (3 != sscanf(line, "%d.%d %20s", &year, &frac_year, dt_text) || 1 != sscanf(dt_text, "%lf", &dt))
-        {
-            error = LogError(context, "Line %d of file %s has invalid format.\n", lnum, filename);
-            goto fail;
-        }
-
-        if (frac_year == 0)
-        {
-            /* reduce the data size */
-            if (year < 1750 && year % 20 != 0) continue;
-            if (year < 1850 && year % 10 != 0) continue;
-            if (year % 5 != 0) continue;
-
-            mjd = MJD_FROM_YEAR(year);
-            ++count;
-            CHECK(GenDeltaTArrayEntry(context, count, mjd, dt_text));
-        }
-    }
-    fclose(infile);
-
-    filename = "delta_t/recent.txt";
-    infile = fopen(filename, "rt");
-    if (infile == NULL) goto fail;
-    lnum = 0;
-    last_mjd = mjd;
-    while (fgets(line, sizeof(line), infile))
-    {
-        ++lnum;
-        if (4 != sscanf(line, "%d %d %d %20s", &year, &month, &day, dt_text) || 1 != sscanf(dt_text, "%lf", &dt))
-        {
-            error = LogError(context, "Line %d of file %s has invalid format.", lnum, filename);
-            goto fail;
-        }
-
-        /* reduce the data size by keeping only 1 sample per year */
-        if (month != 1) continue;
-
-        mjd = MJD_FROM_DATE(year, month, day);
-        if (mjd > last_mjd)
-        {
-            ++count;
-            CHECK(GenDeltaTArrayEntry(context, count, mjd, dt_text));
-        }
-    }
-    fclose(infile);
-
-    filename = "delta_t/predicted.txt";
-    infile = fopen(filename, "rt");
-    if (infile == NULL) goto fail;
-    last_mjd = mjd;
-    lnum = 0;
-    float_year = 0.0;
-    while (fgets(line, sizeof(line), infile))
-    {
-        ++lnum;
-        if (lnum < 2) continue;     /* skip header line */
-        if (3 != sscanf(line, "%lf %lf %20s", &mjd, &float_year, dt_text) || 1 != sscanf(dt_text, "%lf", &dt))
-        {
-            error = LogError(context, "Line %d of file %s has invalid format.", lnum, filename);
-            goto fail;
-        }
-
-        /* reduce the data size by keeping only 1 sample per year */
-        if (float_year != floor(float_year)) continue;
-
-        if (mjd > last_mjd)
-        {
-            ++count;
-            CHECK(GenDeltaTArrayEntry(context, count, mjd, dt_text));
-        }
-    }
-
-    /* Keep the final data point to maximize the extent of predictions into the future. */
-    if (mjd > last_mjd && float_year != floor(float_year))
-    {
-        ++count;
-        CHECK(GenDeltaTArrayEntry(context, count, mjd, dt_text));
-    }
-
-#ifdef EXTRAPOLATE_DT
-    /* Add an extrapolated delta_t value for every decade 2030..2200. */
-    for (year = 2030; year <= 2200; year += 10)
-    {
-        ++count;
-        CHECK(GenExtrapolatedDeltaT(context, year, count));
-    }
-#endif
-
-    CHECK(GenArrayEnd(context));
-
-    if (count < 2)
-    {
-        error = LogError(context, "There must be at least 2 delta_t data!");
-        goto fail;
-    }
-
-    error = 0;
-
-fail:
-    if (infile == NULL)
-        error = LogError(context, "Cannot open input file: %s", filename);
-    else
-        fclose(infile);
-    return error;
-}
 
 static int ScanRealArray(
     cg_context_t *context,
@@ -1638,7 +1437,6 @@ static const cg_directive_entry DirectiveTable[] =
     { "LIST_CHEBYSHEV",     ListChebyshev       },
     { "C_CHEBYSHEV",        CChebyshev          },
     { "CSHARP_CHEBYSHEV",   CsharpChebyshev     },
-    { "DELTA_T",            GenDeltaT           },
     { "IAU_DATA",           OptIauData          },
     { "ADDSOL",             OptAddSol           },
     { "CONSTEL",            ConstellationData   },
