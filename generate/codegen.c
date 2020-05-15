@@ -488,7 +488,7 @@ static int CVsop_Series(cg_context_t *context, const vsop_series_t *series, cons
 
     if (series->nterms_total > 0)
     {
-        fprintf(context->outfile, "static const vsop_term_t %s_%d[] = \n{\n", varprefix, s);
+        fprintf(context->outfile, "static const vsop_term_t %s_%d[] =\n{\n", varprefix, s);
         for (i = 0; i < series->nterms_total; ++i)
         {
             const vsop_term_t *term = &series->term[i];
@@ -517,7 +517,7 @@ static int CVsop_Formula(cg_context_t *context, const vsop_formula_t *formula, c
     for (s=0; s < formula->nseries_total; ++s)
         CHECK(CVsop_Series(context, &formula->series[s], varprefix, s));
 
-    fprintf(context->outfile, "static const vsop_series_t %s[] = \n{\n", varprefix);
+    fprintf(context->outfile, "static const vsop_series_t %s[] =\n{\n", varprefix);
     for (s=0; s < formula->nseries_total; ++s)
     {
         if (formula->series[s].nterms_total == 0)

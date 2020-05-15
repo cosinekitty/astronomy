@@ -337,7 +337,7 @@ Astronomy.MakeTime = function(date) {
 }
 
 const iaudata = [
-    $ASTRO_IAU_DATA()
+$ASTRO_IAU_DATA()
 ];
 
 function iau2000b(time) {
@@ -543,7 +543,7 @@ function CalcMoon(time) {
         SINPI += coeffp * result.x;
     }
 
-    $ASTRO_ADDSOL()
+$ASTRO_ADDSOL()
 
     function ADDN(coeffn, p, q, r, s) {
         return coeffn * Term(p, q, r, s).y;

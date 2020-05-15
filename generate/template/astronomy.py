@@ -547,7 +547,7 @@ class _iau2000b:
         om  = math.fmod((450160.398036 - t*6962890.5431),    _ASEC360) * _ASEC2RAD
         dp = 0
         de = 0
-        $ASTRO_IAU_DATA()
+$ASTRO_IAU_DATA()
         self.dpsi = -0.000135 + (dp * 1.0e-7)
         self.deps = +0.000388 + (de * 1.0e-7)
 
@@ -882,7 +882,7 @@ def _CalcMoon(time):
 
         I += 1
 
-    $ASTRO_ADDSOL()
+$ASTRO_ADDSOL()
 
     def ADDN(coeffn, p, q, r, s):
         return coeffn * (ex[p][1] * ex[q][2] * ex[r][3] * ex[s][4]).imag

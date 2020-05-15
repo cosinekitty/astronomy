@@ -1750,7 +1750,7 @@ $ASTRO_CSHARP_CHEBYSHEV(8);
 
         private static readonly iau_row_t[] iau_row = new iau_row_t[]
         {
-            $ASTRO_IAU_DATA()
+$ASTRO_IAU_DATA()
         };
 
         private static void iau2000b(AstroTime time)

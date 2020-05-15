@@ -689,7 +689,7 @@ static void iau2000b(astro_time_t *time)
 
     static const struct row_t row[77] =
     {
-        $ASTRO_IAU_DATA()
+$ASTRO_IAU_DATA()
     };
 
     double t, el, elp, f, d, om, arg, dp, de, sarg, carg;
@@ -1256,7 +1256,7 @@ static void CalcMoon(
 
     context.t = centuries_since_j2000;
     Init(ctx);
-    $ASTRO_ADDSOL()
+$ASTRO_ADDSOL()
     SolarN(ctx);
     Planetary(ctx);
     S = F + DS/ARC;
