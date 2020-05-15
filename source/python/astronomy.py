@@ -358,7 +358,25 @@ _delta_t_entry_t(60310.0, 71.88),
 _delta_t_entry_t(60675.0, 72.36),
 _delta_t_entry_t(61041.0, 72.83),
 _delta_t_entry_t(61406.0, 73.32),
-_delta_t_entry_t(61680.0, 73.66)
+_delta_t_entry_t(61680.0, 73.66),
+_delta_t_entry_t(62502.0, 77.64),
+_delta_t_entry_t(66154.0, 84.78),
+_delta_t_entry_t(69807.0, 93.08),
+_delta_t_entry_t(73459.0, 113.76),
+_delta_t_entry_t(77112.0, 135.07),
+_delta_t_entry_t(80764.0, 157.02),
+_delta_t_entry_t(84417.0, 179.61),
+_delta_t_entry_t(88069.0, 202.84),
+_delta_t_entry_t(91721.0, 226.71),
+_delta_t_entry_t(95373.0, 251.22),
+_delta_t_entry_t(99026.0, 276.37),
+_delta_t_entry_t(102678.0, 302.16),
+_delta_t_entry_t(106331.0, 328.48),
+_delta_t_entry_t(109983.0, 349.92),
+_delta_t_entry_t(113636.0, 372.00),
+_delta_t_entry_t(117288.0, 394.72),
+_delta_t_entry_t(120941.0, 418.08),
+_delta_t_entry_t(124593.0, 442.08)
 ]
 
 def _DeltaT(mjd):

@@ -196,7 +196,7 @@ def Test_Seasons(filename):
             if diff_minutes > max_minutes:
                 max_minutes = diff_minutes
 
-            if diff_minutes > 1.7:
+            if diff_minutes > 2.37:
                 print('PY Test_Seasons: {} line {}: excessive error ({}): {} minutes.'.format(filename, lnum, name, diff_minutes))
                 return 1
     print('PY Test_Seasons: verified {} lines from file {} : max error minutes = {:0.3f}'.format(lnum, filename, max_minutes))

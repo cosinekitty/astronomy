@@ -1569,7 +1569,25 @@ namespace CosineKitty
             new deltat_entry_t { mjd=60675.0, dt=72.36 },
             new deltat_entry_t { mjd=61041.0, dt=72.83 },
             new deltat_entry_t { mjd=61406.0, dt=73.32 },
-            new deltat_entry_t { mjd=61680.0, dt=73.66 }
+            new deltat_entry_t { mjd=61680.0, dt=73.66 },
+            new deltat_entry_t { mjd=62502.0, dt=77.64 },
+            new deltat_entry_t { mjd=66154.0, dt=84.78 },
+            new deltat_entry_t { mjd=69807.0, dt=93.08 },
+            new deltat_entry_t { mjd=73459.0, dt=113.76 },
+            new deltat_entry_t { mjd=77112.0, dt=135.07 },
+            new deltat_entry_t { mjd=80764.0, dt=157.02 },
+            new deltat_entry_t { mjd=84417.0, dt=179.61 },
+            new deltat_entry_t { mjd=88069.0, dt=202.84 },
+            new deltat_entry_t { mjd=91721.0, dt=226.71 },
+            new deltat_entry_t { mjd=95373.0, dt=251.22 },
+            new deltat_entry_t { mjd=99026.0, dt=276.37 },
+            new deltat_entry_t { mjd=102678.0, dt=302.16 },
+            new deltat_entry_t { mjd=106331.0, dt=328.48 },
+            new deltat_entry_t { mjd=109983.0, dt=349.92 },
+            new deltat_entry_t { mjd=113636.0, dt=372.00 },
+            new deltat_entry_t { mjd=117288.0, dt=394.72 },
+            new deltat_entry_t { mjd=120941.0, dt=418.08 },
+            new deltat_entry_t { mjd=124593.0, dt=442.08 }
         };
 
         private struct vsop_term_t

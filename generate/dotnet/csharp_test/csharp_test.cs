@@ -256,7 +256,7 @@ namespace csharp_test
                     if (diff_minutes > max_minutes)
                         max_minutes = diff_minutes;
 
-                    if (diff_minutes > 1.7)
+                    if (diff_minutes > 2.37)
                     {
                         Console.WriteLine("C# SeasonsTest: {0} line {1}: excessive error ({2}): {3} minutes.", filename, lnum, name, diff_minutes);
                         return 1;

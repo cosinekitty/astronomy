@@ -82,7 +82,7 @@ function Test() {
         if (!calc_date)
             throw `ERROR: Missing calc_date for test date ${item.date.toISOString()}`;
         let diff_minutes = (calc_date - item.date) / 60000;
-        if (Math.abs(diff_minutes) > 1.7) {
+        if (Math.abs(diff_minutes) > 2.37) {
             throw `ERROR: Excessive error in season calculation: ${diff_minutes.toFixed(3)} minutes`;
         }
 

@@ -165,6 +165,12 @@ cd .. || Fail "Could not change to parent directory."
 ./unit_test_python || exit $?
 
 echo ""
+echo "Diffing calculations."
+./ctest diff temp/c_check.txt dotnet/csharp_test/csharp_check.txt || Fail "Diff(c,c#) failure."
+./ctest diff temp/{c,js}_check.txt || Fail "Diff(c,js) failure."
+./ctest diff temp/{py,c}_check.txt || Fail "Diff(py,js) failure."
+
+echo ""
 echo "Testing example programs."
 cd ../demo/c || Fail "Cannot change directory to ../demo/c"
 test/test || Fail "Error testing C examples"

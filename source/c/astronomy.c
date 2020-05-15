@@ -62,7 +62,7 @@ static const double REFRACTION_NEAR_HORIZON = 34.0 / 60.0;   /* degrees of refra
 static const double SUN_RADIUS_KM  = 695700.0;
 #define             SUN_RADIUS_AU  (SUN_RADIUS_KM / KM_PER_AU)
 #define EARTH_RADIUS_KM             6371.0            /* mean radius of the Earth's geoid, without atmosphere */
-#define EARTH_ATMOSPHERE_KM           85.0            /* effective atmosphere thickness for lunar eclipses */
+#define EARTH_ATMOSPHERE_KM           88.0            /* effective atmosphere thickness for lunar eclipses */
 #define EARTH_ECLIPSE_RADIUS_KM     (EARTH_RADIUS_KM + EARTH_ATMOSPHERE_KM)
 static const double MOON_RADIUS_KM = 1737.4;
 #define MOON_RADIUS_AU              (MOON_RADIUS_KM / KM_PER_AU)
@@ -513,7 +513,25 @@ static const deltat_entry_t DT[] = {
 { 60675.0, 72.36 },
 { 61041.0, 72.83 },
 { 61406.0, 73.32 },
-{ 61680.0, 73.66 }
+{ 61680.0, 73.66 },
+{ 62502.0, 77.64 },
+{ 66154.0, 84.78 },
+{ 69807.0, 93.08 },
+{ 73459.0, 113.76 },
+{ 77112.0, 135.07 },
+{ 80764.0, 157.02 },
+{ 84417.0, 179.61 },
+{ 88069.0, 202.84 },
+{ 91721.0, 226.71 },
+{ 95373.0, 251.22 },
+{ 99026.0, 276.37 },
+{ 102678.0, 302.16 },
+{ 106331.0, 328.48 },
+{ 109983.0, 349.92 },
+{ 113636.0, 372.00 },
+{ 117288.0, 394.72 },
+{ 120941.0, 418.08 },
+{ 124593.0, 442.08 }
 };
 
 /** @cond DOXYGEN_SKIP */

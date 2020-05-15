@@ -30,6 +30,8 @@
 #include "vsop.h"
 #include "ephfile.h"
 
+#define EXTRAPOLATE_DT
+
 #define CG_MAX_LINE_LENGTH  200
 #define MAX_DATA_PER_LINE    20
 #define IAU_DATA_PER_ROW     11

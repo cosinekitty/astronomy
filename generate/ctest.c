@@ -534,7 +534,7 @@ static int SeasonsTest(const char *filename)
         if (diff_minutes > max_minutes)
             max_minutes = diff_minutes;
 
-        if (diff_minutes > 1.7)
+        if (diff_minutes > 2.37)
             FAIL("C SeasonsTest: %s line %d: excessive error (%s): %lf minutes.\n", filename, lnum, name, diff_minutes);
     }
 
@@ -1555,7 +1555,7 @@ static int EarthApsis(const char *filename)
         diff_minutes = (24.0 * 60.0) * fabs(apsis.time.ut - correct_time.ut);
         diff_au = fabs(apsis.dist_au - dist_au);
 
-        if (diff_minutes > 120.5)
+        if (diff_minutes > 120.58)
             FAIL("C EarthApsis(%s line %d): Excessive time error: %lf minutes.\n", filename, lnum, diff_minutes);
 
         if (diff_au > 1.2e-5)
@@ -1819,7 +1819,7 @@ static int CheckUnitVector(int lnum, const char *name, astro_rotation_t r, int i
         sum += x*x;
     }
     x = fabs(sum - 1.0);
-    if (x > 1.0e-15)
+    if (x > 1.4e-15)
         FAILRET("C CheckUnitVector ERROR(%s line %d): unit error = %lg for i0=%d, j0=%d, di=%d, dj=%d\n", name, lnum, x, i0, j0, di, dj);
 
     return 0;
