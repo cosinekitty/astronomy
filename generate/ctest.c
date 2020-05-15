@@ -356,7 +356,7 @@ static int Diff(const char *c_filename, const char *js_filename)
     }
 
     printf("ctest(Diff): Maximum numeric difference = %lg, worst line number = %d\n", maxdiff, worst_lnum);
-    if (maxdiff > 1.819e-12)
+    if (maxdiff > 2.7854e-12)
         FAIL("C ERROR: Excessive error comparing files %s and %s\n", c_filename, js_filename);
 
     error = 0;

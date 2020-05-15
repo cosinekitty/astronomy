@@ -525,7 +525,7 @@ double Astronomy_DeltaT_EspenakMeeus(double ut)
     if (y < 2150)
     {
         u = (y-1820)/100;
-        return -20.0 + 32.0*u*u - 0.5628*(2150 - y);
+        return -20 + 32*u*u - 0.5628*(2150 - y);
     }
 
     /* all years after 2150 */

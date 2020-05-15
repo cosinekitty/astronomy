@@ -168,7 +168,7 @@ echo ""
 echo "Diffing calculations."
 ./ctest diff temp/c_check.txt dotnet/csharp_test/csharp_check.txt || Fail "Diff(c,c#) failure."
 ./ctest diff temp/{c,js}_check.txt || Fail "Diff(c,js) failure."
-./ctest diff temp/{py,c}_check.txt || Fail "Diff(py,js) failure."
+./ctest diff temp/{c,py}_check.txt || Fail "Diff(c,py) failure."
 
 echo ""
 echo "Testing example programs."

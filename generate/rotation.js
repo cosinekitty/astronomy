@@ -83,7 +83,7 @@ function Test_EQJ_ECL() {
     const dz = ee.z - ecl.ez;
     const diff = Math.sqrt(dx*dx + dy*dy + dz*dz);
     console.log(`JS Test_EQJ_ECL ee = (${ee.x}, ${ee.y}, ${ee.z}); diff = ${diff}`);
-    if (diff > 1.0e-16)
+    if (diff > 2.0e-15)
         throw 'Test_EQJ_ECL: EXCESSIVE VECTOR ERROR';
 
     /* Reverse the test: go from ecliptic back to equatorial. */
@@ -128,7 +128,7 @@ function Test_EQJ_EQD(body) {
     const t2000 = Astronomy.RotateVector(ir, vdate);
     const diff = VectorDiff(t2000, v2000);
     console.log(`JS Test_EQJ_EQD: ${body} inverse diff = ${diff}`);
-    if (diff > 3.0e-15)
+    if (diff > 5.0e-15)
         throw 'Test_EQJ_EQD: EXCESSIVE INVERSE ERROR';
 }
 
@@ -170,7 +170,7 @@ function Test_EQD_HOR(body) {
     const check_eqd = Astronomy.RotateVector(irot, vec_hor);
     diff = VectorDiff(check_eqd, vec_eqd);
     console.log(`JS Test_EQD_HOR ${body}: OFDATE inverse rotation diff = ${diff}`);
-    if (diff > 1.0e-15)
+    if (diff > 2.0e-15)
         throw 'Test_EQD_HOR: EXCESSIVE OFDATE INVERSE HORIZONTAL ERROR.';
 
     /* Exercise HOR to EQJ translation. */
@@ -180,7 +180,7 @@ function Test_EQD_HOR(body) {
     const check_eqj = Astronomy.RotateVector(yrot, vec_hor);
     diff = VectorDiff(check_eqj, vec_eqj);
     console.log(`JS Test_EQD_HOR ${body}: J2000 inverse rotation diff = ${diff}`);
-    if (diff > 3.0e-15)
+    if (diff > 6.0e-15)
         throw 'Test_EQD_HOR: EXCESSIVE J2000 INVERSE HORIZONTAL ERROR.';
 
     /* Verify the inverse translation: EQJ to HOR. */
