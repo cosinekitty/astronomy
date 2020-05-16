@@ -145,6 +145,9 @@ function PrintSummary(context) {
 }
 
 function ProcessFile(inFileName) {
+    // Use JPL Horizons Delta T function for calculating consistent results.
+    Astronomy.SetDeltaTFunction(Astronomy.DeltaT_JplHorizons);
+
     const text = fs.readFileSync(inFileName, 'utf8');
     const lines = text.split('\n');
     var inHeader = true;
@@ -154,7 +157,7 @@ function ProcessFile(inFileName) {
         lnum: 0,
         fn: inFileName,
         refraction: null,
-        arcmin_threshold: 1.76,
+        arcmin_threshold: 0.878,
         maxArcminError_MetricEquatorial: 0,
         maxArcminError_ApparentEquatorial: 0,
         maxArcminError_Horizontal: 0

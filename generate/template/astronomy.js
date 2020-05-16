@@ -162,7 +162,7 @@ const cheb = {
     Pluto:  $ASTRO_LIST_CHEBYSHEV(8)
 };
 
-function DeltaT_EspenakMeeus(ut) {
+Astronomy.DeltaT_EspenakMeeus = function(ut) {
     var u, u2, u3, u4, u5, u6, u7;
 
     /*
@@ -253,7 +253,16 @@ function DeltaT_EspenakMeeus(ut) {
     return -20 + (32 * u*u);
 }
 
-var DeltaT = DeltaT_EspenakMeeus;
+
+Astronomy.DeltaT_JplHorizons = function(ut) {
+    return Astronomy.DeltaT_EspenakMeeus(Math.min(ut, 17.0 * DAYS_PER_TROPICAL_YEAR));
+}
+
+var DeltaT = Astronomy.DeltaT_EspenakMeeus;
+
+Astronomy.SetDeltaTFunction = function(func) {
+    DeltaT = func;
+}
 
 /**
  * Calculates Terrestrial Time (TT) from Universal Time (UT).
