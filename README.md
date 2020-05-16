@@ -79,6 +79,8 @@ Calculations are also verified to be identical among all the supported programmi
 - Finds date and time of Moon phases: new, first quarter, full, third quarter
   (or anywhere in between as expressed in degrees of ecliptic longitude).
 
+- Predicts lunar eclipses.
+
 - Predicts lunar apogee and perigee dates, times, and distances.
 
 - Predicts date and time of equinoxes and solstices for a given calendar year.
