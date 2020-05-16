@@ -2582,6 +2582,9 @@ static int LunarEclipseTest(void)
     int valid = 0;
     int skip_count = 0;
     const double diff_limit = 2.0;
+    extern int _CalcMoonCount;      /* incremented by Astronomy Engine every time expensive CalcMoon() is called */
+
+    _CalcMoonCount = 0;
 
     infile = fopen(filename, "rt");
     if (infile == NULL)
@@ -2702,7 +2705,11 @@ static int LunarEclipseTest(void)
             FAIL("C LunarEclipseTest(%s line %d): Astronomy_NextLunarEclipse returned status %d\n", filename, lnum, eclipse.status);
     }
 
-    printf("C LunarEclipseTest: PASS (verified %d, skipped %d, max_diff_minutes = %0.3lf, avg_diff_minutes = %0.3lf)\n", lnum, skip_count, max_diff_minutes, (sum_diff_minutes / diff_count));
+    sum_diff_minutes /= diff_count;     /* convert to average error in minutes */
+    if (sum_diff_minutes > 0.274)
+        FAIL("C LunarEclipseTest: EXCESSIVE AVERAGE TIME ERROR: %lf\n", sum_diff_minutes);
+
+    printf("C LunarEclipseTest: PASS (verified %d, skipped %d, moon calcs %d, max_diff_minutes = %0.3lf, avg_diff_minutes = %0.3lf)\n", lnum, skip_count, _CalcMoonCount, max_diff_minutes, sum_diff_minutes);
     error = 0;
 fail:
     if (infile != NULL) fclose(infile);

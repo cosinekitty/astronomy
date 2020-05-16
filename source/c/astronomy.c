@@ -1434,6 +1434,8 @@ static void Planetary(MoonContext *ctx)
         +0.33*Sine(0.3132   +6.3368*T);
 }
 
+int _CalcMoonCount;     /* Undocumented global for performance tuning. */
+
 static void CalcMoon(
     double centuries_since_j2000,
     double *geo_eclip_lon,      /* (LAMBDA) equinox of date */
@@ -1561,6 +1563,7 @@ static void CalcMoon(
     *geo_eclip_lon = PI2 * Frac((L0+DLAM/ARC) / PI2);
     *geo_eclip_lat = lat_seconds * (DEG2RAD / 3600.0);
     *distance_au = (ARC * (ERAD / AU)) / (0.999953253 * SINPI);
+    ++_CalcMoonCount;
 }
 
 #undef T
@@ -7181,39 +7184,55 @@ static earth_shadow_t EarthShadow(astro_time_t time)
     return shadow;
 }
 
+static astro_func_result_t shadow_distance_slope(void *context, astro_time_t time)
+{
+    const double dt = 1.0 / 86400.0;
+    astro_time_t t1, t2;
+    astro_func_result_t result;
+    earth_shadow_t shadow1, shadow2;
+
+    (void)context;
+
+    t1 = Astronomy_AddDays(time, -dt);
+    t2 = Astronomy_AddDays(time, +dt);
+
+    shadow1 = EarthShadow(t1);
+    if (shadow1.status != ASTRO_SUCCESS)
+        return FuncError(shadow1.status);
+
+    shadow2 = EarthShadow(t2);
+    if (shadow2.status != ASTRO_SUCCESS)
+        return FuncError(shadow2.status);
+
+    result.value = (shadow2.r - shadow1.r) / dt;
+    result.status = ASTRO_SUCCESS;
+    return result;
+}
+
+
+static earth_shadow_t ShadowError(astro_status_t status)
+{
+    earth_shadow_t shadow;
+    memset(&shadow, 0, sizeof(shadow));
+    shadow.status = status;
+    return shadow;
+}
+
 
 static earth_shadow_t PeakEarthShadow(astro_time_t search_center_time)
 {
-    earth_shadow_t best_shadow;
     astro_time_t t1, t2;
+    astro_search_result_t result;
     const double window = 0.5;        /* initial search window, in days, before/after given time */
-    const double threshold = 1.0 / (24.0 * 3600.0);     /* stop when uncertainty is less than 1 second */
-    const int nsamples = 8;
-    int i;
 
     t1 = Astronomy_AddDays(search_center_time, -window);
     t2 = Astronomy_AddDays(search_center_time, +window);
 
-    /* Iteratively search for time when the Moon is closest to the Sun/Earth axis. */
-    for(;;)
-    {
-        double dt = (t2.ut - t1.ut) / (nsamples - 1);
+    result = Astronomy_Search(shadow_distance_slope, NULL, t1, t2, 1.0);
+    if (result.status != ASTRO_SUCCESS)
+        return ShadowError(result.status);
 
-        /* In each pass, sample a series of points and pick the one with minimum axis distance. */
-        for (i=0; i < nsamples; ++i)
-        {
-            astro_time_t time = Astronomy_AddDays(t1, i*dt);
-            earth_shadow_t shadow = EarthShadow(time);
-            if ((i == 0) || (shadow.r < best_shadow.r))
-                best_shadow = shadow;
-        }
-
-        if (2.0 * dt < threshold)
-            return best_shadow;
-
-        t1 = Astronomy_AddDays(best_shadow.time, -dt);
-        t2 = Astronomy_AddDays(best_shadow.time, +dt);
-    }
+    return EarthShadow(result.time);
 }
 
 
