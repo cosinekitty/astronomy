@@ -5569,8 +5569,8 @@ namespace CosineKitty
             const double window = 4.0 / 24.0;
             AstroTime before = center_time.AddDays(-window);
             AstroTime after  = center_time.AddDays(+window);
-            AstroTime t1 = Search(new SearchContext_EarthShadow(radius_limit, +1.0), before, center_time, 1.0);
-            AstroTime t2 = Search(new SearchContext_EarthShadow(radius_limit, -1.0), center_time, after, 1.0);
+            AstroTime t1 = Search(new SearchContext_EarthShadow(radius_limit, -1.0), before, center_time, 1.0);
+            AstroTime t2 = Search(new SearchContext_EarthShadow(radius_limit, +1.0), center_time, after, 1.0);
             return (t2.ut - t1.ut) * ((24.0 * 60.0) / 2.0);    // convert days to minutes and average the semi-durations.
         }
 

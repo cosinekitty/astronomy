@@ -25,6 +25,7 @@ namespace csharp_test
                 if (PlanetApsisTest("../../apsides") != 0) return 1;
                 if (MagnitudeTest() != 0) return 1;
                 if (ConstellationTest() != 0) return 1;
+                if (LunarEclipseTest() != 0) return 1;
                 if (AstroCheck() != 0) return 1;
                 Console.WriteLine("csharp_test: PASS");
                 return 0;
@@ -1575,6 +1576,142 @@ namespace csharp_test
             }
 
             Console.WriteLine("C# ConstellationTest: PASS (verified {0})", lnum);
+            return 0;
+        }
+
+        static int LunarEclipseTest()
+        {
+            const string filename = "../../eclipse/lunar_eclipse.txt";
+            const string statsFilename = "../../eclipse/cs_le_stats.csv";
+
+            using (StreamReader infile = File.OpenText(filename))
+            {
+                using (StreamWriter outfile = File.CreateText(statsFilename))
+                {
+                    outfile.WriteLine("\"utc\",\"center\",\"partial\",\"total\"");
+                    LunarEclipseInfo eclipse = Astronomy.SearchLunarEclipse(new AstroTime(1701, 1, 1, 0, 0, 0));
+                    string line;
+                    int lnum = 0;
+                    int skip_count = 0;
+                    int diff_count = 0;
+                    double sum_diff_minutes = 0.0;
+                    double max_diff_minutes = 0.0;
+                    const double diff_limit = 2.0;
+                    while (null != (line = infile.ReadLine()))
+                    {
+                        ++lnum;
+                        if (line.Length < 17)
+                        {
+                            Console.WriteLine("C# LunarEclipseTest({0} line {1}): line is too short.", filename, lnum);
+                            return 1;
+                        }
+                        string time_text = line.Substring(0, 17);
+                        AstroTime peak_time = ParseDate(time_text);
+                        string[] token = line.Substring(17).Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                        double partial_minutes, total_minutes;
+                        if (token.Length != 2 || !double.TryParse(token[0], out partial_minutes) || !double.TryParse(token[1], out total_minutes))
+                        {
+                            Console.WriteLine("C# LunarEclipseTest({0} line {1}): invalid data format.", filename, lnum);
+                            return 1;
+                        }
+
+                        // Verify that the calculated eclipse semi-durations are consistent with the kind.
+                        bool valid = false;
+                        switch (eclipse.kind)
+                        {
+                        case EclipseKind.Penumbral:
+                            valid = (eclipse.sd_penum > 0.0) && (eclipse.sd_partial == 0.0) && (eclipse.sd_total == 0.0);
+                            break;
+
+                        case EclipseKind.Partial:
+                            valid = (eclipse.sd_penum > 0.0) && (eclipse.sd_partial > 0.0) && (eclipse.sd_total == 0.0);
+                            break;
+
+                        case EclipseKind.Total:
+                            valid = (eclipse.sd_penum > 0.0) && (eclipse.sd_partial > 0.0) && (eclipse.sd_total > 0.0);
+                            break;
+
+                        default:
+                            Console.WriteLine("C# LunarEclipseTest({0} line {1}): invalid eclipse kind {2}.", filename, lnum, eclipse.kind);
+                            return 1;
+                        }
+
+                        if (!valid)
+                        {
+                            Console.WriteLine("C# LunarEclipseTest({0} line {1}): inalid semiduration(s) for kind {2}: penum={3}, partial={4}, total={5}",
+                                filename, lnum, eclipse.kind, eclipse.sd_penum, eclipse.sd_partial, eclipse.sd_total);
+                            return 1;
+                        }
+
+                        // Check eclipse center.
+                        double diff_days = eclipse.center.ut - peak_time.ut;
+
+                        // Tolerate missing penumbral eclipses - skip to next input line without calculating next eclipse.
+                        if (partial_minutes == 0.0 && diff_days > 20.0)
+                        {
+                            ++skip_count;
+                            continue;
+                        }
+
+                        outfile.WriteLine("\"{0}\",{1},{2},{3}",
+                            time_text,
+                            diff_days * (24.0 * 60.0),
+                            eclipse.sd_partial - partial_minutes,
+                            eclipse.sd_total - total_minutes
+                        );
+
+                        double diff_minutes = (24.0 * 60.0) * Math.Abs(diff_days);
+                        sum_diff_minutes += diff_minutes;
+                        ++diff_count;
+
+                        if (diff_minutes > diff_limit)
+                        {
+                            Console.WriteLine("C# LunarEclipseTest expected center: {0}", peak_time);
+                            Console.WriteLine("C# LunarEclipseTest found    center: {1}", eclipse.center);
+                            Console.WriteLine("C# LunarEclipseTest({0} line {1}): EXCESSIVE center time error = {2} minutes ({3} days).", filename, lnum, diff_minutes, diff_days);
+                            return 1;
+                        }
+
+                        if (diff_minutes > max_diff_minutes)
+                            max_diff_minutes = diff_minutes;
+
+                        /* check partial eclipse duration */
+
+                        diff_minutes = Math.Abs(partial_minutes - eclipse.sd_partial);
+                        sum_diff_minutes += diff_minutes;
+                        ++diff_count;
+
+                        if (diff_minutes > diff_limit)
+                        {
+                            Console.WriteLine("C# LunarEclipseTest({0} line {1}): EXCESSIVE partial eclipse semiduration error: {2} minutes", filename, lnum, diff_minutes);
+                            return 1;
+                        }
+
+                        if (diff_minutes > max_diff_minutes)
+                            max_diff_minutes = diff_minutes;
+
+                        /* check total eclipse duration */
+
+                        diff_minutes = Math.Abs(total_minutes - eclipse.sd_total);
+                        sum_diff_minutes += diff_minutes;
+                        ++diff_count;
+
+                        if (diff_minutes > diff_limit)
+                        {
+                            Console.WriteLine("C# LunarEclipseTest({0} line {1}): EXCESSIVE total eclipse semiduration error: {2} minutes", filename, lnum, diff_minutes);
+                            return 1;
+                        }
+
+                        if (diff_minutes > max_diff_minutes)
+                            max_diff_minutes = diff_minutes;
+
+                        /* calculate for next iteration */
+
+                        eclipse = Astronomy.NextLunarEclipse(eclipse.center);
+                    }
+                    Console.WriteLine("C# LunarEclipseTest: PASS (verified {0}, skipped {1}, max_diff_minutes = {2}, avg_diff_minutes = {3})", lnum, skip_count, max_diff_minutes, (sum_diff_minutes / diff_count));
+                }
+            }
             return 0;
         }
     }
