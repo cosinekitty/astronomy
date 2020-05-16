@@ -7250,10 +7250,10 @@ static astro_func_result_t shadow_distance(void *context, astro_time_t time)
 }
 
 
-static double ShadowSemiDurationMinutes(astro_time_t center_time, double radius_limit)
+static double ShadowSemiDurationMinutes(astro_time_t center_time, double radius_limit, double window_minutes)
 {
     /* Search backwards and forwards from the center time until shadow axis distance crosses radius limit. */
-    const double window = 4.0 / 24.0;
+    double window = window_minutes / (24.0 * 60.0);
     shadow_context_t context;
     astro_search_result_t s1, s2;
     astro_time_t before, after;
@@ -7337,7 +7337,7 @@ astro_lunar_eclipse_t Astronomy_SearchLunarEclipse(astro_time_t startTime)
                 eclipse.center = shadow.time;
                 eclipse.sd_total = 0.0;
                 eclipse.sd_partial = 0.0;
-                eclipse.sd_penum = ShadowSemiDurationMinutes(shadow.time, shadow.p + MOON_RADIUS_KM);
+                eclipse.sd_penum = ShadowSemiDurationMinutes(shadow.time, shadow.p + MOON_RADIUS_KM, 200.0);
                 if (eclipse.sd_penum <= 0.0)
                     return EclipseError(ASTRO_SEARCH_FAILURE);
 
@@ -7345,7 +7345,7 @@ astro_lunar_eclipse_t Astronomy_SearchLunarEclipse(astro_time_t startTime)
                 {
                     /* This is at least a partial eclipse. */
                     eclipse.kind = ECLIPSE_PARTIAL;
-                    eclipse.sd_partial = ShadowSemiDurationMinutes(shadow.time, shadow.k + MOON_RADIUS_KM);
+                    eclipse.sd_partial = ShadowSemiDurationMinutes(shadow.time, shadow.k + MOON_RADIUS_KM, eclipse.sd_penum);
                     if (eclipse.sd_partial <= 0.0)
                         return EclipseError(ASTRO_SEARCH_FAILURE);
 
@@ -7353,7 +7353,7 @@ astro_lunar_eclipse_t Astronomy_SearchLunarEclipse(astro_time_t startTime)
                     {
                         /* This is a total eclipse. */
                         eclipse.kind = ECLIPSE_TOTAL;
-                        eclipse.sd_total = ShadowSemiDurationMinutes(shadow.time, shadow.k - MOON_RADIUS_KM);
+                        eclipse.sd_total = ShadowSemiDurationMinutes(shadow.time, shadow.k - MOON_RADIUS_KM, eclipse.sd_partial);
                         if (eclipse.sd_total <= 0.0)
                             return EclipseError(ASTRO_SEARCH_FAILURE);
                     }
