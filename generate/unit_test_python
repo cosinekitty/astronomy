@@ -17,6 +17,7 @@ python3 test.py seasons seasons/seasons.txt || Fail "Failed Python seasons test.
 python3 test.py moonphase moonphase/moonphases.txt || Fail "Failed Python moon phase test."
 python3 test.py riseset riseset/riseset.txt || Fail "Failed Python rise/set tests."
 python3 test.py constellation || Fail "Failed Python constellation test."
+python3 test.py lunar_eclipse || Fail "Failed Python lunar eclipse test."
 
 python3 test.py elongation || Fail "Failed Python elongation tests."
 for file in temp/py_longitude_*.txt; do

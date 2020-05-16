@@ -690,7 +690,7 @@ def Test_RiseSet(filename):
             error_minutes = (24.0 * 60.0) * abs(a_evt.tt - correct_time.tt)
             sum_minutes += error_minutes ** 2
             max_minutes = max(max_minutes, error_minutes)
-            if error_minutes > 0.56:
+            if error_minutes > 0.565:
                 print('PY Test_RiseSet({} line {}): excessive prediction time error = {} minutes.'.format(filename, lnum, error_minutes))
                 print('    correct = {}, calculated = {}'.format(correct_time, a_evt))
                 return 1
@@ -1134,6 +1134,97 @@ def Test_Constellation():
 
 #-----------------------------------------------------------------------------------------------------------
 
+def Test_LunarEclipse():
+    astronomy._CalcMoonCount = 0
+    filename = 'eclipse/lunar_eclipse.txt'
+    with open(filename, 'rt') as infile:
+        eclipse = astronomy.SearchLunarEclipse(astronomy.Time.Make(1701, 1, 1, 0, 0, 0))
+        lnum = 0
+        skip_count = 0
+        diff_count = 0
+        sum_diff_minutes = 0.0
+        max_diff_minutes = 0.0
+        diff_limit = 2.0
+        for line in infile:
+            lnum += 1
+            if len(line) < 17:
+                print('PY Test_LunarEclipse({} line {}): line is too short.'.format(filename, lnum))
+                return 1
+            time_text = line[0:17]
+            peak_time = astronomy.Time.Parse(time_text)
+            token = line[17:].split()
+            if len(token) != 2:
+                print('PY Test_LunarEclipse({} line {}): wrong number of tokens.'.format(filename, lnum))
+                return 1
+            partial_minutes = float(token[0])
+            total_minutes = float(token[1])
+            valid = False
+            # Verify that the calculated eclipse semi-durations are consistent with the kind.
+            if eclipse.kind == astronomy.EclipseKind.Penumbral:
+                valid = (eclipse.sd_penum > 0.0) and (eclipse.sd_partial == 0.0) and (eclipse.sd_total == 0.0)
+            elif eclipse.kind == astronomy.EclipseKind.Partial:
+                valid = (eclipse.sd_penum > 0.0) and (eclipse.sd_partial > 0.0) and (eclipse.sd_total == 0.0)
+            elif eclipse.kind == astronomy.EclipseKind.Total:
+                valid = (eclipse.sd_penum > 0.0) and (eclipse.sd_partial > 0.0) and (eclipse.sd_total > 0.0)
+            else:
+                print('PY Test_LunarEclipse({} line {}): invalid semidurations.'.format(filename, lnum))
+                return 1
+
+            # Check eclipse center.
+            diff_days = eclipse.center.ut - peak_time.ut
+
+            # Tolerate missing penumbral eclipses - skip to next input line without calculating next eclipse.
+            if partial_minutes == 0.0 and diff_days > 20.0:
+                skip_count += 1
+                continue
+
+            diff_minutes = (24.0 * 60.0) * abs(diff_days)
+            sum_diff_minutes += diff_minutes
+            diff_count += 1
+
+            if diff_minutes > diff_limit:
+                print("PY Test_LunarEclipse expected center: {}".format(peak_time))
+                print("PY Test_LunarEclipse found    center: {}".format(eclipse.center))
+                print("PY Test_LunarEclipse({} line {}): EXCESSIVE center time error = {} minutes ({} days).".format(filename, lnum, diff_minutes, diff_days))
+                return 1
+
+            if diff_minutes > max_diff_minutes:
+                max_diff_minutes = diff_minutes
+
+            # check partial eclipse duration
+
+            diff_minutes = abs(partial_minutes - eclipse.sd_partial)
+            sum_diff_minutes += diff_minutes
+            diff_count += 1
+
+            if diff_minutes > diff_limit:
+                print("PY Test_LunarEclipse({} line {}): EXCESSIVE partial eclipse semiduration error: {} minutes".format(filename, lnum, diff_minutes))
+                return 1
+
+            if diff_minutes > max_diff_minutes:
+                max_diff_minutes = diff_minutes
+
+            # check total eclipse duration
+
+            diff_minutes = abs(total_minutes - eclipse.sd_total)
+            sum_diff_minutes += diff_minutes
+            diff_count += 1
+
+            if diff_minutes > diff_limit:
+                print("PY Test_LunarEclipse({} line {}): EXCESSIVE total eclipse semiduration error: {} minutes".format(filename, lnum, diff_minutes))
+                return 1
+
+            if diff_minutes > max_diff_minutes:
+                max_diff_minutes = diff_minutes
+
+            # calculate for next iteration
+
+            eclipse = astronomy.NextLunarEclipse(eclipse.center)
+    print("PY Test_LunarEclipse: PASS (verified {}, skipped {}, max_diff_minutes = {}, avg_diff_minutes = {}, moon calcs = {})".format(lnum, skip_count, max_diff_minutes, (sum_diff_minutes / diff_count), astronomy._CalcMoonCount))
+    return 0
+
+#-----------------------------------------------------------------------------------------------------------
+
 if __name__ == '__main__':
     if len(sys.argv) == 2:
         if sys.argv[1] == 'time':
@@ -1161,6 +1252,8 @@ if __name__ == '__main__':
             sys.exit(Test_Refraction())
         if sys.argv[1] == 'constellation':
             sys.exit(Test_Constellation())
+        if sys.argv[1] == 'lunar_eclipse':
+            sys.exit(Test_LunarEclipse())
 
     if len(sys.argv) == 3:
         if sys.argv[1] == 'seasons':

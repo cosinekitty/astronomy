@@ -286,6 +286,37 @@ body at a given date and time.
 
 ---
 
+<a name="LunarEclipseInfo"></a>
+### class LunarEclipseInfo
+
+**Returns information about a lunar eclipse.**
+
+Returned by [`SearchLunarEclipse`](#SearchLunarEclipse) or [`NextLunarEclipse`](#NextLunarEclipse)
+to report information about a lunar eclipse event.
+When a lunar eclipse is found, it is classified as penumbral, partial, or total.
+Penumbral eclipses are difficult to observe, because the moon is only slightly dimmed
+by the Earth's penumbra; no part of the Moon touches the Earth's umbra.
+Partial eclipses occur when part, but not all, of the Moon touches the Earth's umbra.
+Total eclipses occur when the entire Moon passes into the Earth's umbra.
+The `kind` field thus holds one of the values `EclipseKind.Penumbral`, `EclipseKind.Partial`,
+or `EclipseKind.Total`, depending on the kind of lunar eclipse found.
+Field `center` holds the date and time of the center of the eclipse, when it is at its peak.
+Fields `sd_penum`, `sd_partial`, and `sd_total` hold the semi-duration of each phase
+of the eclipse, which is half of the amount of time the eclipse spends in each
+phase (expressed in minutes), or 0 if the eclipse never reaches that phase.
+By converting from minutes to days, and subtracting/adding with `center`, the caller
+may determine the date and time of the beginning/end of each eclipse phase.
+
+| Type | Attribute | Description |
+| --- | --- | --- |
+| `string` | `kind` | The type of lunar eclipse found. |
+| [`Time`](#Time) | `center` | The time of the eclipse at its peak. |
+| `float` | `sd_penum` | The semi-duration of the penumbral phase in minutes. |
+| `float` | `sd_partial` | The semi-duration of the penumbral phase in minutes, or 0.0 if none. |
+| `float` | `sd_total` | The semi-duration of the penumbral phase in minutes, or 0.0 if none. |
+
+---
+
 <a name="MoonQuarter"></a>
 ### class MoonQuarter
 
@@ -542,6 +573,25 @@ and `Direction.Set` is used to find sunset times.
 | --- | --- |
 | `Rise` | First appearance of a body as it rises above the horizon. |
 | `Set` | Last appearance of a body as it sinks below the horizon. |
+
+---
+
+<a name="EclipseKind"></a>
+### enum EclipseKind
+
+**Selects if/how to correct for atmospheric refraction.**
+
+Some functions allow enabling or disabling atmospheric refraction
+for the calculated apparent position of a celestial body
+as seen by an observer on the surface of the Earth.
+
+| Value | Description |
+| --- | --- |
+| `Invalid` | No eclipse found. |
+| `Penumbral` | A penumbral lunar eclipse. (Never used for a solar eclipse.) |
+| `Partial` | A partial lunar/solar eclipse. |
+| `Annular` | An annular solar eclipse. (Never used for a lunar eclipse.) |
+| `Total` | A total lunar/solar eclipse. |
 
 ---
 
@@ -1174,6 +1224,25 @@ See [`SearchLunarApsis`](#SearchLunarApsis) for more details.
 
 ---
 
+<a name="NextLunarEclipse"></a>
+### NextLunarEclipse(prevEclipseTime)
+
+**Searches for the next lunar eclipse in a series.**
+
+ After using [`SearchLunarEclipse`](#SearchLunarEclipse) to find the first lunar eclipse
+ in a series, you can call this function to find the next consecutive lunar eclipse.
+ Pass in the `center` value from the [`LunarEclipseInfo`](#LunarEclipseInfo) returned by the
+ previous call to `SearchLunarEclipse` or `NextLunarEclipse`
+ to find the next lunar eclipse.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Time`](#Time) | `prevEclipseTime` | A date and time near a full moon. Lunar eclipse search will start at the next full moon. |
+
+### Returns: [`LunarEclipseInfo`](#LunarEclipseInfo)
+
+---
+
 <a name="NextMoonQuarter"></a>
 ### NextMoonQuarter(mq)
 
@@ -1616,6 +1685,26 @@ another call of `NextLunarApsis` as many times as desired.
 | [`Time`](#Time) | `startTime` | The date and time at which to start searching for the next perigee or apogee. |
 
 ### Returns: [`Apsis`](#Apsis)
+
+---
+
+<a name="SearchLunarEclipse"></a>
+### SearchLunarEclipse(startTime)
+
+**Searches for a lunar eclipse.**
+
+This function finds the first lunar eclipse that occurs after `startTime`.
+A lunar eclipse found may be penumbral, partial, or total.
+See [`LunarEclipseInfo`](#LunarEclipseInfo) for more information.
+To find a series of lunar eclipses, call this function once,
+then keep calling [`NextLunarEclipse`](#NextLunarEclipse) as many times as desired,
+passing in the `center` value returned from the previous call.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Time`](#Time) | `startTime` | The date and time for starting the search for a lunar eclipse. |
+
+### Returns: [`LunarEclipseInfo`](#LunarEclipseInfo)
 
 ---
 

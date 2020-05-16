@@ -36,6 +36,8 @@ import datetime
 import enum
 import re
 
+_CalcMoonCount = 0
+
 _DAYS_PER_TROPICAL_YEAR = 365.24217
 _PI2 = 2.0 * math.pi
 _EPOCH = datetime.datetime(2000, 1, 1, 12)
@@ -44,8 +46,8 @@ _ASEC2RAD = 4.848136811095359935899141e-6
 _ARC = 3600.0 * 180.0 / math.pi     # arcseconds per radian
 _C_AUDAY = 173.1446326846693        # speed of light in AU/day
 _ERAD = 6378136.6                   # mean earth radius in meters
-_AU = 1.4959787069098932e+11        # astronomical unit in meters
 _KM_PER_AU = 1.4959787069098932e+8
+_METERS_PER_AU = _KM_PER_AU * 1000.0
 _ANGVEL = 7.2921150e-5
 _SECONDS_PER_DAY = 24.0 * 3600.0
 _SOLAR_DAYS_PER_SIDEREAL_DAY = 0.9972695717592592
@@ -53,8 +55,13 @@ _MEAN_SYNODIC_MONTH = 29.530588
 _EARTH_ORBITAL_PERIOD = 365.256
 _NEPTUNE_ORBITAL_PERIOD = 60189.0
 _REFRACTION_NEAR_HORIZON = 34.0 / 60.0
-_SUN_RADIUS_AU  = 4.6505e-3
-_MOON_RADIUS_AU = 1.15717e-5
+_SUN_RADIUS_KM = 695700.0
+_SUN_RADIUS_AU  = _SUN_RADIUS_KM / _KM_PER_AU
+_EARTH_RADIUS_KM = 6371.0         # mean radius of the Earth's geoid, without atmosphere
+_EARTH_ATMOSPHERE_KM = 88.0       # effective atmosphere thickness for lunar eclipses
+_EARTH_ECLIPSE_RADIUS_KM = _EARTH_RADIUS_KM + _EARTH_ATMOSPHERE_KM
+_MOON_RADIUS_KM = 1737.4
+_MOON_RADIUS_AU = _MOON_RADIUS_KM / _KM_PER_AU
 _ASEC180 = 180.0 * 60.0 * 60.0
 _AU_PER_PARSEC = _ASEC180 / math.pi
 _EARTH_MOON_MASS_RATIO = 81.30056
@@ -1431,6 +1438,9 @@ class _moonpos:
         self.distance_au = dist
 
 def _CalcMoon(time):
+    global _CalcMoonCount
+    _CalcMoonCount += 1
+
     T = time.tt / 36525
     ex = _Array2(-6, 6, 1, 4)
 
@@ -2210,7 +2220,7 @@ def _CalcMoon(time):
     return _moonpos(
         _PI2 * Frac((L0+DLAM/_ARC) / _PI2),
         (math.pi / (180 * 3600)) * lat_seconds,
-        (_ARC * (_ERAD / _AU)) / (0.999953253 * SINPI)
+        (_ARC * (_ERAD / _METERS_PER_AU)) / (0.999953253 * SINPI)
     )
 
 def GeoMoon(time):
@@ -6554,3 +6564,213 @@ def Constellation(ra, dec):
 
     # This should never happen!
     raise Error('Unable to find constellation for given coordinates.')
+
+
+@enum.unique
+class EclipseKind(enum.Enum):
+    """Selects if/how to correct for atmospheric refraction.
+
+    Some functions allow enabling or disabling atmospheric refraction
+    for the calculated apparent position of a celestial body
+    as seen by an observer on the surface of the Earth.
+
+    Values
+    ------
+    Invalid: No eclipse found.
+    Penumbral: A penumbral lunar eclipse. (Never used for a solar eclipse.)
+    Partial: A partial lunar/solar eclipse.
+    Annular: An annular solar eclipse. (Never used for a lunar eclipse.)
+    Total: A total lunar/solar eclipse.
+    """
+    Invalid = 0
+    Penumbral = 1
+    Partial = 2
+    Annular = 3
+    Total = 4
+
+
+class _EarthShadowInfo:
+    def __init__(self, time, u, r, k, p):
+        self.time = time
+        self.u = u   # dot product of (heliocentric earth) and (geocentric moon): defines the shadow plane where the Moon is
+        self.r = r   # km distance between center of Moon and the line passing through the centers of the Sun and Earth.
+        self.k = k   # umbra radius in km, at the shadow plane
+        self.p = p   # penumbra radius in km, at the shadow plane
+
+
+def _EarthShadow(time):
+    e = _CalcEarth(time)
+    m = GeoMoon(time)
+    u = (e.x*m.x + e.y*m.y + e.z*m.z) / (e.x*e.x + e.y*e.y + e.z*e.z)
+    dx = (u * e.x) - m.x
+    dy = (u * e.y) - m.y
+    dz = (u * e.z) - m.z
+    r = _KM_PER_AU * math.sqrt(dx*dx + dy*dy + dz*dz)
+    k = +_SUN_RADIUS_KM - (1.0 + u)*(_SUN_RADIUS_KM - _EARTH_ECLIPSE_RADIUS_KM)
+    p = -_SUN_RADIUS_KM + (1.0 + u)*(_SUN_RADIUS_KM + _EARTH_ECLIPSE_RADIUS_KM)
+    return _EarthShadowInfo(time, u, r, k, p)
+
+
+def _EarthShadowSlope(context, time):
+    dt = 1.0 / 86400.0
+    t1 = time.AddDays(-dt)
+    t2 = time.AddDays(+dt)
+    shadow1 = _EarthShadow(t1)
+    shadow2 = _EarthShadow(t2)
+    return (shadow2.r - shadow1.r) / dt
+
+
+def _PeakEarthShadow(search_center_time):
+    window = 0.03        # initial search window, in days, before/after given time
+    t1 = search_center_time.AddDays(-window)
+    t2 = search_center_time.AddDays(+window)
+    tx = Search(_EarthShadowSlope, None, t1, t2, 1.0)
+    return _EarthShadow(tx)
+
+class _ShadowDiffContext:
+    def __init__(self, radius_limit, direction):
+        self.radius_limit = radius_limit
+        self.direction = direction
+
+def _ShadowDiff(context, time):
+    return context.direction * (_EarthShadow(time).r - context.radius_limit)
+
+
+class LunarEclipseInfo:
+    """Returns information about a lunar eclipse.
+
+    Returned by #SearchLunarEclipse or #NextLunarEclipse
+    to report information about a lunar eclipse event.
+    When a lunar eclipse is found, it is classified as penumbral, partial, or total.
+    Penumbral eclipses are difficult to observe, because the moon is only slightly dimmed
+    by the Earth's penumbra; no part of the Moon touches the Earth's umbra.
+    Partial eclipses occur when part, but not all, of the Moon touches the Earth's umbra.
+    Total eclipses occur when the entire Moon passes into the Earth's umbra.
+
+    The `kind` field thus holds one of the values `EclipseKind.Penumbral`, `EclipseKind.Partial`,
+    or `EclipseKind.Total`, depending on the kind of lunar eclipse found.
+
+    Field `center` holds the date and time of the center of the eclipse, when it is at its peak.
+
+    Fields `sd_penum`, `sd_partial`, and `sd_total` hold the semi-duration of each phase
+    of the eclipse, which is half of the amount of time the eclipse spends in each
+    phase (expressed in minutes), or 0 if the eclipse never reaches that phase.
+    By converting from minutes to days, and subtracting/adding with `center`, the caller
+    may determine the date and time of the beginning/end of each eclipse phase.
+
+    Attributes
+    ----------
+    kind : string
+         The type of lunar eclipse found.
+    center : Time
+         The time of the eclipse at its peak.
+    sd_penum : float
+         The semi-duration of the penumbral phase in minutes.
+    sd_partial : float
+         The semi-duration of the penumbral phase in minutes, or 0.0 if none.
+    sd_total : float
+         The semi-duration of the penumbral phase in minutes, or 0.0 if none.
+    """
+    def __init__(self, kind, center, sd_penum, sd_partial, sd_total):
+        self.kind = kind
+        self.center = center
+        self.sd_penum = sd_penum
+        self.sd_partial = sd_partial
+        self.sd_total = sd_total
+
+
+def _ShadowSemiDurationMinutes(center_time, radius_limit, window_minutes):
+    # Search backwards and forwards from the center time until shadow axis distance crosses radius limit.
+    window = window_minutes / (24.0 * 60.0)
+    before = center_time.AddDays(-window)
+    after  = center_time.AddDays(+window)
+    t1 = Search(_ShadowDiff, _ShadowDiffContext(radius_limit, -1.0), before, center_time, 1.0)
+    t2 = Search(_ShadowDiff, _ShadowDiffContext(radius_limit, +1.0), center_time, after, 1.0)
+    if (t1 is None) or (t2 is None):
+        raise Error('Failed to find shadow semiduration')
+    return (t2.ut - t1.ut) * ((24.0 * 60.0) / 2.0)   # convert days to minutes and average the semi-durations.
+
+
+def SearchLunarEclipse(startTime):
+    """Searches for a lunar eclipse.
+
+    This function finds the first lunar eclipse that occurs after `startTime`.
+    A lunar eclipse found may be penumbral, partial, or total.
+    See #LunarEclipseInfo for more information.
+    To find a series of lunar eclipses, call this function once,
+    then keep calling #NextLunarEclipse as many times as desired,
+    passing in the `center` value returned from the previous call.
+
+    Parameters
+    ----------
+    startTime : Time
+         The date and time for starting the search for a lunar eclipse.
+
+    Returns
+    -------
+    LunarEclipseInfo
+    """
+    PruneLatitude = 1.8   # full Moon's ecliptic latitude above which eclipse is impossible
+    fmtime = startTime
+    for fmcount in range(12):
+        # Search for the next full moon. Any eclipse will be near it.
+        fullmoon = SearchMoonPhase(180, fmtime, 40)
+        if fullmoon is None:
+            raise Error('Cannot find full moon.')
+
+        # Pruning: if the full Moon's ecliptic latitude is too large,
+        # a lunar eclipse is not possible. Avoid needless work searching for
+        # the minimum moon distance.
+        moon = _CalcMoon(fullmoon)
+        if math.degrees(abs(moon.geo_eclip_lat)) < PruneLatitude:
+            # Search near the full moon for the time when the center of the Moon
+            # is closest to the line passing through the centers of the Sun and Earth.
+            shadow = _PeakEarthShadow(fullmoon)
+            r1 = abs(shadow.r - _MOON_RADIUS_KM)
+            r2 = abs(shadow.r + _MOON_RADIUS_KM)
+            if r1 < shadow.p:
+                # This is at least a penumbral eclipse. We will return a result.
+                kind = EclipseKind.Penumbral
+                sd_total = 0.0
+                sd_partial = 0.0
+                sd_penum = _ShadowSemiDurationMinutes(shadow.time, shadow.p + _MOON_RADIUS_KM, 200.0)
+
+                if r1 < shadow.k:
+                    # This is at least a partial eclipse.
+                    kind = EclipseKind.Partial
+                    sd_partial = _ShadowSemiDurationMinutes(shadow.time, shadow.k + _MOON_RADIUS_KM, sd_penum)
+
+                    if r2 < shadow.k:
+                        # This is a total eclipse.
+                        kind = EclipseKind.Total
+                        sd_total = _ShadowSemiDurationMinutes(shadow.time, shadow.k - _MOON_RADIUS_KM, sd_partial)
+
+                return LunarEclipseInfo(kind, shadow.time, sd_penum, sd_partial, sd_total)
+
+        # We didn't find an eclipse on this full moon, so search for the next one.
+        fmtime = fullmoon.AddDays(10)
+
+    # This should never happen because there are always at least 2 full moons per year.
+    raise Error('Failed to find lunar eclipse within 12 full moons.')
+
+
+def NextLunarEclipse(prevEclipseTime):
+    """Searches for the next lunar eclipse in a series.
+
+     After using #SearchLunarEclipse to find the first lunar eclipse
+     in a series, you can call this function to find the next consecutive lunar eclipse.
+     Pass in the `center` value from the #LunarEclipseInfo returned by the
+     previous call to `SearchLunarEclipse` or `NextLunarEclipse`
+     to find the next lunar eclipse.
+
+    Parameters
+    ----------
+    prevEclipseTime : Time
+        A date and time near a full moon. Lunar eclipse search will start at the next full moon.
+
+    Returns
+    -------
+    LunarEclipseInfo
+    """
+    startTime = prevEclipseTime.AddDays(10.0)
+    return SearchLunarEclipse(startTime)
