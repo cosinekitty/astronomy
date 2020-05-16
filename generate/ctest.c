@@ -2709,6 +2709,9 @@ static int LunarEclipseTest(void)
     if (sum_diff_minutes > 0.274)
         FAIL("C LunarEclipseTest: EXCESSIVE AVERAGE TIME ERROR: %lf\n", sum_diff_minutes);
 
+    if (skip_count > 9)
+        FAIL("C LunarEclipseTest: Skipped too many penumbral eclipses: %d\n", skip_count);
+
     printf("C LunarEclipseTest: PASS (verified %d, skipped %d, moon calcs %d, max_diff_minutes = %0.3lf, avg_diff_minutes = %0.3lf)\n", lnum, skip_count, _CalcMoonCount, max_diff_minutes, sum_diff_minutes);
     error = 0;
 fail:

@@ -5640,12 +5640,14 @@ static double ShadowSemiDurationMinutes(astro_time_t center_time, double radius_
  */
 astro_lunar_eclipse_t Astronomy_SearchLunarEclipse(astro_time_t startTime)
 {
+    const double PruneLatitude = 1.8;   /* full Moon's ecliptic latitude above which eclipse is impossible */
     astro_time_t fmtime;
     astro_lunar_eclipse_t eclipse;
     astro_search_result_t fullmoon;
     earth_shadow_t shadow;
     int fmcount;
     double r1, r2;
+    double eclip_lat, eclip_lon, distance;
 
     /* Iterate through consecutive full moons until we find any kind of lunar eclipse. */
     fmtime = startTime;
@@ -5656,44 +5658,53 @@ astro_lunar_eclipse_t Astronomy_SearchLunarEclipse(astro_time_t startTime)
         if (fullmoon.status != ASTRO_SUCCESS)
             return EclipseError(fullmoon.status);
 
-        /* Search near the full moon for the time when the center of the Moon */
-        /* is closest to the line passing through the centers of the Sun and Earth. */
-        shadow = PeakEarthShadow(fullmoon.time);
-        if (shadow.status != ASTRO_SUCCESS)
-            return EclipseError(shadow.status);
-
-        r1 = fabs(shadow.r - MOON_RADIUS_KM);
-        r2 = fabs(shadow.r + MOON_RADIUS_KM);
-        if (r1 < shadow.p)
+        /*
+            Pruning: if the full Moon's ecliptic latitude is too large,
+            a lunar eclipse is not possible. Avoid needless work searching for
+            the minimum moon distance.
+        */
+        CalcMoon(fullmoon.time.tt / 36525.0, &eclip_lon, &eclip_lat, &distance);
+        if (RAD2DEG * fabs(eclip_lat) < PruneLatitude)
         {
-            /* This is at least a penumbral eclipse. We will return a result. */
-            eclipse.status = ASTRO_SUCCESS;
-            eclipse.kind = ECLIPSE_PENUMBRAL;
-            eclipse.center = shadow.time;
-            eclipse.sd_total = 0.0;
-            eclipse.sd_partial = 0.0;
-            eclipse.sd_penum = ShadowSemiDurationMinutes(shadow.time, shadow.p + MOON_RADIUS_KM);
-            if (eclipse.sd_penum <= 0.0)
-                return EclipseError(ASTRO_SEARCH_FAILURE);
+            /* Search near the full moon for the time when the center of the Moon */
+            /* is closest to the line passing through the centers of the Sun and Earth. */
+            shadow = PeakEarthShadow(fullmoon.time);
+            if (shadow.status != ASTRO_SUCCESS)
+                return EclipseError(shadow.status);
 
-            if (r1 < shadow.k)
+            r1 = fabs(shadow.r - MOON_RADIUS_KM);
+            r2 = fabs(shadow.r + MOON_RADIUS_KM);
+            if (r1 < shadow.p)
             {
-                /* This is at least a partial eclipse. */
-                eclipse.kind = ECLIPSE_PARTIAL;
-                eclipse.sd_partial = ShadowSemiDurationMinutes(shadow.time, shadow.k + MOON_RADIUS_KM);
-                if (eclipse.sd_partial <= 0.0)
+                /* This is at least a penumbral eclipse. We will return a result. */
+                eclipse.status = ASTRO_SUCCESS;
+                eclipse.kind = ECLIPSE_PENUMBRAL;
+                eclipse.center = shadow.time;
+                eclipse.sd_total = 0.0;
+                eclipse.sd_partial = 0.0;
+                eclipse.sd_penum = ShadowSemiDurationMinutes(shadow.time, shadow.p + MOON_RADIUS_KM);
+                if (eclipse.sd_penum <= 0.0)
                     return EclipseError(ASTRO_SEARCH_FAILURE);
 
-                if (r2 < shadow.k)
+                if (r1 < shadow.k)
                 {
-                    /* This is a total eclipse. */
-                    eclipse.kind = ECLIPSE_TOTAL;
-                    eclipse.sd_total = ShadowSemiDurationMinutes(shadow.time, shadow.k - MOON_RADIUS_KM);
-                    if (eclipse.sd_total <= 0.0)
+                    /* This is at least a partial eclipse. */
+                    eclipse.kind = ECLIPSE_PARTIAL;
+                    eclipse.sd_partial = ShadowSemiDurationMinutes(shadow.time, shadow.k + MOON_RADIUS_KM);
+                    if (eclipse.sd_partial <= 0.0)
                         return EclipseError(ASTRO_SEARCH_FAILURE);
+
+                    if (r2 < shadow.k)
+                    {
+                        /* This is a total eclipse. */
+                        eclipse.kind = ECLIPSE_TOTAL;
+                        eclipse.sd_total = ShadowSemiDurationMinutes(shadow.time, shadow.k - MOON_RADIUS_KM);
+                        if (eclipse.sd_total <= 0.0)
+                            return EclipseError(ASTRO_SEARCH_FAILURE);
+                    }
                 }
+                return eclipse;
             }
-            return eclipse;
         }
 
         /* We didn't find an eclipse on this full moon, so search for the next one. */
