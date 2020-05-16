@@ -2346,7 +2346,7 @@ Fields `sd_penum`, `sd_partial`, and `sd_total` hold the semi-duration of each p
 | [`astro_status_t`](#astro_status_t) | `status` |  `ASTRO_SUCCESS` if this struct is valid; otherwise an error code.  |
 | [`astro_eclipse_kind_t`](#astro_eclipse_kind_t) | `kind` |  The type of lunar eclipse found.  |
 | [`astro_time_t`](#astro_time_t) | `center` |  The time of the eclipse at its peak.  |
-| `double` | `sd_penum` |  The semi-duration of the penumbral phase in minutes, or 0.0 if none.  |
+| `double` | `sd_penum` |  The semi-duration of the penumbral phase in minutes.  |
 | `double` | `sd_partial` |  The semi-duration of the partial phase in minutes, or 0.0 if none.  |
 | `double` | `sd_total` |  The semi-duration of the total phase in minutes, or 0.0 if none.  |
 

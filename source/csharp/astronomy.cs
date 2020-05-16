@@ -883,7 +883,7 @@ namespace CosineKitty
         /// <summary>The time of the eclipse at its peak.</summary>
         public AstroTime center;
 
-        /// <summary>The semi-duration of the penumbral phase in minutes, or 0.0 if none.</summary>
+        /// <summary>The semi-duration of the penumbral phase in minutes.</summary>
         public double sd_penum;
 
         /// <summary>The semi-duration of the partial phase in minutes, or 0.0 if none.</summary>

@@ -46,7 +46,8 @@ const J2000 = new Date('2000-01-01T12:00:00Z');
 const PI2 = 2 * Math.PI;
 const ARC = 3600 * (180 / Math.PI);     // arcseconds per radian
 const ERAD = 6378136.6;                 // mean earth radius in meters
-const AU = 1.4959787069098932e+11;      // astronomical unit in meters
+const KM_PER_AU = 1.4959787069098932e+8;
+const METERS_PER_AU = KM_PER_AU * 1000;
 const C_AUDAY = 173.1446326846693;      // speed of light in AU/day
 const ASEC2RAD = 4.848136811095359935899141e-6;
 const DEG2RAD = 0.017453292519943296;
@@ -54,15 +55,19 @@ const RAD2DEG = 57.295779513082321;
 const ASEC180 = 180 * 60 * 60;              // arcseconds per 180 degrees (or pi radians)
 const ASEC360 = 2 * ASEC180;                // arcseconds per 360 degrees (or 2*pi radians)
 const ANGVEL = 7.2921150e-5;
-const KM_PER_AU = 1.4959787069098932e+8;
 const AU_PER_PARSEC = ASEC180 / Math.PI;    // exact definition of how many AU = one parsec
 const SUN_MAG_1AU = -0.17 - 5*Math.log10(AU_PER_PARSEC);    // formula from JPL Horizons
 const MEAN_SYNODIC_MONTH = 29.530588;       // average number of days for Moon to return to the same phase
 const SECONDS_PER_DAY = 24 * 3600;
 const MILLIS_PER_DAY = SECONDS_PER_DAY * 1000;
 const SOLAR_DAYS_PER_SIDEREAL_DAY = 0.9972695717592592;
-const SUN_RADIUS_AU  = 4.6505e-3;
-const MOON_RADIUS_AU = 1.15717e-5;
+const SUN_RADIUS_KM = 695700.0;
+const SUN_RADIUS_AU  = SUN_RADIUS_KM / KM_PER_AU;
+const EARTH_RADIUS_KM = 6371.0;         /* mean radius of the Earth's geoid, without atmosphere */
+const EARTH_ATMOSPHERE_KM = 88.0;       /* effective atmosphere thickness for lunar eclipses */
+const EARTH_ECLIPSE_RADIUS_KM = EARTH_RADIUS_KM + EARTH_ATMOSPHERE_KM;
+const MOON_RADIUS_KM = 1737.4;
+const MOON_RADIUS_AU = MOON_RADIUS_KM / KM_PER_AU;
 const REFRACTION_NEAR_HORIZON = 34 / 60;        // degrees of refractive "lift" seen for objects near horizon
 const EARTH_MOON_MASS_RATIO = 81.30056;
 const SUN_MASS     = 333054.25318;        /* Sun's mass relative to Earth. */
@@ -473,7 +478,11 @@ function ecl2equ_vec(time, pos) {
     ];
 }
 
+Astronomy.CalcMoonCount = 0;
+
 function CalcMoon(time) {
+    ++Astronomy.CalcMoonCount;
+
     const T = time.tt / 36525;
 
     function DeclareArray1(xmin, xmax) {
@@ -632,7 +641,7 @@ $ASTRO_ADDSOL()
     return {
         geo_eclip_lon: PI2 * Frac((L0+DLAM/ARC) / PI2),
         geo_eclip_lat: (Math.PI / (180 * 3600)) * lat_seconds,
-        distance_au: (ARC * (ERAD / AU)) / (0.999953253 * SINPI)
+        distance_au: (ARC * (ERAD / METERS_PER_AU)) / (0.999953253 * SINPI)
     };
 }
 
@@ -4202,6 +4211,198 @@ Astronomy.Constellation = function(ra, dec) {
 
     // This should never happen!
     throw 'Unable to find constellation for given coordinates.';
+}
+
+/**
+ * Returns information about a lunar eclipse.
+ *
+ * Returned by {@link Astronomy.SearchLunarEclipse} or {@link Astronomy.NextLunarEclipse}
+ * to report information about a lunar eclipse event.
+ * When a lunar eclipse is found, it is classified as penumbral, partial, or total.
+ * Penumbral eclipses are difficult to observe, because the moon is only slightly dimmed
+ * by the Earth's penumbra; no part of the Moon touches the Earth's umbra.
+ * Partial eclipses occur when part, but not all, of the Moon touches the Earth's umbra.
+ * Total eclipses occur when the entire Moon passes into the Earth's umbra.
+ *
+ * The `kind` field thus holds one of the strings `"penumbral"`, `"partial"`,
+ * or `"total"`, depending on the kind of lunar eclipse found.
+ *
+ * Field `center` holds the date and time of the center of the eclipse, when it is at its peak.
+ *
+ * Fields `sd_penum`, `sd_partial`, and `sd_total` hold the semi-duration of each phase
+ * of the eclipse, which is half of the amount of time the eclipse spends in each
+ * phase (expressed in minutes), or 0 if the eclipse never reaches that phase.
+ * By converting from minutes to days, and subtracting/adding with `center`, the caller
+ * may determine the date and time of the beginning/end of each eclipse phase.
+ *
+ * @class
+ * @memberof Astronomy
+ *
+ * @property {string} kind
+ *      The type of lunar eclipse found.
+ *
+ * @property {Astronomy.AstroTime} center
+ *      The time of the eclipse at its peak.
+ *
+ * @property {number} sd_penum
+ *      The semi-duration of the penumbral phase in minutes.
+ *
+ * @property {number} sd_partial
+ *      The semi-duration of the penumbral phase in minutes, or 0.0 if none.
+ *
+ * @property {number} sd_total
+ *      The semi-duration of the penumbral phase in minutes, or 0.0 if none.
+ *
+ */
+class LunarEclipseInfo {
+    constructor(kind, center, sd_penum, sd_partial, sd_total) {
+        this.kind = kind;
+        this.center = center;
+        this.sd_penum = sd_penum;
+        this.sd_partial = sd_partial;
+        this.sd_total = sd_total;
+    }
+}
+
+class EarthShadowInfo {
+    constructor(time, u, r, k, p) {
+        this.time = time;
+        this.u = u;  // dot product of (heliocentric earth) and (geocentric moon): defines the shadow plane where the Moon is
+        this.r = r;  // km distance between center of Moon and the line passing through the centers of the Sun and Earth.
+        this.k = k;  // umbra radius in km, at the shadow plane
+        this.p = p;  // penumbra radius in km, at the shadow plane
+    }
+}
+
+function EarthShadow(time) {
+    const e = CalcVsop(vsop.Earth, time);
+    const m = Astronomy.GeoMoon(time);
+    const u = (e.x*m.x + e.y*m.y + e.z*m.z) / (e.x*e.x + e.y*e.y + e.z*e.z);
+    const dx = (u * e.x) - m.x;
+    const dy = (u * e.y) - m.y;
+    const dz = (u * e.z) - m.z;
+    const r = KM_PER_AU * Math.sqrt(dx*dx + dy*dy + dz*dz);
+    const k = +SUN_RADIUS_KM - (1.0 + u)*(SUN_RADIUS_KM - EARTH_ECLIPSE_RADIUS_KM);
+    const p = -SUN_RADIUS_KM + (1.0 + u)*(SUN_RADIUS_KM + EARTH_ECLIPSE_RADIUS_KM);
+
+    return new EarthShadowInfo(time, u, r, k, p);
+}
+
+function PeakEarthShadow(search_center_time) {
+    function slope(time) {
+        const dt = 1.0 / 86400.0;
+        const t1 = time.AddDays(-dt);
+        const t2 = time.AddDays(+dt);
+        const shadow1 = EarthShadow(t1);
+        const shadow2 = EarthShadow(t2);
+        return (shadow2.r - shadow1.r) / dt;
+    }
+
+    const window = 0.03;        /* initial search window, in days, before/after given time */
+    const t1 = search_center_time.AddDays(-window);
+    const t2 = search_center_time.AddDays(+window);
+
+    const tx = Astronomy.Search(slope, t1, t2, 1.0);
+    return EarthShadow(tx);
+}
+
+function ShadowSemiDurationMinutes(center_time, radius_limit, window_minutes) {
+    // Search backwards and forwards from the center time until shadow axis distance crosses radius limit.
+    const window = window_minutes / (24.0 * 60.0);
+    const before = center_time.AddDays(-window);
+    const after  = center_time.AddDays(+window);
+    const t1 = Astronomy.Search(time => -(EarthShadow(time).r - radius_limit), before, center_time, 1.0);
+    const t2 = Astronomy.Search(time => +(EarthShadow(time).r - radius_limit), center_time, after, 1.0);
+    if (t1 === null || t2 === null)
+        throw 'Failed to find shadow semiduration';
+    return (t2.ut - t1.ut) * ((24.0 * 60.0) / 2.0);    // convert days to minutes and average the semi-durations.
+}
+
+
+/**
+ * @brief Searches for a lunar eclipse.
+ *
+ * This function finds the first lunar eclipse that occurs after `startTime`.
+ * A lunar eclipse found may be penumbral, partial, or total.
+ * See {@link Astronomy.LunarEclipseInfo} for more information.
+ * To find a series of lunar eclipses, call this function once,
+ * then keep calling {@link Astronomy.NextLunarEclipse} as many times as desired,
+ * passing in the `center` value returned from the previous call.
+ *
+ * @param {(Date|number|Astronomy.AstroTime)} date
+ *      The date and time for starting the search for a lunar eclipse.
+ *
+ * @returns {Astronomy.LunarEclipseInfo}
+ */
+Astronomy.SearchLunarEclipse = function(date) {
+    const PruneLatitude = 1.8;   /* full Moon's ecliptic latitude above which eclipse is impossible */
+    let fmtime = Astronomy.MakeTime(date);
+    for (let fmcount = 0; fmcount < 12; ++fmcount) {
+        /* Search for the next full moon. Any eclipse will be near it. */
+        const fullmoon = Astronomy.SearchMoonPhase(180, fmtime, 40);
+        if (fullmoon === null)
+            throw 'Cannot find full moon.';
+
+        /*
+            Pruning: if the full Moon's ecliptic latitude is too large,
+            a lunar eclipse is not possible. Avoid needless work searching for
+            the minimum moon distance.
+        */
+       const moon = CalcMoon(fullmoon);
+       if (RAD2DEG * Math.abs(moon.geo_eclip_lat) < PruneLatitude) {
+           /* Search near the full moon for the time when the center of the Moon */
+           /* is closest to the line passing through the centers of the Sun and Earth. */
+           const shadow = PeakEarthShadow(fullmoon);
+           const r1 = Math.abs(shadow.r - MOON_RADIUS_KM);
+           const r2 = Math.abs(shadow.r + MOON_RADIUS_KM);
+           if (r1 < shadow.p) {
+               /* This is at least a penumbral eclipse. We will return a result. */
+               let kind = 'penumbral';
+               let sd_total = 0.0;
+               let sd_partial = 0.0;
+               let sd_penum = ShadowSemiDurationMinutes(shadow.time, shadow.p + MOON_RADIUS_KM, 200.0);
+
+               if (r1 < shadow.k) {
+                   /* This is at least a partial eclipse. */
+                   kind = 'partial';
+                   sd_partial = ShadowSemiDurationMinutes(shadow.time, shadow.k + MOON_RADIUS_KM, sd_penum);
+
+                   if (r2 < shadow.k) {
+                       /* This is a total eclipse. */
+                       kind = 'total';
+                       sd_total = ShadowSemiDurationMinutes(shadow.time, shadow.k - MOON_RADIUS_KM, sd_partial);
+                   }
+               }
+               return new LunarEclipseInfo(kind, shadow.time, sd_penum, sd_partial, sd_total);
+           }
+       }
+
+       /* We didn't find an eclipse on this full moon, so search for the next one. */
+       fmtime = fullmoon.AddDays(10);
+    }
+
+    /* This should never happen because there are always at least 2 full moons per year. */
+    throw 'Failed to find lunar eclipse within 12 full moons.';
+}
+
+
+/**
+ * @brief Searches for the next lunar eclipse in a series.
+ *
+ * After using {@link Astronomy.SearchLunarEclipse} to find the first lunar eclipse
+ * in a series, you can call this function to find the next consecutive lunar eclipse.
+ * Pass in the `center` value from the {@link Astronomy.LunarEclipseInfo} returned by the
+ * previous call to `Astronomy.SearchLunarEclipse` or `Astronomy.NextLunarEclipse`
+ * to find the next lunar eclipse.
+ *
+ * @param {Astronomy.AstroTime} prevEclipseTime
+ *      A date and time near a full moon. Lunar eclipse search will start at the next full moon.
+ *
+ * @returns {Astronomy.LunarEclipseInfo}
+ */
+Astronomy.NextLunarEclipse = function(prevEclipseTime) {
+    const startTime = prevEclipseTime.AddDays(10);
+    return Astronomy.SearchLunarEclipse(startTime);
 }
 
 

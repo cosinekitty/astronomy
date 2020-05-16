@@ -1674,7 +1674,7 @@ may determine the date and time of the beginning/end of each eclipse phase.
 | --- | --- | --- |
 | [`EclipseKind`](#EclipseKind) | `kind` | The type of lunar eclipse found. |
 | [`AstroTime`](#AstroTime) | `center` | The time of the eclipse at its peak. |
-| `double` | `sd_penum` | The semi-duration of the penumbral phase in minutes, or 0.0 if none. |
+| `double` | `sd_penum` | The semi-duration of the penumbral phase in minutes. |
 | `double` | `sd_partial` | The semi-duration of the partial phase in minutes, or 0.0 if none. |
 | `double` | `sd_total` | The semi-duration of the total phase in minutes, or 0.0 if none. |
 

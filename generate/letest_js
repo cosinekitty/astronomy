@@ -1,0 +1,5 @@
+#!/bin/bash
+./generate source || exit $?
+google-closure-compiler --js ../source/js/astronomy.js --js_output_file ../source/js/astronomy.min.js || exit $?
+time node lunar_eclipse_test.js || exit $?
+exit 0
