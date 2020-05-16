@@ -12,6 +12,9 @@ namespace csharp_test
         {
             try
             {
+                if (args.Length == 1 && args[0] == "lunar_eclipse")
+                    return LunarEclipseTest();
+
                 Console.WriteLine("csharp_test: starting");
                 if (TestTime() != 0) return 1;
                 if (MoonTest() != 0) return 1;
@@ -1584,6 +1587,7 @@ namespace csharp_test
             const string filename = "../../eclipse/lunar_eclipse.txt";
             const string statsFilename = "../../eclipse/cs_le_stats.csv";
 
+            Astronomy.CalcMoonCount = 0;
             using (StreamReader infile = File.OpenText(filename))
             {
                 using (StreamWriter outfile = File.CreateText(statsFilename))
@@ -1709,7 +1713,7 @@ namespace csharp_test
 
                         eclipse = Astronomy.NextLunarEclipse(eclipse.center);
                     }
-                    Console.WriteLine("C# LunarEclipseTest: PASS (verified {0}, skipped {1}, max_diff_minutes = {2}, avg_diff_minutes = {3})", lnum, skip_count, max_diff_minutes, (sum_diff_minutes / diff_count));
+                    Console.WriteLine("C# LunarEclipseTest: PASS (verified {0}, skipped {1}, max_diff_minutes = {2}, avg_diff_minutes = {3}, moon calcs = {4})", lnum, skip_count, max_diff_minutes, (sum_diff_minutes / diff_count), Astronomy.CalcMoonCount);
                 }
             }
             return 0;

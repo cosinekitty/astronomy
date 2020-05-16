@@ -1165,6 +1165,19 @@ namespace CosineKitty
         }
     }
 
+    internal class SearchContext_EarthShadowSlope: SearchContext
+    {
+        public override double Eval(AstroTime time)
+        {
+            const double dt = 1.0 / 86400.0;
+            AstroTime t1 = time.AddDays(-dt);
+            AstroTime t2 = time.AddDays(+dt);
+            EarthShadowInfo shadow1 = Astronomy.EarthShadow(t1);
+            EarthShadowInfo shadow2 = Astronomy.EarthShadow(t2);
+            return (shadow2.r - shadow1.r) / dt;
+        }
+    }
+
     internal class PascalArray2<ElemType>
     {
         private readonly int xmin;
@@ -1354,6 +1367,7 @@ namespace CosineKitty
 
         internal MoonResult CalcMoon()
         {
+            ++Astronomy.CalcMoonCount;
 
             AddSol(    13.9020,    14.0600,    -0.0010,     0.2607, 0, 0, 0, 4);
             AddSol(     0.4030,    -4.0100,     0.3940,     0.0023, 0, 0, 0, 3);
@@ -1567,6 +1581,9 @@ namespace CosineKitty
         private const double SATURN_MASS  =     95.16745;        /* Saturn's mass relative to Earth. */
         private const double URANUS_MASS  =     14.53617;        /* Uranus's mass relative to Earth. */
         private const double NEPTUNE_MASS =     17.14886;        /* Neptune's mass relative to Earth. */
+
+        /// <summary>Counter used for performance testing.</summary>
+        public static int CalcMoonCount;
 
         internal static double LongitudeOffset(double diff)
         {
@@ -5442,36 +5459,18 @@ namespace CosineKitty
         }
 
 
+        // We can get away with creating a single EarthShadowSlope context
+        // because it contains no state and it has no side-effects.
+        // This reduces memory allocation overhead.
+        private static readonly SearchContext_EarthShadowSlope earthShadowSlopeContext = new SearchContext_EarthShadowSlope();
+
         private static EarthShadowInfo PeakEarthShadow(AstroTime search_center_time)
         {
-            EarthShadowInfo best_shadow = new EarthShadowInfo();
-            const double window = 0.5;        /* initial search window, in days, before/after given time */
-            const double threshold = 1.0 / (24.0 * 3600.0);     /* stop when uncertainty is less than 1 second */
-            const int nsamples = 8;
-
+            const double window = 0.03;        /* initial search window, in days, before/after given time */
             AstroTime t1 = search_center_time.AddDays(-window);
             AstroTime t2 = search_center_time.AddDays(+window);
-
-            /* Iteratively search for time when the Moon is closest to the Sun/Earth axis. */
-            for(;;)
-            {
-                double dt = (t2.ut - t1.ut) / (nsamples - 1);
-
-                /* In each pass, sample a series of points and pick the one with minimum axis distance. */
-                for (int i=0; i < nsamples; ++i)
-                {
-                    AstroTime time = t1.AddDays(i*dt);
-                    EarthShadowInfo shadow = EarthShadow(time);
-                    if ((i == 0) || (shadow.r < best_shadow.r))
-                        best_shadow = shadow;
-                }
-
-                if (2.0 * dt < threshold)
-                    return best_shadow;
-
-                t1 = best_shadow.time.AddDays(-dt);
-                t2 = best_shadow.time.AddDays(+dt);
-            }
+            AstroTime tx = Search(earthShadowSlopeContext, t1, t2, 1.0);
+            return EarthShadow(tx);
         }
 
 
@@ -5492,6 +5491,7 @@ namespace CosineKitty
         /// </returns>
         public static LunarEclipseInfo SearchLunarEclipse(AstroTime startTime)
         {
+            const double PruneLatitude = 1.8;   /* full Moon's ecliptic latitude above which eclipse is impossible */
             // Iterate through consecutive full moons until we find any kind of lunar eclipse.
             AstroTime fmtime = startTime;
             for (int fmcount=0; fmcount < 12; ++fmcount)
@@ -5501,34 +5501,44 @@ namespace CosineKitty
                 if (fullmoon == null)
                     throw new Exception("Internal error: could not find full moon.");
 
-                // Search near the full moon for the time when the center of the Moon
-                // is closest to the line passing through the centers of the Sun and Earth.
-                EarthShadowInfo shadow = PeakEarthShadow(fullmoon);
-
-                double r1 = Math.Abs(shadow.r - MOON_RADIUS_KM);
-                double r2 = Math.Abs(shadow.r + MOON_RADIUS_KM);
-                if (r1 < shadow.p)
+                /*
+                    Pruning: if the full Moon's ecliptic latitude is too large,
+                    a lunar eclipse is not possible. Avoid needless work searching for
+                    the minimum moon distance.
+                */
+                var mc = new MoonContext(fullmoon.tt / 36525.0);
+                MoonResult mr = mc.CalcMoon();
+                if (RAD2DEG * Math.Abs(mr.geo_eclip_lat) < PruneLatitude)
                 {
-                    // This is at least a penumbral eclipse. We will return a result.
-                    EclipseKind kind = EclipseKind.Penumbral;
-                    double sd_total = 0.0;
-                    double sd_partial = 0.0;
-                    double sd_penum = ShadowSemiDurationMinutes(shadow.time, shadow.p + MOON_RADIUS_KM);
+                    // Search near the full moon for the time when the center of the Moon
+                    // is closest to the line passing through the centers of the Sun and Earth.
+                    EarthShadowInfo shadow = PeakEarthShadow(fullmoon);
 
-                    if (r1 < shadow.k)
+                    double r1 = Math.Abs(shadow.r - MOON_RADIUS_KM);
+                    double r2 = Math.Abs(shadow.r + MOON_RADIUS_KM);
+                    if (r1 < shadow.p)
                     {
-                        // This is at least a partial eclipse.
-                        kind = EclipseKind.Partial;
-                        sd_partial = ShadowSemiDurationMinutes(shadow.time, shadow.k + MOON_RADIUS_KM);
+                        // This is at least a penumbral eclipse. We will return a result.
+                        EclipseKind kind = EclipseKind.Penumbral;
+                        double sd_total = 0.0;
+                        double sd_partial = 0.0;
+                        double sd_penum = ShadowSemiDurationMinutes(shadow.time, shadow.p + MOON_RADIUS_KM, 200.0);
 
-                        if (r2 < shadow.k)
+                        if (r1 < shadow.k)
                         {
-                            // This is a total eclipse.
-                            kind = EclipseKind.Total;
-                            sd_total = ShadowSemiDurationMinutes(shadow.time, shadow.k - MOON_RADIUS_KM);
+                            // This is at least a partial eclipse.
+                            kind = EclipseKind.Partial;
+                            sd_partial = ShadowSemiDurationMinutes(shadow.time, shadow.k + MOON_RADIUS_KM, sd_penum);
+
+                            if (r2 < shadow.k)
+                            {
+                                // This is a total eclipse.
+                                kind = EclipseKind.Total;
+                                sd_total = ShadowSemiDurationMinutes(shadow.time, shadow.k - MOON_RADIUS_KM, sd_partial);
+                            }
                         }
+                        return new LunarEclipseInfo(kind, shadow.time, sd_penum, sd_partial, sd_total);
                     }
-                    return new LunarEclipseInfo(kind, shadow.time, sd_penum, sd_partial, sd_total);
                 }
 
                 // We didn't find an eclipse on this full moon, so search for the next one.
@@ -5563,10 +5573,10 @@ namespace CosineKitty
         }
 
 
-        private static double ShadowSemiDurationMinutes(AstroTime center_time, double radius_limit)
+        private static double ShadowSemiDurationMinutes(AstroTime center_time, double radius_limit, double window_minutes)
         {
             // Search backwards and forwards from the center time until shadow axis distance crosses radius limit.
-            const double window = 4.0 / 24.0;
+            double window = window_minutes / (24.0 * 60.0);
             AstroTime before = center_time.AddDays(-window);
             AstroTime after  = center_time.AddDays(+window);
             AstroTime t1 = Search(new SearchContext_EarthShadow(radius_limit, -1.0), before, center_time, 1.0);
