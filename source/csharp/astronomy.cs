@@ -833,6 +833,93 @@ namespace CosineKitty
         }
     }
 
+    /// <summary>different kinds of lunar/solar eclipses.</summary>
+    public enum EclipseKind
+    {
+        /// <summary>No eclipse found.</summary>
+        None,
+
+        /// <summary>A penumbral lunar eclipse. (Never used for a solar eclipse.)</summary>
+        Penumbral,
+
+        /// <summary>A partial lunar/solar eclipse.</summary>
+        Partial,
+
+        /// <summary>An annular solar eclipse. (Never used for a lunar eclipse.)</summary>
+        Annular,
+
+        /// <summary>A total lunar/solar eclipse.</summary>
+        Total,
+    }
+
+    /// <summary>
+    /// Information about a lunar eclipse.
+    /// </summary>
+    /// <remarks>
+    /// Returned by #Astronomy.SearchLunarEclipse or #Astronomy.NextLunarEclipse
+    /// to report information about a lunar eclipse event.
+    /// When a lunar eclipse is found, it is classified as penumbral, partial, or total.
+    /// Penumbral eclipses are difficult to observe, because the moon is only slightly dimmed
+    /// by the Earth's penumbra; no part of the Moon touches the Earth's umbra.
+    /// Partial eclipses occur when part, but not all, of the Moon touches the Earth's umbra.
+    /// Total eclipses occur when the entire Moon passes into the Earth's umbra.
+    ///
+    /// The `kind` field thus holds `EclipseKind.Penumbral`, `EclipseKind.Partial`,
+    /// or `EclipseKind.Total`, depending on the kind of lunar eclipse found.
+    ///
+    /// Field `center` holds the date and time of the center of the eclipse, when it is at its peak.
+    ///
+    /// Fields `sd_penum`, `sd_partial`, and `sd_total` hold the semi-duration of each phase
+    /// of the eclipse, which is half of the amount of time the eclipse spends in each
+    /// phase (expressed in minutes), or 0 if the eclipse never reaches that phase.
+    /// By converting from minutes to days, and subtracting/adding with `center`, the caller
+    /// may determine the date and time of the beginning/end of each eclipse phase.
+    /// </remarks>
+    public struct LunarEclipseInfo
+    {
+        /// <summary>The type of lunar eclipse found.</summary>
+        public EclipseKind kind;
+
+        /// <summary>The time of the eclipse at its peak.</summary>
+        public AstroTime center;
+
+        /// <summary>The semi-duration of the penumbral phase in minutes, or 0.0 if none.</summary>
+        public double sd_penum;
+
+        /// <summary>The semi-duration of the partial phase in minutes, or 0.0 if none.</summary>
+        public double sd_partial;
+
+        /// <summary>The semi-duration of the total phase in minutes, or 0.0 if none.</summary>
+        public double sd_total;
+
+        internal LunarEclipseInfo(EclipseKind kind, AstroTime center, double sd_penum, double sd_partial, double sd_total)
+        {
+            this.kind = kind;
+            this.center = center;
+            this.sd_penum = sd_penum;
+            this.sd_partial = sd_partial;
+            this.sd_total = sd_total;
+        }
+    }
+
+    internal struct EarthShadowInfo
+    {
+        public AstroTime time;
+        public double u;    // dot product of (heliocentric earth) and (geocentric moon): defines the shadow plane where the Moon is
+        public double r;    // km distance between center of Moon and the line passing through the centers of the Sun and Earth.
+        public double k;    // umbra radius in km, at the shadow plane
+        public double p;    // penumbra radius in km, at the shadow plane
+
+        public EarthShadowInfo(AstroTime time, double u, double r, double k, double p)
+        {
+            this.time = time;
+            this.u = u;
+            this.r = r;
+            this.k = k;
+            this.p = p;
+        }
+    }
+
     /// <summary>
     /// Information about the brightness and illuminated shape of a celestial body.
     /// </summary>
@@ -1058,6 +1145,23 @@ namespace CosineKitty
             double r1 = Astronomy.HelioDistance(body, t1);
             double r2 = Astronomy.HelioDistance(body, t2);
             return direction * (r2 - r1) / dt;
+        }
+    }
+
+    internal class SearchContext_EarthShadow: SearchContext
+    {
+        private readonly double radius_limit;
+        private readonly double direction;
+
+        public SearchContext_EarthShadow(double radius_limit, double direction)
+        {
+            this.radius_limit = radius_limit;
+            this.direction = direction;
+        }
+
+        public override double Eval(AstroTime time)
+        {
+            return direction * (Astronomy.EarthShadow(time).r - radius_limit);
         }
     }
 
@@ -1365,7 +1469,7 @@ namespace CosineKitty
             return new MoonResult(
                 Astronomy.PI2 * Frac((L0+DLAM/Astronomy.ARC) / Astronomy.PI2),
                 lat_seconds * (Astronomy.DEG2RAD / 3600.0),
-                (Astronomy.ARC * (Astronomy.ERAD / Astronomy.AU)) / (0.999953253 * SINPI)
+                (Astronomy.ARC * (Astronomy.ERAD / Astronomy.METERS_PER_AU)) / (0.999953253 * SINPI)
             );
         }
     }
@@ -1436,11 +1540,11 @@ namespace CosineKitty
         private const double ASEC360 = 1296000.0;
         private const double ASEC2RAD = 4.848136811095359935899141e-6;
         internal const double PI2 = 2.0 * Math.PI;
-        internal const double ARC = 3600.0 * 180.0 / Math.PI;     /* arcseconds per radian */
-        private const double C_AUDAY = 173.1446326846693;        /* speed of light in AU/day */
-        internal const double ERAD = 6378136.6;                   /* mean earth radius in meters */
-        internal const double AU = 1.4959787069098932e+11;        /* astronomical unit in meters */
+        internal const double ARC = 3600.0 * 180.0 / Math.PI;       /* arcseconds per radian */
+        private const double C_AUDAY = 173.1446326846693;           /* speed of light in AU/day */
+        internal const double ERAD = 6378136.6;                     /* mean earth radius in meters */
         internal const double KM_PER_AU = 1.4959787069098932e+8;
+        internal const double METERS_PER_AU = KM_PER_AU * 1000.0;   /* astronomical unit in meters */
         private const double ANGVEL = 7.2921150e-5;
         private const double SECONDS_PER_DAY = 24.0 * 3600.0;
         private const double SOLAR_DAYS_PER_SIDEREAL_DAY = 0.9972695717592592;
@@ -1448,8 +1552,13 @@ namespace CosineKitty
         private const double EARTH_ORBITAL_PERIOD = 365.256;
         private const double NEPTUNE_ORBITAL_PERIOD = 60189.0;
         internal const double REFRACTION_NEAR_HORIZON = 34.0 / 60.0;   /* degrees of refractive "lift" seen for objects near horizon */
-        internal const double SUN_RADIUS_AU  = 4.6505e-3;
-        internal const double MOON_RADIUS_AU = 1.15717e-5;
+        internal const double SUN_RADIUS_KM  = 695700.0;
+        internal const double SUN_RADIUS_AU  = SUN_RADIUS_KM / KM_PER_AU;
+        internal const double EARTH_RADIUS_KM = 6371.0;         /* mean radius of the Earth's geoid, without atmosphere */
+        internal const double EARTH_ATMOSPHERE_KM = 88.0;       /* effective atmosphere thickness for lunar eclipses */
+        internal const double EARTH_ECLIPSE_RADIUS_KM = EARTH_RADIUS_KM + EARTH_ATMOSPHERE_KM;
+        internal const double MOON_RADIUS_KM = 1737.4;
+        internal const double MOON_RADIUS_AU = MOON_RADIUS_KM / KM_PER_AU;
         private const double ASEC180 = 180.0 * 60.0 * 60.0;         /* arcseconds per 180 degrees (or pi radians) */
         private const double AU_PER_PARSEC = (ASEC180 / Math.PI);   /* exact definition of how many AU = one parsec */
         private const double EARTH_MOON_MASS_RATIO = 81.30056;
@@ -5311,6 +5420,158 @@ namespace CosineKitty
                 throw new Exception(string.Format("Internal error: previous apsis was {0}, but found {1} for next apsis.", apsis.kind, next.kind));
 
             return next;
+        }
+
+
+        internal static EarthShadowInfo EarthShadow(AstroTime time)
+        {
+            AstroVector e = CalcEarth(time);
+            AstroVector m = GeoMoon(time);
+
+            double u = (e.x*m.x + e.y*m.y + e.z*m.z) / (e.x*e.x + e.y*e.y + e.z*e.z);
+
+            double dx = (u * e.x) - m.x;
+            double dy = (u * e.y) - m.y;
+            double dz = (u * e.z) - m.z;
+            double r = KM_PER_AU * Math.Sqrt(dx*dx + dy*dy + dz*dz);
+
+            double k = +SUN_RADIUS_KM - (1.0 + u)*(SUN_RADIUS_KM - EARTH_ECLIPSE_RADIUS_KM);
+            double p = -SUN_RADIUS_KM + (1.0 + u)*(SUN_RADIUS_KM + EARTH_ECLIPSE_RADIUS_KM);
+
+            return new EarthShadowInfo(time, u, r, k, p);
+        }
+
+
+        private static EarthShadowInfo PeakEarthShadow(AstroTime search_center_time)
+        {
+            EarthShadowInfo best_shadow = new EarthShadowInfo();
+            const double window = 0.5;        /* initial search window, in days, before/after given time */
+            const double threshold = 1.0 / (24.0 * 3600.0);     /* stop when uncertainty is less than 1 second */
+            const int nsamples = 8;
+
+            AstroTime t1 = search_center_time.AddDays(-window);
+            AstroTime t2 = search_center_time.AddDays(+window);
+
+            /* Iteratively search for time when the Moon is closest to the Sun/Earth axis. */
+            for(;;)
+            {
+                double dt = (t2.ut - t1.ut) / (nsamples - 1);
+
+                /* In each pass, sample a series of points and pick the one with minimum axis distance. */
+                for (int i=0; i < nsamples; ++i)
+                {
+                    AstroTime time = t1.AddDays(i*dt);
+                    EarthShadowInfo shadow = EarthShadow(time);
+                    if ((i == 0) || (shadow.r < best_shadow.r))
+                        best_shadow = shadow;
+                }
+
+                if (2.0 * dt < threshold)
+                    return best_shadow;
+
+                t1 = best_shadow.time.AddDays(-dt);
+                t2 = best_shadow.time.AddDays(+dt);
+            }
+        }
+
+
+        /// <summary>Searches for a lunar eclipse.</summary>
+        /// <remarks>
+        /// This function finds the first lunar eclipse that occurs after `startTime`.
+        /// A lunar eclipse found may be penumbral, partial, or total.
+        /// See #LunarEclipseInfo for more information.
+        /// To find a series of lunar eclipses, call this function once,
+        /// then keep calling #Astronomy.NextLunarEclipse as many times as desired,
+        /// passing in the `center` value returned from the previous call.
+        /// </remarks>
+        /// <param name="startTime">
+        ///      The date and time for starting the search for a lunar eclipse.
+        /// </param>
+        /// <returns>
+        ///      A #LunarEclipseInfo structure containing information about the lunar eclipse.
+        /// </returns>
+        public static LunarEclipseInfo SearchLunarEclipse(AstroTime startTime)
+        {
+            // Iterate through consecutive full moons until we find any kind of lunar eclipse.
+            AstroTime fmtime = startTime;
+            for (int fmcount=0; fmcount < 12; ++fmcount)
+            {
+                // Search for the next full moon. Any eclipse will be near it.
+                AstroTime fullmoon = SearchMoonPhase(180.0, fmtime, 40.0);
+                if (fullmoon == null)
+                    throw new Exception("Internal error: could not find full moon.");
+
+                // Search near the full moon for the time when the center of the Moon
+                // is closest to the line passing through the centers of the Sun and Earth.
+                EarthShadowInfo shadow = PeakEarthShadow(fullmoon);
+
+                double r1 = Math.Abs(shadow.r - MOON_RADIUS_KM);
+                double r2 = Math.Abs(shadow.r + MOON_RADIUS_KM);
+                if (r1 < shadow.p)
+                {
+                    // This is at least a penumbral eclipse. We will return a result.
+                    EclipseKind kind = EclipseKind.Penumbral;
+                    double sd_total = 0.0;
+                    double sd_partial = 0.0;
+                    double sd_penum = ShadowSemiDurationMinutes(shadow.time, shadow.p + MOON_RADIUS_KM);
+
+                    if (r1 < shadow.k)
+                    {
+                        // This is at least a partial eclipse.
+                        kind = EclipseKind.Partial;
+                        sd_partial = ShadowSemiDurationMinutes(shadow.time, shadow.k + MOON_RADIUS_KM);
+
+                        if (r2 < shadow.k)
+                        {
+                            // This is a total eclipse.
+                            kind = EclipseKind.Total;
+                            sd_total = ShadowSemiDurationMinutes(shadow.time, shadow.k - MOON_RADIUS_KM);
+                        }
+                    }
+                    return new LunarEclipseInfo(kind, shadow.time, sd_penum, sd_partial, sd_total);
+                }
+
+                // We didn't find an eclipse on this full moon, so search for the next one.
+                fmtime = fullmoon.AddDays(10.0);
+            }
+
+            // This should never happen, because there should be at least 2 lunar eclipses per year.
+            throw new Exception("Internal error: failed to find lunar eclipse within 12 full moons.");
+        }
+
+
+        /// <summary>Searches for the next lunar eclipse in a series.</summary>
+        /// <remarks>
+        /// After using #Astronomy.SearchLunarEclipse to find the first lunar eclipse
+        /// in a series, you can call this function to find the next consecutive lunar eclipse.
+        /// Pass in the `center` value from the #LunarEclipseInfo returned by the
+        /// previous call to `Astronomy.SearchLunarEclipse` or `Astronomy.NextLunarEclipse`
+        /// to find the next lunar eclipse.
+        /// </remarks>
+        ///
+        /// <param name="prevEclipseTime">
+        /// A date and time near a full moon. Lunar eclipse search will start at the next full moon.
+        /// </param>
+        ///
+        /// <returns>
+        /// A #LunarEclipseInfo structure containing information about the lunar eclipse.
+        /// </returns>
+        public static LunarEclipseInfo NextLunarEclipse(AstroTime prevEclipseTime)
+        {
+            AstroTime startTime = prevEclipseTime.AddDays(10.0);
+            return SearchLunarEclipse(startTime);
+        }
+
+
+        private static double ShadowSemiDurationMinutes(AstroTime center_time, double radius_limit)
+        {
+            // Search backwards and forwards from the center time until shadow axis distance crosses radius limit.
+            const double window = 4.0 / 24.0;
+            AstroTime before = center_time.AddDays(-window);
+            AstroTime after  = center_time.AddDays(+window);
+            AstroTime t1 = Search(new SearchContext_EarthShadow(radius_limit, +1.0), before, center_time, 1.0);
+            AstroTime t2 = Search(new SearchContext_EarthShadow(radius_limit, -1.0), center_time, after, 1.0);
+            return (t2.ut - t1.ut) * ((24.0 * 60.0) / 2.0);    // convert days to minutes and average the semi-durations.
         }
 
 

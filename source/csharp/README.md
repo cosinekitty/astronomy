@@ -564,6 +564,23 @@ See [`Astronomy.SearchLunarApsis`](#Astronomy.SearchLunarApsis) for more details
 
 **Returns:** Same as the return value for [`Astronomy.SearchLunarApsis`](#Astronomy.SearchLunarApsis).
 
+<a name="Astronomy.NextLunarEclipse"></a>
+### Astronomy.NextLunarEclipse(prevEclipseTime) &#8658; [`LunarEclipseInfo`](#LunarEclipseInfo)
+
+**Searches for the next lunar eclipse in a series.**
+
+After using [`Astronomy.SearchLunarEclipse`](#Astronomy.SearchLunarEclipse) to find the first lunar eclipse
+in a series, you can call this function to find the next consecutive lunar eclipse.
+Pass in the `center` value from the [`LunarEclipseInfo`](#LunarEclipseInfo) returned by the
+previous call to `Astronomy.SearchLunarEclipse` or `Astronomy.NextLunarEclipse`
+to find the next lunar eclipse.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`AstroTime`](#AstroTime) | `prevEclipseTime` | A date and time near a full moon. Lunar eclipse search will start at the next full moon. |
+
+**Returns:** A [`LunarEclipseInfo`](#LunarEclipseInfo) structure containing information about the lunar eclipse.
+
 <a name="Astronomy.NextMoonQuarter"></a>
 ### Astronomy.NextMoonQuarter(mq) &#8658; [`MoonQuarterInfo`](#MoonQuarterInfo)
 
@@ -928,6 +945,24 @@ call of `Astronomy.NextLunarApsis` as many times as desired.
 | [`AstroTime`](#AstroTime) | `startTime` | The date and time at which to start searching for the next perigee or apogee. |
 
 **Returns:** Returns an [`ApsisInfo`](#ApsisInfo) structure containing information about the next lunar apsis.
+
+<a name="Astronomy.SearchLunarEclipse"></a>
+### Astronomy.SearchLunarEclipse(startTime) &#8658; [`LunarEclipseInfo`](#LunarEclipseInfo)
+
+**Searches for a lunar eclipse.**
+
+This function finds the first lunar eclipse that occurs after `startTime`.
+A lunar eclipse found may be penumbral, partial, or total.
+See [`LunarEclipseInfo`](#LunarEclipseInfo) for more information.
+To find a series of lunar eclipses, call this function once,
+then keep calling [`Astronomy.NextLunarEclipse`](#Astronomy.NextLunarEclipse) as many times as desired,
+passing in the `center` value returned from the previous call.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`AstroTime`](#AstroTime) | `startTime` | The date and time for starting the search for a lunar eclipse. |
+
+**Returns:** A [`LunarEclipseInfo`](#LunarEclipseInfo) structure containing information about the lunar eclipse.
 
 <a name="Astronomy.SearchMaxElongation"></a>
 ### Astronomy.SearchMaxElongation(body, startTime) &#8658; [`ElongationInfo`](#ElongationInfo)
@@ -1487,6 +1522,21 @@ is the location of the observer.**
 
 ---
 
+<a name="EclipseKind"></a>
+## `enum EclipseKind`
+
+**different kinds of lunar/solar eclipses.**
+
+| Value | Description |
+| --- | --- |
+| `None` | No eclipse found. |
+| `Penumbral` | A penumbral lunar eclipse. (Never used for a solar eclipse.) |
+| `Partial` | A partial lunar/solar eclipse. |
+| `Annular` | An annular solar eclipse. (Never used for a lunar eclipse.) |
+| `Total` | A total lunar/solar eclipse. |
+
+---
+
 <a name="Ecliptic"></a>
 ## `struct Ecliptic`
 
@@ -1593,6 +1643,40 @@ to report the visual magnitude and illuminated fraction of a celestial body at a
 | `double` | `phase_angle` | The angle in degrees between the Sun and the Earth, as seen from the body. Indicates the body's phase as seen from the Earth. |
 | `double` | `helio_dist` | The distance between the Sun and the body at the observation time. |
 | `double` | `ring_tilt` | For Saturn, the tilt angle in degrees of its rings as seen from Earth. For all other bodies, 0. |
+
+---
+
+<a name="LunarEclipseInfo"></a>
+## `struct LunarEclipseInfo`
+
+**Information about a lunar eclipse.**
+
+Returned by [`Astronomy.SearchLunarEclipse`](#Astronomy.SearchLunarEclipse) or [`Astronomy.NextLunarEclipse`](#Astronomy.NextLunarEclipse)
+to report information about a lunar eclipse event.
+When a lunar eclipse is found, it is classified as penumbral, partial, or total.
+Penumbral eclipses are difficult to observe, because the moon is only slightly dimmed
+by the Earth's penumbra; no part of the Moon touches the Earth's umbra.
+Partial eclipses occur when part, but not all, of the Moon touches the Earth's umbra.
+Total eclipses occur when the entire Moon passes into the Earth's umbra.
+
+The `kind` field thus holds `EclipseKind.Penumbral`, `EclipseKind.Partial`,
+or `EclipseKind.Total`, depending on the kind of lunar eclipse found.
+
+Field `center` holds the date and time of the center of the eclipse, when it is at its peak.
+
+Fields `sd_penum`, `sd_partial`, and `sd_total` hold the semi-duration of each phase
+of the eclipse, which is half of the amount of time the eclipse spends in each
+phase (expressed in minutes), or 0 if the eclipse never reaches that phase.
+By converting from minutes to days, and subtracting/adding with `center`, the caller
+may determine the date and time of the beginning/end of each eclipse phase.
+
+| Type | Name | Description |
+| --- | --- | --- |
+| [`EclipseKind`](#EclipseKind) | `kind` | The type of lunar eclipse found. |
+| [`AstroTime`](#AstroTime) | `center` | The time of the eclipse at its peak. |
+| `double` | `sd_penum` | The semi-duration of the penumbral phase in minutes, or 0.0 if none. |
+| `double` | `sd_partial` | The semi-duration of the partial phase in minutes, or 0.0 if none. |
+| `double` | `sd_total` | The semi-duration of the total phase in minutes, or 0.0 if none. |
 
 ---
 

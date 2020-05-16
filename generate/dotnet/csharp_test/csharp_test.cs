@@ -469,7 +469,7 @@ namespace csharp_test
                     if (error_minutes > max_minutes)
                         max_minutes = error_minutes;
 
-                    if (error_minutes > 0.56)
+                    if (error_minutes > 0.57)
                     {
                         Console.WriteLine("C# RiseSetTest({0} line {1}): excessive prediction time error = {2} minutes.", filename, lnum, error_minutes);
                         return 1;
