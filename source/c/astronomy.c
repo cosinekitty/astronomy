@@ -7223,7 +7223,7 @@ static earth_shadow_t PeakEarthShadow(astro_time_t search_center_time)
 {
     astro_time_t t1, t2;
     astro_search_result_t result;
-    const double window = 0.5;        /* initial search window, in days, before/after given time */
+    const double window = 0.03;        /* initial search window, in days, before/after given time */
 
     t1 = Astronomy_AddDays(search_center_time, -window);
     t2 = Astronomy_AddDays(search_center_time, +window);
