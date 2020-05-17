@@ -70,6 +70,13 @@ To get started quickly, here are some [examples](../../demo/c/).
 | [SearchMoonQuarter](#Astronomy_SearchMoonQuarter) | Finds the first quarter moon phase after a given date and time. |
 | [NextMoonQuarter](#Astronomy_NextMoonQuarter) | Finds the next quarter moon phase after a previous one that has been found. |
 
+### Eclipses
+
+| Function | Description |
+| -------- | ----------- |
+| [SearchLunarEclipse](#Astronomy_SearchLunarEclipse) | Search for the first lunar eclipse after a given date. |
+| [NextLunarEclipse](#Astronomy_NextLunarEclipse) | Continue searching for more lunar eclipses. |
+
 ### Lunar perigee and apogee
 
 | Function | Description |

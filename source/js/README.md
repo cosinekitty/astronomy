@@ -40,6 +40,13 @@ and some [Node.js examples](../../demo/nodejs/).
 | [SearchMoonQuarter](#Astronomy.SearchMoonQuarter) | Find the first quarter moon phase after a given date and time. |
 | [NextMoonQuarter](#Astronomy.NextMoonQuarter) | Find the next quarter moon phase after a previous one that has been found. |
 
+### Eclipses
+
+| Function | Description |
+| -------- | ----------- |
+| [SearchLunarEclipse](#Astronomy.SearchLunarEclipse) | Search for the first lunar eclipse after a given date. |
+| [NextLunarEclipse](#Astronomy.NextLunarEclipse) | Continue searching for more lunar eclipses. |
+
 ### Lunar perigee and apogee
 
 | Function | Description |

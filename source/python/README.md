@@ -52,6 +52,13 @@ To get started quickly, here are some [examples](../../demo/python/).
 | [SearchMoonQuarter](#SearchMoonQuarter) | Finds the first quarter moon phase after a given date and time. |
 | [NextMoonQuarter](#NextMoonQuarter) | Finds the next quarter moon phase after a previous one that has been found. |
 
+### Eclipses
+
+| Function | Description |
+| -------- | ----------- |
+| [SearchLunarEclipse](#SearchLunarEclipse) | Search for the first lunar eclipse after a given date. |
+| [NextLunarEclipse](#NextLunarEclipse) | Continue searching for more lunar eclipses. |
+
 ### Lunar perigee and apogee
 
 | Function | Description |
