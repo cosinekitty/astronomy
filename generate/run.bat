@@ -164,6 +164,16 @@ if errorlevel 1 (
     exit /b 1
 )
 
+echo.
+echo.Generating eclipse data.
+cd eclipse
+if exist lunar_eclipse.txt (del lunar_eclipse.txt)
+norm.py
+if errorlevel 1 (
+    echo.Error normalizing eclipse test data.
+    exit /b 1
+)
+cd ..
 
 call makedoc.bat
 if errorlevel 1 (exit /b 1)

@@ -1358,7 +1358,7 @@ namespace csharp_test
             Console.WriteLine("C# Test_EQD_HOR {0}: trusted alt={1}, az={2}; test alt={3}, az={4}; diff_alt={5}, diff_az={6}",
                 body, hor.altitude, hor.azimuth, sphere.lat, sphere.lon, diff_alt, diff_az);
 
-            if (diff_alt > 2.0e-14 || diff_az > 4e-14)
+            if (diff_alt > 3.0e-14 || diff_az > 4e-14)
             {
                 Console.WriteLine("C# Test_EQD_HOR: EXCESSIVE HORIZONTAL ERROR.");
                 return 1;
@@ -1368,7 +1368,7 @@ namespace csharp_test
             AstroVector check_hor = Astronomy.VectorFromHorizon(sphere, time, Refraction.Normal);
             double diff = VectorDiff(check_hor, vec_hor);
             Console.WriteLine("C# Test_EQD_HOR {0}: horizontal recovery: diff = {1}", body, diff);
-            if (diff > 2.0e-15)
+            if (diff > 3.0e-15)
             {
                 Console.WriteLine("C# Test_EQD_HOR: EXCESSIVE ERROR IN HORIZONTAL RECOVERY.");
                 return 1;

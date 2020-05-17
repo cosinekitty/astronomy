@@ -900,7 +900,7 @@ def Test_EQD_HOR(body):
     check_hor = astronomy.VectorFromHorizon(xsphere, time, astronomy.Refraction.Normal)
     diff = VectorDiff(check_hor, vec_hor)
     print('PY Test_EQD_HOR {}: horizontal recovery: diff = {}'.format(body.name, diff))
-    if diff > 2.0e-15:
+    if diff > 3.0e-15:
         print('PY Test_EQD_HOR: EXCESSIVE ERROR IN HORIZONTAL RECOVERY.')
         sys.exit(1)
 
