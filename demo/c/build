@@ -13,7 +13,8 @@ else
     Fail "unrecognized command line option"
 fi
 
-for name in moonphase positions riseset seasons culminate horizon; do
+for name in moonphase positions riseset seasons culminate horizon lunar_eclipse; do
+    echo "Compiling ${name}.c"
     gcc ${BUILDOPT} -Wall -Werror -o ${name} -I../../source/c ../../source/c/astronomy.c astro_demo_common.c ${name}.c -lm ||
         Fail "Error building ${name}.c"
 done

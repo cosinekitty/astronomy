@@ -16,16 +16,21 @@ from astronomy import Time, SearchLunarEclipse, NextLunarEclipse, EclipseKind
 
 
 def PrintEclipse(e):
-    p1 = e.center.AddDays(-e.sd_partial / (24*60))
+    # Calculate beginning/ending of different phases
+    # of an eclipse by subtracting/adding the center time
+    # with the number of minutes indicated by the "semi-duration"
+    # fields sd_partial and sd_total.
+    MINUTES_PER_DAY = 24 * 60
+    p1 = e.center.AddDays(-e.sd_partial / MINUTES_PER_DAY)
     print('{}  Partial eclipse begins.'.format(p1))
     if e.sd_total > 0.0:
-        t1 = e.center.AddDays(-e.sd_total / (24*60))
+        t1 = e.center.AddDays(-e.sd_total / MINUTES_PER_DAY)
         print('{}  Total eclipse begins.'.format(t1))
     print('{}  Peak of {} eclipse.'.format(e.center, e.kind.name.lower()))
     if e.sd_total > 0.0:
-        t2 = e.center.AddDays(+e.sd_total / (24*60))
+        t2 = e.center.AddDays(+e.sd_total / MINUTES_PER_DAY)
         print('{}  Total eclipse ends.'.format(t2))
-    p2 = e.center.AddDays(+e.sd_partial / (24*60))
+    p2 = e.center.AddDays(+e.sd_partial / MINUTES_PER_DAY)
     print('{}  Partial eclipse ends.'.format(p2))
     print()
 
