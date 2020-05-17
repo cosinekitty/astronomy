@@ -226,6 +226,11 @@ node rise_set_test.js
 if errorlevel 1 (exit /b 1)
 
 echo.
+echo.Running lunar eclipse test.
+node lunar_eclipse_test.js
+if errorlevel 1 (exit /b 1)
+
+echo.
 echo.Validating JavaScript code.
 node astro_check.js > temp/js_check.txt
 if errorlevel 1 (exit /b 1)
@@ -280,6 +285,9 @@ if errorlevel 1 (exit /b 1)
 if errorlevel 1 (exit /b 1)
 
 !CTESTEXE! moonphase moonphase\moonphases.txt
+if errorlevel 1 (exit /b 1)
+
+!CTESTEXE! lunar_eclipse
 if errorlevel 1 (exit /b 1)
 
 !CTESTEXE! elongation
@@ -337,6 +345,9 @@ test.py seasons seasons\seasons.txt
 if errorlevel 1 (exit /b 1)
 
 test.py moonphase moonphase\moonphases.txt
+if errorlevel 1 (exit /b 1)
+
+test.py lunar_eclipse
 if errorlevel 1 (exit /b 1)
 
 test.py riseset riseset\riseset.txt
