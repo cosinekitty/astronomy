@@ -2,19 +2,6 @@
 
 ---
 
-### [Moon Phase Calculator](moonphase/moonphase.cs)
-This example shows how to determine the Moon's current phase,
-and how to predict when the next few quarter phases will occur.
-
-### [Body Positions](positions/positions.cs)
-An example of how to calculate equatorial and horizontal coordinates for all of the major solar system bodies.
-
-### [Rise/Set](riseset/riseset.cs)
-Shows how to calculate sunrise, sunset, moonrise, and moonset times.
-
-### [Seasons](seasons/seasons.cs)
-Calculates the equinoxes and solstices for a given calendar year.
-
 ### [Culmination](culminate/culminate.cs)
 Finds when the Sun, Moon, and planets reach their highest position in the sky on a given date,
 as seen by an observer at a specified location on the Earth.
@@ -26,6 +13,23 @@ and then toward due south on the horizon.
 This is a more advanced example. It shows how to use coordinate
 transforms to find where the ecliptic intersects with an observer's
 horizon at a given date and time.
+
+### [Lunar Eclipse](lunar_eclipse/lunar_eclipse.js)
+Calculates details about the first 10 partial/total lunar eclipses
+after the given date and time.
+
+### [Moon Phase Calculator](moonphase/moonphase.cs)
+This example shows how to determine the Moon's current phase,
+and how to predict when the next few quarter phases will occur.
+
+### [Positions](positions/positions.cs)
+Calculates equatorial and horizontal coordinates of the Sun, Moon, and planets.
+
+### [Rise/Set](riseset/riseset.cs)
+Shows how to calculate sunrise, sunset, moonrise, and moonset times.
+
+### [Seasons](seasons/seasons.cs)
+Calculates the equinoxes and solstices for a given calendar year.
 
 ---
 

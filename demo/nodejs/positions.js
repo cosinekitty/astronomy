@@ -9,7 +9,7 @@
     location on the Earth.
 
     To execute, run the command:
-    
+
         node positions.js latitude longitude [date]
 
     where

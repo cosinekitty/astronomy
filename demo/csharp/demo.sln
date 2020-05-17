@@ -19,6 +19,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "demo_helper", "demo_helper\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "astronomy", "..\..\source\csharp\astronomy.csproj", "{B5681C91-3FEF-4455-AAA9-15070BDDB9C9}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "lunar_eclipse", "lunar_eclipse\lunar_eclipse.csproj", "{F65EC67F-7BC8-48D8-8D74-B58747B6BA7A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -128,5 +130,17 @@ Global
 		{B5681C91-3FEF-4455-AAA9-15070BDDB9C9}.Release|x64.Build.0 = Release|Any CPU
 		{B5681C91-3FEF-4455-AAA9-15070BDDB9C9}.Release|x86.ActiveCfg = Release|Any CPU
 		{B5681C91-3FEF-4455-AAA9-15070BDDB9C9}.Release|x86.Build.0 = Release|Any CPU
+		{F65EC67F-7BC8-48D8-8D74-B58747B6BA7A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F65EC67F-7BC8-48D8-8D74-B58747B6BA7A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F65EC67F-7BC8-48D8-8D74-B58747B6BA7A}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{F65EC67F-7BC8-48D8-8D74-B58747B6BA7A}.Debug|x64.Build.0 = Debug|Any CPU
+		{F65EC67F-7BC8-48D8-8D74-B58747B6BA7A}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{F65EC67F-7BC8-48D8-8D74-B58747B6BA7A}.Debug|x86.Build.0 = Debug|Any CPU
+		{F65EC67F-7BC8-48D8-8D74-B58747B6BA7A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F65EC67F-7BC8-48D8-8D74-B58747B6BA7A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F65EC67F-7BC8-48D8-8D74-B58747B6BA7A}.Release|x64.ActiveCfg = Release|Any CPU
+		{F65EC67F-7BC8-48D8-8D74-B58747B6BA7A}.Release|x64.Build.0 = Release|Any CPU
+		{F65EC67F-7BC8-48D8-8D74-B58747B6BA7A}.Release|x86.ActiveCfg = Release|Any CPU
+		{F65EC67F-7BC8-48D8-8D74-B58747B6BA7A}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

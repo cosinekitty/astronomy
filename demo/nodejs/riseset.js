@@ -32,7 +32,7 @@ function Demo() {
         DisplayEvent('sunrise',  sunrise);
         DisplayEvent('sunset',   sunset);
         DisplayEvent('moonrise', moonrise);
-        DisplayEvent('moonset',  moonset);    
+        DisplayEvent('moonset',  moonset);
         process.exit(0);
     } else {
         console.log('USAGE: node riseset.js latitude longitude [date]');

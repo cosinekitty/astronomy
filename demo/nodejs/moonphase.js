@@ -36,14 +36,14 @@ function FormatDate(date) {
 function Demo() {
     const date = (process.argv.length === 3) ? new Date(process.argv[2]) : new Date();
 
-    // Calculate the Moon's current phase angle, 
+    // Calculate the Moon's current phase angle,
     // which ranges from 0 to 360 degrees.
     //   0 degrees = new moon,
     //  90 degrees = first quarter,
     // 180 degrees = full moon,
     // 270 degrees = third quarter.
     const phase = Astronomy.MoonPhase(date);
-    console.log(`${FormatDate(date)} : Moon's phase angle = ${phase.toFixed(6)} degrees.`);        
+    console.log(`${FormatDate(date)} : Moon's phase angle = ${phase.toFixed(6)} degrees.`);
     console.log('');
 
     // Now we predict when the next 10 lunar quarter phases will happen.
