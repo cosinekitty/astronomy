@@ -14,7 +14,7 @@ This is a more advanced example. It shows how to use coordinate
 transforms to find where the ecliptic intersects with an observer's
 horizon at a given date and time.
 
-### [Lunar Eclipse](lunar_eclipse/lunar_eclipse.js)
+### [Lunar Eclipse](lunar_eclipse/lunar_eclipse.cs)
 Calculates details about the first 10 partial/total lunar eclipses
 after the given date and time.
 
