@@ -883,6 +883,13 @@ This function determines the phase of the Moon using its apparent ecliptic longi
 
 ---
 
+<a name="Astronomy_NextGlobalSolarEclipse"></a>
+### Astronomy_NextGlobalSolarEclipse(prevEclipseTime) &#8658; [`astro_global_solar_eclipse_t`](#astro_global_solar_eclipse_t)
+
+
+
+---
+
 <a name="Astronomy_NextLunarApsis"></a>
 ### Astronomy_NextLunarApsis(apsis) &#8658; [`astro_apsis_t`](#astro_apsis_t)
 
@@ -1351,6 +1358,13 @@ If the search does not converge within 20 iterations, it will fail with status c
 | [`astro_time_t`](#astro_time_t) | `t2` |  The upper time bound of the search window. See remarks above for more details. | 
 | `double` | `dt_tolerance_seconds` |  Specifies an amount of time in seconds within which a bounded ascending root is considered accurate enough to stop. A typical value is 1 second. | 
 
+
+
+
+---
+
+<a name="Astronomy_SearchGlobalSolarEclipse"></a>
+### Astronomy_SearchGlobalSolarEclipse(startTime) &#8658; [`astro_global_solar_eclipse_t`](#astro_global_solar_eclipse_t)
 
 
 
@@ -2048,6 +2062,7 @@ The [`Astronomy_SearchRiseSet`](#Astronomy_SearchRiseSet) function finds the ris
 | `ECLIPSE_PARTIAL` |  A partial lunar/solar eclipse.  |
 | `ECLIPSE_ANNULAR` |  An annular solar eclipse. (Never used for a lunar eclipse.)  |
 | `ECLIPSE_TOTAL` |  A total lunar/solar eclipse.  |
+| `ECLIPSE_HYBRID` |  A solar eclipse whose peak is annular to some observers and total to others.  |
 
 
 
@@ -2269,6 +2284,32 @@ When calling [`Astronomy_Search`](#Astronomy_Search), the caller must pass in a 
 | ---- | ------ | ----------- |
 | [`astro_status_t`](#astro_status_t) | `status` |  `ASTRO_SUCCESS` if this struct is valid; otherwise an error code.  |
 | `double` | `value` |  The value returned by a function whose ascending root is to be found.  |
+
+
+---
+
+<a name="astro_global_solar_eclipse_t"></a>
+### `astro_global_solar_eclipse_t`
+
+**Reports the time and geographic location of the peak of a solar eclipse.** 
+
+
+
+Returned by [`Astronomy_SearchGlobalSolarEclipse`](#Astronomy_SearchGlobalSolarEclipse) or [`Astronomy_NextGlobalSolarEclipse`](#Astronomy_NextGlobalSolarEclipse) to report information about a solar eclipse event. If a solar eclipse is found, `status` holds `ASTRO_SUCCESS` and the other fields are set. If `status` holds any other value, it is an error code and the other fields are undefined.
+
+When a solar eclipse is found, it is classified as partial, annular, total, or hybrid, depending on the maximum amount of the Sun's disc obscured, as seen anywhere on the Earth's surface. The `kind` field thus holds `ECLIPSE_PARTIAL`, `ECLIPSE_ANNULAR`, `ECLIPSE_TOTAL`, or `ECLIPSE_HYBRID`. A total eclipse is when observers all along center of the Moon's shadow path on the Earth's surface see the Sun completely blocked by the Moon. An annular eclipse is like a total eclipse, but the Moon is too far from the Earth's surface to completely block the Sun; instead, the Sun takes on a ring-shaped appearance. A partial eclipse is when the Moon blocks part of the Sun's disc, but nobody on the Earth observes either a total or annular eclipse. A hybrid eclipse occurs when observers at different geographic locations along the path of the Moon's shadow on the Earth see either an annular or a total eclipse, due to variable distance between the Earth and Moon.
+
+Field `peak` holds the date and time of the peak of the eclipse, defined as the instant when the axis of the Moon's shadow cone passes cloest to the Earth's center.
+
+The `latitude` and `longitude` fields give the geographic coordinates of the center of the Moon's shadow projected on the daytime side of the Earth at the instant of the eclipse's peak. 
+
+| Type | Member | Description |
+| ---- | ------ | ----------- |
+| [`astro_status_t`](#astro_status_t) | `status` |  `ASTRO_SUCCESS` if this struct is valid; otherwise an error code.  |
+| [`astro_eclipse_kind_t`](#astro_eclipse_kind_t) | `kind` |  The type of solar eclipse found.  |
+| [`astro_time_t`](#astro_time_t) | `peak` |  The date and time of the eclipse at its peak.  |
+| `double` | `latitude` |  The geographic latitude at the center of the peak eclipse shadow.  |
+| `double` | `longitude` |  The geographic longitude at the center of the peak eclipse shadow.  |
 
 
 ---

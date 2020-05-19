@@ -505,7 +505,8 @@ typedef enum
     ECLIPSE_PENUMBRAL,  /**< A penumbral lunar eclipse. (Never used for a solar eclipse.) */
     ECLIPSE_PARTIAL,    /**< A partial lunar/solar eclipse. */
     ECLIPSE_ANNULAR,    /**< An annular solar eclipse. (Never used for a lunar eclipse.) */
-    ECLIPSE_TOTAL       /**< A total lunar/solar eclipse. */
+    ECLIPSE_TOTAL,      /**< A total lunar/solar eclipse. */
+    ECLIPSE_HYBRID      /**< A solar eclipse whose peak is annular to some observers and total to others. */
 }
 astro_eclipse_kind_t;
 
@@ -544,6 +545,46 @@ typedef struct
     double                  sd_total;       /**< The semi-duration of the total phase in minutes, or 0.0 if none. */
 }
 astro_lunar_eclipse_t;
+
+
+/**
+ * @brief Reports the time and geographic location of the peak of a solar eclipse.
+ *
+ * Returned by #Astronomy_SearchGlobalSolarEclipse or #Astronomy_NextGlobalSolarEclipse
+ * to report information about a solar eclipse event.
+ * If a solar eclipse is found, `status` holds `ASTRO_SUCCESS` and the other fields are set.
+ * If `status` holds any other value, it is an error code and the other fields are undefined.
+ *
+ * When a solar eclipse is found, it is classified as partial, annular, total, or hybrid,
+ * depending on the maximum amount of the Sun's disc obscured, as seen anywhere on the Earth's surface.
+ * The `kind` field thus holds `ECLIPSE_PARTIAL`, `ECLIPSE_ANNULAR`, `ECLIPSE_TOTAL`, or `ECLIPSE_HYBRID`.
+ * A total eclipse is when observers all along center of the Moon's shadow path on the Earth's surface
+ * see the Sun completely blocked by the Moon.
+ * An annular eclipse is like a total eclipse, but the Moon is too far from the Earth's surface
+ * to completely block the Sun; instead, the Sun takes on a ring-shaped appearance.
+ * A partial eclipse is when the Moon blocks part of the Sun's disc, but nobody on the Earth
+ * observes either a total or annular eclipse.
+ * A hybrid eclipse occurs when observers at different geographic locations along
+ * the path of the Moon's shadow on the Earth see either an annular or a total eclipse,
+ * due to variable distance between the Earth and Moon.
+ *
+ * Field `peak` holds the date and time of the peak of the eclipse, defined as
+ * the instant when the axis of the Moon's shadow cone passes cloest to the Earth's center.
+ *
+ * The `latitude` and `longitude` fields give the geographic coordinates of
+ * the center of the Moon's shadow projected on the daytime side of the Earth
+ * at the instant of the eclipse's peak.
+ */
+typedef struct
+{
+    astro_status_t          status;         /**< `ASTRO_SUCCESS` if this struct is valid; otherwise an error code. */
+    astro_eclipse_kind_t    kind;           /**< The type of solar eclipse found. */
+    astro_time_t            peak;           /**< The date and time of the eclipse at its peak. */
+    double                  latitude;       /**< The geographic latitude at the center of the peak eclipse shadow. */
+    double                  longitude;      /**< The geographic longitude at the center of the peak eclipse shadow. */
+}
+astro_global_solar_eclipse_t;
+
 
 /**
  * @brief   Aberration calculation options.
@@ -674,6 +715,8 @@ astro_moon_quarter_t Astronomy_SearchMoonQuarter(astro_time_t startTime);
 astro_moon_quarter_t Astronomy_NextMoonQuarter(astro_moon_quarter_t mq);
 astro_lunar_eclipse_t Astronomy_SearchLunarEclipse(astro_time_t startTime);
 astro_lunar_eclipse_t Astronomy_NextLunarEclipse(astro_time_t prevEclipseTime);
+astro_global_solar_eclipse_t Astronomy_SearchGlobalSolarEclipse(astro_time_t startTime);
+astro_global_solar_eclipse_t Astronomy_NextGlobalSolarEclipse(astro_time_t prevEclipseTime);
 
 astro_search_result_t Astronomy_Search(
     astro_search_func_t func,

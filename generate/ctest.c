@@ -65,6 +65,7 @@ static int VectorDiff(astro_vector_t a, astro_vector_t b, double *diff);
 static int RefractionTest(void);
 static int ConstellationTest(void);
 static int LunarEclipseTest(void);
+static int GlobalSolarEclipseTest(void);
 static int PlotDeltaT(const char *outFileName);
 
 int main(int argc, const char *argv[])
@@ -144,6 +145,12 @@ int main(int argc, const char *argv[])
         if (!strcmp(verb, "lunar_eclipse"))
         {
             CHECK(LunarEclipseTest());
+            goto success;
+        }
+
+        if (!strcmp(verb, "global_solar_eclipse"))
+        {
+            CHECK(GlobalSolarEclipseTest());
             goto success;
         }
     }
@@ -2717,6 +2724,46 @@ static int LunarEclipseTest(void)
 fail:
     if (infile != NULL) fclose(infile);
     if (outfile != NULL) fclose(outfile);
+    return error;
+}
+
+/*-----------------------------------------------------------------------------------------------------------*/
+
+static int GlobalSolarEclipseTest(void)
+{
+    int error = 1;
+    FILE *infile = NULL;
+    const char *inFileName = "eclipse/solar_eclipse.txt";
+    int lnum;
+    char line[100];
+    char typeChar;
+    double deltaT, lat, lon;
+    astro_time_t peak;
+
+    infile = fopen(inFileName, "rt");
+    if (infile == NULL)
+        FAIL("C GlobalSolarEclipseTest: Cannot open input file: %s\n", inFileName);
+
+    lnum = 0;
+    while (fgets(line, sizeof(line), infile))
+    {
+        ++lnum;
+        /* 1889-12-22T12:54:15Z   -6 T   -12.7   -12.8 */
+        if (strlen(line) < 20)
+            FAIL("C GlobalSolarEclipseTest(%s line %d): line is too short.\n", inFileName, lnum);
+
+        line[20] = '\0';        /* terminate the date/time string */
+        if (ParseDate(line, &peak))
+            FAIL("C GlobalSolarEclipseTest(%s line %d): invalid date/time format: '%s'\n", inFileName, lnum, line);
+
+        if (4 != sscanf(line+21, "%lf %c %lf %lf", &deltaT, &typeChar, &lat, &lon) || !strchr("PATH", typeChar))
+            FAIL("C GlobalSolarEclipseTest(%s line %d): invalid data format.\n", inFileName, lnum);
+    }
+
+    printf("C GlobalSolarEclipseTest: PASS (%d verified)\n", lnum);
+    error = 0;
+fail:
+    if (infile != NULL) fclose(infile);
     return error;
 }
 

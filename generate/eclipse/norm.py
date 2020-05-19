@@ -62,13 +62,13 @@ def FixLunarEclipseData():
 #--------------------------------------------------------------------------------------
 
 def FixSolarEclipseData():
-    # <a href="/web/20080228210550/http://sunearth.gsfc.nasa.gov/eclipse/5MCSEmap/1701-1800/1719-02-19.gif">08835</a>  
+    # <a href="/web/20080228210550/http://sunearth.gsfc.nasa.gov/eclipse/5MCSEmap/1701-1800/1719-02-19.gif">08835</a>
     # 1719 Feb 19  06:52:57
     # 10  -3474
     # <a href="/web/20080228210550/http://sunearth.gsfc.nasa.gov/eclipse/SEsaros/SEsaros116.html">116</a>
     # A    0.6856  0.9250  30.5N  68.6E  47 163  384  09m01s
     r = re.compile(r'''^
-        <a\s+href="[^"]+">(\d+)</a>\s+                                # [ 1] eclipse number
+        <a\s+href="[^"]+">(\d+)</a>\s+                              # [ 1] eclipse number
         (\d{4})\s+                                                  # [ 2] year
         (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+        # [ 3] month name
         (\d{2})\s+                                                  # [ 4] day
@@ -77,7 +77,7 @@ def FixSolarEclipseData():
         (\d{2})\s+                                                  # [ 7] second
         (-?\d+)\s+                                                  # [ 8] Delta T
         \S+\s+                                                      #      (ignore lunation number)
-        <a\s+href="[^"]+">\d+</a>\s+                                  #      (ignore Saros number)
+        <a\s+href="[^"]+">\d+</a>\s+                                #      (ignore Saros number)
         ([PATH])\S?\s+                                              # [ 9] eclipse type
         \S+\s+                                                      #      (ignore gamma number)
         \S+\s+                                                      #      (ignore eclipse mag)
