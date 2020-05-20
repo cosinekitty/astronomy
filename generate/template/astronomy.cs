@@ -4310,9 +4310,7 @@ $ASTRO_IAU_DATA()
                     // is closest to the line passing through the centers of the Sun and Earth.
                     EarthShadowInfo shadow = PeakEarthShadow(fullmoon);
 
-                    double r1 = Math.Abs(shadow.r - MOON_RADIUS_KM);
-                    double r2 = Math.Abs(shadow.r + MOON_RADIUS_KM);
-                    if (r1 < shadow.p)
+                    if (shadow.r < shadow.p + MOON_RADIUS_KM)
                     {
                         // This is at least a penumbral eclipse. We will return a result.
                         EclipseKind kind = EclipseKind.Penumbral;
@@ -4320,13 +4318,13 @@ $ASTRO_IAU_DATA()
                         double sd_partial = 0.0;
                         double sd_penum = ShadowSemiDurationMinutes(shadow.time, shadow.p + MOON_RADIUS_KM, 200.0);
 
-                        if (r1 < shadow.k)
+                        if (shadow.r < shadow.k + MOON_RADIUS_KM)
                         {
                             // This is at least a partial eclipse.
                             kind = EclipseKind.Partial;
                             sd_partial = ShadowSemiDurationMinutes(shadow.time, shadow.k + MOON_RADIUS_KM, sd_penum);
 
-                            if (r2 < shadow.k)
+                            if (shadow.r + MOON_RADIUS_KM < shadow.k)
                             {
                                 // This is a total eclipse.
                                 kind = EclipseKind.Total;

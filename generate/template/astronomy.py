@@ -4256,21 +4256,19 @@ def SearchLunarEclipse(startTime):
             # Search near the full moon for the time when the center of the Moon
             # is closest to the line passing through the centers of the Sun and Earth.
             shadow = _PeakEarthShadow(fullmoon)
-            r1 = abs(shadow.r - _MOON_RADIUS_KM)
-            r2 = abs(shadow.r + _MOON_RADIUS_KM)
-            if r1 < shadow.p:
+            if shadow.r < shadow.p + _MOON_RADIUS_KM:
                 # This is at least a penumbral eclipse. We will return a result.
                 kind = EclipseKind.Penumbral
                 sd_total = 0.0
                 sd_partial = 0.0
                 sd_penum = _ShadowSemiDurationMinutes(shadow.time, shadow.p + _MOON_RADIUS_KM, 200.0)
 
-                if r1 < shadow.k:
+                if shadow.r < shadow.k + _MOON_RADIUS_KM:
                     # This is at least a partial eclipse.
                     kind = EclipseKind.Partial
                     sd_partial = _ShadowSemiDurationMinutes(shadow.time, shadow.k + _MOON_RADIUS_KM, sd_penum)
 
-                    if r2 < shadow.k:
+                    if shadow.r + _MOON_RADIUS_KM < shadow.k:
                         # This is a total eclipse.
                         kind = EclipseKind.Total
                         sd_total = _ShadowSemiDurationMinutes(shadow.time, shadow.k - _MOON_RADIUS_KM, sd_partial)

@@ -7372,7 +7372,6 @@ astro_lunar_eclipse_t Astronomy_SearchLunarEclipse(astro_time_t startTime)
     astro_search_result_t fullmoon;
     shadow_t shadow;
     int fmcount;
-    double r1, r2;
     double eclip_lat, eclip_lon, distance;
 
     /* Iterate through consecutive full moons until we find any kind of lunar eclipse. */
@@ -7398,9 +7397,7 @@ astro_lunar_eclipse_t Astronomy_SearchLunarEclipse(astro_time_t startTime)
             if (shadow.status != ASTRO_SUCCESS)
                 return LunarEclipseError(shadow.status);
 
-            r1 = fabs(shadow.r - MOON_RADIUS_KM);   /* FIXFIXFIX: is fabs() needed? wrong? */
-            r2 = fabs(shadow.r + MOON_RADIUS_KM);   /* FIXFIXFIX: is fabs() needed? wrong? */
-            if (r1 < shadow.p)
+            if (shadow.r < shadow.p + MOON_RADIUS_KM)
             {
                 /* This is at least a penumbral eclipse. We will return a result. */
                 eclipse.status = ASTRO_SUCCESS;
@@ -7412,7 +7409,7 @@ astro_lunar_eclipse_t Astronomy_SearchLunarEclipse(astro_time_t startTime)
                 if (eclipse.sd_penum <= 0.0)
                     return LunarEclipseError(ASTRO_SEARCH_FAILURE);
 
-                if (r1 < shadow.k)
+                if (shadow.r < shadow.k + MOON_RADIUS_KM)
                 {
                     /* This is at least a partial eclipse. */
                     eclipse.kind = ECLIPSE_PARTIAL;
@@ -7420,7 +7417,7 @@ astro_lunar_eclipse_t Astronomy_SearchLunarEclipse(astro_time_t startTime)
                     if (eclipse.sd_partial <= 0.0)
                         return LunarEclipseError(ASTRO_SEARCH_FAILURE);
 
-                    if (r2 < shadow.k)
+                    if (shadow.r + MOON_RADIUS_KM < shadow.k)
                     {
                         /* This is a total eclipse. */
                         eclipse.kind = ECLIPSE_TOTAL;
