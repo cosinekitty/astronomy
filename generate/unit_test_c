@@ -15,6 +15,7 @@ time ./ctest check || Fail "Failure in ctest check"
 ./ctest moon || Fail "Failure in ctest moon"
 ./ctest constellation || Fail "Failure in ctest constellation"
 ./ctest lunar_eclipse || Fail "Failure in ctest lunar_eclipse"
+./ctest global_solar_eclipse || Fail "Failure in ctest global_solar_eclipse"
 ./ctest seasons seasons/seasons.txt || Fail "Failed C seasons test."
 ./ctest moonphase moonphase/moonphases.txt || Fail "Failed C moon phase test."
 

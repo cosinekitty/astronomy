@@ -2739,15 +2739,24 @@ static int GlobalSolarEclipseTest(void)
     char typeChar;
     double deltaT, lat, lon;
     astro_time_t peak;
+    astro_global_solar_eclipse_t eclipse;
+    double diff_days, diff_minutes, max_minutes=0.0;
+    int skip_count = 0;
 
     infile = fopen(inFileName, "rt");
     if (infile == NULL)
         FAIL("C GlobalSolarEclipseTest: Cannot open input file: %s\n", inFileName);
 
+    eclipse = Astronomy_SearchGlobalSolarEclipse(Astronomy_MakeTime(1701, 1, 1, 0, 0, 0.0));
+
     lnum = 0;
     while (fgets(line, sizeof(line), infile))
     {
         ++lnum;
+
+        if (eclipse.status != ASTRO_SUCCESS)
+            FAIL("C GlobalSolarEclipseTest(%s line %d): error %d searching for solar eclipse.\n", inFileName, lnum, eclipse.status);
+
         /* 1889-12-22T12:54:15Z   -6 T   -12.7   -12.8 */
         if (strlen(line) < 20)
             FAIL("C GlobalSolarEclipseTest(%s line %d): line is too short.\n", inFileName, lnum);
@@ -2758,9 +2767,38 @@ static int GlobalSolarEclipseTest(void)
 
         if (4 != sscanf(line+21, "%lf %c %lf %lf", &deltaT, &typeChar, &lat, &lon) || !strchr("PATH", typeChar))
             FAIL("C GlobalSolarEclipseTest(%s line %d): invalid data format.\n", inFileName, lnum);
+
+        diff_days = eclipse.peak.ut - peak.ut;
+
+        /* Sometimes we find marginal eclipses that aren't listed in the test data. */
+        /* Ignore them if the distance between the Sun/Moon shadow axis and the Earth's center is large. */
+        while (diff_days < -25.0 && eclipse.distance > 9000.0)
+        {
+            ++skip_count;
+            eclipse = Astronomy_NextGlobalSolarEclipse(eclipse.peak);
+            CHECK_STATUS(eclipse);
+            diff_days = eclipse.peak.ut - peak.ut;
+        }
+
+        /* Validate the eclipse prediction. */
+        diff_minutes = (24 * 60) * fabs(diff_days);
+        if (diff_minutes > 6.9)
+        {
+            printf("Expected: ");
+            PrintTime(peak);
+            printf("\nFound:    ");
+            PrintTime(eclipse.peak);
+            printf("\n");
+            FAIL("C GlobalSolarEclipseTest(%s line %d): EXCESSIVE TIME ERROR = %0.2lf minutes\n", inFileName, lnum, diff_minutes);
+        }
+
+        if (diff_minutes > max_minutes)
+            max_minutes = diff_minutes;
+
+        eclipse = Astronomy_NextGlobalSolarEclipse(eclipse.peak);
     }
 
-    printf("C GlobalSolarEclipseTest: PASS (%d verified)\n", lnum);
+    printf("C GlobalSolarEclipseTest: PASS (%d verified, %d skipped, max minutes = %0.3lf)\n", lnum, skip_count, max_minutes);
     error = 0;
 fail:
     if (infile != NULL) fclose(infile);

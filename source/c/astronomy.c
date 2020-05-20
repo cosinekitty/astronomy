@@ -7129,7 +7129,7 @@ astro_constellation_t Astronomy_Constellation(double ra, double dec)
 }
 
 
-static astro_lunar_eclipse_t EclipseError(astro_status_t status)
+static astro_lunar_eclipse_t LunarEclipseError(astro_status_t status)
 {
     astro_lunar_eclipse_t eclipse;
     eclipse.status = status;
@@ -7146,11 +7146,11 @@ typedef struct
     astro_status_t status;
     astro_time_t time;
     double  u;          /* dot product of (heliocentric earth) and (geocentric moon): defines the shadow plane where the Moon is */
-    double  r;          /* km distance between center of Moon and the line passing through the centers of the Sun and Earth. */
+    double  r;          /* km distance between center of Moon/Earth (shaded body) and the line passing through the centers of the Sun and Earth/Moon (casting body). */
     double  k;          /* umbra radius in km, at the shadow plane */
     double  p;          /* penumbra radius in km, at the shadow plane */
 }
-earth_shadow_t;         /* Represents alignment of the Moon with the Earth's shadow, for finding eclipses. */
+shadow_t;               /* Represents alignment of the Moon/Earth with the Earth's/Moon's shadow, for finding eclipses. */
 
 typedef struct
 {
@@ -7160,9 +7160,11 @@ typedef struct
 shadow_context_t;
 /** @endcond */
 
-static earth_shadow_t EarthShadow(astro_time_t time)
+static shadow_t EarthShadow(astro_time_t time)
 {
-    earth_shadow_t shadow;
+    /* This function helps find when the Earth's shadow falls upon the Moon. */
+
+    shadow_t shadow;
     astro_vector_t e, m;
     double dx, dy, dz;
 
@@ -7184,23 +7186,71 @@ static earth_shadow_t EarthShadow(astro_time_t time)
     return shadow;
 }
 
+
+static shadow_t MoonShadow(astro_time_t time)
+{
+    /* This function helps find when the Moon's shadow falls upon the Earth. */
+
+    shadow_t shadow;
+    astro_vector_t h, e, m;
+    double dx, dy, dz;
+
+    /*
+        This is a variation on the logic in EarthShadow().
+        Instead of a heliocentric Earth and a geocentric Moon,
+        we want a heliocentric Moon and a lunacentric Earth.
+    */
+
+    h = CalcEarth(time);            /* heliocentric Earth */
+    m = Astronomy_GeoMoon(time);    /* geocentric Moon */
+
+    /* Calculate lunacentric Earth. */
+    e.status = m.status;
+    e.x = -m.x;
+    e.y = -m.y;
+    e.z = -m.z;
+    e.t = m.t;
+
+    /* Convert geocentric moon to heliocentric Moon. */
+    m.x += h.x;
+    m.y += h.y;
+    m.z += h.z;
+
+    shadow.u = (e.x*m.x + e.y*m.y + e.z*m.z) / (m.x*m.x + m.y*m.y + m.z*m.z);
+
+    dx = (shadow.u * m.x) - e.x;
+    dy = (shadow.u * m.y) - e.y;
+    dz = (shadow.u * m.z) - e.z;
+    shadow.r = KM_PER_AU * sqrt(dx*dx + dy*dy + dz*dz);
+
+    shadow.k = +SUN_RADIUS_KM - (1.0 + shadow.u)*(SUN_RADIUS_KM - MOON_RADIUS_KM);
+    shadow.p = -SUN_RADIUS_KM + (1.0 + shadow.u)*(SUN_RADIUS_KM + MOON_RADIUS_KM);
+    shadow.status = ASTRO_SUCCESS;
+    shadow.time = time;
+
+    return shadow;
+}
+
+
+typedef shadow_t (* shadow_func_t) (astro_time_t time);
+
+
 static astro_func_result_t shadow_distance_slope(void *context, astro_time_t time)
 {
     const double dt = 1.0 / 86400.0;
     astro_time_t t1, t2;
     astro_func_result_t result;
-    earth_shadow_t shadow1, shadow2;
-
-    (void)context;
+    shadow_t shadow1, shadow2;
+    shadow_func_t shadowfunc = context;
 
     t1 = Astronomy_AddDays(time, -dt);
     t2 = Astronomy_AddDays(time, +dt);
 
-    shadow1 = EarthShadow(t1);
+    shadow1 = shadowfunc(t1);
     if (shadow1.status != ASTRO_SUCCESS)
         return FuncError(shadow1.status);
 
-    shadow2 = EarthShadow(t2);
+    shadow2 = shadowfunc(t2);
     if (shadow2.status != ASTRO_SUCCESS)
         return FuncError(shadow2.status);
 
@@ -7210,17 +7260,19 @@ static astro_func_result_t shadow_distance_slope(void *context, astro_time_t tim
 }
 
 
-static earth_shadow_t ShadowError(astro_status_t status)
+static shadow_t ShadowError(astro_status_t status)
 {
-    earth_shadow_t shadow;
+    shadow_t shadow;
     memset(&shadow, 0, sizeof(shadow));
     shadow.status = status;
     return shadow;
 }
 
 
-static earth_shadow_t PeakEarthShadow(astro_time_t search_center_time)
+static shadow_t PeakEarthShadow(astro_time_t search_center_time)
 {
+    /* Search for when the Earth's shadow axis is closest to the center of the Moon. */
+
     astro_time_t t1, t2;
     astro_search_result_t result;
     const double window = 0.03;        /* initial search window, in days, before/after given time */
@@ -7228,7 +7280,7 @@ static earth_shadow_t PeakEarthShadow(astro_time_t search_center_time)
     t1 = Astronomy_AddDays(search_center_time, -window);
     t2 = Astronomy_AddDays(search_center_time, +window);
 
-    result = Astronomy_Search(shadow_distance_slope, NULL, t1, t2, 1.0);
+    result = Astronomy_Search(shadow_distance_slope, EarthShadow, t1, t2, 1.0);
     if (result.status != ASTRO_SUCCESS)
         return ShadowError(result.status);
 
@@ -7236,11 +7288,30 @@ static earth_shadow_t PeakEarthShadow(astro_time_t search_center_time)
 }
 
 
+static shadow_t PeakMoonShadow(astro_time_t search_center_time)
+{
+    /* Search for when the Moon's shadow axis is closest to the center of the Earth. */
+
+    astro_time_t t1, t2;
+    astro_search_result_t result;
+    const double window = 1.0;        /* FIXFIXFIX - initial search window, in days, before/after given time */
+
+    t1 = Astronomy_AddDays(search_center_time, -window);
+    t2 = Astronomy_AddDays(search_center_time, +window);
+
+    result = Astronomy_Search(shadow_distance_slope, MoonShadow, t1, t2, 1.0);
+    if (result.status != ASTRO_SUCCESS)
+        return ShadowError(result.status);
+
+    return MoonShadow(result.time);
+}
+
+
 static astro_func_result_t shadow_distance(void *context, astro_time_t time)
 {
     astro_func_result_t result;
     const shadow_context_t *p = context;
-    earth_shadow_t shadow = EarthShadow(time);
+    shadow_t shadow = EarthShadow(time);
     if (shadow.status != ASTRO_SUCCESS)
         return FuncError(shadow.status);
 
@@ -7299,7 +7370,7 @@ astro_lunar_eclipse_t Astronomy_SearchLunarEclipse(astro_time_t startTime)
     astro_time_t fmtime;
     astro_lunar_eclipse_t eclipse;
     astro_search_result_t fullmoon;
-    earth_shadow_t shadow;
+    shadow_t shadow;
     int fmcount;
     double r1, r2;
     double eclip_lat, eclip_lon, distance;
@@ -7311,7 +7382,7 @@ astro_lunar_eclipse_t Astronomy_SearchLunarEclipse(astro_time_t startTime)
         /* Search for the next full moon. Any eclipse will be near it. */
         fullmoon = Astronomy_SearchMoonPhase(180.0, fmtime, 40.0);
         if (fullmoon.status != ASTRO_SUCCESS)
-            return EclipseError(fullmoon.status);
+            return LunarEclipseError(fullmoon.status);
 
         /*
             Pruning: if the full Moon's ecliptic latitude is too large,
@@ -7325,10 +7396,10 @@ astro_lunar_eclipse_t Astronomy_SearchLunarEclipse(astro_time_t startTime)
             /* is closest to the line passing through the centers of the Sun and Earth. */
             shadow = PeakEarthShadow(fullmoon.time);
             if (shadow.status != ASTRO_SUCCESS)
-                return EclipseError(shadow.status);
+                return LunarEclipseError(shadow.status);
 
-            r1 = fabs(shadow.r - MOON_RADIUS_KM);
-            r2 = fabs(shadow.r + MOON_RADIUS_KM);
+            r1 = fabs(shadow.r - MOON_RADIUS_KM);   /* FIXFIXFIX: is fabs() needed? wrong? */
+            r2 = fabs(shadow.r + MOON_RADIUS_KM);   /* FIXFIXFIX: is fabs() needed? wrong? */
             if (r1 < shadow.p)
             {
                 /* This is at least a penumbral eclipse. We will return a result. */
@@ -7339,7 +7410,7 @@ astro_lunar_eclipse_t Astronomy_SearchLunarEclipse(astro_time_t startTime)
                 eclipse.sd_partial = 0.0;
                 eclipse.sd_penum = ShadowSemiDurationMinutes(shadow.time, shadow.p + MOON_RADIUS_KM, 200.0);
                 if (eclipse.sd_penum <= 0.0)
-                    return EclipseError(ASTRO_SEARCH_FAILURE);
+                    return LunarEclipseError(ASTRO_SEARCH_FAILURE);
 
                 if (r1 < shadow.k)
                 {
@@ -7347,7 +7418,7 @@ astro_lunar_eclipse_t Astronomy_SearchLunarEclipse(astro_time_t startTime)
                     eclipse.kind = ECLIPSE_PARTIAL;
                     eclipse.sd_partial = ShadowSemiDurationMinutes(shadow.time, shadow.k + MOON_RADIUS_KM, eclipse.sd_penum);
                     if (eclipse.sd_partial <= 0.0)
-                        return EclipseError(ASTRO_SEARCH_FAILURE);
+                        return LunarEclipseError(ASTRO_SEARCH_FAILURE);
 
                     if (r2 < shadow.k)
                     {
@@ -7355,7 +7426,7 @@ astro_lunar_eclipse_t Astronomy_SearchLunarEclipse(astro_time_t startTime)
                         eclipse.kind = ECLIPSE_TOTAL;
                         eclipse.sd_total = ShadowSemiDurationMinutes(shadow.time, shadow.k - MOON_RADIUS_KM, eclipse.sd_partial);
                         if (eclipse.sd_total <= 0.0)
-                            return EclipseError(ASTRO_SEARCH_FAILURE);
+                            return LunarEclipseError(ASTRO_SEARCH_FAILURE);
                     }
                 }
                 return eclipse;
@@ -7368,7 +7439,7 @@ astro_lunar_eclipse_t Astronomy_SearchLunarEclipse(astro_time_t startTime)
 
     /* Safety valve to prevent infinite loop. */
     /* This should never happen, because at least 2 lunar eclipses happen per year. */
-    return EclipseError(ASTRO_INTERNAL_ERROR);
+    return LunarEclipseError(ASTRO_INTERNAL_ERROR);
 }
 
 /**
@@ -7392,6 +7463,87 @@ astro_lunar_eclipse_t Astronomy_NextLunarEclipse(astro_time_t prevEclipseTime)
 {
     astro_time_t startTime = Astronomy_AddDays(prevEclipseTime, 10.0);
     return Astronomy_SearchLunarEclipse(startTime);
+}
+
+
+static astro_global_solar_eclipse_t GlobalSolarEclipseError(astro_status_t status)
+{
+    astro_global_solar_eclipse_t eclipse;
+
+    eclipse.status = status;
+    eclipse.kind = ECLIPSE_NONE;
+    eclipse.peak = TimeError();
+    eclipse.distance = eclipse.latitude = eclipse.longitude = NAN;
+
+    return eclipse;
+}
+
+astro_global_solar_eclipse_t Astronomy_SearchGlobalSolarEclipse(astro_time_t startTime)
+{
+    const double PruneLatitude = 90;   /* FIXFIXFIX - full Moon's ecliptic latitude above which eclipse is impossible */
+    astro_time_t nmtime;
+    astro_global_solar_eclipse_t eclipse;
+    astro_search_result_t newmoon;
+    shadow_t shadow;
+    int nmcount;
+    double eclip_lat, eclip_lon, distance;
+
+    /* Iterate through consecutive new moons until we find a solar eclipse visible somewhere on Earth. */
+    nmtime = startTime;
+    for (nmcount=0; nmcount < 12; ++nmcount)
+    {
+        /* Search for the next new moon. Any eclipse will be near it. */
+        newmoon = Astronomy_SearchMoonPhase(0.0, nmtime, 40.0);
+        if (newmoon.status != ASTRO_SUCCESS)
+            return GlobalSolarEclipseError(newmoon.status);
+
+        /*
+            Pruning: if the full Moon's ecliptic latitude is too large,
+            a lunar eclipse is not possible. Avoid needless work searching for
+            the minimum moon distance.
+        */
+        CalcMoon(newmoon.time.tt / 36525.0, &eclip_lon, &eclip_lat, &distance);
+        if (RAD2DEG * fabs(eclip_lat) < PruneLatitude)
+        {
+            /* Search near the full moon for the time when the center of the Earth */
+            /* is closest to the line passing through the centers of the Sun and Moon. */
+            shadow = PeakMoonShadow(newmoon.time);
+            if (shadow.status != ASTRO_SUCCESS)
+                return GlobalSolarEclipseError(shadow.status);
+
+            if (shadow.r < shadow.p + EARTH_RADIUS_KM)
+            {
+                /* This is at least a partial solar eclipse visible somewhere on Earth. */
+                eclipse.status = ASTRO_SUCCESS;
+                eclipse.kind = ECLIPSE_PARTIAL;
+                eclipse.peak = shadow.time;
+                eclipse.distance = shadow.r;
+                eclipse.latitude = eclipse.longitude = NAN;     /* FIXFIXFIX - calculate coordinates */
+
+                if (shadow.r < shadow.k + EARTH_RADIUS_KM)
+                {
+                    /* This is either a total/annular/hybrid eclipse. */
+                    eclipse.kind = ECLIPSE_ANNULAR;
+
+                    /* FIXFIXFIX - determine annular/hybrid/total */
+                }
+                return eclipse;
+            }
+        }
+
+        /* We didn't find an eclipse on this full moon, so search for the next one. */
+        nmtime = Astronomy_AddDays(newmoon.time, 10.0);
+    }
+
+    /* Safety valve to prevent infinite loop. */
+    /* This should never happen, because at least 2 lunar eclipses happen per year. */
+    return GlobalSolarEclipseError(ASTRO_INTERNAL_ERROR);
+}
+
+astro_global_solar_eclipse_t Astronomy_NextGlobalSolarEclipse(astro_time_t prevEclipseTime)
+{
+    astro_time_t startTime = Astronomy_AddDays(prevEclipseTime, 10.0);
+    return Astronomy_SearchGlobalSolarEclipse(startTime);
 }
 
 #ifdef __cplusplus

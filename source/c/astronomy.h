@@ -580,6 +580,7 @@ typedef struct
     astro_status_t          status;         /**< `ASTRO_SUCCESS` if this struct is valid; otherwise an error code. */
     astro_eclipse_kind_t    kind;           /**< The type of solar eclipse found. */
     astro_time_t            peak;           /**< The date and time of the eclipse at its peak. */
+    double                  distance;       /**< The distance between the Sun/Moon shadow axis and the center of the Earth, in kilometers. */
     double                  latitude;       /**< The geographic latitude at the center of the peak eclipse shadow. */
     double                  longitude;      /**< The geographic longitude at the center of the peak eclipse shadow. */
 }
