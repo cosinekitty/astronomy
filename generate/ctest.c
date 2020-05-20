@@ -2742,6 +2742,9 @@ static int GlobalSolarEclipseTest(void)
     astro_global_solar_eclipse_t eclipse;
     double diff_days, diff_minutes, max_minutes=0.0;
     int skip_count = 0;
+    extern int _CalcMoonCount;      /* incremented by Astronomy Engine every time expensive CalcMoon() is called */
+
+    _CalcMoonCount = 0;
 
     infile = fopen(inFileName, "rt");
     if (infile == NULL)
@@ -2798,7 +2801,7 @@ static int GlobalSolarEclipseTest(void)
         eclipse = Astronomy_NextGlobalSolarEclipse(eclipse.peak);
     }
 
-    printf("C GlobalSolarEclipseTest: PASS (%d verified, %d skipped, max minutes = %0.3lf)\n", lnum, skip_count, max_minutes);
+    printf("C GlobalSolarEclipseTest: PASS (%d verified, %d skipped, %d CalcMoons, max minutes = %0.3lf)\n", lnum, skip_count, _CalcMoonCount, max_minutes);
     error = 0;
 fail:
     if (infile != NULL) fclose(infile);

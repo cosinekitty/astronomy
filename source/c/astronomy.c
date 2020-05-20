@@ -7477,7 +7477,7 @@ static astro_global_solar_eclipse_t GlobalSolarEclipseError(astro_status_t statu
 
 astro_global_solar_eclipse_t Astronomy_SearchGlobalSolarEclipse(astro_time_t startTime)
 {
-    const double PruneLatitude = 90;   /* FIXFIXFIX - full Moon's ecliptic latitude above which eclipse is impossible */
+    const double PruneLatitude = 1.8;   /* Moon's ecliptic latitude beyond which eclipse is impossible */
     astro_time_t nmtime;
     astro_global_solar_eclipse_t eclipse;
     astro_search_result_t newmoon;
