@@ -290,6 +290,9 @@ if errorlevel 1 (exit /b 1)
 !CTESTEXE! lunar_eclipse
 if errorlevel 1 (exit /b 1)
 
+!CTESTEXE! global_solar_eclipse
+if errorlevel 1 (exit /b 1)
+
 !CTESTEXE! elongation
 if errorlevel 1 (exit /b 1)
 
