@@ -2741,6 +2741,7 @@ static int GlobalSolarEclipseTest(void)
     astro_time_t peak;
     astro_global_solar_eclipse_t eclipse;
     double diff_days, diff_minutes, max_minutes=0.0;
+    double diff_lat;
     int skip_count = 0;
     extern int _CalcMoonCount;      /* incremented by Astronomy Engine every time expensive CalcMoon() is called */
 
@@ -2797,6 +2798,13 @@ static int GlobalSolarEclipseTest(void)
 
         if (diff_minutes > max_minutes)
             max_minutes = diff_minutes;
+
+        if (eclipse.kind == ECLIPSE_TOTAL || eclipse.kind == ECLIPSE_ANNULAR)
+        {
+            diff_lat = fabs(eclipse.latitude - lat);
+            if (diff_lat > 1.006)
+                FAIL("C GlobalSolarEclipseTest(%s line %d): EXCESSIVE LATITUDE ERROR = %0.6lf degrees.\n", inFileName, lnum, diff_lat);
+        }
 
         eclipse = Astronomy_NextGlobalSolarEclipse(eclipse.peak);
     }
