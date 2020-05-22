@@ -7572,6 +7572,25 @@ static astro_global_solar_eclipse_t GeoidIntersect(shadow_t shadow)
     return eclipse;
 }
 
+
+/**
+ * @brief Searches for a solar eclipse.
+ *
+ * This function finds the first solar eclipse that occurs after `startTime`.
+ * A solar eclipse found may be partial, annular, or total.
+ * See #astro_global_solar_eclipse_t for more information.
+ * To find a series of solar eclipses, call this function once,
+ * then keep calling #Astronomy_NextSolarEclipse as many times as desired,
+ * passing in the `peak` value returned from the previous call.
+ *
+ * @param startTime
+ *      The date and time for starting the search for a solar eclipse.
+ *
+ * @return
+ *      If successful, the `status` field in the returned structure will contain `ASTRO_SUCCESS`
+ *      and the remaining structure fields are as described in #astro_global_solar_eclipse_t.
+ *      Any other value indicates an error.
+ */
 astro_global_solar_eclipse_t Astronomy_SearchGlobalSolarEclipse(astro_time_t startTime)
 {
     const double PruneLatitude = 1.8;   /* Moon's ecliptic latitude beyond which eclipse is impossible */
@@ -7621,6 +7640,24 @@ astro_global_solar_eclipse_t Astronomy_SearchGlobalSolarEclipse(astro_time_t sta
     return GlobalSolarEclipseError(ASTRO_INTERNAL_ERROR);
 }
 
+
+/**
+ * @brief Searches for the next solar eclipse in a series.
+ *
+ * After using #Astronomy_SearchGlobalSolarEclipse to find the first solar eclipse
+ * in a series, you can call this function to find the next consecutive solar eclipse.
+ * Pass in the `peak` value from the #astro_global_solar_eclipse_t returned by the
+ * previous call to `Astronomy_SearchGlobalSolarEclipse` or `Astronomy_NextGlobalSolarEclipse`
+ * to find the next solar eclipse.
+ *
+ * @param prevEclipseTime
+ *      A date and time near a new moon. Solar eclipse search will start at the next new moon.
+ *
+ * @return
+ *      If successful, the `status` field in the returned structure will contain `ASTRO_SUCCESS`
+ *      and the remaining structure fields are as described in #astro_global_solar_eclipse_t.
+ *      Any other value indicates an error.
+ */
 astro_global_solar_eclipse_t Astronomy_NextGlobalSolarEclipse(astro_time_t prevEclipseTime)
 {
     astro_time_t startTime = Astronomy_AddDays(prevEclipseTime, 10.0);

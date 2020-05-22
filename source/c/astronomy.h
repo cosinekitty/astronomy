@@ -505,8 +505,7 @@ typedef enum
     ECLIPSE_PENUMBRAL,  /**< A penumbral lunar eclipse. (Never used for a solar eclipse.) */
     ECLIPSE_PARTIAL,    /**< A partial lunar/solar eclipse. */
     ECLIPSE_ANNULAR,    /**< An annular solar eclipse. (Never used for a lunar eclipse.) */
-    ECLIPSE_TOTAL,      /**< A total lunar/solar eclipse. */
-    ECLIPSE_HYBRID      /**< A solar eclipse whose peak is annular to some observers and total to others. */
+    ECLIPSE_TOTAL       /**< A total lunar/solar eclipse. */
 }
 astro_eclipse_kind_t;
 
@@ -552,28 +551,31 @@ astro_lunar_eclipse_t;
  *
  * Returned by #Astronomy_SearchGlobalSolarEclipse or #Astronomy_NextGlobalSolarEclipse
  * to report information about a solar eclipse event.
- * If a solar eclipse is found, `status` holds `ASTRO_SUCCESS` and the other fields are set.
- * If `status` holds any other value, it is an error code and the other fields are undefined.
+ * If a solar eclipse is found, `status` holds `ASTRO_SUCCESS` and `kind`, `peak`, and `distance`
+ * have valid values. The `latitude` and `longitude` are set only for total and annular eclipses
+ * (see more below).
+ * If `status` holds any value other than `ASTRO_SUCCESS`, it is an error code;
+ * in that case, `kind` holds `ECLIPSE_NONE` and all the other fields are undefined.
  *
- * When a solar eclipse is found, it is classified as partial, annular, total, or hybrid,
- * depending on the maximum amount of the Sun's disc obscured, as seen anywhere on the Earth's surface.
- * The `kind` field thus holds `ECLIPSE_PARTIAL`, `ECLIPSE_ANNULAR`, `ECLIPSE_TOTAL`, or `ECLIPSE_HYBRID`.
- * A total eclipse is when observers all along center of the Moon's shadow path on the Earth's surface
- * see the Sun completely blocked by the Moon.
+ * Field `peak` holds the date and time of the peak of the eclipse, defined as
+ * the instant when the axis of the Moon's shadow cone passes closest to the Earth's center.
+ *
+ * The eclipse is classified as partial, annular, or total, depending on the
+ * maximum amount of the Sun's disc obscured, as seen at the peak location
+ * on the surface of the Earth.
+ *
+ * The `kind` field thus holds `ECLIPSE_PARTIAL`, `ECLIPSE_ANNULAR`, or `ECLIPSE_TOTAL`.
+ * A total eclipse is when the peak observer sees the Sun completely blocked by the Moon.
  * An annular eclipse is like a total eclipse, but the Moon is too far from the Earth's surface
  * to completely block the Sun; instead, the Sun takes on a ring-shaped appearance.
  * A partial eclipse is when the Moon blocks part of the Sun's disc, but nobody on the Earth
  * observes either a total or annular eclipse.
- * A hybrid eclipse occurs when observers at different geographic locations along
- * the path of the Moon's shadow on the Earth see either an annular or a total eclipse,
- * due to variable distance between the Earth and Moon.
  *
- * Field `peak` holds the date and time of the peak of the eclipse, defined as
- * the instant when the axis of the Moon's shadow cone passes cloest to the Earth's center.
- *
- * The `latitude` and `longitude` fields give the geographic coordinates of
- * the center of the Moon's shadow projected on the daytime side of the Earth
- * at the instant of the eclipse's peak.
+ * If `kind` is `ECLIPSE_TOTAL` or `ECLIPSE_ANNULAR`, the `latitude` and `longitude`
+ * fields give the geographic coordinates of the center of the Moon's shadow projected
+ * onto the daytime side of the Earth at the instant of the eclipse's peak.
+ * If `kind` has any other value, `latitude` and `longitude` are undefined and should
+ * not be used.
  */
 typedef struct
 {
