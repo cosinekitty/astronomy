@@ -5838,6 +5838,7 @@ static astro_global_solar_eclipse_t GeoidIntersect(shadow_t shadow)
     astro_vector_t e;
     double A, B, C, radic, u, R;
     double px, py, pz, proj;
+    double gast;
 
     eclipse.status = ASTRO_SUCCESS;
     eclipse.kind = ECLIPSE_PARTIAL;
@@ -5897,9 +5898,13 @@ static astro_global_solar_eclipse_t GeoidIntersect(shadow_t shadow)
         else
             eclipse.latitude = RAD2DEG * atan(pz / proj);
 
-        eclipse.longitude = RAD2DEG * atan2(py, px);
-
         /* Adjust longitude for Earth's rotation at the given UT. */
+        gast = sidereal_time(&eclipse.peak);
+        eclipse.longitude = fmod((RAD2DEG*atan2(py, px)) - (15*gast), 360.0);
+        if (eclipse.longitude <= -180.0)
+            eclipse.longitude += 360.0;
+        else if (eclipse.longitude > +180.0)
+            eclipse.longitude -= 360.0;
 
         /*
             Determine umbra radius at the intersection point.

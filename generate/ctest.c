@@ -12,6 +12,7 @@
 
 #define PI      3.14159265358979323846
 static const double DEG2RAD = 0.017453292519943296;
+static const double RAD2DEG = 57.295779513082321;
 
 #define CHECK(x)        do{if(0 != (error = (x))) goto fail;}while(0)
 #define FAIL(...)       do{fprintf(stderr, __VA_ARGS__); error = 1; goto fail;}while(0)
@@ -67,6 +68,7 @@ static int ConstellationTest(void);
 static int LunarEclipseTest(void);
 static int GlobalSolarEclipseTest(void);
 static int PlotDeltaT(const char *outFileName);
+static double AngleDiff(double alat, double alon, double blat, double blon);
 
 int main(int argc, const char *argv[])
 {
@@ -2741,7 +2743,7 @@ static int GlobalSolarEclipseTest(void)
     astro_time_t peak;
     astro_global_solar_eclipse_t eclipse;
     double diff_days, diff_minutes, max_minutes=0.0;
-    double diff_lat;
+    double diff_angle, max_angle=0.0;
     int skip_count = 0;
     extern int _CalcMoonCount;      /* incremented by Astronomy Engine every time expensive CalcMoon() is called */
 
@@ -2801,19 +2803,59 @@ static int GlobalSolarEclipseTest(void)
 
         if (eclipse.kind == ECLIPSE_TOTAL || eclipse.kind == ECLIPSE_ANNULAR)
         {
-            diff_lat = fabs(eclipse.latitude - lat);
-            if (diff_lat > 1.006)
-                FAIL("C GlobalSolarEclipseTest(%s line %d): EXCESSIVE LATITUDE ERROR = %0.6lf degrees.\n", inFileName, lnum, diff_lat);
+            /*
+                When the distance between the Moon's shadow ray and the Earth's center is beyond 6100 km,
+                it creates a glancing blow whose geographic coordinates are excessively sensitive to
+                slight changes in the ray. Therefore, it is unreasonable to count large errors there.
+            */
+            if (eclipse.distance < 6100.0)
+            {
+                diff_angle = AngleDiff(lat, lon, eclipse.latitude, eclipse.longitude);
+                if (diff_angle > 0.247)
+                    FAIL("C GlobalSolarEclipseTest(%s line %d): EXCESSIVE GEOGRAPHIC LOCATION ERROR = %0.6lf degrees\n", inFileName, lnum, diff_angle);
+                if (diff_angle > max_angle)
+                    max_angle = diff_angle;
+            }
         }
 
         eclipse = Astronomy_NextGlobalSolarEclipse(eclipse.peak);
     }
 
-    printf("C GlobalSolarEclipseTest: PASS (%d verified, %d skipped, %d CalcMoons, max minutes = %0.3lf)\n", lnum, skip_count, _CalcMoonCount, max_minutes);
+    printf("C GlobalSolarEclipseTest: PASS (%d verified, %d skipped, %d CalcMoons, max minutes = %0.3lf, max angle = %0.3lf)\n", lnum, skip_count, _CalcMoonCount, max_minutes, max_angle);
     error = 0;
 fail:
     if (infile != NULL) fclose(infile);
     return error;
+}
+
+
+static void VectorFromAngles(double v[3], double lat, double lon)
+{
+    double coslat = cos(DEG2RAD * lat);
+    v[0] = cos(DEG2RAD * lon) * coslat;
+    v[1] = sin(DEG2RAD * lon) * coslat;
+    v[2] = sin(DEG2RAD * lat);
+}
+
+
+static double AngleDiff(double alat, double alon, double blat, double blon)
+{
+    double a[3];
+    double b[3];
+    double dot;
+
+    /* Convert angles to vectors on a unit sphere. */
+    VectorFromAngles(a, alat, alon);
+    VectorFromAngles(b, blat, blon);
+
+    dot = a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
+    if (dot <= -1.0)
+        return 180.0;
+
+    if (dot >= +1.0)
+        return 0.0;
+
+    return RAD2DEG * acos(dot);
 }
 
 /*-----------------------------------------------------------------------------------------------------------*/
