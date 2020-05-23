@@ -2742,6 +2742,7 @@ static int GlobalSolarEclipseTest(void)
     double deltaT, lat, lon;
     astro_time_t peak;
     astro_global_solar_eclipse_t eclipse;
+    astro_eclipse_kind_t expected_kind;
     double diff_days, diff_minutes, max_minutes=0.0;
     double diff_angle, max_angle=0.0;
     int skip_count = 0;
@@ -2771,8 +2772,25 @@ static int GlobalSolarEclipseTest(void)
         if (ParseDate(line, &peak))
             FAIL("C GlobalSolarEclipseTest(%s line %d): invalid date/time format: '%s'\n", inFileName, lnum, line);
 
-        if (4 != sscanf(line+21, "%lf %c %lf %lf", &deltaT, &typeChar, &lat, &lon) || !strchr("PATH", typeChar))
+        if (4 != sscanf(line+21, "%lf %c %lf %lf", &deltaT, &typeChar, &lat, &lon))
             FAIL("C GlobalSolarEclipseTest(%s line %d): invalid data format.\n", inFileName, lnum);
+
+        /*
+            The test data allows for "hybrid" eclipses, which means that some
+            observers see a total eclipse, others see an annular eclipse.
+            The global solar eclipse predictor determines the eclipse kind
+            for the peak observer only. Therefore, hybrid in the test data
+            matches a total eclipse from our predictor.
+        */
+        switch (typeChar)
+        {
+        case 'P':   expected_kind = ECLIPSE_PARTIAL;    break;
+        case 'A':   expected_kind = ECLIPSE_ANNULAR;    break;
+        case 'T':   expected_kind = ECLIPSE_TOTAL;      break;
+        case 'H':   expected_kind = ECLIPSE_TOTAL;      break;
+        default:
+            FAIL("C GlobalSolarEclipseTest(%s line %d): invalid eclipse kind in test data.\n", inFileName, lnum);
+        }
 
         diff_days = eclipse.peak.ut - peak.ut;
 
@@ -2800,6 +2818,10 @@ static int GlobalSolarEclipseTest(void)
 
         if (diff_minutes > max_minutes)
             max_minutes = diff_minutes;
+
+        /* Validate the eclipse kind, but only when it is not a "glancing" eclipse. */
+        if ((eclipse.distance < 6360) && (eclipse.kind != expected_kind))
+            FAIL("C GlobalSolarEclipseTest(%s line %d): WRONG ECLIPSE KIND: expected %d, found %d\n", inFileName, lnum, expected_kind, eclipse.kind);
 
         if (eclipse.kind == ECLIPSE_TOTAL || eclipse.kind == ECLIPSE_ANNULAR)
         {

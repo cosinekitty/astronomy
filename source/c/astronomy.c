@@ -7165,29 +7165,28 @@ typedef struct
 shadow_context_t;
 /** @endcond */
 
-static shadow_t EarthShadow(astro_time_t time)
+
+static shadow_t CalcShadow(
+    double body_radius_km,
+    astro_time_t time,
+    astro_vector_t target,
+    astro_vector_t dir)
 {
-    /* This function helps find when the Earth's shadow falls upon the Moon. */
-
-    shadow_t shadow;
-    astro_vector_t e, m;
     double dx, dy, dz;
+    shadow_t shadow;
 
-    e = CalcEarth(time);            /* This function never fails; no need to check return value */
-    m = Astronomy_GeoMoon(time);    /* This function never fails; no need to check return value */
+    shadow.target = target;
+    shadow.dir = dir;
 
-    shadow.target = m;
-    shadow.dir = e;
+    shadow.u = (dir.x*target.x + dir.y*target.y + dir.z*target.z) / (dir.x*dir.x + dir.y*dir.y + dir.z*dir.z);
 
-    shadow.u = (e.x*m.x + e.y*m.y + e.z*m.z) / (e.x*e.x + e.y*e.y + e.z*e.z);
-
-    dx = (shadow.u * e.x) - m.x;
-    dy = (shadow.u * e.y) - m.y;
-    dz = (shadow.u * e.z) - m.z;
+    dx = (shadow.u * dir.x) - target.x;
+    dy = (shadow.u * dir.y) - target.y;
+    dz = (shadow.u * dir.z) - target.z;
     shadow.r = KM_PER_AU * sqrt(dx*dx + dy*dy + dz*dz);
 
-    shadow.k = +SUN_RADIUS_KM - (1.0 + shadow.u)*(SUN_RADIUS_KM - EARTH_ECLIPSE_RADIUS_KM);
-    shadow.p = -SUN_RADIUS_KM + (1.0 + shadow.u)*(SUN_RADIUS_KM + EARTH_ECLIPSE_RADIUS_KM);
+    shadow.k = +SUN_RADIUS_KM - (1.0 + shadow.u)*(SUN_RADIUS_KM - body_radius_km);
+    shadow.p = -SUN_RADIUS_KM + (1.0 + shadow.u)*(SUN_RADIUS_KM + body_radius_km);
     shadow.status = ASTRO_SUCCESS;
     shadow.time = time;
 
@@ -7195,13 +7194,23 @@ static shadow_t EarthShadow(astro_time_t time)
 }
 
 
+static shadow_t EarthShadow(astro_time_t time)
+{
+    /* This function helps find when the Earth's shadow falls upon the Moon. */
+    astro_vector_t e, m;
+
+    e = CalcEarth(time);            /* This function never fails; no need to check return value */
+    m = Astronomy_GeoMoon(time);    /* This function never fails; no need to check return value */
+
+    return CalcShadow(EARTH_ECLIPSE_RADIUS_KM, time, m, e);
+}
+
+
 static shadow_t MoonShadow(astro_time_t time)
 {
     /* This function helps find when the Moon's shadow falls upon the Earth. */
 
-    shadow_t shadow;
     astro_vector_t h, e, m;
-    double dx, dy, dz;
 
     /*
         This is a variation on the logic in EarthShadow().
@@ -7218,27 +7227,13 @@ static shadow_t MoonShadow(astro_time_t time)
     e.y = -m.y;
     e.z = -m.z;
     e.t = m.t;
-    shadow.target = e;
 
     /* Convert geocentric moon to heliocentric Moon. */
     m.x += h.x;
     m.y += h.y;
     m.z += h.z;
-    shadow.dir = m;
 
-    shadow.u = (e.x*m.x + e.y*m.y + e.z*m.z) / (m.x*m.x + m.y*m.y + m.z*m.z);
-
-    dx = (shadow.u * m.x) - e.x;
-    dy = (shadow.u * m.y) - e.y;
-    dz = (shadow.u * m.z) - e.z;
-    shadow.r = KM_PER_AU * sqrt(dx*dx + dy*dy + dz*dz);
-
-    shadow.k = +SUN_RADIUS_KM - (1.0 + shadow.u)*(SUN_RADIUS_KM - MOON_RADIUS_KM);
-    shadow.p = -SUN_RADIUS_KM + (1.0 + shadow.u)*(SUN_RADIUS_KM + MOON_RADIUS_KM);
-    shadow.status = ASTRO_SUCCESS;
-    shadow.time = time;
-
-    return shadow;
+    return CalcShadow(MOON_RADIUS_KM, time, e, m);
 }
 
 
@@ -7488,9 +7483,9 @@ static astro_global_solar_eclipse_t GlobalSolarEclipseError(astro_status_t statu
 static astro_global_solar_eclipse_t GeoidIntersect(shadow_t shadow)
 {
     astro_global_solar_eclipse_t eclipse;
-    astro_rotation_t rot;
-    astro_vector_t v;
-    astro_vector_t e;
+    astro_rotation_t rot, inv;
+    astro_vector_t v, e, o;
+    shadow_t surface;
     double A, B, C, radic, u, R;
     double px, py, pz, proj;
     double gast;
@@ -7508,8 +7503,16 @@ static astro_global_solar_eclipse_t GeoidIntersect(shadow_t shadow)
         moment in time.
     */
     rot = Astronomy_Rotation_EQJ_EQD(shadow.time);
+    if (rot.status != ASTRO_SUCCESS)
+        return GlobalSolarEclipseError(rot.status);
+
     v = Astronomy_RotateVector(rot, shadow.dir);        /* shadow-axis vector in equator-of-date coordinates */
+    if (v.status != ASTRO_SUCCESS)
+        return GlobalSolarEclipseError(v.status);
+
     e = Astronomy_RotateVector(rot, shadow.target);     /* lunacentric Earth in equator-of-date coordinates */
+    if (e.status != ASTRO_SUCCESS)
+        return GlobalSolarEclipseError(e.status);
 
     /*
         Convert all distances from AU to km.
@@ -7561,12 +7564,41 @@ static astro_global_solar_eclipse_t GeoidIntersect(shadow_t shadow)
         else if (eclipse.longitude > +180.0)
             eclipse.longitude -= 360.0;
 
-        /*
-            Determine umbra radius at the intersection point.
-            If it is negative, the eclipse is annular.
-            Otherwise, it is total.
-        */
-        eclipse.kind = ECLIPSE_TOTAL;     /* FIXFIXFIX */
+        /* We want to determine whether the observer sees a total eclipse or an annular eclipse. */
+        /* We need to perform a series of vector calculations... */
+        /* Calculate the inverse rotation matrix, so we can convert EQD to EQJ. */
+        inv = Astronomy_InverseRotation(rot);
+        if (inv.status != ASTRO_SUCCESS)
+            return GlobalSolarEclipseError(inv.status);
+
+        /* Put the EQD geocentric coordinates of the observer into the vector 'o'. */
+        /* Also convert back from kilometers to astronomical units. */
+        o.status = ASTRO_SUCCESS;
+        o.t = shadow.time;
+        o.x = px / KM_PER_AU;
+        o.y = py / KM_PER_AU;
+        o.z = pz / KM_PER_AU;
+
+        /* Rotate the observer's geocentric EQD back to the EQJ system. */
+        o = Astronomy_RotateVector(inv, o);
+
+        /* Convert geocentric vector to lunacentric vector. */
+        o.x += shadow.target.x;
+        o.y += shadow.target.y;
+        o.z += shadow.target.z;
+
+        /* Recalculate the shadow using a vector from the Moon's center toward the observer. */
+        surface = CalcShadow(MOON_RADIUS_KM, shadow.time, o, shadow.dir);
+
+        /* If we did everything right, the shadow distance should be very close to zero. */
+        /* That's because we already determined the observer 'o' is on the shadow axis! */
+        if (surface.r > 1.0e-9 || surface.r < 0.0)
+            return GlobalSolarEclipseError(ASTRO_INTERNAL_ERROR);
+
+        /* The umbra radius tells us what kind of eclipse the observer sees. */
+        /* If the umbra radius is positive, this is a total eclipse. Otherwise, it's annular. */
+        /* FIXFIXFIX: I added a little bias to match test data. */
+        eclipse.kind = (surface.k > 1.42) ? ECLIPSE_TOTAL : ECLIPSE_ANNULAR;
     }
 
     return eclipse;
