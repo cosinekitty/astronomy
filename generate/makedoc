@@ -46,7 +46,7 @@ fi
 if [[ -f generate_c_docs ]]; then
     echo "Generating C documentation."
     cd ../source/c || Fail "Error changing directory to ../source/c"
-    rm -rf html xml latex
+    rm -rf xml
     doxygen Doxyfile > doxygen.log || Fail "Error in doxygen"
     cd xml || Fail "Error changinge to xml directory"
     echo "Merging doxygen XML files."
