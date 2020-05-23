@@ -61,13 +61,22 @@ const MEAN_SYNODIC_MONTH = 29.530588;       // average number of days for Moon t
 const SECONDS_PER_DAY = 24 * 3600;
 const MILLIS_PER_DAY = SECONDS_PER_DAY * 1000;
 const SOLAR_DAYS_PER_SIDEREAL_DAY = 0.9972695717592592;
+
 const SUN_RADIUS_KM = 695700.0;
 const SUN_RADIUS_AU  = SUN_RADIUS_KM / KM_PER_AU;
-const EARTH_RADIUS_KM = 6371.0;         /* mean radius of the Earth's geoid, without atmosphere */
+
+const EARTH_FLATTENING = 0.996647180302104;
+const EARTH_EQUATORIAL_RADIUS_KM = 6378.1366;
+const EARTH_EQUATORIAL_RADIUS_AU = EARTH_EQUATORIAL_RADIUS_KM / KM_PER_AU;
+const EARTH_MEAN_RADIUS_KM = 6371.0;    /* mean radius of the Earth's geoid, without atmosphere */
 const EARTH_ATMOSPHERE_KM = 88.0;       /* effective atmosphere thickness for lunar eclipses */
-const EARTH_ECLIPSE_RADIUS_KM = EARTH_RADIUS_KM + EARTH_ATMOSPHERE_KM;
-const MOON_RADIUS_KM = 1737.4;
-const MOON_RADIUS_AU = MOON_RADIUS_KM / KM_PER_AU;
+const EARTH_ECLIPSE_RADIUS_KM = EARTH_MEAN_RADIUS_KM + EARTH_ATMOSPHERE_KM;
+
+const MOON_EQUATORIAL_RADIUS_KM = 1738.1;
+const MOON_MEAN_RADIUS_KM       = 1737.4;
+const MOON_POLAR_RADIUS_KM      = 1736.0;
+const MOON_EQUATORIAL_RADIUS_AU = (MOON_EQUATORIAL_RADIUS_KM / KM_PER_AU);
+
 const REFRACTION_NEAR_HORIZON = 34 / 60;        // degrees of refractive "lift" seen for objects near horizon
 const EARTH_MOON_MASS_RATIO = 81.30056;
 const SUN_MASS     = 333054.25318;        /* Sun's mass relative to Earth. */
@@ -2516,7 +2525,7 @@ Astronomy.NextMoonQuarter = function(mq) {
 Astronomy.SearchRiseSet = function(body, observer, direction, dateStart, limitDays) {
     // We calculate the apparent angular radius of the Sun and Moon,
     // but treat all other bodies as points.
-    let body_radius_au = { Sun:SUN_RADIUS_AU, Moon:MOON_RADIUS_AU }[body] || 0;
+    let body_radius_au = { Sun:SUN_RADIUS_AU, Moon:MOON_EQUATORIAL_RADIUS_AU }[body] || 0;
 
     function peak_altitude(t) {
         // Return the angular altitude above or below the horizon
@@ -4353,22 +4362,22 @@ Astronomy.SearchLunarEclipse = function(date) {
            /* Search near the full moon for the time when the center of the Moon */
            /* is closest to the line passing through the centers of the Sun and Earth. */
            const shadow = PeakEarthShadow(fullmoon);
-           if (shadow.r < shadow.p + MOON_RADIUS_KM) {
+           if (shadow.r < shadow.p + MOON_MEAN_RADIUS_KM) {
                /* This is at least a penumbral eclipse. We will return a result. */
                let kind = 'penumbral';
                let sd_total = 0.0;
                let sd_partial = 0.0;
-               let sd_penum = ShadowSemiDurationMinutes(shadow.time, shadow.p + MOON_RADIUS_KM, 200.0);
+               let sd_penum = ShadowSemiDurationMinutes(shadow.time, shadow.p + MOON_MEAN_RADIUS_KM, 200.0);
 
-               if (shadow.r < shadow.k + MOON_RADIUS_KM) {
+               if (shadow.r < shadow.k + MOON_MEAN_RADIUS_KM) {
                    /* This is at least a partial eclipse. */
                    kind = 'partial';
-                   sd_partial = ShadowSemiDurationMinutes(shadow.time, shadow.k + MOON_RADIUS_KM, sd_penum);
+                   sd_partial = ShadowSemiDurationMinutes(shadow.time, shadow.k + MOON_MEAN_RADIUS_KM, sd_penum);
 
-                   if (shadow.r + MOON_RADIUS_KM < shadow.k) {
+                   if (shadow.r + MOON_MEAN_RADIUS_KM < shadow.k) {
                        /* This is a total eclipse. */
                        kind = 'total';
-                       sd_total = ShadowSemiDurationMinutes(shadow.time, shadow.k - MOON_RADIUS_KM, sd_partial);
+                       sd_total = ShadowSemiDurationMinutes(shadow.time, shadow.k - MOON_MEAN_RADIUS_KM, sd_partial);
                    }
                }
                return new LunarEclipseInfo(kind, shadow.time, sd_penum, sd_partial, sd_total);

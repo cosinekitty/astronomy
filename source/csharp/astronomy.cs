@@ -1068,7 +1068,7 @@ namespace CosineKitty
                     break;
 
                 case Body.Moon:
-                    this.body_radius_au = Astronomy.MOON_RADIUS_AU;
+                    this.body_radius_au = Astronomy.MOON_EQUATORIAL_RADIUS_AU;
                     break;
 
                 default:
@@ -1483,7 +1483,7 @@ namespace CosineKitty
             return new MoonResult(
                 Astronomy.PI2 * Frac((L0+DLAM/Astronomy.ARC) / Astronomy.PI2),
                 lat_seconds * (Astronomy.DEG2RAD / 3600.0),
-                (Astronomy.ARC * (Astronomy.ERAD / Astronomy.METERS_PER_AU)) / (0.999953253 * SINPI)
+                (Astronomy.ARC * Astronomy.EARTH_EQUATORIAL_RADIUS_AU) / (0.999953253 * SINPI)
             );
         }
     }
@@ -1556,9 +1556,23 @@ namespace CosineKitty
         internal const double PI2 = 2.0 * Math.PI;
         internal const double ARC = 3600.0 * 180.0 / Math.PI;       /* arcseconds per radian */
         private const double C_AUDAY = 173.1446326846693;           /* speed of light in AU/day */
-        internal const double ERAD = 6378136.6;                     /* mean earth radius in meters */
         internal const double KM_PER_AU = 1.4959787069098932e+8;
-        internal const double METERS_PER_AU = KM_PER_AU * 1000.0;   /* astronomical unit in meters */
+
+        internal const double SUN_RADIUS_KM  = 695700.0;
+        internal const double SUN_RADIUS_AU  = SUN_RADIUS_KM / KM_PER_AU;
+
+        internal const double EARTH_FLATTENING = 0.996647180302104;
+        internal const double EARTH_EQUATORIAL_RADIUS_KM = 6378.1366;
+        internal const double EARTH_EQUATORIAL_RADIUS_AU = EARTH_EQUATORIAL_RADIUS_KM / KM_PER_AU;
+        internal const double EARTH_MEAN_RADIUS_KM = 6371.0;    /* mean radius of the Earth's geoid, without atmosphere */
+        internal const double EARTH_ATMOSPHERE_KM = 88.0;       /* effective atmosphere thickness for lunar eclipses */
+        internal const double EARTH_ECLIPSE_RADIUS_KM = EARTH_MEAN_RADIUS_KM + EARTH_ATMOSPHERE_KM;
+
+        internal const double MOON_EQUATORIAL_RADIUS_KM = 1738.1;
+        internal const double MOON_MEAN_RADIUS_KM       = 1737.4;
+        internal const double MOON_POLAR_RADIUS_KM      = 1736.0;
+        internal const double MOON_EQUATORIAL_RADIUS_AU = (MOON_EQUATORIAL_RADIUS_KM / KM_PER_AU);
+
         private const double ANGVEL = 7.2921150e-5;
         private const double SECONDS_PER_DAY = 24.0 * 3600.0;
         private const double SOLAR_DAYS_PER_SIDEREAL_DAY = 0.9972695717592592;
@@ -1566,13 +1580,6 @@ namespace CosineKitty
         private const double EARTH_ORBITAL_PERIOD = 365.256;
         private const double NEPTUNE_ORBITAL_PERIOD = 60189.0;
         internal const double REFRACTION_NEAR_HORIZON = 34.0 / 60.0;   /* degrees of refractive "lift" seen for objects near horizon */
-        internal const double SUN_RADIUS_KM  = 695700.0;
-        internal const double SUN_RADIUS_AU  = SUN_RADIUS_KM / KM_PER_AU;
-        internal const double EARTH_RADIUS_KM = 6371.0;         /* mean radius of the Earth's geoid, without atmosphere */
-        internal const double EARTH_ATMOSPHERE_KM = 88.0;       /* effective atmosphere thickness for lunar eclipses */
-        internal const double EARTH_ECLIPSE_RADIUS_KM = EARTH_RADIUS_KM + EARTH_ATMOSPHERE_KM;
-        internal const double MOON_RADIUS_KM = 1737.4;
-        internal const double MOON_RADIUS_AU = MOON_RADIUS_KM / KM_PER_AU;
         private const double ASEC180 = 180.0 * 60.0 * 60.0;         /* arcseconds per 180 degrees (or pi radians) */
         private const double AU_PER_PARSEC = (ASEC180 / Math.PI);   /* exact definition of how many AU = one parsec */
         private const double EARTH_MOON_MASS_RATIO = 81.30056;
@@ -3254,7 +3261,6 @@ namespace CosineKitty
 
         private static AstroVector terra(Observer observer, double st)
         {
-            double erad_km = ERAD / 1000.0;
             double df = 1.0 - 0.003352819697896;    /* flattening of the Earth */
             double df2 = df * df;
             double phi = observer.latitude * DEG2RAD;
@@ -3263,8 +3269,8 @@ namespace CosineKitty
             double c = 1.0 / Math.Sqrt(cosphi*cosphi + df2*sinphi*sinphi);
             double s = df2 * c;
             double ht_km = observer.height / 1000.0;
-            double ach = erad_km*c + ht_km;
-            double ash = erad_km*s + ht_km;
+            double ach = EARTH_EQUATORIAL_RADIUS_KM*c + ht_km;
+            double ash = EARTH_EQUATORIAL_RADIUS_KM*s + ht_km;
             double stlocl = (15.0*st + observer.longitude) * DEG2RAD;
             double sinst = Math.Sin(stlocl);
             double cosst = Math.Cos(stlocl);
@@ -5514,25 +5520,25 @@ namespace CosineKitty
                     // is closest to the line passing through the centers of the Sun and Earth.
                     EarthShadowInfo shadow = PeakEarthShadow(fullmoon);
 
-                    if (shadow.r < shadow.p + MOON_RADIUS_KM)
+                    if (shadow.r < shadow.p + MOON_MEAN_RADIUS_KM)
                     {
                         // This is at least a penumbral eclipse. We will return a result.
                         EclipseKind kind = EclipseKind.Penumbral;
                         double sd_total = 0.0;
                         double sd_partial = 0.0;
-                        double sd_penum = ShadowSemiDurationMinutes(shadow.time, shadow.p + MOON_RADIUS_KM, 200.0);
+                        double sd_penum = ShadowSemiDurationMinutes(shadow.time, shadow.p + MOON_MEAN_RADIUS_KM, 200.0);
 
-                        if (shadow.r < shadow.k + MOON_RADIUS_KM)
+                        if (shadow.r < shadow.k + MOON_MEAN_RADIUS_KM)
                         {
                             // This is at least a partial eclipse.
                             kind = EclipseKind.Partial;
-                            sd_partial = ShadowSemiDurationMinutes(shadow.time, shadow.k + MOON_RADIUS_KM, sd_penum);
+                            sd_partial = ShadowSemiDurationMinutes(shadow.time, shadow.k + MOON_MEAN_RADIUS_KM, sd_penum);
 
-                            if (shadow.r + MOON_RADIUS_KM < shadow.k)
+                            if (shadow.r + MOON_MEAN_RADIUS_KM < shadow.k)
                             {
                                 // This is a total eclipse.
                                 kind = EclipseKind.Total;
-                                sd_total = ShadowSemiDurationMinutes(shadow.time, shadow.k - MOON_RADIUS_KM, sd_partial);
+                                sd_total = ShadowSemiDurationMinutes(shadow.time, shadow.k - MOON_MEAN_RADIUS_KM, sd_partial);
                             }
                         }
                         return new LunarEclipseInfo(kind, shadow.time, sd_penum, sd_partial, sd_total);

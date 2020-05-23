@@ -55,13 +55,22 @@ _MEAN_SYNODIC_MONTH = 29.530588
 _EARTH_ORBITAL_PERIOD = 365.256
 _NEPTUNE_ORBITAL_PERIOD = 60189.0
 _REFRACTION_NEAR_HORIZON = 34.0 / 60.0
+
 _SUN_RADIUS_KM = 695700.0
 _SUN_RADIUS_AU  = _SUN_RADIUS_KM / _KM_PER_AU
-_EARTH_RADIUS_KM = 6371.0         # mean radius of the Earth's geoid, without atmosphere
-_EARTH_ATMOSPHERE_KM = 88.0       # effective atmosphere thickness for lunar eclipses
-_EARTH_ECLIPSE_RADIUS_KM = _EARTH_RADIUS_KM + _EARTH_ATMOSPHERE_KM
-_MOON_RADIUS_KM = 1737.4
-_MOON_RADIUS_AU = _MOON_RADIUS_KM / _KM_PER_AU
+
+_EARTH_FLATTENING = 0.996647180302104
+_EARTH_EQUATORIAL_RADIUS_KM = 6378.1366
+_EARTH_EQUATORIAL_RADIUS_AU = _EARTH_EQUATORIAL_RADIUS_KM / _KM_PER_AU
+_EARTH_MEAN_RADIUS_KM = 6371.0      # mean radius of the Earth's geoid, without atmosphere
+_EARTH_ATMOSPHERE_KM = 88.0         # effective atmosphere thickness for lunar eclipses
+_EARTH_ECLIPSE_RADIUS_KM = _EARTH_MEAN_RADIUS_KM + _EARTH_ATMOSPHERE_KM
+
+_MOON_EQUATORIAL_RADIUS_KM = 1738.1
+_MOON_MEAN_RADIUS_KM       = 1737.4
+_MOON_POLAR_RADIUS_KM      = 1736.0
+_MOON_EQUATORIAL_RADIUS_AU = (_MOON_EQUATORIAL_RADIUS_KM / _KM_PER_AU)
+
 _ASEC180 = 180.0 * 60.0 * 60.0
 _AU_PER_PARSEC = _ASEC180 / math.pi
 _EARTH_MOON_MASS_RATIO = 81.30056
@@ -4981,7 +4990,7 @@ def SearchRiseSet(body, observer, direction, startTime, limitDays):
     elif body == Body.Sun:
         body_radius = _SUN_RADIUS_AU
     elif body == Body.Moon:
-        body_radius = _MOON_RADIUS_AU
+        body_radius = _MOON_EQUATORIAL_RADIUS_AU
     else:
         body_radius = 0.0
 
@@ -6726,22 +6735,22 @@ def SearchLunarEclipse(startTime):
             # Search near the full moon for the time when the center of the Moon
             # is closest to the line passing through the centers of the Sun and Earth.
             shadow = _PeakEarthShadow(fullmoon)
-            if shadow.r < shadow.p + _MOON_RADIUS_KM:
+            if shadow.r < shadow.p + _MOON_MEAN_RADIUS_KM:
                 # This is at least a penumbral eclipse. We will return a result.
                 kind = EclipseKind.Penumbral
                 sd_total = 0.0
                 sd_partial = 0.0
-                sd_penum = _ShadowSemiDurationMinutes(shadow.time, shadow.p + _MOON_RADIUS_KM, 200.0)
+                sd_penum = _ShadowSemiDurationMinutes(shadow.time, shadow.p + _MOON_MEAN_RADIUS_KM, 200.0)
 
-                if shadow.r < shadow.k + _MOON_RADIUS_KM:
+                if shadow.r < shadow.k + _MOON_MEAN_RADIUS_KM:
                     # This is at least a partial eclipse.
                     kind = EclipseKind.Partial
-                    sd_partial = _ShadowSemiDurationMinutes(shadow.time, shadow.k + _MOON_RADIUS_KM, sd_penum)
+                    sd_partial = _ShadowSemiDurationMinutes(shadow.time, shadow.k + _MOON_MEAN_RADIUS_KM, sd_penum)
 
-                    if shadow.r + _MOON_RADIUS_KM < shadow.k:
+                    if shadow.r + _MOON_MEAN_RADIUS_KM < shadow.k:
                         # This is a total eclipse.
                         kind = EclipseKind.Total
-                        sd_total = _ShadowSemiDurationMinutes(shadow.time, shadow.k - _MOON_RADIUS_KM, sd_partial)
+                        sd_total = _ShadowSemiDurationMinutes(shadow.time, shadow.k - _MOON_MEAN_RADIUS_KM, sd_partial)
 
                 return LunarEclipseInfo(kind, shadow.time, sd_penum, sd_partial, sd_total)
 

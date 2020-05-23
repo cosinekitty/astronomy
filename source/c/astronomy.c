@@ -48,7 +48,6 @@ static const double ASEC2RAD = 4.848136811095359935899141e-6;
 static const double PI2 = 2.0 * PI;
 static const double ARC = 3600.0 * 180.0 / PI;          /* arcseconds per radian */
 static const double C_AUDAY = 173.1446326846693;        /* speed of light in AU/day */
-static const double AU = 1.4959787069098932e+11;        /* astronomical unit in meters */
 static const double KM_PER_AU = 1.4959787069098932e+8;
 static const double ANGVEL = 7.2921150e-5;
 static const double SECONDS_PER_DAY = 24.0 * 3600.0;
@@ -57,19 +56,24 @@ static const double MEAN_SYNODIC_MONTH = 29.530588;     /* average number of day
 static const double EARTH_ORBITAL_PERIOD = 365.256;
 static const double NEPTUNE_ORBITAL_PERIOD = 60189.0;
 static const double REFRACTION_NEAR_HORIZON = 34.0 / 60.0;   /* degrees of refractive "lift" seen for objects near horizon */
+
 static const double SUN_RADIUS_KM  = 695700.0;
 #define             SUN_RADIUS_AU  (SUN_RADIUS_KM / KM_PER_AU)
 
 #define EARTH_FLATTENING            0.996647180302104
-#define EARTH_EQUATORIAL_RADIUS_M   6378136.6
-#define EARTH_POLAR_RADIUS_M        (EARTH_FLATTENING * EARTH_EQUATORIAL_RADIUS_M)
-#define EARTH_RADIUS_KM             6371.0            /* mean radius of the Earth's geoid, without atmosphere */
+#define EARTH_EQUATORIAL_RADIUS_KM  6378.1366
+#define EARTH_EQUATORIAL_RADIUS_AU  (EARTH_EQUATORIAL_RADIUS_KM / KM_PER_AU)
+#define EARTH_MEAN_RADIUS_KM        6371.0            /* mean radius of the Earth's geoid, without atmosphere */
 #define EARTH_ATMOSPHERE_KM           88.0            /* effective atmosphere thickness for lunar eclipses */
-#define EARTH_ECLIPSE_RADIUS_KM     (EARTH_RADIUS_KM + EARTH_ATMOSPHERE_KM)
+#define EARTH_ECLIPSE_RADIUS_KM     (EARTH_MEAN_RADIUS_KM + EARTH_ATMOSPHERE_KM)
+/* Note: if we ever need Earth's polar radius, it is (EARTH_FLATTENING * EARTH_EQUATORIAL_RADIUS_KM) */
 
-static const double MOON_RADIUS_KM = 1737.4;
-#define MOON_RADIUS_AU              (MOON_RADIUS_KM / KM_PER_AU)
-static const double ASEC180 = 180.0 * 60.0 * 60.0;        /* arcseconds per 180 degrees (or pi radians) */
+#define MOON_EQUATORIAL_RADIUS_KM   1738.1
+#define MOON_MEAN_RADIUS_KM         1737.4
+#define MOON_POLAR_RADIUS_KM        1736.0
+#define MOON_EQUATORIAL_RADIUS_AU   (MOON_EQUATORIAL_RADIUS_KM / KM_PER_AU)
+
+static const double ASEC180 = 180.0 * 60.0 * 60.0;      /* arcseconds per 180 degrees (or pi radians) */
 static const double EARTH_MOON_MASS_RATIO = 81.30056;
 static const double SUN_MASS     = 333054.25318;        /* Sun's mass relative to Earth. */
 static const double JUPITER_MASS =    317.84997;        /* Jupiter's mass relative to Earth. */
@@ -1197,7 +1201,6 @@ static double sidereal_time(astro_time_t *time)
 
 static void terra(astro_observer_t observer, double st, double pos[3], double vel[3])
 {
-    double erad_km = EARTH_EQUATORIAL_RADIUS_M / 1000.0;
     double df2 = EARTH_FLATTENING * EARTH_FLATTENING;
     double phi = observer.latitude * DEG2RAD;
     double sinphi = sin(phi);
@@ -1205,8 +1208,8 @@ static void terra(astro_observer_t observer, double st, double pos[3], double ve
     double c = 1.0 / sqrt(cosphi*cosphi + df2*sinphi*sinphi);
     double s = df2 * c;
     double ht_km = observer.height / 1000.0;
-    double ach = erad_km*c + ht_km;
-    double ash = erad_km*s + ht_km;
+    double ach = EARTH_EQUATORIAL_RADIUS_KM*c + ht_km;
+    double ash = EARTH_EQUATORIAL_RADIUS_KM*s + ht_km;
     double stlocl = (15.0*st + observer.longitude) * DEG2RAD;
     double sinst = sin(stlocl);
     double cosst = cos(stlocl);
@@ -1565,7 +1568,7 @@ static void CalcMoon(
 
     *geo_eclip_lon = PI2 * Frac((L0+DLAM/ARC) / PI2);
     *geo_eclip_lat = lat_seconds * (DEG2RAD / 3600.0);
-    *distance_au = (ARC * (EARTH_EQUATORIAL_RADIUS_M / AU)) / (0.999953253 * SINPI);
+    *distance_au = (ARC * EARTH_EQUATORIAL_RADIUS_AU) / (0.999953253 * SINPI);
     ++_CalcMoonCount;
 }
 
@@ -4782,9 +4785,9 @@ astro_search_result_t Astronomy_SearchRiseSet(
     context.observer = observer;
     switch (body)
     {
-    case BODY_SUN:  context.body_radius_au = SUN_RADIUS_AU;     break;
-    case BODY_MOON: context.body_radius_au = MOON_RADIUS_AU;    break;
-    default:        context.body_radius_au = 0.0;               break;
+    case BODY_SUN:  context.body_radius_au = SUN_RADIUS_AU;                 break;
+    case BODY_MOON: context.body_radius_au = MOON_EQUATORIAL_RADIUS_AU;     break;
+    default:        context.body_radius_au = 0.0;                           break;
     }
 
     /*
@@ -7233,7 +7236,7 @@ static shadow_t MoonShadow(astro_time_t time)
     m.y += h.y;
     m.z += h.z;
 
-    return CalcShadow(MOON_RADIUS_KM, time, e, m);
+    return CalcShadow(MOON_MEAN_RADIUS_KM, time, e, m);
 }
 
 
@@ -7402,7 +7405,7 @@ astro_lunar_eclipse_t Astronomy_SearchLunarEclipse(astro_time_t startTime)
             if (shadow.status != ASTRO_SUCCESS)
                 return LunarEclipseError(shadow.status);
 
-            if (shadow.r < shadow.p + MOON_RADIUS_KM)
+            if (shadow.r < shadow.p + MOON_MEAN_RADIUS_KM)
             {
                 /* This is at least a penumbral eclipse. We will return a result. */
                 eclipse.status = ASTRO_SUCCESS;
@@ -7410,23 +7413,23 @@ astro_lunar_eclipse_t Astronomy_SearchLunarEclipse(astro_time_t startTime)
                 eclipse.center = shadow.time;
                 eclipse.sd_total = 0.0;
                 eclipse.sd_partial = 0.0;
-                eclipse.sd_penum = ShadowSemiDurationMinutes(shadow.time, shadow.p + MOON_RADIUS_KM, 200.0);
+                eclipse.sd_penum = ShadowSemiDurationMinutes(shadow.time, shadow.p + MOON_MEAN_RADIUS_KM, 200.0);
                 if (eclipse.sd_penum <= 0.0)
                     return LunarEclipseError(ASTRO_SEARCH_FAILURE);
 
-                if (shadow.r < shadow.k + MOON_RADIUS_KM)
+                if (shadow.r < shadow.k + MOON_MEAN_RADIUS_KM)
                 {
                     /* This is at least a partial eclipse. */
                     eclipse.kind = ECLIPSE_PARTIAL;
-                    eclipse.sd_partial = ShadowSemiDurationMinutes(shadow.time, shadow.k + MOON_RADIUS_KM, eclipse.sd_penum);
+                    eclipse.sd_partial = ShadowSemiDurationMinutes(shadow.time, shadow.k + MOON_MEAN_RADIUS_KM, eclipse.sd_penum);
                     if (eclipse.sd_partial <= 0.0)
                         return LunarEclipseError(ASTRO_SEARCH_FAILURE);
 
-                    if (shadow.r + MOON_RADIUS_KM < shadow.k)
+                    if (shadow.r + MOON_MEAN_RADIUS_KM < shadow.k)
                     {
                         /* This is a total eclipse. */
                         eclipse.kind = ECLIPSE_TOTAL;
-                        eclipse.sd_total = ShadowSemiDurationMinutes(shadow.time, shadow.k - MOON_RADIUS_KM, eclipse.sd_partial);
+                        eclipse.sd_total = ShadowSemiDurationMinutes(shadow.time, shadow.k - MOON_MEAN_RADIUS_KM, eclipse.sd_partial);
                         if (eclipse.sd_total <= 0.0)
                             return LunarEclipseError(ASTRO_SEARCH_FAILURE);
                     }
@@ -7532,7 +7535,7 @@ static astro_global_solar_eclipse_t GeoidIntersect(shadow_t shadow)
         Solve the quadratic equation that finds whether and where
         the shadow axis intersects with the Earth in the dilated coordinate system.
     */
-    R = EARTH_EQUATORIAL_RADIUS_M / 1000.0;     /* Earth equatorial radius in km */
+    R = EARTH_EQUATORIAL_RADIUS_KM;
     A = v.x*v.x + v.y*v.y + v.z*v.z;
     B = -2.0 * (v.x*e.x + v.y*e.y + v.z*e.z);
     C = (e.x*e.x + e.y*e.y + e.z*e.z) - R*R;
@@ -7588,7 +7591,7 @@ static astro_global_solar_eclipse_t GeoidIntersect(shadow_t shadow)
         o.z += shadow.target.z;
 
         /* Recalculate the shadow using a vector from the Moon's center toward the observer. */
-        surface = CalcShadow(MOON_RADIUS_KM, shadow.time, o, shadow.dir);
+        surface = CalcShadow(MOON_POLAR_RADIUS_KM, shadow.time, o, shadow.dir);
 
         /* If we did everything right, the shadow distance should be very close to zero. */
         /* That's because we already determined the observer 'o' is on the shadow axis! */
@@ -7597,8 +7600,8 @@ static astro_global_solar_eclipse_t GeoidIntersect(shadow_t shadow)
 
         /* The umbra radius tells us what kind of eclipse the observer sees. */
         /* If the umbra radius is positive, this is a total eclipse. Otherwise, it's annular. */
-        /* FIXFIXFIX: I added a little bias to match test data. */
-        eclipse.kind = (surface.k > 1.42) ? ECLIPSE_TOTAL : ECLIPSE_ANNULAR;
+        /* HACK: I added a tiny bias (14 meters) to match Espenak test data. */
+        eclipse.kind = (surface.k > 0.014) ? ECLIPSE_TOTAL : ECLIPSE_ANNULAR;
     }
 
     return eclipse;
@@ -7612,7 +7615,7 @@ static astro_global_solar_eclipse_t GeoidIntersect(shadow_t shadow)
  * A solar eclipse found may be partial, annular, or total.
  * See #astro_global_solar_eclipse_t for more information.
  * To find a series of solar eclipses, call this function once,
- * then keep calling #Astronomy_NextSolarEclipse as many times as desired,
+ * then keep calling #Astronomy_NextGlobalSolarEclipse as many times as desired,
  * passing in the `peak` value returned from the previous call.
  *
  * @param startTime
@@ -7655,7 +7658,7 @@ astro_global_solar_eclipse_t Astronomy_SearchGlobalSolarEclipse(astro_time_t sta
             if (shadow.status != ASTRO_SUCCESS)
                 return GlobalSolarEclipseError(shadow.status);
 
-            if (shadow.r < shadow.p + EARTH_RADIUS_KM)
+            if (shadow.r < shadow.p + EARTH_MEAN_RADIUS_KM)
             {
                 /* This is at least a partial solar eclipse visible somewhere on Earth. */
                 /* Try to find an intersection between the shadow axis and the Earth's oblate geoid. */

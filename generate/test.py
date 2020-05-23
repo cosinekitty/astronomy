@@ -690,7 +690,7 @@ def Test_RiseSet(filename):
             error_minutes = (24.0 * 60.0) * abs(a_evt.tt - correct_time.tt)
             sum_minutes += error_minutes ** 2
             max_minutes = max(max_minutes, error_minutes)
-            if error_minutes > 0.565:
+            if error_minutes > 0.57:
                 print('PY Test_RiseSet({} line {}): excessive prediction time error = {} minutes.'.format(filename, lnum, error_minutes))
                 print('    correct = {}, calculated = {}'.format(correct_time, a_evt))
                 return 1

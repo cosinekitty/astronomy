@@ -1387,7 +1387,7 @@ If the search does not converge within 20 iterations, it will fail with status c
 
 
 
-This function finds the first solar eclipse that occurs after `startTime`. A solar eclipse found may be partial, annular, or total. See [`astro_global_solar_eclipse_t`](#astro_global_solar_eclipse_t) for more information. To find a series of solar eclipses, call this function once, then keep calling #Astronomy_NextSolarEclipse as many times as desired, passing in the `peak` value returned from the previous call.
+This function finds the first solar eclipse that occurs after `startTime`. A solar eclipse found may be partial, annular, or total. See [`astro_global_solar_eclipse_t`](#astro_global_solar_eclipse_t) for more information. To find a series of solar eclipses, call this function once, then keep calling [`Astronomy_NextGlobalSolarEclipse`](#Astronomy_NextGlobalSolarEclipse) as many times as desired, passing in the `peak` value returned from the previous call.
 
 
 

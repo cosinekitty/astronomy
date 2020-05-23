@@ -91,7 +91,7 @@ function Test() {
             max_minutes = error_minutes;
             console.log(`Line ${evt.lnum} : error = ${error_minutes.toFixed(4)}`);
         }
-        if (error_minutes > 2) {
+        if (error_minutes > 0.57) {
             console.log(`Expected ${evt.date.toISOString()}`);
             console.log(`Found    ${a_date.toString()}`);
             Fail("Excessive prediction time error.");
