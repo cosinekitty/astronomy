@@ -1,0 +1,3 @@
+# lat, lon, kind, p1(time,alt), t1, peak, t2, p2
+# http://www.eclipsewise.com/solar/SEcirc/2001-2100/SE2017Aug21Tcirc.html#section3
+28.553160 -81.364510 P 2017-08-21T17:19:28Z 73 - 0 2017-08-21T18:51:17Z	64 - 0 2017-08-21T20:14:57Z 48

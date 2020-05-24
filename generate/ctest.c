@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
+#include <ctype.h>
 #include "astronomy.h"
 
 #define PI      3.14159265358979323846
@@ -70,6 +71,7 @@ static int GlobalSolarEclipseTest(void);
 static int PlotDeltaT(const char *outFileName);
 static double AngleDiff(double alat, double alon, double blat, double blon);
 static int LocalSolarEclipseTest1(void);
+static int LocalSolarEclipseTest2(void);
 
 int main(int argc, const char *argv[])
 {
@@ -160,6 +162,7 @@ int main(int argc, const char *argv[])
         if (!strcmp(verb, "local_solar_eclipse"))
         {
             CHECK(LocalSolarEclipseTest1());
+            CHECK(LocalSolarEclipseTest2());
             goto success;
         }
     }
@@ -2968,6 +2971,97 @@ static int LocalSolarEclipseTest1(void)
         FAIL("C LocalSolarEclipseTest1: EXCESSIVE SKIP COUNT %d\n", skip_count);
 
     printf("C LocalSolarEclipseTest1: PASS (%d verified, %d skipped, %d CalcMoons, max minutes = %0.3lf)\n", lnum, skip_count, _CalcMoonCount, max_minutes);
+    error = 0;
+fail:
+    if (infile != NULL) fclose(infile);
+    return error;
+}
+
+/*-----------------------------------------------------------------------------------------------------------*/
+
+static int ParseEvent(const char *str, int required, astro_time_t *time)
+{
+    if (required)
+        return ParseDate(str, time);
+
+    if (strcmp(str, "-"))
+    {
+        fprintf(stderr, "ParseEvent: Expected '-' but found '%s'\n", str);
+        return 1;
+    }
+
+    time->ut = time->tt = NAN;
+    return 0;
+}
+
+
+#define TIMESTRSIZE 31
+
+static int LocalSolarEclipseTest2(void)
+{
+    /*
+        Test ability to calculate local solar eclipse conditions away from
+        the peak position on the Earth.
+    */
+
+    int error = 1;
+    FILE *infile = NULL;
+    const char *inFileName = "eclipse/local_solar_eclipse.txt";
+    int lnum, col, empty, nscanned;
+    char line[300];
+    char p1str[TIMESTRSIZE], p2str[TIMESTRSIZE], t1str[TIMESTRSIZE], t2str[TIMESTRSIZE], peakstr[TIMESTRSIZE];
+    double p1alt, p2alt, t1alt, t2alt, peakalt;
+    astro_time_t p1, p2, t1, t2, peak;
+    char typeChar;
+    astro_observer_t observer;
+    double max_minutes=0.0;
+    int verify_count = 0;
+    extern int _CalcMoonCount;      /* incremented by Astronomy Engine every time expensive CalcMoon() is called */
+
+    _CalcMoonCount = 0;
+
+    infile = fopen(inFileName, "rt");
+    if (infile == NULL)
+        FAIL("C LocalSolarEclipseTest2: Cannot open input file: %s\n", inFileName);
+
+    lnum = 0;
+    observer.height = 0.0;
+    while (fgets(line, sizeof(line), infile))
+    {
+        ++lnum;
+
+        /* Treat '#' as a comment character. */
+        empty = 1;
+        for (col=0; line[col] != '\0' && line[col] != '#'; ++col)
+            if (!isspace(line[col]))
+                empty = 0;
+
+        /* Ignore blank lines. */
+        if (empty)
+            continue;
+
+        line[col] = '\0';
+
+        nscanned = sscanf(line, "%lf %lf %c %30s %lf %30s %lf %30s %lf %30s %lf %30s %lf",
+            &observer.latitude,   &observer.longitude,
+            &typeChar,
+            p1str,      &p1alt,
+            t1str,      &t1alt,
+            peakstr,    &peakalt,
+            t2str,      &t2alt,
+            p2str,      &p2alt);
+
+        if (nscanned != 13)
+            FAIL("C LocalSolarEclipseTest2(%s line %d): Incorrect token count (scanned %d)\n", inFileName, lnum, nscanned);
+
+        CHECK(ParseEvent(p1str, 1, &p1));
+        CHECK(ParseEvent(p2str, 1, &p2));
+        CHECK(ParseEvent(peakstr, 1, &peak));
+        CHECK(ParseEvent(t1str, (typeChar != 'P'), &t1));
+        CHECK(ParseEvent(t2str, (typeChar != 'P'), &t2));
+    }
+
+    printf("C LocalSolarEclipseTest2: PASS (%d verified, %d CalcMoons, max minutes = %0.3lf)\n", verify_count, _CalcMoonCount, max_minutes);
     error = 0;
 fail:
     if (infile != NULL) fclose(infile);
