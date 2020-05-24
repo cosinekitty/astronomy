@@ -2995,6 +2995,50 @@ static int ParseEvent(const char *str, int required, astro_time_t *time)
 }
 
 
+static int IgnoreLine(char *line)
+{
+    int col, empty;
+
+    /* Treat '#' as a comment character. */
+    empty = 1;
+    for (col=0; line[col] != '\0' && line[col] != '#'; ++col)
+        if (!isspace(line[col]))
+            empty = 0;
+
+    line[col] = '\0';
+    return empty;
+}
+
+
+static int CheckEvent(
+    const char *inFileName,
+    int lnum,
+    const char *name,
+    astro_time_t expected_time,
+    double expected_altitude,
+    astro_eclipse_event_t evt,
+    double *max_minutes,
+    double *max_degrees)
+{
+    int error = 1;
+    double diff_minutes, diff_alt;
+
+    diff_minutes = (24 * 60) * fabs(expected_time.ut - evt.time.ut);
+    if (diff_minutes > *max_minutes) *max_minutes = diff_minutes;
+    if (diff_minutes > 2.0)
+        FAIL("CheckEvent(%s line %d): EXCESSIVE TIME ERROR: %0.3lf minutes\n", inFileName, lnum, diff_minutes);
+
+    diff_alt = fabs(expected_altitude - evt.altitude);
+    if (diff_alt > *max_degrees) *max_degrees = diff_alt;
+    if (diff_alt > 0.5)
+        FAIL("CheckEvent(%s line %d): EXCESSIVE ALTITUDE ERROR: %0.6lf degrees\n", inFileName, lnum, diff_alt);
+
+    error = 0;
+fail:
+    return error;
+}
+
+
 #define TIMESTRSIZE 31
 
 static int LocalSolarEclipseTest2(void)
@@ -3007,15 +3051,17 @@ static int LocalSolarEclipseTest2(void)
     int error = 1;
     FILE *infile = NULL;
     const char *inFileName = "eclipse/local_solar_eclipse.txt";
-    int lnum, col, empty, nscanned;
+    int lnum, nscanned;
     char line[300];
     char p1str[TIMESTRSIZE], p2str[TIMESTRSIZE], t1str[TIMESTRSIZE], t2str[TIMESTRSIZE], peakstr[TIMESTRSIZE];
     double p1alt, p2alt, t1alt, t2alt, peakalt;
-    astro_time_t p1, p2, t1, t2, peak;
+    astro_time_t p1, p2, t1, t2, peak, search_time;
     char typeChar;
     astro_observer_t observer;
-    double max_minutes=0.0;
+    double max_minutes=0.0, max_degrees=0.0;
     int verify_count = 0;
+    astro_local_solar_eclipse_t eclipse;
+    astro_eclipse_kind_t expected_kind;
     extern int _CalcMoonCount;      /* incremented by Astronomy Engine every time expensive CalcMoon() is called */
 
     _CalcMoonCount = 0;
@@ -3029,18 +3075,7 @@ static int LocalSolarEclipseTest2(void)
     while (fgets(line, sizeof(line), infile))
     {
         ++lnum;
-
-        /* Treat '#' as a comment character. */
-        empty = 1;
-        for (col=0; line[col] != '\0' && line[col] != '#'; ++col)
-            if (!isspace(line[col]))
-                empty = 0;
-
-        /* Ignore blank lines. */
-        if (empty)
-            continue;
-
-        line[col] = '\0';
+        if (IgnoreLine(line)) continue;
 
         nscanned = sscanf(line, "%lf %lf %c %30s %lf %30s %lf %30s %lf %30s %lf %30s %lf",
             &observer.latitude,   &observer.longitude,
@@ -3054,14 +3089,42 @@ static int LocalSolarEclipseTest2(void)
         if (nscanned != 13)
             FAIL("C LocalSolarEclipseTest2(%s line %d): Incorrect token count (scanned %d)\n", inFileName, lnum, nscanned);
 
+        switch (typeChar)
+        {
+        case 'P': expected_kind = ECLIPSE_PARTIAL; break;
+        case 'A': expected_kind = ECLIPSE_ANNULAR; break;
+        case 'T': expected_kind = ECLIPSE_TOTAL;   break;
+        default:
+            FAIL("C LocalSolarEclipseTest2(%s line %d): invalid eclipse type '%c'\n", inFileName, lnum, typeChar);
+        }
+
         CHECK(ParseEvent(p1str, 1, &p1));
         CHECK(ParseEvent(p2str, 1, &p2));
         CHECK(ParseEvent(peakstr, 1, &peak));
         CHECK(ParseEvent(t1str, (typeChar != 'P'), &t1));
         CHECK(ParseEvent(t2str, (typeChar != 'P'), &t2));
+
+        search_time = Astronomy_AddDays(p1, -20.0);
+        eclipse = Astronomy_SearchLocalSolarEclipse(search_time, observer);
+        if (eclipse.status != ASTRO_SUCCESS)
+            FAIL("C LocalSolarEclipseTest2(%s line %d): error %d searching for solar eclipse.\n", inFileName, lnum, eclipse.status);
+
+        if (eclipse.kind != expected_kind)
+            FAIL("C LocalSolarEclipseTest2(%s line %d): expected eclipse kind %d, found %d\n", inFileName, lnum, expected_kind, eclipse.kind);
+
+        CHECK(CheckEvent(inFileName, lnum, "peak", peak, peakalt, eclipse.peak, &max_minutes, &max_degrees));
+        CHECK(CheckEvent(inFileName, lnum, "partial_begin", p1, p1alt, eclipse.partial_begin, &max_minutes, &max_degrees));
+        CHECK(CheckEvent(inFileName, lnum, "partial_end", p2, p2alt, eclipse.partial_end, &max_minutes, &max_degrees));
+        if (typeChar != 'P')
+        {
+            CHECK(CheckEvent(inFileName, lnum, "total_begin", t1, t1alt, eclipse.total_begin, &max_minutes, &max_degrees));
+            CHECK(CheckEvent(inFileName, lnum, "total_end", t2, t2alt, eclipse.total_end, &max_minutes, &max_degrees));
+        }
+
+        ++verify_count;
     }
 
-    printf("C LocalSolarEclipseTest2: PASS (%d verified, %d CalcMoons, max minutes = %0.3lf)\n", verify_count, _CalcMoonCount, max_minutes);
+    printf("C LocalSolarEclipseTest2: PASS (%d verified, %d CalcMoons, max minutes = %0.3lf, max alt degrees = %0.3lf)\n", verify_count, _CalcMoonCount, max_minutes, max_degrees);
     error = 0;
 fail:
     if (infile != NULL) fclose(infile);
