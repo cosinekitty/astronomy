@@ -6037,16 +6037,27 @@ astro_global_solar_eclipse_t Astronomy_NextGlobalSolarEclipse(astro_time_t prevE
 }
 
 
+static astro_eclipse_event_t EclipseEventError(void)
+{
+    astro_eclipse_event_t evt;
+    evt.time = TimeError();
+    evt.altitude = NAN;
+    return evt;
+}
+
+
 static astro_local_solar_eclipse_t LocalSolarEclipseError(astro_status_t status)
 {
     astro_local_solar_eclipse_t eclipse;
 
     eclipse.status = status;
     eclipse.kind = ECLIPSE_NONE;
-    eclipse.peak = eclipse.sunrise = eclipse.sunset =
-        eclipse.partial_begin = eclipse.total_begin =
-        eclipse.total_end = eclipse.partial_end =
-        TimeError();
+
+    eclipse.partial_begin = EclipseEventError();
+    eclipse.total_begin   = EclipseEventError();
+    eclipse.peak          = EclipseEventError();
+    eclipse.total_end     = EclipseEventError();
+    eclipse.partial_end   = EclipseEventError();
 
     return eclipse;
 }
@@ -6070,18 +6081,6 @@ static astro_local_solar_eclipse_t LocalEclipse(
     (void)observer;
     return LocalSolarEclipseError(ASTRO_NOT_INITIALIZED);
 }
-
-
-static int DaytimeOverlap(
-    astro_local_solar_eclipse_t *eclipse,
-    astro_observer_t observer)
-{
-    /* FIXFIXFIX - not yet implemented. */
-    (void)eclipse;
-    (void)observer;
-    return 0;
-}
-
 
 
 /**
@@ -6116,13 +6115,12 @@ astro_local_solar_eclipse_t Astronomy_SearchLocalSolarEclipse(
     astro_time_t nmtime;
     astro_search_result_t newmoon;
     shadow_t shadow;
-    int nmcount;
     double eclip_lat, eclip_lon, distance;
     astro_local_solar_eclipse_t eclipse;
 
     /* Iterate through consecutive new moons until we find a solar eclipse visible somewhere on Earth. */
     nmtime = startTime;
-    for (nmcount=0; nmcount < 12; ++nmcount)
+    for(;;)
     {
         /* Search for the next new moon. Any eclipse will be near it. */
         newmoon = Astronomy_SearchMoonPhase(0.0, nmtime, 40.0);
@@ -6143,13 +6141,15 @@ astro_local_solar_eclipse_t Astronomy_SearchLocalSolarEclipse(
             {
                 /* This is at least a partial solar eclipse for the observer. */
                 eclipse = LocalEclipse(shadow, observer);
+
+                /* If any error occurs, something is really wrong and we should bail out. */
                 if (eclipse.status != ASTRO_SUCCESS)
                     return eclipse;
 
                 /* Ignore any eclipse that happens completely at night. */
-                /* Find sunrise/sunset pairs until either some part of the eclipse */
-                /* overlaps with daytime hours, or we prove that the eclipse is entirely at night. */
-                if (DaytimeOverlap(&eclipse, observer))
+                /* More precisely, the center of the Sun must be above the horizon */
+                /* at the beginning or the end of the eclipse, or we skip the event. */
+                if (eclipse.partial_begin.altitude > 0.0 || eclipse.partial_end.altitude > 0.0)
                     return eclipse;
             }
         }
@@ -6157,10 +6157,6 @@ astro_local_solar_eclipse_t Astronomy_SearchLocalSolarEclipse(
         /* We didn't find an eclipse on this new moon, so search for the next one. */
         nmtime = Astronomy_AddDays(newmoon.time, 10.0);
     }
-
-    /* Safety valve to prevent infinite loop. */
-    /* This should never happen, because at least 2 solar eclipses happen per year. */
-    return LocalSolarEclipseError(ASTRO_INTERNAL_ERROR);
 }
 
 

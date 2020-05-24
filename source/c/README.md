@@ -2298,6 +2298,25 @@ The [`Astronomy_Constellation`](#Astronomy_Constellation) function returns this 
 
 ---
 
+<a name="astro_eclipse_event_t"></a>
+### `astro_eclipse_event_t`
+
+**Holds a time and the observed altitude of the Sun at that time.** 
+
+
+
+When reporting a solar eclipse observed at a specific location on the Earth (a "local" solar eclipse), a series of events occur. In addition to the time of each event, it is important to know the altitude of the Sun, because each event may be invisible to the observer if the Sun is below the horizon (i.e. it at night).
+
+If `altitude` is negative, the event is theoretical only; it would be visible if the Earth were transparent, but the observer cannot actually see it. If `altitude` is positive but less than a few degrees, visibility will be impaired by atmospheric interference (sunrise or sunset conditions). 
+
+| Type | Member | Description |
+| ---- | ------ | ----------- |
+| [`astro_time_t`](#astro_time_t) | `time` |  The date and time of the event.  |
+| `double` | `altitude` |  The angular altitude of the center of the Sun above/below the horizon, at `time`, corrected for atmospheric refraction and expressed in degrees.  |
+
+
+---
+
 <a name="astro_ecliptic_t"></a>
 ### `astro_ecliptic_t`
 
@@ -2480,14 +2499,12 @@ The fields `partial_begin` and `partial_end` are always set, and indicate when t
 | Type | Member | Description |
 | ---- | ------ | ----------- |
 | [`astro_status_t`](#astro_status_t) | `status` |  `ASTRO_SUCCESS` if this struct is valid; otherwise an error code.  |
-| [`astro_eclipse_kind_t`](#astro_eclipse_kind_t) | `kind` |  The type of solar eclipse found.  |
-| [`astro_time_t`](#astro_time_t) | `peak` |  The time of the eclipse at its peak.  |
-| [`astro_time_t`](#astro_time_t) | `sunrise` |  The time of sunrise on the same day as the eclipse.  |
-| [`astro_time_t`](#astro_time_t) | `sunset` |  The time of sunset on the same day as the eclipse.  |
-| [`astro_time_t`](#astro_time_t) | `partial_begin` |  The time the partial eclipse begins; may happen before sunrise.  |
-| [`astro_time_t`](#astro_time_t) | `total_begin` |  If a total eclipse, the time totality begins; otherwise invalid.  |
-| [`astro_time_t`](#astro_time_t) | `total_end` |  If a total eclipse, the time totality ends; otherwise invalid.  |
-| [`astro_time_t`](#astro_time_t) | `partial_end` |  The time the partial eclipse ends; may happen after sunset.  |
+| [`astro_eclipse_kind_t`](#astro_eclipse_kind_t) | `kind` |  The type of solar eclipse found: `ECLIPSE_PARTIAL`, `ECLIPSE_ANNULAR`, or `ECLIPSE_TOTAL`.  |
+| [`astro_eclipse_event_t`](#astro_eclipse_event_t) | `partial_begin` |  The time and Sun altitude at the beginning of the eclipse.  |
+| [`astro_eclipse_event_t`](#astro_eclipse_event_t) | `total_begin` |  If annular or total eclipse, the time and Sun altitude when annular/total phase begins; otherwise invalid.  |
+| [`astro_eclipse_event_t`](#astro_eclipse_event_t) | `peak` |  THe time and Sun altitude when the eclipse reaches its peak.  |
+| [`astro_eclipse_event_t`](#astro_eclipse_event_t) | `total_end` |  If annular or total eclipse, the time and Sun altitude when annular/total phase ends; otherwise invalid.  |
+| [`astro_eclipse_event_t`](#astro_eclipse_event_t) | `partial_end` |  The time and Sun altitude at the end of the eclipse.  |
 
 
 ---
