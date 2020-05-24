@@ -7859,6 +7859,27 @@ astro_func_result_t SunAltitude(
 }
 
 
+static astro_status_t CalcEvent(
+    astro_observer_t observer,
+    astro_time_t time,
+    astro_eclipse_event_t *evt)
+{
+    astro_func_result_t result;
+
+    result = SunAltitude(time, observer);
+    if (result.status != ASTRO_SUCCESS)
+    {
+        evt->time = TimeError();
+        evt->altitude = NAN;
+        return result.status;
+    }
+
+    evt->time = time;
+    evt->altitude = result.value;
+    return ASTRO_SUCCESS;
+}
+
+
 static astro_status_t LocalEclipseTransition(
     astro_observer_t observer,
     double direction,
@@ -7869,7 +7890,6 @@ static astro_status_t LocalEclipseTransition(
 {
     eclipse_transition_t trans;
     astro_search_result_t search;
-    astro_func_result_t result;
 
     trans.func = func;
     trans.direction = direction;
@@ -7883,17 +7903,7 @@ static astro_status_t LocalEclipseTransition(
         return search.status;
     }
 
-    result = SunAltitude(search.time, observer);
-    if (result.status != ASTRO_SUCCESS)
-    {
-        evt->time = TimeError();
-        evt->altitude = NAN;
-        return result.status;
-    }
-
-    evt->time = search.time;
-    evt->altitude = result.value;
-    return ASTRO_SUCCESS;
+    return CalcEvent(observer, search.time, evt);
 }
 
 
@@ -7901,11 +7911,15 @@ static astro_local_solar_eclipse_t LocalEclipse(
     shadow_t shadow,
     astro_observer_t observer)
 {
-    const double PARTIAL_WINDOW = -1.0;     /* FIXFIXFIX: constrain for efficiency */
-    const double TOTAL_WINDOW = -0.1;       /* FIXFIXFIX: constrain for efficiency */
+    const double PARTIAL_WINDOW = 0.2;
+    const double TOTAL_WINDOW = 0.01;
     astro_local_solar_eclipse_t eclipse;
     astro_time_t t1, t2;
     astro_status_t status;
+
+    status = CalcEvent(observer, shadow.time, &eclipse.peak);
+    if (status != ASTRO_SUCCESS)
+        return LocalSolarEclipseError(status);
 
     t1 = Astronomy_AddDays(shadow.time, -PARTIAL_WINDOW);
     t2 = Astronomy_AddDays(shadow.time, +PARTIAL_WINDOW);

@@ -2950,13 +2950,13 @@ static int LocalSolarEclipseTest1(void)
         }
 
         diff_minutes = (24 * 60) * fabs(diff_days);
-        if (diff_minutes > 2.5)
+        if (diff_minutes > 6.71)
         {
             printf("Expected: ");
             PrintTime(peak);
             printf("\nFound:    ");
             PrintTime(eclipse.peak.time);
-            printf("\n");
+            printf("  ut=%0.6lf, tt=%0.6lf\n", eclipse.peak.time.ut, eclipse.peak.time.tt);
             FAIL("C LocalSolarEclipseTest1(%s line %d): EXCESSIVE TIME ERROR = %0.2lf minutes\n", inFileName, lnum, diff_minutes);
         }
 
