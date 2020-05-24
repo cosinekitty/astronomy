@@ -69,6 +69,7 @@ static int LunarEclipseTest(void);
 static int GlobalSolarEclipseTest(void);
 static int PlotDeltaT(const char *outFileName);
 static double AngleDiff(double alat, double alon, double blat, double blon);
+static int LocalSolarEclipseTest1(void);
 
 int main(int argc, const char *argv[])
 {
@@ -153,6 +154,12 @@ int main(int argc, const char *argv[])
         if (!strcmp(verb, "global_solar_eclipse"))
         {
             CHECK(GlobalSolarEclipseTest());
+            goto success;
+        }
+
+        if (!strcmp(verb, "local_solar_eclipse"))
+        {
+            CHECK(LocalSolarEclipseTest1());
             goto success;
         }
     }
@@ -2878,6 +2885,102 @@ static double AngleDiff(double alat, double alon, double blat, double blon)
         return 0.0;
 
     return RAD2DEG * acos(dot);
+}
+
+/*-----------------------------------------------------------------------------------------------------------*/
+
+static int LocalSolarEclipseTest1(void)
+{
+    /*
+        Re-use the test data for global solar eclipses, only feed the given coordinates
+        into the local solar eclipse predictor as the observer's location.
+        In each case, start the search 20 days before the expected eclipse.
+        Then verify that the peak time and eclipse type is correct in each case.
+    */
+
+    int error = 1;
+    FILE *infile = NULL;
+    const char *inFileName = "eclipse/solar_eclipse.txt";
+    int lnum;
+    char line[100];
+    char typeChar;
+    double deltaT;
+    astro_observer_t observer;
+    astro_time_t peak, search_start;
+    astro_eclipse_kind_t expected_kind;
+    astro_local_solar_eclipse_t eclipse;
+    double diff_days, diff_minutes, max_minutes=0.0;
+    int skip_count = 0;
+    extern int _CalcMoonCount;      /* incremented by Astronomy Engine every time expensive CalcMoon() is called */
+
+    _CalcMoonCount = 0;
+
+    infile = fopen(inFileName, "rt");
+    if (infile == NULL)
+        FAIL("C LocalSolarEclipseTest1: Cannot open input file: %s\n", inFileName);
+
+    lnum = 0;
+    observer.height = 0.0;
+    while (fgets(line, sizeof(line), infile))
+    {
+        ++lnum;
+
+        if (eclipse.status != ASTRO_SUCCESS)
+            FAIL("C LocalSolarEclipseTest1(%s line %d): error %d searching for solar eclipse.\n", inFileName, lnum, eclipse.status);
+
+        /* 1889-12-22T12:54:15Z   -6 T   -12.7   -12.8 */
+        if (strlen(line) < 20)
+            FAIL("C LocalSolarEclipseTest1(%s line %d): line is too short.\n", inFileName, lnum);
+
+        line[20] = '\0';        /* terminate the date/time string */
+        if (ParseDate(line, &peak))
+            FAIL("C LocalSolarEclipseTest1(%s line %d): invalid date/time format: '%s'\n", inFileName, lnum, line);
+
+        if (4 != sscanf(line+21, "%lf %c %lf %lf", &deltaT, &typeChar, &observer.latitude, &observer.longitude))
+            FAIL("C LocalSolarEclipseTest1(%s line %d): invalid data format.\n", inFileName, lnum);
+
+        switch (typeChar)
+        {
+        case 'P':   expected_kind = ECLIPSE_PARTIAL;    break;
+        case 'A':   expected_kind = ECLIPSE_ANNULAR;    break;
+        case 'T':   expected_kind = ECLIPSE_TOTAL;      break;
+        case 'H':   expected_kind = ECLIPSE_TOTAL;      break;
+        default:
+            FAIL("C LocalSolarEclipseTest1(%s line %d): invalid eclipse kind in test data.\n", inFileName, lnum);
+        }
+
+        /* Start the search 20 days before we know the eclipse should peak. */
+        search_start = Astronomy_AddDays(peak, -20.0);
+        eclipse = Astronomy_SearchLocalSolarEclipse(search_start, observer);
+        if (eclipse.status != ASTRO_SUCCESS)
+            FAIL("C LocalSolarEclipseTest1(%s line %d): Astronomy_SearchLocalSolarEclipse returned %d\n", inFileName, lnum, eclipse.status);
+
+        /* Validate the eclipse prediction. */
+
+        diff_days = eclipse.peak.time.ut - peak.ut;
+        diff_minutes = (24 * 60) * fabs(diff_days);
+        if (diff_minutes > 6.9)
+        {
+            printf("Expected: ");
+            PrintTime(peak);
+            printf("\nFound:    ");
+            PrintTime(eclipse.peak.time);
+            printf("\n");
+            FAIL("C LocalSolarEclipseTest1(%s line %d): EXCESSIVE TIME ERROR = %0.2lf minutes\n", inFileName, lnum, diff_minutes);
+        }
+
+        if (diff_minutes > max_minutes)
+            max_minutes = diff_minutes;
+
+        if (eclipse.kind != expected_kind)
+            FAIL("C LocalSolarEclipseTest1(%s line %d): WRONG ECLIPSE KIND: expected %d, found %d\n", inFileName, lnum, expected_kind, eclipse.kind);
+    }
+
+    printf("C LocalSolarEclipseTest1: PASS (%d verified, %d skipped, %d CalcMoons, max minutes = %0.3lf)\n", lnum, skip_count, _CalcMoonCount, max_minutes);
+    error = 0;
+fail:
+    if (infile != NULL) fclose(infile);
+    return error;
 }
 
 /*-----------------------------------------------------------------------------------------------------------*/
