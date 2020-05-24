@@ -886,7 +886,7 @@ This function determines the phase of the Moon using its apparent ecliptic longi
 <a name="Astronomy_NextGlobalSolarEclipse"></a>
 ### Astronomy_NextGlobalSolarEclipse(prevEclipseTime) &#8658; [`astro_global_solar_eclipse_t`](#astro_global_solar_eclipse_t)
 
-**Searches for the next solar eclipse in a series.** 
+**Searches for the next global solar eclipse in a series.** 
 
 
 
@@ -901,6 +901,31 @@ After using [`Astronomy_SearchGlobalSolarEclipse`](#Astronomy_SearchGlobalSolarE
 | Type | Parameter | Description |
 | --- | --- | --- |
 | [`astro_time_t`](#astro_time_t) | `prevEclipseTime` |  A date and time near a new moon. Solar eclipse search will start at the next new moon. | 
+
+
+
+
+---
+
+<a name="Astronomy_NextLocalSolarEclipse"></a>
+### Astronomy_NextLocalSolarEclipse(prevEclipseTime, observer) &#8658; [`astro_local_solar_eclipse_t`](#astro_local_solar_eclipse_t)
+
+**Searches for the next local solar eclipse in a series.** 
+
+
+
+After using [`Astronomy_SearchLocalSolarEclipse`](#Astronomy_SearchLocalSolarEclipse) to find the first solar eclipse in a series, you can call this function to find the next consecutive solar eclipse. Pass in the `center` value from the [`astro_local_solar_eclipse_t`](#astro_local_solar_eclipse_t) returned by the previous call to `Astronomy_SearchLocalSolarEclipse` or `Astronomy_NextLocalSolarEclipse` to find the next solar eclipse.
+
+
+
+**Returns:**  If successful, the `status` field in the returned structure will contain `ASTRO_SUCCESS` and the remaining structure fields are as described in [`astro_local_solar_eclipse_t`](#astro_local_solar_eclipse_t). Any other value indicates an error. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_time_t`](#astro_time_t) | `prevEclipseTime` |  A date and time near a new moon. Solar eclipse search will start at the next new moon. | 
+| [`astro_observer_t`](#astro_observer_t) | `observer` |  The geographic location of the observer. | 
 
 
 
@@ -940,7 +965,7 @@ See [`Astronomy_SearchLunarApsis`](#Astronomy_SearchLunarApsis) for more details
 
 
 
-After using [`Astronomy_SearchLunarEclipse`](#Astronomy_SearchLunarEclipse) to find the first lunar eclipse in a series, you can call this function to find the next consecutive lunar eclipse. Pass in the `center` value from the [`astro_lunar_eclipse_t`](#astro_lunar_eclipse_t) returned by the previous call to `Astronomy_SearchLunarEclipse` or `Astronomy_NextLunarEclipse` to find the next lunar eclipse.
+After using [`Astronomy_SearchLunarEclipse`](#Astronomy_SearchLunarEclipse) to find the first lunar eclipse in a series, you can call this function to find the next consecutive lunar eclipse. Pass in the `peak` value from the [`astro_lunar_eclipse_t`](#astro_lunar_eclipse_t) returned by the previous call to `Astronomy_SearchLunarEclipse` or `Astronomy_NextLunarEclipse` to find the next lunar eclipse.
 
 
 
@@ -1383,7 +1408,7 @@ If the search does not converge within 20 iterations, it will fail with status c
 <a name="Astronomy_SearchGlobalSolarEclipse"></a>
 ### Astronomy_SearchGlobalSolarEclipse(startTime) &#8658; [`astro_global_solar_eclipse_t`](#astro_global_solar_eclipse_t)
 
-**Searches for a solar eclipse.** 
+**Searches for a solar eclipse visible anywhere on the Earth's surface.** 
 
 
 
@@ -1431,6 +1456,33 @@ On success, the function reports the date and time, along with the horizontal co
 | [`astro_observer_t`](#astro_observer_t) | `observer` |  Indicates a location on or near the surface of the Earth where the observer is located. Call [`Astronomy_MakeObserver`](#Astronomy_MakeObserver) to create an observer structure. | 
 | `double` | `hourAngle` |  An hour angle value in the range [0, 24) indicating the number of sidereal hours after the body's most recent culmination. | 
 | [`astro_time_t`](#astro_time_t) | `startTime` |  The date and time at which to start the search. | 
+
+
+
+
+---
+
+<a name="Astronomy_SearchLocalSolarEclipse"></a>
+### Astronomy_SearchLocalSolarEclipse(startTime, observer) &#8658; [`astro_local_solar_eclipse_t`](#astro_local_solar_eclipse_t)
+
+**Searches for a solar eclipse visible at a specific location on the Earth's surface.** 
+
+
+
+This function finds the first solar eclipse that occurs after `startTime`. A solar eclipse found may be partial, annular, or total. See [`astro_local_solar_eclipse_t`](#astro_local_solar_eclipse_t) for more information. To find a series of solar eclipses, call this function once, then keep calling [`Astronomy_NextLocalSolarEclipse`](#Astronomy_NextLocalSolarEclipse) as many times as desired, passing in the `peak` value returned from the previous call.
+
+IMPORTANT: An eclipse reported by this function might be partly or completely invisible to the observer due to the time of day.
+
+
+
+**Returns:**  If successful, the `status` field in the returned structure will contain `ASTRO_SUCCESS` and the remaining structure fields are as described in [`astro_local_solar_eclipse_t`](#astro_local_solar_eclipse_t). Any other value indicates an error. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_time_t`](#astro_time_t) | `startTime` |  The date and time for starting the search for a solar eclipse. | 
+| [`astro_observer_t`](#astro_observer_t) | `observer` |  The geographic location of the observer. | 
 
 
 
@@ -2408,6 +2460,38 @@ Returned by the functions [`Astronomy_Illumination`](#Astronomy_Illumination) an
 
 ---
 
+<a name="astro_local_solar_eclipse_t"></a>
+### `astro_local_solar_eclipse_t`
+
+**Information about a solar eclipse as seen by an observer at a given time and geographic location.** 
+
+
+
+Returned by [`Astronomy_SearchLocalSolarEclipse`](#Astronomy_SearchLocalSolarEclipse) or [`Astronomy_NextLocalSolarEclipse`](#Astronomy_NextLocalSolarEclipse) to report information about a solar eclipse as seen at a given geographic location. If a solar eclipse is found, `status` holds `ASTRO_SUCCESS` and the other fields are set. If `status` holds any other value, it is an error code and the other fields are undefined.
+
+When a solar eclipse is found, it is classified as partial, annular, or total. The `kind` field thus holds `ECLIPSE_PARTIAL`, `ECLIPSE_ANNULAR`, or `ECLIPSE_TOTAL`. A partial solar eclipse is when the Moon does not line up directly enough with the Sun to completely block the Sun's light from reaching the observer. An annular eclipse occurs when the Moon's disc is completely visible against the Sun but the Moon is too far away to completely block the Sun's light; this leaves the Sun with a ring-like appearance. A total eclipse occurs when the Moon is close enough to the Earth and aligned with the Sun just right to completely block all sunlight from reaching the observer.
+
+Field `peak` holds the date and time of the center of the eclipse, when it is at its peak.
+
+As a convenience to the caller, the `sunrise` and `sunset` fields indicate the date and time of sunrise and sunset on the same day as the eclipse. An eclipse may not be completely visible to the observer due to starting before sunrise or ending after sunset. However, an eclipse will never be reported that is invisible to the observer due to happening completely at night.
+
+The fields `partial_begin` and `partial_end` are always set, and indicate when the eclipse begins/ends. If the eclipse reaches totality or becomes annular, `total_begin` and `total_end` indicate when the total/annular phase begins/ends. All four fields must be checked against `sunrise` and `sunset` to determine which portion of the eclipse could be seen by the observer. 
+
+| Type | Member | Description |
+| ---- | ------ | ----------- |
+| [`astro_status_t`](#astro_status_t) | `status` |  `ASTRO_SUCCESS` if this struct is valid; otherwise an error code.  |
+| [`astro_eclipse_kind_t`](#astro_eclipse_kind_t) | `kind` |  The type of solar eclipse found.  |
+| [`astro_time_t`](#astro_time_t) | `peak` |  The time of the eclipse at its peak.  |
+| [`astro_time_t`](#astro_time_t) | `sunrise` |  The time of sunrise on the same day as the eclipse.  |
+| [`astro_time_t`](#astro_time_t) | `sunset` |  The time of sunset on the same day as the eclipse.  |
+| [`astro_time_t`](#astro_time_t) | `partial_begin` |  The time the partial eclipse begins; may happen before sunrise.  |
+| [`astro_time_t`](#astro_time_t) | `total_begin` |  If a total eclipse, the time totality begins; otherwise invalid.  |
+| [`astro_time_t`](#astro_time_t) | `total_end` |  If a total eclipse, the time totality ends; otherwise invalid.  |
+| [`astro_time_t`](#astro_time_t) | `partial_end` |  The time the partial eclipse ends; may happen after sunset.  |
+
+
+---
+
 <a name="astro_lunar_eclipse_t"></a>
 ### `astro_lunar_eclipse_t`
 
@@ -2421,7 +2505,7 @@ When a lunar eclipse is found, it is classified as penumbral, partial, or total.
 
 The `kind` field thus holds `ECLIPSE_PENUMBRAL`, `ECLIPSE_PARTIAL`, or `ECLIPSE_TOTAL`, depending on the kind of lunar eclipse found.
 
-Field `center` holds the date and time of the center of the eclipse, when it is at its peak.
+Field `peak` holds the date and time of the center of the eclipse, when it is at its peak.
 
 Fields `sd_penum`, `sd_partial`, and `sd_total` hold the semi-duration of each phase of the eclipse, which is half of the amount of time the eclipse spends in each phase (expressed in minutes), or 0 if the eclipse never reaches that phase. By converting from minutes to days, and subtracting/adding with `center`, the caller may determine the date and time of the beginning/end of each eclipse phase. 
 
@@ -2429,7 +2513,7 @@ Fields `sd_penum`, `sd_partial`, and `sd_total` hold the semi-duration of each p
 | ---- | ------ | ----------- |
 | [`astro_status_t`](#astro_status_t) | `status` |  `ASTRO_SUCCESS` if this struct is valid; otherwise an error code.  |
 | [`astro_eclipse_kind_t`](#astro_eclipse_kind_t) | `kind` |  The type of lunar eclipse found.  |
-| [`astro_time_t`](#astro_time_t) | `center` |  The time of the eclipse at its peak.  |
+| [`astro_time_t`](#astro_time_t) | `peak` |  The time of the eclipse at its peak.  |
 | `double` | `sd_penum` |  The semi-duration of the penumbral phase in minutes.  |
 | `double` | `sd_partial` |  The semi-duration of the partial phase in minutes, or 0.0 if none.  |
 | `double` | `sd_total` |  The semi-duration of the total phase in minutes, or 0.0 if none.  |

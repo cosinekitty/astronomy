@@ -16,31 +16,31 @@ void PrintEclipse(astro_lunar_eclipse_t eclipse)
 {
     /*
         Calculate beginning/ending of different phases
-        of an eclipse by subtracting/adding the center time
+        of an eclipse by subtracting/adding the peak time
         with the number of minutes indicated by the "semi-duration"
         fields sd_partial and sd_total.
     */
     const double MINUTES_PER_DAY = 24 * 60;
 
-    PrintTime(Astronomy_AddDays(eclipse.center, -eclipse.sd_partial / MINUTES_PER_DAY));
+    PrintTime(Astronomy_AddDays(eclipse.peak, -eclipse.sd_partial / MINUTES_PER_DAY));
     printf(" - Partial eclipse begins.\n");
 
     if (eclipse.sd_total > 0.0)
     {
-        PrintTime(Astronomy_AddDays(eclipse.center, -eclipse.sd_total / MINUTES_PER_DAY));
+        PrintTime(Astronomy_AddDays(eclipse.peak, -eclipse.sd_total / MINUTES_PER_DAY));
         printf(" - Total eclipse begins.\n");
     }
 
-    PrintTime(eclipse.center);
+    PrintTime(eclipse.peak);
     printf(" - Peak of %s eclipse.\n", (eclipse.kind == ECLIPSE_TOTAL) ? "total" : "partial");
 
     if (eclipse.sd_total > 0.0)
     {
-        PrintTime(Astronomy_AddDays(eclipse.center, +eclipse.sd_total / MINUTES_PER_DAY));
+        PrintTime(Astronomy_AddDays(eclipse.peak, +eclipse.sd_total / MINUTES_PER_DAY));
         printf(" - Total eclipse ends.\n");
     }
 
-    PrintTime(Astronomy_AddDays(eclipse.center, +eclipse.sd_partial / MINUTES_PER_DAY));
+    PrintTime(Astronomy_AddDays(eclipse.peak, +eclipse.sd_partial / MINUTES_PER_DAY));
     printf(" - Partial eclipse ends.\n\n");
 }
 
@@ -82,6 +82,6 @@ int main(int argc, const char *argv[])
             if (++count == 10)
                 return 0;
         }
-        eclipse = Astronomy_NextLunarEclipse(eclipse.center);
+        eclipse = Astronomy_NextLunarEclipse(eclipse.peak);
     }
 }

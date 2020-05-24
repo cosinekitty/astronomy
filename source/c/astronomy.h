@@ -526,7 +526,7 @@ astro_eclipse_kind_t;
  * The `kind` field thus holds `ECLIPSE_PENUMBRAL`, `ECLIPSE_PARTIAL`, or `ECLIPSE_TOTAL`,
  * depending on the kind of lunar eclipse found.
  *
- * Field `center` holds the date and time of the center of the eclipse, when it is at its peak.
+ * Field `peak` holds the date and time of the center of the eclipse, when it is at its peak.
  *
  * Fields `sd_penum`, `sd_partial`, and `sd_total` hold the semi-duration of each phase
  * of the eclipse, which is half of the amount of time the eclipse spends in each
@@ -538,7 +538,7 @@ typedef struct
 {
     astro_status_t          status;         /**< `ASTRO_SUCCESS` if this struct is valid; otherwise an error code. */
     astro_eclipse_kind_t    kind;           /**< The type of lunar eclipse found. */
-    astro_time_t            center;         /**< The time of the eclipse at its peak. */
+    astro_time_t            peak;           /**< The time of the eclipse at its peak. */
     double                  sd_penum;       /**< The semi-duration of the penumbral phase in minutes. */
     double                  sd_partial;     /**< The semi-duration of the partial phase in minutes, or 0.0 if none. */
     double                  sd_total;       /**< The semi-duration of the total phase in minutes, or 0.0 if none. */
@@ -587,6 +587,53 @@ typedef struct
     double                  longitude;      /**< The geographic longitude at the center of the peak eclipse shadow. */
 }
 astro_global_solar_eclipse_t;
+
+
+/**
+ * @brief Information about a solar eclipse as seen by an observer at a given time and geographic location.
+ *
+ * Returned by #Astronomy_SearchLocalSolarEclipse or #Astronomy_NextLocalSolarEclipse
+ * to report information about a solar eclipse as seen at a given geographic location.
+ * If a solar eclipse is found, `status` holds `ASTRO_SUCCESS` and the other fields are set.
+ * If `status` holds any other value, it is an error code and the other fields are undefined.
+ *
+ * When a solar eclipse is found, it is classified as partial, annular, or total.
+ * The `kind` field thus holds `ECLIPSE_PARTIAL`, `ECLIPSE_ANNULAR`, or `ECLIPSE_TOTAL`.
+ * A partial solar eclipse is when the Moon does not line up directly enough with the Sun
+ * to completely block the Sun's light from reaching the observer.
+ * An annular eclipse occurs when the Moon's disc is completely visible against the Sun
+ * but the Moon is too far away to completely block the Sun's light; this leaves the
+ * Sun with a ring-like appearance.
+ * A total eclipse occurs when the Moon is close enough to the Earth and aligned with the
+ * Sun just right to completely block all sunlight from reaching the observer.
+ *
+ * Field `peak` holds the date and time of the center of the eclipse, when it is at its peak.
+ *
+ * As a convenience to the caller, the `sunrise` and `sunset` fields indicate the
+ * date and time of sunrise and sunset on the same day as the eclipse.
+ * An eclipse may not be completely visible to the observer due to starting
+ * before sunrise or ending after sunset. However, an eclipse will never be
+ * reported that is invisible to the observer due to happening completely at night.
+ *
+ * The fields `partial_begin` and `partial_end` are always set, and indicate when
+ * the eclipse begins/ends. If the eclipse reaches totality or becomes annular,
+ * `total_begin` and `total_end` indicate when the total/annular phase begins/ends.
+ * All four fields must be checked against `sunrise` and `sunset` to determine which
+ * portion of the eclipse could be seen by the observer.
+ */
+typedef struct
+{
+    astro_status_t          status;         /**< `ASTRO_SUCCESS` if this struct is valid; otherwise an error code. */
+    astro_eclipse_kind_t    kind;           /**< The type of solar eclipse found. */
+    astro_time_t            peak;           /**< The time of the eclipse at its peak. */
+    astro_time_t            sunrise;        /**< The time of sunrise on the same day as the eclipse. */
+    astro_time_t            sunset;         /**< The time of sunset on the same day as the eclipse. */
+    astro_time_t            partial_begin;  /**< The time the partial eclipse begins; may happen before sunrise. */
+    astro_time_t            total_begin;    /**< If a total eclipse, the time totality begins; otherwise invalid. */
+    astro_time_t            total_end;      /**< If a total eclipse, the time totality ends; otherwise invalid. */
+    astro_time_t            partial_end;    /**< The time the partial eclipse ends; may happen after sunset. */
+}
+astro_local_solar_eclipse_t;
 
 
 /**
@@ -720,6 +767,8 @@ astro_lunar_eclipse_t Astronomy_SearchLunarEclipse(astro_time_t startTime);
 astro_lunar_eclipse_t Astronomy_NextLunarEclipse(astro_time_t prevEclipseTime);
 astro_global_solar_eclipse_t Astronomy_SearchGlobalSolarEclipse(astro_time_t startTime);
 astro_global_solar_eclipse_t Astronomy_NextGlobalSolarEclipse(astro_time_t prevEclipseTime);
+astro_local_solar_eclipse_t Astronomy_SearchLocalSolarEclipse(astro_time_t startTime, astro_observer_t observer);
+astro_local_solar_eclipse_t Astronomy_NextLocalSolarEclipse(astro_time_t prevEclipseTime, astro_observer_t observer);
 
 astro_search_result_t Astronomy_Search(
     astro_search_func_t func,

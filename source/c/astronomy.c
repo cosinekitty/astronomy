@@ -7140,7 +7140,7 @@ static astro_lunar_eclipse_t LunarEclipseError(astro_status_t status)
     astro_lunar_eclipse_t eclipse;
     eclipse.status = status;
     eclipse.kind = ECLIPSE_NONE;
-    eclipse.center = TimeError();
+    eclipse.peak = TimeError();
     eclipse.sd_penum = eclipse.sd_partial = eclipse.sd_total = NAN;
     return eclipse;
 }
@@ -7391,11 +7391,7 @@ astro_lunar_eclipse_t Astronomy_SearchLunarEclipse(astro_time_t startTime)
         if (fullmoon.status != ASTRO_SUCCESS)
             return LunarEclipseError(fullmoon.status);
 
-        /*
-            Pruning: if the full Moon's ecliptic latitude is too large,
-            a lunar eclipse is not possible. Avoid needless work searching for
-            the minimum moon distance.
-        */
+        /* Pruning: if the full Moon's ecliptic latitude is too large, a lunar eclipse is not possible. */
         CalcMoon(fullmoon.time.tt / 36525.0, &eclip_lon, &eclip_lat, &distance);
         if (RAD2DEG * fabs(eclip_lat) < PruneLatitude)
         {
@@ -7410,7 +7406,7 @@ astro_lunar_eclipse_t Astronomy_SearchLunarEclipse(astro_time_t startTime)
                 /* This is at least a penumbral eclipse. We will return a result. */
                 eclipse.status = ASTRO_SUCCESS;
                 eclipse.kind = ECLIPSE_PENUMBRAL;
-                eclipse.center = shadow.time;
+                eclipse.peak = shadow.time;
                 eclipse.sd_total = 0.0;
                 eclipse.sd_partial = 0.0;
                 eclipse.sd_penum = ShadowSemiDurationMinutes(shadow.time, shadow.p + MOON_MEAN_RADIUS_KM, 200.0);
@@ -7452,7 +7448,7 @@ astro_lunar_eclipse_t Astronomy_SearchLunarEclipse(astro_time_t startTime)
  *
  * After using #Astronomy_SearchLunarEclipse to find the first lunar eclipse
  * in a series, you can call this function to find the next consecutive lunar eclipse.
- * Pass in the `center` value from the #astro_lunar_eclipse_t returned by the
+ * Pass in the `peak` value from the #astro_lunar_eclipse_t returned by the
  * previous call to `Astronomy_SearchLunarEclipse` or `Astronomy_NextLunarEclipse`
  * to find the next lunar eclipse.
  *
@@ -7609,7 +7605,7 @@ static astro_global_solar_eclipse_t GeoidIntersect(shadow_t shadow)
 
 
 /**
- * @brief Searches for a solar eclipse.
+ * @brief Searches for a solar eclipse visible anywhere on the Earth's surface.
  *
  * This function finds the first solar eclipse that occurs after `startTime`.
  * A solar eclipse found may be partial, annular, or total.
@@ -7644,15 +7640,11 @@ astro_global_solar_eclipse_t Astronomy_SearchGlobalSolarEclipse(astro_time_t sta
         if (newmoon.status != ASTRO_SUCCESS)
             return GlobalSolarEclipseError(newmoon.status);
 
-        /*
-            Pruning: if the full Moon's ecliptic latitude is too large,
-            a lunar eclipse is not possible. Avoid needless work searching for
-            the minimum moon distance.
-        */
+        /* Pruning: if the new moon's ecliptic latitude is too large, a solar eclipse is not possible. */
         CalcMoon(newmoon.time.tt / 36525.0, &eclip_lon, &eclip_lat, &distance);
         if (RAD2DEG * fabs(eclip_lat) < PruneLatitude)
         {
-            /* Search near the full moon for the time when the center of the Earth */
+            /* Search near the new moon for the time when the center of the Earth */
             /* is closest to the line passing through the centers of the Sun and Moon. */
             shadow = PeakMoonShadow(newmoon.time);
             if (shadow.status != ASTRO_SUCCESS)
@@ -7677,7 +7669,7 @@ astro_global_solar_eclipse_t Astronomy_SearchGlobalSolarEclipse(astro_time_t sta
 
 
 /**
- * @brief Searches for the next solar eclipse in a series.
+ * @brief Searches for the next global solar eclipse in a series.
  *
  * After using #Astronomy_SearchGlobalSolarEclipse to find the first solar eclipse
  * in a series, you can call this function to find the next consecutive solar eclipse.
@@ -7698,6 +7690,163 @@ astro_global_solar_eclipse_t Astronomy_NextGlobalSolarEclipse(astro_time_t prevE
     astro_time_t startTime = Astronomy_AddDays(prevEclipseTime, 10.0);
     return Astronomy_SearchGlobalSolarEclipse(startTime);
 }
+
+
+static astro_local_solar_eclipse_t LocalSolarEclipseError(astro_status_t status)
+{
+    astro_local_solar_eclipse_t eclipse;
+
+    eclipse.status = status;
+    eclipse.kind = ECLIPSE_NONE;
+    eclipse.peak = eclipse.sunrise = eclipse.sunset =
+        eclipse.partial_begin = eclipse.total_begin =
+        eclipse.total_end = eclipse.partial_end =
+        TimeError();
+
+    return eclipse;
+}
+
+
+static shadow_t PeakLocalMoonShadow(astro_time_t search_center_time, astro_observer_t observer)
+{
+    /* FIXFIXFIX - not yet implemented. */
+    (void)search_center_time;
+    (void)observer;
+    return ShadowError(ASTRO_NOT_INITIALIZED);
+}
+
+
+static astro_local_solar_eclipse_t LocalEclipse(
+    shadow_t shadow,
+    astro_observer_t observer)
+{
+    /* FIXFIXFIX - not yet implemented. */
+    (void)shadow;
+    (void)observer;
+    return LocalSolarEclipseError(ASTRO_NOT_INITIALIZED);
+}
+
+
+static int DaytimeOverlap(
+    astro_local_solar_eclipse_t *eclipse,
+    astro_observer_t observer)
+{
+    /* FIXFIXFIX - not yet implemented. */
+    (void)eclipse;
+    (void)observer;
+    return 0;
+}
+
+
+
+/**
+ * @brief Searches for a solar eclipse visible at a specific location on the Earth's surface.
+ *
+ * This function finds the first solar eclipse that occurs after `startTime`.
+ * A solar eclipse found may be partial, annular, or total.
+ * See #astro_local_solar_eclipse_t for more information.
+ * To find a series of solar eclipses, call this function once,
+ * then keep calling #Astronomy_NextLocalSolarEclipse as many times as desired,
+ * passing in the `peak` value returned from the previous call.
+ *
+ * IMPORTANT: An eclipse reported by this function might be partly or
+ * completely invisible to the observer due to the time of day.
+ *
+ * @param startTime
+ *      The date and time for starting the search for a solar eclipse.
+ *
+ * @param observer
+ *      The geographic location of the observer.
+ *
+ * @return
+ *      If successful, the `status` field in the returned structure will contain `ASTRO_SUCCESS`
+ *      and the remaining structure fields are as described in #astro_local_solar_eclipse_t.
+ *      Any other value indicates an error.
+ */
+astro_local_solar_eclipse_t Astronomy_SearchLocalSolarEclipse(
+    astro_time_t startTime,
+    astro_observer_t observer)
+{
+    const double PruneLatitude = 1.8;   /* Moon's ecliptic latitude beyond which eclipse is impossible */
+    astro_time_t nmtime;
+    astro_search_result_t newmoon;
+    shadow_t shadow;
+    int nmcount;
+    double eclip_lat, eclip_lon, distance;
+    astro_local_solar_eclipse_t eclipse;
+
+    /* Iterate through consecutive new moons until we find a solar eclipse visible somewhere on Earth. */
+    nmtime = startTime;
+    for (nmcount=0; nmcount < 12; ++nmcount)
+    {
+        /* Search for the next new moon. Any eclipse will be near it. */
+        newmoon = Astronomy_SearchMoonPhase(0.0, nmtime, 40.0);
+        if (newmoon.status != ASTRO_SUCCESS)
+            return LocalSolarEclipseError(newmoon.status);
+
+        /* Pruning: if the new moon's ecliptic latitude is too large, a solar eclipse is not possible. */
+        CalcMoon(newmoon.time.tt / 36525.0, &eclip_lon, &eclip_lat, &distance);
+        if (RAD2DEG * fabs(eclip_lat) < PruneLatitude)
+        {
+            /* Search near the new moon for the time when the observer */
+            /* is closest to the line passing through the centers of the Sun and Moon. */
+            shadow = PeakLocalMoonShadow(newmoon.time, observer);
+            if (shadow.status != ASTRO_SUCCESS)
+                return LocalSolarEclipseError(shadow.status);
+
+            if (shadow.r < shadow.p)
+            {
+                /* This is at least a partial solar eclipse for the observer. */
+                eclipse = LocalEclipse(shadow, observer);
+                if (eclipse.status != ASTRO_SUCCESS)
+                    return eclipse;
+
+                /* Ignore any eclipse that happens completely at night. */
+                /* Find sunrise/sunset pairs until either some part of the eclipse */
+                /* overlaps with daytime hours, or we prove that the eclipse is entirely at night. */
+                if (DaytimeOverlap(&eclipse, observer))
+                    return eclipse;
+            }
+        }
+
+        /* We didn't find an eclipse on this new moon, so search for the next one. */
+        nmtime = Astronomy_AddDays(newmoon.time, 10.0);
+    }
+
+    /* Safety valve to prevent infinite loop. */
+    /* This should never happen, because at least 2 solar eclipses happen per year. */
+    return LocalSolarEclipseError(ASTRO_INTERNAL_ERROR);
+}
+
+
+/**
+ * @brief Searches for the next local solar eclipse in a series.
+ *
+ * After using #Astronomy_SearchLocalSolarEclipse to find the first solar eclipse
+ * in a series, you can call this function to find the next consecutive solar eclipse.
+ * Pass in the `center` value from the #astro_local_solar_eclipse_t returned by the
+ * previous call to `Astronomy_SearchLocalSolarEclipse` or `Astronomy_NextLocalSolarEclipse`
+ * to find the next solar eclipse.
+ *
+ * @param prevEclipseTime
+ *      A date and time near a new moon. Solar eclipse search will start at the next new moon.
+ *
+ * @param observer
+ *      The geographic location of the observer.
+ *
+ * @return
+ *      If successful, the `status` field in the returned structure will contain `ASTRO_SUCCESS`
+ *      and the remaining structure fields are as described in #astro_local_solar_eclipse_t.
+ *      Any other value indicates an error.
+ */
+astro_local_solar_eclipse_t Astronomy_NextLocalSolarEclipse(
+    astro_time_t prevEclipseTime,
+    astro_observer_t observer)
+{
+    astro_time_t startTime = Astronomy_AddDays(prevEclipseTime, 10.0);
+    return Astronomy_SearchLocalSolarEclipse(startTime, observer);
+}
+
 
 #ifdef __cplusplus
 }

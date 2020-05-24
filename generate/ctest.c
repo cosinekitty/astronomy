@@ -2648,9 +2648,9 @@ static int LunarEclipseTest(void)
                 filename, lnum, eclipse.kind, eclipse.sd_penum, eclipse.sd_partial, eclipse.sd_total);
         }
 
-        /* check eclipse center */
+        /* check eclipse peak time */
 
-        diff_days = eclipse.center.ut - peak_time.ut;
+        diff_days = eclipse.peak.ut - peak_time.ut;
         /* tolerate missing penumbral eclipses - skip to next input line without calculating next eclipse. */
         if (partial_minutes == 0.0 && diff_days > 20.0)
         {
@@ -2671,13 +2671,13 @@ static int LunarEclipseTest(void)
 
         if (diff_minutes > diff_limit)
         {
-            printf("C LunarEclipseTest expected center: ");
+            printf("C LunarEclipseTest expected peak: ");
             PrintTime(peak_time);
             printf("\n");
-            printf("C LunarEclipseTest found    center: ");
-            PrintTime(eclipse.center);
+            printf("C LunarEclipseTest found    peak: ");
+            PrintTime(eclipse.peak);
             printf("\n");
-            FAIL("C LunarEclipseTest(%s line %d): EXCESSIVE center time error = %lf minutes (%lf days).\n", filename, lnum, diff_minutes, diff_days);
+            FAIL("C LunarEclipseTest(%s line %d): EXCESSIVE peak time error = %lf minutes (%lf days).\n", filename, lnum, diff_minutes, diff_days);
         }
 
         if (diff_minutes > max_diff_minutes)
@@ -2709,7 +2709,7 @@ static int LunarEclipseTest(void)
 
         /* calculate for next iteration */
 
-        eclipse = Astronomy_NextLunarEclipse(eclipse.center);
+        eclipse = Astronomy_NextLunarEclipse(eclipse.peak);
         if (eclipse.status != ASTRO_SUCCESS)
             FAIL("C LunarEclipseTest(%s line %d): Astronomy_NextLunarEclipse returned status %d\n", filename, lnum, eclipse.status);
     }
