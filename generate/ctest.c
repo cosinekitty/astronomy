@@ -2907,7 +2907,6 @@ static int LocalSolarEclipseTest1(void)
     double deltaT;
     astro_observer_t observer;
     astro_time_t peak, search_start;
-    astro_eclipse_kind_t expected_kind;
     astro_local_solar_eclipse_t eclipse;
     double diff_days, diff_minutes, max_minutes=0.0;
     int skip_count = 0;
@@ -2925,9 +2924,6 @@ static int LocalSolarEclipseTest1(void)
     {
         ++lnum;
 
-        if (eclipse.status != ASTRO_SUCCESS)
-            FAIL("C LocalSolarEclipseTest1(%s line %d): error %d searching for solar eclipse.\n", inFileName, lnum, eclipse.status);
-
         /* 1889-12-22T12:54:15Z   -6 T   -12.7   -12.8 */
         if (strlen(line) < 20)
             FAIL("C LocalSolarEclipseTest1(%s line %d): line is too short.\n", inFileName, lnum);
@@ -2939,27 +2935,22 @@ static int LocalSolarEclipseTest1(void)
         if (4 != sscanf(line+21, "%lf %c %lf %lf", &deltaT, &typeChar, &observer.latitude, &observer.longitude))
             FAIL("C LocalSolarEclipseTest1(%s line %d): invalid data format.\n", inFileName, lnum);
 
-        switch (typeChar)
-        {
-        case 'P':   expected_kind = ECLIPSE_PARTIAL;    break;
-        case 'A':   expected_kind = ECLIPSE_ANNULAR;    break;
-        case 'T':   expected_kind = ECLIPSE_TOTAL;      break;
-        case 'H':   expected_kind = ECLIPSE_TOTAL;      break;
-        default:
-            FAIL("C LocalSolarEclipseTest1(%s line %d): invalid eclipse kind in test data.\n", inFileName, lnum);
-        }
-
         /* Start the search 20 days before we know the eclipse should peak. */
         search_start = Astronomy_AddDays(peak, -20.0);
         eclipse = Astronomy_SearchLocalSolarEclipse(search_start, observer);
         if (eclipse.status != ASTRO_SUCCESS)
             FAIL("C LocalSolarEclipseTest1(%s line %d): Astronomy_SearchLocalSolarEclipse returned %d\n", inFileName, lnum, eclipse.status);
 
-        /* Validate the eclipse prediction. */
-
+        /* Validate the predicted eclipse peak time. */
         diff_days = eclipse.peak.time.ut - peak.ut;
+        if (diff_days > 20.0)
+        {
+            ++skip_count;
+            continue;
+        }
+
         diff_minutes = (24 * 60) * fabs(diff_days);
-        if (diff_minutes > 6.9)
+        if (diff_minutes > 2.5)
         {
             printf("Expected: ");
             PrintTime(peak);
@@ -2971,10 +2962,10 @@ static int LocalSolarEclipseTest1(void)
 
         if (diff_minutes > max_minutes)
             max_minutes = diff_minutes;
-
-        if (eclipse.kind != expected_kind)
-            FAIL("C LocalSolarEclipseTest1(%s line %d): WRONG ECLIPSE KIND: expected %d, found %d\n", inFileName, lnum, expected_kind, eclipse.kind);
     }
+
+    if (skip_count > 6)
+        FAIL("C LocalSolarEclipseTest1: EXCESSIVE SKIP COUNT %d\n", skip_count);
 
     printf("C LocalSolarEclipseTest1: PASS (%d verified, %d skipped, %d CalcMoons, max minutes = %0.3lf)\n", lnum, skip_count, _CalcMoonCount, max_minutes);
     error = 0;

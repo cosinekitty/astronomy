@@ -49,7 +49,6 @@ static const double PI2 = 2.0 * PI;
 static const double ARC = 3600.0 * 180.0 / PI;          /* arcseconds per radian */
 static const double C_AUDAY = 173.1446326846693;        /* speed of light in AU/day */
 static const double KM_PER_AU = 1.4959787069098932e+8;
-static const double ANGVEL = 7.2921150e-5;
 static const double SECONDS_PER_DAY = 24.0 * 3600.0;
 static const double SOLAR_DAYS_PER_SIDEREAL_DAY = 0.9972695717592592;
 static const double MEAN_SYNODIC_MONTH = 29.530588;     /* average number of days for Moon to return to the same phase */
@@ -1199,7 +1198,7 @@ static double sidereal_time(astro_time_t *time)
     return gst;
 }
 
-static void terra(astro_observer_t observer, double st, double pos[3], double vel[3])
+static void terra(astro_observer_t observer, double st, double pos[3])
 {
     double df2 = EARTH_FLATTENING * EARTH_FLATTENING;
     double phi = observer.latitude * DEG2RAD;
@@ -1218,17 +1217,21 @@ static void terra(astro_observer_t observer, double st, double pos[3], double ve
     pos[1] = ach * cosphi * sinst / KM_PER_AU;
     pos[2] = ash * sinphi / KM_PER_AU;
 
+#if 0
+    /* If we ever need to calculate the observer's velocity vector, here is how NOVAS C 3.1 does it... */
+    static const double ANGVEL = 7.2921150e-5;
     vel[0] = -ANGVEL * ach * cosphi * sinst * 86400.0;
     vel[1] = +ANGVEL * ach * cosphi * cosst * 86400.0;
     vel[2] = 0.0;
+#endif
 }
 
 static void geo_pos(astro_time_t *time, astro_observer_t observer, double outpos[3])
 {
-    double gast, vel[3], pos1[3], pos2[3];
+    double gast, pos1[3], pos2[3];
 
     gast = sidereal_time(time);
-    terra(observer, gast, pos1, vel);
+    terra(observer, gast, pos1);
     nutation(time, -1, pos1, pos2);
     precession(time->tt, pos2, 0.0, outpos);
 }
@@ -7479,6 +7482,11 @@ static astro_global_solar_eclipse_t GlobalSolarEclipseError(astro_status_t statu
     return eclipse;
 }
 
+/* The umbra radius tells us what kind of eclipse the observer sees. */
+/* If the umbra radius is positive, this is a total eclipse. Otherwise, it's annular. */
+/* HACK: I added a tiny bias (14 meters) to match Espenak test data. */
+#define EclipseKindFromUmbra(k)     (((k) > 0.014) ? ECLIPSE_TOTAL : ECLIPSE_ANNULAR)
+
 static astro_global_solar_eclipse_t GeoidIntersect(shadow_t shadow)
 {
     astro_global_solar_eclipse_t eclipse;
@@ -7594,10 +7602,7 @@ static astro_global_solar_eclipse_t GeoidIntersect(shadow_t shadow)
         if (surface.r > 1.0e-9 || surface.r < 0.0)
             return GlobalSolarEclipseError(ASTRO_INTERNAL_ERROR);
 
-        /* The umbra radius tells us what kind of eclipse the observer sees. */
-        /* If the umbra radius is positive, this is a total eclipse. Otherwise, it's annular. */
-        /* HACK: I added a tiny bias (14 meters) to match Espenak test data. */
-        eclipse.kind = (surface.k > 0.014) ? ECLIPSE_TOTAL : ECLIPSE_ANNULAR;
+        eclipse.kind = EclipseKindFromUmbra(surface.k);
     }
 
     return eclipse;
@@ -7718,12 +7723,177 @@ static astro_local_solar_eclipse_t LocalSolarEclipseError(astro_status_t status)
 }
 
 
+static shadow_t LocalMoonShadow(astro_time_t time, astro_observer_t observer)
+{
+    astro_vector_t h, o, m;
+    double pos[3];
+
+    /* Calculate observer's geocentric position. */
+    /* For efficiency, do this first, to populate the earth rotation parameters in 'time'. */
+    /* That way they can be recycled instead of recalculated. */
+    geo_pos(&time, observer, pos);
+
+    h = CalcEarth(time);            /* heliocentric Earth */
+    m = Astronomy_GeoMoon(time);    /* geocentric Moon */
+
+    /* Calculate lunacentric location of an observer on the Earth's surface. */
+    o.status = m.status;
+    o.x = pos[0] - m.x;
+    o.y = pos[1] - m.y;
+    o.z = pos[2] - m.z;
+    o.t = m.t;
+
+    /* Convert geocentric moon to heliocentric Moon. */
+    m.x += h.x;
+    m.y += h.y;
+    m.z += h.z;
+
+    return CalcShadow(MOON_MEAN_RADIUS_KM, time, o, m);
+}
+
+
+static astro_func_result_t local_shadow_distance_slope(void *context, astro_time_t time)
+{
+    const double dt = 1.0 / 86400.0;
+    astro_time_t t1, t2;
+    astro_func_result_t result;
+    shadow_t shadow1, shadow2;
+    const astro_observer_t *observer = context;
+
+    t1 = Astronomy_AddDays(time, -dt);
+    t2 = Astronomy_AddDays(time, +dt);
+
+    shadow1 = LocalMoonShadow(t1, *observer);
+    if (shadow1.status != ASTRO_SUCCESS)
+        return FuncError(shadow1.status);
+
+    shadow2 = LocalMoonShadow(t2, *observer);
+    if (shadow2.status != ASTRO_SUCCESS)
+        return FuncError(shadow2.status);
+
+    result.value = (shadow2.r - shadow1.r) / dt;
+    result.status = ASTRO_SUCCESS;
+    return result;
+}
+
+
 static shadow_t PeakLocalMoonShadow(astro_time_t search_center_time, astro_observer_t observer)
 {
-    /* FIXFIXFIX - not yet implemented. */
-    (void)search_center_time;
-    (void)observer;
-    return ShadowError(ASTRO_NOT_INITIALIZED);
+    astro_time_t t1, t2;
+    astro_search_result_t result;
+    const double window = 1.00;     /* FIXFIXFIX: constrain; days before/after new moon to search for minimum shadow distance */
+
+    /*
+        Search for the time near search_center_time that the Moon's shadow comes
+        closest to the given observer.
+    */
+
+    t1 = Astronomy_AddDays(search_center_time, -window);
+    t2 = Astronomy_AddDays(search_center_time, +window);
+
+    result = Astronomy_Search(local_shadow_distance_slope, &observer, t1, t2, 1.0);
+    if (result.status != ASTRO_SUCCESS)
+        return ShadowError(result.status);
+
+    return LocalMoonShadow(result.time, observer);
+}
+
+
+static double local_partial_distance(const shadow_t *shadow)
+{
+    return shadow->p - shadow->r;
+}
+
+static double local_total_distance(const shadow_t *shadow)
+{
+    /* Must take the absolute value of the umbra radius 'k' */
+    /* because it can be negative for an annular eclipse. */
+    return fabs(shadow->k) - shadow->r;
+}
+
+/** @cond DOXYGEN_SKIP */
+typedef double (* local_distance_func) (const shadow_t *shadow);
+
+typedef struct
+{
+    local_distance_func     func;
+    double                  direction;
+    astro_observer_t        observer;
+}
+eclipse_transition_t;
+/* @endcond */
+
+
+static astro_func_result_t local_eclipse_func(void *context, astro_time_t time)
+{
+    const eclipse_transition_t *trans = context;
+    shadow_t shadow;
+    astro_func_result_t result;
+
+    shadow = LocalMoonShadow(time, trans->observer);
+    if (shadow.status != ASTRO_SUCCESS)
+        return FuncError(shadow.status);
+
+    result.value = trans->direction * trans->func(&shadow);
+    result.status = ASTRO_SUCCESS;
+    return result;
+}
+
+
+astro_func_result_t SunAltitude(
+    astro_time_t time,
+    astro_observer_t observer)
+{
+    astro_equatorial_t equ;
+    astro_horizon_t hor;
+    astro_func_result_t result;
+
+    equ = Astronomy_Equator(BODY_SUN, &time, observer, EQUATOR_OF_DATE, ABERRATION);
+    if (equ.status != ASTRO_SUCCESS)
+        return FuncError(equ.status);
+
+    hor = Astronomy_Horizon(&time, observer, equ.ra, equ.dec, REFRACTION_NORMAL);
+    result.value = hor.altitude;
+    result.status = ASTRO_SUCCESS;
+    return result;
+}
+
+
+static astro_status_t LocalEclipseTransition(
+    astro_observer_t observer,
+    double direction,
+    local_distance_func func,
+    astro_time_t t1,
+    astro_time_t t2,
+    astro_eclipse_event_t *evt)
+{
+    eclipse_transition_t trans;
+    astro_search_result_t search;
+    astro_func_result_t result;
+
+    trans.func = func;
+    trans.direction = direction;
+    trans.observer = observer;
+
+    search = Astronomy_Search(local_eclipse_func, &trans, t1, t2, 1.0);
+    if (search.status != ASTRO_SUCCESS)
+    {
+        evt->time = TimeError();
+        evt->altitude = NAN;
+        return search.status;
+    }
+
+    result = SunAltitude(search.time, observer);
+    if (result.status != ASTRO_SUCCESS)
+    {
+        evt->time = TimeError();
+        evt->altitude = NAN;
+        return result.status;
+    }
+
+    evt->time = search.time;
+    evt->altitude = result.value;
+    return ASTRO_SUCCESS;
 }
 
 
@@ -7731,10 +7901,46 @@ static astro_local_solar_eclipse_t LocalEclipse(
     shadow_t shadow,
     astro_observer_t observer)
 {
-    /* FIXFIXFIX - not yet implemented. */
-    (void)shadow;
-    (void)observer;
-    return LocalSolarEclipseError(ASTRO_NOT_INITIALIZED);
+    const double PARTIAL_WINDOW = -1.0;     /* FIXFIXFIX: constrain for efficiency */
+    const double TOTAL_WINDOW = -0.1;       /* FIXFIXFIX: constrain for efficiency */
+    astro_local_solar_eclipse_t eclipse;
+    astro_time_t t1, t2;
+    astro_status_t status;
+
+    t1 = Astronomy_AddDays(shadow.time, -PARTIAL_WINDOW);
+    t2 = Astronomy_AddDays(shadow.time, +PARTIAL_WINDOW);
+
+    status = LocalEclipseTransition(observer, +1.0, local_partial_distance, t1, shadow.time, &eclipse.partial_begin);
+    if (status != ASTRO_SUCCESS)
+        return LocalSolarEclipseError(status);
+
+    status = LocalEclipseTransition(observer, -1.0, local_partial_distance, shadow.time, t2, &eclipse.partial_end);
+    if (status != ASTRO_SUCCESS)
+        return LocalSolarEclipseError(status);
+
+    if (shadow.r < fabs(shadow.k))      /* take absolute value of 'k' to handle annular eclipses too. */
+    {
+        t1 = Astronomy_AddDays(shadow.time, -TOTAL_WINDOW);
+        t2 = Astronomy_AddDays(shadow.time, +TOTAL_WINDOW);
+
+        status = LocalEclipseTransition(observer, +1.0, local_total_distance, t1, shadow.time, &eclipse.total_begin);
+        if (status != ASTRO_SUCCESS)
+            return LocalSolarEclipseError(status);
+
+        status = LocalEclipseTransition(observer, -1.0, local_total_distance, shadow.time, t2, &eclipse.total_end);
+        if (status != ASTRO_SUCCESS)
+            return LocalSolarEclipseError(status);
+
+        eclipse.kind = EclipseKindFromUmbra(shadow.k);
+    }
+    else
+    {
+        eclipse.total_begin = eclipse.total_end = EclipseEventError();
+        eclipse.kind = ECLIPSE_PARTIAL;
+    }
+
+    eclipse.status = ASTRO_SUCCESS;
+    return eclipse;
 }
 
 
