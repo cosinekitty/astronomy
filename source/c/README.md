@@ -76,6 +76,10 @@ To get started quickly, here are some [examples](../../demo/c/).
 | -------- | ----------- |
 | [SearchLunarEclipse](#Astronomy_SearchLunarEclipse) | Search for the first lunar eclipse after a given date. |
 | [NextLunarEclipse](#Astronomy_NextLunarEclipse) | Continue searching for more lunar eclipses. |
+| [SearchGlobalSolarEclipse](#Astronomy_SearchGlobalSolarEclipse) | Search for the first solar eclipse that is visible anywhere in the world after a given date. |
+| [NextGlobalSolarEclipse](#Astronomy_NextGlobalSolarEclipse) | Continue searching for more global solar eclipses. |
+| [SearchLocalSolarEclipse](#Astronomy_SearchLocalSolarEclipse) | Search for the first solar eclipse as seen at a particular location after a given date. |
+| [NextLocalSolarEclipse](#Astronomy_NextLocalSolarEclipse) | Continue searching for more local solar eclipses. |
 
 ### Lunar perigee and apogee
 
