@@ -1,6 +1,7 @@
 'use strict';
 const fs = require('fs');
 const Astronomy = require('../source/js/astronomy.min.js');
+const DebugMode = (process.argv.length > 2 && process.argv[2] === '-d');
 
 function LoadMoonPhaseData(filename) {
     // Load known moon phase times from US Naval Observatory.
@@ -69,7 +70,7 @@ function SearchYear(year, data, index) {
         mq = Astronomy.NextMoonQuarter(mq);
         date = mq.time.date;
     }
-    console.log(`JS SearchYear(${year}): count=${count}, maxdiff=${maxdiff.toFixed(3)}`);
+    if (DebugMode) console.log(`JS SearchYear(${year}): count=${count}, maxdiff=${maxdiff.toFixed(3)}`);
     return 0;
 }
 

@@ -5,62 +5,61 @@ Fail()
     exit 1
 }
 
-echo ""
-echo "Running astro_check."
-time node astro_check.js > temp/js_check.txt || Fail "Problem running JavaScript unit test."
-echo "Verifying astro_check output."
+[[ "$1" == "" || "$1" == "-d" ]] || Fail "Invalid command line options."
+
+time node astro_check.js > temp/js_check.txt || Fail "Problem running JavaScript astro_check."
 ./generate check temp/js_check.txt || Fail "Verification failure for JavaScript unit test output."
 
 echo ""
-echo "Running check against JPL Horizons data."
+echo "$0: Running check against JPL Horizons data."
 ./jplcheck || Fail "Error in JPL check."
 
 echo ""
-echo "Running test of moon phase search."
-node moon_phase_test.js || Fail "Failed moon phase test."
+echo "$0: Running test of moon phase search."
+node moon_phase_test.js $1 || Fail "Failed moon phase test."
 
 echo ""
-echo "Running lunar apsis tests."
+echo "$0: Running lunar apsis tests."
 node lunar_apsis_test.js || Fail "Failed lunar apsis test."
 
 echo ""
-echo "Running lunar eclipse test."
+echo "$0: Running lunar eclipse test."
 node lunar_eclipse_test.js || Fail "Failed lunar eclipse test."
 
 echo ""
-echo "Running planet apsis tests."
+echo "$0: Running planet apsis tests."
 node planet_apsis_test.js || Fail "Failed planet apsis test."
 
 echo ""
-echo "Running longitude tests."
-node elong_test.js || Fail "Failed longitude tests."
+echo "$0: Running longitude tests."
+node elong_test.js $1 || Fail "Failed longitude tests."
 
 echo ""
-echo "Verifying elong_test output."
+echo "$0: Verifying elong_test output."
 for file in temp/js_longitude_*.txt; do
     ./generate check ${file} || Fail "Failed verification of ${file}"
 done
 
 echo ""
-echo "Running seasons test."
+echo "$0: Running seasons test."
 node seasons_test.js || Fail "Failed seasons test."
 
 echo ""
-echo "Running rise/set test."
+echo "$0: Running rise/set test."
 node rise_set_test.js || Fail "Failed rise/set test."
 
 echo ""
-echo "Running magnitude tests."
-node mag_test.js || Fail "Failed magnitude tests."
+echo "$0: Running magnitude tests."
+node mag_test.js $1 || Fail "Failed magnitude tests."
 
 echo ""
-echo "Running rotation tests."
-node rotation.js || Fail "Failed rotation tests."
+echo "$0: Running rotation tests."
+node rotation.js $1 || Fail "Failed rotation tests."
 
 echo ""
-echo "Running constellation tests."
+echo "$0: Running constellation tests."
 node constellation.js || Fail "Failed constellation tests."
 
 echo ""
-echo "SUCCESS."
+echo "$0: SUCCESS."
 exit 0
