@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
 
 using CosineKitty;
@@ -10,11 +11,19 @@ namespace csharp_test
     {
         const double DEG2RAD = 0.017453292519943296;
         const double RAD2DEG = 57.295779513082321;
+        static bool DebugMode;
 
         static int Main(string[] args)
         {
             try
             {
+                if (args.Length > 0 && args[0] == "-d")
+                {
+                    DebugMode = true;
+                    args = args.Skip(1).ToArray();
+                    Console.WriteLine("csharp_test: Debug mode enabled.");
+                }
+
                 if (args.Length == 1 && args[0] == "lunar_eclipse")
                     return LunarEclipseTest();
 
@@ -428,7 +437,7 @@ namespace csharp_test
                         foundObserver = true;
                         r_search_date = s_search_date = new AstroTime(year, 1, 1, 0, 0, 0);
                         b_evt = null;
-                        Console.WriteLine("C# RiseSetTest: {0} lat={1} lon={2}", body, latitude, longitude);
+                        if (DebugMode) Console.WriteLine("C# RiseSetTest: {0} lat={1} lon={2}", body, latitude, longitude);
                     }
 
                     if (b_evt != null)
@@ -605,7 +614,7 @@ namespace csharp_test
             }
 
             double ratio = max_diff / min_diff;
-            Console.WriteLine("C# TestPlanetLongitudes({0,7}): {1,5} events, ratio={2,5}, file: {3}", body, count, ratio.ToString("f3"), outFileName);
+            if (DebugMode) Console.WriteLine("C# TestPlanetLongitudes({0,7}): {1,5} events, ratio={2,5}, file: {3}", body, count, ratio.ToString("f3"), outFileName);
 
             if (ratio > thresh)
             {
@@ -631,6 +640,7 @@ namespace csharp_test
                 if (0 != TestMaxElong(et))
                     return 1;
 
+            Console.WriteLine("C# ElongationTest: PASS");
             return 0;
         }
 
@@ -659,7 +669,7 @@ namespace csharp_test
             ElongationInfo evt = Astronomy.SearchMaxElongation(test.body, searchTime);
             double hour_diff = 24.0 * Math.Abs(evt.time.tt - eventTime.tt);
             double arcmin_diff = 60.0 * Math.Abs(evt.elongation - test.angle);
-            Console.WriteLine("C# TestMaxElong: {0,7} {1,7} elong={2,5} ({3} arcmin, {4} hours)", test.body, test.visibility, evt.elongation, arcmin_diff, hour_diff);
+            if (DebugMode) Console.WriteLine("C# TestMaxElong: {0,7} {1,7} elong={2,5} ({3} arcmin, {4} hours)", test.body, test.visibility, evt.elongation, arcmin_diff, hour_diff);
             if (hour_diff > 0.603)
             {
                 Console.WriteLine("C# TestMaxElong({0} {1}): excessive hour error.", test.body, test.searchDate);
@@ -878,7 +888,7 @@ namespace csharp_test
                     return 1;
                 }
 
-                Console.WriteLine("C# PlanetApsis: {0} apsides for {1,-9} -- intervals: min={2:0.00}, max={3:0.00}, ratio={4:0.000000}; max day={5}, degrees={6:0.000}, dist ratio={7}",
+                if (DebugMode) Console.WriteLine("C# PlanetApsis: {0} apsides for {1,-9} -- intervals: min={2:0.00}, max={3:0.00}, ratio={4:0.000000}; max day={5}, degrees={6:0.000}, dist ratio={7}",
                     count, body,
                     min_interval, max_interval, max_interval / min_interval,
                     max_diff_days,
@@ -1111,7 +1121,7 @@ namespace csharp_test
                 AstroTime time = ParseDate(data.date);
 
                 IllumInfo illum = Astronomy.Illumination(Body.Saturn, time);
-                Console.WriteLine("C# Saturn: date={0}  calc mag={1}  ring_tilt={2}", data.date, illum.mag, illum.ring_tilt);
+                if (DebugMode) Console.WriteLine("C# Saturn: date={0}  calc mag={1}  ring_tilt={2}", data.date, illum.mag, illum.ring_tilt);
 
                 double mag_diff = Math.Abs(illum.mag - data.mag);
                 if (mag_diff > 1.0e-4)
@@ -1166,7 +1176,7 @@ namespace csharp_test
                     IllumInfo illum = Astronomy.SearchPeakMagnitude(body, search_time);
                     double mag_diff = Math.Abs(illum.mag - correct_mag);
                     double hours_diff = 24.0 * Math.Abs(illum.time.ut - center_time.ut);
-                    Console.WriteLine("C# TestMaxMag: mag_diff={0}, hours_diff={1}", mag_diff, hours_diff);
+                    if (DebugMode) Console.WriteLine("C# TestMaxMag: mag_diff={0}, hours_diff={1}", mag_diff, hours_diff);
                     if (hours_diff > 7.1)
                     {
                         Console.WriteLine("C# TestMaxMag({0} line {1}): EXCESSIVE TIME DIFFERENCE.", filename, lnum);
@@ -1198,7 +1208,9 @@ namespace csharp_test
             nfailed += CheckMagnitudeData(Body.Neptune, "../../magnitude/Neptune.txt");
             nfailed += CheckMagnitudeData(Body.Pluto, "../../magnitude/Pluto.txt");
             nfailed += TestMaxMag(Body.Venus, "../../magnitude/maxmag_Venus.txt");
-            if (nfailed > 0)
+            if (nfailed == 0)
+                Console.WriteLine("C# MagnitudeTest: PASS");
+            else
                 Console.WriteLine("C# MagnitudeTest: FAILED {0} test(s).", nfailed);
             return nfailed;
         }
@@ -1279,7 +1291,7 @@ namespace csharp_test
 
             /* Use the older function to calculate ecliptic vector and angles. */
             Ecliptic ecl = Astronomy.EquatorialToEcliptic(ev);
-            Console.WriteLine("C# Test_EQJ_ECL ecl = ({0}, {1}, {2})", ecl.ex, ecl.ey, ecl.ez);
+            if (DebugMode) Console.WriteLine("C# Test_EQJ_ECL ecl = ({0}, {1}, {2})", ecl.ex, ecl.ey, ecl.ez);
 
             /* Now compute the same vector via rotation matrix. */
             AstroVector ee = Astronomy.RotateVector(r, ev);
@@ -1287,7 +1299,7 @@ namespace csharp_test
             double dy = ee.y - ecl.ey;
             double dz = ee.z - ecl.ez;
             double diff = Math.Sqrt(dx*dx + dy*dy + dz*dz);
-            Console.WriteLine("C# Test_EQJ_ECL ee = ({0}, {1}, {2}); diff={3}", ee.x, ee.y, ee.z, diff);
+            if (DebugMode) Console.WriteLine("C# Test_EQJ_ECL ee = ({0}, {1}, {2}); diff={3}", ee.x, ee.y, ee.z, diff);
             if (diff > 1.0e-16)
             {
                 Console.WriteLine("C# Test_EQJ_ECL: EXCESSIVE VECTOR ERROR");
@@ -1298,14 +1310,14 @@ namespace csharp_test
             r = Astronomy.Rotation_ECL_EQJ();
             AstroVector et = Astronomy.RotateVector(r, ee);
             diff = VectorDiff(et, ev);
-            Console.WriteLine("C# Test_EQJ_ECL  ev diff={0}", diff);
+            if (DebugMode) Console.WriteLine("C# Test_EQJ_ECL  ev diff={0}", diff);
             if (diff > 2.0e-16)
             {
                 Console.WriteLine("C# Test_EQJ_ECL: EXCESSIVE REVERSE ROTATION ERROR");
                 return 1;
             }
 
-            Console.WriteLine("C# Test_EQJ_ECL: PASS");
+            if (DebugMode) Console.WriteLine("C# Test_EQJ_ECL: PASS");
             return 0;
         }
 
@@ -1324,7 +1336,7 @@ namespace csharp_test
             double ra_diff = Math.Abs(eqcheck.ra - eqdate.ra);
             double dec_diff = Math.Abs(eqcheck.dec - eqdate.dec);
             double dist_diff = Math.Abs(eqcheck.dist - eqdate.dist);
-            Console.WriteLine("C# Test_EQJ_EQD: {0} ra={1}, dec={2}, dist={3}, ra_diff={4}, dec_diff={5}, dist_diff={6}",
+            if (DebugMode) Console.WriteLine("C# Test_EQJ_EQD: {0} ra={1}, dec={2}, dist={3}, ra_diff={4}, dec_diff={5}, dist_diff={6}",
                 body, eqdate.ra, eqdate.dec, eqdate.dist, ra_diff, dec_diff, dist_diff);
 
             if (ra_diff > 1.0e-14 || dec_diff > 1.0e-14 || dist_diff > 4.0e-15)
@@ -1336,13 +1348,14 @@ namespace csharp_test
             r = Astronomy.Rotation_EQD_EQJ(time);
             AstroVector t2000 = Astronomy.RotateVector(r, vdate);
             double diff = VectorDiff(t2000, v2000);
-            Console.WriteLine("C# Test_EQJ_EQD: {0} inverse diff = {1}", body, diff);
+            if (DebugMode) Console.WriteLine("C# Test_EQJ_EQD: {0} inverse diff = {1}", body, diff);
             if (diff > 5.0e-15)
             {
                 Console.WriteLine("C# Test_EQJ_EQD: EXCESSIVE INVERSE ERROR");
                 return 1;
             }
 
+            if (DebugMode) Console.WriteLine("C# Test_EQJ_EQD: PASS");
             return 0;
         }
 
@@ -1360,7 +1373,7 @@ namespace csharp_test
             double diff_alt = Math.Abs(sphere.lat - hor.altitude);
             double diff_az = Math.Abs(sphere.lon - hor.azimuth);
 
-            Console.WriteLine("C# Test_EQD_HOR {0}: trusted alt={1}, az={2}; test alt={3}, az={4}; diff_alt={5}, diff_az={6}",
+            if (DebugMode) Console.WriteLine("C# Test_EQD_HOR {0}: trusted alt={1}, az={2}; test alt={3}, az={4}; diff_alt={5}, diff_az={6}",
                 body, hor.altitude, hor.azimuth, sphere.lat, sphere.lon, diff_alt, diff_az);
 
             if (diff_alt > 3.0e-14 || diff_az > 4e-14)
@@ -1372,7 +1385,7 @@ namespace csharp_test
             /* Confirm that we can convert back to horizontal vector. */
             AstroVector check_hor = Astronomy.VectorFromHorizon(sphere, time, Refraction.Normal);
             double diff = VectorDiff(check_hor, vec_hor);
-            Console.WriteLine("C# Test_EQD_HOR {0}: horizontal recovery: diff = {1}", body, diff);
+            if (DebugMode) Console.WriteLine("C# Test_EQD_HOR {0}: horizontal recovery: diff = {1}", body, diff);
             if (diff > 3.0e-15)
             {
                 Console.WriteLine("C# Test_EQD_HOR: EXCESSIVE ERROR IN HORIZONTAL RECOVERY.");
@@ -1383,7 +1396,7 @@ namespace csharp_test
             rot = Astronomy.Rotation_HOR_EQD(time, observer);
             AstroVector check_eqd = Astronomy.RotateVector(rot, vec_hor);
             diff = VectorDiff(check_eqd, vec_eqd);
-            Console.WriteLine("C# Test_EQD_HOR {0}: OFDATE inverse rotation diff = {1}", body, diff);
+            if (DebugMode) Console.WriteLine("C# Test_EQD_HOR {0}: OFDATE inverse rotation diff = {1}", body, diff);
             if (diff > 2.0e-15)
             {
                 Console.WriteLine("C# Test_EQD_HOR: EXCESSIVE OFDATE INVERSE HORIZONTAL ERROR.");
@@ -1397,7 +1410,7 @@ namespace csharp_test
             rot = Astronomy.Rotation_HOR_EQJ(time, observer);
             AstroVector check_eqj = Astronomy.RotateVector(rot, vec_hor);
             diff = VectorDiff(check_eqj, vec_eqj);
-            Console.WriteLine("C# Test_EQD_HOR {0}: J2000 inverse rotation diff = {1}", body, diff);
+            if (DebugMode) Console.WriteLine("C# Test_EQD_HOR {0}: J2000 inverse rotation diff = {1}", body, diff);
             if (diff > 6.0e-15)
             {
                 Console.WriteLine("C# Test_EQD_HOR: EXCESSIVE J2000 INVERSE HORIZONTAL ERROR.");
@@ -1408,13 +1421,14 @@ namespace csharp_test
             rot = Astronomy.Rotation_EQJ_HOR(time, observer);
             check_hor = Astronomy.RotateVector(rot, vec_eqj);
             diff = VectorDiff(check_hor, vec_hor);
-            Console.WriteLine("C# Test_EQD_HOR {0}: EQJ inverse rotation diff = {1}", body, diff);
+            if (DebugMode) Console.WriteLine("C# Test_EQD_HOR {0}: EQJ inverse rotation diff = {1}", body, diff);
             if (diff > 3e-15)
             {
                 Console.WriteLine("C# Test_EQD_HOR: EXCESSIVE EQJ INVERSE HORIZONTAL ERROR.");
                 return 1;
             }
 
+            if (DebugMode) Console.WriteLine("C# Test_EQD_HOR: PASS");
             return 0;
         }
 
@@ -1499,7 +1513,7 @@ namespace csharp_test
             if (0 != CheckCycle(nameof(eqj_hor), nameof(hor_eqd), nameof(eqd_eqj), eqj_hor, hor_eqd, eqd_eqj)) return 1;     /* excluded corner = ECL */
             if (0 != CheckCycle(nameof(ecl_eqd), nameof(eqd_hor), nameof(hor_ecl), ecl_eqd, eqd_hor, hor_ecl)) return 1;     /* excluded corner = EQJ */
 
-            Console.WriteLine("C# Test_RotRoundTrip: PASS");
+            if (DebugMode) Console.WriteLine("C# Test_RotRoundTrip: PASS");
             return 0;
         }
 
