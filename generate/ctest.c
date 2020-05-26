@@ -19,6 +19,9 @@ static const double RAD2DEG = 57.295779513082321;
 #define FAIL(...)       do{fprintf(stderr, __VA_ARGS__); error = 1; goto fail;}while(0)
 #define FAILRET(...)    do{fprintf(stderr, __VA_ARGS__); return 1;}while(0)
 
+int DebugMode = 0;
+#define DEBUG(...)      do{if(DebugMode)printf(__VA_ARGS__);}while(0)
+
 static int CheckStatus(int lnum, const char *varname, astro_status_t status)
 {
     if (status != ASTRO_SUCCESS)
@@ -76,6 +79,13 @@ static int LocalSolarEclipseTest2(void);
 int main(int argc, const char *argv[])
 {
     int error = 1;
+
+    if (argc > 1 && !strcmp(argv[1], "-d"))
+    {
+        ++argv;
+        --argc;
+        DebugMode = 1;
+    }
 
     if (argc == 2)
     {
@@ -713,7 +723,7 @@ static int TestElongFile(const char *filename, double targetRelLon)
             FAIL("C TestElongFile(%s line %d): SearchRelativeLongitude returned %d\n", filename, lnum, search_result.status);
 
         diff_minutes = (24.0 * 60.0) * (search_result.time.tt - expected_time.tt);
-        printf("C TestElongFile: %-7s error = %6.3lf minutes\n", name, diff_minutes);
+        DEBUG("C TestElongFile: %-7s error = %6.3lf minutes\n", name, diff_minutes);
         if (fabs(diff_minutes) > 15.0)
             FAIL("C TestElongFile(%s line %d): EXCESSIVE ERROR\n", filename, lnum);
     }
@@ -875,7 +885,7 @@ static int TestMaxElong(const elong_test_t *test)
     hour_diff = 24.0 * fabs(evt.time.tt - eventTime.tt);
     arcmin_diff = 60.0 * fabs(evt.elongation - test->angle);
 
-    printf("C TestMaxElong: %-7s %-7s elong=%5.2lf (%4.2lf arcmin, %5.3lf hours)\n", name, vis, evt.elongation, arcmin_diff, hour_diff);
+    DEBUG("C TestMaxElong: %-7s %-7s elong=%5.2lf (%4.2lf arcmin, %5.3lf hours)\n", name, vis, evt.elongation, arcmin_diff, hour_diff);
 
     if (hour_diff > 0.603)
         FAIL("C TestMaxElong(%s %s): excessive hour error.\n", name, test->searchDate);
@@ -980,7 +990,7 @@ static int TestPlanetLongitudes(
     }
 
     ratio = max_diff / min_diff;
-    printf("C TestPlanetLongitudes(%-7s): %5d events, ratio=%5.3lf, file: %s\n", name, count, ratio, outFileName);
+    DEBUG("C TestPlanetLongitudes(%-7s): %5d events, ratio=%5.3lf, file: %s\n", name, count, ratio, outFileName);
 
     if (ratio > thresh)
         FAIL("C TestPlanetLongitudes(%s): excessive event interval ratio.\n", name);
@@ -1082,7 +1092,7 @@ static int RiseSet(const char *filename)
             r_search_date = s_search_date = Astronomy_MakeTime(year, 1, 1, 0, 0, 0.0);
             b_evt.time.tt = b_evt.time.ut = NAN;
             b_evt.status = ASTRO_NOT_INITIALIZED;
-            printf("C RiseSet: %-7s lat=%0.1lf lon=%0.1lf\n", name, latitude, longitude);
+            DEBUG("C RiseSet: %-7s lat=%0.1lf lon=%0.1lf\n", name, latitude, longitude);
         }
 
         if (b_evt.status == ASTRO_SUCCESS)      /* has b_evt been initialized? (does it contain a valid event?) */
@@ -1207,7 +1217,7 @@ static int CheckMagnitudeData(astro_body_t body, const char *filename)
         FAIL("C CheckMagnitudeData: Did not find any data in file: %s\n", filename);
 
     rms = sqrt(sum_squared_diff / count);
-    printf("C CheckMagnitudeData: %-21s %5d rows diff_lo=%0.4lf diff_hi=%0.4lf rms=%0.4lf\n", filename, count, diff_lo, diff_hi, rms);
+    DEBUG("C CheckMagnitudeData: %-21s %5d rows diff_lo=%0.4lf diff_hi=%0.4lf rms=%0.4lf\n", filename, count, diff_lo, diff_hi, rms);
     error = 0;
 
 fail:
@@ -1256,7 +1266,7 @@ static int CheckSaturn()
         if (illum.status != ASTRO_SUCCESS)
             FAILRET("C CheckSaturn(%d): Illumination returned %d\n", i, illum.status);
 
-        printf("Saturn: date=%s  calc mag=%12.8lf  ring_tilt=%12.8lf\n", data[i].date, illum.mag, illum.ring_tilt);
+        DEBUG("Saturn: date=%s  calc mag=%12.8lf  ring_tilt=%12.8lf\n", data[i].date, illum.mag, illum.ring_tilt);
 
         mag_diff = fabs(illum.mag - data[i].mag);
         if (mag_diff > 1.0e-4)
@@ -1313,7 +1323,9 @@ static int MagnitudeTest(void)
 
     nfailed += TestMaxMag(BODY_VENUS, "magnitude/maxmag_Venus.txt");
 
-    if (nfailed > 0)
+    if (nfailed == 0)
+        printf("C MagnitudeTest: PASS\n");
+    else
         fprintf(stderr, "C MagnitudeTest: FAILED %d test(s).\n", nfailed);
 
     return nfailed;
@@ -1370,7 +1382,7 @@ static int TestMaxMag(astro_body_t body, const char *filename)
 
         mag_diff = fabs(illum.mag - correct_mag);
         hours_diff = 24.0 * fabs(illum.time.ut - center_time.ut);
-        printf("C TestMaxMag: mag_diff=%0.3lf, hours_diff=%0.3lf\n", mag_diff, hours_diff);
+        DEBUG("C TestMaxMag: mag_diff=%0.3lf, hours_diff=%0.3lf\n", mag_diff, hours_diff);
         if (hours_diff > 7.1)
             FAIL("C TestMaxMag(%s line %d): EXCESSIVE TIME DIFFERENCE.\n", filename, lnum);
 
@@ -1724,7 +1736,7 @@ static int PlanetApsis(void)
         if (count < 2)
             FAIL("C PlanetApsis: FAILED to find apsides for %s\n", Astronomy_BodyName(body));
 
-        printf("C PlanetApsis: %5d apsides for %-9s -- intervals: min=%9.2lf, max=%9.2lf, ratio=%8.6lf; max day=%lg, degrees=%0.3lf, dist ratio=%lg\n",
+        DEBUG("C PlanetApsis: %5d apsides for %-9s -- intervals: min=%9.2lf, max=%9.2lf, ratio=%8.6lf; max day=%lg, degrees=%0.3lf, dist ratio=%lg\n",
             count, Astronomy_BodyName(body),
             min_interval, max_interval, max_interval / min_interval,
             max_diff_days,
@@ -1977,7 +1989,7 @@ static int TestVectorFromAngles(double lat, double lon, double x, double y, doub
     dz = z - vector.z;
     diff = sqrt(dx*dx + dy*dy + dz*dz);
 
-    printf("TestVectorFromAngles(%lf, %lf): diff = %lg\n", lat, lon, diff);
+    DEBUG("C TestVectorFromAngles(%lf, %lf): diff = %lg\n", lat, lon, diff);
     if (diff > 2.0e-16)
         FAILRET("C TestVectorFromAngles: EXCESSIVE ERROR.\n");
 
@@ -2007,7 +2019,7 @@ static int TestAnglesFromVector(double lat, double lon, double x, double y, doub
 
     latdiff = fabs(sphere.lat - lat);
     londiff = fabs(sphere.lon - lon);
-    printf("TestAnglesFromVector(x=%lf, y=%lf, z=%lf): latdiff=%lg, londiff=%lg\n", x, y, z, latdiff, londiff);
+    DEBUG("TestAnglesFromVector(x=%lf, y=%lf, z=%lf): latdiff=%lg, londiff=%lg\n", x, y, z, latdiff, londiff);
     if (latdiff > 8.0e-15 || londiff > 8.0e-15)
         FAILRET("C TestAnglesFromVector: EXCESSIVE ERROR\n");
 
@@ -2105,7 +2117,7 @@ static int TestSpin(
     dy = ty - tv.y;
     dz = tz - tv.z;
     diff = sqrt(dx*dx + dy*dy + dz*dz);
-    printf("C TestSpin(xrot=%0.0lf, yrot=%0.0lf, zrot=%0.0lf, sx=%0.0lf, sy=%0.0lf, sz=%0.0lf): diff = %lg\n", xrot, yrot, zrot, sx, sy, sz, diff);
+    DEBUG("C TestSpin(xrot=%0.0lf, yrot=%0.0lf, zrot=%0.0lf, sx=%0.0lf, sy=%0.0lf, sz=%0.0lf): diff = %lg\n", xrot, yrot, zrot, sx, sy, sz, diff);
     if (diff > 1.0e-15)
         FAIL("C TestSpin: EXCESSIVE ERROR\n");
 
@@ -2128,7 +2140,7 @@ static int Test_EQJ_ECL(void)
     r = Astronomy_Rotation_EQJ_ECL();
     CHECK_ROTMAT(r);
 
-    printf("C Test_EQJ_ECL:\n[%0.18lf  %0.18lf  %0.18lf]\n[%0.18lf  %0.18lf  %0.18lf]\n[%0.18lf  %0.18lf  %0.18lf]\n",
+    DEBUG("C Test_EQJ_ECL:\n[%0.18lf  %0.18lf  %0.18lf]\n[%0.18lf  %0.18lf  %0.18lf]\n[%0.18lf  %0.18lf  %0.18lf]\n",
         r.rot[0][0], r.rot[1][0], r.rot[2][0],
         r.rot[0][1], r.rot[1][1], r.rot[2][1],
         r.rot[0][2], r.rot[1][2], r.rot[2][2]);
@@ -2144,7 +2156,7 @@ static int Test_EQJ_ECL(void)
     if (ecl.status != ASTRO_SUCCESS)
         FAIL("C Test_EQJ_ECL: Astronomy_Ecliptic returned error %d\n", ecl.status);
 
-    printf("C Test_EQJ_ECL ecl = (%0.18lf, %0.18lf,%0.18lf)\n", ecl.ex, ecl.ey, ecl.ez);
+    DEBUG("C Test_EQJ_ECL ecl = (%0.18lf, %0.18lf,%0.18lf)\n", ecl.ex, ecl.ey, ecl.ez);
 
     /* Now compute the same vector via rotation matrix. */
     ee = Astronomy_RotateVector(r, ev);
@@ -2155,7 +2167,7 @@ static int Test_EQJ_ECL(void)
     dy = ee.y - ecl.ey;
     dz = ee.z - ecl.ez;
     diff = sqrt(dx*dx + dy*dy + dz*dz);
-    printf("C Test_EQJ_ECL  ee = (%0.18lf, %0.18lf,%0.18lf);  diff=%lg\n", ee.x, ee.y, ee.z, diff);
+    DEBUG("C Test_EQJ_ECL  ee = (%0.18lf, %0.18lf,%0.18lf);  diff=%lg\n", ee.x, ee.y, ee.z, diff);
     if (diff > 1.0e-16)
         FAIL("C Test_EQJ_ECL: EXCESSIVE VECTOR ERROR\n");
 
@@ -2164,7 +2176,7 @@ static int Test_EQJ_ECL(void)
     CHECK_ROTMAT(r);
     et = Astronomy_RotateVector(r, ee);
     CHECK(VectorDiff(et, ev, &diff));
-    printf("C Test_EQJ_ECL  ev diff=%lg\n", diff);
+    DEBUG("C Test_EQJ_ECL  ev diff=%lg\n", diff);
     if (diff > 2.0e-16)
         FAIL("C Test_EQJ_ECL: EXCESSIVE REVERSE ROTATION ERROR\n");
 
@@ -2213,7 +2225,7 @@ static int Test_EQJ_EQD(astro_body_t body)
     ra_diff = fabs(eqcheck.ra - eqdate.ra);
     dec_diff = fabs(eqcheck.dec - eqdate.dec);
     dist_diff = fabs(eqcheck.dist - eqdate.dist);
-    printf("C Test_EQJ_EQD: %s ra=%0.3lf, dec=%0.3lf, dist=%0.3lf, ra_diff=%lg, dec_diff=%lg, dist_diff=%lg\n", Astronomy_BodyName(body), eqdate.ra, eqdate.dec, eqdate.dist, ra_diff, dec_diff, dist_diff);
+    DEBUG("C Test_EQJ_EQD: %s ra=%0.3lf, dec=%0.3lf, dist=%0.3lf, ra_diff=%lg, dec_diff=%lg, dist_diff=%lg\n", Astronomy_BodyName(body), eqdate.ra, eqdate.dec, eqdate.dist, ra_diff, dec_diff, dist_diff);
     if (ra_diff > 1.0e-14 || dec_diff > 1.0e-14 || dist_diff > 4.0e-15)
         FAIL("C Test_EQJ_EQD: EXCESSIVE ERROR\n");
 
@@ -2223,7 +2235,7 @@ static int Test_EQJ_EQD(astro_body_t body)
     t2000 = Astronomy_RotateVector(r, vdate);
     CHECK_STATUS(t2000);
     CHECK(VectorDiff(t2000, v2000, &diff));
-    printf("C Test_EQJ_EQD: %s inverse diff = %lg\n", Astronomy_BodyName(body), diff);
+    DEBUG("C Test_EQJ_EQD: %s inverse diff = %lg\n", Astronomy_BodyName(body), diff);
     if (diff > 5.0e-15)
         FAIL("C Test_EQJ_EQD: EXCESSIVE INVERSE ERROR\n");
 
@@ -2248,7 +2260,7 @@ static int Test_EQD_HOR(astro_body_t body)
     time = Astronomy_MakeTime(1970, 12, 13, 5, 15, 0.0);
     observer = Astronomy_MakeObserver(-37.0, +45.0, 0.0);
     CHECK_EQU(eqd, Astronomy_Equator(body, &time, observer, EQUATOR_OF_DATE, ABERRATION));
-    printf("C Test_EQD_HOR %s: OFDATE ra=%0.3lf, dec=%0.3lf\n", Astronomy_BodyName(body), eqd.ra, eqd.dec);
+    DEBUG("C Test_EQD_HOR %s: OFDATE ra=%0.3lf, dec=%0.3lf\n", Astronomy_BodyName(body), eqd.ra, eqd.dec);
     hor = Astronomy_Horizon(&time, observer, eqd.ra, eqd.dec, REFRACTION_NORMAL);
 
     /* Calculate the position of the body as an equatorial vector of date. */
@@ -2268,7 +2280,7 @@ static int Test_EQD_HOR(astro_body_t body)
     diff_alt = fabs(sphere.lat - hor.altitude);
     diff_az = fabs(sphere.lon - hor.azimuth);
 
-    printf("C Test_EQD_HOR %s: trusted alt=%0.3lf, az=%0.3lf; test alt=%0.3lf, az=%0.3lf; diff_alt=%lg, diff_az=%lg\n",
+    DEBUG("C Test_EQD_HOR %s: trusted alt=%0.3lf, az=%0.3lf; test alt=%0.3lf, az=%0.3lf; diff_alt=%lg, diff_az=%lg\n",
         Astronomy_BodyName(body), hor.altitude, hor.azimuth, sphere.lat, sphere.lon, diff_alt, diff_az);
 
     if (diff_alt > 3.0e-14 || diff_az > 4e-14)
@@ -2277,7 +2289,7 @@ static int Test_EQD_HOR(astro_body_t body)
     /* Confirm that we can convert back to horizontal vector. */
     CHECK_VECTOR(check_hor, Astronomy_VectorFromHorizon(sphere, time, REFRACTION_NORMAL));
     CHECK(VectorDiff(check_hor, vec_hor, &diff));
-    printf("C Test_EQD_HOR %s: horizontal recovery: diff = %lg\n", Astronomy_BodyName(body), diff);
+    DEBUG("C Test_EQD_HOR %s: horizontal recovery: diff = %lg\n", Astronomy_BodyName(body), diff);
     if (diff > 3.0e-15)
         FAIL("C Test_EQD_HOR: EXCESSIVE ERROR IN HORIZONTAL RECOVERY.\n");
 
@@ -2286,7 +2298,7 @@ static int Test_EQD_HOR(astro_body_t body)
     CHECK_ROTMAT(rot);
     CHECK_VECTOR(check_eqd, Astronomy_RotateVector(rot, vec_hor));
     CHECK(VectorDiff(check_eqd, vec_eqd, &diff));
-    printf("C Test_EQD_HOR %s: OFDATE inverse rotation diff = %lg\n", Astronomy_BodyName(body), diff);
+    DEBUG("C Test_EQD_HOR %s: OFDATE inverse rotation diff = %lg\n", Astronomy_BodyName(body), diff);
     if (diff > 2.0e-15)
         FAIL("C Test_EQD_HOR: EXCESSIVE OFDATE INVERSE HORIZONTAL ERROR.\n");
 
@@ -2298,7 +2310,7 @@ static int Test_EQD_HOR(astro_body_t body)
     CHECK_ROTMAT(rot);
     CHECK_VECTOR(check_eqj, Astronomy_RotateVector(rot, vec_hor));
     CHECK(VectorDiff(check_eqj, vec_eqj, &diff));
-    printf("C Test_EQD_HOR %s: J2000 inverse rotation diff = %lg\n", Astronomy_BodyName(body), diff);
+    DEBUG("C Test_EQD_HOR %s: J2000 inverse rotation diff = %lg\n", Astronomy_BodyName(body), diff);
     if (diff > 6.0e-15)
         FAIL("C Test_EQD_HOR: EXCESSIVE J2000 INVERSE HORIZONTAL ERROR.\n");
 
@@ -2307,7 +2319,7 @@ static int Test_EQD_HOR(astro_body_t body)
     CHECK_ROTMAT(rot);
     CHECK_VECTOR(check_hor, Astronomy_RotateVector(rot, vec_eqj));
     CHECK(VectorDiff(check_hor, vec_hor, &diff));
-    printf("C Test_EQD_HOR %s: EQJ inverse rotation diff = %lg\n", Astronomy_BodyName(body), diff);
+    DEBUG("C Test_EQD_HOR %s: EQJ inverse rotation diff = %lg\n", Astronomy_BodyName(body), diff);
     if (diff > 3.0e-15)
         FAIL("C Test_EQD_HOR: EXCESSIVE EQJ INVERSE HORIZONTAL ERROR.\n");
 
@@ -2424,7 +2436,7 @@ static int Test_RotRoundTrip(void)
     CHECK_CYCLE(eqj_hor, hor_eqd, eqd_eqj);     /* excluded corner = ECL */
     CHECK_CYCLE(ecl_eqd, eqd_hor, hor_ecl);     /* excluded corner = EQJ */
 
-    printf("C Test_RotRoundTrip: PASS\n");
+    DEBUG("C Test_RotRoundTrip: PASS\n");
     error = 0;
 fail:
     return error;
@@ -2478,6 +2490,7 @@ static int RotationTest(void)
 
     CHECK(Test_RotRoundTrip());
 
+    printf("C RotationTest: PASS\n");
     error = 0;
 fail:
     return error;

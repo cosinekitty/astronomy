@@ -27,24 +27,30 @@ namespace csharp_test
                 if (args.Length == 1 && args[0] == "lunar_eclipse")
                     return LunarEclipseTest();
 
-                Console.WriteLine("csharp_test: starting");
-                if (TestTime() != 0) return 1;
-                if (MoonTest() != 0) return 1;
-                if (RefractionTest() != 0) return 1;
-                if (RotationTest() != 0) return 1;
-                if (RiseSetTest("../../riseset/riseset.txt") != 0) return 1;
-                if (SeasonsTest("../../seasons/seasons.txt") != 0) return 1;
-                if (MoonPhaseTest("../../moonphase/moonphases.txt") != 0) return 1;
-                if (ElongationTest() != 0) return 1;
-                if (LunarApsisTest("../../apsides/moon.txt") != 0) return 1;
-                if (PlanetApsisTest("../../apsides") != 0) return 1;
-                if (MagnitudeTest() != 0) return 1;
-                if (ConstellationTest() != 0) return 1;
-                if (LunarEclipseTest() != 0) return 1;
-                if (GlobalSolarEclipseTest() != 0) return 1;
-                if (AstroCheck() != 0) return 1;
-                Console.WriteLine("csharp_test: PASS");
-                return 0;
+                if (args.Length == 0)
+                {
+                    Console.WriteLine("csharp_test: starting");
+                    if (TestTime() != 0) return 1;
+                    if (MoonTest() != 0) return 1;
+                    if (RefractionTest() != 0) return 1;
+                    if (RotationTest() != 0) return 1;
+                    if (RiseSetTest("../../riseset/riseset.txt") != 0) return 1;
+                    if (SeasonsTest("../../seasons/seasons.txt") != 0) return 1;
+                    if (MoonPhaseTest("../../moonphase/moonphases.txt") != 0) return 1;
+                    if (ElongationTest() != 0) return 1;
+                    if (LunarApsisTest("../../apsides/moon.txt") != 0) return 1;
+                    if (PlanetApsisTest("../../apsides") != 0) return 1;
+                    if (MagnitudeTest() != 0) return 1;
+                    if (ConstellationTest() != 0) return 1;
+                    if (LunarEclipseTest() != 0) return 1;
+                    if (GlobalSolarEclipseTest() != 0) return 1;
+                    if (AstroCheck() != 0) return 1;
+                    Console.WriteLine("csharp_test: PASS");
+                    return 0;
+                }
+
+                Console.WriteLine("csharp_test: Invalid command line parameters.");
+                return 1;
             }
             catch (Exception ex)
             {
@@ -1078,7 +1084,7 @@ namespace csharp_test
                     return 1;
                 }
                 double rms = Math.Sqrt(sum_squared_diff / count);
-                Console.WriteLine("C# CheckMagnitudeData: {0} {1} rows diff_lo={2} diff_hi={3} rms={4}", filename, count, diff_lo, diff_hi, rms);
+                if (DebugMode) Console.WriteLine("C# CheckMagnitudeData: {0} {1} rows diff_lo={2} diff_hi={3} rms={4}", filename, count, diff_lo, diff_hi, rms);
                 return 0;
             }
         }
@@ -1189,7 +1195,7 @@ namespace csharp_test
                     }
                     search_time = time2;
                 }
-                Console.WriteLine("C# TestMaxMag: Processed {0} lines from file {1}", lnum, filename);
+                if (DebugMode) Console.WriteLine("C# TestMaxMag: Processed {0} lines from file {1}", lnum, filename);
                 return 0;
             }
         }

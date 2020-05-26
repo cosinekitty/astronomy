@@ -5,9 +5,12 @@ Fail()
     exit 1
 }
 
+# Allow optional "-d" to enable debug mode in csharp_test.
+[[ "$1" == "" || "$1" == "-d" ]] || Fail "Invalid command line options."
+
 echo "unit_test_csharp: Starting."
 cd dotnet/csharp_test || "Cannot change to directory dotnet/csharp_test"
-dotnet exe/csharp_test.dll "$1" || Fail "Error running csharp unit test"
+dotnet exe/csharp_test.dll $1 || Fail "Error running csharp unit test"
 cd ../..
 ./generate check dotnet/csharp_test/csharp_check.txt || Fail "Verification failure for C# unit test output."
 for file in dotnet/csharp_test/csharp_longitude_*.txt; do
