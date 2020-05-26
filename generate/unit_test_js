@@ -8,7 +8,7 @@ Fail()
 [[ "$1" == "" || "$1" == "-v" ]] || Fail "Invalid command line options."
 
 time node astro_check.js > temp/js_check.txt || Fail "Problem running JavaScript astro_check."
-./generate check temp/js_check.txt || Fail "Verification failure for JavaScript unit test output."
+./generate $1 check temp/js_check.txt || Fail "Verification failure for JavaScript unit test output."
 
 echo ""
 echo "$0: Running check against JPL Horizons data."
@@ -37,7 +37,7 @@ node elong_test.js $1 || Fail "Failed longitude tests."
 echo ""
 echo "$0: Verifying elong_test output."
 for file in temp/js_longitude_*.txt; do
-    ./generate check ${file} || Fail "Failed verification of ${file}"
+    ./generate $1 check ${file} || Fail "Failed verification of ${file}"
 done
 
 echo ""

@@ -43,6 +43,9 @@
 #include "novas_body.h"
 #include "vsop.h"
 
+int Verbose;
+#define DEBUG(...)  do{if(Verbose)printf(__VA_ARGS__);}while(0)
+
 #define VECTOR_DIM 3
 #define MIN_YEAR 1700
 #define MAX_YEAR 2200
@@ -126,6 +129,13 @@ const double ErrorRadius[] =
 
 int main(int argc, const char *argv[])
 {
+    if (argc > 1 && !strcmp(argv[1], "-v"))
+    {
+        Verbose = 1;
+        --argc;
+        ++argv;
+    }
+
     if (argc == 2 && !strcmp(argv[1], "planets"))
         return GenerateVsopPlanets() || GeneratePluto();
 
@@ -1607,7 +1617,7 @@ static int PrintErrorStats(vsop_body_t body, const char *tag, const error_stat_t
 
 static int CheckTestOutput(const char *filename)
 {
-    int error, lnum, nprinted, nbodies;
+    int error, lnum;
     vsop_body_t body;
     FILE *infile = NULL;
     char line[200];
@@ -1671,21 +1681,26 @@ static int CheckTestOutput(const char *filename)
 
     printf("CheckTestOutput: Verified %d lines of file %s\n", lnum, filename);
 
-    nbodies = 0;
-    for (body=0; body < VSOP_BODY_LIMIT; ++body)
+    if (Verbose)
     {
-        nprinted  = PrintErrorStats(body, "hel", &bundle[body].helio, &tally);
-        nprinted += PrintErrorStats(body, "equ", &bundle[body].equ,   &tally);
-        nprinted += PrintErrorStats(body, "hor", &bundle[body].hor,   &tally);
-        nprinted += PrintErrorStats(body, "ecl", &bundle[body].eclip, &tally);
-        if (nprinted > 0)
-            ++nbodies;
-    }
+        int nprinted, nbodies=0;
+        for (body=0; body < VSOP_BODY_LIMIT; ++body)
+        {
+            nprinted  = PrintErrorStats(body, "hel", &bundle[body].helio, &tally);
+            nprinted += PrintErrorStats(body, "equ", &bundle[body].equ,   &tally);
+            nprinted += PrintErrorStats(body, "hor", &bundle[body].hor,   &tally);
+            nprinted += PrintErrorStats(body, "ecl", &bundle[body].eclip, &tally);
+            if (nprinted > 0)
+                ++nbodies;
+        }
 
-    if (nbodies > 1)
-    {
-        printf("---------------------------------------------------------------------\n");
-        PrintErrorStats(-1, "ALL", &tally, NULL);
+        if (nbodies > 1)
+        {
+            printf("---------------------------------------------------------------------\n");
+            PrintErrorStats(-1, "ALL", &tally, NULL);
+        }
+
+        printf("\n");
     }
 
     error = 0;

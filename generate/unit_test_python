@@ -23,13 +23,12 @@ python3 test.py $1 lunar_eclipse || Fail "Failed Python lunar eclipse test."
 
 python3 test.py $1 elongation || Fail "Failed Python elongation tests."
 for file in temp/py_longitude_*.txt; do
-    ./generate check ${file} || Fail "Failed verification of file ${file}"
-    echo ""
+    ./generate $1 check ${file} || Fail "Failed verification of file ${file}"
 done
 
 echo "$0: Generating Python test output."
 time python3 test.py astro_check > temp/py_check.txt || Fail "Failure in Python astro_check"
-./generate check temp/py_check.txt || Fail "Verification failure for Python unit test output."
+./generate $1 check temp/py_check.txt || Fail "Verification failure for Python unit test output."
 
 echo "$0: PASS"
 exit 0

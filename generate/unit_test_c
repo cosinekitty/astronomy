@@ -24,8 +24,7 @@ time ./ctest $1 check || Fail "Failure in ctest check"
 
 ./ctest $1 elongation || Fail "Failed C elongation tests."
 for file in temp/c_longitude_*.txt; do
-    ./generate check ${file} || Fail "Failed verification of file ${file}"
-    echo ""
+    ./generate $1 check ${file} || Fail "Failed verification of file ${file}"
 done
 
 ./ctest $1 riseset riseset/riseset.txt || Fail "Failed C rise/set tests."
