@@ -8,6 +8,9 @@ namespace csharp_test
 {
     class Program
     {
+        const double DEG2RAD = 0.017453292519943296;
+        const double RAD2DEG = 57.295779513082321;
+
         static int Main(string[] args)
         {
             try
@@ -29,6 +32,7 @@ namespace csharp_test
                 if (MagnitudeTest() != 0) return 1;
                 if (ConstellationTest() != 0) return 1;
                 if (LunarEclipseTest() != 0) return 1;
+                if (GlobalSolarEclipseTest() != 0) return 1;
                 if (AstroCheck() != 0) return 1;
                 Console.WriteLine("csharp_test: PASS");
                 return 0;
@@ -38,6 +42,13 @@ namespace csharp_test
                 Console.WriteLine("charp_test: EXCEPTION: {0}", ex);
                 return 1;
             }
+        }
+
+        static readonly char[] TokenSeparators = new char[] { ' ', '\t', '\r', '\n' };
+
+        static string[] Tokenize(string line)
+        {
+            return line.Split(TokenSeparators, StringSplitOptions.RemoveEmptyEntries);
         }
 
         static int TestTime()
@@ -803,7 +814,7 @@ namespace csharp_test
                     while (null != (line = infile.ReadLine()))
                     {
                         /* Parse the line of test data. */
-                        string[] token = line.Split(new char[]{' ', '\t', '\n', '\r'}, StringSplitOptions.RemoveEmptyEntries);
+                        string[] token = Tokenize(line);
                         if (token.Length != 3)
                         {
                             Console.WriteLine("C# PlanetApsisTest({0} line {1}): Invalid data format: {2} tokens", filename, count, token.Length);
@@ -962,12 +973,6 @@ namespace csharp_test
 
         static readonly Regex JplRegex = new Regex(@"^\s*(\d{4})-(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)-(\d{2})\s+(\d{2}):(\d{2})\s+(.*)");
 
-        static readonly char[] TokenSeparators = new char[] { ' ', '\t', '\r', '\n' };
-
-        static string[] Tokenize(string line)
-        {
-            return line.Split(TokenSeparators, StringSplitOptions.RemoveEmptyEntries);
-        }
 
         static JplDateTime ParseJplHorizonsDateTime(string line)
         {
@@ -1611,7 +1616,7 @@ namespace csharp_test
                         }
                         string time_text = line.Substring(0, 17);
                         AstroTime peak_time = ParseDate(time_text);
-                        string[] token = line.Substring(17).Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                        string[] token = Tokenize(line.Substring(17));
                         double partial_minutes, total_minutes;
                         if (token.Length != 2 || !double.TryParse(token[0], out partial_minutes) || !double.TryParse(token[1], out total_minutes))
                         {
@@ -1717,6 +1722,142 @@ namespace csharp_test
                 }
             }
             return 0;
+        }
+
+        static int GlobalSolarEclipseTest()
+        {
+            int lnum = 0;
+            int skip_count = 0;
+            double max_angle = 0.0;
+            double max_minutes = 0.0;
+            GlobalSolarEclipseInfo eclipse = Astronomy.SearchGlobalSolarEclipse(new AstroTime(1701, 1, 1, 0, 0, 0));
+
+            const string inFileName = "../../eclipse/solar_eclipse.txt";
+            using (StreamReader infile = File.OpenText(inFileName))
+            {
+                string line;
+                while (null != (line = infile.ReadLine()))
+                {
+                    ++lnum;
+                    string[] token = Tokenize(line);
+                    /* 1889-12-22T12:54:15Z   -6 T   -12.7   -12.8 */
+                    if (token.Length != 5)
+                    {
+                        Console.WriteLine("C# GlobalSolarEclipseTest({0} line {1}): wrong token count = {2}", inFileName, lnum, token.Length);
+                        return 1;
+                    }
+                    AstroTime peak = ParseDate(token[0]);
+                    string typeChar = token[2];
+                    double lat = double.Parse(token[3]);
+                    double lon = double.Parse(token[4]);
+                    EclipseKind expected_kind;
+                    switch (typeChar)
+                    {
+                        case "P": expected_kind = EclipseKind.Partial;  break;
+                        case "A": expected_kind = EclipseKind.Annular;  break;
+                        case "T": expected_kind = EclipseKind.Total;    break;
+                        case "H": expected_kind = EclipseKind.Total;    break;
+                        default:
+                            Console.WriteLine("C# GlobalSolarEclipseTest({0} line {1}): invalid eclipse kind '{2}' in test data.", inFileName, lnum, typeChar);
+                            return 1;
+                    }
+
+                    double diff_days = eclipse.peak.ut - peak.ut;
+
+                    /* Sometimes we find marginal eclipses that aren't listed in the test data. */
+                    /* Ignore them if the distance between the Sun/Moon shadow axis and the Earth's center is large. */
+                    while (diff_days < -25.0 && eclipse.distance > 9000.0)
+                    {
+                        ++skip_count;
+                        eclipse = Astronomy.NextGlobalSolarEclipse(eclipse.peak);
+                        diff_days = eclipse.peak.ut - peak.ut;
+                    }
+
+                    /* Validate the eclipse prediction. */
+                    double diff_minutes = (24 * 60) * Math.Abs(diff_days);
+                    if (diff_minutes > 6.93)
+                    {
+                        Console.WriteLine("C# GlobalSolarEclipseTest({0} line {1}): EXCESSIVE TIME ERROR = {2} minutes", inFileName, lnum, diff_minutes);
+                        return 1;
+                    }
+
+                    if (diff_minutes > max_minutes)
+                        max_minutes = diff_minutes;
+
+                    /* Validate the eclipse kind, but only when it is not a "glancing" eclipse. */
+                    if ((eclipse.distance < 6360) && (eclipse.kind != expected_kind))
+                    {
+                        Console.WriteLine("C# GlobalSolarEclipseTest({0} line {1}): WRONG ECLIPSE KIND: expected {2}, found {3}", inFileName, lnum, expected_kind, eclipse.kind);
+                        return 1;
+                    }
+
+                    if (eclipse.kind == EclipseKind.Total || eclipse.kind == EclipseKind.Annular)
+                    {
+                        /*
+                            When the distance between the Moon's shadow ray and the Earth's center is beyond 6100 km,
+                            it creates a glancing blow whose geographic coordinates are excessively sensitive to
+                            slight changes in the ray. Therefore, it is unreasonable to count large errors there.
+                        */
+                        if (eclipse.distance < 6100.0)
+                        {
+                            double diff_angle = AngleDiff(lat, lon, eclipse.latitude, eclipse.longitude);
+                            if (diff_angle > 0.247)
+                            {
+                                Console.WriteLine("C# GlobalSolarEclipseTest({0} line {1}): EXCESSIVE GEOGRAPHIC LOCATION ERROR = {2} degrees", inFileName, lnum, diff_angle);
+                                return 1;
+                            }
+                            if (diff_angle > max_angle)
+                                max_angle = diff_angle;
+                        }
+                    }
+
+                    eclipse = Astronomy.NextGlobalSolarEclipse(eclipse.peak);
+                }
+            }
+
+            const int expected_count = 1180;
+            if (lnum != expected_count)
+            {
+                Console.WriteLine("C# GlobalSolarEclipseTest: WRONG LINE COUNT = {0}, expected {1}", lnum, expected_count);
+                return 1;
+            }
+
+            if (skip_count > 2)
+            {
+                Console.WriteLine("C# GlobalSolarEclipseTest: EXCESSSIVE SKIP COUNT = {0}", skip_count);
+                return 1;
+            }
+
+            Console.WriteLine("C# GlobalSolarEclipseTest: PASS ({0} verified, {1} skipped, max minutes = {2}, max angle = {3})", lnum, skip_count, max_minutes, max_angle);
+            return 0;
+        }
+
+        static void VectorFromAngles(double[] v, double lat, double lon)
+        {
+            double coslat = Math.Cos(DEG2RAD * lat);
+            v[0] = Math.Cos(DEG2RAD * lon) * coslat;
+            v[1] = Math.Sin(DEG2RAD * lon) * coslat;
+            v[2] = Math.Sin(DEG2RAD * lat);
+        }
+
+        static double AngleDiff(double alat, double alon, double blat, double blon)
+        {
+            double[] a = new double[3];
+            double[] b = new double[3];
+            double dot;
+
+            /* Convert angles to vectors on a unit sphere. */
+            VectorFromAngles(a, alat, alon);
+            VectorFromAngles(b, blat, blon);
+
+            dot = a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
+            if (dot <= -1.0)
+                return 180.0;
+
+            if (dot >= +1.0)
+                return 0.0;
+
+            return RAD2DEG * Math.Acos(dot);
         }
     }
 }

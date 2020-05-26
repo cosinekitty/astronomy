@@ -2743,6 +2743,7 @@ fail:
 
 static int GlobalSolarEclipseTest(void)
 {
+    const int expected_count = 1180;
     int error = 1;
     FILE *infile = NULL;
     const char *inFileName = "eclipse/solar_eclipse.txt";
@@ -2852,6 +2853,12 @@ static int GlobalSolarEclipseTest(void)
 
         eclipse = Astronomy_NextGlobalSolarEclipse(eclipse.peak);
     }
+
+    if (lnum != expected_count)
+        FAIL("C GlobalSolarEclipseTest: WRONG LINE COUNT = %d, expected %d\n", lnum, expected_count);
+
+    if (skip_count > 2)
+        FAIL("C GlobalSolarEclipseTest: EXCESSIVE SKIP COUNT = %d\n", skip_count);
 
     printf("C GlobalSolarEclipseTest: PASS (%d verified, %d skipped, %d CalcMoons, max minutes = %0.3lf, max angle = %0.3lf)\n", lnum, skip_count, _CalcMoonCount, max_minutes, max_angle);
     error = 0;
