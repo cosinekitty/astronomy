@@ -11,6 +11,8 @@ IsInstalled()
     return $?
 }
 
+[[ "$1" == "" || "$1" == "-d" ]] || Fail "Invalid command line options."
+
 OUTDIR=../source
 EPHFILE=lnxp1600p2200.405
 # EPHURL=ftp://ssd.jpl.nasa.gov/pub/eph/planets/Linux/de405/${EPHFILE}
@@ -159,10 +161,10 @@ python3 norm.py || Fail "Error normalizing eclipse test data."
 cd .. || Fail "Could not change to parent directory."
 
 ./makedoc || exit $?
-./unit_test_csharp || exit $?
-./unit_test_js || exit $?
-./unit_test_c || exit $?
-./unit_test_python || exit $?
+./unit_test_csharp $1 || exit $?
+./unit_test_js $1 || exit $?
+./unit_test_c $1 || exit $?
+./unit_test_python $1 || exit $?
 
 echo ""
 echo "Diffing calculations."
