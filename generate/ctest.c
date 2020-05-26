@@ -19,8 +19,8 @@ static const double RAD2DEG = 57.295779513082321;
 #define FAIL(...)       do{fprintf(stderr, __VA_ARGS__); error = 1; goto fail;}while(0)
 #define FAILRET(...)    do{fprintf(stderr, __VA_ARGS__); return 1;}while(0)
 
-int DebugMode = 0;
-#define DEBUG(...)      do{if(DebugMode)printf(__VA_ARGS__);}while(0)
+int Verbose = 0;
+#define DEBUG(...)      do{if(Verbose)printf(__VA_ARGS__);}while(0)
 
 static int CheckStatus(int lnum, const char *varname, astro_status_t status)
 {
@@ -80,11 +80,11 @@ int main(int argc, const char *argv[])
 {
     int error = 1;
 
-    if (argc > 1 && !strcmp(argv[1], "-d"))
+    if (argc > 1 && !strcmp(argv[1], "-v"))
     {
         ++argv;
         --argc;
-        DebugMode = 1;
+        Verbose = 1;
     }
 
     if (argc == 2)

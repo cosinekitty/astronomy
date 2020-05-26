@@ -5,8 +5,7 @@ Fail()
     exit 1
 }
 
-# Allow optional "-d" to enable debug mode in csharp_test.
-[[ "$1" == "" || "$1" == "-d" ]] || Fail "Invalid command line options."
+[[ "$1" == "" || "$1" == "-v" ]] || Fail "Invalid command line options."
 
 echo "unit_test_csharp: Starting."
 cd dotnet/csharp_test || "Cannot change to directory dotnet/csharp_test"

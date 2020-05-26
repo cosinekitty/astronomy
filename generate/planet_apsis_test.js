@@ -7,7 +7,7 @@
 'use strict';
 const fs = require('fs');
 const Astronomy = require('../source/js/astronomy.min.js');
-const DebugMode = (process.argv.length > 2 && process.argv[2] === '-d');
+const Verbose = (process.argv.length > 2 && process.argv[2] === '-v');
 
 const Planet = {
     Mercury: { OrbitalPeriod:    87.969 },
@@ -86,7 +86,7 @@ function Test() {
         if (count < 2) {
             throw `Failed to find apsides for ${body}`;
         }
-        if (DebugMode) console.log(`JS PlanetApsis: ${count} apsides for ${body} -- intervals: min=${min_interval}, max=${max_interval}, ratio=${max_interval/min_interval}; max day=${max_diff_days}, degrees=${(max_diff_days / period) * 360}, dist ratio=${max_dist_ratio}`);
+        if (Verbose) console.log(`JS PlanetApsis: ${count} apsides for ${body} -- intervals: min=${min_interval}, max=${max_interval}, ratio=${max_interval/min_interval}; max day=${max_diff_days}, degrees=${(max_diff_days / period) * 360}, dist ratio=${max_dist_ratio}`);
         ++pindex;
     }
     if (found_bad_planet) {

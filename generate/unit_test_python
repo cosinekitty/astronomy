@@ -5,7 +5,7 @@ Fail()
     exit 1
 }
 
-[[ "$1" == "" || "$1" == "-d" ]] || Fail "Invalid command line options."
+[[ "$1" == "" || "$1" == "-v" ]] || Fail "Invalid command line options."
 
 python3 --version || Fail "Cannot print python version"
 python3 test.py $1 rotation || Fail "Failed Python rotation tests."

@@ -5,8 +5,7 @@ Fail()
     exit 1
 }
 
-# Allow optional "-d" to enable debug mode in ctest.
-[[ "$1" == "" || "$1" == "-d" ]] || Fail "Invalid command line options."
+[[ "$1" == "" || "$1" == "-v" ]] || Fail "Invalid command line options."
 
 rm -f temp/c_gm_check.txt
 ./ctbuild || exit 1

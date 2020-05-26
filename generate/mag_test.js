@@ -1,7 +1,7 @@
 'use strict';
 const fs = require('fs');
 const Astronomy = require('../source/js/astronomy.min.js');
-const DebugMode = (process.argv.length > 2 && process.argv[2] === '-d');
+const Verbose = (process.argv.length > 2 && process.argv[2] === '-v');
 
 function Fail(message) {
     console.log(`FATAL(mag_test.js): ${message}`);
@@ -65,7 +65,7 @@ function CheckMagnitudeData(body, data) {
     let rms = Math.sqrt(sum_squared_diff / data.rows.length);
     const limit = 0.012;
     const pass = (Math.abs(diff_lo) < limit && Math.abs(diff_hi) < limit);
-    if (!pass || DebugMode) console.log(`JS ${body.padEnd(8)} ${pass?"    ":"FAIL"}  diff_lo=${diff_lo.toFixed(4).padStart(8)}, diff_hi=${diff_hi.toFixed(4).padStart(8)}, rms=${rms.toFixed(4).padStart(8)}`);
+    if (!pass || Verbose) console.log(`JS ${body.padEnd(8)} ${pass?"    ":"FAIL"}  diff_lo=${diff_lo.toFixed(4).padStart(8)}, diff_hi=${diff_hi.toFixed(4).padStart(8)}, rms=${rms.toFixed(4).padStart(8)}`);
     return pass;
 }
 
@@ -89,7 +89,7 @@ function TestSaturn() {
 
     for (let item of data) {
         let illum = Astronomy.Illumination('Saturn', new Date(item.date));
-        if (DebugMode) console.log(`JS Saturn: date=${illum.time.date.toISOString()}  mag=${illum.mag.toFixed(8).padStart(12)}  ring_tilt=${illum.ring_tilt.toFixed(8).padStart(12)}`);
+        if (Verbose) console.log(`JS Saturn: date=${illum.time.date.toISOString()}  mag=${illum.mag.toFixed(8).padStart(12)}  ring_tilt=${illum.ring_tilt.toFixed(8).padStart(12)}`);
         const mag_diff = Math.abs(illum.mag - item.mag);
         if (mag_diff > 1.0e-4) {
             console.log(`ERROR: Excessive magnitude error ${mag_diff}`);
@@ -131,7 +131,7 @@ function TestMaxMag(filename, body) {
         max_diff = Math.max(max_diff, diff_hours);
         date = date2;
     }
-    if (DebugMode) console.log(`JS TestMaxMag: ${lines.length} events, max error = ${max_diff.toFixed(3)} hours.`);
+    if (Verbose) console.log(`JS TestMaxMag: ${lines.length} events, max error = ${max_diff.toFixed(3)} hours.`);
     return true;
 }
 

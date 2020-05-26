@@ -1,2 +1,2 @@
 #!/bin/bash
-./verify_clean && ./run && ./verify_clean && git push
+./verify_clean && ./run $1 && ./verify_clean && git push

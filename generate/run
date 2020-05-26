@@ -11,7 +11,7 @@ IsInstalled()
     return $?
 }
 
-[[ "$1" == "" || "$1" == "-d" ]] || Fail "Invalid command line options."
+[[ "$1" == "" || "$1" == "-v" ]] || Fail "Invalid command line options."
 
 OUTDIR=../source
 EPHFILE=lnxp1600p2200.405

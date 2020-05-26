@@ -1,7 +1,7 @@
 'use strict';
 const fs = require('fs');
 const Astronomy = require('../source/js/astronomy.min.js');
-const DebugMode = (process.argv.length > 2 && process.argv[2] === '-d');
+const Verbose = (process.argv.length > 2 && process.argv[2] === '-v');
 
 function CompareMatrices(caller, a, b, tolerance) {
     for (let i=0; i<3; ++i) {
@@ -70,7 +70,7 @@ function Test_EQJ_ECL() {
 
     /* Use the existing Astronomy.Ecliptic() to calculate ecliptic vector and angles. */
     const ecl = Astronomy.Ecliptic(ev.x, ev.y, ev.z);
-    if (DebugMode) console.log(`JS Test_EQJ_ECL ecl = (${ecl.ex}, ${ecl.ey}, ${ecl.ez})`);
+    if (Verbose) console.log(`JS Test_EQJ_ECL ecl = (${ecl.ex}, ${ecl.ey}, ${ecl.ez})`);
 
     /* Now compute the same vector via rotation matrix. */
     const ee = Astronomy.RotateVector(r, ev);
@@ -78,7 +78,7 @@ function Test_EQJ_ECL() {
     const dy = ee.y - ecl.ey;
     const dz = ee.z - ecl.ez;
     const diff = Math.sqrt(dx*dx + dy*dy + dz*dz);
-    if (DebugMode) console.log(`JS Test_EQJ_ECL ee = (${ee.x}, ${ee.y}, ${ee.z}); diff = ${diff}`);
+    if (Verbose) console.log(`JS Test_EQJ_ECL ee = (${ee.x}, ${ee.y}, ${ee.z}); diff = ${diff}`);
     if (diff > 2.0e-15)
         throw 'Test_EQJ_ECL: EXCESSIVE VECTOR ERROR';
 
@@ -86,7 +86,7 @@ function Test_EQJ_ECL() {
     const ir = Astronomy.Rotation_ECL_EQJ();
     const et = Astronomy.RotateVector(ir, ee);
     const idiff = VectorDiff(et, ev);
-    if (DebugMode) console.log(`JS Test_EQJ_ECL ev diff = ${idiff}`);
+    if (Verbose) console.log(`JS Test_EQJ_ECL ev diff = ${idiff}`);
     if (idiff > 2.0e-16)
         throw 'Test_EQJ_ECL: EXCESSIVE REVERSE ROTATION ERROR';
 }
@@ -115,7 +115,7 @@ function Test_EQJ_EQD(body) {
     const ra_diff = Math.abs(equcheck.ra - eqdate.ra);
     const dec_diff = Math.abs(equcheck.dec - eqdate.dec);
     const dist_diff = Math.abs(equcheck.dist - eqdate.dist);
-    if (DebugMode) console.log(`JS Test_EQJ_EQD: ${body} ra=${eqdate.ra}, dec=${eqdate.dec}, dist=${eqdate.dist}, ra_diff=${ra_diff}, dec_diff=${dec_diff}, dist_diff=${dist_diff}`);
+    if (Verbose) console.log(`JS Test_EQJ_EQD: ${body} ra=${eqdate.ra}, dec=${eqdate.dec}, dist=${eqdate.dist}, ra_diff=${ra_diff}, dec_diff=${dec_diff}, dist_diff=${dist_diff}`);
     if (ra_diff > 1.0e-14 || dec_diff > 1.0e-14 || dist_diff > 4.0e-15)
         throw 'Test_EQJ_EQD: EXCESSIVE ERROR';
 
@@ -123,7 +123,7 @@ function Test_EQJ_EQD(body) {
     const ir = Astronomy.Rotation_EQD_EQJ(time);
     const t2000 = Astronomy.RotateVector(ir, vdate);
     const diff = VectorDiff(t2000, v2000);
-    if (DebugMode) console.log(`JS Test_EQJ_EQD: ${body} inverse diff = ${diff}`);
+    if (Verbose) console.log(`JS Test_EQJ_EQD: ${body} inverse diff = ${diff}`);
     if (diff > 5.0e-15)
         throw 'Test_EQJ_EQD: EXCESSIVE INVERSE ERROR';
 }
@@ -133,7 +133,7 @@ function Test_EQD_HOR(body) {
     const time = Astronomy.MakeTime(new Date('1970-12-13T05:15:00Z'));
     const observer = Astronomy.MakeObserver(-37, +45, 0);
     const eqd = Astronomy.Equator(body, time, observer, true, true);
-    if (DebugMode) console.log(`JS Test_EQD_HOR ${body}: OFDATE ra=${eqd.ra}, dec=${eqd.dec}`);
+    if (Verbose) console.log(`JS Test_EQD_HOR ${body}: OFDATE ra=${eqd.ra}, dec=${eqd.dec}`);
     const hor = Astronomy.Horizon(time, observer, eqd.ra, eqd.dec, 'normal');
 
     /* Calculate the position of the body as an equatorial vector of date. */
@@ -150,14 +150,14 @@ function Test_EQD_HOR(body) {
     const diff_alt = Math.abs(xsphere.lat - hor.altitude);
     const diff_az = Math.abs(xsphere.lon - hor.azimuth);
 
-    if (DebugMode) console.log(`JS Test_EQD_HOR ${body}: trusted alt=${hor.altitude}, az=${hor.azimuth}; test alt=${xsphere.lat}, az=${xsphere.lon}; diff_alt=${diff_alt}, diff_az=${diff_az}`);
+    if (Verbose) console.log(`JS Test_EQD_HOR ${body}: trusted alt=${hor.altitude}, az=${hor.azimuth}; test alt=${xsphere.lat}, az=${xsphere.lon}; diff_alt=${diff_alt}, diff_az=${diff_az}`);
     if (diff_alt > 4.0e-14 || diff_az > 1.0e-13)
         throw 'Test_EQD_HOR: EXCESSIVE HORIZONTAL ERROR.';
 
     /* Confirm that we can convert back to horizontal vector. */
     const check_hor = Astronomy.VectorFromHorizon(xsphere, time, 'normal');
     let diff = VectorDiff(check_hor, vec_hor);
-    if (DebugMode) console.log(`JS Test_EQD_HOR ${body}: horizontal recovery: diff = ${diff}`);
+    if (Verbose) console.log(`JS Test_EQD_HOR ${body}: horizontal recovery: diff = ${diff}`);
     if (diff > 2.0e-15)
         throw 'Test_EQD_HOR: EXCESSIVE ERROR IN HORIZONTAL RECOVERY.';
 
@@ -165,7 +165,7 @@ function Test_EQD_HOR(body) {
     const irot = Astronomy.Rotation_HOR_EQD(time, observer);
     const check_eqd = Astronomy.RotateVector(irot, vec_hor);
     diff = VectorDiff(check_eqd, vec_eqd);
-    if (DebugMode) console.log(`JS Test_EQD_HOR ${body}: OFDATE inverse rotation diff = ${diff}`);
+    if (Verbose) console.log(`JS Test_EQD_HOR ${body}: OFDATE inverse rotation diff = ${diff}`);
     if (diff > 2.0e-15)
         throw 'Test_EQD_HOR: EXCESSIVE OFDATE INVERSE HORIZONTAL ERROR.';
 
@@ -175,7 +175,7 @@ function Test_EQD_HOR(body) {
     const yrot = Astronomy.Rotation_HOR_EQJ(time, observer);
     const check_eqj = Astronomy.RotateVector(yrot, vec_hor);
     diff = VectorDiff(check_eqj, vec_eqj);
-    if (DebugMode) console.log(`JS Test_EQD_HOR ${body}: J2000 inverse rotation diff = ${diff}`);
+    if (Verbose) console.log(`JS Test_EQD_HOR ${body}: J2000 inverse rotation diff = ${diff}`);
     if (diff > 6.0e-15)
         throw 'Test_EQD_HOR: EXCESSIVE J2000 INVERSE HORIZONTAL ERROR.';
 
@@ -183,7 +183,7 @@ function Test_EQD_HOR(body) {
     const zrot = Astronomy.Rotation_EQJ_HOR(time, observer);
     const another_hor = Astronomy.RotateVector(zrot, vec_eqj);
     diff = VectorDiff(another_hor, vec_hor);
-    if (DebugMode) console.log(`JS Test_EQD_HOR ${body}: EQJ inverse rotation diff = ${diff}`);
+    if (Verbose) console.log(`JS Test_EQD_HOR ${body}: EQJ inverse rotation diff = ${diff}`);
     if (diff > 3.0e-15)
         throw 'Test_EQD_HOR: EXCESSIVE EQJ INVERSE HORIZONTAL ERROR.';
 }
@@ -254,7 +254,7 @@ function Test_RotRoundTrip() {
    CheckCycle('eqj_hor, hor_eqd, eqd_eqj', eqj_hor, hor_eqd, eqd_eqj);     /* excluded corner = ECL */
    CheckCycle('ecl_eqd, eqd_hor, hor_ecl', ecl_eqd, eqd_hor, hor_ecl);     /* excluded corner = EQJ */
 
-   if (DebugMode) console.log('JS Test_RotRoundTrip: PASS');
+   if (Verbose) console.log('JS Test_RotRoundTrip: PASS');
 }
 
 function RotationTest() {
@@ -287,7 +287,7 @@ function RefractionTest() {
         if (diff > 2.0e-14)
             throw `JS RefractionTest: alt=${alt}, refr=${refr}, diff=${diff}`;
     }
-    if (DebugMode) console.log('JS RefractionTest: PASS');
+    if (Verbose) console.log('JS RefractionTest: PASS');
 }
 
 RotationTest();

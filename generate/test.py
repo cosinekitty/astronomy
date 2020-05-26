@@ -8,10 +8,10 @@ import astronomy
 
 #-----------------------------------------------------------------------------------------------------------
 
-DebugMode = False
+Verbose = False
 
 def Debug(text):
-    if DebugMode:
+    if Verbose:
         print(text)
 
 def AssertGoodTime(text, correct):
@@ -1239,9 +1239,9 @@ def Test_LunarEclipse():
 #-----------------------------------------------------------------------------------------------------------
 
 if __name__ == '__main__':
-    if len(sys.argv) > 1 and sys.argv[1] == '-d':
+    if len(sys.argv) > 1 and sys.argv[1] == '-v':
         sys.argv = sys.argv[1:]
-        DebugMode = True
+        Verbose = True
 
     if len(sys.argv) == 2:
         if sys.argv[1] == 'time':
