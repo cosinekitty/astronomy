@@ -867,12 +867,12 @@ namespace CosineKitty
     /// The `kind` field thus holds `EclipseKind.Penumbral`, `EclipseKind.Partial`,
     /// or `EclipseKind.Total`, depending on the kind of lunar eclipse found.
     ///
-    /// Field `center` holds the date and time of the center of the eclipse, when it is at its peak.
+    /// Field `peak` holds the date and time of the center of the eclipse, when it is at its peak.
     ///
     /// Fields `sd_penum`, `sd_partial`, and `sd_total` hold the semi-duration of each phase
     /// of the eclipse, which is half of the amount of time the eclipse spends in each
     /// phase (expressed in minutes), or 0 if the eclipse never reaches that phase.
-    /// By converting from minutes to days, and subtracting/adding with `center`, the caller
+    /// By converting from minutes to days, and subtracting/adding with `peak`, the caller
     /// may determine the date and time of the beginning/end of each eclipse phase.
     /// </remarks>
     public struct LunarEclipseInfo
@@ -881,7 +881,7 @@ namespace CosineKitty
         public EclipseKind kind;
 
         /// <summary>The time of the eclipse at its peak.</summary>
-        public AstroTime center;
+        public AstroTime peak;
 
         /// <summary>The semi-duration of the penumbral phase in minutes.</summary>
         public double sd_penum;
@@ -892,10 +892,10 @@ namespace CosineKitty
         /// <summary>The semi-duration of the total phase in minutes, or 0.0 if none.</summary>
         public double sd_total;
 
-        internal LunarEclipseInfo(EclipseKind kind, AstroTime center, double sd_penum, double sd_partial, double sd_total)
+        internal LunarEclipseInfo(EclipseKind kind, AstroTime peak, double sd_penum, double sd_partial, double sd_total)
         {
             this.kind = kind;
-            this.center = center;
+            this.peak = peak;
             this.sd_penum = sd_penum;
             this.sd_partial = sd_partial;
             this.sd_total = sd_total;

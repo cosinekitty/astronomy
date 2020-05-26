@@ -35,27 +35,27 @@ function FormatDate(t) {
 
 function PrintEclipse(e) {
     // Calculate beginning/ending of different phases
-    // of an eclipse by subtracting/adding the center time
+    // of an eclipse by subtracting/adding the peak time
     // with the number of minutes indicated by the "semi-duration"
     // fields sd_partial and sd_total.
     const MINUTES_PER_DAY = 24 * 60;
 
-    const p1 = e.center.AddDays(-e.sd_partial / MINUTES_PER_DAY);
+    const p1 = e.peak.AddDays(-e.sd_partial / MINUTES_PER_DAY);
     console.log(`${FormatDate(p1)} - Partial eclipse begins.`);
 
     if (e.sd_total > 0) {
-        const t1 = e.center.AddDays(-e.sd_total / MINUTES_PER_DAY);
+        const t1 = e.peak.AddDays(-e.sd_total / MINUTES_PER_DAY);
         console.log(`${FormatDate(t1)} - Total eclipse begins.`);
     }
 
-    console.log(`${FormatDate(e.center)} - Peak of ${e.kind} eclipse.`);
+    console.log(`${FormatDate(e.peak)} - Peak of ${e.kind} eclipse.`);
 
     if (e.sd_total > 0) {
-        const t2 = e.center.AddDays(+e.sd_total / MINUTES_PER_DAY);
+        const t2 = e.peak.AddDays(+e.sd_total / MINUTES_PER_DAY);
         console.log(`${FormatDate(t2)} - Total eclipse ends.`);
     }
 
-    const p2 = e.center.AddDays(+e.sd_partial / MINUTES_PER_DAY);
+    const p2 = e.peak.AddDays(+e.sd_partial / MINUTES_PER_DAY);
     console.log(`${FormatDate(p2)} - Partial eclipse ends.`);
     console.log('');
 }
@@ -71,7 +71,7 @@ function Demo() {
                 break;
             }
         }
-        eclipse = Astronomy.NextLunarEclipse(eclipse.center);
+        eclipse = Astronomy.NextLunarEclipse(eclipse.peak);
     }
 }
 

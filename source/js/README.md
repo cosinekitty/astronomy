@@ -494,12 +494,12 @@ Total eclipses occur when the entire Moon passes into the Earth's umbra.
 The `kind` field thus holds one of the strings `"penumbral"`, `"partial"`,
 or `"total"`, depending on the kind of lunar eclipse found.
 
-Field `center` holds the date and time of the center of the eclipse, when it is at its peak.
+Field `peak` holds the date and time of the peak of the eclipse, when it is at its peak.
 
 Fields `sd_penum`, `sd_partial`, and `sd_total` hold the semi-duration of each phase
 of the eclipse, which is half of the amount of time the eclipse spends in each
 phase (expressed in minutes), or 0 if the eclipse never reaches that phase.
-By converting from minutes to days, and subtracting/adding with `center`, the caller
+By converting from minutes to days, and subtracting/adding with `peak`, the caller
 may determine the date and time of the beginning/end of each eclipse phase.
 
 **Kind**: static class of [<code>Astronomy</code>](#Astronomy)  
@@ -508,7 +508,7 @@ may determine the date and time of the beginning/end of each eclipse phase.
 | Name | Type | Description |
 | --- | --- | --- |
 | kind | <code>string</code> | The type of lunar eclipse found. |
-| center | [<code>AstroTime</code>](#Astronomy.AstroTime) | The time of the eclipse at its peak. |
+| peak | [<code>AstroTime</code>](#Astronomy.AstroTime) | The time of the eclipse at its peak. |
 | sd_penum | <code>number</code> | The semi-duration of the penumbral phase in minutes. |
 | sd_partial | <code>number</code> | The semi-duration of the penumbral phase in minutes, or 0.0 if none. |
 | sd_total | <code>number</code> | The semi-duration of the penumbral phase in minutes, or 0.0 if none. |

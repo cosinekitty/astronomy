@@ -1647,8 +1647,8 @@ namespace csharp_test
                             return 1;
                         }
 
-                        // Check eclipse center.
-                        double diff_days = eclipse.center.ut - peak_time.ut;
+                        // Check eclipse peak time.
+                        double diff_days = eclipse.peak.ut - peak_time.ut;
 
                         // Tolerate missing penumbral eclipses - skip to next input line without calculating next eclipse.
                         if (partial_minutes == 0.0 && diff_days > 20.0)
@@ -1670,9 +1670,9 @@ namespace csharp_test
 
                         if (diff_minutes > diff_limit)
                         {
-                            Console.WriteLine("C# LunarEclipseTest expected center: {0}", peak_time);
-                            Console.WriteLine("C# LunarEclipseTest found    center: {1}", eclipse.center);
-                            Console.WriteLine("C# LunarEclipseTest({0} line {1}): EXCESSIVE center time error = {2} minutes ({3} days).", filename, lnum, diff_minutes, diff_days);
+                            Console.WriteLine("C# LunarEclipseTest expected peak: {0}", peak_time);
+                            Console.WriteLine("C# LunarEclipseTest found    peak: {1}", eclipse.peak);
+                            Console.WriteLine("C# LunarEclipseTest({0} line {1}): EXCESSIVE peak time error = {2} minutes ({3} days).", filename, lnum, diff_minutes, diff_days);
                             return 1;
                         }
 
@@ -1711,7 +1711,7 @@ namespace csharp_test
 
                         /* calculate for next iteration */
 
-                        eclipse = Astronomy.NextLunarEclipse(eclipse.center);
+                        eclipse = Astronomy.NextLunarEclipse(eclipse.peak);
                     }
                     Console.WriteLine("C# LunarEclipseTest: PASS (verified {0}, skipped {1}, max_diff_minutes = {2}, avg_diff_minutes = {3}, moon calcs = {4})", lnum, skip_count, max_diff_minutes, (sum_diff_minutes / diff_count), Astronomy.CalcMoonCount);
                 }

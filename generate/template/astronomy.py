@@ -4189,19 +4189,19 @@ class LunarEclipseInfo:
     The `kind` field thus holds one of the values `EclipseKind.Penumbral`, `EclipseKind.Partial`,
     or `EclipseKind.Total`, depending on the kind of lunar eclipse found.
 
-    Field `center` holds the date and time of the center of the eclipse, when it is at its peak.
+    Field `peak` holds the date and time of the peak of the eclipse, when it is at its peak.
 
     Fields `sd_penum`, `sd_partial`, and `sd_total` hold the semi-duration of each phase
     of the eclipse, which is half of the amount of time the eclipse spends in each
     phase (expressed in minutes), or 0 if the eclipse never reaches that phase.
-    By converting from minutes to days, and subtracting/adding with `center`, the caller
+    By converting from minutes to days, and subtracting/adding with `peak`, the caller
     may determine the date and time of the beginning/end of each eclipse phase.
 
     Attributes
     ----------
     kind : string
          The type of lunar eclipse found.
-    center : Time
+    peak : Time
          The time of the eclipse at its peak.
     sd_penum : float
          The semi-duration of the penumbral phase in minutes.
@@ -4210,9 +4210,9 @@ class LunarEclipseInfo:
     sd_total : float
          The semi-duration of the penumbral phase in minutes, or 0.0 if none.
     """
-    def __init__(self, kind, center, sd_penum, sd_partial, sd_total):
+    def __init__(self, kind, peak, sd_penum, sd_partial, sd_total):
         self.kind = kind
-        self.center = center
+        self.peak = peak
         self.sd_penum = sd_penum
         self.sd_partial = sd_partial
         self.sd_total = sd_total
@@ -4238,7 +4238,7 @@ def SearchLunarEclipse(startTime):
     See #LunarEclipseInfo for more information.
     To find a series of lunar eclipses, call this function once,
     then keep calling #NextLunarEclipse as many times as desired,
-    passing in the `center` value returned from the previous call.
+    passing in the `peak` value returned from the previous call.
 
     Parameters
     ----------
@@ -4296,7 +4296,7 @@ def NextLunarEclipse(prevEclipseTime):
 
      After using #SearchLunarEclipse to find the first lunar eclipse
      in a series, you can call this function to find the next consecutive lunar eclipse.
-     Pass in the `center` value from the #LunarEclipseInfo returned by the
+     Pass in the `peak` value from the #LunarEclipseInfo returned by the
      previous call to `SearchLunarEclipse` or `NextLunarEclipse`
      to find the next lunar eclipse.
 

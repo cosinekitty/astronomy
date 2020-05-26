@@ -54,8 +54,8 @@ function TestLunarEclipse() {
             return 1;
         }
 
-        // Check eclipse center.
-        let diff_days = eclipse.center.ut - peak_time.ut;
+        // Check eclipse peak.
+        let diff_days = eclipse.peak.ut - peak_time.ut;
 
         // Tolerate missing penumbral eclipses - skip to next input line without calculating next eclipse.
         if (partial_minutes == 0.0 && diff_days > 20.0) {
@@ -68,9 +68,9 @@ function TestLunarEclipse() {
         ++diff_count;
 
         if (diff_minutes > diff_limit) {
-            console.error(`JS LunarEclipseTest expected center: ${peak_time}`);
-            console.error(`JS LunarEclipseTest found    center: ${eclipse.center}`);
-            console.error(`JS LunarEclipseTest(${filename} line ${lnum}): EXCESSIVE center time error = ${diff_minutes} minutes (${diff_days} days).`);
+            console.error(`JS LunarEclipseTest expected peak: ${peak_time}`);
+            console.error(`JS LunarEclipseTest found    peak: ${eclipse.peak}`);
+            console.error(`JS LunarEclipseTest(${filename} line ${lnum}): EXCESSIVE peak time error = ${diff_minutes} minutes (${diff_days} days).`);
             return 1;
         }
 
@@ -107,7 +107,7 @@ function TestLunarEclipse() {
 
         /* calculate for next iteration */
 
-        eclipse = Astronomy.NextLunarEclipse(eclipse.center);
+        eclipse = Astronomy.NextLunarEclipse(eclipse.peak);
     }
     console.log(`JS LunarEclipseTest: PASS (verified ${lnum}, skipped ${skip_count}, max_diff_minutes = ${max_diff_minutes}, avg_diff_minutes = ${sum_diff_minutes / diff_count}, moon calcs = ${Astronomy.CalcMoonCount})`);
     return 0;

@@ -17,20 +17,20 @@ from astronomy import Time, SearchLunarEclipse, NextLunarEclipse, EclipseKind
 
 def PrintEclipse(e):
     # Calculate beginning/ending of different phases
-    # of an eclipse by subtracting/adding the center time
+    # of an eclipse by subtracting/adding the peak time
     # with the number of minutes indicated by the "semi-duration"
     # fields sd_partial and sd_total.
     MINUTES_PER_DAY = 24 * 60
-    p1 = e.center.AddDays(-e.sd_partial / MINUTES_PER_DAY)
+    p1 = e.peak.AddDays(-e.sd_partial / MINUTES_PER_DAY)
     print('{}  Partial eclipse begins.'.format(p1))
     if e.sd_total > 0.0:
-        t1 = e.center.AddDays(-e.sd_total / MINUTES_PER_DAY)
+        t1 = e.peak.AddDays(-e.sd_total / MINUTES_PER_DAY)
         print('{}  Total eclipse begins.'.format(t1))
-    print('{}  Peak of {} eclipse.'.format(e.center, e.kind.name.lower()))
+    print('{}  Peak of {} eclipse.'.format(e.peak, e.kind.name.lower()))
     if e.sd_total > 0.0:
-        t2 = e.center.AddDays(+e.sd_total / MINUTES_PER_DAY)
+        t2 = e.peak.AddDays(+e.sd_total / MINUTES_PER_DAY)
         print('{}  Total eclipse ends.'.format(t2))
-    p2 = e.center.AddDays(+e.sd_partial / MINUTES_PER_DAY)
+    p2 = e.peak.AddDays(+e.sd_partial / MINUTES_PER_DAY)
     print('{}  Partial eclipse ends.'.format(p2))
     print()
 
@@ -50,7 +50,7 @@ def main(args):
         if e.kind != EclipseKind.Penumbral:
             count += 1
             PrintEclipse(e)
-        e = NextLunarEclipse(e.center)
+        e = NextLunarEclipse(e.peak)
 
 
 if __name__ == '__main__':

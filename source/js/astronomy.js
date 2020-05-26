@@ -5666,12 +5666,12 @@ Astronomy.Constellation = function(ra, dec) {
  * The `kind` field thus holds one of the strings `"penumbral"`, `"partial"`,
  * or `"total"`, depending on the kind of lunar eclipse found.
  *
- * Field `center` holds the date and time of the center of the eclipse, when it is at its peak.
+ * Field `peak` holds the date and time of the peak of the eclipse, when it is at its peak.
  *
  * Fields `sd_penum`, `sd_partial`, and `sd_total` hold the semi-duration of each phase
  * of the eclipse, which is half of the amount of time the eclipse spends in each
  * phase (expressed in minutes), or 0 if the eclipse never reaches that phase.
- * By converting from minutes to days, and subtracting/adding with `center`, the caller
+ * By converting from minutes to days, and subtracting/adding with `peak`, the caller
  * may determine the date and time of the beginning/end of each eclipse phase.
  *
  * @class
@@ -5680,7 +5680,7 @@ Astronomy.Constellation = function(ra, dec) {
  * @property {string} kind
  *      The type of lunar eclipse found.
  *
- * @property {Astronomy.AstroTime} center
+ * @property {Astronomy.AstroTime} peak
  *      The time of the eclipse at its peak.
  *
  * @property {number} sd_penum
@@ -5694,9 +5694,9 @@ Astronomy.Constellation = function(ra, dec) {
  *
  */
 class LunarEclipseInfo {
-    constructor(kind, center, sd_penum, sd_partial, sd_total) {
+    constructor(kind, peak, sd_penum, sd_partial, sd_total) {
         this.kind = kind;
-        this.center = center;
+        this.peak = peak;
         this.sd_penum = sd_penum;
         this.sd_partial = sd_partial;
         this.sd_total = sd_total;

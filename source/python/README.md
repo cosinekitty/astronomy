@@ -307,17 +307,17 @@ Partial eclipses occur when part, but not all, of the Moon touches the Earth's u
 Total eclipses occur when the entire Moon passes into the Earth's umbra.
 The `kind` field thus holds one of the values `EclipseKind.Penumbral`, `EclipseKind.Partial`,
 or `EclipseKind.Total`, depending on the kind of lunar eclipse found.
-Field `center` holds the date and time of the center of the eclipse, when it is at its peak.
+Field `peak` holds the date and time of the peak of the eclipse, when it is at its peak.
 Fields `sd_penum`, `sd_partial`, and `sd_total` hold the semi-duration of each phase
 of the eclipse, which is half of the amount of time the eclipse spends in each
 phase (expressed in minutes), or 0 if the eclipse never reaches that phase.
-By converting from minutes to days, and subtracting/adding with `center`, the caller
+By converting from minutes to days, and subtracting/adding with `peak`, the caller
 may determine the date and time of the beginning/end of each eclipse phase.
 
 | Type | Attribute | Description |
 | --- | --- | --- |
 | `string` | `kind` | The type of lunar eclipse found. |
-| [`Time`](#Time) | `center` | The time of the eclipse at its peak. |
+| [`Time`](#Time) | `peak` | The time of the eclipse at its peak. |
 | `float` | `sd_penum` | The semi-duration of the penumbral phase in minutes. |
 | `float` | `sd_partial` | The semi-duration of the penumbral phase in minutes, or 0.0 if none. |
 | `float` | `sd_total` | The semi-duration of the penumbral phase in minutes, or 0.0 if none. |
@@ -1238,7 +1238,7 @@ See [`SearchLunarApsis`](#SearchLunarApsis) for more details.
 
  After using [`SearchLunarEclipse`](#SearchLunarEclipse) to find the first lunar eclipse
  in a series, you can call this function to find the next consecutive lunar eclipse.
- Pass in the `center` value from the [`LunarEclipseInfo`](#LunarEclipseInfo) returned by the
+ Pass in the `peak` value from the [`LunarEclipseInfo`](#LunarEclipseInfo) returned by the
  previous call to `SearchLunarEclipse` or `NextLunarEclipse`
  to find the next lunar eclipse.
 
@@ -1705,7 +1705,7 @@ A lunar eclipse found may be penumbral, partial, or total.
 See [`LunarEclipseInfo`](#LunarEclipseInfo) for more information.
 To find a series of lunar eclipses, call this function once,
 then keep calling [`NextLunarEclipse`](#NextLunarEclipse) as many times as desired,
-passing in the `center` value returned from the previous call.
+passing in the `peak` value returned from the previous call.
 
 | Type | Parameter | Description |
 | --- | --- | --- |

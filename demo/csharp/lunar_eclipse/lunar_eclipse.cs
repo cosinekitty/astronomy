@@ -34,7 +34,7 @@ namespace lunar_eclipse
                     if (++count == 10)
                         break;
                 }
-                eclipse = Astronomy.NextLunarEclipse(eclipse.center);
+                eclipse = Astronomy.NextLunarEclipse(eclipse.peak);
             }
 
             return 0;
@@ -43,29 +43,29 @@ namespace lunar_eclipse
         static void PrintEclipse(LunarEclipseInfo eclipse)
         {
             // Calculate beginning/ending of different phases
-            // of an eclipse by subtracting/adding the center time
+            // of an eclipse by subtracting/adding the peak time
             // with the number of minutes indicated by the "semi-duration"
             // fields sd_partial and sd_total.
             const double MINUTES_PER_DAY = 24 * 60;
 
-            AstroTime p1 = eclipse.center.AddDays(-eclipse.sd_partial / MINUTES_PER_DAY);
+            AstroTime p1 = eclipse.peak.AddDays(-eclipse.sd_partial / MINUTES_PER_DAY);
             Console.WriteLine("{0}  Partial eclipse begins.", p1);
 
             if (eclipse.sd_total > 0.0)
             {
-                AstroTime t1 = eclipse.center.AddDays(-eclipse.sd_total / MINUTES_PER_DAY);
+                AstroTime t1 = eclipse.peak.AddDays(-eclipse.sd_total / MINUTES_PER_DAY);
                 Console.WriteLine("{0}  Total eclipse begins.", t1);
             }
 
-            Console.WriteLine("{0}  Peak of {1} eclipse.", eclipse.center, eclipse.kind.ToString().ToLowerInvariant());
+            Console.WriteLine("{0}  Peak of {1} eclipse.", eclipse.peak, eclipse.kind.ToString().ToLowerInvariant());
 
             if (eclipse.sd_total > 0.0)
             {
-                AstroTime t2 = eclipse.center.AddDays(+eclipse.sd_total / MINUTES_PER_DAY);
+                AstroTime t2 = eclipse.peak.AddDays(+eclipse.sd_total / MINUTES_PER_DAY);
                 Console.WriteLine("{0}  Total eclipse ends.", t2);
             }
 
-            AstroTime p2 = eclipse.center.AddDays(+eclipse.sd_partial / MINUTES_PER_DAY);
+            AstroTime p2 = eclipse.peak.AddDays(+eclipse.sd_partial / MINUTES_PER_DAY);
             Console.WriteLine("{0}  Partial eclipse ends.", p2);
             Console.WriteLine();
         }

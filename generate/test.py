@@ -1167,11 +1167,15 @@ def Test_LunarEclipse():
             elif eclipse.kind == astronomy.EclipseKind.Total:
                 valid = (eclipse.sd_penum > 0.0) and (eclipse.sd_partial > 0.0) and (eclipse.sd_total > 0.0)
             else:
+                print('PY Test_LunarEclipse({} line {}): invalid eclipse kind {}.'.format(filename, lnum, eclipse.kind))
+                return 1
+
+            if not valid:
                 print('PY Test_LunarEclipse({} line {}): invalid semidurations.'.format(filename, lnum))
                 return 1
 
-            # Check eclipse center.
-            diff_days = eclipse.center.ut - peak_time.ut
+            # Check eclipse peak time.
+            diff_days = eclipse.peak.ut - peak_time.ut
 
             # Tolerate missing penumbral eclipses - skip to next input line without calculating next eclipse.
             if partial_minutes == 0.0 and diff_days > 20.0:
@@ -1184,7 +1188,7 @@ def Test_LunarEclipse():
 
             if diff_minutes > diff_limit:
                 print("PY Test_LunarEclipse expected center: {}".format(peak_time))
-                print("PY Test_LunarEclipse found    center: {}".format(eclipse.center))
+                print("PY Test_LunarEclipse found    center: {}".format(eclipse.peak))
                 print("PY Test_LunarEclipse({} line {}): EXCESSIVE center time error = {} minutes ({} days).".format(filename, lnum, diff_minutes, diff_days))
                 return 1
 
@@ -1219,7 +1223,7 @@ def Test_LunarEclipse():
 
             # calculate for next iteration
 
-            eclipse = astronomy.NextLunarEclipse(eclipse.center)
+            eclipse = astronomy.NextLunarEclipse(eclipse.peak)
     print("PY Test_LunarEclipse: PASS (verified {}, skipped {}, max_diff_minutes = {}, avg_diff_minutes = {}, moon calcs = {})".format(lnum, skip_count, max_diff_minutes, (sum_diff_minutes / diff_count), astronomy._CalcMoonCount))
     return 0
 
