@@ -554,6 +554,21 @@ Certain values of the angle have conventional definitions:
 
 **Returns:** The angle as described above, a value in the range 0..360 degrees.
 
+<a name="Astronomy.NextGlobalSolarEclipse"></a>
+### Astronomy.NextGlobalSolarEclipse(prevEclipseTime) &#8658; [`GlobalSolarEclipseInfo`](#GlobalSolarEclipseInfo)
+
+**Searches for the next global solar eclipse in a series.**
+
+After using [`Astronomy.SearchGlobalSolarEclipse`](#Astronomy.SearchGlobalSolarEclipse) to find the first solar eclipse
+in a series, you can call this function to find the next consecutive solar eclipse.
+Pass in the `peak` value from the [`GlobalSolarEclipseInfo`](#GlobalSolarEclipseInfo) returned by the
+previous call to `Astronomy.SearchGlobalSolarEclipse` or `Astronomy.NextGlobalSolarEclipse`
+to find the next solar eclipse.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`AstroTime`](#AstroTime) | `prevEclipseTime` | A date and time near a new moon. Solar eclipse search will start at the next new moon. |
+
 <a name="Astronomy.NextLunarApsis"></a>
 ### Astronomy.NextLunarApsis(apsis) &#8658; [`ApsisInfo`](#ApsisInfo)
 
@@ -892,6 +907,22 @@ If the search does not converge within 20 iterations, it will throw an exception
 | `double` | `dt_tolerance_seconds` | Specifies an amount of time in seconds within which a bounded ascending root is considered accurate enough to stop. A typical value is 1 second. |
 
 **Returns:** If successful, returns an [`AstroTime`](#AstroTime) value indicating a date and time that is within `dt_tolerance_seconds` of an ascending root. If no ascending root is found, or more than one root exists in the time window `t1`..`t2`, the function returns `null`. If the search does not converge within 20 iterations, an exception is thrown.
+
+<a name="Astronomy.SearchGlobalSolarEclipse"></a>
+### Astronomy.SearchGlobalSolarEclipse(startTime) &#8658; [`GlobalSolarEclipseInfo`](#GlobalSolarEclipseInfo)
+
+**Searches for a solar eclipse visible anywhere on the Earth's surface.**
+
+This function finds the first solar eclipse that occurs after `startTime`.
+A solar eclipse found may be partial, annular, or total.
+See [`GlobalSolarEclipseInfo`](#GlobalSolarEclipseInfo) for more information.
+To find a series of solar eclipses, call this function once,
+then keep calling [`Astronomy.NextGlobalSolarEclipse`](#Astronomy.NextGlobalSolarEclipse) as many times as desired,
+passing in the `peak` value returned from the previous call.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`AstroTime`](#AstroTime) | `startTime` | The date and time for starting the search for a solar eclipse. |
 
 <a name="Astronomy.SearchHourAngle"></a>
 ### Astronomy.SearchHourAngle(body, observer, hourAngle, startTime) &#8658; [`HourAngleInfo`](#HourAngleInfo)
@@ -1617,6 +1648,44 @@ oriented with respect to the projection of the Earth's equator onto the sky.
 | `double` | `ra` | Right ascension in sidereal hours. |
 | `double` | `dec` | Declination in degrees. |
 | `double` | `dist` | Distance to the celestial body in AU. |
+
+---
+
+<a name="GlobalSolarEclipseInfo"></a>
+## `struct GlobalSolarEclipseInfo`
+
+**Reports the time and geographic location of the peak of a solar eclipse.**
+
+Returned by [`Astronomy.SearchGlobalSolarEclipse`](#Astronomy.SearchGlobalSolarEclipse) or [`Astronomy.NextGlobalSolarEclipse`](#Astronomy.NextGlobalSolarEclipse)
+to report information about a solar eclipse event.
+
+Field `peak` holds the date and time of the peak of the eclipse, defined as
+the instant when the axis of the Moon's shadow cone passes closest to the Earth's center.
+
+The eclipse is classified as partial, annular, or total, depending on the
+maximum amount of the Sun's disc obscured, as seen at the peak location
+on the surface of the Earth.
+
+The `kind` field thus holds `EclipseKind.Partial`, `EclipseKind.Annular`, or `EclipseKind.Total`.
+A total eclipse is when the peak observer sees the Sun completely blocked by the Moon.
+An annular eclipse is like a total eclipse, but the Moon is too far from the Earth's surface
+to completely block the Sun; instead, the Sun takes on a ring-shaped appearance.
+A partial eclipse is when the Moon blocks part of the Sun's disc, but nobody on the Earth
+observes either a total or annular eclipse.
+
+If `kind` is `EclipseKind.Total` or `EclipseKind.Annular`, the `latitude` and `longitude`
+fields give the geographic coordinates of the center of the Moon's shadow projected
+onto the daytime side of the Earth at the instant of the eclipse's peak.
+If `kind` has any other value, `latitude` and `longitude` are undefined and should
+not be used.
+
+| Type | Name | Description |
+| --- | --- | --- |
+| [`EclipseKind`](#EclipseKind) | `kind` | The type of solar eclipse found. |
+| [`AstroTime`](#AstroTime) | `peak` | The date and time of the eclipse at its peak. |
+| `double` | `distance` | The distance between the Sun/Moon shadow axis and the center of the Earth, in kilometers. |
+| `double` | `latitude` | The geographic latitude at the center of the peak eclipse shadow. |
+| `double` | `longitude` | The geographic longitude at the center of the peak eclipse shadow. |
 
 ---
 

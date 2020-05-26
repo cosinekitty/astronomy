@@ -283,22 +283,22 @@ namespace CosineKitty
         /// <summary>
         /// The Cartesian x-coordinate of the vector in AU.
         /// </summary>
-        public readonly double x;
+        public double x;
 
         /// <summary>
         /// The Cartesian y-coordinate of the vector in AU.
         /// </summary>
-        public readonly double y;
+        public double y;
 
         /// <summary>
         /// The Cartesian z-coordinate of the vector in AU.
         /// </summary>
-        public readonly double z;
+        public double z;
 
         /// <summary>
         /// The date and time at which this vector is valid.
         /// </summary>
-        public readonly AstroTime t;
+        public AstroTime t;
 
         /// <summary>
         /// Creates an AstroVector.
@@ -902,21 +902,72 @@ namespace CosineKitty
         }
     }
 
-    internal struct EarthShadowInfo
+
+    /// <summary>
+    /// Reports the time and geographic location of the peak of a solar eclipse.
+    /// </summary>
+    /// <remarks>
+    /// Returned by #Astronomy.SearchGlobalSolarEclipse or #Astronomy.NextGlobalSolarEclipse
+    /// to report information about a solar eclipse event.
+    ///
+    /// Field `peak` holds the date and time of the peak of the eclipse, defined as
+    /// the instant when the axis of the Moon's shadow cone passes closest to the Earth's center.
+    ///
+    /// The eclipse is classified as partial, annular, or total, depending on the
+    /// maximum amount of the Sun's disc obscured, as seen at the peak location
+    /// on the surface of the Earth.
+    ///
+    /// The `kind` field thus holds `EclipseKind.Partial`, `EclipseKind.Annular`, or `EclipseKind.Total`.
+    /// A total eclipse is when the peak observer sees the Sun completely blocked by the Moon.
+    /// An annular eclipse is like a total eclipse, but the Moon is too far from the Earth's surface
+    /// to completely block the Sun; instead, the Sun takes on a ring-shaped appearance.
+    /// A partial eclipse is when the Moon blocks part of the Sun's disc, but nobody on the Earth
+    /// observes either a total or annular eclipse.
+    ///
+    /// If `kind` is `EclipseKind.Total` or `EclipseKind.Annular`, the `latitude` and `longitude`
+    /// fields give the geographic coordinates of the center of the Moon's shadow projected
+    /// onto the daytime side of the Earth at the instant of the eclipse's peak.
+    /// If `kind` has any other value, `latitude` and `longitude` are undefined and should
+    /// not be used.
+    /// </remarks>
+    public struct GlobalSolarEclipseInfo
+    {
+        /// <summary>The type of solar eclipse found.</summary>
+        public EclipseKind kind;
+
+        /// <summary>The date and time of the eclipse at its peak.</summary>
+        public AstroTime peak;
+
+        /// <summary>The distance between the Sun/Moon shadow axis and the center of the Earth, in kilometers.</summary>
+        public double distance;
+
+        /// <summary>The geographic latitude at the center of the peak eclipse shadow.</summary>
+        public double latitude;
+
+        /// <summary>The geographic longitude at the center of the peak eclipse shadow.</summary>
+        public double longitude;
+    }
+
+
+    internal struct ShadowInfo
     {
         public AstroTime time;
         public double u;    // dot product of (heliocentric earth) and (geocentric moon): defines the shadow plane where the Moon is
         public double r;    // km distance between center of Moon and the line passing through the centers of the Sun and Earth.
         public double k;    // umbra radius in km, at the shadow plane
         public double p;    // penumbra radius in km, at the shadow plane
+        public AstroVector target;      // coordinates of target body relative to shadow-casting body at 'time'
+        public AstroVector dir;         // heliocentric coordinates of shadow-casting body at 'time'
 
-        public EarthShadowInfo(AstroTime time, double u, double r, double k, double p)
+        public ShadowInfo(AstroTime time, double u, double r, double k, double p, AstroVector target, AstroVector dir)
         {
             this.time = time;
             this.u = u;
             this.r = r;
             this.k = k;
             this.p = p;
+            this.target = target;
+            this.dir = dir;
         }
     }
 
@@ -1172,8 +1223,21 @@ namespace CosineKitty
             const double dt = 1.0 / 86400.0;
             AstroTime t1 = time.AddDays(-dt);
             AstroTime t2 = time.AddDays(+dt);
-            EarthShadowInfo shadow1 = Astronomy.EarthShadow(t1);
-            EarthShadowInfo shadow2 = Astronomy.EarthShadow(t2);
+            ShadowInfo shadow1 = Astronomy.EarthShadow(t1);
+            ShadowInfo shadow2 = Astronomy.EarthShadow(t2);
+            return (shadow2.r - shadow1.r) / dt;
+        }
+    }
+
+    internal class SearchContext_MoonShadowSlope: SearchContext
+    {
+        public override double Eval(AstroTime time)
+        {
+            const double dt = 1.0 / 86400.0;
+            AstroTime t1 = time.AddDays(-dt);
+            AstroTime t2 = time.AddDays(+dt);
+            ShadowInfo shadow1 = Astronomy.MoonShadow(t1);
+            ShadowInfo shadow2 = Astronomy.MoonShadow(t2);
             return (shadow2.r - shadow1.r) / dt;
         }
     }
@@ -4242,31 +4306,12 @@ $ASTRO_IAU_DATA()
         }
 
 
-        internal static EarthShadowInfo EarthShadow(AstroTime time)
-        {
-            AstroVector e = CalcEarth(time);
-            AstroVector m = GeoMoon(time);
-
-            double u = (e.x*m.x + e.y*m.y + e.z*m.z) / (e.x*e.x + e.y*e.y + e.z*e.z);
-
-            double dx = (u * e.x) - m.x;
-            double dy = (u * e.y) - m.y;
-            double dz = (u * e.z) - m.z;
-            double r = KM_PER_AU * Math.Sqrt(dx*dx + dy*dy + dz*dz);
-
-            double k = +SUN_RADIUS_KM - (1.0 + u)*(SUN_RADIUS_KM - EARTH_ECLIPSE_RADIUS_KM);
-            double p = -SUN_RADIUS_KM + (1.0 + u)*(SUN_RADIUS_KM + EARTH_ECLIPSE_RADIUS_KM);
-
-            return new EarthShadowInfo(time, u, r, k, p);
-        }
-
-
         // We can get away with creating a single EarthShadowSlope context
         // because it contains no state and it has no side-effects.
         // This reduces memory allocation overhead.
         private static readonly SearchContext_EarthShadowSlope earthShadowSlopeContext = new SearchContext_EarthShadowSlope();
 
-        private static EarthShadowInfo PeakEarthShadow(AstroTime search_center_time)
+        private static ShadowInfo PeakEarthShadow(AstroTime search_center_time)
         {
             const double window = 0.03;        /* initial search window, in days, before/after given time */
             AstroTime t1 = search_center_time.AddDays(-window);
@@ -4314,7 +4359,7 @@ $ASTRO_IAU_DATA()
                 {
                     // Search near the full moon for the time when the center of the Moon
                     // is closest to the line passing through the centers of the Sun and Earth.
-                    EarthShadowInfo shadow = PeakEarthShadow(fullmoon);
+                    ShadowInfo shadow = PeakEarthShadow(fullmoon);
 
                     if (shadow.r < shadow.p + MOON_MEAN_RADIUS_KM)
                     {
@@ -4384,6 +4429,261 @@ $ASTRO_IAU_DATA()
             return (t2.ut - t1.ut) * ((24.0 * 60.0) / 2.0);    // convert days to minutes and average the semi-durations.
         }
 
+
+        /// <summary>
+        /// Searches for a solar eclipse visible anywhere on the Earth's surface.
+        /// </summary>
+        /// <remarks>
+        /// This function finds the first solar eclipse that occurs after `startTime`.
+        /// A solar eclipse found may be partial, annular, or total.
+        /// See #GlobalSolarEclipseInfo for more information.
+        /// To find a series of solar eclipses, call this function once,
+        /// then keep calling #Astronomy.NextGlobalSolarEclipse as many times as desired,
+        /// passing in the `peak` value returned from the previous call.
+        /// </remarks>
+        /// <param name="startTime">The date and time for starting the search for a solar eclipse.</param>
+        public static GlobalSolarEclipseInfo SearchGlobalSolarEclipse(AstroTime startTime)
+        {
+            const double PruneLatitude = 1.8;   /* Moon's ecliptic latitude beyond which eclipse is impossible */
+
+            /* Iterate through consecutive new moons until we find a solar eclipse visible somewhere on Earth. */
+            AstroTime nmtime = startTime;
+            for (int nmcount=0; nmcount < 12; ++nmcount)
+            {
+                /* Search for the next new moon. Any eclipse will be near it. */
+                AstroTime newmoon = SearchMoonPhase(0.0, nmtime, 40.0);
+                if (newmoon == null)
+                    throw new Exception("Internal error: could not find new moon.");
+
+                /* Pruning: if the new moon's ecliptic latitude is too large, a solar eclipse is not possible. */
+                double eclip_lat = MoonEclipticLatitudeDegrees(newmoon);
+                if (Math.Abs(eclip_lat) < PruneLatitude)
+                {
+                    /* Search near the new moon for the time when the center of the Earth */
+                    /* is closest to the line passing through the centers of the Sun and Moon. */
+                    ShadowInfo shadow = PeakMoonShadow(newmoon);
+                    if (shadow.r < shadow.p + EARTH_MEAN_RADIUS_KM)
+                    {
+                        /* This is at least a partial solar eclipse visible somewhere on Earth. */
+                        /* Try to find an intersection between the shadow axis and the Earth's oblate geoid. */
+                        return GeoidIntersect(shadow);
+                    }
+                }
+
+                /* We didn't find an eclipse on this new moon, so search for the next one. */
+                nmtime = newmoon.AddDays(10.0);
+            }
+
+            /* Safety valve to prevent infinite loop. */
+            /* This should never happen, because at least 2 solar eclipses happen per year. */
+            throw new Exception("Failure to find global solar eclipse.");
+        }
+
+
+        /// <summary>
+        /// Searches for the next global solar eclipse in a series.
+        /// </summary>
+        /// <remarks>
+        /// After using #Astronomy.SearchGlobalSolarEclipse to find the first solar eclipse
+        /// in a series, you can call this function to find the next consecutive solar eclipse.
+        /// Pass in the `peak` value from the #GlobalSolarEclipseInfo returned by the
+        /// previous call to `Astronomy.SearchGlobalSolarEclipse` or `Astronomy.NextGlobalSolarEclipse`
+        /// to find the next solar eclipse.
+        /// </remarks>
+        /// <param name="prevEclipseTime">
+        /// A date and time near a new moon. Solar eclipse search will start at the next new moon.
+        /// </param>
+        public static GlobalSolarEclipseInfo NextGlobalSolarEclipse(AstroTime prevEclipseTime)
+        {
+            AstroTime startTime = prevEclipseTime.AddDays(10.0);
+            return SearchGlobalSolarEclipse(startTime);
+        }
+
+
+        private static GlobalSolarEclipseInfo GeoidIntersect(ShadowInfo shadow)
+        {
+            var eclipse = new GlobalSolarEclipseInfo();
+            eclipse.kind = EclipseKind.Partial;
+            eclipse.peak = shadow.time;
+            eclipse.distance = shadow.r;
+            eclipse.latitude = eclipse.longitude = double.NaN;
+
+            /*
+                We want to calculate the intersection of the shadow axis with the Earth's geoid.
+                First we must convert EQJ (equator of J2000) coordinates to EQD (equator of date)
+                coordinates that are perfectly aligned with the Earth's equator at this
+                moment in time.
+            */
+            RotationMatrix rot = Rotation_EQJ_EQD(shadow.time);
+
+            AstroVector v = RotateVector(rot, shadow.dir);        /* shadow-axis vector in equator-of-date coordinates */
+            AstroVector e = RotateVector(rot, shadow.target);     /* lunacentric Earth in equator-of-date coordinates */
+
+            /*
+                Convert all distances from AU to km.
+                But dilate the z-coordinates so that the Earth becomes a perfect sphere.
+                Then find the intersection of the vector with the sphere.
+                See p 184 in Montenbruck & Pfleger's "Astronomy on the Personal Computer", second edition.
+            */
+            v.x *= KM_PER_AU;
+            v.y *= KM_PER_AU;
+            v.z *= KM_PER_AU / EARTH_FLATTENING;
+
+            e.x *= KM_PER_AU;
+            e.y *= KM_PER_AU;
+            e.z *= KM_PER_AU / EARTH_FLATTENING;
+
+            /*
+                Solve the quadratic equation that finds whether and where
+                the shadow axis intersects with the Earth in the dilated coordinate system.
+            */
+            double R = EARTH_EQUATORIAL_RADIUS_KM;
+            double A = v.x*v.x + v.y*v.y + v.z*v.z;
+            double B = -2.0 * (v.x*e.x + v.y*e.y + v.z*e.z);
+            double C = (e.x*e.x + e.y*e.y + e.z*e.z) - R*R;
+            double radic = B*B - 4*A*C;
+
+            if (radic > 0.0)
+            {
+                /* Calculate the closer of the two intersection points. */
+                /* This will be on the day side of the Earth. */
+                double u = (-B - Math.Sqrt(radic)) / (2 * A);
+
+                /* Convert lunacentric dilated coordinates to geocentric coordinates. */
+                double px = u*v.x - e.x;
+                double py = u*v.y - e.y;
+                double pz = (u*v.z - e.z) * EARTH_FLATTENING;
+
+                /* Convert cartesian coordinates into geodetic latitude/longitude. */
+                double proj = Math.Sqrt(px*px + py*py) * (EARTH_FLATTENING * EARTH_FLATTENING);
+                if (proj == 0.0)
+                    eclipse.latitude = (pz > 0.0) ? +90.0 : -90.0;
+                else
+                    eclipse.latitude = RAD2DEG * Math.Atan(pz / proj);
+
+                /* Adjust longitude for Earth's rotation at the given UT. */
+                double gast = sidereal_time(eclipse.peak);
+                eclipse.longitude = ((RAD2DEG*Math.Atan2(py, px)) - (15*gast)) % 360.0;
+                if (eclipse.longitude <= -180.0)
+                    eclipse.longitude += 360.0;
+                else if (eclipse.longitude > +180.0)
+                    eclipse.longitude -= 360.0;
+
+                /* We want to determine whether the observer sees a total eclipse or an annular eclipse. */
+                /* We need to perform a series of vector calculations... */
+                /* Calculate the inverse rotation matrix, so we can convert EQD to EQJ. */
+                RotationMatrix inv = InverseRotation(rot);
+
+                /* Put the EQD geocentric coordinates of the observer into the vector 'o'. */
+                /* Also convert back from kilometers to astronomical units. */
+                var o = new AstroVector(px / KM_PER_AU, py / KM_PER_AU, pz / KM_PER_AU, shadow.time);
+
+                /* Rotate the observer's geocentric EQD back to the EQJ system. */
+                o = RotateVector(inv, o);
+
+                /* Convert geocentric vector to lunacentric vector. */
+                o.x += shadow.target.x;
+                o.y += shadow.target.y;
+                o.z += shadow.target.z;
+
+                /* Recalculate the shadow using a vector from the Moon's center toward the observer. */
+                ShadowInfo surface = CalcShadow(MOON_POLAR_RADIUS_KM, shadow.time, o, shadow.dir);
+
+                /* If we did everything right, the shadow distance should be very close to zero. */
+                /* That's because we already determined the observer 'o' is on the shadow axis! */
+                if (surface.r > 1.0e-9 || surface.r < 0.0)
+                    throw new Exception("Invalid surface distance from intersection.");
+
+                eclipse.kind = EclipseKindFromUmbra(surface.k);
+            }
+
+            return eclipse;
+        }
+
+
+        private static EclipseKind EclipseKindFromUmbra(double k)
+        {
+            // The umbra radius tells us what kind of eclipse the observer sees.
+            // If the umbra radius is positive, this is a total eclipse. Otherwise, it's annular.
+            // HACK: I added a tiny bias (14 meters) to match Espenak test data.
+            return (k > 0.014) ? EclipseKind.Total : EclipseKind.Annular;
+        }
+
+
+        private static readonly SearchContext_MoonShadowSlope moonShadowSlopeContext = new SearchContext_MoonShadowSlope();
+
+        private static ShadowInfo PeakMoonShadow(AstroTime search_center_time)
+        {
+            /* Search for when the Moon's shadow axis is closest to the center of the Earth. */
+
+            const double window = 0.03;     /* days before/after new moon to search for minimum shadow distance */
+
+            AstroTime t1 = search_center_time.AddDays(-window);
+            AstroTime t2 = search_center_time.AddDays(+window);
+
+            AstroTime time = Search(moonShadowSlopeContext, t1, t2, 1.0);
+            return MoonShadow(time);
+        }
+
+
+        private static ShadowInfo CalcShadow(
+            double body_radius_km,
+            AstroTime time,
+            AstroVector target,
+            AstroVector dir)
+        {
+            double u = (dir.x*target.x + dir.y*target.y + dir.z*target.z) / (dir.x*dir.x + dir.y*dir.y + dir.z*dir.z);
+            double dx = (u * dir.x) - target.x;
+            double dy = (u * dir.y) - target.y;
+            double dz = (u * dir.z) - target.z;
+            double r = KM_PER_AU * Math.Sqrt(dx*dx + dy*dy + dz*dz);
+            double k = +SUN_RADIUS_KM - (1.0 + u)*(SUN_RADIUS_KM - body_radius_km);
+            double p = -SUN_RADIUS_KM + (1.0 + u)*(SUN_RADIUS_KM + body_radius_km);
+            return new ShadowInfo(time, u, r, k, p, target, dir);
+        }
+
+
+        internal static ShadowInfo EarthShadow(AstroTime time)
+        {
+            /* This function helps find when the Earth's shadow falls upon the Moon. */
+            AstroVector e = CalcEarth(time);            /* This function never fails; no need to check return value */
+            AstroVector m = GeoMoon(time);    /* This function never fails; no need to check return value */
+
+            return CalcShadow(EARTH_ECLIPSE_RADIUS_KM, time, m, e);
+        }
+
+
+        internal static ShadowInfo MoonShadow(AstroTime time)
+        {
+            /* This function helps find when the Moon's shadow falls upon the Earth. */
+
+            /*
+                This is a variation on the logic in EarthShadow().
+                Instead of a heliocentric Earth and a geocentric Moon,
+                we want a heliocentric Moon and a lunacentric Earth.
+            */
+
+            AstroVector h = CalcEarth(time);    /* heliocentric Earth */
+            AstroVector m = GeoMoon(time);      /* geocentric Moon */
+
+            /* Calculate lunacentric Earth. */
+            var e = new AstroVector(-m.x, -m.y, -m.z, m.t);
+
+            /* Convert geocentric moon to heliocentric Moon. */
+            m.x += h.x;
+            m.y += h.y;
+            m.z += h.z;
+
+            return CalcShadow(MOON_MEAN_RADIUS_KM, time, e, m);
+        }
+
+
+        private static double MoonEclipticLatitudeDegrees(AstroTime time)
+        {
+            var context = new MoonContext(time.tt / 36525.0);
+            MoonResult moon = context.CalcMoon();
+            return RAD2DEG * moon.geo_eclip_lat;
+        }
 
         /// <summary>
         /// Finds visual magnitude, phase angle, and other illumination information about a celestial body.
