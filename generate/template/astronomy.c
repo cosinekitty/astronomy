@@ -5710,7 +5710,7 @@ static double ShadowSemiDurationMinutes(astro_time_t center_time, double radius_
  * See #astro_lunar_eclipse_t for more information.
  * To find a series of lunar eclipses, call this function once,
  * then keep calling #Astronomy_NextLunarEclipse as many times as desired,
- * passing in the `center` value returned from the previous call.
+ * passing in the `peak` value returned from the previous call.
  *
  * @param startTime
  *      The date and time for starting the search for a lunar eclipse.
@@ -6385,7 +6385,7 @@ astro_local_solar_eclipse_t Astronomy_SearchLocalSolarEclipse(
  *
  * After using #Astronomy_SearchLocalSolarEclipse to find the first solar eclipse
  * in a series, you can call this function to find the next consecutive solar eclipse.
- * Pass in the `center` value from the #astro_local_solar_eclipse_t returned by the
+ * Pass in the `peak` value from the #astro_local_solar_eclipse_t returned by the
  * previous call to `Astronomy_SearchLocalSolarEclipse` or `Astronomy_NextLocalSolarEclipse`
  * to find the next solar eclipse.
  *
