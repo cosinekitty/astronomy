@@ -629,28 +629,23 @@ astro_eclipse_event_t;
  * A total eclipse occurs when the Moon is close enough to the Earth and aligned with the
  * Sun just right to completely block all sunlight from reaching the observer.
  *
+ * There are 5 "event" fields, each of which contains a time and a solar altitude.
  * Field `peak` holds the date and time of the center of the eclipse, when it is at its peak.
- *
- * As a convenience to the caller, the `sunrise` and `sunset` fields indicate the
- * date and time of sunrise and sunset on the same day as the eclipse.
- * An eclipse may not be completely visible to the observer due to starting
- * before sunrise or ending after sunset. However, an eclipse will never be
- * reported that is invisible to the observer due to happening completely at night.
- *
  * The fields `partial_begin` and `partial_end` are always set, and indicate when
  * the eclipse begins/ends. If the eclipse reaches totality or becomes annular,
  * `total_begin` and `total_end` indicate when the total/annular phase begins/ends.
- * All four fields must be checked against `sunrise` and `sunset` to determine which
- * portion of the eclipse could be seen by the observer.
+ * When an event field is valid, the caller must also check its `altitude` field to
+ * see whether the Sun is above the horizon at that time. See #astro_eclipse_kind_t
+ * for more information.
  */
 typedef struct
 {
     astro_status_t          status;         /**< `ASTRO_SUCCESS` if this struct is valid; otherwise an error code. */
     astro_eclipse_kind_t    kind;           /**< The type of solar eclipse found: `ECLIPSE_PARTIAL`, `ECLIPSE_ANNULAR`, or `ECLIPSE_TOTAL`. */
     astro_eclipse_event_t   partial_begin;  /**< The time and Sun altitude at the beginning of the eclipse. */
-    astro_eclipse_event_t   total_begin;    /**< If annular or total eclipse, the time and Sun altitude when annular/total phase begins; otherwise invalid. */
-    astro_eclipse_event_t   peak;           /**< THe time and Sun altitude when the eclipse reaches its peak. */
-    astro_eclipse_event_t   total_end;      /**< If annular or total eclipse, the time and Sun altitude when annular/total phase ends; otherwise invalid. */
+    astro_eclipse_event_t   total_begin;    /**< If this is an annular or a total eclipse, the time and Sun altitude when annular/total phase begins; otherwise invalid. */
+    astro_eclipse_event_t   peak;           /**< The time and Sun altitude when the eclipse reaches its peak. */
+    astro_eclipse_event_t   total_end;      /**< If this is an annular or a total eclipse, the time and Sun altitude when annular/total phase ends; otherwise invalid. */
     astro_eclipse_event_t   partial_end;    /**< The time and Sun altitude at the end of the eclipse. */
 }
 astro_local_solar_eclipse_t;

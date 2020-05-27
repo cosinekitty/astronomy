@@ -949,6 +949,83 @@ namespace CosineKitty
     }
 
 
+    /// <summary>
+    /// Holds a time and the observed altitude of the Sun at that time.
+    /// </summary>
+    /// <remarks>
+    /// When reporting a solar eclipse observed at a specific location on the Earth
+    /// (a "local" solar eclipse), a series of events occur. In addition
+    /// to the time of each event, it is important to know the altitude of the Sun,
+    /// because each event may be invisible to the observer if the Sun is below
+    /// the horizon (i.e. it at night).
+    ///
+    /// If `altitude` is negative, the event is theoretical only; it would be
+    /// visible if the Earth were transparent, but the observer cannot actually see it.
+    /// If `altitude` is positive but less than a few degrees, visibility will be impaired by
+    /// atmospheric interference (sunrise or sunset conditions).
+    /// </remarks>
+    public struct EclipseEvent
+    {
+        /// <summary>The date and time of the event.</summary>
+        public AstroTime time;
+
+        /// <summary>
+        /// The angular altitude of the center of the Sun above/below the horizon, at `time`,
+        /// corrected for atmospheric refraction and expressed in degrees.
+        /// </summary>
+        public double altitude;
+    }
+
+
+    /// <summary>
+    /// Information about a solar eclipse as seen by an observer at a given time and geographic location.
+    /// </summary>
+    /// <remarks>
+    /// Returned by #Astronomy.SearchLocalSolarEclipse or #Astronomy.NextLocalSolarEclipse
+    /// to report information about a solar eclipse as seen at a given geographic location.
+    ///
+    /// When a solar eclipse is found, it is classified as partial, annular, or total.
+    /// The `kind` field thus holds `EclipseKind.Partial`, `EclipseKind.Annular`, or `EclipseKind.Total`.
+    /// A partial solar eclipse is when the Moon does not line up directly enough with the Sun
+    /// to completely block the Sun's light from reaching the observer.
+    /// An annular eclipse occurs when the Moon's disc is completely visible against the Sun
+    /// but the Moon is too far away to completely block the Sun's light; this leaves the
+    /// Sun with a ring-like appearance.
+    /// A total eclipse occurs when the Moon is close enough to the Earth and aligned with the
+    /// Sun just right to completely block all sunlight from reaching the observer.
+    ///
+    /// There are 5 "event" fields, each of which contains a time and a solar altitude.
+    /// Field `peak` holds the date and time of the center of the eclipse, when it is at its peak.
+    /// The fields `partial_begin` and `partial_end` are always set, and indicate when
+    /// the eclipse begins/ends. If the eclipse reaches totality or becomes annular,
+    /// `total_begin` and `total_end` indicate when the total/annular phase begins/ends.
+    /// When an event field is valid, the caller must also check its `altitude` field to
+    /// see whether the Sun is above the horizon at the time indicated by the `time` field.
+    /// See #EclipseEvent for more information.
+    /// </remarks>
+
+    public struct LocalSolarEclipseInfo
+    {
+        /// <summary>The type of solar eclipse found: `EclipseKind.Partial`, `EclipseKind.Annular`, or `EclipseKind.Total`.</summary>
+        public EclipseKind  kind;
+
+        /// <summary>The time and Sun altitude at the beginning of the eclipse.</summary>
+        public EclipseEvent partial_begin;
+
+        /// <summary>If this is an annular or a total eclipse, the time and Sun altitude when annular/total phase begins; otherwise invalid.</summary>
+        public EclipseEvent total_begin;
+
+        /// <summary>The time and Sun altitude when the eclipse reaches its peak.</summary>
+        public EclipseEvent peak;
+
+        /// <summary>If this is an annular or a total eclipse, the time and Sun altitude when annular/total phase ends; otherwise invalid.</summary>
+        public EclipseEvent total_end;
+
+        /// <summary>The time and Sun altitude at the end of the eclipse.</summary>
+        public EclipseEvent partial_end;
+    }
+
+
     internal struct ShadowInfo
     {
         public AstroTime time;
@@ -1241,6 +1318,47 @@ namespace CosineKitty
             return (shadow2.r - shadow1.r) / dt;
         }
     }
+
+    internal class SearchContext_LocalMoonShadowSlope: SearchContext
+    {
+        private readonly Observer observer;
+
+        public SearchContext_LocalMoonShadowSlope(Observer observer)
+        {
+            this.observer = observer;
+        }
+
+        public override double Eval(AstroTime time)
+        {
+            const double dt = 1.0 / 86400.0;
+            AstroTime t1 = time.AddDays(-dt);
+            AstroTime t2 = time.AddDays(+dt);
+            ShadowInfo shadow1 = Astronomy.LocalMoonShadow(t1, observer);
+            ShadowInfo shadow2 = Astronomy.LocalMoonShadow(t2, observer);
+            return (shadow2.r - shadow1.r) / dt;
+        }
+    }
+
+    internal class SearchContext_LocalEclipseTransition: SearchContext
+    {
+        private readonly Func<ShadowInfo,double> func;
+        private readonly double direction;
+        private readonly Observer observer;
+
+        public SearchContext_LocalEclipseTransition(Func<ShadowInfo,double> func, double direction, Observer observer)
+        {
+            this.func = func;
+            this.direction = direction;
+            this.observer = observer;
+        }
+
+        public override double Eval(AstroTime time)
+        {
+            ShadowInfo shadow = Astronomy.LocalMoonShadow(time, observer);
+            return direction * func(shadow);
+        }
+    }
+
 
     internal class PascalArray2<ElemType>
     {
@@ -4404,8 +4522,6 @@ namespace CosineKitty
             double angres = MoonPhase(startTime);
             int quarter = (1 + (int)Math.Floor(angres / 90.0)) % 4;
             AstroTime qtime = SearchMoonPhase(90.0 * quarter, startTime, 10.0);
-            if (qtime == null)
-                throw new Exception(string.Format("Internal error: could not find moon quarter {0} after {1}", quarter, startTime));
             return new MoonQuarterInfo(quarter, qtime);
         }
 
@@ -4463,8 +4579,8 @@ namespace CosineKitty
         /// </param>
         /// <returns>
         /// If successful, returns the date and time the moon reaches the phase specified by
-        /// `targetlon`. This function will return null if the phase does not occur within
-        /// `limitDays` of `startTime`; that is, if the search window is too small.
+        /// `targetlon`. This function will return throw an exception if the phase does not
+        /// occur within `limitDays` of `startTime`; that is, if the search window is too small.
         /// </returns>
         public static AstroTime SearchMoonPhase(double targetLon, AstroTime startTime, double limitDays)
         {
@@ -4495,7 +4611,10 @@ namespace CosineKitty
                 dt2 = limitDays;
             AstroTime t1 = startTime.AddDays(dt1);
             AstroTime t2 = startTime.AddDays(dt2);
-            return Search(moon_offset, t1, t2, 1.0);
+            AstroTime time = Search(moon_offset, t1, t2, 1.0);
+            if (time == null)
+                throw new Exception(string.Format("Could not find moon longitude {0} within {1} days of {2}", targetLon, limitDays, startTime));
+            return time;
         }
 
         /// <summary>
@@ -5549,8 +5668,6 @@ namespace CosineKitty
             {
                 // Search for the next full moon. Any eclipse will be near it.
                 AstroTime fullmoon = SearchMoonPhase(180.0, fmtime, 40.0);
-                if (fullmoon == null)
-                    throw new Exception("Internal error: could not find full moon.");
 
                 /*
                     Pruning: if the full Moon's ecliptic latitude is too large,
@@ -5656,8 +5773,6 @@ namespace CosineKitty
             {
                 /* Search for the next new moon. Any eclipse will be near it. */
                 AstroTime newmoon = SearchMoonPhase(0.0, nmtime, 40.0);
-                if (newmoon == null)
-                    throw new Exception("Internal error: could not find new moon.");
 
                 /* Pruning: if the new moon's ecliptic latitude is too large, a solar eclipse is not possible. */
                 double eclip_lat = MoonEclipticLatitudeDegrees(newmoon);
@@ -5821,14 +5936,25 @@ namespace CosineKitty
             /* Search for when the Moon's shadow axis is closest to the center of the Earth. */
 
             const double window = 0.03;     /* days before/after new moon to search for minimum shadow distance */
-
             AstroTime t1 = search_center_time.AddDays(-window);
             AstroTime t2 = search_center_time.AddDays(+window);
-
             AstroTime time = Search(moonShadowSlopeContext, t1, t2, 1.0);
             return MoonShadow(time);
         }
 
+        private static ShadowInfo PeakLocalMoonShadow(AstroTime search_center_time, Observer observer)
+        {
+            /*
+                Search for the time near search_center_time that the Moon's shadow comes
+                closest to the given observer.
+            */
+            const double window = 1.00;     /* FIXFIXFIX: constrain; days before/after new moon to search for minimum shadow distance */
+            AstroTime t1 = search_center_time.AddDays(-window);
+            AstroTime t2 = search_center_time.AddDays(+window);
+            var context = new SearchContext_LocalMoonShadowSlope(observer);
+            AstroTime time = Search(context, t1, t2, 1.0);
+            return LocalMoonShadow(time, observer);
+        }
 
         private static ShadowInfo CalcShadow(
             double body_radius_km,
@@ -5882,11 +6008,184 @@ namespace CosineKitty
         }
 
 
+        internal static ShadowInfo LocalMoonShadow(AstroTime time, Observer observer)
+        {
+            /* Calculate observer's geocentric position. */
+            /* For efficiency, do this first, to populate the earth rotation parameters in 'time'. */
+            /* That way they can be recycled instead of recalculated. */
+            AstroVector pos = geo_pos(time, observer);
+
+            AstroVector h = CalcEarth(time);    /* heliocentric Earth */
+            AstroVector m = GeoMoon(time);      /* geocentric Moon */
+
+            /* Calculate lunacentric location of an observer on the Earth's surface. */
+            var o = new AstroVector(pos.x - m.x, pos.y - m.y, pos.z - m.z, time);
+
+            /* Convert geocentric moon to heliocentric Moon. */
+            m.x += h.x;
+            m.y += h.y;
+            m.z += h.z;
+
+            return CalcShadow(MOON_MEAN_RADIUS_KM, time, o, m);
+        }
+
+
         private static double MoonEclipticLatitudeDegrees(AstroTime time)
         {
             var context = new MoonContext(time.tt / 36525.0);
             MoonResult moon = context.CalcMoon();
             return RAD2DEG * moon.geo_eclip_lat;
+        }
+
+        /// <summary>
+        /// Searches for a solar eclipse visible at a specific location on the Earth's surface.
+        /// </summary>
+        /// <remarks>
+        /// This function finds the first solar eclipse that occurs after `startTime`.
+        /// A solar eclipse found may be partial, annular, or total.
+        /// See #LocalSolarEclipseInfo for more information.
+        ///
+        /// To find a series of solar eclipses, call this function once,
+        /// then keep calling #Astronomy.NextLocalSolarEclipse as many times as desired,
+        /// passing in the `peak` value returned from the previous call.
+        ///
+        /// IMPORTANT: An eclipse reported by this function might be partly or
+        /// completely invisible to the observer due to the time of day.
+        /// See #LocalSolarEclipseInfo for more information about this topic.
+        /// </remarks>
+        ///
+        /// <param name="startTime">The date and time for starting the search for a solar eclipse.</param>
+        /// <param name="observer">The geographic location of the observer.</param>
+        public static LocalSolarEclipseInfo SearchLocalSolarEclipse(AstroTime startTime, Observer observer)
+        {
+            const double PruneLatitude = 1.8;   /* Moon's ecliptic latitude beyond which eclipse is impossible */
+
+            /* Iterate through consecutive new moons until we find a solar eclipse visible somewhere on Earth. */
+            AstroTime nmtime = startTime;
+            for(;;)
+            {
+                /* Search for the next new moon. Any eclipse will be near it. */
+                AstroTime newmoon = SearchMoonPhase(0.0, nmtime, 40.0);
+
+                /* Pruning: if the new moon's ecliptic latitude is too large, a solar eclipse is not possible. */
+                double eclip_lat = MoonEclipticLatitudeDegrees(newmoon);
+                if (Math.Abs(eclip_lat) < PruneLatitude)
+                {
+                    /* Search near the new moon for the time when the observer */
+                    /* is closest to the line passing through the centers of the Sun and Moon. */
+                    ShadowInfo shadow = PeakLocalMoonShadow(newmoon, observer);
+                    if (shadow.r < shadow.p)
+                    {
+                        /* This is at least a partial solar eclipse for the observer. */
+                        LocalSolarEclipseInfo eclipse = LocalEclipse(shadow, observer);
+
+                        /* Ignore any eclipse that happens completely at night. */
+                        /* More precisely, the center of the Sun must be above the horizon */
+                        /* at the beginning or the end of the eclipse, or we skip the event. */
+                        if (eclipse.partial_begin.altitude > 0.0 || eclipse.partial_end.altitude > 0.0)
+                            return eclipse;
+                    }
+                }
+
+                /* We didn't find an eclipse on this new moon, so search for the next one. */
+                nmtime = newmoon.AddDays(10.0);
+            }
+        }
+
+
+        /// <summary>
+        /// Searches for the next local solar eclipse in a series.
+        /// </summary>
+        ///
+        /// <remarks>
+        /// After using #Astronomy.SearchLocalSolarEclipse to find the first solar eclipse
+        /// in a series, you can call this function to find the next consecutive solar eclipse.
+        /// Pass in the `peak` value from the #LocalSolarEclipseInfo returned by the
+        /// previous call to `Astronomy.SearchLocalSolarEclipse` or `Astronomy.NextLocalSolarEclipse`
+        /// to find the next solar eclipse.
+        /// </remarks>
+        ///
+        /// <param name="prevEclipseTime">
+        ///      A date and time near a new moon. Solar eclipse search will start at the next new moon.
+        /// </param>
+        ///
+        /// <param name="observer">
+        ///      The geographic location of the observer.
+        /// </param>
+        public static LocalSolarEclipseInfo NextLocalSolarEclipse(AstroTime prevEclipseTime, Observer observer)
+        {
+            AstroTime startTime = prevEclipseTime.AddDays(10.0);
+            return SearchLocalSolarEclipse(startTime, observer);
+        }
+
+
+        private static double local_partial_distance(ShadowInfo shadow)
+        {
+            return shadow.p - shadow.r;
+        }
+
+        private static double local_total_distance(ShadowInfo shadow)
+        {
+            /* Must take the absolute value of the umbra radius 'k' */
+            /* because it can be negative for an annular eclipse. */
+            return Math.Abs(shadow.k) - shadow.r;
+        }
+
+        private static LocalSolarEclipseInfo LocalEclipse(ShadowInfo shadow, Observer observer)
+        {
+            const double PARTIAL_WINDOW = 0.2;
+            const double TOTAL_WINDOW = 0.01;
+
+            var eclipse = new LocalSolarEclipseInfo();
+            eclipse.peak = CalcEvent(observer, shadow.time);
+            AstroTime t1 = shadow.time.AddDays(-PARTIAL_WINDOW);
+            AstroTime t2 = shadow.time.AddDays(+PARTIAL_WINDOW);
+            eclipse.partial_begin = LocalEclipseTransition(observer, +1.0, local_partial_distance, t1, shadow.time);
+            eclipse.partial_end   = LocalEclipseTransition(observer, -1.0, local_partial_distance, shadow.time, t2);
+
+            if (shadow.r < Math.Abs(shadow.k))      /* take absolute value of 'k' to handle annular eclipses too. */
+            {
+                t1 = shadow.time.AddDays(-TOTAL_WINDOW);
+                t2 = shadow.time.AddDays(+TOTAL_WINDOW);
+                eclipse.total_begin = LocalEclipseTransition(observer, +1.0, local_total_distance, t1, shadow.time);
+                eclipse.total_end = LocalEclipseTransition(observer, -1.0, local_total_distance, shadow.time, t2);
+                eclipse.kind = EclipseKindFromUmbra(shadow.k);
+            }
+            else
+            {
+                eclipse.kind = EclipseKind.Partial;
+            }
+
+            return eclipse;
+        }
+
+        private static EclipseEvent LocalEclipseTransition(
+            Observer observer,
+            double direction,
+            Func<ShadowInfo,double> func,
+            AstroTime t1,
+            AstroTime t2)
+        {
+            var context = new SearchContext_LocalEclipseTransition(func, direction, observer);
+            AstroTime search = Search(context, t1, t2, 1.0);
+            if (search == null)
+                throw new Exception("Local eclipse transition search failed.");
+            return CalcEvent(observer, search);
+        }
+
+        private static EclipseEvent CalcEvent(Observer observer, AstroTime time)
+        {
+            var evt = new EclipseEvent();
+            evt.time = time;
+            evt.altitude = SunAltitude(time, observer);
+            return evt;
+        }
+
+        private static double SunAltitude(AstroTime time, Observer observer)
+        {
+            Equatorial equ = Equator(Body.Sun, time, observer, EquatorEpoch.OfDate, Aberration.Corrected);
+            Topocentric hor = Horizon(time, observer, equ.ra, equ.dec, Refraction.Normal);
+            return hor.altitude;
         }
 
         /// <summary>
