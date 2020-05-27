@@ -669,6 +669,14 @@ namespace csharp_test
             return new AstroTime(year, month, day, hour, minute, second);
         }
 
+        static AstroTime OptionalParseDate(string text)
+        {
+            if (text == "-")
+                return null;
+
+            return ParseDate(text);
+        }
+
         static int TestMaxElong(elong_test_t test)
         {
             AstroTime searchTime = ParseDate(test.searchDate);
@@ -1947,9 +1955,119 @@ namespace csharp_test
             return 0;
         }
 
+        static string StripLine(string line)
+        {
+            int index = line.IndexOf('#');
+            if (index >= 0)
+                line = line.Substring(0, index);
+            return line.Trim();
+        }
+
         static int LocalSolarEclipseTest2()
         {
+            /*
+                Test ability to calculate local solar eclipse conditions away from
+                the peak position on the Earth.
+            */
+
+            const string inFileName = "../../eclipse/local_solar_eclipse.txt";
+            double max_minutes=0.0, max_degrees=0.0;
+            int verify_count = 0;
+
+            using (StreamReader infile = File.OpenText(inFileName))
+            {
+                int lnum = 0;
+                string line;
+                while (null != (line = infile.ReadLine()))
+                {
+                    ++lnum;
+                    line = StripLine(line);
+                    if (line.Length == 0) continue;
+                    string[] token = Tokenize(line);
+                    if (token.Length != 13)
+                    {
+                        Console.WriteLine("C# LocalSolarEclipseTest2({0} line {1}): Incorrect token count {2}", inFileName, lnum, token.Length);
+                        return 1;
+                    }
+                    double latitude = double.Parse(token[0]);
+                    double longitude = double.Parse(token[1]);
+                    string typeCode = token[2];
+                    AstroTime p1 = ParseDate(token[3]);
+                    double p1alt = double.Parse(token[4]);
+                    AstroTime t1 = OptionalParseDate(token[5]);
+                    double t1alt = double.Parse(token[6]);
+                    AstroTime peak = ParseDate(token[7]);
+                    double peakalt = double.Parse(token[8]);
+                    AstroTime t2 = OptionalParseDate(token[9]);
+                    double t2alt = double.Parse(token[10]);
+                    AstroTime p2 = ParseDate(token[11]);
+                    double p2alt = double.Parse(token[12]);
+
+                    EclipseKind expected_kind;
+                    switch (typeCode)
+                    {
+                    case "P": expected_kind = EclipseKind.Partial; break;
+                    case "A": expected_kind = EclipseKind.Annular; break;
+                    case "T": expected_kind = EclipseKind.Total;   break;
+                    default:
+                        Console.WriteLine("C# LocalSolarEclipseTest2({0} line {1}): invalid eclipse type '{2}'", inFileName, lnum, typeCode);
+                        return 1;
+                    }
+
+                    var observer = new Observer(latitude, longitude, 0.0);
+                    AstroTime search_time = p1.AddDays(-20.0);
+                    LocalSolarEclipseInfo eclipse = Astronomy.SearchLocalSolarEclipse(search_time, observer);
+                    if (eclipse.kind != expected_kind)
+                    {
+                        Console.WriteLine("C# LocalSolarEclipseTest2({0} line {1}): expected {2}, found {3}", inFileName, lnum, expected_kind, eclipse.kind);
+                        return 1;
+                    }
+
+                    if (CheckEvent(inFileName, lnum, "peak", peak, peakalt, eclipse.peak, ref max_minutes, ref max_degrees)) return 1;
+                    if (CheckEvent(inFileName, lnum, "partial_begin", p1, p1alt, eclipse.partial_begin, ref max_minutes, ref max_degrees)) return 1;
+                    if (CheckEvent(inFileName, lnum, "partial_end", p2, p2alt, eclipse.partial_end, ref max_minutes, ref max_degrees)) return 1;
+                    if (typeCode != "P")
+                    {
+                        if (CheckEvent(inFileName, lnum, "total_begin", t1, t1alt, eclipse.total_begin, ref max_minutes, ref max_degrees)) return 1;
+                        if (CheckEvent(inFileName, lnum, "total_end", t2, t2alt, eclipse.total_end, ref max_minutes, ref max_degrees)) return 1;
+                    }
+
+                    ++verify_count;
+                }
+            }
+
+            Console.WriteLine("C# LocalSolarEclipseTest2: PASS ({0} verified, max minutes = {1}, max alt degrees = {2})",
+                verify_count, max_minutes, max_degrees);
             return 0;
+        }
+
+        static bool CheckEvent(
+            string inFileName,
+            int lnum,
+            string name,
+            AstroTime expected_time,
+            double expected_altitude,
+            EclipseEvent evt,
+            ref double max_minutes,
+            ref double max_degrees)
+        {
+            double diff_minutes = (24 * 60) * Math.Abs(expected_time.ut - evt.time.ut);
+            if (diff_minutes > max_minutes) max_minutes = diff_minutes;
+            if (diff_minutes > 2.0)
+            {
+                Console.WriteLine("CheckEvent({0} line {1}): EXCESSIVE TIME ERROR: {2} minutes\n", inFileName, lnum, diff_minutes);
+                return true;
+            }
+
+            double diff_alt = Math.Abs(expected_altitude - evt.altitude);
+            if (diff_alt > max_degrees) max_degrees = diff_alt;
+            if (diff_alt > 0.5)
+            {
+                Console.WriteLine("CheckEvent({0} line {1}): EXCESSIVE ALTITUDE ERROR: {2} degrees\n", inFileName, lnum, diff_alt);
+                return true;
+            }
+
+            return false;
         }
     }
 }
