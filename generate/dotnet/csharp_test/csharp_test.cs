@@ -26,6 +26,13 @@ namespace csharp_test
                 if (args.Length == 1 && args[0] == "lunar_eclipse")
                     return LunarEclipseTest();
 
+                if (args.Length == 1 && args[0] == "local_solar_eclipse")
+                {
+                    if (LocalSolarEclipseTest1() != 0) return 1;
+                    if (LocalSolarEclipseTest2() != 0) return 1;
+                    return 0;
+                }
+
                 if (args.Length == 0)
                 {
                     Console.WriteLine("csharp_test: starting");
@@ -1755,6 +1762,8 @@ namespace csharp_test
 
         static int GlobalSolarEclipseTest()
         {
+            Astronomy.CalcMoonCount = 0;
+
             int lnum = 0;
             int skip_count = 0;
             double max_angle = 0.0;
@@ -1857,7 +1866,7 @@ namespace csharp_test
                 return 1;
             }
 
-            Console.WriteLine("C# GlobalSolarEclipseTest: PASS ({0} verified, {1} skipped, max minutes = {2}, max angle = {3})", lnum, skip_count, max_minutes, max_angle);
+            Console.WriteLine("C# GlobalSolarEclipseTest: PASS ({0} verified, {1} skipped, {2} CalcMoons, max minutes = {3}, max angle = {4})", lnum, skip_count, Astronomy.CalcMoonCount, max_minutes, max_angle);
             return 0;
         }
 
@@ -1897,6 +1906,8 @@ namespace csharp_test
                 In each case, start the search 20 days before the expected eclipse.
                 Then verify that the peak time and eclipse type is correct in each case.
             */
+            Astronomy.CalcMoonCount = 0;
+
             int lnum = 0;
             int skip_count = 0;
             double max_minutes = 0.0;
@@ -1936,7 +1947,7 @@ namespace csharp_test
                     double diff_minutes = (24 * 60) * Math.Abs(diff_days);
                     if (diff_minutes > 7.14)
                     {
-                        Console.WriteLine("C LocalSolarEclipseTest1({0} line {1}): EXCESSIVE TIME ERROR = {2} minutes\n", inFileName, lnum, diff_minutes);
+                        Console.WriteLine("C LocalSolarEclipseTest1({0} line {1}): EXCESSIVE TIME ERROR = {2} minutes", inFileName, lnum, diff_minutes);
                         return 1;
                     }
 
@@ -1951,7 +1962,7 @@ namespace csharp_test
                 return 1;
             }
 
-            Console.WriteLine("C# LocalSolarEclipseTest1: PASS ({0} verified, {1} skipped, max minutes = {2})", lnum, skip_count, max_minutes);
+            Console.WriteLine("C# LocalSolarEclipseTest1: PASS ({0} verified, {1} skipped, {2} CalcMoons, max minutes = {3})", lnum, skip_count, Astronomy.CalcMoonCount, max_minutes);
             return 0;
         }
 
@@ -1969,6 +1980,8 @@ namespace csharp_test
                 Test ability to calculate local solar eclipse conditions away from
                 the peak position on the Earth.
             */
+
+            Astronomy.CalcMoonCount = 0;
 
             const string inFileName = "../../eclipse/local_solar_eclipse.txt";
             double max_minutes=0.0, max_degrees=0.0;
@@ -2036,8 +2049,8 @@ namespace csharp_test
                 }
             }
 
-            Console.WriteLine("C# LocalSolarEclipseTest2: PASS ({0} verified, max minutes = {1}, max alt degrees = {2})",
-                verify_count, max_minutes, max_degrees);
+            Console.WriteLine("C# LocalSolarEclipseTest2: PASS ({0} verified, {1} CalcMoons, max minutes = {2}, max alt degrees = {3})",
+                verify_count, Astronomy.CalcMoonCount, max_minutes, max_degrees);
             return 0;
         }
 
@@ -2052,10 +2065,12 @@ namespace csharp_test
             ref double max_degrees)
         {
             double diff_minutes = (24 * 60) * Math.Abs(expected_time.ut - evt.time.ut);
-            if (diff_minutes > max_minutes) max_minutes = diff_minutes;
+            if (diff_minutes > max_minutes)
+                max_minutes = diff_minutes;
+
             if (diff_minutes > 2.0)
             {
-                Console.WriteLine("CheckEvent({0} line {1}): EXCESSIVE TIME ERROR: {2} minutes\n", inFileName, lnum, diff_minutes);
+                Console.WriteLine("CheckEvent({0} line {1}): EXCESSIVE TIME ERROR: {2} minutes", inFileName, lnum, diff_minutes);
                 return true;
             }
 
@@ -2063,7 +2078,7 @@ namespace csharp_test
             if (diff_alt > max_degrees) max_degrees = diff_alt;
             if (diff_alt > 0.5)
             {
-                Console.WriteLine("CheckEvent({0} line {1}): EXCESSIVE ALTITUDE ERROR: {2} degrees\n", inFileName, lnum, diff_alt);
+                Console.WriteLine("CheckEvent({0} line {1}): EXCESSIVE ALTITUDE ERROR: {2} degrees", inFileName, lnum, diff_alt);
                 return true;
             }
 

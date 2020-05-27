@@ -831,14 +831,16 @@ static const int ElongTestCount = sizeof(ElongTestData) / sizeof(ElongTestData[0
 
 static int ParseDate(const char *text, astro_time_t *time)
 {
+    char zcheck;
     int year, month, day, hour, minute, nscanned;
-    double second = 0.0;
+    double second;
 
-    nscanned = sscanf(text, "%d-%d-%dT%d:%dZ", &year, &month, &day, &hour, &minute);
-    if (nscanned != 5)
+    nscanned = sscanf(text, "%d-%d-%dT%d:%d:%lf%c", &year, &month, &day, &hour, &minute, &second, &zcheck);
+    if (nscanned != 7 || zcheck != 'Z')
     {
-        nscanned = sscanf(text, "%d-%d-%dT%d:%d:%lfZ", &year, &month, &day, &hour, &minute, &second);
-        if (nscanned != 6)
+        second = 0.0;
+        nscanned = sscanf(text, "%d-%d-%dT%d:%d%c", &year, &month, &day, &hour, &minute, &zcheck);
+        if (nscanned != 6 || zcheck != 'Z')
         {
             fprintf(stderr, "C ParseDate: Invalid date text '%s'\n", text);
             time->ut = time->tt = NAN;
@@ -2744,7 +2746,7 @@ static int LunarEclipseTest(void)
     if (skip_count > 9)
         FAIL("C LunarEclipseTest: Skipped too many penumbral eclipses: %d\n", skip_count);
 
-    printf("C LunarEclipseTest: PASS (verified %d, skipped %d, moon calcs %d, max_diff_minutes = %0.3lf, avg_diff_minutes = %0.3lf)\n", lnum, skip_count, _CalcMoonCount, max_diff_minutes, sum_diff_minutes);
+    printf("C LunarEclipseTest: PASS (verified %d, skipped %d, %d CalcMoons, max_diff_minutes = %0.3lf, avg_diff_minutes = %0.3lf)\n", lnum, skip_count, _CalcMoonCount, max_diff_minutes, sum_diff_minutes);
     error = 0;
 fail:
     if (infile != NULL) fclose(infile);
@@ -2830,7 +2832,7 @@ static int GlobalSolarEclipseTest(void)
 
         /* Validate the eclipse prediction. */
         diff_minutes = (24 * 60) * fabs(diff_days);
-        if (diff_minutes > 6.9)
+        if (diff_minutes > 6.93)
         {
             printf("Expected: ");
             PrintTime(peak);
@@ -2973,7 +2975,7 @@ static int LocalSolarEclipseTest1(void)
         }
 
         diff_minutes = (24 * 60) * fabs(diff_days);
-        if (diff_minutes > 6.71)
+        if (diff_minutes > 7.14)
         {
             printf("Expected: ");
             PrintTime(peak);
@@ -3044,7 +3046,10 @@ static int CheckEvent(
     double diff_minutes, diff_alt;
 
     diff_minutes = (24 * 60) * fabs(expected_time.ut - evt.time.ut);
-    if (diff_minutes > *max_minutes) *max_minutes = diff_minutes;
+
+    if (diff_minutes > *max_minutes)
+        *max_minutes = diff_minutes;
+
     if (diff_minutes > 2.0)
         FAIL("CheckEvent(%s line %d): EXCESSIVE TIME ERROR: %0.3lf minutes\n", inFileName, lnum, diff_minutes);
 
