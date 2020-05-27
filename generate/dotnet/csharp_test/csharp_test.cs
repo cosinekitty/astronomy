@@ -43,6 +43,8 @@ namespace csharp_test
                     if (ConstellationTest() != 0) return 1;
                     if (LunarEclipseTest() != 0) return 1;
                     if (GlobalSolarEclipseTest() != 0) return 1;
+                    if (LocalSolarEclipseTest1() != 0) return 1;
+                    if (LocalSolarEclipseTest2() != 0) return 1;
                     if (AstroCheck() != 0) return 1;
                     Console.WriteLine("csharp_test: PASS");
                     return 0;
@@ -1877,6 +1879,77 @@ namespace csharp_test
                 return 0.0;
 
             return RAD2DEG * Math.Acos(dot);
+        }
+
+        static int LocalSolarEclipseTest1()
+        {
+            /*
+                Re-use the test data for global solar eclipses, only feed the given coordinates
+                into the local solar eclipse predictor as the observer's location.
+                In each case, start the search 20 days before the expected eclipse.
+                Then verify that the peak time and eclipse type is correct in each case.
+            */
+            int lnum = 0;
+            int skip_count = 0;
+            double max_minutes = 0.0;
+
+            const string inFileName = "../../eclipse/solar_eclipse.txt";
+            using (StreamReader infile = File.OpenText(inFileName))
+            {
+                string line;
+                while (null != (line = infile.ReadLine()))
+                {
+                    ++lnum;
+                    string[] token = Tokenize(line);
+                    /* 1889-12-22T12:54:15Z   -6 T   -12.7   -12.8 */
+                    if (token.Length != 5)
+                    {
+                        Console.WriteLine("C# LocalSolarEclipseTest1({0} line {1}): wrong token count = {2}", inFileName, lnum, token.Length);
+                        return 1;
+                    }
+                    AstroTime peak = ParseDate(token[0]);
+                    string typeChar = token[2];
+                    double lat = double.Parse(token[3]);
+                    double lon = double.Parse(token[4]);
+                    var observer = new Observer(lat, lon, 0.0);
+
+                    /* Start the search 20 days before we know the eclipse should peak. */
+                    AstroTime search_start = peak.AddDays(-20.0);
+                    LocalSolarEclipseInfo eclipse = Astronomy.SearchLocalSolarEclipse(search_start, observer);
+
+                    /* Validate the predicted eclipse peak time. */
+                    double diff_days = eclipse.peak.time.ut - peak.ut;
+                    if (diff_days > 20.0)
+                    {
+                        ++skip_count;
+                        continue;
+                    }
+
+                    double diff_minutes = (24 * 60) * Math.Abs(diff_days);
+                    if (diff_minutes > 7.14)
+                    {
+                        Console.WriteLine("C LocalSolarEclipseTest1({0} line {1}): EXCESSIVE TIME ERROR = {2} minutes\n", inFileName, lnum, diff_minutes);
+                        return 1;
+                    }
+
+                    if (diff_minutes > max_minutes)
+                        max_minutes = diff_minutes;
+                }
+            }
+
+            if (skip_count > 6)
+            {
+                Console.WriteLine("C# LocalSolarEclipseTest1: EXCESSSIVE SKIP COUNT = {0}", skip_count);
+                return 1;
+            }
+
+            Console.WriteLine("C# LocalSolarEclipseTest1: PASS ({0} verified, {1} skipped, max minutes = {2})", lnum, skip_count, max_minutes);
+            return 0;
+        }
+
+        static int LocalSolarEclipseTest2()
+        {
+            return 0;
         }
     }
 }
