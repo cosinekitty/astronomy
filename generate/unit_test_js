@@ -7,7 +7,7 @@ Fail()
 
 [[ "$1" == "" || "$1" == "-v" ]] || Fail "Invalid command line options."
 
-time node astro_check.js > temp/js_check.txt || Fail "Problem running JavaScript astro_check."
+time node test.js astro_check > temp/js_check.txt || Fail "Problem running JavaScript astro_check."
 ./generate $1 check temp/js_check.txt || Fail "Verification failure for JavaScript unit test output."
 
 echo ""
