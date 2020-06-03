@@ -31,7 +31,7 @@ node test.js $1 rise_set || Fail "Failed rise/set test."
 node test.js $1 rotation || Fail "Failed rotation tests."
 node test.js $1 refraction || Fail "Failed refraction tests."
 node test.js $1 magnitude || Fail "Failed magnitude tests."
-node constellation.js || Fail "Failed constellation tests."
+node test.js $1 constellation || Fail "Failed constellation tests."
 
 echo ""
 echo "$0: SUCCESS."
