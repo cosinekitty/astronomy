@@ -87,26 +87,6 @@ def Test_GeoMoon():
 
 #-----------------------------------------------------------------------------------------------------------
 
-def Test_Issue46():
-    # https://github.com/cosinekitty/astronomy/issues/46
-    observer = astronomy.Observer(29, -81, 10)
-    time = astronomy.Time(-93692.7685882873047376)
-    print('time.ut     = {:0.16f}'.format(time.ut))
-    print('time.tt     = {:0.16f}'.format(time.tt))
-    body = astronomy.Body.Sun
-    j2000 = astronomy.Equator(body, time, observer, False, False)
-    print('j2000  ra   = {:0.16f}'.format(j2000.ra))
-    print('j2000  dec  = {:0.16f}'.format(j2000.dec))
-    ofdate = astronomy.Equator(body, time, observer, True, True)
-    print('ofdate ra   = {:0.16f}'.format(ofdate.ra))
-    print('ofdate dec  = {:0.16f}'.format(ofdate.dec))
-    hor = astronomy.Horizon(time, observer, ofdate.ra, ofdate.dec, astronomy.Refraction.Airless)
-    print('azimuth     = {:0.16f}'.format(hor.azimuth))
-    print('altitude    = {:0.16f}'.format(hor.altitude))
-    return 0
-
-#-----------------------------------------------------------------------------------------------------------
-
 def Test_AstroCheck(printflag):
     time = astronomy.Time.Make(1700, 1, 1, 0, 0, 0)
     stop = astronomy.Time.Make(2200, 1, 1, 0, 0, 0)
@@ -146,7 +126,7 @@ def Test_AstroCheck(printflag):
 
 #-----------------------------------------------------------------------------------------------------------
 
-def Test_Seasons(filename):
+def Test_Seasons(filename = 'seasons/seasons.txt'):
     with open(filename, 'rt') as infile:
         lnum = 0
         current_year = 0
@@ -211,7 +191,7 @@ def Test_Seasons(filename):
 
 #-----------------------------------------------------------------------------------------------------------
 
-def Test_MoonPhase(filename):
+def Test_MoonPhase(filename = 'moonphase/moonphases.txt'):
     threshold_seconds = 120.0       # max tolerable prediction error in seconds
     max_arcmin = 0.0
     maxdiff = 0.0
@@ -619,7 +599,7 @@ def Test_Magnitude():
 
 #-----------------------------------------------------------------------------------------------------------
 
-def Test_RiseSet(filename):
+def Test_RiseSet(filename = 'riseset/riseset.txt'):
     sum_minutes = 0.0
     max_minutes = 0.0
     nudge_days = 0.01
@@ -710,7 +690,7 @@ def Test_RiseSet(filename):
 
 #-----------------------------------------------------------------------------------------------------------
 
-def LunarApsis(filename):
+def LunarApsis(filename = 'apsides/moon.txt'):
     max_minutes = 0.0
     max_km = 0.0
     with open(filename, 'rt') as infile:
@@ -1238,47 +1218,37 @@ def Test_LunarEclipse():
 
 #-----------------------------------------------------------------------------------------------------------
 
+UnitTests = {
+    'constellation':    Test_Constellation,
+    'elongation':       Test_Elongation,
+    'lunar_apsis':      LunarApsis,
+    'lunar_eclipse':    Test_LunarEclipse,
+    'magnitude':        Test_Magnitude,
+    'moon':             Test_GeoMoon,
+    'moonphase':        Test_MoonPhase,
+    'planet_apsis':     Test_PlanetApsis,
+    'refraction':       Test_Refraction,
+    'riseset':          Test_RiseSet,
+    'rotation':         Test_Rotation,
+    'seasons':          Test_Seasons,
+    'time':             Test_AstroTime,
+}
+
+#-----------------------------------------------------------------------------------------------------------
+
 if __name__ == '__main__':
     if len(sys.argv) > 1 and sys.argv[1] == '-v':
         sys.argv = sys.argv[1:]
         Verbose = True
 
     if len(sys.argv) == 2:
-        if sys.argv[1] == 'time':
-            Test_AstroTime()
+        name = sys.argv[1]
+        if name in UnitTests:
+            UnitTests[name]()
             sys.exit(0)
-        if sys.argv[1] == 'moon':
-            Test_GeoMoon()
-            sys.exit(0)
-        if sys.argv[1] == 'astro_check' or sys.argv[1] == 'astro_profile':
+        if name in ['astro_check', 'astro_profile']:
             Test_AstroCheck(sys.argv[1] == 'astro_check')
             sys.exit(0)
-        if sys.argv[1] == 'elongation':
-            sys.exit(Test_Elongation())
-        if sys.argv[1] == 'magnitude':
-            sys.exit(Test_Magnitude())
-        if sys.argv[1] == 'lunar_apsis':
-            sys.exit(LunarApsis('apsides/moon.txt'))
-        if sys.argv[1] == 'planet_apsis':
-            sys.exit(Test_PlanetApsis())
-        if sys.argv[1] == 'issue46':
-            sys.exit(Test_Issue46())
-        if sys.argv[1] == 'rotation':
-            sys.exit(Test_Rotation())
-        if sys.argv[1] == 'refraction':
-            sys.exit(Test_Refraction())
-        if sys.argv[1] == 'constellation':
-            sys.exit(Test_Constellation())
-        if sys.argv[1] == 'lunar_eclipse':
-            sys.exit(Test_LunarEclipse())
-
-    if len(sys.argv) == 3:
-        if sys.argv[1] == 'seasons':
-            sys.exit(Test_Seasons(sys.argv[2]))
-        if sys.argv[1] == 'moonphase':
-            sys.exit(Test_MoonPhase(sys.argv[2]))
-        if sys.argv[1] == 'riseset':
-            sys.exit(Test_RiseSet(sys.argv[2]))
 
     print('test.py: Invalid command line arguments.')
     sys.exit(1)

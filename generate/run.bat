@@ -307,16 +307,16 @@ if errorlevel 1 (exit /b 1)
 test.py moon
 if errorlevel 1 (exit /b 1)
 
-test.py seasons seasons\seasons.txt
+test.py seasons
 if errorlevel 1 (exit /b 1)
 
-test.py moonphase moonphase\moonphases.txt
+test.py moonphase
 if errorlevel 1 (exit /b 1)
 
 test.py lunar_eclipse
 if errorlevel 1 (exit /b 1)
 
-test.py riseset riseset\riseset.txt
+test.py riseset
 if errorlevel 1 (exit /b 1)
 
 test.py elongation
