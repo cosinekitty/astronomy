@@ -14,24 +14,10 @@ echo ""
 echo "$0: Running check against JPL Horizons data."
 ./jplcheck || Fail "Error in JPL check."
 
-echo ""
-echo "$0: Running test of moon phase search."
 node test.js $1 moon_phase || Fail "Failed moon phase test."
-
-echo ""
-echo "$0: Running lunar apsis tests."
 node test.js $1 lunar_apsis || Fail "Failed lunar apsis test."
-
-echo ""
-echo "$0: Running lunar eclipse test."
 node test.js $1 lunar_eclipse || Fail "Failed lunar eclipse test."
-
-echo ""
-echo "$0: Running planet apsis tests."
 node test.js $1 planet_apsis || Fail "Failed planet apsis test."
-
-echo ""
-echo "$0: Running longitude tests."
 node test.js $1 elongation || Fail "Failed longitude tests."
 
 echo ""
@@ -40,24 +26,10 @@ for file in temp/js_longitude_*.txt; do
     ./generate $1 check ${file} || Fail "Failed verification of ${file}"
 done
 
-echo ""
-echo "$0: Running seasons test."
 node test.js $1 seasons || Fail "Failed seasons test."
-
-echo ""
-echo "$0: Running rise/set test."
-node rise_set_test.js || Fail "Failed rise/set test."
-
-echo ""
-echo "$0: Running magnitude tests."
+node test.js $1 rise_set || Fail "Failed rise/set test."
 node mag_test.js $1 || Fail "Failed magnitude tests."
-
-echo ""
-echo "$0: Running rotation tests."
 node rotation.js $1 || Fail "Failed rotation tests."
-
-echo ""
-echo "$0: Running constellation tests."
 node constellation.js || Fail "Failed constellation tests."
 
 echo ""
