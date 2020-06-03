@@ -1298,6 +1298,30 @@ function Constellation() {
     return 0;
 }
 
+const UnitTests = {
+    constellation:   Constellation,
+    elongation:      Elongation,
+    lunar_apsis:     LunarApsis,
+    lunar_eclipse:   LunarEclipse,
+    planet_apsis:    PlanetApsis,
+    magnitude:       Magnitude,
+    moon_phase:      MoonPhase,
+    refraction:      Refraction,
+    rise_set:        RiseSet,
+    rotation:        Rotation,
+    seasons:         Seasons,
+};
+
+
+function TestAll() {
+    for (let name in UnitTests) {
+        if (UnitTests[name]()) {
+            return 1;
+        }
+    }
+    console.log('JS ALL PASS');
+}
+
 
 function main() {
     let args = process.argv.slice(2);
@@ -1307,20 +1331,21 @@ function main() {
     }
 
     if (args.length === 1) {
-        switch (args[0]) {
-            case 'astro_check':     return AstroCheck();
-            case 'constellation':   return Constellation();
-            case 'elongation':      return Elongation();
-            case 'lunar_apsis':     return LunarApsis();
-            case 'lunar_eclipse':   return LunarEclipse();
-            case 'planet_apsis':    return PlanetApsis();
-            case 'magnitude':       return Magnitude();
-            case 'moon_phase':      return MoonPhase();
-            case 'refraction':      return Refraction();
-            case 'rise_set':        return RiseSet();
-            case 'rotation':        return Rotation();
-            case 'seasons':         return Seasons();
+        const name = args[0];
+        if (name === 'all') {
+            return TestAll();
         }
+        if (name === 'astro_check') {
+            // This is a special case because the output is redirected and parsed.
+            // It needs to be invoked separately, and cannot emit any extraneous output.
+            return AstroCheck();
+        }
+        const func = UnitTests[name];
+        if (typeof func !== 'function') {
+            console.log(`test.js: Unknown unit test "${name}"`);
+            return 1;
+        }
+        return func();
     }
 
     console.log('test.js: Invalid command line arguments.');

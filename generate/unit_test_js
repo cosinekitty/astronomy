@@ -14,24 +14,13 @@ echo ""
 echo "$0: Running check against JPL Horizons data."
 ./jplcheck || Fail "Error in JPL check."
 
-node test.js $1 moon_phase || Fail "Failed moon phase test."
-node test.js $1 lunar_apsis || Fail "Failed lunar apsis test."
-node test.js $1 lunar_eclipse || Fail "Failed lunar eclipse test."
-node test.js $1 planet_apsis || Fail "Failed planet apsis test."
-node test.js $1 elongation || Fail "Failed longitude tests."
+node test.js $1 all || Fail "Failed JavaScript unit tests."
 
 echo ""
-echo "$0: Verifying elong_test output."
+echo "$0: Verifying elongation output."
 for file in temp/js_longitude_*.txt; do
     ./generate $1 check ${file} || Fail "Failed verification of ${file}"
 done
-
-node test.js $1 seasons || Fail "Failed seasons test."
-node test.js $1 rise_set || Fail "Failed rise/set test."
-node test.js $1 rotation || Fail "Failed rotation tests."
-node test.js $1 refraction || Fail "Failed refraction tests."
-node test.js $1 magnitude || Fail "Failed magnitude tests."
-node test.js $1 constellation || Fail "Failed constellation tests."
 
 echo ""
 echo "$0: SUCCESS."

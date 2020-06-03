@@ -201,38 +201,8 @@ popd
 
 REM -----------------------------------------------------------------------------------------
 echo.
-echo.Running longitude tests.
-node elong_test.js
-if errorlevel 1 (exit /b 1)
-
-for %%f in (temp\longitude_*.txt) do (
-    !GENEXE! check %%f
-    if errorlevel 1 (exit /b 1)
-)
-
-echo.
-echo Running seasons test.
-node seasons_test.js
-if errorlevel 1 (exit /b 1)
-
-echo.
-echo Running constellation tests.
-node constellation.js
-if errorlevel 1 (exit /b 1)
-
-echo.
-echo Running rise/set test.
-node rise_set_test.js
-if errorlevel 1 (exit /b 1)
-
-echo.
-echo.Running lunar eclipse test.
-node lunar_eclipse_test.js
-if errorlevel 1 (exit /b 1)
-
-echo.
 echo.Validating JavaScript code.
-node astro_check.js > temp/js_check.txt
+node test.js astro_check > temp/js_check.txt
 if errorlevel 1 (exit /b 1)
 
 !GENEXE! check temp/js_check.txt
@@ -244,24 +214,14 @@ call jplcheck.bat
 if errorlevel 1 (exit /b 1)
 
 echo.
-echo.Running test of moon phase search.
-node moon_phase_test.js
+echo.Running JavaScript unit tests.
+node test.js all
 if errorlevel 1 (exit /b 1)
 
-echo.
-echo.Running lunar apsis tests.
-node lunar_apsis_test.js
-if errorlevel 1 (exit /b 1)
-
-echo.
-echo.Running planet apsis tests.
-node planet_apsis_test.js
-if errorlevel 1 (exit /b 1)
-
-echo.
-echo.Running visual magnitude tests.
-node mag_test.js
-if errorlevel 1 (exit /b 1)
+for %%f in (temp\longitude_*.txt) do (
+    !GENEXE! check %%f
+    if errorlevel 1 (exit /b 1)
+)
 
 REM -----------------------------------------------------------------------------------------
 
