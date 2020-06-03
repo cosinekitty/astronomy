@@ -24,7 +24,7 @@ node test.js $1 lunar_apsis || Fail "Failed lunar apsis test."
 
 echo ""
 echo "$0: Running lunar eclipse test."
-node lunar_eclipse_test.js || Fail "Failed lunar eclipse test."
+node test.js $1 lunar_eclipse || Fail "Failed lunar eclipse test."
 
 echo ""
 echo "$0: Running planet apsis tests."
