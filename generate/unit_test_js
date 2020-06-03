@@ -16,7 +16,7 @@ echo "$0: Running check against JPL Horizons data."
 
 echo ""
 echo "$0: Running test of moon phase search."
-node moon_phase_test.js $1 || Fail "Failed moon phase test."
+node test.js $1 moon_phase || Fail "Failed moon phase test."
 
 echo ""
 echo "$0: Running lunar apsis tests."
