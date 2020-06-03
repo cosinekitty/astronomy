@@ -191,6 +191,7 @@ if not exist "!CTESTEXE!" (
     echo.FATAL[run.bat]: The executable does not exist: !CTESTEXE!
     exit /b 1
 )
+
 REM -----------------------------------------------------------------------------------------
 echo.
 echo.Running C# tests.
@@ -232,34 +233,7 @@ if errorlevel 1 (exit /b 1)
 !GENEXE! check temp\c_check.txt
 if errorlevel 1 (exit /b 1)
 
-!CTESTEXE! diff temp\c_check.txt temp\js_check.txt
-if errorlevel 1 (exit /b 1)
-
-!CTESTEXE! diff temp\c_check.txt dotnet\csharp_test\csharp_check.txt
-if errorlevel 1 (exit /b 1)
-
-!CTESTEXE! rotation
-if errorlevel 1 (exit /b 1)
-
-!CTESTEXE! seasons seasons\seasons.txt
-if errorlevel 1 (exit /b 1)
-
-!CTESTEXE! moonphase moonphase\moonphases.txt
-if errorlevel 1 (exit /b 1)
-
-!CTESTEXE! lunar_eclipse
-if errorlevel 1 (exit /b 1)
-
-!CTESTEXE! global_solar_eclipse
-if errorlevel 1 (exit /b 1)
-
-!CTESTEXE! local_solar_eclipse
-if errorlevel 1 (exit /b 1)
-
-!CTESTEXE! elongation
-if errorlevel 1 (exit /b 1)
-
-!CTESTEXE! constellation
+!CTESTEXE! all
 if errorlevel 1 (exit /b 1)
 
 for %%f in (temp\c_longitude_*.txt) do (
@@ -267,21 +241,6 @@ for %%f in (temp\c_longitude_*.txt) do (
     if errorlevel 1 (exit /b 1)
     echo.
 )
-
-!CTESTEXE! riseset riseset\riseset.txt
-if errorlevel 1 (exit /b 1)
-
-!CTESTEXE! magnitude
-if errorlevel 1 (exit /b 1)
-
-!CTESTEXE! moon_apsis apsides\moon.txt
-if errorlevel 1 (exit /b 1)
-
-!CTESTEXE! earth_apsis apsides\earth.txt
-if errorlevel 1 (exit /b 1)
-
-!CTESTEXE! planet_apsis
-if errorlevel 1 (exit /b 1)
 
 REM -----------------------------------------------------------------------------------------
 
@@ -303,7 +262,17 @@ echo.Verifying Python test output.
 !GENEXE! check temp\py_check.txt
 if errorlevel 1 (exit /b 1)
 
-!CTESTEXE! diff temp\py_check.txt temp\c_check.txt
+REM -----------------------------------------------------------------------------------------
+
+echo.Diffing calculations.
+
+!CTESTEXE! diff temp\c_check.txt temp\py_check.txt
+if errorlevel 1 (exit /b 1)
+
+!CTESTEXE! diff temp\c_check.txt temp\js_check.txt
+if errorlevel 1 (exit /b 1)
+
+!CTESTEXE! diff temp\c_check.txt dotnet\csharp_test\csharp_check.txt
 if errorlevel 1 (exit /b 1)
 
 type pass.txt

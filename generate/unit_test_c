@@ -11,28 +11,11 @@ rm -f temp/c_gm_check.txt
 ./ctbuild || exit 1
 time ./ctest $1 check || Fail "Failure in ctest check"
 ./generate check temp/c_check.txt || Fail "Verification failure for C unit test output."
-./ctest $1 gm_issue || Fail "Failed generating GM bug regression."
-./generate check temp/c_gm_check.txt || Fail "Failure checking GM bug regression."
-./ctest $1 refraction || Fail "Failure in ctest refraction"
-./ctest $1 rotation || Fail "Failure in ctest rotation"
-./ctest $1 moon || Fail "Failure in ctest moon"
-./ctest $1 constellation || Fail "Failure in ctest constellation"
-./ctest $1 lunar_eclipse || Fail "Failure in ctest lunar_eclipse"
-./ctest $1 global_solar_eclipse || Fail "Failure in ctest global_solar_eclipse"
-./ctest $1 local_solar_eclipse || Fail "Failure in ctest local_solar_eclipse"
-./ctest $1 seasons seasons/seasons.txt || Fail "Failed C seasons test."
-./ctest $1 moonphase moonphase/moonphases.txt || Fail "Failed C moon phase test."
+./ctest $1 all || Fail "Failure in C unit tests"
 
-./ctest $1 elongation || Fail "Failed C elongation tests."
 for file in temp/c_longitude_*.txt; do
     ./generate $1 check ${file} || Fail "Failed verification of file ${file}"
 done
-
-./ctest $1 riseset riseset/riseset.txt || Fail "Failed C rise/set tests."
-./ctest $1 magnitude || Fail "Failed C magnitude tests."
-./ctest $1 moon_apsis apsides/moon.txt || Fail "Failed C Moon apsis tests."
-./ctest $1 earth_apsis apsides/earth.txt || Fail "Failed C Earth apsis tests."
-./ctest $1 planet_apsis || Fail "Failed C planet apsis tests."
 
 echo "unit_test_c: success"
 exit 0

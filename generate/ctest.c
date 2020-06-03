@@ -47,18 +47,15 @@ static int CheckEquator(int lnum, astro_equatorial_t equ)
 #define CHECK_EQU(var,expr)      CHECK(CheckEquator(__LINE__, ((var) = (expr))))
 #define CHECK_STATUS(expr)       CHECK(CheckStatus(__LINE__, #expr, (expr).status))
 
-static int Issue46(void);
-static int Issue48(void);
-static int IssueGM(void);
 static int Test_AstroTime(void);
 static int AstroCheck(void);
 static int Diff(const char *c_filename, const char *js_filename);
 static int DiffLine(int lnum, const char *cline, const char *jline, double *maxdiff, int *worst_lnum);
-static int SeasonsTest(const char *filename);
-static int MoonPhase(const char *filename);
-static int RiseSet(const char *filename);
-static int LunarApsis(const char *filename);
-static int EarthApsis(const char *filename);
+static int SeasonsTest(void);
+static int MoonPhase(void);
+static int RiseSet(void);
+static int LunarApsis(void);
+static int EarthApsis(void);
 static int PlanetApsis(void);
 static int ElongationTest(void);
 static int MagnitudeTest(void);
@@ -73,8 +70,41 @@ static int LunarEclipseTest(void);
 static int GlobalSolarEclipseTest(void);
 static int PlotDeltaT(const char *outFileName);
 static double AngleDiff(double alat, double alon, double blat, double blon);
+static int LocalSolarEclipseTest(void);
 static int LocalSolarEclipseTest1(void);
 static int LocalSolarEclipseTest2(void);
+
+typedef int (* unit_test_func_t) (void);
+
+typedef struct
+{
+    const char *name;
+    unit_test_func_t func;
+}
+unit_test_t;
+
+static unit_test_t UnitTests[] =
+{
+    {"check",                   AstroCheck},
+    {"constellation",           ConstellationTest},
+    {"earth_apsis",             EarthApsis},
+    {"elongation",              ElongationTest},
+    {"global_solar_eclipse",    GlobalSolarEclipseTest},
+    {"local_solar_eclipse",     LocalSolarEclipseTest},
+    {"lunar_eclipse",           LunarEclipseTest},
+    {"magnitude",               MagnitudeTest},
+    {"moon",                    MoonTest},
+    {"moon_apsis",              LunarApsis},
+    {"moon_phase",              MoonPhase},
+    {"planet_apsis",            PlanetApsis},
+    {"refraction",              RefractionTest},
+    {"riseset",                 RiseSet},
+    {"rotation",                RotationTest},
+    {"seasons",                 SeasonsTest},
+    {"time",                    Test_AstroTime}
+};
+
+#define NUM_UNIT_TESTS    (sizeof(UnitTests) / sizeof(UnitTests[0]))
 
 int main(int argc, const char *argv[])
 {
@@ -87,146 +117,49 @@ int main(int argc, const char *argv[])
         Verbose = 1;
     }
 
-    if (argc == 2)
+    if (argc > 1)
     {
         const char *verb = argv[1];
-        if (!strcmp(verb, "check"))
+        if (argc == 2)
         {
-            CHECK(Test_AstroTime());
-            CHECK(AstroCheck());
-            goto success;
+            int i;
+
+            if (!strcmp(verb, "all"))
+            {
+                for (i=0; i < NUM_UNIT_TESTS; ++i)
+                    CHECK(UnitTests[i].func());
+                goto success;
+            }
+
+            for (i=0; i < NUM_UNIT_TESTS; ++i)
+            {
+                if (!strcmp(verb, UnitTests[i].name))
+                {
+                    CHECK(UnitTests[i].func());
+                    goto success;
+                }
+            }
         }
 
-        if (!strcmp(verb, "elongation"))
+        if (argc == 3)
         {
-            CHECK(ElongationTest());
-            goto success;
+            const char *filename = argv[2];
+            if (!strcmp(verb, "dtplot"))
+            {
+                CHECK(PlotDeltaT(filename));
+                goto success;
+            }
         }
 
-        if (!strcmp(verb, "magnitude"))
+        if (argc == 4)
         {
-            CHECK(MagnitudeTest());
-            goto success;
-        }
-
-        if (!strcmp(verb, "moon"))
-        {
-            CHECK(MoonTest());
-            goto success;
-        }
-
-        if (!strcmp(verb, "rotation"))
-        {
-            CHECK(RotationTest());
-            goto success;
-        }
-
-        if (!strcmp(verb, "refraction"))
-        {
-            CHECK(RefractionTest());
-            goto success;
-        }
-
-        if (!strcmp(verb, "planet_apsis"))
-        {
-            CHECK(PlanetApsis());
-            goto success;
-        }
-
-        if (!strcmp(verb, "issue46"))
-        {
-            CHECK(Issue46());
-            goto success;
-        }
-
-        if (!strcmp(verb, "issue48"))
-        {
-            CHECK(Issue48());
-            goto success;
-        }
-
-        if (!strcmp(verb, "gm_issue"))
-        {
-            CHECK(IssueGM());
-            goto success;
-        }
-
-        if (!strcmp(verb, "constellation"))
-        {
-            CHECK(ConstellationTest());
-            goto success;
-        }
-
-        if (!strcmp(verb, "lunar_eclipse"))
-        {
-            CHECK(LunarEclipseTest());
-            goto success;
-        }
-
-        if (!strcmp(verb, "global_solar_eclipse"))
-        {
-            CHECK(GlobalSolarEclipseTest());
-            goto success;
-        }
-
-        if (!strcmp(verb, "local_solar_eclipse"))
-        {
-            CHECK(LocalSolarEclipseTest1());
-            CHECK(LocalSolarEclipseTest2());
-            goto success;
-        }
-    }
-
-    if (argc == 3)
-    {
-        const char *verb = argv[1];
-        const char *filename = argv[2];
-
-        if (!strcmp(verb, "seasons"))
-        {
-            CHECK(SeasonsTest(filename));
-            goto success;
-        }
-
-        if (!strcmp(verb, "moonphase"))
-        {
-            CHECK(MoonPhase(filename));
-            goto success;
-        }
-
-        if (!strcmp(verb, "riseset"))
-        {
-            CHECK(RiseSet(filename));
-            goto success;
-        }
-
-        if (!strcmp(verb, "moon_apsis"))
-        {
-            CHECK(LunarApsis(filename));
-            goto success;
-        }
-
-        if (!strcmp(verb, "earth_apsis"))
-        {
-            CHECK(EarthApsis(filename));
-            goto success;
-        }
-
-        if (!strcmp(verb, "dtplot"))
-        {
-            CHECK(PlotDeltaT(filename));
-            goto success;
-        }
-    }
-
-    if (argc == 4)
-    {
-        if (!strcmp(argv[1], "diff"))
-        {
-            const char *c_filename = argv[2];
-            const char *js_filename = argv[3];
-            CHECK(Diff(c_filename, js_filename));
-            goto success;
+            if (!strcmp(verb, "diff"))
+            {
+                const char *c_filename = argv[2];
+                const char *js_filename = argv[3];
+                CHECK(Diff(c_filename, js_filename));
+                goto success;
+            }
         }
     }
 
@@ -473,8 +406,9 @@ fail:
 
 /*-----------------------------------------------------------------------------------------------------------*/
 
-static int SeasonsTest(const char *filename)
+static int SeasonsTest(void)
 {
+    const char *filename = "seasons/seasons.txt";
     int error = 1;
     int lnum;
     FILE *infile = NULL;
@@ -585,8 +519,9 @@ fail:
 
 /*-----------------------------------------------------------------------------------------------------------*/
 
-static int MoonPhase(const char *filename)
+static int MoonPhase(void)
 {
+    const char *filename = "moonphase/moonphases.txt";
     int error = 1;
     FILE *infile = NULL;
     int lnum, nscanned;
@@ -1026,8 +961,9 @@ fail:
 
 /*-----------------------------------------------------------------------------------------------------------*/
 
-static int RiseSet(const char *filename)
+static int RiseSet(void)
 {
+    const char *filename = "riseset/riseset.txt";
     int error = 1;
     FILE *infile = NULL;
     char line[100];
@@ -1476,8 +1412,9 @@ static const char *ParseJplHorizonsDateTime(const char *text, astro_time_t *time
 
 /*-----------------------------------------------------------------------------------------------------------*/
 
-static int LunarApsis(const char *filename)
+static int LunarApsis(void)
 {
+    const char *filename = "apsides/moon.txt";
     int error = 1;
     FILE *infile = NULL;
     int lnum, nscanned;
@@ -1547,8 +1484,9 @@ fail:
 
 /*-----------------------------------------------------------------------------------------------------------*/
 
-static int EarthApsis(const char *filename)
+static int EarthApsis(void)
 {
+    const char *filename = "apsides/earth.txt";
     int error = 1;
     FILE *infile = NULL;
     int lnum, nscanned;
@@ -1756,94 +1694,6 @@ fail:
     return error;
 }
 
-
-/*-----------------------------------------------------------------------------------------------------------*/
-
-static int MathCheck(astro_body_t body, double ut)
-{
-    astro_observer_t observer = Astronomy_MakeObserver(29, -81, 10);
-    astro_time_t time = Astronomy_TimeFromDays(ut);
-    astro_equatorial_t j2000;
-    astro_equatorial_t ofdate;
-    astro_horizon_t hor;
-    int error = 1;
-
-    printf("C time.ut     = %0.16lf\n", time.ut);
-    printf("C time.tt     = %0.16lf\n", time.tt);
-
-    CHECK_EQU(j2000, Astronomy_Equator(body, &time, observer, EQUATOR_J2000, NO_ABERRATION));
-    printf("C j2000  ra   = %0.16lf\n", j2000.ra);
-    printf("C j2000  dec  = %0.16lf\n", j2000.dec);
-
-    CHECK_EQU(ofdate, Astronomy_Equator(body, &time, observer, EQUATOR_OF_DATE, ABERRATION));
-    printf("C ofdate ra   = %0.16lf\n", ofdate.ra);
-    printf("C ofdate dec  = %0.16lf\n", ofdate.dec);
-
-    hor = Astronomy_Horizon(&time, observer, ofdate.ra, ofdate.dec, REFRACTION_NONE);
-    printf("C azimuth     = %0.16lf\n", hor.azimuth);
-    printf("C altitude    = %0.16lf\n", hor.altitude);
-
-    error = 0;
-fail:
-    return error;
-}
-
-static int Issue46(void)
-{
-    /* https://github.com/cosinekitty/astronomy/issues/46 */
-    return MathCheck(BODY_SUN, -93692.7685882873047376);
-}
-
-static int Issue48(void)
-{
-    /* https://github.com/cosinekitty/astronomy/issues/48 */
-    return MathCheck(BODY_VENUS, -39864.1907264927140204);
-}
-
-static int IssueGM_Body(FILE *outfile, astro_body_t body, const char *name)
-{
-    int error = 1;
-    astro_time_t time;
-    astro_equatorial_t j2000;
-    astro_equatorial_t ofdate;
-    astro_horizon_t hor;
-    astro_observer_t observer = Astronomy_MakeObserver(29.0, -81.0, 10.0);
-
-    /* Create an extremely exaggerated delta t value. */
-    time.ut = 0.0;
-    time.tt = 0.5;
-    time.eps = time.psi = NAN;
-
-    fprintf(outfile, "o %lf %lf %lf\n", observer.latitude, observer.longitude, observer.height);
-    CHECK_EQU(j2000, Astronomy_Equator(body, &time, observer, EQUATOR_J2000, NO_ABERRATION));
-    CHECK_EQU(ofdate, Astronomy_Equator(body, &time, observer, EQUATOR_OF_DATE, ABERRATION));
-    hor = Astronomy_Horizon(&time, observer, ofdate.ra, ofdate.dec, REFRACTION_NONE);
-    fprintf(outfile, "s %s %0.16lf %0.16lf %0.16lf %0.16lf %0.16lf %0.16lf %0.16lf\n",
-        name,
-        time.tt, time.ut, j2000.ra, j2000.dec, j2000.dist, hor.azimuth, hor.altitude);
-
-    error = 0;
-fail:
-    return error;
-}
-
-static int IssueGM(void)
-{
-    int error = 1;
-    const char *outFileName = "temp/c_gm_check.txt";
-    FILE *outfile = fopen(outFileName, "wt");
-
-    if (outfile == NULL)
-        FAIL("IssueGM: Cannot open output file: %s\n", outFileName);
-
-    /* CHECK(IssueGM_Body(outfile, BODY_JUPITER, "Jupiter")); */
-    CHECK(IssueGM_Body(outfile, BODY_MOON,    "GM"));
-
-    error = 0;
-fail:
-    if (outfile != NULL) fclose(outfile);
-    return error;
-}
 
 /*-----------------------------------------------------------------------------------------------------------*/
 
@@ -2913,6 +2763,16 @@ static double AngleDiff(double alat, double alon, double blat, double blon)
 }
 
 /*-----------------------------------------------------------------------------------------------------------*/
+
+static int LocalSolarEclipseTest(void)
+{
+    int error;
+    CHECK(LocalSolarEclipseTest1());
+    CHECK(LocalSolarEclipseTest2());
+    error = 0;
+fail:
+    return error;
+}
 
 static int LocalSolarEclipseTest1(void)
 {
