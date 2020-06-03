@@ -820,6 +820,301 @@ function RiseSet() {
     const elapsed_seconds = (after_date - before_date) / 1000;
 
     console.log(`JS RiseSet PASS: elapsed=${elapsed_seconds.toFixed(3)}, error in minutes: rms=${Math.sqrt(sum_minutes/data.length).toFixed(4)}, max=${max_minutes.toFixed(4)}`);
+    return 0;
+}
+
+
+function Rotation() {
+    function CompareMatrices(caller, a, b, tolerance) {
+        for (let i=0; i<3; ++i) {
+            for (let j=0; j<3; ++j) {
+                const diff = Math.abs(a.rot[i][j] - b.rot[i][j]);
+                if (diff > tolerance) {
+                    throw `ERROR(${caller}): matrix[${i}][${j}] = ${a.rot[i][j]}, expected ${b.rot[i][j]}, diff ${diff}`;
+                }
+            }
+        }
+    }
+
+    function Rotation_MatrixInverse() {
+        const a = Astronomy.MakeRotation([
+            [1, 4, 7],
+            [2, 5, 8],
+            [3, 6, 9]
+        ]);
+
+        const v = Astronomy.MakeRotation([
+            [1, 2, 3],
+            [4, 5, 6],
+            [7, 8, 9]
+        ]);
+
+        const b = Astronomy.InverseRotation(a);
+        CompareMatrices('Rotation_MatrixInverse', b, v, 0);
+    }
+
+    function Rotation_MatrixMultiply() {
+        const a = Astronomy.MakeRotation([
+            [1, 4, 7],
+            [2, 5, 8],
+            [3, 6, 9]
+        ]);
+
+        const b = Astronomy.MakeRotation([
+            [10, 13, 16],
+            [11, 14, 17],
+            [12, 15, 18]
+        ]);
+
+        const v = Astronomy.MakeRotation([
+            [84, 201, 318],
+            [90, 216, 342],
+            [96, 231, 366]
+        ]);
+
+        const c = Astronomy.CombineRotation(b, a);
+        CompareMatrices('Rotation_MatrixMultiply', c, v, 0);
+    }
+
+    function VectorDiff(a, b) {
+        const dx = a.x - b.x;
+        const dy = a.y - b.y;
+        const dz = a.z - b.z;
+        return Math.sqrt(dx*dx + dy*dy + dz*dz);
+    }
+
+    function Test_EQJ_ECL() {
+        const r = Astronomy.Rotation_EQJ_ECL();
+
+        /* Calculate heliocentric Earth position at a test time. */
+        const time = Astronomy.MakeTime(new Date('2019-12-08T19:39:15Z'));
+        const ev = Astronomy.HelioVector('Earth', time);
+
+        /* Use the existing Astronomy.Ecliptic() to calculate ecliptic vector and angles. */
+        const ecl = Astronomy.Ecliptic(ev.x, ev.y, ev.z);
+        if (Verbose) console.log(`JS Test_EQJ_ECL ecl = (${ecl.ex}, ${ecl.ey}, ${ecl.ez})`);
+
+        /* Now compute the same vector via rotation matrix. */
+        const ee = Astronomy.RotateVector(r, ev);
+        const dx = ee.x - ecl.ex;
+        const dy = ee.y - ecl.ey;
+        const dz = ee.z - ecl.ez;
+        const diff = Math.sqrt(dx*dx + dy*dy + dz*dz);
+        if (Verbose) console.log(`JS Test_EQJ_ECL ee = (${ee.x}, ${ee.y}, ${ee.z}); diff = ${diff}`);
+        if (diff > 2.0e-15)
+            throw 'Test_EQJ_ECL: EXCESSIVE VECTOR ERROR';
+
+        /* Reverse the test: go from ecliptic back to equatorial. */
+        const ir = Astronomy.Rotation_ECL_EQJ();
+        const et = Astronomy.RotateVector(ir, ee);
+        const idiff = VectorDiff(et, ev);
+        if (Verbose) console.log(`JS Test_EQJ_ECL ev diff = ${idiff}`);
+        if (idiff > 2.0e-16)
+            throw 'Test_EQJ_ECL: EXCESSIVE REVERSE ROTATION ERROR';
+    }
+
+    function Test_EQJ_EQD(body) {
+        /* Verify conversion of equatorial J2000 to equatorial of-date, and back. */
+        /* Use established functions to calculate spherical coordinates for the body, in both EQJ and EQD. */
+        const time = Astronomy.MakeTime(new Date('2019-12-08T20:50:00Z'));
+        const observer = Astronomy.MakeObserver(+35, -85, 0);
+        const eq2000 = Astronomy.Equator(body, time, observer, false, true);
+        const eqdate = Astronomy.Equator(body, time, observer, true, true);
+
+        /* Convert EQJ spherical coordinates to vector. */
+        const v2000 = Astronomy.VectorFromEquator(eq2000, time);
+
+        /* Find rotation matrix. */
+        const r = Astronomy.Rotation_EQJ_EQD(time);
+
+        /* Rotate EQJ vector to EQD vector. */
+        const vdate = Astronomy.RotateVector(r, v2000);
+
+        /* Convert vector back to angular equatorial coordinates. */
+        let equcheck = Astronomy.EquatorFromVector(vdate);
+
+        /* Compare the result with the eqdate. */
+        const ra_diff = Math.abs(equcheck.ra - eqdate.ra);
+        const dec_diff = Math.abs(equcheck.dec - eqdate.dec);
+        const dist_diff = Math.abs(equcheck.dist - eqdate.dist);
+        if (Verbose) console.log(`JS Test_EQJ_EQD: ${body} ra=${eqdate.ra}, dec=${eqdate.dec}, dist=${eqdate.dist}, ra_diff=${ra_diff}, dec_diff=${dec_diff}, dist_diff=${dist_diff}`);
+        if (ra_diff > 1.0e-14 || dec_diff > 1.0e-14 || dist_diff > 4.0e-15)
+            throw 'Test_EQJ_EQD: EXCESSIVE ERROR';
+
+        /* Perform the inverse conversion back to equatorial J2000 coordinates. */
+        const ir = Astronomy.Rotation_EQD_EQJ(time);
+        const t2000 = Astronomy.RotateVector(ir, vdate);
+        const diff = VectorDiff(t2000, v2000);
+        if (Verbose) console.log(`JS Test_EQJ_EQD: ${body} inverse diff = ${diff}`);
+        if (diff > 5.0e-15)
+            throw 'Test_EQJ_EQD: EXCESSIVE INVERSE ERROR';
+    }
+
+    function Test_EQD_HOR(body) {
+        /* Use existing functions to calculate horizontal coordinates of the body for the time+observer. */
+        const time = Astronomy.MakeTime(new Date('1970-12-13T05:15:00Z'));
+        const observer = Astronomy.MakeObserver(-37, +45, 0);
+        const eqd = Astronomy.Equator(body, time, observer, true, true);
+        if (Verbose) console.log(`JS Test_EQD_HOR ${body}: OFDATE ra=${eqd.ra}, dec=${eqd.dec}`);
+        const hor = Astronomy.Horizon(time, observer, eqd.ra, eqd.dec, 'normal');
+
+        /* Calculate the position of the body as an equatorial vector of date. */
+        const vec_eqd = Astronomy.VectorFromEquator(eqd, time);
+
+        /* Calculate rotation matrix to convert equatorial J2000 vector to horizontal vector. */
+        const rot = Astronomy.Rotation_EQD_HOR(time, observer);
+
+        /* Rotate the equator of date vector to a horizontal vector. */
+        const vec_hor = Astronomy.RotateVector(rot, vec_eqd);
+
+        /* Convert the horizontal vector to horizontal angular coordinates. */
+        const xsphere = Astronomy.HorizonFromVector(vec_hor, 'normal');
+        const diff_alt = Math.abs(xsphere.lat - hor.altitude);
+        const diff_az = Math.abs(xsphere.lon - hor.azimuth);
+
+        if (Verbose) console.log(`JS Test_EQD_HOR ${body}: trusted alt=${hor.altitude}, az=${hor.azimuth}; test alt=${xsphere.lat}, az=${xsphere.lon}; diff_alt=${diff_alt}, diff_az=${diff_az}`);
+        if (diff_alt > 4.0e-14 || diff_az > 1.0e-13)
+            throw 'Test_EQD_HOR: EXCESSIVE HORIZONTAL ERROR.';
+
+        /* Confirm that we can convert back to horizontal vector. */
+        const check_hor = Astronomy.VectorFromHorizon(xsphere, time, 'normal');
+        let diff = VectorDiff(check_hor, vec_hor);
+        if (Verbose) console.log(`JS Test_EQD_HOR ${body}: horizontal recovery: diff = ${diff}`);
+        if (diff > 2.0e-15)
+            throw 'Test_EQD_HOR: EXCESSIVE ERROR IN HORIZONTAL RECOVERY.';
+
+        /* Verify the inverse translation from horizontal vector to equatorial of-date vector. */
+        const irot = Astronomy.Rotation_HOR_EQD(time, observer);
+        const check_eqd = Astronomy.RotateVector(irot, vec_hor);
+        diff = VectorDiff(check_eqd, vec_eqd);
+        if (Verbose) console.log(`JS Test_EQD_HOR ${body}: OFDATE inverse rotation diff = ${diff}`);
+        if (diff > 2.0e-15)
+            throw 'Test_EQD_HOR: EXCESSIVE OFDATE INVERSE HORIZONTAL ERROR.';
+
+        /* Exercise HOR to EQJ translation. */
+        const eqj = Astronomy.Equator(body, time, observer, false, true);
+        const vec_eqj = Astronomy.VectorFromEquator(eqj, time);
+        const yrot = Astronomy.Rotation_HOR_EQJ(time, observer);
+        const check_eqj = Astronomy.RotateVector(yrot, vec_hor);
+        diff = VectorDiff(check_eqj, vec_eqj);
+        if (Verbose) console.log(`JS Test_EQD_HOR ${body}: J2000 inverse rotation diff = ${diff}`);
+        if (diff > 6.0e-15)
+            throw 'Test_EQD_HOR: EXCESSIVE J2000 INVERSE HORIZONTAL ERROR.';
+
+        /* Verify the inverse translation: EQJ to HOR. */
+        const zrot = Astronomy.Rotation_EQJ_HOR(time, observer);
+        const another_hor = Astronomy.RotateVector(zrot, vec_eqj);
+        diff = VectorDiff(another_hor, vec_hor);
+        if (Verbose) console.log(`JS Test_EQD_HOR ${body}: EQJ inverse rotation diff = ${diff}`);
+        if (diff > 3.0e-15)
+            throw 'Test_EQD_HOR: EXCESSIVE EQJ INVERSE HORIZONTAL ERROR.';
+    }
+
+    const IdentityMatrix = Astronomy.MakeRotation([[1, 0, 0], [0, 1, 0], [0, 0, 1]]);
+
+    function CheckInverse(aname, bname, arot, brot) {
+        const crot = Astronomy.CombineRotation(arot, brot);
+        CompareMatrices(`CheckInverse(${aname},${bname})`, crot, IdentityMatrix, 2.0e-15);
+    }
+
+    function CheckCycle(cyclename, arot, brot, crot) {
+        const xrot = Astronomy.CombineRotation(arot, brot);
+        const irot = Astronomy.InverseRotation(xrot);
+        CompareMatrices(cyclename, crot, irot, 2.0e-15);
+    }
+
+    function Test_RotRoundTrip() {
+        const time = Astronomy.MakeTime(new Date('2067-05-30T14:45:00Z'));
+        const observer = Astronomy.MakeObserver(+28, -82, 0);
+
+        /*
+            In each round trip, calculate a forward rotation and a backward rotation.
+            Verify the two are inverse matrices.
+        */
+
+        /* Round trip #1: EQJ <==> EQD. */
+        const eqj_eqd = Astronomy.Rotation_EQJ_EQD(time);
+        const eqd_eqj = Astronomy.Rotation_EQD_EQJ(time);
+        CheckInverse('eqj_eqd', 'eqd_eqj', eqj_eqd, eqd_eqj);
+
+        /* Round trip #2: EQJ <==> ECL. */
+        const eqj_ecl = Astronomy.Rotation_EQJ_ECL();
+        const ecl_eqj = Astronomy.Rotation_ECL_EQJ();
+        CheckInverse('eqj_ecl', 'ecl_eqj', eqj_ecl, ecl_eqj);
+
+        /* Round trip #3: EQJ <==> HOR. */
+        const eqj_hor = Astronomy.Rotation_EQJ_HOR(time, observer);
+        const hor_eqj = Astronomy.Rotation_HOR_EQJ(time, observer);
+        CheckInverse('eqj_hor', 'hor_eqj', eqj_hor, hor_eqj);
+
+        /* Round trip #4: EQD <==> HOR. */
+        const eqd_hor = Astronomy.Rotation_EQD_HOR(time, observer);
+        const hor_eqd = Astronomy.Rotation_HOR_EQD(time, observer);
+        CheckInverse('eqd_hor', 'hor_eqd', eqd_hor, hor_eqd);
+
+        /* Round trip #5: EQD <==> ECL. */
+        const eqd_ecl = Astronomy.Rotation_EQD_ECL(time);
+        const ecl_eqd = Astronomy.Rotation_ECL_EQD(time);
+        CheckInverse('eqd_ecl', 'ecl_eqd', eqd_ecl, ecl_eqd);
+
+        /* Round trip #6: HOR <==> ECL. */
+        const hor_ecl = Astronomy.Rotation_HOR_ECL(time, observer);
+        const ecl_hor = Astronomy.Rotation_ECL_HOR(time, observer);
+        CheckInverse('hor_ecl', 'ecl_hor', hor_ecl, ecl_hor);
+
+        /*
+            Verify that combining different sequences of rotations result
+            in the expected combination.
+            For example, (EQJ ==> HOR ==> ECL) must be the same matrix as (EQJ ==> ECL).
+            Each of these is a "triangle" of relationships between 3 orientations.
+            There are 4 possible ways to pick 3 orientations from the 4 to form a triangle.
+            Because we have just proved that each transformation is reversible,
+            we only need to verify the triangle in one cyclic direction.
+        */
+       CheckCycle('eqj_ecl, ecl_eqd, eqd_eqj', eqj_ecl, ecl_eqd, eqd_eqj);     /* excluded corner = HOR */
+       CheckCycle('eqj_hor, hor_ecl, ecl_eqj', eqj_hor, hor_ecl, ecl_eqj);     /* excluded corner = EQD */
+       CheckCycle('eqj_hor, hor_eqd, eqd_eqj', eqj_hor, hor_eqd, eqd_eqj);     /* excluded corner = ECL */
+       CheckCycle('ecl_eqd, eqd_hor, hor_ecl', ecl_eqd, eqd_hor, hor_ecl);     /* excluded corner = EQJ */
+
+       if (Verbose) console.log('JS Test_RotRoundTrip: PASS');
+    }
+
+    Rotation_MatrixInverse();
+    Rotation_MatrixMultiply();
+    Test_EQJ_ECL();
+
+    Test_EQJ_EQD('Mercury');
+    Test_EQJ_EQD('Venus');
+    Test_EQJ_EQD('Mars');
+    Test_EQJ_EQD('Jupiter');
+    Test_EQJ_EQD('Saturn');
+
+    Test_EQD_HOR('Mercury');
+    Test_EQD_HOR('Venus');
+    Test_EQD_HOR('Mars');
+    Test_EQD_HOR('Jupiter');
+    Test_EQD_HOR('Saturn');
+
+    Test_RotRoundTrip();
+
+    console.log('JS Rotation: PASS');
+    return 0;
+}
+
+
+function Refraction() {
+    for (let alt = -90.1; alt <= +90.1; alt += 0.001) {
+        const refr = Astronomy.Refraction('normal', alt);
+        const corrected = alt + refr;
+        const inv_refr = Astronomy.InverseRefraction('normal', corrected);
+        const check_alt = corrected + inv_refr;
+        const diff = Math.abs(check_alt - alt);
+        if (diff > 2.0e-14)
+            throw `JS Refraction: alt=${alt}, refr=${refr}, diff=${diff}`;
+    }
+
+    console.log('JS Refraction: PASS');
+    return 0;
 }
 
 
@@ -838,7 +1133,9 @@ function main() {
             case 'lunar_eclipse':   return LunarEclipse();
             case 'planet_apsis':    return PlanetApsis();
             case 'moon_phase':      return MoonPhase();
+            case 'refraction':      return Refraction();
             case 'rise_set':        return RiseSet();
+            case 'rotation':        return Rotation();
             case 'seasons':         return Seasons();
         }
     }
