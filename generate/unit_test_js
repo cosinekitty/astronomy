@@ -32,7 +32,7 @@ node test.js $1 planet_apsis || Fail "Failed planet apsis test."
 
 echo ""
 echo "$0: Running longitude tests."
-node test.js $1 elongation $1 || Fail "Failed longitude tests."
+node test.js $1 elongation || Fail "Failed longitude tests."
 
 echo ""
 echo "$0: Verifying elong_test output."
@@ -42,7 +42,7 @@ done
 
 echo ""
 echo "$0: Running seasons test."
-node seasons_test.js || Fail "Failed seasons test."
+node test.js $1 seasons || Fail "Failed seasons test."
 
 echo ""
 echo "$0: Running rise/set test."

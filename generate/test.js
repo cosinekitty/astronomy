@@ -603,6 +603,116 @@ function Elongation() {
 }
 
 
+function Seasons() {
+    function LoadTestData(filename) {
+        // Moon  150 -45 2050-03-07T19:13Z s
+        const text = fs.readFileSync(filename, {encoding:'utf8'});
+        const lines = text.trimRight().split('\n');
+        let data = [];
+        let lnum = 0;
+        let minByMonth = [];
+        let maxByMonth = [];
+        for (let row of lines) {
+            let token = row.split(/\s+/g);
+            let item = {
+                lnum: ++lnum,
+                date: new Date(token[0]),
+                name: token[1]  // Perihelion, Equinox, Solstice, Aphelion
+            };
+            data.push(item);
+
+            if (item.name === 'Equinox' || item.name == 'Solstice') {
+                let month = 1 + item.date.getUTCMonth();
+                let format = item.date.toISOString().substring(8);
+                if (!minByMonth[month] || format < minByMonth[month])
+                    minByMonth[month] = format;
+                if (!maxByMonth[month] || format > maxByMonth[month])
+                    maxByMonth[month] = format;
+            }
+        }
+
+        if (Verbose) {
+            console.log(`JS Seasons LoadTestData: count = ${data.length}`);
+            for (let month of [3, 6, 9, 12]) {
+                console.log(`Month ${month}: earliest ${minByMonth[month]}, latest ${maxByMonth[month]}`);
+            }
+        }
+        return data;
+    }
+    const data = LoadTestData('seasons/seasons.txt');
+    let current_year;
+    let seasons;
+    let calc_date;
+    let min_diff, max_diff, sum_diff = 0, count = 0;
+    let month_max_diff = [];
+    for (let item of data) {
+        let year = item.date.getUTCFullYear();
+        if (current_year !== year) {
+            current_year = year;
+            seasons = Astronomy.Seasons(year);
+        }
+        calc_date = null;
+        let month = 1 + item.date.getUTCMonth();
+        switch (item.name) {
+        case 'Equinox':
+            switch (month) {
+            case 3:
+                calc_date = seasons.mar_equinox.date;
+                break;
+            case 9:
+                calc_date = seasons.sep_equinox.date;
+                break;
+            default:
+                throw `ERROR: Invalid equinox date in test data: ${item.date.toISOString()}`;
+            }
+            break;
+        case 'Solstice':
+            switch (month) {
+            case 6:
+                calc_date = seasons.jun_solstice.date;
+                break;
+            case 12:
+                calc_date = seasons.dec_solstice.date;
+                break;
+            default:
+                throw `ERROR: Invalid solstice date in test data: ${item.date.toISOString()}`;
+            }
+            break;
+        default:
+            continue;   // ignore the other kinds of events for now
+        }
+        if (!calc_date)
+            throw `ERROR: Missing calc_date for test date ${item.date.toISOString()}`;
+        let diff_minutes = (calc_date - item.date) / 60000;
+        if (Math.abs(diff_minutes) > 2.37) {
+            throw `ERROR: Excessive error in season calculation: ${diff_minutes.toFixed(3)} minutes`;
+        }
+
+        if (min_diff === undefined) {
+            min_diff = max_diff = diff_minutes;
+        } else {
+            min_diff = Math.min(min_diff, diff_minutes);
+            max_diff = Math.max(max_diff, diff_minutes);
+        }
+        if (month_max_diff[month] === undefined) {
+            month_max_diff[month] = Math.abs(diff_minutes);
+        } else {
+            month_max_diff[month] = Math.max(month_max_diff[month], Math.abs(diff_minutes));
+        }
+        sum_diff += diff_minutes;
+        ++count;
+    }
+
+    if (Verbose) {
+        console.log(`JS Seasons: n=${count}, minute errors: min=${min_diff.toFixed(3)}, avg=${(sum_diff/count).toFixed(3)}, max=${max_diff.toFixed(3)}`);
+        for (let month of [3, 6, 9, 12]) {
+            console.log(`JS Seasons: max diff by month ${month} = ${month_max_diff[month].toFixed(3)}`);
+        }
+    }
+    console.log('JS Seasons: PASS');
+}
+
+
 function main() {
     let args = process.argv.slice(2);
     if (args.length > 0 && args[0] === '-v') {
@@ -632,6 +742,10 @@ function main() {
 
     if (args.length === 1 && args[0] == 'elongation') {
         return Elongation();
+    }
+
+    if (args.length === 1 && args[0] == 'seasons') {
+        return Seasons();
     }
 
     console.log('test.js: Invalid command line arguments.');
