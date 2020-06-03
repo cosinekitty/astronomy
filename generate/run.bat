@@ -286,43 +286,7 @@ if errorlevel 1 (exit /b 1)
 REM -----------------------------------------------------------------------------------------
 
 echo.Running Python tests.
-test.py time
-if errorlevel 1 (exit /b 1)
-
-test.py refraction
-if errorlevel 1 (exit /b 1)
-
-test.py rotation
-if errorlevel 1 (exit /b 1)
-
-test.py lunar_apsis
-if errorlevel 1 (exit /b 1)
-
-test.py planet_apsis
-if errorlevel 1 (exit /b 1)
-
-test.py magnitude
-if errorlevel 1 (exit /b 1)
-
-test.py moon
-if errorlevel 1 (exit /b 1)
-
-test.py seasons
-if errorlevel 1 (exit /b 1)
-
-test.py moonphase
-if errorlevel 1 (exit /b 1)
-
-test.py lunar_eclipse
-if errorlevel 1 (exit /b 1)
-
-test.py riseset
-if errorlevel 1 (exit /b 1)
-
-test.py elongation
-if errorlevel 1 (exit /b 1)
-
-test.py constellation
+test.py all
 if errorlevel 1 (exit /b 1)
 
 for %%f in (temp\py_longitude_*.txt) do (

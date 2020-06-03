@@ -69,6 +69,7 @@ def Test_AstroTime():
     AssertBadTime('1971-12-31T23:60:00Z')
     AssertBadTime('1971-12-31T23:00:60Z')
     AssertBadTime('1971-03-17T03:30:55.976')
+    return 0
 
 #-----------------------------------------------------------------------------------------------------------
 
@@ -83,7 +84,8 @@ def Test_GeoMoon():
     print('PY Test_GeoMoon: diff = {}'.format(diff))
     if diff > 4.34e-19:
         print('PY Test_GeoMoon: EXCESSIVE ERROR')
-        sys.exit(1)
+        return 1
+    return 0
 
 #-----------------------------------------------------------------------------------------------------------
 
@@ -123,6 +125,7 @@ def Test_AstroCheck(printflag):
         if printflag:
             print('s GM {:0.16f} {:0.16f} {:0.16f} {:0.16f} {:0.16f} {:0.16f} {:0.16f}'.format(time.tt, time.ut, j2000.ra, j2000.dec, j2000.dist, hor.azimuth, hor.altitude))
         time = time.AddDays(dt)
+    return 0
 
 #-----------------------------------------------------------------------------------------------------------
 
@@ -1244,10 +1247,18 @@ if __name__ == '__main__':
     if len(sys.argv) == 2:
         name = sys.argv[1]
         if name in UnitTests:
-            UnitTests[name]()
-            sys.exit(0)
+            sys.exit(UnitTests[name]())
         if name in ['astro_check', 'astro_profile']:
-            Test_AstroCheck(sys.argv[1] == 'astro_check')
+            sys.exit(Test_AstroCheck(sys.argv[1] == 'astro_check'))
+        if name == 'all':
+            for name in sorted(UnitTests.keys()):
+                func = UnitTests[name]
+                Debug('test.py: Starting test "{}"'.format(name))
+                rc = func()
+                Debug('test.py: Test "{}" returned {}'.format(name, rc))
+                if rc != 0:
+                    sys.exit(1)
+            print('test.py: ALL PASS')
             sys.exit(0)
 
     print('test.py: Invalid command line arguments.')
