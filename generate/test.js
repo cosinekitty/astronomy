@@ -166,6 +166,62 @@ function MoonPhase() {
 }
 
 
+function LunarApsis() {
+    const filename = 'apsides/moon.txt';
+    const text = fs.readFileSync(filename, {encoding:'utf8'});
+    const lines = text.split(/\r?\n/);
+
+    const time_before = new Date();
+    let evt = Astronomy.SearchLunarApsis(new Date(Date.UTC(2001, 0, 1)));
+
+    let lnum = 0;
+    let count = 0;
+    let max_minute_error = 0;
+    let max_dist_error = 0;
+    for (let line of lines) {
+        ++lnum;
+
+        let token = line.split(/\s+/);
+        if (token.length !== 3)
+            continue;
+
+        let kind = parseInt(token[0]);
+        let date = new Date(token[1]);
+        let dist = parseInt(token[2]);
+
+        if (evt.kind !== kind) {
+            console.log('line = ', line);
+            throw `${filename} line ${lnum}: Expected apsis type ${kind}, found ${evt.kind}`;
+        }
+
+        let diff_minutes = Math.abs(evt.time.date - date) / (1000 * 60);
+        if (diff_minutes > 35) {
+            throw `${filename} line ${lnum}: Excessive time error: ${diff_minutes} minutes`;
+        }
+        max_minute_error = Math.max(max_minute_error, diff_minutes);
+
+        let diff_dist = Math.abs(evt.dist_km - dist);
+        if (diff_dist > 25) {
+            throw `${filename} line ${lnum}: Excessive distance error: ${diff_dist} km`;
+        }
+        max_dist_error = Math.max(max_dist_error, diff_dist);
+
+        ++count;
+        evt = Astronomy.NextLunarApsis(evt);
+    }
+    const time_after = new Date();
+    const elapsed = (time_after - time_before) / 1000;
+
+    console.log(`lunar_apsis_test.js: verified ${count} lines, max time error = ${max_minute_error.toFixed(3)} minutes, max dist error = ${max_dist_error.toFixed(3)} km.`);
+
+    if (count !== 2651)
+        throw 'FATAL: Did not process the expected number of data rows!';
+
+    console.log(`LunarApsis PERFORMANCE: time=${elapsed.toFixed(3)}`);
+    return 0;
+}
+
+
 function main() {
     let args = process.argv.slice(2);
     if (args.length > 0 && args[0] === '-v') {
@@ -181,8 +237,13 @@ function main() {
         return MoonPhase();
     }
 
+    if (args.length === 1 && args[0] === 'lunar_apsis') {
+        return LunarApsis();
+    }
+
     console.log('test.js: Invalid command line arguments.');
     return 1;
 }
+
 
 process.exit(main());
