@@ -239,7 +239,6 @@ if errorlevel 1 (exit /b 1)
 for %%f in (temp\c_longitude_*.txt) do (
     !GENEXE! check %%f
     if errorlevel 1 (exit /b 1)
-    echo.
 )
 
 REM -----------------------------------------------------------------------------------------
@@ -251,7 +250,6 @@ if errorlevel 1 (exit /b 1)
 for %%f in (temp\py_longitude_*.txt) do (
     !GENEXE! check %%f
     if errorlevel 1 (exit /b 1)
-    echo .
 )
 
 echo.Generating Python test output.
