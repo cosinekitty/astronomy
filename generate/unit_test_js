@@ -30,7 +30,7 @@ node test.js $1 seasons || Fail "Failed seasons test."
 node test.js $1 rise_set || Fail "Failed rise/set test."
 node test.js $1 rotation || Fail "Failed rotation tests."
 node test.js $1 refraction || Fail "Failed refraction tests."
-node mag_test.js $1 || Fail "Failed magnitude tests."
+node test.js $1 magnitude || Fail "Failed magnitude tests."
 node constellation.js || Fail "Failed constellation tests."
 
 echo ""
