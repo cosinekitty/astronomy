@@ -240,6 +240,32 @@ equator projected onto the sky.
 
 ---
 
+<a name="GlobalSolarEclipseInfo"></a>
+### class GlobalSolarEclipseInfo
+
+**Reports the time and geographic location of the peak of a solar eclipse.**
+
+Returned by [`SearchGlobalSolarEclipse`](#SearchGlobalSolarEclipse) or [`NextGlobalSolarEclipse`](#NextGlobalSolarEclipse)
+to report information about a solar eclipse event.
+Field `peak` holds the date and time of the peak of the eclipse, defined as
+the instant when the axis of the Moon's shadow cone passes closest to the Earth's center.
+The eclipse is classified as partial, annular, or total, depending on the
+maximum amount of the Sun's disc obscured, as seen at the peak location
+on the surface of the Earth.
+The `kind` field thus holds `EclipseKind.Partial`, `EclipseKind.Annular`, or `EclipseKind.Total`.
+A total eclipse is when the peak observer sees the Sun completely blocked by the Moon.
+An annular eclipse is like a total eclipse, but the Moon is too far from the Earth's surface
+to completely block the Sun; instead, the Sun takes on a ring-shaped appearance.
+A partial eclipse is when the Moon blocks part of the Sun's disc, but nobody on the Earth
+observes either a total or annular eclipse.
+If `kind` is `EclipseKind.Total` or `EclipseKind.Annular`, the `latitude` and `longitude`
+fields give the geographic coordinates of the center of the Moon's shadow projected
+onto the daytime side of the Earth at the instant of the eclipse's peak.
+If `kind` has any other value, `latitude` and `longitude` are undefined and should
+not be used.
+
+---
+
 <a name="HorizontalCoordinates"></a>
 ### class HorizontalCoordinates
 
@@ -1212,6 +1238,25 @@ Certain values of the angle have conventional definitions:
 
 ---
 
+<a name="NextGlobalSolarEclipse"></a>
+### NextGlobalSolarEclipse(prevEclipseTime)
+
+**Searches for the next global solar eclipse in a series.**
+
+After using [`SearchGlobalSolarEclipse`](#SearchGlobalSolarEclipse) to find the first solar eclipse
+in a series, you can call this function to find the next consecutive solar eclipse.
+Pass in the `peak` value from the [`GlobalSolarEclipseInfo`](#GlobalSolarEclipseInfo) returned by the
+previous call to `SearchGlobalSolarEclipse` or `NextGlobalSolarEclipse`
+to find the next solar eclipse.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Time`](#Time) | `prevEclipseTime` | A date and time near a new moon. Solar eclipse search will start at the next new moon. |
+
+### Returns: [`GlobalSolarEclipseInfo`](#GlobalSolarEclipseInfo)
+
+---
+
 <a name="NextLunarApsis"></a>
 ### NextLunarApsis(apsis)
 
@@ -1633,6 +1678,26 @@ In this case, the returned time value will always be within the
 inclusive range [`t1`, `t2`].
 If there is no ascending root, or there is more than one ascending root,
 the function returns `None`.
+
+---
+
+<a name="SearchGlobalSolarEclipse"></a>
+### SearchGlobalSolarEclipse(startTime)
+
+**Searches for a solar eclipse visible anywhere on the Earth's surface.**
+
+This function finds the first solar eclipse that occurs after `startTime`.
+A solar eclipse found may be partial, annular, or total.
+See [`GlobalSolarEclipseInfo`](#GlobalSolarEclipseInfo) for more information.
+To find a series of solar eclipses, call this function once,
+then keep calling [`NextGlobalSolarEclipse`](#NextGlobalSolarEclipse) as many times as desired,
+passing in the `peak` value returned from the previous call.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Time`](#Time) | `startTime` | The date and time for starting the search for a solar eclipse. |
+
+### Returns: [`GlobalSolarEclipseInfo`](#GlobalSolarEclipseInfo)
 
 ---
 

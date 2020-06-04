@@ -1221,20 +1221,117 @@ def LunarEclipse():
 
 #-----------------------------------------------------------------------------------------------------------
 
+def VectorFromAngles(lat, lon):
+    coslat = math.cos(math.radians(lat))
+    return [
+        math.cos(math.radians(lon)) * coslat,
+        math.sin(math.radians(lon)) * coslat,
+        math.sin(math.radians(lat))
+    ]
+
+
+def AngleDiff(alat, alon, blat, blon):
+    a = VectorFromAngles(alat, alon)
+    b = VectorFromAngles(blat, blon)
+    dot = a[0]*b[0] + a[1]*b[1] + a[2]*b[2]
+    if dot <= -1.0:
+        return 180.0
+    if dot >= +1.0:
+        return 0.0
+    return math.degrees(math.acos(dot))
+
+
+def GlobalSolarEclipse():
+    expected_count = 1180
+    max_minutes = 0.0
+    max_angle = 0.0
+    skip_count = 0
+    eclipse = astronomy.SearchGlobalSolarEclipse(astronomy.Time.Make(1701, 1, 1, 0, 0, 0))
+    filename = 'eclipse/solar_eclipse.txt'
+    with open(filename, 'rt') as infile:
+        lnum = 0
+        for line in infile:
+            lnum += 1
+            # 1889-12-22T12:54:15Z   -6 T   -12.7   -12.8
+            token = line.split()
+            if len(token) != 5:
+                print('GlobalSolarEclipse({} line {}): invalid token count = {}'.format(filename, lnum, len(token)))
+                return 1
+            peak = astronomy.Time.Parse(token[0])
+            typeChar = token[2]
+            lat = float(token[3])
+            lon = float(token[4])
+            expected_kind = {
+                'P': astronomy.EclipseKind.Partial,
+                'A': astronomy.EclipseKind.Annular,
+                'T': astronomy.EclipseKind.Total,
+                'H': astronomy.EclipseKind.Total,
+            }[typeChar]
+
+            diff_days = eclipse.peak.tt - peak.tt
+            # Sometimes we find marginal eclipses that aren't listed in the test data.
+            # Ignore them if the distance between the Sun/Moon shadow axis and the Earth's center is large.
+            while diff_days < -25.0 and eclipse.distance > 9000.0:
+                skip_count += 1
+                eclipse = astronomy.NextGlobalSolarEclipse(eclipse.peak)
+                diff_days = eclipse.peak.ut - peak.ut
+
+            # Validate the eclipse prediction.
+            diff_minutes = (24 * 60) * abs(diff_days)
+            if diff_minutes > 6.93:
+                print('PY GlobalSolarEclipseTest({} line {}): EXCESSIVE TIME ERROR = {} minutes'.format(filename, lnum, diff_minutes))
+                return 1
+
+            if diff_minutes > max_minutes:
+                max_minutes = diff_minutes
+
+            # Validate the eclipse kind, but only when it is not a "glancing" eclipse.
+            if (eclipse.distance < 6360) and (eclipse.kind != expected_kind):
+                print('PY GlobalSolarEclipseTest({} line {}): WRONG ECLIPSE KIND: expected {}, found {}'.format(filename, lnum, expected_kind, eclipse.kind))
+                return 1
+
+            if eclipse.kind == astronomy.EclipseKind.Total or eclipse.kind == astronomy.EclipseKind.Annular:
+                # When the distance between the Moon's shadow ray and the Earth's center is beyond 6100 km,
+                # it creates a glancing blow whose geographic coordinates are excessively sensitive to
+                # slight changes in the ray. Therefore, it is unreasonable to count large errors there.
+                if eclipse.distance < 6100.0:
+                    diff_angle = AngleDiff(lat, lon, eclipse.latitude, eclipse.longitude)
+                    if diff_angle > 0.247:
+                        print('PY GlobalSolarEclipseTest({} line {}): EXCESSIVE GEOGRAPHIC LOCATION ERROR = {} degrees'.format(filename, lnum, diff_angle))
+                        return 1
+                    if diff_angle > max_angle:
+                        max_angle = diff_angle
+
+            eclipse = astronomy.NextGlobalSolarEclipse(eclipse.peak)
+
+    if lnum != expected_count:
+        print('PY GlobalSolarEclipseTest: WRONG LINE COUNT = {}, expected {}'.format(lnum, expected_count))
+        return 1
+
+    if skip_count > 2:
+        print('PY GlobalSolarEclipseTest: EXCESSIVE SKIP COUNT = {}'.format(skip_count))
+        return 1
+
+    print('PY GlobalSolarEclipseTest: PASS ({} verified, {} skipped, max minutes = {}, max angle = {})'.format(lnum, skip_count, max_minutes, max_angle))
+    return 0
+
+#-----------------------------------------------------------------------------------------------------------
+
 UnitTests = {
-    'constellation':    Constellation,
-    'elongation':       Elongation,
-    'lunar_apsis':      LunarApsis,
-    'lunar_eclipse':    LunarEclipse,
-    'magnitude':        Magnitude,
-    'moon':             GeoMoon,
-    'moonphase':        MoonPhase,
-    'planet_apsis':     PlanetApsis,
-    'refraction':       Refraction,
-    'riseset':          RiseSet,
-    'rotation':         Rotation,
-    'seasons':          Seasons,
-    'time':             AstroTime,
+    'constellation':            Constellation,
+    'elongation':               Elongation,
+    'global_solar_eclipse':     GlobalSolarEclipse,
+    'lunar_apsis':              LunarApsis,
+    'lunar_eclipse':            LunarEclipse,
+    'magnitude':                Magnitude,
+    'moon':                     GeoMoon,
+    'moonphase':                MoonPhase,
+    'planet_apsis':             PlanetApsis,
+    'refraction':               Refraction,
+    'riseset':                  RiseSet,
+    'rotation':                 Rotation,
+    'seasons':                  Seasons,
+    'time':                     AstroTime,
 }
 
 #-----------------------------------------------------------------------------------------------------------
