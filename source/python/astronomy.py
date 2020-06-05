@@ -6761,14 +6761,6 @@ def _EclipseKindFromUmbra(k):
 
 
 def _GeoidIntersect(shadow):
-    #astro_global_solar_eclipse_t eclipse;
-    #astro_rotation_t rot, inv;
-    #astro_vector_t v, e, o;
-    #shadow_t surface;
-    #double A, B, C, radic, u, R;
-    #double px, py, pz, proj;
-    #double gast;
-
     kind = EclipseKind.Partial
     peak = shadow.time
     distance = shadow.r

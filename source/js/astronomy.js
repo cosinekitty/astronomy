@@ -5703,47 +5703,81 @@ class LunarEclipseInfo {
     }
 }
 
-class EarthShadowInfo {
-    constructor(time, u, r, k, p) {
+class ShadowInfo {
+    constructor(time, u, r, k, p, target, dir) {
         this.time = time;
         this.u = u;  // dot product of (heliocentric earth) and (geocentric moon): defines the shadow plane where the Moon is
         this.r = r;  // km distance between center of Moon and the line passing through the centers of the Sun and Earth.
         this.k = k;  // umbra radius in km, at the shadow plane
         this.p = p;  // penumbra radius in km, at the shadow plane
+        this.target = target;
+        this.dir = dir;
     }
 }
+
+
+function CalcShadow(body_radius_km, time, target, dir) {
+    const u = (dir.x*target.x + dir.y*target.y + dir.z*target.z) / (dir.x*dir.x + dir.y*dir.y + dir.z*dir.z);
+    const dx = (u * dir.x) - target.x;
+    const dy = (u * dir.y) - target.y;
+    const dz = (u * dir.z) - target.z;
+    const r = KM_PER_AU * Math.sqrt(dx*dx + dy*dy + dz*dz);
+    const k = +SUN_RADIUS_KM - (1.0 + u)*(SUN_RADIUS_KM - body_radius_km);
+    const p = -SUN_RADIUS_KM + (1.0 + u)*(SUN_RADIUS_KM + body_radius_km);
+    return new ShadowInfo(time, u, r, k, p, target, dir);
+}
+
 
 function EarthShadow(time) {
     const e = CalcVsop(vsop.Earth, time);
     const m = Astronomy.GeoMoon(time);
-    const u = (e.x*m.x + e.y*m.y + e.z*m.z) / (e.x*e.x + e.y*e.y + e.z*e.z);
-    const dx = (u * e.x) - m.x;
-    const dy = (u * e.y) - m.y;
-    const dz = (u * e.z) - m.z;
-    const r = KM_PER_AU * Math.sqrt(dx*dx + dy*dy + dz*dz);
-    const k = +SUN_RADIUS_KM - (1.0 + u)*(SUN_RADIUS_KM - EARTH_ECLIPSE_RADIUS_KM);
-    const p = -SUN_RADIUS_KM + (1.0 + u)*(SUN_RADIUS_KM + EARTH_ECLIPSE_RADIUS_KM);
-
-    return new EarthShadowInfo(time, u, r, k, p);
+    return CalcShadow(EARTH_ECLIPSE_RADIUS_KM, time, m, e);
 }
 
-function PeakEarthShadow(search_center_time) {
-    function slope(time) {
-        const dt = 1.0 / 86400.0;
-        const t1 = time.AddDays(-dt);
-        const t2 = time.AddDays(+dt);
-        const shadow1 = EarthShadow(t1);
-        const shadow2 = EarthShadow(t2);
-        return (shadow2.r - shadow1.r) / dt;
-    }
 
+function MoonShadow(time) {
+    // This is a variation on the logic in _EarthShadow().
+    // Instead of a heliocentric Earth and a geocentric Moon,
+    // we want a heliocentric Moon and a lunacentric Earth.
+    const h = CalcVsop(vsop.Earth, time);    // heliocentric Earth
+    const m = Astronomy.GeoMoon(time);       // geocentric Moon
+    // Calculate lunacentric Earth.
+    const e = new Vector(-m.x, -m.y, -m.z, m.t);
+    // Convert geocentric moon to heliocentric Moon.
+    m.x += h.x;
+    m.y += h.y;
+    m.z += h.z;
+    return CalcShadow(MOON_MEAN_RADIUS_KM, time, e, m);
+}
+
+
+function ShadowDistanceSlope(shadowfunc, time) {
+    const dt = 1.0 / 86400.0;
+    const t1 = time.AddDays(-dt);
+    const t2 = time.AddDays(+dt);
+    const shadow1 = shadowfunc(t1);
+    const shadow2 = shadowfunc(t2);
+    return (shadow2.r - shadow1.r) / dt;
+}
+
+
+function PeakEarthShadow(search_center_time) {
     const window = 0.03;        /* initial search window, in days, before/after given time */
     const t1 = search_center_time.AddDays(-window);
     const t2 = search_center_time.AddDays(+window);
-
-    const tx = Astronomy.Search(slope, t1, t2, 1.0);
+    const tx = Astronomy.Search(time => ShadowDistanceSlope(EarthShadow, time), t1, t2, 1.0);
     return EarthShadow(tx);
 }
+
+
+function PeakMoonShadow(search_center_time) {
+    const window = 0.03;        /* initial search window, in days, before/after given time */
+    const t1 = search_center_time.AddDays(-window);
+    const t2 = search_center_time.AddDays(+window);
+    const tx = Astronomy.Search(time => ShadowDistanceSlope(MoonShadow, time), t1, t2, 1.0);
+    return MoonShadow(tx);
+}
+
 
 function ShadowSemiDurationMinutes(center_time, radius_limit, window_minutes) {
     // Search backwards and forwards from the center time until shadow axis distance crosses radius limit.
@@ -5824,6 +5858,169 @@ Astronomy.SearchLunarEclipse = function(date) {
 
 
 /**
+    Reports the time and geographic location of the peak of a solar eclipse.
+
+    Returned by {@link Astronomy.SearchGlobalSolarEclipse} or {@link Astronomy.NextGlobalSolarEclipse}
+    to report information about a solar eclipse event.
+
+    Field `peak` holds the date and time of the peak of the eclipse, defined as
+    the instant when the axis of the Moon's shadow cone passes closest to the Earth's center.
+
+    The eclipse is classified as partial, annular, or total, depending on the
+    maximum amount of the Sun's disc obscured, as seen at the peak location
+    on the surface of the Earth.
+
+    The `kind` field thus holds one of the strings `"partial"`, `"annular"`, or `"total"`.
+    A total eclipse is when the peak observer sees the Sun completely blocked by the Moon.
+    An annular eclipse is like a total eclipse, but the Moon is too far from the Earth's surface
+    to completely block the Sun; instead, the Sun takes on a ring-shaped appearance.
+    A partial eclipse is when the Moon blocks part of the Sun's disc, but nobody on the Earth
+    observes either a total or annular eclipse.
+
+    If `kind` is `"total"` or `"annular"`, the `latitude` and `longitude`
+    fields give the geographic coordinates of the center of the Moon's shadow projected
+    onto the daytime side of the Earth at the instant of the eclipse's peak.
+    If `kind` has any other value, `latitude` and `longitude` are undefined and should
+    not be used.
+
+    @class
+    @memberof Astronomy
+
+    @property {string} kind
+        One of the following string values: `"partial"`, `"annular"`, `"total"`.
+
+    @property {Astronomy.AstroTime} peak
+        The date and time of the peak of the eclipse, defined as the instant
+        when the axis of the Moon's shadow cone passes closest to the Earth's center.
+
+    @property {number} distance
+        The distance in kilometers between the axis of the Moon's shadow cone
+        and the center of the Earth at the time indicated by `peak`.
+
+    @property {(undefined|number)} latitude
+        If `kind` holds `"total"`, the geographic latitude in degrees
+        where the center of the Moon's shadow falls on the Earth at the
+        time indicated by `peak`; otherwise, `latitude` holds `undefined`.
+
+    @property {(undefined|number)} longitude
+        If `kind` holds `"total"`, the geographic longitude in degrees
+        where the center of the Moon's shadow falls on the Earth at the
+        time indicated by `peak`; otherwise, `longitude` holds `undefined`.
+*/
+class GlobalSolarEclipseInfo {
+    constructor(kind, peak, distance, latitude, longitude) {
+        this.kind = kind;
+        this.peak = peak;
+        this.distance = distance;
+        this.latitude = latitude;
+        this.longitude = longitude;
+    }
+}
+
+
+function EclipseKindFromUmbra(k) {
+    // The umbra radius tells us what kind of eclipse the observer sees.
+    // If the umbra radius is positive, this is a total eclipse. Otherwise, it's annular.
+    // HACK: I added a tiny bias (14 meters) to match Espenak test data.
+    return (k > 0.014) ? 'total' : 'annular';
+}
+
+
+function GeoidIntersect(shadow) {
+    let kind = 'partial';
+    let peak = shadow.time;
+    let distance = shadow.r;
+    let latitude;       // left undefined for partial eclipses
+    let longitude;      // left undefined for partial eclipses
+
+    // We want to calculate the intersection of the shadow axis with the Earth's geoid.
+    // First we must convert EQJ (equator of J2000) coordinates to EQD (equator of date)
+    // coordinates that are perfectly aligned with the Earth's equator at this
+    // moment in time.
+    const rot = Astronomy.Rotation_EQJ_EQD(shadow.time);
+    const v = Astronomy.RotateVector(rot, shadow.dir);       // shadow-axis vector in equator-of-date coordinates
+    const e = Astronomy.RotateVector(rot, shadow.target);    // lunacentric Earth in equator-of-date coordinates
+
+    // Convert all distances from AU to km.
+    // But dilate the z-coordinates so that the Earth becomes a perfect sphere.
+    // Then find the intersection of the vector with the sphere.
+    // See p 184 in Montenbruck & Pfleger's "Astronomy on the Personal Computer", second edition.
+    v.x *= KM_PER_AU;
+    v.y *= KM_PER_AU;
+    v.z *= KM_PER_AU / EARTH_FLATTENING;
+    e.x *= KM_PER_AU;
+    e.y *= KM_PER_AU;
+    e.z *= KM_PER_AU / EARTH_FLATTENING;
+
+    // Solve the quadratic equation that finds whether and where
+    // the shadow axis intersects with the Earth in the dilated coordinate system.
+    const R = EARTH_EQUATORIAL_RADIUS_KM;
+    const A = v.x*v.x + v.y*v.y + v.z*v.z;
+    const B = -2.0 * (v.x*e.x + v.y*e.y + v.z*e.z);
+    const C = (e.x*e.x + e.y*e.y + e.z*e.z) - R*R;
+    const radic = B*B - 4*A*C;
+
+    if (radic > 0.0) {
+        // Calculate the closer of the two intersection points.
+        // This will be on the day side of the Earth.
+        const u = (-B - Math.sqrt(radic)) / (2 * A);
+
+        // Convert lunacentric dilated coordinates to geocentric coordinates.
+        const px = u*v.x - e.x;
+        const py = u*v.y - e.y;
+        const pz = (u*v.z - e.z) * EARTH_FLATTENING;
+
+        // Convert cartesian coordinates into geodetic latitude/longitude.
+        const proj = Math.sqrt(px*px + py*py) * (EARTH_FLATTENING * EARTH_FLATTENING);
+        if (proj == 0.0) {
+            latitude = (pz > 0.0) ? +90.0 : -90.0;
+        } else {
+            latitude = RAD2DEG * Math.atan(pz / proj);
+        }
+
+        // Adjust longitude for Earth's rotation at the given UT.
+        const gast = sidereal_time(peak);
+        longitude = (RAD2DEG * Math.atan2(py, px) - (15*gast)) % 360.0;
+        if (longitude <= -180.0) {
+            longitude += 360.0;
+        } else if (longitude > +180.0) {
+            longitude -= 360.0;
+        }
+
+        // We want to determine whether the observer sees a total eclipse or an annular eclipse.
+        // We need to perform a series of vector calculations...
+        // Calculate the inverse rotation matrix, so we can convert EQD to EQJ.
+        const inv = Astronomy.InverseRotation(rot);
+
+        // Put the EQD geocentric coordinates of the observer into the vector 'o'.
+        // Also convert back from kilometers to astronomical units.
+        let o = new Vector(px / KM_PER_AU, py / KM_PER_AU, pz / KM_PER_AU, shadow.time);
+
+        // Rotate the observer's geocentric EQD back to the EQJ system.
+        o = Astronomy.RotateVector(inv, o);
+
+        // Convert geocentric vector to lunacentric vector.
+        o.x += shadow.target.x;
+        o.y += shadow.target.y;
+        o.z += shadow.target.z;
+
+        // Recalculate the shadow using a vector from the Moon's center toward the observer.
+        const surface = CalcShadow(MOON_POLAR_RADIUS_KM, shadow.time, o, shadow.dir);
+
+        // If we did everything right, the shadow distance should be very close to zero.
+        // That's because we already determined the observer 'o' is on the shadow axis!
+        if (surface.r > 1.0e-9 || surface.r < 0.0) {
+            throw `Unexpected shadow distance from geoid intersection = ${surface.r}`;
+        }
+
+        kind = EclipseKindFromUmbra(surface.k);
+    }
+
+    return new GlobalSolarEclipseInfo(kind, peak, distance, latitude, longitude);
+}
+
+
+/**
  * @brief Searches for the next lunar eclipse in a series.
  *
  * After using {@link Astronomy.SearchLunarEclipse} to find the first lunar eclipse
@@ -5841,6 +6038,76 @@ Astronomy.NextLunarEclipse = function(prevEclipseTime) {
     const startTime = prevEclipseTime.AddDays(10);
     return Astronomy.SearchLunarEclipse(startTime);
 }
+
+/**
+ * @brief Searches for a solar eclipse visible anywhere on the Earth's surface.
+ *
+ * This function finds the first solar eclipse that occurs after `startTime`.
+ * A solar eclipse found may be partial, annular, or total.
+ * See {@link Astronomy.GlobalSolarEclipseInfo} for more information.
+ * To find a series of solar eclipses, call this function once,
+ * then keep calling {@link Astronomy.NextGlobalSolarEclipse} as many times as desired,
+ * passing in the `peak` value returned from the previous call.
+ *
+ * @param {Astronomy.AstroTime} startTime
+ *      The date and time for starting the search for a solar eclipse.
+ *
+ * @returns {Astronomy.GlobalSolarEclipseInfo}
+ */
+Astronomy.SearchGlobalSolarEclipse = function(startTime) {
+    const PruneLatitude = 1.8;      // Moon's ecliptic latitude beyond which eclipse is impossible
+    // Iterate through consecutive new moons until we find a solar eclipse visible somewhere on Earth.
+    let nmtime = startTime;
+    let nmcount;
+    for (nmcount=0; nmcount < 12; ++nmcount) {
+        // Search for the next new moon. Any eclipse will be near it.
+        const newmoon = Astronomy.SearchMoonPhase(0.0, nmtime, 40.0);
+        if (newmoon === null) {
+            throw 'Cannot find new moon';
+        }
+
+        // Pruning: if the new moon's ecliptic latitude is too large, a solar eclipse is not possible.
+        const mp = CalcMoon(newmoon);
+        if (RAD2DEG * Math.abs(mp.geo_eclip_lat) < PruneLatitude) {
+            // Search near the new moon for the time when the center of the Earth
+            // is closest to the line passing through the centers of the Sun and Moon.
+            const shadow = PeakMoonShadow(newmoon);
+            if (shadow.r < shadow.p + EARTH_MEAN_RADIUS_KM) {
+                // This is at least a partial solar eclipse visible somewhere on Earth.
+                // Try to find an intersection between the shadow axis and the Earth's oblate geoid.
+                return GeoidIntersect(shadow);
+            }
+        }
+
+        // We didn't find an eclipse on this new moon, so search for the next one.
+        nmtime = newmoon.AddDays(10.0);
+    }
+
+    // Safety valve to prevent infinite loop.
+    // This should never happen, because at least 2 solar eclipses happen per year.
+    throw 'Failed to find solar eclipse within 12 full moons.';
+}
+
+
+/**
+ * @brief Searches for the next global solar eclipse in a series.
+ *
+ * After using {@link Astronomy.SearchGlobalSolarEclipse} to find the first solar eclipse
+ * in a series, you can call this function to find the next consecutive solar eclipse.
+ * Pass in the `peak` value from the {@link Astronomy.GlobalSolarEclipseInfo} returned by the
+ * previous call to `SearchGlobalSolarEclipse` or `NextGlobalSolarEclipse`
+ * to find the next solar eclipse.
+ *
+ * @param {Astronomy.AstroTime} prevEclipseTime
+ *      A date and time near a new moon. Solar eclipse search will start at the next new moon.
+ *
+ * @returns {Astronomy.GlobalSolarEclipseInfo}
+ */
+Astronomy.NextGlobalSolarEclipse = function(prevEclipseTime) {
+    const startTime = prevEclipseTime.AddDays(10.0);
+    return Astronomy.SearchGlobalSolarEclipse(startTime);
+}
+
 
 
 })(typeof exports==='undefined' ? (this.Astronomy={}) : exports);

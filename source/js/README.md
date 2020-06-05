@@ -516,6 +516,48 @@ may determine the date and time of the beginning/end of each eclipse phase.
 
 * * *
 
+<a name="Astronomy.GlobalSolarEclipseInfo"></a>
+
+### Astronomy.GlobalSolarEclipseInfo
+Reports the time and geographic location of the peak of a solar eclipse.
+
+    Returned by [SearchGlobalSolarEclipse](#Astronomy.SearchGlobalSolarEclipse) or [NextGlobalSolarEclipse](#Astronomy.NextGlobalSolarEclipse)
+    to report information about a solar eclipse event.
+
+    Field `peak` holds the date and time of the peak of the eclipse, defined as
+    the instant when the axis of the Moon's shadow cone passes closest to the Earth's center.
+
+    The eclipse is classified as partial, annular, or total, depending on the
+    maximum amount of the Sun's disc obscured, as seen at the peak location
+    on the surface of the Earth.
+
+    The `kind` field thus holds one of the strings `"partial"`, `"annular"`, or `"total"`.
+    A total eclipse is when the peak observer sees the Sun completely blocked by the Moon.
+    An annular eclipse is like a total eclipse, but the Moon is too far from the Earth's surface
+    to completely block the Sun; instead, the Sun takes on a ring-shaped appearance.
+    A partial eclipse is when the Moon blocks part of the Sun's disc, but nobody on the Earth
+    observes either a total or annular eclipse.
+
+    If `kind` is `"total"` or `"annular"`, the `latitude` and `longitude`
+    fields give the geographic coordinates of the center of the Moon's shadow projected
+    onto the daytime side of the Earth at the instant of the eclipse's peak.
+    If `kind` has any other value, `latitude` and `longitude` are undefined and should
+    not be used.
+
+**Kind**: static class of [<code>Astronomy</code>](#Astronomy)  
+**Properties**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| kind | <code>string</code> | One of the following string values: `"partial"`, `"annular"`, `"total"`. |
+| peak | [<code>AstroTime</code>](#Astronomy.AstroTime) | The date and time of the peak of the eclipse, defined as the instant         when the axis of the Moon's shadow cone passes closest to the Earth's center. |
+| distance | <code>number</code> | The distance in kilometers between the axis of the Moon's shadow cone         and the center of the Earth at the time indicated by `peak`. |
+| latitude | <code>undefined</code> \| <code>number</code> | If `kind` holds `"total"`, the geographic latitude in degrees         where the center of the Moon's shadow falls on the Earth at the         time indicated by `peak`; otherwise, `latitude` holds `undefined`. |
+| longitude | <code>undefined</code> \| <code>number</code> | If `kind` holds `"total"`, the geographic longitude in degrees         where the center of the Moon's shadow falls on the Earth at the         time indicated by `peak`; otherwise, `longitude` holds `undefined`. |
+
+
+* * *
+
 <a name="Astronomy.Bodies"></a>
 
 ### Astronomy.Bodies : <code>Array.&lt;string&gt;</code>
@@ -1759,6 +1801,45 @@ to find the next lunar eclipse.
 | Param | Type | Description |
 | --- | --- | --- |
 | prevEclipseTime | [<code>AstroTime</code>](#Astronomy.AstroTime) | A date and time near a full moon. Lunar eclipse search will start at the next full moon. |
+
+
+* * *
+
+<a name="Astronomy.SearchGlobalSolarEclipse"></a>
+
+### Astronomy.SearchGlobalSolarEclipse(startTime) ⇒ [<code>GlobalSolarEclipseInfo</code>](#Astronomy.GlobalSolarEclipseInfo)
+**Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
+**Brief**: Searches for a solar eclipse visible anywhere on the Earth's surface.
+
+This function finds the first solar eclipse that occurs after `startTime`.
+A solar eclipse found may be partial, annular, or total.
+See [GlobalSolarEclipseInfo](#Astronomy.GlobalSolarEclipseInfo) for more information.
+To find a series of solar eclipses, call this function once,
+then keep calling [NextGlobalSolarEclipse](#Astronomy.NextGlobalSolarEclipse) as many times as desired,
+passing in the `peak` value returned from the previous call.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| startTime | [<code>AstroTime</code>](#Astronomy.AstroTime) | The date and time for starting the search for a solar eclipse. |
+
+
+* * *
+
+<a name="Astronomy.NextGlobalSolarEclipse"></a>
+
+### Astronomy.NextGlobalSolarEclipse(prevEclipseTime) ⇒ [<code>GlobalSolarEclipseInfo</code>](#Astronomy.GlobalSolarEclipseInfo)
+**Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
+**Brief**: Searches for the next global solar eclipse in a series.
+
+After using [SearchGlobalSolarEclipse](#Astronomy.SearchGlobalSolarEclipse) to find the first solar eclipse
+in a series, you can call this function to find the next consecutive solar eclipse.
+Pass in the `peak` value from the [GlobalSolarEclipseInfo](#Astronomy.GlobalSolarEclipseInfo) returned by the
+previous call to `SearchGlobalSolarEclipse` or `NextGlobalSolarEclipse`
+to find the next solar eclipse.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| prevEclipseTime | [<code>AstroTime</code>](#Astronomy.AstroTime) | A date and time near a new moon. Solar eclipse search will start at the next new moon. |
 
 
 * * *

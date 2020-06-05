@@ -2,6 +2,8 @@
 const fs = require('fs');
 const Astronomy = require('../source/js/astronomy.min.js');
 let Verbose = false;
+const DEG2RAD = 0.017453292519943296;
+const RAD2DEG = 57.295779513082321;
 
 function Fail(message) {
     console.log(`FATAL(test.js): ${message}`);
@@ -342,6 +344,119 @@ function LunarEclipse() {
         eclipse = Astronomy.NextLunarEclipse(eclipse.peak);
     }
     console.log(`JS LunarEclipseTest: PASS (verified ${lnum}, skipped ${skip_count}, max_diff_minutes = ${max_diff_minutes}, avg_diff_minutes = ${sum_diff_minutes / diff_count}, moon calcs = ${Astronomy.CalcMoonCount})`);
+    return 0;
+}
+
+function VectorFromAngles(lat, lon) {
+    const coslat = Math.cos(DEG2RAD * lat);
+    return [
+        Math.cos(DEG2RAD * lon) * coslat,
+        Math.sin(DEG2RAD * lon) * coslat,
+        Math.sin(DEG2RAD * lat)
+    ];
+}
+
+
+function AngleDiff(alat, alon, blat, blon) {
+    const a = VectorFromAngles(alat, alon);
+    const b = VectorFromAngles(blat, blon);
+    const dot = a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
+    if (dot <= -1.0) {
+        return 180.0;
+    }
+    if (dot >= +1.0) {
+        return 0.0;
+    }
+    return RAD2DEG * Math.acos(dot);
+}
+
+
+function GlobalSolarEclipse() {
+    const expected_count = 1180;
+    const filename = 'eclipse/solar_eclipse.txt';
+    const text = fs.readFileSync(filename, {encoding:'utf8'});
+    const lines = text.trim().split(/\r?\n/);
+    let max_minutes = 0.0;
+    let max_angle = 0.0;
+    let skip_count = 0;
+    let eclipse = Astronomy.SearchGlobalSolarEclipse(new Date(Date.UTC(1701, 0)));
+    let lnum = 0;
+    for (let line of lines) {
+        ++lnum;
+        // 1889-12-22T12:54:15Z   -6 T   -12.7   -12.8
+        let token = line.trim().split(/\s+/);
+        if (token.length !== 5) {
+            console.error(`JS GlobalSolarEclipse(${filename} line ${lnum}): invalid token count = ${token.length}`);
+            return 1;
+        }
+        const peak = Astronomy.MakeTime(new Date(token[0]));
+        const typeChar = token[2];
+        const lat = parseFloat(token[3]);
+        const lon = parseFloat(token[4]);
+        const expected_kind = {
+            'P': 'partial',
+            'A': 'annular',
+            'T': 'total',
+            'H': 'total'
+        }[typeChar];
+
+        let diff_days = eclipse.peak.tt - peak.tt;
+        // Sometimes we find marginal eclipses that aren't listed in the test data.
+        // Ignore them if the distance between the Sun/Moon shadow axis and the Earth's center is large.
+        while (diff_days < -25.0 && eclipse.distance > 9000.0) {
+            ++skip_count;
+            eclipse = Astronomy.NextGlobalSolarEclipse(eclipse.peak);
+            diff_days = eclipse.peak.ut - peak.ut;
+        }
+
+        // Validate the eclipse prediction.
+        const diff_minutes = (24 * 60) * Math.abs(diff_days);
+        if (diff_minutes > 6.93) {
+            console.error(`JS GlobalSolarEclipseTest(${filename} line ${lnum}): EXCESSIVE TIME ERROR = ${diff_minutes} minutes`);
+            return 1;
+        }
+
+        if (diff_minutes > max_minutes) {
+            max_minutes = diff_minutes;
+        }
+
+        // Validate the eclipse kind, but only when it is not a "glancing" eclipse.
+        if ((eclipse.distance < 6360) && (eclipse.kind != expected_kind)) {
+            console.error(`JS GlobalSolarEclipseTest(${filename} line ${lnum}): WRONG ECLIPSE KIND: expected ${expected_kind}, found ${eclipse.kind}`);
+            return 1;
+        }
+
+        if (eclipse.kind === 'total' || eclipse.kind === 'annular') {
+            // When the distance between the Moon's shadow ray and the Earth's center is beyond 6100 km,
+            // it creates a glancing blow whose geographic coordinates are excessively sensitive to
+            // slight changes in the ray. Therefore, it is unreasonable to count large errors there.
+            if (eclipse.distance < 6100.0) {
+                const diff_angle = AngleDiff(lat, lon, eclipse.latitude, eclipse.longitude);
+                if (diff_angle > 0.247) {
+                    console.error(`PY GlobalSolarEclipseTest(${filename} line ${lnum}): EXCESSIVE GEOGRAPHIC LOCATION ERROR = ${diff_angle} degrees`);
+                    console.log(`   calculated lat=${eclipse.latitude}, lon=${eclipse.longitude}; expected ${lat}, ${lon}`);
+                    return 1;
+                }
+                if (diff_angle > max_angle) {
+                    max_angle = diff_angle;
+                }
+            }
+        }
+
+        eclipse = Astronomy.NextGlobalSolarEclipse(eclipse.peak);
+    }
+
+    if (lnum != expected_count) {
+        console.error(`JS GlobalSolarEclipse: WRONG LINE COUNT = ${lnum}, expected ${expected_count}`);
+        return 1;
+    }
+
+    if (skip_count > 2) {
+        console.error(`PY GlobalSolarEclipse: EXCESSIVE SKIP COUNT = ${skip_count}`);
+        return 1;
+    }
+
+    console.log(`JS GlobalSolarEclipse: PASS (${lnum} verified, ${skip_count} skipped, max minutes = ${max_minutes}, max angle = ${max_angle})`);
     return 0;
 }
 
@@ -1299,17 +1414,18 @@ function Constellation() {
 }
 
 const UnitTests = {
-    constellation:   Constellation,
-    elongation:      Elongation,
-    lunar_apsis:     LunarApsis,
-    lunar_eclipse:   LunarEclipse,
-    planet_apsis:    PlanetApsis,
-    magnitude:       Magnitude,
-    moon_phase:      MoonPhase,
-    refraction:      Refraction,
-    rise_set:        RiseSet,
-    rotation:        Rotation,
-    seasons:         Seasons,
+    constellation:          Constellation,
+    elongation:             Elongation,
+    global_solar_eclipse:   GlobalSolarEclipse,
+    lunar_apsis:            LunarApsis,
+    lunar_eclipse:          LunarEclipse,
+    planet_apsis:           PlanetApsis,
+    magnitude:              Magnitude,
+    moon_phase:             MoonPhase,
+    refraction:             Refraction,
+    rise_set:               RiseSet,
+    rotation:               Rotation,
+    seasons:                Seasons,
 };
 
 

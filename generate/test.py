@@ -1279,7 +1279,7 @@ def GlobalSolarEclipse():
             # Validate the eclipse prediction.
             diff_minutes = (24 * 60) * abs(diff_days)
             if diff_minutes > 6.93:
-                print('PY GlobalSolarEclipseTest({} line {}): EXCESSIVE TIME ERROR = {} minutes'.format(filename, lnum, diff_minutes))
+                print('PY GlobalSolarEclipse({} line {}): EXCESSIVE TIME ERROR = {} minutes'.format(filename, lnum, diff_minutes))
                 return 1
 
             if diff_minutes > max_minutes:
@@ -1287,7 +1287,7 @@ def GlobalSolarEclipse():
 
             # Validate the eclipse kind, but only when it is not a "glancing" eclipse.
             if (eclipse.distance < 6360) and (eclipse.kind != expected_kind):
-                print('PY GlobalSolarEclipseTest({} line {}): WRONG ECLIPSE KIND: expected {}, found {}'.format(filename, lnum, expected_kind, eclipse.kind))
+                print('PY GlobalSolarEclipse({} line {}): WRONG ECLIPSE KIND: expected {}, found {}'.format(filename, lnum, expected_kind, eclipse.kind))
                 return 1
 
             if eclipse.kind == astronomy.EclipseKind.Total or eclipse.kind == astronomy.EclipseKind.Annular:
@@ -1297,7 +1297,7 @@ def GlobalSolarEclipse():
                 if eclipse.distance < 6100.0:
                     diff_angle = AngleDiff(lat, lon, eclipse.latitude, eclipse.longitude)
                     if diff_angle > 0.247:
-                        print('PY GlobalSolarEclipseTest({} line {}): EXCESSIVE GEOGRAPHIC LOCATION ERROR = {} degrees'.format(filename, lnum, diff_angle))
+                        print('PY GlobalSolarEclipse({} line {}): EXCESSIVE GEOGRAPHIC LOCATION ERROR = {} degrees'.format(filename, lnum, diff_angle))
                         return 1
                     if diff_angle > max_angle:
                         max_angle = diff_angle
@@ -1305,14 +1305,14 @@ def GlobalSolarEclipse():
             eclipse = astronomy.NextGlobalSolarEclipse(eclipse.peak)
 
     if lnum != expected_count:
-        print('PY GlobalSolarEclipseTest: WRONG LINE COUNT = {}, expected {}'.format(lnum, expected_count))
+        print('PY GlobalSolarEclipse: WRONG LINE COUNT = {}, expected {}'.format(lnum, expected_count))
         return 1
 
     if skip_count > 2:
-        print('PY GlobalSolarEclipseTest: EXCESSIVE SKIP COUNT = {}'.format(skip_count))
+        print('PY GlobalSolarEclipse: EXCESSIVE SKIP COUNT = {}'.format(skip_count))
         return 1
 
-    print('PY GlobalSolarEclipseTest: PASS ({} verified, {} skipped, max minutes = {}, max angle = {})'.format(lnum, skip_count, max_minutes, max_angle))
+    print('PY GlobalSolarEclipse: PASS ({} verified, {} skipped, max minutes = {}, max angle = {})'.format(lnum, skip_count, max_minutes, max_angle))
     return 0
 
 #-----------------------------------------------------------------------------------------------------------
