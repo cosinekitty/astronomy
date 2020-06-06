@@ -493,7 +493,7 @@ function LocalSolarEclipse1() {
         const eclipse = Astronomy.SearchLocalSolarEclipse(search_start, observer);
 
         // Validate the predicted eclipse peak time.
-        const diff_days = eclipse.peak.tt - peak.tt;
+        const diff_days = eclipse.peak.time.tt - peak.tt;
         if (diff_days > 20) {
             ++skip_count;
             continue;

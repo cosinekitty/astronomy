@@ -1255,7 +1255,7 @@ def GlobalSolarEclipse():
             # 1889-12-22T12:54:15Z   -6 T   -12.7   -12.8
             token = line.split()
             if len(token) != 5:
-                print('GlobalSolarEclipse({} line {}): invalid token count = {}'.format(filename, lnum, len(token)))
+                print('PY GlobalSolarEclipse({} line {}): invalid token count = {}'.format(filename, lnum, len(token)))
                 return 1
             peak = astronomy.Time.Parse(token[0])
             typeChar = token[2]
@@ -1317,10 +1317,154 @@ def GlobalSolarEclipse():
 
 #-----------------------------------------------------------------------------------------------------------
 
+def LocalSolarEclipse1():
+    expected_count = 1180
+    max_minutes = 0.0
+    skip_count = 0
+    filename = 'eclipse/solar_eclipse.txt'
+    with open(filename, 'rt') as infile:
+        lnum = 0
+        for line in infile:
+            lnum += 1
+            # 1889-12-22T12:54:15Z   -6 T   -12.7   -12.8
+            token = line.split()
+            if len(token) != 5:
+                print('PY LocalSolarEclipse1({} line {}): invalid token count = {}'.format(filename, lnum, len(token)))
+                return 1
+            peak = astronomy.Time.Parse(token[0])
+            #typeChar = token[2]
+            lat = float(token[3])
+            lon = float(token[4])
+            observer = astronomy.Observer(lat, lon, 0.0)
+
+            # Start the search 20 days before we know the eclipse should peak.
+            search_start = peak.AddDays(-20)
+            eclipse = astronomy.SearchLocalSolarEclipse(search_start, observer)
+
+            # Validate the predicted eclipse peak time.
+            diff_days = eclipse.peak.time.tt - peak.tt
+            if diff_days > 20:
+                skip_count += 1
+                continue
+
+            diff_minutes = (24 * 60) * abs(diff_days)
+            if diff_minutes > 7.14:
+                print('PY LocalSolarEclipse1({} line {}): EXCESSIVE TIME ERROR = {} minutes'.format(filename, lnum, diff_minutes))
+                return 1
+
+            if diff_minutes > max_minutes:
+                max_minutes = diff_minutes
+
+    if lnum != expected_count:
+        print('PY LocalSolarEclipse1: WRONG LINE COUNT = {}, expected {}'.format(lnum, expected_count))
+        return 1
+
+    if skip_count > 6:
+        print('PY LocalSolarEclipse1: EXCESSIVE SKIP COUNT = {}'.format(skip_count))
+        return 1
+
+    print('PY LocalSolarEclipse1: PASS ({} verified, {} skipped, max minutes = {})'.format(lnum, skip_count, max_minutes))
+    return 0
+
+
+def TrimLine(line):
+    # Treat '#' as a comment character.
+    poundIndex = line.find('#')
+    if poundIndex >= 0:
+        line = line[:poundIndex]
+    return line.strip()
+
+
+def ParseEvent(time_str, alt_str, required):
+    if required:
+        time = astronomy.Time.Parse(time_str)
+        altitude = float(alt_str)
+        return astronomy.EclipseEvent(time, altitude)
+    if time_str != '-':
+        raise Exception('Expected event time to be "-" but found "{}"'.format(time_str))
+    return None
+
+
+def LocalSolarEclipse2():
+    # Test ability to calculate local solar eclipse conditions away from
+    # the peak position on the Earth.
+
+    filename = 'eclipse/local_solar_eclipse.txt'
+    lnum = 0
+    verify_count = 0
+    max_minutes = 0.0
+    max_degrees = 0.0
+
+    def CheckEvent(calc, expect):
+        nonlocal max_minutes, max_degrees
+        diff_minutes = (24 * 60) * abs(expect.time.ut - calc.time.ut)
+        if diff_minutes > max_minutes:
+            max_minutes = diff_minutes
+        if diff_minutes > 1.0:
+            raise Exception('CheckEvent({} line {}): EXCESSIVE TIME ERROR: {} minutes.'.format(filename, lnum, diff_minutes))
+        diff_alt = abs(expect.altitude - calc.altitude)
+        if diff_alt > max_degrees:
+            max_degrees = diff_alt
+        if diff_alt > 0.5:
+            raise Exception('CheckEvent({} line {}): EXCESSIVE ALTITUDE ERROR: {} degrees.'.format(filename, lnum, diff_alt))
+
+    with open(filename, 'rt') as infile:
+        for line in infile:
+            lnum += 1
+            line = TrimLine(line)
+            if line == '':
+                continue
+            token = line.split()
+            if len(token) != 13:
+                print('PY LocalSolarEclipse2({} line {}): Incorrect token count = {}'.format(filename, lnum, len(token)))
+                return 1
+            latitude = float(token[0])
+            longitude = float(token[1])
+            observer = astronomy.Observer(latitude, longitude, 0)
+            typeChar = token[2]
+            expected_kind = {
+                'P': astronomy.EclipseKind.Partial,
+                'A': astronomy.EclipseKind.Annular,
+                'T': astronomy.EclipseKind.Total,
+                'H': astronomy.EclipseKind.Total
+            }[typeChar]
+            p1    = ParseEvent(token[3],  token[4],   True)
+            t1    = ParseEvent(token[5],  token[6],   (typeChar != 'P'))
+            peak  = ParseEvent(token[7],  token[8],   True)
+            t2    = ParseEvent(token[9],  token[10],  (typeChar != 'P'))
+            p2    = ParseEvent(token[11], token[12],  True)
+            search_time = p1.time.AddDays(-20)
+            eclipse = astronomy.SearchLocalSolarEclipse(search_time, observer)
+            if eclipse.kind != expected_kind:
+                print('PY LocalSolarEclipse2({} line {}): expected eclipse kind "{}" but found "{}".'.format(
+                    filename, lnum, expected_kind, eclipse.kind
+                ))
+                return 1
+            CheckEvent(eclipse.peak, peak)
+            CheckEvent(eclipse.partial_begin, p1)
+            CheckEvent(eclipse.partial_end, p2)
+            if typeChar != 'P':
+                CheckEvent(eclipse.total_begin, t1)
+                CheckEvent(eclipse.total_end, t2)
+            verify_count += 1
+    print('PY LocalSolarEclipse2: PASS ({} verified, max_minutes = {}, max_degrees = {})'.format(verify_count, max_minutes, max_degrees))
+    return 0
+
+
+def LocalSolarEclipse():
+    if 0 != LocalSolarEclipse1():
+        return 1
+    if 0 != LocalSolarEclipse2():
+        return 1
+    return 0
+
+#-----------------------------------------------------------------------------------------------------------
+
 UnitTests = {
     'constellation':            Constellation,
     'elongation':               Elongation,
     'global_solar_eclipse':     GlobalSolarEclipse,
+    'local_solar_eclipse':      LocalSolarEclipse,
     'lunar_apsis':              LunarApsis,
     'lunar_eclipse':            LunarEclipse,
     'magnitude':                Magnitude,

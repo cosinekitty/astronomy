@@ -594,7 +594,7 @@ class Observer:
     height : float
         Elevation above sea level in meters.
     """
-    def __init__(self, latitude, longitude, height=0):
+    def __init__(self, latitude, longitude, height=0.0):
         self.latitude = latitude
         self.longitude = longitude
         self.height = height
@@ -4171,6 +4171,22 @@ def _MoonShadow(time):
     return _CalcShadow(_MOON_MEAN_RADIUS_KM, time, e, m)
 
 
+def _LocalMoonShadow(time, observer):
+    # Calculate observer's geocentric position.
+    # For efficiency, do this first, to populate the earth rotation parameters in 'time'.
+    # That way they can be recycled instead of recalculated.
+    pos = _geo_pos(time, observer)
+    h = _CalcEarth(time)     # heliocentric Earth
+    m = GeoMoon(time)        # geocentric Moon
+    # Calculate lunacentric location of an observer on the Earth's surface.
+    o = Vector(pos[0] - m.x, pos[1] - m.y, pos[2] - m.z, time)
+    # Convert geocentric moon to heliocentric Moon.
+    m.x += h.x
+    m.y += h.y
+    m.z += h.z
+    return _CalcShadow(_MOON_MEAN_RADIUS_KM, time, o, m)
+
+
 def _ShadowDistanceSlope(shadowfunc, time):
     dt = 1.0 / 86400.0
     t1 = time.AddDays(-dt)
@@ -4194,6 +4210,15 @@ def _PeakMoonShadow(search_center_time):
     t2 = search_center_time.AddDays(+window)
     tx = Search(_ShadowDistanceSlope, _MoonShadow, t1, t2, 1.0)
     return _MoonShadow(tx)
+
+def _PeakLocalMoonShadow(search_center_time, observer):
+    # Search for the time near search_center_time that the Moon's shadow comes
+    # closest to the given observer.
+    window = 1.00;     # FIXFIXFIX: constrain; days before/after new moon to search for minimum shadow distance
+    t1 = search_center_time.AddDays(-window)
+    t2 = search_center_time.AddDays(+window)
+    tx = Search(_ShadowDistanceSlope, lambda time: _LocalMoonShadow(time, observer), t1, t2, 1.0)
+    return _LocalMoonShadow(tx, observer)
 
 class _ShadowDiffContext:
     def __init__(self, radius_limit, direction):
@@ -4378,6 +4403,67 @@ def _EclipseKindFromUmbra(k):
         return EclipseKind.Total
     return EclipseKind.Annular
 
+class _LocalTransitionContext:
+    def __init__(self, observer, direction, func):
+        self.observer = observer
+        self.direction = direction
+        self.func = func
+
+
+def _LocalTransitionFunc(context, time):
+    shadow = _LocalMoonShadow(time, context.observer)
+    return context.direction * context.func(shadow)
+
+
+def _LocalEclipseTransition(observer, direction, func, t1, t2):
+    context = _LocalTransitionContext(observer, direction, func)
+    search = Search(_LocalTransitionFunc, context, t1, t2, 1.0)
+    if search is None:
+        raise Error('Local eclipse transition search failed')
+    return _CalcEvent(observer, search)
+
+
+def _CalcEvent(observer, time):
+    altitude = _SunAltitude(time, observer)
+    return EclipseEvent(time, altitude)
+
+
+def _SunAltitude(time, observer):
+    equ = Equator(Body.Sun, time, observer, True, True)
+    hor = Horizon(time, observer, equ.ra, equ.dec, Refraction.Normal)
+    return hor.altitude
+
+
+def _local_partial_distance(shadow):
+    # Must take the absolute value of the umbra radius 'k'
+    # because it can be negative for an annular eclipse.
+    return shadow.p - shadow.r
+
+
+def _local_total_distance(shadow):
+    return abs(shadow.k) - shadow.r
+
+
+def _LocalEclipse(shadow, observer):
+    PARTIAL_WINDOW = 0.2
+    TOTAL_WINDOW = 0.01
+    peak = _CalcEvent(observer, shadow.time)
+    t1 = shadow.time.AddDays(-PARTIAL_WINDOW)
+    t2 = shadow.time.AddDays(+PARTIAL_WINDOW)
+    partial_begin = _LocalEclipseTransition(observer, +1.0, _local_partial_distance, t1, shadow.time)
+    partial_end   = _LocalEclipseTransition(observer, -1.0, _local_partial_distance, shadow.time, t2)
+    if shadow.r < abs(shadow.k):    # take absolute value of 'k' to handle annular eclipses too.
+        t1 = shadow.time.AddDays(-TOTAL_WINDOW)
+        t2 = shadow.time.AddDays(+TOTAL_WINDOW)
+        total_begin = _LocalEclipseTransition(observer, +1.0, _local_total_distance, t1, shadow.time)
+        total_end   = _LocalEclipseTransition(observer, -1.0, _local_total_distance, shadow.time, t2)
+        kind = _EclipseKindFromUmbra(shadow.k)
+    else:
+        total_begin = None
+        total_end = None
+        kind = EclipseKind.Partial
+    return LocalSolarEclipseInfo(kind, partial_begin, total_begin, peak, total_end, partial_end)
+
 
 def _GeoidIntersect(shadow):
     kind = EclipseKind.Partial
@@ -4482,6 +4568,11 @@ def _ShadowSemiDurationMinutes(center_time, radius_limit, window_minutes):
     return (t2.ut - t1.ut) * ((24.0 * 60.0) / 2.0)   # convert days to minutes and average the semi-durations.
 
 
+def _MoonEclipticLatitudeDegrees(time):
+    moon = _CalcMoon(time)
+    return math.degrees(moon.geo_eclip_lat)
+
+
 def SearchLunarEclipse(startTime):
     """Searches for a lunar eclipse.
 
@@ -4512,8 +4603,8 @@ def SearchLunarEclipse(startTime):
         # Pruning: if the full Moon's ecliptic latitude is too large,
         # a lunar eclipse is not possible. Avoid needless work searching for
         # the minimum moon distance.
-        moon = _CalcMoon(fullmoon)
-        if math.degrees(abs(moon.geo_eclip_lat)) < PruneLatitude:
+        eclip_lat = _MoonEclipticLatitudeDegrees(fullmoon)
+        if abs(eclip_lat) < PruneLatitude:
             # Search near the full moon for the time when the center of the Moon
             # is closest to the line passing through the centers of the Sun and Earth.
             shadow = _PeakEarthShadow(fullmoon)
@@ -4594,8 +4685,8 @@ def SearchGlobalSolarEclipse(startTime):
             raise Error('Cannot find new moon')
 
         # Pruning: if the new moon's ecliptic latitude is too large, a solar eclipse is not possible.
-        mp = _CalcMoon(newmoon)
-        if math.degrees(abs(mp.geo_eclip_lat)) < PruneLatitude:
+        eclip_lat = _MoonEclipticLatitudeDegrees(newmoon)
+        if abs(eclip_lat) < PruneLatitude:
             # Search near the new moon for the time when the center of the Earth
             # is closest to the line passing through the centers of the Sun and Moon.
             shadow = _PeakMoonShadow(newmoon)
@@ -4659,7 +4750,32 @@ def SearchLocalSolarEclipse(startTime, observer):
     -------
     LocalSolarEclipseInfo
     """
-    raise Error('Not yet implemented')
+    PruneLatitude = 1.8   # Moon's ecliptic latitude beyond which eclipse is impossible
+
+    # Iterate through consecutive new moons until we find a solar eclipse visible somewhere on Earth.
+    nmtime = startTime
+    while True:
+        # Search for the next new moon. Any eclipse will be near it.
+        newmoon = SearchMoonPhase(0.0, nmtime, 40.0)
+
+        # Pruning: if the new moon's ecliptic latitude is too large, a solar eclipse is not possible.
+        eclip_lat = _MoonEclipticLatitudeDegrees(newmoon)
+        if abs(eclip_lat) < PruneLatitude:
+            # Search near the new moon for the time when the observer
+            # is closest to the line passing through the centers of the Sun and Moon.
+            shadow = _PeakLocalMoonShadow(newmoon, observer)
+            if shadow.r < shadow.p:
+                # This is at least a partial solar eclipse for the observer.
+                eclipse = _LocalEclipse(shadow, observer)
+
+                # Ignore any eclipse that happens completely at night.
+                # More precisely, the center of the Sun must be above the horizon
+                # at the beginning or the end of the eclipse, or we skip the event.
+                if eclipse.partial_begin.altitude > 0.0 or eclipse.partial_end.altitude > 0.0:
+                    return eclipse
+
+        # We didn't find an eclipse on this new moon, so search for the next one.
+        nmtime = newmoon.AddDays(10.0)
 
 
 def NextLocalSolarEclipse(prevEclipseTime, observer):
@@ -4682,4 +4798,5 @@ def NextLocalSolarEclipse(prevEclipseTime, observer):
     -------
     LocalSolarEclipseInfo
     """
-    raise Error('Not yet implemented')
+    startTime = prevEclipseTime.AddDays(10.0)
+    return SearchLocalSolarEclipse(startTime, observer)
