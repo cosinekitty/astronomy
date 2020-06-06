@@ -6742,6 +6742,19 @@ class GlobalSolarEclipseInfo:
     onto the daytime side of the Earth at the instant of the eclipse's peak.
     If `kind` has any other value, `latitude` and `longitude` are undefined and should
     not be used.
+
+    Attributes
+    ----------
+    kind : EclipseKind
+        The type of solar eclipse: `EclipseKind.Partial`, `EclipseKind.Annular`, or `EclipseKind.Total`.
+    peak : Time
+        The date and time of the eclipse at its peak.
+    distance : float
+        The distance between the Sun/Moon shadow axis and the center of the Earth, in kilometers.
+    latitude : float
+        The geographic latitude at the center of the peak eclipse shadow.
+    longitude : float
+        The geographic longitude at the center of the peak eclipse shadow.
     """
     def __init__(self, kind, peak, distance, latitude, longitude):
         self.kind = kind
@@ -6749,6 +6762,82 @@ class GlobalSolarEclipseInfo:
         self.distance = distance
         self.latitude = latitude
         self.longitude = longitude
+
+
+class EclipseEvent:
+    """Holds a time and the observed altitude of the Sun at that time.
+
+    When reporting a solar eclipse observed at a specific location on the Earth
+    (a "local" solar eclipse), a series of events occur. In addition
+    to the time of each event, it is important to know the altitude of the Sun,
+    because each event may be invisible to the observer if the Sun is below
+    the horizon (i.e. it at night).
+
+    If `altitude` is negative, the event is theoretical only; it would be
+    visible if the Earth were transparent, but the observer cannot actually see it.
+    If `altitude` is positive but less than a few degrees, visibility will be impaired by
+    atmospheric interference (sunrise or sunset conditions).
+
+    Attributes
+    ----------
+    time : Time
+        The date and time of the event.
+    altitude : float
+        The angular altitude of the center of the Sun above/below the horizon, at `time`,
+        corrected for atmospheric refraction and expressed in degrees.
+    """
+    def __init__(self, time, altitude):
+        self.time = time
+        self.altitude = altitude
+
+
+class LocalSolarEclipseInfo:
+    """Information about a solar eclipse as seen by an observer at a given time and geographic location.
+
+    Returned by #SearchLocalSolarEclipse or #NextLocalSolarEclipse
+    to report information about a solar eclipse as seen at a given geographic location.
+
+    When a solar eclipse is found, it is classified as partial, annular, or total.
+    The `kind` field thus holds `EclipseKind.Partial`, `EclipseKind.Annular`, or `EclipseKind.Total`.
+    A partial solar eclipse is when the Moon does not line up directly enough with the Sun
+    to completely block the Sun's light from reaching the observer.
+    An annular eclipse occurs when the Moon's disc is completely visible against the Sun
+    but the Moon is too far away to completely block the Sun's light; this leaves the
+    Sun with a ring-like appearance.
+    A total eclipse occurs when the Moon is close enough to the Earth and aligned with the
+    Sun just right to completely block all sunlight from reaching the observer.
+
+    There are 5 "event" fields, each of which contains a time and a solar altitude.
+    Field `peak` holds the date and time of the center of the eclipse, when it is at its peak.
+    The fields `partial_begin` and `partial_end` are always set, and indicate when
+    the eclipse begins/ends. If the eclipse reaches totality or becomes annular,
+    `total_begin` and `total_end` indicate when the total/annular phase begins/ends.
+    When an event field is valid, the caller must also check its `altitude` field to
+    see whether the Sun is above the horizon at the time indicated by the `time` field.
+    See #EclipseEvent for more information.
+
+    Attributes
+    ----------
+    kind : EclipseKind
+        The type of solar eclipse: `EclipseKind.Partial`, `EclipseKind.Annular`, or `EclipseKind.Total`.
+    partial_begin : EclipseEvent
+        The time and Sun altitude at the beginning of the eclipse.
+    total_begin : EclipseEvent
+        If this is an annular or a total eclipse, the time and Sun altitude when annular/total phase begins; otherwise `None`.
+    peak : EclipseEvent
+        The time and Sun altitude when the eclipse reaches its peak.
+    total_end : EclipseEvent
+        If this is an annular or a total eclipse, the time and Sun altitude when annular/total phase ends; otherwise `None`.
+    partial_end : EclipseEvent
+        The time and Sun altitude at the end of the eclipse.
+    """
+    def __init__(self, kind, partial_begin, total_begin, peak, total_end, partial_end):
+        self.kind = kind
+        self.partial_begin = partial_begin
+        self.total_begin = total_begin
+        self.peak = peak
+        self.total_end = total_end
+        self.partial_end = partial_end
 
 
 def _EclipseKindFromUmbra(k):
@@ -6867,7 +6956,7 @@ def SearchLunarEclipse(startTime):
     """Searches for a lunar eclipse.
 
     This function finds the first lunar eclipse that occurs after `startTime`.
-    A lunar eclipse found may be penumbral, partial, or total.
+    A lunar eclipse may be penumbral, partial, or total.
     See #LunarEclipseInfo for more information.
     To find a series of lunar eclipses, call this function once,
     then keep calling #NextLunarEclipse as many times as desired,
@@ -6950,7 +7039,7 @@ def SearchGlobalSolarEclipse(startTime):
     """Searches for a solar eclipse visible anywhere on the Earth's surface.
 
     This function finds the first solar eclipse that occurs after `startTime`.
-    A solar eclipse found may be partial, annular, or total.
+    A solar eclipse may be partial, annular, or total.
     See #GlobalSolarEclipseInfo for more information.
     To find a series of solar eclipses, call this function once,
     then keep calling #NextGlobalSolarEclipse as many times as desired,
@@ -7013,3 +7102,54 @@ def NextGlobalSolarEclipse(prevEclipseTime):
     """
     startTime = prevEclipseTime.AddDays(10.0)
     return SearchGlobalSolarEclipse(startTime)
+
+
+def SearchLocalSolarEclipse(startTime, observer):
+    """Searches for a solar eclipse visible at a specific location on the Earth's surface.
+    This function finds the first solar eclipse that occurs after `startTime`.
+    A solar eclipse may be partial, annular, or total.
+    See #LocalSolarEclipseInfo for more information.
+
+    To find a series of solar eclipses, call this function once,
+    then keep calling #NextLocalSolarEclipse as many times as desired,
+    passing in the `peak` value returned from the previous call.
+
+    IMPORTANT: An eclipse reported by this function might be partly or
+    completely invisible to the observer due to the time of day.
+    See #LocalSolarEclipseInfo for more information about this topic.
+
+    Parameters
+    ----------
+    startTime : Time
+        The date and time for starting the search for a solar eclipse.
+    observer : Observer
+        The geographic location of the observer.
+
+    Returns
+    -------
+    LocalSolarEclipseInfo
+    """
+    raise Error('Not yet implemented')
+
+
+def NextLocalSolarEclipse(prevEclipseTime, observer):
+    """Searches for the next local solar eclipse in a series.
+
+    After using #SearchLocalSolarEclipse to find the first solar eclipse
+    in a series, you can call this function to find the next consecutive solar eclipse.
+    Pass in the `peak` value from the #LocalSolarEclipseInfo returned by the
+    previous call to `SearchLocalSolarEclipse` or `NextLocalSolarEclipse`
+    to find the next solar eclipse.
+
+    Parameters
+    ----------
+    prevEclipseTime : Time
+        A date and time near a new moon. Solar eclipse search will start at the next new moon.
+    observer : Observer
+        The geographic location of the observer.
+
+    Returns
+    -------
+    LocalSolarEclipseInfo
+    """
+    raise Error('Not yet implemented')

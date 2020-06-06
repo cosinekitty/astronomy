@@ -1416,7 +1416,7 @@ If the search does not converge within 20 iterations, it will fail with status c
 
 
 
-This function finds the first solar eclipse that occurs after `startTime`. A solar eclipse found may be partial, annular, or total. See [`astro_global_solar_eclipse_t`](#astro_global_solar_eclipse_t) for more information. To find a series of solar eclipses, call this function once, then keep calling [`Astronomy_NextGlobalSolarEclipse`](#Astronomy_NextGlobalSolarEclipse) as many times as desired, passing in the `peak` value returned from the previous call.
+This function finds the first solar eclipse that occurs after `startTime`. A solar eclipse may be partial, annular, or total. See [`astro_global_solar_eclipse_t`](#astro_global_solar_eclipse_t) for more information. To find a series of solar eclipses, call this function once, then keep calling [`Astronomy_NextGlobalSolarEclipse`](#Astronomy_NextGlobalSolarEclipse) as many times as desired, passing in the `peak` value returned from the previous call.
 
 
 
@@ -1473,7 +1473,7 @@ On success, the function reports the date and time, along with the horizontal co
 
 
 
-This function finds the first solar eclipse that occurs after `startTime`. A solar eclipse found may be partial, annular, or total. See [`astro_local_solar_eclipse_t`](#astro_local_solar_eclipse_t) for more information. To find a series of solar eclipses, call this function once, then keep calling [`Astronomy_NextLocalSolarEclipse`](#Astronomy_NextLocalSolarEclipse) as many times as desired, passing in the `peak` value returned from the previous call.
+This function finds the first solar eclipse that occurs after `startTime`. A solar eclipse may be partial, annular, or total. See [`astro_local_solar_eclipse_t`](#astro_local_solar_eclipse_t) for more information. To find a series of solar eclipses, call this function once, then keep calling [`Astronomy_NextLocalSolarEclipse`](#Astronomy_NextLocalSolarEclipse) as many times as desired, passing in the `peak` value returned from the previous call.
 
 IMPORTANT: An eclipse reported by this function might be partly or completely invisible to the observer due to the time of day.
 
@@ -1528,7 +1528,7 @@ To iterate through consecutive alternating perigee and apogee events, call `Astr
 
 
 
-This function finds the first lunar eclipse that occurs after `startTime`. A lunar eclipse found may be penumbral, partial, or total. See [`astro_lunar_eclipse_t`](#astro_lunar_eclipse_t) for more information. To find a series of lunar eclipses, call this function once, then keep calling [`Astronomy_NextLunarEclipse`](#Astronomy_NextLunarEclipse) as many times as desired, passing in the `peak` value returned from the previous call.
+This function finds the first lunar eclipse that occurs after `startTime`. A lunar eclipse may be penumbral, partial, or total. See [`astro_lunar_eclipse_t`](#astro_lunar_eclipse_t) for more information. To find a series of lunar eclipses, call this function once, then keep calling [`Astronomy_NextLunarEclipse`](#Astronomy_NextLunarEclipse) as many times as desired, passing in the `peak` value returned from the previous call.
 
 
 

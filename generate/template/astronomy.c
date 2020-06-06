@@ -5706,7 +5706,7 @@ static double ShadowSemiDurationMinutes(astro_time_t center_time, double radius_
  * @brief Searches for a lunar eclipse.
  *
  * This function finds the first lunar eclipse that occurs after `startTime`.
- * A lunar eclipse found may be penumbral, partial, or total.
+ * A lunar eclipse may be penumbral, partial, or total.
  * See #astro_lunar_eclipse_t for more information.
  * To find a series of lunar eclipses, call this function once,
  * then keep calling #Astronomy_NextLunarEclipse as many times as desired,
@@ -5958,7 +5958,7 @@ static astro_global_solar_eclipse_t GeoidIntersect(shadow_t shadow)
  * @brief Searches for a solar eclipse visible anywhere on the Earth's surface.
  *
  * This function finds the first solar eclipse that occurs after `startTime`.
- * A solar eclipse found may be partial, annular, or total.
+ * A solar eclipse may be partial, annular, or total.
  * See #astro_global_solar_eclipse_t for more information.
  * To find a series of solar eclipses, call this function once,
  * then keep calling #Astronomy_NextGlobalSolarEclipse as many times as desired,
@@ -6307,7 +6307,7 @@ static astro_local_solar_eclipse_t LocalEclipse(
  * @brief Searches for a solar eclipse visible at a specific location on the Earth's surface.
  *
  * This function finds the first solar eclipse that occurs after `startTime`.
- * A solar eclipse found may be partial, annular, or total.
+ * A solar eclipse may be partial, annular, or total.
  * See #astro_local_solar_eclipse_t for more information.
  * To find a series of solar eclipses, call this function once,
  * then keep calling #Astronomy_NextLocalSolarEclipse as many times as desired,

@@ -4409,7 +4409,7 @@ function MoonEclipticLatitudeDegrees(time) {
  * @brief Searches for a lunar eclipse.
  *
  * This function finds the first lunar eclipse that occurs after `startTime`.
- * A lunar eclipse found may be penumbral, partial, or total.
+ * A lunar eclipse may be penumbral, partial, or total.
  * See {@link Astronomy.LunarEclipseInfo} for more information.
  * To find a series of lunar eclipses, call this function once,
  * then keep calling {@link Astronomy.NextLunarEclipse} as many times as desired,
@@ -4656,7 +4656,7 @@ Astronomy.NextLunarEclipse = function(prevEclipseTime) {
  * @brief Searches for a solar eclipse visible anywhere on the Earth's surface.
  *
  * This function finds the first solar eclipse that occurs after `startTime`.
- * A solar eclipse found may be partial, annular, or total.
+ * A solar eclipse may be partial, annular, or total.
  * See {@link Astronomy.GlobalSolarEclipseInfo} for more information.
  * To find a series of solar eclipses, call this function once,
  * then keep calling {@link Astronomy.NextGlobalSolarEclipse} as many times as desired,
@@ -4874,7 +4874,7 @@ function SunAltitude(time, observer) {
  * @brief Searches for a solar eclipse visible at a specific location on the Earth's surface.
  *
  * This function finds the first solar eclipse that occurs after `startTime`.
- * A solar eclipse found may be partial, annular, or total.
+ * A solar eclipse may be partial, annular, or total.
  * See {@link Astronomy.LocalSolarEclipseInfo} for more information.
  *
  * To find a series of solar eclipses, call this function once,
@@ -4935,7 +4935,7 @@ Astronomy.SearchLocalSolarEclipse = function(startTime, observer) {
  * previous call to `SearchLocalSolarEclipse` or `NextLocalSolarEclipse`
  * to find the next solar eclipse.
  * This function finds the first solar eclipse that occurs after `startTime`.
- * A solar eclipse found may be partial, annular, or total.
+ * A solar eclipse may be partial, annular, or total.
  * See {@link Astronomy.LocalSolarEclipseInfo} for more information.
  *
  * @param {Astronomy.AstroTime} prevEclipseTime

@@ -58,6 +58,10 @@ To get started quickly, here are some [examples](../../demo/python/).
 | -------- | ----------- |
 | [SearchLunarEclipse](#SearchLunarEclipse) | Search for the first lunar eclipse after a given date. |
 | [NextLunarEclipse](#NextLunarEclipse) | Continue searching for more lunar eclipses. |
+| [SearchGlobalSolarEclipse](#SearchGlobalSolarEclipse) | Search for the first solar eclipse after a given date that is visible anywhere on the Earth. |
+| [NextGlobalSolarEclipse](#NextGlobalSolarEclipse) | Continue searching for solar eclipses visible anywhere on the Earth. |
+| [SearchLocalSolarEclipse](#SearchLocalSolarEclipse) | Search for the first solar eclipse after a given date that is visible at a particular location on the Earth. |
+| [NextLocalSolarEclipse](#NextLocalSolarEclipse) | Continue searching for solar eclipses visible at a particular location on the Earth. |
 
 ### Lunar perigee and apogee
 

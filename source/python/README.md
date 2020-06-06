@@ -58,6 +58,10 @@ To get started quickly, here are some [examples](../../demo/python/).
 | -------- | ----------- |
 | [SearchLunarEclipse](#SearchLunarEclipse) | Search for the first lunar eclipse after a given date. |
 | [NextLunarEclipse](#NextLunarEclipse) | Continue searching for more lunar eclipses. |
+| [SearchGlobalSolarEclipse](#SearchGlobalSolarEclipse) | Search for the first solar eclipse after a given date that is visible anywhere on the Earth. |
+| [NextGlobalSolarEclipse](#NextGlobalSolarEclipse) | Continue searching for solar eclipses visible anywhere on the Earth. |
+| [SearchLocalSolarEclipse](#SearchLocalSolarEclipse) | Search for the first solar eclipse after a given date that is visible at a particular location on the Earth. |
+| [NextLocalSolarEclipse](#NextLocalSolarEclipse) | Continue searching for solar eclipses visible at a particular location on the Earth. |
 
 ### Lunar perigee and apogee
 
@@ -187,6 +191,28 @@ coordinates, the struct contains converted B1875 coordinates for reference.
 
 ---
 
+<a name="EclipseEvent"></a>
+### class EclipseEvent
+
+**Holds a time and the observed altitude of the Sun at that time.**
+
+When reporting a solar eclipse observed at a specific location on the Earth
+(a "local" solar eclipse), a series of events occur. In addition
+to the time of each event, it is important to know the altitude of the Sun,
+because each event may be invisible to the observer if the Sun is below
+the horizon (i.e. it at night).
+If `altitude` is negative, the event is theoretical only; it would be
+visible if the Earth were transparent, but the observer cannot actually see it.
+If `altitude` is positive but less than a few degrees, visibility will be impaired by
+atmospheric interference (sunrise or sunset conditions).
+
+| Type | Attribute | Description |
+| --- | --- | --- |
+| [`Time`](#Time) | `time` | The date and time of the event. |
+| `float` | `altitude` | The angular altitude of the center of the Sun above/below the horizon, at `time`, corrected for atmospheric refraction and expressed in degrees. |
+
+---
+
 <a name="EclipticCoordinates"></a>
 ### class EclipticCoordinates
 
@@ -264,6 +290,14 @@ onto the daytime side of the Earth at the instant of the eclipse's peak.
 If `kind` has any other value, `latitude` and `longitude` are undefined and should
 not be used.
 
+| Type | Attribute | Description |
+| --- | --- | --- |
+| [`EclipseKind`](#EclipseKind) | `kind` | The type of solar eclipse: `EclipseKind.Partial`, `EclipseKind.Annular`, or `EclipseKind.Total`. |
+| [`Time`](#Time) | `peak` | The date and time of the eclipse at its peak. |
+| `float` | `distance` | The distance between the Sun/Moon shadow axis and the center of the Earth, in kilometers. |
+| `float` | `latitude` | The geographic latitude at the center of the peak eclipse shadow. |
+| `float` | `longitude` | The geographic longitude at the center of the peak eclipse shadow. |
+
 ---
 
 <a name="HorizontalCoordinates"></a>
@@ -316,6 +350,42 @@ body at a given date and time.
 | `float` | `phase_fraction` | A value in the range [0.0, 1.0] indicating what fraction of the body's apparent disc is illuminated, as seen from the Earth. |
 | `float` | `helio_dist` | The distance between the Sun and the body at the observation time, in AU. |
 | `float` | `ring_tilt` | For Saturn, the tilt angle in degrees of its rings as seen from Earth. When the `ring_tilt` is very close to 0, it means the rings are edge-on as seen from observers on the Earth, and are thus very difficult to see. For bodies other than Saturn, `ring_tilt` is `None`. |
+
+---
+
+<a name="LocalSolarEclipseInfo"></a>
+### class LocalSolarEclipseInfo
+
+**Information about a solar eclipse as seen by an observer at a given time and geographic location.**
+
+Returned by [`SearchLocalSolarEclipse`](#SearchLocalSolarEclipse) or [`NextLocalSolarEclipse`](#NextLocalSolarEclipse)
+to report information about a solar eclipse as seen at a given geographic location.
+When a solar eclipse is found, it is classified as partial, annular, or total.
+The `kind` field thus holds `EclipseKind.Partial`, `EclipseKind.Annular`, or `EclipseKind.Total`.
+A partial solar eclipse is when the Moon does not line up directly enough with the Sun
+to completely block the Sun's light from reaching the observer.
+An annular eclipse occurs when the Moon's disc is completely visible against the Sun
+but the Moon is too far away to completely block the Sun's light; this leaves the
+Sun with a ring-like appearance.
+A total eclipse occurs when the Moon is close enough to the Earth and aligned with the
+Sun just right to completely block all sunlight from reaching the observer.
+There are 5 "event" fields, each of which contains a time and a solar altitude.
+Field `peak` holds the date and time of the center of the eclipse, when it is at its peak.
+The fields `partial_begin` and `partial_end` are always set, and indicate when
+the eclipse begins/ends. If the eclipse reaches totality or becomes annular,
+`total_begin` and `total_end` indicate when the total/annular phase begins/ends.
+When an event field is valid, the caller must also check its `altitude` field to
+see whether the Sun is above the horizon at the time indicated by the `time` field.
+See [`EclipseEvent`](#EclipseEvent) for more information.
+
+| Type | Attribute | Description |
+| --- | --- | --- |
+| [`EclipseKind`](#EclipseKind) | `kind` | The type of solar eclipse: `EclipseKind.Partial`, `EclipseKind.Annular`, or `EclipseKind.Total`. |
+| [`EclipseEvent`](#EclipseEvent) | `partial_begin` | The time and Sun altitude at the beginning of the eclipse. |
+| [`EclipseEvent`](#EclipseEvent) | `total_begin` | If this is an annular or a total eclipse, the time and Sun altitude when annular/total phase begins; otherwise `None`. |
+| [`EclipseEvent`](#EclipseEvent) | `peak` | The time and Sun altitude when the eclipse reaches its peak. |
+| [`EclipseEvent`](#EclipseEvent) | `total_end` | If this is an annular or a total eclipse, the time and Sun altitude when annular/total phase ends; otherwise `None`. |
+| [`EclipseEvent`](#EclipseEvent) | `partial_end` | The time and Sun altitude at the end of the eclipse. |
 
 ---
 
@@ -1257,6 +1327,26 @@ to find the next solar eclipse.
 
 ---
 
+<a name="NextLocalSolarEclipse"></a>
+### NextLocalSolarEclipse(prevEclipseTime, observer)
+
+**Searches for the next local solar eclipse in a series.**
+
+After using [`SearchLocalSolarEclipse`](#SearchLocalSolarEclipse) to find the first solar eclipse
+in a series, you can call this function to find the next consecutive solar eclipse.
+Pass in the `peak` value from the [`LocalSolarEclipseInfo`](#LocalSolarEclipseInfo) returned by the
+previous call to `SearchLocalSolarEclipse` or `NextLocalSolarEclipse`
+to find the next solar eclipse.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Time`](#Time) | `prevEclipseTime` | A date and time near a new moon. Solar eclipse search will start at the next new moon. |
+| [`Observer`](#Observer) | `observer` | The geographic location of the observer. |
+
+### Returns: [`LocalSolarEclipseInfo`](#LocalSolarEclipseInfo)
+
+---
+
 <a name="NextLunarApsis"></a>
 ### NextLunarApsis(apsis)
 
@@ -1687,7 +1777,7 @@ the function returns `None`.
 **Searches for a solar eclipse visible anywhere on the Earth's surface.**
 
 This function finds the first solar eclipse that occurs after `startTime`.
-A solar eclipse found may be partial, annular, or total.
+A solar eclipse may be partial, annular, or total.
 See [`GlobalSolarEclipseInfo`](#GlobalSolarEclipseInfo) for more information.
 To find a series of solar eclipses, call this function once,
 then keep calling [`NextGlobalSolarEclipse`](#NextGlobalSolarEclipse) as many times as desired,
@@ -1735,6 +1825,29 @@ of the body at that time, as seen by the given observer.
 
 ---
 
+<a name="SearchLocalSolarEclipse"></a>
+### SearchLocalSolarEclipse(startTime, observer)
+
+Searches for a solar eclipse visible at a specific location on the Earth's surface.
+This function finds the first solar eclipse that occurs after `startTime`.
+A solar eclipse may be partial, annular, or total.
+See [`LocalSolarEclipseInfo`](#LocalSolarEclipseInfo) for more information.
+To find a series of solar eclipses, call this function once,
+then keep calling [`NextLocalSolarEclipse`](#NextLocalSolarEclipse) as many times as desired,
+passing in the `peak` value returned from the previous call.
+IMPORTANT: An eclipse reported by this function might be partly or
+completely invisible to the observer due to the time of day.
+See [`LocalSolarEclipseInfo`](#LocalSolarEclipseInfo) for more information about this topic.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Time`](#Time) | `startTime` | The date and time for starting the search for a solar eclipse. |
+| [`Observer`](#Observer) | `observer` | The geographic location of the observer. |
+
+### Returns: [`LocalSolarEclipseInfo`](#LocalSolarEclipseInfo)
+
+---
+
 <a name="SearchLunarApsis"></a>
 ### SearchLunarApsis(startTime)
 
@@ -1766,7 +1879,7 @@ another call of `NextLunarApsis` as many times as desired.
 **Searches for a lunar eclipse.**
 
 This function finds the first lunar eclipse that occurs after `startTime`.
-A lunar eclipse found may be penumbral, partial, or total.
+A lunar eclipse may be penumbral, partial, or total.
 See [`LunarEclipseInfo`](#LunarEclipseInfo) for more information.
 To find a series of lunar eclipses, call this function once,
 then keep calling [`NextLunarEclipse`](#NextLunarEclipse) as many times as desired,

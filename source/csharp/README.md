@@ -56,6 +56,10 @@ To get started quickly, here are some [examples](../../demo/csharp/).
 | -------- | ----------- |
 | [SearchLunarEclipse](#Astronomy.SearchLunarEclipse) | Search for the first lunar eclipse after a given date. |
 | [NextLunarEclipse](#Astronomy.NextLunarEclipse) | Continue searching for more lunar eclipses. |
+| [SearchGlobalSolarEclipse](#Astronomy.SearchGlobalSolarEclipse) | Search for the first solar eclipse after a given date that is visible anywhere on the Earth. |
+| [NextGlobalSolarEclipse](#Astronomy.NextGlobalSolarEclipse) | Continue searching for solar eclipses visible anywhere on the Earth. |
+| [SearchLocalSolarEclipse](#Astronomy.SearchLocalSolarEclipse) | Search for the first solar eclipse after a given date that is visible at a particular location on the Earth. |
+| [NextLocalSolarEclipse](#Astronomy.NextLocalSolarEclipse) | Continue searching for solar eclipses visible at a particular location on the Earth. |
 
 ### Lunar perigee and apogee
 
@@ -930,7 +934,7 @@ If the search does not converge within 20 iterations, it will throw an exception
 **Searches for a solar eclipse visible anywhere on the Earth's surface.**
 
 This function finds the first solar eclipse that occurs after `startTime`.
-A solar eclipse found may be partial, annular, or total.
+A solar eclipse may be partial, annular, or total.
 See [`GlobalSolarEclipseInfo`](#GlobalSolarEclipseInfo) for more information.
 To find a series of solar eclipses, call this function once,
 then keep calling [`Astronomy.NextGlobalSolarEclipse`](#Astronomy.NextGlobalSolarEclipse) as many times as desired,
@@ -981,7 +985,7 @@ of the body at that time, as seen by the given observer.
 **Searches for a solar eclipse visible at a specific location on the Earth's surface.**
 
 This function finds the first solar eclipse that occurs after `startTime`.
-A solar eclipse found may be partial, annular, or total.
+A solar eclipse may be partial, annular, or total.
 See [`LocalSolarEclipseInfo`](#LocalSolarEclipseInfo) for more information.
 
 To find a series of solar eclipses, call this function once,
@@ -1028,7 +1032,7 @@ call of `Astronomy.NextLunarApsis` as many times as desired.
 **Searches for a lunar eclipse.**
 
 This function finds the first lunar eclipse that occurs after `startTime`.
-A lunar eclipse found may be penumbral, partial, or total.
+A lunar eclipse may be penumbral, partial, or total.
 See [`LunarEclipseInfo`](#LunarEclipseInfo) for more information.
 To find a series of lunar eclipses, call this function once,
 then keep calling [`Astronomy.NextLunarEclipse`](#Astronomy.NextLunarEclipse) as many times as desired,
@@ -1742,7 +1746,7 @@ not be used.
 
 | Type | Name | Description |
 | --- | --- | --- |
-| [`EclipseKind`](#EclipseKind) | `kind` | The type of solar eclipse found. |
+| [`EclipseKind`](#EclipseKind) | `kind` | The type of solar eclipse: `EclipseKind.Partial`, `EclipseKind.Annular`, or `EclipseKind.Total`. |
 | [`AstroTime`](#AstroTime) | `peak` | The date and time of the eclipse at its peak. |
 | `double` | `distance` | The distance between the Sun/Moon shadow axis and the center of the Earth, in kilometers. |
 | `double` | `latitude` | The geographic latitude at the center of the peak eclipse shadow. |
@@ -1812,7 +1816,7 @@ See [`EclipseEvent`](#EclipseEvent) for more information.
 
 | Type | Name | Description |
 | --- | --- | --- |
-| [`EclipseKind`](#EclipseKind) | `kind` | The type of solar eclipse found: `EclipseKind.Partial`, `EclipseKind.Annular`, or `EclipseKind.Total`. |
+| [`EclipseKind`](#EclipseKind) | `kind` | The type of solar eclipse: `EclipseKind.Partial`, `EclipseKind.Annular`, or `EclipseKind.Total`. |
 | [`EclipseEvent`](#EclipseEvent) | `partial_begin` | The time and Sun altitude at the beginning of the eclipse. |
 | [`EclipseEvent`](#EclipseEvent) | `total_begin` | If this is an annular or a total eclipse, the time and Sun altitude when annular/total phase begins; otherwise invalid. |
 | [`EclipseEvent`](#EclipseEvent) | `peak` | The time and Sun altitude when the eclipse reaches its peak. |

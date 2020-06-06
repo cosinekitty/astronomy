@@ -932,7 +932,7 @@ namespace CosineKitty
     /// </remarks>
     public struct GlobalSolarEclipseInfo
     {
-        /// <summary>The type of solar eclipse found.</summary>
+        /// <summary>The type of solar eclipse: `EclipseKind.Partial`, `EclipseKind.Annular`, or `EclipseKind.Total`.</summary>
         public EclipseKind kind;
 
         /// <summary>The date and time of the eclipse at its peak.</summary>
@@ -1006,7 +1006,7 @@ namespace CosineKitty
 
     public struct LocalSolarEclipseInfo
     {
-        /// <summary>The type of solar eclipse found: `EclipseKind.Partial`, `EclipseKind.Annular`, or `EclipseKind.Total`.</summary>
+        /// <summary>The type of solar eclipse: `EclipseKind.Partial`, `EclipseKind.Annular`, or `EclipseKind.Total`.</summary>
         public EclipseKind  kind;
 
         /// <summary>The time and Sun altitude at the beginning of the eclipse.</summary>
@@ -5647,7 +5647,7 @@ namespace CosineKitty
         /// <summary>Searches for a lunar eclipse.</summary>
         /// <remarks>
         /// This function finds the first lunar eclipse that occurs after `startTime`.
-        /// A lunar eclipse found may be penumbral, partial, or total.
+        /// A lunar eclipse may be penumbral, partial, or total.
         /// See #LunarEclipseInfo for more information.
         /// To find a series of lunar eclipses, call this function once,
         /// then keep calling #Astronomy.NextLunarEclipse as many times as desired,
@@ -5756,7 +5756,7 @@ namespace CosineKitty
         /// </summary>
         /// <remarks>
         /// This function finds the first solar eclipse that occurs after `startTime`.
-        /// A solar eclipse found may be partial, annular, or total.
+        /// A solar eclipse may be partial, annular, or total.
         /// See #GlobalSolarEclipseInfo for more information.
         /// To find a series of solar eclipses, call this function once,
         /// then keep calling #Astronomy.NextGlobalSolarEclipse as many times as desired,
@@ -6042,7 +6042,7 @@ namespace CosineKitty
         /// </summary>
         /// <remarks>
         /// This function finds the first solar eclipse that occurs after `startTime`.
-        /// A solar eclipse found may be partial, annular, or total.
+        /// A solar eclipse may be partial, annular, or total.
         /// See #LocalSolarEclipseInfo for more information.
         ///
         /// To find a series of solar eclipses, call this function once,
