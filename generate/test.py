@@ -1241,6 +1241,14 @@ def AngleDiff(alat, alon, blat, blon):
     return math.degrees(math.acos(dot))
 
 
+def KindFromChar(typeChar):
+    return {
+        'P': astronomy.EclipseKind.Partial,
+        'A': astronomy.EclipseKind.Annular,
+        'T': astronomy.EclipseKind.Total,
+        'H': astronomy.EclipseKind.Total,
+    }[typeChar]
+
 def GlobalSolarEclipse():
     expected_count = 1180
     max_minutes = 0.0
@@ -1258,15 +1266,9 @@ def GlobalSolarEclipse():
                 print('PY GlobalSolarEclipse({} line {}): invalid token count = {}'.format(filename, lnum, len(token)))
                 return 1
             peak = astronomy.Time.Parse(token[0])
-            typeChar = token[2]
+            expected_kind = KindFromChar(token[2])
             lat = float(token[3])
             lon = float(token[4])
-            expected_kind = {
-                'P': astronomy.EclipseKind.Partial,
-                'A': astronomy.EclipseKind.Annular,
-                'T': astronomy.EclipseKind.Total,
-                'H': astronomy.EclipseKind.Total,
-            }[typeChar]
 
             diff_days = eclipse.peak.tt - peak.tt
             # Sometimes we find marginal eclipses that aren't listed in the test data.
@@ -1421,17 +1423,12 @@ def LocalSolarEclipse2():
             latitude = float(token[0])
             longitude = float(token[1])
             observer = astronomy.Observer(latitude, longitude, 0)
-            typeChar = token[2]
-            expected_kind = {
-                'P': astronomy.EclipseKind.Partial,
-                'A': astronomy.EclipseKind.Annular,
-                'T': astronomy.EclipseKind.Total,
-                'H': astronomy.EclipseKind.Total
-            }[typeChar]
+            expected_kind = KindFromChar(token[2])
+            is_umbral = (expected_kind != astronomy.EclipseKind.Partial)
             p1    = ParseEvent(token[3],  token[4],   True)
-            t1    = ParseEvent(token[5],  token[6],   (typeChar != 'P'))
+            t1    = ParseEvent(token[5],  token[6],   is_umbral)
             peak  = ParseEvent(token[7],  token[8],   True)
-            t2    = ParseEvent(token[9],  token[10],  (typeChar != 'P'))
+            t2    = ParseEvent(token[9],  token[10],  is_umbral)
             p2    = ParseEvent(token[11], token[12],  True)
             search_time = p1.time.AddDays(-20)
             eclipse = astronomy.SearchLocalSolarEclipse(search_time, observer)
@@ -1443,7 +1440,7 @@ def LocalSolarEclipse2():
             CheckEvent(eclipse.peak, peak)
             CheckEvent(eclipse.partial_begin, p1)
             CheckEvent(eclipse.partial_end, p2)
-            if typeChar != 'P':
+            if is_umbral:
                 CheckEvent(eclipse.total_begin, t1)
                 CheckEvent(eclipse.total_end, t2)
             verify_count += 1
