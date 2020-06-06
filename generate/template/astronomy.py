@@ -4214,7 +4214,7 @@ def _PeakMoonShadow(search_center_time):
 def _PeakLocalMoonShadow(search_center_time, observer):
     # Search for the time near search_center_time that the Moon's shadow comes
     # closest to the given observer.
-    window = 1.00;     # FIXFIXFIX: constrain; days before/after new moon to search for minimum shadow distance
+    window = 0.2
     t1 = search_center_time.AddDays(-window)
     t2 = search_center_time.AddDays(+window)
     tx = Search(_ShadowDistanceSlope, lambda time: _LocalMoonShadow(time, observer), t1, t2, 1.0)

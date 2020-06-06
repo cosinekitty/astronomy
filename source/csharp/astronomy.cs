@@ -5948,7 +5948,7 @@ namespace CosineKitty
                 Search for the time near search_center_time that the Moon's shadow comes
                 closest to the given observer.
             */
-            const double window = 1.00;     /* FIXFIXFIX: constrain; days before/after new moon to search for minimum shadow distance */
+            const double window = 0.2;
             AstroTime t1 = search_center_time.AddDays(-window);
             AstroTime t2 = search_center_time.AddDays(+window);
             var context = new SearchContext_LocalMoonShadowSlope(observer);

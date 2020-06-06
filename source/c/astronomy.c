@@ -7781,7 +7781,7 @@ static shadow_t PeakLocalMoonShadow(astro_time_t search_center_time, astro_obser
 {
     astro_time_t t1, t2;
     astro_search_result_t result;
-    const double window = 1.00;     /* FIXFIXFIX: constrain; days before/after new moon to search for minimum shadow distance */
+    const double window = 0.2;
 
     /*
         Search for the time near search_center_time that the Moon's shadow comes

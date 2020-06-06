@@ -4372,7 +4372,7 @@ function PeakMoonShadow(search_center_time) {
 function PeakLocalMoonShadow(search_center_time, observer) {
     // Search for the time near search_center_time that the Moon's shadow comes
     // closest to the given observer.
-    const window = 1.00;     // FIXFIXFIX: constrain; days before/after new moon to search for minimum shadow distance
+    const window = 0.2;
     const t1 = search_center_time.AddDays(-window);
     const t2 = search_center_time.AddDays(+window);
     function shadowfunc(time) {
