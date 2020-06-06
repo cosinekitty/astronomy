@@ -412,7 +412,7 @@ function GlobalSolarEclipse() {
         // Validate the eclipse prediction.
         const diff_minutes = (24 * 60) * Math.abs(diff_days);
         if (diff_minutes > 6.93) {
-            console.error(`JS GlobalSolarEclipseTest(${filename} line ${lnum}): EXCESSIVE TIME ERROR = ${diff_minutes} minutes`);
+            console.error(`JS GlobalSolarEclipse(${filename} line ${lnum}): EXCESSIVE TIME ERROR = ${diff_minutes} minutes`);
             return 1;
         }
 
@@ -422,7 +422,7 @@ function GlobalSolarEclipse() {
 
         // Validate the eclipse kind, but only when it is not a "glancing" eclipse.
         if ((eclipse.distance < 6360) && (eclipse.kind != expected_kind)) {
-            console.error(`JS GlobalSolarEclipseTest(${filename} line ${lnum}): WRONG ECLIPSE KIND: expected ${expected_kind}, found ${eclipse.kind}`);
+            console.error(`JS GlobalSolarEclipse(${filename} line ${lnum}): WRONG ECLIPSE KIND: expected ${expected_kind}, found ${eclipse.kind}`);
             return 1;
         }
 
@@ -433,7 +433,7 @@ function GlobalSolarEclipse() {
             if (eclipse.distance < 6100.0) {
                 const diff_angle = AngleDiff(lat, lon, eclipse.latitude, eclipse.longitude);
                 if (diff_angle > 0.247) {
-                    console.error(`PY GlobalSolarEclipseTest(${filename} line ${lnum}): EXCESSIVE GEOGRAPHIC LOCATION ERROR = ${diff_angle} degrees`);
+                    console.error(`JS GlobalSolarEclipse(${filename} line ${lnum}): EXCESSIVE GEOGRAPHIC LOCATION ERROR = ${diff_angle} degrees`);
                     console.log(`   calculated lat=${eclipse.latitude}, lon=${eclipse.longitude}; expected ${lat}, ${lon}`);
                     return 1;
                 }
@@ -452,11 +452,186 @@ function GlobalSolarEclipse() {
     }
 
     if (skip_count > 2) {
-        console.error(`PY GlobalSolarEclipse: EXCESSIVE SKIP COUNT = ${skip_count}`);
+        console.error(`JS GlobalSolarEclipse: EXCESSIVE SKIP COUNT = ${skip_count}`);
         return 1;
     }
 
     console.log(`JS GlobalSolarEclipse: PASS (${lnum} verified, ${skip_count} skipped, max minutes = ${max_minutes}, max angle = ${max_angle})`);
+    return 0;
+}
+
+
+function LocalSolarEclipse1() {
+    // Re-use the test data for global solar eclipses, only feed the given coordinates
+    // into the local solar eclipse predictor as the observer's location.
+    // In each case, start the search 20 days before the expected eclipse.
+    // Then verify that the peak time and eclipse type is correct in each case.
+
+    const expected_count = 1180;
+    const filename = 'eclipse/solar_eclipse.txt';
+    const text = fs.readFileSync(filename, {encoding:'utf8'});
+    const lines = text.trim().split(/\r?\n/);
+    let max_minutes = 0.0;
+    let skip_count = 0;
+    let lnum = 0;
+    for (let line of lines) {
+        ++lnum;
+        // 1889-12-22T12:54:15Z   -6 T   -12.7   -12.8
+        let token = line.trim().split(/\s+/);
+        if (token.length !== 5) {
+            console.error(`JS LocalSolarEclipse1(${filename} line ${lnum}): invalid token count = ${token.length}`);
+            return 1;
+        }
+        const peak = Astronomy.MakeTime(new Date(token[0]));
+        //const typeChar = token[2];
+        const lat = parseFloat(token[3]);
+        const lon = parseFloat(token[4]);
+        const observer = Astronomy.MakeObserver(lat, lon, 0);
+
+        // Start the search 20 days before we know the eclipse should peak.
+        const search_start = peak.AddDays(-20);
+        const eclipse = Astronomy.SearchLocalSolarEclipse(search_start, observer);
+
+        // Validate the predicted eclipse peak time.
+        const diff_days = eclipse.peak.tt - peak.tt;
+        if (diff_days > 20) {
+            ++skip_count;
+            continue;
+        }
+
+        const diff_minutes = (24 * 60) * Math.abs(diff_days);
+        if (diff_minutes > 7.14) {
+            console.error(`JS LocalSolarEclipse1(${filename} line ${lnum}): EXCESSIVE TIME ERROR = ${diff_minutes} minutes`);
+            return 1;
+        }
+
+        if (diff_minutes > max_minutes) {
+            max_minutes = diff_minutes;
+        }
+    }
+
+    if (lnum != expected_count) {
+        console.error(`JS LocalSolarEclipse1: WRONG LINE COUNT = ${lnum}, expected ${expected_count}`);
+        return 1;
+    }
+
+    if (skip_count > 6) {
+        console.error(`JS LocalSolarEclipse1: EXCESSIVE SKIP COUNT = ${skip_count}`);
+        return 1;
+    }
+
+    console.log(`JS LocalSolarEclipse1: PASS (${lnum} verified, ${skip_count} skipped, max minutes = ${max_minutes})`);
+    return 0;
+}
+
+
+function TrimLine(line) {
+    // Treat '#' as a comment character.
+    const poundIndex = line.indexOf('#');
+    if (poundIndex >= 0) {
+        line = line.substr(0, poundIndex);
+    }
+    line = line.trim();
+    return line;
+}
+
+
+function ParseEvent(time_str, alt_str, required) {
+    if (required) {
+        return {
+            time: new Astronomy.MakeTime(new Date(time_str)),
+            altitude: parseFloat(alt_str)
+        };
+    }
+    if (time_str !== '-') {
+        throw `Expected event time to be "-" but found "${time_str}"`;
+    }
+    return null;
+}
+
+
+function LocalSolarEclipse2() {
+    // Test ability to calculate local solar eclipse conditions away from
+    // the peak position on the Earth.
+
+    const filename = 'eclipse/local_solar_eclipse.txt';
+    const text = fs.readFileSync(filename, {encoding:'utf8'});
+    const lines = text.trim().split(/\r?\n/);
+    let lnum = 0;
+    let verify_count = 0;
+    let max_minutes = 0.0;
+    let max_degrees = 0.0;
+
+    function CheckEvent(calc, expect) {
+        const diff_minutes = (24 * 60) * Math.abs(expect.time.ut - calc.time.ut);
+        if (diff_minutes > max_minutes) {
+            max_minutes = diff_minutes;
+        }
+        if (diff_minutes > 1.0) {
+            throw `CheckEvent(${filename} line ${lnum}): EXCESSIVE TIME ERROR: ${diff_minutes} minutes.`;
+        }
+        const diff_alt = Math.abs(expect.altitude - calc.altitude);
+        if (diff_alt > max_degrees) {
+            max_degrees = diff_alt;
+        }
+        if (diff_alt > 0.5) {
+            throw `CheckEvent(${filename} line ${lnum}): EXCESSIVE ALTITUDE ERROR: ${diff_alt} degrees.`;
+        }
+    }
+
+    for (let line of lines) {
+        ++lnum;
+        line = TrimLine(line);
+        if (line === '') continue;
+        const token = line.split(/\s+/);
+        if (token.length !== 13) {
+            console.error(`JS LocalSolarEclipse2(${filename} line ${lnum}): Incorrect token count = ${token.length}`);
+            return 1;
+        }
+        const latitude = parseFloat(token[0]);
+        const longitude = parseFloat(token[1]);
+        const observer = Astronomy.MakeObserver(latitude, longitude, 0);
+        const typeChar = token[2];
+        const expected_kind = {
+            'P': 'partial',
+            'A': 'annular',
+            'T': 'total',
+            'H': 'total'
+        }[typeChar];
+        const p1    = ParseEvent(token[3],  token[4],   true);
+        const t1    = ParseEvent(token[5],  token[6],   (typeChar !== 'P'));
+        const peak  = ParseEvent(token[7],  token[8],   true);
+        const t2    = ParseEvent(token[9],  token[10],  (typeChar !== 'P'));
+        const p2    = ParseEvent(token[11], token[12],  true);
+
+        const search_time = p1.time.AddDays(-20);
+        const eclipse = Astronomy.SearchLocalSolarEclipse(search_time, observer);
+        if (eclipse.kind !== expected_kind) {
+            console.error(`JS LocalSolarEclipse2(${filename} line ${lnum}): expected eclipse kind "${expected_kind}" but found "${eclipse.kind}".`);
+            return 1;
+        }
+        CheckEvent(eclipse.peak, peak);
+        CheckEvent(eclipse.partial_begin, p1);
+        CheckEvent(eclipse.partial_end, p2);
+        if (typeChar != 'P') {
+            CheckEvent(eclipse.total_begin, t1);
+            CheckEvent(eclipse.total_end, t2);
+        }
+        ++verify_count;
+    }
+
+    console.log(`JS LocalSolarEclipse2: PASS (${verify_count} verified, max_minutes = ${max_minutes}, max_degrees = ${max_degrees})`);
+    return 0;
+}
+
+
+function LocalSolarEclipse() {
+    if (0 !== LocalSolarEclipse1())
+        return 1;
+
+    if (0 !== LocalSolarEclipse2())
+        return 1;
+
     return 0;
 }
 
@@ -1417,6 +1592,7 @@ const UnitTests = {
     constellation:          Constellation,
     elongation:             Elongation,
     global_solar_eclipse:   GlobalSolarEclipse,
+    local_solar_eclipse:    LocalSolarEclipse,
     lunar_apsis:            LunarApsis,
     lunar_eclipse:          LunarEclipse,
     planet_apsis:           PlanetApsis,

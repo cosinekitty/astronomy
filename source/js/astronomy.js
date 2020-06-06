@@ -5751,6 +5751,26 @@ function MoonShadow(time) {
 }
 
 
+function LocalMoonShadow(time, observer) {
+    // Calculate observer's geocentric position.
+    // For efficiency, do this first, to populate the earth rotation parameters in 'time'.
+    // That way they can be recycled instead of recalculated.
+    const pos = geo_pos(time, observer);
+    const h = CalcVsop(vsop.Earth, time);     // heliocentric Earth
+    const m = Astronomy.GeoMoon(time);        // geocentric Moon
+
+    // Calculate lunacentric location of an observer on the Earth's surface.
+    const o = new Vector(pos[0] - m.x, pos[1] - m.y, pos[2] - m.z, time);
+
+    // Convert geocentric moon to heliocentric Moon.
+    m.x += h.x;
+    m.y += h.y;
+    m.z += h.z;
+
+    return CalcShadow(MOON_MEAN_RADIUS_KM, time, o, m);
+}
+
+
 function ShadowDistanceSlope(shadowfunc, time) {
     const dt = 1.0 / 86400.0;
     const t1 = time.AddDays(-dt);
@@ -5779,6 +5799,23 @@ function PeakMoonShadow(search_center_time) {
 }
 
 
+function PeakLocalMoonShadow(search_center_time, observer) {
+    // Search for the time near search_center_time that the Moon's shadow comes
+    // closest to the given observer.
+    const window = 1.00;     // FIXFIXFIX: constrain; days before/after new moon to search for minimum shadow distance
+    const t1 = search_center_time.AddDays(-window);
+    const t2 = search_center_time.AddDays(+window);
+    function shadowfunc(time) {
+        return LocalMoonShadow(time, observer);
+    }
+    const time = Astronomy.Search(time => ShadowDistanceSlope(shadowfunc, time), t1, t2, 1.0);
+    if (!time) {
+        throw `PeakLocalMoonShadow: search failure for search_center_time = ${search_center_time}`;
+    }
+    return LocalMoonShadow(time, observer);
+}
+
+
 function ShadowSemiDurationMinutes(center_time, radius_limit, window_minutes) {
     // Search backwards and forwards from the center time until shadow axis distance crosses radius limit.
     const window = window_minutes / (24.0 * 60.0);
@@ -5789,6 +5826,12 @@ function ShadowSemiDurationMinutes(center_time, radius_limit, window_minutes) {
     if (t1 === null || t2 === null)
         throw 'Failed to find shadow semiduration';
     return (t2.ut - t1.ut) * ((24.0 * 60.0) / 2.0);    // convert days to minutes and average the semi-durations.
+}
+
+
+function MoonEclipticLatitudeDegrees(time) {
+    const moon = CalcMoon(time);
+    return RAD2DEG * moon.geo_eclip_lat;
 }
 
 
@@ -5821,8 +5864,8 @@ Astronomy.SearchLunarEclipse = function(date) {
             a lunar eclipse is not possible. Avoid needless work searching for
             the minimum moon distance.
         */
-       const moon = CalcMoon(fullmoon);
-       if (RAD2DEG * Math.abs(moon.geo_eclip_lat) < PruneLatitude) {
+       const eclip_lat = MoonEclipticLatitudeDegrees(fullmoon);
+       if (Math.abs(eclip_lat) < PruneLatitude) {
            /* Search near the full moon for the time when the center of the Moon */
            /* is closest to the line passing through the centers of the Sun and Earth. */
            const shadow = PeakEarthShadow(fullmoon);
@@ -6067,8 +6110,8 @@ Astronomy.SearchGlobalSolarEclipse = function(startTime) {
         }
 
         // Pruning: if the new moon's ecliptic latitude is too large, a solar eclipse is not possible.
-        const mp = CalcMoon(newmoon);
-        if (RAD2DEG * Math.abs(mp.geo_eclip_lat) < PruneLatitude) {
+        const eclip_lat = MoonEclipticLatitudeDegrees(newmoon);
+        if (Math.abs(eclip_lat) < PruneLatitude) {
             // Search near the new moon for the time when the center of the Earth
             // is closest to the line passing through the centers of the Sun and Moon.
             const shadow = PeakMoonShadow(newmoon);
@@ -6108,6 +6151,235 @@ Astronomy.NextGlobalSolarEclipse = function(prevEclipseTime) {
     return Astronomy.SearchGlobalSolarEclipse(startTime);
 }
 
+
+/**
+ * @brief Holds a time and the observed altitude of the Sun at that time.
+ *
+ * When reporting a solar eclipse observed at a specific location on the Earth
+ * (a "local" solar eclipse), a series of events occur. In addition
+ * to the time of each event, it is important to know the altitude of the Sun,
+ * because each event may be invisible to the observer if the Sun is below
+ * the horizon (i.e. it at night).
+ *
+ * If `altitude` is negative, the event is theoretical only; it would be
+ * visible if the Earth were transparent, but the observer cannot actually see it.
+ * If `altitude` is positive but less than a few degrees, visibility will be impaired by
+ * atmospheric interference (sunrise or sunset conditions).
+ *
+ * @class
+ * @memberof Astronomy
+ *
+ * @property {Astronomy.AstroTime} time
+ *      The date and time of the event.
+ *
+ * @property {number} altitude
+ *      The angular altitude of the center of the Sun above/below the horizon, at `time`,
+ *      corrected for atmospheric refraction and expressed in degrees.
+ */
+class EclipseEvent {
+    constructor(time, altitude) {
+        this.time = time;
+        this.altitude = altitude;
+    }
+}
+
+
+/**
+ * @brief Information about a solar eclipse as seen by an observer at a given time and geographic location.
+ *
+ * Returned by {@link Astronomy.SearchLocalSolarEclipse} or {@link Astronomy.NextLocalSolarEclipse}
+ * to report information about a solar eclipse as seen at a given geographic location.
+ *
+ * When a solar eclipse is found, it is classified by setting `kind`
+ * to `"partial"`, `"annular"`, or `"total"`.
+ * A partial solar eclipse is when the Moon does not line up directly enough with the Sun
+ * to completely block the Sun's light from reaching the observer.
+ * An annular eclipse occurs when the Moon's disc is completely visible against the Sun
+ * but the Moon is too far away to completely block the Sun's light; this leaves the
+ * Sun with a ring-like appearance.
+ * A total eclipse occurs when the Moon is close enough to the Earth and aligned with the
+ * Sun just right to completely block all sunlight from reaching the observer.
+ *
+ * There are 5 "event" fields, each of which contains a time and a solar altitude.
+ * Field `peak` holds the date and time of the center of the eclipse, when it is at its peak.
+ * The fields `partial_begin` and `partial_end` are always set, and indicate when
+ * the eclipse begins/ends. If the eclipse reaches totality or becomes annular,
+ * `total_begin` and `total_end` indicate when the total/annular phase begins/ends.
+ * When an event field is valid, the caller must also check its `altitude` field to
+ * see whether the Sun is above the horizon at the time indicated by the `time` field.
+ * See #EclipseEvent for more information.
+ *
+ * @class
+ * @memberof Astronomy
+ *
+ * @property {string} kind
+ *      The type of solar eclipse found: `"partial"`, `"annular"`, or `"total"`.
+ *
+ * @property {Astronomy.EclipseEvent} partial_begin
+ *      The time and Sun altitude at the beginning of the eclipse.
+ *
+ * @property {Astronomy.EclipseEvent} total_begin
+ *      If this is an annular or a total eclipse, the time and Sun altitude when annular/total phase begins; otherwise undefined.
+ *
+ * @property {Astronomy.EclipseEvent} peak
+ *      The time and Sun altitude when the eclipse reaches its peak.
+ *
+ * @property {Astronomy.EclipseEvent} total_end
+ *      If this is an annular or a total eclipse, the time and Sun altitude when annular/total phase ends; otherwise undefined.
+ *
+ * @property {Astronomy.EclipseEvent} partial_end
+ *      The time and Sun altitude at the end of the eclipse.
+ */
+class LocalSolarEclipseInfo {
+    constructor(kind, partial_begin, total_begin, peak, total_end, partial_end) {
+        this.kind = kind;
+        this.partial_begin = partial_begin;
+        this.total_begin = total_begin;
+        this.peak = peak;
+        this.total_end = total_end;
+        this.partial_end = partial_end;
+    }
+}
+
+
+function local_partial_distance(shadow) {
+    return shadow.p - shadow.r;
+}
+
+function local_total_distance(shadow) {
+    // Must take the absolute value of the umbra radius 'k'
+    // because it can be negative for an annular eclipse.
+    return Math.abs(shadow.k) - shadow.r;
+}
+
+
+function LocalEclipse(shadow, observer) {
+    const PARTIAL_WINDOW = 0.2;
+    const TOTAL_WINDOW = 0.01;
+    const peak = CalcEvent(observer, shadow.time);
+    let t1 = shadow.time.AddDays(-PARTIAL_WINDOW);
+    let t2 = shadow.time.AddDays(+PARTIAL_WINDOW);
+    const partial_begin = LocalEclipseTransition(observer, +1.0, local_partial_distance, t1, shadow.time);
+    const partial_end   = LocalEclipseTransition(observer, -1.0, local_partial_distance, shadow.time, t2);
+    let total_begin, total_end, kind;
+
+    if (shadow.r < Math.abs(shadow.k)) {     // take absolute value of 'k' to handle annular eclipses too.
+        t1 = shadow.time.AddDays(-TOTAL_WINDOW);
+        t2 = shadow.time.AddDays(+TOTAL_WINDOW);
+        total_begin = LocalEclipseTransition(observer, +1.0, local_total_distance, t1, shadow.time);
+        total_end = LocalEclipseTransition(observer, -1.0, local_total_distance, shadow.time, t2);
+        kind = EclipseKindFromUmbra(shadow.k);
+    } else {
+        kind = 'partial';
+    }
+
+    return new LocalSolarEclipseInfo(kind, partial_begin, total_begin, peak, total_end, partial_end);
+}
+
+
+function LocalEclipseTransition(observer, direction, func, t1, t2) {
+    function evaluate(time) {
+        const shadow = LocalMoonShadow(time, observer);
+        return direction * func(shadow);
+    }
+    const search = Astronomy.Search(evaluate, t1, t2, 1.0);
+    if (search == null)
+        throw "Local eclipse transition search failed.";
+    return CalcEvent(observer, search);
+}
+
+function CalcEvent(observer, time) {
+    const altitude = SunAltitude(time, observer);
+    return new EclipseEvent(time, altitude);
+}
+
+function SunAltitude(time, observer) {
+    const equ = Astronomy.Equator('Sun', time, observer, true, true);
+    const hor = Astronomy.Horizon(time, observer, equ.ra, equ.dec, 'normal');
+    return hor.altitude;
+}
+
+
+/**
+ * @brief Searches for a solar eclipse visible at a specific location on the Earth's surface.
+ *
+ * This function finds the first solar eclipse that occurs after `startTime`.
+ * A solar eclipse found may be partial, annular, or total.
+ * See {@link Astronomy.LocalSolarEclipseInfo} for more information.
+ *
+ * To find a series of solar eclipses, call this function once,
+ * then keep calling {@link Astronomy.NextLocalSolarEclipse} as many times as desired,
+ * passing in the `peak` value returned from the previous call.
+ *
+ * IMPORTANT: An eclipse reported by this function might be partly or
+ * completely invisible to the observer due to the time of day.
+ * See {@link Astronomy.LocalSolarEclipseInfo} for more information about this topic.
+ *
+ * @param {Astronomy.AstroTime} startTime
+ *      The date and time for starting the search for a solar eclipse.
+ *
+ * @param {Astronomy.Observer} observer
+ *      The geographic location of the observer.
+ *
+ * @returns {Astronomy.LocalSolarEclipseInfo}
+ */
+Astronomy.SearchLocalSolarEclipse = function(startTime, observer) {
+    const PruneLatitude = 1.8;   /* Moon's ecliptic latitude beyond which eclipse is impossible */
+
+    /* Iterate through consecutive new moons until we find a solar eclipse visible somewhere on Earth. */
+    let nmtime = startTime;
+    for(;;) {
+        /* Search for the next new moon. Any eclipse will be near it. */
+        const newmoon = Astronomy.SearchMoonPhase(0.0, nmtime, 40.0);
+
+        /* Pruning: if the new moon's ecliptic latitude is too large, a solar eclipse is not possible. */
+        const eclip_lat = MoonEclipticLatitudeDegrees(newmoon);
+        if (Math.abs(eclip_lat) < PruneLatitude) {
+            /* Search near the new moon for the time when the observer */
+            /* is closest to the line passing through the centers of the Sun and Moon. */
+            const shadow = PeakLocalMoonShadow(newmoon, observer);
+            if (shadow.r < shadow.p) {
+                /* This is at least a partial solar eclipse for the observer. */
+                const eclipse = LocalEclipse(shadow, observer);
+
+                /* Ignore any eclipse that happens completely at night. */
+                /* More precisely, the center of the Sun must be above the horizon */
+                /* at the beginning or the end of the eclipse, or we skip the event. */
+                if (eclipse.partial_begin.altitude > 0.0 || eclipse.partial_end.altitude > 0.0)
+                    return eclipse;
+            }
+        }
+
+        /* We didn't find an eclipse on this new moon, so search for the next one. */
+        nmtime = newmoon.AddDays(10.0);
+    }
+}
+
+
+/**
+ * @brief Searches for the next local solar eclipse in a series.
+ *
+ * After using {@link Astronomy.SearchLocalSolarEclipse} to find the first solar eclipse
+ * in a series, you can call this function to find the next consecutive solar eclipse.
+ * Pass in the `peak` value from the {@link Astronomy.LocalSolarEclipseInfo} returned by the
+ * previous call to `SearchLocalSolarEclipse` or `NextLocalSolarEclipse`
+ * to find the next solar eclipse.
+ * This function finds the first solar eclipse that occurs after `startTime`.
+ * A solar eclipse found may be partial, annular, or total.
+ * See {@link Astronomy.LocalSolarEclipseInfo} for more information.
+ *
+ * @param {Astronomy.AstroTime} prevEclipseTime
+ *      The date and time for starting the search for a solar eclipse.
+ *
+ * @param {Astronomy.Observer} observer
+ *      The geographic location of the observer.
+ *
+ * @returns {Astronomy.LocalSolarEclipseInfo}
+ */
+Astronomy.NextLocalSolarEclipse = function(prevEclipseTime, observer) {
+    const startTime = prevEclipseTime.AddDays(10.0);
+    return SearchLocalSolarEclipse(startTime, observer);
+}
 
 
 })(typeof exports==='undefined' ? (this.Astronomy={}) : exports);

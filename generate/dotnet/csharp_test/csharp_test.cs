@@ -2068,7 +2068,7 @@ namespace csharp_test
             if (diff_minutes > max_minutes)
                 max_minutes = diff_minutes;
 
-            if (diff_minutes > 2.0)
+            if (diff_minutes > 1.0)
             {
                 Console.WriteLine("CheckEvent({0} line {1}): EXCESSIVE TIME ERROR: {2} minutes", inFileName, lnum, diff_minutes);
                 return true;

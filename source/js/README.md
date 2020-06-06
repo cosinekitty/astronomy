@@ -558,6 +558,73 @@ Reports the time and geographic location of the peak of a solar eclipse.
 
 * * *
 
+<a name="Astronomy.EclipseEvent"></a>
+
+### Astronomy.EclipseEvent
+**Kind**: static class of [<code>Astronomy</code>](#Astronomy)  
+**Brief**: Holds a time and the observed altitude of the Sun at that time.
+
+When reporting a solar eclipse observed at a specific location on the Earth
+(a "local" solar eclipse), a series of events occur. In addition
+to the time of each event, it is important to know the altitude of the Sun,
+because each event may be invisible to the observer if the Sun is below
+the horizon (i.e. it at night).
+
+If `altitude` is negative, the event is theoretical only; it would be
+visible if the Earth were transparent, but the observer cannot actually see it.
+If `altitude` is positive but less than a few degrees, visibility will be impaired by
+atmospheric interference (sunrise or sunset conditions).  
+**Properties**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| time | [<code>AstroTime</code>](#Astronomy.AstroTime) | The date and time of the event. |
+| altitude | <code>number</code> | The angular altitude of the center of the Sun above/below the horizon, at `time`,      corrected for atmospheric refraction and expressed in degrees. |
+
+
+* * *
+
+<a name="Astronomy.LocalSolarEclipseInfo"></a>
+
+### Astronomy.LocalSolarEclipseInfo
+**Kind**: static class of [<code>Astronomy</code>](#Astronomy)  
+**Brief**: Information about a solar eclipse as seen by an observer at a given time and geographic location.
+
+Returned by [SearchLocalSolarEclipse](#Astronomy.SearchLocalSolarEclipse) or [NextLocalSolarEclipse](#Astronomy.NextLocalSolarEclipse)
+to report information about a solar eclipse as seen at a given geographic location.
+
+When a solar eclipse is found, it is classified by setting `kind`
+to `"partial"`, `"annular"`, or `"total"`.
+A partial solar eclipse is when the Moon does not line up directly enough with the Sun
+to completely block the Sun's light from reaching the observer.
+An annular eclipse occurs when the Moon's disc is completely visible against the Sun
+but the Moon is too far away to completely block the Sun's light; this leaves the
+Sun with a ring-like appearance.
+A total eclipse occurs when the Moon is close enough to the Earth and aligned with the
+Sun just right to completely block all sunlight from reaching the observer.
+
+There are 5 "event" fields, each of which contains a time and a solar altitude.
+Field `peak` holds the date and time of the center of the eclipse, when it is at its peak.
+The fields `partial_begin` and `partial_end` are always set, and indicate when
+the eclipse begins/ends. If the eclipse reaches totality or becomes annular,
+`total_begin` and `total_end` indicate when the total/annular phase begins/ends.
+When an event field is valid, the caller must also check its `altitude` field to
+see whether the Sun is above the horizon at the time indicated by the `time` field.
+See #EclipseEvent for more information.  
+**Properties**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| kind | <code>string</code> | The type of solar eclipse found: `"partial"`, `"annular"`, or `"total"`. |
+| partial_begin | [<code>EclipseEvent</code>](#Astronomy.EclipseEvent) | The time and Sun altitude at the beginning of the eclipse. |
+| total_begin | [<code>EclipseEvent</code>](#Astronomy.EclipseEvent) | If this is an annular or a total eclipse, the time and Sun altitude when annular/total phase begins; otherwise undefined. |
+| peak | [<code>EclipseEvent</code>](#Astronomy.EclipseEvent) | The time and Sun altitude when the eclipse reaches its peak. |
+| total_end | [<code>EclipseEvent</code>](#Astronomy.EclipseEvent) | If this is an annular or a total eclipse, the time and Sun altitude when annular/total phase ends; otherwise undefined. |
+| partial_end | [<code>EclipseEvent</code>](#Astronomy.EclipseEvent) | The time and Sun altitude at the end of the eclipse. |
+
+
+* * *
+
 <a name="Astronomy.Bodies"></a>
 
 ### Astronomy.Bodies : <code>Array.&lt;string&gt;</code>
@@ -1840,6 +1907,55 @@ to find the next solar eclipse.
 | Param | Type | Description |
 | --- | --- | --- |
 | prevEclipseTime | [<code>AstroTime</code>](#Astronomy.AstroTime) | A date and time near a new moon. Solar eclipse search will start at the next new moon. |
+
+
+* * *
+
+<a name="Astronomy.SearchLocalSolarEclipse"></a>
+
+### Astronomy.SearchLocalSolarEclipse(startTime, observer) ⇒ [<code>LocalSolarEclipseInfo</code>](#Astronomy.LocalSolarEclipseInfo)
+**Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
+**Brief**: Searches for a solar eclipse visible at a specific location on the Earth's surface.
+
+This function finds the first solar eclipse that occurs after `startTime`.
+A solar eclipse found may be partial, annular, or total.
+See [LocalSolarEclipseInfo](#Astronomy.LocalSolarEclipseInfo) for more information.
+
+To find a series of solar eclipses, call this function once,
+then keep calling [NextLocalSolarEclipse](#Astronomy.NextLocalSolarEclipse) as many times as desired,
+passing in the `peak` value returned from the previous call.
+
+IMPORTANT: An eclipse reported by this function might be partly or
+completely invisible to the observer due to the time of day.
+See [LocalSolarEclipseInfo](#Astronomy.LocalSolarEclipseInfo) for more information about this topic.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| startTime | [<code>AstroTime</code>](#Astronomy.AstroTime) | The date and time for starting the search for a solar eclipse. |
+| observer | [<code>Observer</code>](#Astronomy.Observer) | The geographic location of the observer. |
+
+
+* * *
+
+<a name="Astronomy.NextLocalSolarEclipse"></a>
+
+### Astronomy.NextLocalSolarEclipse(prevEclipseTime, observer) ⇒ [<code>LocalSolarEclipseInfo</code>](#Astronomy.LocalSolarEclipseInfo)
+**Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
+**Brief**: Searches for the next local solar eclipse in a series.
+
+After using [SearchLocalSolarEclipse](#Astronomy.SearchLocalSolarEclipse) to find the first solar eclipse
+in a series, you can call this function to find the next consecutive solar eclipse.
+Pass in the `peak` value from the [LocalSolarEclipseInfo](#Astronomy.LocalSolarEclipseInfo) returned by the
+previous call to `SearchLocalSolarEclipse` or `NextLocalSolarEclipse`
+to find the next solar eclipse.
+This function finds the first solar eclipse that occurs after `startTime`.
+A solar eclipse found may be partial, annular, or total.
+See [LocalSolarEclipseInfo](#Astronomy.LocalSolarEclipseInfo) for more information.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| prevEclipseTime | [<code>AstroTime</code>](#Astronomy.AstroTime) | The date and time for starting the search for a solar eclipse. |
+| observer | [<code>Observer</code>](#Astronomy.Observer) | The geographic location of the observer. |
 
 
 * * *

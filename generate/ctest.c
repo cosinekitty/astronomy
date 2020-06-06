@@ -2910,7 +2910,7 @@ static int CheckEvent(
     if (diff_minutes > *max_minutes)
         *max_minutes = diff_minutes;
 
-    if (diff_minutes > 2.0)
+    if (diff_minutes > 1.0)
         FAIL("CheckEvent(%s line %d): EXCESSIVE TIME ERROR: %0.3lf minutes\n", inFileName, lnum, diff_minutes);
 
     diff_alt = fabs(expected_altitude - evt.altitude);
