@@ -10,6 +10,54 @@ function Fail(message) {
     process.exit(1);
 }
 
+function v(x) {
+    // Verify that 'x' is really a number.
+
+    if (typeof x !== 'number') {
+        console.trace();
+        throw `Not a numeric type: ${x}`;
+    }
+
+    if (isNaN(x)) {
+        console.trace();
+        throw 'NAN result';
+    }
+
+    return x;
+}
+
+function int(s) {
+    return v(parseInt(s));
+}
+
+function float(s) {
+    return v(parseFloat(s));
+}
+
+function abs(x) {
+    return Math.abs(v(x));
+}
+
+function max(a, b) {
+    return Math.max(v(a), v(b));
+}
+
+function min(a, b) {
+    return Math.min(v(a), v(b));
+}
+
+function sin(x) {
+    return Math.sin(v(x));
+}
+
+function cos(x) {
+    return Math.cos(v(x));
+}
+
+function sqrt(x) {
+    return v(Math.sqrt(v(x)));
+}
+
 function AstroCheck() {
     var date = Astronomy.MakeTime(new Date('1700-01-01T00:00:00Z'));
     var stop = Astronomy.MakeTime(new Date('2200-01-01T00:00:00Z'));
@@ -58,21 +106,20 @@ function MoonPhase() {
         let data = [];
         for (let row of lines) {
             let token = row.split(' ');
-            data.push({quarter:parseInt(token[0]), date:new Date(token[1])});
+            data.push({quarter:int(token[0]), date:new Date(token[1])});
         }
         return data;
     }
 
     function TestLongitudes(data) {
-        // Using known moon phase times from US Naval Obs
         let max_arcmin = 0;
         for (let row of data) {
-            let elong = Astronomy.MoonPhase(row.date);
-            let expected_elong = 90 * row.quarter;
-            let degree_error = Math.abs(elong - expected_elong);
+            let elong = v(Astronomy.MoonPhase(row.date));
+            let expected_elong = 90 * v(row.quarter);
+            let degree_error = abs(elong - expected_elong);
             if (degree_error > 180) degree_error = 360 - degree_error;
             let arcmin = 60 * degree_error;
-            max_arcmin = Math.max(max_arcmin, arcmin);
+            max_arcmin = max(max_arcmin, arcmin);
         }
         console.log(`JS TestLongitudes: nrows = ${data.length}, max_arcmin = ${max_arcmin}`);
         if (max_arcmin > 1.0) {
@@ -106,12 +153,12 @@ function MoonPhase() {
             // Verify that the date and time we found is very close to the correct answer.
             // Calculate the discrepancy in minutes.
             // This is appropriate because the "correct" answers are only given to the minute.
-            let diff = Math.abs(mq.time.date - data[index].date) / millis_per_minute;
+            let diff = abs(mq.time.date - data[index].date) / millis_per_minute;
             if (diff > threshold_minutes) {
                 console.log(`JS SearchYear: EXCESSIVE ERROR = ${diff.toFixed(3)} minutes, correct=${data[index].date.toISOString()}, calculated=${mq.time.toString()}`);
                 return 1;
             }
-            maxdiff = Math.max(maxdiff, diff);
+            maxdiff = max(maxdiff, diff);
 
             ++index;
             ++count;
@@ -143,8 +190,8 @@ function MoonPhase() {
                 let dt = (curr.date - prev.date) / (24 * 3600 * 1000);
                 let s = stats[prev.quarter];
                 if (s) {
-                    s.min = Math.min(s.min, dt);
-                    s.max = Math.max(s.max, dt);
+                    s.min = min(s.min, dt);
+                    s.max = max(s.max, dt);
                     s.sum += dt;
                     ++s.count;
                 } else {
@@ -197,26 +244,26 @@ function LunarApsis() {
         if (token.length !== 3)
             continue;
 
-        let kind = parseInt(token[0]);
+        let kind = int(token[0]);
         let date = new Date(token[1]);
-        let dist = parseInt(token[2]);
+        let dist = int(token[2]);
 
         if (evt.kind !== kind) {
             console.log('line = ', line);
             throw `${filename} line ${lnum}: Expected apsis type ${kind}, found ${evt.kind}`;
         }
 
-        let diff_minutes = Math.abs(evt.time.date - date) / (1000 * 60);
+        let diff_minutes = abs(evt.time.date - date) / (1000 * 60);
         if (diff_minutes > 35) {
             throw `${filename} line ${lnum}: Excessive time error: ${diff_minutes} minutes`;
         }
-        max_minute_error = Math.max(max_minute_error, diff_minutes);
+        max_minute_error = max(max_minute_error, diff_minutes);
 
-        let diff_dist = Math.abs(evt.dist_km - dist);
+        let diff_dist = abs(evt.dist_km - dist);
         if (diff_dist > 25) {
             throw `${filename} line ${lnum}: Excessive distance error: ${diff_dist} km`;
         }
-        max_dist_error = Math.max(max_dist_error, diff_dist);
+        max_dist_error = max(max_dist_error, diff_dist);
 
         ++count;
         evt = Astronomy.NextLunarApsis(evt);
@@ -261,8 +308,8 @@ function LunarEclipse() {
             console.error(`JS TestLunarEclipse(${filename} line ${lnum}): invalid number of tokens.`);
             return 1;
         }
-        const partial_minutes = parseFloat(token[0]);
-        const total_minutes = parseFloat(token[1]);
+        const partial_minutes = float(token[0]);
+        const total_minutes = float(token[1]);
 
         let valid = false;
         switch (eclipse.kind) {
@@ -289,7 +336,7 @@ function LunarEclipse() {
         }
 
         // Check eclipse peak.
-        let diff_days = eclipse.peak.ut - peak_time.ut;
+        let diff_days = v(eclipse.peak.ut) - v(peak_time.ut);
 
         // Tolerate missing penumbral eclipses - skip to next input line without calculating next eclipse.
         if (partial_minutes == 0.0 && diff_days > 20.0) {
@@ -297,7 +344,7 @@ function LunarEclipse() {
             continue;
         }
 
-        let diff_minutes = (24.0 * 60.0) * Math.abs(diff_days);
+        let diff_minutes = (24.0 * 60.0) * abs(diff_days);
         sum_diff_minutes += diff_minutes;
         ++diff_count;
 
@@ -313,7 +360,7 @@ function LunarEclipse() {
 
         /* check partial eclipse duration */
 
-        diff_minutes = Math.abs(partial_minutes - eclipse.sd_partial);
+        diff_minutes = abs(partial_minutes - eclipse.sd_partial);
         sum_diff_minutes += diff_minutes;
         ++diff_count;
 
@@ -327,7 +374,7 @@ function LunarEclipse() {
 
         /* check total eclipse duration */
 
-        diff_minutes = Math.abs(total_minutes - eclipse.sd_total);
+        diff_minutes = abs(total_minutes - eclipse.sd_total);
         sum_diff_minutes += diff_minutes;
         ++diff_count;
 
@@ -348,11 +395,11 @@ function LunarEclipse() {
 }
 
 function VectorFromAngles(lat, lon) {
-    const coslat = Math.cos(DEG2RAD * lat);
+    const coslat = cos(DEG2RAD * lat);
     return [
-        Math.cos(DEG2RAD * lon) * coslat,
-        Math.sin(DEG2RAD * lon) * coslat,
-        Math.sin(DEG2RAD * lat)
+        cos(DEG2RAD * lon) * coslat,
+        sin(DEG2RAD * lon) * coslat,
+        sin(DEG2RAD * lat)
     ];
 }
 
@@ -367,7 +414,7 @@ function AngleDiff(alat, alon, blat, blon) {
     if (dot >= +1.0) {
         return 0.0;
     }
-    return RAD2DEG * Math.acos(dot);
+    return v(RAD2DEG * Math.acos(dot));
 }
 
 
@@ -391,8 +438,8 @@ function GlobalSolarEclipse() {
         }
         const peak = Astronomy.MakeTime(new Date(token[0]));
         const typeChar = token[2];
-        const lat = parseFloat(token[3]);
-        const lon = parseFloat(token[4]);
+        const lat = float(token[3]);
+        const lon = float(token[4]);
         const expected_kind = {
             'P': 'partial',
             'A': 'annular',
@@ -410,7 +457,7 @@ function GlobalSolarEclipse() {
         }
 
         // Validate the eclipse prediction.
-        const diff_minutes = (24 * 60) * Math.abs(diff_days);
+        const diff_minutes = (24 * 60) * abs(diff_days);
         if (diff_minutes > 6.93) {
             console.error(`JS GlobalSolarEclipse(${filename} line ${lnum}): EXCESSIVE TIME ERROR = ${diff_minutes} minutes`);
             return 1;
@@ -484,8 +531,8 @@ function LocalSolarEclipse1() {
         }
         const peak = Astronomy.MakeTime(new Date(token[0]));
         //const typeChar = token[2];
-        const lat = parseFloat(token[3]);
-        const lon = parseFloat(token[4]);
+        const lat = float(token[3]);
+        const lon = float(token[4]);
         const observer = Astronomy.MakeObserver(lat, lon, 0);
 
         // Start the search 20 days before we know the eclipse should peak.
@@ -493,13 +540,13 @@ function LocalSolarEclipse1() {
         const eclipse = Astronomy.SearchLocalSolarEclipse(search_start, observer);
 
         // Validate the predicted eclipse peak time.
-        const diff_days = eclipse.peak.time.tt - peak.tt;
+        const diff_days = v(eclipse.peak.time.tt) - v(peak.tt);
         if (diff_days > 20) {
             ++skip_count;
             continue;
         }
 
-        const diff_minutes = (24 * 60) * Math.abs(diff_days);
+        const diff_minutes = (24 * 60) * abs(diff_days);
         if (diff_minutes > 7.14) {
             console.error(`JS LocalSolarEclipse1(${filename} line ${lnum}): EXCESSIVE TIME ERROR = ${diff_minutes} minutes`);
             return 1;
@@ -540,7 +587,7 @@ function ParseEvent(time_str, alt_str, required) {
     if (required) {
         return {
             time: new Astronomy.MakeTime(new Date(time_str)),
-            altitude: parseFloat(alt_str)
+            altitude: float(alt_str)
         };
     }
     if (time_str !== '-') {
@@ -563,14 +610,14 @@ function LocalSolarEclipse2() {
     let max_degrees = 0.0;
 
     function CheckEvent(calc, expect) {
-        const diff_minutes = (24 * 60) * Math.abs(expect.time.ut - calc.time.ut);
+        const diff_minutes = (24 * 60) * abs(expect.time.ut - calc.time.ut);
         if (diff_minutes > max_minutes) {
             max_minutes = diff_minutes;
         }
         if (diff_minutes > 1.0) {
             throw `CheckEvent(${filename} line ${lnum}): EXCESSIVE TIME ERROR: ${diff_minutes} minutes.`;
         }
-        const diff_alt = Math.abs(expect.altitude - calc.altitude);
+        const diff_alt = abs(expect.altitude - calc.altitude);
         if (diff_alt > max_degrees) {
             max_degrees = diff_alt;
         }
@@ -588,8 +635,8 @@ function LocalSolarEclipse2() {
             console.error(`JS LocalSolarEclipse2(${filename} line ${lnum}): Incorrect token count = ${token.length}`);
             return 1;
         }
-        const latitude = parseFloat(token[0]);
-        const longitude = parseFloat(token[1]);
+        const latitude = float(token[0]);
+        const longitude = float(token[1]);
         const observer = Astronomy.MakeObserver(latitude, longitude, 0);
         const typeChar = token[2];
         const expected_kind = {
@@ -671,20 +718,20 @@ function PlanetApsis() {
             if (token.length != 3) {
                 throw `${filename} line ${count}: Invalid data format: ${token.length} tokens.`;
             }
-            const expected_kind = parseInt(token[0]);
+            const expected_kind = int(token[0]);
             const expected_time = Astronomy.MakeTime(new Date(token[1]));
-            const expected_distance = parseFloat(token[2]);
+            const expected_distance = float(token[2]);
             if (expected_kind !== apsis.kind) {
                 throw `${filename} line ${count}: WRONG APSIS KIND: expected ${expected_kind}, found ${apsis.kind}`;
             }
-            const diff_days = Math.abs(expected_time.tt - apsis.time.tt);
-            max_diff_days = Math.max(max_diff_days, diff_days);
+            const diff_days = abs(expected_time.tt - apsis.time.tt);
+            max_diff_days = max(max_diff_days, diff_days);
             const diff_degrees = (diff_days / period) * 360;
             if (diff_degrees > degree_threshold) {
                 found_bad_planet = true;
             }
-            const diff_dist_ratio = Math.abs(expected_distance - apsis.dist_au) / expected_distance;
-            max_dist_ratio = Math.max(max_dist_ratio, diff_dist_ratio);
+            const diff_dist_ratio = abs(expected_distance - apsis.dist_au) / expected_distance;
+            max_dist_ratio = max(max_dist_ratio, diff_dist_ratio);
             if (diff_dist_ratio > 1.0e-4) {
                 throw `${filename} line ${count}: distance ratio ${diff_dist_ratio} is too large.`;
             }
@@ -705,8 +752,8 @@ function PlanetApsis() {
             if (min_interval < 0.0) {
                 min_interval = max_interval = interval;
             } else {
-                min_interval = Math.min(min_interval, interval);
-                max_interval = Math.max(max_interval, interval);
+                min_interval = min(min_interval, interval);
+                max_interval = max(max_interval, interval);
             }
         }
         if (count < 2) {
@@ -821,7 +868,7 @@ function Elongation() {
             let time = Astronomy.SearchRelativeLongitude(item.body, targetRelLon, startDate);
             let diff_minutes = (time.date - item.date) / 60000;
             if (Verbose) console.log(`JS ${item.body}: error = ${diff_minutes.toFixed(3)} minutes`);
-            if (Math.abs(diff_minutes) > 15)
+            if (abs(diff_minutes) > 15)
                 throw `!!! Excessive error for body ${item.body}`;
         }
     }
@@ -844,13 +891,13 @@ function Elongation() {
                 if (min_diff === undefined) {
                     min_diff = max_diff = day_diff;
                 } else {
-                    min_diff = Math.min(min_diff, day_diff);
-                    max_diff = Math.max(max_diff, day_diff);
+                    min_diff = min(min_diff, day_diff);
+                    max_diff = max(max_diff, day_diff);
                 }
                 sum_diff += day_diff;
             }
             let geo = Astronomy.GeoVector(body, evt_time);
-            let dist = Math.sqrt(geo.x*geo.x + geo.y*geo.y + geo.z*geo.z);
+            let dist = sqrt(geo.x*geo.x + geo.y*geo.y + geo.z*geo.z);
             text += `e ${body} ${event} ${evt_time.tt} ${dist}\n`;
             rlon = 180 - rlon;
             date = evt_time.date;
@@ -874,7 +921,7 @@ function Elongation() {
         let evt = Astronomy.SearchMaxElongation(body, startDate);
 
         let hour_diff = (verifyDate - evt.time.date) / (1000 * 3600);
-        let arcmin_diff = 60.0 * Math.abs(evt.elongation - verifyAngle);
+        let arcmin_diff = 60.0 * abs(evt.elongation - verifyAngle);
         if (Verbose) console.log(`JS TestMaxElong: ${body.padStart(8)} ${evt.visibility.padStart(8)} elong=${evt.elongation.toFixed(2).padStart(5)} (${arcmin_diff.toFixed(2).padStart(4)} arcmin)  ${evt.time.toString()} (err ${hour_diff.toFixed(2).padStart(5)} hours)`);
 
         if (evt.visibility !== verifyVisibility)
@@ -883,7 +930,7 @@ function Elongation() {
         if (arcmin_diff > 4.0)
             throw `TestMaxElong: excessive angular error = ${angle_diff} arcmin`;
 
-        if (Math.abs(hour_diff) > 0.603)
+        if (abs(hour_diff) > 0.603)
             throw `TestMaxElong: excessive hour error = ${hour_diff}`;
     }
 
@@ -983,20 +1030,20 @@ function Seasons() {
         if (!calc_date)
             throw `ERROR: Missing calc_date for test date ${item.date.toISOString()}`;
         let diff_minutes = (calc_date - item.date) / 60000;
-        if (Math.abs(diff_minutes) > 2.37) {
+        if (abs(diff_minutes) > 2.37) {
             throw `ERROR: Excessive error in season calculation: ${diff_minutes.toFixed(3)} minutes`;
         }
 
         if (min_diff === undefined) {
             min_diff = max_diff = diff_minutes;
         } else {
-            min_diff = Math.min(min_diff, diff_minutes);
-            max_diff = Math.max(max_diff, diff_minutes);
+            min_diff = min(min_diff, diff_minutes);
+            max_diff = max(max_diff, diff_minutes);
         }
         if (month_max_diff[month] === undefined) {
-            month_max_diff[month] = Math.abs(diff_minutes);
+            month_max_diff[month] = abs(diff_minutes);
         } else {
-            month_max_diff[month] = Math.max(month_max_diff[month], Math.abs(diff_minutes));
+            month_max_diff[month] = max(month_max_diff[month], abs(diff_minutes));
         }
         sum_diff += diff_minutes;
         ++count;
@@ -1024,8 +1071,8 @@ function RiseSet() {
             data.push({
                 lnum: ++lnum,
                 body: token[0],
-                lon: parseFloat(token[1]),
-                lat: parseFloat(token[2]),
+                lon: float(token[1]),
+                lat: float(token[2]),
                 date: new Date(token[3]),
                 direction: { r:+1, s:-1 }[token[4]] || Fail(`Invalid event code ${token[4]}`)
             });
@@ -1091,7 +1138,7 @@ function RiseSet() {
             Fail(`[line ${evt.lnum}] Expected ${body} dir=${evt.direction} at ${evt.date.toISOString()} but found ${a_dir} ${a_date.toString()}`);
         }
 
-        let error_minutes = Math.abs(a_date.date - evt.date) / 60000;
+        let error_minutes = abs(a_date.date - evt.date) / 60000;
         sum_minutes += error_minutes * error_minutes;
         if (error_minutes > max_minutes) {
             max_minutes = error_minutes;
@@ -1109,7 +1156,7 @@ function RiseSet() {
     const after_date = new Date();
     const elapsed_seconds = (after_date - before_date) / 1000;
 
-    console.log(`JS RiseSet PASS: elapsed=${elapsed_seconds.toFixed(3)}, error in minutes: rms=${Math.sqrt(sum_minutes/data.length).toFixed(4)}, max=${max_minutes.toFixed(4)}`);
+    console.log(`JS RiseSet PASS: elapsed=${elapsed_seconds.toFixed(3)}, error in minutes: rms=${sqrt(sum_minutes/data.length).toFixed(4)}, max=${max_minutes.toFixed(4)}`);
     return 0;
 }
 
@@ -1118,7 +1165,7 @@ function Rotation() {
     function CompareMatrices(caller, a, b, tolerance) {
         for (let i=0; i<3; ++i) {
             for (let j=0; j<3; ++j) {
-                const diff = Math.abs(a.rot[i][j] - b.rot[i][j]);
+                const diff = abs(a.rot[i][j] - b.rot[i][j]);
                 if (diff > tolerance) {
                     throw `ERROR(${caller}): matrix[${i}][${j}] = ${a.rot[i][j]}, expected ${b.rot[i][j]}, diff ${diff}`;
                 }
@@ -1170,7 +1217,7 @@ function Rotation() {
         const dx = a.x - b.x;
         const dy = a.y - b.y;
         const dz = a.z - b.z;
-        return Math.sqrt(dx*dx + dy*dy + dz*dz);
+        return sqrt(dx*dx + dy*dy + dz*dz);
     }
 
     function Test_EQJ_ECL() {
@@ -1189,7 +1236,7 @@ function Rotation() {
         const dx = ee.x - ecl.ex;
         const dy = ee.y - ecl.ey;
         const dz = ee.z - ecl.ez;
-        const diff = Math.sqrt(dx*dx + dy*dy + dz*dz);
+        const diff = sqrt(dx*dx + dy*dy + dz*dz);
         if (Verbose) console.log(`JS Test_EQJ_ECL ee = (${ee.x}, ${ee.y}, ${ee.z}); diff = ${diff}`);
         if (diff > 2.0e-15)
             throw 'Test_EQJ_ECL: EXCESSIVE VECTOR ERROR';
@@ -1224,9 +1271,9 @@ function Rotation() {
         let equcheck = Astronomy.EquatorFromVector(vdate);
 
         /* Compare the result with the eqdate. */
-        const ra_diff = Math.abs(equcheck.ra - eqdate.ra);
-        const dec_diff = Math.abs(equcheck.dec - eqdate.dec);
-        const dist_diff = Math.abs(equcheck.dist - eqdate.dist);
+        const ra_diff = abs(equcheck.ra - eqdate.ra);
+        const dec_diff = abs(equcheck.dec - eqdate.dec);
+        const dist_diff = abs(equcheck.dist - eqdate.dist);
         if (Verbose) console.log(`JS Test_EQJ_EQD: ${body} ra=${eqdate.ra}, dec=${eqdate.dec}, dist=${eqdate.dist}, ra_diff=${ra_diff}, dec_diff=${dec_diff}, dist_diff=${dist_diff}`);
         if (ra_diff > 1.0e-14 || dec_diff > 1.0e-14 || dist_diff > 4.0e-15)
             throw 'Test_EQJ_EQD: EXCESSIVE ERROR';
@@ -1259,8 +1306,8 @@ function Rotation() {
 
         /* Convert the horizontal vector to horizontal angular coordinates. */
         const xsphere = Astronomy.HorizonFromVector(vec_hor, 'normal');
-        const diff_alt = Math.abs(xsphere.lat - hor.altitude);
-        const diff_az = Math.abs(xsphere.lon - hor.azimuth);
+        const diff_alt = abs(xsphere.lat - hor.altitude);
+        const diff_az = abs(xsphere.lon - hor.azimuth);
 
         if (Verbose) console.log(`JS Test_EQD_HOR ${body}: trusted alt=${hor.altitude}, az=${hor.azimuth}; test alt=${xsphere.lat}, az=${xsphere.lon}; diff_alt=${diff_alt}, diff_az=${diff_az}`);
         if (diff_alt > 4.0e-14 || diff_az > 1.0e-13)
@@ -1398,7 +1445,7 @@ function Refraction() {
         const corrected = alt + refr;
         const inv_refr = Astronomy.InverseRefraction('normal', corrected);
         const check_alt = corrected + inv_refr;
-        const diff = Math.abs(check_alt - alt);
+        const diff = abs(check_alt - alt);
         if (diff > 2.0e-14)
             throw `JS Refraction: alt=${alt}, refr=${refr}, diff=${diff}`;
     }
@@ -1421,22 +1468,22 @@ function Magnitude() {
             // [ 2023-Mar-30 00:00      -4.01   1.17  0.719092953368  -0.1186373 1.20453495004726 -11.0204917  55.9004]
             let m = line.match(/^\s(\d{4})-(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)-(\d{2})\s(\d{2}):(\d{2})\s+(-?\d+\.\d+)\s+(-?\d+\.\d+)\s+(-?\d+\.\d+)\s+(-?\d+\.\d+)\s+(-?\d+\.\d+)\s+(-?\d+\.\d+)\s+(-?\d+\.\d+)\s*$/);
             if (m) {
-                const year = parseInt(m[1]);
+                const year = int(m[1]);
                 const month = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].indexOf(m[2]);
-                const day = parseInt(m[3]);
-                const hour = parseInt(m[4]);
-                const minute = parseInt(m[5]);
+                const day = int(m[3]);
+                const hour = int(m[4]);
+                const minute = int(m[5]);
 
                 const item = {
                     lnum: lnum,
                     date: new Date(Date.UTC(year, month, day, hour, minute)),
-                    mag: parseFloat(m[6]),
-                    sbrt: parseFloat(m[7]),
-                    helio_dist: parseFloat(m[8]),
-                    helio_radvel: parseFloat(m[9]),
-                    geo_dist: parseFloat(m[10]),
-                    geo_radvel: parseFloat(m[11]),
-                    phase_angle: parseFloat(m[12])
+                    mag: float(m[6]),
+                    sbrt: float(m[7]),
+                    helio_dist: float(m[8]),
+                    helio_radvel: float(m[9]),
+                    geo_dist: float(m[10]),
+                    geo_radvel: float(m[11]),
+                    phase_angle: float(m[12])
                 };
 
                 rows.push(item);
@@ -1459,13 +1506,13 @@ function Magnitude() {
             if (diff_lo === undefined) {
                 diff_lo = diff_hi = diff;
             } else {
-                diff_lo = Math.min(diff_lo, diff);
-                diff_hi = Math.max(diff_hi, diff);
+                diff_lo = min(diff_lo, diff);
+                diff_hi = max(diff_hi, diff);
             }
         }
-        let rms = Math.sqrt(sum_squared_diff / data.rows.length);
+        let rms = sqrt(sum_squared_diff / data.rows.length);
         const limit = 0.012;
-        const pass = (Math.abs(diff_lo) < limit && Math.abs(diff_hi) < limit);
+        const pass = (abs(diff_lo) < limit && abs(diff_hi) < limit);
         if (!pass || Verbose) console.log(`JS ${body.padEnd(8)} ${pass?"    ":"FAIL"}  diff_lo=${diff_lo.toFixed(4).padStart(8)}, diff_hi=${diff_hi.toFixed(4).padStart(8)}, rms=${rms.toFixed(4).padStart(8)}`);
         return pass;
     }
@@ -1491,12 +1538,12 @@ function Magnitude() {
         for (let item of data) {
             let illum = Astronomy.Illumination('Saturn', new Date(item.date));
             if (Verbose) console.log(`JS Saturn: date=${illum.time.date.toISOString()}  mag=${illum.mag.toFixed(8).padStart(12)}  ring_tilt=${illum.ring_tilt.toFixed(8).padStart(12)}`);
-            const mag_diff = Math.abs(illum.mag - item.mag);
+            const mag_diff = abs(illum.mag - item.mag);
             if (mag_diff > 1.0e-4) {
                 console.log(`ERROR: Excessive magnitude error ${mag_diff}`);
                 success = false;
             }
-            const tilt_diff = Math.abs(illum.ring_tilt - item.tilt);
+            const tilt_diff = abs(illum.ring_tilt - item.tilt);
             if (tilt_diff > 3.0e-5) {
                 console.log(`ERROR: Excessive ring tilt error ${tilt_diff}`);
                 success = false;
@@ -1525,11 +1572,11 @@ function Magnitude() {
 
             // How close are we to the center date?
             let date_center = new Date((date1.getTime() + date2.getTime())/2);
-            let diff_hours = Math.abs(evt.time.date - date_center) / (1000 * 3600);
+            let diff_hours = abs(evt.time.date - date_center) / (1000 * 3600);
             if (diff_hours > 7.1)
                 throw `Excessive diff_hours = ${diff_hours} from center date ${date_center.toISOString()}`;
 
-            max_diff = Math.max(max_diff, diff_hours);
+            max_diff = max(max_diff, diff_hours);
             date = date2;
         }
         if (Verbose) console.log(`JS TestMaxMag: ${lines.length} events, max error = ${max_diff.toFixed(3)} hours.`);
@@ -1568,9 +1615,9 @@ function Constellation() {
         if (token.length !== 4) {
             Fail(`Bad data in ${filename} line ${lnum}: found ${token.length} tokens.`);
         }
-        const id = parseInt(token[0]);
-        const ra = parseFloat(token[1]);
-        const dec = parseFloat(token[2]);
+        const id = int(token[0]);
+        const ra = float(token[1]);
+        const dec = float(token[2]);
         const symbol = token[3];
         if (!/^[A-Z][A-Za-z]{2}$/.test(symbol)) {
             Fail(`Invalid symbol "${symbol}" in ${filename} line ${lnum}`);
