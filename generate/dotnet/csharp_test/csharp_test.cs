@@ -67,6 +67,43 @@ namespace csharp_test
             }
         }
 
+        static double v(double x)
+        {
+            if (double.IsNaN(x))
+                throw new ArgumentException("NAN result");
+            return x;
+        }
+
+        static double abs(double x)
+        {
+            return Math.Abs(v(x));
+        }
+
+        static double max(double a, double b)
+        {
+            return Math.Max(v(a), v(b));
+        }
+
+        static double min(double a, double b)
+        {
+            return Math.Min(v(a), v(b));
+        }
+
+        static double sqrt(double x)
+        {
+            return v(Math.Sqrt(v(x)));
+        }
+
+        static double sin(double x)
+        {
+            return Math.Sin(v(x));
+        }
+
+        static double cos(double x)
+        {
+            return Math.Cos(v(x));
+        }
+
         static readonly char[] TokenSeparators = new char[] { ' ', '\t', '\r', '\n' };
 
         static string[] Tokenize(string line)
@@ -90,7 +127,7 @@ namespace csharp_test
 
             const double expected_ut = 6910.270978506945;
             double diff = time.ut - expected_ut;
-            if (Math.Abs(diff) > 1.0e-12)
+            if (abs(diff) > 1.0e-12)
             {
                 Console.WriteLine("C# TestTime: ERROR - excessive UT error {0}", diff);
                 return 1;
@@ -98,7 +135,7 @@ namespace csharp_test
 
             const double expected_tt = 6910.271800214368;
             diff = time.tt - expected_tt;
-            if (Math.Abs(diff) > 1.0e-12)
+            if (abs(diff) > 1.0e-12)
             {
                 Console.WriteLine("C# TestTime: ERROR - excessive TT error {0}", diff);
                 return 1;
@@ -123,7 +160,7 @@ namespace csharp_test
             double dx = vec.x - (+0.002674037026701135);
             double dy = vec.y - (-0.0001531610316600666);
             double dz = vec.z - (-0.0003150159927069429);
-            double diff = Math.Sqrt(dx*dx + dy*dy + dz*dz);
+            double diff = sqrt(dx*dx + dy*dy + dz*dz);
             Console.WriteLine("C# MoonTest: diff = {0}", diff.ToString("g5"));
             if (diff > 4.34e-19)
             {
@@ -290,7 +327,7 @@ namespace csharp_test
                     }
 
                     /* Verify that the calculated time matches the correct time for this event. */
-                    double diff_minutes = (24.0 * 60.0) * Math.Abs(calc_time.tt - correct_time.tt);
+                    double diff_minutes = (24.0 * 60.0) * abs(calc_time.tt - correct_time.tt);
                     if (diff_minutes > max_minutes)
                         max_minutes = diff_minutes;
 
@@ -346,7 +383,7 @@ namespace csharp_test
                     double expected_elong = 90.0 * quarter;
                     AstroTime expected_time = new AstroTime(year, month, day, hour, minute, second);
                     double calc_elong = Astronomy.MoonPhase(expected_time);
-                    double degree_error = Math.Abs(calc_elong - expected_elong);
+                    double degree_error = abs(calc_elong - expected_elong);
                     if (degree_error > 180.0)
                         degree_error = 360.0 - degree_error;
                     double arcmin = 60.0 * degree_error;
@@ -383,7 +420,7 @@ namespace csharp_test
                     }
                     ++quarter_count;
                     /* Make sure the time matches what we expect. */
-                    double diff_seconds = Math.Abs(mq.time.tt - expected_time.tt) * (24.0 * 3600.0);
+                    double diff_seconds = abs(mq.time.tt - expected_time.tt) * (24.0 * 3600.0);
                     if (diff_seconds > threshold_seconds)
                     {
                         Console.WriteLine("C# MoonPhaseTest({0} line {1}): excessive time error {2:0.000} seconds", filename, lnum, diff_seconds);
@@ -502,7 +539,7 @@ namespace csharp_test
                         Console.WriteLine("C# RiseSetTest({0} line {1}): expected dir={2} but found {3}", filename, lnum, a_dir, direction);
                         return 1;
                     }
-                    double error_minutes = (24.0 * 60.0) * Math.Abs(a_evt.tt - correct_date.tt);
+                    double error_minutes = (24.0 * 60.0) * abs(a_evt.tt - correct_date.tt);
                     sum_minutes += error_minutes * error_minutes;
                     if (error_minutes > max_minutes)
                         max_minutes = error_minutes;
@@ -514,7 +551,7 @@ namespace csharp_test
                     }
                 }
 
-                double rms_minutes = Math.Sqrt(sum_minutes / lnum);
+                double rms_minutes = sqrt(sum_minutes / lnum);
                 Console.WriteLine("C# RiseSetTest: passed {0} lines: time errors in minutes: rms={1}, max={2}", lnum, rms_minutes, max_minutes);
                 return 0;
             }
@@ -553,7 +590,7 @@ namespace csharp_test
                     }
                     double diff_minutes = (24.0 * 60.0) * (search_result.tt - expected_time.tt);
                     Console.WriteLine("{0} error = {1} minutes.", body, diff_minutes.ToString("f3"));
-                    if (Math.Abs(diff_minutes) > 15.0)
+                    if (abs(diff_minutes) > 15.0)
                     {
                         Console.WriteLine("C# TestElongFile({0} line {1}): EXCESSIVE ERROR.", filename, lnum);
                         return 1;
@@ -689,8 +726,8 @@ namespace csharp_test
             AstroTime searchTime = ParseDate(test.searchDate);
             AstroTime eventTime = ParseDate(test.eventDate);
             ElongationInfo evt = Astronomy.SearchMaxElongation(test.body, searchTime);
-            double hour_diff = 24.0 * Math.Abs(evt.time.tt - eventTime.tt);
-            double arcmin_diff = 60.0 * Math.Abs(evt.elongation - test.angle);
+            double hour_diff = 24.0 * abs(evt.time.tt - eventTime.tt);
+            double arcmin_diff = 60.0 * abs(evt.elongation - test.angle);
             if (Verbose) Console.WriteLine("C# TestMaxElong: {0,7} {1,7} elong={2,5} ({3} arcmin, {4} hours)", test.body, test.visibility, evt.elongation, arcmin_diff, hour_diff);
             if (hour_diff > 0.603)
             {
@@ -863,14 +900,14 @@ namespace csharp_test
                             return 1;
                         }
 
-                        double diff_days = Math.Abs(expected_time.tt - apsis.time.tt);
-                        max_diff_days = Math.Max(max_diff_days, diff_days);
+                        double diff_days = abs(expected_time.tt - apsis.time.tt);
+                        max_diff_days = max(max_diff_days, diff_days);
                         double diff_degrees = (diff_days / period) * 360.0;
                         if (diff_degrees > degree_threshold)
                             found_bad_planet = true;
 
-                        double diff_dist_ratio = Math.Abs(expected_distance - apsis.dist_au) / expected_distance;
-                        max_dist_ratio = Math.Max(max_dist_ratio, diff_dist_ratio);
+                        double diff_dist_ratio = abs(expected_distance - apsis.dist_au) / expected_distance;
+                        max_dist_ratio = max(max_dist_ratio, diff_dist_ratio);
                         if (diff_dist_ratio > 1.0e-4)
                         {
                             Console.WriteLine("C# PlanetApsisTest({0} line {1}): distance ratio {2} is too large.", filename, count, diff_dist_ratio);
@@ -898,8 +935,8 @@ namespace csharp_test
                         }
                         else
                         {
-                            min_interval = Math.Min(min_interval, interval);
-                            max_interval = Math.Max(max_interval, interval);
+                            min_interval = min(min_interval, interval);
+                            max_interval = max(max_interval, interval);
                         }
                     }
                 }
@@ -973,13 +1010,13 @@ namespace csharp_test
                         Console.WriteLine("C# LunarApsisTest({0} line {1}): expected apsis kind {2} but found {3}", inFileName, lnum, kind, apsis.kind);
                         return 1;
                     }
-                    double diff_minutes = (24.0 * 60.0) * Math.Abs(apsis.time.ut - correct_time.ut);
+                    double diff_minutes = (24.0 * 60.0) * abs(apsis.time.ut - correct_time.ut);
                     if (diff_minutes > 35.0)
                     {
                         Console.WriteLine("C# LunarApsisTest({0} line {1}): excessive time error: {2} minutes", inFileName, lnum, diff_minutes);
                         return 1;
                     }
-                    double diff_km =  Math.Abs(apsis.dist_km - dist_km);
+                    double diff_km =  abs(apsis.dist_km - dist_km);
                     if (diff_km > 25.0)
                     {
                         Console.WriteLine("C# LunarApsisTest({0} line {1}): excessive distance error: {2} km", inFileName, lnum, diff_km);
@@ -1074,7 +1111,7 @@ namespace csharp_test
                     }
                     var illum = Astronomy.Illumination(body, jpl.Time);
                     double diff = illum.mag - mag;
-                    if (Math.Abs(diff) > limit)
+                    if (abs(diff) > limit)
                     {
                         Console.WriteLine("C# CheckMagnitudeData({0} line {1}): EXCESSIVE ERROR: correct mag={0}, calc mag={1}, diff={2}", mag, illum.mag, diff);
                         return 1;
@@ -1099,7 +1136,7 @@ namespace csharp_test
                     Console.WriteLine("C# CheckMagnitudeData: Data not find any data in file: {0}", filename);
                     return 1;
                 }
-                double rms = Math.Sqrt(sum_squared_diff / count);
+                double rms = sqrt(sum_squared_diff / count);
                 if (Verbose) Console.WriteLine("C# CheckMagnitudeData: {0} {1} rows diff_lo={2} diff_hi={3} rms={4}", filename, count, diff_lo, diff_hi, rms);
                 return 0;
             }
@@ -1145,14 +1182,14 @@ namespace csharp_test
                 IllumInfo illum = Astronomy.Illumination(Body.Saturn, time);
                 if (Verbose) Console.WriteLine("C# Saturn: date={0}  calc mag={1}  ring_tilt={2}", data.date, illum.mag, illum.ring_tilt);
 
-                double mag_diff = Math.Abs(illum.mag - data.mag);
+                double mag_diff = abs(illum.mag - data.mag);
                 if (mag_diff > 1.0e-4)
                 {
                     Console.WriteLine("C# CheckSaturn ERROR: Excessive magnitude error {0}", mag_diff);
                     error = 1;      /* keep going -- print all errors before exiting */
                 }
 
-                double tilt_diff = Math.Abs(illum.ring_tilt - data.tilt);
+                double tilt_diff = abs(illum.ring_tilt - data.tilt);
                 if (tilt_diff > 3.0e-5)
                 {
                     Console.WriteLine("C# CheckSaturn ERROR: Excessive ring tilt error {0}", tilt_diff);
@@ -1196,8 +1233,8 @@ namespace csharp_test
                     double correct_mag = double.Parse(token[4]);
                     AstroTime center_time = time1.AddDays(0.5*(time2.ut - time1.ut));
                     IllumInfo illum = Astronomy.SearchPeakMagnitude(body, search_time);
-                    double mag_diff = Math.Abs(illum.mag - correct_mag);
-                    double hours_diff = 24.0 * Math.Abs(illum.time.ut - center_time.ut);
+                    double mag_diff = abs(illum.mag - correct_mag);
+                    double hours_diff = 24.0 * abs(illum.time.ut - center_time.ut);
                     if (Verbose) Console.WriteLine("C# TestMaxMag: mag_diff={0}, hours_diff={1}", mag_diff, hours_diff);
                     if (hours_diff > 7.1)
                     {
@@ -1242,7 +1279,7 @@ namespace csharp_test
             double dx = a.x - b.x;
             double dy = a.y - b.y;
             double dz = a.z - b.z;
-            return Math.Sqrt(dx*dx + dy*dy + dz*dz);
+            return sqrt(dx*dx + dy*dy + dz*dz);
         }
 
         static int CompareMatrices(string caller, RotationMatrix a, RotationMatrix b, double tolerance)
@@ -1251,7 +1288,7 @@ namespace csharp_test
             {
                 for (int j=0; j<3; ++j)
                 {
-                    double diff = Math.Abs(a.rot[i,j] - b.rot[i,j]);
+                    double diff = abs(a.rot[i,j] - b.rot[i,j]);
                     if (diff > tolerance)
                     {
                         Console.WriteLine("C# CompareMatrices ERROR({0}): matrix[{1},{2}]={3}, expected {4}, diff {5}", caller, i, j, a.rot[i,j], b.rot[i,j], diff);
@@ -1320,7 +1357,7 @@ namespace csharp_test
             double dx = ee.x - ecl.ex;
             double dy = ee.y - ecl.ey;
             double dz = ee.z - ecl.ez;
-            double diff = Math.Sqrt(dx*dx + dy*dy + dz*dz);
+            double diff = sqrt(dx*dx + dy*dy + dz*dz);
             if (Verbose) Console.WriteLine("C# Test_EQJ_ECL ee = ({0}, {1}, {2}); diff={3}", ee.x, ee.y, ee.z, diff);
             if (diff > 1.0e-16)
             {
@@ -1355,9 +1392,9 @@ namespace csharp_test
             AstroVector vdate = Astronomy.RotateVector(r, v2000);
             Equatorial eqcheck = Astronomy.EquatorFromVector(vdate);
 
-            double ra_diff = Math.Abs(eqcheck.ra - eqdate.ra);
-            double dec_diff = Math.Abs(eqcheck.dec - eqdate.dec);
-            double dist_diff = Math.Abs(eqcheck.dist - eqdate.dist);
+            double ra_diff = abs(eqcheck.ra - eqdate.ra);
+            double dec_diff = abs(eqcheck.dec - eqdate.dec);
+            double dist_diff = abs(eqcheck.dist - eqdate.dist);
             if (Verbose) Console.WriteLine("C# Test_EQJ_EQD: {0} ra={1}, dec={2}, dist={3}, ra_diff={4}, dec_diff={5}, dist_diff={6}",
                 body, eqdate.ra, eqdate.dec, eqdate.dist, ra_diff, dec_diff, dist_diff);
 
@@ -1392,8 +1429,8 @@ namespace csharp_test
             AstroVector vec_hor = Astronomy.RotateVector(rot, vec_eqd);
             Spherical sphere = Astronomy.HorizonFromVector(vec_hor, Refraction.Normal);
 
-            double diff_alt = Math.Abs(sphere.lat - hor.altitude);
-            double diff_az = Math.Abs(sphere.lon - hor.azimuth);
+            double diff_alt = abs(sphere.lat - hor.altitude);
+            double diff_az = abs(sphere.lon - hor.azimuth);
 
             if (Verbose) Console.WriteLine("C# Test_EQD_HOR {0}: trusted alt={1}, az={2}; test alt={3}, az={4}; diff_alt={5}, diff_az={6}",
                 body, hor.altitude, hor.azimuth, sphere.lat, sphere.lon, diff_alt, diff_az);
@@ -1571,7 +1608,7 @@ namespace csharp_test
                 double corrected = alt + refr;
                 double inv_refr = Astronomy.InverseRefractionAngle(Refraction.Normal, corrected);
                 double check_alt = corrected + inv_refr;
-                double diff = Math.Abs(check_alt - alt);
+                double diff = abs(check_alt - alt);
                 if (diff > 2.0e-14)
                 {
                     Console.WriteLine("C# ERROR(RefractionTest): alt={0}, refr={1}, diff={2}", alt, refr, diff);
@@ -1705,7 +1742,7 @@ namespace csharp_test
                             eclipse.sd_total - total_minutes
                         );
 
-                        double diff_minutes = (24.0 * 60.0) * Math.Abs(diff_days);
+                        double diff_minutes = (24.0 * 60.0) * abs(diff_days);
                         sum_diff_minutes += diff_minutes;
                         ++diff_count;
 
@@ -1722,7 +1759,7 @@ namespace csharp_test
 
                         /* check partial eclipse duration */
 
-                        diff_minutes = Math.Abs(partial_minutes - eclipse.sd_partial);
+                        diff_minutes = abs(partial_minutes - eclipse.sd_partial);
                         sum_diff_minutes += diff_minutes;
                         ++diff_count;
 
@@ -1737,7 +1774,7 @@ namespace csharp_test
 
                         /* check total eclipse duration */
 
-                        diff_minutes = Math.Abs(total_minutes - eclipse.sd_total);
+                        diff_minutes = abs(total_minutes - eclipse.sd_total);
                         sum_diff_minutes += diff_minutes;
                         ++diff_count;
 
@@ -1812,7 +1849,7 @@ namespace csharp_test
                     }
 
                     /* Validate the eclipse prediction. */
-                    double diff_minutes = (24 * 60) * Math.Abs(diff_days);
+                    double diff_minutes = (24 * 60) * abs(diff_days);
                     if (diff_minutes > 6.93)
                     {
                         Console.WriteLine("C# GlobalSolarEclipseTest({0} line {1}): EXCESSIVE TIME ERROR = {2} minutes", inFileName, lnum, diff_minutes);
@@ -1872,10 +1909,10 @@ namespace csharp_test
 
         static void VectorFromAngles(double[] v, double lat, double lon)
         {
-            double coslat = Math.Cos(DEG2RAD * lat);
-            v[0] = Math.Cos(DEG2RAD * lon) * coslat;
-            v[1] = Math.Sin(DEG2RAD * lon) * coslat;
-            v[2] = Math.Sin(DEG2RAD * lat);
+            double coslat = cos(DEG2RAD * lat);
+            v[0] = cos(DEG2RAD * lon) * coslat;
+            v[1] = sin(DEG2RAD * lon) * coslat;
+            v[2] = sin(DEG2RAD * lat);
         }
 
         static double AngleDiff(double alat, double alon, double blat, double blon)
@@ -1895,7 +1932,7 @@ namespace csharp_test
             if (dot >= +1.0)
                 return 0.0;
 
-            return RAD2DEG * Math.Acos(dot);
+            return v(RAD2DEG * Math.Acos(dot));
         }
 
         static int LocalSolarEclipseTest1()
@@ -1944,7 +1981,7 @@ namespace csharp_test
                         continue;
                     }
 
-                    double diff_minutes = (24 * 60) * Math.Abs(diff_days);
+                    double diff_minutes = (24 * 60) * abs(diff_days);
                     if (diff_minutes > 7.14)
                     {
                         Console.WriteLine("C LocalSolarEclipseTest1({0} line {1}): EXCESSIVE TIME ERROR = {2} minutes", inFileName, lnum, diff_minutes);
@@ -2064,7 +2101,7 @@ namespace csharp_test
             ref double max_minutes,
             ref double max_degrees)
         {
-            double diff_minutes = (24 * 60) * Math.Abs(expected_time.ut - evt.time.ut);
+            double diff_minutes = (24 * 60) * abs(expected_time.ut - evt.time.ut);
             if (diff_minutes > max_minutes)
                 max_minutes = diff_minutes;
 
@@ -2074,7 +2111,7 @@ namespace csharp_test
                 return true;
             }
 
-            double diff_alt = Math.Abs(expected_altitude - evt.altitude);
+            double diff_alt = abs(expected_altitude - evt.altitude);
             if (diff_alt > max_degrees) max_degrees = diff_alt;
             if (diff_alt > 0.5)
             {
