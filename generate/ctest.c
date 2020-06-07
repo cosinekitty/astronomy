@@ -5,6 +5,7 @@
     https://github.com/cosinekitty/astronomy
 */
 
+#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
@@ -46,6 +47,19 @@ static int CheckEquator(int lnum, astro_equatorial_t equ)
 #define CHECK_VECTOR(var,expr)   CHECK(CheckVector(__LINE__, ((var) = (expr))))
 #define CHECK_EQU(var,expr)      CHECK(CheckEquator(__LINE__, ((var) = (expr))))
 #define CHECK_STATUS(expr)       CHECK(CheckStatus(__LINE__, #expr, (expr).status))
+
+static double v(const char *filename, int lnum, double x)
+{
+    if (isnan(x))
+    {
+        fprintf(stderr, "FATAL(%s line %d): non-numeric result.\n", filename, lnum);
+        exit(1);
+    }
+    return x;
+}
+
+#define V(x)        v(__FILE__, __LINE__, (x))
+#define ABS(x)      fabs(V(x))
 
 static int Test_AstroTime(void);
 static int AstroCheck(void);
@@ -191,11 +205,11 @@ static int Test_AstroTime(void)
     printf("C Test_AstroTime: ut=%0.12lf, tt=%0.12lf\n", time.ut, time.tt);
 
     diff = time.ut - expected_ut;
-    if (fabs(diff) > 1.0e-12)
+    if (ABS(diff) > 1.0e-12)
         FAILRET("C Test_AstroTime: excessive UT error %lg\n", diff);
 
     diff = time.tt - expected_tt;
-    if (fabs(diff) > 1.0e-12)
+    if (ABS(diff) > 1.0e-12)
         FAILRET("C Test_AstroTime: excessive TT error %lg\n", diff);
 
     utc = Astronomy_UtcFromTime(time);
@@ -207,7 +221,7 @@ static int Test_AstroTime(void)
     }
 
     diff = utc.second - second;
-    if (fabs(diff) > 2.0e-5)
+    if (ABS(diff) > 2.0e-5)
         FAILRET("C Test_AstroTime: excessive UTC second error %lg\n", diff);
 
     return 0;
@@ -391,7 +405,7 @@ static int DiffLine(int lnum, const char *cline, const char *jline, double *maxd
     /* Verify all the numeric data are very close. */
     for (i=0; i < nrequired; ++i)
     {
-        diff = fabs(cdata[i] - jdata[i]);
+        diff = ABS(cdata[i] - jdata[i]);
         if (diff > *maxdiff)
         {
             *maxdiff = diff;
@@ -500,7 +514,7 @@ static int SeasonsTest(void)
             FAIL("C SeasonsTest: %s line %d: unknown event type '%s'\n", filename, lnum, name);
 
         /* Verify that the calculated time matches the correct time for this event. */
-        diff_minutes = (24.0 * 60.0) * fabs(calc_time.tt - correct_time.tt);
+        diff_minutes = (24.0 * 60.0) * ABS(calc_time.tt - correct_time.tt);
         if (diff_minutes > max_minutes)
             max_minutes = diff_minutes;
 
@@ -563,7 +577,7 @@ static int MoonPhase(void)
         expected_elong = 90.0 * quarter;
         expected_time = Astronomy_MakeTime(year, month, day, hour, minute, second);
         result = Astronomy_MoonPhase(expected_time);
-        degree_error = fabs(result.angle - expected_elong);
+        degree_error = ABS(result.angle - expected_elong);
         if (degree_error > 180.0)
             degree_error = 360 - degree_error;
         arcmin = 60.0 * degree_error;
@@ -601,7 +615,7 @@ static int MoonPhase(void)
         ++quarter_count;
 
         /* Make sure the time matches what we expect. */
-        diff_seconds = fabs(mq.time.tt - expected_time.tt) * (24.0 * 3600.0);
+        diff_seconds = ABS(mq.time.tt - expected_time.tt) * (24.0 * 3600.0);
         if (diff_seconds > threshold_seconds)
             FAIL("C MoonPhase(%s line %d): excessive time error %0.3lf seconds\n", filename, lnum, diff_seconds);
 
@@ -659,7 +673,7 @@ static int TestElongFile(const char *filename, double targetRelLon)
 
         diff_minutes = (24.0 * 60.0) * (search_result.time.tt - expected_time.tt);
         DEBUG("C TestElongFile: %-7s error = %6.3lf minutes\n", name, diff_minutes);
-        if (fabs(diff_minutes) > 15.0)
+        if (ABS(diff_minutes) > 15.0)
             FAIL("C TestElongFile(%s line %d): EXCESSIVE ERROR\n", filename, lnum);
     }
 
@@ -819,8 +833,8 @@ static int TestMaxElong(const elong_test_t *test)
     if (evt.status != ASTRO_SUCCESS)
         FAIL("C TestMaxElong(%s %s): SearchMaxElongation returned %d\n", name, test->searchDate, evt.status);
 
-    hour_diff = 24.0 * fabs(evt.time.tt - eventTime.tt);
-    arcmin_diff = 60.0 * fabs(evt.elongation - test->angle);
+    hour_diff = 24.0 * ABS(evt.time.tt - eventTime.tt);
+    arcmin_diff = 60.0 * ABS(evt.elongation - test->angle);
 
     DEBUG("C TestMaxElong: %-7s %-7s elong=%5.2lf (%4.2lf arcmin, %5.3lf hours)\n", name, vis, evt.elongation, arcmin_diff, hour_diff);
 
@@ -1074,7 +1088,7 @@ static int RiseSet(void)
         if (a_dir != direction)
             FAIL("C RiseSet(%s line %d): expected dir=%d but found %d\n", filename, lnum, a_dir, direction);
 
-        error_minutes = (24.0 * 60.0) * fabs(a_evt.time.tt - correct_date.tt);
+        error_minutes = (24.0 * 60.0) * ABS(a_evt.time.tt - correct_date.tt);
         sum_minutes += error_minutes * error_minutes;
         if (error_minutes > max_minutes)
             max_minutes = error_minutes;
@@ -1083,7 +1097,7 @@ static int RiseSet(void)
             FAIL("C RiseSet(%s line %d): excessive prediction time error = %lg minutes.\n", filename, lnum, error_minutes);
     }
 
-    rms_minutes = sqrt(sum_minutes / lnum);
+    rms_minutes = V(sqrt(sum_minutes / lnum));
     printf("C RiseSet: passed %d lines: time errors in minutes: rms=%0.4lf, max=%0.4lf\n", lnum, rms_minutes, max_minutes);
     error = 0;
 fail:
@@ -1130,7 +1144,7 @@ static int CheckMagnitudeData(astro_body_t body, const char *filename)
                 FAIL("C CheckMagnitudeData(%s line %d): Astronomy_Illumination returned %d\n", filename, lnum, illum.status);
 
             diff = illum.mag - mag;
-            if (fabs(diff) > limit)
+            if (ABS(diff) > limit)
                 FAIL("C CheckMagnitudeData(%s line %d): EXCESSIVE ERROR: correct mag=%lf, calc mag=%lf, diff=%lf\n", filename, lnum, mag, illum.mag, diff);
 
             sum_squared_diff += diff * diff;
@@ -1154,7 +1168,7 @@ static int CheckMagnitudeData(astro_body_t body, const char *filename)
     if (count == 0)
         FAIL("C CheckMagnitudeData: Did not find any data in file: %s\n", filename);
 
-    rms = sqrt(sum_squared_diff / count);
+    rms = V(sqrt(sum_squared_diff / count));
     DEBUG("C CheckMagnitudeData: %-21s %5d rows diff_lo=%0.4lf diff_hi=%0.4lf rms=%0.4lf\n", filename, count, diff_lo, diff_hi, rms);
     error = 0;
 
@@ -1206,11 +1220,11 @@ static int CheckSaturn()
 
         DEBUG("Saturn: date=%s  calc mag=%12.8lf  ring_tilt=%12.8lf\n", data[i].date, illum.mag, illum.ring_tilt);
 
-        mag_diff = fabs(illum.mag - data[i].mag);
+        mag_diff = ABS(illum.mag - data[i].mag);
         if (mag_diff > 1.0e-4)
             FAILRET("C ERROR: Excessive magnitude error %lg\n", mag_diff);
 
-        tilt_diff = fabs(illum.ring_tilt - data[i].tilt);
+        tilt_diff = ABS(illum.ring_tilt - data[i].tilt);
         if (tilt_diff > 3.0e-5)
             FAILRET("C ERROR: Excessive ring tilt error %lg\n", tilt_diff);
     }
@@ -1233,7 +1247,7 @@ static int MoonTest(void)
     dx = vec.x - (+0.002674037026701135);
     dy = vec.y - (-0.0001531610316600666);
     dz = vec.z - (-0.0003150159927069429);
-    diff = sqrt(dx*dx + dy*dy + dz*dz);
+    diff = V(sqrt(dx*dx + dy*dy + dz*dz));
     printf("C MoonTest: diff = %lg\n", diff);
     if (diff > 4.34e-19)
     {
@@ -1318,8 +1332,8 @@ static int TestMaxMag(astro_body_t body, const char *filename)
         if (illum.status != ASTRO_SUCCESS)
             FAIL("C TestMaxMag(%s line %d): SearchPeakMagnitude returned %d\n", filename, lnum, illum.status);
 
-        mag_diff = fabs(illum.mag - correct_mag);
-        hours_diff = 24.0 * fabs(illum.time.ut - center_time.ut);
+        mag_diff = ABS(illum.mag - correct_mag);
+        hours_diff = 24.0 * ABS(illum.time.ut - center_time.ut);
         DEBUG("C TestMaxMag: mag_diff=%0.3lf, hours_diff=%0.3lf\n", mag_diff, hours_diff);
         if (hours_diff > 7.1)
             FAIL("C TestMaxMag(%s line %d): EXCESSIVE TIME DIFFERENCE.\n", filename, lnum);
@@ -1458,8 +1472,8 @@ static int LunarApsis(void)
 
         correct_time = Astronomy_MakeTime(year, month, day, hour, minute, 0.0);
 
-        diff_minutes = (24.0 * 60.0) * fabs(apsis.time.ut - correct_time.ut);
-        diff_km = fabs(apsis.dist_km - dist_km);
+        diff_minutes = (24.0 * 60.0) * ABS(apsis.time.ut - correct_time.ut);
+        diff_km = ABS(apsis.dist_km - dist_km);
 
         if (diff_minutes > 35.0)
             FAIL("C LunarApsis(%s line %d): Excessive time error: %lf minutes.\n", filename, lnum, diff_minutes);
@@ -1530,8 +1544,8 @@ static int EarthApsis(void)
 
         correct_time = Astronomy_MakeTime(year, month, day, hour, minute, 0.0);
 
-        diff_minutes = (24.0 * 60.0) * fabs(apsis.time.ut - correct_time.ut);
-        diff_au = fabs(apsis.dist_au - dist_au);
+        diff_minutes = (24.0 * 60.0) * ABS(apsis.time.ut - correct_time.ut);
+        diff_au = ABS(apsis.dist_au - dist_au);
 
         if (diff_minutes > 120.58)
             FAIL("C EarthApsis(%s line %d): Excessive time error: %lf minutes.\n", filename, lnum, diff_minutes);
@@ -1630,13 +1644,13 @@ static int PlanetApsis(void)
             if (apsis.kind != expected_kind)
                 FAIL("C PlanetApsis: WRONG APSIS KIND (%s line %d)\n", filename, count);
 
-            diff_days = fabs(expected_time.tt - apsis.time.tt);
+            diff_days = ABS(expected_time.tt - apsis.time.tt);
             if (diff_days > max_diff_days) max_diff_days = diff_days;
             diff_degrees = (diff_days / period) * 360.0;
             if (diff_degrees > degree_threshold)
                 bad_planets_found = 1;
 
-            diff_dist_ratio = fabs(expected_distance - apsis.dist_au) / expected_distance;
+            diff_dist_ratio = ABS(expected_distance - apsis.dist_au) / expected_distance;
             if (diff_dist_ratio > max_dist_ratio) max_dist_ratio = diff_dist_ratio;
             if (diff_dist_ratio > 1.0e-4)
             {
@@ -1708,7 +1722,7 @@ static int CheckUnitVector(int lnum, const char *name, astro_rotation_t r, int i
         x = r.rot[i0+k*di][j0+k*dj];
         sum += x*x;
     }
-    x = fabs(sum - 1.0);
+    x = ABS(sum - 1.0);
     if (x > 1.4e-15)
         FAILRET("C CheckUnitVector ERROR(%s line %d): unit error = %lg for i0=%d, j0=%d, di=%d, dj=%d\n", name, lnum, x, i0, j0, di, dj);
 
@@ -1746,7 +1760,7 @@ static int CompareMatrices(const char *caller, astro_rotation_t a, astro_rotatio
     {
         for (j=0; j < 3; ++j)
         {
-            double diff = fabs(a.rot[i][j] - b.rot[i][j]);
+            double diff = ABS(a.rot[i][j] - b.rot[i][j]);
             if (diff > tolerance)
                 FAILRET("C CompareMatrices ERROR(%s): matrix[%d][%d]=%lg, expected %lg, diff %lg\n", caller, i, j, a.rot[i][j], b.rot[i][j], diff);
         }
@@ -1821,7 +1835,7 @@ static int TestVectorFromAngles(double lat, double lon, double x, double y, doub
     double diff, dx, dy, dz;
 
     /* Confirm the expected vector really is a unit vector. */
-    diff = fabs((x*x + y*y + z*z) - 1.0);
+    diff = ABS((x*x + y*y + z*z) - 1.0);
     if (diff > 1.0e-16)
         FAILRET("C TestVectorFromAngles: EXCESSIVE unit error = %lg\n", diff);
 
@@ -1839,7 +1853,7 @@ static int TestVectorFromAngles(double lat, double lon, double x, double y, doub
     dx = x - vector.x;
     dy = y - vector.y;
     dz = z - vector.z;
-    diff = sqrt(dx*dx + dy*dy + dz*dz);
+    diff = V(sqrt(dx*dx + dy*dy + dz*dz));
 
     DEBUG("C TestVectorFromAngles(%lf, %lf): diff = %lg\n", lat, lon, diff);
     if (diff > 2.0e-16)
@@ -1855,7 +1869,7 @@ static int TestAnglesFromVector(double lat, double lon, double x, double y, doub
     double diff, latdiff, londiff;
 
     /* Confirm the expected vector really is a unit vector. */
-    diff = fabs((x*x + y*y + z*z) - 1.0);
+    diff = ABS((x*x + y*y + z*z) - 1.0);
     if (diff > 1.0e-16)
         FAILRET("C TestAnglesFromVector(lat=%lf, lon=%lf, x=%lf, y=%lf, z=%lf): EXCESSIVE unit error = %lg\n", lat, lon, x, y, z, diff);
 
@@ -1869,8 +1883,8 @@ static int TestAnglesFromVector(double lat, double lon, double x, double y, doub
     if (sphere.status != ASTRO_SUCCESS)
         FAILRET("C ERROR TestAnglesFromVector(lat=%lf, lon=%lf, x=%lf, y=%lf, z=%lf): sphere.status = %d\n", lat, lon, x, y, z, sphere.status);
 
-    latdiff = fabs(sphere.lat - lat);
-    londiff = fabs(sphere.lon - lon);
+    latdiff = ABS(sphere.lat - lat);
+    londiff = ABS(sphere.lon - lon);
     DEBUG("TestAnglesFromVector(x=%lf, y=%lf, z=%lf): latdiff=%lg, londiff=%lg\n", x, y, z, latdiff, londiff);
     if (latdiff > 8.0e-15 || londiff > 8.0e-15)
         FAILRET("C TestAnglesFromVector: EXCESSIVE ERROR\n");
@@ -1968,7 +1982,7 @@ static int TestSpin(
     dx = tx - tv.x;
     dy = ty - tv.y;
     dz = tz - tv.z;
-    diff = sqrt(dx*dx + dy*dy + dz*dz);
+    diff = V(sqrt(dx*dx + dy*dy + dz*dz));
     DEBUG("C TestSpin(xrot=%0.0lf, yrot=%0.0lf, zrot=%0.0lf, sx=%0.0lf, sy=%0.0lf, sz=%0.0lf): diff = %lg\n", xrot, yrot, zrot, sx, sy, sz, diff);
     if (diff > 1.0e-15)
         FAIL("C TestSpin: EXCESSIVE ERROR\n");
@@ -2018,7 +2032,7 @@ static int Test_EQJ_ECL(void)
     dx = ee.x - ecl.ex;
     dy = ee.y - ecl.ey;
     dz = ee.z - ecl.ez;
-    diff = sqrt(dx*dx + dy*dy + dz*dz);
+    diff = V(sqrt(dx*dx + dy*dy + dz*dz));
     DEBUG("C Test_EQJ_ECL  ee = (%0.18lf, %0.18lf,%0.18lf);  diff=%lg\n", ee.x, ee.y, ee.z, diff);
     if (diff > 1.0e-16)
         FAIL("C Test_EQJ_ECL: EXCESSIVE VECTOR ERROR\n");
@@ -2074,9 +2088,9 @@ static int Test_EQJ_EQD(astro_body_t body)
     CHECK_STATUS(eqcheck);
 
     /* Compare the result with the eqdate. */
-    ra_diff = fabs(eqcheck.ra - eqdate.ra);
-    dec_diff = fabs(eqcheck.dec - eqdate.dec);
-    dist_diff = fabs(eqcheck.dist - eqdate.dist);
+    ra_diff = ABS(eqcheck.ra - eqdate.ra);
+    dec_diff = ABS(eqcheck.dec - eqdate.dec);
+    dist_diff = ABS(eqcheck.dist - eqdate.dist);
     DEBUG("C Test_EQJ_EQD: %s ra=%0.3lf, dec=%0.3lf, dist=%0.3lf, ra_diff=%lg, dec_diff=%lg, dist_diff=%lg\n", Astronomy_BodyName(body), eqdate.ra, eqdate.dec, eqdate.dist, ra_diff, dec_diff, dist_diff);
     if (ra_diff > 1.0e-14 || dec_diff > 1.0e-14 || dist_diff > 4.0e-15)
         FAIL("C Test_EQJ_EQD: EXCESSIVE ERROR\n");
@@ -2129,8 +2143,8 @@ static int Test_EQD_HOR(astro_body_t body)
     sphere = Astronomy_HorizonFromVector(vec_hor, REFRACTION_NORMAL);
     CHECK_STATUS(sphere);
 
-    diff_alt = fabs(sphere.lat - hor.altitude);
-    diff_az = fabs(sphere.lon - hor.azimuth);
+    diff_alt = ABS(sphere.lat - hor.altitude);
+    diff_az = ABS(sphere.lon - hor.azimuth);
 
     DEBUG("C Test_EQD_HOR %s: trusted alt=%0.3lf, az=%0.3lf; test alt=%0.3lf, az=%0.3lf; diff_alt=%lg, diff_az=%lg\n",
         Astronomy_BodyName(body), hor.altitude, hor.azimuth, sphere.lat, sphere.lon, diff_alt, diff_az);
@@ -2352,7 +2366,7 @@ static int VectorDiff(astro_vector_t a, astro_vector_t b, double *diff)
 {
     double dx, dy, dz;
 
-    *diff = 1.0e+99;
+    *diff = NAN;
 
     if (a.status != ASTRO_SUCCESS)
         FAILRET("C VectorDiff: ERROR - first vector has status %d\n", a.status);
@@ -2363,7 +2377,7 @@ static int VectorDiff(astro_vector_t a, astro_vector_t b, double *diff)
     dx = a.x - b.x;
     dy = a.y - b.y;
     dz = a.z - b.z;
-    *diff = sqrt(dx*dx + dy*dy + dz*dz);
+    *diff = V(sqrt(dx*dx + dy*dy + dz*dz));
     return 0;
 }
 
@@ -2379,7 +2393,7 @@ static int RefractionTest(void)
         corrected = alt + refr;
         inv_refr = Astronomy_InverseRefraction(REFRACTION_NORMAL, corrected);
         check_alt = corrected + inv_refr;
-        diff = fabs(check_alt - alt);
+        diff = ABS(check_alt - alt);
         if (diff > 2.0e-14)
         {
             printf("C ERROR(RefractionTest): alt=%8.3lf, refr=%10.6lf, diff=%lg\n", alt, refr, diff);
@@ -2540,7 +2554,7 @@ static int LunarEclipseTest(void)
             eclipse.sd_total - total_minutes
         );
 
-        diff_minutes = (24.0 * 60.0) * fabs(diff_days);
+        diff_minutes = (24.0 * 60.0) * ABS(diff_days);
         sum_diff_minutes += diff_minutes;
         ++diff_count;
 
@@ -2560,7 +2574,7 @@ static int LunarEclipseTest(void)
 
         /* check partial eclipse duration */
 
-        diff_minutes = fabs(partial_minutes - eclipse.sd_partial);
+        diff_minutes = ABS(partial_minutes - eclipse.sd_partial);
         sum_diff_minutes += diff_minutes;
         ++diff_count;
 
@@ -2572,7 +2586,7 @@ static int LunarEclipseTest(void)
 
         /* check total eclipse duration */
 
-        diff_minutes = fabs(total_minutes - eclipse.sd_total);
+        diff_minutes = ABS(total_minutes - eclipse.sd_total);
         sum_diff_minutes += diff_minutes;
         ++diff_count;
 
@@ -2668,7 +2682,7 @@ static int GlobalSolarEclipseTest(void)
             FAIL("C GlobalSolarEclipseTest(%s line %d): invalid eclipse kind in test data.\n", inFileName, lnum);
         }
 
-        diff_days = eclipse.peak.ut - peak.ut;
+        diff_days = V(eclipse.peak.ut - peak.ut);
 
         /* Sometimes we find marginal eclipses that aren't listed in the test data. */
         /* Ignore them if the distance between the Sun/Moon shadow axis and the Earth's center is large. */
@@ -2677,11 +2691,11 @@ static int GlobalSolarEclipseTest(void)
             ++skip_count;
             eclipse = Astronomy_NextGlobalSolarEclipse(eclipse.peak);
             CHECK_STATUS(eclipse);
-            diff_days = eclipse.peak.ut - peak.ut;
+            diff_days = V(eclipse.peak.ut - peak.ut);
         }
 
         /* Validate the eclipse prediction. */
-        diff_minutes = (24 * 60) * fabs(diff_days);
+        diff_minutes = (24 * 60) * ABS(diff_days);
         if (diff_minutes > 6.93)
         {
             printf("Expected: ");
@@ -2696,7 +2710,7 @@ static int GlobalSolarEclipseTest(void)
             max_minutes = diff_minutes;
 
         /* Validate the eclipse kind, but only when it is not a "glancing" eclipse. */
-        if ((eclipse.distance < 6360) && (eclipse.kind != expected_kind))
+        if ((V(eclipse.distance) < 6360) && (eclipse.kind != expected_kind))
             FAIL("C GlobalSolarEclipseTest(%s line %d): WRONG ECLIPSE KIND: expected %d, found %d\n", inFileName, lnum, expected_kind, eclipse.kind);
 
         if (eclipse.kind == ECLIPSE_TOTAL || eclipse.kind == ECLIPSE_ANNULAR)
@@ -2752,14 +2766,14 @@ static double AngleDiff(double alat, double alon, double blat, double blon)
     VectorFromAngles(a, alat, alon);
     VectorFromAngles(b, blat, blon);
 
-    dot = a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
+    dot = V(a[0]*b[0] + a[1]*b[1] + a[2]*b[2]);
     if (dot <= -1.0)
         return 180.0;
 
     if (dot >= +1.0)
         return 0.0;
 
-    return RAD2DEG * acos(dot);
+    return V(RAD2DEG * acos(dot));
 }
 
 /*-----------------------------------------------------------------------------------------------------------*/
@@ -2834,7 +2848,7 @@ static int LocalSolarEclipseTest1(void)
             continue;
         }
 
-        diff_minutes = (24 * 60) * fabs(diff_days);
+        diff_minutes = (24 * 60) * ABS(diff_days);
         if (diff_minutes > 7.14)
         {
             printf("Expected: ");
@@ -2905,7 +2919,7 @@ static int CheckEvent(
     int error = 1;
     double diff_minutes, diff_alt;
 
-    diff_minutes = (24 * 60) * fabs(expected_time.ut - evt.time.ut);
+    diff_minutes = (24 * 60) * ABS(expected_time.ut - evt.time.ut);
 
     if (diff_minutes > *max_minutes)
         *max_minutes = diff_minutes;
@@ -2913,7 +2927,7 @@ static int CheckEvent(
     if (diff_minutes > 1.0)
         FAIL("CheckEvent(%s line %d): EXCESSIVE TIME ERROR: %0.3lf minutes\n", inFileName, lnum, diff_minutes);
 
-    diff_alt = fabs(expected_altitude - evt.altitude);
+    diff_alt = ABS(expected_altitude - evt.altitude);
     if (diff_alt > *max_degrees) *max_degrees = diff_alt;
     if (diff_alt > 0.5)
         FAIL("CheckEvent(%s line %d): EXCESSIVE ALTITUDE ERROR: %0.6lf degrees\n", inFileName, lnum, diff_alt);
