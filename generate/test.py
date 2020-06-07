@@ -14,6 +14,26 @@ def Debug(text):
     if Verbose:
         print(text)
 
+def v(x):
+    # Verify that a number is really numeric
+    if not isinstance(x, (int, float)):
+        raise Exception('Not a numeric type: {}'.format(x))
+    if math.isnan(x):
+        raise Exception('NAN result')
+    return x
+
+def vabs(x):
+    return abs(v(x))
+
+def vmax(a, b):
+    return max(v(a), v(b))
+
+def vmin(a, b):
+    return min(v(a), v(b))
+
+def sqrt(x):
+    return v(math.sqrt(v(x)))
+
 def AssertGoodTime(text, correct):
     time = astronomy.Time.Parse(text)
     check = str(time)
@@ -36,11 +56,11 @@ def AstroTime():
     expected_tt = 6910.271800214368
     time = astronomy.Time.Make(2018, 12, 2, 18, 30, 12.543)
     diff = time.ut - expected_ut
-    if abs(diff) > 1.0e-12:
+    if vabs(diff) > 1.0e-12:
         print('PY AstroTime: excessive UT error {}'.format(diff))
         sys.exit(1)
     diff = time.tt - expected_tt
-    if abs(diff) > 1.0e-12:
+    if vabs(diff) > 1.0e-12:
         print('PY AstroTime: excessive TT error {}'.format(diff))
         sys.exit(1)
     s = str(time.Utc())
@@ -80,7 +100,7 @@ def GeoMoon():
     # Correct values obtained from C version of GeoMoon calculation
     cx, cy, cz = +0.002674037026701135, -0.0001531610316600666, -0.0003150159927069429
     dx, dy, dz = vec.x - cx, vec.y - cy, vec.z - cz
-    diff = math.sqrt(dx*dx + dy*dy + dz*dz)
+    diff = sqrt(dx*dx + dy*dy + dz*dz)
     print('PY GeoMoon: diff = {}'.format(diff))
     if diff > 4.34e-19:
         print('PY GeoMoon: EXCESSIVE ERROR')
@@ -181,7 +201,7 @@ def Seasons(filename = 'seasons/seasons.txt'):
                 return 1
 
             # Verify that the calculated time matches the correct time for this event.
-            diff_minutes = (24.0 * 60.0) * abs(calc_time.tt - correct_time.tt)
+            diff_minutes = (24.0 * 60.0) * vabs(calc_time.tt - correct_time.tt)
             if diff_minutes > max_minutes:
                 max_minutes = diff_minutes
 
@@ -222,14 +242,14 @@ def MoonPhase(filename = 'moonphase/moonphases.txt'):
             expected_elong = 90.0 * quarter
             expected_time = astronomy.Time.Make(year, month, day, hour, minute, second)
             angle = astronomy.MoonPhase(expected_time)
-            degree_error = abs(angle - expected_elong)
+            degree_error = vabs(angle - expected_elong)
             if degree_error > 180.0:
                 degree_error = 360.0 - degree_error
             arcmin = 60.0 * degree_error
             if arcmin > 1.0:
                 print('PY MoonPhase({} line {}): EXCESSIVE ANGULAR ERROR: {} arcmin'.format(filename, lnum, arcmin))
                 return 1
-            max_arcmin = max(max_arcmin, arcmin)
+            max_arcmin = vmax(max_arcmin, arcmin)
 
             if year != prev_year:
                 prev_year = year
@@ -250,12 +270,12 @@ def MoonPhase(filename = 'moonphase/moonphases.txt'):
             quarter_count += 1
 
             # Make sure the time matches what we expect.
-            diff_seconds = abs(mq.time.tt - expected_time.tt) * (24.0 * 3600.0)
+            diff_seconds = vabs(mq.time.tt - expected_time.tt) * (24.0 * 3600.0)
             if diff_seconds > threshold_seconds:
                 print('PY MoonPhase({} line {}): excessive time error {:0.3f} seconds.'.format(filename, lnum, diff_seconds))
                 return 1
 
-            maxdiff = max(maxdiff, diff_seconds)
+            maxdiff = vmax(maxdiff, diff_seconds)
 
     print('PY MoonPhase: passed {} lines for file {} : max_arcmin = {:0.6f}, maxdiff = {:0.3f} seconds, {} quarters.'
         .format(lnum, filename, max_arcmin, maxdiff, quarter_count))
@@ -291,7 +311,7 @@ def TestElongFile(filename, targetRelLon):
                 return 1
             diff_minutes = (24.0 * 60.0) * (found_time.tt - expected_time.tt)
             Debug('PY TestElongFile: {:<7s} error = {:6.3} minutes'.format(name, diff_minutes))
-            if abs(diff_minutes) > 15.0:
+            if vabs(diff_minutes) > 15.0:
                 print('PY TestElongFile({} line {}): EXCESSIVE ERROR.'.format(filename, lnum))
                 return 1
     print('PY TestElongFile: passed {} rows of data'.format(lnum))
@@ -322,8 +342,8 @@ def TestPlanetLongitudes(body, outFileName, zeroLonEventName):
                 if count == 2:
                     min_diff = max_diff = day_diff
                 else:
-                    min_diff = min(min_diff, day_diff)
-                    max_diff = max(max_diff, day_diff)
+                    min_diff = vmin(min_diff, day_diff)
+                    max_diff = vmax(max_diff, day_diff)
             geo = astronomy.GeoVector(body, found_time, True)
             dist = geo.Length()
             outfile.write('e {} {} {:0.16f} {:0.16f}\n'.format(name, event, found_time.tt, dist))
@@ -434,8 +454,8 @@ def TestMaxElong(body, searchText, eventText, angle, visibility):
     if evt.visibility != visibility:
         print('PY TestMaxElong({} {}): SearchMaxElongation returned visibility {}, but expected {}'.format(name, searchText, evt.visibility.name, visibility.name))
         return 1
-    hour_diff = 24.0 * abs(evt.time.tt - eventTime.tt)
-    arcmin_diff = 60.0 * abs(evt.elongation - angle)
+    hour_diff = 24.0 * vabs(evt.time.tt - eventTime.tt)
+    arcmin_diff = 60.0 * vabs(evt.elongation - angle)
     Debug('PY TestMaxElong: {:<7s} {:<7s} elong={:5.2f} ({:4.2f} arcmin, {:5.3f} hours)'.format(name, visibility.name, evt.elongation, arcmin_diff, hour_diff))
     if hour_diff > 0.603:
         print('PY TestMaxElong({} {}): EXCESSIVE HOUR ERROR.'.format(name, searchText))
@@ -497,21 +517,21 @@ def CheckMagnitudeData(body, filename):
                 (mag, sbrt, dist, rdot, delta, deldot, phase_angle) = data
                 illum = astronomy.Illumination(body, time)
                 diff = illum.mag - mag
-                if abs(diff) > limit:
+                if vabs(diff) > limit:
                     print('PY CheckMagnitudeData({} line {}): EXCESSIVE ERROR: correct mag={}, calc mag={}'.format(filename, lnum, mag, illum.mag))
                     return 1
                 sum_squared_diff += diff * diff
                 if count == 0:
                     diff_lo = diff_hi = diff
                 else:
-                    diff_lo = min(diff_lo, diff)
-                    diff_hi = max(diff_hi, diff)
+                    diff_lo = vmin(diff_lo, diff)
+                    diff_hi = vmax(diff_hi, diff)
                 count += 1
 
         if count == 0:
             print('PY CheckMagnitudeData: Did not find any data in file: {}'.format(filename))
             return 1
-    rms = math.sqrt(sum_squared_diff / count)
+    rms = sqrt(sum_squared_diff / count)
     Debug('PY CheckMagnitudeData: {:<21s} {:5d} rows diff_lo={:0.4f} diff_hi={:0.4f} rms={:0.4f}'.format(filename, count, diff_lo, diff_hi, rms))
     return 0
 
@@ -534,11 +554,11 @@ def CheckSaturn():
         time = astronomy.Time.Parse(dtext)
         illum = astronomy.Illumination(astronomy.Body.Saturn, time)
         Debug('PY Saturn: date={}  calc mag={:12.8f}  ring_tilt={:12.8f}'.format(dtext, illum.mag, illum.ring_tilt))
-        mag_diff = abs(illum.mag - mag)
+        mag_diff = vabs(illum.mag - mag)
         if mag_diff > 1.0e-4:
             print('PY CheckSaturn: Excessive magnitude error {}'.format(mag_diff))
             error = 1
-        tilt_diff = abs(illum.ring_tilt - tilt)
+        tilt_diff = vabs(illum.ring_tilt - tilt)
         if (tilt_diff > 3.0e-5):
             print('PY CheckSaturn: Excessive ring tilt error {}'.format(tilt_diff))
             error = 1
@@ -566,8 +586,8 @@ def TestMaxMag(body, filename):
                     center_time = time1.AddDays(0.5*(time2.ut - time1.ut))
                     correct_mag = float(tokenlist[4])
                     illum = astronomy.SearchPeakMagnitude(body, search_time)
-                    mag_diff = abs(illum.mag - correct_mag)
-                    hours_diff = 24.0 * abs(illum.time.ut - center_time.ut)
+                    mag_diff = vabs(illum.mag - correct_mag)
+                    hours_diff = 24.0 * vabs(illum.time.ut - center_time.ut)
                     Debug('PY TestMaxMag: mag_diff={:0.3f}, hours_diff={:0.3f}'.format(mag_diff, hours_diff))
                     if hours_diff > 7.1:
                         print('PY TestMaxMag({} line {}): EXCESSIVE TIME DIFFERENCE.'.format(filename, lnum))
@@ -679,15 +699,15 @@ def RiseSet(filename = 'riseset/riseset.txt'):
                 print('PY RiseSet({} line {}): expected dir={} but found {}'.format(filename, lnum, a_dir, direction))
                 return 1
 
-            error_minutes = (24.0 * 60.0) * abs(a_evt.tt - correct_time.tt)
+            error_minutes = (24.0 * 60.0) * vabs(a_evt.tt - correct_time.tt)
             sum_minutes += error_minutes ** 2
-            max_minutes = max(max_minutes, error_minutes)
+            max_minutes = vmax(max_minutes, error_minutes)
             if error_minutes > 0.57:
                 print('PY RiseSet({} line {}): excessive prediction time error = {} minutes.'.format(filename, lnum, error_minutes))
                 print('    correct = {}, calculated = {}'.format(correct_time, a_evt))
                 return 1
 
-    rms_minutes = math.sqrt(sum_minutes / lnum)
+    rms_minutes = sqrt(sum_minutes / lnum)
     print('PY RiseSet: passed {} lines: time errors in minutes: rms={:0.4f}, max={:0.4f}'.format(lnum, rms_minutes, max_minutes))
     return 0
 
@@ -718,16 +738,16 @@ def LunarApsis(filename = 'apsides/moon.txt'):
                 print('PY LunarApsis({} line {}): Expected kind {} but found {}'.format(filename, lnum, kind, apsis.kind))
                 return 1
             dist_km = float(tokenlist[2])
-            diff_minutes = (24.0 * 60.0) * abs(apsis.time.ut - correct_time.ut)
-            diff_km = abs(apsis.dist_km - dist_km)
+            diff_minutes = (24.0 * 60.0) * vabs(apsis.time.ut - correct_time.ut)
+            diff_km = vabs(apsis.dist_km - dist_km)
             if diff_minutes > 35.0:
                 print('PY LunarApsis({} line {}): Excessive time error = {} minutes.'.format(filename, lnum, diff_minutes))
                 return 1
             if diff_km > 25.0:
                 print('PY LunarApsis({} line {}): Excessive distance error = {} km.'.format(filename, lnum, diff_km))
                 return 1
-            max_minutes = max(max_minutes, diff_minutes)
-            max_km = max(max_km, diff_km)
+            max_minutes = vmax(max_minutes, diff_minutes)
+            max_km = vmax(max_km, diff_km)
     print('PY LunarApsis: found {} events, max time error = {:0.3f} minutes, max distance error = {:0.3f} km.'.format(lnum, max_minutes, max_km))
     return 0
 
@@ -736,7 +756,7 @@ def LunarApsis(filename = 'apsides/moon.txt'):
 def CompareMatrices(caller, a, b, tolerance):
     for i in range(3):
         for j in range(3):
-            diff = abs(a.rot[i][j] - b.rot[i][j])
+            diff = vabs(a.rot[i][j] - b.rot[i][j])
             if diff > tolerance:
                 print('PY CompareMatrices ERROR({}): matrix[{}][{}] = {}, expected {}, diff {}'.format(caller, i, j, a.rot[i][j], b.rot[i][j], diff))
                 sys.exit(1)
@@ -784,7 +804,7 @@ def VectorDiff(a, b):
     dx = a.x - b.x
     dy = a.y - b.y
     dz = a.z - b.z
-    return math.sqrt(dx*dx + dy*dy + dz*dz)
+    return sqrt(dx*dx + dy*dy + dz*dz)
 
 
 def Test_EQJ_ECL():
@@ -802,7 +822,7 @@ def Test_EQJ_ECL():
     dx = ee.x - ecl.ex
     dy = ee.y - ecl.ey
     dz = ee.z - ecl.ez
-    diff = math.sqrt(dx*dx + dy*dy + dz*dz)
+    diff = sqrt(dx*dx + dy*dy + dz*dz)
     Debug('PY Test_EQJ_ECL ee = ({}, {}, {}); diff = {}'.format(ee.x, ee.y, ee.z, diff))
     if diff > 1.0e-16:
         print('PY Test_EQJ_ECL: EXCESSIVE VECTOR ERROR')
@@ -839,9 +859,9 @@ def Test_EQJ_EQD(body):
     equcheck = astronomy.EquatorFromVector(vdate)
 
     # Compare the result with the eqdate.
-    ra_diff = abs(equcheck.ra - eqdate.ra)
-    dec_diff = abs(equcheck.dec - eqdate.dec)
-    dist_diff = abs(equcheck.dist - eqdate.dist)
+    ra_diff = vabs(equcheck.ra - eqdate.ra)
+    dec_diff = vabs(equcheck.dec - eqdate.dec)
+    dist_diff = vabs(equcheck.dist - eqdate.dist)
     Debug('PY Test_EQJ_EQD: {} ra={}, dec={}, dist={}, ra_diff={}, dec_diff={}, dist_diff={}'.format(
         body.name, eqdate.ra, eqdate.dec, eqdate.dist, ra_diff, dec_diff, dist_diff
     ))
@@ -878,8 +898,8 @@ def Test_EQD_HOR(body):
 
     # Convert the horizontal vector to horizontal angular coordinates.
     xsphere = astronomy.HorizonFromVector(vec_hor, astronomy.Refraction.Normal)
-    diff_alt = abs(xsphere.lat - hor.altitude)
-    diff_az = abs(xsphere.lon - hor.azimuth)
+    diff_alt = vabs(xsphere.lat - hor.altitude)
+    diff_az = vabs(xsphere.lon - hor.azimuth)
 
     Debug('PY Test_EQD_HOR {}: trusted alt={}, az={}; test alt={}, az={}; diff_alt={}, diff_az={}'.format(
         body.name, hor.altitude, hor.azimuth, xsphere.lat, xsphere.lon, diff_alt, diff_az))
@@ -1017,7 +1037,7 @@ def Refraction():
         corrected = alt + refr
         inv_refr = astronomy.InverseRefractionAngle(astronomy.Refraction.Normal, corrected)
         check_alt = corrected + inv_refr
-        diff = abs(check_alt - alt)
+        diff = vabs(check_alt - alt)
         if diff > 2.0e-14:
             print('PY Refraction: ERROR - excessive error: alt={}, refr={}, diff={}'.format(alt, refr, diff))
             return 1
@@ -1052,13 +1072,13 @@ def PlanetApsis():
                 if apsis.kind != expected_kind:
                     print('PY PlanetApsis({} line {}): WRONG APSIS KIND: expected {}, found {}'.format(filename, count, expected_kind, apsis.kind))
                     return 1
-                diff_days = abs(expected_time.tt - apsis.time.tt)
-                max_diff_days = max(max_diff_days, diff_days)
+                diff_days = vabs(expected_time.tt - apsis.time.tt)
+                max_diff_days = vmax(max_diff_days, diff_days)
                 diff_degrees = (diff_days / period) * 360
                 if diff_degrees > degree_threshold:
                     found_bad_planet = True
-                diff_dist_ratio = abs(expected_distance - apsis.dist_au) / expected_distance
-                max_dist_ratio = max(max_dist_ratio, diff_dist_ratio)
+                diff_dist_ratio = vabs(expected_distance - apsis.dist_au) / expected_distance
+                max_dist_ratio = vmax(max_dist_ratio, diff_dist_ratio)
                 if diff_dist_ratio > 1.0e-4:
                     print('PY PlanetApsis({} line {}): distance ratio {} is too large.'.format(filename, count, diff_dist_ratio))
                     return 1
@@ -1076,8 +1096,8 @@ def PlanetApsis():
                 if min_interval < 0.0:
                     min_interval = max_interval = interval
                 else:
-                    min_interval = min(min_interval, interval)
-                    max_interval = max(max_interval, interval)
+                    min_interval = vmin(min_interval, interval)
+                    max_interval = vmax(max_interval, interval)
             if count < 2:
                 print('PY PlanetApsis: FAILED to find apsides for {}'.format(body))
                 return 1
@@ -1174,7 +1194,7 @@ def LunarEclipse():
                 skip_count += 1
                 continue
 
-            diff_minutes = (24.0 * 60.0) * abs(diff_days)
+            diff_minutes = (24.0 * 60.0) * vabs(diff_days)
             sum_diff_minutes += diff_minutes
             diff_count += 1
 
@@ -1189,7 +1209,7 @@ def LunarEclipse():
 
             # check partial eclipse duration
 
-            diff_minutes = abs(partial_minutes - eclipse.sd_partial)
+            diff_minutes = vabs(partial_minutes - eclipse.sd_partial)
             sum_diff_minutes += diff_minutes
             diff_count += 1
 
@@ -1202,7 +1222,7 @@ def LunarEclipse():
 
             # check total eclipse duration
 
-            diff_minutes = abs(total_minutes - eclipse.sd_total)
+            diff_minutes = vabs(total_minutes - eclipse.sd_total)
             sum_diff_minutes += diff_minutes
             diff_count += 1
 
@@ -1222,11 +1242,13 @@ def LunarEclipse():
 #-----------------------------------------------------------------------------------------------------------
 
 def VectorFromAngles(lat, lon):
-    coslat = math.cos(math.radians(lat))
+    rlat = math.radians(v(lat))
+    rlon = math.radians(v(lon))
+    coslat = math.cos(rlat)
     return [
-        math.cos(math.radians(lon)) * coslat,
-        math.sin(math.radians(lon)) * coslat,
-        math.sin(math.radians(lat))
+        math.cos(rlon) * coslat,
+        math.sin(rlon) * coslat,
+        math.sin(rlat)
     ]
 
 
@@ -1238,7 +1260,7 @@ def AngleDiff(alat, alon, blat, blon):
         return 180.0
     if dot >= +1.0:
         return 0.0
-    return math.degrees(math.acos(dot))
+    return v(math.degrees(math.acos(dot)))
 
 
 def KindFromChar(typeChar):
@@ -1279,7 +1301,7 @@ def GlobalSolarEclipse():
                 diff_days = eclipse.peak.ut - peak.ut
 
             # Validate the eclipse prediction.
-            diff_minutes = (24 * 60) * abs(diff_days)
+            diff_minutes = (24 * 60) * vabs(diff_days)
             if diff_minutes > 6.93:
                 print('PY GlobalSolarEclipse({} line {}): EXCESSIVE TIME ERROR = {} minutes'.format(filename, lnum, diff_minutes))
                 return 1
@@ -1349,7 +1371,7 @@ def LocalSolarEclipse1():
                 skip_count += 1
                 continue
 
-            diff_minutes = (24 * 60) * abs(diff_days)
+            diff_minutes = (24 * 60) * vabs(diff_days)
             if diff_minutes > 7.14:
                 print('PY LocalSolarEclipse1({} line {}): EXCESSIVE TIME ERROR = {} minutes'.format(filename, lnum, diff_minutes))
                 return 1
@@ -1399,12 +1421,12 @@ def LocalSolarEclipse2():
 
     def CheckEvent(calc, expect):
         nonlocal max_minutes, max_degrees
-        diff_minutes = (24 * 60) * abs(expect.time.ut - calc.time.ut)
+        diff_minutes = (24 * 60) * vabs(expect.time.ut - calc.time.ut)
         if diff_minutes > max_minutes:
             max_minutes = diff_minutes
         if diff_minutes > 1.0:
             raise Exception('CheckEvent({} line {}): EXCESSIVE TIME ERROR: {} minutes.'.format(filename, lnum, diff_minutes))
-        diff_alt = abs(expect.altitude - calc.altitude)
+        diff_alt = vabs(expect.altitude - calc.altitude)
         if diff_alt > max_degrees:
             max_degrees = diff_alt
         if diff_alt > 0.5:
