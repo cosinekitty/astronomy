@@ -87,6 +87,7 @@ static double AngleDiff(double alat, double alon, double blat, double blon);
 static int LocalSolarEclipseTest(void);
 static int LocalSolarEclipseTest1(void);
 static int LocalSolarEclipseTest2(void);
+static int Transit(void);
 
 typedef int (* unit_test_func_t) (void);
 
@@ -115,7 +116,8 @@ static unit_test_t UnitTests[] =
     {"riseset",                 RiseSet},
     {"rotation",                RotationTest},
     {"seasons",                 SeasonsTest},
-    {"time",                    Test_AstroTime}
+    {"time",                    Test_AstroTime},
+    {"transit",                 Transit}
 };
 
 #define NUM_UNIT_TESTS    (sizeof(UnitTests) / sizeof(UnitTests[0]))
@@ -3056,6 +3058,68 @@ static int PlotDeltaT(const char *outFileName)
     error = 0;
 fail:
     if (outfile != NULL) fclose(outfile);
+    return error;
+}
+
+/*-----------------------------------------------------------------------------------------------------------*/
+
+static int TransitFile(astro_body_t body, const char *filename)
+{
+    int error = 1;
+    FILE *infile = NULL;
+    char line[100];
+    int lnum;
+    astro_time_t time1, time2;
+
+    infile = fopen(filename, "rt");
+    if (infile == NULL)
+        FAIL("C TransitFile: Cannot open input file: %s\n", filename);
+
+    lnum = 0;
+    while (fgets(line, sizeof(line), infile))
+    {
+        ++lnum;
+
+        /* 1881-11-08T22:17Z 03:38 */
+
+        if (strlen(line) < 23)
+            FAIL("C TransitFile(%s line %d): line is too short.\n", filename, lnum);
+
+        if (line[17] != ' ')
+            FAIL("C TransitFile(%s line %d): expected space character in column 18.\n", filename, lnum);
+
+        line[17] = '\0';
+        if (ParseDate(line, &time1))
+            FAIL("C TransitFile(%s line %d): invalid date/time '%s'\n", filename, lnum, line);
+
+        /* Patch the second time and reparse. */
+        line[11] = line[18];
+        line[12] = line[19];
+        line[14] = line[21];
+        line[15] = line[22];
+        if (ParseDate(line, &time2))
+            FAIL("C TransitFile(%s line %d): failed to parse patched date/time '%s'\n", filename, lnum, line);
+
+        /* If the second time is earlier than the first, it means it actually happens on the next day. */
+        if (time2.ut < time1.ut)
+            time2 = Astronomy_AddDays(time2, 1.0);
+    }
+
+    printf("C TransitFile(%s): PASS - verified %d\n", filename, lnum);
+    error = 0;
+
+fail:
+    if (infile != NULL) fclose(infile);
+    return error;
+}
+
+static int Transit(void)
+{
+    int error;
+
+    CHECK(TransitFile(BODY_MERCURY, "eclipse/mercury.txt"));
+    CHECK(TransitFile(BODY_VENUS,   "eclipse/venus.txt"));
+fail:
     return error;
 }
 
