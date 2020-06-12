@@ -652,6 +652,30 @@ astro_local_solar_eclipse_t;
 
 
 /**
+ * @brief Information about a transit of Mercury or Venus, as seen from the Earth.
+ *
+ * Returned by #Astronomy_SearchTransit or #Astronomy_NextTransit to report
+ * information about a transit of Mercury or Venus.
+ * A transit is when Mercury or Venus passes between the Sun and Earth so that
+ * the other planet is seen in silhouette against the Sun.
+ *
+ * The `start` field reports the moment in time when the planet first becomes
+ * visible against the Sun in its background.
+ * The `finish` field reports the last moment when the planet is visible
+ * against the Sun in its background.
+ *
+ * The calculations are performed from the point of view of a geocentric observer.
+ */
+typedef struct
+{
+    astro_status_t  status;     /**< `ASTRO_SUCCESS` if this struct is valid; otherwise an error code. */
+    astro_time_t    start;      /**< Date and time at the beginning of the transit. */
+    astro_time_t    finish;     /**< Date and time at the end of the transit. */
+}
+astro_transit_t;
+
+
+/**
  * @brief   Aberration calculation options.
  *
  * [Aberration](https://en.wikipedia.org/wiki/Aberration_of_light) is an effect
@@ -784,6 +808,8 @@ astro_global_solar_eclipse_t Astronomy_SearchGlobalSolarEclipse(astro_time_t sta
 astro_global_solar_eclipse_t Astronomy_NextGlobalSolarEclipse(astro_time_t prevEclipseTime);
 astro_local_solar_eclipse_t Astronomy_SearchLocalSolarEclipse(astro_time_t startTime, astro_observer_t observer);
 astro_local_solar_eclipse_t Astronomy_NextLocalSolarEclipse(astro_time_t prevEclipseTime, astro_observer_t observer);
+astro_transit_t Astronomy_SearchTransit(astro_body_t body, astro_time_t startTime);
+astro_transit_t Astronomy_NextTransit(astro_body_t body, astro_time_t prevTransitTime);
 
 astro_search_result_t Astronomy_Search(
     astro_search_func_t func,

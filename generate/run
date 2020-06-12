@@ -156,7 +156,7 @@ rm -f apsides/apsis_*.txt
 echo ""
 echo "Generating eclipse data."
 cd eclipse || Fail "Could not change to eclipse directory."
-rm -f lunar_eclipse.txt
+rm -f lunar_eclipse.txt solar_eclipse.txt mercury.txt venus.txt
 python3 norm.py || Fail "Error normalizing eclipse test data."
 cd .. || Fail "Could not change to parent directory."
 

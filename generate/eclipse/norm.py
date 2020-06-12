@@ -116,5 +116,50 @@ def FixSolarEclipseData():
 
 #--------------------------------------------------------------------------------------
 
+def FixTransitData(planet):
+    #    date          t1      t2     peak     t3      t4     sep"    Sun RA   Sun DEC   GST     series
+    #  -1026 Nov 19   11:15   11:42   13:45   15:49   16:15   796.4   15.058  -17.58    3.219    2 
+    #   1957 May 06   23:59   00:09   01:14   02:20   02:30   907.3    2.852   16.41   14.909    9 
+    r = re.compile(r'''^
+        \s*(-?\d+)                                              # [1] year (negative or positive)
+        \s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)    # [2] month name
+        \s+(\d+)                                                # [3] day
+        \s+(\d+)                                                # [4] t1 hour
+        :(\d+)                                                  # [5] t1 minute
+        \s+\d+:\d+    # ignore t2
+        \s+\d+:\d+    # ignore peak
+        \s+\d+:\d+    # ignore t3
+        \s+(\d+)                                                # [6] t4 hour
+        :(\d+)                                                  # [7] t4 minute
+''',
+        re.VERBOSE)
+
+    inFileName = planet + '.html'
+    outFileName = planet + '.txt'
+    with open(inFileName, 'rt') as infile:
+        with open(outFileName, 'wt') as outfile:
+            for line in infile:
+                m = r.match(line)
+                if m:
+                    year = int(m.group(1))
+                    if 1700 <= year:        # ensure use of modern calendar
+                        month = ParseMonth(m.group(2))
+                        day = int(m.group(3))
+                        hour1 = int(m.group(4))
+                        minute1 = int(m.group(5))
+                        hour4 = int(m.group(6))
+                        minute4 = int(m.group(7))
+                        outfile.write('{:04d}-{:02d}-{:02d}T{:02d}:{:02d}Z {:02d}:{:02d}\n'.format(year, month, day, hour1, minute1, hour4, minute4))
+    return 0
+
+#--------------------------------------------------------------------------------------
+
 if __name__ == '__main__':
-    sys.exit(FixLunarEclipseData() or FixSolarEclipseData())
+    rc = FixLunarEclipseData()
+    if rc == 0:
+        rc = FixSolarEclipseData()
+    if rc == 0:
+        rc = FixTransitData('mercury')
+    if rc == 0:
+        rc = FixTransitData('venus')
+    sys.exit(rc)

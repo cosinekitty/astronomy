@@ -1037,6 +1037,31 @@ See [`Astronomy_SearchPlanetApsis`](#Astronomy_SearchPlanetApsis) for more detai
 
 ---
 
+<a name="Astronomy_NextTransit"></a>
+### Astronomy_NextTransit(body, prevTransitTime) &#8658; [`astro_transit_t`](#astro_transit_t)
+
+**Searches for the another transit of Mercury and Venus.** 
+
+
+
+After calling [`Astronomy_SearchTransit`](#Astronomy_SearchTransit) to find a transit of Mercury or Venus, this function finds the next transit after that. Keep calling this function as many times as you want to keep finding more transits.
+
+
+
+**Returns:**  If successful, the `status` field in the returned structure hold `ASTRO_SUCCESS` and the other fields are as documented in [`astro_transit_t`](#astro_transit_t). Otherwise, `status` holds an error code and the other structure members are undefined. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_body_t`](#astro_body_t) | `body` |  The planet whose transit is to be found. Must be `BODY_MERCURY` or `BODY_VENUS`. | 
+| [`astro_time_t`](#astro_time_t) | `prevTransitTime` |  A date and time near the previous transit. | 
+
+
+
+
+---
+
 <a name="Astronomy_Refraction"></a>
 ### Astronomy_Refraction(refraction, altitude) &#8658; `double`
 
@@ -1775,6 +1800,31 @@ The function searches the window of time specified by `startTime` and `startTime
 | `double` | `targetLon` |  The desired ecliptic longitude in degrees, relative to the true equinox of date. This may be any value in the range [0, 360), although certain values have conventional meanings: 0 = March equinox, 90 = June solstice, 180 = September equinox, 270 = December solstice. | 
 | [`astro_time_t`](#astro_time_t) | `startTime` |  The date and time for starting the search for the desired longitude event. | 
 | `double` | `limitDays` |  The real-valued number of days, which when added to `startTime`, limits the range of time over which the search looks. It is recommended to keep this value between 1 and 10 days. See remarks above for more details. | 
+
+
+
+
+---
+
+<a name="Astronomy_SearchTransit"></a>
+### Astronomy_SearchTransit(body, startTime) &#8658; [`astro_transit_t`](#astro_transit_t)
+
+**Searches for the first transit of Mercury or Venus after a given date.** 
+
+
+
+Finds the first transit of Mercury or Venus after a specified date. A transit is when an inferior planet passes between the Sun and the Earth so that the silhouette of the planet is visible against the Sun in the background. To continue the search, pass the `finish` time in the returned structure to [`Astronomy_NextTransit`](#Astronomy_NextTransit).
+
+
+
+**Returns:**  If successful, the `status` field in the returned structure hold `ASTRO_SUCCESS` and the other fields are as documented in [`astro_transit_t`](#astro_transit_t). Otherwise, `status` holds an error code and the other structure members are undefined. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_body_t`](#astro_body_t) | `body` |  The planet whose transit is to be found. Must be `BODY_MERCURY` or `BODY_VENUS`. | 
+| [`astro_time_t`](#astro_time_t) | `startTime` |  The date and time for starting the search for a transit. | 
 
 
 
@@ -2664,6 +2714,28 @@ In cases where [`astro_time_t`](#astro_time_t) is included in a structure return
 | `double` | `tt` | **Terrestrial Time days since noon on January 1, 2000.**  Terrestrial Time is an atomic time scale defined as a number of days since noon on January 1, 2000. In this system, days are not based on Earth rotations, but instead by the number of elapsed [SI seconds](https://physics.nist.gov/cuu/Units/second.html) divided by 86400. Unlike `ut`, `tt` increases uniformly without adjustments for changes in the Earth's rotation. The value in `tt` is used for calculations of movements not involving the Earth's rotation, such as the orbits of planets around the Sun, or the Moon around the Earth. Historically, Terrestrial Time has also been known by the term *Ephemeris Time* (ET).  |
 | `double` | `psi` | **For internal use only. Used to optimize Earth tilt calculations.**  |
 | `double` | `eps` | **For internal use only. Used to optimize Earth tilt calculations.**  |
+
+
+---
+
+<a name="astro_transit_t"></a>
+### `astro_transit_t`
+
+**Information about a transit of Mercury or Venus, as seen from the Earth.** 
+
+
+
+Returned by [`Astronomy_SearchTransit`](#Astronomy_SearchTransit) or [`Astronomy_NextTransit`](#Astronomy_NextTransit) to report information about a transit of Mercury or Venus. A transit is when Mercury or Venus passes between the Sun and Earth so that the other planet is seen in silhouette against the Sun.
+
+The `start` field reports the moment in time when the planet first becomes visible against the Sun in its background. The `finish` field reports the last moment when the planet is visible against the Sun in its background.
+
+The calculations are performed from the point of view of a geocentric observer. 
+
+| Type | Member | Description |
+| ---- | ------ | ----------- |
+| [`astro_status_t`](#astro_status_t) | `status` |  `ASTRO_SUCCESS` if this struct is valid; otherwise an error code.  |
+| [`astro_time_t`](#astro_time_t) | `start` |  Date and time at the beginning of the transit.  |
+| [`astro_time_t`](#astro_time_t) | `finish` |  Date and time at the end of the transit.  |
 
 
 ---

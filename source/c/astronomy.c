@@ -373,6 +373,14 @@ static astro_constellation_t ConstelErr(astro_status_t status)
     return constel;
 }
 
+static astro_transit_t TransitErr(astro_status_t status)
+{
+    astro_transit_t transit;
+    transit.status = status;
+    transit.start = transit.finish = TimeError();
+    return transit;
+}
+
 static astro_func_result_t SynodicPeriod(astro_body_t body)
 {
     double Tp;                         /* planet's orbital period in days */
@@ -8061,6 +8069,63 @@ astro_local_solar_eclipse_t Astronomy_NextLocalSolarEclipse(
 {
     astro_time_t startTime = Astronomy_AddDays(prevEclipseTime, 10.0);
     return Astronomy_SearchLocalSolarEclipse(startTime, observer);
+}
+
+/**
+ * @brief Searches for the first transit of Mercury or Venus after a given date.
+ *
+ * Finds the first transit of Mercury or Venus after a specified date.
+ * A transit is when an inferior planet passes between the Sun and the Earth
+ * so that the silhouette of the planet is visible against the Sun in the background.
+ * To continue the search, pass the `finish` time in the returned structure to
+ * #Astronomy_NextTransit.
+ *
+ * @param body
+ *      The planet whose transit is to be found. Must be `BODY_MERCURY` or `BODY_VENUS`.
+ *
+ * @param startTime
+ *      The date and time for starting the search for a transit.
+ *
+ * @return
+ *      If successful, the `status` field in the returned structure hold `ASTRO_SUCCESS`
+ *      and the other fields are as documented in #astro_transit_t.
+ *      Otherwise, `status` holds an error code and the other structure members are undefined.
+ */
+astro_transit_t Astronomy_SearchTransit(astro_body_t body, astro_time_t startTime)
+{
+    (void)startTime;
+
+    if (body != BODY_MERCURY && body != BODY_VENUS)
+        return TransitErr(ASTRO_INVALID_BODY);
+
+    return TransitErr(ASTRO_NOT_INITIALIZED);       /* NOT YET IMPLEMENTED */
+}
+
+
+/**
+ * @brief Searches for the another transit of Mercury and Venus.
+ *
+ * After calling #Astronomy_SearchTransit to find a transit of Mercury or Venus,
+ * this function finds the next transit after that.
+ * Keep calling this function as many times as you want to keep finding more transits.
+ *
+ * @param body
+ *      The planet whose transit is to be found. Must be `BODY_MERCURY` or `BODY_VENUS`.
+ *
+ * @param prevTransitTime
+ *      A date and time near the previous transit.
+ *
+ * @return
+ *      If successful, the `status` field in the returned structure hold `ASTRO_SUCCESS`
+ *      and the other fields are as documented in #astro_transit_t.
+ *      Otherwise, `status` holds an error code and the other structure members are undefined.
+ */
+astro_transit_t Astronomy_NextTransit(astro_body_t body, astro_time_t prevTransitTime)
+{
+    astro_time_t startTime;
+
+    startTime = Astronomy_AddDays(prevTransitTime, 10.0);
+    return Astronomy_SearchTransit(body, startTime);
 }
 
 

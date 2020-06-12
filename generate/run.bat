@@ -167,7 +167,14 @@ if errorlevel 1 (
 echo.
 echo.Generating eclipse data.
 cd eclipse
-if exist lunar_eclipse.txt (del lunar_eclipse.txt)
+for %%f in (
+    lunar_eclipse.txt
+    solar_eclipse.txt
+    mercury.txt
+    venus.txt
+) do (
+    if exist %%f (del %%f)
+)
 norm.py
 if errorlevel 1 (
     echo.Error normalizing eclipse test data.
