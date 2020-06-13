@@ -13,6 +13,37 @@ namespace csharp_test
         const double RAD2DEG = 57.295779513082321;
         static bool Verbose;
 
+        struct Test
+        {
+            public string Name;
+            public Func<int> TestFunc;
+            public Test(string name, Func<int> testFunc)
+            {
+                this.Name = name;
+                this.TestFunc = testFunc;
+            }
+        }
+
+        static Test[] UnitTests = new Test[]
+        {
+            new Test("time", TestTime),
+            new Test("moon", MoonTest),
+            new Test("constellation", ConstellationTest),
+            new Test("elongation", ElongationTest),
+            new Test("global_solar_eclipse", GlobalSolarEclipseTest),
+            new Test("local_solar_eclipse", LocalSolarEclipseTest),
+            new Test("lunar_apsis", LunarApsisTest),
+            new Test("lunar_eclipse", LunarEclipseTest),
+            new Test("magnitude", MagnitudeTest),
+            new Test("moonphase", MoonPhaseTest),
+            new Test("planet_apsis", PlanetApsisTest),
+            new Test("refraction", RefractionTest),
+            new Test("riseset", RiseSetTest),
+            new Test("rotation", RotationTest),
+            new Test("seasons", SeasonsTest),
+            new Test("astro_check", AstroCheck),
+        };
+
         static int Main(string[] args)
         {
             try
@@ -23,38 +54,22 @@ namespace csharp_test
                     args = args.Skip(1).ToArray();
                 }
 
-                if (args.Length == 1 && args[0] == "lunar_eclipse")
-                    return LunarEclipseTest();
-
-                if (args.Length == 1 && args[0] == "local_solar_eclipse")
+                if (args.Length == 1)
                 {
-                    if (LocalSolarEclipseTest1() != 0) return 1;
-                    if (LocalSolarEclipseTest2() != 0) return 1;
-                    return 0;
-                }
+                    string name = args[0];
+                    if (name == "all")
+                    {
+                        Console.WriteLine("csharp_test: starting");
+                        foreach (Test t in UnitTests)
+                            if (0 != t.TestFunc())
+                                return 1;
+                        Console.WriteLine("csharp_test: PASS");
+                        return 0;
+                    }
 
-                if (args.Length == 0)
-                {
-                    Console.WriteLine("csharp_test: starting");
-                    if (TestTime() != 0) return 1;
-                    if (MoonTest() != 0) return 1;
-                    if (RefractionTest() != 0) return 1;
-                    if (RotationTest() != 0) return 1;
-                    if (RiseSetTest("../../riseset/riseset.txt") != 0) return 1;
-                    if (SeasonsTest("../../seasons/seasons.txt") != 0) return 1;
-                    if (MoonPhaseTest("../../moonphase/moonphases.txt") != 0) return 1;
-                    if (ElongationTest() != 0) return 1;
-                    if (LunarApsisTest("../../apsides/moon.txt") != 0) return 1;
-                    if (PlanetApsisTest("../../apsides") != 0) return 1;
-                    if (MagnitudeTest() != 0) return 1;
-                    if (ConstellationTest() != 0) return 1;
-                    if (LunarEclipseTest() != 0) return 1;
-                    if (GlobalSolarEclipseTest() != 0) return 1;
-                    if (LocalSolarEclipseTest1() != 0) return 1;
-                    if (LocalSolarEclipseTest2() != 0) return 1;
-                    if (AstroCheck() != 0) return 1;
-                    Console.WriteLine("csharp_test: PASS");
-                    return 0;
+                    foreach (Test t in UnitTests)
+                        if (t.Name == name)
+                            return t.TestFunc();
                 }
 
                 Console.WriteLine("csharp_test: Invalid command line parameters.");
@@ -228,8 +243,9 @@ namespace csharp_test
             return 0;
         }
 
-        static int SeasonsTest(string filename)
+        static int SeasonsTest()
         {
+            const string filename = "../../seasons/seasons.txt";
             var re = new Regex(@"^(\d+)-(\d+)-(\d+)T(\d+):(\d+)Z\s+([A-Za-z]+)\s*$");
             using (StreamReader infile = File.OpenText(filename))
             {
@@ -343,8 +359,9 @@ namespace csharp_test
             }
         }
 
-        static int MoonPhaseTest(string filename)
+        static int MoonPhaseTest()
         {
+            const string filename = "../../moonphase/moonphases.txt";
             using (StreamReader infile = File.OpenText(filename))
             {
                 const double threshold_seconds = 120.0;
@@ -438,8 +455,9 @@ namespace csharp_test
             }
         }
 
-        static int RiseSetTest(string filename)
+        static int RiseSetTest()
         {
+            const string filename = "../../riseset/riseset.txt";
             using (StreamReader infile = File.OpenText(filename))
             {
                 int lnum = 0;
@@ -861,8 +879,9 @@ namespace csharp_test
             }
         }
 
-        static int PlanetApsisTest(string testDataPath)
+        static int PlanetApsisTest()
         {
+            const string testDataPath = "../../apsides";
             const double degree_threshold = 0.1;
             var start_time = new AstroTime(Astronomy.MinYear, 1, 1, 0, 0, 0);
             bool found_bad_planet = false;
@@ -965,8 +984,9 @@ namespace csharp_test
             return 0;
         }
 
-        static int LunarApsisTest(string inFileName)
+        static int LunarApsisTest()
         {
+            const string inFileName = "../../apsides/moon.txt";
             using (StreamReader infile = File.OpenText(inFileName))
             {
                 int lnum = 0;
@@ -2120,6 +2140,17 @@ namespace csharp_test
             }
 
             return false;
+        }
+
+        static int LocalSolarEclipseTest()
+        {
+            if (0 != LocalSolarEclipseTest1())
+                return 1;
+
+            if (0 != LocalSolarEclipseTest2())
+                return 1;
+
+            return 0;
         }
     }
 }
