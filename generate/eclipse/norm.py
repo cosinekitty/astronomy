@@ -117,6 +117,9 @@ def FixSolarEclipseData():
 #--------------------------------------------------------------------------------------
 
 def FixTransitData(planet):
+    # The input table format is documented in detail at:
+    # https://eclipse.gsfc.nasa.gov/transit/catalog/Tcatkey.html
+    #
     #    date          t1      t2     peak     t3      t4     sep"    Sun RA   Sun DEC   GST     series
     #  -1026 Nov 19   11:15   11:42   13:45   15:49   16:15   796.4   15.058  -17.58    3.219    2
     #   1957 May 06   23:59   00:09   01:14   02:20   02:30   907.3    2.852   16.41   14.909    9
@@ -126,10 +129,10 @@ def FixTransitData(planet):
         \s+(\d+)                                                # [3] peak day
         \s+(\d+)                                                # [4] t1 hour
         :(\d+)                                                  # [5] t1 minute
-        \s+\d+:\d+    # ignore t2
+        \s+\S+        # ignore t2, and tolerate "---"
         \s+(\d+)                                                # [6] peak hour
         :(\d+)                                                  # [7] peak minute
-        \s+\d+:\d+    # ignore t3
+        \s+\S+        # ignore t3, and tolerate "---"
         \s+(\d+)                                                # [8] t4 hour
         :(\d+)                                                  # [9] t4 minute
 ''',
@@ -143,7 +146,11 @@ def FixTransitData(planet):
                 m = r.match(line)
                 if m:
                     year = int(m.group(1))
-                    if 1700 <= year:        # ensure use of modern calendar
+                    # "Julian calendar is used before 1582 Oct 15."
+                    # Avoid having to convert dates; ignore any data before 1600.
+                    # Mercury data starts at 1605, Venus before that.
+                    # Also avoid oddities in venus.html where there is "-" for first and last contact.
+                    if 1600 <= year <= 3700:
                         month = ParseMonth(m.group(2))
                         day = int(m.group(3))
                         hour1 = int(m.group(4))

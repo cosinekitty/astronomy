@@ -3071,17 +3071,21 @@ static int TransitFile(astro_body_t body, const char *filename)
     int lnum;
     astro_time_t time1, time2, timep;
     astro_transit_t transit;
-    double diff_minutes;
+    double diff_start, diff_peak, diff_finish;
     double max_minutes = 0.0;
-    const double limit_minutes = 1000.0;
+    const double limit_minutes = 26.0;
+    const int START_YEAR = 1600;
 
     infile = fopen(filename, "rt");
     if (infile == NULL)
         FAIL("C TransitFile: Cannot open input file: %s\n", filename);
 
-    transit = Astronomy_SearchTransit(body, Astronomy_MakeTime(1700, 1, 1, 0, 0, 0.0));
+    transit = Astronomy_SearchTransit(body, Astronomy_MakeTime(START_YEAR, 1, 1, 0, 0, 0.0));
     if (transit.status != ASTRO_SUCCESS)
         FAIL("C TransitFile(%s): SearchTransit returned %d\n", filename, transit.status);
+
+    DEBUG("\n----------------------------------------------------------------\n\n");
+    DEBUG("C TransitFile: STARTING %s\n\n", filename);
 
     lnum = 0;
     while (fgets(line, sizeof(line), infile))
@@ -3124,12 +3128,17 @@ static int TransitFile(astro_body_t body, const char *filename)
         if (time2.ut < timep.ut)
             time2 = Astronomy_AddDays(time2, +1.0);
 
-        /* Verify the transit start time. */
-        diff_minutes = (24.0 * 60.0) * ABS(time1.ut - transit.start.ut);
-        if (diff_minutes > limit_minutes)
+        /* Measure result errors. */
+        diff_start  = (24.0 * 60.0) * (time1.ut - transit.start.ut );
+        diff_peak   = (24.0 * 60.0) * (timep.ut - transit.peak.ut  );
+        diff_finish = (24.0 * 60.0) * (time2.ut - transit.finish.ut);
+
+        if (Verbose)
         {
             printf("Expected: ");
             PrintTime(time1);
+            printf("    ");
+            PrintTime(timep);
             printf("    ");
             PrintTime(time2);
             printf("\n");
@@ -3137,35 +3146,22 @@ static int TransitFile(astro_body_t body, const char *filename)
             printf("Found:    ");
             PrintTime(transit.start);
             printf("    ");
-            PrintTime(transit.finish);
-            printf("\n");
-
-            FAIL("C TransitFile(%s line %d): EXCESSIVE start time error = %0.3lf minutes\n", filename, lnum, diff_minutes);
-        }
-        if (diff_minutes > max_minutes)
-            max_minutes = diff_minutes;
-
-        /* Verify the transit finish time. */
-        diff_minutes = (24.0 * 60.0) * ABS(time2.ut - transit.finish.ut);
-        if (diff_minutes > limit_minutes)
-        {
-            printf("Expected: ");
-            PrintTime(time1);
-            printf("    ");
-            PrintTime(time2);
-            printf("\n");
-
-            printf("Found:    ");
-            PrintTime(transit.start);
+            PrintTime(transit.peak);
             printf("    ");
             PrintTime(transit.finish);
             printf("\n");
 
-            FAIL("C TransitFile(%s line %d): EXCESSIVE finish time error = %0.3lf minutes.\n", filename, lnum, diff_minutes);
+            printf("Diff: %24.3lf    %24.3lf    %24.3lf\n\n", diff_start, diff_peak, diff_finish);
         }
 
-        if (diff_minutes > max_minutes)
-            max_minutes = diff_minutes;
+        diff_start  = ABS(diff_start);
+        diff_peak   = ABS(diff_peak);
+        diff_finish = ABS(diff_finish);
+        if (diff_start  > max_minutes)  max_minutes = diff_start;
+        if (diff_peak   > max_minutes)  max_minutes = diff_peak;
+        if (diff_finish > max_minutes)  max_minutes = diff_finish;
+        if (max_minutes > limit_minutes)
+            FAIL("C TransitFile(%s line %d): EXCESSIVE TIME ERROR = %0.3lf minutes. (Run again with -v to debug.)\n", filename, lnum, max_minutes);
 
         /* Search for the next transit. */
         transit = Astronomy_NextTransit(body, transit.finish);
