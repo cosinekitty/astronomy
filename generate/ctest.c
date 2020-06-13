@@ -3063,7 +3063,7 @@ fail:
 
 /*-----------------------------------------------------------------------------------------------------------*/
 
-static int TransitFile(astro_body_t body, const char *filename)
+static int TransitFile(astro_body_t body, const char *filename, double limit_minutes)
 {
     int error = 1;
     FILE *infile = NULL;
@@ -3073,7 +3073,6 @@ static int TransitFile(astro_body_t body, const char *filename)
     astro_transit_t transit;
     double diff_start, diff_peak, diff_finish;
     double max_minutes = 0.0;
-    const double limit_minutes = 26.0;
     const int START_YEAR = 1600;
 
     infile = fopen(filename, "rt");
@@ -3181,8 +3180,8 @@ static int Transit(void)
 {
     int error;
 
-    CHECK(TransitFile(BODY_MERCURY, "eclipse/mercury.txt"));
-    CHECK(TransitFile(BODY_VENUS,   "eclipse/venus.txt"));
+    CHECK(TransitFile(BODY_MERCURY, "eclipse/mercury.txt", 10.710));
+    CHECK(TransitFile(BODY_VENUS,   "eclipse/venus.txt",    9.109));
 fail:
     return error;
 }
