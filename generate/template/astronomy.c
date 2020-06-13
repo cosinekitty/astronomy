@@ -377,7 +377,8 @@ static astro_transit_t TransitErr(astro_status_t status)
 {
     astro_transit_t transit;
     transit.status = status;
-    transit.start = transit.finish = TimeError();
+    transit.start = transit.peak = transit.finish = TimeError();
+    transit.separation = NAN;
     return transit;
 }
 
@@ -6623,6 +6624,12 @@ astro_transit_t Astronomy_SearchTransit(astro_body_t body, astro_time_t startTim
                 transit.finish = search.time;
                 transit.status = ASTRO_SUCCESS;
                 transit.peak = shadow.time;
+
+                separation = Astronomy_AngleFromSun(body, shadow.time);
+                if (separation.status != ASTRO_SUCCESS)
+                    return TransitErr(separation.status);
+
+                transit.separation = 60.0 * separation.angle;   /* convert degrees to arcminutes */
                 return transit;
             }
         }

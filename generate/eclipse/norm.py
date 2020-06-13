@@ -124,17 +124,18 @@ def FixTransitData(planet):
     #  -1026 Nov 19   11:15   11:42   13:45   15:49   16:15   796.4   15.058  -17.58    3.219    2
     #   1957 May 06   23:59   00:09   01:14   02:20   02:30   907.3    2.852   16.41   14.909    9
     r = re.compile(r'''^
-        \s*(-?\d+)                                              # [1] peak year (negative or positive)
-        \s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)    # [2] peak month name
-        \s+(\d+)                                                # [3] peak day
-        \s+(\d+)                                                # [4] t1 hour
-        :(\d+)                                                  # [5] t1 minute
+        \s*(-?\d+)                                              # [ 1] peak year (negative or positive)
+        \s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)    # [ 2] peak month name
+        \s+(\d+)                                                # [ 3] peak day
+        \s+(\d+)                                                # [ 4] t1 hour
+        :(\d+)                                                  # [ 5] t1 minute
         \s+\S+        # ignore t2, and tolerate "---"
-        \s+(\d+)                                                # [6] peak hour
-        :(\d+)                                                  # [7] peak minute
+        \s+(\d+)                                                # [ 6] peak hour
+        :(\d+)                                                  # [ 7] peak minute
         \s+\S+        # ignore t3, and tolerate "---"
-        \s+(\d+)                                                # [8] t4 hour
-        :(\d+)                                                  # [9] t4 minute
+        \s+(\d+)                                                # [ 8] t4 hour
+        :(\d+)                                                  # [ 9] t4 minute
+        \s+([\d\.]+)                                            # [10] minimum angular separation in arcseconds
 ''',
         re.VERBOSE)
 
@@ -159,7 +160,9 @@ def FixTransitData(planet):
                         minutep = int(m.group(7))
                         hour4 = int(m.group(8))
                         minute4 = int(m.group(9))
-                        outfile.write('{:02d}:{:02d} {:04d}-{:02d}-{:02d}T{:02d}:{:02d}Z {:02d}:{:02d}\n'.format(hour1, minute1, year, month, day, hourp, minutep, hour4, minute4))
+                        sep = float(m.group(10)) / 60.0
+                        outfile.write('{:02d}:{:02d} {:04d}-{:02d}-{:02d}T{:02d}:{:02d}Z {:02d}:{:02d} {:7.4f}\n'.format(
+                            hour1, minute1, year, month, day, hourp, minutep, hour4, minute4, sep))
     return 0
 
 #--------------------------------------------------------------------------------------

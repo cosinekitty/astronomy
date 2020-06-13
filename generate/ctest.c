@@ -3063,7 +3063,7 @@ fail:
 
 /*-----------------------------------------------------------------------------------------------------------*/
 
-static int TransitFile(astro_body_t body, const char *filename, double limit_minutes)
+static int TransitFile(astro_body_t body, const char *filename, double limit_minutes, double limit_sep)
 {
     int error = 1;
     FILE *infile = NULL;
@@ -3071,8 +3071,9 @@ static int TransitFile(astro_body_t body, const char *filename, double limit_min
     int lnum;
     astro_time_t time1, time2, timep;
     astro_transit_t transit;
-    double diff_start, diff_peak, diff_finish;
-    double max_minutes = 0.0;
+    double separation;
+    double diff_start, diff_peak, diff_finish, diff_sep;
+    double max_minutes = 0.0, max_sep = 0.0;
     const int START_YEAR = 1600;
 
     infile = fopen(filename, "rt");
@@ -3091,13 +3092,16 @@ static int TransitFile(astro_body_t body, const char *filename, double limit_min
     {
         ++lnum;
 
-        /* 22:17 1881-11-08T00:57Z 03:38 */
+        /* 22:17 1881-11-08T00:57Z 03:38  3.8633 */
 
-        if (strlen(line) < 29)
+        if (strlen(line) < 37)
             FAIL("C TransitFile(%s line %d): line is too short.\n", filename, lnum);
 
-        if (line[5] != ' ' || line[23] != ' ')
+        if (line[5] != ' ' || line[23] != ' ' || line[29] != ' ')
             FAIL("C TransitFile(%s line %d): invalid data format.\n", filename, lnum);
+
+        if (1 != sscanf(line+30, "%lf", &separation))
+            FAIL("C TransitFile(%s line %d): unable to parse angular separation.\n", filename, lnum);
 
         line[23] = '\0';
         if (ParseDate(line+6, &timep))
@@ -3131,6 +3135,7 @@ static int TransitFile(astro_body_t body, const char *filename, double limit_min
         diff_start  = (24.0 * 60.0) * (time1.ut - transit.start.ut );
         diff_peak   = (24.0 * 60.0) * (timep.ut - transit.peak.ut  );
         diff_finish = (24.0 * 60.0) * (time2.ut - transit.finish.ut);
+        diff_sep    = separation - transit.separation;
 
         if (Verbose)
         {
@@ -3140,7 +3145,7 @@ static int TransitFile(astro_body_t body, const char *filename, double limit_min
             PrintTime(timep);
             printf("    ");
             PrintTime(time2);
-            printf("\n");
+            printf(" %10.4lf\n", separation);
 
             printf("Found:    ");
             PrintTime(transit.start);
@@ -3148,9 +3153,9 @@ static int TransitFile(astro_body_t body, const char *filename, double limit_min
             PrintTime(transit.peak);
             printf("    ");
             PrintTime(transit.finish);
-            printf("\n");
+            printf(" %10.4lf\n", transit.separation);
 
-            printf("Diff: %24.3lf    %24.3lf    %24.3lf\n\n", diff_start, diff_peak, diff_finish);
+            printf("Diff: %24.3lf    %24.3lf    %24.3lf     %10.4lf\n\n", diff_start, diff_peak, diff_finish, diff_sep);
         }
 
         diff_start  = ABS(diff_start);
@@ -3162,13 +3167,18 @@ static int TransitFile(astro_body_t body, const char *filename, double limit_min
         if (max_minutes > limit_minutes)
             FAIL("C TransitFile(%s line %d): EXCESSIVE TIME ERROR = %0.3lf minutes. (Run again with -v to debug.)\n", filename, lnum, max_minutes);
 
+        diff_sep = ABS(diff_sep);
+        if (diff_sep > max_sep)  max_sep = diff_sep;
+        if (max_sep > limit_sep)
+            FAIL("C TransitFile(%s line %d): EXCESSIVE SEPARATION ERROR = %0.4lf arcminutes. (Run again with -v to debug.)\n", filename, lnum, max_sep);
+
         /* Search for the next transit. */
         transit = Astronomy_NextTransit(body, transit.finish);
         if (transit.status != ASTRO_SUCCESS)
             FAIL("C TransitFile(%s line %d): NextTransit returned %d\n", filename, lnum, transit.status);
     }
 
-    printf("C TransitFile(%s): PASS - verified %d, max minutes = %0.3lf\n", filename, lnum, max_minutes);
+    printf("C TransitFile(%-20s): PASS - verified %2d, max minutes = %6.3lf, max sep arcmin = %6.4lf\n", filename, lnum, max_minutes, max_sep);
     error = 0;
 
 fail:
@@ -3180,8 +3190,8 @@ static int Transit(void)
 {
     int error;
 
-    CHECK(TransitFile(BODY_MERCURY, "eclipse/mercury.txt", 10.710));
-    CHECK(TransitFile(BODY_VENUS,   "eclipse/venus.txt",    9.109));
+    CHECK(TransitFile(BODY_MERCURY, "eclipse/mercury.txt", 10.710, 0.2121));
+    CHECK(TransitFile(BODY_VENUS,   "eclipse/venus.txt",    9.109, 0.6772));
 fail:
     return error;
 }

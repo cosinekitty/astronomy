@@ -670,10 +670,11 @@ astro_local_solar_eclipse_t;
  */
 typedef struct
 {
-    astro_status_t  status;     /**< `ASTRO_SUCCESS` if this struct is valid; otherwise an error code. */
-    astro_time_t    start;      /**< Date and time at the beginning of the transit. */
-    astro_time_t    peak;       /**< Date and time of the peak of the transit. */
-    astro_time_t    finish;     /**< Date and time at the end of the transit. */
+    astro_status_t  status;         /**< `ASTRO_SUCCESS` if this struct is valid; otherwise an error code. */
+    astro_time_t    start;          /**< Date and time at the beginning of the transit. */
+    astro_time_t    peak;           /**< Date and time of the peak of the transit. */
+    astro_time_t    finish;         /**< Date and time at the end of the transit. */
+    double          separation;     /**< Angular separation in arcminutes between the centers of the Sun and the planet at time `peak`. */
 }
 astro_transit_t;
 

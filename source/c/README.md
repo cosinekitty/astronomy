@@ -2737,6 +2737,7 @@ The calculations are performed from the point of view of a geocentric observer.
 | [`astro_time_t`](#astro_time_t) | `start` |  Date and time at the beginning of the transit.  |
 | [`astro_time_t`](#astro_time_t) | `peak` |  Date and time of the peak of the transit.  |
 | [`astro_time_t`](#astro_time_t) | `finish` |  Date and time at the end of the transit.  |
+| `double` | `separation` |  Angular separation in arcminutes between the centers of the Sun and the planet at time `peak`.  |
 
 
 ---
