@@ -1,5 +1,5 @@
 search   : 2015-02-28T00:00:00.000Z
-Sun      : 2015-02-28T18:12:32.333Z  altitude= 52.13  azimuth= 180.00
+Sun      : 2015-02-28T18:12:31.044Z  altitude= 52.13  azimuth= 180.00
 Moon     : 2015-02-28T01:58:15.630Z  altitude= 77.88  azimuth= 180.00
 Mercury  : 2015-02-28T16:31:18.940Z  altitude= 42.57  azimuth= 180.00
 Venus    : 2015-02-28T20:03:56.711Z  altitude= 63.24  azimuth= 180.00

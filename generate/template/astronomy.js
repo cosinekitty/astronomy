@@ -1685,9 +1685,6 @@ Astronomy.GeoVector = function(body, date, aberration) {
         }
 
         geo = new Vector(h.x-earth.x, h.y-earth.y, h.z-earth.z, time);
-        if (body === 'Sun') {
-            return geo;     // The Sun's heliocentric coordinates are always (0,0,0). No need to correct.
-        }
         let ltime2 = time.AddDays(-geo.Length() / C_AUDAY);
         dt = Math.abs(ltime2.tt - ltime.tt);
         if (dt < 1.0e-9) {
@@ -1986,10 +1983,10 @@ Astronomy.LongitudeFromSun = function(body, date) {
         throw 'The Earth does not have a longitude as seen from itself.';
 
     const t = Astronomy.MakeTime(date);
-    let gb = Astronomy.GeoVector(body, t, true);
+    let gb = Astronomy.GeoVector(body, t, false);
     const eb = Astronomy.Ecliptic(gb.x, gb.y, gb.z);
 
-    let gs = Astronomy.GeoVector('Sun', t, true);
+    let gs = Astronomy.GeoVector('Sun', t, false);
     const es = Astronomy.Ecliptic(gs.x, gs.y, gs.z);
 
     return NormalizeLongitude(eb.elon - es.elon);

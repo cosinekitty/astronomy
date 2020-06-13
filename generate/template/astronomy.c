@@ -1885,14 +1885,6 @@ astro_vector_t Astronomy_GeoVector(astro_body_t body, astro_time_t time, astro_a
         vector.z = 0.0;
         break;
 
-    case BODY_SUN:
-        /* The Sun's heliocentric coordinates are always (0,0,0). No need for light travel correction. */
-        vector = CalcEarth(time);
-        vector.x *= -1.0;
-        vector.y *= -1.0;
-        vector.z *= -1.0;
-        break;
-
     case BODY_MOON:
         vector = Astronomy_GeoMoon(time);
         break;
@@ -3014,12 +3006,12 @@ astro_angle_result_t Astronomy_LongitudeFromSun(astro_body_t body, astro_time_t 
     if (body == BODY_EARTH)
         return AngleError(ASTRO_EARTH_NOT_ALLOWED);
 
-    sv = Astronomy_GeoVector(BODY_SUN, time, ABERRATION);
+    sv = Astronomy_GeoVector(BODY_SUN, time, NO_ABERRATION);
     se = Astronomy_Ecliptic(sv);        /* checks for errors in sv */
     if (se.status != ASTRO_SUCCESS)
         return AngleError(se.status);
 
-    bv = Astronomy_GeoVector(body, time, ABERRATION);
+    bv = Astronomy_GeoVector(body, time, NO_ABERRATION);
     be = Astronomy_Ecliptic(bv);        /* checks for errors in bv */
     if (be.status != ASTRO_SUCCESS)
         return AngleError(be.status);
@@ -5568,20 +5560,21 @@ static shadow_t PlanetShadow(astro_body_t body, double planet_radius_km, astro_t
 {
     astro_vector_t e, p, g;
 
-    /* To include light travel time compensation, we use GeoVector instead of HelioVector. */
-
+    /* Calculate light-travel-corrected vector from Earth to planet. */
     g = Astronomy_GeoVector(body, time, ABERRATION);
     if (g.status != ASTRO_SUCCESS)
         return ShadowError(g.status);
 
-    /* Calculate heliocentric Earth. */
-    e = CalcEarth(time);
+    /* Calculate light-travel-corrected vector from Earth to Sun. */
+    e = Astronomy_GeoVector(BODY_SUN, time, ABERRATION);
+    if (e.status != ASTRO_SUCCESS)
+        return ShadowError(e.status);
 
-    /* Convert light-travel corrected geocentric planet to heliocentric planet. */
+    /* Deduce light-travel-corrected vector from Sun to planet. */
     p.t = time;
-    p.x = e.x + g.x;
-    p.y = e.y + g.y;
-    p.z = e.z + g.z;
+    p.x = g.x - e.x;
+    p.y = g.y - e.y;
+    p.z = g.z - e.z;
 
     /* Calcluate Earth's position from the planet's point of view. */
     e.x = -g.x;

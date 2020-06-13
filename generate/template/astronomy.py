@@ -1497,10 +1497,6 @@ def GeoVector(body, time, aberration):
             earth = _CalcEarth(ltime)
 
         geo = Vector(h.x-earth.x, h.y-earth.y, h.z-earth.z, time)
-        if body == Body.Sun:
-            # The Sun's heliocentric coordinates are always (0,0,0). No need to correct.
-            return geo
-
         ltime2 = time.AddDays(-geo.Length() / _C_AUDAY)
         dt = abs(ltime2.tt - ltime.tt)
         if dt < 1.0e-9:
@@ -2019,9 +2015,9 @@ def LongitudeFromSun(body, time):
     """
     if body == Body.Earth:
         raise EarthNotAllowedError()
-    sv = GeoVector(Body.Sun, time, True)
+    sv = GeoVector(Body.Sun, time, False)
     se = Ecliptic(sv)
-    bv = GeoVector(body, time, True)
+    bv = GeoVector(body, time, False)
     be = Ecliptic(bv)
     return _NormalizeLongitude(be.elon - se.elon)
 

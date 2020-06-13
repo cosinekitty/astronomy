@@ -2617,11 +2617,6 @@ $ASTRO_IAU_DATA()
                 /* The Earth's geocentric coordinates are always (0,0,0). */
                 return new AstroVector(0.0, 0.0, 0.0, time);
 
-            case Body.Sun:
-                /* The Sun's heliocentric coordinates are always (0,0,0). No need for light travel correction. */
-                vector = CalcEarth(time);
-                return new AstroVector(-vector.x, -vector.y, -vector.z, time);
-
             case Body.Moon:
                 return GeoMoon(time);
 
@@ -3268,10 +3263,10 @@ $ASTRO_IAU_DATA()
             if (body == Body.Earth)
                 throw new EarthNotAllowedException();
 
-            AstroVector sv = GeoVector(Body.Sun, time, Aberration.Corrected);
+            AstroVector sv = GeoVector(Body.Sun, time, Aberration.None);
             Ecliptic se = EquatorialToEcliptic(sv);
 
-            AstroVector bv = GeoVector(body, time, Aberration.Corrected);
+            AstroVector bv = GeoVector(body, time, Aberration.None);
             Ecliptic be = EquatorialToEcliptic(bv);
 
             return NormalizeLongitude(be.elon - se.elon);
