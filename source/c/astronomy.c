@@ -5447,12 +5447,14 @@ astro_apsis_t Astronomy_NextLunarApsis(astro_apsis_t apsis)
 }
 
 
+/** @cond DOXYGEN_SKIP */
 typedef struct
 {
     int direction;
     astro_body_t body;
 }
 planet_distance_context_t;
+/** @endcond */
 
 
 static astro_func_result_t planet_distance_slope(void *context, astro_time_t time)
@@ -7180,6 +7182,15 @@ shadow_context_t;
 /** @endcond */
 
 
+static shadow_t ShadowError(astro_status_t status)
+{
+    shadow_t shadow;
+    memset(&shadow, 0, sizeof(shadow));
+    shadow.status = status;
+    return shadow;
+}
+
+
 static shadow_t CalcShadow(
     double body_radius_km,
     astro_time_t time,
@@ -7205,6 +7216,34 @@ static shadow_t CalcShadow(
     shadow.time = time;
 
     return shadow;
+}
+
+
+static shadow_t PlanetShadow(astro_body_t body, double planet_radius_km, astro_time_t time)
+{
+    astro_vector_t e, p, g;
+
+    /* To include light travel time compensation, we use GeoVector instead of HelioVector. */
+
+    g = Astronomy_GeoVector(body, time, ABERRATION);
+    if (g.status != ASTRO_SUCCESS)
+        return ShadowError(g.status);
+
+    /* Calculate heliocentric Earth. */
+    e = CalcEarth(time);
+
+    /* Convert light-travel corrected geocentric planet to heliocentric planet. */
+    p.t = time;
+    p.x = e.x + g.x;
+    p.y = e.y + g.y;
+    p.z = e.z + g.z;
+
+    /* Calcluate Earth's position from the planet's point of view. */
+    e.x = -g.x;
+    e.y = -g.y;
+    e.z = -g.z;
+
+    return CalcShadow(planet_radius_km, time, e, p);
 }
 
 
@@ -7251,7 +7290,9 @@ static shadow_t MoonShadow(astro_time_t time)
 }
 
 
+/** @cond DOXYGEN_SKIP */
 typedef shadow_t (* shadow_func_t) (astro_time_t time);
+/** @endcond */
 
 
 static astro_func_result_t shadow_distance_slope(void *context, astro_time_t time)
@@ -7276,15 +7317,6 @@ static astro_func_result_t shadow_distance_slope(void *context, astro_time_t tim
     result.value = (shadow2.r - shadow1.r) / dt;
     result.status = ASTRO_SUCCESS;
     return result;
-}
-
-
-static shadow_t ShadowError(astro_status_t status)
-{
-    shadow_t shadow;
-    memset(&shadow, 0, sizeof(shadow));
-    shadow.status = status;
-    return shadow;
 }
 
 
@@ -7323,6 +7355,66 @@ static shadow_t PeakMoonShadow(astro_time_t search_center_time)
         return ShadowError(result.status);
 
     return MoonShadow(result.time);
+}
+
+
+/** @cond DOXYGEN_SKIP */
+typedef struct
+{
+    astro_body_t    body;
+    double          planet_radius_km;
+    double          direction;          /* used for transit start/finish search only */
+}
+planet_shadow_context_t;
+/** @endcond */
+
+
+static astro_func_result_t planet_shadow_distance_slope(void *context, astro_time_t time)
+{
+    const double dt = 1.0 / 86400.0;
+    astro_time_t t1, t2;
+    astro_func_result_t result;
+    shadow_t shadow1, shadow2;
+    const planet_shadow_context_t *p = context;
+
+    t1 = Astronomy_AddDays(time, -dt);
+    t2 = Astronomy_AddDays(time, +dt);
+
+    shadow1 = PlanetShadow(p->body, p->planet_radius_km, t1);
+    if (shadow1.status != ASTRO_SUCCESS)
+        return FuncError(shadow1.status);
+
+    shadow2 = PlanetShadow(p->body, p->planet_radius_km, t2);
+    if (shadow2.status != ASTRO_SUCCESS)
+        return FuncError(shadow2.status);
+
+    result.value = (shadow2.r - shadow1.r) / dt;
+    result.status = ASTRO_SUCCESS;
+    return result;
+}
+
+
+static shadow_t PeakPlanetShadow(astro_body_t body, double planet_radius_km, astro_time_t search_center_time)
+{
+    /* Search for when the body's shadow is closest to the center of the Earth. */
+
+    astro_time_t t1, t2;
+    astro_search_result_t result;
+    planet_shadow_context_t context;
+    const double window = 1.0;     /* days before/after inferior conjunction to search for minimum shadow distance */
+
+    t1 = Astronomy_AddDays(search_center_time, -window);
+    t2 = Astronomy_AddDays(search_center_time, +window);
+
+    context.body = body;
+    context.planet_radius_km = planet_radius_km;
+    context.direction = 0.0;    /* not used in this search */
+
+    result = Astronomy_Search(planet_shadow_distance_slope, &context, t1, t2, 1.0);
+    if (result.status != ASTRO_SUCCESS)
+        return ShadowError(result.status);
+
+    return PlanetShadow(body, planet_radius_km, result.time);
 }
 
 
@@ -8071,6 +8163,42 @@ astro_local_solar_eclipse_t Astronomy_NextLocalSolarEclipse(
     return Astronomy_SearchLocalSolarEclipse(startTime, observer);
 }
 
+
+static astro_func_result_t planet_transit_bound(void *context, astro_time_t time)
+{
+    shadow_t shadow;
+    astro_func_result_t result;
+    const planet_shadow_context_t *p = context;
+
+    shadow = PlanetShadow(p->body, p->planet_radius_km, time);
+    if (shadow.status != ASTRO_SUCCESS)
+        return FuncError(shadow.status);
+
+    result.status = ASTRO_SUCCESS;
+    result.value = p->direction * (shadow.r - shadow.p);
+    return result;
+}
+
+
+static astro_search_result_t PlanetTransitBoundary(
+    astro_body_t body,
+    double planet_radius_km,
+    astro_time_t t1,
+    astro_time_t t2,
+    double direction)
+{
+    /* Search for the time the planet's penumbra begins/ends making contact with the center of the Earth. */
+    planet_shadow_context_t context;
+
+    context.body = body;
+    context.planet_radius_km = planet_radius_km;
+    context.direction = direction;
+
+    return Astronomy_Search(planet_transit_bound, &context, t1, t2, 1.0);
+}
+
+
+
 /**
  * @brief Searches for the first transit of Mercury or Venus after a given date.
  *
@@ -8093,12 +8221,77 @@ astro_local_solar_eclipse_t Astronomy_NextLocalSolarEclipse(
  */
 astro_transit_t Astronomy_SearchTransit(astro_body_t body, astro_time_t startTime)
 {
-    (void)startTime;
+    astro_time_t search_time;
+    astro_transit_t transit;
+    astro_search_result_t conj, search;
+    astro_angle_result_t separation;
+    shadow_t shadow;
+    double planet_radius_km;
+    astro_time_t tx;
+    const double threshold_angle = 10.0;     /* maximum angular separation to attempt transit calculation */
+    const double dt_days = 10.0;
 
-    if (body != BODY_MERCURY && body != BODY_VENUS)
+    /* Validate the planet and find its mean radius. */
+    switch (body)
+    {
+    case BODY_MERCURY:  planet_radius_km = 2439.7;  break;
+    case BODY_VENUS:    planet_radius_km = 6051.8;  break;
+    default:
         return TransitErr(ASTRO_INVALID_BODY);
+    }
 
-    return TransitErr(ASTRO_NOT_INITIALIZED);       /* NOT YET IMPLEMENTED */
+    search_time = startTime;
+    for(;;)
+    {
+        /*
+            Search for the next inferior conjunction of the given planet.
+            This is the next time the Earth and the other planet have the same
+            ecliptic longitude as seen from the Sun.
+        */
+        conj = Astronomy_SearchRelativeLongitude(body, 0.0, search_time);
+        if (conj.status != ASTRO_SUCCESS)
+            return TransitErr(conj.status);
+
+        /* Calculate the angular separation between the body and the Sun at this time. */
+        separation = Astronomy_AngleFromSun(body, conj.time);
+        if (separation.status != ASTRO_SUCCESS)
+            return TransitErr(separation.status);
+
+        if (separation.angle < threshold_angle)
+        {
+            /*
+                The planet's angular separation from the Sun is small enough
+                to consider it a transit candidate.
+                Search for the moment when the line passing through the Sun
+                and planet are closest to the Earth's center.
+            */
+            shadow = PeakPlanetShadow(body, planet_radius_km, conj.time);
+            if (shadow.status != ASTRO_SUCCESS)
+                return TransitErr(shadow.status);
+
+            if (shadow.r < shadow.p)        /* does the planet's penumbra touch the Earth's center? */
+            {
+                /* Find the beginning and end of the penumbral contact. */
+                tx = Astronomy_AddDays(shadow.time, -dt_days);
+                search = PlanetTransitBoundary(body, planet_radius_km, tx, shadow.time, -1.0);
+                if (search.status != ASTRO_SUCCESS)
+                    return TransitErr(search.status);
+                transit.start = search.time;
+
+                tx = Astronomy_AddDays(shadow.time, +dt_days);
+                search = PlanetTransitBoundary(body, planet_radius_km, shadow.time, tx, +1.0);
+                if (search.status != ASTRO_SUCCESS)
+                    return TransitErr(search.status);
+                transit.finish = search.time;
+                transit.status = ASTRO_SUCCESS;
+                transit.peak = shadow.time;
+                return transit;
+            }
+        }
+
+        /* This inferior conjunction was not a transit. Try the next inferior conjunction. */
+        search_time = Astronomy_AddDays(conj.time, 10.0);
+    }
 }
 
 
@@ -8124,7 +8317,7 @@ astro_transit_t Astronomy_NextTransit(astro_body_t body, astro_time_t prevTransi
 {
     astro_time_t startTime;
 
-    startTime = Astronomy_AddDays(prevTransitTime, 10.0);
+    startTime = Astronomy_AddDays(prevTransitTime, 100.0);
     return Astronomy_SearchTransit(body, startTime);
 }
 

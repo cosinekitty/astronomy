@@ -661,6 +661,8 @@ astro_local_solar_eclipse_t;
  *
  * The `start` field reports the moment in time when the planet first becomes
  * visible against the Sun in its background.
+ * The `peak` field reports when the planet is most aligned with the Sun,
+ * as seen from the Earth.
  * The `finish` field reports the last moment when the planet is visible
  * against the Sun in its background.
  *
@@ -670,6 +672,7 @@ typedef struct
 {
     astro_status_t  status;     /**< `ASTRO_SUCCESS` if this struct is valid; otherwise an error code. */
     astro_time_t    start;      /**< Date and time at the beginning of the transit. */
+    astro_time_t    peak;       /**< Date and time of the peak of the transit. */
     astro_time_t    finish;     /**< Date and time at the end of the transit. */
 }
 astro_transit_t;
