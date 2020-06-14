@@ -292,7 +292,8 @@ function TerrestrialTime(ut) {
 }
 
 /**
- * The date and time of an astronomical observation.
+ * @brief The date and time of an astronomical observation.
+ *
  * Objects of this type are used throughout the internals
  * of the Astronomy library, and are included in certain return objects.
  * The constructor is not accessible outside the Astronomy library;
@@ -4338,12 +4339,39 @@ function LocalMoonShadow(time, observer) {
 }
 
 
+function PlanetShadow(body, planet_radius_km, time) {
+    // Calculate light-travel-corrected vector from Earth to planet.
+    const g = Astronomy.GeoVector(body, time, false);
+
+    // Calculate light-travel-corrected vector from Earth to Sun.
+    const e = Astronomy.GeoVector('Sun', time, false);
+
+    // Deduce light-travel-corrected vector from Sun to planet.
+    const p = new Vector(g.x - e.x, g.y - e.y, g.z - e.z, time);
+
+    // Calcluate Earth's position from the planet's point of view.
+    e.x = -g.x;
+    e.y = -g.y;
+    e.z = -g.z;
+
+    return CalcShadow(planet_radius_km, time, e, p);
+}
+
+
 function ShadowDistanceSlope(shadowfunc, time) {
     const dt = 1.0 / 86400.0;
     const t1 = time.AddDays(-dt);
     const t2 = time.AddDays(+dt);
     const shadow1 = shadowfunc(t1);
     const shadow2 = shadowfunc(t2);
+    return (shadow2.r - shadow1.r) / dt;
+}
+
+
+function PlanetShadowSlope(body, planet_radius_km, time) {
+    const dt = 1.0 / 86400.0;
+    const shadow1 = PlanetShadow(body, planet_radius_km, time.AddDays(-dt));
+    const shadow2 = PlanetShadow(body, planet_radius_km, time.AddDays(+dt));
     return (shadow2.r - shadow1.r) / dt;
 }
 
@@ -4363,6 +4391,16 @@ function PeakMoonShadow(search_center_time) {
     const t2 = search_center_time.AddDays(+window);
     const tx = Astronomy.Search(time => ShadowDistanceSlope(MoonShadow, time), t1, t2, 1.0);
     return MoonShadow(tx);
+}
+
+
+function PeakPlanetShadow(body, planet_radius_km, search_center_time) {
+    // Search for when the body's shadow is closest to the center of the Earth.
+    const window = 1.0;     // days before/after inferior conjunction to search for minimum shadow distance.
+    const t1 = search_center_time.AddDays(-window);
+    const t2 = search_center_time.AddDays(+window);
+    const tx = Astronomy.Search(time => PlanetShadowSlope(body, planet_radius_km, time), t1, t2, 1.0);
+    return PlanetShadow(body, planet_radius_km, tx);
 }
 
 
@@ -4946,6 +4984,162 @@ Astronomy.SearchLocalSolarEclipse = function(startTime, observer) {
 Astronomy.NextLocalSolarEclipse = function(prevEclipseTime, observer) {
     const startTime = prevEclipseTime.AddDays(10.0);
     return SearchLocalSolarEclipse(startTime, observer);
+}
+
+
+/**
+ * @brief Information about a transit of Mercury or Venus, as seen from the Earth.
+ *
+ * Returned by {@link Astronomy.SearchTransit} or {@link Astronomy.NextTransit} to report
+ * information about a transit of Mercury or Venus.
+ * A transit is when Mercury or Venus passes between the Sun and Earth so that
+ * the other planet is seen in silhouette against the Sun.
+ *
+ * The `start` field reports the moment in time when the planet first becomes
+ * visible against the Sun in its background.
+ * The `peak` field reports when the planet is most aligned with the Sun,
+ * as seen from the Earth.
+ * The `finish` field reports the last moment when the planet is visible
+ * against the Sun in its background.
+ *
+ * The calculations are performed from the point of view of a geocentric observer.
+ *
+ * @class
+ * @memberof Astronomy
+ *
+ * @property {Astronomy.AstroTime} start
+ *      The date and time at the beginning of the transit.
+ *      This is the moment the planet first becomes visible against the Sun in its background.
+ *
+ * @property {Astronomy.AstroTime} peak
+ *      When the planet is most aligned with the Sun, as seen from the Earth.
+ *
+ * @property {Astronomy.AstroTime} finish
+ *      The date and time at the end of the transit.
+ *      This is the moment the planet is last seen against the Sun in its background.
+ *
+ * @property {number} separation;
+ *      The minimum angular separation, in arcminutes, between the centers of the Sun and the planet.
+ *      This angle pertains to the time stored in `peak`.
+ */
+class TransitInfo {
+    constructor(start, peak, finish, separation) {
+        this.start = start;
+        this.peak = peak;
+        this.finish = finish;
+        this.separation = separation;
+    }
+}
+
+
+function PlanetShadowBoundary(time, body, planet_radius_km, direction) {
+    const shadow = PlanetShadow(body, planet_radius_km, time);
+    return direction * (shadow.r - shadow.p);
+}
+
+
+function PlanetTransitBoundary(body, planet_radius_km, t1, t2, direction) {
+    // Search for the time the planet's penumbra begins/ends making contact with the center of the Earth.
+    // context = new SearchContext_PlanetShadowBoundary(body, planet_radius_km, direction);
+    const tx = Astronomy.Search(time => PlanetShadowBoundary(time, body, planet_radius_km, direction), t1, t2, 1.0);
+    if (tx == null)
+        throw 'Planet transit boundary search failed';
+
+    return tx;
+}
+
+
+/**
+ * @brief Searches for the first transit of Mercury or Venus after a given date.
+ *
+ * Finds the first transit of Mercury or Venus after a specified date.
+ * A transit is when an inferior planet passes between the Sun and the Earth
+ * so that the silhouette of the planet is visible against the Sun in the background.
+ * To continue the search, pass the `finish` time in the returned structure to
+ * {@link Astronomy.NextTransit}.
+ *
+ * @param {string} body
+ *      The planet whose transit is to be found. Must be `"Mercury"` or `"Venus"`.
+ *
+ * @param {Astronomy.AstroTime}
+ *      The date and time for starting the search for a transit.
+ *
+ * @returns {Astronomy.TransitInfo}
+ */
+Astronomy.SearchTransit = function(body, startTime) {
+    const threshold_angle = 0.4;     // maximum angular separation to attempt transit calculation
+    const dt_days = 1.0;
+
+    // Validate the planet and find its mean radius.
+    let planet_radius_km;
+    switch (body)
+    {
+        case 'Mercury':
+            planet_radius_km = 2439.7;
+            break;
+
+        case 'Venus':
+            planet_radius_km = 6051.8;
+            break;
+
+        default:
+            throw `Invalid body: ${body}`;
+    }
+
+    let search_time = startTime;
+    for(;;) {
+        // Search for the next inferior conjunction of the given planet.
+        // This is the next time the Earth and the other planet have the same
+        // ecliptic longitude as seen from the Sun.
+        const conj = Astronomy.SearchRelativeLongitude(body, 0.0, search_time);
+
+        // Calculate the angular separation between the body and the Sun at this time.
+        const conj_separation = Astronomy.AngleFromSun(body, conj);
+
+        if (conj_separation < threshold_angle) {
+            // The planet's angular separation from the Sun is small enough
+            // to consider it a transit candidate.
+            // Search for the moment when the line passing through the Sun
+            // and planet are closest to the Earth's center.
+            const shadow = PeakPlanetShadow(body, planet_radius_km, conj);
+
+            if (shadow.r < shadow.p) {      // does the planet's penumbra touch the Earth's center?
+                var transit = new TransitInfo();
+
+                // Find the beginning and end of the penumbral contact.
+                const time_before = shadow.time.AddDays(-dt_days);
+                const start = PlanetTransitBoundary(body, planet_radius_km, time_before, shadow.time, -1.0);
+                const time_after = shadow.time.AddDays(+dt_days);
+                const finish = PlanetTransitBoundary(body, planet_radius_km, shadow.time, time_after, +1.0);
+                const min_separation = 60.0 * Astronomy.AngleFromSun(body, shadow.time);
+                return new TransitInfo(start, shadow.time, finish, min_separation);
+            }
+        }
+
+        // This inferior conjunction was not a transit. Try the next inferior conjunction.
+        search_time = conj.AddDays(10.0);
+    }
+}
+
+
+/**
+ * @brief Searches for another transit of Mercury or Venus.
+ *
+ * After calling {@link Astronomy.SearchTransit} to find a transit of Mercury or Venus,
+ * this function finds the next transit after that.
+ * Keep calling this function as many times as you want to keep finding more transits.
+ *
+ * @param {string} body
+ *      The planet whose transit is to be found. Must be `"Mercury"` or `"Venus"`.
+ *
+ * @param {Astronomy.AstroTime} prevTransitTime
+ *      A date and time near the previous transit.
+ *
+ * @returns {Astronomy.TransitInfo}
+ */
+Astronomy.NextTransit = function(body, prevTransitTime) {
+    const startTime = prevTransitTime.AddDays(100.0);
+    return Astronomy.SearchTransit(body, startTime);
 }
 
 

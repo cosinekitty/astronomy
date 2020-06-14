@@ -2195,16 +2195,16 @@ namespace csharp_test
                     double diff_finish = (24.0 * 60.0) * abs(time2.ut - transit.finish.ut);
                     double diff_sep = abs(separation - transit.separation);
 
-                    max_minutes = Math.Max(max_minutes, diff_start);
-                    max_minutes = Math.Max(max_minutes, diff_peak);
-                    max_minutes = Math.Max(max_minutes, diff_finish);
+                    max_minutes = max(max_minutes, diff_start);
+                    max_minutes = max(max_minutes, diff_peak);
+                    max_minutes = max(max_minutes, diff_finish);
                     if (max_minutes > limit_minutes)
                     {
                         Console.WriteLine("C# TransitFile({0} line {1}): EXCESSIVE TIME ERROR = {2} minutes.", filename, lnum, max_minutes);
                         return 1;
                     }
 
-                    max_sep = Math.Max(max_sep, diff_sep);
+                    max_sep = max(max_sep, diff_sep);
                     if (max_sep > limit_sep)
                     {
                         Console.WriteLine("C# TransitFile({0} line {1}): EXCESSIVE SEPARATION ERROR = {2} arcminutes.", filename, lnum, max_sep);

@@ -8217,7 +8217,7 @@ astro_transit_t Astronomy_SearchTransit(astro_body_t body, astro_time_t startTim
     astro_time_t search_time;
     astro_transit_t transit;
     astro_search_result_t conj, search;
-    astro_angle_result_t separation;
+    astro_angle_result_t conj_separation, min_separation;
     shadow_t shadow;
     double planet_radius_km;
     astro_time_t tx;
@@ -8246,11 +8246,11 @@ astro_transit_t Astronomy_SearchTransit(astro_body_t body, astro_time_t startTim
             return TransitErr(conj.status);
 
         /* Calculate the angular separation between the body and the Sun at this time. */
-        separation = Astronomy_AngleFromSun(body, conj.time);
-        if (separation.status != ASTRO_SUCCESS)
-            return TransitErr(separation.status);
+        conj_separation = Astronomy_AngleFromSun(body, conj.time);
+        if (conj_separation.status != ASTRO_SUCCESS)
+            return TransitErr(conj_separation.status);
 
-        if (separation.angle < threshold_angle)
+        if (conj_separation.angle < threshold_angle)
         {
             /*
                 The planet's angular separation from the Sun is small enough
@@ -8279,11 +8279,11 @@ astro_transit_t Astronomy_SearchTransit(astro_body_t body, astro_time_t startTim
                 transit.status = ASTRO_SUCCESS;
                 transit.peak = shadow.time;
 
-                separation = Astronomy_AngleFromSun(body, shadow.time);
-                if (separation.status != ASTRO_SUCCESS)
-                    return TransitErr(separation.status);
+                min_separation = Astronomy_AngleFromSun(body, shadow.time);
+                if (min_separation.status != ASTRO_SUCCESS)
+                    return TransitErr(min_separation.status);
 
-                transit.separation = 60.0 * separation.angle;   /* convert degrees to arcminutes */
+                transit.separation = 60.0 * min_separation.angle;   /* convert degrees to arcminutes */
                 return transit;
             }
         }

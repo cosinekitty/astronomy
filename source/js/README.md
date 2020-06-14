@@ -138,14 +138,14 @@ these are used in function and type names.
 <a name="Astronomy.AstroTime"></a>
 
 ### Astronomy.AstroTime
-The date and time of an astronomical observation.
+**Kind**: static class of [<code>Astronomy</code>](#Astronomy)  
+**Brief**: The date and time of an astronomical observation.
+
 Objects of this type are used throughout the internals
 of the Astronomy library, and are included in certain return objects.
 The constructor is not accessible outside the Astronomy library;
 outside users should call the [MakeTime](#Astronomy.MakeTime) function
-to create an `AstroTime` object.
-
-**Kind**: static class of [<code>Astronomy</code>](#Astronomy)  
+to create an `AstroTime` object.  
 **Properties**
 
 | Name | Type | Description |
@@ -625,6 +625,37 @@ See #EclipseEvent for more information.
 | peak | [<code>EclipseEvent</code>](#Astronomy.EclipseEvent) | The time and Sun altitude when the eclipse reaches its peak. |
 | total_end | [<code>EclipseEvent</code>](#Astronomy.EclipseEvent) | If this is an annular or a total eclipse, the time and Sun altitude when annular/total phase ends; otherwise undefined. |
 | partial_end | [<code>EclipseEvent</code>](#Astronomy.EclipseEvent) | The time and Sun altitude at the end of the eclipse. |
+
+
+* * *
+
+<a name="Astronomy.TransitInfo"></a>
+
+### Astronomy.TransitInfo
+**Kind**: static class of [<code>Astronomy</code>](#Astronomy)  
+**Brief**: Information about a transit of Mercury or Venus, as seen from the Earth.
+
+Returned by [SearchTransit](#Astronomy.SearchTransit) or [NextTransit](#Astronomy.NextTransit) to report
+information about a transit of Mercury or Venus.
+A transit is when Mercury or Venus passes between the Sun and Earth so that
+the other planet is seen in silhouette against the Sun.
+
+The `start` field reports the moment in time when the planet first becomes
+visible against the Sun in its background.
+The `peak` field reports when the planet is most aligned with the Sun,
+as seen from the Earth.
+The `finish` field reports the last moment when the planet is visible
+against the Sun in its background.
+
+The calculations are performed from the point of view of a geocentric observer.  
+**Properties**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| start | [<code>AstroTime</code>](#Astronomy.AstroTime) | The date and time at the beginning of the transit.      This is the moment the planet first becomes visible against the Sun in its background. |
+| peak | [<code>AstroTime</code>](#Astronomy.AstroTime) | When the planet is most aligned with the Sun, as seen from the Earth. |
+| finish | [<code>AstroTime</code>](#Astronomy.AstroTime) | The date and time at the end of the transit.      This is the moment the planet is last seen against the Sun in its background. |
+| separation; | <code>number</code> | The minimum angular separation, in arcminutes, between the centers of the Sun and the planet.      This angle pertains to the time stored in `peak`. |
 
 
 * * *
@@ -1960,6 +1991,44 @@ See [LocalSolarEclipseInfo](#Astronomy.LocalSolarEclipseInfo) for more informati
 | --- | --- | --- |
 | prevEclipseTime | [<code>AstroTime</code>](#Astronomy.AstroTime) | The date and time for starting the search for a solar eclipse. |
 | observer | [<code>Observer</code>](#Astronomy.Observer) | The geographic location of the observer. |
+
+
+* * *
+
+<a name="Astronomy.SearchTransit"></a>
+
+### Astronomy.SearchTransit(body, The) ⇒ [<code>TransitInfo</code>](#Astronomy.TransitInfo)
+**Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
+**Brief**: Searches for the first transit of Mercury or Venus after a given date.
+
+Finds the first transit of Mercury or Venus after a specified date.
+A transit is when an inferior planet passes between the Sun and the Earth
+so that the silhouette of the planet is visible against the Sun in the background.
+To continue the search, pass the `finish` time in the returned structure to
+[NextTransit](#Astronomy.NextTransit).  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| body | <code>string</code> | The planet whose transit is to be found. Must be `"Mercury"` or `"Venus"`. |
+| The | [<code>AstroTime</code>](#Astronomy.AstroTime) | date and time for starting the search for a transit. |
+
+
+* * *
+
+<a name="Astronomy.NextTransit"></a>
+
+### Astronomy.NextTransit(body, prevTransitTime) ⇒ [<code>TransitInfo</code>](#Astronomy.TransitInfo)
+**Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
+**Brief**: Searches for another transit of Mercury or Venus.
+
+After calling [SearchTransit](#Astronomy.SearchTransit) to find a transit of Mercury or Venus,
+this function finds the next transit after that.
+Keep calling this function as many times as you want to keep finding more transits.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| body | <code>string</code> | The planet whose transit is to be found. Must be `"Mercury"` or `"Venus"`. |
+| prevTransitTime | [<code>AstroTime</code>](#Astronomy.AstroTime) | A date and time near the previous transit. |
 
 
 * * *

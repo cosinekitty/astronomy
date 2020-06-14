@@ -6,6 +6,7 @@ const DEG2RAD = 0.017453292519943296;
 const RAD2DEG = 57.295779513082321;
 
 function Fail(message) {
+    console.trace();
     console.log(`FATAL(test.js): ${message}`);
     process.exit(1);
 }
@@ -1635,6 +1636,76 @@ function Constellation() {
     return 0;
 }
 
+
+function TransitFile(body, filename, limit_minutes, limit_sep) {
+    const text = fs.readFileSync(filename, {encoding: 'utf8'});
+    const lines = text.trimRight().split('\n');
+    let lnum = 0;
+    let max_minutes = 0;
+    let max_sep = 0;
+    let transit = Astronomy.SearchTransit(body, Astronomy.MakeTime(new Date(Date.UTC(1600, 0))));
+    for (let row of lines) {
+        ++lnum;
+        let token = row.trim().split(/\s+/);
+
+        /* 22:17 1881-11-08T00:57Z 03:38  3.8633 */
+        if (token.length !== 4) {
+            Fail(`JS TransitFile(${filename} line ${lnum}): bad data format.`);
+        }
+        const textp = token[1];
+        const text1 = textp.substr(0, 11) + token[0] + 'Z';
+        const text2 = textp.substr(0, 11) + token[2] + 'Z';
+        let timep = Astronomy.MakeTime(new Date(textp));
+        let time1 = Astronomy.MakeTime(new Date(text1));
+        let time2 = Astronomy.MakeTime(new Date(text2));
+        const separation = float(token[3]);
+
+        // If the start time is after the peak time, it really starts on the previous day.
+        if (time1.ut > timep.ut)
+            time1 = time1.AddDays(-1.0);
+
+        // If the finish time is before the peak time, it really starts on the following day.
+        if (time2.ut < timep.ut)
+            time2 = time2.AddDays(+1.0);
+
+        const diff_start  = (24.0 * 60.0) * abs(time1.ut - transit.start.ut );
+        const diff_peak   = (24.0 * 60.0) * abs(timep.ut - transit.peak.ut  );
+        const diff_finish = (24.0 * 60.0) * abs(time2.ut - transit.finish.ut);
+        const diff_sep = abs(separation - transit.separation);
+
+        max_minutes = max(max_minutes, diff_start);
+        max_minutes = max(max_minutes, diff_peak);
+        max_minutes = max(max_minutes, diff_finish);
+        if (max_minutes > limit_minutes) {
+            Fail(`JS TransitFile(${filename} line ${lnum}): EXCESSIVE TIME ERROR = ${max_minutes} minutes.`);
+        }
+
+        max_sep = max(max_sep, diff_sep);
+        if (max_sep > limit_sep) {
+            Fail(`JS TransitFile(${filename} line ${lnum}): EXCESSIVE SEPARATION ERROR = ${max_sep} arcminutes.`);
+        }
+
+        transit = Astronomy.NextTransit(body, transit.finish);
+    }
+
+    console.log(`JS TransitFile(${filename}): PASS - verified ${lnum}, max minutes = ${max_minutes}, max sep arcmin = ${max_sep}`);
+    return 0;
+}
+
+
+function Transit() {
+    if (0 !== TransitFile('Mercury', 'eclipse/mercury.txt', 10.710, 0.2121)) {
+        return 1;
+    }
+
+    if (0 !== TransitFile('Venus', 'eclipse/venus.txt', 9.109, 0.6772)) {
+        return 1;
+    }
+
+    return 0;
+}
+
+
 const UnitTests = {
     constellation:          Constellation,
     elongation:             Elongation,
@@ -1649,6 +1720,7 @@ const UnitTests = {
     rise_set:               RiseSet,
     rotation:               Rotation,
     seasons:                Seasons,
+    transit:                Transit,
 };
 
 
