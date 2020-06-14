@@ -6483,7 +6483,7 @@ function PlanetTransitBoundary(body, planet_radius_km, t1, t2, direction) {
  * @param {string} body
  *      The planet whose transit is to be found. Must be `"Mercury"` or `"Venus"`.
  *
- * @param {Astronomy.AstroTime}
+ * @param {Astronomy.AstroTime} startTime
  *      The date and time for starting the search for a transit.
  *
  * @returns {Astronomy.TransitInfo}

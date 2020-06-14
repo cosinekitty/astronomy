@@ -603,18 +603,13 @@ information about a transit of Mercury or Venus.
 A transit is when Mercury or Venus passes between the Sun and Earth so that
 the other planet is seen in silhouette against the Sun.
 The calculations are performed from the point of view of a geocentric observer.
-peak : Time
-    When the planet is most aligned with the Sun, as seen from the Earth.
-finish : Time
-    The date and time at the end of the transit.
-    This is the moment the planet is last seen against the Sun in its background.
-separation : float
-    The minimum angular separation, in arcminutes, between the centers of the Sun and the planet.
-    This angle pertains to the time stored in `peak`.
 
 | Type | Attribute | Description |
 | --- | --- | --- |
 | [`Time`](#Time) | `start` | The date and time at the beginning of the transit. This is the moment the planet first becomes visible against the Sun in its background. |
+| [`Time`](#Time) | `peak` | When the planet is most aligned with the Sun, as seen from the Earth. |
+| [`Time`](#Time) | `finish` | The date and time at the end of the transit. This is the moment the planet is last seen against the Sun in its background. |
+| `float` | `separation` | The minimum angular separation, in arcminutes, between the centers of the Sun and the planet. This angle pertains to the time stored in `peak`. |
 
 ---
 

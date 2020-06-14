@@ -1992,7 +1992,7 @@ See [LocalSolarEclipseInfo](#Astronomy.LocalSolarEclipseInfo) for more informati
 
 <a name="Astronomy.SearchTransit"></a>
 
-### Astronomy.SearchTransit(body, The) ⇒ [<code>TransitInfo</code>](#Astronomy.TransitInfo)
+### Astronomy.SearchTransit(body, startTime) ⇒ [<code>TransitInfo</code>](#Astronomy.TransitInfo)
 **Kind**: static method of [<code>Astronomy</code>](#Astronomy)  
 **Brief**: Searches for the first transit of Mercury or Venus after a given date.
 
@@ -2005,7 +2005,7 @@ To continue the search, pass the `finish` time in the returned structure to
 | Param | Type | Description |
 | --- | --- | --- |
 | body | <code>string</code> | The planet whose transit is to be found. Must be `"Mercury"` or `"Venus"`. |
-| The | [<code>AstroTime</code>](#Astronomy.AstroTime) | date and time for starting the search for a transit. |
+| startTime | [<code>AstroTime</code>](#Astronomy.AstroTime) | The date and time for starting the search for a transit. |
 
 
 * * *

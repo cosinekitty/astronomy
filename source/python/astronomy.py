@@ -7313,14 +7313,11 @@ class TransitInfo:
     start : Time
         The date and time at the beginning of the transit.
         This is the moment the planet first becomes visible against the Sun in its background.
-
     peak : Time
         When the planet is most aligned with the Sun, as seen from the Earth.
-
     finish : Time
         The date and time at the end of the transit.
         This is the moment the planet is last seen against the Sun in its background.
-
     separation : float
         The minimum angular separation, in arcminutes, between the centers of the Sun and the planet.
         This angle pertains to the time stored in `peak`.
