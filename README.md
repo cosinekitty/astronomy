@@ -45,7 +45,7 @@
 
 Astronomy Engine is a suite of open source libraries for calculating positions of
 the Sun, Moon, and planets, and for predicting interesting events like oppositions,
-conjunctions, rise and set times, lunar phases, and more.
+conjunctions, rise and set times, lunar phases, eclipses, transits, and more.
 
 It supports several popular programming langauges with a consistent API.
 Function and type names are uniform across all the supported languages.
@@ -80,6 +80,8 @@ Calculations are also verified to be identical among all the supported programmi
   (or anywhere in between as expressed in degrees of ecliptic longitude).
 
 - Predicts lunar and solar eclipses.
+
+- Predicts transits of Mercury and Venus.
 
 - Predicts lunar apogee and perigee dates, times, and distances.
 

@@ -70,7 +70,7 @@ To get started quickly, here are some [examples](../../demo/c/).
 | [SearchMoonQuarter](#Astronomy_SearchMoonQuarter) | Finds the first quarter moon phase after a given date and time. |
 | [NextMoonQuarter](#Astronomy_NextMoonQuarter) | Finds the next quarter moon phase after a previous one that has been found. |
 
-### Eclipses
+### Eclipses and Transits
 
 | Function | Description |
 | -------- | ----------- |
@@ -80,6 +80,8 @@ To get started quickly, here are some [examples](../../demo/c/).
 | [NextGlobalSolarEclipse](#Astronomy_NextGlobalSolarEclipse) | Continue searching for more global solar eclipses. |
 | [SearchLocalSolarEclipse](#Astronomy_SearchLocalSolarEclipse) | Search for the first solar eclipse as seen at a particular location after a given date. |
 | [NextLocalSolarEclipse](#Astronomy_NextLocalSolarEclipse) | Continue searching for more local solar eclipses. |
+| [SearchTransit](#Astronomy_SearchTransit) | Search for the next transit of Mercury or Venus. |
+| [NextTransit](#Astronomy_NextTransit) | Continue searching for transits of Mercury or Venus. |
 
 ### Lunar perigee and apogee
 

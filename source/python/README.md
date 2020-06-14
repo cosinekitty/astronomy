@@ -52,7 +52,7 @@ To get started quickly, here are some [examples](../../demo/python/).
 | [SearchMoonQuarter](#SearchMoonQuarter) | Finds the first quarter moon phase after a given date and time. |
 | [NextMoonQuarter](#NextMoonQuarter) | Finds the next quarter moon phase after a previous one that has been found. |
 
-### Eclipses
+### Eclipses and Transits
 
 | Function | Description |
 | -------- | ----------- |
@@ -62,6 +62,8 @@ To get started quickly, here are some [examples](../../demo/python/).
 | [NextGlobalSolarEclipse](#NextGlobalSolarEclipse) | Continue searching for solar eclipses visible anywhere on the Earth. |
 | [SearchLocalSolarEclipse](#SearchLocalSolarEclipse) | Search for the first solar eclipse after a given date that is visible at a particular location on the Earth. |
 | [NextLocalSolarEclipse](#NextLocalSolarEclipse) | Continue searching for solar eclipses visible at a particular location on the Earth. |
+| [SearchTransit](#SearchTransit) | Search for the next transit of Mercury or Venus. |
+| [NextTransit](#NextTransit) | Continue searching for transits of Mercury or Venus. |
 
 ### Lunar perigee and apogee
 
