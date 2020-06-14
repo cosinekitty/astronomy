@@ -44,6 +44,18 @@ namespace CosineKitty
     }
 
     /// <summary>
+    /// This exception is thrown by certain Astronomy Engine functions
+    /// when a body is specified that is not appropriate for the given operation.
+    /// </summary>
+    public class InvalidBodyException: ArgumentException
+    {
+        /// <summary>Creates an exception indicating that the given body is not valid for this operation.</summary>
+        public InvalidBodyException(Body body):
+            base(string.Format("Invalid body: {0}", body))
+            {}
+    }
+
+    /// <summary>
     /// Pluto supports calculations only within the year range Astronomy.MinYear to Astronomy.MaxYear.
     /// </summary>
     public class BadTimeException : ArgumentException
@@ -1003,7 +1015,6 @@ namespace CosineKitty
     /// see whether the Sun is above the horizon at the time indicated by the `time` field.
     /// See #EclipseEvent for more information.
     /// </remarks>
-
     public struct LocalSolarEclipseInfo
     {
         /// <summary>The type of solar eclipse: `EclipseKind.Partial`, `EclipseKind.Annular`, or `EclipseKind.Total`.</summary>
@@ -1023,6 +1034,40 @@ namespace CosineKitty
 
         /// <summary>The time and Sun altitude at the end of the eclipse.</summary>
         public EclipseEvent partial_end;
+    }
+
+
+    /// <summary>
+    /// Information about a transit of Mercury or Venus, as seen from the Earth.
+    /// </summary>
+    /// <remarks>
+    /// Returned by #Astronomy.SearchTransit or #Astronomy.NextTransit to report
+    /// information about a transit of Mercury or Venus.
+    /// A transit is when Mercury or Venus passes between the Sun and Earth so that
+    /// the other planet is seen in silhouette against the Sun.
+    ///
+    /// The `start` field reports the moment in time when the planet first becomes
+    /// visible against the Sun in its background.
+    /// The `peak` field reports when the planet is most aligned with the Sun,
+    /// as seen from the Earth.
+    /// The `finish` field reports the last moment when the planet is visible
+    /// against the Sun in its background.
+    ///
+    /// The calculations are performed from the point of view of a geocentric observer.
+    /// </remarks>
+    public struct TransitInfo
+    {
+        /// <summary>Date and time at the beginning of the transit.</summary>
+        public AstroTime start;
+
+        /// <summary>Date and time of the peak of the transit.</summary>
+        public AstroTime peak;
+
+        /// <summary>Date and time at the end of the transit.</summary>
+        public AstroTime finish;
+
+        /// <summary>Angular separation in arcminutes between the centers of the Sun and the planet at time `peak`.</summary>
+        public double separation;
     }
 
 
@@ -1336,6 +1381,46 @@ namespace CosineKitty
             ShadowInfo shadow1 = Astronomy.LocalMoonShadow(t1, observer);
             ShadowInfo shadow2 = Astronomy.LocalMoonShadow(t2, observer);
             return (shadow2.r - shadow1.r) / dt;
+        }
+    }
+
+    internal class SearchContext_PlanetShadowSlope: SearchContext
+    {
+        private Body body;
+        private double planet_radius_km;
+
+        public SearchContext_PlanetShadowSlope(Body body, double planet_radius_km)
+        {
+            this.body = body;
+            this.planet_radius_km = planet_radius_km;
+        }
+
+        public override double Eval(AstroTime time)
+        {
+            const double dt = 1.0 / 86400.0;
+            ShadowInfo shadow1 = Astronomy.PlanetShadow(body, planet_radius_km, time.AddDays(-dt));
+            ShadowInfo shadow2 = Astronomy.PlanetShadow(body, planet_radius_km, time.AddDays(+dt));
+            return (shadow2.r - shadow1.r) / dt;
+        }
+    }
+
+    internal class SearchContext_PlanetShadowBoundary: SearchContext
+    {
+        private Body body;
+        private double planet_radius_km;
+        private double direction;
+
+        public SearchContext_PlanetShadowBoundary(Body body, double planet_radius_km, double direction)
+        {
+            this.body = body;
+            this.planet_radius_km = planet_radius_km;
+            this.direction = direction;
+        }
+
+        public override double Eval(AstroTime time)
+        {
+            ShadowInfo shadow = Astronomy.PlanetShadow(body, planet_radius_km, time);
+            return direction * (shadow.r - shadow.p);
         }
     }
 
@@ -3722,7 +3807,7 @@ namespace CosineKitty
                     return CalcSolarSystemBarycenter(time);
 
                 default:
-                    throw new ArgumentException(string.Format("Invalid body: {0}", body));
+                    throw new InvalidBodyException(body);
             }
         }
 
@@ -4901,7 +4986,7 @@ namespace CosineKitty
         public static AstroTime SearchRelativeLongitude(Body body, double targetRelLon, AstroTime startTime)
         {
             if (body == Body.Earth || body == Body.Sun || body == Body.Moon)
-                throw new ArgumentException(string.Format("{0} is not a valid body. Must be a planet other than the Earth.", body));
+                throw new InvalidBodyException(body);
 
             double syn = SynodicPeriod(body);
             int direction = IsSuperiorPlanet(body) ? +1 : -1;
@@ -4937,7 +5022,7 @@ namespace CosineKitty
                 }
             }
 
-            return null;    /* failed to converge */
+            throw new Exception("Relative longitude search failed to converge.");
         }
 
         private static double rlon_offset(Body body, AstroTime time, int direction, double targetRelLon)
@@ -5001,7 +5086,7 @@ namespace CosineKitty
                 case Body.Neptune:  return  NEPTUNE_ORBITAL_PERIOD;
                 case Body.Pluto:    return  90560.0;
                 default:
-                    throw new ArgumentException(string.Format("Invalid body {0}. Must be a planet.", body));
+                    throw new InvalidBodyException(body);
             }
         }
 
@@ -5119,7 +5204,7 @@ namespace CosineKitty
                     break;
 
                 default:
-                    throw new ArgumentException(string.Format("Invalid body {0}. Must be either Mercury or Venus.", body));
+                    throw new InvalidBodyException(body);
             }
 
             double syn = SynodicPeriod(body);
@@ -5611,7 +5696,7 @@ namespace CosineKitty
             /* skip 1/4 of an orbit before starting search again */
             double skip = 0.25 * PlanetOrbitalPeriod(body);
             if (skip <= 0.0)
-                throw new ArgumentException("Body must be a planet.");
+                throw new InvalidBodyException(body);
 
             AstroTime time = apsis.time.AddDays(skip);
             ApsisInfo next = SearchPlanetApsis(body, time);
@@ -5951,6 +6036,17 @@ namespace CosineKitty
             return LocalMoonShadow(time, observer);
         }
 
+        private static ShadowInfo PeakPlanetShadow(Body body, double planet_radius_km, AstroTime search_center_time)
+        {
+            /* Search for when the body's shadow is closest to the center of the Earth. */
+            const double window = 1.0;     /* days before/after inferior conjunction to search for minimum shadow distance */
+            AstroTime t1 = search_center_time.AddDays(-window);
+            AstroTime t2 = search_center_time.AddDays(+window);
+            var context = new SearchContext_PlanetShadowSlope(body, planet_radius_km);
+            AstroTime time = Search(context, t1, t2, 1.0);
+            return PlanetShadow(body, planet_radius_km, time);
+        }
+
         private static ShadowInfo CalcShadow(
             double body_radius_km,
             AstroTime time,
@@ -6022,6 +6118,26 @@ namespace CosineKitty
             m.z += h.z;
 
             return CalcShadow(MOON_MEAN_RADIUS_KM, time, o, m);
+        }
+
+
+        internal static ShadowInfo PlanetShadow(Body body, double planet_radius_km, AstroTime time)
+        {
+            /* Calculate light-travel-corrected vector from Earth to planet. */
+            AstroVector g = GeoVector(body, time, Aberration.None);
+
+            /* Calculate light-travel-corrected vector from Earth to Sun. */
+            AstroVector e = GeoVector(Body.Sun, time, Aberration.None);
+
+            /* Deduce light-travel-corrected vector from Sun to planet. */
+            var p = new AstroVector(g.x - e.x, g.y - e.y, g.z - e.z, time);
+
+            /* Calcluate Earth's position from the planet's point of view. */
+            e.x = -g.x;
+            e.y = -g.y;
+            e.z = -g.z;
+
+            return CalcShadow(planet_radius_km, time, e, p);
         }
 
 
@@ -6183,6 +6299,126 @@ namespace CosineKitty
             return hor.altitude;
         }
 
+
+        private static AstroTime PlanetTransitBoundary(
+            Body body,
+            double planet_radius_km,
+            AstroTime t1,
+            AstroTime t2,
+            double direction)
+        {
+            /* Search for the time the planet's penumbra begins/ends making contact with the center of the Earth. */
+            var context = new SearchContext_PlanetShadowBoundary(body, planet_radius_km, direction);
+            AstroTime time = Search(context, t1, t2, 1.0);
+            if (time == null)
+                throw new Exception("Planet transit boundary search failed");
+            return time;
+        }
+
+
+        /// <summary>
+        /// Searches for the first transit of Mercury or Venus after a given date.
+        /// </summary>
+        /// <remarks>
+        /// Finds the first transit of Mercury or Venus after a specified date.
+        /// A transit is when an inferior planet passes between the Sun and the Earth
+        /// so that the silhouette of the planet is visible against the Sun in the background.
+        /// To continue the search, pass the `finish` time in the returned structure to
+        /// #Astronomy.NextTransit.
+        /// </remarks>
+        /// <param name="body">
+        /// The planet whose transit is to be found. Must be `Body.Mercury` or `Body.Venus`.
+        /// </param>
+        /// <param name="startTime">
+        /// The date and time for starting the search for a transit.
+        /// </param>
+        public static TransitInfo SearchTransit(Body body, AstroTime startTime)
+        {
+            const double threshold_angle = 0.4;     /* maximum angular separation to attempt transit calculation */
+            const double dt_days = 1.0;
+
+            // Validate the planet and find its mean radius.
+            double planet_radius_km;
+            switch (body)
+            {
+                case Body.Mercury:
+                    planet_radius_km = 2439.7;
+                    break;
+
+                case Body.Venus:
+                    planet_radius_km = 6051.8;
+                    break;
+
+                default:
+                    throw new InvalidBodyException(body);
+            }
+
+            AstroTime search_time = startTime;
+            for(;;)
+            {
+                /*
+                    Search for the next inferior conjunction of the given planet.
+                    This is the next time the Earth and the other planet have the same
+                    ecliptic longitude as seen from the Sun.
+                */
+                AstroTime conj = SearchRelativeLongitude(body, 0.0, search_time);
+
+                /* Calculate the angular separation between the body and the Sun at this time. */
+                double separation = AngleFromSun(body, conj);
+
+                if (separation < threshold_angle)
+                {
+                    /*
+                        The planet's angular separation from the Sun is small enough
+                        to consider it a transit candidate.
+                        Search for the moment when the line passing through the Sun
+                        and planet are closest to the Earth's center.
+                    */
+                    ShadowInfo shadow = PeakPlanetShadow(body, planet_radius_km, conj);
+
+                    if (shadow.r < shadow.p)        /* does the planet's penumbra touch the Earth's center? */
+                    {
+                        var transit = new TransitInfo();
+
+                        /* Find the beginning and end of the penumbral contact. */
+                        AstroTime tx = shadow.time.AddDays(-dt_days);
+                        transit.start = PlanetTransitBoundary(body, planet_radius_km, tx, shadow.time, -1.0);
+
+                        tx = shadow.time.AddDays(+dt_days);
+                        transit.finish = PlanetTransitBoundary(body, planet_radius_km, shadow.time, tx, +1.0);
+
+                        transit.peak = shadow.time;
+                        transit.separation = 60.0 * AngleFromSun(body, shadow.time);
+                        return transit;
+                    }
+                }
+
+                /* This inferior conjunction was not a transit. Try the next inferior conjunction. */
+                search_time = conj.AddDays(10.0);
+            }
+        }
+
+
+        /// <summary>
+        /// Searches for another transit of Mercury or Venus.
+        /// </summary>
+        /// <remarks>
+        /// After calling #Astronomy.SearchTransit to find a transit of Mercury or Venus,
+        /// this function finds the next transit after that.
+        /// Keep calling this function as many times as you want to keep finding more transits.
+        /// </remarks>
+        /// <param name="body">
+        /// The planet whose transit is to be found. Must be `Body.Mercury` or `Body.Venus`.
+        /// </param>
+        /// <param name="prevTransitTime">
+        /// A date and time near the previous transit.
+        /// </param>
+        public static TransitInfo NextTransit(Body body, AstroTime prevTransitTime)
+        {
+            AstroTime startTime = prevTransitTime.AddDays(100.0);
+            return SearchTransit(body, startTime);
+        }
+
         /// <summary>
         /// Finds visual magnitude, phase angle, and other illumination information about a celestial body.
         /// </summary>
@@ -6312,7 +6548,7 @@ namespace CosineKitty
                 case Body.Neptune:     c0 = -6.87;               break;
                 case Body.Pluto:       c0 = -1.00; c1 = +4.00;   break;
                 default:
-                    throw new ArgumentException(string.Format("Unsupported body {0}", body));
+                    throw new InvalidBodyException(body);
             }
 
             double x = phase / 100;
@@ -6443,11 +6679,7 @@ namespace CosineKitty
                 }
                 AstroTime t_start = startTime.AddDays(adjust_days);
                 AstroTime t1 = SearchRelativeLongitude(body, rlon_lo, t_start);
-                if (t1 == null)
-                    throw new Exception("Relative longitude search #1 failed.");
                 AstroTime t2 = SearchRelativeLongitude(body, rlon_hi, t1);
-                if (t2 == null)
-                    throw new Exception("Relative longitude search #2 failed.");
 
                 /* Now we have a time range [t1,t2] that brackets a maximum magnitude event. */
                 /* Confirm the bracketing. */

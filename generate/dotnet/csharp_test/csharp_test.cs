@@ -41,6 +41,7 @@ namespace csharp_test
             new Test("riseset", RiseSetTest),
             new Test("rotation", RotationTest),
             new Test("seasons", SeasonsTest),
+            new Test("transit", TransitTest),
             new Test("astro_check", AstroCheck),
         };
 
@@ -2148,6 +2149,81 @@ namespace csharp_test
                 return 1;
 
             if (0 != LocalSolarEclipseTest2())
+                return 1;
+
+            return 0;
+        }
+
+        static int TransitFile(Body body, string filename, double limit_minutes, double limit_sep)
+        {
+            using (StreamReader infile = File.OpenText(filename))
+            {
+                string line;
+                int lnum = 0;
+                double max_minutes = 0.0;
+                double max_sep = 0.0;
+                TransitInfo transit = Astronomy.SearchTransit(body, new AstroTime(1600, 1, 1, 0, 0, 0));
+                while (null != (line = infile.ReadLine()))
+                {
+                    ++lnum;
+                    /* 22:17 1881-11-08T00:57Z 03:38  3.8633 */
+                    string[] token = Tokenize(line);
+                    if (token.Length != 4)
+                    {
+                        Console.WriteLine("C# TransitFile({0} line {1}): expected 4 tokens, found {2}", filename, lnum, token.Length);
+                        return 1;
+                    }
+
+                    string textp = token[1];
+                    string text1 = textp.Substring(0, 11) + token[0] + "Z";
+                    string text2 = textp.Substring(0, 11) + token[2] + "Z";
+                    AstroTime timep = ParseDate(textp);
+                    AstroTime time1 = ParseDate(text1);
+                    AstroTime time2 = ParseDate(text2);
+                    double separation = double.Parse(token[3]);
+
+                    // If the start time is after the peak time, it really starts on the previous day.
+                    if (time1.ut > timep.ut)
+                        time1 = time1.AddDays(-1.0);
+
+                    // If the finish time is before the peak time, it really starts on the following day.
+                    if (time2.ut < timep.ut)
+                        time2 = time2.AddDays(+1.0);
+
+                    double diff_start  = (24.0 * 60.0) * abs(time1.ut - transit.start.ut );
+                    double diff_peak   = (24.0 * 60.0) * abs(timep.ut - transit.peak.ut  );
+                    double diff_finish = (24.0 * 60.0) * abs(time2.ut - transit.finish.ut);
+                    double diff_sep = abs(separation - transit.separation);
+
+                    max_minutes = Math.Max(max_minutes, diff_start);
+                    max_minutes = Math.Max(max_minutes, diff_peak);
+                    max_minutes = Math.Max(max_minutes, diff_finish);
+                    if (max_minutes > limit_minutes)
+                    {
+                        Console.WriteLine("C# TransitFile({0} line {1}): EXCESSIVE TIME ERROR = {2} minutes.", filename, lnum, max_minutes);
+                        return 1;
+                    }
+
+                    max_sep = Math.Max(max_sep, diff_sep);
+                    if (max_sep > limit_sep)
+                    {
+                        Console.WriteLine("C# TransitFile({0} line {1}): EXCESSIVE SEPARATION ERROR = {2} arcminutes.", filename, lnum, max_sep);
+                        return 1;
+                    }
+
+                    transit = Astronomy.NextTransit(body, transit.finish);
+                }
+                Console.WriteLine("C# TransitFile({0}): PASS - verified {1}, max minutes = {2}, max sep arcmin = {3}\n", filename, lnum, max_minutes, max_sep);
+                return 0;
+            }
+        }
+
+        static int TransitTest()
+        {
+            if (0 != TransitFile(Body.Mercury, "../../eclipse/mercury.txt", 10.710, 0.2121))
+                return 1;
+
+            if (0 != TransitFile(Body.Venus, "../../eclipse/venus.txt", 9.109, 0.6772))
                 return 1;
 
             return 0;

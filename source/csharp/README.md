@@ -656,6 +656,20 @@ See [`Astronomy.SearchPlanetApsis`](#Astronomy.SearchPlanetApsis) for more detai
 
 **Returns:** Same as the return value for [`Astronomy.SearchPlanetApsis`](#Astronomy.SearchPlanetApsis).
 
+<a name="Astronomy.NextTransit"></a>
+### Astronomy.NextTransit(body, prevTransitTime) &#8658; [`TransitInfo`](#TransitInfo)
+
+**Searches for another transit of Mercury or Venus.**
+
+After calling [`Astronomy.SearchTransit`](#Astronomy.SearchTransit) to find a transit of Mercury or Venus,
+this function finds the next transit after that.
+Keep calling this function as many times as you want to keep finding more transits.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Body`](#Body) | `body` | The planet whose transit is to be found. Must be `Body.Mercury` or `Body.Venus`. |
+| [`AstroTime`](#AstroTime) | `prevTransitTime` | A date and time near the previous transit. |
+
 <a name="Astronomy.RefractionAngle"></a>
 ### Astronomy.RefractionAngle(refraction, altitude) &#8658; `double`
 
@@ -1257,6 +1271,22 @@ It is recommended to keep the window smaller than 10 days when possible.
 
 **Returns:** The date and time when the Sun reaches the specified apparent ecliptic longitude.
 
+<a name="Astronomy.SearchTransit"></a>
+### Astronomy.SearchTransit(body, startTime) &#8658; [`TransitInfo`](#TransitInfo)
+
+**Searches for the first transit of Mercury or Venus after a given date.**
+
+Finds the first transit of Mercury or Venus after a specified date.
+A transit is when an inferior planet passes between the Sun and the Earth
+so that the silhouette of the planet is visible against the Sun in the background.
+To continue the search, pass the `finish` time in the returned structure to
+[`Astronomy.NextTransit`](#Astronomy.NextTransit).
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Body`](#Body) | `body` | The planet whose transit is to be found. Must be `Body.Mercury` or `Body.Venus`. |
+| [`AstroTime`](#AstroTime) | `startTime` | The date and time for starting the search for a transit. |
+
 <a name="Astronomy.Seasons"></a>
 ### Astronomy.Seasons(year) &#8658; [`SeasonsInfo`](#SeasonsInfo)
 
@@ -1787,6 +1817,14 @@ to report the visual magnitude and illuminated fraction of a celestial body at a
 
 ---
 
+<a name="InvalidBodyException"></a>
+## `class InvalidBodyException`
+
+**This exception is thrown by certain Astronomy Engine functions
+when a body is specified that is not appropriate for the given operation.**
+
+---
+
 <a name="LocalSolarEclipseInfo"></a>
 ## `struct LocalSolarEclipseInfo`
 
@@ -1975,6 +2013,34 @@ Optionally corrected for atmospheric refraction.
 | `double` | `altitude` | Angle in degrees above (positive) or below (negative) the observer's horizon. |
 | `double` | `ra` | Right ascension in sidereal hours. |
 | `double` | `dec` | Declination in degrees. |
+
+---
+
+<a name="TransitInfo"></a>
+## `struct TransitInfo`
+
+**Information about a transit of Mercury or Venus, as seen from the Earth.**
+
+Returned by [`Astronomy.SearchTransit`](#Astronomy.SearchTransit) or [`Astronomy.NextTransit`](#Astronomy.NextTransit) to report
+information about a transit of Mercury or Venus.
+A transit is when Mercury or Venus passes between the Sun and Earth so that
+the other planet is seen in silhouette against the Sun.
+
+The `start` field reports the moment in time when the planet first becomes
+visible against the Sun in its background.
+The `peak` field reports when the planet is most aligned with the Sun,
+as seen from the Earth.
+The `finish` field reports the last moment when the planet is visible
+against the Sun in its background.
+
+The calculations are performed from the point of view of a geocentric observer.
+
+| Type | Name | Description |
+| --- | --- | --- |
+| [`AstroTime`](#AstroTime) | `start` | Date and time at the beginning of the transit. |
+| [`AstroTime`](#AstroTime) | `peak` | Date and time of the peak of the transit. |
+| [`AstroTime`](#AstroTime) | `finish` | Date and time at the end of the transit. |
+| `double` | `separation` | Angular separation in arcminutes between the centers of the Sun and the planet at time `peak`. |
 
 ---
 
