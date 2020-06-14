@@ -591,6 +591,31 @@ to represent the date and time in this Time object.
 
 ---
 
+<a name="TransitInfo"></a>
+### class TransitInfo
+
+**Information about a transit of Mercury or Venus, as seen from the Earth.**
+
+Returned by [`SearchTransit`](#SearchTransit) or [`NextTransit`](#NextTransit) to report
+information about a transit of Mercury or Venus.
+A transit is when Mercury or Venus passes between the Sun and Earth so that
+the other planet is seen in silhouette against the Sun.
+The calculations are performed from the point of view of a geocentric observer.
+peak : Time
+    When the planet is most aligned with the Sun, as seen from the Earth.
+finish : Time
+    The date and time at the end of the transit.
+    This is the moment the planet is last seen against the Sun in its background.
+separation : float
+    The minimum angular separation, in arcminutes, between the centers of the Sun and the planet.
+    This angle pertains to the time stored in `peak`.
+
+| Type | Attribute | Description |
+| --- | --- | --- |
+| [`Time`](#Time) | `start` | The date and time at the beginning of the transit. This is the moment the planet first becomes visible against the Sun in its background. |
+
+---
+
 <a name="Vector"></a>
 ### class Vector
 
@@ -1422,6 +1447,24 @@ See [`SearchPlanetApsis`](#SearchPlanetApsis) for more details.
 
 ---
 
+<a name="NextTransit"></a>
+### NextTransit(body, prevTransitTime)
+
+**Searches for another transit of Mercury or Venus.**
+
+After calling [`SearchTransit`](#SearchTransit) to find a transit of Mercury or Venus,
+this function finds the next transit after that.
+Keep calling this function as many times as you want to keep finding more transits.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Body`](#Body) | `body` | The planet whose transit is to be found. Must be `Body.Mercury` or `Body.Venus`. |
+| [`Time`](#Time) | `prevTransitTime` | A date and time near the previous transit. |
+
+### Returns: [`TransitInfo`](#TransitInfo)
+
+---
+
 <a name="RefractionAngle"></a>
 ### RefractionAngle(refraction, altitude)
 
@@ -2116,6 +2159,26 @@ limitDays : float
      See remarks above for more details.
 
 ### Returns: [`Time`](#Time) or `None`
+
+---
+
+<a name="SearchTransit"></a>
+### SearchTransit(body, startTime)
+
+**Searches for the first transit of Mercury or Venus after a given date.**
+
+Finds the first transit of Mercury or Venus after a specified date.
+A transit is when an inferior planet passes between the Sun and the Earth
+so that the silhouette of the planet is visible against the Sun in the background.
+To continue the search, pass the `finish` time in the returned structure to
+[`NextTransit`](#NextTransit).
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Body`](#Body) | `body` | The planet whose transit is to be found. Must be `Body.Mercury` or `Body.Venus`. |
+| [`Time`](#Time) | `startTime` | The date and time for starting the search for a transit. |
+
+### Returns: [`TransitInfo`](#TransitInfo)
 
 ---
 

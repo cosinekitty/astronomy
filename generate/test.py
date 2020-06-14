@@ -1479,6 +1479,64 @@ def LocalSolarEclipse():
 
 #-----------------------------------------------------------------------------------------------------------
 
+def TransitFile(body, filename, limit_minutes, limit_sep):
+    lnum = 0
+    max_minutes = 0
+    max_sep = 0
+    with open(filename, 'rt') as infile:
+        transit = astronomy.SearchTransit(body, astronomy.Time.Make(1600, 1, 1, 0, 0, 0))
+        for line in infile:
+            lnum += 1
+            token = line.strip().split()
+            # 22:17 1881-11-08T00:57Z 03:38  3.8633
+            if len(token) != 4:
+                print('PY TransitFile({} line {}): bad data format.'.format(filename, lnum))
+                return 1
+
+            textp = token[1]
+            text1 = textp[0:11] + token[0] + 'Z'
+            text2 = textp[0:11] + token[2] + 'Z'
+            timep = astronomy.Time.Parse(textp)
+            time1 = astronomy.Time.Parse(text1)
+            time2 = astronomy.Time.Parse(text2)
+            separation = float(token[3])
+
+            # If the start time is after the peak time, it really starts on the previous day.
+            if time1.ut > timep.ut:
+                time1 = time1.AddDays(-1.0)
+
+            # If the finish time is before the peak time, it really starts on the following day.
+            if time2.ut < timep.ut:
+                time2 = time2.AddDays(+1.0)
+
+            diff_start  = (24.0 * 60.0) * vabs(time1.ut - transit.start.ut )
+            diff_peak   = (24.0 * 60.0) * vabs(timep.ut - transit.peak.ut  )
+            diff_finish = (24.0 * 60.0) * vabs(time2.ut - transit.finish.ut)
+            diff_sep = vabs(separation - transit.separation)
+            max_minutes = vmax(max_minutes, diff_start)
+            max_minutes = vmax(max_minutes, diff_peak)
+            max_minutes = vmax(max_minutes, diff_finish)
+            if max_minutes > limit_minutes:
+                print('PY TransitFile({} line {}): EXCESSIVE TIME ERROR = {} minutes.'.format(filename, lnum, max_minutes))
+                return 1
+            max_sep = vmax(max_sep, diff_sep)
+            if max_sep > limit_sep:
+                print('PY TransitFile({} line {}): EXCESSIVE SEPARATION ERROR = {} arcminutes.'.format(filename, lnum, max_sep))
+                return 1
+            transit = astronomy.NextTransit(body, transit.finish)
+    print('PY TransitFile({}): PASS - verified {}, max minutes = {}, max sep arcmin = {}'.format(filename, lnum, max_minutes, max_sep))
+    return 0
+
+
+def Transit():
+    if 0 != TransitFile(astronomy.Body.Mercury, 'eclipse/mercury.txt', 10.710, 0.2121):
+        return 1
+    if 0 != TransitFile(astronomy.Body.Venus, 'eclipse/venus.txt', 9.109, 0.6772):
+        return 1
+    return 0
+
+#-----------------------------------------------------------------------------------------------------------
+
 UnitTests = {
     'constellation':            Constellation,
     'elongation':               Elongation,
@@ -1495,6 +1553,7 @@ UnitTests = {
     'rotation':                 Rotation,
     'seasons':                  Seasons,
     'time':                     AstroTime,
+    'transit':                  Transit,
 }
 
 #-----------------------------------------------------------------------------------------------------------

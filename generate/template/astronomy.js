@@ -4995,13 +4995,6 @@ Astronomy.NextLocalSolarEclipse = function(prevEclipseTime, observer) {
  * A transit is when Mercury or Venus passes between the Sun and Earth so that
  * the other planet is seen in silhouette against the Sun.
  *
- * The `start` field reports the moment in time when the planet first becomes
- * visible against the Sun in its background.
- * The `peak` field reports when the planet is most aligned with the Sun,
- * as seen from the Earth.
- * The `finish` field reports the last moment when the planet is visible
- * against the Sun in its background.
- *
  * The calculations are performed from the point of view of a geocentric observer.
  *
  * @class
@@ -5040,7 +5033,6 @@ function PlanetShadowBoundary(time, body, planet_radius_km, direction) {
 
 function PlanetTransitBoundary(body, planet_radius_km, t1, t2, direction) {
     // Search for the time the planet's penumbra begins/ends making contact with the center of the Earth.
-    // context = new SearchContext_PlanetShadowBoundary(body, planet_radius_km, direction);
     const tx = Astronomy.Search(time => PlanetShadowBoundary(time, body, planet_radius_km, direction), t1, t2, 1.0);
     if (tx == null)
         throw 'Planet transit boundary search failed';
@@ -5104,8 +5096,6 @@ Astronomy.SearchTransit = function(body, startTime) {
             const shadow = PeakPlanetShadow(body, planet_radius_km, conj);
 
             if (shadow.r < shadow.p) {      // does the planet's penumbra touch the Earth's center?
-                var transit = new TransitInfo();
-
                 // Find the beginning and end of the penumbral contact.
                 const time_before = shadow.time.AddDays(-dt_days);
                 const start = PlanetTransitBoundary(body, planet_radius_km, time_before, shadow.time, -1.0);

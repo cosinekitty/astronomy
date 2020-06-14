@@ -4183,12 +4183,34 @@ def _LocalMoonShadow(time, observer):
     return _CalcShadow(_MOON_MEAN_RADIUS_KM, time, o, m)
 
 
+def _PlanetShadow(body, planet_radius_km, time):
+    # Calculate light-travel-corrected vector from Earth to planet.
+    g = GeoVector(body, time, False)
+    # Calculate light-travel-corrected vector from Earth to Sun.
+    e = GeoVector(Body.Sun, time, False)
+    # Deduce light-travel-corrected vector from Sun to planet.
+    p = Vector(g.x - e.x, g.y - e.y, g.z - e.z, time)
+    # Calcluate Earth's position from the planet's point of view.
+    e.x = -g.x
+    e.y = -g.y
+    e.z = -g.z
+    return _CalcShadow(planet_radius_km, time, e, p)
+
+
 def _ShadowDistanceSlope(shadowfunc, time):
     dt = 1.0 / 86400.0
     t1 = time.AddDays(-dt)
     t2 = time.AddDays(+dt)
     shadow1 = shadowfunc(t1)
     shadow2 = shadowfunc(t2)
+    return (shadow2.r - shadow1.r) / dt
+
+
+def _PlanetShadowSlope(context, time):
+    (body, planet_radius_km) = context
+    dt = 1.0 / 86400.0
+    shadow1 = _PlanetShadow(body, planet_radius_km, time.AddDays(-dt))
+    shadow2 = _PlanetShadow(body, planet_radius_km, time.AddDays(+dt))
     return (shadow2.r - shadow1.r) / dt
 
 
@@ -4215,6 +4237,14 @@ def _PeakLocalMoonShadow(search_center_time, observer):
     t2 = search_center_time.AddDays(+window)
     tx = Search(_ShadowDistanceSlope, lambda time: _LocalMoonShadow(time, observer), t1, t2, 1.0)
     return _LocalMoonShadow(tx, observer)
+
+def _PeakPlanetShadow(body, planet_radius_km, search_center_time):
+    # Search for when the body's shadow is closest to the center of the Earth.
+    window = 1.0     # days before/after inferior conjunction to search for minimum shadow distance.
+    t1 = search_center_time.AddDays(-window)
+    t2 = search_center_time.AddDays(+window)
+    tx = Search(_PlanetShadowSlope, (body, planet_radius_km), t1, t2, 1.0)
+    return _PlanetShadow(body, planet_radius_km, tx)
 
 class _ShadowDiffContext:
     def __init__(self, radius_limit, direction):
@@ -4796,3 +4826,135 @@ def NextLocalSolarEclipse(prevEclipseTime, observer):
     """
     startTime = prevEclipseTime.AddDays(10.0)
     return SearchLocalSolarEclipse(startTime, observer)
+
+
+class TransitInfo:
+    """Information about a transit of Mercury or Venus, as seen from the Earth.
+
+    Returned by #SearchTransit or #NextTransit to report
+    information about a transit of Mercury or Venus.
+    A transit is when Mercury or Venus passes between the Sun and Earth so that
+    the other planet is seen in silhouette against the Sun.
+
+    The calculations are performed from the point of view of a geocentric observer.
+
+    Attributes
+    ----------
+    start : Time
+        The date and time at the beginning of the transit.
+        This is the moment the planet first becomes visible against the Sun in its background.
+
+    peak : Time
+        When the planet is most aligned with the Sun, as seen from the Earth.
+
+    finish : Time
+        The date and time at the end of the transit.
+        This is the moment the planet is last seen against the Sun in its background.
+
+    separation : float
+        The minimum angular separation, in arcminutes, between the centers of the Sun and the planet.
+        This angle pertains to the time stored in `peak`.
+    """
+    def __init__(self, start, peak, finish, separation):
+        self.start = start
+        self.peak = peak
+        self.finish = finish
+        self.separation = separation
+
+
+def _PlanetShadowBoundary(context, time):
+    (body, planet_radius_km, direction) = context
+    shadow = _PlanetShadow(body, planet_radius_km, time)
+    return direction * (shadow.r - shadow.p)
+
+
+def _PlanetTransitBoundary(body, planet_radius_km, t1, t2, direction):
+    # Search for the time the planet's penumbra begins/ends making contact with the center of the Earth.
+    # context = new SearchContext_PlanetShadowBoundary(body, planet_radius_km, direction);
+    tx = Search(_PlanetShadowBoundary, (body, planet_radius_km, direction), t1, t2, 1.0)
+    if tx is None:
+        raise Error('Planet transit boundary search failed')
+    return tx
+
+
+def SearchTransit(body, startTime):
+    """Searches for the first transit of Mercury or Venus after a given date.
+
+    Finds the first transit of Mercury or Venus after a specified date.
+    A transit is when an inferior planet passes between the Sun and the Earth
+    so that the silhouette of the planet is visible against the Sun in the background.
+    To continue the search, pass the `finish` time in the returned structure to
+    #NextTransit.
+
+    Parameters
+    ----------
+    body : Body
+        The planet whose transit is to be found. Must be `Body.Mercury` or `Body.Venus`.
+    startTime : Time
+        The date and time for starting the search for a transit.
+
+    Returns
+    -------
+    TransitInfo
+    """
+    threshold_angle = 0.4     # maximum angular separation to attempt transit calculation
+    dt_days = 1.0
+
+    # Validate the planet and find its mean radius.
+    if body == Body.Mercury:
+        planet_radius_km = 2439.7
+    elif body == Body.Venus:
+        planet_radius_km = 6051.8
+    else:
+        raise InvalidBodyError()
+
+    search_time = startTime
+    while True:
+        # Search for the next inferior conjunction of the given planet.
+        # This is the next time the Earth and the other planet have the same
+        # ecliptic longitude as seen from the Sun.
+        conj = SearchRelativeLongitude(body, 0.0, search_time)
+
+        # Calculate the angular separation between the body and the Sun at this time.
+        conj_separation = AngleFromSun(body, conj)
+
+        if conj_separation < threshold_angle:
+            # The planet's angular separation from the Sun is small enough
+            # to consider it a transit candidate.
+            # Search for the moment when the line passing through the Sun
+            # and planet are closest to the Earth's center.
+            shadow = _PeakPlanetShadow(body, planet_radius_km, conj)
+            if shadow.r < shadow.p:      # does the planet's penumbra touch the Earth's center?
+                # Find the beginning and end of the penumbral contact.
+                time_before = shadow.time.AddDays(-dt_days)
+                start = _PlanetTransitBoundary(body, planet_radius_km, time_before, shadow.time, -1.0)
+                time_after = shadow.time.AddDays(+dt_days)
+                finish = _PlanetTransitBoundary(body, planet_radius_km, shadow.time, time_after, +1.0)
+                min_separation = 60.0 * AngleFromSun(body, shadow.time)
+                return TransitInfo(start, shadow.time, finish, min_separation)
+
+        # This inferior conjunction was not a transit. Try the next inferior conjunction.
+        search_time = conj.AddDays(10.0)
+
+
+
+def NextTransit(body, prevTransitTime):
+    """Searches for another transit of Mercury or Venus.
+
+    After calling #SearchTransit to find a transit of Mercury or Venus,
+    this function finds the next transit after that.
+    Keep calling this function as many times as you want to keep finding more transits.
+
+    Parameters
+    ----------
+    body : Body
+        The planet whose transit is to be found. Must be `Body.Mercury` or `Body.Venus`.
+    prevTransitTime : Time
+        A date and time near the previous transit.
+
+    Returns
+    -------
+    TransitInfo
+    """
+    startTime = prevTransitTime.AddDays(100.0)
+    return SearchTransit(body, startTime)
