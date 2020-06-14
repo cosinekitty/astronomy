@@ -5562,12 +5562,12 @@ static shadow_t PlanetShadow(astro_body_t body, double planet_radius_km, astro_t
     astro_vector_t e, p, g;
 
     /* Calculate light-travel-corrected vector from Earth to planet. */
-    g = Astronomy_GeoVector(body, time, ABERRATION);
+    g = Astronomy_GeoVector(body, time, NO_ABERRATION);
     if (g.status != ASTRO_SUCCESS)
         return ShadowError(g.status);
 
     /* Calculate light-travel-corrected vector from Earth to Sun. */
-    e = Astronomy_GeoVector(BODY_SUN, time, ABERRATION);
+    e = Astronomy_GeoVector(BODY_SUN, time, NO_ABERRATION);
     if (e.status != ASTRO_SUCCESS)
         return ShadowError(e.status);
 
@@ -6537,7 +6537,6 @@ static astro_search_result_t PlanetTransitBoundary(
 }
 
 
-
 /**
  * @brief Searches for the first transit of Mercury or Venus after a given date.
  *
@@ -6567,8 +6566,8 @@ astro_transit_t Astronomy_SearchTransit(astro_body_t body, astro_time_t startTim
     shadow_t shadow;
     double planet_radius_km;
     astro_time_t tx;
-    const double threshold_angle = 10.0;     /* maximum angular separation to attempt transit calculation */
-    const double dt_days = 10.0;
+    const double threshold_angle = 0.4;     /* maximum angular separation to attempt transit calculation */
+    const double dt_days = 1.0;
 
     /* Validate the planet and find its mean radius. */
     switch (body)
@@ -6641,7 +6640,7 @@ astro_transit_t Astronomy_SearchTransit(astro_body_t body, astro_time_t startTim
 
 
 /**
- * @brief Searches for the another transit of Mercury and Venus.
+ * @brief Searches for another transit of Mercury or Venus.
  *
  * After calling #Astronomy_SearchTransit to find a transit of Mercury or Venus,
  * this function finds the next transit after that.

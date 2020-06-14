@@ -1040,7 +1040,7 @@ See [`Astronomy_SearchPlanetApsis`](#Astronomy_SearchPlanetApsis) for more detai
 <a name="Astronomy_NextTransit"></a>
 ### Astronomy_NextTransit(body, prevTransitTime) &#8658; [`astro_transit_t`](#astro_transit_t)
 
-**Searches for the another transit of Mercury and Venus.** 
+**Searches for another transit of Mercury or Venus.** 
 
 
 
