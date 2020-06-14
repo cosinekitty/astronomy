@@ -203,7 +203,7 @@ REM ----------------------------------------------------------------------------
 echo.
 echo.Running C# tests.
 pushd dotnet\csharp_test
-dotnet run
+dotnet run -- all
 if errorlevel 1 (exit /b 1)
 popd
 
