@@ -599,6 +599,19 @@ class Observer:
         self.longitude = longitude
         self.height = height
 
+    def __repr__(self):
+        return 'Observer({}, {}, {})'.format(self.latitude, self.longitude, self.height)
+
+    def __str__(self):
+        text = '('
+        text += 'S' if (self.latitude < 0) else 'N'
+        text += '{}, '.format(abs(self.latitude))
+        text += 'W' if (self.longitude < 0) else 'E'
+        text += '{}, '.format(abs(self.longitude))
+        text += '{}m'.format(self.height)
+        text += ')'
+        return text
+
 class RotationMatrix:
     """Contains a rotation matrix that can be used to transform one
     coordinate system into another.
