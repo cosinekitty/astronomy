@@ -120,6 +120,12 @@ class Vector:
         self.z = z
         self.t = t
 
+    def __repr__(self):
+        return 'Vector({}, {}, {}, {})'.format(self.x, self.y, self.z, str(self.t))
+
+    def __str__(self):
+        return '({}, {}, {}, {})'.format(self.x, self.y, self.z, str(self.t))
+
     def Length(self):
         """Returns the length of the vector in AU."""
         return math.sqrt(self.x**2 + self.y**2 + self.z**2)
@@ -554,7 +560,7 @@ class Time:
         return Time(self.ut + days)
 
     def __repr__(self):
-        return 'astronomy.Time(' + repr(self.ut) + ')'
+        return 'Time(' + str(self) + ')'
 
     def __str__(self):
         millis = round(self.ut * 86400000.0)
