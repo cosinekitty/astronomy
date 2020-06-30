@@ -42,6 +42,7 @@
 #include "ephfile.h"
 #include "novas_body.h"
 #include "vsop.h"
+#include "top2013.h"
 
 int Verbose;
 #define DEBUG(...)  do{if(Verbose)printf(__VA_ARGS__);}while(0)
@@ -92,6 +93,7 @@ static int UnitTestChebyshev(void);
 static int DistancePlot(const char *name, double tt1, double tt2);
 static int ImproveVsopApsides(vsop_model_t *model);
 static int DeltaTimePlot(const char *outFileName);
+static int ValidateTop2013(int planet);
 
 #define MOON_PERIGEE        0.00238
 #define MERCURY_APHELION    0.466697
@@ -142,6 +144,9 @@ int main(int argc, const char *argv[])
     if (argc == 2 && !strcmp(argv[1], "pluto"))
         return GeneratePluto();
 
+    if (argc == 3 && !strcmp(argv[1], "validate_top2013"))
+        return ValidateTop2013(atoi(argv[2]));
+
     if (argc == 2 && !strcmp(argv[1], "apsis"))
         return GenerateApsisTestData();
 
@@ -190,6 +195,15 @@ static int PrintUsage(void)
         "\n"
         "generate dtplot outfile.csv\n"
         "   Generate a CSV plot of the Delta-T extrapolator.\n"
+        "\n"
+        "generate validate_top2013 planet\n"
+        "   Validates code for calculating outer planet positions using TOP2013.\n"
+        "   The 'planet' parameter is one of the following:\n"
+        "   5 = Jupiter\n"
+        "   6 = Saturn\n"
+        "   7 = Uranus\n"
+        "   8 = Neptune\n"
+        "   9 = Pluto\n"
         "\n"
     );
 
@@ -1835,5 +1849,21 @@ static int DeltaTimePlot(const char *outFileName)
     error = 0;
 fail:
     if (outfile != NULL) fclose(outfile);
+    return error;
+}
+
+/*-----------------------------------------------------------------------------------------*/
+
+static int ValidateTop2013(int planet)
+{
+    int error = 1;
+    top_model_t model;
+
+    TopInitModel(&model);
+
+    CHECK(TopLoadModel(&model, "TOP2013.dat", planet));
+
+fail:
+    TopFreeModel(&model);
     return error;
 }

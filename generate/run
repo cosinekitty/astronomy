@@ -71,7 +71,7 @@ Download()
 
 Download https://github.com/cosinekitty/ephemeris/raw/master/lnxp1600p2200.405 lnxp1600p2200.405 ephemeris.sha256 ephemeris.md5
 Download https://github.com/cosinekitty/ephemeris/raw/master/top2013/TOP2013.dat TOP2013.dat top2013.sha256 top2013.md5
-Download https://raw.githubusercontent.com/astronexus/HYG-Database/master/hygdata_v3.csv hygdata_v3.csv hygdata_v3.sha256 hygdata_v3.sha256
+Download https://raw.githubusercontent.com/astronexus/HYG-Database/master/hygdata_v3.csv hygdata_v3.csv hygdata_v3.sha256 hygdata_v3.md5
 
 rm -f constellation/test_input.txt
 ./make_constellation_data.py || Fail "Error creating constellation test data."

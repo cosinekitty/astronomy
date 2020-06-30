@@ -12,7 +12,7 @@ else
     exit 1
 fi
 
-${CC} ${BUILDOPT} -Wall -Werror -o generate -I novas -I vsop \
+${CC} ${BUILDOPT} -Wall -Werror -o generate -I novas -I vsop -I top2013 -I . \
     generate.c \
     earth.c \
     astro_vector.c \
@@ -20,6 +20,7 @@ ${CC} ${BUILDOPT} -Wall -Werror -o generate -I novas -I vsop \
     codegen.c \
     ephfile.c \
     vsop/vsop.c \
+    top2013/top2013.c \
     novas/novas.c \
     novas/novascon.c \
     novas/nutation.c \
