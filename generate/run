@@ -90,7 +90,7 @@ rm -f temp/*
 
 echo ""
 echo "Validating TOP2013 code."
-./generate validate_top2013 0 || Fail "Error in TOP2013 validation."
+./generate validate_top2013 || Fail "Error in TOP2013 validation."
 
 FASTMODE=true
 for file in output/vsop_{0,1,3,4,5,6,7,11}.txt output/08.eph; do

@@ -93,7 +93,7 @@ static int UnitTestChebyshev(void);
 static int DistancePlot(const char *name, double tt1, double tt2);
 static int ImproveVsopApsides(vsop_model_t *model);
 static int DeltaTimePlot(const char *outFileName);
-static int ValidateTop2013(int planet);
+static int ValidateTop2013(void);
 static int Diff(const char *filename1, const char *filename2, int *nlines);
 
 #define MOON_PERIGEE        0.00238
@@ -145,8 +145,8 @@ int main(int argc, const char *argv[])
     if (argc == 2 && !strcmp(argv[1], "pluto"))
         return GeneratePluto();
 
-    if (argc == 3 && !strcmp(argv[1], "validate_top2013"))
-        return ValidateTop2013(atoi(argv[2]));
+    if (argc == 2 && !strcmp(argv[1], "validate_top2013"))
+        return ValidateTop2013();
 
     if (argc == 2 && !strcmp(argv[1], "apsis"))
         return GenerateApsisTestData();
@@ -197,15 +197,8 @@ static int PrintUsage(void)
         "generate dtplot outfile.csv\n"
         "   Generate a CSV plot of the Delta-T extrapolator.\n"
         "\n"
-        "generate validate_top2013 planet\n"
+        "generate validate_top2013\n"
         "   Validates code for calculating outer planet positions using TOP2013.\n"
-        "   If 'planet' is 0, performs a file/load save test on Jupiter..Pluto.\n"
-        "   Otherwise, the 'planet' parameter is one of the following:\n"
-        "   5 = Jupiter\n"
-        "   6 = Saturn\n"
-        "   7 = Uranus\n"
-        "   8 = Neptune\n"
-        "   9 = Pluto\n"
         "\n"
     );
 
@@ -1881,13 +1874,14 @@ fail:
     return error;
 }
 
-static int ValidateTop2013(int planet)
+static int ValidateTop2013(void)
 {
     int error = 1;
     top_model_t model;
     FILE *mirror = NULL;
     FILE *outfile = NULL;
-    int nlines;
+    int nlines, planet;
+    const char *mirrorFileName = "TOP2013.mirror";
     const char *outFileName = "top2013/calc.txt";
 
     TopInitModel(&model);
@@ -1895,38 +1889,27 @@ static int ValidateTop2013(int planet)
     if (outfile == NULL)
         FAIL("ValidateTop2013: Cannot open output file: %s\n", outFileName);
 
-    if (planet == 0)
+    mirror = fopen(mirrorFileName, "wt");
+    if (mirror == NULL)
+        FAIL("ValidateTop2013: cannot open output file: %s\n", mirrorFileName);
+
+    for (planet=5; planet <= 9; ++planet)
     {
-        const char *mirrorFileName = "TOP2013.mirror";
-        mirror = fopen(mirrorFileName, "wt");
-        if (mirror == NULL)
-            FAIL("ValidateTop2013: cannot open output file: %s\n", mirrorFileName);
-
-        for (planet=5; planet <= 9; ++planet)
-        {
-            CHECK(TopLoadModel(&model, TopDataFileName, planet));
-            CHECK(TopWriteModel(&model, mirror));
-            CHECK(CalcTop2013(outfile, &model));
-            TopFreeModel(&model);
-        }
-
-        fclose(mirror);
-        mirror = NULL;
-
-        /* Verify that we generated binary identical output. */
-        CHECK(Diff(TopDataFileName, mirrorFileName, &nlines));
-        if (nlines != 336806)
-            FAIL("ValidateTop2013: incorrect number of matching lines = %d\n", nlines);
-
-        remove(mirrorFileName);
-    }
-    else
-    {
-        top_elliptical_t ellip;
         CHECK(TopLoadModel(&model, TopDataFileName, planet));
-        CHECK(TopCalcElliptical(&model, -40000.0, &ellip));
-        printf("%15.10lf %15.10lf %15.10lf %15.10lf %15.10lf %15.10lf\n", ellip.a, ellip.lambda, ellip.k, ellip.h, ellip.q, ellip.p);
+        CHECK(TopWriteModel(&model, mirror));
+        CHECK(CalcTop2013(outfile, &model));
+        TopFreeModel(&model);
     }
+
+    fclose(mirror);
+    mirror = NULL;
+
+    /* Verify that we generated binary identical output. */
+    CHECK(Diff(TopDataFileName, mirrorFileName, &nlines));
+    if (nlines != 336806)
+        FAIL("ValidateTop2013: incorrect number of matching lines = %d\n", nlines);
+
+    remove(mirrorFileName);
 
 fail:
     if (mirror) fclose(mirror);
