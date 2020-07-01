@@ -9,6 +9,8 @@
 #include "codegen.h"
 #include "top2013.h"
 
+static int FormatTermLine(int lnum, char *line, size_t size, const top_term_t *term);
+
 
 void TopInitModel(top_model_t *model)
 {
@@ -27,6 +29,31 @@ void TopFreeModel(top_model_t *model)
 }
 
 
+static int RoundingAdjustment(char original, char regen, int *diff)
+{
+    switch (original - regen)
+    {
+    case 0:
+        *diff = 0;
+        return 0;
+
+    case -1:
+    case +9:
+        *diff = -1;
+        return 0;
+
+    case +1:
+    case -9:
+        *diff = +1;
+        return 0;
+
+    default:
+        fprintf(stderr, "RoundingAdjustment: original=%c, regen=%c\n", original, regen);
+        return 1;
+    }
+}
+
+
 int TopLoadModel(top_model_t *model, const char *filename, int planet)
 {
     int error = 1;
@@ -37,6 +64,7 @@ int TopLoadModel(top_model_t *model, const char *filename, int planet)
     top_series_t *series = NULL;
     top_term_t *term = NULL;
     char line[100];
+    char gline[100];
 
     TopInitModel(model);
     model->planet = planet;
@@ -116,6 +144,26 @@ int TopLoadModel(top_model_t *model, const char *filename, int planet)
                 else if (nscanned != 4)
                     FAIL("TopLoadModel(%s line %d): invalid term data format.\n", filename, lnum);
 
+                /*
+                    Super ugly hack: the weird exponential notation used in TOP2013.dat
+                    makes it really difficult to regenerate exactly in all cases.
+                    So I generate each line back as text, and remember what I will have to do later
+                    to reconstruct the input exactly.
+                */
+                CHECK(FormatTermLine(lnum, gline, sizeof(gline), term));
+                CHECK(RoundingAdjustment(line[30], gline[30], &term->rc));
+                CHECK(RoundingAdjustment(line[56], gline[56], &term->rs));
+
+                /* Sanity check the rounding hack. */
+                CHECK(FormatTermLine(lnum, gline, sizeof(gline), term));
+                line[31] = line[57] = ' ';
+                if (strcmp(line, gline))
+                {
+                    fprintf(stderr, "INPUT:%s", line);
+                    fprintf(stderr, "REGEN:%s", gline);
+                    FAIL("TopLoadModel(%s line %d): unable to reconstruct identical term line.\n", filename, lnum);
+                }
+
                 ++count;
             }
         }
@@ -135,13 +183,15 @@ fail:
 }
 
 
-static int AppendTrigCoeff(char *line, double x)
+static int AppendTrigCoeff(char *line, int lnum, double x, int rounding_adjust)
 {
     int error = 1;
-    int m, need_rounding;
-    int length, exponent;
+    int m, length, exponent;
     char polarity;
     char buffer[40];
+
+    if (rounding_adjust < -1 || rounding_adjust > +1)
+        FAIL("AppendTrigCoeff(%d): invalid rounding_adjust = %d\n", lnum, rounding_adjust);
 
     /*
         The data format for TOP2013 has a weird form of scientific notation.
@@ -153,15 +203,15 @@ static int AppendTrigCoeff(char *line, double x)
     snprintf(buffer, sizeof(buffer), "%23.16le", x);
     length = strlen(buffer);
     if (length != 23)
-        FAIL("AppendTrigCoeff: output string '%s' has incorrect length %d.\n", buffer, length);
+        FAIL("AppendTrigCoeff(%d): output string '%s' has incorrect length %d.\n", lnum, buffer, length);
 
     if (buffer[19] != 'e')
-        FAIL("AppendTrigCoeff: expected 'e' at index 19 in string '%s'\n", buffer);
+        FAIL("AppendTrigCoeff(%d): expected 'e' at index 19 in string '%s'\n", lnum, buffer);
 
     buffer[19] = '\0';      /* truncate the string at the 'e' */
 
     if (1 != sscanf(buffer+20, "%d", &exponent))
-        FAIL("AppendTrigCoeff: cannot scan exponent from '%s'\n", buffer+20);
+        FAIL("AppendTrigCoeff(%d): cannot scan exponent from '%s'\n", lnum, buffer+20);
 
     ++exponent;
     if (x == 0.0)
@@ -176,16 +226,13 @@ static int AppendTrigCoeff(char *line, double x)
         exponent = -exponent;
     }
 
-    /* Figure out whether we need to round before we stomp on the last digit. */
-    need_rounding = (buffer[18] >= '5');
-
     /* Copy digits and shift decimal point */
     buffer[22] = '\0';
     for(m = 17; m >= 0 && buffer[m] != '.'; --m)
         buffer[m+4] = buffer[m];
 
     if (m != 2 || buffer[2] != '.')
-        FAIL("AppendTrigCoeff: decimal point is in the wrong place: '%s'\n", buffer);
+        FAIL("AppendTrigCoeff(%d): decimal point is in the wrong place: '%s'\n", lnum, buffer);
 
     buffer[6] = buffer[1];
     buffer[5] = '.';
@@ -195,17 +242,21 @@ static int AppendTrigCoeff(char *line, double x)
     buffer[1] = ' ';
     buffer[0] = ' ';
 
-    if (need_rounding)
+    if (rounding_adjust != 0)
     {
         for (m=21; m >= 0; --m)
         {
             if (buffer[m] != '.')
             {
                 if (buffer[m] < '0' || buffer[m] > '9')
-                    FAIL("AppendTrigCoeff: rounding failure\n");
-                if (++buffer[m] <= '9')
+                    FAIL("AppendTrigCoeff(%d): rounding failure\n", lnum);
+                buffer[m] += rounding_adjust;
+                if (buffer[m] < '0')
+                    buffer[m] = '9';
+                else if (buffer[m] > '9')
+                    buffer[m] = '0';
+                else
                     break;
-                buffer[m] = '0';
             }
         }
     }
@@ -213,9 +264,29 @@ static int AppendTrigCoeff(char *line, double x)
     sprintf(buffer+22, " %c%02d", polarity, exponent);
     length = strlen(buffer);
     if (length != 26)
-        FAIL("AppendTrigCoeff: generated incorrect length %d in string '%s' for x=%lf\n", length, buffer, x);
+        FAIL("AppendTrigCoeff(%d): generated incorrect length %d in string '%s' for x=%lg\n", lnum, length, buffer, x);
 
     strcat(line, buffer);
+    error = 0;
+fail:
+    return error;
+}
+
+
+static int FormatTermLine(int lnum, char *line, size_t size, const top_term_t *term)
+{
+    int error = 1;
+    int length;
+
+    snprintf(line, size, "%9.0lf", term->k);
+    CHECK(AppendTrigCoeff(line, lnum, term->c, term->rc));
+    CHECK(AppendTrigCoeff(line, lnum, term->s, term->rs));
+    length = strlen(line);
+    if (61 != length)
+        FAIL("FormatTermLine(%d): incorrect output line length = %d.\n", lnum, length);
+    if (term->k != 0)
+        snprintf(line + length, size - (size_t)length, " %11.6lf", term->p);
+    strcat(line, "\n");
     error = 0;
 fail:
     return error;
@@ -242,20 +313,10 @@ int TopWriteModel(const top_model_t *model, FILE *outfile)
 
             for (t=0; t < series->nterms_calc; ++t)
             {
-                int length;
                 const top_term_t *term = &series->terms[t];
-
                 ++lnum;
-                snprintf(line, sizeof(line), "%9.0lf", term->k);
-                CHECK(AppendTrigCoeff(line, term->c));
-                CHECK(AppendTrigCoeff(line, term->s));
-                length = strlen(line);
-                if (61 != length)
-                    FAIL("TopWriteModel(%d): incorrect output line length = %d.\n", lnum, length);
-                if (term->k != 0)
-                    snprintf(line + length, sizeof(line)-(size_t)length, " %11.6lf", term->p);
-
-                if (0 > fprintf(outfile, "%s\n", line))
+                CHECK(FormatTermLine(lnum, line, sizeof(line), term));
+                if (0 > fprintf(outfile, "%s", line))
                     FAIL("TopWriteModel(%d): error writing term record to output stream.\n", lnum);
             }
         }

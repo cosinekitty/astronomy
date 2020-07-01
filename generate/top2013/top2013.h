@@ -13,6 +13,8 @@ typedef struct
     double  c;      /* cosine coefficient */
     double  s;      /* sine coefficient */
     double  p;      /* period expressed in years */
+    int     rc;     /* hack: final digit rounding adjustment for 'c' */
+    int     rs;     /* hack: final digit rounding adjustment for 's' */
 }
 top_term_t;
 
