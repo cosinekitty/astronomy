@@ -48,10 +48,24 @@ typedef struct
 top_model_t;
 
 
+typedef struct
+{
+    /* elliptical elements */
+    double a;           /* AU */
+    double lambda;      /* rad */
+    double k;           /* 1 */
+    double h;           /* 1 */
+    double q;           /* 1 */
+    double p;           /* 1 */
+}
+top_elliptical_t;
+
+
 void TopInitModel(top_model_t *model);
 void TopFreeModel(top_model_t *model);
 int  TopLoadModel(top_model_t *model, const char *filename, int planet);
 int  TopSaveModel(const top_model_t *model, const char *filename);
 int  TopWriteModel(const top_model_t *model, FILE *outfile);
+int  TopCalcElliptical(const top_model_t *model, double tt, top_elliptical_t *ellip);
 
 #endif /* __DDC_TOP2013_H */

@@ -1858,31 +1858,60 @@ fail:
 
 static const char *TopDataFileName = "TOP2013.dat";
 
+static int CalcTop2013(FILE *outfile, const top_model_t *model)
+{
+    int error = 1;
+    double jd, tt;
+    int i;
+    top_elliptical_t ellip;
+
+    for (i=0; i <= 10; ++i)
+    {
+        tt = 4000.0 * (i-10);
+        jd = tt + 2451545.0;
+
+        fprintf(outfile, "%d %0.1lf\n", model->planet, jd);
+
+        CHECK(TopCalcElliptical(model, tt, &ellip));
+        fprintf(outfile, "%15.10lf %15.10lf %15.10lf %15.10lf %15.10lf %15.10lf\n", ellip.a, ellip.lambda, ellip.k, ellip.h, ellip.q, ellip.p);
+    }
+
+    error = 0;
+fail:
+    return error;
+}
+
 static int ValidateTop2013(int planet)
 {
     int error = 1;
     top_model_t model;
+    FILE *mirror = NULL;
     FILE *outfile = NULL;
     int nlines;
+    const char *outFileName = "top2013/calc.txt";
 
     TopInitModel(&model);
+    outfile = fopen(outFileName, "wt");
+    if (outfile == NULL)
+        FAIL("ValidateTop2013: Cannot open output file: %s\n", outFileName);
 
     if (planet == 0)
     {
         const char *mirrorFileName = "TOP2013.mirror";
-        outfile = fopen(mirrorFileName, "wt");
-        if (outfile == NULL)
+        mirror = fopen(mirrorFileName, "wt");
+        if (mirror == NULL)
             FAIL("ValidateTop2013: cannot open output file: %s\n", mirrorFileName);
 
         for (planet=5; planet <= 9; ++planet)
         {
             CHECK(TopLoadModel(&model, TopDataFileName, planet));
-            CHECK(TopWriteModel(&model, outfile));
+            CHECK(TopWriteModel(&model, mirror));
+            CHECK(CalcTop2013(outfile, &model));
             TopFreeModel(&model);
         }
 
-        fclose(outfile);
-        outfile = NULL;
+        fclose(mirror);
+        mirror = NULL;
 
         /* Verify that we generated binary identical output. */
         CHECK(Diff(TopDataFileName, mirrorFileName, &nlines));
@@ -1893,10 +1922,14 @@ static int ValidateTop2013(int planet)
     }
     else
     {
+        top_elliptical_t ellip;
         CHECK(TopLoadModel(&model, TopDataFileName, planet));
+        CHECK(TopCalcElliptical(&model, -40000.0, &ellip));
+        printf("%15.10lf %15.10lf %15.10lf %15.10lf %15.10lf %15.10lf\n", ellip.a, ellip.lambda, ellip.k, ellip.h, ellip.q, ellip.p);
     }
 
 fail:
+    if (mirror) fclose(mirror);
     if (outfile) fclose(outfile);
     TopFreeModel(&model);
     return error;

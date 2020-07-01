@@ -49,6 +49,7 @@ static int RoundingAdjustment(char original, char regen, int *diff)
 
     default:
         fprintf(stderr, "RoundingAdjustment: original=%c, regen=%c\n", original, regen);
+        *diff = 0;
         return 1;
     }
 }
@@ -340,5 +341,75 @@ int TopSaveModel(const top_model_t *model, const char *filename)
     CHECK(TopWriteModel(model, outfile));
 fail:
     if (outfile) fclose(outfile);
+    return error;
+}
+
+
+int TopCalcElliptical(const top_model_t *model, double tt, top_elliptical_t *ellip)
+{
+    /* Translated from: TOP2013.f */
+    /* See: https://github.com/cosinekitty/ephemeris/tree/master/top2013 */
+    /* Copied from: ftp://ftp.imcce.fr/pub/ephem/planets/top2013 */
+    static const double dpi = 6.283185307179586476925287;
+    static const double freq[] =
+    {
+        0.5296909622785881e+03,
+        0.2132990811942489e+03,
+        0.7478166163181234e+02,
+        0.3813297236217556e+02,
+        0.2533566020437000e+02
+    };
+    int error = 1;
+    int i, f, s, t;
+    double time[TOP_MAX_SERIES];
+    double el[6];
+    double arg, dmu, xl;
+
+    /* Check planet index */
+    if (model->planet < 5 || model->planet > 9)
+        FAIL("TopCalcElliptical: invalid planet = %d\n", model->planet);
+
+    /* Time */
+    time[0] = 1.0;
+    time[1] = tt / 365250.0;
+    for (i=1; i < TOP_MAX_SERIES; ++i)
+        time[i] = time[i-1] * time[1];
+
+    dmu = (freq[0] - freq[1]) / 880.0;
+
+    for (f=0; f < TOP_NCOORDS; ++f)
+    {
+        const top_formula_t *formula = &model->formula[f];
+        el[f] = 0.0;
+        for (s=0; s < formula->nseries_calc; ++s)
+        {
+            const top_series_t *series = &formula->series[s];
+            for (t=0; t < series->nterms_calc; ++t)
+            {
+                const top_term_t *term = &series->terms[t];
+                if (f==1 && s==1 && term->k==0)
+                    continue;
+                arg = term->k * dmu * time[1];
+                el[f] += time[s] * (term->c*cos(arg) + term->s*sin(arg));
+            }
+        }
+    }
+
+    xl = el[1] + freq[model->planet - 5] * time[1];
+    xl = fmod(xl, dpi);
+    if (xl < 0.0)
+        xl += dpi;
+    el[1] = xl;
+
+    /* Convert elliptical elements from array 'el' to friendly struct layout. */
+    ellip->a      = el[0];
+    ellip->lambda = el[1];
+    ellip->k      = el[2];
+    ellip->h      = el[3];
+    ellip->q      = el[4];
+    ellip->p      = el[5];
+
+    error = 0;
+fail:
     return error;
 }
