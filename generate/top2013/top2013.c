@@ -94,6 +94,9 @@ int TopLoadModel(top_model_t *model, const char *filename, int planet)
 
             --check_var;    /* convert one-based to zero-based indexing */
 
+            if (tpower < 0 || tpower >= TOP_MAX_SERIES)
+                FAIL("TopLoadModel(%s line %d): invalid power of t: %d\n", filename, lnum, tpower);
+
             if (check_planet == planet)
             {
                 if (series != NULL)
@@ -105,10 +108,8 @@ int TopLoadModel(top_model_t *model, const char *filename, int planet)
 
                 /* Allocate room for the new terms. */
                 formula = &model->formula[check_var];
-                if (formula->nseries_total >= TOP_MAX_SERIES)
-                    FAIL("TopLoadModel(%s line %d): too many series.\n", filename, lnum);
-                series = &formula->series[formula->nseries_total++];
-                formula->nseries_calc = formula->nseries_total;
+                formula->nseries_calc = formula->nseries_total = tpower + 1;
+                series = &formula->series[tpower];
                 series->nterms_total = nterms_remaining;
                 series->nterms_calc = 0;
                 series->terms = calloc(sizeof(top_term_t), nterms_remaining);
@@ -306,6 +307,9 @@ int TopWriteModel(const top_model_t *model, FILE *outfile)
         for (s=0; s < formula->nseries_calc; ++s)
         {
             const top_series_t *series = &formula->series[s];
+
+            if (series->nterms_calc == 0)
+                continue;
 
             ++lnum;
             if (0 > fprintf(outfile, " TOP2013ELL    PLANET %d    VARIABLE %d    T**%02d %7d term(s)\n", model->planet, f+1, s, series->nterms_calc))
