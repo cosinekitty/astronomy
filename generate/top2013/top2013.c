@@ -176,8 +176,10 @@ static int AppendTrigCoeff(char *line, double x)
         exponent = -exponent;
     }
 
-    /* Copy digits and shift decimal point */
+    /* Figure out whether we need to round before we stomp on the last digit. */
     need_rounding = (buffer[18] >= '5');
+
+    /* Copy digits and shift decimal point */
     buffer[22] = '\0';
     for(m = 17; m >= 0 && buffer[m] != '.'; --m)
         buffer[m+4] = buffer[m];
@@ -224,6 +226,7 @@ int TopWriteModel(const top_model_t *model, FILE *outfile)
 {
     int error = 1;
     int f, s, t;
+    int lnum = 0;
     char line[100];
 
     for (f=0; f < TOP_NCOORDS; ++f)
@@ -232,23 +235,28 @@ int TopWriteModel(const top_model_t *model, FILE *outfile)
         for (s=0; s < formula->nseries_calc; ++s)
         {
             const top_series_t *series = &formula->series[s];
+
+            ++lnum;
             if (0 > fprintf(outfile, " TOP2013ELL    PLANET %d    VARIABLE %d    T**%02d %7d term(s)\n", model->planet, f+1, s, series->nterms_calc))
-                FAIL("TopWriteModel: error writing header record to output stream.\n");
+                FAIL("TopWriteModel(%d): error writing header record to output stream.\n", lnum);
 
             for (t=0; t < series->nterms_calc; ++t)
             {
                 int length;
                 const top_term_t *term = &series->terms[t];
+
+                ++lnum;
                 snprintf(line, sizeof(line), "%9.0lf", term->k);
                 CHECK(AppendTrigCoeff(line, term->c));
                 CHECK(AppendTrigCoeff(line, term->s));
                 length = strlen(line);
                 if (61 != length)
-                    FAIL("TopWriteModel: incorrect output line length = %d.\n", length);
+                    FAIL("TopWriteModel(%d): incorrect output line length = %d.\n", lnum, length);
                 if (term->k != 0)
                     snprintf(line + length, sizeof(line)-(size_t)length, " %11.6lf", term->p);
+
                 if (0 > fprintf(outfile, "%s\n", line))
-                    FAIL("TopWriteModel: error writing term record to output stream.\n");
+                    FAIL("TopWriteModel(%d): error writing term record to output stream.\n", lnum);
             }
         }
     }
