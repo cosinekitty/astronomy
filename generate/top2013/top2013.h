@@ -40,6 +40,7 @@ top_formula_t;
 
 typedef struct
 {
+    int planet;     /* 5=Jupiter, 6=Saturn, 7=Uranus, 8=Neptune, 9=Pluto */
     top_formula_t formula[TOP_NCOORDS];
 }
 top_model_t;
@@ -48,6 +49,7 @@ top_model_t;
 void TopInitModel(top_model_t *model);
 void TopFreeModel(top_model_t *model);
 int  TopLoadModel(top_model_t *model, const char *filename, int planet);
-
+int  TopSaveModel(const top_model_t *model, const char *filename);
+int  TopWriteModel(const top_model_t *model, FILE *outfile);
 
 #endif /* __DDC_TOP2013_H */

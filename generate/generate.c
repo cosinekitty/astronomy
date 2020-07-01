@@ -198,7 +198,8 @@ static int PrintUsage(void)
         "\n"
         "generate validate_top2013 planet\n"
         "   Validates code for calculating outer planet positions using TOP2013.\n"
-        "   The 'planet' parameter is one of the following:\n"
+        "   If 'planet' is 0, performs a file/load save test on Jupiter..Pluto.\n"
+        "   Otherwise, the 'planet' parameter is one of the following:\n"
         "   5 = Jupiter\n"
         "   6 = Saturn\n"
         "   7 = Uranus\n"
@@ -1854,16 +1855,37 @@ fail:
 
 /*-----------------------------------------------------------------------------------------*/
 
+static const char *TopDataFileName = "TOP2013.dat";
+
 static int ValidateTop2013(int planet)
 {
     int error = 1;
     top_model_t model;
+    FILE *outfile = NULL;
 
     TopInitModel(&model);
 
-    CHECK(TopLoadModel(&model, "TOP2013.dat", planet));
+    if (planet == 0)
+    {
+        const char *mirrorFileName = "TOP2013.mirror";
+        outfile = fopen(mirrorFileName, "wt");
+        if (outfile == NULL)
+            FAIL("ValidateTop2013: cannot open output file: %s\n", mirrorFileName);
+
+        for (planet=5; planet <= 9; ++planet)
+        {
+            CHECK(TopLoadModel(&model, TopDataFileName, planet));
+            CHECK(TopWriteModel(&model, outfile));
+            TopFreeModel(&model);
+        }
+    }
+    else
+    {
+        CHECK(TopLoadModel(&model, TopDataFileName, planet));
+    }
 
 fail:
+    if (outfile) fclose(outfile);
     TopFreeModel(&model);
     return error;
 }
