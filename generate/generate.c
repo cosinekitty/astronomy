@@ -1856,7 +1856,8 @@ static int CalcTop2013(FILE *outfile, const top_model_t *model)
     int error = 1;
     double jd, tt;
     int i;
-    top_elliptical_t ellip;
+    top_elliptical_t    ellip;
+    top_rectangular_t   ecl, equ;
 
     for (i=0; i <= 10; ++i)
     {
@@ -1866,7 +1867,13 @@ static int CalcTop2013(FILE *outfile, const top_model_t *model)
         fprintf(outfile, "%d %0.1lf\n", model->planet, jd);
 
         CHECK(TopCalcElliptical(model, tt, &ellip));
-        fprintf(outfile, "%15.10lf %15.10lf %15.10lf %15.10lf %15.10lf %15.10lf\n", ellip.a, ellip.lambda, ellip.k, ellip.h, ellip.q, ellip.p);
+        fprintf(outfile, " %15.10lf %15.10lf %15.10lf %15.10lf %15.10lf %15.10lf\n", ellip.a, ellip.lambda, ellip.k, ellip.h, ellip.q, ellip.p);
+
+        CHECK(TopEcliptic(model->planet, &ellip, &ecl));
+        fprintf(outfile, " %15.10lf %15.10lf %15.10lf %15.10lf %15.10lf %15.10lf\n", ecl.x, ecl.y, ecl.z, ecl.vx, ecl.vy, ecl.vz);
+
+        CHECK(TopEquatorial(&ecl, &equ));
+        fprintf(outfile, " %15.10lf %15.10lf %15.10lf %15.10lf %15.10lf %15.10lf\n", equ.x, equ.y, equ.z, equ.vx, equ.vy, equ.vz);
     }
 
     error = 0;
@@ -1904,12 +1911,22 @@ static int ValidateTop2013(void)
     fclose(mirror);
     mirror = NULL;
 
-    /* Verify that we generated binary identical output. */
+    fclose(outfile);
+    outfile = NULL;
+
+    /* Verify that the saved model exactly matches what we loaded. */
     CHECK(Diff(TopDataFileName, mirrorFileName, &nlines));
     if (nlines != 336806)
-        FAIL("ValidateTop2013: incorrect number of matching lines = %d\n", nlines);
+        FAIL("ValidateTop2013(%s): incorrect number of matching lines = %d\n", mirrorFileName, nlines);
 
+    /* Verify that the calculations exactly match those produced by the original FORTRAN code. */
+    CHECK(Diff(outFileName, "top2013/correct.txt", NULL));
+
+    /* Clean up after success. */
     remove(mirrorFileName);
+    remove(outFileName);
+    printf("ValidateTop2013: PASS\n");
+    error = 0;
 
 fail:
     if (mirror) fclose(mirror);

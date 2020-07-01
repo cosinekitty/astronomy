@@ -9,6 +9,8 @@
 #include "codegen.h"
 #include "top2013.h"
 
+static const double dpi = 6.283185307179586476925287;
+
 static int FormatTermLine(int lnum, char *line, size_t size, const top_term_t *term);
 
 
@@ -350,7 +352,6 @@ int TopCalcElliptical(const top_model_t *model, double tt, top_elliptical_t *ell
     /* Translated from: TOP2013.f */
     /* See: https://github.com/cosinekitty/ephemeris/tree/master/top2013 */
     /* Copied from: ftp://ftp.imcce.fr/pub/ephem/planets/top2013 */
-    static const double dpi = 6.283185307179586476925287;
     static const double freq[] =
     {
         0.5296909622785881e+03,
@@ -412,4 +413,133 @@ int TopCalcElliptical(const top_model_t *model, double tt, top_elliptical_t *ell
     error = 0;
 fail:
     return error;
+}
+
+
+int TopEcliptic(int planet, const top_elliptical_t *ellip, top_rectangular_t *ecl)
+{
+    static const double gmp[] =
+    {
+        0, /* placeholder */
+        4.9125474514508118699e-11,
+        7.2434524861627027000e-10,
+        8.9970116036316091182e-10,
+        9.5495351057792580598e-11,
+        2.8253458420837780000e-07,
+        8.4597151856806587398e-08,
+        1.2920249167819693900e-08,
+        1.5243589007842762800e-08,
+        2.1886997654259696800e-12
+    };
+    static const double gmsol = 2.9591220836841438269e-04;
+    double rgm;
+    double xa, xl, xk, xh, xq, xp;
+    double xfi, xki, u, ex, ex2, ex3;
+    double zr, zi;
+    double z1r, z1i;
+    double z2r, z2i;
+    double z3r, z3i;
+    double zteta_r, zteta_i;
+    double zto_r, zto_i;
+    double gl, gm, e, dl, rsa;
+    double xcw, xsw, xm, xr, xms, xmc, xn;
+    int error = 1;
+
+    if (planet < 1 || planet > 9)
+        FAIL("TopEcliptic: invalid planet = %d\n", planet);
+
+    rgm = sqrt(gmp[planet] + gmsol);
+    xa = ellip->a;
+    xl = ellip->lambda;
+    xk = ellip->k;
+    xh = ellip->h;
+    xq = ellip->q;
+    xp = ellip->p;
+
+    xfi = sqrt(1.0 - xk*xk - xh*xh);
+    xki = sqrt(1.0 - xq*xq - xp*xp);
+    zr = xk; zi = xh;       /* z = dcmplx(xk,xh) */
+    u = 1.0 / (1.0 + xfi);
+    ex2 = zr*zr + zi*zi;
+    ex = sqrt(ex2);         /* ex = cdabs(z) */
+    ex3 = ex * ex2;
+    z1r = zr; z1i = -zi;
+
+    gl = fmod(xl, dpi);
+    gm = gl - atan2(xh, xk);
+    e = gl + (ex - 0.125*ex3)*sin(gm) + 0.5*ex2*sin(2.0*gm) + 0.375*ex3*sin(3.0*gm);
+
+    do
+    {
+        z2r = 0.0; z2i = e;
+        zteta_r = cos(z2i);
+        zteta_i = sin(z2i);
+        z3r = z1r*zteta_r - z1i*zteta_i;
+        z3i = z1r*zteta_i + z1i*zteta_r;
+        dl = gl - e + z3i;
+        rsa = 1.0 - z3r;
+        e += dl/rsa;
+    } while (fabs(dl) >= 1.0e-15);
+
+    z1r = z3i * u * zr;
+    z1i = z3i * u * zi;
+    z2r = +z1i;
+    z2i = -z1r;
+    zto_r = (-zr + zteta_r + z2r) / rsa;
+    zto_i = (-zi + zteta_i + z2i) / rsa;
+    xcw = zto_r;
+    xsw = zto_i;
+    xm = xp*xcw - xq*xsw;
+    xr = xa*rsa;
+
+    ecl->x = xr*(xcw - 2.0*xp*xm);
+    ecl->y = xr*(xsw + 2.0*xq*xm);
+    ecl->z = -2.0*xr*xki*xm;
+
+    xms = xa*(xh + xsw)/xfi;
+    xmc = xa*(xk + xcw)/xfi;
+    xn = rgm / (xa * sqrt(xa));
+
+    ecl->vx = xn*((2.0*xp*xp - 1.0)*xms + 2.0*xp*xq*xmc);
+    ecl->vy = xn*((1.0 - 2.0*xq*xq)*xmc - 2.0*xp*xq*xms);
+    ecl->vz = 2.0*xn*xki*(xp*xms + xq*xmc);
+
+    error = 0;
+fail:
+    return error;
+}
+
+
+int TopEquatorial(const top_rectangular_t *ecl, top_rectangular_t *equ)
+{
+    double rot[3][3];
+    const double pi = dpi / 2.0;
+    const double dgrad = pi / 180.0;
+    const double sdrad = dgrad / 3600.0;
+    const double eps = (23.0 + 26.0/60.0 + 21.41136/3600.0)*dgrad;
+    const double phi = -0.05188 * sdrad;
+    const double ceps = cos(eps);
+    const double seps = sin(eps);
+    const double cphi = cos(phi);
+    const double sphi = sin(phi);
+
+    rot[0][0] =  cphi;
+    rot[0][1] = -sphi*ceps;
+    rot[0][2] =  sphi*seps;
+    rot[1][0] =  sphi;
+    rot[1][1] =  cphi*ceps;
+    rot[1][2] = -cphi*seps;
+    rot[2][0] =  0.0;
+    rot[2][1] =  seps;
+    rot[2][2] =  ceps;
+
+    equ->x = (rot[0][0] * ecl->x) + (rot[0][1] * ecl->y) + (rot[0][2] * ecl->z);
+    equ->y = (rot[1][0] * ecl->x) + (rot[1][1] * ecl->y) + (rot[1][2] * ecl->z);
+    equ->z = (rot[2][0] * ecl->x) + (rot[2][1] * ecl->y) + (rot[2][2] * ecl->z);
+
+    equ->vx = (rot[0][0] * ecl->vx) + (rot[0][1] * ecl->vy) + (rot[0][2] * ecl->vz);
+    equ->vy = (rot[1][0] * ecl->vx) + (rot[1][1] * ecl->vy) + (rot[1][2] * ecl->vz);
+    equ->vz = (rot[2][0] * ecl->vx) + (rot[2][1] * ecl->vy) + (rot[2][2] * ecl->vz);
+
+    return 0;
 }
