@@ -1858,6 +1858,9 @@ static int CalcTop2013(FILE *outfile, const top_model_t *model)
     int i;
     top_elliptical_t    ellip;
     top_rectangular_t   ecl, equ;
+    double pos[3];
+    double range, diff, dx, dy, dz;
+    double max_diff = 0.0;
 
     for (i=0; i <= 10; ++i)
     {
@@ -1874,7 +1877,19 @@ static int CalcTop2013(FILE *outfile, const top_model_t *model)
 
         CHECK(TopEquatorial(&ecl, &equ));
         fprintf(outfile, " %15.10lf %15.10lf %15.10lf %15.10lf %15.10lf %15.10lf\n", equ.x, equ.y, equ.z, equ.vx, equ.vy, equ.vz);
+
+        /* Compare the equatorial vector against NOVAS calculations. */
+        CHECK(NovasBodyPos(jd, model->planet - 1, pos));
+        range = sqrt(pos[0]*pos[0] + pos[1]*pos[1] + pos[2]*pos[2]);
+        dx = pos[0] - equ.x;
+        dy = pos[1] - equ.y;
+        dz = pos[2] - equ.z;
+        diff = 60.0 * RAD2DEG * (sqrt(dx*dx + dy*dy + dz*dz) / range);
+        if (diff > max_diff)
+            max_diff = diff;
     }
+
+    printf("CalcTop2013: planet=%d, max arcmin error=%lg\n", model->planet, max_diff);
 
     error = 0;
 fail:
@@ -1892,6 +1907,8 @@ static int ValidateTop2013(void)
     const char *outFileName = "top2013/calc.txt";
 
     TopInitModel(&model);
+    CHECK(OpenEphem());
+
     outfile = fopen(outFileName, "wt");
     if (outfile == NULL)
         FAIL("ValidateTop2013: Cannot open output file: %s\n", outFileName);
@@ -1929,6 +1946,7 @@ static int ValidateTop2013(void)
     error = 0;
 
 fail:
+    ephem_close();
     if (mirror) fclose(mirror);
     if (outfile) fclose(outfile);
     TopFreeModel(&model);
