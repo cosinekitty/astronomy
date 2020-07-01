@@ -79,6 +79,7 @@ int TopLoadModel(top_model_t *model, const char *filename, int planet)
                 if (formula->nseries_total >= TOP_MAX_SERIES)
                     FAIL("TopLoadModel(%s line %d): too many series.\n", filename, lnum);
                 series = &formula->series[formula->nseries_total++];
+                formula->nseries_calc = formula->nseries_total;
                 series->nterms_total = nterms_remaining;
                 series->nterms_calc = 0;
                 series->terms = calloc(sizeof(top_term_t), nterms_remaining);
