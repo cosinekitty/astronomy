@@ -94,6 +94,7 @@ static int DistancePlot(const char *name, double tt1, double tt2);
 static int ImproveVsopApsides(vsop_model_t *model);
 static int DeltaTimePlot(const char *outFileName);
 static int ValidateTop2013(int planet);
+static int Diff(const char *filename1, const char *filename2, int *nlines);
 
 #define MOON_PERIGEE        0.00238
 #define MERCURY_APHELION    0.466697
@@ -1862,6 +1863,7 @@ static int ValidateTop2013(int planet)
     int error = 1;
     top_model_t model;
     FILE *outfile = NULL;
+    int nlines;
 
     TopInitModel(&model);
 
@@ -1878,6 +1880,16 @@ static int ValidateTop2013(int planet)
             CHECK(TopWriteModel(&model, outfile));
             TopFreeModel(&model);
         }
+
+        fclose(outfile);
+        outfile = NULL;
+
+        /* Verify that we generated binary identical output. */
+        CHECK(Diff(TopDataFileName, mirrorFileName, &nlines));
+        if (nlines != 336806)
+            FAIL("ValidateTop2013: incorrect number of matching lines = %d\n", nlines);
+
+        remove(mirrorFileName);
     }
     else
     {
@@ -1887,5 +1899,51 @@ static int ValidateTop2013(int planet)
 fail:
     if (outfile) fclose(outfile);
     TopFreeModel(&model);
+    return error;
+}
+
+
+static int Diff(const char *filename1, const char *filename2, int *nlines)
+{
+    int lnum = 0;
+    int error = 1;
+    FILE *infile1 = NULL;
+    FILE *infile2 = NULL;
+    char line1[200];
+    char line2[200];
+
+    infile1 = fopen(filename1, "rt");
+    if (infile1 == NULL)
+        FAIL("Diff: cannot open input file: %s\n", filename1);
+
+    infile2 = fopen(filename2, "rt");
+    if (infile2 == NULL)
+        FAIL("Diff: cannot open input file: %s\n", filename2);
+
+    for(;;)
+    {
+        char *r1 = fgets(line1, sizeof(line1), infile1);
+        char *r2 = fgets(line2, sizeof(line2), infile2);
+        if (r1 == NULL && r2 == NULL)
+            break;
+        if (r1 == NULL)
+            FAIL("Diff: %s is shorter than %s\n", filename1, filename2);
+        if (r2 == NULL)
+            FAIL("Diff: %s is shorter than %s\n", filename2, filename1);
+        ++lnum;
+        if (strcmp(line1, line2))
+        {
+            fprintf(stderr, "[%s]\n", line1);
+            fprintf(stderr, "[%s]\n", line2);
+            FAIL("Diff(%d): lines are different.\n", lnum);
+        }
+    }
+
+    printf("Diff: %d identical lines in files %s and %s\n", lnum, filename1, filename2);
+    error = 0;
+fail:
+    if (infile1 != NULL) fclose(infile1);
+    if (infile2 != NULL) fclose(infile2);
+    if (nlines != NULL) *nlines = lnum;
     return error;
 }
