@@ -1,11 +1,10 @@
 @echo off
 setlocal EnableDelayedExpansion
 
-for %%x in (wget.exe) do (set wgetexe=%%~$PATH:x)
-for %%x in (curl.exe) do (set curlexe=%%~$PATH:x)
-for %%x in (md5sum.exe) do (set md5exe=%%~$PATH:x)
-
 call :Download https://github.com/cosinekitty/ephemeris/raw/master/lnxp1600p2200.405 lnxp1600p2200.405 ephemeris.md5
+if errorlevel 1 (exit /b 1)
+
+call :Download https://github.com/cosinekitty/ephemeris/raw/master/top2013/TOP2013.dat TOP2013.dat top2013.md5
 if errorlevel 1 (exit /b 1)
 
 call :Download https://raw.githubusercontent.com/astronexus/HYG-Database/master/hygdata_v3.csv hygdata_v3.csv hygdata_v3.md5
@@ -43,6 +42,11 @@ for %%d in (output temp) do (
 )
 
 if exist temp\* (del /q temp\*)
+
+echo.
+echo.Validating TOP2013 code.
+!GENEXE! validate_top2013
+if errorlevel 1 (exit /b 1)
 
 if !FASTMODE! == true (
     REM *** Override fast mode if any of the required files are missing.
@@ -213,6 +217,9 @@ REM     A special download process helps keep the repo size reasonable.
 
 :Download
     setlocal
+    for %%x in (wget.exe) do (set wgetexe=%%~$PATH:x)
+    for %%x in (curl.exe) do (set curlexe=%%~$PATH:x)
+    for %%x in (md5sum.exe) do (set md5exe=%%~$PATH:x)
     set EPHURL=%1
     set EPHFILE=%2
     set MD5FILE=%3
