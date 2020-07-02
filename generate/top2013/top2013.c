@@ -205,7 +205,7 @@ static int AppendTrigCoeff(char *line, int lnum, double x, int rounding_adjust)
     */
 
     snprintf(buffer, sizeof(buffer), "%23.16le", x);
-    length = strlen(buffer);
+    length = (int)strlen(buffer);
     if (length != 23)
         FAIL("AppendTrigCoeff(%d): output string '%s' has incorrect length %d.\n", lnum, buffer, length);
 
@@ -254,7 +254,7 @@ static int AppendTrigCoeff(char *line, int lnum, double x, int rounding_adjust)
             {
                 if (buffer[m] < '0' || buffer[m] > '9')
                     FAIL("AppendTrigCoeff(%d): rounding failure\n", lnum);
-                buffer[m] += rounding_adjust;
+                buffer[m] += (char)rounding_adjust;
                 if (buffer[m] < '0')
                     buffer[m] = '9';
                 else if (buffer[m] > '9')
@@ -266,7 +266,7 @@ static int AppendTrigCoeff(char *line, int lnum, double x, int rounding_adjust)
     }
 
     sprintf(buffer+22, " %c%02d", polarity, exponent);
-    length = strlen(buffer);
+    length = (int)strlen(buffer);
     if (length != 26)
         FAIL("AppendTrigCoeff(%d): generated incorrect length %d in string '%s' for x=%lg\n", lnum, length, buffer, x);
 
@@ -285,7 +285,7 @@ static int FormatTermLine(int lnum, char *line, size_t size, const top_term_t *t
     snprintf(line, size, "%9.0lf", term->k);
     CHECK(AppendTrigCoeff(line, lnum, term->c, term->rc));
     CHECK(AppendTrigCoeff(line, lnum, term->s, term->rs));
-    length = strlen(line);
+    length = (int)strlen(line);
     if (61 != length)
         FAIL("FormatTermLine(%d): incorrect output line length = %d.\n", lnum, length);
     if (term->k != 0)

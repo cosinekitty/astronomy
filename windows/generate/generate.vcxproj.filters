@@ -54,6 +54,9 @@
     <ClCompile Include="..\..\generate\novas\readeph0.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\generate\top2013\top2013.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\generate\astro_vector.h">
@@ -90,6 +93,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\generate\novas\solarsystem.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\generate\top2013\top2013.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
