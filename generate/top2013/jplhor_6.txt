@@ -1,0 +1,109 @@
+*******************************************************************************
+Ephemeris / WWW_USER Wed Jul  1 18:01:20 2020 Pasadena, USA      / Horizons
+*******************************************************************************
+Target body name: Saturn (699)                    {source: sat427l_merged_DE438}
+Center body name: Sun (10)                        {source: sat427l_merged_DE438}
+Center-site name: BODY CENTER
+*******************************************************************************
+Start time      : A.D. 1890-Jun-26 12:00:00.0000 TDB
+Stop  time      : A.D. 2000-Jan-01 12:00:00.0000 TDB
+Step-size       : 5760000 minutes
+*******************************************************************************
+Center geodetic : 0.00000000,0.00000000,0.0000000 {E-lon(deg),Lat(deg),Alt(km)}
+Center cylindric: 0.00000000,0.00000000,0.0000000 {E-lon(deg),Dxy(km),Dz(km)}
+Center radii    : 696000.0 x 696000.0 x 696000.0 k{Equator, meridian, pole}
+Output units    : AU-D
+Output type     : GEOMETRIC cartesian states
+Output format   : 3 (position, velocity, LT, range, range-rate)
+Reference frame : ICRF
+*******************************************************************************
+JDTDB
+   X     Y     Z
+   VX    VY    VZ
+   LT    RG    RR
+*******************************************************************************
+$$SOE
+2411545.000000000 = A.D. 1890-Jun-26 12:00:00.0000 TDB
+ X =-8.515110799581867E+00 Y = 3.282558174277137E+00 Z = 1.720089306281833E+00
+ VX=-2.515704622087634E-03 VY=-4.781334875207566E-03 VZ=-1.865368473584404E-03
+ LT= 5.363494960681112E-02 RG= 9.286603648172701E+00 RR= 2.711317774755163E-04
+2415545.000000000 = A.D. 1901-Jun-09 12:00:00.0000 TDB
+ X = 2.377058668388723E+00 Y =-8.999624883361768E+00 Z =-3.816986973538449E+00
+ VX= 5.118300442548142E-03 VY= 1.283722887759288E-03 VZ= 3.103239236372946E-04
+ LT= 5.810442571869710E-02 RG= 1.006046944781149E+01 RR=-5.675941731205451E-05
+2419545.000000000 = A.D. 1912-May-22 12:00:00.0000 TDB
+ X = 5.217293642210385E+00 Y = 6.981533079835085E+00 Z = 2.657963559358980E+00
+ VX=-4.870726321571654E-03 VY= 2.865641895413514E-03 VZ= 1.391691101322821E-03
+ LT= 5.262594731183255E-02 RG= 9.111900316441172E+00 RR=-1.872684610489724E-04
+2423545.000000000 = A.D. 1923-May-05 12:00:00.0000 TDB
+ X =-9.138187375037004E+00 Y =-3.013450915150760E+00 Z =-8.520810969817985E-01
+ VX= 1.502517104395182E-03 VY=-4.877674424474645E-03 VZ=-2.078535875827891E-03
+ LT= 5.579084854767700E-02 RG= 9.659885978371710E+00 RR= 2.835883114360096E-04
+2427545.000000000 = A.D. 1934-Apr-17 12:00:00.0000 TDB
+ X = 7.750663498516634E+00 Y =-5.502543820645179E+00 Z =-2.604606101389741E+00
+ VX= 3.143144894620899E-03 VY= 4.090054807595497E-03 VZ= 1.553657522373347E-03
+ LT= 5.692175363913172E-02 RG= 9.855696125021066E+00 RR=-2.222991899099968E-04
+2431545.000000000 = A.D. 1945-Mar-30 12:00:00.0000 TDB
+ X =-1.798645284762831E+00 Y = 8.154529160807446E+00 Z = 3.444313400822379E+00
+ VX=-5.767860008238204E-03 VY=-1.134863461360958E-03 VZ=-2.206790244332068E-04
+ LT= 5.217015366741696E-02 RG= 9.032982093303582E+00 RR= 3.985054912464550E-05
+2435545.000000000 = A.D. 1956-Mar-12 12:00:00.0000 TDB
+ X =-5.273452583279634E+00 Y =-7.886667539568806E+00 Z =-3.030015381123053E+00
+ VX= 4.424863514339706E-03 VY=-2.683744809993005E-03 VZ=-1.298067589479256E-03
+ LT= 5.752074710654795E-02 RG= 9.959408628911117E+00 RR= 1.771852099571865E-04
+2439545.000000000 = A.D. 1967-Feb-23 12:00:00.0000 TDB
+ X = 9.501200896496016E+00 Y = 4.527742998983416E-01 Z =-2.214084656503743E-01
+ VX=-5.036799203633631E-04 VY= 5.132678195913501E-03 VZ= 2.141038735185630E-03
+ LT= 5.495151349732500E-02 RG= 9.514559619387898E+00 RR=-3.085443313023813E-04
+2443545.000000000 = A.D. 1978-Feb-05 12:00:00.0000 TDB
+ X =-7.736728159015754E+00 Y = 4.513104441121186E+00 Z = 2.196208702586228E+00
+ VX=-3.342834697413354E-03 VY=-4.395329673746750E-03 VZ=-1.671540830760603E-03
+ LT= 5.326280796375848E-02 RG= 9.222169320083564E+00 RR= 2.553595431458224E-04
+2447545.000000000 = A.D. 1989-Jan-18 12:00:00.0000 TDB
+ X = 1.013881525941693E+00 Y =-9.219777924333181E+00 Z =-3.851266715833568E+00
+ VX= 5.244536958000584E-03 VY= 5.911851116684755E-04 VZ= 1.818167672602391E-05
+ LT= 5.800429747664859E-02 RG= 1.004313278012169E+01 RR=-2.024057620103849E-05
+2451545.000000000 = A.D. 2000-Jan-01 12:00:00.0000 TDB
+ X = 6.406410429019202E+00 Y = 6.174656546561478E+00 Z = 2.274770736285824E+00
+ VX=-4.291884615381649E-03 VY= 3.528908255382223E-03 VZ= 1.641853943215948E-03
+ LT= 5.304148117805770E-02 RG= 9.183847775072431E+00 RR=-2.146090226891527E-04
+$$EOE
+*******************************************************************************
+Coordinate system description:
+
+  International Celestial Reference Frame (ICRF)
+
+    The ICRF is an adopted reference frame whose axes are defined relative to
+    fixed extragalactic radio sources distributed across the sky.
+
+    The ICRF was aligned with the prior FK5/J2000 dynamical system at the ~0.02
+    arcsecond level but is not identical and has no associated standard epoch.
+
+  Symbol meaning [1 au= 149597870.700 km, 1 day= 86400.0 s]:
+
+    JDTDB    Julian Day Number, Barycentric Dynamical Time
+      X      X-component of position vector (au)
+      Y      Y-component of position vector (au)
+      Z      Z-component of position vector (au)
+      VX     X-component of velocity vector (au/day)
+      VY     Y-component of velocity vector (au/day)
+      VZ     Z-component of velocity vector (au/day)
+      LT     One-way down-leg Newtonian light-time (day)
+      RG     Range; distance from coordinate center (au)
+      RR     Range-rate; radial velocity wrt coord. center (au/day)
+
+Geometric states/elements have no aberrations applied.
+
+
+ Computations by ...
+     Solar System Dynamics Group, Horizons On-Line Ephemeris System
+     4800 Oak Grove Drive, Jet Propulsion Laboratory
+     Pasadena, CA  91109   USA
+     Information  : https://ssd.jpl.nasa.gov/
+     Documentation: https://ssd.jpl.nasa.gov/?horizons_doc
+     Connect      : https://ssd.jpl.nasa.gov/?horizons (browser)
+                    telnet ssd.jpl.nasa.gov 6775       (command-line)
+                    e-mail command interface available
+                    Script and CGI interfaces available
+     Author       : Jon.D.Giorgini@jpl.nasa.gov
+*******************************************************************************
