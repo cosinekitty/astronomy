@@ -78,6 +78,8 @@ def Compare(t, j):
     diff  = sqrt((t.x-j.x)**2 + (t.y-j.y)**2 + (t.z-j.z)**2)
     arcmin = 60 * degrees(diff / range)
     print('planet {:1d}  jd {:10.1f}  arcmin {:10.6f}'.format(t.planet, t.jd, arcmin))
+    if arcmin > 0.09:
+        raise Exception('EXCESSIVE ARCMIN ERROR')
 
 
 def main():

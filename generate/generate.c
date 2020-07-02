@@ -1887,6 +1887,8 @@ static int CalcTop2013(FILE *outfile, const top_model_t *model)
         diff = 60.0 * RAD2DEG * (sqrt(dx*dx + dy*dy + dz*dz) / range);
         if (diff > max_diff)
             max_diff = diff;
+
+        DEBUG("planet %d  jd %10.1lf  arcmin %10.6lf\n", model->planet, jd, diff);
     }
 
     printf("CalcTop2013: planet=%d, max arcmin error=%lg\n", model->planet, max_diff);
