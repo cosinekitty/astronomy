@@ -1,6 +1,16 @@
 @echo off
 setlocal EnableDelayedExpansion
 
+for %%x in (wget.exe) do (set wgetexe=%%~$PATH:x)
+for %%x in (curl.exe) do (set curlexe=%%~$PATH:x)
+for %%x in (md5sum.exe) do (set md5exe=%%~$PATH:x)
+
+call :Download https://github.com/cosinekitty/ephemeris/raw/master/lnxp1600p2200.405 lnxp1600p2200.405 ephemeris.md5
+if errorlevel 1 (exit /b 1)
+
+call :Download https://raw.githubusercontent.com/astronexus/HYG-Database/master/hygdata_v3.csv hygdata_v3.csv hygdata_v3.md5
+if errorlevel 1 (exit /b 1)
+
 set FASTMODE=true
 set GENEXE=bin\generate.exe
 set CTESTEXE=bin\ctest.exe
@@ -11,95 +21,6 @@ if errorlevel 1 (exit /b 1)
 if not exist "!GENEXE!" (
     echo.FATAL[run.bat]: The executable does not exist: !GENEXE!
     exit /b 1
-)
-
-set EPHFILE=lnxp1600p2200.405
-REM set EPHURL=ftp://ssd.jpl.nasa.gov/pub/eph/planets/Linux/de405/!EPHFILE!
-set EPHURL=https://github.com/cosinekitty/ephemeris/raw/master/!EPHFILE!
-for %%x in (wget.exe) do (set wgetexe=%%~$PATH:x)
-for %%x in (curl.exe) do (set curlexe=%%~$PATH:x)
-for %%x in (md5sum.exe) do (set md5exe=%%~$PATH:x)
-
-if not exist !EPHFILE! (
-    echo.
-    echo.Ephemeris file not found: !EPHFILE!
-    echo.Trying to download for you from:
-    echo.!EPHURL!
-    echo.
-
-    if defined wgetexe (
-        echo.Trying download using !wgetexe! ...
-        !wgetexe! !EPHURL!
-        if not errorlevel 1 goto verify_eph
-    )
-
-    if defined curlexe (
-        echo.Trying download using !curlexe! ...
-        !curlexe! -L -o !EPHFILE! !EPHURL!
-        if not errorlevel 1 goto verify_eph
-    )
-
-    if exist !EPHFILE! (del !EPHFILE!)
-
-    echo.
-    echo.Could not download the ephemeris file.
-    echo.Use your browser to download the above file from
-    echo.the above URL into this directory.
-    echo.Then run this batch file again to continue.
-    exit /b 1
-)
-
-:verify_eph
-if defined md5exe (
-    echo.Using !md5exe! to test integrity of downloaded !EPHFILE!
-    !md5exe! -c ephemeris.md5
-    if errorlevel 1 (
-        echo.Corrupt ephemeris file !EPHFILE! detected.
-        if exist !EPHFILE! (del !EPHFILE!)
-        exit /b 1
-    )
-)
-
-set STARFILE=hygdata_v3.csv
-set STARURL=https://raw.githubusercontent.com/astronexus/HYG-Database/master/hygdata_v3.csv
-set STARMD5=hygdata_v3.md5
-if not exist !STARFILE! (
-    echo.
-    echo.Star database file !STARFILE! not found.
-    echo.Trying to download for you from:
-    echo.!STARURL!
-    echo.
-    if defined wgetexe (
-        echo.Trying download using !wgetexe! ...
-        !wgetexe! !STARURL!
-        if not errorlevel 1 goto verify_starfile
-    )
-
-    if defined curlexe (
-        echo.Trying download using !curlexe! ...
-        !curlexe! -L -o !STARFILE! !STARURL!
-        if not errorlevel 1 goto verify_starfile
-    )
-
-    if exist !STARFILE! (del !STARFILE!)
-
-    echo.
-    echo.Could not download the star database.
-    echo.Use your browser to download the above file from
-    echo.the above URL into this directory.
-    echo.Then run this batch file again to continue.
-    exit /b 1
-)
-
-:verify_starfile
-if defined md5exe (
-    echo.Using !md5exe! to test integrity of downloaded !STARFILE!
-    !md5exe! -c hygdata_v3.md5
-    if errorlevel 1 (
-        echo.Corrupt star database file !STARFILE! detected.
-        if exist !STARFILE! (del !STARFILE!)
-        exit /b 1
-    )
 )
 
 if exist constellation\test_input.txt (del constellation\test_input.txt)
@@ -282,3 +203,58 @@ if errorlevel 1 (exit /b 1)
 
 type pass.txt
 exit /b 0
+
+REM -----------------------------------------------------------------------------------------
+REM     Subroutine for downloading an external file.
+REM     Some of the files needed to generate source code are large.
+REM     These files are only needed by Astronomy Engine contributors,
+REM     not by developers who are using the published version of Astronomy Engine.
+REM     A special download process helps keep the repo size reasonable.
+
+:Download
+    setlocal
+    set EPHURL=%1
+    set EPHFILE=%2
+    set MD5FILE=%3
+    if not exist !EPHFILE! (
+        echo.
+        echo.Local file not found: !EPHFILE!
+        echo.Trying to download for you from:
+        echo.!EPHURL!
+        echo.
+
+        if defined wgetexe (
+            echo.Trying download using !wgetexe! ...
+            !wgetexe! !EPHURL!
+            if not errorlevel 1 goto verify_eph
+        )
+
+        if defined curlexe (
+            echo.Trying download using !curlexe! ...
+            !curlexe! -L -o !EPHFILE! !EPHURL!
+            if not errorlevel 1 goto verify_eph
+        )
+
+        if exist !EPHFILE! (del !EPHFILE!)
+
+        echo.
+        echo.Could not download the file.
+        echo.Use your browser to download the above file from
+        echo.the above URL into this directory.
+        echo.Then run this batch file again to continue.
+        exit /b 1
+    )
+
+    :verify_eph
+    if defined md5exe (
+        echo.Using !md5exe! to test integrity of downloaded !EPHFILE!
+        !md5exe! -c !MD5FILE!
+        if errorlevel 1 (
+            echo.Corrupt ephemeris file !EPHFILE! detected.
+            if exist !EPHFILE! (del !EPHFILE!)
+            exit /b 1
+        )
+    )
+    exit /b 0
+
+REM -----------------------------------------------------------------------------------------
