@@ -442,21 +442,6 @@ fail:
     return error;
 }
 
-#if 0
-static void ExpandAllSeries(vsop_formula_t *formula, int nterms)
-{
-    int s;
-
-    for (s=0; s < formula->nseries_calc; ++s)
-    {
-        vsop_series_t *series = &formula->series[s];
-        series->nterms_calc += nterms;
-        if (series->nterms_calc > series->nterms_total)
-            series->nterms_calc = series->nterms_total;
-    }
-}
-#endif
-
 static int TermContribution(const vsop_term_t *term, int sindex, double *contrib)
 {
     switch (sindex)

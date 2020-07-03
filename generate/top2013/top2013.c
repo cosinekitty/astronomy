@@ -58,11 +58,8 @@ int TopCloneModel(top_model_t *copy, const top_model_t* original)
     TopInitModel(copy);
     copy->planet = original->planet;
     for (f=0; f < TOP_NCOORDS; ++f)
-    {
-        copy->formula[f].nseries_calc = original->formula[f].nseries_calc;
         for (s=0; s < TOP_NSERIES; ++s)
             CHECK(CloneSeries(&copy->formula[f].series[s], &original->formula[f].series[s]));
-    }
 
     error = 0;
 fail:
@@ -150,8 +147,6 @@ int TopLoadModel(top_model_t *model, const char *filename, int planet)
 
                 /* Allocate room for the new terms. */
                 formula = &model->formula[check_var];
-                if (tpower >= formula->nseries_calc)
-                    formula->nseries_calc = tpower + 1;
                 series = &formula->series[tpower];
                 series->nterms_total = nterms_remaining;
                 series->nterms_calc = 0;
@@ -347,7 +342,7 @@ int TopWriteModel(const top_model_t *model, FILE *outfile)
     for (f=0; f < TOP_NCOORDS; ++f)
     {
         const top_formula_t *formula = &model->formula[f];
-        for (s=0; s < formula->nseries_calc; ++s)
+        for (s=0; s < TOP_NSERIES; ++s)
         {
             const top_series_t *series = &formula->series[s];
 
@@ -396,7 +391,6 @@ void TopResetModel(top_model_t *model)
     for (f=0; f < TOP_NCOORDS; ++f)
     {
         top_formula_t *formula = &model->formula[f];
-        formula->nseries_calc = TOP_NSERIES;
         for (s=0; s < TOP_NSERIES; ++s)
         {
             top_series_t *series = &formula->series[s];
@@ -435,7 +429,7 @@ static int MakeContribList(const top_formula_t *formula, top_contrib_list_t *lis
     /* Count up the number of terms in the elliptical coordinate formula 'f'. */
 
     nterms = 0;
-    for (s=0; s < formula->nseries_calc; ++s)
+    for (s=0; s < TOP_NSERIES; ++s)
         nterms += formula->series[s].nterms_calc;
 
     /* Allocate space for the array. */
@@ -448,7 +442,7 @@ static int MakeContribList(const top_formula_t *formula, top_contrib_list_t *lis
     nterms = 0;
     tpower = 1.0;
     millennia = fabs(millennia);
-    for (s=0; s < formula->nseries_calc; ++s)
+    for (s=0; s < TOP_NSERIES; ++s)
     {
         const top_series_t *series = &formula->series[s];
         for (t=0; t < series->nterms_calc; ++t)
@@ -543,7 +537,7 @@ int TopCalcElliptical(const top_model_t *model, double tt, top_elliptical_t *ell
     {
         const top_formula_t *formula = &model->formula[f];
         el[f] = 0.0;
-        for (s=0; s < formula->nseries_calc; ++s)
+        for (s=0; s < TOP_NSERIES; ++s)
         {
             const top_series_t *series = &formula->series[s];
             for (t=0; t < series->nterms_calc; ++t)

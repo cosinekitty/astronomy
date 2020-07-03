@@ -31,7 +31,6 @@ top_series_t;
 
 typedef struct
 {
-    int nseries_calc;
     top_series_t series[TOP_NSERIES];
 }
 top_formula_t;
