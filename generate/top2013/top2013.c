@@ -678,13 +678,12 @@ int TopEquatorial(const top_rectangular_t *ecl, top_rectangular_t *equ)
 }
 
 
-int TopSquash(
+void TopSquash(
     top_model_t *copy,
     const top_model_t *original,
     const top_contrib_map_t *map,
     double amplitude[TOP_NCOORDS])
 {
-    int error;
     int f, s, t, i, n, skip;
     double sum;
 
@@ -722,8 +721,4 @@ int TopSquash(
             cform[s].terms[n] = oform[s].terms[t];
         }
     }
-
-    error = 0;
-/* fail: */
-    return error;
 }

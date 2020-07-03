@@ -2105,7 +2105,7 @@ static int OptimizeTop(top_model_t *shrunk, const top_model_t *model)
         amplitude[f] = 1.0e-3;
 
     CHECK(TopCloneModel(shrunk, model));
-    CHECK(TopSquash(shrunk, model, &map, amplitude));
+    TopSquash(shrunk, model, &map, amplitude);
 
     CHECK(MeasureTopError(shrunk, &max_arcmin));
     printf("OptimizeTop: shrunk error = %0.6lf\n", max_arcmin);

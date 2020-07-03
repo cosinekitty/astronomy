@@ -105,7 +105,7 @@ void TopInitContribMap(top_contrib_map_t *map);
 int  TopMakeContribMap(const top_model_t *model, top_contrib_map_t *map, double millennia);
 void TopFreeContribMap(top_contrib_map_t *map);
 
-int TopSquash(
+void TopSquash(
     top_model_t *copy,
     const top_model_t *original,
     const top_contrib_map_t *map,
