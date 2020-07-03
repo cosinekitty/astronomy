@@ -444,6 +444,9 @@ static int MakeContribList(const top_series_t *formula, top_contrib_list_t *list
     /* Sort the list in ascending order of magnitude. */
     qsort(list->array, list->nterms, sizeof(list->array[0]), ContribCompare);
 
+    /* If the list is not empty, set the pruning amplitude to the largest value that doesn't cause any pruning. */
+    list->amplitude = (list->nterms > 0) ? list->array[0].magnitude : 0.0;
+
     error = 0;
 fail:
     return error;
@@ -467,7 +470,7 @@ void TopFreeContribMap(top_contrib_map_t *map)
 }
 
 
-int TopMakeContribMap(const top_model_t *model, top_contrib_map_t *map, double millennia)
+int TopMakeContribMap(top_contrib_map_t *map, const top_model_t *model, double millennia)
 {
     int error, f;
 
@@ -678,11 +681,7 @@ int TopEquatorial(const top_rectangular_t *ecl, top_rectangular_t *equ)
 }
 
 
-void TopSquash(
-    top_model_t *copy,
-    const top_model_t *original,
-    const top_contrib_map_t *map,
-    double amplitude[TOP_NCOORDS])
+void TopSquash(top_model_t *copy, const top_model_t *original, const top_contrib_map_t *map)
 {
     int f, s, t, i, n, skip;
     double sum;
@@ -705,7 +704,7 @@ void TopSquash(
             skip any more without exceeding the amplitude threshold.
         */
         sum = 0.0;
-        for (skip=0; skip < list->nterms && sum + list->array[skip].magnitude <= amplitude[f]; ++skip)
+        for (skip=0; skip < list->nterms && sum + list->array[skip].magnitude < list->amplitude; ++skip)
             sum += list->array[skip].magnitude;
 
         /* Start over with all the series in 'copy' empty. */

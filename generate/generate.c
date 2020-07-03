@@ -2083,7 +2083,6 @@ static int OptimizeTop(top_model_t *shrunk, const top_model_t *model)
     double max_arcmin;
     top_contrib_map_t map;
     const double millennia = 0.2;       /* optimize for calculations within 200 years of J2000. */
-    double amplitude[TOP_NCOORDS];
     int f;
 
     TopInitModel(shrunk);
@@ -2093,7 +2092,7 @@ static int OptimizeTop(top_model_t *shrunk, const top_model_t *model)
     printf("OptimizeTop: baseline error = %0.6lf\n", max_arcmin);
 
     /* Make a map of the relative importance of the terms within each of the 6 formulas. */
-    CHECK(TopMakeContribMap(model, &map, millennia));
+    CHECK(TopMakeContribMap(&map, model, millennia));
     CHECK(PrintContribMap(&map, "output/contrib.map"));
 
     /*
@@ -2102,10 +2101,10 @@ static int OptimizeTop(top_model_t *shrunk, const top_model_t *model)
         terms we can truncate on each one without exceeding the error threshold.
     */
     for (f=0; f<TOP_NCOORDS; ++f)
-        amplitude[f] = 1.0e-3;
+        map.list[f].amplitude = 1.0e-3;
 
     CHECK(TopCloneModel(shrunk, model));
-    TopSquash(shrunk, model, &map, amplitude);
+    TopSquash(shrunk, model, &map);
 
     CHECK(MeasureTopError(shrunk, &max_arcmin));
     printf("OptimizeTop: shrunk error = %0.6lf\n", max_arcmin);

@@ -79,6 +79,7 @@ typedef struct
 {
     int             nterms;
     top_contrib_t  *array;
+    double          amplitude;
 }
 top_contrib_list_t;
 
@@ -102,13 +103,8 @@ int  TopEcliptic(int planet, const top_elliptical_t *ellip, top_rectangular_t *e
 int  TopEquatorial(const top_rectangular_t *ecl, top_rectangular_t *equ);
 
 void TopInitContribMap(top_contrib_map_t *map);
-int  TopMakeContribMap(const top_model_t *model, top_contrib_map_t *map, double millennia);
+int  TopMakeContribMap(top_contrib_map_t *map, const top_model_t *model, double millennia);
 void TopFreeContribMap(top_contrib_map_t *map);
-
-void TopSquash(
-    top_model_t *copy,
-    const top_model_t *original,
-    const top_contrib_map_t *map,
-    double amplitude[TOP_NCOORDS]);
+void TopSquash(top_model_t *copy, const top_model_t *original, const top_contrib_map_t *map);
 
 #endif /* __DDC_TOP2013_H */
