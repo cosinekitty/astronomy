@@ -232,7 +232,7 @@ static int AppendTrigCoeff(char *line, int lnum, double x, int rounding_adjust)
 
     /* Copy digits and shift decimal point */
     buffer[22] = '\0';
-    for(m = 17; m >= 0 && buffer[m] != '.'; --m)
+    for (m = 17; m >= 0 && buffer[m] != '.'; --m)
         buffer[m+4] = buffer[m];
 
     if (m != 2 || buffer[2] != '.')

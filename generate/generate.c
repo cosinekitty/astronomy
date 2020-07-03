@@ -75,6 +75,7 @@ static int OpenEphem(void);
 static int PrintUsage(void);
 static int GenerateVsopPlanets(void);
 static int GeneratePluto(void);
+static int GenerateTop(const char *name, const char *outFileName);
 static int GenerateApsisTestData(void);
 static int GenerateSource(void);
 static int TestVsopModel(vsop_model_t *model, int body, double threshold, double *max_arcmin, int *trunc_terms);
@@ -148,6 +149,9 @@ int main(int argc, const char *argv[])
     if (argc == 2 && !strcmp(argv[1], "validate_top2013"))
         return ValidateTop2013();
 
+    if (argc == 4 && !strcmp(argv[1], "top"))
+        return GenerateTop(argv[2], argv[3]);
+
     if (argc == 2 && !strcmp(argv[1], "apsis"))
         return GenerateApsisTestData();
 
@@ -199,6 +203,10 @@ static int PrintUsage(void)
         "\n"
         "generate validate_top2013\n"
         "   Validates code for calculating outer planet positions using TOP2013.\n"
+        "\n"
+        "generate top planet outfile\n"
+        "   Use TOP2013 to generate an optimized model for the specified outer planet.\n"
+        "   The 'planet' must be one of: Jupiter, Saturn, Uranus, Neptune, Pluto.\n"
         "\n"
     );
 
@@ -1998,5 +2006,111 @@ fail:
     if (infile1 != NULL) fclose(infile1);
     if (infile2 != NULL) fclose(infile2);
     if (nlines != NULL) *nlines = lnum;
+    return error;
+}
+
+
+static int MeasureTopError(const top_model_t *model, double *max_arcmin)
+{
+    int error = 1;
+    double tt, jd, jdStart, jdStop, jdDelta;
+    double dx, dy, dz, diff, range, arcmin;
+    double earth[3];
+    double planet[3];
+    const int body = model->planet - 1;     /* convert TOP2013 planet to our body code */
+    top_elliptical_t ellip;
+    top_rectangular_t ecl;
+    top_rectangular_t equ;
+
+    /*
+        Compare the calculations of the (possibly truncated) TOP2013 model
+        against NOVAS, using a few samples over the years 1800..2200.
+        Measure error in arcminutes, based on total distance error divided
+        by the range from Earth to the planet. This represents a worst case
+        parallax error as seen from Earth. Even if the error is mostly radial
+        as seen from Earth, I want to count it, so that the absolute error
+        in the planet's position is bounded.
+    */
+    *max_arcmin = 0.0;
+
+    jdStart = julian_date(1800, 1, 1, 0.0);
+    jdStop = julian_date(2200, 1, 1, 0.0);
+    jdDelta = 100.0;
+
+    for (jd=jdStart; jd <= jdStop; jd += jdDelta)
+    {
+        tt = jd - 2451545.0;
+
+        CHECK(NovasBodyPos(jd, BODY_EARTH, earth));
+        CHECK(NovasBodyPos(jd, body, planet));
+        CHECK(TopCalcElliptical(model, tt, &ellip));
+        CHECK(TopEcliptic(model->planet, &ellip, &ecl));
+        CHECK(TopEquatorial(&ecl, &equ));
+
+        /* Calculate discrepancy in position comparing NOVAS to TOP2013. */
+        dx = equ.x - planet[0];
+        dy = equ.y - planet[1];
+        dz = equ.z - planet[2];
+        diff = sqrt(dx*dx + dy*dy + dz*dz);
+
+        /* Calculate distance of planet from Earth. */
+        dx = planet[0] - earth[0];
+        dy = planet[1] - earth[1];
+        dz = planet[2] - earth[2];
+        range = sqrt(dx*dx + dy*dy + dz*dz);
+
+        /* Calculate worst-case parallax error as seen from Earth. */
+        arcmin = (RAD2DEG * 60.0) * (diff / range);
+        if (arcmin > *max_arcmin)
+            *max_arcmin = arcmin;
+    }
+
+fail:
+    return error;
+}
+
+
+static int OptimizeTop(top_model_t *model)
+{
+    int error = 1;
+    double max_arcmin;
+
+    CHECK(MeasureTopError(model, &max_arcmin));
+
+    printf("OptimizeTop: max arcminute error = %0.6lf\n", max_arcmin);
+    error = 0;
+fail:
+    return error;
+}
+
+
+static int GenerateTop(const char *name, const char *outFileName)
+{
+    int error = 1;
+    top_model_t model;
+    vsop_body_t body;
+    int planet;
+
+    TopInitModel(&model);   /* must init the model before doing anything that could fail (and call TopFreeModel) */
+
+    body = LookupBody(name);
+    if (body < 0)
+        FAIL("GenerateTop: planet name '%s' is not valid.\n", name);
+
+    if (body < BODY_JUPITER || body > BODY_PLUTO)
+        FAIL("GenerateTop: TOP2013 supports Jupiter through Pluto only.\n");
+
+    planet = body + 1;      /* convert our body ID into TOP2013 planet ID */
+
+    CHECK(OpenEphem());
+    CHECK(TopLoadModel(&model, TopDataFileName, planet));
+    CHECK(OptimizeTop(&model));
+    CHECK(TopSaveModel(&model, outFileName));
+    printf("GenerateTop: saved %s\n", outFileName);
+    error = 0;
+
+fail:
+    ephem_close();
+    TopFreeModel(&model);
     return error;
 }
