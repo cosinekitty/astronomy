@@ -25,7 +25,7 @@ void TopFreeModel(top_model_t *model)
     int f, s;
     for (f=0; f < TOP_NCOORDS; ++f)
         for (s=0; s < TOP_NSERIES; ++s)
-            free(model->formula[f].series[s].terms);
+            free(model->series[f][s].terms);
 
     TopInitModel(model);
 }
@@ -59,7 +59,7 @@ int TopCloneModel(top_model_t *copy, const top_model_t* original)
     copy->planet = original->planet;
     for (f=0; f < TOP_NCOORDS; ++f)
         for (s=0; s < TOP_NSERIES; ++s)
-            CHECK(CloneSeries(&copy->formula[f].series[s], &original->formula[f].series[s]));
+            CHECK(CloneSeries(&copy->series[f][s], &original->series[f][s]));
 
     error = 0;
 fail:
@@ -99,7 +99,6 @@ int TopLoadModel(top_model_t *model, const char *filename, int planet)
     FILE *infile = NULL;
     int nterms_remaining, lnum, nscanned, check_planet, check_var, tpower;
     int count = 0;      /* total number of terms we found for this planet */
-    top_formula_t *formula = NULL;
     top_series_t *series = NULL;
     top_term_t *term = NULL;
     char line[100];
@@ -146,8 +145,7 @@ int TopLoadModel(top_model_t *model, const char *filename, int planet)
                 }
 
                 /* Allocate room for the new terms. */
-                formula = &model->formula[check_var];
-                series = &formula->series[tpower];
+                series = &model->series[check_var][tpower];
                 series->nterms_total = nterms_remaining;
                 series->nterms_calc = 0;
                 series->terms = calloc(sizeof(top_term_t), nterms_remaining);
@@ -341,10 +339,9 @@ int TopWriteModel(const top_model_t *model, FILE *outfile)
 
     for (f=0; f < TOP_NCOORDS; ++f)
     {
-        const top_formula_t *formula = &model->formula[f];
         for (s=0; s < TOP_NSERIES; ++s)
         {
-            const top_series_t *series = &formula->series[s];
+            const top_series_t *series = &model->series[f][s];
 
             if (series->nterms_calc == 0)
                 continue;
@@ -382,24 +379,6 @@ fail:
 }
 
 
-void TopResetModel(top_model_t *model)
-{
-    int f, s;
-
-    /* Undo any truncation. */
-
-    for (f=0; f < TOP_NCOORDS; ++f)
-    {
-        top_formula_t *formula = &model->formula[f];
-        for (s=0; s < TOP_NSERIES; ++s)
-        {
-            top_series_t *series = &formula->series[s];
-            series->nterms_calc = series->nterms_total;
-        }
-    }
-}
-
-
 static int ContribCompare(const void *aptr, const void *bptr)
 {
     const top_contrib_t *a = aptr;
@@ -420,7 +399,7 @@ static int ContribCompare(const void *aptr, const void *bptr)
 }
 
 
-static int MakeContribList(const top_formula_t *formula, top_contrib_list_t *list, double millennia)
+static int MakeContribList(const top_series_t *formula, top_contrib_list_t *list, double millennia)
 {
     int error;
     int nterms, s, t;
@@ -430,7 +409,7 @@ static int MakeContribList(const top_formula_t *formula, top_contrib_list_t *lis
 
     nterms = 0;
     for (s=0; s < TOP_NSERIES; ++s)
-        nterms += formula->series[s].nterms_calc;
+        nterms += formula[s].nterms_calc;
 
     /* Allocate space for the array. */
     list->array = calloc(nterms, sizeof(top_contrib_t));
@@ -444,7 +423,7 @@ static int MakeContribList(const top_formula_t *formula, top_contrib_list_t *lis
     millennia = fabs(millennia);
     for (s=0; s < TOP_NSERIES; ++s)
     {
-        const top_series_t *series = &formula->series[s];
+        const top_series_t *series = &formula[s];
         for (t=0; t < series->nterms_calc; ++t)
         {
             top_contrib_t *contrib;
@@ -494,7 +473,7 @@ int TopMakeContribMap(const top_model_t *model, top_contrib_map_t *map, double m
 
     TopInitContribMap(map);
     for (f=0; f < TOP_NCOORDS; ++f)
-        CHECK(MakeContribList(&model->formula[f], &map->list[f], millennia));
+        CHECK(MakeContribList(model->series[f], &map->list[f], millennia));
 
 fail:
     if (error) TopFreeContribMap(map);
@@ -535,11 +514,10 @@ int TopCalcElliptical(const top_model_t *model, double tt, top_elliptical_t *ell
 
     for (f=0; f < TOP_NCOORDS; ++f)
     {
-        const top_formula_t *formula = &model->formula[f];
         el[f] = 0.0;
         for (s=0; s < TOP_NSERIES; ++s)
         {
-            const top_series_t *series = &formula->series[s];
+            const top_series_t *series = &model->series[f][s];
             for (t=0; t < series->nterms_calc; ++t)
             {
                 const top_term_t *term = &series->terms[t];
@@ -719,8 +697,8 @@ int TopSquash(
 
     for (f=0; f < TOP_NCOORDS; ++f)
     {
-        top_formula_t *cform = &copy->formula[f];
-        const top_formula_t *oform = &original->formula[f];
+        top_series_t *cform = copy->series[f];
+        const top_series_t *oform = original->series[f];
         const top_contrib_list_t *list = &map->list[f];
 
         /*
@@ -733,15 +711,15 @@ int TopSquash(
 
         /* Start over with all the series in 'copy' empty. */
         for (s=0; s < TOP_NSERIES; ++s)
-            cform->series[s].nterms_calc = 0;
+            cform[s].nterms_calc = 0;
 
         /* Append the remaining terms one at a time, in descending order of importance. */
         for (i = list->nterms - 1; i >= skip; --i)
         {
             s = list->array[i].s;
             t = list->array[i].t;
-            n = cform->series[s].nterms_calc++;
-            cform->series[s].terms[n] = oform->series[s].terms[t];
+            n = cform[s].nterms_calc++;
+            cform[s].terms[n] = oform[s].terms[t];
         }
     }
 
@@ -749,4 +727,3 @@ int TopSquash(
 /* fail: */
     return error;
 }
-

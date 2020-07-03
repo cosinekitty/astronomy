@@ -27,21 +27,13 @@ typedef struct
 }
 top_series_t;
 
+#define TOP_NCOORDS  6
 #define TOP_NSERIES 13
 
 typedef struct
 {
-    top_series_t series[TOP_NSERIES];
-}
-top_formula_t;
-
-
-#define TOP_NCOORDS 6
-
-typedef struct
-{
     int planet;     /* 5=Jupiter, 6=Saturn, 7=Uranus, 8=Neptune, 9=Pluto */
-    top_formula_t formula[TOP_NCOORDS];
+    top_series_t series[TOP_NCOORDS][TOP_NSERIES];
 }
 top_model_t;
 
@@ -105,7 +97,6 @@ int  TopCloneModel(top_model_t *copy, const top_model_t* original);
 int  TopLoadModel(top_model_t *model, const char *filename, int planet);
 int  TopSaveModel(const top_model_t *model, const char *filename);
 int  TopWriteModel(const top_model_t *model, FILE *outfile);
-void TopResetModel(top_model_t *model);
 int  TopCalcElliptical(const top_model_t *model, double tt, top_elliptical_t *ellip);
 int  TopEcliptic(int planet, const top_elliptical_t *ellip, top_rectangular_t *ecl);
 int  TopEquatorial(const top_rectangular_t *ecl, top_rectangular_t *equ);
