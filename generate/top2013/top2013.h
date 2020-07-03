@@ -75,13 +75,44 @@ typedef struct
 top_rectangular_t;
 
 
+typedef struct
+{
+    /* a sortable item that estimates how much a given term contributes to an elliptical element */
+    double  magnitude;
+    int     s;
+    int     t;
+}
+top_contrib_t;
+
+
+typedef struct
+{
+    int             nterms;
+    top_contrib_t  *array;
+}
+top_contrib_list_t;
+
+
+typedef struct
+{
+    /* an independent sortable list for each of the elliptical formulas */
+    top_contrib_list_t list[TOP_NCOORDS];
+}
+top_contrib_map_t;
+
+
 void TopInitModel(top_model_t *model);
 void TopFreeModel(top_model_t *model);
 int  TopLoadModel(top_model_t *model, const char *filename, int planet);
 int  TopSaveModel(const top_model_t *model, const char *filename);
 int  TopWriteModel(const top_model_t *model, FILE *outfile);
+void TopResetModel(top_model_t *model);
 int  TopCalcElliptical(const top_model_t *model, double tt, top_elliptical_t *ellip);
 int  TopEcliptic(int planet, const top_elliptical_t *ellip, top_rectangular_t *ecl);
 int  TopEquatorial(const top_rectangular_t *ecl, top_rectangular_t *equ);
+
+void TopInitContribMap(top_contrib_map_t *map);
+int  TopMakeContribMap(const top_model_t *model, top_contrib_map_t *map, double millennia);
+void TopFreeContribMap(top_contrib_map_t *map);
 
 #endif /* __DDC_TOP2013_H */

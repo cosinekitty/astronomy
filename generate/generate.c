@@ -2034,8 +2034,8 @@ static int MeasureTopError(const top_model_t *model, double *max_arcmin)
     *max_arcmin = 0.0;
 
     jdStart = julian_date(1800, 1, 1, 0.0);
-    jdStop = julian_date(2200, 1, 1, 0.0);
-    jdDelta = 100.0;
+    jdStop  = julian_date(2200, 1, 1, 0.0);
+    jdDelta = 500.0;
 
     for (jd=jdStart; jd <= jdStop; jd += jdDelta)
     {
@@ -2070,16 +2070,57 @@ fail:
 }
 
 
+static int PrintContribMap(const top_contrib_map_t *map, const char *filename)
+{
+    int error = 1;
+    FILE *outfile = NULL;
+    int f, c;
+
+    outfile = fopen(filename, "wt");
+    if (outfile == NULL)
+        FAIL("PrintContribMap: cannot open output file: %s\n", filename);
+
+    for (f=0; f < TOP_NCOORDS; ++f)
+    {
+        fprintf(outfile, "\n");
+        for (c=0; c < map->list[f].nterms; ++c)
+        {
+            const top_contrib_t *contrib = &map->list[f].array[c];
+            fprintf(outfile, "%10d  %20.15le  f=%d  s=%02d  t=%06d\n", c, contrib->magnitude, f, contrib->s, contrib->t);
+        }
+    }
+
+fail:
+    if (outfile) fclose(outfile);
+    return error;
+}
+
+
 static int OptimizeTop(top_model_t *model)
 {
     int error = 1;
     double max_arcmin;
+    top_contrib_map_t map;
+    const double millennia = 0.2;       /* optimize for calculations within 200 years of J2000. */
+
+    TopInitContribMap(&map);
 
     CHECK(MeasureTopError(model, &max_arcmin));
+    printf("OptimizeTop: baseline error = %0.6lf\n", max_arcmin);
 
-    printf("OptimizeTop: max arcminute error = %0.6lf\n", max_arcmin);
+    /* Make a map of the relative importance of the terms within each of the 6 formulas. */
+    CHECK(TopMakeContribMap(model, &map, millennia));
+    CHECK(PrintContribMap(&map, "output/contrib.map"));
+
+    /*
+        Figure out how big the 6-dimensional box is that we can optimize in.
+        In other words, for each of the 6 elliptical elements, see how many
+        terms we can truncate on each one without exceeding the error threshold.
+    */
+
     error = 0;
 fail:
+    TopFreeContribMap(&map);
     return error;
 }
 

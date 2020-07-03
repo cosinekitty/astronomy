@@ -347,6 +347,127 @@ fail:
 }
 
 
+void TopResetModel(top_model_t *model)
+{
+    int f, s;
+
+    /* Undo any truncation. */
+
+    for (f=0; f < TOP_NCOORDS; ++f)
+    {
+        top_formula_t *formula = &model->formula[f];
+        formula->nseries_calc = formula->nseries_total;
+        for (s=0; s < formula->nseries_total; ++s)
+        {
+            top_series_t *series = &formula->series[s];
+            series->nterms_calc = series->nterms_total;
+        }
+    }
+}
+
+
+static int ContribCompare(const void *aptr, const void *bptr)
+{
+    const top_contrib_t *a = aptr;
+    const top_contrib_t *b = bptr;
+
+    if (a->magnitude < b->magnitude)
+        return -1;
+
+    if (a->magnitude > b->magnitude)
+        return +1;
+
+    /* tie-breaker: keep elements in reverse order as much as possible */
+
+    if (a->s != b->s)
+        return b->s - a->s;
+
+    return b->t - a->t;
+}
+
+
+static int MakeContribList(const top_formula_t *formula, top_contrib_list_t *list, double millennia)
+{
+    int error;
+    int nterms, s, t;
+    double tpower;
+
+    /* Count up the number of terms in the elliptical coordinate formula 'f'. */
+
+    nterms = 0;
+    for (s=0; s < formula->nseries_calc; ++s)
+        nterms += formula->series[s].nterms_calc;
+
+    /* Allocate space for the array. */
+    list->array = calloc(nterms, sizeof(top_contrib_t));
+    if (list->array == NULL)
+        FAIL("MakeContribList: out of memory allocating %d elements.\n", nterms);
+
+    /* Fill up the array. */
+    list->nterms = nterms;
+    nterms = 0;
+    tpower = 1.0;
+    millennia = fabs(millennia);
+    for (s=0; s < formula->nseries_calc; ++s)
+    {
+        const top_series_t *series = &formula->series[s];
+        for (t=0; t < series->nterms_calc; ++t)
+        {
+            top_contrib_t *contrib;
+            const top_term_t *term = &series->terms[t];
+            if (nterms >= list->nterms)
+                FAIL("MakeContribList: internal error -- overflow %d items\n", nterms);
+            contrib = &list->array[nterms++];
+            contrib->s = s;
+            contrib->t = t;
+            contrib->magnitude = tpower * sqrt(term->c*term->c + term->s*term->s);
+        }
+        tpower *= millennia;
+    }
+
+    if (nterms != list->nterms)
+        FAIL("MakeContribList: internal error: expected %d terms, found %d\n", list->nterms, nterms);
+
+    /* Sort the list in ascending order of magnitude. */
+    qsort(list->array, list->nterms, sizeof(list->array[0]), ContribCompare);
+
+    error = 0;
+fail:
+    return error;
+}
+
+
+void TopInitContribMap(top_contrib_map_t *map)
+{
+    memset(map, 0, sizeof(top_contrib_map_t));
+}
+
+
+void TopFreeContribMap(top_contrib_map_t *map)
+{
+    int f;
+
+    for (f=0; f < TOP_NCOORDS; ++f)
+        free(map->list[f].array);
+
+    TopInitContribMap(map);
+}
+
+
+int TopMakeContribMap(const top_model_t *model, top_contrib_map_t *map, double millennia)
+{
+    int error, f;
+
+    TopInitContribMap(map);
+    for (f=0; f < TOP_NCOORDS; ++f)
+        CHECK(MakeContribList(&model->formula[f], &map->list[f], millennia));
+
+fail:
+    if (error) TopFreeContribMap(map);
+    return error;
+}
+
+
 int TopCalcElliptical(const top_model_t *model, double tt, top_elliptical_t *ellip)
 {
     /* Translated from: TOP2013.f */
