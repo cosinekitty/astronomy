@@ -31,7 +31,6 @@ top_series_t;
 
 typedef struct
 {
-    int nseries_total;
     int nseries_calc;
     top_series_t series[TOP_MAX_SERIES];
 }

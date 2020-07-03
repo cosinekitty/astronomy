@@ -24,7 +24,7 @@ void TopFreeModel(top_model_t *model)
 {
     int f, s;
     for (f=0; f < TOP_NCOORDS; ++f)
-        for (s=0; s < model->formula[f].nseries_total; ++s)
+        for (s=0; s < TOP_MAX_SERIES; ++s)
             free(model->formula[f].series[s].terms);
 
     TopInitModel(model);
@@ -111,7 +111,8 @@ int TopLoadModel(top_model_t *model, const char *filename, int planet)
 
                 /* Allocate room for the new terms. */
                 formula = &model->formula[check_var];
-                formula->nseries_calc = formula->nseries_total = tpower + 1;
+                if (tpower >= formula->nseries_calc)
+                    formula->nseries_calc = tpower + 1;
                 series = &formula->series[tpower];
                 series->nterms_total = nterms_remaining;
                 series->nterms_calc = 0;
@@ -356,8 +357,8 @@ void TopResetModel(top_model_t *model)
     for (f=0; f < TOP_NCOORDS; ++f)
     {
         top_formula_t *formula = &model->formula[f];
-        formula->nseries_calc = formula->nseries_total;
-        for (s=0; s < formula->nseries_total; ++s)
+        formula->nseries_calc = TOP_MAX_SERIES;
+        for (s=0; s < TOP_MAX_SERIES; ++s)
         {
             top_series_t *series = &formula->series[s];
             series->nterms_calc = series->nterms_total;
