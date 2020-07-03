@@ -2090,19 +2090,23 @@ static int PrintContribMap(const top_contrib_map_t *map, const char *filename)
         }
     }
 
+    error = 0;
 fail:
     if (outfile) fclose(outfile);
     return error;
 }
 
 
-static int OptimizeTop(top_model_t *model)
+static int OptimizeTop(top_model_t *shrunk, const top_model_t *model)
 {
     int error = 1;
     double max_arcmin;
     top_contrib_map_t map;
     const double millennia = 0.2;       /* optimize for calculations within 200 years of J2000. */
+    double amplitude[TOP_NCOORDS];
+    int f;
 
+    TopInitModel(shrunk);
     TopInitContribMap(&map);
 
     CHECK(MeasureTopError(model, &max_arcmin));
@@ -2117,10 +2121,19 @@ static int OptimizeTop(top_model_t *model)
         In other words, for each of the 6 elliptical elements, see how many
         terms we can truncate on each one without exceeding the error threshold.
     */
+    for (f=0; f<TOP_NCOORDS; ++f)
+        amplitude[f] = 1.0e-3;
+
+    CHECK(TopCloneModel(shrunk, model));
+    CHECK(TopSquash(shrunk, model, &map, amplitude));
+
+    CHECK(MeasureTopError(shrunk, &max_arcmin));
+    printf("OptimizeTop: shrunk error = %0.6lf\n", max_arcmin);
 
     error = 0;
 fail:
     TopFreeContribMap(&map);
+    if (error) TopFreeModel(shrunk);
     return error;
 }
 
@@ -2129,10 +2142,12 @@ static int GenerateTop(const char *name, const char *outFileName)
 {
     int error = 1;
     top_model_t model;
+    top_model_t shrunk;
     vsop_body_t body;
     int planet;
 
-    TopInitModel(&model);   /* must init the model before doing anything that could fail (and call TopFreeModel) */
+    TopInitModel(&shrunk);
+    TopInitModel(&model);
 
     body = LookupBody(name);
     if (body < 0)
@@ -2145,13 +2160,14 @@ static int GenerateTop(const char *name, const char *outFileName)
 
     CHECK(OpenEphem());
     CHECK(TopLoadModel(&model, TopDataFileName, planet));
-    CHECK(OptimizeTop(&model));
-    CHECK(TopSaveModel(&model, outFileName));
+    CHECK(OptimizeTop(&shrunk, &model));
+    CHECK(TopSaveModel(&shrunk, outFileName));
     printf("GenerateTop: saved %s\n", outFileName);
     error = 0;
 
 fail:
     ephem_close();
     TopFreeModel(&model);
+    TopFreeModel(&shrunk);
     return error;
 }

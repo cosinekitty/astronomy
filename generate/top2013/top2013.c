@@ -24,10 +24,49 @@ void TopFreeModel(top_model_t *model)
 {
     int f, s;
     for (f=0; f < TOP_NCOORDS; ++f)
-        for (s=0; s < TOP_MAX_SERIES; ++s)
+        for (s=0; s < TOP_NSERIES; ++s)
             free(model->formula[f].series[s].terms);
 
     TopInitModel(model);
+}
+
+
+static int CloneSeries(top_series_t *copy, const top_series_t *original)
+{
+    int error;
+    size_t size = sizeof(top_term_t) * (size_t)(original->nterms_total);
+
+    copy->nterms_total = original->nterms_total;
+    copy->nterms_calc = original->nterms_calc;
+    copy->terms = malloc(size);
+
+    if (copy->terms == NULL)
+        FAIL("CloneSeries: out of memory trying to allocate %lu bytes.\n", (unsigned long)size);
+
+    memcpy(copy->terms, original->terms, size);
+    error = 0;
+fail:
+    return error;
+}
+
+
+int TopCloneModel(top_model_t *copy, const top_model_t* original)
+{
+    int error = 1;
+    int f, s;
+
+    TopInitModel(copy);
+    copy->planet = original->planet;
+    for (f=0; f < TOP_NCOORDS; ++f)
+    {
+        copy->formula[f].nseries_calc = original->formula[f].nseries_calc;
+        for (s=0; s < TOP_NSERIES; ++s)
+            CHECK(CloneSeries(&copy->formula[f].series[s], &original->formula[f].series[s]));
+    }
+
+    error = 0;
+fail:
+    return error;
 }
 
 
@@ -97,7 +136,7 @@ int TopLoadModel(top_model_t *model, const char *filename, int planet)
 
             --check_var;    /* convert one-based to zero-based indexing */
 
-            if (tpower < 0 || tpower >= TOP_MAX_SERIES)
+            if (tpower < 0 || tpower >= TOP_NSERIES)
                 FAIL("TopLoadModel(%s line %d): invalid power of t: %d\n", filename, lnum, tpower);
 
             if (check_planet == planet)
@@ -357,8 +396,8 @@ void TopResetModel(top_model_t *model)
     for (f=0; f < TOP_NCOORDS; ++f)
     {
         top_formula_t *formula = &model->formula[f];
-        formula->nseries_calc = TOP_MAX_SERIES;
-        for (s=0; s < TOP_MAX_SERIES; ++s)
+        formula->nseries_calc = TOP_NSERIES;
+        for (s=0; s < TOP_NSERIES; ++s)
         {
             top_series_t *series = &formula->series[s];
             series->nterms_calc = series->nterms_total;
@@ -484,7 +523,7 @@ int TopCalcElliptical(const top_model_t *model, double tt, top_elliptical_t *ell
     };
     int error = 1;
     int i, f, s, t;
-    double time[TOP_MAX_SERIES];
+    double time[TOP_NSERIES];
     double el[6];
     double arg, dmu, xl;
 
@@ -495,7 +534,7 @@ int TopCalcElliptical(const top_model_t *model, double tt, top_elliptical_t *ell
     /* Time */
     time[0] = 1.0;
     time[1] = tt / 365250.0;
-    for (i=1; i < TOP_MAX_SERIES; ++i)
+    for (i=1; i < TOP_NSERIES; ++i)
         time[i] = time[i-1] * time[1];
 
     dmu = (freq[0] - freq[1]) / 880.0;
@@ -665,3 +704,55 @@ int TopEquatorial(const top_rectangular_t *ecl, top_rectangular_t *equ)
 
     return 0;
 }
+
+
+int TopSquash(
+    top_model_t *copy,
+    const top_model_t *original,
+    const top_contrib_map_t *map,
+    double amplitude[TOP_NCOORDS])
+{
+    int error;
+    int f, s, t, i, n, skip;
+    double sum;
+
+    /*
+        This function assumes that 'copy' has already been cloned from 'original',
+        at least as far as allocation of the term arrays is concerned.
+        It uses 'amplitude' to skip over the least significant entries in 'map',
+        then copies the remaining terms into 'copy'.
+    */
+
+    for (f=0; f < TOP_NCOORDS; ++f)
+    {
+        top_formula_t *cform = &copy->formula[f];
+        const top_formula_t *oform = &original->formula[f];
+        const top_contrib_list_t *list = &map->list[f];
+
+        /*
+            Keep skipping over entries in the contribution map until we can't
+            skip any more without exceeding the amplitude threshold.
+        */
+        sum = 0.0;
+        for (skip=0; skip < list->nterms && sum + list->array[skip].magnitude <= amplitude[f]; ++skip)
+            sum += list->array[skip].magnitude;
+
+        /* Start over with all the series in 'copy' empty. */
+        for (s=0; s < TOP_NSERIES; ++s)
+            cform->series[s].nterms_calc = 0;
+
+        /* Append the remaining terms one at a time, in descending order of importance. */
+        for (i = list->nterms - 1; i >= skip; --i)
+        {
+            s = list->array[i].s;
+            t = list->array[i].t;
+            n = cform->series[s].nterms_calc++;
+            cform->series[s].terms[n] = oform->series[s].terms[t];
+        }
+    }
+
+    error = 0;
+/* fail: */
+    return error;
+}
+

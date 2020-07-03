@@ -27,12 +27,12 @@ typedef struct
 }
 top_series_t;
 
-#define TOP_MAX_SERIES 13
+#define TOP_NSERIES 13
 
 typedef struct
 {
     int nseries_calc;
-    top_series_t series[TOP_MAX_SERIES];
+    top_series_t series[TOP_NSERIES];
 }
 top_formula_t;
 
@@ -102,6 +102,7 @@ top_contrib_map_t;
 
 void TopInitModel(top_model_t *model);
 void TopFreeModel(top_model_t *model);
+int  TopCloneModel(top_model_t *copy, const top_model_t* original);
 int  TopLoadModel(top_model_t *model, const char *filename, int planet);
 int  TopSaveModel(const top_model_t *model, const char *filename);
 int  TopWriteModel(const top_model_t *model, FILE *outfile);
@@ -113,5 +114,11 @@ int  TopEquatorial(const top_rectangular_t *ecl, top_rectangular_t *equ);
 void TopInitContribMap(top_contrib_map_t *map);
 int  TopMakeContribMap(const top_model_t *model, top_contrib_map_t *map, double millennia);
 void TopFreeContribMap(top_contrib_map_t *map);
+
+int TopSquash(
+    top_model_t *copy,
+    const top_model_t *original,
+    const top_contrib_map_t *map,
+    double amplitude[TOP_NCOORDS]);
 
 #endif /* __DDC_TOP2013_H */
