@@ -1990,7 +1990,7 @@ fail:
 }
 
 
-static int MeasureTopError(const top_model_t *model, double *max_arcmin)
+static int MeasureTopErrorAgainstNovas(const top_model_t *model, double *max_arcmin)
 {
     int error = 1;
     double tt, jd, jdStart, jdStop, jdDelta;
@@ -2046,6 +2046,49 @@ fail:
 }
 
 
+static int MeasureSquashedTopError(const top_model_t *copy, const top_model_t *original, double *max_arcmin)
+{
+    int error;
+    double tt, jd, jdStart, jdStop, jdDelta, arcmin, dx, dy, dz, diff, range;
+    double earth[3];
+    top_rectangular_t a, b;
+
+    *max_arcmin = 0.0;
+    jdStart = julian_date(1800, 1, 1, 0.0);
+    jdStop  = julian_date(2200, 1, 1, 0.0);
+    jdDelta = 500.0;
+
+    for (jd=jdStart; jd <= jdStop; jd += jdDelta)
+    {
+        tt = jd - 2451545.0;
+        CHECK(TopPosition(copy, tt, &a));
+        CHECK(TopPosition(original, tt, &b));
+        CHECK(NovasBodyPos(jd, BODY_EARTH, earth));
+
+        /* Calculate discrepancy in position comparing full TOP2013 model to truncated model. */
+        dx = a.x - b.x;
+        dy = a.y - b.y;
+        dz = a.z - b.z;
+        diff = sqrt(dx*dx + dy*dy + dz*dz);
+
+        /* Calculate distance of planet from Earth. */
+        dx = b.x - earth[0];
+        dy = b.y - earth[1];
+        dz = b.z - earth[2];
+        range = sqrt(dx*dx + dy*dy + dz*dz);
+
+        /* Calculate worst-case parallax error as seen from Earth. */
+        arcmin = (RAD2DEG * 60.0) * (diff / range);
+        if (arcmin > *max_arcmin)
+            *max_arcmin = arcmin;
+    }
+
+    error = 0;
+fail:
+    return error;
+}
+
+
 static int PrintContribMap(const top_contrib_map_t *map, const char *filename)
 {
     int error = 1;
@@ -2073,6 +2116,55 @@ fail:
 }
 
 
+static int BinarySearchSingleAxis(
+    top_model_t *copy,
+    const top_model_t *original,
+    top_contrib_map_t *map,
+    int f)
+{
+    int error = 1;
+    int i;
+    int loskip, hiskip;
+    double arcmin;
+    const double threshold_arcmin = 0.4;
+    int best_skip = 0;
+    double best_arcmin = 0.0;
+
+    for (i=0; i < TOP_NCOORDS; ++i)
+        map->list[i].skip = 0;
+
+    loskip = 0;
+    hiskip = map->list[f].nterms - 1;
+
+    while (loskip <= hiskip)
+    {
+        map->list[f].skip = (loskip + hiskip) / 2;
+        CHECK(TopSquash(copy, original, map));
+        CHECK(MeasureSquashedTopError(copy, original, &arcmin));
+        /* printf("BinarySearchSingleAxis: f=%d, lo=%d, mid=%d, hi=%d, arcmin=%0.6lf\n", f, loskip, map->list[f].skip, hiskip, arcmin); */
+        if (arcmin >= threshold_arcmin)
+        {
+            hiskip = map->list[f].skip - 1;
+        }
+        else
+        {
+            if (map->list[f].skip > best_skip)
+            {
+                best_skip = map->list[f].skip;
+                best_arcmin = arcmin;
+            }
+            loskip = map->list[f].skip + 1;
+        }
+    }
+
+    printf("BinarySearchSingleAxis: f=%d, best_skip=%d, best_arcmin=%0.6lf, keep %d/%d\n\n", 
+        f, best_skip, best_arcmin, map->list[f].nterms - best_skip, map->list[f].nterms);
+
+fail:
+    return error;
+}
+
+
 static int OptimizeTop(top_model_t *shrunk, const top_model_t *model)
 {
     int error = 1;
@@ -2084,7 +2176,7 @@ static int OptimizeTop(top_model_t *shrunk, const top_model_t *model)
     TopInitModel(shrunk);
     TopInitContribMap(&map);
 
-    CHECK(MeasureTopError(model, &max_arcmin));
+    CHECK(MeasureTopErrorAgainstNovas(model, &max_arcmin));
     printf("OptimizeTop: baseline error = %0.6lf\n", max_arcmin);
 
     /* Make a map of the relative importance of the terms within each of the 6 formulas. */
@@ -2095,15 +2187,17 @@ static int OptimizeTop(top_model_t *shrunk, const top_model_t *model)
         Figure out how big the 6-dimensional box is that we can optimize in.
         In other words, for each of the 6 elliptical elements, see how many
         terms we can truncate on each one without exceeding the error threshold.
+
+        BinarySearchSingleAxis: f=0, best_skip=36390, best_arcmin=0.399589, keep 41/36431
+        BinarySearchSingleAxis: f=1, best_skip=19339, best_arcmin=0.362812, keep 54/19393
+        BinarySearchSingleAxis: f=2, best_skip=20474, best_arcmin=0.391021, keep 101/20575
+        BinarySearchSingleAxis: f=3, best_skip=20820, best_arcmin=0.398399, keep 62/20882
+        BinarySearchSingleAxis: f=4, best_skip=8030, best_arcmin=0.399126, keep 9/8039
+        BinarySearchSingleAxis: f=5, best_skip=8759, best_arcmin=0.392142, keep 9/8768
     */
-    for (f=0; f<TOP_NCOORDS; ++f)
-        map.list[f].skip = (map.list[f].nterms * 99) / 100;
-
     CHECK(TopCloneModel(shrunk, model));
-    CHECK(TopSquash(shrunk, model, &map));
-
-    CHECK(MeasureTopError(shrunk, &max_arcmin));
-    printf("OptimizeTop: shrunk error = %0.6lf\n", max_arcmin);
+    for (f=0; f<TOP_NCOORDS; ++f)
+        CHECK(BinarySearchSingleAxis(shrunk, model, &map, f));
 
     error = 0;
 fail:
