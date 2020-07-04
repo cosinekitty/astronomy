@@ -2046,24 +2046,53 @@ fail:
 }
 
 
+#define NSAMPLES 293
 static int MeasureSquashedTopError(const top_model_t *copy, const top_model_t *original, double *max_arcmin)
 {
-    int error;
-    double tt, jd, jdStart, jdStop, jdDelta, arcmin, dx, dy, dz, diff, range;
+    typedef struct
+    {
+        double range;
+        top_rectangular_t b;
+    }
+    item_t;
+
+    static item_t table[NSAMPLES];
+    static int initialized;
+
+    int error, i;
+    double tt, jd, jdStart, jdStop, arcmin, dx, dy, dz, diff, range;
     double earth[3];
     top_rectangular_t a, b;
 
     *max_arcmin = 0.0;
     jdStart = julian_date(1800, 1, 1, 0.0);
     jdStop  = julian_date(2200, 1, 1, 0.0);
-    jdDelta = 500.0;
 
-    for (jd=jdStart; jd <= jdStop; jd += jdDelta)
+    for (i=0; i < NSAMPLES; ++i)
     {
+        jd = jdStart + (i * (jdStop - jdStart) / (NSAMPLES - 1.0));
         tt = jd - 2451545.0;
+
         CHECK(TopPosition(copy, tt, &a));
-        CHECK(TopPosition(original, tt, &b));
-        CHECK(NovasBodyPos(jd, BODY_EARTH, earth));
+        if (initialized)
+        {
+            range = table[i].range;
+            b = table[i].b;
+        }
+        else
+        {
+            CHECK(TopPosition(original, tt, &b));
+            CHECK(NovasBodyPos(jd, BODY_EARTH, earth));
+
+            /* Calculate distance of planet from Earth. */
+            dx = b.x - earth[0];
+            dy = b.y - earth[1];
+            dz = b.z - earth[2];
+            range = sqrt(dx*dx + dy*dy + dz*dz);
+
+            table[i].range = range;
+            table[i].b = b;
+        }
 
         /* Calculate discrepancy in position comparing full TOP2013 model to truncated model. */
         dx = a.x - b.x;
@@ -2071,23 +2100,18 @@ static int MeasureSquashedTopError(const top_model_t *copy, const top_model_t *o
         dz = a.z - b.z;
         diff = sqrt(dx*dx + dy*dy + dz*dz);
 
-        /* Calculate distance of planet from Earth. */
-        dx = b.x - earth[0];
-        dy = b.y - earth[1];
-        dz = b.z - earth[2];
-        range = sqrt(dx*dx + dy*dy + dz*dz);
-
         /* Calculate worst-case parallax error as seen from Earth. */
         arcmin = (RAD2DEG * 60.0) * (diff / range);
         if (arcmin > *max_arcmin)
             *max_arcmin = arcmin;
     }
 
+    initialized = 1;
     error = 0;
 fail:
     return error;
 }
-
+#undef NSAMPLES
 
 static int PrintContribMap(const top_contrib_map_t *map, const char *filename)
 {
@@ -2141,7 +2165,7 @@ static int BinarySearchSingleAxis(
         map->list[f].skip = (loskip + hiskip) / 2;
         CHECK(TopSquash(copy, original, map));
         CHECK(MeasureSquashedTopError(copy, original, &arcmin));
-        /* printf("BinarySearchSingleAxis: f=%d, lo=%d, mid=%d, hi=%d, arcmin=%0.6lf\n", f, loskip, map->list[f].skip, hiskip, arcmin); */
+        printf("BinarySearchSingleAxis: f=%d, lo=%d, mid=%d, hi=%d, arcmin=%0.6lf\n", f, loskip, map->list[f].skip, hiskip, arcmin);
         if (arcmin >= threshold_arcmin)
         {
             hiskip = map->list[f].skip - 1;
@@ -2157,7 +2181,7 @@ static int BinarySearchSingleAxis(
         }
     }
 
-    printf("BinarySearchSingleAxis: f=%d, best_skip=%d, best_arcmin=%0.6lf, keep %d/%d\n\n", 
+    printf("BinarySearchSingleAxis: f=%d, best_skip=%d, best_arcmin=%0.6lf, keep %d/%d\n\n",
         f, best_skip, best_arcmin, map->list[f].nterms - best_skip, map->list[f].nterms);
 
 fail:
@@ -2192,8 +2216,8 @@ static int OptimizeTop(top_model_t *shrunk, const top_model_t *model)
         BinarySearchSingleAxis: f=1, best_skip=19339, best_arcmin=0.362812, keep 54/19393
         BinarySearchSingleAxis: f=2, best_skip=20474, best_arcmin=0.391021, keep 101/20575
         BinarySearchSingleAxis: f=3, best_skip=20820, best_arcmin=0.398399, keep 62/20882
-        BinarySearchSingleAxis: f=4, best_skip=8030, best_arcmin=0.399126, keep 9/8039
-        BinarySearchSingleAxis: f=5, best_skip=8759, best_arcmin=0.392142, keep 9/8768
+        BinarySearchSingleAxis: f=4, best_skip=8030, best_arcmin=0.399126,  keep 9/8039
+        BinarySearchSingleAxis: f=5, best_skip=8759, best_arcmin=0.392142,  keep 9/8768
     */
     CHECK(TopCloneModel(shrunk, model));
     for (f=0; f<TOP_NCOORDS; ++f)
