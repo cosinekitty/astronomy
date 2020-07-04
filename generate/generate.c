@@ -2101,10 +2101,10 @@ static int OptimizeTop(top_model_t *shrunk, const top_model_t *model)
         terms we can truncate on each one without exceeding the error threshold.
     */
     for (f=0; f<TOP_NCOORDS; ++f)
-        map.list[f].amplitude = 1.0e-3;
+        map.list[f].skip = (map.list[f].nterms * 99) / 100;
 
     CHECK(TopCloneModel(shrunk, model));
-    TopSquash(shrunk, model, &map);
+    CHECK(TopSquash(shrunk, model, &map));
 
     CHECK(MeasureTopError(shrunk, &max_arcmin));
     printf("OptimizeTop: shrunk error = %0.6lf\n", max_arcmin);

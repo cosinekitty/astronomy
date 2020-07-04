@@ -77,9 +77,9 @@ top_contrib_t;
 
 typedef struct
 {
-    int             nterms;
+    int             nterms;     /* the number of items in array */
+    int             skip;       /* the number of items requested to be skipped at the front of array */
     top_contrib_t  *array;
-    double          amplitude;
 }
 top_contrib_list_t;
 
@@ -105,6 +105,6 @@ int  TopEquatorial(const top_rectangular_t *ecl, top_rectangular_t *equ);
 void TopInitContribMap(top_contrib_map_t *map);
 int  TopMakeContribMap(top_contrib_map_t *map, const top_model_t *model, double millennia);
 void TopFreeContribMap(top_contrib_map_t *map);
-void TopSquash(top_model_t *copy, const top_model_t *original, const top_contrib_map_t *map);
+int  TopSquash(top_model_t *copy, const top_model_t *original, const top_contrib_map_t *map);
 
 #endif /* __DDC_TOP2013_H */

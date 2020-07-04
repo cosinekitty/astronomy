@@ -417,6 +417,7 @@ static int MakeContribList(const top_series_t *formula, top_contrib_list_t *list
         FAIL("MakeContribList: out of memory allocating %d elements.\n", nterms);
 
     /* Fill up the array. */
+    list->skip = 0;
     list->nterms = nterms;
     nterms = 0;
     tpower = 1.0;
@@ -443,9 +444,6 @@ static int MakeContribList(const top_series_t *formula, top_contrib_list_t *list
 
     /* Sort the list in ascending order of magnitude. */
     qsort(list->array, list->nterms, sizeof(list->array[0]), ContribCompare);
-
-    /* If the list is not empty, set the pruning amplitude to the largest value that doesn't cause any pruning. */
-    list->amplitude = (list->nterms > 0) ? list->array[0].magnitude : 0.0;
 
     error = 0;
 fail:
@@ -681,17 +679,14 @@ int TopEquatorial(const top_rectangular_t *ecl, top_rectangular_t *equ)
 }
 
 
-void TopSquash(top_model_t *copy, const top_model_t *original, const top_contrib_map_t *map)
+int TopSquash(top_model_t *copy, const top_model_t *original, const top_contrib_map_t *map)
 {
-    int f, s, t, i, n, skip;
-    double sum;
+    int f, s, t, i, n;
+    int error;
 
-    /*
-        This function assumes that 'copy' has already been cloned from 'original',
-        at least as far as allocation of the term arrays is concerned.
-        It uses 'amplitude' to skip over the least significant entries in 'map',
-        then copies the remaining terms into 'copy'.
-    */
+    for (f=0; f < TOP_NCOORDS; ++f)
+        if (map->list[f].skip < 0 || map->list[f].skip >= map->list[f].nterms)
+            FAIL("TopSquash: invalid skip count %d for term count %d at f=%d\n", map->list[f].skip, map->list[f].nterms, f);
 
     for (f=0; f < TOP_NCOORDS; ++f)
     {
@@ -699,20 +694,12 @@ void TopSquash(top_model_t *copy, const top_model_t *original, const top_contrib
         const top_series_t *oform = original->series[f];
         const top_contrib_list_t *list = &map->list[f];
 
-        /*
-            Keep skipping over entries in the contribution map until we can't
-            skip any more without exceeding the amplitude threshold.
-        */
-        sum = 0.0;
-        for (skip=0; skip < list->nterms && sum + list->array[skip].magnitude < list->amplitude; ++skip)
-            sum += list->array[skip].magnitude;
-
         /* Start over with all the series in 'copy' empty. */
         for (s=0; s < TOP_NSERIES; ++s)
             cform[s].nterms_calc = 0;
 
         /* Append the remaining terms one at a time, in descending order of importance. */
-        for (i = list->nterms - 1; i >= skip; --i)
+        for (i = list->nterms - 1; i >= list->skip; --i)
         {
             s = list->array[i].s;
             t = list->array[i].t;
@@ -720,4 +707,8 @@ void TopSquash(top_model_t *copy, const top_model_t *original, const top_contrib
             cform[s].terms[n] = oform[s].terms[t];
         }
     }
+
+    error = 0;
+fail:
+    return error;
 }
