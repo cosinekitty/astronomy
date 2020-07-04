@@ -4,6 +4,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
 #include <math.h>
 #include "codegen.h"
@@ -728,6 +729,112 @@ int TopSquash(top_model_t *copy, const top_model_t *original, const top_contrib_
             cform[s].terms[n] = oform[s].terms[t];
         }
     }
+
+    error = 0;
+fail:
+    return error;
+}
+
+
+void TopInitRandomBuffer(top_random_buffer_t *buffer)
+{
+    memset(buffer, 0, sizeof(top_random_buffer_t));
+}
+
+
+void TopFreeRandomBuffer(top_random_buffer_t *buffer)
+{
+    free(buffer->array);
+    TopInitRandomBuffer(buffer);
+}
+
+
+int TopGetRandomNumber(top_random_buffer_t *buffer, double *r)
+{
+    int error = 1;
+    int i;
+    FILE *randfile = NULL;
+
+    if (buffer->array == NULL)
+    {
+        /* First call: allocate array. */
+        buffer->gencount = 0;
+        buffer->length = 0x10000;
+        buffer->offset = buffer->length;        /* indicate buffer is empty... force a read below. */
+        buffer->array = malloc(buffer->length * sizeof(buffer->array[0]));
+        if (buffer->array == NULL)
+            FAIL("TopGetRandomNumber: out of memory trying to allocate %d bytes.\n", buffer->length);
+    }
+
+    if (buffer->offset == buffer->length)
+    {
+        const char *filename = "/dev/urandom";
+        randfile = fopen(filename, "rb");
+        if (randfile == NULL)
+            FAIL("TopGetRandomNumber: cannot open input file: %s\n", filename);
+
+        for (i=0; i < buffer->length; ++i)
+        {
+            uint64_t x = 0;
+            while (x == 0)      /* must read a number in the range [1, 2^64 - 1]. */
+            {
+                size_t count = fread(&x, sizeof(x), 1, randfile);
+                if (count != 1)
+                    FAIL("TopGetRandomNumber: failure to read from file: %s\n", filename);
+            }
+            /* Convert to floating point value in half-open range (0, 1]. */
+            buffer->array[i] = (double)x / (double)0xffffffffffffffffUL;
+
+            /* Sanity check that the required range is satisfied. */
+            if (buffer->array[i] <= 0.0 || buffer->array[i] > 1.0)
+                FAIL("TopGetRandomNumber: generated value %lf is illegal.\n", buffer->array[i]);
+        }
+
+        buffer->offset = 0;
+    }
+
+    *r = buffer->array[(buffer->offset)++];
+    ++(buffer->gencount);
+    error = 0;
+fail:
+    if (randfile != NULL) fclose(randfile);
+    return error;
+}
+
+
+int TopGetDirection(top_direction_t *dir, top_random_buffer_t *buffer)
+{
+    int error = 1;
+    int f;
+    double u, v, sum;
+    double r2, radius, angle;
+
+    /*
+        Use the Box-Muller transform to get 3 pairs of normally-distributed, uniform random variables.
+        https://en.wikipedia.org/wiki/Box%E2%80%93Muller_transform
+
+        Turn this into a random unit direction vector in 6-dimensional space
+        by picking a uniformly distributed point on the surface of a 6-dimensional hypersphere.
+        https://mathworld.wolfram.com/HyperspherePointPicking.html
+    */
+
+    sum = 0.0;
+    for (f = 0; f < TOP_NCOORDS; f += 2)
+    {
+        CHECK(TopGetRandomNumber(buffer, &u));
+        CHECK(TopGetRandomNumber(buffer, &v));
+        r2 = -2.0 * log(u);
+        sum += r2;
+        radius = sqrt(r2);
+        angle = dpi * v;
+        dir->x[f]   = radius * cos(angle);
+        dir->x[f+1] = radius * sin(angle);
+    }
+
+    /* Convert to a unit vector. */
+    sum = sqrt(sum);
+    for (f = 0; f < TOP_NCOORDS; ++f)
+        dir->x[f] /= sum;
 
     error = 0;
 fail:

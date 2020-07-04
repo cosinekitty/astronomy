@@ -92,6 +92,25 @@ typedef struct
 top_contrib_map_t;
 
 
+typedef struct
+{
+    double *array;
+    int     length;
+    int     offset;
+    long    gencount;
+}
+top_random_buffer_t;
+
+
+typedef struct
+{
+    /* A normally distributed unit direction vector in 6-dimensional space. */
+    /* Used for searching for a small series that is accurate enough. */
+    double x[TOP_NCOORDS];
+}
+top_direction_t;
+
+
 void TopInitModel(top_model_t *model);
 void TopFreeModel(top_model_t *model);
 int  TopCloneModel(top_model_t *copy, const top_model_t* original);
@@ -107,5 +126,10 @@ void TopInitContribMap(top_contrib_map_t *map);
 int  TopMakeContribMap(top_contrib_map_t *map, const top_model_t *model, double millennia);
 void TopFreeContribMap(top_contrib_map_t *map);
 int  TopSquash(top_model_t *copy, const top_model_t *original, const top_contrib_map_t *map);
+
+void TopInitRandomBuffer(top_random_buffer_t *buffer);
+void TopFreeRandomBuffer(top_random_buffer_t *buffer);
+int  TopGetRandomNumber(top_random_buffer_t *buffer, double *r);
+int  TopGetDirection(top_direction_t *dir, top_random_buffer_t *buffer);
 
 #endif /* __DDC_TOP2013_H */

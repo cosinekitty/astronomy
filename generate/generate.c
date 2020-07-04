@@ -96,6 +96,7 @@ static int DistancePlot(const char *name, double tt1, double tt2);
 static int ImproveVsopApsides(vsop_model_t *model);
 static int DeltaTimePlot(const char *outFileName);
 static int ValidateTop2013(void);
+static int ValidateRandom(void);
 static int Diff(const char *filename1, const char *filename2, int *nlines);
 
 #define MOON_PERIGEE        0.00238
@@ -146,6 +147,9 @@ int main(int argc, const char *argv[])
 
     if (argc == 2 && !strcmp(argv[1], "validate_top2013"))
         return ValidateTop2013();
+
+    if (argc == 2 && !strcmp(argv[1], "validate_random"))
+        return ValidateRandom();
 
     if (argc == 4 && !strcmp(argv[1], "top"))
         return GenerateTop(argv[2], argv[3]);
@@ -198,6 +202,9 @@ static int PrintUsage(void)
         "\n"
         "generate validate_top2013\n"
         "   Validates code for calculating outer planet positions using TOP2013.\n"
+        "\n"
+        "generate validate_random\n"
+        "   Validates code for generating random 6-dimensional unit vectors.\n"
         "\n"
         "generate top planet outfile\n"
         "   Use TOP2013 to generate an optimized model for the specified outer planet.\n"
@@ -2262,5 +2269,49 @@ fail:
     ephem_close();
     TopFreeModel(&model);
     TopFreeModel(&shrunk);
+    return error;
+}
+
+
+static int ValidateRandom(void)
+{
+    const int ntrials = 1000000;
+    int error = 1;
+    int i, f;
+    double r, rmin, rmax, rsum, rdiff;
+    top_random_buffer_t buffer;
+    top_direction_t dir;
+    TopInitRandomBuffer(&buffer);
+
+    rmin = rmax = rsum = 0.0;
+    for (i=0; i < ntrials; ++i)
+    {
+        CHECK(TopGetRandomNumber(&buffer, &r));
+        rsum += r;
+        if (i == 0 || r < rmin)
+            rmin = r;
+        if (i == 0 || r > rmax)
+            rmax = r;
+    }
+    printf("ValidateRandom: rmin=%0.16lf, rmax=%0.16lf, ravg=%0.16lf\n", rmin, rmax, rsum / ntrials);
+
+    for (i=0; i < 10; ++i)
+    {
+        CHECK(TopGetDirection(&dir, &buffer));
+        rsum = 0.0;
+        for (f=0; f < TOP_NCOORDS; ++f)
+        {
+            rsum += dir.x[f] * dir.x[f];
+            printf(" %20.16lf", dir.x[f]);
+        }
+        rdiff = sqrt(rsum) - 1.0;
+        printf("  [%lg]\n", rdiff);
+        if (fabs(rdiff) > 1.0e-15)
+            FAIL("ValidateRandom: vector is not close enough to unit length.\n");
+    }
+
+    error = 0;
+fail:
+    TopFreeRandomBuffer(&buffer);
     return error;
 }
