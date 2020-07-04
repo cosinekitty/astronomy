@@ -646,26 +646,33 @@ fail:
 
 int TopEquatorial(const top_rectangular_t *ecl, top_rectangular_t *equ)
 {
-    double rot[3][3];
-    const double pi = dpi / 2.0;
-    const double dgrad = pi / 180.0;
-    const double sdrad = dgrad / 3600.0;
-    const double eps = (23.0 + 26.0/60.0 + 21.41136/3600.0)*dgrad;
-    const double phi = -0.05188 * sdrad;
-    const double ceps = cos(eps);
-    const double seps = sin(eps);
-    const double cphi = cos(phi);
-    const double sphi = sin(phi);
+    static int initialized;
+    static double rot[3][3];
 
-    rot[0][0] =  cphi;
-    rot[0][1] = -sphi*ceps;
-    rot[0][2] =  sphi*seps;
-    rot[1][0] =  sphi;
-    rot[1][1] =  cphi*ceps;
-    rot[1][2] = -cphi*seps;
-    rot[2][0] =  0.0;
-    rot[2][1] =  seps;
-    rot[2][2] =  ceps;
+    if (!initialized)
+    {
+        const double pi = dpi / 2.0;
+        const double dgrad = pi / 180.0;
+        const double sdrad = dgrad / 3600.0;
+        const double eps = (23.0 + 26.0/60.0 + 21.41136/3600.0)*dgrad;
+        const double phi = -0.05188 * sdrad;
+        const double ceps = cos(eps);
+        const double seps = sin(eps);
+        const double cphi = cos(phi);
+        const double sphi = sin(phi);
+
+        rot[0][0] =  cphi;
+        rot[0][1] = -sphi*ceps;
+        rot[0][2] =  sphi*seps;
+        rot[1][0] =  sphi;
+        rot[1][1] =  cphi*ceps;
+        rot[1][2] = -cphi*seps;
+        rot[2][0] =  0.0;
+        rot[2][1] =  seps;
+        rot[2][2] =  ceps;
+
+        initialized = 1;
+    }
 
     equ->x = (rot[0][0] * ecl->x) + (rot[0][1] * ecl->y) + (rot[0][2] * ecl->z);
     equ->y = (rot[1][0] * ecl->x) + (rot[1][1] * ecl->y) + (rot[1][2] * ecl->z);
@@ -676,6 +683,20 @@ int TopEquatorial(const top_rectangular_t *ecl, top_rectangular_t *equ)
     equ->vz = (rot[2][0] * ecl->vx) + (rot[2][1] * ecl->vy) + (rot[2][2] * ecl->vz);
 
     return 0;
+}
+
+
+int TopPosition(const top_model_t *model, double tt, top_rectangular_t *equ)
+{
+    int error;
+    top_elliptical_t ellip;
+    top_rectangular_t ecl;
+
+    CHECK(TopCalcElliptical(model, tt, &ellip));
+    CHECK(TopEcliptic(model->planet, &ellip, &ecl));
+    CHECK(TopEquatorial(&ecl, equ));
+fail:
+    return error;
 }
 
 

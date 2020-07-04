@@ -101,6 +101,7 @@ int  TopWriteModel(const top_model_t *model, FILE *outfile);
 int  TopCalcElliptical(const top_model_t *model, double tt, top_elliptical_t *ellip);
 int  TopEcliptic(int planet, const top_elliptical_t *ellip, top_rectangular_t *ecl);
 int  TopEquatorial(const top_rectangular_t *ecl, top_rectangular_t *equ);
+int  TopPosition(const top_model_t *model, double tt, top_rectangular_t *equ);
 
 void TopInitContribMap(top_contrib_map_t *map);
 int  TopMakeContribMap(top_contrib_map_t *map, const top_model_t *model, double millennia);

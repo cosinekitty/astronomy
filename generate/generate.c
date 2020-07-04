@@ -1998,8 +1998,6 @@ static int MeasureTopError(const top_model_t *model, double *max_arcmin)
     double earth[3];
     double planet[3];
     const int body = model->planet - 1;     /* convert TOP2013 planet to our body code */
-    top_elliptical_t ellip;
-    top_rectangular_t ecl;
     top_rectangular_t equ;
 
     /*
@@ -2023,9 +2021,7 @@ static int MeasureTopError(const top_model_t *model, double *max_arcmin)
 
         CHECK(NovasBodyPos(jd, BODY_EARTH, earth));
         CHECK(NovasBodyPos(jd, body, planet));
-        CHECK(TopCalcElliptical(model, tt, &ellip));
-        CHECK(TopEcliptic(model->planet, &ellip, &ecl));
-        CHECK(TopEquatorial(&ecl, &equ));
+        CHECK(TopPosition(model, tt, &equ));
 
         /* Calculate discrepancy in position comparing NOVAS to TOP2013. */
         dx = equ.x - planet[0];
