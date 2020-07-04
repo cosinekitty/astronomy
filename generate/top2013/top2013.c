@@ -32,6 +32,19 @@ void TopFreeModel(top_model_t *model)
 }
 
 
+int TopTermCount(const top_model_t *model)
+{
+    int f, s, count;
+
+    count = 0;
+    for (f=0; f < TOP_NCOORDS; ++f)
+        for (s=0; s < TOP_NSERIES; ++s)
+            count += model->series[f][s].nterms_calc;
+
+    return count;
+}
+
+
 static int CloneSeries(top_series_t *copy, const top_series_t *original)
 {
     int error;
@@ -706,6 +719,11 @@ int TopSquash(top_model_t *copy, const top_model_t *original, const top_contrib_
     int f, s, t, i, n;
     int error;
 
+    /*
+        Use 'map' (and its embedded skip list) to copy the selected
+        most-significant terms from 'original' into 'map'.
+    */
+
     for (f=0; f < TOP_NCOORDS; ++f)
         if (map->list[f].skip < 0 || map->list[f].skip >= map->list[f].nterms)
             FAIL("TopSquash: invalid skip count %d for term count %d at f=%d\n", map->list[f].skip, map->list[f].nterms, f);
@@ -731,6 +749,52 @@ int TopSquash(top_model_t *copy, const top_model_t *original, const top_contrib_
     }
 
     error = 0;
+fail:
+    return error;
+}
+
+
+int TopSetDistance(
+    top_model_t *copy,
+    top_contrib_map_t *map,
+    int *term_count,
+    const top_model_t *original,
+    double distance,
+    const top_direction_t *dir)
+{
+    int error = 1;
+    int f;
+    double xterms;
+    int nterms;
+
+    /*
+        Use the scalar 'distance', multiplied by the vector 'dir' to produce a position vector.
+        That position vector is rounded to a vector with integer components, which becomes
+        the skip list. Force the skip list to be valid by keeping each component in the range
+        [0, nterms-1]. Then squash 'original' into 'map' using the resulting map.
+    */
+
+    *term_count = 0;
+    for (f=0; f < TOP_NCOORDS; ++f)
+    {
+        /* Calculate a real-valu3ed number of terms. */
+        xterms = distance * dir->x[f];
+
+        /* Clamp and round to the allowed range of values. */
+        if (xterms < 1.0)
+            nterms = 1;
+        else if (xterms > map->list[f].nterms)
+            nterms = map->list[f].nterms;
+        else
+            nterms = (int)lround(xterms);
+
+        /* Set the skip value so as to keep 'nterms' terms. */
+        map->list[f].skip = map->list[f].nterms - nterms;
+
+        *term_count += nterms;
+    }
+
+    CHECK(TopSquash(copy, original, map));
 fail:
     return error;
 }
@@ -831,10 +895,10 @@ int TopGetDirection(top_direction_t *dir, top_random_buffer_t *buffer)
         dir->x[f+1] = radius * sin(angle);
     }
 
-    /* Convert to a unit vector. */
+    /* Convert to a unit vector with all components non-negative. */
     sum = sqrt(sum);
     for (f = 0; f < TOP_NCOORDS; ++f)
-        dir->x[f] /= sum;
+        dir->x[f] = fabs(dir->x[f] / sum);
 
     error = 0;
 fail:

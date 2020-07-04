@@ -117,6 +117,7 @@ int  TopCloneModel(top_model_t *copy, const top_model_t* original);
 int  TopLoadModel(top_model_t *model, const char *filename, int planet);
 int  TopSaveModel(const top_model_t *model, const char *filename);
 int  TopWriteModel(const top_model_t *model, FILE *outfile);
+int  TopTermCount(const top_model_t *model);
 int  TopCalcElliptical(const top_model_t *model, double tt, top_elliptical_t *ellip);
 int  TopEcliptic(int planet, const top_elliptical_t *ellip, top_rectangular_t *ecl);
 int  TopEquatorial(const top_rectangular_t *ecl, top_rectangular_t *equ);
@@ -126,6 +127,14 @@ void TopInitContribMap(top_contrib_map_t *map);
 int  TopMakeContribMap(top_contrib_map_t *map, const top_model_t *model, double millennia);
 void TopFreeContribMap(top_contrib_map_t *map);
 int  TopSquash(top_model_t *copy, const top_model_t *original, const top_contrib_map_t *map);
+
+int TopSetDistance(
+    top_model_t *copy,
+    top_contrib_map_t *map,
+    int *term_count,
+    const top_model_t *original,
+    double distance,
+    const top_direction_t *dir);
 
 void TopInitRandomBuffer(top_random_buffer_t *buffer);
 void TopFreeRandomBuffer(top_random_buffer_t *buffer);

@@ -2147,65 +2147,106 @@ fail:
 }
 
 
-static int BinarySearchSingleAxis(
-    top_model_t *copy,
-    const top_model_t *original,
+static int BinarySearchDir(
+    top_model_t *best,
+    const top_model_t *model,
     top_contrib_map_t *map,
-    int f)
+    const top_direction_t *dir,
+    int prune_term_count,
+    int *success)
 {
-    int error = 1;
-    int i;
-    int loskip, hiskip;
-    double arcmin;
     const double threshold_arcmin = 0.4;
-    int best_skip = 0;
-    double best_arcmin = 0.0;
+    int error = 1;
+    double hi_dist, lo_dist, dist, best_dist;
+    int term_count, prev_term_count, best_term_count;
+    double arcmin;
+    top_model_t attempt;
 
-    for (i=0; i < TOP_NCOORDS; ++i)
-        map->list[i].skip = 0;
+    TopInitModel(&attempt);
+    *success = 0;
 
-    loskip = 0;
-    hiskip = map->list[f].nterms - 1;
+    CHECK(TopCloneModel(&attempt, model));
 
-    while (loskip <= hiskip)
+    /* Keep looking farther in the specified direction until we find acceptable accuracy. */
+    lo_dist = 0.0;
+    hi_dist = 1.0;
+    for(;;)
     {
-        map->list[f].skip = (loskip + hiskip) / 2;
-        CHECK(TopSquash(copy, original, map));
-        CHECK(MeasureSquashedTopError(copy, original, &arcmin));
-        printf("BinarySearchSingleAxis: f=%d, lo=%d, mid=%d, hi=%d, arcmin=%0.6lf\n", f, loskip, map->list[f].skip, hiskip, arcmin);
-        if (arcmin >= threshold_arcmin)
+        CHECK(TopSetDistance(&attempt, map, &best_term_count, model, hi_dist, dir));
+        CHECK(MeasureSquashedTopError(&attempt, model, &arcmin));
+        DEBUG("BinarySearchDir: hi_dist=%lf, terms=%d, arcmin=%lf\n", hi_dist, best_term_count, arcmin);
+        if (arcmin < threshold_arcmin)
+            break;
+        if (prune_term_count > 0 && best_term_count > prune_term_count)
         {
-            hiskip = map->list[f].skip - 1;
+            DEBUG("BinarySearchDir: PRE-PRUNE\n");
+            error = 0;
+            goto fail;
+        }
+        lo_dist = hi_dist;
+        hi_dist *= 2.0;
+    }
+    best_dist = hi_dist;
+
+    /* Do a binary search to find the minimum distance that has acceptable accuracy. */
+    prev_term_count = -1;
+    for(;;)
+    {
+        dist = (hi_dist + lo_dist) / 2.0;
+        CHECK(TopSetDistance(&attempt, map, &term_count, model, dist, dir));
+        if (term_count == prev_term_count)
+            break;
+        CHECK(MeasureSquashedTopError(&attempt, model, &arcmin));
+        DEBUG("BinarySearchDir: [lo=%lf, mid=%lf, hi=%lf], terms=%d, arcmin=%lf\n", lo_dist, dist, hi_dist, term_count, arcmin);
+        if (arcmin < threshold_arcmin)
+        {
+            if (term_count < best_term_count)
+            {
+                best_term_count = term_count;
+                best_dist = dist;
+                DEBUG("BinarySearchDir: best so far!\n");
+            }
+            hi_dist = dist;
         }
         else
         {
-            if (map->list[f].skip > best_skip)
+            lo_dist = dist;
+            if (prune_term_count > 0 && term_count > prune_term_count)
             {
-                best_skip = map->list[f].skip;
-                best_arcmin = arcmin;
+                DEBUG("BinarySearchDir: PRUNE\n");
+                error = 0;
+                goto fail;
             }
-            loskip = map->list[f].skip + 1;
         }
+        prev_term_count = term_count;
     }
 
-    printf("BinarySearchSingleAxis: f=%d, best_skip=%d, best_arcmin=%0.6lf, keep %d/%d\n\n",
-        f, best_skip, best_arcmin, map->list[f].nterms - best_skip, map->list[f].nterms);
-
+    /* Return the very best answer to the caller. */
+    CHECK(TopSetDistance(best, map, &term_count, model, best_dist, dir));
+    *success = 1;
 fail:
+    TopFreeModel(&attempt);
     return error;
 }
 
 
 static int OptimizeTop(top_model_t *shrunk, const top_model_t *model)
 {
+    const int nattempts = 100;
     int error = 1;
     double max_arcmin;
     top_contrib_map_t map;
+    top_model_t attempt;
+    top_random_buffer_t buffer;
+    top_direction_t dir;
     const double millennia = 0.2;       /* optimize for calculations within 200 years of J2000. */
-    int f;
+    int i, term_count, best_term_count = -1;
+    int success;
 
+    TopInitModel(&attempt);
     TopInitModel(shrunk);
     TopInitContribMap(&map);
+    TopInitRandomBuffer(&buffer);
 
     CHECK(MeasureTopErrorAgainstNovas(model, &max_arcmin));
     printf("OptimizeTop: baseline error = %0.6lf\n", max_arcmin);
@@ -2214,25 +2255,36 @@ static int OptimizeTop(top_model_t *shrunk, const top_model_t *model)
     CHECK(TopMakeContribMap(&map, model, millennia));
     CHECK(PrintContribMap(&map, "output/contrib.map"));
 
-    /*
-        Figure out how big the 6-dimensional box is that we can optimize in.
-        In other words, for each of the 6 elliptical elements, see how many
-        terms we can truncate on each one without exceeding the error threshold.
+    CHECK(TopCloneModel(&attempt, model));
 
-        BinarySearchSingleAxis: f=0, best_skip=36389, best_arcmin=0.369644, keep 42/36431
-        BinarySearchSingleAxis: f=1, best_skip=19339, best_arcmin=0.379057, keep 54/19393
-        BinarySearchSingleAxis: f=2, best_skip=20479, best_arcmin=0.385666, keep 96/20575
-        BinarySearchSingleAxis: f=3, best_skip=20812, best_arcmin=0.385724, keep 70/20882
-        BinarySearchSingleAxis: f=4, best_skip=8030,  best_arcmin=0.397323, keep 9/8039
-        BinarySearchSingleAxis: f=5, best_skip=8759,  best_arcmin=0.393341, keep 9/8768
-    */
-    CHECK(TopCloneModel(shrunk, model));
-    for (f=0; f<TOP_NCOORDS; ++f)
-        CHECK(BinarySearchSingleAxis(shrunk, model, &map, f));
+    for (i=0; i < nattempts; ++i)
+    {
+        printf("OptimizeTop: ATTEMPT %d of %d\n", i+1, nattempts);
+
+        /* Keep picking random vectors in 6D space. */
+        CHECK(TopGetDirection(&dir, &buffer));
+
+        /* For each direction vector, binary search along that direction. */
+        CHECK(BinarySearchDir(&attempt, model, &map, &dir, best_term_count, &success));
+
+        if (success)
+        {
+            /* Remember the smallest attempt model that has acceptable error. */
+            term_count = TopTermCount(&attempt);
+            if (i == 0 || term_count < best_term_count)
+            {
+                best_term_count = term_count;
+                printf("OptimizeTop: best_term_count = %d\n", best_term_count);
+                CHECK(TopCloneModel(shrunk, &attempt));
+            }
+        }
+    }
 
     error = 0;
 fail:
     TopFreeContribMap(&map);
+    TopFreeModel(&attempt);
+    TopFreeRandomBuffer(&buffer);
     if (error) TopFreeModel(shrunk);
     return error;
 }
