@@ -2212,12 +2212,12 @@ static int OptimizeTop(top_model_t *shrunk, const top_model_t *model)
         In other words, for each of the 6 elliptical elements, see how many
         terms we can truncate on each one without exceeding the error threshold.
 
-        BinarySearchSingleAxis: f=0, best_skip=36390, best_arcmin=0.399589, keep 41/36431
-        BinarySearchSingleAxis: f=1, best_skip=19339, best_arcmin=0.362812, keep 54/19393
-        BinarySearchSingleAxis: f=2, best_skip=20474, best_arcmin=0.391021, keep 101/20575
-        BinarySearchSingleAxis: f=3, best_skip=20820, best_arcmin=0.398399, keep 62/20882
-        BinarySearchSingleAxis: f=4, best_skip=8030, best_arcmin=0.399126,  keep 9/8039
-        BinarySearchSingleAxis: f=5, best_skip=8759, best_arcmin=0.392142,  keep 9/8768
+        BinarySearchSingleAxis: f=0, best_skip=36389, best_arcmin=0.369644, keep 42/36431
+        BinarySearchSingleAxis: f=1, best_skip=19339, best_arcmin=0.379057, keep 54/19393
+        BinarySearchSingleAxis: f=2, best_skip=20479, best_arcmin=0.385666, keep 96/20575
+        BinarySearchSingleAxis: f=3, best_skip=20812, best_arcmin=0.385724, keep 70/20882
+        BinarySearchSingleAxis: f=4, best_skip=8030,  best_arcmin=0.397323, keep 9/8039
+        BinarySearchSingleAxis: f=5, best_skip=8759,  best_arcmin=0.393341, keep 9/8768
     */
     CHECK(TopCloneModel(shrunk, model));
     for (f=0; f<TOP_NCOORDS; ++f)
