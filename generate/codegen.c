@@ -28,6 +28,7 @@
 #include "novas.h"
 #include "codegen.h"
 #include "vsop.h"
+#include "top2013.h"
 #include "ephfile.h"
 
 #define CG_MAX_LINE_LENGTH  200
@@ -1418,6 +1419,71 @@ fail:
     return error;
 }
 
+
+static int Top2013(cg_context_t *context)
+{
+    int error = 1;
+    int body, f, s, t;
+    int s_count[TOP_NCOORDS];
+    char filename[100];
+    top_model_t model;
+
+    TopInitModel(&model);
+
+    if (1 != sscanf(context->args, "%d", &body) || body < 4 || body > 8)
+        CHECK(LogError(context, "TOP2013 body value (%s) is invalid.", context->args));
+
+    snprintf(filename, sizeof(filename), "output/%d.top", body);
+    CHECK(TopLoadModel(&model, filename, 1+body));
+
+    for (f=0; f < TOP_NCOORDS; ++f)
+    {
+        s_count[f] = 0;
+        for (s=0; s < TOP_NSERIES; ++s)
+        {
+            const top_series_t *series = &model.series[f][s];
+            if (series->nterms_calc == 0)
+                continue;
+            s_count[f] = s + 1;
+            fprintf(context->outfile, "static const astro_top_term_t topterms_%d_%d_%d[] =\n", body, f, s);
+            fprintf(context->outfile, "{\n");
+            for (t=0; t < series->nterms_calc; ++t)
+            {
+                const top_term_t *term = &series->terms[t];
+                fprintf(context->outfile, "%c   {%9.0lf, %23.16lf, %23.16lf }  /* %6d */\n", (t==0 ? ' ' : ','), term->k, term->c, term->s, t);
+            }
+            fprintf(context->outfile, "};\n\n");
+        }
+
+        fprintf(context->outfile, "static const astro_top_series_t topseries_%d_%d[] =\n", body, f);
+        fprintf(context->outfile, "{\n");
+        for (s=0; s < s_count[f]; ++s)
+        {
+            const top_series_t *series = &model.series[f][s];
+
+            fprintf(context->outfile, "%c   { %6d, ", (s==0 ? ' ' : ','), series->nterms_calc);
+            if (series->nterms_calc == 0)
+                fprintf(context->outfile, "NULL");
+            else
+                fprintf(context->outfile, "topterms_%d_%d_%d", body, f, s);
+            fprintf(context->outfile, " }\n");
+        }
+        fprintf(context->outfile, "};\n\n");
+    }
+
+    fprintf(context->outfile, "static const astro_top_model_t topmodel_%d[] =\n", body);
+    fprintf(context->outfile, "{\n");
+    for (f=0; f < TOP_NCOORDS; ++f)
+        fprintf(context->outfile, "%c   { %2d, topseries_%d_%d }\n", (f==0 ? ' ' : ','), s_count[f], body, f);
+    fprintf(context->outfile, "};\n\n");
+
+    error = 0;
+fail:
+    TopFreeModel(&model);
+    return error;
+}
+
+
 static int LogError(const cg_context_t *context, const char *format, ...)
 {
     va_list v;
@@ -1440,6 +1506,7 @@ static const cg_directive_entry DirectiveTable[] =
     { "IAU_DATA",           OptIauData          },
     { "ADDSOL",             OptAddSol           },
     { "CONSTEL",            ConstellationData   },
+    { "TOP2013",            Top2013             },
     { NULL, NULL }  /* Marks end of list */
 };
 

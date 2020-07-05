@@ -1606,6 +1606,34 @@ static double VsopHelioDistance(const vsop_model_t *model, astro_time_t time)
     return distance;
 }
 
+/*------------------ TOP2013 model for Pluto ------------------*/
+
+/** @cond DOXYGEN_SKIP */
+typedef struct
+{
+    double k;
+    double c;
+    double s;
+}
+astro_top_term_t;
+
+typedef struct
+{
+    int nterms;
+    const astro_top_term_t *terms;
+}
+astro_top_series_t;
+
+typedef struct
+{
+    int nseries;
+    const astro_top_series_t *series;
+}
+astro_top_model_t;
+/** @endcond */
+
+$ASTRO_TOP2013(8);
+
 /*------------------ Chebyshev model for Pluto ------------------*/
 
 /** @cond DOXYGEN_SKIP */
@@ -1756,6 +1784,7 @@ astro_vector_t Astronomy_HelioVector(astro_body_t body, astro_time_t time)
         return CalcVsop(&vsop[body], time);
 
     case BODY_PLUTO:
+        (void)topmodel_8;   /* FIXFIXFIX: just to get code to compile while transitioning to TOP2013 Pluto model. */
         return CalcPluto(time);
 
     case BODY_MOON:
