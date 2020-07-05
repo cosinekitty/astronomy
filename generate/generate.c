@@ -143,7 +143,7 @@ int main(int argc, const char *argv[])
     }
 
     if (argc == 2 && !strcmp(argv[1], "planets"))
-        return GenerateVsopPlanets() || GenerateChebPluto() || GenerateTopPluto();
+        return GenerateVsopPlanets() || GenerateChebPluto();
 
     if (argc == 2 && !strcmp(argv[1], "validate_top2013"))
         return ValidateTop2013();
@@ -2204,7 +2204,6 @@ static int BinarySearchDir(
             {
                 best_term_count = term_count;
                 best_dist = dist;
-                DEBUG("BinarySearchDir: best so far!\n");
             }
             hi_dist = dist;
         }
@@ -2232,7 +2231,7 @@ fail:
 
 static int OptimizeTop(top_model_t *shrunk, const top_model_t *model)
 {
-    const int nattempts = 100;
+    const int nattempts = 10000;
     int error = 1;
     double max_arcmin;
     top_contrib_map_t map;
@@ -2259,7 +2258,7 @@ static int OptimizeTop(top_model_t *shrunk, const top_model_t *model)
 
     for (i=0; i < nattempts; ++i)
     {
-        printf("OptimizeTop: ATTEMPT %d of %d\n", i+1, nattempts);
+        DEBUG("OptimizeTop: ATTEMPT %d of %d\n", i+1, nattempts);
 
         /* Keep picking random vectors in 6D space. */
         CHECK(TopGetDirection(&dir, &buffer));

@@ -51,7 +51,6 @@ if errorlevel 1 (exit /b 1)
 if !FASTMODE! == true (
     REM *** Override fast mode if any of the required files are missing.
     for %%f in (
-        output\8.top
         output\08.eph
         output\vsop_0.txt
         output\vsop_1.txt
@@ -72,7 +71,6 @@ if !FASTMODE! == true (
 if !FASTMODE! == false (
     if exist output\vsop_*.txt (del /q output\vsop_*.txt)
     if exist output\*.eph (del /q output\*.eph)
-    if exist output\*.top (del /q output\*.top)
     echo.
     echo.Generating planet models.
     !GENEXE! planets
