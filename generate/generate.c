@@ -95,6 +95,7 @@ static int UnitTestChebyshev(void);
 static int DistancePlot(const char *name, double tt1, double tt2);
 static int ImproveVsopApsides(vsop_model_t *model);
 static int DeltaTimePlot(const char *outFileName);
+static int TopFileInfo(const char *filename, const char *name);
 static int ValidateTop2013(void);
 static int ValidateRandom(void);
 static int Diff(const char *filename1, const char *filename2, int *nlines);
@@ -157,6 +158,9 @@ int main(int argc, const char *argv[])
     if (argc == 5 && !strcmp(argv[1], "topnudge"))
         return TopNudge(argv[2], argv[3], argv[4]);
 
+    if (argc == 4 && !strcmp(argv[1], "topinfo"))
+        return TopFileInfo(argv[2], argv[3]);
+
     if (argc == 2 && !strcmp(argv[1], "apsis"))
         return GenerateApsisTestData();
 
@@ -218,6 +222,9 @@ static int PrintUsage(void)
         "   Use a guided random walk to try to improve it.\n"
         "   If a smaller model with acceptable accuracy is found,\n"
         "   it is written to outfile.\n"
+        "\n"
+        "generate topinfo filename planet\n"
+        "   Prints summary info about the TOP2013 file.\n"
         "\n"
     );
 
@@ -2167,7 +2174,7 @@ fail:
 
 static int OptimizeTop(top_model_t *shrunk, const top_model_t *model)
 {
-    const int nattempts = 1000;
+    const int nattempts = 10;
     int error = 1;
     top_contrib_map_t map;
     top_model_t attempt;
@@ -2429,5 +2436,32 @@ static int ValidateRandom(void)
     error = 0;
 fail:
     TopFreeRandomBuffer(&buffer);
+    return error;
+}
+
+static int TopFileInfo(const char *filename, const char *name)
+{
+    int error = 1;
+    top_model_t model;
+    vsop_body_t body;
+    int planet, f;
+
+    TopInitModel(&model);
+
+    body = LookupBody(name);
+    if (body < 0)
+        FAIL("TopFileInfo: planet name '%s' is not valid.\n", name);
+
+    planet = body + 1;      /* convert our body ID into TOP2013 planet ID */
+
+    CHECK(TopLoadModel(&model, filename, planet));
+    printf("%6d [", TopTermCount(&model));
+    for (f=0; f < TOP_NCOORDS; ++f)
+        printf("%6d", TopTermCountF(&model, f));
+    printf("]\n");
+
+    error = 0;
+fail:
+    TopFreeModel(&model);
     return error;
 }
