@@ -118,6 +118,7 @@ int  TopLoadModel(top_model_t *model, const char *filename, int planet);
 int  TopSaveModel(const top_model_t *model, const char *filename);
 int  TopWriteModel(const top_model_t *model, FILE *outfile);
 int  TopTermCount(const top_model_t *model);
+int  TopTermCountF(const top_model_t *model, int f);
 int  TopCalcElliptical(const top_model_t *model, double tt, top_elliptical_t *ellip);
 int  TopEcliptic(int planet, const top_elliptical_t *ellip, top_rectangular_t *ecl);
 int  TopEquatorial(const top_rectangular_t *ecl, top_rectangular_t *equ);

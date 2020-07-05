@@ -45,6 +45,21 @@ int TopTermCount(const top_model_t *model)
 }
 
 
+int TopTermCountF(const top_model_t *model, int f)
+{
+    int s, count;
+
+    if (f < 0 || f >= TOP_NCOORDS)
+        return 0;
+
+    count = 0;
+    for (s=0; s < TOP_NSERIES; ++s)
+        count += model->series[f][s].nterms_calc;
+
+    return count;
+}
+
+
 static int CloneSeries(top_series_t *copy, const top_series_t *original)
 {
     int error;

@@ -1997,109 +1997,30 @@ fail:
 }
 
 
-static int MeasureTopErrorAgainstNovas(const top_model_t *model, double *max_arcmin)
-{
-    int error = 1;
-    double tt, jd, jdStart, jdStop, jdDelta;
-    double dx, dy, dz, diff, range, arcmin;
-    double earth[3];
-    double planet[3];
-    const int body = model->planet - 1;     /* convert TOP2013 planet to our body code */
-    top_rectangular_t equ;
-
-    /*
-        Compare the calculations of the (possibly truncated) TOP2013 model
-        against NOVAS, using a few samples over the years 1800..2200.
-        Measure error in arcminutes, based on total distance error divided
-        by the range from Earth to the planet. This represents a worst case
-        parallax error as seen from Earth. Even if the error is mostly radial
-        as seen from Earth, I want to count it, so that the absolute error
-        in the planet's position is bounded.
-    */
-    *max_arcmin = 0.0;
-
-    jdStart = julian_date(1800, 1, 1, 0.0);
-    jdStop  = julian_date(2200, 1, 1, 0.0);
-    jdDelta = 500.0;
-
-    for (jd=jdStart; jd <= jdStop; jd += jdDelta)
-    {
-        tt = jd - 2451545.0;
-
-        CHECK(NovasBodyPos(jd, BODY_EARTH, earth));
-        CHECK(NovasBodyPos(jd, body, planet));
-        CHECK(TopPosition(model, tt, &equ));
-
-        /* Calculate discrepancy in position comparing NOVAS to TOP2013. */
-        dx = equ.x - planet[0];
-        dy = equ.y - planet[1];
-        dz = equ.z - planet[2];
-        diff = sqrt(dx*dx + dy*dy + dz*dz);
-
-        /* Calculate distance of planet from Earth. */
-        dx = planet[0] - earth[0];
-        dy = planet[1] - earth[1];
-        dz = planet[2] - earth[2];
-        range = sqrt(dx*dx + dy*dy + dz*dz);
-
-        /* Calculate worst-case parallax error as seen from Earth. */
-        arcmin = (RAD2DEG * 60.0) * (diff / range);
-        if (arcmin > *max_arcmin)
-            *max_arcmin = arcmin;
-    }
-
-fail:
-    return error;
-}
-
-
-#define NSAMPLES 293
+#define NSAMPLES 503
 static int MeasureSquashedTopError(const top_model_t *copy, const top_model_t *original, double *max_arcmin)
 {
-    typedef struct
-    {
-        double range;
-        top_rectangular_t b;
-    }
-    item_t;
-
-    static item_t table[NSAMPLES];
+    static top_rectangular_t table[NSAMPLES];
     static int initialized;
 
     int error, i;
-    double tt, jd, jdStart, jdStop, arcmin, dx, dy, dz, diff, range;
-    double earth[3];
+    double tt, ttStart, ttStop, arcmin, dx, dy, dz, diff, range;
     top_rectangular_t a, b;
 
     *max_arcmin = 0.0;
-    jdStart = julian_date(1800, 1, 1, 0.0);
-    jdStop  = julian_date(2200, 1, 1, 0.0);
+
+    /* Sample Pluto from 2 orbits before, to 2 orbits after, J2000. */
+    ttStop  = 2.0 * PlanetOrbitalPeriod(BODY_PLUTO);
+    ttStart = -ttStop;
 
     for (i=0; i < NSAMPLES; ++i)
     {
-        jd = jdStart + (i * (jdStop - jdStart) / (NSAMPLES - 1.0));
-        tt = jd - 2451545.0;
+        tt = ttStart + (i * (ttStop - ttStart) / (NSAMPLES - 1.0));
 
         CHECK(TopPosition(copy, tt, &a));
-        if (initialized)
-        {
-            range = table[i].range;
-            b = table[i].b;
-        }
-        else
-        {
-            CHECK(TopPosition(original, tt, &b));
-            CHECK(NovasBodyPos(jd, BODY_EARTH, earth));
-
-            /* Calculate distance of planet from Earth. */
-            dx = b.x - earth[0];
-            dy = b.y - earth[1];
-            dz = b.z - earth[2];
-            range = sqrt(dx*dx + dy*dy + dz*dz);
-
-            table[i].range = range;
-            table[i].b = b;
-        }
+        if (!initialized)
+            CHECK(TopPosition(original, tt, &table[i]));
+        b = table[i];
 
         /* Calculate discrepancy in position comparing full TOP2013 model to truncated model. */
         dx = a.x - b.x;
@@ -2107,7 +2028,11 @@ static int MeasureSquashedTopError(const top_model_t *copy, const top_model_t *o
         dz = a.z - b.z;
         diff = sqrt(dx*dx + dy*dy + dz*dz);
 
-        /* Calculate worst-case parallax error as seen from Earth. */
+        /* Calculate actual distance of Pluto from Sun, minus Earth aphelion. */
+        /* This gives closest possible distance between Pluto and Earth. */
+        range = sqrt(b.x*b.x + b.y*b.y + b.z*b.z) - 1.016;
+
+        /* Estimate worst-case parallax error as seen from Earth. */
         arcmin = (RAD2DEG * 60.0) * (diff / range);
         if (arcmin > *max_arcmin)
             *max_arcmin = arcmin;
@@ -2119,6 +2044,7 @@ fail:
     return error;
 }
 #undef NSAMPLES
+
 
 static int PrintContribMap(const top_contrib_map_t *map, const char *filename)
 {
@@ -2155,7 +2081,7 @@ static int BinarySearchDir(
     int prune_term_count,
     int *success)
 {
-    const double threshold_arcmin = 0.4;
+    const double threshold_arcmin = 1.0;
     int error = 1;
     double hi_dist, lo_dist, dist, best_dist;
     int term_count, prev_term_count, best_term_count;
@@ -2233,22 +2159,18 @@ static int OptimizeTop(top_model_t *shrunk, const top_model_t *model)
 {
     const int nattempts = 10000;
     int error = 1;
-    double max_arcmin;
     top_contrib_map_t map;
     top_model_t attempt;
     top_random_buffer_t buffer;
     top_direction_t dir;
     const double millennia = 0.2;       /* optimize for calculations within 200 years of J2000. */
-    int i, term_count, best_term_count = -1;
+    int i, f, term_count, best_term_count = -1;
     int success;
 
     TopInitModel(&attempt);
     TopInitModel(shrunk);
     TopInitContribMap(&map);
     TopInitRandomBuffer(&buffer);
-
-    CHECK(MeasureTopErrorAgainstNovas(model, &max_arcmin));
-    printf("OptimizeTop: baseline error = %0.6lf\n", max_arcmin);
 
     /* Make a map of the relative importance of the terms within each of the 6 formulas. */
     CHECK(TopMakeContribMap(&map, model, millennia));
@@ -2273,7 +2195,10 @@ static int OptimizeTop(top_model_t *shrunk, const top_model_t *model)
             if (i == 0 || term_count < best_term_count)
             {
                 best_term_count = term_count;
-                printf("OptimizeTop: best_term_count = %d\n", best_term_count);
+                printf("OptimizeTop: %6d terms [", best_term_count);
+                for (f=0; f < TOP_NCOORDS; ++f)
+                    printf(" %6d", TopTermCountF(&attempt, f));
+                printf("]\n");
                 CHECK(TopCloneModel(shrunk, &attempt));
             }
         }
@@ -2309,7 +2234,6 @@ static int GenerateTop(const char *name, const char *outFileName)
 
     planet = body + 1;      /* convert our body ID into TOP2013 planet ID */
 
-    CHECK(OpenEphem());
     CHECK(TopLoadModel(&model, TopDataFileName, planet));
     CHECK(OptimizeTop(&shrunk, &model));
     CHECK(TopSaveModel(&shrunk, outFileName));
@@ -2317,7 +2241,6 @@ static int GenerateTop(const char *name, const char *outFileName)
     error = 0;
 
 fail:
-    ephem_close();
     TopFreeModel(&model);
     TopFreeModel(&shrunk);
     return error;
