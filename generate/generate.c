@@ -1855,6 +1855,7 @@ fail:
 
 static const char *TopDataFileName = "TOP2013.dat";
 static const double TopMillenniaAroundJ2000 = 0.5;   /* optimize for calculations within 500 years of J2000. */
+static const double TopThresholdArcmin = 1.0;
 
 static int CalcTop2013(FILE *outfile, const top_model_t *model)
 {
@@ -2091,7 +2092,6 @@ static int BinarySearchDir(
     int prune_term_count,
     int *success)
 {
-    const double threshold_arcmin = 1.0;
     int error = 1;
     double hi_dist, lo_dist, dist, best_dist;
     int term_count, prev_term_count, best_term_count;
@@ -2111,7 +2111,7 @@ static int BinarySearchDir(
         CHECK(TopSetDistance(&attempt, map, &best_term_count, model, hi_dist, dir));
         CHECK(MeasureSquashedTopError(&attempt, model, &arcmin));
         DEBUG("BinarySearchDir: hi_dist=%lf, terms=%d, arcmin=%lf\n", hi_dist, best_term_count, arcmin);
-        if (arcmin < threshold_arcmin)
+        if (arcmin < TopThresholdArcmin)
             break;
         if (prune_term_count > 0 && best_term_count > prune_term_count)
         {
@@ -2134,7 +2134,7 @@ static int BinarySearchDir(
             break;
         CHECK(MeasureSquashedTopError(&attempt, model, &arcmin));
         DEBUG("BinarySearchDir: [lo=%lf, mid=%lf, hi=%lf], terms=%d, arcmin=%lf\n", lo_dist, dist, hi_dist, term_count, arcmin);
-        if (arcmin < threshold_arcmin)
+        if (arcmin < TopThresholdArcmin)
         {
             if (term_count < best_term_count)
             {
@@ -2256,18 +2256,91 @@ fail:
 }
 
 
+typedef struct
+{
+    int found;
+    int keep[TOP_NCOORDS];
+}
+nudge_solution_t;
+
+
+static int NudgeSearch(
+    const char *outFileName,
+    top_model_t *smaller,
+    const top_model_t *model,
+    top_contrib_map_t *map,
+    int *best,
+    nudge_solution_t *solution,
+    int keep[TOP_NCOORDS],
+    int depth)
+{
+    int error = 1;
+    int delta, sum, checksum, f;
+    double arcmin;
+
+    if (depth == TOP_NCOORDS)
+    {
+        sum = 0;
+        for (f=0; f < TOP_NCOORDS; ++f)
+            sum += (map->list[f].nterms - map->list[f].skip);
+
+        if (sum < *best)
+        {
+            /* This might be the new best solution, but only if error is small enough. */
+            CHECK(TopSquash(smaller, model, map));
+            CHECK(MeasureSquashedTopError(smaller, model, &arcmin));
+            if (arcmin < TopThresholdArcmin)
+            {
+                *best = sum;
+                printf("winner: %10.6lf arcmin : %6d [", arcmin, sum);
+                checksum = 0;
+                for (f=0; f < TOP_NCOORDS; ++f)
+                {
+                    checksum += solution->keep[f] = TopTermCountF(smaller, f);
+                    printf(" %6d", solution->keep[f]);
+                }
+                printf("]\n");
+                if (checksum != sum)
+                    FAIL("NudgeSearch: FAILURE -- sum=%d, checksum=%d\n", sum, checksum);
+                CHECK(TopSaveModel(smaller, outFileName));
+                ++solution->found;
+            }
+        }
+    }
+    else
+    {
+        for (delta = -1; delta <= +1; ++delta)
+        {
+            int oldskip = map->list[depth].skip;
+            int newskip = delta + (map->list[depth].nterms - keep[depth]);
+            if (0 <= newskip && newskip < map->list[depth].nterms)
+            {
+                map->list[depth].skip = newskip;
+                CHECK(NudgeSearch(outFileName, smaller, model, map, best, solution, keep, depth+1));
+                map->list[depth].skip = oldskip;
+            }
+        }
+    }
+
+    error = 0;
+fail:
+    return error;
+}
+
+
 static int TopNudge(const char *name, const char *inFileName, const char *outFileName)
 {
     int error = 1;
     vsop_body_t body;
     int planet;
-    top_model_t model;
+    top_model_t original;
     top_model_t smaller;
-    int f;
-    int skip[TOP_NCOORDS];
+    int step, f, best;
+    int keep[TOP_NCOORDS];
     top_contrib_map_t map;
+    nudge_solution_t solution;
 
-    TopInitModel(&model);
+    TopInitModel(&original);
     TopInitModel(&smaller);
     TopInitContribMap(&map);
 
@@ -2280,25 +2353,37 @@ static int TopNudge(const char *name, const char *inFileName, const char *outFil
 
     planet = body + 1;      /* convert our body ID into TOP2013 planet ID */
 
-    /* Load the input file just to get its skip list. */
-    CHECK(TopLoadModel(&model, inFileName, planet));
+    /* Load the input file just to get its term count list. */
+    CHECK(TopLoadModel(&smaller, inFileName, planet));
+    best = TopTermCount(&smaller);
     for (f=0; f<TOP_NCOORDS; ++f)
-        skip[f] = TopTermCountF(&model, f);
+        keep[f] = TopTermCountF(&smaller, f);
+    TopFreeModel(&smaller);
 
     /* Load the full-blown planet model. */
-    TopFreeModel(&model);
-    CHECK(TopLoadModel(&model, TopDataFileName, planet));
-    CHECK(TopCloneModel(&smaller, &model));
+    CHECK(TopLoadModel(&original, TopDataFileName, planet));
+
+    /* Clone from original into smaller so that smaller is large enough to hold any shrunk version. */
+    CHECK(TopCloneModel(&smaller, &original));
 
     /* Generate the contribution map so we can sort the full model, but with no terms skipped. */
-    CHECK(TopMakeContribMap(&map, &model, TopMillenniaAroundJ2000));
-    CHECK(TopSquash(&smaller, &model, &map));
+    CHECK(TopMakeContribMap(&map, &original, TopMillenniaAroundJ2000));
 
-    (void)skip;     /* FIXFIXFIX - use as a starting point */
+    for (step=0; ;++step)
+    {
+        printf("Step %d\n", step);
+        memset(&solution, 0, sizeof(solution));
+        CHECK(NudgeSearch(outFileName, &smaller, &original, &map, &best, &solution, keep, 0));
+        if (solution.found == 0)
+            break;
+        for (f=0; f<TOP_NCOORDS; ++f)
+            keep[f] = solution.keep[f];
+    }
 
     error = 0;
 fail:
-    TopFreeModel(&model);
+    TopFreeModel(&original);
+    TopFreeModel(&smaller);
     TopFreeContribMap(&map);
     return error;
 }
