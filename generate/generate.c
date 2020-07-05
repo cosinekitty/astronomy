@@ -76,7 +76,7 @@ static int PrintUsage(void);
 static int GenerateVsopPlanets(void);
 static int GenerateChebPluto(void);
 static int GenerateTop(const char *name, const char *outFileName);
-#define GenerateTopPluto()  GenerateTop("Pluto", "output/8.top")
+static int TopNudge(const char *name, const char *inFileName, const char *outFileName);
 static int GenerateApsisTestData(void);
 static int GenerateSource(void);
 static int TestVsopModel(vsop_model_t *model, int body, double threshold, double *max_arcmin, int *trunc_terms);
@@ -154,6 +154,9 @@ int main(int argc, const char *argv[])
     if (argc == 4 && !strcmp(argv[1], "top"))
         return GenerateTop(argv[2], argv[3]);
 
+    if (argc == 5 && !strcmp(argv[1], "topnudge"))
+        return TopNudge(argv[2], argv[3], argv[4]);
+
     if (argc == 2 && !strcmp(argv[1], "apsis"))
         return GenerateApsisTestData();
 
@@ -209,6 +212,12 @@ static int PrintUsage(void)
         "generate top planet outfile\n"
         "   Use TOP2013 to generate an optimized model for the specified outer planet.\n"
         "   The 'planet' must be one of: Jupiter, Saturn, Uranus, Neptune, Pluto.\n"
+        "\n"
+        "generate topnudge planet infile outfile\n"
+        "   Load TOP2013 model from infile.\n"
+        "   Use a guided random walk to try to improve it.\n"
+        "   If a smaller model with acceptable accuracy is found,\n"
+        "   it is written to outfile.\n"
         "\n"
     );
 
@@ -1845,6 +1854,7 @@ fail:
 /*-----------------------------------------------------------------------------------------*/
 
 static const char *TopDataFileName = "TOP2013.dat";
+static const double TopMillenniaAroundJ2000 = 0.5;   /* optimize for calculations within 500 years of J2000. */
 
 static int CalcTop2013(FILE *outfile, const top_model_t *model)
 {
@@ -2163,7 +2173,6 @@ static int OptimizeTop(top_model_t *shrunk, const top_model_t *model)
     top_model_t attempt;
     top_random_buffer_t buffer;
     top_direction_t dir;
-    const double millennia = 0.2;       /* optimize for calculations within 200 years of J2000. */
     int i, f, term_count, best_term_count = -1;
     int success;
 
@@ -2173,7 +2182,7 @@ static int OptimizeTop(top_model_t *shrunk, const top_model_t *model)
     TopInitRandomBuffer(&buffer);
 
     /* Make a map of the relative importance of the terms within each of the 6 formulas. */
-    CHECK(TopMakeContribMap(&map, model, millennia));
+    CHECK(TopMakeContribMap(&map, model, TopMillenniaAroundJ2000));
     CHECK(PrintContribMap(&map, "output/contrib.map"));
 
     CHECK(TopCloneModel(&attempt, model));
@@ -2243,6 +2252,54 @@ static int GenerateTop(const char *name, const char *outFileName)
 fail:
     TopFreeModel(&model);
     TopFreeModel(&shrunk);
+    return error;
+}
+
+
+static int TopNudge(const char *name, const char *inFileName, const char *outFileName)
+{
+    int error = 1;
+    vsop_body_t body;
+    int planet;
+    top_model_t model;
+    top_model_t smaller;
+    int f;
+    int skip[TOP_NCOORDS];
+    top_contrib_map_t map;
+
+    TopInitModel(&model);
+    TopInitModel(&smaller);
+    TopInitContribMap(&map);
+
+    body = LookupBody(name);
+    if (body < 0)
+        FAIL("TopNudge: planet name '%s' is not valid.\n", name);
+
+    if (body < BODY_JUPITER || body > BODY_PLUTO)
+        FAIL("TopNudge: TOP2013 supports Jupiter through Pluto only.\n");
+
+    planet = body + 1;      /* convert our body ID into TOP2013 planet ID */
+
+    /* Load the input file just to get its skip list. */
+    CHECK(TopLoadModel(&model, inFileName, planet));
+    for (f=0; f<TOP_NCOORDS; ++f)
+        skip[f] = TopTermCountF(&model, f);
+
+    /* Load the full-blown planet model. */
+    TopFreeModel(&model);
+    CHECK(TopLoadModel(&model, TopDataFileName, planet));
+    CHECK(TopCloneModel(&smaller, &model));
+
+    /* Generate the contribution map so we can sort the full model, but with no terms skipped. */
+    CHECK(TopMakeContribMap(&map, &model, TopMillenniaAroundJ2000));
+    CHECK(TopSquash(&smaller, &model, &map));
+
+    (void)skip;     /* FIXFIXFIX - use as a starting point */
+
+    error = 0;
+fail:
+    TopFreeModel(&model);
+    TopFreeContribMap(&map);
     return error;
 }
 
