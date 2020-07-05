@@ -29,7 +29,7 @@ before_script:
 script:
   - export CC=/usr/bin/gcc-6
   - ls -l ${CC} && ${CC} --version
-  - cd generate && rm -f output/* && ./run && ./verify_clean
+  - cd generate && rm -f output/vsop*.txt output/*.eph && ./run && ./verify_clean
 
 branches:
     only:
