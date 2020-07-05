@@ -1,0 +1,11 @@
+#!/bin/bash
+
+while true; do
+    ./generate top Pluto pluto.top || exit $?
+    ./generate topnudge Pluto pluto.top better.top || exit $?
+    ls -l better.top output/8.top
+    if [[ $(stat -c%s better.top) < $(stat -c%s output/8.top) ]]; then
+        echo "FOUND BETTER SOLUTION"
+        mv better.top output/8.top
+    fi
+done

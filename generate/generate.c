@@ -2167,7 +2167,7 @@ fail:
 
 static int OptimizeTop(top_model_t *shrunk, const top_model_t *model)
 {
-    const int nattempts = 10000;
+    const int nattempts = 1000;
     int error = 1;
     top_contrib_map_t map;
     top_model_t attempt;
