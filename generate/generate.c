@@ -2174,7 +2174,7 @@ fail:
 
 static int OptimizeTop(top_model_t *shrunk, const top_model_t *model)
 {
-    const int nattempts = 10;
+    const int nattempts = 100;
     int error = 1;
     top_contrib_map_t map;
     top_model_t attempt;
@@ -2268,8 +2268,30 @@ typedef struct
     int found;
     int keep[TOP_NCOORDS];
     int fshuffle[TOP_NCOORDS];
+    int dshuffle[TOP_NCOORDS][3];
 }
 nudge_solution_t;
+
+
+static int Shuffle(FILE *rand, int *array, int length)
+{
+    int error = 1;
+    int i, r, swap;
+
+    for (i=1; i < length; ++i)
+    {
+        if (1 != fread(&r, sizeof(r), 1, rand))
+            FAIL("Shuffle: unable to read integer from /dev/urandom");
+        r = (r & 0x7fffffff) % (i + 1);
+        swap = array[i];
+        array[i] = array[r];
+        array[r] = swap;
+    }
+
+    error = 0;
+fail:
+    return error;
+}
 
 
 static int NudgeSearch(
@@ -2283,14 +2305,12 @@ static int NudgeSearch(
     int depth)
 {
     int error = 1;
-    int delta, sum, checksum, f;
+    int sum, checksum, f, i;
     double arcmin;
     FILE *rand = NULL;
 
     if (depth == 0)
     {
-        int r, swap;
-
         /* Shuffle the order in which we search the coordinates. */
 
         rand = fopen("/dev/urandom", "rb");
@@ -2298,22 +2318,14 @@ static int NudgeSearch(
             FAIL("NudgeSearch: cannot open /dev/urandom");
 
         for (f=0; f<TOP_NCOORDS; ++f)
-            solution->fshuffle[f] = f;
-
-        for (f=1; f<TOP_NCOORDS; ++f)
         {
-            if (1 != fread(&r, sizeof(r), 1, rand))
-                FAIL("NudgeSearch: unable to read integer from /dev/urandom");
-            r = (r & 0x7fffffff) % (f + 1);
-            swap = solution->fshuffle[f];
-            solution->fshuffle[f] = solution->fshuffle[r];
-            solution->fshuffle[r] = swap;
+            solution->fshuffle[f] = f;
+            for (i=0; i<3; ++i)
+                solution->dshuffle[f][i] = i - 1;
+            Shuffle(rand, solution->dshuffle[f], 3);
         }
 
-        printf("fshuffle = [");
-        for (f=0; f<TOP_NCOORDS; ++f)
-            printf("%2d", solution->fshuffle[f]);
-        printf("]\n");
+        CHECK(Shuffle(rand, solution->fshuffle, TOP_NCOORDS));
     }
 
     if (depth == TOP_NCOORDS)
@@ -2348,10 +2360,10 @@ static int NudgeSearch(
     else
     {
         f = solution->fshuffle[depth];
-        for (delta = -1; delta <= +1; ++delta)
+        for (i=0; i<3; ++i)
         {
             int oldskip = map->list[f].skip;
-            int newskip = delta + (map->list[f].nterms - keep[f]);
+            int newskip = solution->dshuffle[f][i] + (map->list[f].nterms - keep[f]);
             if (0 <= newskip && newskip < map->list[f].nterms)
             {
                 map->list[f].skip = newskip;
