@@ -2,6 +2,7 @@
 rm -f pluto_{novas,top}.csv
 ./build || exit $?
 ./generate distplot Pluto -50000 +50000 > pluto_novas.csv || exit $?
+./generate source || exit $?
 ./ctbuild || exit $?
 ./ctest distplot Pluto -200000 +200000 pluto_top.csv || exit $?
 ./plotdist.py pluto_novas.csv pluto_top.csv || exit $?
