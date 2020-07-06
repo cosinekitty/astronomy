@@ -2267,6 +2267,7 @@ typedef struct
 {
     int found;
     int keep[TOP_NCOORDS];
+    int fshuffle[TOP_NCOORDS];
 }
 nudge_solution_t;
 
@@ -2284,6 +2285,36 @@ static int NudgeSearch(
     int error = 1;
     int delta, sum, checksum, f;
     double arcmin;
+    FILE *rand = NULL;
+
+    if (depth == 0)
+    {
+        int r, swap;
+
+        /* Shuffle the order in which we search the coordinates. */
+
+        rand = fopen("/dev/urandom", "rb");
+        if (rand == NULL)
+            FAIL("NudgeSearch: cannot open /dev/urandom");
+
+        for (f=0; f<TOP_NCOORDS; ++f)
+            solution->fshuffle[f] = f;
+
+        for (f=1; f<TOP_NCOORDS; ++f)
+        {
+            if (1 != fread(&r, sizeof(r), 1, rand))
+                FAIL("NudgeSearch: unable to read integer from /dev/urandom");
+            r = (r & 0x7fffffff) % (f + 1);
+            swap = solution->fshuffle[f];
+            solution->fshuffle[f] = solution->fshuffle[r];
+            solution->fshuffle[r] = swap;
+        }
+
+        printf("fshuffle = [");
+        for (f=0; f<TOP_NCOORDS; ++f)
+            printf("%2d", solution->fshuffle[f]);
+        printf("]\n");
+    }
 
     if (depth == TOP_NCOORDS)
     {
@@ -2316,21 +2347,23 @@ static int NudgeSearch(
     }
     else
     {
+        f = solution->fshuffle[depth];
         for (delta = -1; delta <= +1; ++delta)
         {
-            int oldskip = map->list[depth].skip;
-            int newskip = delta + (map->list[depth].nterms - keep[depth]);
-            if (0 <= newskip && newskip < map->list[depth].nterms)
+            int oldskip = map->list[f].skip;
+            int newskip = delta + (map->list[f].nterms - keep[f]);
+            if (0 <= newskip && newskip < map->list[f].nterms)
             {
-                map->list[depth].skip = newskip;
+                map->list[f].skip = newskip;
                 CHECK(NudgeSearch(outFileName, smaller, model, map, best, solution, keep, depth+1));
-                map->list[depth].skip = oldskip;
+                map->list[f].skip = oldskip;
             }
         }
     }
 
     error = 0;
 fail:
+    if (rand) fclose(rand);
     return error;
 }
 
@@ -2438,6 +2471,7 @@ fail:
     TopFreeRandomBuffer(&buffer);
     return error;
 }
+
 
 static int TopFileInfo(const char *filename, const char *name)
 {
