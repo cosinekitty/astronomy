@@ -90,6 +90,7 @@ static int LocalSolarEclipseTest(void);
 static int LocalSolarEclipseTest1(void);
 static int LocalSolarEclipseTest2(void);
 static int Transit(void);
+static int DistancePlot(astro_body_t body, double ut1, double ut2, const char *filename);
 
 typedef int (* unit_test_func_t) (void);
 
@@ -176,6 +177,29 @@ int main(int argc, const char *argv[])
                 const char *c_filename = argv[2];
                 const char *js_filename = argv[3];
                 CHECK(Diff(c_filename, js_filename));
+                goto success;
+            }
+        }
+
+        if (argc == 6)
+        {
+            if (!strcmp(verb, "distplot"))
+            {
+                /* ctest distplot name tt1 tt2 */
+                astro_body_t body;
+                double ut1, ut2;
+
+                body = Astronomy_BodyCode(argv[2]);
+                if (body == BODY_INVALID)
+                    FAIL("Invalid body name '%s'\n", argv[2]);
+
+                if (1 != sscanf(argv[3], "%lf", &ut1))
+                    FAIL("Invalid tt1 value '%s'\n", argv[3]);
+
+                if (1 != sscanf(argv[4], "%lf", &ut2))
+                    FAIL("Invalid tt2 value '%s'\n", argv[4]);
+
+                CHECK(DistancePlot(body, ut1, ut2, argv[5]));
                 goto success;
             }
         }
@@ -3206,6 +3230,40 @@ static int Transit(void)
     CHECK(TransitFile(BODY_MERCURY, "eclipse/mercury.txt", 10.710, 0.2121));
     CHECK(TransitFile(BODY_VENUS,   "eclipse/venus.txt",    9.109, 0.6772));
 fail:
+    return error;
+}
+
+/*-----------------------------------------------------------------------------------------------------------*/
+
+static int DistancePlot(astro_body_t body, double ut1, double ut2, const char *filename)
+{
+    const int npoints = 100000;
+    int error = 1;
+    int i;
+    double ut;
+    astro_time_t time, j2000;
+    astro_func_result_t dist;
+    FILE *outfile = NULL;
+
+    outfile = fopen(filename, "wt");
+    if (outfile == NULL)
+        FAIL("DistancePlot: Cannot open output file: %s\n", filename);
+
+    j2000 = Astronomy_MakeTime(2000, 1, 1, 12, 0, 0.0);
+
+    fprintf(outfile, "\"tt\",\"distance\"\n");
+    for (i=0; i < npoints; ++i)
+    {
+        ut = ut1 + (((double)i)/((double)(npoints-1)) * (ut2 - ut1));
+        time = Astronomy_AddDays(j2000, ut);
+        dist = Astronomy_HelioDistance(body, time);
+        CHECK_STATUS(dist);
+        fprintf(outfile, "%0.16lf,%0.16lg\n", time.tt, dist.value);
+    }
+
+    error = 0;
+fail:
+    if (outfile != NULL) fclose(outfile);
     return error;
 }
 

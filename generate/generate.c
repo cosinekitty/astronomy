@@ -1809,7 +1809,7 @@ static int DistancePlot(const char *name, double tt1, double tt2)
     double pos[3];
     double tt, dist;
     int i;
-    const int npoints = 1000;
+    const int npoints = 100000;
 
     CHECK(OpenEphem());
 

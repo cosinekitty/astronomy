@@ -2,6 +2,7 @@ generate_c_docs
 generate
 lnxp1600p2200.405
 hygdata_v3.csv
+pluto_*.csv
 TOP2013.dat
 temp/
 html/
