@@ -1298,6 +1298,7 @@ static int CheckEcliptic(const char *filename, int lnum, const char *line, doubl
     double earth_ecl[3];
     double geo[3];
     double tt, jd, lon, dist, blon, elon, diff;
+    double tolerance;
 
     *arcmin = 99999.0;
     *outbody = VSOP_INVALID_BODY;
@@ -1366,8 +1367,9 @@ static int CheckEcliptic(const char *filename, int lnum, const char *line, doubl
     elon = EclipticLongitude(earth_ecl);
     diff = LongitudeOffset((elon - blon) - lon);
 
+    tolerance = (body == BODY_PLUTO) ? 2.0 : 1.0;
     *arcmin = fabs(diff * 60.0);
-    if (*arcmin > 1.0)
+    if (*arcmin > tolerance)
     {
         fprintf(stderr, "CheckEcliptic: Excessive arcminute error = %0.3lf on line %d of file %s\n", *arcmin, lnum, filename);
         return 1;
@@ -1383,6 +1385,7 @@ static int CheckTestVector(const char *filename, int lnum, const char *line, dou
     vsop_body_t body;
     char name[10];
     double tt, jd, xpos[3], npos[3];
+    double tolerance;
 
     *outbody = VSOP_INVALID_BODY;
     *arcmin = 99999.0;
@@ -1415,7 +1418,8 @@ static int CheckTestVector(const char *filename, int lnum, const char *line, dou
         return error;
     }
 
-    if (*arcmin > 0.4)
+    tolerance = (body == BODY_PLUTO) ? 2.0 : 0.4;
+    if (*arcmin > tolerance)
     {
         fprintf(stderr, "CheckTestVector: Excessive angular error (%lf arcmin) on line %d of file %s\n", *arcmin, lnum, filename);
         fprintf(stderr, "check   = (%22.16lf, %22.16lf, %22.16lf)\n", xpos[0], xpos[1], xpos[2]);
@@ -1437,6 +1441,7 @@ static int CheckSkyPos(observer *location, const char *filename, int lnum, const
     sky_pos sky_dat;    /* (RA,DEC) using true equator and equinox of date*/
     double delta_ra, delta_dec, delta_az, delta_alt;
     double delta_t_seconds;
+    double tolerance;
 
     *outbody = VSOP_INVALID_BODY;
     *arcmin_equ = *arcmin_hor = 99999.0;
@@ -1512,7 +1517,8 @@ static int CheckSkyPos(observer *location, const char *filename, int lnum, const
     /* Calculate pythagorean error as if both were planar coordinates. */
     *arcmin_equ = sqrt(delta_ra*delta_ra + delta_dec*delta_dec);
 
-    if (*arcmin_equ > 0.9)
+    tolerance = (body == BODY_PLUTO) ? 2.0 : 0.9;
+    if (*arcmin_equ > tolerance)
     {
         fprintf(stderr, "CheckSkyPos: excessive (RA,DEC) error = %lf arcmin at line %d of file %s\n", *arcmin_equ, lnum, filename);
         return 1;
@@ -1544,7 +1550,7 @@ static int CheckSkyPos(observer *location, const char *filename, int lnum, const
 
     *arcmin_hor = sqrt(delta_az*delta_az + delta_alt*delta_alt);
 
-    if (*arcmin_hor > 0.9)
+    if (*arcmin_hor > tolerance)
     {
         fprintf(stderr, "CheckSkyPos: excessive (az,alt) error = %lf arcmin for body %d at line %d of file %s\n", *arcmin_hor, body, lnum, filename);
         return 1;
