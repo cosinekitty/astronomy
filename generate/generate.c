@@ -1868,7 +1868,7 @@ fail:
 
 static const char *TopDataFileName = "TOP2013.dat";
 static const double TopMillenniaAroundJ2000 = 0.5;   /* optimize for calculations within 500 years of J2000. */
-static const double TopThresholdArcmin = 1.0;
+static const double TopThresholdArcmin = 0.5;
 
 static int CalcTop2013(FILE *outfile, const top_model_t *model)
 {

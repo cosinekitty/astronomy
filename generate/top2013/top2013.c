@@ -792,7 +792,7 @@ int TopSetDistance(
     *term_count = 0;
     for (f=0; f < TOP_NCOORDS; ++f)
     {
-        /* Calculate a real-valu3ed number of terms. */
+        /* Calculate a real-valued number of terms. */
         xterms = distance * dir->x[f];
 
         /* Clamp and round to the allowed range of values. */

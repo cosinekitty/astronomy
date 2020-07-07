@@ -8,4 +8,4 @@ Jupiter  : 2015-02-28 04:40:04 UTC  altitude= 77.29  azimuth=180.00
 Saturn   : 2015-02-28 11:40:53 UTC  altitude= 40.96  azimuth=180.00
 Uranus   : 2015-02-28 20:20:51 UTC  altitude= 65.12  azimuth=180.00
 Neptune  : 2015-02-28 18:04:23 UTC  altitude= 50.53  azimuth=180.00
-Pluto    : 2015-02-28 14:31:39 UTC  altitude= 39.50  azimuth=180.00
+Pluto    : 2015-02-28 14:31:39 UTC  altitude= 39.51  azimuth=180.00
