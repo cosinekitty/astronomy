@@ -1646,7 +1646,7 @@ static int PlanetApsis(void)
     double period;
     double diff_days, diff_degrees, max_degrees=0.0, diff_dist_ratio;
     double degree_threshold;
-    double max_diff_days, max_dist_ratio, dist_ratio_threshold;
+    double max_diff_days, max_dist_ratio;
 
     start_time = Astronomy_MakeTime(MIN_YEAR, 1, 1, 0, 0, 0.0);
 
@@ -1691,14 +1691,13 @@ static int PlanetApsis(void)
             if (diff_degrees > max_degrees)
                 max_degrees = diff_degrees;
 
-            degree_threshold = (body == BODY_PLUTO) ? 0.5 : 0.1;
+            degree_threshold = (body == BODY_PLUTO) ? 0.262 : 0.1;
             if (diff_degrees > degree_threshold)
                 bad_planets_found = 1;
 
             diff_dist_ratio = ABS(expected_distance - apsis.dist_au) / expected_distance;
             if (diff_dist_ratio > max_dist_ratio) max_dist_ratio = diff_dist_ratio;
-            dist_ratio_threshold = (body == BODY_PLUTO) ? 2.0e-4 : 1.0e-4;
-            if (diff_dist_ratio > dist_ratio_threshold)
+            if (diff_dist_ratio > 1.0e-4)
             {
                 FAIL("C PlanetApsis: EXCESSIVE DISTANCE ERROR for %s (%s line %d): expected=%0.16lf, calculated=%0.16lf, error ratio=%lg\n",
                     Astronomy_BodyName(body), filename, count, expected_distance, apsis.dist_au, diff_dist_ratio);
