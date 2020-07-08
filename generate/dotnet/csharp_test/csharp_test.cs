@@ -938,15 +938,7 @@ namespace csharp_test
 
                         /* Calculate the next apsis. */
                         AstroTime prev_time = apsis.time;
-                        try
-                        {
-                            apsis = Astronomy.NextPlanetApsis(body, apsis);
-                        }
-                        catch (BadTimeException) when (body == Body.Pluto)
-                        {
-                            // Correct behavior for Pluto: Chebyshev model has a limited time domain.
-                            break;
-                        }
+                        apsis = Astronomy.NextPlanetApsis(body, apsis);
 
                         /* Update statistics. */
                         ++count;
