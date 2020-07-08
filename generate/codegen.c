@@ -1510,7 +1510,7 @@ static int Top2013_CSharp(cg_context_t *context, const top_model_t *model, int b
 }
 
 
-static int Top2013_List(cg_context_t *context, const top_model_t *model, int body)
+static int Top2013_List(cg_context_t *context, const top_model_t *model)
 {
     int f, s, t, s_count;
     const char *comment = (context->language == CODEGEN_LANGUAGE_PYTHON) ? "#" : "//";
@@ -1576,7 +1576,7 @@ static int Top2013(cg_context_t *context)
 
     case CODEGEN_LANGUAGE_JS:
     case CODEGEN_LANGUAGE_PYTHON:
-        CHECK(Top2013_List(context, &model, body));
+        CHECK(Top2013_List(context, &model));
         break;
 
     default:
