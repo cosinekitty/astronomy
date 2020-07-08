@@ -45,7 +45,6 @@ _ASEC360 = 1296000.0
 _ASEC2RAD = 4.848136811095359935899141e-6
 _ARC = 3600.0 * 180.0 / math.pi     # arcseconds per radian
 _C_AUDAY = 173.1446326846693        # speed of light in AU/day
-_ERAD = 6378136.6                   # mean earth radius in meters
 _KM_PER_AU = 1.4959787069098932e+8
 _METERS_PER_AU = _KM_PER_AU * 1000.0
 _ANGVEL = 7.2921150e-5
@@ -877,7 +876,6 @@ def _sidereal_time(time):
 
 
 def _terra(observer, st):
-    erad_km = _ERAD / 1000.0
     df = 1.0 - 0.003352819697896    # flattening of the Earth
     df2 = df * df
     phi = math.radians(observer.latitude)
@@ -886,8 +884,8 @@ def _terra(observer, st):
     c = 1.0 / math.sqrt(cosphi*cosphi + df2*sinphi*sinphi)
     s = df2 * c
     ht_km = observer.height / 1000.0
-    ach = erad_km*c + ht_km
-    ash = erad_km*s + ht_km
+    ach = _EARTH_EQUATORIAL_RADIUS_KM*c + ht_km
+    ash = _EARTH_EQUATORIAL_RADIUS_KM*s + ht_km
     stlocl = math.radians(15.0*st + observer.longitude)
     sinst = math.sin(stlocl)
     cosst = math.cos(stlocl)
@@ -1025,7 +1023,7 @@ $ASTRO_ADDSOL()
     return _moonpos(
         _PI2 * Frac((L0+DLAM/_ARC) / _PI2),
         (math.pi / (180 * 3600)) * lat_seconds,
-        (_ARC * (_ERAD / _METERS_PER_AU)) / (0.999953253 * SINPI)
+        (_ARC * _EARTH_EQUATORIAL_RADIUS_AU) / (0.999953253 * SINPI)
     )
 
 def GeoMoon(time):
@@ -1134,35 +1132,142 @@ def _CalcEarth(time):
 
 # END VSOP
 #----------------------------------------------------------------------------
-# BEGIN CHEBYSHEV
+# BEGIN TOP2013
 
-_pluto = $ASTRO_LIST_CHEBYSHEV(8)
+_pluto = $ASTRO_TOP2013(8)
 
-def _ChebScale(t_min, t_max, t):
-    return (2*t - (t_max + t_min)) / (t_max - t_min)
+_top_freq = [
+    0.5296909622785881e+03,     # Jupiter
+    0.2132990811942489e+03,     # Saturn
+    0.7478166163181234e+02,     # Uranus
+    0.3813297236217556e+02,     # Neptune
+    0.2533566020437000e+02      # Pluto
+]
 
-def _CalcChebyshev(model, time):
-    # Search for a record that overlaps the given time value.
-    for record in model:
-        x = _ChebScale(record['tt'], record['tt'] + record['ndays'], time.tt)
-        if -1 <= x <= +1:
-            coeff = record['coeff']
-            pos = []
-            for d in range(3):
-                p0 = 1
-                sum = coeff[0][d]
-                p1 = x
-                sum += coeff[1][d] * p1
-                for k in range(2, len(coeff)):
-                    p2 = (2 * x * p1) - p0
-                    sum += coeff[k][d] * p2
-                    p0 = p1
-                    p1 = p2
-                pos.append(sum - coeff[0][d]/2)
-            return Vector(pos[0], pos[1], pos[2], time)
-    raise BadTimeError(time)
 
-# END CHEBYSHEV
+def _calc_elliptical_coord(formula, dmu, f, t1):
+    el = 0.0
+    tpower = 1.0
+    s = 0
+    for series in formula:
+        for term in series:
+            term_k, term_c, term_s = term
+            if f==1 and s==1 and term_k==0:
+                continue
+            arg = term_k * dmu * t1
+            el += tpower * (term_c*math.cos(arg) + term_s*math.sin(arg))
+        tpower *= t1
+        s += 1
+    return el
+
+
+def _TopCalcElliptical(body, model, tt):
+    # Translated from: TOP2013.f
+    # See: https://github.com/cosinekitty/ephemeris/tree/master/top2013
+    # Copied from: ftp://ftp.imcce.fr/pub/ephem/planets/top2013
+    t1 = tt / 365250.0
+    dmu = (_top_freq[0] - _top_freq[1]) / 880.0
+
+    ellip = [
+        _calc_elliptical_coord(model[0], dmu, 0, t1),    # a
+        _calc_elliptical_coord(model[1], dmu, 1, t1),    # lambda
+        _calc_elliptical_coord(model[2], dmu, 2, t1),    # k
+        _calc_elliptical_coord(model[3], dmu, 3, t1),    # h
+        _calc_elliptical_coord(model[4], dmu, 4, t1),    # q
+        _calc_elliptical_coord(model[5], dmu, 5, t1)     # p
+    ]
+
+    xl = (ellip[1] + _top_freq[body.value - 4] * t1) % _PI2
+    if xl < 0.0:
+        xl += _PI2
+    ellip[1] = xl
+    return ellip
+
+
+def _TopEcliptic(ellip, time):
+    xa, xl, xk, xh, xq, xp = ellip
+    xfi = math.sqrt(1.0 - xk*xk - xh*xh)
+    xki = math.sqrt(1.0 - xq*xq - xp*xp)
+    zr = xk
+    zi = xh
+    u = 1.0 / (1.0 + xfi)
+    ex2 = zr*zr + zi*zi
+    ex = math.sqrt(ex2)
+    ex3 = ex * ex2
+    z1r = zr
+    z1i = -zi
+    gl = xl % _PI2
+    gm = gl - math.atan2(xh, xk)
+    e = gl + (ex - 0.125*ex3)*math.sin(gm) + 0.5*ex2*math.sin(2.0*gm) + 0.375*ex3*math.sin(3.0*gm)
+
+    while True:
+        z2r = 0.0
+        z2i = e
+        zteta_r = math.cos(z2i)
+        zteta_i = math.sin(z2i)
+        z3r = z1r*zteta_r - z1i*zteta_i
+        z3i = z1r*zteta_i + z1i*zteta_r
+        dl = gl - e + z3i
+        rsa = 1.0 - z3r
+        e += dl/rsa
+        if abs(dl) < 1.0e-15:
+            break
+
+    z1r = z3i * u * zr
+    z1i = z3i * u * zi
+    z2r = +z1i
+    z2i = -z1r
+    zto_r = (-zr + zteta_r + z2r) / rsa
+    zto_i = (-zi + zteta_i + z2i) / rsa
+    xcw = zto_r
+    xsw = zto_i
+    xm = xp*xcw - xq*xsw
+    xr = xa*rsa
+
+    return Vector(
+        xr*(xcw - 2.0*xp*xm),
+        xr*(xsw + 2.0*xq*xm),
+        -2.0*xr*xki*xm,
+        time
+    )
+
+
+_top_eq_rot = None
+
+
+def _TopEquatorial(ecl):
+    global _top_eq_rot
+
+    if _top_eq_rot is None:
+        sdrad = math.radians(1.0 / 3600.0)
+        eps = math.radians(23.0 + 26.0/60.0 + 21.41136/3600.0)
+        phi = -0.05188 * sdrad
+        ceps = math.cos(eps)
+        seps = math.sin(eps)
+        cphi = math.cos(phi)
+        sphi = math.sin(phi)
+
+        _top_eq_rot = [
+            [cphi, -sphi*ceps, sphi*seps],
+            [sphi, cphi*ceps, -cphi*seps],
+            [0.0, seps, ceps]
+        ]
+
+    return Vector(
+        (_top_eq_rot[0][0] * ecl.x) + (_top_eq_rot[0][1] * ecl.y) + (_top_eq_rot[0][2] * ecl.z),
+        (_top_eq_rot[1][0] * ecl.x) + (_top_eq_rot[1][1] * ecl.y) + (_top_eq_rot[1][2] * ecl.z),
+        (_top_eq_rot[2][0] * ecl.x) + (_top_eq_rot[2][1] * ecl.y) + (_top_eq_rot[2][2] * ecl.z),
+        ecl.t
+    )
+
+
+def _TopPosition(model, body, time):
+    ellip = _TopCalcElliptical(body, model, time.tt)
+    ecl = _TopEcliptic(ellip, time)
+    return _TopEquatorial(ecl)
+
+
+# END TOP2013
 #----------------------------------------------------------------------------
 # BEGIN Search
 
@@ -1397,7 +1502,7 @@ def HelioVector(body, time):
         at the given time.
     """
     if body == Body.Pluto:
-        return _CalcChebyshev(_pluto, time)
+        return _TopPosition(_pluto, body, time)
 
     if 0 <= body.value < len(_vsop):
         return _CalcVsop(_vsop[body.value], time)
@@ -3305,8 +3410,8 @@ def SearchPlanetApsis(body, startTime):
     -------
     Apsis
     """
-    if body == Body.Neptune:
-        return _SearchNeptuneApsis(startTime)
+    if body == Body.Neptune or body == Body.Pluto:
+        return _BruteSearchPlanetApsis(body, startTime)
     positive_slope = (+1.0, body)
     negative_slope = (-1.0, body)
     orbit_period_days = _PlanetOrbitalPeriod[body.value]
@@ -3377,10 +3482,8 @@ def NextPlanetApsis(body, apsis):
         raise InternalError()   # should have found opposite planetary apsis type
     return next
 
-def _NeptuneHelioDistance(time):
-    return _VsopHelioDistance(_vsop[Body.Neptune.value], time)
 
-def _NeptuneExtreme(kind, start_time, dayspan):
+def _PlanetExtreme(body, kind, start_time, dayspan):
     direction = +1.0 if (kind == ApsisKind.Apocenter) else -1.0
     npoints = 10
     while True:
@@ -3388,11 +3491,11 @@ def _NeptuneExtreme(kind, start_time, dayspan):
         # Iterate until uncertainty is less than one minute.
         if interval < 1/1440:
             apsis_time = start_time.AddDays(interval/2)
-            dist_au = _NeptuneHelioDistance(apsis_time)
+            dist_au = HelioDistance(body, apsis_time)
             return Apsis(apsis_time, kind, dist_au)
         for i in range(npoints):
             time = start_time.AddDays(i * interval)
-            dist = direction * _NeptuneHelioDistance(time)
+            dist = direction * HelioDistance(body, time)
             if i==0 or dist > best_dist:
                 best_i = i
                 best_dist = dist
@@ -3400,7 +3503,8 @@ def _NeptuneExtreme(kind, start_time, dayspan):
         start_time = start_time.AddDays((best_i - 1) * interval)
         dayspan = 2 * interval
 
-def _SearchNeptuneApsis(startTime):
+
+def _BruteSearchPlanetApsis(body, startTime):
     # Neptune is a special case for two reasons:
     # 1. Its orbit is nearly circular (low orbital eccentricity).
     # 2. It is so distant from the Sun that the orbital period is very long.
@@ -3411,6 +3515,10 @@ def _SearchNeptuneApsis(startTime):
     # Instead, we use a dumb, brute-force algorithm of sampling and finding min/max
     # heliocentric distance.
     #
+    # There is a similar problem in the TOP2013 model for Pluto:
+    # Its position vector has high-frequency oscillations that confuse the
+    # slope-based determination of apsides.
+    #
     # Rewind approximately 30 degrees in the orbit,
     # then search forward for 270 degrees.
     # This is a very cautious way to prevent missing an apsis.
@@ -3418,15 +3526,16 @@ def _SearchNeptuneApsis(startTime):
     # apsis is ealier, but after startTime.
     # Sample points around this orbital arc and find when the distance
     # is greatest and smallest.
-    t1 = startTime.AddDays(_NEPTUNE_ORBITAL_PERIOD * ( -30 / 360))
-    t2 = startTime.AddDays(_NEPTUNE_ORBITAL_PERIOD * (+270 / 360))
+    period = _PlanetOrbitalPeriod[body.value]
+    t1 = startTime.AddDays(period * ( -30 / 360))
+    t2 = startTime.AddDays(period * (+270 / 360))
     t_min = t_max = t1
     npoints = 100
     interval = (t2.ut - t1.ut) / (npoints - 1)
 
     for i in range(npoints):
         time = t1.AddDays(i * interval)
-        dist = _NeptuneHelioDistance(time)
+        dist = HelioDistance(body, time)
         if i == 0:
             min_dist = max_dist = dist
         else:
@@ -3437,8 +3546,8 @@ def _SearchNeptuneApsis(startTime):
                 min_dist = dist
                 t_min = time
 
-    perihelion = _NeptuneExtreme(ApsisKind.Pericenter, t_min.AddDays(-2*interval), 4*interval)
-    aphelion = _NeptuneExtreme(ApsisKind.Apocenter, t_max.AddDays(-2*interval), 4*interval)
+    perihelion = _PlanetExtreme(body, ApsisKind.Pericenter, t_min.AddDays(-2*interval), 4*interval)
+    aphelion = _PlanetExtreme(body, ApsisKind.Apocenter, t_max.AddDays(-2*interval), 4*interval)
     if perihelion.time.tt >= startTime.tt:
         if startTime.tt <= aphelion.time.tt < perihelion.time.tt:
             return aphelion
@@ -3446,6 +3555,7 @@ def _SearchNeptuneApsis(startTime):
     if aphelion.time.tt >= startTime.tt:
         return aphelion
     raise InternalError()   # failed to find Neptune apsis
+
 
 def VectorFromSphere(sphere, time):
     """Converts spherical coordinates to Cartesian coordinates.
@@ -4951,7 +5061,6 @@ def SearchTransit(body, startTime):
 
         # This inferior conjunction was not a transit. Try the next inferior conjunction.
         search_time = conj.AddDays(10.0)
-
 
 
 def NextTransit(body, prevTransitTime):

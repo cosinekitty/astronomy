@@ -1048,9 +1048,7 @@ def Refraction():
 #-----------------------------------------------------------------------------------------------------------
 
 def PlanetApsis():
-    degree_threshold = 0.1
     start_time = astronomy.Time.Make(1700, 1, 1, 0, 0, 0)
-    found_bad_planet = False
     body = astronomy.Body.Mercury
     while body.value <= astronomy.Body.Pluto.value:
         count = 1
@@ -1075,8 +1073,13 @@ def PlanetApsis():
                 diff_days = vabs(expected_time.tt - apsis.time.tt)
                 max_diff_days = vmax(max_diff_days, diff_days)
                 diff_degrees = (diff_days / period) * 360
+                if body == astronomy.Body.Pluto:
+                    degree_threshold = 0.262
+                else:
+                    degree_threshold = 0.1
                 if diff_degrees > degree_threshold:
-                    found_bad_planet = True
+                    print('PY PlanetApsis: FAIL - {} exceeded angular threshold ({} vs {} degrees)'.format(body.name, diff_degrees, degree_threshold))
+                    return 1
                 diff_dist_ratio = vabs(expected_distance - apsis.dist_au) / expected_distance
                 max_dist_ratio = vmax(max_dist_ratio, diff_dist_ratio)
                 if diff_dist_ratio > 1.0e-4:
@@ -1085,12 +1088,7 @@ def PlanetApsis():
 
                 # Calculate the next apsis.
                 prev_time = apsis.time
-                try:
-                    apsis = astronomy.NextPlanetApsis(body, apsis)
-                except astronomy.BadTimeError:
-                    if body != astronomy.Body.Pluto:
-                        raise
-                    break   # It is OK for us to go beyond Pluto calculation's time domain.
+                apsis = astronomy.NextPlanetApsis(body, apsis)
                 count += 1
                 interval = apsis.time.tt - prev_time.tt
                 if min_interval < 0.0:
@@ -1110,10 +1108,6 @@ def PlanetApsis():
                 max_dist_ratio
             ))
         body = astronomy.Body(body.value + 1)
-
-    if found_bad_planet:
-        print('PY PlanetApsis: FAIL - planet(s) exceeded angular threshold ({} degrees)'.format(degree_threshold))
-        return 1
     print('PY PlanetApsis: PASS')
     return 0
 

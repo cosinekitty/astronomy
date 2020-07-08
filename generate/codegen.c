@@ -1513,6 +1513,7 @@ static int Top2013_CSharp(cg_context_t *context, const top_model_t *model, int b
 static int Top2013_List(cg_context_t *context, const top_model_t *model, int body)
 {
     int f, s, t, s_count;
+    const char *comment = (context->language == CODEGEN_LANGUAGE_PYTHON) ? "#" : "//";
 
     fprintf(context->outfile, "[\n");
 
@@ -1523,18 +1524,19 @@ static int Top2013_List(cg_context_t *context, const top_model_t *model, int bod
             if (model->series[f][s].nterms_calc > 0)
                 s_count = s + 1;
 
-        fprintf(context->outfile, "    [  // f=%1d\n", f);
+        fprintf(context->outfile, "    [  %s f=%1d\n", comment, f);
         for (s=0; s < s_count; ++s)
         {
             const top_series_t *series = &model->series[f][s];
-            fprintf(context->outfile, "        [  // f=%1d, s=%2d\n", f, s);
+            fprintf(context->outfile, "        [  %s f=%1d, s=%2d\n", comment, f, s);
             for (t=0; t < series->nterms_calc; ++t)
             {
                 const top_term_t *term = &series->terms[t];
                 fprintf(context->outfile,
-                    "[%9.0lf, %23.16le, %23.16le]%s   // f=%1d, s=%2d, t=%4d\n",
+                    "[%9.0lf, %23.16le, %23.16le]%s   %s f=%1d, s=%2d, t=%4d\n",
                     term->k, term->c, term->s,
                     (t+1 < series->nterms_calc) ? "," : " ",
+                    comment,
                     f, s, t);
             }
             fprintf(context->outfile, "        ]%s\n", (s+1 < s_count) ? "," : "");
