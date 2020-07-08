@@ -45,9 +45,7 @@ const DAYS_PER_TROPICAL_YEAR = 365.24217;
 const J2000 = new Date('2000-01-01T12:00:00Z');
 const PI2 = 2 * Math.PI;
 const ARC = 3600 * (180 / Math.PI);     // arcseconds per radian
-const ERAD = 6378136.6;                 // mean earth radius in meters
 const KM_PER_AU = 1.4959787069098932e+8;
-const METERS_PER_AU = KM_PER_AU * 1000;
 const C_AUDAY = 173.1446326846693;      // speed of light in AU/day
 const ASEC2RAD = 4.848136811095359935899141e-6;
 const DEG2RAD = 0.017453292519943296;
@@ -1630,7 +1628,7 @@ function CalcMoon(time) {
     return {
         geo_eclip_lon: PI2 * Frac((L0+DLAM/ARC) / PI2),
         geo_eclip_lat: (Math.PI / (180 * 3600)) * lat_seconds,
-        distance_au: (ARC * (ERAD / METERS_PER_AU)) / (0.999953253 * SINPI)
+        distance_au: (ARC * EARTH_EQUATORIAL_RADIUS_AU) / (0.999953253 * SINPI)
     };
 }
 
@@ -1743,7 +1741,6 @@ function sidereal_time(time) {          // calculates Greenwich Apparent Siderea
 }
 
 function terra(observer, st) {
-    const erad_km = ERAD / 1000;
     const df = 1 - 0.003352819697896;    // flattening of the Earth
     const df2 = df * df;
     const phi = observer.latitude * DEG2RAD;
@@ -1752,8 +1749,8 @@ function terra(observer, st) {
     const c = 1 / Math.sqrt(cosphi*cosphi + df2*sinphi*sinphi);
     const s = df2 * c;
     const ht_km = observer.height / 1000;
-    const ach = erad_km*c + ht_km;
-    const ash = erad_km*s + ht_km;
+    const ach = EARTH_EQUATORIAL_RADIUS_KM*c + ht_km;
+    const ash = EARTH_EQUATORIAL_RADIUS_KM*s + ht_km;
     const stlocl = (15*st + observer.longitude) * DEG2RAD;
     const sinst = Math.sin(stlocl);
     const cosst = Math.cos(stlocl);
