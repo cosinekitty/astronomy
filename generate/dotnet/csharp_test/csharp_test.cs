@@ -883,9 +883,7 @@ namespace csharp_test
         static int PlanetApsisTest()
         {
             const string testDataPath = "../../apsides";
-            const double degree_threshold = 0.1;
             var start_time = new AstroTime(Astronomy.MinYear, 1, 1, 0, 0, 0);
-            bool found_bad_planet = false;
             for (Body body = Body.Mercury; body <= Body.Pluto; ++body)
             {
                 double period = PlanetOrbitalPeriod(body);
@@ -923,8 +921,12 @@ namespace csharp_test
                         double diff_days = abs(expected_time.tt - apsis.time.tt);
                         max_diff_days = max(max_diff_days, diff_days);
                         double diff_degrees = (diff_days / period) * 360.0;
+                        double degree_threshold = (body == Body.Pluto) ? 0.262 : 0.1;
                         if (diff_degrees > degree_threshold)
-                            found_bad_planet = true;
+                        {
+                            Console.WriteLine("C# PlanetApsis: FAIL - {0} exceeded angular threshold ({1} vs {2} degrees)", body, diff_degrees, degree_threshold);
+                            return 1;
+                        }
 
                         double diff_dist_ratio = abs(expected_distance - apsis.dist_au) / expected_distance;
                         max_dist_ratio = max(max_dist_ratio, diff_dist_ratio);
@@ -973,12 +975,6 @@ namespace csharp_test
                     max_diff_days,
                     (max_diff_days / period) * 360.0,
                     max_dist_ratio);
-            }
-
-            if (found_bad_planet)
-            {
-                Console.WriteLine("C# PlanetApsis: FAIL - planet(s) exceeded angular threshold ({0} degrees)", degree_threshold);
-                return 1;
             }
 
             Console.WriteLine("C# PlanetApsis: PASS");

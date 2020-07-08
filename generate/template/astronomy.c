@@ -1647,7 +1647,7 @@ typedef struct
 top_elliptical_t;
 /** @endcond */
 
-$ASTRO_TOP2013(8);
+$ASTRO_TOP2013(8)
 
 
 static top_elliptical_t TopCalcElliptical(int planet, const astro_top_model_t *model, double tt)
@@ -1906,7 +1906,6 @@ astro_vector_t Astronomy_HelioVector(astro_body_t body, astro_time_t time)
         return CalcVsop(&vsop[body], time);
 
     case BODY_PLUTO:
-        (void)topmodel_8;   /* FIXFIXFIX: just to get code to compile while transitioning to TOP2013 Pluto model. */
         return CalcPluto(time);
 
     case BODY_MOON:
@@ -4477,7 +4476,7 @@ static astro_apsis_t PlanetExtreme(
 }
 
 
-static astro_apsis_t SearchPlanetApsis(astro_body_t body, astro_time_t startTime)
+static astro_apsis_t BruteSearchPlanetApsis(astro_body_t body, astro_time_t startTime)
 {
     const int npoints = 100;
     int i;
@@ -4618,7 +4617,7 @@ astro_apsis_t Astronomy_SearchPlanetApsis(astro_body_t body, astro_time_t startT
     astro_func_result_t dist;
 
     if (body == BODY_NEPTUNE || body == BODY_PLUTO)
-        return SearchPlanetApsis(body, startTime);
+        return BruteSearchPlanetApsis(body, startTime);
 
     orbit_period_days = PlanetOrbitalPeriod(body);
     if (orbit_period_days == 0.0)

@@ -2033,71 +2033,183 @@ $ASTRO_CSHARP_VSOP(Neptune)
             return VsopFormulaCalc(model.rad, t);
         }
 
-        private struct astro_cheb_coeff_t
-        {
-            public double[] data;
+        // TOP2013 model for Pluto
 
-            public astro_cheb_coeff_t(double x, double y, double z)
+        private struct astro_top_term_t
+        {
+            public double k;
+            public double c;
+            public double s;
+            public astro_top_term_t(double k, double c, double s)
             {
-                this.data = new double[] { x, y, z };
+                this.k = k;
+                this.c = c;
+                this.s = s;
             }
         }
 
-        private struct astro_cheb_record_t
+        private struct top_elliptical_t
         {
-            public double tt;
-            public double ndays;
-            public astro_cheb_coeff_t[] coeff;
-
-            public astro_cheb_record_t(double tt, double ndays, astro_cheb_coeff_t[] coeff)
-            {
-                this.tt = tt;
-                this.ndays = ndays;
-                this.coeff = coeff;
-            }
+            public double a;           /* AU */
+            public double lambda;      /* rad */
+            public double k;           /* 1 */
+            public double h;           /* 1 */
+            public double q;           /* 1 */
+            public double p;           /* 1 */
         }
 
-$ASTRO_CSHARP_CHEBYSHEV(8);
+$ASTRO_TOP2013(8)
 
-        private static double ChebScale(double t_min, double t_max, double t)
+        private static readonly double[] top_freq = new double[]
         {
-            return (2*t - (t_max + t_min)) / (t_max - t_min);
-        }
+            0.5296909622785881e+03,
+            0.2132990811942489e+03,
+            0.7478166163181234e+02,
+            0.3813297236217556e+02,
+            0.2533566020437000e+02
+        };
 
-        private static AstroVector CalcChebyshev(astro_cheb_record_t[] model, AstroTime time)
+        private static double calc_elliptical_coord(astro_top_term_t[][] formula, double dmu, int f, double t1)
         {
-            var pos = new double[3];
-            double p0, p1, p2, sum;
-
-            /* Search for a record that overlaps the given time value. */
-            for (int i=0; i < model.Length; ++i)
+            double el = 0.0;
+            double tpower = 1.0;
+            for (int s=0; s < formula.Length; ++s)
             {
-                double x = ChebScale(model[i].tt, model[i].tt + model[i].ndays, time.tt);
-                if (-1.0 <= x && x <= +1.0)
+                astro_top_term_t[] series = formula[s];
+                for (int t=0; t < series.Length; ++t)
                 {
-                    for (int d=0; d < 3; ++d)
-                    {
-                        p0 = 1.0;
-                        sum = model[i].coeff[0].data[d];
-                        p1 = x;
-                        sum += model[i].coeff[1].data[d] * p1;
-                        for (int k=2; k < model[i].coeff.Length; ++k)
-                        {
-                            p2 = (2.0 * x * p1) - p0;
-                            sum += model[i].coeff[k].data[d] * p2;
-                            p0 = p1;
-                            p1 = p2;
-                        }
-                        pos[d] = sum - model[i].coeff[0].data[d] / 2.0;
-                    }
-
-                    /* We found the position of the body. */
-                    return new AstroVector(pos[0], pos[1], pos[2], time);
+                    astro_top_term_t term = series[t];
+                    if (f==1 && s==1 && term.k==0)
+                        continue;
+                    double arg = term.k * dmu * t1;
+                    el += tpower * (term.c*Math.Cos(arg) + term.s*Math.Sin(arg));
                 }
+                tpower *= t1;
+            }
+            return el;
+        }
+
+        private static top_elliptical_t TopCalcElliptical(int planet, astro_top_term_t[][][] model, double tt)
+        {
+            /* Translated from: TOP2013.f */
+            /* See: https://github.com/cosinekitty/ephemeris/tree/master/top2013 */
+            /* Copied from: ftp://ftp.imcce.fr/pub/ephem/planets/top2013 */
+            double t1 = tt / 365250.0;
+            double dmu = (top_freq[0] - top_freq[1]) / 880.0;
+
+            var ellip = new top_elliptical_t();
+            ellip.a = calc_elliptical_coord(model[0], dmu, 0, t1);
+            ellip.lambda = calc_elliptical_coord(model[1], dmu, 1, t1);
+            ellip.k = calc_elliptical_coord(model[2], dmu, 2, t1);
+            ellip.h = calc_elliptical_coord(model[3], dmu, 3, t1);
+            ellip.q = calc_elliptical_coord(model[4], dmu, 4, t1);
+            ellip.p = calc_elliptical_coord(model[5], dmu, 5, t1);
+
+            double xl = ellip.lambda + top_freq[planet - 5] * t1;
+            xl %= PI2;
+            if (xl < 0.0)
+                xl += PI2;
+            ellip.lambda = xl;
+            return ellip;
+        }
+
+        static AstroVector TopEcliptic(top_elliptical_t ellip, AstroTime time)
+        {
+            double xa = ellip.a;
+            double xl = ellip.lambda;
+            double xk = ellip.k;
+            double xh = ellip.h;
+            double xq = ellip.q;
+            double xp = ellip.p;
+
+            double xfi = Math.Sqrt(1.0 - xk*xk - xh*xh);
+            double xki = Math.Sqrt(1.0 - xq*xq - xp*xp);
+            double zr = xk;
+            double zi = xh;
+            double u = 1.0 / (1.0 + xfi);
+            double ex2 = zr*zr + zi*zi;
+            double ex = Math.Sqrt(ex2);
+            double ex3 = ex * ex2;
+            double z1r = zr;
+            double z1i = -zi;
+
+            double gl = xl % PI2;
+            double gm = gl - Math.Atan2(xh, xk);
+            double e = gl + (ex - 0.125*ex3)*Math.Sin(gm) + 0.5*ex2*Math.Sin(2.0*gm) + 0.375*ex3*Math.Sin(3.0*gm);
+
+            double dl, z2r, z2i, zteta_r, zteta_i, z3r, z3i, rsa;
+            do
+            {
+                z2r = 0.0;
+                z2i = e;
+                zteta_r = Math.Cos(z2i);
+                zteta_i = Math.Sin(z2i);
+                z3r = z1r*zteta_r - z1i*zteta_i;
+                z3i = z1r*zteta_i + z1i*zteta_r;
+                dl = gl - e + z3i;
+                rsa = 1.0 - z3r;
+                e += dl/rsa;
+            } while (Math.Abs(dl) >= 1.0e-15);
+
+            z1r = z3i * u * zr;
+            z1i = z3i * u * zi;
+            z2r = +z1i;
+            z2i = -z1r;
+            double zto_r = (-zr + zteta_r + z2r) / rsa;
+            double zto_i = (-zi + zteta_i + z2i) / rsa;
+            double xcw = zto_r;
+            double xsw = zto_i;
+            double xm = xp*xcw - xq*xsw;
+            double xr = xa*rsa;
+
+            return new AstroVector(
+                xr*(xcw - 2.0*xp*xm),
+                xr*(xsw + 2.0*xq*xm),
+                -2.0*xr*xki*xm,
+                time
+            );
+        }
+
+        private static double[,] top_eq_rot;
+
+        private static AstroVector TopEquatorial(AstroVector ecl)
+        {
+            if (top_eq_rot == null)
+            {
+                const double sdrad = DEG2RAD / 3600.0;
+                const double eps = (23.0 + 26.0/60.0 + 21.41136/3600.0)*DEG2RAD;
+                const double phi = -0.05188 * sdrad;
+                double ceps = Math.Cos(eps);
+                double seps = Math.Sin(eps);
+                double cphi = Math.Cos(phi);
+                double sphi = Math.Sin(phi);
+
+                top_eq_rot = new double[3,3];
+
+                top_eq_rot[0,0] =  cphi;
+                top_eq_rot[0,1] = -sphi*ceps;
+                top_eq_rot[0,2] =  sphi*seps;
+                top_eq_rot[1,0] =  sphi;
+                top_eq_rot[1,1] =  cphi*ceps;
+                top_eq_rot[1,2] = -cphi*seps;
+                top_eq_rot[2,0] =  0.0;
+                top_eq_rot[2,1] =  seps;
+                top_eq_rot[2,2] =  ceps;
             }
 
-            /* The Chebyshev model does not cover this time value. */
-            throw new BadTimeException(time);
+            return new AstroVector(
+                (top_eq_rot[0,0] * ecl.x) + (top_eq_rot[0,1] * ecl.y) + (top_eq_rot[0,2] * ecl.z),
+                (top_eq_rot[1,0] * ecl.x) + (top_eq_rot[1,1] * ecl.y) + (top_eq_rot[1,2] * ecl.z),
+                (top_eq_rot[2,0] * ecl.x) + (top_eq_rot[2,1] * ecl.y) + (top_eq_rot[2,2] * ecl.z),
+                ecl.t
+            );
+        }
+
+        private static AstroVector TopPosition(astro_top_term_t[][][] model, int planet, AstroTime time)
+        {
+            top_elliptical_t ellip = TopCalcElliptical(planet, model, time.tt);
+            AstroVector ecl = TopEcliptic(ellip, time);
+            return TopEquatorial(ecl);
         }
 
         private static RotationMatrix precession_rot(double tt1, double tt2)
@@ -2576,7 +2688,7 @@ $ASTRO_IAU_DATA()
                     return CalcVsop(vsop[(int)body], time);
 
                 case Body.Pluto:
-                    return CalcChebyshev(cheb_8, time);
+                    return TopPosition(top_model_8, 9, time);
 
                 case Body.Moon:
                     geomoon = GeoMoon(time);
@@ -4252,12 +4364,7 @@ $ASTRO_IAU_DATA()
             return next;
         }
 
-        private static double NeptuneHelioDistance(AstroTime time)
-        {
-            return VsopHelioDistance(vsop[(int)Body.Neptune], time);
-        }
-
-        private static ApsisInfo NeptuneExtreme(ApsisKind kind, AstroTime start_time, double dayspan)
+        private static ApsisInfo PlanetExtreme(Body body, ApsisKind kind, AstroTime start_time, double dayspan)
         {
             double direction = (kind == ApsisKind.Apocenter) ? +1.0 : -1.0;
             const int npoints = 10;
@@ -4269,7 +4376,7 @@ $ASTRO_IAU_DATA()
                 if (interval < 1.0 / 1440.0)    /* iterate until uncertainty is less than one minute */
                 {
                     AstroTime apsis_time = start_time.AddDays(interval / 2.0);
-                    double dist_au = NeptuneHelioDistance(apsis_time);
+                    double dist_au = HelioDistance(body, apsis_time);
                     return new ApsisInfo(apsis_time, kind, dist_au);
                 }
 
@@ -4278,7 +4385,7 @@ $ASTRO_IAU_DATA()
                 for (int i=0; i < npoints; ++i)
                 {
                     AstroTime time = start_time.AddDays(i * interval);
-                    double dist = direction * NeptuneHelioDistance(time);
+                    double dist = direction * HelioDistance(body, time);
                     if (i==0 || dist > best_dist)
                     {
                         best_i = i;
@@ -4292,7 +4399,7 @@ $ASTRO_IAU_DATA()
             }
         }
 
-        private static ApsisInfo SearchNeptuneApsis(AstroTime startTime)
+        private static ApsisInfo BruteSearchPlanetApsis(Body body, AstroTime startTime)
         {
             const int npoints = 100;
             int i;
@@ -4309,6 +4416,10 @@ $ASTRO_IAU_DATA()
                 algorithm for finding dr/dt = 0.
                 Instead, we use a dumb, brute-force algorithm of sampling and finding min/max
                 heliocentric distance.
+
+                There is a similar problem in the TOP2013 model for Pluto:
+                Its position vector has high-frequency oscillations that confuse the
+                slope-based determination of apsides.
             */
 
             /*
@@ -4320,8 +4431,9 @@ $ASTRO_IAU_DATA()
                 Sample points around this orbital arc and find when the distance
                 is greatest and smallest.
             */
-            AstroTime t1 = startTime.AddDays(NEPTUNE_ORBITAL_PERIOD * ( -30.0 / 360.0));
-            AstroTime t2 = startTime.AddDays(NEPTUNE_ORBITAL_PERIOD * (+270.0 / 360.0));
+            double period = PlanetOrbitalPeriod(body);
+            AstroTime t1 = startTime.AddDays(period * ( -30.0 / 360.0));
+            AstroTime t2 = startTime.AddDays(period * (+270.0 / 360.0));
             AstroTime t_min = t1;
             AstroTime t_max = t1;
             double min_dist = -1.0;
@@ -4331,7 +4443,7 @@ $ASTRO_IAU_DATA()
             for (i=0; i < npoints; ++i)
             {
                 AstroTime time = t1.AddDays(i * interval);
-                double dist = NeptuneHelioDistance(time);
+                double dist = HelioDistance(body, time);
                 if (i == 0)
                 {
                     max_dist = min_dist = dist;
@@ -4352,10 +4464,10 @@ $ASTRO_IAU_DATA()
             }
 
             t1 = t_min.AddDays(-2 * interval);
-            perihelion = NeptuneExtreme(ApsisKind.Pericenter, t1, 4 * interval);
+            perihelion = PlanetExtreme(body, ApsisKind.Pericenter, t1, 4 * interval);
 
             t1 = t_max.AddDays(-2 * interval);
-            aphelion = NeptuneExtreme(ApsisKind.Apocenter, t1, 4 * interval);
+            aphelion = PlanetExtreme(body, ApsisKind.Apocenter, t1, 4 * interval);
 
             if (perihelion.time.tt >= startTime.tt)
             {
@@ -4371,7 +4483,7 @@ $ASTRO_IAU_DATA()
             if (aphelion.time.tt >= startTime.tt)
                 return aphelion;
 
-            throw new Exception("Internal error: failed to find Neptune apsis.");
+            throw new Exception("Internal error: failed to find planet apsis.");
         }
 
 
@@ -4408,8 +4520,8 @@ $ASTRO_IAU_DATA()
         /// </returns>
         public static ApsisInfo SearchPlanetApsis(Body body, AstroTime startTime)
         {
-            if (body == Body.Neptune)
-                return SearchNeptuneApsis(startTime);
+            if (body == Body.Neptune || body == Body.Pluto)
+                return BruteSearchPlanetApsis(body, startTime);
 
             var positive_slope = new SearchContext_PlanetDistanceSlope(+1.0, body);
             var negative_slope = new SearchContext_PlanetDistanceSlope(-1.0, body);

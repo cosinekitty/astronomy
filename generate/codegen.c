@@ -1420,28 +1420,17 @@ fail:
 }
 
 
-static int Top2013(cg_context_t *context)
+static int Top2013_C(cg_context_t *context, const top_model_t *model, int body)
 {
-    int error = 1;
-    int body, f, s, t;
+    int f, s, t;
     int s_count[TOP_NCOORDS];
-    char filename[100];
-    top_model_t model;
-
-    TopInitModel(&model);
-
-    if (1 != sscanf(context->args, "%d", &body) || body < 4 || body > 8)
-        CHECK(LogError(context, "TOP2013 body value (%s) is invalid.", context->args));
-
-    snprintf(filename, sizeof(filename), "output/%d.top", body);
-    CHECK(TopLoadModel(&model, filename, 1+body));
 
     for (f=0; f < TOP_NCOORDS; ++f)
     {
         s_count[f] = 0;
         for (s=0; s < TOP_NSERIES; ++s)
         {
-            const top_series_t *series = &model.series[f][s];
+            const top_series_t *series = &model->series[f][s];
             if (series->nterms_calc == 0)
                 continue;
             s_count[f] = s + 1;
@@ -1450,7 +1439,7 @@ static int Top2013(cg_context_t *context)
             for (t=0; t < series->nterms_calc; ++t)
             {
                 const top_term_t *term = &series->terms[t];
-                fprintf(context->outfile, "%c   {%9.0lf, %23.16lf, %23.16lf }  /* %6d */\n", (t==0 ? ' ' : ','), term->k, term->c, term->s, t);
+                fprintf(context->outfile, "%c   {%9.0lf, %23.16le, %23.16le}  /* %6d */\n", (t==0 ? ' ' : ','), term->k, term->c, term->s, t);
             }
             fprintf(context->outfile, "};\n\n");
         }
@@ -1459,7 +1448,7 @@ static int Top2013(cg_context_t *context)
         fprintf(context->outfile, "{\n");
         for (s=0; s < s_count[f]; ++s)
         {
-            const top_series_t *series = &model.series[f][s];
+            const top_series_t *series = &model->series[f][s];
 
             fprintf(context->outfile, "%c   { %6d, ", (s==0 ? ' ' : ','), series->nterms_calc);
             if (series->nterms_calc == 0)
@@ -1476,6 +1465,79 @@ static int Top2013(cg_context_t *context)
     for (f=0; f < TOP_NCOORDS; ++f)
         fprintf(context->outfile, "%c   { %2d, topseries_%d_%d }\n", (f==0 ? ' ' : ','), s_count[f], body, f);
     fprintf(context->outfile, "};\n\n");
+
+    return 0;
+}
+
+
+static int Top2013_CSharp(cg_context_t *context, const top_model_t *model, int body)
+{
+    int f, s, t, s_count;
+
+    fprintf(context->outfile, "        private static readonly astro_top_term_t[][][] top_model_%d = new astro_top_term_t[][][]\n", body);
+    fprintf(context->outfile, "        {\n");
+
+    for (f=0; f < TOP_NCOORDS; ++f)
+    {
+        s_count = 0;
+        for (s=0; s < TOP_NSERIES; ++s)
+            if (model->series[f][s].nterms_calc > 0)
+                s_count = s + 1;
+
+        fprintf(context->outfile, "            new astro_top_term_t[][]  // f=%1d\n", f);
+        fprintf(context->outfile, "            {\n");
+        for (s=0; s < s_count; ++s)
+        {
+            const top_series_t *series = &model->series[f][s];
+            fprintf(context->outfile, "                new astro_top_term_t[]  // f=%1d, s=%2d\n", f, s);
+            fprintf(context->outfile, "                {\n");
+            for (t=0; t < series->nterms_calc; ++t)
+            {
+                const top_term_t *term = &series->terms[t];
+                fprintf(context->outfile,
+                    "                    new astro_top_term_t(%9.0lf, %23.16le, %23.16le)%s // f=%1d, s=%2d, t=%4d\n",
+                    term->k, term->c, term->s,
+                    (t+1 < series->nterms_calc) ? "," : " ",
+                    f, s, t);
+            }
+            fprintf(context->outfile, "                }%s\n", (s+1 < s_count) ? "," : "");
+        }
+        fprintf(context->outfile, "            }%s\n", (f+1 < TOP_NCOORDS) ? "," : "");
+    }
+
+    fprintf(context->outfile, "        };\n\n");
+    return 0;
+}
+
+
+static int Top2013(cg_context_t *context)
+{
+    int error = 1;
+    int body;
+    char filename[100];
+    top_model_t model;
+
+    TopInitModel(&model);
+
+    if (1 != sscanf(context->args, "%d", &body) || body < 4 || body > 8)
+        CHECK(LogError(context, "TOP2013 body value (%s) is invalid.", context->args));
+
+    snprintf(filename, sizeof(filename), "output/%d.top", body);
+    CHECK(TopLoadModel(&model, filename, 1+body));
+
+    switch (context->language)
+    {
+    case CODEGEN_LANGUAGE_C:
+        CHECK(Top2013_C(context, &model, body));
+        break;
+
+    case CODEGEN_LANGUAGE_CSHARP:
+        CHECK(Top2013_CSharp(context, &model, body));
+        break;
+
+    default:
+        FAIL("Top2013: Unsupported target language %d\n", context->language);
+    }
 
     error = 0;
 fail:

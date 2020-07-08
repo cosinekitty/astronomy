@@ -1634,7 +1634,6 @@ static int PlanetApsis(void)
     astro_apsis_t apsis;
     astro_utc_t utc;
     int count;
-    int bad_planets_found = 0;
     double interval, min_interval, max_interval;
     FILE *infile = NULL;
     char filename[100];
@@ -1667,11 +1666,8 @@ static int PlanetApsis(void)
             FAIL("C PlanetApsis: ERROR %d finding first apsis for %s\n", apsis.status, Astronomy_BodyName(body));
 
         count = 1;
-        for(;;)
+        while (fgets(line, sizeof(line), infile))
         {
-            if (NULL == fgets(line, sizeof(line), infile))
-                break;  /* normal end of test data */
-
             /* Parse the line of test data. */
             if (   (3 != sscanf(line, "%d %s %lf", &expected_kind, expected_time_text, &expected_distance))
                 || (expected_kind & ~1)     /* must be either 0=perihelion or 1=aphelion */
@@ -1693,7 +1689,7 @@ static int PlanetApsis(void)
 
             degree_threshold = (body == BODY_PLUTO) ? 0.262 : 0.1;
             if (diff_degrees > degree_threshold)
-                bad_planets_found = 1;
+                FAIL("C PlanetApsis: FAIL - %s exceeded angular threshold (%lg versus %lg degrees)\n", Astronomy_BodyName(body), max_degrees, degree_threshold);
 
             diff_dist_ratio = ABS(expected_distance - apsis.dist_au) / expected_distance;
             if (diff_dist_ratio > max_dist_ratio) max_dist_ratio = diff_dist_ratio;
@@ -1739,9 +1735,6 @@ static int PlanetApsis(void)
             (max_diff_days / period) * 360.0,
             max_dist_ratio);
     }
-
-    if (bad_planets_found)
-        FAIL("C PlanetApsis: FAIL - planet(s) exceeded angular threshold (%lg versus %lg degrees)\n", max_degrees, degree_threshold);
 
     printf("C PlanetApsis: PASS\n");
     error = 0;
