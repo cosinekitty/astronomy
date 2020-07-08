@@ -23,8 +23,6 @@ static const double RAD2DEG = 57.295779513082321;
 int Verbose = 0;
 #define DEBUG(...)      do{if(Verbose)printf(__VA_ARGS__);}while(0)
 
-int ToleratePlutoErrors = 1;    /* FIXFIXFIX_PLUTO : eliminate after transition to TOP2013 model for Pluto. */
-
 static int CheckStatus(int lnum, const char *varname, astro_status_t status)
 {
     if (status != ASTRO_SUCCESS)
@@ -433,9 +431,6 @@ static int DiffLine(int lnum, const char *cline, const char *jline, double *maxd
         /* Therefore, we need to correct the number of numeric data. */
         --nrequired;
     }
-
-    if (ToleratePlutoErrors && !strcmp(cbody, "Pluto"))
-        return 0;
 
     /* Verify all the numeric data are very close. */
     for (i=0; i < nrequired; ++i)
