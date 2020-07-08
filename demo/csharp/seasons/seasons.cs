@@ -9,9 +9,9 @@ namespace seasons
         static int Main(string[] args)
         {
             int year;
-            if (args.Length != 1 || !int.TryParse(args[0], out year) || year < Astronomy.MinYear || year > Astronomy.MaxYear)
+            if (args.Length != 1 || !int.TryParse(args[0], out year))
             {
-                Console.WriteLine("ERROR: Must provide year {0}..{1} on command line.", Astronomy.MinYear, Astronomy.MaxYear);
+                Console.WriteLine("ERROR: Must provide a year value on the command line.");
                 return 1;
             }
             SeasonsInfo seasons = Astronomy.Seasons(year);

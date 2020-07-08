@@ -55,18 +55,6 @@ namespace CosineKitty
             {}
     }
 
-    /// <summary>
-    /// Pluto supports calculations only within the year range Astronomy.MinYear to Astronomy.MaxYear.
-    /// </summary>
-    public class BadTimeException : ArgumentException
-    {
-        /// <summary>Creates an exception indicating Astronomy Engine cannot calculate for this time.</summary>
-        public BadTimeException(AstroTime time):
-            base(string.Format("Pluto supports calculations only within the year range {0}..{1}. Given time {2} is out of bounds.",
-                Astronomy.MinYear, Astronomy.MaxYear, time))
-            {}
-    }
-
     /// <summary>Defines a function type for calculating Delta T.</summary>
     /// <remarks>
     /// Delta T is the discrepancy between times measured using an atomic clock
@@ -2780,18 +2768,6 @@ namespace CosineKitty
             new vsop_model_t(vsop_lat_Neptune,  vsop_lon_Neptune,   vsop_rad_Neptune)
         };
 
-        /// <summary>
-        /// The minimum year value supported by Astronomy Engine for calculating Pluto.
-        /// All other bodies can be calculated for any year.
-        /// </summary>
-        public const int MinYear = 1700;
-
-        /// <summary>
-        /// The maximum year value supported by Astronomy Engine for calculating Pluto.
-        /// All other bodies can be calculated for any year.
-        /// </summary>
-        public const int MaxYear = 2200;
-
         /// <summary>The default Delta T function used by Astronomy Engine.</summary>
         /// <remarks>
         /// Espenak and Meeus use a series of piecewise polynomials to
@@ -4301,8 +4277,7 @@ namespace CosineKitty
         /// The position is not corrected for light travel time or aberration.
         /// This is different from the behavior of #Astronomy.GeoVector.
         ///
-        /// If given an invalid value for `body`, or the body is `Body.Pluto` and the `time` is outside
-        /// the year range 1700..2200, this function will throw an `ArgumentException`.
+        /// If given an invalid value for `body`, this function will throw an `ArgumentException`.
         /// </remarks>
         /// <param name="body">A body for which to calculate a heliocentric position: the Sun, Moon, EMB, SSB, or any of the planets.</param>
         /// <param name="time">The date and time for which to calculate the position.</param>
@@ -4416,8 +4391,7 @@ namespace CosineKitty
         /// vector in the J2000 equatorial system: the coordinates are based on the mean equator
         /// of the Earth at noon UTC on 1 January 2000.
         ///
-        /// If given an invalid value for `body`, or the body is `Body.Pluto` and the `time` is outside
-        /// the year range 1700..2200, this function will throw an exception.
+        /// If given an invalid value for `body`, this function will throw an exception.
         ///
         /// Unlike #Astronomy.HelioVector, this function always corrects for light travel time.
         /// This means the position of the body is "back-dated" by the amount of time it takes

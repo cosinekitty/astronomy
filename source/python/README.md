@@ -754,13 +754,6 @@ as seen by an observer on the surface of the Earth.
 
 ---
 
-<a name="BadTimeError"></a>
-### BadTimeError
-
-Cannot calculate Pluto position for this date/time.
-
----
-
 <a name="BadVectorError"></a>
 ### BadVectorError
 
@@ -1071,8 +1064,7 @@ This function calculates the position of the given celestial body as a vector,
 using the center of the Earth as the origin.  The result is expressed as a Cartesian
 vector in the J2000 equatorial system: the coordinates are based on the mean equator
 of the Earth at noon UTC on 1 January 2000.
-If given an invalid value for `body`, or the body is `Body.Pluto` and the `time` is outside
-the year range 1700..2200, this function will raise an exception.
+If given an invalid value for `body`, this function will raise an exception.
 Unlike [`HelioVector`](#HelioVector), this function always corrects for light travel time.
 This means the position of the body is "back-dated" by the amount of time it takes
 light to travel from that body to an observer on the Earth.
@@ -1124,8 +1116,7 @@ vector in the J2000 equatorial system: the coordinates are based on the mean equ
 of the Earth at noon UTC on 1 January 2000.
 The position is not corrected for light travel time or aberration.
 This is different from the behavior of [`GeoVector`](#GeoVector).
-If given an invalid value for `body`, or the body is `Body.Pluto` and `time` is outside
-the year range 1700..2200, this function raise an exception.
+If given an invalid value for `body`, this function raises an exception.
 
 | Type | Parameter | Description |
 | --- | --- | --- |

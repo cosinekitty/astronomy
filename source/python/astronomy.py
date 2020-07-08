@@ -231,11 +231,6 @@ class BadVectorError(Error):
     def __init__(self):
         Error.__init__(self, 'Vector is too small to have a direction.')
 
-class BadTimeError(Error):
-    """Cannot calculate Pluto position for this date/time."""
-    def __init__(self, time):
-        Error.__init__(self, 'Cannot calculate Pluto position for time: {}'.format(time))
-
 class InternalError(Error):
     """An internal error occured that should be reported as a bug.
 
@@ -3935,8 +3930,7 @@ def HelioVector(body, time):
     The position is not corrected for light travel time or aberration.
     This is different from the behavior of #GeoVector.
 
-    If given an invalid value for `body`, or the body is `Body.Pluto` and `time` is outside
-    the year range 1700..2200, this function raise an exception.
+    If given an invalid value for `body`, this function raises an exception.
 
     Parameters
     ----------
@@ -4017,8 +4011,7 @@ def GeoVector(body, time, aberration):
     vector in the J2000 equatorial system: the coordinates are based on the mean equator
     of the Earth at noon UTC on 1 January 2000.
 
-    If given an invalid value for `body`, or the body is `Body.Pluto` and the `time` is outside
-    the year range 1700..2200, this function will raise an exception.
+    If given an invalid value for `body`, this function will raise an exception.
 
     Unlike #HelioVector, this function always corrects for light travel time.
     This means the position of the body is "back-dated" by the amount of time it takes

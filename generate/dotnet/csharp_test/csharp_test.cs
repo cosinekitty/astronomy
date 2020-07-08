@@ -883,7 +883,7 @@ namespace csharp_test
         static int PlanetApsisTest()
         {
             const string testDataPath = "../../apsides";
-            var start_time = new AstroTime(Astronomy.MinYear, 1, 1, 0, 0, 0);
+            var start_time = new AstroTime(1700, 1, 1, 0, 0, 0);
             for (Body body = Body.Mercury; body <= Body.Pluto; ++body)
             {
                 double period = PlanetOrbitalPeriod(body);

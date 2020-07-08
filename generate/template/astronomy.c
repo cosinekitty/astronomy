@@ -1870,8 +1870,7 @@ static astro_vector_t CalcSolarSystemBarycenter(astro_time_t time)
  * The position is not corrected for light travel time or aberration.
  * This is different from the behavior of #Astronomy_GeoVector.
  *
- * If given an invalid value for `body`, or the body is `BODY_PLUTO` and the `time` is outside
- * the year range 1700..2200, this function will fail. The caller should always check
+ * If given an invalid value for `body`, this function will fail. The caller should always check
  * the `status` field inside the returned #astro_vector_t for `ASTRO_SUCCESS` (success)
  * or any other value (failure) before trusting the resulting vector.
  *
@@ -1995,8 +1994,7 @@ astro_func_result_t Astronomy_HelioDistance(astro_body_t body, astro_time_t time
  * vector in the J2000 equatorial system: the coordinates are based on the mean equator
  * of the Earth at noon UTC on 1 January 2000.
  *
- * If given an invalid value for `body`, or the body is `BODY_PLUTO` and the `time` is outside
- * the year range 1700..2200, this function will fail. The caller should always check
+ * If given an invalid value for `body`, this function will fail. The caller should always check
  * the `status` field inside the returned #astro_vector_t for `ASTRO_SUCCESS` (success)
  * or any other value (failure) before trusting the resulting vector.
  *

@@ -65,8 +65,8 @@ Calculations are also verified to be identical among all the supported programmi
 
 - Provides calculations for the Sun, Moon, Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune, and Pluto.
 
-- Calculates all supported objects, except Pluto, for any calendar date and time for millennia
-  before or after the present. Calculates Pluto only between the years 1700 and 2200.
+- Calculates all supported objects for any calendar date and time for millennia
+  before or after the present.
 
 - Provides heliocentric and geocentric Cartesian vectors of all the above bodies.
 

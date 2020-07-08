@@ -315,8 +315,7 @@ using the center of the Earth as the origin.  The result is expressed as a Carte
 vector in the J2000 equatorial system: the coordinates are based on the mean equator
 of the Earth at noon UTC on 1 January 2000.
 
-If given an invalid value for `body`, or the body is `Body.Pluto` and the `time` is outside
-the year range 1700..2200, this function will throw an exception.
+If given an invalid value for `body`, this function will throw an exception.
 
 Unlike [`Astronomy.HelioVector`](#Astronomy.HelioVector), this function always corrects for light travel time.
 This means the position of the body is "back-dated" by the amount of time it takes
@@ -366,8 +365,7 @@ of the Earth at noon UTC on 1 January 2000.
 The position is not corrected for light travel time or aberration.
 This is different from the behavior of [`Astronomy.GeoVector`](#Astronomy.GeoVector).
 
-If given an invalid value for `body`, or the body is `Body.Pluto` and the `time` is outside
-the year range 1700..2200, this function will throw an `ArgumentException`.
+If given an invalid value for `body`, this function will throw an `ArgumentException`.
 
 | Type | Parameter | Description |
 | --- | --- | --- |
@@ -1540,13 +1538,6 @@ according to the historical and predictive Delta-T model provided by the
 **Calculates the total distance in AU represented by this vector.**
 
 **Returns:** The nonnegative length of the Cartisian vector in AU.
-
----
-
-<a name="BadTimeException"></a>
-## `class BadTimeException`
-
-**Pluto supports calculations only within the year range Astronomy.MinYear to Astronomy.MaxYear.**
 
 ---
 
