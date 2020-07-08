@@ -696,9 +696,7 @@ function PlanetApsis() {
         Neptune: { OrbitalPeriod: 60189.0   },
         Pluto:   { OrbitalPeriod: 90560.0   }
     };
-    const degree_threshold = 0.1
     const start_time = Astronomy.MakeTime(new Date('1700-01-01T00:00:00Z'));
-    let found_bad_planet = false;
     let pindex = 0;
     for (let body of ['Mercury', 'Venus', 'Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Pluto']) {
         let count = 1;
@@ -728,8 +726,9 @@ function PlanetApsis() {
             const diff_days = abs(expected_time.tt - apsis.time.tt);
             max_diff_days = max(max_diff_days, diff_days);
             const diff_degrees = (diff_days / period) * 360;
+            const degree_threshold = (body === 'Pluto') ? 0.262 : 0.1;
             if (diff_degrees > degree_threshold) {
-                found_bad_planet = true;
+                throw `APSIS FAIL: ${body} exceeded angular threshold (${diff_degrees} vs ${degree_threshold} degrees).`;
             }
             const diff_dist_ratio = abs(expected_distance - apsis.dist_au) / expected_distance;
             max_dist_ratio = max(max_dist_ratio, diff_dist_ratio);
@@ -739,15 +738,7 @@ function PlanetApsis() {
 
             // Calculate the next apsis
             const prev_time = apsis.time;
-            try {
-                apsis = Astronomy.NextPlanetApsis(body, apsis);
-            } catch (e) {
-                if (body === 'Pluto') {
-                    // It is OK for Pluto to fail due to the time being out-of-bounds.
-                    break;
-                }
-                throw e;
-            }
+            apsis = Astronomy.NextPlanetApsis(body, apsis);
             ++count;
             const interval = apsis.time.tt - prev_time.tt;
             if (min_interval < 0.0) {
@@ -762,9 +753,6 @@ function PlanetApsis() {
         }
         if (Verbose) console.log(`JS PlanetApsis: ${count} apsides for ${body} -- intervals: min=${min_interval}, max=${max_interval}, ratio=${max_interval/min_interval}; max day=${max_diff_days}, degrees=${(max_diff_days / period) * 360}, dist ratio=${max_dist_ratio}`);
         ++pindex;
-    }
-    if (found_bad_planet) {
-        throw `APSIS FAIL: Planet(s) exceeded angular threshold (${degree_threshold} degrees).`;
     }
     return 0;
 }

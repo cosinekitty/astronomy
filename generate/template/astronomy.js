@@ -170,9 +170,151 @@ const vsop = {
     Neptune: $ASTRO_LIST_VSOP(Neptune)
 };
 
-const cheb = {
-    Pluto:  $ASTRO_LIST_CHEBYSHEV(8)
+const top2013 = {
+    Pluto:   $ASTRO_TOP2013(8)
 };
+
+const top_freq = {
+    Jupiter: 0.5296909622785881e+03,
+    Saturn:  0.2132990811942489e+03,
+    Uranus:  0.7478166163181234e+02,
+    Neptune: 0.3813297236217556e+02,
+    Pluto:   0.2533566020437000e+02
+};
+
+
+function calc_elliptical_coord(formula, dmu, f, t1) {
+    let el = 0.0;
+    let tpower = 1.0;
+    for (let s=0; s < formula.length; ++s) {
+        for (let [term_k, term_c, term_s] of formula[s]) {
+            if (f==1 && s==1 && term_k==0)
+                continue;
+            const arg = term_k * dmu * t1;
+            el += tpower * (term_c*Math.cos(arg) + term_s*Math.sin(arg));
+        }
+        tpower *= t1;
+    }
+    return el;
+}
+
+
+function TopCalcElliptical(body, model, tt)
+{
+    /* Translated from: TOP2013.f */
+    /* See: https://github.com/cosinekitty/ephemeris/tree/master/top2013 */
+    /* Copied from: ftp://ftp.imcce.fr/pub/ephem/planets/top2013 */
+    const t1 = tt / 365250.0;
+    const dmu = (top_freq.Jupiter - top_freq.Saturn) / 880.0;
+
+    const ellip = {
+        a: calc_elliptical_coord(model[0], dmu, 0, t1),
+        lambda: calc_elliptical_coord(model[1], dmu, 1, t1),
+        k: calc_elliptical_coord(model[2], dmu, 2, t1),
+        h: calc_elliptical_coord(model[3], dmu, 3, t1),
+        q: calc_elliptical_coord(model[4], dmu, 4, t1),
+        p: calc_elliptical_coord(model[5], dmu, 5, t1)
+    };
+
+    let xl = ellip.lambda + top_freq[body] * t1;
+    xl %= PI2;
+    if (xl < 0.0)
+        xl += PI2;
+    ellip.lambda = xl;
+    return ellip;
+}
+
+
+function TopEcliptic(ellip, time) {
+    let xa = ellip.a;
+    let xl = ellip.lambda;
+    let xk = ellip.k;
+    let xh = ellip.h;
+    let xq = ellip.q;
+    let xp = ellip.p;
+    let xfi = Math.sqrt(1.0 - xk*xk - xh*xh);
+    let xki = Math.sqrt(1.0 - xq*xq - xp*xp);
+    let zr = xk;
+    let zi = xh;
+    let u = 1.0 / (1.0 + xfi);
+    let ex2 = zr*zr + zi*zi;
+    let ex = Math.sqrt(ex2);
+    let ex3 = ex * ex2;
+    let z1r = zr;
+    let z1i = -zi;
+    let gl = xl % PI2;
+    let gm = gl - Math.atan2(xh, xk);
+    let e = gl + (ex - 0.125*ex3)*Math.sin(gm) + 0.5*ex2*Math.sin(2.0*gm) + 0.375*ex3*Math.sin(3.0*gm);
+
+    let dl, z2r, z2i, zteta_r, zteta_i, z3r, z3i, rsa;
+    do
+    {
+        z2r = 0.0;
+        z2i = e;
+        zteta_r = Math.cos(z2i);
+        zteta_i = Math.sin(z2i);
+        z3r = z1r*zteta_r - z1i*zteta_i;
+        z3i = z1r*zteta_i + z1i*zteta_r;
+        dl = gl - e + z3i;
+        rsa = 1.0 - z3r;
+        e += dl/rsa;
+    } while (Math.abs(dl) >= 1.0e-15);
+
+    z1r = z3i * u * zr;
+    z1i = z3i * u * zi;
+    z2r = +z1i;
+    z2i = -z1r;
+    let zto_r = (-zr + zteta_r + z2r) / rsa;
+    let zto_i = (-zi + zteta_i + z2i) / rsa;
+    let xcw = zto_r;
+    let xsw = zto_i;
+    let xm = xp*xcw - xq*xsw;
+    let xr = xa*rsa;
+
+    return new Vector(
+        xr*(xcw - 2.0*xp*xm),
+        xr*(xsw + 2.0*xq*xm),
+        -2.0*xr*xki*xm,
+        time
+    );
+}
+
+
+let top_eq_rot;
+
+
+function TopEquatorial(ecl) {
+    if (!top_eq_rot) {
+        const sdrad = DEG2RAD / 3600.0;
+        const eps = (23.0 + 26.0/60.0 + 21.41136/3600.0)*DEG2RAD;
+        const phi = -0.05188 * sdrad;
+        const ceps = Math.cos(eps);
+        const seps = Math.sin(eps);
+        const cphi = Math.cos(phi);
+        const sphi = Math.sin(phi);
+
+        top_eq_rot = [
+            [cphi, -sphi*ceps, sphi*seps],
+            [sphi, cphi*ceps, -cphi*seps],
+            [0.0, seps, ceps]
+        ];
+    }
+
+    return new Vector(
+        (top_eq_rot[0][0] * ecl.x) + (top_eq_rot[0][1] * ecl.y) + (top_eq_rot[0][2] * ecl.z),
+        (top_eq_rot[1][0] * ecl.x) + (top_eq_rot[1][1] * ecl.y) + (top_eq_rot[1][2] * ecl.z),
+        (top_eq_rot[2][0] * ecl.x) + (top_eq_rot[2][1] * ecl.y) + (top_eq_rot[2][2] * ecl.z),
+        ecl.t
+    );
+}
+
+
+function TopPosition(body, time) {
+    const ellip = TopCalcElliptical(body, top2013[body], time.tt);
+    const ecl = TopEcliptic(ellip, time);
+    return TopEquatorial(ecl);
+}
+
 
 Astronomy.DeltaT_EspenakMeeus = function(ut) {
     var u, u2, u3, u4, u5, u6, u7;
@@ -1497,37 +1639,6 @@ function VsopHelioDistance(model, time) {
     return VsopFormula(model[2], time.tt / 365250);
 }
 
-function ChebScale(t_min, t_max, t) {
-    return (2*t - (t_max + t_min)) / (t_max - t_min);
-}
-
-function CalcChebyshev(model, time) {
-    var record, x, k, d, sum, p0, p1, p2, pos;
-
-    // Search for a record that overlaps the given time value.
-    for (record of model) {
-        x = ChebScale(record.tt, record.tt + record.ndays, time.tt);
-        if (-1 <= x && x <= +1) {
-            pos = [];
-            for (d=0; d < 3; ++d) {
-                p0 = 1;
-                sum = record.coeff[0][d];
-                p1 = x;
-                sum += record.coeff[1][d] * p1;
-                for (k=2; k < record.coeff.length; ++k) {
-                    p2 = (2 * x * p1) - p0;
-                    sum += record.coeff[k][d] * p2;
-                    p0 = p1;
-                    p1 = p2;
-                }
-                pos.push(sum - record.coeff[0][d]/2);
-            }
-            return new Vector(pos[0], pos[1], pos[2], time);
-        }
-    }
-    throw `Cannot extrapolate Chebyshev model for given Terrestrial Time: ${time.tt}`;
-}
-
 function AdjustBarycenter(ssb, time, body, pmass) {
     const shift = pmass / (pmass + SUN_MASS);
     const planet = CalcVsop(vsop[body], time);
@@ -1567,8 +1678,8 @@ Astronomy.HelioVector = function(body, date) {
     if (body in vsop) {
         return CalcVsop(vsop[body], time);
     }
-    if (body in cheb) {
-        return CalcChebyshev(cheb[body], time);
+    if (body in top2013) {
+        return TopPosition(body, time);
     }
     if (body === 'Sun') {
         return new Vector(0, 0, 0, time);
@@ -3227,11 +3338,7 @@ Astronomy.NextLunarApsis = function(apsis) {
     return next;
 }
 
-function NeptuneHelioDistance(time) {
-    return VsopHelioDistance(vsop.Neptune, time);
-}
-
-function NeptuneExtreme(kind, start_time, dayspan) {
+function PlanetExtreme(body, kind, start_time, dayspan) {
     const direction = (kind === 1) ? +1.0 : -1.0;
     const npoints = 10;
 
@@ -3241,7 +3348,7 @@ function NeptuneExtreme(kind, start_time, dayspan) {
         if (interval < 1.0 / 1440.0)    /* iterate until uncertainty is less than one minute */
         {
             const apsis_time = start_time.AddDays(interval / 2.0);
-            const dist_au = NeptuneHelioDistance(apsis_time);
+            const dist_au = Astronomy.HelioDistance(body, apsis_time);
             return new Apsis(apsis_time, kind, dist_au);
         }
 
@@ -3249,7 +3356,7 @@ function NeptuneExtreme(kind, start_time, dayspan) {
         let best_dist = 0.0;
         for (let i=0; i < npoints; ++i) {
             const time = start_time.AddDays(i * interval);
-            const dist = direction * NeptuneHelioDistance(time);
+            const dist = direction * Astronomy.HelioDistance(body, time);
             if (i==0 || dist > best_dist) {
                 best_i = i;
                 best_dist = dist;
@@ -3262,7 +3369,7 @@ function NeptuneExtreme(kind, start_time, dayspan) {
     }
 }
 
-function SearchNeptuneApsis(startTime) {
+function BruteSearchPlanetApsis(body, startTime) {
     /*
         Neptune is a special case for two reasons:
         1. Its orbit is nearly circular (low orbital eccentricity).
@@ -3273,6 +3380,10 @@ function SearchNeptuneApsis(startTime) {
         algorithm for finding dr/dt = 0.
         Instead, we use a dumb, brute-force algorithm of sampling and finding min/max
         heliocentric distance.
+
+        There is a similar problem in the TOP2013 model for Pluto:
+        Its position vector has high-frequency oscillations that confuse the
+        slope-based determination of apsides.
     */
 
     /*
@@ -3285,8 +3396,8 @@ function SearchNeptuneApsis(startTime) {
         is greatest and smallest.
     */
     const npoints = 100;
-    const t1 = startTime.AddDays(Planet.Neptune.OrbitalPeriod * ( -30 / 360));
-    const t2 = startTime.AddDays(Planet.Neptune.OrbitalPeriod * (+270 / 360));
+    const t1 = startTime.AddDays(Planet[body].OrbitalPeriod * ( -30 / 360));
+    const t2 = startTime.AddDays(Planet[body].OrbitalPeriod * (+270 / 360));
     let t_min = t1;
     let t_max = t1;
     let min_dist = -1.0;
@@ -3295,7 +3406,7 @@ function SearchNeptuneApsis(startTime) {
 
     for (let i=0; i < npoints; ++i) {
         const time = t1.AddDays(i * interval);
-        const dist = NeptuneHelioDistance(time);
+        const dist = Astronomy.HelioDistance(body, time);
         if (i === 0) {
             max_dist = min_dist = dist;
         } else {
@@ -3310,8 +3421,8 @@ function SearchNeptuneApsis(startTime) {
         }
     }
 
-    const perihelion = NeptuneExtreme(0, t_min.AddDays(-2*interval), 4*interval);
-    const aphelion   = NeptuneExtreme(1, t_max.AddDays(-2*interval), 4*interval);
+    const perihelion = PlanetExtreme(body, 0, t_min.AddDays(-2*interval), 4*interval);
+    const aphelion   = PlanetExtreme(body, 1, t_max.AddDays(-2*interval), 4*interval);
     if (perihelion.time.tt >= startTime.tt) {
         if (aphelion.time.tt >= startTime.tt && aphelion.time.tt < perihelion.time.tt) {
             return aphelion;
@@ -3353,8 +3464,8 @@ function SearchNeptuneApsis(startTime) {
  *      The next perihelion or aphelion that occurs after `startTime`.
  */
 Astronomy.SearchPlanetApsis = function(body, startTime) {
-    if (body === 'Neptune') {
-        return SearchNeptuneApsis(startTime);
+    if (body === 'Neptune' || body === 'Pluto') {
+        return BruteSearchPlanetApsis(body, startTime);
     }
 
     function positive_slope(t) {
