@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <math.h>
 #include "astro_demo_common.h"
 
@@ -58,9 +59,15 @@ int ParseTime(const char *text, astro_time_t *time)
 
 void PrintTime(astro_time_t time)
 {
-    astro_utc_t utc;
+    astro_status_t status;
+    char text[TIME_TEXT_BYTES];
 
-    utc = Astronomy_UtcFromTime(time);
-    printf("%04d-%02d-%02d %02d:%02d:%02.0lf UTC", utc.year, utc.month, utc.day, utc.hour, utc.minute, floor(utc.second));
+    status = Astronomy_FormatTime(time, TIME_FORMAT_SECOND, text, sizeof(text));
+    if (status != ASTRO_SUCCESS)
+    {
+        fprintf(stderr, "\nFATAL(PrintTime): status %d\n", status);
+        exit(1);
+    }
+    printf("%s", text);
 }
 

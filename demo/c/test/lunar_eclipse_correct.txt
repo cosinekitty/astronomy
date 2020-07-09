@@ -1,50 +1,50 @@
-1988-03-03 16:04:42 UTC - Partial eclipse begins.
-1988-03-03 16:13:29 UTC - Peak of partial eclipse.
-1988-03-03 16:22:15 UTC - Partial eclipse ends.
+1988-03-03T16:04:42Z - Partial eclipse begins.
+1988-03-03T16:13:29Z - Peak of partial eclipse.
+1988-03-03T16:22:16Z - Partial eclipse ends.
 
-1988-08-27 10:07:57 UTC - Partial eclipse begins.
-1988-08-27 11:05:04 UTC - Peak of partial eclipse.
-1988-08-27 12:02:12 UTC - Partial eclipse ends.
+1988-08-27T10:07:57Z - Partial eclipse begins.
+1988-08-27T11:05:05Z - Peak of partial eclipse.
+1988-08-27T12:02:12Z - Partial eclipse ends.
 
-1989-02-20 13:44:07 UTC - Partial eclipse begins.
-1989-02-20 14:56:15 UTC - Total eclipse begins.
-1989-02-20 15:36:04 UTC - Peak of total eclipse.
-1989-02-20 16:15:53 UTC - Total eclipse ends.
-1989-02-20 17:28:01 UTC - Partial eclipse ends.
+1989-02-20T13:44:08Z - Partial eclipse begins.
+1989-02-20T14:56:15Z - Total eclipse begins.
+1989-02-20T15:36:04Z - Peak of total eclipse.
+1989-02-20T16:15:54Z - Total eclipse ends.
+1989-02-20T17:28:01Z - Partial eclipse ends.
 
-1989-08-17 01:21:19 UTC - Partial eclipse begins.
-1989-08-17 02:20:31 UTC - Total eclipse begins.
-1989-08-17 03:08:46 UTC - Peak of total eclipse.
-1989-08-17 03:57:01 UTC - Total eclipse ends.
-1989-08-17 04:56:14 UTC - Partial eclipse ends.
+1989-08-17T01:21:19Z - Partial eclipse begins.
+1989-08-17T02:20:32Z - Total eclipse begins.
+1989-08-17T03:08:47Z - Peak of total eclipse.
+1989-08-17T03:57:02Z - Total eclipse ends.
+1989-08-17T04:56:14Z - Partial eclipse ends.
 
-1990-02-09 17:29:19 UTC - Partial eclipse begins.
-1990-02-09 18:50:02 UTC - Total eclipse begins.
-1990-02-09 19:11:46 UTC - Peak of total eclipse.
-1990-02-09 19:33:31 UTC - Total eclipse ends.
-1990-02-09 20:54:13 UTC - Partial eclipse ends.
+1990-02-09T17:29:19Z - Partial eclipse begins.
+1990-02-09T18:50:02Z - Total eclipse begins.
+1990-02-09T19:11:47Z - Peak of total eclipse.
+1990-02-09T19:33:31Z - Total eclipse ends.
+1990-02-09T20:54:14Z - Partial eclipse ends.
 
-1990-08-06 12:44:54 UTC - Partial eclipse begins.
-1990-08-06 14:13:00 UTC - Peak of partial eclipse.
-1990-08-06 15:41:06 UTC - Partial eclipse ends.
+1990-08-06T12:44:54Z - Partial eclipse begins.
+1990-08-06T14:13:00Z - Peak of partial eclipse.
+1990-08-06T15:41:06Z - Partial eclipse ends.
 
-1991-12-21 10:00:27 UTC - Partial eclipse begins.
-1991-12-21 10:33:39 UTC - Peak of partial eclipse.
-1991-12-21 11:06:51 UTC - Partial eclipse ends.
+1991-12-21T10:00:27Z - Partial eclipse begins.
+1991-12-21T10:33:39Z - Peak of partial eclipse.
+1991-12-21T11:06:51Z - Partial eclipse ends.
 
-1992-06-15 03:27:15 UTC - Partial eclipse begins.
-1992-06-15 04:57:38 UTC - Peak of partial eclipse.
-1992-06-15 06:28:01 UTC - Partial eclipse ends.
+1992-06-15T03:27:15Z - Partial eclipse begins.
+1992-06-15T04:57:38Z - Peak of partial eclipse.
+1992-06-15T06:28:01Z - Partial eclipse ends.
 
-1992-12-09 21:59:59 UTC - Partial eclipse begins.
-1992-12-09 23:07:16 UTC - Total eclipse begins.
-1992-12-09 23:44:42 UTC - Peak of total eclipse.
-1992-12-10 00:22:08 UTC - Total eclipse ends.
-1992-12-10 01:29:25 UTC - Partial eclipse ends.
+1992-12-09T21:59:59Z - Partial eclipse begins.
+1992-12-09T23:07:16Z - Total eclipse begins.
+1992-12-09T23:44:43Z - Peak of total eclipse.
+1992-12-10T00:22:09Z - Total eclipse ends.
+1992-12-10T01:29:26Z - Partial eclipse ends.
 
-1993-06-04 11:11:48 UTC - Partial eclipse begins.
-1993-06-04 12:12:49 UTC - Total eclipse begins.
-1993-06-04 13:01:01 UTC - Peak of total eclipse.
-1993-06-04 13:49:14 UTC - Total eclipse ends.
-1993-06-04 14:50:15 UTC - Partial eclipse ends.
+1993-06-04T11:11:48Z - Partial eclipse begins.
+1993-06-04T12:12:49Z - Total eclipse begins.
+1993-06-04T13:01:02Z - Peak of total eclipse.
+1993-06-04T13:49:14Z - Total eclipse ends.
+1993-06-04T14:50:15Z - Partial eclipse ends.
 

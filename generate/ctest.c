@@ -212,8 +212,34 @@ fail:
     return error;
 }
 
+
+static int CheckTimeFormat(
+    astro_time_t time,
+    astro_time_format_t format,
+    astro_status_t expected_status,
+    const char *expected_text)
+{
+    int error = 1;
+    astro_status_t status;
+    char text[TIME_TEXT_BYTES];
+
+    status = Astronomy_FormatTime(time, format, text, sizeof(text));
+    if (status != expected_status)
+        FAIL("C CheckTimeFormat(%s): expected status %d, got %d\n", expected_text, expected_status, status);
+
+    if (strcmp(text, expected_text))
+        FAIL("C CheckTimeFormat(%s): computed wrong text '%s'\n", expected_text, text);
+
+    DEBUG("C CheckTimeFormat(%s): PASS\n", expected_text);
+    error = 0;
+fail:
+    return error;
+}
+
+
 static int Test_AstroTime(void)
 {
+    int error = 1;
     astro_time_t time;
     astro_utc_t utc;
     const double expected_ut = 6910.270978506945;
@@ -228,29 +254,44 @@ static int Test_AstroTime(void)
     const double second = 12.543;
 
     time = Astronomy_MakeTime(year, month, day, hour, minute, second);
-    printf("C Test_AstroTime: ut=%0.12lf, tt=%0.12lf\n", time.ut, time.tt);
+    DEBUG("C Test_AstroTime: ut=%0.12lf, tt=%0.12lf\n", time.ut, time.tt);
 
     diff = time.ut - expected_ut;
     if (ABS(diff) > 1.0e-12)
-        FAILRET("C Test_AstroTime: excessive UT error %lg\n", diff);
+        FAIL("C Test_AstroTime: excessive UT error %lg\n", diff);
 
     diff = time.tt - expected_tt;
     if (ABS(diff) > 1.0e-12)
-        FAILRET("C Test_AstroTime: excessive TT error %lg\n", diff);
+        FAIL("C Test_AstroTime: excessive TT error %lg\n", diff);
 
     utc = Astronomy_UtcFromTime(time);
     if (utc.year != year || utc.month != month || utc.day != day || utc.hour != hour || utc.minute != minute)
     {
-        FAILRET("C Test_AstroTime: UtcFromTime FAILURE - Expected %04d-%02d-%02dT%02d:%02dZ, found %04d-%02d-%02dT%02d:%02dZ\n",
+        FAIL("C Test_AstroTime: UtcFromTime FAILURE - Expected %04d-%02d-%02dT%02d:%02dZ, found %04d-%02d-%02dT%02d:%02dZ\n",
             year, month, day, hour, minute,
             utc.year, utc.month, utc.day, utc.hour, utc.minute);
     }
 
     diff = utc.second - second;
     if (ABS(diff) > 2.0e-5)
-        FAILRET("C Test_AstroTime: excessive UTC second error %lg\n", diff);
+        FAIL("C Test_AstroTime: excessive UTC second error %lg\n", diff);
 
-    return 0;
+    time = Astronomy_MakeTime(2020, 12, 31, 23, 59, 59.4994);
+    CHECK(CheckTimeFormat(time, TIME_FORMAT_MILLI,  ASTRO_SUCCESS, "2020-12-31T23:59:59.499Z"));
+    CHECK(CheckTimeFormat(time, TIME_FORMAT_SECOND, ASTRO_SUCCESS, "2020-12-31T23:59:59Z"));
+    CHECK(CheckTimeFormat(time, TIME_FORMAT_MINUTE, ASTRO_SUCCESS, "2021-01-01T00:00Z"));
+    CHECK(CheckTimeFormat(time, TIME_FORMAT_DAY,    ASTRO_SUCCESS, "2020-12-31"));
+
+    time = Astronomy_MakeTime(2020, 12, 31, 23, 59, 59.500);
+    CHECK(CheckTimeFormat(time, TIME_FORMAT_MILLI,  ASTRO_SUCCESS, "2020-12-31T23:59:59.500Z"));
+    CHECK(CheckTimeFormat(time, TIME_FORMAT_SECOND, ASTRO_SUCCESS, "2021-01-01T00:00:00Z"));
+    CHECK(CheckTimeFormat(time, TIME_FORMAT_MINUTE, ASTRO_SUCCESS, "2021-01-01T00:00Z"));
+    CHECK(CheckTimeFormat(time, TIME_FORMAT_DAY,    ASTRO_SUCCESS, "2020-12-31"));
+
+    printf("C Test_AstroTime: PASS\n");
+    error = 0;
+fail:
+    return error;
 }
 
 static int AstroCheck(void)

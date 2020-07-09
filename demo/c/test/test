@@ -16,6 +16,10 @@ echo "Testing example: positions.c"
 ./positions +45.6 -90.7 2018-11-30T17:55:07.234Z > test/positions.txt || Fail "Error testing positions.c."
 diff test/positions.txt test/positions_correct.txt || Fail "Error comparing positions.c output."
 
+# Another test to check for a problem I found with putting "60" in the seconds field.
+./positions 20.8 -75.2 2020-07-09T08:30:00Z > test/positions2.txt || Fail "Error in second call to positions.c."
+diff test/positions2.txt test/positions2_correct.txt || Fail "Error comparing positions.c output #2."
+
 echo "Testing example: riseset.c"
 ./riseset 45 -90 2019-06-14T21:45:25Z > test/riseset.txt || Fail "Error testing riseset.c."
 diff test/riseset.txt test/riseset_correct.txt || Fail "Error comparing riseset.c output."

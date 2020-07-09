@@ -1,4 +1,4 @@
-March equinox     : 2020-03-20 03:49:56 UTC
-June solstice     : 2020-06-20 21:43:33 UTC
-September equinox : 2020-09-22 13:30:56 UTC
-December solstice : 2020-12-21 10:02:40 UTC
+March equinox     : 2020-03-20T03:49:57Z
+June solstice     : 2020-06-20T21:43:34Z
+September equinox : 2020-09-22T13:30:56Z
+December solstice : 2020-12-21T10:02:41Z

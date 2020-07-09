@@ -1,13 +1,13 @@
-2019-06-15 09:15:32 UTC : Moon's phase angle = 156.100612 degrees.
+2019-06-15T09:15:33Z : Moon's phase angle = 156.100612 degrees.
 
 The next 10 lunar quarters are:
-2019-06-17 08:31:17 UTC : Full Moon
-2019-06-25 09:47:07 UTC : Third Quarter
-2019-07-02 19:16:46 UTC : New Moon
-2019-07-09 10:55:28 UTC : First Quarter
-2019-07-16 21:38:53 UTC : Full Moon
-2019-07-25 01:18:42 UTC : Third Quarter
-2019-08-01 03:12:26 UTC : New Moon
-2019-08-07 17:31:36 UTC : First Quarter
-2019-08-15 12:29:57 UTC : Full Moon
-2019-08-23 14:56:46 UTC : Third Quarter
+2019-06-17T08:31:18Z : Full Moon
+2019-06-25T09:47:08Z : Third Quarter
+2019-07-02T19:16:47Z : New Moon
+2019-07-09T10:55:28Z : First Quarter
+2019-07-16T21:38:54Z : Full Moon
+2019-07-25T01:18:43Z : Third Quarter
+2019-08-01T03:12:26Z : New Moon
+2019-08-07T17:31:36Z : First Quarter
+2019-08-15T12:29:57Z : Full Moon
+2019-08-23T14:56:46Z : Third Quarter

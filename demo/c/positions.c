@@ -26,7 +26,6 @@ int main(int argc, const char *argv[])
     astro_time_t time;
     astro_equatorial_t equ_2000, equ_ofdate;
     astro_horizon_t hor;
-    astro_utc_t utc;
     int i;
     int num_bodies = sizeof(body) / sizeof(body[0]);
 
@@ -34,9 +33,9 @@ int main(int argc, const char *argv[])
     if (error)
         return error;
 
-    utc = Astronomy_UtcFromTime(time);
-    printf("UTC date = %04d-%02d-%02dT%02d:%02d:%06.3lfZ\n\n",
-        utc.year, utc.month, utc.day, utc.hour, utc.minute, utc.second);
+    printf("UTC date = ");
+    PrintTime(time);
+    printf("\n");
 
     printf("BODY           RA      DEC       AZ      ALT\n");
     for (i=0; i < num_bodies; ++i)

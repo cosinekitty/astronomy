@@ -508,6 +508,33 @@ Correction for aberration is optional, using the `aberration` parameter.
 
 ---
 
+<a name="Astronomy_FormatTime"></a>
+### Astronomy_FormatTime(time, format, text, size) &#8658; [`astro_status_t`](#astro_status_t)
+
+**Formats an [`astro_time_t`](#astro_time_t) value as an ISO 8601 string.** 
+
+
+
+Given an [`astro_time_t`](#astro_time_t) value `time`, formats it as an ISO 8601 string to the resolution specified by the `format` parameter. The result is stored in the `text` buffer whose capacity in bytes is specified by `size`.
+
+
+
+**Returns:**  `ASTRO_SUCCESS` on success; otherwise an error as described above. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_time_t`](#astro_time_t) | `time` |  The date and time whose civil time `time.ut` is to be formatted as an ISO 8601 string. If the civil time is outside the year range 0000 to 9999, the function fails and returns `ASTRO_BAD_TIME`. Years prior to 1583 are treated as if they are using the modern Gregorian calendar, even when the Julian calendar was actually in effect. | 
+| [`astro_time_format_t`](#astro_time_format_t) | `format` |  Specifies the resolution to which the date and time should be formatted, as explained at [`astro_time_format_t`](#astro_time_format_t). If the value of `format` is not recognized, the function fails and returns `ASTRO_INVALID_PARAMETER`. | 
+| `char *` | `text` |  A pointer to a text buffer to receive the output. If `text` is `NULL`, this function returns `ASTRO_INVALID_PARAMETER`. If the function fails for any reason, and `text` is not `NULL`, and `size` is greater than 0, the `text` buffer is set to an empty string. | 
+| `size_t` | `size` |  The size in bytes of the buffer pointed to by `text`. The buffer must be large enough to accomodate the `format` parameter, as specified at [`astro_time_format_t`](#astro_time_format_t). If `size` is too small to hold the string as specified by `format`, the `text` buffer is set to `""` if possible, and the function returns `ASTRO_BUFFER_TOO_SMALL`. A buffer that is `TIME_TEXT_BYTES` (25) bytes or larger is always large enough for this function. | 
+
+
+
+
+---
+
 <a name="Astronomy_GeoMoon"></a>
 ### Astronomy_GeoMoon(time) &#8658; [`astro_vector_t`](#astro_vector_t)
 
@@ -2261,7 +2288,7 @@ For some other purposes, it is more helpful to represent coordinates using the E
 | `ASTRO_NOT_INITIALIZED` |  A placeholder that can be used for data that is not yet initialized.  |
 | `ASTRO_INVALID_BODY` |  The celestial body was not valid. Different sets of bodies are supported depending on the function.  |
 | `ASTRO_NO_CONVERGE` |  A numeric solver failed to converge. This should not happen unless there is a bug in Astronomy Engine.  |
-| `ASTRO_BAD_TIME` |  Cannot calculate Pluto's position outside the year range 1700..2200.  |
+| `ASTRO_BAD_TIME` |  The provided date/time is outside the range allowed by this function.  |
 | `ASTRO_BAD_VECTOR` |  Vector magnitude is too small to be normalized into a unit vector.  |
 | `ASTRO_SEARCH_FAILURE` |  Search was not able to find an ascending root crossing of the function in the specified time interval.  |
 | `ASTRO_EARTH_NOT_ALLOWED` |  The Earth cannot be treated as a celestial body seen from an observer on the Earth itself.  |
@@ -2270,6 +2297,25 @@ For some other purposes, it is more helpful to represent coordinates using the E
 | `ASTRO_INTERNAL_ERROR` |  A self-check failed inside the code somewhere, indicating a bug needs to be fixed.  |
 | `ASTRO_INVALID_PARAMETER` |  A parameter value passed to a function was not valid.  |
 | `ASTRO_FAIL_APSIS` |  Special-case logic for finding Neptune/Pluto apsis failed.  |
+| `ASTRO_BUFFER_TOO_SMALL` |  A provided buffer's size is too small to receive the requested data.  |
+
+
+
+---
+
+<a name="astro_time_format_t"></a>
+### `astro_time_format_t`
+
+**Selects the output format of the function [`Astronomy_FormatTime`](#Astronomy_FormatTime).** 
+
+
+
+| Enum Value | Description |
+| --- | --- |
+| `TIME_FORMAT_DAY` |  Truncate to UTC calendar date only, e.g. `2020-12-31`. Buffer size must be at least 11 characters.  |
+| `TIME_FORMAT_MINUTE` |  Round to nearest UTC minute, e.g. `2020-12-31T15:47Z`. Buffer size must be at least 18 characters.  |
+| `TIME_FORMAT_SECOND` |  Round to nearest UTC second, e.g. `2020-12-31T15:47:32Z`. Buffer size must be at least 21 characters.  |
+| `TIME_FORMAT_MILLI` |  Round to nearest UTC millisecond, e.g. `2020-12-31T15:47:32.397Z`. Buffer size must be at least 25 characters.  |
 
 
 

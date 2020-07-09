@@ -28,6 +28,8 @@
 #ifndef __ASTRONOMY_H
 #define __ASTRONOMY_H
 
+#include <stddef.h>     /* for size_t */
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -43,7 +45,7 @@ typedef enum
     ASTRO_NOT_INITIALIZED,          /**< A placeholder that can be used for data that is not yet initialized. */
     ASTRO_INVALID_BODY,             /**< The celestial body was not valid. Different sets of bodies are supported depending on the function. */
     ASTRO_NO_CONVERGE,              /**< A numeric solver failed to converge. This should not happen unless there is a bug in Astronomy Engine. */
-    ASTRO_BAD_TIME,                 /**< Cannot calculate Pluto's position outside the year range 1700..2200. */
+    ASTRO_BAD_TIME,                 /**< The provided date/time is outside the range allowed by this function. */
     ASTRO_BAD_VECTOR,               /**< Vector magnitude is too small to be normalized into a unit vector. */
     ASTRO_SEARCH_FAILURE,           /**< Search was not able to find an ascending root crossing of the function in the specified time interval. */
     ASTRO_EARTH_NOT_ALLOWED,        /**< The Earth cannot be treated as a celestial body seen from an observer on the Earth itself. */
@@ -51,7 +53,8 @@ typedef enum
     ASTRO_WRONG_MOON_QUARTER,       /**< Internal error: Astronomy_NextMoonQuarter found the wrong moon quarter. */
     ASTRO_INTERNAL_ERROR,           /**< A self-check failed inside the code somewhere, indicating a bug needs to be fixed. */
     ASTRO_INVALID_PARAMETER,        /**< A parameter value passed to a function was not valid. */
-    ASTRO_FAIL_APSIS                /**< Special-case logic for finding Neptune/Pluto apsis failed. */
+    ASTRO_FAIL_APSIS,               /**< Special-case logic for finding Neptune/Pluto apsis failed. */
+    ASTRO_BUFFER_TOO_SMALL          /**< A provided buffer's size is too small to receive the requested data. */
 }
 astro_status_t;
 
@@ -761,6 +764,21 @@ typedef struct
 }
 astro_constellation_t;
 
+
+/**
+ * @brief Selects the output format of the function #Astronomy_FormatTime.
+ */
+typedef enum
+{
+    TIME_FORMAT_DAY,    /**< Truncate to UTC calendar date only, e.g. `2020-12-31`. Buffer size must be at least 11 characters. */
+    TIME_FORMAT_MINUTE, /**< Round to nearest UTC minute, e.g. `2020-12-31T15:47Z`. Buffer size must be at least 18 characters. */
+    TIME_FORMAT_SECOND, /**< Round to nearest UTC second, e.g. `2020-12-31T15:47:32Z`. Buffer size must be at least 21 characters. */
+    TIME_FORMAT_MILLI   /**< Round to nearest UTC millisecond, e.g. `2020-12-31T15:47:32.397Z`. Buffer size must be at least 25 characters. */
+}
+astro_time_format_t;
+
+#define TIME_TEXT_BYTES  25   /**< The smallest number of characters that is always large enough for #Astronomy_FormatTime. */
+
 /*---------- functions ----------*/
 
 double Astronomy_VectorLength(astro_vector_t vector);
@@ -771,6 +789,7 @@ astro_time_t Astronomy_CurrentTime(void);
 astro_time_t Astronomy_MakeTime(int year, int month, int day, int hour, int minute, double second);
 astro_time_t Astronomy_TimeFromUtc(astro_utc_t utc);
 astro_utc_t  Astronomy_UtcFromTime(astro_time_t time);
+astro_status_t Astronomy_FormatTime(astro_time_t time, astro_time_format_t format, char *text, size_t size);
 astro_time_t Astronomy_TimeFromDays(double ut);
 astro_time_t Astronomy_AddDays(astro_time_t time, double days);
 astro_func_result_t Astronomy_HelioDistance(astro_body_t body, astro_time_t time);
