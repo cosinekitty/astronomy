@@ -34,6 +34,7 @@ To get started quickly, here are some [examples](../../demo/c/).
 | [AddDays](#Astronomy_AddDays) | Adds or subtracts an amount of time to an [`astro_time_t`](#astro_time_t) to get another [`astro_time_t`](#astro_time_t). |
 | [TimeFromUtc](#Astronomy_TimeFromUtc) | Converts UTC calendar date and time from an [`astro_utc_t`](#astro_utc_t) structure to an [`astro_time_t`](#astro_time_t) structure that can be used for astronomy calculations. |
 | [UtcFromTime](#Astronomy_UtcFromTime) | Converts an astronomical [`astro_time_t`](#astro_time_t) time value to an [`astro_utc_t`](#astro_utc_t) structure that can be used for displaying a UTC calendar date and time. |
+| [FormatTime](#Astronomy_FormatTime) | Formats an [`astro_time_t`](#astro_time_t) value as an ISO 8601 string. |
 
 ### Celestial bodies
 
@@ -231,7 +232,7 @@ This function calculates the angular separation between the given body and the S
 
 
 
-**Returns:**  If `name` is one of the strings (case-sensitive) listed above, the returned value is the corresponding [`astro_body_t`](#astro_body_t) value, otherwise it is `BODY_INVALID`. 
+**Returns:**  If `name` is one of the listed strings (case-sensitive), the returned value is the corresponding [`astro_body_t`](#astro_body_t) value, otherwise it is `BODY_INVALID`. 
 
 
 
@@ -519,7 +520,7 @@ Given an [`astro_time_t`](#astro_time_t) value `time`, formats it as an ISO 8601
 
 
 
-**Returns:**  `ASTRO_SUCCESS` on success; otherwise an error as described above. 
+**Returns:**  `ASTRO_SUCCESS` on success; otherwise an error as described in the parameter notes. 
 
 
 
@@ -528,7 +529,7 @@ Given an [`astro_time_t`](#astro_time_t) value `time`, formats it as an ISO 8601
 | [`astro_time_t`](#astro_time_t) | `time` |  The date and time whose civil time `time.ut` is to be formatted as an ISO 8601 string. If the civil time is outside the year range 0000 to 9999, the function fails and returns `ASTRO_BAD_TIME`. Years prior to 1583 are treated as if they are using the modern Gregorian calendar, even when the Julian calendar was actually in effect. | 
 | [`astro_time_format_t`](#astro_time_format_t) | `format` |  Specifies the resolution to which the date and time should be formatted, as explained at [`astro_time_format_t`](#astro_time_format_t). If the value of `format` is not recognized, the function fails and returns `ASTRO_INVALID_PARAMETER`. | 
 | `char *` | `text` |  A pointer to a text buffer to receive the output. If `text` is `NULL`, this function returns `ASTRO_INVALID_PARAMETER`. If the function fails for any reason, and `text` is not `NULL`, and `size` is greater than 0, the `text` buffer is set to an empty string. | 
-| `size_t` | `size` |  The size in bytes of the buffer pointed to by `text`. The buffer must be large enough to accomodate the `format` parameter, as specified at [`astro_time_format_t`](#astro_time_format_t). If `size` is too small to hold the string as specified by `format`, the `text` buffer is set to `""` if possible, and the function returns `ASTRO_BUFFER_TOO_SMALL`. A buffer that is `TIME_TEXT_BYTES` (25) bytes or larger is always large enough for this function. | 
+| `size_t` | `size` |  The size in bytes of the buffer pointed to by `text`. The buffer must be large enough to accomodate the output format selected by the `format` parameter, as specified at [`astro_time_format_t`](#astro_time_format_t). If `size` is too small to hold the string as specified by `format`, the `text` buffer is set to `""` (if possible) and the function returns `ASTRO_BUFFER_TOO_SMALL`. A buffer that is `TIME_TEXT_BYTES` (25) bytes or larger is always large enough for this function. | 
 
 
 
@@ -670,9 +671,9 @@ This function optionally corrects for atmospheric refraction. For most uses, it 
 | --- | --- | --- |
 | [`astro_time_t *`](#astro_time_t *) | `time` |  The date and time of the observation. | 
 | [`astro_observer_t`](#astro_observer_t) | `observer` |  The geographic location of the observer. | 
-| `double` | `ra` |  The right ascension of the body in sidereal hours. See remarks above for more details. | 
-| `double` | `dec` |  The declination of the body in degrees. See remarks above for more details. | 
-| [`astro_refraction_t`](#astro_refraction_t) | `refraction` |  Selects whether to correct for atmospheric refraction, and if so, which model to use. The recommended value for most uses is `REFRACTION_NORMAL`. See remarks above for more details. | 
+| `double` | `ra` |  The right ascension of the body in sidereal hours. See function remarks for more details. | 
+| `double` | `dec` |  The declination of the body in degrees. See function remarks for more details. | 
+| [`astro_refraction_t`](#astro_refraction_t) | `refraction` |  Selects whether to correct for atmospheric refraction, and if so, which model to use. The recommended value for most uses is `REFRACTION_NORMAL`. See function remarks for more details. | 
 
 
 
@@ -702,7 +703,7 @@ The distance to the observed object is stored in `dist`, and is expressed in ast
 
 
 
-**Returns:**  If successful, `status` holds `ASTRO_SUCCESS` and the other fields are valid as described above. Otherwise `status` holds an error code and the other fields are undefined. 
+**Returns:**  If successful, `status` holds `ASTRO_SUCCESS` and the other fields are valid as described in the function remarks. Otherwise `status` holds an error code and the other fields are undefined. 
 
 
 
@@ -903,7 +904,7 @@ This function determines the phase of the Moon using its apparent ecliptic longi
 
 
 
-**Returns:**  On success, the function returns the angle as described above in the `angle` field and `ASTRO_SUCCESS` in the `status` field. The function should always succeed, but it is a good idea for callers to check the `status` field in the returned structure. Any other value in `status` indicates a failure that should be [reported as an issue](https://github.com/cosinekitty/astronomy/issues). 
+**Returns:**  On success, the function returns the angle as described in the function remarks in the `angle` field and `ASTRO_SUCCESS` in the `status` field. The function should always succeed, but it is a good idea for callers to check the `status` field in the returned structure. Any other value in `status` indicates a failure that should be [reported as an issue](https://github.com/cosinekitty/astronomy/issues). 
 
 
 
@@ -1446,16 +1447,16 @@ If the search does not converge within 20 iterations, it will fail with status c
 
 
 
-**Returns:**  If successful, the returned structure has `status` equal to `ASTRO_SUCCESS` and `time` set to a value within `dt_tolerance_seconds` of an ascending root. On success, the `time` value will always be in the inclusive range [`t1`, `t2`]. If the search fails, `status` will be set to a value other than `ASTRO_SUCCESS`. See the remarks above for more details. 
+**Returns:**  If successful, the returned structure has `status` equal to `ASTRO_SUCCESS` and `time` set to a value within `dt_tolerance_seconds` of an ascending root. On success, the `time` value will always be in the inclusive range [`t1`, `t2`]. If the search fails, `status` will be set to a value other than `ASTRO_SUCCESS`. See function remarks for more details. 
 
 
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| [`astro_search_func_t`](#astro_search_func_t) | `func` |  The function for which to find the time of an ascending root. See remarks above for more details. | 
+| [`astro_search_func_t`](#astro_search_func_t) | `func` |  The function for which to find the time of an ascending root. See function remarks for more details. | 
 | `void *` | `context` |  Any ancillary data needed by the function `func` to calculate a value. The data type varies depending on the function passed in. For example, the function may involve a specific celestial body that must be specified somehow. | 
-| [`astro_time_t`](#astro_time_t) | `t1` |  The lower time bound of the search window. See remarks above for more details. | 
-| [`astro_time_t`](#astro_time_t) | `t2` |  The upper time bound of the search window. See remarks above for more details. | 
+| [`astro_time_t`](#astro_time_t) | `t1` |  The lower time bound of the search window. See function remarks for more details. | 
+| [`astro_time_t`](#astro_time_t) | `t2` |  The upper time bound of the search window. See function remarks for more details. | 
 | `double` | `dt_tolerance_seconds` |  Specifies an amount of time in seconds within which a bounded ascending root is considered accurate enough to stop. A typical value is 1 second. | 
 
 
@@ -1699,7 +1700,7 @@ This function searches for the date and time Venus appears brightest as seen fro
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| [`astro_body_t`](#astro_body_t) | `body` |  Currently only `BODY_VENUS` is allowed. Any other value results in the error `ASTRO_INVALID_BODY`. See remarks above for more details. | 
+| [`astro_body_t`](#astro_body_t) | `body` |  Currently only `BODY_VENUS` is allowed. Any other value results in the error `ASTRO_INVALID_BODY`. See function remarks for more details. | 
 | [`astro_time_t`](#astro_time_t) | `startTime` |  The date and time to start searching for the next peak magnitude event. | 
 
 
@@ -1828,7 +1829,7 @@ The function searches the window of time specified by `startTime` and `startTime
 | --- | --- | --- |
 | `double` | `targetLon` |  The desired ecliptic longitude in degrees, relative to the true equinox of date. This may be any value in the range [0, 360), although certain values have conventional meanings: 0 = March equinox, 90 = June solstice, 180 = September equinox, 270 = December solstice. | 
 | [`astro_time_t`](#astro_time_t) | `startTime` |  The date and time for starting the search for the desired longitude event. | 
-| `double` | `limitDays` |  The real-valued number of days, which when added to `startTime`, limits the range of time over which the search looks. It is recommended to keep this value between 1 and 10 days. See remarks above for more details. | 
+| `double` | `limitDays` |  The real-valued number of days, which when added to `startTime`, limits the range of time over which the search looks. It is recommended to keep this value between 1 and 10 days. See function remarks for more details. | 
 
 
 

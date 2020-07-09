@@ -159,7 +159,7 @@ const char *Astronomy_BodyName(astro_body_t body)
 /**
  * @brief Returns the #astro_body_t value corresponding to the given English name.
  * @param name One of the following strings: Sun, Moon, Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune, Pluto, EMB, SSB.
- * @return If `name` is one of the strings (case-sensitive) listed above, the returned value is the corresponding #astro_body_t value, otherwise it is `BODY_INVALID`.
+ * @return If `name` is one of the listed strings (case-sensitive), the returned value is the corresponding #astro_body_t value, otherwise it is `BODY_INVALID`.
  */
 astro_body_t Astronomy_BodyCode(const char *name)
 {
@@ -811,13 +811,14 @@ astro_utc_t Astronomy_UtcFromTime(astro_time_t time)
  *
  * @param size
  *      The size in bytes of the buffer pointed to by `text`. The buffer must
- *      be large enough to accomodate the `format` parameter, as specified
- *      at #astro_time_format_t. If `size` is too small to hold the string
- *      as specified by `format`, the `text` buffer is set to `""` if possible,
+ *      be large enough to accomodate the output format selected by the
+ *      `format` parameter, as specified at #astro_time_format_t.
+ *      If `size` is too small to hold the string as specified by `format`,
+ *      the `text` buffer is set to `""` (if possible)
  *      and the function returns `ASTRO_BUFFER_TOO_SMALL`.
  *      A buffer that is `TIME_TEXT_BYTES` (25) bytes or larger is always large enough for this function.
  *
- * @return `ASTRO_SUCCESS` on success; otherwise an error as described above.
+ * @return `ASTRO_SUCCESS` on success; otherwise an error as described in the parameter notes.
  */
 astro_status_t Astronomy_FormatTime(
     astro_time_t time,
@@ -4018,15 +4019,15 @@ astro_equatorial_t Astronomy_Equator(
  *
  * @param ra
  *      The right ascension of the body in sidereal hours.
- *      See remarks above for more details.
+ *      See function remarks for more details.
  *
  * @param dec
- *      The declination of the body in degrees. See remarks above for more details.
+ *      The declination of the body in degrees. See function remarks for more details.
  *
  * @param refraction
  *      Selects whether to correct for atmospheric refraction, and if so, which model to use.
  *      The recommended value for most uses is `REFRACTION_NORMAL`.
- *      See remarks above for more details.
+ *      See function remarks for more details.
  *
  * @return
  *      The body's apparent horizontal coordinates and equatorial coordinates, both optionally corrected for refraction.
@@ -4323,7 +4324,7 @@ static astro_func_result_t sun_offset(void *context, astro_time_t time)
  *      The real-valued number of days, which when added to `startTime`, limits the
  *      range of time over which the search looks.
  *      It is recommended to keep this value between 1 and 10 days.
- *      See remarks above for more details.
+ *      See function remarks for more details.
  *
  * @return
  *      If successful, the `status` field in the returned structure will contain `ASTRO_SUCCESS`
@@ -4400,7 +4401,7 @@ astro_search_result_t Astronomy_SearchSunLongitude(
  *
  * @param func
  *      The function for which to find the time of an ascending root.
- *      See remarks above for more details.
+ *      See function remarks for more details.
  *
  * @param context
  *      Any ancillary data needed by the function `func` to calculate a value.
@@ -4410,11 +4411,11 @@ astro_search_result_t Astronomy_SearchSunLongitude(
  *
  * @param t1
  *      The lower time bound of the search window.
- *      See remarks above for more details.
+ *      See function remarks for more details.
  *
  * @param t2
  *      The upper time bound of the search window.
- *      See remarks above for more details.
+ *      See function remarks for more details.
  *
  * @param dt_tolerance_seconds
  *      Specifies an amount of time in seconds within which a bounded ascending root
@@ -4425,7 +4426,7 @@ astro_search_result_t Astronomy_SearchSunLongitude(
  *      and `time` set to a value within `dt_tolerance_seconds` of an ascending root.
  *      On success, the `time` value will always be in the inclusive range [`t1`, `t2`].
  *      If the search fails, `status` will be set to a value other than `ASTRO_SUCCESS`.
- *      See the remarks above for more details.
+ *      See function remarks for more details.
  */
 astro_search_result_t Astronomy_Search(
     astro_search_func_t func,
@@ -5012,8 +5013,8 @@ astro_angle_result_t Astronomy_LongitudeFromSun(astro_body_t body, astro_time_t 
  *      The date and time of the observation.
  *
  * @return
- *      On success, the function returns the angle as described above in the `angle`
- *      field and `ASTRO_SUCCESS` in the `status` field.
+ *      On success, the function returns the angle as described in the function remarks
+ *      in the `angle` field and `ASTRO_SUCCESS` in the `status` field.
  *      The function should always succeed, but it is a good idea for callers to check
  *      the `status` field in the returned structure.
  *      Any other value in `status` indicates a failure that should be
@@ -5920,7 +5921,7 @@ static astro_func_result_t mag_slope(void *context, astro_time_t time)
  *
  * @param body
  *      Currently only `BODY_VENUS` is allowed. Any other value results in the error `ASTRO_INVALID_BODY`.
- *      See remarks above for more details.
+ *      See function remarks for more details.
  *
  * @param startTime
  *      The date and time to start searching for the next peak magnitude event.
@@ -6819,7 +6820,8 @@ static double ToggleAzimuthDirection(double az)
  *      `REFRACTION_JPLHOR`: for JPL Horizons compatibility testing only; not recommended for normal use.
  *
  * @return
- *      If successful, `status` holds `ASTRO_SUCCESS` and the other fields are valid as described above.
+ *      If successful, `status` holds `ASTRO_SUCCESS` and the other fields are valid as described
+ *      in the function remarks.
  *      Otherwise `status` holds an error code and the other fields are undefined.
  */
 astro_spherical_t Astronomy_HorizonFromVector(astro_vector_t vector, astro_refraction_t refraction)
