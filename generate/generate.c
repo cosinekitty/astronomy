@@ -99,6 +99,7 @@ static int TopFileInfo(const char *filename, const char *name);
 static int ValidateTop2013(void);
 static int ValidateRandom(void);
 static int Diff(const char *filename1, const char *filename2, int *nlines);
+static int GravSim(void);
 
 #define MOON_PERIGEE        0.00238
 #define MERCURY_APHELION    0.466697
@@ -179,6 +180,9 @@ int main(int argc, const char *argv[])
     if (argc == 3 && !strcmp(argv[1], "dtplot"))
         return DeltaTimePlot(argv[2]);
 
+    if (argc == 2 && !strcmp(argv[1], "gravsim"))
+        return GravSim();
+
     return PrintUsage();
 }
 
@@ -225,6 +229,9 @@ static int PrintUsage(void)
         "\n"
         "generate topinfo filename planet\n"
         "   Prints summary info about the TOP2013 file.\n"
+        "\n"
+        "generate gravsim\n"
+        "   Experimental gravity simulation.\n"
         "\n"
     );
 
@@ -2518,3 +2525,187 @@ fail:
     TopFreeModel(&model);
     return error;
 }
+
+/*------------------------------------------------------------------------------------------------*/
+
+typedef struct
+{
+    double pos[3];
+    double vel[3];
+}
+gravsim_body_state_t;
+
+
+static int BodyState(double jd, int body, gravsim_body_state_t *bs)
+{
+    int error;
+    double jed[2];
+
+    jed[0] = jd;
+    jed[1] = 0.0;
+
+    error = (int) state(jed, (short)body, bs->pos, bs->vel);
+    if (error != 0)
+        fprintf(stderr, "BodyState(%d): error %d\n", body, error);
+
+    return error;
+}
+
+
+static double DiffLength(double a[3], double b[3])
+{
+    double dx = a[0] - b[0];
+    double dy = a[0] - b[0];
+    double dz = a[0] - b[0];
+    return sqrt(dx*dx + dy*dy + dz*dz);
+}
+
+
+static int Gravity(double jd, const double pos[3], double acc[3])
+{
+    int error;
+    int i;
+    const double gravconst = 1.4881807e-34;     /* universal gravitational constant [AU^3 kg^(-1) day^(-2)] */
+    const double sun_mass  = 1.98847e+30;        /* mass of Sun [kg] */
+    gravsim_body_state_t bs[5];                 /* 0=Sun, 1=Jupiter, 2=Saturn, 3=Uranus, 4=Neptune */
+    double mass[5];
+
+    CHECK(BodyState(jd, BODY_SUN,     &bs[0]));
+    CHECK(BodyState(jd, BODY_JUPITER, &bs[1]));
+    CHECK(BodyState(jd, BODY_SATURN,  &bs[2]));
+    CHECK(BodyState(jd, BODY_URANUS,  &bs[3]));
+    CHECK(BodyState(jd, BODY_NEPTUNE, &bs[4]));
+
+    /* Use reciprocal masses from novascon.c to initialize masses of bodies. */
+    mass[0] = sun_mass;
+    mass[1] = sun_mass / RMASS[5];
+    mass[2] = sun_mass / RMASS[6];
+    mass[3] = sun_mass / RMASS[7];
+    mass[4] = sun_mass / RMASS[8];
+
+    acc[0] = acc[1] = acc[2] = 0.0;
+    for (i=0; i<5; ++i)
+    {
+        double dx = bs[i].pos[0] - pos[0];
+        double dy = bs[i].pos[1] - pos[1];
+        double dz = bs[i].pos[2] - pos[2];
+        double r2 = dx*dx + dy*dy + dz*dz;
+        double r = sqrt(r2);
+        double scale = mass[i] * gravconst / r2;
+        acc[0] += scale * (dx / r);
+        acc[1] += scale * (dy / r);
+        acc[2] += scale * (dz / r);
+    }
+
+    error = 0;
+fail:
+    return error;
+}
+
+
+static void GravStep(
+    const gravsim_body_state_t *p0,
+    gravsim_body_state_t *p1,
+    double dt,
+    const double acc[3])
+{
+    double h;
+
+    /* Estimate position after time dt. */
+    p1->vel[0] = p0->vel[0] + acc[0]*dt;
+    p1->vel[1] = p0->vel[1] + acc[1]*dt;
+    p1->vel[2] = p0->vel[2] + acc[2]*dt;
+
+    /* Estimate velocity after time dt. */
+    h = dt*dt / 2.0;
+    p1->pos[0] = p0->pos[0] + p0->vel[0]*dt + acc[0]*h;
+    p1->pos[1] = p0->pos[1] + p0->vel[1]*dt + acc[1]*h;
+    p1->pos[2] = p0->pos[2] + p0->vel[2]*dt + acc[2]*h;
+}
+
+
+static int GravSim(void)
+{
+    int error = 1;
+    double jd;
+    double dist;
+    const double dt = 1.0;          /* simulation time increment in days */
+    gravsim_body_state_t p0, p1, p2;
+    gravsim_body_state_t pc;        /* state of Pluto according to NOVAS, for checking */
+    double acc0[3];
+    double acc1[3];
+    short year, day, month;
+    double hour;
+    double arcmin;
+
+    CHECK(OpenEphem());
+
+    /*
+        An experiment, just for fun, with creating a simple gravitational integrator.
+        Try to calculate the position of Pluto.
+        Use NOVAS state() function to calculate the initial position and velocity of Pluto.
+        Also use NOVAS to calculate positions for the other solar system bodies.
+        Start with just the major bodies: Sun, Jupiter, Saturn, Uranus, Neptune.
+        Do all calculations with respect to the Solar System Barycenter (SSB).
+    */
+
+    jd = julian_date(2000, 1, 1, 12.0);
+
+    /* Get initial state vector for Pluto. */
+    CHECK(BodyState(jd, BODY_PLUTO, &p0));
+
+    for(;;)
+    {
+        /* Calculate gravitational acceleration experienced by Pluto at its current position. */
+        CHECK(Gravity(jd, p0.pos, acc0));
+
+        /* Estimate where Pluto will be at the next time increment. */
+        GravStep(&p0, &p1, dt, acc0);
+
+        for(;;)
+        {
+            /* Calculate the acceleration at the guessed new position. */
+            CHECK(Gravity(jd+dt, p1.pos, acc1));
+
+            /* Take the mean acceleration of the two endpoints. */
+            acc1[0] = (acc0[0] + acc1[0]) / 2.0;
+            acc1[1] = (acc0[1] + acc1[1]) / 2.0;
+            acc1[2] = (acc0[2] + acc1[2]) / 2.0;
+
+            /* Refine the estimate of the new position. */
+            GravStep(&p0, &p2, dt, acc1);
+
+            /* How much did the estimate change (in AU)? */
+            dist = DiffLength(p1.pos, p2.pos);
+            if (dist < 1.0e-12)
+                break;
+
+            p1 = p2;
+        }
+
+        jd += dt;
+
+        /* Get correct value of Pluto state vector at updated time. */
+        CHECK(BodyState(jd, BODY_PLUTO, &pc));
+
+        /* What is the error? */
+        dist = DiffLength(pc.pos, p2.pos);
+        arcmin = 60.0 * RAD2DEG * (dist / VectorLength(pc.pos));
+
+        cal_date(jd, &year, &month, &day, &hour);
+        printf("%04d-%02d-%02d  %20.10lf %20.10lf %20.10lf   %9.6le\n",
+            (int)year, (int)month, (int)day,
+            p2.pos[0], p2.pos[1], p2.pos[2],
+            arcmin);
+
+        /* Update simulated state. */
+        p0 = p2;
+    }
+
+    error = 0;
+fail:
+    ephem_close();
+    return error;
+}
+
+/*------------------------------------------------------------------------------------------------*/
