@@ -2698,6 +2698,9 @@ static int GravSim(void)
             p2.pos[0], p2.pos[1], p2.pos[2],
             arcmin);
 
+        if (year >= 2199)
+            break;
+
         /* Update simulated state. */
         p0 = p2;
     }
