@@ -1,0 +1,4 @@
+#!/bin/bash
+./build || exit $?
+./generate ephemeris ../../gravsim/ephemeris.json 2000-01-01 2100-01-01 1000 || exit $?
+exit 0

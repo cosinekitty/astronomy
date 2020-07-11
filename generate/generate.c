@@ -100,6 +100,7 @@ static int ValidateTop2013(void);
 static int ValidateRandom(void);
 static int Diff(const char *filename1, const char *filename2, int *nlines);
 static int GravSim(void);
+static int EphemerisJson(const char *filename, const char *date1, const char *date2, double delta_days);
 
 #define MOON_PERIGEE        0.00238
 #define MERCURY_APHELION    0.466697
@@ -183,6 +184,9 @@ int main(int argc, const char *argv[])
     if (argc == 2 && !strcmp(argv[1], "gravsim"))
         return GravSim();
 
+    if (argc == 6 && !strcmp(argv[1], "ephemeris"))
+        return EphemerisJson(argv[2], argv[3], argv[4], atof(argv[5]));
+
     return PrintUsage();
 }
 
@@ -232,6 +236,12 @@ static int PrintUsage(void)
         "\n"
         "generate gravsim\n"
         "   Experimental gravity simulation.\n"
+        "\n"
+        "ephemeris outfile.json date1 date2 delta_days\n"
+        "   Use NOVAS to generate an ephemeris file in JSON format.\n"
+        "   The output is a table of solar-system barycentric cartesian position\n"
+        "   and velocity vectors for the Sun and planets. The Earth and Moon are\n"
+        "   combined into the Earth-Moon barycenter.\n"
         "\n"
     );
 
@@ -2710,5 +2720,94 @@ fail:
     ephem_close();
     return error;
 }
+
+/*------------------------------------------------------------------------------------------------*/
+
+
+static int ParseDate(const char *text, double *jd)
+{
+    int error = 1;
+    int year, month, day;
+
+    if (3 != sscanf(text, "%d-%d-%d", &year, &month, &day))
+        FAIL("ParseDate: text '%s' is not valid. Must be formatted as yyyy-mm-dd.\n", text);
+
+    *jd = julian_date((short)year, (short)month, (short)day, 12.0);
+    error = 0;
+fail:
+    return error;
+}
+
+
+static const char *QuotedBodyName(int body)
+{
+    switch (body)
+    {
+    case BODY_SUN:      return "\"Sun\"    ";
+    case BODY_MERCURY:  return "\"Mercury\"";
+    case BODY_VENUS:    return "\"Venus\"  ";
+    case BODY_EMB:      return "\"Earth\"  ";
+    case BODY_MARS:     return "\"Mars\"   ";
+    case BODY_JUPITER:  return "\"Jupiter\"";
+    case BODY_SATURN:   return "\"Saturn\" ";
+    case BODY_URANUS:   return "\"Uranus\" ";
+    case BODY_NEPTUNE:  return "\"Neptune\"";
+    case BODY_PLUTO:    return "\"Pluto\"  ";
+    default:            return "\"\"       ";
+    }
+}
+
+
+static int EphemerisJson(const char *filename, const char *date1, const char *date2, double delta_days)
+{
+    static const int bodylist[] =
+    {
+        BODY_SUN,
+        BODY_MERCURY,
+        BODY_VENUS,
+        BODY_EMB,
+        BODY_MARS,
+        BODY_JUPITER,
+        BODY_SATURN,
+        BODY_URANUS,
+        BODY_NEPTUNE,
+        BODY_PLUTO
+    };
+    static const int nbodies = (int)(sizeof(bodylist) / sizeof(bodylist[0]));
+    int i, error;
+    double jd, jd1, jd2;
+    gravsim_body_state_t bs;
+    FILE *outfile = NULL;
+
+    CHECK(OpenEphem());
+    CHECK(ParseDate(date1, &jd1));
+    CHECK(ParseDate(date2, &jd2));
+    outfile = fopen(filename, "wt");
+    if (outfile == NULL)
+        FAIL("EphemerisJson: Cannot open output file: %s\n", filename);
+
+    fprintf(outfile, "{\"jd1\":%lf, \"jd2\":%lf, \"delta_days\":%lf, \"data\":[\n", jd1, jd2, delta_days);
+    for (jd = jd1; jd <= jd2; jd += delta_days)
+    {
+        fprintf(outfile,"    {\"jd\":%17.8lf, \"body\":{\n", jd);
+        for (i=0; i < nbodies; ++i)
+        {
+            CHECK(BodyState(jd, bodylist[i], &bs));
+            fprintf(outfile, "        %s:{\"pos\":[%24.16le,%24.16le,%24.16le], \"vel\":[%24.16le,%24.16le,%24.16le]}%s\n",
+                QuotedBodyName(bodylist[i]),
+                bs.pos[0], bs.pos[1], bs.pos[2],
+                bs.vel[0], bs.vel[1], bs.vel[2],
+                (i+1 < nbodies) ? "," : "");
+        }
+        fprintf(outfile, "    }}%s\n", (jd + delta_days <= jd2) ? "," : "");
+    }
+    fprintf(outfile, "]}\n");
+    error = 0;
+fail:
+    ephem_close();
+    if (outfile != NULL) fclose(outfile);
+    return error;
+}
+
 
 /*------------------------------------------------------------------------------------------------*/
