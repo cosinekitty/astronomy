@@ -2724,7 +2724,7 @@ fail:
 /*------------------------------------------------------------------------------------------------*/
 
 
-static int ParseDate(const char *text, double *jd)
+static int ParseDate(const char *text, double *tt)
 {
     int error = 1;
     int year, month, day;
@@ -2732,7 +2732,7 @@ static int ParseDate(const char *text, double *jd)
     if (3 != sscanf(text, "%d-%d-%d", &year, &month, &day))
         FAIL("ParseDate: text '%s' is not valid. Must be formatted as yyyy-mm-dd.\n", text);
 
-    *jd = julian_date((short)year, (short)month, (short)day, 12.0);
+    *tt = julian_date((short)year, (short)month, (short)day, 12.0) - 2451545.0;
     error = 0;
 fail:
     return error;
@@ -2775,33 +2775,37 @@ static int EphemerisJson(const char *filename, const char *date1, const char *da
     };
     static const int nbodies = (int)(sizeof(bodylist) / sizeof(bodylist[0]));
     int i, error;
-    double jd, jd1, jd2;
+    double tt, tt2;
     gravsim_body_state_t bs;
     FILE *outfile = NULL;
 
     CHECK(OpenEphem());
-    CHECK(ParseDate(date1, &jd1));
-    CHECK(ParseDate(date2, &jd2));
+    CHECK(ParseDate(date1, &tt));
+    CHECK(ParseDate(date2, &tt2));
     outfile = fopen(filename, "wt");
     if (outfile == NULL)
         FAIL("EphemerisJson: Cannot open output file: %s\n", filename);
 
-    fprintf(outfile, "{\"jd1\":%lf, \"jd2\":%lf, \"delta_days\":%lf, \"data\":[\n", jd1, jd2, delta_days);
-    for (jd = jd1; jd <= jd2; jd += delta_days)
+    fprintf(outfile, "{\"tt1\":%0.8lf, \"tt2\":%0.8lf, \"dt\":%0.8lf, \"data\":[\n", tt, tt2, delta_days);
+    for(;;)
     {
-        fprintf(outfile,"    {\"jd\":%17.8lf, \"body\":{\n", jd);
+        fprintf(outfile,"    {\"tt\":%0.8lf, \"body\":{\n", tt);
         for (i=0; i < nbodies; ++i)
         {
-            CHECK(BodyState(jd, bodylist[i], &bs));
+            CHECK(BodyState(tt + 2451545.0, bodylist[i], &bs));
             fprintf(outfile, "        %s:{\"pos\":[%24.16le,%24.16le,%24.16le], \"vel\":[%24.16le,%24.16le,%24.16le]}%s\n",
                 QuotedBodyName(bodylist[i]),
                 bs.pos[0], bs.pos[1], bs.pos[2],
                 bs.vel[0], bs.vel[1], bs.vel[2],
                 (i+1 < nbodies) ? "," : "");
         }
-        fprintf(outfile, "    }}%s\n", (jd + delta_days <= jd2) ? "," : "");
+        fprintf(outfile, "    }}");
+        tt += delta_days;
+        if (tt > tt2)
+            break;
+        fprintf(outfile, ",\n");
     }
-    fprintf(outfile, "]}\n");
+    fprintf(outfile, "\n]}\n");
     error = 0;
 fail:
     ephem_close();
