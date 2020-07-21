@@ -111,6 +111,8 @@ short int app_star (double jd_tt, cat_entry *star, short int accuracy,
 
    sky_pos output;
 
+   *ra = *dec = 0.0;   /* [Don Cross]: fix warnings */
+
 /*
    Set 'obj_name' equal to 'starname' in the 'star' structure.  Length
    will be checked in 'make_object'.
@@ -3361,6 +3363,8 @@ short int ter2cel (double jd_ut_high, double jd_ut_low, double delta_t,
 
    double jd_ut1, jd_tt, dummy, secdiff, jd_tdb, gast, r_cio, theta,
    v1[3], v2[3], v3[3], v4[3], x[3], y[3], z[3];
+
+   vec2[0] = vec2[1] = vec2[2] = 0.0;  /* [Don Cross]: fix build warning. */
 
 /*
    Invalid value of 'accuracy'.

@@ -507,7 +507,7 @@ static int CVsop_Formula(cg_context_t *context, const vsop_formula_t *formula, c
     int error = 0;
     int s;
     char varprefix[100];
-    char sname[100];
+    char sname[120];
 
     snprintf(varprefix, sizeof(varprefix), "vsop_%s_%s", coord_name, body_name);
 
@@ -588,7 +588,7 @@ static int CsharpVsop_Formula(cg_context_t *context, const vsop_formula_t *formu
     int error = 0;
     int s;
     char varprefix[100];
-    char sname[100];
+    char sname[120];
 
     snprintf(varprefix, sizeof(varprefix), "vsop_%s_%s", coord_name, body_name);
 
