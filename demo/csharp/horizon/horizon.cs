@@ -141,7 +141,7 @@ namespace horizon
                     else
                         direction = "descends";     /* azimuth is more toward the west than the east */
 
-                    Console.WriteLine("Ecliptic longitude {0,9:0.0000} {1} through horizon az {2,9:0.0000}, alt {3,12}", ex, direction, hx.lon, hx.lat);
+                    Console.WriteLine("Ecliptic longitude {0,9:0.0000} {1} through horizon az {2,9:0.0000}, alt {3,12:0.000e+00}", ex, direction, hx.lon, hx.lat);
                 }
             }
             return 0;
