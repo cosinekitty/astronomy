@@ -7,9 +7,10 @@ if [[ "$1" == "debug" ]]; then
     BUILDOPT='-g -Og'
 elif [[ -z "$1" ]]; then
     # I ran into some numeric calculation discrepancies when
-    # didn't explicitly turn off gcc "expensive optimizations"
+    # didn't explicitly turn off "fp contract" optimizations
     # on gcc 9.3.0 aarch64 (Rasbperry Pi 3).
-    BUILDOPT='-O3 -fno-expensive-optimizations'
+    # See notes in the 'ctbuild' script for more info.
+    BUILDOPT='-O3 -ffp-contract=off'
 else
     echo "FATAL(buildcode): unrecognized command line option"
     exit 1

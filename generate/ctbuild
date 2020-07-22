@@ -17,10 +17,15 @@ elif [[ "$1" == "opt" ]]; then
 elif [[ -z "$1" ]]; then
     # On Arch Linux running gcc 9.3.0 on aarch64 (Rasbperry Pi 3),
     # started to get some numeric discrepancies in 'ctest check' output
-    # until I turned off the "expensive optimizations". None of them seem
-    # very important. It's probably a wise idea to disable this on any program
-    # that builds the C version of Astronomy Engine.
-    BUILDOPT='-O3 -fno-expensive-optimizations'
+    # until I turned off "fp contract" optimizations.
+    # Some processors (including 64-bit ARM) have the ability to evaluate floating point
+    # expressions like "a*b + c" with a single instruction, and to
+    # do so without rounding the intermediate multiplication result.
+    # Although this is *more* accurate, it produces results that are
+    # different from other processors, which is counterproductive for
+    # unit tests. Therefore, I turn it off here. Users of the C
+    # version of Astronomy Engine can safely build other code with '-O3' by itself.
+    BUILDOPT='-O3 -ffp-contract=off'
 else
     Fail "unrecognized command line option"
 fi
