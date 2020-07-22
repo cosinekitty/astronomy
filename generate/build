@@ -4,9 +4,12 @@
 echo "$0: C compiler = ${CC}"
 
 if [[ "$1" == "debug" ]]; then
-    BUILDOPT='-g -O0'
+    BUILDOPT='-g -Og'
 elif [[ -z "$1" ]]; then
-    BUILDOPT='-O3'
+    # I ran into some numeric calculation discrepancies when
+    # didn't explicitly turn off gcc "expensive optimizations"
+    # on gcc 9.3.0 aarch64 (Rasbperry Pi 3).
+    BUILDOPT='-O3 -fno-expensive-optimizations'
 else
     echo "FATAL(buildcode): unrecognized command line option"
     exit 1

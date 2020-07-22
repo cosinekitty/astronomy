@@ -10,9 +10,17 @@ Fail()
 echo "$0: C compiler = ${CC}"
 
 if [[ "$1" == "debug" ]]; then
-    BUILDOPT='-g -O0'
+    BUILDOPT='-g -Og'
+elif [[ "$1" == "opt" ]]; then
+    BUILDOPT="$2"
+    echo "Using custom build options: ${BUILDOPT}"
 elif [[ -z "$1" ]]; then
-    BUILDOPT='-O1'
+    # On Arch Linux running gcc 9.3.0 on aarch64 (Rasbperry Pi 3),
+    # started to get some numeric discrepancies in 'ctest check' output
+    # until I turned off the "expensive optimizations". None of them seem
+    # very important. It's probably a wise idea to disable this on any program
+    # that builds the C version of Astronomy Engine.
+    BUILDOPT='-O3 -fno-expensive-optimizations'
 else
     Fail "unrecognized command line option"
 fi
