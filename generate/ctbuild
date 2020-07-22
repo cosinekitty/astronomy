@@ -12,7 +12,7 @@ echo "$0: C compiler = ${CC}"
 if [[ "$1" == "debug" ]]; then
     BUILDOPT='-g -O0'
 elif [[ -z "$1" ]]; then
-    BUILDOPT='-O3'
+    BUILDOPT='-O1'
 else
     Fail "unrecognized command line option"
 fi

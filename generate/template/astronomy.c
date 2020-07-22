@@ -1424,10 +1424,10 @@ static void Init(MoonContext *ctx)
     {
         switch(I)
         {
-            case 1: ARG=L;  MAX=4; FAC=1.000002208;               break;
-            case 2: ARG=LS; MAX=3; FAC=0.997504612-0.002495388*T; break;
-            case 3: ARG=F;  MAX=4; FAC=1.000002708+139.978*DGAM;  break;
-            case 4: ARG=D;  MAX=6; FAC=1.0;                       break;
+            case 1:  ARG=L;  MAX=4; FAC=1.000002208;               break;
+            case 2:  ARG=LS; MAX=3; FAC=0.997504612-0.002495388*T; break;
+            case 3:  ARG=F;  MAX=4; FAC=1.000002708+139.978*DGAM;  break;
+            default: ARG=D;  MAX=6; FAC=1.0;                       break;
         }
         CO(0,I) = 1.0;
         CO(1,I) = cos(ARG)*FAC;

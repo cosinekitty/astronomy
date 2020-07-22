@@ -88,6 +88,10 @@ static int Search(
     astro_spherical_t h3;
     const double tolerance = 1.0e-6;        /* one-millionth of a degree is close enough! */
 
+    *ecliptic_longitude_crossing = NAN;
+    hor_crossing->status = ASTRO_NOT_INITIALIZED;
+    hor_crossing->lat = hor_crossing->lon = hor_crossing->dist = NAN;
+
     /*
         Binary search: find the ecliptic longitude such that the horizontal altitude
         ascends through a zero value. The caller must pass e1, e2 such that the altitudes
@@ -155,7 +159,7 @@ static int FindEclipticCrossings(astro_observer_t observer, astro_time_t time)
         double a2 = hor[(i+1) % NUM_SAMPLES].lat;
         double e1 = ECLIPLON(i);
         double e2 = ECLIPLON(i+1);
-        double ex;
+        double ex = NAN;
         astro_spherical_t hx;
         int error;
 

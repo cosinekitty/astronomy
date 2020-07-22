@@ -368,8 +368,8 @@ static int Diff(const char *c_filename, const char *js_filename)
     int lnum;
     FILE *cfile = NULL;
     FILE *jfile = NULL;
-    char cline[200];
-    char jline[200];
+    char cline[200], worst_cline[200];
+    char jline[200], worst_jline[200];
     char *cread;
     char *jread;
     double maxdiff = 0.0;
@@ -396,11 +396,21 @@ static int Diff(const char *c_filename, const char *js_filename)
 
         ++lnum;
         CHECK(DiffLine(lnum, cline, jline, &maxdiff, &worst_lnum));
+        if (worst_lnum == lnum)
+        {
+            /* Retain the worst lines so that we can print them at the end. */
+            strcpy(worst_cline, cline);
+            strcpy(worst_jline, jline);
+        }
     }
 
     printf("ctest(Diff): Maximum numeric difference = %lg, worst line number = %d\n", maxdiff, worst_lnum);
     if (maxdiff > 2.7854e-12)
+    {
+        printf("FIRST : %s\n", worst_cline);
+        printf("SECOND: %s\n", worst_jline);
         FAIL("C ERROR: Excessive error comparing files %s and %s\n", c_filename, js_filename);
+    }
 
     error = 0;
 
