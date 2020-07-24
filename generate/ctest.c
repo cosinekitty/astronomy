@@ -50,7 +50,7 @@ static int CheckEquator(int lnum, astro_equatorial_t equ)
 
 static double v(const char *filename, int lnum, double x)
 {
-    if (isnan(x))
+    if (!isfinite(x))
     {
         fprintf(stderr, "FATAL(%s line %d): non-numeric result.\n", filename, lnum);
         exit(1);

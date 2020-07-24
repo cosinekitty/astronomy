@@ -18,8 +18,8 @@ def v(x):
     # Verify that a number is really numeric
     if not isinstance(x, (int, float)):
         raise Exception('Not a numeric type: {}'.format(x))
-    if math.isnan(x):
-        raise Exception('NAN result')
+    if not math.isfinite(x):
+        raise Exception('Not a finite numeric value: {}'.format(x))
     return x
 
 def vabs(x):

@@ -85,8 +85,8 @@ namespace csharp_test
 
         static double v(double x)
         {
-            if (double.IsNaN(x))
-                throw new ArgumentException("NAN result");
+            if (!double.IsFinite(x))
+                throw new ArgumentException("Non-finite result");
             return x;
         }
 

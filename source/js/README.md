@@ -337,9 +337,9 @@ Represents the geographic location of an observer on the surface of the Earth.
 
 | Name | Type | Description |
 | --- | --- | --- |
-| latitude_degrees | <code>number</code> | The observer's geographic latitude in degrees north of the Earth's equator.      The value is negative for observers south of the equator.      Must be in the range -90 to +90. |
-| longitude_degrees | <code>number</code> | The observer's geographic longitude in degrees east of the prime meridian      passing through Greenwich, England.      The value is negative for observers west of the prime meridian.      The value should be kept in the range -180 to +180 to minimize floating point errors. |
-| height_in_meters | <code>number</code> | The observer's elevation above mean sea level, expressed in meters. |
+| latitude | <code>number</code> | The observer's geographic latitude in degrees north of the Earth's equator.      The value is negative for observers south of the equator.      Must be in the range -90 to +90. |
+| longitude | <code>number</code> | The observer's geographic longitude in degrees east of the prime meridian      passing through Greenwich, England.      The value is negative for observers west of the prime meridian.      The value should be kept in the range -180 to +180 to minimize floating point errors. |
+| height | <code>number</code> | The observer's elevation above mean sea level, expressed in meters. |
 
 
 * * *

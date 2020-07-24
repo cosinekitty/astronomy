@@ -14,14 +14,9 @@ function Fail(message) {
 function v(x) {
     // Verify that 'x' is really a number.
 
-    if (typeof x !== 'number') {
+    if (!Number.isFinite(x)) {
         console.trace();
-        throw `Not a numeric type: ${x}`;
-    }
-
-    if (isNaN(x)) {
-        console.trace();
-        throw 'NAN result';
+        throw `Not a finite number: ${x}`;
     }
 
     return x;
@@ -556,6 +551,11 @@ function LocalSolarEclipse1() {
         if (diff_minutes > max_minutes) {
             max_minutes = diff_minutes;
         }
+
+        // Confirm that we can call NextLocalSolarEclipse and it doesn't throw an exception.
+        // Could add more stringent checking here later.
+        const next = Astronomy.NextLocalSolarEclipse(eclipse.peak.time, observer);
+        v(next.peak.time.tt);
     }
 
     if (lnum != expected_count) {
@@ -885,7 +885,7 @@ function Elongation() {
                 }
                 sum_diff += day_diff;
             }
-            let geo = Astronomy.GeoVector(body, evt_time);
+            let geo = Astronomy.GeoVector(body, evt_time, false);
             let dist = sqrt(geo.x*geo.x + geo.y*geo.y + geo.z*geo.z);
             text += `e ${body} ${event} ${evt_time.tt} ${dist}\n`;
             rlon = 180 - rlon;

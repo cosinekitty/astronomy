@@ -86,6 +86,26 @@ let ob2000;   // lazy-evaluated mean obliquity of the ecliptic at J2000, in radi
 let cos_ob2000;
 let sin_ob2000;
 
+function VerifyBoolean(b) {
+    if (b !== true && b !== false) {
+        console.trace();
+        throw `Value is not boolean: ${b}`;
+    }
+    return b;
+}
+
+function VerifyNumber(x) {
+    if (!Number.isFinite(x)) {
+        console.trace();
+        throw `Value is not a finite number: ${x}`;
+    }
+    return x;
+}
+
+function IsValidDate(d) {
+    return (d instanceof Date) && Number.isFinite(d.getTime());
+}
+
 function Frac(x) {
     return x - Math.floor(x);
 }
@@ -468,14 +488,14 @@ class AstroTime {
     constructor(date) {
         const MillisPerDay = 1000 * 3600 * 24;
 
-        if (date instanceof Date) {
+        if (IsValidDate(date)) {
             this.date = date;
             this.ut = (date - J2000) / MillisPerDay;
             this.tt = TerrestrialTime(this.ut);
             return;
         }
 
-        if (typeof date === 'number') {
+        if (Number.isFinite(date)) {
             this.date = new Date(J2000 - (-date)*MillisPerDay);
             this.ut = date;
             this.tt = TerrestrialTime(this.ut);
@@ -1020,9 +1040,9 @@ class Vector {
  */
 class Spherical {
     constructor(lat, lon, dist) {
-        this.lat = lat;
-        this.lon = lon;
-        this.dist = dist;
+        this.lat  = VerifyNumber(lat);
+        this.lon  = VerifyNumber(lon);
+        this.dist = VerifyNumber(dist);
     }
 }
 
@@ -1062,9 +1082,9 @@ Astronomy.MakeSpherical = function(lat, lon, dist) {
  */
 class EquatorialCoordinates {
     constructor(ra, dec, dist) {
-        this.ra = ra;
-        this.dec = dec;
-        this.dist = dist;
+        this.ra   = VerifyNumber(ra);
+        this.dec  = VerifyNumber(dec);
+        this.dist = VerifyNumber(dist);
     }
 }
 
@@ -1077,7 +1097,7 @@ function IsValidRotationArray(rot) {
             return false;
 
         for (let j=0; j < 3; ++j)
-            if (typeof rot[i][j] !== 'number')
+            if (!Number.isFinite(rot[i][j]))
                 return false;
     }
 
@@ -1152,10 +1172,10 @@ Astronomy.MakeRotation = function(rot) {
  */
 class HorizontalCoordinates {
     constructor(azimuth, altitude, ra, dec) {
-        this.azimuth = azimuth;
-        this.altitude = altitude;
-        this.ra = ra;
-        this.dec = dec;
+        this.azimuth  = VerifyNumber(azimuth);
+        this.altitude = VerifyNumber(altitude);
+        this.ra       = VerifyNumber(ra);
+        this.dec      = VerifyNumber(dec);
     }
 }
 
@@ -1202,11 +1222,11 @@ class HorizontalCoordinates {
  */
 class EclipticCoordinates {
     constructor(ex, ey, ez, elat, elon) {
-        this.ex = ex;
-        this.ey = ey;
-        this.ez = ez;
-        this.elat = elat;
-        this.elon = elon;
+        this.ex   = VerifyNumber(ex);
+        this.ey   = VerifyNumber(ey);
+        this.ez   = VerifyNumber(ez);
+        this.elat = VerifyNumber(elat);
+        this.elon = VerifyNumber(elon);
     }
 }
 
@@ -1294,6 +1314,9 @@ function spin(angle, pos1) {
  */
 Astronomy.Horizon = function(date, observer, ra, dec, refraction) {     // based on NOVAS equ2hor()
     let time = Astronomy.MakeTime(date);
+    VerifyObserver(observer);
+    VerifyNumber(ra);
+    VerifyNumber(dec);
 
     const sinlat = Math.sin(observer.latitude * DEG2RAD);
     const coslat = Math.cos(observer.latitude * DEG2RAD);
@@ -1361,31 +1384,47 @@ Astronomy.Horizon = function(date, observer, ra, dec, refraction) {     // based
     return new HorizontalCoordinates(az, 90-zd, out_ra, out_dec);
 }
 
+
+function VerifyObserver(observer) {
+    if (!(observer instanceof Observer)) {
+        throw `Not an instance of the Observer class: ${observer}`;
+    }
+    VerifyNumber(observer.latitude);
+    VerifyNumber(observer.longitude);
+    VerifyNumber(observer.height);
+    if (observer.latitude < -90 || observer.latitude > +90) {
+        throw `Latitude ${observer.latitude} is out of range. Must be -90..+90.`;
+    }
+    return observer;
+}
+
+
 /**
  * Represents the geographic location of an observer on the surface of the Earth.
  *
  * @class
  * @memberof Astronomy
  *
- * @property {number} latitude_degrees
+ * @property {number} latitude
  *      The observer's geographic latitude in degrees north of the Earth's equator.
  *      The value is negative for observers south of the equator.
  *      Must be in the range -90 to +90.
  *
- * @property {number} longitude_degrees
+ * @property {number} longitude
  *      The observer's geographic longitude in degrees east of the prime meridian
  *      passing through Greenwich, England.
  *      The value is negative for observers west of the prime meridian.
  *      The value should be kept in the range -180 to +180 to minimize floating point errors.
  *
- * @property {number} height_in_meters
+ * @property {number} height
  *      The observer's elevation above mean sea level, expressed in meters.
  */
 class Observer {
     constructor(latitude_degrees, longitude_degrees, height_in_meters) {
-        this.latitude = latitude_degrees;
+        this.latitude  = latitude_degrees;
         this.longitude = longitude_degrees;
-        this.height = height_in_meters;
+        this.height    = height_in_meters;
+        VerifyObserver(this);
     }
 }
 
@@ -1498,6 +1537,9 @@ Astronomy.SunPosition = function(date) {
  *      The topocentric coordinates of the body as adjusted for the given observer.
  */
 Astronomy.Equator = function(body, date, observer, ofdate, aberration) {
+    VerifyObserver(observer);
+    VerifyBoolean(ofdate);
+    VerifyBoolean(aberration);
     const time = Astronomy.MakeTime(date);
     const gc_observer = geo_pos(time, observer);
     const gc = Astronomy.GeoVector(body, time, aberration);
@@ -1557,6 +1599,10 @@ Astronomy.Ecliptic = function(gx, gy, gz) {
         cos_ob2000 = Math.cos(ob2000);
         sin_ob2000 = Math.sin(ob2000);
     }
+
+    VerifyNumber(gx);
+    VerifyNumber(gy);
+    VerifyNumber(gz);
 
     return RotateEquatorialToEcliptic(gx, gy, gz, cos_ob2000, sin_ob2000);
 }
@@ -1756,6 +1802,7 @@ Astronomy.HelioDistance = function(body, date) {
  * @returns {Astronomy.Vector}
  */
 Astronomy.GeoVector = function(body, date, aberration) {
+    VerifyBoolean(aberration);
     const time = Astronomy.MakeTime(date);
     if (body === 'Moon') {
         return Astronomy.GeoMoon(time);
@@ -2058,6 +2105,8 @@ Astronomy.SearchSunLongitude = function(targetLon, dateStart, limitDays) {
         let pos = Astronomy.SunPosition(t);
         return LongitudeOffset(pos.elon - targetLon);
     }
+    VerifyNumber(targetLon);
+    VerifyNumber(limitDays);
     let t1 = Astronomy.MakeTime(dateStart);
     let t2 = t1.AddDays(limitDays);
     return Astronomy.Search(sun_offset, t1, t2);
@@ -2399,6 +2448,7 @@ function SynodicPeriod(body) {
  *      The time when the Earth and the body next reach the specified relative longitudes.
  */
 Astronomy.SearchRelativeLongitude = function(body, targetRelLon, startDate) {
+    VerifyNumber(targetRelLon);
     const planet = Planet[body];
     if (!planet)
         throw `Cannot search relative longitude because body is not a planet: ${body}`;
@@ -2511,6 +2561,9 @@ Astronomy.SearchMoonPhase = function(targetLon, dateStart, limitDays) {
         let mlon = Astronomy.MoonPhase(t);
         return LongitudeOffset(mlon - targetLon);
     }
+
+    VerifyNumber(targetLon);
+    VerifyNumber(limitDays);
 
     // To avoid discontinuities in the moon_offset function causing problems,
     // we need to approximate when that function will next return 0.
@@ -2629,6 +2682,9 @@ Astronomy.NextMoonQuarter = function(mq) {
  *      occurs within the specified time window.
  */
 Astronomy.SearchRiseSet = function(body, observer, direction, dateStart, limitDays) {
+    VerifyObserver(observer);
+    VerifyNumber(limitDays);
+
     // We calculate the apparent angular radius of the Sun and Moon,
     // but treat all other bodies as points.
     let body_radius_au = { Sun:SUN_RADIUS_AU, Moon:MOON_EQUATORIAL_RADIUS_AU }[body] || 0;
@@ -2768,12 +2824,14 @@ class HourAngleEvent {
  * @returns {Astronomy.HourAngleEvent}
  */
 Astronomy.SearchHourAngle = function(body, observer, hourAngle, dateStart) {
+    VerifyObserver(observer);
     let time = Astronomy.MakeTime(dateStart);
     let iter = 0;
 
     if (body === 'Earth')
         throw 'Cannot search for hour angle of the Earth.';
 
+    VerifyNumber(hourAngle);
     if (hourAngle < 0.0 || hourAngle >= 24.0)
         throw `Invalid hour angle ${hourAngle}`;
 
@@ -2885,8 +2943,12 @@ Astronomy.Seasons = function(year) {
         return time;
     }
 
-    if (year instanceof Date) {
+    if (IsValidDate(year)) {
         year = year.getUTCFullYear();
+    }
+
+    if (!Number.isSafeInteger(year)) {
+        throw `Cannot calculate seasons because year argument ${year} is neither a Date nor a safe integer.`;
     }
 
     let mar_equinox  = find(  0,  3, 19);
@@ -3821,6 +3883,8 @@ Astronomy.VectorFromHorizon = function(sphere, time, refraction) {
 Astronomy.Refraction = function(refraction, altitude) {
     let refr;
 
+    VerifyNumber(altitude);
+
     if (altitude < -90.0 || altitude > +90.0)
         return 0.0;     /* no attempt to correct an invalid altitude */
 
@@ -4278,6 +4342,8 @@ class ConstellationInfo {
  *      the converted B1875 (ra,dec) for that point.
  */
 Astronomy.Constellation = function(ra, dec) {
+    VerifyNumber(ra);
+    VerifyNumber(dec);
     if (dec < -90 || dec > +90) {
         throw 'Invalid declination angle. Must be -90..+90.';
     }
@@ -5037,6 +5103,7 @@ function SunAltitude(time, observer) {
  * @returns {Astronomy.LocalSolarEclipseInfo}
  */
 Astronomy.SearchLocalSolarEclipse = function(startTime, observer) {
+    VerifyObserver(observer);
     const PruneLatitude = 1.8;   /* Moon's ecliptic latitude beyond which eclipse is impossible */
 
     /* Iterate through consecutive new moons until we find a solar eclipse visible somewhere on Earth. */
@@ -5091,7 +5158,7 @@ Astronomy.SearchLocalSolarEclipse = function(startTime, observer) {
  */
 Astronomy.NextLocalSolarEclipse = function(prevEclipseTime, observer) {
     const startTime = prevEclipseTime.AddDays(10.0);
-    return SearchLocalSolarEclipse(startTime, observer);
+    return Astronomy.SearchLocalSolarEclipse(startTime, observer);
 }
 
 
