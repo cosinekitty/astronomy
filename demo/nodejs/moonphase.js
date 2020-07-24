@@ -33,8 +33,17 @@ function FormatDate(date) {
     return `${year}-${month}-${day} ${hour}:${minute}:${second} UTC`;
 }
 
+function ParseDate(text) {
+    const d = new Date(text);
+    if (!Number.isFinite(d.getTime())) {
+        console.error(`ERROR: Not a valid date: "${text}"`);
+        process.exit(1);
+    }
+    return d;
+}
+
 function Demo() {
-    const date = (process.argv.length === 3) ? new Date(process.argv[2]) : new Date();
+    const date = (process.argv.length === 3) ? ParseDate(process.argv[2]) : new Date();
 
     // Calculate the Moon's current phase angle,
     // which ranges from 0 to 360 degrees.

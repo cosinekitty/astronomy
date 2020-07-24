@@ -112,12 +112,30 @@ function FindEclipticCrossings(observer, time) {
     }
 }
 
+function ParseNumber(text, name) {
+    const x = Number(text);
+    if (!Number.isFinite(x)) {
+        console.error(`ERROR: Not a valid numeric value for ${name}: "${text}"`);
+        process.exit(1);
+    }
+    return x;
+}
+
+function ParseDate(text) {
+    const d = new Date(text);
+    if (!Number.isFinite(d.getTime())) {
+        console.error(`ERROR: Not a valid date: "${text}"`);
+        process.exit(1);
+    }
+    return d;
+}
+
 function Demo() {
     if (process.argv.length === 4 || process.argv.length === 5) {
-        const latitude = parseFloat(process.argv[2]);
-        const longitude = parseFloat(process.argv[3]);
+        const latitude  = ParseNumber(process.argv[2]);
+        const longitude = ParseNumber(process.argv[3]);
         const observer = Astronomy.MakeObserver(latitude, longitude, 0);
-        const time = Astronomy.MakeTime((process.argv.length === 5) ? new Date(process.argv[4]) : new Date());
+        const time = Astronomy.MakeTime((process.argv.length === 5) ? ParseDate(process.argv[4]) : new Date());
         FindEclipticCrossings(observer, time);
         process.exit(0);
     } else {

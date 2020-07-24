@@ -21,6 +21,10 @@ function DisplayEvent(name, evt) {
 function Demo() {
     if (process.argv.length === 3) {
         let year = parseInt(process.argv[2]);
+        if (!Number.isSafeInteger(year)) {
+            console.log(`ERROR: Not a valid year: "${process.argv[2]}"`);
+            process.exit(1);
+        }
         let seasons = Astronomy.Seasons(year);
         DisplayEvent('March equinox', seasons.mar_equinox);
         DisplayEvent('June solstice', seasons.jun_solstice);

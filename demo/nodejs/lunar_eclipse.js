@@ -60,8 +60,17 @@ function PrintEclipse(e) {
     console.log('');
 }
 
+function ParseDate(text) {
+    const d = new Date(text);
+    if (!Number.isFinite(d.getTime())) {
+        console.error(`ERROR: Not a valid date: "${text}"`);
+        process.exit(1);
+    }
+    return d;
+}
+
 function Demo() {
-    const date = (process.argv.length === 3) ? new Date(process.argv[2]) : new Date();
+    const date = (process.argv.length === 3) ? ParseDate(process.argv[2]) : new Date();
     let count = 0;
     let eclipse = Astronomy.SearchLunarEclipse(date);
     for(;;) {
