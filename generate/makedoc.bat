@@ -148,4 +148,15 @@ echo.Generating Python documentation.
 ..\pydown\pydown.py ..\pydown\py_prefix.md ..\source\python\astronomy.py ..\source\python\README.md
 if errorlevel 1 (exit /b 1)
 
+echo.Making redundant copies of source in demo folders.
+
+copy ..\source\js\astronomy.js ..\demo\browser\
+if errorlevel 1 (exit /b 1)
+
+copy ..\source\js\astronomy.js ..\demo\nodejs\
+if errorlevel 1 (exit /b 1)
+
+copy ..\source\python\astronomy.py ..\demo\python\
+if errorlevel 1 (exit /b 1)
+
 exit /b 0

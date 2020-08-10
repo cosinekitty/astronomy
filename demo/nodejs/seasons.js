@@ -11,7 +11,7 @@
     node riseset latitude longitude [date]
 */
 
-const Astronomy = require('../../source/js/astronomy.js');      // adjust path as needed for your system
+const Astronomy = require('astronomy.js');
 
 function DisplayEvent(name, evt) {
     let text = evt ? evt.date.toISOString() : '';

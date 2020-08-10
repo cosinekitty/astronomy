@@ -64,4 +64,9 @@ echo "Generating Python documentation."
 python3 ../pydown/pydown.py ../pydown/py_prefix.md ../source/python/astronomy.py ../source/python/README.md || Fail "Error generating Markdown from Python source."
 ./check_internal_links.py $(realpath ../source/python/README.md) || exit 1
 
+echo "Making redundant copies of source in demo folders."
+cp -v ../source/js/astronomy.js     ../demo/browser/ || exit $?
+cp -v ../source/js/astronomy.js     ../demo/nodejs/  || exit $?
+cp -v ../source/python/astronomy.py ../demo/python/  || exit $?
+
 exit 0

@@ -12,7 +12,7 @@
     node moonphase [date]
 */
 
-const Astronomy = require('../../source/js/astronomy.js');      // adjust path as needed for your system
+const Astronomy = require('astronomy.js');
 
 function Pad(s, w) {
     s = s.toFixed(0);
