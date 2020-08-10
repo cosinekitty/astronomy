@@ -11,8 +11,16 @@
         <h2>Observer</h2>
         <table cellpadding="5" cellspacing="0" border="1">
             <tr>
-                <td>Date and Time:</td>
-                <td id="DateTimeBox" class="Numeric"></td>
+                <td>
+                    <div>Date and Time:</div>
+                    <div>
+                        <input type="checkbox" id="AutoTimeCheckBox" onchange="OnToggleAutoTime()">
+                        <label for="AutoTimeCheckBox">Automatic</label>
+                    </div>
+                </td>
+                <td>
+                    <input type="datetime" id="DateTimeBox" size="30">
+                </td>
             </tr>
             <tr>
                 <td>Latitude:</td>
@@ -120,12 +128,27 @@
 
     <script src="../../source/js/astronomy.js"></script>
     <script>
+        function OnToggleAutoTime() {
+            const checkbox = document.getElementById('AutoTimeCheckBox');
+            const editbox = document.getElementById('DateTimeBox');
+            if (checkbox.checked) {
+                editbox.setAttribute('readonly', true);
+            } else {
+                editbox.removeAttribute('readonly');
+            }
+        }
+
         window.onload = function() {
             const StorageKey = 'AstroDemo.Options';
             var Options;
 
             function IsValidNumber(s) {
                 return typeof s === 'string' && /^[\-\+]?\d+(\.\d*)?$/.test(s);
+            }
+
+            function IsValidDate(s) {
+                const d = new Date(s);
+                return Number.isFinite(d.getTime());
             }
 
             function LoadOptions() {
@@ -139,6 +162,8 @@
                 if (!IsValidNumber(options.latitude))  options.latitude  = '30';
                 if (!IsValidNumber(options.longitude)) options.longitude = '-90';
                 if (!IsValidNumber(options.elevation)) options.elevation = '0';
+                if (typeof options.automatic !== 'boolean') options.automatic = true;
+                if (!IsValidDate(options.date)) options.date = FormatDate(new Date());
                 return options;
             }
 
@@ -154,6 +179,10 @@
                 document.getElementById('EditLatitude').value  = options.latitude;
                 document.getElementById('EditLongitude').value = options.longitude;
                 document.getElementById('EditElevation').value = options.elevation;
+                document.getElementById('DateTimeBox').value = options.date;
+                let checkbox = document.getElementById('AutoTimeCheckBox');
+                checkbox.checked = options.automatic;
+                OnToggleAutoTime();
                 return options;
             }
 
@@ -179,38 +208,58 @@
                 return x.toFixed(2);
             }
 
+            const BodyList = [
+                'Sun', 'Moon', 'Mercury', 'Venus', 'Mars', 
+                'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Pluto'
+            ];
+
             function UpdateScreen() {
+                const autotime = document.getElementById('AutoTimeCheckBox').checked;
+                const timebox = document.getElementById('DateTimeBox');
                 let text_latitude = document.getElementById('EditLatitude').value;
                 let text_longitude = document.getElementById('EditLongitude').value;
                 let text_elevation = document.getElementById('EditElevation').value;
-                if (!IsValidNumber(text_latitude) || !IsValidNumber(text_longitude) || !IsValidNumber(text_elevation)) {
+                let date;
+
+                if (autotime) {
+                    // Automatically update the date/time every second, using the computer's clock.
+                    date = new Date();
+                    timebox.value = FormatDate(date);
+                } else {
+                    // Try to parse a date/time from the user's input.
+                    date = new Date(timebox.value);
+                }
+
+                if (!IsValidDate(timebox.value) || !IsValidNumber(text_latitude) || !IsValidNumber(text_longitude) || !IsValidNumber(text_elevation)) {
                     // Bail out until user corrects problems in the observer coordinates.
                     // Gray out the whole table so the user knows there is something wrong.
                     document.getElementById('CalcTable').style.display = 'none';
                 } else {
-                    let date = new Date();
-                    document.getElementById('DateTimeBox').innerText = FormatDate(date);
                     document.getElementById('CalcTable').style.display = '';
 
                     let latitude = parseFloat(text_latitude);
                     let longitude = parseFloat(text_longitude);
                     let elevation = parseFloat(text_elevation);
-                    if (latitude !== Options.latitude || longitude !== Options.longitude || elevation !== Options.elevation) {
-                        Options = { latitude:text_latitude, longitude:text_longitude, elevation:text_elevation };
+                    if (latitude !== Options.latitude || longitude !== Options.longitude || elevation !== Options.elevation || Options.automatic !== autotime) {
+                        Options = { 
+                            latitude: text_latitude, 
+                            longitude: text_longitude, 
+                            elevation: text_elevation,
+                            automatic: autotime,
+                            date: timebox.value
+                        };
                         SaveOptions();
                     }
                     let observer = Astronomy.MakeObserver(latitude, longitude, elevation);
 
-                    for (let body of Astronomy.Bodies) {
-                        if (body !== 'Earth') {
-                            let equ_2000 = Astronomy.Equator(body, date, observer, false, true);
-                            let equ_ofdate = Astronomy.Equator(body, date, observer, true, true);
-                            let hor = Astronomy.Horizon(date, observer, equ_ofdate.ra, equ_ofdate.dec, 'normal');
-                            document.getElementById(`${body}_ra`).innerText = FormatCoord(equ_2000.ra);
-                            document.getElementById(`${body}_dec`).innerText = FormatCoord(equ_2000.dec);
-                            document.getElementById(`${body}_az`).innerText = FormatCoord(hor.azimuth);
-                            document.getElementById(`${body}_alt`).innerText = FormatCoord(hor.altitude);
-                        }
+                    for (let body of BodyList) {
+                        let equ_2000 = Astronomy.Equator(body, date, observer, false, true);
+                        let equ_ofdate = Astronomy.Equator(body, date, observer, true, true);
+                        let hor = Astronomy.Horizon(date, observer, equ_ofdate.ra, equ_ofdate.dec, 'normal');
+                        document.getElementById(`${body}_ra`).innerText = FormatCoord(equ_2000.ra);
+                        document.getElementById(`${body}_dec`).innerText = FormatCoord(equ_2000.dec);
+                        document.getElementById(`${body}_az`).innerText = FormatCoord(hor.azimuth);
+                        document.getElementById(`${body}_alt`).innerText = FormatCoord(hor.altitude);
                     }
 
                 }
