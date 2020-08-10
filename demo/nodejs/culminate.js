@@ -20,7 +20,7 @@
     node culminate latitude longitude [date]
 */
 
-const Astronomy = require('astronomy.js');
+const Astronomy = require('./astronomy.js');
 
 function ParseNumber(text, name) {
     const x = Number(text);

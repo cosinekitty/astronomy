@@ -23,7 +23,7 @@
     for example the ISO 8601 UTC format "yyyy-mm-ddThh:mm:ssZ".
 */
 
-const Astronomy = require('astronomy.js');
+const Astronomy = require('./astronomy.js');
 
 function Format(x) {
     return x.toFixed(2).padStart(8);

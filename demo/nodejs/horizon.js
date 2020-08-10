@@ -12,7 +12,7 @@
 */
 'use strict';
 
-const Astronomy = require('astronomy.js');
+const Astronomy = require('./astronomy.js');
 
 const NUM_SAMPLES = 4;
 

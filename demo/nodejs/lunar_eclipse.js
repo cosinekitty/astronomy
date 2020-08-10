@@ -11,7 +11,7 @@
     node lunar_eclipse [date]
 */
 
-const Astronomy = require('astronomy.js');
+const Astronomy = require('./astronomy.js');
 
 function Pad(s, w) {
     s = s.toFixed(0);
