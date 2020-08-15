@@ -842,7 +842,7 @@ static int OptimizeLinear(cg_context_t *context, char *buffer, size_t size, doub
     else
         nprinted = snprintf(buffer, size, "%0.1lf + %0.1lf*t", a, b);
 
-    if (nprinted >= size)
+    if ((size_t)nprinted >= size)
         return LogError(context, "OptimizeLinear: print buffer overflowed.");
 
     return 0;

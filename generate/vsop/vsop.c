@@ -11,6 +11,8 @@
 #include <math.h>
 #include "vsop.h"
 
+static const double DAYS_PER_MILLENNIUM = 365250.0;
+
 static void SphereToRect(double lon, double lat, double radius, double pos[3]);
 static void VsopRotate(const double ecliptic[3], double equatorial[3]);
 
@@ -207,24 +209,15 @@ void VsopFreeModel(vsop_model_t *model)
     VsopInit(model);
 }
 
-static double Millennia(double jd)
+static double Millennia(double tt)
 {
-    double t = (jd - 2451545.0) / 365250.0;     /* t = number of millennia after J2000 */
-    return t;
+    return tt / DAYS_PER_MILLENNIUM;     /* t = number of millennia after J2000 */
 }
 
-int VsopCalc(const vsop_model_t *model, double jd, double pos[3])
+
+static void VsopCoords(const vsop_model_t *model, double t, double coords[])
 {
     int k, s, i;
-    double t = Millennia(jd);
-    double coords[VSOP_MAX_COORDS];
-    double eclip[3];
-
-    if (model->ncoords < 3 || model->ncoords > VSOP_MAX_COORDS)
-    {
-        fprintf(stderr, "VsopCalc(ERROR): model->ncoords = %d is not valid!\n", model->ncoords);
-        return 1;
-    }
 
     for (k=0; k < model->ncoords; ++k)
     {
@@ -244,6 +237,53 @@ int VsopCalc(const vsop_model_t *model, double jd, double pos[3])
             tpower *= t;
         }
     }
+}
+
+
+static void VsopDeriv(const vsop_model_t *model, double t, double deriv[])
+{
+    int k, s, i;
+
+    for (k=0; k < model->ncoords; ++k)
+    {
+        double tpower = 1.0;        /* t^s */
+        double dpower = 0.0;        /* t^(s-1) */
+        const vsop_formula_t *formula = &model->formula[k];
+        deriv[k] = 0.0;
+        for (s=0; s < formula->nseries_calc; ++s)
+        {
+            double sin_sum = 0.0;
+            double cos_sum = 0.0;
+            const vsop_series_t *series = &formula->series[s];
+            for (i=0; i < series->nterms_calc; ++i)
+            {
+                const vsop_term_t *term = &series->term[i];
+                double angle = term->phase + (t * term->frequency);
+                sin_sum += term->amplitude * term->frequency * sin(angle);
+                if (s > 0)
+                    cos_sum += term->amplitude * cos(angle);
+            }
+            deriv[k] += (s * dpower * cos_sum) - (tpower * sin_sum);
+            dpower = tpower;
+            tpower *= t;
+        }
+    }
+}
+
+
+int VsopCalcPos(const vsop_model_t *model, double tt, double pos[3])
+{
+    double t = Millennia(tt);
+    double coords[VSOP_MAX_COORDS];
+    double eclip[3];
+
+    if (model->ncoords < 3 || model->ncoords > VSOP_MAX_COORDS)
+    {
+        fprintf(stderr, "VsopCalcPos(ERROR): model->ncoords = %d is not valid!\n", model->ncoords);
+        return 1;
+    }
+
+    VsopCoords(model, t, coords);
 
     switch (model->version)
     {
@@ -267,6 +307,72 @@ int VsopCalc(const vsop_model_t *model, double jd, double pos[3])
     VsopRotate(eclip, pos);     /* convert ecliptic coordinates to equatorial coordinates */
     return 0;
 }
+
+
+int VsopCalcPosVel(const vsop_model_t *model, double tt, double pos[3], double vel[3])
+{
+    double t = Millennia(tt);
+    double coords[3];   /* lon, lat, r */
+    double deriv[3];    /* d(lon)/dt, d(lat)/dt, dr/dt */
+    double eclip[3];    /* ecliptic (x, y, z) */
+    double dr_dt, dlat_dt, dlon_dt;
+    double r, coslat, coslon, sinlat, sinlon;
+
+    /* Calculate position and velocity vectors, but only for the spherical "B" models. */
+
+    if (model->version != VSOP_HELIO_SPHER_J2000)
+    {
+        fprintf(stderr, "VsopCalcPosVel: Version %d coordinates not implemented.\n", model->version);
+        return 1;
+    }
+
+    if (model->ncoords != 3)
+    {
+        fprintf(stderr, "VsopCalcPosVel: Expected 3 coordinates but found %d\n", model->ncoords);
+        return 1;
+    }
+
+    /* Calculate position the same way VsopCalcPos does. */
+    VsopCoords(model, t, coords);
+    SphereToRect(coords[0], coords[1], coords[2], eclip);
+    VsopRotate(eclip, pos);
+
+    /* Calculate the time derivatives of the 3 spherical coordinates. */
+    VsopDeriv(model, t, deriv);
+
+    /* Use spherical coords and spherical derivatives to calculate */
+    /* the velocity vector in rectangular coordinates. */
+
+    /* Calculate mnemonic variables to help keep the math straight. */
+    coslon = cos(coords[0]);
+    sinlon = sin(coords[0]);
+    coslat = cos(coords[1]);
+    sinlat = sin(coords[1]);
+    r = coords[2];
+    dlon_dt = deriv[0];
+    dlat_dt = deriv[1];
+    dr_dt   = deriv[2];
+
+    /* vx = dx/dt */
+    eclip[0] = (dr_dt * coslat * coslon) - (r * sinlat * coslon * dlat_dt) - (r * coslat * sinlon * dlon_dt);
+
+    /* vy = dy/dt */
+    eclip[1] = (dr_dt * coslat * sinlon) - (r * sinlat * sinlon * dlat_dt) + (r * coslat * coslon * dlon_dt);
+
+    /* vz = dz/dt */
+    eclip[2] = (dr_dt * sinlat) + (r * coslat * dlat_dt);
+
+    /* Rotate the velocity vector from ecliptic to equatorial coordinates. */
+    VsopRotate(eclip, vel);
+
+    /* Convert speed units from [AU/millennium] to [AU/day]. */
+    vel[0] /= DAYS_PER_MILLENNIUM;
+    vel[1] /= DAYS_PER_MILLENNIUM;
+    vel[2] /= DAYS_PER_MILLENNIUM;
+
+    return 0;
+}
+
 
 static void SphereToRect(double lon, double lat, double radius, double pos[3])
 {
@@ -350,15 +456,15 @@ static int ModelTypeScaling(const vsop_model_t *model, int k, double *scaling)
     return 0;
 }
 
-int VsopTruncate(vsop_model_t *model, double jd1, double jd2, double amplitudeThreshold)
+int VsopTruncate(vsop_model_t *model, double tt1, double tt2, double amplitudeThreshold)
 {
     /*
-        Over the specified Julian Date range [jdMin, jdMax],
+        Over the specified J2000 terrestrial time range [tt1, tt2],
         chop off as many small-order terms as possible without exceeding
         the specified threshold of error in total amplitudes.
     */
-    double t1 = fabs(Millennia(jd1));
-    double t2 = fabs(Millennia(jd2));
+    double t1 = fabs(Millennia(tt1));
+    double t2 = fabs(Millennia(tt2));
     double t = (t1 > t2) ? t1 : t2;         /* maximum possible |t| over the given time span */
     int k, s;
 

@@ -237,7 +237,7 @@ static int PrintUsage(void)
         "generate gravsim\n"
         "   Experimental gravity simulation.\n"
         "\n"
-        "ephemeris outfile.json date1 date2 delta_days\n"
+        "generate ephemeris outfile.json date1 date2 delta_days\n"
         "   Use NOVAS to generate an ephemeris file in JSON format.\n"
         "   The output is a table of solar-system barycentric cartesian position\n"
         "   and velocity vectors for the Sun and planets. The Earth and Moon are\n"
@@ -264,11 +264,24 @@ static int OpenEphem()
     return error;
 }
 
-static int NovasBodyPos(double jd, int body, double pos[3])
+
+#define NovasBodyPos(jd,body,pos)   NovasBodyPosVel(jd,body,pos,NULL)
+
+/*
+ *  Returns heliocentric position and velocity vectors based on NOVAS
+ *  interpolation of the ephemeris file. The jd must be a Julian Date
+ *  in the range of years 1600..2200.
+ */
+static int NovasBodyPosVel(double jd, int body, double pos[3], double vel[3])
 {
     int error, k;
     double jed[2];
-    double sun_pos[3], moon_pos[3], vel[3];
+    double sun_pos[3], moon_pos[3];
+    double sun_vel[3], moon_vel[3];
+    double ignore_vel[3];
+
+    if (vel == NULL)
+        vel = ignore_vel;
 
     jed[0] = jd;
     jed[1] = 0.0;
@@ -282,6 +295,7 @@ static int NovasBodyPos(double jd, int body, double pos[3])
             Negating that will result in the SSB position with respect to the Sun.
         */
         pos[0] = pos[1] = pos[2] = 0.0;
+        vel[0] = vel[1] = vel[2] = 0.0;
     }
     else if (body == BODY_EARTH || body == BODY_MOON)
     {
@@ -295,17 +309,11 @@ static int NovasBodyPos(double jd, int body, double pos[3])
         */
         error = state(jed, BODY_EMB, pos, vel);
         if (error)
-        {
-            fprintf(stderr, "NovasBodyPos: state(%lf, EMB) returned %d\n", jd, error);
-            return error;
-        }
+            FAIL("NovasBodyPos: state(%lf, EMB) returned %d\n", jd, error);
 
-        error = state(jed, BODY_GM, moon_pos, vel);
+        error = state(jed, BODY_GM, moon_pos, moon_vel);
         if (error)
-        {
-            fprintf(stderr, "NovasBodyPos: state(%lf, GM) returned %d\n", jd, error);
-            return error;
-        }
+            FAIL("NovasBodyPos: state(%lf, GM) returned %d\n", jd, error);
 
         if (body == BODY_EARTH)
             /* Calculate the Earth's position away from the EMB, opposite the direction of the Moon. */
@@ -315,33 +323,36 @@ static int NovasBodyPos(double jd, int body, double pos[3])
             factor = EarthMoonMassRatio / (1.0 + EarthMoonMassRatio);
 
         for (k=0; k<3; ++k)
+        {
             pos[k] += factor * moon_pos[k];
+            vel[k] += factor * moon_vel[k];
+        }
     }
     else
     {
         /* This is a body that NOVAS directly models in its ephemerides. */
         error = (int)state(jed, (short)body, pos, vel);
         if (error)
-        {
-            fprintf(stderr, "NovasBodyPos: state(%lf, %d) returned %d\n", jd, body, error);
-            return error;
-        }
+            FAIL("NovasBodyPos: state(%lf, %d) returned %d\n", jd, body, error);
 
         /* Special case: geocentric moon should not be converted to heliocentric coordinates. */
         if (body == BODY_GM) return 0;
     }
 
-    error = (int)state(jed, BODY_SUN, sun_pos, vel);
+    error = (int)state(jed, BODY_SUN, sun_pos, sun_vel);
     if (error)
-    {
-        fprintf(stderr, "NovasBodyPos: state(%lf, SUN) returned %d\n", jd, error);
-        return error;
-    }
+        FAIL("NovasBodyPos: state(%lf, SUN) returned %d\n", jd, error);
 
     pos[0] -= sun_pos[0];
     pos[1] -= sun_pos[1];
     pos[2] -= sun_pos[2];
-    return 0;
+    vel[0] -= sun_vel[0];
+    vel[1] -= sun_vel[1];
+    vel[2] -= sun_vel[2];
+    error = 0;
+
+fail:
+    return error;
 }
 
 static int LoadVsopFile(vsop_model_t *model, int body)
@@ -454,13 +465,13 @@ static int TestVsopModel(vsop_model_t *model, int body, double threshold, double
     jdStop = julian_date(MAX_YEAR, 1, 1, 0.0);
     jdDelta = 1.0;
 
-    error = VsopTruncate(model, jdStart, jdStop, threshold);
+    error = VsopTruncate(model, jdStart - T0, jdStop - T0, threshold);
     if (error) goto fail;
     *trunc_terms = VsopTermCount(model);
 
     for (jd = jdStart; jd <= jdStop; jd += jdDelta)
     {
-        VsopCalc(model, jd, vpos);
+        VsopCalcPos(model, jd - T0, vpos);
         if (body == 2)
             error = NovasEarth(jd, npos);
         else
@@ -1833,11 +1844,7 @@ static int DistancePlot(const char *name, double tt1, double tt2)
 
     body = LookupBody(name);
     if (body == BODY_INVALID)
-    {
-        error = 1;
-        fprintf(stderr, "DistancePlot: Invalid body name '%s'\n", name);
-        goto fail;
-    }
+        FAIL("DistancePlot: Invalid body name '%s'\n", name);
 
     printf("\"tt\",\"distance\",\"x\",\"y\",\"z\"\n");
     for (i=0; i < npoints; ++i)
