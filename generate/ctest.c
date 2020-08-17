@@ -71,6 +71,7 @@ static int RiseSet(void);
 static int LunarApsis(void);
 static int EarthApsis(void);
 static int PlanetApsis(void);
+static int PlutoCheck(void);
 static int ElongationTest(void);
 static int MagnitudeTest(void);
 static int MoonTest(void);
@@ -113,6 +114,7 @@ static unit_test_t UnitTests[] =
     {"moon_apsis",              LunarApsis},
     {"moon_phase",              MoonPhase},
     {"planet_apsis",            PlanetApsis},
+    {"pluto",                   PlutoCheck},
     {"refraction",              RefractionTest},
     {"riseset",                 RiseSet},
     {"rotation",                RotationTest},
@@ -3306,6 +3308,38 @@ static int DistancePlot(astro_body_t body, double ut1, double ut2, const char *f
     error = 0;
 fail:
     if (outfile != NULL) fclose(outfile);
+    return error;
+}
+
+/*-----------------------------------------------------------------------------------------------------------*/
+
+static int PlutoCheck(void)
+{
+    int error = 1;
+    astro_time_t time;
+    astro_vector_t vector;
+    double dx, dy, dz, diff;
+    const double x = -25.4825019428226902;
+    const double y = +22.2551862236535278;
+    const double z = +14.6171822618004299;
+
+    time = Astronomy_TimeFromDays(-109572.5);
+
+    PrintTime(time);
+    printf("\n");
+
+    vector = Astronomy_HelioVector(BODY_PLUTO, time);
+    if (vector.status != ASTRO_SUCCESS)
+        FAIL("PlutoCheck: Astronomy_HelioVector returned status = %d\n", vector.status);
+
+    dx = (vector.x - x);
+    dy = (vector.y - y);
+    dz = (vector.z - z);
+    diff = sqrt(dx*dx + dy*dy + dz*dz);
+    printf("PlutoCheck: diff = %le\n", diff);
+
+    error = 0;
+fail:
     return error;
 }
 

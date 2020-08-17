@@ -38,6 +38,83 @@ extern "C" {
 
 /** @cond DOXYGEN_SKIP */
 #define PI      3.14159265358979323846
+
+typedef struct
+{
+    double c[3];
+}
+terse_vector_t;
+
+static const terse_vector_t VecZero;
+
+static terse_vector_t VecAdd(terse_vector_t a, terse_vector_t b)
+{
+    terse_vector_t c;
+    c.c[0] = a.c[0] + b.c[0];
+    c.c[1] = a.c[1] + b.c[1];
+    c.c[2] = a.c[2] + b.c[2];
+    return c;
+}
+
+static terse_vector_t VecSub(terse_vector_t a, terse_vector_t b)
+{
+    terse_vector_t c;
+    c.c[0] = a.c[0] - b.c[0];
+    c.c[1] = a.c[1] - b.c[1];
+    c.c[2] = a.c[2] - b.c[2];
+    return c;
+}
+
+static void VecIncr(terse_vector_t *target, terse_vector_t source)
+{
+    target->c[0] += source.c[0];
+    target->c[1] += source.c[1];
+    target->c[2] += source.c[2];
+}
+
+static void VecDecr(terse_vector_t *target, terse_vector_t source)
+{
+    target->c[0] -= source.c[0];
+    target->c[1] -= source.c[1];
+    target->c[2] -= source.c[2];
+}
+
+static terse_vector_t VecMul(double s, terse_vector_t v)
+{
+    terse_vector_t p;
+    p.c[0] = s * v.c[0];
+    p.c[1] = s * v.c[1];
+    p.c[2] = s * v.c[2];
+    return p;
+}
+
+static void VecScale(terse_vector_t *target, double scalar)
+{
+    target->c[0] *= scalar;
+    target->c[1] *= scalar;
+    target->c[2] *= scalar;
+}
+
+static astro_vector_t PublicVec(astro_time_t time, terse_vector_t terse)
+{
+    astro_vector_t vector;
+
+    vector.status = ASTRO_SUCCESS;
+    vector.t = time;
+    vector.x = terse.c[0];
+    vector.y = terse.c[1];
+    vector.z = terse.c[2];
+
+    return vector;
+}
+
+typedef struct
+{
+    double          tt;  /* Terrestrial Time in J2000 days */
+    terse_vector_t  r;   /* position [au] */
+    terse_vector_t  v;   /* velocity [au/day] */
+}
+body_state_t;
 /** @endcond */
 
 static const double DAYS_PER_TROPICAL_YEAR = 365.24217;
@@ -74,11 +151,24 @@ static const double SUN_RADIUS_KM  = 695700.0;
 
 static const double ASEC180 = 180.0 * 60.0 * 60.0;      /* arcseconds per 180 degrees (or pi radians) */
 static const double EARTH_MOON_MASS_RATIO = 81.30056;
-static const double SUN_MASS     = 333054.25318;        /* Sun's mass relative to Earth. */
-static const double JUPITER_MASS =    317.84997;        /* Jupiter's mass relative to Earth. */
-static const double SATURN_MASS  =     95.16745;        /* Saturn's mass relative to Earth. */
-static const double URANUS_MASS  =     14.53617;        /* Uranus's mass relative to Earth. */
-static const double NEPTUNE_MASS =     17.14886;        /* Neptune's mass relative to Earth. */
+
+/*
+    Masses of the Sun and outer planets, used for:
+    (1) Calculating the Solar System Barycenter
+    (2) Integrating the movement of Pluto
+
+    https://web.archive.org/web/20120220062549/http://iau-comm4.jpl.nasa.gov/de405iom/de405iom.pdf
+
+    Page 10 in the above document describes the constants used in the DE405 ephemeris.
+    The following are G*M values (gravity constant * mass) in [au^3 / day^2].
+    This side-steps issues of not knowing the exact values of G and masses M[i];
+    the products GM[i] are known extremely accurately.
+*/
+static const double SUN_GM     = 0.2959122082855911e-03;
+static const double JUPITER_GM = 0.2825345909524226e-06;
+static const double SATURN_GM  = 0.8459715185680659e-07;
+static const double URANUS_GM  = 0.1292024916781969e-07;
+static const double NEPTUNE_GM = 0.1524358900784276e-07;
 
 /** @cond DOXYGEN_SKIP */
 #define ARRAYSIZE(x)    (sizeof(x) / sizeof(x[0]))
@@ -1671,16 +1761,10 @@ static const vsop_model_t vsop[] =
 #define CalcEarth(time)     CalcVsop(&vsop[BODY_EARTH], (time))
 /** @endcond */
 
-static astro_vector_t CalcVsop(const vsop_model_t *model, astro_time_t time)
+static void VsopCoords(const vsop_model_t *model, double t, double sphere[])
 {
     int k, s, i;
-    double t = time.tt / 365250;    /* millennia since 2000 */
-    double sphere[3];
-    double r_coslat;
-    double eclip[3];
-    astro_vector_t vector;
 
-    /* Calculate the VSOP "B" trigonometric series to obtain ecliptic spherical coordinates. */
     for (k=0; k < 3; ++k)
     {
         double tpower = 1.0;
@@ -1699,27 +1783,152 @@ static astro_vector_t CalcVsop(const vsop_model_t *model, astro_time_t time)
             tpower *= t;
         }
     }
+}
+
+
+static terse_vector_t VsopRotate(const double ecl[3])
+{
+    terse_vector_t equ;
+
+    /*
+        X        +1.000000000000  +0.000000440360  -0.000000190919   X
+        Y     =  -0.000000479966  +0.917482137087  -0.397776982902   Y
+        Z FK5     0.000000000000  +0.397776982902  +0.917482137087   Z VSOP87A
+    */
+
+    equ.c[0] = ecl[0] + 0.000000440360*ecl[1] - 0.000000190919*ecl[2];
+    equ.c[1] = -0.000000479966*ecl[0] + 0.917482137087*ecl[1] - 0.397776982902*ecl[2];
+    equ.c[2] = 0.397776982902*ecl[1] + 0.917482137087*ecl[2];
+
+    return equ;
+}
+
+
+static void VsopSphereToRect(double lon, double lat, double radius, double pos[3])
+{
+    double r_coslat = radius * cos(lat);
+    pos[0] = r_coslat * cos(lon);
+    pos[1] = r_coslat * sin(lon);
+    pos[2] = radius * sin(lat);
+}
+
+static const double DAYS_PER_MILLENNIUM = 365250.0;
+
+
+static astro_vector_t CalcVsop(const vsop_model_t *model, astro_time_t time)
+{
+    double t = time.tt / DAYS_PER_MILLENNIUM;
+    double sphere[3];
+    double eclip[3];
+    astro_vector_t vector;
+    terse_vector_t pos;
+
+    /* Calculate the VSOP "B" trigonometric series to obtain ecliptic spherical coordinates. */
+    VsopCoords(model, t, sphere);
 
     /* Convert ecliptic spherical coordinates to ecliptic Cartesian coordinates. */
-    r_coslat = sphere[2] * cos(sphere[1]);
-    eclip[0] = r_coslat * cos(sphere[0]);
-    eclip[1] = r_coslat * sin(sphere[0]);
-    eclip[2] = sphere[2] * sin(sphere[1]);
+    VsopSphereToRect(sphere[0], sphere[1], sphere[2], eclip);
 
     /* Convert ecliptic Cartesian coordinates to equatorial Cartesian coordinates. */
+    pos = VsopRotate(eclip);
+
+    /* Package the position as astro_vector_t. */
     vector.status = ASTRO_SUCCESS;
-    vector.x = eclip[0] + 0.000000440360*eclip[1] - 0.000000190919*eclip[2];
-    vector.y = -0.000000479966*eclip[0] + 0.917482137087*eclip[1] - 0.397776982902*eclip[2];
-    vector.z = 0.397776982902*eclip[1] + 0.917482137087*eclip[2];
     vector.t = time;
+    vector.x = pos.c[0];
+    vector.y = pos.c[1];
+    vector.z = pos.c[2];
 
     return vector;
 }
 
+
+static void VsopDeriv(const vsop_model_t *model, double t, double deriv[])
+{
+    int k, s, i;
+
+    for (k=0; k < 3; ++k)
+    {
+        double tpower = 1.0;        /* t^s */
+        double dpower = 0.0;        /* t^(s-1) */
+        const vsop_formula_t *formula = &model->formula[k];
+        deriv[k] = 0.0;
+        for (s=0; s < formula->nseries; ++s)
+        {
+            double sin_sum = 0.0;
+            double cos_sum = 0.0;
+            const vsop_series_t *series = &formula->series[s];
+            for (i=0; i < series->nterms; ++i)
+            {
+                const vsop_term_t *term = &series->term[i];
+                double angle = term->phase + (t * term->frequency);
+                sin_sum += term->amplitude * term->frequency * sin(angle);
+                if (s > 0)
+                    cos_sum += term->amplitude * cos(angle);
+            }
+            deriv[k] += (s * dpower * cos_sum) - (tpower * sin_sum);
+            dpower = tpower;
+            tpower *= t;
+        }
+    }
+}
+
+
+static body_state_t CalcVsopPosVel(const vsop_model_t *model, double tt)
+{
+    body_state_t state;
+    double t = tt / DAYS_PER_MILLENNIUM;
+    double sphere[3];   /* lon, lat, r */
+    double deriv[3];    /* d(lon)/dt, d(lat)/dt, dr/dt */
+    double eclip[3];
+    double dr_dt, dlat_dt, dlon_dt;
+    double r, coslat, coslon, sinlat, sinlon;
+
+    state.tt = tt;
+    VsopCoords(model, t, sphere);
+    VsopSphereToRect(sphere[0], sphere[1], sphere[2], eclip);
+    state.r = VsopRotate(eclip);
+
+    VsopDeriv(model, t, deriv);
+
+    /* Use spherical coords and spherical derivatives to calculate */
+    /* the velocity vector in rectangular coordinates. */
+
+    /* Calculate mnemonic variables to help keep the math straight. */
+    coslon = cos(sphere[0]);
+    sinlon = sin(sphere[0]);
+    coslat = cos(sphere[1]);
+    sinlat = sin(sphere[1]);
+    r = sphere[2];
+    dlon_dt = deriv[0];
+    dlat_dt = deriv[1];
+    dr_dt   = deriv[2];
+
+    /* vx = dx/dt */
+    eclip[0] = (dr_dt * coslat * coslon) - (r * sinlat * coslon * dlat_dt) - (r * coslat * sinlon * dlon_dt);
+
+    /* vy = dy/dt */
+    eclip[1] = (dr_dt * coslat * sinlon) - (r * sinlat * sinlon * dlat_dt) + (r * coslat * coslon * dlon_dt);
+
+    /* vz = dz/dt */
+    eclip[2] = (dr_dt * sinlat) + (r * coslat * dlat_dt);
+
+    /* Rotate the velocity vector from ecliptic to equatorial coordinates. */
+    state.v = VsopRotate(eclip);
+
+    /* Convert speed units from [AU/millennium] to [AU/day]. */
+    state.v.c[0] /= DAYS_PER_MILLENNIUM;
+    state.v.c[1] /= DAYS_PER_MILLENNIUM;
+    state.v.c[2] /= DAYS_PER_MILLENNIUM;
+
+    return state;
+}
+
+
 static double VsopHelioDistance(const vsop_model_t *model, astro_time_t time)
 {
     int s, i;
-    double t = time.tt / 365250;    /* millennia since 2000 */
+    double t = time.tt / DAYS_PER_MILLENNIUM;
     double distance = 0.0;
     double tpower = 1.0;
     const vsop_formula_t *formula = &model->formula[2];     /* [2] is the distance part of the formula */
@@ -1745,242 +1954,19 @@ static double VsopHelioDistance(const vsop_model_t *model, astro_time_t time)
     return distance;
 }
 
-/*------------------ TOP2013 model for Pluto ------------------*/
 
-/** @cond DOXYGEN_SKIP */
-
-#define TOP_NCOORDS  6
-#define TOP_NSERIES 13
-
-typedef struct
-{
-    double k;
-    double c;
-    double s;
-}
-astro_top_term_t;
-
-typedef struct
-{
-    int nterms;
-    const astro_top_term_t *terms;
-}
-astro_top_series_t;
-
-typedef struct
-{
-    int nseries;
-    const astro_top_series_t *series;
-}
-astro_top_model_t;
-
-typedef struct
-{
-    double a;           /* AU */
-    double lambda;      /* rad */
-    double k;           /* 1 */
-    double h;           /* 1 */
-    double q;           /* 1 */
-    double p;           /* 1 */
-}
-top_elliptical_t;
-/** @endcond */
-
-$ASTRO_TOP2013(8)
-
-
-static top_elliptical_t TopCalcElliptical(int planet, const astro_top_model_t *model, double tt)
-{
-    /* Translated from: TOP2013.f */
-    /* See: https://github.com/cosinekitty/ephemeris/tree/master/top2013 */
-    /* Copied from: ftp://ftp.imcce.fr/pub/ephem/planets/top2013 */
-    static const double freq[] =
-    {
-        0.5296909622785881e+03,
-        0.2132990811942489e+03,
-        0.7478166163181234e+02,
-        0.3813297236217556e+02,
-        0.2533566020437000e+02
-    };
-    int i, f, s, t;
-    double time[TOP_NSERIES];
-    double el[6];
-    double arg, dmu, xl;
-    top_elliptical_t ellip;
-
-    /* Time */
-    time[0] = 1.0;
-    time[1] = tt / 365250.0;
-    for (i=1; i < TOP_NSERIES; ++i)
-        time[i] = time[i-1] * time[1];
-
-    dmu = (freq[0] - freq[1]) / 880.0;
-
-    for (f=0; f < TOP_NCOORDS; ++f)
-    {
-        el[f] = 0.0;
-        for (s=0; s < model[f].nseries; ++s)
-        {
-            const astro_top_series_t *series = &model[f].series[s];
-            for (t=0; t < series->nterms; ++t)
-            {
-                const astro_top_term_t *term = &series->terms[t];
-                if (f==1 && s==1 && term->k==0)
-                    continue;
-                arg = term->k * dmu * time[1];
-                el[f] += time[s] * (term->c*cos(arg) + term->s*sin(arg));
-            }
-        }
-    }
-
-    xl = el[1] + freq[planet - 5] * time[1];
-    xl = fmod(xl, PI2);
-    if (xl < 0.0)
-        xl += PI2;
-    el[1] = xl;
-
-    /* Convert elliptical elements from array 'el' to friendly struct layout. */
-    ellip.a      = el[0];
-    ellip.lambda = el[1];
-    ellip.k      = el[2];
-    ellip.h      = el[3];
-    ellip.q      = el[4];
-    ellip.p      = el[5];
-    return ellip;
-}
-
-
-static void TopEcliptic(const top_elliptical_t *ellip, astro_vector_t *ecl)
-{
-    double xa, xl, xk, xh, xq, xp;
-    double xfi, xki, u, ex, ex2, ex3;
-    double zr, zi;
-    double z1r, z1i;
-    double z2r, z2i;
-    double z3r, z3i;
-    double zteta_r, zteta_i;
-    double zto_r, zto_i;
-    double gl, gm, e, dl, rsa;
-    double xcw, xsw, xm, xr;
-
-    xa = ellip->a;
-    xl = ellip->lambda;
-    xk = ellip->k;
-    xh = ellip->h;
-    xq = ellip->q;
-    xp = ellip->p;
-
-    xfi = sqrt(1.0 - xk*xk - xh*xh);
-    xki = sqrt(1.0 - xq*xq - xp*xp);
-    zr = xk; zi = xh;       /* z = dcmplx(xk,xh) */
-    u = 1.0 / (1.0 + xfi);
-    ex2 = zr*zr + zi*zi;
-    ex = sqrt(ex2);         /* ex = cdabs(z) */
-    ex3 = ex * ex2;
-    z1r = zr; z1i = -zi;
-
-    gl = fmod(xl, PI2);
-    gm = gl - atan2(xh, xk);
-    e = gl + (ex - 0.125*ex3)*sin(gm) + 0.5*ex2*sin(2.0*gm) + 0.375*ex3*sin(3.0*gm);
-
-    do
-    {
-        z2r = 0.0; z2i = e;
-        zteta_r = cos(z2i);
-        zteta_i = sin(z2i);
-        z3r = z1r*zteta_r - z1i*zteta_i;
-        z3i = z1r*zteta_i + z1i*zteta_r;
-        dl = gl - e + z3i;
-        rsa = 1.0 - z3r;
-        e += dl/rsa;
-    } while (fabs(dl) >= 1.0e-15);
-
-    z1r = z3i * u * zr;
-    z1i = z3i * u * zi;
-    z2r = +z1i;
-    z2i = -z1r;
-    zto_r = (-zr + zteta_r + z2r) / rsa;
-    zto_i = (-zi + zteta_i + z2i) / rsa;
-    xcw = zto_r;
-    xsw = zto_i;
-    xm = xp*xcw - xq*xsw;
-    xr = xa*rsa;
-
-    ecl->x = xr*(xcw - 2.0*xp*xm);
-    ecl->y = xr*(xsw + 2.0*xq*xm);
-    ecl->z = -2.0*xr*xki*xm;
-}
-
-
-
-static void TopEquatorial(const astro_vector_t *ecl, astro_vector_t *equ)
-{
-    static int initialized;
-    static double rot[3][3];
-
-    if (!initialized)
-    {
-        const double sdrad = DEG2RAD / 3600.0;
-        const double eps = (23.0 + 26.0/60.0 + 21.41136/3600.0)*DEG2RAD;
-        const double phi = -0.05188 * sdrad;
-        const double ceps = cos(eps);
-        const double seps = sin(eps);
-        const double cphi = cos(phi);
-        const double sphi = sin(phi);
-
-        rot[0][0] =  cphi;
-        rot[0][1] = -sphi*ceps;
-        rot[0][2] =  sphi*seps;
-        rot[1][0] =  sphi;
-        rot[1][1] =  cphi*ceps;
-        rot[1][2] = -cphi*seps;
-        rot[2][0] =  0.0;
-        rot[2][1] =  seps;
-        rot[2][2] =  ceps;
-
-        initialized = 1;
-    }
-
-    equ->status = ecl->status;
-    equ->t = ecl->t;
-    equ->x = (rot[0][0] * ecl->x) + (rot[0][1] * ecl->y) + (rot[0][2] * ecl->z);
-    equ->y = (rot[1][0] * ecl->x) + (rot[1][1] * ecl->y) + (rot[1][2] * ecl->z);
-    equ->z = (rot[2][0] * ecl->x) + (rot[2][1] * ecl->y) + (rot[2][2] * ecl->z);
-}
-
-
-static astro_vector_t TopPosition(const astro_top_model_t *model, int planet, astro_time_t time)
-{
-    top_elliptical_t ellip;
-    astro_vector_t ecl, equ;
-
-    ellip = TopCalcElliptical(planet, model, time.tt);
-    TopEcliptic(&ellip, &ecl);
-    TopEquatorial(&ecl, &equ);
-    equ.status = ASTRO_SUCCESS;
-    equ.t = time;
-
-    return equ;
-}
-
-
-/** @cond DOXYGEN_SKIP */
-#define CalcPluto(time)    (TopPosition(topmodel_8, 9, (time)))
-/** @endcond */
-
-/*------------------ end of generated code ------------------*/
-
-static void AdjustBarycenter(astro_vector_t *ssb, astro_time_t time, astro_body_t body, double pmass)
+static void AdjustBarycenter(astro_vector_t *ssb, astro_time_t time, astro_body_t body, double planet_gm)
 {
     astro_vector_t planet;
     double shift;
 
-    shift = pmass / (pmass + SUN_MASS);
+    shift = planet_gm / (planet_gm + SUN_GM);
     planet = CalcVsop(&vsop[body], time);
     ssb->x += shift * planet.x;
     ssb->y += shift * planet.y;
     ssb->z += shift * planet.z;
 }
+
 
 static astro_vector_t CalcSolarSystemBarycenter(astro_time_t time)
 {
@@ -1990,13 +1976,231 @@ static astro_vector_t CalcSolarSystemBarycenter(astro_time_t time)
     ssb.t = time;
     ssb.x = ssb.y = ssb.z = 0.0;
 
-    AdjustBarycenter(&ssb, time, BODY_JUPITER, JUPITER_MASS);
-    AdjustBarycenter(&ssb, time, BODY_SATURN,  SATURN_MASS);
-    AdjustBarycenter(&ssb, time, BODY_URANUS,  URANUS_MASS);
-    AdjustBarycenter(&ssb, time, BODY_NEPTUNE, NEPTUNE_MASS);
+    AdjustBarycenter(&ssb, time, BODY_JUPITER, JUPITER_GM);
+    AdjustBarycenter(&ssb, time, BODY_SATURN,  SATURN_GM);
+    AdjustBarycenter(&ssb, time, BODY_URANUS,  URANUS_GM);
+    AdjustBarycenter(&ssb, time, BODY_NEPTUNE, NEPTUNE_GM);
 
     return ssb;
 }
+
+/*------------------ begin Pluto integrator ------------------*/
+
+/** @cond DOXYGEN_SKIP */
+typedef struct
+{
+    double          tt;   /* J2000 terrestrial time [days] */
+    terse_vector_t  r;    /* position [au] */
+    terse_vector_t  v;    /* velocity [au/day] */
+    terse_vector_t  a;    /* acceleration [au/day^2] */
+} body_grav_calc_t;
+/** @endcond */
+
+$ASTRO_PLUTO_TABLE();
+
+
+static body_state_t AdjustBarycenterPosVel(body_state_t *ssb, double tt, astro_body_t body, double planet_gm)
+{
+    body_state_t planet;
+    double shift;
+
+    /*
+        This function does 2 important things:
+        1. Adjusts 'ssb' by the effect of one major body on the Solar System Barycenter.
+        2, Returns the heliocentric position of that major body.
+    */
+
+    shift = planet_gm / (planet_gm + SUN_GM);
+    planet = CalcVsopPosVel(&vsop[body], tt);
+    ssb->r = VecAdd(ssb->r, VecMul(shift, planet.r));
+    ssb->v = VecAdd(ssb->v, VecMul(shift, planet.v));
+
+    return planet;
+}
+
+
+static void MajorBodyBary(body_state_t bary[5], double tt)
+{
+    int p;
+
+    /* bary[0] starts out receiving the Solar System Barycenter. */
+    bary[0].tt = tt;
+    bary[0].r = VecZero;
+    bary[0].v = VecZero;
+
+    /* Calculate heliocentric planet positions and SSB. */
+    bary[1] = AdjustBarycenterPosVel(&bary[0], tt, BODY_JUPITER, JUPITER_GM);
+    bary[2] = AdjustBarycenterPosVel(&bary[0], tt, BODY_SATURN,  SATURN_GM);
+    bary[3] = AdjustBarycenterPosVel(&bary[0], tt, BODY_URANUS,  URANUS_GM);
+    bary[4] = AdjustBarycenterPosVel(&bary[0], tt, BODY_NEPTUNE, NEPTUNE_GM);
+
+    for (p=1; p < 5; ++p)
+    {
+        /* Convert major body [pos, vel] from heliocentric to barycentric. */
+        VecDecr(&bary[p].r, bary[0].r);
+        VecDecr(&bary[p].v, bary[0].v);
+    }
+
+    /* Convert heliocentric SSB to barycentric Sun. */
+    VecScale(&bary[0].r, -1.0);
+    VecScale(&bary[0].v, -1.0);
+}
+
+
+static void AddAcceleration(terse_vector_t *acc, terse_vector_t small_pos, double gm, terse_vector_t major_pos)
+{
+    double dx, dy, dz, r2, pull;
+
+    dx = major_pos.c[0] - small_pos.c[0];
+    dy = major_pos.c[1] - small_pos.c[1];
+    dz = major_pos.c[2] - small_pos.c[2];
+
+    r2 = dx*dx + dy*dy + dz*dz;
+    pull = gm / (r2 * sqrt(r2));
+
+    acc->c[0] += dx * pull;
+    acc->c[1] += dy * pull;
+    acc->c[2] += dz * pull;
+}
+
+
+static terse_vector_t SmallBodyAcceleration(terse_vector_t small_pos, const body_state_t bary[5])
+{
+    terse_vector_t acc = VecZero;
+
+    /* Use barycentric coordinates of the Sun and major planets to calculate gravitational accelerations. */
+    AddAcceleration(&acc, small_pos, SUN_GM,     bary[0].r);
+    AddAcceleration(&acc, small_pos, JUPITER_GM, bary[1].r);
+    AddAcceleration(&acc, small_pos, SATURN_GM,  bary[2].r);
+    AddAcceleration(&acc, small_pos, URANUS_GM,  bary[3].r);
+    AddAcceleration(&acc, small_pos, NEPTUNE_GM, bary[4].r);
+
+    return acc;
+}
+
+
+body_grav_calc_t GravSim(           /* out: [pos, vel, acc] of the simulated body at time tt2 */
+    double tt2,                     /* in:  a target time to be calculated (either before or after tt1 */
+    const body_grav_calc_t *calc1)  /* in:  [pos, vel, acc] of the simulated body at time tt1 */
+{
+    body_grav_calc_t calc2;
+    terse_vector_t approx_pos;
+    terse_vector_t next_acc;
+    terse_vector_t delta_acc;
+    body_state_t bary2[5];
+    const double dt = tt2 - calc1->tt;
+    int i;
+
+    /* Estimate position of small body as if current acceleration applies across the whole time interval. */
+    /* approx_pos = pos1 + vel1*dt + (1/2)acc*dt^2 */
+    approx_pos = calc1->r;
+    VecIncr(&approx_pos, VecMul(dt, calc1->v));
+    VecIncr(&approx_pos, VecMul(dt*dt/2, calc1->a));
+
+    /* Calculate where the major bodies (Sun, Jupiter...Neptune) will be at the next time step. */
+    MajorBodyBary(bary2, tt2);
+
+    calc2.r = approx_pos;
+    for (i=0; i<2; ++i)     /* FIXFIXFIX - what if 2 iterations is not the best answer? */
+    {
+        /* Calculate acceleration experienced by small body at approximate next location. */
+        next_acc = SmallBodyAcceleration(calc2.r, bary2);
+
+        /* Assume each component of the acceleration vector ramps linearly over the interval. */
+        /* Integrating over the interval [tt1, tt2], we get expressions for r2, v2. */
+        delta_acc = VecSub(next_acc, calc1->a);
+        calc2.r = VecAdd(approx_pos, VecMul(dt*dt/6, delta_acc));
+        calc2.v = VecAdd(calc1->v, VecMul(dt, calc1->a));
+        VecIncr(&calc2.v, VecMul(dt/2, delta_acc));
+    }
+
+    calc2.tt = tt2;
+    return calc2;
+}
+
+
+static astro_vector_t CalcPluto(astro_time_t time)
+{
+    int best, nsteps, i;
+    double dt, tt2;
+    body_grav_calc_t calc1;
+    body_grav_calc_t calc2;
+    body_state_t bary[5];
+
+    if (time.tt <= PlutoStateTable[0].tt)
+    {
+        best = 0;
+    }
+    else if (time.tt >= PlutoStateTable[PLUTO_NUM_STATES-1].tt)
+    {
+        best = PLUTO_NUM_STATES-1;
+    }
+    else
+    {
+        int lo, mid, hi;
+        double diff, min_diff;
+
+        /* Binary search PlutoStateTable for closest time. */
+        /* Keep track of the closest fit as we go. */
+        best = lo = 0;
+        hi = PLUTO_NUM_STATES - 1;
+        min_diff = fabs(time.tt - PlutoStateTable[best].tt);
+        while (lo <= hi)
+        {
+            mid = (lo + hi) / 2;
+            diff = fabs(time.tt - PlutoStateTable[mid].tt);
+            if (diff < min_diff)
+            {
+                min_diff = diff;
+                best = mid;
+            }
+            if (time.tt < PlutoStateTable[mid].tt)
+                hi = mid - 1;
+            else
+                lo = mid + 1;
+        }
+    }
+
+    dt = 1.0;       /* EXPERIMENT -- make this as large as possible without sacrificing accuracy */
+    if (PlutoStateTable[best].tt > time.tt)
+        dt = -dt;
+
+    /* Figure out how many loops we need to iterate in order to straddle the target time. */
+    nsteps = (int)ceil((time.tt - PlutoStateTable[best].tt) / dt);
+
+    /* Calculate major body barycentric positions and velocities at the start time. */
+    MajorBodyBary(bary, PlutoStateTable[best].tt);
+
+    /* bary[0] = vectors from SSB to Sun. */
+    /* PlutoStateTable = vectors from Sun to Pluto. */
+    /* Add them to get vectors from SSB to Pluto in calc1. */
+    calc1.tt = PlutoStateTable[best].tt;
+    calc1.r = VecAdd(PlutoStateTable[best].r, bary[0].r);
+    calc1.v = VecAdd(PlutoStateTable[best].v, bary[0].v);
+
+    /* Calculate Pluto's acceleration vector at the current time. */
+    calc1.a = SmallBodyAcceleration(calc1.r, bary);
+
+    /* Iterate forwards or backwards in time from the closest known state to the target time. */
+    for (i=0; ; ++i)
+    {
+        tt2 = (i == nsteps) ? time.tt : (calc1.tt + dt);
+
+        /* Calculate the next body state from the previous body state. */
+        calc2 = GravSim(tt2, &calc1);
+
+        if (i == nsteps)
+        {
+            /* Convert barycentric coordinates back to heliocentric coordinates. */
+            return PublicVec(time, VecAdd(calc2.r, bary[0].r));
+        }
+
+        calc1 = calc2;
+    }
+}
+
+/*------------------ end Pluto integrator ------------------*/
+
 
 /**
  * @brief Calculates heliocentric Cartesian coordinates of a body in the J2000 equatorial system.

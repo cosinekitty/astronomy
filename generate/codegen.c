@@ -1580,7 +1580,69 @@ static int Top2013(cg_context_t *context)
         break;
 
     default:
-        FAIL("Top2013: Unsupported target language %d\n", context->language);
+        CHECK(LogError(context, "Top2013: Unsupported target language %d", context->language));
+    }
+
+    error = 0;
+fail:
+    TopFreeModel(&model);
+    return error;
+}
+
+
+static int PlutoStateTable_C(cg_context_t *context, const top_model_t *model)
+{
+    int error = 1;
+    double tt;
+    top_rectangular_t equ;
+    const double tt1 = -730000.0;   /* 0001-04-30T12:00:00.000Z */
+    const double tt2 = +730000.0;   /* 3998-09-03T12:00:00.000Z */
+    const int nsamples = 41;        /* results in an interval of approximately 100 years */
+    const double dt = (tt2 - tt1) / (nsamples - 1);
+    int i;
+
+    fprintf(context->outfile, "static const body_state_t PlutoStateTable[] =\n");
+    fprintf(context->outfile, "{\n");
+
+    for (i=0; i < nsamples; ++i)
+    {
+        tt = i*dt + tt1;
+        CHECK(TopPosition(model, tt, &equ));
+
+        fprintf(context->outfile,
+            "%c   { %10.1lf, {{%20.16lf, %20.16lf, %20.16lf}}, {{%23.16le, %23.16le, %23.16le}} }\n",
+            (i==0 ? ' ' : ','),
+            tt, equ.x, equ.y, equ.z, equ.vx, equ.vy, equ.vz);
+    }
+
+    fprintf(context->outfile, "};\n\n");
+    fprintf(context->outfile, "static const int PLUTO_NUM_STATES = %d", nsamples);
+
+    error = 0;
+fail:
+    return error;
+}
+
+
+static int PlutoStateTable(cg_context_t *context)
+{
+    int error = 1;
+    top_model_t model;
+    TopInitModel(&model);
+
+    CHECK(TopLoadModel(&model, "TOP2013.dat", 9));
+
+    switch (context->language)
+    {
+    case CODEGEN_LANGUAGE_C:
+        CHECK(PlutoStateTable_C(context, &model));
+        break;
+
+    case CODEGEN_LANGUAGE_CSHARP:
+    case CODEGEN_LANGUAGE_JS:
+    case CODEGEN_LANGUAGE_PYTHON:
+    default:
+        CHECK(LogError(context, "PlutoStateTable: Unsupported target language %d", context->language));
     }
 
     error = 0;
@@ -1613,6 +1675,7 @@ static const cg_directive_entry DirectiveTable[] =
     { "ADDSOL",             OptAddSol           },
     { "CONSTEL",            ConstellationData   },
     { "TOP2013",            Top2013             },
+    { "PLUTO_TABLE",        PlutoStateTable     },
     { NULL, NULL }  /* Marks end of list */
 };
 
