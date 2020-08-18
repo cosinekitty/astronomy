@@ -2079,6 +2079,7 @@ static terse_vector_t SmallBodyAcceleration(terse_vector_t small_pos, const body
 
 
 body_grav_calc_t GravSim(           /* out: [pos, vel, acc] of the simulated body at time tt2 */
+    body_state_t bary2[5],          /* out: major body barycentric positions at tt2 */
     double tt2,                     /* in:  a target time to be calculated (either before or after tt1 */
     const body_grav_calc_t *calc1)  /* in:  [pos, vel, acc] of the simulated body at time tt1 */
 {
@@ -2086,7 +2087,6 @@ body_grav_calc_t GravSim(           /* out: [pos, vel, acc] of the simulated bod
     terse_vector_t approx_pos;
     terse_vector_t next_acc;
     terse_vector_t delta_acc;
-    body_state_t bary2[5];
     const double dt = tt2 - calc1->tt;
 
     /* Estimate position of small body as if current acceleration applies across the whole time interval. */
@@ -2184,7 +2184,7 @@ static astro_vector_t CalcPluto(astro_time_t time)
         tt2 = (i == nsteps) ? time.tt : (calc1.tt + dt);
 
         /* Calculate the next body state from the previous body state. */
-        calc2 = GravSim(tt2, &calc1);
+        calc2 = GravSim(bary, tt2, &calc1);
 
         if (i == nsteps)
         {
