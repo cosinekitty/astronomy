@@ -2120,8 +2120,7 @@ static astro_vector_t CalcPluto(astro_time_t time)
 {
     int best, nsteps, i;
     double dt, tt2;
-    body_grav_calc_t calc1;
-    body_grav_calc_t calc2;
+    body_grav_calc_t calc;
     body_state_t bary[5];
 
     if (time.tt <= PlutoStateTable[0].tt)
@@ -2170,30 +2169,27 @@ static astro_vector_t CalcPluto(astro_time_t time)
 
     /* bary[0] = vectors from SSB to Sun. */
     /* PlutoStateTable = vectors from Sun to Pluto. */
-    /* Add them to get vectors from SSB to Pluto in calc1. */
-    calc1.tt = PlutoStateTable[best].tt;
-    calc1.r = VecAdd(PlutoStateTable[best].r, bary[0].r);
-    calc1.v = VecAdd(PlutoStateTable[best].v, bary[0].v);
+    /* Add them to get vectors from SSB to Pluto in 'calc'. */
+    calc.tt = PlutoStateTable[best].tt;
+    calc.r = VecAdd(PlutoStateTable[best].r, bary[0].r);
+    calc.v = VecAdd(PlutoStateTable[best].v, bary[0].v);
 
     /* Calculate Pluto's acceleration vector at the current time. */
-    calc1.a = SmallBodyAcceleration(calc1.r, bary);
+    calc.a = SmallBodyAcceleration(calc.r, bary);
 
     /* Iterate forwards or backwards in time from the closest known state to the target time. */
-    for (i=0; ; ++i)
+    for (i=0; i < nsteps; ++i)
     {
-        tt2 = (i == nsteps) ? time.tt : (calc1.tt + dt);
+        /* Update the time step by dt on all but the final step. */
+        /* On the final step, set the time to the exact target time. */
+        tt2 = (i+1 == nsteps) ? time.tt : (calc.tt + dt);
 
         /* Calculate the next body state from the previous body state. */
-        calc2 = GravSim(bary, tt2, &calc1);
-
-        if (i == nsteps)
-        {
-            /* Convert barycentric coordinates back to heliocentric coordinates. */
-            return PublicVec(time, VecAdd(calc2.r, bary[0].r));
-        }
-
-        calc1 = calc2;
+        calc = GravSim(bary, tt2, &calc);
     }
+
+    /* Convert barycentric coordinates back to heliocentric coordinates. */
+    return PublicVec(time, VecAdd(calc.r, bary[0].r));
 }
 
 /*------------------ end Pluto integrator ------------------*/
