@@ -71,11 +71,13 @@ static double jd_begin;
 static double jd_end;
 static short int de_number;
 
+static int ParseDate(const char *text, double *tt);
 static int OpenEphem(void);
 static int PrintUsage(void);
 static int GenerateVsopPlanets(void);
 static int GenerateChebPluto(void);
 static int GenerateTop(const char *name, const char *outFileName);
+static int TopCalc(const char *name, const char *date);
 static int TopNudge(const char *name, const char *inFileName, const char *outFileName);
 static int GenerateApsisTestData(void);
 static int GenerateSource(void);
@@ -187,6 +189,9 @@ int main(int argc, const char *argv[])
     if (argc == 6 && !strcmp(argv[1], "ephemeris"))
         return EphemerisJson(argv[2], argv[3], argv[4], atof(argv[5]));
 
+    if (argc == 4 && !strcmp(argv[1], "topcalc"))
+        return TopCalc(argv[2], argv[3]);
+
     return PrintUsage();
 }
 
@@ -230,6 +235,11 @@ static int PrintUsage(void)
         "   Use a guided random walk to try to improve it.\n"
         "   If a smaller model with acceptable accuracy is found,\n"
         "   it is written to outfile.\n"
+        "\n"
+        "generate topcalc planet date\n"
+        "   Calculate an exact position and velocity of the given planet\n"
+        "   (Jupiter, Saturn, Uranus, Neptune, or Pluto)\n"
+        "   at the specified date and time.\n"
         "\n"
         "generate topinfo filename planet\n"
         "   Prints summary info about the TOP2013 file.\n"
@@ -2261,6 +2271,41 @@ fail:
 }
 
 
+static int TopCalc(const char *name, const char *date)
+{
+    int error = 1;
+    top_model_t model;
+    vsop_body_t body;
+    top_rectangular_t equ;
+    int planet;
+    double tt;
+    TopInitModel(&model);
+
+    CHECK(ParseDate(date, &tt));
+
+    body = LookupBody(name);
+    if (body < 0)
+        FAIL("TopCalc: planet name '%s' is not valid.\n", name);
+
+    if (body < BODY_JUPITER || body > BODY_PLUTO)
+        FAIL("TopCalc: TOP2013 supports Jupiter through Pluto only.\n");
+
+    planet = body + 1;      /* convert our body ID into TOP2013 planet ID */
+
+    CHECK(TopLoadModel(&model, TopDataFileName, planet));
+    CHECK(TopPosition(&model, tt, &equ));
+    printf("tt  = %0.8lf\n", tt);
+    printf("pos = [%22.16lf, %22.16lf, %22.16lf]\n", equ.x, equ.y, equ.z);
+    printf("vel = [%22.16lf, %22.16lf, %22.16lf]\n", equ.vx, equ.vy, equ.vz);
+
+    error = 0;
+
+fail:
+    TopFreeModel(&model);
+    return error;
+}
+
+
 static int GenerateTop(const char *name, const char *outFileName)
 {
     int error = 1;
@@ -2734,12 +2779,18 @@ fail:
 static int ParseDate(const char *text, double *tt)
 {
     int error = 1;
-    int year, month, day;
+    int nscanned;
+    int year, month, day, hour, minute;
+    double second, float_hours;
 
-    if (3 != sscanf(text, "%d-%d-%d", &year, &month, &day))
-        FAIL("ParseDate: text '%s' is not valid. Must be formatted as yyyy-mm-dd.\n", text);
+    nscanned = sscanf(text, "%d-%d-%dT%d:%d:%lfZ", &year, &month, &day, &hour, &minute, &second);
+    if (nscanned < 5)
+        FAIL("ParseDate: text '%s' is not valid. Must be formatted as yyyy-mm-dd[Thh:mm[:ss.sss]Z].\n", text);
+    if (nscanned < 6)
+        second = 0.0;
 
-    *tt = julian_date((short)year, (short)month, (short)day, 12.0) - 2451545.0;
+    float_hours = hour + minute/60.0 + second/3600.0;
+    *tt = julian_date((short)year, (short)month, (short)day, float_hours) - T0;
     error = 0;
 fail:
     return error;

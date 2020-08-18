@@ -3319,14 +3319,15 @@ static int PlutoCheck(void)
     astro_time_t time;
     astro_vector_t vector;
     double dx, dy, dz, diff;
-    const double x = -25.4825019428226902;
-    const double y = +22.2551862236535278;
-    const double z = +14.6171822618004299;
+    const double x = -25.4826333966871523;
+    const double y = +22.2540501990260502;
+    const double z = +14.6169332342384415;
 
     time = Astronomy_TimeFromDays(-109572.5);
 
+    printf("C PlutoCheck: ");
     PrintTime(time);
-    printf("\n");
+    printf(" = %0.6lf UT = %0.6lf TT\n", time.ut, time.tt);
 
     vector = Astronomy_HelioVector(BODY_PLUTO, time);
     if (vector.status != ASTRO_SUCCESS)
@@ -3336,7 +3337,10 @@ static int PlutoCheck(void)
     dy = (vector.y - y);
     dz = (vector.z - z);
     diff = sqrt(dx*dx + dy*dy + dz*dz);
-    printf("PlutoCheck: diff = %le\n", diff);
+    printf("C PlutoCheck: calc pos = [%20.16lf, %20.16lf, %20.16lf]\n", vector.x, vector.y, vector.z);
+    printf("C PlutoCheck: ref  pos = [%20.16lf, %20.16lf, %20.16lf]\n", x, y, z);
+    printf("C PlutoCheck: del  pos = [%20.16lf, %20.16lf, %20.16lf]\n", vector.x - x, vector.y - y, vector.z - z);
+    printf("C PlutoCheck: error = %le\n", diff);
 
     error = 0;
 fail:
