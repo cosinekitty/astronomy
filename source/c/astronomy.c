@@ -3139,7 +3139,6 @@ body_grav_calc_t GravSim(           /* out: [pos, vel, acc] of the simulated bod
     terse_vector_t delta_acc;
     body_state_t bary2[5];
     const double dt = tt2 - calc1->tt;
-    int i;
 
     /* Estimate position of small body as if current acceleration applies across the whole time interval. */
     /* approx_pos = pos1 + vel1*dt + (1/2)acc*dt^2 */
@@ -3151,18 +3150,17 @@ body_grav_calc_t GravSim(           /* out: [pos, vel, acc] of the simulated bod
     MajorBodyBary(bary2, tt2);
 
     calc2.r = approx_pos;
-    for (i=0; i<2; ++i)     /* FIXFIXFIX - what if 2 iterations is not the best answer? */
-    {
-        /* Calculate acceleration experienced by small body at approximate next location. */
-        next_acc = SmallBodyAcceleration(calc2.r, bary2);
 
-        /* Assume each component of the acceleration vector ramps linearly over the interval. */
-        /* Integrating over the interval [tt1, tt2], we get expressions for r2, v2. */
-        delta_acc = VecSub(next_acc, calc1->a);
-        calc2.r = VecAdd(approx_pos, VecMul(dt*dt/6, delta_acc));
-        calc2.v = VecAdd(calc1->v, VecMul(dt, calc1->a));
-        VecIncr(&calc2.v, VecMul(dt/2, delta_acc));
-    }
+    /* Calculate acceleration experienced by small body at approximate next location. */
+    next_acc = SmallBodyAcceleration(calc2.r, bary2);
+
+    /* Assume each component of the acceleration vector ramps linearly over the interval. */
+    /* Integrating over the interval [tt1, tt2], we get expressions for r2, v2. */
+    delta_acc = VecSub(next_acc, calc1->a);
+    calc2.r = VecAdd(approx_pos, VecMul(dt*dt/6, delta_acc));
+    calc2.v = VecAdd(calc1->v, VecMul(dt, calc1->a));
+    VecIncr(&calc2.v, VecMul(dt/2, delta_acc));
+    calc2.a = SmallBodyAcceleration(calc2.r, bary2);
 
     calc2.tt = tt2;
     return calc2;
@@ -3211,7 +3209,7 @@ static astro_vector_t CalcPluto(astro_time_t time)
         }
     }
 
-    dt = 1.0;       /* EXPERIMENT -- make this as large as possible without sacrificing accuracy */
+    dt = 10;       /* EXPERIMENT -- make this as large as possible without sacrificing accuracy */
     if (PlutoStateTable[best].tt > time.tt)
         dt = -dt;
 
