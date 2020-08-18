@@ -3062,8 +3062,8 @@ static body_state_t AdjustBarycenterPosVel(body_state_t *ssb, double tt, astro_b
 
     shift = planet_gm / (planet_gm + SUN_GM);
     planet = CalcVsopPosVel(&vsop[body], tt);
-    ssb->r = VecAdd(ssb->r, VecMul(shift, planet.r));
-    ssb->v = VecAdd(ssb->v, VecMul(shift, planet.v));
+    VecDecr(&ssb->r, VecMul(shift, planet.r));
+    VecDecr(&ssb->v, VecMul(shift, planet.v));
 
     return planet;
 }
@@ -3240,7 +3240,7 @@ static astro_vector_t CalcPluto(astro_time_t time)
     }
 
     /* Convert barycentric coordinates back to heliocentric coordinates. */
-    return PublicVec(time, VecAdd(calc.r, bary[0].r));
+    return PublicVec(time, VecSub(calc.r, bary[0].r));
 }
 
 /*------------------ end Pluto integrator ------------------*/
