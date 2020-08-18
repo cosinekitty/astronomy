@@ -33,8 +33,9 @@ script:
 
 branches:
     only:
-        - gh-pages
-        - /.*/
+        - master
+    except:
+        - pluto_integrator
 
 global:
   - DOTNET_SKIP_FIRST_TIME_EXPERIENCE=true
