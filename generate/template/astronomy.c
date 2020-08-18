@@ -41,7 +41,9 @@ extern "C" {
 
 typedef struct
 {
-    double c[3];
+    double x;
+    double y;
+    double z;
 }
 terse_vector_t;
 
@@ -50,49 +52,49 @@ static const terse_vector_t VecZero;
 static terse_vector_t VecAdd(terse_vector_t a, terse_vector_t b)
 {
     terse_vector_t c;
-    c.c[0] = a.c[0] + b.c[0];
-    c.c[1] = a.c[1] + b.c[1];
-    c.c[2] = a.c[2] + b.c[2];
+    c.x = a.x + b.x;
+    c.y = a.y + b.y;
+    c.z = a.z + b.z;
     return c;
 }
 
 static terse_vector_t VecSub(terse_vector_t a, terse_vector_t b)
 {
     terse_vector_t c;
-    c.c[0] = a.c[0] - b.c[0];
-    c.c[1] = a.c[1] - b.c[1];
-    c.c[2] = a.c[2] - b.c[2];
+    c.x = a.x - b.x;
+    c.y = a.y - b.y;
+    c.z = a.z - b.z;
     return c;
 }
 
 static void VecIncr(terse_vector_t *target, terse_vector_t source)
 {
-    target->c[0] += source.c[0];
-    target->c[1] += source.c[1];
-    target->c[2] += source.c[2];
+    target->x += source.x;
+    target->y += source.y;
+    target->z += source.z;
 }
 
 static void VecDecr(terse_vector_t *target, terse_vector_t source)
 {
-    target->c[0] -= source.c[0];
-    target->c[1] -= source.c[1];
-    target->c[2] -= source.c[2];
+    target->x -= source.x;
+    target->y -= source.y;
+    target->z -= source.z;
 }
 
 static terse_vector_t VecMul(double s, terse_vector_t v)
 {
     terse_vector_t p;
-    p.c[0] = s * v.c[0];
-    p.c[1] = s * v.c[1];
-    p.c[2] = s * v.c[2];
+    p.x = s * v.x;
+    p.y = s * v.y;
+    p.z = s * v.z;
     return p;
 }
 
 static void VecScale(terse_vector_t *target, double scalar)
 {
-    target->c[0] *= scalar;
-    target->c[1] *= scalar;
-    target->c[2] *= scalar;
+    target->x *= scalar;
+    target->y *= scalar;
+    target->z *= scalar;
 }
 
 static astro_vector_t PublicVec(astro_time_t time, terse_vector_t terse)
@@ -101,9 +103,9 @@ static astro_vector_t PublicVec(astro_time_t time, terse_vector_t terse)
 
     vector.status = ASTRO_SUCCESS;
     vector.t = time;
-    vector.x = terse.c[0];
-    vector.y = terse.c[1];
-    vector.z = terse.c[2];
+    vector.x = terse.x;
+    vector.y = terse.y;
+    vector.z = terse.z;
 
     return vector;
 }
@@ -1796,9 +1798,9 @@ static terse_vector_t VsopRotate(const double ecl[3])
         Z FK5     0.000000000000  +0.397776982902  +0.917482137087   Z VSOP87A
     */
 
-    equ.c[0] = ecl[0] + 0.000000440360*ecl[1] - 0.000000190919*ecl[2];
-    equ.c[1] = -0.000000479966*ecl[0] + 0.917482137087*ecl[1] - 0.397776982902*ecl[2];
-    equ.c[2] = 0.397776982902*ecl[1] + 0.917482137087*ecl[2];
+    equ.x = ecl[0] + 0.000000440360*ecl[1] - 0.000000190919*ecl[2];
+    equ.y = -0.000000479966*ecl[0] + 0.917482137087*ecl[1] - 0.397776982902*ecl[2];
+    equ.z = 0.397776982902*ecl[1] + 0.917482137087*ecl[2];
 
     return equ;
 }
@@ -1835,9 +1837,9 @@ static astro_vector_t CalcVsop(const vsop_model_t *model, astro_time_t time)
     /* Package the position as astro_vector_t. */
     vector.status = ASTRO_SUCCESS;
     vector.t = time;
-    vector.x = pos.c[0];
-    vector.y = pos.c[1];
-    vector.z = pos.c[2];
+    vector.x = pos.x;
+    vector.y = pos.y;
+    vector.z = pos.z;
 
     return vector;
 }
@@ -1917,9 +1919,7 @@ static body_state_t CalcVsopPosVel(const vsop_model_t *model, double tt)
     state.v = VsopRotate(eclip);
 
     /* Convert speed units from [AU/millennium] to [AU/day]. */
-    state.v.c[0] /= DAYS_PER_MILLENNIUM;
-    state.v.c[1] /= DAYS_PER_MILLENNIUM;
-    state.v.c[2] /= DAYS_PER_MILLENNIUM;
+    VecScale(&state.v, 1 / DAYS_PER_MILLENNIUM);
 
     return state;
 }
@@ -1998,7 +1998,6 @@ typedef struct
 
 $ASTRO_PLUTO_TABLE();
 
-
 static body_state_t AdjustBarycenterPosVel(body_state_t *ssb, double tt, astro_body_t body, double planet_gm)
 {
     body_state_t planet;
@@ -2051,16 +2050,16 @@ static void AddAcceleration(terse_vector_t *acc, terse_vector_t small_pos, doubl
 {
     double dx, dy, dz, r2, pull;
 
-    dx = major_pos.c[0] - small_pos.c[0];
-    dy = major_pos.c[1] - small_pos.c[1];
-    dz = major_pos.c[2] - small_pos.c[2];
+    dx = major_pos.x - small_pos.x;
+    dy = major_pos.y - small_pos.y;
+    dz = major_pos.z - small_pos.z;
 
     r2 = dx*dx + dy*dy + dz*dz;
     pull = gm / (r2 * sqrt(r2));
 
-    acc->c[0] += dx * pull;
-    acc->c[1] += dy * pull;
-    acc->c[2] += dz * pull;
+    acc->x += dx * pull;
+    acc->y += dy * pull;
+    acc->z += dz * pull;
 }
 
 
