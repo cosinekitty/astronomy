@@ -44,6 +44,8 @@
 #include "vsop.h"
 #include "top2013.h"
 
+const double PLUTO_TOLERANCE_ARCMIN = 1.4;
+
 int Verbose;
 #define DEBUG(...)  do{if(Verbose)printf(__VA_ARGS__);}while(0)
 
@@ -1456,7 +1458,7 @@ static int CheckTestVector(const char *filename, int lnum, const char *line, dou
         return error;
     }
 
-    tolerance = (body == BODY_PLUTO) ? 1.3 : 0.4;
+    tolerance = (body == BODY_PLUTO) ? PLUTO_TOLERANCE_ARCMIN : 0.4;
     if (*arcmin > tolerance)
     {
         fprintf(stderr, "CheckTestVector: Excessive angular error (%lf arcmin) on line %d of file %s\n", *arcmin, lnum, filename);
@@ -1555,7 +1557,7 @@ static int CheckSkyPos(observer *location, const char *filename, int lnum, const
     /* Calculate pythagorean error as if both were planar coordinates. */
     *arcmin_equ = sqrt(delta_ra*delta_ra + delta_dec*delta_dec);
 
-    tolerance = (body == BODY_PLUTO) ? 1.3 : 0.9;
+    tolerance = (body == BODY_PLUTO) ? PLUTO_TOLERANCE_ARCMIN : 0.9;
     if (*arcmin_equ > tolerance)
     {
         fprintf(stderr, "CheckSkyPos: excessive (RA,DEC) error = %lf arcmin at line %d of file %s\n", *arcmin_equ, lnum, filename);
@@ -1588,7 +1590,7 @@ static int CheckSkyPos(observer *location, const char *filename, int lnum, const
 
     *arcmin_hor = sqrt(delta_az*delta_az + delta_alt*delta_alt);
 
-    tolerance = (body == BODY_PLUTO) ? 1.4 : 0.9;
+    tolerance = (body == BODY_PLUTO) ? PLUTO_TOLERANCE_ARCMIN : 0.9;
     if (*arcmin_hor > tolerance)
     {
         fprintf(stderr, "CheckSkyPos: excessive (az,alt) error = %lf arcmin for body %d at line %d of file %s\n", *arcmin_hor, body, lnum, filename);

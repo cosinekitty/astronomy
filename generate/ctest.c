@@ -3341,6 +3341,8 @@ static int PlutoCheck(void)
     printf("C PlutoCheck: ref  pos = [%20.16lf, %20.16lf, %20.16lf]\n", x, y, z);
     printf("C PlutoCheck: del  pos = [%20.16lf, %20.16lf, %20.16lf]\n", vector.x - x, vector.y - y, vector.z - z);
     printf("C PlutoCheck: error = %le\n", diff);
+    if (diff > 5.68e-05)
+        FAIL("C PlutoCheck: EXCESSIVE ERROR\n");
 
     error = 0;
 fail:
