@@ -3149,15 +3149,13 @@ body_grav_calc_t GravSim(           /* out: [pos, vel, acc] of the simulated bod
     /* Calculate where the major bodies (Sun, Jupiter...Neptune) will be at the next time step. */
     MajorBodyBary(bary2, tt2);
 
-    calc2.r = approx_pos;
-
     /* Calculate acceleration experienced by small body at approximate next location. */
-    next_acc = SmallBodyAcceleration(calc2.r, bary2);
+    next_acc = SmallBodyAcceleration(approx_pos, bary2);
 
     /* Assume each component of the acceleration vector ramps linearly over the interval. */
     /* Integrating over the interval [tt1, tt2], we get expressions for r2, v2. */
     delta_acc = VecSub(next_acc, calc1->a);
-    calc2.r = VecAdd(approx_pos, VecMul(dt*dt/6, delta_acc));
+    calc2.r = VecAdd(approx_pos, VecMul(dt*dt*dt/6, delta_acc));
     calc2.v = VecAdd(calc1->v, VecMul(dt, calc1->a));
     VecIncr(&calc2.v, VecMul(dt/2, delta_acc));
     calc2.a = SmallBodyAcceleration(calc2.r, bary2);
@@ -3167,7 +3165,7 @@ body_grav_calc_t GravSim(           /* out: [pos, vel, acc] of the simulated bod
 }
 
 
-double CalcPlutoDeltaTime = 10.0;
+double CalcPlutoDeltaTime = 1.0;
 
 
 static astro_vector_t CalcPluto(astro_time_t time)
