@@ -3136,9 +3136,11 @@ body_grav_calc_t GravSim(           /* out: [pos, vel, acc] of the simulated bod
 {
     body_grav_calc_t calc2;
     terse_vector_t approx_pos;
-    terse_vector_t next_acc;
-    terse_vector_t delta_acc;
+    terse_vector_t acc;
     const double dt = tt2 - calc1->tt;
+
+    /* Calculate where the major bodies (Sun, Jupiter...Neptune) will be at the next time step. */
+    MajorBodyBary(bary2, tt2);
 
     /* Estimate position of small body as if current acceleration applies across the whole time interval. */
     /* approx_pos = pos1 + vel1*dt + (1/2)acc*dt^2 */
@@ -3146,26 +3148,28 @@ body_grav_calc_t GravSim(           /* out: [pos, vel, acc] of the simulated bod
     VecIncr(&approx_pos, VecMul(dt, calc1->v));
     VecIncr(&approx_pos, VecMul(dt*dt/2, calc1->a));
 
-    /* Calculate where the major bodies (Sun, Jupiter...Neptune) will be at the next time step. */
-    MajorBodyBary(bary2, tt2);
-
     /* Calculate acceleration experienced by small body at approximate next location. */
-    next_acc = SmallBodyAcceleration(approx_pos, bary2);
+    acc = SmallBodyAcceleration(approx_pos, bary2);
 
-    /* Assume each component of the acceleration vector ramps linearly over the interval. */
-    /* Integrating over the interval [tt1, tt2], we get expressions for r2, v2. */
-    delta_acc = VecSub(next_acc, calc1->a);
-    calc2.r = VecAdd(approx_pos, VecMul(dt*dt*dt/6, delta_acc));
-    calc2.v = VecAdd(calc1->v, VecMul(dt, calc1->a));
-    VecIncr(&calc2.v, VecMul(dt/2, delta_acc));
+    /* Calculate the average acceleration of the endpoints. */
+    /* This becomes our estimate of the mean effective acceleration over the whole interval. */
+    acc.x = (acc.x + calc1->a.x) / 2;
+    acc.y = (acc.y + calc1->a.y) / 2;
+    acc.z = (acc.z + calc1->a.z) / 2;
+
+    /* Refine the estimates of [pos, vel, acc] at tt2 using the mean acceleration. */
+    calc2.r = calc1->r;
+    VecIncr(&calc2.r, VecMul(dt, calc1->v));
+    VecIncr(&calc2.r, VecMul(dt*dt/2, acc));
+
+    calc2.v = VecAdd(calc1->v, VecMul(dt, acc));
     calc2.a = SmallBodyAcceleration(calc2.r, bary2);
-
     calc2.tt = tt2;
     return calc2;
 }
 
 
-double CalcPlutoDeltaTime = 50.0;
+double CalcPlutoDeltaTime = 500.0;
 
 
 static const body_state_t *FindNearestState(double tt)

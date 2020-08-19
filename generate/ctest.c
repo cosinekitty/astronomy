@@ -3349,11 +3349,10 @@ static int PlutoCheck(void)
     printf("C PlutoCheck: calc pos = [%20.16lf, %20.16lf, %20.16lf]\n", vector.x, vector.y, vector.z);
     printf("C PlutoCheck: ref  pos = [%20.16lf, %20.16lf, %20.16lf]\n", x, y, z);
     printf("C PlutoCheck: del  pos = [%20.16lf, %20.16lf, %20.16lf]\n", vector.x - x, vector.y - y, vector.z - z);
-    printf("C PlutoCheck: error = %le AU, %0.3lf arcmin\n", diff, arcmin);
-#if 0
-    if (diff > 5.68e-05)
+    printf("C PlutoCheck: diff = %le AU, %0.3lf arcmin\n", diff, arcmin);
+
+    if ((env == NULL) && (arcmin > 0.4))
         FAIL("C PlutoCheck: EXCESSIVE ERROR\n");
-#endif
 
     error = 0;
 fail:
