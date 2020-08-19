@@ -2118,7 +2118,7 @@ body_grav_calc_t GravSim(           /* out: [pos, vel, acc] of the simulated bod
 }
 
 
-double CalcPlutoDeltaTime = 500.0;
+#define PLUTO_DT 500
 
 
 static const body_state_t *FindNearestState(double tt)
@@ -2170,7 +2170,7 @@ static astro_vector_t CalcPluto(astro_time_t time)
     const body_state_t *best;
 
     best = FindNearestState(time.tt);
-    dt = CalcPlutoDeltaTime;
+    dt = PLUTO_DT;
     if (best->tt > time.tt)
         dt = -dt;
 

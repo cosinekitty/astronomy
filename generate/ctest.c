@@ -3322,13 +3322,6 @@ static int PlutoCheck(void)
     const double x = +37.4377303529113306;
     const double y = -10.2466292445590774;
     const double z = -14.4773101309873091;
-    extern double CalcPlutoDeltaTime;
-    const char *env = getenv("PLUTO_DT");
-
-    if (env != NULL)
-        CalcPlutoDeltaTime = atof(env);
-
-    printf("C PlutoCheck: dt = %lf\n", CalcPlutoDeltaTime);
 
     time = Astronomy_TimeFromDays(18250.0);
 
@@ -3351,7 +3344,7 @@ static int PlutoCheck(void)
     printf("C PlutoCheck: del  pos = [%20.16lf, %20.16lf, %20.16lf]\n", vector.x - x, vector.y - y, vector.z - z);
     printf("C PlutoCheck: diff = %le AU, %0.3lf arcmin\n", diff, arcmin);
 
-    if ((env == NULL) && (arcmin > 0.4))
+    if (arcmin > 0.2)
         FAIL("C PlutoCheck: EXCESSIVE ERROR\n");
 
     error = 0;
