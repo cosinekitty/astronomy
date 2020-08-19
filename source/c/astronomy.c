@@ -3168,18 +3168,14 @@ body_grav_calc_t GravSim(           /* out: [pos, vel, acc] of the simulated bod
 double CalcPlutoDeltaTime = 1.0;
 
 
-static astro_vector_t CalcPluto(astro_time_t time)
+static const body_state_t *FindNearestState(double tt)
 {
-    int best, nsteps, i;
-    double dt, tt2;
-    body_grav_calc_t calc;
-    body_state_t bary[5];
-
-    if (time.tt <= PlutoStateTable[0].tt)
+    int best;
+    if (tt <= PlutoStateTable[0].tt)
     {
         best = 0;
     }
-    else if (time.tt >= PlutoStateTable[PLUTO_NUM_STATES-1].tt)
+    else if (tt >= PlutoStateTable[PLUTO_NUM_STATES-1].tt)
     {
         best = PLUTO_NUM_STATES-1;
     }
@@ -3192,39 +3188,51 @@ static astro_vector_t CalcPluto(astro_time_t time)
         /* Keep track of the closest fit as we go. */
         best = lo = 0;
         hi = PLUTO_NUM_STATES - 1;
-        min_diff = fabs(time.tt - PlutoStateTable[best].tt);
+        min_diff = fabs(tt - PlutoStateTable[best].tt);
         while (lo <= hi)
         {
             mid = (lo + hi) / 2;
-            diff = fabs(time.tt - PlutoStateTable[mid].tt);
+            diff = fabs(tt - PlutoStateTable[mid].tt);
             if (diff < min_diff)
             {
                 min_diff = diff;
                 best = mid;
             }
-            if (time.tt < PlutoStateTable[mid].tt)
+            if (tt < PlutoStateTable[mid].tt)
                 hi = mid - 1;
             else
                 lo = mid + 1;
         }
     }
+    return &PlutoStateTable[best];
+}
 
+
+static astro_vector_t CalcPluto(astro_time_t time)
+{
+    int nsteps, i;
+    double dt, tt2;
+    body_grav_calc_t calc;
+    body_state_t bary[5];
+    const body_state_t *best;
+
+    best = FindNearestState(time.tt);
     dt = CalcPlutoDeltaTime;
-    if (PlutoStateTable[best].tt > time.tt)
+    if (best->tt > time.tt)
         dt = -dt;
 
     /* Figure out how many loops we need to iterate in order to straddle the target time. */
-    nsteps = (int)ceil((time.tt - PlutoStateTable[best].tt) / dt);
+    nsteps = (int)ceil((time.tt - best->tt) / dt);
 
     /* Calculate major body barycentric positions and velocities at the start time. */
-    MajorBodyBary(bary, PlutoStateTable[best].tt);
+    MajorBodyBary(bary, best->tt);
 
     /* bary[0] = vectors from SSB to Sun. */
     /* PlutoStateTable = vectors from Sun to Pluto. */
     /* Add them to get vectors from SSB to Pluto in 'calc'. */
-    calc.tt = PlutoStateTable[best].tt;
-    calc.r = VecAdd(PlutoStateTable[best].r, bary[0].r);
-    calc.v = VecAdd(PlutoStateTable[best].v, bary[0].v);
+    calc.tt = best->tt;
+    calc.r = VecAdd(best->r, bary[0].r);
+    calc.v = VecAdd(best->v, bary[0].v);
 
     /* Calculate Pluto's acceleration vector at the current time. */
     calc.a = SmallBodyAcceleration(calc.r, bary);
