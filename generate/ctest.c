@@ -3318,10 +3318,17 @@ static int PlutoCheck(void)
     int error = 1;
     astro_time_t time;
     astro_vector_t vector;
-    double dx, dy, dz, diff;
+    double dx, dy, dz, diff, dist, arcmin;
     const double x = +37.4377303529113306;
     const double y = -10.2466292445590774;
     const double z = -14.4773101309873091;
+    extern double CalcPlutoDeltaTime;
+    const char *env = getenv("PLUTO_DT");
+
+    if (env != NULL)
+        CalcPlutoDeltaTime = atof(env);
+
+    printf("C PlutoCheck: dt = %lf\n", CalcPlutoDeltaTime);
 
     time = Astronomy_TimeFromDays(18250.0);
 
@@ -3337,10 +3344,12 @@ static int PlutoCheck(void)
     dy = (vector.y - y);
     dz = (vector.z - z);
     diff = sqrt(dx*dx + dy*dy + dz*dz);
+    dist = (sqrt(x*x + y*y + z*z) - 1.0);       /* worst-case distance between Pluto and Earth */
+    arcmin = (diff / dist) * (180.0 * 60.0 / PI);
     printf("C PlutoCheck: calc pos = [%20.16lf, %20.16lf, %20.16lf]\n", vector.x, vector.y, vector.z);
     printf("C PlutoCheck: ref  pos = [%20.16lf, %20.16lf, %20.16lf]\n", x, y, z);
     printf("C PlutoCheck: del  pos = [%20.16lf, %20.16lf, %20.16lf]\n", vector.x - x, vector.y - y, vector.z - z);
-    printf("C PlutoCheck: error = %le\n", diff);
+    printf("C PlutoCheck: error = %le AU, %0.3lf arcmin\n", diff, arcmin);
 #if 0
     if (diff > 5.68e-05)
         FAIL("C PlutoCheck: EXCESSIVE ERROR\n");

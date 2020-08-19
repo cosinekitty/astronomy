@@ -2114,7 +2114,7 @@ body_grav_calc_t GravSim(           /* out: [pos, vel, acc] of the simulated bod
 }
 
 
-double CalcPlutoDeltaTime = 1.0;
+double CalcPlutoDeltaTime = 50.0;
 
 
 static const body_state_t *FindNearestState(double tt)
