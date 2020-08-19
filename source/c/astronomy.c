@@ -3167,6 +3167,9 @@ body_grav_calc_t GravSim(           /* out: [pos, vel, acc] of the simulated bod
 }
 
 
+double CalcPlutoDeltaTime = 10.0;
+
+
 static astro_vector_t CalcPluto(astro_time_t time)
 {
     int best, nsteps, i;
@@ -3208,7 +3211,7 @@ static astro_vector_t CalcPluto(astro_time_t time)
         }
     }
 
-    dt = 10;       /* EXPERIMENT -- make this as large as possible without sacrificing accuracy */
+    dt = CalcPlutoDeltaTime;
     if (PlutoStateTable[best].tt > time.tt)
         dt = -dt;
 
