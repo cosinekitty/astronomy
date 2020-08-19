@@ -2011,8 +2011,8 @@ static body_state_t AdjustBarycenterPosVel(body_state_t *ssb, double tt, astro_b
 
     shift = planet_gm / (planet_gm + SUN_GM);
     planet = CalcVsopPosVel(&vsop[body], tt);
-    VecDecr(&ssb->r, VecMul(shift, planet.r));
-    VecDecr(&ssb->v, VecMul(shift, planet.v));
+    VecIncr(&ssb->r, VecMul(shift, planet.r));
+    VecIncr(&ssb->v, VecMul(shift, planet.v));
 
     return planet;
 }
