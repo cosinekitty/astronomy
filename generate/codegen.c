@@ -1601,6 +1601,10 @@ static int PlutoStateTable_C(cg_context_t *context, const top_model_t *model)
     const double dt = (tt2 - tt1) / (nsamples - 1);
     int i;
 
+    if (dt != round(dt))
+        return LogError(context, "PlutoStateTable_C: dt = %lf is not an integer.\n", dt);
+
+    fprintf(context->outfile, "#define PLUTO_TIME_STEP %0.0lf\n\n", dt);
     fprintf(context->outfile, "static const body_state_t PlutoStateTable[] =\n");
     fprintf(context->outfile, "{\n");
 

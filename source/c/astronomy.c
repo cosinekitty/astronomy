@@ -3002,6 +3002,8 @@ typedef struct
 } body_grav_calc_t;
 /** @endcond */
 
+#define PLUTO_TIME_STEP 36500
+
 static const body_state_t PlutoStateTable[] =
 {
     {  -730000.0, {-26.1182072321075829, -14.3761681778249830,   3.3844025152994774}, { 1.6339372163655529e-03, -2.7861699588507534e-03, -1.3585880229444957e-03} }
@@ -3170,90 +3172,237 @@ body_grav_calc_t GravSim(           /* out: [pos, vel, acc] of the simulated bod
 
 
 #define PLUTO_DT 500
+#if PLUTO_TIME_STEP % PLUTO_DT != 0
+    #error Invalid combination of Pluto time step, time increment.
+#endif
 
+#define PLUTO_NSTEPS    ((PLUTO_TIME_STEP / PLUTO_DT) + 1)
+#define PLUTO_NRECENT   3
 
-static const body_state_t *FindNearestState(double tt)
+/** @cond DOXYGEN_SKIP */
+typedef struct
 {
-    int best;
-    if (tt <= PlutoStateTable[0].tt)
-    {
-        best = 0;
-    }
-    else if (tt >= PlutoStateTable[PLUTO_NUM_STATES-1].tt)
-    {
-        best = PLUTO_NUM_STATES-1;
-    }
-    else
-    {
-        int lo, mid, hi;
-        double diff, min_diff;
+    body_grav_calc_t   step[PLUTO_NSTEPS];
+}
+body_segment_t;
 
-        /* Binary search PlutoStateTable for closest time. */
-        /* Keep track of the closest fit as we go. */
-        best = lo = 0;
-        hi = PLUTO_NUM_STATES - 1;
-        min_diff = fabs(tt - PlutoStateTable[best].tt);
-        while (lo <= hi)
+typedef struct
+{
+    body_segment_t segment[PLUTO_NRECENT];
+    int recent[PLUTO_NRECENT];
+    int nrecent;
+}
+body_segment_cache_t;
+/** @endcond */
+
+
+/* FIXFIXFIX - Using a global is not thread-safe. Either add thread-locks or change API to accept a cache pointer. */
+static body_segment_cache_t pluto_cache;
+
+
+static int FindNearestState(double tt)
+{
+    int best, lo, mid, hi;
+    double diff, min_diff;
+
+    if (tt <= PlutoStateTable[0].tt)
+        return 0;
+
+    if (tt >= PlutoStateTable[PLUTO_NUM_STATES-1].tt)
+        return PLUTO_NUM_STATES-1;
+
+    /* Binary search PlutoStateTable for closest time. */
+    /* Keep track of the closest fit as we go. */
+    best = lo = 0;
+    hi = PLUTO_NUM_STATES - 1;
+    min_diff = fabs(tt - PlutoStateTable[best].tt);
+    while (lo <= hi)
+    {
+        mid = (lo + hi) / 2;
+        diff = fabs(tt - PlutoStateTable[mid].tt);
+        if (diff < min_diff)
         {
-            mid = (lo + hi) / 2;
-            diff = fabs(tt - PlutoStateTable[mid].tt);
-            if (diff < min_diff)
-            {
-                min_diff = diff;
-                best = mid;
-            }
-            if (tt < PlutoStateTable[mid].tt)
-                hi = mid - 1;
-            else
-                lo = mid + 1;
+            min_diff = diff;
+            best = mid;
+        }
+        if (tt < PlutoStateTable[mid].tt)
+            hi = mid - 1;
+        else
+            lo = mid + 1;
+    }
+
+    return best;
+}
+
+
+static body_grav_calc_t GravFromState(const body_state_t *state)
+{
+    body_grav_calc_t calc;
+    body_state_t bary[5];
+
+    MajorBodyBary(bary, state->tt);
+
+    calc.tt = state->tt;
+    calc.r  = VecAdd(state->r, bary[0].r);      /* convert heliocentric to barycentric */
+    calc.v  = VecAdd(state->v, bary[0].v);      /* convert heliocentric to barycentric */
+    calc.a  = SmallBodyAcceleration(calc.r, bary);
+
+    return calc;
+}
+
+
+static const body_segment_t *GetSegment(body_segment_cache_t *cache, double tt)
+{
+    int i, s, r, left_state, right_state;
+    body_segment_t *seg;
+    body_segment_t reverse;
+    body_state_t bary[5];
+    double step_tt, ramp;
+
+    if (tt < PlutoStateTable[0].tt || tt > PlutoStateTable[PLUTO_NUM_STATES-1].tt)
+    {
+        /* We don't bother calculating a segment. Let the caller crawl backward/forward to this time. */
+        return NULL;
+    }
+
+    /* See if we have a segment that straddles the requested time. */
+    /* If so, return it. Otherwise, calculate it and return it. */
+
+    for (s=0; s < cache->nrecent; ++s)
+    {
+        r = cache->recent[s];
+        seg = &cache->segment[r];
+        if ((seg->step[0].tt <= tt) && (tt <= seg->step[PLUTO_NSTEPS-1].tt))
+        {
+            /* We found the segment we want. */
+            /* Mark this segment as the most recently seen. */
+            /* This way, we age out the last recently seen and re-use it first if needed. */
+            for (; s > 0; --s)
+                cache->recent[s] = cache->recent[s-1];
+
+            cache->recent[0] = r;
+            return seg;
         }
     }
-    return &PlutoStateTable[best];
+
+    /* We need to calculate a new segment. */
+    /* This will become the most recent segment, so we locate it in slot [0]. */
+    s = cache->nrecent;
+    if (s < PLUTO_NRECENT)
+        r = (cache->nrecent)++;     /* We are still expanding the array, so the next index is available. */
+    else
+        r = cache->recent[--s];     /* The array is full, so overwrite the oldest segment. */
+
+    for (; s > 0; --s)
+        cache->recent[s] = cache->recent[s-1];
+
+    cache->recent[0] = r;
+    seg = &cache->segment[r];
+
+    /* Calculate the segment. */
+    /* Pick the pair of bracketing body states to fill the segment. */
+    left_state = FindNearestState(tt);
+    if (PlutoStateTable[left_state].tt > tt)
+        --left_state;
+    right_state = left_state + 1;
+
+    /* Each endpoint is exact. */
+    seg->step[0] = GravFromState(&PlutoStateTable[left_state]);
+    seg->step[PLUTO_NSTEPS-1] = GravFromState(&PlutoStateTable[right_state]);
+
+    /* Simulate forwards from the lower time bound. */
+    step_tt = seg->step[0].tt;
+    for (i=1; i < PLUTO_NSTEPS-1; ++i)
+    {
+        step_tt += PLUTO_DT;
+        seg->step[i] = GravSim(bary, step_tt, &seg->step[i-1]);
+    }
+
+    /* Simulate backwards from the upper time bound. */
+    step_tt = seg->step[PLUTO_NSTEPS-1].tt;
+    reverse.step[0] = seg->step[0];
+    reverse.step[PLUTO_NSTEPS-1] = seg->step[PLUTO_NSTEPS-1];
+    for (i=PLUTO_NSTEPS-2; i > 0; --i)
+    {
+        step_tt -= PLUTO_DT;
+        reverse.step[i] = GravSim(bary, step_tt, &reverse.step[i+1]);
+    }
+
+    /* Fade-mix the two series so that there are no discontinuities. */
+    for (i=PLUTO_NSTEPS-2; i > 0; --i)
+    {
+        ramp = (double)i / (PLUTO_NSTEPS-1);
+        VecScale(&reverse.step[i].r, ramp);
+        VecScale(&reverse.step[i].v, ramp);
+        VecScale(&reverse.step[i].a, ramp);
+        VecScale(&seg->step[i].r, 1-ramp);
+        VecScale(&seg->step[i].v, 1-ramp);
+        VecScale(&seg->step[i].a, 1-ramp);
+        VecIncr(&seg->step[i].r, reverse.step[i].r);
+        VecIncr(&seg->step[i].v, reverse.step[i].v);
+        VecIncr(&seg->step[i].a, reverse.step[i].a);
+    }
+
+    return seg;
+}
+
+
+static int FindLeftIndex(const body_segment_t *seg, double tt)
+{
+    int i;
+
+    /* FIXFIXFIX - replace with binary search -- but that is not an obvious thing. */
+    /* On modern processors, it might actually be slower than this. */
+    for (i=0; i < PLUTO_NSTEPS-1; ++i)
+        if (seg->step[i].tt <= tt && tt <= seg->step[i+1].tt)
+            return i;
+
+    return -1;
 }
 
 
 static astro_vector_t CalcPluto(astro_time_t time)
 {
-    int nsteps, i;
-    double dt, tt2;
-    body_grav_calc_t calc;
+    terse_vector_t acc, ra, rb, r;
     body_state_t bary[5];
-    const body_state_t *best;
+    const body_segment_t *seg;
+    int left;
+    double ta, tb;
+    const body_grav_calc_t *s1;
+    const body_grav_calc_t *s2;
 
-    best = FindNearestState(time.tt);
-    dt = PLUTO_DT;
-    if (best->tt > time.tt)
-        dt = -dt;
+    seg = GetSegment(&pluto_cache, time.tt);
+    if (seg == NULL)
+        return VecError(ASTRO_BAD_TIME, time);    /* FIXFIXFIX - need to crawl toward times outside table range. */
 
-    /* Figure out how many loops we need to iterate in order to straddle the target time. */
-    nsteps = (int)ceil((time.tt - best->tt) / dt);
+    left = FindLeftIndex(seg, time.tt);
+    if (left < 0 || left >= PLUTO_NSTEPS-1)
+        return VecError(ASTRO_INTERNAL_ERROR, time);
 
-    /* Calculate major body barycentric positions and velocities at the start time. */
-    MajorBodyBary(bary, best->tt);
+    s1 = &seg->step[left];
+    s2 = &seg->step[left+1];
 
-    /* bary[0] = vectors from SSB to Sun. */
-    /* PlutoStateTable = vectors from Sun to Pluto. */
-    /* Add them to get vectors from SSB to Pluto in 'calc'. */
-    calc.tt = best->tt;
-    calc.r = VecAdd(best->r, bary[0].r);
-    calc.v = VecAdd(best->v, bary[0].v);
+    /* Find mean acceleration vector over the interval. */
+    acc = VecMul(0.5, VecAdd(s1->a, s2->a));
 
-    /* Calculate Pluto's acceleration vector at the current time. */
-    calc.a = SmallBodyAcceleration(calc.r, bary);
+    /* Use Newtonian mechanics to extrapolate away from t1 in the positive time direction. */
+    ta = time.tt - s1->tt;
+    ra = s1->r;
+    VecIncr(&ra, VecMul(ta, s1->v));
+    VecIncr(&ra, VecMul(ta*ta/2, acc));
 
-    /* Iterate forwards or backwards in time from the closest known state to the target time. */
-    for (i=0; i < nsteps; ++i)
-    {
-        /* Update the time step by dt on all but the final step. */
-        /* On the final step, set the time to the exact target time. */
-        tt2 = (i+1 == nsteps) ? time.tt : (calc.tt + dt);
+    /* Use Newtonian mechanics to extrapolate away from t2 in the negative time direction. */
+    tb = time.tt - s2->tt;
+    rb = s2->r;
+    VecIncr(&rb, VecMul(tb, s2->v));
+    VecIncr(&rb, VecMul(tb*tb/2, acc));
 
-        /* Calculate the next body state from the previous body state. */
-        calc = GravSim(bary, tt2, &calc);
-    }
+    /* Use fade in/out idea to blend the two position estimates. */
+    r = VecAdd(VecMul(-tb/PLUTO_DT, ra), VecMul(ta/PLUTO_DT, rb));
 
     /* Convert barycentric coordinates back to heliocentric coordinates. */
-    return PublicVec(time, VecSub(calc.r, bary[0].r));
+    MajorBodyBary(bary, time.tt);
+    return PublicVec(time, VecSub(r, bary[0].r));
 }
 
 /*------------------ end Pluto integrator ------------------*/
