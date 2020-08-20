@@ -2118,7 +2118,7 @@ body_grav_calc_t GravSim(           /* out: [pos, vel, acc] of the simulated bod
 }
 
 
-#define PLUTO_DT 500
+#define PLUTO_DT 250
 #if PLUTO_TIME_STEP % PLUTO_DT != 0
     #error Invalid combination of Pluto time step, time increment.
 #endif
