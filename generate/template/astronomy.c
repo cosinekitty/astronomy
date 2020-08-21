@@ -2158,10 +2158,9 @@ static int ClampIndex(double frac, int nsteps)
 }
 
 
-static body_grav_calc_t GravFromState(const body_state_t *state)
+static body_grav_calc_t GravFromState(body_state_t bary[5], const body_state_t *state)
 {
     body_grav_calc_t calc;
-    body_state_t bary[5];
 
     MajorBodyBary(bary, state->tt);
 
@@ -2232,8 +2231,8 @@ static const body_segment_t *GetSegment(body_segment_cache_t *cache, double tt)
     left_state = ClampIndex((tt - PlutoStateTable[0].tt) / PLUTO_TIME_STEP, PLUTO_NUM_STATES-1);
 
     /* Each endpoint is exact. */
-    seg->step[0] = GravFromState(&PlutoStateTable[left_state]);
-    seg->step[PLUTO_NSTEPS-1] = GravFromState(&PlutoStateTable[left_state+1]);
+    seg->step[0] = GravFromState(bary, &PlutoStateTable[left_state]);
+    seg->step[PLUTO_NSTEPS-1] = GravFromState(bary, &PlutoStateTable[left_state+1]);
 
     /* Simulate forwards from the lower time bound. */
     step_tt = seg->step[0].tt;
@@ -2260,6 +2259,20 @@ static const body_segment_t *GetSegment(body_segment_cache_t *cache, double tt)
 }
 
 
+static terse_vector_t CalcPlutoOneWay(body_state_t bary[5], const body_state_t *init_state, double target_tt, double dt)
+{
+    body_grav_calc_t calc;
+    int i, n;
+
+    calc = GravFromState(bary, init_state);
+    n = (int) ceil((target_tt - calc.tt) / dt);
+    for (i=0; i < n; ++i)
+        calc = GravSim(bary, (i+1 == n) ? target_tt : (calc.tt + dt), &calc);
+
+    return calc.r;
+}
+
+
 static astro_vector_t CalcPluto(astro_time_t time)
 {
     terse_vector_t acc, ra, rb, r;
@@ -2273,36 +2286,13 @@ static astro_vector_t CalcPluto(astro_time_t time)
     seg = GetSegment(&pluto_cache, time.tt);
     if (seg == NULL)
     {
-        body_grav_calc_t calc;
-
-        /* This is outside the year range 0000..4000. */
+        /* The target time is outside the year range 0000..4000. */
         /* Calculate it by crawling backward from 0000 or forward from 4000. */
         /* FIXFIXFIX - This is super slow. Could optimize this with extra caching if needed. */
         if (time.tt < PlutoStateTable[0].tt)
-        {
-            calc = GravFromState(&PlutoStateTable[0]);
-            ta = calc.tt;
-            while (time.tt < ta)
-            {
-                ta -= PLUTO_DT;
-                if (ta < time.tt)
-                    ta = time.tt;
-                calc = GravSim(bary, ta, &calc);
-            }
-        }
+            r = CalcPlutoOneWay(bary, &PlutoStateTable[0], time.tt, -PLUTO_DT);
         else
-        {
-            calc = GravFromState(&PlutoStateTable[PLUTO_NUM_STATES-1]);
-            ta = calc.tt;
-            while (ta < time.tt)
-            {
-                ta += PLUTO_DT;
-                if (ta > time.tt)
-                    ta = time.tt;
-                calc = GravSim(bary, ta, &calc);
-            }
-        }
-        r = calc.r;
+            r = CalcPlutoOneWay(bary, &PlutoStateTable[PLUTO_NUM_STATES-1], time.tt, +PLUTO_DT);
     }
     else
     {
@@ -2327,10 +2317,10 @@ static astro_vector_t CalcPluto(astro_time_t time)
 
         /* Use fade in/out idea to blend the two position estimates. */
         r = VecAdd(VecMul(-tb/PLUTO_DT, ra), VecMul(ta/PLUTO_DT, rb));
+        MajorBodyBary(bary, time.tt);
     }
 
     /* Convert barycentric coordinates back to heliocentric coordinates. */
-    MajorBodyBary(bary, time.tt);
     return PublicVec(time, VecSub(r, bary[0].r));
 }
 
