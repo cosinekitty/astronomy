@@ -2147,38 +2147,14 @@ body_segment_cache_t;
 static body_segment_cache_t pluto_cache;
 
 
-static int FindNearestState(double tt)
+static int ClampIndex(double frac, int nsteps)
 {
-    int best, lo, mid, hi;
-    double diff, min_diff;
-
-    if (tt <= PlutoStateTable[0].tt)
+    int index = (int) floor(frac);
+    if (index < 0)
         return 0;
-
-    if (tt >= PlutoStateTable[PLUTO_NUM_STATES-1].tt)
-        return PLUTO_NUM_STATES-1;
-
-    /* Binary search PlutoStateTable for closest time. */
-    /* Keep track of the closest fit as we go. */
-    best = lo = 0;
-    hi = PLUTO_NUM_STATES - 1;
-    min_diff = fabs(tt - PlutoStateTable[best].tt);
-    while (lo <= hi)
-    {
-        mid = (lo + hi) / 2;
-        diff = fabs(tt - PlutoStateTable[mid].tt);
-        if (diff < min_diff)
-        {
-            min_diff = diff;
-            best = mid;
-        }
-        if (tt < PlutoStateTable[mid].tt)
-            hi = mid - 1;
-        else
-            lo = mid + 1;
-    }
-
-    return best;
+    if (index >= nsteps)
+        return nsteps-1;
+    return index;
 }
 
 
@@ -2245,9 +2221,7 @@ static const body_segment_t *GetSegment(body_segment_cache_t *cache, double tt)
 
     /* Calculate the segment. */
     /* Pick the pair of bracketing body states to fill the segment. */
-    left_state = FindNearestState(tt);
-    if (PlutoStateTable[left_state].tt > tt)
-        --left_state;
+    left_state = ClampIndex((tt - PlutoStateTable[0].tt) / PLUTO_TIME_STEP, PLUTO_NUM_STATES-1);
     right_state = left_state + 1;
 
     /* Each endpoint is exact. */
@@ -2288,20 +2262,6 @@ static const body_segment_t *GetSegment(body_segment_cache_t *cache, double tt)
     }
 
     return seg;
-}
-
-
-static int FindLeftIndex(const body_segment_t *seg, double tt)
-{
-    int i;
-
-    /* FIXFIXFIX - replace with binary search -- but that is not an obvious thing. */
-    /* On modern processors, it might actually be slower than this. */
-    for (i=0; i < PLUTO_NSTEPS-1; ++i)
-        if (seg->step[i].tt <= tt && tt <= seg->step[i+1].tt)
-            return i;
-
-    return -1;
 }
 
 
@@ -2351,10 +2311,7 @@ static astro_vector_t CalcPluto(astro_time_t time)
     }
     else
     {
-        left = FindLeftIndex(seg, time.tt);
-        if (left < 0 || left >= PLUTO_NSTEPS-1)
-            return VecError(ASTRO_INTERNAL_ERROR, time);
-
+        left = ClampIndex((time.tt - seg->step[0].tt) / PLUTO_DT, PLUTO_NSTEPS-1);
         s1 = &seg->step[left];
         s2 = &seg->step[left+1];
 
