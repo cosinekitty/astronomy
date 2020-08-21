@@ -3227,9 +3227,17 @@ static body_grav_calc_t GravFromState(const body_state_t *state)
 }
 
 
+static void VecRamp(terse_vector_t *target, terse_vector_t source, double ramp)
+{
+    target->x = (1-ramp)*target->x + ramp*source.x;
+    target->y = (1-ramp)*target->y + ramp*source.y;
+    target->z = (1-ramp)*target->z + ramp*source.z;
+}
+
+
 static const body_segment_t *GetSegment(body_segment_cache_t *cache, double tt)
 {
-    int i, s, r, left_state, right_state;
+    int i, s, r, left_state;
     body_segment_t *seg;
     body_segment_t reverse;
     body_state_t bary[5];
@@ -3275,43 +3283,30 @@ static const body_segment_t *GetSegment(body_segment_cache_t *cache, double tt)
     /* Calculate the segment. */
     /* Pick the pair of bracketing body states to fill the segment. */
     left_state = ClampIndex((tt - PlutoStateTable[0].tt) / PLUTO_TIME_STEP, PLUTO_NUM_STATES-1);
-    right_state = left_state + 1;
 
     /* Each endpoint is exact. */
     seg->step[0] = GravFromState(&PlutoStateTable[left_state]);
-    seg->step[PLUTO_NSTEPS-1] = GravFromState(&PlutoStateTable[right_state]);
+    seg->step[PLUTO_NSTEPS-1] = GravFromState(&PlutoStateTable[left_state+1]);
 
     /* Simulate forwards from the lower time bound. */
     step_tt = seg->step[0].tt;
     for (i=1; i < PLUTO_NSTEPS-1; ++i)
-    {
-        step_tt += PLUTO_DT;
-        seg->step[i] = GravSim(bary, step_tt, &seg->step[i-1]);
-    }
+        seg->step[i] = GravSim(bary, step_tt += PLUTO_DT, &seg->step[i-1]);
 
     /* Simulate backwards from the upper time bound. */
     step_tt = seg->step[PLUTO_NSTEPS-1].tt;
     reverse.step[0] = seg->step[0];
     reverse.step[PLUTO_NSTEPS-1] = seg->step[PLUTO_NSTEPS-1];
     for (i=PLUTO_NSTEPS-2; i > 0; --i)
-    {
-        step_tt -= PLUTO_DT;
-        reverse.step[i] = GravSim(bary, step_tt, &reverse.step[i+1]);
-    }
+        reverse.step[i] = GravSim(bary, step_tt -= PLUTO_DT, &reverse.step[i+1]);
 
     /* Fade-mix the two series so that there are no discontinuities. */
     for (i=PLUTO_NSTEPS-2; i > 0; --i)
     {
         ramp = (double)i / (PLUTO_NSTEPS-1);
-        VecScale(&reverse.step[i].r, ramp);
-        VecScale(&reverse.step[i].v, ramp);
-        VecScale(&reverse.step[i].a, ramp);
-        VecScale(&seg->step[i].r, 1-ramp);
-        VecScale(&seg->step[i].v, 1-ramp);
-        VecScale(&seg->step[i].a, 1-ramp);
-        VecIncr(&seg->step[i].r, reverse.step[i].r);
-        VecIncr(&seg->step[i].v, reverse.step[i].v);
-        VecIncr(&seg->step[i].a, reverse.step[i].a);
+        VecRamp(&seg->step[i].r, reverse.step[i].r, ramp);
+        VecRamp(&seg->step[i].v, reverse.step[i].v, ramp);
+        VecRamp(&seg->step[i].a, reverse.step[i].a, ramp);
     }
 
     return seg;
