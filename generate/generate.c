@@ -2785,6 +2785,10 @@ static int ParseDate(const char *text, double *tt)
     int year, month, day, hour, minute;
     double second, float_hours;
 
+    /* Allow passing in an explicit tt value directly. */
+    if (text[0] == '@' && 1 == sscanf(text+1, "%lf", tt))
+        return 0;
+
     nscanned = sscanf(text, "%d-%d-%dT%d:%d:%lfZ", &year, &month, &day, &hour, &minute, &second);
     if (nscanned < 5)
         FAIL("ParseDate: text '%s' is not valid. Must be formatted as yyyy-mm-dd[Thh:mm[:ss.sss]Z].\n", text);

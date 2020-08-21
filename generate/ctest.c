@@ -3313,17 +3313,14 @@ fail:
 
 /*-----------------------------------------------------------------------------------------------------------*/
 
-static int PlutoCheck(void)
+static int PlutoCheckDate(double ut, double arcmin_tolerance, double x, double y, double z)
 {
     int error = 1;
     astro_time_t time;
     astro_vector_t vector;
     double dx, dy, dz, diff, dist, arcmin;
-    const double x = +37.4377303529113306;
-    const double y = -10.2466292445590774;
-    const double z = -14.4773101309873091;
 
-    time = Astronomy_TimeFromDays(18250.0);
+    time = Astronomy_TimeFromDays(ut);
 
     printf("C PlutoCheck: ");
     PrintTime(time);
@@ -3331,7 +3328,7 @@ static int PlutoCheck(void)
 
     vector = Astronomy_HelioVector(BODY_PLUTO, time);
     if (vector.status != ASTRO_SUCCESS)
-        FAIL("PlutoCheck: Astronomy_HelioVector returned status = %d\n", vector.status);
+        FAIL("C PlutoCheck: FAIL - Astronomy_HelioVector returned status = %d\n", vector.status);
 
     dx = (vector.x - x);
     dy = (vector.y - y);
@@ -3343,11 +3340,27 @@ static int PlutoCheck(void)
     printf("C PlutoCheck: ref  pos = [%20.16lf, %20.16lf, %20.16lf]\n", x, y, z);
     printf("C PlutoCheck: del  pos = [%20.16lf, %20.16lf, %20.16lf]\n", vector.x - x, vector.y - y, vector.z - z);
     printf("C PlutoCheck: diff = %le AU, %0.3lf arcmin\n", diff, arcmin);
+    printf("\n");
 
-    if (arcmin > 0.271)
+    if (arcmin > arcmin_tolerance)
         FAIL("C PlutoCheck: EXCESSIVE ERROR\n");
 
     error = 0;
+fail:
+    return error;
+}
+
+
+static int PlutoCheck(void)
+{
+    int error;
+    CHECK(PlutoCheckDate(  +18250.0, 0.271, +37.4377303523676090, -10.2466292454075898, -14.4773101310875809));
+    CHECK(PlutoCheckDate(  +18250.0, 0.271, +37.4377303523676090, -10.2466292454075898, -14.4773101310875809));
+    CHECK(PlutoCheckDate( -856493.0, 6.636, +23.4292113199166252, +42.1452685817740829,  +6.0580908436642940));
+    CHECK(PlutoCheckDate( +435633.0, 0.058, -27.3178902095231813, +18.5887022581070305, +14.0493896259306936));
+    CHECK(PlutoCheckDate( +800916.0, 6.705, -29.5266052645301365, +12.0554287322176474, +12.6878484911631091));
+
+    printf("C PlutoCheck: PASS\n");
 fail:
     return error;
 }

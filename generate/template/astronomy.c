@@ -2207,10 +2207,7 @@ static const body_segment_t *GetSegment(body_segment_cache_t *cache, double tt)
     double step_tt, ramp;
 
     if (tt < PlutoStateTable[0].tt || tt > PlutoStateTable[PLUTO_NUM_STATES-1].tt)
-    {
-        /* We don't bother calculating a segment. Let the caller crawl backward/forward to this time. */
-        return NULL;
-    }
+        return NULL;    /* We don't bother calculating a segment. Let the caller crawl backward/forward to this time. */
 
     /* See if we have a segment that straddles the requested time. */
     /* If so, return it. Otherwise, calculate it and return it. */
@@ -2320,32 +2317,65 @@ static astro_vector_t CalcPluto(astro_time_t time)
 
     seg = GetSegment(&pluto_cache, time.tt);
     if (seg == NULL)
-        return VecError(ASTRO_BAD_TIME, time);    /* FIXFIXFIX - need to crawl toward times outside table range. */
+    {
+        body_grav_calc_t calc;
 
-    left = FindLeftIndex(seg, time.tt);
-    if (left < 0 || left >= PLUTO_NSTEPS-1)
-        return VecError(ASTRO_INTERNAL_ERROR, time);
+        /* This is outside the year range 0000..4000. */
+        /* Calculate it by crawling backward from 0000 or forward from 4000. */
+        /* FIXFIXFIX - This is super slow. Could optimize this with extra caching if needed. */
+        if (time.tt < PlutoStateTable[0].tt)
+        {
+            calc = GravFromState(&PlutoStateTable[0]);
+            ta = calc.tt;
+            while (time.tt < ta)
+            {
+                ta -= PLUTO_DT;
+                if (ta < time.tt)
+                    ta = time.tt;
+                calc = GravSim(bary, ta, &calc);
+            }
+        }
+        else
+        {
+            calc = GravFromState(&PlutoStateTable[PLUTO_NUM_STATES-1]);
+            ta = calc.tt;
+            while (ta < time.tt)
+            {
+                ta += PLUTO_DT;
+                if (ta > time.tt)
+                    ta = time.tt;
+                calc = GravSim(bary, ta, &calc);
+            }
+        }
+        r = calc.r;
+    }
+    else
+    {
+        left = FindLeftIndex(seg, time.tt);
+        if (left < 0 || left >= PLUTO_NSTEPS-1)
+            return VecError(ASTRO_INTERNAL_ERROR, time);
 
-    s1 = &seg->step[left];
-    s2 = &seg->step[left+1];
+        s1 = &seg->step[left];
+        s2 = &seg->step[left+1];
 
-    /* Find mean acceleration vector over the interval. */
-    acc = VecMul(0.5, VecAdd(s1->a, s2->a));
+        /* Find mean acceleration vector over the interval. */
+        acc = VecMul(0.5, VecAdd(s1->a, s2->a));
 
-    /* Use Newtonian mechanics to extrapolate away from t1 in the positive time direction. */
-    ta = time.tt - s1->tt;
-    ra = s1->r;
-    VecIncr(&ra, VecMul(ta, s1->v));
-    VecIncr(&ra, VecMul(ta*ta/2, acc));
+        /* Use Newtonian mechanics to extrapolate away from t1 in the positive time direction. */
+        ta = time.tt - s1->tt;
+        ra = s1->r;
+        VecIncr(&ra, VecMul(ta, s1->v));
+        VecIncr(&ra, VecMul(ta*ta/2, acc));
 
-    /* Use Newtonian mechanics to extrapolate away from t2 in the negative time direction. */
-    tb = time.tt - s2->tt;
-    rb = s2->r;
-    VecIncr(&rb, VecMul(tb, s2->v));
-    VecIncr(&rb, VecMul(tb*tb/2, acc));
+        /* Use Newtonian mechanics to extrapolate away from t2 in the negative time direction. */
+        tb = time.tt - s2->tt;
+        rb = s2->r;
+        VecIncr(&rb, VecMul(tb, s2->v));
+        VecIncr(&rb, VecMul(tb*tb/2, acc));
 
-    /* Use fade in/out idea to blend the two position estimates. */
-    r = VecAdd(VecMul(-tb/PLUTO_DT, ra), VecMul(ta/PLUTO_DT, rb));
+        /* Use fade in/out idea to blend the two position estimates. */
+        r = VecAdd(VecMul(-tb/PLUTO_DT, ra), VecMul(ta/PLUTO_DT, rb));
+    }
 
     /* Convert barycentric coordinates back to heliocentric coordinates. */
     MajorBodyBary(bary, time.tt);
