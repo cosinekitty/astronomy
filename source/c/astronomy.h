@@ -54,7 +54,8 @@ typedef enum
     ASTRO_INTERNAL_ERROR,           /**< A self-check failed inside the code somewhere, indicating a bug needs to be fixed. */
     ASTRO_INVALID_PARAMETER,        /**< A parameter value passed to a function was not valid. */
     ASTRO_FAIL_APSIS,               /**< Special-case logic for finding Neptune/Pluto apsis failed. */
-    ASTRO_BUFFER_TOO_SMALL          /**< A provided buffer's size is too small to receive the requested data. */
+    ASTRO_BUFFER_TOO_SMALL,         /**< A provided buffer's size is too small to receive the requested data. */
+    ASTRO_OUT_OF_MEMORY             /**< An attempt to allocate memory failed. */
 }
 astro_status_t;
 
@@ -781,6 +782,7 @@ astro_time_format_t;
 
 /*---------- functions ----------*/
 
+void Astronomy_Reset(void);
 double Astronomy_VectorLength(astro_vector_t vector);
 const char *Astronomy_BodyName(astro_body_t body);
 astro_body_t Astronomy_BodyCode(const char *name);

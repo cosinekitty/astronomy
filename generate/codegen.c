@@ -1604,7 +1604,8 @@ static int PlutoStateTable_C(cg_context_t *context, const top_model_t *model)
     if (dt != round(dt))
         return LogError(context, "PlutoStateTable_C: dt = %lf is not an integer.\n", dt);
 
-    fprintf(context->outfile, "#define PLUTO_TIME_STEP %0.0lf\n\n", dt);
+    fprintf(context->outfile, "#define PLUTO_NUM_STATES  %d\n", nsamples);
+    fprintf(context->outfile, "#define PLUTO_TIME_STEP   %0.0lf\n\n", dt);
     fprintf(context->outfile, "static const body_state_t PlutoStateTable[] =\n");
     fprintf(context->outfile, "{\n");
 
@@ -1619,8 +1620,7 @@ static int PlutoStateTable_C(cg_context_t *context, const top_model_t *model)
             tt, equ.x, equ.y, equ.z, equ.vx, equ.vy, equ.vz);
     }
 
-    fprintf(context->outfile, "};\n\n");
-    fprintf(context->outfile, "static const int PLUTO_NUM_STATES = %d", nsamples);
+    fprintf(context->outfile, "}");
 
     error = 0;
 fail:

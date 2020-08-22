@@ -211,6 +211,7 @@ success:
     error = 0;
 
 fail:
+    Astronomy_Reset();      /* Free memory so valgrind doesn't see any leaks. */
     return error;
 }
 

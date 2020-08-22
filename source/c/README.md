@@ -1117,6 +1117,17 @@ Given an altitude angle and a refraction option, calculates the amount of "lift"
 
 ---
 
+<a name="Astronomy_Reset"></a>
+### Astronomy_Reset() &#8658; `void`
+
+**Frees up all dynamic memory allocated by Astronomy Engine.** 
+
+
+
+Astronomy Engine uses dynamic memory allocation in only one place: it makes calculation of Pluto's orbit more efficient by caching 11 KB segments recycling them. To force purging this cache and freeing all the dynamic memory, you can call this function at any time. It is always safe to call, although it will slow down the very next calculation of Pluto's position for a nearby time value. Calling this function before your program exits is optional, but it will be helpful for leak-checkers like valgrind. 
+
+---
+
 <a name="Astronomy_RotateVector"></a>
 ### Astronomy_RotateVector(rotation, vector) &#8658; [`astro_vector_t`](#astro_vector_t)
 
@@ -2299,6 +2310,7 @@ For some other purposes, it is more helpful to represent coordinates using the E
 | `ASTRO_INVALID_PARAMETER` |  A parameter value passed to a function was not valid.  |
 | `ASTRO_FAIL_APSIS` |  Special-case logic for finding Neptune/Pluto apsis failed.  |
 | `ASTRO_BUFFER_TOO_SMALL` |  A provided buffer's size is too small to receive the requested data.  |
+| `ASTRO_OUT_OF_MEMORY` |  An attempt to allocate memory failed.  |
 
 
 

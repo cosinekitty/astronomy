@@ -2153,19 +2153,11 @@ typedef struct
     body_grav_calc_t   step[PLUTO_NSTEPS];
 }
 body_segment_t;
-
-typedef struct
-{
-    body_segment_t segment[PLUTO_NRECENT];
-    int recent[PLUTO_NRECENT];
-    int nrecent;
-}
-body_segment_cache_t;
 /** @endcond */
 
 
 /* FIXFIXFIX - Using a global is not thread-safe. Either add thread-locks or change API to accept a cache pointer. */
-static body_segment_cache_t pluto_cache;
+static body_segment_t *pluto_cache[PLUTO_NUM_STATES-1];
 
 
 static int ClampIndex(double frac, int nsteps)
@@ -2194,80 +2186,61 @@ static body_grav_calc_t GravFromState(body_state_t bary[5], const body_state_t *
 }
 
 
-static const body_segment_t *GetSegment(body_segment_cache_t *cache, double tt)
+static astro_status_t GetSegment(int *seg_index, body_segment_t *cache[], double tt)
 {
-    int i, s, r, left_state;
-    body_segment_t *seg;
+    int i;
     body_segment_t reverse;
+    body_segment_t *seg;
     body_state_t bary[5];
     double step_tt, ramp;
 
     if (tt < PlutoStateTable[0].tt || tt > PlutoStateTable[PLUTO_NUM_STATES-1].tt)
-        return NULL;    /* We don't bother calculating a segment. Let the caller crawl backward/forward to this time. */
+    {
+        /* We don't bother calculating a segment. Let the caller crawl backward/forward to this time. */
+        *seg_index = -1;
+        return ASTRO_SUCCESS;
+    }
 
     /* See if we have a segment that straddles the requested time. */
     /* If so, return it. Otherwise, calculate it and return it. */
 
-    for (s=0; s < cache->nrecent; ++s)
+    *seg_index = ClampIndex((tt - PlutoStateTable[0].tt) / PLUTO_TIME_STEP, PLUTO_NUM_STATES-1);
+    if (cache[*seg_index] == NULL)
     {
-        r = cache->recent[s];
-        seg = &cache->segment[r];
-        if ((seg->step[0].tt <= tt) && (tt <= seg->step[PLUTO_NSTEPS-1].tt))
-        {
-            /* We found the segment we want. */
-            /* Mark this segment as the most recently seen. */
-            /* This way, we age out the last recently seen and re-use it first if needed. */
-            for (; s > 0; --s)
-                cache->recent[s] = cache->recent[s-1];
+        /* Allocate memory for the segment (about 11K each). */
+        seg = cache[*seg_index] = calloc(1, sizeof(body_segment_t));
+        if (seg == NULL)
+            return ASTRO_OUT_OF_MEMORY;
 
-            cache->recent[0] = r;
-            return seg;
+        /* Calculate the segment. */
+        /* Pick the pair of bracketing body states to fill the segment. */
+
+        /* Each endpoint is exact. */
+        seg->step[0] = GravFromState(bary, &PlutoStateTable[*seg_index]);
+        seg->step[PLUTO_NSTEPS-1] = GravFromState(bary, &PlutoStateTable[*seg_index + 1]);
+
+        /* Simulate forwards from the lower time bound. */
+        step_tt = seg->step[0].tt;
+        for (i=1; i < PLUTO_NSTEPS-1; ++i)
+            seg->step[i] = GravSim(bary, step_tt += PLUTO_DT, &seg->step[i-1]);
+
+        /* Simulate backwards from the upper time bound. */
+        step_tt = seg->step[PLUTO_NSTEPS-1].tt;
+        reverse.step[PLUTO_NSTEPS-1] = seg->step[PLUTO_NSTEPS-1];
+        for (i=PLUTO_NSTEPS-2; i > 0; --i)
+            reverse.step[i] = GravSim(bary, step_tt -= PLUTO_DT, &reverse.step[i+1]);
+
+        /* Fade-mix the two series so that there are no discontinuities. */
+        for (i=PLUTO_NSTEPS-2; i > 0; --i)
+        {
+            ramp = (double)i / (PLUTO_NSTEPS-1);
+            seg->step[i].r = VecRamp(seg->step[i].r, reverse.step[i].r, ramp);
+            seg->step[i].v = VecRamp(seg->step[i].v, reverse.step[i].v, ramp);
+            seg->step[i].a = VecRamp(seg->step[i].a, reverse.step[i].a, ramp);
         }
     }
 
-    /* We need to calculate a new segment. */
-    /* This will become the most recent segment, so we locate it in slot [0]. */
-    s = cache->nrecent;
-    if (s < PLUTO_NRECENT)
-        r = (cache->nrecent)++;     /* We are still expanding the array, so the next index is available. */
-    else
-        r = cache->recent[--s];     /* The array is full, so overwrite the oldest segment. */
-
-    for (; s > 0; --s)
-        cache->recent[s] = cache->recent[s-1];
-
-    cache->recent[0] = r;
-    seg = &cache->segment[r];
-
-    /* Calculate the segment. */
-    /* Pick the pair of bracketing body states to fill the segment. */
-    left_state = ClampIndex((tt - PlutoStateTable[0].tt) / PLUTO_TIME_STEP, PLUTO_NUM_STATES-1);
-
-    /* Each endpoint is exact. */
-    seg->step[0] = GravFromState(bary, &PlutoStateTable[left_state]);
-    seg->step[PLUTO_NSTEPS-1] = GravFromState(bary, &PlutoStateTable[left_state+1]);
-
-    /* Simulate forwards from the lower time bound. */
-    step_tt = seg->step[0].tt;
-    for (i=1; i < PLUTO_NSTEPS-1; ++i)
-        seg->step[i] = GravSim(bary, step_tt += PLUTO_DT, &seg->step[i-1]);
-
-    /* Simulate backwards from the upper time bound. */
-    step_tt = seg->step[PLUTO_NSTEPS-1].tt;
-    reverse.step[PLUTO_NSTEPS-1] = seg->step[PLUTO_NSTEPS-1];
-    for (i=PLUTO_NSTEPS-2; i > 0; --i)
-        reverse.step[i] = GravSim(bary, step_tt -= PLUTO_DT, &reverse.step[i+1]);
-
-    /* Fade-mix the two series so that there are no discontinuities. */
-    for (i=PLUTO_NSTEPS-2; i > 0; --i)
-    {
-        ramp = (double)i / (PLUTO_NSTEPS-1);
-        seg->step[i].r = VecRamp(seg->step[i].r, reverse.step[i].r, ramp);
-        seg->step[i].v = VecRamp(seg->step[i].v, reverse.step[i].v, ramp);
-        seg->step[i].a = VecRamp(seg->step[i].a, reverse.step[i].a, ramp);
-    }
-
-    return seg;
+    return ASTRO_SUCCESS;
 }
 
 
@@ -2290,12 +2263,16 @@ static astro_vector_t CalcPluto(astro_time_t time)
     terse_vector_t acc, ra, rb, r;
     body_state_t bary[5];
     const body_segment_t *seg;
-    int left;
+    int seg_index, left;
     const body_grav_calc_t *s1;
     const body_grav_calc_t *s2;
+    astro_status_t status;
 
-    seg = GetSegment(&pluto_cache, time.tt);
-    if (seg == NULL)
+    status = GetSegment(&seg_index, pluto_cache, time.tt);
+    if (status != ASTRO_SUCCESS)
+        return VecError(status, time);
+
+    if (seg_index < 0)
     {
         /* The target time is outside the year range 0000..4000. */
         /* Calculate it by crawling backward from 0000 or forward from 4000. */
@@ -2307,6 +2284,7 @@ static astro_vector_t CalcPluto(astro_time_t time)
     }
     else
     {
+        seg = pluto_cache[seg_index];
         left = ClampIndex((time.tt - seg->step[0].tt) / PLUTO_DT, PLUTO_NSTEPS-1);
         s1 = &seg->step[left];
         s2 = &seg->step[left+1];
@@ -7304,6 +7282,29 @@ astro_transit_t Astronomy_NextTransit(astro_body_t body, astro_time_t prevTransi
 
     startTime = Astronomy_AddDays(prevTransitTime, 100.0);
     return Astronomy_SearchTransit(body, startTime);
+}
+
+
+/**
+ * @brief Frees up all dynamic memory allocated by Astronomy Engine.
+ *
+ * Astronomy Engine uses dynamic memory allocation in only one place:
+ * it makes calculation of Pluto's orbit more efficient by caching 11 KB
+ * segments recycling them. To force purging this cache and
+ * freeing all the dynamic memory, you can call this function at any time.
+ * It is always safe to call, although it will slow down the very next
+ * calculation of Pluto's position for a nearby time value.
+ * Calling this function before your program exits is optional, but
+ * it will be helpful for leak-checkers like valgrind.
+ */
+void Astronomy_Reset(void)
+{
+    int i;
+    for (i=0; i < PLUTO_NUM_STATES-1; ++i)
+    {
+        free(pluto_cache[i]);
+        pluto_cache[i] = NULL;
+    }
 }
 
 
