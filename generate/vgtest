@@ -1,0 +1,10 @@
+#!/bin/bash
+if [[ -z "$1" ]]; then
+    echo ERROR: Must specify command parameter for ctest.
+    exit 1
+fi
+./build || exit $?
+./generate source || exit $?
+./ctbuild debug || exit $?
+valgrind --leak-check=full --track-origins=yes ./ctest -v $1 || exit $?
+exit 0
