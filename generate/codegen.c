@@ -1615,7 +1615,7 @@ static int PlutoStateTable_C(cg_context_t *context, const top_model_t *model)
         CHECK(TopPosition(model, tt, &equ));
 
         fprintf(context->outfile,
-            "%c   { %10.1lf, {%20.16lf, %20.16lf, %20.16lf}, {%23.16le, %23.16le, %23.16le} }\n",
+            "%c   { %10.1lf, {%17.13lf, %17.13lf, %17.13lf}, {%20.13le, %20.13le, %20.13le} }\n",
             (i==0 ? ' ' : ','),
             tt, equ.x, equ.y, equ.z, equ.vx, equ.vy, equ.vz);
     }
