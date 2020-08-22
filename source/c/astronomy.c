@@ -97,6 +97,24 @@ static void VecScale(terse_vector_t *target, double scalar)
     target->z *= scalar;
 }
 
+static terse_vector_t VecRamp(terse_vector_t a, terse_vector_t b, double ramp)
+{
+    terse_vector_t c;
+    c.x = (1-ramp)*a.x + ramp*b.x;
+    c.y = (1-ramp)*a.y + ramp*b.y;
+    c.z = (1-ramp)*a.z + ramp*b.z;
+    return c;
+}
+
+static terse_vector_t VecMean(terse_vector_t a, terse_vector_t b)
+{
+    terse_vector_t c;
+    c.x = (a.x + b.x) / 2;
+    c.y = (a.y + b.y) / 2;
+    c.z = (a.z + b.z) / 2;
+    return c;
+}
+
 static astro_vector_t PublicVec(astro_time_t time, terse_vector_t terse)
 {
     astro_vector_t vector;
@@ -3051,6 +3069,16 @@ static const body_state_t PlutoStateTable[] =
 
 static const int PLUTO_NUM_STATES = 41;
 
+
+static terse_vector_t UpdatePosition(double dt, terse_vector_t r, terse_vector_t v, terse_vector_t a)
+{
+    r.x += (v.x + a.x*dt/2) * dt;
+    r.y += (v.y + a.y*dt/2) * dt;
+    r.z += (v.z + a.z*dt/2) * dt;
+    return r;
+}
+
+
 static body_state_t AdjustBarycenterPosVel(body_state_t *ssb, double tt, astro_body_t body, double planet_gm)
 {
     body_state_t planet;
@@ -3146,24 +3174,17 @@ body_grav_calc_t GravSim(           /* out: [pos, vel, acc] of the simulated bod
 
     /* Estimate position of small body as if current acceleration applies across the whole time interval. */
     /* approx_pos = pos1 + vel1*dt + (1/2)acc*dt^2 */
-    approx_pos = calc1->r;
-    VecIncr(&approx_pos, VecMul(dt, calc1->v));
-    VecIncr(&approx_pos, VecMul(dt*dt/2, calc1->a));
+    approx_pos = UpdatePosition(dt, calc1->r, calc1->v, calc1->a);
 
     /* Calculate acceleration experienced by small body at approximate next location. */
     acc = SmallBodyAcceleration(approx_pos, bary2);
 
     /* Calculate the average acceleration of the endpoints. */
     /* This becomes our estimate of the mean effective acceleration over the whole interval. */
-    acc.x = (acc.x + calc1->a.x) / 2;
-    acc.y = (acc.y + calc1->a.y) / 2;
-    acc.z = (acc.z + calc1->a.z) / 2;
+    acc = VecMean(acc, calc1->a);
 
     /* Refine the estimates of [pos, vel, acc] at tt2 using the mean acceleration. */
-    calc2.r = calc1->r;
-    VecIncr(&calc2.r, VecMul(dt, calc1->v));
-    VecIncr(&calc2.r, VecMul(dt*dt/2, acc));
-
+    calc2.r = UpdatePosition(dt, calc1->r, calc1->v, acc);
     calc2.v = VecAdd(calc1->v, VecMul(dt, acc));
     calc2.a = SmallBodyAcceleration(calc2.r, bary2);
     calc2.tt = tt2;
@@ -3223,14 +3244,6 @@ static body_grav_calc_t GravFromState(body_state_t bary[5], const body_state_t *
     calc.a  = SmallBodyAcceleration(calc.r, bary);
 
     return calc;
-}
-
-
-static void VecRamp(terse_vector_t *target, terse_vector_t source, double ramp)
-{
-    target->x = (1-ramp)*target->x + ramp*source.x;
-    target->y = (1-ramp)*target->y + ramp*source.y;
-    target->z = (1-ramp)*target->z + ramp*source.z;
 }
 
 
@@ -3294,7 +3307,6 @@ static const body_segment_t *GetSegment(body_segment_cache_t *cache, double tt)
 
     /* Simulate backwards from the upper time bound. */
     step_tt = seg->step[PLUTO_NSTEPS-1].tt;
-    reverse.step[0] = seg->step[0];
     reverse.step[PLUTO_NSTEPS-1] = seg->step[PLUTO_NSTEPS-1];
     for (i=PLUTO_NSTEPS-2; i > 0; --i)
         reverse.step[i] = GravSim(bary, step_tt -= PLUTO_DT, &reverse.step[i+1]);
@@ -3303,9 +3315,9 @@ static const body_segment_t *GetSegment(body_segment_cache_t *cache, double tt)
     for (i=PLUTO_NSTEPS-2; i > 0; --i)
     {
         ramp = (double)i / (PLUTO_NSTEPS-1);
-        VecRamp(&seg->step[i].r, reverse.step[i].r, ramp);
-        VecRamp(&seg->step[i].v, reverse.step[i].v, ramp);
-        VecRamp(&seg->step[i].a, reverse.step[i].a, ramp);
+        seg->step[i].r = VecRamp(seg->step[i].r, reverse.step[i].r, ramp);
+        seg->step[i].v = VecRamp(seg->step[i].v, reverse.step[i].v, ramp);
+        seg->step[i].a = VecRamp(seg->step[i].a, reverse.step[i].a, ramp);
     }
 
     return seg;
@@ -3332,7 +3344,6 @@ static astro_vector_t CalcPluto(astro_time_t time)
     body_state_t bary[5];
     const body_segment_t *seg;
     int left;
-    double ta, tb;
     const body_grav_calc_t *s1;
     const body_grav_calc_t *s2;
 
@@ -3354,22 +3365,16 @@ static astro_vector_t CalcPluto(astro_time_t time)
         s2 = &seg->step[left+1];
 
         /* Find mean acceleration vector over the interval. */
-        acc = VecMul(0.5, VecAdd(s1->a, s2->a));
+        acc = VecMean(s1->a, s2->a);
 
         /* Use Newtonian mechanics to extrapolate away from t1 in the positive time direction. */
-        ta = time.tt - s1->tt;
-        ra = s1->r;
-        VecIncr(&ra, VecMul(ta, s1->v));
-        VecIncr(&ra, VecMul(ta*ta/2, acc));
+        ra = UpdatePosition(time.tt - s1->tt, s1->r, s1->v, acc);
 
         /* Use Newtonian mechanics to extrapolate away from t2 in the negative time direction. */
-        tb = time.tt - s2->tt;
-        rb = s2->r;
-        VecIncr(&rb, VecMul(tb, s2->v));
-        VecIncr(&rb, VecMul(tb*tb/2, acc));
+        rb = UpdatePosition(time.tt - s2->tt, s2->r, s2->v, acc);
 
         /* Use fade in/out idea to blend the two position estimates. */
-        r = VecAdd(VecMul(-tb/PLUTO_DT, ra), VecMul(ta/PLUTO_DT, rb));
+        r = VecRamp(ra, rb, (time.tt - s1->tt)/PLUTO_DT);
         MajorBodyBary(bary, time.tt);
     }
 
