@@ -3323,9 +3323,9 @@ static int PlutoCheckDate(double ut, double arcmin_tolerance, double x, double y
 
     time = Astronomy_TimeFromDays(ut);
 
-    printf("C PlutoCheck: ");
-    PrintTime(time);
-    printf(" = %0.6lf UT = %0.6lf TT\n", time.ut, time.tt);
+    DEBUG("C PlutoCheck: ");
+    if (Verbose) PrintTime(time);
+    DEBUG(" = %0.6lf UT = %0.6lf TT\n", time.ut, time.tt);
 
     vector = Astronomy_HelioVector(BODY_PLUTO, time);
     if (vector.status != ASTRO_SUCCESS)
@@ -3337,11 +3337,11 @@ static int PlutoCheckDate(double ut, double arcmin_tolerance, double x, double y
     diff = sqrt(dx*dx + dy*dy + dz*dz);
     dist = (sqrt(x*x + y*y + z*z) - 1.0);       /* worst-case distance between Pluto and Earth */
     arcmin = (diff / dist) * (180.0 * 60.0 / PI);
-    printf("C PlutoCheck: calc pos = [%20.16lf, %20.16lf, %20.16lf]\n", vector.x, vector.y, vector.z);
-    printf("C PlutoCheck: ref  pos = [%20.16lf, %20.16lf, %20.16lf]\n", x, y, z);
-    printf("C PlutoCheck: del  pos = [%20.16lf, %20.16lf, %20.16lf]\n", vector.x - x, vector.y - y, vector.z - z);
-    printf("C PlutoCheck: diff = %le AU, %0.3lf arcmin\n", diff, arcmin);
-    printf("\n");
+    DEBUG("C PlutoCheck: calc pos = [%20.16lf, %20.16lf, %20.16lf]\n", vector.x, vector.y, vector.z);
+    DEBUG("C PlutoCheck: ref  pos = [%20.16lf, %20.16lf, %20.16lf]\n", x, y, z);
+    DEBUG("C PlutoCheck: del  pos = [%20.16lf, %20.16lf, %20.16lf]\n", vector.x - x, vector.y - y, vector.z - z);
+    DEBUG("C PlutoCheck: diff = %le AU, %0.3lf arcmin\n", diff, arcmin);
+    DEBUG("\n");
 
     if (arcmin > arcmin_tolerance)
         FAIL("C PlutoCheck: EXCESSIVE ERROR\n");
