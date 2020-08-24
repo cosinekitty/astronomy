@@ -1767,21 +1767,24 @@ $ASTRO_C_VSOP(Neptune);
 
 static const vsop_model_t vsop[] =
 {
-    { { VSOPFORMULA(vsop_lat_Mercury),  VSOPFORMULA(vsop_lon_Mercury),  VSOPFORMULA(vsop_rad_Mercury) } },
-    { { VSOPFORMULA(vsop_lat_Venus),    VSOPFORMULA(vsop_lon_Venus),    VSOPFORMULA(vsop_rad_Venus)   } },
-    { { VSOPFORMULA(vsop_lat_Earth),    VSOPFORMULA(vsop_lon_Earth),    VSOPFORMULA(vsop_rad_Earth)   } },
-    { { VSOPFORMULA(vsop_lat_Mars),     VSOPFORMULA(vsop_lon_Mars),     VSOPFORMULA(vsop_rad_Mars)    } },
-    { { VSOPFORMULA(vsop_lat_Jupiter),  VSOPFORMULA(vsop_lon_Jupiter),  VSOPFORMULA(vsop_rad_Jupiter) } },
-    { { VSOPFORMULA(vsop_lat_Saturn),   VSOPFORMULA(vsop_lon_Saturn),   VSOPFORMULA(vsop_rad_Saturn)  } },
-    { { VSOPFORMULA(vsop_lat_Uranus),   VSOPFORMULA(vsop_lon_Uranus),   VSOPFORMULA(vsop_rad_Uranus)  } },
-    { { VSOPFORMULA(vsop_lat_Neptune),  VSOPFORMULA(vsop_lon_Neptune),  VSOPFORMULA(vsop_rad_Neptune) } }
+    { { VSOPFORMULA(vsop_lon_Mercury),  VSOPFORMULA(vsop_lat_Mercury),  VSOPFORMULA(vsop_rad_Mercury) } },
+    { { VSOPFORMULA(vsop_lon_Venus),    VSOPFORMULA(vsop_lat_Venus),    VSOPFORMULA(vsop_rad_Venus)   } },
+    { { VSOPFORMULA(vsop_lon_Earth),    VSOPFORMULA(vsop_lat_Earth),    VSOPFORMULA(vsop_rad_Earth)   } },
+    { { VSOPFORMULA(vsop_lon_Mars),     VSOPFORMULA(vsop_lat_Mars),     VSOPFORMULA(vsop_rad_Mars)    } },
+    { { VSOPFORMULA(vsop_lon_Jupiter),  VSOPFORMULA(vsop_lat_Jupiter),  VSOPFORMULA(vsop_rad_Jupiter) } },
+    { { VSOPFORMULA(vsop_lon_Saturn),   VSOPFORMULA(vsop_lat_Saturn),   VSOPFORMULA(vsop_rad_Saturn)  } },
+    { { VSOPFORMULA(vsop_lon_Uranus),   VSOPFORMULA(vsop_lat_Uranus),   VSOPFORMULA(vsop_rad_Uranus)  } },
+    { { VSOPFORMULA(vsop_lon_Neptune),  VSOPFORMULA(vsop_lat_Neptune),  VSOPFORMULA(vsop_rad_Neptune) } }
 };
 
 /** @cond DOXYGEN_SKIP */
 #define CalcEarth(time)     CalcVsop(&vsop[BODY_EARTH], (time))
+#define LON_INDEX 0
+#define LAT_INDEX 1
+#define RAD_INDEX 2
 /** @endcond */
 
-static void VsopCoords(const vsop_model_t *model, double t, double sphere[])
+static void VsopCoords(const vsop_model_t *model, double t, double sphere[3])
 {
     int k, s, i;
 
@@ -1838,7 +1841,7 @@ static const double DAYS_PER_MILLENNIUM = 365250.0;
 static astro_vector_t CalcVsop(const vsop_model_t *model, astro_time_t time)
 {
     double t = time.tt / DAYS_PER_MILLENNIUM;
-    double sphere[3];
+    double sphere[3];       /* lon, lat, rad */
     double eclip[3];
     astro_vector_t vector;
     terse_vector_t pos;
@@ -1847,7 +1850,7 @@ static astro_vector_t CalcVsop(const vsop_model_t *model, astro_time_t time)
     VsopCoords(model, t, sphere);
 
     /* Convert ecliptic spherical coordinates to ecliptic Cartesian coordinates. */
-    VsopSphereToRect(sphere[0], sphere[1], sphere[2], eclip);
+    VsopSphereToRect(sphere[LON_INDEX], sphere[LAT_INDEX], sphere[RAD_INDEX], eclip);
 
     /* Convert ecliptic Cartesian coordinates to equatorial Cartesian coordinates. */
     pos = VsopRotate(eclip);
@@ -1863,7 +1866,7 @@ static astro_vector_t CalcVsop(const vsop_model_t *model, astro_time_t time)
 }
 
 
-static void VsopDeriv(const vsop_model_t *model, double t, double deriv[])
+static void VsopDeriv(const vsop_model_t *model, double t, double deriv[3])
 {
     int k, s, i;
 
@@ -1906,7 +1909,7 @@ static body_state_t CalcVsopPosVel(const vsop_model_t *model, double tt)
 
     state.tt = tt;
     VsopCoords(model, t, sphere);
-    VsopSphereToRect(sphere[0], sphere[1], sphere[2], eclip);
+    VsopSphereToRect(sphere[LON_INDEX], sphere[LAT_INDEX], sphere[RAD_INDEX], eclip);
     state.r = VsopRotate(eclip);
 
     VsopDeriv(model, t, deriv);
@@ -1915,14 +1918,14 @@ static body_state_t CalcVsopPosVel(const vsop_model_t *model, double tt)
     /* the velocity vector in rectangular coordinates. */
 
     /* Calculate mnemonic variables to help keep the math straight. */
-    coslon = cos(sphere[0]);
-    sinlon = sin(sphere[0]);
-    coslat = cos(sphere[1]);
-    sinlat = sin(sphere[1]);
-    r = sphere[2];
-    dlon_dt = deriv[0];
-    dlat_dt = deriv[1];
-    dr_dt   = deriv[2];
+    coslon = cos(sphere[LON_INDEX]);
+    sinlon = sin(sphere[LON_INDEX]);
+    coslat = cos(sphere[LAT_INDEX]);
+    sinlat = sin(sphere[LAT_INDEX]);
+    r = sphere[RAD_INDEX];
+    dlon_dt = deriv[LON_INDEX];
+    dlat_dt = deriv[LAT_INDEX];
+    dr_dt   = deriv[RAD_INDEX];
 
     /* vx = dx/dt */
     eclip[0] = (dr_dt * coslat * coslon) - (r * sinlat * coslon * dlat_dt) - (r * coslat * sinlon * dlon_dt);
@@ -2145,7 +2148,6 @@ body_grav_calc_t GravSim(           /* out: [pos, vel, acc] of the simulated bod
 #endif
 
 #define PLUTO_NSTEPS    ((PLUTO_TIME_STEP / PLUTO_DT) + 1)
-#define PLUTO_NRECENT   3
 
 /** @cond DOXYGEN_SKIP */
 typedef struct

@@ -275,6 +275,57 @@ namespace CosineKitty
         }
     }
 
+    internal struct TerseVector
+    {
+        public double x;
+        public double y;
+        public double z;
+
+        public TerseVector(double x, double y, double z)
+        {
+            this.x = x;
+            this.y = y;
+            this.z = z;
+        }
+
+        public static readonly TerseVector Zero = new TerseVector(0.0, 0.0, 0.0);
+
+        public AstroVector ToAstroVector(AstroTime time)
+        {
+            return new AstroVector(x, y, z, time);
+        }
+
+        public static TerseVector operator +(TerseVector a, TerseVector b)
+        {
+            return new TerseVector(a.x + b.x, a.y + b.y, a.z + b.z);
+        }
+
+        public static TerseVector operator -(TerseVector a, TerseVector b)
+        {
+            return new TerseVector(a.x - b.x, a.y - b.y, a.z - b.z);
+        }
+
+        public static TerseVector operator *(double s, TerseVector v)
+        {
+            return new TerseVector(s*v.x, s*v.y, s*v.z);
+        }
+
+        public static TerseVector operator /(TerseVector v, double s)
+        {
+            return new TerseVector(v.x/s, v.y/s, v.z/s);
+        }
+
+        public double Quadrature()
+        {
+            return x*x + y*y + z*z;
+        }
+
+        public double Magnitude()
+        {
+            return Math.Sqrt(Quadrature());
+        }
+    }
+
     /// <summary>
     /// A 3D Cartesian vector whose components are expressed in Astronomical Units (AU).
     /// </summary>
@@ -1838,11 +1889,24 @@ namespace CosineKitty
         private const double ASEC180 = 180.0 * 60.0 * 60.0;         /* arcseconds per 180 degrees (or pi radians) */
         private const double AU_PER_PARSEC = (ASEC180 / Math.PI);   /* exact definition of how many AU = one parsec */
         private const double EARTH_MOON_MASS_RATIO = 81.30056;
-        private const double SUN_MASS     = 333054.25318;        /* Sun's mass relative to Earth. */
-        private const double JUPITER_MASS =    317.84997;        /* Jupiter's mass relative to Earth. */
-        private const double SATURN_MASS  =     95.16745;        /* Saturn's mass relative to Earth. */
-        private const double URANUS_MASS  =     14.53617;        /* Uranus's mass relative to Earth. */
-        private const double NEPTUNE_MASS =     17.14886;        /* Neptune's mass relative to Earth. */
+
+        /*
+            Masses of the Sun and outer planets, used for:
+            (1) Calculating the Solar System Barycenter
+            (2) Integrating the movement of Pluto
+
+            https://web.archive.org/web/20120220062549/http://iau-comm4.jpl.nasa.gov/de405iom/de405iom.pdf
+
+            Page 10 in the above document describes the constants used in the DE405 ephemeris.
+            The following are G*M values (gravity constant * mass) in [au^3 / day^2].
+            This side-steps issues of not knowing the exact values of G and masses M[i];
+            the products GM[i] are known extremely accurately.
+        */
+        private const double SUN_GM     = 0.2959122082855911e-03;
+        private const double JUPITER_GM = 0.2825345909524226e-06;
+        private const double SATURN_GM  = 0.8459715185680659e-07;
+        private const double URANUS_GM  = 0.1292024916781969e-07;
+        private const double NEPTUNE_GM = 0.1524358900784276e-07;
 
         /// <summary>Counter used for performance testing.</summary>
         public static int CalcMoonCount;
@@ -1908,19 +1972,19 @@ namespace CosineKitty
 
         private struct vsop_model_t
         {
-            public vsop_formula_t lat;
             public vsop_formula_t lon;
+            public vsop_formula_t lat;
             public vsop_formula_t rad;
 
-            public vsop_model_t(vsop_series_t[] lat, vsop_series_t[] lon, vsop_series_t[] rad)
+            public vsop_model_t(vsop_series_t[] lon, vsop_series_t[] lat, vsop_series_t[] rad)
             {
-                this.lat = new vsop_formula_t(lat);
                 this.lon = new vsop_formula_t(lon);
+                this.lat = new vsop_formula_t(lat);
                 this.rad = new vsop_formula_t(rad);
             }
         };
 
-        private static readonly vsop_term_t[] vsop_lat_Mercury_0 = new vsop_term_t[]
+        private static readonly vsop_term_t[] vsop_lon_Mercury_0 = new vsop_term_t[]
         {
             new vsop_term_t(4.40250710144, 0.00000000000, 0.00000000000),
             new vsop_term_t(0.40989414977, 1.48302034195, 26087.90314157420),
@@ -1931,7 +1995,7 @@ namespace CosineKitty
             new vsop_term_t(0.00007583476, 3.71348404924, 156527.41884944518)
         };
 
-        private static readonly vsop_term_t[] vsop_lat_Mercury_1 = new vsop_term_t[]
+        private static readonly vsop_term_t[] vsop_lon_Mercury_1 = new vsop_term_t[]
         {
             new vsop_term_t(26087.90313685529, 0.00000000000, 0.00000000000),
             new vsop_term_t(0.01131199811, 6.21874197797, 26087.90314157420),
@@ -1940,13 +2004,13 @@ namespace CosineKitty
             new vsop_term_t(0.00019676525, 2.80965111777, 104351.61256629678)
         };
 
-        private static readonly vsop_series_t[] vsop_lat_Mercury = new vsop_series_t[]
+        private static readonly vsop_series_t[] vsop_lon_Mercury = new vsop_series_t[]
         {
-            new vsop_series_t(vsop_lat_Mercury_0),
-            new vsop_series_t(vsop_lat_Mercury_1)
+            new vsop_series_t(vsop_lon_Mercury_0),
+            new vsop_series_t(vsop_lon_Mercury_1)
         };
 
-        private static readonly vsop_term_t[] vsop_lon_Mercury_0 = new vsop_term_t[]
+        private static readonly vsop_term_t[] vsop_lat_Mercury_0 = new vsop_term_t[]
         {
             new vsop_term_t(0.11737528961, 1.98357498767, 26087.90314157420),
             new vsop_term_t(0.02388076996, 5.03738959686, 52175.80628314840),
@@ -1957,16 +2021,16 @@ namespace CosineKitty
             new vsop_term_t(0.00007963301, 4.60972126127, 156527.41884944518)
         };
 
-        private static readonly vsop_term_t[] vsop_lon_Mercury_1 = new vsop_term_t[]
+        private static readonly vsop_term_t[] vsop_lat_Mercury_1 = new vsop_term_t[]
         {
             new vsop_term_t(0.00274646065, 3.95008450011, 26087.90314157420),
             new vsop_term_t(0.00099737713, 3.14159265359, 0.00000000000)
         };
 
-        private static readonly vsop_series_t[] vsop_lon_Mercury = new vsop_series_t[]
+        private static readonly vsop_series_t[] vsop_lat_Mercury = new vsop_series_t[]
         {
-            new vsop_series_t(vsop_lon_Mercury_0),
-            new vsop_series_t(vsop_lon_Mercury_1)
+            new vsop_series_t(vsop_lat_Mercury_0),
+            new vsop_series_t(vsop_lat_Mercury_1)
         };
 
         private static readonly vsop_term_t[] vsop_rad_Mercury_0 = new vsop_term_t[]
@@ -1992,7 +2056,7 @@ namespace CosineKitty
         };
 
 
-        private static readonly vsop_term_t[] vsop_lat_Venus_0 = new vsop_term_t[]
+        private static readonly vsop_term_t[] vsop_lon_Venus_0 = new vsop_term_t[]
         {
             new vsop_term_t(3.17614666774, 0.00000000000, 0.00000000000),
             new vsop_term_t(0.01353968419, 5.59313319619, 10213.28554621100),
@@ -2006,35 +2070,35 @@ namespace CosineKitty
             new vsop_term_t(0.00001200521, 6.15357116043, 30639.85663863300)
         };
 
-        private static readonly vsop_term_t[] vsop_lat_Venus_1 = new vsop_term_t[]
+        private static readonly vsop_term_t[] vsop_lon_Venus_1 = new vsop_term_t[]
         {
             new vsop_term_t(10213.28554621638, 0.00000000000, 0.00000000000),
             new vsop_term_t(0.00095617813, 2.46406511110, 10213.28554621100),
             new vsop_term_t(0.00007787201, 0.62478482220, 20426.57109242200)
         };
 
-        private static readonly vsop_series_t[] vsop_lat_Venus = new vsop_series_t[]
+        private static readonly vsop_series_t[] vsop_lon_Venus = new vsop_series_t[]
         {
-            new vsop_series_t(vsop_lat_Venus_0),
-            new vsop_series_t(vsop_lat_Venus_1)
+            new vsop_series_t(vsop_lon_Venus_0),
+            new vsop_series_t(vsop_lon_Venus_1)
         };
 
-        private static readonly vsop_term_t[] vsop_lon_Venus_0 = new vsop_term_t[]
+        private static readonly vsop_term_t[] vsop_lat_Venus_0 = new vsop_term_t[]
         {
             new vsop_term_t(0.05923638472, 0.26702775812, 10213.28554621100),
             new vsop_term_t(0.00040107978, 1.14737178112, 20426.57109242200),
             new vsop_term_t(0.00032814918, 3.14159265359, 0.00000000000)
         };
 
-        private static readonly vsop_term_t[] vsop_lon_Venus_1 = new vsop_term_t[]
+        private static readonly vsop_term_t[] vsop_lat_Venus_1 = new vsop_term_t[]
         {
             new vsop_term_t(0.00287821243, 1.88964962838, 10213.28554621100)
         };
 
-        private static readonly vsop_series_t[] vsop_lon_Venus = new vsop_series_t[]
+        private static readonly vsop_series_t[] vsop_lat_Venus = new vsop_series_t[]
         {
-            new vsop_series_t(vsop_lon_Venus_0),
-            new vsop_series_t(vsop_lon_Venus_1)
+            new vsop_series_t(vsop_lat_Venus_0),
+            new vsop_series_t(vsop_lat_Venus_1)
         };
 
         private static readonly vsop_term_t[] vsop_rad_Venus_0 = new vsop_term_t[]
@@ -2061,7 +2125,7 @@ namespace CosineKitty
         };
 
 
-        private static readonly vsop_term_t[] vsop_lat_Earth_0 = new vsop_term_t[]
+        private static readonly vsop_term_t[] vsop_lon_Earth_0 = new vsop_term_t[]
         {
             new vsop_term_t(1.75347045673, 0.00000000000, 0.00000000000),
             new vsop_term_t(0.03341656453, 4.66925680415, 6283.07584999140),
@@ -2093,39 +2157,39 @@ namespace CosineKitty
             new vsop_term_t(0.00000155516, 0.83306084617, 213.29909543800)
         };
 
-        private static readonly vsop_term_t[] vsop_lat_Earth_1 = new vsop_term_t[]
+        private static readonly vsop_term_t[] vsop_lon_Earth_1 = new vsop_term_t[]
         {
             new vsop_term_t(6283.07584999140, 0.00000000000, 0.00000000000),
             new vsop_term_t(0.00206058863, 2.67823455808, 6283.07584999140),
             new vsop_term_t(0.00004303419, 2.63512233481, 12566.15169998280)
         };
 
-        private static readonly vsop_term_t[] vsop_lat_Earth_2 = new vsop_term_t[]
+        private static readonly vsop_term_t[] vsop_lon_Earth_2 = new vsop_term_t[]
         {
             new vsop_term_t(0.00008721859, 1.07253635559, 6283.07584999140)
-        };
-
-        private static readonly vsop_series_t[] vsop_lat_Earth = new vsop_series_t[]
-        {
-            new vsop_series_t(vsop_lat_Earth_0),
-            new vsop_series_t(vsop_lat_Earth_1),
-            new vsop_series_t(vsop_lat_Earth_2)
-        };
-
-        private static readonly vsop_term_t[] vsop_lon_Earth_0 = new vsop_term_t[]
-        {
-        };
-
-        private static readonly vsop_term_t[] vsop_lon_Earth_1 = new vsop_term_t[]
-        {
-            new vsop_term_t(0.00227777722, 3.41376620530, 6283.07584999140),
-            new vsop_term_t(0.00003805678, 3.37063423795, 12566.15169998280)
         };
 
         private static readonly vsop_series_t[] vsop_lon_Earth = new vsop_series_t[]
         {
             new vsop_series_t(vsop_lon_Earth_0),
-            new vsop_series_t(vsop_lon_Earth_1)
+            new vsop_series_t(vsop_lon_Earth_1),
+            new vsop_series_t(vsop_lon_Earth_2)
+        };
+
+        private static readonly vsop_term_t[] vsop_lat_Earth_0 = new vsop_term_t[]
+        {
+        };
+
+        private static readonly vsop_term_t[] vsop_lat_Earth_1 = new vsop_term_t[]
+        {
+            new vsop_term_t(0.00227777722, 3.41376620530, 6283.07584999140),
+            new vsop_term_t(0.00003805678, 3.37063423795, 12566.15169998280)
+        };
+
+        private static readonly vsop_series_t[] vsop_lat_Earth = new vsop_series_t[]
+        {
+            new vsop_series_t(vsop_lat_Earth_0),
+            new vsop_series_t(vsop_lat_Earth_1)
         };
 
         private static readonly vsop_term_t[] vsop_rad_Earth_0 = new vsop_term_t[]
@@ -2165,7 +2229,7 @@ namespace CosineKitty
         };
 
 
-        private static readonly vsop_term_t[] vsop_lat_Mars_0 = new vsop_term_t[]
+        private static readonly vsop_term_t[] vsop_lon_Mars_0 = new vsop_term_t[]
         {
             new vsop_term_t(6.20347711581, 0.00000000000, 0.00000000000),
             new vsop_term_t(0.18656368093, 5.05037100270, 3340.61242669980),
@@ -2218,7 +2282,7 @@ namespace CosineKitty
             new vsop_term_t(0.00000299395, 2.78323740866, 6254.62666252360)
         };
 
-        private static readonly vsop_term_t[] vsop_lat_Mars_1 = new vsop_term_t[]
+        private static readonly vsop_term_t[] vsop_lon_Mars_1 = new vsop_term_t[]
         {
             new vsop_term_t(3340.61242700512, 0.00000000000, 0.00000000000),
             new vsop_term_t(0.01457554523, 3.60433733236, 3340.61242669980),
@@ -2229,20 +2293,20 @@ namespace CosineKitty
             new vsop_term_t(0.00000841535, 4.45864030426, 2281.23049651060)
         };
 
-        private static readonly vsop_term_t[] vsop_lat_Mars_2 = new vsop_term_t[]
+        private static readonly vsop_term_t[] vsop_lon_Mars_2 = new vsop_term_t[]
         {
             new vsop_term_t(0.00058152577, 2.04961712429, 3340.61242669980),
             new vsop_term_t(0.00013459579, 2.45738706163, 6681.22485339960)
         };
 
-        private static readonly vsop_series_t[] vsop_lat_Mars = new vsop_series_t[]
+        private static readonly vsop_series_t[] vsop_lon_Mars = new vsop_series_t[]
         {
-            new vsop_series_t(vsop_lat_Mars_0),
-            new vsop_series_t(vsop_lat_Mars_1),
-            new vsop_series_t(vsop_lat_Mars_2)
+            new vsop_series_t(vsop_lon_Mars_0),
+            new vsop_series_t(vsop_lon_Mars_1),
+            new vsop_series_t(vsop_lon_Mars_2)
         };
 
-        private static readonly vsop_term_t[] vsop_lon_Mars_0 = new vsop_term_t[]
+        private static readonly vsop_term_t[] vsop_lat_Mars_0 = new vsop_term_t[]
         {
             new vsop_term_t(0.03197134986, 3.76832042431, 3340.61242669980),
             new vsop_term_t(0.00298033234, 4.10616996305, 6681.22485339960),
@@ -2251,17 +2315,17 @@ namespace CosineKitty
             new vsop_term_t(0.00003484100, 4.78812549260, 13362.44970679920)
         };
 
-        private static readonly vsop_term_t[] vsop_lon_Mars_1 = new vsop_term_t[]
+        private static readonly vsop_term_t[] vsop_lat_Mars_1 = new vsop_term_t[]
         {
             new vsop_term_t(0.00217310991, 6.04472194776, 3340.61242669980),
             new vsop_term_t(0.00020976948, 3.14159265359, 0.00000000000),
             new vsop_term_t(0.00012834709, 1.60810667915, 6681.22485339960)
         };
 
-        private static readonly vsop_series_t[] vsop_lon_Mars = new vsop_series_t[]
+        private static readonly vsop_series_t[] vsop_lat_Mars = new vsop_series_t[]
         {
-            new vsop_series_t(vsop_lon_Mars_0),
-            new vsop_series_t(vsop_lon_Mars_1)
+            new vsop_series_t(vsop_lat_Mars_0),
+            new vsop_series_t(vsop_lat_Mars_1)
         };
 
         private static readonly vsop_term_t[] vsop_rad_Mars_0 = new vsop_term_t[]
@@ -2309,7 +2373,7 @@ namespace CosineKitty
         };
 
 
-        private static readonly vsop_term_t[] vsop_lat_Jupiter_0 = new vsop_term_t[]
+        private static readonly vsop_term_t[] vsop_lon_Jupiter_0 = new vsop_term_t[]
         {
             new vsop_term_t(0.59954691494, 0.00000000000, 0.00000000000),
             new vsop_term_t(0.09695898719, 5.06191793158, 529.69096509460),
@@ -2342,7 +2406,7 @@ namespace CosineKitty
             new vsop_term_t(0.00000973272, 4.09764549134, 95.97922721780)
         };
 
-        private static readonly vsop_term_t[] vsop_lat_Jupiter_1 = new vsop_term_t[]
+        private static readonly vsop_term_t[] vsop_lon_Jupiter_1 = new vsop_term_t[]
         {
             new vsop_term_t(529.69096508814, 0.00000000000, 0.00000000000),
             new vsop_term_t(0.00489503243, 4.22082939470, 529.69096509460),
@@ -2355,21 +2419,21 @@ namespace CosineKitty
             new vsop_term_t(0.00004237744, 5.89008707199, 14.22709400160)
         };
 
-        private static readonly vsop_term_t[] vsop_lat_Jupiter_2 = new vsop_term_t[]
+        private static readonly vsop_term_t[] vsop_lon_Jupiter_2 = new vsop_term_t[]
         {
             new vsop_term_t(0.00047233601, 4.32148536482, 7.11354700080),
             new vsop_term_t(0.00030649436, 2.92977788700, 529.69096509460),
             new vsop_term_t(0.00014837605, 3.14159265359, 0.00000000000)
         };
 
-        private static readonly vsop_series_t[] vsop_lat_Jupiter = new vsop_series_t[]
+        private static readonly vsop_series_t[] vsop_lon_Jupiter = new vsop_series_t[]
         {
-            new vsop_series_t(vsop_lat_Jupiter_0),
-            new vsop_series_t(vsop_lat_Jupiter_1),
-            new vsop_series_t(vsop_lat_Jupiter_2)
+            new vsop_series_t(vsop_lon_Jupiter_0),
+            new vsop_series_t(vsop_lon_Jupiter_1),
+            new vsop_series_t(vsop_lon_Jupiter_2)
         };
 
-        private static readonly vsop_term_t[] vsop_lon_Jupiter_0 = new vsop_term_t[]
+        private static readonly vsop_term_t[] vsop_lat_Jupiter_0 = new vsop_term_t[]
         {
             new vsop_term_t(0.02268615702, 3.55852606721, 529.69096509460),
             new vsop_term_t(0.00109971634, 3.90809347197, 1059.38193018920),
@@ -2379,15 +2443,15 @@ namespace CosineKitty
             new vsop_term_t(0.00006437782, 0.30627119215, 536.80451209540)
         };
 
-        private static readonly vsop_term_t[] vsop_lon_Jupiter_1 = new vsop_term_t[]
+        private static readonly vsop_term_t[] vsop_lat_Jupiter_1 = new vsop_term_t[]
         {
             new vsop_term_t(0.00078203446, 1.52377859742, 529.69096509460)
         };
 
-        private static readonly vsop_series_t[] vsop_lon_Jupiter = new vsop_series_t[]
+        private static readonly vsop_series_t[] vsop_lat_Jupiter = new vsop_series_t[]
         {
-            new vsop_series_t(vsop_lon_Jupiter_0),
-            new vsop_series_t(vsop_lon_Jupiter_1)
+            new vsop_series_t(vsop_lat_Jupiter_0),
+            new vsop_series_t(vsop_lat_Jupiter_1)
         };
 
         private static readonly vsop_term_t[] vsop_rad_Jupiter_0 = new vsop_term_t[]
@@ -2429,7 +2493,7 @@ namespace CosineKitty
         };
 
 
-        private static readonly vsop_term_t[] vsop_lat_Saturn_0 = new vsop_term_t[]
+        private static readonly vsop_term_t[] vsop_lon_Saturn_0 = new vsop_term_t[]
         {
             new vsop_term_t(0.87401354025, 0.00000000000, 0.00000000000),
             new vsop_term_t(0.11107659762, 3.96205090159, 213.29909543800),
@@ -2466,7 +2530,7 @@ namespace CosineKitty
             new vsop_term_t(0.00000848642, 3.19150170830, 209.36694217490)
         };
 
-        private static readonly vsop_term_t[] vsop_lat_Saturn_1 = new vsop_term_t[]
+        private static readonly vsop_term_t[] vsop_lon_Saturn_1 = new vsop_term_t[]
         {
             new vsop_term_t(213.29909521690, 0.00000000000, 0.00000000000),
             new vsop_term_t(0.01297370862, 1.82834923978, 213.29909543800),
@@ -2482,7 +2546,7 @@ namespace CosineKitty
             new vsop_term_t(0.00003768635, 3.64965330780, 3.93215326310)
         };
 
-        private static readonly vsop_term_t[] vsop_lat_Saturn_2 = new vsop_term_t[]
+        private static readonly vsop_term_t[] vsop_lon_Saturn_2 = new vsop_term_t[]
         {
             new vsop_term_t(0.00116441330, 1.17988132879, 7.11354700080),
             new vsop_term_t(0.00091841837, 0.07325195840, 213.29909543800),
@@ -2490,14 +2554,14 @@ namespace CosineKitty
             new vsop_term_t(0.00015274496, 4.06493179167, 206.18554843720)
         };
 
-        private static readonly vsop_series_t[] vsop_lat_Saturn = new vsop_series_t[]
+        private static readonly vsop_series_t[] vsop_lon_Saturn = new vsop_series_t[]
         {
-            new vsop_series_t(vsop_lat_Saturn_0),
-            new vsop_series_t(vsop_lat_Saturn_1),
-            new vsop_series_t(vsop_lat_Saturn_2)
+            new vsop_series_t(vsop_lon_Saturn_0),
+            new vsop_series_t(vsop_lon_Saturn_1),
+            new vsop_series_t(vsop_lon_Saturn_2)
         };
 
-        private static readonly vsop_term_t[] vsop_lon_Saturn_0 = new vsop_term_t[]
+        private static readonly vsop_term_t[] vsop_lat_Saturn_0 = new vsop_term_t[]
         {
             new vsop_term_t(0.04330678039, 3.60284428399, 213.29909543800),
             new vsop_term_t(0.00240348302, 2.85238489373, 426.59819087600),
@@ -2510,17 +2574,17 @@ namespace CosineKitty
             new vsop_term_t(0.00004807588, 5.43305312061, 316.39186965660)
         };
 
-        private static readonly vsop_term_t[] vsop_lon_Saturn_1 = new vsop_term_t[]
+        private static readonly vsop_term_t[] vsop_lat_Saturn_1 = new vsop_term_t[]
         {
             new vsop_term_t(0.00198927992, 4.93901017903, 213.29909543800),
             new vsop_term_t(0.00036947916, 3.14159265359, 0.00000000000),
             new vsop_term_t(0.00017966989, 0.51979431110, 426.59819087600)
         };
 
-        private static readonly vsop_series_t[] vsop_lon_Saturn = new vsop_series_t[]
+        private static readonly vsop_series_t[] vsop_lat_Saturn = new vsop_series_t[]
         {
-            new vsop_series_t(vsop_lon_Saturn_0),
-            new vsop_series_t(vsop_lon_Saturn_1)
+            new vsop_series_t(vsop_lat_Saturn_0),
+            new vsop_series_t(vsop_lat_Saturn_1)
         };
 
         private static readonly vsop_term_t[] vsop_rad_Saturn_0 = new vsop_term_t[]
@@ -2573,7 +2637,7 @@ namespace CosineKitty
         };
 
 
-        private static readonly vsop_term_t[] vsop_lat_Uranus_0 = new vsop_term_t[]
+        private static readonly vsop_term_t[] vsop_lon_Uranus_0 = new vsop_term_t[]
         {
             new vsop_term_t(5.48129294297, 0.00000000000, 0.00000000000),
             new vsop_term_t(0.09260408234, 0.89106421507, 74.78159856730),
@@ -2616,7 +2680,7 @@ namespace CosineKitty
             new vsop_term_t(0.00001150989, 4.17898916639, 33.67961751290)
         };
 
-        private static readonly vsop_term_t[] vsop_lat_Uranus_1 = new vsop_term_t[]
+        private static readonly vsop_term_t[] vsop_lon_Uranus_1 = new vsop_term_t[]
         {
             new vsop_term_t(74.78159860910, 0.00000000000, 0.00000000000),
             new vsop_term_t(0.00154332863, 5.24158770553, 74.78159856730),
@@ -2626,13 +2690,13 @@ namespace CosineKitty
             new vsop_term_t(0.00009150160, 1.41213765216, 149.56319713460)
         };
 
-        private static readonly vsop_series_t[] vsop_lat_Uranus = new vsop_series_t[]
+        private static readonly vsop_series_t[] vsop_lon_Uranus = new vsop_series_t[]
         {
-            new vsop_series_t(vsop_lat_Uranus_0),
-            new vsop_series_t(vsop_lat_Uranus_1)
+            new vsop_series_t(vsop_lon_Uranus_0),
+            new vsop_series_t(vsop_lon_Uranus_1)
         };
 
-        private static readonly vsop_term_t[] vsop_lon_Uranus_0 = new vsop_term_t[]
+        private static readonly vsop_term_t[] vsop_lat_Uranus_0 = new vsop_term_t[]
         {
             new vsop_term_t(0.01346277648, 2.61877810547, 74.78159856730),
             new vsop_term_t(0.00062341400, 5.08111189648, 149.56319713460),
@@ -2641,15 +2705,15 @@ namespace CosineKitty
             new vsop_term_t(0.00009926160, 0.57630380333, 73.29712585900)
         };
 
-        private static readonly vsop_term_t[] vsop_lon_Uranus_1 = new vsop_term_t[]
+        private static readonly vsop_term_t[] vsop_lat_Uranus_1 = new vsop_term_t[]
         {
             new vsop_term_t(0.00034101978, 0.01321929936, 74.78159856730)
         };
 
-        private static readonly vsop_series_t[] vsop_lon_Uranus = new vsop_series_t[]
+        private static readonly vsop_series_t[] vsop_lat_Uranus = new vsop_series_t[]
         {
-            new vsop_series_t(vsop_lon_Uranus_0),
-            new vsop_series_t(vsop_lon_Uranus_1)
+            new vsop_series_t(vsop_lat_Uranus_0),
+            new vsop_series_t(vsop_lat_Uranus_1)
         };
 
         private static readonly vsop_term_t[] vsop_rad_Uranus_0 = new vsop_term_t[]
@@ -2692,7 +2756,7 @@ namespace CosineKitty
         };
 
 
-        private static readonly vsop_term_t[] vsop_lat_Neptune_0 = new vsop_term_t[]
+        private static readonly vsop_term_t[] vsop_lon_Neptune_0 = new vsop_term_t[]
         {
             new vsop_term_t(5.31188633046, 0.00000000000, 0.00000000000),
             new vsop_term_t(0.01798475530, 2.90101273890, 38.13303563780),
@@ -2706,20 +2770,20 @@ namespace CosineKitty
             new vsop_term_t(0.00008994250, 0.27462171806, 175.16605980020)
         };
 
-        private static readonly vsop_term_t[] vsop_lat_Neptune_1 = new vsop_term_t[]
+        private static readonly vsop_term_t[] vsop_lon_Neptune_1 = new vsop_term_t[]
         {
             new vsop_term_t(38.13303563957, 0.00000000000, 0.00000000000),
             new vsop_term_t(0.00016604172, 4.86323329249, 1.48447270830),
             new vsop_term_t(0.00015744045, 2.27887427527, 38.13303563780)
         };
 
-        private static readonly vsop_series_t[] vsop_lat_Neptune = new vsop_series_t[]
+        private static readonly vsop_series_t[] vsop_lon_Neptune = new vsop_series_t[]
         {
-            new vsop_series_t(vsop_lat_Neptune_0),
-            new vsop_series_t(vsop_lat_Neptune_1)
+            new vsop_series_t(vsop_lon_Neptune_0),
+            new vsop_series_t(vsop_lon_Neptune_1)
         };
 
-        private static readonly vsop_term_t[] vsop_lon_Neptune_0 = new vsop_term_t[]
+        private static readonly vsop_term_t[] vsop_lat_Neptune_0 = new vsop_term_t[]
         {
             new vsop_term_t(0.03088622933, 1.44104372644, 38.13303563780),
             new vsop_term_t(0.00027780087, 5.91271884599, 76.26607127560),
@@ -2728,9 +2792,9 @@ namespace CosineKitty
             new vsop_term_t(0.00015448133, 3.50877079215, 39.61750834610)
         };
 
-        private static readonly vsop_series_t[] vsop_lon_Neptune = new vsop_series_t[]
+        private static readonly vsop_series_t[] vsop_lat_Neptune = new vsop_series_t[]
         {
-            new vsop_series_t(vsop_lon_Neptune_0)
+            new vsop_series_t(vsop_lat_Neptune_0)
         };
 
         private static readonly vsop_term_t[] vsop_rad_Neptune_0 = new vsop_term_t[]
@@ -2758,14 +2822,14 @@ namespace CosineKitty
 
         private static readonly vsop_model_t[] vsop = new vsop_model_t[]
         {
-            new vsop_model_t(vsop_lat_Mercury,  vsop_lon_Mercury,   vsop_rad_Mercury),
-            new vsop_model_t(vsop_lat_Venus,    vsop_lon_Venus,     vsop_rad_Venus  ),
-            new vsop_model_t(vsop_lat_Earth,    vsop_lon_Earth,     vsop_rad_Earth  ),
-            new vsop_model_t(vsop_lat_Mars,     vsop_lon_Mars,      vsop_rad_Mars   ),
-            new vsop_model_t(vsop_lat_Jupiter,  vsop_lon_Jupiter,   vsop_rad_Jupiter),
-            new vsop_model_t(vsop_lat_Saturn,   vsop_lon_Saturn,    vsop_rad_Saturn ),
-            new vsop_model_t(vsop_lat_Uranus,   vsop_lon_Uranus,    vsop_rad_Uranus ),
-            new vsop_model_t(vsop_lat_Neptune,  vsop_lon_Neptune,   vsop_rad_Neptune)
+            new vsop_model_t(vsop_lon_Mercury,  vsop_lat_Mercury,   vsop_rad_Mercury),
+            new vsop_model_t(vsop_lon_Venus,    vsop_lat_Venus,     vsop_rad_Venus  ),
+            new vsop_model_t(vsop_lon_Earth,    vsop_lat_Earth,     vsop_rad_Earth  ),
+            new vsop_model_t(vsop_lon_Mars,     vsop_lat_Mars,      vsop_rad_Mars   ),
+            new vsop_model_t(vsop_lon_Jupiter,  vsop_lat_Jupiter,   vsop_rad_Jupiter),
+            new vsop_model_t(vsop_lon_Saturn,   vsop_lat_Saturn,    vsop_rad_Saturn ),
+            new vsop_model_t(vsop_lon_Uranus,   vsop_lat_Uranus,    vsop_rad_Uranus ),
+            new vsop_model_t(vsop_lon_Neptune,  vsop_lat_Neptune,   vsop_rad_Neptune)
         };
 
         /// <summary>The default Delta T function used by Astronomy Engine.</summary>
@@ -2892,862 +2956,421 @@ namespace CosineKitty
         {
             double coord = 0.0;
             double tpower = 1.0;
-            for (int s=0; s < formula.series.Length; ++s)
+            foreach (vsop_series_t series in formula.series)
             {
                 double sum = 0.0;
-                vsop_series_t series = formula.series[s];
-                for (int i=0; i < series.term.Length; ++i)
-                {
-                    vsop_term_t term = series.term[i];
+                foreach (vsop_term_t term in series.term)
                     sum += term.amplitude * Math.Cos(term.phase + (t * term.frequency));
-                }
                 coord += tpower * sum;
                 tpower *= t;
             }
             return coord;
         }
 
+        private static TerseVector VsopRotate(TerseVector eclip)
+        {
+            return new TerseVector(
+                eclip.x + 0.000000440360*eclip.y - 0.000000190919*eclip.z,
+                -0.000000479966*eclip.x + 0.917482137087*eclip.y - 0.397776982902*eclip.z,
+                0.397776982902*eclip.y + 0.917482137087*eclip.z
+            );
+        }
+
+        private static TerseVector VsopSphereToRect(double lon, double lat, double radius)
+        {
+            double r_coslat = radius * Math.Cos(lat);
+            return new TerseVector(
+                r_coslat * Math.Cos(lon),
+                r_coslat * Math.Sin(lon),
+                radius * Math.Sin(lat)
+            );
+        }
+
+        private const double DAYS_PER_MILLENNIUM = 365250.0;
+
         private static AstroVector CalcVsop(vsop_model_t model, AstroTime time)
         {
-            double t = time.tt / 365250;    /* millennia since 2000 */
+            double t = time.tt / DAYS_PER_MILLENNIUM;    /* millennia since 2000 */
 
             /* Calculate the VSOP "B" trigonometric series to obtain ecliptic spherical coordinates. */
-            double sphere0 = VsopFormulaCalc(model.lat, t);
-            double sphere1 = VsopFormulaCalc(model.lon, t);
-            double sphere2 = VsopFormulaCalc(model.rad, t);
+            double lat = VsopFormulaCalc(model.lat, t);
+            double lon = VsopFormulaCalc(model.lon, t);
+            double rad = VsopFormulaCalc(model.rad, t);
 
             /* Convert ecliptic spherical coordinates to ecliptic Cartesian coordinates. */
-            double r_coslat = sphere2 * Math.Cos(sphere1);
-            double eclip0 = r_coslat * Math.Cos(sphere0);
-            double eclip1 = r_coslat * Math.Sin(sphere0);
-            double eclip2 = sphere2 * Math.Sin(sphere1);
+            TerseVector eclip = VsopSphereToRect(lon, lat, rad);
 
             /* Convert ecliptic Cartesian coordinates to equatorial Cartesian coordinates. */
-            double x = eclip0 + 0.000000440360*eclip1 - 0.000000190919*eclip2;
-            double y = -0.000000479966*eclip0 + 0.917482137087*eclip1 - 0.397776982902*eclip2;
-            double z = 0.397776982902*eclip1 + 0.917482137087*eclip2;
-
-            return new AstroVector(x, y, z, time);
+            return VsopRotate(eclip).ToAstroVector(time);
         }
 
-        private static double VsopHelioDistance(vsop_model_t model, AstroTime time)
+        private static double VsopDerivCalc(vsop_formula_t formula, double t)
         {
-            /*
-                The caller only wants to know the distance between the planet and the Sun.
-                So we only need to calculate the radial component of the spherical coordinates.
-            */
-
-            double t = time.tt / 365250;    /* millennia since 2000 */
-            return VsopFormulaCalc(model.rad, t);
-        }
-
-        // TOP2013 model for Pluto
-
-        private struct astro_top_term_t
-        {
-            public double k;
-            public double c;
-            public double s;
-            public astro_top_term_t(double k, double c, double s)
+            double tpower = 1.0;        /* t^s */
+            double dpower = 0.0;        /* t^(s-1) */
+            double deriv = 0.0;
+            for (int s=0; s < formula.series.Length; ++s)
             {
-                this.k = k;
-                this.c = c;
-                this.s = s;
+                double sin_sum = 0.0;
+                double cos_sum = 0.0;
+                vsop_series_t series = formula.series[s];
+                foreach (vsop_term_t term in series.term)
+                {
+                    double angle = term.phase + (t * term.frequency);
+                    sin_sum += term.amplitude * term.frequency * Math.Sin(angle);
+                    if (s > 0)
+                        cos_sum += term.amplitude * Math.Cos(angle);
+                }
+                deriv += (s * dpower * cos_sum) - (tpower * sin_sum);
+                dpower = tpower;
+                tpower *= t;
+            }
+            return deriv;
+        }
+
+        private struct body_state_t
+        {
+            public double tt;       // Terrestrial Time in J2000 days
+            public TerseVector r;   // position [au]
+            public TerseVector v;   // velocity [au/day]
+
+            public body_state_t(double tt, TerseVector r, TerseVector v)
+            {
+                this.tt = tt;
+                this.r = r;
+                this.v = v;
             }
         }
 
-        private struct top_elliptical_t
+        private struct major_bodies_t
         {
-            public double a;           /* AU */
-            public double lambda;      /* rad */
-            public double k;           /* 1 */
-            public double h;           /* 1 */
-            public double q;           /* 1 */
-            public double p;           /* 1 */
+            public body_state_t Sun;
+            public body_state_t Jupiter;
+            public body_state_t Saturn;
+            public body_state_t Uranus;
+            public body_state_t Neptune;
+
+            public TerseVector Acceleration(TerseVector small_pos)
+            {
+                // Use barycentric coordinates of the Sun and major planets to calculate
+                // the gravitational acceleration vector experienced by a small body at location 'small_pos'.
+                return
+                    AccelerationIncrement(small_pos, SUN_GM,      Sun.r) +
+                    AccelerationIncrement(small_pos, JUPITER_GM,  Jupiter.r) +
+                    AccelerationIncrement(small_pos, SATURN_GM,   Saturn.r) +
+                    AccelerationIncrement(small_pos, URANUS_GM,   Uranus.r) +
+                    AccelerationIncrement(small_pos, NEPTUNE_GM,  Neptune.r);
+            }
+
+            private static TerseVector AccelerationIncrement(TerseVector small_pos, double gm, TerseVector major_pos)
+            {
+                TerseVector delta = major_pos - small_pos;
+                double r2 = delta.Quadrature();
+                double pull = gm / (r2 * Math.Sqrt(r2));
+                return new TerseVector(delta.x * pull, delta.y * pull, delta.z * pull);
+            }
         }
 
-        private static readonly astro_top_term_t[][][] top_model_8 = new astro_top_term_t[][][]
+        private static body_state_t CalcVsopPosVel(vsop_model_t model, double tt)
         {
-            new astro_top_term_t[][]  // f=0
+            double t = tt / DAYS_PER_MILLENNIUM;    /* millennia since 2000 */
+
+            /* Calculate the VSOP "B" trigonometric series to obtain ecliptic spherical coordinates. */
+            double lat = VsopFormulaCalc(model.lat, t);
+            double lon = VsopFormulaCalc(model.lon, t);
+            double rad = VsopFormulaCalc(model.rad, t);
+
+            TerseVector eclip_pos = VsopSphereToRect(lon, lat, rad);
+
+            double dlat_dt = VsopDerivCalc(model.lat, t);
+            double dlon_dt = VsopDerivCalc(model.lon, t);
+            double drad_dt = VsopDerivCalc(model.rad, t);
+
+            /* Use spherical coords and spherical derivatives to calculate */
+            /* the velocity vector in rectangular coordinates. */
+
+            double coslon = Math.Cos(lon);
+            double sinlon = Math.Sin(lon);
+            double coslat = Math.Cos(lat);
+            double sinlat = Math.Sin(lat);
+
+            double vx =
+                + (drad_dt * coslat * coslon)
+                - (rad * sinlat * coslon * dlat_dt)
+                - (rad * coslat * sinlon * dlon_dt);
+
+            double vy =
+                + (drad_dt * coslat * sinlon)
+                - (rad * sinlat * sinlon * dlat_dt)
+                + (rad * coslat * coslon * dlon_dt);
+
+            double vz =
+                + (drad_dt * sinlat)
+                + (rad * coslat * dlat_dt);
+
+            /* Convert speed units from [AU/millennium] to [AU/day]. */
+            var eclip_vel = new TerseVector(
+                vx / DAYS_PER_MILLENNIUM,
+                vy / DAYS_PER_MILLENNIUM,
+                vz / DAYS_PER_MILLENNIUM);
+
+            /* Rotate the vectors from ecliptic to equatorial coordinates. */
+            TerseVector equ_pos = VsopRotate(eclip_pos);
+            TerseVector equ_vel = VsopRotate(eclip_vel);
+            return new body_state_t(tt, equ_pos, equ_vel);
+        }
+
+        // Begin Pluto integrator
+
+        private struct body_grav_calc_t
+        {
+            public double tt;       // J2000 terrestrial time [days]
+            public TerseVector r;   // position [au]
+            public TerseVector v;   // velocity [au/day]
+            public TerseVector a;   // acceleration [au/day^2]
+
+            public body_grav_calc_t(double tt, TerseVector r, TerseVector v, TerseVector a)
             {
-                new astro_top_term_t[]  // f=0, s= 0
-                {
-                    new astro_top_term_t(        0,  3.9544617144029999e+01,  0.0000000000000000e+00), // f=0, s= 0, t=   0
-                    new astro_top_term_t(     1402, -1.8891373533434089e-01, -8.5258197635470073e-02), // f=0, s= 0, t=   1
-                    new astro_top_term_t(     1331, -4.1495877833812339e-02, -3.3387415274886263e-02), // f=0, s= 0, t=   2
-                    new astro_top_term_t(      522, -4.8502474919249819e-02, -7.3455412272547278e-03), // f=0, s= 0, t=   3
-                    new astro_top_term_t(       71,  2.8102132918948221e-02, -5.3468437660152152e-03), // f=0, s= 0, t=   4
-                    new astro_top_term_t(     1261, -9.1600251304608978e-03, -1.2309204554431390e-02), // f=0, s= 0, t=   5
-                    new astro_top_term_t(      452, -1.2202161344831991e-02, -5.2519856329982890e-03), // f=0, s= 0, t=   6
-                    new astro_top_term_t(     2875, -9.7845229475467185e-03, -7.2968560644718955e-04), // f=0, s= 0, t=   7
-                    new astro_top_term_t(       35,  4.8494518209585983e-03, -6.8918970374425084e-03), // f=0, s= 0, t=   8
-                    new astro_top_term_t(      141,  5.8271375488234932e-03, -3.1946778653436391e-03), // f=0, s= 0, t=   9
-                    new astro_top_term_t(      137,  1.5300059509576150e-03, -6.0327729791525954e-03), // f=0, s= 0, t=  10
-                    new astro_top_term_t(        4, -1.9494897408412360e-03,  4.5717130739994704e-03), // f=0, s= 0, t=  11
-                    new astro_top_term_t(     1190, -1.7524220672664240e-03, -4.2980683502911454e-03), // f=0, s= 0, t=  12
-                    new astro_top_term_t(      381, -3.1062775803702681e-03, -2.4728667551542258e-03), // f=0, s= 0, t=  13
-                    new astro_top_term_t(        8, -1.7188663433411050e-03,  2.9756270077158122e-03), // f=0, s= 0, t=  14
-                    new astro_top_term_t(     1543, -7.7472653128184826e-04,  2.6514626782777680e-03), // f=0, s= 0, t=  15
-                    new astro_top_term_t(     1115, -1.5405722125111840e-03, -2.0778390548994150e-03), // f=0, s= 0, t=  16
-                    new astro_top_term_t(     2804, -2.0048397209869230e-03, -4.1957951179189120e-04), // f=0, s= 0, t=  17
-                    new astro_top_term_t(       67,  9.6850762192148931e-04, -1.5811913714969829e-03), // f=0, s= 0, t=  18
-                    new astro_top_term_t(      212,  1.5466715821083480e-03, -9.6836654994834209e-04), // f=0, s= 0, t=  19
-                    new astro_top_term_t(     1119, -1.8820367463891121e-04, -1.4293834479379090e-03), // f=0, s= 0, t=  20
-                    new astro_top_term_t(    17405, -1.0738845199599739e-03,  9.5985010997943349e-04), // f=0, s= 0, t=  21
-                    new astro_top_term_t(    28337,  7.5821211083786067e-04,  1.1416213940389449e-03), // f=0, s= 0, t=  22
-                    new astro_top_term_t(      310, -6.9650370158153983e-04, -1.0024667762364200e-03), // f=0, s= 0, t=  23
-                    new astro_top_term_t(     1044, -3.2801771454650589e-04, -6.4947140155397116e-04), // f=0, s= 0, t=  24
-                    new astro_top_term_t(       63,  4.0424767075158291e-04,  5.7315886355325109e-04), // f=0, s= 0, t=  25
-                    new astro_top_term_t(     1614, -1.3238448498587051e-04,  6.7949492229369074e-04), // f=0, s= 0, t=  26
-                    new astro_top_term_t(       12, -6.5048480404874143e-04, -1.0430021074697129e-04), // f=0, s= 0, t=  27
-                    new astro_top_term_t(      283,  3.3929768009878552e-04, -5.1573678840263412e-04), // f=0, s= 0, t=  28
-                    new astro_top_term_t(      133,  4.0138197254613279e-04,  4.5284627712770291e-04), // f=0, s= 0, t=  29
-                    new astro_top_term_t(     1421,  5.0823717785117468e-04,  3.1010622577270548e-04), // f=0, s= 0, t=  30
-                    new astro_top_term_t(     1383, -5.6813906164891585e-04, -1.7225147327178090e-04), // f=0, s= 0, t=  31
-                    new astro_top_term_t(     4348, -5.1094469101100064e-04,  1.4416513132178369e-04), // f=0, s= 0, t=  32
-                    new astro_top_term_t(     2733, -4.8192307867155672e-04, -1.8631709444892481e-04), // f=0, s= 0, t=  33
-                    new astro_top_term_t(      664,  6.3695948832436563e-05,  5.0429756322537705e-04), // f=0, s= 0, t=  34
-                    new astro_top_term_t(      177, -3.0532744995821309e-04,  4.0226535349675440e-04), // f=0, s= 0, t=  35
-                    new astro_top_term_t(      204,  3.4677834246970749e-04,  3.2588064363496143e-04), // f=0, s= 0, t=  36
-                    new astro_top_term_t(     1048,  5.6219036569383140e-05, -4.5145044715373130e-04), // f=0, s= 0, t=  37
-                    new astro_top_term_t(     1406,  3.6764565360298558e-04, -2.4793326161876619e-04), // f=0, s= 0, t=  38
-                    new astro_top_term_t(     1398, -6.1399335668996843e-05, -4.0368084856225791e-04), // f=0, s= 0, t=  39
-                    new astro_top_term_t(      880,  3.8206123841964649e-04,  1.0727867737651879e-04), // f=0, s= 0, t=  40
-                    new astro_top_term_t(      239, -9.2482984334176681e-05, -3.6357760642322443e-04), // f=0, s= 0, t=  41
-                    new astro_top_term_t(      541, -3.5492935880988093e-04, -7.2696664262252120e-05), // f=0, s= 0, t=  42
-                    new astro_top_term_t(    17334, -3.1608420086033548e-04,  1.6282567766535830e-04), // f=0, s= 0, t=  43
-                    new astro_top_term_t(      503,  3.4204624270103872e-04,  6.9800261361389600e-06), // f=0, s= 0, t=  44
-                    new astro_top_term_t(    28266,  1.1026801272880990e-04,  3.1928911807394130e-04), // f=0, s= 0, t=  45
-                    new astro_top_term_t(      974, -1.5403436032839399e-04, -2.6908883645786191e-04), // f=0, s= 0, t=  46
-                    new astro_top_term_t(      345, -2.1738414747494940e-04,  1.5563797862269319e-04), // f=0, s= 0, t=  47
-                    new astro_top_term_t(     1924,  2.1398279518720060e-04,  1.4058024849360011e-04), // f=0, s= 0, t=  48
-                    new astro_top_term_t(      275,  1.7682640345886169e-04,  1.7533174872185701e-04), // f=0, s= 0, t=  49
-                    new astro_top_term_t(      106,  2.0541555697206479e-04, -1.2965626091678131e-04), // f=0, s= 0, t=  50
-                    new astro_top_term_t(     1335,  2.1493444414672229e-04, -1.0499061765897920e-04), // f=0, s= 0, t=  51
-                    new astro_top_term_t(      271,  2.1059070752496800e-04, -9.6647526271973576e-05)  // f=0, s= 0, t=  52
-                },
-                new astro_top_term_t[]  // f=0, s= 1
-                {
-                    new astro_top_term_t(     1402, -2.4541007710854022e-02,  5.3822529675651168e-02), // f=0, s= 1, t=   0
-                    new astro_top_term_t(        0,  3.7890000000000000e-02,  0.0000000000000000e+00), // f=0, s= 1, t=   1
-                    new astro_top_term_t(     1331, -1.5981733929364941e-02,  1.9623571765255570e-02), // f=0, s= 1, t=   2
-                    new astro_top_term_t(      522, -2.1667846285401051e-03,  1.3851523320136261e-02), // f=0, s= 1, t=   3
-                    new astro_top_term_t(       71,  8.6723020043621556e-04,  4.7241967094509424e-03), // f=0, s= 1, t=   4
-                    new astro_top_term_t(     1261, -3.8008804453790821e-03,  2.7392780267271222e-03), // f=0, s= 1, t=   5
-                    new astro_top_term_t(     2875, -5.9015441259769620e-04,  3.3190792202711962e-03), // f=0, s= 1, t=   6
-                    new astro_top_term_t(       35, -2.0646844712970550e-03, -2.6221746776036530e-03), // f=0, s= 1, t=   7
-                    new astro_top_term_t(        4, -2.7341177070724500e-03,  8.4711655196688536e-04), // f=0, s= 1, t=   8
-                    new astro_top_term_t(     1190, -2.1427361371102339e-03,  8.3829844178717706e-04), // f=0, s= 1, t=   9
-                    new astro_top_term_t(      452, -6.5191457442425422e-04,  1.3962477909825410e-03), // f=0, s= 1, t=  10
-                    new astro_top_term_t(        8, -1.4174353266390050e-03, -4.8800609526062797e-04), // f=0, s= 1, t=  11
-                    new astro_top_term_t(      381, -7.7874017402358557e-04,  9.3105764052437356e-04), // f=0, s= 1, t=  12
-                    new astro_top_term_t(      137, -1.1495119655719700e-03, -2.9568842990989599e-04), // f=0, s= 1, t=  13
-                    new astro_top_term_t(     2804, -2.9320339800219448e-04,  1.0245691529492771e-03), // f=0, s= 1, t=  14
-                    new astro_top_term_t(     1119, -9.8344008047702861e-04,  1.2122440012927610e-04), // f=0, s= 1, t=  15
-                    new astro_top_term_t(     1543,  7.2662531437559094e-04,  2.2380632879329121e-04), // f=0, s= 1, t=  16
-                    new astro_top_term_t(     1115, -4.9059020449034973e-04,  5.4125269506251448e-04), // f=0, s= 1, t=  17
-                    new astro_top_term_t(      310, -5.0858314998190228e-04,  3.3071892812221339e-04)  // f=0, s= 1, t=  18
-                },
-                new astro_top_term_t[]  // f=0, s= 2
-                {
-                    new astro_top_term_t(     1402,  6.1564734183986881e-03,  6.9727544398706350e-03), // f=0, s= 2, t=   0
-                    new astro_top_term_t(     1331,  3.4473718686991932e-03,  5.3547458162748890e-03), // f=0, s= 2, t=   1
-                    new astro_top_term_t(        0, -6.0199059744408881e-03,  0.0000000000000000e+00), // f=0, s= 2, t=   2
-                    new astro_top_term_t(      522,  1.8506017571807240e-03,  1.2255527089933200e-03), // f=0, s= 2, t=   3
-                    new astro_top_term_t(        4, -9.0791196955079877e-04, -1.0597464135497440e-03), // f=0, s= 2, t=   4
-                    new astro_top_term_t(     1261, -2.5360705302150178e-04,  1.1006253876392330e-03)  // f=0, s= 2, t=   5
-                }
-            },
-            new astro_top_term_t[][]  // f=1
-            {
-                new astro_top_term_t[]  // f=1, s= 0
-                {
-                    new astro_top_term_t(        0,  4.1654711248260003e+00,  0.0000000000000000e+00), // f=1, s= 0, t=   0
-                    new astro_top_term_t(     1402,  2.0610516934972331e-03, -4.5672163937433728e-03), // f=1, s= 0, t=   1
-                    new astro_top_term_t(        4,  3.4901370659179681e-03,  2.2214931280208532e-03), // f=1, s= 0, t=   2
-                    new astro_top_term_t(     1473, -2.5274121559055551e-04,  1.4438005411011950e-03), // f=1, s= 0, t=   3
-                    new astro_top_term_t(        8,  1.1811406701290150e-03,  5.6294240646172070e-04), // f=1, s= 0, t=   4
-                    new astro_top_term_t(      522,  1.6107717821433110e-04, -1.0623010008063969e-03), // f=1, s= 0, t=   5
-                    new astro_top_term_t(     1331,  2.7651217171242138e-04, -3.4287860661004818e-04), // f=1, s= 0, t=   6
-                    new astro_top_term_t(      593,  3.3064342491574279e-05,  3.2281574175741223e-04), // f=1, s= 0, t=   7
-                    new astro_top_term_t(     2875,  1.7391859631880900e-05, -2.4371046197993790e-04), // f=1, s= 0, t=   8
-                    new astro_top_term_t(       71,  4.3540142673103847e-05, -2.3324350638665871e-04), // f=1, s= 0, t=   9
-                    new astro_top_term_t(       12, -1.4733740390542089e-05,  1.6458293257830351e-04), // f=1, s= 0, t=  10
-                    new astro_top_term_t(       35, -7.7366158840780485e-05, -1.2373453663453069e-04), // f=1, s= 0, t=  11
-                    new astro_top_term_t(      137,  1.0874981420582371e-04,  2.9642106239502481e-05), // f=1, s= 0, t=  12
-                    new astro_top_term_t(      452,  3.2837879995135691e-05, -8.0083302669255936e-05), // f=1, s= 0, t=  13
-                    new astro_top_term_t(      106, -7.1058821662524569e-05, -2.9131217624735831e-05), // f=1, s= 0, t=  14
-                    new astro_top_term_t(     2945,  1.2419927037655510e-05,  6.9699905790296052e-05), // f=1, s= 0, t=  15
-                    new astro_top_term_t(     1115,  4.9015184839992363e-05, -3.7626776449287022e-05), // f=1, s= 0, t=  16
-                    new astro_top_term_t(     1261,  3.7725355301707661e-05, -2.7730601457362580e-05), // f=1, s= 0, t=  17
-                    new astro_top_term_t(       63,  3.4620953450636643e-05, -2.5727054077819990e-05), // f=1, s= 0, t=  18
-                    new astro_top_term_t(    17405, -2.4737834776937812e-05, -2.7668964560844859e-05), // f=1, s= 0, t=  19
-                    new astro_top_term_t(      141, -1.9152627579774910e-05,  3.0608840803230902e-05), // f=1, s= 0, t=  20
-                    new astro_top_term_t(     1543,  3.4403440209432860e-05,  8.2302490865683481e-06), // f=1, s= 0, t=  21
-                    new astro_top_term_t(    28337, -2.9450824049753070e-05,  1.9509947544013829e-05), // f=1, s= 0, t=  22
-                    new astro_top_term_t(      208, -3.3402595486149828e-05,  6.9721024372198099e-07), // f=1, s= 0, t=  23
-                    new astro_top_term_t(       16, -2.5708226560219951e-05,  5.4690438392817274e-06), // f=1, s= 0, t=  24
-                    new astro_top_term_t(     2804,  8.2434428446966487e-06, -2.2056820101697141e-05), // f=1, s= 0, t=  25
-                    new astro_top_term_t(      133,  1.7535496693018641e-05, -1.5317433153649361e-05), // f=1, s= 0, t=  26
-                    new astro_top_term_t(      177,  9.4209450622295435e-06,  1.8609791865429379e-05), // f=1, s= 0, t=  27
-                    new astro_top_term_t(      204,  1.3418024861975440e-05, -1.5519809537438971e-05), // f=1, s= 0, t=  28
-                    new astro_top_term_t(       67,  1.9542040889474939e-05, -2.0438794816549699e-07), // f=1, s= 0, t=  29
-                    new astro_top_term_t(     1186, -1.1497747150912189e-05,  1.4072246679624251e-05), // f=1, s= 0, t=  30
-                    new astro_top_term_t(     1421, -7.4843280005381670e-06,  1.2303197921178691e-05), // f=1, s= 0, t=  31
-                    new astro_top_term_t(     1383,  4.1628765439336240e-06, -1.3719681259667719e-05), // f=1, s= 0, t=  32
-                    new astro_top_term_t(      275,  7.1803653660818622e-06, -1.2018565522581090e-05), // f=1, s= 0, t=  33
-                    new astro_top_term_t(      212,  1.3642921909731060e-05,  2.1147480912091179e-06), // f=1, s= 0, t=  34
-                    new astro_top_term_t(       59, -2.8996742569855378e-06, -1.3093850574478501e-05), // f=1, s= 0, t=  35
-                    new astro_top_term_t(     4348, -3.6912767653086940e-06, -1.2768209379424250e-05), // f=1, s= 0, t=  36
-                    new astro_top_term_t(    17476,  8.8159150487736961e-06,  5.9364512059773267e-06), // f=1, s= 0, t=  37
-                    new astro_top_term_t(       27,  6.2980935945243974e-06, -8.4472797839010716e-06), // f=1, s= 0, t=  38
-                    new astro_top_term_t(     1406,  5.7734139509693619e-06,  8.7248712048903149e-06), // f=1, s= 0, t=  39
-                    new astro_top_term_t(     1398,  1.0115989678361140e-05, -1.3220473394572090e-06), // f=1, s= 0, t=  40
-                    new astro_top_term_t(    28407,  6.7642022362205018e-06, -7.5210649765782616e-06), // f=1, s= 0, t=  41
-                    new astro_top_term_t(      664,  7.9736063591689162e-06, -2.2024063975673750e-06), // f=1, s= 0, t=  42
-                    new astro_top_term_t(      381,  3.1761072779613261e-06, -7.3448935507901516e-06), // f=1, s= 0, t=  43
-                    new astro_top_term_t(      541,  2.5898481389558310e-06, -7.0323742443685127e-06), // f=1, s= 0, t=  44
-                    new astro_top_term_t(      503, -1.5979599372675240e-07,  7.4586091247535634e-06), // f=1, s= 0, t=  45
-                    new astro_top_term_t(      271, -3.1728511373578081e-06, -6.6603677156048786e-06), // f=1, s= 0, t=  46
-                    new astro_top_term_t(      129, -1.8397756711585990e-06, -7.0451043684758007e-06), // f=1, s= 0, t=  47
-                    new astro_top_term_t(      247,  3.1533300480278400e-07, -7.1604266714610849e-06), // f=1, s= 0, t=  48
-                    new astro_top_term_t(      200, -2.2707299296152400e-06, -6.6783936815674601e-06), // f=1, s= 0, t=  49
-                    new astro_top_term_t(       31, -4.2146281840702766e-06, -5.6388188974303981e-06), // f=1, s= 0, t=  50
-                    new astro_top_term_t(      341, -3.9640903174182786e-06, -5.5968952746387096e-06), // f=1, s= 0, t=  51
-                    new astro_top_term_t(       20, -2.1086487296606532e-06, -4.2993743513743323e-06), // f=1, s= 0, t=  52
-                    new astro_top_term_t(      974, -1.9337296464942458e-06,  4.1280092704873532e-06), // f=1, s= 0, t=  53
-                    new astro_top_term_t(     1492,  1.2386884071711840e-06, -4.0279260453190260e-06), // f=1, s= 0, t=  54
-                    new astro_top_term_t(     1454, -1.8674475925452479e-07,  4.1994903608977473e-06), // f=1, s= 0, t=  55
-                    new astro_top_term_t(       55, -4.1054351042334211e-06, -5.3592659852261218e-07), // f=1, s= 0, t=  56
-                    new astro_top_term_t(     1044,  3.5262751998119361e-06,  1.9367410649084749e-06), // f=1, s= 0, t=  57
-                    new astro_top_term_t(       39, -7.0347175355875052e-07,  3.9228440423731852e-06), // f=1, s= 0, t=  58
-                    new astro_top_term_t(      345, -2.7714162211172452e-06, -2.8012028299863999e-06), // f=1, s= 0, t=  59
-                    new astro_top_term_t(      283, -3.8855399506750791e-06,  4.2353837211089759e-07), // f=1, s= 0, t=  60
-                    new astro_top_term_t(     4418,  1.9380717555480920e-06,  3.3362906758656841e-06), // f=1, s= 0, t=  61
-                    new astro_top_term_t(     1708,  3.8363066095252423e-06,  4.0071146882428590e-07), // f=1, s= 0, t=  62
-                    new astro_top_term_t(      903, -2.4535489999476891e-06,  2.7713257447896069e-06), // f=1, s= 0, t=  63
-                    new astro_top_term_t(      412, -2.4194398659193562e-06, -2.6818837171571071e-06), // f=1, s= 0, t=  64
-                    new astro_top_term_t(    17334, -1.5878732753673419e-06, -3.0847459710695832e-06), // f=1, s= 0, t=  65
-                    new astro_top_term_t(     1410,  2.1528516528967772e-06,  2.5955495586096718e-06), // f=1, s= 0, t=  66
-                    new astro_top_term_t(      318, -1.6007757166478231e-06,  2.9567402302706461e-06), // f=1, s= 0, t=  67
-                    new astro_top_term_t(    28266, -3.1282886569147322e-06,  1.0733981547714400e-06), // f=1, s= 0, t=  68
-                    new astro_top_term_t(     1394,  3.2570224915190650e-06, -5.9986669416035846e-08), // f=1, s= 0, t=  69
-                    new astro_top_term_t(    72490,  7.8958524750142168e-07,  3.1029527324934821e-06), // f=1, s= 0, t=  70
-                    new astro_top_term_t(     9220,  2.8325155820290858e-06, -1.4397983817771050e-06), // f=1, s= 0, t=  71
-                    new astro_top_term_t(     1614,  3.0748937595146630e-06,  5.0326493238056022e-07), // f=1, s= 0, t=  72
-                    new astro_top_term_t(      408, -3.0722440820616450e-06,  4.9345659005564487e-07), // f=1, s= 0, t=  73
-                    new astro_top_term_t(      337, -2.9632105019568382e-06,  9.3548023528643972e-08), // f=1, s= 0, t=  74
-                    new astro_top_term_t(       79,  2.7845485358443480e-06,  7.4025133333557920e-07), // f=1, s= 0, t=  75
-                    new astro_top_term_t(      354,  1.9360680354843408e-06,  2.0552415375649160e-06), // f=1, s= 0, t=  76
-                    new astro_top_term_t(      612,  5.3703132984668158e-07,  2.6669817089723940e-06), // f=1, s= 0, t=  77
-                    new astro_top_term_t(      279, -2.5413275396432281e-07,  2.6502544396045040e-06), // f=1, s= 0, t=  78
-                    new astro_top_term_t(       75, -2.8830829576295098e-07,  2.6106707165907741e-06), // f=1, s= 0, t=  79
-                    new astro_top_term_t(      479, -2.4319941706034390e-06,  7.6942886776602959e-07), // f=1, s= 0, t=  80
-                    new astro_top_term_t(      416,  2.0096007406999570e-06,  1.5520759224768389e-06), // f=1, s= 0, t=  81
-                    new astro_top_term_t(     1096, -2.3257110689311771e-06,  9.7831153778294669e-07), // f=1, s= 0, t=  82
-                    new astro_top_term_t(      267, -2.5074175872274202e-06, -1.7701423128546709e-07), // f=1, s= 0, t=  83
-                    new astro_top_term_t(     3162,  2.0698330022272070e-06, -1.3093627746428469e-06), // f=1, s= 0, t=  84
-                    new astro_top_term_t(      832, -1.9285373422971391e-06,  1.4160461431375550e-06), // f=1, s= 0, t=  85
-                    new astro_top_term_t(     1190,  2.2341390259691221e-06, -7.2482790590962755e-07), // f=1, s= 0, t=  86
-                    new astro_top_term_t(      526,  1.7171371907181510e-06,  1.4529625626913769e-06), // f=1, s= 0, t=  87
-                    new astro_top_term_t(     2733,  1.0269773239622380e-06, -2.0007533912028411e-06), // f=1, s= 0, t=  88
-                    new astro_top_term_t(      574, -5.1232176836951890e-07, -2.1792410718247190e-06)  // f=1, s= 0, t=  89
-                },
-                new astro_top_term_t[]  // f=1, s= 1
-                {
-                    new astro_top_term_t(        0,  2.5335660204370001e+01,  0.0000000000000000e+00), // f=1, s= 1, t=   0
-                    new astro_top_term_t(        4, -2.1897916824442529e-04,  1.7741955864290151e-03), // f=1, s= 1, t=   1
-                    new astro_top_term_t(     1402, -1.3029527067277161e-03, -5.8987171410210541e-04), // f=1, s= 1, t=   2
-                    new astro_top_term_t(        8, -5.7857466108113462e-05,  6.2766572590063064e-04), // f=1, s= 1, t=   3
-                    new astro_top_term_t(      522, -3.0338218770459020e-04, -4.6787236333551149e-05), // f=1, s= 1, t=   4
-                    new astro_top_term_t(     1331, -1.6234312756262061e-04, -1.3226650376835280e-04), // f=1, s= 1, t=   5
-                    new astro_top_term_t(       35, -1.6846578574212679e-04,  5.1474337733700072e-05), // f=1, s= 1, t=   6
-                    new astro_top_term_t(     1473,  1.3716672333829441e-04,  2.7605165443775319e-05), // f=1, s= 1, t=   7
-                    new astro_top_term_t(       12, -1.1426985570984979e-04,  1.7062621376287921e-05), // f=1, s= 1, t=   8
-                    new astro_top_term_t(     2875, -8.2654240464229338e-05, -1.4230432684507880e-05), // f=1, s= 1, t=   9
-                    new astro_top_term_t(     2945,  3.6084370654255798e-05, -3.8286603564628976e-06), // f=1, s= 1, t=  10
-                    new astro_top_term_t(      593,  3.1050555447062818e-05, -2.3120488185252789e-06), // f=1, s= 1, t=  11
-                    new astro_top_term_t(       16, -8.7245446550032187e-06, -2.2703299980076952e-05), // f=1, s= 1, t=  12
-                    new astro_top_term_t(      137,  5.5783261240786444e-06, -2.0642718216052691e-05), // f=1, s= 1, t=  13
-                    new astro_top_term_t(     1115, -1.3513503169043030e-05, -1.1380785261757990e-05), // f=1, s= 1, t=  14
-                    new astro_top_term_t(       71,  1.0574660674287450e-05,  1.3281184472910570e-05), // f=1, s= 1, t=  15
-                    new astro_top_term_t(     1261, -8.2709801392281214e-06, -1.1688074277507450e-05), // f=1, s= 1, t=  16
-                    new astro_top_term_t(     2804, -1.1505534938221521e-05, -5.1883886955282330e-06), // f=1, s= 1, t=  17
-                    new astro_top_term_t(       27, -9.0174735475683120e-06, -5.2285448475511598e-06), // f=1, s= 1, t=  18
-                    new astro_top_term_t(      452, -9.3099342968225354e-06, -3.8372164516008766e-06), // f=1, s= 1, t=  19
-                    new astro_top_term_t(     1543,  2.4828575108302229e-06, -9.6169483680059550e-06), // f=1, s= 1, t=  20
-                    new astro_top_term_t(       63, -6.5055787623425069e-06, -7.4385376578198243e-06), // f=1, s= 1, t=  21
-                    new astro_top_term_t(      106, -4.5512156458035857e-06,  8.6658259433823040e-06), // f=1, s= 1, t=  22
-                    new astro_top_term_t(      133, -6.3072609842624613e-06, -6.9148116074105151e-06), // f=1, s= 1, t=  23
-                    new astro_top_term_t(    28337, -4.4530735415054223e-06, -6.7124377273408592e-06), // f=1, s= 1, t=  24
-                    new astro_top_term_t(      141,  6.9466051844107804e-06,  4.0449257224296616e-06), // f=1, s= 1, t=  25
-                    new astro_top_term_t(     1398,  1.0522658062293921e-06, -7.0563446922276261e-06), // f=1, s= 1, t=  26
-                    new astro_top_term_t(       59, -5.7183266993529056e-06,  1.6273101086020201e-06), // f=1, s= 1, t=  27
-                    new astro_top_term_t(     1383, -5.6807273131313079e-06, -9.5798703870467336e-07), // f=1, s= 1, t=  28
-                    new astro_top_term_t(       20,  4.8130148431204634e-06, -2.5299767388566989e-06), // f=1, s= 1, t=  29
-                    new astro_top_term_t(     4348, -5.3269871823774314e-06,  6.0216192993201565e-07), // f=1, s= 1, t=  30
-                    new astro_top_term_t(      129, -4.2816786763917080e-06,  1.2524207693334740e-06)  // f=1, s= 1, t=  31
-                },
-                new astro_top_term_t[]  // f=1, s= 2
-                {
-                    new astro_top_term_t(        0, -1.8272218839163919e-02,  0.0000000000000000e+00), // f=1, s= 2, t=   0
-                    new astro_top_term_t(        4, -4.2382205514535369e-04,  6.0951225139627217e-05), // f=1, s= 2, t=   1
-                    new astro_top_term_t(        8, -2.4214950161520300e-04,  1.3555498866999700e-04), // f=1, s= 2, t=   2
-                    new astro_top_term_t(     1402, -1.6731953542354990e-04,  1.4877590360992571e-04), // f=1, s= 2, t=   3
-                    new astro_top_term_t(       12, -4.0514580902466651e-05, -4.6859429953625132e-05), // f=1, s= 2, t=   4
-                    new astro_top_term_t(     1331, -4.4255479363996823e-05,  2.8523966290637259e-05), // f=1, s= 2, t=   5
-                    new astro_top_term_t(      522, -2.6626163791203940e-05,  4.0414506964273448e-05), // f=1, s= 2, t=   6
-                    new astro_top_term_t(       35, -2.3510812229573040e-06,  1.7218835328103482e-05), // f=1, s= 2, t=   7
-                    new astro_top_term_t(     2875, -7.9375576768093987e-06,  1.3976740463566499e-05), // f=1, s= 2, t=   8
-                    new astro_top_term_t(       16,  9.7305978044426803e-06, -1.0841117038814680e-05), // f=1, s= 2, t=   9
-                    new astro_top_term_t(     2945, -4.5741854272088092e-07, -9.4120776625816716e-06)  // f=1, s= 2, t=  10
-                },
-                new astro_top_term_t[]  // f=1, s= 3
-                {
-                    new astro_top_term_t(        0,  1.9409931667071581e-03,  0.0000000000000000e+00), // f=1, s= 3, t=   0
-                    new astro_top_term_t(        8, -5.2528177259165953e-05, -6.1055439661395280e-05), // f=1, s= 3, t=   1
-                    new astro_top_term_t(        4, -6.0738316603187738e-05,  3.5387155556321078e-05), // f=1, s= 3, t=   2
-                    new astro_top_term_t(     1402,  1.5967276563962451e-05,  3.5538891371840628e-05), // f=1, s= 3, t=   3
-                    new astro_top_term_t(       12,  1.5332065032938759e-05, -2.1295985440213221e-05)  // f=1, s= 3, t=   4
-                },
-                new astro_top_term_t[]  // f=1, s= 4
-                {
-                    new astro_top_term_t(        0,  8.6099959150566781e-05,  0.0000000000000000e+00), // f=1, s= 4, t=   0
-                    new astro_top_term_t(        4, -5.3544872037241911e-05, -3.2079251781364850e-05)  // f=1, s= 4, t=   1
-                }
-            },
-            new astro_top_term_t[][]  // f=2
-            {
-                new astro_top_term_t[]  // f=2, s= 0
-                {
-                    new astro_top_term_t(        0, -1.7873895940349999e-01,  0.0000000000000000e+00), // f=2, s= 0, t=   0
-                    new astro_top_term_t(     1473,  3.1629832749992988e-03, -2.0985870294942081e-03), // f=2, s= 0, t=   1
-                    new astro_top_term_t(       71, -6.8180357663860398e-04,  1.1113519163940930e-03), // f=2, s= 0, t=   2
-                    new astro_top_term_t(     1331,  1.6911781266743710e-04,  1.1885125258969610e-03), // f=2, s= 0, t=   3
-                    new astro_top_term_t(      593,  5.4774166542017916e-04, -6.3844158559171749e-04), // f=2, s= 0, t=   4
-                    new astro_top_term_t(     1402, -2.1438473609329679e-05, -5.2026929830140383e-04), // f=2, s= 0, t=   5
-                    new astro_top_term_t(     1261, -5.7368849879358177e-05,  4.6888445010058260e-04), // f=2, s= 0, t=   6
-                    new astro_top_term_t(      141, -9.6040157452198532e-05,  3.0415286563684890e-04), // f=2, s= 0, t=   7
-                    new astro_top_term_t(      452,  1.2124121714193030e-04,  2.7470351829330812e-04), // f=2, s= 0, t=   8
-                    new astro_top_term_t(     2945,  1.1035693239374779e-04, -1.4867545478165761e-04), // f=2, s= 0, t=   9
-                    new astro_top_term_t(     1190, -5.9767419503565077e-05,  1.5052450817429230e-04), // f=2, s= 0, t=  10
-                    new astro_top_term_t(     1543, -1.0081841648710751e-04,  1.1874253775582299e-04), // f=2, s= 0, t=  11
-                    new astro_top_term_t(      522, -3.7998691236472437e-05, -1.1710923038633279e-04), // f=2, s= 0, t=  12
-                    new astro_top_term_t(      381,  1.7939534333569889e-05,  1.2165766508553840e-04), // f=2, s= 0, t=  13
-                    new astro_top_term_t(        8, -5.1065826531599063e-05, -1.0380178618772450e-04), // f=2, s= 0, t=  14
-                    new astro_top_term_t(        4, -9.6101012457693182e-05, -3.7409967137145340e-05), // f=2, s= 0, t=  15
-                    new astro_top_term_t(      212, -1.0011374095546651e-05,  9.1861092027193070e-05), // f=2, s= 0, t=  16
-                    new astro_top_term_t(      208,  6.3118700287276614e-05,  6.6551813665925998e-05), // f=2, s= 0, t=  17
-                    new astro_top_term_t(      106,  4.6362839297978442e-05,  7.1895265631125496e-05), // f=2, s= 0, t=  18
-                    new astro_top_term_t(     2804,  2.5951137645879960e-05,  4.8810749391069221e-05), // f=2, s= 0, t=  19
-                    new astro_top_term_t(     1119, -3.1798344550251363e-05,  4.3442443246298743e-05), // f=2, s= 0, t=  20
-                    new astro_top_term_t(       35, -2.6365309213148771e-05, -3.7318748312868848e-05), // f=2, s= 0, t=  21
-                    new astro_top_term_t(     1186,  4.5373467873211630e-05, -3.9315678706168707e-06), // f=2, s= 0, t=  22
-                    new astro_top_term_t(      310, -5.7440916735318752e-06,  4.2608008327900133e-05), // f=2, s= 0, t=  23
-                    new astro_top_term_t(       67, -3.2628206231552743e-05,  1.4188485967101389e-05), // f=2, s= 0, t=  24
-                    new astro_top_term_t(      664, -1.3138986439777871e-05,  2.8745825031870391e-05), // f=2, s= 0, t=  25
-                    new astro_top_term_t(    17476, -4.5717070878285386e-06, -2.7229104695341480e-05), // f=2, s= 0, t=  26
-                    new astro_top_term_t(      283,  4.1649905603620409e-06,  2.5778764278582031e-05), // f=2, s= 0, t=  27
-                    new astro_top_term_t(    28407, -2.6086891392275169e-05,  6.5019643042548361e-07), // f=2, s= 0, t=  28
-                    new astro_top_term_t(     2875, -1.2604181155312930e-05, -2.2155626126791911e-05), // f=2, s= 0, t=  29
-                    new astro_top_term_t(     2733,  4.6350251894966598e-06,  2.1642396781861640e-05), // f=2, s= 0, t=  30
-                    new astro_top_term_t(       12,  1.3787761564064851e-05, -1.6882625493196851e-05), // f=2, s= 0, t=  31
-                    new astro_top_term_t(       63,  7.3243482301750183e-06, -2.0430415756143061e-05), // f=2, s= 0, t=  32
-                    new astro_top_term_t(      137,  1.7688914790024399e-05, -2.6466558968384412e-06), // f=2, s= 0, t=  33
-                    new astro_top_term_t(     1048, -1.3743478634746570e-05,  1.1178051438197709e-05), // f=2, s= 0, t=  34
-                    new astro_top_term_t(     1614, -1.4527685432017941e-05, -2.5021418914365550e-06), // f=2, s= 0, t=  35
-                    new astro_top_term_t(     1044, -5.5188522930647246e-06,  1.3429997819426629e-05), // f=2, s= 0, t=  36
-                    new astro_top_term_t(      239, -6.3224380303283023e-06,  1.2677314304305631e-05), // f=2, s= 0, t=  37
-                    new astro_top_term_t(      133,  2.9376054111895790e-06, -1.3077911011252820e-05), // f=2, s= 0, t=  38
-                    new astro_top_term_t(     1492, -9.7624713292315362e-06,  4.8639192065138997e-06), // f=2, s= 0, t=  39
-                    new astro_top_term_t(     1454,  8.1915641060518482e-06, -7.1484181790528786e-06), // f=2, s= 0, t=  40
-                    new astro_top_term_t(     4418,  2.9126133839920300e-06, -9.7148097661500440e-06), // f=2, s= 0, t=  41
-                    new astro_top_term_t(      177, -8.1108828396444682e-06, -5.8479936691072763e-06), // f=2, s= 0, t=  42
-                    new astro_top_term_t(     2663, -7.4109426380852051e-07,  8.1320485449777430e-06), // f=2, s= 0, t=  43
-                    new astro_top_term_t(    17334,  7.7062782105104396e-06,  2.1832991677727231e-06), // f=2, s= 0, t=  44
-                    new astro_top_term_t(     3016, -2.7097054305923721e-06,  7.2985152622098958e-06), // f=2, s= 0, t=  45
-                    new astro_top_term_t(    28266,  3.0978305562474201e-06, -6.9523478329398256e-06), // f=2, s= 0, t=  46
-                    new astro_top_term_t(       75, -7.5005963705916821e-06,  5.8552558907898478e-07), // f=2, s= 0, t=  47
-                    new astro_top_term_t(      354,  2.2767150385710288e-06,  7.1310390742790356e-06), // f=2, s= 0, t=  48
-                    new astro_top_term_t(      974, -2.8814074492595782e-06,  6.7739175425797296e-06), // f=2, s= 0, t=  49
-                    new astro_top_term_t(       59, -4.8255490447201409e-06, -5.3633858025303309e-06), // f=2, s= 0, t=  50
-                    new astro_top_term_t(     1115,  2.4165363833927252e-06, -5.9760260615249186e-06), // f=2, s= 0, t=  51
-                    new astro_top_term_t(      204, -1.5420460797033710e-07, -6.3645330720578637e-06), // f=2, s= 0, t=  52
-                    new astro_top_term_t(      612,  4.7791204064686441e-06, -4.1989180399775663e-06), // f=2, s= 0, t=  53
-                    new astro_top_term_t(      574, -3.2533619740383079e-06,  4.8942036839749464e-06), // f=2, s= 0, t=  54
-                    new astro_top_term_t(      978, -5.2816161970547299e-06,  2.4194318535884879e-06), // f=2, s= 0, t=  55
-                    new astro_top_term_t(      129, -4.1704589160563732e-06, -3.8074741128128591e-06), // f=2, s= 0, t=  56
-                    new astro_top_term_t(      200, -4.3860533690857434e-06, -2.8426817721421870e-06), // f=2, s= 0, t=  57
-                    new astro_top_term_t(     1685, -4.4937857977759297e-06, -2.6664132359831861e-06), // f=2, s= 0, t=  58
-                    new astro_top_term_t(     1327, -4.0394363815867892e-06,  3.0479150446235980e-06), // f=2, s= 0, t=  59
-                    new astro_top_term_t(     1257, -4.4570496522011644e-06,  1.8417244601604851e-06)  // f=2, s= 0, t=  60
-                },
-                new astro_top_term_t[]  // f=2, s= 1
-                {
-                    new astro_top_term_t(        0, -6.1339663802007860e-04,  0.0000000000000000e+00), // f=2, s= 1, t=   0
-                    new astro_top_term_t(     1331,  5.6664110172313892e-04, -8.1133128701713292e-05), // f=2, s= 1, t=   1
-                    new astro_top_term_t(     1473, -1.9632805654171590e-04, -2.9843120844069362e-04), // f=2, s= 1, t=   2
-                    new astro_top_term_t(       71, -1.9721831884265259e-04, -1.2980246221969450e-04), // f=2, s= 1, t=   3
-                    new astro_top_term_t(     1402, -1.4909525632022481e-04,  5.5470899732068926e-06), // f=2, s= 1, t=   4
-                    new astro_top_term_t(     1261,  1.4379398981882231e-04,  1.8301247697520619e-05), // f=2, s= 1, t=   5
-                    new astro_top_term_t(     2945, -7.2143717725975376e-05, -6.1374574108146777e-05), // f=2, s= 1, t=   6
-                    new astro_top_term_t(     1190,  7.4611359353024315e-05,  3.0289539777815409e-05), // f=2, s= 1, t=   7
-                    new astro_top_term_t(      593, -5.9939495914062063e-05, -5.1836225465555612e-05), // f=2, s= 1, t=   8
-                    new astro_top_term_t(        8,  3.9984073707170713e-05, -3.0799116570219068e-05), // f=2, s= 1, t=   9
-                    new astro_top_term_t(     1543,  3.1094179263405468e-05,  2.6861784078602320e-05), // f=2, s= 1, t=  10
-                    new astro_top_term_t(      381,  3.7436713283265682e-05, -5.1576484771147526e-06), // f=2, s= 1, t=  11
-                    new astro_top_term_t(     1119,  2.9759191459225299e-05,  2.2175266912892650e-05), // f=2, s= 1, t=  12
-                    new astro_top_term_t(      452,  3.2286698454013622e-05, -1.4330028054859710e-05), // f=2, s= 1, t=  13
-                    new astro_top_term_t(      522, -3.3610639556594409e-05,  1.0732560764842151e-05), // f=2, s= 1, t=  14
-                    new astro_top_term_t(     2804,  2.6892727962532569e-05, -1.2202088159044841e-05), // f=2, s= 1, t=  15
-                    new astro_top_term_t(        4,  1.6145362682689730e-05, -2.1535180644982459e-05), // f=2, s= 1, t=  16
-                    new astro_top_term_t(       35,  1.1619842301292181e-05,  2.1259793782462840e-05), // f=2, s= 1, t=  17
-                    new astro_top_term_t(      310,  2.1159419772930708e-05,  3.2365387780938209e-06), // f=2, s= 1, t=  18
-                    new astro_top_term_t(      212, -1.7383881837993001e-05, -1.2570139978872199e-07), // f=2, s= 1, t=  19
-                    new astro_top_term_t(     2733,  1.5857546421435610e-05, -2.6232455173985150e-06), // f=2, s= 1, t=  20
-                    new astro_top_term_t(     1048,  9.8372722970562282e-06,  1.2182701032807050e-05), // f=2, s= 1, t=  21
-                    new astro_top_term_t(       12,  1.1952587407675961e-05,  7.5377841861106607e-06), // f=2, s= 1, t=  22
-                    new astro_top_term_t(      283, -1.0224581925761621e-05,  1.2303488561812810e-06), // f=2, s= 1, t=  23
-                    new astro_top_term_t(      239,  8.6293198115122691e-06,  4.6174857696641109e-06)  // f=2, s= 1, t=  24
-                },
-                new astro_top_term_t[]  // f=2, s= 2
-                {
-                    new astro_top_term_t(     1331,  2.3820657956875651e-05, -1.4117217046583029e-04), // f=2, s= 2, t=   0
-                    new astro_top_term_t(        0,  5.7169784317623151e-05,  0.0000000000000000e+00), // f=2, s= 2, t=   1
-                    new astro_top_term_t(     1261,  2.8584658843704731e-05, -1.9153125455819128e-05), // f=2, s= 2, t=   2
-                    new astro_top_term_t(       71, -6.3863669075967202e-06, -3.0182516098252429e-05), // f=2, s= 2, t=   3
-                    new astro_top_term_t(     2945, -1.6831473476249729e-05,  1.7778057659448761e-05), // f=2, s= 2, t=   4
-                    new astro_top_term_t(     1402, -8.7282659443619542e-06,  2.1969730180690399e-05), // f=2, s= 2, t=   5
-                    new astro_top_term_t(     1190,  1.8655664239774939e-05, -1.4275349333837280e-05), // f=2, s= 2, t=   6
-                    new astro_top_term_t(        8,  2.0572423386833478e-05,  2.9970650695923720e-06)  // f=2, s= 2, t=   7
-                }
-            },
-            new astro_top_term_t[][]  // f=3
-            {
-                new astro_top_term_t[]  // f=3, s= 0
-                {
-                    new astro_top_term_t(        0, -1.7340471864230000e-01,  0.0000000000000000e+00), // f=3, s= 0, t=   0
-                    new astro_top_term_t(     1473,  2.1234813115076170e-03,  3.0130058621335031e-03), // f=3, s= 0, t=   1
-                    new astro_top_term_t(       71, -1.0505499200359431e-03, -7.0849649152681434e-04), // f=3, s= 0, t=   2
-                    new astro_top_term_t(     1331,  1.1926139685020671e-03, -1.2467514555563171e-04), // f=3, s= 0, t=   3
-                    new astro_top_term_t(      593,  6.3328818822552336e-04,  5.1838245948530805e-04), // f=3, s= 0, t=   4
-                    new astro_top_term_t(     1402, -4.0198902705438299e-04,  3.4879411820834029e-04), // f=3, s= 0, t=   5
-                    new astro_top_term_t(     1261,  4.6754614871725769e-04,  6.5799333440031267e-05), // f=3, s= 0, t=   6
-                    new astro_top_term_t(      141, -3.1574545029112658e-04, -1.1057917696717649e-04), // f=3, s= 0, t=   7
-                    new astro_top_term_t(      452,  2.7842572840314938e-04, -1.1076531434037220e-04), // f=3, s= 0, t=   8
-                    new astro_top_term_t(     2945,  1.4727652777389929e-04,  1.0316600256389621e-04), // f=3, s= 0, t=   9
-                    new astro_top_term_t(     1190,  1.4974726446281261e-04,  6.1544751468406387e-05), // f=3, s= 0, t=  10
-                    new astro_top_term_t(     1543, -1.1418008898386521e-04, -9.8159556344747838e-05), // f=3, s= 0, t=  11
-                    new astro_top_term_t(      522, -6.9432011255429296e-05,  1.0500648997119170e-04), // f=3, s= 0, t=  12
-                    new astro_top_term_t(      381,  1.2168346615540400e-04, -1.5724958971846889e-05), // f=3, s= 0, t=  13
-                    new astro_top_term_t(        4,  3.5694868279606838e-05, -1.1563400718698000e-04), // f=3, s= 0, t=  14
-                    new astro_top_term_t(        8,  1.0601495232676501e-04, -5.3792770194159239e-05), // f=3, s= 0, t=  15
-                    new astro_top_term_t(      212, -8.8206829660081605e-05, -5.6186044809908770e-06), // f=3, s= 0, t=  16
-                    new astro_top_term_t(      208, -6.2116275994912254e-05,  6.2681468828265711e-05), // f=3, s= 0, t=  17
-                    new astro_top_term_t(      106, -5.9881700950469839e-05,  1.8173312312951261e-05), // f=3, s= 0, t=  18
-                    new astro_top_term_t(     2804,  4.9734881336053070e-05, -2.4663551556821301e-05), // f=3, s= 0, t=  19
-                    new astro_top_term_t(     1119,  4.3142176920002318e-05,  3.2166118196149167e-05), // f=3, s= 0, t=  20
-                    new astro_top_term_t(     1186,  5.3160131153765831e-06,  4.6681999520445390e-05), // f=3, s= 0, t=  21
-                    new astro_top_term_t(      310,  4.2381917128956993e-05,  6.2114355060802278e-06), // f=3, s= 0, t=  22
-                    new astro_top_term_t(       67,  9.7801450369382322e-06,  3.8008739374555199e-05), // f=3, s= 0, t=  23
-                    new astro_top_term_t(       35,  3.4777523130477253e-05,  8.0807437621346330e-06), // f=3, s= 0, t=  24
-                    new astro_top_term_t(      664, -2.7772391338347379e-05, -1.2933056019872690e-05), // f=3, s= 0, t=  25
-                    new astro_top_term_t(    17476,  2.6116611382398249e-05, -5.2512707918252350e-06), // f=3, s= 0, t=  26
-                    new astro_top_term_t(      283, -2.5901894192097461e-05,  7.6613799535167943e-07), // f=3, s= 0, t=  27
-                    new astro_top_term_t(    28407, -1.3727149833568929e-06, -2.5571899427495732e-05), // f=3, s= 0, t=  28
-                    new astro_top_term_t(       12,  1.7840323650284740e-05,  1.4017491541647661e-05), // f=3, s= 0, t=  29
-                    new astro_top_term_t(     2875, -1.2752702589739361e-05,  1.8674367648851481e-05), // f=3, s= 0, t=  30
-                    new astro_top_term_t(       63, -2.1141833621778831e-05, -6.5305966080253417e-06), // f=3, s= 0, t=  31
-                    new astro_top_term_t(     2733,  2.1699001266656308e-05, -4.2325482084098446e-06), // f=3, s= 0, t=  32
-                    new astro_top_term_t(     1048,  1.1071845430997370e-05,  1.3823004095404599e-05), // f=3, s= 0, t=  33
-                    new astro_top_term_t(      137, -1.3154331920868999e-05, -9.3564722901572934e-06), // f=3, s= 0, t=  34
-                    new astro_top_term_t(     1044,  1.3602483536936790e-05,  6.6866532885834768e-06), // f=3, s= 0, t=  35
-                    new astro_top_term_t(     1614,  3.0521160394305390e-06, -1.4295846223173739e-05), // f=3, s= 0, t=  36
-                    new astro_top_term_t(      239,  1.2491201410693211e-05,  6.3469005652658392e-06), // f=3, s= 0, t=  37
-                    new astro_top_term_t(      133, -1.3409179117794041e-05, -2.6113349355778870e-06), // f=3, s= 0, t=  38
-                    new astro_top_term_t(     1492, -4.9926812258289137e-06, -9.3442347365693383e-06), // f=3, s= 0, t=  39
-                    new astro_top_term_t(     1454,  7.1182846121023137e-06,  7.7835699509488784e-06), // f=3, s= 0, t=  40
-                    new astro_top_term_t(     4418,  9.5085270250543767e-06,  2.5720788995216492e-06), // f=3, s= 0, t=  41
-                    new astro_top_term_t(      354, -7.7105865781446408e-06,  3.5195735852526461e-06), // f=3, s= 0, t=  42
-                    new astro_top_term_t(     2663,  8.0823599962064017e-06,  8.8289336639692517e-07), // f=3, s= 0, t=  43
-                    new astro_top_term_t(       75, -6.1089854320482681e-07, -8.0284473434343767e-06), // f=3, s= 0, t=  44
-                    new astro_top_term_t(    17334,  2.4666413292489791e-06, -7.6105265820617346e-06), // f=3, s= 0, t=  45
-                    new astro_top_term_t(      974,  6.9130746927758178e-06,  3.5048585089334658e-06), // f=3, s= 0, t=  46
-                    new astro_top_term_t(    28266, -6.8235793370187026e-06, -3.3487790585021339e-06), // f=3, s= 0, t=  47
-                    new astro_top_term_t(     3016, -7.0427593206860361e-06, -2.6580682576526168e-06), // f=3, s= 0, t=  48
-                    new astro_top_term_t(       59, -5.5456494164143571e-06,  4.9667283828556126e-06), // f=3, s= 0, t=  49
-                    new astro_top_term_t(      204, -7.0017722378178446e-06, -1.6817751033546979e-06), // f=3, s= 0, t=  50
-                    new astro_top_term_t(     1115, -6.4024937184914472e-06,  2.1192315231268140e-06), // f=3, s= 0, t=  51
-                    new astro_top_term_t(      978,  2.3623585675585379e-06,  5.3260537432133881e-06), // f=3, s= 0, t=  52
-                    new astro_top_term_t(      129, -3.9867297079366098e-06,  4.2341276287979132e-06), // f=3, s= 0, t=  53
-                    new astro_top_term_t(      574, -4.8314043929159330e-06, -2.9544972252560498e-06), // f=3, s= 0, t=  54
-                    new astro_top_term_t(      612,  4.0663883671886490e-06,  3.8452439907704313e-06), // f=3, s= 0, t=  55
-                    new astro_top_term_t(      200, -3.2782990554685469e-06,  4.3746397303989681e-06), // f=3, s= 0, t=  56
-                    new astro_top_term_t(      247,  4.4086088444075100e-06, -3.0262449322858620e-06), // f=3, s= 0, t=  57
-                    new astro_top_term_t(     1685,  2.7665561507113492e-06, -4.4616466628081997e-06), // f=3, s= 0, t=  58
-                    new astro_top_term_t(     1335, -2.3134382826680641e-06,  4.5013914052228881e-06), // f=3, s= 0, t=  59
-                    new astro_top_term_t(     1327,  3.1175433103076271e-06,  3.7924860549293981e-06), // f=3, s= 0, t=  60
-                    new astro_top_term_t(      903,  4.4741994730303496e-06,  1.7822080022821150e-06), // f=3, s= 0, t=  61
-                    new astro_top_term_t(       16, -1.4927342901310379e-06,  4.4884086825602869e-06), // f=3, s= 0, t=  62
-                    new astro_top_term_t(      169,  2.5354018835911621e-06,  3.5730000800789471e-06), // f=3, s= 0, t=  63
-                    new astro_top_term_t(      271, -2.1688629242033941e-06,  3.7820832945120280e-06), // f=3, s= 0, t=  64
-                    new astro_top_term_t(       79,  3.8979055894631164e-06, -1.8923407502835230e-06), // f=3, s= 0, t=  65
-                    new astro_top_term_t(      416,  3.9376438761867171e-06, -5.2538703904847715e-07), // f=3, s= 0, t=  66
-                    new astro_top_term_t(    17405,  1.0904344065136349e-06,  3.5409195078133210e-06), // f=3, s= 0, t=  67
-                    new astro_top_term_t(    28337,  3.4736718287656798e-06, -5.2407682497120616e-07), // f=3, s= 0, t=  68
-                    new astro_top_term_t(     1351, -3.4436468577006500e-06, -7.4140986208801818e-08), // f=3, s= 0, t=  69
-                    new astro_top_term_t(     1312,  3.3433376977429141e-06, -7.9547674738811048e-07), // f=3, s= 0, t=  70
-                    new astro_top_term_t(      832,  3.0647904819735712e-06,  1.2969722855848811e-06), // f=3, s= 0, t=  71
-                    new astro_top_term_t(      275,  1.5394331893610239e-06, -2.7751033895625021e-06), // f=3, s= 0, t=  72
-                    new astro_top_term_t(     2592,  2.8273974520595848e-06,  1.3333677990888271e-06), // f=3, s= 0, t=  73
-                    new astro_top_term_t(    17264,  1.6047868553221060e-06, -2.5731990436490451e-06)  // f=3, s= 0, t=  74
-                },
-                new astro_top_term_t[]  // f=3, s= 1
-                {
-                    new astro_top_term_t(     1331, -6.0044174932694893e-05, -5.6841814115066798e-04), // f=3, s= 1, t=   0
-                    new astro_top_term_t(     1473,  2.8299001111328808e-04, -1.9899683117934169e-04), // f=3, s= 1, t=   1
-                    new astro_top_term_t(       71,  1.3109847892346901e-04, -1.9645547029607899e-04), // f=3, s= 1, t=   2
-                    new astro_top_term_t(     1402,  9.8753503746441094e-05,  1.1624141830784459e-04), // f=3, s= 1, t=   3
-                    new astro_top_term_t(     1261,  2.0857393493693379e-05, -1.4333407898431410e-04), // f=3, s= 1, t=   4
-                    new astro_top_term_t(     2945,  5.7600265965337831e-05, -7.1668848804472786e-05), // f=3, s= 1, t=   5
-                    new astro_top_term_t(     1190,  3.1158128562030883e-05, -7.4221508541133025e-05), // f=3, s= 1, t=   6
-                    new astro_top_term_t(      593,  4.9568824746840162e-05, -5.9443745710499677e-05), // f=3, s= 1, t=   7
-                    new astro_top_term_t(        0, -6.3916210233836622e-05,  0.0000000000000000e+00), // f=3, s= 1, t=   8
-                    new astro_top_term_t(        8,  3.2326459763508557e-05,  4.1097067153751401e-05), // f=3, s= 1, t=   9
-                    new astro_top_term_t(        4,  3.8505374914800768e-05, -2.4690750688454580e-05), // f=3, s= 1, t=  10
-                    new astro_top_term_t(     1543, -2.6127774810849349e-05,  2.9873942333388641e-05), // f=3, s= 1, t=  11
-                    new astro_top_term_t(      381, -4.4772545431527864e-06, -3.7396119251182150e-05), // f=3, s= 1, t=  12
-                    new astro_top_term_t(     1119,  2.2430310753365549e-05, -2.9557761386193919e-05), // f=3, s= 1, t=  13
-                    new astro_top_term_t(      522,  2.9886224978272480e-05,  2.0259791365064171e-05), // f=3, s= 1, t=  14
-                    new astro_top_term_t(      452, -1.3106498259692980e-05, -3.2637289766253343e-05), // f=3, s= 1, t=  15
-                    new astro_top_term_t(     2804, -1.1508149132666279e-05, -2.7316790371599908e-05), // f=3, s= 1, t=  16
-                    new astro_top_term_t(      310,  3.4738350608151140e-06, -2.1017437982180379e-05), // f=3, s= 1, t=  17
-                    new astro_top_term_t(      212,  2.1402716283134239e-06, -1.9178262093378069e-05), // f=3, s= 1, t=  18
-                    new astro_top_term_t(     2733, -2.3283762042050202e-06, -1.5882216399278110e-05), // f=3, s= 1, t=  19
-                    new astro_top_term_t(     1048,  1.2246829111767810e-05, -9.7512980427413643e-06), // f=3, s= 1, t=  20
-                    new astro_top_term_t(       12, -7.6135340345472092e-06,  1.2831304341856990e-05), // f=3, s= 1, t=  21
-                    new astro_top_term_t(       35, -5.7732549173295510e-06,  1.0016273100035810e-05), // f=3, s= 1, t=  22
-                    new astro_top_term_t(      283, -2.2363814820487809e-06, -9.6218108123675468e-06), // f=3, s= 1, t=  23
-                    new astro_top_term_t(      239,  4.6765179736328208e-06, -8.5111533123445213e-06), // f=3, s= 1, t=  24
-                    new astro_top_term_t(      106, -1.9836445213635969e-06,  7.8016311549488939e-06), // f=3, s= 1, t=  25
-                    new astro_top_term_t(     2875,  5.8334802150818700e-06,  5.1997278670085084e-06), // f=3, s= 1, t=  26
-                    new astro_top_term_t(     1044,  2.4978011849958161e-06, -6.6276491176842909e-06)  // f=3, s= 1, t=  27
-                },
-                new astro_top_term_t[]  // f=3, s= 2
-                {
-                    new astro_top_term_t(     1331, -1.3993900805601181e-04, -2.9006879879181548e-05), // f=3, s= 2, t=   0
-                    new astro_top_term_t(        0,  6.7829783611580237e-05,  0.0000000000000000e+00), // f=3, s= 2, t=   1
-                    new astro_top_term_t(     1261, -1.8612445466711130e-05, -2.8908877766737650e-05), // f=3, s= 2, t=   2
-                    new astro_top_term_t(       71,  2.9853088727300880e-05, -7.1012915175069879e-06), // f=3, s= 2, t=   3
-                    new astro_top_term_t(        4,  2.6321188906063949e-05,  1.3464234343799510e-05), // f=3, s= 2, t=   4
-                    new astro_top_term_t(     1402,  2.3284325058403039e-05, -6.8144038337101704e-06), // f=3, s= 2, t=   5
-                    new astro_top_term_t(     2945, -1.7707706192590389e-05, -1.5833741011362669e-05), // f=3, s= 2, t=   6
-                    new astro_top_term_t(     1190, -1.4044910483808361e-05, -1.8816964596903641e-05), // f=3, s= 2, t=   7
-                    new astro_top_term_t(        8, -3.2757789019448882e-06,  2.1268129579065079e-05), // f=3, s= 2, t=   8
-                    new astro_top_term_t(     1473, -9.8933125150553904e-06, -1.3083286541079480e-05), // f=3, s= 2, t=   9
-                    new astro_top_term_t(     1119, -7.2140288335202669e-06, -1.1729524860644351e-05)  // f=3, s= 2, t=  10
-                },
-                new astro_top_term_t[]  // f=3, s= 3
-                {
-                    new astro_top_term_t(     1331, -1.7737816039767501e-05,  2.8055420335966871e-05)  // f=3, s= 3, t=   0
-                }
-            },
-            new astro_top_term_t[][]  // f=4
-            {
-                new astro_top_term_t[]  // f=4, s= 0
-                {
-                    new astro_top_term_t(        0, -5.1702307822780000e-02,  0.0000000000000000e+00), // f=4, s= 0, t=   0
-                    new astro_top_term_t(     1402, -1.3296787157385281e-04,  1.3523784099823399e-04), // f=4, s= 0, t=   1
-                    new astro_top_term_t(     1543,  1.6300899640352639e-04,  5.5927755421839437e-05), // f=4, s= 0, t=   2
-                    new astro_top_term_t(     1473, -2.3179975765177140e-05, -9.8184622098344091e-05), // f=4, s= 0, t=   3
-                    new astro_top_term_t(      522, -1.9097390976957099e-05,  3.6607666661423369e-05), // f=4, s= 0, t=   4
-                    new astro_top_term_t(      664,  3.2543564829276270e-05,  1.0672339397019160e-06), // f=4, s= 0, t=   5
-                    new astro_top_term_t(     1331, -2.0841818514170151e-05,  1.2410223144740100e-05), // f=4, s= 0, t=   6
-                    new astro_top_term_t(        4, -8.0356073429830634e-06,  1.9857752253856971e-05), // f=4, s= 0, t=   7
-                    new astro_top_term_t(      593, -1.0459691293338759e-05, -1.7857031017673810e-05), // f=4, s= 0, t=   8
-                    new astro_top_term_t(     1614,  2.0002336741252269e-05,  1.4700260033157791e-06), // f=4, s= 0, t=   9
-                    new astro_top_term_t(     2875, -3.5880881863000781e-06,  8.0256130260543578e-06), // f=4, s= 0, t=  10
-                    new astro_top_term_t(     3016,  8.5254320868063325e-06, -1.8479247218425171e-07), // f=4, s= 0, t=  11
-                    new astro_top_term_t(        8, -5.4541260810660720e-06,  3.9805913226076404e-06), // f=4, s= 0, t=  12
-                    new astro_top_term_t(      452, -3.7355080445397231e-06,  4.0025013123176398e-06), // f=4, s= 0, t=  13
-                    new astro_top_term_t(       35, -2.1277230177098351e-06, -4.9607027782605714e-06), // f=4, s= 0, t=  14
-                    new astro_top_term_t(      137, -3.8233051639183096e-06, -3.1849844866680141e-06)  // f=4, s= 0, t=  15
-                },
-                new astro_top_term_t[]  // f=4, s= 1
-                {
-                    new astro_top_term_t(        0,  1.9166844047183211e-04,  0.0000000000000000e+00), // f=4, s= 1, t=   0
-                    new astro_top_term_t(     1402,  3.9019701387765488e-05,  3.8671378812923788e-05), // f=4, s= 1, t=   1
-                    new astro_top_term_t(     1543,  1.5119207079965939e-05, -4.3332491992581899e-05), // f=4, s= 1, t=   2
-                    new astro_top_term_t(     1331,  5.8922122899993431e-06,  1.0029385340576861e-05), // f=4, s= 1, t=   3
-                    new astro_top_term_t(      522,  1.0280806202111021e-05,  5.2916455231996232e-06)  // f=4, s= 1, t=   4
-                }
-            },
-            new astro_top_term_t[][]  // f=5
-            {
-                new astro_top_term_t[]  // f=5, s= 0
-                {
-                    new astro_top_term_t(        0,  1.3977992515640000e-01,  0.0000000000000000e+00), // f=5, s= 0, t=   0
-                    new astro_top_term_t(     1402,  1.2883200572372361e-04,  1.3471156433694759e-04), // f=5, s= 0, t=   1
-                    new astro_top_term_t(     1543, -4.9979310098879121e-05,  1.6180896042292819e-04), // f=5, s= 0, t=   2
-                    new astro_top_term_t(     1473, -2.2060691195269469e-05, -9.3668360843677731e-05), // f=5, s= 0, t=   3
-                    new astro_top_term_t(      522,  3.5537595493916502e-05,  1.9797390613745271e-05), // f=5, s= 0, t=   4
-                    new astro_top_term_t(      664, -7.4709042862279015e-08,  3.1983280221550278e-05), // f=5, s= 0, t=   5
-                    new astro_top_term_t(     1331,  1.1695376261855580e-05,  2.0798562232570440e-05), // f=5, s= 0, t=   6
-                    new astro_top_term_t(      593, -9.9523808317349038e-06, -1.7074224315439731e-05), // f=5, s= 0, t=   7
-                    new astro_top_term_t(     1614, -9.4118113483089596e-07,  1.9684674172624949e-05), // f=5, s= 0, t=   8
-                    new astro_top_term_t(        4, -1.5932093431444279e-05,  9.4977011164352140e-06), // f=5, s= 0, t=   9
-                    new astro_top_term_t(     2875,  7.8417800319575014e-06,  3.7228551547920001e-06), // f=5, s= 0, t=  10
-                    new astro_top_term_t(     3016,  4.3444197029476981e-07,  8.3694483911743903e-06), // f=5, s= 0, t=  11
-                    new astro_top_term_t(        8, -5.9902893836260643e-06, -4.3498982251067908e-06), // f=5, s= 0, t=  12
-                    new astro_top_term_t(      137, -3.0046395968887028e-06,  4.7462972937701063e-06), // f=5, s= 0, t=  13
-                    new astro_top_term_t(      452,  3.9819715036126689e-06,  3.7540995120279268e-06), // f=5, s= 0, t=  14
-                    new astro_top_term_t(       35, -4.0365965056395762e-08,  5.3159364396026402e-06), // f=5, s= 0, t=  15
-                    new astro_top_term_t(      141,  1.2649492629014499e-07,  4.8536627302669076e-06), // f=5, s= 0, t=  16
-                    new astro_top_term_t(     1261,  1.1901325673451860e-06,  4.3994722705730970e-06), // f=5, s= 0, t=  17
-                    new astro_top_term_t(     2945, -2.7264749792923272e-06, -3.6454310686215340e-06), // f=5, s= 0, t=  18
-                    new astro_top_term_t(     1685,  6.9410338646847810e-07,  3.3566050467992739e-06), // f=5, s= 0, t=  19
-                    new astro_top_term_t(      734,  8.2952840171332113e-07,  3.2356209378486682e-06), // f=5, s= 0, t=  20
-                    new astro_top_term_t(      208,  2.4256846662067760e-06, -9.5181484992359002e-07), // f=5, s= 0, t=  21
-                    new astro_top_term_t(      279, -2.5271926303381422e-06, -3.7922031983877281e-07), // f=5, s= 0, t=  22
-                    new astro_top_term_t(     1115,  5.6515925473070844e-07,  2.1078436053637770e-06), // f=5, s= 0, t=  23
-                    new astro_top_term_t(     1257, -1.3558265037946960e-06,  1.4215822110290420e-06), // f=5, s= 0, t=  24
-                    new astro_top_term_t(       12,  1.3204389683748120e-07, -1.8835278008457151e-06), // f=5, s= 0, t=  25
-                    new astro_top_term_t(       71, -1.9042145379339269e-07, -1.8630215116559800e-06), // f=5, s= 0, t=  26
-                    new astro_top_term_t(      212,  1.6053042001407380e-06,  8.4671630560881122e-07), // f=5, s= 0, t=  27
-                    new astro_top_term_t(    17405,  1.3113174080732559e-06, -4.9311123653462177e-07), // f=5, s= 0, t=  28
-                    new astro_top_term_t(    17547,  1.0602949344425471e-06,  8.9833952832208403e-07), // f=5, s= 0, t=  29
-                    new astro_top_term_t(     2804,  9.2561678972169579e-07,  9.7236819416524451e-07), // f=5, s= 0, t=  30
-                    new astro_top_term_t(    28337, -9.4657252626238933e-08, -1.1160255453211769e-06), // f=5, s= 0, t=  31
-                    new astro_top_term_t(    28478,  9.2430781502463316e-07, -6.2265716348343233e-07), // f=5, s= 0, t=  32
-                    new astro_top_term_t(       75, -9.2130387409465058e-07,  5.9403283989994324e-07), // f=5, s= 0, t=  33
-                    new astro_top_term_t(      106, -2.0304770919600219e-07, -1.0388792453459521e-06), // f=5, s= 0, t=  34
-                    new astro_top_term_t(      381,  5.9915368756519242e-07,  8.3180916441107633e-07), // f=5, s= 0, t=  35
-                    new astro_top_term_t(     1190,  2.7201162062442490e-08,  1.0190741100380801e-06), // f=5, s= 0, t=  36
-                    new astro_top_term_t(     3087,  2.9873098731161120e-07,  9.6483981362737291e-07), // f=5, s= 0, t=  37
-                    new astro_top_term_t(       63,  5.8956418822020129e-07, -7.7745585971202028e-07), // f=5, s= 0, t=  38
-                    new astro_top_term_t(     1186,  2.4117256641652101e-07, -9.2801537744071498e-07), // f=5, s= 0, t=  39
-                    new astro_top_term_t(       67, -3.2941946279216570e-07,  7.9963658829793748e-07), // f=5, s= 0, t=  40
-                    new astro_top_term_t(    17476, -7.4361213537121858e-07, -1.2891468267067801e-07), // f=5, s= 0, t=  41
-                    new astro_top_term_t(      283,  2.8076344536095831e-08,  7.3853891759583075e-07), // f=5, s= 0, t=  42
-                    new astro_top_term_t(     1756,  3.1161152193772379e-07,  6.3104215205486464e-07), // f=5, s= 0, t=  43
-                    new astro_top_term_t(      247, -3.0658465478480348e-07, -6.2524043128321752e-07), // f=5, s= 0, t=  44
-                    new astro_top_term_t(    28407, -2.6107491970896922e-07,  5.4499817140536954e-07), // f=5, s= 0, t=  45
-                    new astro_top_term_t(      354,  4.9460726403829815e-07,  2.9447867230664199e-07), // f=5, s= 0, t=  46
-                    new astro_top_term_t(     1421, -3.1957781759109811e-07, -4.3033184225872391e-07), // f=5, s= 0, t=  47
-                    new astro_top_term_t(     1383,  4.0796989384481828e-07,  3.2647659230997358e-07), // f=5, s= 0, t=  48
-                    new astro_top_term_t(      133,  1.1815490710962760e-07, -5.0524398677283852e-07), // f=5, s= 0, t=  49
-                    new astro_top_term_t(      177, -4.6755777925983522e-07,  2.0641392675487111e-07), // f=5, s= 0, t=  50
-                    new astro_top_term_t(      805,  2.4510909183821792e-07,  4.3308098936875489e-07), // f=5, s= 0, t=  51
-                    new astro_top_term_t(     1563,  2.0041064699998999e-07, -4.4445832345851582e-07), // f=5, s= 0, t=  52
-                    new astro_top_term_t(       59, -1.2658294965005670e-07, -4.6671870382330612e-07), // f=5, s= 0, t=  53
-                    new astro_top_term_t(     1524, -7.8614887212231827e-08,  4.6760439016103602e-07), // f=5, s= 0, t=  54
-                    new astro_top_term_t(     4348,  4.6767825285878958e-07,  3.5290700804681861e-08), // f=5, s= 0, t=  55
-                    new astro_top_term_t(       16,  4.2127049178471667e-07, -1.8684252468076170e-07), // f=5, s= 0, t=  56
-                    new astro_top_term_t(     4489,  1.8055735116211371e-07,  4.2107641051871891e-07), // f=5, s= 0, t=  57
-                    new astro_top_term_t(       79, -4.0548063730912672e-07, -2.1065225409216059e-07), // f=5, s= 0, t=  58
-                    new astro_top_term_t(     1398, -1.2435454796683390e-07,  3.9919922981210330e-07), // f=5, s= 0, t=  59
-                    new astro_top_term_t(      145, -3.0487589061275071e-07,  2.8316787420643652e-07), // f=5, s= 0, t=  60
-                    new astro_top_term_t(      345,  3.4373900983948560e-07, -2.2193498580565619e-07), // f=5, s= 0, t=  61
-                    new astro_top_term_t(      275, -7.6720036516022037e-09, -4.0650745658300768e-07), // f=5, s= 0, t=  62
-                    new astro_top_term_t(     1406, -3.7816142635595027e-07,  9.1996049592574050e-08), // f=5, s= 0, t=  63
-                    new astro_top_term_t(     1044,  7.4671401050977241e-08,  3.7193907363226299e-07), // f=5, s= 0, t=  64
-                    new astro_top_term_t(      318,  7.1927751245935557e-08,  3.6928457890682560e-07), // f=5, s= 0, t=  65
-                    new astro_top_term_t(      416,  4.1798174498739052e-08, -3.6796074151811958e-07), // f=5, s= 0, t=  66
-                    new astro_top_term_t(      204, -1.5624747021437499e-08, -3.6071195814331651e-07), // f=5, s= 0, t=  67
-                    new astro_top_term_t(     1539,  3.3199296973509958e-07, -1.0438655407426570e-07), // f=5, s= 0, t=  68
-                    new astro_top_term_t(     1547,  2.1465474690281490e-07,  2.6396972342688539e-07), // f=5, s= 0, t=  69
-                    new astro_top_term_t(     1327, -1.5719732197123969e-07,  2.8693854391332578e-07), // f=5, s= 0, t=  70
-                    new astro_top_term_t(      541,  2.6198971229951878e-07,  1.7511268865594321e-07)  // f=5, s= 0, t=  71
-                },
-                new astro_top_term_t[]  // f=5, s= 1
-                {
-                    new astro_top_term_t(        0,  7.7993297015907634e-05,  0.0000000000000000e+00), // f=5, s= 1, t=   0
-                    new astro_top_term_t(     1402,  3.9152687150310170e-05, -3.7172486736475712e-05), // f=5, s= 1, t=   1
-                    new astro_top_term_t(     1543,  4.3031136375758243e-05,  1.3517906141260201e-05), // f=5, s= 1, t=   2
-                    new astro_top_term_t(     1331,  1.0005173914454110e-05, -5.5510992766576859e-06), // f=5, s= 1, t=   3
-                    new astro_top_term_t(      522,  5.4799934835759310e-06, -9.9803123122233115e-06), // f=5, s= 1, t=   4
-                    new astro_top_term_t(     1473, -9.2379228749259814e-06,  2.0049455605464851e-06), // f=5, s= 1, t=   5
-                    new astro_top_term_t(      664, -3.2895419619690672e-06, -4.5974891215164072e-08), // f=5, s= 1, t=   6
-                    new astro_top_term_t(        8,  1.3908106265782320e-06, -2.9292856582721550e-06), // f=5, s= 1, t=   7
-                    new astro_top_term_t(     2875,  1.5562630279974180e-06, -2.5756858183805818e-06), // f=5, s= 1, t=   8
-                    new astro_top_term_t(        4, -2.4245388783587939e-06, -1.5068482062721909e-06), // f=5, s= 1, t=   9
-                    new astro_top_term_t(     3016,  2.7144173403334680e-06,  1.5168858882407361e-07), // f=5, s= 1, t=  10
-                    new astro_top_term_t(     2945, -1.9556025171954529e-06,  1.2707620314125440e-06), // f=5, s= 1, t=  11
-                    new astro_top_term_t(       35,  1.3344840689621260e-06,  1.4001396639490341e-06), // f=5, s= 1, t=  12
-                    new astro_top_term_t(      593, -1.5045227426363480e-06,  9.0293863845346919e-07), // f=5, s= 1, t=  13
-                    new astro_top_term_t(     1614,  1.4931074066475380e-06,  1.3901882598918031e-07), // f=5, s= 1, t=  14
-                    new astro_top_term_t(     1261,  1.3653087138211129e-06, -3.4669288959066708e-07), // f=5, s= 1, t=  15
-                    new astro_top_term_t(       12,  1.2315835838874919e-06, -5.9561839689487617e-08), // f=5, s= 1, t=  16
-                    new astro_top_term_t(      137,  9.0428610682743405e-07,  5.7865365381345505e-07), // f=5, s= 1, t=  17
-                    new astro_top_term_t(     2804,  5.6172637460901586e-07, -4.7331838000806132e-07), // f=5, s= 1, t=  18
-                    new astro_top_term_t(      212, -6.0813020695312143e-07,  1.1354550736721950e-07)  // f=5, s= 1, t=  19
-                },
-                new astro_top_term_t[]  // f=5, s= 2
-                {
-                    new astro_top_term_t(     1402, -2.9412500484509639e-06, -8.0598049136548207e-06), // f=5, s= 2, t=   0
-                    new astro_top_term_t(     1543, -1.1369975198335059e-06, -6.6800431913703534e-06), // f=5, s= 2, t=   1
-                    new astro_top_term_t(     1331, -5.6564967655275266e-07, -2.8456118566588939e-06), // f=5, s= 2, t=   2
-                    new astro_top_term_t(        0,  2.4849999999999999e-06,  0.0000000000000000e+00), // f=5, s= 2, t=   3
-                    new astro_top_term_t(      522, -1.0188268325841671e-06, -1.4049711115470319e-06), // f=5, s= 2, t=   4
-                    new astro_top_term_t(        4, -1.2789041308060199e-06, -7.7265243668823065e-07), // f=5, s= 2, t=   5
-                    new astro_top_term_t(        8,  1.2656119872224440e-06, -4.3448350220923409e-07)  // f=5, s= 2, t=   6
-                }
+                this.tt = tt;
+                this.r = r;
+                this.v = v;
+                this.a = a;
             }
+        }
+
+        private const int PLUTO_NUM_STATES = 41;
+        private const int PLUTO_TIME_STEP  = 36500;
+
+        private static readonly body_state_t[] PlutoStateTable = new body_state_t[]
+        {
+            new body_state_t( -730000.0, new TerseVector(-26.1182072321076, -14.3761681778250,   3.3844025152995), new TerseVector( 1.6339372163656e-03, -2.7861699588508e-03, -1.3585880229445e-03))
+        ,   new body_state_t( -693500.0, new TerseVector( 43.6599275018261,  15.7782921408811,  -8.2269833881374), new TerseVector(-2.5043046295860e-04,  2.1163039457238e-03,  7.3466073583102e-04))
+        ,   new body_state_t( -657000.0, new TerseVector(-17.0086014985033,  33.0590743876420,  15.4080189624259), new TerseVector(-1.9676551946049e-03, -1.8337707766770e-03,  2.0125441459959e-05))
+        ,   new body_state_t( -620500.0, new TerseVector( 26.9005106893171, -21.5285596810214, -14.7987712668075), new TerseVector( 2.2939261196998e-03,  1.7431871970059e-03, -1.4585639832643e-04))
+        ,   new body_state_t( -584000.0, new TerseVector( 20.2303809506997,  43.2669666571891,   7.3829660919234), new TerseVector(-1.9754081700585e-03,  5.3457141292226e-04,  7.5929169129793e-04))
+        ,   new body_state_t( -547500.0, new TerseVector(-22.5571440338751, -19.2958112538447,   0.7806423603826), new TerseVector( 2.1494578646505e-03, -2.4266772630044e-03, -1.4013084013574e-03))
+        ,   new body_state_t( -511000.0, new TerseVector( 43.0236236810360,  19.6179542007347,  -6.8406553041565), new TerseVector(-4.7729923671058e-04,  2.0208979483877e-03,  7.7191815992131e-04))
+        ,   new body_state_t( -474500.0, new TerseVector(-20.4245105862934,  29.5157679318005,  15.3408675727018), new TerseVector(-1.8003167284198e-03, -2.1025226687937e-03, -1.1262333332859e-04))
+        ,   new body_state_t( -438000.0, new TerseVector( 30.7746921076872, -18.2366370153037, -14.9455358798963), new TerseVector( 2.0113162005465e-03,  1.9353827024189e-03, -2.0937793168297e-06))
+        ,   new body_state_t( -401500.0, new TerseVector( 16.7235440456361,  44.0505598318603,   8.6886113939440), new TerseVector(-2.0565226049264e-03,  3.2710694138777e-04,  7.2006155046579e-04))
+        ,   new body_state_t( -365000.0, new TerseVector(-18.4891734360057, -23.1428732331142,  -1.6436720878799), new TerseVector( 2.5524223225832e-03, -2.0035792463879e-03, -1.3910737531294e-03))
+        ,   new body_state_t( -328500.0, new TerseVector( 42.0853950560734,  22.9742531259520,  -5.5131410205412), new TerseVector(-6.7105845193949e-04,  1.9177289500465e-03,  7.9770011059534e-04))
+        ,   new body_state_t( -292000.0, new TerseVector(-23.2753639151193,  25.8185142987694,  15.0553815885983), new TerseVector(-1.6062295460975e-03, -2.3395961498533e-03, -2.4377362639479e-04))
+        ,   new body_state_t( -255500.0, new TerseVector( 33.9015793210130, -14.9421228983498, -14.8664994855707), new TerseVector( 1.7455105487563e-03,  2.0655068871494e-03,  1.1695000657630e-04))
+        ,   new body_state_t( -219000.0, new TerseVector( 13.3770189322702,  44.4442211120183,   9.8260227015847), new TerseVector(-2.1171882923251e-03,  1.3114714542921e-04,  6.7884578840323e-04))
+        ,   new body_state_t( -182500.0, new TerseVector(-14.1723844533379, -26.0054690135836,  -3.8387026446526), new TerseVector( 2.8419751785822e-03, -1.5579441656564e-03, -1.3408416711060e-03))
+        ,   new body_state_t( -146000.0, new TerseVector( 40.9468572586403,  25.9049735920209,  -4.2563362404988), new TerseVector(-8.3652705194051e-04,  1.8129497136404e-03,  8.1564228273060e-04))
+        ,   new body_state_t( -109500.0, new TerseVector(-25.5839689598009,  22.0699164999425,  14.5902026036780), new TerseVector(-1.3923977856331e-03, -2.5442249745422e-03, -3.7169906721828e-04))
+        ,   new body_state_t(  -73000.0, new TerseVector( 36.4035708396756, -11.7473067389593, -14.6304139635223), new TerseVector( 1.5037714418941e-03,  2.1500325702247e-03,  2.1523781242948e-04))
+        ,   new body_state_t(  -36500.0, new TerseVector( 10.2436041239517,  44.5280986402285,  10.8048664487066), new TerseVector(-2.1615839201823e-03, -5.1418983893534e-05,  6.3687060751430e-04))
+        ,   new body_state_t(       0.0, new TerseVector( -9.8753695807739, -27.9789262247367,  -5.7537118247043), new TerseVector( 3.0287533248818e-03, -1.1276087003636e-03, -1.2651326732361e-03))
+        ,   new body_state_t(   36500.0, new TerseVector( 39.7009143866164,  28.4327664903825,  -3.0906026170881), new TerseVector(-9.7720559866138e-04,  1.7121518344796e-03,  8.2822409843551e-04))
+        ,   new body_state_t(   73000.0, new TerseVector(-27.3620419812795,  18.4265651225706,  13.9975343005914), new TerseVector(-1.1690934621340e-03, -2.7143131627458e-03, -4.9312695340367e-04))
+        ,   new body_state_t(  109500.0, new TerseVector( 38.3556091850032,  -8.7643800131842, -14.2951819118807), new TerseVector( 1.2922798115839e-03,  2.2032141141126e-03,  2.9606522103424e-04))
+        ,   new body_state_t(  146000.0, new TerseVector(  7.3929490279056,  44.3826789515344,  11.6295002148543), new TerseVector(-2.1932815453830e-03, -2.1751799585364e-04,  5.9556516201114e-04))
+        ,   new body_state_t(  182500.0, new TerseVector( -5.8649529029432, -29.1987619981354,  -7.3502494912123), new TerseVector( 3.1339384323665e-03, -7.4205968379701e-04, -1.1783357537604e-03))
+        ,   new body_state_t(  219000.0, new TerseVector( 38.4269476345329,  30.5667598351632,  -2.0378379641214), new TerseVector(-1.0958945370084e-03,  1.6194885149659e-03,  8.3705272532546e-04))
+        ,   new body_state_t(  255500.0, new TerseVector(-28.6586488201636,  15.0309000931701,  13.3365724093667), new TerseVector(-9.4611899595408e-04, -2.8506813871559e-03, -6.0508645822989e-04))
+        ,   new body_state_t(  292000.0, new TerseVector( 39.8319806717528,  -6.0784057667647, -13.9098153586562), new TerseVector( 1.1117769689167e-03,  2.2362097830152e-03,  3.6230548231153e-04))
+        ,   new body_state_t(  328500.0, new TerseVector(  4.8371523764030,  44.0723119541530,  12.3146147867802), new TerseVector(-2.2164547537724e-03, -3.6790365636785e-04,  5.5542723844616e-04))
+        ,   new body_state_t(  365000.0, new TerseVector( -2.2619763759487, -29.8581508706765,  -8.6502366418978), new TerseVector( 3.1821176368396e-03, -4.0915169873994e-04, -1.0895893040652e-03))
+        ,   new body_state_t(  401500.0, new TerseVector( 37.1576590087419,  32.3528396259588,  -1.0950381786229), new TerseVector(-1.1988412606830e-03,  1.5356290902995e-03,  8.4339118209852e-04))
+        ,   new body_state_t(  438000.0, new TerseVector(-29.5767402292299,  11.8635359435865,  12.6313230398719), new TerseVector(-7.2292830060955e-04, -2.9587820140709e-03, -7.0824296450300e-04))
+        ,   new body_state_t(  474500.0, new TerseVector( 40.9541099577599,  -3.6589805945370, -13.4994699563950), new TerseVector( 9.5387298337127e-04,  2.2572135462477e-03,  4.1826529781128e-04))
+        ,   new body_state_t(  511000.0, new TerseVector(  2.4859523114116,  43.6181887566155,  12.8914184596699), new TerseVector(-2.2339745420393e-03, -5.1034757181916e-04,  5.1485330196245e-04))
+        ,   new body_state_t(  547500.0, new TerseVector(  1.0594791441638, -30.1357921778687,  -9.7458684762963), new TerseVector( 3.1921591684898e-03, -1.1305312796150e-04, -9.9954096945965e-04))
+        ,   new body_state_t(  584000.0, new TerseVector( 35.8778640130144,  33.8942263660709,  -0.2245246362769), new TerseVector(-1.2941245730845e-03,  1.4560427668319e-03,  8.4762160640137e-04))
+        ,   new body_state_t(  620500.0, new TerseVector(-30.2026537318923,   8.7794211940578,  11.8609238187578), new TerseVector(-4.9002221381806e-04, -3.0438768469137e-03, -8.0605935262763e-04))
+        ,   new body_state_t(  657000.0, new TerseVector( 41.8536204011376,  -1.3790965838042, -13.0624345337527), new TerseVector( 8.0674627557124e-04,  2.2702374399791e-03,  4.6832587475465e-04))
+        ,   new body_state_t(  693500.0, new TerseVector(  0.2468843977112,  43.0303960481227,  13.3909343344167), new TerseVector(-2.2436121787266e-03, -6.5238074250728e-04,  4.7172729553196e-04))
+        ,   new body_state_t(  730000.0, new TerseVector(  4.2432528370899, -30.1182016908248, -10.7074412313491), new TerseVector( 3.1725847067411e-03,  1.6098461202270e-04, -9.0672150593868e-04))
         };
 
-
-
-        private static readonly double[] top_freq = new double[]
+        private static TerseVector UpdatePosition(double dt, TerseVector r, TerseVector v, TerseVector a)
         {
-            0.5296909622785881e+03,
-            0.2132990811942489e+03,
-            0.7478166163181234e+02,
-            0.3813297236217556e+02,
-            0.2533566020437000e+02
-        };
-
-        private static double calc_elliptical_coord(astro_top_term_t[][] formula, double dmu, int f, double t1)
-        {
-            double el = 0.0;
-            double tpower = 1.0;
-            for (int s=0; s < formula.Length; ++s)
-            {
-                astro_top_term_t[] series = formula[s];
-                for (int t=0; t < series.Length; ++t)
-                {
-                    astro_top_term_t term = series[t];
-                    if (f==1 && s==1 && term.k==0)
-                        continue;
-                    double arg = term.k * dmu * t1;
-                    el += tpower * (term.c*Math.Cos(arg) + term.s*Math.Sin(arg));
-                }
-                tpower *= t1;
-            }
-            return el;
-        }
-
-        private static top_elliptical_t TopCalcElliptical(int planet, astro_top_term_t[][][] model, double tt)
-        {
-            /* Translated from: TOP2013.f */
-            /* See: https://github.com/cosinekitty/ephemeris/tree/master/top2013 */
-            /* Copied from: ftp://ftp.imcce.fr/pub/ephem/planets/top2013 */
-            double t1 = tt / 365250.0;
-            double dmu = (top_freq[0] - top_freq[1]) / 880.0;
-
-            var ellip = new top_elliptical_t();
-            ellip.a = calc_elliptical_coord(model[0], dmu, 0, t1);
-            ellip.lambda = calc_elliptical_coord(model[1], dmu, 1, t1);
-            ellip.k = calc_elliptical_coord(model[2], dmu, 2, t1);
-            ellip.h = calc_elliptical_coord(model[3], dmu, 3, t1);
-            ellip.q = calc_elliptical_coord(model[4], dmu, 4, t1);
-            ellip.p = calc_elliptical_coord(model[5], dmu, 5, t1);
-
-            double xl = ellip.lambda + top_freq[planet - 5] * t1;
-            xl %= PI2;
-            if (xl < 0.0)
-                xl += PI2;
-            ellip.lambda = xl;
-            return ellip;
-        }
-
-        static AstroVector TopEcliptic(top_elliptical_t ellip, AstroTime time)
-        {
-            double xa = ellip.a;
-            double xl = ellip.lambda;
-            double xk = ellip.k;
-            double xh = ellip.h;
-            double xq = ellip.q;
-            double xp = ellip.p;
-
-            double xfi = Math.Sqrt(1.0 - xk*xk - xh*xh);
-            double xki = Math.Sqrt(1.0 - xq*xq - xp*xp);
-            double zr = xk;
-            double zi = xh;
-            double u = 1.0 / (1.0 + xfi);
-            double ex2 = zr*zr + zi*zi;
-            double ex = Math.Sqrt(ex2);
-            double ex3 = ex * ex2;
-            double z1r = zr;
-            double z1i = -zi;
-
-            double gl = xl % PI2;
-            double gm = gl - Math.Atan2(xh, xk);
-            double e = gl + (ex - 0.125*ex3)*Math.Sin(gm) + 0.5*ex2*Math.Sin(2.0*gm) + 0.375*ex3*Math.Sin(3.0*gm);
-
-            double dl, z2r, z2i, zteta_r, zteta_i, z3r, z3i, rsa;
-            do
-            {
-                z2r = 0.0;
-                z2i = e;
-                zteta_r = Math.Cos(z2i);
-                zteta_i = Math.Sin(z2i);
-                z3r = z1r*zteta_r - z1i*zteta_i;
-                z3i = z1r*zteta_i + z1i*zteta_r;
-                dl = gl - e + z3i;
-                rsa = 1.0 - z3r;
-                e += dl/rsa;
-            } while (Math.Abs(dl) >= 1.0e-15);
-
-            z1r = z3i * u * zr;
-            z1i = z3i * u * zi;
-            z2r = +z1i;
-            z2i = -z1r;
-            double zto_r = (-zr + zteta_r + z2r) / rsa;
-            double zto_i = (-zi + zteta_i + z2i) / rsa;
-            double xcw = zto_r;
-            double xsw = zto_i;
-            double xm = xp*xcw - xq*xsw;
-            double xr = xa*rsa;
-
-            return new AstroVector(
-                xr*(xcw - 2.0*xp*xm),
-                xr*(xsw + 2.0*xq*xm),
-                -2.0*xr*xki*xm,
-                time
+            return new TerseVector(
+                r.x + dt*(v.x + dt*a.x/2),
+                r.y + dt*(v.y + dt*a.y/2),
+                r.z + dt*(v.z + dt*a.z/2)
             );
         }
 
-        private static double[,] top_eq_rot;
-
-        private static AstroVector TopEquatorial(AstroVector ecl)
+        private static body_state_t AdjustBarycenterPosVel(ref body_state_t ssb, double tt, Body body, double planet_gm)
         {
-            if (top_eq_rot == null)
+            double shift = planet_gm / (planet_gm + SUN_GM);
+            body_state_t planet = CalcVsopPosVel(vsop[(int)body], tt);
+            ssb.r += shift * planet.r;
+            ssb.v += shift * planet.v;
+            return planet;
+        }
+
+        private static major_bodies_t MajorBodyBary(double tt)
+        {
+            var bary = new major_bodies_t();
+            var ssb = new body_state_t(tt, TerseVector.Zero, TerseVector.Zero);
+            bary.Jupiter = AdjustBarycenterPosVel(ref ssb, tt, Body.Jupiter, JUPITER_GM);
+            bary.Saturn  = AdjustBarycenterPosVel(ref ssb, tt, Body.Saturn,  SATURN_GM);
+            bary.Uranus  = AdjustBarycenterPosVel(ref ssb, tt, Body.Uranus,  URANUS_GM);
+            bary.Neptune = AdjustBarycenterPosVel(ref ssb, tt, Body.Neptune, NEPTUNE_GM);
+
+            // Convert planets' [pos, vel] vectors from heliocentric to barycentric.
+            bary.Jupiter.r -= ssb.r;    bary.Jupiter.v -= ssb.v;
+            bary.Saturn.r  -= ssb.r;    bary.Saturn.v  -= ssb.v;
+            bary.Uranus.r  -= ssb.r;    bary.Uranus.v  -= ssb.v;
+            bary.Neptune.r -= ssb.r;    bary.Neptune.v -= ssb.v;
+
+            // Convert heliocentric SSB to barycentric Sun.
+            bary.Sun.tt = tt;
+            bary.Sun.r = -1.0 * ssb.r;
+            bary.Sun.v = -1.0 * ssb.v;
+
+            return bary;
+        }
+
+        private static body_grav_calc_t GravSim(    // out: [pos, vel, acc] of the simulated body at time tt2
+            out major_bodies_t bary2,               // out: major body barycentric positions at tt2
+            double tt2,                             // in:  a target time to be calculated (either before or after tt1
+            body_grav_calc_t calc1)                 // in:  [pos, vel, acc] of the simulated body at time tt1
+        {
+            double dt = tt2 - calc1.tt;
+
+            // Calculate where the major bodies (Sun, Jupiter...Neptune) will be at the next time step.
+            bary2 = MajorBodyBary(tt2);
+
+            // Estimate position of small body as if current acceleration applies across the whole time interval.
+            // approx_pos = pos1 + vel1*dt + (1/2)acc*dt^2
+            TerseVector approx_pos = UpdatePosition(dt, calc1.r, calc1.v, calc1.a);
+
+            // Calculate acceleration experienced by small body at approximate next location.
+            TerseVector acc = bary2.Acceleration(approx_pos);
+
+            // Calculate the average acceleration of the endpoints.
+            // This becomes our estimate of the mean effective acceleration over the whole interval.
+            acc = (acc + calc1.a) / 2.0;
+
+            // Refine the estimates of [pos, vel, acc] at tt2 using the mean acceleration.
+            TerseVector pos = UpdatePosition(dt, calc1.r, calc1.v, acc);
+            TerseVector vel = calc1.v + (dt * acc);
+            acc = bary2.Acceleration(pos);
+            return new body_grav_calc_t(tt2, pos, vel, acc);
+        }
+
+        private const int PLUTO_DT = 250;
+        private const int PLUTO_NSTEPS = (PLUTO_TIME_STEP / PLUTO_DT) + 1;
+
+        private static readonly body_grav_calc_t[][] pluto_cache = new body_grav_calc_t[PLUTO_NUM_STATES-1][];
+
+        private static int ClampIndex(double frac, int nsteps)
+        {
+            int index = (int) Math.Floor(frac);
+            if (index < 0)
+                return index;
+            if (index >= nsteps)
+                return nsteps-1;
+            return index;
+        }
+
+        private static body_grav_calc_t GravFromState(out major_bodies_t bary, body_state_t state)
+        {
+            bary = MajorBodyBary(state.tt);
+            TerseVector r = state.r + bary.Sun.r;
+            TerseVector v = state.v + bary.Sun.v;
+            TerseVector a = bary.Acceleration(r);
+            return new body_grav_calc_t(state.tt, r, v, a);
+        }
+
+        private static body_grav_calc_t[] GetSegment(body_grav_calc_t[][] cache, double tt)
+        {
+            if (tt < PlutoStateTable[0].tt || tt > PlutoStateTable[PLUTO_NUM_STATES-1].tt)
+                return null;  // Don't bother calculating a segment. Let the caller crawl backward/forward to this time.
+
+            int seg_index = ClampIndex((tt - PlutoStateTable[0].tt) / PLUTO_TIME_STEP, PLUTO_NUM_STATES-1);
+            lock (cache)
             {
-                const double sdrad = DEG2RAD / 3600.0;
-                const double eps = (23.0 + 26.0/60.0 + 21.41136/3600.0)*DEG2RAD;
-                const double phi = -0.05188 * sdrad;
-                double ceps = Math.Cos(eps);
-                double seps = Math.Sin(eps);
-                double cphi = Math.Cos(phi);
-                double sphi = Math.Sin(phi);
+                if (cache[seg_index] == null)
+                {
+                    var seg = cache[seg_index] = new body_grav_calc_t[PLUTO_NSTEPS];
 
-                top_eq_rot = new double[3,3];
+                    // Each endpoint is exact.
+                    major_bodies_t bary;
+                    seg[0] = GravFromState(out bary, PlutoStateTable[seg_index]);
+                    seg[PLUTO_NSTEPS-1] = GravFromState(out bary, PlutoStateTable[seg_index + 1]);
 
-                top_eq_rot[0,0] =  cphi;
-                top_eq_rot[0,1] = -sphi*ceps;
-                top_eq_rot[0,2] =  sphi*seps;
-                top_eq_rot[1,0] =  sphi;
-                top_eq_rot[1,1] =  cphi*ceps;
-                top_eq_rot[1,2] = -cphi*seps;
-                top_eq_rot[2,0] =  0.0;
-                top_eq_rot[2,1] =  seps;
-                top_eq_rot[2,2] =  ceps;
+                    // Simulate forwards from the lower time bound.
+                    int i;
+                    double step_tt = seg[0].tt;
+                    for (i=1; i < PLUTO_NSTEPS-1; ++i)
+                        seg[i] = GravSim(out bary, step_tt += PLUTO_DT, seg[i-1]);
+
+                    // Simulate backwards from the upper time bound.
+                    step_tt = seg[PLUTO_NSTEPS-1].tt;
+                    var reverse = new body_grav_calc_t[PLUTO_NSTEPS];
+                    reverse[PLUTO_NSTEPS-1] = seg[PLUTO_NSTEPS-1];
+                    for (i=PLUTO_NSTEPS-2; i > 0; --i)
+                        reverse[i] = GravSim(out bary, step_tt -= PLUTO_DT, reverse[i+1]);
+
+                    // Fade-mix the two series so that there are no discontinuities.
+                    for (i=PLUTO_NSTEPS-2; i > 0; --i)
+                    {
+                        double ramp = (double)i / (PLUTO_NSTEPS-1);
+                        seg[i].r = (1 - ramp)*seg[i].r + ramp*reverse[i].r;
+                        seg[i].v = (1 - ramp)*seg[i].v + ramp*reverse[i].v;
+                        seg[i].a = (1 - ramp)*seg[i].a + ramp*reverse[i].a;
+                    }
+                }
+            }
+            return cache[seg_index];
+        }
+
+        private static TerseVector CalcPlutoOneWay(out major_bodies_t bary, body_state_t init_state, double target_tt, double dt)
+        {
+            body_grav_calc_t calc = GravFromState(out bary, init_state);
+            int n = (int) Math.Ceiling((target_tt - calc.tt) / dt);
+            for (int i=0; i < n; ++i)
+                calc = GravSim(out bary, (i+1 == n) ? target_tt : (calc.tt + dt), calc);
+            return calc.r;
+        }
+
+        private static AstroVector CalcPluto(AstroTime time)
+        {
+            TerseVector r;
+            body_grav_calc_t[] seg = GetSegment(pluto_cache, time.tt);
+            major_bodies_t bary;
+            if (seg == null)
+            {
+                // The target time is outside the year range 0000..4000.
+                // Calculate it by crawling backward from 0000 or forward from 4000.
+                // FIXFIXFIX - This is super slow. Could optimize this with extra caching if needed.
+                if (time.tt < PlutoStateTable[0].tt)
+                    r = CalcPlutoOneWay(out bary, PlutoStateTable[0], time.tt, -PLUTO_DT);
+                else
+                    r = CalcPlutoOneWay(out bary, PlutoStateTable[PLUTO_NUM_STATES-1], time.tt, +PLUTO_DT);
+            }
+            else
+            {
+                int left = ClampIndex((time.tt - seg[0].tt) / PLUTO_DT, PLUTO_NSTEPS-1);
+                body_grav_calc_t s1 = seg[left];
+                body_grav_calc_t s2 = seg[left+1];
+
+                /* Find mean acceleration vector over the interval. */
+                TerseVector acc = (s1.a + s2.a) / 2.0;
+
+                /* Use Newtonian mechanics to extrapolate away from t1 in the positive time direction. */
+                TerseVector ra = UpdatePosition(time.tt - s1.tt, s1.r, s1.v, acc);
+
+                /* Use Newtonian mechanics to extrapolate away from t2 in the negative time direction. */
+                TerseVector rb = UpdatePosition(time.tt - s2.tt, s2.r, s2.v, acc);
+
+                /* Use fade in/out idea to blend the two position estimates. */
+                double ramp = (time.tt - s1.tt)/PLUTO_DT;
+                r = (1 - ramp)*ra + ramp*rb;
+                bary = MajorBodyBary(time.tt);
             }
 
-            return new AstroVector(
-                (top_eq_rot[0,0] * ecl.x) + (top_eq_rot[0,1] * ecl.y) + (top_eq_rot[0,2] * ecl.z),
-                (top_eq_rot[1,0] * ecl.x) + (top_eq_rot[1,1] * ecl.y) + (top_eq_rot[1,2] * ecl.z),
-                (top_eq_rot[2,0] * ecl.x) + (top_eq_rot[2,1] * ecl.y) + (top_eq_rot[2,2] * ecl.z),
-                ecl.t
-            );
+            return (r - bary.Sun.r).ToAstroVector(time);
         }
 
-        private static AstroVector TopPosition(astro_top_term_t[][][] model, int planet, AstroTime time)
-        {
-            top_elliptical_t ellip = TopCalcElliptical(planet, model, time.tt);
-            AstroVector ecl = TopEcliptic(ellip, time);
-            return TopEquatorial(ecl);
-        }
+        // End Pluto integrator
 
         private static RotationMatrix precession_rot(double tt1, double tt2)
         {
@@ -4239,9 +3862,9 @@ namespace CosineKitty
             return new AstroVector(mpos2.x, mpos2.y, mpos2.z, time);
         }
 
-        private static AstroVector BarycenterContrib(AstroTime time, Body body, double pmass)
+        private static AstroVector BarycenterContrib(AstroTime time, Body body, double planet_gm)
         {
-            double shift = pmass / (pmass + SUN_MASS);
+            double shift = planet_gm / (planet_gm + SUN_GM);
             AstroVector p = CalcVsop(vsop[(int)body], time);
             return new AstroVector(
                 shift * p.x,
@@ -4253,10 +3876,10 @@ namespace CosineKitty
 
         private static AstroVector CalcSolarSystemBarycenter(AstroTime time)
         {
-            AstroVector j = BarycenterContrib(time, Body.Jupiter, JUPITER_MASS);
-            AstroVector s = BarycenterContrib(time, Body.Saturn,  SATURN_MASS);
-            AstroVector u = BarycenterContrib(time, Body.Uranus,  URANUS_MASS);
-            AstroVector n = BarycenterContrib(time, Body.Neptune, NEPTUNE_MASS);
+            AstroVector j = BarycenterContrib(time, Body.Jupiter, JUPITER_GM);
+            AstroVector s = BarycenterContrib(time, Body.Saturn,  SATURN_GM);
+            AstroVector u = BarycenterContrib(time, Body.Uranus,  URANUS_GM);
+            AstroVector n = BarycenterContrib(time, Body.Neptune, NEPTUNE_GM);
             return new AstroVector(
                 j.x + s.x + u.x + n.x,
                 j.y + s.y + u.y + n.y,
@@ -4302,7 +3925,7 @@ namespace CosineKitty
                     return CalcVsop(vsop[(int)body], time);
 
                 case Body.Pluto:
-                    return TopPosition(top_model_8, 9, time);
+                    return CalcPluto(time);
 
                 case Body.Moon:
                     geomoon = GeoMoon(time);
@@ -4368,7 +3991,7 @@ namespace CosineKitty
                 case Body.Saturn:
                 case Body.Uranus:
                 case Body.Neptune:
-                    return VsopHelioDistance(vsop[(int)body], time);
+                    return VsopFormulaCalc(vsop[(int)body].rad, time.tt / DAYS_PER_MILLENNIUM);
 
                 default:
                     /* For non-VSOP objects, fall back to taking the length of the heliocentric vector. */

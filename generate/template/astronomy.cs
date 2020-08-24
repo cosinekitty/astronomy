@@ -275,6 +275,57 @@ namespace CosineKitty
         }
     }
 
+    internal struct TerseVector
+    {
+        public double x;
+        public double y;
+        public double z;
+
+        public TerseVector(double x, double y, double z)
+        {
+            this.x = x;
+            this.y = y;
+            this.z = z;
+        }
+
+        public static readonly TerseVector Zero = new TerseVector(0.0, 0.0, 0.0);
+
+        public AstroVector ToAstroVector(AstroTime time)
+        {
+            return new AstroVector(x, y, z, time);
+        }
+
+        public static TerseVector operator +(TerseVector a, TerseVector b)
+        {
+            return new TerseVector(a.x + b.x, a.y + b.y, a.z + b.z);
+        }
+
+        public static TerseVector operator -(TerseVector a, TerseVector b)
+        {
+            return new TerseVector(a.x - b.x, a.y - b.y, a.z - b.z);
+        }
+
+        public static TerseVector operator *(double s, TerseVector v)
+        {
+            return new TerseVector(s*v.x, s*v.y, s*v.z);
+        }
+
+        public static TerseVector operator /(TerseVector v, double s)
+        {
+            return new TerseVector(v.x/s, v.y/s, v.z/s);
+        }
+
+        public double Quadrature()
+        {
+            return x*x + y*y + z*z;
+        }
+
+        public double Magnitude()
+        {
+            return Math.Sqrt(Quadrature());
+        }
+    }
+
     /// <summary>
     /// A 3D Cartesian vector whose components are expressed in Astronomical Units (AU).
     /// </summary>
@@ -1733,11 +1784,24 @@ $ASTRO_ADDSOL()
         private const double ASEC180 = 180.0 * 60.0 * 60.0;         /* arcseconds per 180 degrees (or pi radians) */
         private const double AU_PER_PARSEC = (ASEC180 / Math.PI);   /* exact definition of how many AU = one parsec */
         private const double EARTH_MOON_MASS_RATIO = 81.30056;
-        private const double SUN_MASS     = 333054.25318;        /* Sun's mass relative to Earth. */
-        private const double JUPITER_MASS =    317.84997;        /* Jupiter's mass relative to Earth. */
-        private const double SATURN_MASS  =     95.16745;        /* Saturn's mass relative to Earth. */
-        private const double URANUS_MASS  =     14.53617;        /* Uranus's mass relative to Earth. */
-        private const double NEPTUNE_MASS =     17.14886;        /* Neptune's mass relative to Earth. */
+
+        /*
+            Masses of the Sun and outer planets, used for:
+            (1) Calculating the Solar System Barycenter
+            (2) Integrating the movement of Pluto
+
+            https://web.archive.org/web/20120220062549/http://iau-comm4.jpl.nasa.gov/de405iom/de405iom.pdf
+
+            Page 10 in the above document describes the constants used in the DE405 ephemeris.
+            The following are G*M values (gravity constant * mass) in [au^3 / day^2].
+            This side-steps issues of not knowing the exact values of G and masses M[i];
+            the products GM[i] are known extremely accurately.
+        */
+        private const double SUN_GM     = 0.2959122082855911e-03;
+        private const double JUPITER_GM = 0.2825345909524226e-06;
+        private const double SATURN_GM  = 0.8459715185680659e-07;
+        private const double URANUS_GM  = 0.1292024916781969e-07;
+        private const double NEPTUNE_GM = 0.1524358900784276e-07;
 
         /// <summary>Counter used for performance testing.</summary>
         public static int CalcMoonCount;
@@ -1803,14 +1867,14 @@ $ASTRO_ADDSOL()
 
         private struct vsop_model_t
         {
-            public vsop_formula_t lat;
             public vsop_formula_t lon;
+            public vsop_formula_t lat;
             public vsop_formula_t rad;
 
-            public vsop_model_t(vsop_series_t[] lat, vsop_series_t[] lon, vsop_series_t[] rad)
+            public vsop_model_t(vsop_series_t[] lon, vsop_series_t[] lat, vsop_series_t[] rad)
             {
-                this.lat = new vsop_formula_t(lat);
                 this.lon = new vsop_formula_t(lon);
+                this.lat = new vsop_formula_t(lat);
                 this.rad = new vsop_formula_t(rad);
             }
         };
@@ -1826,14 +1890,14 @@ $ASTRO_CSHARP_VSOP(Neptune)
 
         private static readonly vsop_model_t[] vsop = new vsop_model_t[]
         {
-            new vsop_model_t(vsop_lat_Mercury,  vsop_lon_Mercury,   vsop_rad_Mercury),
-            new vsop_model_t(vsop_lat_Venus,    vsop_lon_Venus,     vsop_rad_Venus  ),
-            new vsop_model_t(vsop_lat_Earth,    vsop_lon_Earth,     vsop_rad_Earth  ),
-            new vsop_model_t(vsop_lat_Mars,     vsop_lon_Mars,      vsop_rad_Mars   ),
-            new vsop_model_t(vsop_lat_Jupiter,  vsop_lon_Jupiter,   vsop_rad_Jupiter),
-            new vsop_model_t(vsop_lat_Saturn,   vsop_lon_Saturn,    vsop_rad_Saturn ),
-            new vsop_model_t(vsop_lat_Uranus,   vsop_lon_Uranus,    vsop_rad_Uranus ),
-            new vsop_model_t(vsop_lat_Neptune,  vsop_lon_Neptune,   vsop_rad_Neptune)
+            new vsop_model_t(vsop_lon_Mercury,  vsop_lat_Mercury,   vsop_rad_Mercury),
+            new vsop_model_t(vsop_lon_Venus,    vsop_lat_Venus,     vsop_rad_Venus  ),
+            new vsop_model_t(vsop_lon_Earth,    vsop_lat_Earth,     vsop_rad_Earth  ),
+            new vsop_model_t(vsop_lon_Mars,     vsop_lat_Mars,      vsop_rad_Mars   ),
+            new vsop_model_t(vsop_lon_Jupiter,  vsop_lat_Jupiter,   vsop_rad_Jupiter),
+            new vsop_model_t(vsop_lon_Saturn,   vsop_lat_Saturn,    vsop_rad_Saturn ),
+            new vsop_model_t(vsop_lon_Uranus,   vsop_lat_Uranus,    vsop_rad_Uranus ),
+            new vsop_model_t(vsop_lon_Neptune,  vsop_lat_Neptune,   vsop_rad_Neptune)
         };
 
         /// <summary>The default Delta T function used by Astronomy Engine.</summary>
@@ -1960,233 +2024,375 @@ $ASTRO_CSHARP_VSOP(Neptune)
         {
             double coord = 0.0;
             double tpower = 1.0;
-            for (int s=0; s < formula.series.Length; ++s)
+            foreach (vsop_series_t series in formula.series)
             {
                 double sum = 0.0;
-                vsop_series_t series = formula.series[s];
-                for (int i=0; i < series.term.Length; ++i)
-                {
-                    vsop_term_t term = series.term[i];
+                foreach (vsop_term_t term in series.term)
                     sum += term.amplitude * Math.Cos(term.phase + (t * term.frequency));
-                }
                 coord += tpower * sum;
                 tpower *= t;
             }
             return coord;
         }
 
+        private static TerseVector VsopRotate(TerseVector eclip)
+        {
+            return new TerseVector(
+                eclip.x + 0.000000440360*eclip.y - 0.000000190919*eclip.z,
+                -0.000000479966*eclip.x + 0.917482137087*eclip.y - 0.397776982902*eclip.z,
+                0.397776982902*eclip.y + 0.917482137087*eclip.z
+            );
+        }
+
+        private static TerseVector VsopSphereToRect(double lon, double lat, double radius)
+        {
+            double r_coslat = radius * Math.Cos(lat);
+            return new TerseVector(
+                r_coslat * Math.Cos(lon),
+                r_coslat * Math.Sin(lon),
+                radius * Math.Sin(lat)
+            );
+        }
+
+        private const double DAYS_PER_MILLENNIUM = 365250.0;
+
         private static AstroVector CalcVsop(vsop_model_t model, AstroTime time)
         {
-            double t = time.tt / 365250;    /* millennia since 2000 */
+            double t = time.tt / DAYS_PER_MILLENNIUM;    /* millennia since 2000 */
 
             /* Calculate the VSOP "B" trigonometric series to obtain ecliptic spherical coordinates. */
-            double sphere0 = VsopFormulaCalc(model.lat, t);
-            double sphere1 = VsopFormulaCalc(model.lon, t);
-            double sphere2 = VsopFormulaCalc(model.rad, t);
+            double lat = VsopFormulaCalc(model.lat, t);
+            double lon = VsopFormulaCalc(model.lon, t);
+            double rad = VsopFormulaCalc(model.rad, t);
 
             /* Convert ecliptic spherical coordinates to ecliptic Cartesian coordinates. */
-            double r_coslat = sphere2 * Math.Cos(sphere1);
-            double eclip0 = r_coslat * Math.Cos(sphere0);
-            double eclip1 = r_coslat * Math.Sin(sphere0);
-            double eclip2 = sphere2 * Math.Sin(sphere1);
+            TerseVector eclip = VsopSphereToRect(lon, lat, rad);
 
             /* Convert ecliptic Cartesian coordinates to equatorial Cartesian coordinates. */
-            double x = eclip0 + 0.000000440360*eclip1 - 0.000000190919*eclip2;
-            double y = -0.000000479966*eclip0 + 0.917482137087*eclip1 - 0.397776982902*eclip2;
-            double z = 0.397776982902*eclip1 + 0.917482137087*eclip2;
-
-            return new AstroVector(x, y, z, time);
+            return VsopRotate(eclip).ToAstroVector(time);
         }
 
-        private static double VsopHelioDistance(vsop_model_t model, AstroTime time)
+        private static double VsopDerivCalc(vsop_formula_t formula, double t)
         {
-            /*
-                The caller only wants to know the distance between the planet and the Sun.
-                So we only need to calculate the radial component of the spherical coordinates.
-            */
-
-            double t = time.tt / 365250;    /* millennia since 2000 */
-            return VsopFormulaCalc(model.rad, t);
-        }
-
-        // TOP2013 model for Pluto
-
-        private struct astro_top_term_t
-        {
-            public double k;
-            public double c;
-            public double s;
-            public astro_top_term_t(double k, double c, double s)
+            double tpower = 1.0;        /* t^s */
+            double dpower = 0.0;        /* t^(s-1) */
+            double deriv = 0.0;
+            for (int s=0; s < formula.series.Length; ++s)
             {
-                this.k = k;
-                this.c = c;
-                this.s = s;
-            }
-        }
-
-        private struct top_elliptical_t
-        {
-            public double a;           /* AU */
-            public double lambda;      /* rad */
-            public double k;           /* 1 */
-            public double h;           /* 1 */
-            public double q;           /* 1 */
-            public double p;           /* 1 */
-        }
-
-$ASTRO_TOP2013(8)
-
-        private static readonly double[] top_freq = new double[]
-        {
-            0.5296909622785881e+03,
-            0.2132990811942489e+03,
-            0.7478166163181234e+02,
-            0.3813297236217556e+02,
-            0.2533566020437000e+02
-        };
-
-        private static double calc_elliptical_coord(astro_top_term_t[][] formula, double dmu, int f, double t1)
-        {
-            double el = 0.0;
-            double tpower = 1.0;
-            for (int s=0; s < formula.Length; ++s)
-            {
-                astro_top_term_t[] series = formula[s];
-                for (int t=0; t < series.Length; ++t)
+                double sin_sum = 0.0;
+                double cos_sum = 0.0;
+                vsop_series_t series = formula.series[s];
+                foreach (vsop_term_t term in series.term)
                 {
-                    astro_top_term_t term = series[t];
-                    if (f==1 && s==1 && term.k==0)
-                        continue;
-                    double arg = term.k * dmu * t1;
-                    el += tpower * (term.c*Math.Cos(arg) + term.s*Math.Sin(arg));
+                    double angle = term.phase + (t * term.frequency);
+                    sin_sum += term.amplitude * term.frequency * Math.Sin(angle);
+                    if (s > 0)
+                        cos_sum += term.amplitude * Math.Cos(angle);
                 }
-                tpower *= t1;
+                deriv += (s * dpower * cos_sum) - (tpower * sin_sum);
+                dpower = tpower;
+                tpower *= t;
             }
-            return el;
+            return deriv;
         }
 
-        private static top_elliptical_t TopCalcElliptical(int planet, astro_top_term_t[][][] model, double tt)
+        private struct body_state_t
         {
-            /* Translated from: TOP2013.f */
-            /* See: https://github.com/cosinekitty/ephemeris/tree/master/top2013 */
-            /* Copied from: ftp://ftp.imcce.fr/pub/ephem/planets/top2013 */
-            double t1 = tt / 365250.0;
-            double dmu = (top_freq[0] - top_freq[1]) / 880.0;
+            public double tt;       // Terrestrial Time in J2000 days
+            public TerseVector r;   // position [au]
+            public TerseVector v;   // velocity [au/day]
 
-            var ellip = new top_elliptical_t();
-            ellip.a = calc_elliptical_coord(model[0], dmu, 0, t1);
-            ellip.lambda = calc_elliptical_coord(model[1], dmu, 1, t1);
-            ellip.k = calc_elliptical_coord(model[2], dmu, 2, t1);
-            ellip.h = calc_elliptical_coord(model[3], dmu, 3, t1);
-            ellip.q = calc_elliptical_coord(model[4], dmu, 4, t1);
-            ellip.p = calc_elliptical_coord(model[5], dmu, 5, t1);
-
-            double xl = ellip.lambda + top_freq[planet - 5] * t1;
-            xl %= PI2;
-            if (xl < 0.0)
-                xl += PI2;
-            ellip.lambda = xl;
-            return ellip;
-        }
-
-        static AstroVector TopEcliptic(top_elliptical_t ellip, AstroTime time)
-        {
-            double xa = ellip.a;
-            double xl = ellip.lambda;
-            double xk = ellip.k;
-            double xh = ellip.h;
-            double xq = ellip.q;
-            double xp = ellip.p;
-
-            double xfi = Math.Sqrt(1.0 - xk*xk - xh*xh);
-            double xki = Math.Sqrt(1.0 - xq*xq - xp*xp);
-            double zr = xk;
-            double zi = xh;
-            double u = 1.0 / (1.0 + xfi);
-            double ex2 = zr*zr + zi*zi;
-            double ex = Math.Sqrt(ex2);
-            double ex3 = ex * ex2;
-            double z1r = zr;
-            double z1i = -zi;
-
-            double gl = xl % PI2;
-            double gm = gl - Math.Atan2(xh, xk);
-            double e = gl + (ex - 0.125*ex3)*Math.Sin(gm) + 0.5*ex2*Math.Sin(2.0*gm) + 0.375*ex3*Math.Sin(3.0*gm);
-
-            double dl, z2r, z2i, zteta_r, zteta_i, z3r, z3i, rsa;
-            do
+            public body_state_t(double tt, TerseVector r, TerseVector v)
             {
-                z2r = 0.0;
-                z2i = e;
-                zteta_r = Math.Cos(z2i);
-                zteta_i = Math.Sin(z2i);
-                z3r = z1r*zteta_r - z1i*zteta_i;
-                z3i = z1r*zteta_i + z1i*zteta_r;
-                dl = gl - e + z3i;
-                rsa = 1.0 - z3r;
-                e += dl/rsa;
-            } while (Math.Abs(dl) >= 1.0e-15);
+                this.tt = tt;
+                this.r = r;
+                this.v = v;
+            }
+        }
 
-            z1r = z3i * u * zr;
-            z1i = z3i * u * zi;
-            z2r = +z1i;
-            z2i = -z1r;
-            double zto_r = (-zr + zteta_r + z2r) / rsa;
-            double zto_i = (-zi + zteta_i + z2i) / rsa;
-            double xcw = zto_r;
-            double xsw = zto_i;
-            double xm = xp*xcw - xq*xsw;
-            double xr = xa*rsa;
+        private struct major_bodies_t
+        {
+            public body_state_t Sun;
+            public body_state_t Jupiter;
+            public body_state_t Saturn;
+            public body_state_t Uranus;
+            public body_state_t Neptune;
 
-            return new AstroVector(
-                xr*(xcw - 2.0*xp*xm),
-                xr*(xsw + 2.0*xq*xm),
-                -2.0*xr*xki*xm,
-                time
+            public TerseVector Acceleration(TerseVector small_pos)
+            {
+                // Use barycentric coordinates of the Sun and major planets to calculate
+                // the gravitational acceleration vector experienced by a small body at location 'small_pos'.
+                return
+                    AccelerationIncrement(small_pos, SUN_GM,      Sun.r) +
+                    AccelerationIncrement(small_pos, JUPITER_GM,  Jupiter.r) +
+                    AccelerationIncrement(small_pos, SATURN_GM,   Saturn.r) +
+                    AccelerationIncrement(small_pos, URANUS_GM,   Uranus.r) +
+                    AccelerationIncrement(small_pos, NEPTUNE_GM,  Neptune.r);
+            }
+
+            private static TerseVector AccelerationIncrement(TerseVector small_pos, double gm, TerseVector major_pos)
+            {
+                TerseVector delta = major_pos - small_pos;
+                double r2 = delta.Quadrature();
+                double pull = gm / (r2 * Math.Sqrt(r2));
+                return new TerseVector(delta.x * pull, delta.y * pull, delta.z * pull);
+            }
+        }
+
+        private static body_state_t CalcVsopPosVel(vsop_model_t model, double tt)
+        {
+            double t = tt / DAYS_PER_MILLENNIUM;    /* millennia since 2000 */
+
+            /* Calculate the VSOP "B" trigonometric series to obtain ecliptic spherical coordinates. */
+            double lat = VsopFormulaCalc(model.lat, t);
+            double lon = VsopFormulaCalc(model.lon, t);
+            double rad = VsopFormulaCalc(model.rad, t);
+
+            TerseVector eclip_pos = VsopSphereToRect(lon, lat, rad);
+
+            double dlat_dt = VsopDerivCalc(model.lat, t);
+            double dlon_dt = VsopDerivCalc(model.lon, t);
+            double drad_dt = VsopDerivCalc(model.rad, t);
+
+            /* Use spherical coords and spherical derivatives to calculate */
+            /* the velocity vector in rectangular coordinates. */
+
+            double coslon = Math.Cos(lon);
+            double sinlon = Math.Sin(lon);
+            double coslat = Math.Cos(lat);
+            double sinlat = Math.Sin(lat);
+
+            double vx =
+                + (drad_dt * coslat * coslon)
+                - (rad * sinlat * coslon * dlat_dt)
+                - (rad * coslat * sinlon * dlon_dt);
+
+            double vy =
+                + (drad_dt * coslat * sinlon)
+                - (rad * sinlat * sinlon * dlat_dt)
+                + (rad * coslat * coslon * dlon_dt);
+
+            double vz =
+                + (drad_dt * sinlat)
+                + (rad * coslat * dlat_dt);
+
+            /* Convert speed units from [AU/millennium] to [AU/day]. */
+            var eclip_vel = new TerseVector(
+                vx / DAYS_PER_MILLENNIUM,
+                vy / DAYS_PER_MILLENNIUM,
+                vz / DAYS_PER_MILLENNIUM);
+
+            /* Rotate the vectors from ecliptic to equatorial coordinates. */
+            TerseVector equ_pos = VsopRotate(eclip_pos);
+            TerseVector equ_vel = VsopRotate(eclip_vel);
+            return new body_state_t(tt, equ_pos, equ_vel);
+        }
+
+        // Begin Pluto integrator
+
+        private struct body_grav_calc_t
+        {
+            public double tt;       // J2000 terrestrial time [days]
+            public TerseVector r;   // position [au]
+            public TerseVector v;   // velocity [au/day]
+            public TerseVector a;   // acceleration [au/day^2]
+
+            public body_grav_calc_t(double tt, TerseVector r, TerseVector v, TerseVector a)
+            {
+                this.tt = tt;
+                this.r = r;
+                this.v = v;
+                this.a = a;
+            }
+        }
+
+$ASTRO_PLUTO_TABLE();
+
+        private static TerseVector UpdatePosition(double dt, TerseVector r, TerseVector v, TerseVector a)
+        {
+            return new TerseVector(
+                r.x + dt*(v.x + dt*a.x/2),
+                r.y + dt*(v.y + dt*a.y/2),
+                r.z + dt*(v.z + dt*a.z/2)
             );
         }
 
-        private static double[,] top_eq_rot;
-
-        private static AstroVector TopEquatorial(AstroVector ecl)
+        private static body_state_t AdjustBarycenterPosVel(ref body_state_t ssb, double tt, Body body, double planet_gm)
         {
-            if (top_eq_rot == null)
+            double shift = planet_gm / (planet_gm + SUN_GM);
+            body_state_t planet = CalcVsopPosVel(vsop[(int)body], tt);
+            ssb.r += shift * planet.r;
+            ssb.v += shift * planet.v;
+            return planet;
+        }
+
+        private static major_bodies_t MajorBodyBary(double tt)
+        {
+            var bary = new major_bodies_t();
+            var ssb = new body_state_t(tt, TerseVector.Zero, TerseVector.Zero);
+            bary.Jupiter = AdjustBarycenterPosVel(ref ssb, tt, Body.Jupiter, JUPITER_GM);
+            bary.Saturn  = AdjustBarycenterPosVel(ref ssb, tt, Body.Saturn,  SATURN_GM);
+            bary.Uranus  = AdjustBarycenterPosVel(ref ssb, tt, Body.Uranus,  URANUS_GM);
+            bary.Neptune = AdjustBarycenterPosVel(ref ssb, tt, Body.Neptune, NEPTUNE_GM);
+
+            // Convert planets' [pos, vel] vectors from heliocentric to barycentric.
+            bary.Jupiter.r -= ssb.r;    bary.Jupiter.v -= ssb.v;
+            bary.Saturn.r  -= ssb.r;    bary.Saturn.v  -= ssb.v;
+            bary.Uranus.r  -= ssb.r;    bary.Uranus.v  -= ssb.v;
+            bary.Neptune.r -= ssb.r;    bary.Neptune.v -= ssb.v;
+
+            // Convert heliocentric SSB to barycentric Sun.
+            bary.Sun.tt = tt;
+            bary.Sun.r = -1.0 * ssb.r;
+            bary.Sun.v = -1.0 * ssb.v;
+
+            return bary;
+        }
+
+        private static body_grav_calc_t GravSim(    // out: [pos, vel, acc] of the simulated body at time tt2
+            out major_bodies_t bary2,               // out: major body barycentric positions at tt2
+            double tt2,                             // in:  a target time to be calculated (either before or after tt1
+            body_grav_calc_t calc1)                 // in:  [pos, vel, acc] of the simulated body at time tt1
+        {
+            double dt = tt2 - calc1.tt;
+
+            // Calculate where the major bodies (Sun, Jupiter...Neptune) will be at the next time step.
+            bary2 = MajorBodyBary(tt2);
+
+            // Estimate position of small body as if current acceleration applies across the whole time interval.
+            // approx_pos = pos1 + vel1*dt + (1/2)acc*dt^2
+            TerseVector approx_pos = UpdatePosition(dt, calc1.r, calc1.v, calc1.a);
+
+            // Calculate acceleration experienced by small body at approximate next location.
+            TerseVector acc = bary2.Acceleration(approx_pos);
+
+            // Calculate the average acceleration of the endpoints.
+            // This becomes our estimate of the mean effective acceleration over the whole interval.
+            acc = (acc + calc1.a) / 2.0;
+
+            // Refine the estimates of [pos, vel, acc] at tt2 using the mean acceleration.
+            TerseVector pos = UpdatePosition(dt, calc1.r, calc1.v, acc);
+            TerseVector vel = calc1.v + (dt * acc);
+            acc = bary2.Acceleration(pos);
+            return new body_grav_calc_t(tt2, pos, vel, acc);
+        }
+
+        private const int PLUTO_DT = 250;
+        private const int PLUTO_NSTEPS = (PLUTO_TIME_STEP / PLUTO_DT) + 1;
+
+        private static readonly body_grav_calc_t[][] pluto_cache = new body_grav_calc_t[PLUTO_NUM_STATES-1][];
+
+        private static int ClampIndex(double frac, int nsteps)
+        {
+            int index = (int) Math.Floor(frac);
+            if (index < 0)
+                return index;
+            if (index >= nsteps)
+                return nsteps-1;
+            return index;
+        }
+
+        private static body_grav_calc_t GravFromState(out major_bodies_t bary, body_state_t state)
+        {
+            bary = MajorBodyBary(state.tt);
+            TerseVector r = state.r + bary.Sun.r;
+            TerseVector v = state.v + bary.Sun.v;
+            TerseVector a = bary.Acceleration(r);
+            return new body_grav_calc_t(state.tt, r, v, a);
+        }
+
+        private static body_grav_calc_t[] GetSegment(body_grav_calc_t[][] cache, double tt)
+        {
+            if (tt < PlutoStateTable[0].tt || tt > PlutoStateTable[PLUTO_NUM_STATES-1].tt)
+                return null;  // Don't bother calculating a segment. Let the caller crawl backward/forward to this time.
+
+            int seg_index = ClampIndex((tt - PlutoStateTable[0].tt) / PLUTO_TIME_STEP, PLUTO_NUM_STATES-1);
+            lock (cache)
             {
-                const double sdrad = DEG2RAD / 3600.0;
-                const double eps = (23.0 + 26.0/60.0 + 21.41136/3600.0)*DEG2RAD;
-                const double phi = -0.05188 * sdrad;
-                double ceps = Math.Cos(eps);
-                double seps = Math.Sin(eps);
-                double cphi = Math.Cos(phi);
-                double sphi = Math.Sin(phi);
+                if (cache[seg_index] == null)
+                {
+                    var seg = cache[seg_index] = new body_grav_calc_t[PLUTO_NSTEPS];
 
-                top_eq_rot = new double[3,3];
+                    // Each endpoint is exact.
+                    major_bodies_t bary;
+                    seg[0] = GravFromState(out bary, PlutoStateTable[seg_index]);
+                    seg[PLUTO_NSTEPS-1] = GravFromState(out bary, PlutoStateTable[seg_index + 1]);
 
-                top_eq_rot[0,0] =  cphi;
-                top_eq_rot[0,1] = -sphi*ceps;
-                top_eq_rot[0,2] =  sphi*seps;
-                top_eq_rot[1,0] =  sphi;
-                top_eq_rot[1,1] =  cphi*ceps;
-                top_eq_rot[1,2] = -cphi*seps;
-                top_eq_rot[2,0] =  0.0;
-                top_eq_rot[2,1] =  seps;
-                top_eq_rot[2,2] =  ceps;
+                    // Simulate forwards from the lower time bound.
+                    int i;
+                    double step_tt = seg[0].tt;
+                    for (i=1; i < PLUTO_NSTEPS-1; ++i)
+                        seg[i] = GravSim(out bary, step_tt += PLUTO_DT, seg[i-1]);
+
+                    // Simulate backwards from the upper time bound.
+                    step_tt = seg[PLUTO_NSTEPS-1].tt;
+                    var reverse = new body_grav_calc_t[PLUTO_NSTEPS];
+                    reverse[PLUTO_NSTEPS-1] = seg[PLUTO_NSTEPS-1];
+                    for (i=PLUTO_NSTEPS-2; i > 0; --i)
+                        reverse[i] = GravSim(out bary, step_tt -= PLUTO_DT, reverse[i+1]);
+
+                    // Fade-mix the two series so that there are no discontinuities.
+                    for (i=PLUTO_NSTEPS-2; i > 0; --i)
+                    {
+                        double ramp = (double)i / (PLUTO_NSTEPS-1);
+                        seg[i].r = (1 - ramp)*seg[i].r + ramp*reverse[i].r;
+                        seg[i].v = (1 - ramp)*seg[i].v + ramp*reverse[i].v;
+                        seg[i].a = (1 - ramp)*seg[i].a + ramp*reverse[i].a;
+                    }
+                }
+            }
+            return cache[seg_index];
+        }
+
+        private static TerseVector CalcPlutoOneWay(out major_bodies_t bary, body_state_t init_state, double target_tt, double dt)
+        {
+            body_grav_calc_t calc = GravFromState(out bary, init_state);
+            int n = (int) Math.Ceiling((target_tt - calc.tt) / dt);
+            for (int i=0; i < n; ++i)
+                calc = GravSim(out bary, (i+1 == n) ? target_tt : (calc.tt + dt), calc);
+            return calc.r;
+        }
+
+        private static AstroVector CalcPluto(AstroTime time)
+        {
+            TerseVector r;
+            body_grav_calc_t[] seg = GetSegment(pluto_cache, time.tt);
+            major_bodies_t bary;
+            if (seg == null)
+            {
+                // The target time is outside the year range 0000..4000.
+                // Calculate it by crawling backward from 0000 or forward from 4000.
+                // FIXFIXFIX - This is super slow. Could optimize this with extra caching if needed.
+                if (time.tt < PlutoStateTable[0].tt)
+                    r = CalcPlutoOneWay(out bary, PlutoStateTable[0], time.tt, -PLUTO_DT);
+                else
+                    r = CalcPlutoOneWay(out bary, PlutoStateTable[PLUTO_NUM_STATES-1], time.tt, +PLUTO_DT);
+            }
+            else
+            {
+                int left = ClampIndex((time.tt - seg[0].tt) / PLUTO_DT, PLUTO_NSTEPS-1);
+                body_grav_calc_t s1 = seg[left];
+                body_grav_calc_t s2 = seg[left+1];
+
+                /* Find mean acceleration vector over the interval. */
+                TerseVector acc = (s1.a + s2.a) / 2.0;
+
+                /* Use Newtonian mechanics to extrapolate away from t1 in the positive time direction. */
+                TerseVector ra = UpdatePosition(time.tt - s1.tt, s1.r, s1.v, acc);
+
+                /* Use Newtonian mechanics to extrapolate away from t2 in the negative time direction. */
+                TerseVector rb = UpdatePosition(time.tt - s2.tt, s2.r, s2.v, acc);
+
+                /* Use fade in/out idea to blend the two position estimates. */
+                double ramp = (time.tt - s1.tt)/PLUTO_DT;
+                r = (1 - ramp)*ra + ramp*rb;
+                bary = MajorBodyBary(time.tt);
             }
 
-            return new AstroVector(
-                (top_eq_rot[0,0] * ecl.x) + (top_eq_rot[0,1] * ecl.y) + (top_eq_rot[0,2] * ecl.z),
-                (top_eq_rot[1,0] * ecl.x) + (top_eq_rot[1,1] * ecl.y) + (top_eq_rot[1,2] * ecl.z),
-                (top_eq_rot[2,0] * ecl.x) + (top_eq_rot[2,1] * ecl.y) + (top_eq_rot[2,2] * ecl.z),
-                ecl.t
-            );
+            return (r - bary.Sun.r).ToAstroVector(time);
         }
 
-        private static AstroVector TopPosition(astro_top_term_t[][][] model, int planet, AstroTime time)
-        {
-            top_elliptical_t ellip = TopCalcElliptical(planet, model, time.tt);
-            AstroVector ecl = TopEcliptic(ellip, time);
-            return TopEquatorial(ecl);
-        }
+        // End Pluto integrator
 
         private static RotationMatrix precession_rot(double tt1, double tt2)
         {
@@ -2600,9 +2806,9 @@ $ASTRO_IAU_DATA()
             return new AstroVector(mpos2.x, mpos2.y, mpos2.z, time);
         }
 
-        private static AstroVector BarycenterContrib(AstroTime time, Body body, double pmass)
+        private static AstroVector BarycenterContrib(AstroTime time, Body body, double planet_gm)
         {
-            double shift = pmass / (pmass + SUN_MASS);
+            double shift = planet_gm / (planet_gm + SUN_GM);
             AstroVector p = CalcVsop(vsop[(int)body], time);
             return new AstroVector(
                 shift * p.x,
@@ -2614,10 +2820,10 @@ $ASTRO_IAU_DATA()
 
         private static AstroVector CalcSolarSystemBarycenter(AstroTime time)
         {
-            AstroVector j = BarycenterContrib(time, Body.Jupiter, JUPITER_MASS);
-            AstroVector s = BarycenterContrib(time, Body.Saturn,  SATURN_MASS);
-            AstroVector u = BarycenterContrib(time, Body.Uranus,  URANUS_MASS);
-            AstroVector n = BarycenterContrib(time, Body.Neptune, NEPTUNE_MASS);
+            AstroVector j = BarycenterContrib(time, Body.Jupiter, JUPITER_GM);
+            AstroVector s = BarycenterContrib(time, Body.Saturn,  SATURN_GM);
+            AstroVector u = BarycenterContrib(time, Body.Uranus,  URANUS_GM);
+            AstroVector n = BarycenterContrib(time, Body.Neptune, NEPTUNE_GM);
             return new AstroVector(
                 j.x + s.x + u.x + n.x,
                 j.y + s.y + u.y + n.y,
@@ -2663,7 +2869,7 @@ $ASTRO_IAU_DATA()
                     return CalcVsop(vsop[(int)body], time);
 
                 case Body.Pluto:
-                    return TopPosition(top_model_8, 9, time);
+                    return CalcPluto(time);
 
                 case Body.Moon:
                     geomoon = GeoMoon(time);
@@ -2729,7 +2935,7 @@ $ASTRO_IAU_DATA()
                 case Body.Saturn:
                 case Body.Uranus:
                 case Body.Neptune:
-                    return VsopHelioDistance(vsop[(int)body], time);
+                    return VsopFormulaCalc(vsop[(int)body].rad, time.tt / DAYS_PER_MILLENNIUM);
 
                 default:
                     /* For non-VSOP objects, fall back to taking the length of the heliocentric vector. */

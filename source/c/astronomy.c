@@ -1935,7 +1935,7 @@ typedef struct
 vsop_model_t;
 /** @endcond */
 
-static const vsop_term_t vsop_lat_Mercury_0[] =
+static const vsop_term_t vsop_lon_Mercury_0[] =
 {
     { 4.40250710144, 0.00000000000, 0.00000000000 },
     { 0.40989414977, 1.48302034195, 26087.90314157420 },
@@ -1946,7 +1946,7 @@ static const vsop_term_t vsop_lat_Mercury_0[] =
     { 0.00007583476, 3.71348404924, 156527.41884944518 }
 };
 
-static const vsop_term_t vsop_lat_Mercury_1[] =
+static const vsop_term_t vsop_lon_Mercury_1[] =
 {
     { 26087.90313685529, 0.00000000000, 0.00000000000 },
     { 0.01131199811, 6.21874197797, 26087.90314157420 },
@@ -1955,13 +1955,13 @@ static const vsop_term_t vsop_lat_Mercury_1[] =
     { 0.00019676525, 2.80965111777, 104351.61256629678 }
 };
 
-static const vsop_series_t vsop_lat_Mercury[] =
+static const vsop_series_t vsop_lon_Mercury[] =
 {
-    { 7, vsop_lat_Mercury_0 },
-    { 5, vsop_lat_Mercury_1 }
+    { 7, vsop_lon_Mercury_0 },
+    { 5, vsop_lon_Mercury_1 }
 };
 
-static const vsop_term_t vsop_lon_Mercury_0[] =
+static const vsop_term_t vsop_lat_Mercury_0[] =
 {
     { 0.11737528961, 1.98357498767, 26087.90314157420 },
     { 0.02388076996, 5.03738959686, 52175.80628314840 },
@@ -1972,16 +1972,16 @@ static const vsop_term_t vsop_lon_Mercury_0[] =
     { 0.00007963301, 4.60972126127, 156527.41884944518 }
 };
 
-static const vsop_term_t vsop_lon_Mercury_1[] =
+static const vsop_term_t vsop_lat_Mercury_1[] =
 {
     { 0.00274646065, 3.95008450011, 26087.90314157420 },
     { 0.00099737713, 3.14159265359, 0.00000000000 }
 };
 
-static const vsop_series_t vsop_lon_Mercury[] =
+static const vsop_series_t vsop_lat_Mercury[] =
 {
-    { 7, vsop_lon_Mercury_0 },
-    { 2, vsop_lon_Mercury_1 }
+    { 7, vsop_lat_Mercury_0 },
+    { 2, vsop_lat_Mercury_1 }
 };
 
 static const vsop_term_t vsop_rad_Mercury_0[] =
@@ -2007,7 +2007,7 @@ static const vsop_series_t vsop_rad_Mercury[] =
 };
 
 ;
-static const vsop_term_t vsop_lat_Venus_0[] =
+static const vsop_term_t vsop_lon_Venus_0[] =
 {
     { 3.17614666774, 0.00000000000, 0.00000000000 },
     { 0.01353968419, 5.59313319619, 10213.28554621100 },
@@ -2021,35 +2021,35 @@ static const vsop_term_t vsop_lat_Venus_0[] =
     { 0.00001200521, 6.15357116043, 30639.85663863300 }
 };
 
-static const vsop_term_t vsop_lat_Venus_1[] =
+static const vsop_term_t vsop_lon_Venus_1[] =
 {
     { 10213.28554621638, 0.00000000000, 0.00000000000 },
     { 0.00095617813, 2.46406511110, 10213.28554621100 },
     { 0.00007787201, 0.62478482220, 20426.57109242200 }
 };
 
-static const vsop_series_t vsop_lat_Venus[] =
+static const vsop_series_t vsop_lon_Venus[] =
 {
-    { 10, vsop_lat_Venus_0 },
-    { 3, vsop_lat_Venus_1 }
+    { 10, vsop_lon_Venus_0 },
+    { 3, vsop_lon_Venus_1 }
 };
 
-static const vsop_term_t vsop_lon_Venus_0[] =
+static const vsop_term_t vsop_lat_Venus_0[] =
 {
     { 0.05923638472, 0.26702775812, 10213.28554621100 },
     { 0.00040107978, 1.14737178112, 20426.57109242200 },
     { 0.00032814918, 3.14159265359, 0.00000000000 }
 };
 
-static const vsop_term_t vsop_lon_Venus_1[] =
+static const vsop_term_t vsop_lat_Venus_1[] =
 {
     { 0.00287821243, 1.88964962838, 10213.28554621100 }
 };
 
-static const vsop_series_t vsop_lon_Venus[] =
+static const vsop_series_t vsop_lat_Venus[] =
 {
-    { 3, vsop_lon_Venus_0 },
-    { 1, vsop_lon_Venus_1 }
+    { 3, vsop_lat_Venus_0 },
+    { 1, vsop_lat_Venus_1 }
 };
 
 static const vsop_term_t vsop_rad_Venus_0[] =
@@ -2076,7 +2076,7 @@ static const vsop_series_t vsop_rad_Venus[] =
 };
 
 ;
-static const vsop_term_t vsop_lat_Earth_0[] =
+static const vsop_term_t vsop_lon_Earth_0[] =
 {
     { 1.75347045673, 0.00000000000, 0.00000000000 },
     { 0.03341656453, 4.66925680415, 6283.07584999140 },
@@ -2108,35 +2108,35 @@ static const vsop_term_t vsop_lat_Earth_0[] =
     { 0.00000155516, 0.83306084617, 213.29909543800 }
 };
 
-static const vsop_term_t vsop_lat_Earth_1[] =
+static const vsop_term_t vsop_lon_Earth_1[] =
 {
     { 6283.07584999140, 0.00000000000, 0.00000000000 },
     { 0.00206058863, 2.67823455808, 6283.07584999140 },
     { 0.00004303419, 2.63512233481, 12566.15169998280 }
 };
 
-static const vsop_term_t vsop_lat_Earth_2[] =
+static const vsop_term_t vsop_lon_Earth_2[] =
 {
     { 0.00008721859, 1.07253635559, 6283.07584999140 }
 };
 
-static const vsop_series_t vsop_lat_Earth[] =
+static const vsop_series_t vsop_lon_Earth[] =
 {
-    { 28, vsop_lat_Earth_0 },
-    { 3, vsop_lat_Earth_1 },
-    { 1, vsop_lat_Earth_2 }
+    { 28, vsop_lon_Earth_0 },
+    { 3, vsop_lon_Earth_1 },
+    { 1, vsop_lon_Earth_2 }
 };
 
-static const vsop_term_t vsop_lon_Earth_1[] =
+static const vsop_term_t vsop_lat_Earth_1[] =
 {
     { 0.00227777722, 3.41376620530, 6283.07584999140 },
     { 0.00003805678, 3.37063423795, 12566.15169998280 }
 };
 
-static const vsop_series_t vsop_lon_Earth[] =
+static const vsop_series_t vsop_lat_Earth[] =
 {
     { 0, NULL },
-    { 2, vsop_lon_Earth_1 }
+    { 2, vsop_lat_Earth_1 }
 };
 
 static const vsop_term_t vsop_rad_Earth_0[] =
@@ -2176,7 +2176,7 @@ static const vsop_series_t vsop_rad_Earth[] =
 };
 
 ;
-static const vsop_term_t vsop_lat_Mars_0[] =
+static const vsop_term_t vsop_lon_Mars_0[] =
 {
     { 6.20347711581, 0.00000000000, 0.00000000000 },
     { 0.18656368093, 5.05037100270, 3340.61242669980 },
@@ -2229,7 +2229,7 @@ static const vsop_term_t vsop_lat_Mars_0[] =
     { 0.00000299395, 2.78323740866, 6254.62666252360 }
 };
 
-static const vsop_term_t vsop_lat_Mars_1[] =
+static const vsop_term_t vsop_lon_Mars_1[] =
 {
     { 3340.61242700512, 0.00000000000, 0.00000000000 },
     { 0.01457554523, 3.60433733236, 3340.61242669980 },
@@ -2240,20 +2240,20 @@ static const vsop_term_t vsop_lat_Mars_1[] =
     { 0.00000841535, 4.45864030426, 2281.23049651060 }
 };
 
-static const vsop_term_t vsop_lat_Mars_2[] =
+static const vsop_term_t vsop_lon_Mars_2[] =
 {
     { 0.00058152577, 2.04961712429, 3340.61242669980 },
     { 0.00013459579, 2.45738706163, 6681.22485339960 }
 };
 
-static const vsop_series_t vsop_lat_Mars[] =
+static const vsop_series_t vsop_lon_Mars[] =
 {
-    { 49, vsop_lat_Mars_0 },
-    { 7, vsop_lat_Mars_1 },
-    { 2, vsop_lat_Mars_2 }
+    { 49, vsop_lon_Mars_0 },
+    { 7, vsop_lon_Mars_1 },
+    { 2, vsop_lon_Mars_2 }
 };
 
-static const vsop_term_t vsop_lon_Mars_0[] =
+static const vsop_term_t vsop_lat_Mars_0[] =
 {
     { 0.03197134986, 3.76832042431, 3340.61242669980 },
     { 0.00298033234, 4.10616996305, 6681.22485339960 },
@@ -2262,17 +2262,17 @@ static const vsop_term_t vsop_lon_Mars_0[] =
     { 0.00003484100, 4.78812549260, 13362.44970679920 }
 };
 
-static const vsop_term_t vsop_lon_Mars_1[] =
+static const vsop_term_t vsop_lat_Mars_1[] =
 {
     { 0.00217310991, 6.04472194776, 3340.61242669980 },
     { 0.00020976948, 3.14159265359, 0.00000000000 },
     { 0.00012834709, 1.60810667915, 6681.22485339960 }
 };
 
-static const vsop_series_t vsop_lon_Mars[] =
+static const vsop_series_t vsop_lat_Mars[] =
 {
-    { 5, vsop_lon_Mars_0 },
-    { 3, vsop_lon_Mars_1 }
+    { 5, vsop_lat_Mars_0 },
+    { 3, vsop_lat_Mars_1 }
 };
 
 static const vsop_term_t vsop_rad_Mars_0[] =
@@ -2320,7 +2320,7 @@ static const vsop_series_t vsop_rad_Mars[] =
 };
 
 ;
-static const vsop_term_t vsop_lat_Jupiter_0[] =
+static const vsop_term_t vsop_lon_Jupiter_0[] =
 {
     { 0.59954691494, 0.00000000000, 0.00000000000 },
     { 0.09695898719, 5.06191793158, 529.69096509460 },
@@ -2353,7 +2353,7 @@ static const vsop_term_t vsop_lat_Jupiter_0[] =
     { 0.00000973272, 4.09764549134, 95.97922721780 }
 };
 
-static const vsop_term_t vsop_lat_Jupiter_1[] =
+static const vsop_term_t vsop_lon_Jupiter_1[] =
 {
     { 529.69096508814, 0.00000000000, 0.00000000000 },
     { 0.00489503243, 4.22082939470, 529.69096509460 },
@@ -2366,21 +2366,21 @@ static const vsop_term_t vsop_lat_Jupiter_1[] =
     { 0.00004237744, 5.89008707199, 14.22709400160 }
 };
 
-static const vsop_term_t vsop_lat_Jupiter_2[] =
+static const vsop_term_t vsop_lon_Jupiter_2[] =
 {
     { 0.00047233601, 4.32148536482, 7.11354700080 },
     { 0.00030649436, 2.92977788700, 529.69096509460 },
     { 0.00014837605, 3.14159265359, 0.00000000000 }
 };
 
-static const vsop_series_t vsop_lat_Jupiter[] =
+static const vsop_series_t vsop_lon_Jupiter[] =
 {
-    { 29, vsop_lat_Jupiter_0 },
-    { 9, vsop_lat_Jupiter_1 },
-    { 3, vsop_lat_Jupiter_2 }
+    { 29, vsop_lon_Jupiter_0 },
+    { 9, vsop_lon_Jupiter_1 },
+    { 3, vsop_lon_Jupiter_2 }
 };
 
-static const vsop_term_t vsop_lon_Jupiter_0[] =
+static const vsop_term_t vsop_lat_Jupiter_0[] =
 {
     { 0.02268615702, 3.55852606721, 529.69096509460 },
     { 0.00109971634, 3.90809347197, 1059.38193018920 },
@@ -2390,15 +2390,15 @@ static const vsop_term_t vsop_lon_Jupiter_0[] =
     { 0.00006437782, 0.30627119215, 536.80451209540 }
 };
 
-static const vsop_term_t vsop_lon_Jupiter_1[] =
+static const vsop_term_t vsop_lat_Jupiter_1[] =
 {
     { 0.00078203446, 1.52377859742, 529.69096509460 }
 };
 
-static const vsop_series_t vsop_lon_Jupiter[] =
+static const vsop_series_t vsop_lat_Jupiter[] =
 {
-    { 6, vsop_lon_Jupiter_0 },
-    { 1, vsop_lon_Jupiter_1 }
+    { 6, vsop_lat_Jupiter_0 },
+    { 1, vsop_lat_Jupiter_1 }
 };
 
 static const vsop_term_t vsop_rad_Jupiter_0[] =
@@ -2440,7 +2440,7 @@ static const vsop_series_t vsop_rad_Jupiter[] =
 };
 
 ;
-static const vsop_term_t vsop_lat_Saturn_0[] =
+static const vsop_term_t vsop_lon_Saturn_0[] =
 {
     { 0.87401354025, 0.00000000000, 0.00000000000 },
     { 0.11107659762, 3.96205090159, 213.29909543800 },
@@ -2477,7 +2477,7 @@ static const vsop_term_t vsop_lat_Saturn_0[] =
     { 0.00000848642, 3.19150170830, 209.36694217490 }
 };
 
-static const vsop_term_t vsop_lat_Saturn_1[] =
+static const vsop_term_t vsop_lon_Saturn_1[] =
 {
     { 213.29909521690, 0.00000000000, 0.00000000000 },
     { 0.01297370862, 1.82834923978, 213.29909543800 },
@@ -2493,7 +2493,7 @@ static const vsop_term_t vsop_lat_Saturn_1[] =
     { 0.00003768635, 3.64965330780, 3.93215326310 }
 };
 
-static const vsop_term_t vsop_lat_Saturn_2[] =
+static const vsop_term_t vsop_lon_Saturn_2[] =
 {
     { 0.00116441330, 1.17988132879, 7.11354700080 },
     { 0.00091841837, 0.07325195840, 213.29909543800 },
@@ -2501,14 +2501,14 @@ static const vsop_term_t vsop_lat_Saturn_2[] =
     { 0.00015274496, 4.06493179167, 206.18554843720 }
 };
 
-static const vsop_series_t vsop_lat_Saturn[] =
+static const vsop_series_t vsop_lon_Saturn[] =
 {
-    { 33, vsop_lat_Saturn_0 },
-    { 12, vsop_lat_Saturn_1 },
-    { 4, vsop_lat_Saturn_2 }
+    { 33, vsop_lon_Saturn_0 },
+    { 12, vsop_lon_Saturn_1 },
+    { 4, vsop_lon_Saturn_2 }
 };
 
-static const vsop_term_t vsop_lon_Saturn_0[] =
+static const vsop_term_t vsop_lat_Saturn_0[] =
 {
     { 0.04330678039, 3.60284428399, 213.29909543800 },
     { 0.00240348302, 2.85238489373, 426.59819087600 },
@@ -2521,17 +2521,17 @@ static const vsop_term_t vsop_lon_Saturn_0[] =
     { 0.00004807588, 5.43305312061, 316.39186965660 }
 };
 
-static const vsop_term_t vsop_lon_Saturn_1[] =
+static const vsop_term_t vsop_lat_Saturn_1[] =
 {
     { 0.00198927992, 4.93901017903, 213.29909543800 },
     { 0.00036947916, 3.14159265359, 0.00000000000 },
     { 0.00017966989, 0.51979431110, 426.59819087600 }
 };
 
-static const vsop_series_t vsop_lon_Saturn[] =
+static const vsop_series_t vsop_lat_Saturn[] =
 {
-    { 9, vsop_lon_Saturn_0 },
-    { 3, vsop_lon_Saturn_1 }
+    { 9, vsop_lat_Saturn_0 },
+    { 3, vsop_lat_Saturn_1 }
 };
 
 static const vsop_term_t vsop_rad_Saturn_0[] =
@@ -2584,7 +2584,7 @@ static const vsop_series_t vsop_rad_Saturn[] =
 };
 
 ;
-static const vsop_term_t vsop_lat_Uranus_0[] =
+static const vsop_term_t vsop_lon_Uranus_0[] =
 {
     { 5.48129294297, 0.00000000000, 0.00000000000 },
     { 0.09260408234, 0.89106421507, 74.78159856730 },
@@ -2627,7 +2627,7 @@ static const vsop_term_t vsop_lat_Uranus_0[] =
     { 0.00001150989, 4.17898916639, 33.67961751290 }
 };
 
-static const vsop_term_t vsop_lat_Uranus_1[] =
+static const vsop_term_t vsop_lon_Uranus_1[] =
 {
     { 74.78159860910, 0.00000000000, 0.00000000000 },
     { 0.00154332863, 5.24158770553, 74.78159856730 },
@@ -2637,13 +2637,13 @@ static const vsop_term_t vsop_lat_Uranus_1[] =
     { 0.00009150160, 1.41213765216, 149.56319713460 }
 };
 
-static const vsop_series_t vsop_lat_Uranus[] =
+static const vsop_series_t vsop_lon_Uranus[] =
 {
-    { 39, vsop_lat_Uranus_0 },
-    { 6, vsop_lat_Uranus_1 }
+    { 39, vsop_lon_Uranus_0 },
+    { 6, vsop_lon_Uranus_1 }
 };
 
-static const vsop_term_t vsop_lon_Uranus_0[] =
+static const vsop_term_t vsop_lat_Uranus_0[] =
 {
     { 0.01346277648, 2.61877810547, 74.78159856730 },
     { 0.00062341400, 5.08111189648, 149.56319713460 },
@@ -2652,15 +2652,15 @@ static const vsop_term_t vsop_lon_Uranus_0[] =
     { 0.00009926160, 0.57630380333, 73.29712585900 }
 };
 
-static const vsop_term_t vsop_lon_Uranus_1[] =
+static const vsop_term_t vsop_lat_Uranus_1[] =
 {
     { 0.00034101978, 0.01321929936, 74.78159856730 }
 };
 
-static const vsop_series_t vsop_lon_Uranus[] =
+static const vsop_series_t vsop_lat_Uranus[] =
 {
-    { 5, vsop_lon_Uranus_0 },
-    { 1, vsop_lon_Uranus_1 }
+    { 5, vsop_lat_Uranus_0 },
+    { 1, vsop_lat_Uranus_1 }
 };
 
 static const vsop_term_t vsop_rad_Uranus_0[] =
@@ -2703,7 +2703,7 @@ static const vsop_series_t vsop_rad_Uranus[] =
 };
 
 ;
-static const vsop_term_t vsop_lat_Neptune_0[] =
+static const vsop_term_t vsop_lon_Neptune_0[] =
 {
     { 5.31188633046, 0.00000000000, 0.00000000000 },
     { 0.01798475530, 2.90101273890, 38.13303563780 },
@@ -2717,20 +2717,20 @@ static const vsop_term_t vsop_lat_Neptune_0[] =
     { 0.00008994250, 0.27462171806, 175.16605980020 }
 };
 
-static const vsop_term_t vsop_lat_Neptune_1[] =
+static const vsop_term_t vsop_lon_Neptune_1[] =
 {
     { 38.13303563957, 0.00000000000, 0.00000000000 },
     { 0.00016604172, 4.86323329249, 1.48447270830 },
     { 0.00015744045, 2.27887427527, 38.13303563780 }
 };
 
-static const vsop_series_t vsop_lat_Neptune[] =
+static const vsop_series_t vsop_lon_Neptune[] =
 {
-    { 10, vsop_lat_Neptune_0 },
-    { 3, vsop_lat_Neptune_1 }
+    { 10, vsop_lon_Neptune_0 },
+    { 3, vsop_lon_Neptune_1 }
 };
 
-static const vsop_term_t vsop_lon_Neptune_0[] =
+static const vsop_term_t vsop_lat_Neptune_0[] =
 {
     { 0.03088622933, 1.44104372644, 38.13303563780 },
     { 0.00027780087, 5.91271884599, 76.26607127560 },
@@ -2739,9 +2739,9 @@ static const vsop_term_t vsop_lon_Neptune_0[] =
     { 0.00015448133, 3.50877079215, 39.61750834610 }
 };
 
-static const vsop_series_t vsop_lon_Neptune[] =
+static const vsop_series_t vsop_lat_Neptune[] =
 {
-    { 5, vsop_lon_Neptune_0 }
+    { 5, vsop_lat_Neptune_0 }
 };
 
 static const vsop_term_t vsop_rad_Neptune_0[] =
@@ -2773,21 +2773,24 @@ static const vsop_series_t vsop_rad_Neptune[] =
 
 static const vsop_model_t vsop[] =
 {
-    { { VSOPFORMULA(vsop_lat_Mercury),  VSOPFORMULA(vsop_lon_Mercury),  VSOPFORMULA(vsop_rad_Mercury) } },
-    { { VSOPFORMULA(vsop_lat_Venus),    VSOPFORMULA(vsop_lon_Venus),    VSOPFORMULA(vsop_rad_Venus)   } },
-    { { VSOPFORMULA(vsop_lat_Earth),    VSOPFORMULA(vsop_lon_Earth),    VSOPFORMULA(vsop_rad_Earth)   } },
-    { { VSOPFORMULA(vsop_lat_Mars),     VSOPFORMULA(vsop_lon_Mars),     VSOPFORMULA(vsop_rad_Mars)    } },
-    { { VSOPFORMULA(vsop_lat_Jupiter),  VSOPFORMULA(vsop_lon_Jupiter),  VSOPFORMULA(vsop_rad_Jupiter) } },
-    { { VSOPFORMULA(vsop_lat_Saturn),   VSOPFORMULA(vsop_lon_Saturn),   VSOPFORMULA(vsop_rad_Saturn)  } },
-    { { VSOPFORMULA(vsop_lat_Uranus),   VSOPFORMULA(vsop_lon_Uranus),   VSOPFORMULA(vsop_rad_Uranus)  } },
-    { { VSOPFORMULA(vsop_lat_Neptune),  VSOPFORMULA(vsop_lon_Neptune),  VSOPFORMULA(vsop_rad_Neptune) } }
+    { { VSOPFORMULA(vsop_lon_Mercury),  VSOPFORMULA(vsop_lat_Mercury),  VSOPFORMULA(vsop_rad_Mercury) } },
+    { { VSOPFORMULA(vsop_lon_Venus),    VSOPFORMULA(vsop_lat_Venus),    VSOPFORMULA(vsop_rad_Venus)   } },
+    { { VSOPFORMULA(vsop_lon_Earth),    VSOPFORMULA(vsop_lat_Earth),    VSOPFORMULA(vsop_rad_Earth)   } },
+    { { VSOPFORMULA(vsop_lon_Mars),     VSOPFORMULA(vsop_lat_Mars),     VSOPFORMULA(vsop_rad_Mars)    } },
+    { { VSOPFORMULA(vsop_lon_Jupiter),  VSOPFORMULA(vsop_lat_Jupiter),  VSOPFORMULA(vsop_rad_Jupiter) } },
+    { { VSOPFORMULA(vsop_lon_Saturn),   VSOPFORMULA(vsop_lat_Saturn),   VSOPFORMULA(vsop_rad_Saturn)  } },
+    { { VSOPFORMULA(vsop_lon_Uranus),   VSOPFORMULA(vsop_lat_Uranus),   VSOPFORMULA(vsop_rad_Uranus)  } },
+    { { VSOPFORMULA(vsop_lon_Neptune),  VSOPFORMULA(vsop_lat_Neptune),  VSOPFORMULA(vsop_rad_Neptune) } }
 };
 
 /** @cond DOXYGEN_SKIP */
 #define CalcEarth(time)     CalcVsop(&vsop[BODY_EARTH], (time))
+#define LON_INDEX 0
+#define LAT_INDEX 1
+#define RAD_INDEX 2
 /** @endcond */
 
-static void VsopCoords(const vsop_model_t *model, double t, double sphere[])
+static void VsopCoords(const vsop_model_t *model, double t, double sphere[3])
 {
     int k, s, i;
 
@@ -2844,7 +2847,7 @@ static const double DAYS_PER_MILLENNIUM = 365250.0;
 static astro_vector_t CalcVsop(const vsop_model_t *model, astro_time_t time)
 {
     double t = time.tt / DAYS_PER_MILLENNIUM;
-    double sphere[3];
+    double sphere[3];       /* lon, lat, rad */
     double eclip[3];
     astro_vector_t vector;
     terse_vector_t pos;
@@ -2853,7 +2856,7 @@ static astro_vector_t CalcVsop(const vsop_model_t *model, astro_time_t time)
     VsopCoords(model, t, sphere);
 
     /* Convert ecliptic spherical coordinates to ecliptic Cartesian coordinates. */
-    VsopSphereToRect(sphere[0], sphere[1], sphere[2], eclip);
+    VsopSphereToRect(sphere[LON_INDEX], sphere[LAT_INDEX], sphere[RAD_INDEX], eclip);
 
     /* Convert ecliptic Cartesian coordinates to equatorial Cartesian coordinates. */
     pos = VsopRotate(eclip);
@@ -2869,7 +2872,7 @@ static astro_vector_t CalcVsop(const vsop_model_t *model, astro_time_t time)
 }
 
 
-static void VsopDeriv(const vsop_model_t *model, double t, double deriv[])
+static void VsopDeriv(const vsop_model_t *model, double t, double deriv[3])
 {
     int k, s, i;
 
@@ -2912,7 +2915,7 @@ static body_state_t CalcVsopPosVel(const vsop_model_t *model, double tt)
 
     state.tt = tt;
     VsopCoords(model, t, sphere);
-    VsopSphereToRect(sphere[0], sphere[1], sphere[2], eclip);
+    VsopSphereToRect(sphere[LON_INDEX], sphere[LAT_INDEX], sphere[RAD_INDEX], eclip);
     state.r = VsopRotate(eclip);
 
     VsopDeriv(model, t, deriv);
@@ -2921,14 +2924,14 @@ static body_state_t CalcVsopPosVel(const vsop_model_t *model, double tt)
     /* the velocity vector in rectangular coordinates. */
 
     /* Calculate mnemonic variables to help keep the math straight. */
-    coslon = cos(sphere[0]);
-    sinlon = sin(sphere[0]);
-    coslat = cos(sphere[1]);
-    sinlat = sin(sphere[1]);
-    r = sphere[2];
-    dlon_dt = deriv[0];
-    dlat_dt = deriv[1];
-    dr_dt   = deriv[2];
+    coslon = cos(sphere[LON_INDEX]);
+    sinlon = sin(sphere[LON_INDEX]);
+    coslat = cos(sphere[LAT_INDEX]);
+    sinlat = sin(sphere[LAT_INDEX]);
+    r = sphere[RAD_INDEX];
+    dlon_dt = deriv[LON_INDEX];
+    dlat_dt = deriv[LAT_INDEX];
+    dr_dt   = deriv[RAD_INDEX];
 
     /* vx = dx/dt */
     eclip[0] = (dr_dt * coslat * coslon) - (r * sinlat * coslon * dlat_dt) - (r * coslat * sinlon * dlon_dt);
@@ -3197,7 +3200,6 @@ body_grav_calc_t GravSim(           /* out: [pos, vel, acc] of the simulated bod
 #endif
 
 #define PLUTO_NSTEPS    ((PLUTO_TIME_STEP / PLUTO_DT) + 1)
-#define PLUTO_NRECENT   3
 
 /** @cond DOXYGEN_SKIP */
 typedef struct

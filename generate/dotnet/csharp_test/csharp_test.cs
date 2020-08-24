@@ -13,6 +13,12 @@ namespace csharp_test
         const double RAD2DEG = 57.295779513082321;
         static bool Verbose;
 
+        static void Debug(string format, params object[] args)
+        {
+            if (Verbose)
+                Console.WriteLine(format, args);
+        }
+
         struct Test
         {
             public string Name;
@@ -37,6 +43,7 @@ namespace csharp_test
             new Test("magnitude", MagnitudeTest),
             new Test("moonphase", MoonPhaseTest),
             new Test("planet_apsis", PlanetApsisTest),
+            new Test("pluto", PlutoCheck),
             new Test("refraction", RefractionTest),
             new Test("riseset", RiseSetTest),
             new Test("rotation", RotationTest),
@@ -507,7 +514,7 @@ namespace csharp_test
                         foundObserver = true;
                         r_search_date = s_search_date = new AstroTime(year, 1, 1, 0, 0, 0);
                         b_evt = null;
-                        if (Verbose) Console.WriteLine("C# RiseSetTest: {0} lat={1} lon={2}", body, latitude, longitude);
+                        Debug("C# RiseSetTest: {0} lat={1} lon={2}", body, latitude, longitude);
                     }
 
                     if (b_evt != null)
@@ -684,7 +691,7 @@ namespace csharp_test
             }
 
             double ratio = max_diff / min_diff;
-            if (Verbose) Console.WriteLine("C# TestPlanetLongitudes({0,7}): {1,5} events, ratio={2,5}, file: {3}", body, count, ratio.ToString("f3"), outFileName);
+            Debug("C# TestPlanetLongitudes({0,7}): {1,5} events, ratio={2,5}, file: {3}", body, count, ratio.ToString("f3"), outFileName);
 
             if (ratio > thresh)
             {
@@ -747,7 +754,7 @@ namespace csharp_test
             ElongationInfo evt = Astronomy.SearchMaxElongation(test.body, searchTime);
             double hour_diff = 24.0 * abs(evt.time.tt - eventTime.tt);
             double arcmin_diff = 60.0 * abs(evt.elongation - test.angle);
-            if (Verbose) Console.WriteLine("C# TestMaxElong: {0,7} {1,7} elong={2,5} ({3} arcmin, {4} hours)", test.body, test.visibility, evt.elongation, arcmin_diff, hour_diff);
+            Debug("C# TestMaxElong: {0,7} {1,7} elong={2,5} ({3} arcmin, {4} hours)", test.body, test.visibility, evt.elongation, arcmin_diff, hour_diff);
             if (hour_diff > 0.603)
             {
                 Console.WriteLine("C# TestMaxElong({0} {1}): excessive hour error.", test.body, test.searchDate);
@@ -930,7 +937,7 @@ namespace csharp_test
 
                         double diff_dist_ratio = abs(expected_distance - apsis.dist_au) / expected_distance;
                         max_dist_ratio = max(max_dist_ratio, diff_dist_ratio);
-                        if (diff_dist_ratio > 1.0e-4)
+                        if (diff_dist_ratio > 1.05e-4)
                         {
                             Console.WriteLine("C# PlanetApsisTest({0} line {1}): distance ratio {2} is too large.", filename, count, diff_dist_ratio);
                             return 1;
@@ -961,7 +968,7 @@ namespace csharp_test
                     return 1;
                 }
 
-                if (Verbose) Console.WriteLine("C# PlanetApsis: {0} apsides for {1,-9} -- intervals: min={2:0.00}, max={3:0.00}, ratio={4:0.000000}; max day={5}, degrees={6:0.000}, dist ratio={7}",
+                Debug("C# PlanetApsis: {0} apsides for {1,-9} -- intervals: min={2:0.00}, max={3:0.00}, ratio={4:0.000000}; max day={5}, degrees={6:0.000}, dist ratio={7}",
                     count, body,
                     min_interval, max_interval, max_interval / min_interval,
                     max_diff_days,
@@ -1146,7 +1153,7 @@ namespace csharp_test
                     return 1;
                 }
                 double rms = sqrt(sum_squared_diff / count);
-                if (Verbose) Console.WriteLine("C# CheckMagnitudeData: {0} {1} rows diff_lo={2} diff_hi={3} rms={4}", filename, count, diff_lo, diff_hi, rms);
+                Debug("C# CheckMagnitudeData: {0} {1} rows diff_lo={2} diff_hi={3} rms={4}", filename, count, diff_lo, diff_hi, rms);
                 return 0;
             }
         }
@@ -1189,7 +1196,7 @@ namespace csharp_test
                 AstroTime time = ParseDate(data.date);
 
                 IllumInfo illum = Astronomy.Illumination(Body.Saturn, time);
-                if (Verbose) Console.WriteLine("C# Saturn: date={0}  calc mag={1}  ring_tilt={2}", data.date, illum.mag, illum.ring_tilt);
+                Debug("C# Saturn: date={0}  calc mag={1}  ring_tilt={2}", data.date, illum.mag, illum.ring_tilt);
 
                 double mag_diff = abs(illum.mag - data.mag);
                 if (mag_diff > 1.0e-4)
@@ -1244,7 +1251,7 @@ namespace csharp_test
                     IllumInfo illum = Astronomy.SearchPeakMagnitude(body, search_time);
                     double mag_diff = abs(illum.mag - correct_mag);
                     double hours_diff = 24.0 * abs(illum.time.ut - center_time.ut);
-                    if (Verbose) Console.WriteLine("C# TestMaxMag: mag_diff={0}, hours_diff={1}", mag_diff, hours_diff);
+                    Debug("C# TestMaxMag: mag_diff={0}, hours_diff={1}", mag_diff, hours_diff);
                     if (hours_diff > 7.1)
                     {
                         Console.WriteLine("C# TestMaxMag({0} line {1}): EXCESSIVE TIME DIFFERENCE.", filename, lnum);
@@ -1257,7 +1264,7 @@ namespace csharp_test
                     }
                     search_time = time2;
                 }
-                if (Verbose) Console.WriteLine("C# TestMaxMag: Processed {0} lines from file {1}", lnum, filename);
+                Debug("C# TestMaxMag: Processed {0} lines from file {1}", lnum, filename);
                 return 0;
             }
         }
@@ -1359,7 +1366,7 @@ namespace csharp_test
 
             /* Use the older function to calculate ecliptic vector and angles. */
             Ecliptic ecl = Astronomy.EquatorialToEcliptic(ev);
-            if (Verbose) Console.WriteLine("C# Test_EQJ_ECL ecl = ({0}, {1}, {2})", ecl.ex, ecl.ey, ecl.ez);
+            Debug("C# Test_EQJ_ECL ecl = ({0}, {1}, {2})", ecl.ex, ecl.ey, ecl.ez);
 
             /* Now compute the same vector via rotation matrix. */
             AstroVector ee = Astronomy.RotateVector(r, ev);
@@ -1367,7 +1374,7 @@ namespace csharp_test
             double dy = ee.y - ecl.ey;
             double dz = ee.z - ecl.ez;
             double diff = sqrt(dx*dx + dy*dy + dz*dz);
-            if (Verbose) Console.WriteLine("C# Test_EQJ_ECL ee = ({0}, {1}, {2}); diff={3}", ee.x, ee.y, ee.z, diff);
+            Debug("C# Test_EQJ_ECL ee = ({0}, {1}, {2}); diff={3}", ee.x, ee.y, ee.z, diff);
             if (diff > 1.0e-16)
             {
                 Console.WriteLine("C# Test_EQJ_ECL: EXCESSIVE VECTOR ERROR");
@@ -1378,14 +1385,14 @@ namespace csharp_test
             r = Astronomy.Rotation_ECL_EQJ();
             AstroVector et = Astronomy.RotateVector(r, ee);
             diff = VectorDiff(et, ev);
-            if (Verbose) Console.WriteLine("C# Test_EQJ_ECL  ev diff={0}", diff);
+            Debug("C# Test_EQJ_ECL  ev diff={0}", diff);
             if (diff > 2.0e-16)
             {
                 Console.WriteLine("C# Test_EQJ_ECL: EXCESSIVE REVERSE ROTATION ERROR");
                 return 1;
             }
 
-            if (Verbose) Console.WriteLine("C# Test_EQJ_ECL: PASS");
+            Debug("C# Test_EQJ_ECL: PASS");
             return 0;
         }
 
@@ -1404,7 +1411,7 @@ namespace csharp_test
             double ra_diff = abs(eqcheck.ra - eqdate.ra);
             double dec_diff = abs(eqcheck.dec - eqdate.dec);
             double dist_diff = abs(eqcheck.dist - eqdate.dist);
-            if (Verbose) Console.WriteLine("C# Test_EQJ_EQD: {0} ra={1}, dec={2}, dist={3}, ra_diff={4}, dec_diff={5}, dist_diff={6}",
+            Debug("C# Test_EQJ_EQD: {0} ra={1}, dec={2}, dist={3}, ra_diff={4}, dec_diff={5}, dist_diff={6}",
                 body, eqdate.ra, eqdate.dec, eqdate.dist, ra_diff, dec_diff, dist_diff);
 
             if (ra_diff > 1.0e-14 || dec_diff > 1.0e-14 || dist_diff > 4.0e-15)
@@ -1416,14 +1423,14 @@ namespace csharp_test
             r = Astronomy.Rotation_EQD_EQJ(time);
             AstroVector t2000 = Astronomy.RotateVector(r, vdate);
             double diff = VectorDiff(t2000, v2000);
-            if (Verbose) Console.WriteLine("C# Test_EQJ_EQD: {0} inverse diff = {1}", body, diff);
+            Debug("C# Test_EQJ_EQD: {0} inverse diff = {1}", body, diff);
             if (diff > 5.0e-15)
             {
                 Console.WriteLine("C# Test_EQJ_EQD: EXCESSIVE INVERSE ERROR");
                 return 1;
             }
 
-            if (Verbose) Console.WriteLine("C# Test_EQJ_EQD: PASS");
+            Debug("C# Test_EQJ_EQD: PASS");
             return 0;
         }
 
@@ -1441,7 +1448,7 @@ namespace csharp_test
             double diff_alt = abs(sphere.lat - hor.altitude);
             double diff_az = abs(sphere.lon - hor.azimuth);
 
-            if (Verbose) Console.WriteLine("C# Test_EQD_HOR {0}: trusted alt={1}, az={2}; test alt={3}, az={4}; diff_alt={5}, diff_az={6}",
+            Debug("C# Test_EQD_HOR {0}: trusted alt={1}, az={2}; test alt={3}, az={4}; diff_alt={5}, diff_az={6}",
                 body, hor.altitude, hor.azimuth, sphere.lat, sphere.lon, diff_alt, diff_az);
 
             if (diff_alt > 3.0e-14 || diff_az > 4e-14)
@@ -1453,7 +1460,7 @@ namespace csharp_test
             /* Confirm that we can convert back to horizontal vector. */
             AstroVector check_hor = Astronomy.VectorFromHorizon(sphere, time, Refraction.Normal);
             double diff = VectorDiff(check_hor, vec_hor);
-            if (Verbose) Console.WriteLine("C# Test_EQD_HOR {0}: horizontal recovery: diff = {1}", body, diff);
+            Debug("C# Test_EQD_HOR {0}: horizontal recovery: diff = {1}", body, diff);
             if (diff > 3.0e-15)
             {
                 Console.WriteLine("C# Test_EQD_HOR: EXCESSIVE ERROR IN HORIZONTAL RECOVERY.");
@@ -1464,7 +1471,7 @@ namespace csharp_test
             rot = Astronomy.Rotation_HOR_EQD(time, observer);
             AstroVector check_eqd = Astronomy.RotateVector(rot, vec_hor);
             diff = VectorDiff(check_eqd, vec_eqd);
-            if (Verbose) Console.WriteLine("C# Test_EQD_HOR {0}: OFDATE inverse rotation diff = {1}", body, diff);
+            Debug("C# Test_EQD_HOR {0}: OFDATE inverse rotation diff = {1}", body, diff);
             if (diff > 2.0e-15)
             {
                 Console.WriteLine("C# Test_EQD_HOR: EXCESSIVE OFDATE INVERSE HORIZONTAL ERROR.");
@@ -1478,7 +1485,7 @@ namespace csharp_test
             rot = Astronomy.Rotation_HOR_EQJ(time, observer);
             AstroVector check_eqj = Astronomy.RotateVector(rot, vec_hor);
             diff = VectorDiff(check_eqj, vec_eqj);
-            if (Verbose) Console.WriteLine("C# Test_EQD_HOR {0}: J2000 inverse rotation diff = {1}", body, diff);
+            Debug("C# Test_EQD_HOR {0}: J2000 inverse rotation diff = {1}", body, diff);
             if (diff > 6.0e-15)
             {
                 Console.WriteLine("C# Test_EQD_HOR: EXCESSIVE J2000 INVERSE HORIZONTAL ERROR.");
@@ -1489,14 +1496,14 @@ namespace csharp_test
             rot = Astronomy.Rotation_EQJ_HOR(time, observer);
             check_hor = Astronomy.RotateVector(rot, vec_eqj);
             diff = VectorDiff(check_hor, vec_hor);
-            if (Verbose) Console.WriteLine("C# Test_EQD_HOR {0}: EQJ inverse rotation diff = {1}", body, diff);
+            Debug("C# Test_EQD_HOR {0}: EQJ inverse rotation diff = {1}", body, diff);
             if (diff > 3e-15)
             {
                 Console.WriteLine("C# Test_EQD_HOR: EXCESSIVE EQJ INVERSE HORIZONTAL ERROR.");
                 return 1;
             }
 
-            if (Verbose) Console.WriteLine("C# Test_EQD_HOR: PASS");
+            Debug("C# Test_EQD_HOR: PASS");
             return 0;
         }
 
@@ -1581,7 +1588,7 @@ namespace csharp_test
             if (0 != CheckCycle(nameof(eqj_hor), nameof(hor_eqd), nameof(eqd_eqj), eqj_hor, hor_eqd, eqd_eqj)) return 1;     /* excluded corner = ECL */
             if (0 != CheckCycle(nameof(ecl_eqd), nameof(eqd_hor), nameof(hor_ecl), ecl_eqd, eqd_hor, hor_ecl)) return 1;     /* excluded corner = EQJ */
 
-            if (Verbose) Console.WriteLine("C# Test_RotRoundTrip: PASS");
+            Debug("C# Test_RotRoundTrip: PASS");
             return 0;
         }
 
@@ -2214,6 +2221,57 @@ namespace csharp_test
             if (0 != TransitFile(Body.Venus, "../../eclipse/venus.txt", 9.109, 0.6772))
                 return 1;
 
+            return 0;
+        }
+
+        static int PlutoCheckDate(double ut, double arcmin_tolerance, double x, double y, double z)
+        {
+            var time = new AstroTime(ut);
+            string timeText;
+
+            try
+            {
+                timeText = time.ToString();
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+                // One of the dates we pass in is before the year 0000.
+                // The DateTime class can't handle this.
+                timeText = "???";
+            }
+
+            Debug("C# PlutoCheck: {0} = {1} UT = {2} TT", timeText, time.ut, time.tt);
+
+            AstroVector vector = Astronomy.HelioVector(Body.Pluto, time);
+            double dx = v(vector.x - x);
+            double dy = v(vector.y - y);
+            double dz = v(vector.z - z);
+            double diff = sqrt(dx*dx + dy*dy + dz*dz);
+            double dist = (sqrt(x*x + y*y + z*z) - 1.0);       /* worst-case distance between Pluto and Earth */
+            double arcmin = (diff / dist) * (180.0 * 60.0 / Math.PI);
+            Debug("C# PlutoCheck: calc pos = [{0}, {1}, {2}]", vector.x, vector.y, vector.z);
+            Debug("C# PlutoCheck: ref  pos = [{0}, {1}, {2}]", x, y, z);
+            Debug("C# PlutoCheck: del  pos = [{0}, {1}, {2}]", vector.x - x, vector.y - y, vector.z - z);
+            Debug("C# PlutoCheck: diff = {0} AU, {1} arcmin\n", diff, arcmin);
+            Debug("");
+
+            if (v(arcmin) > arcmin_tolerance)
+            {
+                Console.WriteLine("C# PlutoCheck: EXCESSIVE ERROR\n");
+                return 1;
+            }
+            return 0;
+        }
+
+        static int PlutoCheck()
+        {
+            if (0 != PlutoCheckDate(  +18250.0,  0.271, +37.4377303523676090, -10.2466292454075898, -14.4773101310875809)) return 1;
+            if (0 != PlutoCheckDate(  +18250.0,  0.271, +37.4377303523676090, -10.2466292454075898, -14.4773101310875809)) return 1;
+            if (0 != PlutoCheckDate( -856493.0,  6.636, +23.4292113199166252, +42.1452685817740829,  +6.0580908436642940)) return 1;
+            if (0 != PlutoCheckDate( +435633.0,  0.058, -27.3178902095231813, +18.5887022581070305, +14.0493896259306936)) return 1;
+            if (0 != PlutoCheckDate(       0.0, 4.0e-9, -9.8753673425269000,  -27.9789270580402771,  -5.7537127596369588)) return 1;
+            if (0 != PlutoCheckDate( +800916.0,  6.705, -29.5266052645301365, +12.0554287322176474, +12.6878484911631091)) return 1;
+            Console.WriteLine("C# PlutoCheck: PASS");
             return 0;
         }
     }

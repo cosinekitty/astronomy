@@ -3331,9 +3331,9 @@ static int PlutoCheckDate(double ut, double arcmin_tolerance, double x, double y
     if (vector.status != ASTRO_SUCCESS)
         FAIL("C PlutoCheck: FAIL - Astronomy_HelioVector returned status = %d\n", vector.status);
 
-    dx = (vector.x - x);
-    dy = (vector.y - y);
-    dz = (vector.z - z);
+    dx = V(vector.x) - x;
+    dy = V(vector.y) - y;
+    dz = V(vector.z) - z;
     diff = sqrt(dx*dx + dy*dy + dz*dz);
     dist = (sqrt(x*x + y*y + z*z) - 1.0);       /* worst-case distance between Pluto and Earth */
     arcmin = (diff / dist) * (180.0 * 60.0 / PI);
@@ -3343,7 +3343,7 @@ static int PlutoCheckDate(double ut, double arcmin_tolerance, double x, double y
     DEBUG("C PlutoCheck: diff = %le AU, %0.3lf arcmin\n", diff, arcmin);
     DEBUG("\n");
 
-    if (arcmin > arcmin_tolerance)
+    if (V(arcmin) > arcmin_tolerance)
         FAIL("C PlutoCheck: EXCESSIVE ERROR\n");
 
     error = 0;

@@ -542,7 +542,7 @@ static int CVsop(cg_context_t *context)
     int check_length;
     int k;
     char filename[100];
-    const char *coord_name[3] = { "lat", "lon", "rad" };
+    const char *coord_name[3] = { "lon", "lat", "rad" };
 
     VsopInit(&model);
 
@@ -619,7 +619,7 @@ static int CsharpVsop(cg_context_t *context)
     int check_length;
     int k;
     char filename[100];
-    const char *coord_name[3] = { "lat", "lon", "rad" };
+    const char *coord_name[3] = { "lon", "lat", "rad" };
 
     VsopInit(&model);
 
@@ -1590,28 +1590,27 @@ fail:
 }
 
 
+#define PLUTO_NUM_STATES    41
+#define PLUTO_TT1           (-730000.0)     /* 0001-04-30T12:00:00.000Z */
+#define PLUTO_TT2           (+730000.0)     /* 3998-09-03T12:00:00.000Z */
+#define PLUTO_DT            ((PLUTO_TT2 - PLUTO_TT1) / (PLUTO_NUM_STATES - 1))
+
+
 static int PlutoStateTable_C(cg_context_t *context, const top_model_t *model)
 {
     int error = 1;
     double tt;
     top_rectangular_t equ;
-    const double tt1 = -730000.0;   /* 0001-04-30T12:00:00.000Z */
-    const double tt2 = +730000.0;   /* 3998-09-03T12:00:00.000Z */
-    const int nsamples = 41;        /* results in an interval of approximately 100 years */
-    const double dt = (tt2 - tt1) / (nsamples - 1);
     int i;
 
-    if (dt != round(dt))
-        return LogError(context, "PlutoStateTable_C: dt = %lf is not an integer.\n", dt);
-
-    fprintf(context->outfile, "#define PLUTO_NUM_STATES  %d\n", nsamples);
-    fprintf(context->outfile, "#define PLUTO_TIME_STEP   %0.0lf\n\n", dt);
+    fprintf(context->outfile, "#define PLUTO_NUM_STATES  %d\n", PLUTO_NUM_STATES);
+    fprintf(context->outfile, "#define PLUTO_TIME_STEP   %0.0lf\n\n", PLUTO_DT);
     fprintf(context->outfile, "static const body_state_t PlutoStateTable[] =\n");
     fprintf(context->outfile, "{\n");
 
-    for (i=0; i < nsamples; ++i)
+    for (i=0; i < PLUTO_NUM_STATES; ++i)
     {
-        tt = i*dt + tt1;
+        tt = i*PLUTO_DT + PLUTO_TT1;
         CHECK(TopPosition(model, tt, &equ));
 
         fprintf(context->outfile,
@@ -1628,11 +1627,45 @@ fail:
 }
 
 
+static int PlutoStateTable_CSharp(cg_context_t *context, const top_model_t *model)
+{
+    int error = 1;
+    double tt;
+    top_rectangular_t equ;
+    int i;
+
+    fprintf(context->outfile, "        private const int PLUTO_NUM_STATES = %d;\n", PLUTO_NUM_STATES);
+    fprintf(context->outfile, "        private const int PLUTO_TIME_STEP  = %0.0lf;\n\n", PLUTO_DT);
+    fprintf(context->outfile, "        private static readonly body_state_t[] PlutoStateTable = new body_state_t[]\n");
+    fprintf(context->outfile, "        {\n");
+
+    for (i=0; i < PLUTO_NUM_STATES; ++i)
+    {
+        tt = i*PLUTO_DT + PLUTO_TT1;
+        CHECK(TopPosition(model, tt, &equ));
+
+        fprintf(context->outfile,
+            "        %c   new body_state_t(%10.1lf, new TerseVector(%17.13lf, %17.13lf, %17.13lf), new TerseVector(%20.13le, %20.13le, %20.13le))\n",
+            (i==0 ? ' ' : ','),
+            tt, equ.x, equ.y, equ.z, equ.vx, equ.vy, equ.vz);
+    }
+
+    fprintf(context->outfile, "        }");
+
+    error = 0;
+fail:
+    return error;
+}
+
+
 static int PlutoStateTable(cg_context_t *context)
 {
     int error = 1;
     top_model_t model;
     TopInitModel(&model);
+
+    if (PLUTO_DT != round(PLUTO_DT))
+        CHECK(LogError(context, "PlutoStateTable: PLUTO_DT = %lf is not an integer.\n", PLUTO_DT));
 
     CHECK(TopLoadModel(&model, "TOP2013.dat", 9));
 
@@ -1643,6 +1676,9 @@ static int PlutoStateTable(cg_context_t *context)
         break;
 
     case CODEGEN_LANGUAGE_CSHARP:
+        CHECK(PlutoStateTable_CSharp(context, &model));
+        break;
+
     case CODEGEN_LANGUAGE_JS:
     case CODEGEN_LANGUAGE_PYTHON:
     default:
