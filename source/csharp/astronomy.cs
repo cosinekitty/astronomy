@@ -3066,8 +3066,7 @@ namespace CosineKitty
             {
                 TerseVector delta = major_pos - small_pos;
                 double r2 = delta.Quadrature();
-                double pull = gm / (r2 * Math.Sqrt(r2));
-                return new TerseVector(delta.x * pull, delta.y * pull, delta.z * pull);
+                return (gm / (r2 * Math.Sqrt(r2))) * delta;
             }
         }
 

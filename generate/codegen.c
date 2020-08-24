@@ -1658,6 +1658,36 @@ fail:
 }
 
 
+static int PlutoStateTable_JS(cg_context_t *context, const top_model_t *model)
+{
+    int error = 1;
+    double tt;
+    top_rectangular_t equ;
+    int i;
+
+    fprintf(context->outfile, "const PLUTO_NUM_STATES = %d;\n", PLUTO_NUM_STATES);
+    fprintf(context->outfile, "const PLUTO_TIME_STEP  = %0.0lf;\n\n", PLUTO_DT);
+    fprintf(context->outfile, "const PlutoStateTable = [\n");
+
+    for (i=0; i < PLUTO_NUM_STATES; ++i)
+    {
+        tt = i*PLUTO_DT + PLUTO_TT1;
+        CHECK(TopPosition(model, tt, &equ));
+
+        fprintf(context->outfile,
+            "%c   [%10.1lf, [%17.13lf, %17.13lf, %17.13lf], [%20.13le, %20.13le, %20.13le]]\n",
+            (i==0 ? ' ' : ','),
+            tt, equ.x, equ.y, equ.z, equ.vx, equ.vy, equ.vz);
+    }
+
+    fprintf(context->outfile, "];\n");
+
+    error = 0;
+fail:
+    return error;
+}
+
+
 static int PlutoStateTable(cg_context_t *context)
 {
     int error = 1;
@@ -1680,6 +1710,9 @@ static int PlutoStateTable(cg_context_t *context)
         break;
 
     case CODEGEN_LANGUAGE_JS:
+        CHECK(PlutoStateTable_JS(context, &model));
+        break;
+
     case CODEGEN_LANGUAGE_PYTHON:
     default:
         CHECK(LogError(context, "PlutoStateTable: Unsupported target language %d", context->language));

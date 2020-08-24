@@ -77,11 +77,25 @@ const MOON_EQUATORIAL_RADIUS_AU = (MOON_EQUATORIAL_RADIUS_KM / KM_PER_AU);
 
 const REFRACTION_NEAR_HORIZON = 34 / 60;        // degrees of refractive "lift" seen for objects near horizon
 const EARTH_MOON_MASS_RATIO = 81.30056;
-const SUN_MASS     = 333054.25318;        /* Sun's mass relative to Earth. */
-const JUPITER_MASS =    317.84997;        /* Jupiter's mass relative to Earth. */
-const SATURN_MASS  =     95.16745;        /* Saturn's mass relative to Earth. */
-const URANUS_MASS  =     14.53617;        /* Uranus's mass relative to Earth. */
-const NEPTUNE_MASS =     17.14886;        /* Neptune's mass relative to Earth. */
+
+/*
+    Masses of the Sun and outer planets, used for:
+    (1) Calculating the Solar System Barycenter
+    (2) Integrating the movement of Pluto
+
+    https://web.archive.org/web/20120220062549/http://iau-comm4.jpl.nasa.gov/de405iom/de405iom.pdf
+
+    Page 10 in the above document describes the constants used in the DE405 ephemeris.
+    The following are G*M values (gravity constant * mass) in [au^3 / day^2].
+    This side-steps issues of not knowing the exact values of G and masses M[i];
+    the products GM[i] are known extremely accurately.
+*/
+const SUN_GM     = 0.2959122082855911e-03;
+const JUPITER_GM = 0.2825345909524226e-06;
+const SATURN_GM  = 0.8459715185680659e-07;
+const URANUS_GM  = 0.1292024916781969e-07;
+const NEPTUNE_GM = 0.1524358900784276e-07;
+
 let ob2000;   // lazy-evaluated mean obliquity of the ecliptic at J2000, in radians
 let cos_ob2000;
 let sin_ob2000;
@@ -189,152 +203,6 @@ const vsop = {
     Uranus:  $ASTRO_LIST_VSOP(Uranus),
     Neptune: $ASTRO_LIST_VSOP(Neptune)
 };
-
-const top2013 = {
-    Pluto:   $ASTRO_TOP2013(8)
-};
-
-const top_freq = {
-    Jupiter: 0.5296909622785881e+03,
-    Saturn:  0.2132990811942489e+03,
-    Uranus:  0.7478166163181234e+02,
-    Neptune: 0.3813297236217556e+02,
-    Pluto:   0.2533566020437000e+02
-};
-
-
-function calc_elliptical_coord(formula, dmu, f, t1) {
-    let el = 0.0;
-    let tpower = 1.0;
-    for (let s=0; s < formula.length; ++s) {
-        for (let [term_k, term_c, term_s] of formula[s]) {
-            if (f==1 && s==1 && term_k==0)
-                continue;
-            const arg = term_k * dmu * t1;
-            el += tpower * (term_c*Math.cos(arg) + term_s*Math.sin(arg));
-        }
-        tpower *= t1;
-    }
-    return el;
-}
-
-
-function TopCalcElliptical(body, model, tt)
-{
-    /* Translated from: TOP2013.f */
-    /* See: https://github.com/cosinekitty/ephemeris/tree/master/top2013 */
-    /* Copied from: ftp://ftp.imcce.fr/pub/ephem/planets/top2013 */
-    const t1 = tt / 365250.0;
-    const dmu = (top_freq.Jupiter - top_freq.Saturn) / 880.0;
-
-    const ellip = {
-        a: calc_elliptical_coord(model[0], dmu, 0, t1),
-        lambda: calc_elliptical_coord(model[1], dmu, 1, t1),
-        k: calc_elliptical_coord(model[2], dmu, 2, t1),
-        h: calc_elliptical_coord(model[3], dmu, 3, t1),
-        q: calc_elliptical_coord(model[4], dmu, 4, t1),
-        p: calc_elliptical_coord(model[5], dmu, 5, t1)
-    };
-
-    let xl = ellip.lambda + top_freq[body] * t1;
-    xl %= PI2;
-    if (xl < 0.0)
-        xl += PI2;
-    ellip.lambda = xl;
-    return ellip;
-}
-
-
-function TopEcliptic(ellip, time) {
-    let xa = ellip.a;
-    let xl = ellip.lambda;
-    let xk = ellip.k;
-    let xh = ellip.h;
-    let xq = ellip.q;
-    let xp = ellip.p;
-    let xfi = Math.sqrt(1.0 - xk*xk - xh*xh);
-    let xki = Math.sqrt(1.0 - xq*xq - xp*xp);
-    let zr = xk;
-    let zi = xh;
-    let u = 1.0 / (1.0 + xfi);
-    let ex2 = zr*zr + zi*zi;
-    let ex = Math.sqrt(ex2);
-    let ex3 = ex * ex2;
-    let z1r = zr;
-    let z1i = -zi;
-    let gl = xl % PI2;
-    let gm = gl - Math.atan2(xh, xk);
-    let e = gl + (ex - 0.125*ex3)*Math.sin(gm) + 0.5*ex2*Math.sin(2.0*gm) + 0.375*ex3*Math.sin(3.0*gm);
-
-    let dl, z2r, z2i, zteta_r, zteta_i, z3r, z3i, rsa;
-    do
-    {
-        z2r = 0.0;
-        z2i = e;
-        zteta_r = Math.cos(z2i);
-        zteta_i = Math.sin(z2i);
-        z3r = z1r*zteta_r - z1i*zteta_i;
-        z3i = z1r*zteta_i + z1i*zteta_r;
-        dl = gl - e + z3i;
-        rsa = 1.0 - z3r;
-        e += dl/rsa;
-    } while (Math.abs(dl) >= 1.0e-15);
-
-    z1r = z3i * u * zr;
-    z1i = z3i * u * zi;
-    z2r = +z1i;
-    z2i = -z1r;
-    let zto_r = (-zr + zteta_r + z2r) / rsa;
-    let zto_i = (-zi + zteta_i + z2i) / rsa;
-    let xcw = zto_r;
-    let xsw = zto_i;
-    let xm = xp*xcw - xq*xsw;
-    let xr = xa*rsa;
-
-    return new Vector(
-        xr*(xcw - 2.0*xp*xm),
-        xr*(xsw + 2.0*xq*xm),
-        -2.0*xr*xki*xm,
-        time
-    );
-}
-
-
-let top_eq_rot;
-
-
-function TopEquatorial(ecl) {
-    if (!top_eq_rot) {
-        const sdrad = DEG2RAD / 3600.0;
-        const eps = (23.0 + 26.0/60.0 + 21.41136/3600.0)*DEG2RAD;
-        const phi = -0.05188 * sdrad;
-        const ceps = Math.cos(eps);
-        const seps = Math.sin(eps);
-        const cphi = Math.cos(phi);
-        const sphi = Math.sin(phi);
-
-        top_eq_rot = [
-            [cphi, -sphi*ceps, sphi*seps],
-            [sphi, cphi*ceps, -cphi*seps],
-            [0.0, seps, ceps]
-        ];
-    }
-
-    return new Vector(
-        (top_eq_rot[0][0] * ecl.x) + (top_eq_rot[0][1] * ecl.y) + (top_eq_rot[0][2] * ecl.z),
-        (top_eq_rot[1][0] * ecl.x) + (top_eq_rot[1][1] * ecl.y) + (top_eq_rot[1][2] * ecl.z),
-        (top_eq_rot[2][0] * ecl.x) + (top_eq_rot[2][1] * ecl.y) + (top_eq_rot[2][2] * ecl.z),
-        ecl.t
-    );
-}
-
-
-function TopPosition(body, time) {
-    const ellip = TopCalcElliptical(body, top2013[body], time.tt);
-    const ecl = TopEcliptic(ellip, time);
-    return TopEquatorial(ecl);
-}
-
 
 Astronomy.DeltaT_EspenakMeeus = function(ut) {
     var u, u2, u3, u4, u5, u6, u7;
@@ -1646,8 +1514,8 @@ function VsopFormula(formula, t) {
     let coord = 0;
     for (let series of formula) {
         let sum = 0;
-        for (let term of series) {
-            sum += term[0] * Math.cos(term[1] + (t * term[2]));
+        for (let [ampl, phas, freq] of series) {
+            sum += ampl * Math.cos(phas + (t * freq));
         }
         coord += tpower * sum;
         tpower *= t;
@@ -1655,38 +1523,116 @@ function VsopFormula(formula, t) {
     return coord;
 }
 
-function CalcVsop(model, time) {
-    const t = time.tt / 365250;   // millennia since 2000
-    const spher = [];
-    for (let formula of model) {
-        spher.push(VsopFormula(formula, t));
+function VsopDeriv(formula, t) {
+    let tpower = 1;   // t^s
+    let dpower = 0;   // t^(s-1)
+    let deriv = 0;
+    let s = 0;
+    for (let series of formula) {
+        let sin_sum = 0;
+        let cos_sum = 0;
+        for (let [ampl, phas, freq] of series) {
+            let angle = phas + (t * freq);
+            sin_sum += ampl * freq * Math.sin(angle);
+            if (s > 0) {
+                cos_sum += ampl * Math.cos(angle);
+            }
+        }
+        deriv += (s * dpower * cos_sum) - (tpower * sin_sum);
+        dpower = tpower;
+        tpower *= t;
+        ++s;
     }
+    return deriv;
+}
 
-    // Convert spherical coordinates to ecliptic cartesian coordinates.
-    const r_coslat = spher[2] * Math.cos(spher[1]);
-    const eclip = [
-        r_coslat * Math.cos(spher[0]),
-        r_coslat * Math.sin(spher[0]),
-        spher[2] * Math.sin(spher[1])
-    ];
+const DAYS_PER_MILLENNIUM = 365250;
+const LON_INDEX = 0;
+const LAT_INDEX = 1;
+const RAD_INDEX = 2;
 
+function VsopRotate(eclip) {
     // Convert ecliptic cartesian coordinates to equatorial cartesian coordinates.
-    return new Vector(
+    return new TerseVector(
         eclip[0] + 0.000000440360*eclip[1] - 0.000000190919*eclip[2],
         -0.000000479966*eclip[0] + 0.917482137087*eclip[1] - 0.397776982902*eclip[2],
-        0.397776982902*eclip[1] + 0.917482137087*eclip[2],
-        time
+        0.397776982902*eclip[1] + 0.917482137087*eclip[2]
     );
 }
 
-function VsopHelioDistance(model, time) {
-    // The caller only wants to know the distance between the planet and the Sun.
-    // So we only need to calculate the radial component of the spherical coordinates.
-    return VsopFormula(model[2], time.tt / 365250);
+function VsopSphereToRect(lon, lat, radius) {
+    // Convert spherical coordinates to ecliptic cartesian coordinates.
+    const r_coslat = radius * Math.cos(lat);
+    return [
+        r_coslat * Math.cos(lon),
+        r_coslat * Math.sin(lon),
+        radius * Math.sin(lat)
+    ];
+}
+
+function CalcVsop(model, time) {
+    const t = time.tt / DAYS_PER_MILLENNIUM;   // millennia since 2000
+    const lon = VsopFormula(model[LON_INDEX], t);
+    const lat = VsopFormula(model[LAT_INDEX], t);
+    const rad = VsopFormula(model[RAD_INDEX], t);
+    const eclip = VsopSphereToRect(lon, lat, rad);
+    return VsopRotate(eclip).ToAstroVector(time);
+}
+
+function CalcVsopPosVel(model, tt) {
+    const t = tt / DAYS_PER_MILLENNIUM;
+
+    // Calculate the VSOP "B" trigonometric series to obtain ecliptic spherical coordinates.
+    const lon = VsopFormula(model[LON_INDEX], t);
+    const lat = VsopFormula(model[LAT_INDEX], t);
+    const rad = VsopFormula(model[RAD_INDEX], t);
+
+    const dlon_dt = VsopDeriv(model[LON_INDEX], t);
+    const dlat_dt = VsopDeriv(model[LAT_INDEX], t);
+    const drad_dt = VsopDeriv(model[RAD_INDEX], t);
+
+    // Use spherical coords and spherical derivatives to calculate
+    // the velocity vector in rectangular coordinates.
+
+    const coslon = Math.cos(lon);
+    const sinlon = Math.sin(lon);
+    const coslat = Math.cos(lat);
+    const sinlat = Math.sin(lat);
+
+    const vx = (
+        + (drad_dt * coslat * coslon)
+        - (rad * sinlat * coslon * dlat_dt)
+        - (rad * coslat * sinlon * dlon_dt)
+    );
+
+    const vy = (
+        + (drad_dt * coslat * sinlon)
+        - (rad * sinlat * sinlon * dlat_dt)
+        + (rad * coslat * coslon * dlon_dt)
+    );
+
+    const vz = (
+        + (drad_dt * sinlat)
+        + (rad * coslat * dlat_dt)
+    );
+
+    const eclip_pos = VsopSphereToRect(lon, lat, rad);
+
+    // Convert speed units from [AU/millennium] to [AU/day].
+    const eclip_vel = [
+        vx / DAYS_PER_MILLENNIUM,
+        vy / DAYS_PER_MILLENNIUM,
+        vz / DAYS_PER_MILLENNIUM
+    ];
+
+    // Rotate the vectors from ecliptic to equatorial coordinates.
+    const equ_pos = VsopRotate(eclip_pos);
+    const equ_vel = VsopRotate(eclip_vel);
+    return new body_state_t(tt, equ_pos, equ_vel);
 }
 
 function AdjustBarycenter(ssb, time, body, pmass) {
-    const shift = pmass / (pmass + SUN_MASS);
+    const shift = pmass / (pmass + SUN_GM);
     const planet = CalcVsop(vsop[body], time);
     ssb.x += shift * planet.x;
     ssb.y += shift * planet.y;
@@ -1695,12 +1641,284 @@ function AdjustBarycenter(ssb, time, body, pmass) {
 
 function CalcSolarSystemBarycenter(time) {
     const ssb = new Vector(0.0, 0.0, 0.0, time);
-    AdjustBarycenter(ssb, time, 'Jupiter', JUPITER_MASS);
-    AdjustBarycenter(ssb, time, 'Saturn',  SATURN_MASS);
-    AdjustBarycenter(ssb, time, 'Uranus',  URANUS_MASS);
-    AdjustBarycenter(ssb, time, 'Neptune', NEPTUNE_MASS);
+    AdjustBarycenter(ssb, time, 'Jupiter', JUPITER_GM);
+    AdjustBarycenter(ssb, time, 'Saturn',  SATURN_GM);
+    AdjustBarycenter(ssb, time, 'Uranus',  URANUS_GM);
+    AdjustBarycenter(ssb, time, 'Neptune', NEPTUNE_GM);
     return ssb;
 }
+
+// Pluto integrator begins ----------------------------------------------------
+
+$ASTRO_PLUTO_TABLE()
+
+class TerseVector {
+    constructor(x, y, z) {
+        this.x = x;
+        this.y = y;
+        this.z = z;
+    }
+
+    ToAstroVector(t) {
+        return new Vector(this.x, this.y, this.z, t);
+    }
+
+    quadrature() {
+        return this.x*this.x + this.y*this.y + this.z*this.z;
+    }
+
+    add(other) {
+        return new TerseVector(this.x + other.x, this.y + other.y, this.z + other.z);
+    }
+
+    sub(other) {
+        return new TerseVector(this.x - other.x, this.y - other.y, this.z - other.z);
+    }
+
+    incr(other) {
+        this.x += other.x;
+        this.y += other.y;
+        this.z += other.z;
+    }
+
+    decr(other) {
+        this.x -= other.x;
+        this.y -= other.y;
+        this.z -= other.z;
+    }
+
+    mul(scalar) {
+        return new TerseVector(scalar * this.x, scalar * this.y, scalar * this.z);
+    }
+
+    div(scalar) {
+        return new TerseVector(this.x / scalar, this.y / scalar, this.z / scalar);
+    }
+
+    mean(other) {
+        return new TerseVector(
+            (this.x + other.x) / 2,
+            (this.y + other.y) / 2,
+            (this.z + other.z) / 2
+        );
+    }
+}
+
+class body_state_t {
+    constructor(tt, r, v) {
+        this.tt = tt;
+        this.r = r;
+        this.v = v;
+    }
+}
+
+function BodyStateFromTable(entry) {
+    let [ tt, [rx, ry, rz], [vx, vy, vz] ] = entry;
+    return new body_state_t(tt, new TerseVector(rx, ry, rz), new TerseVector(vx, vy, vz));
+}
+
+function AdjustBarycenterPosVel(ssb, tt, body, planet_gm) {
+    const shift = planet_gm / (planet_gm + SUN_GM);
+    const planet = CalcVsopPosVel(vsop[body], tt);
+    ssb.r.incr(planet.r.mul(shift));
+    ssb.v.incr(planet.v.mul(shift));
+    return planet;
+}
+
+function AccelerationIncrement(small_pos, gm, major_pos) {
+    const delta = major_pos.sub(small_pos);
+    const r2 = delta.quadrature();
+    return delta.mul(gm / (r2 * Math.sqrt(r2)));
+}
+
+class major_bodies_t {
+    constructor(tt) {
+        // Accumulate the Solar System Barycenter position.
+        let ssb = new body_state_t(tt, new TerseVector(0, 0, 0), new TerseVector(0, 0, 0));
+
+        this.Jupiter = AdjustBarycenterPosVel(ssb, tt, 'Jupiter', JUPITER_GM);
+        this.Saturn  = AdjustBarycenterPosVel(ssb, tt, 'Saturn',  SATURN_GM);
+        this.Uranus  = AdjustBarycenterPosVel(ssb, tt, 'Uranus',  URANUS_GM);
+        this.Neptune = AdjustBarycenterPosVel(ssb, tt, 'Neptune', NEPTUNE_GM);
+
+        // Convert planets' [pos, vel] vectors from heliocentric to barycentric.
+        this.Jupiter.r.decr(ssb.r);  this.Jupiter.v.decr(ssb.v);
+        this.Saturn.r.decr(ssb.r);   this.Saturn.v.decr(ssb.v);
+        this.Uranus.r.decr(ssb.r);   this.Uranus.v.decr(ssb.v);
+        this.Neptune.r.decr(ssb.r);  this.Neptune.v.decr(ssb.v);
+
+        // Convert heliocentric SSB to barycentric Sun.
+        this.Sun = new body_state_t(tt, ssb.r.mul(-1), ssb.v.mul(-1));
+    }
+
+    Acceleration(pos) {
+        // Use barycentric coordinates of the Sun and major planets to calculate
+        // the gravitational acceleration vector experienced at location 'pos'.
+        let acc = AccelerationIncrement(pos, SUN_GM,     this.Sun.r);
+        acc.incr(AccelerationIncrement (pos, JUPITER_GM, this.Jupiter.r));
+        acc.incr(AccelerationIncrement (pos, SATURN_GM,  this.Saturn.r));
+        acc.incr(AccelerationIncrement (pos, URANUS_GM,  this.Uranus.r));
+        acc.incr(AccelerationIncrement (pos, NEPTUNE_GM, this.Neptune.r));
+        return acc;
+    }
+}
+
+class body_grav_calc_t {
+    constructor(tt, r, v, a) {
+        this.tt = tt;   // J2000 terrestrial time [days]
+        this.r = r;     // position [au]
+        this.v = v;     // velocity [au/day]
+        this.a = a;     // acceleration [au/day^2]
+    }
+}
+
+class grav_sim_t {
+    constructor(bary, grav) {
+        this.bary = bary;
+        this.grav = grav;
+    }
+}
+
+function UpdatePosition(dt, r, v, a) {
+    return new TerseVector(
+        r.x + dt*(v.x + dt*a.x/2),
+        r.y + dt*(v.y + dt*a.y/2),
+        r.z + dt*(v.z + dt*a.z/2)
+    );
+}
+
+function GravSim(tt2, calc1) {
+    const dt = tt2 - calc1.tt;
+
+    // Calculate where the major bodies (Sun, Jupiter...Neptune) will be at tt2.
+    const bary2 = new major_bodies_t(tt2);
+
+    // Estimate position of small body as if current acceleration applies across the whole time interval.
+    // approx_pos = pos1 + vel1*dt + (1/2)acc*dt^2
+    const approx_pos = UpdatePosition(dt, calc1.r, calc1.v, calc1.a);
+
+    // Calculate the average acceleration of the endpoints.
+    // This becomes our estimate of the mean effective acceleration over the whole interval.
+    const mean_acc = bary2.Acceleration(approx_pos).mean(calc1.a);
+
+    // Refine the estimates of [pos, vel, acc] at tt2 using the mean acceleration.
+    const pos = UpdatePosition(dt, calc1.r, calc1.v, mean_acc);
+    const vel = calc1.v.add(mean_acc.mul(dt));
+    const acc = bary2.Acceleration(pos);
+    const grav = new body_grav_calc_t(tt2, pos, vel, acc);
+    return new grav_sim_t(bary2, grav);
+}
+
+const PLUTO_DT = 250;
+const PLUTO_NSTEPS = (PLUTO_TIME_STEP / PLUTO_DT) + 1;
+const pluto_cache = [];
+
+function ClampIndex(frac, nsteps) {
+    const index = Math.floor(frac);
+    if (index < 0) {
+        return index;
+    }
+    if (index >= nsteps) {
+        return nsteps-1;
+    }
+    return index;
+}
+
+function GravFromState(entry) {
+    const state = BodyStateFromTable(entry);
+    const bary = new major_bodies_t(state.tt);
+    const r = state.r.add(bary.Sun.r);
+    const v = state.v.add(bary.Sun.v);
+    const a = bary.Acceleration(r);
+    const grav = new body_grav_calc_t(state.tt, r, v, a);
+    return new grav_sim_t(bary, grav);
+}
+
+function GetSegment(cache, tt) {
+    if (tt < PlutoStateTable[0][0] || tt > PlutoStateTable[PLUTO_NUM_STATES-1][0]) {
+        // Don't bother calculating a segment. Let the caller crawl backward/forward to this time.
+        return null;
+    }
+
+    const seg_index = ClampIndex((tt - PlutoStateTable[0][0]) / PLUTO_TIME_STEP, PLUTO_NUM_STATES-1);
+    if (!cache[seg_index]) {
+        const seg = cache[seg_index] = [];
+
+        // Each endpoint is exact.
+        seg[0] = GravFromState(PlutoStateTable[seg_index]).grav;
+        seg[PLUTO_NSTEPS-1] = GravFromState(PlutoStateTable[seg_index + 1]).grav;
+
+        // Simulate forwards from the lower time bound.
+        let i;
+        let step_tt = seg[0].tt;
+        for (i=1; i < PLUTO_NSTEPS-1; ++i)
+            seg[i] = GravSim(step_tt += PLUTO_DT, seg[i-1]).grav;
+
+        // Simulate backwards from the upper time bound.
+        step_tt = seg[PLUTO_NSTEPS-1].tt;
+        var reverse = [];
+        reverse[PLUTO_NSTEPS-1] = seg[PLUTO_NSTEPS-1];
+        for (i=PLUTO_NSTEPS-2; i > 0; --i)
+            reverse[i] = GravSim(step_tt -= PLUTO_DT, reverse[i+1]).grav;
+
+        // Fade-mix the two series so that there are no discontinuities.
+        for (i=PLUTO_NSTEPS-2; i > 0; --i) {
+            const ramp = i / (PLUTO_NSTEPS-1);
+            seg[i].r = seg[i].r.mul(1 - ramp).add(reverse[i].r.mul(ramp));
+            seg[i].v = seg[i].v.mul(1 - ramp).add(reverse[i].v.mul(ramp));
+            seg[i].a = seg[i].a.mul(1 - ramp).add(reverse[i].a.mul(ramp));
+        }
+    }
+
+    return cache[seg_index];
+}
+
+function CalcPlutoOneWay(entry, target_tt, dt) {
+    let sim = GravFromState(entry);
+    const n = Math.ceil((target_tt - sim.grav.tt) / dt);
+    for (let i=0; i < n; ++i) {
+        sim = GravSim((i+1 === n) ? target_tt : (sim.grav.tt + dt), sim.grav);
+    }
+    return sim;
+}
+
+function CalcPluto(time) {
+    let r, bary;
+    const seg = GetSegment(pluto_cache, time.tt);
+    if (!seg) {
+        // The target time is outside the year range 0000..4000.
+        // Calculate it by crawling backward from 0000 or forward from 4000.
+        // FIXFIXFIX - This is super slow. Could optimize this with extra caching if needed.
+        let sim;
+        if (time.tt < PlutoStateTable[0][0])
+            sim = CalcPlutoOneWay(PlutoStateTable[0], time.tt, -PLUTO_DT);
+        else
+            sim = CalcPlutoOneWay(PlutoStateTable[PLUTO_NUM_STATES-1], time.tt, +PLUTO_DT);
+        r = sim.grav.r;
+        bary = sim.bary;
+    } else {
+        const left = ClampIndex((time.tt - seg[0].tt) / PLUTO_DT, PLUTO_NSTEPS-1);
+        const s1 = seg[left];
+        const s2 = seg[left+1];
+
+        // Find mean acceleration vector over the interval.
+        const acc = s1.a.mean(s2.a);
+
+        // Use Newtonian mechanics to extrapolate away from t1 in the positive time direction.
+        const ra = UpdatePosition(time.tt - s1.tt, s1.r, s1.v, acc);
+
+        // Use Newtonian mechanics to extrapolate away from t2 in the negative time direction.
+        const rb = UpdatePosition(time.tt - s2.tt, s2.r, s2.v, acc);
+
+        // Use fade in/out idea to blend the two position estimates.
+        const ramp = (time.tt - s1.tt)/PLUTO_DT;
+        r = ra.mul(1 - ramp).add(rb.mul(ramp));
+        bary = new major_bodies_t(time.tt);
+    }
+    return r.sub(bary.Sun.r).ToAstroVector(time);
+}
+
+// Pluto integrator ends -----------------------------------------------------
 
 /**
  * Calculates heliocentric (i.e., with respect to the center of the Sun)
@@ -1724,8 +1942,8 @@ Astronomy.HelioVector = function(body, date) {
     if (body in vsop) {
         return CalcVsop(vsop[body], time);
     }
-    if (body in top2013) {
-        return TopPosition(body, time);
+    if (body === 'Pluto') {
+        return CalcPluto(time);
     }
     if (body === 'Sun') {
         return new Vector(0, 0, 0, time);
@@ -1769,7 +1987,7 @@ Astronomy.HelioVector = function(body, date) {
 Astronomy.HelioDistance = function(body, date) {
     const time = Astronomy.MakeTime(date);
     if (body in vsop) {
-        return VsopHelioDistance(vsop[body], time);
+        return VsopFormula(vsop[body][RAD_INDEX], time.tt / DAYS_PER_MILLENNIUM);
     }
     return Astronomy.HelioVector(body, time).Length();
 }

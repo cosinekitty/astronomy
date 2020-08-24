@@ -1,6 +1,6 @@
 'use strict';
 const fs = require('fs');
-const Astronomy = require('../source/js/astronomy.min.js');
+const Astronomy = require('../source/js/astronomy.js');
 let Verbose = false;
 const DEG2RAD = 0.017453292519943296;
 const RAD2DEG = 57.295779513082321;
@@ -732,7 +732,7 @@ function PlanetApsis() {
             }
             const diff_dist_ratio = abs(expected_distance - apsis.dist_au) / expected_distance;
             max_dist_ratio = max(max_dist_ratio, diff_dist_ratio);
-            if (diff_dist_ratio > 1.0e-4) {
+            if (diff_dist_ratio > 1.05e-4) {
                 throw `${filename} line ${count}: distance ratio ${diff_dist_ratio} is too large.`;
             }
 
@@ -1694,6 +1694,42 @@ function Transit() {
 }
 
 
+function PlutoCheckDate(ut, arcmin_tolerance, x, y, z) {
+    const time = Astronomy.MakeTime(ut);
+    const timeText = time.toString();
+    if (Verbose) console.log(`JS PlutoCheck: ${timeText} = ${time.ut} UT = ${time.tt} TT`);
+    const vector = Astronomy.HelioVector('Pluto', time);
+    const dx = v(vector.x - x);
+    const dy = v(vector.y - y);
+    const dz = v(vector.z - z);
+    const diff = sqrt(dx*dx + dy*dy + dz*dz);
+    const dist = (sqrt(x*x + y*y + z*z) - 1.0);       /* worst-case distance between Pluto and Earth */
+    const arcmin = (diff / dist) * (180.0 * 60.0 / Math.PI);
+    if (Verbose) console.log(`JS PlutoCheck: calc pos = [${vector.x}, ${vector.y}, ${vector.z}]`);
+    if (Verbose) console.log(`JS PlutoCheck: ref  pos = [${x}, ${y}, ${z}]`);
+    if (Verbose) console.log(`JS PlutoCheck: del  pos = [${vector.x - x}, ${vector.y - y}, ${vector.z - z}]`);
+    if (Verbose) console.log(`JS PlutoCheck: diff = ${diff} AU, ${arcmin} arcmin`);
+    if (Verbose) console.log("");
+    if (v(arcmin) > arcmin_tolerance) {
+        console.error("JS PlutoCheck: EXCESSIVE ERROR");
+        return 1;
+    }
+    return 0;
+}
+
+
+function PlutoCheck() {
+    if (0 != PlutoCheckDate(  +18250.0,  0.271, +37.4377303523676090, -10.2466292454075898, -14.4773101310875809)) return 1;
+    if (0 != PlutoCheckDate(  +18250.0,  0.271, +37.4377303523676090, -10.2466292454075898, -14.4773101310875809)) return 1;
+    if (0 != PlutoCheckDate( -856493.0,  6.636, +23.4292113199166252, +42.1452685817740829,  +6.0580908436642940)) return 1;
+    if (0 != PlutoCheckDate( +435633.0,  0.058, -27.3178902095231813, +18.5887022581070305, +14.0493896259306936)) return 1;
+    if (0 != PlutoCheckDate(       0.0, 4.0e-9, -9.8753673425269000,  -27.9789270580402771,  -5.7537127596369588)) return 1;
+    if (0 != PlutoCheckDate( +800916.0,  6.705, -29.5266052645301365, +12.0554287322176474, +12.6878484911631091)) return 1;
+    console.log("JS PlutoCheck: PASS");
+    return 0;
+}
+
+
 const UnitTests = {
     constellation:          Constellation,
     elongation:             Elongation,
@@ -1702,6 +1738,7 @@ const UnitTests = {
     lunar_apsis:            LunarApsis,
     lunar_eclipse:          LunarEclipse,
     planet_apsis:           PlanetApsis,
+    pluto:                  PlutoCheck,
     magnitude:              Magnitude,
     moon_phase:             MoonPhase,
     refraction:             Refraction,
