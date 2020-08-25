@@ -1794,7 +1794,6 @@ function GravSim(tt2, calc1) {
     const bary2 = new major_bodies_t(tt2);
 
     // Estimate position of small body as if current acceleration applies across the whole time interval.
-    // approx_pos = pos1 + vel1*dt + (1/2)acc*dt^2
     const approx_pos = UpdatePosition(dt, calc1.r, calc1.v, calc1.a);
 
     // Calculate the average acceleration of the endpoints.
@@ -1816,7 +1815,7 @@ const pluto_cache = [];
 function ClampIndex(frac, nsteps) {
     const index = Math.floor(frac);
     if (index < 0) {
-        return index;
+        return 0;
     }
     if (index >= nsteps) {
         return nsteps-1;

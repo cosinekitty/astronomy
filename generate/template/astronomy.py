@@ -73,11 +73,24 @@ _MOON_EQUATORIAL_RADIUS_AU = (_MOON_EQUATORIAL_RADIUS_KM / _KM_PER_AU)
 _ASEC180 = 180.0 * 60.0 * 60.0
 _AU_PER_PARSEC = _ASEC180 / math.pi
 _EARTH_MOON_MASS_RATIO = 81.30056
-_SUN_MASS     = 333054.25318      # Sun's mass relative to Earth.
-_JUPITER_MASS =    317.84997      # Jupiter's mass relative to Earth.
-_SATURN_MASS  =     95.16745      # Saturn's mass relative to Earth.
-_URANUS_MASS  =     14.53617      # Uranus's mass relative to Earth.
-_NEPTUNE_MASS =     17.14886      # Neptune's mass relative to Earth.
+
+#
+#    Masses of the Sun and outer planets, used for:
+#    (1) Calculating the Solar System Barycenter
+#    (2) Integrating the movement of Pluto
+#
+#    https://web.archive.org/web/20120220062549/http://iau-comm4.jpl.nasa.gov/de405iom/de405iom.pdf
+#
+#    Page 10 in the above document describes the constants used in the DE405 ephemeris.
+#    The following are G*M values (gravity constant * mass) in [au^3 / day^2].
+#    This side-steps issues of not knowing the exact values of G and masses M[i];
+#    the products GM[i] are known extremely accurately.
+#
+_SUN_GM     = 0.2959122082855911e-03
+_JUPITER_GM = 0.2825345909524226e-06
+_SATURN_GM  = 0.8459715185680659e-07
+_URANUS_GM  = 0.1292024916781969e-07
+_NEPTUNE_GM = 0.1524358900784276e-07
 
 
 def _LongitudeOffset(diff):
@@ -1100,169 +1113,366 @@ def _VsopFormula(formula, t):
         tpower *= t
     return coord
 
-def _CalcVsop(model, time):
-    t = time.tt / 365250.0
-    spher = [_VsopFormula(formula, t) for formula in model]
+def _VsopDeriv(formula, t):
+    tpower = 1      # t**s
+    dpower = 0      # t**(s-1)
+    deriv = 0
+    s = 0
+    for series in formula:
+        sin_sum = 0
+        cos_sum = 0
+        for (ampl, phas, freq) in series:
+            angle = phas + (t * freq)
+            sin_sum += ampl * freq * math.sin(angle)
+            if s > 0:
+                cos_sum += ampl * math.cos(angle)
+        deriv += (s * dpower * cos_sum) - (tpower * sin_sum)
+        dpower = tpower
+        tpower *= t
+        s += 1
+    return deriv
 
-    # Convert spherical coordinates to ecliptic cartesian coordinates.
-    r_coslat = spher[2] * math.cos(spher[1])
-    ex = r_coslat * math.cos(spher[0])
-    ey = r_coslat * math.sin(spher[0])
-    ez = spher[2] * math.sin(spher[1])
+_DAYS_PER_MILLENNIUM = 365250.0
+_LON_INDEX = 0
+_LAT_INDEX = 1
+_RAD_INDEX = 2
 
+
+def _VsopRotate(eclip):
     # Convert ecliptic cartesian coordinates to equatorial cartesian coordinates.
-    vx = ex + 0.000000440360*ey - 0.000000190919*ez
-    vy = -0.000000479966*ex + 0.917482137087*ey - 0.397776982902*ez
-    vz = 0.397776982902*ey + 0.917482137087*ez
-    return Vector(vx, vy, vz, time)
+    x = eclip.x + 0.000000440360*eclip.y - 0.000000190919*eclip.z
+    y = -0.000000479966*eclip.x + 0.917482137087*eclip.y - 0.397776982902*eclip.z
+    z = 0.397776982902*eclip.y + 0.917482137087*eclip.z
+    return _TerseVector(x, y, z)
+
+def _VsopSphereToRect(lon, lat, rad):
+    # Convert spherical coordinates to cartesian coordinates.
+    r_coslat = rad * math.cos(lat)
+    return _TerseVector(
+        r_coslat * math.cos(lon),
+        r_coslat * math.sin(lon),
+        rad * math.sin(lat)
+    )
+
+def _CalcVsop(model, time):
+    t = time.tt / _DAYS_PER_MILLENNIUM
+    (lon, lat, rad) = [_VsopFormula(formula, t) for formula in model]
+    eclip = _VsopSphereToRect(lon, lat, rad)
+    return _VsopRotate(eclip).ToAstroVector(time)
+
+class _body_state_t:
+    def __init__(self, tt, r, v):
+        self.tt  = tt
+        self.r = r
+        self.v = v
+
+def _CalcVsopPosVel(model, tt):
+    t = tt / _DAYS_PER_MILLENNIUM
+
+    (lon, lat, rad) = [_VsopFormula(formula, t) for formula in model]
+    (dlon_dt, dlat_dt, drad_dt) = [_VsopDeriv(formula, t) for formula in model]
+
+    # Use spherical coords and spherical derivatives to calculate
+    # the velocity vector in rectangular coordinates.
+
+    coslon = math.cos(lon)
+    sinlon = math.sin(lon)
+    coslat = math.cos(lat)
+    sinlat = math.sin(lat)
+
+    vx = (
+        + (drad_dt * coslat * coslon)
+        - (rad * sinlat * coslon * dlat_dt)
+        - (rad * coslat * sinlon * dlon_dt)
+    )
+
+    vy = (
+        + (drad_dt * coslat * sinlon)
+        - (rad * sinlat * sinlon * dlat_dt)
+        + (rad * coslat * coslon * dlon_dt)
+    )
+
+    vz = (
+        + (drad_dt * sinlat)
+        + (rad * coslat * dlat_dt)
+    )
+
+    eclip_pos = _VsopSphereToRect(lon, lat, rad)
+
+    # Convert speed units from [AU/millennium] to [AU/day].
+    eclip_vel = _TerseVector(vx, vy, vz) / _DAYS_PER_MILLENNIUM
+
+    # Rotate the vectors from ecliptic to equatorial coordinates.
+    equ_pos = _VsopRotate(eclip_pos)
+    equ_vel = _VsopRotate(eclip_vel)
+    return _body_state_t(tt, equ_pos, equ_vel)
+
+
+def _AdjustBarycenter(ssb, time, body, pmass):
+    shift = pmass / (pmass + _SUN_GM)
+    planet = _CalcVsop(_vsop[body.value], time)
+    ssb.x += shift * planet.x
+    ssb.y += shift * planet.y
+    ssb.z += shift * planet.z
+
+
+def _CalcSolarSystemBarycenter(time):
+    ssb = Vector(0.0, 0.0, 0.0, time)
+    _AdjustBarycenter(ssb, time, Body.Jupiter, _JUPITER_GM)
+    _AdjustBarycenter(ssb, time, Body.Saturn,  _SATURN_GM)
+    _AdjustBarycenter(ssb, time, Body.Uranus,  _URANUS_GM)
+    _AdjustBarycenter(ssb, time, Body.Neptune, _NEPTUNE_GM)
+    return ssb
+
 
 def _VsopHelioDistance(model, time):
     # The caller only wants to know the distance between the planet and the Sun.
     # So we only need to calculate the radial component of the spherical coordinates.
     # There is no need to translate coordinates.
-    return _VsopFormula(model[2], time.tt / 365250.0)
+    return _VsopFormula(model[2], time.tt / _DAYS_PER_MILLENNIUM)
 
 def _CalcEarth(time):
     return _CalcVsop(_vsop[Body.Earth.value], time)
 
 # END VSOP
 #----------------------------------------------------------------------------
-# BEGIN TOP2013
+# BEGIN Pluto Integrator
 
-_pluto = $ASTRO_TOP2013(8)
+$ASTRO_PLUTO_TABLE()
 
-_top_freq = [
-    0.5296909622785881e+03,     # Jupiter
-    0.2132990811942489e+03,     # Saturn
-    0.7478166163181234e+02,     # Uranus
-    0.3813297236217556e+02,     # Neptune
-    0.2533566020437000e+02      # Pluto
-]
+class _TerseVector:
+    def __init__(self, x, y, z):
+        self.x = x
+        self.y = y
+        self.z = z
 
+    def ToAstroVector(self, time):
+        return Vector(self.x, self.y, self.z, time)
 
-def _calc_elliptical_coord(formula, dmu, f, t1):
-    el = 0.0
-    tpower = 1.0
-    s = 0
-    for series in formula:
-        for term in series:
-            term_k, term_c, term_s = term
-            if f==1 and s==1 and term_k==0:
-                continue
-            arg = term_k * dmu * t1
-            el += tpower * (term_c*math.cos(arg) + term_s*math.sin(arg))
-        tpower *= t1
-        s += 1
-    return el
+    def quadrature(self):
+        return self.x**2 + self.y**2 + self.z**2
 
+    def mean(self, other):
+        return _TerseVector((self.x + other.x)/2.0, (self.y + other.y)/2.0, (self.z + other.z)/2.0)
 
-def _TopCalcElliptical(body, model, tt):
-    # Translated from: TOP2013.f
-    # See: https://github.com/cosinekitty/ephemeris/tree/master/top2013
-    # Copied from: ftp://ftp.imcce.fr/pub/ephem/planets/top2013
-    t1 = tt / 365250.0
-    dmu = (_top_freq[0] - _top_freq[1]) / 880.0
+    def __add__(self, other):
+        return _TerseVector(self.x + other.x, self.y + other.y, self.z + other.z)
 
-    ellip = [
-        _calc_elliptical_coord(model[0], dmu, 0, t1),    # a
-        _calc_elliptical_coord(model[1], dmu, 1, t1),    # lambda
-        _calc_elliptical_coord(model[2], dmu, 2, t1),    # k
-        _calc_elliptical_coord(model[3], dmu, 3, t1),    # h
-        _calc_elliptical_coord(model[4], dmu, 4, t1),    # q
-        _calc_elliptical_coord(model[5], dmu, 5, t1)     # p
-    ]
+    def __sub__(self, other):
+        return _TerseVector(self.x - other.x, self.y - other.y, self.z - other.z)
 
-    xl = (ellip[1] + _top_freq[body.value - 4] * t1) % _PI2
-    if xl < 0.0:
-        xl += _PI2
-    ellip[1] = xl
-    return ellip
+    def __mul__(self, scalar):
+        return _TerseVector(scalar * self.x, scalar * self.y, scalar * self.z)
+
+    def __rmul__(self, scalar):
+        return _TerseVector(scalar * self.x, scalar * self.y, scalar * self.z)
+
+    def __truediv__(self, scalar):
+        return _TerseVector(self.x / scalar, self.y / scalar, self.z / scalar)
 
 
-def _TopEcliptic(ellip, time):
-    xa, xl, xk, xh, xq, xp = ellip
-    xfi = math.sqrt(1.0 - xk*xk - xh*xh)
-    xki = math.sqrt(1.0 - xq*xq - xp*xp)
-    zr = xk
-    zi = xh
-    u = 1.0 / (1.0 + xfi)
-    ex2 = zr*zr + zi*zi
-    ex = math.sqrt(ex2)
-    ex3 = ex * ex2
-    z1r = zr
-    z1i = -zi
-    gl = xl % _PI2
-    gm = gl - math.atan2(xh, xk)
-    e = gl + (ex - 0.125*ex3)*math.sin(gm) + 0.5*ex2*math.sin(2.0*gm) + 0.375*ex3*math.sin(3.0*gm)
+def _BodyStateFromTable(entry):
+    [ tt, [rx, ry, rz], [vx, vy, vz] ] = entry
+    return _body_state_t(tt, _TerseVector(rx, ry, rz), _TerseVector(vx, vy, vz))
 
-    while True:
-        z2r = 0.0
-        z2i = e
-        zteta_r = math.cos(z2i)
-        zteta_i = math.sin(z2i)
-        z3r = z1r*zteta_r - z1i*zteta_i
-        z3i = z1r*zteta_i + z1i*zteta_r
-        dl = gl - e + z3i
-        rsa = 1.0 - z3r
-        e += dl/rsa
-        if abs(dl) < 1.0e-15:
-            break
 
-    z1r = z3i * u * zr
-    z1i = z3i * u * zi
-    z2r = +z1i
-    z2i = -z1r
-    zto_r = (-zr + zteta_r + z2r) / rsa
-    zto_i = (-zi + zteta_i + z2i) / rsa
-    xcw = zto_r
-    xsw = zto_i
-    xm = xp*xcw - xq*xsw
-    xr = xa*rsa
+def _AdjustBarycenterPosVel(ssb, tt, body, planet_gm):
+    shift = planet_gm / (planet_gm + _SUN_GM)
+    planet = _CalcVsopPosVel(_vsop[body.value], tt)
+    ssb.r += shift * planet.r
+    ssb.v += shift * planet.v
+    return planet
 
-    return Vector(
-        xr*(xcw - 2.0*xp*xm),
-        xr*(xsw + 2.0*xq*xm),
-        -2.0*xr*xki*xm,
-        time
+def _AccelerationIncrement(small_pos, gm, major_pos):
+    delta = major_pos - small_pos
+    r2 = delta.quadrature()
+    return (gm / (r2 * math.sqrt(r2))) * delta
+
+
+class _major_bodies_t:
+    def __init__(self, tt):
+        # Accumulate the Solar System Barycenter position.
+        ssb = _body_state_t(tt, _TerseVector(0,0,0), _TerseVector(0,0,0))
+        # Calculate the position and velocity vectors of the 4 major planets.
+        self.Jupiter = _AdjustBarycenterPosVel(ssb, tt, Body.Jupiter, _JUPITER_GM)
+        self.Saturn  = _AdjustBarycenterPosVel(ssb, tt, Body.Saturn,  _SATURN_GM)
+        self.Uranus  = _AdjustBarycenterPosVel(ssb, tt, Body.Uranus,  _URANUS_GM)
+        self.Neptune = _AdjustBarycenterPosVel(ssb, tt, Body.Neptune, _NEPTUNE_GM)
+        # Convert the planets' vectors from heliocentric to barycentric.
+        self.Jupiter.r -= ssb.r
+        self.Jupiter.v -= ssb.v
+        self.Saturn.r  -= ssb.r
+        self.Saturn.v  -= ssb.v
+        self.Uranus.r  -= ssb.r
+        self.Uranus.v  -= ssb.v
+        self.Neptune.r -= ssb.r
+        self.Neptune.v -= ssb.v
+        # Convert heliocentric SSB to barycentric Sun.
+        self.Sun = _body_state_t(tt, -1*ssb.r, -1*ssb.v)
+
+    def Acceleration(self, pos):
+        # Use barycentric coordinates of the Sun and major planets to calculate
+        # the gravitational acceleration vector experienced at location 'pos'.
+        acc  = _AccelerationIncrement(pos, _SUN_GM,     self.Sun.r)
+        acc += _AccelerationIncrement(pos, _JUPITER_GM, self.Jupiter.r)
+        acc += _AccelerationIncrement(pos, _SATURN_GM,  self.Saturn.r)
+        acc += _AccelerationIncrement(pos, _URANUS_GM,  self.Uranus.r)
+        acc += _AccelerationIncrement(pos, _NEPTUNE_GM, self.Neptune.r)
+        return acc
+
+
+class _body_grav_calc_t:
+    def __init__(self, tt, r, v, a):
+        self.tt = tt    # J2000 terrestrial time [days]
+        self.r = r      # position [au]
+        self.v = v      # velocity [au/day]
+        self.a = a      # acceleration [au/day^2]
+
+
+class _grav_sim_t:
+    def __init__(self, bary, grav):
+        self.bary = bary
+        self.grav = grav
+
+
+def _UpdatePosition(dt, r, v, a):
+    return _TerseVector(
+        r.x + dt*(v.x + dt*a.x/2.0),
+        r.y + dt*(v.y + dt*a.y/2.0),
+        r.z + dt*(v.z + dt*a.z/2.0)
     )
 
 
-_top_eq_rot = None
+def _GravSim(tt2, calc1):
+    dt = tt2 - calc1.tt
+
+    # Calculate where the major bodies (Sun, Jupiter...Neptune) will be at tt2.
+    bary2 = _major_bodies_t(tt2)
+
+    # Estimate position of small body as if current acceleration applies across the whole time interval.
+    approx_pos = _UpdatePosition(dt, calc1.r, calc1.v, calc1.a)
+
+    # Calculate the average acceleration of the endpoints.
+    # This becomes our estimate of the mean effective acceleration over the whole interval.
+    mean_acc = bary2.Acceleration(approx_pos).mean(calc1.a)
+
+    # Refine the estimates of [pos, vel, acc] at tt2 using the mean acceleration.
+    pos = _UpdatePosition(dt, calc1.r, calc1.v, mean_acc)
+    vel = calc1.v + dt*mean_acc
+    acc = bary2.Acceleration(pos)
+    grav = _body_grav_calc_t(tt2, pos, vel, acc)
+    return _grav_sim_t(bary2, grav)
 
 
-def _TopEquatorial(ecl):
-    global _top_eq_rot
-
-    if _top_eq_rot is None:
-        sdrad = math.radians(1.0 / 3600.0)
-        eps = math.radians(23.0 + 26.0/60.0 + 21.41136/3600.0)
-        phi = -0.05188 * sdrad
-        ceps = math.cos(eps)
-        seps = math.sin(eps)
-        cphi = math.cos(phi)
-        sphi = math.sin(phi)
-
-        _top_eq_rot = [
-            [cphi, -sphi*ceps, sphi*seps],
-            [sphi, cphi*ceps, -cphi*seps],
-            [0.0, seps, ceps]
-        ]
-
-    return Vector(
-        (_top_eq_rot[0][0] * ecl.x) + (_top_eq_rot[0][1] * ecl.y) + (_top_eq_rot[0][2] * ecl.z),
-        (_top_eq_rot[1][0] * ecl.x) + (_top_eq_rot[1][1] * ecl.y) + (_top_eq_rot[1][2] * ecl.z),
-        (_top_eq_rot[2][0] * ecl.x) + (_top_eq_rot[2][1] * ecl.y) + (_top_eq_rot[2][2] * ecl.z),
-        ecl.t
-    )
+_PLUTO_DT = 250
+_PLUTO_NSTEPS = (_PLUTO_TIME_STEP // _PLUTO_DT) + 1
+_pluto_cache = [None] * (_PLUTO_NUM_STATES - 1)
 
 
-def _TopPosition(model, body, time):
-    ellip = _TopCalcElliptical(body, model, time.tt)
-    ecl = _TopEcliptic(ellip, time)
-    return _TopEquatorial(ecl)
+def _ClampIndex(frac, nsteps):
+    index = math.floor(frac)
+    if index < 0:
+        return 0
+    if index >= nsteps:
+        return nsteps-1
+    return index
 
 
-# END TOP2013
+def _GravFromState(entry):
+    state = _BodyStateFromTable(entry)
+    bary = _major_bodies_t(state.tt)
+    r = state.r + bary.Sun.r
+    v = state.v + bary.Sun.v
+    a = bary.Acceleration(r)
+    grav = _body_grav_calc_t(state.tt, r, v, a)
+    return _grav_sim_t(bary, grav)
+
+
+def _GetSegment(cache, tt):
+    if (tt < _PlutoStateTable[0][0]) or (tt > _PlutoStateTable[_PLUTO_NUM_STATES-1][0]):
+        # Don't bother calculating a segment. Let the caller crawl backward/forward to this time.
+        return None
+
+    seg_index = _ClampIndex((tt - _PlutoStateTable[0][0]) / _PLUTO_TIME_STEP, _PLUTO_NUM_STATES-1)
+    if cache[seg_index] is None:
+        seg = cache[seg_index] = [None] * _PLUTO_NSTEPS
+
+        # Each endpoint is exact.
+        seg[0] = _GravFromState(_PlutoStateTable[seg_index]).grav
+        seg[_PLUTO_NSTEPS-1] = _GravFromState(_PlutoStateTable[seg_index + 1]).grav
+
+        # Simulate forwards from the lower time bound.
+        step_tt = seg[0].tt
+        i = 1
+        while i < _PLUTO_NSTEPS-1:
+            step_tt += _PLUTO_DT
+            seg[i] = _GravSim(step_tt, seg[i-1]).grav
+            i += 1
+
+        # Simulate backwards from the upper time bound.
+        step_tt = seg[_PLUTO_NSTEPS-1].tt
+        reverse = [None] * _PLUTO_NSTEPS
+        reverse[_PLUTO_NSTEPS-1] = seg[_PLUTO_NSTEPS-1]
+        i = _PLUTO_NSTEPS - 2
+        while i > 0:
+            step_tt -= _PLUTO_DT
+            reverse[i] = _GravSim(step_tt, reverse[i+1]).grav
+            i -= 1
+
+        # Fade-mix the two series so that there are no discontinuities.
+        i = _PLUTO_NSTEPS - 2
+        while i > 0:
+            ramp = i / (_PLUTO_NSTEPS-1)
+            seg[i].r = seg[i].r*(1 - ramp) + reverse[i].r*ramp
+            seg[i].v = seg[i].v*(1 - ramp) + reverse[i].v*ramp
+            seg[i].a = seg[i].a*(1 - ramp) + reverse[i].a*ramp
+            i -= 1
+
+    return cache[seg_index]
+
+
+def _CalcPlutoOneWay(entry, target_tt, dt):
+    sim = _GravFromState(entry)
+    n = math.ceil((target_tt - sim.grav.tt) / dt)
+    for i in range(n):
+        sim = _GravSim(target_tt if (i+1 == n) else (sim.grav.tt + dt), sim.grav)
+    return sim
+
+
+def _CalcPluto(time):
+    seg = _GetSegment(_pluto_cache, time.tt)
+    if seg is None:
+        # The target time is outside the year range 0000..4000.
+        # Calculate it by crawling backward from 0000 or forward from 4000.
+        # FIXFIXFIX - This is super slow. Could optimize this with extra caching if needed.
+        if time.tt < _PlutoStateTable[0][0]:
+            sim = _CalcPlutoOneWay(_PlutoStateTable[0], time.tt, -_PLUTO_DT)
+        else:
+            sim = _CalcPlutoOneWay(_PlutoStateTable[_PLUTO_NUM_STATES-1], time.tt, +_PLUTO_DT)
+        r = sim.grav.r
+        bary = sim.bary
+    else:
+        left = _ClampIndex((time.tt - seg[0].tt) / _PLUTO_DT, _PLUTO_NSTEPS-1)
+        s1 = seg[left]
+        s2 = seg[left+1]
+
+        # Find mean acceleration vector over the interval.
+        acc = s1.a.mean(s2.a)
+
+        # Use Newtonian mechanics to extrapolate away from t1 in the positive time direction.
+        ra = _UpdatePosition(time.tt - s1.tt, s1.r, s1.v, acc)
+
+        # Use Newtonian mechanics to extrapolate away from t2 in the negative time direction.
+        rb = _UpdatePosition(time.tt - s2.tt, s2.r, s2.v, acc)
+
+        # Use fade in/out idea to blend the two position estimates.
+        ramp = (time.tt - s1.tt)/_PLUTO_DT
+        r = ra*(1 - ramp) + rb*ramp
+        bary = _major_bodies_t(time.tt)
+    return (r - bary.Sun.r).ToAstroVector(time)
+
+
+# END Pluto Integrator
 #----------------------------------------------------------------------------
 # BEGIN Search
 
@@ -1453,20 +1663,6 @@ def Search(func, context, t1, t2, dt_tolerance_seconds):
 # END Search
 #----------------------------------------------------------------------------
 
-def _AdjustBarycenter(ssb, time, body, pmass):
-    shift = pmass / (pmass + _SUN_MASS)
-    planet = _CalcVsop(_vsop[body.value], time)
-    ssb.x += shift * planet.x
-    ssb.y += shift * planet.y
-    ssb.z += shift * planet.z
-
-def _CalcSolarSystemBarycenter(time):
-    ssb = Vector(0.0, 0.0, 0.0, time)
-    _AdjustBarycenter(ssb, time, Body.Jupiter, _JUPITER_MASS)
-    _AdjustBarycenter(ssb, time, Body.Saturn,  _SATURN_MASS)
-    _AdjustBarycenter(ssb, time, Body.Uranus,  _URANUS_MASS)
-    _AdjustBarycenter(ssb, time, Body.Neptune, _NEPTUNE_MASS)
-    return ssb
 
 def HelioVector(body, time):
     """Calculates heliocentric Cartesian coordinates of a body in the J2000 equatorial system.
@@ -1496,7 +1692,7 @@ def HelioVector(body, time):
         at the given time.
     """
     if body == Body.Pluto:
-        return _TopPosition(_pluto, body, time)
+        return _CalcPluto(time)
 
     if 0 <= body.value < len(_vsop):
         return _CalcVsop(_vsop[body.value], time)

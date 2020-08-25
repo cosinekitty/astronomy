@@ -34,7 +34,6 @@ script:
 branches:
     only:
         - master
-    except:
         - pluto_integrator
 
 global:

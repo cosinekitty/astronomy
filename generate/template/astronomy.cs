@@ -2285,7 +2285,7 @@ $ASTRO_PLUTO_TABLE();
         {
             int index = (int) Math.Floor(frac);
             if (index < 0)
-                return index;
+                return 0;
             if (index >= nsteps)
                 return nsteps-1;
             return index;

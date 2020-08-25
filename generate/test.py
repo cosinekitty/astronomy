@@ -1082,7 +1082,7 @@ def PlanetApsis():
                     return 1
                 diff_dist_ratio = vabs(expected_distance - apsis.dist_au) / expected_distance
                 max_dist_ratio = vmax(max_dist_ratio, diff_dist_ratio)
-                if diff_dist_ratio > 1.0e-4:
+                if diff_dist_ratio > 1.05e-4:
                     print('PY PlanetApsis({} line {}): distance ratio {} is too large.'.format(filename, count, diff_dist_ratio))
                     return 1
 
@@ -1531,6 +1531,43 @@ def Transit():
 
 #-----------------------------------------------------------------------------------------------------------
 
+def PlutoCheckDate(ut, arcmin_tolerance, x, y, z):
+    time = astronomy.Time(ut)
+    try:
+        timeText = str(time)
+    except OverflowError:
+        timeText = "???"
+    Debug('PY PlutoCheck: {} = {} UT = {} TT'.format(timeText, time.ut, time.tt))
+    vector = astronomy.HelioVector(astronomy.Body.Pluto, time)
+    dx = v(vector.x - x)
+    dy = v(vector.y - y)
+    dz = v(vector.z - z)
+    diff = sqrt(dx*dx + dy*dy + dz*dz)
+    dist = sqrt(x*x + y*y + z*z) - 1.0
+    arcmin = (diff / dist) * (180.0 * 60.0 / math.pi)
+    Debug('PY PlutoCheck: calc pos = [{}, {}, {}]'.format(vector.x, vector.y, vector.z))
+    Debug('PY PlutoCheck: ref  pos = [{}, {}, {}]'.format(x, y, z))
+    Debug('PY PlutoCheck: del  pos = [{}, {}, {}]'.format(vector.x - x, vector.y - y, vector.z - z))
+    Debug('PY PlutoCheck: diff = {} AU, {} arcmin'.format(diff, arcmin))
+    if v(arcmin) > arcmin_tolerance:
+        print('PY PlutoCheck: EXCESSIVE ERROR')
+        return 1
+    Debug('')
+    return 0
+
+
+def PlutoCheck():
+    if PlutoCheckDate(  +18250.0,  0.271, +37.4377303523676090, -10.2466292454075898, -14.4773101310875809): return 1
+    if PlutoCheckDate(  +18250.0,  0.271, +37.4377303523676090, -10.2466292454075898, -14.4773101310875809): return 1
+    if PlutoCheckDate( -856493.0,  6.636, +23.4292113199166252, +42.1452685817740829,  +6.0580908436642940): return 1
+    if PlutoCheckDate( +435633.0,  0.058, -27.3178902095231813, +18.5887022581070305, +14.0493896259306936): return 1
+    if PlutoCheckDate(       0.0, 4.0e-9, -9.8753673425269000,  -27.9789270580402771,  -5.7537127596369588): return 1
+    if PlutoCheckDate( +800916.0,  6.705, -29.5266052645301365, +12.0554287322176474, +12.6878484911631091): return 1
+    print("PY PlutoCheck: PASS")
+    return 0
+
+#-----------------------------------------------------------------------------------------------------------
+
 UnitTests = {
     'constellation':            Constellation,
     'elongation':               Elongation,
@@ -1542,6 +1579,7 @@ UnitTests = {
     'moon':                     GeoMoon,
     'moonphase':                MoonPhase,
     'planet_apsis':             PlanetApsis,
+    'pluto':                    PlutoCheck,
     'refraction':               Refraction,
     'riseset':                  RiseSet,
     'rotation':                 Rotation,
