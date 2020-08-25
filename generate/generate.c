@@ -84,7 +84,6 @@ static int TestVsopModel(vsop_model_t *model, int body, double threshold, double
 static int SaveVsopFile(const vsop_model_t *model);
 static int PositionArcminError(int body, double jd, const double a[3], const double b[3], double *arcmin);
 static double VectorLength(const double v[3]);
-static double VectorError(double a[3], double b[3]);
 static int CheckTestOutput(const char *filename);
 static vsop_body_t LookupBody(const char *name);
 static int CheckSkyPos(observer *location, const char *filename, int lnum, const char *line, double *arcmin_equ, double *arcmin_hor, vsop_body_t *body);
@@ -975,14 +974,6 @@ static double VectorLength(const double v[3])
     return sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
 }
 
-static double VectorError(double a[3], double b[3])
-{
-    double dx = a[0] - b[0];
-    double dy = a[1] - b[1];
-    double dz = a[2] - b[2];
-    return dx*dx + dy*dy + dz*dz;
-}
-
 static int ParseObserver(const char *filename, int lnum, const char *line, observer *location)
 {
     int error;
@@ -1618,8 +1609,6 @@ fail:
 /*-----------------------------------------------------------------------------------------*/
 
 static const char *TopDataFileName = "TOP2013.dat";
-static const double TopMillenniaAroundJ2000 = 0.5;   /* optimize for calculations within 500 years of J2000. */
-static const double TopThresholdArcmin = 0.5;
 
 static int CalcTop2013(FILE *outfile, const top_model_t *model)
 {
@@ -1860,23 +1849,3 @@ fail:
     return error;
 }
 
-
-static const char *QuotedBodyName(int body)
-{
-    switch (body)
-    {
-    case BODY_SUN:      return "\"Sun\"    ";
-    case BODY_MERCURY:  return "\"Mercury\"";
-    case BODY_VENUS:    return "\"Venus\"  ";
-    case BODY_EMB:      return "\"Earth\"  ";
-    case BODY_MARS:     return "\"Mars\"   ";
-    case BODY_JUPITER:  return "\"Jupiter\"";
-    case BODY_SATURN:   return "\"Saturn\" ";
-    case BODY_URANUS:   return "\"Uranus\" ";
-    case BODY_NEPTUNE:  return "\"Neptune\"";
-    case BODY_PLUTO:    return "\"Pluto\"  ";
-    default:            return "\"\"       ";
-    }
-}
-
-/*------------------------------------------------------------------------------------------------*/
