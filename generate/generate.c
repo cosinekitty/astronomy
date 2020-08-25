@@ -77,21 +77,14 @@ static int ParseDate(const char *text, double *tt);
 static int OpenEphem(void);
 static int PrintUsage(void);
 static int GenerateVsopPlanets(void);
-static int GenerateChebPluto(void);
-static int GenerateTop(const char *name, const char *outFileName);
 static int TopCalc(const char *name, const char *date);
-static int TopNudge(const char *name, const char *inFileName, const char *outFileName);
 static int GenerateApsisTestData(void);
 static int GenerateSource(void);
 static int TestVsopModel(vsop_model_t *model, int body, double threshold, double *max_arcmin, int *trunc_terms);
 static int SaveVsopFile(const vsop_model_t *model);
 static int PositionArcminError(int body, double jd, const double a[3], const double b[3], double *arcmin);
 static double VectorLength(const double v[3]);
-static int MeasureError(const char *inFileName, int nsamples, error_stats_t *stats);
-static int Resample(int body, const char *outFileName, int npoly, int startYear, int stopYear, int nsections);
-static int SampleFunc(const void *context, double jd, double pos[CHEB_MAX_DIM]);
 static double VectorError(double a[3], double b[3]);
-static int ManualResample(int body, int npoly, int nsections, int startYear, int stopYear);
 static int CheckTestOutput(const char *filename);
 static vsop_body_t LookupBody(const char *name);
 static int CheckSkyPos(observer *location, const char *filename, int lnum, const char *line, double *arcmin_equ, double *arcmin_hor, vsop_body_t *body);
@@ -101,10 +94,7 @@ static int ImproveVsopApsides(vsop_model_t *model);
 static int DeltaTimePlot(const char *outFileName);
 static int TopFileInfo(const char *filename, const char *name);
 static int ValidateTop2013(void);
-static int ValidateRandom(void);
 static int Diff(const char *filename1, const char *filename2, int *nlines);
-static int GravSim(void);
-static int EphemerisJson(const char *filename, const char *date1, const char *date2, double delta_days);
 
 #define MOON_PERIGEE        0.00238
 #define MERCURY_APHELION    0.466697
@@ -150,22 +140,7 @@ int main(int argc, const char *argv[])
     }
 
     if (argc == 2 && !strcmp(argv[1], "planets"))
-        return GenerateVsopPlanets() || GenerateChebPluto();
-
-    if (argc == 2 && !strcmp(argv[1], "validate_top2013"))
-        return ValidateTop2013();
-
-    if (argc == 2 && !strcmp(argv[1], "validate_random"))
-        return ValidateRandom();
-
-    if (argc == 4 && !strcmp(argv[1], "top"))
-        return GenerateTop(argv[2], argv[3]);
-
-    if (argc == 5 && !strcmp(argv[1], "topnudge"))
-        return TopNudge(argv[2], argv[3], argv[4]);
-
-    if (argc == 4 && !strcmp(argv[1], "topinfo"))
-        return TopFileInfo(argv[2], argv[3]);
+        return GenerateVsopPlanets();
 
     if (argc == 2 && !strcmp(argv[1], "apsis"))
         return GenerateApsisTestData();
@@ -185,14 +160,14 @@ int main(int argc, const char *argv[])
     if (argc == 3 && !strcmp(argv[1], "dtplot"))
         return DeltaTimePlot(argv[2]);
 
-    if (argc == 2 && !strcmp(argv[1], "gravsim"))
-        return GravSim();
-
-    if (argc == 6 && !strcmp(argv[1], "ephemeris"))
-        return EphemerisJson(argv[2], argv[3], argv[4], atof(argv[5]));
-
     if (argc == 4 && !strcmp(argv[1], "topcalc"))
         return TopCalc(argv[2], argv[3]);
+
+    if (argc == 2 && !strcmp(argv[1], "validate_top2013"))
+        return ValidateTop2013();
+
+    if (argc == 4 && !strcmp(argv[1], "topinfo"))
+        return TopFileInfo(argv[2], argv[3]);
 
     return PrintUsage();
 }
@@ -225,19 +200,6 @@ static int PrintUsage(void)
         "generate validate_top2013\n"
         "   Validates code for calculating outer planet positions using TOP2013.\n"
         "\n"
-        "generate validate_random\n"
-        "   Validates code for generating random 6-dimensional unit vectors.\n"
-        "\n"
-        "generate top planet outfile\n"
-        "   Use TOP2013 to generate an optimized model for the specified outer planet.\n"
-        "   The 'planet' must be one of: Jupiter, Saturn, Uranus, Neptune, Pluto.\n"
-        "\n"
-        "generate topnudge planet infile outfile\n"
-        "   Load TOP2013 model from infile.\n"
-        "   Use a guided random walk to try to improve it.\n"
-        "   If a smaller model with acceptable accuracy is found,\n"
-        "   it is written to outfile.\n"
-        "\n"
         "generate topcalc planet date\n"
         "   Calculate an exact position and velocity of the given planet\n"
         "   (Jupiter, Saturn, Uranus, Neptune, or Pluto)\n"
@@ -245,15 +207,6 @@ static int PrintUsage(void)
         "\n"
         "generate topinfo filename planet\n"
         "   Prints summary info about the TOP2013 file.\n"
-        "\n"
-        "generate gravsim\n"
-        "   Experimental gravity simulation.\n"
-        "\n"
-        "generate ephemeris outfile.json date1 date2 delta_days\n"
-        "   Use NOVAS to generate an ephemeris file in JSON format.\n"
-        "   The output is a table of solar-system barycentric cartesian position\n"
-        "   and velocity vectors for the Sun and planets. The Earth and Moon are\n"
-        "   combined into the Earth-Moon barycenter.\n"
         "\n"
     );
 
@@ -585,18 +538,10 @@ static int ImproveVsopApsides(vsop_model_t *model)
     vsop_formula_t *radform;        /* formula for calculating radial distance */
 
     if (model->version != VSOP_HELIO_SPHER_DATE && model->version != VSOP_HELIO_SPHER_J2000)
-    {
-        fprintf(stderr, "ImproveVsopApsides: Cannot optimize VSOP version %d\n", model->version);
-        error = 1;
-        goto fail;
-    }
+        FAIL("ImproveVsopApsides: Cannot optimize VSOP version %d\n", model->version);
 
     if (model->ncoords != 3)
-    {
-        fprintf(stderr, "ImproveVsopApsides: INTERNAL ERROR: model has incorrect number of coordinates: %d\n", model->ncoords);
-        error = 1;
-        goto fail;
-    }
+        FAIL("ImproveVsopApsides: INTERNAL ERROR: model has incorrect number of coordinates: %d\n", model->ncoords);
 
     radform = &model->formula[2];
 
@@ -645,18 +590,6 @@ static int BuildVsopData(void)
         if (0 != (error = SearchVsop(body)))
             break;
 
-    return error;
-}
-
-static int GenerateChebPluto(void)
-{
-    int error;
-
-    CHECK(OpenEphem());
-    CHECK(ManualResample(8, 19, 8, MIN_YEAR, MAX_YEAR));
-
-fail:
-    ephem_close();
     return error;
 }
 
@@ -1040,225 +973,6 @@ calc:
 static double VectorLength(const double v[3])
 {
     return sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
-}
-
-static int ManualResample(int body, int npoly, int nsections, int startYear, int stopYear)
-{
-    int error, nsamples;
-    double daysPerSection;
-    error_stats_t stats;
-    char filename[80];
-
-    snprintf(filename, sizeof(filename), "output/%02d.eph", body);
-    CHECK(Resample(body, filename, npoly, startYear, stopYear, nsections));
-
-    daysPerSection = (365.244 * (stopYear - startYear + 1)) / nsections;
-    nsamples = (int)(24.0 * (60.0/10.0) * daysPerSection);    /* approximately one sample per 10 minutes */
-    if (nsamples < 100*npoly)
-        nsamples = 100*npoly;     /* but always oversample every segment beyond the polynomial count */
-
-    CHECK(MeasureError(filename, nsamples, &stats));
-    printf("Chebyshev body=%d, rms=%0.6lf, max=%0.6lf, data=%ld\n", body, stats.rmsArcminError, stats.maxArcminError, stats.dataCount);
-
-fail:
-    return error;
-}
-
-static int MeasureError(const char *inFileName, int nsamples, error_stats_t *stats)
-{
-    int i, nvectors;
-    int error = 0;
-    double jd, x, sumPosDiff, posDiff, maxPosDiff;
-    double arcmin, arcminSum;
-    double apos[3];     /* our approximate position vector */
-    double npos[3];     /* NOVAS exact position vector */
-    eph_file_reader_t reader;
-    eph_record_t record;
-
-    memset(stats, 0, sizeof(error_stats_t));
-    error = EphFileOpen(&reader, inFileName);
-    if (error)
-    {
-        fprintf(stderr, "MeasureError: Error %d trying to open file: %s\n", error, inFileName);
-        goto fail;
-    }
-
-    /* sanity check on the body value, to prevent invalid memory access */
-    if (reader.body < 0 || reader.body > 10)
-    {
-        fprintf(stderr, "MeasureError: Invalid body = %d\n", reader.body);
-        error = 1;
-        goto fail;
-    }
-
-    nvectors = 0;
-    sumPosDiff = 0.0;
-    maxPosDiff = 0.0;
-    arcminSum = 0.0;
-    while (EphReadRecord(&reader, &record))
-    {
-        stats->dataCount += (1 + 3*record.numpoly);     /* tally the beginning Julian Date plus all the Chebyshev coefficients */
-
-        /*
-            We sample in such a way as to exclude the endpoints, because
-            we know error will be minimal there (and at all the other Chebyshev nodes).
-            If nsamples==1, we pick the midpoint.
-            If nsamples==2, we pick the 1/3 mark and 2/3 marks.
-            Thus we always divide the interval into (1+nsamples) sections.
-        */
-        for (i=1; i <= nsamples; ++i)
-        {
-            jd = record.jdStart + (i * record.jdDelta)/(1 + nsamples);
-
-            /* Calculate "correct" position at the time 'jd' (according to NOVAS). */
-            error = NovasBodyPos(jd, reader.body, npos);
-            if (error) goto fail;
-
-            /* Calculate our approximation of the position at the time 'jd'. */
-            x = ChebScale(record.jdStart, record.jdStart + record.jdDelta, jd);
-            ChebApprox(record.numpoly, 3, record.coeff, x, apos);
-
-            /* Tally the root-mean-square error between the two position vectors. */
-            posDiff = VectorError(npos, apos);
-            if (posDiff > maxPosDiff)
-                maxPosDiff = posDiff;
-
-            /* Estimate angular error */
-            error = PositionArcminError(reader.body, jd, npos, apos, &arcmin);
-            if (error) goto fail;
-            arcminSum += arcmin * arcmin;
-            if (arcmin > stats->maxArcminError)
-                stats->maxArcminError = arcmin;
-
-            sumPosDiff += posDiff;
-            ++nvectors;
-        }
-    }
-    error = record.error;
-    if (error)
-    {
-        fprintf(stderr, "MeasureError: Error %d reading record on line %d of file %s\n", error, reader.lnum, inFileName);
-        goto fail;
-    }
-
-    if (nvectors < 1)
-    {
-        fprintf(stderr, "MeasureError(ERROR): nvectors = %d\n", nvectors);
-        error = 1;
-        goto fail;
-    }
-
-    stats->rmsPositionError = sqrt(sumPosDiff / nvectors);
-    stats->maxPositionError = sqrt(maxPosDiff);
-    stats->rmsArcminError = sqrt(arcminSum / nvectors);
-
-fail:
-    EphFileClose(&reader);
-    return error;
-}
-
-static int Resample(int body, const char *outFileName, int npoly, int startYear, int stopYear, int nsections)
-{
-    FILE *outfile = NULL;
-    ChebEncoder encoder;
-    double coeff[CHEB_MAX_DIM][CHEB_MAX_POLYS];    /* independent Chebyshev coefficients for each position coordinate: x, y, z */
-    int error, k, i, section;
-    double jdStart, jdStop, jdDelta, jd;
-    sample_context_t context;
-
-    if (startYear < MIN_YEAR || stopYear < startYear || MAX_YEAR < stopYear)
-    {
-        fprintf(stderr, "ERROR: Invalid year range %d..%d\n", startYear, stopYear);
-        error = 1;
-        goto fail;
-    }
-
-    if (nsections < 1)
-    {
-        fprintf(stderr, "ERROR: nsections must be a positive integer.\n");
-        error = 2;
-        goto fail;
-    }
-
-    error = ChebInit(&encoder, npoly, VECTOR_DIM);
-    if (error)
-    {
-        fprintf(stderr, "ERROR %d returned by ChebInit()\n", error);
-        goto fail;
-    }
-
-    outfile = fopen(outFileName, "wt");
-    if (outfile == NULL)
-    {
-        fprintf(stderr, "ERROR: Cannot open output file '%s'\n", outFileName);
-        error = 3;
-        goto fail;
-    }
-
-    /* Write header to output file. */
-    fprintf(outfile, "body=%d\n", body);
-    fprintf(outfile, "\n");     /* blank line terminates the header */
-
-    jdStart = julian_date((short)startYear, 1, 1, 0.0) - 1.0;   /* subtract 1 day for light travel time allowance */
-    jdStop = julian_date((short)(stopYear+1), 1, 1, 0.0);
-    jdDelta = (jdStop - jdStart) / nsections;
-    context.body = body;
-    for (section = 0; section < nsections; ++section)
-    {
-        jd = jdStart + (section * jdDelta);
-
-        /* encode coefficients for vector-valued position function */
-        error = ChebGenerate(&encoder, SampleFunc, &context, jd, jd + jdDelta, coeff);
-        if (error)
-        {
-            fprintf(stderr, "ERROR: ChebGenerate() returned %d\n", error);
-            goto fail;
-        }
-
-        /* Prefix each block of polynomial coefficients with the time range and the number of polynomials. */
-        fprintf(outfile, "%0.1lf %0.1lf %d\n", jd, jdDelta, npoly);
-
-        /* Write the Chebyshev coordinates we obtained for the position function. */
-        for (k=0; k < npoly; k++)
-        {
-            for (i=0; i < 3; ++i)
-                fprintf(outfile, " %16.12lf", coeff[i][k]);
-            fprintf(outfile, "\n");
-        }
-    }
-
-fail:
-    if (outfile != NULL)
-        fclose(outfile);
-
-    if (error)
-        unlink(outFileName);
-
-    return error;
-}
-
-static int SampleFunc(const void *context, double jd, double pos[CHEB_MAX_DIM])
-{
-    const sample_context_t *c = context;
-    int error;
-    double jed[2];
-    double sun_pos[3];
-    double vel[3];      /* we don't care about velocities... ignored */
-
-    jed[0] = jd;
-    jed[1] = 0.0;
-    error = state(jed, (short)c->body, pos, vel);
-    if (error) return error;
-
-    error = state(jed, BODY_SUN, sun_pos, vel);
-    if (error) return error;
-
-    /* Calculate heliocentric coordinates from barycenric coordinates. */
-    pos[0] -= sun_pos[0];
-    pos[1] -= sun_pos[1];
-    pos[2] -= sun_pos[2];
-
-    return 0;
 }
 
 static double VectorError(double a[3], double b[3])
@@ -2058,221 +1772,6 @@ fail:
 }
 
 
-#define NSAMPLES 503
-static int MeasureSquashedTopError(const top_model_t *copy, const top_model_t *original, double *max_arcmin)
-{
-    static top_rectangular_t table[NSAMPLES];
-    static int initialized;
-
-    int error, i;
-    double tt, ttStart, ttStop, arcmin, dx, dy, dz, diff, range;
-    top_rectangular_t a, b;
-
-    *max_arcmin = 0.0;
-
-    /* Sample Pluto from 2 orbits before, to 2 orbits after, J2000. */
-    ttStop  = 2.0 * PlanetOrbitalPeriod(BODY_PLUTO);
-    ttStart = -ttStop;
-
-    for (i=0; i < NSAMPLES; ++i)
-    {
-        tt = ttStart + (i * (ttStop - ttStart) / (NSAMPLES - 1.0));
-
-        CHECK(TopPosition(copy, tt, &a));
-        if (!initialized)
-            CHECK(TopPosition(original, tt, &table[i]));
-        b = table[i];
-
-        /* Calculate discrepancy in position comparing full TOP2013 model to truncated model. */
-        dx = a.x - b.x;
-        dy = a.y - b.y;
-        dz = a.z - b.z;
-        diff = sqrt(dx*dx + dy*dy + dz*dz);
-
-        /* Calculate actual distance of Pluto from Sun, minus Earth aphelion. */
-        /* This gives closest possible distance between Pluto and Earth. */
-        range = sqrt(b.x*b.x + b.y*b.y + b.z*b.z) - 1.016;
-
-        /* Estimate worst-case parallax error as seen from Earth. */
-        arcmin = (RAD2DEG * 60.0) * (diff / range);
-        if (arcmin > *max_arcmin)
-            *max_arcmin = arcmin;
-    }
-
-    initialized = 1;
-    error = 0;
-fail:
-    return error;
-}
-#undef NSAMPLES
-
-
-static int PrintContribMap(const top_contrib_map_t *map, const char *filename)
-{
-    int error = 1;
-    FILE *outfile = NULL;
-    int f, c;
-
-    outfile = fopen(filename, "wt");
-    if (outfile == NULL)
-        FAIL("PrintContribMap: cannot open output file: %s\n", filename);
-
-    for (f=0; f < TOP_NCOORDS; ++f)
-    {
-        fprintf(outfile, "\n");
-        for (c=0; c < map->list[f].nterms; ++c)
-        {
-            const top_contrib_t *contrib = &map->list[f].array[c];
-            fprintf(outfile, "%10d  %20.15le  f=%d  s=%02d  t=%06d\n", c, contrib->magnitude, f, contrib->s, contrib->t);
-        }
-    }
-
-    error = 0;
-fail:
-    if (outfile) fclose(outfile);
-    return error;
-}
-
-
-static int BinarySearchDir(
-    top_model_t *best,
-    const top_model_t *model,
-    top_contrib_map_t *map,
-    const top_direction_t *dir,
-    int prune_term_count,
-    int *success)
-{
-    int error = 1;
-    double hi_dist, lo_dist, dist, best_dist;
-    int term_count, prev_term_count, best_term_count;
-    double arcmin;
-    top_model_t attempt;
-
-    TopInitModel(&attempt);
-    *success = 0;
-
-    CHECK(TopCloneModel(&attempt, model));
-
-    /* Keep looking farther in the specified direction until we find acceptable accuracy. */
-    lo_dist = 0.0;
-    hi_dist = 1.0;
-    for(;;)
-    {
-        CHECK(TopSetDistance(&attempt, map, &best_term_count, model, hi_dist, dir));
-        CHECK(MeasureSquashedTopError(&attempt, model, &arcmin));
-        DEBUG("BinarySearchDir: hi_dist=%lf, terms=%d, arcmin=%lf\n", hi_dist, best_term_count, arcmin);
-        if (arcmin < TopThresholdArcmin)
-            break;
-        if (prune_term_count > 0 && best_term_count > prune_term_count)
-        {
-            DEBUG("BinarySearchDir: PRE-PRUNE\n");
-            error = 0;
-            goto fail;
-        }
-        lo_dist = hi_dist;
-        hi_dist *= 2.0;
-    }
-    best_dist = hi_dist;
-
-    /* Do a binary search to find the minimum distance that has acceptable accuracy. */
-    prev_term_count = -1;
-    for(;;)
-    {
-        dist = (hi_dist + lo_dist) / 2.0;
-        CHECK(TopSetDistance(&attempt, map, &term_count, model, dist, dir));
-        if (term_count == prev_term_count)
-            break;
-        CHECK(MeasureSquashedTopError(&attempt, model, &arcmin));
-        DEBUG("BinarySearchDir: [lo=%lf, mid=%lf, hi=%lf], terms=%d, arcmin=%lf\n", lo_dist, dist, hi_dist, term_count, arcmin);
-        if (arcmin < TopThresholdArcmin)
-        {
-            if (term_count < best_term_count)
-            {
-                best_term_count = term_count;
-                best_dist = dist;
-            }
-            hi_dist = dist;
-        }
-        else
-        {
-            lo_dist = dist;
-            if (prune_term_count > 0 && term_count > prune_term_count)
-            {
-                DEBUG("BinarySearchDir: PRUNE\n");
-                error = 0;
-                goto fail;
-            }
-        }
-        prev_term_count = term_count;
-    }
-
-    /* Return the very best answer to the caller. */
-    CHECK(TopSetDistance(best, map, &term_count, model, best_dist, dir));
-    *success = 1;
-fail:
-    TopFreeModel(&attempt);
-    return error;
-}
-
-
-static int OptimizeTop(top_model_t *shrunk, const top_model_t *model)
-{
-    const int nattempts = 100;
-    int error = 1;
-    top_contrib_map_t map;
-    top_model_t attempt;
-    top_random_buffer_t buffer;
-    top_direction_t dir;
-    int i, f, term_count, best_term_count = -1;
-    int success;
-
-    TopInitModel(&attempt);
-    TopInitModel(shrunk);
-    TopInitContribMap(&map);
-    TopInitRandomBuffer(&buffer);
-
-    /* Make a map of the relative importance of the terms within each of the 6 formulas. */
-    CHECK(TopMakeContribMap(&map, model, TopMillenniaAroundJ2000));
-    CHECK(PrintContribMap(&map, "output/contrib.map"));
-
-    CHECK(TopCloneModel(&attempt, model));
-
-    for (i=0; i < nattempts; ++i)
-    {
-        DEBUG("OptimizeTop: ATTEMPT %d of %d\n", i+1, nattempts);
-
-        /* Keep picking random vectors in 6D space. */
-        CHECK(TopGetDirection(&dir, &buffer));
-
-        /* For each direction vector, binary search along that direction. */
-        CHECK(BinarySearchDir(&attempt, model, &map, &dir, best_term_count, &success));
-
-        if (success)
-        {
-            /* Remember the smallest attempt model that has acceptable error. */
-            term_count = TopTermCount(&attempt);
-            if (i == 0 || term_count < best_term_count)
-            {
-                best_term_count = term_count;
-                printf("OptimizeTop: %6d terms [", best_term_count);
-                for (f=0; f < TOP_NCOORDS; ++f)
-                    printf(" %6d", TopTermCountF(&attempt, f));
-                printf("]\n");
-                CHECK(TopCloneModel(shrunk, &attempt));
-            }
-        }
-    }
-
-    error = 0;
-fail:
-    TopFreeContribMap(&map);
-    TopFreeModel(&attempt);
-    TopFreeRandomBuffer(&buffer);
-    if (error) TopFreeModel(shrunk);
-    return error;
-}
-
-
 static int TopCalc(const char *name, const char *date)
 {
     int error = 1;
@@ -2308,261 +1807,6 @@ fail:
 }
 
 
-static int GenerateTop(const char *name, const char *outFileName)
-{
-    int error = 1;
-    top_model_t model;
-    top_model_t shrunk;
-    vsop_body_t body;
-    int planet;
-
-    TopInitModel(&shrunk);
-    TopInitModel(&model);
-
-    body = LookupBody(name);
-    if (body < 0)
-        FAIL("GenerateTop: planet name '%s' is not valid.\n", name);
-
-    if (body < BODY_JUPITER || body > BODY_PLUTO)
-        FAIL("GenerateTop: TOP2013 supports Jupiter through Pluto only.\n");
-
-    planet = body + 1;      /* convert our body ID into TOP2013 planet ID */
-
-    CHECK(TopLoadModel(&model, TopDataFileName, planet));
-    CHECK(OptimizeTop(&shrunk, &model));
-    CHECK(TopSaveModel(&shrunk, outFileName));
-    printf("GenerateTop: saved %s\n", outFileName);
-    error = 0;
-
-fail:
-    TopFreeModel(&model);
-    TopFreeModel(&shrunk);
-    return error;
-}
-
-
-typedef struct
-{
-    int found;
-    int keep[TOP_NCOORDS];
-    int fshuffle[TOP_NCOORDS];
-    int dshuffle[TOP_NCOORDS][3];
-}
-nudge_solution_t;
-
-
-static int Shuffle(FILE *rand, int *array, int length)
-{
-    int error = 1;
-    int i, r, swap;
-
-    for (i=1; i < length; ++i)
-    {
-        if (1 != fread(&r, sizeof(r), 1, rand))
-            FAIL("Shuffle: unable to read integer from /dev/urandom");
-        r = (r & 0x7fffffff) % (i + 1);
-        swap = array[i];
-        array[i] = array[r];
-        array[r] = swap;
-    }
-
-    error = 0;
-fail:
-    return error;
-}
-
-
-static int NudgeSearch(
-    const char *outFileName,
-    top_model_t *smaller,
-    const top_model_t *model,
-    top_contrib_map_t *map,
-    int *best,
-    nudge_solution_t *solution,
-    int keep[TOP_NCOORDS],
-    int depth)
-{
-    int error = 1;
-    int sum, checksum, f, i;
-    double arcmin;
-    FILE *rand = NULL;
-
-    if (depth == 0)
-    {
-        /* Shuffle the order in which we search the coordinates. */
-
-        rand = fopen("/dev/urandom", "rb");
-        if (rand == NULL)
-            FAIL("NudgeSearch: cannot open /dev/urandom");
-
-        for (f=0; f<TOP_NCOORDS; ++f)
-        {
-            solution->fshuffle[f] = f;
-            for (i=0; i<3; ++i)
-                solution->dshuffle[f][i] = i - 1;
-            Shuffle(rand, solution->dshuffle[f], 3);
-        }
-
-        CHECK(Shuffle(rand, solution->fshuffle, TOP_NCOORDS));
-    }
-
-    if (depth == TOP_NCOORDS)
-    {
-        sum = 0;
-        for (f=0; f < TOP_NCOORDS; ++f)
-            sum += (map->list[f].nterms - map->list[f].skip);
-
-        if (sum < *best)
-        {
-            /* This might be the new best solution, but only if error is small enough. */
-            CHECK(TopSquash(smaller, model, map));
-            CHECK(MeasureSquashedTopError(smaller, model, &arcmin));
-            if (arcmin < TopThresholdArcmin)
-            {
-                *best = sum;
-                printf("winner: %10.6lf arcmin : %6d [", arcmin, sum);
-                checksum = 0;
-                for (f=0; f < TOP_NCOORDS; ++f)
-                {
-                    checksum += solution->keep[f] = TopTermCountF(smaller, f);
-                    printf(" %6d", solution->keep[f]);
-                }
-                printf("]\n");
-                if (checksum != sum)
-                    FAIL("NudgeSearch: FAILURE -- sum=%d, checksum=%d\n", sum, checksum);
-                CHECK(TopSaveModel(smaller, outFileName));
-                ++solution->found;
-            }
-        }
-    }
-    else
-    {
-        f = solution->fshuffle[depth];
-        for (i=0; i<3; ++i)
-        {
-            int oldskip = map->list[f].skip;
-            int newskip = solution->dshuffle[f][i] + (map->list[f].nterms - keep[f]);
-            if (0 <= newskip && newskip < map->list[f].nterms)
-            {
-                map->list[f].skip = newskip;
-                CHECK(NudgeSearch(outFileName, smaller, model, map, best, solution, keep, depth+1));
-                map->list[f].skip = oldskip;
-            }
-        }
-    }
-
-    error = 0;
-fail:
-    if (rand) fclose(rand);
-    return error;
-}
-
-
-static int TopNudge(const char *name, const char *inFileName, const char *outFileName)
-{
-    int error = 1;
-    vsop_body_t body;
-    int planet;
-    top_model_t original;
-    top_model_t smaller;
-    int step, f, best;
-    int keep[TOP_NCOORDS];
-    top_contrib_map_t map;
-    nudge_solution_t solution;
-
-    TopInitModel(&original);
-    TopInitModel(&smaller);
-    TopInitContribMap(&map);
-
-    body = LookupBody(name);
-    if (body < 0)
-        FAIL("TopNudge: planet name '%s' is not valid.\n", name);
-
-    if (body < BODY_JUPITER || body > BODY_PLUTO)
-        FAIL("TopNudge: TOP2013 supports Jupiter through Pluto only.\n");
-
-    planet = body + 1;      /* convert our body ID into TOP2013 planet ID */
-
-    /* Load the input file just to get its term count list. */
-    CHECK(TopLoadModel(&smaller, inFileName, planet));
-    best = TopTermCount(&smaller);
-    for (f=0; f<TOP_NCOORDS; ++f)
-        keep[f] = TopTermCountF(&smaller, f);
-    TopFreeModel(&smaller);
-
-    /* Load the full-blown planet model. */
-    CHECK(TopLoadModel(&original, TopDataFileName, planet));
-
-    /* Clone from original into smaller so that smaller is large enough to hold any shrunk version. */
-    CHECK(TopCloneModel(&smaller, &original));
-
-    /* Generate the contribution map so we can sort the full model, but with no terms skipped. */
-    CHECK(TopMakeContribMap(&map, &original, TopMillenniaAroundJ2000));
-
-    for (step=0; ;++step)
-    {
-        printf("Step %d\n", step);
-        memset(&solution, 0, sizeof(solution));
-        CHECK(NudgeSearch(outFileName, &smaller, &original, &map, &best, &solution, keep, 0));
-        if (solution.found == 0)
-            break;
-        for (f=0; f<TOP_NCOORDS; ++f)
-            keep[f] = solution.keep[f];
-    }
-
-    error = 0;
-fail:
-    TopFreeModel(&original);
-    TopFreeModel(&smaller);
-    TopFreeContribMap(&map);
-    return error;
-}
-
-
-static int ValidateRandom(void)
-{
-    const int ntrials = 1000000;
-    int error = 1;
-    int i, f;
-    double r, rmin, rmax, rsum, rdiff;
-    top_random_buffer_t buffer;
-    top_direction_t dir;
-    TopInitRandomBuffer(&buffer);
-
-    rmin = rmax = rsum = 0.0;
-    for (i=0; i < ntrials; ++i)
-    {
-        CHECK(TopGetRandomNumber(&buffer, &r));
-        rsum += r;
-        if (i == 0 || r < rmin)
-            rmin = r;
-        if (i == 0 || r > rmax)
-            rmax = r;
-    }
-    printf("ValidateRandom: rmin=%0.16lf, rmax=%0.16lf, ravg=%0.16lf\n", rmin, rmax, rsum / ntrials);
-
-    for (i=0; i < 10; ++i)
-    {
-        CHECK(TopGetDirection(&dir, &buffer));
-        rsum = 0.0;
-        for (f=0; f < TOP_NCOORDS; ++f)
-        {
-            rsum += dir.x[f] * dir.x[f];
-            printf(" %20.16lf", dir.x[f]);
-        }
-        rdiff = sqrt(rsum) - 1.0;
-        printf("  [%lg]\n", rdiff);
-        if (fabs(rdiff) > 1.0e-15)
-            FAIL("ValidateRandom: vector is not close enough to unit length.\n");
-    }
-
-    error = 0;
-fail:
-    TopFreeRandomBuffer(&buffer);
-    return error;
-}
-
-
 static int TopFileInfo(const char *filename, const char *name)
 {
     int error = 1;
@@ -2591,192 +1835,6 @@ fail:
 }
 
 /*------------------------------------------------------------------------------------------------*/
-
-typedef struct
-{
-    double pos[3];
-    double vel[3];
-}
-gravsim_body_state_t;
-
-
-static int BodyState(double jd, int body, gravsim_body_state_t *bs)
-{
-    int error;
-    double jed[2];
-
-    jed[0] = jd;
-    jed[1] = 0.0;
-
-    error = (int) state(jed, (short)body, bs->pos, bs->vel);
-    if (error != 0)
-        fprintf(stderr, "BodyState(%d): error %d\n", body, error);
-
-    return error;
-}
-
-
-static double DiffLength(double a[3], double b[3])
-{
-    double dx = a[0] - b[0];
-    double dy = a[0] - b[0];
-    double dz = a[0] - b[0];
-    return sqrt(dx*dx + dy*dy + dz*dz);
-}
-
-
-static int Gravity(double jd, const double pos[3], double acc[3])
-{
-    int error;
-    int i;
-    const double gravconst = 1.4881807e-34;     /* universal gravitational constant [AU^3 kg^(-1) day^(-2)] */
-    const double sun_mass  = 1.98847e+30;        /* mass of Sun [kg] */
-    gravsim_body_state_t bs[5];                 /* 0=Sun, 1=Jupiter, 2=Saturn, 3=Uranus, 4=Neptune */
-    double mass[5];
-
-    CHECK(BodyState(jd, BODY_SUN,     &bs[0]));
-    CHECK(BodyState(jd, BODY_JUPITER, &bs[1]));
-    CHECK(BodyState(jd, BODY_SATURN,  &bs[2]));
-    CHECK(BodyState(jd, BODY_URANUS,  &bs[3]));
-    CHECK(BodyState(jd, BODY_NEPTUNE, &bs[4]));
-
-    /* Use reciprocal masses from novascon.c to initialize masses of bodies. */
-    mass[0] = sun_mass;
-    mass[1] = sun_mass / RMASS[5];
-    mass[2] = sun_mass / RMASS[6];
-    mass[3] = sun_mass / RMASS[7];
-    mass[4] = sun_mass / RMASS[8];
-
-    acc[0] = acc[1] = acc[2] = 0.0;
-    for (i=0; i<5; ++i)
-    {
-        double dx = bs[i].pos[0] - pos[0];
-        double dy = bs[i].pos[1] - pos[1];
-        double dz = bs[i].pos[2] - pos[2];
-        double r2 = dx*dx + dy*dy + dz*dz;
-        double r = sqrt(r2);
-        double scale = mass[i] * gravconst / r2;
-        acc[0] += scale * (dx / r);
-        acc[1] += scale * (dy / r);
-        acc[2] += scale * (dz / r);
-    }
-
-    error = 0;
-fail:
-    return error;
-}
-
-
-static void GravStep(
-    const gravsim_body_state_t *p0,
-    gravsim_body_state_t *p1,
-    double dt,
-    const double acc[3])
-{
-    double h;
-
-    /* Estimate position after time dt. */
-    p1->vel[0] = p0->vel[0] + acc[0]*dt;
-    p1->vel[1] = p0->vel[1] + acc[1]*dt;
-    p1->vel[2] = p0->vel[2] + acc[2]*dt;
-
-    /* Estimate velocity after time dt. */
-    h = dt*dt / 2.0;
-    p1->pos[0] = p0->pos[0] + p0->vel[0]*dt + acc[0]*h;
-    p1->pos[1] = p0->pos[1] + p0->vel[1]*dt + acc[1]*h;
-    p1->pos[2] = p0->pos[2] + p0->vel[2]*dt + acc[2]*h;
-}
-
-
-static int GravSim(void)
-{
-    int error = 1;
-    double jd;
-    double dist;
-    const double dt = 1.0;          /* simulation time increment in days */
-    gravsim_body_state_t p0, p1, p2;
-    gravsim_body_state_t pc;        /* state of Pluto according to NOVAS, for checking */
-    double acc0[3];
-    double acc1[3];
-    short year, day, month;
-    double hour;
-    double arcmin;
-
-    CHECK(OpenEphem());
-
-    /*
-        An experiment, just for fun, with creating a simple gravitational integrator.
-        Try to calculate the position of Pluto.
-        Use NOVAS state() function to calculate the initial position and velocity of Pluto.
-        Also use NOVAS to calculate positions for the other solar system bodies.
-        Start with just the major bodies: Sun, Jupiter, Saturn, Uranus, Neptune.
-        Do all calculations with respect to the Solar System Barycenter (SSB).
-    */
-
-    jd = julian_date(2000, 1, 1, 12.0);
-
-    /* Get initial state vector for Pluto. */
-    CHECK(BodyState(jd, BODY_PLUTO, &p0));
-
-    for(;;)
-    {
-        /* Calculate gravitational acceleration experienced by Pluto at its current position. */
-        CHECK(Gravity(jd, p0.pos, acc0));
-
-        /* Estimate where Pluto will be at the next time increment. */
-        GravStep(&p0, &p1, dt, acc0);
-
-        for(;;)
-        {
-            /* Calculate the acceleration at the guessed new position. */
-            CHECK(Gravity(jd+dt, p1.pos, acc1));
-
-            /* Take the mean acceleration of the two endpoints. */
-            acc1[0] = (acc0[0] + acc1[0]) / 2.0;
-            acc1[1] = (acc0[1] + acc1[1]) / 2.0;
-            acc1[2] = (acc0[2] + acc1[2]) / 2.0;
-
-            /* Refine the estimate of the new position. */
-            GravStep(&p0, &p2, dt, acc1);
-
-            /* How much did the estimate change (in AU)? */
-            dist = DiffLength(p1.pos, p2.pos);
-            if (dist < 1.0e-12)
-                break;
-
-            p1 = p2;
-        }
-
-        jd += dt;
-
-        /* Get correct value of Pluto state vector at updated time. */
-        CHECK(BodyState(jd, BODY_PLUTO, &pc));
-
-        /* What is the error? */
-        dist = DiffLength(pc.pos, p2.pos);
-        arcmin = 60.0 * RAD2DEG * (dist / VectorLength(pc.pos));
-
-        cal_date(jd, &year, &month, &day, &hour);
-        printf("%04d-%02d-%02d  %20.10lf %20.10lf %20.10lf   %9.6le\n",
-            (int)year, (int)month, (int)day,
-            p2.pos[0], p2.pos[1], p2.pos[2],
-            arcmin);
-
-        if (year >= 2199)
-            break;
-
-        /* Update simulated state. */
-        p0 = p2;
-    }
-
-    error = 0;
-fail:
-    ephem_close();
-    return error;
-}
-
-/*------------------------------------------------------------------------------------------------*/
-
 
 static int ParseDate(const char *text, double *tt)
 {
@@ -2820,62 +1878,5 @@ static const char *QuotedBodyName(int body)
     default:            return "\"\"       ";
     }
 }
-
-
-static int EphemerisJson(const char *filename, const char *date1, const char *date2, double delta_days)
-{
-    static const int bodylist[] =
-    {
-        BODY_SUN,
-        BODY_MERCURY,
-        BODY_VENUS,
-        BODY_EMB,
-        BODY_MARS,
-        BODY_JUPITER,
-        BODY_SATURN,
-        BODY_URANUS,
-        BODY_NEPTUNE,
-        BODY_PLUTO
-    };
-    static const int nbodies = (int)(sizeof(bodylist) / sizeof(bodylist[0]));
-    int i, error;
-    double tt, tt2;
-    gravsim_body_state_t bs;
-    FILE *outfile = NULL;
-
-    CHECK(OpenEphem());
-    CHECK(ParseDate(date1, &tt));
-    CHECK(ParseDate(date2, &tt2));
-    outfile = fopen(filename, "wt");
-    if (outfile == NULL)
-        FAIL("EphemerisJson: Cannot open output file: %s\n", filename);
-
-    fprintf(outfile, "{\"tt1\":%0.8lf, \"tt2\":%0.8lf, \"dt\":%0.8lf, \"data\":[\n", tt, tt2, delta_days);
-    for(;;)
-    {
-        fprintf(outfile,"    {\"tt\":%0.8lf, \"body\":{\n", tt);
-        for (i=0; i < nbodies; ++i)
-        {
-            CHECK(BodyState(tt + 2451545.0, bodylist[i], &bs));
-            fprintf(outfile, "        %s:{\"pos\":[%24.16le,%24.16le,%24.16le], \"vel\":[%24.16le,%24.16le,%24.16le]}%s\n",
-                QuotedBodyName(bodylist[i]),
-                bs.pos[0], bs.pos[1], bs.pos[2],
-                bs.vel[0], bs.vel[1], bs.vel[2],
-                (i+1 < nbodies) ? "," : "");
-        }
-        fprintf(outfile, "    }}");
-        tt += delta_days;
-        if (tt > tt2)
-            break;
-        fprintf(outfile, ",\n");
-    }
-    fprintf(outfile, "\n]}\n");
-    error = 0;
-fail:
-    ephem_close();
-    if (outfile != NULL) fclose(outfile);
-    return error;
-}
-
 
 /*------------------------------------------------------------------------------------------------*/
