@@ -57,8 +57,34 @@ typedef struct
 {
     const char *name;
     astro_time_t time;
+    double altitude;    /* angle of culmination above horizon; otherwise NAN */
 }
 event_t;
+
+
+void AppendCulm(
+    event_t evtlist[], 
+    int *evtcount, 
+    const char *name, 
+    astro_body_t body, 
+    astro_observer_t observer,
+    astro_time_t search_time)
+{
+    astro_hour_angle_t culm;
+
+    culm = Astronomy_SearchHourAngle(body, observer, 0.0, search_time);
+    if (culm.status == ASTRO_SUCCESS)
+    {
+        evtlist[*evtcount].name = name;
+        evtlist[*evtcount].time = culm.time;
+        evtlist[*evtcount].altitude = culm.hor.altitude;
+        ++(*evtcount);
+    }
+    else
+    {
+        printf("ERROR %d finding culmination of %s\n", culm.status, name);
+    }
+}
 
 
 void AppendEvent(const char *name, event_t evtlist[], int *evtcount, astro_search_result_t result)
@@ -67,6 +93,7 @@ void AppendEvent(const char *name, event_t evtlist[], int *evtcount, astro_searc
     {
         evtlist[*evtcount].name = name;
         evtlist[*evtcount].time = result.time;
+        evtlist[*evtcount].altitude = NAN;
         ++(*evtcount);
     }
     else
@@ -93,7 +120,7 @@ int main(int argc, const char *argv[])
     astro_observer_t observer;
     astro_time_t time;
     astro_search_result_t result;
-    event_t evtlist[4];
+    event_t evtlist[6];
     int evtcount = 0;
     int i;
 
@@ -112,6 +139,9 @@ int main(int argc, const char *argv[])
     result = Astronomy_SearchRiseSet(BODY_MOON, observer, DIRECTION_SET,  time, 300.0);
     AppendEvent("moonset", evtlist, &evtcount, result);
 
+    AppendCulm(evtlist, &evtcount, "moonculm", BODY_MOON, observer, time);
+    AppendCulm(evtlist, &evtcount, "sunculm",  BODY_SUN, observer, time);
+
     /* Sort the events in chronological order. */
     qsort(evtlist, (size_t)evtcount, sizeof(event_t), EventCompare);
 
@@ -120,6 +150,8 @@ int main(int argc, const char *argv[])
     {
         printf("%-8s : ", evtlist[i].name);
         PrintLocalTime(evtlist[i].time);
+        if (isfinite(evtlist[i].altitude))
+            printf("   alt = %0.2lf", evtlist[i].altitude);
         printf("\n");
     }
 
