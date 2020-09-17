@@ -34,7 +34,7 @@
     The context is used to hold whatever parameters are needed to evaluate
     the function.  In the case of ephemeris resampling, the context will
     include the solar system body identifier.
-    The function stores the N-dimensional vector result of its calculation 
+    The function stores the N-dimensional vector result of its calculation
     at the array indicated by the third parameter 'double[CHEB_MAX_DIM]'.
     The function returns 0 on success, nonzero on error.
     This is needed because ephemeris functions can return errors.

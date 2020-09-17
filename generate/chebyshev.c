@@ -84,14 +84,16 @@ int ChebGenerate(
     }
 
     for (d=0; d < encoder->Dimension; ++d)
+    {
         for (j=0; j < n; ++j)
         {
             double sum = 0.0;
             for (k=0; k < n; ++k)
                 sum += encoder->Alpha[j][k] * f[k][d];
-                
+
             coeff[d][j] = (2.0 / n) * sum;
         }
+    }
 
     return 0;
 }

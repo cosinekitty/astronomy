@@ -1,4 +1,4 @@
-# Astronomy Engine <span style="vertical-align: middle;">[![Build Status](https://travis-ci.org/cosinekitty/astronomy.svg)](https://travis-ci.org/cosinekitty/astronomy)</span> <span style="vertical-align: middle;">[![npm package](https://img.shields.io/npm/v/astronomy-engine.svg)](https://www.npmjs.com/package/astronomy-engine)</span>
+# Astronomy Engine <span style="vertical-align: middle;">[![Build Status](https://travis-ci.com/cosinekitty/astronomy.svg)](https://travis-ci.com/cosinekitty/astronomy)</span> <span style="vertical-align: middle;">[![npm package](https://img.shields.io/npm/v/astronomy-engine.svg)](https://www.npmjs.com/package/astronomy-engine)</span>
 
 ### Supported Programming Languages
 
