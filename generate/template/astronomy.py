@@ -2723,11 +2723,11 @@ def SearchMoonPhase(targetLon, startTime, limitDays):
     # that every lunar phase repeats roughly every 29.5 days.
     # There is a surprising uncertainty in the quarter timing,
     # due to the eccentricity of the moon's orbit.
-    # I have seen up to 0.826 days away from the simple prediction.
+    # I have seen more than 0.9 days away from the simple prediction.
     # To be safe, we take the predicted time of the event and search
-    # +/-0.9 days around it (a 1.8-day wide window).
+    # +/-1.5 days around it (a 3-day wide window).
     # But we must return None if the final result goes beyond limitDays after startTime.
-    uncertainty = 0.9
+    uncertainty = 1.5
     ya = _moon_offset(targetLon, startTime)
     if ya > 0.0:
         ya -= 360.0     # force searching forward in time, not backward

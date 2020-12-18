@@ -4,7 +4,7 @@ The next 10 lunar quarters are:
 2019-06-17T08:31:18Z : Full Moon
 2019-06-25T09:47:08Z : Third Quarter
 2019-07-02T19:16:47Z : New Moon
-2019-07-09T10:55:28Z : First Quarter
+2019-07-09T10:55:29Z : First Quarter
 2019-07-16T21:38:54Z : Full Moon
 2019-07-25T01:18:43Z : Third Quarter
 2019-08-01T03:12:26Z : New Moon

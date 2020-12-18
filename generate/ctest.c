@@ -81,6 +81,7 @@ static const char *ParseJplHorizonsDateTime(const char *text, astro_time_t *time
 static int VectorDiff(astro_vector_t a, astro_vector_t b, double *diff);
 static int RefractionTest(void);
 static int ConstellationTest(void);
+static int LunarEclipseIssue78(void);
 static int LunarEclipseTest(void);
 static int GlobalSolarEclipseTest(void);
 static int PlotDeltaT(const char *outFileName);
@@ -109,6 +110,7 @@ static unit_test_t UnitTests[] =
     {"global_solar_eclipse",    GlobalSolarEclipseTest},
     {"local_solar_eclipse",     LocalSolarEclipseTest},
     {"lunar_eclipse",           LunarEclipseTest},
+    {"lunar_eclipse_78",        LunarEclipseIssue78},
     {"magnitude",               MagnitudeTest},
     {"moon",                    MoonTest},
     {"moon_apsis",              LunarApsis},
@@ -1871,7 +1873,7 @@ static int Rotation_MatrixInverse(void)
     b = Astronomy_InverseRotation(a);
     CHECK(CompareMatrices("Rotation_MatrixInverse", b, v, 0.0));
 
-    printf("Rotation_MatrixInverse: PASS\n");
+    printf("C Rotation_MatrixInverse: PASS\n");
     error = 0;
 
 fail:
@@ -2544,6 +2546,30 @@ static void PrintTime(astro_time_t time)
 {
     astro_utc_t utc = Astronomy_UtcFromTime(time);
     printf("%04d-%02d-%02dT%02d:%02d:%06.3lfZ", utc.year, utc.month, utc.day, utc.hour, utc.minute, utc.second);
+}
+
+static int LunarEclipseIssue78(void)
+{
+    int error;
+    astro_lunar_eclipse_t eclipse;
+    astro_time_t search_time   = Astronomy_MakeTime(2020, 12, 19, 0, 0, 0.0);
+    astro_time_t expected_peak = Astronomy_MakeTime(2021, 5, 26, 11, 18, 42);  /* https://www.timeanddate.com/eclipse/lunar/2021-may-26 */
+    double dt_seconds;
+
+    eclipse = Astronomy_SearchLunarEclipse(search_time);
+    CHECK_STATUS(eclipse);
+
+    dt_seconds = (24.0 * 3600.0) * ABS(eclipse.peak.tt - expected_peak.tt);
+    if (dt_seconds > 40.0)
+        FAIL("C LunarEclipseIssue78: Excessive prediction error = %lf seconds.\n", dt_seconds);
+
+    if (eclipse.kind != ECLIPSE_TOTAL)
+        FAIL("C LunarEclipseIssue78: Expected total eclipse; found %d\n", eclipse.kind);
+
+    printf("C LunarEclipseIssue78: PASS\n");
+    error = 0;
+fail:
+    return error;
 }
 
 static int LunarEclipseTest(void)

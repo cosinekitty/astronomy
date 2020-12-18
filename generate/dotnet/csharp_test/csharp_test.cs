@@ -40,6 +40,7 @@ namespace csharp_test
             new Test("local_solar_eclipse", LocalSolarEclipseTest),
             new Test("lunar_apsis", LunarApsisTest),
             new Test("lunar_eclipse", LunarEclipseTest),
+            new Test("lunar_eclipse_78", LunarEclipseIssue78),
             new Test("magnitude", MagnitudeTest),
             new Test("moonphase", MoonPhaseTest),
             new Test("planet_apsis", PlanetApsisTest),
@@ -1673,6 +1674,25 @@ namespace csharp_test
             }
 
             Console.WriteLine("C# ConstellationTest: PASS (verified {0})", lnum);
+            return 0;
+        }
+
+        static int LunarEclipseIssue78()
+        {
+            LunarEclipseInfo eclipse = Astronomy.SearchLunarEclipse(new AstroTime(2020, 12, 19, 0, 0, 0));
+            var expected_peak = new AstroTime(2021, 5, 26, 11, 18, 42);  // https://www.timeanddate.com/eclipse/lunar/2021-may-26
+            double dt_seconds = (24.0 * 3600.0) * abs(expected_peak.tt - eclipse.peak.tt);
+            if (dt_seconds > 40.0)
+            {
+                Console.WriteLine("C# LunarEclipseIssue78: Excessive prediction error = {0} seconds.", dt_seconds);
+                return 1;
+            }
+            if (eclipse.kind != EclipseKind.Total)
+            {
+                Console.WriteLine("C# LunarEclipseIssue78: Expected total eclipse; found {0}", eclipse.kind);
+                return 1;
+            }
+            Console.WriteLine("C# LunarEclipseIssue78: PASS");
             return 0;
         }
 

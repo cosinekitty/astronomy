@@ -2788,11 +2788,11 @@ Astronomy.SearchMoonPhase = function(targetLon, dateStart, limitDays) {
     // that every lunar phase repeats roughly every 29.5 days.
     // There is a surprising uncertainty in the quarter timing,
     // due to the eccentricity of the moon's orbit.
-    // I have seen up to 0.826 days away from the simple prediction.
+    // I have seen more than 0.9 days away from the simple prediction.
     // To be safe, we take the predicted time of the event and search
-    // +/-0.9 days around it (a 1.8-day wide window).
+    // +/-1.5 days around it (a 3.0-day wide window).
     // But we must return null if the final result goes beyond limitDays after dateStart.
-    const uncertainty = 0.9;
+    const uncertainty = 1.5;
 
     let ta = Astronomy.MakeTime(dateStart);
     let ya = moon_offset(ta);

@@ -279,6 +279,21 @@ function LunarApsis() {
 }
 
 
+function LunarEclipseIssue78() {
+    // https://github.com/cosinekitty/astronomy/issues/78
+
+    let eclipse = Astronomy.SearchLunarEclipse(new Date(Date.UTC(2020, 11, 19)));
+    const expected_peak = new Date('2021-05-26T11:18:42Z');  // https://www.timeanddate.com/eclipse/lunar/2021-may-26
+    const dt = (expected_peak - eclipse.peak.date) / 1000;
+    if (abs(dt) > 40.0)
+        throw `LunarEclipseIssue78: Excessive prediction error = ${dt} seconds.`;
+    if (eclipse.kind !== 'total')
+        throw `Expected total eclipse; found: ${eclipse.kind}`;
+    console.log(`JS LunarEclipseIssue78: PASS`);
+    return 0;
+}
+
+
 function LunarEclipse() {
     Astronomy.CalcMoonCount = 0;
     const filename = 'eclipse/lunar_eclipse.txt';
@@ -1737,6 +1752,7 @@ const UnitTests = {
     local_solar_eclipse:    LocalSolarEclipse,
     lunar_apsis:            LunarApsis,
     lunar_eclipse:          LunarEclipse,
+    lunar_eclipse_78:       LunarEclipseIssue78,
     planet_apsis:           PlanetApsis,
     pluto:                  PlutoCheck,
     magnitude:              Magnitude,

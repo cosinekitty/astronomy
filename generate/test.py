@@ -1140,6 +1140,23 @@ def Constellation():
 
 #-----------------------------------------------------------------------------------------------------------
 
+def LunarEclipseIssue78():
+    # https://github.com/cosinekitty/astronomy/issues/78
+
+    eclipse = astronomy.SearchLunarEclipse(astronomy.Time.Make(2020, 12, 19, 0, 0, 0))
+    expected_peak = astronomy.Time.Make(2021, 5, 26, 11, 18, 42)  # https://www.timeanddate.com/eclipse/lunar/2021-may-26
+    dt = (expected_peak.tt - eclipse.peak.tt) * (24.0 * 3600.0)
+    if vabs(dt) > 40.0:
+        print('LunarEclipseIssue78: Excessive prediction error = {} seconds.'.format(dt))
+        return 1
+    if eclipse.kind != astronomy.EclipseKind.Total:
+        print('Expected total eclipse; found: {}'.format(eclipse.kind))
+        return 1
+    print('PY LunarEclipseIssue78: PASS')
+    return 0
+
+#-----------------------------------------------------------------------------------------------------------
+
 def LunarEclipse():
     astronomy._CalcMoonCount = 0
     filename = 'eclipse/lunar_eclipse.txt'
@@ -1575,6 +1592,7 @@ UnitTests = {
     'local_solar_eclipse':      LocalSolarEclipse,
     'lunar_apsis':              LunarApsis,
     'lunar_eclipse':            LunarEclipse,
+    'lunar_eclipse_78':         LunarEclipseIssue78,
     'magnitude':                Magnitude,
     'moon':                     GeoMoon,
     'moonphase':                MoonPhase,
