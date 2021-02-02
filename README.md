@@ -1,4 +1,8 @@
-# Astronomy Engine <span style="vertical-align: middle;">[![Build Status](https://travis-ci.com/cosinekitty/astronomy.svg)](https://travis-ci.com/cosinekitty/astronomy)</span> <span style="vertical-align: middle;">[![npm package](https://img.shields.io/npm/v/astronomy-engine.svg)](https://www.npmjs.com/package/astronomy-engine)</span>
+# Astronomy Engine
+
+[![Build Status](https://travis-ci.com/cosinekitty/astronomy.svg)](https://travis-ci.com/cosinekitty/astronomy)
+[![npm package](https://img.shields.io/npm/v/astronomy-engine.svg)](https://www.npmjs.com/package/astronomy-engine)
+[![Netlify Status](https://api.netlify.com/api/v1/badges/fb766ed0-27e1-4c4e-82bf-a0fd455113a6/deploy-status)](https://app.netlify.com/sites/astronomy-engine/deploys)
 
 ### Supported Programming Languages
 
@@ -96,9 +100,9 @@ Calculations are also verified to be identical among all the supported programmi
 - Predicts dates of maximum elongation for Mercury and Venus.
 
 - Converts angular and vector coordinates among the following orientations:
-    - Equatorial J2000
-    - Equatorial equator-of-date
-    - Ecliptic J2000
-    - Topocentric Horizontal
+  - Equatorial J2000
+  - Equatorial equator-of-date
+  - Ecliptic J2000
+  - Topocentric Horizontal
 
 - Determines which constellation contains a given point in the sky.
