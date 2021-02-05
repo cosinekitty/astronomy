@@ -6,15 +6,15 @@ Fail()
 }
 
 echo "Trimming trailing whitespace in source code."
-for file in template/astronomy.{c,cs,js,py} ../source/c/astronomy.h; do
-    node trimspace.js ${file}
+for file in template/astronomy.{c,cs,ts,py} ../source/c/astronomy.h; do
+    node trimspace.js ${file} || Fail "Cannot trim whitespace from file: ${file}"
 done
 
 echo "Generating target code."
 ./generate source || Fail "Problem generating target code."
 
 echo "Trimming trailing whitespace in target code."
-for file in ../source/c/astronomy.c ../source/js/astronomy.js ../source/python/astronomy.py ../source/csharp/astronomy.cs; do
+for file in ../source/c/astronomy.c ../source/js/astronomy.ts ../source/python/astronomy.py ../source/csharp/astronomy.cs; do
     node trimspace.js ${file}
 done
 
@@ -27,6 +27,12 @@ cd ../../../csdown || Fail "Error changing to csdown directory"
 dotnet exe/csdown.dll csharp_prefix.md ../generate/dotnet/csharp_test/exe/astronomy.dll ../generate/dotnet/csharp_test/exe/astronomy.xml ../source/csharp/README.md || Fail "Error generating C# documentation."
 cd ../generate || Fail "Error changing back to generate directory"
 ./check_internal_links.py $(realpath ../source/csharp/README.md) || exit 1
+
+echo "Compiling TypeScript to JavaScript."
+tsc --allowJs -t ES2015 --outfile ../source/js/astronomy.js ../source/js/astronomy.ts || Fail "Error in typescript compiler"
+
+echo "Applying exports hack to JavaScript."
+./apply_exports_hack.py ../source/js/astronomy.js || Fail "Error in apply_exports_hack.py"
 
 echo "Minifying JavaScript code."
 google-closure-compiler --js ../source/js/astronomy.js --js_output_file ../source/js/astronomy.min.js || Fail "Error minifying astronomy.js"
