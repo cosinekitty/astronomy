@@ -1286,7 +1286,7 @@ static int PlutoStateTable_JS(cg_context_t *context, const top_model_t *model)
 
     fprintf(context->outfile, "const PLUTO_NUM_STATES = %d;\n", PLUTO_NUM_STATES);
     fprintf(context->outfile, "const PLUTO_TIME_STEP  = %0.0lf;\n\n", PLUTO_DT);
-    fprintf(context->outfile, "const PlutoStateTable = [\n");
+    fprintf(context->outfile, "const PlutoStateTable: BodyStateTableEntry[] = [\n");
 
     for (i=0; i < PLUTO_NUM_STATES; ++i)
     {

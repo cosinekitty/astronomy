@@ -922,7 +922,7 @@
     Astronomy.DeltaT_JplHorizons = function (ut) {
         return Astronomy.DeltaT_EspenakMeeus(Math.min(ut, 17.0 * DAYS_PER_TROPICAL_YEAR));
     };
-    var DeltaT = Astronomy.DeltaT_EspenakMeeus;
+    let DeltaT = Astronomy.DeltaT_EspenakMeeus;
     Astronomy.SetDeltaTFunction = function (func) {
         DeltaT = func;
     };
@@ -1197,32 +1197,32 @@
         ++Astronomy.CalcMoonCount;
         const T = time.tt / 36525;
         function DeclareArray1(xmin, xmax) {
-            var array = [];
-            var i;
+            const array = [];
+            let i;
             for (i = 0; i <= xmax - xmin; ++i) {
                 array.push(0);
             }
             return { min: xmin, array: array };
         }
         function DeclareArray2(xmin, xmax, ymin, ymax) {
-            var array = [];
-            var i;
+            const array = [];
+            let i;
             for (i = 0; i <= xmax - xmin; ++i) {
                 array.push(DeclareArray1(ymin, ymax));
             }
             return { min: xmin, array: array };
         }
         function ArrayGet2(a, x, y) {
-            var m = a.array[x - a.min];
+            const m = a.array[x - a.min];
             return m.array[y - m.min];
         }
         function ArraySet2(a, x, y, v) {
-            var m = a.array[x - a.min];
+            const m = a.array[x - a.min];
             m.array[y - m.min] = v;
         }
-        var S, MAX, ARG, FAC, I, J, T2, DGAM, DLAM, N, GAM1C, SINPI, L0, L, LS, F, D, DL0, DL, DLS, DF, DD, DS;
-        var coArray = DeclareArray2(-6, 6, 1, 4);
-        var siArray = DeclareArray2(-6, 6, 1, 4);
+        let S, MAX, ARG, FAC, I, J, T2, DGAM, DLAM, N, GAM1C, SINPI, L0, L, LS, F, D, DL0, DL, DLS, DF, DD, DS;
+        let coArray = DeclareArray2(-6, 6, 1, 4);
+        let siArray = DeclareArray2(-6, 6, 1, 4);
         function CO(x, y) {
             return ArrayGet2(coArray, x, y);
         }
@@ -1236,7 +1236,7 @@
             return ArraySet2(siArray, x, y, v);
         }
         function AddThe(c1, s1, c2, s2, func) {
-            return func(c1 * c2 - s1 * s2, s1 * c2 + c1 * s2);
+            func(c1 * c2 - s1 * s2, s1 * c2 + c1 * s2);
         }
         function Sine(phi) {
             return Math.sin(PI2 * phi);
@@ -1288,6 +1288,7 @@
                     MAX = 6;
                     FAC = 1.0;
                     break;
+                default: throw `Internal error: I = ${I}`; // persuade TypeScript that ARG, ... are all initialized before use.
             }
             SetCO(0, I, 1);
             SetCO(1, I, Math.cos(ARG) * FAC);
@@ -1303,7 +1304,7 @@
         }
         function Term(p, q, r, s) {
             var result = { x: 1, y: 0 };
-            var I = [null, p, q, r, s];
+            var I = [0, p, q, r, s]; // I[0] is not used; it is a placeholder
             for (var k = 1; k <= 4; ++k)
                 if (I[k] !== 0)
                     AddThe(result.x, result.y, CO(I[k], k), SI(I[k], k), (c, s) => (result.x = c, result.y = s));
@@ -1856,12 +1857,11 @@
         const xz = 0;
         const yz = 0;
         const zz = 1;
-        let pos2 = [
+        return [
             xx * pos1[0] + yx * pos1[1] + zx * pos1[2],
             xy * pos1[0] + yy * pos1[1] + zy * pos1[2],
             xz * pos1[0] + yz * pos1[1] + zz * pos1[2]
         ];
-        return pos2;
     }
     /**
      * Given a date and time, a geographic location of an observer on the Earth, and
@@ -1902,6 +1902,7 @@
      * @returns {Astronomy.HorizontalCoordinates}
      */
     Astronomy.Horizon = function (date, observer, ra, dec, refraction) {
+        // based on NOVAS equ2hor()
         let time = Astronomy.MakeTime(date);
         VerifyObserver(observer);
         VerifyNumber(ra);
@@ -2683,14 +2684,12 @@
         if (body === 'Earth') {
             return new Vector(0, 0, 0, time);
         }
-        let earth;
-        if (!aberration) {
-            // No aberration, so calculate Earth's position once, at the time of observation.
-            earth = CalcVsop(vsop.Earth, time);
-        }
-        // Correct for light-travel time, to get position of body as seen from Earth's center.
-        let h, geo, dt;
+        let earth = null;
+        let h;
+        let geo;
+        let dt = 0;
         let ltime = time;
+        // Correct for light-travel time, to get position of body as seen from Earth's center.
         for (let iter = 0; iter < 10; ++iter) {
             h = Astronomy.HelioVector(body, ltime);
             if (aberration) {
@@ -2708,6 +2707,12 @@
                         (transverse speed of Earth) / (speed of light).
                 */
                 earth = CalcVsop(vsop.Earth, ltime);
+            }
+            else {
+                if (!earth) {
+                    // No aberration, so calculate Earth's position once, at the time of observation.
+                    earth = CalcVsop(vsop.Earth, time);
+                }
             }
             geo = new Vector(h.x - earth.x, h.y - earth.y, h.z - earth.z, time);
             let ltime2 = time.AddDays(-geo.Length() / C_AUDAY);
@@ -2824,7 +2829,7 @@
         const dt_days = Math.abs(dt_tolerance_seconds / SECONDS_PER_DAY);
         let f1 = (options && options.init_f1) || f(t1);
         let f2 = (options && options.init_f2) || f(t2);
-        let fmid;
+        let fmid = NaN;
         let iter = 0;
         let iter_limit = (options && options.iter_limit) || 20;
         let calc_fmid = true;
@@ -3235,7 +3240,7 @@
         }
         let geo_dist = gc.Length(); // distance from body to center of Earth
         let helio_dist = hc.Length(); // distance from body to center of Sun
-        let ring_tilt = null; // only reported for Saturn
+        let ring_tilt; // only reported for Saturn
         if (body === 'Sun') {
             mag = SUN_MAG_1AU + 5 * Math.log10(geo_dist);
         }
@@ -3485,6 +3490,15 @@
         let date = new Date(mq.time.date.getTime() + 6 * MILLIS_PER_DAY);
         return Astronomy.SearchMoonQuarter(date);
     };
+    const BodyRadiusLookup = {
+        Sun: SUN_RADIUS_AU,
+        Moon: MOON_EQUATORIAL_RADIUS_AU
+    };
+    function BodyRadiusAu(body) {
+        // We calculate the apparent angular radius of the Sun and Moon,
+        // but treat all other bodies as points.
+        return BodyRadiusLookup[body] || 0;
+    }
     /**
      * Finds a rise or set time for the given body as
      * seen by an observer at the specified location on the Earth.
@@ -3519,9 +3533,7 @@
     Astronomy.SearchRiseSet = function (body, observer, direction, dateStart, limitDays) {
         VerifyObserver(observer);
         VerifyNumber(limitDays);
-        // We calculate the apparent angular radius of the Sun and Moon,
-        // but treat all other bodies as points.
-        let body_radius_au = { Sun: SUN_RADIUS_AU, Moon: MOON_EQUATORIAL_RADIUS_AU }[body] || 0;
+        let body_radius_au = BodyRadiusAu(body);
         function peak_altitude(t) {
             // Return the angular altitude above or below the horizon
             // of the highest part (the peak) of the given object.
@@ -3560,7 +3572,8 @@
         }
         let time_start = Astronomy.MakeTime(dateStart);
         let time_before;
-        let evt_before, evt_after;
+        let evt_before;
+        let evt_after;
         let alt_before = peak_altitude(time_start);
         let alt_after;
         if (alt_before > 0) {
@@ -4309,7 +4322,8 @@
                 /* There is a change of slope polarity within the time range [t1, t2]. */
                 /* Therefore this time range contains an apsis. */
                 /* Figure out whether it is perihelion or aphelion. */
-                let slope_func, kind;
+                let slope_func;
+                let kind;
                 if (m1 < 0.0 || m2 > 0.0) {
                     /* We found a minimum-distance event: perihelion. */
                     /* Search the time range for the time when the slope goes from negative to positive. */
@@ -6523,7 +6537,9 @@
         let t2 = shadow.time.AddDays(+PARTIAL_WINDOW);
         const partial_begin = LocalEclipseTransition(observer, +1.0, local_partial_distance, t1, shadow.time);
         const partial_end = LocalEclipseTransition(observer, -1.0, local_partial_distance, shadow.time, t2);
-        let total_begin, total_end, kind;
+        let total_begin;
+        let total_end;
+        let kind;
         if (shadow.r < Math.abs(shadow.k)) { // take absolute value of 'k' to handle annular eclipses too.
             t1 = shadow.time.AddDays(-TOTAL_WINDOW);
             t2 = shadow.time.AddDays(+TOTAL_WINDOW);

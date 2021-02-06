@@ -35,12 +35,19 @@
  */
 'use strict';
 
+interface ExportType {
+    Astronomy: any;
+}
+
 /**
  * @name Astronomy
  * @namespace Astronomy
  */
 (function(Astronomy: any){
 'use strict';
+
+type FlexibleDateTime = Date | number | AstroTime;
+
 const DAYS_PER_TROPICAL_YEAR = 365.24217;
 const J2000 = new Date('2000-01-01T12:00:00Z');
 const PI2 = 2 * Math.PI;
@@ -177,7 +184,15 @@ Astronomy.Bodies = [
     'EMB'           // Earth/Moon Barycenter
 ];
 
-const Planet = {
+interface PlanetInfo {
+    OrbitalPeriod: number;
+}
+
+interface PlanetTable {
+    [body: string]: PlanetInfo;
+}
+
+const Planet: PlanetTable = {
     Mercury: { OrbitalPeriod:    87.969 },
     Venus:   { OrbitalPeriod:   224.701 },
     Earth:   { OrbitalPeriod:   365.256 },
@@ -189,7 +204,11 @@ const Planet = {
     Pluto:   { OrbitalPeriod: 90560.0   }
 };
 
-const vsop = {
+interface VsopTable {
+    [body: string]: number[][][][];
+}
+
+const vsop: VsopTable = {
     Mercury: [
   [
     [
@@ -920,13 +939,16 @@ Astronomy.DeltaT_EspenakMeeus = function(ut: number): number {
 }
 
 
+type DeltaTimeFunction = (ut: number) => number;
+
+
 Astronomy.DeltaT_JplHorizons = function(ut: number): number {
     return Astronomy.DeltaT_EspenakMeeus(Math.min(ut, 17.0 * DAYS_PER_TROPICAL_YEAR));
 }
 
-var DeltaT = Astronomy.DeltaT_EspenakMeeus;
+let DeltaT: DeltaTimeFunction = Astronomy.DeltaT_EspenakMeeus;
 
-Astronomy.SetDeltaTFunction = function(func: any) {
+Astronomy.SetDeltaTFunction = function(func: DeltaTimeFunction) {
     DeltaT = func;
 }
 
@@ -1055,7 +1077,7 @@ function InterpolateTime(time1: AstroTime, time2: AstroTime, fraction: number): 
  *
  * @returns {Astronomy.AstroTime}
  */
-Astronomy.MakeTime = function(date: number | Date | AstroTime): AstroTime {
+Astronomy.MakeTime = function(date: FlexibleDateTime): AstroTime {
     if (date instanceof AstroTime) {
         return date;
     }
@@ -1192,9 +1214,18 @@ function mean_obliq(time: AstroTime): number {
     return asec / 3600.0;
 }
 
-var cache_e_tilt: { tt: any; dpsi?: number; deps?: number; ee?: number; mobl?: number; tobl?: number; };
+interface EarthTiltInfo {
+    tt: number;
+    dpsi: number;
+    deps: number;
+    ee: number;
+    mobl: number;
+    tobl: number;
+}
 
-function e_tilt(time: AstroTime) {
+var cache_e_tilt: EarthTiltInfo;
+
+function e_tilt(time: AstroTime): EarthTiltInfo {
     if (!cache_e_tilt || Math.abs(cache_e_tilt.tt - time.tt) > 1.0e-6) {
         const nut = nutation_angles(time);
         const mean_ob = mean_obliq(time);
@@ -1211,7 +1242,7 @@ function e_tilt(time: AstroTime) {
     return cache_e_tilt;
 }
 
-function ecl2equ_vec(time: any, pos: number[]): number[] {
+function ecl2equ_vec(time: AstroTime, pos: ArrayVector): ArrayVector {
     var obl = mean_obliq(time) * DEG2RAD;
     var cos_obl = Math.cos(obl);
     var sin_obl = Math.sin(obl);
@@ -1229,37 +1260,47 @@ function CalcMoon(time: AstroTime) {
 
     const T = time.tt / 36525;
 
-    function DeclareArray1(xmin: number, xmax: number) {
-        var array = [];
-        var i: number;
+    interface PascalArray1 {
+        min: number;
+        array: number[];
+    }
+
+    interface PascalArray2 {
+        min: number;
+        array: PascalArray1[];
+    }
+
+    function DeclareArray1(xmin: number, xmax: number): PascalArray1 {
+        const array = [];
+        let i: number;
         for (i=0; i <= xmax-xmin; ++i) {
             array.push(0);
         }
         return {min:xmin, array:array};
     }
 
-    function DeclareArray2(xmin: number, xmax: number, ymin: number, ymax: number) {
-        var array = [];
-        var i: number;
+    function DeclareArray2(xmin: number, xmax: number, ymin: number, ymax: number): PascalArray2 {
+        const array = [];
+        let i: number;
         for (i=0; i <= xmax-xmin; ++i) {
             array.push(DeclareArray1(ymin, ymax));
         }
         return {min:xmin, array:array};
     }
 
-    function ArrayGet2(a: { min: any; array: any; }, x: number, y: number) {
-        var m = a.array[x - a.min];
+    function ArrayGet2(a: PascalArray2, x: number, y: number) {
+        const m = a.array[x - a.min];
         return m.array[y - m.min];
     }
 
-    function ArraySet2(a: { min: any; array: any; }, x: number, y: number, v: any) {
-        var m = a.array[x - a.min];
+    function ArraySet2(a: PascalArray2, x: number, y: number, v: number) {
+        const m = a.array[x - a.min];
         m.array[y - m.min] = v;
     }
 
-    var S: number, MAX: number, ARG: number, FAC: number, I: number, J: number, T2: number, DGAM: number, DLAM: number, N: number, GAM1C: number, SINPI: number, L0: number, L: number, LS: number, F: number, D: number, DL0: number, DL: number, DLS: number, DF: number, DD: number, DS: number;
-    var coArray = DeclareArray2(-6, 6, 1, 4);
-    var siArray = DeclareArray2(-6, 6, 1, 4);
+    let S: number, MAX: number, ARG: number, FAC: number, I: number, J: number, T2: number, DGAM: number, DLAM: number, N: number, GAM1C: number, SINPI: number, L0: number, L: number, LS: number, F: number, D: number, DL0: number, DL: number, DLS: number, DF: number, DD: number, DS: number;
+    let coArray = DeclareArray2(-6, 6, 1, 4);
+    let siArray = DeclareArray2(-6, 6, 1, 4);
 
     function CO(x: number, y: number) {
         return ArrayGet2(coArray, x, y);
@@ -1269,19 +1310,21 @@ function CalcMoon(time: AstroTime) {
         return ArrayGet2(siArray, x, y);
     }
 
-    function SetCO(x: number, y: any, v: number) {
+    function SetCO(x: number, y: number, v: number) {
         return ArraySet2(coArray, x, y, v);
     }
 
-    function SetSI(x: number, y: any, v: number) {
+    function SetSI(x: number, y: number, v: number) {
         return ArraySet2(siArray, x, y, v);
     }
 
-    function AddThe(c1: number, s1: number, c2: number, s2: number, func: { (c: any, s: any): void; (c: any, s: any): any; (arg0: number, arg1: number): any; }) {
-        return func(c1*c2 - s1*s2, s1*c2 + c1*s2);
+    type ThetaFunc = (real:number, imag:number) => void;
+
+    function AddThe(c1: number, s1: number, c2: number, s2: number, func:ThetaFunc): void {
+        func(c1*c2 - s1*s2, s1*c2 + c1*s2);
     }
 
-    function Sine(phi: number) {
+    function Sine(phi: number): number {
         return Math.sin(PI2 * phi);
     }
 
@@ -1320,13 +1363,14 @@ function CalcMoon(time: AstroTime) {
             case 2: ARG=LS; MAX=3; FAC=0.997504612-0.002495388*T; break;
             case 3: ARG=F;  MAX=4; FAC=1.000002708+139.978*DGAM;  break;
             case 4: ARG=D;  MAX=6; FAC=1.0;                       break;
+            default: throw `Internal error: I = ${I}`;      // persuade TypeScript that ARG, ... are all initialized before use.
         }
         SetCO(0, I, 1);
         SetCO(1, I, Math.cos(ARG) * FAC);
         SetSI(0, I, 0);
         SetSI(1, I, Math.sin(ARG) * FAC);
         for (J=2; J<=MAX; ++J) {
-            AddThe(CO(J-1,I), SI(J-1,I), CO(1,I), SI(1,I), (c: any, s: any) => (SetCO(J,I,c), SetSI(J,I,s)));
+            AddThe(CO(J-1,I), SI(J-1,I), CO(1,I), SI(1,I), (c:number, s:number) => (SetCO(J,I,c), SetSI(J,I,s)));
         }
         for (J=1; J<=MAX; ++J) {
             SetCO(-J, I, CO(J, I));
@@ -1334,16 +1378,21 @@ function CalcMoon(time: AstroTime) {
         }
     }
 
-    function Term(p: any, q: any, r: any, s: any) {
+    interface ComplexValue {
+        x: number;
+        y: number;
+    }
+
+    function Term(p: number, q: number, r: number, s: number): ComplexValue {
         var result = { x:1, y:0 };
-        var I = [ null, p, q, r, s ];
+        var I = [ 0, p, q, r, s ];      // I[0] is not used; it is a placeholder
         for (var k=1; k <= 4; ++k)
             if (I[k] !== 0)
-                AddThe(result.x, result.y, CO(I[k], k), SI(I[k], k), (c: number, s: number) => (result.x=c, result.y=s));
+                AddThe(result.x, result.y, CO(I[k], k), SI(I[k], k), (c:number, s:number) => (result.x=c, result.y=s));
         return result;
     }
 
-    function AddSol(coeffl: number, coeffs: number, coeffg: number, coeffp: number, p: any, q: any, r: any, s: any) {
+    function AddSol(coeffl: number, coeffs: number, coeffg: number, coeffp: number, p: number, q: number, r: number, s: number): void {
         var result = Term(p, q, r, s);
         DLAM += coeffl * result.y;
         DS += coeffs * result.y;
@@ -1494,7 +1543,7 @@ function CalcMoon(time: AstroTime) {
     };
 }
 
-function precession(tt1: number, pos1: any[], tt2: number) {
+function precession(tt1: number, pos1: ArrayVector, tt2: number): ArrayVector {
     const r = precession_rot(tt1, tt2);
     return [
         r.rot[0][0]*pos1[0] + r.rot[1][0]*pos1[1] + r.rot[2][0]*pos1[2],
@@ -1503,7 +1552,7 @@ function precession(tt1: number, pos1: any[], tt2: number) {
     ];
 }
 
-function precession_rot(tt1: number, tt2: number) {
+function precession_rot(tt1: number, tt2: number): RotationMatrix {
     var xx: number, yx: number, zx: number, xy: number, yy: number, zy: number, xz: number, yz: number, zz: number;
     var eps0 = 84381.406;
     var t: number, psia: number, omegaa: number, chia: number, sa: number, ca: number, sb: number, cb: number, sc: number, cc: number, sd: number, cd: number;
@@ -1574,7 +1623,7 @@ function precession_rot(tt1: number, tt2: number) {
     ]);
 }
 
-function era(time: AstroTime) {    // Earth Rotation Angle
+function era(time: AstroTime): number {    // Earth Rotation Angle
     const thet1 = 0.7790572732640 + 0.00273781191135448 * time.ut;
     const thet3 = time.ut % 1;
     let theta = 360 * ((thet1 + thet3) % 1);
@@ -1584,7 +1633,7 @@ function era(time: AstroTime) {    // Earth Rotation Angle
     return theta;
 }
 
-function sidereal_time(time: AstroTime) {          // calculates Greenwich Apparent Sidereal Time (GAST)
+function sidereal_time(time: AstroTime): number {          // calculates Greenwich Apparent Sidereal Time (GAST)
     const t = time.tt / 36525;
     let eqeq = 15 * e_tilt(time).ee;    // Replace with eqeq=0 to get GMST instead of GAST (if we ever need it)
     const theta = era(time);
@@ -1602,7 +1651,7 @@ function sidereal_time(time: AstroTime) {          // calculates Greenwich Appar
     return gst;
 }
 
-function terra(observer: Observer, st: number) {
+function terra(observer: Observer, st: number): TerraInfo {
     const df = 1 - 0.003352819697896;    // flattening of the Earth
     const df2 = df * df;
     const phi = observer.latitude * DEG2RAD;
@@ -1622,7 +1671,7 @@ function terra(observer: Observer, st: number) {
     };
 }
 
-function nutation(time: any, direction: number, pos: number[]) {
+function nutation(time: AstroTime, direction: number, pos: ArrayVector): ArrayVector {
     const r = nutation_rot(time, direction);
     return [
         r.rot[0][0]*pos[0] + r.rot[1][0]*pos[1] + r.rot[2][0]*pos[2],
@@ -1631,7 +1680,7 @@ function nutation(time: any, direction: number, pos: number[]) {
     ];
 }
 
-function nutation_rot(time: any, direction: number) {
+function nutation_rot(time: AstroTime, direction: number): RotationMatrix {
     const tilt = e_tilt(time);
     const oblm = tilt.mobl * DEG2RAD;
     const oblt = tilt.tobl * DEG2RAD;
@@ -1670,7 +1719,7 @@ function nutation_rot(time: any, direction: number) {
     ]);
 }
 
-function geo_pos(time: AstroTime, observer: Observer) {
+function geo_pos(time: AstroTime, observer: Observer): ArrayVector {
     const gast = sidereal_time(time);
     const pos1 = terra(observer, gast).pos;
     const pos2 = nutation(time, -1, pos1);
@@ -1748,7 +1797,7 @@ class Spherical {
  *
  * @returns {Astronomy.Spherical}
  */
-Astronomy.MakeSpherical = function(lat: any, lon: any, dist: any) {
+Astronomy.MakeSpherical = function(lat: number, lon: number, dist: number): Spherical {
     return new Spherical(lat, lon, dist);
 }
 
@@ -1796,6 +1845,12 @@ function IsValidRotationArray(rot: number[][]) {
     return true;
 }
 
+type ArrayVector = [number, number, number];
+
+interface TerraInfo {
+    pos: ArrayVector;
+    vel: ArrayVector;
+}
 
 /**
  * Contains a rotation matrix that can be used to transform one coordinate system to another.
@@ -1926,7 +1981,7 @@ class EclipticCoordinates {
     elat: number;
     elon: number;
 
-    constructor(ex: any, ey: number, ez: number, elat: number, elon: number) {
+    constructor(ex: number, ey: number, ez: number, elat: number, elon: number) {
         this.ex   = VerifyNumber(ex);
         this.ey   = VerifyNumber(ey);
         this.ez   = VerifyNumber(ez);
@@ -1935,7 +1990,7 @@ class EclipticCoordinates {
     }
 }
 
-function vector2radec(pos: number[])
+function vector2radec(pos: ArrayVector): EquatorialCoordinates
 {
     const xyproj = pos[0]*pos[0] + pos[1]*pos[1];
     const dist = Math.sqrt(xyproj + pos[2]*pos[2]);
@@ -1958,7 +2013,7 @@ function vector2radec(pos: number[])
     return new EquatorialCoordinates(ra, dec, dist);
 }
 
-function spin(angle: number, pos1: number[]) {
+function spin(angle: number, pos1: ArrayVector): ArrayVector {
     const angr = angle * DEG2RAD;
     const cosang = Math.cos(angr);
     const sinang = Math.sin(angr);
@@ -1971,12 +2026,11 @@ function spin(angle: number, pos1: number[]) {
     const xz = 0;
     const yz = 0;
     const zz = 1;
-    let pos2 = [
+    return [
         xx*pos1[0] + yx*pos1[1] + zx*pos1[2],
         xy*pos1[0] + yy*pos1[1] + zy*pos1[2],
         xz*pos1[0] + yz*pos1[1] + zz*pos1[2]
     ];
-    return pos2;
 }
 
 /**
@@ -2017,7 +2071,8 @@ function spin(angle: number, pos1: number[]) {
  *
  * @returns {Astronomy.HorizontalCoordinates}
  */
-Astronomy.Horizon = function(date: any, observer: Observer, ra: number, dec: number, refraction: any) {     // based on NOVAS equ2hor()
+Astronomy.Horizon = function(date: FlexibleDateTime, observer: Observer, ra: number, dec: number, refraction?: string): HorizontalCoordinates {
+    // based on NOVAS equ2hor()
     let time = Astronomy.MakeTime(date);
     VerifyObserver(observer);
     VerifyNumber(ra);
@@ -2031,9 +2086,9 @@ Astronomy.Horizon = function(date: any, observer: Observer, ra: number, dec: num
     const cosdc = Math.cos(dec * DEG2RAD);
     const sinra = Math.sin(ra * 15 * DEG2RAD);
     const cosra = Math.cos(ra * 15 * DEG2RAD);
-    let uze = [coslat*coslon, coslat*sinlon, sinlat];
-    let une = [-sinlat*coslon, -sinlat*sinlon, coslat];
-    let uwe = [sinlon, -coslon, 0];
+    let uze: ArrayVector = [coslat*coslon, coslat*sinlon, sinlat];
+    let une: ArrayVector = [-sinlat*coslon, -sinlat*sinlon, coslat];
+    let uwe: ArrayVector = [sinlon, -coslon, 0];
 
     const spin_angle = -15 * sidereal_time(time);
     let uz = spin(spin_angle, uze);
@@ -2177,7 +2232,7 @@ Astronomy.MakeObserver = function(latitude_degrees: number, longitude_degrees: n
  *
  * @returns {Astronomy.EclipticCoordinates}
  */
-Astronomy.SunPosition = function(date: any) {
+Astronomy.SunPosition = function(date: FlexibleDateTime): EclipticCoordinates {
     // Correct for light travel time from the Sun.
     // This is really the same as correcting for aberration.
     // Otherwise season calculations (equinox, solstice) will all be early by about 8 minutes!
@@ -2187,7 +2242,7 @@ Astronomy.SunPosition = function(date: any) {
     const earth2000 = CalcVsop(vsop.Earth, time);
 
     // Convert to geocentric location of the Sun.
-    const sun2000 = [-earth2000.x, -earth2000.y, -earth2000.z];
+    const sun2000: ArrayVector = [-earth2000.x, -earth2000.y, -earth2000.z];
 
     // Convert to equator-of-date equatorial cartesian coordinates.
     const stemp = precession(0, sun2000, time.tt);
@@ -2245,14 +2300,14 @@ Astronomy.SunPosition = function(date: any) {
  * @returns {Astronomy.EquatorialCoordinates}
  *      The topocentric coordinates of the body as adjusted for the given observer.
  */
-Astronomy.Equator = function(body: string, date: (Date | number | AstroTime), observer: Observer, ofdate: boolean, aberration: boolean): EquatorialCoordinates {
+Astronomy.Equator = function(body: string, date: FlexibleDateTime, observer: Observer, ofdate: boolean, aberration: boolean): EquatorialCoordinates {
     VerifyObserver(observer);
     VerifyBoolean(ofdate);
     VerifyBoolean(aberration);
     const time = Astronomy.MakeTime(date);
     const gc_observer = geo_pos(time, observer);
     const gc = Astronomy.GeoVector(body, time, aberration);
-    const j2000 = [
+    const j2000: ArrayVector = [
         gc.x - gc_observer[0],
         gc.y - gc_observer[1],
         gc.z - gc_observer[2]
@@ -2299,7 +2354,7 @@ function RotateEquatorialToEcliptic(gx: number, gy: number, gz: number, cos_ob: 
  *
  * @returns {Astronomy.EclipticCoordinates}
  */
-Astronomy.Ecliptic = function(gx: any, gy: any, gz: any) {
+Astronomy.Ecliptic = function(gx: number, gy: number, gz: number): EclipticCoordinates {
     // Based on NOVAS functions equ2ecl() and equ2ecl_vec().
     if (ob2000 === undefined) {
         // Lazy-evaluate and keep the mean obliquity of the ecliptic at J2000.
@@ -2329,13 +2384,13 @@ Astronomy.Ecliptic = function(gx: any, gy: any, gz: any) {
  *
  * @returns {Astronomy.Vector}
  */
-Astronomy.GeoMoon = function(date: (Date | number | AstroTime)): Vector {
+Astronomy.GeoMoon = function(date: FlexibleDateTime): Vector {
     var time = Astronomy.MakeTime(date);
     var moon = CalcMoon(time);
 
     // Convert geocentric ecliptic spherical coords to cartesian coords.
     var dist_cos_lat = moon.distance_au * Math.cos(moon.geo_eclip_lat);
-    var gepos = [
+    var gepos: ArrayVector = [
         dist_cos_lat * Math.cos(moon.geo_eclip_lon),
         dist_cos_lat * Math.sin(moon.geo_eclip_lon),
         moon.distance_au * Math.sin(moon.geo_eclip_lat)
@@ -2350,7 +2405,7 @@ Astronomy.GeoMoon = function(date: (Date | number | AstroTime)): Vector {
     return new Vector(mpos2[0], mpos2[1], mpos2[2], time);
 }
 
-function VsopFormula(formula: any, t: number) {
+function VsopFormula(formula: any, t: number): number {
     let tpower = 1;
     let coord = 0;
     for (let series of formula) {
@@ -2392,7 +2447,7 @@ const LON_INDEX = 0;
 const LAT_INDEX = 1;
 const RAD_INDEX = 2;
 
-function VsopRotate(eclip: number[]) {
+function VsopRotate(eclip: ArrayVector): TerseVector {
     // Convert ecliptic cartesian coordinates to equatorial cartesian coordinates.
     return new TerseVector(
         eclip[0] + 0.000000440360*eclip[1] - 0.000000190919*eclip[2],
@@ -2401,7 +2456,7 @@ function VsopRotate(eclip: number[]) {
     );
 }
 
-function VsopSphereToRect(lon: number, lat: number, radius: number) {
+function VsopSphereToRect(lon: number, lat: number, radius: number): ArrayVector {
     // Convert spherical coordinates to ecliptic cartesian coordinates.
     const r_coslat = radius * Math.cos(lat);
     return [
@@ -2411,7 +2466,7 @@ function VsopSphereToRect(lon: number, lat: number, radius: number) {
     ];
 }
 
-function CalcVsop(model: any[], time: AstroTime) {
+function CalcVsop(model: any[], time: AstroTime): Vector {
     const t = time.tt / DAYS_PER_MILLENNIUM;   // millennia since 2000
     const lon = VsopFormula(model[LON_INDEX], t);
     const lat = VsopFormula(model[LAT_INDEX], t);
@@ -2420,7 +2475,7 @@ function CalcVsop(model: any[], time: AstroTime) {
     return VsopRotate(eclip).ToAstroVector(time);
 }
 
-function CalcVsopPosVel(model: any[], tt: number) {
+function CalcVsopPosVel(model: any[], tt: number): body_state_t {
     const t = tt / DAYS_PER_MILLENNIUM;
 
     // Calculate the VSOP "B" trigonometric series to obtain ecliptic spherical coordinates.
@@ -2460,7 +2515,7 @@ function CalcVsopPosVel(model: any[], tt: number) {
     const eclip_pos = VsopSphereToRect(lon, lat, rad);
 
     // Convert speed units from [AU/millennium] to [AU/day].
-    const eclip_vel = [
+    const eclip_vel: ArrayVector = [
         vx / DAYS_PER_MILLENNIUM,
         vy / DAYS_PER_MILLENNIUM,
         vz / DAYS_PER_MILLENNIUM
@@ -2472,7 +2527,7 @@ function CalcVsopPosVel(model: any[], tt: number) {
     return new body_state_t(tt, equ_pos, equ_vel);
 }
 
-function AdjustBarycenter(ssb, time: any, body: string, pmass: number) {
+function AdjustBarycenter(ssb: Vector, time: AstroTime, body: string, pmass: number): void {
     const shift = pmass / (pmass + SUN_GM);
     const planet = CalcVsop(vsop[body], time);
     ssb.x += shift * planet.x;
@@ -2480,7 +2535,7 @@ function AdjustBarycenter(ssb, time: any, body: string, pmass: number) {
     ssb.z += shift * planet.z;
 }
 
-function CalcSolarSystemBarycenter(time: any) {
+function CalcSolarSystemBarycenter(time: AstroTime): Vector {
     const ssb = new Vector(0.0, 0.0, 0.0, time);
     AdjustBarycenter(ssb, time, 'Jupiter', JUPITER_GM);
     AdjustBarycenter(ssb, time, 'Saturn',  SATURN_GM);
@@ -2494,7 +2549,7 @@ function CalcSolarSystemBarycenter(time: any) {
 const PLUTO_NUM_STATES = 41;
 const PLUTO_TIME_STEP  = 36500;
 
-const PlutoStateTable = [
+const PlutoStateTable: BodyStateTableEntry[] = [
     [ -730000.0, [-26.1182072321076, -14.3761681778250,   3.3844025152995], [ 1.6339372163656e-03, -2.7861699588508e-03, -1.3585880229445e-03]]
 ,   [ -693500.0, [ 43.6599275018261,  15.7782921408811,  -8.2269833881374], [-2.5043046295860e-04,  2.1163039457238e-03,  7.3466073583102e-04]]
 ,   [ -657000.0, [-17.0086014985033,  33.0590743876420,  15.4080189624259], [-1.9676551946049e-03, -1.8337707766770e-03,  2.0125441459959e-05]]
@@ -2607,12 +2662,14 @@ class body_state_t {
     }
 }
 
-function BodyStateFromTable(entry: [number, [number, number, number], [number, number, number]]) {
+type BodyStateTableEntry = [number, ArrayVector, ArrayVector];
+
+function BodyStateFromTable(entry: BodyStateTableEntry): body_state_t {
     let [ tt, [rx, ry, rz], [vx, vy, vz] ] = entry;
     return new body_state_t(tt, new TerseVector(rx, ry, rz), new TerseVector(vx, vy, vz));
 }
 
-function AdjustBarycenterPosVel(ssb, tt: any, body: string, planet_gm: number): body_state_t {
+function AdjustBarycenterPosVel(ssb: body_state_t, tt: number, body: string, planet_gm: number): body_state_t {
     const shift = planet_gm / (planet_gm + SUN_GM);
     const planet = CalcVsopPosVel(vsop[body], tt);
     ssb.r.incr(planet.r.mul(shift));
@@ -2719,7 +2776,7 @@ function GravSim(tt2: number, calc1: body_grav_calc_t): grav_sim_t {
 
 const PLUTO_DT = 250;
 const PLUTO_NSTEPS = (PLUTO_TIME_STEP / PLUTO_DT) + 1;
-const pluto_cache = [];
+const pluto_cache: body_grav_calc_t[][] = [];
 
 function ClampIndex(frac: number, nsteps: number) {
     const index = Math.floor(frac);
@@ -2732,7 +2789,7 @@ function ClampIndex(frac: number, nsteps: number) {
     return index;
 }
 
-function GravFromState(entry: any) {
+function GravFromState(entry: BodyStateTableEntry) {
     const state = BodyStateFromTable(entry);
     const bary = new major_bodies_t(state.tt);
     const r = state.r.add(bary.Sun.r);
@@ -2742,8 +2799,8 @@ function GravFromState(entry: any) {
     return new grav_sim_t(bary, grav);
 }
 
-function GetSegment(cache: any[], tt: number) {
-    const t0 = <number>PlutoStateTable[0][0];
+function GetSegment(cache: body_grav_calc_t[][], tt: number): body_grav_calc_t[] | null {
+    const t0: number = PlutoStateTable[0][0];
 
     if (tt < t0 || tt > PlutoStateTable[PLUTO_NUM_STATES-1][0]) {
         // Don't bother calculating a segment. Let the caller crawl backward/forward to this time.
@@ -2752,7 +2809,7 @@ function GetSegment(cache: any[], tt: number) {
 
     const seg_index = ClampIndex((tt - t0) / PLUTO_TIME_STEP, PLUTO_NUM_STATES-1);
     if (!cache[seg_index]) {
-        const seg = cache[seg_index] = [];
+        const seg : body_grav_calc_t[] = cache[seg_index] = [];
 
         // Each endpoint is exact.
         seg[0] = GravFromState(PlutoStateTable[seg_index]).grav;
@@ -2783,7 +2840,7 @@ function GetSegment(cache: any[], tt: number) {
     return cache[seg_index];
 }
 
-function CalcPlutoOneWay(entry: any, target_tt: number, dt: number) {
+function CalcPlutoOneWay(entry: BodyStateTableEntry, target_tt: number, dt: number) {
     let sim = GravFromState(entry);
     const n = Math.ceil((target_tt - sim.grav.tt) / dt);
     for (let i=0; i < n; ++i) {
@@ -2792,7 +2849,7 @@ function CalcPlutoOneWay(entry: any, target_tt: number, dt: number) {
     return sim;
 }
 
-function CalcPluto(time: AstroTime) {
+function CalcPluto(time: AstroTime): Vector {
     let r, bary;
     const seg = GetSegment(pluto_cache, time.tt);
     if (!seg) {
@@ -2847,7 +2904,7 @@ function CalcPluto(time: AstroTime) {
  *
  * @returns {Astronomy.Vector}
  */
-Astronomy.HelioVector = function(body: string, date: any) {
+Astronomy.HelioVector = function(body: string, date: FlexibleDateTime): Vector {
     var time = Astronomy.MakeTime(date);
     if (body in vsop) {
         return CalcVsop(vsop[body], time);
@@ -2894,7 +2951,7 @@ Astronomy.HelioVector = function(body: string, date: any) {
  * @returns {number}
  *      The heliocentric distance in AU.
  */
-Astronomy.HelioDistance = function(body: string, date: any) {
+Astronomy.HelioDistance = function(body: string, date: FlexibleDateTime): number {
     const time = Astronomy.MakeTime(date);
     if (body in vsop) {
         return VsopFormula(vsop[body][RAD_INDEX], time.tt / DAYS_PER_MILLENNIUM);
@@ -2929,7 +2986,7 @@ Astronomy.HelioDistance = function(body: string, date: any) {
  *
  * @returns {Astronomy.Vector}
  */
-Astronomy.GeoVector = function(body: string, date: (Date | number | AstroTime), aberration: boolean): Vector {
+Astronomy.GeoVector = function(body: string, date: FlexibleDateTime, aberration: boolean): Vector {
     VerifyBoolean(aberration);
     const time = Astronomy.MakeTime(date);
     if (body === 'Moon') {
@@ -2939,15 +2996,13 @@ Astronomy.GeoVector = function(body: string, date: (Date | number | AstroTime), 
         return new Vector(0, 0, 0, time);
     }
 
-    let earth;
-    if (!aberration) {
-        // No aberration, so calculate Earth's position once, at the time of observation.
-        earth = CalcVsop(vsop.Earth, time);
-    }
+    let earth: Vector | null = null;
+    let h: Vector;
+    let geo: Vector;
+    let dt: number = 0;
+    let ltime = time;
 
     // Correct for light-travel time, to get position of body as seen from Earth's center.
-    let h: Vector, geo, dt: number;
-    let ltime = time;
     for (let iter=0; iter < 10; ++iter) {
         h = Astronomy.HelioVector(body, ltime);
 
@@ -2966,6 +3021,11 @@ Astronomy.GeoVector = function(body: string, date: (Date | number | AstroTime), 
                     (transverse speed of Earth) / (speed of light).
             */
             earth = CalcVsop(vsop.Earth, ltime);
+        } else {
+            if (!earth) {
+                // No aberration, so calculate Earth's position once, at the time of observation.
+                earth = CalcVsop(vsop.Earth, time);
+            }
         }
 
         geo = new Vector(h.x-earth.x, h.y-earth.y, h.z-earth.z, time);
@@ -3084,7 +3144,7 @@ Astronomy.Search = function(
     t1: AstroTime,
     t2: AstroTime,
     options: { dt_tolerance_seconds?: number; init_f1?: number; init_f2?: number; iter_limit: number; }
-    ): AstroTime {
+    ): AstroTime | null {
 
     const dt_tolerance_seconds = (options && options.dt_tolerance_seconds) || 1;
 
@@ -3092,7 +3152,7 @@ Astronomy.Search = function(
 
     let f1 = (options && options.init_f1) || f(t1);
     let f2 = (options && options.init_f2) || f(t2);
-    let fmid: number;
+    let fmid: number = NaN;
 
     let iter = 0;
     let iter_limit = (options && options.iter_limit) || 20;
@@ -3230,7 +3290,7 @@ function NormalizeLongitude(lon: number): number {
  *      To avoid a `null` return value, the caller must pick a time window around
  *      the event that is within a few days but not so small that the event might fall outside the window.
  */
-Astronomy.SearchSunLongitude = function(targetLon: number, dateStart: (Date | number | AstroTime), limitDays: number): AstroTime {
+Astronomy.SearchSunLongitude = function(targetLon: number, dateStart: FlexibleDateTime, limitDays: number): AstroTime {
     function sun_offset(t: AstroTime): number {
         let pos = Astronomy.SunPosition(t);
         return LongitudeOffset(pos.elon - targetLon);
@@ -3266,7 +3326,7 @@ Astronomy.SearchSunLongitude = function(targetLon: number, dateStart: (Date | nu
  *      Values greater than 180 indicate that the body is to the west of
  *      the Sun and is visible in the morning sky.
  */
-Astronomy.LongitudeFromSun = function(body: string, date: (Date | number | AstroTime)): number {
+Astronomy.LongitudeFromSun = function(body: string, date: FlexibleDateTime): number {
     if (body === 'Earth')
         throw 'The Earth does not have a longitude as seen from itself.';
 
@@ -3297,7 +3357,7 @@ Astronomy.LongitudeFromSun = function(body: string, date: (Date | number | Astro
  * @returns {number}
  *      An angle in degrees in the range [0, 180].
  */
-Astronomy.AngleFromSun = function(body: string, date: (Date | number | AstroTime)): number {
+Astronomy.AngleFromSun = function(body: string, date: FlexibleDateTime): number {
     if (body == 'Earth')
         throw 'The Earth does not have an angle as seen from itself.';
 
@@ -3324,7 +3384,7 @@ Astronomy.AngleFromSun = function(body: string, date: (Date | number | AstroTime
  *      increases in the same direction the Earth orbits the Sun.
  *      The returned value is always in the range [0, 360).
  */
-Astronomy.EclipticLongitude = function(body: string, date: (Date | number | AstroTime)): number {
+Astronomy.EclipticLongitude = function(body: string, date: FlexibleDateTime): number {
     if (body === 'Sun')
         throw 'Cannot calculate heliocentric longitude of the Sun.';
 
@@ -3488,7 +3548,7 @@ class IlluminationInfo {
  *
  * @returns {Astronomy.IlluminationInfo}
  */
-Astronomy.Illumination = function(body: string, date: (Date | number | AstroTime)): IlluminationInfo {
+Astronomy.Illumination = function(body: string, date: FlexibleDateTime): IlluminationInfo {
     if (body === 'Earth')
         throw `The illumination of the Earth is not defined.`;
 
@@ -3518,7 +3578,7 @@ Astronomy.Illumination = function(body: string, date: (Date | number | AstroTime
 
     let geo_dist = gc.Length();     // distance from body to center of Earth
     let helio_dist = hc.Length();   // distance from body to center of Sun
-    let ring_tilt = null;   // only reported for Saturn
+    let ring_tilt;   // only reported for Saturn
 
     if (body === 'Sun') {
         mag = SUN_MAG_1AU + 5*Math.log10(geo_dist);
@@ -3587,7 +3647,7 @@ function SynodicPeriod(body: string): number {
  * @returns {Astronomy.AstroTime}
  *      The time when the Earth and the body next reach the specified relative longitudes.
  */
-Astronomy.SearchRelativeLongitude = function(body: string, targetRelLon: number, startDate: (Date | number | AstroTime)): AstroTime {
+Astronomy.SearchRelativeLongitude = function(body: string, targetRelLon: number, startDate: FlexibleDateTime): AstroTime {
     VerifyNumber(targetRelLon);
     const planet = Planet[body];
     if (!planet)
@@ -3600,7 +3660,7 @@ Astronomy.SearchRelativeLongitude = function(body: string, targetRelLon: number,
     // as both race around the Sun.
     const direction = (planet.OrbitalPeriod > Planet.Earth.OrbitalPeriod) ? +1 : -1;
 
-    function offset(t: any) {
+    function offset(t: AstroTime): number {
         const plon = Astronomy.EclipticLongitude(body, t);
         const elon = Astronomy.EclipticLongitude('Earth', t);
         const diff = direction * (elon - plon);
@@ -3659,7 +3719,7 @@ Astronomy.SearchRelativeLongitude = function(body: string, targetRelLon: number,
  * * 180 = full moon
  * * 270 = third quarter
  */
-Astronomy.MoonPhase = function(date: (Date | number | AstroTime)): number {
+Astronomy.MoonPhase = function(date: FlexibleDateTime): number {
     return Astronomy.LongitudeFromSun('Moon', date);
 }
 
@@ -3696,9 +3756,9 @@ Astronomy.MoonPhase = function(date: (Date | number | AstroTime)): number {
  *      this function returns the date and time of the first such occurrence.
  *      Otherwise, it returns `null`.
  */
-Astronomy.SearchMoonPhase = function(targetLon: number, dateStart: (Date | number | AstroTime), limitDays: number): AstroTime {
-    function moon_offset(t: any) {
-        let mlon = Astronomy.MoonPhase(t);
+Astronomy.SearchMoonPhase = function(targetLon: number, dateStart: FlexibleDateTime, limitDays: number): (AstroTime | null) {
+    function moon_offset(t: AstroTime): number {
+        let mlon: number = Astronomy.MoonPhase(t);
         return LongitudeOffset(mlon - targetLon);
     }
 
@@ -3722,7 +3782,8 @@ Astronomy.SearchMoonPhase = function(targetLon: number, dateStart: (Date | numbe
     if (ya > 0) ya -= 360;  // force searching forward in time, not backward
     let est_dt = -(MEAN_SYNODIC_MONTH*ya)/360;
     let dt1 = est_dt - uncertainty;
-    if (dt1 > limitDays) return null;   // not possible for moon phase to occur within the specified window
+    if (dt1 > limitDays)
+        return null;   // not possible for moon phase to occur within the specified window
     let dt2 = Math.min(limitDays, est_dt + uncertainty);
     let t1 = ta.AddDays(dt1);
     let t2 = ta.AddDays(dt2);
@@ -3768,7 +3829,7 @@ class MoonQuarter {
  *
  * @returns {Astronomy.MoonQuarter}
  */
-Astronomy.SearchMoonQuarter = function(dateStart: (Date | number | AstroTime)): MoonQuarter {
+Astronomy.SearchMoonQuarter = function(dateStart: FlexibleDateTime): MoonQuarter {
     // Determine what the next quarter phase will be.
     let phaseStart = Astronomy.MoonPhase(dateStart);
     let quarterStart = Math.floor(phaseStart / 90);
@@ -3791,6 +3852,21 @@ Astronomy.NextMoonQuarter = function(mq: MoonQuarter): MoonQuarter {
     // So far I have seen the interval well contained by the range (6.5, 8.3) days.
     let date = new Date(mq.time.date.getTime() + 6*MILLIS_PER_DAY);
     return Astronomy.SearchMoonQuarter(date);
+}
+
+interface BodyRadiusTable {
+    [body: string]: number;
+}
+
+const BodyRadiusLookup: BodyRadiusTable = {
+    Sun:  SUN_RADIUS_AU,
+    Moon: MOON_EQUATORIAL_RADIUS_AU
+};
+
+function BodyRadiusAu(body: string): number {
+    // We calculate the apparent angular radius of the Sun and Moon,
+    // but treat all other bodies as points.
+    return BodyRadiusLookup[body] || 0;
 }
 
 /**
@@ -3824,15 +3900,13 @@ Astronomy.NextMoonQuarter = function(mq: MoonQuarter): MoonQuarter {
  *      The date and time of the rise or set event, or null if no such event
  *      occurs within the specified time window.
  */
-Astronomy.SearchRiseSet = function(body: string, observer: Observer, direction: number, dateStart: (Date | number | AstroTime), limitDays: number): AstroTime {
+Astronomy.SearchRiseSet = function(body: string, observer: Observer, direction: number, dateStart: FlexibleDateTime, limitDays: number): (AstroTime | null) {
     VerifyObserver(observer);
     VerifyNumber(limitDays);
 
-    // We calculate the apparent angular radius of the Sun and Moon,
-    // but treat all other bodies as points.
-    let body_radius_au = { Sun:SUN_RADIUS_AU, Moon:MOON_EQUATORIAL_RADIUS_AU }[body] || 0;
+    let body_radius_au:number = BodyRadiusAu(body);
 
-    function peak_altitude(t: any) {
+    function peak_altitude(t: AstroTime): number {
         // Return the angular altitude above or below the horizon
         // of the highest part (the peak) of the given object.
         // This is defined as the apparent altitude of the center of the body plus
@@ -3872,8 +3946,9 @@ Astronomy.SearchRiseSet = function(body: string, observer: Observer, direction: 
     }
 
     let time_start = Astronomy.MakeTime(dateStart);
-    let time_before: any;
-    let evt_before: { time: { ut: number; }; }, evt_after: { time: any; };
+    let time_before: AstroTime;
+    let evt_before: HourAngleEvent;
+    let evt_after: HourAngleEvent;
     let alt_before = peak_altitude(time_start);
     let alt_after: number;
     if (alt_before > 0) {
@@ -3969,7 +4044,7 @@ class HourAngleEvent {
  *
  * @returns {Astronomy.HourAngleEvent}
  */
-Astronomy.SearchHourAngle = function(body: string, observer: Observer, hourAngle: number, dateStart: (Date | number | AstroTime)): HourAngleEvent {
+Astronomy.SearchHourAngle = function(body: string, observer: Observer, hourAngle: number, dateStart: FlexibleDateTime): HourAngleEvent {
     VerifyObserver(observer);
     let time = Astronomy.MakeTime(dateStart);
     let iter = 0;
@@ -4171,7 +4246,7 @@ class ElongationEvent {
  *
  * @returns {Astronomy.ElongationEvent}
  */
-Astronomy.Elongation = function(body: string, date: (number | Date | AstroTime)): ElongationEvent {
+Astronomy.Elongation = function(body: string, date: FlexibleDateTime): ElongationEvent {
     let time = Astronomy.MakeTime(date);
 
     let lon = Astronomy.LongitudeFromSun(body, time);
@@ -4201,7 +4276,7 @@ Astronomy.Elongation = function(body: string, date: (number | Date | AstroTime))
  *
  * @returns {Astronomy.ElongationEvent}
  */
-Astronomy.SearchMaxElongation = function(body: string, startDate: (Date | number | AstroTime)): ElongationEvent {
+Astronomy.SearchMaxElongation = function(body: string, startDate: FlexibleDateTime): ElongationEvent {
     const dt = 0.01;
 
     function neg_slope(t: AstroTime): number {
@@ -4218,12 +4293,21 @@ Astronomy.SearchMaxElongation = function(body: string, startDate: (Date | number
 
     let startTime = Astronomy.MakeTime(startDate);
 
-    const table = {
+    interface InferiorPlanetEntry {
+        s1: number;
+        s2: number;
+    }
+
+    interface InferiorPlanetTable {
+        [body: string]: InferiorPlanetEntry;
+    }
+
+    const table: InferiorPlanetTable = {
         Mercury : { s1:50.0, s2:85.0 },
         Venus :   { s1:40.0, s2:50.0 }
     };
 
-    const planet = table[body];
+    const planet:InferiorPlanetEntry = table[body];
     if (!planet)
         throw 'SearchMaxElongation works for Mercury and Venus only.';
 
@@ -4318,7 +4402,7 @@ Astronomy.SearchMaxElongation = function(body: string, startDate: (Date | number
  *
  * @returns {Astronomy.IlluminationInfo}
  */
-Astronomy.SearchPeakMagnitude = function(body: string, startDate: (Date | number | AstroTime)): IlluminationInfo {
+Astronomy.SearchPeakMagnitude = function(body: string, startDate: FlexibleDateTime): IlluminationInfo {
     if (body !== 'Venus')
         throw 'SearchPeakMagnitude currently works for Venus only.';
 
@@ -4448,7 +4532,7 @@ class Apsis {
     dist_au: number;
     dist_km: number;
 
-    constructor(time: any, kind: number, dist_au: number) {
+    constructor(time: AstroTime, kind: number, dist_au: number) {
         this.time = time;
         this.kind = kind;
         this.dist_au = dist_au;
@@ -4465,7 +4549,7 @@ class Apsis {
  *
  * @returns {Astronomy.Apsis}
  */
-Astronomy.SearchLunarApsis = function(startDate: (Date | number | AstroTime)): Apsis {
+Astronomy.SearchLunarApsis = function(startDate: FlexibleDateTime): Apsis {
     const dt = 0.001;
 
     function distance_slope(t: AstroTime): number {
@@ -4689,7 +4773,7 @@ Astronomy.SearchPlanetApsis = function(body: string, startTime: AstroTime): Apsi
         return BruteSearchPlanetApsis(body, startTime);
     }
 
-    function positive_slope(t: { AddDays: (arg0: number) => any; }) {
+    function positive_slope(t: AstroTime): number {
         const dt = 0.001;
         let t1 = t.AddDays(-dt/2);
         let t2 = t.AddDays(+dt/2);
@@ -4699,7 +4783,7 @@ Astronomy.SearchPlanetApsis = function(body: string, startTime: AstroTime): Apsi
         return m;
     }
 
-    function negative_slope(t: any) {
+    function negative_slope(t: AstroTime): number {
         return -positive_slope(t);
     }
 
@@ -4717,7 +4801,8 @@ Astronomy.SearchPlanetApsis = function(body: string, startTime: AstroTime): Apsi
             /* Therefore this time range contains an apsis. */
             /* Figure out whether it is perihelion or aphelion. */
 
-            let slope_func: { (t: any): number; (t: any): number; }, kind: number;
+            let slope_func: (t: AstroTime) => number;
+            let kind: number;
             if (m1 < 0.0 || m2 > 0.0)
             {
                 /* We found a minimum-distance event: perihelion. */
@@ -5261,9 +5346,9 @@ Astronomy.Rotation_EQD_HOR = function(time: AstroTime, observer: Observer): Rota
     const sinlon = Math.sin(observer.longitude * DEG2RAD);
     const coslon = Math.cos(observer.longitude * DEG2RAD);
 
-    const uze = [coslat * coslon, coslat * sinlon, sinlat];
-    const une = [-sinlat * coslon, -sinlat * sinlon, coslat];
-    const uwe = [sinlon, -coslon, 0];
+    const uze: ArrayVector = [coslat * coslon, coslat * sinlon, sinlat];
+    const une: ArrayVector = [-sinlat * coslon, -sinlat * sinlon, coslat];
+    const uwe: ArrayVector = [sinlon, -coslon, 0];
 
     const spin_angle = -15 * sidereal_time(time);
     const uz = spin(spin_angle, uze);
@@ -5903,8 +5988,8 @@ const ConstelBounds = [
 
 
 
-let ConstelRot: any;
-let Epoch2000;
+let ConstelRot: RotationMatrix;
+let Epoch2000 : AstroTime;
 
 /**
  * Reports the constellation that a given celestial point lies within.
@@ -6183,7 +6268,7 @@ function PeakEarthShadow(search_center_time: AstroTime): ShadowInfo {
     const window = 0.03;        /* initial search window, in days, before/after given time */
     const t1 = search_center_time.AddDays(-window);
     const t2 = search_center_time.AddDays(+window);
-    const tx = Astronomy.Search((time: any) => ShadowDistanceSlope(EarthShadow, time), t1, t2, 1.0);
+    const tx = Astronomy.Search((time: AstroTime) => ShadowDistanceSlope(EarthShadow, time), t1, t2, 1.0);
     return EarthShadow(tx);
 }
 
@@ -6192,7 +6277,7 @@ function PeakMoonShadow(search_center_time: AstroTime): ShadowInfo {
     const window = 0.03;        /* initial search window, in days, before/after given time */
     const t1 = search_center_time.AddDays(-window);
     const t2 = search_center_time.AddDays(+window);
-    const tx = Astronomy.Search((time: any) => ShadowDistanceSlope(MoonShadow, time), t1, t2, 1.0);
+    const tx = Astronomy.Search((time: AstroTime) => ShadowDistanceSlope(MoonShadow, time), t1, t2, 1.0);
     return MoonShadow(tx);
 }
 
@@ -6202,7 +6287,7 @@ function PeakPlanetShadow(body: string, planet_radius_km: number, search_center_
     const window = 1.0;     // days before/after inferior conjunction to search for minimum shadow distance.
     const t1 = search_center_time.AddDays(-window);
     const t2 = search_center_time.AddDays(+window);
-    const tx = Astronomy.Search((time: any) => PlanetShadowSlope(body, planet_radius_km, time), t1, t2, 1.0);
+    const tx = Astronomy.Search((time: AstroTime) => PlanetShadowSlope(body, planet_radius_km, time), t1, t2, 1.0);
     return PlanetShadow(body, planet_radius_km, tx);
 }
 
@@ -6213,10 +6298,10 @@ function PeakLocalMoonShadow(search_center_time: AstroTime, observer: Observer):
     const window = 0.2;
     const t1 = search_center_time.AddDays(-window);
     const t2 = search_center_time.AddDays(+window);
-    function shadowfunc(time: any) {
+    function shadowfunc(time: AstroTime): ShadowInfo {
         return LocalMoonShadow(time, observer);
     }
-    const time = Astronomy.Search((time: any) => ShadowDistanceSlope(shadowfunc, time), t1, t2, 1.0);
+    const time = Astronomy.Search((time: AstroTime) => ShadowDistanceSlope(shadowfunc, time), t1, t2, 1.0);
     if (!time) {
         throw `PeakLocalMoonShadow: search failure for search_center_time = ${search_center_time}`;
     }
@@ -6229,8 +6314,8 @@ function ShadowSemiDurationMinutes(center_time: AstroTime, radius_limit: number,
     const window = window_minutes / (24.0 * 60.0);
     const before = center_time.AddDays(-window);
     const after  = center_time.AddDays(+window);
-    const t1 = Astronomy.Search((time: any) => -(EarthShadow(time).r - radius_limit), before, center_time, 1.0);
-    const t2 = Astronomy.Search((time: any) => +(EarthShadow(time).r - radius_limit), center_time, after, 1.0);
+    const t1 = Astronomy.Search((time: AstroTime) => -(EarthShadow(time).r - radius_limit), before, center_time, 1.0);
+    const t2 = Astronomy.Search((time: AstroTime) => +(EarthShadow(time).r - radius_limit), center_time, after, 1.0);
     if (t1 === null || t2 === null)
         throw 'Failed to find shadow semiduration';
     return (t2.ut - t1.ut) * ((24.0 * 60.0) / 2.0);    // convert days to minutes and average the semi-durations.
@@ -6258,7 +6343,7 @@ function MoonEclipticLatitudeDegrees(time: AstroTime): number {
  *
  * @returns {Astronomy.LunarEclipseInfo}
  */
-Astronomy.SearchLunarEclipse = function(date: (Date | number | AstroTime)): LunarEclipseInfo {
+Astronomy.SearchLunarEclipse = function(date: FlexibleDateTime): LunarEclipseInfo {
     const PruneLatitude = 1.8;   /* full Moon's ecliptic latitude above which eclipse is impossible */
     let fmtime = Astronomy.MakeTime(date);
     for (let fmcount = 0; fmcount < 12; ++fmcount) {
@@ -6387,8 +6472,8 @@ function GeoidIntersect(shadow: ShadowInfo): GlobalSolarEclipseInfo {
     let kind = 'partial';
     let peak = shadow.time;
     let distance = shadow.r;
-    let latitude: number;       // left undefined for partial eclipses
-    let longitude: number;      // left undefined for partial eclipses
+    let latitude: number | undefined;       // left undefined for partial eclipses
+    let longitude: number | undefined;      // left undefined for partial eclipses
 
     // We want to calculate the intersection of the shadow axis with the Earth's geoid.
     // First we must convert EQJ (equator of J2000) coordinates to EQD (equator of date)
@@ -6650,12 +6735,12 @@ class EclipseEvent {
 class LocalSolarEclipseInfo {
     kind: string;
     partial_begin: EclipseEvent;
-    total_begin: EclipseEvent;
+    total_begin?: EclipseEvent;
     peak: EclipseEvent;
-    total_end: EclipseEvent;
+    total_end?: EclipseEvent;
     partial_end: EclipseEvent;
 
-    constructor(kind: string, partial_begin: EclipseEvent, total_begin: EclipseEvent, peak : EclipseEvent, total_end: EclipseEvent, partial_end: EclipseEvent) {
+    constructor(kind: string, partial_begin: EclipseEvent, total_begin: EclipseEvent | undefined, peak : EclipseEvent, total_end: EclipseEvent | undefined, partial_end: EclipseEvent) {
         this.kind = kind;
         this.partial_begin = partial_begin;
         this.total_begin = total_begin;
@@ -6685,7 +6770,9 @@ function LocalEclipse(shadow: ShadowInfo, observer: Observer): LocalSolarEclipse
     let t2 = shadow.time.AddDays(+PARTIAL_WINDOW);
     const partial_begin = LocalEclipseTransition(observer, +1.0, local_partial_distance, t1, shadow.time);
     const partial_end   = LocalEclipseTransition(observer, -1.0, local_partial_distance, shadow.time, t2);
-    let total_begin: EclipseEvent, total_end: EclipseEvent, kind: string;
+    let total_begin: EclipseEvent | undefined;
+    let total_end: EclipseEvent | undefined;
+    let kind: string;
 
     if (shadow.r < Math.abs(shadow.k)) {     // take absolute value of 'k' to handle annular eclipses too.
         t1 = shadow.time.AddDays(-TOTAL_WINDOW);
@@ -6700,9 +6787,10 @@ function LocalEclipse(shadow: ShadowInfo, observer: Observer): LocalSolarEclipse
     return new LocalSolarEclipseInfo(kind, partial_begin, total_begin, peak, total_end, partial_end);
 }
 
+type ShadowFunc = (shadow: ShadowInfo) => number;
 
-function LocalEclipseTransition(observer: Observer, direction: number, func, t1: AstroTime, t2: AstroTime): EclipseEvent {
-    function evaluate(time: any) {
+function LocalEclipseTransition(observer: Observer, direction: number, func: ShadowFunc, t1: AstroTime, t2: AstroTime): EclipseEvent {
+    function evaluate(time: AstroTime): number {
         const shadow = LocalMoonShadow(time, observer);
         return direction * func(shadow);
     }
@@ -6858,7 +6946,7 @@ function PlanetShadowBoundary(time: AstroTime, body: string, planet_radius_km: n
 
 function PlanetTransitBoundary(body: string, planet_radius_km: number, t1: AstroTime, t2: AstroTime, direction: number): AstroTime {
     // Search for the time the planet's penumbra begins/ends making contact with the center of the Earth.
-    const tx = Astronomy.Search((time: any) => PlanetShadowBoundary(time, body, planet_radius_km, direction), t1, t2, 1.0);
+    const tx = Astronomy.Search((time: AstroTime) => PlanetShadowBoundary(time, body, planet_radius_km, direction), t1, t2, 1.0);
     if (tx == null)
         throw 'Planet transit boundary search failed';
 
@@ -6883,7 +6971,7 @@ function PlanetTransitBoundary(body: string, planet_radius_km: number, t1: Astro
  *
  * @returns {Astronomy.TransitInfo}
  */
-Astronomy.SearchTransit = function(body: any, startTime: any) {
+Astronomy.SearchTransit = function(body: string, startTime: AstroTime) {
     const threshold_angle = 0.4;     // maximum angular separation to attempt transit calculation
     const dt_days = 1.0;
 
@@ -6952,9 +7040,9 @@ Astronomy.SearchTransit = function(body: any, startTime: any) {
  *
  * @returns {Astronomy.TransitInfo}
  */
-Astronomy.NextTransit = function(body: any, prevTransitTime: { AddDays: (arg0: number) => any; }) {
+Astronomy.NextTransit = function(body: string, prevTransitTime: AstroTime): TransitInfo {
     const startTime = prevTransitTime.AddDays(100.0);
     return Astronomy.SearchTransit(body, startTime);
 }
 
-})(this.Astronomy={});
+})((<ExportType><unknown>this).Astronomy={});

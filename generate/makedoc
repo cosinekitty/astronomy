@@ -29,7 +29,7 @@ cd ../generate || Fail "Error changing back to generate directory"
 ./check_internal_links.py $(realpath ../source/csharp/README.md) || exit 1
 
 echo "Compiling TypeScript to JavaScript."
-tsc --allowJs -t ES2015 --outfile ../source/js/astronomy.js ../source/js/astronomy.ts || Fail "Error in typescript compiler"
+tsc --strict -t ES2015 --outfile ../source/js/astronomy.js ../source/js/astronomy.ts || Fail "Error in typescript compiler"
 
 echo "Applying exports hack to JavaScript."
 ./apply_exports_hack.py ../source/js/astronomy.js || Fail "Error in apply_exports_hack.py"
