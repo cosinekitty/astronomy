@@ -1,4 +1,46 @@
-/* You can add global styles to this file, and also import other style files */
+html,
+body {
+  height: 100%;
+}
 
-html, body { height: 100%; }
-body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: #494d55;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+  font-size: 14px;
+  margin: 0;
+}
+
+.page-wrapper {
+  min-height: 100%;
+  /* equal to footer height */
+  margin-bottom: -50px;
+}
+
+.page-wrapper:after {
+  content: "";
+  display: block;
+  height: 50px;
+}
+
+.footer {
+  height: 50px;
+}
+
+
+a {
+  color: #3aa7aa;
+  transition: all 0.4s ease-in-out;
+}
+
+a:hover {
+  color: #339597;
+  text-decoration: underline;
+}
+
+a:focus {
+  text-decoration: none;
+}
+
+
