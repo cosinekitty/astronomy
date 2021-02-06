@@ -41,6 +41,9 @@ echo "Minifying JavaScript code."
 npm run minify || Fail "Error minifying astronomy.js"
 npm run minify:browser || Fail "Error minifying astronomy.browser.js"
 
+echo "Generating JS documentation in JSON format."
+npm run docs:json || Fail "Error generating JSON documentation."
+
 echo "Generating JS documentation in Markdown format."
 npm run docs:md || Fail "Error generating JS documentation."
 ./check_internal_links.py $(realpath ../source/js/README.md) || exit 1
