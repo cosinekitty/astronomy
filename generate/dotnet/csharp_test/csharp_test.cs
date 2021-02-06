@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading;
 
 using CosineKitty;
 
@@ -57,6 +59,9 @@ namespace csharp_test
         {
             try
             {
+                // Force use of "." for the decimal mark, regardless of local culture settings.
+                Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
+
                 if (args.Length > 0 && args[0] == "-v")
                 {
                     Verbose = true;

@@ -1,10 +1,18 @@
 using System;
+using System.Globalization;
+using System.Threading;
 using CosineKitty;
 
 namespace demo_helper
 {
     public class DemoHelper
     {
+        static DemoHelper()
+        {
+            // Force use of "." for the decimal mark, regardless of local culture settings.
+            Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
+        }
+
         public static void ParseArgs(string program, string[] args, out Observer observer, out AstroTime time)
         {
             if (args.Length == 2 || args.Length == 3)
