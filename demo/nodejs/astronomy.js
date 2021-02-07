@@ -3473,7 +3473,9 @@
         let quarterStart = Math.floor(phaseStart / 90);
         let quarter = (quarterStart + 1) % 4;
         let time = Astronomy.SearchMoonPhase(90 * quarter, dateStart, 10);
-        return time && new MoonQuarter(quarter, time);
+        if (!time)
+            throw 'Cannot find moon quarter';
+        return new MoonQuarter(quarter, time);
     };
     /**
      * Given a {@link Astronomy.MoonQuarter} object, finds the next consecutive
@@ -4135,7 +4137,7 @@
                     // Search the time range [t1, t2] for the time when the slope goes
                     // from negative to positive.
                     let tx = Astronomy.Search(distance_slope, t1, t2, { init_f1: m1, init_f2: m2 });
-                    if (tx == null)
+                    if (!tx)
                         throw 'SearchLunarApsis INTERNAL ERROR: perigee search failed!';
                     let dist = CalcMoon(tx).distance_au;
                     return new Apsis(tx, 0, dist);
@@ -4145,7 +4147,7 @@
                     // Search the time range [t1, t2] for the time when the slope goes
                     // from positive to negative.
                     let tx = Astronomy.Search(negative_distance_slope, t1, t2, { init_f1: -m1, init_f2: -m2 });
-                    if (tx == null)
+                    if (!tx)
                         throw 'SearchLunarApsis INTERNAL ERROR: apogee search failed!';
                     let dist = CalcMoon(tx).distance_au;
                     return new Apsis(tx, 1, dist);
@@ -4340,8 +4342,8 @@
                     /* This should never happen. It should not be possible for both slopes to be zero. */
                     throw "Internal error with slopes in SearchPlanetApsis";
                 }
-                const search = Astronomy.Search(slope_func, t1, t2, 1.0);
-                if (search == null)
+                const search = Astronomy.Search(slope_func, t1, t2);
+                if (!search)
                     throw "Failed to find slope transition in planetary apsis search.";
                 const dist = Astronomy.HelioDistance(body, search);
                 return new Apsis(search, kind, dist);
@@ -6104,14 +6106,18 @@
         const window = 0.03; /* initial search window, in days, before/after given time */
         const t1 = search_center_time.AddDays(-window);
         const t2 = search_center_time.AddDays(+window);
-        const tx = Astronomy.Search((time) => ShadowDistanceSlope(EarthShadow, time), t1, t2, 1.0);
+        const tx = Astronomy.Search((time) => ShadowDistanceSlope(EarthShadow, time), t1, t2);
+        if (!tx)
+            throw 'Failed to find peak Earth shadow time.';
         return EarthShadow(tx);
     }
     function PeakMoonShadow(search_center_time) {
         const window = 0.03; /* initial search window, in days, before/after given time */
         const t1 = search_center_time.AddDays(-window);
         const t2 = search_center_time.AddDays(+window);
-        const tx = Astronomy.Search((time) => ShadowDistanceSlope(MoonShadow, time), t1, t2, 1.0);
+        const tx = Astronomy.Search((time) => ShadowDistanceSlope(MoonShadow, time), t1, t2);
+        if (!tx)
+            throw 'Failed to find peak Moon shadow time.';
         return MoonShadow(tx);
     }
     function PeakPlanetShadow(body, planet_radius_km, search_center_time) {
@@ -6119,7 +6125,9 @@
         const window = 1.0; // days before/after inferior conjunction to search for minimum shadow distance.
         const t1 = search_center_time.AddDays(-window);
         const t2 = search_center_time.AddDays(+window);
-        const tx = Astronomy.Search((time) => PlanetShadowSlope(body, planet_radius_km, time), t1, t2, 1.0);
+        const tx = Astronomy.Search((time) => PlanetShadowSlope(body, planet_radius_km, time), t1, t2);
+        if (!tx)
+            throw 'Failed to find peak planet shadow time.';
         return PlanetShadow(body, planet_radius_km, tx);
     }
     function PeakLocalMoonShadow(search_center_time, observer) {
@@ -6131,10 +6139,9 @@
         function shadowfunc(time) {
             return LocalMoonShadow(time, observer);
         }
-        const time = Astronomy.Search((time) => ShadowDistanceSlope(shadowfunc, time), t1, t2, 1.0);
-        if (!time) {
+        const time = Astronomy.Search((time) => ShadowDistanceSlope(shadowfunc, time), t1, t2);
+        if (!time)
             throw `PeakLocalMoonShadow: search failure for search_center_time = ${search_center_time}`;
-        }
         return LocalMoonShadow(time, observer);
     }
     function ShadowSemiDurationMinutes(center_time, radius_limit, window_minutes) {
@@ -6142,9 +6149,9 @@
         const window = window_minutes / (24.0 * 60.0);
         const before = center_time.AddDays(-window);
         const after = center_time.AddDays(+window);
-        const t1 = Astronomy.Search((time) => -(EarthShadow(time).r - radius_limit), before, center_time, 1.0);
-        const t2 = Astronomy.Search((time) => +(EarthShadow(time).r - radius_limit), center_time, after, 1.0);
-        if (t1 === null || t2 === null)
+        const t1 = Astronomy.Search((time) => -(EarthShadow(time).r - radius_limit), before, center_time);
+        const t2 = Astronomy.Search((time) => +(EarthShadow(time).r - radius_limit), center_time, after);
+        if (!t1 || !t2)
             throw 'Failed to find shadow semiduration';
         return (t2.ut - t1.ut) * ((24.0 * 60.0) / 2.0); // convert days to minutes and average the semi-durations.
     }
@@ -6173,7 +6180,7 @@
         for (let fmcount = 0; fmcount < 12; ++fmcount) {
             /* Search for the next full moon. Any eclipse will be near it. */
             const fullmoon = Astronomy.SearchMoonPhase(180, fmtime, 40);
-            if (fullmoon === null)
+            if (!fullmoon)
                 throw 'Cannot find full moon.';
             /*
                 Pruning: if the full Moon's ecliptic latitude is too large,
@@ -6395,9 +6402,8 @@
         for (nmcount = 0; nmcount < 12; ++nmcount) {
             // Search for the next new moon. Any eclipse will be near it.
             const newmoon = Astronomy.SearchMoonPhase(0.0, nmtime, 40.0);
-            if (newmoon === null) {
+            if (!newmoon)
                 throw 'Cannot find new moon';
-            }
             // Pruning: if the new moon's ecliptic latitude is too large, a solar eclipse is not possible.
             const eclip_lat = MoonEclipticLatitudeDegrees(newmoon);
             if (Math.abs(eclip_lat) < PruneLatitude) {
@@ -6557,8 +6563,8 @@
             const shadow = LocalMoonShadow(time, observer);
             return direction * func(shadow);
         }
-        const search = Astronomy.Search(evaluate, t1, t2, 1.0);
-        if (search == null)
+        const search = Astronomy.Search(evaluate, t1, t2);
+        if (!search)
             throw "Local eclipse transition search failed.";
         return CalcEvent(observer, search);
     }
@@ -6602,6 +6608,8 @@
         for (;;) {
             /* Search for the next new moon. Any eclipse will be near it. */
             const newmoon = Astronomy.SearchMoonPhase(0.0, nmtime, 40.0);
+            if (!newmoon)
+                throw 'Cannot find next new moon';
             /* Pruning: if the new moon's ecliptic latitude is too large, a solar eclipse is not possible. */
             const eclip_lat = MoonEclipticLatitudeDegrees(newmoon);
             if (Math.abs(eclip_lat) < PruneLatitude) {
@@ -6688,8 +6696,8 @@
     }
     function PlanetTransitBoundary(body, planet_radius_km, t1, t2, direction) {
         // Search for the time the planet's penumbra begins/ends making contact with the center of the Earth.
-        const tx = Astronomy.Search((time) => PlanetShadowBoundary(time, body, planet_radius_km, direction), t1, t2, 1.0);
-        if (tx == null)
+        const tx = Astronomy.Search((time) => PlanetShadowBoundary(time, body, planet_radius_km, direction), t1, t2);
+        if (!tx)
             throw 'Planet transit boundary search failed';
         return tx;
     }
