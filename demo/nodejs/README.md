@@ -9,10 +9,16 @@ Then in your own source file, do this:
 const Astronomy = require('astronomy.js');
 ```
 
+or install the package with `npm i astronomy-engine` and:
+
+```typescript
+import { SearchMoonQuarter } from 'astronomy-engine';
+```
+
 ![Vanilla JS](../vanillajs.png) There are no external dependencies!
 Astronomy Engine is completely self-contained, and it always will be.
 
-(By the way, you can use the same file `astronomy.js` for
+(By the way, you can use the same file `astronomy.browser.js` for
 [astronomy calculations inside the browser](../browser/).)
 
 ---

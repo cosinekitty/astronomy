@@ -1,0 +1,18 @@
+{
+  "name": "astronomy-engine-dev",
+  "version": "1.0.0",
+  "description": "Development node.js dependencies",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cosinekitty/astronomy.git"
+  },
+  "author": "Donald Cross",
+  "license": "MIT",
+  "devDependencies": {
+    "browserify": "~17.0.0",
+    "esmify": "~2.1.1",
+    "google-closure-compiler": "~20210202.0.0",
+    "jsdoc-to-markdown": "~6.0.1",
+    "typescript": "~4.1.3"
+  }
+}

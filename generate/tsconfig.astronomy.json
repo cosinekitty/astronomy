@@ -1,0 +1,14 @@
+{
+    "compilerOptions": {
+      "outDir": "../source/js/",
+      "declaration": true,
+      "moduleResolution": "node",
+      "module": "commonjs",
+      "target": "es2015",
+      "strict": true,
+      "lib": ["dom", "es6"]
+    },
+    "files": [
+      "../source/js/astronomy.ts"
+    ]
+  }
