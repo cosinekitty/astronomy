@@ -1,0 +1,21 @@
+@import 'variables';
+
+.container {
+  text-align: center;
+
+  .branding {
+    .text-astro {
+      color: $color-primary;
+    }
+
+    .text-engine {
+      color: #fff;
+    }
+
+    .mat-icon {
+      font-size: 24px;
+      color: $color-primary;
+    }
+  }
+}
+

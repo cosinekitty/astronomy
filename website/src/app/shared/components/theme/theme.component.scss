@@ -1,0 +1,36 @@
+@import 'variables';
+
+.page-wrapper {
+  background: #f9f9fb;
+  min-height: 100%;
+  /* equal to footer height */
+  margin-bottom: -$footer;
+}
+
+.page-wrapper:after {
+  content: "";
+  display: block;
+  height: $footer;
+}
+
+.footer {
+  background: #26282c;
+  color: rgba(255, 255, 255, 0.6);
+  height: $footer;
+  line-height: 12px;
+  padding-top: 6px;
+  text-align: center;
+
+  a {
+    color: #40babd;
+  }
+
+  .mat-icon {
+    color: #EA5395;
+    display: inline-block;
+    font-size: 1em;
+    height: 1em;
+    width: 1em;
+    vertical-align: middle;
+  }
+}
