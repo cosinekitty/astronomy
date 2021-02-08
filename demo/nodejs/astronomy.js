@@ -928,7 +928,9 @@ function SetDeltaTFunction(func) {
 }
 exports.SetDeltaTFunction = SetDeltaTFunction;
 /**
- * Calculates Terrestrial Time (TT) from Universal Time (UT).
+ * @ignore
+ *
+ * @brief Calculates Terrestrial Time (TT) from Universal Time (UT).
  *
  * @param {number} ut
  *      The Universal Time expressed as a floating point number of days since the 2000.0 epoch.
@@ -967,10 +969,17 @@ function TerrestrialTime(ut) {
  */
 class AstroTime {
     /**
-     * @param {(Date|number)} date
-     *      A JavaScript Date object or a numeric UTC value expressed in J2000 days.
+     * @param {FlexibleDateTime} date
+     *      A JavaScript Date object, a numeric UTC value expressed in J2000 days, or another AstroTime object.
      */
     constructor(date) {
+        if (date instanceof AstroTime) {
+            // Construct a clone of the AstroTime passed in.
+            this.date = date.date;
+            this.ut = date.ut;
+            this.tt = date.tt;
+            return;
+        }
         const MillisPerDay = 1000 * 3600 * 24;
         if ((date instanceof Date) && Number.isFinite(date.getTime())) {
             this.date = date;
@@ -1022,12 +1031,25 @@ function InterpolateTime(time1, time2, fraction) {
     return new AstroTime(time1.ut + fraction * (time2.ut - time1.ut));
 }
 /**
- * A Date object, a number of UTC days since the J2000 epoch (noon on January 1, 2000).
- * @typedef {(Date | number | AstroTime)} FlexibleDateTime
+ * @brief A `Date`, `number`, or `AstroTime` value that specifies the date and time of an astronomical event.
+ *
+ * `FlexibleDateTime` is a placeholder type that represents three different types
+ * that may be passed to many Astronomy Engine functions: a JavaScript `Date` object,
+ * a number representing the real-valued number of UT days since the J2000 epoch,
+ * or an {@link AstroTime} object.
+ *
+ * This flexibility is for convenience of outside callers.
+ * Internally, Astronomy Engine always converts a `FlexibleTime` parameter
+ * to an `AstroTime` object by calling {@link MakeTime}.
+ *
+ * @typedef {Date | number | AstroTime} FlexibleDateTime
  */
 /**
+ * @brief Converts multiple date/time formats to `AstroTime` format.
+ *
  * Given a Date object or a number days since noon (12:00) on January 1, 2000 (UTC),
  * this function creates an {@link AstroTime} object.
+ *
  * Given an {@link AstroTime} object, returns the same object unmodified.
  * Use of this function is not required for any of the other exposed functions in this library,
  * because they all guarantee converting date/time parameters to AstroTime
@@ -1619,9 +1641,9 @@ function geo_pos(time, observer) {
  * Holds the Cartesian coordinates of a vector in 3D space,
  * along with the time at which the vector is valid.
  *
- * @property {number} x             The x-coordinate expressed in astronomical units (AU).
- * @property {number} y             The y-coordinate expressed in astronomical units (AU).
- * @property {number} z             The z-coordinate expressed in astronomical units (AU).
+ * @property {number} x        The x-coordinate expressed in astronomical units (AU).
+ * @property {number} y        The y-coordinate expressed in astronomical units (AU).
+ * @property {number} z        The z-coordinate expressed in astronomical units (AU).
  * @property {AstroTime} t     The time at which the vector is valid.
  */
 class Vector {
@@ -1863,7 +1885,7 @@ function spin(angle, pos1) {
  * returns horizontal coordinates (azimuth and altitude angles) for that body
  * as seen by that observer. Allows optional correction for atmospheric refraction.
  *
- * @param {(Date|number|AstroTime)} date
+ * @param {FlexibleDateTime} date
  *      The date and time for which to find horizontal coordinates.
  *
  * @param {Observer} observer
@@ -1994,10 +2016,10 @@ function VerifyObserver(observer) {
  *      The observer's elevation above mean sea level, expressed in meters.
  */
 class Observer {
-    constructor(latitude_degrees, longitude_degrees, height_in_meters) {
-        this.latitude = latitude_degrees;
-        this.longitude = longitude_degrees;
-        this.height = height_in_meters;
+    constructor(latitude, longitude, height) {
+        this.latitude = latitude;
+        this.longitude = longitude;
+        this.height = height;
         VerifyObserver(this);
     }
 }
@@ -2081,7 +2103,7 @@ exports.SunPosition = SunPosition;
  *      The name of the body for which to find equatorial coordinates.
  *      Not allowed to be `"Earth"`.
  *
- * @param {(Date | number | Time)} date
+ * @param {FlexibleDateTime} date
  *      Specifies the date and time at which the body is to be observed.
  *
  * @param {Observer} observer
@@ -2177,7 +2199,7 @@ exports.Ecliptic = Ecliptic;
  * <a href="https://www.springer.com/us/book/9783540672210">Astronomy on the Personal Computer</a>
  * by Montenbruck and Pfleger.
  *
- * @param {(Date|number|AstroTime)} date
+ * @param {FlexibleDateTime} date
  *      The date and time for which to calculate the Moon's geocentric position.
  *
  * @returns {Vector}
@@ -2447,12 +2469,33 @@ class major_bodies_t {
         return acc;
     }
 }
+/**
+ * @ignore
+ *
+ * @brief The state of a body at an incremental step in a gravity simulation.
+ *
+ * This is an internal data structure used to represent the
+ * position, velocity, and acceleration vectors of a body
+ * in a gravity simulation at a given moment in time.
+ *
+ * @property tt
+ *      The J2000 terrestrial time of the state [days].
+ *
+ * @property r
+ *      The position vector [au].
+ *
+ * @property v
+ *      The velocity vector [au/day].
+ *
+ * @property a
+ *      The acceleration vector [au/day^2].
+ */
 class body_grav_calc_t {
     constructor(tt, r, v, a) {
-        this.tt = tt; // J2000 terrestrial time [days]
-        this.r = r; // position [au]
-        this.v = v; // velocity [au/day]
-        this.a = a; // acceleration [au/day^2]
+        this.tt = tt;
+        this.r = r;
+        this.v = v;
+        this.a = a;
     }
 }
 class grav_sim_t {
@@ -2766,27 +2809,28 @@ function QuadInterp(tm, dt, fa, fm, fb) {
     return { x: x, t: t, df_dt: df_dt };
 }
 /**
- * Options for the {@link Search} function.
- * @typedef {Object} SearchOptions
+ * @brief Options for the {@link Search} function.
  *
- * @property {(number|undefined)} dt_tolerance_seconds
+ * @typedef {object} SearchOptions
+ *
+ * @property {number | undefined} dt_tolerance_seconds
  *      The number of seconds for a time window smaller than which the search
  *      is considered successful.  Using too large a tolerance can result in
  *      an inaccurate time estimate.  Using too small a tolerance can cause
  *      excessive computation, or can even cause the search to fail because of
  *      limited floating-point resolution.  Defaults to 1 second.
  *
- * @property {(number|undefined)} init_f1
+ * @property {number | undefined} init_f1
  *      As an optimization, if the caller of {@link Search}
  *      has already calculated the value of the function being searched (the parameter `func`)
  *      at the time coordinate `t1`, it can pass in that value as `init_f1`.
  *      For very expensive calculations, this can measurably improve performance.
  *
- * @property {(number|undefined)} init_f2
+ * @property {number | undefined} init_f2
  *      The same as `init_f1`, except this is the optional initial value of `func(t2)`
  *      instead of `func(t1)`.
  *
- * @property {(number|undefined)} iter_limit
+ * @property {number | undefined} iter_limit
  */
 /**
  * Search for next time <i>t</i> (such that <i>t</i> is between `t1` and `t2`)
@@ -2811,11 +2855,11 @@ function QuadInterp(tm, dt, fa, fm, fb) {
  * @param {AstroTime} t2
  *      The upper time bound of a search window.
  *
- * @param {(null | SearchOptions)} options
+ * @param {SearchOptions | undefined} options
  *      Options that can tune the behavior of the search.
- *      Most callers can omit this argument or pass in `null`.
+ *      Most callers can omit this argument.
  *
- * @returns {(null | AstroTime)}
+ * @returns {AstroTime | null}
  *      If the search is successful, returns the date and time of the solution.
  *      If the search fails, returns null.
  */
@@ -2978,7 +3022,7 @@ exports.SearchSunLongitude = SearchSunLongitude;
  * @param {string} body
  *      The name of a supported celestial body other than the Earth.
  *
- * @param {(Date|number|AstroTime)} date
+ * @param {FlexibleDateTime} date
  *      The time at which the relative longitude is to be found.
  *
  * @returns {number}
@@ -3011,7 +3055,7 @@ exports.LongitudeFromSun = LongitudeFromSun;
  * @param {string} body
  *      The name of a supported celestial body other than the Earth.
  *
- * @param {(Date|number|AstroTime)} date
+ * @param {FlexibleDateTime} date
  *      The time at which the angle from the Sun is to be found.
  *
  * @returns {number}
@@ -3170,7 +3214,7 @@ function MoonMagnitude(phase, helio_dist, geo_dist) {
  *      Like `gc`, `hc` is expressed in AU and oriented with respect
  *      to the J2000 equatorial plane.
  *
- * @property {number | null} ring_tilt
+ * @property {number | undefined} ring_tilt
  *      For Saturn, this is the angular tilt of the planet's rings in degrees away
  *      from the line of sight from the Earth. When the value is near 0, the rings
  *      appear edge-on from the Earth and are therefore difficult to see.
@@ -3179,19 +3223,19 @@ function MoonMagnitude(phase, helio_dist, geo_dist) {
  *      Unlike the <a href="https://ssd.jpl.nasa.gov/horizons.cgi">JPL Horizons</a> online tool,
  *      this library includes the effect of the ring tilt angle in the calculated value
  *      for Saturn's visual magnitude.
- *      For all bodies other than Saturn, the value of `ring_tilt` is `null`.
+ *      For all bodies other than Saturn, the value of `ring_tilt` is `undefined`.
  */
 class IlluminationInfo {
-    constructor(time, mag, phase, helio_dist, geo_dist, gc, hc, ring_tilt) {
+    constructor(time, mag, phase_angle, helio_dist, geo_dist, gc, hc, ring_tilt) {
         this.time = time;
         this.mag = mag;
-        this.phase_angle = phase;
-        this.phase_fraction = (1 + Math.cos(DEG2RAD * phase)) / 2;
+        this.phase_angle = phase_angle;
         this.helio_dist = helio_dist;
         this.geo_dist = geo_dist;
         this.gc = gc;
         this.hc = hc;
         this.ring_tilt = ring_tilt;
+        this.phase_fraction = (1 + Math.cos(DEG2RAD * phase_angle)) / 2;
     }
 }
 exports.IlluminationInfo = IlluminationInfo;
@@ -3389,14 +3433,14 @@ exports.MoonPhase = MoonPhase;
  *      180 = full moon,
  *      270 = third quarter.
  *
- * @param {(Date|number|AstroTime)} dateStart
+ * @param {FlexibleDateTime} dateStart
  *      The beginning of the window of time in which to search.
  *
  * @param {number} limitDays
  *      The floating point number of days after `dateStart`
  *      that limits the window of time in which to search.
  *
- * @returns {(AstroTime|null)}
+ * @returns {AstroTime | null}
  *      If the specified lunar phase occurs after `dateStart`
  *      and before `limitDays` days after `dateStart`,
  *      this function returns the date and time of the first such occurrence.
@@ -3462,7 +3506,7 @@ exports.MoonQuarter = MoonQuarter;
  * `MoonQuarter`. Keep calling `NextMoonQuarter` in a loop,
  * passing the previous return value as the argument to the next call.
  *
- * @param {(Date|number|AstroTime)} dateStart
+ * @param {FlexibleDateTime} dateStart
  *      The date and time after which to find the first quarter lunar phase.
  *
  * @returns {MoonQuarter}
@@ -3523,14 +3567,14 @@ function BodyRadiusAu(body) {
  *      Either +1 to find rise time or -1 to find set time.
  *      Any other value will cause an exception to be thrown.
  *
- * @param {(Date|number|AstroTime)} dateStart
+ * @param {FlexibleDateTime} dateStart
  *      The date and time after which the specified rise or set time is to be found.
  *
  * @param {number} limitDays
  *      The fractional number of days after `dateStart` that limits
  *      when the rise or set time is to be found.
  *
- * @returns {(AstroTime|null)}
+ * @returns {AstroTime | null}
  *      The date and time of the rise or set event, or null if no such event
  *      occurs within the specified time window.
  */
@@ -3659,7 +3703,7 @@ exports.HourAngleEvent = HourAngleEvent;
  *      This specifying `hourAngle` = 0 finds the moment in time
  *      the body reaches the highest angular altitude in a given sidereal day.
  *
- * @param {(Date|number|AstroTime)} dateStart
+ * @param {FlexibleDateTime} dateStart
  *      The date and time after which the desired hour angle crossing event
  *      is to be found.
  *
@@ -3760,7 +3804,7 @@ exports.SeasonInfo = SeasonInfo;
 /**
  * Finds the equinoxes and solstices for a given calendar year.
  *
- * @param {(number | AstroTime)} year
+ * @param {number | AstroTime} year
  *      The integer value or `AstroTime` object that specifies
  *      the UTC calendar year for which to find equinoxes and solstices.
  *
@@ -6044,13 +6088,61 @@ class LunarEclipseInfo {
     }
 }
 exports.LunarEclipseInfo = LunarEclipseInfo;
+/**
+ * @ignore
+ *
+ * @brief Represents the relative alignment of the Earth and another body, and their respective shadows.
+ *
+ * This is an internal data structure used to assist calculation of
+ * lunar eclipses, solar eclipses, and transits of Mercury and Venus.
+ *
+ * Definitions:
+ *
+ * casting body = A body that casts a shadow of interest, possibly striking another body.
+ *
+ * receiving body = A body on which the shadow of another body might land.
+ *
+ * shadow axis = The line passing through the center of the Sun and the center of the casting body.
+ *
+ * shadow plane = The plane passing through the center of a receiving body,
+ * and perpendicular to the shadow axis.
+ *
+ * @property {AstroTime} time
+ *      The time associated with the shadow calculation.
+ *
+ * @property {number} u
+ *      The distance [au] between the center of the casting body and the shadow plane.
+ *
+ * @property {number} r
+ *      The distance [km] between center of receiving body and the shadow axis.
+ *
+ * @property {number} k
+ *      The umbra radius [km] at the shadow plane.
+ *
+ * @property {number} p
+ *      The penumbra radius [km] at the shadow plane.
+ *
+ * @property {Vector} target
+ *      The location in space where we are interested in determining how close a shadow falls.
+ *      For example, when calculating lunar eclipses, `target` would be the center of the Moon
+ *      expressed in geocentric coordinates. Then we can evaluate how far the center of the Earth's
+ *      shadow cone approaches the center of the Moon.
+ *      The vector components are expressed in [au].
+ *
+ * @property {Vector} dir
+ *      The direction in space that the shadow points away from the center of a shadow-casting body.
+ *      This vector lies on the shadow axis and points away from the Sun.
+ *      In other words: the direction light from the Sun would be traveling,
+ *      except that the center of a body (Earth, Moon, Mercury, or Venus) is blocking it.
+ *      The distance units do not matter, because the vector will be normalized.
+ */
 class ShadowInfo {
     constructor(time, u, r, k, p, target, dir) {
         this.time = time;
-        this.u = u; // dot product of (heliocentric earth) and (geocentric moon): defines the shadow plane where the Moon is
-        this.r = r; // km distance between center of Moon and the line passing through the centers of the Sun and Earth.
-        this.k = k; // umbra radius in km, at the shadow plane
-        this.p = p; // penumbra radius in km, at the shadow plane
+        this.u = u;
+        this.r = r;
+        this.k = k;
+        this.p = p;
         this.target = target;
         this.dir = dir;
     }
@@ -6193,7 +6285,7 @@ function MoonEclipticLatitudeDegrees(time) {
  * then keep calling {@link NextLunarEclipse} as many times as desired,
  * passing in the `center` value returned from the previous call.
  *
- * @param {(Date|number|AstroTime)} date
+ * @param {FlexibleDateTime} date
  *      The date and time for starting the search for a lunar eclipse.
  *
  * @returns {LunarEclipseInfo}
@@ -6279,12 +6371,12 @@ exports.SearchLunarEclipse = SearchLunarEclipse;
         The distance in kilometers between the axis of the Moon's shadow cone
         and the center of the Earth at the time indicated by `peak`.
 
-    @property {(undefined|number)} latitude
+    @property {number | undefined} latitude
         If `kind` holds `"total"`, the geographic latitude in degrees
         where the center of the Moon's shadow falls on the Earth at the
         time indicated by `peak`; otherwise, `latitude` holds `undefined`.
 
-    @property {(undefined|number)} longitude
+    @property {number | undefined} longitude
         If `kind` holds `"total"`, the geographic longitude in degrees
         where the center of the Moon's shadow falls on the Earth at the
         time indicated by `peak`; otherwise, `longitude` holds `undefined`.
@@ -6526,13 +6618,13 @@ exports.EclipseEvent = EclipseEvent;
  * @property {EclipseEvent} partial_begin
  *      The time and Sun altitude at the beginning of the eclipse.
  *
- * @property {EclipseEvent} total_begin
+ * @property {EclipseEvent | undefined} total_begin
  *      If this is an annular or a total eclipse, the time and Sun altitude when annular/total phase begins; otherwise undefined.
  *
  * @property {EclipseEvent} peak
  *      The time and Sun altitude when the eclipse reaches its peak.
  *
- * @property {EclipseEvent} total_end
+ * @property {EclipseEvent | undefined} total_end
  *      If this is an annular or a total eclipse, the time and Sun altitude when annular/total phase ends; otherwise undefined.
  *
  * @property {EclipseEvent} partial_end
@@ -6699,7 +6791,7 @@ exports.NextLocalSolarEclipse = NextLocalSolarEclipse;
  *      The date and time at the end of the transit.
  *      This is the moment the planet is last seen against the Sun in its background.
  *
- * @property {number} separation;
+ * @property {number} separation
  *      The minimum angular separation, in arcminutes, between the centers of the Sun and the planet.
  *      This angle pertains to the time stored in `peak`.
  */

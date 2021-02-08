@@ -158,7 +158,7 @@ to create an `AstroTime` object.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| date | <code>Date</code> \| <code>number</code> | A JavaScript Date object or a numeric UTC value expressed in J2000 days. |
+| date | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | A JavaScript Date object, a numeric UTC value expressed in J2000 days, or another AstroTime object. |
 
 
 * * *
@@ -349,7 +349,7 @@ Contains information about the apparent brightness and sunlit phase of a celesti
 | geo_dist | <code>number</code> | The distance between the center of the Earth and the center of the body in AU. |
 | gc | [<code>Vector</code>](#Vector) | Geocentric coordinates: the 3D vector from the center of the Earth to the center of the body.      The components are in expressed in AU and are oriented with respect to the J2000 equatorial plane. |
 | hc | [<code>Vector</code>](#Vector) | Heliocentric coordinates: The 3D vector from the center of the Sun to the center of the body.      Like `gc`, `hc` is expressed in AU and oriented with respect      to the J2000 equatorial plane. |
-| ring_tilt | <code>number</code> \| <code>null</code> | For Saturn, this is the angular tilt of the planet's rings in degrees away      from the line of sight from the Earth. When the value is near 0, the rings      appear edge-on from the Earth and are therefore difficult to see.      When `ring_tilt` approaches its maximum value (about 27 degrees),      the rings appear widest and brightest from the Earth.      Unlike the <a href="https://ssd.jpl.nasa.gov/horizons.cgi">JPL Horizons</a> online tool,      this library includes the effect of the ring tilt angle in the calculated value      for Saturn's visual magnitude.      For all bodies other than Saturn, the value of `ring_tilt` is `null`. |
+| ring_tilt | <code>number</code> \| <code>undefined</code> | For Saturn, this is the angular tilt of the planet's rings in degrees away      from the line of sight from the Earth. When the value is near 0, the rings      appear edge-on from the Earth and are therefore difficult to see.      When `ring_tilt` approaches its maximum value (about 27 degrees),      the rings appear widest and brightest from the Earth.      Unlike the <a href="https://ssd.jpl.nasa.gov/horizons.cgi">JPL Horizons</a> online tool,      this library includes the effect of the ring tilt angle in the calculated value      for Saturn's visual magnitude.      For all bodies other than Saturn, the value of `ring_tilt` is `undefined`. |
 
 
 * * *
@@ -545,8 +545,8 @@ Reports the time and geographic location of the peak of a solar eclipse.
 | kind | <code>string</code> | One of the following string values: `"partial"`, `"annular"`, `"total"`. |
 | peak | [<code>AstroTime</code>](#AstroTime) | The date and time of the peak of the eclipse, defined as the instant         when the axis of the Moon's shadow cone passes closest to the Earth's center. |
 | distance | <code>number</code> | The distance in kilometers between the axis of the Moon's shadow cone         and the center of the Earth at the time indicated by `peak`. |
-| latitude | <code>undefined</code> \| <code>number</code> | If `kind` holds `"total"`, the geographic latitude in degrees         where the center of the Moon's shadow falls on the Earth at the         time indicated by `peak`; otherwise, `latitude` holds `undefined`. |
-| longitude | <code>undefined</code> \| <code>number</code> | If `kind` holds `"total"`, the geographic longitude in degrees         where the center of the Moon's shadow falls on the Earth at the         time indicated by `peak`; otherwise, `longitude` holds `undefined`. |
+| latitude | <code>number</code> \| <code>undefined</code> | If `kind` holds `"total"`, the geographic latitude in degrees         where the center of the Moon's shadow falls on the Earth at the         time indicated by `peak`; otherwise, `latitude` holds `undefined`. |
+| longitude | <code>number</code> \| <code>undefined</code> | If `kind` holds `"total"`, the geographic longitude in degrees         where the center of the Moon's shadow falls on the Earth at the         time indicated by `peak`; otherwise, `longitude` holds `undefined`. |
 
 
 * * *
@@ -610,9 +610,9 @@ See #EclipseEvent for more information.
 | --- | --- | --- |
 | kind | <code>string</code> | The type of solar eclipse found: `"partial"`, `"annular"`, or `"total"`. |
 | partial_begin | [<code>EclipseEvent</code>](#EclipseEvent) | The time and Sun altitude at the beginning of the eclipse. |
-| total_begin | [<code>EclipseEvent</code>](#EclipseEvent) | If this is an annular or a total eclipse, the time and Sun altitude when annular/total phase begins; otherwise undefined. |
+| total_begin | [<code>EclipseEvent</code>](#EclipseEvent) \| <code>undefined</code> | If this is an annular or a total eclipse, the time and Sun altitude when annular/total phase begins; otherwise undefined. |
 | peak | [<code>EclipseEvent</code>](#EclipseEvent) | The time and Sun altitude when the eclipse reaches its peak. |
-| total_end | [<code>EclipseEvent</code>](#EclipseEvent) | If this is an annular or a total eclipse, the time and Sun altitude when annular/total phase ends; otherwise undefined. |
+| total_end | [<code>EclipseEvent</code>](#EclipseEvent) \| <code>undefined</code> | If this is an annular or a total eclipse, the time and Sun altitude when annular/total phase ends; otherwise undefined. |
 | partial_end | [<code>EclipseEvent</code>](#EclipseEvent) | The time and Sun altitude at the end of the eclipse. |
 
 
@@ -637,7 +637,7 @@ The calculations are performed from the point of view of a geocentric observer.
 | start | [<code>AstroTime</code>](#AstroTime) | The date and time at the beginning of the transit.      This is the moment the planet first becomes visible against the Sun in its background. |
 | peak | [<code>AstroTime</code>](#AstroTime) | When the planet is most aligned with the Sun, as seen from the Earth. |
 | finish | [<code>AstroTime</code>](#AstroTime) | The date and time at the end of the transit.      This is the moment the planet is last seen against the Sun in its background. |
-| separation; | <code>number</code> | The minimum angular separation, in arcminutes, between the centers of the Sun and the planet.      This angle pertains to the time stored in `peak`. |
+| separation | <code>number</code> | The minimum angular separation, in arcminutes, between the centers of the Sun and the planet.      This angle pertains to the time stored in `peak`. |
 
 
 * * *
@@ -671,35 +671,22 @@ The angle is measured in the plane that contains both vectors.
 
 * * *
 
-<a name="TerrestrialTime"></a>
-
-## TerrestrialTime(ut) ⇒ <code>number</code>
-Calculates Terrestrial Time (TT) from Universal Time (UT).
-
-**Kind**: global function  
-**Returns**: <code>number</code> - A Terrestrial Time expressed as a floating point number of days since the 2000.0 epoch.  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| ut | <code>number</code> | The Universal Time expressed as a floating point number of days since the 2000.0 epoch. |
-
-
-* * *
-
 <a name="MakeTime"></a>
 
 ## MakeTime(date) ⇒ [<code>AstroTime</code>](#AstroTime)
+**Kind**: global function  
+**Brief**: Converts multiple date/time formats to `AstroTime` format.
+
 Given a Date object or a number days since noon (12:00) on January 1, 2000 (UTC),
 this function creates an [AstroTime](#AstroTime) object.
+
 Given an [AstroTime](#AstroTime) object, returns the same object unmodified.
 Use of this function is not required for any of the other exposed functions in this library,
 because they all guarantee converting date/time parameters to AstroTime
 as needed. However, it may be convenient for callers who need to understand
 the difference between UTC and TT (Terrestrial Time). In some use cases,
 converting once to AstroTime format and passing the result into multiple
-function calls may be more efficient than passing in native JavaScript Date objects.
-
-**Kind**: global function  
+function calls may be more efficient than passing in native JavaScript Date objects.  
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -750,7 +737,7 @@ as seen by that observer. Allows optional correction for atmospheric refraction.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| date | <code>Date</code> \| <code>number</code> \| [<code>AstroTime</code>](#AstroTime) | The date and time for which to find horizontal coordinates. |
+| date | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time for which to find horizontal coordinates. |
 | observer | [<code>Observer</code>](#Observer) | The location of the observer for which to find horizontal coordinates. |
 | ra | <code>number</code> | Right ascension in sidereal hours of the celestial object,      referred to the mean equinox of date for the J2000 epoch. |
 | dec | <code>number</code> | Declination in degrees of the celestial object,      referred to the mean equator of date for the J2000 epoch.      Positive values are north of the celestial equator and negative values are south. |
@@ -818,7 +805,7 @@ However, it can have a small effect on the apparent positions of other bodies.
 | Param | Type | Description |
 | --- | --- | --- |
 | body | <code>string</code> | The name of the body for which to find equatorial coordinates.      Not allowed to be `"Earth"`. |
-| date | <code>Date</code> \| <code>number</code> \| <code>Time</code> | Specifies the date and time at which the body is to be observed. |
+| date | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | Specifies the date and time at which the body is to be observed. |
 | observer | [<code>Observer</code>](#Observer) | The location on the Earth of the observer.      Call [MakeObserver](#MakeObserver) to create an observer object. |
 | ofdate | <code>bool</code> | Pass `true` to return equatorial coordinates of date,      i.e. corrected for precession and nutation at the given date.      This is needed to get correct horizontal coordinates when you call      [Horizon](#Horizon).      Pass `false` to return equatorial coordinates in the J2000 system. |
 | aberration | <code>bool</code> | Pass `true` to correct for      <a href="https://en.wikipedia.org/wiki/Aberration_of_light">aberration</a>,      or `false` to leave uncorrected. |
@@ -859,7 +846,7 @@ by Montenbruck and Pfleger.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| date | <code>Date</code> \| <code>number</code> \| [<code>AstroTime</code>](#AstroTime) | The date and time for which to calculate the Moon's geocentric position. |
+| date | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time for which to calculate the Moon's geocentric position. |
 
 
 * * *
@@ -929,7 +916,7 @@ coming from that body.
 
 <a name="Search"></a>
 
-## Search(func, t1, t2, options) ⇒ <code>null</code> \| [<code>AstroTime</code>](#AstroTime)
+## Search(func, t1, t2, options) ⇒ [<code>AstroTime</code>](#AstroTime) \| <code>null</code>
 Search for next time <i>t</i> (such that <i>t</i> is between `t1` and `t2`)
 that `func(t)` crosses from a negative value to a non-negative value.
 The given function must have "smooth" behavior over the entire inclusive range [`t1`, `t2`],
@@ -942,7 +929,7 @@ that the "wrong" event will be found (i.e. not the first event after t1)
 or even that the function will return null, indicating that no event was found.
 
 **Kind**: global function  
-**Returns**: <code>null</code> \| [<code>AstroTime</code>](#AstroTime) - If the search is successful, returns the date and time of the solution.
+**Returns**: [<code>AstroTime</code>](#AstroTime) \| <code>null</code> - If the search is successful, returns the date and time of the solution.
      If the search fails, returns null.  
 
 | Param | Type | Description |
@@ -950,7 +937,7 @@ or even that the function will return null, indicating that no event was found.
 | func | <code>ContinuousFunction</code> | The function to find an ascending zero crossing for.      The function must accept a single parameter of type [AstroTime](#AstroTime)      and return a numeric value. |
 | t1 | [<code>AstroTime</code>](#AstroTime) | The lower time bound of a search window. |
 | t2 | [<code>AstroTime</code>](#AstroTime) | The upper time bound of a search window. |
-| options | <code>null</code> \| [<code>SearchOptions</code>](#SearchOptions) | Options that can tune the behavior of the search.      Most callers can omit this argument or pass in `null`. |
+| options | [<code>SearchOptions</code>](#SearchOptions) \| <code>undefined</code> | Options that can tune the behavior of the search.      Most callers can omit this argument. |
 
 
 * * *
@@ -1005,7 +992,7 @@ of the body onto that plane.
 | Param | Type | Description |
 | --- | --- | --- |
 | body | <code>string</code> | The name of a supported celestial body other than the Earth. |
-| date | <code>Date</code> \| <code>number</code> \| [<code>AstroTime</code>](#AstroTime) | The time at which the relative longitude is to be found. |
+| date | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The time at which the relative longitude is to be found. |
 
 
 * * *
@@ -1026,7 +1013,7 @@ contains the centers of the Earth, the Sun, and `body`.
 | Param | Type | Description |
 | --- | --- | --- |
 | body | <code>string</code> | The name of a supported celestial body other than the Earth. |
-| date | <code>Date</code> \| <code>number</code> \| [<code>AstroTime</code>](#AstroTime) | The time at which the angle from the Sun is to be found. |
+| date | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The time at which the angle from the Sun is to be found. |
 
 
 * * *
@@ -1140,7 +1127,7 @@ necessary for finding other lunar phases than the usual quarter phases.
 | Param | Type | Description |
 | --- | --- | --- |
 | targetLon | <code>number</code> | The difference in geocentric ecliptic longitude between the Sun and Moon      that specifies the lunar phase being sought. This can be any value      in the range [0, 360). Here are some helpful examples:      0 = new moon,      90 = first quarter,      180 = full moon,      270 = third quarter. |
-| dateStart | <code>Date</code> \| <code>number</code> \| [<code>AstroTime</code>](#AstroTime) | The beginning of the window of time in which to search. |
+| dateStart | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The beginning of the window of time in which to search. |
 | limitDays | <code>number</code> | The floating point number of days after `dateStart`      that limits the window of time in which to search. |
 
 
@@ -1160,7 +1147,7 @@ passing the previous return value as the argument to the next call.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| dateStart | <code>Date</code> \| <code>number</code> \| [<code>AstroTime</code>](#AstroTime) | The date and time after which to find the first quarter lunar phase. |
+| dateStart | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time after which to find the first quarter lunar phase. |
 
 
 * * *
@@ -1201,7 +1188,7 @@ The times are adjusted for typical atmospheric refraction conditions.
 | body | <code>string</code> | The name of the body to find the rise or set time for. |
 | observer | [<code>Observer</code>](#Observer) | Specifies the geographic coordinates and elevation above sea level of the observer.      Call [MakeObserver](#MakeObserver) to create an observer object. |
 | direction | <code>number</code> | Either +1 to find rise time or -1 to find set time.      Any other value will cause an exception to be thrown. |
-| dateStart | <code>Date</code> \| <code>number</code> \| [<code>AstroTime</code>](#AstroTime) | The date and time after which the specified rise or set time is to be found. |
+| dateStart | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time after which the specified rise or set time is to be found. |
 | limitDays | <code>number</code> | The fractional number of days after `dateStart` that limits      when the rise or set time is to be found. |
 
 
@@ -1227,7 +1214,7 @@ at its minimum altitude.
 | body | <code>string</code> | The name of a celestial body other than the Earth. |
 | observer | [<code>Observer</code>](#Observer) | Specifies the geographic coordinates and elevation above sea level of the observer.      Call [MakeObserver](#MakeObserver) to create an observer object. |
 | hourAngle | <code>number</code> | The hour angle expressed in      <a href="https://en.wikipedia.org/wiki/Sidereal_time">sidereal</a>      hours for which the caller seeks to find the body attain.      The value must be in the range [0, 24).      The hour angle represents the number of sidereal hours that have      elapsed since the most recent time the body crossed the observer's local      <a href="https://en.wikipedia.org/wiki/Meridian_(astronomy)">meridian</a>.      This specifying `hourAngle` = 0 finds the moment in time      the body reaches the highest angular altitude in a given sidereal day. |
-| dateStart | <code>Date</code> \| <code>number</code> \| [<code>AstroTime</code>](#AstroTime) | The date and time after which the desired hour angle crossing event      is to be found. |
+| dateStart | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time after which the desired hour angle crossing event      is to be found. |
 
 
 * * *
@@ -1898,7 +1885,7 @@ passing in the `center` value returned from the previous call.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| date | <code>Date</code> \| <code>number</code> \| [<code>AstroTime</code>](#AstroTime) | The date and time for starting the search for a lunar eclipse. |
+| date | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time for starting the search for a lunar eclipse. |
 
 
 * * *
@@ -2051,18 +2038,25 @@ Keep calling this function as many times as you want to keep finding more transi
 <a name="FlexibleDateTime"></a>
 
 ## FlexibleDateTime : <code>Date</code> \| <code>number</code> \| [<code>AstroTime</code>](#AstroTime)
-A Date object, a number of UTC days since the J2000 epoch (noon on January 1, 2000).
-
 **Kind**: global typedef  
+**Brief**: A `Date`, `number`, or `AstroTime` value that specifies the date and time of an astronomical event.
+
+`FlexibleDateTime` is a placeholder type that represents three different types
+that may be passed to many Astronomy Engine functions: a JavaScript `Date` object,
+a number representing the real-valued number of UT days since the J2000 epoch,
+or an [AstroTime](#AstroTime) object.
+
+This flexibility is for convenience of outside callers.
+Internally, Astronomy Engine always converts a `FlexibleTime` parameter
+to an `AstroTime` object by calling [MakeTime](#MakeTime).  
 
 * * *
 
 <a name="SearchOptions"></a>
 
-## SearchOptions : <code>Object</code>
-Options for the [Search](#Search) function.
-
+## SearchOptions : <code>object</code>
 **Kind**: global typedef  
+**Brief**: Options for the [Search](#Search) function.  
 **Properties**
 
 | Name | Type | Description |
