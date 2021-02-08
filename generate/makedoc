@@ -43,6 +43,7 @@ npm run minify:browser || Fail "Error minifying astronomy.browser.js"
 
 echo "Generating JS documentation in JSON format."
 npm run docs:json || Fail "Error generating JSON documentation."
+node jsdoc_strip_path.js || Fail "Error stripping absolute paths."
 
 echo "Generating JS documentation in Markdown format."
 npm run docs:md || Fail "Error generating JS documentation."
