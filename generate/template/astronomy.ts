@@ -96,7 +96,7 @@ let ob2000: number;   // lazy-evaluated mean obliquity of the ecliptic at J2000,
 let cos_ob2000: number;
 let sin_ob2000: number;
 
-export function VerifyBoolean(b: boolean): boolean {
+function VerifyBoolean(b: boolean): boolean {
     if (b !== true && b !== false) {
         console.trace();
         throw `Value is not boolean: ${b}`;
@@ -104,7 +104,7 @@ export function VerifyBoolean(b: boolean): boolean {
     return b;
 }
 
-export function VerifyNumber(x: number): number {
+function VerifyNumber(x: number): number {
     if (!Number.isFinite(x)) {
         console.trace();
         throw `Value is not a finite number: ${x}`;
@@ -112,7 +112,7 @@ export function VerifyNumber(x: number): number {
     return x;
 }
 
-export function Frac(x: number): number {
+function Frac(x: number): number {
     return x - Math.floor(x);
 }
 
@@ -173,15 +173,15 @@ export const Bodies = [
     'EMB'           // Earth/Moon Barycenter
 ];
 
-export interface PlanetInfo {
+interface PlanetInfo {
     OrbitalPeriod: number;
 }
 
-export interface PlanetTable {
+interface PlanetTable {
     [body: string]: PlanetInfo;
 }
 
-export const Planet: PlanetTable = {
+const Planet: PlanetTable = {
     Mercury: { OrbitalPeriod:    87.969 },
     Venus:   { OrbitalPeriod:   224.701 },
     Earth:   { OrbitalPeriod:   365.256 },
@@ -193,11 +193,11 @@ export const Planet: PlanetTable = {
     Pluto:   { OrbitalPeriod: 90560.0   }
 };
 
-export interface VsopTable {
+interface VsopTable {
     [body: string]: number[][][][];
 }
 
-export const vsop: VsopTable = {
+const vsop: VsopTable = {
     Mercury: $ASTRO_LIST_VSOP(Mercury),
     Venus:   $ASTRO_LIST_VSOP(Venus),
     Earth:   $ASTRO_LIST_VSOP(Earth),
@@ -322,7 +322,7 @@ export function SetDeltaTFunction(func: DeltaTimeFunction) {
  * @returns {number}
  *      A Terrestrial Time expressed as a floating point number of days since the 2000.0 epoch.
  */
-export function TerrestrialTime(ut: number): number {
+function TerrestrialTime(ut: number): number {
     return ut + DeltaT(ut)/86400;
 }
 
@@ -414,7 +414,7 @@ export class AstroTime {
     }
 }
 
-export function InterpolateTime(time1: AstroTime, time2: AstroTime, fraction: number): AstroTime {
+function InterpolateTime(time1: AstroTime, time2: AstroTime, fraction: number): AstroTime {
     return new AstroTime(time1.ut + fraction*(time2.ut - time1.ut));
 }
 
@@ -499,7 +499,7 @@ function mean_obliq(time: AstroTime): number {
     return asec / 3600.0;
 }
 
-export interface EarthTiltInfo {
+interface EarthTiltInfo {
     tt: number;
     dpsi: number;
     deps: number;
@@ -540,7 +540,7 @@ function ecl2equ_vec(time: AstroTime, pos: ArrayVector): ArrayVector {
 
 export let CalcMoonCount = 0;
 
-export function CalcMoon(time: AstroTime) {
+function CalcMoon(time: AstroTime) {
     ++CalcMoonCount;
 
     const T = time.tt / 36525;
@@ -1000,7 +1000,7 @@ export class EquatorialCoordinates {
     }
 }
 
-export function IsValidRotationArray(rot: number[][]) {
+function IsValidRotationArray(rot: number[][]) {
     if (!(rot instanceof Array) || (rot.length !== 3))
         return false;
 
@@ -1016,9 +1016,9 @@ export function IsValidRotationArray(rot: number[][]) {
     return true;
 }
 
-export type ArrayVector = [number, number, number];
+type ArrayVector = [number, number, number];
 
-export interface TerraInfo {
+interface TerraInfo {
     pos: ArrayVector;
     vel: ArrayVector;
 }
@@ -1707,7 +1707,7 @@ function CalcSolarSystemBarycenter(time: AstroTime): Vector {
 
 $ASTRO_PLUTO_TABLE()
 
-export class TerseVector {
+class TerseVector {
     x: number;
     y: number;
     z: number;
@@ -2338,14 +2338,14 @@ export function Search(
     }
 }
 
-export function LongitudeOffset(diff: number): number {
+function LongitudeOffset(diff: number): number {
     let offset = diff;
     while (offset <= -180) offset += 360;
     while (offset > 180) offset -= 360;
     return offset;
 }
 
-export function NormalizeLongitude(lon: number): number {
+function NormalizeLongitude(lon: number): number {
     while (lon < 0) lon += 360;
     while (lon >= 360) lon -= 360;
     return lon;
@@ -3732,7 +3732,7 @@ export function NextLunarApsis(apsis: Apsis): Apsis {
     return next;
 }
 
-export function PlanetExtreme(body: string, kind: number, start_time: AstroTime, dayspan: number): Apsis {
+function PlanetExtreme(body: string, kind: number, start_time: AstroTime, dayspan: number): Apsis {
     const direction = (kind === 1) ? +1.0 : -1.0;
     const npoints = 10;
 
@@ -4783,7 +4783,7 @@ export class LunarEclipseInfo {
     }
 }
 
-export class ShadowInfo {
+class ShadowInfo {
     time: AstroTime;
     u: number;
     r: number;

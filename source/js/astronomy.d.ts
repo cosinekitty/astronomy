@@ -27,9 +27,6 @@
     SOFTWARE.
 */
 export declare type FlexibleDateTime = Date | number | AstroTime;
-export declare function VerifyBoolean(b: boolean): boolean;
-export declare function VerifyNumber(x: number): number;
-export declare function Frac(x: number): number;
 /**
  * Calculates the angle in degrees between two vectors.
  * The angle is measured in the plane that contains both vectors.
@@ -52,31 +49,10 @@ export declare function AngleBetween(a: Vector, b: Vector): number;
  *      list is not supported at all.
  */
 export declare const Bodies: string[];
-export interface PlanetInfo {
-    OrbitalPeriod: number;
-}
-export interface PlanetTable {
-    [body: string]: PlanetInfo;
-}
-export declare const Planet: PlanetTable;
-export interface VsopTable {
-    [body: string]: number[][][][];
-}
-export declare const vsop: VsopTable;
 export declare function DeltaT_EspenakMeeus(ut: number): number;
 export declare type DeltaTimeFunction = (ut: number) => number;
 export declare function DeltaT_JplHorizons(ut: number): number;
 export declare function SetDeltaTFunction(func: DeltaTimeFunction): void;
-/**
- * Calculates Terrestrial Time (TT) from Universal Time (UT).
- *
- * @param {number} ut
- *      The Universal Time expressed as a floating point number of days since the 2000.0 epoch.
- *
- * @returns {number}
- *      A Terrestrial Time expressed as a floating point number of days since the 2000.0 epoch.
- */
-export declare function TerrestrialTime(ut: number): number;
 /**
  * @brief The date and time of an astronomical observation.
  *
@@ -132,7 +108,6 @@ export declare class AstroTime {
      */
     AddDays(days: number): AstroTime;
 }
-export declare function InterpolateTime(time1: AstroTime, time2: AstroTime, fraction: number): AstroTime;
 /**
  * A Date object, a number of UTC days since the J2000 epoch (noon on January 1, 2000).
  * @typedef {(Date | number | AstroTime)} FlexibleDateTime
@@ -155,20 +130,7 @@ export declare function InterpolateTime(time1: AstroTime, time2: AstroTime, frac
  * @returns {AstroTime}
  */
 export declare function MakeTime(date: FlexibleDateTime): AstroTime;
-export interface EarthTiltInfo {
-    tt: number;
-    dpsi: number;
-    deps: number;
-    ee: number;
-    mobl: number;
-    tobl: number;
-}
 export declare let CalcMoonCount: number;
-export declare function CalcMoon(time: AstroTime): {
-    geo_eclip_lon: number;
-    geo_eclip_lat: number;
-    distance_au: number;
-};
 /**
  * Holds the Cartesian coordinates of a vector in 3D space,
  * along with the time at which the vector is valid.
@@ -236,12 +198,6 @@ export declare class EquatorialCoordinates {
     dec: number;
     dist: number;
     constructor(ra: number, dec: number, dist: number);
-}
-export declare function IsValidRotationArray(rot: number[][]): boolean;
-export declare type ArrayVector = [number, number, number];
-export interface TerraInfo {
-    pos: ArrayVector;
-    vel: ArrayVector;
 }
 /**
  * Contains a rotation matrix that can be used to transform one coordinate system to another.
@@ -518,21 +474,6 @@ export declare function Ecliptic(gx: number, gy: number, gz: number): EclipticCo
  * @returns {Vector}
  */
 export declare function GeoMoon(date: FlexibleDateTime): Vector;
-export declare class TerseVector {
-    x: number;
-    y: number;
-    z: number;
-    constructor(x: number, y: number, z: number);
-    ToAstroVector(t: AstroTime): Vector;
-    quadrature(): number;
-    add(other: TerseVector): TerseVector;
-    sub(other: TerseVector): TerseVector;
-    incr(other: TerseVector): void;
-    decr(other: TerseVector): void;
-    mul(scalar: number): TerseVector;
-    div(scalar: number): TerseVector;
-    mean(other: TerseVector): TerseVector;
-}
 /**
  * Calculates heliocentric (i.e., with respect to the center of the Sun)
  * Cartesian coordinates in the J2000 equatorial system of a celestial
@@ -659,8 +600,6 @@ export declare function Search(f: (t: AstroTime) => number, t1: AstroTime, t2: A
     init_f2?: number;
     iter_limit?: number;
 }): AstroTime | null;
-export declare function LongitudeOffset(diff: number): number;
-export declare function NormalizeLongitude(lon: number): number;
 /**
  * Searches for the moment in time when the center of the Sun reaches a given apparent
  * ecliptic longitude, as seen from the center of the Earth, within a given range of dates.
@@ -1246,7 +1185,6 @@ export declare function SearchLunarApsis(startDate: FlexibleDateTime): Apsis;
  *      The successor apogee for the given perigee, or the successor perigee for the given apogee.
  */
 export declare function NextLunarApsis(apsis: Apsis): Apsis;
-export declare function PlanetExtreme(body: string, kind: number, start_time: AstroTime, dayspan: number): Apsis;
 /**
  * Finds the date and time of a planet's perihelion (closest approach to the Sun)
  * or aphelion (farthest distance from the Sun) after a given time.
@@ -1786,16 +1724,6 @@ export declare class LunarEclipseInfo {
     sd_partial: number;
     sd_total: number;
     constructor(kind: string, peak: AstroTime, sd_penum: number, sd_partial: number, sd_total: number);
-}
-export declare class ShadowInfo {
-    time: AstroTime;
-    u: number;
-    r: number;
-    k: number;
-    p: number;
-    target: Vector;
-    dir: Vector;
-    constructor(time: AstroTime, u: number, r: number, k: number, p: number, target: Vector, dir: Vector);
 }
 /**
  * @brief Searches for a lunar eclipse.

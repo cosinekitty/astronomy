@@ -35,9 +35,8 @@
  */
 'use strict';
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.SearchMoonQuarter = exports.MoonQuarter = exports.SearchMoonPhase = exports.MoonPhase = exports.SearchRelativeLongitude = exports.Illumination = exports.IlluminationInfo = exports.EclipticLongitude = exports.AngleFromSun = exports.LongitudeFromSun = exports.SearchSunLongitude = exports.NormalizeLongitude = exports.LongitudeOffset = exports.Search = exports.GeoVector = exports.HelioDistance = exports.HelioVector = exports.TerseVector = exports.GeoMoon = exports.Ecliptic = exports.Equator = exports.SunPosition = exports.MakeObserver = exports.Observer = exports.Horizon = exports.EclipticCoordinates = exports.HorizontalCoordinates = exports.MakeRotation = exports.RotationMatrix = exports.IsValidRotationArray = exports.EquatorialCoordinates = exports.MakeSpherical = exports.Spherical = exports.Vector = exports.CalcMoon = exports.CalcMoonCount = exports.MakeTime = exports.InterpolateTime = exports.AstroTime = exports.TerrestrialTime = exports.SetDeltaTFunction = exports.DeltaT_JplHorizons = exports.DeltaT_EspenakMeeus = exports.vsop = exports.Planet = exports.Bodies = exports.AngleBetween = exports.Frac = exports.VerifyNumber = exports.VerifyBoolean = void 0;
-exports.LocalSolarEclipseInfo = exports.EclipseEvent = exports.NextGlobalSolarEclipse = exports.SearchGlobalSolarEclipse = exports.NextLunarEclipse = exports.GlobalSolarEclipseInfo = exports.SearchLunarEclipse = exports.ShadowInfo = exports.LunarEclipseInfo = exports.Constellation = exports.ConstellationInfo = exports.Rotation_HOR_ECL = exports.Rotation_ECL_HOR = exports.Rotation_ECL_EQD = exports.Rotation_EQD_ECL = exports.Rotation_EQJ_HOR = exports.Rotation_HOR_EQJ = exports.Rotation_HOR_EQD = exports.Rotation_EQD_HOR = exports.Rotation_EQD_EQJ = exports.Rotation_EQJ_EQD = exports.Rotation_ECL_EQJ = exports.Rotation_EQJ_ECL = exports.RotateVector = exports.InverseRefraction = exports.Refraction = exports.VectorFromHorizon = exports.HorizonFromVector = exports.SphereFromVector = exports.EquatorFromVector = exports.VectorFromEquator = exports.VectorFromSphere = exports.CombineRotation = exports.InverseRotation = exports.NextPlanetApsis = exports.SearchPlanetApsis = exports.PlanetExtreme = exports.NextLunarApsis = exports.SearchLunarApsis = exports.Apsis = exports.SearchPeakMagnitude = exports.SearchMaxElongation = exports.Elongation = exports.ElongationEvent = exports.Seasons = exports.SeasonInfo = exports.SearchHourAngle = exports.HourAngleEvent = exports.SearchRiseSet = exports.NextMoonQuarter = void 0;
-exports.NextTransit = exports.SearchTransit = exports.TransitInfo = exports.NextLocalSolarEclipse = exports.SearchLocalSolarEclipse = void 0;
+exports.SearchLunarApsis = exports.Apsis = exports.SearchPeakMagnitude = exports.SearchMaxElongation = exports.Elongation = exports.ElongationEvent = exports.Seasons = exports.SeasonInfo = exports.SearchHourAngle = exports.HourAngleEvent = exports.SearchRiseSet = exports.NextMoonQuarter = exports.SearchMoonQuarter = exports.MoonQuarter = exports.SearchMoonPhase = exports.MoonPhase = exports.SearchRelativeLongitude = exports.Illumination = exports.IlluminationInfo = exports.EclipticLongitude = exports.AngleFromSun = exports.LongitudeFromSun = exports.SearchSunLongitude = exports.Search = exports.GeoVector = exports.HelioDistance = exports.HelioVector = exports.GeoMoon = exports.Ecliptic = exports.Equator = exports.SunPosition = exports.MakeObserver = exports.Observer = exports.Horizon = exports.EclipticCoordinates = exports.HorizontalCoordinates = exports.MakeRotation = exports.RotationMatrix = exports.EquatorialCoordinates = exports.MakeSpherical = exports.Spherical = exports.Vector = exports.CalcMoonCount = exports.MakeTime = exports.AstroTime = exports.SetDeltaTFunction = exports.DeltaT_JplHorizons = exports.DeltaT_EspenakMeeus = exports.Bodies = exports.AngleBetween = void 0;
+exports.NextTransit = exports.SearchTransit = exports.TransitInfo = exports.NextLocalSolarEclipse = exports.SearchLocalSolarEclipse = exports.LocalSolarEclipseInfo = exports.EclipseEvent = exports.NextGlobalSolarEclipse = exports.SearchGlobalSolarEclipse = exports.NextLunarEclipse = exports.GlobalSolarEclipseInfo = exports.SearchLunarEclipse = exports.LunarEclipseInfo = exports.Constellation = exports.ConstellationInfo = exports.Rotation_HOR_ECL = exports.Rotation_ECL_HOR = exports.Rotation_ECL_EQD = exports.Rotation_EQD_ECL = exports.Rotation_EQJ_HOR = exports.Rotation_HOR_EQJ = exports.Rotation_HOR_EQD = exports.Rotation_EQD_HOR = exports.Rotation_EQD_EQJ = exports.Rotation_EQJ_EQD = exports.Rotation_ECL_EQJ = exports.Rotation_EQJ_ECL = exports.RotateVector = exports.InverseRefraction = exports.Refraction = exports.VectorFromHorizon = exports.HorizonFromVector = exports.SphereFromVector = exports.EquatorFromVector = exports.VectorFromEquator = exports.VectorFromSphere = exports.CombineRotation = exports.InverseRotation = exports.NextPlanetApsis = exports.SearchPlanetApsis = exports.NextLunarApsis = void 0;
 const DAYS_PER_TROPICAL_YEAR = 365.24217;
 const J2000 = new Date('2000-01-01T12:00:00Z');
 const PI2 = 2 * Math.PI;
@@ -97,7 +96,6 @@ function VerifyBoolean(b) {
     }
     return b;
 }
-exports.VerifyBoolean = VerifyBoolean;
 function VerifyNumber(x) {
     if (!Number.isFinite(x)) {
         console.trace();
@@ -105,11 +103,9 @@ function VerifyNumber(x) {
     }
     return x;
 }
-exports.VerifyNumber = VerifyNumber;
 function Frac(x) {
     return x - Math.floor(x);
 }
-exports.Frac = Frac;
 /**
  * Calculates the angle in degrees between two vectors.
  * The angle is measured in the plane that contains both vectors.
@@ -161,7 +157,7 @@ exports.Bodies = [
     'SSB',
     'EMB' // Earth/Moon Barycenter
 ];
-exports.Planet = {
+const Planet = {
     Mercury: { OrbitalPeriod: 87.969 },
     Venus: { OrbitalPeriod: 224.701 },
     Earth: { OrbitalPeriod: 365.256 },
@@ -172,7 +168,7 @@ exports.Planet = {
     Neptune: { OrbitalPeriod: 60189.0 },
     Pluto: { OrbitalPeriod: 90560.0 }
 };
-exports.vsop = {
+const vsop = {
     Mercury: [
         [
             [
@@ -944,7 +940,6 @@ exports.SetDeltaTFunction = SetDeltaTFunction;
 function TerrestrialTime(ut) {
     return ut + DeltaT(ut) / 86400;
 }
-exports.TerrestrialTime = TerrestrialTime;
 /**
  * @brief The date and time of an astronomical observation.
  *
@@ -1027,7 +1022,6 @@ exports.AstroTime = AstroTime;
 function InterpolateTime(time1, time2, fraction) {
     return new AstroTime(time1.ut + fraction * (time2.ut - time1.ut));
 }
-exports.InterpolateTime = InterpolateTime;
 /**
  * A Date object, a number of UTC days since the J2000 epoch (noon on January 1, 2000).
  * @typedef {(Date | number | AstroTime)} FlexibleDateTime
@@ -1460,7 +1454,6 @@ function CalcMoon(time) {
         distance_au: (ARC * EARTH_EQUATORIAL_RADIUS_AU) / (0.999953253 * SINPI)
     };
 }
-exports.CalcMoon = CalcMoon;
 function precession(tt1, pos1, tt2) {
     const r = precession_rot(tt1, tt2);
     return [
@@ -1714,7 +1707,6 @@ function IsValidRotationArray(rot) {
     }
     return true;
 }
-exports.IsValidRotationArray = IsValidRotationArray;
 /**
  * Contains a rotation matrix that can be used to transform one coordinate system to another.
  *
@@ -2056,7 +2048,7 @@ function SunPosition(date) {
     // Otherwise season calculations (equinox, solstice) will all be early by about 8 minutes!
     const time = MakeTime(date).AddDays(-1 / C_AUDAY);
     // Get heliocentric cartesian coordinates of Earth in J2000.
-    const earth2000 = CalcVsop(exports.vsop.Earth, time);
+    const earth2000 = CalcVsop(vsop.Earth, time);
     // Convert to geocentric location of the Sun.
     const sun2000 = [-earth2000.x, -earth2000.y, -earth2000.z];
     // Convert to equator-of-date equatorial cartesian coordinates.
@@ -2305,7 +2297,7 @@ function CalcVsopPosVel(model, tt) {
 }
 function AdjustBarycenter(ssb, time, body, pmass) {
     const shift = pmass / (pmass + SUN_GM);
-    const planet = CalcVsop(exports.vsop[body], time);
+    const planet = CalcVsop(vsop[body], time);
     ssb.x += shift * planet.x;
     ssb.y += shift * planet.y;
     ssb.z += shift * planet.z;
@@ -2402,7 +2394,6 @@ class TerseVector {
         return new TerseVector((this.x + other.x) / 2, (this.y + other.y) / 2, (this.z + other.z) / 2);
     }
 }
-exports.TerseVector = TerseVector;
 class body_state_t {
     constructor(tt, r, v) {
         this.tt = tt;
@@ -2416,7 +2407,7 @@ function BodyStateFromTable(entry) {
 }
 function AdjustBarycenterPosVel(ssb, tt, body, planet_gm) {
     const shift = planet_gm / (planet_gm + SUN_GM);
-    const planet = CalcVsopPosVel(exports.vsop[body], tt);
+    const planet = CalcVsopPosVel(vsop[body], tt);
     ssb.r.incr(planet.r.mul(shift));
     ssb.v.incr(planet.v.mul(shift));
     return planet;
@@ -2605,8 +2596,8 @@ function CalcPluto(time) {
  */
 function HelioVector(body, date) {
     var time = MakeTime(date);
-    if (body in exports.vsop) {
-        return CalcVsop(exports.vsop[body], time);
+    if (body in vsop) {
+        return CalcVsop(vsop[body], time);
     }
     if (body === 'Pluto') {
         return CalcPluto(time);
@@ -2615,12 +2606,12 @@ function HelioVector(body, date) {
         return new Vector(0, 0, 0, time);
     }
     if (body === 'Moon') {
-        var e = CalcVsop(exports.vsop.Earth, time);
+        var e = CalcVsop(vsop.Earth, time);
         var m = GeoMoon(time);
         return new Vector(e.x + m.x, e.y + m.y, e.z + m.z, time);
     }
     if (body === 'EMB') {
-        const e = CalcVsop(exports.vsop.Earth, time);
+        const e = CalcVsop(vsop.Earth, time);
         const m = GeoMoon(time);
         const denom = 1.0 + EARTH_MOON_MASS_RATIO;
         return new Vector(e.x + (m.x / denom), e.y + (m.y / denom), e.z + (m.z / denom), time);
@@ -2653,8 +2644,8 @@ exports.HelioVector = HelioVector;
  */
 function HelioDistance(body, date) {
     const time = MakeTime(date);
-    if (body in exports.vsop) {
-        return VsopFormula(exports.vsop[body][RAD_INDEX], time.tt / DAYS_PER_MILLENNIUM);
+    if (body in vsop) {
+        return VsopFormula(vsop[body][RAD_INDEX], time.tt / DAYS_PER_MILLENNIUM);
     }
     return HelioVector(body, time).Length();
 }
@@ -2717,12 +2708,12 @@ function GeoVector(body, date, aberration) {
                     (transverse distance Earth moves) / (distance to body)
                     (transverse speed of Earth) / (speed of light).
             */
-            earth = CalcVsop(exports.vsop.Earth, ltime);
+            earth = CalcVsop(vsop.Earth, ltime);
         }
         else {
             if (!earth) {
                 // No aberration, so calculate Earth's position once, at the time of observation.
-                earth = CalcVsop(exports.vsop.Earth, time);
+                earth = CalcVsop(vsop.Earth, time);
             }
         }
         geo = new Vector(h.x - earth.x, h.y - earth.y, h.z - earth.z, time);
@@ -2912,7 +2903,6 @@ function LongitudeOffset(diff) {
         offset -= 360;
     return offset;
 }
-exports.LongitudeOffset = LongitudeOffset;
 function NormalizeLongitude(lon) {
     while (lon < 0)
         lon += 360;
@@ -2920,7 +2910,6 @@ function NormalizeLongitude(lon) {
         lon -= 360;
     return lon;
 }
-exports.NormalizeLongitude = NormalizeLongitude;
 /**
  * Searches for the moment in time when the center of the Sun reaches a given apparent
  * ecliptic longitude, as seen from the center of the Earth, within a given range of dates.
@@ -3225,7 +3214,7 @@ function Illumination(body, date) {
     if (body === 'Earth')
         throw `The illumination of the Earth is not defined.`;
     const time = MakeTime(date);
-    const earth = CalcVsop(exports.vsop.Earth, time);
+    const earth = CalcVsop(vsop.Earth, time);
     let phase; // phase angle in degrees between Earth and Sun as seen from body
     let hc; // vector from Sun to body
     let gc; // vector from Earth to body
@@ -3277,12 +3266,12 @@ function SynodicPeriod(body) {
     // The sidereal period of a planet is how long it takes to go around the Sun in days, on average.
     // The synodic period of a planet is how long it takes between consecutive oppositions
     // or conjunctions, on average.
-    let planet = exports.Planet[body];
+    let planet = Planet[body];
     if (!planet)
         throw `Not a valid planet name: ${body}`;
     // See here for explanation of the formula:
     // https://en.wikipedia.org/wiki/Elongation_(astronomy)#Elongation_period
-    const Te = exports.Planet.Earth.OrbitalPeriod;
+    const Te = Planet.Earth.OrbitalPeriod;
     const Tp = planet.OrbitalPeriod;
     const synodicPeriod = Math.abs(Te / (Te / Tp - 1));
     return synodicPeriod;
@@ -3315,14 +3304,14 @@ function SynodicPeriod(body) {
  */
 function SearchRelativeLongitude(body, targetRelLon, startDate) {
     VerifyNumber(targetRelLon);
-    const planet = exports.Planet[body];
+    const planet = Planet[body];
     if (!planet)
         throw `Cannot search relative longitude because body is not a planet: ${body}`;
     if (body === 'Earth')
         throw 'Cannot search relative longitude for the Earth (it is always 0)';
     // Determine whether the Earth "gains" (+1) on the planet or "loses" (-1)
     // as both race around the Sun.
-    const direction = (planet.OrbitalPeriod > exports.Planet.Earth.OrbitalPeriod) ? +1 : -1;
+    const direction = (planet.OrbitalPeriod > Planet.Earth.OrbitalPeriod) ? +1 : -1;
     function offset(t) {
         const plon = EclipticLongitude(body, t);
         const elon = EclipticLongitude('Earth', t);
@@ -4220,7 +4209,6 @@ function PlanetExtreme(body, kind, start_time, dayspan) {
         dayspan = 2.0 * interval;
     }
 }
-exports.PlanetExtreme = PlanetExtreme;
 function BruteSearchPlanetApsis(body, startTime) {
     /*
         Neptune is a special case for two reasons:
@@ -4247,8 +4235,8 @@ function BruteSearchPlanetApsis(body, startTime) {
         is greatest and smallest.
     */
     const npoints = 100;
-    const t1 = startTime.AddDays(exports.Planet[body].OrbitalPeriod * (-30 / 360));
-    const t2 = startTime.AddDays(exports.Planet[body].OrbitalPeriod * (+270 / 360));
+    const t1 = startTime.AddDays(Planet[body].OrbitalPeriod * (-30 / 360));
+    const t2 = startTime.AddDays(Planet[body].OrbitalPeriod * (+270 / 360));
     let t_min = t1;
     let t_max = t1;
     let min_dist = -1.0;
@@ -4328,7 +4316,7 @@ function SearchPlanetApsis(body, startTime) {
     function negative_slope(t) {
         return -positive_slope(t);
     }
-    const orbit_period_days = exports.Planet[body].OrbitalPeriod;
+    const orbit_period_days = Planet[body].OrbitalPeriod;
     const increment = orbit_period_days / 6.0;
     let t1 = startTime;
     let m1 = positive_slope(t1);
@@ -4394,7 +4382,7 @@ function NextPlanetApsis(body, apsis) {
         throw `Invalid apsis kind: ${apsis.kind}`;
     }
     /* skip 1/4 of an orbit before starting search again */
-    const skip = 0.25 * exports.Planet[body].OrbitalPeriod;
+    const skip = 0.25 * Planet[body].OrbitalPeriod;
     const time = apsis.time.AddDays(skip);
     const next = SearchPlanetApsis(body, time);
     /* Verify that we found the opposite apsis from the previous one. */
@@ -6068,7 +6056,6 @@ class ShadowInfo {
         this.dir = dir;
     }
 }
-exports.ShadowInfo = ShadowInfo;
 function CalcShadow(body_radius_km, time, target, dir) {
     const u = (dir.x * target.x + dir.y * target.y + dir.z * target.z) / (dir.x * dir.x + dir.y * dir.y + dir.z * dir.z);
     const dx = (u * dir.x) - target.x;
@@ -6080,7 +6067,7 @@ function CalcShadow(body_radius_km, time, target, dir) {
     return new ShadowInfo(time, u, r, k, p, target, dir);
 }
 function EarthShadow(time) {
-    const e = CalcVsop(exports.vsop.Earth, time);
+    const e = CalcVsop(vsop.Earth, time);
     const m = GeoMoon(time);
     return CalcShadow(EARTH_ECLIPSE_RADIUS_KM, time, m, e);
 }
@@ -6088,7 +6075,7 @@ function MoonShadow(time) {
     // This is a variation on the logic in _EarthShadow().
     // Instead of a heliocentric Earth and a geocentric Moon,
     // we want a heliocentric Moon and a lunacentric Earth.
-    const h = CalcVsop(exports.vsop.Earth, time); // heliocentric Earth
+    const h = CalcVsop(vsop.Earth, time); // heliocentric Earth
     const m = GeoMoon(time); // geocentric Moon
     // Calculate lunacentric Earth.
     const e = new Vector(-m.x, -m.y, -m.z, m.t);
@@ -6103,7 +6090,7 @@ function LocalMoonShadow(time, observer) {
     // For efficiency, do this first, to populate the earth rotation parameters in 'time'.
     // That way they can be recycled instead of recalculated.
     const pos = geo_pos(time, observer);
-    const h = CalcVsop(exports.vsop.Earth, time); // heliocentric Earth
+    const h = CalcVsop(vsop.Earth, time); // heliocentric Earth
     const m = GeoMoon(time); // geocentric Moon
     // Calculate lunacentric location of an observer on the Earth's surface.
     const o = new Vector(pos[0] - m.x, pos[1] - m.y, pos[2] - m.z, time);
