@@ -14,7 +14,7 @@ const routes: Routes = [
 @NgModule({
   imports: [
     BrowserAnimationsModule,
-    RouterModule.forRoot(routes),
+    RouterModule.forRoot(routes, { useHash: true }),
     MainModule,
   ],
   declarations: [AppComponent],
