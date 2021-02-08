@@ -3,7 +3,7 @@
     <head>
         <title>Solar System Barycenter</title>
         <link rel="stylesheet" href="barycenter.css">
-        <script src="astronomy.js"></script>
+        <script src="astronomy.browser.js"></script>
         <script>
             window.onload = function() {
                 const ReservedPixelsBottom = 70;
@@ -141,7 +141,7 @@
                 });
                 timeSlider.addEventListener('mouseout', function() {
                     animating = true;
-                })
+                });
                 Render();
                 requestAnimationFrame(OnAnimationFrame);
             }

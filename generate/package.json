@@ -1,0 +1,28 @@
+{
+  "name": "astronomy-engine-dev",
+  "version": "1.0.0",
+  "description": "Development node.js dependencies",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cosinekitty/astronomy.git"
+  },
+  "author": "Donald Cross",
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc -p tsconfig.astronomy.json",
+    "build:browser": "browserify ../source/js/astronomy.js -o ../source/js/astronomy.browser.js -p esmify -s Astronomy",
+    "minify": "google-closure-compiler --js ../source/js/astronomy.js --js_output_file ../source/js/astronomy.min.js",
+    "minify:browser": "google-closure-compiler --js ../source/js/astronomy.browser.js --js_output_file ../source/js/astronomy.browser.min.js",
+    "docs:md": "jsdoc2md --separators --template ../jsdoc2md/js.hbs --files ../source/js/astronomy.js > ../source/js/README.md",
+    "docs:html": "jsdoc -a all -c jsdoc.json -r ../source/js/astronomy.js --destination html"
+  },
+  "devDependencies": {
+    "browserify": "~17.0.0",
+    "docdash": "~1.2.0",
+    "esmify": "~2.1.1",
+    "google-closure-compiler": "~20210202.0.0",
+    "jsdoc": "~3.6.6",
+    "jsdoc-to-markdown": "~6.0.1",
+    "typescript": "~4.1.3"
+  }
+}

@@ -12,3 +12,4 @@ bin/
 obj/
 profile/
 private/
+node_modules/

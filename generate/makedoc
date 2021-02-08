@@ -28,23 +28,27 @@ dotnet exe/csdown.dll csharp_prefix.md ../generate/dotnet/csharp_test/exe/astron
 cd ../generate || Fail "Error changing back to generate directory"
 ./check_internal_links.py $(realpath ../source/csharp/README.md) || exit 1
 
-echo "Compiling TypeScript to JavaScript."
-tsc --strict -t ES2015 --outfile ../source/js/astronomy.js ../source/js/astronomy.ts || Fail "Error in typescript compiler"
+echo "Install NodeJS dev dependencies"
+[ -d node_modules ] || npm ci || Fail "Error installing npm devDependencies"
 
-echo "Applying exports hack to JavaScript."
-./apply_exports_hack.py ../source/js/astronomy.js || Fail "Error in apply_exports_hack.py"
+echo "Compiling TypeScript to JavaScript."
+npm run build || Fail "Error in typescript compiler"
+
+echo "Bundling JavaScript code for Browser."
+npm run build:browser || Fail "Error building browser bundle"
 
 echo "Minifying JavaScript code."
-google-closure-compiler --js ../source/js/astronomy.js --js_output_file ../source/js/astronomy.min.js || Fail "Error minifying astronomy.js"
+npm run minify || Fail "Error minifying astronomy.js"
+npm run minify:browser || Fail "Error minifying astronomy.browser.js"
 
 echo "Generating JS documentation in Markdown format."
-jsdoc2md --separators --template ../jsdoc2md/js.hbs --files ../source/js/astronomy.js > ../source/js/README.md || Fail "Error generating JS documentation."
+npm run docs:md || Fail "Error generating JS documentation."
 ./check_internal_links.py $(realpath ../source/js/README.md) || exit 1
 
 if [[ -d html ]]; then
     echo "Generating JS documentation in HTML format for local viewing."
     rm -rf html
-    jsdoc ../source/js/astronomy.js --destination html || Fail "Error generating HTML preview"
+    npm run docs:html || Fail "Error generating HTML preview"
 else
     echo "(Skipping local HTML generation because html directory does not exist.)"
 fi
@@ -71,7 +75,7 @@ python3 ../pydown/pydown.py ../pydown/py_prefix.md ../source/python/astronomy.py
 ./check_internal_links.py $(realpath ../source/python/README.md) || exit 1
 
 echo "Making redundant copies of source in demo folders."
-cp -v ../source/js/astronomy.js     ../demo/browser/ || exit $?
+cp -v ../source/js/astronomy.browser.js     ../demo/browser/ || exit $?
 cp -v ../source/js/astronomy.js     ../demo/nodejs/  || exit $?
 cp -v ../source/python/astronomy.py ../demo/python/  || exit $?
 

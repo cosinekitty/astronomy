@@ -1,14 +1,16 @@
 {
   "name": "astronomy-engine",
-  "version": "1.1.3",
+  "version": "2.0.0",
   "description": "Astronomy calculation for Sun, Moon, and planets.",
   "main": "astronomy.js",
+  "browser": "astronomy.browser.min.js",
+  "typings": "astronomy.d.ts",
   "files": [
-    "astronomy.js"
+    "astronomy.js",
+    "astronomy.min.js",
+    "astronomy.browser.js",
+    "astronomy.browser.min.js"
   ],
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cosinekitty/astronomy.git"
@@ -33,5 +35,6 @@
   "bugs": {
     "url": "https://github.com/cosinekitty/astronomy/issues"
   },
-  "homepage": "https://github.com/cosinekitty/astronomy#readme"
+  "homepage": "https://github.com/cosinekitty/astronomy#readme",
+  "sideEffects": false
 }
