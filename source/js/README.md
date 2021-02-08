@@ -1,7 +1,12 @@
-# Astronomy Engine (JavaScript)
+# Astronomy Engine (JavaScript / TypeScript)
 This is the complete programming reference for the JavaScript version
 of Astronomy Engine. It supports client side programming
-in the browser and backend use of [Node.js](https://nodejs.org).
+in the browser, and backend use of [Node.js](https://nodejs.org).
+
+Both the browser and backend versions of the JavaScript code are generated from
+[TypeScript](https://www.typescriptlang.org/) code in `astronomy.ts`,
+which is also provided here for those who want to use it directly.
+
 Other programming languages are supported also.
 See the [home page](https://github.com/cosinekitty/astronomy) for more info.
 
