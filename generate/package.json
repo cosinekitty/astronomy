@@ -9,7 +9,7 @@
   "author": "Donald Cross",
   "license": "MIT",
   "scripts": {
-    "build": "tsc -p tsconfig.astronomy.json",
+    "build": "tsc -p tsconfig.main.json && tsc -p tsconfig.module.json",
     "build:browser": "browserify ../source/js/astronomy.js -o ../source/js/astronomy.browser.js -p esmify -s Astronomy",
     "minify": "google-closure-compiler --js ../source/js/astronomy.js --js_output_file ../source/js/astronomy.min.js",
     "minify:browser": "google-closure-compiler --js ../source/js/astronomy.browser.js --js_output_file ../source/js/astronomy.browser.min.js",

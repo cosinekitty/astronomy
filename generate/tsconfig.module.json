@@ -1,0 +1,12 @@
+{
+    "compilerOptions": {
+      "outDir": "../source/js/esm/",
+      "moduleResolution": "node",
+      "target": "es6",
+      "strict": true,
+      "lib": ["dom", "es6"]
+    },
+    "files": [
+      "../source/js/astronomy.ts"
+    ]
+  }
