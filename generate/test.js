@@ -1,6 +1,6 @@
 'use strict';
 const fs = require('fs');
-const Astronomy = require('../source/js/astronomy.browser.min.js');
+const Astronomy = require('../source/js/astronomy.min.js');
 let Verbose = false;
 const DEG2RAD = 0.017453292519943296;
 const RAD2DEG = 57.295779513082321;
