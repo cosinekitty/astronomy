@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, HostBinding } from '@angular/core';
 
 @Component({
   selector: 'ae-header',
@@ -6,4 +6,6 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
   styleUrls: ['./header.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class HeaderComponent {}
+export class HeaderComponent {
+  @HostBinding('class.header') isHeader = true;
+}

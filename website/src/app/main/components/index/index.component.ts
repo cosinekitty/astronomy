@@ -14,7 +14,7 @@ export class IndexComponent {
       color: 'blue',
       title: 'Demos',
       description: 'See AstronomyEngine in action',
-      disabled: true,
+      disabled: false,
     },
     {
       link: '/start',
