@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.com/cosinekitty/astronomy.svg)](https://travis-ci.com/cosinekitty/astronomy)
 [![npm package](https://img.shields.io/npm/v/astronomy-engine.svg)](https://www.npmjs.com/package/astronomy-engine)
-[![Netlify Status](https://api.netlify.com/api/v1/badges/fb766ed0-27e1-4c4e-82bf-a0fd455113a6/deploy-status)](https://app.netlify.com/sites/astronomy-engine/deploys)
+[![Netlify Status](https://img.shields.io/netlify/fb766ed0-27e1-4c4e-82bf-a0fd455113a6)](https://app.netlify.com/sites/astronomy-engine/deploys)
 
 ### Supported Programming Languages
 
