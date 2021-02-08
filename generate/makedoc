@@ -32,23 +32,23 @@ echo "Install NodeJS dev dependencies"
 [ -d node_modules ] || npm ci || Fail "Error installing npm devDependencies"
 
 echo "Compiling TypeScript to JavaScript."
-./node_modules/.bin/tsc -p tsconfig.astronomy.json || Fail "Error in typescript compiler"
+npm run build || Fail "Error in typescript compiler"
 
 echo "Bundling JavaScript code for Browser."
-./node_modules/.bin/browserify ../source/js/astronomy.js -o ../source/js/astronomy.browser.js -p esmify -s Astronomy || Fail "Error building browser bundle"
+npm run build:browser || Fail "Error building browser bundle"
 
 echo "Minifying JavaScript code."
-./node_modules/.bin/google-closure-compiler --js ../source/js/astronomy.js --js_output_file ../source/js/astronomy.min.js || Fail "Error minifying astronomy.js"
-./node_modules/.bin/google-closure-compiler --js ../source/js/astronomy.browser.js --js_output_file ../source/js/astronomy.browser.min.js || Fail "Error minifying astronomy.browser.js"
+npm run minify || Fail "Error minifying astronomy.js"
+npm run minify:browser || Fail "Error minifying astronomy.browser.js"
 
 echo "Generating JS documentation in Markdown format."
-./node_modules/.bin/jsdoc2md --separators --files ../source/js/astronomy.js > ../source/js/README.md || Fail "Error generating JS documentation."
+npm run docs:md || Fail "Error generating JS documentation."
 # ./check_internal_links.py $(realpath ../source/js/README.md) || exit 1
 
 if [[ -d html ]]; then
     echo "Generating JS documentation in HTML format for local viewing."
     rm -rf html
-    ./node_modules/.bin/jsdoc ../source/js/astronomy.js --destination html || Fail "Error generating HTML preview"
+    npm run docs:html || Fail "Error generating HTML preview"
 else
     echo "(Skipping local HTML generation because html directory does not exist.)"
 fi

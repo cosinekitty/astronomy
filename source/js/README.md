@@ -569,6 +569,9 @@ determines the constellation that contains that point.</p>
 ## Typedefs
 
 <dl>
+<dt><a href="#FlexibleDateTime">FlexibleDateTime</a> : <code>Date</code> | <code>number</code> | <code><a href="#AstroTime">AstroTime</a></code></dt>
+<dd><p>A Date object, a number of UTC days since the J2000 epoch (noon on January 1, 2000).</p>
+</dd>
 <dt><a href="#SearchOptions">SearchOptions</a> : <code>Object</code></dt>
 <dd><p>Options for the <a href="#Search">Search</a> function.</p>
 </dd>
@@ -1153,7 +1156,7 @@ function calls may be more efficient than passing in native JavaScript Date obje
 
 | Param | Type | Description |
 | --- | --- | --- |
-| date | <code>Date</code> \| <code>number</code> \| [<code>AstroTime</code>](#AstroTime) | A Date object, a number of UTC days since the J2000 epoch (noon on January 1, 2000),      or an AstroTime object. See remarks above. |
+| date | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | A Date object, a number of UTC days since the J2000 epoch (noon on January 1, 2000),      or an AstroTime object. See remarks above. |
 
 
 * * *
@@ -1242,7 +1245,7 @@ axis of rotation on the given date.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| date | <code>Date</code> \| <code>number</code> \| [<code>AstroTime</code>](#AstroTime) | The date and time at which to calculate the Sun's apparent location as seen from      the center of the Earth. |
+| date | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time at which to calculate the Sun's apparent location as seen from      the center of the Earth. |
 
 
 * * *
@@ -1326,7 +1329,7 @@ body at a specified time. The position is not corrected for light travel time or
 | Param | Type | Description |
 | --- | --- | --- |
 | body | <code>string</code> | One of the strings      `"Sun"`, `"Moon"`, `"Mercury"`, `"Venus"`,      `"Earth"`, `"Mars"`, `"Jupiter"`, `"Saturn"`,      `"Uranus"`, `"Neptune"`, `"Pluto"`,      `"SSB"`, or `"EMB"`. |
-| date | <code>Date</code> \| <code>number</code> \| [<code>AstroTime</code>](#AstroTime) | The date and time for which the body's position is to be calculated. |
+| date | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time for which the body's position is to be calculated. |
 
 
 * * *
@@ -1348,7 +1351,7 @@ of the resulting vector.
 | Param | Type | Description |
 | --- | --- | --- |
 | body | <code>string</code> | A body for which to calculate a heliocentric distance:      the Sun, Moon, or any of the planets. |
-| date | <code>Date</code> \| <code>number</code> \| [<code>AstroTime</code>](#AstroTime) | The date and time for which to calculate the heliocentric distance. |
+| date | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time for which to calculate the heliocentric distance. |
 
 
 * * *
@@ -1371,7 +1374,7 @@ coming from that body.
 | Param | Type | Description |
 | --- | --- | --- |
 | body | <code>string</code> | One of the strings      `"Sun"`, `"Moon"`, `"Mercury"`, `"Venus"`,      `"Earth"`, `"Mars"`, `"Jupiter"`, `"Saturn"`,      `"Uranus"`, `"Neptune"`, or `"Pluto"`. |
-| date | <code>Date</code> \| <code>number</code> \| [<code>AstroTime</code>](#AstroTime) | The date and time for which the body's position is to be calculated. |
+| date | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time for which the body's position is to be calculated. |
 | aberration | <code>bool</code> | Pass `true` to correct for      <a href="https://en.wikipedia.org/wiki/Aberration_of_light">aberration</a>,      or `false` to leave uncorrected. |
 
 
@@ -1426,7 +1429,7 @@ to calculate equinoxes and solstices for a given calendar year.
 | Param | Type | Description |
 | --- | --- | --- |
 | targetLon | <code>number</code> | The desired ecliptic longitude of date in degrees.      This may be any value in the range [0, 360), although certain      values have conventional meanings:      When `targetLon` is 0, finds the March equinox,      which is the moment spring begins in the northern hemisphere      and the beginning of autumn in the southern hemisphere.      When `targetLon` is 180, finds the September equinox,      which is the moment autumn begins in the northern hemisphere and      spring begins in the southern hemisphere.      When `targetLon` is 90, finds the northern solstice, which is the      moment summer begins in the northern hemisphere and winter      begins in the southern hemisphere.      When `targetLon` is 270, finds the southern solstice, which is the      moment winter begins in the northern hemisphere and summer      begins in the southern hemisphere. |
-| dateStart | <code>Date</code> \| <code>number</code> \| [<code>AstroTime</code>](#AstroTime) | A date and time known to be earlier than the desired longitude event. |
+| dateStart | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | A date and time known to be earlier than the desired longitude event. |
 | limitDays | <code>number</code> | A floating point number of days, which when added to `dateStart`,      yields a date and time known to be after the desired longitude event. |
 
 
@@ -1497,7 +1500,7 @@ Calculates heliocentric ecliptic longitude based on the J2000 equinox.
 | Param | Type | Description |
 | --- | --- | --- |
 | body | <code>string</code> | The name of a celestial body other than the Sun. |
-| date | <code>Date</code> \| <code>number</code> \| [<code>AstroTime</code>](#AstroTime) | The date and time for which to calculate the ecliptic longitude. |
+| date | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time for which to calculate the ecliptic longitude. |
 
 
 * * *
@@ -1514,7 +1517,7 @@ at the given date and time, as seen from the Earth.
 | Param | Type | Description |
 | --- | --- | --- |
 | body | <code>string</code> | The name of the celestial body being observed.      Not allowed to be `"Earth"`. |
-| date | <code>Date</code> \| <code>number</code> \| [<code>AstroTime</code>](#AstroTime) | The date and time for which to calculate the illumination data for the given body. |
+| date | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time for which to calculate the illumination data for the given body. |
 
 
 * * *
@@ -1540,7 +1543,7 @@ This means the Earth and the other planet are on opposite sides of the Sun.
 | --- | --- | --- |
 | body | <code>string</code> | The name of a planet other than the Earth. |
 | targetRelLon | <code>number</code> | The desired angular difference in degrees between the ecliptic longitudes      of `body` and the Earth. Must be in the range (-180, +180]. |
-| startDate | <code>Date</code> \| <code>number</code> \| [<code>AstroTime</code>](#AstroTime) | The date and time after which to find the next occurrence of the      body and the Earth reaching the desired relative longitude. |
+| startDate | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time after which to find the next occurrence of the      body and the Earth reaching the desired relative longitude. |
 
 
 * * *
@@ -1563,7 +1566,7 @@ Determines the moon's phase expressed as an ecliptic longitude.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| date | <code>Date</code> \| <code>number</code> \| [<code>AstroTime</code>](#AstroTime) | The date and time for which to calculate the moon's phase. |
+| date | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time for which to calculate the moon's phase. |
 
 
 * * *
@@ -1735,7 +1738,7 @@ the body is visible in the morning or evening.
 | Param | Type | Description |
 | --- | --- | --- |
 | body | <code>string</code> | Either `"Mercury"` or `"Venus"`. |
-| startDate | <code>Date</code> \| <code>number</code> \| [<code>AstroTime</code>](#AstroTime) | The date and time after which to search for the next maximum elongation event. |
+| startDate | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time after which to search for the next maximum elongation event. |
 
 
 * * *
@@ -1750,7 +1753,7 @@ Searches for the date and time Venus will next appear brightest as seen from the
 | Param | Type | Description |
 | --- | --- | --- |
 | body | <code>string</code> | Currently only `"Venus"` is supported.      Mercury's peak magnitude occurs at superior conjunction, when it is virtually impossible to see from Earth,      so peak magnitude events have little practical value for that planet.      The Moon reaches peak magnitude very close to full moon, which can be found using      [SearchMoonQuarter](#SearchMoonQuarter) or [SearchMoonPhase](#SearchMoonPhase).      The other planets reach peak magnitude very close to opposition,      which can be found using [SearchRelativeLongitude](#SearchRelativeLongitude). |
-| startDate | <code>Date</code> \| <code>number</code> \| [<code>AstroTime</code>](#AstroTime) | The date and time after which to find the next peak magnitude event. |
+| startDate | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time after which to find the next peak magnitude event. |
 
 
 * * *
@@ -1765,7 +1768,7 @@ that occurs after the specified date and time.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| startDate | <code>Date</code> \| <code>number</code> \| [<code>AstroTime</code>](#AstroTime) | The date and time after which to find the next perigee or apogee. |
+| startDate | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time after which to find the next perigee or apogee. |
 
 
 * * *
@@ -2495,6 +2498,15 @@ Keep calling this function as many times as you want to keep finding more transi
 | body | <code>string</code> | The planet whose transit is to be found. Must be `"Mercury"` or `"Venus"`. |
 | prevTransitTime | [<code>AstroTime</code>](#AstroTime) | A date and time near the previous transit. |
 
+
+* * *
+
+<a name="FlexibleDateTime"></a>
+
+## FlexibleDateTime : <code>Date</code> \| <code>number</code> \| [<code>AstroTime</code>](#AstroTime)
+A Date object, a number of UTC days since the J2000 epoch (noon on January 1, 2000).
+
+**Kind**: global typedef  
 
 * * *
 

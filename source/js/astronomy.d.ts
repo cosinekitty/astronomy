@@ -144,7 +144,7 @@ export declare function InterpolateTime(time1: AstroTime, time2: AstroTime, frac
  * converting once to AstroTime format and passing the result into multiple
  * function calls may be more efficient than passing in native JavaScript Date objects.
  *
- * @param {(Date | number | AstroTime)} date
+ * @param {FlexibleDateTime} date
  *      A Date object, a number of UTC days since the J2000 epoch (noon on January 1, 2000),
  *      or an AstroTime object. See remarks above.
  *
@@ -435,7 +435,7 @@ export declare function MakeObserver(latitude_degrees: number, longitude_degrees
  * of the Earth as adjusted for precession and nutation of the Earth's
  * axis of rotation on the given date.
  *
- * @param {(Date | number | AstroTime)} date
+ * @param {FlexibleDateTime} date
  *      The date and time at which to calculate the Sun's apparent location as seen from
  *      the center of the Earth.
  *
@@ -541,7 +541,7 @@ export declare class TerseVector {
  *      `"Uranus"`, `"Neptune"`, `"Pluto"`,
  *      `"SSB"`, or `"EMB"`.
  *
- * @param {(Date | number | AstroTime)} date
+ * @param {FlexibleDateTime} date
  *      The date and time for which the body's position is to be calculated.
  *
  * @returns {Vector}
@@ -560,7 +560,7 @@ export declare function HelioVector(body: string, date: FlexibleDateTime): Vecto
  *      A body for which to calculate a heliocentric distance:
  *      the Sun, Moon, or any of the planets.
  *
- * @param {(Date | number | AstroTime)} date
+ * @param {FlexibleDateTime} date
  *      The date and time for which to calculate the heliocentric distance.
  *
  * @returns {number}
@@ -584,7 +584,7 @@ export declare function HelioDistance(body: string, date: FlexibleDateTime): num
  *      `"Earth"`, `"Mars"`, `"Jupiter"`, `"Saturn"`,
  *      `"Uranus"`, `"Neptune"`, or `"Pluto"`.
  *
- * @param {(Date | number | AstroTime)} date
+ * @param {FlexibleDateTime} date
  *      The date and time for which the body's position is to be calculated.
  *
  * @param {bool} aberration
@@ -684,7 +684,7 @@ export declare function NormalizeLongitude(lon: number): number;
  *      moment winter begins in the northern hemisphere and summer
  *      begins in the southern hemisphere.
  *
- * @param {(Date | number | AstroTime)} dateStart
+ * @param {FlexibleDateTime} dateStart
  *      A date and time known to be earlier than the desired longitude event.
  *
  * @param {number} limitDays
@@ -749,7 +749,7 @@ export declare function AngleFromSun(body: string, date: FlexibleDateTime): numb
  * @param {string} body
  *      The name of a celestial body other than the Sun.
  *
- * @param {(Date | number | AstroTime)} date
+ * @param {FlexibleDateTime} date
  *      The date and time for which to calculate the ecliptic longitude.
  *
  * @returns {number}
@@ -835,7 +835,7 @@ export declare class IlluminationInfo {
  *      The name of the celestial body being observed.
  *      Not allowed to be `"Earth"`.
  *
- * @param {Date | number | AstroTime} date
+ * @param {FlexibleDateTime} date
  *      The date and time for which to calculate the illumination data for the given body.
  *
  * @returns {IlluminationInfo}
@@ -860,7 +860,7 @@ export declare function Illumination(body: string, date: FlexibleDateTime): Illu
  *      The desired angular difference in degrees between the ecliptic longitudes
  *      of `body` and the Earth. Must be in the range (-180, +180].
  *
- * @param {(Date | number | AstroTime)} startDate
+ * @param {FlexibleDateTime} startDate
  *      The date and time after which to find the next occurrence of the
  *      body and the Earth reaching the desired relative longitude.
  *
@@ -871,7 +871,7 @@ export declare function SearchRelativeLongitude(body: string, targetRelLon: numb
 /**
  * Determines the moon's phase expressed as an ecliptic longitude.
  *
- * @param {Date | number | AstroTime} date
+ * @param {FlexibleDateTime} date
  *      The date and time for which to calculate the moon's phase.
  *
  * @returns {number}
@@ -1167,7 +1167,7 @@ export declare function Elongation(body: string, date: FlexibleDateTime): Elonga
  * the body is visible in the morning or evening.
  *
  * @param {string} body     Either `"Mercury"` or `"Venus"`.
- * @param {(Date | number | AstroTime)} startDate  The date and time after which to search for the next maximum elongation event.
+ * @param {FlexibleDateTime} startDate  The date and time after which to search for the next maximum elongation event.
  *
  * @returns {ElongationEvent}
  */
@@ -1184,7 +1184,7 @@ export declare function SearchMaxElongation(body: string, startDate: FlexibleDat
  *      The other planets reach peak magnitude very close to opposition,
  *      which can be found using {@link SearchRelativeLongitude}.
  *
- * @param {(Date | number | AstroTime)} startDate
+ * @param {FlexibleDateTime} startDate
  *      The date and time after which to find the next peak magnitude event.
  *
  * @returns {IlluminationInfo}
@@ -1222,7 +1222,7 @@ export declare class Apsis {
  * Finds the next perigee (closest approach) or apogee (farthest remove) of the Moon
  * that occurs after the specified date and time.
  *
- * @param {(Date | number | AstroTime)} startDate
+ * @param {FlexibleDateTime} startDate
  *      The date and time after which to find the next perigee or apogee.
  *
  * @returns {Apsis}

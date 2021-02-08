@@ -97,7 +97,7 @@ echo.Making documentation in HTML format for local viewing.
 if exist html (
     rd /s/q html
 )
-call jsdoc ../source/js/astronomy.js --destination html
+call npm run docs:html
 if errorlevel 1 (
     echo.FATAL: error in jsdoc
 )

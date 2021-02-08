@@ -38,6 +38,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.SearchMoonQuarter = exports.MoonQuarter = exports.SearchMoonPhase = exports.MoonPhase = exports.SearchRelativeLongitude = exports.Illumination = exports.IlluminationInfo = exports.EclipticLongitude = exports.AngleFromSun = exports.LongitudeFromSun = exports.SearchSunLongitude = exports.NormalizeLongitude = exports.LongitudeOffset = exports.Search = exports.GeoVector = exports.HelioDistance = exports.HelioVector = exports.TerseVector = exports.GeoMoon = exports.Ecliptic = exports.Equator = exports.SunPosition = exports.MakeObserver = exports.Observer = exports.Horizon = exports.EclipticCoordinates = exports.HorizontalCoordinates = exports.MakeRotation = exports.RotationMatrix = exports.IsValidRotationArray = exports.EquatorialCoordinates = exports.MakeSpherical = exports.Spherical = exports.Vector = exports.CalcMoon = exports.CalcMoonCount = exports.MakeTime = exports.InterpolateTime = exports.AstroTime = exports.TerrestrialTime = exports.SetDeltaTFunction = exports.DeltaT_JplHorizons = exports.DeltaT_EspenakMeeus = exports.vsop = exports.Planet = exports.Bodies = exports.AngleBetween = exports.Frac = exports.VerifyNumber = exports.VerifyBoolean = void 0;
 exports.LocalSolarEclipseInfo = exports.EclipseEvent = exports.NextGlobalSolarEclipse = exports.SearchGlobalSolarEclipse = exports.NextLunarEclipse = exports.GlobalSolarEclipseInfo = exports.SearchLunarEclipse = exports.ShadowInfo = exports.LunarEclipseInfo = exports.Constellation = exports.ConstellationInfo = exports.Rotation_HOR_ECL = exports.Rotation_ECL_HOR = exports.Rotation_ECL_EQD = exports.Rotation_EQD_ECL = exports.Rotation_EQJ_HOR = exports.Rotation_HOR_EQJ = exports.Rotation_HOR_EQD = exports.Rotation_EQD_HOR = exports.Rotation_EQD_EQJ = exports.Rotation_EQJ_EQD = exports.Rotation_ECL_EQJ = exports.Rotation_EQJ_ECL = exports.RotateVector = exports.InverseRefraction = exports.Refraction = exports.VectorFromHorizon = exports.HorizonFromVector = exports.SphereFromVector = exports.EquatorFromVector = exports.VectorFromEquator = exports.VectorFromSphere = exports.CombineRotation = exports.InverseRotation = exports.NextPlanetApsis = exports.SearchPlanetApsis = exports.PlanetExtreme = exports.NextLunarApsis = exports.SearchLunarApsis = exports.Apsis = exports.SearchPeakMagnitude = exports.SearchMaxElongation = exports.Elongation = exports.ElongationEvent = exports.Seasons = exports.SeasonInfo = exports.SearchHourAngle = exports.HourAngleEvent = exports.SearchRiseSet = exports.NextMoonQuarter = void 0;
 exports.NextTransit = exports.SearchTransit = exports.TransitInfo = exports.NextLocalSolarEclipse = exports.SearchLocalSolarEclipse = void 0;
+/**
+ * A Date object, a number of UTC days since the J2000 epoch (noon on January 1, 2000).
+ * @typedef {(Date | number | AstroTime)} FlexibleDateTime
+ * @alias FlexibleDateTime
+ */
 const DAYS_PER_TROPICAL_YEAR = 365.24217;
 const J2000 = new Date('2000-01-01T12:00:00Z');
 const PI2 = 2 * Math.PI;
@@ -1039,7 +1044,7 @@ exports.InterpolateTime = InterpolateTime;
  * converting once to AstroTime format and passing the result into multiple
  * function calls may be more efficient than passing in native JavaScript Date objects.
  *
- * @param {(Date | number | AstroTime)} date
+ * @param {FlexibleDateTime} date
  *      A Date object, a number of UTC days since the J2000 epoch (noon on January 1, 2000),
  *      or an AstroTime object. See remarks above.
  *
@@ -2040,7 +2045,7 @@ exports.MakeObserver = MakeObserver;
  * of the Earth as adjusted for precession and nutation of the Earth's
  * axis of rotation on the given date.
  *
- * @param {(Date | number | AstroTime)} date
+ * @param {FlexibleDateTime} date
  *      The date and time at which to calculate the Sun's apparent location as seen from
  *      the center of the Earth.
  *
@@ -2594,7 +2599,7 @@ function CalcPluto(time) {
  *      `"Uranus"`, `"Neptune"`, `"Pluto"`,
  *      `"SSB"`, or `"EMB"`.
  *
- * @param {(Date | number | AstroTime)} date
+ * @param {FlexibleDateTime} date
  *      The date and time for which the body's position is to be calculated.
  *
  * @returns {Vector}
@@ -2641,7 +2646,7 @@ exports.HelioVector = HelioVector;
  *      A body for which to calculate a heliocentric distance:
  *      the Sun, Moon, or any of the planets.
  *
- * @param {(Date | number | AstroTime)} date
+ * @param {FlexibleDateTime} date
  *      The date and time for which to calculate the heliocentric distance.
  *
  * @returns {number}
@@ -2672,7 +2677,7 @@ exports.HelioDistance = HelioDistance;
  *      `"Earth"`, `"Mars"`, `"Jupiter"`, `"Saturn"`,
  *      `"Uranus"`, `"Neptune"`, or `"Pluto"`.
  *
- * @param {(Date | number | AstroTime)} date
+ * @param {FlexibleDateTime} date
  *      The date and time for which the body's position is to be calculated.
  *
  * @param {bool} aberration
@@ -2944,7 +2949,7 @@ exports.NormalizeLongitude = NormalizeLongitude;
  *      moment winter begins in the northern hemisphere and summer
  *      begins in the southern hemisphere.
  *
- * @param {(Date | number | AstroTime)} dateStart
+ * @param {FlexibleDateTime} dateStart
  *      A date and time known to be earlier than the desired longitude event.
  *
  * @param {number} limitDays
@@ -3038,7 +3043,7 @@ exports.AngleFromSun = AngleFromSun;
  * @param {string} body
  *      The name of a celestial body other than the Sun.
  *
- * @param {(Date | number | AstroTime)} date
+ * @param {FlexibleDateTime} date
  *      The date and time for which to calculate the ecliptic longitude.
  *
  * @returns {number}
@@ -3210,7 +3215,7 @@ exports.IlluminationInfo = IlluminationInfo;
  *      The name of the celestial body being observed.
  *      Not allowed to be `"Earth"`.
  *
- * @param {Date | number | AstroTime} date
+ * @param {FlexibleDateTime} date
  *      The date and time for which to calculate the illumination data for the given body.
  *
  * @returns {IlluminationInfo}
@@ -3300,7 +3305,7 @@ function SynodicPeriod(body) {
  *      The desired angular difference in degrees between the ecliptic longitudes
  *      of `body` and the Earth. Must be in the range (-180, +180].
  *
- * @param {(Date | number | AstroTime)} startDate
+ * @param {FlexibleDateTime} startDate
  *      The date and time after which to find the next occurrence of the
  *      body and the Earth reaching the desired relative longitude.
  *
@@ -3357,7 +3362,7 @@ exports.SearchRelativeLongitude = SearchRelativeLongitude;
 /**
  * Determines the moon's phase expressed as an ecliptic longitude.
  *
- * @param {Date | number | AstroTime} date
+ * @param {FlexibleDateTime} date
  *      The date and time for which to calculate the moon's phase.
  *
  * @returns {number}
@@ -3872,7 +3877,7 @@ exports.Elongation = Elongation;
  * the body is visible in the morning or evening.
  *
  * @param {string} body     Either `"Mercury"` or `"Venus"`.
- * @param {(Date | number | AstroTime)} startDate  The date and time after which to search for the next maximum elongation event.
+ * @param {FlexibleDateTime} startDate  The date and time after which to search for the next maximum elongation event.
  *
  * @returns {ElongationEvent}
  */
@@ -3977,7 +3982,7 @@ exports.SearchMaxElongation = SearchMaxElongation;
  *      The other planets reach peak magnitude very close to opposition,
  *      which can be found using {@link SearchRelativeLongitude}.
  *
- * @param {(Date | number | AstroTime)} startDate
+ * @param {FlexibleDateTime} startDate
  *      The date and time after which to find the next peak magnitude event.
  *
  * @returns {IlluminationInfo}
@@ -4105,7 +4110,7 @@ exports.Apsis = Apsis;
  * Finds the next perigee (closest approach) or apogee (farthest remove) of the Moon
  * that occurs after the specified date and time.
  *
- * @param {(Date | number | AstroTime)} startDate
+ * @param {FlexibleDateTime} startDate
  *      The date and time after which to find the next perigee or apogee.
  *
  * @returns {Apsis}
