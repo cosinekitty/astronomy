@@ -134,6 +134,10 @@ export declare class AstroTime {
 }
 export declare function InterpolateTime(time1: AstroTime, time2: AstroTime, fraction: number): AstroTime;
 /**
+ * A Date object, a number of UTC days since the J2000 epoch (noon on January 1, 2000).
+ * @typedef {(Date | number | AstroTime)} FlexibleDateTime
+ */
+/**
  * Given a Date object or a number days since noon (12:00) on January 1, 2000 (UTC),
  * this function creates an {@link AstroTime} object.
  * Given an {@link AstroTime} object, returns the same object unmodified.
@@ -598,6 +602,11 @@ export declare function GeoVector(body: string, date: FlexibleDateTime, aberrati
 /**
  * Options for the {@link Search} function.
  * @typedef {Object} SearchOptions
+ * @property {number} dt_tolerance_seconds
+ * @property {number} init_f1
+ * @property {number} init_f2
+ * @property {number} iter_limit
+ *
  *
  * @property {(number|null)} dt_tolerance_seconds
  *      The number of seconds for a time window smaller than which the search

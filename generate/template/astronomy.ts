@@ -37,11 +37,6 @@
 
 export type FlexibleDateTime = Date | number | AstroTime;
 
-/**
- * A Date object, a number of UTC days since the J2000 epoch (noon on January 1, 2000).
- * @typedef {(Date | number | AstroTime)} FlexibleDateTime
- * @alias FlexibleDateTime
- */
 const DAYS_PER_TROPICAL_YEAR = 365.24217;
 const J2000 = new Date('2000-01-01T12:00:00Z');
 const PI2 = 2 * Math.PI;
@@ -422,6 +417,11 @@ export class AstroTime {
 export function InterpolateTime(time1: AstroTime, time2: AstroTime, fraction: number): AstroTime {
     return new AstroTime(time1.ut + fraction*(time2.ut - time1.ut));
 }
+
+/**
+ * A Date object, a number of UTC days since the J2000 epoch (noon on January 1, 2000).
+ * @typedef {(Date | number | AstroTime)} FlexibleDateTime
+ */
 
 /**
  * Given a Date object or a number days since noon (12:00) on January 1, 2000 (UTC),
@@ -2192,6 +2192,11 @@ function QuadInterp(tm: number, dt: number, fa: number, fm: number, fb: number) 
 /**
  * Options for the {@link Search} function.
  * @typedef {Object} SearchOptions
+ * @property {number} dt_tolerance_seconds
+ * @property {number} init_f1
+ * @property {number} init_f2
+ * @property {number} iter_limit
+ *
  *
  * @property {(number|null)} dt_tolerance_seconds
  *      The number of seconds for a time window smaller than which the search

@@ -37,11 +37,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.SearchMoonQuarter = exports.MoonQuarter = exports.SearchMoonPhase = exports.MoonPhase = exports.SearchRelativeLongitude = exports.Illumination = exports.IlluminationInfo = exports.EclipticLongitude = exports.AngleFromSun = exports.LongitudeFromSun = exports.SearchSunLongitude = exports.NormalizeLongitude = exports.LongitudeOffset = exports.Search = exports.GeoVector = exports.HelioDistance = exports.HelioVector = exports.TerseVector = exports.GeoMoon = exports.Ecliptic = exports.Equator = exports.SunPosition = exports.MakeObserver = exports.Observer = exports.Horizon = exports.EclipticCoordinates = exports.HorizontalCoordinates = exports.MakeRotation = exports.RotationMatrix = exports.IsValidRotationArray = exports.EquatorialCoordinates = exports.MakeSpherical = exports.Spherical = exports.Vector = exports.CalcMoon = exports.CalcMoonCount = exports.MakeTime = exports.InterpolateTime = exports.AstroTime = exports.TerrestrialTime = exports.SetDeltaTFunction = exports.DeltaT_JplHorizons = exports.DeltaT_EspenakMeeus = exports.vsop = exports.Planet = exports.Bodies = exports.AngleBetween = exports.Frac = exports.VerifyNumber = exports.VerifyBoolean = void 0;
 exports.LocalSolarEclipseInfo = exports.EclipseEvent = exports.NextGlobalSolarEclipse = exports.SearchGlobalSolarEclipse = exports.NextLunarEclipse = exports.GlobalSolarEclipseInfo = exports.SearchLunarEclipse = exports.ShadowInfo = exports.LunarEclipseInfo = exports.Constellation = exports.ConstellationInfo = exports.Rotation_HOR_ECL = exports.Rotation_ECL_HOR = exports.Rotation_ECL_EQD = exports.Rotation_EQD_ECL = exports.Rotation_EQJ_HOR = exports.Rotation_HOR_EQJ = exports.Rotation_HOR_EQD = exports.Rotation_EQD_HOR = exports.Rotation_EQD_EQJ = exports.Rotation_EQJ_EQD = exports.Rotation_ECL_EQJ = exports.Rotation_EQJ_ECL = exports.RotateVector = exports.InverseRefraction = exports.Refraction = exports.VectorFromHorizon = exports.HorizonFromVector = exports.SphereFromVector = exports.EquatorFromVector = exports.VectorFromEquator = exports.VectorFromSphere = exports.CombineRotation = exports.InverseRotation = exports.NextPlanetApsis = exports.SearchPlanetApsis = exports.PlanetExtreme = exports.NextLunarApsis = exports.SearchLunarApsis = exports.Apsis = exports.SearchPeakMagnitude = exports.SearchMaxElongation = exports.Elongation = exports.ElongationEvent = exports.Seasons = exports.SeasonInfo = exports.SearchHourAngle = exports.HourAngleEvent = exports.SearchRiseSet = exports.NextMoonQuarter = void 0;
 exports.NextTransit = exports.SearchTransit = exports.TransitInfo = exports.NextLocalSolarEclipse = exports.SearchLocalSolarEclipse = void 0;
-/**
- * A Date object, a number of UTC days since the J2000 epoch (noon on January 1, 2000).
- * @typedef {(Date | number | AstroTime)} FlexibleDateTime
- * @alias FlexibleDateTime
- */
 const DAYS_PER_TROPICAL_YEAR = 365.24217;
 const J2000 = new Date('2000-01-01T12:00:00Z');
 const PI2 = 2 * Math.PI;
@@ -1032,6 +1027,10 @@ function InterpolateTime(time1, time2, fraction) {
     return new AstroTime(time1.ut + fraction * (time2.ut - time1.ut));
 }
 exports.InterpolateTime = InterpolateTime;
+/**
+ * A Date object, a number of UTC days since the J2000 epoch (noon on January 1, 2000).
+ * @typedef {(Date | number | AstroTime)} FlexibleDateTime
+ */
 /**
  * Given a Date object or a number days since noon (12:00) on January 1, 2000 (UTC),
  * this function creates an {@link AstroTime} object.
@@ -2778,6 +2777,11 @@ function QuadInterp(tm, dt, fa, fm, fb) {
 /**
  * Options for the {@link Search} function.
  * @typedef {Object} SearchOptions
+ * @property {number} dt_tolerance_seconds
+ * @property {number} init_f1
+ * @property {number} init_f2
+ * @property {number} iter_limit
+ *
  *
  * @property {(number|null)} dt_tolerance_seconds
  *      The number of seconds for a time window smaller than which the search
