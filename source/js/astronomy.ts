@@ -3049,28 +3049,25 @@ function QuadInterp(tm: number, dt: number, fa: number, fm: number, fb: number) 
 /**
  * Options for the {@link Search} function.
  * @typedef {Object} SearchOptions
- * @property {number} dt_tolerance_seconds
- * @property {number} init_f1
- * @property {number} init_f2
- * @property {number} iter_limit
  *
- *
- * @property {(number|null)} dt_tolerance_seconds
+ * @property {(number|undefined)} dt_tolerance_seconds
  *      The number of seconds for a time window smaller than which the search
  *      is considered successful.  Using too large a tolerance can result in
  *      an inaccurate time estimate.  Using too small a tolerance can cause
  *      excessive computation, or can even cause the search to fail because of
  *      limited floating-point resolution.  Defaults to 1 second.
  *
- * @property {(number|null)} init_f1
+ * @property {(number|undefined)} init_f1
  *      As an optimization, if the caller of {@link Search}
  *      has already calculated the value of the function being searched (the parameter `func`)
  *      at the time coordinate `t1`, it can pass in that value as `init_f1`.
  *      For very expensive calculations, this can measurably improve performance.
  *
- * @property {(number|null)} init_f2
+ * @property {(number|undefined)} init_f2
  *      The same as `init_f1`, except this is the optional initial value of `func(t2)`
  *      instead of `func(t1)`.
+ *
+ * @property {(number|undefined)} iter_limit
  */
 
 /**
@@ -3861,7 +3858,7 @@ function BodyRadiusAu(body: string): number {
  *      The date and time of the rise or set event, or null if no such event
  *      occurs within the specified time window.
  */
-export function SearchRiseSet(body: string, observer: Observer, direction: number, dateStart: FlexibleDateTime, limitDays: number): (AstroTime | null) {
+export function SearchRiseSet(body: string, observer: Observer, direction: number, dateStart: FlexibleDateTime, limitDays: number): AstroTime | null {
     VerifyObserver(observer);
     VerifyNumber(limitDays);
 

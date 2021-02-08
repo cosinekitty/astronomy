@@ -2067,13 +2067,10 @@ Options for the [Search](#Search) function.
 
 | Name | Type | Description |
 | --- | --- | --- |
-| dt_tolerance_seconds | <code>number</code> |  |
-| init_f1 | <code>number</code> |  |
-| init_f2 | <code>number</code> |  |
-| iter_limit | <code>number</code> |  |
-| dt_tolerance_seconds | <code>number</code> \| <code>null</code> | The number of seconds for a time window smaller than which the search      is considered successful.  Using too large a tolerance can result in      an inaccurate time estimate.  Using too small a tolerance can cause      excessive computation, or can even cause the search to fail because of      limited floating-point resolution.  Defaults to 1 second. |
-| init_f1 | <code>number</code> \| <code>null</code> | As an optimization, if the caller of [Search](#Search)      has already calculated the value of the function being searched (the parameter `func`)      at the time coordinate `t1`, it can pass in that value as `init_f1`.      For very expensive calculations, this can measurably improve performance. |
-| init_f2 | <code>number</code> \| <code>null</code> | The same as `init_f1`, except this is the optional initial value of `func(t2)`      instead of `func(t1)`. |
+| dt_tolerance_seconds | <code>number</code> \| <code>undefined</code> | The number of seconds for a time window smaller than which the search      is considered successful.  Using too large a tolerance can result in      an inaccurate time estimate.  Using too small a tolerance can cause      excessive computation, or can even cause the search to fail because of      limited floating-point resolution.  Defaults to 1 second. |
+| init_f1 | <code>number</code> \| <code>undefined</code> | As an optimization, if the caller of [Search](#Search)      has already calculated the value of the function being searched (the parameter `func`)      at the time coordinate `t1`, it can pass in that value as `init_f1`.      For very expensive calculations, this can measurably improve performance. |
+| init_f2 | <code>number</code> \| <code>undefined</code> | The same as `init_f1`, except this is the optional initial value of `func(t2)`      instead of `func(t1)`. |
+| iter_limit | <code>number</code> \| <code>undefined</code> |  |
 
 
 * * *
