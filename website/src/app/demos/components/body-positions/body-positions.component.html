@@ -1,0 +1,59 @@
+<fieldset class="mat-elevation-z1">
+  <legend>Observer</legend>
+
+  <form [formGroup]="form" fxLayout="column">
+
+    <mat-form-field>
+      <mat-label>Date and Time</mat-label>
+      <input matInput formControlName="date">
+      <mat-icon matSuffix>timer</mat-icon>
+    </mat-form-field>
+
+    <mat-form-field>
+      <mat-label>Latitude</mat-label>
+      <input matInput formControlName="lat">
+    </mat-form-field>
+
+    <mat-form-field>
+      <mat-label>Longitude</mat-label>
+      <input matInput formControlName="lng">
+    </mat-form-field>
+
+    <mat-form-field>
+      <mat-label>Elevation <small>(m)</small></mat-label>
+      <input matInput formControlName="alt">
+    </mat-form-field>
+
+  </form>
+</fieldset>
+
+<table mat-table [dataSource]="data" class="mat-elevation-z1">
+
+  <ng-container matColumnDef="body">
+    <th mat-header-cell *matHeaderCellDef> Body </th>
+    <td mat-cell *matCellDef="let row"> {{ row.body }} </td>
+  </ng-container>
+
+  <ng-container matColumnDef="ra">
+    <th mat-header-cell *matHeaderCellDef> RA </th>
+    <td mat-cell *matCellDef="let row"> {{ row.ra }} </td>
+  </ng-container>
+
+  <ng-container matColumnDef="dec">
+    <th mat-header-cell *matHeaderCellDef> DEC </th>
+    <td mat-cell *matCellDef="let row"> {{ row.dec }} </td>
+  </ng-container>
+
+  <ng-container matColumnDef="az">
+    <th mat-header-cell *matHeaderCellDef> Az </th>
+    <td mat-cell *matCellDef="let row"> {{ row.az }} </td>
+  </ng-container>
+
+  <ng-container matColumnDef="alt">
+    <th mat-header-cell *matHeaderCellDef> Alt </th>
+    <td mat-cell *matCellDef="let row"> {{ row.alt }} </td>
+  </ng-container>
+
+  <tr mat-header-row *matHeaderRowDef="columns"></tr>
+  <tr mat-row *matRowDef="let row; columns: columns;"></tr>
+</table>

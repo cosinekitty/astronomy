@@ -1,0 +1,86 @@
+@import './styles/variables';
+
+* {
+  box-sizing: border-box
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: #494d55;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+  font-size: 14px;
+  margin: 0;
+}
+
+.container {
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 15px;
+  padding-right: 15px;
+  width: 100%;
+
+  @media (min-width: 576px) {
+    max-width: 540px;
+  }
+
+  @media (min-width: 768px) {
+    max-width: 720px;
+  }
+
+  @media (min-width: 992px) {
+    max-width: 960px;
+  }
+}
+
+a {
+  color: #3aa7aa;
+  text-decoration: none;
+  transition: all 0.4s ease-in-out;
+}
+
+a:hover {
+  color: #339597;
+  text-decoration: underline;
+}
+
+a:focus {
+  text-decoration: none;
+}
+
+/* LAYOUT */
+
+.header {
+  background: #494d55;
+  border-top: 5px solid $color-primary;
+  color: rgba(255, 255, 255, 0.85);
+  display: block;
+  padding: 30px 0 15px;
+
+  a {
+    color: #fff;
+  }
+
+  .container {
+    position: relative;
+  }
+}
+
+fieldset {
+  border: 1px solid rgba(0,0,0,.2);
+  border-radius: 4px;
+  margin-bottom: 24px;
+  padding: 0.35em 1.45em 0.625em;
+}
+
+/* UTILS */
+
+.sticky {
+  position: sticky;
+  top: 0;
+}

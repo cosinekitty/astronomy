@@ -1,0 +1,21 @@
+$footer: 40px;
+
+$colors: (
+  aqua: #40babd,
+  dark-aqua: #2d8284,
+  green: #75c181,
+  dark-green: #48a156,
+  blue: #58bbee,
+  dark-blue: #179de2,
+  orange: #F88C30,
+  dark-orange: #d46607,
+  red: #f77b6b,
+  dark-red: #f33a22,
+  pink: #EA5395,
+  dark-pink: #d61a6c,
+  purple: #8A40A7,
+  dark-purple: #5c2b70
+);
+$colorNames: aqua, green, blue, orange, red, pink, purple;
+
+$color-primary: map-get($colors, blue);
