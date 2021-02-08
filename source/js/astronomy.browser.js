@@ -2845,7 +2845,7 @@ function QuadInterp(tm, dt, fa, fm, fb) {
  * that the "wrong" event will be found (i.e. not the first event after t1)
  * or even that the function will return null, indicating that no event was found.
  *
- * @param {ContinuousFunction} func
+ * @param {function(AstroTime): number} func
  *      The function to find an ascending zero crossing for.
  *      The function must accept a single parameter of type {@link AstroTime}
  *      and return a numeric value.

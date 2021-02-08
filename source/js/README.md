@@ -934,7 +934,7 @@ or even that the function will return null, indicating that no event was found.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| func | <code>ContinuousFunction</code> | The function to find an ascending zero crossing for.      The function must accept a single parameter of type [AstroTime](#AstroTime)      and return a numeric value. |
+| func | <code>function</code> | The function to find an ascending zero crossing for.      The function must accept a single parameter of type [AstroTime](#AstroTime)      and return a numeric value. |
 | t1 | [<code>AstroTime</code>](#AstroTime) | The lower time bound of a search window. |
 | t2 | [<code>AstroTime</code>](#AstroTime) | The upper time bound of a search window. |
 | options | [<code>SearchOptions</code>](#SearchOptions) \| <code>undefined</code> | Options that can tune the behavior of the search.      Most callers can omit this argument. |
