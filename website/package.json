@@ -24,6 +24,7 @@
     "@angular/router": "~11.1.1",
     "@ngneat/until-destroy": "~8.0.3",
     "astronomy-engine": "file:../source/js",
+    "ngx-markdown": "~11.0.1",
     "normalize.css": "~8.0.1",
     "rxjs": "6.6.3",
     "tslib": "^2.0.0",

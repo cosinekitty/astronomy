@@ -4,6 +4,10 @@
   text-align: left;
 
   .branding {
+    a:hover {
+      text-decoration: none;
+    }
+
     .text-astro {
       color: $color-primary;
     }

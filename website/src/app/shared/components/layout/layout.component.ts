@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, HostBinding, Input } from '@angular/core';
 import { SidenavItem } from '../../interfaces/sidenav-item.interface';
 
 @Component({
@@ -8,5 +8,9 @@ import { SidenavItem } from '../../interfaces/sidenav-item.interface';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class LayoutComponent {
+  @HostBinding('class')
+  @Input() color!: string;
+  @Input() section!: string;
+  @Input() icon!: string;
   @Input() menu!: SidenavItem[];
 }

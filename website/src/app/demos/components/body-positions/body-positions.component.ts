@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { Equator, Horizon, MakeObserver } from 'astronomy-engine';
+import { Equator, Horizon, Observer } from 'astronomy-engine';
 import { combineLatest, interval } from 'rxjs';
 
 interface BodyPositionsArgs {
@@ -89,7 +89,7 @@ export class BodyPositionsComponent implements OnInit {
     this.data = [];
 
     try {
-      const observer = MakeObserver(Number(lat), Number(lng), Number(alt));
+      const observer = new Observer(Number(lat), Number(lng), Number(alt));
 
       this.bodies.forEach(body => {
         const equ2000 = Equator(body, date, observer, false, true);

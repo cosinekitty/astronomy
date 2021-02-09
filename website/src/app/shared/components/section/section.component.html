@@ -1,0 +1,25 @@
+<section>
+  <h2 class="section-title">{{ title }}</h2>
+
+  <div class="section-block">
+    <ng-container *ngIf="children; else noChildren">
+
+      <nav mat-tab-nav-bar>
+        <a
+          mat-tab-link
+          *ngFor="let child of children; let i = index"
+          [routerLink]="child.link"
+          [active]="activeLink == child.link || (!activeLink && i === 0)"
+          (click)="activeLink = child.link"
+        >{{ child.text }} </a>
+      </nav>
+      <router-outlet></router-outlet>
+
+    </ng-container>
+    <ng-template #noChildren>
+
+      <ng-content></ng-content>
+
+    </ng-template>
+  </div>
+</section>
