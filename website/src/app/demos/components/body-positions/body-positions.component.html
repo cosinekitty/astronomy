@@ -1,33 +1,37 @@
-<fieldset class="mat-elevation-z1">
+<fieldset>
   <legend>Observer</legend>
 
   <form [formGroup]="form" fxLayout="column">
 
-    <mat-form-field>
-      <mat-label>Date and Time</mat-label>
-      <input matInput formControlName="date">
-      <mat-icon matSuffix>timer</mat-icon>
-    </mat-form-field>
+    <div fxLayout="row" fxLayoutAlign=" center" fxLayoutGap="20px">
+      <mat-form-field fxFlex>
+        <mat-label>Date and Time</mat-label>
+        <input matInput formControlName="datetime">
+        <mat-icon matSuffix>timer</mat-icon>
+      </mat-form-field>
+
+      <mat-checkbox fxFlex formControlName="livetime">Live time</mat-checkbox>
+    </div>
 
     <mat-form-field>
       <mat-label>Latitude</mat-label>
-      <input matInput formControlName="lat">
+      <input type="number" matInput formControlName="lat">
     </mat-form-field>
 
     <mat-form-field>
       <mat-label>Longitude</mat-label>
-      <input matInput formControlName="lng">
+      <input type="number" matInput formControlName="lng">
     </mat-form-field>
 
     <mat-form-field>
       <mat-label>Elevation <small>(m)</small></mat-label>
-      <input matInput formControlName="alt">
+      <input type="number" matInput formControlName="alt">
     </mat-form-field>
 
   </form>
 </fieldset>
 
-<table mat-table [dataSource]="data" class="mat-elevation-z1">
+<table mat-table [dataSource]="data">
 
   <ng-container matColumnDef="body">
     <th mat-header-cell *matHeaderCellDef> Body </th>

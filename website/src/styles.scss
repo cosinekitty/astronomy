@@ -1,3 +1,4 @@
+@import '~@angular/material/theming';
 @import './styles/variables';
 
 * {
@@ -71,11 +72,19 @@ a:focus {
   }
 }
 
+/* ELEMENTS */
+
 fieldset {
-  border: 1px solid rgba(0,0,0,.2);
+  border: none;
   border-radius: 4px;
   margin-bottom: 24px;
   padding: 0.35em 1.45em 0.625em;
+
+  @include mat-elevation(4)
+}
+
+.mat-table {
+  @include mat-elevation(4)
 }
 
 /* UTILS */

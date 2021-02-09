@@ -54962,7 +54962,7 @@
                 "type": "MIT"
             }
         ],
-        "main": "astronomy.js",
+        "main": "./astronomy.js",
         "repository": {
             "type": "git",
             "url": "git+https://github.com/cosinekitty/astronomy.git"
