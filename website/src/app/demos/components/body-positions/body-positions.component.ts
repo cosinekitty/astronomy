@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
-import { FormBuilder } from '@angular/forms';
+import { FormBuilder, FormGroup } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { Equator, Horizon, MakeObserver } from 'astronomy-engine';
 import { combineLatest, interval } from 'rxjs';
@@ -28,13 +28,7 @@ interface BodyPositionsData {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class BodyPositionsComponent implements OnInit {
-  form = this.fb.group({
-    datetime: this.formatDate(new Date()),
-    livetime: true,
-    lat: 0,
-    lng: 0,
-    alt: 0,
-  });
+  form!: FormGroup;
 
   bodies = [
     'Sun', 'Moon', 'Mercury', 'Venus', 'Mars',
@@ -48,6 +42,14 @@ export class BodyPositionsComponent implements OnInit {
   constructor(private cdr: ChangeDetectorRef, private fb: FormBuilder) {}
 
   ngOnInit(): void {
+    this.form  = this.fb.group({
+      datetime: this.formatDate(new Date()),
+      livetime: true,
+      lat: 0,
+      lng: 0,
+      alt: 0,
+    });
+
     this.getCurrentLocation().then(pos => this.form.patchValue(pos));
 
     // listen changes

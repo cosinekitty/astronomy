@@ -6,12 +6,12 @@ import { MAT_FORM_FIELD_DEFAULT_OPTIONS } from '@angular/material/form-field';
 import { RouterModule, Routes } from '@angular/router';
 import { SharedModule } from '../shared/shared.module';
 import { BodyPositionsComponent } from './components/body-positions/body-positions.component';
-import { DemosLayoutComponent } from './containers/layout/layout.component';
+import { DemosComponent } from './containers/demos/demos.component';
 
 const routes: Routes = [
   {
     path: '',
-    component: DemosLayoutComponent,
+    component: DemosComponent,
     children: [
       {
         path: '',
@@ -35,7 +35,7 @@ const routes: Routes = [
     SharedModule,
   ],
   declarations: [
-    DemosLayoutComponent,
+    DemosComponent,
     BodyPositionsComponent,
   ],
   providers: [
@@ -48,4 +48,4 @@ const routes: Routes = [
     }
   ]
 })
-export class DemosModule { }
+export class DemosModule {}
