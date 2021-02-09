@@ -2,7 +2,6 @@
 
 [![Build Status](https://travis-ci.com/cosinekitty/astronomy.svg)](https://travis-ci.com/cosinekitty/astronomy)
 [![npm package](https://img.shields.io/npm/v/astronomy-engine.svg)](https://www.npmjs.com/package/astronomy-engine)
-[![Netlify Status](https://img.shields.io/netlify/fb766ed0-27e1-4c4e-82bf-a0fd455113a6)](https://app.netlify.com/sites/astronomy-engine/deploys)
 
 ### Supported Programming Languages
 
@@ -106,3 +105,7 @@ Calculations are also verified to be identical among all the supported programmi
   - Topocentric Horizontal
 
 - Determines which constellation contains a given point in the sky.
+
+# Acknowledgements
+
+[![Deploys by Netlify](https://www.netlify.com/img/global/badges/netlify-color-accent.svg)](https://www.netlify.com)
