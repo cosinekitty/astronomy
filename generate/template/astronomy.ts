@@ -29,7 +29,6 @@
 
 /**
  * @fileoverview Astronomy calculation library for browser scripting and Node.js.
- *
  * @author Don Cross <cosinekitty@gmail.com>
  * @license MIT
  */
@@ -117,7 +116,8 @@ function Frac(x: number): number {
 }
 
 /**
- * Calculates the angle in degrees between two vectors.
+ * @brief Calculates the angle in degrees between two vectors.
+ *
  * The angle is measured in the plane that contains both vectors.
  *
  * @param {Vector} a
@@ -331,11 +331,9 @@ function TerrestrialTime(ut: number): number {
 /**
  * @brief The date and time of an astronomical observation.
  *
- * Objects of this type are used throughout the internals
+ * Objects of type `AstroTime` are used throughout the internals
  * of the Astronomy library, and are included in certain return objects.
- * The constructor is not accessible outside the Astronomy library;
- * outside users should call the {@link MakeTime} function
- * to create an `AstroTime` object.
+ * Use the constructor or the {@link MakeTime} function to create an `AstroTime` object.
  *
  * @property {Date} date
  *      The JavaScript Date object for the given date and time.
@@ -451,10 +449,10 @@ function InterpolateTime(time1: AstroTime, time2: AstroTime, fraction: number): 
  *
  * Given an {@link AstroTime} object, returns the same object unmodified.
  * Use of this function is not required for any of the other exposed functions in this library,
- * because they all guarantee converting date/time parameters to AstroTime
+ * because they all guarantee converting date/time parameters to `AstroTime`
  * as needed. However, it may be convenient for callers who need to understand
  * the difference between UTC and TT (Terrestrial Time). In some use cases,
- * converting once to AstroTime format and passing the result into multiple
+ * converting once to `AstroTime` format and passing the result into multiple
  * function calls may be more efficient than passing in native JavaScript Date objects.
  *
  * @param {FlexibleDateTime} date
@@ -931,6 +929,8 @@ function geo_pos(time: AstroTime, observer: Observer): ArrayVector {
 }
 
 /**
+ * @brief A 3D Cartesian vector with a time attached to it.
+ *
  * Holds the Cartesian coordinates of a vector in 3D space,
  * along with the time at which the vector is valid.
  *
@@ -957,7 +957,10 @@ export class Vector {
 }
 
 /**
- * Holds spherical coordinates: latitude, longitude, distance.
+ * @brief Holds spherical coordinates: latitude, longitude, distance.
+ *
+ * Spherical coordinates represent the location of
+ * a point using two angles and a distance.
  *
  * @property {number} lat       The latitude angle: -90..+90 degrees.
  * @property {number} lon       The longitude angle: 0..360 degrees.
@@ -976,7 +979,7 @@ export class Spherical {
 }
 
 /**
- * Create spherical coordinates.
+ * @brief Creates spherical coordinates.
  *
  * @param {number} lat
  *      The angular distance above or below the reference plane, in degrees.
@@ -994,7 +997,7 @@ export function MakeSpherical(lat: number, lon: number, dist: number): Spherical
 }
 
 /**
- * Holds right ascension, declination, and distance of a celestial object.
+ * @brief Holds right ascension, declination, and distance of a celestial object.
  *
  * @property {number} ra
  *      Right ascension in sidereal hours: [0, 24).
@@ -1042,19 +1045,24 @@ interface TerraInfo {
 }
 
 /**
- * Contains a rotation matrix that can be used to transform one coordinate system to another.
+ * @brief Contains a rotation matrix that can be used to transform one coordinate system to another.
  *
- * @property {Array<Array<number>>} rot
- *      A normalized 3x3 rotation matrix.
+ * @property {number[][]} rot
+ *      A normalized 3x3 rotation matrix. For example, the identity matrix is represented
+ *      as `[[1, 0, 0], [0, 1, 0], [0, 0, 1]]`.
  */
 export class RotationMatrix {
     constructor(public rot: number[][]) {}
 }
 
 /**
- * Creates a rotation matrix that can be used to transform one coordinate system to another.
+ * @brief Creates a rotation matrix that can be used to transform one coordinate system to another.
  *
- * @param {Array<Array<number>>} rot
+ * This function verifies that the `rot` parameter is of the correct format:
+ * a number[3][3] array. It throws an exception if `rot` is not of that shape.
+ * Otherwise it creates a new {@link RotationMatrix} object based on `rot`.
+ *
+ * @param {number[][]} rot
  *      An array [3][3] of numbers. Defines a rotation matrix used to premultiply
  *      a 3D vector to reorient it into another coordinate system.
  *
@@ -1068,6 +1076,8 @@ export function MakeRotation(rot: number[][]) {
 }
 
 /**
+ * @brief Represents the location of an object seen by an observer on the Earth.
+ *
  * Holds azimuth (compass direction) and altitude (angle above/below the horizon)
  * of a celestial object as seen by an observer at a particular location on the Earth's surface.
  * Also holds right ascension and declination of the same object.
@@ -1113,7 +1123,8 @@ export class HorizontalCoordinates {
 }
 
 /**
- * Holds ecliptic coordinates of a celestial body.
+ * @brief Ecliptic coordinates of a celestial body.
+ *
  * The origin and date of the coordinate system may vary depending on the caller's usage.
  * In general, ecliptic coordinates are measured with respect to the mean plane of the Earth's
  * orbit around the Sun.
@@ -1210,6 +1221,8 @@ function spin(angle: number, pos1: ArrayVector): ArrayVector {
 }
 
 /**
+ * @brief Converts equatorial coordinates to horizontal coordinates.
+ *
  * Given a date and time, a geographic location of an observer on the Earth, and
  * equatorial coordinates (right ascension and declination) of a celestial body,
  * returns horizontal coordinates (azimuth and altitude angles) for that body
@@ -1336,7 +1349,7 @@ function VerifyObserver(observer: Observer): Observer {
 
 
 /**
- * Represents the geographic location of an observer on the surface of the Earth.
+ * @brief Represents the geographic location of an observer on the surface of the Earth.
  *
  * @property {number} latitude
  *      The observer's geographic latitude in degrees north of the Earth's equator.
@@ -1387,7 +1400,10 @@ export function MakeObserver(latitude_degrees: number, longitude_degrees: number
 }
 
 /**
- * Returns apparent geocentric true ecliptic coordinates of date for the Sun.
+ * @brief Returns apparent geocentric true ecliptic coordinates of date for the Sun.
+ *
+ * This function is used for calculating the times of equinoxes and solstices.
+ *
  * <i>Geocentric</i> means coordinates as the Sun would appear to a hypothetical observer
  * at the center of the Earth.
  * <i>Ecliptic coordinates of date</i> are measured along the plane of the Earth's mean
@@ -1416,22 +1432,20 @@ export function SunPosition(date: FlexibleDateTime): EclipticCoordinates {
 
     // Convert to equator-of-date equatorial cartesian coordinates.
     const stemp = precession(0, sun2000, time.tt);
-    const sun_ofdate = nutation(time, 0, stemp);
+    const [gx, gy, gz] = nutation(time, 0, stemp);
 
     // Convert to ecliptic coordinates of date.
     const true_obliq = DEG2RAD * e_tilt(time).tobl;
     const cos_ob = Math.cos(true_obliq);
     const sin_ob = Math.sin(true_obliq);
 
-    const gx = sun_ofdate[0];
-    const gy = sun_ofdate[1];
-    const gz = sun_ofdate[2];
-
     const sun_ecliptic = RotateEquatorialToEcliptic(gx, gy, gz, cos_ob, sin_ob);
     return sun_ecliptic;
 }
 
 /**
+ * @brief Calculates equatorial coordinates of a Solar System body at a given time.
+ *
  * Returns topocentric equatorial coordinates (right ascension and declination)
  * in one of two different systems: J2000 or true-equator-of-date.
  * Allows optional correction for aberration.
@@ -1508,6 +1522,8 @@ function RotateEquatorialToEcliptic(gx: number, gy: number, gz: number, cos_ob: 
 }
 
 /**
+ * @brief Converts equatorial Cartesian coordinates to ecliptic Cartesian and angular coordinates.
+ *
  * Given J2000 equatorial Cartesian coordinates,
  * returns J2000 ecliptic latitude, longitude, and cartesian coordinates.
  * You can call {@link GeoVector} and use its (x, y, z) return values
@@ -1542,7 +1558,8 @@ export function Ecliptic(gx: number, gy: number, gz: number): EclipticCoordinate
 }
 
 /**
- * Calculates the geocentric Cartesian coordinates for the Moon in the J2000 equatorial system.
+ * @brief Calculates the geocentric Cartesian coordinates for the Moon in the J2000 equatorial system.
+ *
  * Based on the Nautical Almanac Office's <i>Improved Lunar Ephemeris</i> of 1954,
  * which in turn derives from E. W. Brown's lunar theories.
  * Adapted from Turbo Pascal code from the book
@@ -2026,6 +2043,8 @@ function CalcPluto(time: AstroTime): Vector {
 // Pluto integrator ends -----------------------------------------------------
 
 /**
+ * @brief Calculates a vector from the center of the Sun to the given body at the given time.
+ *
  * Calculates heliocentric (i.e., with respect to the center of the Sun)
  * Cartesian coordinates in the J2000 equatorial system of a celestial
  * body at a specified time. The position is not corrected for light travel time or aberration.
@@ -2071,7 +2090,7 @@ export function HelioVector(body: string, date: FlexibleDateTime): Vector {
 };
 
 /**
- * Calculates the distance between a body and the Sun at a given time.
+ * @brief Calculates the distance between a body and the Sun at a given time.
  *
  * Given a date and time, this function calculates the distance between
  * the center of `body` and the center of the Sun.
@@ -2098,6 +2117,8 @@ export function HelioDistance(body: string, date: FlexibleDateTime): number {
 }
 
 /**
+ * @brief Calculates a vector from the center of the Earth to the given body at the given time.
+ *
  * Calculates geocentric (i.e., with respect to the center of the Earth)
  * Cartesian coordinates in the J2000 equatorial system of a celestial
  * body at a specified time. The position is always corrected for light travel time:
@@ -2247,6 +2268,8 @@ export interface SearchOptions {
  */
 
 /**
+ * @brief Finds the time when a function ascends through zero.
+ *
  * Search for next time <i>t</i> (such that <i>t</i> is between `t1` and `t2`)
  * that `func(t)` crosses from a negative value to a non-negative value.
  * The given function must have "smooth" behavior over the entire inclusive range [`t1`, `t2`],
@@ -2256,7 +2279,7 @@ export interface SearchOptions {
  * Note: `t1` and `t2` must be chosen such that there is no possibility
  * of more than one zero-crossing (ascending or descending), or it is possible
  * that the "wrong" event will be found (i.e. not the first event after t1)
- * or even that the function will return null, indicating that no event was found.
+ * or even that the function will return `null`, indicating that no event was found.
  *
  * @param {function(AstroTime): number} func
  *      The function to find an ascending zero crossing for.
@@ -2275,7 +2298,7 @@ export interface SearchOptions {
  *
  * @returns {AstroTime | null}
  *      If the search is successful, returns the date and time of the solution.
- *      If the search fails, returns null.
+ *      If the search fails, returns `null`.
  */
 export function Search(
     f: (t: AstroTime) => number,
@@ -2284,7 +2307,7 @@ export function Search(
     options?: SearchOptions
 ): AstroTime | null {
 
-    const dt_tolerance_seconds = (options && options.dt_tolerance_seconds) || 1;
+    const dt_tolerance_seconds = VerifyNumber((options && options.dt_tolerance_seconds) || 1);
 
     const dt_days = Math.abs(dt_tolerance_seconds / SECONDS_PER_DAY);
 
@@ -2385,6 +2408,8 @@ function NormalizeLongitude(lon: number): number {
 }
 
 /**
+ * @brief Searches for when the Sun reaches a given ecliptic longitude.
+ *
  * Searches for the moment in time when the center of the Sun reaches a given apparent
  * ecliptic longitude, as seen from the center of the Earth, within a given range of dates.
  * This function can be used to determine equinoxes and solstices.
@@ -2441,6 +2466,8 @@ export function SearchSunLongitude(targetLon: number, dateStart: FlexibleDateTim
 }
 
 /**
+ * @brief Calculates the longitude separation between the Sun and the given body.
+ *
  * Calculates the ecliptic longitude difference
  * between the given body and the Sun as seen from
  * the Earth at a given moment in time.
@@ -2449,6 +2476,9 @@ export function SearchSunLongitude(targetLon: number, dateStart: FlexibleDateTim
  * Ignores the height of the `body` above or below the ecliptic plane;
  * the resulting angle is measured around the ecliptic plane for the "shadow"
  * of the body onto that plane.
+ *
+ * Use {@link AngleFromSun} instead, if you wish to calculate the full angle
+ * between the Sun and a body, instead of just their longitude difference.
  *
  * @param {string} body
  *      The name of a supported celestial body other than the Earth.
@@ -2479,6 +2509,8 @@ export function LongitudeFromSun(body: string, date: FlexibleDateTime): number {
 }
 
 /**
+ * @brief Calculates the angular separation between the Sun and the given body.
+ *
  * Returns the full angle seen from
  * the Earth, between the given body and the Sun.
  * Unlike {@link LongitudeFromSun}, this function does not
@@ -2506,7 +2538,7 @@ export function AngleFromSun(body: string, date: FlexibleDateTime): number {
 }
 
 /**
- * Calculates heliocentric ecliptic longitude based on the J2000 equinox.
+ * @brief Calculates heliocentric ecliptic longitude based on the J2000 equinox.
  *
  * @param {string} body
  *      The name of a celestial body other than the Sun.
@@ -2593,7 +2625,7 @@ function MoonMagnitude(phase: number, helio_dist: number, geo_dist: number): num
 }
 
 /**
- * Contains information about the apparent brightness and sunlit phase of a celestial object.
+ * @brief Information about the apparent brightness and sunlit phase of a celestial object.
  *
  * @property {AstroTime} time
  *      The date and time pertaining to the other calculated values in this object.
@@ -2663,7 +2695,9 @@ export class IlluminationInfo {
 }
 
 /**
- * Calculates the phase angle, visual maginitude,
+ * @brief Calculates visual magnitude and related information about a body.
+ *
+ * Calculates the phase angle, visual magnitude,
  * and other values relating to the body's illumination
  * at the given date and time, as seen from the Earth.
  *
@@ -2750,6 +2784,8 @@ function SynodicPeriod(body: string): number {
 }
 
 /**
+ * @brief Searches for when the Earth and a given body reach a relative ecliptic longitude separation.
+ *
  * Searches for the date and time the relative ecliptic longitudes of
  * the specified body and the Earth, as seen from the Sun, reach a certain
  * difference. This function is useful for finding conjunctions and oppositions
@@ -2831,7 +2867,7 @@ export function SearchRelativeLongitude(body: string, targetRelLon: number, star
 }
 
 /**
- * Determines the moon's phase expressed as an ecliptic longitude.
+ * @brief Determines the moon's phase expressed as an ecliptic longitude.
  *
  * @param {FlexibleDateTime} date
  *      The date and time for which to calculate the moon's phase.
@@ -2852,7 +2888,8 @@ export function MoonPhase(date: FlexibleDateTime): number {
 }
 
 /**
- * Searches for the date and time that the Moon reaches a specified phase.
+ * @brief Searches for the date and time that the Moon reaches a specified phase.
+ *
  * Lunar phases are defined in terms of geocentric ecliptic longitudes
  * with respect to the Sun.  When the Moon and the Sun have the same ecliptic
  * longitude, that is defined as a new moon. When the two ecliptic longitudes
@@ -2919,7 +2956,7 @@ export function SearchMoonPhase(targetLon: number, dateStart: FlexibleDateTime, 
 }
 
 /**
- * Represents a quarter lunar phase, along with when it occurs.
+ * @brief A quarter lunar phase, along with when it occurs.
  *
  * @property {number} quarter
  *      An integer as follows:
@@ -2939,7 +2976,8 @@ export class MoonQuarter {
 }
 
 /**
- * Finds the first quarter lunar phase after the specified date and time.
+ * @brief Finds the first quarter lunar phase after the specified date and time.
+ *
  * The quarter lunar phases are: new moon, first quarter, full moon, and third quarter.
  * To enumerate quarter lunar phases, call `SearchMoonQuarter` once,
  * then pass its return value to {@link NextMoonQuarter} to find the next
@@ -2963,6 +3001,8 @@ export function SearchMoonQuarter(dateStart: FlexibleDateTime): MoonQuarter {
 }
 
 /**
+ * @brief Finds the next quarter lunar phase in a series.
+ *
  * Given a {@link MoonQuarter} object, finds the next consecutive
  * quarter lunar phase. See remarks in {@link SearchMoonQuarter}
  * for explanation of usage.
@@ -2978,22 +3018,21 @@ export function NextMoonQuarter(mq: MoonQuarter): MoonQuarter {
     return SearchMoonQuarter(date);
 }
 
-interface BodyRadiusTable {
-    [body: string]: number;
-}
-
-const BodyRadiusLookup: BodyRadiusTable = {
-    Sun:  SUN_RADIUS_AU,
-    Moon: MOON_EQUATORIAL_RADIUS_AU
-};
-
 function BodyRadiusAu(body: string): number {
-    // We calculate the apparent angular radius of the Sun and Moon,
-    // but treat all other bodies as points.
-    return BodyRadiusLookup[body] || 0;
+    // For the purposes of calculating rise/set times,
+    // only the Sun and Moon appear large enough to an observer
+    // on the Earth for their radius to matter.
+    // All other bodies are treated as points.
+    switch (body) {
+        case 'Sun':   return SUN_RADIUS_AU;
+        case 'Moon':  return MOON_EQUATORIAL_RADIUS_AU;
+        default:      return 0;
+    }
 }
 
 /**
+ * @brief Finds the next rise or set time for a body.
+ *
  * Finds a rise or set time for the given body as
  * seen by an observer at the specified location on the Earth.
  * Rise time is defined as the moment when the top of the body
@@ -3109,6 +3148,8 @@ export function SearchRiseSet(body: string, observer: Observer, direction: numbe
 }
 
 /**
+ * @brief Horizontal position of a body upon reaching an hour angle.
+ *
  * Returns information about an occurrence of a celestial body
  * reaching a given hour angle as seen by an observer at a given
  * location on the surface of the Earth.
@@ -3128,6 +3169,8 @@ export class HourAngleEvent {
 }
 
 /**
+ * @brief Finds when a body will reach a given hour angle.
+ *
  * Finds the next time the given body is seen to reach the specified
  * <a href="https://en.wikipedia.org/wiki/Hour_angle">hour angle</a>
  * by the given observer.
@@ -3212,6 +3255,8 @@ export function SearchHourAngle(body: string, observer: Observer, hourAngle: num
 }
 
 /**
+ * @brief When the seasons change for a given calendar year.
+ *
  * Represents the dates and times of the two solstices
  * and the two equinoxes in a given calendar year.
  * These four events define the changing of the seasons on the Earth.
@@ -3262,7 +3307,7 @@ export class SeasonInfo {
 }
 
 /**
- * Finds the equinoxes and solstices for a given calendar year.
+ * @brief Finds the equinoxes and solstices for a given calendar year.
  *
  * @param {number | AstroTime} year
  *      The integer value or `AstroTime` object that specifies
@@ -3296,6 +3341,8 @@ export function Seasons(year: (number | AstroTime)): SeasonInfo {
 }
 
 /**
+ * @brief The viewing conditions of a body relative to the Sun.
+ *
  * Represents the angular separation of a body from the Sun as seen from the Earth
  * and the relative ecliptic longitudes between that body and the Earth as seen from the Sun.
  *
@@ -3333,6 +3380,8 @@ export class ElongationEvent {
 }
 
 /**
+ * @brief Calculates the viewing conditions of a body relative to the Sun.
+ *
  * Calculates angular separation of a body from the Sun as seen from the Earth
  * and the relative ecliptic longitudes between that body and the Earth as seen from the Sun.
  * See the return type {@link ElongationEvent} for details.
@@ -3364,6 +3413,8 @@ export function Elongation(body: string, date: FlexibleDateTime): ElongationEven
 }
 
 /**
+ * @brief Finds the next time Mercury or Venus reaches maximum elongation.
+ *
  * Searches for the next maximum elongation event for Mercury or Venus
  * that occurs after the given start date. Calling with other values
  * of `body` will result in an exception.
@@ -3488,7 +3539,7 @@ export function SearchMaxElongation(body: string, startDate: FlexibleDateTime): 
 }
 
 /**
- * Searches for the date and time Venus will next appear brightest as seen from the Earth.
+ * @brief Searches for the date and time Venus will next appear brightest as seen from the Earth.
  *
  * @param {string} body
  *      Currently only `"Venus"` is supported.
@@ -3605,9 +3656,10 @@ export function SearchPeakMagnitude(body: string, startDate: FlexibleDateTime): 
 }
 
 /**
- * Represents a closest or farthest point in a body's orbit around its primary.
- * For a planet orbiting the Sun, this is a perihelion or aphelion, respectively.
- * For the Moon orbiting the Earth, this is a perigee or apogee, respectively.
+ * @brief A closest or farthest point in a body's orbit around its primary.
+ *
+ * For a planet orbiting the Sun, apsis is a perihelion or aphelion, respectively.
+ * For the Moon orbiting the Earth, apsis is a perigee or apogee, respectively.
  *
  * @property {AstroTime} time
  *      The date and time of the apsis.
@@ -3638,6 +3690,8 @@ export class Apsis {
 }
 
 /**
+ * @brief Finds the next perigee or apogee of the Moon.
+ *
  * Finds the next perigee (closest approach) or apogee (farthest remove) of the Moon
  * that occurs after the specified date and time.
  *
@@ -3721,6 +3775,8 @@ export function SearchLunarApsis(startDate: FlexibleDateTime): Apsis {
 }
 
 /**
+ * @brief Finds the next lunar apsis (perigee or apogee) in a series.
+ *
  * Given a lunar apsis returned by an initial call to {@link SearchLunarApsis},
  * or a previous call to `NextLunarApsis`, finds the next lunar apsis.
  * If the given apsis is a perigee, this function finds the next apogee, and vice versa.
@@ -3838,6 +3894,8 @@ function BruteSearchPlanetApsis(body: string, startTime: AstroTime): Apsis {
 }
 
 /**
+ * @brief Finds the next perihelion or aphelion of a planet.
+ *
  * Finds the date and time of a planet's perihelion (closest approach to the Sun)
  * or aphelion (farthest distance from the Sun) after a given time.
  *
@@ -3935,7 +3993,7 @@ export function SearchPlanetApsis(body: string, startTime: AstroTime): Apsis {
 }
 
 /**
- * Finds the next planetary perihelion or aphelion event in a series.
+ * @brief Finds the next planetary perihelion or aphelion event in a series.
  *
  * This function requires an {@link Apsis} value obtained from a call
  * to {@link SearchPlanetApsis} or `NextPlanetApsis`.
@@ -3972,7 +4030,8 @@ export function NextPlanetApsis(body: string, apsis: Apsis): Apsis {
 }
 
 /**
- * Calculates the inverse of a rotation matrix.
+ * @brief Calculates the inverse of a rotation matrix.
+ *
  * Given a rotation matrix that performs some coordinate transform,
  * this function returns the matrix that reverses that trasnform.
  *
@@ -3991,7 +4050,8 @@ export function InverseRotation(rotation: RotationMatrix): RotationMatrix {
 }
 
 /**
- * Creates a rotation based on applying one rotation followed by another.
+ * @brief Creates a rotation based on applying one rotation followed by another.
+ *
  * Given two rotation matrices, returns a combined rotation matrix that is
  * equivalent to rotating based on the first matrix, followed by the second.
  *
@@ -4033,7 +4093,8 @@ export function CombineRotation(a: RotationMatrix, b: RotationMatrix): RotationM
 }
 
 /**
- * Converts spherical coordinates to Cartesian coordinates.
+ * @brief Converts spherical coordinates to Cartesian coordinates.
+ *
  * Given spherical coordinates and a time at which they are valid,
  * returns a vector of Cartesian coordinates. The returned value
  * includes the time, as required by `AstroTime`.
@@ -4060,7 +4121,7 @@ export function VectorFromSphere(sphere: Spherical, time: AstroTime): Vector {
 }
 
 /**
- * Given angular equatorial coordinates in `equ`, calculates equatorial vector.
+ * @brief Given angular equatorial coordinates, calculates the equatorial vector.
  *
  * @param {EquatorialCoordinates} equ
  *      An object that contains angular equatorial coordinates to be converted to a vector.
@@ -4077,7 +4138,7 @@ export function VectorFromEquator(equ: EquatorialCoordinates, time: AstroTime): 
 }
 
 /**
- * Given an equatorial vector, calculates equatorial angular coordinates.
+ * @brief Given an equatorial vector, calculates equatorial angular coordinates.
  *
  * @param {Vector} vec
  *      A vector in an equatorial coordinate system.
@@ -4091,7 +4152,7 @@ export function EquatorFromVector(vec: Vector): EquatorialCoordinates {
 }
 
 /**
- * Converts Cartesian coordinates to spherical coordinates.
+ * @brief Converts Cartesian coordinates to spherical coordinates.
  *
  * Given a Cartesian vector, returns latitude, longitude, and distance.
  *
@@ -4131,7 +4192,7 @@ function ToggleAzimuthDirection(az: number): number {
 }
 
 /**
- * Converts Cartesian coordinates to horizontal coordinates.
+ * @brief Converts Cartesian coordinates to horizontal coordinates.
  *
  * Given a horizontal Cartesian vector, returns horizontal azimuth and altitude.
  *
@@ -4170,7 +4231,7 @@ export function HorizonFromVector(vector: Vector, refraction: string): Spherical
 
 
 /**
- * Given apparent angular horizontal coordinates in `sphere`, calculate horizontal vector.
+ * @brief Given apparent angular horizontal coordinates in `sphere`, calculate horizontal vector.
  *
  * @param {Spherical} sphere
  *      A structure that contains apparent horizontal coordinates:
@@ -4203,7 +4264,7 @@ export function VectorFromHorizon(sphere: Spherical, time: AstroTime, refraction
 
 
 /**
- * Calculates the amount of "lift" to an altitude angle caused by atmospheric refraction.
+ * @brief Calculates the amount of "lift" to an altitude angle caused by atmospheric refraction.
  *
  * Given an altitude angle and a refraction option, calculates
  * the amount of "lift" caused by atmospheric refraction.
@@ -4260,7 +4321,7 @@ export function Refraction(refraction: string, altitude: number): number {
 }
 
 /**
- * Calculates the inverse of an atmospheric refraction angle.
+ * @brief Calculates the inverse of an atmospheric refraction angle.
  *
  * Given an observed altitude angle that includes atmospheric refraction,
  * calculate the negative angular correction to obtain the unrefracted
@@ -4300,7 +4361,7 @@ export function InverseRefraction(refraction: string, bent_altitude: number): nu
 }
 
 /**
- * Applies a rotation to a vector, yielding a rotated vector.
+ * @brief Applies a rotation to a vector, yielding a rotated vector.
  *
  * This function transforms a vector in one orientation to a vector
  * in another orientation.
@@ -4326,7 +4387,7 @@ export function RotateVector(rotation: RotationMatrix, vector: Vector): Vector
 
 
 /**
- * Calculates a rotation matrix from equatorial J2000 (EQJ) to ecliptic J2000 (ECL).
+ * @brief Calculates a rotation matrix from equatorial J2000 (EQJ) to ecliptic J2000 (ECL).
  *
  * This is one of the family of functions that returns a rotation matrix
  * for converting from one orientation to another.
@@ -4349,7 +4410,7 @@ export function Rotation_EQJ_ECL(): RotationMatrix {
 
 
 /**
- * Calculates a rotation matrix from ecliptic J2000 (ECL) to equatorial J2000 (EQJ).
+ * @brief Calculates a rotation matrix from ecliptic J2000 (ECL) to equatorial J2000 (EQJ).
  *
  * This is one of the family of functions that returns a rotation matrix
  * for converting from one orientation to another.
@@ -4372,7 +4433,7 @@ export function Rotation_ECL_EQJ(): RotationMatrix {
 
 
 /**
- * Calculates a rotation matrix from equatorial J2000 (EQJ) to equatorial of-date (EQD).
+ * @brief Calculates a rotation matrix from equatorial J2000 (EQJ) to equatorial of-date (EQD).
  *
  * This is one of the family of functions that returns a rotation matrix
  * for converting from one orientation to another.
@@ -4393,7 +4454,7 @@ export function Rotation_EQJ_EQD(time: AstroTime): RotationMatrix {
 
 
 /**
- * Calculates a rotation matrix from equatorial of-date (EQD) to equatorial J2000 (EQJ).
+ * @brief Calculates a rotation matrix from equatorial of-date (EQD) to equatorial J2000 (EQJ).
  *
  * This is one of the family of functions that returns a rotation matrix
  * for converting from one orientation to another.
@@ -4414,7 +4475,7 @@ export function Rotation_EQD_EQJ(time: AstroTime): RotationMatrix {
 
 
 /**
- * Calculates a rotation matrix from equatorial of-date (EQD) to horizontal (HOR).
+ * @brief Calculates a rotation matrix from equatorial of-date (EQD) to horizontal (HOR).
  *
  * This is one of the family of functions that returns a rotation matrix
  * for converting from one orientation to another.
@@ -4461,7 +4522,7 @@ export function Rotation_EQD_HOR(time: AstroTime, observer: Observer): RotationM
 
 
 /**
- * Calculates a rotation matrix from horizontal (HOR) to equatorial of-date (EQD).
+ * @brief Calculates a rotation matrix from horizontal (HOR) to equatorial of-date (EQD).
  *
  * This is one of the family of functions that returns a rotation matrix
  * for converting from one orientation to another.
@@ -4484,7 +4545,7 @@ export function Rotation_HOR_EQD(time: AstroTime, observer: Observer): RotationM
 
 
 /**
- * Calculates a rotation matrix from horizontal (HOR) to J2000 equatorial (EQJ).
+ * @brief Calculates a rotation matrix from horizontal (HOR) to J2000 equatorial (EQJ).
  *
  * This is one of the family of functions that returns a rotation matrix
  * for converting from one orientation to another.
@@ -4508,7 +4569,7 @@ export function Rotation_HOR_EQJ(time: AstroTime, observer: Observer): RotationM
 
 
 /**
- * Calculates a rotation matrix from equatorial J2000 (EQJ) to horizontal (HOR).
+ * @brief Calculates a rotation matrix from equatorial J2000 (EQJ) to horizontal (HOR).
  *
  * This is one of the family of functions that returns a rotation matrix
  * for converting from one orientation to another.
@@ -4538,7 +4599,7 @@ export function Rotation_EQJ_HOR(time: AstroTime, observer: Observer): RotationM
 
 
 /**
- * Calculates a rotation matrix from equatorial of-date (EQD) to ecliptic J2000 (ECL).
+ * @brief Calculates a rotation matrix from equatorial of-date (EQD) to ecliptic J2000 (ECL).
  *
  * This is one of the family of functions that returns a rotation matrix
  * for converting from one orientation to another.
@@ -4559,7 +4620,7 @@ export function Rotation_EQD_ECL(time: AstroTime): RotationMatrix {
 
 
 /**
- * Calculates a rotation matrix from ecliptic J2000 (ECL) to equatorial of-date (EQD).
+ * @brief Calculates a rotation matrix from ecliptic J2000 (ECL) to equatorial of-date (EQD).
  *
  * This is one of the family of functions that returns a rotation matrix
  * for converting from one orientation to another.
@@ -4579,7 +4640,7 @@ export function Rotation_ECL_EQD(time: AstroTime): RotationMatrix {
 
 
 /**
- * Calculates a rotation matrix from ecliptic J2000 (ECL) to horizontal (HOR).
+ * @brief Calculates a rotation matrix from ecliptic J2000 (ECL) to horizontal (HOR).
  *
  * This is one of the family of functions that returns a rotation matrix
  * for converting from one orientation to another.
@@ -4610,7 +4671,7 @@ export function Rotation_ECL_HOR(time: AstroTime, observer: Observer): RotationM
 
 
 /**
- * Calculates a rotation matrix from horizontal (HOR) to ecliptic J2000 (ECL).
+ * @brief Calculates a rotation matrix from horizontal (HOR) to ecliptic J2000 (ECL).
  *
  * This is one of the family of functions that returns a rotation matrix
  * for converting from one orientation to another.
@@ -4638,7 +4699,7 @@ let ConstelRot: RotationMatrix;
 let Epoch2000 : AstroTime;
 
 /**
- * Reports the constellation that a given celestial point lies within.
+ * @brief Reports the constellation that a given celestial point lies within.
  *
  * @property {string} symbol
  *      3-character mnemonic symbol for the constellation, e.g. "Ori".
@@ -4663,7 +4724,7 @@ export class ConstellationInfo {
 
 
 /**
- * Determines the constellation that contains the given point in the sky.
+ * @brief Determines the constellation that contains the given point in the sky.
  *
  * Given J2000 equatorial (EQJ) coordinates of a point in the sky,
  * determines the constellation that contains that point.
@@ -4733,7 +4794,7 @@ export function Constellation(ra: number, dec: number): ConstellationInfo {
 }
 
 /**
- * Returns information about a lunar eclipse.
+ * @brief Returns information about a lunar eclipse.
  *
  * Returned by {@link SearchLunarEclipse} or {@link NextLunarEclipse}
  * to report information about a lunar eclipse event.
@@ -5068,7 +5129,7 @@ export function SearchLunarEclipse(date: FlexibleDateTime): LunarEclipseInfo {
 
 
 /**
-    Reports the time and geographic location of the peak of a solar eclipse.
+    @brief Reports the time and geographic location of the peak of a solar eclipse.
 
     Returned by {@link SearchGlobalSolarEclipse} or {@link NextGlobalSolarEclipse}
     to report information about a solar eclipse event.
@@ -5367,7 +5428,7 @@ export class EclipseEvent {
  * `total_begin` and `total_end` indicate when the total/annular phase begins/ends.
  * When an event field is valid, the caller must also check its `altitude` field to
  * see whether the Sun is above the horizon at the time indicated by the `time` field.
- * See #EclipseEvent for more information.
+ * See {@link EclipseEvent} for more information.
  *
  * @property {string} kind
  *      The type of solar eclipse found: `"partial"`, `"annular"`, or `"total"`.
@@ -5668,7 +5729,7 @@ export function SearchTransit(body: string, startTime: AstroTime) {
 
 
 /**
- * @brief Searches for another transit of Mercury or Venus.
+ * @brief Searches for the next transit of Mercury or Venus in a series.
  *
  * After calling {@link SearchTransit} to find a transit of Mercury or Venus,
  * this function finds the next transit after that.
