@@ -106,6 +106,6 @@ Calculations are also verified to be identical among all the supported programmi
 
 - Determines which constellation contains a given point in the sky.
 
-# Acknowledgements
+### Acknowledgements
 
 [![Deploys by Netlify](https://www.netlify.com/img/global/badges/netlify-color-accent.svg)](https://www.netlify.com)
