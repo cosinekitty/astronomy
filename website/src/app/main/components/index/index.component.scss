@@ -70,7 +70,7 @@
     }
 
     @each $color in $colorNames {
-      &.item-#{$color} {
+      &.#{"item-"+$color} {
         .item-inner {
           border-top: 3px solid map-get($colors, $color);
           &:hover .title {
