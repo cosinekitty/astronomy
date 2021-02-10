@@ -1790,24 +1790,6 @@ export class Spherical {
 }
 
 /**
- * @brief Creates spherical coordinates.
- *
- * @param {number} lat
- *      The angular distance above or below the reference plane, in degrees.
- *
- * @param {number} lon
- *      The angular distance around the reference plane, in degrees.
- *
- * @param {number} dist
- *      A radial distance in AU.
- *
- * @returns {Spherical}
- */
-export function MakeSpherical(lat: number, lon: number, dist: number): Spherical {
-    return new Spherical(lat, lon, dist);
-}
-
-/**
  * @brief Holds right ascension, declination, and distance of a celestial object.
  *
  * @property {number} ra
@@ -2186,30 +2168,6 @@ export class Observer {
     }
 }
 
-
-/**
- * Creates an {@link Observer} object that represents a location
- * on the surface of the Earth from which observations are made.
- *
- * @param {number} latitude_degrees
- *      The observer's geographic latitude in degrees north of the Earth's equator.
- *      The value is negative for observers south of the equator.
- *      Must be in the range -90 to +90.
- *
- * @param {number} longitude_degrees
- *      The observer's geographic longitude in degrees east of the prime meridian
- *      passing through Greenwich, England.
- *      The value is negative for observers west of the prime meridian.
- *      The value should be kept in the range -180 to +180 to minimize floating point errors.
- *
- * @param {number} height_in_meters
- *      The observer's elevation above mean sea level, expressed in meters.
- *      If omitted, the elevation is assumed to be 0 meters.
- */
-export function MakeObserver(latitude_degrees: number, longitude_degrees: number, height_in_meters = 0): Observer {
-    return new Observer(latitude_degrees, longitude_degrees, height_in_meters);
-}
-
 /**
  * @brief Returns apparent geocentric true ecliptic coordinates of date for the Sun.
  *
@@ -2278,7 +2236,6 @@ export function SunPosition(date: FlexibleDateTime): EclipticCoordinates {
  *
  * @param {Observer} observer
  *      The location on the Earth of the observer.
- *      Call {@link MakeObserver} to create an observer object.
  *
  * @param {bool} ofdate
  *      Pass `true` to return equatorial coordinates of date,
@@ -3903,7 +3860,6 @@ function BodyRadiusAu(body: string): number {
  *
  * @param {Observer} observer
  *      Specifies the geographic coordinates and elevation above sea level of the observer.
- *      Call {@link MakeObserver} to create an observer object.
  *
  * @param {number} direction
  *      Either +1 to find rise time or -1 to find set time.
@@ -4043,7 +3999,6 @@ export class HourAngleEvent {
  *
  * @param {Observer} observer
  *      Specifies the geographic coordinates and elevation above sea level of the observer.
- *      Call {@link MakeObserver} to create an observer object.
  *
  * @param {number} hourAngle
  *      The hour angle expressed in

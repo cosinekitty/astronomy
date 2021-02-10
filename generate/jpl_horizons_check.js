@@ -175,7 +175,7 @@ function ProcessFile(inFileName) {
                 }
                 let latitude = parseFloat(m[2]);
                 let elevation = 1000 * parseFloat(m[3]);
-                context.observer = Astronomy.MakeObserver(latitude, longitude, elevation);
+                context.observer = new Astronomy.Observer(latitude, longitude, elevation);
                 continue;
             }
 

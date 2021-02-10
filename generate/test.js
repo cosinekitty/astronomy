@@ -58,7 +58,7 @@ function AstroCheck() {
     var date = Astronomy.MakeTime(new Date('1700-01-01T00:00:00Z'));
     var stop = Astronomy.MakeTime(new Date('2200-01-01T00:00:00Z'));
     var body, pos, hor, dt, j2000, ofdate, time;
-    const observer = Astronomy.MakeObserver(29, -81, 10);
+    const observer = new Astronomy.Observer(29, -81, 10);
 
     console.log(`o ${observer.latitude.toFixed(6)} ${observer.longitude.toFixed(6)} ${observer.height.toFixed(6)}`);
 
@@ -544,7 +544,7 @@ function LocalSolarEclipse1() {
         //const typeChar = token[2];
         const lat = float(token[3]);
         const lon = float(token[4]);
-        const observer = Astronomy.MakeObserver(lat, lon, 0);
+        const observer = new Astronomy.Observer(lat, lon, 0);
 
         // Start the search 20 days before we know the eclipse should peak.
         const search_start = peak.AddDays(-20);
@@ -653,7 +653,7 @@ function LocalSolarEclipse2() {
         }
         const latitude = float(token[0]);
         const longitude = float(token[1]);
-        const observer = Astronomy.MakeObserver(latitude, longitude, 0);
+        const observer = new Astronomy.Observer(latitude, longitude, 0);
         const typeChar = token[2];
         const expected_kind = {
             'P': 'partial',
@@ -1101,7 +1101,7 @@ function RiseSet() {
             // Every time we see a new geographic location, start a new iteration
             // of finding all rise/set times for that UTC calendar year.
             body = evt.body;
-            observer = Astronomy.MakeObserver(evt.lat, evt.lon, 0);
+            observer = new Astronomy.Observer(evt.lat, evt.lon, 0);
             r_search_date = s_search_date = new Date(Date.UTC(evt.date.getUTCFullYear(), 0, 1));
             b_date = null;
             if (Verbose) {
@@ -1258,7 +1258,7 @@ function Rotation() {
         /* Verify conversion of equatorial J2000 to equatorial of-date, and back. */
         /* Use established functions to calculate spherical coordinates for the body, in both EQJ and EQD. */
         const time = Astronomy.MakeTime(new Date('2019-12-08T20:50:00Z'));
-        const observer = Astronomy.MakeObserver(+35, -85, 0);
+        const observer = new Astronomy.Observer(+35, -85, 0);
         const eq2000 = Astronomy.Equator(body, time, observer, false, true);
         const eqdate = Astronomy.Equator(body, time, observer, true, true);
 
@@ -1294,7 +1294,7 @@ function Rotation() {
     function Test_EQD_HOR(body) {
         /* Use existing functions to calculate horizontal coordinates of the body for the time+observer. */
         const time = Astronomy.MakeTime(new Date('1970-12-13T05:15:00Z'));
-        const observer = Astronomy.MakeObserver(-37, +45, 0);
+        const observer = new Astronomy.Observer(-37, +45, 0);
         const eqd = Astronomy.Equator(body, time, observer, true, true);
         if (Verbose) console.log(`JS Test_EQD_HOR ${body}: OFDATE ra=${eqd.ra}, dec=${eqd.dec}`);
         const hor = Astronomy.Horizon(time, observer, eqd.ra, eqd.dec, 'normal');
@@ -1366,7 +1366,7 @@ function Rotation() {
 
     function Test_RotRoundTrip() {
         const time = Astronomy.MakeTime(new Date('2067-05-30T14:45:00Z'));
-        const observer = Astronomy.MakeObserver(+28, -82, 0);
+        const observer = new Astronomy.Observer(+28, -82, 0);
 
         /*
             In each round trip, calculate a forward rotation and a backward rotation.

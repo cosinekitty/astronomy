@@ -2,7 +2,7 @@
 <html>
     <head>
         <title>Astronomy unit test</title>
-        <script src="../source/js/astronomy.js"></script>
+        <script src="../source/js/astronomy.browser.js"></script>
         <script>
             window.onload = function() {
                 function FormatDec(x) {
@@ -31,12 +31,12 @@
                 }
 
                 var now = new Date();
-                const observer = Astronomy.MakeObserver(29, -81, 10);
+                const observer = new Astronomy.Observer(29, -81, 10);
                 var body, pos;
                 document.getElementById('CurrentDateTime').innerText = now.toLocaleString();
-                for (body of Astronomy.Bodies) {
+                for (body of ['Sun', 'Moon', 'Mercury', 'Venus', 'Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Pluto']) {
                     if (body === 'Moon')
-                        pos = Astronomy.GeoVector(body, now);
+                        pos = Astronomy.GeoVector(body, now, false);
                     else
                         pos = Astronomy.HelioVector(body, now);
 
@@ -45,15 +45,16 @@
 
                     if (body !== 'Earth') {
                         if (body !== 'Moon')    // prevent redundant calculation
-                            pos = Astronomy.GeoVector(body, now);
-                        var sky = Astronomy.SkyPos(pos, observer);
+                            pos = Astronomy.GeoVector(body, now, false);
+                        var j2000 = Astronomy.Equator(body, now, observer, false, false);
+                        var ofdate = Astronomy.Equator(body, now, observer, true, true);
+                        var hor = Astronomy.Horizon(now, observer, ofdate.ra, ofdate.dec);
                         var raCell = document.getElementById('ra_' + body);
-                        raCell.innerText = FormatRa(sky.j2000.ra);
+                        raCell.innerText = FormatRa(j2000.ra);
                         var decCell = document.getElementById('dec_' + body);
-                        decCell.innerText = FormatDec(sky.j2000.dec);
+                        decCell.innerText = FormatDec(j2000.dec);
 
-                        var hor = Astronomy.Horizon(sky.t, observer, sky.ofdate.ra, sky.ofdate.dec);
-                        var azCell = document.getElementById('az_' + body);                        
+                        var azCell = document.getElementById('az_' + body);
                         azCell.innerText = hor.azimuth.toFixed(3);
                         var altCell = document.getElementById('alt_' + body);
                         altCell.innerText = hor.altitude.toFixed(3);
@@ -64,7 +65,7 @@
 
                         const illum = Astronomy.Illumination(body, now);
                         cell = document.getElementById('phase_' + body);
-                        cell.innerText = illum.phase.toFixed(3);
+                        cell.innerText = illum.phase_angle.toFixed(3);
                         cell = document.getElementById('dist_' + body);
                         cell.innerText = illum.geo_dist.toFixed(6);
                         cell = document.getElementById('mag_' + body);
@@ -92,7 +93,7 @@
                 <td>azimuth</td>
                 <td>altitude</td>
                 <td>culm</td>
-                <td>phase</td>                
+                <td>phase</td>
                 <td>dist</td>
                 <td>mag</td>
             </tr>

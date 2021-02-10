@@ -25,7 +25,7 @@
             <tr>
                 <td>Elevation (m):</td>
                 <td><input type="text" id="EditElevation" pattern="[\-\+]?\d+(\.\d*)?" size="10"></td>
-            </tr>            
+            </tr>
         </table>
 
         <h2>Rise/Set Times</h2>
@@ -53,7 +53,7 @@
         </table>
 
         <p>
-            This is a sample page for the open-source 
+            This is a sample page for the open-source
             <a href="https://github.com/cosinekitty/astronomy/">Astronomy Engine</a>.
             All of the source code and documentation is available there.
             Also, try using your browser's View Source command to look at how this page works.
@@ -61,7 +61,7 @@
 
     </body>
 
-    <script src="astronomy.js"></script>
+    <script src="astronomy.browser.js"></script>
     <script>
         window.onload = function() {
             const StorageKey = 'AstroDemo.Options';
@@ -143,7 +143,7 @@
                         Options = { latitude:text_latitude, longitude:text_longitude, elevation:text_elevation };
                         SaveOptions();
                     }
-                    let observer = Astronomy.MakeObserver(latitude, longitude, elevation);
+                    let observer = new Astronomy.Observer(latitude, longitude, elevation);
 
                     let sunrise  = Astronomy.SearchRiseSet('Sun',  observer, +1, date, 300);
                     let sunset   = Astronomy.SearchRiseSet('Sun',  observer, -1, date, 300);

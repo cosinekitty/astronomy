@@ -55,7 +55,7 @@ function Demo() {
     if (process.argv.length === 4 || process.argv.length === 5) {
         const latitude  = ParseNumber(process.argv[2]);
         const longitude = ParseNumber(process.argv[3]);
-        const observer = Astronomy.MakeObserver(latitude, longitude, 0);
+        const observer = new Astronomy.Observer(latitude, longitude, 0);
         const date = (process.argv.length === 5) ? ParseDate(process.argv[4]) : new Date();
         console.log('search   : ' + date.toISOString());
 

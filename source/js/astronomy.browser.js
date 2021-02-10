@@ -34,8 +34,8 @@
  */
 'use strict';
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.SearchLunarApsis = exports.Apsis = exports.SearchPeakMagnitude = exports.SearchMaxElongation = exports.Elongation = exports.ElongationEvent = exports.Seasons = exports.SeasonInfo = exports.SearchHourAngle = exports.HourAngleEvent = exports.SearchRiseSet = exports.NextMoonQuarter = exports.SearchMoonQuarter = exports.MoonQuarter = exports.SearchMoonPhase = exports.MoonPhase = exports.SearchRelativeLongitude = exports.Illumination = exports.IlluminationInfo = exports.EclipticLongitude = exports.AngleFromSun = exports.LongitudeFromSun = exports.SearchSunLongitude = exports.Search = exports.GeoVector = exports.HelioDistance = exports.HelioVector = exports.GeoMoon = exports.Ecliptic = exports.Equator = exports.SunPosition = exports.MakeObserver = exports.Observer = exports.Horizon = exports.EclipticCoordinates = exports.HorizontalCoordinates = exports.MakeRotation = exports.RotationMatrix = exports.EquatorialCoordinates = exports.MakeSpherical = exports.Spherical = exports.Vector = exports.CalcMoonCount = exports.MakeTime = exports.AstroTime = exports.SetDeltaTFunction = exports.DeltaT_JplHorizons = exports.DeltaT_EspenakMeeus = exports.Bodies = exports.AngleBetween = void 0;
-exports.NextTransit = exports.SearchTransit = exports.TransitInfo = exports.NextLocalSolarEclipse = exports.SearchLocalSolarEclipse = exports.LocalSolarEclipseInfo = exports.EclipseEvent = exports.NextGlobalSolarEclipse = exports.SearchGlobalSolarEclipse = exports.NextLunarEclipse = exports.GlobalSolarEclipseInfo = exports.SearchLunarEclipse = exports.LunarEclipseInfo = exports.Constellation = exports.ConstellationInfo = exports.Rotation_HOR_ECL = exports.Rotation_ECL_HOR = exports.Rotation_ECL_EQD = exports.Rotation_EQD_ECL = exports.Rotation_EQJ_HOR = exports.Rotation_HOR_EQJ = exports.Rotation_HOR_EQD = exports.Rotation_EQD_HOR = exports.Rotation_EQD_EQJ = exports.Rotation_EQJ_EQD = exports.Rotation_ECL_EQJ = exports.Rotation_EQJ_ECL = exports.RotateVector = exports.InverseRefraction = exports.Refraction = exports.VectorFromHorizon = exports.HorizonFromVector = exports.SphereFromVector = exports.EquatorFromVector = exports.VectorFromEquator = exports.VectorFromSphere = exports.CombineRotation = exports.InverseRotation = exports.NextPlanetApsis = exports.SearchPlanetApsis = exports.NextLunarApsis = void 0;
+exports.SearchPlanetApsis = exports.NextLunarApsis = exports.SearchLunarApsis = exports.Apsis = exports.SearchPeakMagnitude = exports.SearchMaxElongation = exports.Elongation = exports.ElongationEvent = exports.Seasons = exports.SeasonInfo = exports.SearchHourAngle = exports.HourAngleEvent = exports.SearchRiseSet = exports.NextMoonQuarter = exports.SearchMoonQuarter = exports.MoonQuarter = exports.SearchMoonPhase = exports.MoonPhase = exports.SearchRelativeLongitude = exports.Illumination = exports.IlluminationInfo = exports.EclipticLongitude = exports.AngleFromSun = exports.LongitudeFromSun = exports.SearchSunLongitude = exports.Search = exports.GeoVector = exports.HelioDistance = exports.HelioVector = exports.GeoMoon = exports.Ecliptic = exports.Equator = exports.SunPosition = exports.Observer = exports.Horizon = exports.EclipticCoordinates = exports.HorizontalCoordinates = exports.MakeRotation = exports.RotationMatrix = exports.EquatorialCoordinates = exports.Spherical = exports.Vector = exports.CalcMoonCount = exports.MakeTime = exports.AstroTime = exports.SetDeltaTFunction = exports.DeltaT_JplHorizons = exports.DeltaT_EspenakMeeus = exports.Bodies = exports.AngleBetween = void 0;
+exports.NextTransit = exports.SearchTransit = exports.TransitInfo = exports.NextLocalSolarEclipse = exports.SearchLocalSolarEclipse = exports.LocalSolarEclipseInfo = exports.EclipseEvent = exports.NextGlobalSolarEclipse = exports.SearchGlobalSolarEclipse = exports.NextLunarEclipse = exports.GlobalSolarEclipseInfo = exports.SearchLunarEclipse = exports.LunarEclipseInfo = exports.Constellation = exports.ConstellationInfo = exports.Rotation_HOR_ECL = exports.Rotation_ECL_HOR = exports.Rotation_ECL_EQD = exports.Rotation_EQD_ECL = exports.Rotation_EQJ_HOR = exports.Rotation_HOR_EQJ = exports.Rotation_HOR_EQD = exports.Rotation_EQD_HOR = exports.Rotation_EQD_EQJ = exports.Rotation_EQJ_EQD = exports.Rotation_ECL_EQJ = exports.Rotation_EQJ_ECL = exports.RotateVector = exports.InverseRefraction = exports.Refraction = exports.VectorFromHorizon = exports.HorizonFromVector = exports.SphereFromVector = exports.EquatorFromVector = exports.VectorFromEquator = exports.VectorFromSphere = exports.CombineRotation = exports.InverseRotation = exports.NextPlanetApsis = void 0;
 const DAYS_PER_TROPICAL_YEAR = 365.24217;
 const J2000 = new Date('2000-01-01T12:00:00Z');
 const PI2 = 2 * Math.PI;
@@ -1682,24 +1682,6 @@ class Spherical {
 }
 exports.Spherical = Spherical;
 /**
- * @brief Creates spherical coordinates.
- *
- * @param {number} lat
- *      The angular distance above or below the reference plane, in degrees.
- *
- * @param {number} lon
- *      The angular distance around the reference plane, in degrees.
- *
- * @param {number} dist
- *      A radial distance in AU.
- *
- * @returns {Spherical}
- */
-function MakeSpherical(lat, lon, dist) {
-    return new Spherical(lat, lon, dist);
-}
-exports.MakeSpherical = MakeSpherical;
-/**
  * @brief Holds right ascension, declination, and distance of a celestial object.
  *
  * @property {number} ra
@@ -2039,29 +2021,6 @@ class Observer {
 }
 exports.Observer = Observer;
 /**
- * Creates an {@link Observer} object that represents a location
- * on the surface of the Earth from which observations are made.
- *
- * @param {number} latitude_degrees
- *      The observer's geographic latitude in degrees north of the Earth's equator.
- *      The value is negative for observers south of the equator.
- *      Must be in the range -90 to +90.
- *
- * @param {number} longitude_degrees
- *      The observer's geographic longitude in degrees east of the prime meridian
- *      passing through Greenwich, England.
- *      The value is negative for observers west of the prime meridian.
- *      The value should be kept in the range -180 to +180 to minimize floating point errors.
- *
- * @param {number} height_in_meters
- *      The observer's elevation above mean sea level, expressed in meters.
- *      If omitted, the elevation is assumed to be 0 meters.
- */
-function MakeObserver(latitude_degrees, longitude_degrees, height_in_meters = 0) {
-    return new Observer(latitude_degrees, longitude_degrees, height_in_meters);
-}
-exports.MakeObserver = MakeObserver;
-/**
  * @brief Returns apparent geocentric true ecliptic coordinates of date for the Sun.
  *
  * This function is used for calculating the times of equinoxes and solstices.
@@ -2124,7 +2083,6 @@ exports.SunPosition = SunPosition;
  *
  * @param {Observer} observer
  *      The location on the Earth of the observer.
- *      Call {@link MakeObserver} to create an observer object.
  *
  * @param {bool} ofdate
  *      Pass `true` to return equatorial coordinates of date,
@@ -3607,7 +3565,6 @@ function BodyRadiusAu(body) {
  *
  * @param {Observer} observer
  *      Specifies the geographic coordinates and elevation above sea level of the observer.
- *      Call {@link MakeObserver} to create an observer object.
  *
  * @param {number} direction
  *      Either +1 to find rise time or -1 to find set time.
@@ -3740,7 +3697,6 @@ exports.HourAngleEvent = HourAngleEvent;
  *
  * @param {Observer} observer
  *      Specifies the geographic coordinates and elevation above sea level of the observer.
- *      Call {@link MakeObserver} to create an observer object.
  *
  * @param {number} hourAngle
  *      The hour angle expressed in

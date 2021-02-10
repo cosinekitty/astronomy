@@ -21,7 +21,7 @@ function ECLIPLON(i) {
 }
 
 function HorizontalCoords(ecliptic_longitude, time, rot_ecl_hor) {
-    const eclip = Astronomy.MakeSpherical(
+    const eclip = new Astronomy.Spherical(
         0.0,                    /* being "on the ecliptic plane" means ecliptic latitude is zero. */
         ecliptic_longitude,
         1.0);                   /* any positive distance value will work fine. */
@@ -134,7 +134,7 @@ function Demo() {
     if (process.argv.length === 4 || process.argv.length === 5) {
         const latitude  = ParseNumber(process.argv[2]);
         const longitude = ParseNumber(process.argv[3]);
-        const observer = Astronomy.MakeObserver(latitude, longitude, 0);
+        const observer = new Astronomy.Observer(latitude, longitude, 0);
         const time = Astronomy.MakeTime((process.argv.length === 5) ? ParseDate(process.argv[4]) : new Date());
         FindEclipticCrossings(observer, time);
         process.exit(0);

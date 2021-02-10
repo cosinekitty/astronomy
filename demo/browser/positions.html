@@ -33,7 +33,7 @@
             <tr>
                 <td>Elevation (m):</td>
                 <td><input type="text" id="EditElevation" pattern="[\-\+]?\d+(\.\d*)?" size="10"></td>
-            </tr>            
+            </tr>
         </table>
 
         <h2>Body Positions</h2>
@@ -118,7 +118,7 @@
         </table>
 
         <p>
-            This is a sample page for the open-source 
+            This is a sample page for the open-source
             <a href="https://github.com/cosinekitty/astronomy/">Astronomy Engine</a>.
             All of the source code and documentation is available there.
             Also, try using your browser's View Source command to look at how this page works.
@@ -209,7 +209,7 @@
             }
 
             const BodyList = [
-                'Sun', 'Moon', 'Mercury', 'Venus', 'Mars', 
+                'Sun', 'Moon', 'Mercury', 'Venus', 'Mars',
                 'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Pluto'
             ];
 
@@ -241,16 +241,16 @@
                     let longitude = parseFloat(text_longitude);
                     let elevation = parseFloat(text_elevation);
                     if (latitude !== Options.latitude || longitude !== Options.longitude || elevation !== Options.elevation || Options.automatic !== autotime) {
-                        Options = { 
-                            latitude: text_latitude, 
-                            longitude: text_longitude, 
+                        Options = {
+                            latitude: text_latitude,
+                            longitude: text_longitude,
                             elevation: text_elevation,
                             automatic: autotime,
                             date: timebox.value
                         };
                         SaveOptions();
                     }
-                    let observer = Astronomy.MakeObserver(latitude, longitude, elevation);
+                    let observer = new Astronomy.Observer(latitude, longitude, elevation);
 
                     for (let body of BodyList) {
                         let equ_2000 = Astronomy.Equator(body, date, observer, false, true);
