@@ -50,48 +50,79 @@ if errorlevel 1 (
     exit /b 1
 )
 
-if not defined CLOSURE (
-    REM     You can customize where the Google Closure Compiler jar file
-    REM     is located by setting the environment variable CLOSURE
-    REM     before running this batch file.
-
-    set CLOSURE=c:\closure\closure-compiler-v20190528.jar
+echo.Install NodeJS dev dependencies
+if not exist node_modules (
+    call npm ci
+    if errorlevel 1 (
+        echo.Error installing NodeJS dev dependencies.
+        exit /b 1
+    )
 )
 
-if not exist !CLOSURE! (
-    echo.FATAL ERROR - cannot find Google Closure Compiler jar file: !CLOSURE!
+echo.Compiling TypeScript to JavaScript.
+call npm run build
+if errorlevel 1 (
+    echo.Error in typescript compiler.
+    exit /b 1
+)
+
+echo.Bundling JavaScript code for Browser.
+call npm run build:browser
+if errorlevel 1 (
+    echo.Error building browser bundle
     exit /b 1
 )
 
 echo.Minifying JavaScript code.
-if exist ..\source\js\astronomy.min.js (
-    del ..\source\js\astronomy.min.js
-)
-java -jar !CLOSURE! --js ..\source\js\astronomy.js --js_output_file ..\source\js\astronomy.min.js
+call npm run minify
 if errorlevel 1 (
     echo.Error minifying astronomy.js
     exit /b 1
 )
 
-node eol_hack.js ..\source\js\astronomy.min.js
+call npm run minify:browser
 if errorlevel 1 (
-    echo.Error fixing line endings for Windows in astronomy.min.js
+    echo.Error minifying astronomy.browser.js
     exit /b 1
 )
 
-echo.
-echo.Making documentation files in Markdown format.
-call jsdoc2md --separators --template ../jsdoc2md/js.hbs --files ..\source\js\astronomy.js > ..\source\js\README.md
+for %%f in (
+    ..\source\js\astronomy.js
+    ..\source\js\astronomy.min.js
+    ..\source\js\astronomy.browser.js
+    ..\source\js\astronomy.browser.min.js
+) do (
+    node eol_hack.js %%f
+    if errorlevel 1 (
+        echo.ERROR cleaning newlines in file: %%f
+        exit /b 1
+    )
+)
+
+echo.Generating JS documentation in JSON format.
+call npm run docs:json
 if errorlevel 1 (
-    echo.FATAL: error in jsdoc2md
+    echo.Error generating JSON documentation.
+    exit /b 1
+)
+node jsdoc_strip_path.js
+if errorlevel 1 (
+    echo.Error stripping absolute paths.
+    exit /b 1
+)
+
+echo.Generating JS documentation in Markdown format.
+call npm run docs:md
+if errorlevel 1 (
+    echo.Error generating JS documentation.
     exit /b 1
 )
 
 node eol_hack.js ..\source\js\README.md
-if errorlevel 1 (
-    echo.FATAL: error in eol_hack.js [JS]
-    exit /b 1
-)
+if errorlevel 1 (exit /b 1)
+
+check_internal_links.py ..\source\js\README.md
+if errorlevel 1 (exit /b 1)
 
 echo.Making documentation in HTML format for local viewing.
 if exist html (
@@ -150,7 +181,7 @@ if errorlevel 1 (exit /b 1)
 
 echo.Making redundant copies of source in demo folders.
 
-copy ..\source\js\astronomy.js ..\demo\browser\
+copy ..\source\js\astronomy.browser.js ..\demo\browser\
 if errorlevel 1 (exit /b 1)
 
 copy ..\source\js\astronomy.js ..\demo\nodejs\
