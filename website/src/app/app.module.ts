@@ -42,7 +42,7 @@ export function markedOptionsFactory(): MarkedOptions {
   imports: [
     HttpClientModule,
     BrowserAnimationsModule,
-    RouterModule.forRoot(routes, { useHash: true }),
+    RouterModule.forRoot(routes),
     MarkdownModule.forRoot({
       loader: HttpClient,
       markedOptions: {
