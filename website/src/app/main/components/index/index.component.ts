@@ -9,17 +9,33 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 export class IndexComponent {
   items = [
     {
+      link: '/glossary',
+      icon: 'description',
+      color: 'blue',
+      title: 'Glossary',
+      description: 'Concepts and terminology',
+      disabled: false,
+    },
+    {
       link: '/demos',
       icon: 'travel_explore',
-      color: 'blue',
+      color: 'green',
       title: 'Demos',
       description: 'See AstronomyEngine in action',
       disabled: false,
     },
     {
+      link: '/showcase',
+      icon: 'campaign',
+      color: 'pink',
+      title: 'Showcase',
+      description: 'Applications using AstronomyEngine',
+      disabled: true,
+    },
+    {
       link: '/start',
       icon: 'assistant',
-      color: 'green',
+      color: 'purple',
       title: 'Quick Start',
       description: 'Requirements and Installation',
       disabled: true,
@@ -27,25 +43,9 @@ export class IndexComponent {
     {
       link: '/documentation',
       icon: 'extension',
-      color: 'pink',
+      color: 'aqua',
       title: 'API',
       description: 'Documentation',
-      disabled: true,
-    },
-    {
-      link: '/faq',
-      icon: 'support',
-      color: 'purple',
-      title: 'FAQs',
-      description: 'Frequently asked questions',
-      disabled: true,
-    },
-    {
-      link: '/showcase',
-      icon: 'campaign',
-      color: 'aqua',
-      title: 'Showcase',
-      description: 'Some software using AstronomyEngine',
       disabled: true,
     },
     {

@@ -1,0 +1,8 @@
+<markdown src="tutorials/observers.md"></markdown>
+
+<mat-tab-group mat-align-tabs="start" (selectedIndexChange)="onChange($event)">
+  <mat-tab
+    *ngFor="let child of children"
+    [label]="child.text"
+  ></mat-tab>
+</mat-tab-group>

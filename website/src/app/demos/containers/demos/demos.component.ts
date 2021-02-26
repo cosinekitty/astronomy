@@ -1,12 +1,12 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 
 @Component({
-  selector: 'ae-demos-layout',
-  templateUrl: './layout.component.html',
-  styleUrls: ['./layout.component.scss'],
+  selector: 'ae-demos',
+  templateUrl: './demos.component.html',
+  styleUrls: ['./demos.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class DemosLayoutComponent {
+export class DemosComponent {
   menu = [
     {
       text: 'Body Positions',

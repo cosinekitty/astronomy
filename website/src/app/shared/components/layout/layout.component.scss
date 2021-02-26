@@ -1,0 +1,48 @@
+@import 'variables';
+
+header {
+  margin-bottom: 10px;
+  text-align: center;
+
+  .doc-title {
+    font-size: 36px;
+    margin: 30px 0 0;
+
+    .mat-icon {
+      vertical-align: top;
+      font-size: 32px;
+      height: 30px;
+      width: 30px;
+    }
+  }
+}
+
+main {
+  padding: 30px 0;
+}
+
+/* COLORS */
+
+:host {
+  &.aqua .doc-title {
+    color: map-get($colors, aqua);
+  }
+  &.blue .doc-title {
+    color: map-get($colors, blue);
+  }
+  &.green .doc-title {
+    color: map-get($colors, green);
+  }
+  &.orange .doc-title {
+    color: map-get($colors, orange);
+  }
+  &.pink .doc-title {
+    color: map-get($colors, pink);
+  }
+  &.purple .doc-title {
+    color: map-get($colors, purple);
+  }
+  &.red .doc-title {
+    color: map-get($colors, red);
+  }
+}
