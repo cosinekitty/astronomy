@@ -880,6 +880,7 @@ def _sidereal_time(time):
     gst = math.fmod((st/3600.0 + theta), 360.0) / 15.0
     if gst < 0.0:
         gst += 24.0
+    # return sidereal hours in the half-open range [0, 24).
     return gst
 
 
@@ -1988,29 +1989,69 @@ def Horizon(time, observer, ra, dec, refraction):
     sinra = math.sin(rarad)
     cosra = math.cos(rarad)
 
+    # Calculate three mutually perpendicular unit vectors
+    # in equatorial coordinates: uze, une, uwe.
+    #
+    # uze = The direction of the observer's local zenith (straight up).
+    # une = The direction toward due north on the observer's horizon.
+    # uwe = The direction toward due west on the observer's horizon.
+    #
+    # HOWEVER, these are uncorrected for the Earth's rotation due to the time of day.
+    #
+    # The components of these 3 vectors are as follows:
+    # [0] = x = direction from center of Earth toward 0 degrees longitude (the prime meridian) on equator.
+    # [1] = y = direction from center of Earth toward 90 degrees west longitude on equator.
+    # [2] = z = direction from center of Earth toward the north pole.
+
     uze = [coslat*coslon, coslat*sinlon, sinlat]
     une = [-sinlat*coslon, -sinlat*sinlon, coslat]
     uwe = [sinlon, -coslon, 0.0]
+
+    # Correct the vectors uze, une, uwe for the Earth's rotation by calculating
+    # sideral time. Call spin() for each uncorrected vector to rotate about
+    # the Earth's axis to yield corrected unit vectors uz, un, uw.
+    # Multiply sidereal hours by -15 to convert to degrees and flip eastward
+    # rotation of the Earth to westward apparent movement of objects with time.
 
     angle = -15.0 * _sidereal_time(time)
     uz = _spin(angle, uze)
     un = _spin(angle, une)
     uw = _spin(angle, uwe)
 
+    # Convert angular equatorial coordinates (RA, DEC) to
+    # cartesian equatorial coordinates in 'p', using the
+    # same orientation system as uze, une, uwe.
+
     p = [cosdc*cosra, cosdc*sinra, sindc]
+
+    # Use dot products of p with the zenith, north, and west
+    # vectors to obtain the cartesian coordinates of the body in
+    # the observer's horizontal orientation system.
+    #
+    # pz = zenith component [-1, +1]
+    # pn = north  component [-1, +1]
+    # pw = west   component [-1, +1]
 
     pz = p[0]*uz[0] + p[1]*uz[1] + p[2]*uz[2]
     pn = p[0]*un[0] + p[1]*un[1] + p[2]*un[2]
     pw = p[0]*uw[0] + p[1]*uw[1] + p[2]*uw[2]
 
+    # proj is the "shadow" of the body vector along the observer's flat ground.
     proj = math.sqrt(pn*pn + pw*pw)
-    az = 0.0
+
+    # Calculate az = azimuth (compass direction clockwise from East.)
     if proj > 0.0:
+        # If the body is not exactly straight up/down, it has an azimuth.
+        # Invert the angle to produce degrees eastward from north.
         az = math.degrees(-math.atan2(pw, pn))
         if az < 0:
             az += 360
-        if az >= 360:
-            az -= 360
+    else:
+        # The body is straight up/down, so it does not have an azimuth.
+        # Report an arbitrary but reasonable value.
+        az = 0.0
+
+    # zd = the angle of the body away from the observer's zenith.
     zd = math.degrees(math.atan2(proj, pz))
     hor_ra = ra
     hor_dec = dec
@@ -2033,8 +2074,6 @@ def Horizon(time, observer, ra, dec, refraction):
                 hor_ra = math.degrees(math.atan2(pr[1], pr[0])) / 15
                 if hor_ra < 0:
                     hor_ra += 24
-                if hor_ra >= 24:
-                    hor_ra -= 24
             else:
                 hor_ra = 0
             hor_dec = math.degrees(math.atan2(pr[2], proj))

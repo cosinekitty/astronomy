@@ -3668,7 +3668,7 @@ namespace CosineKitty
             if (gst < 0.0)
                 gst += 24.0;
 
-            return gst;
+            return gst;     // return sidereal hours in the half-open range [0, 24).
         }
 
         private static AstroVector terra(Observer observer, double st)
@@ -4200,30 +4200,69 @@ namespace CosineKitty
             double sinra = Math.Sin(ra * 15 * DEG2RAD);
             double cosra = Math.Cos(ra * 15 * DEG2RAD);
 
+            // Calculate three mutually perpendicular unit vectors
+            // in equatorial coordinates: uze, une, uwe.
+            //
+            // uze = The direction of the observer's local zenith (straight up).
+            // une = The direction toward due north on the observer's horizon.
+            // uwe = The direction toward due west on the observer's horizon.
+            //
+            // HOWEVER, these are uncorrected for the Earth's rotation due to the time of day.
+            //
+            // The components of these 3 vectors are as follows:
+            // x = direction from center of Earth toward 0 degrees longitude (the prime meridian) on equator.
+            // y = direction from center of Earth toward 90 degrees west longitude on equator.
+            // z = direction from center of Earth toward the north pole.
             var uze = new AstroVector(coslat * coslon, coslat * sinlon, sinlat, null);
             var une = new AstroVector(-sinlat * coslon, -sinlat * sinlon, coslat, null);
             var uwe = new AstroVector(sinlon, -coslon, 0.0, null);
 
+            // Correct the vectors uze, une, uwe for the Earth's rotation by calculating
+            // sideral time. Call spin() for each uncorrected vector to rotate about
+            // the Earth's axis to yield corrected unit vectors uz, un, uw.
+            // Multiply sidereal hours by -15 to convert to degrees and flip eastward
+            // rotation of the Earth to westward apparent movement of objects with time.
             double spin_angle = -15.0 * sidereal_time(time);
             AstroVector uz = spin(spin_angle, uze);
             AstroVector un = spin(spin_angle, une);
             AstroVector uw = spin(spin_angle, uwe);
 
+            // Convert angular equatorial coordinates (RA, DEC) to
+            // cartesian equatorial coordinates in 'p', using the
+            // same orientation system as uze, une, uwe.
             var p = new AstroVector(cosdc * cosra, cosdc * sinra, sindc, null);
+
+            // Use dot products of p with the zenith, north, and west
+            // vectors to obtain the cartesian coordinates of the body in
+            // the observer's horizontal orientation system.
+            // pz = zenith component [-1, +1]
+            // pn = north  component [-1, +1]
+            // pw = west   component [-1, +1]
             double pz = p.x*uz.x + p.y*uz.y + p.z*uz.z;
             double pn = p.x*un.x + p.y*un.y + p.z*un.z;
             double pw = p.x*uw.x + p.y*uw.y + p.z*uw.z;
 
+            // proj is the "shadow" of the body vector along the observer's flat ground.
             double proj = Math.Sqrt(pn*pn + pw*pw);
-            double az = 0.0;
+
+            // Calculate az = azimuth (compass direction clockwise from East.)
+            double az;
             if (proj > 0.0)
             {
+                // If the body is not exactly straight up/down, it has an azimuth.
+                // Invert the angle to produce degrees eastward from north.
                 az = -Math.Atan2(pw, pn) * RAD2DEG;
                 if (az < 0.0)
                     az += 360.0;
-                else if (az >= 360.0)
-                    az -= 360.0;
             }
+            else
+            {
+                // The body is straight up/down, so it does not have an azimuth.
+                // Report an arbitrary but reasonable value.
+                az = 0.0;
+            }
+
+            // zd = the angle of the body away from the observer's zenith, in degrees.
             double zd = Math.Atan2(proj, pz) * RAD2DEG;
             double hor_ra = ra;
             double hor_dec = dec;
@@ -4251,8 +4290,6 @@ namespace CosineKitty
                         hor_ra = Math.Atan2(pry, prx) * (RAD2DEG / 15.0);
                         if (hor_ra < 0.0)
                             hor_ra += 24.0;
-                        else if (hor_ra >= 24.0)
-                            hor_ra -= 24.0;
                     }
                     else
                     {

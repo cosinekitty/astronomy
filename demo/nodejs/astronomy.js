@@ -1564,7 +1564,7 @@ function sidereal_time(time) {
     if (gst < 0) {
         gst += 24;
     }
-    return gst;
+    return gst; // return sidereal hours in the half-open range [0, 24).
 }
 function terra(observer, st) {
     const df = 1 - 0.003352819697896; // flattening of the Earth
@@ -1926,26 +1926,61 @@ function Horizon(date, observer, ra, dec, refraction) {
     const cosdc = Math.cos(dec * DEG2RAD);
     const sinra = Math.sin(ra * 15 * DEG2RAD);
     const cosra = Math.cos(ra * 15 * DEG2RAD);
+    // Calculate three mutually perpendicular unit vectors
+    // in equatorial coordinates: uze, une, uwe.
+    //
+    // uze = The direction of the observer's local zenith (straight up).
+    // une = The direction toward due north on the observer's horizon.
+    // uwe = The direction toward due west on the observer's horizon.
+    //
+    // HOWEVER, these are uncorrected for the Earth's rotation due to the time of day.
+    //
+    // The components of these 3 vectors are as follows:
+    // x = direction from center of Earth toward 0 degrees longitude (the prime meridian) on equator.
+    // y = direction from center of Earth toward 90 degrees west longitude on equator.
+    // z = direction from center of Earth toward the north pole.
     let uze = [coslat * coslon, coslat * sinlon, sinlat];
     let une = [-sinlat * coslon, -sinlat * sinlon, coslat];
     let uwe = [sinlon, -coslon, 0];
+    // Correct the vectors uze, une, uwe for the Earth's rotation by calculating
+    // sideral time. Call spin() for each uncorrected vector to rotate about
+    // the Earth's axis to yield corrected unit vectors uz, un, uw.
+    // Multiply sidereal hours by -15 to convert to degrees and flip eastward
+    // rotation of the Earth to westward apparent movement of objects with time.
     const spin_angle = -15 * sidereal_time(time);
     let uz = spin(spin_angle, uze);
     let un = spin(spin_angle, une);
     let uw = spin(spin_angle, uwe);
+    // Convert angular equatorial coordinates (RA, DEC) to
+    // cartesian equatorial coordinates in 'p', using the
+    // same orientation system as uze, une, uwe.
     let p = [cosdc * cosra, cosdc * sinra, sindc];
+    // Use dot products of p with the zenith, north, and west
+    // vectors to obtain the cartesian coordinates of the body in
+    // the observer's horizontal orientation system.
+    // pz = zenith component [-1, +1]
+    // pn = north  component [-1, +1]
+    // pw = west   component [-1, +1]
     const pz = p[0] * uz[0] + p[1] * uz[1] + p[2] * uz[2];
     const pn = p[0] * un[0] + p[1] * un[1] + p[2] * un[2];
     const pw = p[0] * uw[0] + p[1] * uw[1] + p[2] * uw[2];
+    // proj is the "shadow" of the body vector along the observer's flat ground.
     let proj = Math.sqrt(pn * pn + pw * pw);
-    let az = 0;
+    // Calculate az = azimuth (compass direction clockwise from East.)
+    let az;
     if (proj > 0) {
+        // If the body is not exactly straight up/down, it has an azimuth.
+        // Invert the angle to produce degrees eastward from north.
         az = -Math.atan2(pw, pn) * RAD2DEG;
         if (az < 0)
             az += 360;
-        if (az >= 360)
-            az -= 360;
     }
+    else {
+        // The body is straight up/down, so it does not have an azimuth.
+        // Report an arbitrary but reasonable value.
+        az = 0;
+    }
+    // zd = the angle of the body away from the observer's zenith, in degrees.
     let zd = Math.atan2(proj, pz) * RAD2DEG;
     let out_ra = ra;
     let out_dec = dec;
@@ -1967,9 +2002,6 @@ function Horizon(date, observer, ra, dec, refraction) {
                 out_ra = Math.atan2(pr[1], pr[0]) * RAD2DEG / 15;
                 if (out_ra < 0) {
                     out_ra += 24;
-                }
-                if (out_ra >= 24) {
-                    out_ra -= 24;
                 }
             }
             else {
