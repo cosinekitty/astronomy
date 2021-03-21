@@ -7,7 +7,6 @@ Fail()
 
 [[ "$1" == "" || "$1" == "-v" ]] || Fail "Invalid command line options."
 
-rm -f temp/c_gm_check.txt
 ./ctbuild || exit 1
 time ./ctest $1 check || Fail "Failure in ctest check"
 ./generate check temp/c_check.txt || Fail "Verification failure for C unit test output."
