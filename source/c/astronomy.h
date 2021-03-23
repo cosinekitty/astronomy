@@ -243,7 +243,7 @@ typedef struct
 astro_observer_t;
 
 /**
- * @brief Equatorial angular coordinates.
+ * @brief Equatorial angular and cartesian coordinates.
  *
  * Coordinates of a celestial body as seen from the Earth (geocentric or topocentric, depending on context),
  * oriented with respect to the projection of the Earth's equator onto the sky.
@@ -254,6 +254,7 @@ typedef struct
     double ra;              /**< right ascension in sidereal hours. */
     double dec;             /**< declination in degrees */
     double dist;            /**< distance to the celestial body in AU. */
+    astro_vector_t vec;     /**< equatorial coordinates in cartesian vector form: x = March equinox, y = September solstice, z = north. */
 }
 astro_equatorial_t;
 
@@ -869,8 +870,10 @@ astro_apsis_t Astronomy_NextLunarApsis(astro_apsis_t apsis);
 astro_apsis_t Astronomy_SearchPlanetApsis(astro_body_t body, astro_time_t startTime);
 astro_apsis_t Astronomy_NextPlanetApsis(astro_body_t body, astro_apsis_t apsis);
 
+astro_rotation_t Astronomy_IdentityMatrix(void);
 astro_rotation_t Astronomy_InverseRotation(astro_rotation_t rotation);
 astro_rotation_t Astronomy_CombineRotation(astro_rotation_t a, astro_rotation_t b);
+astro_rotation_t Astronomy_Pivot(astro_rotation_t rotation, int axis, double angle);
 astro_vector_t Astronomy_VectorFromSphere(astro_spherical_t sphere, astro_time_t time);
 astro_spherical_t Astronomy_SphereFromVector(astro_vector_t vector);
 astro_vector_t Astronomy_VectorFromEquator(astro_equatorial_t equ, astro_time_t time);

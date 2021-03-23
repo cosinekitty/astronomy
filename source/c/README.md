@@ -717,6 +717,23 @@ The distance to the observed object is stored in `dist`, and is expressed in ast
 
 ---
 
+<a name="Astronomy_IdentityMatrix"></a>
+### Astronomy_IdentityMatrix() &#8658; [`astro_rotation_t`](#astro_rotation_t)
+
+**Creates an identity rotation matrix.** 
+
+
+
+Returns a rotation matrix that has no effect on orientation. This matrix can be the starting point for other operations, such as using a series of calls to [`Astronomy_Pivot`](#Astronomy_Pivot) to create a custom rotation matrix.
+
+
+
+**Returns:**  The identity matrix. 
+
+
+
+---
+
 <a name="Astronomy_Illumination"></a>
 ### Astronomy_Illumination(body, time) &#8658; [`astro_illum_t`](#astro_illum_t)
 
@@ -1086,6 +1103,34 @@ After calling [`Astronomy_SearchTransit`](#Astronomy_SearchTransit) to find a tr
 | --- | --- | --- |
 | [`astro_body_t`](#astro_body_t) | `body` |  The planet whose transit is to be found. Must be `BODY_MERCURY` or `BODY_VENUS`. | 
 | [`astro_time_t`](#astro_time_t) | `prevTransitTime` |  A date and time near the previous transit. | 
+
+
+
+
+---
+
+<a name="Astronomy_Pivot"></a>
+### Astronomy_Pivot(rotation, axis, angle) &#8658; [`astro_rotation_t`](#astro_rotation_t)
+
+**Re-orients a rotation matrix by pivoting it by an angle around one of its axes.** 
+
+
+
+Given a rotation matrix, a selected coordinate axis, and an angle in degrees, this function pivots the rotation matrix by that angle around that coordinate axis.
+
+For example, if you have rotation matrix that converts ecliptic coordinates (ECL) to horizontal coordinates (HOR), but you really want to convert ECL to the orientation of a telescope camera pointed at a given body, you can use `Astronomy_Pivot` twice: (1) pivot around the zenith axis by the body's azimuth, then (2) pivot around the western axis by the body's altitude angle. The resulting rotation matrix will then reorient ECL coordinates to the orientation of your telescope camera.
+
+
+
+**Returns:**  If successful, the return value will have `ASTRO_SUCCESS` in the `status` field, along with a pivoted rotation matrix. Otherwise, `status` holds an appropriate error code and the rotation matrix is invalid. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_rotation_t`](#astro_rotation_t) | `rotation` |  The input rotation matrix. | 
+| `int` | `axis` |  An integer that selects which coordinate axis to rotate around: 0 = x, 1 = y, 2 = z. Any other value will fail with the error code `ASTRO_INVALID_PARAMETER` in the `status` field of the return value. | 
+| `double` | `angle` |  An angle in degrees indicating the amount of rotation around the specified axis. Positive angles indicate rotation counterclockwise as seen from the positive direction along that axis, looking towards the origin point of the orientation system. If `angle` is NAN or infinite, the function will fail with the error code `ASTRO_INVALID_PARAMETER`. Any finite number of degrees is allowed, but best precision will result from keeping `angle` in the range [-360, +360]. | 
 
 
 
@@ -2474,7 +2519,7 @@ Coordinates of a celestial body as seen from the center of the Sun (heliocentric
 <a name="astro_equatorial_t"></a>
 ### `astro_equatorial_t`
 
-**Equatorial angular coordinates.** 
+**Equatorial angular and cartesian coordinates.** 
 
 
 
@@ -2486,6 +2531,7 @@ Coordinates of a celestial body as seen from the Earth (geocentric or topocentri
 | `double` | `ra` |  right ascension in sidereal hours.  |
 | `double` | `dec` |  declination in degrees  |
 | `double` | `dist` |  distance to the celestial body in AU.  |
+| [`astro_vector_t`](#astro_vector_t) | `vec` |  equatorial coordinates in cartesian vector form: x = March equinox, y = September solstice, z = north.  |
 
 
 ---

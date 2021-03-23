@@ -1,0 +1,4 @@
+Moon horizontal position: azimuth = 276.298, altitude = 27.107
+Moon check: x = 1.0000e+00, y = -1.2070e-16, z = -2.0117e-17
+Sun vector: x = 0.862088, y = -0.115142, z = -0.500017
+Tilt angle of sunlit side of the Moon = -102.968 degrees counterclockwise from up.

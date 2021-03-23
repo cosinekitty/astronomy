@@ -355,9 +355,17 @@ static astro_spherical_t SphereError(astro_status_t status)
     return sphere;
 }
 
+static astro_time_t TimeError(void)
+{
+    astro_time_t time;
+    time.tt = time.ut = time.eps = time.psi = NAN;
+    return time;
+}
+
 static astro_equatorial_t EquError(astro_status_t status)
 {
     astro_equatorial_t equ;
+    equ.vec = VecError(status, TimeError());
     equ.ra = equ.dec = equ.dist = NAN;
     equ.status = status;
     return equ;
@@ -385,13 +393,6 @@ static astro_func_result_t FuncError(astro_status_t status)
     result.status = status;
     result.value = NAN;
     return result;
-}
-
-static astro_time_t TimeError(void)
-{
-    astro_time_t time;
-    time.tt = time.ut = time.eps = time.psi = NAN;
-    return time;
 }
 
 static astro_rotation_t RotationErr(astro_status_t status)
@@ -1246,11 +1247,19 @@ static void precession(double tt1, const double pos1[3], double tt2, double pos2
 }
 
 
-static astro_equatorial_t vector2radec(const double pos[3])
+static astro_equatorial_t vector2radec(const double pos[3], astro_time_t time)
 {
     astro_equatorial_t equ;
     double xyproj;
 
+    /* Copy the cartesian coordinates from the input into the returned structure. */
+    equ.vec.status = ASTRO_SUCCESS;
+    equ.vec.t = time;
+    equ.vec.x = pos[0];
+    equ.vec.y = pos[1];
+    equ.vec.z = pos[2];
+
+    /* Calculate spherical coordinates: RA, DEC, distance. */
     xyproj = pos[0]*pos[0] + pos[1]*pos[1];
     equ.dist = sqrt(xyproj + pos[2]*pos[2]);
     equ.status = ASTRO_SUCCESS;
@@ -2586,11 +2595,15 @@ astro_equatorial_t Astronomy_Equator(
     double temp[3];
     double datevect[3];
 
+    /* Calculate the geocentric location of the observer. */
     geo_pos(time, observer, gc_observer);
+
+    /* Calculate the geocentric location of the body. */
     gc = Astronomy_GeoVector(body, *time, aberration);
     if (gc.status != ASTRO_SUCCESS)
         return EquError(gc.status);
 
+    /* Convert geocentric coordinates to topocentric coordinates. */
     j2000[0] = gc.x - gc_observer[0];
     j2000[1] = gc.y - gc_observer[1];
     j2000[2] = gc.z - gc_observer[2];
@@ -2600,11 +2613,11 @@ astro_equatorial_t Astronomy_Equator(
     case EQUATOR_OF_DATE:
         precession(0.0, j2000, time->tt, temp);
         nutation(time, 0, temp, datevect);
-        equ = vector2radec(datevect);
+        equ = vector2radec(datevect, *time);
         return equ;
 
     case EQUATOR_J2000:
-        equ = vector2radec(j2000);
+        equ = vector2radec(j2000, *time);
         return equ;
 
     default:
@@ -2734,14 +2747,14 @@ astro_horizon_t Astronomy_Horizon(
         vectors to obtain the cartesian coordinates of the body in
         the observer's horizontal orientation system.
 
-        pz = zenith component [-1, +1]
         pn = north  component [-1, +1]
         pw = west   component [-1, +1]
+        pz = zenith component [-1, +1]
     */
 
-    pz = p[0]*uz[0] + p[1]*uz[1] + p[2]*uz[2];
     pn = p[0]*un[0] + p[1]*un[1] + p[2]*un[2];
     pw = p[0]*uw[0] + p[1]*uw[1] + p[2]*uw[2];
+    pz = p[0]*uz[0] + p[1]*uz[1] + p[2]*uz[2];
 
     /* proj is the "shadow" of the body vector along the observer's flat ground. */
     proj = sqrt(pn*pn + pw*pw);
@@ -5311,6 +5324,112 @@ astro_rotation_t Astronomy_CombineRotation(astro_rotation_t a, astro_rotation_t 
 
     c.status = ASTRO_SUCCESS;
     return c;
+}
+
+/**
+ * @brief Creates an identity rotation matrix.
+ *
+ * Returns a rotation matrix that has no effect on orientation.
+ * This matrix can be the starting point for other operations,
+ * such as using a series of calls to #Astronomy_Pivot to
+ * create a custom rotation matrix.
+ *
+ * @return
+ *      The identity matrix.
+ */
+astro_rotation_t Astronomy_IdentityMatrix(void)
+{
+    astro_rotation_t r;
+
+    r.rot[0][0] = 1.0;  r.rot[1][0] = 0.0;  r.rot[2][0] = 0.0;
+    r.rot[0][1] = 0.0;  r.rot[1][1] = 1.0;  r.rot[2][1] = 0.0;
+    r.rot[0][2] = 0.0;  r.rot[1][2] = 0.0;  r.rot[2][2] = 1.0;
+
+    r.status = ASTRO_SUCCESS;
+
+    return r;
+}
+
+/**
+ * @brief Re-orients a rotation matrix by pivoting it by an angle around one of its axes.
+ *
+ * Given a rotation matrix, a selected coordinate axis, and an angle in degrees,
+ * this function pivots the rotation matrix by that angle around that coordinate axis.
+ *
+ * For example, if you have rotation matrix that converts ecliptic coordinates (ECL)
+ * to horizontal coordinates (HOR), but you really want to convert ECL to the orientation
+ * of a telescope camera pointed at a given body, you can use `Astronomy_Pivot` twice:
+ * (1) pivot around the zenith axis by the body's azimuth, then (2) pivot around the
+ * western axis by the body's altitude angle. The resulting rotation matrix will then
+ * reorient ECL coordinates to the orientation of your telescope camera.
+ *
+ * @param rotation
+ *      The input rotation matrix.
+ *
+ * @param axis
+ *      An integer that selects which coordinate axis to rotate around:
+ *      0 = x, 1 = y, 2 = z. Any other value will fail with the error code
+ *      `ASTRO_INVALID_PARAMETER` in the `status` field of the return value.
+ *
+ * @param angle
+ *      An angle in degrees indicating the amount of rotation around the specified axis.
+ *      Positive angles indicate rotation counterclockwise as seen from the positive
+ *      direction along that axis, looking towards the origin point of the orientation system.
+ *      If `angle` is NAN or infinite, the function will fail with the error code
+ *      `ASTRO_INVALID_PARAMETER`. Any finite number of degrees is allowed, but best
+ *      precision will result from keeping `angle` in the range [-360, +360].
+ *
+ * @return
+ *      If successful, the return value will have `ASTRO_SUCCESS` in the `status`
+ *      field, along with a pivoted rotation matrix. Otherwise, `status` holds
+ *      an appropriate error code and the rotation matrix is invalid.
+ */
+astro_rotation_t Astronomy_Pivot(astro_rotation_t rotation, int axis, double angle)
+{
+    astro_rotation_t p;
+    double radians, c, s;
+    int i, j, k;
+
+    /* Check for an invalid input matrix. */
+    if (rotation.status != ASTRO_SUCCESS)
+        return RotationErr(ASTRO_INVALID_PARAMETER);
+
+    /* Check for an invalid coordinate axis. */
+    if (axis < 0 || axis > 2)
+        return RotationErr(ASTRO_INVALID_PARAMETER);
+
+    /* Check for an invalid angle value. */
+    if (!isfinite(angle))
+        return RotationErr(ASTRO_INVALID_PARAMETER);
+
+    radians = angle * DEG2RAD;
+    c = cos(radians);
+    s = sin(radians);
+
+    /*
+        We need to maintain the "right-hand" rule, no matter which
+        axis was selected. That means we pick (i, j, k) axis order
+        such that the following vector cross product is satisfied:
+        i x j = k
+    */
+    i = (axis + 1) % 3;
+    j = (axis + 2) % 3;
+    k = axis;
+
+    p.rot[i][i] = c*rotation.rot[i][i] - s*rotation.rot[i][j];
+    p.rot[i][j] = s*rotation.rot[i][i] + c*rotation.rot[i][j];
+    p.rot[i][k] = rotation.rot[i][k];
+
+    p.rot[j][i] = c*rotation.rot[j][i] - s*rotation.rot[j][j];
+    p.rot[j][j] = s*rotation.rot[j][i] + c*rotation.rot[j][j];
+    p.rot[j][k] = rotation.rot[j][k];
+
+    p.rot[k][i] = c*rotation.rot[k][i] - s*rotation.rot[k][j];
+    p.rot[k][j] = s*rotation.rot[k][i] + c*rotation.rot[k][j];
+    p.rot[k][k] = rotation.rot[k][k];
+
+    p.status = ASTRO_SUCCESS;
+    return p;
 }
 
 /**

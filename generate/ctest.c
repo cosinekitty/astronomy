@@ -1880,6 +1880,34 @@ fail:
     return error;
 }
 
+static int Rotation_Pivot(void)
+{
+    int error;
+    astro_rotation_t ident;
+    astro_rotation_t r;
+    astro_rotation_t a;
+    const double tolerance = 1.0e-16;
+
+    /* Start with an identity matrix. */
+    ident = Astronomy_IdentityMatrix();
+
+    /* Pivot 90 degrees counterclockwise around the z-axis. */
+    r = Astronomy_Pivot(ident, 2, +90.0);
+
+    /* Put the expected answer in 'a'. */
+    a.rot[0][0] =  0.0;  a.rot[1][0] = -1.0;  a.rot[2][0] =  0.0;
+    a.rot[0][1] = +1.0;  a.rot[1][1] =  0.0;  a.rot[2][1] =  0.0;
+    a.rot[0][2] =  0.0;  a.rot[1][2] =  0.0;  a.rot[2][2] =  1.0;
+
+    /* Compare actual 'r' with expected 'a'. */
+    CHECK(CompareMatrices("Rotation_Pivot #1", r, a, tolerance));
+
+    printf("C Rotation_Pivot: PASS\n");
+    error = 0;
+fail:
+    return error;
+}
+
 static int Rotation_MatrixMultiply(void)
 {
     astro_rotation_t  a, b, c, v;
@@ -2399,6 +2427,7 @@ static int RotationTest(void)
     int error;
     CHECK(Rotation_MatrixInverse());
     CHECK(Rotation_MatrixMultiply());
+    CHECK(Rotation_Pivot());
 
     /* Verify conversion of spherical coordinates to vector. */
     CHECK(TestVectorFromAngles(0.0, 0.0, 1.0, 0.0, 0.0));
