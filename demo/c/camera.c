@@ -46,6 +46,8 @@ static int CameraImage(astro_observer_t observer, astro_time_t time)
     astro_horizon_t moon_hor;
     astro_rotation_t rot;
     astro_vector_t vec;
+    astro_illum_t illum;
+    astro_angle_result_t angle;
     double radius;
     double tilt;
     const double tolerance = 1.0e-15;
@@ -123,6 +125,18 @@ static int CameraImage(astro_observer_t observer, astro_time_t time)
     /* The x-axis is now pointing directly at the object, z is up in the camera image, y is to the left. */
     tilt = RAD2DEG * atan2(vec.z, vec.y);
     printf("Tilt angle of sunlit side of the Moon = %0.3lf degrees counterclockwise from up.\n", tilt);
+
+    illum = Astronomy_Illumination(BODY_MOON, time);
+    if (illum.status != ASTRO_SUCCESS)
+        FAIL("Error %d trying to calculate Moon illumination.\n", illum.status);
+
+    printf("Moon magnitude = %0.2lf, phase angle = %0.2lf degrees.\n", illum.mag, illum.phase_angle);
+
+    angle = Astronomy_AngleFromSun(BODY_MOON, time);
+    if (angle.status != ASTRO_SUCCESS)
+        FAIL("Error %d trying to calculate angle between Moon and Sun\n", angle.status);
+
+    printf("Angle between Moon and Sun as seen from Earth = %0.2lf degrees.\n", angle.angle);
 
     error = 0;
 fail:
