@@ -1832,6 +1832,31 @@ static int CheckRotationMatrix(int lnum, const char *name, astro_rotation_t r)
 
 #define CHECK_ROTMAT(r)   CHECK(CheckRotationMatrix(__LINE__, #r, (r)))
 
+static int CompareVectors(const char *caller, astro_vector_t a, astro_vector_t b, double tolerance)
+{
+    double diff;
+
+    if (a.status != ASTRO_SUCCESS)
+        FAILRET("C CompareVectors ERROR(%s): a.status = %d\n", caller, a.status);
+
+    if (b.status != ASTRO_SUCCESS)
+        FAILRET("C CompareVectors ERROR(%s): b.status = %d\n", caller, b.status);
+
+    diff = ABS(a.x - b.x);
+    if (diff > tolerance)
+        FAILRET("C CompareVectors ERROR(%s): x=%lg, expected %lg, diff %lg\n", caller, a.x, b.x, diff);
+
+    diff = ABS(a.y - b.y);
+    if (diff > tolerance)
+        FAILRET("C CompareVectors ERROR(%s): y=%lg, expected %lg, diff %lg\n", caller, a.y, b.y, diff);
+
+    diff = ABS(a.z - b.z);
+    if (diff > tolerance)
+        FAILRET("C CompareVectors ERROR(%s): z=%lg, expected %lg, diff %lg\n", caller, a.z, b.z, diff);
+
+    return 0;
+}
+
 static int CompareMatrices(const char *caller, astro_rotation_t a, astro_rotation_t b, double tolerance)
 {
     int i, j;
@@ -1886,21 +1911,54 @@ static int Rotation_Pivot(void)
     astro_rotation_t ident;
     astro_rotation_t r;
     astro_rotation_t a;
-    const double tolerance = 1.0e-16;
+    astro_vector_t v1, v2, ve;
+    const double tolerance = 1.0e-15;
+
+    /* Test #1 */
 
     /* Start with an identity matrix. */
     ident = Astronomy_IdentityMatrix();
 
     /* Pivot 90 degrees counterclockwise around the z-axis. */
     r = Astronomy_Pivot(ident, 2, +90.0);
+    CHECK_STATUS(r);
 
     /* Put the expected answer in 'a'. */
+    a.status = ASTRO_SUCCESS;
     a.rot[0][0] =  0.0;  a.rot[1][0] = -1.0;  a.rot[2][0] =  0.0;
     a.rot[0][1] = +1.0;  a.rot[1][1] =  0.0;  a.rot[2][1] =  0.0;
     a.rot[0][2] =  0.0;  a.rot[1][2] =  0.0;  a.rot[2][2] =  1.0;
 
     /* Compare actual 'r' with expected 'a'. */
     CHECK(CompareMatrices("Rotation_Pivot #1", r, a, tolerance));
+
+    /* Test #2. */
+
+    /* Pivot again, -30 degrees around the x-axis. */
+    r = Astronomy_Pivot(r, 0, -30.0);
+    CHECK_STATUS(r);
+
+    /* Pivot a third time, 180 degrees around the y-axis. */
+    r = Astronomy_Pivot(r, 1, +180.0);
+
+    /* Use the 'r' matrix to rotate a vector. */
+    v1.status = ASTRO_SUCCESS;
+    v1.t = Astronomy_MakeTime(2000, 1, 1, 0, 0, 0.0);
+    v1.x = 1.0;
+    v1.y = 2.0;
+    v1.z = 3.0;
+
+    v2 = Astronomy_RotateVector(r, v1);
+    CHECK_STATUS(v2);
+
+    /* Initialize the expected vector 've'. */
+    ve.status = ASTRO_SUCCESS;
+    ve.t = v1.t;
+    ve.x = +2.0;
+    ve.y = +2.3660254037844390;
+    ve.z = -2.0980762113533156;
+
+    CHECK(CompareVectors("Rotation_Pivot #2", v2, ve, tolerance));
 
     printf("C Rotation_Pivot: PASS\n");
     error = 0;
