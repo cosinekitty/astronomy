@@ -1773,6 +1773,7 @@ oriented with respect to the projection of the Earth's equator onto the sky.
 | `double` | `ra` | Right ascension in sidereal hours. |
 | `double` | `dec` | Declination in degrees. |
 | `double` | `dist` | Distance to the celestial body in AU. |
+| [`AstroVector`](#AstroVector) | `vec` | Equatorial coordinates in cartesian vector form: x = March equinox, y = September solstice, z = north. |
 
 ---
 

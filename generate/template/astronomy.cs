@@ -603,16 +603,23 @@ namespace CosineKitty
         public readonly double dist;
 
         /// <summary>
+        /// Equatorial coordinates in cartesian vector form: x = March equinox, y = September solstice, z = north.
+        /// </summary>
+        public readonly AstroVector vec;
+
+        /// <summary>
         /// Creates an equatorial coordinates object.
         /// </summary>
         /// <param name="ra">Right ascension in sidereal hours.</param>
         /// <param name="dec">Declination in degrees.</param>
         /// <param name="dist">Distance to the celestial body in AU.</param>
-        public Equatorial(double ra, double dec, double dist)
+        /// <param name="vec">Equatorial coordinates in vector form.</param>
+        public Equatorial(double ra, double dec, double dist, AstroVector vec)
         {
             this.ra = ra;
             this.dec = dec;
             this.dist = dist;
+            this.vec = vec;
         }
     }
 
@@ -2742,7 +2749,7 @@ $ASTRO_IAU_DATA()
                 dec = RAD2DEG * Math.Atan2(pos.z, Math.Sqrt(xyproj));
             }
 
-            return new Equatorial(ra, dec, dist);
+            return new Equatorial(ra, dec, dist, pos);
         }
 
         private static AstroVector geo_pos(AstroTime time, Observer observer)
@@ -6073,7 +6080,7 @@ $ASTRO_IAU_DATA()
         public static Equatorial EquatorFromVector(AstroVector vector)
         {
             Spherical sphere = SphereFromVector(vector);
-            return new Equatorial(sphere.lon / 15.0, sphere.lat, sphere.dist);
+            return new Equatorial(sphere.lon / 15.0, sphere.lat, sphere.dist, vector);
         }
 
 
@@ -6668,7 +6675,8 @@ $ASTRO_IAU_DATA()
             }
 
             // Convert coordinates from J2000 to B1875.
-            var equ2000 = new Equatorial(ra, dec, 1.0);
+            var dummyVector = new AstroVector();    // we don't need the vector, but we have to pass one in
+            var equ2000 = new Equatorial(ra, dec, 1.0, dummyVector);
             AstroVector vec2000 = VectorFromEquator(equ2000, Epoch2000);
             AstroVector vec1875 = RotateVector(ConstelRot, vec2000);
             Equatorial equ1875 = EquatorFromVector(vec1875);
