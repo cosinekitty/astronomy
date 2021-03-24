@@ -140,6 +140,8 @@ these are used in function and type names.
 | [RotateVector](#Astronomy_RotateVector) | Applies a rotation matrix to a vector, yielding a vector in another orientation system. |
 | [InverseRotation](#Astronomy_InverseRotation) | Given a rotation matrix, finds the inverse rotation matrix that does the opposite transformation. |
 | [CombineRotation](#Astronomy_CombineRotation) | Given two rotation matrices, returns a rotation matrix that combines them into a net transformation. |
+| [IdentityMatrix](#Astronomy_IdentityMatrix) | Returns a 3x3 identity matrix, which can be used to form other rotation matrices. |
+| [Pivot](#Astronomy_Pivot) | Transforms a rotation matrix by pivoting it around a given axis by a given angle. |
 | [VectorFromSphere](#Astronomy_VectorFromSphere) | Converts spherical coordinates to Cartesian coordinates. |
 | [SphereFromVector](#Astronomy_SphereFromVector) | Converts Cartesian coordinates to spherical coordinates. |
 | [VectorFromEquator](#Astronomy_VectorFromEquator) | Given angular equatorial coordinates, calculates equatorial vector. |
