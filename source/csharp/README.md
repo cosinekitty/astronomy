@@ -443,6 +443,18 @@ and is expressed in astronomical units (AU).
 
 **Returns:** Horizontal spherical coordinates as described above.
 
+<a name="Astronomy.IdentityMatrix"></a>
+### Astronomy.IdentityMatrix() &#8658; [`RotationMatrix`](#RotationMatrix)
+
+**Creates an identity rotation matrix.**
+
+Returns a rotation matrix that has no effect on orientation.
+This matrix can be the starting point for other operations,
+such as using a series of calls to [`Astronomy.Pivot`](#Astronomy.Pivot) to
+create a custom rotation matrix.
+
+**Returns:** The identity matrix.
+
 <a name="Astronomy.Illumination"></a>
 ### Astronomy.Illumination(body, time) &#8658; [`IllumInfo`](#IllumInfo)
 
@@ -669,6 +681,29 @@ Keep calling this function as many times as you want to keep finding more transi
 | --- | --- | --- |
 | [`Body`](#Body) | `body` | The planet whose transit is to be found. Must be `Body.Mercury` or `Body.Venus`. |
 | [`AstroTime`](#AstroTime) | `prevTransitTime` | A date and time near the previous transit. |
+
+<a name="Astronomy.Pivot"></a>
+### Astronomy.Pivot(rotation, axis, angle) &#8658; [`RotationMatrix`](#RotationMatrix)
+
+**Re-orients a rotation matrix by pivoting it by an angle around one of its axes.**
+
+Given a rotation matrix, a selected coordinate axis, and an angle in degrees,
+this function pivots the rotation matrix by that angle around that coordinate axis.
+
+For example, if you have rotation matrix that converts ecliptic coordinates (ECL)
+to horizontal coordinates (HOR), but you really want to convert ECL to the orientation
+of a telescope camera pointed at a given body, you can use `Astronomy.Pivot` twice:
+(1) pivot around the zenith axis by the body's azimuth, then (2) pivot around the
+western axis by the body's altitude angle. The resulting rotation matrix will then
+reorient ECL coordinates to the orientation of your telescope camera.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`RotationMatrix`](#RotationMatrix) | `rotation` | The input rotation matrix. |
+| `int` | `axis` | An integer that selects which coordinate axis to rotate around: 0 = x, 1 = y, 2 = z. Any other value will cause an ArgumentException to be thrown. |
+| `double` | `angle` | An angle in degrees indicating the amount of rotation around the specified axis. Positive angles indicate rotation counterclockwise as seen from the positive direction along that axis, looking towards the origin point of the orientation system. Any finite number of degrees is allowed, but best precision will result from keeping `angle` in the range [-360, +360]. |
+
+**Returns:** A pivoted matrix object.
 
 <a name="Astronomy.RefractionAngle"></a>
 ### Astronomy.RefractionAngle(refraction, altitude) &#8658; `double`

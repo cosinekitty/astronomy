@@ -1304,6 +1304,34 @@ namespace csharp_test
             return sqrt(dx*dx + dy*dy + dz*dz);
         }
 
+        static int CompareVectors(string caller, AstroVector a, AstroVector b, double tolerance)
+        {
+            double diff;
+
+            diff = abs(a.x - b.x);
+            if (diff > tolerance)
+            {
+                Console.WriteLine("C# CompareVectors ERROR({0}): x={1}, expected {2}, diff {3}", caller, a.x, b.x, diff);
+                return 1;
+            }
+
+            diff = abs(a.y - b.y);
+            if (diff > tolerance)
+            {
+                Console.WriteLine("C# CompareVectors ERROR({0}): y={1}, expected {2}, diff {3}", caller, a.y, b.y, diff);
+                return 1;
+            }
+
+            diff = abs(a.z - b.z);
+            if (diff > tolerance)
+            {
+                Console.WriteLine("C# CompareVectors ERROR({0}): z={1}, expected {2}, diff {3}", caller, a.z, b.z, diff);
+                return 1;
+            }
+
+            return 0;
+        }
+
         static int CompareMatrices(string caller, RotationMatrix a, RotationMatrix b, double tolerance)
         {
             for (int i=0; i<3; ++i)
@@ -1598,10 +1626,58 @@ namespace csharp_test
             return 0;
         }
 
+        static int Rotation_Pivot()
+        {
+            //astro_rotation_t a;
+            //astro_vector_t v1, v2, ve;
+            const double tolerance = 1.0e-15;
+
+            /* Test #1 */
+
+            /* Start with an identity matrix. */
+            RotationMatrix ident = Astronomy.IdentityMatrix();
+
+            /* Pivot 90 degrees counterclockwise around the z-axis. */
+            RotationMatrix r = Astronomy.Pivot(ident, 2, +90.0);
+
+            /* Put the expected answer in 'a'. */
+            var a = new RotationMatrix(new double[3,3]
+            {
+                {  0, +1,  0 },
+                { -1,  0,  0 },
+                {  0,  0, +1 },
+            });
+
+            /* Compare actual 'r' with expected 'a'. */
+            if (0 != CompareMatrices("Rotation_Pivot #1", r, a, tolerance)) return 1;
+
+            /* Test #2. */
+
+            /* Pivot again, -30 degrees around the x-axis. */
+            r = Astronomy.Pivot(r, 0, -30.0);
+
+            /* Pivot a third time, 180 degrees around the y-axis. */
+            r = Astronomy.Pivot(r, 1, +180.0);
+
+            /* Use the 'r' matrix to rotate a vector. */
+            var v1 = new AstroVector(1.0, 2.0, 3.0, new AstroTime(0.0));
+
+            AstroVector v2 = Astronomy.RotateVector(r, v1);
+
+            /* Initialize the expected vector 've'. */
+            AstroVector ve = new AstroVector(+2.0, +2.3660254037844390, -2.0980762113533156, v1.t);
+
+            if (0 != CompareVectors("Rotation_Pivot #2", v2, ve, tolerance)) return 1;
+
+            Console.WriteLine("C# Rotation_Pivot: PASS");
+            return 0;
+        }
+
         static int RotationTest()
         {
             if (0 != Rotation_MatrixInverse()) return 1;
             if (0 != Rotation_MatrixMultiply()) return 1;
+            if (0 != Rotation_Pivot()) return 1;
             if (0 != Test_EQJ_ECL()) return 1;
 
             if (0 != Test_EQJ_EQD(Body.Mercury)) return 1;

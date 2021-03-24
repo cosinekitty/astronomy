@@ -6943,6 +6943,97 @@ namespace CosineKitty
             return new RotationMatrix(rot);
         }
 
+        /// <summary>Creates an identity rotation matrix.</summary>
+        /// <remarks>
+        /// Returns a rotation matrix that has no effect on orientation.
+        /// This matrix can be the starting point for other operations,
+        /// such as using a series of calls to #Astronomy.Pivot to
+        /// create a custom rotation matrix.
+        /// </remarks>
+        /// <returns>The identity matrix.</returns>
+        public static RotationMatrix IdentityMatrix()
+        {
+            var rot = new double[3, 3]
+            {
+                { 1, 0, 0 },
+                { 0, 1, 0 },
+                { 0, 0, 1 }
+            };
+
+            return new RotationMatrix(rot);
+        }
+
+        /// <summary>Re-orients a rotation matrix by pivoting it by an angle around one of its axes.</summary>
+        /// <remarks>
+        /// Given a rotation matrix, a selected coordinate axis, and an angle in degrees,
+        /// this function pivots the rotation matrix by that angle around that coordinate axis.
+        ///
+        /// For example, if you have rotation matrix that converts ecliptic coordinates (ECL)
+        /// to horizontal coordinates (HOR), but you really want to convert ECL to the orientation
+        /// of a telescope camera pointed at a given body, you can use `Astronomy.Pivot` twice:
+        /// (1) pivot around the zenith axis by the body's azimuth, then (2) pivot around the
+        /// western axis by the body's altitude angle. The resulting rotation matrix will then
+        /// reorient ECL coordinates to the orientation of your telescope camera.
+        /// </remarks>
+        ///
+        /// <param name="rotation">The input rotation matrix.</param>
+        ///
+        /// <param name="axis">
+        ///      An integer that selects which coordinate axis to rotate around:
+        ///      0 = x, 1 = y, 2 = z. Any other value will cause an ArgumentException to be thrown.
+        /// </param>
+        ///
+        /// <param name="angle">
+        ///      An angle in degrees indicating the amount of rotation around the specified axis.
+        ///      Positive angles indicate rotation counterclockwise as seen from the positive
+        ///      direction along that axis, looking towards the origin point of the orientation system.
+        ///      Any finite number of degrees is allowed, but best precision will result from keeping
+        ///      `angle` in the range [-360, +360].
+        /// </param>
+        ///
+        /// <returns>A pivoted matrix object.</returns>
+        public static RotationMatrix Pivot(RotationMatrix rotation, int axis, double angle)
+        {
+            /* Check for an invalid coordinate axis. */
+            if (axis < 0 || axis > 2)
+                throw new ArgumentException($"Invalid coordinate axis = {axis}. Must be 0..2.");
+
+            /* Check for an invalid angle value. */
+            if (!double.IsFinite(angle))
+                throw new ArgumentException("Angle is not a finite number.");
+
+            double radians = angle * DEG2RAD;
+            double c = Math.Cos(radians);
+            double s = Math.Sin(radians);
+
+            /*
+                We need to maintain the "right-hand" rule, no matter which
+                axis was selected. That means we pick (i, j, k) axis order
+                such that the following vector cross product is satisfied:
+                i x j = k
+            */
+            int i = (axis + 1) % 3;
+            int j = (axis + 2) % 3;
+            int k = axis;
+
+            var rot = new double[3, 3];
+
+            rot[i, i] = c*rotation.rot[i, i] - s*rotation.rot[i, j];
+            rot[i, j] = s*rotation.rot[i, i] + c*rotation.rot[i, j];
+            rot[i, k] = rotation.rot[i, k];
+
+            rot[j, i] = c*rotation.rot[j, i] - s*rotation.rot[j, j];
+            rot[j, j] = s*rotation.rot[j, i] + c*rotation.rot[j, j];
+            rot[j, k] = rotation.rot[j, k];
+
+            rot[k, i] = c*rotation.rot[k, i] - s*rotation.rot[k, j];
+            rot[k, j] = s*rotation.rot[k, i] + c*rotation.rot[k, j];
+            rot[k, k] = rotation.rot[k, k];
+
+            return new RotationMatrix(rot);
+        }
+
+
         /// <summary>Applies a rotation to a vector, yielding a rotated vector.</summary>
         /// <remarks>
         /// This function transforms a vector in one orientation to a vector
