@@ -4944,6 +4944,91 @@ export function CombineRotation(a: RotationMatrix, b: RotationMatrix): RotationM
 }
 
 /**
+ * @brief Creates an identity rotation matrix.
+ *
+ * Returns a rotation matrix that has no effect on orientation.
+ * This matrix can be the starting point for other operations,
+ * such as using a series of calls to #Astronomy_Pivot to
+ * create a custom rotation matrix.
+ *
+ * @returns {RotationMatrix}
+ *      The identity matrix.
+ */
+ export function IdentityMatrix(): RotationMatrix {
+     return new RotationMatrix([
+        [1, 0, 0],
+        [0, 1, 0],
+        [0, 0, 1]
+     ]);
+ }
+
+ /**
+ * @brief Re-orients a rotation matrix by pivoting it by an angle around one of its axes.
+ *
+ * Given a rotation matrix, a selected coordinate axis, and an angle in degrees,
+ * this function pivots the rotation matrix by that angle around that coordinate axis.
+ *
+ * For example, if you have rotation matrix that converts ecliptic coordinates (ECL)
+ * to horizontal coordinates (HOR), but you really want to convert ECL to the orientation
+ * of a telescope camera pointed at a given body, you can use `Astronomy_Pivot` twice:
+ * (1) pivot around the zenith axis by the body's azimuth, then (2) pivot around the
+ * western axis by the body's altitude angle. The resulting rotation matrix will then
+ * reorient ECL coordinates to the orientation of your telescope camera.
+ *
+ * @param {RotationMatrix} rotation
+ *      The input rotation matrix.
+ *
+ * @param {number} axis
+ *      An integer that selects which coordinate axis to rotate around:
+ *      0 = x, 1 = y, 2 = z. Any other value will cause an exception.
+ *
+ * @param {number} angle
+ *      An angle in degrees indicating the amount of rotation around the specified axis.
+ *      Positive angles indicate rotation counterclockwise as seen from the positive
+ *      direction along that axis, looking towards the origin point of the orientation system.
+ *      Any finite number of degrees is allowed, but best precision will result from
+ *      keeping `angle` in the range [-360, +360].
+ *
+ * @returns {RotationMatrix}
+ *      A pivoted matrix object.
+ */
+export function Pivot(rotation: RotationMatrix, axis: 0 | 1 | 2, angle: number): RotationMatrix {
+    // Check for an invalid coordinate axis.
+    if (axis !== 0 && axis !== 1 && axis !== 2)
+        throw `Invalid axis ${axis}. Must be [0, 1, 2].`;
+
+    const radians = VerifyNumber(angle) * DEG2RAD;
+    const c = Math.cos(radians);
+    const s = Math.sin(radians);
+
+    /*
+        We need to maintain the "right-hand" rule, no matter which
+        axis was selected. That means we pick (i, j, k) axis order
+        such that the following vector cross product is satisfied:
+        i x j = k
+    */
+    const i = (axis + 1) % 3;
+    const j = (axis + 2) % 3;
+    const k = axis;
+
+    let rot = [[0, 0, 0], [0, 0, 0], [0, 0, 0]];
+
+    rot[i][i] = c*rotation.rot[i][i] - s*rotation.rot[i][j];
+    rot[i][j] = s*rotation.rot[i][i] + c*rotation.rot[i][j];
+    rot[i][k] = rotation.rot[i][k];
+
+    rot[j][i] = c*rotation.rot[j][i] - s*rotation.rot[j][j];
+    rot[j][j] = s*rotation.rot[j][i] + c*rotation.rot[j][j];
+    rot[j][k] = rotation.rot[j][k];
+
+    rot[k][i] = c*rotation.rot[k][i] - s*rotation.rot[k][j];
+    rot[k][j] = s*rotation.rot[k][i] + c*rotation.rot[k][j];
+    rot[k][k] = rotation.rot[k][k];
+
+    return new RotationMatrix(rot);
+}
+
+/**
  * @brief Converts spherical coordinates to Cartesian coordinates.
  *
  * Given spherical coordinates and a time at which they are valid,

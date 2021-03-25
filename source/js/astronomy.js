@@ -34,7 +34,7 @@
 'use strict';
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SearchPlanetApsis = exports.NextLunarApsis = exports.SearchLunarApsis = exports.Apsis = exports.SearchPeakMagnitude = exports.SearchMaxElongation = exports.Elongation = exports.ElongationEvent = exports.Seasons = exports.SeasonInfo = exports.SearchHourAngle = exports.HourAngleEvent = exports.SearchRiseSet = exports.NextMoonQuarter = exports.SearchMoonQuarter = exports.MoonQuarter = exports.SearchMoonPhase = exports.MoonPhase = exports.SearchRelativeLongitude = exports.Illumination = exports.IlluminationInfo = exports.EclipticLongitude = exports.AngleFromSun = exports.LongitudeFromSun = exports.SearchSunLongitude = exports.Search = exports.GeoVector = exports.HelioDistance = exports.HelioVector = exports.GeoMoon = exports.Ecliptic = exports.Equator = exports.SunPosition = exports.Observer = exports.Horizon = exports.EclipticCoordinates = exports.HorizontalCoordinates = exports.MakeRotation = exports.RotationMatrix = exports.EquatorialCoordinates = exports.Spherical = exports.Vector = exports.CalcMoonCount = exports.MakeTime = exports.AstroTime = exports.SetDeltaTFunction = exports.DeltaT_JplHorizons = exports.DeltaT_EspenakMeeus = exports.Bodies = exports.AngleBetween = void 0;
-exports.NextTransit = exports.SearchTransit = exports.TransitInfo = exports.NextLocalSolarEclipse = exports.SearchLocalSolarEclipse = exports.LocalSolarEclipseInfo = exports.EclipseEvent = exports.NextGlobalSolarEclipse = exports.SearchGlobalSolarEclipse = exports.NextLunarEclipse = exports.GlobalSolarEclipseInfo = exports.SearchLunarEclipse = exports.LunarEclipseInfo = exports.Constellation = exports.ConstellationInfo = exports.Rotation_HOR_ECL = exports.Rotation_ECL_HOR = exports.Rotation_ECL_EQD = exports.Rotation_EQD_ECL = exports.Rotation_EQJ_HOR = exports.Rotation_HOR_EQJ = exports.Rotation_HOR_EQD = exports.Rotation_EQD_HOR = exports.Rotation_EQD_EQJ = exports.Rotation_EQJ_EQD = exports.Rotation_ECL_EQJ = exports.Rotation_EQJ_ECL = exports.RotateVector = exports.InverseRefraction = exports.Refraction = exports.VectorFromHorizon = exports.HorizonFromVector = exports.SphereFromVector = exports.EquatorFromVector = exports.VectorFromEquator = exports.VectorFromSphere = exports.CombineRotation = exports.InverseRotation = exports.NextPlanetApsis = void 0;
+exports.NextTransit = exports.SearchTransit = exports.TransitInfo = exports.NextLocalSolarEclipse = exports.SearchLocalSolarEclipse = exports.LocalSolarEclipseInfo = exports.EclipseEvent = exports.NextGlobalSolarEclipse = exports.SearchGlobalSolarEclipse = exports.NextLunarEclipse = exports.GlobalSolarEclipseInfo = exports.SearchLunarEclipse = exports.LunarEclipseInfo = exports.Constellation = exports.ConstellationInfo = exports.Rotation_HOR_ECL = exports.Rotation_ECL_HOR = exports.Rotation_ECL_EQD = exports.Rotation_EQD_ECL = exports.Rotation_EQJ_HOR = exports.Rotation_HOR_EQJ = exports.Rotation_HOR_EQD = exports.Rotation_EQD_HOR = exports.Rotation_EQD_EQJ = exports.Rotation_EQJ_EQD = exports.Rotation_ECL_EQJ = exports.Rotation_EQJ_ECL = exports.RotateVector = exports.InverseRefraction = exports.Refraction = exports.VectorFromHorizon = exports.HorizonFromVector = exports.SphereFromVector = exports.EquatorFromVector = exports.VectorFromEquator = exports.VectorFromSphere = exports.Pivot = exports.IdentityMatrix = exports.CombineRotation = exports.InverseRotation = exports.NextPlanetApsis = void 0;
 const DAYS_PER_TROPICAL_YEAR = 365.24217;
 const J2000 = new Date('2000-01-01T12:00:00Z');
 const PI2 = 2 * Math.PI;
@@ -4549,6 +4549,84 @@ function CombineRotation(a, b) {
     ]);
 }
 exports.CombineRotation = CombineRotation;
+/**
+ * @brief Creates an identity rotation matrix.
+ *
+ * Returns a rotation matrix that has no effect on orientation.
+ * This matrix can be the starting point for other operations,
+ * such as using a series of calls to #Astronomy_Pivot to
+ * create a custom rotation matrix.
+ *
+ * @returns {RotationMatrix}
+ *      The identity matrix.
+ */
+function IdentityMatrix() {
+    return new RotationMatrix([
+        [1, 0, 0],
+        [0, 1, 0],
+        [0, 0, 1]
+    ]);
+}
+exports.IdentityMatrix = IdentityMatrix;
+/**
+* @brief Re-orients a rotation matrix by pivoting it by an angle around one of its axes.
+*
+* Given a rotation matrix, a selected coordinate axis, and an angle in degrees,
+* this function pivots the rotation matrix by that angle around that coordinate axis.
+*
+* For example, if you have rotation matrix that converts ecliptic coordinates (ECL)
+* to horizontal coordinates (HOR), but you really want to convert ECL to the orientation
+* of a telescope camera pointed at a given body, you can use `Astronomy_Pivot` twice:
+* (1) pivot around the zenith axis by the body's azimuth, then (2) pivot around the
+* western axis by the body's altitude angle. The resulting rotation matrix will then
+* reorient ECL coordinates to the orientation of your telescope camera.
+*
+* @param {RotationMatrix} rotation
+*      The input rotation matrix.
+*
+* @param {number} axis
+*      An integer that selects which coordinate axis to rotate around:
+*      0 = x, 1 = y, 2 = z. Any other value will cause an exception.
+*
+* @param {number} angle
+*      An angle in degrees indicating the amount of rotation around the specified axis.
+*      Positive angles indicate rotation counterclockwise as seen from the positive
+*      direction along that axis, looking towards the origin point of the orientation system.
+*      Any finite number of degrees is allowed, but best precision will result from
+*      keeping `angle` in the range [-360, +360].
+*
+* @returns {RotationMatrix}
+*      A pivoted matrix object.
+*/
+function Pivot(rotation, axis, angle) {
+    // Check for an invalid coordinate axis.
+    if (axis !== 0 && axis !== 1 && axis !== 2)
+        throw `Invalid axis ${axis}. Must be [0, 1, 2].`;
+    const radians = VerifyNumber(angle) * DEG2RAD;
+    const c = Math.cos(radians);
+    const s = Math.sin(radians);
+    /*
+        We need to maintain the "right-hand" rule, no matter which
+        axis was selected. That means we pick (i, j, k) axis order
+        such that the following vector cross product is satisfied:
+        i x j = k
+    */
+    const i = (axis + 1) % 3;
+    const j = (axis + 2) % 3;
+    const k = axis;
+    let rot = [[0, 0, 0], [0, 0, 0], [0, 0, 0]];
+    rot[i][i] = c * rotation.rot[i][i] - s * rotation.rot[i][j];
+    rot[i][j] = s * rotation.rot[i][i] + c * rotation.rot[i][j];
+    rot[i][k] = rotation.rot[i][k];
+    rot[j][i] = c * rotation.rot[j][i] - s * rotation.rot[j][j];
+    rot[j][j] = s * rotation.rot[j][i] + c * rotation.rot[j][j];
+    rot[j][k] = rotation.rot[j][k];
+    rot[k][i] = c * rotation.rot[k][i] - s * rotation.rot[k][j];
+    rot[k][j] = s * rotation.rot[k][i] + c * rotation.rot[k][j];
+    rot[k][k] = rotation.rot[k][k];
+    return new RotationMatrix(rot);
+}
+exports.Pivot = Pivot;
 /**
  * @brief Converts spherical coordinates to Cartesian coordinates.
  *

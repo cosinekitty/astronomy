@@ -1401,6 +1401,46 @@ equivalent to rotating based on the first matrix, followed by the second.
 
 * * *
 
+<a name="IdentityMatrix"></a>
+
+## IdentityMatrix() ⇒ [<code>RotationMatrix</code>](#RotationMatrix)
+**Kind**: global function  
+**Returns**: [<code>RotationMatrix</code>](#RotationMatrix) - The identity matrix.  
+**Brief**: Creates an identity rotation matrix.
+
+Returns a rotation matrix that has no effect on orientation.
+This matrix can be the starting point for other operations,
+such as using a series of calls to #Astronomy_Pivot to
+create a custom rotation matrix.  
+
+* * *
+
+<a name="Pivot"></a>
+
+## Pivot(rotation, axis, angle) ⇒ [<code>RotationMatrix</code>](#RotationMatrix)
+**Kind**: global function  
+**Returns**: [<code>RotationMatrix</code>](#RotationMatrix) - A pivoted matrix object.  
+**Brief**: Re-orients a rotation matrix by pivoting it by an angle around one of its axes.
+
+Given a rotation matrix, a selected coordinate axis, and an angle in degrees,
+this function pivots the rotation matrix by that angle around that coordinate axis.
+
+For example, if you have rotation matrix that converts ecliptic coordinates (ECL)
+to horizontal coordinates (HOR), but you really want to convert ECL to the orientation
+of a telescope camera pointed at a given body, you can use `Astronomy_Pivot` twice:
+(1) pivot around the zenith axis by the body's azimuth, then (2) pivot around the
+western axis by the body's altitude angle. The resulting rotation matrix will then
+reorient ECL coordinates to the orientation of your telescope camera.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| rotation | [<code>RotationMatrix</code>](#RotationMatrix) | The input rotation matrix. |
+| axis | <code>number</code> | An integer that selects which coordinate axis to rotate around:      0 = x, 1 = y, 2 = z. Any other value will cause an exception. |
+| angle | <code>number</code> | An angle in degrees indicating the amount of rotation around the specified axis.      Positive angles indicate rotation counterclockwise as seen from the positive      direction along that axis, looking towards the origin point of the orientation system.      Any finite number of degrees is allowed, but best precision will result from      keeping `angle` in the range [-360, +360]. |
+
+
+* * *
+
 <a name="VectorFromSphere"></a>
 
 ## VectorFromSphere(sphere, time) ⇒ [<code>Vector</code>](#Vector)

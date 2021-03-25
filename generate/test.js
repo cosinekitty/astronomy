@@ -1177,6 +1177,25 @@ function Rotation() {
         }
     }
 
+    function CompareVectors(caller, a, b, tolerance) {
+        let diff;
+
+        diff = abs(a.x - b.x);
+        if (diff > tolerance) {
+            throw `ERROR(${caller}): vector x = ${a.x}, expected ${b.x}, diff ${diff}`;
+        }
+
+        diff = abs(a.y - b.y);
+        if (diff > tolerance) {
+            throw `ERROR(${caller}): vector y = ${a.y}, expected ${b.y}, diff ${diff}`;
+        }
+
+        diff = abs(a.z - b.z);
+        if (diff > tolerance) {
+            throw `ERROR(${caller}): vector z = ${a.z}, expected ${b.z}, diff ${diff}`;
+        }
+    }
+
     function Rotation_MatrixInverse() {
         const a = Astronomy.MakeRotation([
             [1, 4, 7],
@@ -1351,7 +1370,7 @@ function Rotation() {
             throw 'Test_EQD_HOR: EXCESSIVE EQJ INVERSE HORIZONTAL ERROR.';
     }
 
-    const IdentityMatrix = Astronomy.MakeRotation([[1, 0, 0], [0, 1, 0], [0, 0, 1]]);
+    const IdentityMatrix = Astronomy.IdentityMatrix();
 
     function CheckInverse(aname, bname, arot, brot) {
         const crot = Astronomy.CombineRotation(arot, brot);
@@ -1420,8 +1439,52 @@ function Rotation() {
        if (Verbose) console.log('JS Test_RotRoundTrip: PASS');
     }
 
+    function Rotation_Pivot() {
+        const tolerance = 1.0e-15;
+
+        /* Test #1 */
+
+        /* Start with an identity matrix. */
+        const ident = Astronomy.IdentityMatrix();
+
+        /* Pivot 90 degrees counterclockwise around the z-axis. */
+        let r = Astronomy.Pivot(ident, 2, +90.0);
+
+        /* Put the expected answer in 'a'. */
+        const a = Astronomy.MakeRotation([
+            [ 0, +1,  0],
+            [-1,  0,  0],
+            [ 0,  0, +1],
+        ]);
+
+        /* Compare actual 'r' with expected 'a'. */
+        CompareMatrices('Rotation_Pivot #1', r, a, tolerance);
+
+        /* Test #2. */
+
+        /* Pivot again, -30 degrees around the x-axis. */
+        r = Astronomy.Pivot(r, 0, -30.0);
+
+        /* Pivot a third time, 180 degrees around the y-axis. */
+        r = Astronomy.Pivot(r, 1, +180.0);
+
+        /* Use the 'r' matrix to rotate a vector. */
+        const v1 = new Astronomy.Vector(1, 2, 3, Astronomy.MakeTime(0));
+
+        const v2 = Astronomy.RotateVector(r, v1);
+
+        /* Initialize the expected vector 've'. */
+        const ve = new Astronomy.Vector(+2.0, +2.3660254037844390, -2.0980762113533156, v1.t);
+
+        CompareVectors('Rotation_Pivot #2', v2, ve, tolerance);
+
+        if (Verbose) console.log('JS Rotation_Pivot: PASS');
+    }
+
+
     Rotation_MatrixInverse();
     Rotation_MatrixMultiply();
+    Rotation_Pivot();
     Test_EQJ_ECL();
 
     Test_EQJ_EQD('Mercury');
