@@ -762,6 +762,23 @@ def CompareMatrices(caller, a, b, tolerance):
                 sys.exit(1)
 
 
+def CompareVectors(caller, a, b, tolerance):
+    diff = vabs(a.x - b.x)
+    if diff > tolerance:
+        print('PY CompareVectors ERROR({}): vector x = {}, expected {}, diff {}'.format(caller, a.x, b.x, diff))
+        sys.exit(1)
+
+    diff = vabs(a.y - b.y)
+    if diff > tolerance:
+        print('PY CompareVectors ERROR({}): vector y = {}, expected {}, diff {}'.format(caller, a.y, b.y, diff))
+        sys.exit(1)
+
+    diff = vabs(a.z - b.z)
+    if diff > tolerance:
+        print('PY CompareVectors ERROR({}): vector z = {}, expected {}, diff {}'.format(caller, a.z, b.z, diff))
+        sys.exit(1)
+
+
 def Rotation_MatrixInverse():
     a = astronomy.RotationMatrix([
         [1, 4, 7],
@@ -1010,9 +1027,48 @@ def Test_RotRoundTrip():
     Debug('PY Test_RotRoundTrip: PASS')
 
 
+def Rotation_Pivot():
+    tolerance = 1.0e-15
+
+    # Start with an identity matrix.
+    ident = astronomy.IdentityMatrix()
+
+    # Pivot 90 degrees counterclockwise around the z-axis.
+    r = astronomy.Pivot(ident, 2, +90.0)
+
+    # Put the expected answer in 'a'.
+    a = astronomy.RotationMatrix([
+        [ 0, +1,  0],
+        [-1,  0,  0],
+        [ 0,  0, +1],
+    ])
+
+    # Compare actual 'r' with expected 'a'.
+    CompareMatrices('Rotation_Pivot #1', r, a, tolerance)
+
+    # Pivot again, -30 degrees around the x-axis.
+    r = astronomy.Pivot(r, 0, -30.0)
+
+    # Pivot a third time, 180 degrees around the y-axis.
+    r = astronomy.Pivot(r, 1, +180.0)
+
+    # Use the 'r' matrix to rotate a vector.
+    v1 = astronomy.Vector(1, 2, 3, astronomy.Time(0))
+    v2 = astronomy.RotateVector(r, v1)
+
+    # Initialize the expected vector 've'.
+    ve = astronomy.Vector(+2.0, +2.3660254037844390, -2.0980762113533156, v1.t)
+
+    CompareVectors('Rotation_Pivot #2', v2, ve, tolerance)
+
+    Debug('PY Rotation_Pivot: PASS')
+
+
+
 def Rotation():
     Rotation_MatrixInverse()
     Rotation_MatrixMultiply()
+    Rotation_Pivot()
     Test_EQJ_ECL()
     Test_EQJ_EQD(astronomy.Body.Mercury)
     Test_EQJ_EQD(astronomy.Body.Venus)

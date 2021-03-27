@@ -2,6 +2,20 @@
 using demo_helper;
 using CosineKitty;
 
+//    camera.cs  -  by Don Cross - 2021-03-27
+//
+//    Example C# program for Astronomy Engine:
+//    https://github.com/cosinekitty/astronomy
+//
+//    Suppose you want to photograph the Moon,
+//    and you want to know what it will look like in the photo.
+//    Given a location on the Earth, and a date/time,
+//    this program calculates the orientation of the sunlit
+//    side of the Moon with respect to the top of your
+//    photo image. It assumes the camera faces directly
+//    toward the Moon's azimuth and tilts upward to its
+//    altitude angle above the horizon.
+
 namespace camera
 {
     class Program

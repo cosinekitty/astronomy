@@ -265,6 +265,7 @@ equator projected onto the sky.
 | `float` | `ra` | Right ascension in sidereal hours. |
 | `float` | `dec` | Declination in degrees. |
 | `float` | `dist` | Distance to the celestial body in AU. |
+| [`Vector`](#Vector) | `vec` | The equatorial coordinates in cartesian form, using AU distance units. x = direction of the March equinox, y = direction of the June solstice, z = north. |
 
 ---
 
@@ -1197,6 +1198,21 @@ and is expressed in astronomical units (AU).
 
 ---
 
+<a name="IdentityMatrix"></a>
+### IdentityMatrix()
+
+**Creates an identity rotation matrix.**
+
+Returns a rotation matrix that has no effect on orientation.
+This matrix can be the starting point for other operations,
+such as using a series of calls to [`Pivot`](#Pivot) to
+create a custom rotation matrix.
+
+### Returns: [`RotationMatrix`](#RotationMatrix)
+The identity rotation matrix.
+
+---
+
 <a name="Illumination"></a>
 ### Illumination(body, time)
 
@@ -1450,6 +1466,31 @@ Keep calling this function as many times as you want to keep finding more transi
 | [`Time`](#Time) | `prevTransitTime` | A date and time near the previous transit. |
 
 ### Returns: [`TransitInfo`](#TransitInfo)
+
+---
+
+<a name="Pivot"></a>
+### Pivot(rotation, axis, angle)
+
+**Re-orients a rotation matrix by pivoting it by an angle around one of its axes.**
+
+Given a rotation matrix, a selected coordinate axis, and an angle in degrees,
+this function pivots the rotation matrix by that angle around that coordinate axis.
+For example, if you have rotation matrix that converts ecliptic coordinates (ECL)
+to horizontal coordinates (HOR), but you really want to convert ECL to the orientation
+of a telescope camera pointed at a given body, you can use `Pivot` twice:
+(1) pivot around the zenith axis by the body's azimuth, then (2) pivot around the
+western axis by the body's altitude angle. The resulting rotation matrix will then
+reorient ECL coordinates to the orientation of your telescope camera.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`RotationMatrix`](#RotationMatrix) | `rotation` | The input rotation matrix. |
+| `int` | `axis` | An integer that selects which coordinate axis to rotate around: 0 = x, 1 = y, 2 = z. Any other value will cause an exception. |
+| `float` | `angle` | An angle in degrees indicating the amount of rotation around the specified axis. Positive angles indicate rotation counterclockwise as seen from the positive direction along that axis, looking towards the origin point of the orientation system. Any finite number of degrees is allowed, but best precision will result from keeping `angle` in the range [-360, +360]. |
+
+### Returns: [`RotationMatrix`](#RotationMatrix)
+A pivoted matrix object.
 
 ---
 
