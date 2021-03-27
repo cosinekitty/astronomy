@@ -152,26 +152,39 @@ export function AngleBetween(a: Vector, b: Vector): number {
 }
 
 /**
- * @constant {string[]} Bodies
- *      An array of strings, each a name of a supported astronomical body.
- *      Not all bodies are valid for all functions, but any string not in this
- *      list is not supported at all.
+ * @brief String constants that represent the solar system bodies supported by Astronomy Engine.
+ *
+ * The following strings represent solar system bodies supported by various Astronomy Engine functions.
+ * Not every body is supported by every function; consult the documentation for each function
+ * to find which bodies it supports.
+ *
+ * "Sun", "Moon", "Mercury", "Venus", "Earth", "Mars", "Jupiter",
+ * "Saturn", "Uranus", "Neptune", "Pluto",
+ * "SSB" (Solar System Barycenter),
+ * "EMB" (Earth/Moon Barycenter)
+ *
+ * You can also use enumeration syntax for the bodies, like
+ * `Astronomy.Body.Moon`, `Astronomy.Body.Jupiter`, etc.
+ *
+ * @enum {string}
  */
-export const Bodies = [
-    'Sun',
-    'Moon',
-    'Mercury',
-    'Venus',
-    'Earth',
-    'Mars',
-    'Jupiter',
-    'Saturn',
-    'Uranus',
-    'Neptune',
-    'Pluto',
-    'SSB',          // Solar System Barycenter
-    'EMB'           // Earth/Moon Barycenter
-];
+export enum Body {
+    Sun     = 'Sun',
+    Moon    = 'Moon',
+    Mercury = 'Mercury',
+    Venus   = 'Venus',
+    Earth   = 'Earth',
+    Mars    = 'Mars',
+    Jupiter = 'Jupiter',
+    Saturn  = 'Saturn',
+    Uranus  = 'Uranus',
+    Neptune = 'Neptune',
+    Pluto   = 'Pluto',
+    SSB     = 'SSB',          // Solar System Barycenter
+    EMB     = 'EMB'           // Earth/Moon Barycenter
+}
+
+
 
 interface PlanetInfo {
     OrbitalPeriod: number;
@@ -1461,8 +1474,8 @@ export function SunPosition(date: FlexibleDateTime): EclipticCoordinates {
  * This is most significant for the Moon, because it is so close to the Earth.
  * However, it can have a small effect on the apparent positions of other bodies.
  *
- * @param {string} body
- *      The name of the body for which to find equatorial coordinates.
+ * @param {Body} body
+ *      The body for which to find equatorial coordinates.
  *      Not allowed to be `"Earth"`.
  *
  * @param {FlexibleDateTime} date
@@ -1486,7 +1499,7 @@ export function SunPosition(date: FlexibleDateTime): EclipticCoordinates {
  * @returns {EquatorialCoordinates}
  *      The topocentric coordinates of the body as adjusted for the given observer.
  */
-export function Equator(body: string, date: FlexibleDateTime, observer: Observer, ofdate: boolean, aberration: boolean): EquatorialCoordinates {
+export function Equator(body: Body, date: FlexibleDateTime, observer: Observer, ofdate: boolean, aberration: boolean): EquatorialCoordinates {
     VerifyObserver(observer);
     VerifyBoolean(ofdate);
     VerifyBoolean(aberration);
@@ -1716,7 +1729,7 @@ function CalcVsopPosVel(model: any[], tt: number): body_state_t {
     return new body_state_t(tt, equ_pos, equ_vel);
 }
 
-function AdjustBarycenter(ssb: Vector, time: AstroTime, body: string, pmass: number): void {
+function AdjustBarycenter(ssb: Vector, time: AstroTime, body: Body, pmass: number): void {
     const shift = pmass / (pmass + SUN_GM);
     const planet = CalcVsop(vsop[body], time);
     ssb.x += shift * planet.x;
@@ -1726,10 +1739,10 @@ function AdjustBarycenter(ssb: Vector, time: AstroTime, body: string, pmass: num
 
 function CalcSolarSystemBarycenter(time: AstroTime): Vector {
     const ssb = new Vector(0.0, 0.0, 0.0, time);
-    AdjustBarycenter(ssb, time, 'Jupiter', JUPITER_GM);
-    AdjustBarycenter(ssb, time, 'Saturn',  SATURN_GM);
-    AdjustBarycenter(ssb, time, 'Uranus',  URANUS_GM);
-    AdjustBarycenter(ssb, time, 'Neptune', NEPTUNE_GM);
+    AdjustBarycenter(ssb, time, Body.Jupiter, JUPITER_GM);
+    AdjustBarycenter(ssb, time, Body.Saturn,  SATURN_GM);
+    AdjustBarycenter(ssb, time, Body.Uranus,  URANUS_GM);
+    AdjustBarycenter(ssb, time, Body.Neptune, NEPTUNE_GM);
     return ssb;
 }
 
@@ -1804,7 +1817,7 @@ function BodyStateFromTable(entry: BodyStateTableEntry): body_state_t {
     return new body_state_t(tt, new TerseVector(rx, ry, rz), new TerseVector(vx, vy, vz));
 }
 
-function AdjustBarycenterPosVel(ssb: body_state_t, tt: number, body: string, planet_gm: number): body_state_t {
+function AdjustBarycenterPosVel(ssb: body_state_t, tt: number, body: Body, planet_gm: number): body_state_t {
     const shift = planet_gm / (planet_gm + SUN_GM);
     const planet = CalcVsopPosVel(vsop[body], tt);
     ssb.r.incr(planet.r.mul(shift));
@@ -1830,10 +1843,10 @@ class major_bodies_t {
 
         let ssb = new body_state_t(tt, new TerseVector(0, 0, 0), new TerseVector(0, 0, 0));
 
-        this.Jupiter = AdjustBarycenterPosVel(ssb, tt, 'Jupiter', JUPITER_GM);
-        this.Saturn  = AdjustBarycenterPosVel(ssb, tt, 'Saturn',  SATURN_GM);
-        this.Uranus  = AdjustBarycenterPosVel(ssb, tt, 'Uranus',  URANUS_GM);
-        this.Neptune = AdjustBarycenterPosVel(ssb, tt, 'Neptune', NEPTUNE_GM);
+        this.Jupiter = AdjustBarycenterPosVel(ssb, tt, Body.Jupiter, JUPITER_GM);
+        this.Saturn  = AdjustBarycenterPosVel(ssb, tt, Body.Saturn,  SATURN_GM);
+        this.Uranus  = AdjustBarycenterPosVel(ssb, tt, Body.Uranus,  URANUS_GM);
+        this.Neptune = AdjustBarycenterPosVel(ssb, tt, Body.Neptune, NEPTUNE_GM);
 
         // Convert planets' [pos, vel] vectors from heliocentric to barycentric.
 
@@ -2051,7 +2064,7 @@ function CalcPluto(time: AstroTime): Vector {
  * Cartesian coordinates in the J2000 equatorial system of a celestial
  * body at a specified time. The position is not corrected for light travel time or aberration.
  *
- * @param {string} body
+ * @param {Body} body
  *      One of the strings
  *      `"Sun"`, `"Moon"`, `"Mercury"`, `"Venus"`,
  *      `"Earth"`, `"Mars"`, `"Jupiter"`, `"Saturn"`,
@@ -2063,29 +2076,29 @@ function CalcPluto(time: AstroTime): Vector {
  *
  * @returns {Vector}
  */
-export function HelioVector(body: string, date: FlexibleDateTime): Vector {
+export function HelioVector(body: Body, date: FlexibleDateTime): Vector {
     var time = MakeTime(date);
     if (body in vsop) {
         return CalcVsop(vsop[body], time);
     }
-    if (body === 'Pluto') {
+    if (body === Body.Pluto) {
         return CalcPluto(time);
     }
-    if (body === 'Sun') {
+    if (body === Body.Sun) {
         return new Vector(0, 0, 0, time);
     }
-    if (body === 'Moon') {
+    if (body === Body.Moon) {
         var e = CalcVsop(vsop.Earth, time);
         var m = GeoMoon(time);
         return new Vector(e.x+m.x, e.y+m.y, e.z+m.z, time);
     }
-    if (body === 'EMB') {
+    if (body === Body.EMB) {
         const e = CalcVsop(vsop.Earth, time);
         const m = GeoMoon(time);
         const denom = 1.0 + EARTH_MOON_MASS_RATIO;
         return new Vector(e.x+(m.x/denom), e.y+(m.y/denom), e.z+(m.z/denom), time);
     }
-    if (body === 'SSB') {
+    if (body === Body.SSB) {
         return CalcSolarSystemBarycenter(time);
     }
     throw `HelioVector: Unknown body "${body}"`;
@@ -2100,7 +2113,7 @@ export function HelioVector(body: string, date: FlexibleDateTime): Vector {
  * more efficient than calling {@link HelioVector} followed by taking the length
  * of the resulting vector.
  *
- * @param {string} body
+ * @param {Body} body
  *      A body for which to calculate a heliocentric distance:
  *      the Sun, Moon, or any of the planets.
  *
@@ -2110,7 +2123,7 @@ export function HelioVector(body: string, date: FlexibleDateTime): Vector {
  * @returns {number}
  *      The heliocentric distance in AU.
  */
-export function HelioDistance(body: string, date: FlexibleDateTime): number {
+export function HelioDistance(body: Body, date: FlexibleDateTime): number {
     const time = MakeTime(date);
     if (body in vsop) {
         return VsopFormula(vsop[body][RAD_INDEX], time.tt / DAYS_PER_MILLENNIUM);
@@ -2131,7 +2144,7 @@ export function HelioDistance(body: string, date: FlexibleDateTime): number {
  * transverse movement of the Earth with respect to the rays of light
  * coming from that body.
  *
- * @param {string} body
+ * @param {Body} body
  *      One of the strings
  *      `"Sun"`, `"Moon"`, `"Mercury"`, `"Venus"`,
  *      `"Earth"`, `"Mars"`, `"Jupiter"`, `"Saturn"`,
@@ -2147,13 +2160,13 @@ export function HelioDistance(body: string, date: FlexibleDateTime): number {
  *
  * @returns {Vector}
  */
-export function GeoVector(body: string, date: FlexibleDateTime, aberration: boolean): Vector {
+export function GeoVector(body: Body, date: FlexibleDateTime, aberration: boolean): Vector {
     VerifyBoolean(aberration);
     const time = MakeTime(date);
-    if (body === 'Moon') {
+    if (body === Body.Moon) {
         return GeoMoon(time);
     }
-    if (body === 'Earth') {
+    if (body === Body.Earth) {
         return new Vector(0, 0, 0, time);
     }
 
@@ -2482,7 +2495,7 @@ export function SearchSunLongitude(targetLon: number, dateStart: FlexibleDateTim
  * Use {@link AngleFromSun} instead, if you wish to calculate the full angle
  * between the Sun and a body, instead of just their longitude difference.
  *
- * @param {string} body
+ * @param {Body} body
  *      The name of a supported celestial body other than the Earth.
  *
  * @param {FlexibleDateTime} date
@@ -2496,15 +2509,15 @@ export function SearchSunLongitude(targetLon: number, dateStart: FlexibleDateTim
  *      Values greater than 180 indicate that the body is to the west of
  *      the Sun and is visible in the morning sky.
  */
-export function LongitudeFromSun(body: string, date: FlexibleDateTime): number {
-    if (body === 'Earth')
+export function LongitudeFromSun(body: Body, date: FlexibleDateTime): number {
+    if (body === Body.Earth)
         throw 'The Earth does not have a longitude as seen from itself.';
 
     const t = MakeTime(date);
     let gb = GeoVector(body, t, false);
     const eb = Ecliptic(gb.x, gb.y, gb.z);
 
-    let gs = GeoVector('Sun', t, false);
+    let gs = GeoVector(Body.Sun, t, false);
     const es = Ecliptic(gs.x, gs.y, gs.z);
 
     return NormalizeLongitude(eb.elon - es.elon);
@@ -2520,7 +2533,7 @@ export function LongitudeFromSun(body: string, date: FlexibleDateTime): number {
  * the angle is measured in 3D space around the plane that
  * contains the centers of the Earth, the Sun, and `body`.
  *
- * @param {string} body
+ * @param {Body} body
  *      The name of a supported celestial body other than the Earth.
  *
  * @param {FlexibleDateTime} date
@@ -2529,11 +2542,11 @@ export function LongitudeFromSun(body: string, date: FlexibleDateTime): number {
  * @returns {number}
  *      An angle in degrees in the range [0, 180].
  */
-export function AngleFromSun(body: string, date: FlexibleDateTime): number {
-    if (body == 'Earth')
+export function AngleFromSun(body: Body, date: FlexibleDateTime): number {
+    if (body == Body.Earth)
         throw 'The Earth does not have an angle as seen from itself.';
 
-    let sv = GeoVector('Sun', date, true);
+    let sv = GeoVector(Body.Sun, date, true);
     let bv = GeoVector(body, date, true);
     let angle = AngleBetween(sv, bv);
     return angle;
@@ -2542,7 +2555,7 @@ export function AngleFromSun(body: string, date: FlexibleDateTime): number {
 /**
  * @brief Calculates heliocentric ecliptic longitude based on the J2000 equinox.
  *
- * @param {string} body
+ * @param {Body} body
  *      The name of a celestial body other than the Sun.
  *
  * @param {FlexibleDateTime} date
@@ -2556,8 +2569,8 @@ export function AngleFromSun(body: string, date: FlexibleDateTime): number {
  *      increases in the same direction the Earth orbits the Sun.
  *      The returned value is always in the range [0, 360).
  */
-export function EclipticLongitude(body: string, date: FlexibleDateTime): number {
-    if (body === 'Sun')
+export function EclipticLongitude(body: Body, date: FlexibleDateTime): number {
+    if (body === Body.Sun)
         throw 'Cannot calculate heliocentric longitude of the Sun.';
 
     let hv = HelioVector(body, date);
@@ -2565,23 +2578,23 @@ export function EclipticLongitude(body: string, date: FlexibleDateTime): number 
     return eclip.elon;
 }
 
-function VisualMagnitude(body: string, phase: number, helio_dist: number, geo_dist: number): number {
+function VisualMagnitude(body: Body, phase: number, helio_dist: number, geo_dist: number): number {
     // For Mercury and Venus, see:  https://iopscience.iop.org/article/10.1086/430212
     let c0: number, c1=0, c2=0, c3=0;
     switch (body) {
-    case 'Mercury':     c0 = -0.60; c1 = +4.98; c2 = -4.88; c3 = +3.02; break;
-    case 'Venus':
+    case Body.Mercury:     c0 = -0.60; c1 = +4.98; c2 = -4.88; c3 = +3.02; break;
+    case Body.Venus:
         if (phase < 163.6) {
             c0 = -4.47; c1 = +1.03; c2 = +0.57; c3 = +0.13;
         } else {
             c0 = 0.98; c1 = -1.02;
         }
         break;
-    case 'Mars':        c0 = -1.52; c1 = +1.60;                         break;
-    case 'Jupiter':     c0 = -9.40; c1 = +0.50;                         break;
-    case 'Uranus':      c0 = -7.19; c1 = +0.25;                         break;
-    case 'Neptune':     c0 = -6.87;                                     break;
-    case 'Pluto':       c0 = -1.00; c1 = +4.00;                         break;
+    case Body.Mars:        c0 = -1.52; c1 = +1.60;                         break;
+    case Body.Jupiter:     c0 = -9.40; c1 = +0.50;                         break;
+    case Body.Uranus:      c0 = -7.19; c1 = +0.25;                         break;
+    case Body.Neptune:     c0 = -6.87;                                     break;
+    case Body.Pluto:       c0 = -1.00; c1 = +4.00;                         break;
     default: throw `VisualMagnitude: unsupported body ${body}`;
     }
 
@@ -2703,7 +2716,7 @@ export class IlluminationInfo {
  * and other values relating to the body's illumination
  * at the given date and time, as seen from the Earth.
  *
- * @param {string} body
+ * @param {Body} body
  *      The name of the celestial body being observed.
  *      Not allowed to be `"Earth"`.
  *
@@ -2712,8 +2725,8 @@ export class IlluminationInfo {
  *
  * @returns {IlluminationInfo}
  */
-export function Illumination(body: string, date: FlexibleDateTime): IlluminationInfo {
-    if (body === 'Earth')
+export function Illumination(body: Body, date: FlexibleDateTime): IlluminationInfo {
+    if (body === Body.Earth)
         throw `The illumination of the Earth is not defined.`;
 
     const time = MakeTime(date);
@@ -2723,12 +2736,12 @@ export function Illumination(body: string, date: FlexibleDateTime): Illumination
     let gc: Vector;         // vector from Earth to body
     let mag: number;        // visual magnitude
 
-    if (body === 'Sun') {
+    if (body === Body.Sun) {
         gc = new Vector(-earth.x, -earth.y, -earth.z, time);
         hc = new Vector(0, 0, 0, time);
         phase = 0;      // a placeholder value; the Sun does not have an illumination phase because it emits, rather than reflects, light.
     } else {
-        if (body === 'Moon') {
+        if (body === Body.Moon) {
             // For extra numeric precision, use geocentric moon formula directly.
             gc = GeoMoon(time);
             hc = new Vector(earth.x + gc.x, earth.y + gc.y, earth.z + gc.z, time);
@@ -2744,11 +2757,11 @@ export function Illumination(body: string, date: FlexibleDateTime): Illumination
     let helio_dist = hc.Length();   // distance from body to center of Sun
     let ring_tilt;   // only reported for Saturn
 
-    if (body === 'Sun') {
+    if (body === Body.Sun) {
         mag = SUN_MAG_1AU + 5*Math.log10(geo_dist);
-    } else if (body === 'Moon') {
+    } else if (body === Body.Moon) {
         mag = MoonMagnitude(phase, helio_dist, geo_dist);
-    } else if (body === 'Saturn') {
+    } else if (body === Body.Saturn) {
         const saturn = SaturnMagnitude(phase, helio_dist, geo_dist, gc, time);
         mag = saturn.mag;
         ring_tilt = saturn.ring_tilt;
@@ -2759,11 +2772,11 @@ export function Illumination(body: string, date: FlexibleDateTime): Illumination
     return new IlluminationInfo(time, mag, phase, helio_dist, geo_dist, gc, hc, ring_tilt);
 }
 
-function SynodicPeriod(body: string): number {
-    if (body === 'Earth')
+function SynodicPeriod(body: Body): number {
+    if (body === Body.Earth)
         throw 'The Earth does not have a synodic period as seen from itself.';
 
-    if (body === 'Moon')
+    if (body === Body.Moon)
         return MEAN_SYNODIC_MONTH;
 
     // Calculate the synodic period of the planet from its and the Earth's sidereal periods.
@@ -2799,7 +2812,7 @@ function SynodicPeriod(body: string): number {
  * For superior conjunctions, call with `targetRelLon` = 180.
  * This means the Earth and the other planet are on opposite sides of the Sun.
  *
- * @param {string} body
+ * @param {Body} body
  *      The name of a planet other than the Earth.
  *
  * @param {number} targetRelLon
@@ -2813,13 +2826,13 @@ function SynodicPeriod(body: string): number {
  * @returns {AstroTime}
  *      The time when the Earth and the body next reach the specified relative longitudes.
  */
-export function SearchRelativeLongitude(body: string, targetRelLon: number, startDate: FlexibleDateTime): AstroTime {
+export function SearchRelativeLongitude(body: Body, targetRelLon: number, startDate: FlexibleDateTime): AstroTime {
     VerifyNumber(targetRelLon);
     const planet = Planet[body];
     if (!planet)
         throw `Cannot search relative longitude because body is not a planet: ${body}`;
 
-    if (body === 'Earth')
+    if (body === Body.Earth)
         throw 'Cannot search relative longitude for the Earth (it is always 0)';
 
     // Determine whether the Earth "gains" (+1) on the planet or "loses" (-1)
@@ -2828,7 +2841,7 @@ export function SearchRelativeLongitude(body: string, targetRelLon: number, star
 
     function offset(t: AstroTime): number {
         const plon = EclipticLongitude(body, t);
-        const elon = EclipticLongitude('Earth', t);
+        const elon = EclipticLongitude(Body.Earth, t);
         const diff = direction * (elon - plon);
         return LongitudeOffset(diff - targetRelLon);
     }
@@ -2886,7 +2899,7 @@ export function SearchRelativeLongitude(body: string, targetRelLon: number, star
  * * 270 = third quarter
  */
 export function MoonPhase(date: FlexibleDateTime): number {
-    return LongitudeFromSun('Moon', date);
+    return LongitudeFromSun(Body.Moon, date);
 }
 
 /**
@@ -3020,14 +3033,14 @@ export function NextMoonQuarter(mq: MoonQuarter): MoonQuarter {
     return SearchMoonQuarter(date);
 }
 
-function BodyRadiusAu(body: string): number {
+function BodyRadiusAu(body: Body): number {
     // For the purposes of calculating rise/set times,
     // only the Sun and Moon appear large enough to an observer
     // on the Earth for their radius to matter.
     // All other bodies are treated as points.
     switch (body) {
-        case 'Sun':   return SUN_RADIUS_AU;
-        case 'Moon':  return MOON_EQUATORIAL_RADIUS_AU;
+        case Body.Sun:   return SUN_RADIUS_AU;
+        case Body.Moon:  return MOON_EQUATORIAL_RADIUS_AU;
         default:      return 0;
     }
 }
@@ -3043,7 +3056,7 @@ function BodyRadiusAu(body: string): number {
  * is observed to sink below the horizon in the west.
  * The times are adjusted for typical atmospheric refraction conditions.
  *
- * @param {string} body
+ * @param {Body} body
  *      The name of the body to find the rise or set time for.
  *
  * @param {Observer} observer
@@ -3064,7 +3077,7 @@ function BodyRadiusAu(body: string): number {
  *      The date and time of the rise or set event, or null if no such event
  *      occurs within the specified time window.
  */
-export function SearchRiseSet(body: string, observer: Observer, direction: number, dateStart: FlexibleDateTime, limitDays: number): AstroTime | null {
+export function SearchRiseSet(body: Body, observer: Observer, direction: number, dateStart: FlexibleDateTime, limitDays: number): AstroTime | null {
     VerifyObserver(observer);
     VerifyNumber(limitDays);
 
@@ -3086,7 +3099,7 @@ export function SearchRiseSet(body: string, observer: Observer, direction: numbe
         return direction * alt;
     }
 
-    if (body === 'Earth')
+    if (body === Body.Earth)
         throw 'Cannot find rise or set time of the Earth.';
 
     // See if the body is currently above/below the horizon.
@@ -3182,7 +3195,7 @@ export class HourAngleEvent {
  * assume that a culminating object is visible nor that an object is below the horizon
  * at its minimum altitude.
  *
- * @param {string} body
+ * @param {Body} body
  *      The name of a celestial body other than the Earth.
  *
  * @param {Observer} observer
@@ -3205,12 +3218,12 @@ export class HourAngleEvent {
  *
  * @returns {HourAngleEvent}
  */
-export function SearchHourAngle(body: string, observer: Observer, hourAngle: number, dateStart: FlexibleDateTime): HourAngleEvent {
+export function SearchHourAngle(body: Body, observer: Observer, hourAngle: number, dateStart: FlexibleDateTime): HourAngleEvent {
     VerifyObserver(observer);
     let time = MakeTime(dateStart);
     let iter = 0;
 
-    if (body === 'Earth')
+    if (body === Body.Earth)
         throw 'Cannot search for hour angle of the Earth.';
 
     VerifyNumber(hourAngle);
@@ -3392,12 +3405,12 @@ export class ElongationEvent {
  * this is more important the smaller the elongation is.
  * It is also used to determine how far a planet is from opposition, conjunction, or quadrature.
  *
- * @param {string} body
+ * @param {Body} body
  *      The name of the observed body. Not allowed to be `"Earth"`.
  *
  * @returns {ElongationEvent}
  */
-export function Elongation(body: string, date: FlexibleDateTime): ElongationEvent {
+export function Elongation(body: Body, date: FlexibleDateTime): ElongationEvent {
     let time = MakeTime(date);
 
     let lon = LongitudeFromSun(body, time);
@@ -3424,12 +3437,12 @@ export function Elongation(body: string, date: FlexibleDateTime): ElongationEven
  * maximum elongation, the elongation in degrees, and whether
  * the body is visible in the morning or evening.
  *
- * @param {string} body     Either `"Mercury"` or `"Venus"`.
+ * @param {Body} body     Either `"Mercury"` or `"Venus"`.
  * @param {FlexibleDateTime} startDate  The date and time after which to search for the next maximum elongation event.
  *
  * @returns {ElongationEvent}
  */
-export function SearchMaxElongation(body: string, startDate: FlexibleDateTime): ElongationEvent {
+export function SearchMaxElongation(body: Body, startDate: FlexibleDateTime): ElongationEvent {
     const dt = 0.01;
 
     function neg_slope(t: AstroTime): number {
@@ -3469,7 +3482,7 @@ export function SearchMaxElongation(body: string, startDate: FlexibleDateTime): 
         // Find current heliocentric relative longitude between the
         // inferior planet and the Earth.
         let plon = EclipticLongitude(body, startTime);
-        let elon = EclipticLongitude('Earth', startTime);
+        let elon = EclipticLongitude(Body.Earth, startTime);
         let rlon = LongitudeOffset(plon - elon);    // clamp to (-180, +180]
 
         // The slope function is not well-behaved when rlon is near 0 degrees or 180 degrees
@@ -3541,7 +3554,7 @@ export function SearchMaxElongation(body: string, startDate: FlexibleDateTime): 
 /**
  * @brief Searches for the date and time Venus will next appear brightest as seen from the Earth.
  *
- * @param {string} body
+ * @param {Body} body
  *      Currently only `"Venus"` is supported.
  *      Mercury's peak magnitude occurs at superior conjunction, when it is virtually impossible to see from Earth,
  *      so peak magnitude events have little practical value for that planet.
@@ -3555,8 +3568,8 @@ export function SearchMaxElongation(body: string, startDate: FlexibleDateTime): 
  *
  * @returns {IlluminationInfo}
  */
-export function SearchPeakMagnitude(body: string, startDate: FlexibleDateTime): IlluminationInfo {
-    if (body !== 'Venus')
+export function SearchPeakMagnitude(body: Body, startDate: FlexibleDateTime): IlluminationInfo {
+    if (body !== Body.Venus)
         throw 'SearchPeakMagnitude currently works for Venus only.';
 
     const dt = 0.01;
@@ -3586,7 +3599,7 @@ export function SearchPeakMagnitude(body: string, startDate: FlexibleDateTime): 
         // Find current heliocentric relative longitude between the
         // inferior planet and the Earth.
         let plon = EclipticLongitude(body, startTime);
-        let elon = EclipticLongitude('Earth', startTime);
+        let elon = EclipticLongitude(Body.Earth, startTime);
         let rlon = LongitudeOffset(plon - elon);    // clamp to (-180, +180]
 
         // The slope function is not well-behaved when rlon is near 0 degrees or 180 degrees
@@ -3796,7 +3809,7 @@ export function NextLunarApsis(apsis: Apsis): Apsis {
     return next;
 }
 
-function PlanetExtreme(body: string, kind: number, start_time: AstroTime, dayspan: number): Apsis {
+function PlanetExtreme(body: Body, kind: number, start_time: AstroTime, dayspan: number): Apsis {
     const direction = (kind === 1) ? +1.0 : -1.0;
     const npoints = 10;
 
@@ -3827,7 +3840,7 @@ function PlanetExtreme(body: string, kind: number, start_time: AstroTime, dayspa
     }
 }
 
-function BruteSearchPlanetApsis(body: string, startTime: AstroTime): Apsis {
+function BruteSearchPlanetApsis(body: Body, startTime: AstroTime): Apsis {
     /*
         Neptune is a special case for two reasons:
         1. Its orbit is nearly circular (low orbital eccentricity).
@@ -3913,7 +3926,7 @@ function BruteSearchPlanetApsis(body: string, startTime: AstroTime): Apsis {
  * from `NextPlanetApsis` into another call of `NextPlanetApsis`
  * as many times as desired.
  *
- * @param {string} body
+ * @param {Body} body
  *      The planet for which to find the next perihelion/aphelion event.
  *      Not allowed to be `"Sun"` or `"Moon"`.
  *
@@ -3923,8 +3936,8 @@ function BruteSearchPlanetApsis(body: string, startTime: AstroTime): Apsis {
  * @returns {Apsis}
  *      The next perihelion or aphelion that occurs after `startTime`.
  */
-export function SearchPlanetApsis(body: string, startTime: AstroTime): Apsis {
-    if (body === 'Neptune' || body === 'Pluto') {
+export function SearchPlanetApsis(body: Body, startTime: AstroTime): Apsis {
+    if (body === Body.Neptune || body === Body.Pluto) {
         return BruteSearchPlanetApsis(body, startTime);
     }
 
@@ -4000,7 +4013,7 @@ export function SearchPlanetApsis(body: string, startTime: AstroTime): Apsis {
  * Given an aphelion event, this function finds the next perihelion event, and vice versa.
  * See {@link SearchPlanetApsis} for more details.
  *
- * @param {string} body
+ * @param {Body} body
  *      The planet for which to find the next perihelion/aphelion event.
  *      Not allowed to be `"Sun"` or `"Moon"`.
  *      Must match the body passed into the call that produced the `apsis` parameter.
@@ -4011,7 +4024,7 @@ export function SearchPlanetApsis(body: string, startTime: AstroTime): Apsis {
  * @returns {Apsis}
  *      Same as the return value for {@link SearchPlanetApsis}.
  */
-export function NextPlanetApsis(body: string, apsis: Apsis): Apsis {
+export function NextPlanetApsis(body: Body, apsis: Apsis): Apsis {
     if (apsis.kind !== 0 && apsis.kind !== 1) {
         throw `Invalid apsis kind: ${apsis.kind}`;
     }
@@ -5025,12 +5038,12 @@ function LocalMoonShadow(time: AstroTime, observer: Observer): ShadowInfo {
 }
 
 
-function PlanetShadow(body: string, planet_radius_km: number, time: AstroTime): ShadowInfo {
+function PlanetShadow(body: Body, planet_radius_km: number, time: AstroTime): ShadowInfo {
     // Calculate light-travel-corrected vector from Earth to planet.
     const g = GeoVector(body, time, false);
 
     // Calculate light-travel-corrected vector from Earth to Sun.
-    const e = GeoVector('Sun', time, false);
+    const e = GeoVector(Body.Sun, time, false);
 
     // Deduce light-travel-corrected vector from Sun to planet.
     const p = new Vector(g.x - e.x, g.y - e.y, g.z - e.z, time);
@@ -5054,7 +5067,7 @@ function ShadowDistanceSlope(shadowfunc: (t:AstroTime) => ShadowInfo, time: Astr
 }
 
 
-function PlanetShadowSlope(body: string, planet_radius_km: number, time: AstroTime): number {
+function PlanetShadowSlope(body: Body, planet_radius_km: number, time: AstroTime): number {
     const dt = 1.0 / 86400.0;
     const shadow1 = PlanetShadow(body, planet_radius_km, time.AddDays(-dt));
     const shadow2 = PlanetShadow(body, planet_radius_km, time.AddDays(+dt));
@@ -5084,7 +5097,7 @@ function PeakMoonShadow(search_center_time: AstroTime): ShadowInfo {
 }
 
 
-function PeakPlanetShadow(body: string, planet_radius_km: number, search_center_time: AstroTime): ShadowInfo {
+function PeakPlanetShadow(body: Body, planet_radius_km: number, search_center_time: AstroTime): ShadowInfo {
     // Search for when the body's shadow is closest to the center of the Earth.
     const window = 1.0;     // days before/after inferior conjunction to search for minimum shadow distance.
     const t1 = search_center_time.AddDays(-window);
@@ -5583,7 +5596,7 @@ function CalcEvent(observer: Observer, time: AstroTime): EclipseEvent {
 }
 
 function SunAltitude(time: AstroTime, observer: Observer): number {
-    const equ = Equator('Sun', time, observer, true, true);
+    const equ = Equator(Body.Sun, time, observer, true, true);
     const hor = Horizon(time, observer, equ.ra, equ.dec, 'normal');
     return hor.altitude;
 }
@@ -5709,13 +5722,13 @@ export class TransitInfo {
 }
 
 
-function PlanetShadowBoundary(time: AstroTime, body: string, planet_radius_km: number, direction: number): number {
+function PlanetShadowBoundary(time: AstroTime, body: Body, planet_radius_km: number, direction: number): number {
     const shadow = PlanetShadow(body, planet_radius_km, time);
     return direction * (shadow.r - shadow.p);
 }
 
 
-function PlanetTransitBoundary(body: string, planet_radius_km: number, t1: AstroTime, t2: AstroTime, direction: number): AstroTime {
+function PlanetTransitBoundary(body: Body, planet_radius_km: number, t1: AstroTime, t2: AstroTime, direction: number): AstroTime {
     // Search for the time the planet's penumbra begins/ends making contact with the center of the Earth.
     const tx = Search((time: AstroTime) => PlanetShadowBoundary(time, body, planet_radius_km, direction), t1, t2);
     if (!tx)
@@ -5734,7 +5747,7 @@ function PlanetTransitBoundary(body: string, planet_radius_km: number, t1: Astro
  * To continue the search, pass the `finish` time in the returned structure to
  * {@link NextTransit}.
  *
- * @param {string} body
+ * @param {Body} body
  *      The planet whose transit is to be found. Must be `"Mercury"` or `"Venus"`.
  *
  * @param {AstroTime} startTime
@@ -5742,7 +5755,7 @@ function PlanetTransitBoundary(body: string, planet_radius_km: number, t1: Astro
  *
  * @returns {TransitInfo}
  */
-export function SearchTransit(body: string, startTime: AstroTime) {
+export function SearchTransit(body: Body, startTime: AstroTime) {
     const threshold_angle = 0.4;     // maximum angular separation to attempt transit calculation
     const dt_days = 1.0;
 
@@ -5750,11 +5763,11 @@ export function SearchTransit(body: string, startTime: AstroTime) {
     let planet_radius_km: number;
     switch (body)
     {
-        case 'Mercury':
+        case Body.Mercury:
             planet_radius_km = 2439.7;
             break;
 
-        case 'Venus':
+        case Body.Venus:
             planet_radius_km = 6051.8;
             break;
 
@@ -5803,7 +5816,7 @@ export function SearchTransit(body: string, startTime: AstroTime) {
  * this function finds the next transit after that.
  * Keep calling this function as many times as you want to keep finding more transits.
  *
- * @param {string} body
+ * @param {Body} body
  *      The planet whose transit is to be found. Must be `"Mercury"` or `"Venus"`.
  *
  * @param {AstroTime} prevTransitTime
@@ -5811,7 +5824,7 @@ export function SearchTransit(body: string, startTime: AstroTime) {
  *
  * @returns {TransitInfo}
  */
-export function NextTransit(body: string, prevTransitTime: AstroTime): TransitInfo {
+export function NextTransit(body: Body, prevTransitTime: AstroTime): TransitInfo {
     const startTime = prevTransitTime.AddDays(100.0);
     return SearchTransit(body, startTime);
 }

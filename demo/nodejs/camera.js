@@ -38,10 +38,10 @@ function Camera(observer, time) {
 
     // Calculate the topocentric equatorial coordinates of date for the Moon.
     // Assume aberration does not matter because the Moon is so close and has such a small relative velocity.
-    const moon_equ = Astronomy.Equator('Moon', time, observer, true, false);
+    const moon_equ = Astronomy.Equator(Astronomy.Body.Moon, time, observer, true, false);
 
     // Also calculate the Sun's topocentric position in the same coordinate system.
-    const sun_equ = Astronomy.Equator('Sun', time, observer, true, false);
+    const sun_equ = Astronomy.Equator(Astronomy.Body.Sun, time, observer, true, false);
 
     // Get the Moon's horizontal coordinates, so we know how much to pivot azimuth and altitude.
     const moon_hor = Astronomy.Horizon(time, observer, moon_equ.ra, moon_equ.dec, false);
@@ -100,11 +100,11 @@ function Camera(observer, time) {
     const tilt = RAD2DEG * Math.atan2(vec.z, vec.y);
     console.log(`Tilt angle of sunlit side of the Moon = ${tilt.toFixed(3)} degrees counterclockwise from up.`);
 
-    const illum = Astronomy.Illumination('Moon', time);
+    const illum = Astronomy.Illumination(Astronomy.Body.Moon, time);
 
     console.log(`Moon magnitude = ${illum.mag.toFixed(2)}, phase angle = ${illum.phase_angle.toFixed(2)} degrees.`);
 
-    const angle = Astronomy.AngleFromSun('Moon', time);
+    const angle = Astronomy.AngleFromSun(Astronomy.Body.Moon, time);
 
     console.log(`Angle between Moon and Sun as seen from Earth = ${angle.toFixed(2)} degrees.`);
 }

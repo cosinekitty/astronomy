@@ -66,7 +66,7 @@ function AstroCheck() {
     while (date.tt < stop.tt) {
         time = Astronomy.MakeTime(date);
 
-        for (body of Astronomy.Bodies) {
+        for (body in Astronomy.Body) {
             if (body !== 'Moon') {
                 pos = Astronomy.HelioVector(body, date);
                 console.log(`v ${body} ${pos.t.tt.toFixed(16)} ${pos.x.toFixed(16)} ${pos.y.toFixed(16)} ${pos.z.toFixed(16)}`);

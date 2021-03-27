@@ -44,12 +44,37 @@ export declare type FlexibleDateTime = Date | number | AstroTime;
  */
 export declare function AngleBetween(a: Vector, b: Vector): number;
 /**
- * @constant {string[]} Bodies
- *      An array of strings, each a name of a supported astronomical body.
- *      Not all bodies are valid for all functions, but any string not in this
- *      list is not supported at all.
+ * @brief String constants that represent the solar system bodies supported by Astronomy Engine.
+ *
+ * The following strings represent solar system bodies supported by various Astronomy Engine functions.
+ * Not every body is supported by every function; consult the documentation for each function
+ * to find which bodies it supports.
+ *
+ * "Sun", "Moon", "Mercury", "Venus", "Earth", "Mars", "Jupiter",
+ * "Saturn", "Uranus", "Neptune", "Pluto",
+ * "SSB" (Solar System Barycenter),
+ * "EMB" (Earth/Moon Barycenter)
+ *
+ * You can also use enumeration syntax for the bodies, like
+ * `Astronomy.Body.Moon`, `Astronomy.Body.Jupiter`, etc.
+ *
+ * @enum {string}
  */
-export declare const Bodies: string[];
+export declare enum Body {
+    Sun = "Sun",
+    Moon = "Moon",
+    Mercury = "Mercury",
+    Venus = "Venus",
+    Earth = "Earth",
+    Mars = "Mars",
+    Jupiter = "Jupiter",
+    Saturn = "Saturn",
+    Uranus = "Uranus",
+    Neptune = "Neptune",
+    Pluto = "Pluto",
+    SSB = "SSB",
+    EMB = "EMB"
+}
 export declare function DeltaT_EspenakMeeus(ut: number): number;
 export declare type DeltaTimeFunction = (ut: number) => number;
 export declare function DeltaT_JplHorizons(ut: number): number;
@@ -419,8 +444,8 @@ export declare function SunPosition(date: FlexibleDateTime): EclipticCoordinates
  * This is most significant for the Moon, because it is so close to the Earth.
  * However, it can have a small effect on the apparent positions of other bodies.
  *
- * @param {string} body
- *      The name of the body for which to find equatorial coordinates.
+ * @param {Body} body
+ *      The body for which to find equatorial coordinates.
  *      Not allowed to be `"Earth"`.
  *
  * @param {FlexibleDateTime} date
@@ -444,7 +469,7 @@ export declare function SunPosition(date: FlexibleDateTime): EclipticCoordinates
  * @returns {EquatorialCoordinates}
  *      The topocentric coordinates of the body as adjusted for the given observer.
  */
-export declare function Equator(body: string, date: FlexibleDateTime, observer: Observer, ofdate: boolean, aberration: boolean): EquatorialCoordinates;
+export declare function Equator(body: Body, date: FlexibleDateTime, observer: Observer, ofdate: boolean, aberration: boolean): EquatorialCoordinates;
 /**
  * @brief Converts equatorial Cartesian coordinates to ecliptic Cartesian and angular coordinates.
  *
@@ -487,7 +512,7 @@ export declare function GeoMoon(date: FlexibleDateTime): Vector;
  * Cartesian coordinates in the J2000 equatorial system of a celestial
  * body at a specified time. The position is not corrected for light travel time or aberration.
  *
- * @param {string} body
+ * @param {Body} body
  *      One of the strings
  *      `"Sun"`, `"Moon"`, `"Mercury"`, `"Venus"`,
  *      `"Earth"`, `"Mars"`, `"Jupiter"`, `"Saturn"`,
@@ -499,7 +524,7 @@ export declare function GeoMoon(date: FlexibleDateTime): Vector;
  *
  * @returns {Vector}
  */
-export declare function HelioVector(body: string, date: FlexibleDateTime): Vector;
+export declare function HelioVector(body: Body, date: FlexibleDateTime): Vector;
 /**
  * @brief Calculates the distance between a body and the Sun at a given time.
  *
@@ -509,7 +534,7 @@ export declare function HelioVector(body: string, date: FlexibleDateTime): Vecto
  * more efficient than calling {@link HelioVector} followed by taking the length
  * of the resulting vector.
  *
- * @param {string} body
+ * @param {Body} body
  *      A body for which to calculate a heliocentric distance:
  *      the Sun, Moon, or any of the planets.
  *
@@ -519,7 +544,7 @@ export declare function HelioVector(body: string, date: FlexibleDateTime): Vecto
  * @returns {number}
  *      The heliocentric distance in AU.
  */
-export declare function HelioDistance(body: string, date: FlexibleDateTime): number;
+export declare function HelioDistance(body: Body, date: FlexibleDateTime): number;
 /**
  * @brief Calculates a vector from the center of the Earth to the given body at the given time.
  *
@@ -533,7 +558,7 @@ export declare function HelioDistance(body: string, date: FlexibleDateTime): num
  * transverse movement of the Earth with respect to the rays of light
  * coming from that body.
  *
- * @param {string} body
+ * @param {Body} body
  *      One of the strings
  *      `"Sun"`, `"Moon"`, `"Mercury"`, `"Venus"`,
  *      `"Earth"`, `"Mars"`, `"Jupiter"`, `"Saturn"`,
@@ -549,7 +574,7 @@ export declare function HelioDistance(body: string, date: FlexibleDateTime): num
  *
  * @returns {Vector}
  */
-export declare function GeoVector(body: string, date: FlexibleDateTime, aberration: boolean): Vector;
+export declare function GeoVector(body: Body, date: FlexibleDateTime, aberration: boolean): Vector;
 export interface SearchOptions {
     dt_tolerance_seconds?: number;
     init_f1?: number;
@@ -676,7 +701,7 @@ export declare function SearchSunLongitude(targetLon: number, dateStart: Flexibl
  * Use {@link AngleFromSun} instead, if you wish to calculate the full angle
  * between the Sun and a body, instead of just their longitude difference.
  *
- * @param {string} body
+ * @param {Body} body
  *      The name of a supported celestial body other than the Earth.
  *
  * @param {FlexibleDateTime} date
@@ -690,7 +715,7 @@ export declare function SearchSunLongitude(targetLon: number, dateStart: Flexibl
  *      Values greater than 180 indicate that the body is to the west of
  *      the Sun and is visible in the morning sky.
  */
-export declare function LongitudeFromSun(body: string, date: FlexibleDateTime): number;
+export declare function LongitudeFromSun(body: Body, date: FlexibleDateTime): number;
 /**
  * @brief Calculates the angular separation between the Sun and the given body.
  *
@@ -701,7 +726,7 @@ export declare function LongitudeFromSun(body: string, date: FlexibleDateTime): 
  * the angle is measured in 3D space around the plane that
  * contains the centers of the Earth, the Sun, and `body`.
  *
- * @param {string} body
+ * @param {Body} body
  *      The name of a supported celestial body other than the Earth.
  *
  * @param {FlexibleDateTime} date
@@ -710,11 +735,11 @@ export declare function LongitudeFromSun(body: string, date: FlexibleDateTime): 
  * @returns {number}
  *      An angle in degrees in the range [0, 180].
  */
-export declare function AngleFromSun(body: string, date: FlexibleDateTime): number;
+export declare function AngleFromSun(body: Body, date: FlexibleDateTime): number;
 /**
  * @brief Calculates heliocentric ecliptic longitude based on the J2000 equinox.
  *
- * @param {string} body
+ * @param {Body} body
  *      The name of a celestial body other than the Sun.
  *
  * @param {FlexibleDateTime} date
@@ -728,7 +753,7 @@ export declare function AngleFromSun(body: string, date: FlexibleDateTime): numb
  *      increases in the same direction the Earth orbits the Sun.
  *      The returned value is always in the range [0, 360).
  */
-export declare function EclipticLongitude(body: string, date: FlexibleDateTime): number;
+export declare function EclipticLongitude(body: Body, date: FlexibleDateTime): number;
 /**
  * @brief Information about the apparent brightness and sunlit phase of a celestial object.
  *
@@ -801,7 +826,7 @@ export declare class IlluminationInfo {
  * and other values relating to the body's illumination
  * at the given date and time, as seen from the Earth.
  *
- * @param {string} body
+ * @param {Body} body
  *      The name of the celestial body being observed.
  *      Not allowed to be `"Earth"`.
  *
@@ -810,7 +835,7 @@ export declare class IlluminationInfo {
  *
  * @returns {IlluminationInfo}
  */
-export declare function Illumination(body: string, date: FlexibleDateTime): IlluminationInfo;
+export declare function Illumination(body: Body, date: FlexibleDateTime): IlluminationInfo;
 /**
  * @brief Searches for when the Earth and a given body reach a relative ecliptic longitude separation.
  *
@@ -825,7 +850,7 @@ export declare function Illumination(body: string, date: FlexibleDateTime): Illu
  * For superior conjunctions, call with `targetRelLon` = 180.
  * This means the Earth and the other planet are on opposite sides of the Sun.
  *
- * @param {string} body
+ * @param {Body} body
  *      The name of a planet other than the Earth.
  *
  * @param {number} targetRelLon
@@ -839,7 +864,7 @@ export declare function Illumination(body: string, date: FlexibleDateTime): Illu
  * @returns {AstroTime}
  *      The time when the Earth and the body next reach the specified relative longitudes.
  */
-export declare function SearchRelativeLongitude(body: string, targetRelLon: number, startDate: FlexibleDateTime): AstroTime;
+export declare function SearchRelativeLongitude(body: Body, targetRelLon: number, startDate: FlexibleDateTime): AstroTime;
 /**
  * @brief Determines the moon's phase expressed as an ecliptic longitude.
  *
@@ -948,7 +973,7 @@ export declare function NextMoonQuarter(mq: MoonQuarter): MoonQuarter;
  * is observed to sink below the horizon in the west.
  * The times are adjusted for typical atmospheric refraction conditions.
  *
- * @param {string} body
+ * @param {Body} body
  *      The name of the body to find the rise or set time for.
  *
  * @param {Observer} observer
@@ -969,7 +994,7 @@ export declare function NextMoonQuarter(mq: MoonQuarter): MoonQuarter;
  *      The date and time of the rise or set event, or null if no such event
  *      occurs within the specified time window.
  */
-export declare function SearchRiseSet(body: string, observer: Observer, direction: number, dateStart: FlexibleDateTime, limitDays: number): AstroTime | null;
+export declare function SearchRiseSet(body: Body, observer: Observer, direction: number, dateStart: FlexibleDateTime, limitDays: number): AstroTime | null;
 /**
  * @brief Horizontal position of a body upon reaching an hour angle.
  *
@@ -1002,7 +1027,7 @@ export declare class HourAngleEvent {
  * assume that a culminating object is visible nor that an object is below the horizon
  * at its minimum altitude.
  *
- * @param {string} body
+ * @param {Body} body
  *      The name of a celestial body other than the Earth.
  *
  * @param {Observer} observer
@@ -1025,7 +1050,7 @@ export declare class HourAngleEvent {
  *
  * @returns {HourAngleEvent}
  */
-export declare function SearchHourAngle(body: string, observer: Observer, hourAngle: number, dateStart: FlexibleDateTime): HourAngleEvent;
+export declare function SearchHourAngle(body: Body, observer: Observer, hourAngle: number, dateStart: FlexibleDateTime): HourAngleEvent;
 /**
  * @brief When the seasons change for a given calendar year.
  *
@@ -1136,12 +1161,12 @@ export declare class ElongationEvent {
  * this is more important the smaller the elongation is.
  * It is also used to determine how far a planet is from opposition, conjunction, or quadrature.
  *
- * @param {string} body
+ * @param {Body} body
  *      The name of the observed body. Not allowed to be `"Earth"`.
  *
  * @returns {ElongationEvent}
  */
-export declare function Elongation(body: string, date: FlexibleDateTime): ElongationEvent;
+export declare function Elongation(body: Body, date: FlexibleDateTime): ElongationEvent;
 /**
  * @brief Finds the next time Mercury or Venus reaches maximum elongation.
  *
@@ -1154,16 +1179,16 @@ export declare function Elongation(body: string, date: FlexibleDateTime): Elonga
  * maximum elongation, the elongation in degrees, and whether
  * the body is visible in the morning or evening.
  *
- * @param {string} body     Either `"Mercury"` or `"Venus"`.
+ * @param {Body} body     Either `"Mercury"` or `"Venus"`.
  * @param {FlexibleDateTime} startDate  The date and time after which to search for the next maximum elongation event.
  *
  * @returns {ElongationEvent}
  */
-export declare function SearchMaxElongation(body: string, startDate: FlexibleDateTime): ElongationEvent;
+export declare function SearchMaxElongation(body: Body, startDate: FlexibleDateTime): ElongationEvent;
 /**
  * @brief Searches for the date and time Venus will next appear brightest as seen from the Earth.
  *
- * @param {string} body
+ * @param {Body} body
  *      Currently only `"Venus"` is supported.
  *      Mercury's peak magnitude occurs at superior conjunction, when it is virtually impossible to see from Earth,
  *      so peak magnitude events have little practical value for that planet.
@@ -1177,7 +1202,7 @@ export declare function SearchMaxElongation(body: string, startDate: FlexibleDat
  *
  * @returns {IlluminationInfo}
  */
-export declare function SearchPeakMagnitude(body: string, startDate: FlexibleDateTime): IlluminationInfo;
+export declare function SearchPeakMagnitude(body: Body, startDate: FlexibleDateTime): IlluminationInfo;
 /**
  * @brief A closest or farthest point in a body's orbit around its primary.
  *
@@ -1253,7 +1278,7 @@ export declare function NextLunarApsis(apsis: Apsis): Apsis;
  * from `NextPlanetApsis` into another call of `NextPlanetApsis`
  * as many times as desired.
  *
- * @param {string} body
+ * @param {Body} body
  *      The planet for which to find the next perihelion/aphelion event.
  *      Not allowed to be `"Sun"` or `"Moon"`.
  *
@@ -1263,7 +1288,7 @@ export declare function NextLunarApsis(apsis: Apsis): Apsis;
  * @returns {Apsis}
  *      The next perihelion or aphelion that occurs after `startTime`.
  */
-export declare function SearchPlanetApsis(body: string, startTime: AstroTime): Apsis;
+export declare function SearchPlanetApsis(body: Body, startTime: AstroTime): Apsis;
 /**
  * @brief Finds the next planetary perihelion or aphelion event in a series.
  *
@@ -1272,7 +1297,7 @@ export declare function SearchPlanetApsis(body: string, startTime: AstroTime): A
  * Given an aphelion event, this function finds the next perihelion event, and vice versa.
  * See {@link SearchPlanetApsis} for more details.
  *
- * @param {string} body
+ * @param {Body} body
  *      The planet for which to find the next perihelion/aphelion event.
  *      Not allowed to be `"Sun"` or `"Moon"`.
  *      Must match the body passed into the call that produced the `apsis` parameter.
@@ -1283,7 +1308,7 @@ export declare function SearchPlanetApsis(body: string, startTime: AstroTime): A
  * @returns {Apsis}
  *      Same as the return value for {@link SearchPlanetApsis}.
  */
-export declare function NextPlanetApsis(body: string, apsis: Apsis): Apsis;
+export declare function NextPlanetApsis(body: Body, apsis: Apsis): Apsis;
 /**
  * @brief Calculates the inverse of a rotation matrix.
  *
@@ -2088,7 +2113,7 @@ export declare class TransitInfo {
  * To continue the search, pass the `finish` time in the returned structure to
  * {@link NextTransit}.
  *
- * @param {string} body
+ * @param {Body} body
  *      The planet whose transit is to be found. Must be `"Mercury"` or `"Venus"`.
  *
  * @param {AstroTime} startTime
@@ -2096,7 +2121,7 @@ export declare class TransitInfo {
  *
  * @returns {TransitInfo}
  */
-export declare function SearchTransit(body: string, startTime: AstroTime): TransitInfo;
+export declare function SearchTransit(body: Body, startTime: AstroTime): TransitInfo;
 /**
  * @brief Searches for the next transit of Mercury or Venus in a series.
  *
@@ -2104,7 +2129,7 @@ export declare function SearchTransit(body: string, startTime: AstroTime): Trans
  * this function finds the next transit after that.
  * Keep calling this function as many times as you want to keep finding more transits.
  *
- * @param {string} body
+ * @param {Body} body
  *      The planet whose transit is to be found. Must be `"Mercury"` or `"Venus"`.
  *
  * @param {AstroTime} prevTransitTime
@@ -2112,4 +2137,4 @@ export declare function SearchTransit(body: string, startTime: AstroTime): Trans
  *
  * @returns {TransitInfo}
  */
-export declare function NextTransit(body: string, prevTransitTime: AstroTime): TransitInfo;
+export declare function NextTransit(body: Body, prevTransitTime: AstroTime): TransitInfo;

@@ -42,10 +42,10 @@ function Demo() {
         const longitude = ParseNumber(process.argv[3]);
         const observer = new Astronomy.Observer(latitude, longitude, 0);
         const date = (process.argv.length === 5) ? ParseDate(process.argv[4]) : new Date();
-        let sunrise  = Astronomy.SearchRiseSet('Sun',  observer, +1, date, 300);
-        let sunset   = Astronomy.SearchRiseSet('Sun',  observer, -1, date, 300);
-        let moonrise = Astronomy.SearchRiseSet('Moon', observer, +1, date, 300);
-        let moonset  = Astronomy.SearchRiseSet('Moon', observer, -1, date, 300);
+        let sunrise  = Astronomy.SearchRiseSet(Astronomy.Body.Sun,  observer, +1, date, 300);
+        let sunset   = Astronomy.SearchRiseSet(Astronomy.Body.Sun,  observer, -1, date, 300);
+        let moonrise = Astronomy.SearchRiseSet(Astronomy.Body.Moon, observer, +1, date, 300);
+        let moonset  = Astronomy.SearchRiseSet(Astronomy.Body.Moon, observer, -1, date, 300);
         console.log('search   : ' + date.toISOString());
         DisplayEvent('sunrise',  sunrise);
         DisplayEvent('sunset',   sunset);
