@@ -101,7 +101,8 @@ export declare function SetDeltaTFunction(func: DeltaTimeFunction): void;
  *      Terrestrial Time in fractional days since the J2000 epoch.
  *      TT represents a continuously flowing ephemeris timescale independent of
  *      any variations of the Earth's rotation, and is adjusted from UT
- *      using historical and predictive models of those variations.
+ *      using a best-fit piecewise polynomial model devised by
+ *      [Espenak and Meeus](https://eclipse.gsfc.nasa.gov/SEhelp/deltatpoly2004.html).
  */
 export declare class AstroTime {
     date: Date;

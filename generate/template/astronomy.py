@@ -547,9 +547,9 @@ class Time:
         in the calling object.
 
         More precisely, the result's Universal Time field `ut` is exactly adjusted by `days`
-        and the Terrestrial Time field `tt` is adjusted correctly for the resulting UTC date and time,
-        according to the historical and predictive Delta-T model provided by the
-        [United States Naval Observatory](http://maia.usno.navy.mil/ser7/).
+        and the Terrestrial Time field `tt` is adjusted for the resulting UTC date and time,
+        using a best-fit piecewise polynomial model devised by
+        [Espenak and Meeus](https://eclipse.gsfc.nasa.gov/SEhelp/deltatpoly2004.html).
 
         The value of the calling object is not modified. This function creates a brand new
         #Time object and returns it.

@@ -2785,11 +2785,11 @@ To create a valid [`astro_time_t`](#astro_time_t) value from scratch, call [`Ast
 
 To adjust an existing [`astro_time_t`](#astro_time_t) by a certain real number of days, call [`Astronomy_AddDays`](#Astronomy_AddDays).
 
-The [`astro_time_t`](#astro_time_t) type contains `ut` to represent Universal Time (UT1/UTC) and `tt` to represent Terrestrial Time (TT, also known as *ephemeris time*). The difference `tt-ut` is known as *&Delta;T*, and is obtained from a model provided by the [United States Naval Observatory](http://maia.usno.navy.mil/ser7/).
+The [`astro_time_t`](#astro_time_t) type contains `ut` to represent Universal Time (UT1/UTC) and `tt` to represent Terrestrial Time (TT, also known as *ephemeris time*). The difference `tt-ut` is known as *&Delta;T*, using a best-fit piecewise model devised by [Espenak and Meeus](https://eclipse.gsfc.nasa.gov/SEhelp/deltatpoly2004.html).
 
 Both `tt` and `ut` are necessary for performing different astronomical calculations. Indeed, certain calculations (such as rise/set times) require both time scales. See the documentation for the `ut` and `tt` fields for more detailed information.
 
-In cases where [`astro_time_t`](#astro_time_t) is included in a structure returned by a function that can fail, the astro_status_t field `status` will contain a value other than `ASTRO_SUCCESS`; in that case the `ut` and `tt` will hold `NAN` (not a number). In general, when there is an error code stored in a struct field `status`, the caller should ignore all other values in that structure, including the `ut` and `tt` inside [`astro_time_t`](#astro_time_t). 
+In cases where `[`astro_time_t`](#astro_time_t)` is included in a structure returned by a function that can fail, the `astro_status_t` field `status` will contain a value other than `ASTRO_SUCCESS`; in that case the `ut` and `tt` will hold `NAN` (not a number). In general, when there is an error code stored in a struct field `status`, the caller should ignore all other values in that structure, including the `ut` and `tt` inside `[`astro_time_t`](#astro_time_t)`. 
 
 | Type | Member | Description |
 | ---- | ------ | ----------- |

@@ -1516,9 +1516,9 @@ Sometimes we need to adjust a given [`AstroTime`](#AstroTime) value by a certain
 This function adds the given real number of days in `days` to the date and time in this object.
 
 More precisely, the result's Universal Time field `ut` is exactly adjusted by `days` and
-the Terrestrial Time field `tt` is adjusted correctly for the resulting UTC date and time,
-according to the historical and predictive Delta-T model provided by the
-[United States Naval Observatory](http://maia.usno.navy.mil/ser7/).
+the Terrestrial Time field `tt` is adjusted for the resulting UTC date and time,
+using a best-fit piecewise polynomial model devised by
+[Espenak and Meeus](https://eclipse.gsfc.nasa.gov/SEhelp/deltatpoly2004.html).
 
 | Type | Parameter | Description |
 | --- | --- | --- |
