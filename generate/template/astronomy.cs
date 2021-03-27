@@ -578,7 +578,7 @@ namespace CosineKitty
     }
 
     /// <summary>
-    /// Equatorial angular coordinates.
+    /// Equatorial angular and cartesian coordinates.
     /// </summary>
     /// <remarks>
     /// Coordinates of a celestial body as seen from the Earth
@@ -603,7 +603,7 @@ namespace CosineKitty
         public readonly double dist;
 
         /// <summary>
-        /// Equatorial coordinates in cartesian vector form: x = March equinox, y = September solstice, z = north.
+        /// Equatorial coordinates in cartesian vector form: x = March equinox, y = June solstice, z = north.
         /// </summary>
         public readonly AstroVector vec;
 

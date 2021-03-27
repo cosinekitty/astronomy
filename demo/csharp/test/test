@@ -9,8 +9,8 @@ rm -f test/{camera,moonphase,positions,riseset,seasons,culminate,horizon,lunar_e
 dotnet build --output ${PWD}/exe || Fail "Error building ${PWD}/demo.sln"
 
 echo "Testing example: camera.cs"
-exe/camera 29 -81 2021-03-22T02:45:00Z > test/camera.txt || Fail "Error testing camera.c."
-diff test/camera.txt test/camera_correct.txt || Fail "Error comparing camera.c output."
+exe/camera 29 -81 2021-03-22T02:45:00Z > test/camera.txt || Fail "Error testing camera.cs."
+diff test/camera.txt test/camera_correct.txt || Fail "Error comparing camera.cs output."
 
 echo "Testing example: moonphase.cs"
 exe/moonphase 2019-06-15T09:15:32.987Z > test/moonphase.txt || Fail "Error testing moonphase.cs"

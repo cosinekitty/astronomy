@@ -1693,12 +1693,19 @@ exports.Spherical = Spherical;
  * @property {number} dist
  *      Distance to the celestial object expressed in
  *      <a href="https://en.wikipedia.org/wiki/Astronomical_unit">astronomical units</a> (AU).
+ *
+ * @property {Vector} vec
+ *      The equatorial coordinates in cartesian form, using AU distance units.
+ *      x = direction of the March equinox,
+ *      y = direction of the June solstice,
+ *      z = north.
  */
 class EquatorialCoordinates {
-    constructor(ra, dec, dist) {
+    constructor(ra, dec, dist, vec) {
         this.ra = VerifyNumber(ra);
         this.dec = VerifyNumber(dec);
         this.dist = VerifyNumber(dist);
+        this.vec = vec;
     }
 }
 exports.EquatorialCoordinates = EquatorialCoordinates;
@@ -1837,22 +1844,22 @@ class EclipticCoordinates {
     }
 }
 exports.EclipticCoordinates = EclipticCoordinates;
-function vector2radec(pos) {
-    const xyproj = pos[0] * pos[0] + pos[1] * pos[1];
-    const dist = Math.sqrt(xyproj + pos[2] * pos[2]);
+function vector2radec(pos, time) {
+    const vec = new Vector(pos[0], pos[1], pos[2], time);
+    const xyproj = vec.x * vec.x + vec.y * vec.y;
+    const dist = Math.sqrt(xyproj + vec.z * vec.z);
     if (xyproj === 0) {
-        if (pos[2] === 0)
+        if (vec.z === 0)
             throw 'Indeterminate sky coordinates';
-        if (pos[2] < 0)
-            return { ra: 0, dec: -90, dist: dist };
-        return { ra: 0, dec: +90, dist: dist };
+        if (vec.z < 0)
+            return new EquatorialCoordinates(0, -90, dist, vec);
+        return new EquatorialCoordinates(0, +90, dist, vec);
     }
-    let ra = Math.atan2(pos[1], pos[0]) / (DEG2RAD * 15);
-    if (ra < 0) {
+    let ra = Math.atan2(vec.y, vec.x) / (DEG2RAD * 15);
+    if (ra < 0)
         ra += 24;
-    }
-    let dec = Math.atan2(pos[2], Math.sqrt(xyproj)) / DEG2RAD;
-    return new EquatorialCoordinates(ra, dec, dist);
+    const dec = Math.atan2(pos[2], Math.sqrt(xyproj)) / DEG2RAD;
+    return new EquatorialCoordinates(ra, dec, dist, vec);
 }
 function spin(angle, pos1) {
     const angr = angle * DEG2RAD;
@@ -2144,10 +2151,10 @@ function Equator(body, date, observer, ofdate, aberration) {
         gc.z - gc_observer[2]
     ];
     if (!ofdate)
-        return vector2radec(j2000);
+        return vector2radec(j2000, time);
     const temp = precession(0, j2000, time.tt);
     const datevect = nutation(time, 0, temp);
-    return vector2radec(datevect);
+    return vector2radec(datevect, time);
 }
 exports.Equator = Equator;
 function RotateEquatorialToEcliptic(gx, gy, gz, cos_ob, sin_ob) {
@@ -4679,7 +4686,7 @@ exports.VectorFromEquator = VectorFromEquator;
  */
 function EquatorFromVector(vec) {
     const sphere = SphereFromVector(vec);
-    return new EquatorialCoordinates(sphere.lon / 15, sphere.lat, sphere.dist);
+    return new EquatorialCoordinates(sphere.lon / 15, sphere.lat, sphere.dist, vec);
 }
 exports.EquatorFromVector = EquatorFromVector;
 /**
@@ -6153,7 +6160,8 @@ function Constellation(ra, dec) {
         Epoch2000 = new AstroTime(0);
     }
     // Convert coordinates from J2000 to B1875.
-    const equ2000 = new EquatorialCoordinates(ra, dec, 1.0);
+    const dummyVector = new Vector(0, 0, 0, Epoch2000); // FIXFIXFIX: rework so we don't need dummy vector
+    const equ2000 = new EquatorialCoordinates(ra, dec, 1.0, dummyVector);
     const vec2000 = VectorFromEquator(equ2000, Epoch2000);
     const vec1875 = RotateVector(ConstelRot, vec2000);
     const equ1875 = EquatorFromVector(vec1875);

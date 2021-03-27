@@ -2533,7 +2533,7 @@ Coordinates of a celestial body as seen from the Earth (geocentric or topocentri
 | `double` | `ra` |  right ascension in sidereal hours.  |
 | `double` | `dec` |  declination in degrees  |
 | `double` | `dist` |  distance to the celestial body in AU.  |
-| [`astro_vector_t`](#astro_vector_t) | `vec` |  equatorial coordinates in cartesian vector form: x = March equinox, y = September solstice, z = north.  |
+| [`astro_vector_t`](#astro_vector_t) | `vec` |  equatorial coordinates in cartesian vector form: x = March equinox, y = June solstice, z = north.  |
 
 
 ---

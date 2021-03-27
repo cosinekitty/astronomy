@@ -252,6 +252,7 @@ a point using two angles and a distance.
 | ra | <code>number</code> | Right ascension in sidereal hours: [0, 24). |
 | dec | <code>number</code> | Declination in degrees: [-90, +90]. |
 | dist | <code>number</code> | Distance to the celestial object expressed in      <a href="https://en.wikipedia.org/wiki/Astronomical_unit">astronomical units</a> (AU). |
+| vec | [<code>Vector</code>](#Vector) | The equatorial coordinates in cartesian form, using AU distance units.      x = direction of the March equinox,      y = direction of the June solstice,      z = north. |
 
 
 * * *

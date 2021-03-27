@@ -1762,7 +1762,7 @@ calculations.
 <a name="Equatorial"></a>
 ## `struct Equatorial`
 
-**Equatorial angular coordinates.**
+**Equatorial angular and cartesian coordinates.**
 
 Coordinates of a celestial body as seen from the Earth
 (geocentric or topocentric, depending on context),
@@ -1773,7 +1773,7 @@ oriented with respect to the projection of the Earth's equator onto the sky.
 | `double` | `ra` | Right ascension in sidereal hours. |
 | `double` | `dec` | Declination in degrees. |
 | `double` | `dist` | Distance to the celestial body in AU. |
-| [`AstroVector`](#AstroVector) | `vec` | Equatorial coordinates in cartesian vector form: x = March equinox, y = September solstice, z = north. |
+| [`AstroVector`](#AstroVector) | `vec` | Equatorial coordinates in cartesian vector form: x = March equinox, y = June solstice, z = north. |
 
 ---
 

@@ -194,12 +194,19 @@ export declare class Spherical {
  * @property {number} dist
  *      Distance to the celestial object expressed in
  *      <a href="https://en.wikipedia.org/wiki/Astronomical_unit">astronomical units</a> (AU).
+ *
+ * @property {Vector} vec
+ *      The equatorial coordinates in cartesian form, using AU distance units.
+ *      x = direction of the March equinox,
+ *      y = direction of the June solstice,
+ *      z = north.
  */
 export declare class EquatorialCoordinates {
     ra: number;
     dec: number;
     dist: number;
-    constructor(ra: number, dec: number, dist: number);
+    vec: Vector;
+    constructor(ra: number, dec: number, dist: number, vec: Vector);
 }
 /**
  * @brief Contains a rotation matrix that can be used to transform one coordinate system to another.
