@@ -224,9 +224,7 @@ oriented with respect to the plane of the Earth's orbit around the Sun (the ecli
 
 | Type | Attribute | Description |
 | --- | --- | --- |
-| `float` | `ex` | Cartesian x-coordinate: in the direction of the equinox along the ecliptic plane. |
-| `float` | `ey` | Cartesian y-coordinate: in the ecliptic plane 90 degrees prograde from the equinox. |
-| `float` | `ez` | Cartesian z-coordinate: perpendicular to the ecliptic plane. Positive is north. |
+| [`Vector`](#Vector) | `vec` | Ecliptic cartesian vector with the following components: x: in the direction of the equinox along the ecliptic plane. y: Cartesian y-coordinate: in the ecliptic plane 90 degrees prograde from the equinox. z: Cartesian z-coordinate: perpendicular to the ecliptic plane. Positive is north. |
 | `float` | `elat` | Latitude in degrees north (positive) or south (negative) of the ecliptic plane. |
 | `float` | `elon` | Longitude in degrees around the ecliptic plane prograde from the equinox. |
 

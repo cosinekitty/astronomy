@@ -1251,14 +1251,14 @@ function Rotation() {
         const ev = Astronomy.HelioVector('Earth', time);
 
         /* Use the existing Astronomy.Ecliptic() to calculate ecliptic vector and angles. */
-        const ecl = Astronomy.Ecliptic(ev.x, ev.y, ev.z);
-        if (Verbose) console.log(`JS Test_EQJ_ECL ecl = (${ecl.ex}, ${ecl.ey}, ${ecl.ez})`);
+        const ecl = Astronomy.Ecliptic(ev);
+        if (Verbose) console.log(`JS Test_EQJ_ECL ecl = (${ecl.vec.x}, ${ecl.vec.y}, ${ecl.vec.z})`);
 
         /* Now compute the same vector via rotation matrix. */
         const ee = Astronomy.RotateVector(r, ev);
-        const dx = ee.x - ecl.ex;
-        const dy = ee.y - ecl.ey;
-        const dz = ee.z - ecl.ez;
+        const dx = ee.x - ecl.vec.x;
+        const dy = ee.y - ecl.vec.y;
+        const dz = ee.z - ecl.vec.z;
         const diff = sqrt(dx*dx + dy*dy + dz*dz);
         if (Verbose) console.log(`JS Test_EQJ_ECL ee = (${ee.x}, ${ee.y}, ${ee.z}); diff = ${diff}`);
         if (diff > 2.0e-15)

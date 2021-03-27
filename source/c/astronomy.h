@@ -267,9 +267,7 @@ astro_equatorial_t;
 typedef struct
 {
     astro_status_t status;  /**< `ASTRO_SUCCESS` if this struct is valid; otherwise an error code. */
-    double ex;              /**< Cartesian x-coordinate: in the direction of the equinox along the ecliptic plane. */
-    double ey;              /**< Cartesian y-coordinate: in the ecliptic plane 90 degrees prograde from the equinox. */
-    double ez;              /**< Cartesian z-coordinate: perpendicular to the ecliptic plane. Positive is north. */
+    astro_vector_t vec;     /**< Cartesian ecliptic vector: x=equinox, y=90 degrees prograde in ecliptic plane, z=northward perpendicular to ecliptic. */
     double elat;            /**< Latitude in degrees north (positive) or south (negative) of the ecliptic plane. */
     double elon;            /**< Longitude in degrees around the ecliptic plane prograde from the equinox. */
 }

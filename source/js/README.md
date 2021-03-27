@@ -310,9 +310,7 @@ and spherical coordinates `(elon, elat)` measured in degrees.
 
 | Name | Type | Description |
 | --- | --- | --- |
-| ex | <code>number</code> | The Cartesian x-coordinate of the body in astronomical units (AU).      The x-axis is within the ecliptic plane and is oriented in the direction of the      <a href="https://en.wikipedia.org/wiki/Equinox_(celestial_coordinates)">equinox</a>. |
-| ey | <code>number</code> | The Cartesian y-coordinate of the body in astronomical units (AU).      The y-axis is within the ecliptic plane and is oriented 90 degrees      counterclockwise from the equinox, as seen from above the Sun's north pole. |
-| ez | <code>number</code> | The Cartesian z-coordinate of the body in astronomical units (AU).      The z-axis is oriented perpendicular to the ecliptic plane,      along the direction of the Sun's north pole. |
+| vec | [<code>Vector</code>](#Vector) | Ecliptic cartesian vector with components measured in astronomical units (AU).      The x-axis is within the ecliptic plane and is oriented in the direction of the      <a href="https://en.wikipedia.org/wiki/Equinox_(celestial_coordinates)">equinox</a>.      The y-axis is within the ecliptic plane and is oriented 90 degrees      counterclockwise from the equinox, as seen from above the Sun's north pole.      The z-axis is oriented perpendicular to the ecliptic plane,      along the direction of the Sun's north pole. |
 | elat | <code>number</code> | The ecliptic latitude of the body in degrees.      This is the angle north or south of the ecliptic plane.      The value is in the range [-90, +90].      Positive values are north and negative values are south. |
 | elon | <code>number</code> | The ecliptic longitude of the body in degrees.      This is the angle measured counterclockwise around the ecliptic plane,      as seen from above the Sun's north pole.      This is the same direction that the Earth orbits around the Sun.      The angle is measured starting at 0 from the equinox and increases      up to 360 degrees. |
 
@@ -800,20 +798,17 @@ However, it can have a small effect on the apparent positions of other bodies.
 
 <a name="Ecliptic"></a>
 
-## Ecliptic(gx, gy, gz) ⇒ [<code>EclipticCoordinates</code>](#EclipticCoordinates)
+## Ecliptic(equ) ⇒ [<code>EclipticCoordinates</code>](#EclipticCoordinates)
 **Kind**: global function  
 **Brief**: Converts equatorial Cartesian coordinates to ecliptic Cartesian and angular coordinates.
 
 Given J2000 equatorial Cartesian coordinates,
 returns J2000 ecliptic latitude, longitude, and cartesian coordinates.
-You can call [GeoVector](#GeoVector) and use its (x, y, z) return values
-to pass into this function.  
+You can call [GeoVector](#GeoVector) and pass the resulting vector to this function.  
 
 | Param | Type | Description |
 | --- | --- | --- |
-| gx | <code>number</code> | The x-coordinate of a 3D vector in the J2000 equatorial coordinate system. |
-| gy | <code>number</code> | The y-coordinate of a 3D vector in the J2000 equatorial coordinate system. |
-| gz | <code>number</code> | The z-coordinate of a 3D vector in the J2000 equatorial coordinate system. |
+| equ | [<code>Vector</code>](#Vector) | A vector in the J2000 equatorial coordinate system. |
 
 
 * * *

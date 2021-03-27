@@ -1816,18 +1816,12 @@ exports.HorizontalCoordinates = HorizontalCoordinates;
  * <a href="https://en.wikipedia.org/wiki/Astronomical_unit">astronomical units</a> (AU)
  * and spherical coordinates `(elon, elat)` measured in degrees.
  *
- * @property {number} ex
- *      The Cartesian x-coordinate of the body in astronomical units (AU).
+ * @property {Vector} vec
+ *      Ecliptic cartesian vector with components measured in astronomical units (AU).
  *      The x-axis is within the ecliptic plane and is oriented in the direction of the
  *      <a href="https://en.wikipedia.org/wiki/Equinox_(celestial_coordinates)">equinox</a>.
- *
- * @property {number} ey
- *      The Cartesian y-coordinate of the body in astronomical units (AU).
  *      The y-axis is within the ecliptic plane and is oriented 90 degrees
  *      counterclockwise from the equinox, as seen from above the Sun's north pole.
- *
- * @property {number} ez
- *      The Cartesian z-coordinate of the body in astronomical units (AU).
  *      The z-axis is oriented perpendicular to the ecliptic plane,
  *      along the direction of the Sun's north pole.
  *
@@ -1846,10 +1840,8 @@ exports.HorizontalCoordinates = HorizontalCoordinates;
  *      up to 360 degrees.
  */
 class EclipticCoordinates {
-    constructor(ex, ey, ez, elat, elon) {
-        this.ex = VerifyNumber(ex);
-        this.ey = VerifyNumber(ey);
-        this.ez = VerifyNumber(ez);
+    constructor(vec, elat, elon) {
+        this.vec = vec;
         this.elat = VerifyNumber(elat);
         this.elon = VerifyNumber(elon);
     }
@@ -2105,7 +2097,8 @@ function SunPosition(date) {
     const true_obliq = DEG2RAD * e_tilt(time).tobl;
     const cos_ob = Math.cos(true_obliq);
     const sin_ob = Math.sin(true_obliq);
-    const sun_ecliptic = RotateEquatorialToEcliptic(gx, gy, gz, cos_ob, sin_ob);
+    const vec = new Vector(gx, gy, gz, time);
+    const sun_ecliptic = RotateEquatorialToEcliptic(vec, cos_ob, sin_ob);
     return sun_ecliptic;
 }
 exports.SunPosition = SunPosition;
@@ -2168,11 +2161,11 @@ function Equator(body, date, observer, ofdate, aberration) {
     return vector2radec(datevect, time);
 }
 exports.Equator = Equator;
-function RotateEquatorialToEcliptic(gx, gy, gz, cos_ob, sin_ob) {
+function RotateEquatorialToEcliptic(equ, cos_ob, sin_ob) {
     // Rotate equatorial vector to obtain ecliptic vector.
-    const ex = gx;
-    const ey = gy * cos_ob + gz * sin_ob;
-    const ez = -gy * sin_ob + gz * cos_ob;
+    const ex = equ.x;
+    const ey = equ.y * cos_ob + equ.z * sin_ob;
+    const ez = -equ.y * sin_ob + equ.z * cos_ob;
     const xyproj = Math.sqrt(ex * ex + ey * ey);
     let elon = 0;
     if (xyproj > 0) {
@@ -2181,28 +2174,22 @@ function RotateEquatorialToEcliptic(gx, gy, gz, cos_ob, sin_ob) {
             elon += 360;
     }
     let elat = RAD2DEG * Math.atan2(ez, xyproj);
-    return new EclipticCoordinates(ex, ey, ez, elat, elon);
+    let ecl = new Vector(ex, ey, ez, equ.t);
+    return new EclipticCoordinates(ecl, elat, elon);
 }
 /**
  * @brief Converts equatorial Cartesian coordinates to ecliptic Cartesian and angular coordinates.
  *
  * Given J2000 equatorial Cartesian coordinates,
  * returns J2000 ecliptic latitude, longitude, and cartesian coordinates.
- * You can call {@link GeoVector} and use its (x, y, z) return values
- * to pass into this function.
+ * You can call {@link GeoVector} and pass the resulting vector to this function.
  *
- * @param {number} gx
- *      The x-coordinate of a 3D vector in the J2000 equatorial coordinate system.
- *
- * @param {number} gy
- *      The y-coordinate of a 3D vector in the J2000 equatorial coordinate system.
- *
- * @param {number} gz
- *      The z-coordinate of a 3D vector in the J2000 equatorial coordinate system.
+ * @param {Vector} equ
+ *      A vector in the J2000 equatorial coordinate system.
  *
  * @returns {EclipticCoordinates}
  */
-function Ecliptic(gx, gy, gz) {
+function Ecliptic(equ) {
     // Based on NOVAS functions equ2ecl() and equ2ecl_vec().
     if (ob2000 === undefined) {
         // Lazy-evaluate and keep the mean obliquity of the ecliptic at J2000.
@@ -2211,10 +2198,7 @@ function Ecliptic(gx, gy, gz) {
         cos_ob2000 = Math.cos(ob2000);
         sin_ob2000 = Math.sin(ob2000);
     }
-    VerifyNumber(gx);
-    VerifyNumber(gy);
-    VerifyNumber(gz);
-    return RotateEquatorialToEcliptic(gx, gy, gz, cos_ob2000, sin_ob2000);
+    return RotateEquatorialToEcliptic(equ, cos_ob2000, sin_ob2000);
 }
 exports.Ecliptic = Ecliptic;
 /**
@@ -3077,10 +3061,10 @@ function LongitudeFromSun(body, date) {
     if (body === Body.Earth)
         throw 'The Earth does not have a longitude as seen from itself.';
     const t = MakeTime(date);
-    let gb = GeoVector(body, t, false);
-    const eb = Ecliptic(gb.x, gb.y, gb.z);
-    let gs = GeoVector(Body.Sun, t, false);
-    const es = Ecliptic(gs.x, gs.y, gs.z);
+    const gb = GeoVector(body, t, false);
+    const eb = Ecliptic(gb);
+    const gs = GeoVector(Body.Sun, t, false);
+    const es = Ecliptic(gs);
     return NormalizeLongitude(eb.elon - es.elon);
 }
 exports.LongitudeFromSun = LongitudeFromSun;
@@ -3132,8 +3116,8 @@ exports.AngleFromSun = AngleFromSun;
 function EclipticLongitude(body, date) {
     if (body === Body.Sun)
         throw 'Cannot calculate heliocentric longitude of the Sun.';
-    let hv = HelioVector(body, date);
-    let eclip = Ecliptic(hv.x, hv.y, hv.z);
+    const hv = HelioVector(body, date);
+    const eclip = Ecliptic(hv);
     return eclip.elon;
 }
 exports.EclipticLongitude = EclipticLongitude;
@@ -3190,7 +3174,7 @@ function SaturnMagnitude(phase, helio_dist, geo_dist, gc, time) {
     // http://www.stjarnhimlen.se/comp/ppcomp.html#15
     // We must handle Saturn's rings as a major component of its visual magnitude.
     // Find geocentric ecliptic coordinates of Saturn.
-    const eclip = Ecliptic(gc.x, gc.y, gc.z);
+    const eclip = Ecliptic(gc);
     const ir = DEG2RAD * 28.06; // tilt of Saturn's rings to the ecliptic, in radians
     const Nr = DEG2RAD * (169.51 + (3.82e-5 * time.tt)); // ascending node of Saturn's rings, in radians
     // Find tilt of Saturn's rings, as seen from Earth.

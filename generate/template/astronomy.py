@@ -2185,25 +2185,22 @@ class EclipticCoordinates:
 
     Attributes
     ----------
-    ex : float
-        Cartesian x-coordinate: in the direction of the equinox along the ecliptic plane.
-    ey : float
-        Cartesian y-coordinate: in the ecliptic plane 90 degrees prograde from the equinox.
-    ez : float
-        Cartesian z-coordinate: perpendicular to the ecliptic plane. Positive is north.
+    vec : Vector
+        Ecliptic cartesian vector with the following components:
+        x: in the direction of the equinox along the ecliptic plane.
+        y: Cartesian y-coordinate: in the ecliptic plane 90 degrees prograde from the equinox.
+        z: Cartesian z-coordinate: perpendicular to the ecliptic plane. Positive is north.
     elat : float
         Latitude in degrees north (positive) or south (negative) of the ecliptic plane.
     elon : float
         Longitude in degrees around the ecliptic plane prograde from the equinox.
     """
-    def __init__(self, ex, ey, ez, elat, elon):
-        self.ex = ex
-        self.ey = ey
-        self.ez = ez
+    def __init__(self, vec, elat, elon):
+        self.vec = vec
         self.elat = elat
         self.elon = elon
 
-def _RotateEquatorialToEcliptic(pos, obliq_radians):
+def _RotateEquatorialToEcliptic(pos, obliq_radians, time):
     cos_ob = math.cos(obliq_radians)
     sin_ob = math.sin(obliq_radians)
     ex = +pos[0]
@@ -2217,7 +2214,8 @@ def _RotateEquatorialToEcliptic(pos, obliq_radians):
     else:
         elon = 0.0
     elat = math.degrees(math.atan2(ez, xyproj))
-    return EclipticCoordinates(ex, ey, ez, elat, elon)
+    vec = Vector(ex, ey, ez, time)
+    return EclipticCoordinates(vec, elat, elon)
 
 def SunPosition(time):
     """Calculates geocentric ecliptic coordinates for the Sun.
@@ -2259,7 +2257,7 @@ def SunPosition(time):
 
     # Convert equatorial coordinates to ecliptic coordinates.
     true_obliq = math.radians(adjusted_time._etilt().tobl)
-    return _RotateEquatorialToEcliptic(sun_ofdate, true_obliq)
+    return _RotateEquatorialToEcliptic(sun_ofdate, true_obliq, time)
 
 def Ecliptic(equ):
     """Converts J2000 equatorial Cartesian coordinates to J2000 ecliptic coordinates.
@@ -2280,7 +2278,7 @@ def Ecliptic(equ):
     """
     # Based on NOVAS functions equ2ecl() and equ2ecl_vec().
     ob2000 = 0.40909260059599012   # mean obliquity of the J2000 ecliptic in radians
-    return _RotateEquatorialToEcliptic([equ.x, equ.y, equ.z], ob2000)
+    return _RotateEquatorialToEcliptic([equ.x, equ.y, equ.z], ob2000, equ.t)
 
 def EclipticLongitude(body, time):
     """Calculates heliocentric ecliptic longitude of a body based on the J2000 equinox.

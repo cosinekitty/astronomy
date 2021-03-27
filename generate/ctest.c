@@ -2194,16 +2194,16 @@ static int Test_EQJ_ECL(void)
     if (ecl.status != ASTRO_SUCCESS)
         FAIL("C Test_EQJ_ECL: Astronomy_Ecliptic returned error %d\n", ecl.status);
 
-    DEBUG("C Test_EQJ_ECL ecl = (%0.18lf, %0.18lf,%0.18lf)\n", ecl.ex, ecl.ey, ecl.ez);
+    DEBUG("C Test_EQJ_ECL ecl = (%0.18lf, %0.18lf,%0.18lf)\n", ecl.vec.x, ecl.vec.y, ecl.vec.z);
 
     /* Now compute the same vector via rotation matrix. */
     ee = Astronomy_RotateVector(r, ev);
     if (ee.status != ASTRO_SUCCESS)
         FAIL("C Test_EQJ_ECL: Astronomy_RotateVector returned error %d\n", ee.status);
 
-    dx = ee.x - ecl.ex;
-    dy = ee.y - ecl.ey;
-    dz = ee.z - ecl.ez;
+    dx = ee.x - ecl.vec.x;
+    dy = ee.y - ecl.vec.y;
+    dz = ee.z - ecl.vec.z;
     diff = V(sqrt(dx*dx + dy*dy + dz*dz));
     DEBUG("C Test_EQJ_ECL  ee = (%0.18lf, %0.18lf,%0.18lf);  diff=%lg\n", ee.x, ee.y, ee.z, diff);
     if (diff > 1.0e-16)

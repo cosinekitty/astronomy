@@ -832,13 +832,13 @@ def Test_EQJ_ECL():
 
     # Use the existing astronomy.Ecliptic() to calculate ecliptic vector and angles.
     ecl = astronomy.Ecliptic(ev)
-    Debug('PY Test_EQJ_ECL ecl = ({}, {}, {})'.format(ecl.ex, ecl.ey, ecl.ez))
+    Debug('PY Test_EQJ_ECL ecl = ({}, {}, {})'.format(ecl.vec.x, ecl.vec.y, ecl.vec.z))
 
     # Now compute the same vector via rotation matrix.
     ee = astronomy.RotateVector(r, ev)
-    dx = ee.x - ecl.ex
-    dy = ee.y - ecl.ey
-    dz = ee.z - ecl.ez
+    dx = ee.x - ecl.vec.x
+    dy = ee.y - ecl.vec.y
+    dz = ee.z - ecl.vec.z
     diff = sqrt(dx*dx + dy*dy + dz*dz)
     Debug('PY Test_EQJ_ECL ee = ({}, {}, {}); diff = {}'.format(ee.x, ee.y, ee.z, diff))
     if diff > 1.0e-16:

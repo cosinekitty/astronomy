@@ -308,18 +308,12 @@ export declare class HorizontalCoordinates {
  * <a href="https://en.wikipedia.org/wiki/Astronomical_unit">astronomical units</a> (AU)
  * and spherical coordinates `(elon, elat)` measured in degrees.
  *
- * @property {number} ex
- *      The Cartesian x-coordinate of the body in astronomical units (AU).
+ * @property {Vector} vec
+ *      Ecliptic cartesian vector with components measured in astronomical units (AU).
  *      The x-axis is within the ecliptic plane and is oriented in the direction of the
  *      <a href="https://en.wikipedia.org/wiki/Equinox_(celestial_coordinates)">equinox</a>.
- *
- * @property {number} ey
- *      The Cartesian y-coordinate of the body in astronomical units (AU).
  *      The y-axis is within the ecliptic plane and is oriented 90 degrees
  *      counterclockwise from the equinox, as seen from above the Sun's north pole.
- *
- * @property {number} ez
- *      The Cartesian z-coordinate of the body in astronomical units (AU).
  *      The z-axis is oriented perpendicular to the ecliptic plane,
  *      along the direction of the Sun's north pole.
  *
@@ -338,12 +332,10 @@ export declare class HorizontalCoordinates {
  *      up to 360 degrees.
  */
 export declare class EclipticCoordinates {
-    ex: number;
-    ey: number;
-    ez: number;
+    vec: Vector;
     elat: number;
     elon: number;
-    constructor(ex: number, ey: number, ez: number, elat: number, elon: number);
+    constructor(vec: Vector, elat: number, elon: number);
 }
 /**
  * @brief Converts equatorial coordinates to horizontal coordinates.
@@ -475,21 +467,14 @@ export declare function Equator(body: Body, date: FlexibleDateTime, observer: Ob
  *
  * Given J2000 equatorial Cartesian coordinates,
  * returns J2000 ecliptic latitude, longitude, and cartesian coordinates.
- * You can call {@link GeoVector} and use its (x, y, z) return values
- * to pass into this function.
+ * You can call {@link GeoVector} and pass the resulting vector to this function.
  *
- * @param {number} gx
- *      The x-coordinate of a 3D vector in the J2000 equatorial coordinate system.
- *
- * @param {number} gy
- *      The y-coordinate of a 3D vector in the J2000 equatorial coordinate system.
- *
- * @param {number} gz
- *      The z-coordinate of a 3D vector in the J2000 equatorial coordinate system.
+ * @param {Vector} equ
+ *      A vector in the J2000 equatorial coordinate system.
  *
  * @returns {EclipticCoordinates}
  */
-export declare function Ecliptic(gx: number, gy: number, gz: number): EclipticCoordinates;
+export declare function Ecliptic(equ: Vector): EclipticCoordinates;
 /**
  * @brief Calculates the geocentric Cartesian coordinates for the Moon in the J2000 equatorial system.
  *

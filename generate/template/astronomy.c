@@ -196,7 +196,7 @@ static const double NEPTUNE_GM = 0.1524358900784276e-07;
 #define Y2000_IN_MJD    (T0 - MJD_BASIS)
 /** @endcond */
 
-static astro_ecliptic_t RotateEquatorialToEcliptic(const double pos[3], double obliq_radians);
+static astro_ecliptic_t RotateEquatorialToEcliptic(const double pos[3], double obliq_radians, astro_time_t time);
 static int QuadInterp(
     double tm, double dt, double fa, double fm, double fb,
     double *x, double *t, double *df_dt);
@@ -375,7 +375,7 @@ static astro_ecliptic_t EclError(astro_status_t status)
 {
     astro_ecliptic_t ecl;
     ecl.status = status;
-    ecl.ex = ecl.ey = ecl.ez = ecl.elat = ecl.elon = NAN;
+    ecl.vec = VecError(status, TimeError());
     return ecl;
 }
 
@@ -2870,7 +2870,7 @@ astro_ecliptic_t Astronomy_SunPosition(astro_time_t time)
 
     /* Convert equatorial coordinates to ecliptic coordinates. */
     true_obliq = DEG2RAD * e_tilt(&adjusted_time).tobl;
-    return RotateEquatorialToEcliptic(sun_ofdate, true_obliq);
+    return RotateEquatorialToEcliptic(sun_ofdate, true_obliq, time);
 }
 
 /**
@@ -2900,7 +2900,7 @@ astro_ecliptic_t Astronomy_Ecliptic(astro_vector_t equ)
     pos[1] = equ.y;
     pos[2] = equ.z;
 
-    return RotateEquatorialToEcliptic(pos, ob2000);
+    return RotateEquatorialToEcliptic(pos, ob2000, equ.t);
 }
 
 /**
@@ -2941,7 +2941,7 @@ astro_angle_result_t Astronomy_EclipticLongitude(astro_body_t body, astro_time_t
     return result;
 }
 
-static astro_ecliptic_t RotateEquatorialToEcliptic(const double pos[3], double obliq_radians)
+static astro_ecliptic_t RotateEquatorialToEcliptic(const double pos[3], double obliq_radians, astro_time_t time)
 {
     astro_ecliptic_t ecl;
     double cos_ob, sin_ob;
@@ -2950,21 +2950,23 @@ static astro_ecliptic_t RotateEquatorialToEcliptic(const double pos[3], double o
     cos_ob = cos(obliq_radians);
     sin_ob = sin(obliq_radians);
 
-    ecl.ex = +pos[0];
-    ecl.ey = +pos[1]*cos_ob + pos[2]*sin_ob;
-    ecl.ez = -pos[1]*sin_ob + pos[2]*cos_ob;
+    ecl.vec.status = ASTRO_SUCCESS;
+    ecl.vec.t = time;
+    ecl.vec.x = +pos[0];
+    ecl.vec.y = +pos[1]*cos_ob + pos[2]*sin_ob;
+    ecl.vec.z = -pos[1]*sin_ob + pos[2]*cos_ob;
 
-    xyproj = sqrt(ecl.ex*ecl.ex + ecl.ey*ecl.ey);
+    xyproj = sqrt(ecl.vec.x*ecl.vec.x + ecl.vec.y*ecl.vec.y);
     if (xyproj > 0.0)
     {
-        ecl.elon = RAD2DEG * atan2(ecl.ey, ecl.ex);
+        ecl.elon = RAD2DEG * atan2(ecl.vec.y, ecl.vec.x);
         if (ecl.elon < 0.0)
             ecl.elon += 360.0;
     }
     else
         ecl.elon = 0.0;
 
-    ecl.elat = RAD2DEG * atan2(ecl.ez, xyproj);
+    ecl.elat = RAD2DEG * atan2(ecl.vec.z, xyproj);
     ecl.status = ASTRO_SUCCESS;
     return ecl;
 }

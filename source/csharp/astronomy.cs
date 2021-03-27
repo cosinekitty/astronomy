@@ -633,19 +633,12 @@ namespace CosineKitty
     public struct Ecliptic
     {
         /// <summary>
-        /// Cartesian x-coordinate: in the direction of the equinox along the ecliptic plane.
+        /// Cartesian ecliptic vector, with components as follows:
+        /// x: the direction of the equinox along the ecliptic plane.
+        /// y: in the ecliptic plane 90 degrees prograde from the equinox.
+        /// z: perpendicular to the ecliptic plane. Positive is north.
         /// </summary>
-        public readonly double ex;
-
-        /// <summary>
-        /// Cartesian y-coordinate: in the ecliptic plane 90 degrees prograde from the equinox.
-        /// </summary>
-        public readonly double ey;
-
-        /// <summary>
-        /// Cartesian z-coordinate: perpendicular to the ecliptic plane. Positive is north.
-        /// </summary>
-        public readonly double ez;
+        public readonly AstroVector vec;
 
         /// <summary>
         /// Latitude in degrees north (positive) or south (negative) of the ecliptic plane.
@@ -660,16 +653,12 @@ namespace CosineKitty
         /// <summary>
         /// Creates an object that holds Cartesian and angular ecliptic coordinates.
         /// </summary>
-        /// <param name="ex">x-coordinate of the ecliptic position</param>
-        /// <param name="ey">y-coordinate of the ecliptic position</param>
-        /// <param name="ez">z-coordinate of the ecliptic position</param>
+        /// <param name="vec">ecliptic vector</param>
         /// <param name="elat">ecliptic latitude</param>
         /// <param name="elon">ecliptic longitude</param>
-        public Ecliptic(double ex, double ey, double ez, double elat, double elon)
+        public Ecliptic(AstroVector vec, double elat, double elon)
         {
-            this.ex = ex;
-            this.ey = ey;
-            this.ez = ez;
+            this.vec = vec;
             this.elat = elat;
             this.elon = elon;
         }
@@ -4376,7 +4365,8 @@ namespace CosineKitty
 
             double elat = RAD2DEG * Math.Atan2(ez, xyproj);
 
-            return new Ecliptic(ex, ey, ez, elat, elon);
+            var vec = new AstroVector(ex, ey, ez, pos.t);
+            return new Ecliptic(vec, elat, elon);
         }
 
         /// <summary>

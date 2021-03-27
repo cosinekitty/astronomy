@@ -1400,13 +1400,13 @@ namespace csharp_test
 
             /* Use the older function to calculate ecliptic vector and angles. */
             Ecliptic ecl = Astronomy.EquatorialToEcliptic(ev);
-            Debug("C# Test_EQJ_ECL ecl = ({0}, {1}, {2})", ecl.ex, ecl.ey, ecl.ez);
+            Debug("C# Test_EQJ_ECL ecl = ({0}, {1}, {2})", ecl.vec.x, ecl.vec.y, ecl.vec.z);
 
             /* Now compute the same vector via rotation matrix. */
             AstroVector ee = Astronomy.RotateVector(r, ev);
-            double dx = ee.x - ecl.ex;
-            double dy = ee.y - ecl.ey;
-            double dz = ee.z - ecl.ez;
+            double dx = ee.x - ecl.vec.x;
+            double dy = ee.y - ecl.vec.y;
+            double dz = ee.z - ecl.vec.z;
             double diff = sqrt(dx*dx + dy*dy + dz*dz);
             Debug("C# Test_EQJ_ECL ee = ({0}, {1}, {2}); diff={3}", ee.x, ee.y, ee.z, diff);
             if (diff > 1.0e-16)
