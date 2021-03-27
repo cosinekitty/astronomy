@@ -1282,7 +1282,7 @@ function Rotation() {
         const eqdate = Astronomy.Equator(body, time, observer, true, true);
 
         /* Convert EQJ spherical coordinates to vector. */
-        const v2000 = Astronomy.VectorFromEquator(eq2000, time);
+        const v2000 = eq2000.vec;
 
         /* Find rotation matrix. */
         const r = Astronomy.Rotation_EQJ_EQD(time);
@@ -1319,7 +1319,7 @@ function Rotation() {
         const hor = Astronomy.Horizon(time, observer, eqd.ra, eqd.dec, 'normal');
 
         /* Calculate the position of the body as an equatorial vector of date. */
-        const vec_eqd = Astronomy.VectorFromEquator(eqd, time);
+        const vec_eqd = eqd.vec;
 
         /* Calculate rotation matrix to convert equatorial J2000 vector to horizontal vector. */
         const rot = Astronomy.Rotation_EQD_HOR(time, observer);
@@ -1353,7 +1353,7 @@ function Rotation() {
 
         /* Exercise HOR to EQJ translation. */
         const eqj = Astronomy.Equator(body, time, observer, false, true);
-        const vec_eqj = Astronomy.VectorFromEquator(eqj, time);
+        const vec_eqj = eqj.vec;
         const yrot = Astronomy.Rotation_HOR_EQJ(time, observer);
         const check_eqj = Astronomy.RotateVector(yrot, vec_hor);
         diff = VectorDiff(check_eqj, vec_eqj);

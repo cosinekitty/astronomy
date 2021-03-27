@@ -5515,36 +5515,6 @@ astro_spherical_t Astronomy_SphereFromVector(astro_vector_t vector)
 
 /**
  * @brief
- *      Given angular equatorial coordinates in `equ`, calculates equatorial vector.
- *
- * @param equ
- *      Angular equatorial coordinates to be converted to a vector.
- *
- * @param time
- *      The date and time of the observation. This is needed because the returned
- *      vector requires a valid time value when passed to certain other functions.
- *
- * @return
- *      A vector in the equatorial system.
- */
-astro_vector_t Astronomy_VectorFromEquator(astro_equatorial_t equ, astro_time_t time)
-{
-    astro_spherical_t sphere;
-
-    if (equ.status != ASTRO_SUCCESS)
-        return VecError(ASTRO_INVALID_PARAMETER, time);
-
-    sphere.status = ASTRO_SUCCESS;
-    sphere.lat = equ.dec;
-    sphere.lon = 15.0 * equ.ra;     /* convert sidereal hours to degrees */
-    sphere.dist = equ.dist;
-
-    return Astronomy_VectorFromSphere(sphere, time);
-}
-
-
-/**
- * @brief
  *      Given an equatorial vector, calculates equatorial angular coordinates.
  *
  * @param vector
@@ -5566,6 +5536,7 @@ astro_equatorial_t Astronomy_EquatorFromVector(astro_vector_t vector)
     equ.dec = sphere.lat;
     equ.ra = sphere.lon / 15.0;     /* convert degrees to sidereal hours */
     equ.dist = sphere.dist;
+    equ.vec = vector;
 
     return equ;
 }
@@ -6195,7 +6166,8 @@ astro_constellation_t Astronomy_Constellation(double ra, double dec)
     static astro_time_t epoch2000;
     static astro_rotation_t rot = { ASTRO_NOT_INITIALIZED };
     astro_constellation_t constel;
-    astro_equatorial_t j2000, b1875;
+    astro_spherical_t s2000;
+    astro_equatorial_t b1875;
     astro_vector_t vec2000, vec1875;
     int i, c;
 
@@ -6232,11 +6204,11 @@ astro_constellation_t Astronomy_Constellation(double ra, double dec)
     }
 
     /* Convert coordinates from J2000 to year 1875. */
-    j2000.status = ASTRO_SUCCESS;
-    j2000.ra = ra;
-    j2000.dec = dec;
-    j2000.dist = 1.0;
-    vec2000 = Astronomy_VectorFromEquator(j2000, epoch2000);
+    s2000.status = ASTRO_SUCCESS;
+    s2000.lon = ra * 15.0;
+    s2000.lat = dec;
+    s2000.dist = 1.0;
+    vec2000 = Astronomy_VectorFromSphere(s2000, epoch2000);
     if (vec2000.status != ASTRO_SUCCESS)
         return ConstelErr(vec2000.status);
 

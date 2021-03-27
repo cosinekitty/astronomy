@@ -144,7 +144,6 @@ these are used in function and type names.
 | [Pivot](#Astronomy_Pivot) | Transforms a rotation matrix by pivoting it around a given axis by a given angle. |
 | [VectorFromSphere](#Astronomy_VectorFromSphere) | Converts spherical coordinates to Cartesian coordinates. |
 | [SphereFromVector](#Astronomy_SphereFromVector) | Converts Cartesian coordinates to spherical coordinates. |
-| [VectorFromEquator](#Astronomy_VectorFromEquator) | Given angular equatorial coordinates, calculates equatorial vector. |
 | [EquatorFromVector](#Astronomy_EquatorFromVector) | Given an equatorial vector, calculates equatorial angular coordinates. |
 | [VectorFromHorizon](#Astronomy_VectorFromHorizon) | Given apparent angular horizontal coordinates, calculates horizontal vector. |
 | [HorizonFromVector](#Astronomy_HorizonFromVector) | Given a vector in horizontal orientation, calculates horizontal angular coordinates. |
@@ -2085,29 +2084,6 @@ After calculating the date and time of an astronomical event in the form of an [
 | Type | Parameter | Description |
 | --- | --- | --- |
 | [`astro_time_t`](#astro_time_t) | `time` |  The astronomical time value to be converted to calendar date and time.  | 
-
-
-
-
----
-
-<a name="Astronomy_VectorFromEquator"></a>
-### Astronomy_VectorFromEquator(equ, time) &#8658; [`astro_vector_t`](#astro_vector_t)
-
-**Given angular equatorial coordinates in `equ`, calculates equatorial vector.** 
-
-
-
-
-
-**Returns:**  A vector in the equatorial system. 
-
-
-
-| Type | Parameter | Description |
-| --- | --- | --- |
-| [`astro_equatorial_t`](#astro_equatorial_t) | `equ` |  Angular equatorial coordinates to be converted to a vector. | 
-| [`astro_time_t`](#astro_time_t) | `time` |  The date and time of the observation. This is needed because the returned vector requires a valid time value when passed to certain other functions. | 
 
 
 

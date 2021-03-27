@@ -2244,7 +2244,7 @@ static int Test_EQJ_EQD(astro_body_t body)
     CHECK_STATUS(eqdate);
 
     /* Convert EQJ angular coordinates to vector. */
-    v2000 = Astronomy_VectorFromEquator(eq2000, time);
+    v2000 = eq2000.vec;
     CHECK_STATUS(v2000);
 
     /* Find rotation matrix. */
@@ -2302,7 +2302,7 @@ static int Test_EQD_HOR(astro_body_t body)
     hor = Astronomy_Horizon(&time, observer, eqd.ra, eqd.dec, REFRACTION_NORMAL);
 
     /* Calculate the position of the body as an equatorial vector of date. */
-    CHECK_VECTOR(vec_eqd, Astronomy_VectorFromEquator(eqd, time));
+    CHECK_VECTOR(vec_eqd, eqd.vec);
 
     /* Calculate rotation matrix to convert equatorial J2000 vector to horizontal vector. */
     rot = Astronomy_Rotation_EQD_HOR(time, observer);
@@ -2321,7 +2321,7 @@ static int Test_EQD_HOR(astro_body_t body)
     DEBUG("C Test_EQD_HOR %s: trusted alt=%0.3lf, az=%0.3lf; test alt=%0.3lf, az=%0.3lf; diff_alt=%lg, diff_az=%lg\n",
         Astronomy_BodyName(body), hor.altitude, hor.azimuth, sphere.lat, sphere.lon, diff_alt, diff_az);
 
-    if (diff_alt > 3.0e-14 || diff_az > 5e-14)
+    if (diff_alt > 3.0e-14 || diff_az > 7e-14)
         FAIL("C Test_EQD_HOR: EXCESSIVE HORIZONTAL ERROR.\n");
 
     /* Confirm that we can convert back to horizontal vector. */
@@ -2342,7 +2342,7 @@ static int Test_EQD_HOR(astro_body_t body)
 
     /* Exercise HOR to EQJ translation. */
     CHECK_EQU(eqj, Astronomy_Equator(body, &time, observer, EQUATOR_J2000, ABERRATION));
-    CHECK_VECTOR(vec_eqj, Astronomy_VectorFromEquator(eqj, time));
+    CHECK_VECTOR(vec_eqj, eqj.vec);
 
     rot = Astronomy_Rotation_HOR_EQJ(time, observer);
     CHECK_ROTMAT(rot);

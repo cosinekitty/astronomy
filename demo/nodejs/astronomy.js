@@ -34,7 +34,7 @@
 'use strict';
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SearchPlanetApsis = exports.NextLunarApsis = exports.SearchLunarApsis = exports.Apsis = exports.SearchPeakMagnitude = exports.SearchMaxElongation = exports.Elongation = exports.ElongationEvent = exports.Seasons = exports.SeasonInfo = exports.SearchHourAngle = exports.HourAngleEvent = exports.SearchRiseSet = exports.NextMoonQuarter = exports.SearchMoonQuarter = exports.MoonQuarter = exports.SearchMoonPhase = exports.MoonPhase = exports.SearchRelativeLongitude = exports.Illumination = exports.IlluminationInfo = exports.EclipticLongitude = exports.AngleFromSun = exports.LongitudeFromSun = exports.SearchSunLongitude = exports.Search = exports.GeoVector = exports.HelioDistance = exports.HelioVector = exports.GeoMoon = exports.Ecliptic = exports.Equator = exports.SunPosition = exports.Observer = exports.Horizon = exports.EclipticCoordinates = exports.HorizontalCoordinates = exports.MakeRotation = exports.RotationMatrix = exports.EquatorialCoordinates = exports.Spherical = exports.Vector = exports.CalcMoonCount = exports.MakeTime = exports.AstroTime = exports.SetDeltaTFunction = exports.DeltaT_JplHorizons = exports.DeltaT_EspenakMeeus = exports.Bodies = exports.AngleBetween = void 0;
-exports.NextTransit = exports.SearchTransit = exports.TransitInfo = exports.NextLocalSolarEclipse = exports.SearchLocalSolarEclipse = exports.LocalSolarEclipseInfo = exports.EclipseEvent = exports.NextGlobalSolarEclipse = exports.SearchGlobalSolarEclipse = exports.NextLunarEclipse = exports.GlobalSolarEclipseInfo = exports.SearchLunarEclipse = exports.LunarEclipseInfo = exports.Constellation = exports.ConstellationInfo = exports.Rotation_HOR_ECL = exports.Rotation_ECL_HOR = exports.Rotation_ECL_EQD = exports.Rotation_EQD_ECL = exports.Rotation_EQJ_HOR = exports.Rotation_HOR_EQJ = exports.Rotation_HOR_EQD = exports.Rotation_EQD_HOR = exports.Rotation_EQD_EQJ = exports.Rotation_EQJ_EQD = exports.Rotation_ECL_EQJ = exports.Rotation_EQJ_ECL = exports.RotateVector = exports.InverseRefraction = exports.Refraction = exports.VectorFromHorizon = exports.HorizonFromVector = exports.SphereFromVector = exports.EquatorFromVector = exports.VectorFromEquator = exports.VectorFromSphere = exports.Pivot = exports.IdentityMatrix = exports.CombineRotation = exports.InverseRotation = exports.NextPlanetApsis = void 0;
+exports.NextTransit = exports.SearchTransit = exports.TransitInfo = exports.NextLocalSolarEclipse = exports.SearchLocalSolarEclipse = exports.LocalSolarEclipseInfo = exports.EclipseEvent = exports.NextGlobalSolarEclipse = exports.SearchGlobalSolarEclipse = exports.NextLunarEclipse = exports.GlobalSolarEclipseInfo = exports.SearchLunarEclipse = exports.LunarEclipseInfo = exports.Constellation = exports.ConstellationInfo = exports.Rotation_HOR_ECL = exports.Rotation_ECL_HOR = exports.Rotation_ECL_EQD = exports.Rotation_EQD_ECL = exports.Rotation_EQJ_HOR = exports.Rotation_HOR_EQJ = exports.Rotation_HOR_EQD = exports.Rotation_EQD_HOR = exports.Rotation_EQD_EQJ = exports.Rotation_EQJ_EQD = exports.Rotation_ECL_EQJ = exports.Rotation_EQJ_ECL = exports.RotateVector = exports.InverseRefraction = exports.Refraction = exports.VectorFromHorizon = exports.HorizonFromVector = exports.SphereFromVector = exports.EquatorFromVector = exports.VectorFromSphere = exports.Pivot = exports.IdentityMatrix = exports.CombineRotation = exports.InverseRotation = exports.NextPlanetApsis = void 0;
 const DAYS_PER_TROPICAL_YEAR = 365.24217;
 const J2000 = new Date('2000-01-01T12:00:00Z');
 const PI2 = 2 * Math.PI;
@@ -4658,23 +4658,6 @@ function VectorFromSphere(sphere, time) {
 }
 exports.VectorFromSphere = VectorFromSphere;
 /**
- * @brief Given angular equatorial coordinates, calculates the equatorial vector.
- *
- * @param {EquatorialCoordinates} equ
- *      An object that contains angular equatorial coordinates to be converted to a vector.
- *
- * @param {AstroTime} time
- *      The date and time of the observation. This is needed because the returned
- *      vector object requires a valid time value when passed to certain other functions.
- *
- * @returns {Vector}
- *      A vector in the equatorial system.
- */
-function VectorFromEquator(equ, time) {
-    return VectorFromSphere(new Spherical(equ.dec, 15 * equ.ra, equ.dist), time);
-}
-exports.VectorFromEquator = VectorFromEquator;
-/**
  * @brief Given an equatorial vector, calculates equatorial angular coordinates.
  *
  * @param {Vector} vec
@@ -6159,9 +6142,8 @@ function Constellation(ra, dec) {
         Epoch2000 = new AstroTime(0);
     }
     // Convert coordinates from J2000 to B1875.
-    const dummyVector = new Vector(0, 0, 0, Epoch2000); // FIXFIXFIX: rework so we don't need dummy vector
-    const equ2000 = new EquatorialCoordinates(ra, dec, 1.0, dummyVector);
-    const vec2000 = VectorFromEquator(equ2000, Epoch2000);
+    const sph2000 = new Spherical(dec, 15.0 * ra, 1.0);
+    const vec2000 = VectorFromSphere(sph2000, Epoch2000);
     const vec1875 = RotateVector(ConstelRot, vec2000);
     const equ1875 = EquatorFromVector(vec1875);
     // Search for the constellation using the B1875 coordinates.

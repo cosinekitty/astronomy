@@ -4601,22 +4601,6 @@ export function VectorFromSphere(sphere, time) {
     return new Vector(rcoslat * Math.cos(radlon), rcoslat * Math.sin(radlon), sphere.dist * Math.sin(radlat), time);
 }
 /**
- * @brief Given angular equatorial coordinates, calculates the equatorial vector.
- *
- * @param {EquatorialCoordinates} equ
- *      An object that contains angular equatorial coordinates to be converted to a vector.
- *
- * @param {AstroTime} time
- *      The date and time of the observation. This is needed because the returned
- *      vector object requires a valid time value when passed to certain other functions.
- *
- * @returns {Vector}
- *      A vector in the equatorial system.
- */
-export function VectorFromEquator(equ, time) {
-    return VectorFromSphere(new Spherical(equ.dec, 15 * equ.ra, equ.dist), time);
-}
-/**
  * @brief Given an equatorial vector, calculates equatorial angular coordinates.
  *
  * @param {Vector} vec
@@ -6081,9 +6065,8 @@ export function Constellation(ra, dec) {
         Epoch2000 = new AstroTime(0);
     }
     // Convert coordinates from J2000 to B1875.
-    const dummyVector = new Vector(0, 0, 0, Epoch2000); // FIXFIXFIX: rework so we don't need dummy vector
-    const equ2000 = new EquatorialCoordinates(ra, dec, 1.0, dummyVector);
-    const vec2000 = VectorFromEquator(equ2000, Epoch2000);
+    const sph2000 = new Spherical(dec, 15.0 * ra, 1.0);
+    const vec2000 = VectorFromSphere(sph2000, Epoch2000);
     const vec1875 = RotateVector(ConstelRot, vec2000);
     const equ1875 = EquatorFromVector(vec1875);
     // Search for the constellation using the B1875 coordinates.

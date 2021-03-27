@@ -3823,25 +3823,6 @@ def VectorFromSphere(sphere, time):
     )
 
 
-def VectorFromEquator(equ, time):
-    """Given angular equatorial coordinates in `equ`, calculates equatorial vector.
-
-    Parameters
-    ----------
-    equ : Equatorial
-        Angular equatorial coordinates to be converted to a vector.
-    time : Time
-        The date and time of the observation. This is needed because the returned
-        vector object requires a valid time value when passed to certain other functions.
-
-    Returns
-    -------
-    Vector
-        A vector in the equatorial system.
-    """
-    return VectorFromSphere(Spherical(equ.dec, 15.0 * equ.ra, equ.dist), time)
-
-
 def EquatorFromVector(vec):
     """Given an equatorial vector, calculates equatorial angular coordinates.
 
@@ -4535,8 +4516,8 @@ def Constellation(ra, dec):
         _Epoch2000 = Time(0.0)
 
     # Convert coordinates from J2000 to B1875.
-    equ2000 = Equatorial(ra, dec, 1.0, None)    # FIXFIXFIX - avoid this hack with unused vector
-    vec2000 = VectorFromEquator(equ2000, _Epoch2000)
+    sph2000 = Spherical(dec, 15.0 * ra, 1.0)
+    vec2000 = VectorFromSphere(sph2000, _Epoch2000)
     vec1875 = RotateVector(_ConstelRot, vec2000)
     equ1875 = EquatorFromVector(vec1875)
 

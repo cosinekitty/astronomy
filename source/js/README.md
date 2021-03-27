@@ -114,7 +114,6 @@ these are used in function and type names.
 | [CombineRotation](#CombineRotation) | Given two rotation matrices, returns a rotation matrix that combines them into a net transformation. |
 | [VectorFromSphere](#VectorFromSphere) | Converts spherical coordinates to Cartesian coordinates. |
 | [SphereFromVector](#SphereFromVector) | Converts Cartesian coordinates to spherical coordinates. |
-| [VectorFromEquator](#VectorFromEquator) | Given angular equatorial coordinates, calculates equatorial vector. |
 | [EquatorFromVector](#EquatorFromVector) | Given an equatorial vector, calculates equatorial angular coordinates. |
 | [VectorFromHorizon](#VectorFromHorizon) | Given apparent angular horizontal coordinates, calculates horizontal vector. |
 | [HorizonFromVector](#HorizonFromVector) | Given a vector in horizontal orientation, calculates horizontal angular coordinates. |
@@ -1457,21 +1456,6 @@ includes the time, as required by `AstroTime`.
 | --- | --- | --- |
 | sphere | [<code>Spherical</code>](#Spherical) | Spherical coordinates to be converted. |
 | time | [<code>AstroTime</code>](#AstroTime) | The time that should be included in the returned vector. |
-
-
-* * *
-
-<a name="VectorFromEquator"></a>
-
-## VectorFromEquator(equ, time) ⇒ [<code>Vector</code>](#Vector)
-**Kind**: global function  
-**Returns**: [<code>Vector</code>](#Vector) - A vector in the equatorial system.  
-**Brief**: Given angular equatorial coordinates, calculates the equatorial vector.  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| equ | [<code>EquatorialCoordinates</code>](#EquatorialCoordinates) | An object that contains angular equatorial coordinates to be converted to a vector. |
-| time | [<code>AstroTime</code>](#AstroTime) | The date and time of the observation. This is needed because the returned      vector object requires a valid time value when passed to certain other functions. |
 
 
 * * *

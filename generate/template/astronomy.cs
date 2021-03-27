@@ -6060,20 +6060,6 @@ $ASTRO_IAU_DATA()
         }
 
 
-        /// <summary>Given angular equatorial coordinates in `equ`, calculates equatorial vector.</summary>
-        /// <param name="equ">Angular equatorial coordinates to be converted to a vector.</param>
-        /// <param name="time">
-        /// The date and time of the observation. This is needed because the returned
-        /// vector requires a valid time value when passed to certain other functions.
-        /// </param>
-        /// <returns>A vector in the equatorial system.</returns>
-        public static AstroVector VectorFromEquator(Equatorial equ, AstroTime time)
-        {
-            var sphere = new Spherical(equ.dec, 15.0 * equ.ra, equ.dist);
-            return VectorFromSphere(sphere, time);
-        }
-
-
         /// <summary>Given an equatorial vector, calculates equatorial angular coordinates.</summary>
         /// <param name="vector">A vector in an equatorial coordinate system.</param>
         /// <returns>Angular coordinates expressed in the same equatorial system as `vector`.</returns>
@@ -6675,9 +6661,8 @@ $ASTRO_IAU_DATA()
             }
 
             // Convert coordinates from J2000 to B1875.
-            var dummyVector = new AstroVector();    // we don't need the vector, but we have to pass one in
-            var equ2000 = new Equatorial(ra, dec, 1.0, dummyVector);
-            AstroVector vec2000 = VectorFromEquator(equ2000, Epoch2000);
+            var sph2000 = new Spherical(dec, 15.0 * ra, 1.0);
+            AstroVector vec2000 = VectorFromSphere(sph2000, Epoch2000);
             AstroVector vec1875 = RotateVector(ConstelRot, vec2000);
             Equatorial equ1875 = EquatorFromVector(vec1875);
 

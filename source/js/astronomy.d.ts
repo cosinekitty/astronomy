@@ -1374,20 +1374,6 @@ export declare function Pivot(rotation: RotationMatrix, axis: 0 | 1 | 2, angle: 
  */
 export declare function VectorFromSphere(sphere: Spherical, time: AstroTime): Vector;
 /**
- * @brief Given angular equatorial coordinates, calculates the equatorial vector.
- *
- * @param {EquatorialCoordinates} equ
- *      An object that contains angular equatorial coordinates to be converted to a vector.
- *
- * @param {AstroTime} time
- *      The date and time of the observation. This is needed because the returned
- *      vector object requires a valid time value when passed to certain other functions.
- *
- * @returns {Vector}
- *      A vector in the equatorial system.
- */
-export declare function VectorFromEquator(equ: EquatorialCoordinates, time: AstroTime): Vector;
-/**
  * @brief Given an equatorial vector, calculates equatorial angular coordinates.
  *
  * @param {Vector} vec

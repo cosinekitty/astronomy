@@ -864,7 +864,7 @@ def Test_EQJ_EQD(body):
     eqdate = astronomy.Equator(body, time, observer, True, True)
 
     # Convert EQJ spherical coordinates to vector.
-    v2000 = astronomy.VectorFromEquator(eq2000, time)
+    v2000 = eq2000.vec
 
     # Find rotation matrix.
     r = astronomy.Rotation_EQJ_EQD(time)
@@ -905,7 +905,7 @@ def Test_EQD_HOR(body):
     hor = astronomy.Horizon(time, observer, eqd.ra, eqd.dec, astronomy.Refraction.Normal)
 
     # Calculate the position of the body as an equatorial vector of date.
-    vec_eqd = astronomy.VectorFromEquator(eqd, time)
+    vec_eqd = eqd.vec
 
     # Calculate rotation matrix to convert equatorial J2000 vector to horizontal vector.
     rot = astronomy.Rotation_EQD_HOR(time, observer)
@@ -944,7 +944,7 @@ def Test_EQD_HOR(body):
 
     # Exercise HOR to EQJ translation.
     eqj = astronomy.Equator(body, time, observer, False, True)
-    vec_eqj = astronomy.VectorFromEquator(eqj, time)
+    vec_eqj = eqj.vec
     yrot = astronomy.Rotation_HOR_EQJ(time, observer)
     check_eqj = astronomy.RotateVector(yrot, vec_hor)
     diff = VectorDiff(check_eqj, vec_eqj)

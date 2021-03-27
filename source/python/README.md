@@ -123,7 +123,6 @@ these are used in function and type names.
 | [CombineRotation](#CombineRotation) | Given two rotation matrices, returns a rotation matrix that combines them into a net transformation. |
 | [VectorFromSphere](#VectorFromSphere) | Converts spherical coordinates to Cartesian coordinates. |
 | [SphereFromVector](#SphereFromVector) | Converts Cartesian coordinates to spherical coordinates. |
-| [VectorFromEquator](#VectorFromEquator) | Given angular equatorial coordinates, calculates equatorial vector. |
 | [EquatorFromVector](#EquatorFromVector) | Given an equatorial vector, calculates equatorial angular coordinates. |
 | [VectorFromHorizon](#VectorFromHorizon) | Given apparent angular horizontal coordinates, calculates horizontal vector. |
 | [HorizonFromVector](#HorizonFromVector) | Given a vector in horizontal orientation, calculates horizontal angular coordinates. |
@@ -2282,21 +2281,6 @@ In fact, the function [`Seasons`](#Seasons) does use this function for that purp
 
 ### Returns: [`EclipticCoordinates`](#EclipticCoordinates)
 The ecliptic coordinates of the Sun using the Earth's true equator of date.
-
----
-
-<a name="VectorFromEquator"></a>
-### VectorFromEquator(equ, time)
-
-**Given angular equatorial coordinates in `equ`, calculates equatorial vector.**
-
-| Type | Parameter | Description |
-| --- | --- | --- |
-| [`Equatorial`](#Equatorial) | `equ` | Angular equatorial coordinates to be converted to a vector. |
-| [`Time`](#Time) | `time` | The date and time of the observation. This is needed because the returned vector object requires a valid time value when passed to certain other functions. |
-
-### Returns: [`Vector`](#Vector)
-A vector in the equatorial system.
 
 ---
 

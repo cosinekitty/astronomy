@@ -1437,7 +1437,7 @@ namespace csharp_test
             var observer = new Observer(35, -85, 0);
             Equatorial eq2000 = Astronomy.Equator(body, time, observer, EquatorEpoch.J2000, Aberration.Corrected);
             Equatorial eqdate = Astronomy.Equator(body, time, observer, EquatorEpoch.OfDate, Aberration.Corrected);
-            AstroVector v2000 = Astronomy.VectorFromEquator(eq2000, time);
+            AstroVector v2000 = eq2000.vec;
             RotationMatrix r = Astronomy.Rotation_EQJ_EQD(time);
             AstroVector vdate = Astronomy.RotateVector(r, v2000);
             Equatorial eqcheck = Astronomy.EquatorFromVector(vdate);
@@ -1474,7 +1474,7 @@ namespace csharp_test
             var observer = new Observer(-37.0, +45.0, 0.0);
             Equatorial eqd = Astronomy.Equator(body, time, observer, EquatorEpoch.OfDate, Aberration.Corrected);
             Topocentric hor = Astronomy.Horizon(time, observer, eqd.ra, eqd.dec, Refraction.Normal);
-            AstroVector vec_eqd = Astronomy.VectorFromEquator(eqd, time);
+            AstroVector vec_eqd = eqd.vec;
             RotationMatrix rot = Astronomy.Rotation_EQD_HOR(time, observer);
             AstroVector vec_hor = Astronomy.RotateVector(rot, vec_eqd);
             Spherical sphere = Astronomy.HorizonFromVector(vec_hor, Refraction.Normal);
@@ -1485,7 +1485,7 @@ namespace csharp_test
             Debug("C# Test_EQD_HOR {0}: trusted alt={1}, az={2}; test alt={3}, az={4}; diff_alt={5}, diff_az={6}",
                 body, hor.altitude, hor.azimuth, sphere.lat, sphere.lon, diff_alt, diff_az);
 
-            if (diff_alt > 3.0e-14 || diff_az > 4e-14)
+            if (diff_alt > 3.0e-14 || diff_az > 7.0e-14)
             {
                 Console.WriteLine("C# Test_EQD_HOR: EXCESSIVE HORIZONTAL ERROR.");
                 return 1;
@@ -1514,7 +1514,7 @@ namespace csharp_test
 
             /* Exercise HOR to EQJ translation. */
             Equatorial eqj = Astronomy.Equator(body, time, observer, EquatorEpoch.J2000, Aberration.Corrected);
-            AstroVector vec_eqj = Astronomy.VectorFromEquator(eqj, time);
+            AstroVector vec_eqj = eqj.vec;
 
             rot = Astronomy.Rotation_HOR_EQJ(time, observer);
             AstroVector check_eqj = Astronomy.RotateVector(rot, vec_hor);

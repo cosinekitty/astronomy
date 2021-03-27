@@ -123,7 +123,6 @@ these are used in function and type names.
 | [Pivot](#Astronomy.Pivot) | Transforms a rotation matrix by pivoting it around a given axis by a given angle. |
 | [VectorFromSphere](#Astronomy.VectorFromSphere) | Converts spherical coordinates to Cartesian coordinates. |
 | [SphereFromVector](#Astronomy.SphereFromVector) | Converts Cartesian coordinates to spherical coordinates. |
-| [VectorFromEquator](#Astronomy.VectorFromEquator) | Given angular equatorial coordinates, calculates equatorial vector. |
 | [EquatorFromVector](#Astronomy.EquatorFromVector) | Given an equatorial vector, calculates equatorial angular coordinates. |
 | [VectorFromHorizon](#Astronomy.VectorFromHorizon) | Given apparent angular horizontal coordinates, calculates horizontal vector. |
 | [HorizonFromVector](#Astronomy.HorizonFromVector) | Given a vector in horizontal orientation, calculates horizontal angular coordinates. |
@@ -1393,18 +1392,6 @@ In fact, the function [`Astronomy.Seasons`](#Astronomy.Seasons) does use this fu
 | [`AstroTime`](#AstroTime) | `time` | The date and time for which to calculate the Sun's position. |
 
 **Returns:** The ecliptic coordinates of the Sun using the Earth's true equator of date.
-
-<a name="Astronomy.VectorFromEquator"></a>
-### Astronomy.VectorFromEquator(equ, time) &#8658; [`AstroVector`](#AstroVector)
-
-**Given angular equatorial coordinates in `equ`, calculates equatorial vector.**
-
-| Type | Parameter | Description |
-| --- | --- | --- |
-| [`Equatorial`](#Equatorial) | `equ` | Angular equatorial coordinates to be converted to a vector. |
-| [`AstroTime`](#AstroTime) | `time` | The date and time of the observation. This is needed because the returned vector requires a valid time value when passed to certain other functions. |
-
-**Returns:** A vector in the equatorial system.
 
 <a name="Astronomy.VectorFromHorizon"></a>
 ### Astronomy.VectorFromHorizon(sphere, time, refraction) &#8658; [`AstroVector`](#AstroVector)
