@@ -113,13 +113,13 @@ I felt when I saw Saturn through a backyard telescope for the first time.
 As a software developer, I naturally became interested in combining my love of
 astronomy with my computer programming skills.
 
-In 2008, I started to learn about formulas and algorithms for calculating positions
+In 2008, I started to learn about formulas for calculating positions
 of the Moon and planets. I discovered many wonderful resources, including
 
 - Paul Schlyter's lucid and educational page
-[Hot to compute planetary positions](http://www.stjarnhimlen.se/comp/ppcomp.html)
-- [Practical Astronomy with your Calculator](https://www.amazon.com/Practical-Astronomy-Calculator-Peter-Duffett-Smith/dp/0521356997), third edition, by Peter Duffett-Smith, Cambridge University Press. ISBN&nbsp;0&nbsp;521&nbsp;35629&nbsp;6
-- [Astronomy on the Personal Computer](https://www.amazon.com/Astronomy-Personal-Computer-Oliver-Montenbruck/dp/3540672214/) by Oliver Montenbruck and Thomas Pfleger. ISBN-13:&nbsp;978-3540672210
+[How to compute planetary positions](http://www.stjarnhimlen.se/comp/ppcomp.html).
+- [Practical Astronomy with your Calculator](https://www.amazon.com/Practical-Astronomy-Calculator-Peter-Duffett-Smith/dp/0521356997), third edition, by Peter Duffett-Smith, Cambridge University Press. ISBN&nbsp;0&nbsp;521&nbsp;35629&nbsp;6.
+- [Astronomy on the Personal Computer](https://www.amazon.com/Astronomy-Personal-Computer-Oliver-Montenbruck/dp/3540672214/) by Oliver Montenbruck and Thomas Pfleger. ISBN-13:&nbsp;978-3540672210.
 
 I implemented algorithms based on these resources. Over time, however, I noticed that they were not quite
 as accurate as I would like. Their calculated positions differed from those reported by online tools
@@ -173,8 +173,8 @@ simpler, faster, and smaller.
 I am committed to maintaining this project for the long term, and I am happy to
 answer questions about how to solve various astronomy calculation problems
 using Astronomy Engine. Feel free to reach out on the
-[Discussions page](https://github.com/cosinekitty/astronomy/discussions) or
-to [submit a new issue](https://github.com/cosinekitty/astronomy/issues).
+[discussions page](https://github.com/cosinekitty/astronomy/discussions) or
+[submit a new issue](https://github.com/cosinekitty/astronomy/issues).
 
 ### Acknowledgements
 
