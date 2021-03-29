@@ -1129,7 +1129,7 @@ The returned vector has components expressed in astronomical units (AU). To conv
 
 
 
-**Returns:**  A vector from the center of the Earth to the specified surface location. 
+**Returns:**  If successful, the returned vector holds `ASTRO_SUCCESS` in its `status` field, and is an equatorial vector from the center of the Earth to the specified location on (or near) the Earth's surface. Otherwise, `status` holds an error code. 
 
 
 

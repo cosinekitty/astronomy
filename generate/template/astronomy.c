@@ -2654,7 +2654,9 @@ astro_equatorial_t Astronomy_Equator(
  *      as the orientation.
  *
  * @return
- *      A vector from the center of the Earth to the specified surface location.
+ *      If successful, the returned vector holds `ASTRO_SUCCESS` in its `status` field,
+ *      and is an equatorial vector from the center of the Earth to the specified location
+ *      on (or near) the Earth's surface. Otherwise, `status` holds an error code.
  */
 astro_vector_t Astronomy_ObserverVector(
     astro_time_t *time,
@@ -2662,9 +2664,33 @@ astro_vector_t Astronomy_ObserverVector(
     astro_equator_date_t equdate)
 {
     astro_vector_t vec;
+    double gast, pos[3], temp[3];
 
-    vec = VecError(ASTRO_NOT_INITIALIZED, *time);
+    gast = sidereal_time(time);
+    terra(observer, gast, pos);
 
+    switch (equdate)
+    {
+    case EQUATOR_OF_DATE:
+        /* 'pos' already contains equator-of-date coordinates. */
+        break;
+
+    case EQUATOR_J2000:
+        /* Convert 'pos' from equator-of-date to J2000. */
+        nutation(time, -1, pos, temp);
+        precession(time->tt, temp, 0.0, pos);
+        break;
+
+    default:
+        /* This is not a valid value of the 'equdate' parameter. */
+        return VecError(ASTRO_INVALID_PARAMETER, *time);
+    }
+
+    vec.x = pos[0];
+    vec.y = pos[1];
+    vec.z = pos[2];
+    vec.t = *time;
+    vec.status = ASTRO_SUCCESS;
     return vec;
 }
 

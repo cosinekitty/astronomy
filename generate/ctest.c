@@ -89,6 +89,7 @@ static int LocalSolarEclipseTest1(void);
 static int LocalSolarEclipseTest2(void);
 static int Transit(void);
 static int DistancePlot(astro_body_t body, double ut1, double ut2, const char *filename);
+static int GeoidTest(void);
 
 typedef int (* unit_test_func_t) (void);
 
@@ -105,6 +106,7 @@ static unit_test_t UnitTests[] =
     {"constellation",           ConstellationTest},
     {"earth_apsis",             EarthApsis},
     {"elongation",              ElongationTest},
+    {"geoid",                   GeoidTest},
     {"global_solar_eclipse",    GlobalSolarEclipseTest},
     {"local_solar_eclipse",     LocalSolarEclipseTest},
     {"lunar_eclipse",           LunarEclipseTest},
@@ -3479,3 +3481,48 @@ fail:
 }
 
 /*-----------------------------------------------------------------------------------------------------------*/
+
+static int GeoidTest(void)
+{
+    int error;
+    astro_time_t time;
+    astro_vector_t surface;
+    astro_vector_t geo_moon;
+    astro_observer_t observer;
+    astro_equatorial_t topo_moon;
+    double dx, dy, dz, diff;
+
+    time = Astronomy_MakeTime(1970, 12, 13, 15, 42, 0.0);
+    observer = Astronomy_MakeObserver(-53.7, 141.7, 100.0);
+
+    topo_moon = Astronomy_Equator(BODY_MOON, &time, observer, EQUATOR_J2000, NO_ABERRATION);
+    CHECK_STATUS(topo_moon);
+
+    surface = Astronomy_ObserverVector(&time, observer, EQUATOR_J2000);
+    CHECK_STATUS(surface);
+
+    geo_moon = Astronomy_GeoMoon(time);
+    CHECK_STATUS(geo_moon);
+
+    dx = KM_PER_AU * V((geo_moon.x - surface.x) - topo_moon.vec.x);
+    dy = KM_PER_AU * V((geo_moon.y - surface.y) - topo_moon.vec.y);
+    dz = KM_PER_AU * V((geo_moon.z - surface.z) - topo_moon.vec.z);
+    diff = sqrt(dx*dx + dy*dy + dz*dz);
+    DEBUG("C GeoidTest: surface=(%0.6lf, %0.6lf, %0.6lf), diff = %0.6lf km\n",
+        KM_PER_AU * surface.x,
+        KM_PER_AU * surface.y,
+        KM_PER_AU * surface.z,
+        diff);
+
+    /* Require 1 millimeter accuracy! (one millionth of a kilometer). */
+    if (diff > 1.0e-6)
+        FAIL("C GeoidTest: EXCESSIVE POSITION ERROR.\n");
+
+    printf("C GeoidTest: PASS\n");
+    error = 0;
+fail:
+    return error;
+}
+
+/*-----------------------------------------------------------------------------------------------------------*/
+
