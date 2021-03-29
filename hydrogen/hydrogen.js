@@ -244,6 +244,16 @@ class Define extends Item {
 
     Markdown() {
         let md = this.MarkdownPrefix();
+        let name = Item.Flat(this.name);
+        md += '### `' + name + '`\n\n';
+        md += this.MdDescription(this.brief, this.detail, true);
+        let defn;
+        if (this.init._) {
+            defn = this.init._.trim();
+        } else {
+            defn = this.init.ref[0]._;
+        }
+        md += "\n\n```C\n#define " + name + "  " + defn + "\n```\n\n";
         return md;
     }
 }
@@ -390,6 +400,11 @@ class StructInfo extends Item {
         md += '### `' + name + '`\n\n';
         md += this.MdDescription(this.brief, this.detail, true);
         md += '\n\n';
+
+        if (!this.section) {
+            throw `struct "${name}" has no inner members.`;
+        }
+
         md += '| Type | Member | Description |\n';
         md += '| ---- | ------ | ----------- |\n';
         for (let member of this.section.$$) {
@@ -498,6 +513,12 @@ class Transformer {
         md += '## Functions\n\n';
         for (let f of this.funcs) {
             md += f.Markdown();
+        }
+
+        md += '\n<a name="constants"></a>\n';
+        md += '## Constants\n\n';
+        for (let d of this.defines) {
+            md += d.Markdown();
         }
 
         md += '\n<a name="enums"></a>\n';

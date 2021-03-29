@@ -138,14 +138,11 @@ body_state_t;
 /** @endcond */
 
 static const double DAYS_PER_TROPICAL_YEAR = 365.24217;
-static const double DEG2RAD = 0.017453292519943296;
-static const double RAD2DEG = 57.295779513082321;
 static const double ASEC360 = 1296000.0;
 static const double ASEC2RAD = 4.848136811095359935899141e-6;
 static const double PI2 = 2.0 * PI;
 static const double ARC = 3600.0 * 180.0 / PI;          /* arcseconds per radian */
 static const double C_AUDAY = 173.1446326846693;        /* speed of light in AU/day */
-static const double KM_PER_AU = 1.4959787069098932e+8;
 static const double SECONDS_PER_DAY = 24.0 * 3600.0;
 static const double SOLAR_DAYS_PER_SIDEREAL_DAY = 0.9972695717592592;
 static const double MEAN_SYNODIC_MONTH = 29.530588;     /* average number of days for Moon to return to the same phase */
@@ -2580,6 +2577,7 @@ finished:
  * @param observer      A location on or near the surface of the Earth.
  * @param equdate       Selects the date of the Earth's equator in which to express the equatorial coordinates.
  * @param aberration    Selects whether or not to correct for aberration.
+ * @return              Topocentric equatorial coordinates of the celestial body.
  */
 astro_equatorial_t Astronomy_Equator(
     astro_body_t body,
@@ -2624,6 +2622,52 @@ astro_equatorial_t Astronomy_Equator(
         return EquError(ASTRO_INVALID_PARAMETER);
     }
 }
+
+/**
+ * @brief Calculates geocentric equatorial coordinates of an observer on the surface of the Earth.
+ *
+ * This function calculates a vector from the center of the Earth to
+ * a point on or near the surface of the Earth, expressed in equatorial
+ * coordinates. It takes into account the rotation of the Earth at the given
+ * time, along with the given latitude, longitude, and elevation of the observer.
+ *
+ * The caller may pass a value in `equdate` to select either `EQUATOR_J2000`
+ * for using J2000 coordinates, or `EQUATOR_OF_DATE` for using coordinates relative
+ * to the Earth's equator at the specified time.
+ *
+ * The returned vector has components expressed in astronomical units (AU).
+ * To convert to kilometers, multiply the `x`, `y`, and `z` values by
+ * the constant value #KM_PER_AU.
+ *
+ * @param time
+ *      The date and time for which to calculate the observer's position vector.
+ *
+ * @param observer
+ *      The geographic location of a point on or near the surface of the Earth.
+ *
+ * @param equdate
+ *      Selects the date of the Earth's equator in which to express the equatorial coordinates.
+ *      The caller may select `EQUATOR_J2000` to use the orientation of the Earth's equator
+ *      at noon UTC on January 1, 2000, in which case this function corrects for precession
+ *      and nutation of the Earth as it was at the moment specified by the `time` parameter.
+ *      Or the caller may select `EQUATOR_OF_DATE` to use the Earth's equator at `time`
+ *      as the orientation.
+ *
+ * @return
+ *      A vector from the center of the Earth to the specified surface location.
+ */
+astro_vector_t Astronomy_ObserverVector(
+    astro_time_t *time,
+    astro_observer_t observer,
+    astro_equator_date_t equdate)
+{
+    astro_vector_t vec;
+
+    vec = VecError(ASTRO_NOT_INITIALIZED, *time);
+
+    return vec;
+}
+
 
 /**
  * @brief Calculates the apparent location of a body relative to the local horizon of an observer on the Earth.
@@ -7431,7 +7475,7 @@ astro_transit_t Astronomy_NextTransit(astro_body_t body, astro_time_t prevTransi
  *
  * Astronomy Engine uses dynamic memory allocation in only one place:
  * it makes calculation of Pluto's orbit more efficient by caching 11 KB
- * segments recycling them. To force purging this cache and
+ * segments and recycling them. To force purging this cache and
  * freeing all the dynamic memory, you can call this function at any time.
  * It is always safe to call, although it will slow down the very next
  * calculation of Pluto's position for a nearby time value.

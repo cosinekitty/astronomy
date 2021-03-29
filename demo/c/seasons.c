@@ -29,9 +29,9 @@ int main(int argc, const char *argv[])
         return 1;
     }
 
-    if (1 != sscanf(argv[1], "%d", &year) || year < MIN_YEAR || year > MAX_YEAR)
+    if (1 != sscanf(argv[1], "%d", &year))
     {
-        fprintf(stderr, "ERROR: Invalid year '%s'. Must be in the range %d..%d.\n", argv[1], MIN_YEAR, MAX_YEAR);
+        fprintf(stderr, "ERROR: Invalid year '%s'.\n", argv[1]);
         return 1;
     }
 

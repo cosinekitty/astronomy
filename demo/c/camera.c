@@ -18,8 +18,6 @@
 #include <math.h>
 #include "astro_demo_common.h"
 
-const double RAD2DEG = 57.295779513082321;
-
 #define FAIL(...)   do{fprintf(stderr, __VA_ARGS__); error = 1; goto fail;}while(0)
 
 static int CameraImage(astro_observer_t observer, astro_time_t time);

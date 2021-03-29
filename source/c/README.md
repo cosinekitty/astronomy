@@ -475,6 +475,10 @@ Correction for aberration is optional, using the `aberration` parameter.
 
 
 
+**Returns:**  Topocentric equatorial coordinates of the celestial body. 
+
+
+
 | Type | Parameter | Description |
 | --- | --- | --- |
 | [`astro_body_t`](#astro_body_t) | `body` |  The celestial body to be observed. Not allowed to be `BODY_EARTH`.  | 
@@ -1110,6 +1114,36 @@ After calling [`Astronomy_SearchTransit`](#Astronomy_SearchTransit) to find a tr
 
 ---
 
+<a name="Astronomy_ObserverVector"></a>
+### Astronomy_ObserverVector(time, observer, equdate) &#8658; [`astro_vector_t`](#astro_vector_t)
+
+**Calculates geocentric equatorial coordinates of an observer on the surface of the Earth.** 
+
+
+
+This function calculates a vector from the center of the Earth to a point on or near the surface of the Earth, expressed in equatorial coordinates. It takes into account the rotation of the Earth at the given time, along with the given latitude, longitude, and elevation of the observer.
+
+The caller may pass a value in `equdate` to select either `EQUATOR_J2000` for using J2000 coordinates, or `EQUATOR_OF_DATE` for using coordinates relative to the Earth's equator at the specified time.
+
+The returned vector has components expressed in astronomical units (AU). To convert to kilometers, multiply the `x`, `y`, and `z` values by the constant value [`KM_PER_AU`](#KM_PER_AU).
+
+
+
+**Returns:**  A vector from the center of the Earth to the specified surface location. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_time_t *`](#astro_time_t *) | `time` |  The date and time for which to calculate the observer's position vector. | 
+| [`astro_observer_t`](#astro_observer_t) | `observer` |  The geographic location of a point on or near the surface of the Earth. | 
+| [`astro_equator_date_t`](#astro_equator_date_t) | `equdate` |  Selects the date of the Earth's equator in which to express the equatorial coordinates. The caller may select `EQUATOR_J2000` to use the orientation of the Earth's equator at noon UTC on January 1, 2000, in which case this function corrects for precession and nutation of the Earth as it was at the moment specified by the `time` parameter. Or the caller may select `EQUATOR_OF_DATE` to use the Earth's equator at `time` as the orientation. | 
+
+
+
+
+---
+
 <a name="Astronomy_Pivot"></a>
 ### Astronomy_Pivot(rotation, axis, angle) &#8658; [`astro_rotation_t`](#astro_rotation_t)
 
@@ -1170,7 +1204,7 @@ Given an altitude angle and a refraction option, calculates the amount of "lift"
 
 
 
-Astronomy Engine uses dynamic memory allocation in only one place: it makes calculation of Pluto's orbit more efficient by caching 11 KB segments recycling them. To force purging this cache and freeing all the dynamic memory, you can call this function at any time. It is always safe to call, although it will slow down the very next calculation of Pluto's position for a nearby time value. Calling this function before your program exits is optional, but it will be helpful for leak-checkers like valgrind. 
+Astronomy Engine uses dynamic memory allocation in only one place: it makes calculation of Pluto's orbit more efficient by caching 11 KB segments and recycling them. To force purging this cache and freeing all the dynamic memory, you can call this function at any time. It is always safe to call, although it will slow down the very next calculation of Pluto's position for a nearby time value. Calling this function before your program exits is optional, but it will be helpful for leak-checkers like valgrind. 
 
 ---
 
@@ -2158,6 +2192,100 @@ Calculates the non-negative length of the given vector. The length is expressed 
 | --- | --- | --- |
 | [`astro_vector_t`](#astro_vector_t) | `vector` |  The vector whose length is to be calculated.  | 
 
+
+
+<a name="constants"></a>
+## Constants
+
+
+
+---
+
+<a name="DEG2RAD"></a>
+### `DEG2RAD`
+
+**The factor to convert radians to degrees = pi/180.** 
+
+
+
+```C
+#define DEG2RAD  0.017453292519943296
+```
+
+
+
+---
+
+<a name="KM_PER_AU"></a>
+### `KM_PER_AU`
+
+**The number of kilometers in one astronomical unit (AU).** 
+
+
+
+```C
+#define KM_PER_AU  1.4959787069098932e+8
+```
+
+
+
+---
+
+<a name="MAX_BODY"></a>
+### `MAX_BODY`
+
+**Maximum valid astro_body_t value; useful for iteration.** 
+
+
+
+```C
+#define MAX_BODY  BODY_SSB
+```
+
+
+
+---
+
+<a name="MIN_BODY"></a>
+### `MIN_BODY`
+
+**Minimum valid astro_body_t value; useful for iteration.** 
+
+
+
+```C
+#define MIN_BODY  BODY_MERCURY
+```
+
+
+
+---
+
+<a name="RAD2DEG"></a>
+### `RAD2DEG`
+
+**The factor to convert degrees to radians = 180/pi.** 
+
+
+
+```C
+#define RAD2DEG  57.295779513082321
+```
+
+
+
+---
+
+<a name="TIME_TEXT_BYTES"></a>
+### `TIME_TEXT_BYTES`
+
+**The smallest number of characters that is always large enough for [`Astronomy_FormatTime`](#Astronomy_FormatTime).** 
+
+
+
+```C
+#define TIME_TEXT_BYTES  25
+```
 
 
 <a name="enums"></a>

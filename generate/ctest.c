@@ -13,8 +13,6 @@
 #include "astronomy.h"
 
 #define PI      3.14159265358979323846
-static const double DEG2RAD = 0.017453292519943296;
-static const double RAD2DEG = 57.295779513082321;
 
 #define CHECK(x)        do{if(0 != (error = (x))) goto fail;}while(0)
 #define FAIL(...)       do{fprintf(stderr, __VA_ARGS__); error = 1; goto fail;}while(0)
@@ -1698,7 +1696,7 @@ static int PlanetApsis(void)
     double degree_threshold;
     double max_diff_days, max_dist_ratio;
 
-    start_time = Astronomy_MakeTime(MIN_YEAR, 1, 1, 0, 0, 0.0);
+    start_time = Astronomy_MakeTime(1700, 1, 1, 0, 0, 0.0);
 
     for (body = BODY_MERCURY; body <= BODY_PLUTO; ++body)
     {

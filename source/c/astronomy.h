@@ -34,6 +34,26 @@
 extern "C" {
 #endif
 
+/*---------- numeric constants ----------*/
+
+/**
+ * \def KM_PER_AU
+ * @brief The number of kilometers in one astronomical unit (AU).
+ */
+#define KM_PER_AU   1.4959787069098932e+8
+
+/**
+ * \def DEG2RAD
+ * @brief The factor to convert radians to degrees = pi/180.
+ */
+#define DEG2RAD     0.017453292519943296
+
+/**
+ * \def RAD2DEG
+ * @brief The factor to convert degrees to radians = 180/pi.
+ */
+#define RAD2DEG     57.295779513082321
+
 /*---------- types ----------*/
 
 /**
@@ -218,11 +238,17 @@ typedef enum
 }
 astro_body_t;
 
-#define MIN_BODY    BODY_MERCURY    /**< Minimum valid astro_body_t value; useful for iteration. */
-#define MAX_BODY    BODY_SSB        /**< Maximum valid astro_body_t value; useful for iteration. */
+/**
+ * \def MIN_BODY
+ * @brief Minimum valid astro_body_t value; useful for iteration.
+ */
+#define MIN_BODY    BODY_MERCURY
 
-#define MIN_YEAR    1700    /**< Minimum year value supported by Astronomy Engine. */
-#define MAX_YEAR    2200    /**< Maximum year value supported by Astronomy Engine. */
+/**
+ * \def MAX_BODY
+ * @brief Maximum valid astro_body_t value; useful for iteration.
+ */
+#define MAX_BODY    BODY_SSB
 
 /**
  * @brief The location of an observer on (or near) the surface of the Earth.
@@ -776,7 +802,11 @@ typedef enum
 }
 astro_time_format_t;
 
-#define TIME_TEXT_BYTES  25   /**< The smallest number of characters that is always large enough for #Astronomy_FormatTime. */
+/**
+ * \def TIME_TEXT_BYTES
+ * @brief The smallest number of characters that is always large enough for #Astronomy_FormatTime.
+ */
+#define TIME_TEXT_BYTES  25
 
 /*---------- functions ----------*/
 
@@ -803,6 +833,12 @@ astro_equatorial_t Astronomy_Equator(
     astro_observer_t observer,
     astro_equator_date_t equdate,
     astro_aberration_t aberration
+);
+
+astro_vector_t Astronomy_ObserverVector(
+    astro_time_t *time,
+    astro_observer_t observer,
+    astro_equator_date_t equdate
 );
 
 astro_ecliptic_t Astronomy_SunPosition(astro_time_t time);
