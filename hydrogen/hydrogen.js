@@ -232,9 +232,12 @@ class Item {
             const m = /([a-z_]+)(.*)/.exec(text);
             const symbol = m[1];
             const tail = m[2];
-            md = '[`' + symbol + '`](#' + symbol + ')';
-            if (tail.length > 0)
-                md += '`' + tail + '`';
+            if (tail.length > 0) {
+                // Verbose HTML syntax gets the job done best.
+                md = `<code><a href="#${symbol}">${symbol}</a>${tail}</code>`;
+            } else {
+                md = '[`' + symbol + '`](#' + symbol + ')';
+            }
         } else {
             // assume built-in type that we can't link to
             md = '`' + text + '`';
