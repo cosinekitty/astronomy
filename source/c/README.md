@@ -482,7 +482,7 @@ Correction for aberration is optional, using the `aberration` parameter.
 | Type | Parameter | Description |
 | --- | --- | --- |
 | [`astro_body_t`](#astro_body_t) | `body` |  The celestial body to be observed. Not allowed to be `BODY_EARTH`.  | 
-| [`astro_time_t *`](#astro_time_t *) | `time` |  The date and time at which the observation takes place.  | 
+| [`astro_time_t`](#astro_time_t)` *` | `time` |  The date and time at which the observation takes place.  | 
 | [`astro_observer_t`](#astro_observer_t) | `observer` |  A location on or near the surface of the Earth.  | 
 | [`astro_equator_date_t`](#astro_equator_date_t) | `equdate` |  Selects the date of the Earth's equator in which to express the equatorial coordinates.  | 
 | [`astro_aberration_t`](#astro_aberration_t) | `aberration` |  Selects whether or not to correct for aberration.  | 
@@ -674,7 +674,7 @@ This function optionally corrects for atmospheric refraction. For most uses, it 
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| [`astro_time_t *`](#astro_time_t *) | `time` |  The date and time of the observation. | 
+| [`astro_time_t`](#astro_time_t)` *` | `time` |  The date and time of the observation. | 
 | [`astro_observer_t`](#astro_observer_t) | `observer` |  The geographic location of the observer. | 
 | `double` | `ra` |  The right ascension of the body in sidereal hours. See function remarks for more details. | 
 | `double` | `dec` |  The declination of the body in degrees. See function remarks for more details. | 
@@ -1135,7 +1135,7 @@ The returned vector has components expressed in astronomical units (AU). To conv
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| [`astro_time_t *`](#astro_time_t *) | `time` |  The date and time for which to calculate the observer's position vector. | 
+| [`astro_time_t`](#astro_time_t)` *` | `time` |  The date and time for which to calculate the observer's position vector. | 
 | [`astro_observer_t`](#astro_observer_t) | `observer` |  The geographic location of a point on or near the surface of the Earth. | 
 | [`astro_equator_date_t`](#astro_equator_date_t) | `equdate` |  Selects the date of the Earth's equator in which to express the equatorial coordinates. The caller may select `EQUATOR_J2000` to use the orientation of the Earth's equator at noon UTC on January 1, 2000, in which case this function corrects for precession and nutation of the Earth as it was at the moment specified by the `time` parameter. Or the caller may select `EQUATOR_OF_DATE` to use the Earth's equator at `time` as the orientation. | 
 
@@ -2824,7 +2824,7 @@ Fields `sd_penum`, `sd_partial`, and `sd_total` hold the semi-duration of each p
 
 This structure is passed to functions that calculate phenomena as observed from a particular place on the Earth.
 
-You can create this structure directly, or you can call the convenience function [`Astronomy_MakeObserver`](#Astronomy_MakeObserver)# to create one for you. 
+You can create this structure directly, or you can call the convenience function [`Astronomy_MakeObserver`](#Astronomy_MakeObserver) to create one for you. 
 
 | Type | Member | Description |
 | ---- | ------ | ----------- |

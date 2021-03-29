@@ -223,14 +223,21 @@ class Item {
     }
 
     static MdType(type) {
-        let name = Item.Flat(type);
+        let text = Item.Flat(type);
         let md;
-        if (name.indexOf('astro_') === 0) {
-            // create a link to our custom type
-            md = '[`' + name + '`](#' + name + ')';
+        if (text.indexOf('astro_') === 0) {
+            // Create a link to our custom type.
+            // But watch out for pointer types like 'astro_time_t *'.
+            // For those, we need to extract and link to just the type itself.
+            const m = /([a-z_]+)(.*)/.exec(text);
+            const symbol = m[1];
+            const tail = m[2];
+            md = '[`' + symbol + '`](#' + symbol + ')';
+            if (tail.length > 0)
+                md += '`' + tail + '`';
         } else {
             // assume built-in type that we can't link to
-            md = '`' + name + '`';
+            md = '`' + text + '`';
         }
         return md;
     }

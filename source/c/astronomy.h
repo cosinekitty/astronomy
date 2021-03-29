@@ -257,7 +257,7 @@ astro_body_t;
  * from a particular place on the Earth.
  *
  * You can create this structure directly, or you can call the convenience function
- * #Astronomy_MakeObserver# to create one for you.
+ * #Astronomy_MakeObserver to create one for you.
  */
 typedef struct
 {
