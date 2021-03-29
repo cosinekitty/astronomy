@@ -3482,33 +3482,41 @@ fail:
 
 /*-----------------------------------------------------------------------------------------------------------*/
 
-static int GeoidTest(void)
+static int GeoidTestCase(astro_time_t time, astro_observer_t observer, astro_equator_date_t equdate)
 {
     int error;
-    astro_time_t time;
     astro_vector_t surface;
     astro_vector_t geo_moon;
-    astro_observer_t observer;
     astro_equatorial_t topo_moon;
     double dx, dy, dz, diff;
 
-    time = Astronomy_MakeTime(1970, 12, 13, 15, 42, 0.0);
-    observer = Astronomy_MakeObserver(-53.7, 141.7, 100.0);
-
-    topo_moon = Astronomy_Equator(BODY_MOON, &time, observer, EQUATOR_J2000, NO_ABERRATION);
+    topo_moon = Astronomy_Equator(BODY_MOON, &time, observer, equdate, NO_ABERRATION);
     CHECK_STATUS(topo_moon);
 
-    surface = Astronomy_ObserverVector(&time, observer, EQUATOR_J2000);
+    surface = Astronomy_ObserverVector(&time, observer, equdate);
     CHECK_STATUS(surface);
 
     geo_moon = Astronomy_GeoMoon(time);
     CHECK_STATUS(geo_moon);
 
+    if (equdate == EQUATOR_OF_DATE)
+    {
+        /* Astronomy_GeoMoon() returns J2000 coordinates. Convert to equator-of-date coordinates. */
+        astro_rotation_t rot = Astronomy_Rotation_EQJ_EQD(time);
+        CHECK_STATUS(rot);
+        geo_moon = Astronomy_RotateVector(rot, geo_moon);
+    }
+
     dx = KM_PER_AU * V((geo_moon.x - surface.x) - topo_moon.vec.x);
     dy = KM_PER_AU * V((geo_moon.y - surface.y) - topo_moon.vec.y);
     dz = KM_PER_AU * V((geo_moon.z - surface.z) - topo_moon.vec.z);
     diff = sqrt(dx*dx + dy*dy + dz*dz);
-    DEBUG("C GeoidTest: surface=(%0.6lf, %0.6lf, %0.6lf), diff = %0.6lf km\n",
+    DEBUG("C GeoidTestCase: equ=%d, tt=%14.5lf, lat=%5.1lf, lon=%6.1lf, ht=%6.1lf, surface=(%12.6lf, %12.6lf, %12.6lf), diff = %9.6lf km\n",
+        (int)equdate,
+        time.tt,
+        observer.latitude,
+        observer.longitude,
+        observer.height,
         KM_PER_AU * surface.x,
         KM_PER_AU * surface.y,
         KM_PER_AU * surface.z,
@@ -3516,7 +3524,57 @@ static int GeoidTest(void)
 
     /* Require 1 millimeter accuracy! (one millionth of a kilometer). */
     if (diff > 1.0e-6)
-        FAIL("C GeoidTest: EXCESSIVE POSITION ERROR.\n");
+        FAIL("C GeoidTestCase: EXCESSIVE POSITION ERROR.\n");
+
+    error = 0;
+fail:
+    return error;
+}
+
+
+static int GeoidTest(void)
+{
+    int error;
+    int tindex, oindex;
+    astro_time_t time;
+    astro_vector_t vec;
+
+    const astro_time_t time_list[] =
+    {
+        Astronomy_MakeTime(1066,  9, 27, 18,  0,  0.0),
+        Astronomy_MakeTime(1970, 12, 13, 15, 42,  0.0),
+        Astronomy_MakeTime(1970, 12, 13, 15, 43,  0.0),
+        Astronomy_MakeTime(2015,  3,  5,  2, 15, 45.0)
+    };
+    const int ntimes = sizeof(time_list) / sizeof(time_list[0]);
+
+    const astro_observer_t observer_list[] =
+    {
+        Astronomy_MakeObserver( +1.5,   +2.7,    7.4),
+        Astronomy_MakeObserver(-53.7, +141.7, +100.0),
+        Astronomy_MakeObserver(+30.0,  -85.2,  -50.0),
+        Astronomy_MakeObserver(+90.0,  +45.0,  -50.0),
+        Astronomy_MakeObserver(-90.0, -180.0,    0.0)
+    };
+    const int nobs = sizeof(observer_list) / sizeof(observer_list[0]);
+
+    /* Make sure Astronomy_ObserverVector() checks for invalid equdate parameter. */
+    time = time_list[0];
+    vec = Astronomy_ObserverVector(&time, observer_list[0], (astro_equator_date_t)42);
+    if (vec.status != ASTRO_INVALID_PARAMETER)
+        FAIL("C GeoidTest: Expected ASTRO_INVALID_PARAMETER (%d) but found %d\n", (int)ASTRO_INVALID_PARAMETER, (int)vec.status);
+    DEBUG("C GeoidTest: Astronomy_ObserverVector correctly detected invalid astro_equator_date_t parameter.\n");
+
+    /* Test a variety of times and locations, in both supported orientation systems. */
+
+    for (oindex = 0; oindex < nobs; ++oindex)
+    {
+        for (tindex = 0; tindex < ntimes; ++tindex)
+        {
+            CHECK(GeoidTestCase(time_list[tindex], observer_list[oindex], EQUATOR_J2000));
+            CHECK(GeoidTestCase(time_list[tindex], observer_list[oindex], EQUATOR_OF_DATE));
+        }
+    }
 
     printf("C GeoidTest: PASS\n");
     error = 0;
@@ -3525,4 +3583,3 @@ fail:
 }
 
 /*-----------------------------------------------------------------------------------------------------------*/
-
