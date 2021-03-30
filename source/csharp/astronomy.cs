@@ -410,6 +410,29 @@ namespace CosineKitty
             VerifyIdenticalTimes(a.t, b.t);
             return (a.x * b.x) + (a.y * b.y) + (a.z * b.z);
         }
+
+        public static AstroVector operator * (double factor, AstroVector a)
+        {
+            return new AstroVector(
+                factor * a.x,
+                factor * a.y,
+                factor * a.z,
+                a.t
+            );
+        }
+
+        public static AstroVector operator / (AstroVector a, double denom)
+        {
+            if (denom == 0.0)
+                throw new ArgumentException("Attempt to divide a vector by zero.");
+
+            return new AstroVector(
+                a.x / denom,
+                a.y / denom,
+                a.z / denom,
+                a.t
+            );
+        }
 #pragma warning restore 1591
 
         private static AstroTime VerifyIdenticalTimes(AstroTime a, AstroTime b)
@@ -3916,20 +3939,13 @@ namespace CosineKitty
             /* Convert from mean equinox of date to J2000. */
             AstroVector mpos2 = precession(mpos1, time, PrecessDirection.Into2000);
 
-            /* Patch in the correct time value into the returned vector. */
-            return new AstroVector(mpos2.x, mpos2.y, mpos2.z, time);
+            return mpos2;
         }
 
         private static AstroVector BarycenterContrib(AstroTime time, Body body, double planet_gm)
         {
-            double shift = planet_gm / (planet_gm + SUN_GM);
             AstroVector p = CalcVsop(vsop[(int)body], time);
-            return new AstroVector(
-                shift * p.x,
-                shift * p.y,
-                shift * p.z,
-                time
-            );
+            return (planet_gm / (planet_gm + SUN_GM)) * p;
         }
 
         private static AstroVector CalcSolarSystemBarycenter(AstroTime time)
@@ -3988,23 +4004,12 @@ namespace CosineKitty
                 case Body.Moon:
                     geomoon = GeoMoon(time);
                     earth = CalcEarth(time);
-                    return new AstroVector(
-                        earth.x + geomoon.x,
-                        earth.y + geomoon.y,
-                        earth.z + geomoon.z,
-                        time
-                    );
+                    return earth + geomoon;
 
                 case Body.EMB:
                     geomoon = GeoMoon(time);
                     earth = CalcEarth(time);
-                    double denom = 1.0 + EARTH_MOON_MASS_RATIO;
-                    return new AstroVector(
-                        earth.x + (geomoon.x / denom),
-                        earth.y + (geomoon.y / denom),
-                        earth.z + (geomoon.z / denom),
-                        time
-                    );
+                    return earth + (geomoon / (1.0 + EARTH_MOON_MASS_RATIO));
 
                 case Body.SSB:
                     return CalcSolarSystemBarycenter(time);
@@ -6737,7 +6742,7 @@ namespace CosineKitty
             double phase_angle;
             if (body == Body.Sun)
             {
-                gc = new AstroVector(-earth.x, -earth.y, -earth.z, time);
+                gc = -earth;
                 hc = new AstroVector(0.0, 0.0, 0.0, time);
                 // The Sun emits light instead of reflecting it,
                 // so we report a placeholder phase angle of 0.
