@@ -2447,18 +2447,19 @@ $ASTRO_PLUTO_TABLE();
 
         // End Pluto integrator
 
-        private static RotationMatrix precession_rot(double tt1, double tt2)
+        private enum PrecessDirection
+        {
+            From2000,
+            Into2000,
+        }
+
+        private static RotationMatrix precession_rot(AstroTime time, PrecessDirection dir)
         {
             double xx, yx, zx, xy, yy, zy, xz, yz, zz;
-            double t, psia, omegaa, chia, sa, ca, sb, cb, sc, cc, sd, cd;
+            double psia, omegaa, chia, sa, ca, sb, cb, sc, cc, sd, cd;
             double eps0 = 84381.406;
 
-            if ((tt1 != 0.0) && (tt2 != 0.0))
-                throw new ArgumentException("precession_rot: one of (tt1, tt2) must be zero.");
-
-            t = (tt2 - tt1) / 36525;
-            if (tt2 == 0)
-                t = -t;
+            double t = time.tt / 36525;
 
             psia   = (((((-    0.0000000951  * t
                         +    0.000132851 ) * t
@@ -2503,9 +2504,9 @@ $ASTRO_PLUTO_TABLE();
             zz = -sc * cb * sa + cc * ca;
 
             var rot = new double[3,3];
-            if (tt2 == 0.0)
+            if (dir == PrecessDirection.Into2000)
             {
-                /* Perform rotation from other epoch to J2000.0. */
+                // Perform rotation from other epoch to J2000.0.
                 rot[0, 0] = xx;
                 rot[0, 1] = yx;
                 rot[0, 2] = zx;
@@ -2516,9 +2517,9 @@ $ASTRO_PLUTO_TABLE();
                 rot[2, 1] = yz;
                 rot[2, 2] = zz;
             }
-            else
+            else if (dir == PrecessDirection.From2000)
             {
-                /* Perform rotation from J2000.0 to other epoch. */
+                // Perform rotation from J2000.0 to other epoch.
                 rot[0, 0] = xx;
                 rot[0, 1] = xy;
                 rot[0, 2] = xz;
@@ -2529,13 +2530,17 @@ $ASTRO_PLUTO_TABLE();
                 rot[2, 1] = zy;
                 rot[2, 2] = zz;
             }
+            else
+            {
+                throw new ArgumentException("Unsupported precess direction: " + dir);
+            }
 
             return new RotationMatrix(rot);
         }
 
-        private static AstroVector precession(double tt1, AstroVector pos, double tt2, AstroTime time)
+        private static AstroVector precession(AstroVector pos, AstroTime time, PrecessDirection dir)
         {
-            RotationMatrix r = precession_rot(tt1, tt2);
+            RotationMatrix r = precession_rot(time, dir);
             return new AstroVector(
                 r.rot[0, 0]*pos.x + r.rot[1, 0]*pos.y + r.rot[2, 0]*pos.z,
                 r.rot[0, 1]*pos.x + r.rot[1, 1]*pos.y + r.rot[2, 1]*pos.z,
@@ -2804,7 +2809,7 @@ $ASTRO_IAU_DATA()
         {
             AstroVector pos1 = terra(observer, time);
             AstroVector pos2 = nutation(time, -1, pos1);
-            return precession(time.tt, pos2, 0.0, time);
+            return precession(pos2, time, PrecessDirection.Into2000);
         }
 
         private static AstroVector spin(double angle, AstroVector pos)
@@ -2853,7 +2858,7 @@ $ASTRO_IAU_DATA()
             AstroVector mpos1 = ecl2equ_vec(time, gepos);
 
             /* Convert from mean equinox of date to J2000. */
-            AstroVector mpos2 = precession(time.tt, mpos1, 0, time);
+            AstroVector mpos2 = precession(mpos1, time, PrecessDirection.Into2000);
 
             /* Patch in the correct time value into the returned vector. */
             return new AstroVector(mpos2.x, mpos2.y, mpos2.z, time);
@@ -3132,7 +3137,7 @@ $ASTRO_IAU_DATA()
             switch (equdate)
             {
                 case EquatorEpoch.OfDate:
-                    AstroVector temp = precession(0.0, j2000, time.tt, time);
+                    AstroVector temp = precession(j2000, time, PrecessDirection.From2000);
                     AstroVector datevect = nutation(time, 0, temp);
                     return vector2radec(datevect);
 
@@ -3199,7 +3204,7 @@ $ASTRO_IAU_DATA()
             {
                 // Convert 'pos' from equator-of-date to J2000.
                 pos = nutation(time, -1, pos);
-                pos = precession(time.tt, pos, 0.0, time);
+                pos = precession(pos, time, PrecessDirection.Into2000);
                 return pos;
             }
 
@@ -3402,7 +3407,7 @@ $ASTRO_IAU_DATA()
             AstroVector sun2000 = new AstroVector(-earth2000.x, -earth2000.y, -earth2000.z, adjusted_time);
 
             /* Convert to equatorial Cartesian coordinates of date. */
-            AstroVector stemp = precession(0.0, sun2000, adjusted_time.tt, adjusted_time);
+            AstroVector stemp = precession(sun2000, adjusted_time, PrecessDirection.From2000);
             AstroVector sun_ofdate = nutation(adjusted_time, 0, stemp);
 
             /* Convert equatorial coordinates to ecliptic coordinates. */
@@ -6413,7 +6418,7 @@ $ASTRO_IAU_DATA()
         /// </returns>
         public static RotationMatrix Rotation_EQJ_EQD(AstroTime time)
         {
-            RotationMatrix prec = precession_rot(0.0, time.tt);
+            RotationMatrix prec = precession_rot(time, PrecessDirection.From2000);
             RotationMatrix nut = nutation_rot(time, 0);
             return CombineRotation(prec, nut);
         }
@@ -6437,7 +6442,7 @@ $ASTRO_IAU_DATA()
         public static RotationMatrix Rotation_EQD_EQJ(AstroTime time)
         {
             RotationMatrix nut = nutation_rot(time, 1);
-            RotationMatrix prec = precession_rot(time.tt, 0.0);
+            RotationMatrix prec = precession_rot(time, PrecessDirection.Into2000);
             return CombineRotation(nut, prec);
         }
 
