@@ -14,6 +14,7 @@ To get started quickly, here are some [examples](../../demo/csharp/).
 ## Contents
 
 - [Topic Index](#topics)
+- [Constants](#constants)
 - [Functions](#functions)
 - [Types](#types)
 

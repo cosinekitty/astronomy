@@ -14,6 +14,7 @@ To get started quickly, here are some [examples](../../demo/csharp/).
 ## Contents
 
 - [Topic Index](#topics)
+- [Constants](#constants)
 - [Functions](#functions)
 - [Types](#types)
 
@@ -140,6 +141,26 @@ these are used in function and type names.
 | [Rotation_HOR_ECL](#Astronomy.Rotation_HOR_ECL) | Calculates a rotation matrix from horizontal (HOR) to ecliptic J2000 (ECL). |
 
 ---
+
+<a name="constants"></a>
+## Constants
+
+---
+
+<a name="Astronomy.KM_PER_AU"></a>
+### `const double Astronomy.KM_PER_AU = 149597870.69098932;`
+
+**The number of kilometers in one astronomical unit (AU).**
+
+<a name="Astronomy.RAD2DEG"></a>
+### `const double Astronomy.RAD2DEG = 57.29577951308232;`
+
+**The factor to convert radians to degrees = pi/180.**
+
+<a name="Astronomy.DEG2RAD"></a>
+### `const double Astronomy.DEG2RAD = 0.017453292519943295;`
+
+**The factor to convert degrees to radians = 180/pi.**
 
 <a name="functions"></a>
 ## Functions
@@ -279,6 +300,8 @@ Correction for aberration is optional, using the `aberration` parameter.
 | [`Observer`](#Observer) | `observer` | A location on or near the surface of the Earth. |
 | [`EquatorEpoch`](#EquatorEpoch) | `equdate` | Selects the date of the Earth's equator in which to express the equatorial coordinates. |
 | [`Aberration`](#Aberration) | `aberration` | Selects whether or not to correct for aberration. |
+
+**Returns:** Topocentric equatorial coordinates of the celestial body.
 
 <a name="Astronomy.EquatorFromVector"></a>
 ### Astronomy.EquatorFromVector(vector) &#8658; [`Equatorial`](#Equatorial)
@@ -682,6 +705,32 @@ Keep calling this function as many times as you want to keep finding more transi
 | --- | --- | --- |
 | [`Body`](#Body) | `body` | The planet whose transit is to be found. Must be `Body.Mercury` or `Body.Venus`. |
 | [`AstroTime`](#AstroTime) | `prevTransitTime` | A date and time near the previous transit. |
+
+<a name="Astronomy.ObserverVector"></a>
+### Astronomy.ObserverVector(time, observer, equdate) &#8658; [`AstroVector`](#AstroVector)
+
+**Calculates geocentric equatorial coordinates of an observer on the surface of the Earth.**
+
+This function calculates a vector from the center of the Earth to
+a point on or near the surface of the Earth, expressed in equatorial
+coordinates. It takes into account the rotation of the Earth at the given
+time, along with the given latitude, longitude, and elevation of the observer.
+
+The caller may pass a value in `equdate` to select either `EQUATOR_J2000`
+for using J2000 coordinates, or `EQUATOR_OF_DATE` for using coordinates relative
+to the Earth's equator at the specified time.
+
+The returned vector has components expressed in astronomical units (AU).
+To convert to kilometers, multiply the `x`, `y`, and `z` values by
+the constant value [`Astronomy.KM_PER_AU`](#Astronomy.KM_PER_AU).
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`AstroTime`](#AstroTime) | `time` | The date and time for which to calculate the observer's position vector. |
+| [`Observer`](#Observer) | `observer` | The geographic location of a point on or near the surface of the Earth. |
+| [`EquatorEpoch`](#EquatorEpoch) | `equdate` | Selects the date of the Earth's equator in which to express the equatorial coordinates. The caller may select `EQUATOR_J2000` to use the orientation of the Earth's equator at noon UTC on January 1, 2000, in which case this function corrects for precession and nutation of the Earth as it was at the moment specified by the `time` parameter. Or the caller may select `EQUATOR_OF_DATE` to use the Earth's equator at `time` as the orientation. |
+
+**Returns:** An equatorial vector from the center of the Earth to the specified location on (or near) the Earth's surface.
 
 <a name="Astronomy.Pivot"></a>
 ### Astronomy.Pivot(rotation, axis, angle) &#8658; [`RotationMatrix`](#RotationMatrix)

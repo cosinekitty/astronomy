@@ -360,6 +360,9 @@ namespace CosineKitty
         /// <param name="t">The date and time at which this vector is valid.</param>
         public AstroVector(double x, double y, double z, AstroTime t)
         {
+            if (t == null)
+                throw new NullReferenceException("AstroTime parameter is not allowed to be null.");
+
             this.x = x;
             this.y = y;
             this.z = z;
@@ -373,6 +376,49 @@ namespace CosineKitty
         public double Length()
         {
             return Math.Sqrt(x*x + y*y + z*z);
+        }
+
+#pragma warning disable 1591        // we don't need XML documentation for these operator overloads
+        public static AstroVector operator - (AstroVector a)
+        {
+            return new AstroVector(-a.x, -a.y, -a.z, a.t);
+        }
+
+        public static AstroVector operator - (AstroVector a, AstroVector b)
+        {
+            return new AstroVector (
+                a.x - b.x,
+                a.y - b.y,
+                a.z - b.z,
+                VerifyIdenticalTimes(a.t, b.t)
+            );
+        }
+
+        public static AstroVector operator + (AstroVector a, AstroVector b)
+        {
+            return new AstroVector (
+                a.x + b.x,
+                a.y + b.y,
+                a.z + b.z,
+                VerifyIdenticalTimes(a.t, b.t)
+            );
+        }
+
+        public static double operator * (AstroVector a, AstroVector b)
+        {
+            // the scalar dot product of two vectors
+            VerifyIdenticalTimes(a.t, b.t);
+            return (a.x * b.x) + (a.y * b.y) + (a.z * b.z);
+        }
+#pragma warning restore 1591
+
+        private static AstroTime VerifyIdenticalTimes(AstroTime a, AstroTime b)
+        {
+            if (a.tt != b.tt)
+                throw new ArgumentException("Attempt to operate on two vectors from different times.");
+
+            // If either time has already had its nutation calculated, retain that work.
+            return !double.IsNaN(a.psi) ? a : b;
         }
     }
 
@@ -1745,15 +1791,27 @@ $ASTRO_ADDSOL()
     /// </summary>
     public static class Astronomy
     {
+        /// <summary>
+        /// The number of kilometers in one astronomical unit (AU).
+        /// </summary>
+        public const double KM_PER_AU = 1.4959787069098932e+8;
+
+        /// <summary>
+        /// The factor to convert radians to degrees = pi/180.
+        /// </summary>
+        public const double RAD2DEG = 57.295779513082321;
+
+        /// <summary>
+        /// The factor to convert degrees to radians = 180/pi.
+        /// </summary>
+        public const double DEG2RAD = 0.017453292519943296;
+
         private const double DAYS_PER_TROPICAL_YEAR = 365.24217;
-        internal const double DEG2RAD = 0.017453292519943296;
-        internal const double RAD2DEG = 57.295779513082321;
         private const double ASEC360 = 1296000.0;
         private const double ASEC2RAD = 4.848136811095359935899141e-6;
         internal const double PI2 = 2.0 * Math.PI;
         internal const double ARC = 3600.0 * 180.0 / Math.PI;       /* arcseconds per radian */
         private const double C_AUDAY = 173.1446326846693;           /* speed of light in AU/day */
-        internal const double KM_PER_AU = 1.4959787069098932e+8;
 
         internal const double SUN_RADIUS_KM  = 695700.0;
         internal const double SUN_RADIUS_AU  = SUN_RADIUS_KM / KM_PER_AU;
@@ -2475,14 +2533,14 @@ $ASTRO_PLUTO_TABLE();
             return new RotationMatrix(rot);
         }
 
-        private static AstroVector precession(double tt1, AstroVector pos, double tt2)
+        private static AstroVector precession(double tt1, AstroVector pos, double tt2, AstroTime time)
         {
             RotationMatrix r = precession_rot(tt1, tt2);
             return new AstroVector(
                 r.rot[0, 0]*pos.x + r.rot[1, 0]*pos.y + r.rot[2, 0]*pos.z,
                 r.rot[0, 1]*pos.x + r.rot[1, 1]*pos.y + r.rot[2, 1]*pos.z,
                 r.rot[0, 2]*pos.x + r.rot[1, 2]*pos.y + r.rot[2, 2]*pos.z,
-                null
+                time
             );
         }
 
@@ -2611,8 +2669,9 @@ $ASTRO_IAU_DATA()
             return gst;     // return sidereal hours in the half-open range [0, 24).
         }
 
-        private static AstroVector terra(Observer observer, double st)
+        private static AstroVector terra(Observer observer, AstroTime time)
         {
+            double st = sidereal_time(time);
             double df = 1.0 - 0.003352819697896;    /* flattening of the Earth */
             double df2 = df * df;
             double phi = observer.latitude * DEG2RAD;
@@ -2631,7 +2690,7 @@ $ASTRO_IAU_DATA()
                 ach * cosphi * cosst / KM_PER_AU,
                 ach * cosphi * sinst / KM_PER_AU,
                 ash * sinphi / KM_PER_AU,
-                null
+                time
             );
         }
 
@@ -2743,10 +2802,9 @@ $ASTRO_IAU_DATA()
 
         private static AstroVector geo_pos(AstroTime time, Observer observer)
         {
-            double gast = sidereal_time(time);
-            AstroVector pos1 = terra(observer, gast);
+            AstroVector pos1 = terra(observer, time);
             AstroVector pos2 = nutation(time, -1, pos1);
-            return precession(time.tt, pos2, 0.0);
+            return precession(time.tt, pos2, 0.0, time);
         }
 
         private static AstroVector spin(double angle, AstroVector pos)
@@ -2758,7 +2816,7 @@ $ASTRO_IAU_DATA()
                 +cosang*pos.x + sinang*pos.y,
                 -sinang*pos.x + cosang*pos.y,
                 pos.z,
-                null
+                pos.t
             );
         }
 
@@ -2788,14 +2846,14 @@ $ASTRO_IAU_DATA()
                 dist_cos_lat * Math.Cos(moon.geo_eclip_lon),
                 dist_cos_lat * Math.Sin(moon.geo_eclip_lon),
                 moon.distance_au * Math.Sin(moon.geo_eclip_lat),
-                null
+                time
             );
 
             /* Convert ecliptic coordinates to equatorial coordinates, both in mean equinox of date. */
             AstroVector mpos1 = ecl2equ_vec(time, gepos);
 
             /* Convert from mean equinox of date to J2000. */
-            AstroVector mpos2 = precession(time.tt, mpos1, 0);
+            AstroVector mpos2 = precession(time.tt, mpos1, 0, time);
 
             /* Patch in the correct time value into the returned vector. */
             return new AstroVector(mpos2.x, mpos2.y, mpos2.z, time);
@@ -2974,7 +3032,7 @@ $ASTRO_IAU_DATA()
             Aberration aberration)
         {
             AstroVector vector;
-            AstroVector earth = new AstroVector(0.0, 0.0, 0.0, null);
+            AstroVector earth = new AstroVector(0.0, 0.0, 0.0, time);
             AstroTime ltime;
             AstroTime ltime2;
             double dt;
@@ -3059,6 +3117,7 @@ $ASTRO_IAU_DATA()
         /// <param name="observer">A location on or near the surface of the Earth.</param>
         /// <param name="equdate">Selects the date of the Earth's equator in which to express the equatorial coordinates.</param>
         /// <param name="aberration">Selects whether or not to correct for aberration.</param>
+        /// <returns>Topocentric equatorial coordinates of the celestial body.</returns>
         public static Equatorial Equator(
             Body body,
             AstroTime time,
@@ -3068,12 +3127,12 @@ $ASTRO_IAU_DATA()
         {
             AstroVector gc_observer = geo_pos(time, observer);
             AstroVector gc = GeoVector(body, time, aberration);
-            AstroVector j2000 = new AstroVector(gc.x - gc_observer.x, gc.y - gc_observer.y, gc.z - gc_observer.z, time);
+            AstroVector j2000 = gc - gc_observer;
 
             switch (equdate)
             {
                 case EquatorEpoch.OfDate:
-                    AstroVector temp = precession(0.0, j2000, time.tt);
+                    AstroVector temp = precession(0.0, j2000, time.tt, time);
                     AstroVector datevect = nutation(time, 0, temp);
                     return vector2radec(datevect);
 
@@ -3083,6 +3142,68 @@ $ASTRO_IAU_DATA()
                 default:
                     throw new ArgumentException(string.Format("Unsupported equator epoch {0}", equdate));
             }
+        }
+
+        ///
+        /// <summary>
+        /// Calculates geocentric equatorial coordinates of an observer on the surface of the Earth.
+        /// </summary>
+        ///
+        /// <remarks>
+        /// This function calculates a vector from the center of the Earth to
+        /// a point on or near the surface of the Earth, expressed in equatorial
+        /// coordinates. It takes into account the rotation of the Earth at the given
+        /// time, along with the given latitude, longitude, and elevation of the observer.
+        ///
+        /// The caller may pass a value in `equdate` to select either `EQUATOR_J2000`
+        /// for using J2000 coordinates, or `EQUATOR_OF_DATE` for using coordinates relative
+        /// to the Earth's equator at the specified time.
+        ///
+        /// The returned vector has components expressed in astronomical units (AU).
+        /// To convert to kilometers, multiply the `x`, `y`, and `z` values by
+        /// the constant value #Astronomy.KM_PER_AU.
+        /// </remarks>
+        ///
+        /// <param name="time">
+        /// The date and time for which to calculate the observer's position vector.
+        /// </param>
+        ///
+        /// <param name="observer">
+        /// The geographic location of a point on or near the surface of the Earth.
+        /// </param>
+        ///
+        /// <param name="equdate">
+        /// Selects the date of the Earth's equator in which to express the equatorial coordinates.
+        /// The caller may select `EQUATOR_J2000` to use the orientation of the Earth's equator
+        /// at noon UTC on January 1, 2000, in which case this function corrects for precession
+        /// and nutation of the Earth as it was at the moment specified by the `time` parameter.
+        /// Or the caller may select `EQUATOR_OF_DATE` to use the Earth's equator at `time`
+        /// as the orientation.
+        /// </param>
+        ///
+        /// <returns>
+        /// An equatorial vector from the center of the Earth to the specified location
+        /// on (or near) the Earth's surface.
+        /// </returns>
+        public static AstroVector ObserverVector(
+            AstroTime time,
+            Observer observer,
+            EquatorEpoch equdate)
+        {
+            AstroVector pos = terra(observer, time);
+
+            if (equdate == EquatorEpoch.OfDate)
+                return pos;     // 'pos' already contains equator-of-date coordinates.
+
+            if (equdate == EquatorEpoch.J2000)
+            {
+                // Convert 'pos' from equator-of-date to J2000.
+                pos = nutation(time, -1, pos);
+                pos = precession(time.tt, pos, 0.0, time);
+                return pos;
+            }
+
+            throw new ArgumentException(string.Format("Unsupported equator epoch {0}", equdate));
         }
 
         /// <summary>
@@ -3153,24 +3274,24 @@ $ASTRO_IAU_DATA()
             // x = direction from center of Earth toward 0 degrees longitude (the prime meridian) on equator.
             // y = direction from center of Earth toward 90 degrees west longitude on equator.
             // z = direction from center of Earth toward the north pole.
-            var uze = new AstroVector(coslat * coslon, coslat * sinlon, sinlat, null);
-            var une = new AstroVector(-sinlat * coslon, -sinlat * sinlon, coslat, null);
-            var uwe = new AstroVector(sinlon, -coslon, 0.0, null);
+            var uze = new AstroVector(coslat * coslon, coslat * sinlon, sinlat, time);
+            var une = new AstroVector(-sinlat * coslon, -sinlat * sinlon, coslat, time);
+            var uwe = new AstroVector(sinlon, -coslon, 0.0, time);
 
             // Correct the vectors uze, une, uwe for the Earth's rotation by calculating
             // sideral time. Call spin() for each uncorrected vector to rotate about
             // the Earth's axis to yield corrected unit vectors uz, un, uw.
             // Multiply sidereal hours by -15 to convert to degrees and flip eastward
             // rotation of the Earth to westward apparent movement of objects with time.
-            double spin_angle = -15.0 * sidereal_time(time);
-            AstroVector uz = spin(spin_angle, uze);
-            AstroVector un = spin(spin_angle, une);
-            AstroVector uw = spin(spin_angle, uwe);
+            double angle = -15.0 * sidereal_time(time);
+            AstroVector uz = spin(angle, uze);
+            AstroVector un = spin(angle, une);
+            AstroVector uw = spin(angle, uwe);
 
             // Convert angular equatorial coordinates (RA, DEC) to
             // cartesian equatorial coordinates in 'p', using the
             // same orientation system as uze, une, uwe.
-            var p = new AstroVector(cosdc * cosra, cosdc * sinra, sindc, null);
+            var p = new AstroVector(cosdc * cosra, cosdc * sinra, sindc, time);
 
             // Use dot products of p with the zenith, north, and west
             // vectors to obtain the cartesian coordinates of the body in
@@ -3281,7 +3402,7 @@ $ASTRO_IAU_DATA()
             AstroVector sun2000 = new AstroVector(-earth2000.x, -earth2000.y, -earth2000.z, adjusted_time);
 
             /* Convert to equatorial Cartesian coordinates of date. */
-            AstroVector stemp = precession(0.0, sun2000, adjusted_time.tt);
+            AstroVector stemp = precession(0.0, sun2000, adjusted_time.tt, adjusted_time);
             AstroVector sun_ofdate = nutation(adjusted_time, 0, stemp);
 
             /* Convert equatorial coordinates to ecliptic coordinates. */
@@ -5174,7 +5295,7 @@ $ASTRO_IAU_DATA()
             AstroVector target,
             AstroVector dir)
         {
-            double u = (dir.x*target.x + dir.y*target.y + dir.z*target.z) / (dir.x*dir.x + dir.y*dir.y + dir.z*dir.z);
+            double u = (dir * target) / (dir * dir);
             double dx = (u * dir.x) - target.x;
             double dy = (u * dir.y) - target.y;
             double dz = (u * dir.z) - target.z;
@@ -5187,9 +5308,9 @@ $ASTRO_IAU_DATA()
 
         internal static ShadowInfo EarthShadow(AstroTime time)
         {
-            /* This function helps find when the Earth's shadow falls upon the Moon. */
-            AstroVector e = CalcEarth(time);            /* This function never fails; no need to check return value */
-            AstroVector m = GeoMoon(time);    /* This function never fails; no need to check return value */
+            // This function helps find when the Earth's shadow falls upon the Moon.
+            AstroVector e = CalcEarth(time);    // heliocentric Earth
+            AstroVector m = GeoMoon(time);      // geocentric Moon
 
             return CalcShadow(EARTH_ECLIPSE_RADIUS_KM, time, m, e);
         }
@@ -5197,68 +5318,46 @@ $ASTRO_IAU_DATA()
 
         internal static ShadowInfo MoonShadow(AstroTime time)
         {
-            /* This function helps find when the Moon's shadow falls upon the Earth. */
+            // This function helps find when the Moon's shadow falls upon the Earth.
+            // This is a variation on the logic in EarthShadow().
+            // Instead of a heliocentric Earth and a geocentric Moon,
+            // we want a heliocentric Moon and a lunacentric Earth.
 
-            /*
-                This is a variation on the logic in EarthShadow().
-                Instead of a heliocentric Earth and a geocentric Moon,
-                we want a heliocentric Moon and a lunacentric Earth.
-            */
+            AstroVector e = CalcEarth(time);    // heliocentric Earth
+            AstroVector m = GeoMoon(time);      // geocentric Moon
 
-            AstroVector h = CalcEarth(time);    /* heliocentric Earth */
-            AstroVector m = GeoMoon(time);      /* geocentric Moon */
-
-            /* Calculate lunacentric Earth. */
-            var e = new AstroVector(-m.x, -m.y, -m.z, m.t);
-
-            /* Convert geocentric moon to heliocentric Moon. */
-            m.x += h.x;
-            m.y += h.y;
-            m.z += h.z;
-
-            return CalcShadow(MOON_MEAN_RADIUS_KM, time, e, m);
+            // -m  = lunacentric Earth
+            // m+e = heliocentric Moon
+            return CalcShadow(MOON_MEAN_RADIUS_KM, time, -m, m+e);
         }
 
 
         internal static ShadowInfo LocalMoonShadow(AstroTime time, Observer observer)
         {
-            /* Calculate observer's geocentric position. */
-            /* For efficiency, do this first, to populate the earth rotation parameters in 'time'. */
-            /* That way they can be recycled instead of recalculated. */
-            AstroVector pos = geo_pos(time, observer);
+            // Calculate observer's geocentric position.
+            // For efficiency, do this first, to populate the earth rotation parameters in 'time'.
+            // That way they can be recycled instead of recalculated.
+            AstroVector o = geo_pos(time, observer);
+            AstroVector h = CalcEarth(time);    // heliocentric Earth
+            AstroVector m = GeoMoon(time);      // geocentric Moon
 
-            AstroVector h = CalcEarth(time);    /* heliocentric Earth */
-            AstroVector m = GeoMoon(time);      /* geocentric Moon */
-
-            /* Calculate lunacentric location of an observer on the Earth's surface. */
-            var o = new AstroVector(pos.x - m.x, pos.y - m.y, pos.z - m.z, time);
-
-            /* Convert geocentric moon to heliocentric Moon. */
-            m.x += h.x;
-            m.y += h.y;
-            m.z += h.z;
-
-            return CalcShadow(MOON_MEAN_RADIUS_KM, time, o, m);
+            // o-m = lunacentric observer
+            // m+h = heliocentric Moon
+            return CalcShadow(MOON_MEAN_RADIUS_KM, time, o-m, m+h);
         }
 
 
         internal static ShadowInfo PlanetShadow(Body body, double planet_radius_km, AstroTime time)
         {
-            /* Calculate light-travel-corrected vector from Earth to planet. */
+            // Calculate light-travel-corrected vector from Earth to planet.
             AstroVector g = GeoVector(body, time, Aberration.None);
 
-            /* Calculate light-travel-corrected vector from Earth to Sun. */
+            // Calculate light-travel-corrected vector from Earth to Sun.
             AstroVector e = GeoVector(Body.Sun, time, Aberration.None);
 
-            /* Deduce light-travel-corrected vector from Sun to planet. */
-            var p = new AstroVector(g.x - e.x, g.y - e.y, g.z - e.z, time);
-
-            /* Calcluate Earth's position from the planet's point of view. */
-            e.x = -g.x;
-            e.y = -g.y;
-            e.z = -g.z;
-
-            return CalcShadow(planet_radius_km, time, e, p);
+            // -g  = planetcentric Earth
+            // g-e = heliocentric planet
+            return CalcShadow(planet_radius_km, time, -g, g-e);
         }
 
 
@@ -5589,13 +5688,13 @@ $ASTRO_IAU_DATA()
                 {
                     // For extra numeric precision, use geocentric Moon formula directly.
                     gc = GeoMoon(time);
-                    hc = new AstroVector(earth.x + gc.x, earth.y + gc.y, earth.z + gc.z, time);
+                    hc = earth + gc;
                 }
                 else
                 {
                     // For planets, the heliocentric vector is more direct to calculate.
                     hc = HelioVector(body, time);
-                    gc = new AstroVector(hc.x - earth.x, hc.y - earth.y, hc.z - earth.z, time);
+                    gc = hc - earth;
                 }
 
                 phase_angle = AngleBetween(gc, hc);
@@ -6372,14 +6471,16 @@ $ASTRO_IAU_DATA()
             double sinlon = Math.Sin(observer.longitude * DEG2RAD);
             double coslon = Math.Cos(observer.longitude * DEG2RAD);
 
-            var uze = new AstroVector(coslat * coslon, coslat * sinlon, sinlat, null);
-            var une = new AstroVector(-sinlat * coslon, -sinlat * sinlon, coslat, null);
-            var uwe = new AstroVector(sinlon, -coslon, 0.0, null);
+            var uze = new AstroVector(coslat * coslon, coslat * sinlon, sinlat, time);
+            var une = new AstroVector(-sinlat * coslon, -sinlat * sinlon, coslat, time);
+            var uwe = new AstroVector(sinlon, -coslon, 0.0, time);
 
-            double spin_angle = -15.0 * sidereal_time(time);
-            AstroVector uz = spin(spin_angle, uze);
-            AstroVector un = spin(spin_angle, une);
-            AstroVector uw = spin(spin_angle, uwe);
+            // Multiply sidereal hours by -15 to convert to degrees and flip eastward
+            // rotation of the Earth to westward apparent movement of objects with time.
+            double angle = -15.0 * sidereal_time(time);
+            AstroVector uz = spin(angle, uze);
+            AstroVector un = spin(angle, une);
+            AstroVector uw = spin(angle, uwe);
 
             var rot = new double[3,3];
             rot[0, 0] = un.x; rot[1, 0] = un.y; rot[2, 0] = un.z;

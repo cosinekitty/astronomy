@@ -24,7 +24,7 @@ cd dotnet/csharp_test || "Cannot change to directory dotnet/csharp_test"
 dotnet build --output ${PWD}/exe || Fail "Error building C# source code"
 cd ../../../csdown || Fail "Error changing to csdown directory"
 ./build || exit 1
-dotnet exe/csdown.dll csharp_prefix.md ../generate/dotnet/csharp_test/exe/astronomy.dll ../generate/dotnet/csharp_test/exe/astronomy.xml ../source/csharp/README.md || Fail "Error generating C# documentation."
+exe/csdown csharp_prefix.md ../generate/dotnet/csharp_test/exe/astronomy.dll ../generate/dotnet/csharp_test/exe/astronomy.xml ../source/csharp/README.md || Fail "Error generating C# documentation."
 cd ../generate || Fail "Error changing back to generate directory"
 ./check_internal_links.py $(realpath ../source/csharp/README.md) || exit 1
 
