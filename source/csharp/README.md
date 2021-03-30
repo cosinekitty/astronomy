@@ -27,8 +27,9 @@ To get started quickly, here are some [examples](../../demo/csharp/).
 
 | Function | Description |
 | -------- | ----------- |
-| [HelioVector](#Astronomy.HelioVector) | Calculates vector with respect to the center of the Sun. |
-| [GeoVector](#Astronomy.GeoVector)     | Calculates vector with respect to the center of the Earth. |
+| [HelioVector](#Astronomy.HelioVector) | Calculates body position vector with respect to the center of the Sun. |
+| [GeoVector](#Astronomy.GeoVector)     | Calculates body position vector with respect to the center of the Earth. |
+| [ObserverVector](#Astronomy.ObserverVector) | Calculates vector from the center of the Earth to an observer on the Earth's surface. |
 | [Equator](#Astronomy.Equator)         | Calculates right ascension and declination. |
 | [EquatorialToEcliptic](#Astronomy.EquatorialToEcliptic)       | Converts J2000 equatorial coordinates to J2000 ecliptic coordinates. |
 | [EclipticLongitude](#Astronomy.EclipticLongitude) | Calculates ecliptic longitude of a body in the J2000 system. |

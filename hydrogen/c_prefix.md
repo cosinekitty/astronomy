@@ -47,8 +47,9 @@ To get started quickly, here are some [examples](../../demo/c/).
 
 | Function | Description |
 | -------- | ----------- |
-| [HelioVector](#Astronomy_HelioVector) | Calculates vector with respect to the center of the Sun. |
-| [GeoVector](#Astronomy_GeoVector)     | Calculates vector with respect to the center of the Earth. |
+| [HelioVector](#Astronomy_HelioVector) | Calculates body position vector with respect to the center of the Sun. |
+| [GeoVector](#Astronomy_GeoVector)     | Calculates body position vector with respect to the center of the Earth. |
+| [ObserverVector](#Astronomy_ObserverVector) | Calculates vector from the center of the Earth to an observer on the Earth's surface. |
 | [Equator](#Astronomy_Equator)         | Calculates right ascension and declination. |
 | [Ecliptic](#Astronomy_Ecliptic)       | Converts J2000 equatorial coordinates to J2000 ecliptic coordinates. |
 | [EclipticLongitude](#Astronomy_EclipticLongitude) | Calculates ecliptic longitude of a body in the J2000 system. |
