@@ -20,8 +20,6 @@ namespace camera
 {
     class Program
     {
-        const double RAD2DEG = 57.295779513082321;
-
         static int Main(string[] args)
         {
             DemoHelper.ParseArgs("camera", args, out Observer observer, out AstroTime time);
@@ -96,7 +94,7 @@ namespace camera
 
             // Calculate the tilt angle of the sunlit side, as seen by the camera.
             // The x-axis is now pointing directly at the object, z is up in the camera image, y is to the left.
-            double tilt = RAD2DEG * Math.Atan2(vec.z, vec.y);
+            double tilt = Astronomy.RAD2DEG * Math.Atan2(vec.z, vec.y);
             Console.WriteLine($"Tilt angle of sunlit side of the Moon = {tilt:F3} degrees counterclockwise from up.");
 
             IllumInfo illum = Astronomy.Illumination(Body.Moon, time);

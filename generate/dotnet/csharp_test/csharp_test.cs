@@ -11,8 +11,6 @@ namespace csharp_test
 {
     class Program
     {
-        const double DEG2RAD = 0.017453292519943296;
-        const double RAD2DEG = 57.295779513082321;
         static bool Verbose;
 
         static void Debug(string format, params object[] args)
@@ -2026,10 +2024,10 @@ namespace csharp_test
 
         static void VectorFromAngles(double[] v, double lat, double lon)
         {
-            double coslat = cos(DEG2RAD * lat);
-            v[0] = cos(DEG2RAD * lon) * coslat;
-            v[1] = sin(DEG2RAD * lon) * coslat;
-            v[2] = sin(DEG2RAD * lat);
+            double coslat = cos(Astronomy.DEG2RAD * lat);
+            v[0] = cos(Astronomy.DEG2RAD * lon) * coslat;
+            v[1] = sin(Astronomy.DEG2RAD * lon) * coslat;
+            v[2] = sin(Astronomy.DEG2RAD * lat);
         }
 
         static double AngleDiff(double alat, double alon, double blat, double blon)
@@ -2049,7 +2047,7 @@ namespace csharp_test
             if (dot >= +1.0)
                 return 0.0;
 
-            return v(RAD2DEG * Math.Acos(dot));
+            return v(Astronomy.RAD2DEG * Math.Acos(dot));
         }
 
         static int LocalSolarEclipseTest1()
