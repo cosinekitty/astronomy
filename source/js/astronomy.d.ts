@@ -28,6 +28,10 @@
 */
 export declare type FlexibleDateTime = Date | number | AstroTime;
 /**
+ * @brief The number of kilometers per astronomical unit.
+ */
+export declare const KM_PER_AU = 149597870.69098932;
+/**
  * @brief Calculates the angle in degrees between two vectors.
  *
  * The angle is measured in the plane that contains both vectors.
@@ -463,6 +467,39 @@ export declare function SunPosition(date: FlexibleDateTime): EclipticCoordinates
  *      The topocentric coordinates of the body as adjusted for the given observer.
  */
 export declare function Equator(body: Body, date: FlexibleDateTime, observer: Observer, ofdate: boolean, aberration: boolean): EquatorialCoordinates;
+/**
+ * @brief Calculates geocentric equatorial coordinates of an observer on the surface of the Earth.
+ *
+ * This function calculates a vector from the center of the Earth to
+ * a point on or near the surface of the Earth, expressed in equatorial
+ * coordinates. It takes into account the rotation of the Earth at the given
+ * time, along with the given latitude, longitude, and elevation of the observer.
+ *
+ * The caller may pass `ofdate` as `true` to return coordinates relative to the Earth's
+ * equator at the specified time, or `false` to use the J2000 equator.
+ *
+ * The returned vector has components expressed in astronomical units (AU).
+ * To convert to kilometers, multiply the `x`, `y`, and `z` values by
+ * the constant value #Astronomy.KM_PER_AU.
+ *
+ * @param {FlexibleDateTime} date
+ *      The date and time for which to calculate the observer's position vector.
+ *
+ * @param {Observer} observer
+ *      The geographic location of a point on or near the surface of the Earth.
+ *
+ * @param {boolean} ofdate
+ *      Selects the date of the Earth's equator in which to express the equatorial coordinates.
+ *      The caller may pass `false` to use the orientation of the Earth's equator
+ *      at noon UTC on January 1, 2000, in which case this function corrects for precession
+ *      and nutation of the Earth as it was at the moment specified by the `time` parameter.
+ *      Or the caller may pass `true` to use the Earth's equator at `time`
+ *      as the orientation.
+ *
+ * @returns {Vector}
+ *      An equatorial vector from the center of the Earth to the specified location
+ *      on (or near) the Earth's surface.
+ */
 export declare function ObserverVector(date: FlexibleDateTime, observer: Observer, ofdate: boolean): Vector;
 /**
  * @brief Converts equatorial Cartesian coordinates to ecliptic Cartesian and angular coordinates.
@@ -1552,13 +1589,13 @@ export declare function Rotation_ECL_EQJ(): RotationMatrix;
  * Source: EQJ = equatorial system, using equator at J2000 epoch.
  * Target: EQD = equatorial system, using equator of the specified date/time.
  *
- * @param {AstroTime} time
+ * @param {FlexibleDateTime} time
  *      The date and time at which the Earth's equator defines the target orientation.
  *
  * @returns {RotationMatrix}
  *      A rotation matrix that converts EQJ to EQD at `time`.
  */
-export declare function Rotation_EQJ_EQD(time: AstroTime): RotationMatrix;
+export declare function Rotation_EQJ_EQD(time: FlexibleDateTime): RotationMatrix;
 /**
  * @brief Calculates a rotation matrix from equatorial of-date (EQD) to equatorial J2000 (EQJ).
  *
@@ -1567,13 +1604,13 @@ export declare function Rotation_EQJ_EQD(time: AstroTime): RotationMatrix;
  * Source: EQD = equatorial system, using equator of the specified date/time.
  * Target: EQJ = equatorial system, using equator at J2000 epoch.
  *
- * @param {AstroTime} time
+ * @param {FlexibleDateTime} time
  *      The date and time at which the Earth's equator defines the source orientation.
  *
  * @returns {RotationMatrix}
  *      A rotation matrix that converts EQD at `time` to EQJ.
  */
-export declare function Rotation_EQD_EQJ(time: AstroTime): RotationMatrix;
+export declare function Rotation_EQD_EQJ(time: FlexibleDateTime): RotationMatrix;
 /**
  * @brief Calculates a rotation matrix from equatorial of-date (EQD) to horizontal (HOR).
  *
@@ -1585,7 +1622,7 @@ export declare function Rotation_EQD_EQJ(time: AstroTime): RotationMatrix;
  * Use `HorizonFromVector` to convert the return value
  * to a traditional altitude/azimuth pair.
  *
- * @param {AstroTime} time
+ * @param {FlexibleDateTime} time
  *      The date and time at which the Earth's equator applies.
  *
  * @param {Observer} observer
@@ -1598,7 +1635,7 @@ export declare function Rotation_EQD_EQJ(time: AstroTime): RotationMatrix;
  *      These components are chosen so that the "right-hand rule" works for the vector
  *      and so that north represents the direction where azimuth = 0.
  */
-export declare function Rotation_EQD_HOR(time: AstroTime, observer: Observer): RotationMatrix;
+export declare function Rotation_EQD_HOR(time: FlexibleDateTime, observer: Observer): RotationMatrix;
 /**
  * @brief Calculates a rotation matrix from horizontal (HOR) to equatorial of-date (EQD).
  *
@@ -1607,7 +1644,7 @@ export declare function Rotation_EQD_HOR(time: AstroTime, observer: Observer): R
  * Source: HOR = horizontal system (x=North, y=West, z=Zenith).
  * Target: EQD = equatorial system, using equator of the specified date/time.
  *
- * @param {AstroTime} time
+ * @param {FlexibleDateTime} time
  *      The date and time at which the Earth's equator applies.
  *
  * @param {Observer} observer
@@ -1616,7 +1653,7 @@ export declare function Rotation_EQD_HOR(time: AstroTime, observer: Observer): R
  * @returns {RotationMatrix}
  *      A rotation matrix that converts HOR to EQD at `time` and for `observer`.
  */
-export declare function Rotation_HOR_EQD(time: AstroTime, observer: Observer): RotationMatrix;
+export declare function Rotation_HOR_EQD(time: FlexibleDateTime, observer: Observer): RotationMatrix;
 /**
  * @brief Calculates a rotation matrix from horizontal (HOR) to J2000 equatorial (EQJ).
  *
@@ -1625,7 +1662,7 @@ export declare function Rotation_HOR_EQD(time: AstroTime, observer: Observer): R
  * Source: HOR = horizontal system (x=North, y=West, z=Zenith).
  * Target: EQJ = equatorial system, using equator at the J2000 epoch.
  *
- * @param {AstroTime} time
+ * @param {FlexibleDateTime} time
  *      The date and time of the observation.
  *
  * @param {Observer} observer
@@ -1634,7 +1671,7 @@ export declare function Rotation_HOR_EQD(time: AstroTime, observer: Observer): R
  * @returns {RotationMatrix}
  *      A rotation matrix that converts HOR to EQD at `time` and for `observer`.
  */
-export declare function Rotation_HOR_EQJ(time: AstroTime, observer: Observer): RotationMatrix;
+export declare function Rotation_HOR_EQJ(time: FlexibleDateTime, observer: Observer): RotationMatrix;
 /**
  * @brief Calculates a rotation matrix from equatorial J2000 (EQJ) to horizontal (HOR).
  *
@@ -1646,10 +1683,10 @@ export declare function Rotation_HOR_EQJ(time: AstroTime, observer: Observer): R
  * Use {@link HorizonFromVector} to convert the return value
  * to a traditional altitude/azimuth pair.
  *
- * @param time
+ * @param {FlexibleDateTime} time
  *      The date and time of the desired horizontal orientation.
  *
- * @param observer
+ * @param {Observer} observer
  *      A location near the Earth's mean sea level that defines the observer's horizon.
  *
  * @return
@@ -1659,7 +1696,7 @@ export declare function Rotation_HOR_EQJ(time: AstroTime, observer: Observer): R
  *      These components are chosen so that the "right-hand rule" works for the vector
  *      and so that north represents the direction where azimuth = 0.
  */
-export declare function Rotation_EQJ_HOR(time: AstroTime, observer: Observer): RotationMatrix;
+export declare function Rotation_EQJ_HOR(time: FlexibleDateTime, observer: Observer): RotationMatrix;
 /**
  * @brief Calculates a rotation matrix from equatorial of-date (EQD) to ecliptic J2000 (ECL).
  *
@@ -1668,13 +1705,13 @@ export declare function Rotation_EQJ_HOR(time: AstroTime, observer: Observer): R
  * Source: EQD = equatorial system, using equator of date.
  * Target: ECL = ecliptic system, using equator at J2000 epoch.
  *
- * @param {AstroTime} time
+ * @param {FlexibleDateTime} time
  *      The date and time of the source equator.
  *
  * @returns {RotationMatrix}
  *      A rotation matrix that converts EQD to ECL.
  */
-export declare function Rotation_EQD_ECL(time: AstroTime): RotationMatrix;
+export declare function Rotation_EQD_ECL(time: FlexibleDateTime): RotationMatrix;
 /**
  * @brief Calculates a rotation matrix from ecliptic J2000 (ECL) to equatorial of-date (EQD).
  *
@@ -1683,13 +1720,13 @@ export declare function Rotation_EQD_ECL(time: AstroTime): RotationMatrix;
  * Source: ECL = ecliptic system, using equator at J2000 epoch.
  * Target: EQD = equatorial system, using equator of date.
  *
- * @param {AstroTime} time
+ * @param {FlexibleDateTime} time
  *      The date and time of the desired equator.
  *
  * @returns {RotationMatrix}
  *      A rotation matrix that converts ECL to EQD.
  */
-export declare function Rotation_ECL_EQD(time: AstroTime): RotationMatrix;
+export declare function Rotation_ECL_EQD(time: FlexibleDateTime): RotationMatrix;
 /**
  * @brief Calculates a rotation matrix from ecliptic J2000 (ECL) to horizontal (HOR).
  *
@@ -1701,7 +1738,7 @@ export declare function Rotation_ECL_EQD(time: AstroTime): RotationMatrix;
  * Use {@link HorizonFromVector} to convert the return value
  * to a traditional altitude/azimuth pair.
  *
- * @param {AstroTime} time
+ * @param {FlexibleDateTime} time
  *      The date and time of the desired horizontal orientation.
  *
  * @param {Observer} observer
@@ -1714,7 +1751,7 @@ export declare function Rotation_ECL_EQD(time: AstroTime): RotationMatrix;
  *      These components are chosen so that the "right-hand rule" works for the vector
  *      and so that north represents the direction where azimuth = 0.
  */
-export declare function Rotation_ECL_HOR(time: AstroTime, observer: Observer): RotationMatrix;
+export declare function Rotation_ECL_HOR(time: FlexibleDateTime, observer: Observer): RotationMatrix;
 /**
  * @brief Calculates a rotation matrix from horizontal (HOR) to ecliptic J2000 (ECL).
  *
@@ -1723,7 +1760,7 @@ export declare function Rotation_ECL_HOR(time: AstroTime, observer: Observer): R
  * Source: HOR = horizontal system.
  * Target: ECL = ecliptic system, using equator at J2000 epoch.
  *
- * @param {AstroTime} time
+ * @param {FlexibleDateTime} time
  *      The date and time of the horizontal observation.
  *
  * @param {Observer} observer
@@ -1732,7 +1769,7 @@ export declare function Rotation_ECL_HOR(time: AstroTime, observer: Observer): R
  * @returns {RotationMatrix}
  *      A rotation matrix that converts HOR to ECL.
  */
-export declare function Rotation_HOR_ECL(time: AstroTime, observer: Observer): RotationMatrix;
+export declare function Rotation_HOR_ECL(time: FlexibleDateTime, observer: Observer): RotationMatrix;
 /**
  * @brief Reports the constellation that a given celestial point lies within.
  *

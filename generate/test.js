@@ -1808,9 +1808,67 @@ function PlutoCheck() {
 }
 
 
+function GeoidTestCase(time, observer, ofdate) {
+    let topo_moon = Astronomy.Equator(Astronomy.Body.Moon, time, observer, ofdate, false);
+    let surface = Astronomy.ObserverVector(time, observer, ofdate);
+    let geo_moon = Astronomy.GeoVector(Astronomy.Body.Moon, time, false);
+
+    if (ofdate) {
+        // GeoVector() returns J2000 coordinates. Convert to equator-of-date coordinates.
+        const rot = Astronomy.Rotation_EQJ_EQD(time);
+        geo_moon = Astronomy.RotateVector(rot, geo_moon);
+    }
+
+    const dx = Astronomy.KM_PER_AU * v((geo_moon.x - surface.x) - topo_moon.vec.x);
+    const dy = Astronomy.KM_PER_AU * v((geo_moon.y - surface.y) - topo_moon.vec.y);
+    const dz = Astronomy.KM_PER_AU * v((geo_moon.z - surface.z) - topo_moon.vec.z);
+    const diff = sqrt(dx*dx + dy*dy + dz*dz);
+    if (Verbose) console.log(`JS GeoidTestCase: ofdate=${ofdate}, time=${time.toISOString()}, lat=${observer.latitude}, lon=${observer.longitude}, ht=${observer.height}, surface=(${Astronomy.KM_PER_AU * surface.x}, ${Astronomy.KM_PER_AU * surface.y}, ${Astronomy.KM_PER_AU * surface.z}), diff = ${diff} km`);
+
+    // Require 1 millimeter accuracy! (one millionth of a kilometer).
+    if (diff > 1.0e-6) {
+        console.error('JS GeoidTestCase: EXCESSIVE POSITION ERROR.');
+        return 1;
+    }
+    return 0;
+}
+
+
+
+function Geoid() {
+    const time_list = [
+        new Date('1066-09-27T18:00:00Z'),
+        new Date('1970-12-13T15:42:00Z'),
+        new Date('1970-12-13T15:43:00Z'),
+        new Date('2015-03-05T02:15:45Z')
+    ];
+
+    const observer_list = [
+        new Astronomy.Observer( +1.5,   +2.7,    7.4),
+        new Astronomy.Observer(-53.7, +141.7, +100.0),
+        new Astronomy.Observer(+30.0,  -85.2,  -50.0),
+        new Astronomy.Observer(+90.0,  +45.0,  -50.0),
+        new Astronomy.Observer(-90.0, -180.0,    0.0)
+    ];
+
+    // Test a variety of times and locations, in both supported orientation systems.
+
+    for (let observer of observer_list) {
+        for (let time of time_list) {
+            if (0 != GeoidTestCase(time, observer, false)) return 1;
+            if (0 != GeoidTestCase(time, observer, true))  return 1;
+        }
+    }
+
+    console.log('JS GeoidTest: PASS');
+    return 0;
+}
+
+
 const UnitTests = {
     constellation:          Constellation,
     elongation:             Elongation,
+    geoid:                  Geoid,
     global_solar_eclipse:   GlobalSolarEclipse,
     local_solar_eclipse:    LocalSolarEclipse,
     lunar_apsis:            LunarApsis,

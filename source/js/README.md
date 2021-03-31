@@ -644,6 +644,14 @@ The calculations are performed from the point of view of a geocentric observer.
 
 * * *
 
+<a name="KM_PER_AU"></a>
+
+## KM\_PER\_AU
+**Kind**: global variable  
+**Brief**: The number of kilometers per astronomical unit.  
+
+* * *
+
 <a name="Body"></a>
 
 ## Body : <code>enum</code>
@@ -794,6 +802,35 @@ However, it can have a small effect on the apparent positions of other bodies.
 | observer | [<code>Observer</code>](#Observer) | The location on the Earth of the observer. |
 | ofdate | <code>bool</code> | Pass `true` to return equatorial coordinates of date,      i.e. corrected for precession and nutation at the given date.      This is needed to get correct horizontal coordinates when you call      [Horizon](#Horizon).      Pass `false` to return equatorial coordinates in the J2000 system. |
 | aberration | <code>bool</code> | Pass `true` to correct for      <a href="https://en.wikipedia.org/wiki/Aberration_of_light">aberration</a>,      or `false` to leave uncorrected. |
+
+
+* * *
+
+<a name="ObserverVector"></a>
+
+## ObserverVector(date, observer, ofdate) ⇒ [<code>Vector</code>](#Vector)
+**Kind**: global function  
+**Returns**: [<code>Vector</code>](#Vector) - An equatorial vector from the center of the Earth to the specified location
+     on (or near) the Earth's surface.  
+**Brief**: Calculates geocentric equatorial coordinates of an observer on the surface of the Earth.
+
+This function calculates a vector from the center of the Earth to
+a point on or near the surface of the Earth, expressed in equatorial
+coordinates. It takes into account the rotation of the Earth at the given
+time, along with the given latitude, longitude, and elevation of the observer.
+
+The caller may pass `ofdate` as `true` to return coordinates relative to the Earth's
+equator at the specified time, or `false` to use the J2000 equator.
+
+The returned vector has components expressed in astronomical units (AU).
+To convert to kilometers, multiply the `x`, `y`, and `z` values by
+the constant value #Astronomy.KM_PER_AU.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| date | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time for which to calculate the observer's position vector. |
+| observer | [<code>Observer</code>](#Observer) | The geographic location of a point on or near the surface of the Earth. |
+| ofdate | <code>boolean</code> | Selects the date of the Earth's equator in which to express the equatorial coordinates.      The caller may pass `false` to use the orientation of the Earth's equator      at noon UTC on January 1, 2000, in which case this function corrects for precession      and nutation of the Earth as it was at the moment specified by the `time` parameter.      Or the caller may pass `true` to use the Earth's equator at `time`      as the orientation. |
 
 
 * * *
@@ -1647,7 +1684,7 @@ Target: EQD = equatorial system, using equator of the specified date/time.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| time | [<code>AstroTime</code>](#AstroTime) | The date and time at which the Earth's equator defines the target orientation. |
+| time | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time at which the Earth's equator defines the target orientation. |
 
 
 * * *
@@ -1666,7 +1703,7 @@ Target: EQJ = equatorial system, using equator at J2000 epoch.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| time | [<code>AstroTime</code>](#AstroTime) | The date and time at which the Earth's equator defines the source orientation. |
+| time | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time at which the Earth's equator defines the source orientation. |
 
 
 * * *
@@ -1692,7 +1729,7 @@ to a traditional altitude/azimuth pair.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| time | [<code>AstroTime</code>](#AstroTime) | The date and time at which the Earth's equator applies. |
+| time | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time at which the Earth's equator applies. |
 | observer | [<code>Observer</code>](#Observer) | A location near the Earth's mean sea level that defines the observer's horizon. |
 
 
@@ -1712,7 +1749,7 @@ Target: EQD = equatorial system, using equator of the specified date/time.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| time | [<code>AstroTime</code>](#AstroTime) | The date and time at which the Earth's equator applies. |
+| time | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time at which the Earth's equator applies. |
 | observer | [<code>Observer</code>](#Observer) | A location near the Earth's mean sea level that defines the observer's horizon. |
 
 
@@ -1732,7 +1769,7 @@ Target: EQJ = equatorial system, using equator at the J2000 epoch.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| time | [<code>AstroTime</code>](#AstroTime) | The date and time of the observation. |
+| time | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time of the observation. |
 | observer | [<code>Observer</code>](#Observer) | A location near the Earth's mean sea level that defines the observer's horizon. |
 
 
@@ -1757,10 +1794,10 @@ Target: HOR = horizontal system.
 Use [HorizonFromVector](#HorizonFromVector) to convert the return value
 to a traditional altitude/azimuth pair.  
 
-| Param | Description |
-| --- | --- |
-| time | The date and time of the desired horizontal orientation. |
-| observer | A location near the Earth's mean sea level that defines the observer's horizon. |
+| Param | Type | Description |
+| --- | --- | --- |
+| time | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time of the desired horizontal orientation. |
+| observer | [<code>Observer</code>](#Observer) | A location near the Earth's mean sea level that defines the observer's horizon. |
 
 
 * * *
@@ -1779,7 +1816,7 @@ Target: ECL = ecliptic system, using equator at J2000 epoch.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| time | [<code>AstroTime</code>](#AstroTime) | The date and time of the source equator. |
+| time | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time of the source equator. |
 
 
 * * *
@@ -1798,7 +1835,7 @@ Target: EQD = equatorial system, using equator of date.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| time | [<code>AstroTime</code>](#AstroTime) | The date and time of the desired equator. |
+| time | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time of the desired equator. |
 
 
 * * *
@@ -1824,7 +1861,7 @@ to a traditional altitude/azimuth pair.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| time | [<code>AstroTime</code>](#AstroTime) | The date and time of the desired horizontal orientation. |
+| time | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time of the desired horizontal orientation. |
 | observer | [<code>Observer</code>](#Observer) | A location near the Earth's mean sea level that defines the observer's horizon. |
 
 
@@ -1844,7 +1881,7 @@ Target: ECL = ecliptic system, using equator at J2000 epoch.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| time | [<code>AstroTime</code>](#AstroTime) | The date and time of the horizontal observation. |
+| time | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time of the horizontal observation. |
 | observer | [<code>Observer</code>](#Observer) | The location of the horizontal observer. |
 
 

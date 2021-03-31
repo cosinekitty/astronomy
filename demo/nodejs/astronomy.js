@@ -33,13 +33,16 @@
  */
 'use strict';
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.NextLunarApsis = exports.SearchLunarApsis = exports.Apsis = exports.SearchPeakMagnitude = exports.SearchMaxElongation = exports.Elongation = exports.ElongationEvent = exports.Seasons = exports.SeasonInfo = exports.SearchHourAngle = exports.HourAngleEvent = exports.SearchRiseSet = exports.NextMoonQuarter = exports.SearchMoonQuarter = exports.MoonQuarter = exports.SearchMoonPhase = exports.MoonPhase = exports.SearchRelativeLongitude = exports.Illumination = exports.IlluminationInfo = exports.EclipticLongitude = exports.AngleFromSun = exports.LongitudeFromSun = exports.SearchSunLongitude = exports.Search = exports.GeoVector = exports.HelioDistance = exports.HelioVector = exports.GeoMoon = exports.Ecliptic = exports.ObserverVector = exports.Equator = exports.SunPosition = exports.Observer = exports.Horizon = exports.EclipticCoordinates = exports.HorizontalCoordinates = exports.MakeRotation = exports.RotationMatrix = exports.EquatorialCoordinates = exports.Spherical = exports.Vector = exports.CalcMoonCount = exports.MakeTime = exports.AstroTime = exports.SetDeltaTFunction = exports.DeltaT_JplHorizons = exports.DeltaT_EspenakMeeus = exports.Body = exports.AngleBetween = void 0;
-exports.NextTransit = exports.SearchTransit = exports.TransitInfo = exports.NextLocalSolarEclipse = exports.SearchLocalSolarEclipse = exports.LocalSolarEclipseInfo = exports.EclipseEvent = exports.NextGlobalSolarEclipse = exports.SearchGlobalSolarEclipse = exports.NextLunarEclipse = exports.GlobalSolarEclipseInfo = exports.SearchLunarEclipse = exports.LunarEclipseInfo = exports.Constellation = exports.ConstellationInfo = exports.Rotation_HOR_ECL = exports.Rotation_ECL_HOR = exports.Rotation_ECL_EQD = exports.Rotation_EQD_ECL = exports.Rotation_EQJ_HOR = exports.Rotation_HOR_EQJ = exports.Rotation_HOR_EQD = exports.Rotation_EQD_HOR = exports.Rotation_EQD_EQJ = exports.Rotation_EQJ_EQD = exports.Rotation_ECL_EQJ = exports.Rotation_EQJ_ECL = exports.RotateVector = exports.InverseRefraction = exports.Refraction = exports.VectorFromHorizon = exports.HorizonFromVector = exports.SphereFromVector = exports.EquatorFromVector = exports.VectorFromSphere = exports.Pivot = exports.IdentityMatrix = exports.CombineRotation = exports.InverseRotation = exports.NextPlanetApsis = exports.SearchPlanetApsis = void 0;
+exports.SearchLunarApsis = exports.Apsis = exports.SearchPeakMagnitude = exports.SearchMaxElongation = exports.Elongation = exports.ElongationEvent = exports.Seasons = exports.SeasonInfo = exports.SearchHourAngle = exports.HourAngleEvent = exports.SearchRiseSet = exports.NextMoonQuarter = exports.SearchMoonQuarter = exports.MoonQuarter = exports.SearchMoonPhase = exports.MoonPhase = exports.SearchRelativeLongitude = exports.Illumination = exports.IlluminationInfo = exports.EclipticLongitude = exports.AngleFromSun = exports.LongitudeFromSun = exports.SearchSunLongitude = exports.Search = exports.GeoVector = exports.HelioDistance = exports.HelioVector = exports.GeoMoon = exports.Ecliptic = exports.ObserverVector = exports.Equator = exports.SunPosition = exports.Observer = exports.Horizon = exports.EclipticCoordinates = exports.HorizontalCoordinates = exports.MakeRotation = exports.RotationMatrix = exports.EquatorialCoordinates = exports.Spherical = exports.Vector = exports.CalcMoonCount = exports.MakeTime = exports.AstroTime = exports.SetDeltaTFunction = exports.DeltaT_JplHorizons = exports.DeltaT_EspenakMeeus = exports.Body = exports.AngleBetween = exports.KM_PER_AU = void 0;
+exports.NextTransit = exports.SearchTransit = exports.TransitInfo = exports.NextLocalSolarEclipse = exports.SearchLocalSolarEclipse = exports.LocalSolarEclipseInfo = exports.EclipseEvent = exports.NextGlobalSolarEclipse = exports.SearchGlobalSolarEclipse = exports.NextLunarEclipse = exports.GlobalSolarEclipseInfo = exports.SearchLunarEclipse = exports.LunarEclipseInfo = exports.Constellation = exports.ConstellationInfo = exports.Rotation_HOR_ECL = exports.Rotation_ECL_HOR = exports.Rotation_ECL_EQD = exports.Rotation_EQD_ECL = exports.Rotation_EQJ_HOR = exports.Rotation_HOR_EQJ = exports.Rotation_HOR_EQD = exports.Rotation_EQD_HOR = exports.Rotation_EQD_EQJ = exports.Rotation_EQJ_EQD = exports.Rotation_ECL_EQJ = exports.Rotation_EQJ_ECL = exports.RotateVector = exports.InverseRefraction = exports.Refraction = exports.VectorFromHorizon = exports.HorizonFromVector = exports.SphereFromVector = exports.EquatorFromVector = exports.VectorFromSphere = exports.Pivot = exports.IdentityMatrix = exports.CombineRotation = exports.InverseRotation = exports.NextPlanetApsis = exports.SearchPlanetApsis = exports.NextLunarApsis = void 0;
+/**
+ * @brief The number of kilometers per astronomical unit.
+ */
+exports.KM_PER_AU = 1.4959787069098932e+8;
 const DAYS_PER_TROPICAL_YEAR = 365.24217;
 const J2000 = new Date('2000-01-01T12:00:00Z');
 const PI2 = 2 * Math.PI;
 const ARC = 3600 * (180 / Math.PI); // arcseconds per radian
-const KM_PER_AU = 1.4959787069098932e+8;
 const C_AUDAY = 173.1446326846693; // speed of light in AU/day
 const ASEC2RAD = 4.848136811095359935899141e-6;
 const DEG2RAD = 0.017453292519943296;
@@ -54,17 +57,17 @@ const SECONDS_PER_DAY = 24 * 3600;
 const MILLIS_PER_DAY = SECONDS_PER_DAY * 1000;
 const SOLAR_DAYS_PER_SIDEREAL_DAY = 0.9972695717592592;
 const SUN_RADIUS_KM = 695700.0;
-const SUN_RADIUS_AU = SUN_RADIUS_KM / KM_PER_AU;
+const SUN_RADIUS_AU = SUN_RADIUS_KM / exports.KM_PER_AU;
 const EARTH_FLATTENING = 0.996647180302104;
 const EARTH_EQUATORIAL_RADIUS_KM = 6378.1366;
-const EARTH_EQUATORIAL_RADIUS_AU = EARTH_EQUATORIAL_RADIUS_KM / KM_PER_AU;
+const EARTH_EQUATORIAL_RADIUS_AU = EARTH_EQUATORIAL_RADIUS_KM / exports.KM_PER_AU;
 const EARTH_MEAN_RADIUS_KM = 6371.0; /* mean radius of the Earth's geoid, without atmosphere */
 const EARTH_ATMOSPHERE_KM = 88.0; /* effective atmosphere thickness for lunar eclipses */
 const EARTH_ECLIPSE_RADIUS_KM = EARTH_MEAN_RADIUS_KM + EARTH_ATMOSPHERE_KM;
 const MOON_EQUATORIAL_RADIUS_KM = 1738.1;
 const MOON_MEAN_RADIUS_KM = 1737.4;
 const MOON_POLAR_RADIUS_KM = 1736.0;
-const MOON_EQUATORIAL_RADIUS_AU = (MOON_EQUATORIAL_RADIUS_KM / KM_PER_AU);
+const MOON_EQUATORIAL_RADIUS_AU = (MOON_EQUATORIAL_RADIUS_KM / exports.KM_PER_AU);
 const REFRACTION_NEAR_HORIZON = 34 / 60; // degrees of refractive "lift" seen for objects near horizon
 const EARTH_MOON_MASS_RATIO = 81.30056;
 /*
@@ -1596,7 +1599,7 @@ function terra(observer, st) {
     const sinst = Math.sin(stlocl);
     const cosst = Math.cos(stlocl);
     return {
-        pos: [ach * cosphi * cosst / KM_PER_AU, ach * cosphi * sinst / KM_PER_AU, ash * sinphi / KM_PER_AU],
+        pos: [ach * cosphi * cosst / exports.KM_PER_AU, ach * cosphi * sinst / exports.KM_PER_AU, ash * sinphi / exports.KM_PER_AU],
         vel: [-ANGVEL * ach * cosphi * sinst * 86400, ANGVEL * ach * cosphi * cosst * 86400, 0]
     };
 }
@@ -2174,6 +2177,39 @@ function Equator(body, date, observer, ofdate, aberration) {
     return vector2radec(datevect, time);
 }
 exports.Equator = Equator;
+/**
+ * @brief Calculates geocentric equatorial coordinates of an observer on the surface of the Earth.
+ *
+ * This function calculates a vector from the center of the Earth to
+ * a point on or near the surface of the Earth, expressed in equatorial
+ * coordinates. It takes into account the rotation of the Earth at the given
+ * time, along with the given latitude, longitude, and elevation of the observer.
+ *
+ * The caller may pass `ofdate` as `true` to return coordinates relative to the Earth's
+ * equator at the specified time, or `false` to use the J2000 equator.
+ *
+ * The returned vector has components expressed in astronomical units (AU).
+ * To convert to kilometers, multiply the `x`, `y`, and `z` values by
+ * the constant value #Astronomy.KM_PER_AU.
+ *
+ * @param {FlexibleDateTime} date
+ *      The date and time for which to calculate the observer's position vector.
+ *
+ * @param {Observer} observer
+ *      The geographic location of a point on or near the surface of the Earth.
+ *
+ * @param {boolean} ofdate
+ *      Selects the date of the Earth's equator in which to express the equatorial coordinates.
+ *      The caller may pass `false` to use the orientation of the Earth's equator
+ *      at noon UTC on January 1, 2000, in which case this function corrects for precession
+ *      and nutation of the Earth as it was at the moment specified by the `time` parameter.
+ *      Or the caller may pass `true` to use the Earth's equator at `time`
+ *      as the orientation.
+ *
+ * @returns {Vector}
+ *      An equatorial vector from the center of the Earth to the specified location
+ *      on (or near) the Earth's surface.
+ */
 function ObserverVector(date, observer, ofdate) {
     const time = MakeTime(date);
     const gast = sidereal_time(time);
@@ -3215,7 +3251,7 @@ function MoonMagnitude(phase, helio_dist, geo_dist) {
     let rad2 = rad * rad;
     let rad4 = rad2 * rad2;
     let mag = -12.717 + 1.49 * Math.abs(rad) + 0.0431 * rad4;
-    const moon_mean_distance_au = 385000.6 / KM_PER_AU;
+    const moon_mean_distance_au = 385000.6 / exports.KM_PER_AU;
     let geo_au = geo_dist / moon_mean_distance_au;
     mag += 5 * Math.log10(helio_dist * geo_au);
     return mag;
@@ -4206,7 +4242,7 @@ class Apsis {
         this.time = time;
         this.kind = kind;
         this.dist_au = dist_au;
-        this.dist_km = dist_au * KM_PER_AU;
+        this.dist_km = dist_au * exports.KM_PER_AU;
     }
 }
 exports.Apsis = Apsis;
@@ -4957,13 +4993,14 @@ exports.Rotation_ECL_EQJ = Rotation_ECL_EQJ;
  * Source: EQJ = equatorial system, using equator at J2000 epoch.
  * Target: EQD = equatorial system, using equator of the specified date/time.
  *
- * @param {AstroTime} time
+ * @param {FlexibleDateTime} time
  *      The date and time at which the Earth's equator defines the target orientation.
  *
  * @returns {RotationMatrix}
  *      A rotation matrix that converts EQJ to EQD at `time`.
  */
 function Rotation_EQJ_EQD(time) {
+    time = MakeTime(time);
     const prec = precession_rot(time, PrecessDirection.From2000);
     const nut = nutation_rot(time, PrecessDirection.From2000);
     return CombineRotation(prec, nut);
@@ -4977,13 +5014,14 @@ exports.Rotation_EQJ_EQD = Rotation_EQJ_EQD;
  * Source: EQD = equatorial system, using equator of the specified date/time.
  * Target: EQJ = equatorial system, using equator at J2000 epoch.
  *
- * @param {AstroTime} time
+ * @param {FlexibleDateTime} time
  *      The date and time at which the Earth's equator defines the source orientation.
  *
  * @returns {RotationMatrix}
  *      A rotation matrix that converts EQD at `time` to EQJ.
  */
 function Rotation_EQD_EQJ(time) {
+    time = MakeTime(time);
     const nut = nutation_rot(time, PrecessDirection.Into2000);
     const prec = precession_rot(time, PrecessDirection.Into2000);
     return CombineRotation(nut, prec);
@@ -5000,7 +5038,7 @@ exports.Rotation_EQD_EQJ = Rotation_EQD_EQJ;
  * Use `HorizonFromVector` to convert the return value
  * to a traditional altitude/azimuth pair.
  *
- * @param {AstroTime} time
+ * @param {FlexibleDateTime} time
  *      The date and time at which the Earth's equator applies.
  *
  * @param {Observer} observer
@@ -5014,6 +5052,7 @@ exports.Rotation_EQD_EQJ = Rotation_EQD_EQJ;
  *      and so that north represents the direction where azimuth = 0.
  */
 function Rotation_EQD_HOR(time, observer) {
+    time = MakeTime(time);
     const sinlat = Math.sin(observer.latitude * DEG2RAD);
     const coslat = Math.cos(observer.latitude * DEG2RAD);
     const sinlon = Math.sin(observer.longitude * DEG2RAD);
@@ -5040,7 +5079,7 @@ exports.Rotation_EQD_HOR = Rotation_EQD_HOR;
  * Source: HOR = horizontal system (x=North, y=West, z=Zenith).
  * Target: EQD = equatorial system, using equator of the specified date/time.
  *
- * @param {AstroTime} time
+ * @param {FlexibleDateTime} time
  *      The date and time at which the Earth's equator applies.
  *
  * @param {Observer} observer
@@ -5062,7 +5101,7 @@ exports.Rotation_HOR_EQD = Rotation_HOR_EQD;
  * Source: HOR = horizontal system (x=North, y=West, z=Zenith).
  * Target: EQJ = equatorial system, using equator at the J2000 epoch.
  *
- * @param {AstroTime} time
+ * @param {FlexibleDateTime} time
  *      The date and time of the observation.
  *
  * @param {Observer} observer
@@ -5072,6 +5111,7 @@ exports.Rotation_HOR_EQD = Rotation_HOR_EQD;
  *      A rotation matrix that converts HOR to EQD at `time` and for `observer`.
  */
 function Rotation_HOR_EQJ(time, observer) {
+    time = MakeTime(time);
     const hor_eqd = Rotation_HOR_EQD(time, observer);
     const eqd_eqj = Rotation_EQD_EQJ(time);
     return CombineRotation(hor_eqd, eqd_eqj);
@@ -5088,10 +5128,10 @@ exports.Rotation_HOR_EQJ = Rotation_HOR_EQJ;
  * Use {@link HorizonFromVector} to convert the return value
  * to a traditional altitude/azimuth pair.
  *
- * @param time
+ * @param {FlexibleDateTime} time
  *      The date and time of the desired horizontal orientation.
  *
- * @param observer
+ * @param {Observer} observer
  *      A location near the Earth's mean sea level that defines the observer's horizon.
  *
  * @return
@@ -5114,7 +5154,7 @@ exports.Rotation_EQJ_HOR = Rotation_EQJ_HOR;
  * Source: EQD = equatorial system, using equator of date.
  * Target: ECL = ecliptic system, using equator at J2000 epoch.
  *
- * @param {AstroTime} time
+ * @param {FlexibleDateTime} time
  *      The date and time of the source equator.
  *
  * @returns {RotationMatrix}
@@ -5134,7 +5174,7 @@ exports.Rotation_EQD_ECL = Rotation_EQD_ECL;
  * Source: ECL = ecliptic system, using equator at J2000 epoch.
  * Target: EQD = equatorial system, using equator of date.
  *
- * @param {AstroTime} time
+ * @param {FlexibleDateTime} time
  *      The date and time of the desired equator.
  *
  * @returns {RotationMatrix}
@@ -5156,7 +5196,7 @@ exports.Rotation_ECL_EQD = Rotation_ECL_EQD;
  * Use {@link HorizonFromVector} to convert the return value
  * to a traditional altitude/azimuth pair.
  *
- * @param {AstroTime} time
+ * @param {FlexibleDateTime} time
  *      The date and time of the desired horizontal orientation.
  *
  * @param {Observer} observer
@@ -5170,6 +5210,7 @@ exports.Rotation_ECL_EQD = Rotation_ECL_EQD;
  *      and so that north represents the direction where azimuth = 0.
  */
 function Rotation_ECL_HOR(time, observer) {
+    time = MakeTime(time);
     const ecl_eqd = Rotation_ECL_EQD(time);
     const eqd_hor = Rotation_EQD_HOR(time, observer);
     return CombineRotation(ecl_eqd, eqd_hor);
@@ -5183,7 +5224,7 @@ exports.Rotation_ECL_HOR = Rotation_ECL_HOR;
  * Source: HOR = horizontal system.
  * Target: ECL = ecliptic system, using equator at J2000 epoch.
  *
- * @param {AstroTime} time
+ * @param {FlexibleDateTime} time
  *      The date and time of the horizontal observation.
  *
  * @param {Observer} observer
@@ -6293,7 +6334,7 @@ function CalcShadow(body_radius_km, time, target, dir) {
     const dx = (u * dir.x) - target.x;
     const dy = (u * dir.y) - target.y;
     const dz = (u * dir.z) - target.z;
-    const r = KM_PER_AU * Math.sqrt(dx * dx + dy * dy + dz * dz);
+    const r = exports.KM_PER_AU * Math.sqrt(dx * dx + dy * dy + dz * dz);
     const k = +SUN_RADIUS_KM - (1.0 + u) * (SUN_RADIUS_KM - body_radius_km);
     const p = -SUN_RADIUS_KM + (1.0 + u) * (SUN_RADIUS_KM + body_radius_km);
     return new ShadowInfo(time, u, r, k, p, target, dir);
@@ -6555,12 +6596,12 @@ function GeoidIntersect(shadow) {
     // But dilate the z-coordinates so that the Earth becomes a perfect sphere.
     // Then find the intersection of the vector with the sphere.
     // See p 184 in Montenbruck & Pfleger's "Astronomy on the Personal Computer", second edition.
-    v.x *= KM_PER_AU;
-    v.y *= KM_PER_AU;
-    v.z *= KM_PER_AU / EARTH_FLATTENING;
-    e.x *= KM_PER_AU;
-    e.y *= KM_PER_AU;
-    e.z *= KM_PER_AU / EARTH_FLATTENING;
+    v.x *= exports.KM_PER_AU;
+    v.y *= exports.KM_PER_AU;
+    v.z *= exports.KM_PER_AU / EARTH_FLATTENING;
+    e.x *= exports.KM_PER_AU;
+    e.y *= exports.KM_PER_AU;
+    e.z *= exports.KM_PER_AU / EARTH_FLATTENING;
     // Solve the quadratic equation that finds whether and where
     // the shadow axis intersects with the Earth in the dilated coordinate system.
     const R = EARTH_EQUATORIAL_RADIUS_KM;
@@ -6599,7 +6640,7 @@ function GeoidIntersect(shadow) {
         const inv = InverseRotation(rot);
         // Put the EQD geocentric coordinates of the observer into the vector 'o'.
         // Also convert back from kilometers to astronomical units.
-        let o = new Vector(px / KM_PER_AU, py / KM_PER_AU, pz / KM_PER_AU, shadow.time);
+        let o = new Vector(px / exports.KM_PER_AU, py / exports.KM_PER_AU, pz / exports.KM_PER_AU, shadow.time);
         // Rotate the observer's geocentric EQD back to the EQJ system.
         o = RotateVector(inv, o);
         // Convert geocentric vector to lunacentric vector.

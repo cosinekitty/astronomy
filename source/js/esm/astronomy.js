@@ -32,11 +32,14 @@
  * @license MIT
  */
 'use strict';
+/**
+ * @brief The number of kilometers per astronomical unit.
+ */
+export const KM_PER_AU = 1.4959787069098932e+8;
 const DAYS_PER_TROPICAL_YEAR = 365.24217;
 const J2000 = new Date('2000-01-01T12:00:00Z');
 const PI2 = 2 * Math.PI;
 const ARC = 3600 * (180 / Math.PI); // arcseconds per radian
-const KM_PER_AU = 1.4959787069098932e+8;
 const C_AUDAY = 173.1446326846693; // speed of light in AU/day
 const ASEC2RAD = 4.848136811095359935899141e-6;
 const DEG2RAD = 0.017453292519943296;
@@ -2154,6 +2157,39 @@ export function Equator(body, date, observer, ofdate, aberration) {
     const datevect = gyration(j2000, time, PrecessDirection.From2000);
     return vector2radec(datevect, time);
 }
+/**
+ * @brief Calculates geocentric equatorial coordinates of an observer on the surface of the Earth.
+ *
+ * This function calculates a vector from the center of the Earth to
+ * a point on or near the surface of the Earth, expressed in equatorial
+ * coordinates. It takes into account the rotation of the Earth at the given
+ * time, along with the given latitude, longitude, and elevation of the observer.
+ *
+ * The caller may pass `ofdate` as `true` to return coordinates relative to the Earth's
+ * equator at the specified time, or `false` to use the J2000 equator.
+ *
+ * The returned vector has components expressed in astronomical units (AU).
+ * To convert to kilometers, multiply the `x`, `y`, and `z` values by
+ * the constant value #Astronomy.KM_PER_AU.
+ *
+ * @param {FlexibleDateTime} date
+ *      The date and time for which to calculate the observer's position vector.
+ *
+ * @param {Observer} observer
+ *      The geographic location of a point on or near the surface of the Earth.
+ *
+ * @param {boolean} ofdate
+ *      Selects the date of the Earth's equator in which to express the equatorial coordinates.
+ *      The caller may pass `false` to use the orientation of the Earth's equator
+ *      at noon UTC on January 1, 2000, in which case this function corrects for precession
+ *      and nutation of the Earth as it was at the moment specified by the `time` parameter.
+ *      Or the caller may pass `true` to use the Earth's equator at `time`
+ *      as the orientation.
+ *
+ * @returns {Vector}
+ *      An equatorial vector from the center of the Earth to the specified location
+ *      on (or near) the Earth's surface.
+ */
 export function ObserverVector(date, observer, ofdate) {
     const time = MakeTime(date);
     const gast = sidereal_time(time);
@@ -4890,13 +4926,14 @@ export function Rotation_ECL_EQJ() {
  * Source: EQJ = equatorial system, using equator at J2000 epoch.
  * Target: EQD = equatorial system, using equator of the specified date/time.
  *
- * @param {AstroTime} time
+ * @param {FlexibleDateTime} time
  *      The date and time at which the Earth's equator defines the target orientation.
  *
  * @returns {RotationMatrix}
  *      A rotation matrix that converts EQJ to EQD at `time`.
  */
 export function Rotation_EQJ_EQD(time) {
+    time = MakeTime(time);
     const prec = precession_rot(time, PrecessDirection.From2000);
     const nut = nutation_rot(time, PrecessDirection.From2000);
     return CombineRotation(prec, nut);
@@ -4909,13 +4946,14 @@ export function Rotation_EQJ_EQD(time) {
  * Source: EQD = equatorial system, using equator of the specified date/time.
  * Target: EQJ = equatorial system, using equator at J2000 epoch.
  *
- * @param {AstroTime} time
+ * @param {FlexibleDateTime} time
  *      The date and time at which the Earth's equator defines the source orientation.
  *
  * @returns {RotationMatrix}
  *      A rotation matrix that converts EQD at `time` to EQJ.
  */
 export function Rotation_EQD_EQJ(time) {
+    time = MakeTime(time);
     const nut = nutation_rot(time, PrecessDirection.Into2000);
     const prec = precession_rot(time, PrecessDirection.Into2000);
     return CombineRotation(nut, prec);
@@ -4931,7 +4969,7 @@ export function Rotation_EQD_EQJ(time) {
  * Use `HorizonFromVector` to convert the return value
  * to a traditional altitude/azimuth pair.
  *
- * @param {AstroTime} time
+ * @param {FlexibleDateTime} time
  *      The date and time at which the Earth's equator applies.
  *
  * @param {Observer} observer
@@ -4945,6 +4983,7 @@ export function Rotation_EQD_EQJ(time) {
  *      and so that north represents the direction where azimuth = 0.
  */
 export function Rotation_EQD_HOR(time, observer) {
+    time = MakeTime(time);
     const sinlat = Math.sin(observer.latitude * DEG2RAD);
     const coslat = Math.cos(observer.latitude * DEG2RAD);
     const sinlon = Math.sin(observer.longitude * DEG2RAD);
@@ -4970,7 +5009,7 @@ export function Rotation_EQD_HOR(time, observer) {
  * Source: HOR = horizontal system (x=North, y=West, z=Zenith).
  * Target: EQD = equatorial system, using equator of the specified date/time.
  *
- * @param {AstroTime} time
+ * @param {FlexibleDateTime} time
  *      The date and time at which the Earth's equator applies.
  *
  * @param {Observer} observer
@@ -4991,7 +5030,7 @@ export function Rotation_HOR_EQD(time, observer) {
  * Source: HOR = horizontal system (x=North, y=West, z=Zenith).
  * Target: EQJ = equatorial system, using equator at the J2000 epoch.
  *
- * @param {AstroTime} time
+ * @param {FlexibleDateTime} time
  *      The date and time of the observation.
  *
  * @param {Observer} observer
@@ -5001,6 +5040,7 @@ export function Rotation_HOR_EQD(time, observer) {
  *      A rotation matrix that converts HOR to EQD at `time` and for `observer`.
  */
 export function Rotation_HOR_EQJ(time, observer) {
+    time = MakeTime(time);
     const hor_eqd = Rotation_HOR_EQD(time, observer);
     const eqd_eqj = Rotation_EQD_EQJ(time);
     return CombineRotation(hor_eqd, eqd_eqj);
@@ -5016,10 +5056,10 @@ export function Rotation_HOR_EQJ(time, observer) {
  * Use {@link HorizonFromVector} to convert the return value
  * to a traditional altitude/azimuth pair.
  *
- * @param time
+ * @param {FlexibleDateTime} time
  *      The date and time of the desired horizontal orientation.
  *
- * @param observer
+ * @param {Observer} observer
  *      A location near the Earth's mean sea level that defines the observer's horizon.
  *
  * @return
@@ -5041,7 +5081,7 @@ export function Rotation_EQJ_HOR(time, observer) {
  * Source: EQD = equatorial system, using equator of date.
  * Target: ECL = ecliptic system, using equator at J2000 epoch.
  *
- * @param {AstroTime} time
+ * @param {FlexibleDateTime} time
  *      The date and time of the source equator.
  *
  * @returns {RotationMatrix}
@@ -5060,7 +5100,7 @@ export function Rotation_EQD_ECL(time) {
  * Source: ECL = ecliptic system, using equator at J2000 epoch.
  * Target: EQD = equatorial system, using equator of date.
  *
- * @param {AstroTime} time
+ * @param {FlexibleDateTime} time
  *      The date and time of the desired equator.
  *
  * @returns {RotationMatrix}
@@ -5081,7 +5121,7 @@ export function Rotation_ECL_EQD(time) {
  * Use {@link HorizonFromVector} to convert the return value
  * to a traditional altitude/azimuth pair.
  *
- * @param {AstroTime} time
+ * @param {FlexibleDateTime} time
  *      The date and time of the desired horizontal orientation.
  *
  * @param {Observer} observer
@@ -5095,6 +5135,7 @@ export function Rotation_ECL_EQD(time) {
  *      and so that north represents the direction where azimuth = 0.
  */
 export function Rotation_ECL_HOR(time, observer) {
+    time = MakeTime(time);
     const ecl_eqd = Rotation_ECL_EQD(time);
     const eqd_hor = Rotation_EQD_HOR(time, observer);
     return CombineRotation(ecl_eqd, eqd_hor);
@@ -5107,7 +5148,7 @@ export function Rotation_ECL_HOR(time, observer) {
  * Source: HOR = horizontal system.
  * Target: ECL = ecliptic system, using equator at J2000 epoch.
  *
- * @param {AstroTime} time
+ * @param {FlexibleDateTime} time
  *      The date and time of the horizontal observation.
  *
  * @param {Observer} observer
