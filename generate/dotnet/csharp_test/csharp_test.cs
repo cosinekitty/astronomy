@@ -34,6 +34,7 @@ namespace csharp_test
         {
             new Test("time", TestTime),
             new Test("moon", MoonTest),
+            new Test("geoid", GeoidTest),
             new Test("constellation", ConstellationTest),
             new Test("elongation", ElongationTest),
             new Test("global_solar_eclipse", GlobalSolarEclipseTest),
@@ -2371,6 +2372,77 @@ namespace csharp_test
             if (0 != PlutoCheckDate(       0.0, 4.0e-9, -9.8753673425269000,  -27.9789270580402771,  -5.7537127596369588)) return 1;
             if (0 != PlutoCheckDate( +800916.0,  6.705, -29.5266052645301365, +12.0554287322176474, +12.6878484911631091)) return 1;
             Console.WriteLine("C# PlutoCheck: PASS");
+            return 0;
+        }
+
+        static int GeoidTestCase(AstroTime time, Observer observer, EquatorEpoch epoch)
+        {
+            Equatorial topo_moon = Astronomy.Equator(Body.Moon, time, observer, epoch, Aberration.None);
+            AstroVector surface = Astronomy.ObserverVector(time, observer, epoch);
+            AstroVector geo_moon = Astronomy.GeoVector(Body.Moon, time, Aberration.None);
+
+            if (epoch == EquatorEpoch.OfDate)
+            {
+                // Astronomy_GeoMoon() returns J2000 coordinates. Convert to equator-of-date coordinates.
+                RotationMatrix rot = Astronomy.Rotation_EQJ_EQD(time);
+                geo_moon = Astronomy.RotateVector(rot, geo_moon);
+            }
+
+            double dx = Astronomy.KM_PER_AU * v((geo_moon.x - surface.x) - topo_moon.vec.x);
+            double dy = Astronomy.KM_PER_AU * v((geo_moon.y - surface.y) - topo_moon.vec.y);
+            double dz = Astronomy.KM_PER_AU * v((geo_moon.z - surface.z) - topo_moon.vec.z);
+            double diff = sqrt(dx*dx + dy*dy + dz*dz);
+            Debug("C# GeoidTestCase: epoch={0}, time={1}, lat={2}, lon={3}, ht={4}, surface=({5}, {6}, {7}), diff = {8} km",
+                epoch,
+                time,
+                observer.latitude,
+                observer.longitude,
+                observer.height,
+                Astronomy.KM_PER_AU * surface.x,
+                Astronomy.KM_PER_AU * surface.y,
+                Astronomy.KM_PER_AU * surface.z,
+                diff);
+
+            // Require 1 millimeter accuracy! (one millionth of a kilometer).
+            if (diff > 1.0e-6)
+            {
+                Console.WriteLine("C# GeoidTestCase: EXCESSIVE POSITION ERROR.");
+                return 1;
+            }
+            return 0;
+        }
+
+        static int GeoidTest()
+        {
+            var time_list = new AstroTime[]
+            {
+                new AstroTime(1066,  9, 27, 18,  0,  0),
+                new AstroTime(1970, 12, 13, 15, 42,  0),
+                new AstroTime(1970, 12, 13, 15, 43,  0),
+                new AstroTime(2015,  3,  5,  2, 15, 45)
+            };
+
+            var observer_list = new Observer[]
+            {
+                new Observer( +1.5,   +2.7,    7.4),
+                new Observer(-53.7, +141.7, +100.0),
+                new Observer(+30.0,  -85.2,  -50.0),
+                new Observer(+90.0,  +45.0,  -50.0),
+                new Observer(-90.0, -180.0,    0.0)
+            };
+
+            /* Test a variety of times and locations, in both supported orientation systems. */
+
+            foreach (Observer observer in observer_list)
+            {
+                foreach (AstroTime time in time_list)
+                {
+                    if (0 != GeoidTestCase(time, observer, EquatorEpoch.J2000)) return 1;
+                    if (0 != GeoidTestCase(time, observer, EquatorEpoch.OfDate)) return 1;
+                }
+            }
+
+            Console.WriteLine("C# GeoidTest: PASS");
             return 0;
         }
     }
