@@ -3456,53 +3456,50 @@ namespace CosineKitty
 
         private static RotationMatrix precession_rot(AstroTime time, PrecessDirection dir)
         {
-            double xx, yx, zx, xy, yy, zy, xz, yz, zz;
-            double psia, omegaa, chia, sa, ca, sb, cb, sc, cc, sd, cd;
+            double t = time.tt / 36525;
             double eps0 = 84381.406;
 
-            double t = time.tt / 36525;
+            double psia   = (((((-    0.0000000951  * t
+                                +    0.000132851 ) * t
+                                -    0.00114045  ) * t
+                                -    1.0790069   ) * t
+                                + 5038.481507    ) * t);
 
-            psia   = (((((-    0.0000000951  * t
-                        +    0.000132851 ) * t
-                        -    0.00114045  ) * t
-                        -    1.0790069   ) * t
-                        + 5038.481507    ) * t);
+            double omegaa = (((((+    0.0000003337  * t
+                                 -    0.000000467 ) * t
+                                 -    0.00772503  ) * t
+                                 +    0.0512623   ) * t
+                                 -    0.025754    ) * t + eps0);
 
-            omegaa = (((((+    0.0000003337  * t
-                        -    0.000000467 ) * t
-                        -    0.00772503  ) * t
-                        +    0.0512623   ) * t
-                        -    0.025754    ) * t + eps0);
+            double chia   = (((((-    0.0000000560  * t
+                                 +    0.000170663 ) * t
+                                 -    0.00121197  ) * t
+                                 -    2.3814292   ) * t
+                                 +   10.556403    ) * t);
 
-            chia   = (((((-    0.0000000560  * t
-                        +    0.000170663 ) * t
-                        -    0.00121197  ) * t
-                        -    2.3814292   ) * t
-                        +   10.556403    ) * t);
+            eps0   *= ASEC2RAD;
+            psia   *= ASEC2RAD;
+            omegaa *= ASEC2RAD;
+            chia   *= ASEC2RAD;
 
-            eps0 = eps0 * ASEC2RAD;
-            psia = psia * ASEC2RAD;
-            omegaa = omegaa * ASEC2RAD;
-            chia = chia * ASEC2RAD;
+            double sa = Math.Sin(eps0);
+            double ca = Math.Cos(eps0);
+            double sb = Math.Sin(-psia);
+            double cb = Math.Cos(-psia);
+            double sc = Math.Sin(-omegaa);
+            double cc = Math.Cos(-omegaa);
+            double sd = Math.Sin(chia);
+            double cd = Math.Cos(chia);
 
-            sa = Math.Sin(eps0);
-            ca = Math.Cos(eps0);
-            sb = Math.Sin(-psia);
-            cb = Math.Cos(-psia);
-            sc = Math.Sin(-omegaa);
-            cc = Math.Cos(-omegaa);
-            sd = Math.Sin(chia);
-            cd = Math.Cos(chia);
-
-            xx =  cd * cb - sb * sd * cc;
-            yx =  cd * sb * ca + sd * cc * cb * ca - sa * sd * sc;
-            zx =  cd * sb * sa + sd * cc * cb * sa + ca * sd * sc;
-            xy = -sd * cb - sb * cd * cc;
-            yy = -sd * sb * ca + cd * cc * cb * ca - sa * cd * sc;
-            zy = -sd * sb * sa + cd * cc * cb * sa + ca * cd * sc;
-            xz =  sb * sc;
-            yz = -sc * cb * ca - sa * cc;
-            zz = -sc * cb * sa + cc * ca;
+            double xx =  cd*cb - sb*sd*cc;
+            double yx =  cd*sb*ca + sd*cc*cb*ca - sa*sd*sc;
+            double zx =  cd*sb*sa + sd*cc*cb*sa + ca*sd*sc;
+            double xy = -sd*cb - sb*cd*cc;
+            double yy = -sd*sb * ca + cd*cc*cb*ca - sa*cd*sc;
+            double zy = -sd*sb * sa + cd*cc*cb*sa + ca*cd*sc;
+            double xz =  sb*sc;
+            double yz = -sc*cb*ca - sa*cc;
+            double zz = -sc*cb*sa + cc*ca;
 
             var rot = new double[3,3];
             if (dir == PrecessDirection.Into2000)
@@ -3778,7 +3775,7 @@ namespace CosineKitty
             );
         }
 
-        private static RotationMatrix nutation_rot(AstroTime time, int direction)
+        private static RotationMatrix nutation_rot(AstroTime time, PrecessDirection dir)
         {
             earth_tilt_t tilt = e_tilt(time);
             double oblm = tilt.mobl * DEG2RAD;
@@ -3803,9 +3800,9 @@ namespace CosineKitty
 
             var rot = new double[3,3];
 
-            if (direction == 0)
+            if (dir == PrecessDirection.From2000)
             {
-                /* forward rotation */
+                // convert J2000 to of-date
                 rot[0, 0] = xx;
                 rot[0, 1] = xy;
                 rot[0, 2] = xz;
@@ -3816,9 +3813,9 @@ namespace CosineKitty
                 rot[2, 1] = zy;
                 rot[2, 2] = zz;
             }
-            else
+            else if (dir == PrecessDirection.Into2000)
             {
-                /* inverse rotation */
+                // convert of-date to J2000
                 rot[0, 0] = xx;
                 rot[0, 1] = yx;
                 rot[0, 2] = zx;
@@ -3829,14 +3826,18 @@ namespace CosineKitty
                 rot[2, 1] = yz;
                 rot[2, 2] = zz;
             }
+            else
+            {
+                throw new ArgumentException("Unsupported nutation direction: " + dir);
+            }
 
             return new RotationMatrix(rot);
         }
 
 
-        private static AstroVector nutation(AstroTime time, int direction, AstroVector pos)
+        private static AstroVector nutation(AstroVector pos, AstroTime time, PrecessDirection dir)
         {
-            RotationMatrix r = nutation_rot(time, direction);
+            RotationMatrix r = nutation_rot(time, dir);
             return new AstroVector(
                 r.rot[0, 0]*pos.x + r.rot[1, 0]*pos.y + r.rot[2, 0]*pos.z,
                 r.rot[0, 1]*pos.x + r.rot[1, 1]*pos.y + r.rot[2, 1]*pos.z,
@@ -3884,11 +3885,20 @@ namespace CosineKitty
             return new Equatorial(ra, dec, dist, pos);
         }
 
+        private static AstroVector gyration(AstroVector pos, AstroTime time, PrecessDirection dir)
+        {
+            // Combine nutation and precession into a single operation I call "gyration".
+            // The order they are composed depends on the direction,
+            // because both directions are mutual inverse functions.
+            return (dir == PrecessDirection.Into2000) ?
+                precession(nutation(pos, time, dir), time, dir) :
+                nutation(precession(pos, time, dir), time, dir);
+        }
+
         private static AstroVector geo_pos(AstroTime time, Observer observer)
         {
-            AstroVector pos1 = terra(observer, time);
-            AstroVector pos2 = nutation(time, -1, pos1);
-            return precession(pos2, time, PrecessDirection.Into2000);
+            AstroVector pos = terra(observer, time);
+            return gyration(pos, time, PrecessDirection.Into2000);
         }
 
         private static AstroVector spin(double angle, AstroVector pos)
@@ -4198,8 +4208,7 @@ namespace CosineKitty
             switch (equdate)
             {
                 case EquatorEpoch.OfDate:
-                    AstroVector temp = precession(j2000, time, PrecessDirection.From2000);
-                    AstroVector datevect = nutation(time, 0, temp);
+                    AstroVector datevect = gyration(j2000, time, PrecessDirection.From2000);
                     return vector2radec(datevect);
 
                 case EquatorEpoch.J2000:
@@ -4262,12 +4271,7 @@ namespace CosineKitty
                 return pos;     // 'pos' already contains equator-of-date coordinates.
 
             if (equdate == EquatorEpoch.J2000)
-            {
-                // Convert 'pos' from equator-of-date to J2000.
-                pos = nutation(time, -1, pos);
-                pos = precession(pos, time, PrecessDirection.Into2000);
-                return pos;
-            }
+                return gyration(pos, time, PrecessDirection.Into2000);
 
             throw new ArgumentException(string.Format("Unsupported equator epoch {0}", equdate));
         }
@@ -4468,8 +4472,7 @@ namespace CosineKitty
             AstroVector sun2000 = new AstroVector(-earth2000.x, -earth2000.y, -earth2000.z, adjusted_time);
 
             /* Convert to equatorial Cartesian coordinates of date. */
-            AstroVector stemp = precession(sun2000, adjusted_time, PrecessDirection.From2000);
-            AstroVector sun_ofdate = nutation(adjusted_time, 0, stemp);
+            AstroVector sun_ofdate = gyration(sun2000, adjusted_time, PrecessDirection.From2000);
 
             /* Convert equatorial coordinates to ecliptic coordinates. */
             double true_obliq = DEG2RAD * e_tilt(adjusted_time).tobl;
@@ -7480,7 +7483,7 @@ namespace CosineKitty
         public static RotationMatrix Rotation_EQJ_EQD(AstroTime time)
         {
             RotationMatrix prec = precession_rot(time, PrecessDirection.From2000);
-            RotationMatrix nut = nutation_rot(time, 0);
+            RotationMatrix nut = nutation_rot(time, PrecessDirection.From2000);
             return CombineRotation(prec, nut);
         }
 
@@ -7502,7 +7505,7 @@ namespace CosineKitty
         /// </returns>
         public static RotationMatrix Rotation_EQD_EQJ(AstroTime time)
         {
-            RotationMatrix nut = nutation_rot(time, 1);
+            RotationMatrix nut = nutation_rot(time, PrecessDirection.Into2000);
             RotationMatrix prec = precession_rot(time, PrecessDirection.Into2000);
             return CombineRotation(nut, prec);
         }

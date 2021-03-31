@@ -92,6 +92,10 @@ _SATURN_GM  = 0.8459715185680659e-07
 _URANUS_GM  = 0.1292024916781969e-07
 _NEPTUNE_GM = 0.1524358900784276e-07
 
+@enum.unique
+class _PrecessDir(enum.Enum):
+    From2000 = 0
+    Into2000 = 1
 
 def _LongitudeOffset(diff):
     offset = diff
@@ -1235,13 +1239,9 @@ def _ecl2equ_vec(time, ecl):
         ecl[1]*sin_obl + ecl[2]*cos_obl
     ]
 
-def _precession_rot(tt1, tt2):
+def _precession_rot(time, dir):
     eps0 = 84381.406
-    if tt1 != 0 and tt2 != 0:
-        raise Error('One of (tt1, tt2) must be zero.')
-    t = (tt2 - tt1) / 36525
-    if tt2 == 0:
-        t = -t
+    t = time.tt / 36525
 
     psia  = (((((-    0.0000000951  * t
                  +    0.000132851 ) * t
@@ -1284,7 +1284,7 @@ def _precession_rot(tt1, tt2):
     xz =  sb * sc
     yz = -sc * cb * ca - sa * cc
     zz = -sc * cb * sa + cc * ca
-    if tt2 == 0.0:
+    if dir == _PrecessDir.Into2000:
         # Perform rotation from other epoch to J2000.0.
         return RotationMatrix([
             [xx, yx, zx],
@@ -1292,19 +1292,22 @@ def _precession_rot(tt1, tt2):
             [xz, yz, zz]
         ])
 
-    # Perform rotation from J2000.0 to other epoch.
-    return RotationMatrix([
-        [xx, xy, xz],
-        [yx, yy, yz],
-        [zx, zy, zz]
-    ])
+    if dir == _PrecessDir.From2000:
+        # Perform rotation from J2000.0 to other epoch.
+        return RotationMatrix([
+            [xx, xy, xz],
+            [yx, yy, yz],
+            [zx, zy, zz]
+        ])
 
-def _precession(tt1, pos1, tt2):
-    r = _precession_rot(tt1, tt2)
+    raise Error('Inalid precession direction')
+
+def _precession(pos, time, dir):
+    r = _precession_rot(time, dir)
     return [
-        r.rot[0][0]*pos1[0] + r.rot[1][0]*pos1[1] + r.rot[2][0]*pos1[2],
-        r.rot[0][1]*pos1[0] + r.rot[1][1]*pos1[1] + r.rot[2][1]*pos1[2],
-        r.rot[0][2]*pos1[0] + r.rot[1][2]*pos1[1] + r.rot[2][2]*pos1[2]
+        r.rot[0][0]*pos[0] + r.rot[1][0]*pos[1] + r.rot[2][0]*pos[2],
+        r.rot[0][1]*pos[0] + r.rot[1][1]*pos[1] + r.rot[2][1]*pos[2],
+        r.rot[0][2]*pos[0] + r.rot[1][2]*pos[1] + r.rot[2][2]*pos[2]
     ]
 
 class Equatorial:
@@ -1357,7 +1360,7 @@ def _vector2radec(pos, time):
     return Equatorial(ra, dec, dist, vec)
 
 
-def _nutation_rot(time, direction):
+def _nutation_rot(time, dir):
     tilt = time._etilt()
     oblm = math.radians(tilt.mobl)
     oblt = math.radians(tilt.tobl)
@@ -1379,23 +1382,27 @@ def _nutation_rot(time, direction):
     yz = cpsi * cobm * sobt - sobm * cobt
     zz = cpsi * sobm * sobt + cobm * cobt
 
-    if direction == 0:
-        # forward rotation
+    if dir == _PrecessDir.From2000:
+        # convert J2000 to of-date
         return RotationMatrix([
             [xx, xy, xz],
             [yx, yy, yz],
             [zx, zy, zz]
         ])
 
-    # inverse rotation
-    return RotationMatrix([
-        [xx, yx, zx],
-        [xy, yy, zy],
-        [xz, yz, zz]
-    ])
+    if dir == _PrecessDir.Into2000:
+        # convert of-date to J2000
+        return RotationMatrix([
+            [xx, yx, zx],
+            [xy, yy, zy],
+            [xz, yz, zz]
+        ])
 
-def _nutation(time, direction, pos):
-    r = _nutation_rot(time, direction)
+    raise Error('Invalid nutation direction')
+
+
+def _nutation(pos, time, dir):
+    r = _nutation_rot(time, dir)
     return [
         r.rot[0][0]*pos[0] + r.rot[1][0]*pos[1] + r.rot[2][0]*pos[2],
         r.rot[0][1]*pos[0] + r.rot[1][1]*pos[1] + r.rot[2][1]*pos[2],
@@ -1451,8 +1458,8 @@ def _terra(observer, st):
 def _geo_pos(time, observer):
     gast = _sidereal_time(time)
     pos1 = _terra(observer, gast)
-    pos2 = _nutation(time, -1, pos1)
-    outpos = _precession(time.tt, pos2, 0.0)
+    pos2 = _nutation(pos1, time, _PrecessDir.Into2000)
+    outpos = _precession(pos2, time, _PrecessDir.Into2000)
     return outpos
 
 def _spin(angle, pos1):
@@ -2304,7 +2311,7 @@ def GeoMoon(time):
     mpos1 = _ecl2equ_vec(time, gepos)
 
     # Convert from mean equinox of date to J2000.
-    mpos2 = _precession(time.tt, mpos1, 0)
+    mpos2 = _precession(mpos1, time, _PrecessDir.Into2000)
     return Vector(mpos2[0], mpos2[1], mpos2[2], time)
 
 # END CalcMoon
@@ -3774,8 +3781,8 @@ def Equator(body, time, observer, ofdate, aberration):
     ]
     if not ofdate:
         return _vector2radec(j2000, time)
-    temp = _precession(0, j2000, time.tt)
-    datevect = _nutation(time, 0, temp)
+    temp = _precession(j2000, time, _PrecessDir.From2000)
+    datevect = _nutation(temp, time, _PrecessDir.From2000)
     return _vector2radec(datevect, time)
 
 @enum.unique
@@ -4149,8 +4156,8 @@ def SunPosition(time):
     sun2000 = [-earth2000.x, -earth2000.y, -earth2000.z]
 
     # Convert to equatorial Cartesian coordinates of date.
-    stemp = _precession(0.0, sun2000, adjusted_time.tt)
-    sun_ofdate = _nutation(adjusted_time, 0, stemp)
+    stemp = _precession(sun2000, adjusted_time, _PrecessDir.From2000)
+    sun_ofdate = _nutation(stemp, adjusted_time, _PrecessDir.From2000)
 
     # Convert equatorial coordinates to ecliptic coordinates.
     true_obliq = math.radians(adjusted_time._etilt().tobl)
@@ -6079,8 +6086,8 @@ def Rotation_EQJ_EQD(time):
     RotationMatrix
         A rotation matrix that converts EQJ to EQD at `time`.
     """
-    prec = _precession_rot(0.0, time.tt)
-    nut = _nutation_rot(time, 0)
+    prec = _precession_rot(time, _PrecessDir.From2000)
+    nut = _nutation_rot(time, _PrecessDir.From2000)
     return CombineRotation(prec, nut)
 
 
@@ -6102,8 +6109,8 @@ def Rotation_EQD_EQJ(time):
     RotationMatrix
         A rotation matrix that converts EQD at `time` to EQJ.
     """
-    nut = _nutation_rot(time, 1)
-    prec = _precession_rot(time.tt, 0.0)
+    nut = _nutation_rot(time, _PrecessDir.Into2000)
+    prec = _precession_rot(time, _PrecessDir.Into2000)
     return CombineRotation(nut, prec)
 
 

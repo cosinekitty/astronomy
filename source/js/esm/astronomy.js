@@ -164,6 +164,11 @@ export var Body;
     Body["SSB"] = "SSB";
     Body["EMB"] = "EMB"; // Earth/Moon Barycenter
 })(Body || (Body = {}));
+var PrecessDirection;
+(function (PrecessDirection) {
+    PrecessDirection[PrecessDirection["From2000"] = 0] = "From2000";
+    PrecessDirection[PrecessDirection["Into2000"] = 1] = "Into2000";
+})(PrecessDirection || (PrecessDirection = {}));
 const Planet = {
     Mercury: { OrbitalPeriod: 87.969 },
     Venus: { OrbitalPeriod: 224.701 },
@@ -1477,60 +1482,54 @@ function CalcMoon(time) {
         distance_au: (ARC * EARTH_EQUATORIAL_RADIUS_AU) / (0.999953253 * SINPI)
     };
 }
-function precession(tt1, pos1, tt2) {
-    const r = precession_rot(tt1, tt2);
+function precession(pos, time, dir) {
+    const r = precession_rot(time, dir);
     return [
-        r.rot[0][0] * pos1[0] + r.rot[1][0] * pos1[1] + r.rot[2][0] * pos1[2],
-        r.rot[0][1] * pos1[0] + r.rot[1][1] * pos1[1] + r.rot[2][1] * pos1[2],
-        r.rot[0][2] * pos1[0] + r.rot[1][2] * pos1[1] + r.rot[2][2] * pos1[2]
+        r.rot[0][0] * pos[0] + r.rot[1][0] * pos[1] + r.rot[2][0] * pos[2],
+        r.rot[0][1] * pos[0] + r.rot[1][1] * pos[1] + r.rot[2][1] * pos[2],
+        r.rot[0][2] * pos[0] + r.rot[1][2] * pos[1] + r.rot[2][2] * pos[2]
     ];
 }
-function precession_rot(tt1, tt2) {
-    var xx, yx, zx, xy, yy, zy, xz, yz, zz;
-    var eps0 = 84381.406;
-    var t, psia, omegaa, chia, sa, ca, sb, cb, sc, cc, sd, cd;
-    if ((tt1 !== 0) && (tt2 !== 0))
-        throw 'One of (tt1, tt2) must be 0.';
-    t = (tt2 - tt1) / 36525;
-    if (tt2 === 0)
-        t = -t;
-    psia = (((((-0.0000000951 * t
+function precession_rot(time, dir) {
+    const t = time.tt / 36525;
+    let eps0 = 84381.406;
+    let psia = (((((-0.0000000951 * t
         + 0.000132851) * t
         - 0.00114045) * t
         - 1.0790069) * t
         + 5038.481507) * t);
-    omegaa = (((((+0.0000003337 * t
+    let omegaa = (((((+0.0000003337 * t
         - 0.000000467) * t
         - 0.00772503) * t
         + 0.0512623) * t
         - 0.025754) * t + eps0);
-    chia = (((((-0.0000000560 * t
+    let chia = (((((-0.0000000560 * t
         + 0.000170663) * t
         - 0.00121197) * t
         - 2.3814292) * t
         + 10.556403) * t);
-    eps0 = eps0 * ASEC2RAD;
-    psia = psia * ASEC2RAD;
-    omegaa = omegaa * ASEC2RAD;
-    chia = chia * ASEC2RAD;
-    sa = Math.sin(eps0);
-    ca = Math.cos(eps0);
-    sb = Math.sin(-psia);
-    cb = Math.cos(-psia);
-    sc = Math.sin(-omegaa);
-    cc = Math.cos(-omegaa);
-    sd = Math.sin(chia);
-    cd = Math.cos(chia);
-    xx = cd * cb - sb * sd * cc;
-    yx = cd * sb * ca + sd * cc * cb * ca - sa * sd * sc;
-    zx = cd * sb * sa + sd * cc * cb * sa + ca * sd * sc;
-    xy = -sd * cb - sb * cd * cc;
-    yy = -sd * sb * ca + cd * cc * cb * ca - sa * cd * sc;
-    zy = -sd * sb * sa + cd * cc * cb * sa + ca * cd * sc;
-    xz = sb * sc;
-    yz = -sc * cb * ca - sa * cc;
-    zz = -sc * cb * sa + cc * ca;
-    if (tt2 === 0) {
+    eps0 *= ASEC2RAD;
+    psia *= ASEC2RAD;
+    omegaa *= ASEC2RAD;
+    chia *= ASEC2RAD;
+    const sa = Math.sin(eps0);
+    const ca = Math.cos(eps0);
+    const sb = Math.sin(-psia);
+    const cb = Math.cos(-psia);
+    const sc = Math.sin(-omegaa);
+    const cc = Math.cos(-omegaa);
+    const sd = Math.sin(chia);
+    const cd = Math.cos(chia);
+    const xx = cd * cb - sb * sd * cc;
+    const yx = cd * sb * ca + sd * cc * cb * ca - sa * sd * sc;
+    const zx = cd * sb * sa + sd * cc * cb * sa + ca * sd * sc;
+    const xy = -sd * cb - sb * cd * cc;
+    const yy = -sd * sb * ca + cd * cc * cb * ca - sa * cd * sc;
+    const zy = -sd * sb * sa + cd * cc * cb * sa + ca * cd * sc;
+    const xz = sb * sc;
+    const yz = -sc * cb * ca - sa * cc;
+    const zz = -sc * cb * sa + cc * ca;
+    if (dir === PrecessDirection.Into2000) {
         // Perform rotation from epoch to J2000.0.
         return new RotationMatrix([
             [xx, yx, zx],
@@ -1538,12 +1537,15 @@ function precession_rot(tt1, tt2) {
             [xz, yz, zz]
         ]);
     }
-    // Perform rotation from J2000.0 to epoch.
-    return new RotationMatrix([
-        [xx, xy, xz],
-        [yx, yy, yz],
-        [zx, zy, zz]
-    ]);
+    if (dir === PrecessDirection.From2000) {
+        // Perform rotation from J2000.0 to epoch.
+        return new RotationMatrix([
+            [xx, xy, xz],
+            [yx, yy, yz],
+            [zx, zy, zz]
+        ]);
+    }
+    throw 'Invalid precess direction';
 }
 function era(time) {
     const thet1 = 0.7790572732640 + 0.00273781191135448 * time.ut;
@@ -1589,15 +1591,15 @@ function terra(observer, st) {
         vel: [-ANGVEL * ach * cosphi * sinst * 86400, ANGVEL * ach * cosphi * cosst * 86400, 0]
     };
 }
-function nutation(time, direction, pos) {
-    const r = nutation_rot(time, direction);
+function nutation(pos, time, dir) {
+    const r = nutation_rot(time, dir);
     return [
         r.rot[0][0] * pos[0] + r.rot[1][0] * pos[1] + r.rot[2][0] * pos[2],
         r.rot[0][1] * pos[0] + r.rot[1][1] * pos[1] + r.rot[2][1] * pos[2],
         r.rot[0][2] * pos[0] + r.rot[1][2] * pos[1] + r.rot[2][2] * pos[2]
     ];
 }
-function nutation_rot(time, direction) {
+function nutation_rot(time, dir) {
     const tilt = e_tilt(time);
     const oblm = tilt.mobl * DEG2RAD;
     const oblt = tilt.tobl * DEG2RAD;
@@ -1617,27 +1619,36 @@ function nutation_rot(time, direction) {
     const xz = spsi * sobt;
     const yz = cpsi * cobm * sobt - sobm * cobt;
     const zz = cpsi * sobm * sobt + cobm * cobt;
-    if (direction === 0) {
-        // forward rotation
+    if (dir === PrecessDirection.From2000) {
+        // convert J2000 to of-date
         return new RotationMatrix([
             [xx, xy, xz],
             [yx, yy, yz],
             [zx, zy, zz]
         ]);
     }
-    // inverse rotation
-    return new RotationMatrix([
-        [xx, yx, zx],
-        [xy, yy, zy],
-        [xz, yz, zz]
-    ]);
+    if (dir === PrecessDirection.Into2000) {
+        // convert of-date to J2000
+        return new RotationMatrix([
+            [xx, yx, zx],
+            [xy, yy, zy],
+            [xz, yz, zz]
+        ]);
+    }
+    throw 'Invalid precess direction';
+}
+function gyration(pos, time, dir) {
+    // Combine nutation and precession into a single operation I call "gyration".
+    // The order they are composed depends on the direction,
+    // because both directions are mutual inverse functions.
+    return (dir === PrecessDirection.Into2000) ?
+        precession(nutation(pos, time, dir), time, dir) :
+        nutation(precession(pos, time, dir), time, dir);
 }
 function geo_pos(time, observer) {
     const gast = sidereal_time(time);
-    const pos1 = terra(observer, gast).pos;
-    const pos2 = nutation(time, -1, pos1);
-    const pos3 = precession(time.tt, pos2, 0);
-    return pos3;
+    const pos = terra(observer, gast).pos;
+    return gyration(pos, time, PrecessDirection.Into2000);
 }
 /**
  * @brief A 3D Cartesian vector with a time attached to it.
@@ -1832,8 +1843,11 @@ export class EclipticCoordinates {
         this.elon = VerifyNumber(elon);
     }
 }
+function VectorFromArray(av, time) {
+    return new Vector(av[0], av[1], av[2], time);
+}
 function vector2radec(pos, time) {
-    const vec = new Vector(pos[0], pos[1], pos[2], time);
+    const vec = VectorFromArray(pos, time);
     const xyproj = vec.x * vec.x + vec.y * vec.y;
     const dist = Math.sqrt(xyproj + vec.z * vec.z);
     if (xyproj === 0) {
@@ -1849,7 +1863,7 @@ function vector2radec(pos, time) {
     const dec = Math.atan2(pos[2], Math.sqrt(xyproj)) / DEG2RAD;
     return new EquatorialCoordinates(ra, dec, dist, vec);
 }
-function spin(angle, pos1) {
+function spin(angle, pos) {
     const angr = angle * DEG2RAD;
     const cosang = Math.cos(angr);
     const sinang = Math.sin(angr);
@@ -1863,9 +1877,9 @@ function spin(angle, pos1) {
     const yz = 0;
     const zz = 1;
     return [
-        xx * pos1[0] + yx * pos1[1] + zx * pos1[2],
-        xy * pos1[0] + yy * pos1[1] + zy * pos1[2],
-        xz * pos1[0] + yz * pos1[1] + zz * pos1[2]
+        xx * pos[0] + yx * pos[1] + zx * pos[2],
+        xy * pos[0] + yy * pos[1] + zy * pos[2],
+        xz * pos[0] + yz * pos[1] + zz * pos[2]
     ];
 }
 /**
@@ -2074,8 +2088,7 @@ export function SunPosition(date) {
     // Convert to geocentric location of the Sun.
     const sun2000 = [-earth2000.x, -earth2000.y, -earth2000.z];
     // Convert to equator-of-date equatorial cartesian coordinates.
-    const stemp = precession(0, sun2000, time.tt);
-    const [gx, gy, gz] = nutation(time, 0, stemp);
+    const [gx, gy, gz] = gyration(sun2000, time, PrecessDirection.From2000);
     // Convert to ecliptic coordinates of date.
     const true_obliq = DEG2RAD * e_tilt(time).tobl;
     const cos_ob = Math.cos(true_obliq);
@@ -2138,9 +2151,16 @@ export function Equator(body, date, observer, ofdate, aberration) {
     ];
     if (!ofdate)
         return vector2radec(j2000, time);
-    const temp = precession(0, j2000, time.tt);
-    const datevect = nutation(time, 0, temp);
+    const datevect = gyration(j2000, time, PrecessDirection.From2000);
     return vector2radec(datevect, time);
+}
+export function ObserverVector(date, observer, ofdate) {
+    const time = MakeTime(date);
+    const gast = sidereal_time(time);
+    let ovec = terra(observer, gast).pos;
+    if (!ofdate)
+        ovec = gyration(ovec, time, PrecessDirection.Into2000);
+    return VectorFromArray(ovec, time);
 }
 function RotateEquatorialToEcliptic(equ, cos_ob, sin_ob) {
     // Rotate equatorial vector to obtain ecliptic vector.
@@ -2208,7 +2228,7 @@ export function GeoMoon(date) {
     // Convert ecliptic coordinates to equatorial coordinates, both in mean equinox of date.
     var mpos1 = ecl2equ_vec(time, gepos);
     // Convert from mean equinox of date to J2000...
-    var mpos2 = precession(time.tt, mpos1, 0);
+    var mpos2 = precession(mpos1, time, PrecessDirection.Into2000);
     return new Vector(mpos2[0], mpos2[1], mpos2[2], time);
 }
 function VsopFormula(formula, t) {
@@ -4877,8 +4897,8 @@ export function Rotation_ECL_EQJ() {
  *      A rotation matrix that converts EQJ to EQD at `time`.
  */
 export function Rotation_EQJ_EQD(time) {
-    const prec = precession_rot(0.0, time.tt);
-    const nut = nutation_rot(time, 0);
+    const prec = precession_rot(time, PrecessDirection.From2000);
+    const nut = nutation_rot(time, PrecessDirection.From2000);
     return CombineRotation(prec, nut);
 }
 /**
@@ -4896,8 +4916,8 @@ export function Rotation_EQJ_EQD(time) {
  *      A rotation matrix that converts EQD at `time` to EQJ.
  */
 export function Rotation_EQD_EQJ(time) {
-    const nut = nutation_rot(time, 1);
-    const prec = precession_rot(time.tt, 0.0);
+    const nut = nutation_rot(time, PrecessDirection.Into2000);
+    const prec = precession_rot(time, PrecessDirection.Into2000);
     return CombineRotation(nut, prec);
 }
 /**

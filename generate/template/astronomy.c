@@ -39,6 +39,13 @@ extern "C" {
 /** @cond DOXYGEN_SKIP */
 #define PI      3.14159265358979323846
 
+typedef enum
+{
+    FROM_2000,
+    INTO_2000
+}
+precess_dir_t;
+
 typedef struct
 {
     double x;
@@ -327,12 +334,6 @@ static double PlanetOrbitalPeriod(astro_body_t body)
     case BODY_PLUTO:    return  90560.0;
     default:            return  0.0;        /* invalid body */
     }
-}
-
-static void FatalError(const char *message)
-{
-    fprintf(stderr, "FATAL: %s\n", message);
-    exit(1);
 }
 
 static astro_vector_t VecError(astro_status_t status, astro_time_t time)
@@ -1147,19 +1148,14 @@ static void ecl2equ_vec(astro_time_t time, const double ecl[3], double equ[3])
 }
 
 
-static astro_rotation_t precession_rot(double tt1, double tt2)
+static astro_rotation_t precession_rot(astro_time_t time, precess_dir_t dir)
 {
     astro_rotation_t rotation;
     double xx, yx, zx, xy, yy, zy, xz, yz, zz;
     double t, psia, omegaa, chia, sa, ca, sb, cb, sc, cc, sd, cd;
     double eps0 = 84381.406;
 
-    if ((tt1 != 0.0) && (tt2 != 0.0))
-        FatalError("precession_rot: one of (tt1, tt2) must be zero.");
-
-    t = (tt2 - tt1) / 36525;
-    if (tt2 == 0)
-        t = -t;
+    t = time.tt / 36525;
 
     psia   = (((((-    0.0000000951  * t
                  +    0.000132851 ) * t
@@ -1203,7 +1199,7 @@ static astro_rotation_t precession_rot(double tt1, double tt2)
     yz = -sc * cb * ca - sa * cc;
     zz = -sc * cb * sa + cc * ca;
 
-    if (tt2 == 0.0)
+    if (dir == INTO_2000)
     {
         /* Perform rotation from other epoch to J2000.0. */
         rotation.rot[0][0] = xx;
@@ -1235,9 +1231,9 @@ static astro_rotation_t precession_rot(double tt1, double tt2)
 }
 
 
-static void precession(double tt1, const double pos1[3], double tt2, double pos2[3])
+static void precession(const double pos1[3], astro_time_t time, precess_dir_t dir, double pos2[3])
 {
-    astro_rotation_t r = precession_rot(tt1, tt2);
+    astro_rotation_t r = precession_rot(time, dir);
     pos2[0] = r.rot[0][0]*pos1[0] + r.rot[1][0]*pos1[1] + r.rot[2][0]*pos1[2];
     pos2[1] = r.rot[0][1]*pos1[0] + r.rot[1][1]*pos1[1] + r.rot[2][1]*pos1[2];
     pos2[2] = r.rot[0][2]*pos1[0] + r.rot[1][2]*pos1[1] + r.rot[2][2]*pos1[2];
@@ -1291,7 +1287,7 @@ static astro_equatorial_t vector2radec(const double pos[3], astro_time_t time)
 }
 
 
-static astro_rotation_t nutation_rot(astro_time_t *time, int direction)
+static astro_rotation_t nutation_rot(astro_time_t *time, precess_dir_t dir)
 {
     astro_rotation_t rotation;
     earth_tilt_t tilt = e_tilt(time);
@@ -1315,9 +1311,9 @@ static astro_rotation_t nutation_rot(astro_time_t *time, int direction)
     double yz = cpsi * cobm * sobt - sobm * cobt;
     double zz = cpsi * sobm * sobt + cobm * cobt;
 
-    if (direction == 0)
+    if (dir == FROM_2000)
     {
-        /* forward rotation */
+        /* convert J2000 to of-date */
         rotation.rot[0][0] = xx;
         rotation.rot[0][1] = xy;
         rotation.rot[0][2] = xz;
@@ -1330,7 +1326,7 @@ static astro_rotation_t nutation_rot(astro_time_t *time, int direction)
     }
     else
     {
-        /* inverse rotation */
+        /* convert of-date to J2000 */
         rotation.rot[0][0] = xx;
         rotation.rot[0][1] = yx;
         rotation.rot[0][2] = zx;
@@ -1346,9 +1342,9 @@ static astro_rotation_t nutation_rot(astro_time_t *time, int direction)
     return rotation;
 }
 
-static void nutation(astro_time_t *time, int direction, const double inpos[3], double outpos[3])
+static void nutation(const double inpos[3], astro_time_t *time, precess_dir_t dir, double outpos[3])
 {
-    astro_rotation_t r = nutation_rot(time, direction);
+    astro_rotation_t r = nutation_rot(time, dir);
     outpos[0] = r.rot[0][0]*inpos[0] + r.rot[1][0]*inpos[1] + r.rot[2][0]*inpos[2];
     outpos[1] = r.rot[0][1]*inpos[0] + r.rot[1][1]*inpos[1] + r.rot[2][1]*inpos[2];
     outpos[2] = r.rot[0][2]*inpos[0] + r.rot[1][2]*inpos[1] + r.rot[2][2]*inpos[2];
@@ -1418,8 +1414,8 @@ static void geo_pos(astro_time_t *time, astro_observer_t observer, double outpos
 
     gast = sidereal_time(time);
     terra(observer, gast, pos1);
-    nutation(time, -1, pos1, pos2);
-    precession(time->tt, pos2, 0.0, outpos);
+    nutation(pos1, time, INTO_2000, pos2);
+    precession(pos2, *time, INTO_2000, outpos);
 }
 
 static void spin(double angle, const double pos1[3], double vec2[3])
@@ -1716,7 +1712,7 @@ astro_vector_t Astronomy_GeoMoon(astro_time_t time)
     ecl2equ_vec(time, gepos, mpos1);
 
     /* Convert from mean equinox of date to J2000. */
-    precession(time.tt, mpos1, 0, mpos2);
+    precession(mpos1, time, INTO_2000, mpos2);
 
     vector.status = ASTRO_SUCCESS;
     vector.x = mpos2[0];
@@ -2609,8 +2605,8 @@ astro_equatorial_t Astronomy_Equator(
     switch (equdate)
     {
     case EQUATOR_OF_DATE:
-        precession(0.0, j2000, time->tt, temp);
-        nutation(time, 0, temp, datevect);
+        precession(j2000, *time, FROM_2000, temp);
+        nutation(temp, time, FROM_2000, datevect);
         equ = vector2radec(datevect, *time);
         return equ;
 
@@ -2677,8 +2673,8 @@ astro_vector_t Astronomy_ObserverVector(
 
     case EQUATOR_J2000:
         /* Convert 'pos' from equator-of-date to J2000. */
-        nutation(time, -1, pos, temp);
-        precession(time->tt, temp, 0.0, pos);
+        nutation(pos, time, INTO_2000, temp);
+        precession(temp, *time, INTO_2000, pos);
         break;
 
     default:
@@ -2935,8 +2931,8 @@ astro_ecliptic_t Astronomy_SunPosition(astro_time_t time)
     sun2000[2] = -earth2000.z;
 
     /* Convert to equatorial Cartesian coordinates of date. */
-    precession(0.0, sun2000, adjusted_time.tt, stemp);
-    nutation(&adjusted_time, 0, stemp, sun_ofdate);
+    precession(sun2000, adjusted_time, FROM_2000, stemp);
+    nutation(stemp, &adjusted_time, FROM_2000, sun_ofdate);
 
     /* Convert equatorial coordinates to ecliptic coordinates. */
     true_obliq = DEG2RAD * e_tilt(&adjusted_time).tobl;
@@ -5921,8 +5917,8 @@ astro_rotation_t Astronomy_Rotation_EQJ_EQD(astro_time_t time)
 {
     astro_rotation_t prec, nut;
 
-    prec = precession_rot(0.0, time.tt);
-    nut = nutation_rot(&time, 0);
+    prec = precession_rot(time, FROM_2000);
+    nut = nutation_rot(&time, FROM_2000);
     return Astronomy_CombineRotation(prec, nut);
 }
 
@@ -5945,8 +5941,8 @@ astro_rotation_t Astronomy_Rotation_EQD_EQJ(astro_time_t time)
 {
     astro_rotation_t prec, nut;
 
-    nut = nutation_rot(&time, 1);
-    prec = precession_rot(time.tt, 0.0);
+    nut = nutation_rot(&time, INTO_2000);
+    prec = precession_rot(time, INTO_2000);
     return Astronomy_CombineRotation(nut, prec);
 }
 

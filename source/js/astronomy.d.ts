@@ -463,6 +463,7 @@ export declare function SunPosition(date: FlexibleDateTime): EclipticCoordinates
  *      The topocentric coordinates of the body as adjusted for the given observer.
  */
 export declare function Equator(body: Body, date: FlexibleDateTime, observer: Observer, ofdate: boolean, aberration: boolean): EquatorialCoordinates;
+export declare function ObserverVector(date: FlexibleDateTime, observer: Observer, ofdate: boolean): Vector;
 /**
  * @brief Converts equatorial Cartesian coordinates to ecliptic Cartesian and angular coordinates.
  *

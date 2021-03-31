@@ -185,6 +185,11 @@ export enum Body {
 }
 
 
+enum PrecessDirection {
+    From2000,
+    Into2000
+}
+
 
 interface PlanetInfo {
     OrbitalPeriod: number;
@@ -758,70 +763,63 @@ $ASTRO_ADDSOL()
     };
 }
 
-function precession(tt1: number, pos1: ArrayVector, tt2: number): ArrayVector {
-    const r = precession_rot(tt1, tt2);
+function precession(pos: ArrayVector, time: AstroTime, dir: PrecessDirection): ArrayVector {
+    const r = precession_rot(time, dir);
     return [
-        r.rot[0][0]*pos1[0] + r.rot[1][0]*pos1[1] + r.rot[2][0]*pos1[2],
-        r.rot[0][1]*pos1[0] + r.rot[1][1]*pos1[1] + r.rot[2][1]*pos1[2],
-        r.rot[0][2]*pos1[0] + r.rot[1][2]*pos1[1] + r.rot[2][2]*pos1[2]
+        r.rot[0][0]*pos[0] + r.rot[1][0]*pos[1] + r.rot[2][0]*pos[2],
+        r.rot[0][1]*pos[0] + r.rot[1][1]*pos[1] + r.rot[2][1]*pos[2],
+        r.rot[0][2]*pos[0] + r.rot[1][2]*pos[1] + r.rot[2][2]*pos[2]
     ];
 }
 
-function precession_rot(tt1: number, tt2: number): RotationMatrix {
-    var xx: number, yx: number, zx: number, xy: number, yy: number, zy: number, xz: number, yz: number, zz: number;
-    var eps0 = 84381.406;
-    var t: number, psia: number, omegaa: number, chia: number, sa: number, ca: number, sb: number, cb: number, sc: number, cc: number, sd: number, cd: number;
+function precession_rot(time: AstroTime, dir: PrecessDirection): RotationMatrix {
+    const t = time.tt / 36525;
 
-    if ((tt1 !== 0) && (tt2 !== 0))
-        throw 'One of (tt1, tt2) must be 0.';
+    let eps0 = 84381.406;
 
-    t = (tt2 - tt1) / 36525;
-    if (tt2 === 0)
-        t = -t;
+    let psia   = (((((-    0.0000000951  * t
+                      +    0.000132851 ) * t
+                      -    0.00114045  ) * t
+                      -    1.0790069   ) * t
+                      + 5038.481507    ) * t);
 
-    psia   = (((((-    0.0000000951  * t
-                 +    0.000132851 ) * t
-                 -    0.00114045  ) * t
-                 -    1.0790069   ) * t
-                 + 5038.481507    ) * t);
+    let omegaa = (((((+    0.0000003337  * t
+                      -    0.000000467 ) * t
+                      -    0.00772503  ) * t
+                      +    0.0512623   ) * t
+                      -    0.025754    ) * t + eps0);
 
-    omegaa = (((((+    0.0000003337  * t
-                 -    0.000000467 ) * t
-                 -    0.00772503  ) * t
-                 +    0.0512623   ) * t
-                 -    0.025754    ) * t + eps0);
+    let chia   = (((((-    0.0000000560  * t
+                      +    0.000170663 ) * t
+                      -    0.00121197  ) * t
+                      -    2.3814292   ) * t
+                      +   10.556403    ) * t);
 
-    chia   = (((((-    0.0000000560  * t
-                 +    0.000170663 ) * t
-                 -    0.00121197  ) * t
-                 -    2.3814292   ) * t
-                 +   10.556403    ) * t);
+    eps0   *= ASEC2RAD;
+    psia   *= ASEC2RAD;
+    omegaa *= ASEC2RAD;
+    chia   *= ASEC2RAD;
 
-    eps0 = eps0 * ASEC2RAD;
-    psia = psia * ASEC2RAD;
-    omegaa = omegaa * ASEC2RAD;
-    chia = chia * ASEC2RAD;
+    const sa = Math.sin(eps0);
+    const ca = Math.cos(eps0);
+    const sb = Math.sin(-psia);
+    const cb = Math.cos(-psia);
+    const sc = Math.sin(-omegaa);
+    const cc = Math.cos(-omegaa);
+    const sd = Math.sin(chia);
+    const cd = Math.cos(chia);
 
-    sa = Math.sin(eps0);
-    ca = Math.cos(eps0);
-    sb = Math.sin(-psia);
-    cb = Math.cos(-psia);
-    sc = Math.sin(-omegaa);
-    cc = Math.cos(-omegaa);
-    sd = Math.sin(chia);
-    cd = Math.cos(chia);
+    const xx =  cd*cb - sb*sd*cc;
+    const yx =  cd*sb*ca + sd*cc*cb*ca - sa*sd*sc;
+    const zx =  cd*sb*sa + sd*cc*cb*sa + ca*sd*sc;
+    const xy = -sd*cb - sb*cd*cc;
+    const yy = -sd*sb * ca + cd*cc*cb*ca - sa*cd*sc;
+    const zy = -sd*sb * sa + cd*cc*cb*sa + ca*cd*sc;
+    const xz =  sb*sc;
+    const yz = -sc*cb * ca - sa*cc;
+    const zz = -sc*cb * sa + cc*ca;
 
-    xx =  cd * cb - sb * sd * cc;
-    yx =  cd * sb * ca + sd * cc * cb * ca - sa * sd * sc;
-    zx =  cd * sb * sa + sd * cc * cb * sa + ca * sd * sc;
-    xy = -sd * cb - sb * cd * cc;
-    yy = -sd * sb * ca + cd * cc * cb * ca - sa * cd * sc;
-    zy = -sd * sb * sa + cd * cc * cb * sa + ca * cd * sc;
-    xz =  sb * sc;
-    yz = -sc * cb * ca - sa * cc;
-    zz = -sc * cb * sa + cc * ca;
-
-    if (tt2 === 0) {
+    if (dir === PrecessDirection.Into2000) {
         // Perform rotation from epoch to J2000.0.
         return new RotationMatrix([
             [xx, yx, zx],
@@ -830,12 +828,16 @@ function precession_rot(tt1: number, tt2: number): RotationMatrix {
         ]);
     }
 
-    // Perform rotation from J2000.0 to epoch.
-    return new RotationMatrix([
-        [xx, xy, xz],
-        [yx, yy, yz],
-        [zx, zy, zz]
-    ]);
+    if (dir === PrecessDirection.From2000) {
+        // Perform rotation from J2000.0 to epoch.
+        return new RotationMatrix([
+            [xx, xy, xz],
+            [yx, yy, yz],
+            [zx, zy, zz]
+        ]);
+    }
+
+    throw 'Invalid precess direction';
 }
 
 function era(time: AstroTime): number {    // Earth Rotation Angle
@@ -853,11 +855,11 @@ function sidereal_time(time: AstroTime): number {          // calculates Greenwi
     let eqeq = 15 * e_tilt(time).ee;    // Replace with eqeq=0 to get GMST instead of GAST (if we ever need it)
     const theta = era(time);
     const st = (eqeq + 0.014506 +
-        (((( -    0.0000000368   * t
-            -    0.000029956  ) * t
-            -    0.00000044   ) * t
-            +    1.3915817    ) * t
-            + 4612.156534     ) * t);
+             (((( -    0.0000000368   * t
+                  -    0.000029956  ) * t
+                  -    0.00000044   ) * t
+                  +    1.3915817    ) * t
+                  + 4612.156534     ) * t);
 
     let gst = ((st/3600 + theta) % 360) / 15;
     if (gst < 0) {
@@ -886,8 +888,8 @@ function terra(observer: Observer, st: number): TerraInfo {
     };
 }
 
-function nutation(time: AstroTime, direction: number, pos: ArrayVector): ArrayVector {
-    const r = nutation_rot(time, direction);
+function nutation(pos: ArrayVector, time: AstroTime, dir: PrecessDirection): ArrayVector {
+    const r = nutation_rot(time, dir);
     return [
         r.rot[0][0]*pos[0] + r.rot[1][0]*pos[1] + r.rot[2][0]*pos[2],
         r.rot[0][1]*pos[0] + r.rot[1][1]*pos[1] + r.rot[2][1]*pos[2],
@@ -895,11 +897,11 @@ function nutation(time: AstroTime, direction: number, pos: ArrayVector): ArrayVe
     ];
 }
 
-function nutation_rot(time: AstroTime, direction: number): RotationMatrix {
+function nutation_rot(time: AstroTime, dir: PrecessDirection): RotationMatrix {
     const tilt = e_tilt(time);
     const oblm = tilt.mobl * DEG2RAD;
     const oblt = tilt.tobl * DEG2RAD;
-    const psi = tilt.dpsi * ASEC2RAD;
+    const psi  = tilt.dpsi * ASEC2RAD;
     const cobm = Math.cos(oblm);
     const sobm = Math.sin(oblm);
     const cobt = Math.cos(oblt);
@@ -907,18 +909,18 @@ function nutation_rot(time: AstroTime, direction: number): RotationMatrix {
     const cpsi = Math.cos(psi);
     const spsi = Math.sin(psi);
 
-    const xx = cpsi;
-    const yx = -spsi * cobm;
-    const zx = -spsi * sobm;
-    const xy = spsi * cobt;
-    const yy = cpsi * cobm * cobt + sobm * sobt;
-    const zy = cpsi * sobm * cobt - cobm * sobt;
-    const xz = spsi * sobt;
-    const yz = cpsi * cobm * sobt - sobm * cobt;
-    const zz = cpsi * sobm * sobt + cobm * cobt;
+    const xx =  cpsi;
+    const yx = -spsi*cobm;
+    const zx = -spsi*sobm;
+    const xy =  spsi*cobt;
+    const yy =  cpsi*cobm*cobt + sobm*sobt;
+    const zy =  cpsi*sobm*cobt - cobm*sobt;
+    const xz =  spsi*sobt;
+    const yz =  cpsi*cobm*sobt - sobm*cobt;
+    const zz =  cpsi*sobm*sobt + cobm*cobt;
 
-    if (direction === 0) {
-        // forward rotation
+    if (dir === PrecessDirection.From2000) {
+        // convert J2000 to of-date
         return new RotationMatrix([
             [xx, xy, xz],
             [yx, yy, yz],
@@ -926,20 +928,31 @@ function nutation_rot(time: AstroTime, direction: number): RotationMatrix {
         ]);
     }
 
-    // inverse rotation
-    return new RotationMatrix([
-        [xx, yx, zx],
-        [xy, yy, zy],
-        [xz, yz, zz]
-    ]);
+    if (dir === PrecessDirection.Into2000) {
+        // convert of-date to J2000
+        return new RotationMatrix([
+            [xx, yx, zx],
+            [xy, yy, zy],
+            [xz, yz, zz]
+        ]);
+    }
+
+    throw 'Invalid precess direction';
+}
+
+function gyration(pos: ArrayVector, time: AstroTime, dir: PrecessDirection) {
+    // Combine nutation and precession into a single operation I call "gyration".
+    // The order they are composed depends on the direction,
+    // because both directions are mutual inverse functions.
+    return (dir === PrecessDirection.Into2000) ?
+        precession(nutation(pos, time, dir), time, dir) :
+        nutation(precession(pos, time, dir), time, dir);
 }
 
 function geo_pos(time: AstroTime, observer: Observer): ArrayVector {
     const gast = sidereal_time(time);
-    const pos1 = terra(observer, gast).pos;
-    const pos2 = nutation(time, -1, pos1);
-    const pos3 = precession(time.tt, pos2, 0);
-    return pos3;
+    const pos = terra(observer, gast).pos;
+    return gyration(pos, time, PrecessDirection.Into2000);
 }
 
 /**
@@ -1171,8 +1184,12 @@ export class EclipticCoordinates {
     }
 }
 
+function VectorFromArray(av: ArrayVector, time: AstroTime): Vector {
+    return new Vector(av[0], av[1], av[2], time);
+}
+
 function vector2radec(pos: ArrayVector, time: AstroTime): EquatorialCoordinates {
-    const vec = new Vector(pos[0], pos[1], pos[2], time);
+    const vec = VectorFromArray(pos, time);
     const xyproj = vec.x*vec.x + vec.y*vec.y;
     const dist = Math.sqrt(xyproj + vec.z*vec.z);
     if (xyproj === 0) {
@@ -1192,7 +1209,7 @@ function vector2radec(pos: ArrayVector, time: AstroTime): EquatorialCoordinates 
     return new EquatorialCoordinates(ra, dec, dist, vec);
 }
 
-function spin(angle: number, pos1: ArrayVector): ArrayVector {
+function spin(angle: number, pos: ArrayVector): ArrayVector {
     const angr = angle * DEG2RAD;
     const cosang = Math.cos(angr);
     const sinang = Math.sin(angr);
@@ -1206,9 +1223,9 @@ function spin(angle: number, pos1: ArrayVector): ArrayVector {
     const yz = 0;
     const zz = 1;
     return [
-        xx*pos1[0] + yx*pos1[1] + zx*pos1[2],
-        xy*pos1[0] + yy*pos1[1] + zy*pos1[2],
-        xz*pos1[0] + yz*pos1[1] + zz*pos1[2]
+        xx*pos[0] + yx*pos[1] + zx*pos[2],
+        xy*pos[0] + yy*pos[1] + zy*pos[2],
+        xz*pos[0] + yz*pos[1] + zz*pos[2]
     ];
 }
 
@@ -1263,10 +1280,10 @@ export function Horizon(date: FlexibleDateTime, observer: Observer, ra: number, 
     const coslat = Math.cos(observer.latitude * DEG2RAD);
     const sinlon = Math.sin(observer.longitude * DEG2RAD);
     const coslon = Math.cos(observer.longitude * DEG2RAD);
-    const sindc = Math.sin(dec * DEG2RAD);
-    const cosdc = Math.cos(dec * DEG2RAD);
-    const sinra = Math.sin(ra * 15 * DEG2RAD);
-    const cosra = Math.cos(ra * 15 * DEG2RAD);
+    const sindc  = Math.sin(dec * DEG2RAD);
+    const cosdc  = Math.cos(dec * DEG2RAD);
+    const sinra  = Math.sin(ra * 15 * DEG2RAD);
+    const cosra  = Math.cos(ra * 15 * DEG2RAD);
 
     // Calculate three mutually perpendicular unit vectors
     // in equatorial coordinates: uze, une, uwe.
@@ -1438,8 +1455,7 @@ export function SunPosition(date: FlexibleDateTime): EclipticCoordinates {
     const sun2000: ArrayVector = [-earth2000.x, -earth2000.y, -earth2000.z];
 
     // Convert to equator-of-date equatorial cartesian coordinates.
-    const stemp = precession(0, sun2000, time.tt);
-    const [gx, gy, gz] = nutation(time, 0, stemp);
+    const [gx, gy, gz] = gyration(sun2000, time, PrecessDirection.From2000);
 
     // Convert to ecliptic coordinates of date.
     const true_obliq = DEG2RAD * e_tilt(time).tobl;
@@ -1507,10 +1523,20 @@ export function Equator(body: Body, date: FlexibleDateTime, observer: Observer, 
     if (!ofdate)
         return vector2radec(j2000, time);
 
-    const temp = precession(0, j2000, time.tt);
-    const datevect = nutation(time, 0, temp);
+    const datevect = gyration(j2000, time, PrecessDirection.From2000);
     return vector2radec(datevect, time);
 }
+
+
+export function ObserverVector(date: FlexibleDateTime, observer: Observer, ofdate: boolean): Vector {
+    const time = MakeTime(date);
+    const gast = sidereal_time(time);
+    let ovec = terra(observer, gast).pos;
+    if (!ofdate)
+        ovec = gyration(ovec, time, PrecessDirection.Into2000);
+    return VectorFromArray(ovec, time);
+}
+
 
 function RotateEquatorialToEcliptic(equ: Vector, cos_ob: number, sin_ob: number): EclipticCoordinates {
     // Rotate equatorial vector to obtain ecliptic vector.
@@ -1583,7 +1609,7 @@ export function GeoMoon(date: FlexibleDateTime): Vector {
     var mpos1 = ecl2equ_vec(time, gepos);
 
     // Convert from mean equinox of date to J2000...
-    var mpos2 = precession(time.tt, mpos1, 0);
+    var mpos2 = precession(mpos1, time, PrecessDirection.Into2000);
 
     return new Vector(mpos2[0], mpos2[1], mpos2[2], time);
 }
@@ -4509,8 +4535,8 @@ export function Rotation_ECL_EQJ(): RotationMatrix {
  *      A rotation matrix that converts EQJ to EQD at `time`.
  */
 export function Rotation_EQJ_EQD(time: AstroTime): RotationMatrix {
-    const prec = precession_rot(0.0, time.tt);
-    const nut = nutation_rot(time, 0);
+    const prec = precession_rot(time, PrecessDirection.From2000);
+    const nut = nutation_rot(time, PrecessDirection.From2000);
     return CombineRotation(prec, nut);
 }
 
@@ -4530,8 +4556,8 @@ export function Rotation_EQJ_EQD(time: AstroTime): RotationMatrix {
  *      A rotation matrix that converts EQD at `time` to EQJ.
  */
 export function Rotation_EQD_EQJ(time: AstroTime): RotationMatrix {
-    const nut = nutation_rot(time, 1);
-    const prec = precession_rot(time.tt, 0.0);
+    const nut = nutation_rot(time, PrecessDirection.Into2000);
+    const prec = precession_rot(time, PrecessDirection.Into2000);
     return CombineRotation(nut, prec);
 }
 
