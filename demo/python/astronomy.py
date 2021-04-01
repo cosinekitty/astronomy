@@ -36,6 +36,8 @@ import datetime
 import enum
 import re
 
+KM_PER_AU = 1.4959787069098932e+8
+
 _CalcMoonCount = 0
 
 _DAYS_PER_TROPICAL_YEAR = 365.24217
@@ -45,8 +47,7 @@ _ASEC360 = 1296000.0
 _ASEC2RAD = 4.848136811095359935899141e-6
 _ARC = 3600.0 * 180.0 / math.pi     # arcseconds per radian
 _C_AUDAY = 173.1446326846693        # speed of light in AU/day
-_KM_PER_AU = 1.4959787069098932e+8
-_METERS_PER_AU = _KM_PER_AU * 1000.0
+_METERS_PER_AU = KM_PER_AU * 1000.0
 _ANGVEL = 7.2921150e-5
 _SECONDS_PER_DAY = 24.0 * 3600.0
 _SOLAR_DAYS_PER_SIDEREAL_DAY = 0.9972695717592592
@@ -56,11 +57,11 @@ _NEPTUNE_ORBITAL_PERIOD = 60189.0
 _REFRACTION_NEAR_HORIZON = 34.0 / 60.0
 
 _SUN_RADIUS_KM = 695700.0
-_SUN_RADIUS_AU  = _SUN_RADIUS_KM / _KM_PER_AU
+_SUN_RADIUS_AU  = _SUN_RADIUS_KM / KM_PER_AU
 
 _EARTH_FLATTENING = 0.996647180302104
 _EARTH_EQUATORIAL_RADIUS_KM = 6378.1366
-_EARTH_EQUATORIAL_RADIUS_AU = _EARTH_EQUATORIAL_RADIUS_KM / _KM_PER_AU
+_EARTH_EQUATORIAL_RADIUS_AU = _EARTH_EQUATORIAL_RADIUS_KM / KM_PER_AU
 _EARTH_MEAN_RADIUS_KM = 6371.0      # mean radius of the Earth's geoid, without atmosphere
 _EARTH_ATMOSPHERE_KM = 88.0         # effective atmosphere thickness for lunar eclipses
 _EARTH_ECLIPSE_RADIUS_KM = _EARTH_MEAN_RADIUS_KM + _EARTH_ATMOSPHERE_KM
@@ -68,7 +69,7 @@ _EARTH_ECLIPSE_RADIUS_KM = _EARTH_MEAN_RADIUS_KM + _EARTH_ATMOSPHERE_KM
 _MOON_EQUATORIAL_RADIUS_KM = 1738.1
 _MOON_MEAN_RADIUS_KM       = 1737.4
 _MOON_POLAR_RADIUS_KM      = 1736.0
-_MOON_EQUATORIAL_RADIUS_AU = (_MOON_EQUATORIAL_RADIUS_KM / _KM_PER_AU)
+_MOON_EQUATORIAL_RADIUS_AU = (_MOON_EQUATORIAL_RADIUS_KM / KM_PER_AU)
 
 _ASEC180 = 180.0 * 60.0 * 60.0
 _AU_PER_PARSEC = _ASEC180 / math.pi
@@ -1450,9 +1451,9 @@ def _terra(observer, st):
     sinst = math.sin(stlocl)
     cosst = math.cos(stlocl)
     return [
-        ach * cosphi * cosst / _KM_PER_AU,
-        ach * cosphi * sinst / _KM_PER_AU,
-        ash * sinphi / _KM_PER_AU
+        ach * cosphi * cosst / KM_PER_AU,
+        ach * cosphi * sinst / KM_PER_AU,
+        ash * sinphi / KM_PER_AU
     ]
 
 def _geo_pos(time, observer):
@@ -3785,6 +3786,50 @@ def Equator(body, time, observer, ofdate, aberration):
     datevect = _nutation(temp, time, _PrecessDir.From2000)
     return _vector2radec(datevect, time)
 
+
+def ObserverVector(time, observer, ofdate):
+    """Calculates geocentric equatorial coordinates of an observer on the surface of the Earth.
+
+    This function calculates a vector from the center of the Earth to
+    a point on or near the surface of the Earth, expressed in equatorial
+    coordinates. It takes into account the rotation of the Earth at the given
+    time, along with the given latitude, longitude, and elevation of the observer.
+
+    The caller may pass `ofdate` as `True` to return coordinates relative to the Earth's
+    equator at the specified time, or `False` to use the J2000 equator.
+
+    The returned vector has components expressed in astronomical units (AU).
+    To convert to kilometers, multiply the `x`, `y`, and `z` values by
+    the constant value `KM_PER_AU`.
+
+    Parameters
+    ----------
+    time : Time
+        The date and time for which to calculate the observer's position vector.
+    observer : Observer
+        The geographic location of a point on or near the surface of the Earth.
+    ofdate : bool
+        Selects the date of the Earth's equator in which to express the equatorial coordinates.
+        The caller may pass `False` to use the orientation of the Earth's equator
+        at noon UTC on January 1, 2000, in which case this function corrects for precession
+        and nutation of the Earth as it was at the moment specified by the `time` parameter.
+        Or the caller may pass `true` to use the Earth's equator at `time`
+        as the orientation.
+
+    Returns
+    -------
+    Vector
+        An equatorial vector from the center of the Earth to the specified location
+        on (or near) the Earth's surface.
+    """
+    gast = _sidereal_time(time)
+    ovec = _terra(observer, gast)
+    if not ofdate:
+        ovec = _nutation(ovec, time, _PrecessDir.Into2000)
+        ovec = _precession(ovec, time, _PrecessDir.Into2000)
+    return Vector(ovec[0], ovec[1], ovec[2], time)
+
+
 @enum.unique
 class Refraction(enum.Enum):
     """Selects if/how to correct for atmospheric refraction.
@@ -4808,7 +4853,7 @@ def _MoonMagnitude(phase, helio_dist, geo_dist):
     # https://astronomy.stackexchange.com/questions/10246/is-there-a-simple-analytical-formula-for-the-lunar-phase-brightness-curve
     rad = math.radians(phase)
     mag = -12.717 + 1.49*abs(rad) + 0.0431*(rad**4)
-    moon_mean_distance_au = 385000.6 / _KM_PER_AU
+    moon_mean_distance_au = 385000.6 / KM_PER_AU
     geo_au = geo_dist / moon_mean_distance_au
     mag += 5.0 * math.log10(helio_dist * geo_au)
     return mag
@@ -5413,7 +5458,7 @@ class Apsis:
         self.time = time
         self.kind = kind
         self.dist_au = dist_au
-        self.dist_km = dist_au * _KM_PER_AU
+        self.dist_km = dist_au * KM_PER_AU
 
 def SearchLunarApsis(startTime):
     """Finds the time of the first lunar apogee or perigee after the given time.
@@ -6924,7 +6969,7 @@ def _CalcShadow(body_radius_km, time, target, dir):
     dx = (u * dir.x) - target.x
     dy = (u * dir.y) - target.y
     dz = (u * dir.z) - target.z
-    r = _KM_PER_AU * math.sqrt(dx*dx + dy*dy + dz*dz)
+    r = KM_PER_AU * math.sqrt(dx*dx + dy*dy + dz*dz)
     k = +_SUN_RADIUS_KM - (1.0 + u)*(_SUN_RADIUS_KM - body_radius_km)
     p = -_SUN_RADIUS_KM + (1.0 + u)*(_SUN_RADIUS_KM + body_radius_km)
     return _ShadowInfo(time, u, r, k, p, target, dir)
@@ -7293,12 +7338,12 @@ def _GeoidIntersect(shadow):
     # But dilate the z-coordinates so that the Earth becomes a perfect sphere.
     # Then find the intersection of the vector with the sphere.
     # See p 184 in Montenbruck & Pfleger's "Astronomy on the Personal Computer", second edition.
-    v.x *= _KM_PER_AU
-    v.y *= _KM_PER_AU
-    v.z *= _KM_PER_AU / _EARTH_FLATTENING
-    e.x *= _KM_PER_AU
-    e.y *= _KM_PER_AU
-    e.z *= _KM_PER_AU / _EARTH_FLATTENING
+    v.x *= KM_PER_AU
+    v.y *= KM_PER_AU
+    v.z *= KM_PER_AU / _EARTH_FLATTENING
+    e.x *= KM_PER_AU
+    e.y *= KM_PER_AU
+    e.z *= KM_PER_AU / _EARTH_FLATTENING
 
     # Solve the quadratic equation that finds whether and where
     # the shadow axis intersects with the Earth in the dilated coordinate system.
@@ -7343,7 +7388,7 @@ def _GeoidIntersect(shadow):
 
         # Put the EQD geocentric coordinates of the observer into the vector 'o'.
         # Also convert back from kilometers to astronomical units.
-        o = Vector(px / _KM_PER_AU, py / _KM_PER_AU, pz / _KM_PER_AU, shadow.time)
+        o = Vector(px / KM_PER_AU, py / KM_PER_AU, pz / KM_PER_AU, shadow.time)
 
         # Rotate the observer's geocentric EQD back to the EQJ system.
         o = RotateVector(inv, o)

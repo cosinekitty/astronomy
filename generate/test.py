@@ -1641,9 +1641,66 @@ def PlutoCheck():
 
 #-----------------------------------------------------------------------------------------------------------
 
+def GeoidTestCase(time, observer, ofdate):
+    topo_moon = astronomy.Equator(astronomy.Body.Moon, time, observer, ofdate, False)
+    surface = astronomy.ObserverVector(time, observer, ofdate)
+    geo_moon = astronomy.GeoVector(astronomy.Body.Moon, time, False)
+
+    if ofdate:
+        # GeoVector() returns J2000 coordinates. Convert to equator-of-date coordinates.
+        rot = astronomy.Rotation_EQJ_EQD(time)
+        geo_moon = astronomy.RotateVector(rot, geo_moon)
+
+    dx = astronomy.KM_PER_AU * v((geo_moon.x - surface.x) - topo_moon.vec.x)
+    dy = astronomy.KM_PER_AU * v((geo_moon.y - surface.y) - topo_moon.vec.y)
+    dz = astronomy.KM_PER_AU * v((geo_moon.z - surface.z) - topo_moon.vec.z)
+    diff = sqrt(dx*dx + dy*dy + dz*dz)
+    Debug('PY GeoidTestCase: ofdate={}, time={}, lat={}, ht={}, surface=({}, {}, {}), diff = {} km'.format(
+        ofdate, time,
+        observer.latitude, observer.longitude, observer.height,
+        astronomy.KM_PER_AU * surface.x,
+        astronomy.KM_PER_AU * surface.y,
+        astronomy.KM_PER_AU * surface.z,
+        diff
+    ))
+
+    # Require 1 millimeter accuracy! (one millionth of a kilometer).
+    if diff > 1.0e-6:
+        print('JS GeoidTestCase: EXCESSIVE POSITION ERROR.')
+        return 1
+    return 0
+
+
+def Geoid():
+    time_list = [
+        astronomy.Time.Parse('1066-09-27T18:00:00Z'),
+        astronomy.Time.Parse('1970-12-13T15:42:00Z'),
+        astronomy.Time.Parse('1970-12-13T15:43:00Z'),
+        astronomy.Time.Parse('2015-03-05T02:15:45Z')
+    ]
+
+    observer_list = [
+        astronomy.Observer( +1.5,   +2.7,    7.4),
+        astronomy.Observer(-53.7, +141.7, +100.0),
+        astronomy.Observer(+30.0,  -85.2,  -50.0),
+        astronomy.Observer(+90.0,  +45.0,  -50.0),
+        astronomy.Observer(-90.0, -180.0,    0.0)
+    ]
+
+    for observer in observer_list:
+        for time in time_list:
+            if GeoidTestCase(time, observer, False): return 1
+            if GeoidTestCase(time, observer, True): return 1
+
+    print('PY GeoidTest: PASS')
+    return 0
+
+#-----------------------------------------------------------------------------------------------------------
+
 UnitTests = {
     'constellation':            Constellation,
     'elongation':               Elongation,
+    'geoid':                    Geoid,
     'global_solar_eclipse':     GlobalSolarEclipse,
     'local_solar_eclipse':      LocalSolarEclipse,
     'lunar_apsis':              LunarApsis,

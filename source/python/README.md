@@ -1468,6 +1468,33 @@ Keep calling this function as many times as you want to keep finding more transi
 
 ---
 
+<a name="ObserverVector"></a>
+### ObserverVector(time, observer, ofdate)
+
+**Calculates geocentric equatorial coordinates of an observer on the surface of the Earth.**
+
+This function calculates a vector from the center of the Earth to
+a point on or near the surface of the Earth, expressed in equatorial
+coordinates. It takes into account the rotation of the Earth at the given
+time, along with the given latitude, longitude, and elevation of the observer.
+The caller may pass `ofdate` as `True` to return coordinates relative to the Earth's
+equator at the specified time, or `False` to use the J2000 equator.
+The returned vector has components expressed in astronomical units (AU).
+To convert to kilometers, multiply the `x`, `y`, and `z` values by
+the constant value `KM_PER_AU`.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Time`](#Time) | `time` | The date and time for which to calculate the observer's position vector. |
+| [`Observer`](#Observer) | `observer` | The geographic location of a point on or near the surface of the Earth. |
+| `bool` | `ofdate` | Selects the date of the Earth's equator in which to express the equatorial coordinates. The caller may pass `False` to use the orientation of the Earth's equator at noon UTC on January 1, 2000, in which case this function corrects for precession and nutation of the Earth as it was at the moment specified by the `time` parameter. Or the caller may pass `true` to use the Earth's equator at `time` as the orientation. |
+
+### Returns: [`Vector`](#Vector)
+An equatorial vector from the center of the Earth to the specified location
+on (or near) the Earth's surface.
+
+---
+
 <a name="Pivot"></a>
 ### Pivot(rotation, axis, angle)
 
