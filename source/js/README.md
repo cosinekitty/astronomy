@@ -24,8 +24,9 @@ and some [Node.js examples](../../demo/nodejs/).
 
 | Function | Description |
 | -------- | ----------- |
-| [HelioVector](#HelioVector) | Calculates vector with respect to the center of the Sun.   |
-| [GeoVector](#GeoVector)     | Calculates vector with respect to the center of the Earth. |
+| [HelioVector](#HelioVector) | Calculates body position vector with respect to the center of the Sun.   |
+| [GeoVector](#GeoVector)     | Calculates body position vector with respect to the center of the Earth. |
+| [ObserverVector](#ObserverVector) | Calculates vector from the center of the Earth to an observer on the Earth's surface. |
 | [Equator](#Equator)         | Calculates right ascension and declination. |
 | [Ecliptic](#Ecliptic)       | Calculates ecliptic latitude, longitude, and Cartesian coordinates. |
 | [Horizon](#Horizon)         | Calculates horizontal coordinates (azimuth, altitude) for a given observer on the Earth. |

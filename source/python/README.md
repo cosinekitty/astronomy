@@ -28,8 +28,9 @@ To get started quickly, here are some [examples](../../demo/python/).
 
 | Function | Description |
 | -------- | ----------- |
-| [HelioVector](#HelioVector) | Calculates vector with respect to the center of the Sun. |
-| [GeoVector](#GeoVector)     | Calculates vector with respect to the center of the Earth. |
+| [HelioVector](#HelioVector) | Calculates body position vector with respect to the center of the Sun. |
+| [GeoVector](#GeoVector)     | Calculates body position vector with respect to the center of the Earth. |
+| [ObserverVector](#ObserverVector) | Calculates vector from the center of the Earth to an observer on the Earth's surface. |
 | [Equator](#Equator)         | Calculates right ascension and declination. |
 | [Ecliptic](#Ecliptic)       | Converts J2000 equatorial coordinates to J2000 ecliptic coordinates. |
 | [EclipticLongitude](#EclipticLongitude) | Calculates ecliptic longitude of a body in the J2000 system. |
