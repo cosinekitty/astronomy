@@ -1820,12 +1820,12 @@ $ASTRO_ADDSOL()
         public const double KM_PER_AU = 1.4959787069098932e+8;
 
         /// <summary>
-        /// The factor to convert radians to degrees = pi/180.
+        /// The factor to convert radians to degrees = 180/pi.
         /// </summary>
         public const double RAD2DEG = 57.295779513082321;
 
         /// <summary>
-        /// The factor to convert degrees to radians = 180/pi.
+        /// The factor to convert degrees to radians = pi/180.
         /// </summary>
         public const double DEG2RAD = 0.017453292519943296;
 

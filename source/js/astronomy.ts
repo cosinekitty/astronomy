@@ -41,14 +41,23 @@ export type FlexibleDateTime = Date | number | AstroTime;
  */
 export const KM_PER_AU = 1.4959787069098932e+8;
 
+/**
+ * @brief The factor to convert radians to degrees = pi/180.
+ */
+export const DEG2RAD = 0.017453292519943296;
+
+ /**
+  * @brief The factor to convert degrees to radians = 180/pi.
+  */
+export const RAD2DEG = 57.295779513082321;
+
+
 const DAYS_PER_TROPICAL_YEAR = 365.24217;
 const J2000 = new Date('2000-01-01T12:00:00Z');
 const PI2 = 2 * Math.PI;
 const ARC = 3600 * (180 / Math.PI);     // arcseconds per radian
 const C_AUDAY = 173.1446326846693;      // speed of light in AU/day
 const ASEC2RAD = 4.848136811095359935899141e-6;
-const DEG2RAD = 0.017453292519943296;
-const RAD2DEG = 57.295779513082321;
 const ASEC180 = 180 * 60 * 60;              // arcseconds per 180 degrees (or pi radians)
 const ASEC360 = 2 * ASEC180;                // arcseconds per 360 degrees (or 2*pi radians)
 const ANGVEL = 7.2921150e-5;

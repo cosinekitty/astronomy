@@ -156,12 +156,12 @@ these are used in function and type names.
 <a name="Astronomy.RAD2DEG"></a>
 ### `const double Astronomy.RAD2DEG = 57.29577951308232;`
 
-**The factor to convert radians to degrees = pi/180.**
+**The factor to convert radians to degrees = 180/pi.**
 
 <a name="Astronomy.DEG2RAD"></a>
 ### `const double Astronomy.DEG2RAD = 0.017453292519943295;`
 
-**The factor to convert degrees to radians = 180/pi.**
+**The factor to convert degrees to radians = pi/180.**
 
 <a name="functions"></a>
 ## Functions

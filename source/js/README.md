@@ -653,6 +653,22 @@ The calculations are performed from the point of view of a geocentric observer.
 
 * * *
 
+<a name="DEG2RAD"></a>
+
+## DEG2RAD
+**Kind**: global variable  
+**Brief**: The factor to convert radians to degrees = pi/180.  
+
+* * *
+
+<a name="RAD2DEG"></a>
+
+## RAD2DEG
+**Kind**: global variable  
+**Brief**: The factor to convert degrees to radians = 180/pi.  
+
+* * *
+
 <a name="Body"></a>
 
 ## Body : <code>enum</code>

@@ -32,6 +32,14 @@ export declare type FlexibleDateTime = Date | number | AstroTime;
  */
 export declare const KM_PER_AU = 149597870.69098932;
 /**
+ * @brief The factor to convert radians to degrees = pi/180.
+ */
+export declare const DEG2RAD = 0.017453292519943295;
+/**
+ * @brief The factor to convert degrees to radians = 180/pi.
+ */
+export declare const RAD2DEG = 57.29577951308232;
+/**
  * @brief Calculates the angle in degrees between two vectors.
  *
  * The angle is measured in the plane that contains both vectors.
