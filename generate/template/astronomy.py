@@ -36,7 +36,7 @@ import datetime
 import enum
 import re
 
-KM_PER_AU = 1.4959787069098932e+8
+KM_PER_AU = 1.4959787069098932e+8   #<const> The number of kilometers per astronomical unit.
 
 _CalcMoonCount = 0
 
@@ -1903,7 +1903,7 @@ def ObserverVector(time, observer, ofdate):
 
     The returned vector has components expressed in astronomical units (AU).
     To convert to kilometers, multiply the `x`, `y`, and `z` values by
-    the constant value `KM_PER_AU`.
+    the constant value #KM_PER_AU.
 
     Parameters
     ----------

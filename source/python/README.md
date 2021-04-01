@@ -14,6 +14,7 @@ To get started quickly, here are some [examples](../../demo/python/).
 ## Contents
 
 - [Topic Index](#topics)
+- [Constants](#constants)
 - [Classes](#classes)
 - [Enumerated Types](#enumerations)
 - [Error Types](#errors)
@@ -143,6 +144,18 @@ these are used in function and type names.
 | [Rotation_HOR_ECL](#Rotation_HOR_ECL) | Calculates a rotation matrix from horizontal (HOR) to ecliptic J2000 (ECL). |
 
 ---
+
+---
+
+<a name="constants"></a>
+## Constants
+
+---
+
+<a name="KM_PER_AU"></a>
+### `KM_PER_AU = 1.4959787069098932e+8`
+
+**The number of kilometers per astronomical unit.**
 
 ---
 
@@ -1482,7 +1495,7 @@ The caller may pass `ofdate` as `True` to return coordinates relative to the Ear
 equator at the specified time, or `False` to use the J2000 equator.
 The returned vector has components expressed in astronomical units (AU).
 To convert to kilometers, multiply the `x`, `y`, and `z` values by
-the constant value `KM_PER_AU`.
+the constant value [`KM_PER_AU`](#KM_PER_AU).
 
 | Type | Parameter | Description |
 | --- | --- | --- |

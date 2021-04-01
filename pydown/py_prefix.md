@@ -14,6 +14,7 @@ To get started quickly, here are some [examples](../../demo/python/).
 ## Contents
 
 - [Topic Index](#topics)
+- [Constants](#constants)
 - [Classes](#classes)
 - [Enumerated Types](#enumerations)
 - [Error Types](#errors)
