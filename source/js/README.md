@@ -825,7 +825,7 @@ equator at the specified time, or `false` to use the J2000 equator.
 
 The returned vector has components expressed in astronomical units (AU).
 To convert to kilometers, multiply the `x`, `y`, and `z` values by
-the constant value #Astronomy.KM_PER_AU.  
+the constant value [KM_PER_AU](#KM_PER_AU).  
 
 | Param | Type | Description |
 | --- | --- | --- |

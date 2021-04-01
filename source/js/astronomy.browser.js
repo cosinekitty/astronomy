@@ -2191,7 +2191,7 @@ exports.Equator = Equator;
  *
  * The returned vector has components expressed in astronomical units (AU).
  * To convert to kilometers, multiply the `x`, `y`, and `z` values by
- * the constant value #Astronomy.KM_PER_AU.
+ * the constant value {@link KM_PER_AU}.
  *
  * @param {FlexibleDateTime} date
  *      The date and time for which to calculate the observer's position vector.
