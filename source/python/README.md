@@ -149,6 +149,12 @@ these are used in function and type names.
 
 <a name="constants"></a>
 ## Constants
+The following numeric constants are exported by the `astronomy` module.
+They may be of use for unit conversion.
+Note: For the other supported programming languages, Astronomy Engine defines
+helper constants `DEG2RAD` and `RAD2DEG` to convert between angular degrees and radians.
+However, because Python defines the [angular conversion functions](https://docs.python.org/3/library/math.html#angular-conversion)
+`math.degrees()` and `math.radians()`, they are not needed in the Python version.
 
 ---
 
@@ -156,6 +162,13 @@ these are used in function and type names.
 ### `KM_PER_AU = 1.4959787069098932e+8`
 
 **The number of kilometers per astronomical unit.**
+
+---
+
+<a name="C_AUDAY"></a>
+### `C_AUDAY   = 173.1446326846693`
+
+**The speed of light expressed in astronomical units per day.**
 
 ---
 
@@ -193,11 +206,11 @@ to iterate through consecutive alternating perigees and apogees.
 
 **Reports the constellation that a given celestial point lies within.**
 
-The [`Constellation`](#Constellation) function returns this struct
+The [`Constellation`](#Constellation) function returns a `ConstellationInfo` object
 to report which constellation corresponds with a given point in the sky.
 Constellations are defined with respect to the B1875 equatorial system
-per IAU standard. Although `Constellation` requires J2000 equatorial
-coordinates, the struct contains converted B1875 coordinates for reference.
+per IAU standard. Although the `Constellation` function requires J2000 equatorial
+coordinates as input, the returned object contains converted B1875 coordinates for reference.
 
 | Type | Attribute | Description |
 | --- | --- | --- |

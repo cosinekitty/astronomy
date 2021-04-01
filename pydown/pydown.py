@@ -290,6 +290,12 @@ def Markdown(module, const_md):
     md += '\n'
     md += '<a name="constants"></a>\n'
     md += '## Constants\n'
+    md += 'The following numeric constants are exported by the `astronomy` module.\n'
+    md += 'They may be of use for unit conversion.\n'
+    md += 'Note: For the other supported programming languages, Astronomy Engine defines\n'
+    md += 'helper constants `DEG2RAD` and `RAD2DEG` to convert between angular degrees and radians.\n'
+    md += 'However, because Python defines the [angular conversion functions](https://docs.python.org/3/library/math.html#angular-conversion)\n'
+    md += '`math.degrees()` and `math.radians()`, they are not needed in the Python version.\n'
     md += '\n'
     md += const_md
 
@@ -332,7 +338,7 @@ def Markdown(module, const_md):
     return md
 
 
-def ParseConstants(inPythonFileName):
+def ConstantsMd(inPythonFileName):
     md = ''
     with open(inPythonFileName) as infile:
         for line in infile:
@@ -367,7 +373,7 @@ def main():
         prefix = infile.read()
 
     module = LoadModule(inPythonFileName)
-    const_md = ParseConstants(inPythonFileName)
+    const_md = ConstantsMd(inPythonFileName)
     md = Markdown(module, const_md)
 
     with open(outMarkdownFileName, 'wt') as outfile:

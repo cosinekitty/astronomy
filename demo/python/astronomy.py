@@ -37,6 +37,7 @@ import enum
 import re
 
 KM_PER_AU = 1.4959787069098932e+8   #<const> The number of kilometers per astronomical unit.
+C_AUDAY   = 173.1446326846693       #<const> The speed of light expressed in astronomical units per day.
 
 _CalcMoonCount = 0
 
@@ -46,7 +47,6 @@ _EPOCH = datetime.datetime(2000, 1, 1, 12)
 _ASEC360 = 1296000.0
 _ASEC2RAD = 4.848136811095359935899141e-6
 _ARC = 3600.0 * 180.0 / math.pi     # arcseconds per radian
-_C_AUDAY = 173.1446326846693        # speed of light in AU/day
 _METERS_PER_AU = KM_PER_AU * 1000.0
 _ANGVEL = 7.2921150e-5
 _SECONDS_PER_DAY = 24.0 * 3600.0
@@ -3724,7 +3724,7 @@ def GeoVector(body, time, aberration):
             earth = _CalcEarth(ltime)
 
         geo = Vector(h.x-earth.x, h.y-earth.y, h.z-earth.z, time)
-        ltime2 = time.AddDays(-geo.Length() / _C_AUDAY)
+        ltime2 = time.AddDays(-geo.Length() / C_AUDAY)
         dt = abs(ltime2.tt - ltime.tt)
         if dt < 1.0e-9:
             return geo
@@ -4196,7 +4196,7 @@ def SunPosition(time):
     """
     # Correct for light travel time from the Sun.
     # Otherwise season calculations (equinox, solstice) will all be early by about 8 minutes!
-    adjusted_time = time.AddDays(-1.0 / _C_AUDAY)
+    adjusted_time = time.AddDays(-1.0 / C_AUDAY)
     earth2000 = _CalcEarth(adjusted_time)
     sun2000 = [-earth2000.x, -earth2000.y, -earth2000.z]
 
@@ -6387,11 +6387,11 @@ def Rotation_HOR_ECL(time, observer):
 class ConstellationInfo:
     """Reports the constellation that a given celestial point lies within.
 
-    The #Constellation function returns this struct
+    The #Constellation function returns a `ConstellationInfo` object
     to report which constellation corresponds with a given point in the sky.
     Constellations are defined with respect to the B1875 equatorial system
-    per IAU standard. Although `Constellation` requires J2000 equatorial
-    coordinates, the struct contains converted B1875 coordinates for reference.
+    per IAU standard. Although the `Constellation` function requires J2000 equatorial
+    coordinates as input, the returned object contains converted B1875 coordinates for reference.
 
     Attributes
     ----------
