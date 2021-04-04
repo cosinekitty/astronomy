@@ -39,7 +39,7 @@ Change into the directory `hydrogen` and execute:  `npm init`.
 
 Once you have all the tools installed and configured, you are ready to proceed.
 
-Change into the `generate` directory (this directory) and run the bash script 
+Change into the `generate` directory (this directory) and run the bash script
 `./run` to rebuild all code, generate all documentation, and run all the unit tests.
 
 ---
@@ -73,7 +73,7 @@ Change into the directory `hydrogen` and execute:  `npm init`.
 
 Once you have all the tools installed and configured, you are ready to proceed.
 
-Change into the `generate` directory (this directory) and run the 
+Change into the `generate` directory (this directory) and run the
 batch file `run.bat` to rebuild all code, generate all documentation,
 and run all the unit tests.
 

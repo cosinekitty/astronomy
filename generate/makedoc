@@ -29,7 +29,7 @@ cd ../generate || Fail "Error changing back to generate directory"
 ./check_internal_links.py $(realpath ../source/csharp/README.md) || exit 1
 
 echo "Install NodeJS dev dependencies"
-[ -d node_modules ] || npm ci || Fail "Error installing npm devDependencies"
+[[ -d node_modules ]] || npm ci || Fail "Error installing npm devDependencies"
 
 echo "Compiling TypeScript to JavaScript."
 npm run build || Fail "Error in typescript compiler"
@@ -40,6 +40,7 @@ npm run build:browser || Fail "Error building browser bundle"
 echo "Minifying JavaScript code."
 npm run minify || Fail "Error minifying astronomy.js"
 npm run minify:browser || Fail "Error minifying astronomy.browser.js"
+./patch_readme.py ../README.md ../source/js/astronomy.browser.min.js || Fail "Error patching README.md."
 
 echo "Generating JS documentation in JSON format."
 npm run docs:json || Fail "Error generating JSON documentation."
