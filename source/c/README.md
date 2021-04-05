@@ -16,6 +16,7 @@ To get started quickly, here are some [examples](../../demo/c/).
 
 - [Topic Index](#topics)
 - [Functions](#functions)
+- [Constants](#constants)
 - [Enumerated Types](#enums)
 - [Structures](#structs)
 - [Type Definitions](#typedefs)

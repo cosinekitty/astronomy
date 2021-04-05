@@ -340,6 +340,8 @@ def Markdown(module, const_md):
 
 def ConstantsMd(inPythonFileName):
     md = ''
+
+    clist = []
     with open(inPythonFileName) as infile:
         for line in infile:
             parts = line.split('#<const>')
@@ -349,10 +351,14 @@ def ConstantsMd(inPythonFileName):
                 tokens = code.split()
                 if len(tokens) >= 3 and tokens[1] == '=':
                     symbol = tokens[0]
-                    md += '\n---\n\n'
-                    md += '<a name="{}"></a>\n'.format(symbol)
-                    md += '### `{}`\n\n'.format(code)
-                    md += '**{}**\n\n'.format(doc)
+                    clist.append((symbol, code, doc))
+
+    for (symbol, code, doc) in sorted(clist):
+        md += '\n---\n\n'
+        md += '<a name="{}"></a>\n'.format(symbol)
+        md += '### `{}`\n\n'.format(code)
+        md += '**{}**\n\n'.format(doc)
+
     return md
 
 

@@ -158,13 +158,6 @@ However, because Python defines the [angular conversion functions](https://docs.
 
 ---
 
-<a name="KM_PER_AU"></a>
-### `KM_PER_AU = 1.4959787069098932e+8`
-
-**The number of kilometers per astronomical unit.**
-
----
-
 <a name="C_AUDAY"></a>
 ### `C_AUDAY   = 173.1446326846693`
 
@@ -179,6 +172,13 @@ However, because Python defines the [angular conversion functions](https://docs.
 
 ---
 
+<a name="JUPITER_MEAN_RADIUS_KM"></a>
+### `JUPITER_MEAN_RADIUS_KM = 69911.0`
+
+**The volumetric mean radius of Jupiter, expressed in kilometers.**
+
+---
+
 <a name="JUPITER_POLAR_RADIUS_KM"></a>
 ### `JUPITER_POLAR_RADIUS_KM = 66854.0`
 
@@ -186,10 +186,10 @@ However, because Python defines the [angular conversion functions](https://docs.
 
 ---
 
-<a name="JUPITER_MEAN_RADIUS_KM"></a>
-### `JUPITER_MEAN_RADIUS_KM = 69911.0`
+<a name="KM_PER_AU"></a>
+### `KM_PER_AU = 1.4959787069098932e+8`
 
-**The volumetric mean radius of Jupiter, expressed in kilometers.**
+**The number of kilometers per astronomical unit.**
 
 ---
 
