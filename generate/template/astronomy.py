@@ -39,6 +39,14 @@ import re
 KM_PER_AU = 1.4959787069098932e+8   #<const> The number of kilometers per astronomical unit.
 C_AUDAY   = 173.1446326846693       #<const> The speed of light expressed in astronomical units per day.
 
+# Jupiter radius data are nominal values obtained from:
+# https://www.iau.org/static/resolutions/IAU2015_English.pdf
+# https://nssdc.gsfc.nasa.gov/planetary/factsheet/jupiterfact.html
+
+JUPITER_EQUATORIAL_RADIUS_KM = 71492.0  #<const> The equatorial radius of Jupiter, expressed in kilometers.
+JUPITER_POLAR_RADIUS_KM = 66854.0       #<const> The polar radius of Jupiter, expressed in kilometers.
+JUPITER_MEAN_RADIUS_KM = 69911.0        #<const> The volumetric mean radius of Jupiter, expressed in kilometers.
+
 _CalcMoonCount = 0
 
 _DAYS_PER_TROPICAL_YEAR = 365.24217

@@ -669,6 +669,30 @@ The calculations are performed from the point of view of a geocentric observer.
 
 * * *
 
+<a name="JUPITER_EQUATORIAL_RADIUS_KM"></a>
+
+## JUPITER\_EQUATORIAL\_RADIUS\_KM
+**Kind**: global variable  
+**Brief**: The equatorial radius of Jupiter, expressed in kilometers.  
+
+* * *
+
+<a name="JUPITER_POLAR_RADIUS_KM"></a>
+
+## JUPITER\_POLAR\_RADIUS\_KM
+**Kind**: global variable  
+**Brief**: The polar radius of Jupiter, expressed in kilometers.  
+
+* * *
+
+<a name="JUPITER_MEAN_RADIUS_KM"></a>
+
+## JUPITER\_MEAN\_RADIUS\_KM
+**Kind**: global variable  
+**Brief**: The volumetric mean radius of Jupiter, expressed in kilometers.  
+
+* * *
+
 <a name="Body"></a>
 
 ## Body : <code>enum</code>

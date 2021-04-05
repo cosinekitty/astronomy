@@ -44,6 +44,21 @@ export const DEG2RAD = 0.017453292519943296;
  * @brief The factor to convert degrees to radians = 180/pi.
  */
 export const RAD2DEG = 57.295779513082321;
+// Jupiter radius data are nominal values obtained from:
+// https://www.iau.org/static/resolutions/IAU2015_English.pdf
+// https://nssdc.gsfc.nasa.gov/planetary/factsheet/jupiterfact.html
+/**
+ * @brief The equatorial radius of Jupiter, expressed in kilometers.
+ */
+export const JUPITER_EQUATORIAL_RADIUS_KM = 71492.0;
+/**
+ * @brief The polar radius of Jupiter, expressed in kilometers.
+ */
+export const JUPITER_POLAR_RADIUS_KM = 66854.0;
+/**
+ * @brief The volumetric mean radius of Jupiter, expressed in kilometers.
+ */
+export const JUPITER_MEAN_RADIUS_KM = 69911.0;
 const DAYS_PER_TROPICAL_YEAR = 365.24217;
 const J2000 = new Date('2000-01-01T12:00:00Z');
 const PI2 = 2 * Math.PI;

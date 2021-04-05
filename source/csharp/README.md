@@ -163,6 +163,21 @@ these are used in function and type names.
 
 **The factor to convert degrees to radians = pi/180.**
 
+<a name="Astronomy.JUPITER_EQUATORIAL_RADIUS_KM"></a>
+### `const double Astronomy.JUPITER_EQUATORIAL_RADIUS_KM = 71492;`
+
+**The equatorial radius of Jupiter, expressed in kilometers.**
+
+<a name="Astronomy.JUPITER_POLAR_RADIUS_KM"></a>
+### `const double Astronomy.JUPITER_POLAR_RADIUS_KM = 66854;`
+
+**The polar radius of Jupiter, expressed in kilometers.**
+
+<a name="Astronomy.JUPITER_MEAN_RADIUS_KM"></a>
+### `const double Astronomy.JUPITER_MEAN_RADIUS_KM = 69911;`
+
+**The volumetric mean radius of Jupiter, expressed in kilometers.**
+
 <a name="functions"></a>
 ## Functions
 

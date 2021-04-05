@@ -54,6 +54,29 @@ extern "C" {
  */
 #define RAD2DEG     57.295779513082321
 
+// Jupiter radius data are nominal values obtained from:
+// https://www.iau.org/static/resolutions/IAU2015_English.pdf
+// https://nssdc.gsfc.nasa.gov/planetary/factsheet/jupiterfact.html
+
+/**
+ * \def JUPITER_EQUATORIAL_RADIUS_KM
+ * @brief The equatorial radius of Jupiter, expressed in kilometers.
+ */
+#define JUPITER_EQUATORIAL_RADIUS_KM    71492.0
+
+/**
+ * \def JUPITER_POLAR_RADIUS_KM
+ * @brief The polar radius of Jupiter, expressed in kilometers.
+ */
+#define JUPITER_POLAR_RADIUS_KM         66854.0
+
+/**
+ * \def JUPITER_MEAN_RADIUS_KM
+ * @brief The volumetric mean radius of Jupiter, expressed in kilometers.
+ */
+#define JUPITER_MEAN_RADIUS_KM          69911.0
+
+
 /*---------- types ----------*/
 
 /**

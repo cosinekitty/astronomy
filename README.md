@@ -98,6 +98,8 @@ Calculations are also verified to be identical among all the supported programmi
 
 - Predicts dates of maximum elongation for Mercury and Venus.
 
+- Calculates the positions of Jupiter's four largest moons: Io, Europa, Ganymede, and Callisto.
+
 - Converts angular and vector coordinates among the following orientations:
   - Equatorial J2000
   - Equatorial equator-of-date
@@ -146,7 +148,7 @@ of complexity. So I decided to create Astronomy Engine with the following engine
 
 - Support JavaScript, C, C#, and Python with the same algorithms, and verify them to produce identical results.
 - No external dependencies! The code must not require anything outside the standard library for each language.
-- Minified JavaScript code less than 100K. (The current size is <!--MINIFIED_SIZE-->88029 bytes.)
+- Minified JavaScript code less than 100K. (The current size is <!--MINIFIED_SIZE-->88212 bytes.)
 - Accuracy always within 1 arcminute of results from NOVAS.
 - It would be well documented, relatively easy to use, and support a wide variety of common use cases.
 

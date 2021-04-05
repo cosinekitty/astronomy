@@ -34,8 +34,8 @@
  */
 'use strict';
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.SearchPeakMagnitude = exports.SearchMaxElongation = exports.Elongation = exports.ElongationEvent = exports.Seasons = exports.SeasonInfo = exports.SearchHourAngle = exports.HourAngleEvent = exports.SearchRiseSet = exports.NextMoonQuarter = exports.SearchMoonQuarter = exports.MoonQuarter = exports.SearchMoonPhase = exports.MoonPhase = exports.SearchRelativeLongitude = exports.Illumination = exports.IlluminationInfo = exports.EclipticLongitude = exports.AngleFromSun = exports.LongitudeFromSun = exports.SearchSunLongitude = exports.Search = exports.GeoVector = exports.HelioDistance = exports.HelioVector = exports.GeoMoon = exports.Ecliptic = exports.ObserverVector = exports.Equator = exports.SunPosition = exports.Observer = exports.Horizon = exports.EclipticCoordinates = exports.HorizontalCoordinates = exports.MakeRotation = exports.RotationMatrix = exports.EquatorialCoordinates = exports.Spherical = exports.Vector = exports.CalcMoonCount = exports.MakeTime = exports.AstroTime = exports.SetDeltaTFunction = exports.DeltaT_JplHorizons = exports.DeltaT_EspenakMeeus = exports.Body = exports.AngleBetween = exports.RAD2DEG = exports.DEG2RAD = exports.KM_PER_AU = void 0;
-exports.NextTransit = exports.SearchTransit = exports.TransitInfo = exports.NextLocalSolarEclipse = exports.SearchLocalSolarEclipse = exports.LocalSolarEclipseInfo = exports.EclipseEvent = exports.NextGlobalSolarEclipse = exports.SearchGlobalSolarEclipse = exports.NextLunarEclipse = exports.GlobalSolarEclipseInfo = exports.SearchLunarEclipse = exports.LunarEclipseInfo = exports.Constellation = exports.ConstellationInfo = exports.Rotation_HOR_ECL = exports.Rotation_ECL_HOR = exports.Rotation_ECL_EQD = exports.Rotation_EQD_ECL = exports.Rotation_EQJ_HOR = exports.Rotation_HOR_EQJ = exports.Rotation_HOR_EQD = exports.Rotation_EQD_HOR = exports.Rotation_EQD_EQJ = exports.Rotation_EQJ_EQD = exports.Rotation_ECL_EQJ = exports.Rotation_EQJ_ECL = exports.RotateVector = exports.InverseRefraction = exports.Refraction = exports.VectorFromHorizon = exports.HorizonFromVector = exports.SphereFromVector = exports.EquatorFromVector = exports.VectorFromSphere = exports.Pivot = exports.IdentityMatrix = exports.CombineRotation = exports.InverseRotation = exports.NextPlanetApsis = exports.SearchPlanetApsis = exports.NextLunarApsis = exports.SearchLunarApsis = exports.Apsis = void 0;
+exports.ElongationEvent = exports.Seasons = exports.SeasonInfo = exports.SearchHourAngle = exports.HourAngleEvent = exports.SearchRiseSet = exports.NextMoonQuarter = exports.SearchMoonQuarter = exports.MoonQuarter = exports.SearchMoonPhase = exports.MoonPhase = exports.SearchRelativeLongitude = exports.Illumination = exports.IlluminationInfo = exports.EclipticLongitude = exports.AngleFromSun = exports.LongitudeFromSun = exports.SearchSunLongitude = exports.Search = exports.GeoVector = exports.HelioDistance = exports.HelioVector = exports.GeoMoon = exports.Ecliptic = exports.ObserverVector = exports.Equator = exports.SunPosition = exports.Observer = exports.Horizon = exports.EclipticCoordinates = exports.HorizontalCoordinates = exports.MakeRotation = exports.RotationMatrix = exports.EquatorialCoordinates = exports.Spherical = exports.Vector = exports.CalcMoonCount = exports.MakeTime = exports.AstroTime = exports.SetDeltaTFunction = exports.DeltaT_JplHorizons = exports.DeltaT_EspenakMeeus = exports.Body = exports.AngleBetween = exports.JUPITER_MEAN_RADIUS_KM = exports.JUPITER_POLAR_RADIUS_KM = exports.JUPITER_EQUATORIAL_RADIUS_KM = exports.RAD2DEG = exports.DEG2RAD = exports.KM_PER_AU = void 0;
+exports.NextTransit = exports.SearchTransit = exports.TransitInfo = exports.NextLocalSolarEclipse = exports.SearchLocalSolarEclipse = exports.LocalSolarEclipseInfo = exports.EclipseEvent = exports.NextGlobalSolarEclipse = exports.SearchGlobalSolarEclipse = exports.NextLunarEclipse = exports.GlobalSolarEclipseInfo = exports.SearchLunarEclipse = exports.LunarEclipseInfo = exports.Constellation = exports.ConstellationInfo = exports.Rotation_HOR_ECL = exports.Rotation_ECL_HOR = exports.Rotation_ECL_EQD = exports.Rotation_EQD_ECL = exports.Rotation_EQJ_HOR = exports.Rotation_HOR_EQJ = exports.Rotation_HOR_EQD = exports.Rotation_EQD_HOR = exports.Rotation_EQD_EQJ = exports.Rotation_EQJ_EQD = exports.Rotation_ECL_EQJ = exports.Rotation_EQJ_ECL = exports.RotateVector = exports.InverseRefraction = exports.Refraction = exports.VectorFromHorizon = exports.HorizonFromVector = exports.SphereFromVector = exports.EquatorFromVector = exports.VectorFromSphere = exports.Pivot = exports.IdentityMatrix = exports.CombineRotation = exports.InverseRotation = exports.NextPlanetApsis = exports.SearchPlanetApsis = exports.NextLunarApsis = exports.SearchLunarApsis = exports.Apsis = exports.SearchPeakMagnitude = exports.SearchMaxElongation = exports.Elongation = void 0;
 /**
  * @brief The number of kilometers per astronomical unit.
  */
@@ -48,6 +48,21 @@ exports.DEG2RAD = 0.017453292519943296;
  * @brief The factor to convert degrees to radians = 180/pi.
  */
 exports.RAD2DEG = 57.295779513082321;
+// Jupiter radius data are nominal values obtained from:
+// https://www.iau.org/static/resolutions/IAU2015_English.pdf
+// https://nssdc.gsfc.nasa.gov/planetary/factsheet/jupiterfact.html
+/**
+ * @brief The equatorial radius of Jupiter, expressed in kilometers.
+ */
+exports.JUPITER_EQUATORIAL_RADIUS_KM = 71492.0;
+/**
+ * @brief The polar radius of Jupiter, expressed in kilometers.
+ */
+exports.JUPITER_POLAR_RADIUS_KM = 66854.0;
+/**
+ * @brief The volumetric mean radius of Jupiter, expressed in kilometers.
+ */
+exports.JUPITER_MEAN_RADIUS_KM = 69911.0;
 const DAYS_PER_TROPICAL_YEAR = 365.24217;
 const J2000 = new Date('2000-01-01T12:00:00Z');
 const PI2 = 2 * Math.PI;

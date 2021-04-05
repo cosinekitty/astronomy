@@ -172,6 +172,27 @@ However, because Python defines the [angular conversion functions](https://docs.
 
 ---
 
+<a name="JUPITER_EQUATORIAL_RADIUS_KM"></a>
+### `JUPITER_EQUATORIAL_RADIUS_KM = 71492.0`
+
+**The equatorial radius of Jupiter, expressed in kilometers.**
+
+---
+
+<a name="JUPITER_POLAR_RADIUS_KM"></a>
+### `JUPITER_POLAR_RADIUS_KM = 66854.0`
+
+**The polar radius of Jupiter, expressed in kilometers.**
+
+---
+
+<a name="JUPITER_MEAN_RADIUS_KM"></a>
+### `JUPITER_MEAN_RADIUS_KM = 69911.0`
+
+**The volumetric mean radius of Jupiter, expressed in kilometers.**
+
+---
+
 <a name="classes"></a>
 ## Classes
 

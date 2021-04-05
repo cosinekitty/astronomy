@@ -2217,6 +2217,51 @@ Calculates the non-negative length of the given vector. The length is expressed 
 
 ---
 
+<a name="JUPITER_EQUATORIAL_RADIUS_KM"></a>
+### `JUPITER_EQUATORIAL_RADIUS_KM`
+
+**The equatorial radius of Jupiter, expressed in kilometers.** 
+
+
+
+```C
+#define JUPITER_EQUATORIAL_RADIUS_KM  71492.0
+```
+
+
+
+---
+
+<a name="JUPITER_MEAN_RADIUS_KM"></a>
+### `JUPITER_MEAN_RADIUS_KM`
+
+**The volumetric mean radius of Jupiter, expressed in kilometers.** 
+
+
+
+```C
+#define JUPITER_MEAN_RADIUS_KM  69911.0
+```
+
+
+
+---
+
+<a name="JUPITER_POLAR_RADIUS_KM"></a>
+### `JUPITER_POLAR_RADIUS_KM`
+
+**The polar radius of Jupiter, expressed in kilometers.** 
+
+
+
+```C
+#define JUPITER_POLAR_RADIUS_KM  66854.0
+```
+
+
+
+---
+
 <a name="KM_PER_AU"></a>
 ### `KM_PER_AU`
 

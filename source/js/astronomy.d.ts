@@ -40,6 +40,18 @@ export declare const DEG2RAD = 0.017453292519943295;
  */
 export declare const RAD2DEG = 57.29577951308232;
 /**
+ * @brief The equatorial radius of Jupiter, expressed in kilometers.
+ */
+export declare const JUPITER_EQUATORIAL_RADIUS_KM = 71492;
+/**
+ * @brief The polar radius of Jupiter, expressed in kilometers.
+ */
+export declare const JUPITER_POLAR_RADIUS_KM = 66854;
+/**
+ * @brief The volumetric mean radius of Jupiter, expressed in kilometers.
+ */
+export declare const JUPITER_MEAN_RADIUS_KM = 69911;
+/**
  * @brief Calculates the angle in degrees between two vectors.
  *
  * The angle is measured in the plane that contains both vectors.

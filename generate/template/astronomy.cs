@@ -1829,6 +1829,25 @@ $ASTRO_ADDSOL()
         /// </summary>
         public const double DEG2RAD = 0.017453292519943296;
 
+        // Jupiter radius data are nominal values obtained from:
+        // https://www.iau.org/static/resolutions/IAU2015_English.pdf
+        // https://nssdc.gsfc.nasa.gov/planetary/factsheet/jupiterfact.html
+
+        /// <summary>
+        /// The equatorial radius of Jupiter, expressed in kilometers.
+        /// </summary>
+        public const double JUPITER_EQUATORIAL_RADIUS_KM = 71492.0;
+
+        /// <summary>
+        /// The polar radius of Jupiter, expressed in kilometers.
+        /// </summary>
+        public const double JUPITER_POLAR_RADIUS_KM = 66854.0;
+
+        /// <summary>
+        /// The volumetric mean radius of Jupiter, expressed in kilometers.
+        /// </summary>
+        public const double JUPITER_MEAN_RADIUS_KM = 69911.0;
+
         private const double DAYS_PER_TROPICAL_YEAR = 365.24217;
         private const double ASEC360 = 1296000.0;
         private const double ASEC2RAD = 4.848136811095359935899141e-6;
