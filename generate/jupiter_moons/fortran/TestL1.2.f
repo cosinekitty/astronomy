@@ -67,8 +67,8 @@
          AN(i)=DSQRT(MU(i)/A0(i)**3.D0)
        end do
 
-       open(12,file='TestL1.2.res')
-       
+       open(12,file='validate.txt')
+
        write(12,*)'semi-major axes in km '
        write(12,*) axkm
        write(12,*)'mean motions in rad/day '

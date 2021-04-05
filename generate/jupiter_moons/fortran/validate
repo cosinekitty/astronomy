@@ -1,0 +1,6 @@
+#!/bin/bash
+f77 -o TestL12 TestL1.2.f || exit 1
+./TestL12 || exit 1
+diff validate.txt correct.txt || exit 1
+echo "PASS"
+exit 0
