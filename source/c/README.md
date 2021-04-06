@@ -819,6 +819,30 @@ Given a rotation matrix that performs some coordinate transform, this function r
 
 ---
 
+<a name="Astronomy_JupiterMoons"></a>
+### Astronomy_JupiterMoons(time) &#8658; [`astro_jupiter_moons_t`](#astro_jupiter_moons_t)
+
+**Calculates positions of Jupiter's largest 4 moons.** 
+
+
+
+Calculates jovicentric position vectors for Jupiter's moons Io, Europa, Ganymede, and Callisto, at the given date and time. See [`astro_jupiter_moons_t`](#astro_jupiter_moons_t) for more information about the representation of the position vectors.
+
+
+
+**Returns:**  Position vectors of Jupiter's largest 4 moons, as described above. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_time_t`](#astro_time_t) | `time` |  The date and time for which to calculate the position vectors.  | 
+
+
+
+
+---
+
 <a name="Astronomy_LongitudeFromSun"></a>
 ### Astronomy_LongitudeFromSun(body, time) &#8658; [`astro_angle_result_t`](#astro_angle_result_t)
 
@@ -2218,6 +2242,66 @@ Calculates the non-negative length of the given vector. The length is expressed 
 
 ---
 
+<a name="JM_CALLISTO"></a>
+### `JM_CALLISTO`
+
+**The array index of Jupiter's moon Callisto in the `moon` field of [`astro_jupiter_moons_t`](#astro_jupiter_moons_t).** 
+
+
+
+```C
+#define JM_CALLISTO  3
+```
+
+
+
+---
+
+<a name="JM_EUROPA"></a>
+### `JM_EUROPA`
+
+**The array index of Jupiter's moon Europa in the `moon` field of [`astro_jupiter_moons_t`](#astro_jupiter_moons_t).** 
+
+
+
+```C
+#define JM_EUROPA  1
+```
+
+
+
+---
+
+<a name="JM_GANYMEDE"></a>
+### `JM_GANYMEDE`
+
+**The array index of Jupiter's moon Ganymede in the `moon` field of [`astro_jupiter_moons_t`](#astro_jupiter_moons_t).** 
+
+
+
+```C
+#define JM_GANYMEDE  2
+```
+
+
+
+---
+
+<a name="JM_IO"></a>
+### `JM_IO`
+
+**The array index of Jupiter's moon Io in the `moon` field of [`astro_jupiter_moons_t`](#astro_jupiter_moons_t).** 
+
+
+
+```C
+#define JM_IO  0
+```
+
+
+
+---
+
 <a name="JUPITER_EQUATORIAL_RADIUS_KM"></a>
 ### `JUPITER_EQUATORIAL_RADIUS_KM`
 
@@ -2302,6 +2386,21 @@ Calculates the non-negative length of the given vector. The length is expressed 
 
 ```C
 #define MIN_BODY  BODY_MERCURY
+```
+
+
+
+---
+
+<a name="NUM_JUPITER_MOONS"></a>
+### `NUM_JUPITER_MOONS`
+
+**The number of Jupiter's moons that Astronomy Engine knows how to calculate.** 
+
+
+
+```C
+#define NUM_JUPITER_MOONS  4
 ```
 
 
@@ -2787,6 +2886,24 @@ Returned by the functions [`Astronomy_Illumination`](#Astronomy_Illumination) an
 | `double` | `phase_angle` |  The angle in degrees between the Sun and the Earth, as seen from the body. Indicates the body's phase as seen from the Earth.  |
 | `double` | `helio_dist` |  The distance between the Sun and the body at the observation time.  |
 | `double` | `ring_tilt` |  For Saturn, the tilt angle in degrees of its rings as seen from Earth. For all other bodies, 0.  |
+
+
+---
+
+<a name="astro_jupiter_moons_t"></a>
+### `astro_jupiter_moons_t`
+
+**Holds the positions of Jupiter's major 4 moons.** 
+
+
+
+The [`Astronomy_JupiterMoons`](#Astronomy_JupiterMoons) function returns this struct to report position vectors for Jupiter's largest 4 moons Io, Europa, Ganymede, and Callisto. Each vector is relative to the center of Jupiter and is oriented in the EQJ system (that is, using Earth's equator at the J2000 epoch.) The vector components are expressed in astronomical units (AU).
+
+The following integer constants may be useful for indexing into the `moon` array: [`JM_IO`](#JM_IO), [`JM_EUROPA`](#JM_EUROPA), [`JM_GANYMEDE`](#JM_GANYMEDE), [`JM_CALLISTO`](#JM_CALLISTO). 
+
+| Type | Member | Description |
+| ---- | ------ | ----------- |
+| [`astro_vector_t`](#astro_vector_t) | `moon` |  Jovicentric coordinates of each moon, as described above.  |
 
 
 ---

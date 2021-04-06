@@ -831,6 +831,56 @@ astro_time_format_t;
  */
 #define TIME_TEXT_BYTES  25
 
+/**
+ * \def NUM_JUPITER_MOONS
+ * @brief The number of Jupiter's moons that Astronomy Engine knows how to calculate.
+ */
+#define NUM_JUPITER_MOONS  4
+
+/**
+ * \def JM_IO
+ * @brief The array index of Jupiter's moon Io in the `moon` field of #astro_jupiter_moons_t.
+ */
+#define JM_IO         0
+
+/**
+ * \def JM_EUROPA
+ * @brief The array index of Jupiter's moon Europa in the `moon` field of #astro_jupiter_moons_t.
+ */
+#define JM_EUROPA     1
+
+/**
+ * \def JM_GANYMEDE
+ * @brief The array index of Jupiter's moon Ganymede in the `moon` field of #astro_jupiter_moons_t.
+ */
+#define JM_GANYMEDE   2
+
+/**
+ * \def JM_CALLISTO
+ * @brief The array index of Jupiter's moon Callisto in the `moon` field of #astro_jupiter_moons_t.
+ */
+#define JM_CALLISTO   3
+
+/**
+ * @brief Holds the positions of Jupiter's major 4 moons.
+ *
+ * The #Astronomy_JupiterMoons function returns this struct
+ * to report position vectors for Jupiter's largest 4 moons
+ * Io, Europa, Ganymede, and Callisto. Each vector is relative
+ * to the center of Jupiter and is oriented in the EQJ system
+ * (that is, using Earth's equator at the J2000 epoch.)
+ * The vector components are expressed in astronomical units (AU).
+ *
+ * The following integer constants may be useful for indexing
+ * into the `moon` array: #JM_IO, #JM_EUROPA, #JM_GANYMEDE, #JM_CALLISTO.
+ */
+typedef struct
+{
+    astro_vector_t moon[NUM_JUPITER_MOONS];     /**< Jovicentric coordinates of each moon, as described above. */
+}
+astro_jupiter_moons_t;
+
+
 /*---------- functions ----------*/
 
 void Astronomy_Reset(void);
@@ -849,6 +899,7 @@ astro_func_result_t Astronomy_HelioDistance(astro_body_t body, astro_time_t time
 astro_vector_t Astronomy_HelioVector(astro_body_t body, astro_time_t time);
 astro_vector_t Astronomy_GeoVector(astro_body_t body, astro_time_t time, astro_aberration_t aberration);
 astro_vector_t Astronomy_GeoMoon(astro_time_t time);
+astro_jupiter_moons_t Astronomy_JupiterMoons(astro_time_t time);
 
 astro_equatorial_t Astronomy_Equator(
     astro_body_t body,

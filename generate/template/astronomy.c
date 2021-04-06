@@ -1752,6 +1752,17 @@ typedef struct
     const vsop_formula_t formula[3];
 }
 vsop_model_t;
+
+typedef struct
+{
+    double mu;
+    double al[2];
+    vsop_series_t a;
+    vsop_series_t l;
+    vsop_series_t z;
+    vsop_series_t zeta;
+}
+jupiter_moon_t;
 /** @endcond */
 
 $ASTRO_C_VSOP(Mercury);
@@ -2312,6 +2323,38 @@ static astro_vector_t CalcPluto(astro_time_t time)
 }
 
 /*------------------ end Pluto integrator ------------------*/
+
+
+/*---------------------- begin Jupiter moons ----------------------*/
+
+$ASTRO_JUPITER_MOONS();
+
+/**
+ * @brief Calculates positions of Jupiter's largest 4 moons.
+ *
+ * Calculates jovicentric position vectors for Jupiter's
+ * moons Io, Europa, Ganymede, and Callisto, at the given date and time.
+ * See #astro_jupiter_moons_t for more information about the representation
+ * of the position vectors.
+ *
+ * @param time  The date and time for which to calculate the position vectors.
+ * @return Position vectors of Jupiter's largest 4 moons, as described above.
+ */
+astro_jupiter_moons_t Astronomy_JupiterMoons(astro_time_t time)
+{
+    astro_jupiter_moons_t jm;
+
+    (void)JupiterMoonModel;
+
+    jm.moon[0] = VecError(ASTRO_NOT_INITIALIZED, time);
+    jm.moon[1] = VecError(ASTRO_NOT_INITIALIZED, time);
+    jm.moon[2] = VecError(ASTRO_NOT_INITIALIZED, time);
+    jm.moon[3] = VecError(ASTRO_NOT_INITIALIZED, time);
+
+    return jm;
+}
+
+/*---------------------- end Jupiter moons ----------------------*/
 
 
 /**

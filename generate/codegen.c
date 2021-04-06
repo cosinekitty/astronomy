@@ -1522,7 +1522,6 @@ static int LoadJupiterMoonModel(jupiter_moon_model_t model[NUM_JUPITER_MOONS], c
                 series->nterms_calc = series->nterms_total = nterms;
                 series->term = &model->buffer[next_term_index];
                 next_term_index += nterms;
-                printf("moon = %d, var = %d, next_term_index = %d\n", moon, var, next_term_index);
                 if (next_term_index > MAX_JUPITER_TERMS)
                     FAIL("LoadJupiterMoonModel(%s line %d): Exhausted the term buffer!\n", filename, lnum);
             }
@@ -1541,7 +1540,49 @@ fail:
 
 static int JupiterMoons_C(cg_context_t *context, const jupiter_moon_model_t model[NUM_JUPITER_MOONS])
 {
-    return LogError(context, "JupiterMoons_C: NOT YET IMPLEMENTED.\n");
+    int moon, var, i;
+    const char *moon_name[] = { "Io", "Europa", "Ganymede", "Callisto" };
+    const char *var_name[] = { "a", "l", "z", "zeta" };
+    vsop_series_t series[4];
+
+    for (moon = 0; moon < NUM_JUPITER_MOONS; ++moon)
+    {
+        series[0] = model[moon].a;
+        series[1] = model[moon].l;
+        series[2] = model[moon].z;
+        series[3] = model[moon].zeta;
+        for (var = 0; var < NUM_JM_VARS; ++var)
+        {
+            fprintf(context->outfile, "static const vsop_term_t jm_%s_%s[] =\n", moon_name[moon], var_name[var]);
+            fprintf(context->outfile, "{\n");
+            for (i = 0; i < series->nterms_total; ++i)
+            {
+                const vsop_term_t *term = &series->term[i];
+                fprintf(context->outfile, "    { %23.16le, %23.16le, %23.16le }%s\n",
+                    term->amplitude,
+                    term->phase,
+                    term->frequency,
+                    (i + 1 < series->nterms_total) ? "," : "");
+            }
+            fprintf(context->outfile, "};\n\n");
+        }
+    }
+
+    fprintf(context->outfile, "static jupiter_moon_t JupiterMoonModel[%d] =\n", NUM_JUPITER_MOONS);
+    fprintf(context->outfile, "{\n");
+    for (moon = 0; moon < NUM_JUPITER_MOONS; ++moon)
+    {
+        series[0] = model[moon].a;
+        series[1] = model[moon].l;
+        series[2] = model[moon].z;
+        series[3] = model[moon].zeta;
+        fprintf(context->outfile, "    { %0.16le, {%0.16le, %0.16le}", model[moon].mu, model[moon].al[0], model[moon].al[1]);
+        for (var = 0; var < NUM_JM_VARS; ++var)
+            fprintf(context->outfile, ", {%d, jm_%s_%s}", series[var].nterms_total, moon_name[moon], var_name[var]);
+        fprintf(context->outfile, " }%s\n", ((moon + 1 < NUM_JUPITER_MOONS) ? "," : ""));
+    }
+    fprintf(context->outfile, "}");
+    return 0;
 }
 
 
