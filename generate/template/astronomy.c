@@ -39,6 +39,13 @@ extern "C" {
 /** @cond DOXYGEN_SKIP */
 #define PI      3.14159265358979323846
 
+typedef enum
+{
+    FROM_2000,
+    INTO_2000
+}
+precess_dir_t;
+
 typedef struct
 {
     double x;
@@ -138,14 +145,11 @@ body_state_t;
 /** @endcond */
 
 static const double DAYS_PER_TROPICAL_YEAR = 365.24217;
-static const double DEG2RAD = 0.017453292519943296;
-static const double RAD2DEG = 57.295779513082321;
 static const double ASEC360 = 1296000.0;
 static const double ASEC2RAD = 4.848136811095359935899141e-6;
 static const double PI2 = 2.0 * PI;
 static const double ARC = 3600.0 * 180.0 / PI;          /* arcseconds per radian */
 static const double C_AUDAY = 173.1446326846693;        /* speed of light in AU/day */
-static const double KM_PER_AU = 1.4959787069098932e+8;
 static const double SECONDS_PER_DAY = 24.0 * 3600.0;
 static const double SOLAR_DAYS_PER_SIDEREAL_DAY = 0.9972695717592592;
 static const double MEAN_SYNODIC_MONTH = 29.530588;     /* average number of days for Moon to return to the same phase */
@@ -196,7 +200,7 @@ static const double NEPTUNE_GM = 0.1524358900784276e-07;
 #define Y2000_IN_MJD    (T0 - MJD_BASIS)
 /** @endcond */
 
-static astro_ecliptic_t RotateEquatorialToEcliptic(const double pos[3], double obliq_radians);
+static astro_ecliptic_t RotateEquatorialToEcliptic(const double pos[3], double obliq_radians, astro_time_t time);
 static int QuadInterp(
     double tm, double dt, double fa, double fm, double fb,
     double *x, double *t, double *df_dt);
@@ -332,12 +336,6 @@ static double PlanetOrbitalPeriod(astro_body_t body)
     }
 }
 
-static void FatalError(const char *message)
-{
-    fprintf(stderr, "FATAL: %s\n", message);
-    exit(1);
-}
-
 static astro_vector_t VecError(astro_status_t status, astro_time_t time)
 {
     astro_vector_t vec;
@@ -355,9 +353,17 @@ static astro_spherical_t SphereError(astro_status_t status)
     return sphere;
 }
 
+static astro_time_t TimeError(void)
+{
+    astro_time_t time;
+    time.tt = time.ut = time.eps = time.psi = NAN;
+    return time;
+}
+
 static astro_equatorial_t EquError(astro_status_t status)
 {
     astro_equatorial_t equ;
+    equ.vec = VecError(status, TimeError());
     equ.ra = equ.dec = equ.dist = NAN;
     equ.status = status;
     return equ;
@@ -367,7 +373,7 @@ static astro_ecliptic_t EclError(astro_status_t status)
 {
     astro_ecliptic_t ecl;
     ecl.status = status;
-    ecl.ex = ecl.ey = ecl.ez = ecl.elat = ecl.elon = NAN;
+    ecl.vec = VecError(status, TimeError());
     return ecl;
 }
 
@@ -385,13 +391,6 @@ static astro_func_result_t FuncError(astro_status_t status)
     result.status = status;
     result.value = NAN;
     return result;
-}
-
-static astro_time_t TimeError(void)
-{
-    astro_time_t time;
-    time.tt = time.ut = time.eps = time.psi = NAN;
-    return time;
 }
 
 static astro_rotation_t RotationErr(astro_status_t status)
@@ -1149,19 +1148,14 @@ static void ecl2equ_vec(astro_time_t time, const double ecl[3], double equ[3])
 }
 
 
-static astro_rotation_t precession_rot(double tt1, double tt2)
+static astro_rotation_t precession_rot(astro_time_t time, precess_dir_t dir)
 {
     astro_rotation_t rotation;
     double xx, yx, zx, xy, yy, zy, xz, yz, zz;
     double t, psia, omegaa, chia, sa, ca, sb, cb, sc, cc, sd, cd;
     double eps0 = 84381.406;
 
-    if ((tt1 != 0.0) && (tt2 != 0.0))
-        FatalError("precession_rot: one of (tt1, tt2) must be zero.");
-
-    t = (tt2 - tt1) / 36525;
-    if (tt2 == 0)
-        t = -t;
+    t = time.tt / 36525;
 
     psia   = (((((-    0.0000000951  * t
                  +    0.000132851 ) * t
@@ -1205,7 +1199,7 @@ static astro_rotation_t precession_rot(double tt1, double tt2)
     yz = -sc * cb * ca - sa * cc;
     zz = -sc * cb * sa + cc * ca;
 
-    if (tt2 == 0.0)
+    if (dir == INTO_2000)
     {
         /* Perform rotation from other epoch to J2000.0. */
         rotation.rot[0][0] = xx;
@@ -1237,20 +1231,28 @@ static astro_rotation_t precession_rot(double tt1, double tt2)
 }
 
 
-static void precession(double tt1, const double pos1[3], double tt2, double pos2[3])
+static void precession(const double pos1[3], astro_time_t time, precess_dir_t dir, double pos2[3])
 {
-    astro_rotation_t r = precession_rot(tt1, tt2);
+    astro_rotation_t r = precession_rot(time, dir);
     pos2[0] = r.rot[0][0]*pos1[0] + r.rot[1][0]*pos1[1] + r.rot[2][0]*pos1[2];
     pos2[1] = r.rot[0][1]*pos1[0] + r.rot[1][1]*pos1[1] + r.rot[2][1]*pos1[2];
     pos2[2] = r.rot[0][2]*pos1[0] + r.rot[1][2]*pos1[1] + r.rot[2][2]*pos1[2];
 }
 
 
-static astro_equatorial_t vector2radec(const double pos[3])
+static astro_equatorial_t vector2radec(const double pos[3], astro_time_t time)
 {
     astro_equatorial_t equ;
     double xyproj;
 
+    /* Copy the cartesian coordinates from the input into the returned structure. */
+    equ.vec.status = ASTRO_SUCCESS;
+    equ.vec.t = time;
+    equ.vec.x = pos[0];
+    equ.vec.y = pos[1];
+    equ.vec.z = pos[2];
+
+    /* Calculate spherical coordinates: RA, DEC, distance. */
     xyproj = pos[0]*pos[0] + pos[1]*pos[1];
     equ.dist = sqrt(xyproj + pos[2]*pos[2]);
     equ.status = ASTRO_SUCCESS;
@@ -1285,7 +1287,7 @@ static astro_equatorial_t vector2radec(const double pos[3])
 }
 
 
-static astro_rotation_t nutation_rot(astro_time_t *time, int direction)
+static astro_rotation_t nutation_rot(astro_time_t *time, precess_dir_t dir)
 {
     astro_rotation_t rotation;
     earth_tilt_t tilt = e_tilt(time);
@@ -1309,9 +1311,9 @@ static astro_rotation_t nutation_rot(astro_time_t *time, int direction)
     double yz = cpsi * cobm * sobt - sobm * cobt;
     double zz = cpsi * sobm * sobt + cobm * cobt;
 
-    if (direction == 0)
+    if (dir == FROM_2000)
     {
-        /* forward rotation */
+        /* convert J2000 to of-date */
         rotation.rot[0][0] = xx;
         rotation.rot[0][1] = xy;
         rotation.rot[0][2] = xz;
@@ -1324,7 +1326,7 @@ static astro_rotation_t nutation_rot(astro_time_t *time, int direction)
     }
     else
     {
-        /* inverse rotation */
+        /* convert of-date to J2000 */
         rotation.rot[0][0] = xx;
         rotation.rot[0][1] = yx;
         rotation.rot[0][2] = zx;
@@ -1340,9 +1342,9 @@ static astro_rotation_t nutation_rot(astro_time_t *time, int direction)
     return rotation;
 }
 
-static void nutation(astro_time_t *time, int direction, const double inpos[3], double outpos[3])
+static void nutation(const double inpos[3], astro_time_t *time, precess_dir_t dir, double outpos[3])
 {
-    astro_rotation_t r = nutation_rot(time, direction);
+    astro_rotation_t r = nutation_rot(time, dir);
     outpos[0] = r.rot[0][0]*inpos[0] + r.rot[1][0]*inpos[1] + r.rot[2][0]*inpos[2];
     outpos[1] = r.rot[0][1]*inpos[0] + r.rot[1][1]*inpos[1] + r.rot[2][1]*inpos[2];
     outpos[2] = r.rot[0][2]*inpos[0] + r.rot[1][2]*inpos[1] + r.rot[2][2]*inpos[2];
@@ -1412,8 +1414,8 @@ static void geo_pos(astro_time_t *time, astro_observer_t observer, double outpos
 
     gast = sidereal_time(time);
     terra(observer, gast, pos1);
-    nutation(time, -1, pos1, pos2);
-    precession(time->tt, pos2, 0.0, outpos);
+    nutation(pos1, time, INTO_2000, pos2);
+    precession(pos2, *time, INTO_2000, outpos);
 }
 
 static void spin(double angle, const double pos1[3], double vec2[3])
@@ -1710,7 +1712,7 @@ astro_vector_t Astronomy_GeoMoon(astro_time_t time)
     ecl2equ_vec(time, gepos, mpos1);
 
     /* Convert from mean equinox of date to J2000. */
-    precession(time.tt, mpos1, 0, mpos2);
+    precession(mpos1, time, INTO_2000, mpos2);
 
     vector.status = ASTRO_SUCCESS;
     vector.x = mpos2[0];
@@ -2571,6 +2573,7 @@ finished:
  * @param observer      A location on or near the surface of the Earth.
  * @param equdate       Selects the date of the Earth's equator in which to express the equatorial coordinates.
  * @param aberration    Selects whether or not to correct for aberration.
+ * @return              Topocentric equatorial coordinates of the celestial body.
  */
 astro_equatorial_t Astronomy_Equator(
     astro_body_t body,
@@ -2586,11 +2589,15 @@ astro_equatorial_t Astronomy_Equator(
     double temp[3];
     double datevect[3];
 
+    /* Calculate the geocentric location of the observer. */
     geo_pos(time, observer, gc_observer);
+
+    /* Calculate the geocentric location of the body. */
     gc = Astronomy_GeoVector(body, *time, aberration);
     if (gc.status != ASTRO_SUCCESS)
         return EquError(gc.status);
 
+    /* Convert geocentric coordinates to topocentric coordinates. */
     j2000[0] = gc.x - gc_observer[0];
     j2000[1] = gc.y - gc_observer[1];
     j2000[2] = gc.z - gc_observer[2];
@@ -2598,19 +2605,91 @@ astro_equatorial_t Astronomy_Equator(
     switch (equdate)
     {
     case EQUATOR_OF_DATE:
-        precession(0.0, j2000, time->tt, temp);
-        nutation(time, 0, temp, datevect);
-        equ = vector2radec(datevect);
+        precession(j2000, *time, FROM_2000, temp);
+        nutation(temp, time, FROM_2000, datevect);
+        equ = vector2radec(datevect, *time);
         return equ;
 
     case EQUATOR_J2000:
-        equ = vector2radec(j2000);
+        equ = vector2radec(j2000, *time);
         return equ;
 
     default:
         return EquError(ASTRO_INVALID_PARAMETER);
     }
 }
+
+/**
+ * @brief Calculates geocentric equatorial coordinates of an observer on the surface of the Earth.
+ *
+ * This function calculates a vector from the center of the Earth to
+ * a point on or near the surface of the Earth, expressed in equatorial
+ * coordinates. It takes into account the rotation of the Earth at the given
+ * time, along with the given latitude, longitude, and elevation of the observer.
+ *
+ * The caller may pass a value in `equdate` to select either `EQUATOR_J2000`
+ * for using J2000 coordinates, or `EQUATOR_OF_DATE` for using coordinates relative
+ * to the Earth's equator at the specified time.
+ *
+ * The returned vector has components expressed in astronomical units (AU).
+ * To convert to kilometers, multiply the `x`, `y`, and `z` values by
+ * the constant value #KM_PER_AU.
+ *
+ * @param time
+ *      The date and time for which to calculate the observer's position vector.
+ *
+ * @param observer
+ *      The geographic location of a point on or near the surface of the Earth.
+ *
+ * @param equdate
+ *      Selects the date of the Earth's equator in which to express the equatorial coordinates.
+ *      The caller may select `EQUATOR_J2000` to use the orientation of the Earth's equator
+ *      at noon UTC on January 1, 2000, in which case this function corrects for precession
+ *      and nutation of the Earth as it was at the moment specified by the `time` parameter.
+ *      Or the caller may select `EQUATOR_OF_DATE` to use the Earth's equator at `time`
+ *      as the orientation.
+ *
+ * @return
+ *      If successful, the returned vector holds `ASTRO_SUCCESS` in its `status` field,
+ *      and is an equatorial vector from the center of the Earth to the specified location
+ *      on (or near) the Earth's surface. Otherwise, `status` holds an error code.
+ */
+astro_vector_t Astronomy_ObserverVector(
+    astro_time_t *time,
+    astro_observer_t observer,
+    astro_equator_date_t equdate)
+{
+    astro_vector_t vec;
+    double gast, pos[3], temp[3];
+
+    gast = sidereal_time(time);
+    terra(observer, gast, pos);
+
+    switch (equdate)
+    {
+    case EQUATOR_OF_DATE:
+        /* 'pos' already contains equator-of-date coordinates. */
+        break;
+
+    case EQUATOR_J2000:
+        /* Convert 'pos' from equator-of-date to J2000. */
+        nutation(pos, time, INTO_2000, temp);
+        precession(temp, *time, INTO_2000, pos);
+        break;
+
+    default:
+        /* This is not a valid value of the 'equdate' parameter. */
+        return VecError(ASTRO_INVALID_PARAMETER, *time);
+    }
+
+    vec.x = pos[0];
+    vec.y = pos[1];
+    vec.z = pos[2];
+    vec.t = *time;
+    vec.status = ASTRO_SUCCESS;
+    return vec;
+}
+
 
 /**
  * @brief Calculates the apparent location of a body relative to the local horizon of an observer on the Earth.
@@ -2734,14 +2813,14 @@ astro_horizon_t Astronomy_Horizon(
         vectors to obtain the cartesian coordinates of the body in
         the observer's horizontal orientation system.
 
-        pz = zenith component [-1, +1]
         pn = north  component [-1, +1]
         pw = west   component [-1, +1]
+        pz = zenith component [-1, +1]
     */
 
-    pz = p[0]*uz[0] + p[1]*uz[1] + p[2]*uz[2];
     pn = p[0]*un[0] + p[1]*un[1] + p[2]*un[2];
     pw = p[0]*uw[0] + p[1]*uw[1] + p[2]*uw[2];
+    pz = p[0]*uz[0] + p[1]*uz[1] + p[2]*uz[2];
 
     /* proj is the "shadow" of the body vector along the observer's flat ground. */
     proj = sqrt(pn*pn + pw*pw);
@@ -2852,12 +2931,12 @@ astro_ecliptic_t Astronomy_SunPosition(astro_time_t time)
     sun2000[2] = -earth2000.z;
 
     /* Convert to equatorial Cartesian coordinates of date. */
-    precession(0.0, sun2000, adjusted_time.tt, stemp);
-    nutation(&adjusted_time, 0, stemp, sun_ofdate);
+    precession(sun2000, adjusted_time, FROM_2000, stemp);
+    nutation(stemp, &adjusted_time, FROM_2000, sun_ofdate);
 
     /* Convert equatorial coordinates to ecliptic coordinates. */
     true_obliq = DEG2RAD * e_tilt(&adjusted_time).tobl;
-    return RotateEquatorialToEcliptic(sun_ofdate, true_obliq);
+    return RotateEquatorialToEcliptic(sun_ofdate, true_obliq, time);
 }
 
 /**
@@ -2887,7 +2966,7 @@ astro_ecliptic_t Astronomy_Ecliptic(astro_vector_t equ)
     pos[1] = equ.y;
     pos[2] = equ.z;
 
-    return RotateEquatorialToEcliptic(pos, ob2000);
+    return RotateEquatorialToEcliptic(pos, ob2000, equ.t);
 }
 
 /**
@@ -2928,7 +3007,7 @@ astro_angle_result_t Astronomy_EclipticLongitude(astro_body_t body, astro_time_t
     return result;
 }
 
-static astro_ecliptic_t RotateEquatorialToEcliptic(const double pos[3], double obliq_radians)
+static astro_ecliptic_t RotateEquatorialToEcliptic(const double pos[3], double obliq_radians, astro_time_t time)
 {
     astro_ecliptic_t ecl;
     double cos_ob, sin_ob;
@@ -2937,21 +3016,23 @@ static astro_ecliptic_t RotateEquatorialToEcliptic(const double pos[3], double o
     cos_ob = cos(obliq_radians);
     sin_ob = sin(obliq_radians);
 
-    ecl.ex = +pos[0];
-    ecl.ey = +pos[1]*cos_ob + pos[2]*sin_ob;
-    ecl.ez = -pos[1]*sin_ob + pos[2]*cos_ob;
+    ecl.vec.status = ASTRO_SUCCESS;
+    ecl.vec.t = time;
+    ecl.vec.x = +pos[0];
+    ecl.vec.y = +pos[1]*cos_ob + pos[2]*sin_ob;
+    ecl.vec.z = -pos[1]*sin_ob + pos[2]*cos_ob;
 
-    xyproj = sqrt(ecl.ex*ecl.ex + ecl.ey*ecl.ey);
+    xyproj = sqrt(ecl.vec.x*ecl.vec.x + ecl.vec.y*ecl.vec.y);
     if (xyproj > 0.0)
     {
-        ecl.elon = RAD2DEG * atan2(ecl.ey, ecl.ex);
+        ecl.elon = RAD2DEG * atan2(ecl.vec.y, ecl.vec.x);
         if (ecl.elon < 0.0)
             ecl.elon += 360.0;
     }
     else
         ecl.elon = 0.0;
 
-    ecl.elat = RAD2DEG * atan2(ecl.ez, xyproj);
+    ecl.elat = RAD2DEG * atan2(ecl.vec.z, xyproj);
     ecl.status = ASTRO_SUCCESS;
     return ecl;
 }
@@ -5314,6 +5395,112 @@ astro_rotation_t Astronomy_CombineRotation(astro_rotation_t a, astro_rotation_t 
 }
 
 /**
+ * @brief Creates an identity rotation matrix.
+ *
+ * Returns a rotation matrix that has no effect on orientation.
+ * This matrix can be the starting point for other operations,
+ * such as using a series of calls to #Astronomy_Pivot to
+ * create a custom rotation matrix.
+ *
+ * @return
+ *      The identity matrix.
+ */
+astro_rotation_t Astronomy_IdentityMatrix(void)
+{
+    astro_rotation_t r;
+
+    r.rot[0][0] = 1.0;  r.rot[1][0] = 0.0;  r.rot[2][0] = 0.0;
+    r.rot[0][1] = 0.0;  r.rot[1][1] = 1.0;  r.rot[2][1] = 0.0;
+    r.rot[0][2] = 0.0;  r.rot[1][2] = 0.0;  r.rot[2][2] = 1.0;
+
+    r.status = ASTRO_SUCCESS;
+
+    return r;
+}
+
+/**
+ * @brief Re-orients a rotation matrix by pivoting it by an angle around one of its axes.
+ *
+ * Given a rotation matrix, a selected coordinate axis, and an angle in degrees,
+ * this function pivots the rotation matrix by that angle around that coordinate axis.
+ *
+ * For example, if you have rotation matrix that converts ecliptic coordinates (ECL)
+ * to horizontal coordinates (HOR), but you really want to convert ECL to the orientation
+ * of a telescope camera pointed at a given body, you can use `Astronomy_Pivot` twice:
+ * (1) pivot around the zenith axis by the body's azimuth, then (2) pivot around the
+ * western axis by the body's altitude angle. The resulting rotation matrix will then
+ * reorient ECL coordinates to the orientation of your telescope camera.
+ *
+ * @param rotation
+ *      The input rotation matrix.
+ *
+ * @param axis
+ *      An integer that selects which coordinate axis to rotate around:
+ *      0 = x, 1 = y, 2 = z. Any other value will fail with the error code
+ *      `ASTRO_INVALID_PARAMETER` in the `status` field of the return value.
+ *
+ * @param angle
+ *      An angle in degrees indicating the amount of rotation around the specified axis.
+ *      Positive angles indicate rotation counterclockwise as seen from the positive
+ *      direction along that axis, looking towards the origin point of the orientation system.
+ *      If `angle` is NAN or infinite, the function will fail with the error code
+ *      `ASTRO_INVALID_PARAMETER`. Any finite number of degrees is allowed, but best
+ *      precision will result from keeping `angle` in the range [-360, +360].
+ *
+ * @return
+ *      If successful, the return value will have `ASTRO_SUCCESS` in the `status`
+ *      field, along with a pivoted rotation matrix. Otherwise, `status` holds
+ *      an appropriate error code and the rotation matrix is invalid.
+ */
+astro_rotation_t Astronomy_Pivot(astro_rotation_t rotation, int axis, double angle)
+{
+    astro_rotation_t p;
+    double radians, c, s;
+    int i, j, k;
+
+    /* Check for an invalid input matrix. */
+    if (rotation.status != ASTRO_SUCCESS)
+        return RotationErr(ASTRO_INVALID_PARAMETER);
+
+    /* Check for an invalid coordinate axis. */
+    if (axis < 0 || axis > 2)
+        return RotationErr(ASTRO_INVALID_PARAMETER);
+
+    /* Check for an invalid angle value. */
+    if (!isfinite(angle))
+        return RotationErr(ASTRO_INVALID_PARAMETER);
+
+    radians = angle * DEG2RAD;
+    c = cos(radians);
+    s = sin(radians);
+
+    /*
+        We need to maintain the "right-hand" rule, no matter which
+        axis was selected. That means we pick (i, j, k) axis order
+        such that the following vector cross product is satisfied:
+        i x j = k
+    */
+    i = (axis + 1) % 3;
+    j = (axis + 2) % 3;
+    k = axis;
+
+    p.rot[i][i] = c*rotation.rot[i][i] - s*rotation.rot[i][j];
+    p.rot[i][j] = s*rotation.rot[i][i] + c*rotation.rot[i][j];
+    p.rot[i][k] = rotation.rot[i][k];
+
+    p.rot[j][i] = c*rotation.rot[j][i] - s*rotation.rot[j][j];
+    p.rot[j][j] = s*rotation.rot[j][i] + c*rotation.rot[j][j];
+    p.rot[j][k] = rotation.rot[j][k];
+
+    p.rot[k][i] = c*rotation.rot[k][i] - s*rotation.rot[k][j];
+    p.rot[k][j] = s*rotation.rot[k][i] + c*rotation.rot[k][j];
+    p.rot[k][k] = rotation.rot[k][k];
+
+    p.status = ASTRO_SUCCESS;
+    return p;
+}
+
+/**
  * @brief Converts spherical coordinates to Cartesian coordinates.
  *
  * Given spherical coordinates and a time at which they are valid,
@@ -5396,36 +5583,6 @@ astro_spherical_t Astronomy_SphereFromVector(astro_vector_t vector)
 
 /**
  * @brief
- *      Given angular equatorial coordinates in `equ`, calculates equatorial vector.
- *
- * @param equ
- *      Angular equatorial coordinates to be converted to a vector.
- *
- * @param time
- *      The date and time of the observation. This is needed because the returned
- *      vector requires a valid time value when passed to certain other functions.
- *
- * @return
- *      A vector in the equatorial system.
- */
-astro_vector_t Astronomy_VectorFromEquator(astro_equatorial_t equ, astro_time_t time)
-{
-    astro_spherical_t sphere;
-
-    if (equ.status != ASTRO_SUCCESS)
-        return VecError(ASTRO_INVALID_PARAMETER, time);
-
-    sphere.status = ASTRO_SUCCESS;
-    sphere.lat = equ.dec;
-    sphere.lon = 15.0 * equ.ra;     /* convert sidereal hours to degrees */
-    sphere.dist = equ.dist;
-
-    return Astronomy_VectorFromSphere(sphere, time);
-}
-
-
-/**
- * @brief
  *      Given an equatorial vector, calculates equatorial angular coordinates.
  *
  * @param vector
@@ -5447,6 +5604,7 @@ astro_equatorial_t Astronomy_EquatorFromVector(astro_vector_t vector)
     equ.dec = sphere.lat;
     equ.ra = sphere.lon / 15.0;     /* convert degrees to sidereal hours */
     equ.dist = sphere.dist;
+    equ.vec = vector;
 
     return equ;
 }
@@ -5759,8 +5917,8 @@ astro_rotation_t Astronomy_Rotation_EQJ_EQD(astro_time_t time)
 {
     astro_rotation_t prec, nut;
 
-    prec = precession_rot(0.0, time.tt);
-    nut = nutation_rot(&time, 0);
+    prec = precession_rot(time, FROM_2000);
+    nut = nutation_rot(&time, FROM_2000);
     return Astronomy_CombineRotation(prec, nut);
 }
 
@@ -5783,8 +5941,8 @@ astro_rotation_t Astronomy_Rotation_EQD_EQJ(astro_time_t time)
 {
     astro_rotation_t prec, nut;
 
-    nut = nutation_rot(&time, 1);
-    prec = precession_rot(time.tt, 0.0);
+    nut = nutation_rot(&time, INTO_2000);
+    prec = precession_rot(time, INTO_2000);
     return Astronomy_CombineRotation(nut, prec);
 }
 
@@ -6076,7 +6234,8 @@ astro_constellation_t Astronomy_Constellation(double ra, double dec)
     static astro_time_t epoch2000;
     static astro_rotation_t rot = { ASTRO_NOT_INITIALIZED };
     astro_constellation_t constel;
-    astro_equatorial_t j2000, b1875;
+    astro_spherical_t s2000;
+    astro_equatorial_t b1875;
     astro_vector_t vec2000, vec1875;
     int i, c;
 
@@ -6113,11 +6272,11 @@ astro_constellation_t Astronomy_Constellation(double ra, double dec)
     }
 
     /* Convert coordinates from J2000 to year 1875. */
-    j2000.status = ASTRO_SUCCESS;
-    j2000.ra = ra;
-    j2000.dec = dec;
-    j2000.dist = 1.0;
-    vec2000 = Astronomy_VectorFromEquator(j2000, epoch2000);
+    s2000.status = ASTRO_SUCCESS;
+    s2000.lon = ra * 15.0;
+    s2000.lat = dec;
+    s2000.dist = 1.0;
+    vec2000 = Astronomy_VectorFromSphere(s2000, epoch2000);
     if (vec2000.status != ASTRO_SUCCESS)
         return ConstelErr(vec2000.status);
 
@@ -7338,7 +7497,7 @@ astro_transit_t Astronomy_NextTransit(astro_body_t body, astro_time_t prevTransi
  *
  * Astronomy Engine uses dynamic memory allocation in only one place:
  * it makes calculation of Pluto's orbit more efficient by caching 11 KB
- * segments recycling them. To force purging this cache and
+ * segments and recycling them. To force purging this cache and
  * freeing all the dynamic memory, you can call this function at any time.
  * It is always safe to call, although it will slow down the very next
  * calculation of Pluto's position for a nearby time value.

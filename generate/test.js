@@ -66,7 +66,7 @@ function AstroCheck() {
     while (date.tt < stop.tt) {
         time = Astronomy.MakeTime(date);
 
-        for (body of Astronomy.Bodies) {
+        for (body in Astronomy.Body) {
             if (body !== 'Moon') {
                 pos = Astronomy.HelioVector(body, date);
                 console.log(`v ${body} ${pos.t.tt.toFixed(16)} ${pos.x.toFixed(16)} ${pos.y.toFixed(16)} ${pos.z.toFixed(16)}`);
@@ -1177,6 +1177,25 @@ function Rotation() {
         }
     }
 
+    function CompareVectors(caller, a, b, tolerance) {
+        let diff;
+
+        diff = abs(a.x - b.x);
+        if (diff > tolerance) {
+            throw `ERROR(${caller}): vector x = ${a.x}, expected ${b.x}, diff ${diff}`;
+        }
+
+        diff = abs(a.y - b.y);
+        if (diff > tolerance) {
+            throw `ERROR(${caller}): vector y = ${a.y}, expected ${b.y}, diff ${diff}`;
+        }
+
+        diff = abs(a.z - b.z);
+        if (diff > tolerance) {
+            throw `ERROR(${caller}): vector z = ${a.z}, expected ${b.z}, diff ${diff}`;
+        }
+    }
+
     function Rotation_MatrixInverse() {
         const a = Astronomy.MakeRotation([
             [1, 4, 7],
@@ -1232,14 +1251,14 @@ function Rotation() {
         const ev = Astronomy.HelioVector('Earth', time);
 
         /* Use the existing Astronomy.Ecliptic() to calculate ecliptic vector and angles. */
-        const ecl = Astronomy.Ecliptic(ev.x, ev.y, ev.z);
-        if (Verbose) console.log(`JS Test_EQJ_ECL ecl = (${ecl.ex}, ${ecl.ey}, ${ecl.ez})`);
+        const ecl = Astronomy.Ecliptic(ev);
+        if (Verbose) console.log(`JS Test_EQJ_ECL ecl = (${ecl.vec.x}, ${ecl.vec.y}, ${ecl.vec.z})`);
 
         /* Now compute the same vector via rotation matrix. */
         const ee = Astronomy.RotateVector(r, ev);
-        const dx = ee.x - ecl.ex;
-        const dy = ee.y - ecl.ey;
-        const dz = ee.z - ecl.ez;
+        const dx = ee.x - ecl.vec.x;
+        const dy = ee.y - ecl.vec.y;
+        const dz = ee.z - ecl.vec.z;
         const diff = sqrt(dx*dx + dy*dy + dz*dz);
         if (Verbose) console.log(`JS Test_EQJ_ECL ee = (${ee.x}, ${ee.y}, ${ee.z}); diff = ${diff}`);
         if (diff > 2.0e-15)
@@ -1263,7 +1282,7 @@ function Rotation() {
         const eqdate = Astronomy.Equator(body, time, observer, true, true);
 
         /* Convert EQJ spherical coordinates to vector. */
-        const v2000 = Astronomy.VectorFromEquator(eq2000, time);
+        const v2000 = eq2000.vec;
 
         /* Find rotation matrix. */
         const r = Astronomy.Rotation_EQJ_EQD(time);
@@ -1300,7 +1319,7 @@ function Rotation() {
         const hor = Astronomy.Horizon(time, observer, eqd.ra, eqd.dec, 'normal');
 
         /* Calculate the position of the body as an equatorial vector of date. */
-        const vec_eqd = Astronomy.VectorFromEquator(eqd, time);
+        const vec_eqd = eqd.vec;
 
         /* Calculate rotation matrix to convert equatorial J2000 vector to horizontal vector. */
         const rot = Astronomy.Rotation_EQD_HOR(time, observer);
@@ -1334,7 +1353,7 @@ function Rotation() {
 
         /* Exercise HOR to EQJ translation. */
         const eqj = Astronomy.Equator(body, time, observer, false, true);
-        const vec_eqj = Astronomy.VectorFromEquator(eqj, time);
+        const vec_eqj = eqj.vec;
         const yrot = Astronomy.Rotation_HOR_EQJ(time, observer);
         const check_eqj = Astronomy.RotateVector(yrot, vec_hor);
         diff = VectorDiff(check_eqj, vec_eqj);
@@ -1351,7 +1370,7 @@ function Rotation() {
             throw 'Test_EQD_HOR: EXCESSIVE EQJ INVERSE HORIZONTAL ERROR.';
     }
 
-    const IdentityMatrix = Astronomy.MakeRotation([[1, 0, 0], [0, 1, 0], [0, 0, 1]]);
+    const IdentityMatrix = Astronomy.IdentityMatrix();
 
     function CheckInverse(aname, bname, arot, brot) {
         const crot = Astronomy.CombineRotation(arot, brot);
@@ -1420,8 +1439,52 @@ function Rotation() {
        if (Verbose) console.log('JS Test_RotRoundTrip: PASS');
     }
 
+    function Rotation_Pivot() {
+        const tolerance = 1.0e-15;
+
+        /* Test #1 */
+
+        /* Start with an identity matrix. */
+        const ident = Astronomy.IdentityMatrix();
+
+        /* Pivot 90 degrees counterclockwise around the z-axis. */
+        let r = Astronomy.Pivot(ident, 2, +90.0);
+
+        /* Put the expected answer in 'a'. */
+        const a = Astronomy.MakeRotation([
+            [ 0, +1,  0],
+            [-1,  0,  0],
+            [ 0,  0, +1],
+        ]);
+
+        /* Compare actual 'r' with expected 'a'. */
+        CompareMatrices('Rotation_Pivot #1', r, a, tolerance);
+
+        /* Test #2. */
+
+        /* Pivot again, -30 degrees around the x-axis. */
+        r = Astronomy.Pivot(r, 0, -30.0);
+
+        /* Pivot a third time, 180 degrees around the y-axis. */
+        r = Astronomy.Pivot(r, 1, +180.0);
+
+        /* Use the 'r' matrix to rotate a vector. */
+        const v1 = new Astronomy.Vector(1, 2, 3, Astronomy.MakeTime(0));
+
+        const v2 = Astronomy.RotateVector(r, v1);
+
+        /* Initialize the expected vector 've'. */
+        const ve = new Astronomy.Vector(+2.0, +2.3660254037844390, -2.0980762113533156, v1.t);
+
+        CompareVectors('Rotation_Pivot #2', v2, ve, tolerance);
+
+        if (Verbose) console.log('JS Rotation_Pivot: PASS');
+    }
+
+
     Rotation_MatrixInverse();
     Rotation_MatrixMultiply();
+    Rotation_Pivot();
     Test_EQJ_ECL();
 
     Test_EQJ_EQD('Mercury');
@@ -1745,9 +1808,67 @@ function PlutoCheck() {
 }
 
 
+function GeoidTestCase(time, observer, ofdate) {
+    let topo_moon = Astronomy.Equator(Astronomy.Body.Moon, time, observer, ofdate, false);
+    let surface = Astronomy.ObserverVector(time, observer, ofdate);
+    let geo_moon = Astronomy.GeoVector(Astronomy.Body.Moon, time, false);
+
+    if (ofdate) {
+        // GeoVector() returns J2000 coordinates. Convert to equator-of-date coordinates.
+        const rot = Astronomy.Rotation_EQJ_EQD(time);
+        geo_moon = Astronomy.RotateVector(rot, geo_moon);
+    }
+
+    const dx = Astronomy.KM_PER_AU * v((geo_moon.x - surface.x) - topo_moon.vec.x);
+    const dy = Astronomy.KM_PER_AU * v((geo_moon.y - surface.y) - topo_moon.vec.y);
+    const dz = Astronomy.KM_PER_AU * v((geo_moon.z - surface.z) - topo_moon.vec.z);
+    const diff = sqrt(dx*dx + dy*dy + dz*dz);
+    if (Verbose) console.log(`JS GeoidTestCase: ofdate=${ofdate}, time=${time.toISOString()}, lat=${observer.latitude}, lon=${observer.longitude}, ht=${observer.height}, surface=(${Astronomy.KM_PER_AU * surface.x}, ${Astronomy.KM_PER_AU * surface.y}, ${Astronomy.KM_PER_AU * surface.z}), diff = ${diff} km`);
+
+    // Require 1 millimeter accuracy! (one millionth of a kilometer).
+    if (diff > 1.0e-6) {
+        console.error('JS GeoidTestCase: EXCESSIVE POSITION ERROR.');
+        return 1;
+    }
+    return 0;
+}
+
+
+
+function Geoid() {
+    const time_list = [
+        new Date('1066-09-27T18:00:00Z'),
+        new Date('1970-12-13T15:42:00Z'),
+        new Date('1970-12-13T15:43:00Z'),
+        new Date('2015-03-05T02:15:45Z')
+    ];
+
+    const observer_list = [
+        new Astronomy.Observer( +1.5,   +2.7,    7.4),
+        new Astronomy.Observer(-53.7, +141.7, +100.0),
+        new Astronomy.Observer(+30.0,  -85.2,  -50.0),
+        new Astronomy.Observer(+90.0,  +45.0,  -50.0),
+        new Astronomy.Observer(-90.0, -180.0,    0.0)
+    ];
+
+    // Test a variety of times and locations, in both supported orientation systems.
+
+    for (let observer of observer_list) {
+        for (let time of time_list) {
+            if (0 != GeoidTestCase(time, observer, false)) return 1;
+            if (0 != GeoidTestCase(time, observer, true))  return 1;
+        }
+    }
+
+    console.log('JS GeoidTest: PASS');
+    return 0;
+}
+
+
 const UnitTests = {
     constellation:          Constellation,
     elongation:             Elongation,
+    geoid:                  Geoid,
     global_solar_eclipse:   GlobalSolarEclipse,
     local_solar_eclipse:    LocalSolarEclipse,
     lunar_apsis:            LunarApsis,

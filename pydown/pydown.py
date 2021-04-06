@@ -34,7 +34,7 @@ def HtmlEscape(text):
     return text
 
 def SymbolLink(name):
-    # Special case: Search and related functions have return type = "Time or `None`"
+    # Special case: Search() and related functions have return type = "Time or `None`"
     m = re.match(r'^\s*([a-zA-Z0-9_]+)\s+or\s+`None`\s*$', name)
     if m:
         return SymbolLink(m.group(1)) + ' or `None`'
@@ -264,7 +264,7 @@ def MdErrType(c):
         Fail('No documentation for exception class ' + c.__name__)
     return md
 
-def Markdown(module):
+def Markdown(module, const_md):
     md = ''
     funclist = []
     classlist = []
@@ -285,6 +285,19 @@ def Markdown(module):
                 pass # ignore other modules pulled in
             else:
                 print('pydown.py WARNING: ignoring', name)
+
+    md += '---\n'
+    md += '\n'
+    md += '<a name="constants"></a>\n'
+    md += '## Constants\n'
+    md += 'The following numeric constants are exported by the `astronomy` module.\n'
+    md += 'They may be of use for unit conversion.\n'
+    md += 'Note: For the other supported programming languages, Astronomy Engine defines\n'
+    md += 'helper constants `DEG2RAD` and `RAD2DEG` to convert between angular degrees and radians.\n'
+    md += 'However, because Python defines the [angular conversion functions](https://docs.python.org/3/library/math.html#angular-conversion)\n'
+    md += '`math.degrees()` and `math.radians()`, they are not needed in the Python version.\n'
+    md += '\n'
+    md += const_md
 
     md += '---\n'
     md += '\n'
@@ -324,6 +337,25 @@ def Markdown(module):
 
     return md
 
+
+def ConstantsMd(inPythonFileName):
+    md = ''
+    with open(inPythonFileName) as infile:
+        for line in infile:
+            parts = line.split('#<const>')
+            if len(parts) == 2:
+                code = parts[0].strip()
+                doc = parts[1].strip()
+                tokens = code.split()
+                if len(tokens) >= 3 and tokens[1] == '=':
+                    symbol = tokens[0]
+                    md += '\n---\n\n'
+                    md += '<a name="{}"></a>\n'.format(symbol)
+                    md += '### `{}`\n\n'.format(code)
+                    md += '**{}**\n\n'.format(doc)
+    return md
+
+
 def main():
     if len(sys.argv) != 4:
         return PrintUsage()
@@ -341,7 +373,8 @@ def main():
         prefix = infile.read()
 
     module = LoadModule(inPythonFileName)
-    md = Markdown(module)
+    const_md = ConstantsMd(inPythonFileName)
+    md = Markdown(module, const_md)
 
     with open(outMarkdownFileName, 'wt') as outfile:
         outfile.write(prefix)

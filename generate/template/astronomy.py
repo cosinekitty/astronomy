@@ -36,6 +36,9 @@ import datetime
 import enum
 import re
 
+KM_PER_AU = 1.4959787069098932e+8   #<const> The number of kilometers per astronomical unit.
+C_AUDAY   = 173.1446326846693       #<const> The speed of light expressed in astronomical units per day.
+
 _CalcMoonCount = 0
 
 _DAYS_PER_TROPICAL_YEAR = 365.24217
@@ -44,9 +47,7 @@ _EPOCH = datetime.datetime(2000, 1, 1, 12)
 _ASEC360 = 1296000.0
 _ASEC2RAD = 4.848136811095359935899141e-6
 _ARC = 3600.0 * 180.0 / math.pi     # arcseconds per radian
-_C_AUDAY = 173.1446326846693        # speed of light in AU/day
-_KM_PER_AU = 1.4959787069098932e+8
-_METERS_PER_AU = _KM_PER_AU * 1000.0
+_METERS_PER_AU = KM_PER_AU * 1000.0
 _ANGVEL = 7.2921150e-5
 _SECONDS_PER_DAY = 24.0 * 3600.0
 _SOLAR_DAYS_PER_SIDEREAL_DAY = 0.9972695717592592
@@ -56,11 +57,11 @@ _NEPTUNE_ORBITAL_PERIOD = 60189.0
 _REFRACTION_NEAR_HORIZON = 34.0 / 60.0
 
 _SUN_RADIUS_KM = 695700.0
-_SUN_RADIUS_AU  = _SUN_RADIUS_KM / _KM_PER_AU
+_SUN_RADIUS_AU  = _SUN_RADIUS_KM / KM_PER_AU
 
 _EARTH_FLATTENING = 0.996647180302104
 _EARTH_EQUATORIAL_RADIUS_KM = 6378.1366
-_EARTH_EQUATORIAL_RADIUS_AU = _EARTH_EQUATORIAL_RADIUS_KM / _KM_PER_AU
+_EARTH_EQUATORIAL_RADIUS_AU = _EARTH_EQUATORIAL_RADIUS_KM / KM_PER_AU
 _EARTH_MEAN_RADIUS_KM = 6371.0      # mean radius of the Earth's geoid, without atmosphere
 _EARTH_ATMOSPHERE_KM = 88.0         # effective atmosphere thickness for lunar eclipses
 _EARTH_ECLIPSE_RADIUS_KM = _EARTH_MEAN_RADIUS_KM + _EARTH_ATMOSPHERE_KM
@@ -68,7 +69,7 @@ _EARTH_ECLIPSE_RADIUS_KM = _EARTH_MEAN_RADIUS_KM + _EARTH_ATMOSPHERE_KM
 _MOON_EQUATORIAL_RADIUS_KM = 1738.1
 _MOON_MEAN_RADIUS_KM       = 1737.4
 _MOON_POLAR_RADIUS_KM      = 1736.0
-_MOON_EQUATORIAL_RADIUS_AU = (_MOON_EQUATORIAL_RADIUS_KM / _KM_PER_AU)
+_MOON_EQUATORIAL_RADIUS_AU = (_MOON_EQUATORIAL_RADIUS_KM / KM_PER_AU)
 
 _ASEC180 = 180.0 * 60.0 * 60.0
 _AU_PER_PARSEC = _ASEC180 / math.pi
@@ -92,6 +93,10 @@ _SATURN_GM  = 0.8459715185680659e-07
 _URANUS_GM  = 0.1292024916781969e-07
 _NEPTUNE_GM = 0.1524358900784276e-07
 
+@enum.unique
+class _PrecessDir(enum.Enum):
+    From2000 = 0
+    Into2000 = 1
 
 def _LongitudeOffset(diff):
     offset = diff
@@ -547,9 +552,9 @@ class Time:
         in the calling object.
 
         More precisely, the result's Universal Time field `ut` is exactly adjusted by `days`
-        and the Terrestrial Time field `tt` is adjusted correctly for the resulting UTC date and time,
-        according to the historical and predictive Delta-T model provided by the
-        [United States Naval Observatory](http://maia.usno.navy.mil/ser7/).
+        and the Terrestrial Time field `tt` is adjusted for the resulting UTC date and time,
+        using a best-fit piecewise polynomial model devised by
+        [Espenak and Meeus](https://eclipse.gsfc.nasa.gov/SEhelp/deltatpoly2004.html).
 
         The value of the calling object is not modified. This function creates a brand new
         #Time object and returns it.
@@ -699,13 +704,9 @@ def _ecl2equ_vec(time, ecl):
         ecl[1]*sin_obl + ecl[2]*cos_obl
     ]
 
-def _precession_rot(tt1, tt2):
+def _precession_rot(time, dir):
     eps0 = 84381.406
-    if tt1 != 0 and tt2 != 0:
-        raise Error('One of (tt1, tt2) must be zero.')
-    t = (tt2 - tt1) / 36525
-    if tt2 == 0:
-        t = -t
+    t = time.tt / 36525
 
     psia  = (((((-    0.0000000951  * t
                  +    0.000132851 ) * t
@@ -748,7 +749,7 @@ def _precession_rot(tt1, tt2):
     xz =  sb * sc
     yz = -sc * cb * ca - sa * cc
     zz = -sc * cb * sa + cc * ca
-    if tt2 == 0.0:
+    if dir == _PrecessDir.Into2000:
         # Perform rotation from other epoch to J2000.0.
         return RotationMatrix([
             [xx, yx, zx],
@@ -756,19 +757,22 @@ def _precession_rot(tt1, tt2):
             [xz, yz, zz]
         ])
 
-    # Perform rotation from J2000.0 to other epoch.
-    return RotationMatrix([
-        [xx, xy, xz],
-        [yx, yy, yz],
-        [zx, zy, zz]
-    ])
+    if dir == _PrecessDir.From2000:
+        # Perform rotation from J2000.0 to other epoch.
+        return RotationMatrix([
+            [xx, xy, xz],
+            [yx, yy, yz],
+            [zx, zy, zz]
+        ])
 
-def _precession(tt1, pos1, tt2):
-    r = _precession_rot(tt1, tt2)
+    raise Error('Inalid precession direction')
+
+def _precession(pos, time, dir):
+    r = _precession_rot(time, dir)
     return [
-        r.rot[0][0]*pos1[0] + r.rot[1][0]*pos1[1] + r.rot[2][0]*pos1[2],
-        r.rot[0][1]*pos1[0] + r.rot[1][1]*pos1[1] + r.rot[2][1]*pos1[2],
-        r.rot[0][2]*pos1[0] + r.rot[1][2]*pos1[1] + r.rot[2][2]*pos1[2]
+        r.rot[0][0]*pos[0] + r.rot[1][0]*pos[1] + r.rot[2][0]*pos[2],
+        r.rot[0][1]*pos[0] + r.rot[1][1]*pos[1] + r.rot[2][1]*pos[2],
+        r.rot[0][2]*pos[0] + r.rot[1][2]*pos[1] + r.rot[2][2]*pos[2]
     ]
 
 class Equatorial:
@@ -787,13 +791,20 @@ class Equatorial:
         Declination in degrees.
     dist : float
         Distance to the celestial body in AU.
+    vec : Vector
+        The equatorial coordinates in cartesian form, using AU distance units.
+        x = direction of the March equinox,
+        y = direction of the June solstice,
+        z = north.
     """
-    def __init__(self, ra, dec, dist):
+    def __init__(self, ra, dec, dist, vec):
         self.ra = ra
         self.dec = dec
         self.dist = dist
+        self.vec = vec
 
-def _vector2radec(pos):
+
+def _vector2radec(pos, time):
     xyproj = pos[0]*pos[0] + pos[1]*pos[1]
     dist = math.sqrt(xyproj + pos[2]*pos[2])
     if xyproj == 0.0:
@@ -810,10 +821,11 @@ def _vector2radec(pos):
         if ra < 0:
             ra += 24
         dec = math.degrees(math.atan2(pos[2], math.sqrt(xyproj)))
-    return Equatorial(ra, dec, dist)
+    vec = Vector(pos[0], pos[1], pos[2], time)
+    return Equatorial(ra, dec, dist, vec)
 
 
-def _nutation_rot(time, direction):
+def _nutation_rot(time, dir):
     tilt = time._etilt()
     oblm = math.radians(tilt.mobl)
     oblt = math.radians(tilt.tobl)
@@ -835,23 +847,27 @@ def _nutation_rot(time, direction):
     yz = cpsi * cobm * sobt - sobm * cobt
     zz = cpsi * sobm * sobt + cobm * cobt
 
-    if direction == 0:
-        # forward rotation
+    if dir == _PrecessDir.From2000:
+        # convert J2000 to of-date
         return RotationMatrix([
             [xx, xy, xz],
             [yx, yy, yz],
             [zx, zy, zz]
         ])
 
-    # inverse rotation
-    return RotationMatrix([
-        [xx, yx, zx],
-        [xy, yy, zy],
-        [xz, yz, zz]
-    ])
+    if dir == _PrecessDir.Into2000:
+        # convert of-date to J2000
+        return RotationMatrix([
+            [xx, yx, zx],
+            [xy, yy, zy],
+            [xz, yz, zz]
+        ])
 
-def _nutation(time, direction, pos):
-    r = _nutation_rot(time, direction)
+    raise Error('Invalid nutation direction')
+
+
+def _nutation(pos, time, dir):
+    r = _nutation_rot(time, dir)
     return [
         r.rot[0][0]*pos[0] + r.rot[1][0]*pos[1] + r.rot[2][0]*pos[2],
         r.rot[0][1]*pos[0] + r.rot[1][1]*pos[1] + r.rot[2][1]*pos[2],
@@ -899,16 +915,16 @@ def _terra(observer, st):
     sinst = math.sin(stlocl)
     cosst = math.cos(stlocl)
     return [
-        ach * cosphi * cosst / _KM_PER_AU,
-        ach * cosphi * sinst / _KM_PER_AU,
-        ash * sinphi / _KM_PER_AU
+        ach * cosphi * cosst / KM_PER_AU,
+        ach * cosphi * sinst / KM_PER_AU,
+        ash * sinphi / KM_PER_AU
     ]
 
 def _geo_pos(time, observer):
     gast = _sidereal_time(time)
     pos1 = _terra(observer, gast)
-    pos2 = _nutation(time, -1, pos1)
-    outpos = _precession(time.tt, pos2, 0.0)
+    pos2 = _nutation(pos1, time, _PrecessDir.Into2000)
+    outpos = _precession(pos2, time, _PrecessDir.Into2000)
     return outpos
 
 def _spin(angle, pos1):
@@ -1073,7 +1089,7 @@ def GeoMoon(time):
     mpos1 = _ecl2equ_vec(time, gepos)
 
     # Convert from mean equinox of date to J2000.
-    mpos2 = _precession(time.tt, mpos1, 0)
+    mpos2 = _precession(mpos1, time, _PrecessDir.Into2000)
     return Vector(mpos2[0], mpos2[1], mpos2[2], time)
 
 # END CalcMoon
@@ -1811,7 +1827,7 @@ def GeoVector(body, time, aberration):
             earth = _CalcEarth(ltime)
 
         geo = Vector(h.x-earth.x, h.y-earth.y, h.z-earth.z, time)
-        ltime2 = time.AddDays(-geo.Length() / _C_AUDAY)
+        ltime2 = time.AddDays(-geo.Length() / C_AUDAY)
         dt = abs(ltime2.tt - ltime.tt)
         if dt < 1.0e-9:
             return geo
@@ -1868,10 +1884,54 @@ def Equator(body, time, observer, ofdate, aberration):
         gc.z - gc_observer[2]
     ]
     if not ofdate:
-        return _vector2radec(j2000)
-    temp = _precession(0, j2000, time.tt)
-    datevect = _nutation(time, 0, temp)
-    return _vector2radec(datevect)
+        return _vector2radec(j2000, time)
+    temp = _precession(j2000, time, _PrecessDir.From2000)
+    datevect = _nutation(temp, time, _PrecessDir.From2000)
+    return _vector2radec(datevect, time)
+
+
+def ObserverVector(time, observer, ofdate):
+    """Calculates geocentric equatorial coordinates of an observer on the surface of the Earth.
+
+    This function calculates a vector from the center of the Earth to
+    a point on or near the surface of the Earth, expressed in equatorial
+    coordinates. It takes into account the rotation of the Earth at the given
+    time, along with the given latitude, longitude, and elevation of the observer.
+
+    The caller may pass `ofdate` as `True` to return coordinates relative to the Earth's
+    equator at the specified time, or `False` to use the J2000 equator.
+
+    The returned vector has components expressed in astronomical units (AU).
+    To convert to kilometers, multiply the `x`, `y`, and `z` values by
+    the constant value #KM_PER_AU.
+
+    Parameters
+    ----------
+    time : Time
+        The date and time for which to calculate the observer's position vector.
+    observer : Observer
+        The geographic location of a point on or near the surface of the Earth.
+    ofdate : bool
+        Selects the date of the Earth's equator in which to express the equatorial coordinates.
+        The caller may pass `False` to use the orientation of the Earth's equator
+        at noon UTC on January 1, 2000, in which case this function corrects for precession
+        and nutation of the Earth as it was at the moment specified by the `time` parameter.
+        Or the caller may pass `true` to use the Earth's equator at `time`
+        as the orientation.
+
+    Returns
+    -------
+    Vector
+        An equatorial vector from the center of the Earth to the specified location
+        on (or near) the Earth's surface.
+    """
+    gast = _sidereal_time(time)
+    ovec = _terra(observer, gast)
+    if not ofdate:
+        ovec = _nutation(ovec, time, _PrecessDir.Into2000)
+        ovec = _precession(ovec, time, _PrecessDir.Into2000)
+    return Vector(ovec[0], ovec[1], ovec[2], time)
+
 
 @enum.unique
 class Refraction(enum.Enum):
@@ -2177,25 +2237,22 @@ class EclipticCoordinates:
 
     Attributes
     ----------
-    ex : float
-        Cartesian x-coordinate: in the direction of the equinox along the ecliptic plane.
-    ey : float
-        Cartesian y-coordinate: in the ecliptic plane 90 degrees prograde from the equinox.
-    ez : float
-        Cartesian z-coordinate: perpendicular to the ecliptic plane. Positive is north.
+    vec : Vector
+        Ecliptic cartesian vector with the following components:
+        x: in the direction of the equinox along the ecliptic plane.
+        y: Cartesian y-coordinate: in the ecliptic plane 90 degrees prograde from the equinox.
+        z: Cartesian z-coordinate: perpendicular to the ecliptic plane. Positive is north.
     elat : float
         Latitude in degrees north (positive) or south (negative) of the ecliptic plane.
     elon : float
         Longitude in degrees around the ecliptic plane prograde from the equinox.
     """
-    def __init__(self, ex, ey, ez, elat, elon):
-        self.ex = ex
-        self.ey = ey
-        self.ez = ez
+    def __init__(self, vec, elat, elon):
+        self.vec = vec
         self.elat = elat
         self.elon = elon
 
-def _RotateEquatorialToEcliptic(pos, obliq_radians):
+def _RotateEquatorialToEcliptic(pos, obliq_radians, time):
     cos_ob = math.cos(obliq_radians)
     sin_ob = math.sin(obliq_radians)
     ex = +pos[0]
@@ -2209,7 +2266,8 @@ def _RotateEquatorialToEcliptic(pos, obliq_radians):
     else:
         elon = 0.0
     elat = math.degrees(math.atan2(ez, xyproj))
-    return EclipticCoordinates(ex, ey, ez, elat, elon)
+    vec = Vector(ex, ey, ez, time)
+    return EclipticCoordinates(vec, elat, elon)
 
 def SunPosition(time):
     """Calculates geocentric ecliptic coordinates for the Sun.
@@ -2241,17 +2299,17 @@ def SunPosition(time):
     """
     # Correct for light travel time from the Sun.
     # Otherwise season calculations (equinox, solstice) will all be early by about 8 minutes!
-    adjusted_time = time.AddDays(-1.0 / _C_AUDAY)
+    adjusted_time = time.AddDays(-1.0 / C_AUDAY)
     earth2000 = _CalcEarth(adjusted_time)
     sun2000 = [-earth2000.x, -earth2000.y, -earth2000.z]
 
     # Convert to equatorial Cartesian coordinates of date.
-    stemp = _precession(0.0, sun2000, adjusted_time.tt)
-    sun_ofdate = _nutation(adjusted_time, 0, stemp)
+    stemp = _precession(sun2000, adjusted_time, _PrecessDir.From2000)
+    sun_ofdate = _nutation(stemp, adjusted_time, _PrecessDir.From2000)
 
     # Convert equatorial coordinates to ecliptic coordinates.
     true_obliq = math.radians(adjusted_time._etilt().tobl)
-    return _RotateEquatorialToEcliptic(sun_ofdate, true_obliq)
+    return _RotateEquatorialToEcliptic(sun_ofdate, true_obliq, time)
 
 def Ecliptic(equ):
     """Converts J2000 equatorial Cartesian coordinates to J2000 ecliptic coordinates.
@@ -2272,7 +2330,7 @@ def Ecliptic(equ):
     """
     # Based on NOVAS functions equ2ecl() and equ2ecl_vec().
     ob2000 = 0.40909260059599012   # mean obliquity of the J2000 ecliptic in radians
-    return _RotateEquatorialToEcliptic([equ.x, equ.y, equ.z], ob2000)
+    return _RotateEquatorialToEcliptic([equ.x, equ.y, equ.z], ob2000, equ.t)
 
 def EclipticLongitude(body, time):
     """Calculates heliocentric ecliptic longitude of a body based on the J2000 equinox.
@@ -2898,7 +2956,7 @@ def _MoonMagnitude(phase, helio_dist, geo_dist):
     # https://astronomy.stackexchange.com/questions/10246/is-there-a-simple-analytical-formula-for-the-lunar-phase-brightness-curve
     rad = math.radians(phase)
     mag = -12.717 + 1.49*abs(rad) + 0.0431*(rad**4)
-    moon_mean_distance_au = 385000.6 / _KM_PER_AU
+    moon_mean_distance_au = 385000.6 / KM_PER_AU
     geo_au = geo_dist / moon_mean_distance_au
     mag += 5.0 * math.log10(helio_dist * geo_au)
     return mag
@@ -3503,7 +3561,7 @@ class Apsis:
         self.time = time
         self.kind = kind
         self.dist_au = dist_au
-        self.dist_km = dist_au * _KM_PER_AU
+        self.dist_km = dist_au * KM_PER_AU
 
 def SearchLunarApsis(startTime):
     """Finds the time of the first lunar apogee or perigee after the given time.
@@ -3815,25 +3873,6 @@ def VectorFromSphere(sphere, time):
     )
 
 
-def VectorFromEquator(equ, time):
-    """Given angular equatorial coordinates in `equ`, calculates equatorial vector.
-
-    Parameters
-    ----------
-    equ : Equatorial
-        Angular equatorial coordinates to be converted to a vector.
-    time : Time
-        The date and time of the observation. This is needed because the returned
-        vector object requires a valid time value when passed to certain other functions.
-
-    Returns
-    -------
-    Vector
-        A vector in the equatorial system.
-    """
-    return VectorFromSphere(Spherical(equ.dec, 15.0 * equ.ra, equ.dist), time)
-
-
 def EquatorFromVector(vec):
     """Given an equatorial vector, calculates equatorial angular coordinates.
 
@@ -3848,7 +3887,7 @@ def EquatorFromVector(vec):
         Angular coordinates expressed in the same equatorial system as `vec`.
     """
     sphere = SphereFromVector(vec)
-    return Equatorial(sphere.lon / 15.0, sphere.lat, sphere.dist)
+    return Equatorial(sphere.lon / 15.0, sphere.lat, sphere.dist, vec)
 
 
 def SphereFromVector(vector):
@@ -4021,6 +4060,91 @@ def CombineRotation(a, b):
     ])
 
 
+def IdentityMatrix():
+    """Creates an identity rotation matrix.
+
+    Returns a rotation matrix that has no effect on orientation.
+    This matrix can be the starting point for other operations,
+    such as using a series of calls to #Pivot to
+    create a custom rotation matrix.
+
+    Returns
+    -------
+    RotationMatrix
+        The identity rotation matrix.
+    """
+    return RotationMatrix([
+        [1, 0, 0],
+        [0, 1, 0],
+        [0, 0, 1]
+    ])
+
+
+def Pivot(rotation, axis, angle):
+    """Re-orients a rotation matrix by pivoting it by an angle around one of its axes.
+
+    Given a rotation matrix, a selected coordinate axis, and an angle in degrees,
+    this function pivots the rotation matrix by that angle around that coordinate axis.
+
+    For example, if you have rotation matrix that converts ecliptic coordinates (ECL)
+    to horizontal coordinates (HOR), but you really want to convert ECL to the orientation
+    of a telescope camera pointed at a given body, you can use `Pivot` twice:
+    (1) pivot around the zenith axis by the body's azimuth, then (2) pivot around the
+    western axis by the body's altitude angle. The resulting rotation matrix will then
+    reorient ECL coordinates to the orientation of your telescope camera.
+
+    Parameters
+    ----------
+    rotation : RotationMatrix
+        The input rotation matrix.
+    axis : int
+        An integer that selects which coordinate axis to rotate around:
+        0 = x, 1 = y, 2 = z. Any other value will cause an exception.
+    angle : float
+        An angle in degrees indicating the amount of rotation around the specified axis.
+        Positive angles indicate rotation counterclockwise as seen from the positive
+        direction along that axis, looking towards the origin point of the orientation system.
+        Any finite number of degrees is allowed, but best precision will result from
+        keeping `angle` in the range [-360, +360].
+
+    Returns
+    -------
+    RotationMatrix
+        A pivoted matrix object.
+    """
+    # Check for an invalid coordinate axis.
+    if axis not in [0, 1, 2]:
+        raise Error('Invalid axis {}. Must be [0, 1, 2].'.format(axis))
+
+    radians = math.radians(angle)
+    c = math.cos(radians)
+    s = math.sin(radians)
+
+    # We need to maintain the "right-hand" rule, no matter which
+    # axis was selected. That means we pick (i, j, k) axis order
+    # such that the following vector cross product is satisfied:
+    # i x j = k
+    i = (axis + 1) % 3
+    j = (axis + 2) % 3
+    k = axis
+
+    rot = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
+
+    rot[i][i] = c*rotation.rot[i][i] - s*rotation.rot[i][j]
+    rot[i][j] = s*rotation.rot[i][i] + c*rotation.rot[i][j]
+    rot[i][k] = rotation.rot[i][k]
+
+    rot[j][i] = c*rotation.rot[j][i] - s*rotation.rot[j][j]
+    rot[j][j] = s*rotation.rot[j][i] + c*rotation.rot[j][j]
+    rot[j][k] = rotation.rot[j][k]
+
+    rot[k][i] = c*rotation.rot[k][i] - s*rotation.rot[k][j]
+    rot[k][j] = s*rotation.rot[k][i] + c*rotation.rot[k][j]
+    rot[k][k] = rotation.rot[k][k]
+
+    return RotationMatrix(rot)
+
+
 def RotateVector(rotation, vector):
     """Applies a rotation to a vector, yielding a rotated vector.
 
@@ -4110,8 +4234,8 @@ def Rotation_EQJ_EQD(time):
     RotationMatrix
         A rotation matrix that converts EQJ to EQD at `time`.
     """
-    prec = _precession_rot(0.0, time.tt)
-    nut = _nutation_rot(time, 0)
+    prec = _precession_rot(time, _PrecessDir.From2000)
+    nut = _nutation_rot(time, _PrecessDir.From2000)
     return CombineRotation(prec, nut)
 
 
@@ -4133,8 +4257,8 @@ def Rotation_EQD_EQJ(time):
     RotationMatrix
         A rotation matrix that converts EQD at `time` to EQJ.
     """
-    nut = _nutation_rot(time, 1)
-    prec = _precession_rot(time.tt, 0.0)
+    nut = _nutation_rot(time, _PrecessDir.Into2000)
+    prec = _precession_rot(time, _PrecessDir.Into2000)
     return CombineRotation(nut, prec)
 
 
@@ -4366,11 +4490,11 @@ def Rotation_HOR_ECL(time, observer):
 class ConstellationInfo:
     """Reports the constellation that a given celestial point lies within.
 
-    The #Constellation function returns this struct
+    The #Constellation function returns a `ConstellationInfo` object
     to report which constellation corresponds with a given point in the sky.
     Constellations are defined with respect to the B1875 equatorial system
-    per IAU standard. Although `Constellation` requires J2000 equatorial
-    coordinates, the struct contains converted B1875 coordinates for reference.
+    per IAU standard. Although the `Constellation` function requires J2000 equatorial
+    coordinates as input, the returned object contains converted B1875 coordinates for reference.
 
     Attributes
     ----------
@@ -4442,8 +4566,8 @@ def Constellation(ra, dec):
         _Epoch2000 = Time(0.0)
 
     # Convert coordinates from J2000 to B1875.
-    equ2000 = Equatorial(ra, dec, 1.0)
-    vec2000 = VectorFromEquator(equ2000, _Epoch2000)
+    sph2000 = Spherical(dec, 15.0 * ra, 1.0)
+    vec2000 = VectorFromSphere(sph2000, _Epoch2000)
     vec1875 = RotateVector(_ConstelRot, vec2000)
     equ1875 = EquatorFromVector(vec1875)
 
@@ -4497,7 +4621,7 @@ def _CalcShadow(body_radius_km, time, target, dir):
     dx = (u * dir.x) - target.x
     dy = (u * dir.y) - target.y
     dz = (u * dir.z) - target.z
-    r = _KM_PER_AU * math.sqrt(dx*dx + dy*dy + dz*dz)
+    r = KM_PER_AU * math.sqrt(dx*dx + dy*dy + dz*dz)
     k = +_SUN_RADIUS_KM - (1.0 + u)*(_SUN_RADIUS_KM - body_radius_km)
     p = -_SUN_RADIUS_KM + (1.0 + u)*(_SUN_RADIUS_KM + body_radius_km)
     return _ShadowInfo(time, u, r, k, p, target, dir)
@@ -4866,12 +4990,12 @@ def _GeoidIntersect(shadow):
     # But dilate the z-coordinates so that the Earth becomes a perfect sphere.
     # Then find the intersection of the vector with the sphere.
     # See p 184 in Montenbruck & Pfleger's "Astronomy on the Personal Computer", second edition.
-    v.x *= _KM_PER_AU
-    v.y *= _KM_PER_AU
-    v.z *= _KM_PER_AU / _EARTH_FLATTENING
-    e.x *= _KM_PER_AU
-    e.y *= _KM_PER_AU
-    e.z *= _KM_PER_AU / _EARTH_FLATTENING
+    v.x *= KM_PER_AU
+    v.y *= KM_PER_AU
+    v.z *= KM_PER_AU / _EARTH_FLATTENING
+    e.x *= KM_PER_AU
+    e.y *= KM_PER_AU
+    e.z *= KM_PER_AU / _EARTH_FLATTENING
 
     # Solve the quadratic equation that finds whether and where
     # the shadow axis intersects with the Earth in the dilated coordinate system.
@@ -4916,7 +5040,7 @@ def _GeoidIntersect(shadow):
 
         # Put the EQD geocentric coordinates of the observer into the vector 'o'.
         # Also convert back from kilometers to astronomical units.
-        o = Vector(px / _KM_PER_AU, py / _KM_PER_AU, pz / _KM_PER_AU, shadow.time)
+        o = Vector(px / KM_PER_AU, py / KM_PER_AU, pz / KM_PER_AU, shadow.time)
 
         # Rotate the observer's geocentric EQD back to the EQJ system.
         o = RotateVector(inv, o)

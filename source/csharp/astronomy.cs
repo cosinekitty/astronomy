@@ -263,9 +263,9 @@ namespace CosineKitty
         /// This function adds the given real number of days in `days` to the date and time in this object.
         ///
         /// More precisely, the result's Universal Time field `ut` is exactly adjusted by `days` and
-        /// the Terrestrial Time field `tt` is adjusted correctly for the resulting UTC date and time,
-        /// according to the historical and predictive Delta-T model provided by the
-        /// [United States Naval Observatory](http://maia.usno.navy.mil/ser7/).
+        /// the Terrestrial Time field `tt` is adjusted for the resulting UTC date and time,
+        /// using a best-fit piecewise polynomial model devised by
+        /// [Espenak and Meeus](https://eclipse.gsfc.nasa.gov/SEhelp/deltatpoly2004.html).
         /// </remarks>
         /// <param name="days">A floating point number of days by which to adjust `time`. May be negative, 0, or positive.</param>
         /// <returns>A date and time that is conceptually equal to `time + days`.</returns>
@@ -360,6 +360,9 @@ namespace CosineKitty
         /// <param name="t">The date and time at which this vector is valid.</param>
         public AstroVector(double x, double y, double z, AstroTime t)
         {
+            if (t == null)
+                throw new NullReferenceException("AstroTime parameter is not allowed to be null.");
+
             this.x = x;
             this.y = y;
             this.z = z;
@@ -373,6 +376,72 @@ namespace CosineKitty
         public double Length()
         {
             return Math.Sqrt(x*x + y*y + z*z);
+        }
+
+#pragma warning disable 1591        // we don't need XML documentation for these operator overloads
+        public static AstroVector operator - (AstroVector a)
+        {
+            return new AstroVector(-a.x, -a.y, -a.z, a.t);
+        }
+
+        public static AstroVector operator - (AstroVector a, AstroVector b)
+        {
+            return new AstroVector (
+                a.x - b.x,
+                a.y - b.y,
+                a.z - b.z,
+                VerifyIdenticalTimes(a.t, b.t)
+            );
+        }
+
+        public static AstroVector operator + (AstroVector a, AstroVector b)
+        {
+            return new AstroVector (
+                a.x + b.x,
+                a.y + b.y,
+                a.z + b.z,
+                VerifyIdenticalTimes(a.t, b.t)
+            );
+        }
+
+        public static double operator * (AstroVector a, AstroVector b)
+        {
+            // the scalar dot product of two vectors
+            VerifyIdenticalTimes(a.t, b.t);
+            return (a.x * b.x) + (a.y * b.y) + (a.z * b.z);
+        }
+
+        public static AstroVector operator * (double factor, AstroVector a)
+        {
+            return new AstroVector(
+                factor * a.x,
+                factor * a.y,
+                factor * a.z,
+                a.t
+            );
+        }
+
+        public static AstroVector operator / (AstroVector a, double denom)
+        {
+            if (denom == 0.0)
+                throw new ArgumentException("Attempt to divide a vector by zero.");
+
+            return new AstroVector(
+                a.x / denom,
+                a.y / denom,
+                a.z / denom,
+                a.t
+            );
+        }
+#pragma warning restore 1591
+
+        private static AstroTime VerifyIdenticalTimes(AstroTime a, AstroTime b)
+        {
+            if (a.tt != b.tt)
+                throw new ArgumentException("Attempt to operate on two vectors from different times.");
+
+            // If either time has already had its nutation calculated, retain that work.
+            return !double.IsNaN(a.psi) ? a : b;
         }
     }
 
@@ -578,7 +647,7 @@ namespace CosineKitty
     }
 
     /// <summary>
-    /// Equatorial angular coordinates.
+    /// Equatorial angular and cartesian coordinates.
     /// </summary>
     /// <remarks>
     /// Coordinates of a celestial body as seen from the Earth
@@ -603,16 +672,23 @@ namespace CosineKitty
         public readonly double dist;
 
         /// <summary>
+        /// Equatorial coordinates in cartesian vector form: x = March equinox, y = June solstice, z = north.
+        /// </summary>
+        public readonly AstroVector vec;
+
+        /// <summary>
         /// Creates an equatorial coordinates object.
         /// </summary>
         /// <param name="ra">Right ascension in sidereal hours.</param>
         /// <param name="dec">Declination in degrees.</param>
         /// <param name="dist">Distance to the celestial body in AU.</param>
-        public Equatorial(double ra, double dec, double dist)
+        /// <param name="vec">Equatorial coordinates in vector form.</param>
+        public Equatorial(double ra, double dec, double dist, AstroVector vec)
         {
             this.ra = ra;
             this.dec = dec;
             this.dist = dist;
+            this.vec = vec;
         }
     }
 
@@ -626,19 +702,12 @@ namespace CosineKitty
     public struct Ecliptic
     {
         /// <summary>
-        /// Cartesian x-coordinate: in the direction of the equinox along the ecliptic plane.
+        /// Cartesian ecliptic vector, with components as follows:
+        /// x: the direction of the equinox along the ecliptic plane.
+        /// y: in the ecliptic plane 90 degrees prograde from the equinox.
+        /// z: perpendicular to the ecliptic plane. Positive is north.
         /// </summary>
-        public readonly double ex;
-
-        /// <summary>
-        /// Cartesian y-coordinate: in the ecliptic plane 90 degrees prograde from the equinox.
-        /// </summary>
-        public readonly double ey;
-
-        /// <summary>
-        /// Cartesian z-coordinate: perpendicular to the ecliptic plane. Positive is north.
-        /// </summary>
-        public readonly double ez;
+        public readonly AstroVector vec;
 
         /// <summary>
         /// Latitude in degrees north (positive) or south (negative) of the ecliptic plane.
@@ -653,16 +722,12 @@ namespace CosineKitty
         /// <summary>
         /// Creates an object that holds Cartesian and angular ecliptic coordinates.
         /// </summary>
-        /// <param name="ex">x-coordinate of the ecliptic position</param>
-        /// <param name="ey">y-coordinate of the ecliptic position</param>
-        /// <param name="ez">z-coordinate of the ecliptic position</param>
+        /// <param name="vec">ecliptic vector</param>
         /// <param name="elat">ecliptic latitude</param>
         /// <param name="elon">ecliptic longitude</param>
-        public Ecliptic(double ex, double ey, double ez, double elat, double elon)
+        public Ecliptic(AstroVector vec, double elat, double elon)
         {
-            this.ex = ex;
-            this.ey = ey;
-            this.ez = ez;
+            this.vec = vec;
             this.elat = elat;
             this.elon = elon;
         }
@@ -1854,15 +1919,27 @@ namespace CosineKitty
     /// </summary>
     public static class Astronomy
     {
+        /// <summary>
+        /// The number of kilometers in one astronomical unit (AU).
+        /// </summary>
+        public const double KM_PER_AU = 1.4959787069098932e+8;
+
+        /// <summary>
+        /// The factor to convert radians to degrees = 180/pi.
+        /// </summary>
+        public const double RAD2DEG = 57.295779513082321;
+
+        /// <summary>
+        /// The factor to convert degrees to radians = pi/180.
+        /// </summary>
+        public const double DEG2RAD = 0.017453292519943296;
+
         private const double DAYS_PER_TROPICAL_YEAR = 365.24217;
-        internal const double DEG2RAD = 0.017453292519943296;
-        internal const double RAD2DEG = 57.295779513082321;
         private const double ASEC360 = 1296000.0;
         private const double ASEC2RAD = 4.848136811095359935899141e-6;
         internal const double PI2 = 2.0 * Math.PI;
         internal const double ARC = 3600.0 * 180.0 / Math.PI;       /* arcseconds per radian */
         private const double C_AUDAY = 173.1446326846693;           /* speed of light in AU/day */
-        internal const double KM_PER_AU = 1.4959787069098932e+8;
 
         internal const double SUN_RADIUS_KM  = 695700.0;
         internal const double SUN_RADIUS_AU  = SUN_RADIUS_KM / KM_PER_AU;
@@ -3371,65 +3448,63 @@ namespace CosineKitty
 
         // End Pluto integrator
 
-        private static RotationMatrix precession_rot(double tt1, double tt2)
+        private enum PrecessDirection
         {
-            double xx, yx, zx, xy, yy, zy, xz, yz, zz;
-            double t, psia, omegaa, chia, sa, ca, sb, cb, sc, cc, sd, cd;
+            From2000,
+            Into2000,
+        }
+
+        private static RotationMatrix precession_rot(AstroTime time, PrecessDirection dir)
+        {
+            double t = time.tt / 36525;
             double eps0 = 84381.406;
 
-            if ((tt1 != 0.0) && (tt2 != 0.0))
-                throw new ArgumentException("precession_rot: one of (tt1, tt2) must be zero.");
+            double psia   = (((((-    0.0000000951  * t
+                                +    0.000132851 ) * t
+                                -    0.00114045  ) * t
+                                -    1.0790069   ) * t
+                                + 5038.481507    ) * t);
 
-            t = (tt2 - tt1) / 36525;
-            if (tt2 == 0)
-                t = -t;
+            double omegaa = (((((+    0.0000003337  * t
+                                 -    0.000000467 ) * t
+                                 -    0.00772503  ) * t
+                                 +    0.0512623   ) * t
+                                 -    0.025754    ) * t + eps0);
 
-            psia   = (((((-    0.0000000951  * t
-                        +    0.000132851 ) * t
-                        -    0.00114045  ) * t
-                        -    1.0790069   ) * t
-                        + 5038.481507    ) * t);
+            double chia   = (((((-    0.0000000560  * t
+                                 +    0.000170663 ) * t
+                                 -    0.00121197  ) * t
+                                 -    2.3814292   ) * t
+                                 +   10.556403    ) * t);
 
-            omegaa = (((((+    0.0000003337  * t
-                        -    0.000000467 ) * t
-                        -    0.00772503  ) * t
-                        +    0.0512623   ) * t
-                        -    0.025754    ) * t + eps0);
+            eps0   *= ASEC2RAD;
+            psia   *= ASEC2RAD;
+            omegaa *= ASEC2RAD;
+            chia   *= ASEC2RAD;
 
-            chia   = (((((-    0.0000000560  * t
-                        +    0.000170663 ) * t
-                        -    0.00121197  ) * t
-                        -    2.3814292   ) * t
-                        +   10.556403    ) * t);
+            double sa = Math.Sin(eps0);
+            double ca = Math.Cos(eps0);
+            double sb = Math.Sin(-psia);
+            double cb = Math.Cos(-psia);
+            double sc = Math.Sin(-omegaa);
+            double cc = Math.Cos(-omegaa);
+            double sd = Math.Sin(chia);
+            double cd = Math.Cos(chia);
 
-            eps0 = eps0 * ASEC2RAD;
-            psia = psia * ASEC2RAD;
-            omegaa = omegaa * ASEC2RAD;
-            chia = chia * ASEC2RAD;
-
-            sa = Math.Sin(eps0);
-            ca = Math.Cos(eps0);
-            sb = Math.Sin(-psia);
-            cb = Math.Cos(-psia);
-            sc = Math.Sin(-omegaa);
-            cc = Math.Cos(-omegaa);
-            sd = Math.Sin(chia);
-            cd = Math.Cos(chia);
-
-            xx =  cd * cb - sb * sd * cc;
-            yx =  cd * sb * ca + sd * cc * cb * ca - sa * sd * sc;
-            zx =  cd * sb * sa + sd * cc * cb * sa + ca * sd * sc;
-            xy = -sd * cb - sb * cd * cc;
-            yy = -sd * sb * ca + cd * cc * cb * ca - sa * cd * sc;
-            zy = -sd * sb * sa + cd * cc * cb * sa + ca * cd * sc;
-            xz =  sb * sc;
-            yz = -sc * cb * ca - sa * cc;
-            zz = -sc * cb * sa + cc * ca;
+            double xx =  cd*cb - sb*sd*cc;
+            double yx =  cd*sb*ca + sd*cc*cb*ca - sa*sd*sc;
+            double zx =  cd*sb*sa + sd*cc*cb*sa + ca*sd*sc;
+            double xy = -sd*cb - sb*cd*cc;
+            double yy = -sd*sb * ca + cd*cc*cb*ca - sa*cd*sc;
+            double zy = -sd*sb * sa + cd*cc*cb*sa + ca*cd*sc;
+            double xz =  sb*sc;
+            double yz = -sc*cb*ca - sa*cc;
+            double zz = -sc*cb*sa + cc*ca;
 
             var rot = new double[3,3];
-            if (tt2 == 0.0)
+            if (dir == PrecessDirection.Into2000)
             {
-                /* Perform rotation from other epoch to J2000.0. */
+                // Perform rotation from other epoch to J2000.0.
                 rot[0, 0] = xx;
                 rot[0, 1] = yx;
                 rot[0, 2] = zx;
@@ -3440,9 +3515,9 @@ namespace CosineKitty
                 rot[2, 1] = yz;
                 rot[2, 2] = zz;
             }
-            else
+            else if (dir == PrecessDirection.From2000)
             {
-                /* Perform rotation from J2000.0 to other epoch. */
+                // Perform rotation from J2000.0 to other epoch.
                 rot[0, 0] = xx;
                 rot[0, 1] = xy;
                 rot[0, 2] = xz;
@@ -3453,18 +3528,22 @@ namespace CosineKitty
                 rot[2, 1] = zy;
                 rot[2, 2] = zz;
             }
+            else
+            {
+                throw new ArgumentException("Unsupported precess direction: " + dir);
+            }
 
             return new RotationMatrix(rot);
         }
 
-        private static AstroVector precession(double tt1, AstroVector pos, double tt2)
+        private static AstroVector precession(AstroVector pos, AstroTime time, PrecessDirection dir)
         {
-            RotationMatrix r = precession_rot(tt1, tt2);
+            RotationMatrix r = precession_rot(time, dir);
             return new AstroVector(
                 r.rot[0, 0]*pos.x + r.rot[1, 0]*pos.y + r.rot[2, 0]*pos.z,
                 r.rot[0, 1]*pos.x + r.rot[1, 1]*pos.y + r.rot[2, 1]*pos.z,
                 r.rot[0, 2]*pos.x + r.rot[1, 2]*pos.y + r.rot[2, 2]*pos.z,
-                null
+                time
             );
         }
 
@@ -3671,8 +3750,9 @@ namespace CosineKitty
             return gst;     // return sidereal hours in the half-open range [0, 24).
         }
 
-        private static AstroVector terra(Observer observer, double st)
+        private static AstroVector terra(Observer observer, AstroTime time)
         {
+            double st = sidereal_time(time);
             double df = 1.0 - 0.003352819697896;    /* flattening of the Earth */
             double df2 = df * df;
             double phi = observer.latitude * DEG2RAD;
@@ -3691,11 +3771,11 @@ namespace CosineKitty
                 ach * cosphi * cosst / KM_PER_AU,
                 ach * cosphi * sinst / KM_PER_AU,
                 ash * sinphi / KM_PER_AU,
-                null
+                time
             );
         }
 
-        private static RotationMatrix nutation_rot(AstroTime time, int direction)
+        private static RotationMatrix nutation_rot(AstroTime time, PrecessDirection dir)
         {
             earth_tilt_t tilt = e_tilt(time);
             double oblm = tilt.mobl * DEG2RAD;
@@ -3720,9 +3800,9 @@ namespace CosineKitty
 
             var rot = new double[3,3];
 
-            if (direction == 0)
+            if (dir == PrecessDirection.From2000)
             {
-                /* forward rotation */
+                // convert J2000 to of-date
                 rot[0, 0] = xx;
                 rot[0, 1] = xy;
                 rot[0, 2] = xz;
@@ -3733,9 +3813,9 @@ namespace CosineKitty
                 rot[2, 1] = zy;
                 rot[2, 2] = zz;
             }
-            else
+            else if (dir == PrecessDirection.Into2000)
             {
-                /* inverse rotation */
+                // convert of-date to J2000
                 rot[0, 0] = xx;
                 rot[0, 1] = yx;
                 rot[0, 2] = zx;
@@ -3746,14 +3826,18 @@ namespace CosineKitty
                 rot[2, 1] = yz;
                 rot[2, 2] = zz;
             }
+            else
+            {
+                throw new ArgumentException("Unsupported nutation direction: " + dir);
+            }
 
             return new RotationMatrix(rot);
         }
 
 
-        private static AstroVector nutation(AstroTime time, int direction, AstroVector pos)
+        private static AstroVector nutation(AstroVector pos, AstroTime time, PrecessDirection dir)
         {
-            RotationMatrix r = nutation_rot(time, direction);
+            RotationMatrix r = nutation_rot(time, dir);
             return new AstroVector(
                 r.rot[0, 0]*pos.x + r.rot[1, 0]*pos.y + r.rot[2, 0]*pos.z,
                 r.rot[0, 1]*pos.x + r.rot[1, 1]*pos.y + r.rot[2, 1]*pos.z,
@@ -3798,15 +3882,23 @@ namespace CosineKitty
                 dec = RAD2DEG * Math.Atan2(pos.z, Math.Sqrt(xyproj));
             }
 
-            return new Equatorial(ra, dec, dist);
+            return new Equatorial(ra, dec, dist, pos);
+        }
+
+        private static AstroVector gyration(AstroVector pos, AstroTime time, PrecessDirection dir)
+        {
+            // Combine nutation and precession into a single operation I call "gyration".
+            // The order they are composed depends on the direction,
+            // because both directions are mutual inverse functions.
+            return (dir == PrecessDirection.Into2000) ?
+                precession(nutation(pos, time, dir), time, dir) :
+                nutation(precession(pos, time, dir), time, dir);
         }
 
         private static AstroVector geo_pos(AstroTime time, Observer observer)
         {
-            double gast = sidereal_time(time);
-            AstroVector pos1 = terra(observer, gast);
-            AstroVector pos2 = nutation(time, -1, pos1);
-            return precession(time.tt, pos2, 0.0);
+            AstroVector pos = terra(observer, time);
+            return gyration(pos, time, PrecessDirection.Into2000);
         }
 
         private static AstroVector spin(double angle, AstroVector pos)
@@ -3818,7 +3910,7 @@ namespace CosineKitty
                 +cosang*pos.x + sinang*pos.y,
                 -sinang*pos.x + cosang*pos.y,
                 pos.z,
-                null
+                pos.t
             );
         }
 
@@ -3848,29 +3940,22 @@ namespace CosineKitty
                 dist_cos_lat * Math.Cos(moon.geo_eclip_lon),
                 dist_cos_lat * Math.Sin(moon.geo_eclip_lon),
                 moon.distance_au * Math.Sin(moon.geo_eclip_lat),
-                null
+                time
             );
 
             /* Convert ecliptic coordinates to equatorial coordinates, both in mean equinox of date. */
             AstroVector mpos1 = ecl2equ_vec(time, gepos);
 
             /* Convert from mean equinox of date to J2000. */
-            AstroVector mpos2 = precession(time.tt, mpos1, 0);
+            AstroVector mpos2 = precession(mpos1, time, PrecessDirection.Into2000);
 
-            /* Patch in the correct time value into the returned vector. */
-            return new AstroVector(mpos2.x, mpos2.y, mpos2.z, time);
+            return mpos2;
         }
 
         private static AstroVector BarycenterContrib(AstroTime time, Body body, double planet_gm)
         {
-            double shift = planet_gm / (planet_gm + SUN_GM);
             AstroVector p = CalcVsop(vsop[(int)body], time);
-            return new AstroVector(
-                shift * p.x,
-                shift * p.y,
-                shift * p.z,
-                time
-            );
+            return (planet_gm / (planet_gm + SUN_GM)) * p;
         }
 
         private static AstroVector CalcSolarSystemBarycenter(AstroTime time)
@@ -3929,23 +4014,12 @@ namespace CosineKitty
                 case Body.Moon:
                     geomoon = GeoMoon(time);
                     earth = CalcEarth(time);
-                    return new AstroVector(
-                        earth.x + geomoon.x,
-                        earth.y + geomoon.y,
-                        earth.z + geomoon.z,
-                        time
-                    );
+                    return earth + geomoon;
 
                 case Body.EMB:
                     geomoon = GeoMoon(time);
                     earth = CalcEarth(time);
-                    double denom = 1.0 + EARTH_MOON_MASS_RATIO;
-                    return new AstroVector(
-                        earth.x + (geomoon.x / denom),
-                        earth.y + (geomoon.y / denom),
-                        earth.z + (geomoon.z / denom),
-                        time
-                    );
+                    return earth + (geomoon / (1.0 + EARTH_MOON_MASS_RATIO));
 
                 case Body.SSB:
                     return CalcSolarSystemBarycenter(time);
@@ -4034,7 +4108,7 @@ namespace CosineKitty
             Aberration aberration)
         {
             AstroVector vector;
-            AstroVector earth = new AstroVector(0.0, 0.0, 0.0, null);
+            AstroVector earth = new AstroVector(0.0, 0.0, 0.0, time);
             AstroTime ltime;
             AstroTime ltime2;
             double dt;
@@ -4119,6 +4193,7 @@ namespace CosineKitty
         /// <param name="observer">A location on or near the surface of the Earth.</param>
         /// <param name="equdate">Selects the date of the Earth's equator in which to express the equatorial coordinates.</param>
         /// <param name="aberration">Selects whether or not to correct for aberration.</param>
+        /// <returns>Topocentric equatorial coordinates of the celestial body.</returns>
         public static Equatorial Equator(
             Body body,
             AstroTime time,
@@ -4128,13 +4203,12 @@ namespace CosineKitty
         {
             AstroVector gc_observer = geo_pos(time, observer);
             AstroVector gc = GeoVector(body, time, aberration);
-            AstroVector j2000 = new AstroVector(gc.x - gc_observer.x, gc.y - gc_observer.y, gc.z - gc_observer.z, time);
+            AstroVector j2000 = gc - gc_observer;
 
             switch (equdate)
             {
                 case EquatorEpoch.OfDate:
-                    AstroVector temp = precession(0.0, j2000, time.tt);
-                    AstroVector datevect = nutation(time, 0, temp);
+                    AstroVector datevect = gyration(j2000, time, PrecessDirection.From2000);
                     return vector2radec(datevect);
 
                 case EquatorEpoch.J2000:
@@ -4143,6 +4217,63 @@ namespace CosineKitty
                 default:
                     throw new ArgumentException(string.Format("Unsupported equator epoch {0}", equdate));
             }
+        }
+
+        ///
+        /// <summary>
+        /// Calculates geocentric equatorial coordinates of an observer on the surface of the Earth.
+        /// </summary>
+        ///
+        /// <remarks>
+        /// This function calculates a vector from the center of the Earth to
+        /// a point on or near the surface of the Earth, expressed in equatorial
+        /// coordinates. It takes into account the rotation of the Earth at the given
+        /// time, along with the given latitude, longitude, and elevation of the observer.
+        ///
+        /// The caller may pass a value in `equdate` to select either `EQUATOR_J2000`
+        /// for using J2000 coordinates, or `EQUATOR_OF_DATE` for using coordinates relative
+        /// to the Earth's equator at the specified time.
+        ///
+        /// The returned vector has components expressed in astronomical units (AU).
+        /// To convert to kilometers, multiply the `x`, `y`, and `z` values by
+        /// the constant value #Astronomy.KM_PER_AU.
+        /// </remarks>
+        ///
+        /// <param name="time">
+        /// The date and time for which to calculate the observer's position vector.
+        /// </param>
+        ///
+        /// <param name="observer">
+        /// The geographic location of a point on or near the surface of the Earth.
+        /// </param>
+        ///
+        /// <param name="equdate">
+        /// Selects the date of the Earth's equator in which to express the equatorial coordinates.
+        /// The caller may select `EQUATOR_J2000` to use the orientation of the Earth's equator
+        /// at noon UTC on January 1, 2000, in which case this function corrects for precession
+        /// and nutation of the Earth as it was at the moment specified by the `time` parameter.
+        /// Or the caller may select `EQUATOR_OF_DATE` to use the Earth's equator at `time`
+        /// as the orientation.
+        /// </param>
+        ///
+        /// <returns>
+        /// An equatorial vector from the center of the Earth to the specified location
+        /// on (or near) the Earth's surface.
+        /// </returns>
+        public static AstroVector ObserverVector(
+            AstroTime time,
+            Observer observer,
+            EquatorEpoch equdate)
+        {
+            AstroVector pos = terra(observer, time);
+
+            if (equdate == EquatorEpoch.OfDate)
+                return pos;     // 'pos' already contains equator-of-date coordinates.
+
+            if (equdate == EquatorEpoch.J2000)
+                return gyration(pos, time, PrecessDirection.Into2000);
+
+            throw new ArgumentException(string.Format("Unsupported equator epoch {0}", equdate));
         }
 
         /// <summary>
@@ -4213,24 +4344,24 @@ namespace CosineKitty
             // x = direction from center of Earth toward 0 degrees longitude (the prime meridian) on equator.
             // y = direction from center of Earth toward 90 degrees west longitude on equator.
             // z = direction from center of Earth toward the north pole.
-            var uze = new AstroVector(coslat * coslon, coslat * sinlon, sinlat, null);
-            var une = new AstroVector(-sinlat * coslon, -sinlat * sinlon, coslat, null);
-            var uwe = new AstroVector(sinlon, -coslon, 0.0, null);
+            var uze = new AstroVector(coslat * coslon, coslat * sinlon, sinlat, time);
+            var une = new AstroVector(-sinlat * coslon, -sinlat * sinlon, coslat, time);
+            var uwe = new AstroVector(sinlon, -coslon, 0.0, time);
 
             // Correct the vectors uze, une, uwe for the Earth's rotation by calculating
             // sideral time. Call spin() for each uncorrected vector to rotate about
             // the Earth's axis to yield corrected unit vectors uz, un, uw.
             // Multiply sidereal hours by -15 to convert to degrees and flip eastward
             // rotation of the Earth to westward apparent movement of objects with time.
-            double spin_angle = -15.0 * sidereal_time(time);
-            AstroVector uz = spin(spin_angle, uze);
-            AstroVector un = spin(spin_angle, une);
-            AstroVector uw = spin(spin_angle, uwe);
+            double angle = -15.0 * sidereal_time(time);
+            AstroVector uz = spin(angle, uze);
+            AstroVector un = spin(angle, une);
+            AstroVector uw = spin(angle, uwe);
 
             // Convert angular equatorial coordinates (RA, DEC) to
             // cartesian equatorial coordinates in 'p', using the
             // same orientation system as uze, une, uwe.
-            var p = new AstroVector(cosdc * cosra, cosdc * sinra, sindc, null);
+            var p = new AstroVector(cosdc * cosra, cosdc * sinra, sindc, time);
 
             // Use dot products of p with the zenith, north, and west
             // vectors to obtain the cartesian coordinates of the body in
@@ -4341,8 +4472,7 @@ namespace CosineKitty
             AstroVector sun2000 = new AstroVector(-earth2000.x, -earth2000.y, -earth2000.z, adjusted_time);
 
             /* Convert to equatorial Cartesian coordinates of date. */
-            AstroVector stemp = precession(0.0, sun2000, adjusted_time.tt);
-            AstroVector sun_ofdate = nutation(adjusted_time, 0, stemp);
+            AstroVector sun_ofdate = gyration(sun2000, adjusted_time, PrecessDirection.From2000);
 
             /* Convert equatorial coordinates to ecliptic coordinates. */
             double true_obliq = DEG2RAD * e_tilt(adjusted_time).tobl;
@@ -4369,7 +4499,8 @@ namespace CosineKitty
 
             double elat = RAD2DEG * Math.Atan2(ez, xyproj);
 
-            return new Ecliptic(ex, ey, ez, elat, elon);
+            var vec = new AstroVector(ex, ey, ez, pos.t);
+            return new Ecliptic(vec, elat, elon);
         }
 
         /// <summary>
@@ -6233,7 +6364,7 @@ namespace CosineKitty
             AstroVector target,
             AstroVector dir)
         {
-            double u = (dir.x*target.x + dir.y*target.y + dir.z*target.z) / (dir.x*dir.x + dir.y*dir.y + dir.z*dir.z);
+            double u = (dir * target) / (dir * dir);
             double dx = (u * dir.x) - target.x;
             double dy = (u * dir.y) - target.y;
             double dz = (u * dir.z) - target.z;
@@ -6246,9 +6377,9 @@ namespace CosineKitty
 
         internal static ShadowInfo EarthShadow(AstroTime time)
         {
-            /* This function helps find when the Earth's shadow falls upon the Moon. */
-            AstroVector e = CalcEarth(time);            /* This function never fails; no need to check return value */
-            AstroVector m = GeoMoon(time);    /* This function never fails; no need to check return value */
+            // This function helps find when the Earth's shadow falls upon the Moon.
+            AstroVector e = CalcEarth(time);    // heliocentric Earth
+            AstroVector m = GeoMoon(time);      // geocentric Moon
 
             return CalcShadow(EARTH_ECLIPSE_RADIUS_KM, time, m, e);
         }
@@ -6256,68 +6387,46 @@ namespace CosineKitty
 
         internal static ShadowInfo MoonShadow(AstroTime time)
         {
-            /* This function helps find when the Moon's shadow falls upon the Earth. */
+            // This function helps find when the Moon's shadow falls upon the Earth.
+            // This is a variation on the logic in EarthShadow().
+            // Instead of a heliocentric Earth and a geocentric Moon,
+            // we want a heliocentric Moon and a lunacentric Earth.
 
-            /*
-                This is a variation on the logic in EarthShadow().
-                Instead of a heliocentric Earth and a geocentric Moon,
-                we want a heliocentric Moon and a lunacentric Earth.
-            */
+            AstroVector e = CalcEarth(time);    // heliocentric Earth
+            AstroVector m = GeoMoon(time);      // geocentric Moon
 
-            AstroVector h = CalcEarth(time);    /* heliocentric Earth */
-            AstroVector m = GeoMoon(time);      /* geocentric Moon */
-
-            /* Calculate lunacentric Earth. */
-            var e = new AstroVector(-m.x, -m.y, -m.z, m.t);
-
-            /* Convert geocentric moon to heliocentric Moon. */
-            m.x += h.x;
-            m.y += h.y;
-            m.z += h.z;
-
-            return CalcShadow(MOON_MEAN_RADIUS_KM, time, e, m);
+            // -m  = lunacentric Earth
+            // m+e = heliocentric Moon
+            return CalcShadow(MOON_MEAN_RADIUS_KM, time, -m, m+e);
         }
 
 
         internal static ShadowInfo LocalMoonShadow(AstroTime time, Observer observer)
         {
-            /* Calculate observer's geocentric position. */
-            /* For efficiency, do this first, to populate the earth rotation parameters in 'time'. */
-            /* That way they can be recycled instead of recalculated. */
-            AstroVector pos = geo_pos(time, observer);
+            // Calculate observer's geocentric position.
+            // For efficiency, do this first, to populate the earth rotation parameters in 'time'.
+            // That way they can be recycled instead of recalculated.
+            AstroVector o = geo_pos(time, observer);
+            AstroVector h = CalcEarth(time);    // heliocentric Earth
+            AstroVector m = GeoMoon(time);      // geocentric Moon
 
-            AstroVector h = CalcEarth(time);    /* heliocentric Earth */
-            AstroVector m = GeoMoon(time);      /* geocentric Moon */
-
-            /* Calculate lunacentric location of an observer on the Earth's surface. */
-            var o = new AstroVector(pos.x - m.x, pos.y - m.y, pos.z - m.z, time);
-
-            /* Convert geocentric moon to heliocentric Moon. */
-            m.x += h.x;
-            m.y += h.y;
-            m.z += h.z;
-
-            return CalcShadow(MOON_MEAN_RADIUS_KM, time, o, m);
+            // o-m = lunacentric observer
+            // m+h = heliocentric Moon
+            return CalcShadow(MOON_MEAN_RADIUS_KM, time, o-m, m+h);
         }
 
 
         internal static ShadowInfo PlanetShadow(Body body, double planet_radius_km, AstroTime time)
         {
-            /* Calculate light-travel-corrected vector from Earth to planet. */
+            // Calculate light-travel-corrected vector from Earth to planet.
             AstroVector g = GeoVector(body, time, Aberration.None);
 
-            /* Calculate light-travel-corrected vector from Earth to Sun. */
+            // Calculate light-travel-corrected vector from Earth to Sun.
             AstroVector e = GeoVector(Body.Sun, time, Aberration.None);
 
-            /* Deduce light-travel-corrected vector from Sun to planet. */
-            var p = new AstroVector(g.x - e.x, g.y - e.y, g.z - e.z, time);
-
-            /* Calcluate Earth's position from the planet's point of view. */
-            e.x = -g.x;
-            e.y = -g.y;
-            e.z = -g.z;
-
-            return CalcShadow(planet_radius_km, time, e, p);
+            // -g  = planetcentric Earth
+            // g-e = heliocentric planet
+            return CalcShadow(planet_radius_km, time, -g, g-e);
         }
 
 
@@ -6636,7 +6745,7 @@ namespace CosineKitty
             double phase_angle;
             if (body == Body.Sun)
             {
-                gc = new AstroVector(-earth.x, -earth.y, -earth.z, time);
+                gc = -earth;
                 hc = new AstroVector(0.0, 0.0, 0.0, time);
                 // The Sun emits light instead of reflecting it,
                 // so we report a placeholder phase angle of 0.
@@ -6648,13 +6757,13 @@ namespace CosineKitty
                 {
                     // For extra numeric precision, use geocentric Moon formula directly.
                     gc = GeoMoon(time);
-                    hc = new AstroVector(earth.x + gc.x, earth.y + gc.y, earth.z + gc.z, time);
+                    hc = earth + gc;
                 }
                 else
                 {
                     // For planets, the heliocentric vector is more direct to calculate.
                     hc = HelioVector(body, time);
-                    gc = new AstroVector(hc.x - earth.x, hc.y - earth.y, hc.z - earth.z, time);
+                    gc = hc - earth;
                 }
 
                 phase_angle = AngleBetween(gc, hc);
@@ -6943,6 +7052,97 @@ namespace CosineKitty
             return new RotationMatrix(rot);
         }
 
+        /// <summary>Creates an identity rotation matrix.</summary>
+        /// <remarks>
+        /// Returns a rotation matrix that has no effect on orientation.
+        /// This matrix can be the starting point for other operations,
+        /// such as using a series of calls to #Astronomy.Pivot to
+        /// create a custom rotation matrix.
+        /// </remarks>
+        /// <returns>The identity matrix.</returns>
+        public static RotationMatrix IdentityMatrix()
+        {
+            var rot = new double[3, 3]
+            {
+                { 1, 0, 0 },
+                { 0, 1, 0 },
+                { 0, 0, 1 }
+            };
+
+            return new RotationMatrix(rot);
+        }
+
+        /// <summary>Re-orients a rotation matrix by pivoting it by an angle around one of its axes.</summary>
+        /// <remarks>
+        /// Given a rotation matrix, a selected coordinate axis, and an angle in degrees,
+        /// this function pivots the rotation matrix by that angle around that coordinate axis.
+        ///
+        /// For example, if you have rotation matrix that converts ecliptic coordinates (ECL)
+        /// to horizontal coordinates (HOR), but you really want to convert ECL to the orientation
+        /// of a telescope camera pointed at a given body, you can use `Astronomy.Pivot` twice:
+        /// (1) pivot around the zenith axis by the body's azimuth, then (2) pivot around the
+        /// western axis by the body's altitude angle. The resulting rotation matrix will then
+        /// reorient ECL coordinates to the orientation of your telescope camera.
+        /// </remarks>
+        ///
+        /// <param name="rotation">The input rotation matrix.</param>
+        ///
+        /// <param name="axis">
+        ///      An integer that selects which coordinate axis to rotate around:
+        ///      0 = x, 1 = y, 2 = z. Any other value will cause an ArgumentException to be thrown.
+        /// </param>
+        ///
+        /// <param name="angle">
+        ///      An angle in degrees indicating the amount of rotation around the specified axis.
+        ///      Positive angles indicate rotation counterclockwise as seen from the positive
+        ///      direction along that axis, looking towards the origin point of the orientation system.
+        ///      Any finite number of degrees is allowed, but best precision will result from keeping
+        ///      `angle` in the range [-360, +360].
+        /// </param>
+        ///
+        /// <returns>A pivoted matrix object.</returns>
+        public static RotationMatrix Pivot(RotationMatrix rotation, int axis, double angle)
+        {
+            /* Check for an invalid coordinate axis. */
+            if (axis < 0 || axis > 2)
+                throw new ArgumentException($"Invalid coordinate axis = {axis}. Must be 0..2.");
+
+            /* Check for an invalid angle value. */
+            if (!double.IsFinite(angle))
+                throw new ArgumentException("Angle is not a finite number.");
+
+            double radians = angle * DEG2RAD;
+            double c = Math.Cos(radians);
+            double s = Math.Sin(radians);
+
+            /*
+                We need to maintain the "right-hand" rule, no matter which
+                axis was selected. That means we pick (i, j, k) axis order
+                such that the following vector cross product is satisfied:
+                i x j = k
+            */
+            int i = (axis + 1) % 3;
+            int j = (axis + 2) % 3;
+            int k = axis;
+
+            var rot = new double[3, 3];
+
+            rot[i, i] = c*rotation.rot[i, i] - s*rotation.rot[i, j];
+            rot[i, j] = s*rotation.rot[i, i] + c*rotation.rot[i, j];
+            rot[i, k] = rotation.rot[i, k];
+
+            rot[j, i] = c*rotation.rot[j, i] - s*rotation.rot[j, j];
+            rot[j, j] = s*rotation.rot[j, i] + c*rotation.rot[j, j];
+            rot[j, k] = rotation.rot[j, k];
+
+            rot[k, i] = c*rotation.rot[k, i] - s*rotation.rot[k, j];
+            rot[k, j] = s*rotation.rot[k, i] + c*rotation.rot[k, j];
+            rot[k, k] = rotation.rot[k, k];
+
+            return new RotationMatrix(rot);
+        }
+
+
         /// <summary>Applies a rotation to a vector, yielding a rotated vector.</summary>
         /// <remarks>
         /// This function transforms a vector in one orientation to a vector
@@ -7018,27 +7218,13 @@ namespace CosineKitty
         }
 
 
-        /// <summary>Given angular equatorial coordinates in `equ`, calculates equatorial vector.</summary>
-        /// <param name="equ">Angular equatorial coordinates to be converted to a vector.</param>
-        /// <param name="time">
-        /// The date and time of the observation. This is needed because the returned
-        /// vector requires a valid time value when passed to certain other functions.
-        /// </param>
-        /// <returns>A vector in the equatorial system.</returns>
-        public static AstroVector VectorFromEquator(Equatorial equ, AstroTime time)
-        {
-            var sphere = new Spherical(equ.dec, 15.0 * equ.ra, equ.dist);
-            return VectorFromSphere(sphere, time);
-        }
-
-
         /// <summary>Given an equatorial vector, calculates equatorial angular coordinates.</summary>
         /// <param name="vector">A vector in an equatorial coordinate system.</param>
         /// <returns>Angular coordinates expressed in the same equatorial system as `vector`.</returns>
         public static Equatorial EquatorFromVector(AstroVector vector)
         {
             Spherical sphere = SphereFromVector(vector);
-            return new Equatorial(sphere.lon / 15.0, sphere.lat, sphere.dist);
+            return new Equatorial(sphere.lon / 15.0, sphere.lat, sphere.dist, vector);
         }
 
 
@@ -7296,8 +7482,8 @@ namespace CosineKitty
         /// </returns>
         public static RotationMatrix Rotation_EQJ_EQD(AstroTime time)
         {
-            RotationMatrix prec = precession_rot(0.0, time.tt);
-            RotationMatrix nut = nutation_rot(time, 0);
+            RotationMatrix prec = precession_rot(time, PrecessDirection.From2000);
+            RotationMatrix nut = nutation_rot(time, PrecessDirection.From2000);
             return CombineRotation(prec, nut);
         }
 
@@ -7319,8 +7505,8 @@ namespace CosineKitty
         /// </returns>
         public static RotationMatrix Rotation_EQD_EQJ(AstroTime time)
         {
-            RotationMatrix nut = nutation_rot(time, 1);
-            RotationMatrix prec = precession_rot(time.tt, 0.0);
+            RotationMatrix nut = nutation_rot(time, PrecessDirection.Into2000);
+            RotationMatrix prec = precession_rot(time, PrecessDirection.Into2000);
             return CombineRotation(nut, prec);
         }
 
@@ -7354,14 +7540,16 @@ namespace CosineKitty
             double sinlon = Math.Sin(observer.longitude * DEG2RAD);
             double coslon = Math.Cos(observer.longitude * DEG2RAD);
 
-            var uze = new AstroVector(coslat * coslon, coslat * sinlon, sinlat, null);
-            var une = new AstroVector(-sinlat * coslon, -sinlat * sinlon, coslat, null);
-            var uwe = new AstroVector(sinlon, -coslon, 0.0, null);
+            var uze = new AstroVector(coslat * coslon, coslat * sinlon, sinlat, time);
+            var une = new AstroVector(-sinlat * coslon, -sinlat * sinlon, coslat, time);
+            var uwe = new AstroVector(sinlon, -coslon, 0.0, time);
 
-            double spin_angle = -15.0 * sidereal_time(time);
-            AstroVector uz = spin(spin_angle, uze);
-            AstroVector un = spin(spin_angle, une);
-            AstroVector uw = spin(spin_angle, uwe);
+            // Multiply sidereal hours by -15 to convert to degrees and flip eastward
+            // rotation of the Earth to westward apparent movement of objects with time.
+            double angle = -15.0 * sidereal_time(time);
+            AstroVector uz = spin(angle, uze);
+            AstroVector un = spin(angle, une);
+            AstroVector uw = spin(angle, uwe);
 
             var rot = new double[3,3];
             rot[0, 0] = un.x; rot[1, 0] = un.y; rot[2, 0] = un.z;
@@ -7633,8 +7821,8 @@ namespace CosineKitty
             }
 
             // Convert coordinates from J2000 to B1875.
-            var equ2000 = new Equatorial(ra, dec, 1.0);
-            AstroVector vec2000 = VectorFromEquator(equ2000, Epoch2000);
+            var sph2000 = new Spherical(dec, 15.0 * ra, 1.0);
+            AstroVector vec2000 = VectorFromSphere(sph2000, Epoch2000);
             AstroVector vec1875 = RotateVector(ConstelRot, vec2000);
             Equatorial equ1875 = EquatorFromVector(vec1875);
 

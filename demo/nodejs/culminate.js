@@ -59,8 +59,8 @@ function Demo() {
         const date = (process.argv.length === 5) ? ParseDate(process.argv[4]) : new Date();
         console.log('search   : ' + date.toISOString());
 
-        for (let body of Astronomy.Bodies) {
-            if (body !== 'Earth' && body !== 'EMB' && body !== 'SSB') {
+        for (let body in Astronomy.Body) {
+            if (body !== Astronomy.Body.Earth && body !== Astronomy.Body.EMB && body !== Astronomy.Body.SSB) {
                 let culm = Astronomy.SearchHourAngle(body, observer, 0, date);
                 DisplayEvent(body, culm);
             }

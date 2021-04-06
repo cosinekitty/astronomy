@@ -47,8 +47,9 @@ To get started quickly, here are some [examples](../../demo/c/).
 
 | Function | Description |
 | -------- | ----------- |
-| [HelioVector](#Astronomy_HelioVector) | Calculates vector with respect to the center of the Sun. |
-| [GeoVector](#Astronomy_GeoVector)     | Calculates vector with respect to the center of the Earth. |
+| [HelioVector](#Astronomy_HelioVector) | Calculates body position vector with respect to the center of the Sun. |
+| [GeoVector](#Astronomy_GeoVector)     | Calculates body position vector with respect to the center of the Earth. |
+| [ObserverVector](#Astronomy_ObserverVector) | Calculates vector from the center of the Earth to an observer on the Earth's surface. |
 | [Equator](#Astronomy_Equator)         | Calculates right ascension and declination. |
 | [Ecliptic](#Astronomy_Ecliptic)       | Converts J2000 equatorial coordinates to J2000 ecliptic coordinates. |
 | [EclipticLongitude](#Astronomy_EclipticLongitude) | Calculates ecliptic longitude of a body in the J2000 system. |
@@ -140,9 +141,10 @@ these are used in function and type names.
 | [RotateVector](#Astronomy_RotateVector) | Applies a rotation matrix to a vector, yielding a vector in another orientation system. |
 | [InverseRotation](#Astronomy_InverseRotation) | Given a rotation matrix, finds the inverse rotation matrix that does the opposite transformation. |
 | [CombineRotation](#Astronomy_CombineRotation) | Given two rotation matrices, returns a rotation matrix that combines them into a net transformation. |
+| [IdentityMatrix](#Astronomy_IdentityMatrix) | Returns a 3x3 identity matrix, which can be used to form other rotation matrices. |
+| [Pivot](#Astronomy_Pivot) | Transforms a rotation matrix by pivoting it around a given axis by a given angle. |
 | [VectorFromSphere](#Astronomy_VectorFromSphere) | Converts spherical coordinates to Cartesian coordinates. |
 | [SphereFromVector](#Astronomy_SphereFromVector) | Converts Cartesian coordinates to spherical coordinates. |
-| [VectorFromEquator](#Astronomy_VectorFromEquator) | Given angular equatorial coordinates, calculates equatorial vector. |
 | [EquatorFromVector](#Astronomy_EquatorFromVector) | Given an equatorial vector, calculates equatorial angular coordinates. |
 | [VectorFromHorizon](#Astronomy_VectorFromHorizon) | Given apparent angular horizontal coordinates, calculates horizontal vector. |
 | [HorizonFromVector](#Astronomy_HorizonFromVector) | Given a vector in horizontal orientation, calculates horizontal angular coordinates. |
@@ -474,10 +476,14 @@ Correction for aberration is optional, using the `aberration` parameter.
 
 
 
+**Returns:**  Topocentric equatorial coordinates of the celestial body. 
+
+
+
 | Type | Parameter | Description |
 | --- | --- | --- |
 | [`astro_body_t`](#astro_body_t) | `body` |  The celestial body to be observed. Not allowed to be `BODY_EARTH`.  | 
-| [`astro_time_t *`](#astro_time_t *) | `time` |  The date and time at which the observation takes place.  | 
+| <code><a href="#astro_time_t">astro_time_t</a> *</code> | `time` |  The date and time at which the observation takes place.  | 
 | [`astro_observer_t`](#astro_observer_t) | `observer` |  A location on or near the surface of the Earth.  | 
 | [`astro_equator_date_t`](#astro_equator_date_t) | `equdate` |  Selects the date of the Earth's equator in which to express the equatorial coordinates.  | 
 | [`astro_aberration_t`](#astro_aberration_t) | `aberration` |  Selects whether or not to correct for aberration.  | 
@@ -669,7 +675,7 @@ This function optionally corrects for atmospheric refraction. For most uses, it 
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| [`astro_time_t *`](#astro_time_t *) | `time` |  The date and time of the observation. | 
+| <code><a href="#astro_time_t">astro_time_t</a> *</code> | `time` |  The date and time of the observation. | 
 | [`astro_observer_t`](#astro_observer_t) | `observer` |  The geographic location of the observer. | 
 | `double` | `ra` |  The right ascension of the body in sidereal hours. See function remarks for more details. | 
 | `double` | `dec` |  The declination of the body in degrees. See function remarks for more details. | 
@@ -712,6 +718,23 @@ The distance to the observed object is stored in `dist`, and is expressed in ast
 | [`astro_vector_t`](#astro_vector_t) | `vector` |  Cartesian vector to be converted to horizontal coordinates. | 
 | [`astro_refraction_t`](#astro_refraction_t) | `refraction` |  `REFRACTION_NORMAL`: correct altitude for atmospheric refraction (recommended). `REFRACTION_NONE`: no atmospheric refraction correction is performed. `REFRACTION_JPLHOR`: for JPL Horizons compatibility testing only; not recommended for normal use. | 
 
+
+
+
+---
+
+<a name="Astronomy_IdentityMatrix"></a>
+### Astronomy_IdentityMatrix() &#8658; [`astro_rotation_t`](#astro_rotation_t)
+
+**Creates an identity rotation matrix.** 
+
+
+
+Returns a rotation matrix that has no effect on orientation. This matrix can be the starting point for other operations, such as using a series of calls to [`Astronomy_Pivot`](#Astronomy_Pivot) to create a custom rotation matrix.
+
+
+
+**Returns:**  The identity matrix. 
 
 
 
@@ -1092,6 +1115,64 @@ After calling [`Astronomy_SearchTransit`](#Astronomy_SearchTransit) to find a tr
 
 ---
 
+<a name="Astronomy_ObserverVector"></a>
+### Astronomy_ObserverVector(time, observer, equdate) &#8658; [`astro_vector_t`](#astro_vector_t)
+
+**Calculates geocentric equatorial coordinates of an observer on the surface of the Earth.** 
+
+
+
+This function calculates a vector from the center of the Earth to a point on or near the surface of the Earth, expressed in equatorial coordinates. It takes into account the rotation of the Earth at the given time, along with the given latitude, longitude, and elevation of the observer.
+
+The caller may pass a value in `equdate` to select either `EQUATOR_J2000` for using J2000 coordinates, or `EQUATOR_OF_DATE` for using coordinates relative to the Earth's equator at the specified time.
+
+The returned vector has components expressed in astronomical units (AU). To convert to kilometers, multiply the `x`, `y`, and `z` values by the constant value [`KM_PER_AU`](#KM_PER_AU).
+
+
+
+**Returns:**  If successful, the returned vector holds `ASTRO_SUCCESS` in its `status` field, and is an equatorial vector from the center of the Earth to the specified location on (or near) the Earth's surface. Otherwise, `status` holds an error code. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| <code><a href="#astro_time_t">astro_time_t</a> *</code> | `time` |  The date and time for which to calculate the observer's position vector. | 
+| [`astro_observer_t`](#astro_observer_t) | `observer` |  The geographic location of a point on or near the surface of the Earth. | 
+| [`astro_equator_date_t`](#astro_equator_date_t) | `equdate` |  Selects the date of the Earth's equator in which to express the equatorial coordinates. The caller may select `EQUATOR_J2000` to use the orientation of the Earth's equator at noon UTC on January 1, 2000, in which case this function corrects for precession and nutation of the Earth as it was at the moment specified by the `time` parameter. Or the caller may select `EQUATOR_OF_DATE` to use the Earth's equator at `time` as the orientation. | 
+
+
+
+
+---
+
+<a name="Astronomy_Pivot"></a>
+### Astronomy_Pivot(rotation, axis, angle) &#8658; [`astro_rotation_t`](#astro_rotation_t)
+
+**Re-orients a rotation matrix by pivoting it by an angle around one of its axes.** 
+
+
+
+Given a rotation matrix, a selected coordinate axis, and an angle in degrees, this function pivots the rotation matrix by that angle around that coordinate axis.
+
+For example, if you have rotation matrix that converts ecliptic coordinates (ECL) to horizontal coordinates (HOR), but you really want to convert ECL to the orientation of a telescope camera pointed at a given body, you can use `Astronomy_Pivot` twice: (1) pivot around the zenith axis by the body's azimuth, then (2) pivot around the western axis by the body's altitude angle. The resulting rotation matrix will then reorient ECL coordinates to the orientation of your telescope camera.
+
+
+
+**Returns:**  If successful, the return value will have `ASTRO_SUCCESS` in the `status` field, along with a pivoted rotation matrix. Otherwise, `status` holds an appropriate error code and the rotation matrix is invalid. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_rotation_t`](#astro_rotation_t) | `rotation` |  The input rotation matrix. | 
+| `int` | `axis` |  An integer that selects which coordinate axis to rotate around: 0 = x, 1 = y, 2 = z. Any other value will fail with the error code `ASTRO_INVALID_PARAMETER` in the `status` field of the return value. | 
+| `double` | `angle` |  An angle in degrees indicating the amount of rotation around the specified axis. Positive angles indicate rotation counterclockwise as seen from the positive direction along that axis, looking towards the origin point of the orientation system. If `angle` is NAN or infinite, the function will fail with the error code `ASTRO_INVALID_PARAMETER`. Any finite number of degrees is allowed, but best precision will result from keeping `angle` in the range [-360, +360]. | 
+
+
+
+
+---
+
 <a name="Astronomy_Refraction"></a>
 ### Astronomy_Refraction(refraction, altitude) &#8658; `double`
 
@@ -1124,7 +1205,7 @@ Given an altitude angle and a refraction option, calculates the amount of "lift"
 
 
 
-Astronomy Engine uses dynamic memory allocation in only one place: it makes calculation of Pluto's orbit more efficient by caching 11 KB segments recycling them. To force purging this cache and freeing all the dynamic memory, you can call this function at any time. It is always safe to call, although it will slow down the very next calculation of Pluto's position for a nearby time value. Calling this function before your program exits is optional, but it will be helpful for leak-checkers like valgrind. 
+Astronomy Engine uses dynamic memory allocation in only one place: it makes calculation of Pluto's orbit more efficient by caching 11 KB segments and recycling them. To force purging this cache and freeing all the dynamic memory, you can call this function at any time. It is always safe to call, although it will slow down the very next calculation of Pluto's position for a nearby time value. Calling this function before your program exits is optional, but it will be helpful for leak-checkers like valgrind. 
 
 ---
 
@@ -2044,29 +2125,6 @@ After calculating the date and time of an astronomical event in the form of an [
 
 ---
 
-<a name="Astronomy_VectorFromEquator"></a>
-### Astronomy_VectorFromEquator(equ, time) &#8658; [`astro_vector_t`](#astro_vector_t)
-
-**Given angular equatorial coordinates in `equ`, calculates equatorial vector.** 
-
-
-
-
-
-**Returns:**  A vector in the equatorial system. 
-
-
-
-| Type | Parameter | Description |
-| --- | --- | --- |
-| [`astro_equatorial_t`](#astro_equatorial_t) | `equ` |  Angular equatorial coordinates to be converted to a vector. | 
-| [`astro_time_t`](#astro_time_t) | `time` |  The date and time of the observation. This is needed because the returned vector requires a valid time value when passed to certain other functions. | 
-
-
-
-
----
-
 <a name="Astronomy_VectorFromHorizon"></a>
 ### Astronomy_VectorFromHorizon(sphere, time, refraction) &#8658; [`astro_vector_t`](#astro_vector_t)
 
@@ -2135,6 +2193,100 @@ Calculates the non-negative length of the given vector. The length is expressed 
 | --- | --- | --- |
 | [`astro_vector_t`](#astro_vector_t) | `vector` |  The vector whose length is to be calculated.  | 
 
+
+
+<a name="constants"></a>
+## Constants
+
+
+
+---
+
+<a name="DEG2RAD"></a>
+### `DEG2RAD`
+
+**The factor to convert radians to degrees = pi/180.** 
+
+
+
+```C
+#define DEG2RAD  0.017453292519943296
+```
+
+
+
+---
+
+<a name="KM_PER_AU"></a>
+### `KM_PER_AU`
+
+**The number of kilometers in one astronomical unit (AU).** 
+
+
+
+```C
+#define KM_PER_AU  1.4959787069098932e+8
+```
+
+
+
+---
+
+<a name="MAX_BODY"></a>
+### `MAX_BODY`
+
+**Maximum valid astro_body_t value; useful for iteration.** 
+
+
+
+```C
+#define MAX_BODY  BODY_SSB
+```
+
+
+
+---
+
+<a name="MIN_BODY"></a>
+### `MIN_BODY`
+
+**Minimum valid astro_body_t value; useful for iteration.** 
+
+
+
+```C
+#define MIN_BODY  BODY_MERCURY
+```
+
+
+
+---
+
+<a name="RAD2DEG"></a>
+### `RAD2DEG`
+
+**The factor to convert degrees to radians = 180/pi.** 
+
+
+
+```C
+#define RAD2DEG  57.295779513082321
+```
+
+
+
+---
+
+<a name="TIME_TEXT_BYTES"></a>
+### `TIME_TEXT_BYTES`
+
+**The smallest number of characters that is always large enough for [`Astronomy_FormatTime`](#Astronomy_FormatTime).** 
+
+
+
+```C
+#define TIME_TEXT_BYTES  25
+```
 
 
 <a name="enums"></a>
@@ -2444,9 +2596,7 @@ Coordinates of a celestial body as seen from the center of the Sun (heliocentric
 | Type | Member | Description |
 | ---- | ------ | ----------- |
 | [`astro_status_t`](#astro_status_t) | `status` |  `ASTRO_SUCCESS` if this struct is valid; otherwise an error code.  |
-| `double` | `ex` |  Cartesian x-coordinate: in the direction of the equinox along the ecliptic plane.  |
-| `double` | `ey` |  Cartesian y-coordinate: in the ecliptic plane 90 degrees prograde from the equinox.  |
-| `double` | `ez` |  Cartesian z-coordinate: perpendicular to the ecliptic plane. Positive is north.  |
+| [`astro_vector_t`](#astro_vector_t) | `vec` |  Cartesian ecliptic vector: x=equinox, y=90 degrees prograde in ecliptic plane, z=northward perpendicular to ecliptic.  |
 | `double` | `elat` |  Latitude in degrees north (positive) or south (negative) of the ecliptic plane.  |
 | `double` | `elon` |  Longitude in degrees around the ecliptic plane prograde from the equinox.  |
 
@@ -2474,7 +2624,7 @@ Coordinates of a celestial body as seen from the center of the Sun (heliocentric
 <a name="astro_equatorial_t"></a>
 ### `astro_equatorial_t`
 
-**Equatorial angular coordinates.** 
+**Equatorial angular and cartesian coordinates.** 
 
 
 
@@ -2486,6 +2636,7 @@ Coordinates of a celestial body as seen from the Earth (geocentric or topocentri
 | `double` | `ra` |  right ascension in sidereal hours.  |
 | `double` | `dec` |  declination in degrees  |
 | `double` | `dist` |  distance to the celestial body in AU.  |
+| [`astro_vector_t`](#astro_vector_t) | `vec` |  equatorial coordinates in cartesian vector form: x = March equinox, y = June solstice, z = north.  |
 
 
 ---
@@ -2674,7 +2825,7 @@ Fields `sd_penum`, `sd_partial`, and `sd_total` hold the semi-duration of each p
 
 This structure is passed to functions that calculate phenomena as observed from a particular place on the Earth.
 
-You can create this structure directly, or you can call the convenience function [`Astronomy_MakeObserver`](#Astronomy_MakeObserver)# to create one for you. 
+You can create this structure directly, or you can call the convenience function [`Astronomy_MakeObserver`](#Astronomy_MakeObserver) to create one for you. 
 
 | Type | Member | Description |
 | ---- | ------ | ----------- |
@@ -2763,11 +2914,11 @@ To create a valid [`astro_time_t`](#astro_time_t) value from scratch, call [`Ast
 
 To adjust an existing [`astro_time_t`](#astro_time_t) by a certain real number of days, call [`Astronomy_AddDays`](#Astronomy_AddDays).
 
-The [`astro_time_t`](#astro_time_t) type contains `ut` to represent Universal Time (UT1/UTC) and `tt` to represent Terrestrial Time (TT, also known as *ephemeris time*). The difference `tt-ut` is known as *&Delta;T*, and is obtained from a model provided by the [United States Naval Observatory](http://maia.usno.navy.mil/ser7/).
+The [`astro_time_t`](#astro_time_t) type contains `ut` to represent Universal Time (UT1/UTC) and `tt` to represent Terrestrial Time (TT, also known as *ephemeris time*). The difference `tt-ut` is known as *&Delta;T*, using a best-fit piecewise model devised by [Espenak and Meeus](https://eclipse.gsfc.nasa.gov/SEhelp/deltatpoly2004.html).
 
 Both `tt` and `ut` are necessary for performing different astronomical calculations. Indeed, certain calculations (such as rise/set times) require both time scales. See the documentation for the `ut` and `tt` fields for more detailed information.
 
-In cases where [`astro_time_t`](#astro_time_t) is included in a structure returned by a function that can fail, the astro_status_t field `status` will contain a value other than `ASTRO_SUCCESS`; in that case the `ut` and `tt` will hold `NAN` (not a number). In general, when there is an error code stored in a struct field `status`, the caller should ignore all other values in that structure, including the `ut` and `tt` inside [`astro_time_t`](#astro_time_t). 
+In cases where `[`astro_time_t`](#astro_time_t)` is included in a structure returned by a function that can fail, the `astro_status_t` field `status` will contain a value other than `ASTRO_SUCCESS`; in that case the `ut` and `tt` will hold `NAN` (not a number). In general, when there is an error code stored in a struct field `status`, the caller should ignore all other values in that structure, including the `ut` and `tt` inside `[`astro_time_t`](#astro_time_t)`. 
 
 | Type | Member | Description |
 | ---- | ------ | ----------- |

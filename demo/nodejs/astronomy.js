@@ -33,17 +33,26 @@
  */
 'use strict';
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.SearchPlanetApsis = exports.NextLunarApsis = exports.SearchLunarApsis = exports.Apsis = exports.SearchPeakMagnitude = exports.SearchMaxElongation = exports.Elongation = exports.ElongationEvent = exports.Seasons = exports.SeasonInfo = exports.SearchHourAngle = exports.HourAngleEvent = exports.SearchRiseSet = exports.NextMoonQuarter = exports.SearchMoonQuarter = exports.MoonQuarter = exports.SearchMoonPhase = exports.MoonPhase = exports.SearchRelativeLongitude = exports.Illumination = exports.IlluminationInfo = exports.EclipticLongitude = exports.AngleFromSun = exports.LongitudeFromSun = exports.SearchSunLongitude = exports.Search = exports.GeoVector = exports.HelioDistance = exports.HelioVector = exports.GeoMoon = exports.Ecliptic = exports.Equator = exports.SunPosition = exports.Observer = exports.Horizon = exports.EclipticCoordinates = exports.HorizontalCoordinates = exports.MakeRotation = exports.RotationMatrix = exports.EquatorialCoordinates = exports.Spherical = exports.Vector = exports.CalcMoonCount = exports.MakeTime = exports.AstroTime = exports.SetDeltaTFunction = exports.DeltaT_JplHorizons = exports.DeltaT_EspenakMeeus = exports.Bodies = exports.AngleBetween = void 0;
-exports.NextTransit = exports.SearchTransit = exports.TransitInfo = exports.NextLocalSolarEclipse = exports.SearchLocalSolarEclipse = exports.LocalSolarEclipseInfo = exports.EclipseEvent = exports.NextGlobalSolarEclipse = exports.SearchGlobalSolarEclipse = exports.NextLunarEclipse = exports.GlobalSolarEclipseInfo = exports.SearchLunarEclipse = exports.LunarEclipseInfo = exports.Constellation = exports.ConstellationInfo = exports.Rotation_HOR_ECL = exports.Rotation_ECL_HOR = exports.Rotation_ECL_EQD = exports.Rotation_EQD_ECL = exports.Rotation_EQJ_HOR = exports.Rotation_HOR_EQJ = exports.Rotation_HOR_EQD = exports.Rotation_EQD_HOR = exports.Rotation_EQD_EQJ = exports.Rotation_EQJ_EQD = exports.Rotation_ECL_EQJ = exports.Rotation_EQJ_ECL = exports.RotateVector = exports.InverseRefraction = exports.Refraction = exports.VectorFromHorizon = exports.HorizonFromVector = exports.SphereFromVector = exports.EquatorFromVector = exports.VectorFromEquator = exports.VectorFromSphere = exports.CombineRotation = exports.InverseRotation = exports.NextPlanetApsis = void 0;
+exports.SearchPeakMagnitude = exports.SearchMaxElongation = exports.Elongation = exports.ElongationEvent = exports.Seasons = exports.SeasonInfo = exports.SearchHourAngle = exports.HourAngleEvent = exports.SearchRiseSet = exports.NextMoonQuarter = exports.SearchMoonQuarter = exports.MoonQuarter = exports.SearchMoonPhase = exports.MoonPhase = exports.SearchRelativeLongitude = exports.Illumination = exports.IlluminationInfo = exports.EclipticLongitude = exports.AngleFromSun = exports.LongitudeFromSun = exports.SearchSunLongitude = exports.Search = exports.GeoVector = exports.HelioDistance = exports.HelioVector = exports.GeoMoon = exports.Ecliptic = exports.ObserverVector = exports.Equator = exports.SunPosition = exports.Observer = exports.Horizon = exports.EclipticCoordinates = exports.HorizontalCoordinates = exports.MakeRotation = exports.RotationMatrix = exports.EquatorialCoordinates = exports.Spherical = exports.Vector = exports.CalcMoonCount = exports.MakeTime = exports.AstroTime = exports.SetDeltaTFunction = exports.DeltaT_JplHorizons = exports.DeltaT_EspenakMeeus = exports.Body = exports.AngleBetween = exports.RAD2DEG = exports.DEG2RAD = exports.KM_PER_AU = void 0;
+exports.NextTransit = exports.SearchTransit = exports.TransitInfo = exports.NextLocalSolarEclipse = exports.SearchLocalSolarEclipse = exports.LocalSolarEclipseInfo = exports.EclipseEvent = exports.NextGlobalSolarEclipse = exports.SearchGlobalSolarEclipse = exports.NextLunarEclipse = exports.GlobalSolarEclipseInfo = exports.SearchLunarEclipse = exports.LunarEclipseInfo = exports.Constellation = exports.ConstellationInfo = exports.Rotation_HOR_ECL = exports.Rotation_ECL_HOR = exports.Rotation_ECL_EQD = exports.Rotation_EQD_ECL = exports.Rotation_EQJ_HOR = exports.Rotation_HOR_EQJ = exports.Rotation_HOR_EQD = exports.Rotation_EQD_HOR = exports.Rotation_EQD_EQJ = exports.Rotation_EQJ_EQD = exports.Rotation_ECL_EQJ = exports.Rotation_EQJ_ECL = exports.RotateVector = exports.InverseRefraction = exports.Refraction = exports.VectorFromHorizon = exports.HorizonFromVector = exports.SphereFromVector = exports.EquatorFromVector = exports.VectorFromSphere = exports.Pivot = exports.IdentityMatrix = exports.CombineRotation = exports.InverseRotation = exports.NextPlanetApsis = exports.SearchPlanetApsis = exports.NextLunarApsis = exports.SearchLunarApsis = exports.Apsis = void 0;
+/**
+ * @brief The number of kilometers per astronomical unit.
+ */
+exports.KM_PER_AU = 1.4959787069098932e+8;
+/**
+ * @brief The factor to convert radians to degrees = pi/180.
+ */
+exports.DEG2RAD = 0.017453292519943296;
+/**
+ * @brief The factor to convert degrees to radians = 180/pi.
+ */
+exports.RAD2DEG = 57.295779513082321;
 const DAYS_PER_TROPICAL_YEAR = 365.24217;
 const J2000 = new Date('2000-01-01T12:00:00Z');
 const PI2 = 2 * Math.PI;
 const ARC = 3600 * (180 / Math.PI); // arcseconds per radian
-const KM_PER_AU = 1.4959787069098932e+8;
 const C_AUDAY = 173.1446326846693; // speed of light in AU/day
 const ASEC2RAD = 4.848136811095359935899141e-6;
-const DEG2RAD = 0.017453292519943296;
-const RAD2DEG = 57.295779513082321;
 const ASEC180 = 180 * 60 * 60; // arcseconds per 180 degrees (or pi radians)
 const ASEC360 = 2 * ASEC180; // arcseconds per 360 degrees (or 2*pi radians)
 const ANGVEL = 7.2921150e-5;
@@ -54,17 +63,17 @@ const SECONDS_PER_DAY = 24 * 3600;
 const MILLIS_PER_DAY = SECONDS_PER_DAY * 1000;
 const SOLAR_DAYS_PER_SIDEREAL_DAY = 0.9972695717592592;
 const SUN_RADIUS_KM = 695700.0;
-const SUN_RADIUS_AU = SUN_RADIUS_KM / KM_PER_AU;
+const SUN_RADIUS_AU = SUN_RADIUS_KM / exports.KM_PER_AU;
 const EARTH_FLATTENING = 0.996647180302104;
 const EARTH_EQUATORIAL_RADIUS_KM = 6378.1366;
-const EARTH_EQUATORIAL_RADIUS_AU = EARTH_EQUATORIAL_RADIUS_KM / KM_PER_AU;
+const EARTH_EQUATORIAL_RADIUS_AU = EARTH_EQUATORIAL_RADIUS_KM / exports.KM_PER_AU;
 const EARTH_MEAN_RADIUS_KM = 6371.0; /* mean radius of the Earth's geoid, without atmosphere */
 const EARTH_ATMOSPHERE_KM = 88.0; /* effective atmosphere thickness for lunar eclipses */
 const EARTH_ECLIPSE_RADIUS_KM = EARTH_MEAN_RADIUS_KM + EARTH_ATMOSPHERE_KM;
 const MOON_EQUATORIAL_RADIUS_KM = 1738.1;
 const MOON_MEAN_RADIUS_KM = 1737.4;
 const MOON_POLAR_RADIUS_KM = 1736.0;
-const MOON_EQUATORIAL_RADIUS_AU = (MOON_EQUATORIAL_RADIUS_KM / KM_PER_AU);
+const MOON_EQUATORIAL_RADIUS_AU = (MOON_EQUATORIAL_RADIUS_KM / exports.KM_PER_AU);
 const REFRACTION_NEAR_HORIZON = 34 / 60; // degrees of refractive "lift" seen for objects near horizon
 const EARTH_MOON_MASS_RATIO = 81.30056;
 /*
@@ -131,31 +140,48 @@ function AngleBetween(a, b) {
         return 180;
     if (dot >= +1.0)
         return 0;
-    const angle = RAD2DEG * Math.acos(dot);
+    const angle = exports.RAD2DEG * Math.acos(dot);
     return angle;
 }
 exports.AngleBetween = AngleBetween;
 /**
- * @constant {string[]} Bodies
- *      An array of strings, each a name of a supported astronomical body.
- *      Not all bodies are valid for all functions, but any string not in this
- *      list is not supported at all.
+ * @brief String constants that represent the solar system bodies supported by Astronomy Engine.
+ *
+ * The following strings represent solar system bodies supported by various Astronomy Engine functions.
+ * Not every body is supported by every function; consult the documentation for each function
+ * to find which bodies it supports.
+ *
+ * "Sun", "Moon", "Mercury", "Venus", "Earth", "Mars", "Jupiter",
+ * "Saturn", "Uranus", "Neptune", "Pluto",
+ * "SSB" (Solar System Barycenter),
+ * "EMB" (Earth/Moon Barycenter)
+ *
+ * You can also use enumeration syntax for the bodies, like
+ * `Astronomy.Body.Moon`, `Astronomy.Body.Jupiter`, etc.
+ *
+ * @enum {string}
  */
-exports.Bodies = [
-    'Sun',
-    'Moon',
-    'Mercury',
-    'Venus',
-    'Earth',
-    'Mars',
-    'Jupiter',
-    'Saturn',
-    'Uranus',
-    'Neptune',
-    'Pluto',
-    'SSB',
-    'EMB' // Earth/Moon Barycenter
-];
+var Body;
+(function (Body) {
+    Body["Sun"] = "Sun";
+    Body["Moon"] = "Moon";
+    Body["Mercury"] = "Mercury";
+    Body["Venus"] = "Venus";
+    Body["Earth"] = "Earth";
+    Body["Mars"] = "Mars";
+    Body["Jupiter"] = "Jupiter";
+    Body["Saturn"] = "Saturn";
+    Body["Uranus"] = "Uranus";
+    Body["Neptune"] = "Neptune";
+    Body["Pluto"] = "Pluto";
+    Body["SSB"] = "SSB";
+    Body["EMB"] = "EMB"; // Earth/Moon Barycenter
+})(Body = exports.Body || (exports.Body = {}));
+var PrecessDirection;
+(function (PrecessDirection) {
+    PrecessDirection[PrecessDirection["From2000"] = 0] = "From2000";
+    PrecessDirection[PrecessDirection["Into2000"] = 1] = "Into2000";
+})(PrecessDirection || (PrecessDirection = {}));
 const Planet = {
     Mercury: { OrbitalPeriod: 87.969 },
     Venus: { OrbitalPeriod: 224.701 },
@@ -963,7 +989,8 @@ function TerrestrialTime(ut) {
  *      Terrestrial Time in fractional days since the J2000 epoch.
  *      TT represents a continuously flowing ephemeris timescale independent of
  *      any variations of the Earth's rotation, and is adjusted from UT
- *      using historical and predictive models of those variations.
+ *      using a best-fit piecewise polynomial model devised by
+ *      [Espenak and Meeus](https://eclipse.gsfc.nasa.gov/SEhelp/deltatpoly2004.html).
  */
 class AstroTime {
     /**
@@ -1199,7 +1226,7 @@ function e_tilt(time) {
             tt: time.tt,
             dpsi: nut.dpsi,
             deps: nut.deps,
-            ee: nut.dpsi * Math.cos(mean_ob * DEG2RAD) / 15,
+            ee: nut.dpsi * Math.cos(mean_ob * exports.DEG2RAD) / 15,
             mobl: mean_ob,
             tobl: true_ob
         };
@@ -1207,7 +1234,7 @@ function e_tilt(time) {
     return cache_e_tilt;
 }
 function ecl2equ_vec(time, pos) {
-    var obl = mean_obliq(time) * DEG2RAD;
+    var obl = mean_obliq(time) * exports.DEG2RAD;
     var cos_obl = Math.cos(obl);
     var sin_obl = Math.sin(obl);
     return [
@@ -1473,60 +1500,54 @@ function CalcMoon(time) {
         distance_au: (ARC * EARTH_EQUATORIAL_RADIUS_AU) / (0.999953253 * SINPI)
     };
 }
-function precession(tt1, pos1, tt2) {
-    const r = precession_rot(tt1, tt2);
+function precession(pos, time, dir) {
+    const r = precession_rot(time, dir);
     return [
-        r.rot[0][0] * pos1[0] + r.rot[1][0] * pos1[1] + r.rot[2][0] * pos1[2],
-        r.rot[0][1] * pos1[0] + r.rot[1][1] * pos1[1] + r.rot[2][1] * pos1[2],
-        r.rot[0][2] * pos1[0] + r.rot[1][2] * pos1[1] + r.rot[2][2] * pos1[2]
+        r.rot[0][0] * pos[0] + r.rot[1][0] * pos[1] + r.rot[2][0] * pos[2],
+        r.rot[0][1] * pos[0] + r.rot[1][1] * pos[1] + r.rot[2][1] * pos[2],
+        r.rot[0][2] * pos[0] + r.rot[1][2] * pos[1] + r.rot[2][2] * pos[2]
     ];
 }
-function precession_rot(tt1, tt2) {
-    var xx, yx, zx, xy, yy, zy, xz, yz, zz;
-    var eps0 = 84381.406;
-    var t, psia, omegaa, chia, sa, ca, sb, cb, sc, cc, sd, cd;
-    if ((tt1 !== 0) && (tt2 !== 0))
-        throw 'One of (tt1, tt2) must be 0.';
-    t = (tt2 - tt1) / 36525;
-    if (tt2 === 0)
-        t = -t;
-    psia = (((((-0.0000000951 * t
+function precession_rot(time, dir) {
+    const t = time.tt / 36525;
+    let eps0 = 84381.406;
+    let psia = (((((-0.0000000951 * t
         + 0.000132851) * t
         - 0.00114045) * t
         - 1.0790069) * t
         + 5038.481507) * t);
-    omegaa = (((((+0.0000003337 * t
+    let omegaa = (((((+0.0000003337 * t
         - 0.000000467) * t
         - 0.00772503) * t
         + 0.0512623) * t
         - 0.025754) * t + eps0);
-    chia = (((((-0.0000000560 * t
+    let chia = (((((-0.0000000560 * t
         + 0.000170663) * t
         - 0.00121197) * t
         - 2.3814292) * t
         + 10.556403) * t);
-    eps0 = eps0 * ASEC2RAD;
-    psia = psia * ASEC2RAD;
-    omegaa = omegaa * ASEC2RAD;
-    chia = chia * ASEC2RAD;
-    sa = Math.sin(eps0);
-    ca = Math.cos(eps0);
-    sb = Math.sin(-psia);
-    cb = Math.cos(-psia);
-    sc = Math.sin(-omegaa);
-    cc = Math.cos(-omegaa);
-    sd = Math.sin(chia);
-    cd = Math.cos(chia);
-    xx = cd * cb - sb * sd * cc;
-    yx = cd * sb * ca + sd * cc * cb * ca - sa * sd * sc;
-    zx = cd * sb * sa + sd * cc * cb * sa + ca * sd * sc;
-    xy = -sd * cb - sb * cd * cc;
-    yy = -sd * sb * ca + cd * cc * cb * ca - sa * cd * sc;
-    zy = -sd * sb * sa + cd * cc * cb * sa + ca * cd * sc;
-    xz = sb * sc;
-    yz = -sc * cb * ca - sa * cc;
-    zz = -sc * cb * sa + cc * ca;
-    if (tt2 === 0) {
+    eps0 *= ASEC2RAD;
+    psia *= ASEC2RAD;
+    omegaa *= ASEC2RAD;
+    chia *= ASEC2RAD;
+    const sa = Math.sin(eps0);
+    const ca = Math.cos(eps0);
+    const sb = Math.sin(-psia);
+    const cb = Math.cos(-psia);
+    const sc = Math.sin(-omegaa);
+    const cc = Math.cos(-omegaa);
+    const sd = Math.sin(chia);
+    const cd = Math.cos(chia);
+    const xx = cd * cb - sb * sd * cc;
+    const yx = cd * sb * ca + sd * cc * cb * ca - sa * sd * sc;
+    const zx = cd * sb * sa + sd * cc * cb * sa + ca * sd * sc;
+    const xy = -sd * cb - sb * cd * cc;
+    const yy = -sd * sb * ca + cd * cc * cb * ca - sa * cd * sc;
+    const zy = -sd * sb * sa + cd * cc * cb * sa + ca * cd * sc;
+    const xz = sb * sc;
+    const yz = -sc * cb * ca - sa * cc;
+    const zz = -sc * cb * sa + cc * ca;
+    if (dir === PrecessDirection.Into2000) {
         // Perform rotation from epoch to J2000.0.
         return new RotationMatrix([
             [xx, yx, zx],
@@ -1534,12 +1555,15 @@ function precession_rot(tt1, tt2) {
             [xz, yz, zz]
         ]);
     }
-    // Perform rotation from J2000.0 to epoch.
-    return new RotationMatrix([
-        [xx, xy, xz],
-        [yx, yy, yz],
-        [zx, zy, zz]
-    ]);
+    if (dir === PrecessDirection.From2000) {
+        // Perform rotation from J2000.0 to epoch.
+        return new RotationMatrix([
+            [xx, xy, xz],
+            [yx, yy, yz],
+            [zx, zy, zz]
+        ]);
+    }
+    throw 'Invalid precess direction';
 }
 function era(time) {
     const thet1 = 0.7790572732640 + 0.00273781191135448 * time.ut;
@@ -1569,7 +1593,7 @@ function sidereal_time(time) {
 function terra(observer, st) {
     const df = 1 - 0.003352819697896; // flattening of the Earth
     const df2 = df * df;
-    const phi = observer.latitude * DEG2RAD;
+    const phi = observer.latitude * exports.DEG2RAD;
     const sinphi = Math.sin(phi);
     const cosphi = Math.cos(phi);
     const c = 1 / Math.sqrt(cosphi * cosphi + df2 * sinphi * sinphi);
@@ -1577,26 +1601,26 @@ function terra(observer, st) {
     const ht_km = observer.height / 1000;
     const ach = EARTH_EQUATORIAL_RADIUS_KM * c + ht_km;
     const ash = EARTH_EQUATORIAL_RADIUS_KM * s + ht_km;
-    const stlocl = (15 * st + observer.longitude) * DEG2RAD;
+    const stlocl = (15 * st + observer.longitude) * exports.DEG2RAD;
     const sinst = Math.sin(stlocl);
     const cosst = Math.cos(stlocl);
     return {
-        pos: [ach * cosphi * cosst / KM_PER_AU, ach * cosphi * sinst / KM_PER_AU, ash * sinphi / KM_PER_AU],
+        pos: [ach * cosphi * cosst / exports.KM_PER_AU, ach * cosphi * sinst / exports.KM_PER_AU, ash * sinphi / exports.KM_PER_AU],
         vel: [-ANGVEL * ach * cosphi * sinst * 86400, ANGVEL * ach * cosphi * cosst * 86400, 0]
     };
 }
-function nutation(time, direction, pos) {
-    const r = nutation_rot(time, direction);
+function nutation(pos, time, dir) {
+    const r = nutation_rot(time, dir);
     return [
         r.rot[0][0] * pos[0] + r.rot[1][0] * pos[1] + r.rot[2][0] * pos[2],
         r.rot[0][1] * pos[0] + r.rot[1][1] * pos[1] + r.rot[2][1] * pos[2],
         r.rot[0][2] * pos[0] + r.rot[1][2] * pos[1] + r.rot[2][2] * pos[2]
     ];
 }
-function nutation_rot(time, direction) {
+function nutation_rot(time, dir) {
     const tilt = e_tilt(time);
-    const oblm = tilt.mobl * DEG2RAD;
-    const oblt = tilt.tobl * DEG2RAD;
+    const oblm = tilt.mobl * exports.DEG2RAD;
+    const oblt = tilt.tobl * exports.DEG2RAD;
     const psi = tilt.dpsi * ASEC2RAD;
     const cobm = Math.cos(oblm);
     const sobm = Math.sin(oblm);
@@ -1613,27 +1637,36 @@ function nutation_rot(time, direction) {
     const xz = spsi * sobt;
     const yz = cpsi * cobm * sobt - sobm * cobt;
     const zz = cpsi * sobm * sobt + cobm * cobt;
-    if (direction === 0) {
-        // forward rotation
+    if (dir === PrecessDirection.From2000) {
+        // convert J2000 to of-date
         return new RotationMatrix([
             [xx, xy, xz],
             [yx, yy, yz],
             [zx, zy, zz]
         ]);
     }
-    // inverse rotation
-    return new RotationMatrix([
-        [xx, yx, zx],
-        [xy, yy, zy],
-        [xz, yz, zz]
-    ]);
+    if (dir === PrecessDirection.Into2000) {
+        // convert of-date to J2000
+        return new RotationMatrix([
+            [xx, yx, zx],
+            [xy, yy, zy],
+            [xz, yz, zz]
+        ]);
+    }
+    throw 'Invalid precess direction';
+}
+function gyration(pos, time, dir) {
+    // Combine nutation and precession into a single operation I call "gyration".
+    // The order they are composed depends on the direction,
+    // because both directions are mutual inverse functions.
+    return (dir === PrecessDirection.Into2000) ?
+        precession(nutation(pos, time, dir), time, dir) :
+        nutation(precession(pos, time, dir), time, dir);
 }
 function geo_pos(time, observer) {
     const gast = sidereal_time(time);
-    const pos1 = terra(observer, gast).pos;
-    const pos2 = nutation(time, -1, pos1);
-    const pos3 = precession(time.tt, pos2, 0);
-    return pos3;
+    const pos = terra(observer, gast).pos;
+    return gyration(pos, time, PrecessDirection.Into2000);
 }
 /**
  * @brief A 3D Cartesian vector with a time attached to it.
@@ -1692,12 +1725,19 @@ exports.Spherical = Spherical;
  * @property {number} dist
  *      Distance to the celestial object expressed in
  *      <a href="https://en.wikipedia.org/wiki/Astronomical_unit">astronomical units</a> (AU).
+ *
+ * @property {Vector} vec
+ *      The equatorial coordinates in cartesian form, using AU distance units.
+ *      x = direction of the March equinox,
+ *      y = direction of the June solstice,
+ *      z = north.
  */
 class EquatorialCoordinates {
-    constructor(ra, dec, dist) {
+    constructor(ra, dec, dist, vec) {
         this.ra = VerifyNumber(ra);
         this.dec = VerifyNumber(dec);
         this.dist = VerifyNumber(dist);
+        this.vec = vec;
     }
 }
 exports.EquatorialCoordinates = EquatorialCoordinates;
@@ -1797,18 +1837,12 @@ exports.HorizontalCoordinates = HorizontalCoordinates;
  * <a href="https://en.wikipedia.org/wiki/Astronomical_unit">astronomical units</a> (AU)
  * and spherical coordinates `(elon, elat)` measured in degrees.
  *
- * @property {number} ex
- *      The Cartesian x-coordinate of the body in astronomical units (AU).
+ * @property {Vector} vec
+ *      Ecliptic cartesian vector with components measured in astronomical units (AU).
  *      The x-axis is within the ecliptic plane and is oriented in the direction of the
  *      <a href="https://en.wikipedia.org/wiki/Equinox_(celestial_coordinates)">equinox</a>.
- *
- * @property {number} ey
- *      The Cartesian y-coordinate of the body in astronomical units (AU).
  *      The y-axis is within the ecliptic plane and is oriented 90 degrees
  *      counterclockwise from the equinox, as seen from above the Sun's north pole.
- *
- * @property {number} ez
- *      The Cartesian z-coordinate of the body in astronomical units (AU).
  *      The z-axis is oriented perpendicular to the ecliptic plane,
  *      along the direction of the Sun's north pole.
  *
@@ -1827,34 +1861,35 @@ exports.HorizontalCoordinates = HorizontalCoordinates;
  *      up to 360 degrees.
  */
 class EclipticCoordinates {
-    constructor(ex, ey, ez, elat, elon) {
-        this.ex = VerifyNumber(ex);
-        this.ey = VerifyNumber(ey);
-        this.ez = VerifyNumber(ez);
+    constructor(vec, elat, elon) {
+        this.vec = vec;
         this.elat = VerifyNumber(elat);
         this.elon = VerifyNumber(elon);
     }
 }
 exports.EclipticCoordinates = EclipticCoordinates;
-function vector2radec(pos) {
-    const xyproj = pos[0] * pos[0] + pos[1] * pos[1];
-    const dist = Math.sqrt(xyproj + pos[2] * pos[2]);
-    if (xyproj === 0) {
-        if (pos[2] === 0)
-            throw 'Indeterminate sky coordinates';
-        if (pos[2] < 0)
-            return { ra: 0, dec: -90, dist: dist };
-        return { ra: 0, dec: +90, dist: dist };
-    }
-    let ra = Math.atan2(pos[1], pos[0]) / (DEG2RAD * 15);
-    if (ra < 0) {
-        ra += 24;
-    }
-    let dec = Math.atan2(pos[2], Math.sqrt(xyproj)) / DEG2RAD;
-    return new EquatorialCoordinates(ra, dec, dist);
+function VectorFromArray(av, time) {
+    return new Vector(av[0], av[1], av[2], time);
 }
-function spin(angle, pos1) {
-    const angr = angle * DEG2RAD;
+function vector2radec(pos, time) {
+    const vec = VectorFromArray(pos, time);
+    const xyproj = vec.x * vec.x + vec.y * vec.y;
+    const dist = Math.sqrt(xyproj + vec.z * vec.z);
+    if (xyproj === 0) {
+        if (vec.z === 0)
+            throw 'Indeterminate sky coordinates';
+        if (vec.z < 0)
+            return new EquatorialCoordinates(0, -90, dist, vec);
+        return new EquatorialCoordinates(0, +90, dist, vec);
+    }
+    let ra = Math.atan2(vec.y, vec.x) / (exports.DEG2RAD * 15);
+    if (ra < 0)
+        ra += 24;
+    const dec = Math.atan2(pos[2], Math.sqrt(xyproj)) / exports.DEG2RAD;
+    return new EquatorialCoordinates(ra, dec, dist, vec);
+}
+function spin(angle, pos) {
+    const angr = angle * exports.DEG2RAD;
     const cosang = Math.cos(angr);
     const sinang = Math.sin(angr);
     const xx = cosang;
@@ -1867,9 +1902,9 @@ function spin(angle, pos1) {
     const yz = 0;
     const zz = 1;
     return [
-        xx * pos1[0] + yx * pos1[1] + zx * pos1[2],
-        xy * pos1[0] + yy * pos1[1] + zy * pos1[2],
-        xz * pos1[0] + yz * pos1[1] + zz * pos1[2]
+        xx * pos[0] + yx * pos[1] + zx * pos[2],
+        xy * pos[0] + yy * pos[1] + zy * pos[2],
+        xz * pos[0] + yz * pos[1] + zz * pos[2]
     ];
 }
 /**
@@ -1918,14 +1953,14 @@ function Horizon(date, observer, ra, dec, refraction) {
     VerifyObserver(observer);
     VerifyNumber(ra);
     VerifyNumber(dec);
-    const sinlat = Math.sin(observer.latitude * DEG2RAD);
-    const coslat = Math.cos(observer.latitude * DEG2RAD);
-    const sinlon = Math.sin(observer.longitude * DEG2RAD);
-    const coslon = Math.cos(observer.longitude * DEG2RAD);
-    const sindc = Math.sin(dec * DEG2RAD);
-    const cosdc = Math.cos(dec * DEG2RAD);
-    const sinra = Math.sin(ra * 15 * DEG2RAD);
-    const cosra = Math.cos(ra * 15 * DEG2RAD);
+    const sinlat = Math.sin(observer.latitude * exports.DEG2RAD);
+    const coslat = Math.cos(observer.latitude * exports.DEG2RAD);
+    const sinlon = Math.sin(observer.longitude * exports.DEG2RAD);
+    const coslon = Math.cos(observer.longitude * exports.DEG2RAD);
+    const sindc = Math.sin(dec * exports.DEG2RAD);
+    const cosdc = Math.cos(dec * exports.DEG2RAD);
+    const sinra = Math.sin(ra * 15 * exports.DEG2RAD);
+    const cosra = Math.cos(ra * 15 * exports.DEG2RAD);
     // Calculate three mutually perpendicular unit vectors
     // in equatorial coordinates: uze, une, uwe.
     //
@@ -1971,7 +2006,7 @@ function Horizon(date, observer, ra, dec, refraction) {
     if (proj > 0) {
         // If the body is not exactly straight up/down, it has an azimuth.
         // Invert the angle to produce degrees eastward from north.
-        az = -Math.atan2(pw, pn) * RAD2DEG;
+        az = -Math.atan2(pw, pn) * exports.RAD2DEG;
         if (az < 0)
             az += 360;
     }
@@ -1981,7 +2016,7 @@ function Horizon(date, observer, ra, dec, refraction) {
         az = 0;
     }
     // zd = the angle of the body away from the observer's zenith, in degrees.
-    let zd = Math.atan2(proj, pz) * RAD2DEG;
+    let zd = Math.atan2(proj, pz) * exports.RAD2DEG;
     let out_ra = ra;
     let out_dec = dec;
     if (refraction) {
@@ -1989,17 +2024,17 @@ function Horizon(date, observer, ra, dec, refraction) {
         let refr = Refraction(refraction, 90 - zd);
         zd -= refr;
         if (refr > 0.0 && zd > 3.0e-4) {
-            const sinzd = Math.sin(zd * DEG2RAD);
-            const coszd = Math.cos(zd * DEG2RAD);
-            const sinzd0 = Math.sin(zd0 * DEG2RAD);
-            const coszd0 = Math.cos(zd0 * DEG2RAD);
+            const sinzd = Math.sin(zd * exports.DEG2RAD);
+            const coszd = Math.cos(zd * exports.DEG2RAD);
+            const sinzd0 = Math.sin(zd0 * exports.DEG2RAD);
+            const coszd0 = Math.cos(zd0 * exports.DEG2RAD);
             var pr = [];
             for (let j = 0; j < 3; ++j) {
                 pr.push(((p[j] - coszd0 * uz[j]) / sinzd0) * sinzd + uz[j] * coszd);
             }
             proj = Math.sqrt(pr[0] * pr[0] + pr[1] * pr[1]);
             if (proj > 0) {
-                out_ra = Math.atan2(pr[1], pr[0]) * RAD2DEG / 15;
+                out_ra = Math.atan2(pr[1], pr[0]) * exports.RAD2DEG / 15;
                 if (out_ra < 0) {
                     out_ra += 24;
                 }
@@ -2007,7 +2042,7 @@ function Horizon(date, observer, ra, dec, refraction) {
             else {
                 out_ra = 0;
             }
-            out_dec = Math.atan2(pr[2], proj) * RAD2DEG;
+            out_dec = Math.atan2(pr[2], proj) * exports.RAD2DEG;
         }
     }
     return new HorizontalCoordinates(az, 90 - zd, out_ra, out_dec);
@@ -2080,13 +2115,13 @@ function SunPosition(date) {
     // Convert to geocentric location of the Sun.
     const sun2000 = [-earth2000.x, -earth2000.y, -earth2000.z];
     // Convert to equator-of-date equatorial cartesian coordinates.
-    const stemp = precession(0, sun2000, time.tt);
-    const [gx, gy, gz] = nutation(time, 0, stemp);
+    const [gx, gy, gz] = gyration(sun2000, time, PrecessDirection.From2000);
     // Convert to ecliptic coordinates of date.
-    const true_obliq = DEG2RAD * e_tilt(time).tobl;
+    const true_obliq = exports.DEG2RAD * e_tilt(time).tobl;
     const cos_ob = Math.cos(true_obliq);
     const sin_ob = Math.sin(true_obliq);
-    const sun_ecliptic = RotateEquatorialToEcliptic(gx, gy, gz, cos_ob, sin_ob);
+    const vec = new Vector(gx, gy, gz, time);
+    const sun_ecliptic = RotateEquatorialToEcliptic(vec, cos_ob, sin_ob);
     return sun_ecliptic;
 }
 exports.SunPosition = SunPosition;
@@ -2105,8 +2140,8 @@ exports.SunPosition = SunPosition;
  * This is most significant for the Moon, because it is so close to the Earth.
  * However, it can have a small effect on the apparent positions of other bodies.
  *
- * @param {string} body
- *      The name of the body for which to find equatorial coordinates.
+ * @param {Body} body
+ *      The body for which to find equatorial coordinates.
  *      Not allowed to be `"Earth"`.
  *
  * @param {FlexibleDateTime} date
@@ -2143,59 +2178,91 @@ function Equator(body, date, observer, ofdate, aberration) {
         gc.z - gc_observer[2]
     ];
     if (!ofdate)
-        return vector2radec(j2000);
-    const temp = precession(0, j2000, time.tt);
-    const datevect = nutation(time, 0, temp);
-    return vector2radec(datevect);
+        return vector2radec(j2000, time);
+    const datevect = gyration(j2000, time, PrecessDirection.From2000);
+    return vector2radec(datevect, time);
 }
 exports.Equator = Equator;
-function RotateEquatorialToEcliptic(gx, gy, gz, cos_ob, sin_ob) {
+/**
+ * @brief Calculates geocentric equatorial coordinates of an observer on the surface of the Earth.
+ *
+ * This function calculates a vector from the center of the Earth to
+ * a point on or near the surface of the Earth, expressed in equatorial
+ * coordinates. It takes into account the rotation of the Earth at the given
+ * time, along with the given latitude, longitude, and elevation of the observer.
+ *
+ * The caller may pass `ofdate` as `true` to return coordinates relative to the Earth's
+ * equator at the specified time, or `false` to use the J2000 equator.
+ *
+ * The returned vector has components expressed in astronomical units (AU).
+ * To convert to kilometers, multiply the `x`, `y`, and `z` values by
+ * the constant value {@link KM_PER_AU}.
+ *
+ * @param {FlexibleDateTime} date
+ *      The date and time for which to calculate the observer's position vector.
+ *
+ * @param {Observer} observer
+ *      The geographic location of a point on or near the surface of the Earth.
+ *
+ * @param {boolean} ofdate
+ *      Selects the date of the Earth's equator in which to express the equatorial coordinates.
+ *      The caller may pass `false` to use the orientation of the Earth's equator
+ *      at noon UTC on January 1, 2000, in which case this function corrects for precession
+ *      and nutation of the Earth as it was at the moment specified by the `time` parameter.
+ *      Or the caller may pass `true` to use the Earth's equator at `time`
+ *      as the orientation.
+ *
+ * @returns {Vector}
+ *      An equatorial vector from the center of the Earth to the specified location
+ *      on (or near) the Earth's surface.
+ */
+function ObserverVector(date, observer, ofdate) {
+    const time = MakeTime(date);
+    const gast = sidereal_time(time);
+    let ovec = terra(observer, gast).pos;
+    if (!ofdate)
+        ovec = gyration(ovec, time, PrecessDirection.Into2000);
+    return VectorFromArray(ovec, time);
+}
+exports.ObserverVector = ObserverVector;
+function RotateEquatorialToEcliptic(equ, cos_ob, sin_ob) {
     // Rotate equatorial vector to obtain ecliptic vector.
-    const ex = gx;
-    const ey = gy * cos_ob + gz * sin_ob;
-    const ez = -gy * sin_ob + gz * cos_ob;
+    const ex = equ.x;
+    const ey = equ.y * cos_ob + equ.z * sin_ob;
+    const ez = -equ.y * sin_ob + equ.z * cos_ob;
     const xyproj = Math.sqrt(ex * ex + ey * ey);
     let elon = 0;
     if (xyproj > 0) {
-        elon = RAD2DEG * Math.atan2(ey, ex);
+        elon = exports.RAD2DEG * Math.atan2(ey, ex);
         if (elon < 0)
             elon += 360;
     }
-    let elat = RAD2DEG * Math.atan2(ez, xyproj);
-    return new EclipticCoordinates(ex, ey, ez, elat, elon);
+    let elat = exports.RAD2DEG * Math.atan2(ez, xyproj);
+    let ecl = new Vector(ex, ey, ez, equ.t);
+    return new EclipticCoordinates(ecl, elat, elon);
 }
 /**
  * @brief Converts equatorial Cartesian coordinates to ecliptic Cartesian and angular coordinates.
  *
  * Given J2000 equatorial Cartesian coordinates,
  * returns J2000 ecliptic latitude, longitude, and cartesian coordinates.
- * You can call {@link GeoVector} and use its (x, y, z) return values
- * to pass into this function.
+ * You can call {@link GeoVector} and pass the resulting vector to this function.
  *
- * @param {number} gx
- *      The x-coordinate of a 3D vector in the J2000 equatorial coordinate system.
- *
- * @param {number} gy
- *      The y-coordinate of a 3D vector in the J2000 equatorial coordinate system.
- *
- * @param {number} gz
- *      The z-coordinate of a 3D vector in the J2000 equatorial coordinate system.
+ * @param {Vector} equ
+ *      A vector in the J2000 equatorial coordinate system.
  *
  * @returns {EclipticCoordinates}
  */
-function Ecliptic(gx, gy, gz) {
+function Ecliptic(equ) {
     // Based on NOVAS functions equ2ecl() and equ2ecl_vec().
     if (ob2000 === undefined) {
         // Lazy-evaluate and keep the mean obliquity of the ecliptic at J2000.
         // This way we don't need to crunch the numbers more than once.
-        ob2000 = DEG2RAD * e_tilt(MakeTime(J2000)).mobl;
+        ob2000 = exports.DEG2RAD * e_tilt(MakeTime(J2000)).mobl;
         cos_ob2000 = Math.cos(ob2000);
         sin_ob2000 = Math.sin(ob2000);
     }
-    VerifyNumber(gx);
-    VerifyNumber(gy);
-    VerifyNumber(gz);
-    return RotateEquatorialToEcliptic(gx, gy, gz, cos_ob2000, sin_ob2000);
+    return RotateEquatorialToEcliptic(equ, cos_ob2000, sin_ob2000);
 }
 exports.Ecliptic = Ecliptic;
 /**
@@ -2225,7 +2292,7 @@ function GeoMoon(date) {
     // Convert ecliptic coordinates to equatorial coordinates, both in mean equinox of date.
     var mpos1 = ecl2equ_vec(time, gepos);
     // Convert from mean equinox of date to J2000...
-    var mpos2 = precession(time.tt, mpos1, 0);
+    var mpos2 = precession(mpos1, time, PrecessDirection.Into2000);
     return new Vector(mpos2[0], mpos2[1], mpos2[2], time);
 }
 exports.GeoMoon = GeoMoon;
@@ -2333,10 +2400,10 @@ function AdjustBarycenter(ssb, time, body, pmass) {
 }
 function CalcSolarSystemBarycenter(time) {
     const ssb = new Vector(0.0, 0.0, 0.0, time);
-    AdjustBarycenter(ssb, time, 'Jupiter', JUPITER_GM);
-    AdjustBarycenter(ssb, time, 'Saturn', SATURN_GM);
-    AdjustBarycenter(ssb, time, 'Uranus', URANUS_GM);
-    AdjustBarycenter(ssb, time, 'Neptune', NEPTUNE_GM);
+    AdjustBarycenter(ssb, time, Body.Jupiter, JUPITER_GM);
+    AdjustBarycenter(ssb, time, Body.Saturn, SATURN_GM);
+    AdjustBarycenter(ssb, time, Body.Uranus, URANUS_GM);
+    AdjustBarycenter(ssb, time, Body.Neptune, NEPTUNE_GM);
     return ssb;
 }
 // Pluto integrator begins ----------------------------------------------------
@@ -2450,10 +2517,10 @@ class major_bodies_t {
     constructor(tt) {
         // Accumulate the Solar System Barycenter position.
         let ssb = new body_state_t(tt, new TerseVector(0, 0, 0), new TerseVector(0, 0, 0));
-        this.Jupiter = AdjustBarycenterPosVel(ssb, tt, 'Jupiter', JUPITER_GM);
-        this.Saturn = AdjustBarycenterPosVel(ssb, tt, 'Saturn', SATURN_GM);
-        this.Uranus = AdjustBarycenterPosVel(ssb, tt, 'Uranus', URANUS_GM);
-        this.Neptune = AdjustBarycenterPosVel(ssb, tt, 'Neptune', NEPTUNE_GM);
+        this.Jupiter = AdjustBarycenterPosVel(ssb, tt, Body.Jupiter, JUPITER_GM);
+        this.Saturn = AdjustBarycenterPosVel(ssb, tt, Body.Saturn, SATURN_GM);
+        this.Uranus = AdjustBarycenterPosVel(ssb, tt, Body.Uranus, URANUS_GM);
+        this.Neptune = AdjustBarycenterPosVel(ssb, tt, Body.Neptune, NEPTUNE_GM);
         // Convert planets' [pos, vel] vectors from heliocentric to barycentric.
         this.Jupiter.r.decr(ssb.r);
         this.Jupiter.v.decr(ssb.v);
@@ -2634,7 +2701,7 @@ function CalcPluto(time) {
  * Cartesian coordinates in the J2000 equatorial system of a celestial
  * body at a specified time. The position is not corrected for light travel time or aberration.
  *
- * @param {string} body
+ * @param {Body} body
  *      One of the strings
  *      `"Sun"`, `"Moon"`, `"Mercury"`, `"Venus"`,
  *      `"Earth"`, `"Mars"`, `"Jupiter"`, `"Saturn"`,
@@ -2651,24 +2718,24 @@ function HelioVector(body, date) {
     if (body in vsop) {
         return CalcVsop(vsop[body], time);
     }
-    if (body === 'Pluto') {
+    if (body === Body.Pluto) {
         return CalcPluto(time);
     }
-    if (body === 'Sun') {
+    if (body === Body.Sun) {
         return new Vector(0, 0, 0, time);
     }
-    if (body === 'Moon') {
+    if (body === Body.Moon) {
         var e = CalcVsop(vsop.Earth, time);
         var m = GeoMoon(time);
         return new Vector(e.x + m.x, e.y + m.y, e.z + m.z, time);
     }
-    if (body === 'EMB') {
+    if (body === Body.EMB) {
         const e = CalcVsop(vsop.Earth, time);
         const m = GeoMoon(time);
         const denom = 1.0 + EARTH_MOON_MASS_RATIO;
         return new Vector(e.x + (m.x / denom), e.y + (m.y / denom), e.z + (m.z / denom), time);
     }
-    if (body === 'SSB') {
+    if (body === Body.SSB) {
         return CalcSolarSystemBarycenter(time);
     }
     throw `HelioVector: Unknown body "${body}"`;
@@ -2684,7 +2751,7 @@ exports.HelioVector = HelioVector;
  * more efficient than calling {@link HelioVector} followed by taking the length
  * of the resulting vector.
  *
- * @param {string} body
+ * @param {Body} body
  *      A body for which to calculate a heliocentric distance:
  *      the Sun, Moon, or any of the planets.
  *
@@ -2715,7 +2782,7 @@ exports.HelioDistance = HelioDistance;
  * transverse movement of the Earth with respect to the rays of light
  * coming from that body.
  *
- * @param {string} body
+ * @param {Body} body
  *      One of the strings
  *      `"Sun"`, `"Moon"`, `"Mercury"`, `"Venus"`,
  *      `"Earth"`, `"Mars"`, `"Jupiter"`, `"Saturn"`,
@@ -2734,10 +2801,10 @@ exports.HelioDistance = HelioDistance;
 function GeoVector(body, date, aberration) {
     VerifyBoolean(aberration);
     const time = MakeTime(date);
-    if (body === 'Moon') {
+    if (body === Body.Moon) {
         return GeoMoon(time);
     }
-    if (body === 'Earth') {
+    if (body === Body.Earth) {
         return new Vector(0, 0, 0, time);
     }
     let earth = null;
@@ -3040,7 +3107,7 @@ exports.SearchSunLongitude = SearchSunLongitude;
  * Use {@link AngleFromSun} instead, if you wish to calculate the full angle
  * between the Sun and a body, instead of just their longitude difference.
  *
- * @param {string} body
+ * @param {Body} body
  *      The name of a supported celestial body other than the Earth.
  *
  * @param {FlexibleDateTime} date
@@ -3055,13 +3122,13 @@ exports.SearchSunLongitude = SearchSunLongitude;
  *      the Sun and is visible in the morning sky.
  */
 function LongitudeFromSun(body, date) {
-    if (body === 'Earth')
+    if (body === Body.Earth)
         throw 'The Earth does not have a longitude as seen from itself.';
     const t = MakeTime(date);
-    let gb = GeoVector(body, t, false);
-    const eb = Ecliptic(gb.x, gb.y, gb.z);
-    let gs = GeoVector('Sun', t, false);
-    const es = Ecliptic(gs.x, gs.y, gs.z);
+    const gb = GeoVector(body, t, false);
+    const eb = Ecliptic(gb);
+    const gs = GeoVector(Body.Sun, t, false);
+    const es = Ecliptic(gs);
     return NormalizeLongitude(eb.elon - es.elon);
 }
 exports.LongitudeFromSun = LongitudeFromSun;
@@ -3075,7 +3142,7 @@ exports.LongitudeFromSun = LongitudeFromSun;
  * the angle is measured in 3D space around the plane that
  * contains the centers of the Earth, the Sun, and `body`.
  *
- * @param {string} body
+ * @param {Body} body
  *      The name of a supported celestial body other than the Earth.
  *
  * @param {FlexibleDateTime} date
@@ -3085,9 +3152,9 @@ exports.LongitudeFromSun = LongitudeFromSun;
  *      An angle in degrees in the range [0, 180].
  */
 function AngleFromSun(body, date) {
-    if (body == 'Earth')
+    if (body == Body.Earth)
         throw 'The Earth does not have an angle as seen from itself.';
-    let sv = GeoVector('Sun', date, true);
+    let sv = GeoVector(Body.Sun, date, true);
     let bv = GeoVector(body, date, true);
     let angle = AngleBetween(sv, bv);
     return angle;
@@ -3096,7 +3163,7 @@ exports.AngleFromSun = AngleFromSun;
 /**
  * @brief Calculates heliocentric ecliptic longitude based on the J2000 equinox.
  *
- * @param {string} body
+ * @param {Body} body
  *      The name of a celestial body other than the Sun.
  *
  * @param {FlexibleDateTime} date
@@ -3111,10 +3178,10 @@ exports.AngleFromSun = AngleFromSun;
  *      The returned value is always in the range [0, 360).
  */
 function EclipticLongitude(body, date) {
-    if (body === 'Sun')
+    if (body === Body.Sun)
         throw 'Cannot calculate heliocentric longitude of the Sun.';
-    let hv = HelioVector(body, date);
-    let eclip = Ecliptic(hv.x, hv.y, hv.z);
+    const hv = HelioVector(body, date);
+    const eclip = Ecliptic(hv);
     return eclip.elon;
 }
 exports.EclipticLongitude = EclipticLongitude;
@@ -3122,13 +3189,13 @@ function VisualMagnitude(body, phase, helio_dist, geo_dist) {
     // For Mercury and Venus, see:  https://iopscience.iop.org/article/10.1086/430212
     let c0, c1 = 0, c2 = 0, c3 = 0;
     switch (body) {
-        case 'Mercury':
+        case Body.Mercury:
             c0 = -0.60;
             c1 = +4.98;
             c2 = -4.88;
             c3 = +3.02;
             break;
-        case 'Venus':
+        case Body.Venus:
             if (phase < 163.6) {
                 c0 = -4.47;
                 c1 = +1.03;
@@ -3140,22 +3207,22 @@ function VisualMagnitude(body, phase, helio_dist, geo_dist) {
                 c1 = -1.02;
             }
             break;
-        case 'Mars':
+        case Body.Mars:
             c0 = -1.52;
             c1 = +1.60;
             break;
-        case 'Jupiter':
+        case Body.Jupiter:
             c0 = -9.40;
             c1 = +0.50;
             break;
-        case 'Uranus':
+        case Body.Uranus:
             c0 = -7.19;
             c1 = +0.25;
             break;
-        case 'Neptune':
+        case Body.Neptune:
             c0 = -6.87;
             break;
-        case 'Pluto':
+        case Body.Pluto:
             c0 = -1.00;
             c1 = +4.00;
             break;
@@ -3171,26 +3238,26 @@ function SaturnMagnitude(phase, helio_dist, geo_dist, gc, time) {
     // http://www.stjarnhimlen.se/comp/ppcomp.html#15
     // We must handle Saturn's rings as a major component of its visual magnitude.
     // Find geocentric ecliptic coordinates of Saturn.
-    const eclip = Ecliptic(gc.x, gc.y, gc.z);
-    const ir = DEG2RAD * 28.06; // tilt of Saturn's rings to the ecliptic, in radians
-    const Nr = DEG2RAD * (169.51 + (3.82e-5 * time.tt)); // ascending node of Saturn's rings, in radians
+    const eclip = Ecliptic(gc);
+    const ir = exports.DEG2RAD * 28.06; // tilt of Saturn's rings to the ecliptic, in radians
+    const Nr = exports.DEG2RAD * (169.51 + (3.82e-5 * time.tt)); // ascending node of Saturn's rings, in radians
     // Find tilt of Saturn's rings, as seen from Earth.
-    const lat = DEG2RAD * eclip.elat;
-    const lon = DEG2RAD * eclip.elon;
+    const lat = exports.DEG2RAD * eclip.elat;
+    const lon = exports.DEG2RAD * eclip.elon;
     const tilt = Math.asin(Math.sin(lat) * Math.cos(ir) - Math.cos(lat) * Math.sin(ir) * Math.sin(lon - Nr));
     const sin_tilt = Math.sin(Math.abs(tilt));
     let mag = -9.0 + 0.044 * phase;
     mag += sin_tilt * (-2.6 + 1.2 * sin_tilt);
     mag += 5 * Math.log10(helio_dist * geo_dist);
-    return { mag: mag, ring_tilt: RAD2DEG * tilt };
+    return { mag: mag, ring_tilt: exports.RAD2DEG * tilt };
 }
 function MoonMagnitude(phase, helio_dist, geo_dist) {
     // https://astronomy.stackexchange.com/questions/10246/is-there-a-simple-analytical-formula-for-the-lunar-phase-brightness-curve
-    let rad = phase * DEG2RAD;
+    let rad = phase * exports.DEG2RAD;
     let rad2 = rad * rad;
     let rad4 = rad2 * rad2;
     let mag = -12.717 + 1.49 * Math.abs(rad) + 0.0431 * rad4;
-    const moon_mean_distance_au = 385000.6 / KM_PER_AU;
+    const moon_mean_distance_au = 385000.6 / exports.KM_PER_AU;
     let geo_au = geo_dist / moon_mean_distance_au;
     mag += 5 * Math.log10(helio_dist * geo_au);
     return mag;
@@ -3258,7 +3325,7 @@ class IlluminationInfo {
         this.gc = gc;
         this.hc = hc;
         this.ring_tilt = ring_tilt;
-        this.phase_fraction = (1 + Math.cos(DEG2RAD * phase_angle)) / 2;
+        this.phase_fraction = (1 + Math.cos(exports.DEG2RAD * phase_angle)) / 2;
     }
 }
 exports.IlluminationInfo = IlluminationInfo;
@@ -3269,7 +3336,7 @@ exports.IlluminationInfo = IlluminationInfo;
  * and other values relating to the body's illumination
  * at the given date and time, as seen from the Earth.
  *
- * @param {string} body
+ * @param {Body} body
  *      The name of the celestial body being observed.
  *      Not allowed to be `"Earth"`.
  *
@@ -3279,7 +3346,7 @@ exports.IlluminationInfo = IlluminationInfo;
  * @returns {IlluminationInfo}
  */
 function Illumination(body, date) {
-    if (body === 'Earth')
+    if (body === Body.Earth)
         throw `The illumination of the Earth is not defined.`;
     const time = MakeTime(date);
     const earth = CalcVsop(vsop.Earth, time);
@@ -3287,13 +3354,13 @@ function Illumination(body, date) {
     let hc; // vector from Sun to body
     let gc; // vector from Earth to body
     let mag; // visual magnitude
-    if (body === 'Sun') {
+    if (body === Body.Sun) {
         gc = new Vector(-earth.x, -earth.y, -earth.z, time);
         hc = new Vector(0, 0, 0, time);
         phase = 0; // a placeholder value; the Sun does not have an illumination phase because it emits, rather than reflects, light.
     }
     else {
-        if (body === 'Moon') {
+        if (body === Body.Moon) {
             // For extra numeric precision, use geocentric moon formula directly.
             gc = GeoMoon(time);
             hc = new Vector(earth.x + gc.x, earth.y + gc.y, earth.z + gc.z, time);
@@ -3308,13 +3375,13 @@ function Illumination(body, date) {
     let geo_dist = gc.Length(); // distance from body to center of Earth
     let helio_dist = hc.Length(); // distance from body to center of Sun
     let ring_tilt; // only reported for Saturn
-    if (body === 'Sun') {
+    if (body === Body.Sun) {
         mag = SUN_MAG_1AU + 5 * Math.log10(geo_dist);
     }
-    else if (body === 'Moon') {
+    else if (body === Body.Moon) {
         mag = MoonMagnitude(phase, helio_dist, geo_dist);
     }
-    else if (body === 'Saturn') {
+    else if (body === Body.Saturn) {
         const saturn = SaturnMagnitude(phase, helio_dist, geo_dist, gc, time);
         mag = saturn.mag;
         ring_tilt = saturn.ring_tilt;
@@ -3326,9 +3393,9 @@ function Illumination(body, date) {
 }
 exports.Illumination = Illumination;
 function SynodicPeriod(body) {
-    if (body === 'Earth')
+    if (body === Body.Earth)
         throw 'The Earth does not have a synodic period as seen from itself.';
-    if (body === 'Moon')
+    if (body === Body.Moon)
         return MEAN_SYNODIC_MONTH;
     // Calculate the synodic period of the planet from its and the Earth's sidereal periods.
     // The sidereal period of a planet is how long it takes to go around the Sun in days, on average.
@@ -3358,7 +3425,7 @@ function SynodicPeriod(body) {
  * For superior conjunctions, call with `targetRelLon` = 180.
  * This means the Earth and the other planet are on opposite sides of the Sun.
  *
- * @param {string} body
+ * @param {Body} body
  *      The name of a planet other than the Earth.
  *
  * @param {number} targetRelLon
@@ -3377,14 +3444,14 @@ function SearchRelativeLongitude(body, targetRelLon, startDate) {
     const planet = Planet[body];
     if (!planet)
         throw `Cannot search relative longitude because body is not a planet: ${body}`;
-    if (body === 'Earth')
+    if (body === Body.Earth)
         throw 'Cannot search relative longitude for the Earth (it is always 0)';
     // Determine whether the Earth "gains" (+1) on the planet or "loses" (-1)
     // as both race around the Sun.
     const direction = (planet.OrbitalPeriod > Planet.Earth.OrbitalPeriod) ? +1 : -1;
     function offset(t) {
         const plon = EclipticLongitude(body, t);
-        const elon = EclipticLongitude('Earth', t);
+        const elon = EclipticLongitude(Body.Earth, t);
         const diff = direction * (elon - plon);
         return LongitudeOffset(diff - targetRelLon);
     }
@@ -3437,7 +3504,7 @@ exports.SearchRelativeLongitude = SearchRelativeLongitude;
  * * 270 = third quarter
  */
 function MoonPhase(date) {
-    return LongitudeFromSun('Moon', date);
+    return LongitudeFromSun(Body.Moon, date);
 }
 exports.MoonPhase = MoonPhase;
 /**
@@ -3575,8 +3642,8 @@ function BodyRadiusAu(body) {
     // on the Earth for their radius to matter.
     // All other bodies are treated as points.
     switch (body) {
-        case 'Sun': return SUN_RADIUS_AU;
-        case 'Moon': return MOON_EQUATORIAL_RADIUS_AU;
+        case Body.Sun: return SUN_RADIUS_AU;
+        case Body.Moon: return MOON_EQUATORIAL_RADIUS_AU;
         default: return 0;
     }
 }
@@ -3591,7 +3658,7 @@ function BodyRadiusAu(body) {
  * is observed to sink below the horizon in the west.
  * The times are adjusted for typical atmospheric refraction conditions.
  *
- * @param {string} body
+ * @param {Body} body
  *      The name of the body to find the rise or set time for.
  *
  * @param {Observer} observer
@@ -3627,10 +3694,10 @@ function SearchRiseSet(body, observer, direction, dateStart, limitDays) {
         // wants rise times or set times, respectively.
         const ofdate = Equator(body, t, observer, true, true);
         const hor = Horizon(t, observer, ofdate.ra, ofdate.dec);
-        const alt = hor.altitude + RAD2DEG * (body_radius_au / ofdate.dist) + REFRACTION_NEAR_HORIZON;
+        const alt = hor.altitude + exports.RAD2DEG * (body_radius_au / ofdate.dist) + REFRACTION_NEAR_HORIZON;
         return direction * alt;
     }
-    if (body === 'Earth')
+    if (body === Body.Earth)
         throw 'Cannot find rise or set time of the Earth.';
     // See if the body is currently above/below the horizon.
     // If we are looking for next rise time and the body is below the horizon,
@@ -3723,7 +3790,7 @@ exports.HourAngleEvent = HourAngleEvent;
  * assume that a culminating object is visible nor that an object is below the horizon
  * at its minimum altitude.
  *
- * @param {string} body
+ * @param {Body} body
  *      The name of a celestial body other than the Earth.
  *
  * @param {Observer} observer
@@ -3750,7 +3817,7 @@ function SearchHourAngle(body, observer, hourAngle, dateStart) {
     VerifyObserver(observer);
     let time = MakeTime(dateStart);
     let iter = 0;
-    if (body === 'Earth')
+    if (body === Body.Earth)
         throw 'Cannot search for hour angle of the Earth.';
     VerifyNumber(hourAngle);
     if (hourAngle < 0.0 || hourAngle >= 24.0)
@@ -3922,7 +3989,7 @@ exports.ElongationEvent = ElongationEvent;
  * this is more important the smaller the elongation is.
  * It is also used to determine how far a planet is from opposition, conjunction, or quadrature.
  *
- * @param {string} body
+ * @param {Body} body
  *      The name of the observed body. Not allowed to be `"Earth"`.
  *
  * @returns {ElongationEvent}
@@ -3954,7 +4021,7 @@ exports.Elongation = Elongation;
  * maximum elongation, the elongation in degrees, and whether
  * the body is visible in the morning or evening.
  *
- * @param {string} body     Either `"Mercury"` or `"Venus"`.
+ * @param {Body} body     Either `"Mercury"` or `"Venus"`.
  * @param {FlexibleDateTime} startDate  The date and time after which to search for the next maximum elongation event.
  *
  * @returns {ElongationEvent}
@@ -3985,7 +4052,7 @@ function SearchMaxElongation(body, startDate) {
         // Find current heliocentric relative longitude between the
         // inferior planet and the Earth.
         let plon = EclipticLongitude(body, startTime);
-        let elon = EclipticLongitude('Earth', startTime);
+        let elon = EclipticLongitude(Body.Earth, startTime);
         let rlon = LongitudeOffset(plon - elon); // clamp to (-180, +180]
         // The slope function is not well-behaved when rlon is near 0 degrees or 180 degrees
         // because there is a cusp there that causes a discontinuity in the derivative.
@@ -4051,7 +4118,7 @@ exports.SearchMaxElongation = SearchMaxElongation;
 /**
  * @brief Searches for the date and time Venus will next appear brightest as seen from the Earth.
  *
- * @param {string} body
+ * @param {Body} body
  *      Currently only `"Venus"` is supported.
  *      Mercury's peak magnitude occurs at superior conjunction, when it is virtually impossible to see from Earth,
  *      so peak magnitude events have little practical value for that planet.
@@ -4066,7 +4133,7 @@ exports.SearchMaxElongation = SearchMaxElongation;
  * @returns {IlluminationInfo}
  */
 function SearchPeakMagnitude(body, startDate) {
-    if (body !== 'Venus')
+    if (body !== Body.Venus)
         throw 'SearchPeakMagnitude currently works for Venus only.';
     const dt = 0.01;
     function slope(t) {
@@ -4091,7 +4158,7 @@ function SearchPeakMagnitude(body, startDate) {
         // Find current heliocentric relative longitude between the
         // inferior planet and the Earth.
         let plon = EclipticLongitude(body, startTime);
-        let elon = EclipticLongitude('Earth', startTime);
+        let elon = EclipticLongitude(Body.Earth, startTime);
         let rlon = LongitudeOffset(plon - elon); // clamp to (-180, +180]
         // The slope function is not well-behaved when rlon is near 0 degrees or 180 degrees
         // because there is a cusp there that causes a discontinuity in the derivative.
@@ -4181,7 +4248,7 @@ class Apsis {
         this.time = time;
         this.kind = kind;
         this.dist_au = dist_au;
-        this.dist_km = dist_au * KM_PER_AU;
+        this.dist_km = dist_au * exports.KM_PER_AU;
     }
 }
 exports.Apsis = Apsis;
@@ -4385,7 +4452,7 @@ function BruteSearchPlanetApsis(body, startTime) {
  * from `NextPlanetApsis` into another call of `NextPlanetApsis`
  * as many times as desired.
  *
- * @param {string} body
+ * @param {Body} body
  *      The planet for which to find the next perihelion/aphelion event.
  *      Not allowed to be `"Sun"` or `"Moon"`.
  *
@@ -4396,7 +4463,7 @@ function BruteSearchPlanetApsis(body, startTime) {
  *      The next perihelion or aphelion that occurs after `startTime`.
  */
 function SearchPlanetApsis(body, startTime) {
-    if (body === 'Neptune' || body === 'Pluto') {
+    if (body === Body.Neptune || body === Body.Pluto) {
         return BruteSearchPlanetApsis(body, startTime);
     }
     function positive_slope(t) {
@@ -4461,7 +4528,7 @@ exports.SearchPlanetApsis = SearchPlanetApsis;
  * Given an aphelion event, this function finds the next perihelion event, and vice versa.
  * See {@link SearchPlanetApsis} for more details.
  *
- * @param {string} body
+ * @param {Body} body
  *      The planet for which to find the next perihelion/aphelion event.
  *      Not allowed to be `"Sun"` or `"Moon"`.
  *      Must match the body passed into the call that produced the `apsis` parameter.
@@ -4550,6 +4617,84 @@ function CombineRotation(a, b) {
 }
 exports.CombineRotation = CombineRotation;
 /**
+ * @brief Creates an identity rotation matrix.
+ *
+ * Returns a rotation matrix that has no effect on orientation.
+ * This matrix can be the starting point for other operations,
+ * such as using a series of calls to #Astronomy_Pivot to
+ * create a custom rotation matrix.
+ *
+ * @returns {RotationMatrix}
+ *      The identity matrix.
+ */
+function IdentityMatrix() {
+    return new RotationMatrix([
+        [1, 0, 0],
+        [0, 1, 0],
+        [0, 0, 1]
+    ]);
+}
+exports.IdentityMatrix = IdentityMatrix;
+/**
+* @brief Re-orients a rotation matrix by pivoting it by an angle around one of its axes.
+*
+* Given a rotation matrix, a selected coordinate axis, and an angle in degrees,
+* this function pivots the rotation matrix by that angle around that coordinate axis.
+*
+* For example, if you have rotation matrix that converts ecliptic coordinates (ECL)
+* to horizontal coordinates (HOR), but you really want to convert ECL to the orientation
+* of a telescope camera pointed at a given body, you can use `Astronomy_Pivot` twice:
+* (1) pivot around the zenith axis by the body's azimuth, then (2) pivot around the
+* western axis by the body's altitude angle. The resulting rotation matrix will then
+* reorient ECL coordinates to the orientation of your telescope camera.
+*
+* @param {RotationMatrix} rotation
+*      The input rotation matrix.
+*
+* @param {number} axis
+*      An integer that selects which coordinate axis to rotate around:
+*      0 = x, 1 = y, 2 = z. Any other value will cause an exception.
+*
+* @param {number} angle
+*      An angle in degrees indicating the amount of rotation around the specified axis.
+*      Positive angles indicate rotation counterclockwise as seen from the positive
+*      direction along that axis, looking towards the origin point of the orientation system.
+*      Any finite number of degrees is allowed, but best precision will result from
+*      keeping `angle` in the range [-360, +360].
+*
+* @returns {RotationMatrix}
+*      A pivoted matrix object.
+*/
+function Pivot(rotation, axis, angle) {
+    // Check for an invalid coordinate axis.
+    if (axis !== 0 && axis !== 1 && axis !== 2)
+        throw `Invalid axis ${axis}. Must be [0, 1, 2].`;
+    const radians = VerifyNumber(angle) * exports.DEG2RAD;
+    const c = Math.cos(radians);
+    const s = Math.sin(radians);
+    /*
+        We need to maintain the "right-hand" rule, no matter which
+        axis was selected. That means we pick (i, j, k) axis order
+        such that the following vector cross product is satisfied:
+        i x j = k
+    */
+    const i = (axis + 1) % 3;
+    const j = (axis + 2) % 3;
+    const k = axis;
+    let rot = [[0, 0, 0], [0, 0, 0], [0, 0, 0]];
+    rot[i][i] = c * rotation.rot[i][i] - s * rotation.rot[i][j];
+    rot[i][j] = s * rotation.rot[i][i] + c * rotation.rot[i][j];
+    rot[i][k] = rotation.rot[i][k];
+    rot[j][i] = c * rotation.rot[j][i] - s * rotation.rot[j][j];
+    rot[j][j] = s * rotation.rot[j][i] + c * rotation.rot[j][j];
+    rot[j][k] = rotation.rot[j][k];
+    rot[k][i] = c * rotation.rot[k][i] - s * rotation.rot[k][j];
+    rot[k][j] = s * rotation.rot[k][i] + c * rotation.rot[k][j];
+    rot[k][k] = rotation.rot[k][k];
+    return new RotationMatrix(rot);
+}
+exports.Pivot = Pivot;
+/**
  * @brief Converts spherical coordinates to Cartesian coordinates.
  *
  * Given spherical coordinates and a time at which they are valid,
@@ -4566,29 +4711,12 @@ exports.CombineRotation = CombineRotation;
  *      The vector form of the supplied spherical coordinates.
  */
 function VectorFromSphere(sphere, time) {
-    const radlat = sphere.lat * DEG2RAD;
-    const radlon = sphere.lon * DEG2RAD;
+    const radlat = sphere.lat * exports.DEG2RAD;
+    const radlon = sphere.lon * exports.DEG2RAD;
     const rcoslat = sphere.dist * Math.cos(radlat);
     return new Vector(rcoslat * Math.cos(radlon), rcoslat * Math.sin(radlon), sphere.dist * Math.sin(radlat), time);
 }
 exports.VectorFromSphere = VectorFromSphere;
-/**
- * @brief Given angular equatorial coordinates, calculates the equatorial vector.
- *
- * @param {EquatorialCoordinates} equ
- *      An object that contains angular equatorial coordinates to be converted to a vector.
- *
- * @param {AstroTime} time
- *      The date and time of the observation. This is needed because the returned
- *      vector object requires a valid time value when passed to certain other functions.
- *
- * @returns {Vector}
- *      A vector in the equatorial system.
- */
-function VectorFromEquator(equ, time) {
-    return VectorFromSphere(new Spherical(equ.dec, 15 * equ.ra, equ.dist), time);
-}
-exports.VectorFromEquator = VectorFromEquator;
 /**
  * @brief Given an equatorial vector, calculates equatorial angular coordinates.
  *
@@ -4600,7 +4728,7 @@ exports.VectorFromEquator = VectorFromEquator;
  */
 function EquatorFromVector(vec) {
     const sphere = SphereFromVector(vec);
-    return new EquatorialCoordinates(sphere.lon / 15, sphere.lat, sphere.dist);
+    return new EquatorialCoordinates(sphere.lon / 15, sphere.lat, sphere.dist, vec);
 }
 exports.EquatorFromVector = EquatorFromVector;
 /**
@@ -4626,11 +4754,11 @@ function SphereFromVector(vector) {
         lat = (vector.z < 0.0) ? -90.0 : +90.0;
     }
     else {
-        lon = RAD2DEG * Math.atan2(vector.y, vector.x);
+        lon = exports.RAD2DEG * Math.atan2(vector.y, vector.x);
         if (lon < 0.0) {
             lon += 360.0;
         }
-        lat = RAD2DEG * Math.atan2(vector.z, Math.sqrt(xyproj));
+        lat = exports.RAD2DEG * Math.atan2(vector.z, Math.sqrt(xyproj));
     }
     return new Spherical(lat, lon, dist);
 }
@@ -4747,7 +4875,7 @@ function Refraction(refraction, altitude) {
         let hd = altitude;
         if (hd < -1.0)
             hd = -1.0;
-        refr = (1.02 / Math.tan((hd + 10.3 / (hd + 5.11)) * DEG2RAD)) / 60.0;
+        refr = (1.02 / Math.tan((hd + 10.3 / (hd + 5.11)) * exports.DEG2RAD)) / 60.0;
         if (refraction === 'normal' && altitude < -1.0) {
             // In "normal" mode we gradually reduce refraction toward the nadir
             // so that we never get an altitude angle less than -90 degrees.
@@ -4871,15 +4999,16 @@ exports.Rotation_ECL_EQJ = Rotation_ECL_EQJ;
  * Source: EQJ = equatorial system, using equator at J2000 epoch.
  * Target: EQD = equatorial system, using equator of the specified date/time.
  *
- * @param {AstroTime} time
+ * @param {FlexibleDateTime} time
  *      The date and time at which the Earth's equator defines the target orientation.
  *
  * @returns {RotationMatrix}
  *      A rotation matrix that converts EQJ to EQD at `time`.
  */
 function Rotation_EQJ_EQD(time) {
-    const prec = precession_rot(0.0, time.tt);
-    const nut = nutation_rot(time, 0);
+    time = MakeTime(time);
+    const prec = precession_rot(time, PrecessDirection.From2000);
+    const nut = nutation_rot(time, PrecessDirection.From2000);
     return CombineRotation(prec, nut);
 }
 exports.Rotation_EQJ_EQD = Rotation_EQJ_EQD;
@@ -4891,15 +5020,16 @@ exports.Rotation_EQJ_EQD = Rotation_EQJ_EQD;
  * Source: EQD = equatorial system, using equator of the specified date/time.
  * Target: EQJ = equatorial system, using equator at J2000 epoch.
  *
- * @param {AstroTime} time
+ * @param {FlexibleDateTime} time
  *      The date and time at which the Earth's equator defines the source orientation.
  *
  * @returns {RotationMatrix}
  *      A rotation matrix that converts EQD at `time` to EQJ.
  */
 function Rotation_EQD_EQJ(time) {
-    const nut = nutation_rot(time, 1);
-    const prec = precession_rot(time.tt, 0.0);
+    time = MakeTime(time);
+    const nut = nutation_rot(time, PrecessDirection.Into2000);
+    const prec = precession_rot(time, PrecessDirection.Into2000);
     return CombineRotation(nut, prec);
 }
 exports.Rotation_EQD_EQJ = Rotation_EQD_EQJ;
@@ -4914,7 +5044,7 @@ exports.Rotation_EQD_EQJ = Rotation_EQD_EQJ;
  * Use `HorizonFromVector` to convert the return value
  * to a traditional altitude/azimuth pair.
  *
- * @param {AstroTime} time
+ * @param {FlexibleDateTime} time
  *      The date and time at which the Earth's equator applies.
  *
  * @param {Observer} observer
@@ -4928,10 +5058,11 @@ exports.Rotation_EQD_EQJ = Rotation_EQD_EQJ;
  *      and so that north represents the direction where azimuth = 0.
  */
 function Rotation_EQD_HOR(time, observer) {
-    const sinlat = Math.sin(observer.latitude * DEG2RAD);
-    const coslat = Math.cos(observer.latitude * DEG2RAD);
-    const sinlon = Math.sin(observer.longitude * DEG2RAD);
-    const coslon = Math.cos(observer.longitude * DEG2RAD);
+    time = MakeTime(time);
+    const sinlat = Math.sin(observer.latitude * exports.DEG2RAD);
+    const coslat = Math.cos(observer.latitude * exports.DEG2RAD);
+    const sinlon = Math.sin(observer.longitude * exports.DEG2RAD);
+    const coslon = Math.cos(observer.longitude * exports.DEG2RAD);
     const uze = [coslat * coslon, coslat * sinlon, sinlat];
     const une = [-sinlat * coslon, -sinlat * sinlon, coslat];
     const uwe = [sinlon, -coslon, 0];
@@ -4954,7 +5085,7 @@ exports.Rotation_EQD_HOR = Rotation_EQD_HOR;
  * Source: HOR = horizontal system (x=North, y=West, z=Zenith).
  * Target: EQD = equatorial system, using equator of the specified date/time.
  *
- * @param {AstroTime} time
+ * @param {FlexibleDateTime} time
  *      The date and time at which the Earth's equator applies.
  *
  * @param {Observer} observer
@@ -4976,7 +5107,7 @@ exports.Rotation_HOR_EQD = Rotation_HOR_EQD;
  * Source: HOR = horizontal system (x=North, y=West, z=Zenith).
  * Target: EQJ = equatorial system, using equator at the J2000 epoch.
  *
- * @param {AstroTime} time
+ * @param {FlexibleDateTime} time
  *      The date and time of the observation.
  *
  * @param {Observer} observer
@@ -4986,6 +5117,7 @@ exports.Rotation_HOR_EQD = Rotation_HOR_EQD;
  *      A rotation matrix that converts HOR to EQD at `time` and for `observer`.
  */
 function Rotation_HOR_EQJ(time, observer) {
+    time = MakeTime(time);
     const hor_eqd = Rotation_HOR_EQD(time, observer);
     const eqd_eqj = Rotation_EQD_EQJ(time);
     return CombineRotation(hor_eqd, eqd_eqj);
@@ -5002,10 +5134,10 @@ exports.Rotation_HOR_EQJ = Rotation_HOR_EQJ;
  * Use {@link HorizonFromVector} to convert the return value
  * to a traditional altitude/azimuth pair.
  *
- * @param time
+ * @param {FlexibleDateTime} time
  *      The date and time of the desired horizontal orientation.
  *
- * @param observer
+ * @param {Observer} observer
  *      A location near the Earth's mean sea level that defines the observer's horizon.
  *
  * @return
@@ -5028,7 +5160,7 @@ exports.Rotation_EQJ_HOR = Rotation_EQJ_HOR;
  * Source: EQD = equatorial system, using equator of date.
  * Target: ECL = ecliptic system, using equator at J2000 epoch.
  *
- * @param {AstroTime} time
+ * @param {FlexibleDateTime} time
  *      The date and time of the source equator.
  *
  * @returns {RotationMatrix}
@@ -5048,7 +5180,7 @@ exports.Rotation_EQD_ECL = Rotation_EQD_ECL;
  * Source: ECL = ecliptic system, using equator at J2000 epoch.
  * Target: EQD = equatorial system, using equator of date.
  *
- * @param {AstroTime} time
+ * @param {FlexibleDateTime} time
  *      The date and time of the desired equator.
  *
  * @returns {RotationMatrix}
@@ -5070,7 +5202,7 @@ exports.Rotation_ECL_EQD = Rotation_ECL_EQD;
  * Use {@link HorizonFromVector} to convert the return value
  * to a traditional altitude/azimuth pair.
  *
- * @param {AstroTime} time
+ * @param {FlexibleDateTime} time
  *      The date and time of the desired horizontal orientation.
  *
  * @param {Observer} observer
@@ -5084,6 +5216,7 @@ exports.Rotation_ECL_EQD = Rotation_ECL_EQD;
  *      and so that north represents the direction where azimuth = 0.
  */
 function Rotation_ECL_HOR(time, observer) {
+    time = MakeTime(time);
     const ecl_eqd = Rotation_ECL_EQD(time);
     const eqd_hor = Rotation_EQD_HOR(time, observer);
     return CombineRotation(ecl_eqd, eqd_hor);
@@ -5097,7 +5230,7 @@ exports.Rotation_ECL_HOR = Rotation_ECL_HOR;
  * Source: HOR = horizontal system.
  * Target: ECL = ecliptic system, using equator at J2000 epoch.
  *
- * @param {AstroTime} time
+ * @param {FlexibleDateTime} time
  *      The date and time of the horizontal observation.
  *
  * @param {Observer} observer
@@ -6074,8 +6207,8 @@ function Constellation(ra, dec) {
         Epoch2000 = new AstroTime(0);
     }
     // Convert coordinates from J2000 to B1875.
-    const equ2000 = new EquatorialCoordinates(ra, dec, 1.0);
-    const vec2000 = VectorFromEquator(equ2000, Epoch2000);
+    const sph2000 = new Spherical(dec, 15.0 * ra, 1.0);
+    const vec2000 = VectorFromSphere(sph2000, Epoch2000);
     const vec1875 = RotateVector(ConstelRot, vec2000);
     const equ1875 = EquatorFromVector(vec1875);
     // Search for the constellation using the B1875 coordinates.
@@ -6207,7 +6340,7 @@ function CalcShadow(body_radius_km, time, target, dir) {
     const dx = (u * dir.x) - target.x;
     const dy = (u * dir.y) - target.y;
     const dz = (u * dir.z) - target.z;
-    const r = KM_PER_AU * Math.sqrt(dx * dx + dy * dy + dz * dz);
+    const r = exports.KM_PER_AU * Math.sqrt(dx * dx + dy * dy + dz * dz);
     const k = +SUN_RADIUS_KM - (1.0 + u) * (SUN_RADIUS_KM - body_radius_km);
     const p = -SUN_RADIUS_KM + (1.0 + u) * (SUN_RADIUS_KM + body_radius_km);
     return new ShadowInfo(time, u, r, k, p, target, dir);
@@ -6250,7 +6383,7 @@ function PlanetShadow(body, planet_radius_km, time) {
     // Calculate light-travel-corrected vector from Earth to planet.
     const g = GeoVector(body, time, false);
     // Calculate light-travel-corrected vector from Earth to Sun.
-    const e = GeoVector('Sun', time, false);
+    const e = GeoVector(Body.Sun, time, false);
     // Deduce light-travel-corrected vector from Sun to planet.
     const p = new Vector(g.x - e.x, g.y - e.y, g.z - e.z, time);
     // Calcluate Earth's position from the planet's point of view.
@@ -6328,7 +6461,7 @@ function ShadowSemiDurationMinutes(center_time, radius_limit, window_minutes) {
 }
 function MoonEclipticLatitudeDegrees(time) {
     const moon = CalcMoon(time);
-    return RAD2DEG * moon.geo_eclip_lat;
+    return exports.RAD2DEG * moon.geo_eclip_lat;
 }
 /**
  * @brief Searches for a lunar eclipse.
@@ -6469,12 +6602,12 @@ function GeoidIntersect(shadow) {
     // But dilate the z-coordinates so that the Earth becomes a perfect sphere.
     // Then find the intersection of the vector with the sphere.
     // See p 184 in Montenbruck & Pfleger's "Astronomy on the Personal Computer", second edition.
-    v.x *= KM_PER_AU;
-    v.y *= KM_PER_AU;
-    v.z *= KM_PER_AU / EARTH_FLATTENING;
-    e.x *= KM_PER_AU;
-    e.y *= KM_PER_AU;
-    e.z *= KM_PER_AU / EARTH_FLATTENING;
+    v.x *= exports.KM_PER_AU;
+    v.y *= exports.KM_PER_AU;
+    v.z *= exports.KM_PER_AU / EARTH_FLATTENING;
+    e.x *= exports.KM_PER_AU;
+    e.y *= exports.KM_PER_AU;
+    e.z *= exports.KM_PER_AU / EARTH_FLATTENING;
     // Solve the quadratic equation that finds whether and where
     // the shadow axis intersects with the Earth in the dilated coordinate system.
     const R = EARTH_EQUATORIAL_RADIUS_KM;
@@ -6496,11 +6629,11 @@ function GeoidIntersect(shadow) {
             latitude = (pz > 0.0) ? +90.0 : -90.0;
         }
         else {
-            latitude = RAD2DEG * Math.atan(pz / proj);
+            latitude = exports.RAD2DEG * Math.atan(pz / proj);
         }
         // Adjust longitude for Earth's rotation at the given UT.
         const gast = sidereal_time(peak);
-        longitude = (RAD2DEG * Math.atan2(py, px) - (15 * gast)) % 360.0;
+        longitude = (exports.RAD2DEG * Math.atan2(py, px) - (15 * gast)) % 360.0;
         if (longitude <= -180.0) {
             longitude += 360.0;
         }
@@ -6513,7 +6646,7 @@ function GeoidIntersect(shadow) {
         const inv = InverseRotation(rot);
         // Put the EQD geocentric coordinates of the observer into the vector 'o'.
         // Also convert back from kilometers to astronomical units.
-        let o = new Vector(px / KM_PER_AU, py / KM_PER_AU, pz / KM_PER_AU, shadow.time);
+        let o = new Vector(px / exports.KM_PER_AU, py / exports.KM_PER_AU, pz / exports.KM_PER_AU, shadow.time);
         // Rotate the observer's geocentric EQD back to the EQJ system.
         o = RotateVector(inv, o);
         // Convert geocentric vector to lunacentric vector.
@@ -6742,7 +6875,7 @@ function CalcEvent(observer, time) {
     return new EclipseEvent(time, altitude);
 }
 function SunAltitude(time, observer) {
-    const equ = Equator('Sun', time, observer, true, true);
+    const equ = Equator(Body.Sun, time, observer, true, true);
     const hor = Horizon(time, observer, equ.ra, equ.dec, 'normal');
     return hor.altitude;
 }
@@ -6879,7 +7012,7 @@ function PlanetTransitBoundary(body, planet_radius_km, t1, t2, direction) {
  * To continue the search, pass the `finish` time in the returned structure to
  * {@link NextTransit}.
  *
- * @param {string} body
+ * @param {Body} body
  *      The planet whose transit is to be found. Must be `"Mercury"` or `"Venus"`.
  *
  * @param {AstroTime} startTime
@@ -6893,10 +7026,10 @@ function SearchTransit(body, startTime) {
     // Validate the planet and find its mean radius.
     let planet_radius_km;
     switch (body) {
-        case 'Mercury':
+        case Body.Mercury:
             planet_radius_km = 2439.7;
             break;
-        case 'Venus':
+        case Body.Venus:
             planet_radius_km = 6051.8;
             break;
         default:
@@ -6938,7 +7071,7 @@ exports.SearchTransit = SearchTransit;
  * this function finds the next transit after that.
  * Keep calling this function as many times as you want to keep finding more transits.
  *
- * @param {string} body
+ * @param {Body} body
  *      The planet whose transit is to be found. Must be `"Mercury"` or `"Venus"`.
  *
  * @param {AstroTime} prevTransitTime

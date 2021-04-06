@@ -14,6 +14,7 @@ To get started quickly, here are some [examples](../../demo/csharp/).
 ## Contents
 
 - [Topic Index](#topics)
+- [Constants](#constants)
 - [Functions](#functions)
 - [Types](#types)
 
@@ -26,8 +27,9 @@ To get started quickly, here are some [examples](../../demo/csharp/).
 
 | Function | Description |
 | -------- | ----------- |
-| [HelioVector](#Astronomy.HelioVector) | Calculates vector with respect to the center of the Sun. |
-| [GeoVector](#Astronomy.GeoVector)     | Calculates vector with respect to the center of the Earth. |
+| [HelioVector](#Astronomy.HelioVector) | Calculates body position vector with respect to the center of the Sun. |
+| [GeoVector](#Astronomy.GeoVector)     | Calculates body position vector with respect to the center of the Earth. |
+| [ObserverVector](#Astronomy.ObserverVector) | Calculates vector from the center of the Earth to an observer on the Earth's surface. |
 | [Equator](#Astronomy.Equator)         | Calculates right ascension and declination. |
 | [EquatorialToEcliptic](#Astronomy.EquatorialToEcliptic)       | Converts J2000 equatorial coordinates to J2000 ecliptic coordinates. |
 | [EclipticLongitude](#Astronomy.EclipticLongitude) | Calculates ecliptic longitude of a body in the J2000 system. |
@@ -119,9 +121,10 @@ these are used in function and type names.
 | [RotateVector](#Astronomy.RotateVector) | Applies a rotation matrix to a vector, yielding a vector in another orientation system. |
 | [InverseRotation](#Astronomy.InverseRotation) | Given a rotation matrix, finds the inverse rotation matrix that does the opposite transformation. |
 | [CombineRotation](#Astronomy.CombineRotation) | Given two rotation matrices, returns a rotation matrix that combines them into a net transformation. |
+| [IdentityMatrix](#Astronomy.IdentityMatrix) | Returns a 3x3 identity matrix, which can be used to form other rotation matrices. |
+| [Pivot](#Astronomy.Pivot) | Transforms a rotation matrix by pivoting it around a given axis by a given angle. |
 | [VectorFromSphere](#Astronomy.VectorFromSphere) | Converts spherical coordinates to Cartesian coordinates. |
 | [SphereFromVector](#Astronomy.SphereFromVector) | Converts Cartesian coordinates to spherical coordinates. |
-| [VectorFromEquator](#Astronomy.VectorFromEquator) | Given angular equatorial coordinates, calculates equatorial vector. |
 | [EquatorFromVector](#Astronomy.EquatorFromVector) | Given an equatorial vector, calculates equatorial angular coordinates. |
 | [VectorFromHorizon](#Astronomy.VectorFromHorizon) | Given apparent angular horizontal coordinates, calculates horizontal vector. |
 | [HorizonFromVector](#Astronomy.HorizonFromVector) | Given a vector in horizontal orientation, calculates horizontal angular coordinates. |
@@ -139,6 +142,26 @@ these are used in function and type names.
 | [Rotation_HOR_ECL](#Astronomy.Rotation_HOR_ECL) | Calculates a rotation matrix from horizontal (HOR) to ecliptic J2000 (ECL). |
 
 ---
+
+<a name="constants"></a>
+## Constants
+
+---
+
+<a name="Astronomy.KM_PER_AU"></a>
+### `const double Astronomy.KM_PER_AU = 149597870.69098932;`
+
+**The number of kilometers in one astronomical unit (AU).**
+
+<a name="Astronomy.RAD2DEG"></a>
+### `const double Astronomy.RAD2DEG = 57.29577951308232;`
+
+**The factor to convert radians to degrees = 180/pi.**
+
+<a name="Astronomy.DEG2RAD"></a>
+### `const double Astronomy.DEG2RAD = 0.017453292519943295;`
+
+**The factor to convert degrees to radians = pi/180.**
 
 <a name="functions"></a>
 ## Functions
@@ -278,6 +301,8 @@ Correction for aberration is optional, using the `aberration` parameter.
 | [`Observer`](#Observer) | `observer` | A location on or near the surface of the Earth. |
 | [`EquatorEpoch`](#EquatorEpoch) | `equdate` | Selects the date of the Earth's equator in which to express the equatorial coordinates. |
 | [`Aberration`](#Aberration) | `aberration` | Selects whether or not to correct for aberration. |
+
+**Returns:** Topocentric equatorial coordinates of the celestial body.
 
 <a name="Astronomy.EquatorFromVector"></a>
 ### Astronomy.EquatorFromVector(vector) &#8658; [`Equatorial`](#Equatorial)
@@ -442,6 +467,18 @@ and is expressed in astronomical units (AU).
 | [`Refraction`](#Refraction) | `refraction` | `Refraction.Normal`: correct altitude for atmospheric refraction (recommended). `Refraction.None`: no atmospheric refraction correction is performed. `Refraction.JplHor`: for JPL Horizons compatibility testing only; not recommended for normal use. |
 
 **Returns:** Horizontal spherical coordinates as described above.
+
+<a name="Astronomy.IdentityMatrix"></a>
+### Astronomy.IdentityMatrix() &#8658; [`RotationMatrix`](#RotationMatrix)
+
+**Creates an identity rotation matrix.**
+
+Returns a rotation matrix that has no effect on orientation.
+This matrix can be the starting point for other operations,
+such as using a series of calls to [`Astronomy.Pivot`](#Astronomy.Pivot) to
+create a custom rotation matrix.
+
+**Returns:** The identity matrix.
 
 <a name="Astronomy.Illumination"></a>
 ### Astronomy.Illumination(body, time) &#8658; [`IllumInfo`](#IllumInfo)
@@ -669,6 +706,55 @@ Keep calling this function as many times as you want to keep finding more transi
 | --- | --- | --- |
 | [`Body`](#Body) | `body` | The planet whose transit is to be found. Must be `Body.Mercury` or `Body.Venus`. |
 | [`AstroTime`](#AstroTime) | `prevTransitTime` | A date and time near the previous transit. |
+
+<a name="Astronomy.ObserverVector"></a>
+### Astronomy.ObserverVector(time, observer, equdate) &#8658; [`AstroVector`](#AstroVector)
+
+**Calculates geocentric equatorial coordinates of an observer on the surface of the Earth.**
+
+This function calculates a vector from the center of the Earth to
+a point on or near the surface of the Earth, expressed in equatorial
+coordinates. It takes into account the rotation of the Earth at the given
+time, along with the given latitude, longitude, and elevation of the observer.
+
+The caller may pass a value in `equdate` to select either `EQUATOR_J2000`
+for using J2000 coordinates, or `EQUATOR_OF_DATE` for using coordinates relative
+to the Earth's equator at the specified time.
+
+The returned vector has components expressed in astronomical units (AU).
+To convert to kilometers, multiply the `x`, `y`, and `z` values by
+the constant value [`Astronomy.KM_PER_AU`](#Astronomy.KM_PER_AU).
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`AstroTime`](#AstroTime) | `time` | The date and time for which to calculate the observer's position vector. |
+| [`Observer`](#Observer) | `observer` | The geographic location of a point on or near the surface of the Earth. |
+| [`EquatorEpoch`](#EquatorEpoch) | `equdate` | Selects the date of the Earth's equator in which to express the equatorial coordinates. The caller may select `EQUATOR_J2000` to use the orientation of the Earth's equator at noon UTC on January 1, 2000, in which case this function corrects for precession and nutation of the Earth as it was at the moment specified by the `time` parameter. Or the caller may select `EQUATOR_OF_DATE` to use the Earth's equator at `time` as the orientation. |
+
+**Returns:** An equatorial vector from the center of the Earth to the specified location on (or near) the Earth's surface.
+
+<a name="Astronomy.Pivot"></a>
+### Astronomy.Pivot(rotation, axis, angle) &#8658; [`RotationMatrix`](#RotationMatrix)
+
+**Re-orients a rotation matrix by pivoting it by an angle around one of its axes.**
+
+Given a rotation matrix, a selected coordinate axis, and an angle in degrees,
+this function pivots the rotation matrix by that angle around that coordinate axis.
+
+For example, if you have rotation matrix that converts ecliptic coordinates (ECL)
+to horizontal coordinates (HOR), but you really want to convert ECL to the orientation
+of a telescope camera pointed at a given body, you can use `Astronomy.Pivot` twice:
+(1) pivot around the zenith axis by the body's azimuth, then (2) pivot around the
+western axis by the body's altitude angle. The resulting rotation matrix will then
+reorient ECL coordinates to the orientation of your telescope camera.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`RotationMatrix`](#RotationMatrix) | `rotation` | The input rotation matrix. |
+| `int` | `axis` | An integer that selects which coordinate axis to rotate around: 0 = x, 1 = y, 2 = z. Any other value will cause an ArgumentException to be thrown. |
+| `double` | `angle` | An angle in degrees indicating the amount of rotation around the specified axis. Positive angles indicate rotation counterclockwise as seen from the positive direction along that axis, looking towards the origin point of the orientation system. Any finite number of degrees is allowed, but best precision will result from keeping `angle` in the range [-360, +360]. |
+
+**Returns:** A pivoted matrix object.
 
 <a name="Astronomy.RefractionAngle"></a>
 ### Astronomy.RefractionAngle(refraction, altitude) &#8658; `double`
@@ -1357,18 +1443,6 @@ In fact, the function [`Astronomy.Seasons`](#Astronomy.Seasons) does use this fu
 
 **Returns:** The ecliptic coordinates of the Sun using the Earth's true equator of date.
 
-<a name="Astronomy.VectorFromEquator"></a>
-### Astronomy.VectorFromEquator(equ, time) &#8658; [`AstroVector`](#AstroVector)
-
-**Given angular equatorial coordinates in `equ`, calculates equatorial vector.**
-
-| Type | Parameter | Description |
-| --- | --- | --- |
-| [`Equatorial`](#Equatorial) | `equ` | Angular equatorial coordinates to be converted to a vector. |
-| [`AstroTime`](#AstroTime) | `time` | The date and time of the observation. This is needed because the returned vector requires a valid time value when passed to certain other functions. |
-
-**Returns:** A vector in the equatorial system.
-
 <a name="Astronomy.VectorFromHorizon"></a>
 ### Astronomy.VectorFromHorizon(sphere, time, refraction) &#8658; [`AstroVector`](#AstroVector)
 
@@ -1492,9 +1566,9 @@ Sometimes we need to adjust a given [`AstroTime`](#AstroTime) value by a certain
 This function adds the given real number of days in `days` to the date and time in this object.
 
 More precisely, the result's Universal Time field `ut` is exactly adjusted by `days` and
-the Terrestrial Time field `tt` is adjusted correctly for the resulting UTC date and time,
-according to the historical and predictive Delta-T model provided by the
-[United States Naval Observatory](http://maia.usno.navy.mil/ser7/).
+the Terrestrial Time field `tt` is adjusted for the resulting UTC date and time,
+using a best-fit piecewise polynomial model devised by
+[Espenak and Meeus](https://eclipse.gsfc.nasa.gov/SEhelp/deltatpoly2004.html).
 
 | Type | Parameter | Description |
 | --- | --- | --- |
@@ -1673,9 +1747,7 @@ oriented with respect to the plane of the Earth's orbit around the Sun (the ecli
 
 | Type | Name | Description |
 | --- | --- | --- |
-| `double` | `ex` | Cartesian x-coordinate: in the direction of the equinox along the ecliptic plane. |
-| `double` | `ey` | Cartesian y-coordinate: in the ecliptic plane 90 degrees prograde from the equinox. |
-| `double` | `ez` | Cartesian z-coordinate: perpendicular to the ecliptic plane. Positive is north. |
+| [`AstroVector`](#AstroVector) | `vec` | Cartesian ecliptic vector, with components as follows: x: the direction of the equinox along the ecliptic plane. y: in the ecliptic plane 90 degrees prograde from the equinox. z: perpendicular to the ecliptic plane. Positive is north. |
 | `double` | `elat` | Latitude in degrees north (positive) or south (negative) of the ecliptic plane. |
 | `double` | `elon` | Longitude in degrees around the ecliptic plane prograde from the equinox. |
 
@@ -1725,7 +1797,7 @@ calculations.
 <a name="Equatorial"></a>
 ## `struct Equatorial`
 
-**Equatorial angular coordinates.**
+**Equatorial angular and cartesian coordinates.**
 
 Coordinates of a celestial body as seen from the Earth
 (geocentric or topocentric, depending on context),
@@ -1736,6 +1808,7 @@ oriented with respect to the projection of the Earth's equator onto the sky.
 | `double` | `ra` | Right ascension in sidereal hours. |
 | `double` | `dec` | Declination in degrees. |
 | `double` | `dist` | Distance to the celestial body in AU. |
+| [`AstroVector`](#AstroVector) | `vec` | Equatorial coordinates in cartesian vector form: x = March equinox, y = June solstice, z = north. |
 
 ---
 

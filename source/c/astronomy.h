@@ -34,6 +34,26 @@
 extern "C" {
 #endif
 
+/*---------- numeric constants ----------*/
+
+/**
+ * \def KM_PER_AU
+ * @brief The number of kilometers in one astronomical unit (AU).
+ */
+#define KM_PER_AU   1.4959787069098932e+8
+
+/**
+ * \def DEG2RAD
+ * @brief The factor to convert radians to degrees = pi/180.
+ */
+#define DEG2RAD     0.017453292519943296
+
+/**
+ * \def RAD2DEG
+ * @brief The factor to convert degrees to radians = 180/pi.
+ */
+#define RAD2DEG     57.295779513082321
+
 /*---------- types ----------*/
 
 /**
@@ -75,20 +95,19 @@ astro_status_t;
  *
  * The astro_time_t type contains `ut` to represent Universal Time (UT1/UTC) and
  * `tt` to represent Terrestrial Time (TT, also known as *ephemeris time*).
- * The difference `tt-ut` is known as *&Delta;T*, and is obtained from
- * a model provided by the
- * [United States Naval Observatory](http://maia.usno.navy.mil/ser7/).
+ * The difference `tt-ut` is known as *&Delta;T*, using a best-fit piecewise model devised by
+ * [Espenak and Meeus](https://eclipse.gsfc.nasa.gov/SEhelp/deltatpoly2004.html).
  *
  * Both `tt` and `ut` are necessary for performing different astronomical calculations.
  * Indeed, certain calculations (such as rise/set times) require both time scales.
  * See the documentation for the `ut` and `tt` fields for more detailed information.
  *
- * In cases where astro_time_t is included in a structure returned by
- * a function that can fail, the astro_status_t field `status` will contain a value
+ * In cases where `astro_time_t` is included in a structure returned by
+ * a function that can fail, the `astro_status_t` field `status` will contain a value
  * other than `ASTRO_SUCCESS`; in that case the `ut` and `tt` will hold `NAN` (not a number).
  * In general, when there is an error code stored in a struct field `status`, the
  * caller should ignore all other values in that structure, including the `ut` and `tt`
- * inside astro_time_t.
+ * inside `astro_time_t`.
  */
 typedef struct
 {
@@ -219,11 +238,17 @@ typedef enum
 }
 astro_body_t;
 
-#define MIN_BODY    BODY_MERCURY    /**< Minimum valid astro_body_t value; useful for iteration. */
-#define MAX_BODY    BODY_SSB        /**< Maximum valid astro_body_t value; useful for iteration. */
+/**
+ * \def MIN_BODY
+ * @brief Minimum valid astro_body_t value; useful for iteration.
+ */
+#define MIN_BODY    BODY_MERCURY
 
-#define MIN_YEAR    1700    /**< Minimum year value supported by Astronomy Engine. */
-#define MAX_YEAR    2200    /**< Maximum year value supported by Astronomy Engine. */
+/**
+ * \def MAX_BODY
+ * @brief Maximum valid astro_body_t value; useful for iteration.
+ */
+#define MAX_BODY    BODY_SSB
 
 /**
  * @brief The location of an observer on (or near) the surface of the Earth.
@@ -232,7 +257,7 @@ astro_body_t;
  * from a particular place on the Earth.
  *
  * You can create this structure directly, or you can call the convenience function
- * #Astronomy_MakeObserver# to create one for you.
+ * #Astronomy_MakeObserver to create one for you.
  */
 typedef struct
 {
@@ -243,7 +268,7 @@ typedef struct
 astro_observer_t;
 
 /**
- * @brief Equatorial angular coordinates.
+ * @brief Equatorial angular and cartesian coordinates.
  *
  * Coordinates of a celestial body as seen from the Earth (geocentric or topocentric, depending on context),
  * oriented with respect to the projection of the Earth's equator onto the sky.
@@ -254,6 +279,7 @@ typedef struct
     double ra;              /**< right ascension in sidereal hours. */
     double dec;             /**< declination in degrees */
     double dist;            /**< distance to the celestial body in AU. */
+    astro_vector_t vec;     /**< equatorial coordinates in cartesian vector form: x = March equinox, y = June solstice, z = north. */
 }
 astro_equatorial_t;
 
@@ -266,9 +292,7 @@ astro_equatorial_t;
 typedef struct
 {
     astro_status_t status;  /**< `ASTRO_SUCCESS` if this struct is valid; otherwise an error code. */
-    double ex;              /**< Cartesian x-coordinate: in the direction of the equinox along the ecliptic plane. */
-    double ey;              /**< Cartesian y-coordinate: in the ecliptic plane 90 degrees prograde from the equinox. */
-    double ez;              /**< Cartesian z-coordinate: perpendicular to the ecliptic plane. Positive is north. */
+    astro_vector_t vec;     /**< Cartesian ecliptic vector: x=equinox, y=90 degrees prograde in ecliptic plane, z=northward perpendicular to ecliptic. */
     double elat;            /**< Latitude in degrees north (positive) or south (negative) of the ecliptic plane. */
     double elon;            /**< Longitude in degrees around the ecliptic plane prograde from the equinox. */
 }
@@ -778,7 +802,11 @@ typedef enum
 }
 astro_time_format_t;
 
-#define TIME_TEXT_BYTES  25   /**< The smallest number of characters that is always large enough for #Astronomy_FormatTime. */
+/**
+ * \def TIME_TEXT_BYTES
+ * @brief The smallest number of characters that is always large enough for #Astronomy_FormatTime.
+ */
+#define TIME_TEXT_BYTES  25
 
 /*---------- functions ----------*/
 
@@ -805,6 +833,12 @@ astro_equatorial_t Astronomy_Equator(
     astro_observer_t observer,
     astro_equator_date_t equdate,
     astro_aberration_t aberration
+);
+
+astro_vector_t Astronomy_ObserverVector(
+    astro_time_t *time,
+    astro_observer_t observer,
+    astro_equator_date_t equdate
 );
 
 astro_ecliptic_t Astronomy_SunPosition(astro_time_t time);
@@ -869,11 +903,12 @@ astro_apsis_t Astronomy_NextLunarApsis(astro_apsis_t apsis);
 astro_apsis_t Astronomy_SearchPlanetApsis(astro_body_t body, astro_time_t startTime);
 astro_apsis_t Astronomy_NextPlanetApsis(astro_body_t body, astro_apsis_t apsis);
 
+astro_rotation_t Astronomy_IdentityMatrix(void);
 astro_rotation_t Astronomy_InverseRotation(astro_rotation_t rotation);
 astro_rotation_t Astronomy_CombineRotation(astro_rotation_t a, astro_rotation_t b);
+astro_rotation_t Astronomy_Pivot(astro_rotation_t rotation, int axis, double angle);
 astro_vector_t Astronomy_VectorFromSphere(astro_spherical_t sphere, astro_time_t time);
 astro_spherical_t Astronomy_SphereFromVector(astro_vector_t vector);
-astro_vector_t Astronomy_VectorFromEquator(astro_equatorial_t equ, astro_time_t time);
 astro_equatorial_t Astronomy_EquatorFromVector(astro_vector_t vector);
 astro_vector_t Astronomy_VectorFromHorizon(astro_spherical_t sphere, astro_time_t time, astro_refraction_t refraction);
 astro_spherical_t Astronomy_HorizonFromVector(astro_vector_t vector, astro_refraction_t refraction);

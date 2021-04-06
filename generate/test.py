@@ -762,6 +762,23 @@ def CompareMatrices(caller, a, b, tolerance):
                 sys.exit(1)
 
 
+def CompareVectors(caller, a, b, tolerance):
+    diff = vabs(a.x - b.x)
+    if diff > tolerance:
+        print('PY CompareVectors ERROR({}): vector x = {}, expected {}, diff {}'.format(caller, a.x, b.x, diff))
+        sys.exit(1)
+
+    diff = vabs(a.y - b.y)
+    if diff > tolerance:
+        print('PY CompareVectors ERROR({}): vector y = {}, expected {}, diff {}'.format(caller, a.y, b.y, diff))
+        sys.exit(1)
+
+    diff = vabs(a.z - b.z)
+    if diff > tolerance:
+        print('PY CompareVectors ERROR({}): vector z = {}, expected {}, diff {}'.format(caller, a.z, b.z, diff))
+        sys.exit(1)
+
+
 def Rotation_MatrixInverse():
     a = astronomy.RotationMatrix([
         [1, 4, 7],
@@ -815,13 +832,13 @@ def Test_EQJ_ECL():
 
     # Use the existing astronomy.Ecliptic() to calculate ecliptic vector and angles.
     ecl = astronomy.Ecliptic(ev)
-    Debug('PY Test_EQJ_ECL ecl = ({}, {}, {})'.format(ecl.ex, ecl.ey, ecl.ez))
+    Debug('PY Test_EQJ_ECL ecl = ({}, {}, {})'.format(ecl.vec.x, ecl.vec.y, ecl.vec.z))
 
     # Now compute the same vector via rotation matrix.
     ee = astronomy.RotateVector(r, ev)
-    dx = ee.x - ecl.ex
-    dy = ee.y - ecl.ey
-    dz = ee.z - ecl.ez
+    dx = ee.x - ecl.vec.x
+    dy = ee.y - ecl.vec.y
+    dz = ee.z - ecl.vec.z
     diff = sqrt(dx*dx + dy*dy + dz*dz)
     Debug('PY Test_EQJ_ECL ee = ({}, {}, {}); diff = {}'.format(ee.x, ee.y, ee.z, diff))
     if diff > 1.0e-16:
@@ -847,7 +864,7 @@ def Test_EQJ_EQD(body):
     eqdate = astronomy.Equator(body, time, observer, True, True)
 
     # Convert EQJ spherical coordinates to vector.
-    v2000 = astronomy.VectorFromEquator(eq2000, time)
+    v2000 = eq2000.vec
 
     # Find rotation matrix.
     r = astronomy.Rotation_EQJ_EQD(time)
@@ -888,7 +905,7 @@ def Test_EQD_HOR(body):
     hor = astronomy.Horizon(time, observer, eqd.ra, eqd.dec, astronomy.Refraction.Normal)
 
     # Calculate the position of the body as an equatorial vector of date.
-    vec_eqd = astronomy.VectorFromEquator(eqd, time)
+    vec_eqd = eqd.vec
 
     # Calculate rotation matrix to convert equatorial J2000 vector to horizontal vector.
     rot = astronomy.Rotation_EQD_HOR(time, observer)
@@ -927,7 +944,7 @@ def Test_EQD_HOR(body):
 
     # Exercise HOR to EQJ translation.
     eqj = astronomy.Equator(body, time, observer, False, True)
-    vec_eqj = astronomy.VectorFromEquator(eqj, time)
+    vec_eqj = eqj.vec
     yrot = astronomy.Rotation_HOR_EQJ(time, observer)
     check_eqj = astronomy.RotateVector(yrot, vec_hor)
     diff = VectorDiff(check_eqj, vec_eqj)
@@ -1010,9 +1027,48 @@ def Test_RotRoundTrip():
     Debug('PY Test_RotRoundTrip: PASS')
 
 
+def Rotation_Pivot():
+    tolerance = 1.0e-15
+
+    # Start with an identity matrix.
+    ident = astronomy.IdentityMatrix()
+
+    # Pivot 90 degrees counterclockwise around the z-axis.
+    r = astronomy.Pivot(ident, 2, +90.0)
+
+    # Put the expected answer in 'a'.
+    a = astronomy.RotationMatrix([
+        [ 0, +1,  0],
+        [-1,  0,  0],
+        [ 0,  0, +1],
+    ])
+
+    # Compare actual 'r' with expected 'a'.
+    CompareMatrices('Rotation_Pivot #1', r, a, tolerance)
+
+    # Pivot again, -30 degrees around the x-axis.
+    r = astronomy.Pivot(r, 0, -30.0)
+
+    # Pivot a third time, 180 degrees around the y-axis.
+    r = astronomy.Pivot(r, 1, +180.0)
+
+    # Use the 'r' matrix to rotate a vector.
+    v1 = astronomy.Vector(1, 2, 3, astronomy.Time(0))
+    v2 = astronomy.RotateVector(r, v1)
+
+    # Initialize the expected vector 've'.
+    ve = astronomy.Vector(+2.0, +2.3660254037844390, -2.0980762113533156, v1.t)
+
+    CompareVectors('Rotation_Pivot #2', v2, ve, tolerance)
+
+    Debug('PY Rotation_Pivot: PASS')
+
+
+
 def Rotation():
     Rotation_MatrixInverse()
     Rotation_MatrixMultiply()
+    Rotation_Pivot()
     Test_EQJ_ECL()
     Test_EQJ_EQD(astronomy.Body.Mercury)
     Test_EQJ_EQD(astronomy.Body.Venus)
@@ -1585,9 +1641,66 @@ def PlutoCheck():
 
 #-----------------------------------------------------------------------------------------------------------
 
+def GeoidTestCase(time, observer, ofdate):
+    topo_moon = astronomy.Equator(astronomy.Body.Moon, time, observer, ofdate, False)
+    surface = astronomy.ObserverVector(time, observer, ofdate)
+    geo_moon = astronomy.GeoVector(astronomy.Body.Moon, time, False)
+
+    if ofdate:
+        # GeoVector() returns J2000 coordinates. Convert to equator-of-date coordinates.
+        rot = astronomy.Rotation_EQJ_EQD(time)
+        geo_moon = astronomy.RotateVector(rot, geo_moon)
+
+    dx = astronomy.KM_PER_AU * v((geo_moon.x - surface.x) - topo_moon.vec.x)
+    dy = astronomy.KM_PER_AU * v((geo_moon.y - surface.y) - topo_moon.vec.y)
+    dz = astronomy.KM_PER_AU * v((geo_moon.z - surface.z) - topo_moon.vec.z)
+    diff = sqrt(dx*dx + dy*dy + dz*dz)
+    Debug('PY GeoidTestCase: ofdate={}, time={}, lat={}, ht={}, surface=({}, {}, {}), diff = {} km'.format(
+        ofdate, time,
+        observer.latitude, observer.longitude, observer.height,
+        astronomy.KM_PER_AU * surface.x,
+        astronomy.KM_PER_AU * surface.y,
+        astronomy.KM_PER_AU * surface.z,
+        diff
+    ))
+
+    # Require 1 millimeter accuracy! (one millionth of a kilometer).
+    if diff > 1.0e-6:
+        print('JS GeoidTestCase: EXCESSIVE POSITION ERROR.')
+        return 1
+    return 0
+
+
+def Geoid():
+    time_list = [
+        astronomy.Time.Parse('1066-09-27T18:00:00Z'),
+        astronomy.Time.Parse('1970-12-13T15:42:00Z'),
+        astronomy.Time.Parse('1970-12-13T15:43:00Z'),
+        astronomy.Time.Parse('2015-03-05T02:15:45Z')
+    ]
+
+    observer_list = [
+        astronomy.Observer( +1.5,   +2.7,    7.4),
+        astronomy.Observer(-53.7, +141.7, +100.0),
+        astronomy.Observer(+30.0,  -85.2,  -50.0),
+        astronomy.Observer(+90.0,  +45.0,  -50.0),
+        astronomy.Observer(-90.0, -180.0,    0.0)
+    ]
+
+    for observer in observer_list:
+        for time in time_list:
+            if GeoidTestCase(time, observer, False): return 1
+            if GeoidTestCase(time, observer, True): return 1
+
+    print('PY GeoidTest: PASS')
+    return 0
+
+#-----------------------------------------------------------------------------------------------------------
+
 UnitTests = {
     'constellation':            Constellation,
     'elongation':               Elongation,
+    'geoid':                    Geoid,
     'global_solar_eclipse':     GlobalSolarEclipse,
     'local_solar_eclipse':      LocalSolarEclipse,
     'lunar_apsis':              LunarApsis,

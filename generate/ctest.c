@@ -13,8 +13,6 @@
 #include "astronomy.h"
 
 #define PI      3.14159265358979323846
-static const double DEG2RAD = 0.017453292519943296;
-static const double RAD2DEG = 57.295779513082321;
 
 #define CHECK(x)        do{if(0 != (error = (x))) goto fail;}while(0)
 #define FAIL(...)       do{fprintf(stderr, __VA_ARGS__); error = 1; goto fail;}while(0)
@@ -91,6 +89,7 @@ static int LocalSolarEclipseTest1(void);
 static int LocalSolarEclipseTest2(void);
 static int Transit(void);
 static int DistancePlot(astro_body_t body, double ut1, double ut2, const char *filename);
+static int GeoidTest(void);
 
 typedef int (* unit_test_func_t) (void);
 
@@ -107,6 +106,7 @@ static unit_test_t UnitTests[] =
     {"constellation",           ConstellationTest},
     {"earth_apsis",             EarthApsis},
     {"elongation",              ElongationTest},
+    {"geoid",                   GeoidTest},
     {"global_solar_eclipse",    GlobalSolarEclipseTest},
     {"local_solar_eclipse",     LocalSolarEclipseTest},
     {"lunar_eclipse",           LunarEclipseTest},
@@ -1698,7 +1698,7 @@ static int PlanetApsis(void)
     double degree_threshold;
     double max_diff_days, max_dist_ratio;
 
-    start_time = Astronomy_MakeTime(MIN_YEAR, 1, 1, 0, 0, 0.0);
+    start_time = Astronomy_MakeTime(1700, 1, 1, 0, 0, 0.0);
 
     for (body = BODY_MERCURY; body <= BODY_PLUTO; ++body)
     {
@@ -1832,6 +1832,31 @@ static int CheckRotationMatrix(int lnum, const char *name, astro_rotation_t r)
 
 #define CHECK_ROTMAT(r)   CHECK(CheckRotationMatrix(__LINE__, #r, (r)))
 
+static int CompareVectors(const char *caller, astro_vector_t a, astro_vector_t b, double tolerance)
+{
+    double diff;
+
+    if (a.status != ASTRO_SUCCESS)
+        FAILRET("C CompareVectors ERROR(%s): a.status = %d\n", caller, a.status);
+
+    if (b.status != ASTRO_SUCCESS)
+        FAILRET("C CompareVectors ERROR(%s): b.status = %d\n", caller, b.status);
+
+    diff = ABS(a.x - b.x);
+    if (diff > tolerance)
+        FAILRET("C CompareVectors ERROR(%s): x=%lg, expected %lg, diff %lg\n", caller, a.x, b.x, diff);
+
+    diff = ABS(a.y - b.y);
+    if (diff > tolerance)
+        FAILRET("C CompareVectors ERROR(%s): y=%lg, expected %lg, diff %lg\n", caller, a.y, b.y, diff);
+
+    diff = ABS(a.z - b.z);
+    if (diff > tolerance)
+        FAILRET("C CompareVectors ERROR(%s): z=%lg, expected %lg, diff %lg\n", caller, a.z, b.z, diff);
+
+    return 0;
+}
+
 static int CompareMatrices(const char *caller, astro_rotation_t a, astro_rotation_t b, double tolerance)
 {
     int i, j;
@@ -1876,6 +1901,67 @@ static int Rotation_MatrixInverse(void)
     printf("C Rotation_MatrixInverse: PASS\n");
     error = 0;
 
+fail:
+    return error;
+}
+
+static int Rotation_Pivot(void)
+{
+    int error;
+    astro_rotation_t ident;
+    astro_rotation_t r;
+    astro_rotation_t a;
+    astro_vector_t v1, v2, ve;
+    const double tolerance = 1.0e-15;
+
+    /* Test #1 */
+
+    /* Start with an identity matrix. */
+    ident = Astronomy_IdentityMatrix();
+
+    /* Pivot 90 degrees counterclockwise around the z-axis. */
+    r = Astronomy_Pivot(ident, 2, +90.0);
+    CHECK_STATUS(r);
+
+    /* Put the expected answer in 'a'. */
+    a.status = ASTRO_SUCCESS;
+    a.rot[0][0] =  0.0;  a.rot[1][0] = -1.0;  a.rot[2][0] =  0.0;
+    a.rot[0][1] = +1.0;  a.rot[1][1] =  0.0;  a.rot[2][1] =  0.0;
+    a.rot[0][2] =  0.0;  a.rot[1][2] =  0.0;  a.rot[2][2] =  1.0;
+
+    /* Compare actual 'r' with expected 'a'. */
+    CHECK(CompareMatrices("Rotation_Pivot #1", r, a, tolerance));
+
+    /* Test #2. */
+
+    /* Pivot again, -30 degrees around the x-axis. */
+    r = Astronomy_Pivot(r, 0, -30.0);
+    CHECK_STATUS(r);
+
+    /* Pivot a third time, 180 degrees around the y-axis. */
+    r = Astronomy_Pivot(r, 1, +180.0);
+
+    /* Use the 'r' matrix to rotate a vector. */
+    v1.status = ASTRO_SUCCESS;
+    v1.t = Astronomy_MakeTime(2000, 1, 1, 0, 0, 0.0);
+    v1.x = 1.0;
+    v1.y = 2.0;
+    v1.z = 3.0;
+
+    v2 = Astronomy_RotateVector(r, v1);
+    CHECK_STATUS(v2);
+
+    /* Initialize the expected vector 've'. */
+    ve.status = ASTRO_SUCCESS;
+    ve.t = v1.t;
+    ve.x = +2.0;
+    ve.y = +2.3660254037844390;
+    ve.z = -2.0980762113533156;
+
+    CHECK(CompareVectors("Rotation_Pivot #2", v2, ve, tolerance));
+
+    printf("C Rotation_Pivot: PASS\n");
+    error = 0;
 fail:
     return error;
 }
@@ -2108,16 +2194,16 @@ static int Test_EQJ_ECL(void)
     if (ecl.status != ASTRO_SUCCESS)
         FAIL("C Test_EQJ_ECL: Astronomy_Ecliptic returned error %d\n", ecl.status);
 
-    DEBUG("C Test_EQJ_ECL ecl = (%0.18lf, %0.18lf,%0.18lf)\n", ecl.ex, ecl.ey, ecl.ez);
+    DEBUG("C Test_EQJ_ECL ecl = (%0.18lf, %0.18lf,%0.18lf)\n", ecl.vec.x, ecl.vec.y, ecl.vec.z);
 
     /* Now compute the same vector via rotation matrix. */
     ee = Astronomy_RotateVector(r, ev);
     if (ee.status != ASTRO_SUCCESS)
         FAIL("C Test_EQJ_ECL: Astronomy_RotateVector returned error %d\n", ee.status);
 
-    dx = ee.x - ecl.ex;
-    dy = ee.y - ecl.ey;
-    dz = ee.z - ecl.ez;
+    dx = ee.x - ecl.vec.x;
+    dy = ee.y - ecl.vec.y;
+    dz = ee.z - ecl.vec.z;
     diff = V(sqrt(dx*dx + dy*dy + dz*dz));
     DEBUG("C Test_EQJ_ECL  ee = (%0.18lf, %0.18lf,%0.18lf);  diff=%lg\n", ee.x, ee.y, ee.z, diff);
     if (diff > 1.0e-16)
@@ -2158,7 +2244,7 @@ static int Test_EQJ_EQD(astro_body_t body)
     CHECK_STATUS(eqdate);
 
     /* Convert EQJ angular coordinates to vector. */
-    v2000 = Astronomy_VectorFromEquator(eq2000, time);
+    v2000 = eq2000.vec;
     CHECK_STATUS(v2000);
 
     /* Find rotation matrix. */
@@ -2216,7 +2302,7 @@ static int Test_EQD_HOR(astro_body_t body)
     hor = Astronomy_Horizon(&time, observer, eqd.ra, eqd.dec, REFRACTION_NORMAL);
 
     /* Calculate the position of the body as an equatorial vector of date. */
-    CHECK_VECTOR(vec_eqd, Astronomy_VectorFromEquator(eqd, time));
+    CHECK_VECTOR(vec_eqd, eqd.vec);
 
     /* Calculate rotation matrix to convert equatorial J2000 vector to horizontal vector. */
     rot = Astronomy_Rotation_EQD_HOR(time, observer);
@@ -2235,7 +2321,7 @@ static int Test_EQD_HOR(astro_body_t body)
     DEBUG("C Test_EQD_HOR %s: trusted alt=%0.3lf, az=%0.3lf; test alt=%0.3lf, az=%0.3lf; diff_alt=%lg, diff_az=%lg\n",
         Astronomy_BodyName(body), hor.altitude, hor.azimuth, sphere.lat, sphere.lon, diff_alt, diff_az);
 
-    if (diff_alt > 3.0e-14 || diff_az > 5e-14)
+    if (diff_alt > 3.0e-14 || diff_az > 7e-14)
         FAIL("C Test_EQD_HOR: EXCESSIVE HORIZONTAL ERROR.\n");
 
     /* Confirm that we can convert back to horizontal vector. */
@@ -2256,7 +2342,7 @@ static int Test_EQD_HOR(astro_body_t body)
 
     /* Exercise HOR to EQJ translation. */
     CHECK_EQU(eqj, Astronomy_Equator(body, &time, observer, EQUATOR_J2000, ABERRATION));
-    CHECK_VECTOR(vec_eqj, Astronomy_VectorFromEquator(eqj, time));
+    CHECK_VECTOR(vec_eqj, eqj.vec);
 
     rot = Astronomy_Rotation_HOR_EQJ(time, observer);
     CHECK_ROTMAT(rot);
@@ -2399,6 +2485,7 @@ static int RotationTest(void)
     int error;
     CHECK(Rotation_MatrixInverse());
     CHECK(Rotation_MatrixMultiply());
+    CHECK(Rotation_Pivot());
 
     /* Verify conversion of spherical coordinates to vector. */
     CHECK(TestVectorFromAngles(0.0, 0.0, 1.0, 0.0, 0.0));
@@ -3389,6 +3476,108 @@ static int PlutoCheck(void)
     CHECK(PlutoCheckDate( +800916.0, 6.705, -29.5266052645301365, +12.0554287322176474, +12.6878484911631091));
 
     printf("C PlutoCheck: PASS\n");
+fail:
+    return error;
+}
+
+/*-----------------------------------------------------------------------------------------------------------*/
+
+static int GeoidTestCase(astro_time_t time, astro_observer_t observer, astro_equator_date_t equdate)
+{
+    int error;
+    astro_vector_t surface;
+    astro_vector_t geo_moon;
+    astro_equatorial_t topo_moon;
+    double dx, dy, dz, diff;
+
+    topo_moon = Astronomy_Equator(BODY_MOON, &time, observer, equdate, NO_ABERRATION);
+    CHECK_STATUS(topo_moon);
+
+    surface = Astronomy_ObserverVector(&time, observer, equdate);
+    CHECK_STATUS(surface);
+
+    geo_moon = Astronomy_GeoMoon(time);
+    CHECK_STATUS(geo_moon);
+
+    if (equdate == EQUATOR_OF_DATE)
+    {
+        /* Astronomy_GeoMoon() returns J2000 coordinates. Convert to equator-of-date coordinates. */
+        astro_rotation_t rot = Astronomy_Rotation_EQJ_EQD(time);
+        CHECK_STATUS(rot);
+        geo_moon = Astronomy_RotateVector(rot, geo_moon);
+    }
+
+    dx = KM_PER_AU * V((geo_moon.x - surface.x) - topo_moon.vec.x);
+    dy = KM_PER_AU * V((geo_moon.y - surface.y) - topo_moon.vec.y);
+    dz = KM_PER_AU * V((geo_moon.z - surface.z) - topo_moon.vec.z);
+    diff = sqrt(dx*dx + dy*dy + dz*dz);
+    DEBUG("C GeoidTestCase: equ=%d, tt=%14.5lf, lat=%5.1lf, lon=%6.1lf, ht=%6.1lf, surface=(%12.6lf, %12.6lf, %12.6lf), diff = %9.6lf km\n",
+        (int)equdate,
+        time.tt,
+        observer.latitude,
+        observer.longitude,
+        observer.height,
+        KM_PER_AU * surface.x,
+        KM_PER_AU * surface.y,
+        KM_PER_AU * surface.z,
+        diff);
+
+    /* Require 1 millimeter accuracy! (one millionth of a kilometer). */
+    if (diff > 1.0e-6)
+        FAIL("C GeoidTestCase: EXCESSIVE POSITION ERROR.\n");
+
+    error = 0;
+fail:
+    return error;
+}
+
+
+static int GeoidTest(void)
+{
+    int error;
+    int tindex, oindex;
+    astro_time_t time;
+    astro_vector_t vec;
+
+    const astro_time_t time_list[] =
+    {
+        Astronomy_MakeTime(1066,  9, 27, 18,  0,  0.0),
+        Astronomy_MakeTime(1970, 12, 13, 15, 42,  0.0),
+        Astronomy_MakeTime(1970, 12, 13, 15, 43,  0.0),
+        Astronomy_MakeTime(2015,  3,  5,  2, 15, 45.0)
+    };
+    const int ntimes = sizeof(time_list) / sizeof(time_list[0]);
+
+    const astro_observer_t observer_list[] =
+    {
+        Astronomy_MakeObserver( +1.5,   +2.7,    7.4),
+        Astronomy_MakeObserver(-53.7, +141.7, +100.0),
+        Astronomy_MakeObserver(+30.0,  -85.2,  -50.0),
+        Astronomy_MakeObserver(+90.0,  +45.0,  -50.0),
+        Astronomy_MakeObserver(-90.0, -180.0,    0.0)
+    };
+    const int nobs = sizeof(observer_list) / sizeof(observer_list[0]);
+
+    /* Make sure Astronomy_ObserverVector() checks for invalid equdate parameter. */
+    time = time_list[0];
+    vec = Astronomy_ObserverVector(&time, observer_list[0], (astro_equator_date_t)42);
+    if (vec.status != ASTRO_INVALID_PARAMETER)
+        FAIL("C GeoidTest: Expected ASTRO_INVALID_PARAMETER (%d) but found %d\n", (int)ASTRO_INVALID_PARAMETER, (int)vec.status);
+    DEBUG("C GeoidTest: Astronomy_ObserverVector correctly detected invalid astro_equator_date_t parameter.\n");
+
+    /* Test a variety of times and locations, in both supported orientation systems. */
+
+    for (oindex = 0; oindex < nobs; ++oindex)
+    {
+        for (tindex = 0; tindex < ntimes; ++tindex)
+        {
+            CHECK(GeoidTestCase(time_list[tindex], observer_list[oindex], EQUATOR_J2000));
+            CHECK(GeoidTestCase(time_list[tindex], observer_list[oindex], EQUATOR_OF_DATE));
+        }
+    }
+
+    printf("C GeoidTest: PASS\n");
+    error = 0;
 fail:
     return error;
 }

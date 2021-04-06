@@ -223,14 +223,24 @@ class Item {
     }
 
     static MdType(type) {
-        let name = Item.Flat(type);
+        let text = Item.Flat(type);
         let md;
-        if (name.indexOf('astro_') === 0) {
-            // create a link to our custom type
-            md = '[`' + name + '`](#' + name + ')';
+        if (text.indexOf('astro_') === 0) {
+            // Create a link to our custom type.
+            // But watch out for pointer types like 'astro_time_t *'.
+            // For those, we need to extract and link to just the type itself.
+            const m = /([a-z_]+)(.*)/.exec(text);
+            const symbol = m[1];
+            const tail = m[2];
+            if (tail.length > 0) {
+                // Verbose HTML syntax gets the job done best.
+                md = `<code><a href="#${symbol}">${symbol}</a>${tail}</code>`;
+            } else {
+                md = '[`' + symbol + '`](#' + symbol + ')';
+            }
         } else {
             // assume built-in type that we can't link to
-            md = '`' + name + '`';
+            md = '`' + text + '`';
         }
         return md;
     }
@@ -244,6 +254,16 @@ class Define extends Item {
 
     Markdown() {
         let md = this.MarkdownPrefix();
+        let name = Item.Flat(this.name);
+        md += '### `' + name + '`\n\n';
+        md += this.MdDescription(this.brief, this.detail, true);
+        let defn;
+        if (this.init._) {
+            defn = this.init._.trim();
+        } else {
+            defn = this.init.ref[0]._;
+        }
+        md += "\n\n```C\n#define " + name + "  " + defn + "\n```\n\n";
         return md;
     }
 }
@@ -390,6 +410,11 @@ class StructInfo extends Item {
         md += '### `' + name + '`\n\n';
         md += this.MdDescription(this.brief, this.detail, true);
         md += '\n\n';
+
+        if (!this.section) {
+            throw `struct "${name}" has no inner members.`;
+        }
+
         md += '| Type | Member | Description |\n';
         md += '| ---- | ------ | ----------- |\n';
         for (let member of this.section.$$) {
@@ -498,6 +523,12 @@ class Transformer {
         md += '## Functions\n\n';
         for (let f of this.funcs) {
             md += f.Markdown();
+        }
+
+        md += '\n<a name="constants"></a>\n';
+        md += '## Constants\n\n';
+        for (let d of this.defines) {
+            md += d.Markdown();
         }
 
         md += '\n<a name="enums"></a>\n';

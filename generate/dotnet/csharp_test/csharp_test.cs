@@ -11,8 +11,6 @@ namespace csharp_test
 {
     class Program
     {
-        const double DEG2RAD = 0.017453292519943296;
-        const double RAD2DEG = 57.295779513082321;
         static bool Verbose;
 
         static void Debug(string format, params object[] args)
@@ -36,6 +34,7 @@ namespace csharp_test
         {
             new Test("time", TestTime),
             new Test("moon", MoonTest),
+            new Test("geoid", GeoidTest),
             new Test("constellation", ConstellationTest),
             new Test("elongation", ElongationTest),
             new Test("global_solar_eclipse", GlobalSolarEclipseTest),
@@ -1304,6 +1303,34 @@ namespace csharp_test
             return sqrt(dx*dx + dy*dy + dz*dz);
         }
 
+        static int CompareVectors(string caller, AstroVector a, AstroVector b, double tolerance)
+        {
+            double diff;
+
+            diff = abs(a.x - b.x);
+            if (diff > tolerance)
+            {
+                Console.WriteLine("C# CompareVectors ERROR({0}): x={1}, expected {2}, diff {3}", caller, a.x, b.x, diff);
+                return 1;
+            }
+
+            diff = abs(a.y - b.y);
+            if (diff > tolerance)
+            {
+                Console.WriteLine("C# CompareVectors ERROR({0}): y={1}, expected {2}, diff {3}", caller, a.y, b.y, diff);
+                return 1;
+            }
+
+            diff = abs(a.z - b.z);
+            if (diff > tolerance)
+            {
+                Console.WriteLine("C# CompareVectors ERROR({0}): z={1}, expected {2}, diff {3}", caller, a.z, b.z, diff);
+                return 1;
+            }
+
+            return 0;
+        }
+
         static int CompareMatrices(string caller, RotationMatrix a, RotationMatrix b, double tolerance)
         {
             for (int i=0; i<3; ++i)
@@ -1372,13 +1399,13 @@ namespace csharp_test
 
             /* Use the older function to calculate ecliptic vector and angles. */
             Ecliptic ecl = Astronomy.EquatorialToEcliptic(ev);
-            Debug("C# Test_EQJ_ECL ecl = ({0}, {1}, {2})", ecl.ex, ecl.ey, ecl.ez);
+            Debug("C# Test_EQJ_ECL ecl = ({0}, {1}, {2})", ecl.vec.x, ecl.vec.y, ecl.vec.z);
 
             /* Now compute the same vector via rotation matrix. */
             AstroVector ee = Astronomy.RotateVector(r, ev);
-            double dx = ee.x - ecl.ex;
-            double dy = ee.y - ecl.ey;
-            double dz = ee.z - ecl.ez;
+            double dx = ee.x - ecl.vec.x;
+            double dy = ee.y - ecl.vec.y;
+            double dz = ee.z - ecl.vec.z;
             double diff = sqrt(dx*dx + dy*dy + dz*dz);
             Debug("C# Test_EQJ_ECL ee = ({0}, {1}, {2}); diff={3}", ee.x, ee.y, ee.z, diff);
             if (diff > 1.0e-16)
@@ -1409,7 +1436,7 @@ namespace csharp_test
             var observer = new Observer(35, -85, 0);
             Equatorial eq2000 = Astronomy.Equator(body, time, observer, EquatorEpoch.J2000, Aberration.Corrected);
             Equatorial eqdate = Astronomy.Equator(body, time, observer, EquatorEpoch.OfDate, Aberration.Corrected);
-            AstroVector v2000 = Astronomy.VectorFromEquator(eq2000, time);
+            AstroVector v2000 = eq2000.vec;
             RotationMatrix r = Astronomy.Rotation_EQJ_EQD(time);
             AstroVector vdate = Astronomy.RotateVector(r, v2000);
             Equatorial eqcheck = Astronomy.EquatorFromVector(vdate);
@@ -1446,7 +1473,7 @@ namespace csharp_test
             var observer = new Observer(-37.0, +45.0, 0.0);
             Equatorial eqd = Astronomy.Equator(body, time, observer, EquatorEpoch.OfDate, Aberration.Corrected);
             Topocentric hor = Astronomy.Horizon(time, observer, eqd.ra, eqd.dec, Refraction.Normal);
-            AstroVector vec_eqd = Astronomy.VectorFromEquator(eqd, time);
+            AstroVector vec_eqd = eqd.vec;
             RotationMatrix rot = Astronomy.Rotation_EQD_HOR(time, observer);
             AstroVector vec_hor = Astronomy.RotateVector(rot, vec_eqd);
             Spherical sphere = Astronomy.HorizonFromVector(vec_hor, Refraction.Normal);
@@ -1457,7 +1484,7 @@ namespace csharp_test
             Debug("C# Test_EQD_HOR {0}: trusted alt={1}, az={2}; test alt={3}, az={4}; diff_alt={5}, diff_az={6}",
                 body, hor.altitude, hor.azimuth, sphere.lat, sphere.lon, diff_alt, diff_az);
 
-            if (diff_alt > 3.0e-14 || diff_az > 4e-14)
+            if (diff_alt > 3.0e-14 || diff_az > 7.0e-14)
             {
                 Console.WriteLine("C# Test_EQD_HOR: EXCESSIVE HORIZONTAL ERROR.");
                 return 1;
@@ -1486,7 +1513,7 @@ namespace csharp_test
 
             /* Exercise HOR to EQJ translation. */
             Equatorial eqj = Astronomy.Equator(body, time, observer, EquatorEpoch.J2000, Aberration.Corrected);
-            AstroVector vec_eqj = Astronomy.VectorFromEquator(eqj, time);
+            AstroVector vec_eqj = eqj.vec;
 
             rot = Astronomy.Rotation_HOR_EQJ(time, observer);
             AstroVector check_eqj = Astronomy.RotateVector(rot, vec_hor);
@@ -1598,10 +1625,58 @@ namespace csharp_test
             return 0;
         }
 
+        static int Rotation_Pivot()
+        {
+            //astro_rotation_t a;
+            //astro_vector_t v1, v2, ve;
+            const double tolerance = 1.0e-15;
+
+            /* Test #1 */
+
+            /* Start with an identity matrix. */
+            RotationMatrix ident = Astronomy.IdentityMatrix();
+
+            /* Pivot 90 degrees counterclockwise around the z-axis. */
+            RotationMatrix r = Astronomy.Pivot(ident, 2, +90.0);
+
+            /* Put the expected answer in 'a'. */
+            var a = new RotationMatrix(new double[3,3]
+            {
+                {  0, +1,  0 },
+                { -1,  0,  0 },
+                {  0,  0, +1 },
+            });
+
+            /* Compare actual 'r' with expected 'a'. */
+            if (0 != CompareMatrices("Rotation_Pivot #1", r, a, tolerance)) return 1;
+
+            /* Test #2. */
+
+            /* Pivot again, -30 degrees around the x-axis. */
+            r = Astronomy.Pivot(r, 0, -30.0);
+
+            /* Pivot a third time, 180 degrees around the y-axis. */
+            r = Astronomy.Pivot(r, 1, +180.0);
+
+            /* Use the 'r' matrix to rotate a vector. */
+            var v1 = new AstroVector(1.0, 2.0, 3.0, new AstroTime(0.0));
+
+            AstroVector v2 = Astronomy.RotateVector(r, v1);
+
+            /* Initialize the expected vector 've'. */
+            AstroVector ve = new AstroVector(+2.0, +2.3660254037844390, -2.0980762113533156, v1.t);
+
+            if (0 != CompareVectors("Rotation_Pivot #2", v2, ve, tolerance)) return 1;
+
+            Console.WriteLine("C# Rotation_Pivot: PASS");
+            return 0;
+        }
+
         static int RotationTest()
         {
             if (0 != Rotation_MatrixInverse()) return 1;
             if (0 != Rotation_MatrixMultiply()) return 1;
+            if (0 != Rotation_Pivot()) return 1;
             if (0 != Test_EQJ_ECL()) return 1;
 
             if (0 != Test_EQJ_EQD(Body.Mercury)) return 1;
@@ -1950,10 +2025,10 @@ namespace csharp_test
 
         static void VectorFromAngles(double[] v, double lat, double lon)
         {
-            double coslat = cos(DEG2RAD * lat);
-            v[0] = cos(DEG2RAD * lon) * coslat;
-            v[1] = sin(DEG2RAD * lon) * coslat;
-            v[2] = sin(DEG2RAD * lat);
+            double coslat = cos(Astronomy.DEG2RAD * lat);
+            v[0] = cos(Astronomy.DEG2RAD * lon) * coslat;
+            v[1] = sin(Astronomy.DEG2RAD * lon) * coslat;
+            v[2] = sin(Astronomy.DEG2RAD * lat);
         }
 
         static double AngleDiff(double alat, double alon, double blat, double blon)
@@ -1973,7 +2048,7 @@ namespace csharp_test
             if (dot >= +1.0)
                 return 0.0;
 
-            return v(RAD2DEG * Math.Acos(dot));
+            return v(Astronomy.RAD2DEG * Math.Acos(dot));
         }
 
         static int LocalSolarEclipseTest1()
@@ -2297,6 +2372,77 @@ namespace csharp_test
             if (0 != PlutoCheckDate(       0.0, 4.0e-9, -9.8753673425269000,  -27.9789270580402771,  -5.7537127596369588)) return 1;
             if (0 != PlutoCheckDate( +800916.0,  6.705, -29.5266052645301365, +12.0554287322176474, +12.6878484911631091)) return 1;
             Console.WriteLine("C# PlutoCheck: PASS");
+            return 0;
+        }
+
+        static int GeoidTestCase(AstroTime time, Observer observer, EquatorEpoch epoch)
+        {
+            Equatorial topo_moon = Astronomy.Equator(Body.Moon, time, observer, epoch, Aberration.None);
+            AstroVector surface = Astronomy.ObserverVector(time, observer, epoch);
+            AstroVector geo_moon = Astronomy.GeoVector(Body.Moon, time, Aberration.None);
+
+            if (epoch == EquatorEpoch.OfDate)
+            {
+                // Astronomy_GeoMoon() returns J2000 coordinates. Convert to equator-of-date coordinates.
+                RotationMatrix rot = Astronomy.Rotation_EQJ_EQD(time);
+                geo_moon = Astronomy.RotateVector(rot, geo_moon);
+            }
+
+            double dx = Astronomy.KM_PER_AU * v((geo_moon.x - surface.x) - topo_moon.vec.x);
+            double dy = Astronomy.KM_PER_AU * v((geo_moon.y - surface.y) - topo_moon.vec.y);
+            double dz = Astronomy.KM_PER_AU * v((geo_moon.z - surface.z) - topo_moon.vec.z);
+            double diff = sqrt(dx*dx + dy*dy + dz*dz);
+            Debug("C# GeoidTestCase: epoch={0}, time={1}, lat={2}, lon={3}, ht={4}, surface=({5}, {6}, {7}), diff = {8} km",
+                epoch,
+                time,
+                observer.latitude,
+                observer.longitude,
+                observer.height,
+                Astronomy.KM_PER_AU * surface.x,
+                Astronomy.KM_PER_AU * surface.y,
+                Astronomy.KM_PER_AU * surface.z,
+                diff);
+
+            // Require 1 millimeter accuracy! (one millionth of a kilometer).
+            if (diff > 1.0e-6)
+            {
+                Console.WriteLine("C# GeoidTestCase: EXCESSIVE POSITION ERROR.");
+                return 1;
+            }
+            return 0;
+        }
+
+        static int GeoidTest()
+        {
+            var time_list = new AstroTime[]
+            {
+                new AstroTime(1066,  9, 27, 18,  0,  0),
+                new AstroTime(1970, 12, 13, 15, 42,  0),
+                new AstroTime(1970, 12, 13, 15, 43,  0),
+                new AstroTime(2015,  3,  5,  2, 15, 45)
+            };
+
+            var observer_list = new Observer[]
+            {
+                new Observer( +1.5,   +2.7,    7.4),
+                new Observer(-53.7, +141.7, +100.0),
+                new Observer(+30.0,  -85.2,  -50.0),
+                new Observer(+90.0,  +45.0,  -50.0),
+                new Observer(-90.0, -180.0,    0.0)
+            };
+
+            /* Test a variety of times and locations, in both supported orientation systems. */
+
+            foreach (Observer observer in observer_list)
+            {
+                foreach (AstroTime time in time_list)
+                {
+                    if (0 != GeoidTestCase(time, observer, EquatorEpoch.J2000)) return 1;
+                    if (0 != GeoidTestCase(time, observer, EquatorEpoch.OfDate)) return 1;
+                }
+            }
+
+            Console.WriteLine("C# GeoidTest: PASS");
             return 0;
         }
     }

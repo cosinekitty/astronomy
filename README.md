@@ -106,6 +106,76 @@ Calculations are also verified to be identical among all the supported programmi
 
 - Determines which constellation contains a given point in the sky.
 
+### Why I Created This Thing
+
+I have been an amateur astronomer since childhood. I still remember the amazement
+I felt when I saw Saturn through a backyard telescope for the first time.
+As a software developer, I naturally became interested in combining my love of
+astronomy with my computer programming skills.
+
+In 2008, I started to learn about formulas for calculating positions
+of the Moon and planets. I discovered many wonderful resources, including
+
+- Paul Schlyter's lucid and educational page
+[How to compute planetary positions](http://www.stjarnhimlen.se/comp/ppcomp.html).
+- [Practical Astronomy with your Calculator](https://www.amazon.com/Practical-Astronomy-Calculator-Peter-Duffett-Smith/dp/0521356997), third edition, by Peter Duffett-Smith, Cambridge University Press. ISBN&nbsp;0&nbsp;521&nbsp;35629&nbsp;6.
+- [Astronomy on the Personal Computer](https://www.amazon.com/Astronomy-Personal-Computer-Oliver-Montenbruck/dp/3540672214/) by Oliver Montenbruck and Thomas Pfleger. ISBN-13:&nbsp;978-3540672210.
+
+I implemented algorithms based on these resources. Over time, however, I noticed that they were not quite
+as accurate as I would like. Their calculated positions differed from those reported by online tools
+like [JPL Horizons](https://ssd.jpl.nasa.gov/horizons.cgi) and [Heavens Above](https://www.heavens-above.com/)
+by large fractions of a degree in many cases.
+
+In 2019 I renewed my interest in astronomy calculations, with the goal of creating something more accurate
+that could be written in JavaScript to run inside a browser. I studied how professional
+astronomers and space agencies did their calculations. First I looked the United States Naval Observatory's
+[NOVAS C 3.1](https://github.com/indigo-astronomy/novas) library. I quickly realized it could not be
+ported to the browser environment, because it required very large (hundreds of megabytes)
+precomputed ephemeris files.
+
+This led in turn to studying the French *Bureau des Longitudes* model known as
+[VSOP87](https://en.wikipedia.org/wiki/VSOP_(planets)). It requires more computation
+but the data is much smaller, consisting of trigonometric power series coefficients.
+However, it was still too large to fit in a practical web page.
+
+Furthermore, these models were extremely complicated, and far more accurate than what I needed.
+NOVAS, for example, performs relativistic calculations to correct for the bending
+of light through the gravitational fields of planets, and time dilation due to different
+non-intertial frames of reference! My humble needs did not require this herculean level
+of complexity. So I decided to create Astronomy Engine with the following engineering goals:
+
+- Support JavaScript, C, C#, and Python with the same algorithms, and verify them to produce identical results.
+- No external dependencies! The code must not require anything outside the standard library for each language.
+- Minified JavaScript code less than 100K. (The current size is <!--MINIFIED_SIZE-->88029 bytes.)
+- Accuracy always within 1 arcminute of results from NOVAS.
+- It would be well documented, relatively easy to use, and support a wide variety of common use cases.
+
+The solution I settled on was to truncate the VSOP87 series to make it as small
+as possible without exceeding the 1 arcminute error threshold.
+I created a code generator that converts the truncated tables into C, C#, JavaScript,
+and Python source code. Then I built unit tests that compare the calculations
+against the NOVAS C 3.1 code operating on the DE405 ephemeris and other authoritative
+sources, including the JPL Horizons tool. Basing on VSOP87 and verifying
+against independent trusted sources provides extra confidence that everything is correct.
+
+Pluto was a special case, because VSOP87 does not include a model for it. I ended up writing
+a custom gravitation simulator for the major outer planets to model Pluto's orbit.
+The results are verified against NOVAS and the model
+[TOP2013](https://www.aanda.org/articles/aa/abs/2013/09/aa21843-13/aa21843-13.html).
+
+As far as I know, Astronomy Engine is the only open source solution in existence that
+combines very compact code for four major programming languages with such rigorous
+validation and testing at a reasonable accuracy threshold.
+The 1-arcminute accuracy is not good enough for spacecraft navigation,
+but it is good enough for most amateur uses, and allows the code to be much
+simpler, faster, and smaller.
+
+I am committed to maintaining this project for the long term, and I am happy to
+answer questions about how to solve various astronomy calculation problems
+using Astronomy Engine. Feel free to reach out on the
+[discussions page](https://github.com/cosinekitty/astronomy/discussions) or
+[submit a new issue](https://github.com/cosinekitty/astronomy/issues).
+
 ### Acknowledgements
 
 [![Deploys by Netlify](https://www.netlify.com/img/global/badges/netlify-color-accent.svg)](https://www.netlify.com)

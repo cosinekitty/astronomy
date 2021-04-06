@@ -24,8 +24,9 @@ and some [Node.js examples](../../demo/nodejs/).
 
 | Function | Description |
 | -------- | ----------- |
-| [HelioVector](#HelioVector) | Calculates vector with respect to the center of the Sun.   |
-| [GeoVector](#GeoVector)     | Calculates vector with respect to the center of the Earth. |
+| [HelioVector](#HelioVector) | Calculates body position vector with respect to the center of the Sun.   |
+| [GeoVector](#GeoVector)     | Calculates body position vector with respect to the center of the Earth. |
+| [ObserverVector](#ObserverVector) | Calculates vector from the center of the Earth to an observer on the Earth's surface. |
 | [Equator](#Equator)         | Calculates right ascension and declination. |
 | [Ecliptic](#Ecliptic)       | Calculates ecliptic latitude, longitude, and Cartesian coordinates. |
 | [Horizon](#Horizon)         | Calculates horizontal coordinates (azimuth, altitude) for a given observer on the Earth. |
@@ -112,9 +113,10 @@ these are used in function and type names.
 | [RotateVector](#RotateVector) | Applies a rotation matrix to a vector, yielding a vector in another orientation system. |
 | [InverseRotation](#InverseRotation) | Given a rotation matrix, finds the inverse rotation matrix that does the opposite transformation. |
 | [CombineRotation](#CombineRotation) | Given two rotation matrices, returns a rotation matrix that combines them into a net transformation. |
+| [IdentityMatrix](#IdentityMatrix) | Returns a 3x3 identity matrix, which can be used to form other rotation matrices. |
+| [Pivot](#Pivot) | Transforms a rotation matrix by pivoting it around a given axis by a given angle. |
 | [VectorFromSphere](#VectorFromSphere) | Converts spherical coordinates to Cartesian coordinates. |
 | [SphereFromVector](#SphereFromVector) | Converts Cartesian coordinates to spherical coordinates. |
-| [VectorFromEquator](#VectorFromEquator) | Given angular equatorial coordinates, calculates equatorial vector. |
 | [EquatorFromVector](#EquatorFromVector) | Given an equatorial vector, calculates equatorial angular coordinates. |
 | [VectorFromHorizon](#VectorFromHorizon) | Given apparent angular horizontal coordinates, calculates horizontal vector. |
 | [HorizonFromVector](#HorizonFromVector) | Given a vector in horizontal orientation, calculates horizontal angular coordinates. |
@@ -150,7 +152,7 @@ Use the constructor or the [MakeTime](#MakeTime) function to create an `AstroTim
 | --- | --- | --- |
 | date | <code>Date</code> | The JavaScript Date object for the given date and time.      This Date corresponds to the numeric day value stored in the `ut` property. |
 | ut | <code>number</code> | Universal Time (UT1/UTC) in fractional days since the J2000 epoch.      Universal Time represents time measured with respect to the Earth's rotation,      tracking mean solar days.      The Astronomy library approximates UT1 and UTC as being the same thing.      This gives sufficient accuracy for the precision requirements of this project. |
-| tt | <code>number</code> | Terrestrial Time in fractional days since the J2000 epoch.      TT represents a continuously flowing ephemeris timescale independent of      any variations of the Earth's rotation, and is adjusted from UT      using historical and predictive models of those variations. |
+| tt | <code>number</code> | Terrestrial Time in fractional days since the J2000 epoch.      TT represents a continuously flowing ephemeris timescale independent of      any variations of the Earth's rotation, and is adjusted from UT      using a best-fit piecewise polynomial model devised by      [Espenak and Meeus](https://eclipse.gsfc.nasa.gov/SEhelp/deltatpoly2004.html). |
 
 
 * * *
@@ -252,6 +254,7 @@ a point using two angles and a distance.
 | ra | <code>number</code> | Right ascension in sidereal hours: [0, 24). |
 | dec | <code>number</code> | Declination in degrees: [-90, +90]. |
 | dist | <code>number</code> | Distance to the celestial object expressed in      <a href="https://en.wikipedia.org/wiki/Astronomical_unit">astronomical units</a> (AU). |
+| vec | [<code>Vector</code>](#Vector) | The equatorial coordinates in cartesian form, using AU distance units.      x = direction of the March equinox,      y = direction of the June solstice,      z = north. |
 
 
 * * *
@@ -310,9 +313,7 @@ and spherical coordinates `(elon, elat)` measured in degrees.
 
 | Name | Type | Description |
 | --- | --- | --- |
-| ex | <code>number</code> | The Cartesian x-coordinate of the body in astronomical units (AU).      The x-axis is within the ecliptic plane and is oriented in the direction of the      <a href="https://en.wikipedia.org/wiki/Equinox_(celestial_coordinates)">equinox</a>. |
-| ey | <code>number</code> | The Cartesian y-coordinate of the body in astronomical units (AU).      The y-axis is within the ecliptic plane and is oriented 90 degrees      counterclockwise from the equinox, as seen from above the Sun's north pole. |
-| ez | <code>number</code> | The Cartesian z-coordinate of the body in astronomical units (AU).      The z-axis is oriented perpendicular to the ecliptic plane,      along the direction of the Sun's north pole. |
+| vec | [<code>Vector</code>](#Vector) | Ecliptic cartesian vector with components measured in astronomical units (AU).      The x-axis is within the ecliptic plane and is oriented in the direction of the      <a href="https://en.wikipedia.org/wiki/Equinox_(celestial_coordinates)">equinox</a>.      The y-axis is within the ecliptic plane and is oriented 90 degrees      counterclockwise from the equinox, as seen from above the Sun's north pole.      The z-axis is oriented perpendicular to the ecliptic plane,      along the direction of the Sun's north pole. |
 | elat | <code>number</code> | The ecliptic latitude of the body in degrees.      This is the angle north or south of the ecliptic plane.      The value is in the range [-90, +90].      Positive values are north and negative values are south. |
 | elon | <code>number</code> | The ecliptic longitude of the body in degrees.      This is the angle measured counterclockwise around the ecliptic plane,      as seen from above the Sun's north pole.      This is the same direction that the Earth orbits around the Sun.      The angle is measured starting at 0 from the equinox and increases      up to 360 degrees. |
 
@@ -644,14 +645,47 @@ The calculations are performed from the point of view of a geocentric observer.
 
 * * *
 
-<a name="Bodies"></a>
+<a name="KM_PER_AU"></a>
 
-## Bodies : <code>Array.&lt;string&gt;</code>
-An array of strings, each a name of a supported astronomical body.
-     Not all bodies are valid for all functions, but any string not in this
-     list is not supported at all.
+## KM\_PER\_AU
+**Kind**: global variable  
+**Brief**: The number of kilometers per astronomical unit.  
 
-**Kind**: global constant  
+* * *
+
+<a name="DEG2RAD"></a>
+
+## DEG2RAD
+**Kind**: global variable  
+**Brief**: The factor to convert radians to degrees = pi/180.  
+
+* * *
+
+<a name="RAD2DEG"></a>
+
+## RAD2DEG
+**Kind**: global variable  
+**Brief**: The factor to convert degrees to radians = 180/pi.  
+
+* * *
+
+<a name="Body"></a>
+
+## Body : <code>enum</code>
+**Kind**: global enum  
+**Brief**: String constants that represent the solar system bodies supported by Astronomy Engine.
+
+The following strings represent solar system bodies supported by various Astronomy Engine functions.
+Not every body is supported by every function; consult the documentation for each function
+to find which bodies it supports.
+
+"Sun", "Moon", "Mercury", "Venus", "Earth", "Mars", "Jupiter",
+"Saturn", "Uranus", "Neptune", "Pluto",
+"SSB" (Solar System Barycenter),
+"EMB" (Earth/Moon Barycenter)
+
+You can also use enumeration syntax for the bodies, like
+`Astronomy.Body.Moon`, `Astronomy.Body.Jupiter`, etc.  
 
 * * *
 
@@ -780,7 +814,7 @@ However, it can have a small effect on the apparent positions of other bodies.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| body | <code>string</code> | The name of the body for which to find equatorial coordinates.      Not allowed to be `"Earth"`. |
+| body | [<code>Body</code>](#Body) | The body for which to find equatorial coordinates.      Not allowed to be `"Earth"`. |
 | date | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | Specifies the date and time at which the body is to be observed. |
 | observer | [<code>Observer</code>](#Observer) | The location on the Earth of the observer. |
 | ofdate | <code>bool</code> | Pass `true` to return equatorial coordinates of date,      i.e. corrected for precession and nutation at the given date.      This is needed to get correct horizontal coordinates when you call      [Horizon](#Horizon).      Pass `false` to return equatorial coordinates in the J2000 system. |
@@ -789,22 +823,48 @@ However, it can have a small effect on the apparent positions of other bodies.
 
 * * *
 
+<a name="ObserverVector"></a>
+
+## ObserverVector(date, observer, ofdate) ⇒ [<code>Vector</code>](#Vector)
+**Kind**: global function  
+**Returns**: [<code>Vector</code>](#Vector) - An equatorial vector from the center of the Earth to the specified location
+     on (or near) the Earth's surface.  
+**Brief**: Calculates geocentric equatorial coordinates of an observer on the surface of the Earth.
+
+This function calculates a vector from the center of the Earth to
+a point on or near the surface of the Earth, expressed in equatorial
+coordinates. It takes into account the rotation of the Earth at the given
+time, along with the given latitude, longitude, and elevation of the observer.
+
+The caller may pass `ofdate` as `true` to return coordinates relative to the Earth's
+equator at the specified time, or `false` to use the J2000 equator.
+
+The returned vector has components expressed in astronomical units (AU).
+To convert to kilometers, multiply the `x`, `y`, and `z` values by
+the constant value [KM_PER_AU](#KM_PER_AU).  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| date | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time for which to calculate the observer's position vector. |
+| observer | [<code>Observer</code>](#Observer) | The geographic location of a point on or near the surface of the Earth. |
+| ofdate | <code>boolean</code> | Selects the date of the Earth's equator in which to express the equatorial coordinates.      The caller may pass `false` to use the orientation of the Earth's equator      at noon UTC on January 1, 2000, in which case this function corrects for precession      and nutation of the Earth as it was at the moment specified by the `time` parameter.      Or the caller may pass `true` to use the Earth's equator at `time`      as the orientation. |
+
+
+* * *
+
 <a name="Ecliptic"></a>
 
-## Ecliptic(gx, gy, gz) ⇒ [<code>EclipticCoordinates</code>](#EclipticCoordinates)
+## Ecliptic(equ) ⇒ [<code>EclipticCoordinates</code>](#EclipticCoordinates)
 **Kind**: global function  
 **Brief**: Converts equatorial Cartesian coordinates to ecliptic Cartesian and angular coordinates.
 
 Given J2000 equatorial Cartesian coordinates,
 returns J2000 ecliptic latitude, longitude, and cartesian coordinates.
-You can call [GeoVector](#GeoVector) and use its (x, y, z) return values
-to pass into this function.  
+You can call [GeoVector](#GeoVector) and pass the resulting vector to this function.  
 
 | Param | Type | Description |
 | --- | --- | --- |
-| gx | <code>number</code> | The x-coordinate of a 3D vector in the J2000 equatorial coordinate system. |
-| gy | <code>number</code> | The y-coordinate of a 3D vector in the J2000 equatorial coordinate system. |
-| gz | <code>number</code> | The z-coordinate of a 3D vector in the J2000 equatorial coordinate system. |
+| equ | [<code>Vector</code>](#Vector) | A vector in the J2000 equatorial coordinate system. |
 
 
 * * *
@@ -840,7 +900,7 @@ body at a specified time. The position is not corrected for light travel time or
 
 | Param | Type | Description |
 | --- | --- | --- |
-| body | <code>string</code> | One of the strings      `"Sun"`, `"Moon"`, `"Mercury"`, `"Venus"`,      `"Earth"`, `"Mars"`, `"Jupiter"`, `"Saturn"`,      `"Uranus"`, `"Neptune"`, `"Pluto"`,      `"SSB"`, or `"EMB"`. |
+| body | [<code>Body</code>](#Body) | One of the strings      `"Sun"`, `"Moon"`, `"Mercury"`, `"Venus"`,      `"Earth"`, `"Mars"`, `"Jupiter"`, `"Saturn"`,      `"Uranus"`, `"Neptune"`, `"Pluto"`,      `"SSB"`, or `"EMB"`. |
 | date | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time for which the body's position is to be calculated. |
 
 
@@ -861,7 +921,7 @@ of the resulting vector.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| body | <code>string</code> | A body for which to calculate a heliocentric distance:      the Sun, Moon, or any of the planets. |
+| body | [<code>Body</code>](#Body) | A body for which to calculate a heliocentric distance:      the Sun, Moon, or any of the planets. |
 | date | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time for which to calculate the heliocentric distance. |
 
 
@@ -885,7 +945,7 @@ coming from that body.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| body | <code>string</code> | One of the strings      `"Sun"`, `"Moon"`, `"Mercury"`, `"Venus"`,      `"Earth"`, `"Mars"`, `"Jupiter"`, `"Saturn"`,      `"Uranus"`, `"Neptune"`, or `"Pluto"`. |
+| body | [<code>Body</code>](#Body) | One of the strings      `"Sun"`, `"Moon"`, `"Mercury"`, `"Venus"`,      `"Earth"`, `"Mars"`, `"Jupiter"`, `"Saturn"`,      `"Uranus"`, `"Neptune"`, or `"Pluto"`. |
 | date | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time for which the body's position is to be calculated. |
 | aberration | <code>bool</code> | Pass `true` to correct for      <a href="https://en.wikipedia.org/wiki/Aberration_of_light">aberration</a>,      or `false` to leave uncorrected. |
 
@@ -975,7 +1035,7 @@ between the Sun and a body, instead of just their longitude difference.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| body | <code>string</code> | The name of a supported celestial body other than the Earth. |
+| body | [<code>Body</code>](#Body) | The name of a supported celestial body other than the Earth. |
 | date | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The time at which the relative longitude is to be found. |
 
 
@@ -997,7 +1057,7 @@ contains the centers of the Earth, the Sun, and `body`.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| body | <code>string</code> | The name of a supported celestial body other than the Earth. |
+| body | [<code>Body</code>](#Body) | The name of a supported celestial body other than the Earth. |
 | date | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The time at which the angle from the Sun is to be found. |
 
 
@@ -1017,7 +1077,7 @@ contains the centers of the Earth, the Sun, and `body`.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| body | <code>string</code> | The name of a celestial body other than the Sun. |
+| body | [<code>Body</code>](#Body) | The name of a celestial body other than the Sun. |
 | date | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time for which to calculate the ecliptic longitude. |
 
 
@@ -1035,7 +1095,7 @@ at the given date and time, as seen from the Earth.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| body | <code>string</code> | The name of the celestial body being observed.      Not allowed to be `"Earth"`. |
+| body | [<code>Body</code>](#Body) | The name of the celestial body being observed.      Not allowed to be `"Earth"`. |
 | date | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time for which to calculate the illumination data for the given body. |
 
 
@@ -1061,7 +1121,7 @@ This means the Earth and the other planet are on opposite sides of the Sun.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| body | <code>string</code> | The name of a planet other than the Earth. |
+| body | [<code>Body</code>](#Body) | The name of a planet other than the Earth. |
 | targetRelLon | <code>number</code> | The desired angular difference in degrees between the ecliptic longitudes      of `body` and the Earth. Must be in the range (-180, +180]. |
 | startDate | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time after which to find the next occurrence of the      body and the Earth reaching the desired relative longitude. |
 
@@ -1172,7 +1232,7 @@ The times are adjusted for typical atmospheric refraction conditions.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| body | <code>string</code> | The name of the body to find the rise or set time for. |
+| body | [<code>Body</code>](#Body) | The name of the body to find the rise or set time for. |
 | observer | [<code>Observer</code>](#Observer) | Specifies the geographic coordinates and elevation above sea level of the observer. |
 | direction | <code>number</code> | Either +1 to find rise time or -1 to find set time.      Any other value will cause an exception to be thrown. |
 | dateStart | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time after which the specified rise or set time is to be found. |
@@ -1199,7 +1259,7 @@ at its minimum altitude.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| body | <code>string</code> | The name of a celestial body other than the Earth. |
+| body | [<code>Body</code>](#Body) | The name of a celestial body other than the Earth. |
 | observer | [<code>Observer</code>](#Observer) | Specifies the geographic coordinates and elevation above sea level of the observer. |
 | hourAngle | <code>number</code> | The hour angle expressed in      <a href="https://en.wikipedia.org/wiki/Sidereal_time">sidereal</a>      hours for which the caller seeks to find the body attain.      The value must be in the range [0, 24).      The hour angle represents the number of sidereal hours that have      elapsed since the most recent time the body crossed the observer's local      <a href="https://en.wikipedia.org/wiki/Meridian_(astronomy)">meridian</a>.      This specifying `hourAngle` = 0 finds the moment in time      the body reaches the highest angular altitude in a given sidereal day. |
 | dateStart | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time after which the desired hour angle crossing event      is to be found. |
@@ -1238,7 +1298,7 @@ It is also used to determine how far a planet is from opposition, conjunction, o
 
 | Param | Type | Description |
 | --- | --- | --- |
-| body | <code>string</code> | The name of the observed body. Not allowed to be `"Earth"`. |
+| body | [<code>Body</code>](#Body) | The name of the observed body. Not allowed to be `"Earth"`. |
 
 
 * * *
@@ -1260,7 +1320,7 @@ the body is visible in the morning or evening.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| body | <code>string</code> | Either `"Mercury"` or `"Venus"`. |
+| body | [<code>Body</code>](#Body) | Either `"Mercury"` or `"Venus"`. |
 | startDate | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time after which to search for the next maximum elongation event. |
 
 
@@ -1274,7 +1334,7 @@ the body is visible in the morning or evening.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| body | <code>string</code> | Currently only `"Venus"` is supported.      Mercury's peak magnitude occurs at superior conjunction, when it is virtually impossible to see from Earth,      so peak magnitude events have little practical value for that planet.      The Moon reaches peak magnitude very close to full moon, which can be found using      [SearchMoonQuarter](#SearchMoonQuarter) or [SearchMoonPhase](#SearchMoonPhase).      The other planets reach peak magnitude very close to opposition,      which can be found using [SearchRelativeLongitude](#SearchRelativeLongitude). |
+| body | [<code>Body</code>](#Body) | Currently only `"Venus"` is supported.      Mercury's peak magnitude occurs at superior conjunction, when it is virtually impossible to see from Earth,      so peak magnitude events have little practical value for that planet.      The Moon reaches peak magnitude very close to full moon, which can be found using      [SearchMoonQuarter](#SearchMoonQuarter) or [SearchMoonPhase](#SearchMoonPhase).      The other planets reach peak magnitude very close to opposition,      which can be found using [SearchRelativeLongitude](#SearchRelativeLongitude). |
 | startDate | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time after which to find the next peak magnitude event. |
 
 
@@ -1340,7 +1400,7 @@ as many times as desired.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| body | <code>string</code> | The planet for which to find the next perihelion/aphelion event.      Not allowed to be `"Sun"` or `"Moon"`. |
+| body | [<code>Body</code>](#Body) | The planet for which to find the next perihelion/aphelion event.      Not allowed to be `"Sun"` or `"Moon"`. |
 | startTime | [<code>AstroTime</code>](#AstroTime) | The date and time at which to start searching for the next perihelion or aphelion. |
 
 
@@ -1360,7 +1420,7 @@ See [SearchPlanetApsis](#SearchPlanetApsis) for more details.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| body | <code>string</code> | The planet for which to find the next perihelion/aphelion event.      Not allowed to be `"Sun"` or `"Moon"`.      Must match the body passed into the call that produced the `apsis` parameter. |
+| body | [<code>Body</code>](#Body) | The planet for which to find the next perihelion/aphelion event.      Not allowed to be `"Sun"` or `"Moon"`.      Must match the body passed into the call that produced the `apsis` parameter. |
 | apsis | [<code>Apsis</code>](#Apsis) | An apsis event obtained from a call to [SearchPlanetApsis](#SearchPlanetApsis) or `NextPlanetApsis`. |
 
 
@@ -1401,6 +1461,46 @@ equivalent to rotating based on the first matrix, followed by the second.
 
 * * *
 
+<a name="IdentityMatrix"></a>
+
+## IdentityMatrix() ⇒ [<code>RotationMatrix</code>](#RotationMatrix)
+**Kind**: global function  
+**Returns**: [<code>RotationMatrix</code>](#RotationMatrix) - The identity matrix.  
+**Brief**: Creates an identity rotation matrix.
+
+Returns a rotation matrix that has no effect on orientation.
+This matrix can be the starting point for other operations,
+such as using a series of calls to #Astronomy_Pivot to
+create a custom rotation matrix.  
+
+* * *
+
+<a name="Pivot"></a>
+
+## Pivot(rotation, axis, angle) ⇒ [<code>RotationMatrix</code>](#RotationMatrix)
+**Kind**: global function  
+**Returns**: [<code>RotationMatrix</code>](#RotationMatrix) - A pivoted matrix object.  
+**Brief**: Re-orients a rotation matrix by pivoting it by an angle around one of its axes.
+
+Given a rotation matrix, a selected coordinate axis, and an angle in degrees,
+this function pivots the rotation matrix by that angle around that coordinate axis.
+
+For example, if you have rotation matrix that converts ecliptic coordinates (ECL)
+to horizontal coordinates (HOR), but you really want to convert ECL to the orientation
+of a telescope camera pointed at a given body, you can use `Astronomy_Pivot` twice:
+(1) pivot around the zenith axis by the body's azimuth, then (2) pivot around the
+western axis by the body's altitude angle. The resulting rotation matrix will then
+reorient ECL coordinates to the orientation of your telescope camera.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| rotation | [<code>RotationMatrix</code>](#RotationMatrix) | The input rotation matrix. |
+| axis | <code>number</code> | An integer that selects which coordinate axis to rotate around:      0 = x, 1 = y, 2 = z. Any other value will cause an exception. |
+| angle | <code>number</code> | An angle in degrees indicating the amount of rotation around the specified axis.      Positive angles indicate rotation counterclockwise as seen from the positive      direction along that axis, looking towards the origin point of the orientation system.      Any finite number of degrees is allowed, but best precision will result from      keeping `angle` in the range [-360, +360]. |
+
+
+* * *
+
 <a name="VectorFromSphere"></a>
 
 ## VectorFromSphere(sphere, time) ⇒ [<code>Vector</code>](#Vector)
@@ -1416,21 +1516,6 @@ includes the time, as required by `AstroTime`.
 | --- | --- | --- |
 | sphere | [<code>Spherical</code>](#Spherical) | Spherical coordinates to be converted. |
 | time | [<code>AstroTime</code>](#AstroTime) | The time that should be included in the returned vector. |
-
-
-* * *
-
-<a name="VectorFromEquator"></a>
-
-## VectorFromEquator(equ, time) ⇒ [<code>Vector</code>](#Vector)
-**Kind**: global function  
-**Returns**: [<code>Vector</code>](#Vector) - A vector in the equatorial system.  
-**Brief**: Given angular equatorial coordinates, calculates the equatorial vector.  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| equ | [<code>EquatorialCoordinates</code>](#EquatorialCoordinates) | An object that contains angular equatorial coordinates to be converted to a vector. |
-| time | [<code>AstroTime</code>](#AstroTime) | The date and time of the observation. This is needed because the returned      vector object requires a valid time value when passed to certain other functions. |
 
 
 * * *
@@ -1616,7 +1701,7 @@ Target: EQD = equatorial system, using equator of the specified date/time.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| time | [<code>AstroTime</code>](#AstroTime) | The date and time at which the Earth's equator defines the target orientation. |
+| time | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time at which the Earth's equator defines the target orientation. |
 
 
 * * *
@@ -1635,7 +1720,7 @@ Target: EQJ = equatorial system, using equator at J2000 epoch.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| time | [<code>AstroTime</code>](#AstroTime) | The date and time at which the Earth's equator defines the source orientation. |
+| time | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time at which the Earth's equator defines the source orientation. |
 
 
 * * *
@@ -1661,7 +1746,7 @@ to a traditional altitude/azimuth pair.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| time | [<code>AstroTime</code>](#AstroTime) | The date and time at which the Earth's equator applies. |
+| time | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time at which the Earth's equator applies. |
 | observer | [<code>Observer</code>](#Observer) | A location near the Earth's mean sea level that defines the observer's horizon. |
 
 
@@ -1681,7 +1766,7 @@ Target: EQD = equatorial system, using equator of the specified date/time.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| time | [<code>AstroTime</code>](#AstroTime) | The date and time at which the Earth's equator applies. |
+| time | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time at which the Earth's equator applies. |
 | observer | [<code>Observer</code>](#Observer) | A location near the Earth's mean sea level that defines the observer's horizon. |
 
 
@@ -1701,7 +1786,7 @@ Target: EQJ = equatorial system, using equator at the J2000 epoch.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| time | [<code>AstroTime</code>](#AstroTime) | The date and time of the observation. |
+| time | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time of the observation. |
 | observer | [<code>Observer</code>](#Observer) | A location near the Earth's mean sea level that defines the observer's horizon. |
 
 
@@ -1726,10 +1811,10 @@ Target: HOR = horizontal system.
 Use [HorizonFromVector](#HorizonFromVector) to convert the return value
 to a traditional altitude/azimuth pair.  
 
-| Param | Description |
-| --- | --- |
-| time | The date and time of the desired horizontal orientation. |
-| observer | A location near the Earth's mean sea level that defines the observer's horizon. |
+| Param | Type | Description |
+| --- | --- | --- |
+| time | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time of the desired horizontal orientation. |
+| observer | [<code>Observer</code>](#Observer) | A location near the Earth's mean sea level that defines the observer's horizon. |
 
 
 * * *
@@ -1748,7 +1833,7 @@ Target: ECL = ecliptic system, using equator at J2000 epoch.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| time | [<code>AstroTime</code>](#AstroTime) | The date and time of the source equator. |
+| time | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time of the source equator. |
 
 
 * * *
@@ -1767,7 +1852,7 @@ Target: EQD = equatorial system, using equator of date.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| time | [<code>AstroTime</code>](#AstroTime) | The date and time of the desired equator. |
+| time | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time of the desired equator. |
 
 
 * * *
@@ -1793,7 +1878,7 @@ to a traditional altitude/azimuth pair.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| time | [<code>AstroTime</code>](#AstroTime) | The date and time of the desired horizontal orientation. |
+| time | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time of the desired horizontal orientation. |
 | observer | [<code>Observer</code>](#Observer) | A location near the Earth's mean sea level that defines the observer's horizon. |
 
 
@@ -1813,7 +1898,7 @@ Target: ECL = ecliptic system, using equator at J2000 epoch.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| time | [<code>AstroTime</code>](#AstroTime) | The date and time of the horizontal observation. |
+| time | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time of the horizontal observation. |
 | observer | [<code>Observer</code>](#Observer) | The location of the horizontal observer. |
 
 
@@ -1980,7 +2065,7 @@ To continue the search, pass the `finish` time in the returned structure to
 
 | Param | Type | Description |
 | --- | --- | --- |
-| body | <code>string</code> | The planet whose transit is to be found. Must be `"Mercury"` or `"Venus"`. |
+| body | [<code>Body</code>](#Body) | The planet whose transit is to be found. Must be `"Mercury"` or `"Venus"`. |
 | startTime | [<code>AstroTime</code>](#AstroTime) | The date and time for starting the search for a transit. |
 
 
@@ -1998,7 +2083,7 @@ Keep calling this function as many times as you want to keep finding more transi
 
 | Param | Type | Description |
 | --- | --- | --- |
-| body | <code>string</code> | The planet whose transit is to be found. Must be `"Mercury"` or `"Venus"`. |
+| body | [<code>Body</code>](#Body) | The planet whose transit is to be found. Must be `"Mercury"` or `"Venus"`. |
 | prevTransitTime | [<code>AstroTime</code>](#AstroTime) | A date and time near the previous transit. |
 
 

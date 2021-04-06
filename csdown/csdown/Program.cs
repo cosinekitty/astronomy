@@ -38,10 +38,20 @@ namespace csdown
         {
             Console.WriteLine("Generating C# documentation.");
 
+            Type astro = asm.GetType("CosineKitty.Astronomy");
+
+            // Document all public constants in the Astronomy class.
+            FieldInfo[] constants = astro.GetFields(BindingFlags.Public | BindingFlags.Static)
+                .Where(f => f.IsLiteral && !f.IsInitOnly)
+                .ToArray();
+
+            AppendSectionHeader(sb, "Constants");
+            foreach (FieldInfo c in constants)
+                AppendConstantMarkdown(sb, cinfo, c);
+
             // All the member functions in the Astronomy class go in the "functions" section.
 
             AppendSectionHeader(sb, "Functions");
-            Type astro = asm.GetType("CosineKitty.Astronomy");
             MethodInfo[] funcs = astro.GetMethods()
                 .Where(m => m.IsPublic && m.IsStatic)
                 .OrderBy(m => m.Name.ToUpperInvariant())
@@ -170,6 +180,43 @@ namespace csdown
             sb.AppendLine();
             sb.AppendLine("---");
             sb.AppendLine();
+        }
+
+        private static void AppendConstantMarkdown(StringBuilder sb, CodeInfo cinfo, FieldInfo f)
+        {
+            CodeItem item = cinfo.FindField(f);
+            if (item == null)
+                return;
+
+            string fieldType;
+            switch (f.FieldType.Name)
+            {
+                case "Double":
+                    fieldType = "double";
+                    break;
+
+                default:
+                    throw new Exception($"Do not know how to generate markdown for constant type: {f.FieldType.Name}");
+            }
+
+            string parentClassName = f.DeclaringType.Name;
+
+            sb.AppendFormat("<a name=\"{0}.{1}\"></a>", parentClassName, f.Name);
+            sb.AppendLine();
+            sb.AppendFormat("### `const {0} {1}.{2} = {3};`", fieldType, parentClassName, f.Name, f.GetValue(null));
+            sb.AppendLine();
+            sb.AppendLine();
+            if (!string.IsNullOrWhiteSpace(item.Summary))
+            {
+                sb.AppendLine("**" + item.Summary + "**");
+                sb.AppendLine();
+            }
+
+            if (!string.IsNullOrWhiteSpace(item.Remarks))
+            {
+                sb.AppendLine(item.Remarks);
+                sb.AppendLine();
+            }
         }
 
         private static void AppendFunctionMarkdown(StringBuilder sb, CodeInfo cinfo, MethodInfo f)

@@ -14,6 +14,7 @@ To get started quickly, here are some [examples](../../demo/python/).
 ## Contents
 
 - [Topic Index](#topics)
+- [Constants](#constants)
 - [Classes](#classes)
 - [Enumerated Types](#enumerations)
 - [Error Types](#errors)
@@ -28,8 +29,9 @@ To get started quickly, here are some [examples](../../demo/python/).
 
 | Function | Description |
 | -------- | ----------- |
-| [HelioVector](#HelioVector) | Calculates vector with respect to the center of the Sun. |
-| [GeoVector](#GeoVector)     | Calculates vector with respect to the center of the Earth. |
+| [HelioVector](#HelioVector) | Calculates body position vector with respect to the center of the Sun. |
+| [GeoVector](#GeoVector)     | Calculates body position vector with respect to the center of the Earth. |
+| [ObserverVector](#ObserverVector) | Calculates vector from the center of the Earth to an observer on the Earth's surface. |
 | [Equator](#Equator)         | Calculates right ascension and declination. |
 | [Ecliptic](#Ecliptic)       | Converts J2000 equatorial coordinates to J2000 ecliptic coordinates. |
 | [EclipticLongitude](#EclipticLongitude) | Calculates ecliptic longitude of a body in the J2000 system. |
@@ -121,9 +123,10 @@ these are used in function and type names.
 | [RotateVector](#RotateVector) | Applies a rotation matrix to a vector, yielding a vector in another orientation system. |
 | [InverseRotation](#InverseRotation) | Given a rotation matrix, finds the inverse rotation matrix that does the opposite transformation. |
 | [CombineRotation](#CombineRotation) | Given two rotation matrices, returns a rotation matrix that combines them into a net transformation. |
+| [IdentityMatrix](#IdentityMatrix) | Returns a 3x3 identity matrix, which can be used to form other rotation matrices. |
+| [Pivot](#Pivot) | Transforms a rotation matrix by pivoting it around a given axis by a given angle. |
 | [VectorFromSphere](#VectorFromSphere) | Converts spherical coordinates to Cartesian coordinates. |
 | [SphereFromVector](#SphereFromVector) | Converts Cartesian coordinates to spherical coordinates. |
-| [VectorFromEquator](#VectorFromEquator) | Given angular equatorial coordinates, calculates equatorial vector. |
 | [EquatorFromVector](#EquatorFromVector) | Given an equatorial vector, calculates equatorial angular coordinates. |
 | [VectorFromHorizon](#VectorFromHorizon) | Given apparent angular horizontal coordinates, calculates horizontal vector. |
 | [HorizonFromVector](#HorizonFromVector) | Given a vector in horizontal orientation, calculates horizontal angular coordinates. |
@@ -141,6 +144,31 @@ these are used in function and type names.
 | [Rotation_HOR_ECL](#Rotation_HOR_ECL) | Calculates a rotation matrix from horizontal (HOR) to ecliptic J2000 (ECL). |
 
 ---
+
+---
+
+<a name="constants"></a>
+## Constants
+The following numeric constants are exported by the `astronomy` module.
+They may be of use for unit conversion.
+Note: For the other supported programming languages, Astronomy Engine defines
+helper constants `DEG2RAD` and `RAD2DEG` to convert between angular degrees and radians.
+However, because Python defines the [angular conversion functions](https://docs.python.org/3/library/math.html#angular-conversion)
+`math.degrees()` and `math.radians()`, they are not needed in the Python version.
+
+---
+
+<a name="KM_PER_AU"></a>
+### `KM_PER_AU = 1.4959787069098932e+8`
+
+**The number of kilometers per astronomical unit.**
+
+---
+
+<a name="C_AUDAY"></a>
+### `C_AUDAY   = 173.1446326846693`
+
+**The speed of light expressed in astronomical units per day.**
 
 ---
 
@@ -178,11 +206,11 @@ to iterate through consecutive alternating perigees and apogees.
 
 **Reports the constellation that a given celestial point lies within.**
 
-The [`Constellation`](#Constellation) function returns this struct
+The [`Constellation`](#Constellation) function returns a `ConstellationInfo` object
 to report which constellation corresponds with a given point in the sky.
 Constellations are defined with respect to the B1875 equatorial system
-per IAU standard. Although `Constellation` requires J2000 equatorial
-coordinates, the struct contains converted B1875 coordinates for reference.
+per IAU standard. Although the `Constellation` function requires J2000 equatorial
+coordinates as input, the returned object contains converted B1875 coordinates for reference.
 
 | Type | Attribute | Description |
 | --- | --- | --- |
@@ -225,9 +253,7 @@ oriented with respect to the plane of the Earth's orbit around the Sun (the ecli
 
 | Type | Attribute | Description |
 | --- | --- | --- |
-| `float` | `ex` | Cartesian x-coordinate: in the direction of the equinox along the ecliptic plane. |
-| `float` | `ey` | Cartesian y-coordinate: in the ecliptic plane 90 degrees prograde from the equinox. |
-| `float` | `ez` | Cartesian z-coordinate: perpendicular to the ecliptic plane. Positive is north. |
+| [`Vector`](#Vector) | `vec` | Ecliptic cartesian vector with the following components: x: in the direction of the equinox along the ecliptic plane. y: Cartesian y-coordinate: in the ecliptic plane 90 degrees prograde from the equinox. z: Cartesian z-coordinate: perpendicular to the ecliptic plane. Positive is north. |
 | `float` | `elat` | Latitude in degrees north (positive) or south (negative) of the ecliptic plane. |
 | `float` | `elon` | Longitude in degrees around the ecliptic plane prograde from the equinox. |
 
@@ -265,6 +291,7 @@ equator projected onto the sky.
 | `float` | `ra` | Right ascension in sidereal hours. |
 | `float` | `dec` | Declination in degrees. |
 | `float` | `dist` | Distance to the celestial body in AU. |
+| [`Vector`](#Vector) | `vec` | The equatorial coordinates in cartesian form, using AU distance units. x = direction of the March equinox, y = direction of the June solstice, z = north. |
 
 ---
 
@@ -523,9 +550,9 @@ Sometimes we need to adjust a given [`Time`](#Time) value by a certain amount of
 This function adds the given real number of days in `days` to the date and time
 in the calling object.
 More precisely, the result's Universal Time field `ut` is exactly adjusted by `days`
-and the Terrestrial Time field `tt` is adjusted correctly for the resulting UTC date and time,
-according to the historical and predictive Delta-T model provided by the
-[United States Naval Observatory](http://maia.usno.navy.mil/ser7/).
+and the Terrestrial Time field `tt` is adjusted for the resulting UTC date and time,
+using a best-fit piecewise polynomial model devised by
+[Espenak and Meeus](https://eclipse.gsfc.nasa.gov/SEhelp/deltatpoly2004.html).
 The value of the calling object is not modified. This function creates a brand new
 [`Time`](#Time) object and returns it.
 
@@ -1197,6 +1224,21 @@ and is expressed in astronomical units (AU).
 
 ---
 
+<a name="IdentityMatrix"></a>
+### IdentityMatrix()
+
+**Creates an identity rotation matrix.**
+
+Returns a rotation matrix that has no effect on orientation.
+This matrix can be the starting point for other operations,
+such as using a series of calls to [`Pivot`](#Pivot) to
+create a custom rotation matrix.
+
+### Returns: [`RotationMatrix`](#RotationMatrix)
+The identity rotation matrix.
+
+---
+
 <a name="Illumination"></a>
 ### Illumination(body, time)
 
@@ -1450,6 +1492,58 @@ Keep calling this function as many times as you want to keep finding more transi
 | [`Time`](#Time) | `prevTransitTime` | A date and time near the previous transit. |
 
 ### Returns: [`TransitInfo`](#TransitInfo)
+
+---
+
+<a name="ObserverVector"></a>
+### ObserverVector(time, observer, ofdate)
+
+**Calculates geocentric equatorial coordinates of an observer on the surface of the Earth.**
+
+This function calculates a vector from the center of the Earth to
+a point on or near the surface of the Earth, expressed in equatorial
+coordinates. It takes into account the rotation of the Earth at the given
+time, along with the given latitude, longitude, and elevation of the observer.
+The caller may pass `ofdate` as `True` to return coordinates relative to the Earth's
+equator at the specified time, or `False` to use the J2000 equator.
+The returned vector has components expressed in astronomical units (AU).
+To convert to kilometers, multiply the `x`, `y`, and `z` values by
+the constant value [`KM_PER_AU`](#KM_PER_AU).
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Time`](#Time) | `time` | The date and time for which to calculate the observer's position vector. |
+| [`Observer`](#Observer) | `observer` | The geographic location of a point on or near the surface of the Earth. |
+| `bool` | `ofdate` | Selects the date of the Earth's equator in which to express the equatorial coordinates. The caller may pass `False` to use the orientation of the Earth's equator at noon UTC on January 1, 2000, in which case this function corrects for precession and nutation of the Earth as it was at the moment specified by the `time` parameter. Or the caller may pass `true` to use the Earth's equator at `time` as the orientation. |
+
+### Returns: [`Vector`](#Vector)
+An equatorial vector from the center of the Earth to the specified location
+on (or near) the Earth's surface.
+
+---
+
+<a name="Pivot"></a>
+### Pivot(rotation, axis, angle)
+
+**Re-orients a rotation matrix by pivoting it by an angle around one of its axes.**
+
+Given a rotation matrix, a selected coordinate axis, and an angle in degrees,
+this function pivots the rotation matrix by that angle around that coordinate axis.
+For example, if you have rotation matrix that converts ecliptic coordinates (ECL)
+to horizontal coordinates (HOR), but you really want to convert ECL to the orientation
+of a telescope camera pointed at a given body, you can use `Pivot` twice:
+(1) pivot around the zenith axis by the body's azimuth, then (2) pivot around the
+western axis by the body's altitude angle. The resulting rotation matrix will then
+reorient ECL coordinates to the orientation of your telescope camera.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`RotationMatrix`](#RotationMatrix) | `rotation` | The input rotation matrix. |
+| `int` | `axis` | An integer that selects which coordinate axis to rotate around: 0 = x, 1 = y, 2 = z. Any other value will cause an exception. |
+| `float` | `angle` | An angle in degrees indicating the amount of rotation around the specified axis. Positive angles indicate rotation counterclockwise as seen from the positive direction along that axis, looking towards the origin point of the orientation system. Any finite number of degrees is allowed, but best precision will result from keeping `angle` in the range [-360, +360]. |
+
+### Returns: [`RotationMatrix`](#RotationMatrix)
+A pivoted matrix object.
 
 ---
 
@@ -2241,21 +2335,6 @@ In fact, the function [`Seasons`](#Seasons) does use this function for that purp
 
 ### Returns: [`EclipticCoordinates`](#EclipticCoordinates)
 The ecliptic coordinates of the Sun using the Earth's true equator of date.
-
----
-
-<a name="VectorFromEquator"></a>
-### VectorFromEquator(equ, time)
-
-**Given angular equatorial coordinates in `equ`, calculates equatorial vector.**
-
-| Type | Parameter | Description |
-| --- | --- | --- |
-| [`Equatorial`](#Equatorial) | `equ` | Angular equatorial coordinates to be converted to a vector. |
-| [`Time`](#Time) | `time` | The date and time of the observation. This is needed because the returned vector object requires a valid time value when passed to certain other functions. |
-
-### Returns: [`Vector`](#Vector)
-A vector in the equatorial system.
 
 ---
 

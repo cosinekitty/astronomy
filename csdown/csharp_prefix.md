@@ -14,6 +14,7 @@ To get started quickly, here are some [examples](../../demo/csharp/).
 ## Contents
 
 - [Topic Index](#topics)
+- [Constants](#constants)
 - [Functions](#functions)
 - [Types](#types)
 
@@ -26,8 +27,9 @@ To get started quickly, here are some [examples](../../demo/csharp/).
 
 | Function | Description |
 | -------- | ----------- |
-| [HelioVector](#Astronomy.HelioVector) | Calculates vector with respect to the center of the Sun. |
-| [GeoVector](#Astronomy.GeoVector)     | Calculates vector with respect to the center of the Earth. |
+| [HelioVector](#Astronomy.HelioVector) | Calculates body position vector with respect to the center of the Sun. |
+| [GeoVector](#Astronomy.GeoVector)     | Calculates body position vector with respect to the center of the Earth. |
+| [ObserverVector](#Astronomy.ObserverVector) | Calculates vector from the center of the Earth to an observer on the Earth's surface. |
 | [Equator](#Astronomy.Equator)         | Calculates right ascension and declination. |
 | [EquatorialToEcliptic](#Astronomy.EquatorialToEcliptic)       | Converts J2000 equatorial coordinates to J2000 ecliptic coordinates. |
 | [EclipticLongitude](#Astronomy.EclipticLongitude) | Calculates ecliptic longitude of a body in the J2000 system. |
@@ -119,9 +121,10 @@ these are used in function and type names.
 | [RotateVector](#Astronomy.RotateVector) | Applies a rotation matrix to a vector, yielding a vector in another orientation system. |
 | [InverseRotation](#Astronomy.InverseRotation) | Given a rotation matrix, finds the inverse rotation matrix that does the opposite transformation. |
 | [CombineRotation](#Astronomy.CombineRotation) | Given two rotation matrices, returns a rotation matrix that combines them into a net transformation. |
+| [IdentityMatrix](#Astronomy.IdentityMatrix) | Returns a 3x3 identity matrix, which can be used to form other rotation matrices. |
+| [Pivot](#Astronomy.Pivot) | Transforms a rotation matrix by pivoting it around a given axis by a given angle. |
 | [VectorFromSphere](#Astronomy.VectorFromSphere) | Converts spherical coordinates to Cartesian coordinates. |
 | [SphereFromVector](#Astronomy.SphereFromVector) | Converts Cartesian coordinates to spherical coordinates. |
-| [VectorFromEquator](#Astronomy.VectorFromEquator) | Given angular equatorial coordinates, calculates equatorial vector. |
 | [EquatorFromVector](#Astronomy.EquatorFromVector) | Given an equatorial vector, calculates equatorial angular coordinates. |
 | [VectorFromHorizon](#Astronomy.VectorFromHorizon) | Given apparent angular horizontal coordinates, calculates horizontal vector. |
 | [HorizonFromVector](#Astronomy.HorizonFromVector) | Given a vector in horizontal orientation, calculates horizontal angular coordinates. |
