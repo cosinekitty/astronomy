@@ -22,6 +22,7 @@
     SOFTWARE.
 */
 
+#include <ctype.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdarg.h>
@@ -1377,6 +1378,234 @@ fail:
 }
 
 
+/*-------------------------- begin Jupiter moons -----------------------------*/
+
+#define NUM_JUPITER_MOONS     4
+#define MAX_JM_SERIES        50
+#define NUM_JM_VARS           4
+#define MAX_JUPITER_TERMS   (NUM_JUPITER_MOONS * NUM_JM_VARS * MAX_JM_SERIES)
+
+typedef struct
+{
+    double mu;      /* mu = G(M+m), where M = Jupiter mass, m = moon mass. */
+    double al[2];   /* mean longitude coefficients */
+    vsop_series_t   a;
+    vsop_series_t   l;
+    vsop_series_t   z;
+    vsop_series_t   zeta;
+    vsop_term_t     buffer[MAX_JUPITER_TERMS];
+}
+jupiter_moon_model_t;
+
+
+static int ReadFixLine(char *line, size_t size, FILE *infile)
+{
+    if (!fgets(line, size, infile))
+        return 0;
+
+    // Convert FORTRAN double-precision exponential notation like
+    // 0.333688627964400D+06
+    // to the format that sscanf() can handle:
+    // 0.333688627964400e+06
+    for (int i = 0; line[i]; ++i)
+        if (isdigit(line[i]) && line[i+1] == 'D' && (line[i+2] == '+' || line[i+2] == '-') && isdigit(line[i+3]))
+            line[i+1] = 'e';
+
+    return 1;
+}
+
+
+#define REQUIRE_NSCAN(required) \
+    do{if ((nscanned) != (required)) FAIL("LoadJupiterMoonModel(%s line %d): expected %d tokens, found %d\n", filename, lnum, required, nscanned);}while(0)
+
+
+static int LoadJupiterMoonModel(jupiter_moon_model_t model[NUM_JUPITER_MOONS], const char *filename)
+{
+    int error;
+    FILE *infile;
+    int lnum;
+    char line[200];
+    int nscanned, check, moon, nterms, tindex, var, next_term_index, read_mean_longitude;
+    vsop_series_t *series = NULL;
+
+    infile = fopen(filename, "rt");
+    if (infile == NULL)
+        FAIL("LoadJupiterMoonModel: Cannot open file for read: %s\n", filename);
+
+    lnum = 0;
+    moon = -1;
+    nterms = 0;
+    tindex = 0;
+    var = 3;
+    next_term_index = 0;
+    read_mean_longitude = 0;
+    while (ReadFixLine(line, sizeof(line), infile))
+    {
+        ++lnum;
+        if (lnum == 19)
+        {
+            /* G(M+m), where M = Jupiter mass, m = moon mass. */
+            nscanned = sscanf(line, "%lf %lf %lf %lf", &model[0].mu, &model[1].mu, &model[2].mu, &model[3].mu);
+            REQUIRE_NSCAN(4);
+        }
+        else if (lnum >= 21)
+        {
+            if (tindex < nterms)
+            {
+                if (tindex == 0 && var == 1 && !read_mean_longitude)
+                {
+                    /* Special case: there is an extra row of mean longitude values here. */
+                    nscanned = sscanf(line, "%d %lf %lf",
+                        &check,
+                        &model[moon].al[0],
+                        &model[moon].al[1]);
+
+                    REQUIRE_NSCAN(3);
+                    if (check != 0)
+                        FAIL("LoadJupiterMoonModel(%s line %d): invalid check value %d (expected 0 for mean longitude line)\n", filename, lnum, check);
+
+                    read_mean_longitude = 1;
+                }
+                else
+                {
+                    /* Load the next term for the current moon and variable. */
+                    nscanned = sscanf(line, "%d %lf %lf %lf",
+                        &check,
+                        &series->term[tindex].amplitude,
+                        &series->term[tindex].phase,
+                        &series->term[tindex].frequency);
+
+                    REQUIRE_NSCAN(4);
+
+                    if (check != tindex + 1)
+                        FAIL("LoadJupiterMoonModel(%s line %d): invalid check value %d (expected %d)\n", filename, lnum, check, tindex + 1);
+
+                    ++tindex;
+                }
+            }
+            else
+            {
+                read_mean_longitude = 0;
+                tindex = 0;
+                if (var == 3)
+                {
+                    /* Start the next moon. */
+                    var = 0;
+                    ++moon;
+                    if (moon == NUM_JUPITER_MOONS)
+                        break;  /* We are done loading data! (We don't care about the Tchebycheff polynomials.) */
+                }
+                else
+                {
+                    /* Start the next variable in the current moon. */
+                    ++var;
+                }
+
+                /* Select which variable corresponds to the value of 'var'. */
+                switch (var)
+                {
+                    case 0:  series = &model[moon].a;     break;
+                    case 1:  series = &model[moon].l;     break;
+                    case 2:  series = &model[moon].z;     break;
+                    case 3:  series = &model[moon].zeta;  break;
+                    default:
+                        FAIL("LoadJupiterMoonModel: Invalid var = %d\n", var);
+                }
+
+                /* Read the number of terms in this variable. */
+                nscanned = sscanf(line, "%d", &nterms);
+                REQUIRE_NSCAN(1);
+                if (nterms < 0 || nterms > MAX_JM_SERIES)
+                    FAIL("LoadJupiterMoonModel(%s line %d): Invalid nterms = %d\n", filename, lnum, nterms);
+
+                /* Allocate terms for this series from the term buffer. */
+                series->nterms_calc = series->nterms_total = nterms;
+                series->term = &model->buffer[next_term_index];
+                next_term_index += nterms;
+                printf("moon = %d, var = %d, next_term_index = %d\n", moon, var, next_term_index);
+                if (next_term_index > MAX_JUPITER_TERMS)
+                    FAIL("LoadJupiterMoonModel(%s line %d): Exhausted the term buffer!\n", filename, lnum);
+            }
+        }
+    }
+
+    if (moon != NUM_JUPITER_MOONS)
+        FAIL("LoadJupiterMoonModel(%s): only loaded %d moons.\n", filename, moon);
+
+    error = 0;
+fail:
+    if (infile != NULL) fclose(infile);
+    return error;
+}
+
+
+static int JupiterMoons_C(cg_context_t *context, const jupiter_moon_model_t model[NUM_JUPITER_MOONS])
+{
+    return LogError(context, "JupiterMoons_C: NOT YET IMPLEMENTED.\n");
+}
+
+
+static int JupiterMoons_CSharp(cg_context_t *context, const jupiter_moon_model_t model[NUM_JUPITER_MOONS])
+{
+    return LogError(context, "JupiterMoons_CSharp: NOT YET IMPLEMENTED.\n");
+}
+
+
+static int JupiterMoons_JS(cg_context_t *context, const jupiter_moon_model_t model[NUM_JUPITER_MOONS])
+{
+    return LogError(context, "JupiterMoons_JS: NOT YET IMPLEMENTED.\n");
+}
+
+
+static int JupiterMoons_Python(cg_context_t *context, const jupiter_moon_model_t model[NUM_JUPITER_MOONS])
+{
+    return LogError(context, "JupiterMoons_Python: NOT YET IMPLEMENTED.\n");
+}
+
+
+static int JupiterMoons(cg_context_t *context)
+{
+    int error;
+    jupiter_moon_model_t *model;
+
+    model = calloc(NUM_JUPITER_MOONS, sizeof(jupiter_moon_model_t));
+    if (model == NULL)
+        FAIL("JupiterMoons: memory allocation failure!\n");
+
+    CHECK(LoadJupiterMoonModel(model, "jupiter_moons/fortran/BisL1.2.dat"));
+
+    switch (context->language)
+    {
+    case CODEGEN_LANGUAGE_C:
+        CHECK(JupiterMoons_C(context, model));
+        break;
+
+    case CODEGEN_LANGUAGE_CSHARP:
+        CHECK(JupiterMoons_CSharp(context, model));
+        break;
+
+    case CODEGEN_LANGUAGE_JS:
+        CHECK(JupiterMoons_JS(context, model));
+        break;
+
+    case CODEGEN_LANGUAGE_PYTHON:
+        CHECK(JupiterMoons_Python(context, model));
+        break;
+
+    default:
+        CHECK(LogError(context, "JupiterMoons: Unsupported target language %d", context->language));
+    }
+
+    error = 0;
+fail:
+    free(model);
+    return error;
+}
+
+
+/*-------------------------- end Jupiter moons -----------------------------*/
+
+
 static int LogError(const cg_context_t *context, const char *format, ...)
 {
     va_list v;
@@ -1397,6 +1626,7 @@ static const cg_directive_entry DirectiveTable[] =
     { "ADDSOL",             OptAddSol           },
     { "CONSTEL",            ConstellationData   },
     { "PLUTO_TABLE",        PlutoStateTable     },
+    { "JUPITER_MOONS",      JupiterMoons        },
     { NULL, NULL }  /* Marks end of list */
 };
 
