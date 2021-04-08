@@ -1,0 +1,10 @@
+#!/bin/bash
+for kind in geometric astrometric apparent; do
+    for moon in 0 1 2 3; do
+        fn=jm_${kind}_${moon}.txt
+        echo $fn
+        ./jmcompare.py stellarium.txt ${fn} || exit 1
+    done
+    echo ""
+done
+exit 0
