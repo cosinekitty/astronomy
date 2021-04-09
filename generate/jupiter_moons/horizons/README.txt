@@ -32,7 +32,7 @@ Time Span:
 Table Settings:
     Type 2 (state vector x, y, z, vx, vy, vz)
     output units: au & au/d
-    reference plane: ecliptic and mean equinox of reference epoch
+    reference plane: Earth mean equator and equinox of reference epoch
     reference system: ICRF/J2000.0
     aberrations:
         jm_geometric_*.txt   = Geometric states
