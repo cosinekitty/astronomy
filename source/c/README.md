@@ -822,11 +822,13 @@ Given a rotation matrix that performs some coordinate transform, this function r
 <a name="Astronomy_JupiterMoons"></a>
 ### Astronomy_JupiterMoons(time) &#8658; [`astro_jupiter_moons_t`](#astro_jupiter_moons_t)
 
-**Calculates positions of Jupiter's largest 4 moons.** 
+**Calculates jovicentric positions of Jupiter's largest 4 moons.** 
 
 
 
-Calculates jovicentric position vectors for Jupiter's moons Io, Europa, Ganymede, and Callisto, at the given date and time. See [`astro_jupiter_moons_t`](#astro_jupiter_moons_t) for more information about the representation of the position vectors.
+Calculates position vectors for Jupiter's moons Io, Europa, Ganymede, and Callisto, at the given date and time. The position vectors are jovicentric, meaning their coordinate origin is the center of Jupiter. Their orientation is the Earth's equatorial system at the J2000 epoch, called `EQJ`. The vector components are expressed in astronomical units (AU).
+
+To convert to heliocentric vectors, call [`Astronomy_HelioVector`](#Astronomy_HelioVector) with `BODY_JUPITER` to get Jupiter's heliocentric position, then add the jovicentric vectors. Likewise, you can call [`Astronomy_GeoVector`](#Astronomy_GeoVector) with `BODY_JUPITER` to convert to geocentric vectors.
 
 
 
@@ -1231,6 +1233,31 @@ Given an altitude angle and a refraction option, calculates the amount of "lift"
 
 
 Astronomy Engine uses dynamic memory allocation in only one place: it makes calculation of Pluto's orbit more efficient by caching 11 KB segments and recycling them. To force purging this cache and freeing all the dynamic memory, you can call this function at any time. It is always safe to call, although it will slow down the very next calculation of Pluto's position for a nearby time value. Calling this function before your program exits is optional, but it will be helpful for leak-checkers like valgrind. 
+
+---
+
+<a name="Astronomy_RotateState"></a>
+### Astronomy_RotateState(rotation, state) &#8658; [`astro_state_vector_t`](#astro_state_vector_t)
+
+**Applies a rotation to a state vector, yielding a rotated vector.** 
+
+
+
+This function transforms a state vector in one orientation to a vector in another orientation.
+
+
+
+**Returns:**  A state vector in the orientation specified by `rotation`. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_rotation_t`](#astro_rotation_t) | `rotation` |  A rotation matrix that specifies how the orientation of the vector is to be changed. | 
+| [`astro_state_vector_t`](#astro_state_vector_t) | `state` |  The state vector whose orientation is to be changed. Both the position and velocity components are transformed. | 
+
+
+
 
 ---
 
@@ -2897,13 +2924,13 @@ Returned by the functions [`Astronomy_Illumination`](#Astronomy_Illumination) an
 
 
 
-The [`Astronomy_JupiterMoons`](#Astronomy_JupiterMoons) function returns this struct to report position vectors for Jupiter's largest 4 moons Io, Europa, Ganymede, and Callisto. Each vector is relative to the center of Jupiter and is oriented in the EQJ system (that is, using Earth's equator at the J2000 epoch.) The vector components are expressed in astronomical units (AU).
+The [`Astronomy_JupiterMoons`](#Astronomy_JupiterMoons) function returns this struct to report position and velocity vectors for Jupiter's largest 4 moons Io, Europa, Ganymede, and Callisto. Each vector is relative to the center of Jupiter and is oriented in the EQJ system (that is, using Earth's equator at the J2000 epoch.) The positions are expressed in astronomical units (AU), and the velocities in AU/day.
 
 The following integer constants may be useful for indexing into the `moon` array: [`JM_IO`](#JM_IO), [`JM_EUROPA`](#JM_EUROPA), [`JM_GANYMEDE`](#JM_GANYMEDE), [`JM_CALLISTO`](#JM_CALLISTO). 
 
 | Type | Member | Description |
 | ---- | ------ | ----------- |
-| [`astro_vector_t`](#astro_vector_t) | `moon` |  Jovicentric coordinates of each moon, as described above.  |
+| [`astro_state_vector_t`](#astro_state_vector_t) | `moon` |  Jovicentric position and velocity of each moon, as described above.  |
 
 
 ---
@@ -3060,6 +3087,27 @@ You can create this structure directly, or you can call the convenience function
 | `double` | `lat` |  The latitude angle: -90..+90 degrees.  |
 | `double` | `lon` |  The longitude angle: 0..360 degrees.  |
 | `double` | `dist` |  Distance in AU.  |
+
+
+---
+
+<a name="astro_state_vector_t"></a>
+### `astro_state_vector_t`
+
+**A state vector that contains a position (AU) and velocity (AU/day).** 
+
+
+
+| Type | Member | Description |
+| ---- | ------ | ----------- |
+| [`astro_status_t`](#astro_status_t) | `status` |  `ASTRO_SUCCESS` if this struct is valid; otherwise an error code.  |
+| `double` | `x` |  The Cartesian position x-coordinate of the vector in AU.  |
+| `double` | `y` |  The Cartesian position y-coordinate of the vector in AU.  |
+| `double` | `z` |  The Cartesian position z-coordinate of the vector in AU.  |
+| `double` | `vx` |  The Cartesian velocity x-coordinate of the vector in AU/day.  |
+| `double` | `vy` |  The Cartesian velocity y-coordinate of the vector in AU/day.  |
+| `double` | `vz` |  The Cartesian velocity z-coordinate of the vector in AU/day.  |
+| [`astro_time_t`](#astro_time_t) | `t` |  The date and time at which this state vector is valid.  |
 
 
 ---

@@ -345,6 +345,16 @@ static astro_vector_t VecError(astro_status_t status, astro_time_t time)
     return vec;
 }
 
+static astro_state_vector_t StateVecError(astro_status_t status, astro_time_t time)
+{
+    astro_state_vector_t vec;
+    vec.x = vec.y = vec.z = NAN;
+    vec.vx = vec.vy = vec.vz = NAN;
+    vec.t = time;
+    vec.status = status;
+    return vec;
+}
+
 static astro_spherical_t SphereError(astro_status_t status)
 {
     astro_spherical_t sphere;
@@ -2329,13 +2339,130 @@ static astro_vector_t CalcPluto(astro_time_t time)
 
 $ASTRO_JUPITER_MOONS();
 
+static astro_state_vector_t JupiterMoon_elem2pv(astro_time_t time, double mu, double elem[6])
+{
+    /* Translation of FORTRAN subroutine ELEM2PV from: */
+    /* https://ftp.imcce.fr/pub/ephem/satel/galilean/L1/L1.2/ */
+    astro_state_vector_t state;
+    double EE, DE, CE, SE, DLE, RSAM1, ASR, PHI, PSI, X1, Y1, VX1, VY1, F2, P2, Q2, PQ;
+
+    const double A  = elem[0];
+    const double AL = elem[1];
+    const double K  = elem[2];
+    const double H  = elem[3];
+    const double Q  = elem[4];
+    const double P  = elem[5];
+
+    const double AN = sqrt(mu / (A*A*A));
+
+    EE = AL + K*sin(AL) - H*cos(AL);
+    do
+    {
+        CE = cos(EE);
+        SE = sin(EE);
+        DE = (AL - EE + K*SE - H*CE) / (1.0 - K*CE - H*SE);
+        EE += DE;
+    }
+    while (fabs(DE) >= 1.0e-12);
+
+    CE = cos(EE);
+    SE = sin(EE);
+    DLE = H*CE - K*SE;
+    RSAM1 = -K*CE - H*SE;
+    ASR = 1.0/(1.0 + RSAM1);
+    PHI = sqrt(1.0 - K*K - H*H);
+    PSI = 1.0/(1.0 + PHI);
+    X1 = A*(CE - K - PSI*H*DLE);
+    Y1 = A*(SE - H + PSI*K*DLE);
+    VX1 = AN*ASR*A*(-SE - PSI*H*RSAM1);
+    VY1 = AN*ASR*A*(+CE + PSI*K*RSAM1);
+    F2 = 2.0*sqrt(1.0 - Q*Q - P*P);
+    P2 = 1.0 - 2.0*P*P;
+    Q2 = 1.0 - 2.0*Q*Q;
+    PQ = 2.0*P*Q;
+
+    state.x = X1*P2 + Y1*PQ;
+    state.y = X1*PQ + Y1*Q2;
+    state.z = (Q*Y1 - X1*P)*F2;
+
+    state.vx = VX1*P2 + VY1*PQ;
+    state.vy = VX1*PQ + VY1*Q2;
+    state.vz = (Q*VY1 - VX1*P)*F2;
+
+    state.t = time;
+    state.status = ASTRO_SUCCESS;
+    return state;
+}
+
+static astro_state_vector_t CalcJupiterMoon(astro_time_t time, int mindex)
+{
+    /* This is a translation of FORTRAN code by Duriez, Lainey, and Vienne: */
+    /* https://ftp.imcce.fr/pub/ephem/satel/galilean/L1/L1.2/ */
+
+    astro_state_vector_t state;
+    int k;
+    double arg;
+    double elem[6];
+    const jupiter_moon_t *m = &JupiterMoonModel[mindex];
+    const double t = time.tt + 18262.5;     /* t = time since 1950-01-01T00:00:00Z */
+
+    /* Calculate 6 orbital elements at the given time t. */
+
+    elem[0] = 0.0;
+    for (k = 0; k < m->a.nterms; ++k)
+    {
+        arg = m->a.term[k].phase + (t * m->a.term[k].frequency);
+        elem[0] += m->a.term[k].amplitude * cos(arg);
+    }
+
+    elem[1] = m->al[0] + (t * m->al[1]);
+    for (k = 0; k < m->l.nterms; ++k)
+    {
+        arg = m->l.term[k].phase + (t * m->l.term[k].frequency);
+        elem[1] += m->l.term[k].amplitude * sin(arg);
+    }
+    elem[1] = fmod(elem[1], PI2);
+    if (elem[1] < 0.0)
+        elem[1] += PI2;
+
+    elem[2] = elem[3] = 0.0;
+    for (k = 0; k < m->z.nterms; ++k)
+    {
+        arg = m->z.term[k].phase + (t * m->z.term[k].frequency);
+        elem[2] += m->z.term[k].amplitude * cos(arg);
+        elem[3] += m->z.term[k].amplitude * sin(arg);
+    }
+
+    elem[4] = elem[5] = 0.0;
+    for (k = 0; k < m->zeta.nterms; ++k)
+    {
+        arg = m->zeta.term[k].phase + (t * m->zeta.term[k].frequency);
+        elem[4] += m->zeta.term[k].amplitude * cos(arg);
+        elem[5] += m->zeta.term[k].amplitude * sin(arg);
+    }
+
+    /* Convert the oribital elements into position vectors in the Jupiter equatorial system (JUP). */
+    state = JupiterMoon_elem2pv(time, m->mu, elem);
+
+    /* Re-orient position and velocity vectors from Jupiter-equatorial (JUP) to Earth-equatorial in J2000 (EQJ). */
+    return Astronomy_RotateState(Rotation_JUP_EQJ, state);
+}
+
+
 /**
- * @brief Calculates positions of Jupiter's largest 4 moons.
+ * @brief Calculates jovicentric positions of Jupiter's largest 4 moons.
  *
- * Calculates jovicentric position vectors for Jupiter's
- * moons Io, Europa, Ganymede, and Callisto, at the given date and time.
- * See #astro_jupiter_moons_t for more information about the representation
- * of the position vectors.
+ * Calculates position vectors for Jupiter's moons
+ * Io, Europa, Ganymede, and Callisto, at the given date and time.
+ * The position vectors are jovicentric, meaning their coordinate origin
+ * is the center of Jupiter. Their orientation is the Earth's equatorial
+ * system at the J2000 epoch, called `EQJ`. The vector components
+ * are expressed in astronomical units (AU).
+ *
+ * To convert to heliocentric vectors, call #Astronomy_HelioVector
+ * with `BODY_JUPITER` to get Jupiter's heliocentric position, then
+ * add the jovicentric vectors. Likewise, you can call #Astronomy_GeoVector
+ * with `BODY_JUPITER` to convert to geocentric vectors.
  *
  * @param time  The date and time for which to calculate the position vectors.
  * @return Position vectors of Jupiter's largest 4 moons, as described above.
@@ -2343,13 +2470,10 @@ $ASTRO_JUPITER_MOONS();
 astro_jupiter_moons_t Astronomy_JupiterMoons(astro_time_t time)
 {
     astro_jupiter_moons_t jm;
+    int mindex;
 
-    (void)JupiterMoonModel;
-
-    jm.moon[0] = VecError(ASTRO_NOT_INITIALIZED, time);
-    jm.moon[1] = VecError(ASTRO_NOT_INITIALIZED, time);
-    jm.moon[2] = VecError(ASTRO_NOT_INITIALIZED, time);
-    jm.moon[3] = VecError(ASTRO_NOT_INITIALIZED, time);
+    for (mindex = 0; mindex < NUM_JUPITER_MOONS; ++mindex)
+        jm.moon[mindex] = CalcJupiterMoon(time, mindex);
 
     return jm;
 }
@@ -5884,6 +6008,45 @@ astro_vector_t Astronomy_RotateVector(astro_rotation_t rotation, astro_vector_t 
     target.x = rotation.rot[0][0]*vector.x + rotation.rot[1][0]*vector.y + rotation.rot[2][0]*vector.z;
     target.y = rotation.rot[0][1]*vector.x + rotation.rot[1][1]*vector.y + rotation.rot[2][1]*vector.z;
     target.z = rotation.rot[0][2]*vector.x + rotation.rot[1][2]*vector.y + rotation.rot[2][2]*vector.z;
+
+    return target;
+}
+
+
+/**
+ * @brief
+ *      Applies a rotation to a state vector, yielding a rotated vector.
+ *
+ * This function transforms a state vector in one orientation to a vector
+ * in another orientation.
+ *
+ * @param rotation
+ *      A rotation matrix that specifies how the orientation of the vector is to be changed.
+ *
+ * @param state
+ *      The state vector whose orientation is to be changed.
+ *      Both the position and velocity components are transformed.
+ *
+ * @return
+ *      A state vector in the orientation specified by `rotation`.
+ */
+astro_state_vector_t Astronomy_RotateState(astro_rotation_t rotation, astro_state_vector_t state)
+{
+    astro_state_vector_t target;
+
+    if (rotation.status != ASTRO_SUCCESS || state.status != ASTRO_SUCCESS)
+        return StateVecError(ASTRO_INVALID_PARAMETER, state.t);
+
+    target.status = ASTRO_SUCCESS;
+    target.t = state.t;
+
+    target.x = rotation.rot[0][0]*state.x + rotation.rot[1][0]*state.y + rotation.rot[2][0]*state.z;
+    target.y = rotation.rot[0][1]*state.x + rotation.rot[1][1]*state.y + rotation.rot[2][1]*state.z;
+    target.z = rotation.rot[0][2]*state.x + rotation.rot[1][2]*state.y + rotation.rot[2][2]*state.z;
+
+    target.vx = rotation.rot[0][0]*state.vx + rotation.rot[1][0]*state.vy + rotation.rot[2][0]*state.vz;
+    target.vy = rotation.rot[0][1]*state.vx + rotation.rot[1][1]*state.vy + rotation.rot[2][1]*state.vz;
+    target.vz = rotation.rot[0][2]*state.vx + rotation.rot[1][2]*state.vy + rotation.rot[2][2]*state.vz;
 
     return target;
 }

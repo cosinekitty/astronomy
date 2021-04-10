@@ -441,10 +441,10 @@
         a= T1    !  -819.727638594856D0
         b= T2    !   812.721806990360D0
         x=(T/365.25D0-0.5D0*(b+a))/(0.5D0*(b-a))
-	if(abs(x).gt.1.d0) then
-	  write(*,*)'date',T,' out of interval of validity'
-	  return
-	end if
+        if(abs(x).gt.1.d0) then
+          write(*,*)'date',T,' out of interval of validity'
+	        return
+	      end if
         TN(0)=1.D0
         TN(1)=x
         do it=2,8
@@ -463,42 +463,43 @@
         kv=1
         s=0.d0
         do k=1,nbterm(ks,kv)
-         arg=phasc(k,ks,kv)+freqc(k,ks,kv)*T
-         s=s+ampl(k,ks,kv)*cos(arg)
-	end do
-	elem(1)=s
+          arg=phasc(k,ks,kv)+freqc(k,ks,kv)*T
+          s=s+ampl(k,ks,kv)*cos(arg)
+        end do
+        elem(1)=s
 
         kv=2
-         s=al(1,ks) +al(2,ks)*T
+        s = al(1,ks) + al(2,ks)*T
         do k=1,nbterm(ks,kv)
-         arg=phasc(k,ks,kv)+freqc(k,ks,kv)*T
-         s=s+ampl(k,ks,kv)*sin(arg)
-	end do
-	s=mod(s+val(1),pi2)
-	if(s.lt.0) s=s+pi2
-	elem(2)=s
+          arg=phasc(k,ks,kv)+freqc(k,ks,kv)*T
+          s=s+ampl(k,ks,kv)*sin(arg)
+      	end do
+        s=mod(s+val(1),pi2)
+        if(s.lt.0) s=s+pi2
+        elem(2)=s
 
         kv=3
-         s1=0.d0
-         s2=0.d0
+        s1=0.d0
+        s2=0.d0
         do k=1,nbterm(ks,kv)
-         arg=phasc(k,ks,kv)+freqc(k,ks,kv)*T
-         s1=s1+ampl(k,ks,kv)*cos(arg)
-         s2=s2+ampl(k,ks,kv)*sin(arg)
-	end do
-	elem(3)=s1+val(2)
-	elem(4)=s2+val(3)
+          arg=phasc(k,ks,kv)+freqc(k,ks,kv)*T
+          s1=s1+ampl(k,ks,kv)*cos(arg)
+          s2=s2+ampl(k,ks,kv)*sin(arg)
+	      end do
+	      elem(3)=s1+val(2)
+	      elem(4)=s2+val(3)
 
         kv=4
-         s1=0.d0
-         s2=0.d0
+        s1=0.d0
+        s2=0.d0
         do k=1,nbterm(ks,kv)
          arg=phasc(k,ks,kv)+freqc(k,ks,kv)*T
          s1=s1+ampl(k,ks,kv)*cos(arg)
          s2=s2+ampl(k,ks,kv)*sin(arg)
-	end do
-	elem(5)=s1+val(4)
-	elem(6)=s2+val(5)
+	      end do
+
+	      elem(5)=s1+val(4)
+	      elem(6)=s2+val(5)
 *
 *  computing cartesian coordinates from elements
 *
@@ -571,7 +572,7 @@
 *  OMEGA  is the longitude of ascending node on Fxy plane
 *  omega  is the argument of pericentre such as
 *         OMEGA + omega represents the longitude of pericentre
-*     and  L (= OMEGA+omega+M) représents the mean longitude
+*     and  L (= OMEGA+omega+M) reprï¿½sents the mean longitude
 *
       IMPLICIT DOUBLE PRECISION(A-H,O-Z)
       PARAMETER(PI2=3.141592653589793D0*2.d0)

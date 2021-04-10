@@ -218,6 +218,22 @@ typedef struct
 astro_vector_t;
 
 /**
+ * @brief A state vector that contains a position (AU) and velocity (AU/day).
+ */
+typedef struct
+{
+    astro_status_t status;  /**< `ASTRO_SUCCESS` if this struct is valid; otherwise an error code. */
+    double x;               /**< The Cartesian position x-coordinate of the vector in AU. */
+    double y;               /**< The Cartesian position y-coordinate of the vector in AU. */
+    double z;               /**< The Cartesian position z-coordinate of the vector in AU. */
+    double vx;              /**< The Cartesian velocity x-coordinate of the vector in AU/day. */
+    double vy;              /**< The Cartesian velocity y-coordinate of the vector in AU/day. */
+    double vz;              /**< The Cartesian velocity z-coordinate of the vector in AU/day. */
+    astro_time_t t;         /**< The date and time at which this state vector is valid. */
+}
+astro_state_vector_t;
+
+/**
  * @brief Spherical coordinates: latitude, longitude, distance.
  */
 typedef struct
@@ -865,18 +881,19 @@ astro_time_format_t;
  * @brief Holds the positions of Jupiter's major 4 moons.
  *
  * The #Astronomy_JupiterMoons function returns this struct
- * to report position vectors for Jupiter's largest 4 moons
+ * to report position and velocity vectors for Jupiter's largest 4 moons
  * Io, Europa, Ganymede, and Callisto. Each vector is relative
  * to the center of Jupiter and is oriented in the EQJ system
  * (that is, using Earth's equator at the J2000 epoch.)
- * The vector components are expressed in astronomical units (AU).
+ * The positions are expressed in astronomical units (AU),
+ * and the velocities in AU/day.
  *
  * The following integer constants may be useful for indexing
  * into the `moon` array: #JM_IO, #JM_EUROPA, #JM_GANYMEDE, #JM_CALLISTO.
  */
 typedef struct
 {
-    astro_vector_t moon[NUM_JUPITER_MOONS];     /**< Jovicentric coordinates of each moon, as described above. */
+    astro_state_vector_t moon[NUM_JUPITER_MOONS];     /**< Jovicentric position and velocity of each moon, as described above. */
 }
 astro_jupiter_moons_t;
 
@@ -987,6 +1004,7 @@ astro_equatorial_t Astronomy_EquatorFromVector(astro_vector_t vector);
 astro_vector_t Astronomy_VectorFromHorizon(astro_spherical_t sphere, astro_time_t time, astro_refraction_t refraction);
 astro_spherical_t Astronomy_HorizonFromVector(astro_vector_t vector, astro_refraction_t refraction);
 astro_vector_t Astronomy_RotateVector(astro_rotation_t rotation, astro_vector_t vector);
+astro_state_vector_t Astronomy_RotateState(astro_rotation_t rotation, astro_state_vector_t state);
 
 astro_rotation_t Astronomy_Rotation_EQD_EQJ(astro_time_t time);
 astro_rotation_t Astronomy_Rotation_EQD_ECL(astro_time_t time);
