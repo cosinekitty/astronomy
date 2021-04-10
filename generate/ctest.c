@@ -90,6 +90,7 @@ static int LocalSolarEclipseTest2(void);
 static int Transit(void);
 static int DistancePlot(astro_body_t body, double ut1, double ut2, const char *filename);
 static int GeoidTest(void);
+static int JupiterMoonsTest(void);
 
 typedef int (* unit_test_func_t) (void);
 
@@ -108,6 +109,7 @@ static unit_test_t UnitTests[] =
     {"elongation",              ElongationTest},
     {"geoid",                   GeoidTest},
     {"global_solar_eclipse",    GlobalSolarEclipseTest},
+    {"jupiter_moons",           JupiterMoonsTest},
     {"local_solar_eclipse",     LocalSolarEclipseTest},
     {"lunar_eclipse",           LunarEclipseTest},
     {"lunar_eclipse_78",        LunarEclipseIssue78},
@@ -3580,6 +3582,71 @@ static int GeoidTest(void)
     error = 0;
 fail:
     return error;
+}
+
+/*-----------------------------------------------------------------------------------------------------------*/
+
+static astro_time_t AstroTerrestrialTime(double tt)
+{
+    /* Iterate to solve to find the correct ut for a given tt, and create an astro_time_t for that time. */
+    astro_time_t time = Astronomy_TimeFromDays(tt);
+    for(;;)
+    {
+        double err = tt - time.tt;
+        if (fabs(err) < 1.0e-12)
+            return time;
+        time = Astronomy_AddDays(time, err);
+    }
+}
+
+
+static int JupiterMoons_CompareStellarium(void)
+{
+    int error;
+    int lnum;
+    FILE *infile = NULL;
+    char line[200];
+    const char *inFileName = "jupiter_moons/horizons/stellarium.txt";
+    double prev_tt, tt, pos[3], vel[3];
+    int moon, nscanned;
+    astro_time_t time;
+    astro_jupiter_moons_t jm;
+
+    infile = fopen(inFileName, "rt");
+    if (infile == NULL)
+        FAIL("C JupiterMoons_CompareStellarium: Cannot open input file: %s\n", inFileName);
+
+    lnum = 0;
+    prev_tt = 1.0e+99;
+    while (fgets(line, sizeof(line), infile))
+    {
+        ++lnum;
+        if (lnum == 1) continue;    /* ignore header line */
+        nscanned = sscanf(line, "%lf %d %lf %lf %lf %lf %lf %lf", &tt, &moon, &pos[0], &pos[1], &pos[2], &vel[0], &vel[1], &vel[2]);
+        if (nscanned != 8)
+            FAIL("JupiterMoons_CompareStellarium(%s line %d): error scanning data\n", inFileName, lnum);
+        if (tt != prev_tt)
+        {
+            /* Calculate all 4 moons for this moment in time. */
+            prev_tt = tt;
+            time = AstroTerrestrialTime(tt);
+            jm = Astronomy_JupiterMoons(time);
+            (void)jm;
+        }
+    }
+
+    DEBUG("C JupiterMoons_Stellarium: PASS\n");
+    error = 0;
+fail:
+    if (infile != NULL) fclose(infile);
+    return error;
+}
+
+static int JupiterMoonsTest(void)
+{
+    if (JupiterMoons_CompareStellarium()) return 1;
+    printf("C JupiterMoons: PASS\n");
+    return 0;
 }
 
 /*-----------------------------------------------------------------------------------------------------------*/
