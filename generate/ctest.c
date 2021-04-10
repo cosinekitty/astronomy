@@ -3612,8 +3612,8 @@ static int JupiterMoons_CompareStellarium(void)
     int moon, nscanned;
     astro_time_t time;
     astro_jupiter_moons_t jm;
-    const double pos_tolerance = 1.0e-12;
-    const double vel_tolerance = 1.0e-12;
+    const double pos_tolerance = 0.0;
+    const double vel_tolerance = 4.0e-18;
 
     memset(&jm, 0, sizeof(jm));
 
