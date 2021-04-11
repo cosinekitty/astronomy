@@ -1855,16 +1855,59 @@ fail:
 
 /*------------------------------------------------------------------------------------------------*/
 
+static void JupiterMoonAnalyze(const char *moon_name, const char *var_name, const vsop_series_t *var)
+{
+    const double PI2 = (2.0 * 3.14159265358979323846);
+    double min_freq = +1.0e+99;
+    double max_freq = -1.0e+99;
+    int tindex;
+
+    /* What are the highest and lowest frequencies by moon and var? */
+    /* Convert each from radians/day into time periods: days/cycle. */
+
+    for (tindex = 0; tindex < var->nterms_calc; ++tindex)
+    {
+        double freq = fabs(var->term[tindex].frequency);
+
+        if (freq != 0.0)
+        {
+            if (freq < min_freq)
+                min_freq = freq;
+
+            if (freq > max_freq)
+                max_freq = freq;
+        }
+    }
+
+    DEBUG("JupiterMoonAnalyze: %-8s %-4s : min period = %lf days, max_period = %lf days.\n", 
+        moon_name,
+        var_name,
+        PI2 / max_freq, 
+        PI2 / min_freq);
+}
+
+
 static int OptimizeJupiterMoons(const char *inFileName, const char *outFileName)
 {
-    int error;
+    int error, mindex;
     jupiter_moon_model_t *model;
+    const char *moon_name[] = {"Io", "Europa", "Ganymede", "Callisto"};
 
     model = calloc(1, sizeof(jupiter_moon_model_t));
     if (model == NULL)
         FAIL("OptimizeJupiterMoons: memory allocation failure.\n");
 
     CHECK(LoadJupiterMoonModel(inFileName, model));
+
+    for (mindex = 0; mindex < NUM_JUPITER_MOONS; ++mindex)
+    {
+        JupiterMoonAnalyze(moon_name[mindex], "a",    &model->moon[mindex].a);
+        JupiterMoonAnalyze(moon_name[mindex], "l",    &model->moon[mindex].l);
+        JupiterMoonAnalyze(moon_name[mindex], "z",    &model->moon[mindex].z);
+        JupiterMoonAnalyze(moon_name[mindex], "zeta", &model->moon[mindex].zeta);
+        DEBUG("\n");
+    }
+
     CHECK(SaveJupiterMoonModel(outFileName, model));
 
     error = 0;
