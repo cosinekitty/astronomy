@@ -3613,7 +3613,7 @@ static int JupiterMoons_CompareStellarium(void)
     astro_time_t time;
     astro_jupiter_moons_t jm;
     const double pos_tolerance = 0.0;
-    const double vel_tolerance = 4.0e-18;
+    const double vel_tolerance = 5.0e-18;
 
     memset(&jm, 0, sizeof(jm));
 
@@ -3698,8 +3698,8 @@ static int JupiterMoons_CheckJpl(int mindex, double tt, double pos[3], double ve
     astro_jupiter_moons_t jm;
     astro_time_t time;
     double dx, dy, dz, mag, diff;
-    const double pos_tolerance = 2.3e-4;
-    const double vel_tolerance = 2.3e-4;
+    const double pos_tolerance = 8.2e-4;
+    const double vel_tolerance = 8.1e-4;
 
     time = AstroTerrestrialTime(tt);
 
@@ -3738,12 +3738,12 @@ static int JupiterMoons_JplHorizons(void)
     FILE *infile = NULL;
     char filename[100];
     char line[100];
-    const int expected_count = 101;
+    const int expected_count = 5001;
     int count;
 
     for (mindex = 0; mindex < NUM_JUPITER_MOONS; ++mindex)
     {
-        snprintf(filename, sizeof(filename), "jupiter_moons/horizons/jm_geometric_%d.txt", mindex);
+        snprintf(filename, sizeof(filename), "jupiter_moons/horizons/jm%d.txt", mindex);
         infile = fopen(filename, "rt");
         if (infile == NULL)
             FAIL("JupiterMoons_JplHorizons: Cannot open input file: %s\n", filename);
@@ -3815,7 +3815,7 @@ static int JupiterMoons_JplHorizons(void)
         infile = NULL;
 
         if (count != expected_count)
-            FAIL("JupiterMoons_JplHorizons(%s): expected %d test cases, found %d", filename, expected_count, count);
+            FAIL("JupiterMoons_JplHorizons(%s): expected %d test cases, found %d\n", filename, expected_count, count);
     }
 
     DEBUG("C JupiterMoons_JplHorizons: PASS\n");
