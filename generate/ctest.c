@@ -3599,6 +3599,7 @@ static astro_time_t AstroTerrestrialTime(double tt)
     }
 }
 
+#ifdef COMPARE_STELLARIUM
 
 static int JupiterMoons_CompareStellarium(void)
 {
@@ -3670,6 +3671,8 @@ fail:
     if (infile != NULL) fclose(infile);
     return error;
 }
+
+#endif /* COMPARE_STELLARIUM */
 
 
 static void TrimWhiteSpace(char *line)
@@ -3828,7 +3831,9 @@ fail:
 
 static int JupiterMoonsTest(void)
 {
+#ifdef COMPARE_STELLARIUM
     if (JupiterMoons_CompareStellarium()) return 1;
+#endif
     if (JupiterMoons_JplHorizons()) return 1;
     printf("C JupiterMoons: PASS\n");
     return 0;

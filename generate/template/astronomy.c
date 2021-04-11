@@ -2339,7 +2339,7 @@ static astro_vector_t CalcPluto(astro_time_t time)
 
 $ASTRO_JUPITER_MOONS();
 
-static astro_state_vector_t JupiterMoon_elem2pv(astro_time_t time, double mu, double elem[6])
+static astro_state_vector_t JupiterMoon_elem2pv(astro_time_t time, double mu, const double elem[6])
 {
     /* Translation of FORTRAN subroutine ELEM2PV from: */
     /* https://ftp.imcce.fr/pub/ephem/satel/galilean/L1/L1.2/ */
