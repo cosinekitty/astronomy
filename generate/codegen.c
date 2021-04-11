@@ -28,7 +28,6 @@
 #include <stdarg.h>
 #include "novas.h"
 #include "codegen.h"
-#include "vsop.h"
 #include "top2013.h"
 #include "ephfile.h"
 
@@ -1380,38 +1379,6 @@ fail:
 
 /*-------------------------- begin Jupiter moons -----------------------------*/
 
-#define NUM_JUPITER_MOONS     4
-#define MAX_JM_SERIES        50
-#define NUM_JM_VARS           4
-#define MAX_JUPITER_TERMS   (NUM_JUPITER_MOONS * NUM_JM_VARS * MAX_JM_SERIES)
-
-typedef struct
-{
-    double          mu;          /* mu = G(M+m), where M = Jupiter mass, m = moon mass. */
-    double          al[2];       /* mean longitude coefficients */
-    vsop_series_t   a;
-    vsop_series_t   l;
-    vsop_series_t   z;
-    vsop_series_t   zeta;
-}
-jupiter_moon_t;
-
-
-typedef struct
-{
-    /* angles that rotate Jupiter equatorial system to EQJ */
-    double          incl;
-    double          psi;
-
-    /* a rotation matrix calculated from incl and psi, for the convenience of the code generators. */
-    double          rot[3][3];
-
-    jupiter_moon_t  moon[NUM_JUPITER_MOONS];
-    vsop_term_t     buffer[MAX_JUPITER_TERMS];
-}
-jupiter_moon_model_t;
-
-
 static int ReadFixLine(char *line, size_t size, FILE *infile)
 {
     if (!fgets(line, size, infile))
@@ -1433,7 +1400,7 @@ static int ReadFixLine(char *line, size_t size, FILE *infile)
     do{if ((nscanned) != (required)) FAIL("LoadJupiterMoonModel(%s line %d): expected %d tokens, found %d\n", filename, lnum, required, nscanned);}while(0)
 
 
-static int LoadJupiterMoonModel(const char *filename, jupiter_moon_model_t *model)
+int LoadJupiterMoonModel(const char *filename, jupiter_moon_model_t *model)
 {
     int error;
     FILE *infile;
@@ -1572,6 +1539,65 @@ fail:
 }
 
 
+static int JupiterMoonWriteVar(FILE *outfile, const vsop_series_t *series, const double *al)
+{
+    int tindex;
+
+    fprintf(outfile, "%d\n", series->nterms_calc);
+
+    if (al != NULL)
+        fprintf(outfile, "%23.16le %23.16le\n", al[0], al[1]);
+
+    for (tindex = 0; tindex < series->nterms_calc; ++tindex)
+    {
+        fprintf(outfile, "%3d %23.16lf %20.13le %20.13le\n",
+            1 + tindex,
+            series->term[tindex].amplitude,
+            series->term[tindex].phase,
+            series->term[tindex].frequency);
+    }
+
+    return 0;
+}
+
+
+
+int SaveJupiterMoonModel(const char *filename, const jupiter_moon_model_t *model)
+{
+    int error, mindex;
+    FILE *outfile;
+
+    outfile = fopen(filename, "wt");
+    if (outfile == NULL)
+        FAIL("SaveJupiterMoonModel: cannot open output file: %s\n", filename);
+
+    /* As a hack, we emit 18 blank lines, because we ignore those from the original L1.2 file. */
+    for (mindex = 0; mindex < 18; ++mindex)
+        fprintf(outfile, "\n");
+
+    /* Write G(M+m) constants */
+    fprintf(outfile, "%23.16le %23.16le %23.16le %23.16le\n", model->moon[0].mu, model->moon[1].mu, model->moon[2].mu, model->moon[3].mu);
+
+    /* Write Jupiter equatorial orientation angles. */
+    fprintf(outfile, "%23.16le %23.16le\n", model->psi, model->incl);
+
+    for (mindex = 0; mindex < NUM_JUPITER_MOONS; ++mindex)
+    {
+        CHECK(JupiterMoonWriteVar(outfile, &model->moon[mindex].a,    NULL));
+        CHECK(JupiterMoonWriteVar(outfile, &model->moon[mindex].l,    model->moon[mindex].al));
+        CHECK(JupiterMoonWriteVar(outfile, &model->moon[mindex].z,    NULL));
+        CHECK(JupiterMoonWriteVar(outfile, &model->moon[mindex].zeta, NULL));
+    }
+
+    fprintf(outfile, "\n");     /* final blank line needed for loader to know it has all 4 moons. */
+
+    error = 0;
+fail:
+    if (outfile != NULL) fclose(outfile);
+    return error;
+}
+
+
 static int JupiterMoons_C(cg_context_t *context, const jupiter_moon_model_t *model)
 {
     int mindex, var, i;
@@ -1658,7 +1684,7 @@ static int JupiterMoons(cg_context_t *context)
     if (model == NULL)
         FAIL("JupiterMoons: memory allocation failure!\n");
 
-    CHECK(LoadJupiterMoonModel("jupiter_moons/fortran/BisL1.2.dat", model));
+    CHECK(LoadJupiterMoonModel("output/jupiter_moons.txt", model));
 
     switch (context->language)
     {

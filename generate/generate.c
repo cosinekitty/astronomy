@@ -79,6 +79,7 @@ static int PrintUsage(void);
 static int GenerateVsopPlanets(void);
 static int TopCalc(const char *name, const char *date);
 static int GenerateApsisTestData(void);
+static int OptimizeJupiterMoons(const char *inFileName, const char *outFileName);
 static int GenerateSource(void);
 static int TestVsopModel(vsop_model_t *model, int body, double threshold, double *max_arcmin, int *trunc_terms);
 static int SaveVsopFile(const vsop_model_t *model);
@@ -143,6 +144,9 @@ int main(int argc, const char *argv[])
 
     if (argc == 2 && !strcmp(argv[1], "apsis"))
         return GenerateApsisTestData();
+
+    if (argc == 2 && !strcmp(argv[1], "jmopt"))
+        return OptimizeJupiterMoons("jupiter_moons/fortran/BisL1.2.dat", "output/jupiter_moons.txt");
 
     if (argc == 2 && !strcmp(argv[1], "source"))
         return GenerateSource();
@@ -1848,4 +1852,26 @@ static int ParseDate(const char *text, double *tt)
 fail:
     return error;
 }
+
+/*------------------------------------------------------------------------------------------------*/
+
+static int OptimizeJupiterMoons(const char *inFileName, const char *outFileName)
+{
+    int error;
+    jupiter_moon_model_t *model;
+
+    model = calloc(1, sizeof(jupiter_moon_model_t));
+    if (model == NULL)
+        FAIL("OptimizeJupiterMoons: memory allocation failure.\n");
+
+    CHECK(LoadJupiterMoonModel(inFileName, model));
+    CHECK(SaveJupiterMoonModel(outFileName, model));
+
+    error = 0;
+fail:
+    free(model);
+    return error;
+}
+
+/*------------------------------------------------------------------------------------------------*/
 

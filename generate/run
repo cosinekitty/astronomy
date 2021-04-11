@@ -108,6 +108,11 @@ if [[ "${FASTMODE}" == "false" ]]; then
 fi
 
 echo ""
+echo "Optimizing Jupiter Moon models."
+rm -f output/jupiter_moons.txt
+./generate jmopt || Fail "Error optimizing Jupiter Moon models."
+
+echo ""
 echo "Generating apsis test data."
 rm -f apsides/apsis_*.txt
 ./generate apsis || Fail "Could not generate apsis test data."
