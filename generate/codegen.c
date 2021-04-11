@@ -1603,7 +1603,7 @@ static int JupiterMoons_C(cg_context_t *context, const jupiter_moon_model_t *mod
             for (i = 0; i < nterms; ++i)
             {
                 const vsop_term_t *term = &series[var].term[i];
-                fprintf(context->outfile, "    { %23.16le, %23.16le, %23.16le }%s\n",
+                fprintf(context->outfile, "    { %19.16lf, %23.16le, %23.16le }%s\n",
                     term->amplitude,
                     term->phase,
                     term->frequency,
@@ -1613,7 +1613,7 @@ static int JupiterMoons_C(cg_context_t *context, const jupiter_moon_model_t *mod
         }
     }
 
-    fprintf(context->outfile, "static jupiter_moon_t JupiterMoonModel[%d] =\n", NUM_JUPITER_MOONS);
+    fprintf(context->outfile, "static const jupiter_moon_t JupiterMoonModel[] =\n");
     fprintf(context->outfile, "{\n");
     for (mindex = 0; mindex < NUM_JUPITER_MOONS; ++mindex)
     {
@@ -1621,10 +1621,10 @@ static int JupiterMoons_C(cg_context_t *context, const jupiter_moon_model_t *mod
         series[1] = model->moon[mindex].l;
         series[2] = model->moon[mindex].z;
         series[3] = model->moon[mindex].zeta;
-        fprintf(context->outfile, "    { %0.16le, {%0.16le, %0.16le}", model->moon[mindex].mu, model->moon[mindex].al[0], model->moon[mindex].al[1]);
+        fprintf(context->outfile, "    { %23.16le, { %23.16le, %23.16le }", model->moon[mindex].mu, model->moon[mindex].al[0], model->moon[mindex].al[1]);
         for (var = 0; var < NUM_JM_VARS; ++var)
-            fprintf(context->outfile, ", {%d, jm_%s_%s}", series[var].nterms_total, moon_name[mindex], var_name[var]);
-        fprintf(context->outfile, " }%s\n", ((mindex + 1 < NUM_JUPITER_MOONS) ? "," : ""));
+            fprintf(context->outfile, "\n        , { %3d, jm_%s_%-4s }", series[var].nterms_total, moon_name[mindex], var_name[var]);
+        fprintf(context->outfile, " }%s\n", ((mindex + 1 < NUM_JUPITER_MOONS) ? ",\n" : ""));
     }
     fprintf(context->outfile, "}");
     return 0;

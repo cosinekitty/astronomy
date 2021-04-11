@@ -86,7 +86,7 @@ def Compare(ref, jpl):
         mag = math.sqrt(a.pos[0]**2 + a.pos[1]**2 + a.pos[2]**2)
         n += 1
         sum += diff / mag
-    
+
     print('n={}, fit={:0.3e}'.format(n, sum / n))
 
 
