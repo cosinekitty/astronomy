@@ -1914,22 +1914,9 @@ function vector2radec(pos, time) {
 }
 function spin(angle, pos) {
     const angr = angle * DEG2RAD;
-    const cosang = Math.cos(angr);
-    const sinang = Math.sin(angr);
-    const xx = cosang;
-    const yx = sinang;
-    const zx = 0;
-    const xy = -sinang;
-    const yy = cosang;
-    const zy = 0;
-    const xz = 0;
-    const yz = 0;
-    const zz = 1;
-    return [
-        xx * pos[0] + yx * pos[1] + zx * pos[2],
-        xy * pos[0] + yy * pos[1] + zy * pos[2],
-        xz * pos[0] + yz * pos[1] + zz * pos[2]
-    ];
+    const c = Math.cos(angr);
+    const s = Math.sin(angr);
+    return [c * pos[0] + s * pos[1], c * pos[1] - s * pos[0], pos[2]];
 }
 /**
  * @brief Converts equatorial coordinates to horizontal coordinates.
