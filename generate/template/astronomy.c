@@ -5981,8 +5981,7 @@ double Astronomy_InverseRefraction(astro_refraction_t refraction, double bent_al
 }
 
 /**
- * @brief
- *      Applies a rotation to a vector, yielding a rotated vector.
+ * @brief Applies a rotation to a vector, yielding a rotated vector.
  *
  * This function transforms a vector in one orientation to a vector
  * in another orientation.
@@ -6014,14 +6013,13 @@ astro_vector_t Astronomy_RotateVector(astro_rotation_t rotation, astro_vector_t 
 
 
 /**
- * @brief
- *      Applies a rotation to a state vector, yielding a rotated vector.
+ * @brief Applies a rotation to a state vector, yielding a rotated vector.
  *
  * This function transforms a state vector in one orientation to a vector
  * in another orientation.
  *
  * @param rotation
- *      A rotation matrix that specifies how the orientation of the vector is to be changed.
+ *      A rotation matrix that specifies how the orientation of the state vector is to be changed.
  *
  * @param state
  *      The state vector whose orientation is to be changed.

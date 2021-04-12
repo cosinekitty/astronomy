@@ -223,6 +223,29 @@ Returns the length of the vector in astronomical units (AU).
 
 * * *
 
+<a name="StateVector"></a>
+
+## StateVector
+**Kind**: global class  
+**Brief**: A combination of a position vector, a velocity vector, and a time.
+
+Holds the state vector of a body at a given time, including its position,
+velocity, and the time they are valid.  
+**Properties**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| x | <code>number</code> | The position x-coordinate expressed in astronomical units (AU). |
+| y | <code>number</code> | The position y-coordinate expressed in astronomical units (AU). |
+| z | <code>number</code> | The position z-coordinate expressed in astronomical units (AU). |
+| vx | <code>number</code> | The velocity x-coordinate expressed in AU/day. |
+| vy | <code>number</code> | The velocity y-coordinate expressed in AU/day. |
+| vz | <code>number</code> | The velocity z-coordinate expressed in AU/day. |
+| t | [<code>AstroTime</code>](#AstroTime) | The time at which the vector is valid. |
+
+
+* * *
+
 <a name="Spherical"></a>
 
 ## Spherical
@@ -1679,6 +1702,24 @@ in another orientation.
 | --- | --- | --- |
 | rotation | [<code>RotationMatrix</code>](#RotationMatrix) | A rotation matrix that specifies how the orientation of the vector is to be changed. |
 | vector | [<code>Vector</code>](#Vector) | The vector whose orientation is to be changed. |
+
+
+* * *
+
+<a name="RotateState"></a>
+
+## RotateState(rotation, state) ⇒ [<code>StateVector</code>](#StateVector)
+**Kind**: global function  
+**Returns**: [<code>StateVector</code>](#StateVector) - A state vector in the orientation specified by `rotation`.  
+**Brief**: Applies a rotation to a state vector, yielding a rotated vector.
+
+This function transforms a state vector in one orientation to a vector
+in another orientation.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| rotation | [<code>RotationMatrix</code>](#RotationMatrix) | A rotation matrix that specifies how the orientation of the state vector is to be changed. |
+| state | [<code>StateVector</code>](#StateVector) | The state vector whose orientation is to be changed.      Both the position and velocity components are transformed. |
 
 
 * * *

@@ -3642,7 +3642,7 @@ static int JupiterMoons_CheckJpl(int mindex, double tt, double pos[3], double ve
     mag = V(sqrt(pos[0]*pos[0] + pos[1]*pos[1] + pos[2]*pos[2]));
     diff = V(sqrt(dx*dx + dy*dy + dz*dz) / mag);
     if (diff > pos_tolerance)
-        FAIL("JupiterMoons_CheckJpl(mindex=%d, tt=%0.1lf): excessive position error %le\n", mindex, tt, diff);
+        FAIL("C JupiterMoons_CheckJpl(mindex=%d, tt=%0.1lf): excessive position error %le\n", mindex, tt, diff);
 
     dx = V(vel[0] - jm.moon[mindex].vx);
     dy = V(vel[1] - jm.moon[mindex].vy);
@@ -3650,7 +3650,7 @@ static int JupiterMoons_CheckJpl(int mindex, double tt, double pos[3], double ve
     mag = V(sqrt(vel[0]*vel[0] + vel[1]*vel[1] + vel[2]*vel[2]));
     diff = V(sqrt(dx*dx + dy*dy + dz*dz) / mag);
     if (diff > vel_tolerance)
-        FAIL("JupiterMoons_CheckJpl(mindex=%d, tt=%0.1lf): excessive velocity error %le\n", mindex, tt, diff);
+        FAIL("C JupiterMoons_CheckJpl(mindex=%d, tt=%0.1lf): excessive velocity error %le\n", mindex, tt, diff);
 
     error = 0;
 fail:
@@ -3658,7 +3658,7 @@ fail:
 }
 
 
-static int JupiterMoons_JplHorizons(void)
+static int JupiterMoonsTest(void)
 {
     int error, mindex, check_mindex, lnum, found, part;
     double tt = NAN, pos[3] = {NAN, NAN, NAN}, vel[3] = {NAN, NAN, NAN};
@@ -3673,9 +3673,9 @@ static int JupiterMoons_JplHorizons(void)
         snprintf(filename, sizeof(filename), "jupiter_moons/horizons/jm%d.txt", mindex);
         infile = fopen(filename, "rt");
         if (infile == NULL)
-            FAIL("JupiterMoons_JplHorizons: Cannot open input file: %s\n", filename);
+            FAIL("C JupiterMoonsTest: Cannot open input file: %s\n", filename);
 
-        DEBUG("JupiterMoons_JplHorizons: Comparing against %s\n", filename);
+        DEBUG("C JupiterMoonsTest: Comparing against %s\n", filename);
 
         lnum = 0;
         found = 0;
@@ -3695,10 +3695,10 @@ static int JupiterMoons_JplHorizons(void)
                 else if (StringStartsWith(line, "Revised:"))
                 {
                     if (strlen(line) != 79)
-                        FAIL("JupiterMoons_JplHorizons(%s line %d): unexpected line length.\n", filename, lnum);
+                        FAIL("C JupiterMoonsTest(%s line %d): unexpected line length.\n", filename, lnum);
                     check_mindex = atoi(&line[76]) - 501;
                     if (mindex != check_mindex)
-                        FAIL("JupiterMoons_JplHorizons(%s line %d): moon index does not match: check=%d, mindex=%d.\n", filename, lnum, check_mindex, mindex);
+                        FAIL("C JupiterMoonsTest(%s line %d): moon index does not match: check=%d, mindex=%d.\n", filename, lnum, check_mindex, mindex);
                 }
             }
             else if (!strcmp(line, "$$EOE"))
@@ -3712,27 +3712,27 @@ static int JupiterMoons_JplHorizons(void)
                     case 0:
                         /* 2446545.000000000 = A.D. 1986-Apr-24 12:00:00.0000 TDB */
                         if (1 != sscanf(line, "%lf", &tt))
-                            FAIL("JupiterMoons_JplHorizons(%s line %d): failed to read time stamp.\n", filename, lnum);
+                            FAIL("C JupiterMoonsTest(%s line %d): failed to read time stamp.\n", filename, lnum);
                         tt -= 2451545.0;    /* convert JD to J2000 TT */
                         break;
 
                     case 1:
                         /* X = 1.134408131605554E-03 Y =-2.590904586750408E-03 Z =-7.490427225904720E-05 */
                         if (3 != sscanf(line, " X =%lf Y =%lf Z =%lf", &pos[0], &pos[1], &pos[2]))
-                            FAIL("JupiterMoons_JplHorizons(%s line %d): cannot parse position vector.\n", filename, lnum);
+                            FAIL("C JupiterMoonsTest(%s line %d): cannot parse position vector.\n", filename, lnum);
                         break;
 
                     case 2:
                         /* VX= 9.148038778472862E-03 VY= 3.973823407182510E-03 VZ= 2.765660368640458E-04 */
                         if (3 != sscanf(line, " VX=%lf VY=%lf VZ=%lf", &vel[0], &vel[1], &vel[2]))
-                            FAIL("JupiterMoons_JplHorizons(%s line %d): cannot parse velocity vector.\n", filename, lnum);
+                            FAIL("C JupiterMoonsTest(%s line %d): cannot parse velocity vector.\n", filename, lnum);
                         if (JupiterMoons_CheckJpl(mindex, tt, pos, vel))
-                            FAIL("JupiterMoons_JplHorizons(%s line %d): FAILED VERIFICATION.\n", filename, lnum);
+                            FAIL("C JupiterMoonsTest(%s line %d): FAILED VERIFICATION.\n", filename, lnum);
                         ++count;
                         break;
 
                     default:
-                        FAIL("JupiterMoons_JplHorizons(%s line %d): unexpected part = %d.\n", filename, lnum, part);
+                        FAIL("C JupiterMoonsTest(%s line %d): unexpected part = %d.\n", filename, lnum, part);
                 }
                 part = (part + 1) % 3;
             }
@@ -3742,22 +3742,14 @@ static int JupiterMoons_JplHorizons(void)
         infile = NULL;
 
         if (count != expected_count)
-            FAIL("JupiterMoons_JplHorizons(%s): expected %d test cases, found %d\n", filename, expected_count, count);
+            FAIL("C JupiterMoonsTest(%s): expected %d test cases, found %d\n", filename, expected_count, count);
     }
 
-    DEBUG("C JupiterMoons_JplHorizons: PASS\n");
+    printf("C JupiterMoonsTest: PASS\n");
     error = 0;
 fail:
     if (infile != NULL) fclose(infile);
     return error;
-}
-
-
-static int JupiterMoonsTest(void)
-{
-    if (JupiterMoons_JplHorizons()) return 1;
-    printf("C JupiterMoons: PASS\n");
-    return 0;
 }
 
 /*-----------------------------------------------------------------------------------------------------------*/

@@ -1015,6 +1015,32 @@ export class Vector {
 }
 
 /**
+ * @brief A combination of a position vector, a velocity vector, and a time.
+ *
+ * Holds the state vector of a body at a given time, including its position,
+ * velocity, and the time they are valid.
+ *
+ * @property {number} x        The position x-coordinate expressed in astronomical units (AU).
+ * @property {number} y        The position y-coordinate expressed in astronomical units (AU).
+ * @property {number} z        The position z-coordinate expressed in astronomical units (AU).
+ * @property {number} vx       The velocity x-coordinate expressed in AU/day.
+ * @property {number} vy       The velocity y-coordinate expressed in AU/day.
+ * @property {number} vz       The velocity z-coordinate expressed in AU/day.
+ * @property {AstroTime} t     The time at which the vector is valid.
+ */
+export class StateVector {
+    constructor(
+        public x: number,
+        public y: number,
+        public z: number,
+        public vx: number,
+        public vy: number,
+        public vz: number,
+        public t: AstroTime)
+        {}
+}
+
+/**
  * @brief Holds spherical coordinates: latitude, longitude, distance.
  *
  * Spherical coordinates represent the location of
@@ -2127,6 +2153,131 @@ function CalcPluto(time: AstroTime): Vector {
 }
 
 // Pluto integrator ends -----------------------------------------------------
+
+// Jupiter Moons begins ------------------------------------------------------
+
+type jm_term_t = [number, number, number];    // amplitude, phase, frequency
+type jm_series_t = jm_term_t[];
+
+interface jupiter_moon_t {
+    mu: number;
+    al: [number, number];
+    a: jm_series_t;
+    l: jm_series_t;
+    z: jm_series_t;
+    zeta: jm_series_t;
+};
+
+$ASTRO_JUPITER_MOONS();
+
+export class JupiterMoonsInfo {
+    constructor(public moon: StateVector[]) {}
+}
+
+function JupiterMoon_elem2pv(
+    time: AstroTime,
+    mu: number,
+    elem: [number, number, number, number, number, number]): StateVector {
+
+    /* Translation of FORTRAN subroutine ELEM2PV from: */
+    /* https://ftp.imcce.fr/pub/ephem/satel/galilean/L1/L1.2/ */
+
+    const A  = elem[0];
+    const AL = elem[1];
+    const K  = elem[2];
+    const H  = elem[3];
+    const Q  = elem[4];
+    const P  = elem[5];
+
+    const AN = Math.sqrt(mu / (A*A*A));
+
+    let CE: number, SE: number, DE: number;
+    let EE = AL + K*Math.sin(AL) - H*Math.cos(AL);
+    do {
+        CE = Math.cos(EE);
+        SE = Math.sin(EE);
+        DE = (AL - EE + K*SE - H*CE) / (1.0 - K*CE - H*SE);
+        EE += DE;
+    }
+    while (Math.abs(DE) >= 1.0e-12);
+
+    CE = Math.cos(EE);
+    SE = Math.sin(EE);
+    const DLE = H*CE - K*SE;
+    const RSAM1 = -K*CE - H*SE;
+    const ASR = 1.0/(1.0 + RSAM1);
+    const PHI = Math.sqrt(1.0 - K*K - H*H);
+    const PSI = 1.0/(1.0 + PHI);
+    const X1 = A*(CE - K - PSI*H*DLE);
+    const Y1 = A*(SE - H + PSI*K*DLE);
+    const VX1 = AN*ASR*A*(-SE - PSI*H*RSAM1);
+    const VY1 = AN*ASR*A*(+CE + PSI*K*RSAM1);
+    const F2 = 2.0*Math.sqrt(1.0 - Q*Q - P*P);
+    const P2 = 1.0 - 2.0*P*P;
+    const Q2 = 1.0 - 2.0*Q*Q;
+    const PQ = 2.0*P*Q;
+
+    return new StateVector(
+        X1*P2 + Y1*PQ,
+        X1*PQ + Y1*Q2,
+        (Q*Y1 - X1*P)*F2,
+        VX1*P2 + VY1*PQ,
+        VX1*PQ + VY1*Q2,
+        (Q*VY1 - VX1*P)*F2,
+        time
+    );
+}
+
+function CalcJupiterMoon(time: AstroTime, m: any /*FIXFIXFIX*/): StateVector {
+    // This is a translation of FORTRAN code by Duriez, Lainey, and Vienne:
+    // https://ftp.imcce.fr/pub/ephem/satel/galilean/L1/L1.2/
+
+    //astro_state_vector_t state;
+    const t = time.tt + 18262.5;     /* t = time since 1950-01-01T00:00:00Z */
+
+    /* Calculate 6 orbital elements at the given time t. */
+    const elem: [number, number, number, number, number, number] = [0, m.al[0] + (t * m.al[1]), 0, 0, 0, 0];
+
+    for (let [amplitude, phase, frequency] of m.a)
+        elem[0] += amplitude * Math.cos(phase + (t * frequency));
+
+    for (let [amplitude, phase, frequency] of m.l)
+        elem[1] += amplitude * Math.sin(phase + (t * frequency));
+
+    elem[1] %= PI2;
+    if (elem[1] < 0)
+        elem[1] += PI2;
+
+    for (let [amplitude, phase, frequency] of m.z) {
+        const arg = phase + (t * frequency);
+        elem[2] += amplitude * Math.cos(arg);
+        elem[3] += amplitude * Math.sin(arg);
+    }
+
+    for (let [amplitude, phase, frequency] of m.zeta) {
+        const arg = phase + (t * frequency);
+        elem[4] += amplitude * Math.cos(arg);
+        elem[5] += amplitude * Math.sin(arg);
+    }
+
+    // Convert the oribital elements into position vectors in the Jupiter equatorial system (JUP).
+    const state = JupiterMoon_elem2pv(time, m.mu, elem);
+
+    // Re-orient position and velocity vectors from Jupiter-equatorial (JUP) to Earth-equatorial in J2000 (EQJ).
+    return RotateState(Rotation_JUP_EQJ, state);
+}
+
+export function JupiterMoons(date: FlexibleDateTime): JupiterMoonsInfo {
+    const time = new AstroTime(date);
+    let infolist: StateVector[] = [];
+    for (let moon of JupiterMoonModel) {
+        infolist.push(CalcJupiterMoon(time, moon));
+    }
+    return new JupiterMoonsInfo(infolist);
+}
+
+// Jupiter Moons ends --------------------------------------------------------
+
 
 /**
  * @brief Calculates a vector from the center of the Sun to the given body at the given time.
@@ -4539,6 +4690,39 @@ export function RotateVector(rotation: RotationMatrix, vector: Vector): Vector
 
 
 /**
+ * @brief Applies a rotation to a state vector, yielding a rotated vector.
+ *
+ * This function transforms a state vector in one orientation to a vector
+ * in another orientation.
+ *
+ * @param {RotationMatrix} rotation
+ *      A rotation matrix that specifies how the orientation of the state vector is to be changed.
+ *
+ * @param {StateVector} state
+ *      The state vector whose orientation is to be changed.
+ *      Both the position and velocity components are transformed.
+ *
+ * @return {StateVector}
+ *      A state vector in the orientation specified by `rotation`.
+ */
+export function RotateState(rotation: RotationMatrix, state: StateVector): StateVector
+{
+    return new StateVector(
+        rotation.rot[0][0]*state.x + rotation.rot[1][0]*state.y + rotation.rot[2][0]*state.z,
+        rotation.rot[0][1]*state.x + rotation.rot[1][1]*state.y + rotation.rot[2][1]*state.z,
+        rotation.rot[0][2]*state.x + rotation.rot[1][2]*state.y + rotation.rot[2][2]*state.z,
+
+        rotation.rot[0][0]*state.vx + rotation.rot[1][0]*state.vy + rotation.rot[2][0]*state.vz,
+        rotation.rot[0][1]*state.vx + rotation.rot[1][1]*state.vy + rotation.rot[2][1]*state.vz,
+        rotation.rot[0][2]*state.vx + rotation.rot[1][2]*state.vy + rotation.rot[2][2]*state.vz,
+
+        state.t
+    );
+}
+
+
+
+/**
  * @brief Calculates a rotation matrix from equatorial J2000 (EQJ) to ecliptic J2000 (ECL).
  *
  * This is one of the family of functions that returns a rotation matrix
@@ -4554,9 +4738,9 @@ export function Rotation_EQJ_ECL(): RotationMatrix {
     const c = 0.9174821430670688;    /* cos(ob) */
     const s = 0.3977769691083922;    /* sin(ob) */
     return new RotationMatrix([
-        [ 1,  0,  0],
-        [ 0, +c, -s],
-        [ 0, +s, +c]
+        [1,  0,  0],
+        [0, +c, -s],
+        [0, +s, +c]
     ]);
 }
 

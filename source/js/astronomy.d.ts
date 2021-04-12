@@ -217,6 +217,30 @@ export declare class Vector {
     Length(): number;
 }
 /**
+ * @brief A combination of a position vector, a velocity vector, and a time.
+ *
+ * Holds the state vector of a body at a given time, including its position,
+ * velocity, and the time they are valid.
+ *
+ * @property {number} x        The position x-coordinate expressed in astronomical units (AU).
+ * @property {number} y        The position y-coordinate expressed in astronomical units (AU).
+ * @property {number} z        The position z-coordinate expressed in astronomical units (AU).
+ * @property {number} vx       The velocity x-coordinate expressed in AU/day.
+ * @property {number} vy       The velocity y-coordinate expressed in AU/day.
+ * @property {number} vz       The velocity z-coordinate expressed in AU/day.
+ * @property {AstroTime} t     The time at which the vector is valid.
+ */
+export declare class StateVector {
+    x: number;
+    y: number;
+    z: number;
+    vx: number;
+    vy: number;
+    vz: number;
+    t: AstroTime;
+    constructor(x: number, y: number, z: number, vx: number, vy: number, vz: number, t: AstroTime);
+}
+/**
  * @brief Holds spherical coordinates: latitude, longitude, distance.
  *
  * Spherical coordinates represent the location of
@@ -549,6 +573,11 @@ export declare function Ecliptic(equ: Vector): EclipticCoordinates;
  * @returns {Vector}
  */
 export declare function GeoMoon(date: FlexibleDateTime): Vector;
+export declare class JupiterMoonsInfo {
+    moon: StateVector[];
+    constructor(moon: StateVector[]);
+}
+export declare function JupiterMoons(date: FlexibleDateTime): JupiterMoonsInfo;
 /**
  * @brief Calculates a vector from the center of the Sun to the given body at the given time.
  *
@@ -1577,6 +1606,23 @@ export declare function InverseRefraction(refraction: string, bent_altitude: num
  *      A vector in the orientation specified by `rotation`.
  */
 export declare function RotateVector(rotation: RotationMatrix, vector: Vector): Vector;
+/**
+ * @brief Applies a rotation to a state vector, yielding a rotated vector.
+ *
+ * This function transforms a state vector in one orientation to a vector
+ * in another orientation.
+ *
+ * @param {RotationMatrix} rotation
+ *      A rotation matrix that specifies how the orientation of the state vector is to be changed.
+ *
+ * @param {StateVector} state
+ *      The state vector whose orientation is to be changed.
+ *      Both the position and velocity components are transformed.
+ *
+ * @return {StateVector}
+ *      A state vector in the orientation specified by `rotation`.
+ */
+export declare function RotateState(rotation: RotationMatrix, state: StateVector): StateVector;
 /**
  * @brief Calculates a rotation matrix from equatorial J2000 (EQJ) to ecliptic J2000 (ECL).
  *

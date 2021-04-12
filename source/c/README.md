@@ -1253,7 +1253,7 @@ This function transforms a state vector in one orientation to a vector in anothe
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| [`astro_rotation_t`](#astro_rotation_t) | `rotation` |  A rotation matrix that specifies how the orientation of the vector is to be changed. | 
+| [`astro_rotation_t`](#astro_rotation_t) | `rotation` |  A rotation matrix that specifies how the orientation of the state vector is to be changed. | 
 | [`astro_state_vector_t`](#astro_state_vector_t) | `state` |  The state vector whose orientation is to be changed. Both the position and velocity components are transformed. | 
 
 
