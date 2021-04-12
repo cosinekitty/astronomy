@@ -878,13 +878,13 @@ astro_time_format_t;
 #define JM_CALLISTO   3
 
 /**
- * @brief Holds the positions of Jupiter's major 4 moons.
+ * @brief Holds the positions and velocities of Jupiter's major 4 moons.
  *
  * The #Astronomy_JupiterMoons function returns this struct
  * to report position and velocity vectors for Jupiter's largest 4 moons
- * Io, Europa, Ganymede, and Callisto. Each vector is relative
- * to the center of Jupiter and is oriented in the EQJ system
- * (that is, using Earth's equator at the J2000 epoch.)
+ * Io, Europa, Ganymede, and Callisto. Each position vector is relative
+ * to the center of Jupiter. Both position and velocity are oriented in
+ * the EQJ system (that is, using Earth's equator at the J2000 epoch.)
  * The positions are expressed in astronomical units (AU),
  * and the velocities in AU/day.
  *

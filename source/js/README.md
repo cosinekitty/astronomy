@@ -359,6 +359,28 @@ and spherical coordinates `(elon, elat)` measured in degrees.
 
 * * *
 
+<a name="JupiterMoonsInfo"></a>
+
+## JupiterMoonsInfo
+**Kind**: global class  
+**Brief**: Holds the positions and velocities of Jupiter's major 4 moons.
+
+The [JupiterMoons](#JupiterMoons) function returns an object of this type
+to report position and velocity vectors for Jupiter's largest 4 moons
+Io, Europa, Ganymede, and Callisto. Each position vector is relative
+to the center of Jupiter. Both position and velocity are oriented in
+the EQJ system (that is, using Earth's equator at the J2000 epoch.)
+The positions are expressed in astronomical units (AU),
+and the velocities in AU/day.  
+**Properties**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| moon | [<code>Array.&lt;StateVector&gt;</code>](#StateVector) | An array of state vectors, one for each of the four major moons      of Jupiter, in the following order: 0=Io, 1=Europa, 2=Ganymede, 3=Callisto. |
+
+
+* * *
+
 <a name="IlluminationInfo"></a>
 
 ## IlluminationInfo
@@ -931,6 +953,32 @@ by Montenbruck and Pfleger.
 | Param | Type | Description |
 | --- | --- | --- |
 | date | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time for which to calculate the Moon's geocentric position. |
+
+
+* * *
+
+<a name="JupiterMoons"></a>
+
+## JupiterMoons(date) ⇒ [<code>JupiterMoonsInfo</code>](#JupiterMoonsInfo)
+**Kind**: global function  
+**Returns**: [<code>JupiterMoonsInfo</code>](#JupiterMoonsInfo) - Position vectors of Jupiter's largest 4 moons, as described above.  
+**Brief**: Calculates jovicentric positions of Jupiter's largest 4 moons.
+
+Calculates position vectors for Jupiter's moons
+Io, Europa, Ganymede, and Callisto, at the given date and time.
+The position vectors are jovicentric, meaning their coordinate origin
+is the center of Jupiter. Their orientation is the Earth's equatorial
+system at the J2000 epoch, called `EQJ`. The vector components
+are expressed in astronomical units (AU).
+
+To convert to heliocentric vectors, call [HelioVector](#HelioVector)
+with `Astronomy.Body.Jupiter` to get Jupiter's heliocentric position, then
+add the jovicentric vectors. Likewise, you can call [GeoVector](#GeoVector)
+to convert to geocentric vectors.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| date | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time for which to calculate the position vectors. |
 
 
 * * *

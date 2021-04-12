@@ -2920,11 +2920,11 @@ Returned by the functions [`Astronomy_Illumination`](#Astronomy_Illumination) an
 <a name="astro_jupiter_moons_t"></a>
 ### `astro_jupiter_moons_t`
 
-**Holds the positions of Jupiter's major 4 moons.** 
+**Holds the positions and velocities of Jupiter's major 4 moons.** 
 
 
 
-The [`Astronomy_JupiterMoons`](#Astronomy_JupiterMoons) function returns this struct to report position and velocity vectors for Jupiter's largest 4 moons Io, Europa, Ganymede, and Callisto. Each vector is relative to the center of Jupiter and is oriented in the EQJ system (that is, using Earth's equator at the J2000 epoch.) The positions are expressed in astronomical units (AU), and the velocities in AU/day.
+The [`Astronomy_JupiterMoons`](#Astronomy_JupiterMoons) function returns this struct to report position and velocity vectors for Jupiter's largest 4 moons Io, Europa, Ganymede, and Callisto. Each position vector is relative to the center of Jupiter. Both position and velocity are oriented in the EQJ system (that is, using Earth's equator at the J2000 epoch.) The positions are expressed in astronomical units (AU), and the velocities in AU/day.
 
 The following integer constants may be useful for indexing into the `moon` array: [`JM_IO`](#JM_IO), [`JM_EUROPA`](#JM_EUROPA), [`JM_GANYMEDE`](#JM_GANYMEDE), [`JM_CALLISTO`](#JM_CALLISTO). 
 

@@ -573,10 +573,43 @@ export declare function Ecliptic(equ: Vector): EclipticCoordinates;
  * @returns {Vector}
  */
 export declare function GeoMoon(date: FlexibleDateTime): Vector;
+/**
+ * @brief Holds the positions and velocities of Jupiter's major 4 moons.
+ *
+ * The {@link JupiterMoons} function returns an object of this type
+ * to report position and velocity vectors for Jupiter's largest 4 moons
+ * Io, Europa, Ganymede, and Callisto. Each position vector is relative
+ * to the center of Jupiter. Both position and velocity are oriented in
+ * the EQJ system (that is, using Earth's equator at the J2000 epoch.)
+ * The positions are expressed in astronomical units (AU),
+ * and the velocities in AU/day.
+ *
+ * @property {StateVector[]} moon
+ *      An array of state vectors, one for each of the four major moons
+ *      of Jupiter, in the following order: 0=Io, 1=Europa, 2=Ganymede, 3=Callisto.
+ */
 export declare class JupiterMoonsInfo {
     moon: StateVector[];
     constructor(moon: StateVector[]);
 }
+/**
+ * @brief Calculates jovicentric positions of Jupiter's largest 4 moons.
+ *
+ * Calculates position vectors for Jupiter's moons
+ * Io, Europa, Ganymede, and Callisto, at the given date and time.
+ * The position vectors are jovicentric, meaning their coordinate origin
+ * is the center of Jupiter. Their orientation is the Earth's equatorial
+ * system at the J2000 epoch, called `EQJ`. The vector components
+ * are expressed in astronomical units (AU).
+ *
+ * To convert to heliocentric vectors, call {@link HelioVector}
+ * with `Astronomy.Body.Jupiter` to get Jupiter's heliocentric position, then
+ * add the jovicentric vectors. Likewise, you can call {@link GeoVector}
+ * to convert to geocentric vectors.
+ *
+ * @param {FlexibleDateTime} date  The date and time for which to calculate the position vectors.
+ * @return {JupiterMoonsInfo} Position vectors of Jupiter's largest 4 moons, as described above.
+ */
 export declare function JupiterMoons(date: FlexibleDateTime): JupiterMoonsInfo;
 /**
  * @brief Calculates a vector from the center of the Sun to the given body at the given time.
