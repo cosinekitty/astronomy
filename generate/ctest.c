@@ -3599,82 +3599,6 @@ static astro_time_t AstroTerrestrialTime(double tt)
     }
 }
 
-#ifdef COMPARE_STELLARIUM
-
-static int JupiterMoons_CompareStellarium(void)
-{
-    int error;
-    int lnum;
-    FILE *infile = NULL;
-    char line[200];
-    const char *inFileName = "jupiter_moons/horizons/stellarium.txt";
-    double prev_tt, tt, pos[3], vel[3];
-    double dx, dy, dz, diff;
-    int moon, nscanned;
-    astro_time_t time;
-    astro_jupiter_moons_t jm;
-    const double pos_tolerance = 0.0;
-    const double vel_tolerance = 5.0e-18;
-
-    memset(&jm, 0, sizeof(jm));
-
-    infile = fopen(inFileName, "rt");
-    if (infile == NULL)
-        FAIL("C JupiterMoons_CompareStellarium: Cannot open input file: %s\n", inFileName);
-
-    lnum = 0;
-    prev_tt = 1.0e+99;
-    while (fgets(line, sizeof(line), infile))
-    {
-        ++lnum;
-        if (lnum == 1) continue;    /* ignore header line */
-        nscanned = sscanf(line, "%lf %d %lf %lf %lf %lf %lf %lf", &tt, &moon, &pos[0], &pos[1], &pos[2], &vel[0], &vel[1], &vel[2]);
-        if (nscanned != 8)
-            FAIL("C JupiterMoons_CompareStellarium(%s line %d): error scanning data\n", inFileName, lnum);
-
-        if (moon < 0 || moon > 3)
-            FAIL("C JupiterMoons_CompareStellarium(%s line %d): invalid moon = %d\n", inFileName, lnum, moon);
-
-        if (tt != prev_tt)
-        {
-            /* Calculate all 4 moons for this moment in time. */
-            prev_tt = tt;
-            time = AstroTerrestrialTime(tt);
-            jm = Astronomy_JupiterMoons(time);
-            CHECK_STATUS(jm.moon[0]);
-            CHECK_STATUS(jm.moon[1]);
-            CHECK_STATUS(jm.moon[2]);
-            CHECK_STATUS(jm.moon[3]);
-        }
-
-        DEBUG("C JupiterMoons_CompareStellarium: tt=%6.1lf ref  pos=(%20.12le, %20.12le, %20.12le), vel=(%20.12le, %20.12le, %20.12le)\n", tt, pos[0], pos[1], pos[2], vel[0], vel[1], vel[2]);
-        DEBUG("              moon=%d                         calc pos=(%20.12le, %20.12le, %20.12le), vel=(%20.12le, %20.12le, %20.12le)\n\n", moon, jm.moon[moon].x, jm.moon[moon].y, jm.moon[moon].z, jm.moon[moon].vx, jm.moon[moon].vy, jm.moon[moon].vz);
-
-        dx = V(pos[0] - jm.moon[moon].x);
-        dy = V(pos[1] - jm.moon[moon].y);
-        dz = V(pos[2] - jm.moon[moon].z);
-        diff = sqrt(dx*dx + dy*dy + dz*dz);
-        if (diff > pos_tolerance)
-            FAIL("C JupiterMoons_CompareStellarium(%s line %d): EXCESSIVE POSITION ERROR: diff = %le\n", inFileName, lnum, diff);
-
-        dx = V(vel[0] - jm.moon[moon].vx);
-        dy = V(vel[1] - jm.moon[moon].vy);
-        dz = V(vel[2] - jm.moon[moon].vz);
-        diff = sqrt(dx*dx + dy*dy + dz*dz);
-        if (diff > vel_tolerance)
-            FAIL("C JupiterMoons_CompareStellarium(%s line %d): EXCESSIVE VELOCITY ERROR: diff = %le\n", inFileName, lnum, diff);
-    }
-
-    DEBUG("C JupiterMoons_Stellarium: PASS\n");
-    error = 0;
-fail:
-    if (infile != NULL) fclose(infile);
-    return error;
-}
-
-#endif /* COMPARE_STELLARIUM */
-
-
 static void TrimWhiteSpace(char *line)
 {
     int len = (int)strlen(line);
@@ -3831,9 +3755,6 @@ fail:
 
 static int JupiterMoonsTest(void)
 {
-#ifdef COMPARE_STELLARIUM
-    if (JupiterMoons_CompareStellarium()) return 1;
-#endif
     if (JupiterMoons_JplHorizons()) return 1;
     printf("C JupiterMoons: PASS\n");
     return 0;
