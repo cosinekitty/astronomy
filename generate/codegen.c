@@ -1381,7 +1381,7 @@ fail:
 
 static int ReadFixLine(char *line, size_t size, FILE *infile)
 {
-    if (!fgets(line, size, infile))
+    if (!fgets(line, (int)size, infile))
         return 0;
 
     // Convert FORTRAN double-precision exponential notation like
@@ -1755,6 +1755,7 @@ static int JupiterMoons_JS(cg_context_t *context, const jupiter_moon_model_t *mo
 
 static int JupiterMoons_Python(cg_context_t *context, const jupiter_moon_model_t *model)
 {
+    (void)model;
     return LogError(context, "JupiterMoons_Python: NOT YET IMPLEMENTED.\n");
 }
 

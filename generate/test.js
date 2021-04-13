@@ -1911,7 +1911,7 @@ function JupiterMoons() {
     for (let mindex = 0; mindex < 4; ++mindex) {
         const filename = `jupiter_moons/horizons/jm${mindex}.txt`;
         const text = fs.readFileSync(filename, {encoding:'utf8'});
-        const lines = text.split('\n');
+        const lines = text.split(/\r?\n/);
         let lnum = 0;
         let found = false;
         let part = -1;

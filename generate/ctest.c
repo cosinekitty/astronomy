@@ -2323,7 +2323,7 @@ static int Test_EQD_HOR(astro_body_t body)
     DEBUG("C Test_EQD_HOR %s: trusted alt=%0.3lf, az=%0.3lf; test alt=%0.3lf, az=%0.3lf; diff_alt=%lg, diff_az=%lg\n",
         Astronomy_BodyName(body), hor.altitude, hor.azimuth, sphere.lat, sphere.lon, diff_alt, diff_az);
 
-    if (diff_alt > 3.0e-14 || diff_az > 7e-14)
+    if (diff_alt > 3.0e-14 || diff_az > 8e-14)
         FAIL("C Test_EQD_HOR: EXCESSIVE HORIZONTAL ERROR.\n");
 
     /* Confirm that we can convert back to horizontal vector. */
