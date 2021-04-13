@@ -2013,7 +2013,7 @@ static double JupiterMoonRelativeError(const jupiter_moon_model_t *model, int mi
 
 static int JupiterMoonTruncate(jupiter_moon_model_t *model, int mindex)
 {
-    const double threshold = 1.0e-7;
+    const double threshold = 3.5e-7;
     int error;
     jupiter_moon_t *moon = &model->moon[mindex];
     double score, best_score;

@@ -3625,8 +3625,8 @@ static int JupiterMoons_CheckJpl(int mindex, double tt, double pos[3], double ve
     astro_jupiter_moons_t jm;
     astro_time_t time;
     double dx, dy, dz, mag, diff;
-    const double pos_tolerance = 8.2e-4;
-    const double vel_tolerance = 8.1e-4;
+    const double pos_tolerance = 9.0e-4;
+    const double vel_tolerance = 9.0e-4;
 
     time = AstroTerrestrialTime(tt);
 

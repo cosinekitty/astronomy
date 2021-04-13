@@ -1877,8 +1877,8 @@ function AstroTerrestrialTime(tt) {
 
 
 function JupiterMoons_CheckJpl(mindex, tt, pos, vel) {
-    const pos_tolerance = 8.2e-4;
-    const vel_tolerance = 8.1e-4;
+    const pos_tolerance = 9.0e-4;
+    const vel_tolerance = 9.0e-4;
     const time = AstroTerrestrialTime(tt);
     const jm = Astronomy.JupiterMoons(time);
 
