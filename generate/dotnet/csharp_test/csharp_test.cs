@@ -38,6 +38,7 @@ namespace csharp_test
             new Test("constellation", ConstellationTest),
             new Test("elongation", ElongationTest),
             new Test("global_solar_eclipse", GlobalSolarEclipseTest),
+            new Test("jupiter_moons", JupiterMoonsTest),
             new Test("local_solar_eclipse", LocalSolarEclipseTest),
             new Test("lunar_apsis", LunarApsisTest),
             new Test("lunar_eclipse", LunarEclipseTest),
@@ -2443,6 +2444,146 @@ namespace csharp_test
             }
 
             Console.WriteLine("C# GeoidTest: PASS");
+            return 0;
+        }
+
+        const int NUM_JUPITER_MOONS = 4;
+
+        static int JupiterMoons_CheckJpl(int mindex, double tt, double[] pos, double[] vel)
+        {
+            const double pos_tolerance = 9.0e-4;
+            const double vel_tolerance = 9.0e-4;
+            AstroTime time = AstroTime.FromTerrestrialTime(tt);
+            var jm = Astronomy.JupiterMoons(time);
+
+            double dx = v(pos[0] - jm.moon[mindex].x);
+            double dy = v(pos[1] - jm.moon[mindex].y);
+            double dz = v(pos[2] - jm.moon[mindex].z);
+            double mag = Math.Sqrt(pos[0]*pos[0] + pos[1]*pos[1] + pos[2]*pos[2]);
+            double pos_diff = Math.Sqrt(dx*dx + dy*dy + dz*dz) / mag;
+            if (pos_diff > pos_tolerance)
+            {
+                Console.WriteLine($"C# JupiterMoons_CheckJpl(mindex={mindex}, tt={tt}): excessive position error {pos_diff}");
+                return 1;
+            }
+
+            dx = v(vel[0] - jm.moon[mindex].vx);
+            dy = v(vel[1] - jm.moon[mindex].vy);
+            dz = v(vel[2] - jm.moon[mindex].vz);
+            mag = Math.Sqrt(vel[0]*vel[0] + vel[1]*vel[1] + vel[2]*vel[2]);
+            double vel_diff = Math.Sqrt(dx*dx + dy*dy + dz*dz) / mag;
+            if (vel_diff > vel_tolerance)
+            {
+                Console.WriteLine($"C# JupiterMoons_CheckJpl(mindex={mindex}, tt={tt}): excessive velocity error {vel_diff}");
+                return 1;
+            }
+
+            Debug($"C# JupiterMoons_CheckJpl: mindex={mindex}, tt={tt}, pos_diff={pos_diff}, vel_diff={vel_diff}");
+            return 0;
+        }
+
+
+        static int JupiterMoonsTest()
+        {
+            const int expected_count = 5001;
+            for (int mindex = 0; mindex < NUM_JUPITER_MOONS; ++mindex)
+            {
+                string filename = $"../../jupiter_moons/horizons/jm{mindex}.txt";
+                using (StreamReader input = File.OpenText(filename))
+                {
+                    int lnum = 0;
+                    bool found = false;
+                    int part = -1;
+                    int count = 0;
+                    string line;
+                    double tt = 1.0e+99;
+                    var pos = new double[3];
+                    var vel = new double[3];
+                    while (null != (line = input.ReadLine()))
+                    {
+                        ++lnum;
+                        if (!found)
+                        {
+                            if (line == "$$SOE")
+                            {
+                                found = true;
+                                part = 0;
+                            }
+                            else if (line.StartsWith("Revised:"))
+                            {
+                                if (line.Length != 79)
+                                {
+                                    Console.WriteLine($"C# JupiterMoonsTest({filename} line {lnum}): unexpected line length.");
+                                    return 1;
+                                }
+                                int check_mindex = int.Parse(line.Substring(76)) - 501;
+                                if (mindex != check_mindex)
+                                {
+                                    Console.WriteLine($"C# JupiterMoonsTest({filename} line {lnum}): moon index does not match: check={check_mindex}, mindex={mindex}.");
+                                    return 1;
+                                }
+                            }
+                        }
+                        else if (line == "$$EOE")
+                        {
+                            break;
+                        }
+                        else
+                        {
+                            Match match;
+                            switch (part)
+                            {
+                                case 0:
+                                    /* 2446545.000000000 = A.D. 1986-Apr-24 12:00:00.0000 TDB */
+                                    tt = double.Parse(line.Split()[0]) - 2451545.0;    /* convert JD to J2000 TT */
+                                    break;
+
+                                case 1:
+                                    /* X = 1.134408131605554E-03 Y =-2.590904586750408E-03 Z =-7.490427225904720E-05 */
+                                    match = Regex.Match(line, @"\s*X =\s*(\S+) Y =\s*(\S+) Z =\s*(\S+)");
+                                    if (!match.Success)
+                                    {
+                                        Console.WriteLine($"C# JupiterMoonsTest({filename} line {lnum}): cannot parse position vector.");
+                                        return 1;
+                                    }
+                                    pos[0] = double.Parse(match.Groups[1].Value);
+                                    pos[1] = double.Parse(match.Groups[2].Value);
+                                    pos[2] = double.Parse(match.Groups[3].Value);
+                                    break;
+
+                                case 2:
+                                    /* VX= 9.148038778472862E-03 VY= 3.973823407182510E-03 VZ= 2.765660368640458E-04 */
+                                    match = Regex.Match(line, @"\s*VX=\s*(\S+) VY=\s*(\S+) VZ=\s*(\S+)");
+                                    if (!match.Success)
+                                    {
+                                        Console.WriteLine($"C# JupiterMoonsTest({filename} line {lnum}): cannot parse velocity vector.");
+                                        return 1;
+                                    }
+                                    vel[0] = double.Parse(match.Groups[1].Value);
+                                    vel[1] = double.Parse(match.Groups[2].Value);
+                                    vel[2] = double.Parse(match.Groups[3].Value);
+                                    if (0 != JupiterMoons_CheckJpl(mindex, tt, pos, vel))
+                                    {
+                                        Console.WriteLine($"C# JupiterMoonsTest({filename} line {lnum}): FAILED VERIFICATION.");
+                                        return 1;
+                                    }
+                                    ++count;
+                                    break;
+
+                                default:
+                                    Console.WriteLine($"C# JupiterMoonsTest({filename} line {lnum}): unexpected part = {part}.");
+                                    return 1;
+                            }
+                            part = (part + 1) % 3;
+                        }
+                    }
+                    if (count != expected_count)
+                    {
+                        Console.WriteLine($"C# JupiterMoonsTest({filename}): expected {expected_count} test cases, found {count}.");
+                        return 1;
+                    }
+                }
+            }
             return 0;
         }
     }

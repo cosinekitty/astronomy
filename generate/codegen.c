@@ -1659,7 +1659,51 @@ static int JupiterMoons_C(cg_context_t *context, const jupiter_moon_model_t *mod
 
 static int JupiterMoons_CSharp(cg_context_t *context, const jupiter_moon_model_t *model)
 {
-    return LogError(context, "JupiterMoons_CSharp: NOT YET IMPLEMENTED.\n");
+    int mindex, var, i;
+    vsop_series_t series[4];
+    const char *moon_name[] = { "Io", "Europa", "Ganymede", "Callisto" };
+    const char *var_name[] = { "a", "l", "z", "zeta" };
+
+    fprintf(context->outfile, "        private static readonly RotationMatrix Rotation_JUP_EQJ = new RotationMatrix(\n");
+    fprintf(context->outfile, "            new double[3,3]\n");
+    fprintf(context->outfile, "            {\n");
+    fprintf(context->outfile, "                { %23.16le, %23.16le, %23.16le },\n", model->rot[0][0], model->rot[0][1], model->rot[0][2]);
+    fprintf(context->outfile, "                { %23.16le, %23.16le, %23.16le },\n", model->rot[1][0], model->rot[1][1], model->rot[1][2]);
+    fprintf(context->outfile, "                { %23.16le, %23.16le, %23.16le }\n",  model->rot[2][0], model->rot[2][1], model->rot[2][2]);
+    fprintf(context->outfile, "            }\n");
+    fprintf(context->outfile, "        );\n\n");
+
+    fprintf(context->outfile, "        private static readonly jupiter_moon_t[] JupiterMoonModel = new jupiter_moon_t[] {\n");
+    for (mindex = 0; mindex < NUM_JUPITER_MOONS; ++mindex)
+    {
+        series[0] = model->moon[mindex].a;
+        series[1] = model->moon[mindex].l;
+        series[2] = model->moon[mindex].z;
+        series[3] = model->moon[mindex].zeta;
+        fprintf(context->outfile, "            // [%d] %s\n", mindex, moon_name[mindex]);
+        fprintf(context->outfile, "            new jupiter_moon_t {\n");
+        fprintf(context->outfile, "                mu = %23.16le,\n", model->moon[mindex].mu);
+        fprintf(context->outfile, "                al0 = %23.16le,\n", model->moon[mindex].al[0]);
+        fprintf(context->outfile, "                al1 = %23.16le,\n", model->moon[mindex].al[1]);
+        for (var = 0; var < NUM_JM_VARS; ++var)
+        {
+            int nterms = series[var].nterms_total;
+            fprintf(context->outfile, "                %s = new vsop_term_t[] {\n", var_name[var]);
+            for (i = 0; i < nterms; ++i)
+            {
+                const vsop_term_t *term = &series[var].term[i];
+                fprintf(context->outfile, "                    new vsop_term_t(%19.16lf, %23.16le, %23.16le)%s\n",
+                    term->amplitude,
+                    term->phase,
+                    term->frequency,
+                    (i+1 < nterms) ? "," : "");
+            }
+            fprintf(context->outfile, "                }%s\n", ((var+1 < NUM_JM_VARS) ? "," : ""));
+        }
+        fprintf(context->outfile, "            }%s\n", ((mindex+1 < NUM_JUPITER_MOONS) ? ",\n" : ""));
+    }
+    fprintf(context->outfile, "        }");
+    return 0;
 }
 
 

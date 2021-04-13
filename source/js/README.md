@@ -369,7 +369,7 @@ The [JupiterMoons](#JupiterMoons) function returns an object of this type
 to report position and velocity vectors for Jupiter's largest 4 moons
 Io, Europa, Ganymede, and Callisto. Each position vector is relative
 to the center of Jupiter. Both position and velocity are oriented in
-the EQJ system (that is, using Earth's equator at the J2000 epoch.)
+the EQJ system (that is, using Earth's equator at the J2000 epoch).
 The positions are expressed in astronomical units (AU),
 and the velocities in AU/day.  
 **Properties**
@@ -961,15 +961,15 @@ by Montenbruck and Pfleger.
 
 ## JupiterMoons(date) ⇒ [<code>JupiterMoonsInfo</code>](#JupiterMoonsInfo)
 **Kind**: global function  
-**Returns**: [<code>JupiterMoonsInfo</code>](#JupiterMoonsInfo) - Position vectors of Jupiter's largest 4 moons, as described above.  
-**Brief**: Calculates jovicentric positions of Jupiter's largest 4 moons.
+**Returns**: [<code>JupiterMoonsInfo</code>](#JupiterMoonsInfo) - Position and velocity vectors of Jupiter's largest 4 moons.  
+**Brief**: Calculates jovicentric positions and velocities of Jupiter's largest 4 moons.
 
-Calculates position vectors for Jupiter's moons
+Calculates position and velocity vectors for Jupiter's moons
 Io, Europa, Ganymede, and Callisto, at the given date and time.
-The position vectors are jovicentric, meaning their coordinate origin
-is the center of Jupiter. Their orientation is the Earth's equatorial
-system at the J2000 epoch, called `EQJ`. The vector components
-are expressed in astronomical units (AU).
+The vectors are jovicentric (relative to the center of Jupiter).
+Their orientation is the Earth's equatorial system at the J2000 epoch (EQJ).
+The position components are expressed in astronomical units (AU), and the
+velocity components are in AU/day.
 
 To convert to heliocentric vectors, call [HelioVector](#HelioVector)
 with `Astronomy.Body.Jupiter` to get Jupiter's heliocentric position, then

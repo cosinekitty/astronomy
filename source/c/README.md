@@ -822,13 +822,13 @@ Given a rotation matrix that performs some coordinate transform, this function r
 <a name="Astronomy_JupiterMoons"></a>
 ### Astronomy_JupiterMoons(time) &#8658; [`astro_jupiter_moons_t`](#astro_jupiter_moons_t)
 
-**Calculates jovicentric positions of Jupiter's largest 4 moons.** 
+**Calculates jovicentric positions and velocities of Jupiter's largest 4 moons.** 
 
 
 
-Calculates position vectors for Jupiter's moons Io, Europa, Ganymede, and Callisto, at the given date and time. The position vectors are jovicentric, meaning their coordinate origin is the center of Jupiter. Their orientation is the Earth's equatorial system at the J2000 epoch, called `EQJ`. The vector components are expressed in astronomical units (AU).
+Calculates position and velocity vectors for Jupiter's moons Io, Europa, Ganymede, and Callisto, at the given date and time. The vectors are jovicentric (relative to the center of Jupiter). Their orientation is the Earth's equatorial system at the J2000 epoch (EQJ). The position components are expressed in astronomical units (AU), and the velocity components are in AU/day.
 
-To convert to heliocentric vectors, call [`Astronomy_HelioVector`](#Astronomy_HelioVector) with `BODY_JUPITER` to get Jupiter's heliocentric position, then add the jovicentric vectors. Likewise, you can call [`Astronomy_GeoVector`](#Astronomy_GeoVector) with `BODY_JUPITER` to convert to geocentric vectors.
+To convert to heliocentric position vectors, call [`Astronomy_HelioVector`](#Astronomy_HelioVector) with `BODY_JUPITER` to get Jupiter's heliocentric position, then add the jovicentric positions. Likewise, you can call [`Astronomy_GeoVector`](#Astronomy_GeoVector) with `BODY_JUPITER` to convert to geocentric positions.
 
 
 

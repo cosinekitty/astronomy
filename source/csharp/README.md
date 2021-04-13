@@ -575,6 +575,29 @@ this function returns the matrix that reverses that trasnform.
 
 **Returns:** A rotation matrix that performs the opposite transformation.
 
+<a name="Astronomy.JupiterMoons"></a>
+### Astronomy.JupiterMoons(time) &#8658; [`JupiterMoonsInfo`](#JupiterMoonsInfo)
+
+**Calculates jovicentric positions and velocities of Jupiter's largest 4 moons.**
+
+Calculates position and velocity vectors for Jupiter's moons
+Io, Europa, Ganymede, and Callisto, at the given date and time.
+The vectors are jovicentric (relative to the center of Jupiter).
+Their orientation is the Earth's equatorial system at the J2000 epoch (EQJ).
+The position components are expressed in astronomical units (AU), and the
+velocity components are in AU/day.
+
+To convert to heliocentric position vectors, call [`Astronomy.HelioVector`](#Astronomy.HelioVector)
+with `Body.Jupiter` to get Jupiter's heliocentric position, then
+add the jovicentric positions. Likewise, you can call [`Astronomy.GeoVector`](#Astronomy.GeoVector)
+to convert to geocentric positions.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`AstroTime`](#AstroTime) | `time` | The date and time for which to calculate the position vectors. |
+
+**Returns:** Position and velocity vectors of Jupiter's largest 4 moons.
+
 <a name="Astronomy.LongitudeFromSun"></a>
 ### Astronomy.LongitudeFromSun(body, time) &#8658; `double`
 
@@ -805,6 +828,20 @@ due to the lensing of the Earth's atmosphere.
 | `double` | `altitude` | An altitude angle in a horizontal coordinate system. Must be a value between -90 and +90. |
 
 **Returns:** The angular adjustment in degrees to be added to the altitude angle to correct for atmospheric lensing.
+
+<a name="Astronomy.RotateState"></a>
+### Astronomy.RotateState(rotation, state) &#8658; [`StateVector`](#StateVector)
+
+**Applies a rotation to a state vector, yielding a rotated state vector.**
+
+This function transforms a state vector in one orientation to a state vector in another orientation.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`RotationMatrix`](#RotationMatrix) | `rotation` | A rotation matrix that specifies how the orientation of the state vector is to be changed. |
+| [`StateVector`](#StateVector) | `state` | The state vector whose orientation is to be changed. |
+
+**Returns:** A state vector in the orientation specified by `rotation`.
 
 <a name="Astronomy.RotateVector"></a>
 ### Astronomy.RotateVector(rotation, vector) &#8658; [`AstroVector`](#AstroVector)
@@ -1609,6 +1646,15 @@ using a best-fit piecewise polynomial model devised by
 
 **Returns:** A date and time that is conceptually equal to `time + days`.
 
+<a name="AstroTime.FromTerrestrialTime"></a>
+### AstroTime.FromTerrestrialTime(tt) &#8658; [`AstroTime`](#AstroTime)
+
+**Creates an `AstroTime` object from a Terrestrial Time day value.**
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| `double` | `tt` | The number of days after the J2000 epoch. |
+
 <a name="AstroTime.ToString"></a>
 ### AstroTime.ToString() &#8658; `string`
 
@@ -1924,6 +1970,25 @@ when a body is specified that is not appropriate for the given operation.**
 
 ---
 
+<a name="JupiterMoonsInfo"></a>
+## `struct JupiterMoonsInfo`
+
+**Holds the positions and velocities of Jupiter's major 4 moons.**
+
+The [`Astronomy.JupiterMoons`](#Astronomy.JupiterMoons) function returns an object of this type
+to report position and velocity vectors for Jupiter's largest 4 moons
+Io, Europa, Ganymede, and Callisto. Each position vector is relative
+to the center of Jupiter. Both position and velocity are oriented in
+the EQJ system (that is, using Earth's equator at the J2000 epoch).
+The positions are expressed in astronomical units (AU),
+and the velocities in AU/day.
+
+| Type | Name | Description |
+| --- | --- | --- |
+| [`StateVector[]`](#StateVector[]) | `moon` | An array of state vectors for each of the 4 moons, in the following order: 0 = Io, 1 = Europa, 2 = Ganymede, 3 = Callisto. |
+
+---
+
 <a name="LocalSolarEclipseInfo"></a>
 ## `struct LocalSolarEclipseInfo`
 
@@ -2094,6 +2159,27 @@ Call [`Astronomy.Seasons`](#Astronomy.Seasons) to calculate this data structure 
 | `double` | `lat` | The latitude angle: -90..+90 degrees. |
 | `double` | `lon` | The longitude angle: 0..360 degrees. |
 | `double` | `dist` | Distance in AU. |
+
+---
+
+<a name="StateVector"></a>
+## `struct StateVector`
+
+**A combination of a position vector and a velocity vector at a given moment in time.**
+
+A state vector represents the dynamic state of a point at a given moment.
+It includes the position vector of the point, expressed in Astronomical Units (AU)
+along with the velocity vector of the point, expressed in AU/day.
+
+| Type | Name | Description |
+| --- | --- | --- |
+| `double` | `x` | The position x-coordinate in AU. |
+| `double` | `y` | The position y-coordinate in AU. |
+| `double` | `z` | The position z-coordinate in AU. |
+| `double` | `vx` | The velocity x-component in AU/day. |
+| `double` | `vy` | The velocity y-component in AU/day. |
+| `double` | `vz` | The velocity z-component in AU/day. |
+| [`AstroTime`](#AstroTime) | `t` | The date and time at which this vector is valid. |
 
 ---
 

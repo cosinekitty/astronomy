@@ -200,18 +200,22 @@ namespace CosineKitty
         /// </remarks>
         public readonly double tt;
 
-        internal double psi;    // For internal use only. Used to optimize Earth tilt calculations.
-        internal double eps;    // For internal use only. Used to optimize Earth tilt calculations.
+        internal double psi = double.NaN;    // For internal use only. Used to optimize Earth tilt calculations.
+        internal double eps = double.NaN;    // For internal use only. Used to optimize Earth tilt calculations.
+
+        private AstroTime(double ut, double tt)
+        {
+            this.ut = ut;
+            this.tt = tt;
+        }
 
         /// <summary>
         /// Creates an `AstroTime` object from a Universal Time day value.
         /// </summary>
         /// <param name="ut">The number of days after the J2000 epoch.</param>
         public AstroTime(double ut)
+            : this(ut, Astronomy.TerrestrialTime(ut))
         {
-            this.ut = ut;
-            this.tt = Astronomy.TerrestrialTime(ut);
-            this.psi = this.eps = double.NaN;
         }
 
         /// <summary>
@@ -235,6 +239,15 @@ namespace CosineKitty
         public AstroTime(int year, int month, int day, int hour, int minute, int second)
             : this(new DateTime(year, month, day, hour, minute, second, DateTimeKind.Utc))
         {
+        }
+
+        /// <summary>
+        /// Creates an `AstroTime` object from a Terrestrial Time day value.
+        /// </summary>
+        /// <param name="tt">The number of days after the J2000 epoch.</param>
+        public static AstroTime FromTerrestrialTime(double tt)
+        {
+            return new AstroTime(Astronomy.UniversalTime(tt), tt);
         }
 
         /// <summary>
@@ -442,6 +455,102 @@ namespace CosineKitty
 
             // If either time has already had its nutation calculated, retain that work.
             return !double.IsNaN(a.psi) ? a : b;
+        }
+    }
+
+    /// <summary>
+    /// A combination of a position vector and a velocity vector at a given moment in time.
+    /// </summary>
+    /// <remarks>
+    /// A state vector represents the dynamic state of a point at a given moment.
+    /// It includes the position vector of the point, expressed in Astronomical Units (AU)
+    /// along with the velocity vector of the point, expressed in AU/day.
+    /// </remarks>
+    public struct StateVector
+    {
+        /// <summary>
+        /// The position x-coordinate in AU.
+        /// </summary>
+        public double x;
+
+        /// <summary>
+        /// The position y-coordinate in AU.
+        /// </summary>
+        public double y;
+
+        /// <summary>
+        /// The position z-coordinate in AU.
+        /// </summary>
+        public double z;
+
+        /// <summary>
+        /// The velocity x-component in AU/day.
+        /// </summary>
+        public double vx;
+
+        /// <summary>
+        /// The velocity y-component in AU/day.
+        /// </summary>
+        public double vy;
+
+        /// <summary>
+        /// The velocity z-component in AU/day.
+        /// </summary>
+        public double vz;
+
+        /// <summary>
+        /// The date and time at which this vector is valid.
+        /// </summary>
+        public AstroTime t;
+
+        /// <summary>
+        /// Creates an AstroVector.
+        /// </summary>
+        /// <param name="x">A position x-coordinate expressed in AU.</param>
+        /// <param name="y">A position y-coordinate expressed in AU.</param>
+        /// <param name="z">A position z-coordinate expressed in AU.</param>
+        /// <param name="vx">A velocity x-component expressed in AU/day.</param>
+        /// <param name="vy">A velocity y-component expressed in AU/day.</param>
+        /// <param name="vz">A velocity z-component expressed in AU/day.</param>
+        /// <param name="t">The date and time at which this state vector is valid.</param>
+        public StateVector(double x, double y, double z, double vx, double vy, double vz, AstroTime t)
+        {
+            if (t == null)
+                throw new NullReferenceException("AstroTime parameter is not allowed to be null.");
+
+            this.x = x;
+            this.y = y;
+            this.z = z;
+            this.vx = vx;
+            this.vy = vy;
+            this.vz = vz;
+            this.t = t;
+        }
+    }
+
+    /// <summary>
+    /// Holds the positions and velocities of Jupiter's major 4 moons.
+    /// </summary>
+    /// <remarks>
+    /// The #Astronomy.JupiterMoons function returns an object of this type
+    /// to report position and velocity vectors for Jupiter's largest 4 moons
+    /// Io, Europa, Ganymede, and Callisto. Each position vector is relative
+    /// to the center of Jupiter. Both position and velocity are oriented in
+    /// the EQJ system (that is, using Earth's equator at the J2000 epoch).
+    /// The positions are expressed in astronomical units (AU),
+    /// and the velocities in AU/day.
+    /// </remarks>
+    public struct JupiterMoonsInfo
+    {
+        /// <summary>
+        /// An array of state vectors for each of the 4 moons, in the following order:
+        /// 0 = Io, 1 = Europa, 2 = Ganymede, 3 = Callisto.
+        /// </summary>
+        public readonly StateVector[] moon;
+
+        internal JupiterMoonsInfo(StateVector[] moon)
+        {
+            this.moon = moon;
         }
     }
 
@@ -2116,6 +2225,26 @@ $ASTRO_CSHARP_VSOP(Neptune)
             return ut + DeltaT(ut)/86400.0;
         }
 
+        internal static double UniversalTime(double tt)
+        {
+            // This is the inverse function of TerrestrialTime.
+            // This is an iterative numerical solver, but because
+            // the relationship between UT and TT is almost perfectly linear,
+            // it converges extremely fast (never more than 3 iterations).
+
+            // dt = tt - ut
+            double dt = TerrestrialTime(tt) - tt;
+            for(;;)
+            {
+                double ut = tt - dt;
+                double tt_check = TerrestrialTime(ut);
+                double err = tt_check - tt;
+                if (Math.Abs(err) < 1.0e-12)
+                    return ut;
+                dt += err;
+            }
+        }
+
         private static double VsopFormulaCalc(vsop_formula_t formula, double t)
         {
             double coord = 0.0;
@@ -2283,7 +2412,7 @@ $ASTRO_CSHARP_VSOP(Neptune)
             return new body_state_t(tt, equ_pos, equ_vel);
         }
 
-        // Begin Pluto integrator
+#region Pluto
 
         private struct body_grav_calc_t
         {
@@ -2487,7 +2616,143 @@ $ASTRO_PLUTO_TABLE();
             return (r - bary.Sun.r).ToAstroVector(time);
         }
 
-        // End Pluto integrator
+#endregion  // Pluto
+
+#region Jupiter's Moons
+
+        private struct jupiter_moon_t
+        {
+            public double mu;
+            public double al0, al1;
+            public vsop_term_t[] a;
+            public vsop_term_t[] l;
+            public vsop_term_t[] z;
+            public vsop_term_t[] zeta;
+        }
+
+$ASTRO_JUPITER_MOONS();
+
+        private static StateVector JupiterMoon_elem2pv(
+            AstroTime time,
+            double mu,
+            double A, double AL, double K, double H, double Q, double P)
+        {
+            // Translation of FORTRAN subroutine ELEM2PV from:
+            // https://ftp.imcce.fr/pub/ephem/satel/galilean/L1/L1.2/
+
+            double AN = Math.Sqrt(mu / (A*A*A));
+
+            double CE, SE, DE;
+            double EE = AL + K*Math.Sin(AL) - H*Math.Cos(AL);
+            do
+            {
+                CE = Math.Cos(EE);
+                SE = Math.Sin(EE);
+                DE = (AL - EE + K*SE - H*CE) / (1.0 - K*CE - H*SE);
+                EE += DE;
+            }
+            while (Math.Abs(DE) >= 1.0e-12);
+
+            CE = Math.Cos(EE);
+            SE = Math.Sin(EE);
+            double DLE = H*CE - K*SE;
+            double RSAM1 = -K*CE - H*SE;
+            double ASR = 1.0/(1.0 + RSAM1);
+            double PHI = Math.Sqrt(1.0 - K*K - H*H);
+            double PSI = 1.0/(1.0 + PHI);
+            double X1 = A*(CE - K - PSI*H*DLE);
+            double Y1 = A*(SE - H + PSI*K*DLE);
+            double VX1 = AN*ASR*A*(-SE - PSI*H*RSAM1);
+            double VY1 = AN*ASR*A*(+CE + PSI*K*RSAM1);
+            double F2 = 2.0*Math.Sqrt(1.0 - Q*Q - P*P);
+            double P2 = 1.0 - 2.0*P*P;
+            double Q2 = 1.0 - 2.0*Q*Q;
+            double PQ = 2.0*P*Q;
+
+            return new StateVector(
+                X1*P2 + Y1*PQ,
+                X1*PQ + Y1*Q2,
+                (Q*Y1 - X1*P)*F2,
+                VX1*P2 + VY1*PQ,
+                VX1*PQ + VY1*Q2,
+                (Q*VY1 - VX1*P)*F2,
+                time
+            );
+        }
+
+        private static StateVector CalcJupiterMoon(AstroTime time, jupiter_moon_t m)
+        {
+            // This is a translation of FORTRAN code by Duriez, Lainey, and Vienne:
+            // https://ftp.imcce.fr/pub/ephem/satel/galilean/L1/L1.2/
+
+            double t = time.tt + 18262.5;     // number of days since 1950-01-01T00:00:00Z
+
+            /* Calculate 6 orbital elements at the given time t. */
+            double elem0 = 0.0;
+            foreach (vsop_term_t term in m.a)
+                elem0 += term.amplitude * Math.Cos(term.phase + (t * term.frequency));
+
+            double elem1 = m.al0 + (t * m.al1);
+            foreach (vsop_term_t term in m.l)
+                elem1 += term.amplitude * Math.Sin(term.phase + (t * term.frequency));
+
+            elem1 %= PI2;
+            if (elem1 < 0)
+                elem1 += PI2;
+
+            double elem2 = 0.0;
+            double elem3 = 0.0;
+            foreach (vsop_term_t term in m.z)
+            {
+                double arg = term.phase + (t * term.frequency);
+                elem2 += term.amplitude * Math.Cos(arg);
+                elem3 += term.amplitude * Math.Sin(arg);
+            }
+
+            double elem4 = 0.0;
+            double elem5 = 0.0;
+            foreach (vsop_term_t term in m.zeta)
+            {
+                double arg = term.phase + (t * term.frequency);
+                elem4 += term.amplitude * Math.Cos(arg);
+                elem5 += term.amplitude * Math.Sin(arg);
+            }
+
+            // Convert the oribital elements into position vectors in the Jupiter equatorial system (JUP).
+            StateVector state = JupiterMoon_elem2pv(time, m.mu, elem0, elem1, elem2, elem3, elem4, elem5);
+
+            // Re-orient position and velocity vectors from Jupiter-equatorial (JUP) to Earth-equatorial in J2000 (EQJ).
+            return RotateState(Rotation_JUP_EQJ, state);
+        }
+
+        ///
+        /// <summary>
+        /// Calculates jovicentric positions and velocities of Jupiter's largest 4 moons.
+        /// </summary>
+        /// <remarks>
+        /// Calculates position and velocity vectors for Jupiter's moons
+        /// Io, Europa, Ganymede, and Callisto, at the given date and time.
+        /// The vectors are jovicentric (relative to the center of Jupiter).
+        /// Their orientation is the Earth's equatorial system at the J2000 epoch (EQJ).
+        /// The position components are expressed in astronomical units (AU), and the
+        /// velocity components are in AU/day.
+        ///
+        /// To convert to heliocentric position vectors, call #Astronomy.HelioVector
+        /// with `Body.Jupiter` to get Jupiter's heliocentric position, then
+        /// add the jovicentric positions. Likewise, you can call #Astronomy.GeoVector
+        /// to convert to geocentric positions.
+        /// </remarks>
+        /// <param name="time">The date and time for which to calculate the position vectors.</param>
+        /// <returns>Position and velocity vectors of Jupiter's largest 4 moons.</returns>
+        public static JupiterMoonsInfo JupiterMoons(AstroTime time)
+        {
+            var infolist = new StateVector[4];
+            for (int mindex = 0; mindex < 4; ++mindex)
+                infolist[mindex] = CalcJupiterMoon(time, JupiterMoonModel[mindex]);
+            return new JupiterMoonsInfo(infolist);
+        }
+
+#endregion  // Jupiter's Moons
 
         private enum PrecessDirection
         {
@@ -6105,7 +6370,6 @@ $ASTRO_IAU_DATA()
             return new RotationMatrix(rot);
         }
 
-
         /// <summary>Applies a rotation to a vector, yielding a rotated vector.</summary>
         /// <remarks>
         /// This function transforms a vector in one orientation to a vector
@@ -6121,6 +6385,26 @@ $ASTRO_IAU_DATA()
                 rotation.rot[0, 1]*vector.x + rotation.rot[1, 1]*vector.y + rotation.rot[2, 1]*vector.z,
                 rotation.rot[0, 2]*vector.x + rotation.rot[1, 2]*vector.y + rotation.rot[2, 2]*vector.z,
                 vector.t
+            );
+        }
+
+        /// <summary>Applies a rotation to a state vector, yielding a rotated state vector.</summary>
+        /// <remarks>
+        /// This function transforms a state vector in one orientation to a state vector in another orientation.
+        /// </remarks>
+        /// <param name="rotation">A rotation matrix that specifies how the orientation of the state vector is to be changed.</param>
+        /// <param name="state">The state vector whose orientation is to be changed.</param>
+        /// <returns>A state vector in the orientation specified by `rotation`.</returns>
+        public static StateVector RotateState(RotationMatrix rotation, StateVector state)
+        {
+            return new StateVector(
+                rotation.rot[0, 0]*state.x + rotation.rot[1, 0]*state.y + rotation.rot[2, 0]*state.z,
+                rotation.rot[0, 1]*state.x + rotation.rot[1, 1]*state.y + rotation.rot[2, 1]*state.z,
+                rotation.rot[0, 2]*state.x + rotation.rot[1, 2]*state.y + rotation.rot[2, 2]*state.z,
+                rotation.rot[0, 0]*state.vx + rotation.rot[1, 0]*state.vy + rotation.rot[2, 0]*state.vz,
+                rotation.rot[0, 1]*state.vx + rotation.rot[1, 1]*state.vy + rotation.rot[2, 1]*state.vz,
+                rotation.rot[0, 2]*state.vx + rotation.rot[1, 2]*state.vy + rotation.rot[2, 2]*state.vz,
+                state.t
             );
         }
 

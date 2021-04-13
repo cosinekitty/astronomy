@@ -580,7 +580,7 @@ export declare function GeoMoon(date: FlexibleDateTime): Vector;
  * to report position and velocity vectors for Jupiter's largest 4 moons
  * Io, Europa, Ganymede, and Callisto. Each position vector is relative
  * to the center of Jupiter. Both position and velocity are oriented in
- * the EQJ system (that is, using Earth's equator at the J2000 epoch.)
+ * the EQJ system (that is, using Earth's equator at the J2000 epoch).
  * The positions are expressed in astronomical units (AU),
  * and the velocities in AU/day.
  *
@@ -593,14 +593,14 @@ export declare class JupiterMoonsInfo {
     constructor(moon: StateVector[]);
 }
 /**
- * @brief Calculates jovicentric positions of Jupiter's largest 4 moons.
+ * @brief Calculates jovicentric positions and velocities of Jupiter's largest 4 moons.
  *
- * Calculates position vectors for Jupiter's moons
+ * Calculates position and velocity vectors for Jupiter's moons
  * Io, Europa, Ganymede, and Callisto, at the given date and time.
- * The position vectors are jovicentric, meaning their coordinate origin
- * is the center of Jupiter. Their orientation is the Earth's equatorial
- * system at the J2000 epoch, called `EQJ`. The vector components
- * are expressed in astronomical units (AU).
+ * The vectors are jovicentric (relative to the center of Jupiter).
+ * Their orientation is the Earth's equatorial system at the J2000 epoch (EQJ).
+ * The position components are expressed in astronomical units (AU), and the
+ * velocity components are in AU/day.
  *
  * To convert to heliocentric vectors, call {@link HelioVector}
  * with `Astronomy.Body.Jupiter` to get Jupiter's heliocentric position, then
@@ -608,7 +608,7 @@ export declare class JupiterMoonsInfo {
  * to convert to geocentric vectors.
  *
  * @param {FlexibleDateTime} date  The date and time for which to calculate the position vectors.
- * @return {JupiterMoonsInfo} Position vectors of Jupiter's largest 4 moons, as described above.
+ * @return {JupiterMoonsInfo} Position and velocity vectors of Jupiter's largest 4 moons.
  */
 export declare function JupiterMoons(date: FlexibleDateTime): JupiterMoonsInfo;
 /**
