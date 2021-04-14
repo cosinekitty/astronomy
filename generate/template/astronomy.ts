@@ -2283,7 +2283,7 @@ function CalcJupiterMoon(time: AstroTime, m: jupiter_moon_t): StateVector {
  * add the jovicentric vectors. Likewise, you can call {@link GeoVector}
  * to convert to geocentric vectors.
  *
- * @param {FlexibleDateTime} date  The date and time for which to calculate the position vectors.
+ * @param {FlexibleDateTime} date  The date and time for which to calculate Jupiter's moons.
  * @return {JupiterMoonsInfo} Position and velocity vectors of Jupiter's largest 4 moons.
  */
 export function JupiterMoons(date: FlexibleDateTime): JupiterMoonsInfo {

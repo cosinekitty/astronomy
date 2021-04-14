@@ -607,7 +607,7 @@ export declare class JupiterMoonsInfo {
  * add the jovicentric vectors. Likewise, you can call {@link GeoVector}
  * to convert to geocentric vectors.
  *
- * @param {FlexibleDateTime} date  The date and time for which to calculate the position vectors.
+ * @param {FlexibleDateTime} date  The date and time for which to calculate Jupiter's moons.
  * @return {JupiterMoonsInfo} Position and velocity vectors of Jupiter's largest 4 moons.
  */
 export declare function JupiterMoons(date: FlexibleDateTime): JupiterMoonsInfo;

@@ -155,6 +155,50 @@ class Vector:
         """Returns the length of the vector in AU."""
         return math.sqrt(self.x**2 + self.y**2 + self.z**2)
 
+class StateVector:
+    """A combination of a position vector, a velocity vector, and a time.
+
+    The position (x, y, z) is measured in astronomical units (AU).
+    The velocity (vx, vy, vz) is measured in AU/day.
+    The coordinate system varies and depends on context.
+    The state vector also includes a time stamp.
+
+    Attributes
+    ----------
+    x : float
+        The x-coordinate of the position, measured in AU.
+    y : float
+        The y-coordinate of the position, measured in AU.
+    z : float
+        The z-coordinate of the position, measured in AU.
+    vx : float
+        The x-component of the velocity, measured in AU/day.
+    vy : float
+        The y-component of the velocity, measured in AU/day.
+    vz : float
+        The z-component of the velocity, measured in AU/day.
+    t : Time
+        The date and time at which the position and velocity vectors are valid.
+    """
+    def __init__(self, x, y, z, vx, vy, vz, t):
+        self.x = x
+        self.y = y
+        self.z = z
+        self.vx = vx
+        self.vy = vy
+        self.vz = vz
+        self.t = t
+
+    def __repr__(self):
+        return 'StateVector[pos=({}, {}, {}), vel=({}, {}, {}), t{}]'.format(
+            self.x, self.y, self.z,
+            self.vx, self.vy, self.vz,
+            str(self.t))
+
+    def __str__(self):
+        return '({}, {}, {}, {}, {}, {}, {})'.format(self.x, self.y, self.z, self.vx, self.vy, self.vz, str(self.t))
+
+
 @enum.unique
 class Body(enum.Enum):
     """The celestial bodies supported by Astronomy Engine calculations.
@@ -411,6 +455,20 @@ _DeltaT = DeltaT_EspenakMeeus
 def _TerrestrialTime(ut):
     return ut + _DeltaT(ut) / 86400.0
 
+def _UniversalTime(tt):
+    # This is the inverse function of _TerrestrialTime.
+    # This is an iterative numerical solver, but because
+    # the relationship between UT and TT is almost perfectly linear,
+    # it converges extremely fast (never more than 3 iterations).
+    dt = _TerrestrialTime(tt) - tt      # first approximation of dt = tt - ut
+    while True:
+        ut = tt - dt
+        tt_check = _TerrestrialTime(ut)
+        err = tt_check - tt
+        if abs(err) < 1.0e-12:
+            return ut
+        dt += err
+
 _TimeRegex = re.compile(r'^([0-9]{1,4})-([0-9]{2})-([0-9]{2})(T([0-9]{2}):([0-9]{2})(:([0-9]{2}(\.[0-9]+)?))?Z)?$')
 
 class Time:
@@ -457,10 +515,27 @@ class Time:
         such as the orbits of planets around the Sun, or the Moon around the Earth.
         Historically, Terrestrial Time has also been known by the term *Ephemeris Time* (ET).
     """
-    def __init__(self, ut):
+    def __init__(self, ut, tt = None):
         self.ut = ut
-        self.tt = _TerrestrialTime(ut)
+        if tt is None:
+            self.tt = _TerrestrialTime(ut)
+        else:
+            self.tt = tt
         self.etilt = None
+
+    @staticmethod
+    def FromTerrestrialTime(tt):
+        """Creates a #Time object from a Terrestrial Time day value.
+
+        Parameters
+        ----------
+        tt : The number of days after the J2000 epoch.
+
+        Returns
+        -------
+        Time
+        """
+        return Time(_UniversalTime(tt), tt)
 
     @staticmethod
     def Parse(text):
@@ -3396,6 +3471,273 @@ def _CalcPluto(time):
 
 # END Pluto Integrator
 #----------------------------------------------------------------------------
+# BEGIN Jupiter Moons
+
+_Rotation_JUP_EQJ = RotationMatrix([
+    [  9.9943276533865444e-01, -3.3677107469764142e-02,  0.0000000000000000e+00 ],
+    [  3.0395942890628476e-02,  9.0205791235280897e-01,  4.3054338854229507e-01 ],
+    [ -1.4499455966335291e-02, -4.3029916940910073e-01,  9.0256988127375404e-01 ]
+])
+
+_JupiterMoonModel = [
+    # [0] Io
+    [
+         2.8248942843381399e-07,  1.4462132960212239e+00,  3.5515522861824000e+00, # mu, al0, al1
+        [   # a
+            [  0.0028210960212903,  0.0000000000000000e+00,  0.0000000000000000e+00 ]
+        ],
+        [   # l
+            [ -0.0001925258348666,  4.9369589722644998e+00,  1.3584836583050000e-02 ],
+            [ -0.0000970803596076,  4.3188796477322002e+00,  1.3034138432430000e-02 ],
+            [ -0.0000898817416500,  1.9080016428616999e+00,  3.0506486715799999e-03 ],
+            [ -0.0000553101050262,  1.4936156681568999e+00,  1.2938928911549999e-02 ]
+        ],
+        [   # z
+            [  0.0041510849668155,  4.0899396355450000e+00, -1.2906864146660001e-02 ],
+            [  0.0006260521444113,  1.4461888986270000e+00,  3.5515522949801999e+00 ],
+            [  0.0000352747346169,  2.1256287034577999e+00,  1.2727416566999999e-04 ]
+        ],
+        [   # zeta
+            [  0.0003142172466014,  2.7964219722923001e+00, -2.3150960980000000e-03 ],
+            [  0.0000904169207946,  1.0477061879627001e+00, -5.6920638196000003e-04 ]
+        ]
+    ],
+
+    # [1] Europa
+    [
+         2.8248327439289299e-07, -3.7352634374713622e-01,  1.7693227111234699e+00, # mu, al0, al1
+        [   # a
+            [  0.0044871037804314,  0.0000000000000000e+00,  0.0000000000000000e+00 ],
+            [  0.0000004324367498,  1.8196456062910000e+00,  1.7822295777568000e+00 ]
+        ],
+        [   # l
+            [  0.0008576433172936,  4.3188693178264002e+00,  1.3034138308049999e-02 ],
+            [  0.0004549582875086,  1.4936531751079001e+00,  1.2938928819619999e-02 ],
+            [  0.0003248939825174,  1.8196494533458001e+00,  1.7822295777568000e+00 ],
+            [ -0.0003074250079334,  4.9377037005910998e+00,  1.3584832867240000e-02 ],
+            [  0.0001982386144784,  1.9079869054759999e+00,  3.0510121286900001e-03 ],
+            [  0.0001834063551804,  2.1402853388529000e+00,  1.4500978933800000e-03 ],
+            [ -0.0001434383188452,  5.6222140366630002e+00,  8.9111478887838003e-01 ],
+            [ -0.0000771939140944,  4.3002724372349999e+00,  2.6733443704265998e+00 ]
+        ],
+        [   # z
+            [ -0.0093589104136341,  4.0899396509038999e+00, -1.2906864146660001e-02 ],
+            [  0.0002988994545555,  5.9097265185595003e+00,  1.7693227079461999e+00 ],
+            [  0.0002139036390350,  2.1256289300016000e+00,  1.2727418406999999e-04 ],
+            [  0.0001980963564781,  2.7435168292649998e+00,  6.7797343008999997e-04 ],
+            [  0.0001210388158965,  5.5839943711203004e+00,  3.2056614899999997e-05 ],
+            [  0.0000837042048393,  1.6094538368039000e+00, -9.0402165808846002e-01 ],
+            [  0.0000823525166369,  1.4461887708689001e+00,  3.5515522949801999e+00 ]
+        ],
+        [   # zeta
+            [  0.0040404917832303,  1.0477063169425000e+00, -5.6920640539999997e-04 ],
+            [  0.0002200421034564,  3.3368857864364001e+00, -1.2491307306999999e-04 ],
+            [  0.0001662544744719,  2.4134862374710999e+00,  0.0000000000000000e+00 ],
+            [  0.0000590282470983,  5.9719930968366004e+00, -3.0561602250000000e-05 ]
+        ]
+    ],
+
+    # [2] Ganymede
+    [
+         2.8249818418472298e-07,  2.8740893911433479e-01,  8.7820792358932798e-01, # mu, al0, al1
+        [   # a
+            [  0.0071566594572575,  0.0000000000000000e+00,  0.0000000000000000e+00 ],
+            [  0.0000013930299110,  1.1586745884981000e+00,  2.6733443704265998e+00 ]
+        ],
+        [   # l
+            [  0.0002310797886226,  2.1402987195941998e+00,  1.4500978438400001e-03 ],
+            [ -0.0001828635964118,  4.3188672736968003e+00,  1.3034138282630000e-02 ],
+            [  0.0001512378778204,  4.9373102372298003e+00,  1.3584834812520000e-02 ],
+            [ -0.0001163720969778,  4.3002659861490002e+00,  2.6733443704265998e+00 ],
+            [ -0.0000955478069846,  1.4936612842567001e+00,  1.2938928798570001e-02 ],
+            [  0.0000815246854464,  5.6222137132535002e+00,  8.9111478887838003e-01 ],
+            [ -0.0000801219679602,  1.2995922951532000e+00,  1.0034433456728999e+00 ],
+            [ -0.0000607017260182,  6.4978769669238001e-01,  5.0172167043264004e-01 ]
+        ],
+        [   # z
+            [  0.0014289811307319,  2.1256295942738999e+00,  1.2727413029000001e-04 ],
+            [  0.0007710931226760,  5.5836330003496002e+00,  3.2064341100000001e-05 ],
+            [  0.0005925911780766,  4.0899396636447998e+00, -1.2906864146660001e-02 ],
+            [  0.0002045597496146,  5.2713683670371996e+00, -1.2523544076106000e-01 ],
+            [  0.0001785118648258,  2.8743156721063001e-01,  8.7820792442520001e-01 ],
+            [  0.0001131999784893,  1.4462127277818000e+00,  3.5515522949801999e+00 ],
+            [ -0.0000658778169210,  2.2702423990985001e+00, -1.7951364394536999e+00 ],
+            [  0.0000497058888328,  5.9096792204858000e+00,  1.7693227129285001e+00 ]
+        ],
+        [   # zeta
+            [  0.0015932721570848,  3.3368862796665000e+00, -1.2491307058000000e-04 ],
+            [  0.0008533093128905,  2.4133881688166001e+00,  0.0000000000000000e+00 ],
+            [  0.0003513347911037,  5.9720789850126996e+00, -3.0561017709999999e-05 ],
+            [ -0.0001441929255483,  1.0477061764435001e+00, -5.6920632124000004e-04 ]
+        ]
+    ],
+
+    # [3] Callisto
+    [
+         2.8249214488990899e-07, -3.6203412913757038e-01,  3.7648623343382798e-01, # mu, al0, al1
+        [   # a
+            [  0.0125879701715314,  0.0000000000000000e+00,  0.0000000000000000e+00 ],
+            [  0.0000035952049470,  6.4965776007116005e-01,  5.0172168165034003e-01 ],
+            [  0.0000027580210652,  1.8084235781510001e+00,  3.1750660413359002e+00 ]
+        ],
+        [   # l
+            [  0.0005586040123824,  2.1404207189814999e+00,  1.4500979323100001e-03 ],
+            [ -0.0003805813868176,  2.7358844897852999e+00,  2.9729650620000000e-05 ],
+            [  0.0002205152863262,  6.4979652596399995e-01,  5.0172167243580001e-01 ],
+            [  0.0001877895151158,  1.8084787604004999e+00,  3.1750660413359002e+00 ],
+            [  0.0000766916975242,  6.2720114319754998e+00,  1.3928364636651001e+00 ],
+            [  0.0000747056855106,  1.2995916202344000e+00,  1.0034433456728999e+00 ]
+        ],
+        [   # z
+            [  0.0073755808467977,  5.5836071576083999e+00,  3.2065099140000001e-05 ],
+            [  0.0002065924169942,  5.9209831565786004e+00,  3.7648624194703001e-01 ],
+            [  0.0001589869764021,  2.8744006242622999e-01,  8.7820792442520001e-01 ],
+            [ -0.0001561131605348,  2.1257397865089001e+00,  1.2727441285000001e-04 ],
+            [  0.0001486043380971,  1.4462134301023000e+00,  3.5515522949801999e+00 ],
+            [  0.0000635073108731,  5.9096803285953996e+00,  1.7693227129285001e+00 ],
+            [  0.0000599351698525,  4.1125517584797997e+00, -2.7985797954588998e+00 ],
+            [  0.0000540660842731,  5.5390350845569003e+00,  2.8683408228299999e-03 ],
+            [ -0.0000489596900866,  4.6218149483337996e+00, -6.2695712529518999e-01 ]
+        ],
+        [   # zeta
+            [  0.0038422977898495,  2.4133922085556998e+00,  0.0000000000000000e+00 ],
+            [  0.0022453891791894,  5.9721736773277003e+00, -3.0561255249999997e-05 ],
+            [ -0.0002604479450559,  3.3368746306408998e+00, -1.2491309972000001e-04 ],
+            [  0.0000332112143230,  5.5604137742336999e+00,  2.9003768850700000e-03 ]
+        ]
+    ]
+]
+
+class JupiterMoonsInfo:
+    """Holds the positions and velocities of Jupiter's major 4 moons.
+
+    The #JupiterMoons function returns an object of this type
+    to report position and velocity vectors for Jupiter's largest 4 moons
+    Io, Europa, Ganymede, and Callisto. Each position vector is relative
+    to the center of Jupiter. Both position and velocity are oriented in
+    the EQJ system (that is, using Earth's equator at the J2000 epoch).
+    The positions are expressed in astronomical units (AU),
+    and the velocities in AU/day.
+
+    Attributes
+    ----------
+    moon : StateVector[4]
+        An array of state vectors, one for each of the four major moons
+        of Jupiter, in the following order: 0=Io, 1=Europa, 2=Ganymede, 3=Callisto.
+    """
+    def __init__(self, moon):
+        self.moon = moon
+
+
+def _JupiterMoon_elem2pv(time, mu, A, AL, K, H, Q, P):
+    # Translation of FORTRAN subroutine ELEM2PV from:
+    # https://ftp.imcce.fr/pub/ephem/satel/galilean/L1/L1.2/
+    AN = math.sqrt(mu / (A*A*A))
+    EE = AL + K*math.sin(AL) - H*math.cos(AL)
+    DE = 1
+    while abs(DE) >= 1.0e-12:
+        CE = math.cos(EE)
+        SE = math.sin(EE)
+        DE = (AL - EE + K*SE - H*CE) / (1.0 - K*CE - H*SE)
+        EE += DE
+    CE = math.cos(EE)
+    SE = math.sin(EE)
+    DLE = H*CE - K*SE
+    RSAM1 = -K*CE - H*SE
+    ASR = 1.0/(1.0 + RSAM1)
+    PHI = math.sqrt(1.0 - K*K - H*H)
+    PSI = 1.0/(1.0 + PHI)
+    X1 = A*(CE - K - PSI*H*DLE)
+    Y1 = A*(SE - H + PSI*K*DLE)
+    VX1 = AN*ASR*A*(-SE - PSI*H*RSAM1)
+    VY1 = AN*ASR*A*(+CE + PSI*K*RSAM1)
+    F2 = 2.0*math.sqrt(1.0 - Q*Q - P*P)
+    P2 = 1.0 - 2.0*P*P
+    Q2 = 1.0 - 2.0*Q*Q
+    PQ = 2.0*P*Q
+    return StateVector(
+        X1*P2 + Y1*PQ,
+        X1*PQ + Y1*Q2,
+        (Q*Y1 - X1*P)*F2,
+        VX1*P2 + VY1*PQ,
+        VX1*PQ + VY1*Q2,
+        (Q*VY1 - VX1*P)*F2,
+        time
+    )
+
+
+def _CalcJupiterMoon(time, mu, al0, al1, a, l, z, zeta):
+    # This is a translation of FORTRAN code by Duriez, Lainey, and Vienne:
+    # https://ftp.imcce.fr/pub/ephem/satel/galilean/L1/L1.2/
+
+    t = time.tt + 18262.5    # number of days since 1950-01-01T00:00:00Z
+
+    # Calculate 6 orbital elements at the given time t.
+    elem0 = 0.0
+    for (amplitude, phase, frequency) in a:
+        elem0 += amplitude * math.cos(phase + (t * frequency))
+
+    elem1 = al0 + (t * al1)
+    for (amplitude, phase, frequency) in l:
+        elem1 += amplitude * math.sin(phase + (t * frequency))
+
+    elem1 = math.fmod(elem1, _PI2)
+    if elem1 < 0:
+        elem1 += _PI2
+
+    elem2 = 0.0
+    elem3 = 0.0
+    for (amplitude, phase, frequency) in z:
+        arg = phase + (t * frequency)
+        elem2 += amplitude * math.cos(arg)
+        elem3 += amplitude * math.sin(arg)
+
+    elem4 = 0.0
+    elem5 = 0.0
+    for (amplitude, phase, frequency) in zeta:
+        arg = phase + (t * frequency)
+        elem4 += amplitude * math.cos(arg)
+        elem5 += amplitude * math.sin(arg)
+
+    # Convert the oribital elements into position vectors in the Jupiter equatorial system (JUP).
+    state = _JupiterMoon_elem2pv(time, mu, elem0, elem1, elem2, elem3, elem4, elem5)
+
+    # Re-orient position and velocity vectors from Jupiter-equatorial (JUP) to Earth-equatorial in J2000 (EQJ).
+    return RotateState(_Rotation_JUP_EQJ, state)
+
+
+def JupiterMoons(time):
+    """Calculates jovicentric positions and velocities of Jupiter's largest 4 moons.
+
+    Calculates position and velocity vectors for Jupiter's moons
+    Io, Europa, Ganymede, and Callisto, at the given date and time.
+    The vectors are jovicentric (relative to the center of Jupiter).
+    Their orientation is the Earth's equatorial system at the J2000 epoch (EQJ).
+    The position components are expressed in astronomical units (AU), and the
+    velocity components are in AU/day.
+
+    To convert to heliocentric vectors, call #HelioVector
+    with `Body.Jupiter` to get Jupiter's heliocentric position, then
+    add the jovicentric vectors. Likewise, you can call #GeoVector
+    to convert to geocentric vectors.
+
+    Parameters
+    ----------
+    time : Time
+        The date and time for which to calculate Jupiter's moons.
+
+    Returns
+    -------
+    JupiterMoonsInfo
+        The positions and velocities of Jupiter's 4 largest moons.
+    """
+    infolist = []
+    for (mu, al0, al1, a, l, z, zeta) in _JupiterMoonModel:
+        infolist.append(_CalcJupiterMoon(time, mu, al0, al1, a, l, z, zeta))
+    return JupiterMoonsInfo(infolist)
+
+# END Jupiter Moons
+#----------------------------------------------------------------------------
 # BEGIN Search
 
 def _QuadInterp(tm, dt, fa, fm, fb):
@@ -6073,6 +6415,36 @@ def RotateVector(rotation, vector):
         rotation.rot[0][1]*vector.x + rotation.rot[1][1]*vector.y + rotation.rot[2][1]*vector.z,
         rotation.rot[0][2]*vector.x + rotation.rot[1][2]*vector.y + rotation.rot[2][2]*vector.z,
         vector.t
+    )
+
+
+def RotateState(rotation, state):
+    """Applies a rotation to a state vector, yielding a rotated state vector.
+
+    This function transforms a state vector in one orientation to a
+    state vector in another orientation. Both the position and velocity
+    vectors are rotated the same way.
+
+    Parameters
+    ----------
+    rotation : RotationMatrix
+        A rotation matrix that specifies how the orientation of the vector is to be changed.
+    state : StateVector
+        The state vector whose orientation is to be changed.
+
+    Returns
+    -------
+    StateVector
+        A state vector in the orientation specified by `rotation`.
+    """
+    return StateVector(
+        rotation.rot[0][0]*state.x + rotation.rot[1][0]*state.y + rotation.rot[2][0]*state.z,
+        rotation.rot[0][1]*state.x + rotation.rot[1][1]*state.y + rotation.rot[2][1]*state.z,
+        rotation.rot[0][2]*state.x + rotation.rot[1][2]*state.y + rotation.rot[2][2]*state.z,
+        rotation.rot[0][0]*state.vx + rotation.rot[1][0]*state.vy + rotation.rot[2][0]*state.vz,
+        rotation.rot[0][1]*state.vx + rotation.rot[1][1]*state.vy + rotation.rot[2][1]*state.vz,
+        rotation.rot[0][2]*state.vx + rotation.rot[1][2]*state.vy + rotation.rot[2][2]*state.vz,
+        state.t
     )
 
 

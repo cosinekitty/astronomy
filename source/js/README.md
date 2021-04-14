@@ -978,7 +978,7 @@ to convert to geocentric vectors.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| date | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time for which to calculate the position vectors. |
+| date | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time for which to calculate Jupiter's moons. |
 
 
 * * *
