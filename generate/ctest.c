@@ -3586,19 +3586,6 @@ fail:
 
 /*-----------------------------------------------------------------------------------------------------------*/
 
-static astro_time_t AstroTerrestrialTime(double tt)
-{
-    /* Iterate to solve to find the correct ut for a given tt, and create an astro_time_t for that time. */
-    astro_time_t time = Astronomy_TimeFromDays(tt);
-    for(;;)
-    {
-        double err = tt - time.tt;
-        if (fabs(err) < 1.0e-12)
-            return time;
-        time = Astronomy_AddDays(time, err);
-    }
-}
-
 static void TrimWhiteSpace(char *line)
 {
     int len = (int)strlen(line);
@@ -3628,7 +3615,7 @@ static int JupiterMoons_CheckJpl(int mindex, double tt, double pos[3], double ve
     const double pos_tolerance = 9.0e-4;
     const double vel_tolerance = 9.0e-4;
 
-    time = AstroTerrestrialTime(tt);
+    time = Astronomy_TerrestrialTime(tt);
 
     jm = Astronomy_JupiterMoons(time);
     CHECK_STATUS(jm.moon[0]);

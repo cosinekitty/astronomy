@@ -2105,6 +2105,30 @@ This function can be used for calculating changes of seasons: equinoxes and sols
 
 ---
 
+<a name="Astronomy_TerrestrialTime"></a>
+### Astronomy_TerrestrialTime(tt) &#8658; [`astro_time_t`](#astro_time_t)
+
+**Converts a terrestrial time value into an [`astro_time_t`](#astro_time_t) value.** 
+
+
+
+This function can be used in rare cases where a time must be based on Terrestrial Time (TT) rather than Universal Time (UT). Most developers will want to call [`Astronomy_TimeFromDays`](#Astronomy_TimeFromDays) instead of this function, because usually time is based on civil time adjusted by leap seconds to match the Earth's rotation, rather than the uniformly flowing TT used to calculate solar system dynamics. In rare cases where the caller already knows TT, this function is provided to create an [`astro_time_t`](#astro_time_t) value that can be passed to Astronomy Engine functions.
+
+
+
+**Returns:**  An [`astro_time_t`](#astro_time_t) value for the given `tt` value. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| `double` | `tt` |  The floating point number of days of uniformly flowing Terrestrial Time since the J2000 epoch. | 
+
+
+
+
+---
+
 <a name="Astronomy_TimeFromDays"></a>
 ### Astronomy_TimeFromDays(ut) &#8658; [`astro_time_t`](#astro_time_t)
 
@@ -2122,7 +2146,7 @@ This function can be useful for reproducing an [`astro_time_t`](#astro_time_t) s
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| `double` | `ut` |  The floating point number of days since noon UTC on January 1, 2000. | 
+| `double` | `ut` |  The floating point number of days since noon UTC on January 1, 2000. This time is based on UTC/UT1 civil time. See [`Astronomy_TerrestrialTime`](#Astronomy_TerrestrialTime) if you instead want to create a time value based on atomic Terrestrial Time (TT). | 
 
 
 

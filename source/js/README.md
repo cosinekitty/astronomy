@@ -194,6 +194,29 @@ Does NOT modify the original `AstroTime` object.
 
 * * *
 
+<a name="AstroTime.FromTerrestrialTime"></a>
+
+### AstroTime.FromTerrestrialTime(tt) ⇒ [<code>AstroTime</code>](#AstroTime)
+**Kind**: static method of [<code>AstroTime</code>](#AstroTime)  
+**Returns**: [<code>AstroTime</code>](#AstroTime) - An `AstroTime` object for the specified terrestrial time.  
+**Brief**: Creates an `AstroTime` value from a Terrestrial Time (TT) day value.
+
+This function can be used in rare cases where a time must be based
+on Terrestrial Time (TT) rather than Universal Time (UT).
+Most developers will want to invoke `new AstroTime(ut)` with a universal time
+instead of this function, because usually time is based on civil time adjusted
+by leap seconds to match the Earth's rotation, rather than the uniformly
+flowing TT used to calculate solar system dynamics. In rare cases
+where the caller already knows TT, this function is provided to create
+an `AstroTime` value that can be passed to Astronomy Engine functions.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| tt | <code>number</code> | The number of days since the J2000 epoch as expressed in Terrestrial Time. |
+
+
+* * *
+
 <a name="Vector"></a>
 
 ## Vector

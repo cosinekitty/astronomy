@@ -1865,21 +1865,10 @@ function Geoid() {
 }
 
 
-function AstroTerrestrialTime(tt) {
-    let time = new Astronomy.AstroTime(tt);
-    for(;;) {
-        const err = tt - time.tt;
-        if (Math.abs(err) < 1.0e-12)
-            return time;
-        time = time.AddDays(err);
-    }
-}
-
-
 function JupiterMoons_CheckJpl(mindex, tt, pos, vel) {
     const pos_tolerance = 9.0e-4;
     const vel_tolerance = 9.0e-4;
-    const time = AstroTerrestrialTime(tt);
+    const time = Astronomy.AstroTime.FromTerrestrialTime(tt);
     const jm = Astronomy.JupiterMoons(time);
 
     let dx = v(pos[0] - jm.moon[mindex].x);

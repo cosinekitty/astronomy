@@ -440,6 +440,34 @@ export class AstroTime {
     }
 
     /**
+     * @brief Creates an `AstroTime` value from a Terrestrial Time (TT) day value.
+     *
+     * This function can be used in rare cases where a time must be based
+     * on Terrestrial Time (TT) rather than Universal Time (UT).
+     * Most developers will want to invoke `new AstroTime(ut)` with a universal time
+     * instead of this function, because usually time is based on civil time adjusted
+     * by leap seconds to match the Earth's rotation, rather than the uniformly
+     * flowing TT used to calculate solar system dynamics. In rare cases
+     * where the caller already knows TT, this function is provided to create
+     * an `AstroTime` value that can be passed to Astronomy Engine functions.
+     *
+     * @param {number} tt
+     *      The number of days since the J2000 epoch as expressed in Terrestrial Time.
+     *
+     * @returns {AstroTime}
+     *      An `AstroTime` object for the specified terrestrial time.
+     */
+    static FromTerrestrialTime(tt: number): AstroTime {
+        let time = new AstroTime(tt);
+        for(;;) {
+            const err = tt - time.tt;
+            if (Math.abs(err) < 1.0e-12)
+                return time;
+            time = time.AddDays(err);
+        }
+    }
+
+    /**
      * Formats an `AstroTime` object as an [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601)
      * date/time string in UTC, to millisecond resolution.
      * Example: `2018-08-17T17:22:04.050Z`

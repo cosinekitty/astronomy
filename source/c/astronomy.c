@@ -718,14 +718,16 @@ static double TerrestrialTime(double ut)
 }
 
 /**
- * @brief
- *      Converts a J2000 day value to an #astro_time_t value.
+ * @brief Converts a J2000 day value to an #astro_time_t value.
  *
  * This function can be useful for reproducing an #astro_time_t structure
  * from its `ut` field only.
  *
  * @param ut
  *      The floating point number of days since noon UTC on January 1, 2000.
+ *      This time is based on UTC/UT1 civil time.
+ *      See #Astronomy_TerrestrialTime if you instead want to create
+ *      a time value based on atomic Terrestrial Time (TT).
  *
  * @returns
  *      An #astro_time_t value for the given `ut` value.
@@ -738,6 +740,40 @@ astro_time_t Astronomy_TimeFromDays(double ut)
     time.psi = time.eps = NAN;
     return time;
 }
+
+
+/**
+ * @brief Converts a terrestrial time value into an #astro_time_t value.
+ *
+ * This function can be used in rare cases where a time must be based
+ * on Terrestrial Time (TT) rather than Universal Time (UT).
+ * Most developers will want to call #Astronomy_TimeFromDays instead of
+ * this function, because usually time is based on civil time adjusted
+ * by leap seconds to match the Earth's rotation, rather than the uniformly
+ * flowing TT used to calculate solar system dynamics. In rare cases
+ * where the caller already knows TT, this function is provided to create
+ * an #astro_time_t value that can be passed to Astronomy Engine functions.
+ *
+ * @param tt
+ *      The floating point number of days of uniformly flowing
+ *      Terrestrial Time since the J2000 epoch.
+ *
+ * @returns
+ *      An #astro_time_t value for the given `tt` value.
+ */
+astro_time_t Astronomy_TerrestrialTime(double tt)
+{
+    /* Iterate to solve to find the correct ut for a given tt, and create an astro_time_t for that time. */
+    astro_time_t time = Astronomy_TimeFromDays(tt);
+    for(;;)
+    {
+        double err = tt - time.tt;
+        if (fabs(err) < 1.0e-12)
+            return time;
+        time = Astronomy_AddDays(time, err);
+    }
+}
+
 
 /**
  * @brief Returns the computer's current date and time in the form of an #astro_time_t.

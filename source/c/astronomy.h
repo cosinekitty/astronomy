@@ -911,6 +911,7 @@ astro_time_t Astronomy_TimeFromUtc(astro_utc_t utc);
 astro_utc_t  Astronomy_UtcFromTime(astro_time_t time);
 astro_status_t Astronomy_FormatTime(astro_time_t time, astro_time_format_t format, char *text, size_t size);
 astro_time_t Astronomy_TimeFromDays(double ut);
+astro_time_t Astronomy_TerrestrialTime(double tt);
 astro_time_t Astronomy_AddDays(astro_time_t time, double days);
 astro_func_result_t Astronomy_HelioDistance(astro_body_t body, astro_time_t time);
 astro_vector_t Astronomy_HelioVector(astro_body_t body, astro_time_t time);
