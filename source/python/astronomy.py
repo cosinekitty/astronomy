@@ -47,6 +47,13 @@ JUPITER_EQUATORIAL_RADIUS_KM = 71492.0  #<const> The equatorial radius of Jupite
 JUPITER_POLAR_RADIUS_KM = 66854.0       #<const> The polar radius of Jupiter, expressed in kilometers.
 JUPITER_MEAN_RADIUS_KM = 69911.0        #<const> The volumetric mean radius of Jupiter, expressed in kilometers.
 
+# The radii of Jupiter's 4 largest moons were obtained from:
+# https://ssd.jpl.nasa.gov/?sat_phys_par
+IO_RADIUS_KM       = 1821.6     #<const> The radius of Jupiter's moon Io, expressed in kilometers.
+EUROPA_RADIUS_KM   = 1560.8     #<const> The radius of Jupiter's moon Europa, expressed in kilometers.
+GANYMEDE_RADIUS_KM = 2631.2     #<const> The radius of Jupiter's moon Ganymede, expressed in kilometers.
+CALLISTO_RADIUS_KM = 2410.3     #<const> The radius of Jupiter's moon Callisto, expressed in kilometers.
+
 _CalcMoonCount = 0
 
 _DAYS_PER_TROPICAL_YEAR = 365.24217
