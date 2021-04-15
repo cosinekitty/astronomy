@@ -54,9 +54,11 @@ extern "C" {
  */
 #define RAD2DEG     57.295779513082321
 
-// Jupiter radius data are nominal values obtained from:
-// https://www.iau.org/static/resolutions/IAU2015_English.pdf
-// https://nssdc.gsfc.nasa.gov/planetary/factsheet/jupiterfact.html
+/*
+    Jupiter radius data are nominal values obtained from:
+    https://www.iau.org/static/resolutions/IAU2015_English.pdf
+    https://nssdc.gsfc.nasa.gov/planetary/factsheet/jupiterfact.html
+*/
 
 /**
  * \def JUPITER_EQUATORIAL_RADIUS_KM
@@ -75,6 +77,36 @@ extern "C" {
  * @brief The volumetric mean radius of Jupiter, expressed in kilometers.
  */
 #define JUPITER_MEAN_RADIUS_KM          69911.0
+
+/*
+    The radii of Jupiter's four major moons are obtained from:
+    https://ssd.jpl.nasa.gov/?sat_phys_par
+*/
+
+/**
+ * \def IO_RADIUS_KM
+ * @brief The mean radius of Jupiter's moon Io, expressed in kilometers.
+ */
+#define IO_RADIUS_KM            1821.6
+
+/**
+ * \def EUROPA_RADIUS_KM
+ * @brief The mean radius of Jupiter's moon Europa, expressed in kilometers.
+ */
+#define EUROPA_RADIUS_KM        1560.8
+
+/**
+ * \def GANYMEDE_RADIUS_KM
+ * @brief The mean radius of Jupiter's moon Ganymede, expressed in kilometers.
+ */
+#define GANYMEDE_RADIUS_KM      2631.2
+
+/**
+ * \def CALLISTO_RADIUS_KM
+ * @brief The mean radius of Jupiter's moon Callisto, expressed in kilometers.
+ */
+#define CALLISTO_RADIUS_KM      2410.3
+
 
 
 /*---------- types ----------*/

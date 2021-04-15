@@ -5941,14 +5941,17 @@ double Astronomy_Refraction(astro_refraction_t refraction, double altitude)
 
     if (refraction == REFRACTION_NORMAL || refraction == REFRACTION_JPLHOR)
     {
-        // http://extras.springer.com/1999/978-1-4471-0555-8/chap4/horizons/horizons.pdf
-        // JPL Horizons says it uses refraction algorithm from
-        // Meeus "Astronomical Algorithms", 1991, p. 101-102.
-        // I found the following Go implementation:
-        // https://github.com/soniakeys/meeus/blob/master/v3/refraction/refract.go
-        // This is a translation from the function "Saemundsson" there.
-        // I found experimentally that JPL Horizons clamps the angle to 1 degree below the horizon.
-        // This is important because the 'refr' formula below goes crazy near hd = -5.11.
+        /*
+            http://extras.springer.com/1999/978-1-4471-0555-8/chap4/horizons/horizons.pdf
+            JPL Horizons says it uses refraction algorithm from
+            Meeus "Astronomical Algorithms", 1991, p. 101-102.
+            I found the following Go implementation:
+            https://github.com/soniakeys/meeus/blob/master/v3/refraction/refract.go
+            This is a translation from the function "Saemundsson" there.
+            I found experimentally that JPL Horizons clamps the angle to 1 degree below the horizon.
+            This is important because the 'refr' formula below goes crazy near hd = -5.11.
+        */
+
         hd = altitude;
         if (hd < -1.0)
             hd = -1.0;
@@ -5957,10 +5960,12 @@ double Astronomy_Refraction(astro_refraction_t refraction, double altitude)
 
         if (refraction == REFRACTION_NORMAL && altitude < -1.0)
         {
-            // In "normal" mode we gradually reduce refraction toward the nadir
-            // so that we never get an altitude angle less than -90 degrees.
-            // When horizon angle is -1 degrees, the factor is exactly 1.
-            // As altitude approaches -90 (the nadir), the fraction approaches 0 linearly.
+            /*
+                In "normal" mode we gradually reduce refraction toward the nadir
+                so that we never get an altitude angle less than -90 degrees.
+                When horizon angle is -1 degrees, the factor is exactly 1.
+                As altitude approaches -90 (the nadir), the fraction approaches 0 linearly.
+            */
             refr *= (altitude + 90.0) / 89.0;
         }
     }

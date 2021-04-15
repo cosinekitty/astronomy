@@ -2278,6 +2278,21 @@ Calculates the non-negative length of the given vector. The length is expressed 
 
 ---
 
+<a name="CALLISTO_RADIUS_KM"></a>
+### `CALLISTO_RADIUS_KM`
+
+**The mean radius of Jupiter's moon Callisto, expressed in kilometers.** 
+
+
+
+```C
+#define CALLISTO_RADIUS_KM  2410.3
+```
+
+
+
+---
+
 <a name="DEG2RAD"></a>
 ### `DEG2RAD`
 
@@ -2287,6 +2302,51 @@ Calculates the non-negative length of the given vector. The length is expressed 
 
 ```C
 #define DEG2RAD  0.017453292519943296
+```
+
+
+
+---
+
+<a name="EUROPA_RADIUS_KM"></a>
+### `EUROPA_RADIUS_KM`
+
+**The mean radius of Jupiter's moon Europa, expressed in kilometers.** 
+
+
+
+```C
+#define EUROPA_RADIUS_KM  1560.8
+```
+
+
+
+---
+
+<a name="GANYMEDE_RADIUS_KM"></a>
+### `GANYMEDE_RADIUS_KM`
+
+**The mean radius of Jupiter's moon Ganymede, expressed in kilometers.** 
+
+
+
+```C
+#define GANYMEDE_RADIUS_KM  2631.2
+```
+
+
+
+---
+
+<a name="IO_RADIUS_KM"></a>
+### `IO_RADIUS_KM`
+
+**The mean radius of Jupiter's moon Io, expressed in kilometers.** 
+
+
+
+```C
+#define IO_RADIUS_KM  1821.6
 ```
 
 

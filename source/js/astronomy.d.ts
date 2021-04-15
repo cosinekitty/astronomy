@@ -52,6 +52,22 @@ export declare const JUPITER_POLAR_RADIUS_KM = 66854;
  */
 export declare const JUPITER_MEAN_RADIUS_KM = 69911;
 /**
+ * @brief The mean radius of Jupiter's moon Io, expressed in kilometers.
+ */
+export declare const IO_RADIUS_KM = 1821.6;
+/**
+ * @brief The mean radius of Jupiter's moon Europa, expressed in kilometers.
+ */
+export declare const EUROPA_RADIUS_KM = 1560.8;
+/**
+ * @brief The mean radius of Jupiter's moon Ganymede, expressed in kilometers.
+ */
+export declare const GANYMEDE_RADIUS_KM = 2631.2;
+/**
+ * @brief The mean radius of Jupiter's moon Callisto, expressed in kilometers.
+ */
+export declare const CALLISTO_RADIUS_KM = 2410.3;
+/**
  * @brief Calculates the angle in degrees between two vectors.
  *
  * The angle is measured in the plane that contains both vectors.

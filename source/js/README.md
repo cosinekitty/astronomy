@@ -761,6 +761,38 @@ The calculations are performed from the point of view of a geocentric observer.
 
 * * *
 
+<a name="IO_RADIUS_KM"></a>
+
+## IO\_RADIUS\_KM
+**Kind**: global variable  
+**Brief**: The mean radius of Jupiter's moon Io, expressed in kilometers.  
+
+* * *
+
+<a name="EUROPA_RADIUS_KM"></a>
+
+## EUROPA\_RADIUS\_KM
+**Kind**: global variable  
+**Brief**: The mean radius of Jupiter's moon Europa, expressed in kilometers.  
+
+* * *
+
+<a name="GANYMEDE_RADIUS_KM"></a>
+
+## GANYMEDE\_RADIUS\_KM
+**Kind**: global variable  
+**Brief**: The mean radius of Jupiter's moon Ganymede, expressed in kilometers.  
+
+* * *
+
+<a name="CALLISTO_RADIUS_KM"></a>
+
+## CALLISTO\_RADIUS\_KM
+**Kind**: global variable  
+**Brief**: The mean radius of Jupiter's moon Callisto, expressed in kilometers.  
+
+* * *
+
 <a name="Body"></a>
 
 ## Body : <code>enum</code>

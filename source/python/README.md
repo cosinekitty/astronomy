@@ -161,7 +161,7 @@ However, because Python defines the [angular conversion functions](https://docs.
 <a name="CALLISTO_RADIUS_KM"></a>
 ### `CALLISTO_RADIUS_KM = 2410.3`
 
-**The radius of Jupiter's moon Callisto, expressed in kilometers.**
+**The mean radius of Jupiter's moon Callisto, expressed in kilometers.**
 
 ---
 
@@ -175,21 +175,21 @@ However, because Python defines the [angular conversion functions](https://docs.
 <a name="EUROPA_RADIUS_KM"></a>
 ### `EUROPA_RADIUS_KM = 1560.8`
 
-**The radius of Jupiter's moon Europa, expressed in kilometers.**
+**The mean radius of Jupiter's moon Europa, expressed in kilometers.**
 
 ---
 
 <a name="GANYMEDE_RADIUS_KM"></a>
 ### `GANYMEDE_RADIUS_KM = 2631.2`
 
-**The radius of Jupiter's moon Ganymede, expressed in kilometers.**
+**The mean radius of Jupiter's moon Ganymede, expressed in kilometers.**
 
 ---
 
 <a name="IO_RADIUS_KM"></a>
 ### `IO_RADIUS_KM = 1821.6`
 
-**The radius of Jupiter's moon Io, expressed in kilometers.**
+**The mean radius of Jupiter's moon Io, expressed in kilometers.**
 
 ---
 

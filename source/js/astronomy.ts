@@ -70,6 +70,31 @@ export const JUPITER_POLAR_RADIUS_KM = 66854.0;
   */
 export const JUPITER_MEAN_RADIUS_KM = 69911.0;
 
+
+// The radii of Jupiter's four major moons are obtained from:
+// https://ssd.jpl.nasa.gov/?sat_phys_par
+
+/**
+ * @brief The mean radius of Jupiter's moon Io, expressed in kilometers.
+ */
+export const IO_RADIUS_KM = 1821.6;
+
+/**
+ * @brief The mean radius of Jupiter's moon Europa, expressed in kilometers.
+ */
+export const EUROPA_RADIUS_KM = 1560.8;
+
+/**
+ * @brief The mean radius of Jupiter's moon Ganymede, expressed in kilometers.
+ */
+export const GANYMEDE_RADIUS_KM = 2631.2;
+
+/**
+ * @brief The mean radius of Jupiter's moon Callisto, expressed in kilometers.
+ */
+export const CALLISTO_RADIUS_KM = 2410.3;
+
+
 const DAYS_PER_TROPICAL_YEAR = 365.24217;
 const J2000 = new Date('2000-01-01T12:00:00Z');
 const PI2 = 2 * Math.PI;

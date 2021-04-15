@@ -2072,6 +2072,29 @@ namespace CosineKitty
         /// </summary>
         public const double JUPITER_MEAN_RADIUS_KM = 69911.0;
 
+        // The radii of Jupiter's four major moons are obtained from:
+        // https://ssd.jpl.nasa.gov/?sat_phys_par
+
+        /// <summary>
+        /// The The mean radius of Jupiter's moon Io, expressed in kilometers.
+        /// </summary>
+        public const double IO_RADIUS_KM = 1821.6;
+
+        /// <summary>
+        /// The The mean radius of Jupiter's moon Europa, expressed in kilometers.
+        /// </summary>
+        public const double EUROPA_RADIUS_KM = 1560.8;
+
+        /// <summary>
+        /// The The mean radius of Jupiter's moon Ganymede, expressed in kilometers.
+        /// </summary>
+        public const double GANYMEDE_RADIUS_KM = 2631.2;
+
+        /// <summary>
+        /// The The mean radius of Jupiter's moon Callisto, expressed in kilometers.
+        /// </summary>
+        public const double CALLISTO_RADIUS_KM = 2410.3;
+
         private const double DAYS_PER_TROPICAL_YEAR = 365.24217;
         private const double ASEC360 = 1296000.0;
         private const double ASEC2RAD = 4.848136811095359935899141e-6;
