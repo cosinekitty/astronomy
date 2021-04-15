@@ -159,7 +159,7 @@ However, because Python defines the [angular conversion functions](https://docs.
 ---
 
 <a name="C_AUDAY"></a>
-### `C_AUDAY   = 173.1446326846693`
+### `C_AUDAY = 173.1446326846693`
 
 **The speed of light expressed in astronomical units per day.**
 

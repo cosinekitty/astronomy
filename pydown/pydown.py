@@ -264,7 +264,7 @@ def MdErrType(c):
         Fail('No documentation for exception class ' + c.__name__)
     return md
 
-def Markdown(module, const_md):
+def Markdown(module, const_md, const_set):
     md = ''
     funclist = []
     classlist = []
@@ -284,7 +284,11 @@ def Markdown(module, const_md):
             elif inspect.ismodule(obj):
                 pass # ignore other modules pulled in
             else:
-                print('pydown.py WARNING: ignoring', name)
+                # Assume this is a global constant. Fail if not documented
+                # using my custom "#<const>" documentation text.
+                if name not in const_set:
+                    Fail('Undocumented symbol: ' + name)
+
 
     md += '---\n'
     md += '\n'
@@ -339,6 +343,7 @@ def Markdown(module, const_md):
 
 
 def ConstantsMd(inPythonFileName):
+    documentedSymbolSet = set()
     md = ''
 
     clist = []
@@ -350,8 +355,11 @@ def ConstantsMd(inPythonFileName):
                 doc = parts[1].strip()
                 tokens = code.split()
                 if len(tokens) >= 3 and tokens[1] == '=':
+                    # Reformat the code to remove extraneous spaces.
+                    codeText = ' '.join(tokens).strip()
                     symbol = tokens[0]
-                    clist.append((symbol, code, doc))
+                    clist.append((symbol, codeText, doc))
+                    documentedSymbolSet.add(symbol)
 
     for (symbol, code, doc) in sorted(clist):
         md += '\n---\n\n'
@@ -359,7 +367,7 @@ def ConstantsMd(inPythonFileName):
         md += '### `{}`\n\n'.format(code)
         md += '**{}**\n\n'.format(doc)
 
-    return md
+    return md, documentedSymbolSet
 
 
 def main():
@@ -379,8 +387,8 @@ def main():
         prefix = infile.read()
 
     module = LoadModule(inPythonFileName)
-    const_md = ConstantsMd(inPythonFileName)
-    md = Markdown(module, const_md)
+    const_md, const_set = ConstantsMd(inPythonFileName)
+    md = Markdown(module, const_md, const_set)
 
     with open(outMarkdownFileName, 'wt') as outfile:
         outfile.write(prefix)
