@@ -162,6 +162,9 @@ class Vector:
         """Returns the length of the vector in AU."""
         return math.sqrt(self.x**2 + self.y**2 + self.z**2)
 
+    def __add__(self, other):
+        return Vector(self.x + other.x, self.y + other.y, self.z + other.z, self.t)
+
 class StateVector:
     """A combination of a position vector, a velocity vector, and a time.
 
@@ -197,7 +200,7 @@ class StateVector:
         self.t = t
 
     def __repr__(self):
-        return 'StateVector[pos=({}, {}, {}), vel=({}, {}, {}), t{}]'.format(
+        return 'StateVector[pos=({}, {}, {}), vel=({}, {}, {}), t={}]'.format(
             self.x, self.y, self.z,
             self.vx, self.vy, self.vz,
             str(self.t))
