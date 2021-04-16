@@ -54,6 +54,61 @@ extern "C" {
  */
 #define RAD2DEG     57.295779513082321
 
+/*
+    Jupiter radius data are nominal values obtained from:
+    https://www.iau.org/static/resolutions/IAU2015_English.pdf
+    https://nssdc.gsfc.nasa.gov/planetary/factsheet/jupiterfact.html
+*/
+
+/**
+ * \def JUPITER_EQUATORIAL_RADIUS_KM
+ * @brief The equatorial radius of Jupiter, expressed in kilometers.
+ */
+#define JUPITER_EQUATORIAL_RADIUS_KM    71492.0
+
+/**
+ * \def JUPITER_POLAR_RADIUS_KM
+ * @brief The polar radius of Jupiter, expressed in kilometers.
+ */
+#define JUPITER_POLAR_RADIUS_KM         66854.0
+
+/**
+ * \def JUPITER_MEAN_RADIUS_KM
+ * @brief The volumetric mean radius of Jupiter, expressed in kilometers.
+ */
+#define JUPITER_MEAN_RADIUS_KM          69911.0
+
+/*
+    The radii of Jupiter's four major moons are obtained from:
+    https://ssd.jpl.nasa.gov/?sat_phys_par
+*/
+
+/**
+ * \def IO_RADIUS_KM
+ * @brief The mean radius of Jupiter's moon Io, expressed in kilometers.
+ */
+#define IO_RADIUS_KM            1821.6
+
+/**
+ * \def EUROPA_RADIUS_KM
+ * @brief The mean radius of Jupiter's moon Europa, expressed in kilometers.
+ */
+#define EUROPA_RADIUS_KM        1560.8
+
+/**
+ * \def GANYMEDE_RADIUS_KM
+ * @brief The mean radius of Jupiter's moon Ganymede, expressed in kilometers.
+ */
+#define GANYMEDE_RADIUS_KM      2631.2
+
+/**
+ * \def CALLISTO_RADIUS_KM
+ * @brief The mean radius of Jupiter's moon Callisto, expressed in kilometers.
+ */
+#define CALLISTO_RADIUS_KM      2410.3
+
+
+
 /*---------- types ----------*/
 
 /**
@@ -193,6 +248,22 @@ typedef struct
     astro_time_t t;         /**< The date and time at which this vector is valid. */
 }
 astro_vector_t;
+
+/**
+ * @brief A state vector that contains a position (AU) and velocity (AU/day).
+ */
+typedef struct
+{
+    astro_status_t status;  /**< `ASTRO_SUCCESS` if this struct is valid; otherwise an error code. */
+    double x;               /**< The Cartesian position x-coordinate of the vector in AU. */
+    double y;               /**< The Cartesian position y-coordinate of the vector in AU. */
+    double z;               /**< The Cartesian position z-coordinate of the vector in AU. */
+    double vx;              /**< The Cartesian velocity x-coordinate of the vector in AU/day. */
+    double vy;              /**< The Cartesian velocity y-coordinate of the vector in AU/day. */
+    double vz;              /**< The Cartesian velocity z-coordinate of the vector in AU/day. */
+    astro_time_t t;         /**< The date and time at which this state vector is valid. */
+}
+astro_state_vector_t;
 
 /**
  * @brief Spherical coordinates: latitude, longitude, distance.
@@ -808,6 +879,57 @@ astro_time_format_t;
  */
 #define TIME_TEXT_BYTES  25
 
+/**
+ * \def NUM_JUPITER_MOONS
+ * @brief The number of Jupiter's moons that Astronomy Engine knows how to calculate.
+ */
+#define NUM_JUPITER_MOONS  4
+
+/**
+ * \def JM_IO
+ * @brief The array index of Jupiter's moon Io in the `moon` field of #astro_jupiter_moons_t.
+ */
+#define JM_IO         0
+
+/**
+ * \def JM_EUROPA
+ * @brief The array index of Jupiter's moon Europa in the `moon` field of #astro_jupiter_moons_t.
+ */
+#define JM_EUROPA     1
+
+/**
+ * \def JM_GANYMEDE
+ * @brief The array index of Jupiter's moon Ganymede in the `moon` field of #astro_jupiter_moons_t.
+ */
+#define JM_GANYMEDE   2
+
+/**
+ * \def JM_CALLISTO
+ * @brief The array index of Jupiter's moon Callisto in the `moon` field of #astro_jupiter_moons_t.
+ */
+#define JM_CALLISTO   3
+
+/**
+ * @brief Holds the positions and velocities of Jupiter's major 4 moons.
+ *
+ * The #Astronomy_JupiterMoons function returns this struct
+ * to report position and velocity vectors for Jupiter's largest 4 moons
+ * Io, Europa, Ganymede, and Callisto. Each position vector is relative
+ * to the center of Jupiter. Both position and velocity are oriented in
+ * the EQJ system (that is, using Earth's equator at the J2000 epoch.)
+ * The positions are expressed in astronomical units (AU),
+ * and the velocities in AU/day.
+ *
+ * The following integer constants may be useful for indexing
+ * into the `moon` array: #JM_IO, #JM_EUROPA, #JM_GANYMEDE, #JM_CALLISTO.
+ */
+typedef struct
+{
+    astro_state_vector_t moon[NUM_JUPITER_MOONS];     /**< Jovicentric position and velocity of each moon, as described above. */
+}
+astro_jupiter_moons_t;
+
+
 /*---------- functions ----------*/
 
 void Astronomy_Reset(void);
@@ -821,11 +943,13 @@ astro_time_t Astronomy_TimeFromUtc(astro_utc_t utc);
 astro_utc_t  Astronomy_UtcFromTime(astro_time_t time);
 astro_status_t Astronomy_FormatTime(astro_time_t time, astro_time_format_t format, char *text, size_t size);
 astro_time_t Astronomy_TimeFromDays(double ut);
+astro_time_t Astronomy_TerrestrialTime(double tt);
 astro_time_t Astronomy_AddDays(astro_time_t time, double days);
 astro_func_result_t Astronomy_HelioDistance(astro_body_t body, astro_time_t time);
 astro_vector_t Astronomy_HelioVector(astro_body_t body, astro_time_t time);
 astro_vector_t Astronomy_GeoVector(astro_body_t body, astro_time_t time, astro_aberration_t aberration);
 astro_vector_t Astronomy_GeoMoon(astro_time_t time);
+astro_jupiter_moons_t Astronomy_JupiterMoons(astro_time_t time);
 
 astro_equatorial_t Astronomy_Equator(
     astro_body_t body,
@@ -913,6 +1037,7 @@ astro_equatorial_t Astronomy_EquatorFromVector(astro_vector_t vector);
 astro_vector_t Astronomy_VectorFromHorizon(astro_spherical_t sphere, astro_time_t time, astro_refraction_t refraction);
 astro_spherical_t Astronomy_HorizonFromVector(astro_vector_t vector, astro_refraction_t refraction);
 astro_vector_t Astronomy_RotateVector(astro_rotation_t rotation, astro_vector_t vector);
+astro_state_vector_t Astronomy_RotateState(astro_rotation_t rotation, astro_state_vector_t state);
 
 astro_rotation_t Astronomy_Rotation_EQD_EQJ(astro_time_t time);
 astro_rotation_t Astronomy_Rotation_EQD_ECL(astro_time_t time);

@@ -78,6 +78,16 @@ if !FASTMODE! == false (
     )
 )
 
+if not exist output\jupiter_moons.txt (
+    echo.
+    echo.Optimizing Jupiter Moon models.
+    !GENEXE! jmopt
+    if errorlevel 1 (
+        echo.FATAL: !GENEXE! jmopt
+        exit /b 1
+    )
+)
+
 echo.
 echo.Generating apsis test data.
 if exist apsides\apsis_*.txt (del apsides\apsis_*.txt)

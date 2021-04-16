@@ -39,6 +39,21 @@ import re
 KM_PER_AU = 1.4959787069098932e+8   #<const> The number of kilometers per astronomical unit.
 C_AUDAY   = 173.1446326846693       #<const> The speed of light expressed in astronomical units per day.
 
+# Jupiter radius data are nominal values obtained from:
+# https://www.iau.org/static/resolutions/IAU2015_English.pdf
+# https://nssdc.gsfc.nasa.gov/planetary/factsheet/jupiterfact.html
+
+JUPITER_EQUATORIAL_RADIUS_KM = 71492.0  #<const> The equatorial radius of Jupiter, expressed in kilometers.
+JUPITER_POLAR_RADIUS_KM = 66854.0       #<const> The polar radius of Jupiter, expressed in kilometers.
+JUPITER_MEAN_RADIUS_KM = 69911.0        #<const> The volumetric mean radius of Jupiter, expressed in kilometers.
+
+# The radii of Jupiter's 4 largest moons were obtained from:
+# https://ssd.jpl.nasa.gov/?sat_phys_par
+IO_RADIUS_KM       = 1821.6     #<const> The mean radius of Jupiter's moon Io, expressed in kilometers.
+EUROPA_RADIUS_KM   = 1560.8     #<const> The mean radius of Jupiter's moon Europa, expressed in kilometers.
+GANYMEDE_RADIUS_KM = 2631.2     #<const> The mean radius of Jupiter's moon Ganymede, expressed in kilometers.
+CALLISTO_RADIUS_KM = 2410.3     #<const> The mean radius of Jupiter's moon Callisto, expressed in kilometers.
+
 _CalcMoonCount = 0
 
 _DAYS_PER_TROPICAL_YEAR = 365.24217
@@ -146,6 +161,53 @@ class Vector:
     def Length(self):
         """Returns the length of the vector in AU."""
         return math.sqrt(self.x**2 + self.y**2 + self.z**2)
+
+    def __add__(self, other):
+        return Vector(self.x + other.x, self.y + other.y, self.z + other.z, self.t)
+
+class StateVector:
+    """A combination of a position vector, a velocity vector, and a time.
+
+    The position (x, y, z) is measured in astronomical units (AU).
+    The velocity (vx, vy, vz) is measured in AU/day.
+    The coordinate system varies and depends on context.
+    The state vector also includes a time stamp.
+
+    Attributes
+    ----------
+    x : float
+        The x-coordinate of the position, measured in AU.
+    y : float
+        The y-coordinate of the position, measured in AU.
+    z : float
+        The z-coordinate of the position, measured in AU.
+    vx : float
+        The x-component of the velocity, measured in AU/day.
+    vy : float
+        The y-component of the velocity, measured in AU/day.
+    vz : float
+        The z-component of the velocity, measured in AU/day.
+    t : Time
+        The date and time at which the position and velocity vectors are valid.
+    """
+    def __init__(self, x, y, z, vx, vy, vz, t):
+        self.x = x
+        self.y = y
+        self.z = z
+        self.vx = vx
+        self.vy = vy
+        self.vz = vz
+        self.t = t
+
+    def __repr__(self):
+        return 'StateVector[pos=({}, {}, {}), vel=({}, {}, {}), t={}]'.format(
+            self.x, self.y, self.z,
+            self.vx, self.vy, self.vz,
+            str(self.t))
+
+    def __str__(self):
+        return '({}, {}, {}, {}, {}, {}, {})'.format(self.x, self.y, self.z, self.vx, self.vy, self.vz, str(self.t))
+
 
 @enum.unique
 class Body(enum.Enum):
@@ -403,6 +465,20 @@ _DeltaT = DeltaT_EspenakMeeus
 def _TerrestrialTime(ut):
     return ut + _DeltaT(ut) / 86400.0
 
+def _UniversalTime(tt):
+    # This is the inverse function of _TerrestrialTime.
+    # This is an iterative numerical solver, but because
+    # the relationship between UT and TT is almost perfectly linear,
+    # it converges extremely fast (never more than 3 iterations).
+    dt = _TerrestrialTime(tt) - tt      # first approximation of dt = tt - ut
+    while True:
+        ut = tt - dt
+        tt_check = _TerrestrialTime(ut)
+        err = tt_check - tt
+        if abs(err) < 1.0e-12:
+            return ut
+        dt += err
+
 _TimeRegex = re.compile(r'^([0-9]{1,4})-([0-9]{2})-([0-9]{2})(T([0-9]{2}):([0-9]{2})(:([0-9]{2}(\.[0-9]+)?))?Z)?$')
 
 class Time:
@@ -449,10 +525,27 @@ class Time:
         such as the orbits of planets around the Sun, or the Moon around the Earth.
         Historically, Terrestrial Time has also been known by the term *Ephemeris Time* (ET).
     """
-    def __init__(self, ut):
+    def __init__(self, ut, tt = None):
         self.ut = ut
-        self.tt = _TerrestrialTime(ut)
+        if tt is None:
+            self.tt = _TerrestrialTime(ut)
+        else:
+            self.tt = tt
         self.etilt = None
+
+    @staticmethod
+    def FromTerrestrialTime(tt):
+        """Creates a #Time object from a Terrestrial Time day value.
+
+        Parameters
+        ----------
+        tt : The number of days after the J2000 epoch.
+
+        Returns
+        -------
+        Time
+        """
+        return Time(_UniversalTime(tt), tt)
 
     @staticmethod
     def Parse(text):
@@ -1490,6 +1583,140 @@ def _CalcPluto(time):
 
 
 # END Pluto Integrator
+#----------------------------------------------------------------------------
+# BEGIN Jupiter Moons
+
+$ASTRO_JUPITER_MOONS()
+
+class JupiterMoonsInfo:
+    """Holds the positions and velocities of Jupiter's major 4 moons.
+
+    The #JupiterMoons function returns an object of this type
+    to report position and velocity vectors for Jupiter's largest 4 moons
+    Io, Europa, Ganymede, and Callisto. Each position vector is relative
+    to the center of Jupiter. Both position and velocity are oriented in
+    the EQJ system (that is, using Earth's equator at the J2000 epoch).
+    The positions are expressed in astronomical units (AU),
+    and the velocities in AU/day.
+
+    Attributes
+    ----------
+    moon : StateVector[4]
+        An array of state vectors, one for each of the four major moons
+        of Jupiter, in the following order: 0=Io, 1=Europa, 2=Ganymede, 3=Callisto.
+    """
+    def __init__(self, moon):
+        self.moon = moon
+
+
+def _JupiterMoon_elem2pv(time, mu, A, AL, K, H, Q, P):
+    # Translation of FORTRAN subroutine ELEM2PV from:
+    # https://ftp.imcce.fr/pub/ephem/satel/galilean/L1/L1.2/
+    AN = math.sqrt(mu / (A*A*A))
+    EE = AL + K*math.sin(AL) - H*math.cos(AL)
+    DE = 1
+    while abs(DE) >= 1.0e-12:
+        CE = math.cos(EE)
+        SE = math.sin(EE)
+        DE = (AL - EE + K*SE - H*CE) / (1.0 - K*CE - H*SE)
+        EE += DE
+    CE = math.cos(EE)
+    SE = math.sin(EE)
+    DLE = H*CE - K*SE
+    RSAM1 = -K*CE - H*SE
+    ASR = 1.0/(1.0 + RSAM1)
+    PHI = math.sqrt(1.0 - K*K - H*H)
+    PSI = 1.0/(1.0 + PHI)
+    X1 = A*(CE - K - PSI*H*DLE)
+    Y1 = A*(SE - H + PSI*K*DLE)
+    VX1 = AN*ASR*A*(-SE - PSI*H*RSAM1)
+    VY1 = AN*ASR*A*(+CE + PSI*K*RSAM1)
+    F2 = 2.0*math.sqrt(1.0 - Q*Q - P*P)
+    P2 = 1.0 - 2.0*P*P
+    Q2 = 1.0 - 2.0*Q*Q
+    PQ = 2.0*P*Q
+    return StateVector(
+        X1*P2 + Y1*PQ,
+        X1*PQ + Y1*Q2,
+        (Q*Y1 - X1*P)*F2,
+        VX1*P2 + VY1*PQ,
+        VX1*PQ + VY1*Q2,
+        (Q*VY1 - VX1*P)*F2,
+        time
+    )
+
+
+def _CalcJupiterMoon(time, mu, al0, al1, a, l, z, zeta):
+    # This is a translation of FORTRAN code by Duriez, Lainey, and Vienne:
+    # https://ftp.imcce.fr/pub/ephem/satel/galilean/L1/L1.2/
+
+    t = time.tt + 18262.5    # number of days since 1950-01-01T00:00:00Z
+
+    # Calculate 6 orbital elements at the given time t.
+    elem0 = 0.0
+    for (amplitude, phase, frequency) in a:
+        elem0 += amplitude * math.cos(phase + (t * frequency))
+
+    elem1 = al0 + (t * al1)
+    for (amplitude, phase, frequency) in l:
+        elem1 += amplitude * math.sin(phase + (t * frequency))
+
+    elem1 = math.fmod(elem1, _PI2)
+    if elem1 < 0:
+        elem1 += _PI2
+
+    elem2 = 0.0
+    elem3 = 0.0
+    for (amplitude, phase, frequency) in z:
+        arg = phase + (t * frequency)
+        elem2 += amplitude * math.cos(arg)
+        elem3 += amplitude * math.sin(arg)
+
+    elem4 = 0.0
+    elem5 = 0.0
+    for (amplitude, phase, frequency) in zeta:
+        arg = phase + (t * frequency)
+        elem4 += amplitude * math.cos(arg)
+        elem5 += amplitude * math.sin(arg)
+
+    # Convert the oribital elements into position vectors in the Jupiter equatorial system (JUP).
+    state = _JupiterMoon_elem2pv(time, mu, elem0, elem1, elem2, elem3, elem4, elem5)
+
+    # Re-orient position and velocity vectors from Jupiter-equatorial (JUP) to Earth-equatorial in J2000 (EQJ).
+    return RotateState(_Rotation_JUP_EQJ, state)
+
+
+def JupiterMoons(time):
+    """Calculates jovicentric positions and velocities of Jupiter's largest 4 moons.
+
+    Calculates position and velocity vectors for Jupiter's moons
+    Io, Europa, Ganymede, and Callisto, at the given date and time.
+    The vectors are jovicentric (relative to the center of Jupiter).
+    Their orientation is the Earth's equatorial system at the J2000 epoch (EQJ).
+    The position components are expressed in astronomical units (AU), and the
+    velocity components are in AU/day.
+
+    To convert to heliocentric vectors, call #HelioVector
+    with `Body.Jupiter` to get Jupiter's heliocentric position, then
+    add the jovicentric vectors. Likewise, you can call #GeoVector
+    to convert to geocentric vectors.
+
+    Parameters
+    ----------
+    time : Time
+        The date and time for which to calculate Jupiter's moons.
+
+    Returns
+    -------
+    JupiterMoonsInfo
+        The positions and velocities of Jupiter's 4 largest moons.
+    """
+    infolist = []
+    for (mu, al0, al1, a, l, z, zeta) in _JupiterMoonModel:
+        infolist.append(_CalcJupiterMoon(time, mu, al0, al1, a, l, z, zeta))
+    return JupiterMoonsInfo(infolist)
+
+# END Jupiter Moons
 #----------------------------------------------------------------------------
 # BEGIN Search
 
@@ -4168,6 +4395,36 @@ def RotateVector(rotation, vector):
         rotation.rot[0][1]*vector.x + rotation.rot[1][1]*vector.y + rotation.rot[2][1]*vector.z,
         rotation.rot[0][2]*vector.x + rotation.rot[1][2]*vector.y + rotation.rot[2][2]*vector.z,
         vector.t
+    )
+
+
+def RotateState(rotation, state):
+    """Applies a rotation to a state vector, yielding a rotated state vector.
+
+    This function transforms a state vector in one orientation to a
+    state vector in another orientation. Both the position and velocity
+    vectors are rotated the same way.
+
+    Parameters
+    ----------
+    rotation : RotationMatrix
+        A rotation matrix that specifies how the orientation of the vector is to be changed.
+    state : StateVector
+        The state vector whose orientation is to be changed.
+
+    Returns
+    -------
+    StateVector
+        A state vector in the orientation specified by `rotation`.
+    """
+    return StateVector(
+        rotation.rot[0][0]*state.x + rotation.rot[1][0]*state.y + rotation.rot[2][0]*state.z,
+        rotation.rot[0][1]*state.x + rotation.rot[1][1]*state.y + rotation.rot[2][1]*state.z,
+        rotation.rot[0][2]*state.x + rotation.rot[1][2]*state.y + rotation.rot[2][2]*state.z,
+        rotation.rot[0][0]*state.vx + rotation.rot[1][0]*state.vy + rotation.rot[2][0]*state.vz,
+        rotation.rot[0][1]*state.vx + rotation.rot[1][1]*state.vy + rotation.rot[2][1]*state.vz,
+        rotation.rot[0][2]*state.vx + rotation.rot[1][2]*state.vy + rotation.rot[2][2]*state.vz,
+        state.t
     )
 
 

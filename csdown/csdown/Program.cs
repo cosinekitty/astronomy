@@ -43,6 +43,7 @@ namespace csdown
             // Document all public constants in the Astronomy class.
             FieldInfo[] constants = astro.GetFields(BindingFlags.Public | BindingFlags.Static)
                 .Where(f => f.IsLiteral && !f.IsInitOnly)
+                .OrderBy(f => f.Name.ToUpperInvariant())
                 .ToArray();
 
             AppendSectionHeader(sb, "Constants");
@@ -217,6 +218,9 @@ namespace csdown
                 sb.AppendLine(item.Remarks);
                 sb.AppendLine();
             }
+            sb.AppendLine();
+            sb.AppendLine("---");
+            sb.AppendLine();
         }
 
         private static void AppendFunctionMarkdown(StringBuilder sb, CodeInfo cinfo, MethodInfo f)
@@ -253,7 +257,7 @@ namespace csdown
                 sb.AppendLine("| --- | --- | --- |");
                 foreach (ParameterInfo p in parms)
                 {
-                    // | [`astro_rotation_t`](#astro_rotation_t) | `a` |  The first rotation to apply. | 
+                    // | [`astro_rotation_t`](#astro_rotation_t) | `a` |  The first rotation to apply. |
                     string t = TypeMarkdown(p.ParameterType);
                     string n = "`" + p.Name + "`";
                     string r = item.Params[p.Name];

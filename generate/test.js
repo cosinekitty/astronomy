@@ -1865,11 +1865,123 @@ function Geoid() {
 }
 
 
+function JupiterMoons_CheckJpl(mindex, tt, pos, vel) {
+    const pos_tolerance = 9.0e-4;
+    const vel_tolerance = 9.0e-4;
+    const time = Astronomy.AstroTime.FromTerrestrialTime(tt);
+    const jm = Astronomy.JupiterMoons(time);
+
+    let dx = v(pos[0] - jm.moon[mindex].x);
+    let dy = v(pos[1] - jm.moon[mindex].y);
+    let dz = v(pos[2] - jm.moon[mindex].z);
+    let mag = sqrt(pos[0]*pos[0] + pos[1]*pos[1] + pos[2]*pos[2]);
+    const pos_diff = sqrt(dx*dx + dy*dy + dz*dz) / mag;
+    if (pos_diff > pos_tolerance) {
+        console.error(`JS JupiterMoons_CheckJpl(mindex=${mindex}, tt=${tt}): excessive position error ${pos_diff}`);
+        return 1;
+    }
+
+    dx = v(vel[0] - jm.moon[mindex].vx);
+    dy = v(vel[1] - jm.moon[mindex].vy);
+    dz = v(vel[2] - jm.moon[mindex].vz);
+    mag = sqrt(vel[0]*vel[0] + vel[1]*vel[1] + vel[2]*vel[2]);
+    const vel_diff = sqrt(dx*dx + dy*dy + dz*dz) / mag;
+    if (vel_diff > vel_tolerance) {
+        console.error(`JS JupiterMoons_CheckJpl(mindex=${mindex}, tt=${tt}): excessive velocity error ${vel_diff}`);
+        return 1;
+    }
+
+    if (Verbose) console.debug(`JS JupiterMoons_CheckJpl: mindex=${mindex}, tt=${tt}, pos_diff=${pos_diff}, vel_diff=${vel_diff}`);
+    return 0;
+}
+
+
+function JupiterMoons() {
+    for (let mindex = 0; mindex < 4; ++mindex) {
+        const filename = `jupiter_moons/horizons/jm${mindex}.txt`;
+        const text = fs.readFileSync(filename, {encoding:'utf8'});
+        const lines = text.split(/\r?\n/);
+        let lnum = 0;
+        let found = false;
+        let part = -1;
+        const expected_count = 5001;
+        let count = 0;
+        let tt, match, pos, vel;
+        for (let line of lines) {
+            ++lnum;
+            if (!found) {
+                if (line == '$$SOE') {
+                    found = true;
+                    part = 0;
+                } else if (line.startsWith('Revised:')) {
+                    if (line.length !== 79) {
+                        console.error(`JS JupiterMoons(${filename} line ${lnum}): unexpected line length.`);
+                        return 1;
+                    }
+                    console.log(line.substr(76));
+                    const check_mindex = int(line.substr(76)) - 501;
+                    if (mindex !== check_mindex) {
+                        console.error(`JS JupiterMoons(${filename} line ${lnum}): moon index does not match: check=${check_mindex}, mindex=${mindex}.`);
+                        return 1;
+                    }
+                }
+            } else if (line == '$$EOE') {
+                break;
+            } else {
+                switch (part) {
+                case 0:
+                    // 2446545.000000000 = A.D. 1986-Apr-24 12:00:00.0000 TDB
+                    tt = float(line.split()[0]) - 2451545.0;    // convert JD to J2000 TT
+                    break;
+
+                case 1:
+                    // X = 1.134408131605554E-03 Y =-2.590904586750408E-03 Z =-7.490427225904720E-05
+                    match = /\s*X =\s*(\S+) Y =\s*(\S+) Z =\s*(\S+)/.exec(line);
+                    if (!match) {
+                        console.error(`JS JupiterMoons(${filename} line ${lnum}): cannot parse position vector.`);
+                        return 1;
+                    }
+                    pos = [ float(match[1]), float(match[2]), float(match[3]) ];
+                    break;
+
+                case 2:
+                    // VX= 9.148038778472862E-03 VY= 3.973823407182510E-03 VZ= 2.765660368640458E-04
+                    match = /\s*VX=\s*(\S+) VY=\s*(\S+) VZ=\s*(\S+)/.exec(line);
+                    if (!match) {
+                        console.error(`JS JupiterMoons(${filename} line ${lnum}): cannot parse velocity vector.`);
+                        return 1;
+                    }
+                    vel = [ float(match[1]), float(match[2]), float(match[3]) ];
+                    if (JupiterMoons_CheckJpl(mindex, tt, pos, vel)) {
+                        console.error(`JS JupiterMoons(${filename} line ${lnum}): FAILED VERIFICATION.`);
+                        return 1;
+                    }
+                    ++count;
+                    break;
+
+                default:
+                    console.error(`JS JupiterMoons(${filename} line ${lnum}): unexpected part = ${part}`);
+                    return 1;
+                }
+                part = (part + 1) % 3;
+            }
+        }
+        if (count !== expected_count) {
+            console.error(`JS JupiterMoons: Expected ${expected_count} test cases, but found ${count}`);
+            return 1;
+        }
+    }
+    console.log(`JS JupiterMoons: PASS`);
+    return 0;
+}
+
+
 const UnitTests = {
     constellation:          Constellation,
     elongation:             Elongation,
     geoid:                  Geoid,
     global_solar_eclipse:   GlobalSolarEclipse,
+    jupiter_moons:          JupiterMoons,
     local_solar_eclipse:    LocalSolarEclipse,
     lunar_apsis:            LunarApsis,
     lunar_eclipse:          LunarEclipse,

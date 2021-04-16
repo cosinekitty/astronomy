@@ -16,6 +16,7 @@ To get started quickly, here are some [examples](../../demo/c/).
 
 - [Topic Index](#topics)
 - [Functions](#functions)
+- [Constants](#constants)
 - [Enumerated Types](#enums)
 - [Structures](#structs)
 - [Type Definitions](#typedefs)
@@ -818,6 +819,32 @@ Given a rotation matrix that performs some coordinate transform, this function r
 
 ---
 
+<a name="Astronomy_JupiterMoons"></a>
+### Astronomy_JupiterMoons(time) &#8658; [`astro_jupiter_moons_t`](#astro_jupiter_moons_t)
+
+**Calculates jovicentric positions and velocities of Jupiter's largest 4 moons.** 
+
+
+
+Calculates position and velocity vectors for Jupiter's moons Io, Europa, Ganymede, and Callisto, at the given date and time. The vectors are jovicentric (relative to the center of Jupiter). Their orientation is the Earth's equatorial system at the J2000 epoch (EQJ). The position components are expressed in astronomical units (AU), and the velocity components are in AU/day.
+
+To convert to heliocentric position vectors, call [`Astronomy_HelioVector`](#Astronomy_HelioVector) with `BODY_JUPITER` to get Jupiter's heliocentric position, then add the jovicentric positions. Likewise, you can call [`Astronomy_GeoVector`](#Astronomy_GeoVector) with `BODY_JUPITER` to convert to geocentric positions.
+
+
+
+**Returns:**  Position vectors of Jupiter's largest 4 moons, as described above. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_time_t`](#astro_time_t) | `time` |  The date and time for which to calculate the position vectors.  | 
+
+
+
+
+---
+
 <a name="Astronomy_LongitudeFromSun"></a>
 ### Astronomy_LongitudeFromSun(body, time) &#8658; [`astro_angle_result_t`](#astro_angle_result_t)
 
@@ -1206,6 +1233,31 @@ Given an altitude angle and a refraction option, calculates the amount of "lift"
 
 
 Astronomy Engine uses dynamic memory allocation in only one place: it makes calculation of Pluto's orbit more efficient by caching 11 KB segments and recycling them. To force purging this cache and freeing all the dynamic memory, you can call this function at any time. It is always safe to call, although it will slow down the very next calculation of Pluto's position for a nearby time value. Calling this function before your program exits is optional, but it will be helpful for leak-checkers like valgrind. 
+
+---
+
+<a name="Astronomy_RotateState"></a>
+### Astronomy_RotateState(rotation, state) &#8658; [`astro_state_vector_t`](#astro_state_vector_t)
+
+**Applies a rotation to a state vector, yielding a rotated vector.** 
+
+
+
+This function transforms a state vector in one orientation to a vector in another orientation.
+
+
+
+**Returns:**  A state vector in the orientation specified by `rotation`. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_rotation_t`](#astro_rotation_t) | `rotation` |  A rotation matrix that specifies how the orientation of the state vector is to be changed. | 
+| [`astro_state_vector_t`](#astro_state_vector_t) | `state` |  The state vector whose orientation is to be changed. Both the position and velocity components are transformed. | 
+
+
+
 
 ---
 
@@ -2053,6 +2105,30 @@ This function can be used for calculating changes of seasons: equinoxes and sols
 
 ---
 
+<a name="Astronomy_TerrestrialTime"></a>
+### Astronomy_TerrestrialTime(tt) &#8658; [`astro_time_t`](#astro_time_t)
+
+**Converts a terrestrial time value into an [`astro_time_t`](#astro_time_t) value.** 
+
+
+
+This function can be used in rare cases where a time must be based on Terrestrial Time (TT) rather than Universal Time (UT). Most developers will want to call [`Astronomy_TimeFromDays`](#Astronomy_TimeFromDays) instead of this function, because usually time is based on civil time adjusted by leap seconds to match the Earth's rotation, rather than the uniformly flowing TT used to calculate solar system dynamics. In rare cases where the caller already knows TT, this function is provided to create an [`astro_time_t`](#astro_time_t) value that can be passed to Astronomy Engine functions.
+
+
+
+**Returns:**  An [`astro_time_t`](#astro_time_t) value for the given `tt` value. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| `double` | `tt` |  The floating point number of days of uniformly flowing Terrestrial Time since the J2000 epoch. | 
+
+
+
+
+---
+
 <a name="Astronomy_TimeFromDays"></a>
 ### Astronomy_TimeFromDays(ut) &#8658; [`astro_time_t`](#astro_time_t)
 
@@ -2070,7 +2146,7 @@ This function can be useful for reproducing an [`astro_time_t`](#astro_time_t) s
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| `double` | `ut` |  The floating point number of days since noon UTC on January 1, 2000. | 
+| `double` | `ut` |  The floating point number of days since noon UTC on January 1, 2000. This time is based on UTC/UT1 civil time. See [`Astronomy_TerrestrialTime`](#Astronomy_TerrestrialTime) if you instead want to create a time value based on atomic Terrestrial Time (TT). | 
 
 
 
@@ -2202,6 +2278,21 @@ Calculates the non-negative length of the given vector. The length is expressed 
 
 ---
 
+<a name="CALLISTO_RADIUS_KM"></a>
+### `CALLISTO_RADIUS_KM`
+
+**The mean radius of Jupiter's moon Callisto, expressed in kilometers.** 
+
+
+
+```C
+#define CALLISTO_RADIUS_KM  2410.3
+```
+
+
+
+---
+
 <a name="DEG2RAD"></a>
 ### `DEG2RAD`
 
@@ -2211,6 +2302,156 @@ Calculates the non-negative length of the given vector. The length is expressed 
 
 ```C
 #define DEG2RAD  0.017453292519943296
+```
+
+
+
+---
+
+<a name="EUROPA_RADIUS_KM"></a>
+### `EUROPA_RADIUS_KM`
+
+**The mean radius of Jupiter's moon Europa, expressed in kilometers.** 
+
+
+
+```C
+#define EUROPA_RADIUS_KM  1560.8
+```
+
+
+
+---
+
+<a name="GANYMEDE_RADIUS_KM"></a>
+### `GANYMEDE_RADIUS_KM`
+
+**The mean radius of Jupiter's moon Ganymede, expressed in kilometers.** 
+
+
+
+```C
+#define GANYMEDE_RADIUS_KM  2631.2
+```
+
+
+
+---
+
+<a name="IO_RADIUS_KM"></a>
+### `IO_RADIUS_KM`
+
+**The mean radius of Jupiter's moon Io, expressed in kilometers.** 
+
+
+
+```C
+#define IO_RADIUS_KM  1821.6
+```
+
+
+
+---
+
+<a name="JM_CALLISTO"></a>
+### `JM_CALLISTO`
+
+**The array index of Jupiter's moon Callisto in the `moon` field of [`astro_jupiter_moons_t`](#astro_jupiter_moons_t).** 
+
+
+
+```C
+#define JM_CALLISTO  3
+```
+
+
+
+---
+
+<a name="JM_EUROPA"></a>
+### `JM_EUROPA`
+
+**The array index of Jupiter's moon Europa in the `moon` field of [`astro_jupiter_moons_t`](#astro_jupiter_moons_t).** 
+
+
+
+```C
+#define JM_EUROPA  1
+```
+
+
+
+---
+
+<a name="JM_GANYMEDE"></a>
+### `JM_GANYMEDE`
+
+**The array index of Jupiter's moon Ganymede in the `moon` field of [`astro_jupiter_moons_t`](#astro_jupiter_moons_t).** 
+
+
+
+```C
+#define JM_GANYMEDE  2
+```
+
+
+
+---
+
+<a name="JM_IO"></a>
+### `JM_IO`
+
+**The array index of Jupiter's moon Io in the `moon` field of [`astro_jupiter_moons_t`](#astro_jupiter_moons_t).** 
+
+
+
+```C
+#define JM_IO  0
+```
+
+
+
+---
+
+<a name="JUPITER_EQUATORIAL_RADIUS_KM"></a>
+### `JUPITER_EQUATORIAL_RADIUS_KM`
+
+**The equatorial radius of Jupiter, expressed in kilometers.** 
+
+
+
+```C
+#define JUPITER_EQUATORIAL_RADIUS_KM  71492.0
+```
+
+
+
+---
+
+<a name="JUPITER_MEAN_RADIUS_KM"></a>
+### `JUPITER_MEAN_RADIUS_KM`
+
+**The volumetric mean radius of Jupiter, expressed in kilometers.** 
+
+
+
+```C
+#define JUPITER_MEAN_RADIUS_KM  69911.0
+```
+
+
+
+---
+
+<a name="JUPITER_POLAR_RADIUS_KM"></a>
+### `JUPITER_POLAR_RADIUS_KM`
+
+**The polar radius of Jupiter, expressed in kilometers.** 
+
+
+
+```C
+#define JUPITER_POLAR_RADIUS_KM  66854.0
 ```
 
 
@@ -2256,6 +2497,21 @@ Calculates the non-negative length of the given vector. The length is expressed 
 
 ```C
 #define MIN_BODY  BODY_MERCURY
+```
+
+
+
+---
+
+<a name="NUM_JUPITER_MOONS"></a>
+### `NUM_JUPITER_MOONS`
+
+**The number of Jupiter's moons that Astronomy Engine knows how to calculate.** 
+
+
+
+```C
+#define NUM_JUPITER_MOONS  4
 ```
 
 
@@ -2745,6 +3001,24 @@ Returned by the functions [`Astronomy_Illumination`](#Astronomy_Illumination) an
 
 ---
 
+<a name="astro_jupiter_moons_t"></a>
+### `astro_jupiter_moons_t`
+
+**Holds the positions and velocities of Jupiter's major 4 moons.** 
+
+
+
+The [`Astronomy_JupiterMoons`](#Astronomy_JupiterMoons) function returns this struct to report position and velocity vectors for Jupiter's largest 4 moons Io, Europa, Ganymede, and Callisto. Each position vector is relative to the center of Jupiter. Both position and velocity are oriented in the EQJ system (that is, using Earth's equator at the J2000 epoch.) The positions are expressed in astronomical units (AU), and the velocities in AU/day.
+
+The following integer constants may be useful for indexing into the `moon` array: [`JM_IO`](#JM_IO), [`JM_EUROPA`](#JM_EUROPA), [`JM_GANYMEDE`](#JM_GANYMEDE), [`JM_CALLISTO`](#JM_CALLISTO). 
+
+| Type | Member | Description |
+| ---- | ------ | ----------- |
+| [`astro_state_vector_t`](#astro_state_vector_t) | `moon` |  Jovicentric position and velocity of each moon, as described above.  |
+
+
+---
+
 <a name="astro_local_solar_eclipse_t"></a>
 ### `astro_local_solar_eclipse_t`
 
@@ -2897,6 +3171,27 @@ You can create this structure directly, or you can call the convenience function
 | `double` | `lat` |  The latitude angle: -90..+90 degrees.  |
 | `double` | `lon` |  The longitude angle: 0..360 degrees.  |
 | `double` | `dist` |  Distance in AU.  |
+
+
+---
+
+<a name="astro_state_vector_t"></a>
+### `astro_state_vector_t`
+
+**A state vector that contains a position (AU) and velocity (AU/day).** 
+
+
+
+| Type | Member | Description |
+| ---- | ------ | ----------- |
+| [`astro_status_t`](#astro_status_t) | `status` |  `ASTRO_SUCCESS` if this struct is valid; otherwise an error code.  |
+| `double` | `x` |  The Cartesian position x-coordinate of the vector in AU.  |
+| `double` | `y` |  The Cartesian position y-coordinate of the vector in AU.  |
+| `double` | `z` |  The Cartesian position z-coordinate of the vector in AU.  |
+| `double` | `vx` |  The Cartesian velocity x-coordinate of the vector in AU/day.  |
+| `double` | `vy` |  The Cartesian velocity y-coordinate of the vector in AU/day.  |
+| `double` | `vz` |  The Cartesian velocity z-coordinate of the vector in AU/day.  |
+| [`astro_time_t`](#astro_time_t) | `t` |  The date and time at which this state vector is valid.  |
 
 
 ---

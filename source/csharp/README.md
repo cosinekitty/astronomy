@@ -148,20 +148,85 @@ these are used in function and type names.
 
 ---
 
+<a name="Astronomy.CALLISTO_RADIUS_KM"></a>
+### `const double Astronomy.CALLISTO_RADIUS_KM = 2410.3;`
+
+**The The mean radius of Jupiter's moon Callisto, expressed in kilometers.**
+
+
+---
+
+<a name="Astronomy.DEG2RAD"></a>
+### `const double Astronomy.DEG2RAD = 0.017453292519943295;`
+
+**The factor to convert degrees to radians = pi/180.**
+
+
+---
+
+<a name="Astronomy.EUROPA_RADIUS_KM"></a>
+### `const double Astronomy.EUROPA_RADIUS_KM = 1560.8;`
+
+**The The mean radius of Jupiter's moon Europa, expressed in kilometers.**
+
+
+---
+
+<a name="Astronomy.GANYMEDE_RADIUS_KM"></a>
+### `const double Astronomy.GANYMEDE_RADIUS_KM = 2631.2;`
+
+**The The mean radius of Jupiter's moon Ganymede, expressed in kilometers.**
+
+
+---
+
+<a name="Astronomy.IO_RADIUS_KM"></a>
+### `const double Astronomy.IO_RADIUS_KM = 1821.6;`
+
+**The The mean radius of Jupiter's moon Io, expressed in kilometers.**
+
+
+---
+
+<a name="Astronomy.JUPITER_EQUATORIAL_RADIUS_KM"></a>
+### `const double Astronomy.JUPITER_EQUATORIAL_RADIUS_KM = 71492;`
+
+**The equatorial radius of Jupiter, expressed in kilometers.**
+
+
+---
+
+<a name="Astronomy.JUPITER_MEAN_RADIUS_KM"></a>
+### `const double Astronomy.JUPITER_MEAN_RADIUS_KM = 69911;`
+
+**The volumetric mean radius of Jupiter, expressed in kilometers.**
+
+
+---
+
+<a name="Astronomy.JUPITER_POLAR_RADIUS_KM"></a>
+### `const double Astronomy.JUPITER_POLAR_RADIUS_KM = 66854;`
+
+**The polar radius of Jupiter, expressed in kilometers.**
+
+
+---
+
 <a name="Astronomy.KM_PER_AU"></a>
 ### `const double Astronomy.KM_PER_AU = 149597870.69098932;`
 
 **The number of kilometers in one astronomical unit (AU).**
+
+
+---
 
 <a name="Astronomy.RAD2DEG"></a>
 ### `const double Astronomy.RAD2DEG = 57.29577951308232;`
 
 **The factor to convert radians to degrees = 180/pi.**
 
-<a name="Astronomy.DEG2RAD"></a>
-### `const double Astronomy.DEG2RAD = 0.017453292519943295;`
 
-**The factor to convert degrees to radians = pi/180.**
+---
 
 <a name="functions"></a>
 ## Functions
@@ -542,6 +607,29 @@ this function returns the matrix that reverses that trasnform.
 
 **Returns:** A rotation matrix that performs the opposite transformation.
 
+<a name="Astronomy.JupiterMoons"></a>
+### Astronomy.JupiterMoons(time) &#8658; [`JupiterMoonsInfo`](#JupiterMoonsInfo)
+
+**Calculates jovicentric positions and velocities of Jupiter's largest 4 moons.**
+
+Calculates position and velocity vectors for Jupiter's moons
+Io, Europa, Ganymede, and Callisto, at the given date and time.
+The vectors are jovicentric (relative to the center of Jupiter).
+Their orientation is the Earth's equatorial system at the J2000 epoch (EQJ).
+The position components are expressed in astronomical units (AU), and the
+velocity components are in AU/day.
+
+To convert to heliocentric position vectors, call [`Astronomy.HelioVector`](#Astronomy.HelioVector)
+with `Body.Jupiter` to get Jupiter's heliocentric position, then
+add the jovicentric positions. Likewise, you can call [`Astronomy.GeoVector`](#Astronomy.GeoVector)
+to convert to geocentric positions.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`AstroTime`](#AstroTime) | `time` | The date and time for which to calculate the position vectors. |
+
+**Returns:** Position and velocity vectors of Jupiter's largest 4 moons.
+
 <a name="Astronomy.LongitudeFromSun"></a>
 ### Astronomy.LongitudeFromSun(body, time) &#8658; `double`
 
@@ -772,6 +860,20 @@ due to the lensing of the Earth's atmosphere.
 | `double` | `altitude` | An altitude angle in a horizontal coordinate system. Must be a value between -90 and +90. |
 
 **Returns:** The angular adjustment in degrees to be added to the altitude angle to correct for atmospheric lensing.
+
+<a name="Astronomy.RotateState"></a>
+### Astronomy.RotateState(rotation, state) &#8658; [`StateVector`](#StateVector)
+
+**Applies a rotation to a state vector, yielding a rotated state vector.**
+
+This function transforms a state vector in one orientation to a state vector in another orientation.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`RotationMatrix`](#RotationMatrix) | `rotation` | A rotation matrix that specifies how the orientation of the state vector is to be changed. |
+| [`StateVector`](#StateVector) | `state` | The state vector whose orientation is to be changed. |
+
+**Returns:** A state vector in the orientation specified by `rotation`.
 
 <a name="Astronomy.RotateVector"></a>
 ### Astronomy.RotateVector(rotation, vector) &#8658; [`AstroVector`](#AstroVector)
@@ -1576,6 +1678,24 @@ using a best-fit piecewise polynomial model devised by
 
 **Returns:** A date and time that is conceptually equal to `time + days`.
 
+<a name="AstroTime.FromTerrestrialTime"></a>
+### AstroTime.FromTerrestrialTime(tt) &#8658; [`AstroTime`](#AstroTime)
+
+**Creates an `AstroTime` object from a Terrestrial Time day value.**
+
+This function can be used in rare cases where a time must be based
+on Terrestrial Time (TT) rather than Universal Time (UT).
+Most developers will want to invoke `new AstroTime(ut)` with a universal time
+instead of this function, because usually time is based on civil time adjusted
+by leap seconds to match the Earth's rotation, rather than the uniformly
+flowing TT used to calculate solar system dynamics. In rare cases
+where the caller already knows TT, this function is provided to create
+an `AstroTime` value that can be passed to Astronomy Engine functions.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| `double` | `tt` | The number of days after the J2000 epoch. |
+
 <a name="AstroTime.ToString"></a>
 ### AstroTime.ToString() &#8658; `string`
 
@@ -1891,6 +2011,25 @@ when a body is specified that is not appropriate for the given operation.**
 
 ---
 
+<a name="JupiterMoonsInfo"></a>
+## `struct JupiterMoonsInfo`
+
+**Holds the positions and velocities of Jupiter's major 4 moons.**
+
+The [`Astronomy.JupiterMoons`](#Astronomy.JupiterMoons) function returns an object of this type
+to report position and velocity vectors for Jupiter's largest 4 moons
+Io, Europa, Ganymede, and Callisto. Each position vector is relative
+to the center of Jupiter. Both position and velocity are oriented in
+the EQJ system (that is, using Earth's equator at the J2000 epoch).
+The positions are expressed in astronomical units (AU),
+and the velocities in AU/day.
+
+| Type | Name | Description |
+| --- | --- | --- |
+| [`StateVector[]`](#StateVector[]) | `moon` | An array of state vectors for each of the 4 moons, in the following order: 0 = Io, 1 = Europa, 2 = Ganymede, 3 = Callisto. |
+
+---
+
 <a name="LocalSolarEclipseInfo"></a>
 ## `struct LocalSolarEclipseInfo`
 
@@ -2061,6 +2200,27 @@ Call [`Astronomy.Seasons`](#Astronomy.Seasons) to calculate this data structure 
 | `double` | `lat` | The latitude angle: -90..+90 degrees. |
 | `double` | `lon` | The longitude angle: 0..360 degrees. |
 | `double` | `dist` | Distance in AU. |
+
+---
+
+<a name="StateVector"></a>
+## `struct StateVector`
+
+**A combination of a position vector and a velocity vector at a given moment in time.**
+
+A state vector represents the dynamic state of a point at a given moment.
+It includes the position vector of the point, expressed in Astronomical Units (AU)
+along with the velocity vector of the point, expressed in AU/day.
+
+| Type | Name | Description |
+| --- | --- | --- |
+| `double` | `x` | The position x-coordinate in AU. |
+| `double` | `y` | The position y-coordinate in AU. |
+| `double` | `z` | The position z-coordinate in AU. |
+| `double` | `vx` | The velocity x-component in AU/day. |
+| `double` | `vy` | The velocity y-component in AU/day. |
+| `double` | `vz` | The velocity z-component in AU/day. |
+| [`AstroTime`](#AstroTime) | `t` | The date and time at which this vector is valid. |
 
 ---
 

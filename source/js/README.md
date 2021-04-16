@@ -194,6 +194,29 @@ Does NOT modify the original `AstroTime` object.
 
 * * *
 
+<a name="AstroTime.FromTerrestrialTime"></a>
+
+### AstroTime.FromTerrestrialTime(tt) ⇒ [<code>AstroTime</code>](#AstroTime)
+**Kind**: static method of [<code>AstroTime</code>](#AstroTime)  
+**Returns**: [<code>AstroTime</code>](#AstroTime) - An `AstroTime` object for the specified terrestrial time.  
+**Brief**: Creates an `AstroTime` value from a Terrestrial Time (TT) day value.
+
+This function can be used in rare cases where a time must be based
+on Terrestrial Time (TT) rather than Universal Time (UT).
+Most developers will want to invoke `new AstroTime(ut)` with a universal time
+instead of this function, because usually time is based on civil time adjusted
+by leap seconds to match the Earth's rotation, rather than the uniformly
+flowing TT used to calculate solar system dynamics. In rare cases
+where the caller already knows TT, this function is provided to create
+an `AstroTime` value that can be passed to Astronomy Engine functions.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| tt | <code>number</code> | The number of days since the J2000 epoch as expressed in Terrestrial Time. |
+
+
+* * *
+
 <a name="Vector"></a>
 
 ## Vector
@@ -220,6 +243,29 @@ along with the time at which the vector is valid.
 Returns the length of the vector in astronomical units (AU).
 
 **Kind**: instance method of [<code>Vector</code>](#Vector)  
+
+* * *
+
+<a name="StateVector"></a>
+
+## StateVector
+**Kind**: global class  
+**Brief**: A combination of a position vector, a velocity vector, and a time.
+
+Holds the state vector of a body at a given time, including its position,
+velocity, and the time they are valid.  
+**Properties**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| x | <code>number</code> | The position x-coordinate expressed in astronomical units (AU). |
+| y | <code>number</code> | The position y-coordinate expressed in astronomical units (AU). |
+| z | <code>number</code> | The position z-coordinate expressed in astronomical units (AU). |
+| vx | <code>number</code> | The velocity x-coordinate expressed in AU/day. |
+| vy | <code>number</code> | The velocity y-coordinate expressed in AU/day. |
+| vz | <code>number</code> | The velocity z-coordinate expressed in AU/day. |
+| t | [<code>AstroTime</code>](#AstroTime) | The time at which the vector is valid. |
+
 
 * * *
 
@@ -332,6 +378,28 @@ and spherical coordinates `(elon, elat)` measured in degrees.
 | latitude | <code>number</code> | The observer's geographic latitude in degrees north of the Earth's equator.      The value is negative for observers south of the equator.      Must be in the range -90 to +90. |
 | longitude | <code>number</code> | The observer's geographic longitude in degrees east of the prime meridian      passing through Greenwich, England.      The value is negative for observers west of the prime meridian.      The value should be kept in the range -180 to +180 to minimize floating point errors. |
 | height | <code>number</code> | The observer's elevation above mean sea level, expressed in meters. |
+
+
+* * *
+
+<a name="JupiterMoonsInfo"></a>
+
+## JupiterMoonsInfo
+**Kind**: global class  
+**Brief**: Holds the positions and velocities of Jupiter's major 4 moons.
+
+The [JupiterMoons](#JupiterMoons) function returns an object of this type
+to report position and velocity vectors for Jupiter's largest 4 moons
+Io, Europa, Ganymede, and Callisto. Each position vector is relative
+to the center of Jupiter. Both position and velocity are oriented in
+the EQJ system (that is, using Earth's equator at the J2000 epoch).
+The positions are expressed in astronomical units (AU),
+and the velocities in AU/day.  
+**Properties**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| moon | [<code>Array.&lt;StateVector&gt;</code>](#StateVector) | An array of state vectors, one for each of the four major moons      of Jupiter, in the following order: 0=Io, 1=Europa, 2=Ganymede, 3=Callisto. |
 
 
 * * *
@@ -669,6 +737,62 @@ The calculations are performed from the point of view of a geocentric observer.
 
 * * *
 
+<a name="JUPITER_EQUATORIAL_RADIUS_KM"></a>
+
+## JUPITER\_EQUATORIAL\_RADIUS\_KM
+**Kind**: global variable  
+**Brief**: The equatorial radius of Jupiter, expressed in kilometers.  
+
+* * *
+
+<a name="JUPITER_POLAR_RADIUS_KM"></a>
+
+## JUPITER\_POLAR\_RADIUS\_KM
+**Kind**: global variable  
+**Brief**: The polar radius of Jupiter, expressed in kilometers.  
+
+* * *
+
+<a name="JUPITER_MEAN_RADIUS_KM"></a>
+
+## JUPITER\_MEAN\_RADIUS\_KM
+**Kind**: global variable  
+**Brief**: The volumetric mean radius of Jupiter, expressed in kilometers.  
+
+* * *
+
+<a name="IO_RADIUS_KM"></a>
+
+## IO\_RADIUS\_KM
+**Kind**: global variable  
+**Brief**: The mean radius of Jupiter's moon Io, expressed in kilometers.  
+
+* * *
+
+<a name="EUROPA_RADIUS_KM"></a>
+
+## EUROPA\_RADIUS\_KM
+**Kind**: global variable  
+**Brief**: The mean radius of Jupiter's moon Europa, expressed in kilometers.  
+
+* * *
+
+<a name="GANYMEDE_RADIUS_KM"></a>
+
+## GANYMEDE\_RADIUS\_KM
+**Kind**: global variable  
+**Brief**: The mean radius of Jupiter's moon Ganymede, expressed in kilometers.  
+
+* * *
+
+<a name="CALLISTO_RADIUS_KM"></a>
+
+## CALLISTO\_RADIUS\_KM
+**Kind**: global variable  
+**Brief**: The mean radius of Jupiter's moon Callisto, expressed in kilometers.  
+
+* * *
+
 <a name="Body"></a>
 
 ## Body : <code>enum</code>
@@ -884,6 +1008,32 @@ by Montenbruck and Pfleger.
 | Param | Type | Description |
 | --- | --- | --- |
 | date | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time for which to calculate the Moon's geocentric position. |
+
+
+* * *
+
+<a name="JupiterMoons"></a>
+
+## JupiterMoons(date) ⇒ [<code>JupiterMoonsInfo</code>](#JupiterMoonsInfo)
+**Kind**: global function  
+**Returns**: [<code>JupiterMoonsInfo</code>](#JupiterMoonsInfo) - Position and velocity vectors of Jupiter's largest 4 moons.  
+**Brief**: Calculates jovicentric positions and velocities of Jupiter's largest 4 moons.
+
+Calculates position and velocity vectors for Jupiter's moons
+Io, Europa, Ganymede, and Callisto, at the given date and time.
+The vectors are jovicentric (relative to the center of Jupiter).
+Their orientation is the Earth's equatorial system at the J2000 epoch (EQJ).
+The position components are expressed in astronomical units (AU), and the
+velocity components are in AU/day.
+
+To convert to heliocentric vectors, call [HelioVector](#HelioVector)
+with `Astronomy.Body.Jupiter` to get Jupiter's heliocentric position, then
+add the jovicentric vectors. Likewise, you can call [GeoVector](#GeoVector)
+to convert to geocentric vectors.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| date | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time for which to calculate Jupiter's moons. |
 
 
 * * *
@@ -1655,6 +1805,24 @@ in another orientation.
 | --- | --- | --- |
 | rotation | [<code>RotationMatrix</code>](#RotationMatrix) | A rotation matrix that specifies how the orientation of the vector is to be changed. |
 | vector | [<code>Vector</code>](#Vector) | The vector whose orientation is to be changed. |
+
+
+* * *
+
+<a name="RotateState"></a>
+
+## RotateState(rotation, state) ⇒ [<code>StateVector</code>](#StateVector)
+**Kind**: global function  
+**Returns**: [<code>StateVector</code>](#StateVector) - A state vector in the orientation specified by `rotation`.  
+**Brief**: Applies a rotation to a state vector, yielding a rotated vector.
+
+This function transforms a state vector in one orientation to a vector
+in another orientation.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| rotation | [<code>RotationMatrix</code>](#RotationMatrix) | A rotation matrix that specifies how the orientation of the state vector is to be changed. |
+| state | [<code>StateVector</code>](#StateVector) | The state vector whose orientation is to be changed.      Both the position and velocity components are transformed. |
 
 
 * * *

@@ -79,6 +79,7 @@ static int PrintUsage(void);
 static int GenerateVsopPlanets(void);
 static int TopCalc(const char *name, const char *date);
 static int GenerateApsisTestData(void);
+static int OptimizeJupiterMoons(const char *inFileName, const char *outFileName);
 static int GenerateSource(void);
 static int TestVsopModel(vsop_model_t *model, int body, double threshold, double *max_arcmin, int *trunc_terms);
 static int SaveVsopFile(const vsop_model_t *model);
@@ -143,6 +144,9 @@ int main(int argc, const char *argv[])
 
     if (argc == 2 && !strcmp(argv[1], "apsis"))
         return GenerateApsisTestData();
+
+    if (argc == 2 && !strcmp(argv[1], "jmopt"))
+        return OptimizeJupiterMoons("jupiter_moons/fortran/BisL1.2.dat", "output/jupiter_moons.txt");
 
     if (argc == 2 && !strcmp(argv[1], "source"))
         return GenerateSource();
@@ -1848,4 +1852,286 @@ static int ParseDate(const char *text, double *tt)
 fail:
     return error;
 }
+
+/*------------------------------------------------------------------------------------------------*/
+
+
+static void JupiterMoon_elem2pv(double mu, const double elem[6], double state[6])
+{
+    /* Translation of FORTRAN subroutine ELEM2PV from: */
+    /* https://ftp.imcce.fr/pub/ephem/satel/galilean/L1/L1.2/ */
+    double EE, DE, CE, SE, DLE, RSAM1, ASR, PHI, PSI, X1, Y1, VX1, VY1, F2, P2, Q2, PQ;
+
+    const double A  = elem[0];
+    const double AL = elem[1];
+    const double K  = elem[2];
+    const double H  = elem[3];
+    const double Q  = elem[4];
+    const double P  = elem[5];
+
+    const double AN = sqrt(mu / (A*A*A));
+
+    EE = AL + K*sin(AL) - H*cos(AL);
+    do
+    {
+        CE = cos(EE);
+        SE = sin(EE);
+        DE = (AL - EE + K*SE - H*CE) / (1.0 - K*CE - H*SE);
+        EE += DE;
+    }
+    while (fabs(DE) >= 1.0e-12);
+
+    CE = cos(EE);
+    SE = sin(EE);
+    DLE = H*CE - K*SE;
+    RSAM1 = -K*CE - H*SE;
+    ASR = 1.0/(1.0 + RSAM1);
+    PHI = sqrt(1.0 - K*K - H*H);
+    PSI = 1.0/(1.0 + PHI);
+    X1 = A*(CE - K - PSI*H*DLE);
+    Y1 = A*(SE - H + PSI*K*DLE);
+    VX1 = AN*ASR*A*(-SE - PSI*H*RSAM1);
+    VY1 = AN*ASR*A*(+CE + PSI*K*RSAM1);
+    F2 = 2.0*sqrt(1.0 - Q*Q - P*P);
+    P2 = 1.0 - 2.0*P*P;
+    Q2 = 1.0 - 2.0*Q*Q;
+    PQ = 2.0*P*Q;
+
+    /* position vector */
+    state[0] = X1*P2 + Y1*PQ;
+    state[1] = X1*PQ + Y1*Q2;
+    state[2] = (Q*Y1 - X1*P)*F2;
+
+    /* velocity vector */
+    state[3] = VX1*P2 + VY1*PQ;
+    state[4] = VX1*PQ + VY1*Q2;
+    state[5] = (Q*VY1 - VX1*P)*F2;
+}
+
+static void CalcJupiterMoon(const jupiter_moon_model_t *model, int mindex, int trunc_flag, double tt, double state[6])
+{
+    /* This is a translation of FORTRAN code by Duriez, Lainey, and Vienne: */
+    /* https://ftp.imcce.fr/pub/ephem/satel/galilean/L1/L1.2/ */
+
+    const double PI2 = (2.0 * 3.14159265358979323846);
+    int k, nterms;
+    double arg;
+    double elem[6];
+    const jupiter_moon_t *m = &model->moon[mindex];
+    const double t = tt + 18262.5;     /* t = time since 1950-01-01T00:00:00Z */
+
+    /* Calculate 6 orbital elements at the given time t. */
+
+    elem[0] = 0.0;
+    nterms = trunc_flag ? m->a.nterms_calc : m->a.nterms_total;
+    for (k = 0; k < nterms; ++k)
+    {
+        arg = m->a.term[k].phase + (t * m->a.term[k].frequency);
+        elem[0] += m->a.term[k].amplitude * cos(arg);
+    }
+
+    elem[1] = m->al[0] + (t * m->al[1]);
+    nterms = trunc_flag ? m->l.nterms_calc : m->l.nterms_total;
+    for (k = 0; k < nterms; ++k)
+    {
+        arg = m->l.term[k].phase + (t * m->l.term[k].frequency);
+        elem[1] += m->l.term[k].amplitude * sin(arg);
+    }
+    elem[1] = fmod(elem[1], PI2);
+    if (elem[1] < 0.0)
+        elem[1] += PI2;
+
+    elem[2] = elem[3] = 0.0;
+    nterms = trunc_flag ? m->z.nterms_calc : m->z.nterms_total;
+    for (k = 0; k < nterms; ++k)
+    {
+        arg = m->z.term[k].phase + (t * m->z.term[k].frequency);
+        elem[2] += m->z.term[k].amplitude * cos(arg);
+        elem[3] += m->z.term[k].amplitude * sin(arg);
+    }
+
+    elem[4] = elem[5] = 0.0;
+    nterms = trunc_flag ? m->zeta.nterms_calc : m->zeta.nterms_total;
+    for (k = 0; k < nterms; ++k)
+    {
+        arg = m->zeta.term[k].phase + (t * m->zeta.term[k].frequency);
+        elem[4] += m->zeta.term[k].amplitude * cos(arg);
+        elem[5] += m->zeta.term[k].amplitude * sin(arg);
+    }
+
+    /* Convert the oribital elements into position vectors in the Jupiter equatorial system (JUP). */
+    JupiterMoon_elem2pv(m->mu, elem, state);
+}
+
+
+static double JupiterMoonRelativeError(const jupiter_moon_model_t *model, int mindex)
+{
+    const double tt1 = -2000.0;
+    const double tt2 = +2000.0;
+    const double dt = 0.1;
+    double tt;
+    int n = 0;
+    double sum = 0.0;
+    double state_full[6];
+    double state_trunc[6];
+    double dx, dy, dz;
+    double rx, ry, rz;
+
+    for (tt = tt1; tt <= tt2; tt += dt)
+    {
+        /* Calculate without truncation. */
+        CalcJupiterMoon(model, mindex, 0, tt, state_full);
+
+        /* Calculate with truncation. */
+        CalcJupiterMoon(model, mindex, 1, tt, state_trunc);
+
+        /* Tally the dimensionless relative position error introduced by the truncation. */
+        rx = state_full[0];
+        ry = state_full[1];
+        rz = state_full[2];
+        dx = rx - state_trunc[0];
+        dy = ry - state_trunc[1];
+        dz = rz - state_trunc[2];
+        sum += (dx*dx + dy*dy + dz*dz) / (rx*rx + ry*ry + rz*rz);
+
+        /* Tally the dimensionless relative velocity error introduced by the truncation. */
+        rx = state_full[3];
+        ry = state_full[4];
+        rz = state_full[5];
+        dx = rx - state_trunc[3];
+        dy = ry - state_trunc[4];
+        dz = rz - state_trunc[5];
+        sum += (dx*dx + dy*dy + dz*dz) / (rx*rx + ry*ry + rz*rz);
+
+        /* Account for 2 additional error terms in the sum. */
+        n += 2;
+    }
+
+    return sqrt(sum) / n;
+}
+
+
+static int JupiterMoonTruncate(jupiter_moon_model_t *model, int mindex)
+{
+    const double threshold = 3.5e-7;
+    int error;
+    jupiter_moon_t *moon = &model->moon[mindex];
+    double score, best_score;
+    int winner;     /* Which truncation is best? 0=a, 1=l, 2=z, 3=zeta. */
+
+    for(;;)
+    {
+        /* Chop off one term at a time from each variable's series. */
+        /* Pick whichever incremental truncation causes the least damage to the accuracy score. */
+        /* Keep going until we can't chop of any more terms without exceeding relative error threshold. */
+
+        winner = -1;
+        best_score = 1.0e+99;
+
+        if (moon->a.nterms_calc > 1)
+        {
+            --moon->a.nterms_calc;
+            score = JupiterMoonRelativeError(model, mindex);
+            ++moon->a.nterms_calc;
+            if (score < best_score)
+            {
+                best_score = score;
+                winner = 0;
+            }
+        }
+
+        if (moon->l.nterms_calc > 1)
+        {
+            --moon->l.nterms_calc;
+            score = JupiterMoonRelativeError(model, mindex);
+            ++moon->l.nterms_calc;
+            if (score < best_score)
+            {
+                best_score = score;
+                winner = 1;
+            }
+        }
+
+        if (moon->z.nterms_calc > 1)
+        {
+            --moon->z.nterms_calc;
+            score = JupiterMoonRelativeError(model, mindex);
+            ++moon->z.nterms_calc;
+            if (score < best_score)
+            {
+                best_score = score;
+                winner = 2;
+            }
+        }
+
+        if (moon->zeta.nterms_calc > 1)
+        {
+            --moon->zeta.nterms_calc;
+            score = JupiterMoonRelativeError(model, mindex);
+            ++moon->zeta.nterms_calc;
+            if (score < best_score)
+            {
+                best_score = score;
+                winner = 3;
+            }
+        }
+
+        if (winner < 0)
+        {
+            printf("JupiterMoonTruncate: mindex=%d : no more truncation is available!\n", mindex);
+            break;
+        }
+
+        printf("JupiterMoonTruncate: mindex=%d, winner=%d, best_score=%le, nterms=[a:%d/%d, l:%d/%d, z:%d/%d, zeta:%d/%d]\n",
+            mindex, winner, best_score,
+            moon->a.nterms_calc,    moon->a.nterms_total,
+            moon->l.nterms_calc,    moon->l.nterms_total,
+            moon->z.nterms_calc,    moon->z.nterms_total,
+            moon->zeta.nterms_calc, moon->zeta.nterms_total);
+
+        if (best_score > threshold)
+        {
+            printf("JupiterMoonTruncate: mindex=%d : reached threshold.\n", mindex);
+            break;
+        }
+
+        switch (winner)
+        {
+            case 0:     --moon->a.nterms_calc;      break;
+            case 1:     --moon->l.nterms_calc;      break;
+            case 2:     --moon->z.nterms_calc;      break;
+            case 3:     --moon->zeta.nterms_calc;   break;
+            default:    FAIL("JupiterMoonTruncate: Internal error: winner=%d\n", winner);
+        }
+    }
+
+    error = 0;
+fail:
+    return error;
+}
+
+
+static int OptimizeJupiterMoons(const char *inFileName, const char *outFileName)
+{
+    int error, mindex;
+    jupiter_moon_model_t *model;
+
+    model = calloc(1, sizeof(jupiter_moon_model_t));
+    if (model == NULL)
+        FAIL("OptimizeJupiterMoons: memory allocation failure.\n");
+
+    CHECK(LoadJupiterMoonModel(inFileName, model));
+
+    for (mindex = 0; mindex < NUM_JUPITER_MOONS; ++mindex)
+        CHECK(JupiterMoonTruncate(model, mindex));
+
+    CHECK(SaveJupiterMoonModel(outFileName, model));
+
+    error = 0;
+fail:
+    free(model);
+    return error;
+}
+
+/*------------------------------------------------------------------------------------------------*/
 

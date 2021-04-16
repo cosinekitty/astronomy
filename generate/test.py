@@ -1697,11 +1697,95 @@ def Geoid():
 
 #-----------------------------------------------------------------------------------------------------------
 
+def JupiterMoons_CheckJpl(mindex, tt, pos, vel):
+    pos_tolerance = 9.0e-4
+    vel_tolerance = 9.0e-4
+    time = astronomy.Time.FromTerrestrialTime(tt)
+    jm = astronomy.JupiterMoons(time)
+
+    dx = v(pos[0] - jm.moon[mindex].x)
+    dy = v(pos[1] - jm.moon[mindex].y)
+    dz = v(pos[2] - jm.moon[mindex].z)
+    mag = sqrt(pos[0]*pos[0] + pos[1]*pos[1] + pos[2]*pos[2])
+    pos_diff = sqrt(dx*dx + dy*dy + dz*dz) / mag
+    if pos_diff > pos_tolerance:
+        print('PY JupiterMoons_CheckJpl(mindex={}, tt={}): excessive position error {}'.format(mindex, tt, pos_diff))
+        return 1
+
+    dx = v(vel[0] - jm.moon[mindex].vx)
+    dy = v(vel[1] - jm.moon[mindex].vy)
+    dz = v(vel[2] - jm.moon[mindex].vz)
+    mag = sqrt(vel[0]*vel[0] + vel[1]*vel[1] + vel[2]*vel[2])
+    vel_diff = sqrt(dx*dx + dy*dy + dz*dz) / mag
+    if vel_diff > vel_tolerance:
+        print('PY JupiterMoons_CheckJpl(mindex={}, tt={}): excessive velocity error {}'.format(mindex, tt, vel_diff))
+        return 1
+
+    Debug('PY JupiterMoons_CheckJpl: mindex={}, tt={}, pos_diff={}, vel_diff={}'.format(mindex, tt, pos_diff, vel_diff))
+    return 0
+
+
+def JupiterMoons():
+    for mindex in range(4):
+        filename = 'jupiter_moons/horizons/jm{}.txt'.format(mindex)
+        with open(filename, 'rt') as infile:
+            lnum = 0
+            found = False
+            part = -1
+            expected_count = 5001
+            count = 0
+            for line in infile:
+                line = line.rstrip()
+                lnum += 1
+                if not found:
+                    if line == '$$SOE':
+                        found = True
+                        part = 0
+                    elif line.startswith('Revised:'):
+                        check_mindex = int(line[76:]) - 501
+                        if mindex != check_mindex:
+                            print('PY JupiterMoons({} line {}): moon index does not match: check={}, mindex={}'.format(filename, lnum, check_mindex, mindex))
+                            return 1
+                elif line == '$$EOE':
+                    break
+                else:
+                    if part == 0:
+                        # 2446545.000000000 = A.D. 1986-Apr-24 12:00:00.0000 TDB
+                        tt = float(line.split()[0]) - 2451545.0    # convert JD to J2000 TT
+                    elif part == 1:
+                        # X = 1.134408131605554E-03 Y =-2.590904586750408E-03 Z =-7.490427225904720E-05
+                        match = re.match(r'\s*X =\s*(\S+) Y =\s*(\S+) Z =\s*(\S+)', line)
+                        if not match:
+                            print('PY JupiterMoons({} line {}): cannot parse position vector.'.format(filename, lnum))
+                            return 1
+                        pos = [ float(match.group(1)), float(match.group(2)), float(match.group(3)) ]
+                    else:   # part == 2
+                        # VX= 9.148038778472862E-03 VY= 3.973823407182510E-03 VZ= 2.765660368640458E-04
+                        match = re.match(r'\s*VX=\s*(\S+) VY=\s*(\S+) VZ=\s*(\S+)', line)
+                        if not match:
+                            print('PY JupiterMoons({} line {}): cannot parse velocity vector.'.format(filename, lnum))
+                            return 1
+                        vel = [ float(match.group(1)), float(match.group(2)), float(match.group(3)) ]
+                        if JupiterMoons_CheckJpl(mindex, tt, pos, vel):
+                            print('PY JupiterMoons({} line {}): FAILED VERIFICATION.'.format(filename, lnum))
+                            return 1
+                        count += 1
+                    part = (part + 1) % 3
+            if count != expected_count:
+                print('PY JupiterMoons: expected {} test cases, but found {}'.format(expected_count, count))
+                return 1
+
+    print('PY JupiterMoons: PASS')
+    return 0
+
+#-----------------------------------------------------------------------------------------------------------
+
 UnitTests = {
     'constellation':            Constellation,
     'elongation':               Elongation,
     'geoid':                    Geoid,
     'global_solar_eclipse':     GlobalSolarEclipse,
+    'jupiter_moons':            JupiterMoons,
     'local_solar_eclipse':      LocalSolarEclipse,
     'lunar_apsis':              LunarApsis,
     'lunar_eclipse':            LunarEclipse,

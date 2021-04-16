@@ -1,0 +1,8 @@
+#!/bin/bash
+for moon in 0 1 2 3; do
+    fn=jm${moon}.txt
+    echo $fn
+    ./jmcompare.py stellarium.txt ${fn} || exit 1
+done
+echo ""
+exit 0

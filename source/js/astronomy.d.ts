@@ -40,6 +40,34 @@ export declare const DEG2RAD = 0.017453292519943295;
  */
 export declare const RAD2DEG = 57.29577951308232;
 /**
+ * @brief The equatorial radius of Jupiter, expressed in kilometers.
+ */
+export declare const JUPITER_EQUATORIAL_RADIUS_KM = 71492;
+/**
+ * @brief The polar radius of Jupiter, expressed in kilometers.
+ */
+export declare const JUPITER_POLAR_RADIUS_KM = 66854;
+/**
+ * @brief The volumetric mean radius of Jupiter, expressed in kilometers.
+ */
+export declare const JUPITER_MEAN_RADIUS_KM = 69911;
+/**
+ * @brief The mean radius of Jupiter's moon Io, expressed in kilometers.
+ */
+export declare const IO_RADIUS_KM = 1821.6;
+/**
+ * @brief The mean radius of Jupiter's moon Europa, expressed in kilometers.
+ */
+export declare const EUROPA_RADIUS_KM = 1560.8;
+/**
+ * @brief The mean radius of Jupiter's moon Ganymede, expressed in kilometers.
+ */
+export declare const GANYMEDE_RADIUS_KM = 2631.2;
+/**
+ * @brief The mean radius of Jupiter's moon Callisto, expressed in kilometers.
+ */
+export declare const CALLISTO_RADIUS_KM = 2410.3;
+/**
  * @brief Calculates the angle in degrees between two vectors.
  *
  * The angle is measured in the plane that contains both vectors.
@@ -126,6 +154,25 @@ export declare class AstroTime {
      */
     constructor(date: FlexibleDateTime);
     /**
+     * @brief Creates an `AstroTime` value from a Terrestrial Time (TT) day value.
+     *
+     * This function can be used in rare cases where a time must be based
+     * on Terrestrial Time (TT) rather than Universal Time (UT).
+     * Most developers will want to invoke `new AstroTime(ut)` with a universal time
+     * instead of this function, because usually time is based on civil time adjusted
+     * by leap seconds to match the Earth's rotation, rather than the uniformly
+     * flowing TT used to calculate solar system dynamics. In rare cases
+     * where the caller already knows TT, this function is provided to create
+     * an `AstroTime` value that can be passed to Astronomy Engine functions.
+     *
+     * @param {number} tt
+     *      The number of days since the J2000 epoch as expressed in Terrestrial Time.
+     *
+     * @returns {AstroTime}
+     *      An `AstroTime` object for the specified terrestrial time.
+     */
+    static FromTerrestrialTime(tt: number): AstroTime;
+    /**
      * Formats an `AstroTime` object as an [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601)
      * date/time string in UTC, to millisecond resolution.
      * Example: `2018-08-17T17:22:04.050Z`
@@ -203,6 +250,30 @@ export declare class Vector {
      * @returns {number}
      */
     Length(): number;
+}
+/**
+ * @brief A combination of a position vector, a velocity vector, and a time.
+ *
+ * Holds the state vector of a body at a given time, including its position,
+ * velocity, and the time they are valid.
+ *
+ * @property {number} x        The position x-coordinate expressed in astronomical units (AU).
+ * @property {number} y        The position y-coordinate expressed in astronomical units (AU).
+ * @property {number} z        The position z-coordinate expressed in astronomical units (AU).
+ * @property {number} vx       The velocity x-coordinate expressed in AU/day.
+ * @property {number} vy       The velocity y-coordinate expressed in AU/day.
+ * @property {number} vz       The velocity z-coordinate expressed in AU/day.
+ * @property {AstroTime} t     The time at which the vector is valid.
+ */
+export declare class StateVector {
+    x: number;
+    y: number;
+    z: number;
+    vx: number;
+    vy: number;
+    vz: number;
+    t: AstroTime;
+    constructor(x: number, y: number, z: number, vx: number, vy: number, vz: number, t: AstroTime);
 }
 /**
  * @brief Holds spherical coordinates: latitude, longitude, distance.
@@ -537,6 +608,44 @@ export declare function Ecliptic(equ: Vector): EclipticCoordinates;
  * @returns {Vector}
  */
 export declare function GeoMoon(date: FlexibleDateTime): Vector;
+/**
+ * @brief Holds the positions and velocities of Jupiter's major 4 moons.
+ *
+ * The {@link JupiterMoons} function returns an object of this type
+ * to report position and velocity vectors for Jupiter's largest 4 moons
+ * Io, Europa, Ganymede, and Callisto. Each position vector is relative
+ * to the center of Jupiter. Both position and velocity are oriented in
+ * the EQJ system (that is, using Earth's equator at the J2000 epoch).
+ * The positions are expressed in astronomical units (AU),
+ * and the velocities in AU/day.
+ *
+ * @property {StateVector[]} moon
+ *      An array of state vectors, one for each of the four major moons
+ *      of Jupiter, in the following order: 0=Io, 1=Europa, 2=Ganymede, 3=Callisto.
+ */
+export declare class JupiterMoonsInfo {
+    moon: StateVector[];
+    constructor(moon: StateVector[]);
+}
+/**
+ * @brief Calculates jovicentric positions and velocities of Jupiter's largest 4 moons.
+ *
+ * Calculates position and velocity vectors for Jupiter's moons
+ * Io, Europa, Ganymede, and Callisto, at the given date and time.
+ * The vectors are jovicentric (relative to the center of Jupiter).
+ * Their orientation is the Earth's equatorial system at the J2000 epoch (EQJ).
+ * The position components are expressed in astronomical units (AU), and the
+ * velocity components are in AU/day.
+ *
+ * To convert to heliocentric vectors, call {@link HelioVector}
+ * with `Astronomy.Body.Jupiter` to get Jupiter's heliocentric position, then
+ * add the jovicentric vectors. Likewise, you can call {@link GeoVector}
+ * to convert to geocentric vectors.
+ *
+ * @param {FlexibleDateTime} date  The date and time for which to calculate Jupiter's moons.
+ * @return {JupiterMoonsInfo} Position and velocity vectors of Jupiter's largest 4 moons.
+ */
+export declare function JupiterMoons(date: FlexibleDateTime): JupiterMoonsInfo;
 /**
  * @brief Calculates a vector from the center of the Sun to the given body at the given time.
  *
@@ -1565,6 +1674,23 @@ export declare function InverseRefraction(refraction: string, bent_altitude: num
  *      A vector in the orientation specified by `rotation`.
  */
 export declare function RotateVector(rotation: RotationMatrix, vector: Vector): Vector;
+/**
+ * @brief Applies a rotation to a state vector, yielding a rotated vector.
+ *
+ * This function transforms a state vector in one orientation to a vector
+ * in another orientation.
+ *
+ * @param {RotationMatrix} rotation
+ *      A rotation matrix that specifies how the orientation of the state vector is to be changed.
+ *
+ * @param {StateVector} state
+ *      The state vector whose orientation is to be changed.
+ *      Both the position and velocity components are transformed.
+ *
+ * @return {StateVector}
+ *      A state vector in the orientation specified by `rotation`.
+ */
+export declare function RotateState(rotation: RotationMatrix, state: StateVector): StateVector;
 /**
  * @brief Calculates a rotation matrix from equatorial J2000 (EQJ) to ecliptic J2000 (ECL).
  *

@@ -158,17 +158,66 @@ However, because Python defines the [angular conversion functions](https://docs.
 
 ---
 
-<a name="KM_PER_AU"></a>
-### `KM_PER_AU = 1.4959787069098932e+8`
+<a name="CALLISTO_RADIUS_KM"></a>
+### `CALLISTO_RADIUS_KM = 2410.3`
 
-**The number of kilometers per astronomical unit.**
+**The mean radius of Jupiter's moon Callisto, expressed in kilometers.**
 
 ---
 
 <a name="C_AUDAY"></a>
-### `C_AUDAY   = 173.1446326846693`
+### `C_AUDAY = 173.1446326846693`
 
 **The speed of light expressed in astronomical units per day.**
+
+---
+
+<a name="EUROPA_RADIUS_KM"></a>
+### `EUROPA_RADIUS_KM = 1560.8`
+
+**The mean radius of Jupiter's moon Europa, expressed in kilometers.**
+
+---
+
+<a name="GANYMEDE_RADIUS_KM"></a>
+### `GANYMEDE_RADIUS_KM = 2631.2`
+
+**The mean radius of Jupiter's moon Ganymede, expressed in kilometers.**
+
+---
+
+<a name="IO_RADIUS_KM"></a>
+### `IO_RADIUS_KM = 1821.6`
+
+**The mean radius of Jupiter's moon Io, expressed in kilometers.**
+
+---
+
+<a name="JUPITER_EQUATORIAL_RADIUS_KM"></a>
+### `JUPITER_EQUATORIAL_RADIUS_KM = 71492.0`
+
+**The equatorial radius of Jupiter, expressed in kilometers.**
+
+---
+
+<a name="JUPITER_MEAN_RADIUS_KM"></a>
+### `JUPITER_MEAN_RADIUS_KM = 69911.0`
+
+**The volumetric mean radius of Jupiter, expressed in kilometers.**
+
+---
+
+<a name="JUPITER_POLAR_RADIUS_KM"></a>
+### `JUPITER_POLAR_RADIUS_KM = 66854.0`
+
+**The polar radius of Jupiter, expressed in kilometers.**
+
+---
+
+<a name="KM_PER_AU"></a>
+### `KM_PER_AU = 1.4959787069098932e+8`
+
+**The number of kilometers per astronomical unit.**
 
 ---
 
@@ -382,6 +431,25 @@ body at a given date and time.
 
 ---
 
+<a name="JupiterMoonsInfo"></a>
+### class JupiterMoonsInfo
+
+**Holds the positions and velocities of Jupiter's major 4 moons.**
+
+The [`JupiterMoons`](#JupiterMoons) function returns an object of this type
+to report position and velocity vectors for Jupiter's largest 4 moons
+Io, Europa, Ganymede, and Callisto. Each position vector is relative
+to the center of Jupiter. Both position and velocity are oriented in
+the EQJ system (that is, using Earth's equator at the J2000 epoch).
+The positions are expressed in astronomical units (AU),
+and the velocities in AU/day.
+
+| Type | Attribute | Description |
+| --- | --- | --- |
+| [`StateVector[4]`](#StateVector[4]) | `moon` | An array of state vectors, one for each of the four major moons of Jupiter, in the following order: 0=Io, 1=Europa, 2=Ganymede, 3=Callisto. |
+
+---
+
 <a name="LocalSolarEclipseInfo"></a>
 ### class LocalSolarEclipseInfo
 
@@ -522,6 +590,28 @@ Call [`Seasons`](#Seasons) to calculate this data structure for a given year.
 
 ---
 
+<a name="StateVector"></a>
+### class StateVector
+
+**A combination of a position vector, a velocity vector, and a time.**
+
+The position (x, y, z) is measured in astronomical units (AU).
+The velocity (vx, vy, vz) is measured in AU/day.
+The coordinate system varies and depends on context.
+The state vector also includes a time stamp.
+
+| Type | Attribute | Description |
+| --- | --- | --- |
+| `float` | `x` | The x-coordinate of the position, measured in AU. |
+| `float` | `y` | The y-coordinate of the position, measured in AU. |
+| `float` | `z` | The z-coordinate of the position, measured in AU. |
+| `float` | `vx` | The x-component of the velocity, measured in AU/day. |
+| `float` | `vy` | The y-component of the velocity, measured in AU/day. |
+| `float` | `vz` | The z-component of the velocity, measured in AU/day. |
+| [`Time`](#Time) | `t` | The date and time at which the position and velocity vectors are valid. |
+
+---
+
 <a name="Time"></a>
 ### class Time
 
@@ -559,6 +649,17 @@ The value of the calling object is not modified. This function creates a brand n
 | Type | Parameter | Description |
 | --- | --- | --- |
 | `float` | `days` | A floating point number of days by which to adjust `time`. May be negative, 0, or positive. |
+
+### Returns: [`Time`](#Time)
+
+<a name="Time.FromTerrestrialTime"></a>
+### Time.FromTerrestrialTime(tt)
+
+**Creates a [`Time`](#Time) object from a Terrestrial Time day value.**
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`The number of days after the J2000 epoch.`](#The number of days after the J2000 epoch.) | `tt` |  |
 
 ### Returns: [`Time`](#Time)
 
@@ -1309,6 +1410,31 @@ The inverse rotation matrix.
 
 ---
 
+<a name="JupiterMoons"></a>
+### JupiterMoons(time)
+
+**Calculates jovicentric positions and velocities of Jupiter's largest 4 moons.**
+
+Calculates position and velocity vectors for Jupiter's moons
+Io, Europa, Ganymede, and Callisto, at the given date and time.
+The vectors are jovicentric (relative to the center of Jupiter).
+Their orientation is the Earth's equatorial system at the J2000 epoch (EQJ).
+The position components are expressed in astronomical units (AU), and the
+velocity components are in AU/day.
+To convert to heliocentric vectors, call [`HelioVector`](#HelioVector)
+with `Body.Jupiter` to get Jupiter's heliocentric position, then
+add the jovicentric vectors. Likewise, you can call [`GeoVector`](#GeoVector)
+to convert to geocentric vectors.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Time`](#Time) | `time` | The date and time for which to calculate Jupiter's moons. |
+
+### Returns: [`JupiterMoonsInfo`](#JupiterMoonsInfo)
+The positions and velocities of Jupiter's 4 largest moons.
+
+---
+
 <a name="LongitudeFromSun"></a>
 ### LongitudeFromSun(body, time)
 
@@ -1566,6 +1692,25 @@ due to lensing of the Earth's atmosphere.
 The number of additional degrees of altitude an object appears
 to have, due to atmospheric refraction, depending on the
 option selected by the `refraction` parameter.
+
+---
+
+<a name="RotateState"></a>
+### RotateState(rotation, state)
+
+**Applies a rotation to a state vector, yielding a rotated state vector.**
+
+This function transforms a state vector in one orientation to a
+state vector in another orientation. Both the position and velocity
+vectors are rotated the same way.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`RotationMatrix`](#RotationMatrix) | `rotation` | A rotation matrix that specifies how the orientation of the vector is to be changed. |
+| [`StateVector`](#StateVector) | `state` | The state vector whose orientation is to be changed. |
+
+### Returns: [`StateVector`](#StateVector)
+A state vector in the orientation specified by `rotation`.
 
 ---
 

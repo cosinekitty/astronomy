@@ -22,12 +22,12 @@
     SOFTWARE.
 */
 
+#include <ctype.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdarg.h>
 #include "novas.h"
 #include "codegen.h"
-#include "vsop.h"
 #include "top2013.h"
 #include "ephfile.h"
 
@@ -1377,6 +1377,470 @@ fail:
 }
 
 
+/*-------------------------- begin Jupiter moons -----------------------------*/
+
+static int ReadFixLine(char *line, size_t size, FILE *infile)
+{
+    if (!fgets(line, (int)size, infile))
+        return 0;
+
+    // Convert FORTRAN double-precision exponential notation like
+    // 0.333688627964400D+06
+    // to the format that sscanf() can handle:
+    // 0.333688627964400e+06
+    for (int i = 0; line[i]; ++i)
+        if (isdigit(line[i]) && line[i+1] == 'D' && (line[i+2] == '+' || line[i+2] == '-') && isdigit(line[i+3]))
+            line[i+1] = 'e';
+
+    return 1;
+}
+
+
+#define REQUIRE_NSCAN(required) \
+    do{if ((nscanned) != (required)) FAIL("LoadJupiterMoonModel(%s line %d): expected %d tokens, found %d\n", filename, lnum, required, nscanned);}while(0)
+
+
+int LoadJupiterMoonModel(const char *filename, jupiter_moon_model_t *model)
+{
+    int error;
+    FILE *infile;
+    int lnum;
+    char line[200];
+    int nscanned, check, mindex, nterms, tindex, var, next_term_index, read_mean_longitude;
+    vsop_series_t *series = NULL;
+
+    infile = fopen(filename, "rt");
+    if (infile == NULL)
+        FAIL("LoadJupiterMoonModel: Cannot open file for read: %s\n", filename);
+
+    lnum = 0;
+    mindex = -1;
+    nterms = 0;
+    tindex = 0;
+    var = 3;
+    next_term_index = 0;
+    read_mean_longitude = 0;
+    while (ReadFixLine(line, sizeof(line), infile))
+    {
+        ++lnum;
+        if (lnum == 19)
+        {
+            /* G(M+m), where M = Jupiter mass, m = moon mass. */
+            nscanned = sscanf(line, "%lf %lf %lf %lf", &model->moon[0].mu, &model->moon[1].mu, &model->moon[2].mu, &model->moon[3].mu);
+            REQUIRE_NSCAN(4);
+        }
+        else if (lnum == 20)
+        {
+            double cp, sp, ci, si;
+
+            /* read angles that convert Jupiter equatorial coordinates into Earth J2000 equatorial coordinates. */
+            nscanned = sscanf(line, "%lf %lf", &model->psi, &model->incl);
+            REQUIRE_NSCAN(2);
+
+            /* calculate the corresponding rotation matrix. */
+            ci = cos(model->incl);
+            si = sin(model->incl);
+            cp = cos(model->psi);
+            sp = sin(model->psi);
+
+            model->rot[0][0] = +cp;
+            model->rot[1][0] = -sp*ci;
+            model->rot[2][0] = +sp*si;
+            model->rot[0][1] = +sp;
+            model->rot[1][1] = +cp*ci;
+            model->rot[2][1] = -cp*si;
+            model->rot[0][2] = 0.0;
+            model->rot[1][2] = +si;
+            model->rot[2][2] = +ci;
+        }
+        else if (lnum >= 21)
+        {
+            if (tindex < nterms)
+            {
+                if (tindex == 0 && var == 1 && !read_mean_longitude)
+                {
+                    /* Special case: there is an extra row of mean longitude values here. */
+                    nscanned = sscanf(line, "%lf %lf",
+                        &model->moon[mindex].al[0],
+                        &model->moon[mindex].al[1]);
+
+                    REQUIRE_NSCAN(2);
+                    read_mean_longitude = 1;
+                }
+                else
+                {
+                    /* Load the next term for the current moon and variable. */
+                    nscanned = sscanf(line, "%d %lf %lf %lf",
+                        &check,
+                        &series->term[tindex].amplitude,
+                        &series->term[tindex].phase,
+                        &series->term[tindex].frequency);
+
+                    REQUIRE_NSCAN(4);
+
+                    if (check != tindex + 1)
+                        FAIL("LoadJupiterMoonModel(%s line %d): invalid check value %d (expected %d)\n", filename, lnum, check, tindex + 1);
+
+                    ++tindex;
+                }
+            }
+            else
+            {
+                read_mean_longitude = 0;
+                tindex = 0;
+                if (var == 3)
+                {
+                    /* Start the next moon. */
+                    var = 0;
+                    ++mindex;
+                    if (mindex == NUM_JUPITER_MOONS)
+                        break;  /* We are done loading data! (We don't care about the Tchebycheff polynomials.) */
+                }
+                else
+                {
+                    /* Start the next variable in the current moon. */
+                    ++var;
+                }
+
+                /* Select which variable corresponds to the value of 'var'. */
+                switch (var)
+                {
+                    case 0:  series = &model->moon[mindex].a;     break;
+                    case 1:  series = &model->moon[mindex].l;     break;
+                    case 2:  series = &model->moon[mindex].z;     break;
+                    case 3:  series = &model->moon[mindex].zeta;  break;
+                    default:
+                        FAIL("LoadJupiterMoonModel: Invalid var = %d\n", var);
+                }
+
+                /* Read the number of terms in this variable. */
+                nscanned = sscanf(line, "%d", &nterms);
+                REQUIRE_NSCAN(1);
+                if (nterms < 0 || nterms > MAX_JM_SERIES)
+                    FAIL("LoadJupiterMoonModel(%s line %d): Invalid nterms = %d\n", filename, lnum, nterms);
+
+                /* Allocate terms for this series from the term buffer. */
+                series->nterms_calc = series->nterms_total = nterms;
+                series->term = &model->buffer[next_term_index];
+                next_term_index += nterms;
+                if (next_term_index > MAX_JUPITER_TERMS)
+                    FAIL("LoadJupiterMoonModel(%s line %d): Exhausted the term buffer!\n", filename, lnum);
+            }
+        }
+    }
+
+    if (mindex != NUM_JUPITER_MOONS)
+        FAIL("LoadJupiterMoonModel(%s): only loaded %d moons.\n", filename, mindex);
+
+    error = 0;
+fail:
+    if (infile != NULL) fclose(infile);
+    return error;
+}
+
+
+static int JupiterMoonWriteVar(FILE *outfile, const vsop_series_t *series, const double *al)
+{
+    int tindex;
+
+    fprintf(outfile, "%d\n", series->nterms_calc);
+
+    if (al != NULL)
+        fprintf(outfile, "%23.16le %23.16le\n", al[0], al[1]);
+
+    for (tindex = 0; tindex < series->nterms_calc; ++tindex)
+    {
+        fprintf(outfile, "%3d %23.16lf %20.13le %20.13le\n",
+            1 + tindex,
+            series->term[tindex].amplitude,
+            series->term[tindex].phase,
+            series->term[tindex].frequency);
+    }
+
+    return 0;
+}
+
+
+
+int SaveJupiterMoonModel(const char *filename, const jupiter_moon_model_t *model)
+{
+    int error, mindex;
+    FILE *outfile;
+
+    outfile = fopen(filename, "wt");
+    if (outfile == NULL)
+        FAIL("SaveJupiterMoonModel: cannot open output file: %s\n", filename);
+
+    /* As a hack, we emit 18 blank lines, because we ignore those from the original L1.2 file. */
+    for (mindex = 0; mindex < 18; ++mindex)
+        fprintf(outfile, "\n");
+
+    /* Write G(M+m) constants */
+    fprintf(outfile, "%23.16le %23.16le %23.16le %23.16le\n", model->moon[0].mu, model->moon[1].mu, model->moon[2].mu, model->moon[3].mu);
+
+    /* Write Jupiter equatorial orientation angles. */
+    fprintf(outfile, "%23.16le %23.16le\n", model->psi, model->incl);
+
+    for (mindex = 0; mindex < NUM_JUPITER_MOONS; ++mindex)
+    {
+        CHECK(JupiterMoonWriteVar(outfile, &model->moon[mindex].a,    NULL));
+        CHECK(JupiterMoonWriteVar(outfile, &model->moon[mindex].l,    model->moon[mindex].al));
+        CHECK(JupiterMoonWriteVar(outfile, &model->moon[mindex].z,    NULL));
+        CHECK(JupiterMoonWriteVar(outfile, &model->moon[mindex].zeta, NULL));
+    }
+
+    fprintf(outfile, "\n");     /* final blank line needed for loader to know it has all 4 moons. */
+
+    error = 0;
+fail:
+    if (outfile != NULL) fclose(outfile);
+    return error;
+}
+
+
+static int JupiterMoons_C(cg_context_t *context, const jupiter_moon_model_t *model)
+{
+    int mindex, var, i;
+    const char *moon_name[] = { "Io", "Europa", "Ganymede", "Callisto" };
+    const char *var_name[] = { "a", "l", "z", "zeta" };
+    vsop_series_t series[4];
+
+    fprintf(context->outfile, "static const astro_rotation_t Rotation_JUP_EQJ =\n");
+    fprintf(context->outfile, "{\n");
+    fprintf(context->outfile, "    ASTRO_SUCCESS,\n");
+    fprintf(context->outfile, "    {\n");
+    fprintf(context->outfile, "        { %23.16le, %23.16le, %23.16le },\n", model->rot[0][0], model->rot[0][1], model->rot[0][2]);
+    fprintf(context->outfile, "        { %23.16le, %23.16le, %23.16le },\n", model->rot[1][0], model->rot[1][1], model->rot[1][2]);
+    fprintf(context->outfile, "        { %23.16le, %23.16le, %23.16le }\n",  model->rot[2][0], model->rot[2][1], model->rot[2][2]);
+    fprintf(context->outfile, "    }\n");
+    fprintf(context->outfile, "};\n\n");
+
+    for (mindex = 0; mindex < NUM_JUPITER_MOONS; ++mindex)
+    {
+        series[0] = model->moon[mindex].a;
+        series[1] = model->moon[mindex].l;
+        series[2] = model->moon[mindex].z;
+        series[3] = model->moon[mindex].zeta;
+        for (var = 0; var < NUM_JM_VARS; ++var)
+        {
+            int nterms = series[var].nterms_total;
+            fprintf(context->outfile, "static const vsop_term_t jm_%s_%s[] =\n", moon_name[mindex], var_name[var]);
+            fprintf(context->outfile, "{\n");
+            for (i = 0; i < nterms; ++i)
+            {
+                const vsop_term_t *term = &series[var].term[i];
+                fprintf(context->outfile, "    { %19.16lf, %23.16le, %23.16le }%s\n",
+                    term->amplitude,
+                    term->phase,
+                    term->frequency,
+                    (i+1 < nterms) ? "," : "");
+            }
+            fprintf(context->outfile, "};\n\n");
+        }
+    }
+
+    fprintf(context->outfile, "static const jupiter_moon_t JupiterMoonModel[] =\n");
+    fprintf(context->outfile, "{\n");
+    for (mindex = 0; mindex < NUM_JUPITER_MOONS; ++mindex)
+    {
+        series[0] = model->moon[mindex].a;
+        series[1] = model->moon[mindex].l;
+        series[2] = model->moon[mindex].z;
+        series[3] = model->moon[mindex].zeta;
+        fprintf(context->outfile, "    { %23.16le, { %23.16le, %23.16le }", model->moon[mindex].mu, model->moon[mindex].al[0], model->moon[mindex].al[1]);
+        for (var = 0; var < NUM_JM_VARS; ++var)
+            fprintf(context->outfile, "\n        , { %3d, jm_%s_%-4s }", series[var].nterms_total, moon_name[mindex], var_name[var]);
+        fprintf(context->outfile, " }%s\n", ((mindex + 1 < NUM_JUPITER_MOONS) ? ",\n" : ""));
+    }
+    fprintf(context->outfile, "}");
+    return 0;
+}
+
+
+static int JupiterMoons_CSharp(cg_context_t *context, const jupiter_moon_model_t *model)
+{
+    int mindex, var, i;
+    vsop_series_t series[4];
+    const char *moon_name[] = { "Io", "Europa", "Ganymede", "Callisto" };
+    const char *var_name[] = { "a", "l", "z", "zeta" };
+
+    fprintf(context->outfile, "        private static readonly RotationMatrix Rotation_JUP_EQJ = new RotationMatrix(\n");
+    fprintf(context->outfile, "            new double[3,3]\n");
+    fprintf(context->outfile, "            {\n");
+    fprintf(context->outfile, "                { %23.16le, %23.16le, %23.16le },\n", model->rot[0][0], model->rot[0][1], model->rot[0][2]);
+    fprintf(context->outfile, "                { %23.16le, %23.16le, %23.16le },\n", model->rot[1][0], model->rot[1][1], model->rot[1][2]);
+    fprintf(context->outfile, "                { %23.16le, %23.16le, %23.16le }\n",  model->rot[2][0], model->rot[2][1], model->rot[2][2]);
+    fprintf(context->outfile, "            }\n");
+    fprintf(context->outfile, "        );\n\n");
+
+    fprintf(context->outfile, "        private static readonly jupiter_moon_t[] JupiterMoonModel = new jupiter_moon_t[] {\n");
+    for (mindex = 0; mindex < NUM_JUPITER_MOONS; ++mindex)
+    {
+        series[0] = model->moon[mindex].a;
+        series[1] = model->moon[mindex].l;
+        series[2] = model->moon[mindex].z;
+        series[3] = model->moon[mindex].zeta;
+        fprintf(context->outfile, "            // [%d] %s\n", mindex, moon_name[mindex]);
+        fprintf(context->outfile, "            new jupiter_moon_t {\n");
+        fprintf(context->outfile, "                mu = %23.16le,\n", model->moon[mindex].mu);
+        fprintf(context->outfile, "                al0 = %23.16le,\n", model->moon[mindex].al[0]);
+        fprintf(context->outfile, "                al1 = %23.16le,\n", model->moon[mindex].al[1]);
+        for (var = 0; var < NUM_JM_VARS; ++var)
+        {
+            int nterms = series[var].nterms_total;
+            fprintf(context->outfile, "                %s = new vsop_term_t[] {\n", var_name[var]);
+            for (i = 0; i < nterms; ++i)
+            {
+                const vsop_term_t *term = &series[var].term[i];
+                fprintf(context->outfile, "                    new vsop_term_t(%19.16lf, %23.16le, %23.16le)%s\n",
+                    term->amplitude,
+                    term->phase,
+                    term->frequency,
+                    (i+1 < nterms) ? "," : "");
+            }
+            fprintf(context->outfile, "                }%s\n", ((var+1 < NUM_JM_VARS) ? "," : ""));
+        }
+        fprintf(context->outfile, "            }%s\n", ((mindex+1 < NUM_JUPITER_MOONS) ? ",\n" : ""));
+    }
+    fprintf(context->outfile, "        }");
+    return 0;
+}
+
+
+static int JupiterMoons_JS(cg_context_t *context, const jupiter_moon_model_t *model)
+{
+    int mindex, var, i;
+    vsop_series_t series[4];
+    const char *moon_name[] = { "Io", "Europa", "Ganymede", "Callisto" };
+    const char *var_name[] = { "a", "l", "z", "zeta" };
+
+    fprintf(context->outfile, "const Rotation_JUP_EQJ = new RotationMatrix([\n");
+    fprintf(context->outfile, "    [ %23.16le, %23.16le, %23.16le ],\n", model->rot[0][0], model->rot[0][1], model->rot[0][2]);
+    fprintf(context->outfile, "    [ %23.16le, %23.16le, %23.16le ],\n", model->rot[1][0], model->rot[1][1], model->rot[1][2]);
+    fprintf(context->outfile, "    [ %23.16le, %23.16le, %23.16le ]\n",  model->rot[2][0], model->rot[2][1], model->rot[2][2]);
+    fprintf(context->outfile, "]);\n\n");
+
+    fprintf(context->outfile, "const JupiterMoonModel: jupiter_moon_t[] = [\n");
+    for (mindex = 0; mindex < NUM_JUPITER_MOONS; ++mindex)
+    {
+        series[0] = model->moon[mindex].a;
+        series[1] = model->moon[mindex].l;
+        series[2] = model->moon[mindex].z;
+        series[3] = model->moon[mindex].zeta;
+        fprintf(context->outfile, "    // [%d] %s\n", mindex, moon_name[mindex]);
+        fprintf(context->outfile, "    {\n");
+        fprintf(context->outfile, "        mu: %23.16le,\n", model->moon[mindex].mu);
+        fprintf(context->outfile, "        al: [%23.16le, %23.16le],\n", model->moon[mindex].al[0], model->moon[mindex].al[1]);
+        for (var = 0; var < NUM_JM_VARS; ++var)
+        {
+            int nterms = series[var].nterms_total;
+            fprintf(context->outfile, "        %s: [\n", var_name[var]);
+            for (i = 0; i < nterms; ++i)
+            {
+                const vsop_term_t *term = &series[var].term[i];
+                fprintf(context->outfile, "            [ %19.16lf, %23.16le, %23.16le ]%s\n",
+                    term->amplitude,
+                    term->phase,
+                    term->frequency,
+                    (i+1 < nterms) ? "," : "");
+            }
+            fprintf(context->outfile, "        ]%s\n", ((var+1 < NUM_JM_VARS) ? "," : ""));
+        }
+        fprintf(context->outfile, "    }%s\n", ((mindex+1 < NUM_JUPITER_MOONS) ? ",\n" : ""));
+    }
+    fprintf(context->outfile, "]");
+    return 0;
+}
+
+
+static int JupiterMoons_Python(cg_context_t *context, const jupiter_moon_model_t *model)
+{
+    int mindex, var, i;
+    vsop_series_t series[4];
+    const char *moon_name[] = { "Io", "Europa", "Ganymede", "Callisto" };
+    const char *var_name[] = { "a", "l", "z", "zeta" };
+
+    fprintf(context->outfile, "_Rotation_JUP_EQJ = RotationMatrix([\n");
+    fprintf(context->outfile, "    [ %23.16le, %23.16le, %23.16le ],\n", model->rot[0][0], model->rot[0][1], model->rot[0][2]);
+    fprintf(context->outfile, "    [ %23.16le, %23.16le, %23.16le ],\n", model->rot[1][0], model->rot[1][1], model->rot[1][2]);
+    fprintf(context->outfile, "    [ %23.16le, %23.16le, %23.16le ]\n",  model->rot[2][0], model->rot[2][1], model->rot[2][2]);
+    fprintf(context->outfile, "])\n\n");
+
+    fprintf(context->outfile, "_JupiterMoonModel = [\n");
+    for (mindex = 0; mindex < NUM_JUPITER_MOONS; ++mindex)
+    {
+        series[0] = model->moon[mindex].a;
+        series[1] = model->moon[mindex].l;
+        series[2] = model->moon[mindex].z;
+        series[3] = model->moon[mindex].zeta;
+        fprintf(context->outfile, "    # [%d] %s\n", mindex, moon_name[mindex]);
+        fprintf(context->outfile, "    [\n");
+        fprintf(context->outfile, "        %23.16le, %23.16le, %23.16le, # mu, al0, al1\n", model->moon[mindex].mu, model->moon[mindex].al[0], model->moon[mindex].al[1]);
+        for (var = 0; var < NUM_JM_VARS; ++var)
+        {
+            int nterms = series[var].nterms_total;
+            fprintf(context->outfile, "        [   # %s\n", var_name[var]);
+            for (i = 0; i < nterms; ++i)
+            {
+                const vsop_term_t *term = &series[var].term[i];
+                fprintf(context->outfile, "            [ %19.16lf, %23.16le, %23.16le ]%s\n",
+                    term->amplitude,
+                    term->phase,
+                    term->frequency,
+                    (i+1 < nterms) ? "," : "");
+            }
+            fprintf(context->outfile, "        ]%s\n", ((var+1 < NUM_JM_VARS) ? "," : ""));
+        }
+        fprintf(context->outfile, "    ]%s\n", ((mindex+1 < NUM_JUPITER_MOONS) ? ",\n" : ""));
+    }
+    fprintf(context->outfile, "]");
+    return 0;
+}
+
+
+static int JupiterMoons(cg_context_t *context)
+{
+    int error;
+    jupiter_moon_model_t *model;
+
+    model = calloc(1, sizeof(jupiter_moon_model_t));
+    if (model == NULL)
+        FAIL("JupiterMoons: memory allocation failure!\n");
+
+    CHECK(LoadJupiterMoonModel("output/jupiter_moons.txt", model));
+
+    switch (context->language)
+    {
+    case CODEGEN_LANGUAGE_C:
+        CHECK(JupiterMoons_C(context, model));
+        break;
+
+    case CODEGEN_LANGUAGE_CSHARP:
+        CHECK(JupiterMoons_CSharp(context, model));
+        break;
+
+    case CODEGEN_LANGUAGE_JS:
+        CHECK(JupiterMoons_JS(context, model));
+        break;
+
+    case CODEGEN_LANGUAGE_PYTHON:
+        CHECK(JupiterMoons_Python(context, model));
+        break;
+
+    default:
+        CHECK(LogError(context, "JupiterMoons: Unsupported target language %d", context->language));
+    }
+
+    error = 0;
+fail:
+    free(model);
+    return error;
+}
+
+
+/*-------------------------- end Jupiter moons -----------------------------*/
+
+
 static int LogError(const cg_context_t *context, const char *format, ...)
 {
     va_list v;
@@ -1397,6 +1861,7 @@ static const cg_directive_entry DirectiveTable[] =
     { "ADDSOL",             OptAddSol           },
     { "CONSTEL",            ConstellationData   },
     { "PLUTO_TABLE",        PlutoStateTable     },
+    { "JUPITER_MOONS",      JupiterMoons        },
     { NULL, NULL }  /* Marks end of list */
 };
 

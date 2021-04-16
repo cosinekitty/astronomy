@@ -5,7 +5,11 @@ Fail()
     exit 1
 }
 
-rm -f test/{camera,moonphase,positions,riseset,seasons,culminate,horizon,lunar_eclipse}.txt
+rm -f test/{jupiter_moons,camera,moonphase,positions,riseset,seasons,culminate,horizon,lunar_eclipse}.txt
+
+echo "Testing example: jupiter_moons.py"
+./jupiter_moons.py 2021-04-16T00:26:18Z > test/jupiter_moons.txt || Fail "Error testing jupiter_moons.py."
+diff test/jupiter_moons.txt test/jupiter_moons_correct.txt || Fail "Error comparing jupiter_moons.py output."
 
 echo "Testing example: camera.py"
 ./camera.py 29 -81 2021-03-22T02:45:00Z > test/camera.txt || Fail "Error testing camera.py."
