@@ -6482,6 +6482,7 @@ astro_constellation_t Astronomy_Constellation(double ra, double dec)
     astro_spherical_t s2000;
     astro_equatorial_t b1875;
     astro_vector_t vec2000, vec1875;
+    double x_ra, x_dec;
     int i, c;
 
     if (dec < -90.0 || dec > +90.0)
@@ -6533,12 +6534,16 @@ astro_constellation_t Astronomy_Constellation(double ra, double dec)
     if (b1875.status != ASTRO_SUCCESS)
         return ConstelErr(b1875.status);
 
+    /* Convert DEC from degrees, and RA from hours, to compact angle units used in the ContelBounds table. */
+    x_ra = (24.0 * 15.0) * b1875.ra;
+    x_dec = 24.0 * b1875.dec;
+
     /* Search for the constellation using the B1875 coordinates. */
     c = -1;     /* constellation not (yet) found */
     for (i=0; i < NUM_CONSTEL_BOUNDARIES; ++i)
     {
         const constel_boundary_t *b = &ConstelBounds[i];
-        if ((b->dec_lo <= b1875.dec) && (b->ra_hi > b1875.ra) && (b->ra_lo <= b1875.ra))
+        if ((b->dec_lo <= x_dec) && (b->ra_hi > x_ra) && (b->ra_lo <= x_ra))
         {
             c = b->index;
             break;

@@ -4828,10 +4828,14 @@ def Constellation(ra, dec):
     vec1875 = RotateVector(_ConstelRot, vec2000)
     equ1875 = EquatorFromVector(vec1875)
 
+    # Convert DEC from degrees and RA from hours, into compact angle units used in the _ConstelBounds table.
+    x_dec = 24.0 * equ1875.dec
+    x_ra = (24.0 * 15.0) * equ1875.ra
+
     # Search for the constellation using the B1875 coordinates.
     for b in _ConstelBounds:
-        index, ra_lo, ra_hi, dec = b
-        if (dec <= equ1875.dec) and (ra_lo <= equ1875.ra < ra_hi):
+        index, ra_lo, ra_hi, b_dec = b
+        if (b_dec <= x_dec) and (ra_lo <= x_ra < ra_hi):
             symbol, name = _ConstelNames[index]
             return ConstellationInfo(symbol, name, equ1875.ra, equ1875.dec)
 

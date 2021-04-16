@@ -7106,9 +7106,13 @@ $ASTRO_IAU_DATA()
             AstroVector vec1875 = RotateVector(ConstelRot, vec2000);
             Equatorial equ1875 = EquatorFromVector(vec1875);
 
+            // Convert DEC from degrees and RA from hours, into compact angle units used in the _ConstelBounds table.
+            double x_dec = 24.0 * equ1875.dec;
+            double x_ra = (24.0 * 15.0) * equ1875.ra;
+
             // Search for the constellation using the B1875 coordinates.
             foreach (constel_boundary_t b in ConstelBounds)
-                if ((b.dec_lo <= equ1875.dec) && (b.ra_hi > equ1875.ra) && (b.ra_lo <= equ1875.ra))
+                if ((b.dec_lo <= x_dec) && (b.ra_hi > x_ra) && (b.ra_lo <= x_ra))
                     return new ConstellationInfo(ConstelNames[b.index].symbol, ConstelNames[b.index].name, equ1875.ra, equ1875.dec);
 
             // This should never happen!

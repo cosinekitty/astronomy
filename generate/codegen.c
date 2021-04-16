@@ -1135,9 +1135,6 @@ static int ConstellationData(cg_context_t *context)
         if (4 != sscanf(line, "%lf %lf %lf %3s", &ra_lo, &ra_hi, &dec, symbol))
             CHECK(LogError(context, "Invalid constellation data at %s line %d", borderFileName, lnum));
 
-        ra_lo /= 15.0;      /* convert RA from degrees to sidereal hours */
-        ra_hi /= 15.0;      /* convert RA from degrees to sidereal hours */
-
         /* Search for the constellation symbol in the name table, to find its array index. */
         for (index=0; index < NUM_CONSTELLATIONS; ++index)
             if (0 == strcmp(symbol, dict[index]))
@@ -1146,16 +1143,21 @@ static int ConstellationData(cg_context_t *context)
         if (index == NUM_CONSTELLATIONS)
             CHECK(LogError(context, "Invalid constellation symbol '%s' at %s line %d", symbol, borderFileName, lnum));
 
+        /* For compact encoding, store each angle in tenths of quarter-arcminutes. */
+        ra_lo = RoundAngle(ra_lo);
+        ra_hi = RoundAngle(ra_hi);
+        dec = RoundAngle(dec);
+
         switch (context->language)
         {
         case CODEGEN_LANGUAGE_C:
-            fprintf(context->outfile, "%c   { %2d, %17.14lf, %17.14lf, %17.14lf }    /* %s */\n",
+            fprintf(context->outfile, "%c   { %2d, %6lg, %6lg, %6lg }    /* %s */\n",
                 ((lnum == 1) ? ' ' : ','),
                 index, ra_lo, ra_hi, dec, symbol);
             break;
 
         case CODEGEN_LANGUAGE_CSHARP:
-            fprintf(context->outfile, "        %c   new constel_boundary_t(%2d, %17.14lf, %17.14lf, %17.14lf)    // %s\n",
+            fprintf(context->outfile, "        %c   new constel_boundary_t(%2d, %6lg, %6lg, %6lg)    // %s\n",
                 ((lnum == 1) ? ' ' : ','),
                 index, ra_lo, ra_hi, dec, symbol);
             break;
@@ -1163,15 +1165,11 @@ static int ConstellationData(cg_context_t *context)
         case CODEGEN_LANGUAGE_JS:
             fprintf(context->outfile, "%c   [ %2d, %6lg, %6lg, %6lg ]    // %s\n",
                 ((lnum == 1) ? ' ' : ','),
-                index,
-                RoundAngle(15.0 * ra_lo),
-                RoundAngle(15.0 * ra_hi),
-                RoundAngle(dec),
-                symbol);
+                index, ra_lo, ra_hi, dec, symbol);
             break;
 
         case CODEGEN_LANGUAGE_PYTHON:
-            fprintf(context->outfile, "%c   ( %2d, %17.14lf, %17.14lf, %17.14lf )    # %s\n",
+            fprintf(context->outfile, "%c   ( %2d, %6lg, %6lg, %6lg )    # %s\n",
                 ((lnum == 1) ? ' ' : ','),
                 index, ra_lo, ra_hi, dec, symbol);
             break;
