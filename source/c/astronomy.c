@@ -526,13 +526,33 @@ static astro_func_result_t SynodicPeriod(astro_body_t body)
     return result;
 }
 
-static astro_angle_result_t AngleBetween(astro_vector_t a, astro_vector_t b)
+
+/**
+ * @brief Calculates the angle between two vectors.
+ *
+ * Given a pair of vectors, this function returns the angle in degrees
+ * between the two vectors in 3D space.
+ * The angle is measured in the plane that contains both vectors.
+ *
+ * @param a
+ *      The first vector.
+ *
+ * @param b
+ *      The second vector.
+ *
+ * @returns
+ *      On success, the `status` field holds `ASTRO_SUCCESS` and `angle` holds
+ *      a number of degrees in the range [0, 180].
+ *      If either vector has a zero magnitude or contains NAN (not a number)
+ *      components, the `status` will hold the error code `ASTRO_BAD_VECTOR`.
+ */
+astro_angle_result_t Astronomy_AngleBetween(astro_vector_t a, astro_vector_t b)
 {
     double r, dot;
     astro_angle_result_t result;
 
     r = Astronomy_VectorLength(a) * Astronomy_VectorLength(b);
-    if (r < 1.0e-8)
+    if (r < 1.0e-8 || !isfinite(r))
         return AngleError(ASTRO_BAD_VECTOR);
 
     dot = (a.x*b.x + a.y*b.y + a.z*b.z) / r;
@@ -4872,7 +4892,7 @@ astro_angle_result_t Astronomy_AngleFromSun(astro_body_t body, astro_time_t time
     if (bv.status != ASTRO_SUCCESS)
         return AngleError(bv.status);
 
-    return AngleBetween(sv, bv);
+    return Astronomy_AngleBetween(sv, bv);
 }
 
 /**
@@ -6019,7 +6039,7 @@ astro_illum_t Astronomy_Illumination(astro_body_t body, astro_time_t time)
             gc.z = hc.z - earth.z;
         }
 
-        phase = AngleBetween(gc, hc);
+        phase = Astronomy_AngleBetween(gc, hc);
         if (phase.status != ASTRO_SUCCESS)
             return IllumError(phase.status);
     }

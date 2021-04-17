@@ -821,6 +821,8 @@ You can also use enumeration syntax for the bodies, like
      The value is in the range [0, 180].  
 **Brief**: Calculates the angle in degrees between two vectors.
 
+Given a pair of vectors, this function returns the angle in degrees
+between the two vectors in 3D space.
 The angle is measured in the plane that contains both vectors.  
 
 | Param | Type | Description |

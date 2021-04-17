@@ -346,7 +346,26 @@ def _SynodicPeriod(body):
         return _MEAN_SYNODIC_MONTH
     return abs(_EARTH_ORBITAL_PERIOD / (_EARTH_ORBITAL_PERIOD/_PlanetOrbitalPeriod[body.value] - 1.0))
 
-def _AngleBetween(a, b):
+def AngleBetween(a, b):
+    """Calculates the angle in degrees between two vectors.
+
+    Given a pair of vectors, this function returns the angle in degrees
+    between the two vectors in 3D space.
+    The angle is measured in the plane that contains both vectors.
+
+    Parameters
+    ----------
+    a : Vector
+        The first of a pair of vectors between which to measure an angle.
+    b : Vector
+        The second of a pair of vectors between which to measure an angle.
+
+    Returns
+    -------
+    float
+        The angle between the two vectors expressed in degrees.
+        The value is in the range [0, 180].
+    """
     r = a.Length() * b.Length()
     if r < 1.0e-8:
         return BadVectorError()
@@ -4641,7 +4660,7 @@ def AngleFromSun(body, time):
         raise EarthNotAllowedError()
     sv = GeoVector(Body.Sun, time, True)
     bv = GeoVector(body, time, True)
-    return _AngleBetween(sv, bv)
+    return AngleBetween(sv, bv)
 
 def LongitudeFromSun(body, time):
     """Returns a body's ecliptic longitude with respect to the Sun, as seen from the Earth.
@@ -5317,7 +5336,7 @@ def Illumination(body, time):
             # For planets, heliocentric vector is most direct to calculate.
             hc = HelioVector(body, time)
             gc = Vector(hc.x - earth.x, hc.y - earth.y, hc.z - earth.z, time)
-        phase = _AngleBetween(gc, hc)
+        phase = AngleBetween(gc, hc)
 
     geo_dist = gc.Length()      # distance from body to center of Earth
     helio_dist = hc.Length()    # distance from body to center of Sun

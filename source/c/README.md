@@ -201,6 +201,31 @@ The value stored in `time` will not be modified; it is passed by value.
 
 ---
 
+<a name="Astronomy_AngleBetween"></a>
+### Astronomy_AngleBetween(a, b) &#8658; [`astro_angle_result_t`](#astro_angle_result_t)
+
+**Calculates the angle between two vectors.** 
+
+
+
+Given a pair of vectors, this function returns the angle in degrees between the two vectors in 3D space. The angle is measured in the plane that contains both vectors.
+
+
+
+**Returns:**  On success, the `status` field holds `ASTRO_SUCCESS` and `angle` holds a number of degrees in the range [0, 180]. If either vector has a zero magnitude or contains NAN (not a number) components, the `status` will hold the error code `ASTRO_BAD_VECTOR`. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_vector_t`](#astro_vector_t) | `a` |  The first vector. | 
+| [`astro_vector_t`](#astro_vector_t) | `b` |  The second vector. | 
+
+
+
+
+---
+
 <a name="Astronomy_AngleFromSun"></a>
 ### Astronomy_AngleFromSun(body, time) &#8658; [`astro_angle_result_t`](#astro_angle_result_t)
 

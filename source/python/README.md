@@ -950,6 +950,26 @@ Astronomy Engine for everyone! (Thank you in advance from the author.)
 
 ---
 
+<a name="AngleBetween"></a>
+### AngleBetween(a, b)
+
+**Calculates the angle in degrees between two vectors.**
+
+Given a pair of vectors, this function returns the angle in degrees
+between the two vectors in 3D space.
+The angle is measured in the plane that contains both vectors.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Vector`](#Vector) | `a` | The first of a pair of vectors between which to measure an angle. |
+| [`Vector`](#Vector) | `b` | The second of a pair of vectors between which to measure an angle. |
+
+### Returns: `float`
+The angle between the two vectors expressed in degrees.
+The value is in the range [0, 180].
+
+---
+
 <a name="AngleFromSun"></a>
 ### AngleFromSun(body, time)
 

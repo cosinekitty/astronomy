@@ -6093,7 +6093,21 @@ namespace CosineKitty
             return AngleBetween(sv, bv);
         }
 
-        private static double AngleBetween(AstroVector a, AstroVector b)
+        /// <summary>
+        /// Calculates the angle in degrees between two vectors.
+        /// </summary>
+        /// <remarks>
+        /// Given a pair of vectors, this function returns the angle in degrees
+        /// between the two vectors in 3D space.
+        /// The angle is measured in the plane that contains both vectors.
+        /// </remarks>
+        /// <param name="a">The first of a pair of vectors between which to measure an angle.</param>
+        /// <param name="b">The second of a pair of vectors between which to measure an angle.</param>
+        /// <returns>
+        /// The angle between the two vectors expressed in degrees.
+        /// The value is in the range [0, 180].
+        /// </returns>
+        public static double AngleBetween(AstroVector a, AstroVector b)
         {
             double r = a.Length() * b.Length();
             if (r < 1.0e-8)

@@ -233,6 +233,22 @@ these are used in function and type names.
 
 ---
 
+<a name="Astronomy.AngleBetween"></a>
+### Astronomy.AngleBetween(a, b) &#8658; `double`
+
+**Calculates the angle in degrees between two vectors.**
+
+Given a pair of vectors, this function returns the angle in degrees
+between the two vectors in 3D space.
+The angle is measured in the plane that contains both vectors.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`AstroVector`](#AstroVector) | `a` | The first of a pair of vectors between which to measure an angle. |
+| [`AstroVector`](#AstroVector) | `b` | The second of a pair of vectors between which to measure an angle. |
+
+**Returns:** The angle between the two vectors expressed in degrees. The value is in the range [0, 180].
+
 <a name="Astronomy.AngleFromSun"></a>
 ### Astronomy.AngleFromSun(body, time) &#8658; `double`
 

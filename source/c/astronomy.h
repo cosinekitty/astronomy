@@ -934,6 +934,7 @@ astro_jupiter_moons_t;
 
 void Astronomy_Reset(void);
 double Astronomy_VectorLength(astro_vector_t vector);
+astro_angle_result_t Astronomy_AngleBetween(astro_vector_t a, astro_vector_t b);
 const char *Astronomy_BodyName(astro_body_t body);
 astro_body_t Astronomy_BodyCode(const char *name);
 astro_observer_t Astronomy_MakeObserver(double latitude, double longitude, double height);

@@ -70,6 +70,8 @@ export declare const CALLISTO_RADIUS_KM = 2410.3;
 /**
  * @brief Calculates the angle in degrees between two vectors.
  *
+ * Given a pair of vectors, this function returns the angle in degrees
+ * between the two vectors in 3D space.
  * The angle is measured in the plane that contains both vectors.
  *
  * @param {Vector} a
