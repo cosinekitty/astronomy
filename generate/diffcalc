@@ -1,0 +1,21 @@
+#!/bin/bash
+
+echo ""
+echo "Diffing calculations: C vs C#"
+./ctest diff temp/c_check.txt dotnet/csharp_test/csharp_check.txt || exit $?
+
+echo ""
+echo "Diffing calculations: C vs JS"
+./ctest diff temp/{c,js}_check.txt || exit $?
+
+echo ""
+echo "Diffing calculations: C vs PY"
+./ctest diff temp/{c,py}_check.txt || exit $?
+
+echo ""
+echo "Diffing calculations: JS vs PY"
+./ctest diff temp/{js,py}_check.txt || exit $?
+
+echo ""
+echo "diffcalc: PASS"
+exit 0

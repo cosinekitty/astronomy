@@ -131,11 +131,7 @@ cd .. || Fail "Could not change to parent directory."
 ./unit_test_c $1 || exit $?
 ./unit_test_python $1 || exit $?
 
-echo ""
-echo "Diffing calculations."
-./ctest diff temp/c_check.txt dotnet/csharp_test/csharp_check.txt || Fail "Diff(c,c#) failure."
-./ctest diff temp/{c,js}_check.txt || Fail "Diff(c,js) failure."
-./ctest diff temp/{c,py}_check.txt || Fail "Diff(c,py) failure."
+./diffcalc || exit $?
 
 echo ""
 echo "Testing example programs."

@@ -180,6 +180,14 @@ these are used in function and type names.
 
 ---
 
+<a name="Astronomy.HOUR2RAD"></a>
+### `const double Astronomy.HOUR2RAD = 0.26179938779914946;`
+
+**The factor to convert sidereal hours to radians = pi/12.**
+
+
+---
+
 <a name="Astronomy.IO_RADIUS_KM"></a>
 ### `const double Astronomy.IO_RADIUS_KM = 1821.6;`
 
@@ -224,6 +232,14 @@ these are used in function and type names.
 ### `const double Astronomy.RAD2DEG = 57.29577951308232;`
 
 **The factor to convert radians to degrees = 180/pi.**
+
+
+---
+
+<a name="Astronomy.RAD2HOUR"></a>
+### `const double Astronomy.RAD2HOUR = 3.819718634205488;`
+
+**The factor to convert radians to sidereal hours = 12/pi.**
 
 
 ---

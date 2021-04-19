@@ -850,7 +850,7 @@ def Test_EQJ_ECL():
     et = astronomy.RotateVector(ir, ee)
     idiff = VectorDiff(et, ev)
     Debug('PY Test_EQJ_ECL ev diff = {}'.format(idiff))
-    if idiff > 2.0e-16:
+    if idiff > 2.3e-16:
         print('PY Test_EQJ_ECL: EXCESSIVE REVERSE ROTATION ERROR')
         sys.exit(1)
 
@@ -921,7 +921,7 @@ def Test_EQD_HOR(body):
     Debug('PY Test_EQD_HOR {}: trusted alt={}, az={}; test alt={}, az={}; diff_alt={}, diff_az={}'.format(
         body.name, hor.altitude, hor.azimuth, xsphere.lat, xsphere.lon, diff_alt, diff_az))
 
-    if diff_alt > 4.0e-14 or diff_az > 1.0e-13:
+    if diff_alt > 4.0e-14 or diff_az > 1.2e-13:
         print('PY Test_EQD_HOR: EXCESSIVE HORIZONTAL ERROR.')
         sys.exit(1)
 
@@ -1780,11 +1780,27 @@ def JupiterMoons():
 
 #-----------------------------------------------------------------------------------------------------------
 
+def Issue103():
+    # https://github.com/cosinekitty/astronomy/issues/103
+    observer = astronomy.Observer(29, -81, 10)
+    ut = -39864.1907264927140204
+    time = astronomy.Time(ut)
+    body = astronomy.Body.Venus
+    ofdate = astronomy.Equator(body, time, observer, True, True)
+    hor = astronomy.Horizon(time, observer, ofdate.ra, ofdate.dec, astronomy.Refraction.Airless)
+    print('tt  = {:23.16f}'.format(time.tt))
+    print('az  = {:23.16f}'.format(hor.azimuth))
+    print('alt = {:23.16f}'.format(hor.altitude))
+    return 0
+
+#-----------------------------------------------------------------------------------------------------------
+
 UnitTests = {
     'constellation':            Constellation,
     'elongation':               Elongation,
     'geoid':                    Geoid,
     'global_solar_eclipse':     GlobalSolarEclipse,
+    'issue_103':                Issue103,
     'jupiter_moons':            JupiterMoons,
     'local_solar_eclipse':      LocalSolarEclipse,
     'lunar_apsis':              LunarApsis,

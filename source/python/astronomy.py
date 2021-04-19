@@ -56,6 +56,8 @@ CALLISTO_RADIUS_KM = 2410.3     #<const> The mean radius of Jupiter's moon Calli
 
 _CalcMoonCount = 0
 
+_RAD2HOUR  =  3.819718634205488         # 12/pi = factor to convert radians to sidereal hours
+_HOUR2RAD  =  0.2617993877991494365     # pi/12 = factor to convert sidereal hours to radians
 _DAYS_PER_TROPICAL_YEAR = 365.24217
 _PI2 = 2.0 * math.pi
 _EPOCH = datetime.datetime(2000, 1, 1, 12)
@@ -1465,7 +1467,7 @@ def _vector2radec(pos, time):
         else:
             dec = +90.0
     else:
-        ra = math.degrees(math.atan2(pos[1], pos[0])) / 15.0
+        ra = _RAD2HOUR * math.atan2(pos[1], pos[0])
         if ra < 0:
             ra += 24
         dec = math.degrees(math.atan2(pos[2], math.sqrt(xyproj)))
@@ -3085,11 +3087,16 @@ _vsop = [
 ],
 ]
 
-def _VsopFormula(formula, t):
+def _VsopFormula(formula, t, clamp_angle):
     tpower = 1.0
     coord = 0.0
     for series in formula:
-        coord += tpower * sum(A * math.cos(B + C*t) for (A, B, C) in series)
+        incr = tpower * sum(A * math.cos(B + C*t) for (A, B, C) in series)
+        if clamp_angle:
+            # Longitude angles can be hundreds of radians.
+            # Improve precision by keeping each increment within [-2*pi, +2*pi].
+            incr = math.fmod(incr, _PI2)
+        coord += incr
         tpower *= t
     return coord
 
@@ -3136,7 +3143,9 @@ def _VsopSphereToRect(lon, lat, rad):
 
 def _CalcVsop(model, time):
     t = time.tt / _DAYS_PER_MILLENNIUM
-    (lon, lat, rad) = [_VsopFormula(formula, t) for formula in model]
+    lon = _VsopFormula(model[0], t, True)
+    lat = _VsopFormula(model[1], t, False)
+    rad = _VsopFormula(model[2], t, False)
     eclip = _VsopSphereToRect(lon, lat, rad)
     return _VsopRotate(eclip).ToAstroVector(time)
 
@@ -3149,7 +3158,10 @@ class _body_state_t:
 def _CalcVsopPosVel(model, tt):
     t = tt / _DAYS_PER_MILLENNIUM
 
-    (lon, lat, rad) = [_VsopFormula(formula, t) for formula in model]
+    lon = _VsopFormula(model[0], t, True)
+    lat = _VsopFormula(model[1], t, False)
+    rad = _VsopFormula(model[2], t, False)
+
     (dlon_dt, dlat_dt, drad_dt) = [_VsopDeriv(formula, t) for formula in model]
 
     # Use spherical coords and spherical derivatives to calculate
@@ -3209,7 +3221,7 @@ def _VsopHelioDistance(model, time):
     # The caller only wants to know the distance between the planet and the Sun.
     # So we only need to calculate the radial component of the spherical coordinates.
     # There is no need to translate coordinates.
-    return _VsopFormula(model[2], time.tt / _DAYS_PER_MILLENNIUM)
+    return _VsopFormula(model[2], time.tt / _DAYS_PER_MILLENNIUM, False)
 
 def _CalcEarth(time):
     return _CalcVsop(_vsop[Body.Earth.value], time)
@@ -4314,7 +4326,7 @@ def Horizon(time, observer, ra, dec, refraction):
     latrad = math.radians(observer.latitude)
     lonrad = math.radians(observer.longitude)
     decrad = math.radians(dec)
-    rarad = math.radians(ra * 15.0)
+    rarad = ra * _HOUR2RAD
 
     sinlat = math.sin(latrad)
     coslat = math.cos(latrad)
@@ -4407,7 +4419,7 @@ def Horizon(time, observer, ra, dec, refraction):
             pr = [(((p[j] - coszd0 * uz[j]) / sinzd0)*sinzd + uz[j]*coszd) for j in range(3)]
             proj = math.sqrt(pr[0]*pr[0] + pr[1]*pr[1])
             if proj > 0:
-                hor_ra = math.degrees(math.atan2(pr[1], pr[0])) / 15
+                hor_ra = _RAD2HOUR * math.atan2(pr[1], pr[0])
                 if hor_ra < 0:
                     hor_ra += 24
             else:

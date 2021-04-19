@@ -42,14 +42,25 @@ export type FlexibleDateTime = Date | number | AstroTime;
 export const KM_PER_AU = 1.4959787069098932e+8;
 
 /**
- * @brief The factor to convert radians to degrees = pi/180.
+ * @brief The factor to convert degrees to radians = pi/180.
  */
 export const DEG2RAD = 0.017453292519943296;
 
+/**
+ * @brief The factor to convert sidereal hours to radians = pi/12.
+ */
+export const HOUR2RAD = 0.2617993877991494365;
+
  /**
-  * @brief The factor to convert degrees to radians = 180/pi.
+  * @brief The factor to convert radians to degrees = 180/pi.
   */
 export const RAD2DEG = 57.295779513082321;
+
+ /**
+  * @brief The factor to convert radians to sidereal hours = 12/pi.
+  */
+export const RAD2HOUR = 3.819718634205488;
+
 
 // Jupiter radius data are nominal values obtained from:
 // https://www.iau.org/static/resolutions/IAU2015_English.pdf
@@ -2125,10 +2136,10 @@ function vector2radec(pos: ArrayVector, time: AstroTime): EquatorialCoordinates 
         return new EquatorialCoordinates(0, +90, dist, vec);
     }
 
-    let ra = Math.atan2(vec.y, vec.x) / (DEG2RAD * 15);
+    let ra = RAD2HOUR * Math.atan2(vec.y, vec.x);
     if (ra < 0)
         ra += 24;
-    const dec = Math.atan2(pos[2], Math.sqrt(xyproj)) / DEG2RAD;
+    const dec = RAD2DEG * Math.atan2(pos[2], Math.sqrt(xyproj));
     return new EquatorialCoordinates(ra, dec, dist, vec);
 }
 
@@ -2192,8 +2203,8 @@ export function Horizon(date: FlexibleDateTime, observer: Observer, ra: number, 
     const coslon = Math.cos(observer.longitude * DEG2RAD);
     const sindc  = Math.sin(dec * DEG2RAD);
     const cosdc  = Math.cos(dec * DEG2RAD);
-    const sinra  = Math.sin(ra * 15 * DEG2RAD);
-    const cosra  = Math.cos(ra * 15 * DEG2RAD);
+    const sinra  = Math.sin(ra * HOUR2RAD);
+    const cosra  = Math.cos(ra * HOUR2RAD);
 
     // Calculate three mutually perpendicular unit vectors
     // in equatorial coordinates: uze, une, uwe.
@@ -2249,7 +2260,7 @@ export function Horizon(date: FlexibleDateTime, observer: Observer, ra: number, 
     if (proj > 0) {
         // If the body is not exactly straight up/down, it has an azimuth.
         // Invert the angle to produce degrees eastward from north.
-        az = -Math.atan2(pw, pn) * RAD2DEG;
+        az = -RAD2DEG * Math.atan2(pw, pn);
         if (az < 0) az += 360;
     } else {
         // The body is straight up/down, so it does not have an azimuth.
@@ -2258,7 +2269,7 @@ export function Horizon(date: FlexibleDateTime, observer: Observer, ra: number, 
     }
 
     // zd = the angle of the body away from the observer's zenith, in degrees.
-    let zd = Math.atan2(proj, pz) * RAD2DEG;
+    let zd = RAD2DEG * Math.atan2(proj, pz);
     let out_ra = ra;
     let out_dec = dec;
 
@@ -2277,14 +2288,14 @@ export function Horizon(date: FlexibleDateTime, observer: Observer, ra: number, 
             }
             proj = Math.sqrt(pr[0]*pr[0] + pr[1]*pr[1]);
             if (proj > 0) {
-                out_ra = Math.atan2(pr[1], pr[0]) * RAD2DEG / 15;
+                out_ra = RAD2HOUR * Math.atan2(pr[1], pr[0]);
                 if (out_ra < 0) {
                     out_ra += 24;
                 }
             } else {
                 out_ra = 0;
             }
-            out_dec = Math.atan2(pr[2], proj) * RAD2DEG;
+            out_dec = RAD2DEG * Math.atan2(pr[2], proj);
         }
     }
 
@@ -2557,7 +2568,7 @@ export function GeoMoon(date: FlexibleDateTime): Vector {
     return new Vector(mpos2[0], mpos2[1], mpos2[2], time);
 }
 
-function VsopFormula(formula: any, t: number): number {
+function VsopFormula(formula: any, t: number, clamp_angle: boolean): number {
     let tpower = 1;
     let coord = 0;
     for (let series of formula) {
@@ -2565,7 +2576,10 @@ function VsopFormula(formula: any, t: number): number {
         for (let [ampl, phas, freq] of series) {
             sum += ampl * Math.cos(phas + (t * freq));
         }
-        coord += tpower * sum;
+        let incr = tpower * sum;
+        if (clamp_angle)
+            incr %= PI2;    // improve precision for longitudes: they can be hundreds of radians
+        coord += incr;
         tpower *= t;
     }
     return coord;
@@ -2611,18 +2625,20 @@ function VsopRotate(eclip: ArrayVector): TerseVector {
 function VsopSphereToRect(lon: number, lat: number, radius: number): ArrayVector {
     // Convert spherical coordinates to ecliptic cartesian coordinates.
     const r_coslat = radius * Math.cos(lat);
+    const coslon = Math.cos(lon);
+    const sinlon = Math.sin(lon);
     return [
-        r_coslat * Math.cos(lon),
-        r_coslat * Math.sin(lon),
+        r_coslat * coslon,
+        r_coslat * sinlon,
         radius * Math.sin(lat)
     ];
 }
 
 function CalcVsop(model: any[], time: AstroTime): Vector {
     const t = time.tt / DAYS_PER_MILLENNIUM;   // millennia since 2000
-    const lon = VsopFormula(model[LON_INDEX], t);
-    const lat = VsopFormula(model[LAT_INDEX], t);
-    const rad = VsopFormula(model[RAD_INDEX], t);
+    const lon = VsopFormula(model[LON_INDEX], t, true);
+    const lat = VsopFormula(model[LAT_INDEX], t, false);
+    const rad = VsopFormula(model[RAD_INDEX], t, false);
     const eclip = VsopSphereToRect(lon, lat, rad);
     return VsopRotate(eclip).ToAstroVector(time);
 }
@@ -2631,9 +2647,9 @@ function CalcVsopPosVel(model: any[], tt: number): body_state_t {
     const t = tt / DAYS_PER_MILLENNIUM;
 
     // Calculate the VSOP "B" trigonometric series to obtain ecliptic spherical coordinates.
-    const lon = VsopFormula(model[LON_INDEX], t);
-    const lat = VsopFormula(model[LAT_INDEX], t);
-    const rad = VsopFormula(model[RAD_INDEX], t);
+    const lon = VsopFormula(model[LON_INDEX], t, true);
+    const lat = VsopFormula(model[LAT_INDEX], t, false);
+    const rad = VsopFormula(model[RAD_INDEX], t, false);
 
     const dlon_dt = VsopDeriv(model[LON_INDEX], t);
     const dlat_dt = VsopDeriv(model[LAT_INDEX], t);
@@ -3416,7 +3432,7 @@ export function HelioVector(body: Body, date: FlexibleDateTime): Vector {
 export function HelioDistance(body: Body, date: FlexibleDateTime): number {
     const time = MakeTime(date);
     if (body in vsop) {
-        return VsopFormula(vsop[body][RAD_INDEX], time.tt / DAYS_PER_MILLENNIUM);
+        return VsopFormula(vsop[body][RAD_INDEX], time.tt / DAYS_PER_MILLENNIUM, false);
     }
     return HelioVector(body, time).Length();
 }
@@ -7108,7 +7124,7 @@ function GeoidIntersect(shadow: ShadowInfo): GlobalSolarEclipseInfo {
 
         // Adjust longitude for Earth's rotation at the given UT.
         const gast = sidereal_time(peak);
-        longitude = (RAD2DEG * Math.atan2(py, px) - (15*gast)) % 360.0;
+        longitude = (RAD2DEG*Math.atan2(py, px) - (15*gast)) % 360.0;
         if (longitude <= -180.0) {
             longitude += 360.0;
         } else if (longitude > +180.0) {

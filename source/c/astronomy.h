@@ -44,15 +44,27 @@ extern "C" {
 
 /**
  * \def DEG2RAD
- * @brief The factor to convert radians to degrees = pi/180.
+ * @brief The factor to convert degrees to radians = pi/180.
  */
 #define DEG2RAD     0.017453292519943296
 
 /**
+ * \def HOUR2RAD
+ * @brief The factor to convert sidereal hours to radians = pi/12.
+ */
+#define HOUR2RAD    0.2617993877991494365
+
+/**
  * \def RAD2DEG
- * @brief The factor to convert degrees to radians = 180/pi.
+ * @brief The factor to convert radians to degrees = 180/pi.
  */
 #define RAD2DEG     57.295779513082321
+
+/**
+ * \def RAD2HOUR
+ * @brief The factor to convert radians to sidereal hours = 12/pi.
+ */
+#define RAD2HOUR    3.819718634205488
 
 /*
     Jupiter radius data are nominal values obtained from:

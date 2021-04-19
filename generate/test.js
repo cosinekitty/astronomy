@@ -2,8 +2,6 @@
 const fs = require('fs');
 const Astronomy = require('../source/js/astronomy.min.js');
 let Verbose = false;
-const DEG2RAD = 0.017453292519943296;
-const RAD2DEG = 57.295779513082321;
 
 function Fail(message) {
     console.trace();
@@ -406,11 +404,13 @@ function LunarEclipse() {
 }
 
 function VectorFromAngles(lat, lon) {
-    const coslat = cos(DEG2RAD * lat);
+    const latrad = Astronomy.DEG2RAD * lat;
+    const lonrad = Astronomy.DEG2RAD * lon;
+    const coslat = cos(latrad);
     return [
-        cos(DEG2RAD * lon) * coslat,
-        sin(DEG2RAD * lon) * coslat,
-        sin(DEG2RAD * lat)
+        cos(lonrad) * coslat,
+        sin(lonrad) * coslat,
+        sin(latrad)
     ];
 }
 
@@ -425,7 +425,7 @@ function AngleDiff(alat, alon, blat, blon) {
     if (dot >= +1.0) {
         return 0.0;
     }
-    return v(RAD2DEG * Math.acos(dot));
+    return v(Astronomy.RAD2DEG * Math.acos(dot));
 }
 
 
@@ -1269,7 +1269,7 @@ function Rotation() {
         const et = Astronomy.RotateVector(ir, ee);
         const idiff = VectorDiff(et, ev);
         if (Verbose) console.log(`JS Test_EQJ_ECL ev diff = ${idiff}`);
-        if (idiff > 2.0e-16)
+        if (idiff > 2.3e-16)
             throw 'Test_EQJ_ECL: EXCESSIVE REVERSE ROTATION ERROR';
     }
 
@@ -1333,7 +1333,7 @@ function Rotation() {
         const diff_az = abs(xsphere.lon - hor.azimuth);
 
         if (Verbose) console.log(`JS Test_EQD_HOR ${body}: trusted alt=${hor.altitude}, az=${hor.azimuth}; test alt=${xsphere.lat}, az=${xsphere.lon}; diff_alt=${diff_alt}, diff_az=${diff_az}`);
-        if (diff_alt > 4.0e-14 || diff_az > 1.0e-13)
+        if (diff_alt > 4.3e-14 || diff_az > 1.2e-13)
             throw 'Test_EQD_HOR: EXCESSIVE HORIZONTAL ERROR.';
 
         /* Confirm that we can convert back to horizontal vector. */
@@ -1348,7 +1348,7 @@ function Rotation() {
         const check_eqd = Astronomy.RotateVector(irot, vec_hor);
         diff = VectorDiff(check_eqd, vec_eqd);
         if (Verbose) console.log(`JS Test_EQD_HOR ${body}: OFDATE inverse rotation diff = ${diff}`);
-        if (diff > 2.0e-15)
+        if (diff > 2.1e-15)
             throw 'Test_EQD_HOR: EXCESSIVE OFDATE INVERSE HORIZONTAL ERROR.';
 
         /* Exercise HOR to EQJ translation. */
@@ -1976,11 +1976,31 @@ function JupiterMoons() {
 }
 
 
+function Issue103() {
+    // https://github.com/cosinekitty/astronomy/issues/103
+
+    const observer = new Astronomy.Observer(29, -81, 10);
+    const ut = -51279.9420508868643083;
+    const time = Astronomy.MakeTime(ut);
+    const ofdate = Astronomy.Equator(Astronomy.Body.Moon, time, observer, true, true);
+
+    console.log(`tt  = ${time.tt.toFixed(16)}`);
+    console.log(`ra  = ${ofdate.ra.toFixed(16)}`);
+    console.log(`dec = ${ofdate.dec.toFixed(16)}`);
+    const hor = Astronomy.Horizon(time, observer, ofdate.ra, ofdate.dec, false);
+    console.log(`az  = ${hor.azimuth.toFixed(16)}`);
+    console.log(`alt = ${hor.altitude.toFixed(16)}`);
+
+    return 0;
+}
+
+
 const UnitTests = {
     constellation:          Constellation,
     elongation:             Elongation,
     geoid:                  Geoid,
     global_solar_eclipse:   GlobalSolarEclipse,
+    issue_103:              Issue103,
     jupiter_moons:          JupiterMoons,
     local_solar_eclipse:    LocalSolarEclipse,
     lunar_apsis:            LunarApsis,

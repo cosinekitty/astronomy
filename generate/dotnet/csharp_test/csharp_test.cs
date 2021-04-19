@@ -1420,7 +1420,7 @@ namespace csharp_test
             AstroVector et = Astronomy.RotateVector(r, ee);
             diff = VectorDiff(et, ev);
             Debug("C# Test_EQJ_ECL  ev diff={0}", diff);
-            if (diff > 2.0e-16)
+            if (diff > 2.3e-16)
             {
                 Console.WriteLine("C# Test_EQJ_ECL: EXCESSIVE REVERSE ROTATION ERROR");
                 return 1;
@@ -1485,7 +1485,7 @@ namespace csharp_test
             Debug("C# Test_EQD_HOR {0}: trusted alt={1}, az={2}; test alt={3}, az={4}; diff_alt={5}, diff_az={6}",
                 body, hor.altitude, hor.azimuth, sphere.lat, sphere.lon, diff_alt, diff_az);
 
-            if (diff_alt > 3.0e-14 || diff_az > 8.0e-14)
+            if (diff_alt > 3.2e-14 || diff_az > 1.2e-13)
             {
                 Console.WriteLine("C# Test_EQD_HOR: EXCESSIVE HORIZONTAL ERROR.");
                 return 1;
@@ -1506,7 +1506,7 @@ namespace csharp_test
             AstroVector check_eqd = Astronomy.RotateVector(rot, vec_hor);
             diff = VectorDiff(check_eqd, vec_eqd);
             Debug("C# Test_EQD_HOR {0}: OFDATE inverse rotation diff = {1}", body, diff);
-            if (diff > 2.0e-15)
+            if (diff > 2.1e-15)
             {
                 Console.WriteLine("C# Test_EQD_HOR: EXCESSIVE OFDATE INVERSE HORIZONTAL ERROR.");
                 return 1;

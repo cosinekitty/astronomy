@@ -33,21 +33,29 @@
  */
 'use strict';
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.SearchMoonQuarter = exports.MoonQuarter = exports.SearchMoonPhase = exports.MoonPhase = exports.SearchRelativeLongitude = exports.Illumination = exports.IlluminationInfo = exports.EclipticLongitude = exports.AngleFromSun = exports.LongitudeFromSun = exports.SearchSunLongitude = exports.Search = exports.GeoVector = exports.HelioDistance = exports.HelioVector = exports.JupiterMoons = exports.JupiterMoonsInfo = exports.GeoMoon = exports.Ecliptic = exports.ObserverVector = exports.Equator = exports.SunPosition = exports.Observer = exports.Horizon = exports.EclipticCoordinates = exports.HorizontalCoordinates = exports.MakeRotation = exports.RotationMatrix = exports.EquatorialCoordinates = exports.Spherical = exports.StateVector = exports.Vector = exports.CalcMoonCount = exports.MakeTime = exports.AstroTime = exports.SetDeltaTFunction = exports.DeltaT_JplHorizons = exports.DeltaT_EspenakMeeus = exports.Body = exports.AngleBetween = exports.CALLISTO_RADIUS_KM = exports.GANYMEDE_RADIUS_KM = exports.EUROPA_RADIUS_KM = exports.IO_RADIUS_KM = exports.JUPITER_MEAN_RADIUS_KM = exports.JUPITER_POLAR_RADIUS_KM = exports.JUPITER_EQUATORIAL_RADIUS_KM = exports.RAD2DEG = exports.DEG2RAD = exports.KM_PER_AU = void 0;
-exports.LocalSolarEclipseInfo = exports.EclipseEvent = exports.NextGlobalSolarEclipse = exports.SearchGlobalSolarEclipse = exports.NextLunarEclipse = exports.GlobalSolarEclipseInfo = exports.SearchLunarEclipse = exports.LunarEclipseInfo = exports.Constellation = exports.ConstellationInfo = exports.Rotation_HOR_ECL = exports.Rotation_ECL_HOR = exports.Rotation_ECL_EQD = exports.Rotation_EQD_ECL = exports.Rotation_EQJ_HOR = exports.Rotation_HOR_EQJ = exports.Rotation_HOR_EQD = exports.Rotation_EQD_HOR = exports.Rotation_EQD_EQJ = exports.Rotation_EQJ_EQD = exports.Rotation_ECL_EQJ = exports.Rotation_EQJ_ECL = exports.RotateState = exports.RotateVector = exports.InverseRefraction = exports.Refraction = exports.VectorFromHorizon = exports.HorizonFromVector = exports.SphereFromVector = exports.EquatorFromVector = exports.VectorFromSphere = exports.Pivot = exports.IdentityMatrix = exports.CombineRotation = exports.InverseRotation = exports.NextPlanetApsis = exports.SearchPlanetApsis = exports.NextLunarApsis = exports.SearchLunarApsis = exports.Apsis = exports.SearchPeakMagnitude = exports.SearchMaxElongation = exports.Elongation = exports.ElongationEvent = exports.Seasons = exports.SeasonInfo = exports.SearchHourAngle = exports.HourAngleEvent = exports.SearchRiseSet = exports.NextMoonQuarter = void 0;
-exports.NextTransit = exports.SearchTransit = exports.TransitInfo = exports.NextLocalSolarEclipse = exports.SearchLocalSolarEclipse = void 0;
+exports.SearchMoonPhase = exports.MoonPhase = exports.SearchRelativeLongitude = exports.Illumination = exports.IlluminationInfo = exports.EclipticLongitude = exports.AngleFromSun = exports.LongitudeFromSun = exports.SearchSunLongitude = exports.Search = exports.GeoVector = exports.HelioDistance = exports.HelioVector = exports.JupiterMoons = exports.JupiterMoonsInfo = exports.GeoMoon = exports.Ecliptic = exports.ObserverVector = exports.Equator = exports.SunPosition = exports.Observer = exports.Horizon = exports.EclipticCoordinates = exports.HorizontalCoordinates = exports.MakeRotation = exports.RotationMatrix = exports.EquatorialCoordinates = exports.Spherical = exports.StateVector = exports.Vector = exports.CalcMoonCount = exports.MakeTime = exports.AstroTime = exports.SetDeltaTFunction = exports.DeltaT_JplHorizons = exports.DeltaT_EspenakMeeus = exports.Body = exports.AngleBetween = exports.CALLISTO_RADIUS_KM = exports.GANYMEDE_RADIUS_KM = exports.EUROPA_RADIUS_KM = exports.IO_RADIUS_KM = exports.JUPITER_MEAN_RADIUS_KM = exports.JUPITER_POLAR_RADIUS_KM = exports.JUPITER_EQUATORIAL_RADIUS_KM = exports.RAD2HOUR = exports.RAD2DEG = exports.HOUR2RAD = exports.DEG2RAD = exports.KM_PER_AU = void 0;
+exports.NextGlobalSolarEclipse = exports.SearchGlobalSolarEclipse = exports.NextLunarEclipse = exports.GlobalSolarEclipseInfo = exports.SearchLunarEclipse = exports.LunarEclipseInfo = exports.Constellation = exports.ConstellationInfo = exports.Rotation_HOR_ECL = exports.Rotation_ECL_HOR = exports.Rotation_ECL_EQD = exports.Rotation_EQD_ECL = exports.Rotation_EQJ_HOR = exports.Rotation_HOR_EQJ = exports.Rotation_HOR_EQD = exports.Rotation_EQD_HOR = exports.Rotation_EQD_EQJ = exports.Rotation_EQJ_EQD = exports.Rotation_ECL_EQJ = exports.Rotation_EQJ_ECL = exports.RotateState = exports.RotateVector = exports.InverseRefraction = exports.Refraction = exports.VectorFromHorizon = exports.HorizonFromVector = exports.SphereFromVector = exports.EquatorFromVector = exports.VectorFromSphere = exports.Pivot = exports.IdentityMatrix = exports.CombineRotation = exports.InverseRotation = exports.NextPlanetApsis = exports.SearchPlanetApsis = exports.NextLunarApsis = exports.SearchLunarApsis = exports.Apsis = exports.SearchPeakMagnitude = exports.SearchMaxElongation = exports.Elongation = exports.ElongationEvent = exports.Seasons = exports.SeasonInfo = exports.SearchHourAngle = exports.HourAngleEvent = exports.SearchRiseSet = exports.NextMoonQuarter = exports.SearchMoonQuarter = exports.MoonQuarter = void 0;
+exports.NextTransit = exports.SearchTransit = exports.TransitInfo = exports.NextLocalSolarEclipse = exports.SearchLocalSolarEclipse = exports.LocalSolarEclipseInfo = exports.EclipseEvent = void 0;
 /**
  * @brief The number of kilometers per astronomical unit.
  */
 exports.KM_PER_AU = 1.4959787069098932e+8;
 /**
- * @brief The factor to convert radians to degrees = pi/180.
+ * @brief The factor to convert degrees to radians = pi/180.
  */
 exports.DEG2RAD = 0.017453292519943296;
 /**
- * @brief The factor to convert degrees to radians = 180/pi.
+ * @brief The factor to convert sidereal hours to radians = pi/12.
+ */
+exports.HOUR2RAD = 0.2617993877991494365;
+/**
+ * @brief The factor to convert radians to degrees = 180/pi.
  */
 exports.RAD2DEG = 57.295779513082321;
+/**
+ * @brief The factor to convert radians to sidereal hours = 12/pi.
+ */
+exports.RAD2HOUR = 3.819718634205488;
 // Jupiter radius data are nominal values obtained from:
 // https://www.iau.org/static/resolutions/IAU2015_English.pdf
 // https://nssdc.gsfc.nasa.gov/planetary/factsheet/jupiterfact.html
@@ -1971,10 +1979,10 @@ function vector2radec(pos, time) {
             return new EquatorialCoordinates(0, -90, dist, vec);
         return new EquatorialCoordinates(0, +90, dist, vec);
     }
-    let ra = Math.atan2(vec.y, vec.x) / (exports.DEG2RAD * 15);
+    let ra = exports.RAD2HOUR * Math.atan2(vec.y, vec.x);
     if (ra < 0)
         ra += 24;
-    const dec = Math.atan2(pos[2], Math.sqrt(xyproj)) / exports.DEG2RAD;
+    const dec = exports.RAD2DEG * Math.atan2(pos[2], Math.sqrt(xyproj));
     return new EquatorialCoordinates(ra, dec, dist, vec);
 }
 function spin(angle, pos) {
@@ -2035,8 +2043,8 @@ function Horizon(date, observer, ra, dec, refraction) {
     const coslon = Math.cos(observer.longitude * exports.DEG2RAD);
     const sindc = Math.sin(dec * exports.DEG2RAD);
     const cosdc = Math.cos(dec * exports.DEG2RAD);
-    const sinra = Math.sin(ra * 15 * exports.DEG2RAD);
-    const cosra = Math.cos(ra * 15 * exports.DEG2RAD);
+    const sinra = Math.sin(ra * exports.HOUR2RAD);
+    const cosra = Math.cos(ra * exports.HOUR2RAD);
     // Calculate three mutually perpendicular unit vectors
     // in equatorial coordinates: uze, une, uwe.
     //
@@ -2082,7 +2090,7 @@ function Horizon(date, observer, ra, dec, refraction) {
     if (proj > 0) {
         // If the body is not exactly straight up/down, it has an azimuth.
         // Invert the angle to produce degrees eastward from north.
-        az = -Math.atan2(pw, pn) * exports.RAD2DEG;
+        az = -exports.RAD2DEG * Math.atan2(pw, pn);
         if (az < 0)
             az += 360;
     }
@@ -2092,7 +2100,7 @@ function Horizon(date, observer, ra, dec, refraction) {
         az = 0;
     }
     // zd = the angle of the body away from the observer's zenith, in degrees.
-    let zd = Math.atan2(proj, pz) * exports.RAD2DEG;
+    let zd = exports.RAD2DEG * Math.atan2(proj, pz);
     let out_ra = ra;
     let out_dec = dec;
     if (refraction) {
@@ -2110,7 +2118,7 @@ function Horizon(date, observer, ra, dec, refraction) {
             }
             proj = Math.sqrt(pr[0] * pr[0] + pr[1] * pr[1]);
             if (proj > 0) {
-                out_ra = Math.atan2(pr[1], pr[0]) * exports.RAD2DEG / 15;
+                out_ra = exports.RAD2HOUR * Math.atan2(pr[1], pr[0]);
                 if (out_ra < 0) {
                     out_ra += 24;
                 }
@@ -2118,7 +2126,7 @@ function Horizon(date, observer, ra, dec, refraction) {
             else {
                 out_ra = 0;
             }
-            out_dec = Math.atan2(pr[2], proj) * exports.RAD2DEG;
+            out_dec = exports.RAD2DEG * Math.atan2(pr[2], proj);
         }
     }
     return new HorizontalCoordinates(az, 90 - zd, out_ra, out_dec);
@@ -2372,7 +2380,7 @@ function GeoMoon(date) {
     return new Vector(mpos2[0], mpos2[1], mpos2[2], time);
 }
 exports.GeoMoon = GeoMoon;
-function VsopFormula(formula, t) {
+function VsopFormula(formula, t, clamp_angle) {
     let tpower = 1;
     let coord = 0;
     for (let series of formula) {
@@ -2380,7 +2388,10 @@ function VsopFormula(formula, t) {
         for (let [ampl, phas, freq] of series) {
             sum += ampl * Math.cos(phas + (t * freq));
         }
-        coord += tpower * sum;
+        let incr = tpower * sum;
+        if (clamp_angle)
+            incr %= PI2; // improve precision for longitudes: they can be hundreds of radians
+        coord += incr;
         tpower *= t;
     }
     return coord;
@@ -2418,26 +2429,28 @@ function VsopRotate(eclip) {
 function VsopSphereToRect(lon, lat, radius) {
     // Convert spherical coordinates to ecliptic cartesian coordinates.
     const r_coslat = radius * Math.cos(lat);
+    const coslon = Math.cos(lon);
+    const sinlon = Math.sin(lon);
     return [
-        r_coslat * Math.cos(lon),
-        r_coslat * Math.sin(lon),
+        r_coslat * coslon,
+        r_coslat * sinlon,
         radius * Math.sin(lat)
     ];
 }
 function CalcVsop(model, time) {
     const t = time.tt / DAYS_PER_MILLENNIUM; // millennia since 2000
-    const lon = VsopFormula(model[LON_INDEX], t);
-    const lat = VsopFormula(model[LAT_INDEX], t);
-    const rad = VsopFormula(model[RAD_INDEX], t);
+    const lon = VsopFormula(model[LON_INDEX], t, true);
+    const lat = VsopFormula(model[LAT_INDEX], t, false);
+    const rad = VsopFormula(model[RAD_INDEX], t, false);
     const eclip = VsopSphereToRect(lon, lat, rad);
     return VsopRotate(eclip).ToAstroVector(time);
 }
 function CalcVsopPosVel(model, tt) {
     const t = tt / DAYS_PER_MILLENNIUM;
     // Calculate the VSOP "B" trigonometric series to obtain ecliptic spherical coordinates.
-    const lon = VsopFormula(model[LON_INDEX], t);
-    const lat = VsopFormula(model[LAT_INDEX], t);
-    const rad = VsopFormula(model[RAD_INDEX], t);
+    const lon = VsopFormula(model[LON_INDEX], t, true);
+    const lat = VsopFormula(model[LAT_INDEX], t, false);
+    const rad = VsopFormula(model[RAD_INDEX], t, false);
     const dlon_dt = VsopDeriv(model[LON_INDEX], t);
     const dlat_dt = VsopDeriv(model[LAT_INDEX], t);
     const drad_dt = VsopDeriv(model[RAD_INDEX], t);
@@ -3086,7 +3099,7 @@ exports.HelioVector = HelioVector;
 function HelioDistance(body, date) {
     const time = MakeTime(date);
     if (body in vsop) {
-        return VsopFormula(vsop[body][RAD_INDEX], time.tt / DAYS_PER_MILLENNIUM);
+        return VsopFormula(vsop[body][RAD_INDEX], time.tt / DAYS_PER_MILLENNIUM, false);
     }
     return HelioVector(body, time).Length();
 }

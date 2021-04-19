@@ -32,13 +32,21 @@ export declare type FlexibleDateTime = Date | number | AstroTime;
  */
 export declare const KM_PER_AU = 149597870.69098932;
 /**
- * @brief The factor to convert radians to degrees = pi/180.
+ * @brief The factor to convert degrees to radians = pi/180.
  */
 export declare const DEG2RAD = 0.017453292519943295;
 /**
- * @brief The factor to convert degrees to radians = 180/pi.
+ * @brief The factor to convert sidereal hours to radians = pi/12.
+ */
+export declare const HOUR2RAD = 0.26179938779914946;
+/**
+ * @brief The factor to convert radians to degrees = 180/pi.
  */
 export declare const RAD2DEG = 57.29577951308232;
+/**
+ * @brief The factor to convert radians to sidereal hours = 12/pi.
+ */
+export declare const RAD2HOUR = 3.819718634205488;
 /**
  * @brief The equatorial radius of Jupiter, expressed in kilometers.
  */

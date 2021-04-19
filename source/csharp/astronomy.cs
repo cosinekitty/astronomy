@@ -2049,9 +2049,20 @@ namespace CosineKitty
         public const double RAD2DEG = 57.295779513082321;
 
         /// <summary>
+        /// The factor to convert radians to sidereal hours = 12/pi.
+        /// </summary>
+        public const double RAD2HOUR  = 3.819718634205488;
+
+        /// <summary>
         /// The factor to convert degrees to radians = pi/180.
         /// </summary>
         public const double DEG2RAD = 0.017453292519943296;
+
+        /// <summary>
+        /// The factor to convert sidereal hours to radians = pi/12.
+        /// </summary>
+        public const double HOUR2RAD = 0.2617993877991494365;
+
 
         // Jupiter radius data are nominal values obtained from:
         // https://www.iau.org/static/resolutions/IAU2015_English.pdf
@@ -3210,7 +3221,7 @@ namespace CosineKitty
             }
         }
 
-        private static double VsopFormulaCalc(vsop_formula_t formula, double t)
+        private static double VsopFormulaCalc(vsop_formula_t formula, double t, bool clamp_angle)
         {
             double coord = 0.0;
             double tpower = 1.0;
@@ -3219,7 +3230,10 @@ namespace CosineKitty
                 double sum = 0.0;
                 foreach (vsop_term_t term in series.term)
                     sum += term.amplitude * Math.Cos(term.phase + (t * term.frequency));
-                coord += tpower * sum;
+                double incr = tpower * sum;
+                if (clamp_angle)
+                    incr %= PI2;    // improve precision: longitude angles can be hundreds of radians
+                coord += incr;
                 tpower *= t;
             }
             return coord;
@@ -3251,9 +3265,9 @@ namespace CosineKitty
             double t = time.tt / DAYS_PER_MILLENNIUM;    /* millennia since 2000 */
 
             /* Calculate the VSOP "B" trigonometric series to obtain ecliptic spherical coordinates. */
-            double lat = VsopFormulaCalc(model.lat, t);
-            double lon = VsopFormulaCalc(model.lon, t);
-            double rad = VsopFormulaCalc(model.rad, t);
+            double lon = VsopFormulaCalc(model.lon, t, true);
+            double lat = VsopFormulaCalc(model.lat, t, false);
+            double rad = VsopFormulaCalc(model.rad, t, false);
 
             /* Convert ecliptic spherical coordinates to ecliptic Cartesian coordinates. */
             TerseVector eclip = VsopSphereToRect(lon, lat, rad);
@@ -3333,14 +3347,14 @@ namespace CosineKitty
             double t = tt / DAYS_PER_MILLENNIUM;    /* millennia since 2000 */
 
             /* Calculate the VSOP "B" trigonometric series to obtain ecliptic spherical coordinates. */
-            double lat = VsopFormulaCalc(model.lat, t);
-            double lon = VsopFormulaCalc(model.lon, t);
-            double rad = VsopFormulaCalc(model.rad, t);
+            double lon = VsopFormulaCalc(model.lon, t, true);
+            double lat = VsopFormulaCalc(model.lat, t, false);
+            double rad = VsopFormulaCalc(model.rad, t, false);
 
             TerseVector eclip_pos = VsopSphereToRect(lon, lat, rad);
 
-            double dlat_dt = VsopDerivCalc(model.lat, t);
             double dlon_dt = VsopDerivCalc(model.lon, t);
+            double dlat_dt = VsopDerivCalc(model.lat, t);
             double drad_dt = VsopDerivCalc(model.rad, t);
 
             /* Use spherical coords and spherical derivatives to calculate */
@@ -4336,7 +4350,7 @@ namespace CosineKitty
             }
             else
             {
-                ra = Math.Atan2(pos.y, pos.x) / (DEG2RAD * 15.0);
+                ra = RAD2HOUR * Math.Atan2(pos.y, pos.x);
                 if (ra < 0)
                     ra += 24.0;
 
@@ -4525,7 +4539,7 @@ namespace CosineKitty
                 case Body.Saturn:
                 case Body.Uranus:
                 case Body.Neptune:
-                    return VsopFormulaCalc(vsop[(int)body].rad, time.tt / DAYS_PER_MILLENNIUM);
+                    return VsopFormulaCalc(vsop[(int)body].rad, time.tt / DAYS_PER_MILLENNIUM, false);
 
                 default:
                     /* For non-VSOP objects, fall back to taking the length of the heliocentric vector. */
@@ -4789,8 +4803,8 @@ namespace CosineKitty
             double coslon = Math.Cos(observer.longitude * DEG2RAD);
             double sindc = Math.Sin(dec * DEG2RAD);
             double cosdc = Math.Cos(dec * DEG2RAD);
-            double sinra = Math.Sin(ra * 15 * DEG2RAD);
-            double cosra = Math.Cos(ra * 15 * DEG2RAD);
+            double sinra = Math.Sin(ra * HOUR2RAD);
+            double cosra = Math.Cos(ra * HOUR2RAD);
 
             // Calculate three mutually perpendicular unit vectors
             // in equatorial coordinates: uze, une, uwe.
@@ -4879,7 +4893,7 @@ namespace CosineKitty
                     proj = Math.Sqrt(prx*prx + pry*pry);
                     if (proj > 0.0)
                     {
-                        hor_ra = Math.Atan2(pry, prx) * (RAD2DEG / 15.0);
+                        hor_ra = RAD2HOUR * Math.Atan2(pry, prx);
                         if (hor_ra < 0.0)
                             hor_ra += 24.0;
                     }
@@ -4887,7 +4901,7 @@ namespace CosineKitty
                     {
                         hor_ra = 0.0;
                     }
-                    hor_dec = Math.Atan2(prz, proj) * RAD2DEG;
+                    hor_dec = RAD2DEG * Math.Atan2(prz, proj);
                 }
             }
             else if (refraction != Refraction.None)

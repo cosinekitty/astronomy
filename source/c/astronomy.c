@@ -1420,7 +1420,7 @@ static astro_equatorial_t vector2radec(const double pos[3], astro_time_t time)
     }
     else
     {
-        equ.ra = atan2(pos[1], pos[0]) / (DEG2RAD * 15.0);
+        equ.ra = RAD2HOUR * atan2(pos[1], pos[0]);
         if (equ.ra < 0)
             equ.ra += 24.0;
 
@@ -2872,6 +2872,7 @@ static const vsop_model_t vsop[] =
 static void VsopCoords(const vsop_model_t *model, double t, double sphere[3])
 {
     int k, s, i;
+    double incr;
 
     for (k=0; k < 3; ++k)
     {
@@ -2885,9 +2886,12 @@ static void VsopCoords(const vsop_model_t *model, double t, double sphere[3])
             for (i=0; i < series->nterms; ++i)
             {
                 const vsop_term_t *term = &series->term[i];
-                sum += term->amplitude * cos(term->phase + (t * term->frequency));
+                sum  += term->amplitude * cos(term->phase + (t * term->frequency));
             }
-            sphere[k] += tpower * sum;
+            incr = tpower * sum;
+            if (k == LON_INDEX)
+                incr = fmod(incr, PI2);     /* improve precision for longitudes, which can be hundreds of radians */
+            sphere[k] += incr;
             tpower *= t;
         }
     }
@@ -2915,8 +2919,10 @@ static terse_vector_t VsopRotate(const double ecl[3])
 static void VsopSphereToRect(double lon, double lat, double radius, double pos[3])
 {
     double r_coslat = radius * cos(lat);
-    pos[0] = r_coslat * cos(lon);
-    pos[1] = r_coslat * sin(lon);
+    double coslon = cos(lon);
+    double sinlon = sin(lon);
+    pos[0] = r_coslat * coslon;
+    pos[1] = r_coslat * sinlon;
     pos[2] = radius * sin(lat);
 }
 
@@ -4191,20 +4197,26 @@ astro_horizon_t Astronomy_Horizon(
     astro_time_t *time, astro_observer_t observer, double ra, double dec, astro_refraction_t refraction)
 {
     astro_horizon_t hor;
+    double latrad, lonrad, decrad, rarad;
     double uze[3], une[3], uwe[3];
     double uz[3], un[3], uw[3];
     double p[3], pz, pn, pw, proj;
     double az, zd;
     double spin_angle;
 
-    double sinlat = sin(observer.latitude * DEG2RAD);
-    double coslat = cos(observer.latitude * DEG2RAD);
-    double sinlon = sin(observer.longitude * DEG2RAD);
-    double coslon = cos(observer.longitude * DEG2RAD);
-    double sindc = sin(dec * DEG2RAD);
-    double cosdc = cos(dec * DEG2RAD);
-    double sinra = sin(ra * 15 * DEG2RAD);
-    double cosra = cos(ra * 15 * DEG2RAD);
+    latrad = observer.latitude * DEG2RAD;
+    lonrad = observer.longitude * DEG2RAD;
+    decrad = dec * DEG2RAD;
+    rarad = ra * HOUR2RAD;
+
+    double sinlat = sin(latrad);
+    double coslat = cos(latrad);
+    double sinlon = sin(lonrad);
+    double coslon = cos(lonrad);
+    double sindc = sin(decrad);
+    double cosdc = cos(decrad);
+    double sinra = sin(rarad);
+    double cosra = cos(rarad);
 
     /*
         Calculate three mutually perpendicular unit vectors
@@ -4316,7 +4328,7 @@ astro_horizon_t Astronomy_Horizon(
             proj = sqrt(pr[0]*pr[0] + pr[1]*pr[1]);
             if (proj > 0)
             {
-                hor.ra = atan2(pr[1], pr[0]) * (RAD2DEG / 15.0);
+                hor.ra = RAD2HOUR * atan2(pr[1], pr[0]);
                 if (hor.ra < 0.0)
                     hor.ra += 24.0;
             }
@@ -4324,7 +4336,7 @@ astro_horizon_t Astronomy_Horizon(
             {
                 hor.ra = 0.0;
             }
-            hor.dec = atan2(pr[2], proj) * RAD2DEG;
+            hor.dec = RAD2DEG * atan2(pr[2], proj);
         }
     }
 

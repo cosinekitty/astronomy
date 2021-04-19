@@ -725,7 +725,15 @@ The calculations are performed from the point of view of a geocentric observer.
 
 ## DEG2RAD
 **Kind**: global variable  
-**Brief**: The factor to convert radians to degrees = pi/180.  
+**Brief**: The factor to convert degrees to radians = pi/180.  
+
+* * *
+
+<a name="HOUR2RAD"></a>
+
+## HOUR2RAD
+**Kind**: global variable  
+**Brief**: The factor to convert sidereal hours to radians = pi/12.  
 
 * * *
 
@@ -733,7 +741,15 @@ The calculations are performed from the point of view of a geocentric observer.
 
 ## RAD2DEG
 **Kind**: global variable  
-**Brief**: The factor to convert degrees to radians = 180/pi.  
+**Brief**: The factor to convert radians to degrees = 180/pi.  
+
+* * *
+
+<a name="RAD2HOUR"></a>
+
+## RAD2HOUR
+**Kind**: global variable  
+**Brief**: The factor to convert radians to sidereal hours = 12/pi.  
 
 * * *
 

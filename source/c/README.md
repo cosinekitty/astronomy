@@ -2321,7 +2321,7 @@ Calculates the non-negative length of the given vector. The length is expressed 
 <a name="DEG2RAD"></a>
 ### `DEG2RAD`
 
-**The factor to convert radians to degrees = pi/180.** 
+**The factor to convert degrees to radians = pi/180.** 
 
 
 
@@ -2357,6 +2357,21 @@ Calculates the non-negative length of the given vector. The length is expressed 
 
 ```C
 #define GANYMEDE_RADIUS_KM  2631.2
+```
+
+
+
+---
+
+<a name="HOUR2RAD"></a>
+### `HOUR2RAD`
+
+**The factor to convert sidereal hours to radians = pi/12.** 
+
+
+
+```C
+#define HOUR2RAD  0.2617993877991494365
 ```
 
 
@@ -2546,12 +2561,27 @@ Calculates the non-negative length of the given vector. The length is expressed 
 <a name="RAD2DEG"></a>
 ### `RAD2DEG`
 
-**The factor to convert degrees to radians = 180/pi.** 
+**The factor to convert radians to degrees = 180/pi.** 
 
 
 
 ```C
 #define RAD2DEG  57.295779513082321
+```
+
+
+
+---
+
+<a name="RAD2HOUR"></a>
+### `RAD2HOUR`
+
+**The factor to convert radians to sidereal hours = 12/pi.** 
+
+
+
+```C
+#define RAD2HOUR  3.819718634205488
 ```
 
 

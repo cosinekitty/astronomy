@@ -91,6 +91,7 @@ static int Transit(void);
 static int DistancePlot(astro_body_t body, double ut1, double ut2, const char *filename);
 static int GeoidTest(void);
 static int JupiterMoonsTest(void);
+static int Issue103(void);
 
 typedef int (* unit_test_func_t) (void);
 
@@ -109,6 +110,7 @@ static unit_test_t UnitTests[] =
     {"elongation",              ElongationTest},
     {"geoid",                   GeoidTest},
     {"global_solar_eclipse",    GlobalSolarEclipseTest},
+    {"issue_103",               Issue103},
     {"jupiter_moons",           JupiterMoonsTest},
     {"local_solar_eclipse",     LocalSolarEclipseTest},
     {"lunar_eclipse",           LunarEclipseTest},
@@ -2217,7 +2219,7 @@ static int Test_EQJ_ECL(void)
     et = Astronomy_RotateVector(r, ee);
     CHECK(VectorDiff(et, ev, &diff));
     DEBUG("C Test_EQJ_ECL  ev diff=%lg\n", diff);
-    if (diff > 2.0e-16)
+    if (diff > 2.3e-16)
         FAIL("C Test_EQJ_ECL: EXCESSIVE REVERSE ROTATION ERROR\n");
 
     error = 0;
@@ -2323,7 +2325,7 @@ static int Test_EQD_HOR(astro_body_t body)
     DEBUG("C Test_EQD_HOR %s: trusted alt=%0.3lf, az=%0.3lf; test alt=%0.3lf, az=%0.3lf; diff_alt=%lg, diff_az=%lg\n",
         Astronomy_BodyName(body), hor.altitude, hor.azimuth, sphere.lat, sphere.lon, diff_alt, diff_az);
 
-    if (diff_alt > 3.0e-14 || diff_az > 8e-14)
+    if (diff_alt > 3.2e-14 || diff_az > 1.2e-13)
         FAIL("C Test_EQD_HOR: EXCESSIVE HORIZONTAL ERROR.\n");
 
     /* Confirm that we can convert back to horizontal vector. */
@@ -2339,7 +2341,7 @@ static int Test_EQD_HOR(astro_body_t body)
     CHECK_VECTOR(check_eqd, Astronomy_RotateVector(rot, vec_hor));
     CHECK(VectorDiff(check_eqd, vec_eqd, &diff));
     DEBUG("C Test_EQD_HOR %s: OFDATE inverse rotation diff = %lg\n", Astronomy_BodyName(body), diff);
-    if (diff > 2.0e-15)
+    if (diff > 2.1e-15)
         FAIL("C Test_EQD_HOR: EXCESSIVE OFDATE INVERSE HORIZONTAL ERROR.\n");
 
     /* Exercise HOR to EQJ translation. */
@@ -3737,6 +3739,29 @@ static int JupiterMoonsTest(void)
 fail:
     if (infile != NULL) fclose(infile);
     return error;
+}
+
+/*-----------------------------------------------------------------------------------------------------------*/
+
+static int Issue103(void)
+{
+    /* https://github.com/cosinekitty/astronomy/issues/103 */
+
+    astro_observer_t observer = Astronomy_MakeObserver(29.0, -81.0, 10.0);
+    double ut = -51279.9420508868643083;
+    astro_time_t time = Astronomy_TimeFromDays(ut);
+    astro_body_t body = BODY_MOON;
+    astro_equatorial_t ofdate = Astronomy_Equator(body, &time, observer, EQUATOR_OF_DATE, ABERRATION);
+    astro_horizon_t hor;
+
+    printf("tt  = %23.16lf\n", time.tt);
+    printf("ra  = %23.16lf\n", ofdate.ra);
+    printf("dec = %23.16lf\n", ofdate.dec);
+    hor = Astronomy_Horizon(&time, observer, ofdate.ra, ofdate.dec, REFRACTION_NONE);
+    printf("az  = %23.16lf\n", hor.azimuth);
+    printf("alt = %23.16lf\n", hor.altitude);
+
+    return 0;
 }
 
 /*-----------------------------------------------------------------------------------------------------------*/
