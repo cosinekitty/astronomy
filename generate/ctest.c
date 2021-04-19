@@ -69,7 +69,7 @@ typedef struct
 }
 maxdiff_column_t;
 
-#define NUM_V_COLUMNS       3
+#define NUM_V_COLUMNS       4
 #define NUM_S_COLUMNS       7
 #define NUM_DIFF_COLUMNS    (NUM_V_COLUMNS + NUM_S_COLUMNS)
 
@@ -354,25 +354,25 @@ static int AstroCheck(void)
         {
             body = bodylist[b];
             CHECK_VECTOR(pos, Astronomy_HelioVector(body, time));
-            fprintf(outfile, "v %s %0.16lf %0.16lf %0.16lf %0.16lf\n", Astronomy_BodyName(body), pos.t.tt, pos.x, pos.y, pos.z);
+            fprintf(outfile, "v %s %0.20lf %0.20lf %0.20lf %0.20lf\n", Astronomy_BodyName(body), pos.t.tt, pos.x, pos.y, pos.z);
 
             if (body != BODY_EARTH && body != BODY_EMB && body != BODY_SSB)
             {
                 CHECK_EQU(j2000, Astronomy_Equator(body, &time, observer, EQUATOR_J2000, NO_ABERRATION));
                 CHECK_EQU(ofdate, Astronomy_Equator(body, &time, observer, EQUATOR_OF_DATE, ABERRATION));
                 hor = Astronomy_Horizon(&time, observer, ofdate.ra, ofdate.dec, REFRACTION_NONE);
-                fprintf(outfile, "s %s %0.16lf %0.16lf %0.16lf %0.16lf %0.16lf %0.16lf %0.16lf\n",
+                fprintf(outfile, "s %s %0.20lf %0.20lf %0.20lf %0.20lf %0.20lf %0.20lf %0.20lf\n",
                     Astronomy_BodyName(body), time.tt, time.ut, j2000.ra, j2000.dec, j2000.dist, hor.azimuth, hor.altitude);
             }
         }
 
         CHECK_VECTOR(pos, Astronomy_GeoVector(BODY_MOON, time, NO_ABERRATION));
-        fprintf(outfile, "v GM %0.16lf %0.16lf %0.16lf %0.16lf\n", pos.t.tt, pos.x, pos.y, pos.z);
+        fprintf(outfile, "v GM %0.20lf %0.20lf %0.20lf %0.20lf\n", pos.t.tt, pos.x, pos.y, pos.z);
 
         CHECK_EQU(j2000, Astronomy_Equator(BODY_MOON, &time, observer, EQUATOR_J2000, NO_ABERRATION));
         CHECK_EQU(ofdate, Astronomy_Equator(BODY_MOON, &time, observer, EQUATOR_OF_DATE, ABERRATION));
         hor = Astronomy_Horizon(&time, observer, ofdate.ra, ofdate.dec, REFRACTION_NONE);
-        fprintf(outfile, "s GM %0.16lf %0.16lf %0.16lf %0.16lf %0.16lf %0.16lf %0.16lf\n",
+        fprintf(outfile, "s GM %0.20lf %0.20lf %0.20lf %0.20lf %0.20lf %0.20lf %0.20lf\n",
             time.tt, time.ut, j2000.ra, j2000.dec, j2000.dist, hor.azimuth, hor.altitude);
 
         time = Astronomy_AddDays(time, 10.0 + PI/100.0);
@@ -389,6 +389,7 @@ fail:
 static const char *DiffColName[NUM_DIFF_COLUMNS] =
 {
     /* 'v' lines */
+    "helio_tt",
     "helio_x",
     "helio_y",
     "helio_z",
@@ -516,11 +517,11 @@ static int DiffLine(int lnum, const char *aline, const char *bline, double *maxd
             FAIL("Observers are not identical on line %d\n", lnum);
         return 0;
 
-    case 'v':       /* heliocentric vector */
+    case 'v':       /* heliocentric vector: tt x y z */
         colbase = 0;
-        na = sscanf(aline, "v %9[A-Za-z] %lf %lf %lf", abody, &adata[0], &adata[1], &adata[2]);
-        nb = sscanf(bline, "v %9[A-Za-z] %lf %lf %lf", bbody, &bdata[0], &bdata[1], &bdata[2]);
-        nrequired = 4;
+        na = sscanf(aline, "v %9[A-Za-z] %lf %lf %lf %lf", abody, &adata[0], &adata[1], &adata[2], &adata[3]);
+        nb = sscanf(bline, "v %9[A-Za-z] %lf %lf %lf %lf", bbody, &bdata[0], &bdata[1], &bdata[2], &bdata[3]);
+        nrequired = 5;
         break;
 
     case 's':       /* sky coords: ecliptic and horizontal */
