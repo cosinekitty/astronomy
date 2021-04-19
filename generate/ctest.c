@@ -59,10 +59,24 @@ static double v(const char *filename, int lnum, double x)
 #define V(x)        v(__FILE__, __LINE__, (x))
 #define ABS(x)      fabs(V(x))
 
+typedef struct
+{
+    int     lnum;
+    double  a_value;
+    double  b_value;
+    double  factor;
+    double  diff;
+}
+maxdiff_column_t;
+
+#define NUM_V_COLUMNS       3
+#define NUM_S_COLUMNS       7
+#define NUM_DIFF_COLUMNS    (NUM_V_COLUMNS + NUM_S_COLUMNS)
+
 static int Test_AstroTime(void);
 static int AstroCheck(void);
-static int Diff(const char *c_filename, const char *js_filename);
-static int DiffLine(int lnum, const char *cline, const char *jline, double *maxdiff, int *worst_lnum);
+static int Diff(double tolerance, const char *c_filename, const char *js_filename);
+static int DiffLine(int lnum, const char *cline, const char *jline, double *maxdiff, maxdiff_column_t column[]);
 static int SeasonsTest(void);
 static int MoonPhase(void);
 static int RiseSet(void);
@@ -176,13 +190,14 @@ int main(int argc, const char *argv[])
             }
         }
 
-        if (argc == 4)
+        if (argc == 5)
         {
             if (!strcmp(verb, "diff"))
             {
-                const char *c_filename = argv[2];
-                const char *js_filename = argv[3];
-                CHECK(Diff(c_filename, js_filename));
+                double tolerance = atof(argv[2]);
+                const char *c_filename = argv[3];
+                const char *js_filename = argv[4];
+                CHECK(Diff(tolerance, c_filename, js_filename));
                 goto success;
             }
         }
@@ -371,121 +386,177 @@ fail:
 
 /*-----------------------------------------------------------------------------------------------------------*/
 
-static int Diff(const char *c_filename, const char *js_filename)
+static const char *DiffColName[NUM_DIFF_COLUMNS] =
+{
+    /* 'v' lines */
+    "helio_x",
+    "helio_y",
+    "helio_z",
+
+    /* 's' lines */
+    "sky_tt",
+    "sky_ut",
+    "sky_j2000_ra",
+    "sky_j2000_dec",
+    "sky_j2000_dist",
+    "sky_hor_az",
+    "sky_hor_alt"
+};
+
+static int Diff(double tolerance, const char *a_filename, const char *b_filename)
 {
     int error = 1;
     int lnum;
-    FILE *cfile = NULL;
-    FILE *jfile = NULL;
-    char cline[200], worst_cline[200];
-    char jline[200], worst_jline[200];
+    int i;
+    FILE *afile = NULL;
+    FILE *bfile = NULL;
+    char aline[200];
+    char jline[200];
     char *cread;
     char *jread;
     double maxdiff = 0.0;
-    int worst_lnum = 0;
+    maxdiff_column_t columns[NUM_DIFF_COLUMNS];
 
-    cfile = fopen(c_filename, "rt");
-    if (cfile == NULL)
-        FAIL("ctest(Diff): Cannot open input file: %s\n", c_filename);
+    memset(columns, 0, sizeof(columns));
 
-    jfile = fopen(js_filename, "rt");
-    if (jfile == NULL)
-        FAIL("ctest(Diff): Cannot open input file: %s\n", js_filename);
+    afile = fopen(a_filename, "rt");
+    if (afile == NULL)
+        FAIL("ctest(Diff): Cannot open input file: %s\n", a_filename);
+
+    bfile = fopen(b_filename, "rt");
+    if (bfile == NULL)
+        FAIL("ctest(Diff): Cannot open input file: %s\n", b_filename);
 
     lnum = 0;
     for(;;)
     {
-        cread = fgets(cline, sizeof(cline), cfile);
-        jread = fgets(jline, sizeof(jline), jfile);
+        cread = fgets(aline, sizeof(aline), afile);
+        jread = fgets(jline, sizeof(jline), bfile);
         if (cread==NULL && jread==NULL)
             break;      /* normal end of both files */
 
         if (cread==NULL || jread==NULL)
-            FAIL("ctest(Diff): Files do not have same number of lines: %s and %s\n", c_filename, js_filename);
+            FAIL("ctest(Diff): Files do not have same number of lines: %s and %s\n", a_filename, b_filename);
 
         ++lnum;
-        CHECK(DiffLine(lnum, cline, jline, &maxdiff, &worst_lnum));
-        if (worst_lnum == lnum)
-        {
-            /* Retain the worst lines so that we can print them at the end. */
-            strcpy(worst_cline, cline);
-            strcpy(worst_jline, jline);
-        }
-    }
-
-    printf("ctest(Diff): Maximum numeric difference = %lg, worst line number = %d\n", maxdiff, worst_lnum);
-    if (maxdiff > 2.7854e-12)
-    {
-        printf("FIRST : %s", worst_cline);  /* no need for '\n' because there is already one in the lines */
-        printf("SECOND: %s", worst_jline);
-        FAIL("C ERROR: Excessive error comparing files %s and %s\n", c_filename, js_filename);
+        CHECK(DiffLine(lnum, aline, jline, &maxdiff, columns));
     }
 
     error = 0;
 
+    printf("First  file: %s\n", a_filename);
+    printf("Second file: %s\n", b_filename);
+    printf("Tolerance = %le\n", tolerance);
+    printf("      %10s %23s %23s %8s %10s  %s\n", "lnum", "a_value", "b_value", "factor", "diff", "name");
+    for (i = 0; i < NUM_DIFF_COLUMNS; ++i)
+    {
+        if (columns[i].lnum > 0)
+        {
+            const char *result = "OK";
+            if (columns[i].diff > tolerance)
+            {
+                result = "FAIL";
+                error = 1;
+            }
+
+            printf("%4s  %10d %23.16le %23.16le %8.5lf %10.3le  %s\n",
+                result,
+                columns[i].lnum,
+                columns[i].a_value,
+                columns[i].b_value,
+                columns[i].factor,
+                columns[i].diff,
+                DiffColName[i]);
+        }
+    }
+
+    printf("\n");
+    if (error)
+        printf("ctest(Diff): EXCEEDED ERROR TOLERANCE.\n");
+    printf("----------------------------------------------------------------------------------------------------\n\n");
+
 fail:
-    if (cfile != NULL) fclose(cfile);
-    if (jfile != NULL) fclose(jfile);
+    if (afile != NULL) fclose(afile);
+    if (bfile != NULL) fclose(bfile);
     return error;
 }
 
-static int DiffLine(int lnum, const char *cline, const char *jline, double *maxdiff, int *worst_lnum)
+static int DiffLine(int lnum, const char *aline, const char *bline, double *maxdiff, maxdiff_column_t columns[])
 {
     int error = 1;
-    char cbody[10];
-    char jbody[10];
-    double cdata[7];
-    double jdata[7];
+    char abody[10];
+    char bbody[10];
+    double adata[7];
+    double bdata[7];
     double diff;
-    int i, nc, nj, nrequired = -1;
+    int i, na, nb, nrequired = -1;
     int wrap[7] = {0, 0, 0, 0, 0, 0, 0};
+    int soften[7] = {-1, -1, -1, -1, -1, -1, -1};
+    int colbase = -1;
+    maxdiff_column_t *col;
 
     /* be paranoid: make sure we can't possibly have a fake match. */
-    memset(cdata, 0xdc, sizeof(cdata));
-    memset(jdata, 0xce, sizeof(jdata));
+    memset(adata, 0xdc, sizeof(adata));
+    memset(bdata, 0xce, sizeof(bdata));
 
     /* Make sure the two data records are the same type. */
-    if (cline[0] != jline[0])
-        FAIL("ctest(DiffLine): Line %d mismatch record type: '%c' vs '%c'.\n", lnum, cline[0], jline[0]);
+    if (aline[0] != bline[0])
+        FAIL("ctest(DiffLine): Line %d mismatch record type: '%c' vs '%c'.\n", lnum, aline[0], bline[0]);
 
-    switch (cline[0])
+    switch (aline[0])
     {
     case 'o':       /* observer */
-        nc = sscanf(cline, "o %lf %lf %lf", &cdata[0], &cdata[1], &cdata[2]);
-        nj = sscanf(jline, "o %lf %lf %lf", &jdata[0], &jdata[1], &jdata[2]);
-        cbody[0] = jbody[0] = '\0';
-        nrequired = 3;
-        break;
+        na = sscanf(aline, "o %lf %lf %lf", &adata[0], &adata[1], &adata[2]);
+        if (na != 3)
+            FAIL("Bad observer on line %d of first file\n", lnum);
+        nb = sscanf(bline, "o %lf %lf %lf", &bdata[0], &bdata[1], &bdata[2]);
+        if (nb != 3)
+            FAIL("Bad observer on line %d of second file\n", lnum);
+        if (adata[0] != bdata[0] || adata[1] != bdata[1] || adata[2] != bdata[2])
+            FAIL("Observers are not identical on line %d\n", lnum);
+        return 0;
 
     case 'v':       /* heliocentric vector */
-        nc = sscanf(cline, "v %9[A-Za-z] %lf %lf %lf", cbody, &cdata[0], &cdata[1], &cdata[2]);
-        nj = sscanf(jline, "v %9[A-Za-z] %lf %lf %lf", jbody, &jdata[0], &jdata[1], &jdata[2]);
+        colbase = 0;
+        na = sscanf(aline, "v %9[A-Za-z] %lf %lf %lf", abody, &adata[0], &adata[1], &adata[2]);
+        nb = sscanf(bline, "v %9[A-Za-z] %lf %lf %lf", bbody, &bdata[0], &bdata[1], &bdata[2]);
         nrequired = 4;
         break;
 
     case 's':       /* sky coords: ecliptic and horizontal */
         /* Astronomy_BodyName(body), [0] time.tt, [1] time.ut, [2] j2000.ra, [3] j2000.dec, [4] j2000.dist, [5] hor.azimuth, [6] hor.altitude */
-        nc = sscanf(cline, "s %9[A-Za-z] %lf %lf %lf %lf %lf %lf %lf", cbody, &cdata[0], &cdata[1], &cdata[2], &cdata[3], &cdata[4], &cdata[5], &cdata[6]);
-        nj = sscanf(jline, "s %9[A-Za-z] %lf %lf %lf %lf %lf %lf %lf", jbody, &jdata[0], &jdata[1], &jdata[2], &jdata[3], &jdata[4], &jdata[5], &jdata[6]);
+        colbase = NUM_V_COLUMNS;
+        na = sscanf(aline, "s %9[A-Za-z] %lf %lf %lf %lf %lf %lf %lf", abody, &adata[0], &adata[1], &adata[2], &adata[3], &adata[4], &adata[5], &adata[6]);
+        nb = sscanf(bline, "s %9[A-Za-z] %lf %lf %lf %lf %lf %lf %lf", bbody, &bdata[0], &bdata[1], &bdata[2], &bdata[3], &bdata[4], &bdata[5], &bdata[6]);
         nrequired = 8;
         wrap[2] = 24;    /* right ascension can "wrap around" at 24 sidereal hours */
         wrap[5] = 360;   /* azimuth can "wrap around" at 360 degrees */
+
+        /*
+            Longitude-like angles (right ascension and azimuth) become less significant as their
+            counterpart latitude-like angle gets closer to its poles.
+            For example, if horizontal altitude is close to 90 degrees (near the zenith),
+            then an azimuth error is not very important.
+            So we multiple errors for these types of numbers by the cosine of their counterpart.
+        */
+        soften[2] = 3;      /* moderate RA errors by cos(DEC) */
+        soften[5] = 6;      /* moderate AZ by cos(ALT) */
         break;
 
     default:
-        FAIL("ctest(DiffLine): Line %d type '%c' is not a valid record type.\n", lnum, cline[0]);
+        FAIL("ctest(DiffLine): Line %d type '%c' is not a valid record type.\n", lnum, aline[0]);
     }
 
-    if (nc != nj)
-        FAIL("ctest(DiffLine): Line %d mismatch data counts: %d vs %d\n", lnum, nc, nj);
+    if (na != nb)
+        FAIL("ctest(DiffLine): Line %d mismatch data counts: %d vs %d\n", lnum, na, nb);
 
-    if (nc != nrequired)
-        FAIL("ctest(DiffLine): Line %d incorrect number of scanned arguments: %d\n", lnum, nc);
+    if (na != nrequired)
+        FAIL("ctest(DiffLine): Line %d incorrect number of scanned arguments: %d\n", lnum, na);
 
-    if (strcmp(cbody, jbody))
-        FAIL("ctest(DiffLine): Line %d body mismatch: '%s' vs '%s'\n.", lnum, cbody, jbody);
+    if (strcmp(abody, bbody))
+        FAIL("ctest(DiffLine): Line %d body mismatch: '%s' vs '%s'\n.", lnum, abody, bbody);
 
-    if (cbody[0])
+    if (abody[0])
     {
         /* This is one of the record types that contains a body name. */
         /* Therefore, we need to correct the number of numeric data. */
@@ -495,17 +566,38 @@ static int DiffLine(int lnum, const char *cline, const char *jline, double *maxd
     /* Verify all the numeric data are very close. */
     for (i=0; i < nrequired; ++i)
     {
-        diff = ABS(cdata[i] - jdata[i]);
+        double factor = 1.0;
+        diff = ABS(adata[i] - bdata[i]);
         if (wrap[i] && (diff > wrap[i] / 2))
         {
             /* Tolerate differences in angular values that wrap around at a periodic limit. */
             diff = ABS(wrap[i] - diff);
         }
 
-        if (diff > *maxdiff)
+        if (soften[i] >= 0)
         {
-            *maxdiff = diff;
-            *worst_lnum = lnum;
+            /* Reduce the severity of longitude-like angles by cos(latitude-like-angle). */
+            /* Make sure we calculate identical values regardless of the order of the filenames. */
+            /* Therefore, use the arithmetic mean of the two latitude angles. */
+            double latrad1 = V(adata[soften[i]]);
+            double latrad2 = V(bdata[soften[i]]);
+            factor = ABS(cos(DEG2RAD * ((latrad1 + latrad2) / 2.0)));
+            diff *= factor;
+        }
+
+        /* Life is too short to debug memory corruption errors. */
+        if (colbase + i < 0 || colbase + i >= NUM_DIFF_COLUMNS)
+            FAIL("ctest(DiffLine): Internal error on line %d: colbase=%d, i=%d\n", lnum, colbase, i);
+
+        /* Remember the worst difference for each different type of calculation. */
+        col = &columns[colbase + i];
+        if (diff > col->diff)
+        {
+            col->diff = diff;
+            col->lnum = lnum;
+            col->a_value = adata[i];
+            col->b_value = bdata[i];
+            col->factor = factor;
         }
     }
     error = 0;
