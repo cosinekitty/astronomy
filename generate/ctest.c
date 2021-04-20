@@ -386,7 +386,7 @@ fail:
 
 /*-----------------------------------------------------------------------------------------------------------*/
 
-static double BodyDistanceRange(const char *name)
+static double OrbitRange(const char *name)
 {
     /* Return the minimum distance from a planet to the Sun, in AU. */
     if (!strcmp(name, "Mercury"))   return 0.307;
@@ -410,9 +410,37 @@ static double BodyDistanceRange(const char *name)
     if (!strcmp(name, "Sun"))       return 1.0;
 
 
-    fprintf(stderr, "FATAL(BodyDistanceRange): unknown body name '%s'\n", name);
+    fprintf(stderr, "FATAL(OrbitRange): unknown body name '%s'\n", name);
     exit(1);
 }
+
+static double TopoRange(const char *name)
+{
+    /* Return the minimum distance from a planet to the Earth, in AU. */
+    if (!strcmp(name, "Mercury"))   return 1.0 - 0.307;
+    if (!strcmp(name, "Venus"))     return 1.0 - 0.718;
+    if (!strcmp(name, "Earth"))     return 1.0;             /* we don't calculate topocentric Earth. */
+    if (!strcmp(name, "EMB"))       return 1.0;             /* we don't calculate topocentric EMB */
+    if (!strcmp(name, "Mars"))      return 1.382 - 1.0;
+    if (!strcmp(name, "Jupiter"))   return 4.951 - 1.0;
+    if (!strcmp(name, "Saturn"))    return 9.014 - 1.0;
+    if (!strcmp(name, "Uranus"))    return 18.31 - 1.0;
+    if (!strcmp(name, "Neptune"))   return 29.76 - 1.0;
+    if (!strcmp(name, "Pluto"))     return 29.73 - 1.0;
+
+    /* GM is geocentric moon, so use minimum distance to Earth. */
+    if (!strcmp(name, "GM"))        return 0.00243;
+
+    /* For Solar System Barycenter, we use typical distance. */
+    if (!strcmp(name, "SSB"))       return 1.0;
+
+    /* The Sun vector is always (0, 0, 0), so range doesn't matter. */
+    if (!strcmp(name, "Sun"))       return 1.0;
+
+    fprintf(stderr, "FATAL(TopoRange): unknown body name '%s'\n", name);
+    exit(1);
+}
+
 
 typedef struct
 {
@@ -436,7 +464,7 @@ static const maxdiff_settings_t DiffSettings[NUM_DIFF_COLUMNS] =
     { "sky_ut",         -1,     0,      1.0 },      /*  5 */
     { "sky_j2000_ra",    7,    24,     24.0 },      /*  6 */
     { "sky_j2000_dec",  -1,     0,    180.0 },      /*  7 */
-    { "sky_j2000_dist", -1,     0,      0.0 },      /*  8 */
+    { "sky_j2000_dist", -1,     0,     -1.0 },      /*  8 */
     { "sky_hor_az",     10,   360,    360.0 },      /*  9 */
     { "sky_hor_alt",    -1,     0,    180.0 },      /* 10 */
 };
@@ -603,8 +631,10 @@ static int DiffLine(int lnum, const char *aline, const char *bline, maxdiff_colu
 
         ci = DiffSettings[k].cos_index;
         w = DiffSettings[k].wrap;
+        if (DiffSettings[k].range <= -1.0)
+            factor = 1.0 / TopoRange(abody);
         if (DiffSettings[k].range <= 0.0)
-            factor = 1.0 / BodyDistanceRange(abody);
+            factor = 1.0 / OrbitRange(abody);
         else
             factor = 1.0 / DiffSettings[k].range;
 
@@ -622,7 +652,7 @@ static int DiffLine(int lnum, const char *aline, const char *bline, maxdiff_colu
                 counterpart latitude-like angle gets closer to its poles.
                 For example, if horizontal altitude is close to 90 degrees (near the zenith),
                 then an azimuth error is not very important.
-                So we multiple errors for these types of numbers by the cosine of their counterpart.
+                So we multiply errors for these types of numbers by the cosine of their counterpart.
                 Make sure we calculate identical values regardless of the order of the filenames.
                 Therefore, use the arithmetic mean of the two latitude angles.
             */
