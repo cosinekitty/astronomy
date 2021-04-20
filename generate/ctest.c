@@ -76,7 +76,7 @@ maxdiff_column_t;
 static int Test_AstroTime(void);
 static int AstroCheck(void);
 static int Diff(double tolerance, const char *c_filename, const char *js_filename);
-static int DiffLine(int lnum, const char *cline, const char *jline, double *maxdiff, maxdiff_column_t column[]);
+static int DiffLine(int lnum, const char *cline, const char *jline, maxdiff_column_t column[]);
 static int SeasonsTest(void);
 static int MoonPhase(void);
 static int RiseSet(void);
@@ -436,7 +436,7 @@ static const maxdiff_settings_t DiffSettings[NUM_DIFF_COLUMNS] =
     { "sky_ut",         -1,     0,      1.0 },      /*  5 */
     { "sky_j2000_ra",    7,    24,     24.0 },      /*  6 */
     { "sky_j2000_dec",  -1,     0,    180.0 },      /*  7 */
-    { "sky_j2000_dist", -1,     0,      1.0 },      /*  8 */
+    { "sky_j2000_dist", -1,     0,      0.0 },      /*  8 */
     { "sky_hor_az",     10,   360,    360.0 },      /*  9 */
     { "sky_hor_alt",    -1,     0,    180.0 },      /* 10 */
 };
@@ -452,8 +452,8 @@ static int Diff(double tolerance, const char *a_filename, const char *b_filename
     char jline[200];
     char *cread;
     char *jread;
-    double maxdiff = 0.0;
     maxdiff_column_t columns[NUM_DIFF_COLUMNS];
+    double score = 0.0;
 
     memset(columns, 0, sizeof(columns));
 
@@ -477,14 +477,14 @@ static int Diff(double tolerance, const char *a_filename, const char *b_filename
             FAIL("ctest(Diff): Files do not have same number of lines: %s and %s\n", a_filename, b_filename);
 
         ++lnum;
-        CHECK(DiffLine(lnum, aline, jline, &maxdiff, columns));
+        CHECK(DiffLine(lnum, aline, jline, columns));
     }
 
     error = 0;
 
     printf("First  file: %s\n", a_filename);
     printf("Second file: %s\n", b_filename);
-    printf("Tolerance = %le\n", tolerance);
+    printf("Tolerance = %0.3le\n\n", tolerance);
     printf("      %10s %23s %23s %8s %10s  %s\n", "lnum", "a_value", "b_value", "factor", "diff", "name");
     for (i = 0; i < NUM_DIFF_COLUMNS; ++i)
     {
@@ -497,6 +497,9 @@ static int Diff(double tolerance, const char *a_filename, const char *b_filename
                 error = 1;
             }
 
+            if (columns[i].diff > score)
+                score = columns[i].diff;
+
             printf("%4s  %10d %23.16le %23.16le %8.5lf %10.3le  %s\n",
                 result,
                 columns[i].lnum,
@@ -508,7 +511,7 @@ static int Diff(double tolerance, const char *a_filename, const char *b_filename
         }
     }
 
-    printf("\n");
+    printf("\nScore = %0.3le\n", score);
     if (error)
         printf("ctest(Diff): EXCEEDED ERROR TOLERANCE.\n");
     printf("----------------------------------------------------------------------------------------------------\n\n");
@@ -519,7 +522,7 @@ fail:
     return error;
 }
 
-static int DiffLine(int lnum, const char *aline, const char *bline, double *maxdiff, maxdiff_column_t columns[])
+static int DiffLine(int lnum, const char *aline, const char *bline, maxdiff_column_t columns[])
 {
     int error = 1;
     char abody[10];
