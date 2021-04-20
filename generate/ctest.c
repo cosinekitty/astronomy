@@ -386,6 +386,34 @@ fail:
 
 /*-----------------------------------------------------------------------------------------------------------*/
 
+static double BodyDistanceRange(const char *name)
+{
+    /* Return the minimum distance from a planet to the Sun, in AU. */
+    if (!strcmp(name, "Mercury"))   return 0.307;
+    if (!strcmp(name, "Venus"))     return 0.718;
+    if (!strcmp(name, "Earth"))     return 0.983;
+    if (!strcmp(name, "EMB"))       return 0.983;
+    if (!strcmp(name, "Mars"))      return 1.382;
+    if (!strcmp(name, "Jupiter"))   return 4.951;
+    if (!strcmp(name, "Saturn"))    return 9.014;
+    if (!strcmp(name, "Uranus"))    return 18.31;
+    if (!strcmp(name, "Neptune"))   return 29.76;
+    if (!strcmp(name, "Pluto"))     return 29.73;
+
+    /* GM is geocentric moon */
+    if (!strcmp(name, "GM"))        return 0.00243;
+
+    /* For Solar System Barycenter, we use typical distance. */
+    if (!strcmp(name, "SSB"))       return 0.005;
+
+    /* The Sun vector is always (0, 0, 0), so range doesn't matter. */
+    if (!strcmp(name, "Sun"))       return 1.0;
+
+
+    fprintf(stderr, "FATAL(BodyDistanceRange): unknown body name '%s'\n", name);
+    exit(1);
+}
+
 typedef struct
 {
     const char *name;   /* the name of the column/field */
@@ -573,7 +601,7 @@ static int DiffLine(int lnum, const char *aline, const char *bline, double *maxd
         ci = DiffSettings[k].cos_index;
         w = DiffSettings[k].wrap;
         if (DiffSettings[k].range <= 0.0)
-            factor = 1.0;       /* FIXFIXFIX - use the heliocentric distance for this planet as the range. */
+            factor = 1.0 / BodyDistanceRange(abody);
         else
             factor = 1.0 / DiffSettings[k].range;
 
