@@ -226,7 +226,7 @@ namespace csharp_test
                     foreach (Body body in bodylist)
                     {
                         pos = Astronomy.HelioVector(body, time);
-                        outfile.WriteLine("v {0} {1} {2} {3} {4}", body, pos.t.tt.ToString("G20"), pos.x.ToString("G20"), pos.y.ToString("G20"), pos.z.ToString("G20"));
+                        outfile.WriteLine("v {0} {1} {2} {3} {4}", body, pos.t.tt.ToString("G18"), pos.x.ToString("G18"), pos.y.ToString("G18"), pos.z.ToString("G18"));
                         if (body != Body.Earth && body != Body.SSB && body != Body.EMB)
                         {
                             j2000 = Astronomy.Equator(body, time, observer, EquatorEpoch.J2000, Aberration.None);
@@ -234,21 +234,21 @@ namespace csharp_test
                             hor = Astronomy.Horizon(time, observer, ofdate.ra, ofdate.dec, Refraction.None);
                             outfile.WriteLine("s {0} {1} {2} {3} {4} {5} {6} {7}",
                                 body,
-                                time.tt.ToString("G20"), time.ut.ToString("G20"),
-                                j2000.ra.ToString("G20"), j2000.dec.ToString("G20"), j2000.dist.ToString("G20"),
-                                hor.azimuth.ToString("G20"), hor.altitude.ToString("G20"));
+                                time.tt.ToString("G18"), time.ut.ToString("G18"),
+                                j2000.ra.ToString("G18"), j2000.dec.ToString("G18"), j2000.dist.ToString("G18"),
+                                hor.azimuth.ToString("G18"), hor.altitude.ToString("G18"));
                         }
                     }
 
                     pos = Astronomy.GeoVector(Body.Moon, time, Aberration.None);
-                    outfile.WriteLine("v GM {0} {1} {2} {3}", pos.t.tt.ToString("G20"), pos.x.ToString("G20"), pos.y.ToString("G20"), pos.z.ToString("G20"));
+                    outfile.WriteLine("v GM {0} {1} {2} {3}", pos.t.tt.ToString("G18"), pos.x.ToString("G18"), pos.y.ToString("G18"), pos.z.ToString("G18"));
                     j2000 = Astronomy.Equator(Body.Moon, time, observer, EquatorEpoch.J2000, Aberration.None);
                     ofdate = Astronomy.Equator(Body.Moon, time, observer, EquatorEpoch.OfDate, Aberration.Corrected);
                     hor = Astronomy.Horizon(time, observer, ofdate.ra, ofdate.dec, Refraction.None);
                     outfile.WriteLine("s GM {0} {1} {2} {3} {4} {5} {6}",
-                        time.tt.ToString("G20"), time.ut.ToString("G20"),
-                        j2000.ra.ToString("G20"), j2000.dec.ToString("G20"), j2000.dist.ToString("G20"),
-                        hor.azimuth.ToString("G20"), hor.altitude.ToString("G20"));
+                        time.tt.ToString("G18"), time.ut.ToString("G18"),
+                        j2000.ra.ToString("G18"), j2000.dec.ToString("G18"), j2000.dist.ToString("G18"),
+                        hor.azimuth.ToString("G18"), hor.altitude.ToString("G18"));
 
                     time = time.AddDays(10.0 + Math.PI/100.0);
                 }
@@ -680,7 +680,7 @@ namespace csharp_test
 
                     AstroVector geo = Astronomy.GeoVector(body, search_result, Aberration.Corrected);
                     double dist = geo.Length();
-                    outfile.WriteLine("e {0} {1} {2} {3}", body, event_name, search_result.tt.ToString("G20"), dist.ToString("G20"));
+                    outfile.WriteLine("e {0} {1} {2} {3}", body, event_name, search_result.tt.ToString("G18"), dist.ToString("G18"));
 
                     /* Search for the opposite longitude event next time. */
                     time = search_result;

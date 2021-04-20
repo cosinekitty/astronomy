@@ -354,25 +354,25 @@ static int AstroCheck(void)
         {
             body = bodylist[b];
             CHECK_VECTOR(pos, Astronomy_HelioVector(body, time));
-            fprintf(outfile, "v %s %0.20lf %0.20lf %0.20lf %0.20lf\n", Astronomy_BodyName(body), pos.t.tt, pos.x, pos.y, pos.z);
+            fprintf(outfile, "v %s %0.18le %0.18le %0.18le %0.18le\n", Astronomy_BodyName(body), pos.t.tt, pos.x, pos.y, pos.z);
 
             if (body != BODY_EARTH && body != BODY_EMB && body != BODY_SSB)
             {
                 CHECK_EQU(j2000, Astronomy_Equator(body, &time, observer, EQUATOR_J2000, NO_ABERRATION));
                 CHECK_EQU(ofdate, Astronomy_Equator(body, &time, observer, EQUATOR_OF_DATE, ABERRATION));
                 hor = Astronomy_Horizon(&time, observer, ofdate.ra, ofdate.dec, REFRACTION_NONE);
-                fprintf(outfile, "s %s %0.20lf %0.20lf %0.20lf %0.20lf %0.20lf %0.20lf %0.20lf\n",
+                fprintf(outfile, "s %s %0.18le %0.18le %0.18le %0.18le %0.18le %0.18le %0.18le\n",
                     Astronomy_BodyName(body), time.tt, time.ut, j2000.ra, j2000.dec, j2000.dist, hor.azimuth, hor.altitude);
             }
         }
 
         CHECK_VECTOR(pos, Astronomy_GeoVector(BODY_MOON, time, NO_ABERRATION));
-        fprintf(outfile, "v GM %0.20lf %0.20lf %0.20lf %0.20lf\n", pos.t.tt, pos.x, pos.y, pos.z);
+        fprintf(outfile, "v GM %0.18le %0.18le %0.18le %0.18le\n", pos.t.tt, pos.x, pos.y, pos.z);
 
         CHECK_EQU(j2000, Astronomy_Equator(BODY_MOON, &time, observer, EQUATOR_J2000, NO_ABERRATION));
         CHECK_EQU(ofdate, Astronomy_Equator(BODY_MOON, &time, observer, EQUATOR_OF_DATE, ABERRATION));
         hor = Astronomy_Horizon(&time, observer, ofdate.ra, ofdate.dec, REFRACTION_NONE);
-        fprintf(outfile, "s GM %0.20lf %0.20lf %0.20lf %0.20lf %0.20lf %0.20lf %0.20lf\n",
+        fprintf(outfile, "s GM %0.18le %0.18le %0.18le %0.18le %0.18le %0.18le %0.18le\n",
             time.tt, time.ut, j2000.ra, j2000.dec, j2000.dist, hor.azimuth, hor.altitude);
 
         time = Astronomy_AddDays(time, 10.0 + PI/100.0);
