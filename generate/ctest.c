@@ -386,22 +386,31 @@ fail:
 
 /*-----------------------------------------------------------------------------------------------------------*/
 
-static const char *DiffColName[NUM_DIFF_COLUMNS] =
+typedef struct
+{
+    const char *name;   /* the name of the column/field */
+    int cos_index;      /* moderate longitude-like differences by the cosine of the indicated latitude-like field (or -1 if N/A) */
+    int wrap;           /* the value at which an angular measure can wrap around, or 0 if N/A */
+    double range;       /* moderate differences by dividing by this range of possible values (0 = use heliocentric distance of planet in AU) */
+}
+maxdiff_settings_t;
+
+static const maxdiff_settings_t DiffSettings[NUM_DIFF_COLUMNS] =
 {
     /* 'v' lines */
-    "helio_tt",
-    "helio_x",
-    "helio_y",
-    "helio_z",
+    { "helio_tt",       -1,     0,      1.0 },      /*  0 */
+    { "helio_x",        -1,     0,      0.0 },      /*  1 */
+    { "helio_y",        -1,     0,      0.0 },      /*  2 */
+    { "helio_z",        -1,     0,      0.0 },      /*  3 */
 
     /* 's' lines */
-    "sky_tt",
-    "sky_ut",
-    "sky_j2000_ra",
-    "sky_j2000_dec",
-    "sky_j2000_dist",
-    "sky_hor_az",
-    "sky_hor_alt"
+    { "sky_tt",         -1,     0,      1.0 },      /*  4 */
+    { "sky_ut",         -1,     0,      1.0 },      /*  5 */
+    { "sky_j2000_ra",    7,    24,     24.0 },      /*  6 */
+    { "sky_j2000_dec",  -1,     0,    180.0 },      /*  7 */
+    { "sky_j2000_dist", -1,     0,      1.0 },      /*  8 */
+    { "sky_hor_az",     10,   360,    360.0 },      /*  9 */
+    { "sky_hor_alt",    -1,     0,    180.0 },      /* 10 */
 };
 
 static int Diff(double tolerance, const char *a_filename, const char *b_filename)
@@ -467,7 +476,7 @@ static int Diff(double tolerance, const char *a_filename, const char *b_filename
                 columns[i].b_value,
                 columns[i].factor,
                 columns[i].diff,
-                DiffColName[i]);
+                DiffSettings[i].name);
         }
     }
 
@@ -491,8 +500,6 @@ static int DiffLine(int lnum, const char *aline, const char *bline, double *maxd
     double bdata[7];
     double diff;
     int i, na, nb, nrequired = -1;
-    int wrap[7] = {0, 0, 0, 0, 0, 0, 0};
-    int soften[7] = {-1, -1, -1, -1, -1, -1, -1};
     int colbase = -1;
     maxdiff_column_t *col;
 
@@ -530,18 +537,6 @@ static int DiffLine(int lnum, const char *aline, const char *bline, double *maxd
         na = sscanf(aline, "s %9[A-Za-z] %lf %lf %lf %lf %lf %lf %lf", abody, &adata[0], &adata[1], &adata[2], &adata[3], &adata[4], &adata[5], &adata[6]);
         nb = sscanf(bline, "s %9[A-Za-z] %lf %lf %lf %lf %lf %lf %lf", bbody, &bdata[0], &bdata[1], &bdata[2], &bdata[3], &bdata[4], &bdata[5], &bdata[6]);
         nrequired = 8;
-        wrap[2] = 24;    /* right ascension can "wrap around" at 24 sidereal hours */
-        wrap[5] = 360;   /* azimuth can "wrap around" at 360 degrees */
-
-        /*
-            Longitude-like angles (right ascension and azimuth) become less significant as their
-            counterpart latitude-like angle gets closer to its poles.
-            For example, if horizontal altitude is close to 90 degrees (near the zenith),
-            then an azimuth error is not very important.
-            So we multiple errors for these types of numbers by the cosine of their counterpart.
-        */
-        soften[2] = 3;      /* moderate RA errors by cos(DEC) */
-        soften[5] = 6;      /* moderate AZ by cos(ALT) */
         break;
 
     default:
@@ -567,31 +562,46 @@ static int DiffLine(int lnum, const char *aline, const char *bline, double *maxd
     /* Verify all the numeric data are very close. */
     for (i=0; i < nrequired; ++i)
     {
-        double factor = 1.0;
-        diff = ABS(adata[i] - bdata[i]);
-        if (wrap[i] && (diff > wrap[i] / 2))
-        {
-            /* Tolerate differences in angular values that wrap around at a periodic limit. */
-            diff = ABS(wrap[i] - diff);
-        }
-
-        if (soften[i] >= 0)
-        {
-            /* Reduce the severity of longitude-like angles by cos(latitude-like-angle). */
-            /* Make sure we calculate identical values regardless of the order of the filenames. */
-            /* Therefore, use the arithmetic mean of the two latitude angles. */
-            double latrad1 = V(adata[soften[i]]);
-            double latrad2 = V(bdata[soften[i]]);
-            factor = ABS(cos(DEG2RAD * ((latrad1 + latrad2) / 2.0)));
-            diff *= factor;
-        }
+        double factor;
+        int ci, w;
+        int k = colbase + i;
 
         /* Life is too short to debug memory corruption errors. */
-        if (colbase + i < 0 || colbase + i >= NUM_DIFF_COLUMNS)
-            FAIL("ctest(DiffLine): Internal error on line %d: colbase=%d, i=%d\n", lnum, colbase, i);
+        if (k < 0 || k >= NUM_DIFF_COLUMNS)
+            FAIL("ctest(DiffLine): Internal error on line %d: k=%d\n", lnum, k);
+
+        ci = DiffSettings[k].cos_index;
+        w = DiffSettings[k].wrap;
+        if (DiffSettings[k].range <= 0.0)
+            factor = 1.0;       /* FIXFIXFIX - use the heliocentric distance for this planet as the range. */
+        else
+            factor = 1.0 / DiffSettings[k].range;
+
+        diff = ABS(adata[i] - bdata[i]);
+        if ((w > 0) && (diff > w / 2))
+        {
+            /* Tolerate differences in angular values that wrap around at a periodic limit. */
+            diff = ABS(w - diff);
+        }
+
+        if (ci >= 0)
+        {
+            /*
+                Longitude-like angles (right ascension and azimuth) become less significant as their
+                counterpart latitude-like angle gets closer to its poles.
+                For example, if horizontal altitude is close to 90 degrees (near the zenith),
+                then an azimuth error is not very important.
+                So we multiple errors for these types of numbers by the cosine of their counterpart.
+                Make sure we calculate identical values regardless of the order of the filenames.
+                Therefore, use the arithmetic mean of the two latitude angles.
+            */
+            factor *= ABS(cos(DEG2RAD * ((adata[ci] + bdata[ci]) / 2.0)));
+        }
+
+        diff *= factor;
 
         /* Remember the worst difference for each different type of calculation. */
-        col = &columns[colbase + i];
+        col = &columns[k];
         if (diff > col->diff)
         {
             col->diff = diff;
