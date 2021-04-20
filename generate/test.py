@@ -129,21 +129,21 @@ def AstroCheck(printflag):
             if body != astronomy.Body.Moon:
                 pos = astronomy.HelioVector(body, time)
                 if printflag:
-                    print('v {} {:0.16f} {:0.16f} {:0.16f} {:0.16f}'.format(name, pos.t.tt, pos.x, pos.y, pos.z))
+                    print('v {} {:0.18e} {:0.18e} {:0.18e} {:0.18e}'.format(name, pos.t.tt, pos.x, pos.y, pos.z))
                 if body != astronomy.Body.Earth and body != astronomy.Body.EMB and body != astronomy.Body.SSB:
                     j2000 = astronomy.Equator(body, time, observer, False, False)
                     ofdate = astronomy.Equator(body, time, observer, True, True)
                     hor = astronomy.Horizon(time, observer, ofdate.ra, ofdate.dec, astronomy.Refraction.Airless)
                     if printflag:
-                        print('s {} {:0.16f} {:0.16f} {:0.16f} {:0.16f} {:0.16f} {:0.16f} {:0.16f}'.format(name, time.tt, time.ut, j2000.ra, j2000.dec, j2000.dist, hor.azimuth, hor.altitude))
+                        print('s {} {:0.18e} {:0.18e} {:0.18e} {:0.18e} {:0.18e} {:0.18e} {:0.18e}'.format(name, time.tt, time.ut, j2000.ra, j2000.dec, j2000.dist, hor.azimuth, hor.altitude))
         pos = astronomy.GeoMoon(time)
         if printflag:
-            print('v GM {:0.16f} {:0.16f} {:0.16f} {:0.16f}'.format(pos.t.tt, pos.x, pos.y, pos.z))
+            print('v GM {:0.18e} {:0.18e} {:0.18e} {:0.18e}'.format(pos.t.tt, pos.x, pos.y, pos.z))
         j2000 = astronomy.Equator(astronomy.Body.Moon, time, observer, False, False)
         ofdate = astronomy.Equator(astronomy.Body.Moon, time, observer, True, True)
         hor = astronomy.Horizon(time, observer, ofdate.ra, ofdate.dec, astronomy.Refraction.Airless)
         if printflag:
-            print('s GM {:0.16f} {:0.16f} {:0.16f} {:0.16f} {:0.16f} {:0.16f} {:0.16f}'.format(time.tt, time.ut, j2000.ra, j2000.dec, j2000.dist, hor.azimuth, hor.altitude))
+            print('s GM {:0.18e} {:0.18e} {:0.18e} {:0.18e} {:0.18e} {:0.18e} {:0.18e}'.format(time.tt, time.ut, j2000.ra, j2000.dec, j2000.dist, hor.azimuth, hor.altitude))
         time = time.AddDays(dt)
     return 0
 

@@ -67,23 +67,23 @@ function AstroCheck() {
         for (body in Astronomy.Body) {
             if (body !== 'Moon') {
                 pos = Astronomy.HelioVector(body, date);
-                console.log(`v ${body} ${pos.t.tt.toFixed(16)} ${pos.x.toFixed(16)} ${pos.y.toFixed(16)} ${pos.z.toFixed(16)}`);
+                console.log(`v ${body} ${pos.t.tt.toExponential(18)} ${pos.x.toExponential(18)} ${pos.y.toExponential(18)} ${pos.z.toExponential(18)}`);
 
                 if (body !== 'Earth' && body !== 'EMB' && body !== 'SSB') {
                     j2000 = Astronomy.Equator(body, date, observer, false, false);
                     ofdate = Astronomy.Equator(body, date, observer, true, true);
                     hor = Astronomy.Horizon(date, observer, ofdate.ra, ofdate.dec);
-                    console.log(`s ${body} ${time.tt.toFixed(16)} ${time.ut.toFixed(16)} ${j2000.ra.toFixed(16)} ${j2000.dec.toFixed(16)} ${j2000.dist.toFixed(16)} ${hor.azimuth.toFixed(16)} ${hor.altitude.toFixed(16)}`);
+                    console.log(`s ${body} ${time.tt.toExponential(18)} ${time.ut.toExponential(18)} ${j2000.ra.toExponential(18)} ${j2000.dec.toExponential(18)} ${j2000.dist.toExponential(18)} ${hor.azimuth.toExponential(18)} ${hor.altitude.toExponential(18)}`);
                 }
             }
         }
         pos = Astronomy.GeoMoon(date);
-        console.log(`v GM ${pos.t.tt.toFixed(16)} ${pos.x.toFixed(16)} ${pos.y.toFixed(16)} ${pos.z.toFixed(16)}`);
+        console.log(`v GM ${pos.t.tt.toExponential(18)} ${pos.x.toExponential(18)} ${pos.y.toExponential(18)} ${pos.z.toExponential(18)}`);
 
         j2000 = Astronomy.Equator('Moon', date, observer, false, false);
         ofdate = Astronomy.Equator('Moon', date, observer, true, true);
         hor = Astronomy.Horizon(date, observer, ofdate.ra, ofdate.dec);
-        console.log(`s GM ${time.tt.toFixed(16)} ${time.ut.toFixed(16)} ${j2000.ra.toFixed(16)} ${j2000.dec.toFixed(16)} ${j2000.dist.toFixed(16)} ${hor.azimuth.toFixed(16)} ${hor.altitude.toFixed(16)}`);
+        console.log(`s GM ${time.tt.toExponential(18)} ${time.ut.toExponential(18)} ${j2000.ra.toExponential(18)} ${j2000.dec.toExponential(18)} ${j2000.dist.toExponential(18)} ${hor.azimuth.toExponential(18)} ${hor.altitude.toExponential(18)}`);
 
         date = date.AddDays(dt);
     }
