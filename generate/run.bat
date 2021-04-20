@@ -204,13 +204,16 @@ REM ----------------------------------------------------------------------------
 
 echo.Diffing calculations.
 
-!CTESTEXE! diff temp\c_check.txt temp\py_check.txt
+!CTESTEXE! diff 0.0 temp\c_check.txt dotnet\csharp_test\csharp_check.txt
 if errorlevel 1 (exit /b 1)
 
-!CTESTEXE! diff temp\c_check.txt temp\js_check.txt
+!CTESTEXE! diff 1.2e-12 temp\c_check.txt temp\js_check.txt
 if errorlevel 1 (exit /b 1)
 
-!CTESTEXE! diff temp\c_check.txt dotnet\csharp_test\csharp_check.txt
+!CTESTEXE! diff 5.1e-14 temp\c_check.txt temp\py_check.txt
+if errorlevel 1 (exit /b 1)
+
+!CTESTEXE! diff 1.2e-12 temp\js_check.txt temp\py_check.txt
 if errorlevel 1 (exit /b 1)
 
 type pass.txt
