@@ -3841,9 +3841,9 @@ static int Issue103(void)
     /* https://github.com/cosinekitty/astronomy/issues/103 */
 
     astro_observer_t observer = Astronomy_MakeObserver(29.0, -81.0, 10.0);
-    double ut = -51279.9420508868643083;
+    double ut = -8.817548982869034808e+04;
     astro_time_t time = Astronomy_TimeFromDays(ut);
-    astro_body_t body = BODY_MOON;
+    astro_body_t body = BODY_VENUS;
     astro_equatorial_t ofdate = Astronomy_Equator(body, &time, observer, EQUATOR_OF_DATE, ABERRATION);
     astro_horizon_t hor;
 

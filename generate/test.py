@@ -1783,7 +1783,7 @@ def JupiterMoons():
 def Issue103():
     # https://github.com/cosinekitty/astronomy/issues/103
     observer = astronomy.Observer(29, -81, 10)
-    ut = -39864.1907264927140204
+    ut = -8.817548982869034808e+04
     time = astronomy.Time(ut)
     body = astronomy.Body.Venus
     ofdate = astronomy.Equator(body, time, observer, True, True)
