@@ -1396,7 +1396,7 @@ static int CheckTestOutput(const char *filename)
     int error, lnum;
     vsop_body_t body;
     FILE *infile = NULL;
-    char line[200];
+    char line[300];
     double arcmin_helio, arcmin_eclip, arcmin_equ, arcmin_hor;
     error_bundle_t bundle[VSOP_BODY_LIMIT];
     error_stat_t tally;
@@ -1424,8 +1424,9 @@ static int CheckTestOutput(const char *filename)
         ++lnum;
         switch (line[0])
         {
-        case '#':
-            break;  /* ignore debug output */
+        case '#':   /* ignore debug output */
+        case 'j':   /* ignore Jupiter moons calculations: for diff testing only */
+            break;
 
         case 'o':
             /* The observer used for all future sky position calculations */

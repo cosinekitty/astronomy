@@ -71,7 +71,8 @@ maxdiff_column_t;
 
 #define NUM_V_COLUMNS       4
 #define NUM_S_COLUMNS       7
-#define NUM_DIFF_COLUMNS    (NUM_V_COLUMNS + NUM_S_COLUMNS)
+#define NUM_J_COLUMNS       8
+#define NUM_DIFF_COLUMNS    (NUM_V_COLUMNS + NUM_S_COLUMNS + NUM_J_COLUMNS)
 
 static int Test_AstroTime(void);
 static int AstroCheck(void);
@@ -330,6 +331,7 @@ static int AstroCheck(void)
     astro_equatorial_t j2000;
     astro_equatorial_t ofdate;
     astro_horizon_t hor;
+    astro_jupiter_moons_t jm;
     astro_observer_t observer = Astronomy_MakeObserver(29.0, -81.0, 10.0);
     int b;
     static const astro_body_t bodylist[] =  /* match the order in the JavaScript unit test */
@@ -375,6 +377,17 @@ static int AstroCheck(void)
         fprintf(outfile, "s GM %0.18le %0.18le %0.18le %0.18le %0.18le %0.18le %0.18le\n",
             time.tt, time.ut, j2000.ra, j2000.dec, j2000.dist, hor.azimuth, hor.altitude);
 
+        /* Calculate Jupiter's moons for diff purposes only. */
+        jm = Astronomy_JupiterMoons(time);
+        for (b = 0; b < NUM_JUPITER_MOONS; ++b)
+        {
+            CHECK_STATUS(jm.moon[b]);
+            fprintf(outfile, "j %d %0.18le %0.18le %0.18le %0.18le %0.18le %0.18le %0.18le %0.18le\n",
+                b, time.tt, time.ut,
+                jm.moon[b].x, jm.moon[b].y, jm.moon[b].z,
+                jm.moon[b].vx, jm.moon[b].vy, jm.moon[b].vz);
+        }
+
         time = Astronomy_AddDays(time, 10.0 + PI/100.0);
     }
 
@@ -409,8 +422,25 @@ static double OrbitRange(const char *name)
     /* The Sun vector is always (0, 0, 0), so range doesn't matter. */
     if (!strcmp(name, "Sun"))       return 1.0;
 
+    /* Jovicentric distances for Jupiter's moons. */
+    if (!strcmp(name, "jm0"))   return 0.00282;      /* Io */
+    if (!strcmp(name, "jm1"))   return 0.00448;      /* Europa */
+    if (!strcmp(name, "jm2"))   return 0.00716;      /* Ganymede */
+    if (!strcmp(name, "jm3"))   return 0.01259;      /* Callisto */
 
     fprintf(stderr, "FATAL(OrbitRange): unknown body name '%s'\n", name);
+    exit(1);
+}
+
+static double OrbitSpeed(const char *name)
+{
+    /* Return the orbital speed (AU/day) of Jupiter's moons. */
+    if (!strcmp(name, "jm0"))   return 0.0100;      /* Io */
+    if (!strcmp(name, "jm1"))   return 0.0079;      /* Europa */
+    if (!strcmp(name, "jm2"))   return 0.0063;      /* Ganymede */
+    if (!strcmp(name, "jm3"))   return 0.0047;      /* Callisto */
+
+    fprintf(stderr, "FATAL(OrbitSpeed): unknown body name '%s'\n", name);
     exit(1);
 }
 
@@ -447,7 +477,7 @@ typedef struct
     const char *name;   /* the name of the column/field */
     int cos_index;      /* moderate longitude-like differences by the cosine of the indicated latitude-like field (or -1 if N/A) */
     int wrap;           /* the value at which an angular measure can wrap around, or 0 if N/A */
-    double range;       /* moderate differences by dividing by this range of possible values (0 = use heliocentric distance of planet in AU) */
+    double range;       /* moderate differences by dividing by this range of possible values (or special codes for 0, -1, -2) */
 }
 maxdiff_settings_t;
 
@@ -467,6 +497,16 @@ static const maxdiff_settings_t DiffSettings[NUM_DIFF_COLUMNS] =
     { "sky_j2000_dist", -1,     0,     -1.0 },      /*  8 */
     { "sky_hor_az",     10,   360,    360.0 },      /*  9 */
     { "sky_hor_alt",    -1,     0,    180.0 },      /* 10 */
+
+    /* 'j' lines */
+    { "jm_tt",          -1,     0,      1.0 },      /* 11 */
+    { "jm_ut",          -1,     0,      1.0 },      /* 12 */
+    { "jm_x",           -1,     0,      0.0 },      /* 13 */
+    { "jm_y",           -1,     0,      0.0 },      /* 14 */
+    { "jm_z",           -1,     0,      0.0 },      /* 15 */
+    { "jm_vx",          -1,     0,     -2.0 },      /* 16 */
+    { "jm_vy",          -1,     0,     -2.0 },      /* 17 */
+    { "jm_vz",          -1,     0,     -2.0 }       /* 18 */
 };
 
 static int Diff(double tolerance, const char *a_filename, const char *b_filename)
@@ -476,10 +516,10 @@ static int Diff(double tolerance, const char *a_filename, const char *b_filename
     int i;
     FILE *afile = NULL;
     FILE *bfile = NULL;
-    char aline[200];
-    char jline[200];
-    char *cread;
-    char *jread;
+    char aline[300];
+    char bline[300];
+    char *aread;
+    char *bread;
     maxdiff_column_t columns[NUM_DIFF_COLUMNS];
     double score = 0.0;
 
@@ -496,16 +536,16 @@ static int Diff(double tolerance, const char *a_filename, const char *b_filename
     lnum = 0;
     for(;;)
     {
-        cread = fgets(aline, sizeof(aline), afile);
-        jread = fgets(jline, sizeof(jline), bfile);
-        if (cread==NULL && jread==NULL)
+        aread = fgets(aline, sizeof(aline), afile);
+        bread = fgets(bline, sizeof(bline), bfile);
+        if (aread==NULL && bread==NULL)
             break;      /* normal end of both files */
 
-        if (cread==NULL || jread==NULL)
+        if (aread==NULL || bread==NULL)
             FAIL("ctest(Diff): Files do not have same number of lines: %s and %s\n", a_filename, b_filename);
 
         ++lnum;
-        CHECK(DiffLine(lnum, aline, jline, columns));
+        CHECK(DiffLine(lnum, aline, bline, columns));
     }
 
     error = 0;
@@ -513,7 +553,7 @@ static int Diff(double tolerance, const char *a_filename, const char *b_filename
     printf("First  file: %s\n", a_filename);
     printf("Second file: %s\n", b_filename);
     printf("Tolerance = %0.3le\n\n", tolerance);
-    printf("      %10s %23s %23s %8s %10s  %s\n", "lnum", "a_value", "b_value", "factor", "diff", "name");
+    printf("      %10s %23s %23s %10s %10s  %s\n", "lnum", "a_value", "b_value", "factor", "diff", "name");
     for (i = 0; i < NUM_DIFF_COLUMNS; ++i)
     {
         if (columns[i].lnum > 0)
@@ -528,7 +568,7 @@ static int Diff(double tolerance, const char *a_filename, const char *b_filename
             if (columns[i].diff > score)
                 score = columns[i].diff;
 
-            printf("%4s  %10d %23.16le %23.16le %8.5lf %10.3le  %s\n",
+            printf("%4s  %10d %23.16le %23.16le %10.5lf %10.3le  %s\n",
                 result,
                 columns[i].lnum,
                 columns[i].a_value,
@@ -555,11 +595,12 @@ static int DiffLine(int lnum, const char *aline, const char *bline, maxdiff_colu
     int error = 1;
     char abody[10];
     char bbody[10];
-    double adata[7];
-    double bdata[7];
+    double adata[8];
+    double bdata[8];
     double diff;
     int i, na, nb, nrequired = -1;
     int colbase = -1;
+    int mindex_a, mindex_b;     /* index of Jupiter's moon: 0..3 */
     maxdiff_column_t *col;
 
     /* be paranoid: make sure we can't possibly have a fake match. */
@@ -598,6 +639,17 @@ static int DiffLine(int lnum, const char *aline, const char *bline, maxdiff_colu
         nrequired = 8;
         break;
 
+    case 'j':       /* Jupiter's moons:   j moon[0..3] tt ut x y z vx vy vz */
+        colbase = NUM_V_COLUMNS + NUM_S_COLUMNS;
+        na = sscanf(aline, "j %d %lf %lf %lf %lf %lf %lf %lf %lf", &mindex_a, &adata[0], &adata[1], &adata[2], &adata[3], &adata[4], &adata[5], &adata[6], &adata[7]);
+        nb = sscanf(bline, "j %d %lf %lf %lf %lf %lf %lf %lf %lf", &mindex_b, &bdata[0], &bdata[1], &bdata[2], &bdata[3], &bdata[4], &bdata[5], &bdata[6], &bdata[7]);
+        nrequired = 9;
+        if (mindex_a < 0 || mindex_a >= NUM_JUPITER_MOONS || mindex_a != mindex_b)
+            FAIL("Bad Jupiter moon index in line %d: mindex_a=%d, mindex_b=%d\n", lnum, mindex_a, mindex_b);
+        snprintf(abody, sizeof(abody), "jm%d", mindex_a);
+        snprintf(bbody, sizeof(bbody), "jm%d", mindex_b);
+        break;
+
     default:
         FAIL("ctest(DiffLine): Line %d type '%c' is not a valid record type.\n", lnum, aline[0]);
     }
@@ -621,7 +673,7 @@ static int DiffLine(int lnum, const char *aline, const char *bline, maxdiff_colu
     /* Verify all the numeric data are very close. */
     for (i=0; i < nrequired; ++i)
     {
-        double factor;
+        double factor, denom;
         int ci, w;
         int k = colbase + i;
 
@@ -631,12 +683,23 @@ static int DiffLine(int lnum, const char *aline, const char *bline, maxdiff_colu
 
         ci = DiffSettings[k].cos_index;
         w = DiffSettings[k].wrap;
-        if (DiffSettings[k].range <= -1.0)
-            factor = 1.0 / TopoRange(abody);
-        if (DiffSettings[k].range <= 0.0)
-            factor = 1.0 / OrbitRange(abody);
+
+        denom = NAN;
+        if (DiffSettings[k].range == -2.0)
+            denom = OrbitSpeed(abody);
+        else if (DiffSettings[k].range == -1.0)
+            denom = TopoRange(abody);
+        else if (DiffSettings[k].range == 0.0)
+            denom = OrbitRange(abody);
+        else if (DiffSettings[k].range > 0.0)
+            denom = DiffSettings[k].range;
         else
-            factor = 1.0 / DiffSettings[k].range;
+            FAIL("ctest(DiffLine): Invalid range value: %lf\n", DiffSettings[k].range);
+
+        if (!isfinite(denom) || denom <= 0.0)
+            FAIL("ctest(DiffLine): Invalid denominator value: %lf\n", denom);
+
+        factor = V(1.0 / denom);
 
         diff = ABS(adata[i] - bdata[i]);
         if ((w > 0) && (diff > w / 2))

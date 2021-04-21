@@ -250,6 +250,13 @@ namespace csharp_test
                         j2000.ra.ToString("G18"), j2000.dec.ToString("G18"), j2000.dist.ToString("G18"),
                         hor.azimuth.ToString("G18"), hor.altitude.ToString("G18"));
 
+                    JupiterMoonsInfo jm = Astronomy.JupiterMoons(time);
+                    for (int mindex = 0; mindex < NUM_JUPITER_MOONS; ++mindex)
+                    {
+                        StateVector moon = jm.moon[mindex];
+                        outfile.WriteLine($"j {mindex} {time.tt:G18} {time.ut:G18} {moon.x:G18} {moon.y:G18} {moon.z:G18} {moon.vx:G18} {moon.vy:G18} {moon.vz:G18}");
+                    }
+
                     time = time.AddDays(10.0 + Math.PI/100.0);
                 }
             }

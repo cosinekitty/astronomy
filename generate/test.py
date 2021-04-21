@@ -144,6 +144,11 @@ def AstroCheck(printflag):
         hor = astronomy.Horizon(time, observer, ofdate.ra, ofdate.dec, astronomy.Refraction.Airless)
         if printflag:
             print('s GM {:0.18e} {:0.18e} {:0.18e} {:0.18e} {:0.18e} {:0.18e} {:0.18e}'.format(time.tt, time.ut, j2000.ra, j2000.dec, j2000.dist, hor.azimuth, hor.altitude))
+        jm = astronomy.JupiterMoons(time)
+        if printflag:
+            for mindex in range(4):
+                moon = jm.moon[mindex]
+                print('j {:d} {:0.18e} {:0.18e} {:0.18e} {:0.18e} {:0.18e} {:0.18e} {:0.18e} {:0.18e}'.format(mindex, time.tt, time.ut, moon.x, moon.y, moon.z, moon.vx, moon.vy, moon.vz))
         time = time.AddDays(dt)
     return 0
 

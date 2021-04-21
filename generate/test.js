@@ -85,6 +85,12 @@ function AstroCheck() {
         hor = Astronomy.Horizon(date, observer, ofdate.ra, ofdate.dec);
         console.log(`s GM ${time.tt.toExponential(18)} ${time.ut.toExponential(18)} ${j2000.ra.toExponential(18)} ${j2000.dec.toExponential(18)} ${j2000.dist.toExponential(18)} ${hor.azimuth.toExponential(18)} ${hor.altitude.toExponential(18)}`);
 
+        const jm = Astronomy.JupiterMoons(time);
+        for (let mindex = 0; mindex < 4; ++mindex) {
+            const moon = jm.moon[mindex];
+            console.log(`j ${mindex} ${time.tt.toExponential(18)} ${time.ut.toExponential(18)} ${moon.x.toExponential(18)} ${moon.y.toExponential(18)} ${moon.z.toExponential(18)} ${moon.vx.toExponential(18)} ${moon.vy.toExponential(18)} ${moon.vz.toExponential(18)}`);
+        }
+
         date = date.AddDays(dt);
     }
 
