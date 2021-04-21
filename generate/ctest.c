@@ -12,6 +12,27 @@
 #include <ctype.h>
 #include "astronomy.h"
 
+char *ReadLine(char *s, int n, FILE *f, const char *filename, int lnum)
+{
+    char *ret = fgets(s, n, f);
+    if (ret != NULL)
+    {
+        /* If a line is longer than the buffer can hold, it can cause confusing problems. */
+        /* Detect that and fail immediately, for easier diagnosis. */
+        int i;
+        int found = 0;
+        for (i = 0; !found && s[i] != '\0'; ++i)
+            if (s[i] == '\n' || s[i] == '\r')
+                found = 1;
+        if (!found)
+        {
+            fprintf(stderr, "ReadLine(%s line %d): No EOLN character found. Is the line too long for buffer size %d?\n", filename, lnum+1, n);
+            exit(1);
+        }
+    }
+    return ret;
+}
+
 #define PI      3.14159265358979323846
 
 #define CHECK(x)        do{if(0 != (error = (x))) goto fail;}while(0)
@@ -536,8 +557,8 @@ static int Diff(double tolerance, const char *a_filename, const char *b_filename
     lnum = 0;
     for(;;)
     {
-        aread = fgets(aline, sizeof(aline), afile);
-        bread = fgets(bline, sizeof(bline), bfile);
+        aread = ReadLine(aline, sizeof(aline), afile, a_filename, lnum);
+        bread = ReadLine(bline, sizeof(bline), bfile, b_filename, lnum);
         if (aread==NULL && bread==NULL)
             break;      /* normal end of both files */
 
@@ -766,7 +787,7 @@ static int SeasonsTest(void)
         FAIL("C SeasonsTest: Cannot open input file: %s\n", filename);
 
     lnum = 0;
-    while (fgets(line, sizeof(line), infile))
+    while (ReadLine(line, sizeof(line), infile, filename, lnum))
     {
         ++lnum;
         /*
@@ -887,7 +908,7 @@ static int MoonPhase(void)
         3 1800-02-16T15:49:00.000Z
     */
     lnum = 0;
-    while (fgets(line, sizeof(line), infile))
+    while (ReadLine(line, sizeof(line), infile, filename, lnum))
     {
         ++lnum;
         nscanned = sscanf(line, "%d %d-%d-%dT%d:%d:%lfZ", &quarter, &year, &month, &day, &hour, &minute, &second);
@@ -975,7 +996,7 @@ static int TestElongFile(const char *filename, double targetRelLon)
         FAIL("C TestElongFile: Cannot open input file: %s\n", filename);
 
     lnum = 0;
-    while (fgets(line, sizeof(line), infile))
+    while (ReadLine(line, sizeof(line), infile, filename, lnum))
     {
         ++lnum;
 
@@ -1333,7 +1354,7 @@ static int RiseSet(void)
         FAIL("C RiseSet: cannot open input file: %s\n", filename);
 
     lnum = 0;
-    while (fgets(line, sizeof(line), infile))
+    while (ReadLine(line, sizeof(line), infile, filename, lnum))
     {
         ++lnum;
 
@@ -1449,7 +1470,7 @@ static int CheckMagnitudeData(astro_body_t body, const char *filename)
         FAIL("C CheckMagnitudeData: cannot open input file: %s\n", filename);
 
     count = lnum = 0;
-    while (fgets(line, sizeof(line), infile))
+    while (ReadLine(line, sizeof(line), infile, filename, lnum))
     {
         ++lnum;
         rest = ParseJplHorizonsDateTime(line, &time);
@@ -1635,7 +1656,7 @@ static int TestMaxMag(astro_body_t body, const char *filename)
 
     lnum = 0;
     search_time = Astronomy_MakeTime(2001, 1, 1, 0, 0, 0.0);
-    while (fgets(line, sizeof(line), infile))
+    while (ReadLine(line, sizeof(line), infile, filename, lnum))
     {
         ++lnum;
 
@@ -1774,7 +1795,7 @@ static int LunarApsis(void)
 
     start_time = Astronomy_MakeTime(2001, 1, 1, 0, 0, 0.0);
     lnum = 0;
-    while (fgets(line, sizeof(line), infile))
+    while (ReadLine(line, sizeof(line), infile, filename, lnum))
     {
         ++lnum;
 
@@ -1846,7 +1867,7 @@ static int EarthApsis(void)
 
     start_time = Astronomy_MakeTime(2001, 1, 1, 0, 0, 0.0);
     lnum = 0;
-    while (fgets(line, sizeof(line), infile))
+    while (ReadLine(line, sizeof(line), infile, filename, lnum))
     {
         ++lnum;
 
@@ -1948,7 +1969,7 @@ static int PlanetApsis(void)
             FAIL("C PlanetApsis: ERROR %d finding first apsis for %s\n", apsis.status, Astronomy_BodyName(body));
 
         count = 1;
-        while (fgets(line, sizeof(line), infile))
+        while (ReadLine(line, sizeof(line), infile, filename, count-1))
         {
             /* Parse the line of test data. */
             if (   (3 != sscanf(line, "%d %s %lf", &expected_kind, expected_time_text, &expected_distance))
@@ -2828,7 +2849,7 @@ static int ConstellationTest(void)
 
     lnum = 0;
     failcount = 0;
-    while (fgets(line, sizeof(line), infile))
+    while (ReadLine(line, sizeof(line), infile, inFileName, lnum))
     {
         ++lnum;
         if (4 != sscanf(line, "%d %lf %lf %3s", &id, &ra, &dec, symbol) || 3 != strlen(symbol))
@@ -2924,7 +2945,7 @@ static int LunarEclipseTest(void)
     CHECK_STATUS(eclipse);
 
     fprintf(outfile, "\"utc\",\"center\",\"partial\",\"total\"\n");
-    while (fgets(line, sizeof(line), infile))
+    while (ReadLine(line, sizeof(line), infile, filename, lnum))
     {
         ++lnum;
 
@@ -3075,7 +3096,7 @@ static int GlobalSolarEclipseTest(void)
     eclipse = Astronomy_SearchGlobalSolarEclipse(Astronomy_MakeTime(1701, 1, 1, 0, 0, 0.0));
 
     lnum = 0;
-    while (fgets(line, sizeof(line), infile))
+    while (ReadLine(line, sizeof(line), infile, inFileName, lnum))
     {
         ++lnum;
 
@@ -3247,7 +3268,7 @@ static int LocalSolarEclipseTest1(void)
 
     lnum = 0;
     observer.height = 0.0;
-    while (fgets(line, sizeof(line), infile))
+    while (ReadLine(line, sizeof(line), infile, inFileName, lnum))
     {
         ++lnum;
 
@@ -3399,7 +3420,7 @@ static int LocalSolarEclipseTest2(void)
 
     lnum = 0;
     observer.height = 0.0;
-    while (fgets(line, sizeof(line), infile))
+    while (ReadLine(line, sizeof(line), infile, inFileName, lnum))
     {
         ++lnum;
         if (IgnoreLine(line)) continue;
@@ -3514,7 +3535,7 @@ static int TransitFile(astro_body_t body, const char *filename, double limit_min
     DEBUG("C TransitFile: STARTING %s\n\n", filename);
 
     lnum = 0;
-    while (fgets(line, sizeof(line), infile))
+    while (ReadLine(line, sizeof(line), infile, filename, lnum))
     {
         ++lnum;
 
@@ -3897,7 +3918,7 @@ static int JupiterMoonsTest(void)
         found = 0;
         part = -1;
         count = 0;
-        while (fgets(line, sizeof(line), infile))
+        while (ReadLine(line, sizeof(line), infile, filename, lnum))
         {
             ++lnum;
             TrimWhiteSpace(line);
