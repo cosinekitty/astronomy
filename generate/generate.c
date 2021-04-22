@@ -2083,7 +2083,7 @@ static int JupiterMoonTruncate(jupiter_moon_model_t *model, int mindex)
             break;
         }
 
-        printf("JupiterMoonTruncate: mindex=%d, winner=%d, best_score=%le, nterms=[a:%d/%d, l:%d/%d, z:%d/%d, zeta:%d/%d]\n",
+        DEBUG("JupiterMoonTruncate: mindex=%d, winner=%d, best_score=%le, nterms=[a:%d/%d, l:%d/%d, z:%d/%d, zeta:%d/%d]\n",
             mindex, winner, best_score,
             moon->a.nterms_calc,    moon->a.nterms_total,
             moon->l.nterms_calc,    moon->l.nterms_total,
@@ -2092,7 +2092,12 @@ static int JupiterMoonTruncate(jupiter_moon_model_t *model, int mindex)
 
         if (best_score > threshold)
         {
-            printf("JupiterMoonTruncate: mindex=%d : reached threshold.\n", mindex);
+            printf("JupiterMoonTruncate: reached threshold, mindex=%d, winner=%d, best_score=%le, nterms=[a:%d/%d, l:%d/%d, z:%d/%d, zeta:%d/%d]\n",
+                mindex, winner, best_score,
+                moon->a.nterms_calc,    moon->a.nterms_total,
+                moon->l.nterms_calc,    moon->l.nterms_total,
+                moon->z.nterms_calc,    moon->z.nterms_total,
+                moon->zeta.nterms_calc, moon->zeta.nterms_total);
             break;
         }
 
