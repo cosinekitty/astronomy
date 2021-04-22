@@ -1,6 +1,6 @@
 # Astronomy Engine
 
-[![Build Status](https://travis-ci.com/cosinekitty/astronomy.svg)](https://travis-ci.com/cosinekitty/astronomy)
+[![build status](https://github.com/cosinekitty/astronomy/actions/workflows/astronomy-engine-tests.yml/badge.svg)](https://github.com/cosinekitty/astronomy/actions)
 [![npm package](https://img.shields.io/npm/v/astronomy-engine.svg)](https://www.npmjs.com/package/astronomy-engine)
 
 ### Supported Programming Languages
