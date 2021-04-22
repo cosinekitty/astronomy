@@ -31,7 +31,7 @@ Download()
                     echo "wget failed (attempt ${attempt} of 10) -- will retry download in 9 seconds..."
                     sleep 9
                 fi
-                if wget ${EPHURL}; then
+                if wget --no-verbose ${EPHURL}; then
                     echo "wget successfully downloaded the file."
                     wget_success=true
                     break
