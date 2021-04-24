@@ -200,7 +200,7 @@ class Item {
         return md;
     }
 
-    MdDescription(brief, detail, allow_paragraphs) {
+    MdDescription(brief, detail, allow_paragraphs, require_brief) {
         // I could prevent gh-pages (kramdown) escaping html inside tables:
         // https://stackoverflow.com/questions/47262698/inline-html-is-escaped-by-jekyll
         // But then it doesn't render correctly on github.com!  Ya just can't win.
@@ -212,6 +212,8 @@ class Item {
             md += '**' + btext.trim() + '** ';
             if (allow_paragraphs)
                 md += '\n\n';
+        } else if (require_brief) {
+            throw `Missing brief text for ${require_brief}`;
         }
 
         let dtext = this.MdText(detail, allow_paragraphs);
@@ -256,7 +258,7 @@ class Define extends Item {
         let md = this.MarkdownPrefix();
         let name = Item.Flat(this.name);
         md += '### `' + name + '`\n\n';
-        md += this.MdDescription(this.brief, this.detail, true);
+        md += this.MdDescription(this.brief, this.detail, true, '#define ' + name);
         let defn;
         if (this.init._) {
             defn = this.init._.trim();
@@ -285,7 +287,7 @@ class EnumInfo extends Item {
         let name = Item.Flat(this.name);
         let md = this.MarkdownPrefix();
         md += '### `' + name + '`\n\n';
-        md += this.MdDescription(this.brief, this.detail, true);
+        md += this.MdDescription(this.brief, this.detail, true, 'enum ' + name);
         if (this.enumValueList instanceof Array && this.enumValueList.length > 0) {
             md += '\n\n| Enum Value | Description |\n';
             md += '| --- | --- |\n';
@@ -315,7 +317,7 @@ class TypeDef extends Item {
         let md = this.MarkdownPrefix();
         md += '### `' + name + '`\n\n';
         md += '`' + defn + ';`\n\n';
-        md += this.MdDescription(this.brief, this.detail, true);
+        md += this.MdDescription(this.brief, this.detail, true, 'typedef ' + name);
         return md;
     }
 }
@@ -350,7 +352,7 @@ class FuncInfo extends Item {
         md += '### ' + name;
         md += this.MdParamNameList();
         md += ' &#8658; ' + Item.MdType(this.rettype) + '\n\n';
-        md += this.MdDescription(this.brief, this.detail, true);
+        md += this.MdDescription(this.brief, this.detail, true, 'function ' + name);
 
         if (this.paramdocs) {
             md += '\n\n| Type | Parameter | Description |\n';
