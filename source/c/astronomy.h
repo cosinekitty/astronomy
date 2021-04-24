@@ -992,7 +992,13 @@ astro_horizon_t Astronomy_Horizon(
 astro_angle_result_t Astronomy_AngleFromSun(astro_body_t body, astro_time_t time);
 astro_elongation_t Astronomy_Elongation(astro_body_t body, astro_time_t time);
 astro_elongation_t Astronomy_SearchMaxElongation(astro_body_t body, astro_time_t startTime);
-astro_angle_result_t Astronomy_LongitudeFromSun(astro_body_t body, astro_time_t time);
+astro_angle_result_t Astronomy_PairLongitude(astro_body_t body1, astro_body_t body2, astro_time_t time);
+
+/** @cond DOXYGEN_SKIP */
+/* Provided for backward compatibility. Newer code can use Astronomy_PairLongitude. */
+#define Astronomy_LongitudeFromSun(body,time)   (Astronomy_PairLongitude((body), BODY_SUN, (time)))
+/** @endcond */
+
 astro_search_result_t Astronomy_SearchRelativeLongitude(astro_body_t body, double targetRelLon, astro_time_t startTime);
 astro_angle_result_t Astronomy_MoonPhase(astro_time_t time);
 astro_search_result_t Astronomy_SearchMoonPhase(double targetLon, astro_time_t startTime, double limitDays);

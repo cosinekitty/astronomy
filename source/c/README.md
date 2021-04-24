@@ -55,7 +55,7 @@ To get started quickly, here are some [examples](../../demo/c/).
 | [Ecliptic](#Astronomy_Ecliptic)       | Converts J2000 equatorial coordinates to J2000 ecliptic coordinates. |
 | [EclipticLongitude](#Astronomy_EclipticLongitude) | Calculates ecliptic longitude of a body in the J2000 system. |
 | [Horizon](#Astronomy_Horizon)         | Calculates horizontal coordinates (azimuth, altitude) for a given observer on the Earth. |
-| [LongitudeFromSun](#Astronomy_LongitudeFromSun) | Calculates a body's apparent ecliptic longitude difference from the Sun, as seen by an observer on the Earth. |
+| [PairLongitude](#Astronomy_PairLongitude) | Calculates the difference in apparent ecliptic longitude between two bodies, as seen from the Earth. |
 
 ### Rise, set, and culmination times
 
@@ -870,39 +870,6 @@ To convert to heliocentric position vectors, call [`Astronomy_HelioVector`](#Ast
 
 ---
 
-<a name="Astronomy_LongitudeFromSun"></a>
-### Astronomy_LongitudeFromSun(body, time) &#8658; [`astro_angle_result_t`](#astro_angle_result_t)
-
-**Returns a body's ecliptic longitude with respect to the Sun, as seen from the Earth.** 
-
-
-
-This function can be used to determine where a planet appears around the ecliptic plane (the plane of the Earth's orbit around the Sun) as seen from the Earth, relative to the Sun's apparent position.
-
-The angle starts at 0 when the body and the Sun are at the same ecliptic longitude as seen from the Earth. The angle increases in the prograde direction (the direction that the planets orbit the Sun and the Moon orbits the Earth).
-
-When the angle is 180 degrees, it means the Sun and the body appear on opposite sides of the sky for an Earthly observer. When `body` is a planet whose orbit around the Sun is farther than the Earth's, 180 degrees indicates opposition. For the Moon, it indicates a full moon.
-
-The angle keeps increasing up to 360 degrees as the body's apparent prograde motion continues relative to the Sun. When the angle reaches 360 degrees, it starts over at 0 degrees.
-
-Values between 0 and 180 degrees indicate that the body is visible in the evening sky after sunset. Values between 180 degrees and 360 degrees indicate that the body is visible in the morning sky before sunrise.
-
-
-
-**Returns:**  On success, the `status` field in the returned structure holds `ASTRO_SUCCESS` and the `angle` field holds a value in the range [0, 360). On failure, the `status` field contains some other value indicating an error condition. 
-
-
-
-| Type | Parameter | Description |
-| --- | --- | --- |
-| [`astro_body_t`](#astro_body_t) | `body` |  The celestial body for which to find longitude from the Sun. | 
-| [`astro_time_t`](#astro_time_t) | `time` |  The date and time of the observation. | 
-
-
-
-
----
-
 <a name="Astronomy_MakeObserver"></a>
 ### Astronomy_MakeObserver(latitude, longitude, height) &#8658; [`astro_observer_t`](#astro_observer_t)
 
@@ -1191,6 +1158,38 @@ The returned vector has components expressed in astronomical units (AU). To conv
 | <code><a href="#astro_time_t">astro_time_t</a> *</code> | `time` |  The date and time for which to calculate the observer's position vector. | 
 | [`astro_observer_t`](#astro_observer_t) | `observer` |  The geographic location of a point on or near the surface of the Earth. | 
 | [`astro_equator_date_t`](#astro_equator_date_t) | `equdate` |  Selects the date of the Earth's equator in which to express the equatorial coordinates. The caller may select `EQUATOR_J2000` to use the orientation of the Earth's equator at noon UTC on January 1, 2000, in which case this function corrects for precession and nutation of the Earth as it was at the moment specified by the `time` parameter. Or the caller may select `EQUATOR_OF_DATE` to use the Earth's equator at `time` as the orientation. | 
+
+
+
+
+---
+
+<a name="Astronomy_PairLongitude"></a>
+### Astronomy_PairLongitude(body1, body2, time) &#8658; [`astro_angle_result_t`](#astro_angle_result_t)
+
+**Returns one body's ecliptic longitude with respect another, as seen from the Earth.** 
+
+
+
+This function determines where one body appears around the ecliptic plane (the plane of the Earth's orbit around the Sun) as seen from the Earth, relative to the another body's apparent position. The function returns an angle in the half-open range [0, 360) degrees. The value is the ecliptic longitude of `body1` relative to the ecliptic longitude of `body2`.
+
+The angle is 0 when the two bodies are at the same ecliptic longitude as seen from the Earth. The angle increases in the prograde direction (the direction that the planets orbit the Sun and the Moon orbits the Earth).
+
+When the angle is 180 degrees, it means the two bodies appear on opposite sides of the sky for an Earthly observer.
+
+Neither `body1` nor `body2` is allowed to be `BODY_EARTH`. If this happens, the function fails with the error code `ASTRO_EARTH_NOT_ALLOWED`.
+
+
+
+**Returns:**  On success, the `status` field in the returned structure holds `ASTRO_SUCCESS` and the `angle` field holds a value in the range [0, 360). On failure, the `status` field contains some other value indicating an error condition. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_body_t`](#astro_body_t) | `body1` |  The first body, whose longitude is to be found relative to the second body. | 
+| [`astro_body_t`](#astro_body_t) | `body2` |  The second body, relative to which the longitude of the first body is to be found. | 
+| [`astro_time_t`](#astro_time_t) | `time` |  The date and time of the observation. | 
 
 
 

@@ -3717,7 +3717,7 @@ astro_elongation_t Astronomy_Elongation(astro_body_t body, astro_time_t time)
     astro_elongation_t result;
     astro_angle_result_t angres;
 
-    angres = Astronomy_LongitudeFromSun(body, time);
+    angres = Astronomy_PairLongitude(body, BODY_SUN, time);
     if (angres.status != ASTRO_SUCCESS)
         return ElongError(angres.status);
 
@@ -3925,33 +3925,32 @@ astro_elongation_t Astronomy_SearchMaxElongation(astro_body_t body, astro_time_t
     return ElongError(ASTRO_SEARCH_FAILURE);
 }
 
+
 /**
- * @brief
- *      Returns a body's ecliptic longitude with respect to the Sun, as seen from the Earth.
+ * @brief Returns one body's ecliptic longitude with respect another, as seen from the Earth.
  *
- * This function can be used to determine where a planet appears around the ecliptic plane
+ * This function determines where one body appears around the ecliptic plane
  * (the plane of the Earth's orbit around the Sun) as seen from the Earth,
- * relative to the Sun's apparent position.
+ * relative to the another body's apparent position.
+ * The function returns an angle in the half-open range [0, 360) degrees.
+ * The value is the ecliptic longitude of `body1` relative to the ecliptic
+ * longitude of `body2`.
  *
- * The angle starts at 0 when the body and the Sun are at the same ecliptic longitude
+ * The angle is 0 when the two bodies are at the same ecliptic longitude
  * as seen from the Earth. The angle increases in the prograde direction
  * (the direction that the planets orbit the Sun and the Moon orbits the Earth).
  *
- * When the angle is 180 degrees, it means the Sun and the body appear on opposite sides
- * of the sky for an Earthly observer. When `body` is a planet whose orbit around the
- * Sun is farther than the Earth's, 180 degrees indicates opposition. For the Moon,
- * it indicates a full moon.
+ * When the angle is 180 degrees, it means the two bodies appear on opposite sides
+ * of the sky for an Earthly observer.
  *
- * The angle keeps increasing up to 360 degrees as the body's apparent prograde
- * motion continues relative to the Sun. When the angle reaches 360 degrees, it starts
- * over at 0 degrees.
+ * Neither `body1` nor `body2` is allowed to be `BODY_EARTH`.
+ * If this happens, the function fails with the error code `ASTRO_EARTH_NOT_ALLOWED`.
  *
- * Values between 0 and 180 degrees indicate that the body is visible in the evening sky
- * after sunset.  Values between 180 degrees and 360 degrees indicate that the body
- * is visible in the morning sky before sunrise.
+ * @param body1
+ *      The first body, whose longitude is to be found relative to the second body.
  *
- * @param body
- *      The celestial body for which to find longitude from the Sun.
+ * @param body2
+ *      The second body, relative to which the longitude of the first body is to be found.
  *
  * @param time
  *      The date and time of the observation.
@@ -3961,29 +3960,33 @@ astro_elongation_t Astronomy_SearchMaxElongation(astro_body_t body, astro_time_t
  *      the `angle` field holds a value in the range [0, 360).
  *      On failure, the `status` field contains some other value indicating an error condition.
  */
-astro_angle_result_t Astronomy_LongitudeFromSun(astro_body_t body, astro_time_t time)
+astro_angle_result_t Astronomy_PairLongitude(
+    astro_body_t body1,
+    astro_body_t body2,
+    astro_time_t time)
 {
-    astro_vector_t sv, bv;
-    astro_ecliptic_t se, be;
+    astro_vector_t vector1, vector2;
+    astro_ecliptic_t eclip1, eclip2;
     astro_angle_result_t result;
 
-    if (body == BODY_EARTH)
+    if (body1 == BODY_EARTH || body2 == BODY_EARTH)
         return AngleError(ASTRO_EARTH_NOT_ALLOWED);
 
-    sv = Astronomy_GeoVector(BODY_SUN, time, NO_ABERRATION);
-    se = Astronomy_Ecliptic(sv);        /* checks for errors in sv */
-    if (se.status != ASTRO_SUCCESS)
-        return AngleError(se.status);
+    vector1 = Astronomy_GeoVector(body1, time, NO_ABERRATION);
+    eclip1 = Astronomy_Ecliptic(vector1);        /* checks for errors in vector1 */
+    if (eclip1.status != ASTRO_SUCCESS)
+        return AngleError(eclip1.status);
 
-    bv = Astronomy_GeoVector(body, time, NO_ABERRATION);
-    be = Astronomy_Ecliptic(bv);        /* checks for errors in bv */
-    if (be.status != ASTRO_SUCCESS)
-        return AngleError(be.status);
+    vector2 = Astronomy_GeoVector(body2, time, NO_ABERRATION);
+    eclip2 = Astronomy_Ecliptic(vector2);        /* checks for errors in vector2 */
+    if (eclip2.status != ASTRO_SUCCESS)
+        return AngleError(eclip2.status);
 
     result.status = ASTRO_SUCCESS;
-    result.angle = NormalizeLongitude(be.elon - se.elon);
+    result.angle = NormalizeLongitude(eclip1.elon - eclip2.elon);
     return result;
 }
+
 
 /**
  * @brief
@@ -4011,7 +4014,7 @@ astro_angle_result_t Astronomy_LongitudeFromSun(astro_body_t body, astro_time_t 
  */
 astro_angle_result_t Astronomy_MoonPhase(astro_time_t time)
 {
-    return Astronomy_LongitudeFromSun(BODY_MOON, time);
+    return Astronomy_PairLongitude(BODY_MOON, BODY_SUN, time);
 }
 
 static astro_func_result_t moon_offset(void *context, astro_time_t time)
