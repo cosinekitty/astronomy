@@ -3787,7 +3787,7 @@ export function SearchSunLongitude(targetLon: number, dateStart: FlexibleDateTim
 }
 
 /**
- * @brief Returns one body's ecliptic longitude with respect another, as seen from the Earth.
+ * @brief Returns one body's ecliptic longitude with respect to another, as seen from the Earth.
  *
  * This function determines where one body appears around the ecliptic plane
  * (the plane of the Earth's orbit around the Sun) as seen from the Earth,

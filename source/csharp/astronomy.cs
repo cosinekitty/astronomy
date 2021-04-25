@@ -5304,7 +5304,7 @@ namespace CosineKitty
 
         ///
         /// <summary>
-        /// Returns one body's ecliptic longitude with respect another, as seen from the Earth.
+        /// Returns one body's ecliptic longitude with respect to another, as seen from the Earth.
         /// </summary>
         /// <remarks>
         /// This function determines where one body appears around the ecliptic plane

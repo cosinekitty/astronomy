@@ -4674,35 +4674,32 @@ def AngleFromSun(body, time):
     bv = GeoVector(body, time, True)
     return AngleBetween(sv, bv)
 
-def LongitudeFromSun(body, time):
-    """Returns a body's ecliptic longitude with respect to the Sun, as seen from the Earth.
+def PairLongitude(body1, body2, time):
+    """Returns one body's ecliptic longitude with respect to another, as seen from the Earth.
 
-    This function can be used to determine where a planet appears around the ecliptic plane
+    This function determines where one body appears around the ecliptic plane
     (the plane of the Earth's orbit around the Sun) as seen from the Earth,
-    relative to the Sun's apparent position.
+    relative to the another body's apparent position.
+    The function returns an angle in the half-open range [0, 360) degrees.
+    The value is the ecliptic longitude of `body1` relative to the ecliptic
+    longitude of `body2`.
 
-    The angle starts at 0 when the body and the Sun are at the same ecliptic longitude
+    The angle is 0 when the two bodies are at the same ecliptic longitude
     as seen from the Earth. The angle increases in the prograde direction
     (the direction that the planets orbit the Sun and the Moon orbits the Earth).
 
-    When the angle is 180 degrees, it means the Sun and the body appear on opposite sides
-    of the sky for an Earthly observer. When `body` is a planet whose orbit around the
-    Sun is farther than the Earth's, 180 degrees indicates opposition. For the Moon,
-    it indicates a full moon.
+    When the angle is 180 degrees, it means the two bodies appear on opposite sides
+    of the sky for an Earthly observer.
 
-    The angle keeps increasing up to 360 degrees as the body's apparent prograde
-    motion continues relative to the Sun. When the angle reaches 360 degrees, it starts
-    over at 0 degrees.
-
-    Values between 0 and 180 degrees indicate that the body is visible in the evening sky
-    after sunset.  Values between 180 degrees and 360 degrees indicate that the body
-    is visible in the morning sky before sunrise.
+    Neither `body1` nor `body2` is allowed to be `Body.Earth`.
+    If this happens, the function throws an exception.
 
     Parameters
     ----------
-    body : Body
-        The celestial body for which to find longitude from the Sun.
-
+    body1 : Body
+        The first body, whose longitude is to be found relative to the second body.
+    body2 : Body
+        The second body, relative to which the longitude of the first body is to be found.
     time : Time
         The date and time of the observation.
 
@@ -4711,13 +4708,13 @@ def LongitudeFromSun(body, time):
     float
         An angle in degrees in the range [0, 360).
     """
-    if body == Body.Earth:
+    if body1 == Body.Earth or body2 == Body.Earth:
         raise EarthNotAllowedError()
-    sv = GeoVector(Body.Sun, time, False)
-    se = Ecliptic(sv)
-    bv = GeoVector(body, time, False)
-    be = Ecliptic(bv)
-    return _NormalizeLongitude(be.elon - se.elon)
+    vector1 = GeoVector(body1, time, False)
+    eclip1 = Ecliptic(vector1)
+    vector2 = GeoVector(body2, time, False)
+    eclip2 = Ecliptic(vector2)
+    return _NormalizeLongitude(eclip1.elon - eclip2.elon)
 
 class ElongationEvent:
     """Contains information about the visibility of a celestial body at a given date and time.
@@ -4786,7 +4783,7 @@ def Elongation(body, time):
     -------
     ElongationEvent
     """
-    angle = LongitudeFromSun(body, time)
+    angle = PairLongitude(body, Body.Sun, time)
     if angle > 180.0:
         visibility = Visibility.Morning
         esep = 360.0 - angle
@@ -5065,7 +5062,7 @@ def MoonPhase(time):
     -------
     float
     """
-    return LongitudeFromSun(Body.Moon, time)
+    return PairLongitude(Body.Moon, Body.Sun, time)
 
 def _moon_offset(targetLon, time):
     angle = MoonPhase(time)

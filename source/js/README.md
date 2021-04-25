@@ -1183,7 +1183,7 @@ to calculate equinoxes and solstices for a given calendar year.
 ## PairLongitude(body1, body2, date) ⇒ <code>number</code>
 **Kind**: global function  
 **Returns**: <code>number</code> - An angle in the range [0, 360), expressed in degrees.  
-**Brief**: Returns one body's ecliptic longitude with respect another, as seen from the Earth.
+**Brief**: Returns one body's ecliptic longitude with respect to another, as seen from the Earth.
 
 This function determines where one body appears around the ecliptic plane
 (the plane of the Earth's orbit around the Sun) as seen from the Earth,

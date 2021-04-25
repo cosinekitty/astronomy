@@ -1167,7 +1167,7 @@ The returned vector has components expressed in astronomical units (AU). To conv
 <a name="Astronomy_PairLongitude"></a>
 ### Astronomy_PairLongitude(body1, body2, time) &#8658; [`astro_angle_result_t`](#astro_angle_result_t)
 
-**Returns one body's ecliptic longitude with respect another, as seen from the Earth.** 
+**Returns one body's ecliptic longitude with respect to another, as seen from the Earth.** 
 
 
 
