@@ -33,7 +33,7 @@
  */
 'use strict';
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.SearchMoonPhase = exports.MoonPhase = exports.SearchRelativeLongitude = exports.Illumination = exports.IlluminationInfo = exports.EclipticLongitude = exports.AngleFromSun = exports.LongitudeFromSun = exports.SearchSunLongitude = exports.Search = exports.GeoVector = exports.HelioDistance = exports.HelioVector = exports.JupiterMoons = exports.JupiterMoonsInfo = exports.GeoMoon = exports.Ecliptic = exports.ObserverVector = exports.Equator = exports.SunPosition = exports.Observer = exports.Horizon = exports.EclipticCoordinates = exports.HorizontalCoordinates = exports.MakeRotation = exports.RotationMatrix = exports.EquatorialCoordinates = exports.Spherical = exports.StateVector = exports.Vector = exports.CalcMoonCount = exports.MakeTime = exports.AstroTime = exports.SetDeltaTFunction = exports.DeltaT_JplHorizons = exports.DeltaT_EspenakMeeus = exports.Body = exports.AngleBetween = exports.CALLISTO_RADIUS_KM = exports.GANYMEDE_RADIUS_KM = exports.EUROPA_RADIUS_KM = exports.IO_RADIUS_KM = exports.JUPITER_MEAN_RADIUS_KM = exports.JUPITER_POLAR_RADIUS_KM = exports.JUPITER_EQUATORIAL_RADIUS_KM = exports.RAD2HOUR = exports.RAD2DEG = exports.HOUR2RAD = exports.DEG2RAD = exports.KM_PER_AU = void 0;
+exports.SearchMoonPhase = exports.MoonPhase = exports.SearchRelativeLongitude = exports.Illumination = exports.IlluminationInfo = exports.EclipticLongitude = exports.AngleFromSun = exports.PairLongitude = exports.SearchSunLongitude = exports.Search = exports.GeoVector = exports.HelioDistance = exports.HelioVector = exports.JupiterMoons = exports.JupiterMoonsInfo = exports.GeoMoon = exports.Ecliptic = exports.ObserverVector = exports.Equator = exports.SunPosition = exports.Observer = exports.Horizon = exports.EclipticCoordinates = exports.HorizontalCoordinates = exports.MakeRotation = exports.RotationMatrix = exports.EquatorialCoordinates = exports.Spherical = exports.StateVector = exports.Vector = exports.CalcMoonCount = exports.MakeTime = exports.AstroTime = exports.SetDeltaTFunction = exports.DeltaT_JplHorizons = exports.DeltaT_EspenakMeeus = exports.Body = exports.AngleBetween = exports.CALLISTO_RADIUS_KM = exports.GANYMEDE_RADIUS_KM = exports.EUROPA_RADIUS_KM = exports.IO_RADIUS_KM = exports.JUPITER_MEAN_RADIUS_KM = exports.JUPITER_POLAR_RADIUS_KM = exports.JUPITER_EQUATORIAL_RADIUS_KM = exports.RAD2HOUR = exports.RAD2DEG = exports.HOUR2RAD = exports.DEG2RAD = exports.KM_PER_AU = void 0;
 exports.NextGlobalSolarEclipse = exports.SearchGlobalSolarEclipse = exports.NextLunarEclipse = exports.GlobalSolarEclipseInfo = exports.SearchLunarEclipse = exports.LunarEclipseInfo = exports.Constellation = exports.ConstellationInfo = exports.Rotation_HOR_ECL = exports.Rotation_ECL_HOR = exports.Rotation_ECL_EQD = exports.Rotation_EQD_ECL = exports.Rotation_EQJ_HOR = exports.Rotation_HOR_EQJ = exports.Rotation_HOR_EQD = exports.Rotation_EQD_HOR = exports.Rotation_EQD_EQJ = exports.Rotation_EQJ_EQD = exports.Rotation_ECL_EQJ = exports.Rotation_EQJ_ECL = exports.RotateState = exports.RotateVector = exports.InverseRefraction = exports.Refraction = exports.VectorFromHorizon = exports.HorizonFromVector = exports.SphereFromVector = exports.EquatorFromVector = exports.VectorFromSphere = exports.Pivot = exports.IdentityMatrix = exports.CombineRotation = exports.InverseRotation = exports.NextPlanetApsis = exports.SearchPlanetApsis = exports.NextLunarApsis = exports.SearchLunarApsis = exports.Apsis = exports.SearchPeakMagnitude = exports.SearchMaxElongation = exports.Elongation = exports.ElongationEvent = exports.Seasons = exports.SeasonInfo = exports.SearchHourAngle = exports.HourAngleEvent = exports.SearchRiseSet = exports.NextMoonQuarter = exports.SearchMoonQuarter = exports.MoonQuarter = void 0;
 exports.NextTransit = exports.SearchTransit = exports.TransitInfo = exports.NextLocalSolarEclipse = exports.SearchLocalSolarEclipse = exports.LocalSolarEclipseInfo = exports.EclipseEvent = void 0;
 /**
@@ -3428,51 +3428,54 @@ function SearchSunLongitude(targetLon, dateStart, limitDays) {
 }
 exports.SearchSunLongitude = SearchSunLongitude;
 /**
- * @brief Calculates the longitude separation between the Sun and the given body.
+ * @brief Returns one body's ecliptic longitude with respect another, as seen from the Earth.
  *
- * Calculates the ecliptic longitude difference
- * between the given body and the Sun as seen from
- * the Earth at a given moment in time.
- * The returned value ranges [0, 360) degrees.
- * By definition, the Earth and the Sun are both in the plane of the ecliptic.
- * Ignores the height of the `body` above or below the ecliptic plane;
- * the resulting angle is measured around the ecliptic plane for the "shadow"
- * of the body onto that plane.
+ * This function determines where one body appears around the ecliptic plane
+ * (the plane of the Earth's orbit around the Sun) as seen from the Earth,
+ * relative to the another body's apparent position.
+ * The function returns an angle in the half-open range [0, 360) degrees.
+ * The value is the ecliptic longitude of `body1` relative to the ecliptic
+ * longitude of `body2`.
  *
- * Use {@link AngleFromSun} instead, if you wish to calculate the full angle
- * between the Sun and a body, instead of just their longitude difference.
+ * The angle is 0 when the two bodies are at the same ecliptic longitude
+ * as seen from the Earth. The angle increases in the prograde direction
+ * (the direction that the planets orbit the Sun and the Moon orbits the Earth).
  *
- * @param {Body} body
- *      The name of a supported celestial body other than the Earth.
+ * When the angle is 180 degrees, it means the two bodies appear on opposite sides
+ * of the sky for an Earthly observer.
+ *
+ * Neither `body1` nor `body2` is allowed to be `Body.Earth`.
+ * If this happens, the function throws an exception.
+ *
+ * @param {Body} body1
+ *      The first body, whose longitude is to be found relative to the second body.
+ *
+ * @param {Body} body2
+ *      The second body, relative to which the longitude of the first body is to be found.
  *
  * @param {FlexibleDateTime} date
- *      The time at which the relative longitude is to be found.
+ *      The date and time of the observation.
  *
  * @returns {number}
- *      An angle in degrees in the range [0, 360).
- *      Values less than 180 indicate that the body is to the east
- *      of the Sun as seen from the Earth; that is, the body sets after
- *      the Sun does and is visible in the evening sky.
- *      Values greater than 180 indicate that the body is to the west of
- *      the Sun and is visible in the morning sky.
+ *      An angle in the range [0, 360), expressed in degrees.
  */
-function LongitudeFromSun(body, date) {
-    if (body === Body.Earth)
+function PairLongitude(body1, body2, date) {
+    if (body1 === Body.Earth || body2 === Body.Earth)
         throw 'The Earth does not have a longitude as seen from itself.';
-    const t = MakeTime(date);
-    const gb = GeoVector(body, t, false);
-    const eb = Ecliptic(gb);
-    const gs = GeoVector(Body.Sun, t, false);
-    const es = Ecliptic(gs);
-    return NormalizeLongitude(eb.elon - es.elon);
+    const time = MakeTime(date);
+    const vector1 = GeoVector(body1, time, false);
+    const eclip1 = Ecliptic(vector1);
+    const vector2 = GeoVector(body2, time, false);
+    const eclip2 = Ecliptic(vector2);
+    return NormalizeLongitude(eclip1.elon - eclip2.elon);
 }
-exports.LongitudeFromSun = LongitudeFromSun;
+exports.PairLongitude = PairLongitude;
 /**
  * @brief Calculates the angular separation between the Sun and the given body.
  *
  * Returns the full angle seen from
  * the Earth, between the given body and the Sun.
- * Unlike {@link LongitudeFromSun}, this function does not
+ * Unlike {@link PairLongitude}, this function does not
  * project the body's "shadow" onto the ecliptic;
  * the angle is measured in 3D space around the plane that
  * contains the centers of the Earth, the Sun, and `body`.
@@ -3489,9 +3492,10 @@ exports.LongitudeFromSun = LongitudeFromSun;
 function AngleFromSun(body, date) {
     if (body == Body.Earth)
         throw 'The Earth does not have an angle as seen from itself.';
-    let sv = GeoVector(Body.Sun, date, true);
-    let bv = GeoVector(body, date, true);
-    let angle = AngleBetween(sv, bv);
+    const time = MakeTime(date);
+    const sv = GeoVector(Body.Sun, time, true);
+    const bv = GeoVector(body, time, true);
+    const angle = AngleBetween(sv, bv);
     return angle;
 }
 exports.AngleFromSun = AngleFromSun;
@@ -3839,7 +3843,7 @@ exports.SearchRelativeLongitude = SearchRelativeLongitude;
  * * 270 = third quarter
  */
 function MoonPhase(date) {
-    return LongitudeFromSun(Body.Moon, date);
+    return PairLongitude(Body.Moon, Body.Sun, date);
 }
 exports.MoonPhase = MoonPhase;
 /**
@@ -4331,7 +4335,7 @@ exports.ElongationEvent = ElongationEvent;
  */
 function Elongation(body, date) {
     let time = MakeTime(date);
-    let lon = LongitudeFromSun(body, time);
+    let lon = PairLongitude(body, Body.Sun, time);
     let vis;
     if (lon > 180) {
         vis = 'morning';

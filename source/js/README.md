@@ -30,6 +30,7 @@ and some [Node.js examples](../../demo/nodejs/).
 | [Equator](#Equator)         | Calculates right ascension and declination. |
 | [Ecliptic](#Ecliptic)       | Calculates ecliptic latitude, longitude, and Cartesian coordinates. |
 | [Horizon](#Horizon)         | Calculates horizontal coordinates (azimuth, altitude) for a given observer on the Earth. |
+| [PairLongitude](#PairLongitude) | Calculates the difference in apparent ecliptic longitude between two bodies, as seen from the Earth. |
 
 ### Rise, set, and culmination times
 
@@ -1177,34 +1178,35 @@ to calculate equinoxes and solstices for a given calendar year.
 
 * * *
 
-<a name="LongitudeFromSun"></a>
+<a name="PairLongitude"></a>
 
-## LongitudeFromSun(body, date) ⇒ <code>number</code>
+## PairLongitude(body1, body2, date) ⇒ <code>number</code>
 **Kind**: global function  
-**Returns**: <code>number</code> - An angle in degrees in the range [0, 360).
-     Values less than 180 indicate that the body is to the east
-     of the Sun as seen from the Earth; that is, the body sets after
-     the Sun does and is visible in the evening sky.
-     Values greater than 180 indicate that the body is to the west of
-     the Sun and is visible in the morning sky.  
-**Brief**: Calculates the longitude separation between the Sun and the given body.
+**Returns**: <code>number</code> - An angle in the range [0, 360), expressed in degrees.  
+**Brief**: Returns one body's ecliptic longitude with respect another, as seen from the Earth.
 
-Calculates the ecliptic longitude difference
-between the given body and the Sun as seen from
-the Earth at a given moment in time.
-The returned value ranges [0, 360) degrees.
-By definition, the Earth and the Sun are both in the plane of the ecliptic.
-Ignores the height of the `body` above or below the ecliptic plane;
-the resulting angle is measured around the ecliptic plane for the "shadow"
-of the body onto that plane.
+This function determines where one body appears around the ecliptic plane
+(the plane of the Earth's orbit around the Sun) as seen from the Earth,
+relative to the another body's apparent position.
+The function returns an angle in the half-open range [0, 360) degrees.
+The value is the ecliptic longitude of `body1` relative to the ecliptic
+longitude of `body2`.
 
-Use [AngleFromSun](#AngleFromSun) instead, if you wish to calculate the full angle
-between the Sun and a body, instead of just their longitude difference.  
+The angle is 0 when the two bodies are at the same ecliptic longitude
+as seen from the Earth. The angle increases in the prograde direction
+(the direction that the planets orbit the Sun and the Moon orbits the Earth).
+
+When the angle is 180 degrees, it means the two bodies appear on opposite sides
+of the sky for an Earthly observer.
+
+Neither `body1` nor `body2` is allowed to be `Body.Earth`.
+If this happens, the function throws an exception.  
 
 | Param | Type | Description |
 | --- | --- | --- |
-| body | [<code>Body</code>](#Body) | The name of a supported celestial body other than the Earth. |
-| date | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The time at which the relative longitude is to be found. |
+| body1 | [<code>Body</code>](#Body) | The first body, whose longitude is to be found relative to the second body. |
+| body2 | [<code>Body</code>](#Body) | The second body, relative to which the longitude of the first body is to be found. |
+| date | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time of the observation. |
 
 
 * * *
@@ -1218,7 +1220,7 @@ between the Sun and a body, instead of just their longitude difference.
 
 Returns the full angle seen from
 the Earth, between the given body and the Sun.
-Unlike [LongitudeFromSun](#LongitudeFromSun), this function does not
+Unlike [PairLongitude](#PairLongitude), this function does not
 project the body's "shadow" onto the ecliptic;
 the angle is measured in 3D space around the plane that
 contains the centers of the Earth, the Sun, and `body`.  

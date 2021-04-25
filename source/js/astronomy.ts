@@ -3787,46 +3787,50 @@ export function SearchSunLongitude(targetLon: number, dateStart: FlexibleDateTim
 }
 
 /**
- * @brief Calculates the longitude separation between the Sun and the given body.
+ * @brief Returns one body's ecliptic longitude with respect another, as seen from the Earth.
  *
- * Calculates the ecliptic longitude difference
- * between the given body and the Sun as seen from
- * the Earth at a given moment in time.
- * The returned value ranges [0, 360) degrees.
- * By definition, the Earth and the Sun are both in the plane of the ecliptic.
- * Ignores the height of the `body` above or below the ecliptic plane;
- * the resulting angle is measured around the ecliptic plane for the "shadow"
- * of the body onto that plane.
+ * This function determines where one body appears around the ecliptic plane
+ * (the plane of the Earth's orbit around the Sun) as seen from the Earth,
+ * relative to the another body's apparent position.
+ * The function returns an angle in the half-open range [0, 360) degrees.
+ * The value is the ecliptic longitude of `body1` relative to the ecliptic
+ * longitude of `body2`.
  *
- * Use {@link AngleFromSun} instead, if you wish to calculate the full angle
- * between the Sun and a body, instead of just their longitude difference.
+ * The angle is 0 when the two bodies are at the same ecliptic longitude
+ * as seen from the Earth. The angle increases in the prograde direction
+ * (the direction that the planets orbit the Sun and the Moon orbits the Earth).
  *
- * @param {Body} body
- *      The name of a supported celestial body other than the Earth.
+ * When the angle is 180 degrees, it means the two bodies appear on opposite sides
+ * of the sky for an Earthly observer.
+ *
+ * Neither `body1` nor `body2` is allowed to be `Body.Earth`.
+ * If this happens, the function throws an exception.
+ *
+ * @param {Body} body1
+ *      The first body, whose longitude is to be found relative to the second body.
+ *
+ * @param {Body} body2
+ *      The second body, relative to which the longitude of the first body is to be found.
  *
  * @param {FlexibleDateTime} date
- *      The time at which the relative longitude is to be found.
+ *      The date and time of the observation.
  *
  * @returns {number}
- *      An angle in degrees in the range [0, 360).
- *      Values less than 180 indicate that the body is to the east
- *      of the Sun as seen from the Earth; that is, the body sets after
- *      the Sun does and is visible in the evening sky.
- *      Values greater than 180 indicate that the body is to the west of
- *      the Sun and is visible in the morning sky.
+ *      An angle in the range [0, 360), expressed in degrees.
  */
-export function LongitudeFromSun(body: Body, date: FlexibleDateTime): number {
-    if (body === Body.Earth)
+export function PairLongitude(body1: Body, body2: Body, date: FlexibleDateTime): number {
+    if (body1 === Body.Earth || body2 === Body.Earth)
         throw 'The Earth does not have a longitude as seen from itself.';
 
-    const t = MakeTime(date);
-    const gb = GeoVector(body, t, false);
-    const eb = Ecliptic(gb);
+    const time = MakeTime(date);
 
-    const gs = GeoVector(Body.Sun, t, false);
-    const es = Ecliptic(gs);
+    const vector1 = GeoVector(body1, time, false);
+    const eclip1 = Ecliptic(vector1);
 
-    return NormalizeLongitude(eb.elon - es.elon);
+    const vector2 = GeoVector(body2, time, false);
+    const eclip2 = Ecliptic(vector2);
+
+    return NormalizeLongitude(eclip1.elon - eclip2.elon);
 }
 
 /**
@@ -3834,7 +3838,7 @@ export function LongitudeFromSun(body: Body, date: FlexibleDateTime): number {
  *
  * Returns the full angle seen from
  * the Earth, between the given body and the Sun.
- * Unlike {@link LongitudeFromSun}, this function does not
+ * Unlike {@link PairLongitude}, this function does not
  * project the body's "shadow" onto the ecliptic;
  * the angle is measured in 3D space around the plane that
  * contains the centers of the Earth, the Sun, and `body`.
@@ -3852,9 +3856,10 @@ export function AngleFromSun(body: Body, date: FlexibleDateTime): number {
     if (body == Body.Earth)
         throw 'The Earth does not have an angle as seen from itself.';
 
-    let sv = GeoVector(Body.Sun, date, true);
-    let bv = GeoVector(body, date, true);
-    let angle = AngleBetween(sv, bv);
+    const time = MakeTime(date);
+    const sv = GeoVector(Body.Sun, time, true);
+    const bv = GeoVector(body, time, true);
+    const angle = AngleBetween(sv, bv);
     return angle;
 }
 
@@ -4205,7 +4210,7 @@ export function SearchRelativeLongitude(body: Body, targetRelLon: number, startD
  * * 270 = third quarter
  */
 export function MoonPhase(date: FlexibleDateTime): number {
-    return LongitudeFromSun(Body.Moon, date);
+    return PairLongitude(Body.Moon, Body.Sun, date);
 }
 
 /**
@@ -4719,7 +4724,7 @@ export class ElongationEvent {
 export function Elongation(body: Body, date: FlexibleDateTime): ElongationEvent {
     let time = MakeTime(date);
 
-    let lon = LongitudeFromSun(body, time);
+    let lon = PairLongitude(body, Body.Sun, time);
     let vis: string;
     if (lon > 180) {
         vis = 'morning';

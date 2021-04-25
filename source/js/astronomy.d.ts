@@ -838,41 +838,44 @@ export declare function Search(f: (t: AstroTime) => number, t1: AstroTime, t2: A
  */
 export declare function SearchSunLongitude(targetLon: number, dateStart: FlexibleDateTime, limitDays: number): AstroTime | null;
 /**
- * @brief Calculates the longitude separation between the Sun and the given body.
+ * @brief Returns one body's ecliptic longitude with respect another, as seen from the Earth.
  *
- * Calculates the ecliptic longitude difference
- * between the given body and the Sun as seen from
- * the Earth at a given moment in time.
- * The returned value ranges [0, 360) degrees.
- * By definition, the Earth and the Sun are both in the plane of the ecliptic.
- * Ignores the height of the `body` above or below the ecliptic plane;
- * the resulting angle is measured around the ecliptic plane for the "shadow"
- * of the body onto that plane.
+ * This function determines where one body appears around the ecliptic plane
+ * (the plane of the Earth's orbit around the Sun) as seen from the Earth,
+ * relative to the another body's apparent position.
+ * The function returns an angle in the half-open range [0, 360) degrees.
+ * The value is the ecliptic longitude of `body1` relative to the ecliptic
+ * longitude of `body2`.
  *
- * Use {@link AngleFromSun} instead, if you wish to calculate the full angle
- * between the Sun and a body, instead of just their longitude difference.
+ * The angle is 0 when the two bodies are at the same ecliptic longitude
+ * as seen from the Earth. The angle increases in the prograde direction
+ * (the direction that the planets orbit the Sun and the Moon orbits the Earth).
  *
- * @param {Body} body
- *      The name of a supported celestial body other than the Earth.
+ * When the angle is 180 degrees, it means the two bodies appear on opposite sides
+ * of the sky for an Earthly observer.
+ *
+ * Neither `body1` nor `body2` is allowed to be `Body.Earth`.
+ * If this happens, the function throws an exception.
+ *
+ * @param {Body} body1
+ *      The first body, whose longitude is to be found relative to the second body.
+ *
+ * @param {Body} body2
+ *      The second body, relative to which the longitude of the first body is to be found.
  *
  * @param {FlexibleDateTime} date
- *      The time at which the relative longitude is to be found.
+ *      The date and time of the observation.
  *
  * @returns {number}
- *      An angle in degrees in the range [0, 360).
- *      Values less than 180 indicate that the body is to the east
- *      of the Sun as seen from the Earth; that is, the body sets after
- *      the Sun does and is visible in the evening sky.
- *      Values greater than 180 indicate that the body is to the west of
- *      the Sun and is visible in the morning sky.
+ *      An angle in the range [0, 360), expressed in degrees.
  */
-export declare function LongitudeFromSun(body: Body, date: FlexibleDateTime): number;
+export declare function PairLongitude(body1: Body, body2: Body, date: FlexibleDateTime): number;
 /**
  * @brief Calculates the angular separation between the Sun and the given body.
  *
  * Returns the full angle seen from
  * the Earth, between the given body and the Sun.
- * Unlike {@link LongitudeFromSun}, this function does not
+ * Unlike {@link PairLongitude}, this function does not
  * project the body's "shadow" onto the ecliptic;
  * the angle is measured in 3D space around the plane that
  * contains the centers of the Earth, the Sun, and `body`.
