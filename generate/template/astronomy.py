@@ -713,6 +713,24 @@ class Time:
             self.etilt = _e_tilt(self)
         return self.etilt
 
+    def __lt__(self, other):
+        return self.tt < other.tt
+
+    def __eq__(self, other):
+        return self.tt == other.tt
+
+    def __le__(self, other):
+        return self.tt <= other.tt
+
+    def __ne__(self, other):
+        return self.tt != other.tt
+
+    def __gt__(self, other):
+        return self.tt > other.tt
+
+    def __ge__(self, other):
+        return self.tt >= other.tt
+
 
 class Observer:
     """Represents the geographic location of an observer on the surface of the Earth.
