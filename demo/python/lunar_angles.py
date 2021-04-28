@@ -1,14 +1,36 @@
 #!/usr/bin/env python3
 #
-#   lunar_angles.py  -  Don Cross  -  2021-04-27
+#   lunar_angles.py  -  Don Cross  -  2021-04-28
 #
 #   Searches for the next few times the Moon reaches a relative
 #   ecliptic longitude with respect to another body
 #   (as seen from the Earth) that is a multiple of 30 degrees.
-#   This is an example of creating a custom search algorithm.
+#
+#   This is an example of how to implement your own custom search to
+#   find the time when a function ascends from a negative value through
+#   zero to a positive value. The search returns the time of the zero-crossing
+#   within the specified tolerance in seconds. You must already have narrowed
+#   in on a bounding time range [t1, t2] that contains exactly one
+#   zero-crossing, or the search will fail.
+#
+#   You provide a custom context (see example PairSearchContext below)
+#   and a function that returns a floating point number (see LongitudeFunc below).
+#   Your custom context is passed to every single call to your custom function,
+#   and holds whatever constant state your function needs to calculate its return value.
+#   (Some functions may not need a context; can pass None for the context in that case.)
+#   Your function must accept your custom context type and a Time
+#   value, and return a floating point value. Search() assumes the value will
+#   increase from negative value to a positive value over the supplied time range [t1, t2].
+#   If there is no zero-crossing, or the zero-crossing is not unique,
+#   or the zero-crossing descends through zero instead of ascending,
+#   Search() will return None, indicating a search failure.
+#
+#   See the following online documentation for more information about Search():
+#
+#   https://github.com/cosinekitty/astronomy/tree/master/source/python#searchfunc-context-t1-t2-dt_tolerance_seconds
 #
 import sys
-from astronomy import Time, Body, PairLongitude
+from astronomy import Time, Body, PairLongitude, Search
 
 #------------------------------------------------------------------------------
 
@@ -35,12 +57,38 @@ def AdjustAngle(angle):
         angle -= 360.0
     return angle
 
+#------------------------------------------------------------------------------
+
+class PairSearchContext:
+    def __init__(self, body1, body2, targetRelLon):
+        self.body1 = body1
+        self.body2 = body2
+        self.targetRelLon = targetRelLon
+
+
+def LongitudeFunc(context, time):
+    lon = PairLongitude(context.body1, context.body2, time)
+    return AdjustAngle(lon - context.targetRelLon)
+
+
+def LongitudeSearch(body1, body2, angle, t1, t2):
+    context = PairSearchContext(body1, body2, angle)
+    tolerance_seconds = 0.1
+    t = Search(LongitudeFunc, context, t1, t2, tolerance_seconds)
+    if not t:
+        raise Exception('Search failure for body={}, t1={}, t2={}'.format(body, t1, t2))
+    return t
+
+#------------------------------------------------------------------------------
+
 def Straddle(lon1, lon2, angle):
     # A pair of longitudes "straddles" an angle if
     # the angle lies between the two longitudes modulo 360 degrees.
     a1 = AdjustAngle(lon1 - angle)
     a2 = AdjustAngle(lon2 - angle)
     return a1 <= 0.0 <= a2
+
+#------------------------------------------------------------------------------
 
 def AppendEvents(event_list, body, startTime, stopTime, dayIncrement):
     angle_list = [30.0*i for i in range(12)]
@@ -53,9 +101,8 @@ def AppendEvents(event_list, body, startTime, stopTime, dayIncrement):
         # Does it straddle a 30-degree boundary?
         for angle in angle_list:
             if Straddle(lon1, lon2, angle):
-                # !!! Search for when the pair reaches that exact longitude.
-                # !!! Hack for now: take the mean time.
-                t = t1.AddDays(dayIncrement / 2.0)
+                # Search for when the pair reaches that exact longitude.
+                t = LongitudeSearch(Body.Moon, body, angle, t1, t2)
                 event_list.append(Event(body, t, angle))
         t1 = t2
 

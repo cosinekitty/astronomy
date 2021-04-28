@@ -31,6 +31,12 @@ at a given date and time. This program illustrates how to correct
 for the delay caused by the time it takes for light to reach
 the Earth from the Jupiter system.
 
+### [Lunar Angles](lunar_angles.py)
+This is an example of how to implement your own custom search function
+using Astronomy Engine. This program searches for the next few times
+the Moon reaches a relative ecliptic longitude with respect to another body
+(as seen from the Earth) that is a multiple of 30 degrees.
+
 ### [Lunar Eclipse](lunar_eclipse.py)
 Calculates details about the first 10 partial/total lunar eclipses
 after the given date and time.

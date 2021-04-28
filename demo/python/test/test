@@ -5,7 +5,7 @@ Fail()
     exit 1
 }
 
-rm -f test/{jupiter_moons,camera,moonphase,positions,riseset,seasons,culminate,horizon,lunar_eclipse}.txt
+rm -f test/{jupiter_moons,camera,moonphase,positions,riseset,seasons,culminate,horizon,lunar_eclipse,lunar_angles}.txt
 
 echo "Testing example: jupiter_moons.py"
 ./jupiter_moons.py 2021-04-16T00:26:18Z > test/jupiter_moons.txt || Fail "Error testing jupiter_moons.py."
@@ -42,6 +42,10 @@ diff test/horizon.txt test/horizon_correct.txt || Fail "Error comparing horizon.
 echo "Testing example: lunar_eclipse.py"
 ./lunar_eclipse.py 1988-01-01 > test/lunar_eclipse.txt || Fail "Error running lunar_eclipse.py."
 diff test/lunar_eclipse.txt test/lunar_eclipse_correct.txt || Fail "Error comparing lunar_eclipse.py output."
+
+echo "Testing example: lunar_angles.py"
+./lunar_angles.py 2021-05-15 > test/lunar_angles.txt || Fail "Error running lunar_angles.py."
+diff test/lunar_angles.txt test/lunar_angles_correct.txt || Fail "Error comparing lunar_angles.py output."
 
 echo "PASS: Python examples"
 exit 0
