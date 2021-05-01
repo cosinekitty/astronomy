@@ -15,6 +15,10 @@ echo "Testing example: camera.py"
 ./camera.py 29 -81 2021-03-22T02:45:00Z > test/camera.txt || Fail "Error testing camera.py."
 diff test/camera.txt test/camera_correct.txt || Fail "Error comparing camera.py output."
 
+echo "Testing example: constellation.py"
+./constellation.py 2021-06-01T00:00:00Z > test/constellation.txt || Fail "Error testing constellation.py."
+diff test/constellation.txt test/constellation_correct.txt || Fail "Error comparing constellation.py output."
+
 echo "Testing example: moonphase.py"
 ./moonphase.py 2019-06-15T09:15:32.987Z > test/moonphase.txt || Fail "Error running moonphase.py."
 diff test/moonphase.txt test/moonphase_correct.txt || Fail "Error comparing moonphase.py output."

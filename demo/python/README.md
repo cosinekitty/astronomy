@@ -12,6 +12,12 @@ photo image. It assumes the camera faces directly
 toward the Moon's azimuth and tilts upward to its
 altitude angle above the horizon.
 
+### [Constellation](constellation.py)
+This demo shows how to find what constellation a body
+is in at a given time. It also shows how to do a binary
+search to find the moment in time when a body moves
+across the border between constellations.
+
 ### [Culmination](culminate.py)
 Finds when the Sun, Moon, and planets reach their highest position in the sky on a given date,
 as seen by an observer at a specified location on the Earth.
