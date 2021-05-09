@@ -605,8 +605,8 @@ function iau2000b(time: AstroTime) {
     dp = 0;
     de = 0;
     for (i=76; i >= 0; --i) {
-        nals = iaudata[i].nals;
-        cls = iaudata[i].cls;
+        nals = iaudata[i][0];
+        cls = iaudata[i][1];
         arg = (nals[0]*el + nals[1]*elp + nals[2]*f + nals[3]*d + nals[4]*om) % PI2;
         sarg = Math.sin(arg);
         carg = Math.cos(arg);
