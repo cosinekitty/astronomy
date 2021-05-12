@@ -5,7 +5,7 @@
     interesting events for a calendar.
 */
 
-import { AstroTime, Observer, Body, SearchRiseSet, Search } from "./astronomy";
+import { AstroTime, Observer, Body, SearchRiseSet, Seasons, SeasonInfo } from "./astronomy";
 
 class AstroEvent {
     constructor(
@@ -85,6 +85,40 @@ class RiseSetEnumerator implements AstroEventEnumerator {
 }
 
 
+class SeasonEnumerator implements AstroEventEnumerator {
+    private slist: AstroEvent[];
+    private year: number;
+    private index: number;
+
+    FindFirst(startTime: AstroTime): AstroEvent {
+        this.year = startTime.date.getUTCFullYear();
+        this.LoadYear(this.year);
+        while (this.index < this.slist.length && this.slist[this.index].time.tt < startTime.tt) {
+            ++this.index;
+        }
+        return this.FindNext();
+    }
+
+    FindNext(): AstroEvent {
+        if (this.index === this.slist.length) {
+            this.LoadYear(++this.year);
+        }
+        return this.slist[this.index++];
+    }
+
+    private LoadYear(year: number): void {
+        const seasons = Seasons(year);
+        this.slist = [
+            new AstroEvent(seasons.mar_equinox,  'March equinox', this),
+            new AstroEvent(seasons.jun_solstice, 'June solstice', this),
+            new AstroEvent(seasons.sep_equinox,  'September equinox', this),
+            new AstroEvent(seasons.dec_solstice, 'December solstice', this),
+        ];
+        this.index = 0;
+    }
+}
+
+
 function RunTest(): void {
     const startTime = new AstroTime(new Date('2022-01-01T00:00:00Z'));
     const observer = new Observer(28.6, -81.2, 10.0);
@@ -92,15 +126,16 @@ function RunTest(): void {
         new RiseSetEnumerator(observer, Body.Sun, +1, 'sunrise'),
         new RiseSetEnumerator(observer, Body.Sun, -1, 'sunset'),
         new RiseSetEnumerator(observer, Body.Moon, +1, 'moonrise'),
-        new RiseSetEnumerator(observer, Body.Moon, -1, 'moonset')
+        new RiseSetEnumerator(observer, Body.Moon, -1, 'moonset'),
+        new SeasonEnumerator()
     ]);
 
+    const stopYear = startTime.date.getUTCFullYear() + 11;
     let evt:AstroEvent = collator.FindFirst(startTime);
-    while (evt !== null && evt.time.date.getUTCFullYear() === startTime.date.getUTCFullYear()) {
+    while (evt !== null && evt.time.date.getUTCFullYear() < stopYear) {
         console.log(`${evt.time} ${evt.title}`);
         evt = collator.FindNext();
     }
 }
-
 
 RunTest();
