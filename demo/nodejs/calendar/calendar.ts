@@ -36,10 +36,6 @@ class EventCollator implements AstroEventEnumerator {
     constructor(private enumeratorList: AstroEventEnumerator[]) {
     }
 
-    Append(enumerator: AstroEventEnumerator) {
-        this.enumeratorList.push(enumerator);
-    }
-
     FindFirst(startTime: AstroTime): AstroEvent {
         this.eventQueue = [];
         for (let enumerator of this.enumeratorList)
