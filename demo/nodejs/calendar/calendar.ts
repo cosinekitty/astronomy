@@ -10,6 +10,7 @@ import {
     Body,
     Observer,
     SearchMoonQuarter, NextMoonQuarter, MoonQuarter,
+    SearchRelativeLongitude,
     SearchRiseSet,
     Seasons,
 } from "./astronomy";
@@ -145,17 +146,53 @@ class MoonQuarterEnumerator implements AstroEventEnumerator {
 }
 
 
+class ConjunctionOppositionEnumerator implements AstroEventEnumerator {
+    private title: string;
+    private nextTime: AstroTime;
+
+    constructor(private body: Body, private targetRelLon: number, kind: string) {
+        this.title = `${body} ${kind}`;     // e.g. "Jupiter opposition" or "Venus inferior conjunction"
+    }
+
+    FindFirst(startTime: AstroTime): AstroEvent {
+        this.nextTime = startTime;
+        return this.FindNext();
+    }
+
+    FindNext(): AstroEvent {
+        const time = SearchRelativeLongitude(this.body, this.targetRelLon, this.nextTime);
+        this.nextTime = time.AddDays(1);
+        return new AstroEvent(time, this.title, this);
+    }
+}
+
+
 function RunTest(): void {
     const startTime = new AstroTime(new Date('2021-05-12T00:00:00Z'));
     const observer = new Observer(28.6, -81.2, 10.0);
-    const collator = new EventCollator([
+
+    var enumeratorList: AstroEventEnumerator[] = [
         new RiseSetEnumerator(observer, Body.Sun, +1, 'sunrise'),
         new RiseSetEnumerator(observer, Body.Sun, -1, 'sunset'),
         new RiseSetEnumerator(observer, Body.Moon, +1, 'moonrise'),
         new RiseSetEnumerator(observer, Body.Moon, -1, 'moonset'),
         new SeasonEnumerator(),
         new MoonQuarterEnumerator()
-    ]);
+    ];
+
+    // Inferior and superior conjunctions of inner planets.
+    for (let body of [Body.Mercury, Body.Venus]) {
+        enumeratorList.push(new ConjunctionOppositionEnumerator(body, 0, 'inferior conjunction'));
+        enumeratorList.push(new ConjunctionOppositionEnumerator(body, 180, 'superior conjunction'));
+    }
+
+    // Conjunctions and oppositions of outer planets.
+    for (let body of [Body.Mars, Body.Jupiter, Body.Saturn, Body.Uranus, Body.Neptune, Body.Pluto]) {
+        enumeratorList.push(new ConjunctionOppositionEnumerator(body, 0, 'opposition'));
+        enumeratorList.push(new ConjunctionOppositionEnumerator(body, 180, 'conjunction'));
+    }
+
+    const collator = new EventCollator(enumeratorList);
 
     const stopYear = startTime.date.getUTCFullYear() + 11;
     let evt:AstroEvent = collator.FindFirst(startTime);
