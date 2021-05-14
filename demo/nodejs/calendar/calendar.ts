@@ -9,8 +9,10 @@ import {
     AstroTime,
     Body,
     Observer,
+    PairLongitude,
     SearchMaxElongation,
     SearchMoonQuarter, NextMoonQuarter, MoonQuarter,
+    SearchPeakMagnitude,
     SearchRelativeLongitude,
     SearchRiseSet,
     Seasons,
@@ -190,6 +192,27 @@ class MaxElongationEnumerator implements AstroEventEnumerator {
 }
 
 
+class VenusPeakMagnitudeEnumerator implements AstroEventEnumerator {
+    private nextTime: AstroTime;
+
+    FindFirst(startTime: AstroTime): AstroEvent {
+        this.nextTime = startTime;
+        return this.FindNext();
+    }
+
+    FindNext(): AstroEvent {
+        const illum = SearchPeakMagnitude(Body.Venus, this.nextTime);
+        const rlon = PairLongitude(Body.Venus, Body.Sun, illum.time);
+        this.nextTime = illum.time.AddDays(1);
+        return new AstroEvent(
+            illum.time,
+            `Venus peak magnitude ${illum.mag.toFixed(2)} in ${(rlon < 180) ? 'evening' : 'morning'} sky`,
+            this
+        );
+    }
+}
+
+
 function RunTest(): void {
     const startTime = new AstroTime(new Date('2021-05-12T00:00:00Z'));
     const observer = new Observer(28.6, -81.2, 10.0);
@@ -200,7 +223,8 @@ function RunTest(): void {
         new RiseSetEnumerator(observer, Body.Moon, +1, 'moonrise'),
         new RiseSetEnumerator(observer, Body.Moon, -1, 'moonset'),
         new SeasonEnumerator(),
-        new MoonQuarterEnumerator()
+        new MoonQuarterEnumerator(),
+        new VenusPeakMagnitudeEnumerator()
     ];
 
     // Inferior and superior conjunctions of inner planets.
