@@ -241,6 +241,13 @@ function RunTest(): void {
         enumeratorList.push(new ConjunctionOppositionEnumerator(body, 180, 'conjunction'));
     }
 
+    // TODO: Lunar and solar eclipses
+    // TODO: Transits of Mercury and Venus
+    // TODO: lunar apogee and perigee
+    // TODO: planet aphelion and perihelion
+    // TODO: when planets enter a new constellation
+    // TODO: Moon and Sun culmination
+
     const collator = new EventCollator(enumeratorList);
 
     const stopYear = startTime.date.getUTCFullYear() + 11;
