@@ -20,6 +20,7 @@
 2021-05-16T14:09:05.204Z moonrise
 2021-05-17T00:09:22.832Z sunset
 2021-05-17T04:36:03.416Z moonset
+2021-05-17T05:51:03.516Z Mercury max evening elongation: 22.02 degrees from Sun
 2021-05-17T10:32:47.080Z sunrise
 2021-05-17T15:05:05.832Z moonrise
 2021-05-18T00:09:58.715Z sunset
@@ -219,6 +220,7 @@
 2021-07-04T00:26:34.326Z sunset
 2021-07-04T06:38:49.642Z moonrise
 2021-07-04T10:31:58.230Z sunrise
+2021-07-04T19:51:27.493Z Mercury max morning elongation: 21.55 degrees from Sun
 2021-07-04T19:59:22.741Z moonset
 2021-07-05T00:26:30.335Z sunset
 2021-07-05T07:10:49.203Z moonrise
@@ -514,6 +516,7 @@
 2021-09-13T18:05:58.988Z moonrise
 2021-09-13T20:39:56.405Z first quarter
 2021-09-13T23:31:42.798Z sunset
+2021-09-14T04:26:12.490Z Mercury max evening elongation: 26.76 degrees from Sun
 2021-09-14T04:32:54.163Z moonset
 2021-09-14T09:12:11.225Z Neptune opposition
 2021-09-14T11:09:27.551Z sunrise
@@ -685,6 +688,7 @@
 2021-10-24T15:02:43.266Z moonset
 2021-10-24T22:46:00.030Z sunset
 2021-10-25T01:30:09.587Z moonrise
+2021-10-25T05:27:45.569Z Mercury max morning elongation: 18.40 degrees from Sun
 2021-10-25T11:32:09.076Z sunrise
 2021-10-25T15:57:05.621Z moonset
 2021-10-25T22:45:06.358Z sunset
@@ -704,6 +708,7 @@
 2021-10-29T04:58:49.714Z moonrise
 2021-10-29T11:34:53.346Z sunrise
 2021-10-29T19:04:32.320Z moonset
+2021-10-29T20:50:29.941Z Venus max evening elongation: 47.04 degrees from Sun
 2021-10-29T22:41:42.410Z sunset
 2021-10-30T05:58:06.867Z moonrise
 2021-10-30T11:35:35.512Z sunrise
@@ -989,6 +994,7 @@
 2022-01-06T15:39:24.723Z moonrise
 2022-01-06T22:43:04.083Z sunset
 2022-01-07T03:09:00.964Z moonset
+2022-01-07T11:00:45.939Z Mercury max evening elongation: 19.22 degrees from Sun
 2022-01-07T12:18:37.462Z sunrise
 2022-01-07T16:13:30.393Z moonrise
 2022-01-07T22:43:49.857Z sunset
@@ -1158,6 +1164,7 @@
 2022-02-16T12:02:05.504Z sunrise
 2022-02-16T12:16:38.942Z moonset
 2022-02-16T16:57:14.831Z full moon
+2022-02-16T21:00:07.224Z Mercury max morning elongation: 26.28 degrees from Sun
 2022-02-16T23:15:54.258Z sunset
 2022-02-16T23:23:46.167Z moonrise
 2022-02-17T12:01:13.660Z sunrise
@@ -1288,6 +1295,7 @@
 2022-03-19T12:27:47.732Z moonset
 2022-03-19T23:35:37.812Z sunset
 2022-03-20T01:11:57.509Z moonrise
+2022-03-20T09:32:04.911Z Venus max morning elongation: 46.59 degrees from Sun
 2022-03-20T11:28:37.428Z sunrise
 2022-03-20T13:01:12.810Z moonset
 2022-03-20T15:33:24.790Z March equinox
@@ -1452,6 +1460,7 @@
 2022-04-28T10:46:36.486Z sunrise
 2022-04-28T22:08:51.732Z moonset
 2022-04-28T23:58:20.423Z sunset
+2022-04-29T08:06:53.922Z Mercury max evening elongation: 20.61 degrees from Sun
 2022-04-29T10:09:25.095Z moonrise
 2022-04-29T10:45:43.809Z sunrise
 2022-04-29T23:05:26.645Z moonset
@@ -1652,6 +1661,7 @@
 2022-06-16T02:10:50.061Z moonrise
 2022-06-16T10:26:49.913Z sunrise
 2022-06-16T12:31:54.331Z moonset
+2022-06-16T14:50:05.946Z Mercury max morning elongation: 23.20 degrees from Sun
 2022-06-17T00:24:23.201Z sunset
 2022-06-17T03:08:36.282Z moonrise
 2022-06-17T10:26:57.838Z sunrise
@@ -1949,6 +1959,7 @@
 2022-08-27T08:17:47.750Z new moon
 2022-08-27T11:00:29.134Z sunrise
 2022-08-27T11:08:09.722Z moonrise
+2022-08-27T16:07:35.172Z Mercury max evening elongation: 27.32 degrees from Sun
 2022-08-27T23:51:38.817Z sunset
 2022-08-28T00:26:09.244Z moonset
 2022-08-28T11:00:59.640Z sunrise
@@ -2123,6 +2134,7 @@
 2022-10-07T23:03:39.716Z sunset
 2022-10-08T09:58:49.703Z moonset
 2022-10-08T11:21:37.439Z sunrise
+2022-10-08T21:11:21.577Z Mercury max morning elongation: 17.98 degrees from Sun
 2022-10-08T22:38:04.032Z moonrise
 2022-10-08T23:02:32.612Z sunset
 2022-10-09T11:00:23.354Z moonset
@@ -2428,6 +2440,7 @@
 2022-12-20T22:32:07.919Z sunset
 2022-12-21T10:14:34.110Z moonrise
 2022-12-21T12:13:15.739Z sunrise
+2022-12-21T15:26:08.872Z Mercury max evening elongation: 20.14 degrees from Sun
 2022-12-21T20:50:58.914Z moonset
 2022-12-21T21:47:58.017Z December solstice
 2022-12-21T22:32:37.243Z sunset
@@ -2592,6 +2605,7 @@
 2023-01-29T12:14:24.808Z sunrise
 2023-01-29T17:23:55.163Z moonrise
 2023-01-29T23:01:38.364Z sunset
+2023-01-30T05:58:07.293Z Mercury max morning elongation: 24.96 degrees from Sun
 2023-01-30T07:24:33.804Z moonset
 2023-01-30T12:13:55.606Z sunrise
 2023-01-30T18:01:58.826Z moonrise
@@ -2888,6 +2902,7 @@
 2023-04-11T11:03:48.198Z sunrise
 2023-04-11T14:52:12.168Z moonset
 2023-04-11T22:09:29.682Z Jupiter conjunction
+2023-04-11T22:12:52.059Z Mercury max evening elongation: 19.49 degrees from Sun
 2023-04-11T23:48:18.550Z sunset
 2023-04-12T05:44:05.031Z moonrise
 2023-04-12T11:02:43.124Z sunrise
@@ -3083,6 +3098,7 @@
 2023-05-28T10:28:25.583Z sunrise
 2023-05-28T18:11:54.652Z moonrise
 2023-05-29T00:16:01.284Z sunset
+2023-05-29T05:36:39.534Z Mercury max morning elongation: 24.89 degrees from Sun
 2023-05-29T06:58:19.284Z moonset
 2023-05-29T10:28:08.381Z sunrise
 2023-05-29T19:05:51.776Z moonrise
@@ -3110,6 +3126,7 @@
 2023-06-04T03:42:15.013Z full moon
 2023-06-04T10:26:53.491Z sunrise
 2023-06-04T10:34:26.138Z moonset
+2023-06-04T11:00:38.401Z Venus max evening elongation: 45.40 degrees from Sun
 2023-06-05T00:19:34.916Z sunset
 2023-06-05T01:21:58.046Z moonrise
 2023-06-05T10:26:45.739Z sunrise
@@ -3383,6 +3400,7 @@
 2023-08-09T10:50:46.057Z sunrise
 2023-08-09T19:09:45.813Z moonset
 2023-08-10T00:09:30.418Z sunset
+2023-08-10T01:47:34.986Z Mercury max evening elongation: 27.40 degrees from Sun
 2023-08-10T05:38:23.683Z moonrise
 2023-08-10T10:51:19.278Z sunrise
 2023-08-10T20:09:54.028Z moonset
@@ -3563,6 +3581,7 @@
 2023-09-21T23:22:41.313Z sunset
 2023-09-22T03:32:48.204Z moonset
 2023-09-22T11:13:08.893Z sunrise
+2023-09-22T13:17:24.230Z Mercury max morning elongation: 17.86 degrees from Sun
 2023-09-22T18:22:53.544Z moonrise
 2023-09-22T19:32:21.462Z first quarter
 2023-09-22T23:21:29.277Z sunset
@@ -3694,6 +3713,7 @@
 2023-10-23T11:30:31.523Z sunrise
 2023-10-23T19:44:51.468Z moonrise
 2023-10-23T22:47:21.882Z sunset
+2023-10-23T23:14:59.787Z Venus max morning elongation: 46.41 degrees from Sun
 2023-10-24T06:49:15.317Z moonset
 2023-10-24T11:31:10.878Z sunrise
 2023-10-24T20:22:50.344Z moonrise
@@ -3865,6 +3885,7 @@
 2023-12-03T22:27:31.636Z sunset
 2023-12-04T04:15:16.498Z moonrise
 2023-12-04T12:02:10.644Z sunrise
+2023-12-04T14:31:57.215Z Mercury max evening elongation: 21.27 degrees from Sun
 2023-12-04T17:38:54.501Z moonset
 2023-12-04T22:27:34.963Z sunset
 2023-12-05T05:08:47.057Z moonrise
@@ -4027,6 +4048,7 @@
 2024-01-11T23:02:36.959Z moonset
 2024-01-12T12:18:47.546Z sunrise
 2024-01-12T13:34:33.952Z moonrise
+2024-01-12T14:40:14.154Z Mercury max morning elongation: 23.50 degrees from Sun
 2024-01-12T22:47:23.133Z sunset
 2024-01-13T00:15:00.322Z moonset
 2024-01-13T12:18:45.346Z sunrise
@@ -4324,6 +4346,7 @@
 2024-03-23T23:38:10.212Z sunset
 2024-03-24T11:08:12.891Z moonset
 2024-03-24T11:23:23.104Z sunrise
+2024-03-24T22:32:33.926Z Mercury max evening elongation: 18.70 degrees from Sun
 2024-03-24T23:19:01.068Z moonrise
 2024-03-24T23:38:43.596Z sunset
 2024-03-25T07:01:02.717Z full moon
@@ -4513,6 +4536,7 @@
 2024-05-09T01:03:01.196Z moonset
 2024-05-09T10:37:29.250Z sunrise
 2024-05-09T11:32:36.993Z moonrise
+2024-05-09T21:31:39.048Z Mercury max morning elongation: 26.36 degrees from Sun
 2024-05-10T00:05:18.341Z sunset
 2024-05-10T02:11:29.613Z moonset
 2024-05-10T10:36:48.668Z sunrise
@@ -4817,6 +4841,7 @@
 2024-07-21T10:40:33.410Z sunrise
 2024-07-22T00:21:42.394Z sunset
 2024-07-22T01:03:19.171Z moonrise
+2024-07-22T06:43:00.752Z Mercury max evening elongation: 26.94 degrees from Sun
 2024-07-22T10:41:06.303Z sunrise
 2024-07-22T11:47:05.941Z moonset
 2024-07-23T00:21:12.978Z sunset
@@ -5002,6 +5027,7 @@
 2024-09-04T12:19:47.851Z moonrise
 2024-09-04T23:42:01.140Z sunset
 2024-09-05T00:38:23.495Z moonset
+2024-09-05T02:33:28.778Z Mercury max morning elongation: 18.05 degrees from Sun
 2024-09-05T11:05:12.633Z sunrise
 2024-09-05T13:11:38.973Z moonrise
 2024-09-05T23:40:51.387Z sunset
@@ -5299,6 +5325,7 @@
 2024-11-15T21:29:02.348Z full moon
 2024-11-15T22:15:34.936Z moonrise
 2024-11-15T22:30:51.878Z sunset
+2024-11-16T08:11:39.270Z Mercury max evening elongation: 22.55 degrees from Sun
 2024-11-16T11:48:38.946Z sunrise
 2024-11-16T12:40:41.656Z moonset
 2024-11-16T22:30:27.156Z sunset
@@ -5461,6 +5488,7 @@
 2024-12-24T12:14:55.078Z sunrise
 2024-12-24T18:08:35.167Z moonset
 2024-12-24T22:34:30.158Z sunset
+2024-12-25T02:23:52.017Z Mercury max morning elongation: 22.05 degrees from Sun
 2024-12-25T07:25:09.038Z moonrise
 2024-12-25T12:15:20.387Z sunrise
 2024-12-25T18:37:30.777Z moonset
@@ -5526,6 +5554,7 @@
 2025-01-09T12:18:46.817Z sunrise
 2025-01-09T18:44:17.373Z moonrise
 2025-01-09T22:45:36.160Z sunset
+2025-01-10T04:57:09.667Z Venus max evening elongation: 47.17 degrees from Sun
 2025-01-10T09:11:25.658Z moonset
 2025-01-10T12:18:48.087Z sunrise
 2025-01-10T19:33:27.410Z moonrise
@@ -5761,6 +5790,7 @@
 2025-03-07T11:43:01.263Z sunrise
 2025-03-07T17:15:18.237Z moonrise
 2025-03-07T23:28:44.691Z sunset
+2025-03-08T06:05:35.592Z Mercury max evening elongation: 18.25 degrees from Sun
 2025-03-08T08:06:56.800Z moonset
 2025-03-08T11:41:55.331Z sunrise
 2025-03-08T18:17:03.093Z moonrise
@@ -5948,6 +5978,7 @@
 2025-04-21T06:51:03.843Z moonrise
 2025-04-21T10:52:52.085Z sunrise
 2025-04-21T17:28:14.995Z moonset
+2025-04-21T18:41:14.984Z Mercury max morning elongation: 27.39 degrees from Sun
 2025-04-21T23:54:19.386Z sunset
 2025-04-22T07:30:14.041Z moonrise
 2025-04-22T10:51:53.659Z sunrise
@@ -6113,6 +6144,7 @@
 2025-05-31T10:27:29.677Z sunrise
 2025-05-31T14:55:36.797Z moonrise
 2025-06-01T00:17:50.731Z sunset
+2025-06-01T03:28:38.121Z Venus max morning elongation: 45.88 degrees from Sun
 2025-06-01T04:51:57.646Z moonset
 2025-06-01T10:27:17.339Z sunrise
 2025-06-01T15:57:25.327Z moonrise
@@ -6250,6 +6282,7 @@
 2025-07-03T10:31:35.945Z sunrise
 2025-07-03T18:21:09.542Z moonrise
 2025-07-04T00:26:35.989Z sunset
+2025-07-04T04:31:44.837Z Mercury max evening elongation: 25.93 degrees from Sun
 2025-07-04T05:43:54.311Z moonset
 2025-07-04T10:32:00.756Z sunrise
 2025-07-04T19:15:08.259Z moonrise
@@ -6440,6 +6473,7 @@
 2025-08-18T20:47:40.668Z moonset
 2025-08-19T00:00:45.174Z sunset
 2025-08-19T06:57:10.818Z moonrise
+2025-08-19T09:46:05.071Z Mercury max morning elongation: 18.58 degrees from Sun
 2025-08-19T10:56:28.878Z sunrise
 2025-08-19T21:44:30.659Z moonset
 2025-08-19T23:59:45.387Z sunset
@@ -6735,6 +6769,7 @@
 2025-10-29T11:34:56.885Z sunrise
 2025-10-29T16:21:26.837Z first quarter
 2025-10-29T18:25:18.379Z moonrise
+2025-10-29T21:56:17.324Z Mercury max evening elongation: 23.88 degrees from Sun
 2025-10-29T22:41:41.875Z sunset
 2025-10-30T05:11:01.831Z moonset
 2025-10-30T11:35:39.003Z sunrise
@@ -6895,6 +6930,7 @@
 2025-12-07T00:19:46.925Z moonrise
 2025-12-07T12:04:45.517Z sunrise
 2025-12-07T14:58:57.773Z moonset
+2025-12-07T21:03:04.122Z Mercury max morning elongation: 20.73 degrees from Sun
 2025-12-07T22:27:59.980Z sunset
 2025-12-08T01:30:33.277Z moonrise
 2025-12-08T12:05:27.994Z sunrise
@@ -7202,6 +7238,7 @@
 2026-02-19T00:39:43.244Z moonset
 2026-02-19T11:59:25.052Z sunrise
 2026-02-19T13:11:25.692Z moonrise
+2026-02-19T17:41:36.578Z Mercury max evening elongation: 18.12 degrees from Sun
 2026-02-19T23:18:04.657Z sunset
 2026-02-20T01:40:39.584Z moonset
 2026-02-20T11:58:30.391Z sunrise
@@ -7381,6 +7418,7 @@
 2026-04-03T00:31:24.452Z moonrise
 2026-04-03T11:12:24.446Z sunrise
 2026-04-03T11:48:00.085Z moonset
+2026-04-03T22:34:31.466Z Mercury max morning elongation: 27.82 degrees from Sun
 2026-04-03T23:43:59.156Z sunset
 2026-04-04T01:28:11.042Z moonrise
 2026-04-04T11:11:16.290Z sunrise
@@ -7680,6 +7718,7 @@
 2026-06-15T02:54:38.973Z new moon
 2026-06-15T10:26:41.833Z sunrise
 2026-06-15T10:39:02.744Z moonrise
+2026-06-15T20:02:43.026Z Mercury max evening elongation: 24.52 degrees from Sun
 2026-06-16T00:24:04.095Z sunset
 2026-06-16T01:29:28.768Z moonset
 2026-06-16T10:26:48.801Z sunrise
@@ -7877,6 +7916,7 @@
 2026-08-01T13:28:09.780Z moonset
 2026-08-02T00:15:29.123Z sunset
 2026-08-02T02:08:01.509Z moonrise
+2026-08-02T08:02:28.152Z Mercury max morning elongation: 19.47 degrees from Sun
 2026-08-02T10:47:00.361Z sunrise
 2026-08-02T14:25:12.815Z moonset
 2026-08-03T00:14:46.445Z sunset
@@ -7930,6 +7970,7 @@
 2026-08-14T12:48:24.307Z moonrise
 2026-08-15T00:04:49.819Z sunset
 2026-08-15T01:22:23.151Z moonset
+2026-08-15T06:23:03.225Z Venus max evening elongation: 45.89 degrees from Sun
 2026-08-15T10:54:13.270Z sunrise
 2026-08-15T13:49:14.923Z moonrise
 2026-08-16T00:03:53.658Z sunset
@@ -8170,6 +8211,7 @@
 2026-10-11T12:17:26.888Z moonrise
 2026-10-11T22:59:12.771Z sunset
 2026-10-11T23:24:23.009Z moonset
+2026-10-12T10:06:20.884Z Mercury max evening elongation: 25.16 degrees from Sun
 2026-10-12T11:23:55.656Z sunrise
 2026-10-12T13:16:34.650Z moonrise
 2026-10-12T22:58:08.178Z sunset
@@ -8334,6 +8376,7 @@
 2026-11-20T11:51:27.734Z sunrise
 2026-11-20T19:35:16.062Z moonrise
 2026-11-20T22:29:13.738Z sunset
+2026-11-20T23:35:39.724Z Mercury max morning elongation: 19.62 degrees from Sun
 2026-11-21T08:32:49.509Z moonset
 2026-11-21T11:52:15.449Z sunrise
 2026-11-21T20:08:36.039Z moonrise
@@ -8514,6 +8557,7 @@
 2027-01-02T22:39:58.510Z sunset
 2027-01-03T08:50:15.460Z moonrise
 2027-01-03T12:17:58.792Z sunrise
+2027-01-03T17:56:03.410Z Venus max morning elongation: 46.95 degrees from Sun
 2027-01-03T19:15:37.157Z moonset
 2027-01-03T22:40:41.403Z sunset
 2027-01-04T09:47:08.367Z moonrise
@@ -8639,6 +8683,7 @@
 2027-02-02T12:12:18.279Z sunrise
 2027-02-02T19:36:36.161Z moonset
 2027-02-02T23:04:56.691Z sunset
+2027-02-03T06:20:08.602Z Mercury max evening elongation: 18.32 degrees from Sun
 2027-02-03T10:16:20.315Z moonrise
 2027-02-03T12:11:43.480Z sunrise
 2027-02-03T20:31:26.396Z moonset
@@ -8813,6 +8858,7 @@
 2027-03-16T11:33:27.833Z sunrise
 2027-03-16T17:29:18.206Z moonrise
 2027-03-16T23:33:48.562Z sunset
+2027-03-17T06:56:57.340Z Mercury max morning elongation: 27.63 degrees from Sun
 2027-03-17T08:04:49.288Z moonset
 2027-03-17T11:32:19.469Z sunrise
 2027-03-17T18:38:19.252Z moonrise
@@ -9111,6 +9157,7 @@
 2027-05-27T16:31:05.374Z moonset
 2027-05-28T00:15:28.432Z sunset
 2027-05-28T05:39:30.443Z moonrise
+2027-05-28T10:01:57.904Z Mercury max evening elongation: 22.92 degrees from Sun
 2027-05-28T10:28:24.039Z sunrise
 2027-05-28T13:58:34.252Z third quarter
 2027-05-28T17:24:44.079Z moonset
@@ -9310,6 +9357,7 @@
 2027-07-15T00:24:43.512Z sunset
 2027-07-15T07:44:57.482Z moonset
 2027-07-15T10:36:59.043Z sunrise
+2027-07-15T19:29:41.626Z Mercury max morning elongation: 20.70 degrees from Sun
 2027-07-15T22:26:26.500Z moonrise
 2027-07-16T00:24:24.697Z sunset
 2027-07-16T08:37:04.274Z moonset
@@ -9605,6 +9653,7 @@
 2027-09-24T05:03:08.704Z moonrise
 2027-09-24T11:14:08.957Z sunrise
 2027-09-24T19:32:00.237Z moonset
+2027-09-24T22:06:02.129Z Mercury max evening elongation: 26.26 degrees from Sun
 2027-09-24T23:19:02.472Z sunset
 2027-09-25T06:11:26.598Z moonrise
 2027-09-25T11:14:39.068Z sunrise
@@ -9772,6 +9821,7 @@
 2027-11-03T16:26:50.667Z moonrise
 2027-11-03T22:38:13.376Z sunset
 2027-11-04T02:52:03.412Z moonset
+2027-11-04T08:55:11.872Z Mercury max morning elongation: 18.77 degrees from Sun
 2027-11-04T11:38:53.515Z sunrise
 2027-11-04T17:08:22.061Z moonrise
 2027-11-04T22:37:30.747Z sunset
@@ -10078,6 +10128,7 @@
 2028-01-17T04:07:58.536Z moonrise
 2028-01-17T12:18:18.501Z sunrise
 2028-01-17T15:54:34.916Z moonset
+2028-01-17T17:18:25.812Z Mercury max evening elongation: 18.81 degrees from Sun
 2028-01-17T22:51:28.788Z sunset
 2028-01-18T05:11:12.237Z moonrise
 2028-01-18T12:18:08.083Z sunrise
@@ -10247,6 +10298,7 @@
 2028-02-27T00:38:33.998Z moonset
 2028-02-27T11:52:13.165Z sunrise
 2028-02-27T12:44:56.346Z moonrise
+2028-02-27T16:30:58.622Z Mercury max morning elongation: 26.89 degrees from Sun
 2028-02-27T23:23:13.388Z sunset
 2028-02-28T01:31:10.052Z moonset
 2028-02-28T11:51:12.401Z sunrise
@@ -10347,6 +10399,7 @@
 2028-03-21T23:37:04.069Z sunset
 2028-03-22T09:22:53.253Z moonrise
 2028-03-22T11:25:39.779Z sunrise
+2028-03-22T12:21:56.393Z Venus max evening elongation: 46.12 degrees from Sun
 2028-03-22T20:49:11.384Z moonset
 2028-03-22T23:37:37.831Z sunset
 2028-03-23T09:52:17.788Z moonrise
@@ -10544,6 +10597,7 @@
 2028-05-08T19:49:26.206Z full moon
 2028-05-09T00:04:43.164Z sunset
 2028-05-09T00:18:55.549Z moonrise
+2028-05-09T06:07:23.979Z Mercury max evening elongation: 21.39 degrees from Sun
 2028-05-09T10:37:28.144Z sunrise
 2028-05-09T10:54:07.781Z moonset
 2028-05-10T00:05:19.584Z sunset
@@ -10745,6 +10799,7 @@
 2028-06-26T02:58:49.934Z moonset
 2028-06-26T10:29:09.830Z sunrise
 2028-06-26T14:34:43.740Z moonrise
+2028-06-26T19:34:00.855Z Mercury max morning elongation: 22.23 degrees from Sun
 2028-06-27T00:26:27.837Z sunset
 2028-06-27T03:36:04.647Z moonset
 2028-06-27T10:29:29.112Z sunrise
@@ -10930,6 +10985,7 @@
 2028-08-10T02:18:35.179Z moonrise
 2028-08-10T10:51:44.776Z sunrise
 2028-08-10T15:23:38.877Z moonset
+2028-08-10T16:05:17.918Z Venus max morning elongation: 45.78 degrees from Sun
 2028-08-11T00:07:56.967Z sunset
 2028-08-11T02:48:58.839Z moonrise
 2028-08-11T10:52:17.720Z sunrise
@@ -11038,6 +11094,7 @@
 2028-09-05T12:26:12.609Z moonset
 2028-09-05T23:40:48.602Z sunset
 2028-09-06T00:21:49.060Z moonrise
+2028-09-06T10:15:18.045Z Mercury max evening elongation: 27.05 degrees from Sun
 2028-09-06T11:05:42.829Z sunrise
 2028-09-06T13:18:28.427Z moonset
 2028-09-06T23:39:38.400Z sunset
@@ -11212,6 +11269,7 @@
 2028-10-17T11:27:13.185Z sunrise
 2028-10-17T22:21:40.497Z moonset
 2028-10-17T22:52:23.897Z sunset
+2028-10-17T22:59:49.495Z Mercury max morning elongation: 18.19 degrees from Sun
 2028-10-18T02:57:14.600Z new moon
 2028-10-18T11:27:50.515Z sunrise
 2028-10-18T12:00:39.399Z moonrise
@@ -11517,6 +11575,7 @@
 2028-12-30T12:17:07.554Z sunrise
 2028-12-30T21:47:05.513Z moonrise
 2028-12-30T22:38:17.195Z sunset
+2028-12-31T00:37:24.940Z Mercury max evening elongation: 19.58 degrees from Sun
 2028-12-31T12:12:33.052Z moonset
 2028-12-31T12:17:24.262Z sunrise
 2028-12-31T16:48:59.713Z full moon
@@ -11682,6 +11741,7 @@
 2029-02-08T12:08:07.292Z sunrise
 2029-02-08T18:51:54.593Z moonset
 2029-02-08T23:10:07.380Z sunset
+2029-02-09T01:43:03.008Z Mercury max morning elongation: 25.75 degrees from Sun
 2029-02-09T09:20:58.794Z moonrise
 2029-02-09T12:07:24.067Z sunrise
 2029-02-09T19:51:06.935Z moonset
@@ -11978,6 +12038,7 @@
 2029-04-20T23:53:47.384Z sunset
 2029-04-21T05:54:44.842Z moonset
 2029-04-21T10:52:51.513Z sunrise
+2029-04-21T13:35:44.613Z Mercury max evening elongation: 20.09 degrees from Sun
 2029-04-21T16:52:32.864Z moonrise
 2029-04-21T19:50:42.758Z first quarter
 2029-04-21T23:54:22.381Z sunset
@@ -12177,6 +12238,7 @@
 2029-06-08T00:21:09.562Z sunset
 2029-06-08T07:40:58.961Z moonrise
 2029-06-08T10:26:28.348Z sunrise
+2029-06-08T11:44:40.061Z Mercury max morning elongation: 23.93 degrees from Sun
 2029-06-08T21:28:44.950Z moonset
 2029-06-09T00:21:35.095Z sunset
 2029-06-09T08:18:57.395Z moonrise
@@ -12474,6 +12536,7 @@
 2029-08-19T06:29:45.801Z moonset
 2029-08-19T10:56:29.247Z sunrise
 2029-08-19T20:53:20.255Z moonrise
+2029-08-19T21:35:16.789Z Mercury max evening elongation: 27.42 degrees from Sun
 2029-08-19T23:59:42.373Z sunset
 2029-08-20T07:31:04.434Z moonset
 2029-08-20T10:57:00.817Z sunrise
@@ -12650,6 +12713,7 @@
 2029-09-30T23:11:19.253Z sunset
 2029-10-01T04:46:13.293Z moonrise
 2029-10-01T11:17:59.107Z sunrise
+2029-10-01T15:09:44.795Z Mercury max morning elongation: 17.89 degrees from Sun
 2029-10-01T18:50:56.240Z moonset
 2029-10-01T23:10:09.297Z sunset
 2029-10-02T05:45:06.343Z moonrise
@@ -12755,6 +12819,7 @@
 2029-10-26T15:12:55.484Z moonset
 2029-10-26T22:44:10.454Z sunset
 2029-10-27T01:45:09.385Z moonrise
+2029-10-27T10:48:46.330Z Venus max evening elongation: 47.02 degrees from Sun
 2029-10-27T11:33:33.371Z sunrise
 2029-10-27T16:01:22.536Z moonset
 2029-10-27T22:43:18.969Z sunset
@@ -12954,6 +13019,7 @@
 2029-12-13T12:08:51.544Z sunrise
 2029-12-13T17:44:19.262Z moonrise
 2029-12-13T22:29:29.247Z sunset
+2029-12-14T02:55:15.284Z Mercury max evening elongation: 20.60 degrees from Sun
 2029-12-14T06:37:19.300Z moonset
 2029-12-14T12:09:29.371Z sunrise
 2029-12-14T18:15:45.716Z moonrise
@@ -13116,6 +13182,7 @@
 2030-01-21T13:22:11.560Z moonset
 2030-01-21T22:55:14.981Z sunset
 2030-01-22T01:11:55.413Z moonrise
+2030-01-22T10:18:11.922Z Mercury max morning elongation: 24.35 degrees from Sun
 2030-01-22T12:17:01.398Z sunrise
 2030-01-22T13:57:51.962Z moonset
 2030-01-22T22:56:05.008Z sunset
@@ -13341,6 +13408,7 @@
 2030-03-17T11:32:00.202Z sunrise
 2030-03-17T21:42:29.612Z moonrise
 2030-03-17T23:34:32.006Z sunset
+2030-03-17T23:58:48.546Z Venus max morning elongation: 46.61 degrees from Sun
 2030-03-18T10:26:34.971Z moonset
 2030-03-18T11:30:51.136Z sunrise
 2030-03-18T22:45:19.757Z moonrise
@@ -13413,6 +13481,7 @@
 2030-04-03T11:18:49.656Z moonrise
 2030-04-03T23:44:02.079Z sunset
 2030-04-04T00:39:10.418Z moonset
+2030-04-04T08:22:27.081Z Mercury max evening elongation: 19.11 degrees from Sun
 2030-04-04T11:11:15.361Z sunrise
 2030-04-04T11:53:58.091Z moonrise
 2030-04-04T23:44:35.477Z sunset
@@ -13606,6 +13675,7 @@
 2030-05-20T10:31:22.957Z sunrise
 2030-05-20T13:39:44.369Z moonset
 2030-05-21T00:11:39.284Z sunset
+2030-05-21T02:27:09.100Z Mercury max morning elongation: 25.56 degrees from Sun
 2030-05-21T03:43:37.766Z moonrise
 2030-05-21T10:30:55.407Z sunrise
 2030-05-21T14:45:43.555Z moonset
@@ -13908,6 +13978,7 @@
 2030-08-01T12:49:07.057Z moonrise
 2030-08-02T00:15:28.069Z sunset
 2030-08-02T01:29:24.852Z moonset
+2030-08-02T05:39:11.585Z Mercury max evening elongation: 27.27 degrees from Sun
 2030-08-02T10:47:03.026Z sunrise
 2030-08-02T13:47:15.442Z moonrise
 2030-08-03T00:14:45.432Z sunset
@@ -14089,6 +14160,7 @@
 2030-09-14T13:40:39.000Z moonset
 2030-09-14T23:30:43.090Z sunset
 2030-09-15T01:02:27.467Z moonrise
+2030-09-15T06:28:48.460Z Mercury max morning elongation: 17.90 degrees from Sun
 2030-09-15T11:09:51.560Z sunrise
 2030-09-15T14:36:09.195Z moonset
 2030-09-15T23:29:31.064Z sunset
@@ -14389,6 +14461,7 @@
 2030-11-26T11:56:13.705Z sunrise
 2030-11-26T13:21:09.580Z moonrise
 2030-11-26T22:27:52.160Z sunset
+2030-11-26T23:33:16.344Z Mercury max evening elongation: 21.80 degrees from Sun
 2030-11-27T00:06:54.392Z moonset
 2030-11-27T11:57:01.077Z sunrise
 2030-11-27T14:20:47.716Z moonrise
@@ -14552,6 +14625,7 @@
 2031-01-04T08:50:23.696Z moonset
 2031-01-04T12:18:10.242Z sunrise
 2031-01-04T19:37:30.702Z moonrise
+2031-01-04T19:54:09.900Z Mercury max morning elongation: 22.88 degrees from Sun
 2031-01-04T22:41:27.017Z sunset
 2031-01-05T09:41:59.369Z moonset
 2031-01-05T12:18:20.145Z sunrise
@@ -14850,6 +14924,7 @@
 2031-03-17T23:34:23.205Z sunset
 2031-03-18T08:04:48.445Z moonrise
 2031-03-18T11:31:07.653Z sunrise
+2031-03-18T12:05:02.056Z Mercury max evening elongation: 18.47 degrees from Sun
 2031-03-18T19:14:44.426Z moonset
 2031-03-18T23:34:57.601Z sunset
 2031-03-19T08:50:23.899Z moonrise
@@ -15037,6 +15112,7 @@
 2031-05-02T07:30:00.248Z moonset
 2031-05-02T10:43:20.832Z sunrise
 2031-05-02T19:45:45.968Z moonrise
+2031-05-02T20:30:24.832Z Mercury max morning elongation: 26.87 degrees from Sun
 2031-05-03T00:00:39.165Z sunset
 2031-05-03T08:04:52.423Z moonset
 2031-05-03T10:42:31.763Z sunrise
@@ -15161,6 +15237,7 @@
 2031-06-01T10:27:25.393Z sunrise
 2031-06-01T20:26:43.415Z moonrise
 2031-06-02T00:18:09.097Z sunset
+2031-06-02T03:32:19.375Z Venus max evening elongation: 45.40 degrees from Sun
 2031-06-02T07:54:11.706Z moonset
 2031-06-02T10:27:13.693Z sunrise
 2031-06-02T21:29:50.990Z moonrise
@@ -15342,6 +15419,7 @@
 2031-07-14T20:34:56.799Z moonset
 2031-07-15T00:24:42.371Z sunset
 2031-07-15T07:24:20.906Z moonrise
+2031-07-15T07:25:43.905Z Mercury max evening elongation: 26.57 degrees from Sun
 2031-07-15T10:37:00.602Z sunrise
 2031-07-15T21:26:15.491Z moonset
 2031-07-16T00:24:23.625Z sunset
@@ -15529,6 +15607,7 @@
 2031-08-28T23:50:43.818Z sunset
 2031-08-29T07:53:05.935Z moonset
 2031-08-29T11:01:24.371Z sunrise
+2031-08-29T17:38:01.776Z Mercury max morning elongation: 18.24 degrees from Sun
 2031-08-29T21:39:34.786Z moonrise
 2031-08-29T23:49:37.456Z sunset
 2031-08-30T09:00:24.655Z moonset
@@ -15747,6 +15826,7 @@
 2031-10-20T22:50:08.673Z sunset
 2031-10-21T02:33:45.568Z moonset
 2031-10-21T11:29:15.334Z sunrise
+2031-10-21T14:12:59.534Z Venus max morning elongation: 46.39 degrees from Sun
 2031-10-21T16:38:16.956Z moonrise
 2031-10-21T22:49:10.842Z sunset
 2031-10-22T03:35:42.379Z moonset
@@ -15825,6 +15905,7 @@
 2031-11-08T22:34:50.975Z sunset
 2031-11-09T06:37:28.315Z moonrise
 2031-11-09T11:42:37.409Z sunrise
+2031-11-09T15:04:26.791Z Mercury max evening elongation: 23.12 degrees from Sun
 2031-11-09T19:10:02.874Z moonset
 2031-11-09T22:34:15.056Z sunset
 2031-11-10T07:31:14.903Z moonrise
@@ -15985,6 +16066,7 @@
 2031-12-17T14:56:08.217Z moonrise
 2031-12-17T22:30:44.930Z sunset
 2031-12-18T02:28:56.737Z moonset
+2031-12-18T10:20:13.785Z Mercury max morning elongation: 21.47 degrees from Sun
 2031-12-18T12:11:33.280Z sunrise
 2031-12-18T15:40:12.444Z moonrise
 2031-12-18T22:31:10.000Z sunset

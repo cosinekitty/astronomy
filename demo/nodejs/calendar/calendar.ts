@@ -9,6 +9,7 @@ import {
     AstroTime,
     Body,
     Observer,
+    SearchMaxElongation,
     SearchMoonQuarter, NextMoonQuarter, MoonQuarter,
     SearchRelativeLongitude,
     SearchRiseSet,
@@ -167,6 +168,28 @@ class ConjunctionOppositionEnumerator implements AstroEventEnumerator {
 }
 
 
+class MaxElongationEnumerator implements AstroEventEnumerator {
+    private nextTime: AstroTime;
+
+    constructor(private body: Body) {
+    }
+
+    FindFirst(startTime: AstroTime): AstroEvent {
+        this.nextTime = startTime;
+        return this.FindNext();
+    }
+
+    FindNext(): AstroEvent {
+        const elon = SearchMaxElongation(this.body, this.nextTime);
+        this.nextTime = elon.time.AddDays(1);
+        return new AstroEvent(
+            elon.time,
+            `${this.body} max ${elon.visibility} elongation: ${elon.elongation.toFixed(2)} degrees from Sun`,
+            this);
+    }
+}
+
+
 function RunTest(): void {
     const startTime = new AstroTime(new Date('2021-05-12T00:00:00Z'));
     const observer = new Observer(28.6, -81.2, 10.0);
@@ -181,9 +204,11 @@ function RunTest(): void {
     ];
 
     // Inferior and superior conjunctions of inner planets.
+    // Maximum elongation of inner planets.
     for (let body of [Body.Mercury, Body.Venus]) {
         enumeratorList.push(new ConjunctionOppositionEnumerator(body, 0, 'inferior conjunction'));
         enumeratorList.push(new ConjunctionOppositionEnumerator(body, 180, 'superior conjunction'));
+        enumeratorList.push(new MaxElongationEnumerator(body));
     }
 
     // Conjunctions and oppositions of outer planets.
