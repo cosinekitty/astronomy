@@ -10,6 +10,7 @@ import {
     Body,
     Observer,
     PairLongitude,
+    LunarEclipseInfo, SearchLunarEclipse, NextLunarEclipse,
     SearchMaxElongation,
     SearchMoonQuarter, NextMoonQuarter, MoonQuarter,
     SearchPeakMagnitude,
@@ -213,6 +214,27 @@ class VenusPeakMagnitudeEnumerator implements AstroEventEnumerator {
 }
 
 
+class LunarEclipseEnumerator implements AstroEventEnumerator {
+    private nextTime: AstroTime;
+
+    FindFirst(startTime: AstroTime): AstroEvent {
+        const info = SearchLunarEclipse(startTime);
+        this.nextTime = info.peak;
+        return this.MakeEvent(info);
+    }
+
+    FindNext(): AstroEvent {
+        const info = NextLunarEclipse(this.nextTime);
+        this.nextTime = info.peak;
+        return this.MakeEvent(info);
+    }
+
+    private MakeEvent(info: LunarEclipseInfo): AstroEvent {
+        return new AstroEvent(info.peak, `${info.kind} lunar eclipse`, this);
+    }
+}
+
+
 function RunTest(): void {
     const startTime = new AstroTime(new Date('2021-05-12T00:00:00Z'));
     const observer = new Observer(28.6, -81.2, 10.0);
@@ -224,7 +246,8 @@ function RunTest(): void {
         new RiseSetEnumerator(observer, Body.Moon, -1, 'moonset'),
         new SeasonEnumerator(),
         new MoonQuarterEnumerator(),
-        new VenusPeakMagnitudeEnumerator()
+        new VenusPeakMagnitudeEnumerator(),
+        new LunarEclipseEnumerator()
     ];
 
     // Inferior and superior conjunctions of inner planets.
@@ -241,7 +264,7 @@ function RunTest(): void {
         enumeratorList.push(new ConjunctionOppositionEnumerator(body, 180, 'conjunction'));
     }
 
-    // TODO: Lunar and solar eclipses
+    // TODO: Solar eclipses
     // TODO: Transits of Mercury and Venus
     // TODO: lunar apogee and perigee
     // TODO: planet aphelion and perihelion
