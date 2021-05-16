@@ -17,6 +17,7 @@ import {
     SearchPeakMagnitude,
     SearchRelativeLongitude,
     SearchRiseSet,
+    SearchTransit, NextTransit, TransitInfo,
     Seasons,
 } from "./astronomy";
 
@@ -258,6 +259,29 @@ class LocalSolarEclipseEnumerator implements AstroEventEnumerator {
 }
 
 
+class TransitEnumerator implements AstroEventEnumerator {
+    private nextTime: AstroTime;
+
+    constructor(private body: Body) {
+    }
+
+    FindFirst(startTime: AstroTime): AstroEvent {
+        const info = SearchTransit(this.body, startTime);
+        return this.MakeEvent(info);
+    }
+
+    FindNext(): AstroEvent {
+        const info = NextTransit(this.body, this.nextTime);
+        return this.MakeEvent(info);
+    }
+
+    private MakeEvent(info: TransitInfo): AstroEvent {
+        this.nextTime = info.peak;
+        return new AstroEvent(info.peak, `transit of ${this.body}`, this);
+    }
+}
+
+
 function RunTest(): void {
     const startTime = new AstroTime(new Date('2021-05-12T00:00:00Z'));
     const observer = new Observer(28.6, -81.2, 10.0);
@@ -276,19 +300,24 @@ function RunTest(): void {
 
     // Inferior and superior conjunctions of inner planets.
     // Maximum elongation of inner planets.
+    // Transits of inner planets.
     for (let body of [Body.Mercury, Body.Venus]) {
-        enumeratorList.push(new ConjunctionOppositionEnumerator(body, 0, 'inferior conjunction'));
-        enumeratorList.push(new ConjunctionOppositionEnumerator(body, 180, 'superior conjunction'));
-        enumeratorList.push(new MaxElongationEnumerator(body));
+        enumeratorList.push(
+            new ConjunctionOppositionEnumerator(body, 0, 'inferior conjunction'),
+            new ConjunctionOppositionEnumerator(body, 180, 'superior conjunction'),
+            new MaxElongationEnumerator(body),
+            new TransitEnumerator(body)
+        );
     }
 
     // Conjunctions and oppositions of outer planets.
     for (let body of [Body.Mars, Body.Jupiter, Body.Saturn, Body.Uranus, Body.Neptune, Body.Pluto]) {
-        enumeratorList.push(new ConjunctionOppositionEnumerator(body, 0, 'opposition'));
-        enumeratorList.push(new ConjunctionOppositionEnumerator(body, 180, 'conjunction'));
+        enumeratorList.push(
+            new ConjunctionOppositionEnumerator(body, 0, 'opposition'),
+            new ConjunctionOppositionEnumerator(body, 180, 'conjunction')
+        );
     }
 
-    // TODO: Transits of Mercury and Venus
     // TODO: lunar apogee and perigee
     // TODO: planet aphelion and perihelion
     // TODO: when planets enter a new constellation
@@ -296,7 +325,7 @@ function RunTest(): void {
 
     const collator = new EventCollator(enumeratorList);
 
-    const stopYear = startTime.date.getUTCFullYear() + 11;
+    const stopYear = startTime.date.getUTCFullYear() + 12;
     let evt:AstroEvent = collator.FindFirst(startTime);
     while (evt !== null && evt.time.date.getUTCFullYear() < stopYear) {
         console.log(`${evt.time} ${evt.title}`);
