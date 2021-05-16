@@ -10,7 +10,8 @@ import {
     Body,
     Observer,
     PairLongitude,
-    LunarEclipseInfo, SearchLunarEclipse, NextLunarEclipse,
+    SearchLocalSolarEclipse, NextLocalSolarEclipse, LocalSolarEclipseInfo,
+    SearchLunarEclipse, NextLunarEclipse, LunarEclipseInfo,
     SearchMaxElongation,
     SearchMoonQuarter, NextMoonQuarter, MoonQuarter,
     SearchPeakMagnitude,
@@ -219,18 +220,40 @@ class LunarEclipseEnumerator implements AstroEventEnumerator {
 
     FindFirst(startTime: AstroTime): AstroEvent {
         const info = SearchLunarEclipse(startTime);
-        this.nextTime = info.peak;
         return this.MakeEvent(info);
     }
 
     FindNext(): AstroEvent {
         const info = NextLunarEclipse(this.nextTime);
-        this.nextTime = info.peak;
         return this.MakeEvent(info);
     }
 
     private MakeEvent(info: LunarEclipseInfo): AstroEvent {
+        this.nextTime = info.peak;
         return new AstroEvent(info.peak, `${info.kind} lunar eclipse`, this);
+    }
+}
+
+
+class LocalSolarEclipseEnumerator implements AstroEventEnumerator {
+    private nextTime: AstroTime;
+
+    constructor(private observer: Observer) {
+    }
+
+    FindFirst(startTime: AstroTime): AstroEvent {
+        const info = SearchLocalSolarEclipse(startTime, this.observer);
+        return this.MakeEvent(info);
+    }
+
+    FindNext(): AstroEvent {
+        const info = NextLocalSolarEclipse(this.nextTime, this.observer);
+        return this.MakeEvent(info);
+    }
+
+    private MakeEvent(info: LocalSolarEclipseInfo): AstroEvent {
+        this.nextTime = info.peak.time;
+        return new AstroEvent(info.peak.time, `${info.kind} solar eclipse peak at ${info.peak.altitude.toFixed(2)} degrees altitude`, this);
     }
 }
 
@@ -247,7 +270,8 @@ function RunTest(): void {
         new SeasonEnumerator(),
         new MoonQuarterEnumerator(),
         new VenusPeakMagnitudeEnumerator(),
-        new LunarEclipseEnumerator()
+        new LunarEclipseEnumerator(),
+        new LocalSolarEclipseEnumerator(observer)
     ];
 
     // Inferior and superior conjunctions of inner planets.
@@ -264,7 +288,6 @@ function RunTest(): void {
         enumeratorList.push(new ConjunctionOppositionEnumerator(body, 180, 'conjunction'));
     }
 
-    // TODO: Solar eclipses
     // TODO: Transits of Mercury and Venus
     // TODO: lunar apogee and perigee
     // TODO: planet aphelion and perihelion

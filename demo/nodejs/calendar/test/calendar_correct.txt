@@ -3682,6 +3682,7 @@
 2023-10-13T22:57:21.107Z sunset
 2023-10-14T11:14:26.461Z moonrise
 2023-10-14T11:24:55.198Z sunrise
+2023-10-14T17:27:26.420Z partial solar eclipse peak at 52.96 degrees altitude
 2023-10-14T17:55:48.311Z new moon
 2023-10-14T22:56:17.678Z sunset
 2023-10-14T22:59:23.068Z moonset
@@ -4420,6 +4421,7 @@
 2024-04-08T10:58:47.763Z moonrise
 2024-04-08T11:06:15.894Z sunrise
 2024-04-08T18:21:25.179Z new moon
+2024-04-08T19:04:38.361Z partial solar eclipse peak at 58.76 degrees altitude
 2024-04-08T23:47:03.404Z sunset
 2024-04-08T23:57:50.808Z moonset
 2024-04-09T11:05:09.848Z sunrise
@@ -10189,6 +10191,7 @@
 2028-01-25T22:58:09.235Z sunset
 2028-01-26T12:14:53.934Z moonrise
 2028-01-26T12:15:48.402Z sunrise
+2028-01-26T14:19:54.939Z partial solar eclipse peak at 22.88 degrees altitude
 2028-01-26T15:13:09.787Z new moon
 2028-01-26T22:58:59.343Z sunset
 2028-01-26T23:12:21.752Z moonset
@@ -11664,6 +11667,7 @@
 2029-01-14T12:11:11.599Z moonrise
 2029-01-14T12:18:36.800Z sunrise
 2029-01-14T17:25:04.182Z new moon
+2029-01-14T17:26:46.370Z partial solar eclipse peak at 40.23 degrees altitude
 2029-01-14T22:49:39.511Z sunset
 2029-01-14T22:59:52.653Z moonset
 2029-01-15T12:18:30.084Z sunrise
@@ -15968,6 +15972,7 @@
 2031-11-14T21:10:08.063Z new moon
 2031-11-14T22:30:40.677Z moonset
 2031-11-14T22:31:37.092Z sunset
+2031-11-14T22:34:57.342Z partial solar eclipse peak at -0.88 degrees altitude
 2031-11-15T11:47:17.490Z sunrise
 2031-11-15T12:29:53.045Z moonrise
 2031-11-15T22:31:09.945Z sunset
