@@ -11,6 +11,7 @@ import {
     Observer,
     PairLongitude,
     SearchLocalSolarEclipse, NextLocalSolarEclipse, LocalSolarEclipseInfo,
+    SearchLunarApsis, NextLunarApsis, Apsis,
     SearchLunarEclipse, NextLunarEclipse, LunarEclipseInfo,
     SearchMaxElongation,
     SearchMoonQuarter, NextMoonQuarter, MoonQuarter,
@@ -282,6 +283,26 @@ class TransitEnumerator implements AstroEventEnumerator {
 }
 
 
+class LunarApsisEnumerator implements AstroEventEnumerator {
+    private apsis: Apsis;
+
+    FindFirst(startTime: AstroTime): AstroEvent {
+        this.apsis = SearchLunarApsis(startTime);
+        return this.MakeEvent();
+    }
+
+    FindNext(): AstroEvent {
+        this.apsis = NextLunarApsis(this.apsis);
+        return this.MakeEvent();
+    }
+
+    private MakeEvent(): AstroEvent {
+        const kind = (this.apsis.kind === 0) ? 'perigee' : 'apogee';
+        return new AstroEvent(this.apsis.time, `lunar ${kind} at ${this.apsis.dist_km.toFixed(0)} km`, this);
+    }
+}
+
+
 function RunTest(): void {
     const startTime = new AstroTime(new Date('2021-05-12T00:00:00Z'));
     const observer = new Observer(28.6, -81.2, 10.0);
@@ -295,7 +316,8 @@ function RunTest(): void {
         new MoonQuarterEnumerator(),
         new VenusPeakMagnitudeEnumerator(),
         new LunarEclipseEnumerator(),
-        new LocalSolarEclipseEnumerator(observer)
+        new LocalSolarEclipseEnumerator(observer),
+        new LunarApsisEnumerator()
     ];
 
     // Inferior and superior conjunctions of inner planets.
@@ -318,7 +340,6 @@ function RunTest(): void {
         );
     }
 
-    // TODO: lunar apogee and perigee
     // TODO: planet aphelion and perihelion
     // TODO: when planets enter a new constellation
     // TODO: Moon and Sun culmination
