@@ -15,6 +15,7 @@ import {
     SearchLunarEclipse, NextLunarEclipse, LunarEclipseInfo,
     SearchMaxElongation,
     SearchMoonQuarter, NextMoonQuarter, MoonQuarter,
+    SearchPlanetApsis, NextPlanetApsis,
     SearchPeakMagnitude,
     SearchRelativeLongitude,
     SearchRiseSet,
@@ -41,8 +42,7 @@ interface AstroEventEnumerator {
 class EventCollator implements AstroEventEnumerator {
     private eventQueue: AstroEvent[];
 
-    constructor(private enumeratorList: AstroEventEnumerator[]) {
-    }
+    constructor(private enumeratorList: AstroEventEnumerator[]) {}
 
     FindFirst(startTime: AstroTime): AstroEvent {
         this.eventQueue = [];
@@ -78,8 +78,7 @@ class EventCollator implements AstroEventEnumerator {
 class RiseSetEnumerator implements AstroEventEnumerator {
     private nextSearchTime: AstroTime;
 
-    constructor(private observer: Observer, private body: Body, private direction: number, private title: string) {
-    }
+    constructor(private observer: Observer, private body: Body, private direction: number, private title: string) {}
 
     FindFirst(startTime: AstroTime): AstroEvent {
         this.nextSearchTime = SearchRiseSet(this.body, this.observer, this.direction, startTime, 366.0);
@@ -177,8 +176,7 @@ class ConjunctionOppositionEnumerator implements AstroEventEnumerator {
 class MaxElongationEnumerator implements AstroEventEnumerator {
     private nextTime: AstroTime;
 
-    constructor(private body: Body) {
-    }
+    constructor(private body: Body) {}
 
     FindFirst(startTime: AstroTime): AstroEvent {
         this.nextTime = startTime;
@@ -240,8 +238,7 @@ class LunarEclipseEnumerator implements AstroEventEnumerator {
 class LocalSolarEclipseEnumerator implements AstroEventEnumerator {
     private nextTime: AstroTime;
 
-    constructor(private observer: Observer) {
-    }
+    constructor(private observer: Observer) {}
 
     FindFirst(startTime: AstroTime): AstroEvent {
         const info = SearchLocalSolarEclipse(startTime, this.observer);
@@ -263,8 +260,7 @@ class LocalSolarEclipseEnumerator implements AstroEventEnumerator {
 class TransitEnumerator implements AstroEventEnumerator {
     private nextTime: AstroTime;
 
-    constructor(private body: Body) {
-    }
+    constructor(private body: Body) {}
 
     FindFirst(startTime: AstroTime): AstroEvent {
         const info = SearchTransit(this.body, startTime);
@@ -299,6 +295,28 @@ class LunarApsisEnumerator implements AstroEventEnumerator {
     private MakeEvent(): AstroEvent {
         const kind = (this.apsis.kind === 0) ? 'perigee' : 'apogee';
         return new AstroEvent(this.apsis.time, `lunar ${kind} at ${this.apsis.dist_km.toFixed(0)} km`, this);
+    }
+}
+
+
+class PlanetApsisEnumerator implements AstroEventEnumerator {
+    private apsis: Apsis;
+
+    constructor(private body: Body) {}
+
+    FindFirst(startTime: AstroTime): AstroEvent {
+        this.apsis = SearchPlanetApsis(this.body, startTime);
+        return this.MakeEvent();
+    }
+
+    FindNext(): AstroEvent {
+        this.apsis = NextPlanetApsis(this.body, this.apsis);
+        return this.MakeEvent();
+    }
+
+    private MakeEvent(): AstroEvent {
+        const kind = (this.apsis.kind === 0) ? 'perihelion' : 'aphelion';
+        return new AstroEvent(this.apsis.time, `${this.body} ${kind} at ${this.apsis.dist_au.toFixed(4)} AU`, this);
     }
 }
 
@@ -340,7 +358,13 @@ function RunTest(): void {
         );
     }
 
-    // TODO: planet aphelion and perihelion
+    // Perihelion and aphelion of all planets.
+    for (let body of [Body.Mercury, Body.Venus, Body.Earth, Body.Mars, Body.Jupiter, Body.Saturn, Body.Uranus, Body.Neptune, Body.Pluto]) {
+        enumeratorList.push(
+            new PlanetApsisEnumerator(body)
+        );
+    }
+
     // TODO: when planets enter a new constellation
     // TODO: Moon and Sun culmination
 
