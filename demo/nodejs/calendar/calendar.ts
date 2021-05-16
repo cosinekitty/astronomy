@@ -10,6 +10,7 @@ import {
     Body,
     Observer,
     PairLongitude,
+    SearchHourAngle, HourAngleEvent,
     SearchLocalSolarEclipse, NextLocalSolarEclipse, LocalSolarEclipseInfo,
     SearchLunarApsis, NextLunarApsis, Apsis,
     SearchLunarEclipse, NextLunarEclipse, LunarEclipseInfo,
@@ -321,6 +322,24 @@ class PlanetApsisEnumerator implements AstroEventEnumerator {
 }
 
 
+class BodyCulminationEnumerator implements AstroEventEnumerator {
+    private nextTime: AstroTime;
+
+    constructor(private observer: Observer, private body: Body) {}
+
+    FindFirst(startTime: AstroTime): AstroEvent {
+        this.nextTime = startTime;
+        return this.FindNext();
+    }
+
+    FindNext(): AstroEvent {
+        const info = SearchHourAngle(this.body, this.observer, 0, this.nextTime);
+        this.nextTime = info.time.AddDays(0.5);
+        return new AstroEvent(info.time, `${this.body} culminates ${info.hor.altitude.toFixed(2)} degrees above the horizon`, this);
+    }
+}
+
+
 function RunTest(): void {
     const startTime = new AstroTime(new Date('2021-05-12T00:00:00Z'));
     const observer = new Observer(28.6, -81.2, 10.0);
@@ -330,6 +349,8 @@ function RunTest(): void {
         new RiseSetEnumerator(observer, Body.Sun, -1, 'sunset'),
         new RiseSetEnumerator(observer, Body.Moon, +1, 'moonrise'),
         new RiseSetEnumerator(observer, Body.Moon, -1, 'moonset'),
+        new BodyCulminationEnumerator(observer, Body.Sun),
+        new BodyCulminationEnumerator(observer, Body.Moon),
         new SeasonEnumerator(),
         new MoonQuarterEnumerator(),
         new VenusPeakMagnitudeEnumerator(),
@@ -366,7 +387,6 @@ function RunTest(): void {
     }
 
     // TODO: when planets enter a new constellation
-    // TODO: Moon and Sun culmination
 
     const collator = new EventCollator(enumeratorList);
 
