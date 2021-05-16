@@ -6,11 +6,10 @@
 */
 
 import {
-    AstroTime,
-    Body,
-    Observer,
+    AstroTime, Body, Observer,
+    GeoVector, EquatorFromVector, Constellation, ConstellationInfo,
     PairLongitude,
-    SearchHourAngle, HourAngleEvent,
+    SearchHourAngle,
     SearchLocalSolarEclipse, NextLocalSolarEclipse, LocalSolarEclipseInfo,
     SearchLunarApsis, NextLunarApsis, Apsis,
     SearchLunarEclipse, NextLunarEclipse, LunarEclipseInfo,
@@ -340,6 +339,61 @@ class BodyCulminationEnumerator implements AstroEventEnumerator {
 }
 
 
+class ConstellationEnumerator implements AstroEventEnumerator {
+    private nextTime: AstroTime;
+    private currentConst: ConstellationInfo;
+
+    constructor(private body: Body, private dayIncrement: number) {}
+
+    FindFirst(startTime: AstroTime): AstroEvent {
+        this.nextTime = startTime;
+        this.currentConst = this.BodyConstellation(startTime);
+        return this.FindNext();
+    }
+
+    FindNext(): AstroEvent {
+        const tolerance = 0.1 / (24 * 3600);    // one tenth of a second, expressed in days
+        // Step through one time increment at a time until we see a constellation change.
+        let t1 = this.nextTime;
+        let c1 = this.currentConst;
+        for(;;) {
+            let t2 = t1.AddDays(this.dayIncrement);
+            let c2 = this.BodyConstellation(t2);
+            if (c1.symbol === c2.symbol) {
+                t1 = t2;
+            } else {
+                // The body moved from one constellation to another during this time step.
+                // Narrow in on the exact moment by doing a binary search.
+                for(;;) {
+                    let dt = t2.ut - t1.ut;
+                    let tx = t1.AddDays(dt/2);
+                    let cx = this.BodyConstellation(tx);
+                    if (cx.symbol === c1.symbol) {
+                        t1 = tx;
+                    } else {
+                        if (dt < tolerance) {
+                            // We have found the transition time within tolerance.
+                            // Always end the search inside the new constellation.
+                            this.nextTime = tx;
+                            this.currentConst = cx;
+                            return new AstroEvent(tx, `${this.body} moves from ${c1.name} to ${cx.name}`, this);
+                        } else {
+                            t2 = tx;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private BodyConstellation(time: AstroTime): ConstellationInfo {
+        const vec = GeoVector(this.body, time, false);
+        const equ = EquatorFromVector(vec);
+        return Constellation(equ.ra, equ.dec);
+    }
+}
+
+
 function RunTest(): void {
     const startTime = new AstroTime(new Date('2021-05-12T00:00:00Z'));
     const observer = new Observer(28.6, -81.2, 10.0);
@@ -380,13 +434,13 @@ function RunTest(): void {
     }
 
     // Perihelion and aphelion of all planets.
+    // Constellation change of all planets.
     for (let body of [Body.Mercury, Body.Venus, Body.Earth, Body.Mars, Body.Jupiter, Body.Saturn, Body.Uranus, Body.Neptune, Body.Pluto]) {
-        enumeratorList.push(
-            new PlanetApsisEnumerator(body)
-        );
+        enumeratorList.push(new PlanetApsisEnumerator(body));
+        if (body !== Body.Earth) {
+            enumeratorList.push(new ConstellationEnumerator(body, 1));
+        }
     }
-
-    // TODO: when planets enter a new constellation
 
     const collator = new EventCollator(enumeratorList);
 
