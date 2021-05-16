@@ -1271,13 +1271,9 @@ function iau2000b(time) {
         de += (cls[3] + cls[4] * t) * carg + cls[5] * sarg;
     }
     return {
-        dpsi: (-0.000135 * ASEC2RAD) + (dp * 1.0e-7 * ASEC2RAD),
-        deps: (+0.000388 * ASEC2RAD) + (de * 1.0e-7 * ASEC2RAD)
+        dpsi: -0.000135 + (dp * 1.0e-7),
+        deps: +0.000388 + (de * 1.0e-7)
     };
-}
-function nutation_angles(time) {
-    var nut = iau2000b(time);
-    return { dpsi: nut.dpsi / ASEC2RAD, deps: nut.deps / ASEC2RAD };
 }
 function mean_obliq(time) {
     var t = time.tt / 36525;
@@ -1291,7 +1287,7 @@ function mean_obliq(time) {
 var cache_e_tilt;
 function e_tilt(time) {
     if (!cache_e_tilt || Math.abs(cache_e_tilt.tt - time.tt) > 1.0e-6) {
-        const nut = nutation_angles(time);
+        const nut = iau2000b(time);
         const mean_ob = mean_obliq(time);
         const true_ob = mean_ob + (nut.deps / 3600);
         cache_e_tilt = {
@@ -1565,7 +1561,7 @@ function CalcMoon(time) {
         + 0.24 * Sine(0.2275 - 5.7374 * T) + 0.28 * Sine(0.2965 + 2.6929 * T)
         + 0.33 * Sine(0.3132 + 6.3368 * T));
     S = F + DS / ARC;
-    var lat_seconds = (1.000002708 + 139.978 * DGAM) * (18518.511 + 1.189 + GAM1C) * Math.sin(S) - 6.24 * Math.sin(3 * S) + N;
+    let lat_seconds = (1.000002708 + 139.978 * DGAM) * (18518.511 + 1.189 + GAM1C) * Math.sin(S) - 6.24 * Math.sin(3 * S) + N;
     return {
         geo_eclip_lon: PI2 * Frac((L0 + DLAM / ARC) / PI2),
         geo_eclip_lat: (Math.PI / (180 * 3600)) * lat_seconds,
