@@ -43,5 +43,9 @@ echo "Testing example: lunar_eclipse.js"
 node lunar_eclipse.js 1988-01-01 > test/lunar_eclipse.txt || Fail "Error running lunar_eclipse.js."
 diff test/lunar_eclipse.txt test/lunar_eclipse_correct.txt || Fail "Error comparing lunar_eclipse.js output."
 
+cd calendar || Fail "Cannot change to calendar directory."
+./run || exit 1
+cd ..
+
 echo "PASS: nodejs examples"
 exit 0

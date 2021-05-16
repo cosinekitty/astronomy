@@ -1,0 +1,14 @@
+{
+  "name": "astronomy-calendar-demo",
+  "version": "1.0.0",
+  "description": "Demo of enumerating interesting astronomy events for a calendar.",
+  "main": "index.js",
+  "scripts": {
+    "test": "tsc && node dist/calendar.js > test/calendar.txt && diff test/calendar_correct.txt test/calendar.txt"
+  },
+  "author": "Don Cross <cosinekitty@gmail.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^4.1.3"
+  }
+}
