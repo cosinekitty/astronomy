@@ -1324,8 +1324,7 @@ function CalcMoon(time) {
     }
     function DeclareArray2(xmin, xmax, ymin, ymax) {
         const array = [];
-        let i;
-        for (i = 0; i <= xmax - xmin; ++i) {
+        for (let i = 0; i <= xmax - xmin; ++i) {
             array.push(DeclareArray1(ymin, ymax));
         }
         return { min: xmin, array: array };
@@ -1971,9 +1970,7 @@ function vector2radec(pos, time) {
     if (xyproj === 0) {
         if (vec.z === 0)
             throw 'Indeterminate sky coordinates';
-        if (vec.z < 0)
-            return new EquatorialCoordinates(0, -90, dist, vec);
-        return new EquatorialCoordinates(0, +90, dist, vec);
+        return new EquatorialCoordinates(0, (vec.z < 0) ? -90 : +90, dist, vec);
     }
     let ra = exports.RAD2HOUR * Math.atan2(vec.y, vec.x);
     if (ra < 0)
@@ -2381,9 +2378,8 @@ function VsopFormula(formula, t, clamp_angle) {
     let coord = 0;
     for (let series of formula) {
         let sum = 0;
-        for (let [ampl, phas, freq] of series) {
+        for (let [ampl, phas, freq] of series)
             sum += ampl * Math.cos(phas + (t * freq));
-        }
         let incr = tpower * sum;
         if (clamp_angle)
             incr %= PI2; // improve precision for longitudes: they can be hundreds of radians
@@ -2403,9 +2399,8 @@ function VsopDeriv(formula, t) {
         for (let [ampl, phas, freq] of series) {
             let angle = phas + (t * freq);
             sin_sum += ampl * freq * Math.sin(angle);
-            if (s > 0) {
+            if (s > 0)
                 cos_sum += ampl * Math.cos(angle);
-            }
         }
         deriv += (s * dpower * cos_sum) - (tpower * sin_sum);
         dpower = tpower;
@@ -2688,12 +2683,10 @@ const PLUTO_NSTEPS = (PLUTO_TIME_STEP / PLUTO_DT) + 1;
 const pluto_cache = [];
 function ClampIndex(frac, nsteps) {
     const index = Math.floor(frac);
-    if (index < 0) {
+    if (index < 0)
         return 0;
-    }
-    if (index >= nsteps) {
+    if (index >= nsteps)
         return nsteps - 1;
-    }
     return index;
 }
 function GravFromState(entry) {
@@ -2741,9 +2734,8 @@ function GetSegment(cache, tt) {
 function CalcPlutoOneWay(entry, target_tt, dt) {
     let sim = GravFromState(entry);
     const n = Math.ceil((target_tt - sim.grav.tt) / dt);
-    for (let i = 0; i < n; ++i) {
+    for (let i = 0; i < n; ++i)
         sim = GravSim((i + 1 === n) ? target_tt : (sim.grav.tt + dt), sim.grav);
-    }
     return sim;
 }
 function CalcPluto(time) {
@@ -3018,9 +3010,8 @@ function CalcJupiterMoon(time, m) {
 function JupiterMoons(date) {
     const time = new AstroTime(date);
     let infolist = [];
-    for (let moon of JupiterMoonModel) {
+    for (let moon of JupiterMoonModel)
         infolist.push(CalcJupiterMoon(time, moon));
-    }
     return new JupiterMoonsInfo(infolist);
 }
 exports.JupiterMoons = JupiterMoons;
@@ -3046,15 +3037,12 @@ exports.JupiterMoons = JupiterMoons;
  */
 function HelioVector(body, date) {
     var time = MakeTime(date);
-    if (body in vsop) {
+    if (body in vsop)
         return CalcVsop(vsop[body], time);
-    }
-    if (body === Body.Pluto) {
+    if (body === Body.Pluto)
         return CalcPluto(time);
-    }
-    if (body === Body.Sun) {
+    if (body === Body.Sun)
         return new Vector(0, 0, 0, time);
-    }
     if (body === Body.Moon) {
         var e = CalcVsop(vsop.Earth, time);
         var m = GeoMoon(time);
@@ -3066,9 +3054,8 @@ function HelioVector(body, date) {
         const denom = 1.0 + EARTH_MOON_MASS_RATIO;
         return new Vector(e.x + (m.x / denom), e.y + (m.y / denom), e.z + (m.z / denom), time);
     }
-    if (body === Body.SSB) {
+    if (body === Body.SSB)
         return CalcSolarSystemBarycenter(time);
-    }
     throw `HelioVector: Unknown body "${body}"`;
 }
 exports.HelioVector = HelioVector;
@@ -3094,9 +3081,8 @@ exports.HelioVector = HelioVector;
  */
 function HelioDistance(body, date) {
     const time = MakeTime(date);
-    if (body in vsop) {
+    if (body in vsop)
         return VsopFormula(vsop[body][RAD_INDEX], time.tt / DAYS_PER_MILLENNIUM, false);
-    }
     return HelioVector(body, time).Length();
 }
 exports.HelioDistance = HelioDistance;
@@ -3132,12 +3118,10 @@ exports.HelioDistance = HelioDistance;
 function GeoVector(body, date, aberration) {
     VerifyBoolean(aberration);
     const time = MakeTime(date);
-    if (body === Body.Moon) {
+    if (body === Body.Moon)
         return GeoMoon(time);
-    }
-    if (body === Body.Earth) {
+    if (body === Body.Earth)
         return new Vector(0, 0, 0, time);
-    }
     let earth = null;
     let h;
     let geo;
@@ -3171,9 +3155,8 @@ function GeoVector(body, date, aberration) {
         geo = new Vector(h.x - earth.x, h.y - earth.y, h.z - earth.z, time);
         let ltime2 = time.AddDays(-geo.Length() / C_AUDAY);
         dt = Math.abs(ltime2.tt - ltime.tt);
-        if (dt < 1.0e-9) {
+        if (dt < 1.0e-9)
             return geo;
-        }
         ltime = ltime2;
     }
     throw `Light-travel time solver did not converge: dt=${dt}`;
@@ -4259,12 +4242,10 @@ function Seasons(year) {
             throw `Cannot find season change near ${startDate.toISOString()}`;
         return time;
     }
-    if ((year instanceof Date) && Number.isFinite(year.getTime())) {
+    if ((year instanceof Date) && Number.isFinite(year.getTime()))
         year = year.getUTCFullYear();
-    }
-    if (!Number.isSafeInteger(year)) {
+    if (!Number.isSafeInteger(year))
         throw `Cannot calculate seasons because year argument ${year} is neither a Date nor a safe integer.`;
-    }
     let mar_equinox = find(0, 3, 19);
     let jun_solstice = find(90, 6, 19);
     let sep_equinox = find(180, 9, 21);
@@ -4673,9 +4654,8 @@ exports.SearchLunarApsis = SearchLunarApsis;
 function NextLunarApsis(apsis) {
     const skip = 11; // number of days to skip to start looking for next apsis event
     let next = SearchLunarApsis(apsis.time.AddDays(skip));
-    if (next.kind + apsis.kind !== 1) {
+    if (next.kind + apsis.kind !== 1)
         throw `NextLunarApsis INTERNAL ERROR: did not find alternating apogee/perigee: prev=${apsis.kind} @ ${apsis.time.toString()}, next=${next.kind} @ ${next.time.toString()}`;
-    }
     return next;
 }
 exports.NextLunarApsis = NextLunarApsis;
@@ -4684,7 +4664,8 @@ function PlanetExtreme(body, kind, start_time, dayspan) {
     const npoints = 10;
     for (;;) {
         const interval = dayspan / (npoints - 1);
-        if (interval < 1.0 / 1440.0) /* iterate until uncertainty is less than one minute */ {
+        // iterate until uncertainty is less than one minute
+        if (interval < 1.0 / 1440.0) {
             const apsis_time = start_time.AddDays(interval / 2.0);
             const dist_au = HelioDistance(body, apsis_time);
             return new Apsis(apsis_time, kind, dist_au);
@@ -4757,14 +4738,12 @@ function BruteSearchPlanetApsis(body, startTime) {
     const perihelion = PlanetExtreme(body, 0, t_min.AddDays(-2 * interval), 4 * interval);
     const aphelion = PlanetExtreme(body, 1, t_max.AddDays(-2 * interval), 4 * interval);
     if (perihelion.time.tt >= startTime.tt) {
-        if (aphelion.time.tt >= startTime.tt && aphelion.time.tt < perihelion.time.tt) {
+        if (aphelion.time.tt >= startTime.tt && aphelion.time.tt < perihelion.time.tt)
             return aphelion;
-        }
         return perihelion;
     }
-    if (aphelion.time.tt >= startTime.tt) {
+    if (aphelion.time.tt >= startTime.tt)
         return aphelion;
-    }
     throw 'Internal error: failed to find Neptune apsis.';
 }
 /**
@@ -4798,9 +4777,8 @@ function BruteSearchPlanetApsis(body, startTime) {
  *      The next perihelion or aphelion that occurs after `startTime`.
  */
 function SearchPlanetApsis(body, startTime) {
-    if (body === Body.Neptune || body === Body.Pluto) {
+    if (body === Body.Neptune || body === Body.Pluto)
         return BruteSearchPlanetApsis(body, startTime);
-    }
     function positive_slope(t) {
         const dt = 0.001;
         let t1 = t.AddDays(-dt / 2);
@@ -4875,17 +4853,15 @@ exports.SearchPlanetApsis = SearchPlanetApsis;
  *      Same as the return value for {@link SearchPlanetApsis}.
  */
 function NextPlanetApsis(body, apsis) {
-    if (apsis.kind !== 0 && apsis.kind !== 1) {
+    if (apsis.kind !== 0 && apsis.kind !== 1)
         throw `Invalid apsis kind: ${apsis.kind}`;
-    }
     /* skip 1/4 of an orbit before starting search again */
     const skip = 0.25 * Planet[body].OrbitalPeriod;
     const time = apsis.time.AddDays(skip);
     const next = SearchPlanetApsis(body, time);
     /* Verify that we found the opposite apsis from the previous one. */
-    if (next.kind + apsis.kind !== 1) {
+    if (next.kind + apsis.kind !== 1)
         throw `Internal error: previous apsis was ${apsis.kind}, but found ${next.kind} for next apsis.`;
-    }
     return next;
 }
 exports.NextPlanetApsis = NextPlanetApsis;
@@ -5082,17 +5058,15 @@ function SphereFromVector(vector) {
     const dist = Math.sqrt(xyproj + vector.z * vector.z);
     let lat, lon;
     if (xyproj === 0.0) {
-        if (vector.z === 0.0) {
+        if (vector.z === 0.0)
             throw 'Zero-length vector not allowed.';
-        }
         lon = 0.0;
         lat = (vector.z < 0.0) ? -90.0 : +90.0;
     }
     else {
         lon = exports.RAD2DEG * Math.atan2(vector.y, vector.x);
-        if (lon < 0.0) {
+        if (lon < 0.0)
             lon += 360.0;
-        }
         lat = exports.RAD2DEG * Math.atan2(vector.z, Math.sqrt(xyproj));
     }
     return new Spherical(lat, lon, dist);
@@ -5249,9 +5223,8 @@ exports.Refraction = Refraction;
  *      This will be less than or equal to zero.
  */
 function InverseRefraction(refraction, bent_altitude) {
-    if (bent_altitude < -90.0 || bent_altitude > +90.0) {
+    if (bent_altitude < -90.0 || bent_altitude > +90.0)
         return 0.0; /* no attempt to correct an invalid altitude */
-    }
     /* Find the pre-adjusted altitude whose refraction correction leads to 'altitude'. */
     let altitude = bent_altitude - Refraction(refraction, bent_altitude);
     for (;;) {
@@ -6537,14 +6510,12 @@ exports.ConstellationInfo = ConstellationInfo;
 function Constellation(ra, dec) {
     VerifyNumber(ra);
     VerifyNumber(dec);
-    if (dec < -90 || dec > +90) {
+    if (dec < -90 || dec > +90)
         throw 'Invalid declination angle. Must be -90..+90.';
-    }
     // Clamp right ascension to [0, 24) sidereal hours.
     ra %= 24.0;
-    if (ra < 0.0) {
+    if (ra < 0.0)
         ra += 24.0;
-    }
     // Lazy-initialize rotation matrix.
     if (!ConstelRot) {
         // Need to calculate the B1875 epoch. Based on this:
@@ -6980,21 +6951,17 @@ function GeoidIntersect(shadow) {
         const pz = (u * v.z - e.z) * EARTH_FLATTENING;
         // Convert cartesian coordinates into geodetic latitude/longitude.
         const proj = Math.sqrt(px * px + py * py) * (EARTH_FLATTENING * EARTH_FLATTENING);
-        if (proj == 0.0) {
+        if (proj == 0.0)
             latitude = (pz > 0.0) ? +90.0 : -90.0;
-        }
-        else {
+        else
             latitude = exports.RAD2DEG * Math.atan(pz / proj);
-        }
         // Adjust longitude for Earth's rotation at the given UT.
         const gast = sidereal_time(peak);
         longitude = (exports.RAD2DEG * Math.atan2(py, px) - (15 * gast)) % 360.0;
-        if (longitude <= -180.0) {
+        if (longitude <= -180.0)
             longitude += 360.0;
-        }
-        else if (longitude > +180.0) {
+        else if (longitude > +180.0)
             longitude -= 360.0;
-        }
         // We want to determine whether the observer sees a total eclipse or an annular eclipse.
         // We need to perform a series of vector calculations...
         // Calculate the inverse rotation matrix, so we can convert EQD to EQJ.
@@ -7012,9 +6979,8 @@ function GeoidIntersect(shadow) {
         const surface = CalcShadow(MOON_POLAR_RADIUS_KM, shadow.time, o, shadow.dir);
         // If we did everything right, the shadow distance should be very close to zero.
         // That's because we already determined the observer 'o' is on the shadow axis!
-        if (surface.r > 1.0e-9 || surface.r < 0.0) {
+        if (surface.r > 1.0e-9 || surface.r < 0.0)
             throw `Unexpected shadow distance from geoid intersection = ${surface.r}`;
-        }
         kind = EclipseKindFromUmbra(surface.k);
     }
     return new GlobalSolarEclipseInfo(kind, peak, distance, latitude, longitude);
