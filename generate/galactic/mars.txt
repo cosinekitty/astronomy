@@ -1,0 +1,153 @@
+*******************************************************************************
+ Revised: June 21, 2016                 Mars                            499 / 4
+ 
+ PHYSICAL DATA (updated 2019-Oct-29):
+  Vol. mean radius (km) = 3389.92+-0.04   Density (g/cm^3)      =  3.933(5+-4)
+  Mass x10^23 (kg)      =    6.4171       Flattening, f         =  1/169.779
+  Volume (x10^10 km^3)  =   16.318        Equatorial radius (km)=  3396.19
+  Sidereal rot. period  =   24.622962 hr  Sid. rot. rate, rad/s =  0.0000708822 
+  Mean solar day (sol)  =   88775.24415 s Polar gravity m/s^2   =  3.758
+  Core radius (km)      = ~1700           Equ. gravity  m/s^2   =  3.71
+  Geometric Albedo      =    0.150                                              
+
+  GM (km^3/s^2)         = 42828.375214    Mass ratio (Sun/Mars) = 3098703.59
+  GM 1-sigma (km^3/s^2) = +- 0.00028      Mass of atmosphere, kg= ~ 2.5 x 10^16
+  Mean temperature (K)  =  210            Atmos. pressure (bar) =    0.0056 
+  Obliquity to orbit    =   25.19 deg     Max. angular diam.    =  17.9"
+  Mean sidereal orb per =    1.88081578 y Visual mag. V(1,0)    =  -1.52
+  Mean sidereal orb per =  686.98 d       Orbital speed,  km/s  =  24.13
+  Hill's sphere rad. Rp =  319.8          Escape speed, km/s    =   5.027
+                                 Perihelion  Aphelion    Mean
+  Solar Constant (W/m^2)         717         493         589
+  Maximum Planetary IR (W/m^2)   470         315         390
+  Minimum Planetary IR (W/m^2)    30          30          30
+*******************************************************************************
+ 
+ 
+*******************************************************************************
+Ephemeris / WWW_USER Sun Jun  6 14:20:26 2021 Pasadena, USA      / Horizons    
+*******************************************************************************
+Target body name: Mars (499)                      {source: mar097}
+Center body name: Earth (399)                     {source: mar097}
+Center-site name: GEOCENTRIC
+*******************************************************************************
+Start time      : A.D. 2021-Jun-06 00:00:00.0000 UT      
+Stop  time      : A.D. 2031-Jun-06 00:00:00.0000 UT      
+Step-size       : 144000 minutes
+*******************************************************************************
+Target pole/equ : IAU_MARS                        {West-longitude positive}
+Target radii    : 3396.2 x 3396.2 x 3376.2 km     {Equator, meridian, pole}    
+Center geodetic : 0.00000000,0.00000000,0.0000000 {E-lon(deg),Lat(deg),Alt(km)}
+Center cylindric: 0.00000000,0.00000000,0.0000000 {E-lon(deg),Dxy(km),Dz(km)}
+Center pole/equ : High-precision EOP model        {East-longitude positive}
+Center radii    : 6378.1 x 6378.1 x 6356.8 km     {Equator, meridian, pole}    
+Target primary  : Sun
+Vis. interferer : MOON (R_eq= 1737.400) km        {source: mar097}
+Rel. light bend : Sun, EARTH                      {source: mar097}
+Rel. lght bnd GM: 1.3271E+11, 3.9860E+05 km^3/s^2                              
+Atmos refraction: NO (AIRLESS)
+RA format       : DEG
+Time format     : CAL 
+EOP file        : eop.210604.p210826                                           
+EOP coverage    : DATA-BASED 1962-JAN-20 TO 2021-JUN-04. PREDICTS-> 2021-AUG-25
+Units conversion: 1 au= 149597870.700 km, c= 299792.458 km/s, 1 day= 86400.0 s 
+Table cut-offs 1: Elevation (-90.0deg=NO ),Airmass (>38.000=NO), Daylight (NO )
+Table cut-offs 2: Solar elongation (  0.0,180.0=NO ),Local Hour Angle( 0.0=NO )
+Table cut-offs 3: RA/DEC angular rate (     0.0=NO )                           
+*******************************************************************************
+ Date__(UT)__HR:MN     R.A.___(ICRF)___DEC     GlxLon     GlxLat
+****************************************************************
+$$SOE
+ 2021-Jun-06 00:00     118.56685  22.21110 198.933028  23.289531
+ 2021-Sep-14 00:00     179.46039   1.13241 274.374209  60.998069
+ 2021-Dec-23 00:00     244.56331 -21.41399 354.101960  20.307926
+ 2022-Apr-02 00:00     322.59026 -16.04485  35.571948 -42.275584
+ 2022-Jul-11 00:00      32.07387  11.05430 151.496925 -47.510245
+ 2022-Oct-19 00:00      83.86915  23.27404 183.607557  -4.923467
+ 2023-Jan-27 00:00      66.84314  24.52060 173.125301 -16.668890
+ 2023-May-07 00:00     114.05618  23.32473 196.182404  19.828508
+ 2023-Aug-15 00:00     172.67971   4.02665 259.565630  59.917319
+ 2023-Nov-23 00:00     236.38862 -20.01711 349.373378  26.761291
+ 2024-Mar-02 00:00     316.14663 -17.83345  30.458189 -37.198328
+ 2024-Jun-10 00:00      28.56319  10.51418 147.060586 -49.394021
+ 2024-Sep-18 00:00      98.06110  23.46781 189.856433   6.504551
+ 2024-Dec-27 00:00     126.29254  23.08958 200.752570  30.295690
+ 2025-Apr-06 00:00     117.39187  23.63501 197.069934  22.793616
+ 2025-Jul-15 00:00     167.10554   6.42475 248.473397  57.947436
+ 2025-Oct-23 00:00     228.21790 -18.22887 343.958754  33.149589
+ 2026-Jan-31 00:00     308.21953 -19.87933  24.958547 -30.894154
+ 2026-May-11 00:00      22.18058   8.42008 138.484061 -53.324518
+ 2026-Aug-19 00:00      95.08748  23.69690 188.394617   4.186294
+ 2026-Nov-27 00:00     152.90970  13.52703 224.844188  50.354204
+ 2027-Mar-07 00:00     148.44362  17.22545 217.004698  47.924844
+ 2027-Jun-15 00:00     165.07991   7.41197 244.612558  57.103695
+ 2027-Sep-23 00:00     220.97700 -16.40224 338.288224  38.630194
+ 2028-Jan-01 00:00     299.82588 -21.73895  19.872388 -24.208028
+ 2028-Apr-10 00:00      14.97620   5.69496 126.803663 -57.115466
+ 2028-Jul-19 00:00      88.20086  23.84857 185.187671  -1.243477
+ 2028-Oct-27 00:00     153.87610  12.45376 227.018653  50.700768
+ 2029-Feb-04 00:00     193.04481  -2.24088 303.314981  60.628887
+ 2029-May-15 00:00     175.95942   3.18717 266.006146  61.115095
+ 2029-Aug-23 00:00     216.23879 -15.31383 333.859716  41.874674
+ 2029-Dec-01 00:00     291.94998 -23.22420  15.507996 -17.996925
+ 2030-Mar-11 00:00       7.75665   2.76250 112.777639 -59.707976
+ 2030-Jun-19 00:00      80.12331  23.63976 181.401480  -7.605211
+ 2030-Sep-27 00:00     148.89944  13.96453 221.683298  47.029215
+ 2031-Jan-05 00:00     202.98457  -7.71223 320.087835  53.805367
+ 2031-Apr-15 00:00     227.28997 -16.36179 344.510469  35.158103
+$$EOE
+*******************************************************************************
+Column meaning:
+ 
+TIME
+
+  Times PRIOR to 1962 are UT1, a mean-solar time closely related to the
+prior but now-deprecated GMT. Times AFTER 1962 are in UTC, the current
+civil or "wall-clock" time-scale. UTC is kept within 0.9 seconds of UT1
+using integer leap-seconds for 1972 and later years.
+
+  Conversion from the internal Barycentric Dynamical Time (TDB) of solar
+system dynamics to the non-uniform civil UT time-scale requested for output
+has not been determined for UTC times after the next July or January 1st.
+Therefore, the last known leap-second is used as a constant over future
+intervals.
+
+  Time tags refer to the UT time-scale conversion from TDB on Earth
+regardless of observer location within the solar system, although clock
+rates may differ due to the local gravity field and no analog to "UT"
+may be defined for that location.
+
+  Any 'b' symbol in the 1st-column denotes a B.C. date. First-column blank
+(" ") denotes an A.D. date. Calendar dates prior to 1582-Oct-15 are in the
+Julian calendar system. Later calendar dates are in the Gregorian system.
+
+  NOTE: "n.a." in output means quantity "not available" at the print-time.
+ 
+ 'R.A.___(ICRF)___DEC' =
+  Astrometric right ascension and declination of the target center with
+respect to the observing site (coordinate origin) in the reference frame of
+the planetary ephemeris (ICRF). Compensated for down-leg light-time delay
+aberration.
+
+  Units: RA  in decimal degrees,  ddd.fffff{ffff}
+         DEC in decimal degrees,  sdd.fffff{ffff}
+ 
+ 'GlxLon     GlxLat' =
+   Observer-centered Galactic System II (post WW II) longitude and latitude
+of the target centers' apparent position, with light-time, gravitational
+deflection of light, and stellar aberrations. Units: DEGREES
+
+
+ Computations by ...
+     Solar System Dynamics Group, Horizons On-Line Ephemeris System
+     4800 Oak Grove Drive, Jet Propulsion Laboratory
+     Pasadena, CA  91109   USA
+     Information  : https://ssd.jpl.nasa.gov/
+     Documentation: https://ssd.jpl.nasa.gov/?horizons_doc
+     Connect      : https://ssd.jpl.nasa.gov/?horizons (browser)
+                    telnet ssd.jpl.nasa.gov 6775       (command-line)
+                    e-mail command interface available
+                    Script and CGI interfaces available
+     Author       : Jon.D.Giorgini@jpl.nasa.gov
+
+*******************************************************************************
