@@ -125,6 +125,11 @@ rm -f lunar_eclipse.txt solar_eclipse.txt mercury.txt venus.txt
 python3 norm.py || Fail "Error normalizing eclipse test data."
 cd .. || Fail "Could not change to parent directory."
 
+echo ""
+echo "Generating EQJ/GAL conversion test data."
+./generate galeqj temp/galeqj.txt || Fail "Error generating EQJ/GAL test data."
+echo ""
+
 ./makedoc || exit $?
 ./unit_test_csharp $1 || exit $?
 ./unit_test_js $1 || exit $?
