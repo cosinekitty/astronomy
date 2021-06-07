@@ -39,6 +39,9 @@ char *ReadLine(char *s, int n, FILE *f, const char *filename, int lnum)
 #define FAIL(...)       do{fprintf(stderr, __VA_ARGS__); error = 1; goto fail;}while(0)
 #define FAILRET(...)    do{fprintf(stderr, __VA_ARGS__); return 1;}while(0)
 
+static int CheckInverse(const char *aname, const char *bname, astro_rotation_t arot, astro_rotation_t brot);
+#define CHECK_INVERSE(a,b)   CHECK(CheckInverse(#a, #b, a, b))
+
 int Verbose = 0;
 #define DEBUG(...)      do{if(Verbose)printf(__VA_ARGS__);}while(0)
 
@@ -2061,7 +2064,7 @@ static int CheckUnitVector(int lnum, const char *name, astro_rotation_t r, int i
         sum += x*x;
     }
     x = ABS(sum - 1.0);
-    if (x > 1.4e-15)
+    if (x > 1.8e-15)
         FAILRET("C CheckUnitVector ERROR(%s line %d): unit error = %lg for i0=%d, j0=%d, di=%d, dj=%d\n", name, lnum, x, i0, j0, di, dj);
 
     return 0;
@@ -2486,7 +2489,7 @@ static int Test_EQJ_GAL(void)
     FILE *infile = NULL;
     int lnum, nscanned;
     char line[100];
-    astro_rotation_t rot;
+    astro_rotation_t rot, inv;
     astro_time_t time;
     astro_spherical_t eqj_sphere, gal_sphere;
     astro_vector_t eqj_vec, gal_vec;
@@ -2495,6 +2498,10 @@ static int Test_EQJ_GAL(void)
 
     rot = Astronomy_Rotation_EQJ_GAL();
     CHECK_STATUS(rot);
+
+    inv = Astronomy_Rotation_GAL_EQJ();
+    CHECK_STATUS(inv);
+    CHECK_INVERSE(rot, inv);
 
     infile = fopen(filename, "rt");
     if (infile == NULL)
@@ -2711,8 +2718,6 @@ static int CheckInverse(const char *aname, const char *bname, astro_rotation_t a
 fail:
     return error;
 }
-
-#define CHECK_INVERSE(a,b)   CHECK(CheckInverse(#a, #b, a, b))
 
 static int CheckCycle(
     const char *cyclename,
