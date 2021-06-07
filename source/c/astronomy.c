@@ -7695,6 +7695,84 @@ astro_rotation_t Astronomy_Rotation_HOR_ECL(astro_time_t time, astro_observer_t 
     return Astronomy_InverseRotation(rot);
 }
 
+/**
+ * @brief
+ *      Returns a rotation matrix from ecliptic J2000 (EQJ) to galactic (GAL).
+ *
+ * This is one of the family of functions that returns a rotation matrix
+ * for converting from one orientation to another.
+ * Source: EQJ = equatorial system, using the equator at the J2000 epoch.
+ * Target: GAL = galactic system (IAU 1958 definition).
+ *
+ * @return
+ *      A rotation matrix that converts EQJ to GAL.
+ */
+astro_rotation_t Astronomy_Rotation_EQJ_GAL(void)
+{
+    astro_rotation_t rot;
+
+    /*
+        This rotation matrix was calculated by the following script
+        in this same source code repository:
+        demo/python/galeqj_matrix.py
+    */
+
+    rot.rot[0][0] = -0.0548624779711344;
+    rot.rot[0][1] = +0.4941095946388765;
+    rot.rot[0][2] = -0.8676668813529025;
+
+    rot.rot[1][0] = -0.8734572784246782;
+    rot.rot[1][1] = -0.4447938112296831;
+    rot.rot[1][2] = -0.1980677870294097;
+
+    rot.rot[2][0] = -0.4838000529948520;
+    rot.rot[2][1] = +0.7470034631630423;
+    rot.rot[2][2] = +0.4559861124470794;
+
+    rot.status = ASTRO_SUCCESS;
+
+    return rot;
+}
+
+/**
+ * @brief
+ *      Returns a rotation matrix from ecliptic galactic (GAL) to J2000 (EQJ).
+ *
+ * This is one of the family of functions that returns a rotation matrix
+ * for converting from one orientation to another.
+ * Source: GAL = galactic system (IAU 1958 definition).
+ * Target: EQJ = equatorial system, using the equator at the J2000 epoch.
+ *
+ * @return
+ *      A rotation matrix that converts GAL to EQJ.
+ */
+astro_rotation_t Astronomy_Rotation_GAL_EQJ(void)
+{
+    astro_rotation_t rot;
+
+    /*
+        This rotation matrix was calculated by the following script
+        in this same source code repository:
+        demo/python/galeqj_matrix.py
+    */
+
+    rot.rot[0][0] = -0.0548624779711344;
+    rot.rot[0][1] = -0.8734572784246782;
+    rot.rot[0][2] = -0.4838000529948520;
+
+    rot.rot[1][0] = +0.4941095946388765;
+    rot.rot[1][1] = -0.4447938112296831;
+    rot.rot[1][2] = +0.7470034631630423;
+
+    rot.rot[2][0] = -0.8676668813529025;
+    rot.rot[2][1] = -0.1980677870294097;
+    rot.rot[2][2] = +0.4559861124470794;
+
+    rot.status = ASTRO_SUCCESS;
+
+    return rot;
+}
+
 
 /** @cond DOXYGEN_SKIP */
 typedef struct

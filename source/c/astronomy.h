@@ -1070,6 +1070,8 @@ astro_rotation_t Astronomy_Rotation_ECL_HOR(astro_time_t time, astro_observer_t 
 astro_rotation_t Astronomy_Rotation_HOR_EQD(astro_time_t time, astro_observer_t observer);
 astro_rotation_t Astronomy_Rotation_HOR_EQJ(astro_time_t time, astro_observer_t observer);
 astro_rotation_t Astronomy_Rotation_HOR_ECL(astro_time_t time, astro_observer_t observer);
+astro_rotation_t Astronomy_Rotation_EQJ_GAL(void);
+astro_rotation_t Astronomy_Rotation_GAL_EQJ(void);
 
 double Astronomy_Refraction(astro_refraction_t refraction, double altitude);
 double Astronomy_InverseRefraction(astro_refraction_t refraction, double bent_altitude);

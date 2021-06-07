@@ -161,6 +161,8 @@ these are used in function and type names.
 | [Rotation_HOR_EQD](#Astronomy_Rotation_HOR_EQD) | Calculates a rotation matrix from horizontal (HOR) to equatorial of-date (EQD). |
 | [Rotation_HOR_EQJ](#Astronomy_Rotation_HOR_EQJ) | Calculates a rotation matrix from horizontal (HOR) to J2000 equatorial (EQJ). |
 | [Rotation_HOR_ECL](#Astronomy_Rotation_HOR_ECL) | Calculates a rotation matrix from horizontal (HOR) to ecliptic J2000 (ECL). |
+| [Rotation_EQJ_GAL](#Astronomy_Rotation_EQJ_GAL) | Calculates a rotation matrix from J2000 equatorial (EQJ) to galactic (GAL). |
+| [Rotation_GAL_EQJ](#Astronomy_Rotation_EQJ_GAL) | Calculates a rotation matrix from galactic (GAL) to J2000 equatorial (EQJ). |
 
 ---
 
@@ -1490,6 +1492,23 @@ This is one of the family of functions that returns a rotation matrix for conver
 
 ---
 
+<a name="Astronomy_Rotation_EQJ_GAL"></a>
+### Astronomy_Rotation_EQJ_GAL() &#8658; [`astro_rotation_t`](#astro_rotation_t)
+
+**Returns a rotation matrix from ecliptic J2000 (EQJ) to galactic (GAL).** 
+
+
+
+This is one of the family of functions that returns a rotation matrix for converting from one orientation to another. Source: EQJ = equatorial system, using the equator at the J2000 epoch. Target: GAL = galactic system (IAU 1958 definition).
+
+
+
+**Returns:**  A rotation matrix that converts EQJ to GAL. 
+
+
+
+---
+
 <a name="Astronomy_Rotation_EQJ_HOR"></a>
 ### Astronomy_Rotation_EQJ_HOR(time, observer) &#8658; [`astro_rotation_t`](#astro_rotation_t)
 
@@ -1510,6 +1529,23 @@ This is one of the family of functions that returns a rotation matrix for conver
 | [`astro_time_t`](#astro_time_t) | `time` |  The date and time of the desired horizontal orientation. | 
 | [`astro_observer_t`](#astro_observer_t) | `observer` |  A location near the Earth's mean sea level that defines the observer's horizon. | 
 
+
+
+
+---
+
+<a name="Astronomy_Rotation_GAL_EQJ"></a>
+### Astronomy_Rotation_GAL_EQJ() &#8658; [`astro_rotation_t`](#astro_rotation_t)
+
+**Returns a rotation matrix from ecliptic galactic (GAL) to J2000 (EQJ).** 
+
+
+
+This is one of the family of functions that returns a rotation matrix for converting from one orientation to another. Source: GAL = galactic system (IAU 1958 definition). Target: EQJ = equatorial system, using the equator at the J2000 epoch.
+
+
+
+**Returns:**  A rotation matrix that converts GAL to EQJ. 
 
 
 

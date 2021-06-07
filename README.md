@@ -105,6 +105,7 @@ Calculations are also verified to be identical among all the supported programmi
   - Equatorial equator-of-date
   - Ecliptic J2000
   - Topocentric Horizontal
+  - Galactic (IAU 1958)
 
 - Determines which constellation contains a given point in the sky.
 

@@ -161,6 +161,8 @@ these are used in function and type names.
 | [Rotation_HOR_EQD](#Astronomy_Rotation_HOR_EQD) | Calculates a rotation matrix from horizontal (HOR) to equatorial of-date (EQD). |
 | [Rotation_HOR_EQJ](#Astronomy_Rotation_HOR_EQJ) | Calculates a rotation matrix from horizontal (HOR) to J2000 equatorial (EQJ). |
 | [Rotation_HOR_ECL](#Astronomy_Rotation_HOR_ECL) | Calculates a rotation matrix from horizontal (HOR) to ecliptic J2000 (ECL). |
+| [Rotation_EQJ_GAL](#Astronomy_Rotation_EQJ_GAL) | Calculates a rotation matrix from J2000 equatorial (EQJ) to galactic (GAL). |
+| [Rotation_GAL_EQJ](#Astronomy_Rotation_EQJ_GAL) | Calculates a rotation matrix from galactic (GAL) to J2000 equatorial (EQJ). |
 
 ---
 

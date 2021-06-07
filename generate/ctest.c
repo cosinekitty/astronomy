@@ -2475,6 +2475,76 @@ fail:
     return error;
 }
 
+static int Test_EQJ_GAL(void)
+{
+    /* First test: compare against ICRS/GAL calculated by NOVAS C 3.1. */
+    const char *filename = "temp/galeqj.txt";
+    const double THRESHOLD_SECONDS = 8.8;
+    int error;
+    double ra, dec, glon, glat;
+    double dlon, dlat, diff, max_diff;
+    FILE *infile = NULL;
+    int lnum, nscanned;
+    char line[100];
+    astro_rotation_t rot;
+    astro_time_t time;
+    astro_spherical_t eqj_sphere, gal_sphere;
+    astro_vector_t eqj_vec, gal_vec;
+
+    time = Astronomy_MakeTime(2000, 1, 1, 0, 0, 0.0);   /* placeholder time - value does not matter */
+
+    rot = Astronomy_Rotation_EQJ_GAL();
+    CHECK_STATUS(rot);
+
+    infile = fopen(filename, "rt");
+    if (infile == NULL)
+        FAIL("C Test_EQJ_GAL: Cannot open input file: %s\n", filename);
+
+    max_diff = 0.0;
+    lnum = 0;
+    while (ReadLine(line, sizeof(line), infile, filename, lnum))
+    {
+        ++lnum;
+        nscanned = sscanf(line, "%lf %lf %lf %lf", &ra, &dec, &glon, &glat);
+        if (nscanned != 4)
+            FAIL("C Test_EQJ_GAL(%s line %d): bad input format.\n", filename, lnum);
+        V(ra);
+        V(dec);
+        V(glon);
+        V(glat);
+
+        /* Use Astronomy Engine to do the same EQJ/GAL conversion. */
+        eqj_sphere.status = ASTRO_SUCCESS;
+        eqj_sphere.dist = 1.0;
+        eqj_sphere.lon = 15.0 * ra;
+        eqj_sphere.lat = dec;
+
+        eqj_vec = Astronomy_VectorFromSphere(eqj_sphere, time);
+        CHECK_STATUS(eqj_vec);
+
+        gal_vec = Astronomy_RotateVector(rot, eqj_vec);
+        CHECK_STATUS(gal_vec);
+
+        gal_sphere = Astronomy_SphereFromVector(gal_vec);
+        CHECK_STATUS(gal_sphere);
+
+        dlat = V(gal_sphere.lat - glat);
+        dlon = cos(DEG2RAD * glat) * V(gal_sphere.lon - glon);
+        diff = V(3600.0 * sqrt(dlon*dlon + dlat*dlat));     /* error in arcseconds */
+        if (diff > THRESHOLD_SECONDS)
+            FAIL("C Test_EQJ_GAL(%s line %d): EXCESSIVE ERROR = %0.3lf arcseconds\n", filename, lnum, diff);
+
+        if (diff > max_diff)
+            max_diff = diff;
+    }
+
+    DEBUG("C Test_EQJ_GAL: PASS. max_diff = %0.3lf arcseconds.\n", max_diff);
+    error = 0;
+fail:
+    if (infile != NULL) fclose(infile);
+    return error;
+}
+
 static int Test_EQJ_EQD(astro_body_t body)
 {
     astro_time_t time;
@@ -2766,6 +2836,7 @@ static int RotationTest(void)
     CHECK(TestSpin(0.0, 0.0, -45.0, +1, 0, 0, +0.7071067811865476, -0.7071067811865476, 0));
 
     CHECK(Test_EQJ_ECL());
+    CHECK(Test_EQJ_GAL());
 
     CHECK(Test_EQJ_EQD(BODY_MERCURY));
     CHECK(Test_EQJ_EQD(BODY_VENUS));
@@ -2778,6 +2849,7 @@ static int RotationTest(void)
     CHECK(Test_EQD_HOR(BODY_MARS));
     CHECK(Test_EQD_HOR(BODY_JUPITER));
     CHECK(Test_EQD_HOR(BODY_SATURN));
+
 
     CHECK(Test_RotRoundTrip());
 
