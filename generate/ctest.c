@@ -2478,10 +2478,9 @@ fail:
     return error;
 }
 
-static int Test_EQJ_GAL(void)
+static int Test_EQJ_GAL_NOVAS(const char *filename)
 {
-    /* First test: compare against ICRS/GAL calculated by NOVAS C 3.1. */
-    const char *filename = "temp/galeqj.txt";
+    /* Compare against ICRS/GAL calculated by NOVAS C 3.1. */
     const double THRESHOLD_SECONDS = 8.8;
     int error;
     double ra, dec, glon, glat;
@@ -2505,7 +2504,7 @@ static int Test_EQJ_GAL(void)
 
     infile = fopen(filename, "rt");
     if (infile == NULL)
-        FAIL("C Test_EQJ_GAL: Cannot open input file: %s\n", filename);
+        FAIL("C Test_EQJ_GAL_NOVAS: Cannot open input file: %s\n", filename);
 
     max_diff = 0.0;
     lnum = 0;
@@ -2514,7 +2513,7 @@ static int Test_EQJ_GAL(void)
         ++lnum;
         nscanned = sscanf(line, "%lf %lf %lf %lf", &ra, &dec, &glon, &glat);
         if (nscanned != 4)
-            FAIL("C Test_EQJ_GAL(%s line %d): bad input format.\n", filename, lnum);
+            FAIL("C Test_EQJ_GAL_NOVAS(%s line %d): bad input format.\n", filename, lnum);
         V(ra);
         V(dec);
         V(glon);
@@ -2523,7 +2522,7 @@ static int Test_EQJ_GAL(void)
         /* Use Astronomy Engine to do the same EQJ/GAL conversion. */
         eqj_sphere.status = ASTRO_SUCCESS;
         eqj_sphere.dist = 1.0;
-        eqj_sphere.lon = 15.0 * ra;
+        eqj_sphere.lon = 15.0 * ra;     /* Convert from sidereal hours to degrees. */
         eqj_sphere.lat = dec;
 
         eqj_vec = Astronomy_VectorFromSphere(eqj_sphere, time);
@@ -2539,13 +2538,109 @@ static int Test_EQJ_GAL(void)
         dlon = cos(DEG2RAD * glat) * V(gal_sphere.lon - glon);
         diff = V(3600.0 * sqrt(dlon*dlon + dlat*dlat));     /* error in arcseconds */
         if (diff > THRESHOLD_SECONDS)
-            FAIL("C Test_EQJ_GAL(%s line %d): EXCESSIVE ERROR = %0.3lf arcseconds\n", filename, lnum, diff);
+            FAIL("C Test_EQJ_GAL_NOVAS(%s line %d): EXCESSIVE ERROR = %0.3lf arcseconds\n", filename, lnum, diff);
 
         if (diff > max_diff)
             max_diff = diff;
     }
 
-    DEBUG("C Test_EQJ_GAL: PASS. max_diff = %0.3lf arcseconds.\n", max_diff);
+    DEBUG("C Test_EQJ_GAL_NOVAS: PASS. max_diff = %0.3lf arcseconds.\n", max_diff);
+    error = 0;
+fail:
+    if (infile != NULL) fclose(infile);
+    return error;
+}
+
+static int Test_EQJ_GAL_JPL(const char *filename)
+{
+    /*
+        Compare against ICRS/GAL calculated by JPL Horizons tool.
+        We get a fairly large error of 23 arcseconds due because I
+        can't figure out how to make JPL Horizons use the same
+        aberration settings in equatorial and galactic coordinates.
+    */
+    const double THRESHOLD_SECONDS = 23.0;
+    int error, lnum, nscanned;
+    int found_begin = 0;
+    int found_end = 0;
+    double ra, dec, glon, glat;
+    FILE *infile = NULL;
+    char line[100];
+    astro_rotation_t rot;
+    astro_time_t time;
+    astro_spherical_t eqj_sphere, gal_sphere;
+    astro_vector_t eqj_vec, gal_vec;
+    double dlon, dlat, diff, max_diff = 0.0;
+
+    time = Astronomy_MakeTime(2000, 1, 1, 0, 0, 0.0);   /* placeholder time - value does not matter */
+
+    rot = Astronomy_Rotation_EQJ_GAL();
+    CHECK_STATUS(rot);
+
+    infile = fopen(filename, "rt");
+    if (infile == NULL)
+        FAIL("C Test_EQJ_GAL_JPL: Cannot open input file: %s\n", filename);
+
+    lnum = 0;
+    while (!found_end && ReadLine(line, sizeof(line), infile, filename, lnum))
+    {
+        ++lnum;
+        if (!found_begin)
+        {
+            if (strlen(line) >= 5 && !memcmp(line, "$$SOE", 5))
+                found_begin = 1;
+        }
+        else if (strlen(line) >= 5 && !memcmp(line, "$$EOE", 5))
+        {
+            found_end = 1;
+        }
+        else
+        {
+            if (strlen(line) < 18)
+                FAIL("C Test_EQJ_GAL_JPL(%s line %d): line is too short.\n", filename, lnum);
+
+            nscanned = sscanf(line+18, "%lf %lf %lf %lf", &ra, &dec, &glon, &glat);
+            if (nscanned != 4)
+                FAIL("C Test_EQJ_GAL_JPL(%s line %d): invalid data format.\n", filename, lnum);
+
+            V(ra);
+            V(dec);
+            V(glon);
+            V(glat);
+
+            /* Use Astronomy Engine to do the same EQJ/GAL conversion. */
+            eqj_sphere.status = ASTRO_SUCCESS;
+            eqj_sphere.dist = 1.0;
+            eqj_sphere.lon = ra;        /* RA is already in degrees in the JPL Horizons input file. */
+            eqj_sphere.lat = dec;
+
+            eqj_vec = Astronomy_VectorFromSphere(eqj_sphere, time);
+            CHECK_STATUS(eqj_vec);
+
+            gal_vec = Astronomy_RotateVector(rot, eqj_vec);
+            CHECK_STATUS(gal_vec);
+
+            gal_sphere = Astronomy_SphereFromVector(gal_vec);
+            CHECK_STATUS(gal_sphere);
+
+            dlat = V(gal_sphere.lat - glat);
+            dlon = cos(DEG2RAD * glat) * V(gal_sphere.lon - glon);
+            diff = V(3600.0 * sqrt(dlon*dlon + dlat*dlat));     /* error in arcseconds */
+            if (diff > THRESHOLD_SECONDS)
+                FAIL("C Test_EQJ_GAL_JPL(%s line %d): EXCESSIVE ERROR = %0.3lf arcseconds\n", filename, lnum, diff);
+
+            if (diff > max_diff)
+                max_diff = diff;
+        }
+    }
+
+    if (!found_begin)
+        FAIL("C Test_EQJ_GAL_JPL: did not find begin-data marker in: %s\n", filename);
+
+    if (!found_end)
+        FAIL("C Test_EQJ_GAL_JPL: did not find end-data marker in: %s\n", filename);
+
+    DEBUG("C Test_EQJ_GAL_JPL: PASS. max_diff = %0.3lf arcseconds.\n", max_diff);
     error = 0;
 fail:
     if (infile != NULL) fclose(infile);
@@ -2841,7 +2936,8 @@ static int RotationTest(void)
     CHECK(TestSpin(0.0, 0.0, -45.0, +1, 0, 0, +0.7071067811865476, -0.7071067811865476, 0));
 
     CHECK(Test_EQJ_ECL());
-    CHECK(Test_EQJ_GAL());
+    CHECK(Test_EQJ_GAL_NOVAS("temp/galeqj.txt"));
+    CHECK(Test_EQJ_GAL_JPL("galactic/mars.txt"));
 
     CHECK(Test_EQJ_EQD(BODY_MERCURY));
     CHECK(Test_EQJ_EQD(BODY_VENUS));
