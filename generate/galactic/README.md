@@ -11,9 +11,8 @@ Here are the steps to reproduce this test data on JPL Horizons:
 3. Observer Location = Geocentric (500)
 4. Time Span: Start=2021-06-06, Stop=2031-06-06, Step=100 days
 5. Table Settings: check boxes 1 (Astrometric RA, DEC) and 33 (Galactic lon, lat).
-6. Also on Table Settings, change angle format to decimal degrees; 
-   airless (no refraction); 
-   enable extra precision.
+6. Also on Table Settings, change angle format to decimal degrees;
+   airless (no refraction); enable extra precision.
 7. Set Display Output to plain text.
 8. Generate the data, Ctrl+A, Ctrl+C to copy to clipboard.
    Paste into editor. Add an extra blank line at the end, and save.
