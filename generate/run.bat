@@ -115,6 +115,15 @@ if errorlevel 1 (
 )
 cd ..
 
+echo.
+echo.Generating EQJ/GAL conversion test data.
+!GENEXE! galeqj temp\galeqj.txt
+if errorlevel 1 (
+    echo.Error generating EQJ/GAL conversion test data.
+    exit /b 1
+)
+echo.
+
 call makedoc.bat
 if errorlevel 1 (exit /b 1)
 
