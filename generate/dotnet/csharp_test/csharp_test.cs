@@ -1549,6 +1549,58 @@ namespace csharp_test
         }
 
 
+        static int Test_EQJ_GAL_NOVAS(string filename)
+        {
+            const double THRESHOLD_SECONDS = 8.8;
+            RotationMatrix rot = Astronomy.Rotation_EQJ_GAL();
+            RotationMatrix inv = Astronomy.Rotation_GAL_EQJ();
+            if (0 != CheckInverse("EQJ_GAL", "GAL_EQJ", rot, inv)) return 1;
+
+            var time = new AstroTime(0.0);  // placeholder time - value does not matter
+            double max_diff = 0.0;
+
+            using (StreamReader infile = File.OpenText(filename))
+            {
+                string line;
+                int lnum = 0;
+                while (null != (line = infile.ReadLine()))
+                {
+                    ++lnum;
+                    string[] token = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                    if (token.Length != 4)
+                    {
+                        Console.WriteLine("C# Test_EQJ_GAL_NOVAS({0} line {1}): found {2} tokens instead of 4.", filename, lnum, token.Length);
+                        return 1;
+                    }
+
+                    double ra = double.Parse(token[0]);
+                    double dec = double.Parse(token[1]);
+                    double glon = double.Parse(token[2]);
+                    double glat = double.Parse(token[3]);
+
+                    // Use Astronomy Engine to do the same EQJ/GAL conversion.
+                    var eqj_sphere = new Spherical(dec, 15.0 * ra, 1.0);
+                    AstroVector eqj_vec = Astronomy.VectorFromSphere(eqj_sphere, time);
+                    AstroVector gal_vec = Astronomy.RotateVector(rot, eqj_vec);
+                    Spherical gal_sphere = Astronomy.SphereFromVector(gal_vec);
+                    double dlat = v(gal_sphere.lat - glat);
+                    double dlon = cos(Astronomy.DEG2RAD * glat) * v(gal_sphere.lon - glon);
+                    double diff = 3600.0 * sqrt(dlon*dlon + dlat*dlat);
+                    if (diff > THRESHOLD_SECONDS)
+                    {
+                        Console.WriteLine("C# Test_EQJ_GAL_NOVAS({0} line {1}): EXCESSIVE ERROR = {2:F3} arcseconds.", filename, lnum, diff);
+                        return 1;
+                    }
+                    if (diff > max_diff)
+                        max_diff = diff;
+                }
+            }
+
+            Debug("C# Test_EQJ_GAL_NOVAS: PASS. max_diff = {0:F3} arcseconds.", max_diff);
+            return 0;
+        }
+
+
         static int CheckInverse(string aname, string bname, RotationMatrix arot, RotationMatrix brot)
         {
             RotationMatrix crot = Astronomy.CombineRotation(arot, brot);
@@ -1686,6 +1738,7 @@ namespace csharp_test
             if (0 != Rotation_MatrixMultiply()) return 1;
             if (0 != Rotation_Pivot()) return 1;
             if (0 != Test_EQJ_ECL()) return 1;
+            if (0 != Test_EQJ_GAL_NOVAS("../../temp/galeqj.txt")) return 1;
 
             if (0 != Test_EQJ_EQD(Body.Mercury)) return 1;
             if (0 != Test_EQJ_EQD(Body.Venus)) return 1;

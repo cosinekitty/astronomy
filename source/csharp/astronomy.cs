@@ -8243,6 +8243,76 @@ namespace CosineKitty
             return InverseRotation(rot);
         }
 
+        /// <summary>
+        /// Calculates a rotation matrix from equatorial J2000 (EQJ) to galactic (GAL).
+        /// </summary>
+        /// <remarks>
+        /// This is one of the family of functions that returns a rotation matrix
+        /// for converting from one orientation to another.
+        /// Source: EQJ = equatorial system, using the equator at the J2000 epoch.
+        /// Target: GAL = galactic system (IAU 1958 definition).
+        /// </remarks>
+        /// <returns>
+        /// A rotation matrix that converts EQJ to GAL.
+        /// </returns>
+        public static RotationMatrix Rotation_EQJ_GAL()
+        {
+            var rot = new double[3, 3];
+
+            // This rotation matrix was calculated by the following script
+            // in this same source code repository:
+            // demo/python/galeqj_matrix.py
+
+            rot[0, 0] = -0.0548624779711344;
+            rot[0, 1] = +0.4941095946388765;
+            rot[0, 2] = -0.8676668813529025;
+
+            rot[1, 0] = -0.8734572784246782;
+            rot[1, 1] = -0.4447938112296831;
+            rot[1, 2] = -0.1980677870294097;
+
+            rot[2, 0] = -0.4838000529948520;
+            rot[2, 1] = +0.7470034631630423;
+            rot[2, 2] = +0.4559861124470794;
+
+            return new RotationMatrix(rot);
+        }
+
+        /// <summary>
+        /// Calculates a rotation matrix from galactic (GAL) to equatorial J2000 (EQJ).
+        /// </summary>
+        /// <remarks>
+        /// This is one of the family of functions that returns a rotation matrix
+        /// for converting from one orientation to another.
+        /// Source: GAL = galactic system (IAU 1958 definition).
+        /// Target: EQJ = equatorial system, using the equator at the J2000 epoch.
+        /// </remarks>
+        /// <returns>
+        /// A rotation matrix that converts GAL to EQJ.
+        /// </returns>
+        public static RotationMatrix Rotation_GAL_EQJ()
+        {
+            var rot = new double[3, 3];
+
+            // This rotation matrix was calculated by the following script
+            // in this same source code repository:
+            // demo/python/galeqj_matrix.py
+
+            rot[0, 0] = -0.0548624779711344;
+            rot[0, 1] = -0.8734572784246782;
+            rot[0, 2] = -0.4838000529948520;
+
+            rot[1, 0] = +0.4941095946388765;
+            rot[1, 1] = -0.4447938112296831;
+            rot[1, 2] = +0.7470034631630423;
+
+            rot[2, 0] = -0.8676668813529025;
+            rot[2, 1] = -0.1980677870294097;
+            rot[2, 2] = +0.4559861124470794;
+
+            return new RotationMatrix(rot);
+        }
+
         private struct constel_info_t
         {
             public readonly string symbol;
