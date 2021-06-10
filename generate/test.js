@@ -1279,6 +1279,40 @@ function Rotation() {
             throw 'Test_EQJ_ECL: EXCESSIVE REVERSE ROTATION ERROR';
     }
 
+    function Test_GAL_EQJ_NOVAS(filename) {
+        const THRESHOLD_SECONDS = 8.8;
+        const rot = Astronomy.Rotation_EQJ_GAL();
+        const text = fs.readFileSync(filename, {encoding:'utf8'});
+        const lines = text.trimRight().split('\n');
+        const time = new Astronomy.AstroTime(0);    // placeholder time - value does not matter
+        let lnum = 0;
+        let max_diff = 0;
+        for (let row of lines) {
+            ++lnum;
+            let token = row.trim().split(/\s+/);
+            if (token.length !== 4)
+                throw `Test_GAL_EQJ_NOVAS(${filename} line ${lnum}): expected 4 tokens, found ${token.length}`;
+            const ra = float(token[0]);
+            const dec = float(token[1]);
+            const glon = float(token[2]);
+            const glat = float(token[3]);
+
+            const eqj_sphere = new Astronomy.Spherical(dec, 15*ra, 1);
+            const eqj_vec = Astronomy.VectorFromSphere(eqj_sphere, time);
+            const gal_vec = Astronomy.RotateVector(rot, eqj_vec);
+            const gal_sphere = Astronomy.SphereFromVector(gal_vec);
+            const dlat = v(gal_sphere.lat - glat);
+            const dlon = cos(Astronomy.DEG2RAD * glat) * v(gal_sphere.lon - glon);
+            const diff = 3600 * sqrt(dlon*dlon + dlat*dlat);
+            if (diff > THRESHOLD_SECONDS)
+                throw `Test_GAL_EQJ_NOVAS(${filename} line ${lnum}): EXCESSIVE ERROR = ${diff.toFixed(3)} arcseconds.`;
+            if (diff > max_diff)
+                max_diff = diff;
+        }
+        if (Verbose) console.log(`JS Test_GAL_EQJ_NOVAS: PASS. max_diff = ${max_diff.toFixed(3)} arcseconds.`);
+        return 0;
+    }
+
     function Test_EQJ_EQD(body) {
         /* Verify conversion of equatorial J2000 to equatorial of-date, and back. */
         /* Use established functions to calculate spherical coordinates for the body, in both EQJ and EQD. */
@@ -1492,6 +1526,7 @@ function Rotation() {
     Rotation_MatrixMultiply();
     Rotation_Pivot();
     Test_EQJ_ECL();
+    Test_GAL_EQJ_NOVAS('temp/galeqj.txt');
 
     Test_EQJ_EQD('Mercury');
     Test_EQJ_EQD('Venus');

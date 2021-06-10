@@ -1918,6 +1918,36 @@ export declare function Rotation_ECL_HOR(time: FlexibleDateTime, observer: Obser
  */
 export declare function Rotation_HOR_ECL(time: FlexibleDateTime, observer: Observer): RotationMatrix;
 /**
+ * @brief Calculates a rotation matrix from equatorial J2000 (EQJ) to galactic (GAL).
+ *
+ * This is one of the family of functions that returns a rotation matrix
+ * for converting from one orientation to another.
+ * Source: EQJ = equatorial system, using the equator at the J2000 epoch.
+ * Target: GAL = galactic system (IAU 1958 definition).
+ *
+ * @returns {RotationMatrix}
+ *      A rotation matrix that converts EQJ to GAL.
+ */
+export declare function Rotation_EQJ_GAL(): RotationMatrix;
+/**
+ * @brief Calculates a rotation matrix from galactic (GAL) to equatorial J2000 (EQJ).
+ *
+ * This is one of the family of functions that returns a rotation matrix
+ * for converting from one orientation to another.
+ * Source: GAL = galactic system (IAU 1958 definition).
+ * Target: EQJ = equatorial system, using the equator at the J2000 epoch.
+ *
+ * @param {FlexibleDateTime} time
+ *      The date and time of the horizontal observation.
+ *
+ * @param {Observer} observer
+ *      The location of the horizontal observer.
+ *
+ * @returns {RotationMatrix}
+ *      A rotation matrix that converts GAL to EQJ.
+ */
+export declare function Rotation_GAL_EQJ(): RotationMatrix;
+/**
  * @brief Reports the constellation that a given celestial point lies within.
  *
  * @property {string} symbol

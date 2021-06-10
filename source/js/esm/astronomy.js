@@ -5490,6 +5490,54 @@ export function Rotation_HOR_ECL(time, observer) {
     const rot = Rotation_ECL_HOR(time, observer);
     return InverseRotation(rot);
 }
+/**
+ * @brief Calculates a rotation matrix from equatorial J2000 (EQJ) to galactic (GAL).
+ *
+ * This is one of the family of functions that returns a rotation matrix
+ * for converting from one orientation to another.
+ * Source: EQJ = equatorial system, using the equator at the J2000 epoch.
+ * Target: GAL = galactic system (IAU 1958 definition).
+ *
+ * @returns {RotationMatrix}
+ *      A rotation matrix that converts EQJ to GAL.
+ */
+export function Rotation_EQJ_GAL() {
+    // This rotation matrix was calculated by the following script
+    // in this same source code repository:
+    // demo/python/galeqj_matrix.py
+    return new RotationMatrix([
+        [-0.0548624779711344, +0.4941095946388765, -0.8676668813529025],
+        [-0.8734572784246782, -0.4447938112296831, -0.1980677870294097],
+        [-0.4838000529948520, +0.7470034631630423, +0.4559861124470794]
+    ]);
+}
+/**
+ * @brief Calculates a rotation matrix from galactic (GAL) to equatorial J2000 (EQJ).
+ *
+ * This is one of the family of functions that returns a rotation matrix
+ * for converting from one orientation to another.
+ * Source: GAL = galactic system (IAU 1958 definition).
+ * Target: EQJ = equatorial system, using the equator at the J2000 epoch.
+ *
+ * @param {FlexibleDateTime} time
+ *      The date and time of the horizontal observation.
+ *
+ * @param {Observer} observer
+ *      The location of the horizontal observer.
+ *
+ * @returns {RotationMatrix}
+ *      A rotation matrix that converts GAL to EQJ.
+ */
+export function Rotation_GAL_EQJ() {
+    // This rotation matrix was calculated by the following script
+    // in this same source code repository:
+    // demo/python/galeqj_matrix.py
+    return new RotationMatrix([
+        [-0.0548624779711344, -0.8734572784246782, -0.4838000529948520],
+        [+0.4941095946388765, -0.4447938112296831, +0.7470034631630423],
+        [-0.8676668813529025, -0.1980677870294097, +0.4559861124470794]
+    ]);
+}
 const ConstelNames = [
     ['And', 'Andromeda'] //  0
     ,
