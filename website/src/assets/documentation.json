@@ -46952,14 +46952,14 @@
         "scope": "global"
     },
     {
-        "comment": "/**\n * @brief Calculates a rotation matrix from galactic (GAL) to equatorial J2000 (EQJ).\n *\n * This is one of the family of functions that returns a rotation matrix\n * for converting from one orientation to another.\n * Source: GAL = galactic system (IAU 1958 definition).\n * Target: EQJ = equatorial system, using the equator at the J2000 epoch.\n *\n * @param {FlexibleDateTime} time\n *      The date and time of the horizontal observation.\n *\n * @param {Observer} observer\n *      The location of the horizontal observer.\n *\n * @returns {RotationMatrix}\n *      A rotation matrix that converts GAL to EQJ.\n */",
+        "comment": "/**\n * @brief Calculates a rotation matrix from galactic (GAL) to equatorial J2000 (EQJ).\n *\n * This is one of the family of functions that returns a rotation matrix\n * for converting from one orientation to another.\n * Source: GAL = galactic system (IAU 1958 definition).\n * Target: EQJ = equatorial system, using the equator at the J2000 epoch.\n *\n * @returns {RotationMatrix}\n *      A rotation matrix that converts GAL to EQJ.\n */",
         "meta": {
             "range": [
-                248031,
-                248467
+                247855,
+                248291
             ],
             "filename": "astronomy.js",
-            "lineno": 5614,
+            "lineno": 5608,
             "columnno": 0,
             "code": {
                 "id": "astnode100022496",
@@ -46976,26 +46976,6 @@
                 "value": "Calculates a rotation matrix from galactic (GAL) to equatorial J2000 (EQJ).\n\nThis is one of the family of functions that returns a rotation matrix\nfor converting from one orientation to another.\nSource: GAL = galactic system (IAU 1958 definition).\nTarget: EQJ = equatorial system, using the equator at the J2000 epoch."
             }
         ],
-        "params": [
-            {
-                "type": {
-                    "names": [
-                        "FlexibleDateTime"
-                    ]
-                },
-                "description": "The date and time of the horizontal observation.",
-                "name": "time"
-            },
-            {
-                "type": {
-                    "names": [
-                        "Observer"
-                    ]
-                },
-                "description": "The location of the horizontal observer.",
-                "name": "observer"
-            }
-        ],
         "returns": [
             {
                 "type": {
@@ -47009,17 +46989,18 @@
         "name": "Rotation_GAL_EQJ",
         "longname": "Rotation_GAL_EQJ",
         "kind": "function",
-        "scope": "global"
+        "scope": "global",
+        "params": []
     },
     {
         "comment": "",
         "meta": {
             "range": [
-                248468,
-                248511
+                248292,
+                248335
             ],
             "filename": "astronomy.js",
-            "lineno": 5624,
+            "lineno": 5618,
             "columnno": 0,
             "code": {
                 "id": "astnode100022525",
@@ -47039,11 +47020,11 @@
         "comment": "",
         "meta": {
             "range": [
-                248519,
-                251655
+                248343,
+                251479
             ],
             "filename": "astronomy.js",
-            "lineno": 5625,
+            "lineno": 5619,
             "columnno": 6,
             "code": {
                 "id": "astnode100022531",
@@ -47063,11 +47044,11 @@
         "comment": "",
         "meta": {
             "range": [
-                251663,
-                265736
+                251487,
+                265560
             ],
             "filename": "astronomy.js",
-            "lineno": 5802,
+            "lineno": 5796,
             "columnno": 6,
             "code": {
                 "id": "astnode100022799",
@@ -47087,11 +47068,11 @@
         "comment": "",
         "meta": {
             "range": [
-                265742,
-                265752
+                265566,
+                265576
             ],
             "filename": "astronomy.js",
-            "lineno": 6517,
+            "lineno": 6511,
             "columnno": 4,
             "code": {
                 "id": "astnode100024751",
@@ -47109,11 +47090,11 @@
         "comment": "",
         "meta": {
             "range": [
-                265758,
-                265767
+                265582,
+                265591
             ],
             "filename": "astronomy.js",
-            "lineno": 6518,
+            "lineno": 6512,
             "columnno": 4,
             "code": {
                 "id": "astnode100024754",
@@ -47131,11 +47112,11 @@
         "comment": "/**\n * @brief Reports the constellation that a given celestial point lies within.\n *\n * @property {string} symbol\n *      3-character mnemonic symbol for the constellation, e.g. \"Ori\".\n *\n * @property {string} name\n *      Full name of constellation, e.g. \"Orion\".\n *\n * @property {number} ra1875\n *      Right ascension expressed in B1875 coordinates.\n *\n * @property {number} dec1875\n *      Declination expressed in B1875 coordinates.\n */",
         "meta": {
             "range": [
-                266211,
-                266411
+                266035,
+                266235
             ],
             "filename": "astronomy.js",
-            "lineno": 6534,
+            "lineno": 6528,
             "columnno": 0,
             "code": {
                 "id": "astnode100024756",
@@ -47205,11 +47186,11 @@
         "comment": "",
         "meta": {
             "range": [
-                266241,
-                266409
+                266065,
+                266233
             ],
             "filename": "astronomy.js",
-            "lineno": 6535,
+            "lineno": 6529,
             "columnno": 4,
             "code": {
                 "id": "astnode100024759",
@@ -47237,11 +47218,11 @@
         "comment": "/**\n * @brief Reports the constellation that a given celestial point lies within.\n *\n * @property {string} symbol\n *      3-character mnemonic symbol for the constellation, e.g. \"Ori\".\n *\n * @property {string} name\n *      Full name of constellation, e.g. \"Orion\".\n *\n * @property {number} ra1875\n *      Right ascension expressed in B1875 coordinates.\n *\n * @property {number} dec1875\n *      Declination expressed in B1875 coordinates.\n */",
         "meta": {
             "range": [
-                266211,
-                266411
+                266035,
+                266235
             ],
             "filename": "astronomy.js",
-            "lineno": 6534,
+            "lineno": 6528,
             "columnno": 0,
             "code": {
                 "id": "astnode100024756",
@@ -47310,11 +47291,11 @@
         "comment": "",
         "meta": {
             "range": [
-                266294,
-                266314
+                266118,
+                266138
             ],
             "filename": "astronomy.js",
-            "lineno": 6536,
+            "lineno": 6530,
             "columnno": 8,
             "code": {
                 "id": "astnode100024768",
@@ -47335,11 +47316,11 @@
         "comment": "",
         "meta": {
             "range": [
-                266324,
-                266340
+                266148,
+                266164
             ],
             "filename": "astronomy.js",
-            "lineno": 6537,
+            "lineno": 6531,
             "columnno": 8,
             "code": {
                 "id": "astnode100024774",
@@ -47360,11 +47341,11 @@
         "comment": "",
         "meta": {
             "range": [
-                266350,
-                266370
+                266174,
+                266194
             ],
             "filename": "astronomy.js",
-            "lineno": 6538,
+            "lineno": 6532,
             "columnno": 8,
             "code": {
                 "id": "astnode100024780",
@@ -47385,11 +47366,11 @@
         "comment": "",
         "meta": {
             "range": [
-                266380,
-                266402
+                266204,
+                266226
             ],
             "filename": "astronomy.js",
-            "lineno": 6539,
+            "lineno": 6533,
             "columnno": 8,
             "code": {
                 "id": "astnode100024786",
@@ -47410,11 +47391,11 @@
         "comment": "",
         "meta": {
             "range": [
-                266412,
-                266457
+                266236,
+                266281
             ],
             "filename": "astronomy.js",
-            "lineno": 6542,
+            "lineno": 6536,
             "columnno": 0,
             "code": {
                 "id": "astnode100024792",
@@ -47434,11 +47415,11 @@
         "comment": "/**\n * @brief Determines the constellation that contains the given point in the sky.\n *\n * Given J2000 equatorial (EQJ) coordinates of a point in the sky,\n * determines the constellation that contains that point.\n *\n * @param {number} ra\n *      The right ascension (RA) of a point in the sky, using the J2000 equatorial system.\n *\n * @param {number} dec\n *      The declination (DEC) of a point in the sky, using the J2000 equatorial system.\n *\n * @returns {ConstellationInfo}\n *      An object that contains the 3-letter abbreviation and full name\n *      of the constellation that contains the given (ra,dec), along with\n *      the converted B1875 (ra,dec) for that point.\n */",
         "meta": {
             "range": [
-                267140,
-                269328
+                266964,
+                269152
             ],
             "filename": "astronomy.js",
-            "lineno": 6560,
+            "lineno": 6554,
             "columnno": 0,
             "code": {
                 "id": "astnode100024797",
@@ -47513,11 +47494,11 @@
         "comment": "",
         "meta": {
             "range": [
-                267373,
-                267383
+                267197,
+                267207
             ],
             "filename": "astronomy.js",
-            "lineno": 6566,
+            "lineno": 6560,
             "columnno": 4,
             "code": {
                 "id": "astnode100024823",
@@ -47539,11 +47520,11 @@
         "comment": "",
         "meta": {
             "range": [
-                267411,
-                267421
+                267235,
+                267245
             ],
             "filename": "astronomy.js",
-            "lineno": 6568,
+            "lineno": 6562,
             "columnno": 8,
             "code": {
                 "id": "astnode100024831",
@@ -47565,11 +47546,11 @@
         "comment": "",
         "meta": {
             "range": [
-                268197,
-                268261
+                268021,
+                268085
             ],
             "filename": "astronomy.js",
-            "lineno": 6582,
+            "lineno": 6576,
             "columnno": 8,
             "code": {
                 "id": "astnode100024839",
@@ -47591,11 +47572,11 @@
         "comment": "",
         "meta": {
             "range": [
-                268271,
-                268299
+                268095,
+                268123
             ],
             "filename": "astronomy.js",
-            "lineno": 6583,
+            "lineno": 6577,
             "columnno": 8,
             "code": {
                 "id": "astnode100024848",
@@ -47617,11 +47598,11 @@
         "comment": "",
         "meta": {
             "range": [
-                268365,
-                268409
+                268189,
+                268233
             ],
             "filename": "astronomy.js",
-            "lineno": 6586,
+            "lineno": 6580,
             "columnno": 10,
             "code": {
                 "id": "astnode100024854",
@@ -47642,11 +47623,11 @@
         "comment": "",
         "meta": {
             "range": [
-                268421,
-                268467
+                268245,
+                268291
             ],
             "filename": "astronomy.js",
-            "lineno": 6587,
+            "lineno": 6581,
             "columnno": 10,
             "code": {
                 "id": "astnode100024864",
@@ -47667,11 +47648,11 @@
         "comment": "",
         "meta": {
             "range": [
-                268479,
-                268522
+                268303,
+                268346
             ],
             "filename": "astronomy.js",
-            "lineno": 6588,
+            "lineno": 6582,
             "columnno": 10,
             "code": {
                 "id": "astnode100024871",
@@ -47692,11 +47673,11 @@
         "comment": "",
         "meta": {
             "range": [
-                268534,
-                268570
+                268358,
+                268394
             ],
             "filename": "astronomy.js",
-            "lineno": 6589,
+            "lineno": 6583,
             "columnno": 10,
             "code": {
                 "id": "astnode100024878",
@@ -47717,11 +47698,11 @@
         "comment": "",
         "meta": {
             "range": [
-                268647,
-                268665
+                268471,
+                268489
             ],
             "filename": "astronomy.js",
-            "lineno": 6591,
+            "lineno": 6585,
             "columnno": 10,
             "code": {
                 "id": "astnode100024884",
@@ -47742,11 +47723,11 @@
         "comment": "",
         "meta": {
             "range": [
-                268732,
-                268744
+                268556,
+                268568
             ],
             "filename": "astronomy.js",
-            "lineno": 6592,
+            "lineno": 6586,
             "columnno": 10,
             "code": {
                 "id": "astnode100024892",
@@ -47767,11 +47748,11 @@
         "comment": "",
         "meta": {
             "range": [
-                268821,
-                268822
+                268645,
+                268646
             ],
             "filename": "astronomy.js",
-            "lineno": 6593,
+            "lineno": 6587,
             "columnno": 13,
             "code": {
                 "id": "astnode100024899",
@@ -47790,11 +47771,11 @@
         "comment": "",
         "meta": {
             "range": [
-                268930,
-                268945
+                268754,
+                268769
             ],
             "filename": "astronomy.js",
-            "lineno": 6595,
+            "lineno": 6589,
             "columnno": 14,
             "code": {
                 "id": "astnode100024904",
@@ -47815,11 +47796,11 @@
         "comment": "",
         "meta": {
             "range": [
-                268961,
-                268978
+                268785,
+                268802
             ],
             "filename": "astronomy.js",
-            "lineno": 6596,
+            "lineno": 6590,
             "columnno": 14,
             "code": {
                 "id": "astnode100024912",
@@ -47840,11 +47821,11 @@
         "comment": "",
         "meta": {
             "range": [
-                268994,
-                269011
+                268818,
+                268835
             ],
             "filename": "astronomy.js",
-            "lineno": 6597,
+            "lineno": 6591,
             "columnno": 14,
             "code": {
                 "id": "astnode100024920",
@@ -47865,11 +47846,11 @@
         "comment": "",
         "meta": {
             "range": [
-                269110,
-                269132
+                268934,
+                268956
             ],
             "filename": "astronomy.js",
-            "lineno": 6599,
+            "lineno": 6593,
             "columnno": 18,
             "code": {
                 "id": "astnode100024947",
@@ -47890,11 +47871,11 @@
         "comment": "",
         "meta": {
             "range": [
-                269329,
-                269366
+                269153,
+                269190
             ],
             "filename": "astronomy.js",
-            "lineno": 6606,
+            "lineno": 6600,
             "columnno": 0,
             "code": {
                 "id": "astnode100024972",
@@ -47914,11 +47895,11 @@
         "comment": "/**\n * @brief Returns information about a lunar eclipse.\n *\n * Returned by {@link SearchLunarEclipse} or {@link NextLunarEclipse}\n * to report information about a lunar eclipse event.\n * When a lunar eclipse is found, it is classified as penumbral, partial, or total.\n * Penumbral eclipses are difficult to observe, because the moon is only slightly dimmed\n * by the Earth's penumbra; no part of the Moon touches the Earth's umbra.\n * Partial eclipses occur when part, but not all, of the Moon touches the Earth's umbra.\n * Total eclipses occur when the entire Moon passes into the Earth's umbra.\n *\n * The `kind` field thus holds one of the strings `\"penumbral\"`, `\"partial\"`,\n * or `\"total\"`, depending on the kind of lunar eclipse found.\n *\n * Field `peak` holds the date and time of the peak of the eclipse, when it is at its peak.\n *\n * Fields `sd_penum`, `sd_partial`, and `sd_total` hold the semi-duration of each phase\n * of the eclipse, which is half of the amount of time the eclipse spends in each\n * phase (expressed in minutes), or 0 if the eclipse never reaches that phase.\n * By converting from minutes to days, and subtracting/adding with `peak`, the caller\n * may determine the date and time of the beginning/end of each eclipse phase.\n *\n * @property {string} kind\n *      The type of lunar eclipse found.\n *\n * @property {AstroTime} peak\n *      The time of the eclipse at its peak.\n *\n * @property {number} sd_penum\n *      The semi-duration of the penumbral phase in minutes.\n *\n * @property {number} sd_partial\n *      The semi-duration of the penumbral phase in minutes, or 0.0 if none.\n *\n * @property {number} sd_total\n *      The semi-duration of the penumbral phase in minutes, or 0.0 if none.\n *\n */",
         "meta": {
             "range": [
-                271096,
-                271348
+                270920,
+                271172
             ],
             "filename": "astronomy.js",
-            "lineno": 6645,
+            "lineno": 6639,
             "columnno": 0,
             "code": {
                 "id": "astnode100024977",
@@ -47998,11 +47979,11 @@
         "comment": "",
         "meta": {
             "range": [
-                271125,
-                271346
+                270949,
+                271170
             ],
             "filename": "astronomy.js",
-            "lineno": 6646,
+            "lineno": 6640,
             "columnno": 4,
             "code": {
                 "id": "astnode100024980",
@@ -48031,11 +48012,11 @@
         "comment": "/**\n * @brief Returns information about a lunar eclipse.\n *\n * Returned by {@link SearchLunarEclipse} or {@link NextLunarEclipse}\n * to report information about a lunar eclipse event.\n * When a lunar eclipse is found, it is classified as penumbral, partial, or total.\n * Penumbral eclipses are difficult to observe, because the moon is only slightly dimmed\n * by the Earth's penumbra; no part of the Moon touches the Earth's umbra.\n * Partial eclipses occur when part, but not all, of the Moon touches the Earth's umbra.\n * Total eclipses occur when the entire Moon passes into the Earth's umbra.\n *\n * The `kind` field thus holds one of the strings `\"penumbral\"`, `\"partial\"`,\n * or `\"total\"`, depending on the kind of lunar eclipse found.\n *\n * Field `peak` holds the date and time of the peak of the eclipse, when it is at its peak.\n *\n * Fields `sd_penum`, `sd_partial`, and `sd_total` hold the semi-duration of each phase\n * of the eclipse, which is half of the amount of time the eclipse spends in each\n * phase (expressed in minutes), or 0 if the eclipse never reaches that phase.\n * By converting from minutes to days, and subtracting/adding with `peak`, the caller\n * may determine the date and time of the beginning/end of each eclipse phase.\n *\n * @property {string} kind\n *      The type of lunar eclipse found.\n *\n * @property {AstroTime} peak\n *      The time of the eclipse at its peak.\n *\n * @property {number} sd_penum\n *      The semi-duration of the penumbral phase in minutes.\n *\n * @property {number} sd_partial\n *      The semi-duration of the penumbral phase in minutes, or 0.0 if none.\n *\n * @property {number} sd_total\n *      The semi-duration of the penumbral phase in minutes, or 0.0 if none.\n *\n */",
         "meta": {
             "range": [
-                271096,
-                271348
+                270920,
+                271172
             ],
             "filename": "astronomy.js",
-            "lineno": 6645,
+            "lineno": 6639,
             "columnno": 0,
             "code": {
                 "id": "astnode100024977",
@@ -48114,11 +48095,11 @@
         "comment": "",
         "meta": {
             "range": [
-                271191,
-                271207
+                271015,
+                271031
             ],
             "filename": "astronomy.js",
-            "lineno": 6647,
+            "lineno": 6641,
             "columnno": 8,
             "code": {
                 "id": "astnode100024990",
@@ -48139,11 +48120,11 @@
         "comment": "",
         "meta": {
             "range": [
-                271217,
-                271233
+                271041,
+                271057
             ],
             "filename": "astronomy.js",
-            "lineno": 6648,
+            "lineno": 6642,
             "columnno": 8,
             "code": {
                 "id": "astnode100024996",
@@ -48164,11 +48145,11 @@
         "comment": "",
         "meta": {
             "range": [
-                271243,
-                271267
+                271067,
+                271091
             ],
             "filename": "astronomy.js",
-            "lineno": 6649,
+            "lineno": 6643,
             "columnno": 8,
             "code": {
                 "id": "astnode100025002",
@@ -48189,11 +48170,11 @@
         "comment": "",
         "meta": {
             "range": [
-                271277,
-                271305
+                271101,
+                271129
             ],
             "filename": "astronomy.js",
-            "lineno": 6650,
+            "lineno": 6644,
             "columnno": 8,
             "code": {
                 "id": "astnode100025008",
@@ -48214,11 +48195,11 @@
         "comment": "",
         "meta": {
             "range": [
-                271315,
-                271339
+                271139,
+                271163
             ],
             "filename": "astronomy.js",
-            "lineno": 6651,
+            "lineno": 6645,
             "columnno": 8,
             "code": {
                 "id": "astnode100025014",
@@ -48239,11 +48220,11 @@
         "comment": "",
         "meta": {
             "range": [
-                271349,
-                271392
+                271173,
+                271216
             ],
             "filename": "astronomy.js",
-            "lineno": 6654,
+            "lineno": 6648,
             "columnno": 0,
             "code": {
                 "id": "astnode100025020",
@@ -48263,11 +48244,11 @@
         "comment": "/**\n * @ignore\n *\n * @brief Represents the relative alignment of the Earth and another body, and their respective shadows.\n *\n * This is an internal data structure used to assist calculation of\n * lunar eclipses, solar eclipses, and transits of Mercury and Venus.\n *\n * Definitions:\n *\n * casting body = A body that casts a shadow of interest, possibly striking another body.\n *\n * receiving body = A body on which the shadow of another body might land.\n *\n * shadow axis = The line passing through the center of the Sun and the center of the casting body.\n *\n * shadow plane = The plane passing through the center of a receiving body,\n * and perpendicular to the shadow axis.\n *\n * @property {AstroTime} time\n *      The time associated with the shadow calculation.\n *\n * @property {number} u\n *      The distance [au] between the center of the casting body and the shadow plane.\n *\n * @property {number} r\n *      The distance [km] between center of receiving body and the shadow axis.\n *\n * @property {number} k\n *      The umbra radius [km] at the shadow plane.\n *\n * @property {number} p\n *      The penumbra radius [km] at the shadow plane.\n *\n * @property {Vector} target\n *      The location in space where we are interested in determining how close a shadow falls.\n *      For example, when calculating lunar eclipses, `target` would be the center of the Moon\n *      expressed in geocentric coordinates. Then we can evaluate how far the center of the Earth's\n *      shadow cone approaches the center of the Moon.\n *      The vector components are expressed in [au].\n *\n * @property {Vector} dir\n *      The direction in space that the shadow points away from the center of a shadow-casting body.\n *      This vector lies on the shadow axis and points away from the Sun.\n *      In other words: the direction light from the Sun would be traveling,\n *      except that the center of a body (Earth, Moon, Mercury, or Venus) is blocking it.\n *      The distance units do not matter, because the vector will be normalized.\n */",
         "meta": {
             "range": [
-                273427,
-                273662
+                273251,
+                273486
             ],
             "filename": "astronomy.js",
-            "lineno": 6703,
+            "lineno": 6697,
             "columnno": 0,
             "code": {
                 "id": "astnode100025025",
@@ -48368,11 +48349,11 @@
         "comment": "",
         "meta": {
             "range": [
-                273450,
-                273660
+                273274,
+                273484
             ],
             "filename": "astronomy.js",
-            "lineno": 6704,
+            "lineno": 6698,
             "columnno": 4,
             "code": {
                 "id": "astnode100025028",
@@ -48403,11 +48384,11 @@
         "comment": "/**\n * @ignore\n *\n * @brief Represents the relative alignment of the Earth and another body, and their respective shadows.\n *\n * This is an internal data structure used to assist calculation of\n * lunar eclipses, solar eclipses, and transits of Mercury and Venus.\n *\n * Definitions:\n *\n * casting body = A body that casts a shadow of interest, possibly striking another body.\n *\n * receiving body = A body on which the shadow of another body might land.\n *\n * shadow axis = The line passing through the center of the Sun and the center of the casting body.\n *\n * shadow plane = The plane passing through the center of a receiving body,\n * and perpendicular to the shadow axis.\n *\n * @property {AstroTime} time\n *      The time associated with the shadow calculation.\n *\n * @property {number} u\n *      The distance [au] between the center of the casting body and the shadow plane.\n *\n * @property {number} r\n *      The distance [km] between center of receiving body and the shadow axis.\n *\n * @property {number} k\n *      The umbra radius [km] at the shadow plane.\n *\n * @property {number} p\n *      The penumbra radius [km] at the shadow plane.\n *\n * @property {Vector} target\n *      The location in space where we are interested in determining how close a shadow falls.\n *      For example, when calculating lunar eclipses, `target` would be the center of the Moon\n *      expressed in geocentric coordinates. Then we can evaluate how far the center of the Earth's\n *      shadow cone approaches the center of the Moon.\n *      The vector components are expressed in [au].\n *\n * @property {Vector} dir\n *      The direction in space that the shadow points away from the center of a shadow-casting body.\n *      This vector lies on the shadow axis and points away from the Sun.\n *      In other words: the direction light from the Sun would be traveling,\n *      except that the center of a body (Earth, Moon, Mercury, or Venus) is blocking it.\n *      The distance units do not matter, because the vector will be normalized.\n */",
         "meta": {
             "range": [
-                273427,
-                273662
+                273251,
+                273486
             ],
             "filename": "astronomy.js",
-            "lineno": 6703,
+            "lineno": 6697,
             "columnno": 0,
             "code": {
                 "id": "astnode100025025",
@@ -48507,11 +48488,11 @@
         "comment": "",
         "meta": {
             "range": [
-                273503,
-                273519
+                273327,
+                273343
             ],
             "filename": "astronomy.js",
-            "lineno": 6705,
+            "lineno": 6699,
             "columnno": 8,
             "code": {
                 "id": "astnode100025040",
@@ -48532,11 +48513,11 @@
         "comment": "",
         "meta": {
             "range": [
-                273529,
-                273539
+                273353,
+                273363
             ],
             "filename": "astronomy.js",
-            "lineno": 6706,
+            "lineno": 6700,
             "columnno": 8,
             "code": {
                 "id": "astnode100025046",
@@ -48557,11 +48538,11 @@
         "comment": "",
         "meta": {
             "range": [
-                273549,
-                273559
+                273373,
+                273383
             ],
             "filename": "astronomy.js",
-            "lineno": 6707,
+            "lineno": 6701,
             "columnno": 8,
             "code": {
                 "id": "astnode100025052",
@@ -48582,11 +48563,11 @@
         "comment": "",
         "meta": {
             "range": [
-                273569,
-                273579
+                273393,
+                273403
             ],
             "filename": "astronomy.js",
-            "lineno": 6708,
+            "lineno": 6702,
             "columnno": 8,
             "code": {
                 "id": "astnode100025058",
@@ -48607,11 +48588,11 @@
         "comment": "",
         "meta": {
             "range": [
-                273589,
-                273599
+                273413,
+                273423
             ],
             "filename": "astronomy.js",
-            "lineno": 6709,
+            "lineno": 6703,
             "columnno": 8,
             "code": {
                 "id": "astnode100025064",
@@ -48632,11 +48613,11 @@
         "comment": "",
         "meta": {
             "range": [
-                273609,
-                273629
+                273433,
+                273453
             ],
             "filename": "astronomy.js",
-            "lineno": 6710,
+            "lineno": 6704,
             "columnno": 8,
             "code": {
                 "id": "astnode100025070",
@@ -48657,11 +48638,11 @@
         "comment": "",
         "meta": {
             "range": [
-                273639,
-                273653
+                273463,
+                273477
             ],
             "filename": "astronomy.js",
-            "lineno": 6711,
+            "lineno": 6705,
             "columnno": 8,
             "code": {
                 "id": "astnode100025076",
@@ -48682,11 +48663,11 @@
         "comment": "",
         "meta": {
             "range": [
-                273663,
-                274246
+                273487,
+                274070
             ],
             "filename": "astronomy.js",
-            "lineno": 6714,
+            "lineno": 6708,
             "columnno": 0,
             "code": {
                 "id": "astnode100025081",
@@ -48720,11 +48701,11 @@
         "comment": "",
         "meta": {
             "range": [
-                273730,
-                273840
+                273554,
+                273664
             ],
             "filename": "astronomy.js",
-            "lineno": 6715,
+            "lineno": 6709,
             "columnno": 10,
             "code": {
                 "id": "astnode100025089",
@@ -48745,11 +48726,11 @@
         "comment": "",
         "meta": {
             "range": [
-                273852,
-                273879
+                273676,
+                273703
             ],
             "filename": "astronomy.js",
-            "lineno": 6716,
+            "lineno": 6710,
             "columnno": 10,
             "code": {
                 "id": "astnode100025139",
@@ -48770,11 +48751,11 @@
         "comment": "",
         "meta": {
             "range": [
-                273891,
-                273918
+                273715,
+                273742
             ],
             "filename": "astronomy.js",
-            "lineno": 6717,
+            "lineno": 6711,
             "columnno": 10,
             "code": {
                 "id": "astnode100025151",
@@ -48795,11 +48776,11 @@
         "comment": "",
         "meta": {
             "range": [
-                273930,
-                273957
+                273754,
+                273781
             ],
             "filename": "astronomy.js",
-            "lineno": 6718,
+            "lineno": 6712,
             "columnno": 10,
             "code": {
                 "id": "astnode100025163",
@@ -48820,11 +48801,11 @@
         "comment": "",
         "meta": {
             "range": [
-                273969,
-                274031
+                273793,
+                273855
             ],
             "filename": "astronomy.js",
-            "lineno": 6719,
+            "lineno": 6713,
             "columnno": 10,
             "code": {
                 "id": "astnode100025175",
@@ -48845,11 +48826,11 @@
         "comment": "",
         "meta": {
             "range": [
-                274043,
-                274108
+                273867,
+                273932
             ],
             "filename": "astronomy.js",
-            "lineno": 6720,
+            "lineno": 6714,
             "columnno": 10,
             "code": {
                 "id": "astnode100025197",
@@ -48870,11 +48851,11 @@
         "comment": "",
         "meta": {
             "range": [
-                274120,
-                274185
+                273944,
+                274009
             ],
             "filename": "astronomy.js",
-            "lineno": 6721,
+            "lineno": 6715,
             "columnno": 10,
             "code": {
                 "id": "astnode100025210",
@@ -48895,11 +48876,11 @@
         "comment": "",
         "meta": {
             "range": [
-                274247,
-                274408
+                274071,
+                274232
             ],
             "filename": "astronomy.js",
-            "lineno": 6724,
+            "lineno": 6718,
             "columnno": 0,
             "code": {
                 "id": "astnode100025232",
@@ -48925,11 +48906,11 @@
         "comment": "",
         "meta": {
             "range": [
-                274286,
-                274316
+                274110,
+                274140
             ],
             "filename": "astronomy.js",
-            "lineno": 6725,
+            "lineno": 6719,
             "columnno": 10,
             "code": {
                 "id": "astnode100025237",
@@ -48950,11 +48931,11 @@
         "comment": "",
         "meta": {
             "range": [
-                274328,
-                274345
+                274152,
+                274169
             ],
             "filename": "astronomy.js",
-            "lineno": 6726,
+            "lineno": 6720,
             "columnno": 10,
             "code": {
                 "id": "astnode100025246",
@@ -48975,11 +48956,11 @@
         "comment": "",
         "meta": {
             "range": [
-                274409,
-                274973
+                274233,
+                274797
             ],
             "filename": "astronomy.js",
-            "lineno": 6729,
+            "lineno": 6723,
             "columnno": 0,
             "code": {
                 "id": "astnode100025258",
@@ -49009,11 +48990,11 @@
         "comment": "",
         "meta": {
             "range": [
-                274628,
-                274658
+                274452,
+                274482
             ],
             "filename": "astronomy.js",
-            "lineno": 6733,
+            "lineno": 6727,
             "columnno": 10,
             "code": {
                 "id": "astnode100025263",
@@ -49034,11 +49015,11 @@
         "comment": "",
         "meta": {
             "range": [
-                274692,
-                274709
+                274516,
+                274533
             ],
             "filename": "astronomy.js",
-            "lineno": 6734,
+            "lineno": 6728,
             "columnno": 10,
             "code": {
                 "id": "astnode100025272",
@@ -49059,11 +49040,11 @@
         "comment": "",
         "meta": {
             "range": [
-                274776,
-                274813
+                274600,
+                274637
             ],
             "filename": "astronomy.js",
-            "lineno": 6736,
+            "lineno": 6730,
             "columnno": 10,
             "code": {
                 "id": "astnode100025278",
@@ -49084,11 +49065,11 @@
         "comment": "",
         "meta": {
             "range": [
-                274872,
-                274882
+                274696,
+                274706
             ],
             "filename": "astronomy.js",
-            "lineno": 6738,
+            "lineno": 6732,
             "columnno": 4,
             "code": {
                 "id": "astnode100025298",
@@ -49110,11 +49091,11 @@
         "comment": "",
         "meta": {
             "range": [
-                274888,
-                274898
+                274712,
+                274722
             ],
             "filename": "astronomy.js",
-            "lineno": 6739,
+            "lineno": 6733,
             "columnno": 4,
             "code": {
                 "id": "astnode100025306",
@@ -49136,11 +49117,11 @@
         "comment": "",
         "meta": {
             "range": [
-                274904,
-                274914
+                274728,
+                274738
             ],
             "filename": "astronomy.js",
-            "lineno": 6740,
+            "lineno": 6734,
             "columnno": 4,
             "code": {
                 "id": "astnode100025314",
@@ -49162,11 +49143,11 @@
         "comment": "",
         "meta": {
             "range": [
-                274974,
-                275681
+                274798,
+                275505
             ],
             "filename": "astronomy.js",
-            "lineno": 6743,
+            "lineno": 6737,
             "columnno": 0,
             "code": {
                 "id": "astnode100025328",
@@ -49198,11 +49179,11 @@
         "comment": "",
         "meta": {
             "range": [
-                275229,
-                275258
+                275053,
+                275082
             ],
             "filename": "astronomy.js",
-            "lineno": 6747,
+            "lineno": 6741,
             "columnno": 10,
             "code": {
                 "id": "astnode100025334",
@@ -49223,11 +49204,11 @@
         "comment": "",
         "meta": {
             "range": [
-                275270,
-                275300
+                275094,
+                275124
             ],
             "filename": "astronomy.js",
-            "lineno": 6748,
+            "lineno": 6742,
             "columnno": 10,
             "code": {
                 "id": "astnode100025341",
@@ -49248,11 +49229,11 @@
         "comment": "",
         "meta": {
             "range": [
-                275334,
-                275351
+                275158,
+                275175
             ],
             "filename": "astronomy.js",
-            "lineno": 6749,
+            "lineno": 6743,
             "columnno": 10,
             "code": {
                 "id": "astnode100025350",
@@ -49273,11 +49254,11 @@
         "comment": "",
         "meta": {
             "range": [
-                275459,
-                275521
+                275283,
+                275345
             ],
             "filename": "astronomy.js",
-            "lineno": 6751,
+            "lineno": 6745,
             "columnno": 10,
             "code": {
                 "id": "astnode100025356",
@@ -49298,11 +49279,11 @@
         "comment": "",
         "meta": {
             "range": [
-                275580,
-                275590
+                275404,
+                275414
             ],
             "filename": "astronomy.js",
-            "lineno": 6753,
+            "lineno": 6747,
             "columnno": 4,
             "code": {
                 "id": "astnode100025383",
@@ -49324,11 +49305,11 @@
         "comment": "",
         "meta": {
             "range": [
-                275596,
-                275606
+                275420,
+                275430
             ],
             "filename": "astronomy.js",
-            "lineno": 6754,
+            "lineno": 6748,
             "columnno": 4,
             "code": {
                 "id": "astnode100025391",
@@ -49350,11 +49331,11 @@
         "comment": "",
         "meta": {
             "range": [
-                275612,
-                275622
+                275436,
+                275446
             ],
             "filename": "astronomy.js",
-            "lineno": 6755,
+            "lineno": 6749,
             "columnno": 4,
             "code": {
                 "id": "astnode100025399",
@@ -49376,11 +49357,11 @@
         "comment": "",
         "meta": {
             "range": [
-                275682,
-                276261
+                275506,
+                276085
             ],
             "filename": "astronomy.js",
-            "lineno": 6758,
+            "lineno": 6752,
             "columnno": 0,
             "code": {
                 "id": "astnode100025413",
@@ -49412,11 +49393,11 @@
         "comment": "",
         "meta": {
             "range": [
-                275815,
-                275847
+                275639,
+                275671
             ],
             "filename": "astronomy.js",
-            "lineno": 6760,
+            "lineno": 6754,
             "columnno": 10,
             "code": {
                 "id": "astnode100025420",
@@ -49437,11 +49418,11 @@
         "comment": "",
         "meta": {
             "range": [
-                275925,
-                275961
+                275749,
+                275785
             ],
             "filename": "astronomy.js",
-            "lineno": 6762,
+            "lineno": 6756,
             "columnno": 10,
             "code": {
                 "id": "astnode100025428",
@@ -49462,11 +49443,11 @@
         "comment": "",
         "meta": {
             "range": [
-                276037,
-                276090
+                275861,
+                275914
             ],
             "filename": "astronomy.js",
-            "lineno": 6764,
+            "lineno": 6758,
             "columnno": 10,
             "code": {
                 "id": "astnode100025438",
@@ -49487,11 +49468,11 @@
         "comment": "",
         "meta": {
             "range": [
-                276163,
-                276173
+                275987,
+                275997
             ],
             "filename": "astronomy.js",
-            "lineno": 6766,
+            "lineno": 6760,
             "columnno": 4,
             "code": {
                 "id": "astnode100025465",
@@ -49513,11 +49494,11 @@
         "comment": "",
         "meta": {
             "range": [
-                276179,
-                276189
+                276003,
+                276013
             ],
             "filename": "astronomy.js",
-            "lineno": 6767,
+            "lineno": 6761,
             "columnno": 4,
             "code": {
                 "id": "astnode100025474",
@@ -49539,11 +49520,11 @@
         "comment": "",
         "meta": {
             "range": [
-                276195,
-                276205
+                276019,
+                276029
             ],
             "filename": "astronomy.js",
-            "lineno": 6768,
+            "lineno": 6762,
             "columnno": 4,
             "code": {
                 "id": "astnode100025483",
@@ -49565,11 +49546,11 @@
         "comment": "",
         "meta": {
             "range": [
-                276262,
-                276523
+                276086,
+                276347
             ],
             "filename": "astronomy.js",
-            "lineno": 6771,
+            "lineno": 6765,
             "columnno": 0,
             "code": {
                 "id": "astnode100025498",
@@ -49599,11 +49580,11 @@
         "comment": "",
         "meta": {
             "range": [
-                276321,
-                276339
+                276145,
+                276163
             ],
             "filename": "astronomy.js",
-            "lineno": 6772,
+            "lineno": 6766,
             "columnno": 10,
             "code": {
                 "id": "astnode100025504",
@@ -49624,11 +49605,11 @@
         "comment": "",
         "meta": {
             "range": [
-                276351,
-                276373
+                276175,
+                276197
             ],
             "filename": "astronomy.js",
-            "lineno": 6773,
+            "lineno": 6767,
             "columnno": 10,
             "code": {
                 "id": "astnode100025510",
@@ -49649,11 +49630,11 @@
         "comment": "",
         "meta": {
             "range": [
-                276385,
-                276407
+                276209,
+                276231
             ],
             "filename": "astronomy.js",
-            "lineno": 6774,
+            "lineno": 6768,
             "columnno": 10,
             "code": {
                 "id": "astnode100025519",
@@ -49674,11 +49655,11 @@
         "comment": "",
         "meta": {
             "range": [
-                276419,
-                276443
+                276243,
+                276267
             ],
             "filename": "astronomy.js",
-            "lineno": 6775,
+            "lineno": 6769,
             "columnno": 10,
             "code": {
                 "id": "astnode100025528",
@@ -49699,11 +49680,11 @@
         "comment": "",
         "meta": {
             "range": [
-                276455,
-                276479
+                276279,
+                276303
             ],
             "filename": "astronomy.js",
-            "lineno": 6776,
+            "lineno": 6770,
             "columnno": 10,
             "code": {
                 "id": "astnode100025534",
@@ -49724,11 +49705,11 @@
         "comment": "",
         "meta": {
             "range": [
-                276524,
-                276809
+                276348,
+                276633
             ],
             "filename": "astronomy.js",
-            "lineno": 6779,
+            "lineno": 6773,
             "columnno": 0,
             "code": {
                 "id": "astnode100025549",
@@ -49757,11 +49738,11 @@
         "comment": "",
         "meta": {
             "range": [
-                276593,
-                276611
+                276417,
+                276435
             ],
             "filename": "astronomy.js",
-            "lineno": 6780,
+            "lineno": 6774,
             "columnno": 10,
             "code": {
                 "id": "astnode100025556",
@@ -49782,11 +49763,11 @@
         "comment": "",
         "meta": {
             "range": [
-                276623,
-                276688
+                276447,
+                276512
             ],
             "filename": "astronomy.js",
-            "lineno": 6781,
+            "lineno": 6775,
             "columnno": 10,
             "code": {
                 "id": "astnode100025562",
@@ -49807,11 +49788,11 @@
         "comment": "",
         "meta": {
             "range": [
-                276700,
-                276765
+                276524,
+                276589
             ],
             "filename": "astronomy.js",
-            "lineno": 6782,
+            "lineno": 6776,
             "columnno": 10,
             "code": {
                 "id": "astnode100025575",
@@ -49832,11 +49813,11 @@
         "comment": "",
         "meta": {
             "range": [
-                276810,
-                277227
+                276634,
+                277051
             ],
             "filename": "astronomy.js",
-            "lineno": 6785,
+            "lineno": 6779,
             "columnno": 0,
             "code": {
                 "id": "astnode100025597",
@@ -49865,11 +49846,11 @@
         "comment": "",
         "meta": {
             "range": [
-                276867,
-                276880
+                276691,
+                276704
             ],
             "filename": "astronomy.js",
-            "lineno": 6786,
+            "lineno": 6780,
             "columnno": 10,
             "code": {
                 "id": "astnode100025602",
@@ -49890,11 +49871,11 @@
         "comment": "",
         "meta": {
             "range": [
-                276954,
-                276994
+                276778,
+                276818
             ],
             "filename": "astronomy.js",
-            "lineno": 6787,
+            "lineno": 6781,
             "columnno": 10,
             "code": {
                 "id": "astnode100025606",
@@ -49915,11 +49896,11 @@
         "comment": "",
         "meta": {
             "range": [
-                277006,
-                277046
+                276830,
+                276870
             ],
             "filename": "astronomy.js",
-            "lineno": 6788,
+            "lineno": 6782,
             "columnno": 10,
             "code": {
                 "id": "astnode100025615",
@@ -49940,11 +49921,11 @@
         "comment": "",
         "meta": {
             "range": [
-                277058,
-                277127
+                276882,
+                276951
             ],
             "filename": "astronomy.js",
-            "lineno": 6789,
+            "lineno": 6783,
             "columnno": 10,
             "code": {
                 "id": "astnode100025624",
@@ -49965,11 +49946,11 @@
         "comment": "",
         "meta": {
             "range": [
-                277228,
-                277641
+                277052,
+                277465
             ],
             "filename": "astronomy.js",
-            "lineno": 6794,
+            "lineno": 6788,
             "columnno": 0,
             "code": {
                 "id": "astnode100025645",
@@ -49998,11 +49979,11 @@
         "comment": "",
         "meta": {
             "range": [
-                277284,
-                277297
+                277108,
+                277121
             ],
             "filename": "astronomy.js",
-            "lineno": 6795,
+            "lineno": 6789,
             "columnno": 10,
             "code": {
                 "id": "astnode100025650",
@@ -50023,11 +50004,11 @@
         "comment": "",
         "meta": {
             "range": [
-                277371,
-                277411
+                277195,
+                277235
             ],
             "filename": "astronomy.js",
-            "lineno": 6796,
+            "lineno": 6790,
             "columnno": 10,
             "code": {
                 "id": "astnode100025654",
@@ -50048,11 +50029,11 @@
         "comment": "",
         "meta": {
             "range": [
-                277423,
-                277463
+                277247,
+                277287
             ],
             "filename": "astronomy.js",
-            "lineno": 6797,
+            "lineno": 6791,
             "columnno": 10,
             "code": {
                 "id": "astnode100025663",
@@ -50073,11 +50054,11 @@
         "comment": "",
         "meta": {
             "range": [
-                277475,
-                277543
+                277299,
+                277367
             ],
             "filename": "astronomy.js",
-            "lineno": 6798,
+            "lineno": 6792,
             "columnno": 10,
             "code": {
                 "id": "astnode100025672",
@@ -50098,11 +50079,11 @@
         "comment": "",
         "meta": {
             "range": [
-                277642,
-                278217
+                277466,
+                278041
             ],
             "filename": "astronomy.js",
-            "lineno": 6803,
+            "lineno": 6797,
             "columnno": 0,
             "code": {
                 "id": "astnode100025693",
@@ -50133,11 +50114,11 @@
         "comment": "",
         "meta": {
             "range": [
-                277804,
-                277816
+                277628,
+                277640
             ],
             "filename": "astronomy.js",
-            "lineno": 6805,
+            "lineno": 6799,
             "columnno": 10,
             "code": {
                 "id": "astnode100025700",
@@ -50158,11 +50139,11 @@
         "comment": "",
         "meta": {
             "range": [
-                277909,
-                277949
+                277733,
+                277773
             ],
             "filename": "astronomy.js",
-            "lineno": 6806,
+            "lineno": 6800,
             "columnno": 10,
             "code": {
                 "id": "astnode100025704",
@@ -50183,11 +50164,11 @@
         "comment": "",
         "meta": {
             "range": [
-                277961,
-                278001
+                277785,
+                277825
             ],
             "filename": "astronomy.js",
-            "lineno": 6807,
+            "lineno": 6801,
             "columnno": 10,
             "code": {
                 "id": "astnode100025713",
@@ -50208,11 +50189,11 @@
         "comment": "",
         "meta": {
             "range": [
-                278013,
-                278091
+                277837,
+                277915
             ],
             "filename": "astronomy.js",
-            "lineno": 6808,
+            "lineno": 6802,
             "columnno": 10,
             "code": {
                 "id": "astnode100025722",
@@ -50233,11 +50214,11 @@
         "comment": "",
         "meta": {
             "range": [
-                278218,
-                278853
+                278042,
+                278677
             ],
             "filename": "astronomy.js",
-            "lineno": 6813,
+            "lineno": 6807,
             "columnno": 0,
             "code": {
                 "id": "astnode100025746",
@@ -50268,11 +50249,11 @@
         "comment": "",
         "meta": {
             "range": [
-                278407,
-                278419
+                278231,
+                278243
             ],
             "filename": "astronomy.js",
-            "lineno": 6816,
+            "lineno": 6810,
             "columnno": 10,
             "code": {
                 "id": "astnode100025752",
@@ -50293,11 +50274,11 @@
         "comment": "",
         "meta": {
             "range": [
-                278431,
-                278471
+                278255,
+                278295
             ],
             "filename": "astronomy.js",
-            "lineno": 6817,
+            "lineno": 6811,
             "columnno": 10,
             "code": {
                 "id": "astnode100025756",
@@ -50318,11 +50299,11 @@
         "comment": "",
         "meta": {
             "range": [
-                278483,
-                278523
+                278307,
+                278347
             ],
             "filename": "astronomy.js",
-            "lineno": 6818,
+            "lineno": 6812,
             "columnno": 10,
             "code": {
                 "id": "astnode100025765",
@@ -50343,11 +50324,11 @@
         "comment": "",
         "meta": {
             "range": [
-                278529,
-                278610
+                278353,
+                278434
             ],
             "filename": "astronomy.js",
-            "lineno": 6819,
+            "lineno": 6813,
             "columnno": 4,
             "code": {
                 "id": "astnode100025773",
@@ -50370,11 +50351,11 @@
         "comment": "",
         "meta": {
             "range": [
-                278621,
-                278691
+                278445,
+                278515
             ],
             "filename": "astronomy.js",
-            "lineno": 6822,
+            "lineno": 6816,
             "columnno": 10,
             "code": {
                 "id": "astnode100025783",
@@ -50395,11 +50376,11 @@
         "comment": "",
         "meta": {
             "range": [
-                278854,
-                279558
+                278678,
+                279382
             ],
             "filename": "astronomy.js",
-            "lineno": 6827,
+            "lineno": 6821,
             "columnno": 0,
             "code": {
                 "id": "astnode100025808",
@@ -50431,11 +50412,11 @@
         "comment": "",
         "meta": {
             "range": [
-                279051,
-                279090
+                278875,
+                278914
             ],
             "filename": "astronomy.js",
-            "lineno": 6829,
+            "lineno": 6823,
             "columnno": 10,
             "code": {
                 "id": "astnode100025815",
@@ -50456,11 +50437,11 @@
         "comment": "",
         "meta": {
             "range": [
-                279102,
-                279139
+                278926,
+                278963
             ],
             "filename": "astronomy.js",
-            "lineno": 6830,
+            "lineno": 6824,
             "columnno": 10,
             "code": {
                 "id": "astnode100025823",
@@ -50481,11 +50462,11 @@
         "comment": "",
         "meta": {
             "range": [
-                279151,
-                279187
+                278975,
+                279011
             ],
             "filename": "astronomy.js",
-            "lineno": 6831,
+            "lineno": 6825,
             "columnno": 10,
             "code": {
                 "id": "astnode100025832",
@@ -50506,11 +50487,11 @@
         "comment": "",
         "meta": {
             "range": [
-                279199,
-                279280
+                279023,
+                279104
             ],
             "filename": "astronomy.js",
-            "lineno": 6832,
+            "lineno": 6826,
             "columnno": 10,
             "code": {
                 "id": "astnode100025841",
@@ -50531,11 +50512,11 @@
         "comment": "",
         "meta": {
             "range": [
-                279292,
-                279372
+                279116,
+                279196
             ],
             "filename": "astronomy.js",
-            "lineno": 6833,
+            "lineno": 6827,
             "columnno": 10,
             "code": {
                 "id": "astnode100025858",
@@ -50556,11 +50537,11 @@
         "comment": "",
         "meta": {
             "range": [
-                279559,
-                279687
+                279383,
+                279511
             ],
             "filename": "astronomy.js",
-            "lineno": 6838,
+            "lineno": 6832,
             "columnno": 0,
             "code": {
                 "id": "astnode100025896",
@@ -50585,11 +50566,11 @@
         "comment": "",
         "meta": {
             "range": [
-                279614,
-                279635
+                279438,
+                279459
             ],
             "filename": "astronomy.js",
-            "lineno": 6839,
+            "lineno": 6833,
             "columnno": 10,
             "code": {
                 "id": "astnode100025901",
@@ -50610,11 +50591,11 @@
         "comment": "/**\n * @brief Searches for a lunar eclipse.\n *\n * This function finds the first lunar eclipse that occurs after `startTime`.\n * A lunar eclipse may be penumbral, partial, or total.\n * See {@link LunarEclipseInfo} for more information.\n * To find a series of lunar eclipses, call this function once,\n * then keep calling {@link NextLunarEclipse} as many times as desired,\n * passing in the `center` value returned from the previous call.\n *\n * @param {FlexibleDateTime} date\n *      The date and time for starting the search for a lunar eclipse.\n *\n * @returns {LunarEclipseInfo}\n */",
         "meta": {
             "range": [
-                280271,
-                282634
+                280095,
+                282458
             ],
             "filename": "astronomy.js",
-            "lineno": 6857,
+            "lineno": 6851,
             "columnno": 0,
             "code": {
                 "id": "astnode100025914",
@@ -50674,11 +50655,11 @@
         "comment": "",
         "meta": {
             "range": [
-                280317,
-                280336
+                280141,
+                280160
             ],
             "filename": "astronomy.js",
-            "lineno": 6858,
+            "lineno": 6852,
             "columnno": 10,
             "code": {
                 "id": "astnode100025919",
@@ -50699,11 +50680,11 @@
         "comment": "",
         "meta": {
             "range": [
-                280416,
-                280439
+                280240,
+                280263
             ],
             "filename": "astronomy.js",
-            "lineno": 6859,
+            "lineno": 6853,
             "columnno": 8,
             "code": {
                 "id": "astnode100025923",
@@ -50724,11 +50705,11 @@
         "comment": "",
         "meta": {
             "range": [
-                280454,
-                280465
+                280278,
+                280289
             ],
             "filename": "astronomy.js",
-            "lineno": 6860,
+            "lineno": 6854,
             "columnno": 13,
             "code": {
                 "id": "astnode100025930",
@@ -50749,11 +50730,11 @@
         "comment": "",
         "meta": {
             "range": [
-                280582,
-                280625
+                280406,
+                280449
             ],
             "filename": "astronomy.js",
-            "lineno": 6862,
+            "lineno": 6856,
             "columnno": 14,
             "code": {
                 "id": "astnode100025940",
@@ -50774,11 +50755,11 @@
         "comment": "",
         "meta": {
             "range": [
-                280920,
-                280969
+                280744,
+                280793
             ],
             "filename": "astronomy.js",
-            "lineno": 6870,
+            "lineno": 6864,
             "columnno": 14,
             "code": {
                 "id": "astnode100025953",
@@ -50799,11 +50780,11 @@
         "comment": "",
         "meta": {
             "range": [
-                281216,
-                281250
+                281040,
+                281074
             ],
             "filename": "astronomy.js",
-            "lineno": 6874,
+            "lineno": 6868,
             "columnno": 18,
             "code": {
                 "id": "astnode100025968",
@@ -50824,11 +50805,11 @@
         "comment": "",
         "meta": {
             "range": [
-                281418,
-                281436
+                281242,
+                281260
             ],
             "filename": "astronomy.js",
-            "lineno": 6877,
+            "lineno": 6871,
             "columnno": 20,
             "code": {
                 "id": "astnode100025985",
@@ -50849,11 +50830,11 @@
         "comment": "",
         "meta": {
             "range": [
-                281458,
-                281472
+                281282,
+                281296
             ],
             "filename": "astronomy.js",
-            "lineno": 6878,
+            "lineno": 6872,
             "columnno": 20,
             "code": {
                 "id": "astnode100025989",
@@ -50874,11 +50855,11 @@
         "comment": "",
         "meta": {
             "range": [
-                281494,
-                281510
+                281318,
+                281334
             ],
             "filename": "astronomy.js",
-            "lineno": 6879,
+            "lineno": 6873,
             "columnno": 20,
             "code": {
                 "id": "astnode100025993",
@@ -50899,11 +50880,11 @@
         "comment": "",
         "meta": {
             "range": [
-                281532,
-                281620
+                281356,
+                281444
             ],
             "filename": "astronomy.js",
-            "lineno": 6880,
+            "lineno": 6874,
             "columnno": 20,
             "code": {
                 "id": "astnode100025997",
@@ -50924,11 +50905,11 @@
         "comment": "",
         "meta": {
             "range": [
-                281769,
-                281785
+                281593,
+                281609
             ],
             "filename": "astronomy.js",
-            "lineno": 6883,
+            "lineno": 6877,
             "columnno": 20,
             "code": {
                 "id": "astnode100026022",
@@ -50950,11 +50931,11 @@
         "comment": "",
         "meta": {
             "range": [
-                281807,
-                281900
+                281631,
+                281724
             ],
             "filename": "astronomy.js",
-            "lineno": 6884,
+            "lineno": 6878,
             "columnno": 20,
             "code": {
                 "id": "astnode100026026",
@@ -50976,11 +50957,11 @@
         "comment": "",
         "meta": {
             "range": [
-                282050,
-                282064
+                281874,
+                281888
             ],
             "filename": "astronomy.js",
-            "lineno": 6887,
+            "lineno": 6881,
             "columnno": 24,
             "code": {
                 "id": "astnode100026051",
@@ -51002,11 +50983,11 @@
         "comment": "",
         "meta": {
             "range": [
-                282090,
-                282183
+                281914,
+                282007
             ],
             "filename": "astronomy.js",
-            "lineno": 6888,
+            "lineno": 6882,
             "columnno": 24,
             "code": {
                 "id": "astnode100026055",
@@ -51028,11 +51009,11 @@
         "comment": "",
         "meta": {
             "range": [
-                282440,
-                282469
+                282264,
+                282293
             ],
             "filename": "astronomy.js",
-            "lineno": 6895,
+            "lineno": 6889,
             "columnno": 8,
             "code": {
                 "id": "astnode100026079",
@@ -51054,11 +51035,11 @@
         "comment": "",
         "meta": {
             "range": [
-                282635,
-                282682
+                282459,
+                282506
             ],
             "filename": "astronomy.js",
-            "lineno": 6900,
+            "lineno": 6894,
             "columnno": 0,
             "code": {
                 "id": "astnode100026089",
@@ -51078,11 +51059,11 @@
         "comment": "/**\n    @brief Reports the time and geographic location of the peak of a solar eclipse.\n\n    Returned by {@link SearchGlobalSolarEclipse} or {@link NextGlobalSolarEclipse}\n    to report information about a solar eclipse event.\n\n    Field `peak` holds the date and time of the peak of the eclipse, defined as\n    the instant when the axis of the Moon's shadow cone passes closest to the Earth's center.\n\n    The eclipse is classified as partial, annular, or total, depending on the\n    maximum amount of the Sun's disc obscured, as seen at the peak location\n    on the surface of the Earth.\n\n    The `kind` field thus holds one of the strings `\"partial\"`, `\"annular\"`, or `\"total\"`.\n    A total eclipse is when the peak observer sees the Sun completely blocked by the Moon.\n    An annular eclipse is like a total eclipse, but the Moon is too far from the Earth's surface\n    to completely block the Sun; instead, the Sun takes on a ring-shaped appearance.\n    A partial eclipse is when the Moon blocks part of the Sun's disc, but nobody on the Earth\n    observes either a total or annular eclipse.\n\n    If `kind` is `\"total\"` or `\"annular\"`, the `latitude` and `longitude`\n    fields give the geographic coordinates of the center of the Moon's shadow projected\n    onto the daytime side of the Earth at the instant of the eclipse's peak.\n    If `kind` has any other value, `latitude` and `longitude` are undefined and should\n    not be used.\n\n    @property {string} kind\n        One of the following string values: `\"partial\"`, `\"annular\"`, `\"total\"`.\n\n    @property {AstroTime} peak\n        The date and time of the peak of the eclipse, defined as the instant\n        when the axis of the Moon's shadow cone passes closest to the Earth's center.\n\n    @property {number} distance\n        The distance in kilometers between the axis of the Moon's shadow cone\n        and the center of the Earth at the time indicated by `peak`.\n\n    @property {number | undefined} latitude\n        If `kind` holds `\"total\"`, the geographic latitude in degrees\n        where the center of the Moon's shadow falls on the Earth at the\n        time indicated by `peak`; otherwise, `latitude` holds `undefined`.\n\n    @property {number | undefined} longitude\n        If `kind` holds `\"total\"`, the geographic longitude in degrees\n        where the center of the Moon's shadow falls on the Earth at the\n        time indicated by `peak`; otherwise, `longitude` holds `undefined`.\n*/",
         "meta": {
             "range": [
-                285140,
-                285395
+                284964,
+                285219
             ],
             "filename": "astronomy.js",
-            "lineno": 6948,
+            "lineno": 6942,
             "columnno": 0,
             "code": {
                 "id": "astnode100026094",
@@ -51164,11 +51145,11 @@
         "comment": "",
         "meta": {
             "range": [
-                285175,
-                285393
+                284999,
+                285217
             ],
             "filename": "astronomy.js",
-            "lineno": 6949,
+            "lineno": 6943,
             "columnno": 4,
             "code": {
                 "id": "astnode100026097",
@@ -51197,11 +51178,11 @@
         "comment": "/**\n    @brief Reports the time and geographic location of the peak of a solar eclipse.\n\n    Returned by {@link SearchGlobalSolarEclipse} or {@link NextGlobalSolarEclipse}\n    to report information about a solar eclipse event.\n\n    Field `peak` holds the date and time of the peak of the eclipse, defined as\n    the instant when the axis of the Moon's shadow cone passes closest to the Earth's center.\n\n    The eclipse is classified as partial, annular, or total, depending on the\n    maximum amount of the Sun's disc obscured, as seen at the peak location\n    on the surface of the Earth.\n\n    The `kind` field thus holds one of the strings `\"partial\"`, `\"annular\"`, or `\"total\"`.\n    A total eclipse is when the peak observer sees the Sun completely blocked by the Moon.\n    An annular eclipse is like a total eclipse, but the Moon is too far from the Earth's surface\n    to completely block the Sun; instead, the Sun takes on a ring-shaped appearance.\n    A partial eclipse is when the Moon blocks part of the Sun's disc, but nobody on the Earth\n    observes either a total or annular eclipse.\n\n    If `kind` is `\"total\"` or `\"annular\"`, the `latitude` and `longitude`\n    fields give the geographic coordinates of the center of the Moon's shadow projected\n    onto the daytime side of the Earth at the instant of the eclipse's peak.\n    If `kind` has any other value, `latitude` and `longitude` are undefined and should\n    not be used.\n\n    @property {string} kind\n        One of the following string values: `\"partial\"`, `\"annular\"`, `\"total\"`.\n\n    @property {AstroTime} peak\n        The date and time of the peak of the eclipse, defined as the instant\n        when the axis of the Moon's shadow cone passes closest to the Earth's center.\n\n    @property {number} distance\n        The distance in kilometers between the axis of the Moon's shadow cone\n        and the center of the Earth at the time indicated by `peak`.\n\n    @property {number | undefined} latitude\n        If `kind` holds `\"total\"`, the geographic latitude in degrees\n        where the center of the Moon's shadow falls on the Earth at the\n        time indicated by `peak`; otherwise, `latitude` holds `undefined`.\n\n    @property {number | undefined} longitude\n        If `kind` holds `\"total\"`, the geographic longitude in degrees\n        where the center of the Moon's shadow falls on the Earth at the\n        time indicated by `peak`; otherwise, `longitude` holds `undefined`.\n*/",
         "meta": {
             "range": [
-                285140,
-                285395
+                284964,
+                285219
             ],
             "filename": "astronomy.js",
-            "lineno": 6948,
+            "lineno": 6942,
             "columnno": 0,
             "code": {
                 "id": "astnode100026094",
@@ -51282,11 +51263,11 @@
         "comment": "",
         "meta": {
             "range": [
-                285240,
-                285256
+                285064,
+                285080
             ],
             "filename": "astronomy.js",
-            "lineno": 6950,
+            "lineno": 6944,
             "columnno": 8,
             "code": {
                 "id": "astnode100026107",
@@ -51307,11 +51288,11 @@
         "comment": "",
         "meta": {
             "range": [
-                285266,
-                285282
+                285090,
+                285106
             ],
             "filename": "astronomy.js",
-            "lineno": 6951,
+            "lineno": 6945,
             "columnno": 8,
             "code": {
                 "id": "astnode100026113",
@@ -51332,11 +51313,11 @@
         "comment": "",
         "meta": {
             "range": [
-                285292,
-                285316
+                285116,
+                285140
             ],
             "filename": "astronomy.js",
-            "lineno": 6952,
+            "lineno": 6946,
             "columnno": 8,
             "code": {
                 "id": "astnode100026119",
@@ -51357,11 +51338,11 @@
         "comment": "",
         "meta": {
             "range": [
-                285326,
-                285350
+                285150,
+                285174
             ],
             "filename": "astronomy.js",
-            "lineno": 6953,
+            "lineno": 6947,
             "columnno": 8,
             "code": {
                 "id": "astnode100026125",
@@ -51382,11 +51363,11 @@
         "comment": "",
         "meta": {
             "range": [
-                285360,
-                285386
+                285184,
+                285210
             ],
             "filename": "astronomy.js",
-            "lineno": 6954,
+            "lineno": 6948,
             "columnno": 8,
             "code": {
                 "id": "astnode100026131",
@@ -51407,11 +51388,11 @@
         "comment": "",
         "meta": {
             "range": [
-                285396,
-                285451
+                285220,
+                285275
             ],
             "filename": "astronomy.js",
-            "lineno": 6957,
+            "lineno": 6951,
             "columnno": 0,
             "code": {
                 "id": "astnode100026137",
@@ -51431,11 +51412,11 @@
         "comment": "",
         "meta": {
             "range": [
-                285453,
-                285771
+                285277,
+                285595
             ],
             "filename": "astronomy.js",
-            "lineno": 6958,
+            "lineno": 6952,
             "columnno": 0,
             "code": {
                 "id": "astnode100026142",
@@ -51457,11 +51438,11 @@
         "comment": "",
         "meta": {
             "range": [
-                285772,
-                289904
+                285596,
+                289728
             ],
             "filename": "astronomy.js",
-            "lineno": 6964,
+            "lineno": 6958,
             "columnno": 0,
             "code": {
                 "id": "astnode100026153",
@@ -51516,11 +51497,11 @@
         "comment": "",
         "meta": {
             "range": [
-                285814,
-                285830
+                285638,
+                285654
             ],
             "filename": "astronomy.js",
-            "lineno": 6965,
+            "lineno": 6959,
             "columnno": 8,
             "code": {
                 "id": "astnode100026158",
@@ -51541,11 +51522,11 @@
         "comment": "",
         "meta": {
             "range": [
-                285840,
-                285858
+                285664,
+                285682
             ],
             "filename": "astronomy.js",
-            "lineno": 6966,
+            "lineno": 6960,
             "columnno": 8,
             "code": {
                 "id": "astnode100026162",
@@ -51566,11 +51547,11 @@
         "comment": "",
         "meta": {
             "range": [
-                285868,
-                285887
+                285692,
+                285711
             ],
             "filename": "astronomy.js",
-            "lineno": 6967,
+            "lineno": 6961,
             "columnno": 8,
             "code": {
                 "id": "astnode100026168",
@@ -51591,11 +51572,11 @@
         "comment": "",
         "meta": {
             "range": [
-                285897,
-                285905
+                285721,
+                285729
             ],
             "filename": "astronomy.js",
-            "lineno": 6968,
+            "lineno": 6962,
             "columnno": 8,
             "code": {
                 "id": "astnode100026174",
@@ -51614,11 +51595,11 @@
         "comment": "",
         "meta": {
             "range": [
-                285954,
-                285963
+                285778,
+                285787
             ],
             "filename": "astronomy.js",
-            "lineno": 6969,
+            "lineno": 6963,
             "columnno": 8,
             "code": {
                 "id": "astnode100026177",
@@ -51637,11 +51618,11 @@
         "comment": "",
         "meta": {
             "range": [
-                286293,
-                286328
+                286117,
+                286152
             ],
             "filename": "astronomy.js",
-            "lineno": 6974,
+            "lineno": 6968,
             "columnno": 10,
             "code": {
                 "id": "astnode100026180",
@@ -51662,11 +51643,11 @@
         "comment": "",
         "meta": {
             "range": [
-                286340,
-                286373
+                286164,
+                286197
             ],
             "filename": "astronomy.js",
-            "lineno": 6975,
+            "lineno": 6969,
             "columnno": 10,
             "code": {
                 "id": "astnode100026188",
@@ -51687,11 +51668,11 @@
         "comment": "",
         "meta": {
             "range": [
-                286438,
-                286474
+                286262,
+                286298
             ],
             "filename": "astronomy.js",
-            "lineno": 6976,
+            "lineno": 6970,
             "columnno": 10,
             "code": {
                 "id": "astnode100026197",
@@ -51712,11 +51693,11 @@
         "comment": "",
         "meta": {
             "range": [
-                286819,
-                286843
+                286643,
+                286667
             ],
             "filename": "astronomy.js",
-            "lineno": 6981,
+            "lineno": 6975,
             "columnno": 4,
             "code": {
                 "id": "astnode100026206",
@@ -51738,11 +51719,11 @@
         "comment": "",
         "meta": {
             "range": [
-                286849,
-                286873
+                286673,
+                286697
             ],
             "filename": "astronomy.js",
-            "lineno": 6982,
+            "lineno": 6976,
             "columnno": 4,
             "code": {
                 "id": "astnode100026214",
@@ -51764,11 +51745,11 @@
         "comment": "",
         "meta": {
             "range": [
-                286879,
-                286922
+                286703,
+                286746
             ],
             "filename": "astronomy.js",
-            "lineno": 6983,
+            "lineno": 6977,
             "columnno": 4,
             "code": {
                 "id": "astnode100026222",
@@ -51790,11 +51771,11 @@
         "comment": "",
         "meta": {
             "range": [
-                286928,
-                286952
+                286752,
+                286776
             ],
             "filename": "astronomy.js",
-            "lineno": 6984,
+            "lineno": 6978,
             "columnno": 4,
             "code": {
                 "id": "astnode100026232",
@@ -51816,11 +51797,11 @@
         "comment": "",
         "meta": {
             "range": [
-                286958,
-                286982
+                286782,
+                286806
             ],
             "filename": "astronomy.js",
-            "lineno": 6985,
+            "lineno": 6979,
             "columnno": 4,
             "code": {
                 "id": "astnode100026240",
@@ -51842,11 +51823,11 @@
         "comment": "",
         "meta": {
             "range": [
-                286988,
-                287031
+                286812,
+                286855
             ],
             "filename": "astronomy.js",
-            "lineno": 6986,
+            "lineno": 6980,
             "columnno": 4,
             "code": {
                 "id": "astnode100026248",
@@ -51868,11 +51849,11 @@
         "comment": "",
         "meta": {
             "range": [
-                287191,
-                287221
+                287015,
+                287045
             ],
             "filename": "astronomy.js",
-            "lineno": 6989,
+            "lineno": 6983,
             "columnno": 10,
             "code": {
                 "id": "astnode100026258",
@@ -51893,11 +51874,11 @@
         "comment": "",
         "meta": {
             "range": [
-                287233,
-                287270
+                287057,
+                287094
             ],
             "filename": "astronomy.js",
-            "lineno": 6990,
+            "lineno": 6984,
             "columnno": 10,
             "code": {
                 "id": "astnode100026262",
@@ -51918,11 +51899,11 @@
         "comment": "",
         "meta": {
             "range": [
-                287282,
-                287328
+                287106,
+                287152
             ],
             "filename": "astronomy.js",
-            "lineno": 6991,
+            "lineno": 6985,
             "columnno": 10,
             "code": {
                 "id": "astnode100026288",
@@ -51943,11 +51924,11 @@
         "comment": "",
         "meta": {
             "range": [
-                287340,
-                287387
+                287164,
+                287211
             ],
             "filename": "astronomy.js",
-            "lineno": 6992,
+            "lineno": 6986,
             "columnno": 10,
             "code": {
                 "id": "astnode100026317",
@@ -51968,11 +51949,11 @@
         "comment": "",
         "meta": {
             "range": [
-                287399,
-                287424
+                287223,
+                287248
             ],
             "filename": "astronomy.js",
-            "lineno": 6993,
+            "lineno": 6987,
             "columnno": 10,
             "code": {
                 "id": "astnode100026347",
@@ -51993,11 +51974,11 @@
         "comment": "",
         "meta": {
             "range": [
-                287581,
-                287618
+                287405,
+                287442
             ],
             "filename": "astronomy.js",
-            "lineno": 6997,
+            "lineno": 6991,
             "columnno": 14,
             "code": {
                 "id": "astnode100026364",
@@ -52018,11 +51999,11 @@
         "comment": "",
         "meta": {
             "range": [
-                287712,
-                287730
+                287536,
+                287554
             ],
             "filename": "astronomy.js",
-            "lineno": 6999,
+            "lineno": 6993,
             "columnno": 14,
             "code": {
                 "id": "astnode100026379",
@@ -52043,11 +52024,11 @@
         "comment": "",
         "meta": {
             "range": [
-                287746,
-                287764
+                287570,
+                287588
             ],
             "filename": "astronomy.js",
-            "lineno": 7000,
+            "lineno": 6994,
             "columnno": 14,
             "code": {
                 "id": "astnode100026391",
@@ -52068,11 +52049,11 @@
         "comment": "",
         "meta": {
             "range": [
-                287780,
-                287819
+                287604,
+                287643
             ],
             "filename": "astronomy.js",
-            "lineno": 7001,
+            "lineno": 6995,
             "columnno": 14,
             "code": {
                 "id": "astnode100026403",
@@ -52093,11 +52074,11 @@
         "comment": "",
         "meta": {
             "range": [
-                287910,
-                287985
+                287734,
+                287809
             ],
             "filename": "astronomy.js",
-            "lineno": 7003,
+            "lineno": 6997,
             "columnno": 14,
             "code": {
                 "id": "astnode100026417",
@@ -52118,11 +52099,11 @@
         "comment": "",
         "meta": {
             "range": [
-                288024,
-                288061
+                287848,
+                287885
             ],
             "filename": "astronomy.js",
-            "lineno": 7005,
+            "lineno": 6999,
             "columnno": 12,
             "code": {
                 "id": "astnode100026439",
@@ -52144,11 +52125,11 @@
         "comment": "",
         "meta": {
             "range": [
-                288088,
-                288137
+                287912,
+                287961
             ],
             "filename": "astronomy.js",
-            "lineno": 7007,
+            "lineno": 7001,
             "columnno": 12,
             "code": {
                 "id": "astnode100026450",
@@ -52170,11 +52151,11 @@
         "comment": "",
         "meta": {
             "range": [
-                288219,
-                288245
+                288043,
+                288069
             ],
             "filename": "astronomy.js",
-            "lineno": 7009,
+            "lineno": 7003,
             "columnno": 14,
             "code": {
                 "id": "astnode100026464",
@@ -52195,11 +52176,11 @@
         "comment": "",
         "meta": {
             "range": [
-                288255,
-                288327
+                288079,
+                288151
             ],
             "filename": "astronomy.js",
-            "lineno": 7010,
+            "lineno": 7004,
             "columnno": 8,
             "code": {
                 "id": "astnode100026470",
@@ -52221,11 +52202,11 @@
         "comment": "",
         "meta": {
             "range": [
-                288374,
-                288392
+                288198,
+                288216
             ],
             "filename": "astronomy.js",
-            "lineno": 7012,
+            "lineno": 7006,
             "columnno": 12,
             "code": {
                 "id": "astnode100026494",
@@ -52247,11 +52228,11 @@
         "comment": "",
         "meta": {
             "range": [
-                288443,
-                288461
+                288267,
+                288285
             ],
             "filename": "astronomy.js",
-            "lineno": 7014,
+            "lineno": 7008,
             "columnno": 12,
             "code": {
                 "id": "astnode100026503",
@@ -52273,11 +52254,11 @@
         "comment": "",
         "meta": {
             "range": [
-                288719,
-                288745
+                288543,
+                288569
             ],
             "filename": "astronomy.js",
-            "lineno": 7018,
+            "lineno": 7012,
             "columnno": 14,
             "code": {
                 "id": "astnode100026507",
@@ -52298,11 +52279,11 @@
         "comment": "",
         "meta": {
             "range": [
-                288910,
-                289009
+                288734,
+                288833
             ],
             "filename": "astronomy.js",
-            "lineno": 7021,
+            "lineno": 7015,
             "columnno": 12,
             "code": {
                 "id": "astnode100026513",
@@ -52323,11 +52304,11 @@
         "comment": "",
         "meta": {
             "range": [
-                289091,
-                289115
+                288915,
+                288939
             ],
             "filename": "astronomy.js",
-            "lineno": 7023,
+            "lineno": 7017,
             "columnno": 8,
             "code": {
                 "id": "astnode100026536",
@@ -52349,11 +52330,11 @@
         "comment": "",
         "meta": {
             "range": [
-                289185,
-                289207
+                289009,
+                289031
             ],
             "filename": "astronomy.js",
-            "lineno": 7025,
+            "lineno": 7019,
             "columnno": 8,
             "code": {
                 "id": "astnode100026543",
@@ -52375,11 +52356,11 @@
         "comment": "",
         "meta": {
             "range": [
-                289217,
-                289239
+                289041,
+                289063
             ],
             "filename": "astronomy.js",
-            "lineno": 7026,
+            "lineno": 7020,
             "columnno": 8,
             "code": {
                 "id": "astnode100026553",
@@ -52401,11 +52382,11 @@
         "comment": "",
         "meta": {
             "range": [
-                289249,
-                289271
+                289073,
+                289095
             ],
             "filename": "astronomy.js",
-            "lineno": 7027,
+            "lineno": 7021,
             "columnno": 8,
             "code": {
                 "id": "astnode100026563",
@@ -52427,11 +52408,11 @@
         "comment": "",
         "meta": {
             "range": [
-                289380,
-                289450
+                289204,
+                289274
             ],
             "filename": "astronomy.js",
-            "lineno": 7029,
+            "lineno": 7023,
             "columnno": 14,
             "code": {
                 "id": "astnode100026573",
@@ -52452,11 +52433,11 @@
         "comment": "",
         "meta": {
             "range": [
-                289775,
-                289813
+                289599,
+                289637
             ],
             "filename": "astronomy.js",
-            "lineno": 7034,
+            "lineno": 7028,
             "columnno": 8,
             "code": {
                 "id": "astnode100026605",
@@ -52478,11 +52459,11 @@
         "comment": "/**\n * @brief Searches for the next lunar eclipse in a series.\n *\n * After using {@link SearchLunarEclipse} to find the first lunar eclipse\n * in a series, you can call this function to find the next consecutive lunar eclipse.\n * Pass in the `center` value from the {@link LunarEclipseInfo} returned by the\n * previous call to `SearchLunarEclipse` or `NextLunarEclipse`\n * to find the next lunar eclipse.\n *\n * @param {AstroTime} prevEclipseTime\n *      A date and time near a full moon. Lunar eclipse search will start at the next full moon.\n *\n * @returns {LunarEclipseInfo}\n */",
         "meta": {
             "range": [
-                290486,
-                290625
+                290310,
+                290449
             ],
             "filename": "astronomy.js",
-            "lineno": 7052,
+            "lineno": 7046,
             "columnno": 0,
             "code": {
                 "id": "astnode100026620",
@@ -52533,11 +52514,11 @@
         "comment": "",
         "meta": {
             "range": [
-                290541,
-                290580
+                290365,
+                290404
             ],
             "filename": "astronomy.js",
-            "lineno": 7053,
+            "lineno": 7047,
             "columnno": 10,
             "code": {
                 "id": "astnode100026625",
@@ -52558,11 +52539,11 @@
         "comment": "",
         "meta": {
             "range": [
-                290626,
-                290669
+                290450,
+                290493
             ],
             "filename": "astronomy.js",
-            "lineno": 7056,
+            "lineno": 7050,
             "columnno": 0,
             "code": {
                 "id": "astnode100026637",
@@ -52582,11 +52563,11 @@
         "comment": "/**\n * @brief Searches for a solar eclipse visible anywhere on the Earth's surface.\n *\n * This function finds the first solar eclipse that occurs after `startTime`.\n * A solar eclipse may be partial, annular, or total.\n * See {@link GlobalSolarEclipseInfo} for more information.\n * To find a series of solar eclipses, call this function once,\n * then keep calling {@link NextGlobalSolarEclipse} as many times as desired,\n * passing in the `peak` value returned from the previous call.\n *\n * @param {AstroTime} startTime\n *      The date and time for starting the search for a solar eclipse.\n *\n * @returns {GlobalSolarEclipseInfo}\n */",
         "meta": {
             "range": [
-                291306,
-                292923
+                291130,
+                292747
             ],
             "filename": "astronomy.js",
-            "lineno": 7072,
+            "lineno": 7066,
             "columnno": 0,
             "code": {
                 "id": "astnode100026642",
@@ -52642,11 +52623,11 @@
         "comment": "",
         "meta": {
             "range": [
-                291363,
-                291382
+                291187,
+                291206
             ],
             "filename": "astronomy.js",
-            "lineno": 7073,
+            "lineno": 7067,
             "columnno": 10,
             "code": {
                 "id": "astnode100026647",
@@ -52667,11 +52648,11 @@
         "comment": "",
         "meta": {
             "range": [
-                291558,
-                291576
+                291382,
+                291400
             ],
             "filename": "astronomy.js",
-            "lineno": 7075,
+            "lineno": 7069,
             "columnno": 8,
             "code": {
                 "id": "astnode100026651",
@@ -52692,11 +52673,11 @@
         "comment": "",
         "meta": {
             "range": [
-                291586,
-                291593
+                291410,
+                291417
             ],
             "filename": "astronomy.js",
-            "lineno": 7076,
+            "lineno": 7070,
             "columnno": 8,
             "code": {
                 "id": "astnode100026655",
@@ -52715,11 +52696,11 @@
         "comment": "",
         "meta": {
             "range": [
-                291604,
-                291615
+                291428,
+                291439
             ],
             "filename": "astronomy.js",
-            "lineno": 7077,
+            "lineno": 7071,
             "columnno": 9,
             "code": {
                 "id": "astnode100026658",
@@ -52741,11 +52722,11 @@
         "comment": "",
         "meta": {
             "range": [
-                291728,
-                291772
+                291552,
+                291596
             ],
             "filename": "astronomy.js",
-            "lineno": 7079,
+            "lineno": 7073,
             "columnno": 14,
             "code": {
                 "id": "astnode100026668",
@@ -52766,11 +52747,11 @@
         "comment": "",
         "meta": {
             "range": [
-                291955,
-                292003
+                291779,
+                291827
             ],
             "filename": "astronomy.js",
-            "lineno": 7083,
+            "lineno": 7077,
             "columnno": 14,
             "code": {
                 "id": "astnode100026681",
@@ -52791,11 +52772,11 @@
         "comment": "",
         "meta": {
             "range": [
-                292243,
-                292275
+                292067,
+                292099
             ],
             "filename": "astronomy.js",
-            "lineno": 7087,
+            "lineno": 7081,
             "columnno": 18,
             "code": {
                 "id": "astnode100026696",
@@ -52816,11 +52797,11 @@
         "comment": "",
         "meta": {
             "range": [
-                292690,
-                292720
+                292514,
+                292544
             ],
             "filename": "astronomy.js",
-            "lineno": 7095,
+            "lineno": 7089,
             "columnno": 8,
             "code": {
                 "id": "astnode100026717",
@@ -52842,11 +52823,11 @@
         "comment": "",
         "meta": {
             "range": [
-                292924,
-                292983
+                292748,
+                292807
             ],
             "filename": "astronomy.js",
-            "lineno": 7101,
+            "lineno": 7095,
             "columnno": 0,
             "code": {
                 "id": "astnode100026727",
@@ -52866,11 +52847,11 @@
         "comment": "/**\n * @brief Searches for the next global solar eclipse in a series.\n *\n * After using {@link SearchGlobalSolarEclipse} to find the first solar eclipse\n * in a series, you can call this function to find the next consecutive solar eclipse.\n * Pass in the `peak` value from the {@link GlobalSolarEclipseInfo} returned by the\n * previous call to `SearchGlobalSolarEclipse` or `NextGlobalSolarEclipse`\n * to find the next solar eclipse.\n *\n * @param {AstroTime} prevEclipseTime\n *      A date and time near a new moon. Solar eclipse search will start at the next new moon.\n *\n * @returns {GlobalSolarEclipseInfo}\n */",
         "meta": {
             "range": [
-                293599,
-                293752
+                293423,
+                293576
             ],
             "filename": "astronomy.js",
-            "lineno": 7116,
+            "lineno": 7110,
             "columnno": 0,
             "code": {
                 "id": "astnode100026732",
@@ -52921,11 +52902,11 @@
         "comment": "",
         "meta": {
             "range": [
-                293660,
-                293701
+                293484,
+                293525
             ],
             "filename": "astronomy.js",
-            "lineno": 7117,
+            "lineno": 7111,
             "columnno": 10,
             "code": {
                 "id": "astnode100026737",
@@ -52946,11 +52927,11 @@
         "comment": "",
         "meta": {
             "range": [
-                293753,
-                293808
+                293577,
+                293632
             ],
             "filename": "astronomy.js",
-            "lineno": 7120,
+            "lineno": 7114,
             "columnno": 0,
             "code": {
                 "id": "astnode100026749",
@@ -52970,11 +52951,11 @@
         "comment": "/**\n * @brief Holds a time and the observed altitude of the Sun at that time.\n *\n * When reporting a solar eclipse observed at a specific location on the Earth\n * (a \"local\" solar eclipse), a series of events occur. In addition\n * to the time of each event, it is important to know the altitude of the Sun,\n * because each event may be invisible to the observer if the Sun is below\n * the horizon (i.e. it at night).\n *\n * If `altitude` is negative, the event is theoretical only; it would be\n * visible if the Earth were transparent, but the observer cannot actually see it.\n * If `altitude` is positive but less than a few degrees, visibility will be impaired by\n * atmospheric interference (sunrise or sunset conditions).\n *\n * @property {AstroTime} time\n *      The date and time of the event.\n *\n * @property {number} altitude\n *      The angular altitude of the center of the Sun above/below the horizon, at `time`,\n *      corrected for atmospheric refraction and expressed in degrees.\n */",
         "meta": {
             "range": [
-                294807,
-                294929
+                294631,
+                294753
             ],
             "filename": "astronomy.js",
-            "lineno": 7142,
+            "lineno": 7136,
             "columnno": 0,
             "code": {
                 "id": "astnode100026754",
@@ -53024,11 +53005,11 @@
         "comment": "",
         "meta": {
             "range": [
-                294832,
-                294927
+                294656,
+                294751
             ],
             "filename": "astronomy.js",
-            "lineno": 7143,
+            "lineno": 7137,
             "columnno": 4,
             "code": {
                 "id": "astnode100026757",
@@ -53054,11 +53035,11 @@
         "comment": "/**\n * @brief Holds a time and the observed altitude of the Sun at that time.\n *\n * When reporting a solar eclipse observed at a specific location on the Earth\n * (a \"local\" solar eclipse), a series of events occur. In addition\n * to the time of each event, it is important to know the altitude of the Sun,\n * because each event may be invisible to the observer if the Sun is below\n * the horizon (i.e. it at night).\n *\n * If `altitude` is negative, the event is theoretical only; it would be\n * visible if the Earth were transparent, but the observer cannot actually see it.\n * If `altitude` is positive but less than a few degrees, visibility will be impaired by\n * atmospheric interference (sunrise or sunset conditions).\n *\n * @property {AstroTime} time\n *      The date and time of the event.\n *\n * @property {number} altitude\n *      The angular altitude of the center of the Sun above/below the horizon, at `time`,\n *      corrected for atmospheric refraction and expressed in degrees.\n */",
         "meta": {
             "range": [
-                294807,
-                294929
+                294631,
+                294753
             ],
             "filename": "astronomy.js",
-            "lineno": 7142,
+            "lineno": 7136,
             "columnno": 0,
             "code": {
                 "id": "astnode100026754",
@@ -53107,11 +53088,11 @@
         "comment": "",
         "meta": {
             "range": [
-                294870,
-                294886
+                294694,
+                294710
             ],
             "filename": "astronomy.js",
-            "lineno": 7144,
+            "lineno": 7138,
             "columnno": 8,
             "code": {
                 "id": "astnode100026764",
@@ -53132,11 +53113,11 @@
         "comment": "",
         "meta": {
             "range": [
-                294896,
-                294920
+                294720,
+                294744
             ],
             "filename": "astronomy.js",
-            "lineno": 7145,
+            "lineno": 7139,
             "columnno": 8,
             "code": {
                 "id": "astnode100026770",
@@ -53157,11 +53138,11 @@
         "comment": "",
         "meta": {
             "range": [
-                294930,
-                294965
+                294754,
+                294789
             ],
             "filename": "astronomy.js",
-            "lineno": 7148,
+            "lineno": 7142,
             "columnno": 0,
             "code": {
                 "id": "astnode100026776",
@@ -53181,11 +53162,11 @@
         "comment": "/**\n * @brief Information about a solar eclipse as seen by an observer at a given time and geographic location.\n *\n * Returned by {@link SearchLocalSolarEclipse} or {@link NextLocalSolarEclipse}\n * to report information about a solar eclipse as seen at a given geographic location.\n *\n * When a solar eclipse is found, it is classified by setting `kind`\n * to `\"partial\"`, `\"annular\"`, or `\"total\"`.\n * A partial solar eclipse is when the Moon does not line up directly enough with the Sun\n * to completely block the Sun's light from reaching the observer.\n * An annular eclipse occurs when the Moon's disc is completely visible against the Sun\n * but the Moon is too far away to completely block the Sun's light; this leaves the\n * Sun with a ring-like appearance.\n * A total eclipse occurs when the Moon is close enough to the Earth and aligned with the\n * Sun just right to completely block all sunlight from reaching the observer.\n *\n * There are 5 \"event\" fields, each of which contains a time and a solar altitude.\n * Field `peak` holds the date and time of the center of the eclipse, when it is at its peak.\n * The fields `partial_begin` and `partial_end` are always set, and indicate when\n * the eclipse begins/ends. If the eclipse reaches totality or becomes annular,\n * `total_begin` and `total_end` indicate when the total/annular phase begins/ends.\n * When an event field is valid, the caller must also check its `altitude` field to\n * see whether the Sun is above the horizon at the time indicated by the `time` field.\n * See {@link EclipseEvent} for more information.\n *\n * @property {string} kind\n *      The type of solar eclipse found: `\"partial\"`, `\"annular\"`, or `\"total\"`.\n *\n * @property {EclipseEvent} partial_begin\n *      The time and Sun altitude at the beginning of the eclipse.\n *\n * @property {EclipseEvent | undefined} total_begin\n *      If this is an annular or a total eclipse, the time and Sun altitude when annular/total phase begins; otherwise undefined.\n *\n * @property {EclipseEvent} peak\n *      The time and Sun altitude when the eclipse reaches its peak.\n *\n * @property {EclipseEvent | undefined} total_end\n *      If this is an annular or a total eclipse, the time and Sun altitude when annular/total phase ends; otherwise undefined.\n *\n * @property {EclipseEvent} partial_end\n *      The time and Sun altitude at the end of the eclipse.\n */",
         "meta": {
             "range": [
-                297351,
-                297682
+                297175,
+                297506
             ],
             "filename": "astronomy.js",
-            "lineno": 7192,
+            "lineno": 7186,
             "columnno": 0,
             "code": {
                 "id": "astnode100026781",
@@ -53277,11 +53258,11 @@
         "comment": "",
         "meta": {
             "range": [
-                297385,
-                297680
+                297209,
+                297504
             ],
             "filename": "astronomy.js",
-            "lineno": 7193,
+            "lineno": 7187,
             "columnno": 4,
             "code": {
                 "id": "astnode100026784",
@@ -53311,11 +53292,11 @@
         "comment": "/**\n * @brief Information about a solar eclipse as seen by an observer at a given time and geographic location.\n *\n * Returned by {@link SearchLocalSolarEclipse} or {@link NextLocalSolarEclipse}\n * to report information about a solar eclipse as seen at a given geographic location.\n *\n * When a solar eclipse is found, it is classified by setting `kind`\n * to `\"partial\"`, `\"annular\"`, or `\"total\"`.\n * A partial solar eclipse is when the Moon does not line up directly enough with the Sun\n * to completely block the Sun's light from reaching the observer.\n * An annular eclipse occurs when the Moon's disc is completely visible against the Sun\n * but the Moon is too far away to completely block the Sun's light; this leaves the\n * Sun with a ring-like appearance.\n * A total eclipse occurs when the Moon is close enough to the Earth and aligned with the\n * Sun just right to completely block all sunlight from reaching the observer.\n *\n * There are 5 \"event\" fields, each of which contains a time and a solar altitude.\n * Field `peak` holds the date and time of the center of the eclipse, when it is at its peak.\n * The fields `partial_begin` and `partial_end` are always set, and indicate when\n * the eclipse begins/ends. If the eclipse reaches totality or becomes annular,\n * `total_begin` and `total_end` indicate when the total/annular phase begins/ends.\n * When an event field is valid, the caller must also check its `altitude` field to\n * see whether the Sun is above the horizon at the time indicated by the `time` field.\n * See {@link EclipseEvent} for more information.\n *\n * @property {string} kind\n *      The type of solar eclipse found: `\"partial\"`, `\"annular\"`, or `\"total\"`.\n *\n * @property {EclipseEvent} partial_begin\n *      The time and Sun altitude at the beginning of the eclipse.\n *\n * @property {EclipseEvent | undefined} total_begin\n *      If this is an annular or a total eclipse, the time and Sun altitude when annular/total phase begins; otherwise undefined.\n *\n * @property {EclipseEvent} peak\n *      The time and Sun altitude when the eclipse reaches its peak.\n *\n * @property {EclipseEvent | undefined} total_end\n *      If this is an annular or a total eclipse, the time and Sun altitude when annular/total phase ends; otherwise undefined.\n *\n * @property {EclipseEvent} partial_end\n *      The time and Sun altitude at the end of the eclipse.\n */",
         "meta": {
             "range": [
-                297351,
-                297682
+                297175,
+                297506
             ],
             "filename": "astronomy.js",
-            "lineno": 7192,
+            "lineno": 7186,
             "columnno": 0,
             "code": {
                 "id": "astnode100026781",
@@ -53406,11 +53387,11 @@
         "comment": "",
         "meta": {
             "range": [
-                297471,
-                297487
+                297295,
+                297311
             ],
             "filename": "astronomy.js",
-            "lineno": 7194,
+            "lineno": 7188,
             "columnno": 8,
             "code": {
                 "id": "astnode100026795",
@@ -53431,11 +53412,11 @@
         "comment": "",
         "meta": {
             "range": [
-                297497,
-                297531
+                297321,
+                297355
             ],
             "filename": "astronomy.js",
-            "lineno": 7195,
+            "lineno": 7189,
             "columnno": 8,
             "code": {
                 "id": "astnode100026801",
@@ -53456,11 +53437,11 @@
         "comment": "",
         "meta": {
             "range": [
-                297541,
-                297571
+                297365,
+                297395
             ],
             "filename": "astronomy.js",
-            "lineno": 7196,
+            "lineno": 7190,
             "columnno": 8,
             "code": {
                 "id": "astnode100026807",
@@ -53481,11 +53462,11 @@
         "comment": "",
         "meta": {
             "range": [
-                297581,
-                297597
+                297405,
+                297421
             ],
             "filename": "astronomy.js",
-            "lineno": 7197,
+            "lineno": 7191,
             "columnno": 8,
             "code": {
                 "id": "astnode100026813",
@@ -53506,11 +53487,11 @@
         "comment": "",
         "meta": {
             "range": [
-                297607,
-                297633
+                297431,
+                297457
             ],
             "filename": "astronomy.js",
-            "lineno": 7198,
+            "lineno": 7192,
             "columnno": 8,
             "code": {
                 "id": "astnode100026819",
@@ -53531,11 +53512,11 @@
         "comment": "",
         "meta": {
             "range": [
-                297643,
-                297673
+                297467,
+                297497
             ],
             "filename": "astronomy.js",
-            "lineno": 7199,
+            "lineno": 7193,
             "columnno": 8,
             "code": {
                 "id": "astnode100026825",
@@ -53556,11 +53537,11 @@
         "comment": "",
         "meta": {
             "range": [
-                297683,
-                297736
+                297507,
+                297560
             ],
             "filename": "astronomy.js",
-            "lineno": 7202,
+            "lineno": 7196,
             "columnno": 0,
             "code": {
                 "id": "astnode100026831",
@@ -53580,11 +53561,11 @@
         "comment": "",
         "meta": {
             "range": [
-                297738,
-                297813
+                297562,
+                297637
             ],
             "filename": "astronomy.js",
-            "lineno": 7203,
+            "lineno": 7197,
             "columnno": 0,
             "code": {
                 "id": "astnode100026836",
@@ -53606,11 +53587,11 @@
         "comment": "",
         "meta": {
             "range": [
-                297814,
-                298015
+                297638,
+                297839
             ],
             "filename": "astronomy.js",
-            "lineno": 7206,
+            "lineno": 7200,
             "columnno": 0,
             "code": {
                 "id": "astnode100026848",
@@ -53632,11 +53613,11 @@
         "comment": "",
         "meta": {
             "range": [
-                298016,
-                299140
+                297840,
+                298964
             ],
             "filename": "astronomy.js",
-            "lineno": 7211,
+            "lineno": 7205,
             "columnno": 0,
             "code": {
                 "id": "astnode100026864",
@@ -53671,11 +53652,11 @@
         "comment": "",
         "meta": {
             "range": [
-                298068,
-                298088
+                297892,
+                297912
             ],
             "filename": "astronomy.js",
-            "lineno": 7212,
+            "lineno": 7206,
             "columnno": 10,
             "code": {
                 "id": "astnode100026870",
@@ -53696,11 +53677,11 @@
         "comment": "",
         "meta": {
             "range": [
-                298100,
-                298119
+                297924,
+                297943
             ],
             "filename": "astronomy.js",
-            "lineno": 7213,
+            "lineno": 7207,
             "columnno": 10,
             "code": {
                 "id": "astnode100026874",
@@ -53721,11 +53702,11 @@
         "comment": "",
         "meta": {
             "range": [
-                298131,
-                298170
+                297955,
+                297994
             ],
             "filename": "astronomy.js",
-            "lineno": 7214,
+            "lineno": 7208,
             "columnno": 10,
             "code": {
                 "id": "astnode100026878",
@@ -53746,11 +53727,11 @@
         "comment": "",
         "meta": {
             "range": [
-                298180,
-                298221
+                298004,
+                298045
             ],
             "filename": "astronomy.js",
-            "lineno": 7215,
+            "lineno": 7209,
             "columnno": 8,
             "code": {
                 "id": "astnode100026887",
@@ -53771,11 +53752,11 @@
         "comment": "",
         "meta": {
             "range": [
-                298231,
-                298272
+                298055,
+                298096
             ],
             "filename": "astronomy.js",
-            "lineno": 7216,
+            "lineno": 7210,
             "columnno": 8,
             "code": {
                 "id": "astnode100026898",
@@ -53796,11 +53777,11 @@
         "comment": "",
         "meta": {
             "range": [
-                298284,
-                298379
+                298108,
+                298203
             ],
             "filename": "astronomy.js",
-            "lineno": 7217,
+            "lineno": 7211,
             "columnno": 10,
             "code": {
                 "id": "astnode100026909",
@@ -53821,11 +53802,11 @@
         "comment": "",
         "meta": {
             "range": [
-                298391,
-                298484
+                298215,
+                298308
             ],
             "filename": "astronomy.js",
-            "lineno": 7218,
+            "lineno": 7212,
             "columnno": 10,
             "code": {
                 "id": "astnode100026922",
@@ -53846,11 +53827,11 @@
         "comment": "",
         "meta": {
             "range": [
-                298494,
-                298505
+                298318,
+                298329
             ],
             "filename": "astronomy.js",
-            "lineno": 7219,
+            "lineno": 7213,
             "columnno": 8,
             "code": {
                 "id": "astnode100026935",
@@ -53869,11 +53850,11 @@
         "comment": "",
         "meta": {
             "range": [
-                298515,
-                298524
+                298339,
+                298348
             ],
             "filename": "astronomy.js",
-            "lineno": 7220,
+            "lineno": 7214,
             "columnno": 8,
             "code": {
                 "id": "astnode100026938",
@@ -53892,11 +53873,11 @@
         "comment": "",
         "meta": {
             "range": [
-                298534,
-                298538
+                298358,
+                298362
             ],
             "filename": "astronomy.js",
-            "lineno": 7221,
+            "lineno": 7215,
             "columnno": 8,
             "code": {
                 "id": "astnode100026941",
@@ -53915,11 +53896,11 @@
         "comment": "",
         "meta": {
             "range": [
-                298651,
-                298690
+                298475,
+                298514
             ],
             "filename": "astronomy.js",
-            "lineno": 7223,
+            "lineno": 7217,
             "columnno": 8,
             "code": {
                 "id": "astnode100026957",
@@ -53941,11 +53922,11 @@
         "comment": "",
         "meta": {
             "range": [
-                298700,
-                298739
+                298524,
+                298563
             ],
             "filename": "astronomy.js",
-            "lineno": 7224,
+            "lineno": 7218,
             "columnno": 8,
             "code": {
                 "id": "astnode100026968",
@@ -53967,11 +53948,11 @@
         "comment": "",
         "meta": {
             "range": [
-                298749,
-                298840
+                298573,
+                298664
             ],
             "filename": "astronomy.js",
-            "lineno": 7225,
+            "lineno": 7219,
             "columnno": 8,
             "code": {
                 "id": "astnode100026979",
@@ -53993,11 +53974,11 @@
         "comment": "",
         "meta": {
             "range": [
-                298850,
-                298939
+                298674,
+                298763
             ],
             "filename": "astronomy.js",
-            "lineno": 7226,
+            "lineno": 7220,
             "columnno": 8,
             "code": {
                 "id": "astnode100026992",
@@ -54019,11 +54000,11 @@
         "comment": "",
         "meta": {
             "range": [
-                298949,
-                298986
+                298773,
+                298810
             ],
             "filename": "astronomy.js",
-            "lineno": 7227,
+            "lineno": 7221,
             "columnno": 8,
             "code": {
                 "id": "astnode100027005",
@@ -54045,11 +54026,11 @@
         "comment": "",
         "meta": {
             "range": [
-                299013,
-                299029
+                298837,
+                298853
             ],
             "filename": "astronomy.js",
-            "lineno": 7230,
+            "lineno": 7224,
             "columnno": 8,
             "code": {
                 "id": "astnode100027014",
@@ -54071,11 +54052,11 @@
         "comment": "",
         "meta": {
             "range": [
-                299141,
-                299503
+                298965,
+                299327
             ],
             "filename": "astronomy.js",
-            "lineno": 7234,
+            "lineno": 7228,
             "columnno": 0,
             "code": {
                 "id": "astnode100027026",
@@ -54105,11 +54086,11 @@
         "comment": "",
         "meta": {
             "range": [
-                299214,
-                299342
+                299038,
+                299166
             ],
             "filename": "astronomy.js",
-            "lineno": 7235,
+            "lineno": 7229,
             "columnno": 4,
             "code": {
                 "id": "astnode100027034",
@@ -54135,11 +54116,11 @@
         "comment": "",
         "meta": {
             "range": [
-                299254,
-                299294
+                299078,
+                299118
             ],
             "filename": "astronomy.js",
-            "lineno": 7236,
+            "lineno": 7230,
             "columnno": 14,
             "code": {
                 "id": "astnode100027039",
@@ -54160,11 +54141,11 @@
         "comment": "",
         "meta": {
             "range": [
-                299353,
-                299386
+                299177,
+                299210
             ],
             "filename": "astronomy.js",
-            "lineno": 7239,
+            "lineno": 7233,
             "columnno": 10,
             "code": {
                 "id": "astnode100027052",
@@ -54185,11 +54166,11 @@
         "comment": "",
         "meta": {
             "range": [
-                299504,
-                299637
+                299328,
+                299461
             ],
             "filename": "astronomy.js",
-            "lineno": 7244,
+            "lineno": 7238,
             "columnno": 0,
             "code": {
                 "id": "astnode100027069",
@@ -54215,11 +54196,11 @@
         "comment": "",
         "meta": {
             "range": [
-                299551,
-                299589
+                299375,
+                299413
             ],
             "filename": "astronomy.js",
-            "lineno": 7245,
+            "lineno": 7239,
             "columnno": 10,
             "code": {
                 "id": "astnode100027075",
@@ -54240,11 +54221,11 @@
         "comment": "",
         "meta": {
             "range": [
-                299638,
-                299834
+                299462,
+                299658
             ],
             "filename": "astronomy.js",
-            "lineno": 7248,
+            "lineno": 7242,
             "columnno": 0,
             "code": {
                 "id": "astnode100027086",
@@ -54271,11 +54252,11 @@
         "comment": "",
         "meta": {
             "range": [
-                299687,
-                299738
+                299511,
+                299562
             ],
             "filename": "astronomy.js",
-            "lineno": 7249,
+            "lineno": 7243,
             "columnno": 10,
             "code": {
                 "id": "astnode100027092",
@@ -54296,11 +54277,11 @@
         "comment": "",
         "meta": {
             "range": [
-                299750,
-                299806
+                299574,
+                299630
             ],
             "filename": "astronomy.js",
-            "lineno": 7250,
+            "lineno": 7244,
             "columnno": 10,
             "code": {
                 "id": "astnode100027104",
@@ -54321,11 +54302,11 @@
         "comment": "/**\n * @brief Searches for a solar eclipse visible at a specific location on the Earth's surface.\n *\n * This function finds the first solar eclipse that occurs after `startTime`.\n * A solar eclipse may be partial, annular, or total.\n * See {@link LocalSolarEclipseInfo} for more information.\n *\n * To find a series of solar eclipses, call this function once,\n * then keep calling {@link NextLocalSolarEclipse} as many times as desired,\n * passing in the `peak` value returned from the previous call.\n *\n * IMPORTANT: An eclipse reported by this function might be partly or\n * completely invisible to the observer due to the time of day.\n * See {@link LocalSolarEclipseInfo} for more information about this topic.\n *\n * @param {AstroTime} startTime\n *      The date and time for starting the search for a solar eclipse.\n *\n * @param {Observer} observer\n *      The geographic location of the observer.\n *\n * @returns {LocalSolarEclipseInfo}\n */",
         "meta": {
             "range": [
-                300779,
-                302487
+                300603,
+                302311
             ],
             "filename": "astronomy.js",
-            "lineno": 7276,
+            "lineno": 7270,
             "columnno": 0,
             "code": {
                 "id": "astnode100027121",
@@ -54391,11 +54372,11 @@
         "comment": "",
         "meta": {
             "range": [
-                300875,
-                300894
+                300699,
+                300718
             ],
             "filename": "astronomy.js",
-            "lineno": 7278,
+            "lineno": 7272,
             "columnno": 10,
             "code": {
                 "id": "astnode100027131",
@@ -54416,11 +54397,11 @@
         "comment": "",
         "meta": {
             "range": [
-                301076,
-                301094
+                300900,
+                300918
             ],
             "filename": "astronomy.js",
-            "lineno": 7280,
+            "lineno": 7274,
             "columnno": 8,
             "code": {
                 "id": "astnode100027135",
@@ -54441,11 +54422,11 @@
         "comment": "",
         "meta": {
             "range": [
-                301198,
-                301242
+                301022,
+                301066
             ],
             "filename": "astronomy.js",
-            "lineno": 7283,
+            "lineno": 7277,
             "columnno": 14,
             "code": {
                 "id": "astnode100027141",
@@ -54466,11 +54447,11 @@
         "comment": "",
         "meta": {
             "range": [
-                301433,
-                301481
+                301257,
+                301305
             ],
             "filename": "astronomy.js",
-            "lineno": 7287,
+            "lineno": 7281,
             "columnno": 14,
             "code": {
                 "id": "astnode100027154",
@@ -54491,11 +54472,11 @@
         "comment": "",
         "meta": {
             "range": [
-                301716,
-                301763
+                301540,
+                301587
             ],
             "filename": "astronomy.js",
-            "lineno": 7291,
+            "lineno": 7285,
             "columnno": 18,
             "code": {
                 "id": "astnode100027169",
@@ -54516,11 +54497,11 @@
         "comment": "",
         "meta": {
             "range": [
-                301907,
-                301947
+                301731,
+                301771
             ],
             "filename": "astronomy.js",
-            "lineno": 7294,
+            "lineno": 7288,
             "columnno": 22,
             "code": {
                 "id": "astnode100027185",
@@ -54541,11 +54522,11 @@
         "comment": "",
         "meta": {
             "range": [
-                302448,
-                302478
+                302272,
+                302302
             ],
             "filename": "astronomy.js",
-            "lineno": 7303,
+            "lineno": 7297,
             "columnno": 8,
             "code": {
                 "id": "astnode100027210",
@@ -54567,11 +54548,11 @@
         "comment": "",
         "meta": {
             "range": [
-                302488,
-                302545
+                302312,
+                302369
             ],
             "filename": "astronomy.js",
-            "lineno": 7306,
+            "lineno": 7300,
             "columnno": 0,
             "code": {
                 "id": "astnode100027218",
@@ -54591,11 +54572,11 @@
         "comment": "/**\n * @brief Searches for the next local solar eclipse in a series.\n *\n * After using {@link SearchLocalSolarEclipse} to find the first solar eclipse\n * in a series, you can call this function to find the next consecutive solar eclipse.\n * Pass in the `peak` value from the {@link LocalSolarEclipseInfo} returned by the\n * previous call to `SearchLocalSolarEclipse` or `NextLocalSolarEclipse`\n * to find the next solar eclipse.\n * This function finds the first solar eclipse that occurs after `startTime`.\n * A solar eclipse may be partial, annular, or total.\n * See {@link LocalSolarEclipseInfo} for more information.\n *\n * @param {AstroTime} prevEclipseTime\n *      The date and time for starting the search for a solar eclipse.\n *\n * @param {Observer} observer\n *      The geographic location of the observer.\n *\n * @returns {LocalSolarEclipseInfo}\n */",
         "meta": {
             "range": [
-                303404,
-                303575
+                303228,
+                303399
             ],
             "filename": "astronomy.js",
-            "lineno": 7327,
+            "lineno": 7321,
             "columnno": 0,
             "code": {
                 "id": "astnode100027223",
@@ -54656,11 +54637,11 @@
         "comment": "",
         "meta": {
             "range": [
-                303474,
-                303515
+                303298,
+                303339
             ],
             "filename": "astronomy.js",
-            "lineno": 7328,
+            "lineno": 7322,
             "columnno": 10,
             "code": {
                 "id": "astnode100027229",
@@ -54681,11 +54662,11 @@
         "comment": "",
         "meta": {
             "range": [
-                303576,
-                303629
+                303400,
+                303453
             ],
             "filename": "astronomy.js",
-            "lineno": 7331,
+            "lineno": 7325,
             "columnno": 0,
             "code": {
                 "id": "astnode100027242",
@@ -54705,11 +54686,11 @@
         "comment": "/**\n * @brief Information about a transit of Mercury or Venus, as seen from the Earth.\n *\n * Returned by {@link SearchTransit} or {@link NextTransit} to report\n * information about a transit of Mercury or Venus.\n * A transit is when Mercury or Venus passes between the Sun and Earth so that\n * the other planet is seen in silhouette against the Sun.\n *\n * The calculations are performed from the point of view of a geocentric observer.\n *\n * @property {AstroTime} start\n *      The date and time at the beginning of the transit.\n *      This is the moment the planet first becomes visible against the Sun in its background.\n *\n * @property {AstroTime} peak\n *      When the planet is most aligned with the Sun, as seen from the Earth.\n *\n * @property {AstroTime} finish\n *      The date and time at the end of the transit.\n *      This is the moment the planet is last seen against the Sun in its background.\n *\n * @property {number} separation\n *      The minimum angular separation, in arcminutes, between the centers of the Sun and the planet.\n *      This angle pertains to the time stored in `peak`.\n */",
         "meta": {
             "range": [
-                304740,
-                304940
+                304564,
+                304764
             ],
             "filename": "astronomy.js",
-            "lineno": 7357,
+            "lineno": 7351,
             "columnno": 0,
             "code": {
                 "id": "astnode100027247",
@@ -54779,11 +54760,11 @@
         "comment": "",
         "meta": {
             "range": [
-                304764,
-                304938
+                304588,
+                304762
             ],
             "filename": "astronomy.js",
-            "lineno": 7358,
+            "lineno": 7352,
             "columnno": 4,
             "code": {
                 "id": "astnode100027250",
@@ -54811,11 +54792,11 @@
         "comment": "/**\n * @brief Information about a transit of Mercury or Venus, as seen from the Earth.\n *\n * Returned by {@link SearchTransit} or {@link NextTransit} to report\n * information about a transit of Mercury or Venus.\n * A transit is when Mercury or Venus passes between the Sun and Earth so that\n * the other planet is seen in silhouette against the Sun.\n *\n * The calculations are performed from the point of view of a geocentric observer.\n *\n * @property {AstroTime} start\n *      The date and time at the beginning of the transit.\n *      This is the moment the planet first becomes visible against the Sun in its background.\n *\n * @property {AstroTime} peak\n *      When the planet is most aligned with the Sun, as seen from the Earth.\n *\n * @property {AstroTime} finish\n *      The date and time at the end of the transit.\n *      This is the moment the planet is last seen against the Sun in its background.\n *\n * @property {number} separation\n *      The minimum angular separation, in arcminutes, between the centers of the Sun and the planet.\n *      This angle pertains to the time stored in `peak`.\n */",
         "meta": {
             "range": [
-                304740,
-                304940
+                304564,
+                304764
             ],
             "filename": "astronomy.js",
-            "lineno": 7357,
+            "lineno": 7351,
             "columnno": 0,
             "code": {
                 "id": "astnode100027247",
@@ -54884,11 +54865,11 @@
         "comment": "",
         "meta": {
             "range": [
-                304819,
-                304837
+                304643,
+                304661
             ],
             "filename": "astronomy.js",
-            "lineno": 7359,
+            "lineno": 7353,
             "columnno": 8,
             "code": {
                 "id": "astnode100027259",
@@ -54909,11 +54890,11 @@
         "comment": "",
         "meta": {
             "range": [
-                304847,
-                304863
+                304671,
+                304687
             ],
             "filename": "astronomy.js",
-            "lineno": 7360,
+            "lineno": 7354,
             "columnno": 8,
             "code": {
                 "id": "astnode100027265",
@@ -54934,11 +54915,11 @@
         "comment": "",
         "meta": {
             "range": [
-                304873,
-                304893
+                304697,
+                304717
             ],
             "filename": "astronomy.js",
-            "lineno": 7361,
+            "lineno": 7355,
             "columnno": 8,
             "code": {
                 "id": "astnode100027271",
@@ -54959,11 +54940,11 @@
         "comment": "",
         "meta": {
             "range": [
-                304903,
-                304931
+                304727,
+                304755
             ],
             "filename": "astronomy.js",
-            "lineno": 7362,
+            "lineno": 7356,
             "columnno": 8,
             "code": {
                 "id": "astnode100027277",
@@ -54984,11 +54965,11 @@
         "comment": "",
         "meta": {
             "range": [
-                304941,
-                304974
+                304765,
+                304798
             ],
             "filename": "astronomy.js",
-            "lineno": 7365,
+            "lineno": 7359,
             "columnno": 0,
             "code": {
                 "id": "astnode100027283",
@@ -55008,11 +54989,11 @@
         "comment": "",
         "meta": {
             "range": [
-                304976,
-                305159
+                304800,
+                304983
             ],
             "filename": "astronomy.js",
-            "lineno": 7366,
+            "lineno": 7360,
             "columnno": 0,
             "code": {
                 "id": "astnode100027288",
@@ -55040,11 +55021,11 @@
         "comment": "",
         "meta": {
             "range": [
-                305059,
-                305110
+                304883,
+                304934
             ],
             "filename": "astronomy.js",
-            "lineno": 7367,
+            "lineno": 7361,
             "columnno": 10,
             "code": {
                 "id": "astnode100027296",
@@ -55065,11 +55046,11 @@
         "comment": "",
         "meta": {
             "range": [
-                305160,
-                305530
+                304984,
+                305354
             ],
             "filename": "astronomy.js",
-            "lineno": 7370,
+            "lineno": 7364,
             "columnno": 0,
             "code": {
                 "id": "astnode100027313",
@@ -55099,11 +55080,11 @@
         "comment": "",
         "meta": {
             "range": [
-                305352,
-                305444
+                305176,
+                305268
             ],
             "filename": "astronomy.js",
-            "lineno": 7372,
+            "lineno": 7366,
             "columnno": 10,
             "code": {
                 "id": "astnode100027322",
@@ -55124,11 +55105,11 @@
         "comment": "/**\n * @brief Searches for the first transit of Mercury or Venus after a given date.\n *\n * Finds the first transit of Mercury or Venus after a specified date.\n * A transit is when an inferior planet passes between the Sun and the Earth\n * so that the silhouette of the planet is visible against the Sun in the background.\n * To continue the search, pass the `finish` time in the returned structure to\n * {@link NextTransit}.\n *\n * @param {Body} body\n *      The planet whose transit is to be found. Must be `\"Mercury\"` or `\"Venus\"`.\n *\n * @param {AstroTime} startTime\n *      The date and time for starting the search for a transit.\n *\n * @returns {TransitInfo}\n */",
         "meta": {
             "range": [
-                306197,
-                308389
+                306021,
+                308213
             ],
             "filename": "astronomy.js",
-            "lineno": 7394,
+            "lineno": 7388,
             "columnno": 0,
             "code": {
                 "id": "astnode100027343",
@@ -55200,11 +55181,11 @@
         "comment": "",
         "meta": {
             "range": [
-                306249,
-                306270
+                306073,
+                306094
             ],
             "filename": "astronomy.js",
-            "lineno": 7395,
+            "lineno": 7389,
             "columnno": 10,
             "code": {
                 "id": "astnode100027349",
@@ -55225,11 +55206,11 @@
         "comment": "",
         "meta": {
             "range": [
-                306343,
-                306356
+                306167,
+                306180
             ],
             "filename": "astronomy.js",
-            "lineno": 7396,
+            "lineno": 7390,
             "columnno": 10,
             "code": {
                 "id": "astnode100027353",
@@ -55250,11 +55231,11 @@
         "comment": "",
         "meta": {
             "range": [
-                306419,
-                306435
+                306243,
+                306259
             ],
             "filename": "astronomy.js",
-            "lineno": 7398,
+            "lineno": 7392,
             "columnno": 8,
             "code": {
                 "id": "astnode100027357",
@@ -55273,11 +55254,11 @@
         "comment": "",
         "meta": {
             "range": [
-                306496,
-                306521
+                306320,
+                306345
             ],
             "filename": "astronomy.js",
-            "lineno": 7401,
+            "lineno": 7395,
             "columnno": 12,
             "code": {
                 "id": "astnode100027366",
@@ -55299,11 +55280,11 @@
         "comment": "",
         "meta": {
             "range": [
-                306579,
-                306604
+                306403,
+                306428
             ],
             "filename": "astronomy.js",
-            "lineno": 7404,
+            "lineno": 7398,
             "columnno": 12,
             "code": {
                 "id": "astnode100027375",
@@ -55325,11 +55306,11 @@
         "comment": "",
         "meta": {
             "range": [
-                306699,
-                306722
+                306523,
+                306546
             ],
             "filename": "astronomy.js",
-            "lineno": 7409,
+            "lineno": 7403,
             "columnno": 8,
             "code": {
                 "id": "astnode100027386",
@@ -55350,11 +55331,11 @@
         "comment": "",
         "meta": {
             "range": [
-                306956,
-                307010
+                306780,
+                306834
             ],
             "filename": "astronomy.js",
-            "lineno": 7414,
+            "lineno": 7408,
             "columnno": 14,
             "code": {
                 "id": "astnode100027392",
@@ -55375,11 +55356,11 @@
         "comment": "",
         "meta": {
             "range": [
-                307113,
-                307155
+                306937,
+                306979
             ],
             "filename": "astronomy.js",
-            "lineno": 7416,
+            "lineno": 7410,
             "columnno": 14,
             "code": {
                 "id": "astnode100027400",
@@ -55400,11 +55381,11 @@
         "comment": "",
         "meta": {
             "range": [
-                307487,
-                307542
+                307311,
+                307366
             ],
             "filename": "astronomy.js",
-            "lineno": 7422,
+            "lineno": 7416,
             "columnno": 18,
             "code": {
                 "id": "astnode100027412",
@@ -55425,11 +55406,11 @@
         "comment": "",
         "meta": {
             "range": [
-                307733,
-                307776
+                307557,
+                307600
             ],
             "filename": "astronomy.js",
-            "lineno": 7425,
+            "lineno": 7419,
             "columnno": 22,
             "code": {
                 "id": "astnode100027429",
@@ -55450,11 +55431,11 @@
         "comment": "",
         "meta": {
             "range": [
-                307800,
-                307885
+                307624,
+                307709
             ],
             "filename": "astronomy.js",
-            "lineno": 7426,
+            "lineno": 7420,
             "columnno": 22,
             "code": {
                 "id": "astnode100027440",
@@ -55475,11 +55456,11 @@
         "comment": "",
         "meta": {
             "range": [
-                307909,
-                307951
+                307733,
+                307775
             ],
             "filename": "astronomy.js",
-            "lineno": 7427,
+            "lineno": 7421,
             "columnno": 22,
             "code": {
                 "id": "astnode100027453",
@@ -55500,11 +55481,11 @@
         "comment": "",
         "meta": {
             "range": [
-                307975,
-                308060
+                307799,
+                307884
             ],
             "filename": "astronomy.js",
-            "lineno": 7428,
+            "lineno": 7422,
             "columnno": 22,
             "code": {
                 "id": "astnode100027464",
@@ -55525,11 +55506,11 @@
         "comment": "",
         "meta": {
             "range": [
-                308084,
-                308139
+                307908,
+                307963
             ],
             "filename": "astronomy.js",
-            "lineno": 7429,
+            "lineno": 7423,
             "columnno": 22,
             "code": {
                 "id": "astnode100027477",
@@ -55550,11 +55531,11 @@
         "comment": "",
         "meta": {
             "range": [
-                308348,
-                308380
+                308172,
+                308204
             ],
             "filename": "astronomy.js",
-            "lineno": 7434,
+            "lineno": 7428,
             "columnno": 8,
             "code": {
                 "id": "astnode100027497",
@@ -55576,11 +55557,11 @@
         "comment": "",
         "meta": {
             "range": [
-                308390,
-                308427
+                308214,
+                308251
             ],
             "filename": "astronomy.js",
-            "lineno": 7437,
+            "lineno": 7431,
             "columnno": 0,
             "code": {
                 "id": "astnode100027505",
@@ -55600,11 +55581,11 @@
         "comment": "/**\n * @brief Searches for the next transit of Mercury or Venus in a series.\n *\n * After calling {@link SearchTransit} to find a transit of Mercury or Venus,\n * this function finds the next transit after that.\n * Keep calling this function as many times as you want to keep finding more transits.\n *\n * @param {Body} body\n *      The planet whose transit is to be found. Must be `\"Mercury\"` or `\"Venus\"`.\n *\n * @param {AstroTime} prevTransitTime\n *      A date and time near the previous transit.\n *\n * @returns {TransitInfo}\n */",
         "meta": {
             "range": [
-                308959,
-                309103
+                308783,
+                308927
             ],
             "filename": "astronomy.js",
-            "lineno": 7453,
+            "lineno": 7447,
             "columnno": 0,
             "code": {
                 "id": "astnode100027510",
@@ -55665,11 +55646,11 @@
         "comment": "",
         "meta": {
             "range": [
-                309015,
-                309057
+                308839,
+                308881
             ],
             "filename": "astronomy.js",
-            "lineno": 7454,
+            "lineno": 7448,
             "columnno": 10,
             "code": {
                 "id": "astnode100027516",
@@ -55690,11 +55671,11 @@
         "comment": "",
         "meta": {
             "range": [
-                309104,
-                309137
+                308928,
+                308961
             ],
             "filename": "astronomy.js",
-            "lineno": 7457,
+            "lineno": 7451,
             "columnno": 0,
             "code": {
                 "id": "astnode100027529",

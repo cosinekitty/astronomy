@@ -859,6 +859,37 @@ def Test_EQJ_ECL():
         print('PY Test_EQJ_ECL: EXCESSIVE REVERSE ROTATION ERROR')
         sys.exit(1)
 
+def Test_GAL_EQJ_NOVAS(filename):
+    THRESHOLD_SECONDS = 8.8
+    rot = astronomy.Rotation_EQJ_GAL()
+    time = astronomy.Time(0.0)      # placeholder time - value does not matter
+    with open(filename, 'rt') as infile:
+        lnum = 0
+        max_diff = 0.0
+        for line in infile:
+            lnum += 1
+            token = line.split()
+            if len(token) != 4:
+                print('PY Test_GAL_EQJ_NOVAS({} line {}): Wrong number of tokens.'.format(filename, lnum))
+                sys.exit(1)
+            ra = float(token[0])
+            dec = float(token[1])
+            glon = float(token[2])
+            glat = float(token[3])
+            eqj_sphere = astronomy.Spherical(dec, 15.0*ra, 1.0)
+            eqj_vec = astronomy.VectorFromSphere(eqj_sphere, time)
+            gal_vec = astronomy.RotateVector(rot, eqj_vec)
+            gal_sphere = astronomy.SphereFromVector(gal_vec)
+            dlat = gal_sphere.lat - glat
+            dlon = math.cos(math.radians(glat)) * (gal_sphere.lon - glon)
+            diff = 3600.0 * math.sqrt(dlon*dlon + dlat*dlat)
+            if diff > THRESHOLD_SECONDS:
+                print('PY Test_GAL_EQJ_NOVAS({} line {}): EXCESSIVE ERROR = {:0.3f}'.format(filename, lnum, diff))
+                sys.exit(1)
+            if diff > max_diff:
+                max_diff = diff
+        Debug('PY Test_GAL_EQJ_NOVAS: PASS. max_diff = {:0.3f} arcseconds.'.format(max_diff))
+        return 0
 
 def Test_EQJ_EQD(body):
     # Verify conversion of equatorial J2000 to equatorial of-date, and back.
@@ -1075,6 +1106,7 @@ def Rotation():
     Rotation_MatrixMultiply()
     Rotation_Pivot()
     Test_EQJ_ECL()
+    Test_GAL_EQJ_NOVAS('temp/galeqj.txt')
     Test_EQJ_EQD(astronomy.Body.Mercury)
     Test_EQJ_EQD(astronomy.Body.Venus)
     Test_EQJ_EQD(astronomy.Body.Mars)

@@ -98,7 +98,7 @@ and some [Node.js examples](../../demo/nodejs/).
 
 ### Coordinate transforms
 
-The following four orientation systems are supported.
+The following five orientation systems are supported.
 Astronomy Engine can convert a vector from any of these orientations to any of the others.
 It also allows converting from a vector to spherical (angular) coordinates and back,
 within a given orientation. Note the 3-letter codes for each of the orientation systems;
@@ -108,6 +108,7 @@ these are used in function and type names.
 - **EQD = Equator of-date**: Uses the Earth's equator on a given date and time, adjusted for precession and nutation.
 - **ECL = Ecliptic**: Uses the mean plane of the Earth's orbit around the Sun. The x-axis is referenced against the J2000 equinox.
 - **HOR = Horizontal**: Uses the viewpoint of an observer at a specific location on the Earth at a given date and time.
+- **GAL = Galactic**: Based on the IAU 1958 definition of galactic coordinates.
 
 | Function | Description |
 | -------- | ----------- |
@@ -2110,7 +2111,7 @@ Target: GAL = galactic system (IAU 1958 definition).
 
 <a name="Rotation_GAL_EQJ"></a>
 
-## Rotation\_GAL\_EQJ(time, observer) ⇒ [<code>RotationMatrix</code>](#RotationMatrix)
+## Rotation\_GAL\_EQJ() ⇒ [<code>RotationMatrix</code>](#RotationMatrix)
 **Kind**: global function  
 **Returns**: [<code>RotationMatrix</code>](#RotationMatrix) - A rotation matrix that converts GAL to EQJ.  
 **Brief**: Calculates a rotation matrix from galactic (GAL) to equatorial J2000 (EQJ).
@@ -2119,12 +2120,6 @@ This is one of the family of functions that returns a rotation matrix
 for converting from one orientation to another.
 Source: GAL = galactic system (IAU 1958 definition).
 Target: EQJ = equatorial system, using the equator at the J2000 epoch.  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| time | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time of the horizontal observation. |
-| observer | [<code>Observer</code>](#Observer) | The location of the horizontal observer. |
-
 
 * * *
 

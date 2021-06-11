@@ -107,7 +107,7 @@ To get started quickly, here are some [examples](../../demo/python/).
 
 ### Coordinate transforms
 
-The following four orientation systems are supported.
+The following five orientation systems are supported.
 Astronomy Engine can convert a vector from any of these orientations to any of the others.
 It also allows converting from a vector to spherical (angular) coordinates and back,
 within a given orientation. Note the 3-letter codes for each of the orientation systems;
@@ -117,6 +117,7 @@ these are used in function and type names.
 - **EQD = Equator of-date**: Uses the Earth's equator on a given date and time, adjusted for precession and nutation.
 - **ECL = Ecliptic**: Uses the mean plane of the Earth's orbit around the Sun. The x-axis is referenced against the J2000 equinox.
 - **HOR = Horizontal**: Uses the viewpoint of an observer at a specific location on the Earth at a given date and time.
+- **GAL = Galactic**: Based on the IAU 1958 definition of galactic coordinates.
 
 | Function | Description |
 | -------- | ----------- |
@@ -142,6 +143,8 @@ these are used in function and type names.
 | [Rotation_HOR_EQD](#Rotation_HOR_EQD) | Calculates a rotation matrix from horizontal (HOR) to equatorial of-date (EQD). |
 | [Rotation_HOR_EQJ](#Rotation_HOR_EQJ) | Calculates a rotation matrix from horizontal (HOR) to J2000 equatorial (EQJ). |
 | [Rotation_HOR_ECL](#Rotation_HOR_ECL) | Calculates a rotation matrix from horizontal (HOR) to ecliptic J2000 (ECL). |
+| [Rotation_EQJ_GAL](#Rotation_EQJ_GAL) | Calculates a rotation matrix from equatorial J2000 (EQJ) to galactic (GAL). |
+| [Rotation_GAL_EQJ](#Rotation_GAL_EQJ) | Calculates a rotation matrix from galactic (GAL) to equatorial J2000 (EQJ). |
 
 ---
 
@@ -1907,6 +1910,21 @@ A rotation matrix that converts EQJ to EQD at `time`.
 
 ---
 
+<a name="Rotation_EQJ_GAL"></a>
+### Rotation_EQJ_GAL()
+
+**Calculates a rotation matrix from equatorial J2000 (EQJ) to galactic (GAL).**
+
+This is one of the family of functions that returns a rotation matrix
+for converting from one orientation to another.
+Source: EQJ = equatorial system, using the equator at the J2000 epoch.
+Target: GAL = galactic system (IAU 1958 definition).
+
+### Returns: [`RotationMatrix`](#RotationMatrix)
+A rotation matrix that converts EQJ to GAL.
+
+---
+
 <a name="Rotation_EQJ_HOR"></a>
 ### Rotation_EQJ_HOR(time, observer)
 
@@ -1930,6 +1948,21 @@ The components of the horizontal vector are:
 x = north, y = west, z = zenith (straight up from the observer).
 These components are chosen so that the "right-hand rule" works for the vector
 and so that north represents the direction where azimuth = 0.
+
+---
+
+<a name="Rotation_GAL_EQJ"></a>
+### Rotation_GAL_EQJ()
+
+**Calculates a rotation matrix from galactic (GAL) to equatorial J2000 (EQJ).**
+
+This is one of the family of functions that returns a rotation matrix
+for converting from one orientation to another.
+Source: GAL = galactic system (IAU 1958 definition).
+Target: EQJ = equatorial system, using the equator at the J2000 epoch.
+
+### Returns: [`RotationMatrix`](#RotationMatrix)
+A rotation matrix that converts GAL to EQJ.
 
 ---
 

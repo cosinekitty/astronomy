@@ -5602,12 +5602,6 @@ exports.Rotation_EQJ_GAL = Rotation_EQJ_GAL;
  * Source: GAL = galactic system (IAU 1958 definition).
  * Target: EQJ = equatorial system, using the equator at the J2000 epoch.
  *
- * @param {FlexibleDateTime} time
- *      The date and time of the horizontal observation.
- *
- * @param {Observer} observer
- *      The location of the horizontal observer.
- *
  * @returns {RotationMatrix}
  *      A rotation matrix that converts GAL to EQJ.
  */
