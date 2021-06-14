@@ -44,5 +44,9 @@ echo "Testing example: lunar_eclipse.c"
 ./lunar_eclipse 1988-01-01T00:00:00Z > test/lunar_eclipse.txt || Fail "Error running lunar_eclipse.c."
 diff test/lunar_eclipse.txt test/lunar_eclipse_correct.txt || Fail "Error comparing lunar_eclipse.c output."
 
+echo "Testing example: galactic.c"
+./galactic 38.92056 -77.0658 22.793498 197.070510 2025-04-06T00:00:00Z > test/galactic.txt || Fail "Error running galactic.c."
+diff test/galactic.txt test/galactic_correct.txt || Fail "Error comparing galactic.c output."
+
 echo "PASS: C examples"
 exit 0
