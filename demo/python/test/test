@@ -51,5 +51,9 @@ echo "Testing example: lunar_angles.py"
 ./lunar_angles.py 2021-05-15 > test/lunar_angles.txt || Fail "Error running lunar_angles.py."
 diff test/lunar_angles.txt test/lunar_angles_correct.txt || Fail "Error comparing lunar_angles.py output."
 
+echo "Testing example: galactic.py"
+./galactic.py 38.92056 -77.0658 22.793498 197.070510 2025-04-06T00:00:00Z > test/galactic.txt || Fail "Error running galactic.py."
+diff test/galactic.txt test/galactic_correct.txt || Fail "Error comparing galactic.py output."
+
 echo "PASS: Python examples"
 exit 0

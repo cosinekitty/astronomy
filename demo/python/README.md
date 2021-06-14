@@ -25,6 +25,14 @@ Culmination is also the moment a body crosses the *meridian*, the imaginary semi
 in the sky that passes from due north on the horizon, through the zenith (straight up),
 and then toward due south on the horizon.
 
+### [Galactic to Horizontal Converter](galactic.py)
+A demonstration of how to convert galactic coordinates to horizontal coordinates.
+This could be useful for backyard radio astronomers who know the galactic
+coordinates of a distant radio source and want to aim a radio dish at it.
+Given the galactic coordinates, the geographic coordinates of the observer,
+and the date and time of the observation, this program shows how to
+obtain the altitude and azimuth to aim the dish at the radio source.
+
 ### [Horizon Intersection](horizon.py)
 This is a more advanced example. It shows how to use coordinate
 transforms to find where the ecliptic intersects with an observer's

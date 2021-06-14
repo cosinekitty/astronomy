@@ -1,0 +1,1 @@
+altitude =     74.647, azimuth =    178.955

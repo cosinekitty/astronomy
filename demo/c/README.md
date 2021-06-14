@@ -15,7 +15,7 @@ This could be useful for backyard radio astronomers who know the galactic
 coordinates of a distant radio source and want to aim a radio dish at it.
 Given the galactic coordinates, the geographic coordinates of the observer,
 and the date and time of the observation, this program shows how to
-convert the altitude and azimuth to aim at the radio source.
+obtain the altitude and azimuth to aim the dish at the radio source.
 
 ### [Horizon Intersection](horizon.c)
 This is a more advanced example. It shows how to use coordinate

@@ -16,19 +16,19 @@
 
 
 int GalaticToHorizontal(
-    astro_time_t time, 
-    astro_observer_t observer, 
-    double glat, 
-    double glon, 
-    double *altitude, 
+    astro_time_t time,
+    astro_observer_t observer,
+    double glat,
+    double glon,
+    double *altitude,
     double *azimuth)
 {
     astro_rotation_t    rot, adjust_rot;
     astro_spherical_t   gsphere, hsphere;
     astro_vector_t      gvec, hvec;
 
-    /* 
-        Calculate a rotation matrix that converts 
+    /*
+        Calculate a rotation matrix that converts
         galactic coordinates to J2000 equatorial coordinates.
     */
     rot = Astronomy_Rotation_GAL_EQJ();
@@ -36,7 +36,7 @@ int GalaticToHorizontal(
     /*
         Adjust the rotation matrix to convert galatic to horizontal (HOR).
     */
-    adjust_rot = Astronomy_Rotation_EQJ_HOR(time, observer);    
+    adjust_rot = Astronomy_Rotation_EQJ_HOR(time, observer);
     rot = Astronomy_CombineRotation(rot, adjust_rot);
 
     /*
@@ -89,7 +89,7 @@ int main(int argc, const char *argv[])
 
     if (argc < 5 || argc > 6)
     {
-        fprintf(stderr, 
+        fprintf(stderr,
             "\n"
             "USAGE: galactic olat olon glat glon [yyyy-mm-ddThh:mm:ssZ]\n"
             "\n"
