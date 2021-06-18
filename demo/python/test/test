@@ -55,5 +55,10 @@ echo "Testing example: galactic.py"
 ./galactic.py 38.92056 -77.0658 22.793498 197.070510 2025-04-06T00:00:00Z > test/galactic.txt || Fail "Error running galactic.py."
 diff test/galactic.txt test/galactic_correct.txt || Fail "Error comparing galactic.py output."
 
+echo "Testing example: triangulate.py"
+# Target expected near: lat=48.28821, lon=24.56373, elv=4000
+./triangulate.py 48.16042 24.49986 2019 18 7 48.27305 24.36401 662 83 12 > test/triangulate.txt || Fail "Error running triangulate.py."
+diff test/triangulate.txt test/triangulate_correct.txt || Fail "Error comparing triangulate.py output."
+
 echo "PASS: Python examples"
 exit 0
