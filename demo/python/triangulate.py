@@ -20,6 +20,12 @@ come closest to intersecting. It then prints out the coordinates
 of that triangulation point, along with the error radius in meters.
 '''
 
+Verbose = False
+
+def Debug(text):
+    if Verbose:
+        print(text)
+
 def DotProduct(a, b):
     return a.x*b.x + a.y*b.y + a.z*b.z
 
@@ -32,20 +38,47 @@ def Intersect(pos1, dir1, pos2, dir2):
     # 0 = G + Fu - v
     denom = 1.0 - F*F
     if denom == 0.0:
-        print('Cannot solve because directions are parallel.')
-    else:
-        u = (F*G - E) / denom
-        v = G + F*u
-        print('u={}, v={}'.format(u, v))
+        Debug('Cannot solve because directions are parallel.')
+        return None
+
+    u = (F*G - E) / denom
+    v = G + F*u
+    Debug('u={}, v={}'.format(u, v))
+    if u < 0 or v < 0:
+        Debug('Lines of sight do not converge.')
+        return None
+
+    a = Vector(pos1.x + u*dir1.x, pos1.y + u*dir1.y, pos1.z + u*dir1.z, pos1.t)
+    b = Vector(pos2.x + v*dir2.x, pos2.y + v*dir2.y, pos2.z + v*dir2.z, pos2.t)
+    c = Vector((a.x + b.x)/2, (a.y + b.y)/2, (a.z + b.z)/2, a.t)
+    Debug('c = {}'.format(c))
+    # Convert vector back to geographic coordinates
+    return VectorObserver(c, True)
+
+def DirectionVector(time, observer, altitude, azimuth):
+    # Convert horizontal angles to a horizontal unit vector.
+    hor = Spherical(altitude, azimuth, 1.0)
+    hvec = VectorFromHorizon(hor, time, Refraction.Airless)    
+    # Find the rotation matrix that converts horizontal vectors to equatorial vectors.
+    rot = Rotation_HOR_EQD(time, observer)
+    # Rotate the horizontal (HOR) vector to an equator-of-date (EQD) vector.
+    evec = RotateVector(rot, hvec)
+    return evec
 
 if __name__ == '__main__':
     # Validate and parse command line arguments.
 
-    if len(sys.argv) != 11:
+    # The '-v' option enables debug prints.
+    args = sys.argv[1:]
+    if len(args) > 0 and args[0] == '-v':
+        Verbose = True
+        args = args[1:]
+
+    if len(args) != 10:
         print(UsageText)
         sys.exit(1)
 
-    lat1, lon1, elv1, az1, alt1, lat2, lon2, elv2, az2, alt2 = [float(x) for x in sys.argv[1:]]
+    lat1, lon1, elv1, az1, alt1, lat2, lon2, elv2, az2, alt2 = [float(x) for x in args]
     obs1 = Observer(lat1, lon1, elv1)
     obs2 = Observer(lat2, lon2, elv2)
 
@@ -56,26 +89,34 @@ if __name__ == '__main__':
     time = Time(0.0)
 
     pos1 = ObserverVector(time, obs1, True)
-    print('Observer #1 = {}'.format(obs1))
-    print('Position #1 = ({:0.6e}, {:0.6e}, {:0.6e})'.format(pos1.x, pos1.y, pos1.z))
+    Debug('Observer #1 = {}'.format(obs1))
+    Debug('Position #1 = ({:0.6f}, {:0.6f}, {:0.6f})'.format(pos1.x * KM_PER_AU, pos1.y * KM_PER_AU, pos1.z * KM_PER_AU))
 
     pos2 = ObserverVector(time, obs2, True)
-    print('Observer #2 = {}'.format(obs2))
-    print('Position #2 = ({:0.6e}, {:0.6e}, {:0.6e})'.format(pos2.x, pos2.y, pos2.z))
+    Debug('Observer #2 = {}'.format(obs2))
+    Debug('Position #2 = ({:0.6f}, {:0.6f}, {:0.6f})'.format(pos2.x * KM_PER_AU, pos2.y * KM_PER_AU, pos2.z * KM_PER_AU))
 
-    # Convert horizontal coordinates into unit direction vectors.
+    # Convert horizontal coordinates into unit direction vectors in EQD orientation.
+    dir1 = DirectionVector(time, obs1, alt1, az1)
+    dir2 = DirectionVector(time, obs2, alt2, az2)
 
-    hor1 = Spherical(alt1, az1, 1.0)
-    hor2 = Spherical(alt2, az2, 1.0)
-    dir1 = VectorFromHorizon(hor1, time, Refraction.Airless)
-    dir2 = VectorFromHorizon(hor2, time, Refraction.Airless)
-    print('Direction #1 = ({:0.6e}, {:0.6e}, {:0.6e})'.format(dir1.x, dir1.y, dir1.z))
-    print('Direction #2 = ({:0.6e}, {:0.6e}, {:0.6e})'.format(dir2.x, dir2.y, dir2.z))
+    Debug('Direction #1 = ({:0.6f}, {:0.6f}, {:0.6f})'.format(dir1.x, dir1.y, dir1.z))
+    Debug('Direction #2 = ({:0.6f}, {:0.6f}, {:0.6f})'.format(dir2.x, dir2.y, dir2.z))
 
     # Solve for the target point.
-    Intersect(pos1, dir1, pos2, dir2)
+    obs = Intersect(pos1, dir1, pos2, dir2)
+    if obs is None:
+        print('ERROR: Could not find intersection.')
+        sys.exit(1)
+
+    print('Solution #1 = {}'.format(obs))
 
     # Solve again with the inputs reversed, as a sanity check.
-    Intersect(pos2, dir2, pos1, dir1)
+    check_obs = Intersect(pos2, dir2, pos1, dir1)
+    if check_obs is None:
+        print('INTERNAL ERROR: inconsistent solution.')
+        sys.exit(1)
+
+    print('Solution #2 = {}'.format(check_obs))
 
     sys.exit(0)

@@ -1692,9 +1692,10 @@ def GeoidTestCase(time, observer, ofdate):
     dy = astronomy.KM_PER_AU * v((geo_moon.y - surface.y) - topo_moon.vec.y)
     dz = astronomy.KM_PER_AU * v((geo_moon.z - surface.z) - topo_moon.vec.z)
     diff = sqrt(dx*dx + dy*dy + dz*dz)
-    Debug('PY GeoidTestCase: ofdate={}, time={}, lat={}, ht={}, surface=({}, {}, {}), diff = {} km'.format(
-        ofdate, time,
-        observer.latitude, observer.longitude, observer.height,
+    Debug('PY GeoidTestCase: ofdate={}, time={}, obs={}, surface=({}, {}, {}), diff = {} km'.format(
+        ofdate,
+        time,
+        observer,
         astronomy.KM_PER_AU * surface.x,
         astronomy.KM_PER_AU * surface.y,
         astronomy.KM_PER_AU * surface.z,
@@ -1703,7 +1704,32 @@ def GeoidTestCase(time, observer, ofdate):
 
     # Require 1 millimeter accuracy! (one millionth of a kilometer).
     if diff > 1.0e-6:
-        print('JS GeoidTestCase: EXCESSIVE POSITION ERROR.')
+        print('PY GeoidTestCase: EXCESSIVE POSITION ERROR.')
+        return 1
+
+    # Verify that we can convert the surface vector back to an observer.
+    vobs = astronomy.VectorObserver(surface, ofdate)
+    lat_diff = vabs(vobs.latitude - observer.latitude)
+
+    # Longitude is meaningless at the poles, so don't bother checking it there.
+    if -89.99 <= observer.latitude <= +89.99:
+        lon_diff = vabs(vobs.longitude - observer.longitude)
+        if lon_diff > 180.0:
+            lon_diff = 360.0 - lon_diff
+        lon_diff = vabs(lon_diff * math.cos(math.degrees(observer.latitude)))
+        if lon_diff > 1.0e-6:
+            print('PY GeoidTestCase: EXCESSIVE longitude check error = {}'.format(lon_diff))
+            return 1
+    else:
+        lon_diff = 0.0
+
+    h_diff = vabs(vobs.height - observer.height)
+    Debug('PY GeoidTestCase: vobs={}, lat_diff={}, lon_diff={}, h_diff={}'.format(vobs, lat_diff, lon_diff, h_diff))
+    if lat_diff > 1.0e-6:
+        print('PY GeoidTestCase: EXCESSIVE latitude check error = {}'.format(lat_diff))
+        return 1
+    if h_diff > 0.001:
+        print('PY GeoidTestCase: EXCESSIVE height check error = {}'.format(h_diff))
         return 1
     return 0
 

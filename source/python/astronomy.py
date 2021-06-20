@@ -78,6 +78,7 @@ _SUN_RADIUS_AU  = _SUN_RADIUS_KM / KM_PER_AU
 
 _EARTH_FLATTENING = 0.996647180302104
 _EARTH_EQUATORIAL_RADIUS_KM = 6378.1366
+_EARTH_POLAR_RADIUS_KM = _EARTH_EQUATORIAL_RADIUS_KM * _EARTH_FLATTENING
 _EARTH_EQUATORIAL_RADIUS_AU = _EARTH_EQUATORIAL_RADIUS_KM / KM_PER_AU
 _EARTH_MEAN_RADIUS_KM = 6371.0      # mean radius of the Earth's geoid, without atmosphere
 _EARTH_ATMOSPHERE_KM = 88.0         # effective atmosphere thickness for lunar eclipses
@@ -1567,10 +1568,63 @@ def _sidereal_time(time):
     # return sidereal hours in the half-open range [0, 24).
     return gst
 
+def _inverse_terra(ovec, st):
+    # Convert from AU to kilometers
+    x = ovec[0] * KM_PER_AU
+    y = ovec[1] * KM_PER_AU
+    z = ovec[2] * KM_PER_AU
+    p = math.sqrt(x*x + y*y)
+    if p < 1.0e-6:
+        # Special case: within 1 millimeter of a pole!
+        # Use arbitrary longitude, and latitude determined by polarity of z.
+        lon_deg = 0.0
+        if z > 0.0:
+            lat_deg = +90.0
+        else:
+            lat_deg = -90.0
+        # Elevation is calculated directly from z
+        height_km = abs(z) - _EARTH_POLAR_RADIUS_KM
+    else:
+        stlocl = math.atan2(y, x)
+        # Calculate exact longitude.
+        lon_deg = math.degrees(stlocl) - (15.0 * st)
+        # Normalize longitude to the range (-180, +180].
+        while lon_deg <= -180.0:
+            lon_deg += 360.0
+        while lon_deg > +180.0:
+            lon_deg -= 360.0
+        # Numerically solve for exact latitude.
+        F = _EARTH_FLATTENING ** 2
+        def W(context, time):
+            lat = time.ut
+            cos = math.cos(lat)
+            sin = math.sin(lat)
+            return ((F-1)*_EARTH_EQUATORIAL_RADIUS_KM*sin*cos)/math.sqrt(cos*cos + F*sin*sin) - z*cos + p*sin
+        # Total hack: use Search(), even though it expects a function of time.
+        # Pretend that the angle is a time!
+        # This is not as efficient as I would like, because of all the unnecessary DeltaT calculations.
+        # But the search is very well tested and converges quickly.
+        t1 = Time(-math.pi/2)
+        t2 = Time(+math.pi/2)
+        dt = 86400.0 * math.radians(1.0e-6)     # hack to converge at a millionth of a degree error
+        tx = Search(W, None, t1, t2, dt)
+        if tx is None:
+            raise Error('Cannot solve for geographic latitude')
+        lat_rad = tx.ut
+        lat_deg = math.degrees(lat_rad)
+        # Solve for exact height in meters.
+        # There are two formulas I can use. Use whichever has the less risky denominator.
+        sin = math.sin(lat_rad)
+        cos = math.cos(lat_rad)
+        adjust = _EARTH_EQUATORIAL_RADIUS_KM/math.sqrt(cos*cos + F*sin*sin)
+        if abs(sin) > abs(cos):
+            height_km = z/sin - F*adjust
+        else:
+            height_km = p/cos - adjust
+    return Observer(lat_deg, lon_deg, 1000*height_km)
 
 def _terra(observer, st):
-    df = 1.0 - 0.003352819697896    # flattening of the Earth
-    df2 = df * df
+    df2 = _EARTH_FLATTENING ** 2
     phi = math.radians(observer.latitude)
     sinphi = math.sin(phi)
     cosphi = math.cos(phi)
@@ -4238,6 +4292,38 @@ def ObserverVector(time, observer, ofdate):
         ovec = _precession(ovec, time, _PrecessDir.Into2000)
     return Vector(ovec[0], ovec[1], ovec[2], time)
 
+def VectorObserver(vector, ofdate):
+    """Calculates the geographic location corresponding to an equatorial vector.
+
+    This is the inverse function of #ObserverVector.
+    Instead of converting an #Observer to a #Vector, it converts
+    a `Vector` to an `Observer`.
+
+    Parameters
+    ----------
+    vector : Vector
+        The geocentric vector in an equatorial orientation.
+        The components are expressed in astronomical units (AU).
+        The time `vector.t` determines the Earth's rotation.
+    ofdate : bool
+        Selects the date of the Earth's equator in which to express the equatorial coordinates.
+        The caller may pass `False` to use the orientation of the Earth's equator
+        at noon UTC on January 1, 2000, in which case this function corrects for precession
+        and nutation of the Earth as it was at the moment specified by the the time `vector.t`.
+        Or the caller may pass `True` to use the Earth's equator at `vector.t` as the orientation.
+
+    Returns
+    -------
+    Observer
+        The geographic latitude, longitude, and elevation above sea level
+        that corresponds to the given equatorial vector.
+    """
+    gast = _sidereal_time(vector.t)
+    ovec = [vector.x, vector.y, vector.z]
+    if not ofdate:
+        ovec = _precession(ovec, vector.t, _PrecessDir.From2000)
+        ovec = _nutation(ovec, vector.t, _PrecessDir.From2000)
+    return _inverse_terra(ovec, gast)
 
 @enum.unique
 class Refraction(enum.Enum):
