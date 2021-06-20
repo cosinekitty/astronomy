@@ -39,21 +39,24 @@ def Intersect(pos1, dir1, pos2, dir2):
     denom = 1.0 - F*F
     if denom == 0.0:
         Debug('Cannot solve because directions are parallel.')
-        return None
+        return None, None
 
     u = (F*G - E) / denom
     v = G + F*u
     Debug('u={}, v={}'.format(u, v))
     if u < 0 or v < 0:
         Debug('Lines of sight do not converge.')
-        return None
+        return None, None
 
     a = Vector(pos1.x + u*dir1.x, pos1.y + u*dir1.y, pos1.z + u*dir1.z, pos1.t)
     b = Vector(pos2.x + v*dir2.x, pos2.y + v*dir2.y, pos2.z + v*dir2.z, pos2.t)
     c = Vector((a.x + b.x)/2, (a.y + b.y)/2, (a.z + b.z)/2, a.t)
     Debug('c = {}'.format(c))
+    # Calculate the error distance in meters between the two skew lines.
+    dist = (KM_PER_AU * 1000) * math.sqrt((a.x - b.x)**2 + (a.y - b.y)**2 + (a.z - b.z)**2)
     # Convert vector back to geographic coordinates
-    return VectorObserver(c, True)
+    obs = VectorObserver(c, True)
+    return obs, dist
 
 def DirectionVector(time, observer, altitude, azimuth):
     # Convert horizontal angles to a horizontal unit vector.
@@ -104,19 +107,19 @@ if __name__ == '__main__':
     Debug('Direction #2 = ({:0.6f}, {:0.6f}, {:0.6f})'.format(dir2.x, dir2.y, dir2.z))
 
     # Solve for the target point.
-    obs = Intersect(pos1, dir1, pos2, dir2)
+    obs, error = Intersect(pos1, dir1, pos2, dir2)
     if obs is None:
         print('ERROR: Could not find intersection.')
         sys.exit(1)
 
-    print('Solution #1 = {}'.format(obs))
+    print('Solution #1 = {}, err = {:0.3f} meters'.format(obs, error))
 
     # Solve again with the inputs reversed, as a sanity check.
-    check_obs = Intersect(pos2, dir2, pos1, dir1)
+    check_obs, check_error = Intersect(pos2, dir2, pos1, dir1)
     if check_obs is None:
         print('INTERNAL ERROR: inconsistent solution.')
         sys.exit(1)
 
-    print('Solution #2 = {}'.format(check_obs))
+    print('Solution #1 = {}, err = {:0.3f} meters'.format(check_obs, check_error))
 
     sys.exit(0)
