@@ -120,6 +120,6 @@ if __name__ == '__main__':
         print('INTERNAL ERROR: inconsistent solution.')
         sys.exit(1)
 
-    print('Solution #1 = {}, err = {:0.3f} meters'.format(check_obs, check_error))
+    print('Solution #2 = {}, err = {:0.3f} meters'.format(check_obs, check_error))
 
     sys.exit(0)
