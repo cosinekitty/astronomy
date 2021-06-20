@@ -1606,7 +1606,10 @@ def _inverse_terra(ovec, st):
         # But the search is very well tested and converges quickly.
         t1 = Time(-math.pi/2)
         t2 = Time(+math.pi/2)
-        dt = 86400.0 * math.radians(1.0e-6)     # hack to converge at a millionth of a degree error
+        # Because we are pretending that radians of angle are days of time in the Search function,
+        # we have to compute a phony error tolerance expressed in seconds of time.
+        # Converge at one billionth of a degree error.
+        dt = 86400.0 * math.radians(1.0e-9)
         tx = Search(W, None, t1, t2, dt)
         if tx is None:
             raise Error('Cannot solve for geographic latitude')

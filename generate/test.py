@@ -1743,17 +1743,41 @@ def Geoid():
     ]
 
     observer_list = [
+        astronomy.Observer(  0.0,    0.0,    0.0),
         astronomy.Observer( +1.5,   +2.7,    7.4),
-        astronomy.Observer(-53.7, +141.7, +100.0),
+        astronomy.Observer( -1.5,   -2.7,    7.4),
+        astronomy.Observer(-53.7, +141.7,  100.0),
         astronomy.Observer(+30.0,  -85.2,  -50.0),
         astronomy.Observer(+90.0,  +45.0,  -50.0),
-        astronomy.Observer(-90.0, -180.0,    0.0)
+        astronomy.Observer(-90.0, -180.0,    0.0),
+        astronomy.Observer(-89.0,  -81.0, 1234.0),
+        astronomy.Observer(+89.0, -103.4,  279.8),
+        astronomy.Observer(+48.2,   24.5, 2019.0),
+        astronomy.Observer(+28.5,  -82.3,   -3.4)
     ]
+
+    # Test hand-crafted locations.
 
     for observer in observer_list:
         for time in time_list:
-            if GeoidTestCase(time, observer, False): return 1
-            if GeoidTestCase(time, observer, True): return 1
+            if GeoidTestCase(time, observer, False):
+                return 1
+            if GeoidTestCase(time, observer, True):
+                return 1
+
+    # More exhaustive tests for a single time value across many different geographic coordinates.
+    # Solving for latitude is the most complicated part of VectorObserver, so
+    # I test for every 1-degree increment of latitude, but with 5-degree increments for longitude.
+    time = astronomy.Time.Parse('2021-06-20T15:08:00Z')
+    lat = -90
+    while lat <= +90:
+        lon = -175
+        while lon <= +180:
+            observer = astronomy.Observer(lat, lon, 0.0)
+            if GeoidTestCase(time, observer, True):
+                return 1
+            lon += 5
+        lat += 1
 
     print('PY GeoidTest: PASS')
     return 0
