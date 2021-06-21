@@ -2279,7 +2279,7 @@ def VectorObserver(vector, ofdate):
         The components are expressed in astronomical units (AU).
         The time `vector.t` determines the Earth's rotation.
     ofdate : bool
-        Selects the date of the Earth's equator in which to express the equatorial coordinates.
+        Selects the date of the Earth's equator in which `vector` is expressed.
         The caller may pass `False` to use the orientation of the Earth's equator
         at noon UTC on January 1, 2000, in which case this function corrects for precession
         and nutation of the Earth as it was at the moment specified by the the time `vector.t`.

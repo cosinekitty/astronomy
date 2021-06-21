@@ -163,6 +163,7 @@ static const double SUN_RADIUS_KM  = 695700.0;
 #define EARTH_FLATTENING            0.996647180302104
 #define EARTH_EQUATORIAL_RADIUS_KM  6378.1366
 #define EARTH_EQUATORIAL_RADIUS_AU  (EARTH_EQUATORIAL_RADIUS_KM / KM_PER_AU)
+#define EARTH_POLAR_RADIUS_KM       (EARTH_EQUATORIAL_RADIUS_KM * EARTH_FLATTENING)
 #define EARTH_MEAN_RADIUS_KM        6371.0            /* mean radius of the Earth's geoid, without atmosphere */
 #define EARTH_ATMOSPHERE_KM           88.0            /* effective atmosphere thickness for lunar eclipses */
 #define EARTH_ECLIPSE_RADIUS_KM     (EARTH_MEAN_RADIUS_KM + EARTH_ATMOSPHERE_KM)
@@ -1522,6 +1523,77 @@ static double sidereal_time(astro_time_t *time)
         gst += 24.0;
 
     return gst;     /* return sidereal hours in the half-open range [0, 24). */
+}
+
+static astro_observer_t inverse_terra(const double ovec[3], double st)
+{
+    double x, y, z, p, F, W, D, c, s, c2, s2;
+    double lon_deg, lat_deg, lat, radicand, factor, denom, adjust;
+    double height_km, stlocl;
+    astro_observer_t observer;
+
+    /* Convert from AU to kilometers. */
+    x = ovec[0] * KM_PER_AU;
+    y = ovec[1] * KM_PER_AU;
+    z = ovec[2] * KM_PER_AU;
+    p = sqrt(x*x + y*y);
+    if (p < 1.0e-6)
+    {
+        /* Special case: within 1 millimeter of a pole! */
+        /* Use arbitrary longitude, and latitude determined by polarity of z. */
+        lon_deg = 0.0;
+        lat_deg = (z > 0.0) ? +90.0 : -90.0;
+        /* Elevation is calculated directly from z */
+        height_km = fabs(z) - EARTH_POLAR_RADIUS_KM;
+    }
+    else
+    {
+        stlocl = atan2(y, x);
+        /* Calculate exact longitude. */
+        lon_deg = RAD2DEG*stlocl - (15.0 * st);
+        /* Normalize longitude to the range (-180, +180]. */
+        while (lon_deg <= -180.0)
+            lon_deg += 360.0;
+        while (lon_deg > +180.0)
+            lon_deg -= 360.0;
+        /* Numerically solve for exact latitude, using Newton's Method. */
+        F = EARTH_FLATTENING * EARTH_FLATTENING;
+        /* Start with initial latitude estimate, based on a spherical Earth. */
+        lat = atan2(z, p);
+        for(;;)
+        {
+            /* Calculate the error function W(lat). */
+            /* We try to find the root of W, meaning where the error is 0. */
+            c = cos(lat);
+            s = sin(lat);
+            factor = (F-1)*EARTH_EQUATORIAL_RADIUS_KM;
+            c2 = c*c;
+            s2 = s*s;
+            radicand = c2 + F*s2;
+            denom = sqrt(radicand);
+            W = (factor*s*c)/denom - z*c + p*s;
+            if (fabs(W) < 1.0e-12)
+                break;  /* The error is now negligible. */
+            /* Error is still too large. Find the next estimate. */
+            /* Calculate D = the derivative of W with respect to lat. */
+            D = factor*((c2 - s2)/denom - s2*c2*(F-1)/(factor*radicand)) + z*s + p*c;
+            lat -= W/D;
+        }
+        /* We now have a solution for the latitude in radians. */
+        lat_deg = lat * RAD2DEG;
+        /* Solve for exact height in meters. */
+        /* There are two formulas I can use. Use whichever has the less risky denominator. */
+        adjust = EARTH_EQUATORIAL_RADIUS_KM / denom;
+        if (fabs(s) > fabs(c))
+            height_km = z/s - F*adjust;
+        else
+            height_km = p/c - adjust;
+    }
+
+    observer.latitude = lat_deg;
+    observer.longitude = lon_deg;
+    observer.height = 1000.0 * height_km;
+    return observer;
 }
 
 static void terra(astro_observer_t observer, double st, double pos[3])
@@ -4143,6 +4215,52 @@ astro_vector_t Astronomy_ObserverVector(
     vec.t = *time;
     vec.status = ASTRO_SUCCESS;
     return vec;
+}
+
+
+/**
+ * @brief Calculates the geographic location corresponding to an equatorial vector.
+ *
+ * This is the inverse function of #Astronomy_ObserverVector.
+ * Instead of converting #astro_observer_t to #astro_vector_t,
+ * it converts `astro_vector_t` to `astro_observer_t`.
+ *
+ * @param vector
+ *      The date and time for which to calculate the observer's position vector.
+ *      The components are expressed in Astronomical Units (AU).
+ *      You can calculate AU by dividing kilometers by the constant #KM_PER_AU.
+ *      The time `vector.t` determines the Earth's rotation.
+ *
+ * @param equdate
+ *      Selects the date of the Earth's equator in which `vector` is expressed.
+ *      The caller may select `EQUATOR_J2000` to use the orientation of the Earth's equator
+ *      at noon UTC on January 1, 2000, in which case this function corrects for precession
+ *      and nutation of the Earth as it was at the moment specified by `vector.t`.
+ *      Or the caller may select `EQUATOR_OF_DATE` to use the Earth's equator at `vector.t`
+ *      as the orientation.
+ *
+ * @return
+ *      The geographic latitude, longitude, and elevation above sea level
+ *      that corresponds to the given equatorial vector.
+ */
+astro_observer_t Astronomy_VectorObserver(
+    astro_vector_t vector,
+    astro_equator_date_t equdate)
+{
+    double gast;
+    double pos1[3];
+    double pos2[3];
+
+    gast = sidereal_time(&vector.t);
+    pos1[0] = vector.x;
+    pos1[1] = vector.y;
+    pos1[2] = vector.z;
+    if (equdate == EQUATOR_J2000)
+    {
+        precession(pos1, vector.t, FROM_2000, pos2);
+        nutation(pos2, &vector.t, FROM_2000, pos1);
+    }
+    return inverse_terra(pos1, gast);
 }
 
 

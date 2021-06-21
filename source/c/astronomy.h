@@ -978,6 +978,8 @@ astro_vector_t Astronomy_ObserverVector(
     astro_equator_date_t equdate
 );
 
+astro_observer_t Astronomy_VectorObserver(astro_vector_t vector, astro_equator_date_t equdate);
+
 astro_ecliptic_t Astronomy_SunPosition(astro_time_t time);
 astro_ecliptic_t Astronomy_Ecliptic(astro_vector_t equ);
 astro_angle_result_t Astronomy_EclipticLongitude(astro_body_t body, astro_time_t time);

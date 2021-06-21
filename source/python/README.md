@@ -2580,7 +2580,7 @@ a `Vector` to an `Observer`.
 | Type | Parameter | Description |
 | --- | --- | --- |
 | [`Vector`](#Vector) | `vector` | The geocentric vector in an equatorial orientation. The components are expressed in astronomical units (AU). The time `vector.t` determines the Earth's rotation. |
-| `bool` | `ofdate` | Selects the date of the Earth's equator in which to express the equatorial coordinates. The caller may pass `False` to use the orientation of the Earth's equator at noon UTC on January 1, 2000, in which case this function corrects for precession and nutation of the Earth as it was at the moment specified by the the time `vector.t`. Or the caller may pass `True` to use the Earth's equator at `vector.t` as the orientation. |
+| `bool` | `ofdate` | Selects the date of the Earth's equator in which `vector` is expressed. The caller may pass `False` to use the orientation of the Earth's equator at noon UTC on January 1, 2000, in which case this function corrects for precession and nutation of the Earth as it was at the moment specified by the the time `vector.t`. Or the caller may pass `True` to use the Earth's equator at `vector.t` as the orientation. |
 
 ### Returns: [`Observer`](#Observer)
 The geographic latitude, longitude, and elevation above sea level

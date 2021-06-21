@@ -3913,7 +3913,8 @@ static int GeoidTestCase(astro_time_t time, astro_observer_t observer, astro_equ
     astro_vector_t surface;
     astro_vector_t geo_moon;
     astro_equatorial_t topo_moon;
-    double dx, dy, dz, diff;
+    double dx, dy, dz, diff, lat_diff, lon_diff, h_diff;
+    astro_observer_t vobs;
 
     topo_moon = Astronomy_Equator(BODY_MOON, &time, observer, equdate, NO_ABERRATION);
     CHECK_STATUS(topo_moon);
@@ -3951,6 +3952,35 @@ static int GeoidTestCase(astro_time_t time, astro_observer_t observer, astro_equ
     if (diff > 1.0e-6)
         FAIL("C GeoidTestCase: EXCESSIVE POSITION ERROR.\n");
 
+    /* Verify that we can convert the surface vector back to an observer. */
+    vobs = Astronomy_VectorObserver(surface, equdate);
+    lat_diff = ABS(vobs.latitude - observer.latitude);
+
+    /* Longitude is meaningless at the poles, so don't bother checking it there. */
+    if (-89.99 <= observer.latitude && observer.latitude <= +89.99)
+    {
+        lon_diff = ABS(vobs.longitude - observer.longitude);
+        if (lon_diff > 180.0)
+            lon_diff = 360.0 - lon_diff;
+        lon_diff = ABS(lon_diff * cos(DEG2RAD * observer.latitude));
+        if (lon_diff > 1.0e-6)
+            FAIL("C GeoidTestCase: EXCESSIVE longitude check error = %lf\n", lon_diff);
+    }
+    else
+    {
+        lon_diff = 0.0;
+    }
+
+    h_diff = ABS(vobs.height - observer.height);
+    DEBUG("C GeoidTestCase: vobs=(lat=%lf, lon=%lf, height=%lf), lat_diff=%lg, lon_diff=%lg, h_diff=%lg\n", 
+        vobs.latitude, vobs.longitude, vobs.height, lat_diff, lon_diff, h_diff);
+
+    if (lat_diff > 1.0e-6)
+        FAIL("C GeoidTestCase: EXCESSIVE latitude check error = %lf\n", lat_diff);
+
+    if (h_diff > 0.001)
+        FAIL("C GeoidTestCase: EXCESSIVE height check error = %lf\n", h_diff);
+
     error = 0;
 fail:
     return error;
@@ -3963,6 +3993,8 @@ static int GeoidTest(void)
     int tindex, oindex;
     astro_time_t time;
     astro_vector_t vec;
+    astro_observer_t observer;
+    int lat, lon;
 
     const astro_time_t time_list[] =
     {
@@ -3998,6 +4030,17 @@ static int GeoidTest(void)
         {
             CHECK(GeoidTestCase(time_list[tindex], observer_list[oindex], EQUATOR_J2000));
             CHECK(GeoidTestCase(time_list[tindex], observer_list[oindex], EQUATOR_OF_DATE));
+        }
+    }
+
+    /* More exhaustive tests for a single time value across many different geographic coordinates. */
+    time = Astronomy_MakeTime(2021, 06, 20, 15, 8, 0.0);
+    for (lat = -90; lat <= +90; lat += 1)
+    {
+        for (lon = -175; lon <= +180; lon += 5)
+        {
+            observer = Astronomy_MakeObserver(lat, lon, 0.0);
+            CHECK(GeoidTestCase(time, observer, EQUATOR_OF_DATE));
         }
     }
 
