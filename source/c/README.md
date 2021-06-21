@@ -2352,7 +2352,7 @@ This is the inverse function of [`Astronomy_ObserverVector`](#Astronomy_Observer
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| [`astro_vector_t`](#astro_vector_t) | `vector` |  The date and time for which to calculate the observer's position vector. The components are expressed in Astronomical Units (AU). You can calculate AU by dividing kilometers by the constant [`KM_PER_AU`](#KM_PER_AU). The time `vector.t` determines the Earth's rotation. | 
+| [`astro_vector_t`](#astro_vector_t) | `vector` |  The geocentric equatorial position vector for which to find geographic coordinates. The components are expressed in Astronomical Units (AU). You can calculate AU by dividing kilometers by the constant [`KM_PER_AU`](#KM_PER_AU). The time `vector.t` determines the Earth's rotation. | 
 | [`astro_equator_date_t`](#astro_equator_date_t) | `equdate` |  Selects the date of the Earth's equator in which `vector` is expressed. The caller may select `EQUATOR_J2000` to use the orientation of the Earth's equator at noon UTC on January 1, 2000, in which case this function corrects for precession and nutation of the Earth as it was at the moment specified by `vector.t`. Or the caller may select `EQUATOR_OF_DATE` to use the Earth's equator at `vector.t` as the orientation. | 
 
 

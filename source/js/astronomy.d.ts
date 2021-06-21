@@ -591,6 +591,32 @@ export declare function Equator(body: Body, date: FlexibleDateTime, observer: Ob
  */
 export declare function ObserverVector(date: FlexibleDateTime, observer: Observer, ofdate: boolean): Vector;
 /**
+ * @brief Calculates the geographic location corresponding to an equatorial vector.
+ *
+ * This is the inverse function of #Vector.
+ * Instead of converting #Observer to #Vector,
+ * it converts `Vector` to `Observer`.
+ *
+ * @param {Vector} vector
+ *      The geocentric equatorial position vector for which to find geographic coordinates.
+ *      The components are expressed in Astronomical Units (AU).
+ *      You can calculate AU by dividing kilometers by the constant #KM_PER_AU.
+ *      The time `vector.t` determines the Earth's rotation.
+ *
+ * @param {boolean} ofdate
+ *      Selects the date of the Earth's equator in which `vector` is expressed.
+ *      The caller may select `EQUATOR_J2000` to use the orientation of the Earth's equator
+ *      at noon UTC on January 1, 2000, in which case this function corrects for precession
+ *      and nutation of the Earth as it was at the moment specified by `vector.t`.
+ *      Or the caller may select `EQUATOR_OF_DATE` to use the Earth's equator at `vector.t`
+ *      as the orientation.
+ *
+ * @returns {Observer}
+ *      The geographic latitude, longitude, and elevation above sea level
+ *      that corresponds to the given equatorial vector.
+ */
+export declare function VectorObserver(vector: Vector, ofdate: boolean): Observer;
+/**
  * @brief Converts equatorial Cartesian coordinates to ecliptic Cartesian and angular coordinates.
  *
  * Given J2000 equatorial Cartesian coordinates,

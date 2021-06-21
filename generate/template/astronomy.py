@@ -1015,7 +1015,6 @@ def _era(time):        # Earth Rotation Angle
         theta += 360.0
     return theta
 
-
 def _sidereal_time(time):
     t = time.tt / 36525.0
     eqeq = 15.0 * time._etilt().ee    # Replace with eqeq=0 to get GMST instead of GAST (if we ever need it)
@@ -2275,7 +2274,7 @@ def VectorObserver(vector, ofdate):
     Parameters
     ----------
     vector : Vector
-        The geocentric vector in an equatorial orientation.
+        The geocentric equatorial position vector for which to find geographic coordinates.
         The components are expressed in astronomical units (AU).
         The time `vector.t` determines the Earth's rotation.
     ofdate : bool

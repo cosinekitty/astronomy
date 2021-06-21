@@ -4226,7 +4226,7 @@ astro_vector_t Astronomy_ObserverVector(
  * it converts `astro_vector_t` to `astro_observer_t`.
  *
  * @param vector
- *      The date and time for which to calculate the observer's position vector.
+ *      The geocentric equatorial position vector for which to find geographic coordinates.
  *      The components are expressed in Astronomical Units (AU).
  *      You can calculate AU by dividing kilometers by the constant #KM_PER_AU.
  *      The time `vector.t` determines the Earth's rotation.

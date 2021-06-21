@@ -128,6 +128,7 @@ const SUN_RADIUS_AU  = SUN_RADIUS_KM / KM_PER_AU;
 const EARTH_FLATTENING = 0.996647180302104;
 const EARTH_EQUATORIAL_RADIUS_KM = 6378.1366;
 const EARTH_EQUATORIAL_RADIUS_AU = EARTH_EQUATORIAL_RADIUS_KM / KM_PER_AU;
+const EARTH_POLAR_RADIUS_KM = EARTH_EQUATORIAL_RADIUS_KM * EARTH_FLATTENING;
 const EARTH_MEAN_RADIUS_KM = 6371.0;    /* mean radius of the Earth's geoid, without atmosphere */
 const EARTH_ATMOSPHERE_KM = 88.0;       /* effective atmosphere thickness for lunar eclipses */
 const EARTH_ECLIPSE_RADIUS_KM = EARTH_MEAN_RADIUS_KM + EARTH_ATMOSPHERE_KM;
@@ -1773,6 +1774,65 @@ function sidereal_time(time: AstroTime): number {          // calculates Greenwi
     return gst;     // return sidereal hours in the half-open range [0, 24).
 }
 
+function inverse_terra(ovec: ArrayVector, st: number): Observer {
+    // Convert from AU to kilometers
+    const x = ovec[0] * KM_PER_AU;
+    const y = ovec[1] * KM_PER_AU;
+    const z = ovec[2] * KM_PER_AU;
+    const p = Math.sqrt(x*x + y*y);
+    let lon_deg:number, lat_deg:number, height_km:number;
+    if (p < 1.0e-6) {
+        // Special case: within 1 millimeter of a pole!
+        // Use arbitrary longitude, and latitude determined by polarity of z.
+        lon_deg = 0;
+        lat_deg = (z > 0.0) ? +90 : -90;
+        // Elevation is calculated directly from z.
+        height_km = Math.abs(z) - EARTH_POLAR_RADIUS_KM;
+    } else {
+        const stlocl = Math.atan2(y, x);
+        // Calculate exact longitude.
+        lon_deg = (RAD2DEG * stlocl) - (15.0 * st);
+        // Normalize longitude to the range (-180, +180].
+        while (lon_deg <= -180)
+            lon_deg += 360;
+        while (lon_deg > +180)
+            lon_deg -= 360;
+        // Numerically solve for exact latitude, using Newton's Method.
+        const F = EARTH_FLATTENING * EARTH_FLATTENING;
+        // Start with initial latitude estimate, based on a spherical Earth.
+        let lat = Math.atan2(z, p);
+        let cos:number, sin:number, denom:number;
+        for(;;) {
+            // Calculate the error function W(lat).
+            // We try to find the root of W, meaning where the error is 0.
+            cos = Math.cos(lat);
+            sin = Math.sin(lat);
+            const factor = (F-1)*EARTH_EQUATORIAL_RADIUS_KM;
+            const cos2 = cos*cos;
+            const sin2 = sin*sin;
+            const radicand = cos2 + F*sin2;
+            denom = Math.sqrt(radicand);
+            const W = (factor*sin*cos)/denom - z*cos + p*sin;
+            if (Math.abs(W) < 1.0e-12)
+                break;  // The error is now negligible
+            // Error is still too large. Find the next estimate.
+            // Calculate D = the derivative of W with respect to lat.
+            const D = factor*((cos2 - sin2)/denom - sin2*cos2*(F-1)/(factor*radicand)) + z*sin + p*cos;
+            lat -= W/D;
+        }
+        // We now have a solution for the latitude in radians.
+        lat_deg = RAD2DEG * lat;
+        // Solve for exact height in meters.
+        // There are two formulas I can use. Use whichever has the less risky denominator.
+        const adjust = EARTH_EQUATORIAL_RADIUS_KM / denom;
+        if (Math.abs(sin) > Math.abs(cos))
+            height_km = z/sin - F*adjust;
+        else
+            height_km = p/cos - adjust;
+    }
+    return new Observer(lat_deg, lon_deg, 1000*height_km);
+}
+
 function terra(observer: Observer, st: number): TerraInfo {
     const df = 1 - 0.003352819697896;    // flattening of the Earth
     const df2 = df * df;
@@ -2484,6 +2544,40 @@ export function ObserverVector(date: FlexibleDateTime, observer: Observer, ofdat
     return VectorFromArray(ovec, time);
 }
 
+/**
+ * @brief Calculates the geographic location corresponding to an equatorial vector.
+ *
+ * This is the inverse function of #Vector.
+ * Instead of converting #Observer to #Vector,
+ * it converts `Vector` to `Observer`.
+ *
+ * @param {Vector} vector
+ *      The geocentric equatorial position vector for which to find geographic coordinates.
+ *      The components are expressed in Astronomical Units (AU).
+ *      You can calculate AU by dividing kilometers by the constant #KM_PER_AU.
+ *      The time `vector.t` determines the Earth's rotation.
+ *
+ * @param {boolean} ofdate
+ *      Selects the date of the Earth's equator in which `vector` is expressed.
+ *      The caller may select `EQUATOR_J2000` to use the orientation of the Earth's equator
+ *      at noon UTC on January 1, 2000, in which case this function corrects for precession
+ *      and nutation of the Earth as it was at the moment specified by `vector.t`.
+ *      Or the caller may select `EQUATOR_OF_DATE` to use the Earth's equator at `vector.t`
+ *      as the orientation.
+ *
+ * @returns {Observer}
+ *      The geographic latitude, longitude, and elevation above sea level
+ *      that corresponds to the given equatorial vector.
+ */
+ export function VectorObserver(vector: Vector, ofdate: boolean): Observer {
+    const gast = sidereal_time(vector.t);
+    let ovec:ArrayVector = [vector.x, vector.y, vector.z];
+    if (!ofdate) {
+        ovec = precession(ovec, vector.t, PrecessDirection.From2000);
+        ovec = nutation(ovec, vector.t, PrecessDirection.From2000);
+    }
+    return inverse_terra(ovec, gast);
+}
 
 function RotateEquatorialToEcliptic(equ: Vector, cos_ob: number, sin_ob: number): EclipticCoordinates {
     // Rotate equatorial vector to obtain ecliptic vector.

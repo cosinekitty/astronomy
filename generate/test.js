@@ -1871,9 +1871,41 @@ function GeoidTestCase(time, observer, ofdate) {
         console.error('JS GeoidTestCase: EXCESSIVE POSITION ERROR.');
         return 1;
     }
+
+    // Verify that we can convert the surface vector back to an observer.
+    const vobs = Astronomy.VectorObserver(surface, ofdate);
+    const lat_diff = abs(vobs.latitude - observer.latitude);
+    let lon_diff;
+
+    /* Longitude is meaningless at the poles, so don't bother checking it there. */
+    if (-89.99 <= observer.latitude && observer.latitude <= +89.99) {
+        lon_diff = abs(vobs.longitude - observer.longitude);
+        if (lon_diff > 180.0)
+            lon_diff = 360.0 - lon_diff;
+        lon_diff = abs(lon_diff * Math.cos(Astronomy.DEG2RAD * observer.latitude));
+        if (lon_diff > 1.0e-6) {
+            console.error(`JS GeoidTestCase: EXCESSIVE longitude check error = ${lon_diff}`);
+            return 1;
+        }
+    } else {
+        lon_diff = 0.0;
+    }
+
+    const h_diff = abs(vobs.height - observer.height);
+    if (Verbose) console.log(`JS GeoidTestCase: vobs=(lat=${vobs.latitude}, lon=${vobs.longitude}, height=${vobs.height}), lat_diff=${lat_diff}, lon_diff=${lon_diff}, h_diff=${h_diff}`);
+
+    if (lat_diff > 1.0e-6) {
+        console.error(`JS GeoidTestCase: EXCESSIVE latitude check error = ${lat_diff}`);
+        return 1;
+    }
+
+    if (h_diff > 0.001) {
+        console.error(`JS GeoidTestCase: EXCESSIVE height check error = ${h_diff}`);
+        return 1;
+    }
+
     return 0;
 }
-
 
 
 function Geoid() {
@@ -1894,10 +1926,24 @@ function Geoid() {
 
     // Test a variety of times and locations, in both supported orientation systems.
 
-    for (let observer of observer_list) {
-        for (let time of time_list) {
-            if (0 != GeoidTestCase(time, observer, false)) return 1;
-            if (0 != GeoidTestCase(time, observer, true))  return 1;
+    let observer, time;
+    for (observer of observer_list) {
+        for (time of time_list) {
+            if (0 != GeoidTestCase(time, observer, false)) 
+                return 1;
+            if (0 != GeoidTestCase(time, observer, true))  
+                return 1;
+        }
+    }
+
+    // More exhaustive tests for a single time value across many different geographic coordinates.
+
+    time = new Date('2021-06-20T15:08:00Z');
+    for (let lat = -90; lat <= +90; lat += 1) {
+        for (let lon = -175; lon <= +180; lon += 5) {
+            observer = new Astronomy.Observer(lat, lon, 0.0);
+            if (0 != GeoidTestCase(time, observer, true)) 
+                return 1;
         }
     }
 
