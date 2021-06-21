@@ -1630,6 +1630,22 @@ includes the time, as required by the type [`AstroVector`](#AstroVector).
 
 **Returns:** The vector form of the supplied spherical coordinates.
 
+<a name="Astronomy.VectorObserver"></a>
+### Astronomy.VectorObserver(vector, equdate) &#8658; [`Observer`](#Observer)
+
+**Calculates the geographic location corresponding to an equatorial vector.**
+
+This is the inverse function of [`Astronomy.ObserverVector`](#Astronomy.ObserverVector).
+Instead of converting [`Observer`](#Observer) to [`AstroVector`](#AstroVector),
+it converts `AstroVector` to `Observer`.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`AstroVector`](#AstroVector) | `vector` | The geocentric equatorial position vector for which to find geographic coordinates. The components are expressed in Astronomical Units (AU). You can calculate AU by dividing kilometers by the constant [`Astronomy.KM_PER_AU`](#Astronomy.KM_PER_AU). The time `vector.t` determines the Earth's rotation. |
+| [`EquatorEpoch`](#EquatorEpoch) | `equdate` | Selects the date of the Earth's equator in which `vector` is expressed. The caller may select `EquatorEpoch.J2000` to use the orientation of the Earth's equator at noon UTC on January 1, 2000, in which case this function corrects for precession and nutation of the Earth as it was at the moment specified by `vector.t`. Or the caller may select `EquatorEpoch.OfDate` to use the Earth's equator at `vector.t` as the orientation. |
+
+**Returns:** The geographic latitude, longitude, and elevation above sea level that corresponds to the given equatorial vector.
+
 ---
 
 <a name="types"></a>

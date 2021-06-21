@@ -4034,7 +4034,7 @@ static int GeoidTest(void)
     }
 
     /* More exhaustive tests for a single time value across many different geographic coordinates. */
-    time = Astronomy_MakeTime(2021, 06, 20, 15, 8, 0.0);
+    time = Astronomy_MakeTime(2021, 6, 20, 15, 8, 0.0);
     for (lat = -90; lat <= +90; lat += 1)
     {
         for (lon = -175; lon <= +180; lon += 5)

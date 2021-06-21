@@ -2470,6 +2470,46 @@ namespace csharp_test
                 Console.WriteLine("C# GeoidTestCase: EXCESSIVE POSITION ERROR.");
                 return 1;
             }
+
+            // Verify that we can convert the surface vector back to an observer.
+            Observer vobs = Astronomy.VectorObserver(surface, epoch);
+            double lat_diff = abs(vobs.latitude - observer.latitude);
+
+            // Longitude is meaningless at the poles, so don't bother checking it there.
+            double lon_diff;
+            if (-89.99 <= observer.latitude && observer.latitude <= +89.99)
+            {
+                lon_diff = abs(vobs.longitude - observer.longitude);
+                if (lon_diff > 180.0)
+                    lon_diff = 360.0 - lon_diff;
+                lon_diff = abs(lon_diff * cos(Astronomy.DEG2RAD * observer.latitude));
+                if (lon_diff > 1.0e-6)
+                {
+                    Console.WriteLine("C# GeoidTestCase: EXCESSIVE longitude check error = {0}", lon_diff);
+                    return 1;
+                }
+            }
+            else
+            {
+                lon_diff = 0.0;
+            }
+
+            double h_diff = abs(vobs.height - observer.height);
+            Debug("C# GeoidTestCase: vobs=(lat={0}, lon={1}, height={2}), lat_diff={3}, lon_diff={4}, h_diff={5}", 
+                vobs.latitude, vobs.longitude, vobs.height, lat_diff, lon_diff, h_diff);
+
+            if (lat_diff > 1.0e-6)
+            {
+                Console.WriteLine("C# GeoidTestCase: EXCESSIVE latitude check error = {0}", lat_diff);
+                return 1;
+            }
+
+            if (h_diff > 0.001)
+            {
+                Console.WriteLine("C# GeoidTestCase: EXCESSIVE height check error = {0}", h_diff);
+                return 1;
+            }
+
             return 0;
         }
 
@@ -2498,8 +2538,21 @@ namespace csharp_test
             {
                 foreach (AstroTime time in time_list)
                 {
-                    if (0 != GeoidTestCase(time, observer, EquatorEpoch.J2000)) return 1;
-                    if (0 != GeoidTestCase(time, observer, EquatorEpoch.OfDate)) return 1;
+                    if (0 != GeoidTestCase(time, observer, EquatorEpoch.J2000)) 
+                        return 1;
+                    if (0 != GeoidTestCase(time, observer, EquatorEpoch.OfDate)) 
+                        return 1;
+                }
+            }
+
+            var fixed_time = new AstroTime(2021, 6, 20, 15, 8, 0);
+            for (int lat = -90; lat <= +90; lat += 1)
+            {
+                for (int lon = -175; lon <= +180; lon += 5)
+                {
+                    var observer = new Observer(lat, lon, 0.0);
+                    if (0 != GeoidTestCase(fixed_time, observer, EquatorEpoch.OfDate))
+                        return 1;
                 }
             }
 

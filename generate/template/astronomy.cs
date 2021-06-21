@@ -2014,6 +2014,7 @@ $ASTRO_ADDSOL()
         internal const double EARTH_FLATTENING = 0.996647180302104;
         internal const double EARTH_EQUATORIAL_RADIUS_KM = 6378.1366;
         internal const double EARTH_EQUATORIAL_RADIUS_AU = EARTH_EQUATORIAL_RADIUS_KM / KM_PER_AU;
+        internal const double EARTH_POLAR_RADIUS_KM = EARTH_EQUATORIAL_RADIUS_KM * EARTH_FLATTENING;
         internal const double EARTH_MEAN_RADIUS_KM = 6371.0;    /* mean radius of the Earth's geoid, without atmosphere */
         internal const double EARTH_ATMOSPHERE_KM = 88.0;       /* effective atmosphere thickness for lunar eclipses */
         internal const double EARTH_ECLIPSE_RADIUS_KM = EARTH_MEAN_RADIUS_KM + EARTH_ATMOSPHERE_KM;
@@ -3025,6 +3026,72 @@ $ASTRO_IAU_DATA()
             return gst;     // return sidereal hours in the half-open range [0, 24).
         }
 
+        static Observer inverse_terra(AstroVector ovec, double st)
+        {
+            double lon_deg, lat_deg, height_km;
+
+            /* Convert from AU to kilometers. */
+            double x = ovec.x * KM_PER_AU;
+            double y = ovec.y * KM_PER_AU;
+            double z = ovec.z * KM_PER_AU;
+            double p = Math.Sqrt(x*x + y*y);
+            if (p < 1.0e-6)
+            {
+                /* Special case: within 1 millimeter of a pole! */
+                /* Use arbitrary longitude, and latitude determined by polarity of z. */
+                lon_deg = 0.0;
+                lat_deg = (z > 0.0) ? +90.0 : -90.0;
+                /* Elevation is calculated directly from z */
+                height_km = Math.Abs(z) - EARTH_POLAR_RADIUS_KM;
+            }
+            else
+            {
+                double stlocl = Math.Atan2(y, x);
+                /* Calculate exact longitude. */
+                lon_deg = RAD2DEG*stlocl - (15.0 * st);
+                /* Normalize longitude to the range (-180, +180]. */
+                while (lon_deg <= -180.0)
+                    lon_deg += 360.0;
+                while (lon_deg > +180.0)
+                    lon_deg -= 360.0;
+                /* Numerically solve for exact latitude, using Newton's Method. */
+                double F = EARTH_FLATTENING * EARTH_FLATTENING;
+                /* Start with initial latitude estimate, based on a spherical Earth. */
+                double lat = Math.Atan2(z, p);
+                double c, s, denom;
+                for(;;)
+                {
+                    /* Calculate the error function W(lat). */
+                    /* We try to find the root of W, meaning where the error is 0. */
+                    c = Math.Cos(lat);
+                    s = Math.Sin(lat);
+                    double factor = (F-1)*EARTH_EQUATORIAL_RADIUS_KM;
+                    double c2 = c*c;
+                    double s2 = s*s;
+                    double radicand = c2 + F*s2;
+                    denom = Math.Sqrt(radicand);
+                    double W = (factor*s*c)/denom - z*c + p*s;
+                    if (Math.Abs(W) < 1.0e-12)
+                        break;  /* The error is now negligible. */
+                    /* Error is still too large. Find the next estimate. */
+                    /* Calculate D = the derivative of W with respect to lat. */
+                    double D = factor*((c2 - s2)/denom - s2*c2*(F-1)/(factor*radicand)) + z*s + p*c;
+                    lat -= W/D;
+                }
+                /* We now have a solution for the latitude in radians. */
+                lat_deg = lat * RAD2DEG;
+                /* Solve for exact height in meters. */
+                /* There are two formulas I can use. Use whichever has the less risky denominator. */
+                double adjust = EARTH_EQUATORIAL_RADIUS_KM / denom;
+                if (Math.Abs(s) > Math.Abs(c))
+                    height_km = z/s - F*adjust;
+                else
+                    height_km = p/c - adjust;
+            }
+
+            return new Observer(lat_deg, lon_deg, 1000.0 * height_km);
+        }
+
         private static AstroVector terra(Observer observer, AstroTime time)
         {
             double st = sidereal_time(time);
@@ -3494,7 +3561,6 @@ $ASTRO_IAU_DATA()
             }
         }
 
-        ///
         /// <summary>
         /// Calculates geocentric equatorial coordinates of an observer on the surface of the Earth.
         /// </summary>
@@ -3549,6 +3615,46 @@ $ASTRO_IAU_DATA()
                 return gyration(pos, time, PrecessDirection.Into2000);
 
             throw new ArgumentException(string.Format("Unsupported equator epoch {0}", equdate));
+        }
+
+        /// <summary>
+        /// Calculates the geographic location corresponding to an equatorial vector.
+        /// </summary>
+        ///
+        /// <remarks>
+        /// This is the inverse function of #Astronomy.ObserverVector.
+        /// Instead of converting #Observer to #AstroVector,
+        /// it converts `AstroVector` to `Observer`.
+        /// </remarks>
+        ///
+        /// <param name="vector">
+        /// The geocentric equatorial position vector for which to find geographic coordinates.
+        /// The components are expressed in Astronomical Units (AU).
+        /// You can calculate AU by dividing kilometers by the constant #Astronomy.KM_PER_AU.
+        /// The time `vector.t` determines the Earth's rotation.
+        /// </param>
+        ///
+        /// <param name="equdate">
+        /// Selects the date of the Earth's equator in which `vector` is expressed.
+        /// The caller may select `EquatorEpoch.J2000` to use the orientation of the Earth's equator
+        /// at noon UTC on January 1, 2000, in which case this function corrects for precession
+        /// and nutation of the Earth as it was at the moment specified by `vector.t`.
+        /// Or the caller may select `EquatorEpoch.OfDate` to use the Earth's equator at `vector.t`
+        /// as the orientation.
+        /// </param>
+        ///
+        /// <returns>
+        /// The geographic latitude, longitude, and elevation above sea level
+        /// that corresponds to the given equatorial vector.
+        /// </returns>
+        public static Observer VectorObserver(
+            AstroVector vector,
+            EquatorEpoch equdate)
+        {
+            double gast = sidereal_time(vector.t);
+            if (equdate == EquatorEpoch.J2000)
+                vector = gyration(vector, vector.t, PrecessDirection.From2000);
+            return inverse_terra(vector, gast);
         }
 
         /// <summary>
