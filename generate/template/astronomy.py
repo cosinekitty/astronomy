@@ -1057,33 +1057,33 @@ def _inverse_terra(ovec, st):
             lon_deg += 360.0
         while lon_deg > +180.0:
             lon_deg -= 360.0
-        # Numerically solve for exact latitude.
+        # Numerically solve for exact latitude, using Newton's Method.
         F = _EARTH_FLATTENING ** 2
-        def W(context, time):
-            lat = time.ut
+        # Start with initial latitude estimate, based on a spherical Earth.
+        lat = math.atan2(z, p)
+        while True:
+            # Calculate the error function W(lat).
+            # We try to find the root of W, meaning where the error is 0.
             cos = math.cos(lat)
             sin = math.sin(lat)
-            return ((F-1)*_EARTH_EQUATORIAL_RADIUS_KM*sin*cos)/math.sqrt(cos*cos + F*sin*sin) - z*cos + p*sin
-        # Total hack: use Search(), even though it expects a function of time.
-        # Pretend that the angle is a time!
-        # This is not as efficient as I would like, because of all the unnecessary DeltaT calculations.
-        # But the search is very well tested and converges quickly.
-        t1 = Time(-math.pi/2)
-        t2 = Time(+math.pi/2)
-        # Because we are pretending that radians of angle are days of time in the Search function,
-        # we have to compute a phony error tolerance expressed in seconds of time.
-        # Converge at one billionth of a degree error.
-        dt = 86400.0 * math.radians(1.0e-9)
-        tx = Search(W, None, t1, t2, dt)
-        if tx is None:
-            raise Error('Cannot solve for geographic latitude')
-        lat_rad = tx.ut
-        lat_deg = math.degrees(lat_rad)
+            factor = (F-1)*_EARTH_EQUATORIAL_RADIUS_KM
+            cos2 = cos*cos
+            sin2 = sin*sin
+            radicand = cos2 + F*sin2
+            denom = math.sqrt(radicand)
+            W = (factor*sin*cos)/denom - z*cos + p*sin
+            if abs(W) < 1.0e-12:
+                # The error is now negligible
+                break
+            # Error is still too large. Find the next estimate.
+            # Calculate D = the derivative of W with respect to lat.
+            D = factor*((cos2 - sin2)/denom - sin2*cos2*(F-1)/(factor*radicand)) + z*sin + p*cos
+            lat -= W/D
+        # We now have a solution for the latitude in radians.
+        lat_deg = math.degrees(lat)
         # Solve for exact height in meters.
         # There are two formulas I can use. Use whichever has the less risky denominator.
-        sin = math.sin(lat_rad)
-        cos = math.cos(lat_rad)
-        adjust = _EARTH_EQUATORIAL_RADIUS_KM/math.sqrt(cos*cos + F*sin*sin)
+        adjust = _EARTH_EQUATORIAL_RADIUS_KM / denom
         if abs(sin) > abs(cos):
             height_km = z/sin - F*adjust
         else:
