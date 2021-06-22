@@ -2336,7 +2336,7 @@ exports.Equator = Equator;
  * To convert to kilometers, multiply the `x`, `y`, and `z` values by
  * the constant value {@link KM_PER_AU}.
  *
- * The inverse of this function is also available: #VectorObserver.
+ * The inverse of this function is also available: {@link VectorObserver}.
  *
  * @param {FlexibleDateTime} date
  *      The date and time for which to calculate the observer's position vector.
@@ -2368,14 +2368,14 @@ exports.ObserverVector = ObserverVector;
 /**
  * @brief Calculates the geographic location corresponding to an equatorial vector.
  *
- * This is the inverse function of #ObserverVector.
+ * This is the inverse function of {@link ObserverVector}.
  * Given a geocentric equatorial vector, it returns the geographic
  * latitude, longitude, and elevation for that vector.
  *
  * @param {Vector} vector
  *      The geocentric equatorial position vector for which to find geographic coordinates.
  *      The components are expressed in Astronomical Units (AU).
- *      You can calculate AU by dividing kilometers by the constant #KM_PER_AU.
+ *      You can calculate AU by dividing kilometers by the constant {@link KM_PER_AU}.
  *      The time `vector.t` determines the Earth's rotation.
  *
  * @param {boolean} ofdate
@@ -5030,7 +5030,7 @@ exports.CombineRotation = CombineRotation;
  *
  * Returns a rotation matrix that has no effect on orientation.
  * This matrix can be the starting point for other operations,
- * such as using a series of calls to #Astronomy_Pivot to
+ * such as using a series of calls to {@link Pivot} to
  * create a custom rotation matrix.
  *
  * @returns {RotationMatrix}
@@ -7132,7 +7132,7 @@ function GeoidIntersect(shadow) {
  *
  * After using {@link SearchLunarEclipse} to find the first lunar eclipse
  * in a series, you can call this function to find the next consecutive lunar eclipse.
- * Pass in the `center` value from the {@link LunarEclipseInfo} returned by the
+ * Pass in the `peak` value from the {@link LunarEclipseInfo} returned by the
  * previous call to `SearchLunarEclipse` or `NextLunarEclipse`
  * to find the next lunar eclipse.
  *

@@ -995,7 +995,7 @@ The returned vector has components expressed in astronomical units (AU).
 To convert to kilometers, multiply the `x`, `y`, and `z` values by
 the constant value [KM_PER_AU](#KM_PER_AU).
 
-The inverse of this function is also available: #VectorObserver.  
+The inverse of this function is also available: [VectorObserver](#VectorObserver).  
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -1014,13 +1014,13 @@ The inverse of this function is also available: #VectorObserver.
      that corresponds to the given equatorial vector.  
 **Brief**: Calculates the geographic location corresponding to an equatorial vector.
 
-This is the inverse function of #ObserverVector.
+This is the inverse function of [ObserverVector](#ObserverVector).
 Given a geocentric equatorial vector, it returns the geographic
 latitude, longitude, and elevation for that vector.  
 
 | Param | Type | Description |
 | --- | --- | --- |
-| vector | [<code>Vector</code>](#Vector) | The geocentric equatorial position vector for which to find geographic coordinates.      The components are expressed in Astronomical Units (AU).      You can calculate AU by dividing kilometers by the constant #KM_PER_AU.      The time `vector.t` determines the Earth's rotation. |
+| vector | [<code>Vector</code>](#Vector) | The geocentric equatorial position vector for which to find geographic coordinates.      The components are expressed in Astronomical Units (AU).      You can calculate AU by dividing kilometers by the constant [KM_PER_AU](#KM_PER_AU).      The time `vector.t` determines the Earth's rotation. |
 | ofdate | <code>boolean</code> | Selects the date of the Earth's equator in which `vector` is expressed.      The caller may select `false` to use the orientation of the Earth's equator      at noon UTC on January 1, 2000, in which case this function corrects for precession      and nutation of the Earth as it was at the moment specified by `vector.t`.      Or the caller may select `true` to use the Earth's equator at `vector.t`      as the orientation. |
 
 
@@ -1671,7 +1671,7 @@ equivalent to rotating based on the first matrix, followed by the second.
 
 Returns a rotation matrix that has no effect on orientation.
 This matrix can be the starting point for other operations,
-such as using a series of calls to #Astronomy_Pivot to
+such as using a series of calls to [Pivot](#Pivot) to
 create a custom rotation matrix.  
 
 * * *
@@ -2199,7 +2199,7 @@ passing in the `center` value returned from the previous call.
 
 After using [SearchLunarEclipse](#SearchLunarEclipse) to find the first lunar eclipse
 in a series, you can call this function to find the next consecutive lunar eclipse.
-Pass in the `center` value from the [LunarEclipseInfo](#LunarEclipseInfo) returned by the
+Pass in the `peak` value from the [LunarEclipseInfo](#LunarEclipseInfo) returned by the
 previous call to `SearchLunarEclipse` or `NextLunarEclipse`
 to find the next lunar eclipse.  
 
