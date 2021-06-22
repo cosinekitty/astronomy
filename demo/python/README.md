@@ -68,6 +68,13 @@ Shows how to calculate sunrise, sunset, moonrise, and moonset times.
 ### [Seasons](seasons.py)
 Calculates the equinoxes and solstices for a given calendar year.
 
+### [Triangulate](triangulate.py)
+Given the geographic coordinates of two observers, and angular
+directions they are looking in, determines geographic coordinates
+of the point they are both looking at. This example demonstrates
+use of the geoid functions `VectorObserver` and `ObserverVector`
+that convert between geographic coordinates and vectors.
+
 ---
 
 # [API Reference](../../source/python/)
