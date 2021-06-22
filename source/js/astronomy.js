@@ -6938,7 +6938,7 @@ function MoonEclipticLatitudeDegrees(time) {
  * See {@link LunarEclipseInfo} for more information.
  * To find a series of lunar eclipses, call this function once,
  * then keep calling {@link NextLunarEclipse} as many times as desired,
- * passing in the `center` value returned from the previous call.
+ * passing in the `peak` value returned from the previous call.
  *
  * @param {FlexibleDateTime} date
  *      The date and time for starting the search for a lunar eclipse.

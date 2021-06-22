@@ -2182,7 +2182,7 @@ A lunar eclipse may be penumbral, partial, or total.
 See [LunarEclipseInfo](#LunarEclipseInfo) for more information.
 To find a series of lunar eclipses, call this function once,
 then keep calling [NextLunarEclipse](#NextLunarEclipse) as many times as desired,
-passing in the `center` value returned from the previous call.  
+passing in the `peak` value returned from the previous call.  
 
 | Param | Type | Description |
 | --- | --- | --- |
