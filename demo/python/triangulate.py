@@ -52,8 +52,8 @@ def Intersect(pos1, dir1, pos2, dir2):
     b = Vector(pos2.x + v*dir2.x, pos2.y + v*dir2.y, pos2.z + v*dir2.z, pos2.t)
     c = Vector((a.x + b.x)/2, (a.y + b.y)/2, (a.z + b.z)/2, a.t)
     Debug('c = {}'.format(c))
-    # Calculate the error distance in meters between the two skew lines.
-    dist = (KM_PER_AU * 1000) * math.sqrt((a.x - b.x)**2 + (a.y - b.y)**2 + (a.z - b.z)**2)
+    # Calculate the error radius in meters between the two skew lines.
+    dist = (KM_PER_AU * 1000 / 2) * math.sqrt((a.x - b.x)**2 + (a.y - b.y)**2 + (a.z - b.z)**2)
     # Convert vector back to geographic coordinates
     obs = VectorObserver(c, True)
     return obs, dist
@@ -61,7 +61,7 @@ def Intersect(pos1, dir1, pos2, dir2):
 def DirectionVector(time, observer, altitude, azimuth):
     # Convert horizontal angles to a horizontal unit vector.
     hor = Spherical(altitude, azimuth, 1.0)
-    hvec = VectorFromHorizon(hor, time, Refraction.Airless)    
+    hvec = VectorFromHorizon(hor, time, Refraction.Airless)
     # Find the rotation matrix that converts horizontal vectors to equatorial vectors.
     rot = Rotation_HOR_EQD(time, observer)
     # Rotate the horizontal (HOR) vector to an equator-of-date (EQD) vector.
