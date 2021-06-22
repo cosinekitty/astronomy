@@ -1,0 +1,1 @@
+Solution: lat = 48.289143, lon = 24.562600, elv = 3862.010 meters; error = 24.405 meters

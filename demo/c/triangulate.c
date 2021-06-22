@@ -175,7 +175,7 @@ int main(int argc, const char *argv[])
 
     if (argc != 11)
     {
-        fprintf(stderr, UsageText);
+        fprintf(stderr, "%s", UsageText);
         return 1;
     }
 
