@@ -4778,6 +4778,8 @@ namespace CosineKitty
         /// The returned vector has components expressed in astronomical units (AU).
         /// To convert to kilometers, multiply the `x`, `y`, and `z` values by
         /// the constant value #Astronomy.KM_PER_AU.
+        ///
+        /// The inverse of this function is also available: #Astronomy.VectorObserver.
         /// </remarks>
         ///
         /// <param name="time">
@@ -4823,8 +4825,8 @@ namespace CosineKitty
         ///
         /// <remarks>
         /// This is the inverse function of #Astronomy.ObserverVector.
-        /// Instead of converting #Observer to #AstroVector,
-        /// it converts `AstroVector` to `Observer`.
+        /// Given a geocentric equatorial vector, it returns the geographic
+        /// latitude, longitude, and elevation for that vector.
         /// </remarks>
         ///
         /// <param name="vector">

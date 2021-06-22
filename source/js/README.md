@@ -26,11 +26,17 @@ and some [Node.js examples](../../demo/nodejs/).
 | -------- | ----------- |
 | [HelioVector](#HelioVector) | Calculates body position vector with respect to the center of the Sun.   |
 | [GeoVector](#GeoVector)     | Calculates body position vector with respect to the center of the Earth. |
-| [ObserverVector](#ObserverVector) | Calculates vector from the center of the Earth to an observer on the Earth's surface. |
 | [Equator](#Equator)         | Calculates right ascension and declination. |
 | [Ecliptic](#Ecliptic)       | Calculates ecliptic latitude, longitude, and Cartesian coordinates. |
 | [Horizon](#Horizon)         | Calculates horizontal coordinates (azimuth, altitude) for a given observer on the Earth. |
 | [PairLongitude](#PairLongitude) | Calculates the difference in apparent ecliptic longitude between two bodies, as seen from the Earth. |
+
+### Geographic helper functions
+
+| Function | Description |
+| -------- | ----------- |
+| [ObserverVector](#ObserverVector) | Calculates a vector from the center of the Earth to an observer on the Earth's surface. |
+| [VectorObserver](#VectorObserver) | Calculates the geographic coordinates for a geocentric equatorial vector. |
 
 ### Rise, set, and culmination times
 
@@ -987,7 +993,9 @@ equator at the specified time, or `false` to use the J2000 equator.
 
 The returned vector has components expressed in astronomical units (AU).
 To convert to kilometers, multiply the `x`, `y`, and `z` values by
-the constant value [KM_PER_AU](#KM_PER_AU).  
+the constant value [KM_PER_AU](#KM_PER_AU).
+
+The inverse of this function is also available: #VectorObserver.  
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -1006,14 +1014,14 @@ the constant value [KM_PER_AU](#KM_PER_AU).
      that corresponds to the given equatorial vector.  
 **Brief**: Calculates the geographic location corresponding to an equatorial vector.
 
-This is the inverse function of #Vector.
-Instead of converting #Observer to #Vector,
-it converts `Vector` to `Observer`.  
+This is the inverse function of #ObserverVector.
+Given a geocentric equatorial vector, it returns the geographic
+latitude, longitude, and elevation for that vector.  
 
 | Param | Type | Description |
 | --- | --- | --- |
 | vector | [<code>Vector</code>](#Vector) | The geocentric equatorial position vector for which to find geographic coordinates.      The components are expressed in Astronomical Units (AU).      You can calculate AU by dividing kilometers by the constant #KM_PER_AU.      The time `vector.t` determines the Earth's rotation. |
-| ofdate | <code>boolean</code> | Selects the date of the Earth's equator in which `vector` is expressed.      The caller may select `EQUATOR_J2000` to use the orientation of the Earth's equator      at noon UTC on January 1, 2000, in which case this function corrects for precession      and nutation of the Earth as it was at the moment specified by `vector.t`.      Or the caller may select `EQUATOR_OF_DATE` to use the Earth's equator at `vector.t`      as the orientation. |
+| ofdate | <code>boolean</code> | Selects the date of the Earth's equator in which `vector` is expressed.      The caller may select `false` to use the orientation of the Earth's equator      at noon UTC on January 1, 2000, in which case this function corrects for precession      and nutation of the Earth as it was at the moment specified by `vector.t`.      Or the caller may select `true` to use the Earth's equator at `vector.t`      as the orientation. |
 
 
 * * *

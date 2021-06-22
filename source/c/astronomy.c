@@ -4162,6 +4162,8 @@ astro_equatorial_t Astronomy_Equator(
  * To convert to kilometers, multiply the `x`, `y`, and `z` values by
  * the constant value #KM_PER_AU.
  *
+ * The inverse of this function is also available: #Astronomy_VectorObserver.
+ *
  * @param time
  *      The date and time for which to calculate the observer's position vector.
  *
@@ -4222,8 +4224,8 @@ astro_vector_t Astronomy_ObserverVector(
  * @brief Calculates the geographic location corresponding to an equatorial vector.
  *
  * This is the inverse function of #Astronomy_ObserverVector.
- * Instead of converting #astro_observer_t to #astro_vector_t,
- * it converts `astro_vector_t` to `astro_observer_t`.
+ * Given a geocentric equatorial vector, it returns the geographic
+ * latitude, longitude, and elevation for that vector.
  *
  * @param vector
  *      The geocentric equatorial position vector for which to find geographic coordinates.

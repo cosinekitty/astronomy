@@ -2237,6 +2237,8 @@ def ObserverVector(time, observer, ofdate):
     To convert to kilometers, multiply the `x`, `y`, and `z` values by
     the constant value #KM_PER_AU.
 
+    The inverse of this function is also available: #VectorObserver.
+
     Parameters
     ----------
     time : Time
@@ -2268,8 +2270,8 @@ def VectorObserver(vector, ofdate):
     """Calculates the geographic location corresponding to an equatorial vector.
 
     This is the inverse function of #ObserverVector.
-    Instead of converting an #Observer to a #Vector, it converts
-    a `Vector` to an `Observer`.
+    Given a geocentric equatorial vector, it returns the geographic
+    latitude, longitude, and elevation for that vector.
 
     Parameters
     ----------

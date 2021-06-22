@@ -29,13 +29,18 @@ To get started quickly, here are some [examples](../../demo/csharp/).
 | -------- | ----------- |
 | [HelioVector](#Astronomy.HelioVector) | Calculates body position vector with respect to the center of the Sun. |
 | [GeoVector](#Astronomy.GeoVector)     | Calculates body position vector with respect to the center of the Earth. |
-| [ObserverVector](#Astronomy.ObserverVector) | Calculates vector from the center of the Earth to an observer on the Earth's surface. |
 | [Equator](#Astronomy.Equator)         | Calculates right ascension and declination. |
 | [EquatorialToEcliptic](#Astronomy.EquatorialToEcliptic)       | Converts J2000 equatorial coordinates to J2000 ecliptic coordinates. |
 | [EclipticLongitude](#Astronomy.EclipticLongitude) | Calculates ecliptic longitude of a body in the J2000 system. |
 | [Horizon](#Astronomy.Horizon)         | Calculates horizontal coordinates (azimuth, altitude) for a given observer on the Earth. |
 | [PairLongitude](#Astronomy.PairLongitude) | Calculates the difference in apparent ecliptic longitude between two bodies, as seen from the Earth. |
 
+### Geographic helper functions
+
+| Function | Description |
+| -------- | ----------- |
+| [ObserverVector](#Astronomy.ObserverVector) | Calculates a vector from the center of the Earth to an observer on the Earth's surface. |
+| [VectorObserver](#Astronomy.VectorObserver) | Calculates the geographic coordinates for a geocentric equatorial vector. |
 ### Rise, set, and culmination times
 
 | Function | Description |
@@ -814,6 +819,8 @@ to the Earth's equator at the specified time.
 The returned vector has components expressed in astronomical units (AU).
 To convert to kilometers, multiply the `x`, `y`, and `z` values by
 the constant value [`Astronomy.KM_PER_AU`](#Astronomy.KM_PER_AU).
+
+The inverse of this function is also available: [`Astronomy.VectorObserver`](#Astronomy.VectorObserver).
 
 | Type | Parameter | Description |
 | --- | --- | --- |
@@ -1636,8 +1643,8 @@ includes the time, as required by the type [`AstroVector`](#AstroVector).
 **Calculates the geographic location corresponding to an equatorial vector.**
 
 This is the inverse function of [`Astronomy.ObserverVector`](#Astronomy.ObserverVector).
-Instead of converting [`Observer`](#Observer) to [`AstroVector`](#AstroVector),
-it converts `AstroVector` to `Observer`.
+Given a geocentric equatorial vector, it returns the geographic
+latitude, longitude, and elevation for that vector.
 
 | Type | Parameter | Description |
 | --- | --- | --- |

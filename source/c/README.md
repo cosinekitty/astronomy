@@ -50,12 +50,19 @@ To get started quickly, here are some [examples](../../demo/c/).
 | -------- | ----------- |
 | [HelioVector](#Astronomy_HelioVector) | Calculates body position vector with respect to the center of the Sun. |
 | [GeoVector](#Astronomy_GeoVector)     | Calculates body position vector with respect to the center of the Earth. |
-| [ObserverVector](#Astronomy_ObserverVector) | Calculates vector from the center of the Earth to an observer on the Earth's surface. |
 | [Equator](#Astronomy_Equator)         | Calculates right ascension and declination. |
 | [Ecliptic](#Astronomy_Ecliptic)       | Converts J2000 equatorial coordinates to J2000 ecliptic coordinates. |
 | [EclipticLongitude](#Astronomy_EclipticLongitude) | Calculates ecliptic longitude of a body in the J2000 system. |
 | [Horizon](#Astronomy_Horizon)         | Calculates horizontal coordinates (azimuth, altitude) for a given observer on the Earth. |
 | [PairLongitude](#Astronomy_PairLongitude) | Calculates the difference in apparent ecliptic longitude between two bodies, as seen from the Earth. |
+
+### Geographic helper functions
+
+| Function | Description |
+| -------- | ----------- |
+| [ObserverVector](#Astronomy_ObserverVector) | Calculates a vector from the center of the Earth to an observer on the Earth's surface. |
+| [VectorObserver](#Astronomy_VectorObserver) | Calculates the geographic coordinates for a geocentric equatorial vector. |
+
 
 ### Rise, set, and culmination times
 
@@ -1149,6 +1156,8 @@ This function calculates a vector from the center of the Earth to a point on or 
 The caller may pass a value in `equdate` to select either `EQUATOR_J2000` for using J2000 coordinates, or `EQUATOR_OF_DATE` for using coordinates relative to the Earth's equator at the specified time.
 
 The returned vector has components expressed in astronomical units (AU). To convert to kilometers, multiply the `x`, `y`, and `z` values by the constant value [`KM_PER_AU`](#KM_PER_AU).
+
+The inverse of this function is also available: [`Astronomy_VectorObserver`](#Astronomy_VectorObserver).
 
 
 
@@ -2342,7 +2351,7 @@ Calculates the non-negative length of the given vector. The length is expressed 
 
 
 
-This is the inverse function of [`Astronomy_ObserverVector`](#Astronomy_ObserverVector). Instead of converting [`astro_observer_t`](#astro_observer_t) to [`astro_vector_t`](#astro_vector_t), it converts `[`astro_vector_t`](#astro_vector_t)` to `[`astro_observer_t`](#astro_observer_t)`.
+This is the inverse function of [`Astronomy_ObserverVector`](#Astronomy_ObserverVector). Given a geocentric equatorial vector, it returns the geographic latitude, longitude, and elevation for that vector.
 
 
 

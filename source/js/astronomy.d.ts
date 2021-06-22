@@ -571,6 +571,8 @@ export declare function Equator(body: Body, date: FlexibleDateTime, observer: Ob
  * To convert to kilometers, multiply the `x`, `y`, and `z` values by
  * the constant value {@link KM_PER_AU}.
  *
+ * The inverse of this function is also available: #VectorObserver.
+ *
  * @param {FlexibleDateTime} date
  *      The date and time for which to calculate the observer's position vector.
  *
@@ -593,9 +595,9 @@ export declare function ObserverVector(date: FlexibleDateTime, observer: Observe
 /**
  * @brief Calculates the geographic location corresponding to an equatorial vector.
  *
- * This is the inverse function of #Vector.
- * Instead of converting #Observer to #Vector,
- * it converts `Vector` to `Observer`.
+ * This is the inverse function of #ObserverVector.
+ * Given a geocentric equatorial vector, it returns the geographic
+ * latitude, longitude, and elevation for that vector.
  *
  * @param {Vector} vector
  *      The geocentric equatorial position vector for which to find geographic coordinates.
@@ -605,10 +607,10 @@ export declare function ObserverVector(date: FlexibleDateTime, observer: Observe
  *
  * @param {boolean} ofdate
  *      Selects the date of the Earth's equator in which `vector` is expressed.
- *      The caller may select `EQUATOR_J2000` to use the orientation of the Earth's equator
+ *      The caller may select `false` to use the orientation of the Earth's equator
  *      at noon UTC on January 1, 2000, in which case this function corrects for precession
  *      and nutation of the Earth as it was at the moment specified by `vector.t`.
- *      Or the caller may select `EQUATOR_OF_DATE` to use the Earth's equator at `vector.t`
+ *      Or the caller may select `true` to use the Earth's equator at `vector.t`
  *      as the orientation.
  *
  * @returns {Observer}

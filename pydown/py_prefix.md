@@ -31,12 +31,18 @@ To get started quickly, here are some [examples](../../demo/python/).
 | -------- | ----------- |
 | [HelioVector](#HelioVector) | Calculates body position vector with respect to the center of the Sun. |
 | [GeoVector](#GeoVector)     | Calculates body position vector with respect to the center of the Earth. |
-| [ObserverVector](#ObserverVector) | Calculates vector from the center of the Earth to an observer on the Earth's surface. |
 | [Equator](#Equator)         | Calculates right ascension and declination. |
 | [Ecliptic](#Ecliptic)       | Converts J2000 equatorial coordinates to J2000 ecliptic coordinates. |
 | [EclipticLongitude](#EclipticLongitude) | Calculates ecliptic longitude of a body in the J2000 system. |
 | [Horizon](#Horizon)         | Calculates horizontal coordinates (azimuth, altitude) for a given observer on the Earth. |
 | [PairLongitude](#PairLongitude) | Calculates the difference in apparent ecliptic longitude between two bodies, as seen from the Earth. |
+
+### Geographic helper functions
+
+| Function | Description |
+| -------- | ----------- |
+| [ObserverVector](#ObserverVector) | Calculates a vector from the center of the Earth to an observer on the Earth's surface. |
+| [VectorObserver](#VectorObserver) | Calculates the geographic coordinates for a geocentric equatorial vector. |
 
 ### Rise, set, and culmination times
 
