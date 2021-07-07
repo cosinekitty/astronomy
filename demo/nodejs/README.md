@@ -30,6 +30,14 @@ Culmination is also the moment a body crosses the *meridian*, the imaginary semi
 in the sky that passes from due north on the horizon, through the zenith (straight up),
 and then toward due south on the horizon.
 
+### [Equator of Date](equator_of_date.js)
+Given the right ascension and declination of a star,
+expressed in J2000 coordinates, converts those coordinates
+to right ascension and declination expressed in the Earth's
+equator at any given date and time. This example illustrates
+how to use rotation matrices to convert one coordinate system
+to another.
+
 ### [Horizon Intersection](horizon.js)
 This is a more advanced example. It shows how to use coordinate
 transforms to find where the ecliptic intersects with an observer's

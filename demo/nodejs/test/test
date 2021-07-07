@@ -11,6 +11,10 @@ echo "Testing example: equatorial.js"
 node equatorial.js 38.1256 -89.5544 215.7 23.5 2021-03-27T18:45:00Z > test/equatorial.txt || Fail "Error testing equatorial.js."
 diff test/equatorial.txt test/equatorial_correct.txt || Fail "Error comparing equatorial.js output."
 
+echo "Testing example: equator_of_date.js"
+node equator_of_date.js 2021-07-06T00:00:00Z 12 45 > test/equator_of_date.txt || Fail "Error testing equator_of_date.js"
+diff test/equator_of_date.txt test/equator_of_date_correct.txt || Fail "Error comparing equator_of_date.js output."
+
 echo "Testing example: camera.js"
 node camera.js 29 -81 2021-03-22T02:45:00Z > test/camera.txt || Fail "Error testing camera.js."
 diff test/camera.txt test/camera_correct.txt || Fail "Error comparing camera.js output."

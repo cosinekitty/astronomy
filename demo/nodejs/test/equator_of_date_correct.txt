@@ -1,0 +1,1 @@
+Equator-of-date coordinates: RA=12.0181, DEC=44.8820
