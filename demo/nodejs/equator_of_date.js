@@ -6,14 +6,15 @@
 */
 
 const UsageText = `
-USAGE:  node equator_of_date.js yyyy-mm-ddThh:mm:ssZ ra dec
+USAGE:  node equator_of_date.js ra dec [yyyy-mm-ddThh:mm:ssZ]
 
 Converts J2000 equatorial coordinates to
 equator-of-date coordinates.
 
-yyyy-mm-ddThh:mm:ssZ = The date and time in UTC.
 ra  = J2000 Right ascension in sidereal hours (0 .. 24).
 dec = J2000 Declination in degrees (-90 .. +90).
+yyyy-mm-ddThh:mm:ssZ = Optional date and time in UTC.
+(If omitted, the current date and time are used.)
 
 This program prints out the right ascension and declination
 of the same point in the sky, but expressed in the Earth's
@@ -41,14 +42,16 @@ function ParseDate(text) {
 }
 
 function Demo() {
-    if (process.argv.length !== 5) {
+    if (process.argv.length < 4 || process.argv.length > 5) {
         console.log(UsageText);
         process.exit(1);
     } else {
         // Parse the command line arguments.
-        const time = Astronomy.MakeTime(ParseDate(process.argv[2]));
-        const ra = ParseNumber("RA", process.argv[3], 0, 24);
-        const dec = ParseNumber("DEC", process.argv[4], -90, +90);
+        const ra = ParseNumber("RA", process.argv[2], 0, 24);
+        const dec = ParseNumber("DEC", process.argv[3], -90, +90);
+        const date = (process.argv.length > 4) ? ParseDate(process.argv[4]) : new Date();
+        const time = Astronomy.MakeTime(date);
+        console.log(`time = ${time}`);
 
         // Create a rotation matrix that converts J2000 equatorial (EQJ)
         // orientation to equator-of-date (EQD) orientation.
