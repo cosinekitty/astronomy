@@ -261,6 +261,31 @@ This function calculates the angular separation between the given body and the S
 
 ---
 
+<a name="Astronomy_BaryState"></a>
+### Astronomy_BaryState(body, time) &#8658; [`astro_state_vector_t`](#astro_state_vector_t)
+
+**Calculates barycentric position and velocity vectors for the given body.** 
+
+
+
+Given a body and a time, calculates the barycentric position and velocity vectors for the center of that body at that time. The vectors are expressed in equatorial J2000 coordinates (EQJ).
+
+
+
+**Returns:**  A structure that contains barycentric position and velocity vectors. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_body_t`](#astro_body_t) | `body` |  The celestial body whose barycentric state vector is to be calculated. Supported values are `BODY_SUN`, `BODY_SSB`, and all planets except Pluto: `BODY_MERCURY`, `BODY_VENUS`, `BODY_EARTH`, `BODY_MARS`, `BODY_JUPITER`, `BODY_SATURN`, `BODY_URANUS`, `BODY_NEPTUNE`.  | 
+| [`astro_time_t`](#astro_time_t) | `time` |  The date and time for which to calculate position and velocity.  | 
+
+
+
+
+---
+
 <a name="Astronomy_BodyCode"></a>
 ### Astronomy_BodyCode(name) &#8658; [`astro_body_t`](#astro_body_t)
 

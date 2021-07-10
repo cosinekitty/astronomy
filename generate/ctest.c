@@ -132,6 +132,7 @@ static int GeoidTest(void);
 static int JupiterMoonsTest(void);
 static int Issue103(void);
 static int AberrationTest(void);
+static int BaryStateTest(void);
 
 typedef int (* unit_test_func_t) (void);
 
@@ -145,6 +146,7 @@ unit_test_t;
 static unit_test_t UnitTests[] =
 {
     {"aberration",              AberrationTest},
+    {"barystate",               BaryStateTest},
     {"check",                   AstroCheck},
     {"constellation",           ConstellationTest},
     {"earth_apsis",             EarthApsis},
@@ -3974,7 +3976,7 @@ static int GeoidTestCase(astro_time_t time, astro_observer_t observer, astro_equ
     }
 
     h_diff = ABS(vobs.height - observer.height);
-    DEBUG("C GeoidTestCase: vobs=(lat=%lf, lon=%lf, height=%lf), lat_diff=%lg, lon_diff=%lg, h_diff=%lg\n", 
+    DEBUG("C GeoidTestCase: vobs=(lat=%lf, lon=%lf, height=%lf), lat_diff=%lg, lon_diff=%lg, h_diff=%lg\n",
         vobs.latitude, vobs.longitude, vobs.height, lat_diff, lon_diff, h_diff);
 
     if (lat_diff > 1.0e-6)
@@ -4315,6 +4317,129 @@ static int AberrationTest(void)
     error = 0;
 fail:
     if (infile != NULL) fclose(infile);
+    return error;
+}
+
+/*-----------------------------------------------------------------------------------------------------------*/
+
+static int VerifyBaryState(
+    astro_body_t body,
+    const char *filename,
+    int lnum,
+    astro_time_t time,
+    double pos[3],
+    double vel[3])
+{
+    return 0;
+}
+
+static int BaryStateBody(astro_body_t body, const char *filename)
+{
+    int error, lnum, nscanned;
+    int found_begin = 0;
+    int found_end = 0;
+    int count = 0;
+    int part = 0;
+    FILE *infile = NULL;
+    char line[100];
+    astro_time_t time;
+    double jd, pos[3], vel[3];
+
+    infile = fopen(filename, "rt");
+    if (infile == NULL)
+        FAIL("C BaryStateBody: Cannot open input file: %s\n", filename);
+
+    lnum = 0;
+    while (!found_end && ReadLine(line, sizeof(line), infile, filename, lnum))
+    {
+        ++lnum;
+        if (!found_begin)
+        {
+            if (strlen(line) >= 5 && !memcmp(line, "$$SOE", 5))
+                found_begin = 1;
+        }
+        else
+        {
+            /*
+                Input comes in triplets of lines:
+
+                2444249.500000000 = A.D. 1980-Jan-11 00:00:00.0000 TDB
+                 X =-3.314860345089456E-01 Y = 8.463418210972562E-01 Z = 3.667227830514760E-01
+                 VX=-1.642704711077836E-02 VY=-5.494770742558920E-03 VZ=-2.383170237527642E-03
+
+                Track which of these 3 cases we are in using the 'part' variable...
+            */
+
+            switch (part)
+            {
+            case 0:
+                if (strlen(line) >= 5 && !memcmp(line, "$$EOE", 5))
+                {
+                    found_end = 1;
+                }
+                else
+                {
+                    nscanned = sscanf(line, "%lf", &jd);
+                    if (nscanned != 1)
+                        FAIL("C BaryStateBody(%s line %d) ERROR reading Julian date.\n", filename, lnum);
+                    V(jd);
+
+                    /* Convert julian day value to astro_time_t. */
+                    time = Astronomy_TimeFromDays(jd - 2451545.0);
+                }
+                break;
+
+            case 1:
+                nscanned = sscanf(line, " X =%lf Y =%lf Z =%lf", &pos[0], &pos[1], &pos[2]);
+                if (nscanned != 3)
+                    FAIL("C BaryStateBody(%s line %d) ERROR reading position vector.\n", filename, lnum);
+                V(pos[0]);
+                V(pos[1]);
+                V(pos[2]);
+                break;
+
+            case 2:
+                nscanned = sscanf(line, " VX=%lf VY=%lf VZ=%lf", &vel[0], &vel[1], &vel[2]);
+                if (nscanned != 3)
+                    FAIL("C BaryStateBody(%s line %d) ERROR reading velocity vector.\n", filename, lnum);
+                V(vel[0]);
+                V(vel[1]);
+                V(vel[2]);
+                CHECK(VerifyBaryState(body, filename, lnum, time, pos, vel));
+                ++count;
+                break;
+
+            default:
+                FAIL("C BaryStateBody: INTERNAL ERROR : part=%d\n", part);
+            }
+
+            part = (part + 1) % 3;
+        }
+    }
+
+    DEBUG("C BaryStateBody(%s): PASS - Tested %d cases.\n", filename, count);
+    error = 0;
+fail:
+    if (infile != NULL) fclose(infile);
+    return error;
+}
+
+static int BaryStateTest(void)
+{
+    int error;  /* set as a side-effect of CHECK macro */
+
+    CHECK(BaryStateBody(BODY_SUN,     "barystate/Sun.txt"));
+    CHECK(BaryStateBody(BODY_MERCURY, "barystate/Mercury.txt"));
+    CHECK(BaryStateBody(BODY_VENUS,   "barystate/Venus.txt"));
+    CHECK(BaryStateBody(BODY_EARTH,   "barystate/Earth.txt"));
+    CHECK(BaryStateBody(BODY_MARS,    "barystate/Mars.txt"));
+    CHECK(BaryStateBody(BODY_JUPITER, "barystate/Jupiter.txt"));
+    CHECK(BaryStateBody(BODY_SATURN,  "barystate/Saturn.txt"));
+    CHECK(BaryStateBody(BODY_URANUS,  "barystate/Uranus.txt"));
+    CHECK(BaryStateBody(BODY_NEPTUNE, "barystate/Neptune.txt"));
+
+    printf("C BaryStateTest: PASS\n");
+fail:
     return error;
 }
 
