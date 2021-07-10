@@ -1,2 +1,2 @@
 time = 2021-07-06T00:00:00.000Z
-Equator-of-date coordinates: RA=12.0181, DEC=44.8820
+Equator-of-date coordinates: RA=12.018143, DEC=44.881965

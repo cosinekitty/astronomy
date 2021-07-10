@@ -131,6 +131,7 @@ static int DistancePlot(astro_body_t body, double ut1, double ut2, const char *f
 static int GeoidTest(void);
 static int JupiterMoonsTest(void);
 static int Issue103(void);
+static int AberrationTest(void);
 
 typedef int (* unit_test_func_t) (void);
 
@@ -143,6 +144,7 @@ unit_test_t;
 
 static unit_test_t UnitTests[] =
 {
+    {"aberration",              AberrationTest},
     {"check",                   AstroCheck},
     {"constellation",           ConstellationTest},
     {"earth_apsis",             EarthApsis},
@@ -4226,6 +4228,94 @@ static int Issue103(void)
     printf("alt = %23.16lf\n", hor.altitude);
 
     return 0;
+}
+
+/*-----------------------------------------------------------------------------------------------------------*/
+
+static int AberrationTest(void)
+{
+    int error, lnum, nscanned;
+    int found_begin = 0;
+    int found_end = 0;
+    int count = 0;
+    FILE *infile = NULL;
+    const char *filename = "equatorial/Mars_j2000_ofdate_aberration.txt";
+    char line[100];
+    double jd, jra, jdec, dra, ddec, xra, xdec;
+    astro_time_t time;
+    astro_rotation_t rot;
+    astro_spherical_t eqj_sphere, eqd_sphere;
+    astro_vector_t eqj_vec, eqd_vec;
+    double factor, diff_seconds;
+
+    infile = fopen(filename, "rt");
+    if (infile == NULL)
+        FAIL("C AberrationTest: Cannot open input file: %s\n", filename);
+
+    lnum = 0;
+    while (!found_end && ReadLine(line, sizeof(line), infile, filename, lnum))
+    {
+        ++lnum;
+        if (!found_begin)
+        {
+            if (strlen(line) >= 5 && !memcmp(line, "$$SOE", 5))
+                found_begin = 1;
+        }
+        else if (strlen(line) >= 5 && !memcmp(line, "$$EOE", 5))
+        {
+            found_end = 1;
+        }
+        else
+        {
+            /* 2459371.500000000 *   118.566080210  22.210647456 118.874086738  22.155784122 */
+            nscanned = sscanf(line+22, "%lf %lf %lf %lf", &jra, &jdec, &dra, &ddec);
+            if (nscanned != 4)
+                FAIL("C AberrationTest(%s line %d): invalid coordinates\n", filename, lnum);
+
+            nscanned = sscanf(line, "%lf", &jd);
+            if (nscanned != 1)
+                FAIL("C AberrationTest(%s line %d): invalid julian date\n", filename, lnum);
+
+            /* Convert julian day value to astro_time_t. */
+            time = Astronomy_TimeFromDays(jd - 2451545.0);
+
+            /* Convert EQJ angular coordinates (jra, jdec) to an EQJ vector. */
+            eqj_sphere.status = ASTRO_SUCCESS;
+            eqj_sphere.lat = jdec;
+            eqj_sphere.lon = jra;   /* JPL Horizons RA is already in degrees, not hours. */
+            eqj_sphere.dist = 1.0;  /* make a unit vector */
+            eqj_vec = Astronomy_VectorFromSphere(eqj_sphere, time);
+            CHECK_STATUS(eqj_vec);
+
+            /* Calculate the rotation matrix that converts J2000 coordinates to of-date coordinates. */
+            rot = Astronomy_Rotation_EQJ_EQD(time);
+            CHECK_STATUS(rot);
+
+            /* Use the rotation matrix to re-orient the EQJ vector to a EQD vector. */
+            eqd_vec = Astronomy_RotateVector(rot, eqj_vec);
+            CHECK_STATUS(eqd_vec);
+
+            /* Convert the EQD vector back to spherical angular coordinates. */
+            eqd_sphere = Astronomy_SphereFromVector(eqd_vec);
+            CHECK_STATUS(eqd_sphere);
+
+            /* Calculate the differences in RA and DEC between expected and calculated values. */
+            factor = cos(V(eqd_sphere.lat * DEG2RAD));  /* RA errors are less important toward the poles */
+            xra = factor * ABS(eqd_sphere.lon - dra);
+            xdec = ABS(eqd_sphere.lat - ddec);
+            diff_seconds = V(3600.0 * sqrt(xra*xra + xdec*xdec));
+            DEBUG("C AberrationTest(%s line %d): xra=%0.6lf deg, xdec=%0.6lf deg, diff_seconds=%0.3lf.\n", filename, lnum, xra, xdec, diff_seconds);
+
+            /* We have completed one more test case. */
+            ++count;
+        }
+    }
+
+    printf("C AberrationTest: PASS - Tested %d cases.\n", count);
+    error = 0;
+fail:
+    if (infile != NULL) fclose(infile);
+    return error;
 }
 
 /*-----------------------------------------------------------------------------------------------------------*/

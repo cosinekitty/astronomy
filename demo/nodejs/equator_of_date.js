@@ -65,13 +65,13 @@ function Demo() {
         // Use the rotation matrix to re-orient the EQJ vector to a EQD vector.
         const eqd_vec = Astronomy.RotateVector(rot, eqj_vec);
 
-        // Convert the EQJ vector back to spherical angular coordinates.
+        // Convert the EQD vector back to spherical angular coordinates.
         const eqd_sphere = Astronomy.SphereFromVector(eqd_vec);
 
         // Print out the converted angular coordinates.
         const eqd_ra = eqd_sphere.lon / 15;     // convert degrees to sidereal hours
         const eqd_dec = eqd_sphere.lat;
-        console.log(`Equator-of-date coordinates: RA=${eqd_ra.toFixed(4)}, DEC=${eqd_dec.toFixed(4)}`);
+        console.log(`Equator-of-date coordinates: RA=${eqd_ra.toFixed(6)}, DEC=${eqd_dec.toFixed(6)}`);
 
         // Success!
         process.exit(0);
