@@ -4248,7 +4248,9 @@ static int AberrationTest(void)
     astro_rotation_t rot;
     astro_spherical_t eqj_sphere, eqd_sphere;
     astro_vector_t eqj_vec, eqd_vec;
-    double factor, diff_seconds;
+    double factor, diff_seconds, max_diff_seconds = 0.0;
+    astro_state_vector_t eqj_earth;
+    const double THRESHOLD_SECONDS = 0.4;
 
     infile = fopen(filename, "rt");
     if (infile == NULL)
@@ -4284,10 +4286,20 @@ static int AberrationTest(void)
             /* Convert EQJ angular coordinates (jra, jdec) to an EQJ vector. */
             eqj_sphere.status = ASTRO_SUCCESS;
             eqj_sphere.lat = jdec;
-            eqj_sphere.lon = jra;   /* JPL Horizons RA is already in degrees, not hours. */
-            eqj_sphere.dist = 1.0;  /* make a unit vector */
+            eqj_sphere.lon = jra;       /* JPL Horizons RA is already in degrees, not hours. */
+            eqj_sphere.dist = C_AUDAY;  /* scale to the speed of light, to prepare for aberration correction. */
             eqj_vec = Astronomy_VectorFromSphere(eqj_sphere, time);
             CHECK_STATUS(eqj_vec);
+
+            /* Aberration correction: calculate the Earth's barycentric velocity vector in EQJ coordinates. */
+            eqj_earth = Astronomy_BaryState(BODY_EARTH, time);
+            CHECK_STATUS(eqj_earth);
+
+            /* Use non-relativistic approximation: add light vector to Earth velocity vector. */
+            /* This gives aberration-corrected apparent position of the star in EQJ. */
+            eqj_vec.x += eqj_earth.vx;
+            eqj_vec.y += eqj_earth.vy;
+            eqj_vec.z += eqj_earth.vz;
 
             /* Calculate the rotation matrix that converts J2000 coordinates to of-date coordinates. */
             rot = Astronomy_Rotation_EQJ_EQD(time);
@@ -4307,13 +4319,17 @@ static int AberrationTest(void)
             xdec = ABS(eqd_sphere.lat - ddec);
             diff_seconds = V(3600.0 * sqrt(xra*xra + xdec*xdec));
             DEBUG("C AberrationTest(%s line %d): xra=%0.6lf deg, xdec=%0.6lf deg, diff_seconds=%0.3lf.\n", filename, lnum, xra, xdec, diff_seconds);
+            if (diff_seconds > THRESHOLD_SECONDS)
+                FAIL("C AberrationTest(%s line %d): EXCESSIVE ANGULAR ERROR = %0.3lf seconds\n", filename, lnum, diff_seconds);
+            if (diff_seconds > max_diff_seconds)
+                max_diff_seconds = diff_seconds;
 
             /* We have completed one more test case. */
             ++count;
         }
     }
 
-    printf("C AberrationTest: PASS - Tested %d cases.\n", count);
+    printf("C AberrationTest: PASS - Tested %d cases. max_diff_seconds = %0.3lf\n", count, max_diff_seconds);
     error = 0;
 fail:
     if (infile != NULL) fclose(infile);

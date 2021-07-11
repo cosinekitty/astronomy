@@ -37,6 +37,13 @@ extern "C" {
 /*---------- numeric constants ----------*/
 
 /**
+ * \def C_AUDAY
+ * @brief The speed of light in AU/day.
+ */
+#define C_AUDAY     173.1446326846693
+
+
+/**
  * \def KM_PER_AU
  * @brief The number of kilometers in one astronomical unit (AU).
  */

@@ -2413,6 +2413,21 @@ This is the inverse function of [`Astronomy_ObserverVector`](#Astronomy_Observer
 
 ---
 
+<a name="C_AUDAY"></a>
+### `C_AUDAY`
+
+**The speed of light in AU/day.** 
+
+
+
+```C
+#define C_AUDAY  173.1446326846693
+```
+
+
+
+---
+
 <a name="DEG2RAD"></a>
 ### `DEG2RAD`
 
