@@ -33,6 +33,10 @@
  */
 'use strict';
 /**
+ * @brief The speed of light in AU/day.
+ */
+export const C_AUDAY = 173.1446326846693;
+/**
  * @brief The number of kilometers per astronomical unit.
  */
 export const KM_PER_AU = 1.4959787069098932e+8;
@@ -89,7 +93,6 @@ const DAYS_PER_TROPICAL_YEAR = 365.24217;
 const J2000 = new Date('2000-01-01T12:00:00Z');
 const PI2 = 2 * Math.PI;
 const ARC = 3600 * (180 / Math.PI); // arcseconds per radian
-const C_AUDAY = 173.1446326846693; // speed of light in AU/day
 const ASEC2RAD = 4.848136811095359935899141e-6;
 const ASEC180 = 180 * 60 * 60; // arcseconds per 180 degrees (or pi radians)
 const ASEC360 = 2 * ASEC180; // arcseconds per 360 degrees (or 2*pi radians)
@@ -3227,6 +3230,54 @@ export function GeoVector(body, date, aberration) {
         ltime = ltime2;
     }
     throw `Light-travel time solver did not converge: dt=${dt}`;
+}
+function ExportState(terse, time) {
+    return new StateVector(terse.r.x, terse.r.y, terse.r.z, terse.v.x, terse.v.y, terse.v.z, time);
+}
+/**
+ * @brief  Calculates barycentric position and velocity vectors for the given body.
+ *
+ * Given a body and a time, calculates the barycentric position and velocity
+ * vectors for the center of that body at that time.
+ * The vectors are expressed in equatorial J2000 coordinates (EQJ).
+ *
+ * @param {Body} body
+ *      The celestial body whose barycentric state vector is to be calculated.
+ *      Supported values are `Body.Sun`, `Body.SSB`, and all planets except Pluto:
+ *      `Body.Mercury`, `Body.Venus`, `Body.Earth`, `Body.Mars`, `Body.Jupiter`,
+ *      `Body.Saturn`, `Body.Uranus`, `Body.Neptune`.
+ * @param {FlexibleDateTime} date
+ *      The date and time for which to calculate position and velocity.
+ * @returns {StateVector}
+ *      An object that contains barycentric position and velocity vectors.
+ */
+export function BaryState(body, date) {
+    const time = MakeTime(date);
+    if (body == Body.SSB) {
+        // Trivial case: the solar system barycenter itself.
+        return new StateVector(0, 0, 0, 0, 0, 0, time);
+    }
+    // Find the barycentric positions and velocities for the 5 major bodies:
+    // Sun, Jupiter, Saturn, Uranus, Neptune.
+    const bary = new major_bodies_t(time.tt);
+    // If the caller is asking for one of the major bodies, we can immediately return the answer.
+    switch (body) {
+        case Body.Sun: return ExportState(bary.Sun, time);
+        case Body.Jupiter: return ExportState(bary.Jupiter, time);
+        case Body.Saturn: return ExportState(bary.Saturn, time);
+        case Body.Uranus: return ExportState(bary.Uranus, time);
+        case Body.Neptune: return ExportState(bary.Neptune, time);
+    }
+    // Otherwise, we need to calculate the heliocentric state of the given body
+    // and add the Sun's heliocentric state to obtain the body's barycentric state.
+    // BarySun + HelioBody = BaryBody
+    // Handle the remaining VSOP bodies: Mercury, Venus, Earth, Mars.
+    if (body in vsop) {
+        const planet = CalcVsopPosVel(vsop[body], time.tt);
+        return new StateVector(bary.Sun.r.x + planet.r.x, bary.Sun.r.y + planet.r.y, bary.Sun.r.z + planet.r.z, bary.Sun.v.x + planet.v.x, bary.Sun.v.y + planet.v.y, bary.Sun.v.z + planet.v.z, time);
+    }
+    // FIXFIXFIX: later, we can add support for Pluto, Moon, EMB, etc.
+    throw `BaryState: Unsupported body "${body}"`;
 }
 function QuadInterp(tm, dt, fa, fm, fb) {
     let Q = (fb + fa) / 2 - fm;

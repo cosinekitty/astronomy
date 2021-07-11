@@ -4376,10 +4376,10 @@ static int VerifyBaryState(
         *max_vdiff = vdiff;
 
     if (rdiff > r_thresh)
-        FAIL("C VerifyBaryState(%s line %d): EXCESSIVE position error = %lg\n", filename, lnum, rdiff);
+        FAIL("C VerifyBaryState(%s line %d): EXCESSIVE position error = %0.4le\n", filename, lnum, rdiff);
 
     if (vdiff > v_thresh)
-        FAIL("C VerifyBaryState(%s line %d): EXCESSIVE velocity error = %lg\n", filename, lnum, vdiff);
+        FAIL("C VerifyBaryState(%s line %d): EXCESSIVE velocity error = %0.4le\n", filename, lnum, vdiff);
 
     error = 0;
 fail:
@@ -4438,8 +4438,8 @@ static int BaryStateBody(astro_body_t body, const char *filename, double r_thres
                         FAIL("C BaryStateBody(%s line %d) ERROR reading Julian date.\n", filename, lnum);
                     V(jd);
 
-                    /* Convert julian day value to astro_time_t. */
-                    time = Astronomy_TimeFromDays(jd - 2451545.0);
+                    /* Convert julian TT day value to astro_time_t. */
+                    time = Astronomy_TerrestrialTime(jd - 2451545.0);
                 }
                 break;
 
@@ -4471,7 +4471,7 @@ static int BaryStateBody(astro_body_t body, const char *filename, double r_thres
         }
     }
 
-    DEBUG("C BaryStateBody(%s): PASS - Tested %d cases. max rdiff=%le, vdiff=%le\n", filename, count, max_rdiff, max_vdiff);
+    DEBUG("C BaryStateBody(%s): PASS - Tested %d cases. max rdiff=%0.3le, vdiff=%0.3le\n", filename, count, max_rdiff, max_vdiff);
     error = 0;
 fail:
     if (infile != NULL) fclose(infile);
@@ -4483,14 +4483,14 @@ static int BaryStateTest(void)
     int error;  /* set as a side-effect of CHECK macro */
 
     CHECK(BaryStateBody(BODY_SUN,     "barystate/Sun.txt",      1.23e-5,  1.14e-7));
-    CHECK(BaryStateBody(BODY_MERCURY, "barystate/Mercury.txt",  7.08e-5,  1.00e-5));
-    CHECK(BaryStateBody(BODY_VENUS,   "barystate/Venus.txt",    3.94e-5,  1.17e-6));
-    CHECK(BaryStateBody(BODY_EARTH,   "barystate/Earth.txt",    2.99e-5,  1.14e-6));
-    CHECK(BaryStateBody(BODY_MARS,    "barystate/Mars.txt",     5.10e-5,  9.16e-7));
-    CHECK(BaryStateBody(BODY_JUPITER, "barystate/Jupiter.txt",  3.70e-4,  1.79e-6));
+    CHECK(BaryStateBody(BODY_MERCURY, "barystate/Mercury.txt",  5.24e-5,  8.22e-6));
+    CHECK(BaryStateBody(BODY_VENUS,   "barystate/Venus.txt",    2.98e-5,  8.22e-6));
+    CHECK(BaryStateBody(BODY_EARTH,   "barystate/Earth.txt",    2.30e-5,  1.09e-6));
+    CHECK(BaryStateBody(BODY_MARS,    "barystate/Mars.txt",     4.34e-5,  8.23e-7));
+    CHECK(BaryStateBody(BODY_JUPITER, "barystate/Jupiter.txt",  3.74e-4,  1.78e-6));
     CHECK(BaryStateBody(BODY_SATURN,  "barystate/Saturn.txt",   1.07e-3,  1.71e-6));
-    CHECK(BaryStateBody(BODY_URANUS,  "barystate/Uranus.txt",   1.70e-3,  1.03e-6));
-    CHECK(BaryStateBody(BODY_NEPTUNE, "barystate/Neptune.txt",  2.96e-3,  1.39e-6));
+    CHECK(BaryStateBody(BODY_URANUS,  "barystate/Uranus.txt",   1.71e-3,  1.03e-6));
+    CHECK(BaryStateBody(BODY_NEPTUNE, "barystate/Neptune.txt",  2.95e-3,  1.39e-6));
 
     printf("C BaryStateTest: PASS\n");
 fail:

@@ -2082,7 +2082,119 @@ function Issue103() {
 }
 
 
+function StateVectorDiff(vec, x, y, z) {
+    const dx = v(vec[0] - x);
+    const dy = v(vec[1] - y);
+    const dz = v(vec[2] - z);
+    const ds = v(Math.sqrt(dx*dx + dy*dy + dz*dz));
+    return ds;
+}
+
+
+function VerifyBaryState(score, body, filename, lnum, time, pos, vel, r_thresh, v_thresh) {
+    const state = Astronomy.BaryState(body, time);
+
+    const rdiff = StateVectorDiff(pos, state.x, state.y, state.z);
+    if (rdiff > score.max_rdiff)
+        score.max_rdiff = rdiff;
+
+    const vdiff = StateVectorDiff(vel, state.vx, state.vy, state.vz);
+    if (vdiff > score.max_vdiff)
+        score.max_vdiff = vdiff;
+
+    if (rdiff > r_thresh) {
+        console.error(`JS VerifyBaryState(${filename} line ${lnum}): EXCESSIVE POSITION ERROR = ${rdiff.toExponential(3)}`);
+        return 1;
+    }
+
+    if (vdiff > v_thresh) {
+        console.error(`JS VerifyBaryState(${filename} line ${lnum}): EXCESSIVE VELOCITY ERROR = ${vdiff.toExponential(3)}`);
+        return 1;
+    }
+
+    return 0;
+}
+
+
+function BaryStateBody(body, filename, r_thresh, v_thresh) {
+    const text = fs.readFileSync(filename, {encoding:'utf8'});
+    const lines = text.split(/\r?\n/);
+    let lnum = 0;
+    let found = false;
+    let part = -1;
+    let count = 0;
+    let tt, match, pos, vel, time;
+    let score = { max_rdiff:0, max_vdiff:0 };
+    for (let line of lines) {
+        ++lnum;
+        if (!found) {
+            if (line == '$$SOE') {
+                found = true;
+                part = 0;
+            }
+        } else if (line == '$$EOE') {
+            break;
+        } else {
+            switch (part) {
+            case 0:
+                // 2446545.000000000 = A.D. 1986-Apr-24 12:00:00.0000 TDB
+                tt = float(line.split()[0]) - 2451545.0;    // convert JD to J2000 TT
+                time = Astronomy.AstroTime.FromTerrestrialTime(tt);
+                break;
+
+            case 1:
+                // X = 1.134408131605554E-03 Y =-2.590904586750408E-03 Z =-7.490427225904720E-05
+                match = /\s*X =\s*(\S+) Y =\s*(\S+) Z =\s*(\S+)/.exec(line);
+                if (!match) {
+                    console.error(`JS BaryStateBody(${filename} line ${lnum}): cannot parse position vector.`);
+                    return 1;
+                }
+                pos = [ float(match[1]), float(match[2]), float(match[3]) ];
+                break;
+
+            case 2:
+                // VX= 9.148038778472862E-03 VY= 3.973823407182510E-03 VZ= 2.765660368640458E-04
+                match = /\s*VX=\s*(\S+) VY=\s*(\S+) VZ=\s*(\S+)/.exec(line);
+                if (!match) {
+                    console.error(`JS BaryStateBody(${filename} line ${lnum}): cannot parse velocity vector.`);
+                    return 1;
+                }
+                vel = [ float(match[1]), float(match[2]), float(match[3]) ];
+                if (VerifyBaryState(score, body, filename, lnum, time, pos, vel, r_thresh, v_thresh))
+                    return 1;
+                ++count;
+                break;
+
+            default:
+                console.error(`JS BaryStateBody(${filename} line ${lnum}): unexpected part = ${part}`);
+                return 1;
+            }
+            part = (part + 1) % 3;
+        }
+    }
+
+    if (Verbose) console.debug(`JS BaryStateBody(${filename}): PASS - Tested ${count} cases. max rdiff=${score.max_rdiff.toExponential(3)}, vdiff=${score.max_vdiff.toExponential(3)}`);
+    return 0;
+}
+
+
+function BaryStateTest() {
+    if (BaryStateBody(Astronomy.Body.Sun,     'barystate/Sun.txt',      1.23e-5,  1.14e-7)) return 1;
+    if (BaryStateBody(Astronomy.Body.Mercury, 'barystate/Mercury.txt',  5.24e-5,  8.22e-6)) return 1;
+    if (BaryStateBody(Astronomy.Body.Venus,   'barystate/Venus.txt',    2.98e-5,  8.22e-6)) return 1;
+    if (BaryStateBody(Astronomy.Body.Earth,   'barystate/Earth.txt',    2.30e-5,  1.09e-6)) return 1;
+    if (BaryStateBody(Astronomy.Body.Mars,    'barystate/Mars.txt',     4.34e-5,  8.23e-7)) return 1;
+    if (BaryStateBody(Astronomy.Body.Jupiter, 'barystate/Jupiter.txt',  3.74e-4,  1.78e-6)) return 1;
+    if (BaryStateBody(Astronomy.Body.Saturn,  'barystate/Saturn.txt',   1.07e-3,  1.71e-6)) return 1;
+    if (BaryStateBody(Astronomy.Body.Uranus,  'barystate/Uranus.txt',   1.71e-3,  1.03e-6)) return 1;
+    if (BaryStateBody(Astronomy.Body.Neptune, 'barystate/Neptune.txt',  2.95e-3,  1.39e-6)) return 1;
+    console.log('JS BaryStateTest: PASS');
+    return 0;
+}
+
+
 const UnitTests = {
+    barystate:              BaryStateTest,
     constellation:          Constellation,
     elongation:             Elongation,
     geoid:                  Geoid,
