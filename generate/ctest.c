@@ -4329,7 +4329,7 @@ static int AberrationTest(void)
         }
     }
 
-    printf("C AberrationTest: PASS - Tested %d cases. max_diff_seconds = %0.3lf\n", count, max_diff_seconds);
+    printf("C AberrationTest(%s): PASS - Tested %d cases. max_diff_seconds = %0.3lf\n", filename, count, max_diff_seconds);
     error = 0;
 fail:
     if (infile != NULL) fclose(infile);

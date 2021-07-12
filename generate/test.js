@@ -1929,9 +1929,9 @@ function Geoid() {
     let observer, time;
     for (observer of observer_list) {
         for (time of time_list) {
-            if (0 != GeoidTestCase(time, observer, false)) 
+            if (0 != GeoidTestCase(time, observer, false))
                 return 1;
-            if (0 != GeoidTestCase(time, observer, true))  
+            if (0 != GeoidTestCase(time, observer, true))
                 return 1;
         }
     }
@@ -1942,7 +1942,7 @@ function Geoid() {
     for (let lat = -90; lat <= +90; lat += 1) {
         for (let lon = -175; lon <= +180; lon += 5) {
             observer = new Astronomy.Observer(lat, lon, 0.0);
-            if (0 != GeoidTestCase(time, observer, true)) 
+            if (0 != GeoidTestCase(time, observer, true))
                 return 1;
         }
     }
@@ -2082,6 +2082,79 @@ function Issue103() {
 }
 
 
+function AberrationTest() {
+    const THRESHOLD_SECONDS = 0.4;
+    const filename = 'equatorial/Mars_j2000_ofdate_aberration.txt';
+    const text = fs.readFileSync(filename, {encoding:'utf8'});
+    const lines = text.split(/\r?\n/);
+    let lnum = 0;
+    let found_begin = false;
+    let max_diff_seconds = 0;
+    let count = 0;
+    for (let line of lines) {
+        ++lnum;
+        if (!found_begin) {
+            if (line === '$$SOE')
+                found_begin = true;
+        } else if (line === '$$EOE') {
+            break;
+        } else {
+            // 2459371.500000000 *   118.566080210  22.210647456 118.874086738  22.155784122
+            const ut = float(line.trim().split(/\s+/)[0]) - 2451545.0;    // convert JD to J2000 UT day value
+            const time = Astronomy.MakeTime(ut);
+            const tokens = line.substr(22).trim().split(/\s+/);
+            const jra = float(tokens[0]);
+            const jdec = float(tokens[1]);
+            const dra = float(tokens[2]);
+            const ddec = float(tokens[3]);
+
+            // Create spherical coordinates with magnitude = speed of light.
+            // This helps us perform the aberration correction later.
+            const eqj_sphere = new Astronomy.Spherical(jdec, jra, Astronomy.C_AUDAY);
+
+            // Convert EQJ angular coordinates (jra, jdec) to an EQJ vector.
+            // This vector represents a ray of light, only it is travelling from the observer toward the star.
+            // The backwards direction makes the math simpler.
+            const eqj_vec = Astronomy.VectorFromSphere(eqj_sphere, time);
+
+            // Calculate the Earth's barycentric velocity vector in EQJ coordinates.
+            const eqj_earth = Astronomy.BaryState(Astronomy.Body.Earth, time);
+
+            // Use non-relativistic approximation: add light vector to Earth velocity vector.
+            // This gives aberration-corrected apparent position of the star in EQJ.
+            eqj_vec.x += eqj_earth.vx;
+            eqj_vec.y += eqj_earth.vy;
+            eqj_vec.z += eqj_earth.vz;
+
+            // Calculate the rotation matrix that converts J2000 coordinates to of-date coordinates.
+            const rot = Astronomy.Rotation_EQJ_EQD(time);
+
+            // Use the rotation matrix to re-orient the EQJ vector to a EQD vector.
+            const eqd_vec = Astronomy.RotateVector(rot, eqj_vec);
+
+            // Convert the EQD vector back to spherical angular coordinates.
+            const eqd_sphere = Astronomy.SphereFromVector(eqd_vec);
+
+            // Calculate the differences in RA and DEC between expected and calculated values.
+            const factor = cos(eqd_sphere.lat * Astronomy.DEG2RAD);     // RA errors are less important toward the poles.
+            const xra = factor * abs(eqd_sphere.lon - dra);
+            const xdec = abs(eqd_sphere.lat - ddec);
+            const diff_seconds = 3600 * sqrt(xra*xra + xdec*xdec);
+            if (Verbose) console.debug(`JS AberrationTest(${filename} line ${lnum}): xra=${xra.toFixed(6)} deg, xdec=${xdec.toFixed(6)} deg, diff_seconds=${diff_seconds.toFixed(3)}`);
+            if (diff_seconds > THRESHOLD_SECONDS) {
+                console.error(`JS AberrationTest(${filename} line ${lnum}): EXCESSIVE ANGULAR ERROR = ${diff_seconds.toFixed(3)} seconds.`);
+                return 1;
+            }
+            if (diff_seconds > max_diff_seconds)
+                max_diff_seconds = diff_seconds;
+            ++count;
+        }
+    }
+    console.log(`JS AberrationTest(${filename}): PASS - Tested ${count} cases. max_diff_seconds = ${max_diff_seconds.toFixed(3)}`);
+    return 0;
+}
+
+
 function StateVectorDiff(vec, x, y, z) {
     const dx = v(vec[0] - x);
     const dy = v(vec[1] - y);
@@ -2194,6 +2267,7 @@ function BaryStateTest() {
 
 
 const UnitTests = {
+    aberration:             AberrationTest,
     barystate:              BaryStateTest,
     constellation:          Constellation,
     elongation:             Elongation,
