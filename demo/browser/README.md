@@ -28,6 +28,11 @@ Here are some example web pages using Astronomy Engine in a web browser.
 Determines the Moon's current phase and
 predicts when the next few quarter phases will occur.
 
+### [Moon Radar Pulse Round Trip Calculator](moonradar.html)
+Given a location of an observer on the Earth, calculates the amount of time
+it takes for a radar pulse to travel from that observer to the Moon
+and reflect back.
+
 ### [Planet Positions](positions.html)
 Calculates equatorial and horizontal coordinates of the Sun, Moon, and planets.
 
