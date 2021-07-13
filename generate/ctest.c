@@ -4484,7 +4484,7 @@ static int BaryStateTest(void)
 
     CHECK(BaryStateBody(BODY_SUN,     "barystate/Sun.txt",      1.23e-5,  1.14e-7));
     CHECK(BaryStateBody(BODY_MERCURY, "barystate/Mercury.txt",  5.24e-5,  8.22e-6));
-    CHECK(BaryStateBody(BODY_VENUS,   "barystate/Venus.txt",    2.98e-5,  8.22e-6));
+    CHECK(BaryStateBody(BODY_VENUS,   "barystate/Venus.txt",    2.98e-5,  8.78e-7));
     CHECK(BaryStateBody(BODY_EARTH,   "barystate/Earth.txt",    2.30e-5,  1.09e-6));
     CHECK(BaryStateBody(BODY_MARS,    "barystate/Mars.txt",     4.34e-5,  8.23e-7));
     CHECK(BaryStateBody(BODY_JUPITER, "barystate/Jupiter.txt",  3.74e-4,  1.78e-6));

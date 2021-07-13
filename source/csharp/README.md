@@ -289,6 +289,22 @@ easy it is to see the body away from the glare of the Sun.
 
 **Returns:** Returns the angle in degrees between the Sun and the specified body as seen from the center of the Earth.
 
+<a name="Astronomy.BaryState"></a>
+### Astronomy.BaryState(body, time) &#8658; [`StateVector`](#StateVector)
+
+**Calculates barycentric position and velocity vectors for the given body.**
+
+Given a body and a time, calculates the barycentric position and velocity
+vectors for the center of that body at that time.
+The vectors are expressed in equatorial J2000 coordinates (EQJ).
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Body`](#Body) | `body` | The celestial body whose barycentric state vector is to be calculated. Supported values are `Body.Sun`, `Body.SSB`, and all planets except Pluto: `Body.Mercury`, `Body.Venus`, `Body.Earth`, `Body.Mars`, `Body.Jupiter`, `Body.Saturn`, `Body.Uranus`, `Body.Neptune`. |
+| [`AstroTime`](#AstroTime) | `time` | The date and time for which to calculate position and velocity. |
+
+**Returns:** A structure that contains barycentric position and velocity vectors.
+
 <a name="Astronomy.CombineRotation"></a>
 ### Astronomy.CombineRotation(a, b) &#8658; [`RotationMatrix`](#RotationMatrix)
 
