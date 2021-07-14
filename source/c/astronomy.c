@@ -4154,10 +4154,10 @@ astro_state_vector_t Astronomy_BaryState(astro_body_t body, astro_time_t time)
     case BODY_URANUS:   return ExportState(bary[3], time);
     case BODY_NEPTUNE:  return ExportState(bary[4], time);
 
+    /* Handle the remaining VSOP bodies: Mercury, Venus, Earth, Mars. */
     /* Otherwise, we need to calculate the heliocentric state of the given body */
     /* and add the Sun's heliocentric state to obtain the body's barycentric state. */
     /* BarySun + HelioBody = BaryBody */
-    /* Handle the remaining VSOP bodies: Mercury, Venus, Earth, Mars. */
     case BODY_MERCURY:
     case BODY_VENUS:
     case BODY_EARTH:

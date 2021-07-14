@@ -3560,10 +3560,10 @@ $ASTRO_IAU_DATA()
                 case Body.Neptune:  return ExportState(bary.Neptune, time);
             }
 
+            // Handle the remaining VSOP bodies: Mercury, Venus, Earth, Mars.
             // Otherwise, we need to calculate the heliocentric state of the given body
             // and add the Sun's heliocentric state to obtain the body's barycentric state.
             // BarySun + HelioBody = BaryBody
-            // Handle the remaining VSOP bodies: Mercury, Venus, Earth, Mars.
             int bindex = (int)body;
             if (bindex >= 0 && bindex < vsop.Length)
             {
@@ -3579,7 +3579,7 @@ $ASTRO_IAU_DATA()
                 );
             }
 
-            // FIXFIXFIX: later, we can add support for Pluton, Moon, EMB, etc.
+            // FIXFIXFIX: later, we can add support for Pluto, Moon, EMB, etc.
             throw new InvalidBodyException(body);
         }
 

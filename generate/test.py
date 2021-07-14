@@ -1882,7 +1882,99 @@ def Issue103():
 
 #-----------------------------------------------------------------------------------------------------------
 
+class _bary_stats_t:
+    def __init__(self):
+        self.max_rdiff = 0.0
+        self.max_vdiff = 0.0
+
+def StateVectorDiff(vec, x, y, z):
+    dx = v(vec[0] - x)
+    dy = v(vec[1] - y)
+    dz = v(vec[2] - z)
+    ds = sqrt(dx*dx + dy*dy + dz*dz)
+    return ds
+
+def VerifyBaryState(stats, body, filename, lnum, time, pos, vel, r_thresh, v_thresh):
+    state = astronomy.BaryState(body, time)
+    rdiff = StateVectorDiff(pos, state.x, state.y, state.z)
+    if rdiff > stats.max_rdiff:
+        stats.max_rdiff = rdiff
+
+    vdiff = StateVectorDiff(vel, state.vx, state.vy, state.vz)
+    if vdiff > stats.max_vdiff:
+        stats.max_vdiff = vdiff
+
+    if rdiff > r_thresh:
+        print('PY VerifyBaryState({} line {}): EXCESSIVE position error = {:0.4e}'.format(filename, lnum, rdiff))
+        return 1
+
+    if vdiff > v_thresh:
+        print('PY VerifyBaryState({} line {}): EXCESSIVE velocity error = {:0.4e}'.format(filename, lnum, vdiff))
+        return 1
+
+    return 0
+
+
+def BaryStateBody(body, filename, r_thresh, v_thresh):
+    with open(filename, 'rt') as infile:
+        lnum = 0
+        part = 0
+        count = 0
+        found_begin = False
+        stats = _bary_stats_t()
+        for line in infile:
+            line = line.rstrip()
+            lnum += 1
+            if not found_begin:
+                if line == '$$SOE':
+                    found_begin = True
+            elif line == '$$EOE':
+                break
+            else:
+                if part == 0:
+                    # 2446545.000000000 = A.D. 1986-Apr-24 12:00:00.0000 TDB
+                    tt = float(line.split()[0]) - 2451545.0    # convert JD to J2000 TT
+                    time = astronomy.Time.FromTerrestrialTime(tt)
+                elif part == 1:
+                    # X = 1.134408131605554E-03 Y =-2.590904586750408E-03 Z =-7.490427225904720E-05
+                    match = re.match(r'\s*X =\s*(\S+) Y =\s*(\S+) Z =\s*(\S+)', line)
+                    if not match:
+                        print('PY BaryStateBody({} line {}): cannot parse position vector.'.format(filename, lnum))
+                        return 1
+                    pos = [ float(match.group(1)), float(match.group(2)), float(match.group(3)) ]
+                else:   # part == 2
+                    # VX= 9.148038778472862E-03 VY= 3.973823407182510E-03 VZ= 2.765660368640458E-04
+                    match = re.match(r'\s*VX=\s*(\S+) VY=\s*(\S+) VZ=\s*(\S+)', line)
+                    if not match:
+                        print('PY BaryStateBody({} line {}): cannot parse velocity vector.'.format(filename, lnum))
+                        return 1
+                    vel = [ float(match.group(1)), float(match.group(2)), float(match.group(3)) ]
+                    if VerifyBaryState(stats, body, filename, lnum, time, pos, vel, r_thresh, v_thresh):
+                        print('PY BaryStateBody({} line {}): FAILED VERIFICATION.'.format(filename, lnum))
+                        return 1
+                    count += 1
+                part = (part + 1) % 3
+                Debug('PY BaryStateBody({}): PASS - Tested {} cases. max rdiff={:0.3e}, vdiff={:0.3e}'.format(filename, count, stats.max_rdiff, stats.max_vdiff))
+    return 0
+
+
+def BaryState():
+    if BaryStateBody(astronomy.Body.Sun,     'barystate/Sun.txt',      1.23e-5,  1.14e-7):  return 1
+    if BaryStateBody(astronomy.Body.Mercury, 'barystate/Mercury.txt',  5.24e-5,  8.22e-6):  return 1
+    if BaryStateBody(astronomy.Body.Venus,   'barystate/Venus.txt',    2.98e-5,  8.78e-7):  return 1
+    if BaryStateBody(astronomy.Body.Earth,   'barystate/Earth.txt',    2.30e-5,  1.09e-6):  return 1
+    if BaryStateBody(astronomy.Body.Mars,    'barystate/Mars.txt',     4.34e-5,  8.23e-7):  return 1
+    if BaryStateBody(astronomy.Body.Jupiter, 'barystate/Jupiter.txt',  3.74e-4,  1.78e-6):  return 1
+    if BaryStateBody(astronomy.Body.Saturn,  'barystate/Saturn.txt',   1.07e-3,  1.71e-6):  return 1
+    if BaryStateBody(astronomy.Body.Uranus,  'barystate/Uranus.txt',   1.71e-3,  1.03e-6):  return 1
+    if BaryStateBody(astronomy.Body.Neptune, 'barystate/Neptune.txt',  2.95e-3,  1.39e-6):  return 1
+    print('PY BaryState: PASS')
+    return 0
+
+#-----------------------------------------------------------------------------------------------------------
+
 UnitTests = {
+    'barystate':                BaryState,
     'constellation':            Constellation,
     'elongation':               Elongation,
     'geoid':                    Geoid,

@@ -2839,7 +2839,7 @@ namespace csharp_test
         {
             if (0 != BaryStateBody(Body.Sun,     "../../barystate/Sun.txt",      1.23e-5,  1.14e-7)) return 1;
             if (0 != BaryStateBody(Body.Mercury, "../../barystate/Mercury.txt",  5.24e-5,  8.22e-6)) return 1;
-            if (0 != BaryStateBody(Body.Venus,   "../../barystate/Venus.txt",    2.98e-5,  8.22e-6)) return 1;
+            if (0 != BaryStateBody(Body.Venus,   "../../barystate/Venus.txt",    2.98e-5,  8.78e-7)) return 1;
             if (0 != BaryStateBody(Body.Earth,   "../../barystate/Earth.txt",    2.30e-5,  1.09e-6)) return 1;
             if (0 != BaryStateBody(Body.Mars,    "../../barystate/Mars.txt",     4.34e-5,  8.23e-7)) return 1;
             if (0 != BaryStateBody(Body.Jupiter, "../../barystate/Jupiter.txt",  3.74e-4,  1.78e-6)) return 1;
