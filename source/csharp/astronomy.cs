@@ -2106,12 +2106,16 @@ namespace CosineKitty
         /// </summary>
         public const double CALLISTO_RADIUS_KM = 2410.3;
 
+        /// <summary>
+        /// The speed of light in AU/day.
+        /// </summary>
+        public const double C_AUDAY = 173.1446326846693;
+
         private const double DAYS_PER_TROPICAL_YEAR = 365.24217;
         private const double ASEC360 = 1296000.0;
         private const double ASEC2RAD = 4.848136811095359935899141e-6;
         internal const double PI2 = 2.0 * Math.PI;
         internal const double ARC = 3600.0 * 180.0 / Math.PI;       /* arcseconds per radian */
-        private const double C_AUDAY = 173.1446326846693;           /* speed of light in AU/day */
 
         internal const double SUN_RADIUS_KM  = 695700.0;
         internal const double SUN_RADIUS_AU  = SUN_RADIUS_KM / KM_PER_AU;

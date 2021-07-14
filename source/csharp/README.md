@@ -156,6 +156,14 @@ these are used in function and type names.
 
 ---
 
+<a name="Astronomy.C_AUDAY"></a>
+### `const double Astronomy.C_AUDAY = 173.1446326846693;`
+
+**The speed of light in AU/day.**
+
+
+---
+
 <a name="Astronomy.CALLISTO_RADIUS_KM"></a>
 ### `const double Astronomy.CALLISTO_RADIUS_KM = 2410.3;`
 

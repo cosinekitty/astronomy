@@ -54,6 +54,7 @@ namespace csharp_test
             new Test("transit", TransitTest),
             new Test("astro_check", AstroCheck),
             new Test("barystate", BaryStateTest),
+            new Test("aberration", AberrationTest),
         };
 
         static int Main(string[] args)
@@ -2847,6 +2848,101 @@ namespace csharp_test
             if (0 != BaryStateBody(Body.Uranus,  "../../barystate/Uranus.txt",   1.71e-3,  1.03e-6)) return 1;
             if (0 != BaryStateBody(Body.Neptune, "../../barystate/Neptune.txt",  2.95e-3,  1.39e-6)) return 1;
             Console.WriteLine("C# BaryStateTest: PASS");
+            return 0;
+        }
+
+        static int AberrationTest()
+        {
+            const string filename = "../../equatorial/Mars_j2000_ofdate_aberration.txt";
+            const double THRESHOLD_SECONDS = 0.4;
+
+            using (StreamReader infile = File.OpenText(filename))
+            {
+                int lnum = 0;
+                int count = 0;
+                string line;
+                bool found_begin = false;
+                double max_diff_seconds = 0.0;
+                while (null != (line = infile.ReadLine()))
+                {
+                    ++lnum;
+                    if (!found_begin)
+                    {
+                        if (line == "$$SOE")
+                            found_begin = true;
+                    }
+                    else if (line == "$$EOE")
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        // 2459371.500000000 *   118.566080210  22.210647456 118.874086738  22.155784122
+                        string[] token = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                        if (token.Length < 5)
+                        {
+                            Console.WriteLine($"C# AberrationTest({filename} line {lnum}): not enough tokens");
+                            return 1;
+                        }
+
+                        //Console.WriteLine(">>> [" + string.Join(",", token) + "]");
+
+                        double jd = double.Parse(token[0]);
+                        double jra = double.Parse(token[token.Length-4]);
+                        double jdec = double.Parse(token[token.Length-3]);
+                        double dra = double.Parse(token[token.Length-2]);
+                        double ddec = double.Parse(token[token.Length-1]);
+
+                        // Convert julian day value to AstroTime.
+                        var time = new AstroTime(jd - 2451545.0);
+
+                        // Convert EQJ angular coordinates (jra, jdec) to an EQJ vector.
+                        // Make the maginitude of the vector the speed of light,
+                        // to prepare for aberration correction.
+                        var eqj_sphere = new Spherical(jdec, jra, Astronomy.C_AUDAY);
+                        var eqj_vec = Astronomy.VectorFromSphere(eqj_sphere, time);
+
+                        // Aberration correction: calculate the Earth's barycentric
+                        // velocity vector in EQJ coordinates.
+                        StateVector eqj_earth = Astronomy.BaryState(Body.Earth, time);
+
+                        // Use non-relativistic approximation: add light vector to Earth velocity vector.
+                        // This gives aberration-corrected apparent position of the start in EQJ.
+                        eqj_vec.x += eqj_earth.vx;
+                        eqj_vec.y += eqj_earth.vy;
+                        eqj_vec.z += eqj_earth.vz;
+
+                        // Calculate the rotation matrix that converts J2000 coordinates to of-date coordinates.
+                        RotationMatrix rot = Astronomy.Rotation_EQJ_EQD(time);
+
+                        // Use the rotation matrix to re-orient the EQJ vector to an EQD vector.
+                        AstroVector eqd_vec = Astronomy.RotateVector(rot, eqj_vec);
+
+                        // Convert the EQD vector back to spherical angular coordinates.
+                        Spherical eqd_sphere = Astronomy.SphereFromVector(eqd_vec);
+
+                        // Calculate the differences in RA and DEC between expected and calculated values.
+                        double factor = cos(eqd_sphere.lat * Astronomy.DEG2RAD);    // RA errors are less important toward the poles.
+                        double xra = factor * abs(eqd_sphere.lon - dra);
+                        double xdec = abs(eqd_sphere.lat - ddec);
+                        double diff_seconds = 3600.0 * sqrt(xra*xra + xdec*xdec);
+                        Debug($"C# AberrationTest({filename} line {lnum}): xra={xra:F6} deg, xdec={xdec:F6} deg, diff_seconds={diff_seconds:F3}.");
+                        if (diff_seconds > THRESHOLD_SECONDS)
+                        {
+                            Console.WriteLine($"C# AberrationTest({filename} line {lnum}): EXCESSIVE ANGULAR ERROR = {diff_seconds:F3} seconds.");
+                            return 1;
+                        }
+
+                        if (diff_seconds > max_diff_seconds)
+                            max_diff_seconds = diff_seconds;
+
+                        // We have completed one more test case.
+                        ++count;
+                    }
+                }
+                Console.WriteLine($"C# AberrationTest({filename}): PASS - Tested {count} cases. max_diff_seconds = {max_diff_seconds:F3}");
+            }
+
             return 0;
         }
     }
