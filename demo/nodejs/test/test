@@ -12,7 +12,7 @@ node equatorial.js 38.1256 -89.5544 215.7 23.5 2021-03-27T18:45:00Z > test/equat
 diff test/equatorial.txt test/equatorial_correct.txt || Fail "Error comparing equatorial.js output."
 
 echo "Testing example: equator_of_date.js"
-node equator_of_date.js 12 45 2021-07-06T00:00:00Z > test/equator_of_date.txt || Fail "Error testing equator_of_date.js"
+node equator_of_date.js a 12 45 2021-07-06T00:00:00Z > test/equator_of_date.txt || Fail "Error testing equator_of_date.js"
 diff test/equator_of_date.txt test/equator_of_date_correct.txt || Fail "Error comparing equator_of_date.js output."
 
 echo "Testing example: camera.js"

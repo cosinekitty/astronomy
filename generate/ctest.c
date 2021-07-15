@@ -131,6 +131,8 @@ static int DistancePlot(astro_body_t body, double ut1, double ut2, const char *f
 static int GeoidTest(void);
 static int JupiterMoonsTest(void);
 static int Issue103(void);
+static int AberrationTest(void);
+static int BaryStateTest(void);
 
 typedef int (* unit_test_func_t) (void);
 
@@ -143,6 +145,8 @@ unit_test_t;
 
 static unit_test_t UnitTests[] =
 {
+    {"aberration",              AberrationTest},
+    {"barystate",               BaryStateTest},
     {"check",                   AstroCheck},
     {"constellation",           ConstellationTest},
     {"earth_apsis",             EarthApsis},
@@ -3972,7 +3976,7 @@ static int GeoidTestCase(astro_time_t time, astro_observer_t observer, astro_equ
     }
 
     h_diff = ABS(vobs.height - observer.height);
-    DEBUG("C GeoidTestCase: vobs=(lat=%lf, lon=%lf, height=%lf), lat_diff=%lg, lon_diff=%lg, h_diff=%lg\n", 
+    DEBUG("C GeoidTestCase: vobs=(lat=%lf, lon=%lf, height=%lf), lat_diff=%lg, lon_diff=%lg, h_diff=%lg\n",
         vobs.latitude, vobs.longitude, vobs.height, lat_diff, lon_diff, h_diff);
 
     if (lat_diff > 1.0e-6)
@@ -4226,6 +4230,271 @@ static int Issue103(void)
     printf("alt = %23.16lf\n", hor.altitude);
 
     return 0;
+}
+
+/*-----------------------------------------------------------------------------------------------------------*/
+
+static int AberrationTest(void)
+{
+    int error, lnum, nscanned;
+    int found_begin = 0;
+    int found_end = 0;
+    int count = 0;
+    FILE *infile = NULL;
+    const char *filename = "equatorial/Mars_j2000_ofdate_aberration.txt";
+    char line[100];
+    double jd, jra, jdec, dra, ddec, xra, xdec;
+    astro_time_t time;
+    astro_rotation_t rot;
+    astro_spherical_t eqj_sphere, eqd_sphere;
+    astro_vector_t eqj_vec, eqd_vec;
+    double factor, diff_seconds, max_diff_seconds = 0.0;
+    astro_state_vector_t eqj_earth;
+    const double THRESHOLD_SECONDS = 0.4;
+
+    infile = fopen(filename, "rt");
+    if (infile == NULL)
+        FAIL("C AberrationTest: Cannot open input file: %s\n", filename);
+
+    lnum = 0;
+    while (!found_end && ReadLine(line, sizeof(line), infile, filename, lnum))
+    {
+        ++lnum;
+        if (!found_begin)
+        {
+            if (strlen(line) >= 5 && !memcmp(line, "$$SOE", 5))
+                found_begin = 1;
+        }
+        else if (strlen(line) >= 5 && !memcmp(line, "$$EOE", 5))
+        {
+            found_end = 1;
+        }
+        else
+        {
+            /* 2459371.500000000 *   118.566080210  22.210647456 118.874086738  22.155784122 */
+            nscanned = sscanf(line+22, "%lf %lf %lf %lf", &jra, &jdec, &dra, &ddec);
+            if (nscanned != 4)
+                FAIL("C AberrationTest(%s line %d): invalid coordinates\n", filename, lnum);
+
+            nscanned = sscanf(line, "%lf", &jd);
+            if (nscanned != 1)
+                FAIL("C AberrationTest(%s line %d): invalid julian date\n", filename, lnum);
+
+            /* Convert julian day value to astro_time_t. */
+            time = Astronomy_TimeFromDays(jd - 2451545.0);
+
+            /* Convert EQJ angular coordinates (jra, jdec) to an EQJ vector. */
+            eqj_sphere.status = ASTRO_SUCCESS;
+            eqj_sphere.lat = jdec;
+            eqj_sphere.lon = jra;       /* JPL Horizons RA is already in degrees, not hours. */
+            eqj_sphere.dist = C_AUDAY;  /* scale to the speed of light, to prepare for aberration correction. */
+            eqj_vec = Astronomy_VectorFromSphere(eqj_sphere, time);
+            CHECK_STATUS(eqj_vec);
+
+            /* Aberration correction: calculate the Earth's barycentric velocity vector in EQJ coordinates. */
+            eqj_earth = Astronomy_BaryState(BODY_EARTH, time);
+            CHECK_STATUS(eqj_earth);
+
+            /* Use non-relativistic approximation: add light vector to Earth velocity vector. */
+            /* This gives aberration-corrected apparent position of the star in EQJ. */
+            eqj_vec.x += eqj_earth.vx;
+            eqj_vec.y += eqj_earth.vy;
+            eqj_vec.z += eqj_earth.vz;
+
+            /* Calculate the rotation matrix that converts J2000 coordinates to of-date coordinates. */
+            rot = Astronomy_Rotation_EQJ_EQD(time);
+            CHECK_STATUS(rot);
+
+            /* Use the rotation matrix to re-orient the EQJ vector to a EQD vector. */
+            eqd_vec = Astronomy_RotateVector(rot, eqj_vec);
+            CHECK_STATUS(eqd_vec);
+
+            /* Convert the EQD vector back to spherical angular coordinates. */
+            eqd_sphere = Astronomy_SphereFromVector(eqd_vec);
+            CHECK_STATUS(eqd_sphere);
+
+            /* Calculate the differences in RA and DEC between expected and calculated values. */
+            factor = cos(V(eqd_sphere.lat * DEG2RAD));  /* RA errors are less important toward the poles */
+            xra = factor * ABS(eqd_sphere.lon - dra);
+            xdec = ABS(eqd_sphere.lat - ddec);
+            diff_seconds = V(3600.0 * sqrt(xra*xra + xdec*xdec));
+            DEBUG("C AberrationTest(%s line %d): xra=%0.6lf deg, xdec=%0.6lf deg, diff_seconds=%0.3lf.\n", filename, lnum, xra, xdec, diff_seconds);
+            if (diff_seconds > THRESHOLD_SECONDS)
+                FAIL("C AberrationTest(%s line %d): EXCESSIVE ANGULAR ERROR = %0.3lf seconds\n", filename, lnum, diff_seconds);
+            if (diff_seconds > max_diff_seconds)
+                max_diff_seconds = diff_seconds;
+
+            /* We have completed one more test case. */
+            ++count;
+        }
+    }
+
+    printf("C AberrationTest(%s): PASS - Tested %d cases. max_diff_seconds = %0.3lf\n", filename, count, max_diff_seconds);
+    error = 0;
+fail:
+    if (infile != NULL) fclose(infile);
+    return error;
+}
+
+/*-----------------------------------------------------------------------------------------------------------*/
+
+static double StateVectorDiff(const double vec[3], double x, double y, double z)
+{
+    double dx = V(vec[0] - x);
+    double dy = V(vec[1] - y);
+    double dz = V(vec[2] - z);
+    double ds = V(sqrt(dx*dx + dy*dy + dz*dz));
+    return ds;
+}
+
+
+static int VerifyBaryState(
+    double *max_rdiff,
+    double *max_vdiff,
+    astro_body_t body,
+    const char *filename,
+    int lnum,
+    astro_time_t time,
+    const double pos[3],
+    const double vel[3],
+    double r_thresh,
+    double v_thresh)
+{
+    int error;
+    astro_state_vector_t state;
+    double rdiff, vdiff;
+
+    state = Astronomy_BaryState(body, time);
+    CHECK_STATUS(state);
+
+    rdiff = StateVectorDiff(pos, state.x, state.y, state.z);
+    if (rdiff > *max_rdiff)
+        *max_rdiff = rdiff;
+
+    vdiff = StateVectorDiff(vel, state.vx, state.vy, state.vz);
+    if (vdiff > *max_vdiff)
+        *max_vdiff = vdiff;
+
+    if (rdiff > r_thresh)
+        FAIL("C VerifyBaryState(%s line %d): EXCESSIVE position error = %0.4le\n", filename, lnum, rdiff);
+
+    if (vdiff > v_thresh)
+        FAIL("C VerifyBaryState(%s line %d): EXCESSIVE velocity error = %0.4le\n", filename, lnum, vdiff);
+
+    error = 0;
+fail:
+    return error;
+}
+
+static int BaryStateBody(astro_body_t body, const char *filename, double r_thresh, double v_thresh)
+{
+    int error, lnum, nscanned;
+    int found_begin = 0;
+    int found_end = 0;
+    int count = 0;
+    int part = 0;
+    FILE *infile = NULL;
+    char line[100];
+    astro_time_t time;
+    double jd, pos[3], vel[3];
+    double max_rdiff = 0.0, max_vdiff = 0.0;
+
+    infile = fopen(filename, "rt");
+    if (infile == NULL)
+        FAIL("C BaryStateBody: Cannot open input file: %s\n", filename);
+
+    lnum = 0;
+    while (!found_end && ReadLine(line, sizeof(line), infile, filename, lnum))
+    {
+        ++lnum;
+        if (!found_begin)
+        {
+            if (strlen(line) >= 5 && !memcmp(line, "$$SOE", 5))
+                found_begin = 1;
+        }
+        else
+        {
+            /*
+                Input comes in triplets of lines:
+
+                2444249.500000000 = A.D. 1980-Jan-11 00:00:00.0000 TDB
+                 X =-3.314860345089456E-01 Y = 8.463418210972562E-01 Z = 3.667227830514760E-01
+                 VX=-1.642704711077836E-02 VY=-5.494770742558920E-03 VZ=-2.383170237527642E-03
+
+                Track which of these 3 cases we are in using the 'part' variable...
+            */
+
+            switch (part)
+            {
+            case 0:
+                if (strlen(line) >= 5 && !memcmp(line, "$$EOE", 5))
+                {
+                    found_end = 1;
+                }
+                else
+                {
+                    nscanned = sscanf(line, "%lf", &jd);
+                    if (nscanned != 1)
+                        FAIL("C BaryStateBody(%s line %d) ERROR reading Julian date.\n", filename, lnum);
+                    V(jd);
+
+                    /* Convert julian TT day value to astro_time_t. */
+                    time = Astronomy_TerrestrialTime(jd - 2451545.0);
+                }
+                break;
+
+            case 1:
+                nscanned = sscanf(line, " X =%lf Y =%lf Z =%lf", &pos[0], &pos[1], &pos[2]);
+                if (nscanned != 3)
+                    FAIL("C BaryStateBody(%s line %d) ERROR reading position vector.\n", filename, lnum);
+                V(pos[0]);
+                V(pos[1]);
+                V(pos[2]);
+                break;
+
+            case 2:
+                nscanned = sscanf(line, " VX=%lf VY=%lf VZ=%lf", &vel[0], &vel[1], &vel[2]);
+                if (nscanned != 3)
+                    FAIL("C BaryStateBody(%s line %d) ERROR reading velocity vector.\n", filename, lnum);
+                V(vel[0]);
+                V(vel[1]);
+                V(vel[2]);
+                CHECK(VerifyBaryState(&max_rdiff, &max_vdiff, body, filename, lnum, time, pos, vel, r_thresh, v_thresh));
+                ++count;
+                break;
+
+            default:
+                FAIL("C BaryStateBody: INTERNAL ERROR : part=%d\n", part);
+            }
+
+            part = (part + 1) % 3;
+        }
+    }
+
+    DEBUG("C BaryStateBody(%s): PASS - Tested %d cases. max rdiff=%0.3le, vdiff=%0.3le\n", filename, count, max_rdiff, max_vdiff);
+    error = 0;
+fail:
+    if (infile != NULL) fclose(infile);
+    return error;
+}
+
+static int BaryStateTest(void)
+{
+    int error;  /* set as a side-effect of CHECK macro */
+
+    CHECK(BaryStateBody(BODY_SUN,     "barystate/Sun.txt",      1.23e-5,  1.14e-7));
+    CHECK(BaryStateBody(BODY_MERCURY, "barystate/Mercury.txt",  5.24e-5,  8.22e-6));
+    CHECK(BaryStateBody(BODY_VENUS,   "barystate/Venus.txt",    2.98e-5,  8.78e-7));
+    CHECK(BaryStateBody(BODY_EARTH,   "barystate/Earth.txt",    2.30e-5,  1.09e-6));
+    CHECK(BaryStateBody(BODY_MARS,    "barystate/Mars.txt",     4.34e-5,  8.23e-7));
+    CHECK(BaryStateBody(BODY_JUPITER, "barystate/Jupiter.txt",  3.74e-4,  1.78e-6));
+    CHECK(BaryStateBody(BODY_SATURN,  "barystate/Saturn.txt",   1.07e-3,  1.71e-6));
+    CHECK(BaryStateBody(BODY_URANUS,  "barystate/Uranus.txt",   1.71e-3,  1.03e-6));
+    CHECK(BaryStateBody(BODY_NEPTUNE, "barystate/Neptune.txt",  2.95e-3,  1.39e-6));
+
+    printf("C BaryStateTest: PASS\n");
+fail:
+    return error;
 }
 
 /*-----------------------------------------------------------------------------------------------------------*/

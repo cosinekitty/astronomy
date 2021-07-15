@@ -53,6 +53,8 @@ namespace csharp_test
             new Test("seasons", SeasonsTest),
             new Test("transit", TransitTest),
             new Test("astro_check", AstroCheck),
+            new Test("barystate", BaryStateTest),
+            new Test("aberration", AberrationTest),
         };
 
         static int Main(string[] args)
@@ -2495,7 +2497,7 @@ namespace csharp_test
             }
 
             double h_diff = abs(vobs.height - observer.height);
-            Debug("C# GeoidTestCase: vobs=(lat={0}, lon={1}, height={2}), lat_diff={3}, lon_diff={4}, h_diff={5}", 
+            Debug("C# GeoidTestCase: vobs=(lat={0}, lon={1}, height={2}), lat_diff={3}, lon_diff={4}, h_diff={5}",
                 vobs.latitude, vobs.longitude, vobs.height, lat_diff, lon_diff, h_diff);
 
             if (lat_diff > 1.0e-6)
@@ -2538,9 +2540,9 @@ namespace csharp_test
             {
                 foreach (AstroTime time in time_list)
                 {
-                    if (0 != GeoidTestCase(time, observer, EquatorEpoch.J2000)) 
+                    if (0 != GeoidTestCase(time, observer, EquatorEpoch.J2000))
                         return 1;
-                    if (0 != GeoidTestCase(time, observer, EquatorEpoch.OfDate)) 
+                    if (0 != GeoidTestCase(time, observer, EquatorEpoch.OfDate))
                         return 1;
                 }
             }
@@ -2697,6 +2699,248 @@ namespace csharp_test
                     }
                 }
             }
+            return 0;
+        }
+
+        static double StateVectorDiff(double[] vec, double x, double y, double z)
+        {
+            double dx = vec[0] - x;
+            double dy = vec[1] - y;
+            double dz = vec[2] - z;
+            double ds = Math.Sqrt(dx*dx + dy*dy + dz*dz);
+            return ds;
+        }
+
+        static int VerifyBaryState(
+            ref double max_rdiff,
+            ref double max_vdiff,
+            Body body,
+            string filename,
+            int lnum,
+            AstroTime time,
+            double[] pos,
+            double[] vel,
+            double r_thresh,
+            double v_thresh)
+        {
+            StateVector state = Astronomy.BaryState(body, time);
+            double rdiff = StateVectorDiff(pos, state.x, state.y, state.z);
+            if (rdiff > max_rdiff)
+                max_rdiff = rdiff;
+
+            double vdiff = StateVectorDiff(vel, state.vx, state.vy, state.vz);
+            if (vdiff > max_vdiff)
+                max_vdiff = vdiff;
+
+            if (rdiff > r_thresh)
+            {
+                Console.WriteLine($"C# VerifyBaryState({filename} line {lnum}): EXCESSIVE position error = {rdiff:E3}");
+                return 1;
+            }
+
+            if (vdiff > v_thresh)
+            {
+                Console.WriteLine($"C# VerifyBaryState({filename} line {lnum}): EXCESSIVE velocity error = {vdiff:E3}");
+                return 1;
+            }
+
+            return 0;
+        }
+
+        static int BaryStateBody(Body body, string filename, double r_thresh, double v_thresh)
+        {
+            using (StreamReader infile = File.OpenText(filename))
+            {
+                int lnum = 0;
+                string line;
+                bool found_begin = false;
+                bool found_end = false;
+                int part = 0;
+                AstroTime time = null;
+                var pos = new double[3];
+                var vel = new double[3];
+                int count = 0;
+                double max_rdiff = 0.0, max_vdiff = 0.0;
+                while (!found_end && null != (line = infile.ReadLine()))
+                {
+                    ++lnum;
+                    if (!found_begin)
+                    {
+                        if (line == "$$SOE")
+                            found_begin = true;
+                    }
+                    else
+                    {
+                        // Input comes in triplets of lines:
+                        //
+                        // 2444249.500000000 = A.D. 1980-Jan-11 00:00:00.0000 TDB
+                        // X =-3.314860345089456E-01 Y = 8.463418210972562E-01 Z = 3.667227830514760E-01
+                        // VX=-1.642704711077836E-02 VY=-5.494770742558920E-03 VZ=-2.383170237527642E-03
+                        //
+                        // Track which of these 3 cases we are in using the 'part' variable...
+                        Match match;
+                        switch (part)
+                        {
+                            case 0:
+                                if (line == "$$EOE")
+                                {
+                                    found_end = true;
+                                }
+                                else
+                                {
+                                    // 2444249.500000000 = A.D. 1980-Jan-11 00:00:00.0000 TDB
+                                    // Convert JD to J2000 TT.
+                                    double tt = double.Parse(line.Split()[0]) - 2451545.0;
+                                    time = AstroTime.FromTerrestrialTime(tt);
+                                }
+                                break;
+
+                            case 1:
+                                /* X = 1.134408131605554E-03 Y =-2.590904586750408E-03 Z =-7.490427225904720E-05 */
+                                match = Regex.Match(line, @"\s*X =\s*(\S+) Y =\s*(\S+) Z =\s*(\S+)");
+                                if (!match.Success)
+                                {
+                                    Console.WriteLine($"C# BaryStateBody({filename} line {lnum}): cannot parse position vector.");
+                                    return 1;
+                                }
+                                pos[0] = double.Parse(match.Groups[1].Value);
+                                pos[1] = double.Parse(match.Groups[2].Value);
+                                pos[2] = double.Parse(match.Groups[3].Value);
+                                break;
+
+                            case 2:
+                                /* VX= 9.148038778472862E-03 VY= 3.973823407182510E-03 VZ= 2.765660368640458E-04 */
+                                match = Regex.Match(line, @"\s*VX=\s*(\S+) VY=\s*(\S+) VZ=\s*(\S+)");
+                                if (!match.Success)
+                                {
+                                    Console.WriteLine($"C# BaryStateBody({filename} line {lnum}): cannot parse velocity vector.");
+                                    return 1;
+                                }
+                                vel[0] = double.Parse(match.Groups[1].Value);
+                                vel[1] = double.Parse(match.Groups[2].Value);
+                                vel[2] = double.Parse(match.Groups[3].Value);
+                                if (0 != VerifyBaryState(ref max_rdiff, ref max_vdiff, body, filename, lnum, time, pos, vel, r_thresh, v_thresh))
+                                    return 1;
+                                ++count;
+                                break;
+
+                            default:
+                                Console.WriteLine($"C# BaryStateBody({filename} line {lnum}): unexpected part = {part}.");
+                                return 1;
+                        }
+                        part = (part + 1) % 3;
+                    }
+                }
+                Debug($"C# BaryStateBody({filename}): PASS - Tested {count} cases. max rdiff={max_rdiff:E3}, vdiff={max_vdiff:E3}");
+                return 0;
+            }
+        }
+
+        static int BaryStateTest()
+        {
+            if (0 != BaryStateBody(Body.Sun,     "../../barystate/Sun.txt",      1.23e-5,  1.14e-7)) return 1;
+            if (0 != BaryStateBody(Body.Mercury, "../../barystate/Mercury.txt",  5.24e-5,  8.22e-6)) return 1;
+            if (0 != BaryStateBody(Body.Venus,   "../../barystate/Venus.txt",    2.98e-5,  8.78e-7)) return 1;
+            if (0 != BaryStateBody(Body.Earth,   "../../barystate/Earth.txt",    2.30e-5,  1.09e-6)) return 1;
+            if (0 != BaryStateBody(Body.Mars,    "../../barystate/Mars.txt",     4.34e-5,  8.23e-7)) return 1;
+            if (0 != BaryStateBody(Body.Jupiter, "../../barystate/Jupiter.txt",  3.74e-4,  1.78e-6)) return 1;
+            if (0 != BaryStateBody(Body.Saturn,  "../../barystate/Saturn.txt",   1.07e-3,  1.71e-6)) return 1;
+            if (0 != BaryStateBody(Body.Uranus,  "../../barystate/Uranus.txt",   1.71e-3,  1.03e-6)) return 1;
+            if (0 != BaryStateBody(Body.Neptune, "../../barystate/Neptune.txt",  2.95e-3,  1.39e-6)) return 1;
+            Console.WriteLine("C# BaryStateTest: PASS");
+            return 0;
+        }
+
+        static int AberrationTest()
+        {
+            const string filename = "../../equatorial/Mars_j2000_ofdate_aberration.txt";
+            const double THRESHOLD_SECONDS = 0.4;
+
+            using (StreamReader infile = File.OpenText(filename))
+            {
+                int lnum = 0;
+                int count = 0;
+                string line;
+                bool found_begin = false;
+                double max_diff_seconds = 0.0;
+                while (null != (line = infile.ReadLine()))
+                {
+                    ++lnum;
+                    if (!found_begin)
+                    {
+                        if (line == "$$SOE")
+                            found_begin = true;
+                    }
+                    else if (line == "$$EOE")
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        // 2459371.500000000 *   118.566080210  22.210647456 118.874086738  22.155784122
+                        string[] token = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                        if (token.Length < 5)
+                        {
+                            Console.WriteLine($"C# AberrationTest({filename} line {lnum}): not enough tokens");
+                            return 1;
+                        }
+
+                        double jd = double.Parse(token[0]);
+                        double jra = double.Parse(token[token.Length-4]);
+                        double jdec = double.Parse(token[token.Length-3]);
+                        double dra = double.Parse(token[token.Length-2]);
+                        double ddec = double.Parse(token[token.Length-1]);
+
+                        // Convert julian day value to AstroTime.
+                        var time = new AstroTime(jd - 2451545.0);
+
+                        // Convert EQJ angular coordinates (jra, jdec) to an EQJ vector.
+                        // Make the maginitude of the vector the speed of light,
+                        // to prepare for aberration correction.
+                        var eqj_sphere = new Spherical(jdec, jra, Astronomy.C_AUDAY);
+                        var eqj_vec = Astronomy.VectorFromSphere(eqj_sphere, time);
+
+                        // Aberration correction: calculate the Earth's barycentric
+                        // velocity vector in EQJ coordinates.
+                        StateVector eqj_earth = Astronomy.BaryState(Body.Earth, time);
+
+                        // Use non-relativistic approximation: add light vector to Earth velocity vector.
+                        // This gives aberration-corrected apparent position of the start in EQJ.
+                        eqj_vec.x += eqj_earth.vx;
+                        eqj_vec.y += eqj_earth.vy;
+                        eqj_vec.z += eqj_earth.vz;
+
+                        // Calculate the rotation matrix that converts J2000 coordinates to of-date coordinates.
+                        RotationMatrix rot = Astronomy.Rotation_EQJ_EQD(time);
+
+                        // Use the rotation matrix to re-orient the EQJ vector to an EQD vector.
+                        AstroVector eqd_vec = Astronomy.RotateVector(rot, eqj_vec);
+
+                        // Convert the EQD vector back to spherical angular coordinates.
+                        Spherical eqd_sphere = Astronomy.SphereFromVector(eqd_vec);
+
+                        // Calculate the differences in RA and DEC between expected and calculated values.
+                        double factor = cos(eqd_sphere.lat * Astronomy.DEG2RAD);    // RA errors are less important toward the poles.
+                        double xra = factor * abs(eqd_sphere.lon - dra);
+                        double xdec = abs(eqd_sphere.lat - ddec);
+                        double diff_seconds = 3600.0 * sqrt(xra*xra + xdec*xdec);
+                        Debug($"C# AberrationTest({filename} line {lnum}): xra={xra:F6} deg, xdec={xdec:F6} deg, diff_seconds={diff_seconds:F3}.");
+                        if (diff_seconds > THRESHOLD_SECONDS)
+                        {
+                            Console.WriteLine($"C# AberrationTest({filename} line {lnum}): EXCESSIVE ANGULAR ERROR = {diff_seconds:F3} seconds.");
+                            return 1;
+                        }
+
+                        if (diff_seconds > max_diff_seconds)
+                            max_diff_seconds = diff_seconds;
+
+                        // We have completed one more test case.
+                        ++count;
+                    }
+                }
+                Console.WriteLine($"C# AberrationTest({filename}): PASS - Tested {count} cases. max_diff_seconds = {max_diff_seconds:F3}");
+            }
+
             return 0;
         }
     }

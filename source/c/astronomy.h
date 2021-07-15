@@ -37,6 +37,13 @@ extern "C" {
 /*---------- numeric constants ----------*/
 
 /**
+ * \def C_AUDAY
+ * @brief The speed of light in AU/day.
+ */
+#define C_AUDAY     173.1446326846693
+
+
+/**
  * \def KM_PER_AU
  * @brief The number of kilometers in one astronomical unit (AU).
  */
@@ -962,6 +969,7 @@ astro_func_result_t Astronomy_HelioDistance(astro_body_t body, astro_time_t time
 astro_vector_t Astronomy_HelioVector(astro_body_t body, astro_time_t time);
 astro_vector_t Astronomy_GeoVector(astro_body_t body, astro_time_t time, astro_aberration_t aberration);
 astro_vector_t Astronomy_GeoMoon(astro_time_t time);
+astro_state_vector_t Astronomy_BaryState(astro_body_t body, astro_time_t time);
 astro_jupiter_moons_t Astronomy_JupiterMoons(astro_time_t time);
 
 astro_equatorial_t Astronomy_Equator(

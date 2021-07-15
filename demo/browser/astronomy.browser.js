@@ -34,9 +34,13 @@
  */
 'use strict';
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.MoonPhase = exports.SearchRelativeLongitude = exports.Illumination = exports.IlluminationInfo = exports.EclipticLongitude = exports.AngleFromSun = exports.PairLongitude = exports.SearchSunLongitude = exports.Search = exports.GeoVector = exports.HelioDistance = exports.HelioVector = exports.JupiterMoons = exports.JupiterMoonsInfo = exports.GeoMoon = exports.Ecliptic = exports.VectorObserver = exports.ObserverVector = exports.Equator = exports.SunPosition = exports.Observer = exports.Horizon = exports.EclipticCoordinates = exports.HorizontalCoordinates = exports.MakeRotation = exports.RotationMatrix = exports.EquatorialCoordinates = exports.Spherical = exports.StateVector = exports.Vector = exports.CalcMoonCount = exports.MakeTime = exports.AstroTime = exports.SetDeltaTFunction = exports.DeltaT_JplHorizons = exports.DeltaT_EspenakMeeus = exports.Body = exports.AngleBetween = exports.CALLISTO_RADIUS_KM = exports.GANYMEDE_RADIUS_KM = exports.EUROPA_RADIUS_KM = exports.IO_RADIUS_KM = exports.JUPITER_MEAN_RADIUS_KM = exports.JUPITER_POLAR_RADIUS_KM = exports.JUPITER_EQUATORIAL_RADIUS_KM = exports.RAD2HOUR = exports.RAD2DEG = exports.HOUR2RAD = exports.DEG2RAD = exports.KM_PER_AU = void 0;
-exports.GlobalSolarEclipseInfo = exports.SearchLunarEclipse = exports.LunarEclipseInfo = exports.Constellation = exports.ConstellationInfo = exports.Rotation_GAL_EQJ = exports.Rotation_EQJ_GAL = exports.Rotation_HOR_ECL = exports.Rotation_ECL_HOR = exports.Rotation_ECL_EQD = exports.Rotation_EQD_ECL = exports.Rotation_EQJ_HOR = exports.Rotation_HOR_EQJ = exports.Rotation_HOR_EQD = exports.Rotation_EQD_HOR = exports.Rotation_EQD_EQJ = exports.Rotation_EQJ_EQD = exports.Rotation_ECL_EQJ = exports.Rotation_EQJ_ECL = exports.RotateState = exports.RotateVector = exports.InverseRefraction = exports.Refraction = exports.VectorFromHorizon = exports.HorizonFromVector = exports.SphereFromVector = exports.EquatorFromVector = exports.VectorFromSphere = exports.Pivot = exports.IdentityMatrix = exports.CombineRotation = exports.InverseRotation = exports.NextPlanetApsis = exports.SearchPlanetApsis = exports.NextLunarApsis = exports.SearchLunarApsis = exports.Apsis = exports.SearchPeakMagnitude = exports.SearchMaxElongation = exports.Elongation = exports.ElongationEvent = exports.Seasons = exports.SeasonInfo = exports.SearchHourAngle = exports.HourAngleEvent = exports.SearchRiseSet = exports.NextMoonQuarter = exports.SearchMoonQuarter = exports.MoonQuarter = exports.SearchMoonPhase = void 0;
-exports.NextTransit = exports.SearchTransit = exports.TransitInfo = exports.NextLocalSolarEclipse = exports.SearchLocalSolarEclipse = exports.LocalSolarEclipseInfo = exports.EclipseEvent = exports.NextGlobalSolarEclipse = exports.SearchGlobalSolarEclipse = exports.NextLunarEclipse = void 0;
+exports.Illumination = exports.IlluminationInfo = exports.EclipticLongitude = exports.AngleFromSun = exports.PairLongitude = exports.SearchSunLongitude = exports.Search = exports.BaryState = exports.GeoVector = exports.HelioDistance = exports.HelioVector = exports.JupiterMoons = exports.JupiterMoonsInfo = exports.GeoMoon = exports.Ecliptic = exports.VectorObserver = exports.ObserverVector = exports.Equator = exports.SunPosition = exports.Observer = exports.Horizon = exports.EclipticCoordinates = exports.HorizontalCoordinates = exports.MakeRotation = exports.RotationMatrix = exports.EquatorialCoordinates = exports.Spherical = exports.StateVector = exports.Vector = exports.CalcMoonCount = exports.MakeTime = exports.AstroTime = exports.SetDeltaTFunction = exports.DeltaT_JplHorizons = exports.DeltaT_EspenakMeeus = exports.Body = exports.AngleBetween = exports.CALLISTO_RADIUS_KM = exports.GANYMEDE_RADIUS_KM = exports.EUROPA_RADIUS_KM = exports.IO_RADIUS_KM = exports.JUPITER_MEAN_RADIUS_KM = exports.JUPITER_POLAR_RADIUS_KM = exports.JUPITER_EQUATORIAL_RADIUS_KM = exports.RAD2HOUR = exports.RAD2DEG = exports.HOUR2RAD = exports.DEG2RAD = exports.KM_PER_AU = exports.C_AUDAY = void 0;
+exports.LunarEclipseInfo = exports.Constellation = exports.ConstellationInfo = exports.Rotation_GAL_EQJ = exports.Rotation_EQJ_GAL = exports.Rotation_HOR_ECL = exports.Rotation_ECL_HOR = exports.Rotation_ECL_EQD = exports.Rotation_EQD_ECL = exports.Rotation_EQJ_HOR = exports.Rotation_HOR_EQJ = exports.Rotation_HOR_EQD = exports.Rotation_EQD_HOR = exports.Rotation_EQD_EQJ = exports.Rotation_EQJ_EQD = exports.Rotation_ECL_EQJ = exports.Rotation_EQJ_ECL = exports.RotateState = exports.RotateVector = exports.InverseRefraction = exports.Refraction = exports.VectorFromHorizon = exports.HorizonFromVector = exports.SphereFromVector = exports.EquatorFromVector = exports.VectorFromSphere = exports.Pivot = exports.IdentityMatrix = exports.CombineRotation = exports.InverseRotation = exports.NextPlanetApsis = exports.SearchPlanetApsis = exports.NextLunarApsis = exports.SearchLunarApsis = exports.Apsis = exports.SearchPeakMagnitude = exports.SearchMaxElongation = exports.Elongation = exports.ElongationEvent = exports.Seasons = exports.SeasonInfo = exports.SearchHourAngle = exports.HourAngleEvent = exports.SearchRiseSet = exports.NextMoonQuarter = exports.SearchMoonQuarter = exports.MoonQuarter = exports.SearchMoonPhase = exports.MoonPhase = exports.SearchRelativeLongitude = void 0;
+exports.NextTransit = exports.SearchTransit = exports.TransitInfo = exports.NextLocalSolarEclipse = exports.SearchLocalSolarEclipse = exports.LocalSolarEclipseInfo = exports.EclipseEvent = exports.NextGlobalSolarEclipse = exports.SearchGlobalSolarEclipse = exports.NextLunarEclipse = exports.GlobalSolarEclipseInfo = exports.SearchLunarEclipse = void 0;
+/**
+ * @brief The speed of light in AU/day.
+ */
+exports.C_AUDAY = 173.1446326846693;
 /**
  * @brief The number of kilometers per astronomical unit.
  */
@@ -94,7 +98,6 @@ const DAYS_PER_TROPICAL_YEAR = 365.24217;
 const J2000 = new Date('2000-01-01T12:00:00Z');
 const PI2 = 2 * Math.PI;
 const ARC = 3600 * (180 / Math.PI); // arcseconds per radian
-const C_AUDAY = 173.1446326846693; // speed of light in AU/day
 const ASEC2RAD = 4.848136811095359935899141e-6;
 const ASEC180 = 180 * 60 * 60; // arcseconds per 180 degrees (or pi radians)
 const ASEC360 = 2 * ASEC180; // arcseconds per 360 degrees (or 2*pi radians)
@@ -2247,7 +2250,7 @@ function SunPosition(date) {
     // Correct for light travel time from the Sun.
     // This is really the same as correcting for aberration.
     // Otherwise season calculations (equinox, solstice) will all be early by about 8 minutes!
-    const time = MakeTime(date).AddDays(-1 / C_AUDAY);
+    const time = MakeTime(date).AddDays(-1 / exports.C_AUDAY);
     // Get heliocentric cartesian coordinates of Earth in J2000.
     const earth2000 = CalcVsop(vsop.Earth, time);
     // Convert to geocentric location of the Sun.
@@ -3251,7 +3254,7 @@ function GeoVector(body, date, aberration) {
             }
         }
         geo = new Vector(h.x - earth.x, h.y - earth.y, h.z - earth.z, time);
-        let ltime2 = time.AddDays(-geo.Length() / C_AUDAY);
+        let ltime2 = time.AddDays(-geo.Length() / exports.C_AUDAY);
         dt = Math.abs(ltime2.tt - ltime.tt);
         if (dt < 1.0e-9)
             return geo;
@@ -3260,6 +3263,55 @@ function GeoVector(body, date, aberration) {
     throw `Light-travel time solver did not converge: dt=${dt}`;
 }
 exports.GeoVector = GeoVector;
+function ExportState(terse, time) {
+    return new StateVector(terse.r.x, terse.r.y, terse.r.z, terse.v.x, terse.v.y, terse.v.z, time);
+}
+/**
+ * @brief  Calculates barycentric position and velocity vectors for the given body.
+ *
+ * Given a body and a time, calculates the barycentric position and velocity
+ * vectors for the center of that body at that time.
+ * The vectors are expressed in equatorial J2000 coordinates (EQJ).
+ *
+ * @param {Body} body
+ *      The celestial body whose barycentric state vector is to be calculated.
+ *      Supported values are `Body.Sun`, `Body.SSB`, and all planets except Pluto:
+ *      `Body.Mercury`, `Body.Venus`, `Body.Earth`, `Body.Mars`, `Body.Jupiter`,
+ *      `Body.Saturn`, `Body.Uranus`, `Body.Neptune`.
+ * @param {FlexibleDateTime} date
+ *      The date and time for which to calculate position and velocity.
+ * @returns {StateVector}
+ *      An object that contains barycentric position and velocity vectors.
+ */
+function BaryState(body, date) {
+    const time = MakeTime(date);
+    if (body == Body.SSB) {
+        // Trivial case: the solar system barycenter itself.
+        return new StateVector(0, 0, 0, 0, 0, 0, time);
+    }
+    // Find the barycentric positions and velocities for the 5 major bodies:
+    // Sun, Jupiter, Saturn, Uranus, Neptune.
+    const bary = new major_bodies_t(time.tt);
+    // If the caller is asking for one of the major bodies, we can immediately return the answer.
+    switch (body) {
+        case Body.Sun: return ExportState(bary.Sun, time);
+        case Body.Jupiter: return ExportState(bary.Jupiter, time);
+        case Body.Saturn: return ExportState(bary.Saturn, time);
+        case Body.Uranus: return ExportState(bary.Uranus, time);
+        case Body.Neptune: return ExportState(bary.Neptune, time);
+    }
+    // Otherwise, we need to calculate the heliocentric state of the given body
+    // and add the Sun's heliocentric state to obtain the body's barycentric state.
+    // BarySun + HelioBody = BaryBody
+    // Handle the remaining VSOP bodies: Mercury, Venus, Earth, Mars.
+    if (body in vsop) {
+        const planet = CalcVsopPosVel(vsop[body], time.tt);
+        return new StateVector(bary.Sun.r.x + planet.r.x, bary.Sun.r.y + planet.r.y, bary.Sun.r.z + planet.r.z, bary.Sun.v.x + planet.v.x, bary.Sun.v.y + planet.v.y, bary.Sun.v.z + planet.v.z, time);
+    }
+    // FIXFIXFIX: later, we can add support for Pluto, Moon, EMB, etc.
+    throw `BaryState: Unsupported body "${body}"`;
+}
+exports.BaryState = BaryState;
 function QuadInterp(tm, dt, fa, fm, fb) {
     let Q = (fb + fa) / 2 - fm;
     let R = (fb - fa) / 2;

@@ -2169,6 +2169,81 @@ def GeoVector(body, time, aberration):
     raise Error('Light-travel time solver did not converge: dt={}'.format(dt))
 
 
+def _ExportState(terse, time):
+    return StateVector(
+        terse.r.x, terse.r.y, terse.r.z,
+        terse.v.x, terse.v.y, terse.v.z,
+        time
+    )
+
+
+def BaryState(body, time):
+    """Calculates barycentric position and velocity vectors for the given body.
+
+    Given a body and a time, calculates the barycentric position and velocity
+    vectors for the center of that body at that time.
+    The vectors are expressed in equatorial J2000 coordinates (EQJ).
+
+    Parameters
+    ----------
+    body : Body
+        The celestial body whose barycentric state vector is to be calculated.
+        Supported values are `Body.Sun`, `Body.SSB`, and all planets except Pluto:
+        `Body.Mercury`, `Body.Venus`, `Body.Earth`, `Body.Mars`, `Body.Jupiter`,
+        `Body.Saturn`, `Body.Uranus`, `Body.Neptune`.
+    time : Time
+        The date and time for which to calculate position and velocity.
+
+    Returns
+    -------
+    StateVector
+        An object that contains barycentric position and velocity vectors.
+    """
+    # Trivial case: the solar sytem barycenter itself.
+    if body == Body.SSB:
+        return StateVector(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, time)
+
+    # Find the barycentric positions and velocities for the 5 major bodies.
+    bary = _major_bodies_t(time.tt)
+
+    # If the caller is asking for one of the major bodies,
+    # we can immediately return the answer.
+    if body == Body.Sun:
+        return _ExportState(bary.Sun, time)
+
+    if body == Body.Jupiter:
+        return _ExportState(bary.Jupiter, time)
+
+    if body == Body.Saturn:
+        return _ExportState(bary.Saturn, time)
+
+    if body == Body.Uranus:
+        return _ExportState(bary.Uranus, time)
+
+    if body == Body.Neptune:
+        return _ExportState(bary.Neptune, time)
+
+    if 0 <= body.value < len(_vsop):
+        # Handle the remaining VSOP bodies: Mercury, Venus, Earth, Mars.
+        # Calculate the heliocentric state of the given body
+        # and add the Sun's heliocentric state to obtain the
+        # body's barycentric state.
+        # BarySun + HelioBody = BaryBody
+        planet = _CalcVsopPosVel(_vsop[body.value], time.tt)
+        return StateVector(
+            bary.Sun.r.x + planet.r.x,
+            bary.Sun.r.y + planet.r.y,
+            bary.Sun.r.z + planet.r.z,
+            bary.Sun.v.x + planet.v.x,
+            bary.Sun.v.y + planet.v.y,
+            bary.Sun.v.z + planet.v.z,
+            time
+        )
+
+    # FIXFIXFIX: later, we can add support for Pluto, Moon, EMB, etc.
+    raise InvalidBodyError()
+
+
 def Equator(body, time, observer, ofdate, aberration):
     """Calculates equatorial coordinates of a celestial body as seen by an observer on the Earth's surface.
 

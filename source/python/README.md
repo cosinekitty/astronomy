@@ -36,6 +36,7 @@ To get started quickly, here are some [examples](../../demo/python/).
 | [EclipticLongitude](#EclipticLongitude) | Calculates ecliptic longitude of a body in the J2000 system. |
 | [Horizon](#Horizon)         | Calculates horizontal coordinates (azimuth, altitude) for a given observer on the Earth. |
 | [PairLongitude](#PairLongitude) | Calculates the difference in apparent ecliptic longitude between two bodies, as seen from the Earth. |
+| [BaryState](#BaryState) | Calculates the barycentric position and velocity vectors of the Sun or a planet. |
 
 ### Geographic helper functions
 
@@ -996,6 +997,25 @@ easy it is to see the body away from the glare of the Sun.
 ### Returns: `float`
 A numeric value indicating the angle in degrees between the Sun
 and the specified body as seen from the center of the Earth.
+
+---
+
+<a name="BaryState"></a>
+### BaryState(body, time)
+
+**Calculates barycentric position and velocity vectors for the given body.**
+
+Given a body and a time, calculates the barycentric position and velocity
+vectors for the center of that body at that time.
+The vectors are expressed in equatorial J2000 coordinates (EQJ).
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Body`](#Body) | `body` | The celestial body whose barycentric state vector is to be calculated. Supported values are `Body.Sun`, `Body.SSB`, and all planets except Pluto: `Body.Mercury`, `Body.Venus`, `Body.Earth`, `Body.Mars`, `Body.Jupiter`, `Body.Saturn`, `Body.Uranus`, `Body.Neptune`. |
+| [`Time`](#Time) | `time` | The date and time for which to calculate position and velocity. |
+
+### Returns: [`StateVector`](#StateVector)
+An object that contains barycentric position and velocity vectors.
 
 ---
 

@@ -2106,12 +2106,16 @@ namespace CosineKitty
         /// </summary>
         public const double CALLISTO_RADIUS_KM = 2410.3;
 
+        /// <summary>
+        /// The speed of light in AU/day.
+        /// </summary>
+        public const double C_AUDAY = 173.1446326846693;
+
         private const double DAYS_PER_TROPICAL_YEAR = 365.24217;
         private const double ASEC360 = 1296000.0;
         private const double ASEC2RAD = 4.848136811095359935899141e-6;
         internal const double PI2 = 2.0 * Math.PI;
         internal const double ARC = 3600.0 * 180.0 / Math.PI;       /* arcseconds per radian */
-        private const double C_AUDAY = 173.1446326846693;           /* speed of light in AU/day */
 
         internal const double SUN_RADIUS_KM  = 695700.0;
         internal const double SUN_RADIUS_AU  = SUN_RADIUS_KM / KM_PER_AU;
@@ -4710,6 +4714,77 @@ namespace CosineKitty
                 }
                 throw new Exception("Light travel time correction did not converge");
             }
+        }
+
+        private static StateVector ExportState(body_state_t terse, AstroTime time)
+        {
+            return new StateVector(
+                terse.r.x, terse.r.y, terse.r.z,
+                terse.v.x, terse.v.y, terse.v.z,
+                time
+            );
+        }
+
+        /// <summary>
+        /// Calculates barycentric position and velocity vectors for the given body.
+        /// </summary>
+        /// <remarks>
+        /// Given a body and a time, calculates the barycentric position and velocity
+        /// vectors for the center of that body at that time.
+        /// The vectors are expressed in equatorial J2000 coordinates (EQJ).
+        /// </remarks>
+        /// <param name="body">
+        /// The celestial body whose barycentric state vector is to be calculated.
+        /// Supported values are `Body.Sun`, `Body.SSB`, and all planets except Pluto:
+        /// `Body.Mercury`, `Body.Venus`, `Body.Earth`, `Body.Mars`, `Body.Jupiter`,
+        /// `Body.Saturn`, `Body.Uranus`, `Body.Neptune`.
+        /// </param>
+        /// <param name="time">
+        /// The date and time for which to calculate position and velocity.
+        /// </param>
+        /// <returns>
+        /// A structure that contains barycentric position and velocity vectors.
+        /// </returns>
+        public static StateVector BaryState(Body body, AstroTime time)
+        {
+            // Trivial case: the solar system barycenter itself.
+            if (body == Body.SSB)
+                return new StateVector(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, time);
+
+            // Find the barycentric positions and velocities for the 5 major bodies.
+            major_bodies_t bary = MajorBodyBary(time.tt);
+
+            // If the caller is asking for one of the major bodies, we can immediately return the answer.
+            switch (body)
+            {
+                case Body.Sun:      return ExportState(bary.Sun, time);
+                case Body.Jupiter:  return ExportState(bary.Jupiter, time);
+                case Body.Saturn:   return ExportState(bary.Saturn, time);
+                case Body.Uranus:   return ExportState(bary.Uranus, time);
+                case Body.Neptune:  return ExportState(bary.Neptune, time);
+            }
+
+            // Handle the remaining VSOP bodies: Mercury, Venus, Earth, Mars.
+            // Otherwise, we need to calculate the heliocentric state of the given body
+            // and add the Sun's heliocentric state to obtain the body's barycentric state.
+            // BarySun + HelioBody = BaryBody
+            int bindex = (int)body;
+            if (bindex >= 0 && bindex < vsop.Length)
+            {
+                body_state_t planet = CalcVsopPosVel(vsop[bindex], time.tt);
+                return new StateVector(
+                    bary.Sun.r.x + planet.r.x,
+                    bary.Sun.r.y + planet.r.y,
+                    bary.Sun.r.z + planet.r.z,
+                    bary.Sun.v.x + planet.v.x,
+                    bary.Sun.v.y + planet.v.y,
+                    bary.Sun.v.z + planet.v.z,
+                    time
+                );
+            }
+
+            // FIXFIXFIX: later, we can add support for Pluto, Moon, EMB, etc.
+            throw new InvalidBodyException(body);
         }
 
         /// <summary>

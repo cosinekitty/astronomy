@@ -55,6 +55,7 @@ To get started quickly, here are some [examples](../../demo/c/).
 | [EclipticLongitude](#Astronomy_EclipticLongitude) | Calculates ecliptic longitude of a body in the J2000 system. |
 | [Horizon](#Astronomy_Horizon)         | Calculates horizontal coordinates (azimuth, altitude) for a given observer on the Earth. |
 | [PairLongitude](#Astronomy_PairLongitude) | Calculates the difference in apparent ecliptic longitude between two bodies, as seen from the Earth. |
+| [BaryState](#Astronomy_BaryState) | Calculates the barycentric position and velocity vectors of the Sun or a planet. |
 
 ### Geographic helper functions
 
@@ -255,6 +256,31 @@ This function calculates the angular separation between the given body and the S
 | --- | --- | --- |
 | [`astro_body_t`](#astro_body_t) | `body` |  The celestial body whose angle from the Sun is to be measured. Not allowed to be `BODY_EARTH`. | 
 | [`astro_time_t`](#astro_time_t) | `time` |  The time at which the observation is made. | 
+
+
+
+
+---
+
+<a name="Astronomy_BaryState"></a>
+### Astronomy_BaryState(body, time) &#8658; [`astro_state_vector_t`](#astro_state_vector_t)
+
+**Calculates barycentric position and velocity vectors for the given body.** 
+
+
+
+Given a body and a time, calculates the barycentric position and velocity vectors for the center of that body at that time. The vectors are expressed in equatorial J2000 coordinates (EQJ).
+
+
+
+**Returns:**  A structure that contains barycentric position and velocity vectors. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_body_t`](#astro_body_t) | `body` |  The celestial body whose barycentric state vector is to be calculated. Supported values are `BODY_SUN`, `BODY_SSB`, and all planets except Pluto: `BODY_MERCURY`, `BODY_VENUS`, `BODY_EARTH`, `BODY_MARS`, `BODY_JUPITER`, `BODY_SATURN`, `BODY_URANUS`, `BODY_NEPTUNE`.  | 
+| [`astro_time_t`](#astro_time_t) | `time` |  The date and time for which to calculate position and velocity.  | 
 
 
 
@@ -2382,6 +2408,21 @@ This is the inverse function of [`Astronomy_ObserverVector`](#Astronomy_Observer
 
 ```C
 #define CALLISTO_RADIUS_KM  2410.3
+```
+
+
+
+---
+
+<a name="C_AUDAY"></a>
+### `C_AUDAY`
+
+**The speed of light in AU/day.** 
+
+
+
+```C
+#define C_AUDAY  173.1446326846693
 ```
 
 

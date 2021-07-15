@@ -149,7 +149,6 @@ static const double ASEC360 = 1296000.0;
 static const double ASEC2RAD = 4.848136811095359935899141e-6;
 static const double PI2 = 2.0 * PI;
 static const double ARC = 3600.0 * 180.0 / PI;          /* arcseconds per radian */
-static const double C_AUDAY = 173.1446326846693;        /* speed of light in AU/day */
 static const double SECONDS_PER_DAY = 24.0 * 3600.0;
 static const double SOLAR_DAYS_PER_SIDEREAL_DAY = 0.9972695717592592;
 static const double MEAN_SYNODIC_MONTH = 29.530588;     /* average number of days for Moon to return to the same phase */
@@ -178,7 +177,7 @@ static const double ASEC180 = 180.0 * 60.0 * 60.0;      /* arcseconds per 180 de
 static const double EARTH_MOON_MASS_RATIO = 81.30056;
 
 /*
-    Masses of the Sun and outer planets, used for:
+    Masses of the Sun and planets, used for:
     (1) Calculating the Solar System Barycenter
     (2) Integrating the movement of Pluto
 
@@ -194,6 +193,15 @@ static const double JUPITER_GM = 0.2825345909524226e-06;
 static const double SATURN_GM  = 0.8459715185680659e-07;
 static const double URANUS_GM  = 0.1292024916781969e-07;
 static const double NEPTUNE_GM = 0.1524358900784276e-07;
+
+#if 0
+/* These values are not currently used, but recorded here just in case. */
+static const double MERCURY_GM = 0.4912547451450812e-10;
+static const double VENUS_GM   = 0.7243452486162703e-09;
+static const double EARTH_GM   = 0.8887692390113509e-09;
+static const double MARS_GM    = 0.9549535105779258e-10;
+static const double PLUTO_GM   = 0.2188699765425970e-11;
+#endif
 
 /** @cond DOXYGEN_SKIP */
 #define ARRAYSIZE(x)    (sizeof(x) / sizeof(x[0]))
@@ -2850,6 +2858,99 @@ astro_vector_t Astronomy_GeoVector(astro_body_t body, astro_time_t time, astro_a
 finished:
     vector.t = time;
     return vector;
+}
+
+static astro_state_vector_t ExportState(body_state_t terse, astro_time_t time)
+{
+    astro_state_vector_t state;
+
+    state.status = ASTRO_SUCCESS;
+    state.x = terse.r.x;
+    state.y = terse.r.y;
+    state.z = terse.r.z;
+    state.vx = terse.v.x;
+    state.vy = terse.v.y;
+    state.vz = terse.v.z;
+    state.t = time;
+
+    return state;
+}
+
+/**
+ * @brief  Calculates barycentric position and velocity vectors for the given body.
+ *
+ * Given a body and a time, calculates the barycentric position and velocity
+ * vectors for the center of that body at that time.
+ * The vectors are expressed in equatorial J2000 coordinates (EQJ).
+ *
+ * @param body
+ *      The celestial body whose barycentric state vector is to be calculated.
+ *      Supported values are `BODY_SUN`, `BODY_SSB`, and all planets except Pluto:
+ *      `BODY_MERCURY`, `BODY_VENUS`, `BODY_EARTH`, `BODY_MARS`, `BODY_JUPITER`,
+ *      `BODY_SATURN`, `BODY_URANUS`, `BODY_NEPTUNE`.
+ * @param time
+ *      The date and time for which to calculate position and velocity.
+ * @return
+ *      A structure that contains barycentric position and velocity vectors.
+ */
+astro_state_vector_t Astronomy_BaryState(astro_body_t body, astro_time_t time)
+{
+    astro_state_vector_t state;
+    body_state_t bary[5];
+    body_state_t planet;
+
+    if (body == BODY_SSB)
+    {
+        /* Trivial case: the solar system barycenter itself. */
+        state.status = ASTRO_SUCCESS;
+        state.x = state.y = state.z = 0.0;
+        state.vx = state.vy = state.vz = 0.0;
+        state.t = time;
+        return state;
+    }
+
+    /*
+        Find the barycentric positions and velocities for the 5 major bodies:
+        bary[0] = Sun
+        bary[1] = Jupiter
+        bary[2] = Saturn
+        bary[3] = Uranus
+        bary[4] = Neptune
+    */
+    MajorBodyBary(bary, time.tt);
+
+    switch (body)
+    {
+    /* If the caller is asking for one of the major bodies, we can immediately return the answer. */
+    case BODY_SUN:      return ExportState(bary[0], time);
+    case BODY_JUPITER:  return ExportState(bary[1], time);
+    case BODY_SATURN:   return ExportState(bary[2], time);
+    case BODY_URANUS:   return ExportState(bary[3], time);
+    case BODY_NEPTUNE:  return ExportState(bary[4], time);
+
+    /* Handle the remaining VSOP bodies: Mercury, Venus, Earth, Mars. */
+    /* Otherwise, we need to calculate the heliocentric state of the given body */
+    /* and add the Sun's heliocentric state to obtain the body's barycentric state. */
+    /* BarySun + HelioBody = BaryBody */
+    case BODY_MERCURY:
+    case BODY_VENUS:
+    case BODY_EARTH:
+    case BODY_MARS:
+        planet = CalcVsopPosVel(&vsop[body], time.tt);
+        state.x  = bary[0].r.x + planet.r.x;
+        state.y  = bary[0].r.y + planet.r.y;
+        state.z  = bary[0].r.z + planet.r.z;
+        state.vx = bary[0].v.x + planet.v.x;
+        state.vy = bary[0].v.y + planet.v.y;
+        state.vz = bary[0].v.z + planet.v.z;
+        state.t  = time;
+        state.status = ASTRO_SUCCESS;
+        return state;
+
+    /* FIXFIXFIX - add support for BODY_MOON, BODY_EMB, BODY_PLUTO. */
+    default:
+        return StateVecError(ASTRO_INVALID_BODY, time);
+    }
 }
 
 /**

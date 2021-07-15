@@ -30,6 +30,7 @@ and some [Node.js examples](../../demo/nodejs/).
 | [Ecliptic](#Ecliptic)       | Calculates ecliptic latitude, longitude, and Cartesian coordinates. |
 | [Horizon](#Horizon)         | Calculates horizontal coordinates (azimuth, altitude) for a given observer on the Earth. |
 | [PairLongitude](#PairLongitude) | Calculates the difference in apparent ecliptic longitude between two bodies, as seen from the Earth. |
+| [BaryState](#BaryState) | Calculates the barycentric position and velocity vectors of the Sun or a planet. |
 
 ### Geographic helper functions
 
@@ -723,6 +724,14 @@ The calculations are performed from the point of view of a geocentric observer.
 
 * * *
 
+<a name="C_AUDAY"></a>
+
+## C\_AUDAY
+**Kind**: global variable  
+**Brief**: The speed of light in AU/day.  
+
+* * *
+
 <a name="KM_PER_AU"></a>
 
 ## KM\_PER\_AU
@@ -1148,6 +1157,25 @@ coming from that body.
 | body | [<code>Body</code>](#Body) | One of the strings      `"Sun"`, `"Moon"`, `"Mercury"`, `"Venus"`,      `"Earth"`, `"Mars"`, `"Jupiter"`, `"Saturn"`,      `"Uranus"`, `"Neptune"`, or `"Pluto"`. |
 | date | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time for which the body's position is to be calculated. |
 | aberration | <code>bool</code> | Pass `true` to correct for      <a href="https://en.wikipedia.org/wiki/Aberration_of_light">aberration</a>,      or `false` to leave uncorrected. |
+
+
+* * *
+
+<a name="BaryState"></a>
+
+## BaryState(body, date) ⇒ [<code>StateVector</code>](#StateVector)
+**Kind**: global function  
+**Returns**: [<code>StateVector</code>](#StateVector) - An object that contains barycentric position and velocity vectors.  
+**Brief**: Calculates barycentric position and velocity vectors for the given body.
+
+Given a body and a time, calculates the barycentric position and velocity
+vectors for the center of that body at that time.
+The vectors are expressed in equatorial J2000 coordinates (EQJ).  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| body | [<code>Body</code>](#Body) | The celestial body whose barycentric state vector is to be calculated.      Supported values are `Body.Sun`, `Body.SSB`, and all planets except Pluto:      `Body.Mercury`, `Body.Venus`, `Body.Earth`, `Body.Mars`, `Body.Jupiter`,      `Body.Saturn`, `Body.Uranus`, `Body.Neptune`. |
+| date | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time for which to calculate position and velocity. |
 
 
 * * *

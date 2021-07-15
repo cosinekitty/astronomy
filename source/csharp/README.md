@@ -34,6 +34,7 @@ To get started quickly, here are some [examples](../../demo/csharp/).
 | [EclipticLongitude](#Astronomy.EclipticLongitude) | Calculates ecliptic longitude of a body in the J2000 system. |
 | [Horizon](#Astronomy.Horizon)         | Calculates horizontal coordinates (azimuth, altitude) for a given observer on the Earth. |
 | [PairLongitude](#Astronomy.PairLongitude) | Calculates the difference in apparent ecliptic longitude between two bodies, as seen from the Earth. |
+| [BaryState](#Astronomy.BaryState) | Calculates the barycentric position and velocity vectors of the Sun or a planet. |
 
 ### Geographic helper functions
 
@@ -153,6 +154,14 @@ these are used in function and type names.
 
 <a name="constants"></a>
 ## Constants
+
+---
+
+<a name="Astronomy.C_AUDAY"></a>
+### `const double Astronomy.C_AUDAY = 173.1446326846693;`
+
+**The speed of light in AU/day.**
+
 
 ---
 
@@ -288,6 +297,22 @@ easy it is to see the body away from the glare of the Sun.
 | [`AstroTime`](#AstroTime) | `time` | The time at which the observation is made. |
 
 **Returns:** Returns the angle in degrees between the Sun and the specified body as seen from the center of the Earth.
+
+<a name="Astronomy.BaryState"></a>
+### Astronomy.BaryState(body, time) &#8658; [`StateVector`](#StateVector)
+
+**Calculates barycentric position and velocity vectors for the given body.**
+
+Given a body and a time, calculates the barycentric position and velocity
+vectors for the center of that body at that time.
+The vectors are expressed in equatorial J2000 coordinates (EQJ).
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Body`](#Body) | `body` | The celestial body whose barycentric state vector is to be calculated. Supported values are `Body.Sun`, `Body.SSB`, and all planets except Pluto: `Body.Mercury`, `Body.Venus`, `Body.Earth`, `Body.Mars`, `Body.Jupiter`, `Body.Saturn`, `Body.Uranus`, `Body.Neptune`. |
+| [`AstroTime`](#AstroTime) | `time` | The date and time for which to calculate position and velocity. |
+
+**Returns:** A structure that contains barycentric position and velocity vectors.
 
 <a name="Astronomy.CombineRotation"></a>
 ### Astronomy.CombineRotation(a, b) &#8658; [`RotationMatrix`](#RotationMatrix)
