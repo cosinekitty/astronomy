@@ -2885,8 +2885,6 @@ namespace csharp_test
                             return 1;
                         }
 
-                        //Console.WriteLine(">>> [" + string.Join(",", token) + "]");
-
                         double jd = double.Parse(token[0]);
                         double jra = double.Parse(token[token.Length-4]);
                         double jdec = double.Parse(token[token.Length-3]);

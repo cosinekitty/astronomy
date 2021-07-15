@@ -1973,7 +1973,86 @@ def BaryState():
 
 #-----------------------------------------------------------------------------------------------------------
 
+def Aberration():
+    THRESHOLD_SECONDS = 0.4
+    filename = 'equatorial/Mars_j2000_ofdate_aberration.txt'
+    count = 0
+    with open(filename, 'rt') as infile:
+        lnum = 0
+        found_begin = False
+        max_diff_seconds = 0.0
+        for line in infile:
+            lnum += 1
+            line = line.rstrip()
+            if not found_begin:
+                if line == '$$SOE':
+                    found_begin = True
+            elif line == '$$EOE':
+                break
+            else:
+                # 2459371.500000000 *   118.566080210  22.210647456 118.874086738  22.155784122
+                token = line.split()
+                if len(token) < 5:
+                    print('PY Aberration({} line {}): not enough tokens'.format(filename, lnum))
+                    return 1
+
+                jd = float(token[0])
+                jra = float(token[-4])
+                jdec = float(token[-3])
+                dra = float(token[-2])
+                ddec = float(token[-1])
+
+                # Convert julian day value to AstroTime.
+                time = astronomy.Time(jd - 2451545.0)
+
+                # Convert EQJ angular coordinates (jra, jdec) to an EQJ vector.
+                # Make the maginitude of the vector the speed of light,
+                # to prepare for aberration correction.
+                eqj_sphere = astronomy.Spherical(jdec, jra, astronomy.C_AUDAY)
+                eqj_vec = astronomy.VectorFromSphere(eqj_sphere, time)
+
+                # Aberration correction: calculate the Earth's barycentric
+                # velocity vector in EQJ coordinates.
+                eqj_earth = astronomy.BaryState(astronomy.Body.Earth, time)
+
+                # Use non-relativistic approximation: add light vector to Earth velocity vector.
+                # This gives aberration-corrected apparent position of the start in EQJ.
+                eqj_vec.x += eqj_earth.vx
+                eqj_vec.y += eqj_earth.vy
+                eqj_vec.z += eqj_earth.vz
+
+                # Calculate the rotation matrix that converts J2000 coordinates to of-date coordinates.
+                rot = astronomy.Rotation_EQJ_EQD(time)
+
+                # Use the rotation matrix to re-orient the EQJ vector to an EQD vector.
+                eqd_vec = astronomy.RotateVector(rot, eqj_vec)
+
+                # Convert the EQD vector back to spherical angular coordinates.
+                eqd_sphere = astronomy.SphereFromVector(eqd_vec)
+
+                # Calculate the differences in RA and DEC between expected and calculated values.
+                factor = math.cos(math.radians(v(eqd_sphere.lat)))    # RA errors are less important toward the poles.
+                xra = factor * vabs(eqd_sphere.lon - dra)
+                xdec = vabs(eqd_sphere.lat - ddec)
+                diff_seconds = 3600.0 * sqrt(xra*xra + xdec*xdec)
+                Debug('PY Aberration({} line {}): xra={:0.6f} deg, xdec={:0.6f} deg, diff_seconds={:0.3f}.'.format(filename, lnum, xra, xdec, diff_seconds))
+                if diff_seconds > THRESHOLD_SECONDS:
+                    print('PY Aberration({} line {}): EXCESSIVE ANGULAR ERROR = {:0.3f} seconds.'.format(filename, lnum, diff_seconds));
+                    return 1
+
+                if diff_seconds > max_diff_seconds:
+                    max_diff_seconds = diff_seconds
+
+                # We have completed one more test case.
+                count += 1
+
+    print('PY AberrationTest({}): PASS - Tested {} cases. max_diff_seconds = {:0.3f}'.format(filename, count, max_diff_seconds))
+    return 0
+
+#-----------------------------------------------------------------------------------------------------------
+
 UnitTests = {
+    'aberration':               Aberration,
     'barystate':                BaryState,
     'constellation':            Constellation,
     'elongation':               Elongation,
