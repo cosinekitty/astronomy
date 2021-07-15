@@ -36,6 +36,7 @@ To get started quickly, here are some [examples](../../demo/python/).
 | [EclipticLongitude](#EclipticLongitude) | Calculates ecliptic longitude of a body in the J2000 system. |
 | [Horizon](#Horizon)         | Calculates horizontal coordinates (azimuth, altitude) for a given observer on the Earth. |
 | [PairLongitude](#PairLongitude) | Calculates the difference in apparent ecliptic longitude between two bodies, as seen from the Earth. |
+| [BaryState](#BaryState) | Calculates the barycentric position and velocity vectors of the Sun or a planet. |
 
 ### Geographic helper functions
 
