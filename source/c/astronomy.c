@@ -4368,6 +4368,40 @@ astro_observer_t Astronomy_VectorObserver(
 
 
 /**
+ * @brief Calculates the gravitational acceleration experienced by an observer on the Earth.
+ *
+ * This function implements the WGS 84 Ellipsoidal Gravity Formula.
+ * The result is a combination of inward gravitational acceleration
+ * with outward centrifugal acceleration, as experienced by an observer
+ * in the Earth's rotating frame of reference.
+ * The resulting value increases toward the Earth's poles and decreases
+ * toward the equator, consistent with changes of the weight measured
+ * by a spring scale of a fixed mass moved to different latitudes and heights
+ * on the Earth.
+ *
+ * @param latitude
+ *      The latitude of the observer in degrees north or south of the equator.
+ *      By formula symmetry, positive latitudes give the same answer as negative
+ *      latitudes, so the sign does not matter.
+ *
+ * @param height
+ *      The height above the sea level geoid in meters.
+ *      No range checking is done; however, accuracy is only valid in the
+ *      range 0 to 100000 meters.
+ *
+ * @return
+ *      The effective gravitational acceleration expressed in meters per second squared [m/s^2].
+ */
+double Astronomy_ObserverGravity(double latitude, double height)
+{
+    double s = sin(latitude * DEG2RAD);
+    double s2 = s*s;
+    double g0 = 9.7803253359 * (1.0 + 0.00193185265241*s2) / sqrt(1.0 - 0.00669437999013*s2);
+    return g0 * (1.0 - (3.15704e-07 - 2.10269e-09*s2)*height + 7.37452e-14*height*height);
+}
+
+
+/**
  * @brief Calculates the apparent location of a body relative to the local horizon of an observer on the Earth.
  *
  * Given a date and time, the geographic location of an observer on the Earth, and

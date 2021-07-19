@@ -1170,6 +1170,31 @@ After calling [`Astronomy_SearchTransit`](#Astronomy_SearchTransit) to find a tr
 
 ---
 
+<a name="Astronomy_ObserverGravity"></a>
+### Astronomy_ObserverGravity(latitude, height) &#8658; `double`
+
+**Calculates the gravitational acceleration experienced by an observer on the Earth.** 
+
+
+
+This function implements the WGS 84 Ellipsoidal Gravity Formula. The result is a combination of inward gravitational acceleration with outward centrifugal acceleration, as experienced by an observer in the Earth's rotating frame of reference. The resulting value increases toward the Earth's poles and decreases toward the equator, consistent with changes of the weight measured by a spring scale of a fixed mass moved to different latitudes and heights on the Earth.
+
+
+
+**Returns:**  The effective gravitational acceleration expressed in meters per second squared [m/s^2]. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| `double` | `latitude` |  The latitude of the observer in degrees north or south of the equator. By formula symmetry, positive latitudes give the same answer as negative latitudes, so the sign does not matter. | 
+| `double` | `height` |  The height above the sea level geoid in meters. No range checking is done; however, accuracy is only valid in the range 0 to 100000 meters. | 
+
+
+
+
+---
+
 <a name="Astronomy_ObserverVector"></a>
 ### Astronomy_ObserverVector(time, observer, equdate) &#8658; [`astro_vector_t`](#astro_vector_t)
 
