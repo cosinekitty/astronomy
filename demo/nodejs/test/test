@@ -5,7 +5,7 @@ Fail()
     exit 1
 }
 
-rm -f test/{equatorial,camera,moonphase,positions,riseset,seasons,culminate,horizon,lunar_eclipse}.txt
+rm -f test/{equatorial,equator_of_date,camera,moonphase,positions,riseset,seasons,culminate,horizon,lunar_eclipse,triangulate,gravity}.txt
 
 echo "Testing example: equatorial.js"
 node equatorial.js 38.1256 -89.5544 215.7 23.5 2021-03-27T18:45:00Z > test/equatorial.txt || Fail "Error testing equatorial.js."
@@ -50,6 +50,12 @@ diff test/lunar_eclipse.txt test/lunar_eclipse_correct.txt || Fail "Error compar
 echo "Testing example: triangulate.js"
 node triangulate.js 48.16042 24.49986 2019 18 7 48.27305 24.36401 662 83 12 > test/triangulate.txt || Fail "Error running triangulate.js."
 diff test/triangulate.txt test/triangulate_correct.txt || Fail "Error comparing triangulate.js output."
+
+echo "Testing example: gravity.js"
+for latitude in {0..90}; do
+    node gravity.js ${latitude} 0 >> test/gravity.txt || Fail "Error running gravity.js."
+done
+diff test/gravity.txt test/gravity_correct.txt || Fail "Error comparing gravity.js output."
 
 cd calendar || Fail "Cannot change to calendar directory."
 ./run || exit 1

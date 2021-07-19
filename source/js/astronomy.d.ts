@@ -623,6 +623,32 @@ export declare function ObserverVector(date: FlexibleDateTime, observer: Observe
  */
 export declare function VectorObserver(vector: Vector, ofdate: boolean): Observer;
 /**
+ * @brief Calculates the gravitational acceleration experienced by an observer on the Earth.
+ *
+ * This function implements the WGS 84 Ellipsoidal Gravity Formula.
+ * The result is a combination of inward gravitational acceleration
+ * with outward centrifugal acceleration, as experienced by an observer
+ * in the Earth's rotating frame of reference.
+ * The resulting value increases toward the Earth's poles and decreases
+ * toward the equator, consistent with changes of the weight measured
+ * by a spring scale of a fixed mass moved to different latitudes and heights
+ * on the Earth.
+ *
+ * @param {number} latitude
+ *      The latitude of the observer in degrees north or south of the equator.
+ *      By formula symmetry, positive latitudes give the same answer as negative
+ *      latitudes, so the sign does not matter.
+ *
+ * @param {number} height
+ *      The height above the sea level geoid in meters.
+ *      No range checking is done; however, accuracy is only valid in the
+ *      range 0 to 100000 meters.
+ *
+ * @returns {number}
+ *      The effective gravitational acceleration expressed in meters per second squared [m/s^2].
+ */
+export declare function ObserverGravity(latitude: number, height: number): number;
+/**
  * @brief Converts equatorial Cartesian coordinates to ecliptic Cartesian and angular coordinates.
  *
  * Given J2000 equatorial Cartesian coordinates,
