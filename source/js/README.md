@@ -598,37 +598,37 @@ may determine the date and time of the beginning/end of each eclipse phase.
 **Kind**: global class  
 **Brief**: Reports the time and geographic location of the peak of a solar eclipse.
 
-    Returned by [SearchGlobalSolarEclipse](#SearchGlobalSolarEclipse) or [NextGlobalSolarEclipse](#NextGlobalSolarEclipse)
-    to report information about a solar eclipse event.
+Returned by [SearchGlobalSolarEclipse](#SearchGlobalSolarEclipse) or [NextGlobalSolarEclipse](#NextGlobalSolarEclipse)
+to report information about a solar eclipse event.
 
-    Field `peak` holds the date and time of the peak of the eclipse, defined as
-    the instant when the axis of the Moon's shadow cone passes closest to the Earth's center.
+Field `peak` holds the date and time of the peak of the eclipse, defined as
+the instant when the axis of the Moon's shadow cone passes closest to the Earth's center.
 
-    The eclipse is classified as partial, annular, or total, depending on the
-    maximum amount of the Sun's disc obscured, as seen at the peak location
-    on the surface of the Earth.
+The eclipse is classified as partial, annular, or total, depending on the
+maximum amount of the Sun's disc obscured, as seen at the peak location
+on the surface of the Earth.
 
-    The `kind` field thus holds one of the strings `"partial"`, `"annular"`, or `"total"`.
-    A total eclipse is when the peak observer sees the Sun completely blocked by the Moon.
-    An annular eclipse is like a total eclipse, but the Moon is too far from the Earth's surface
-    to completely block the Sun; instead, the Sun takes on a ring-shaped appearance.
-    A partial eclipse is when the Moon blocks part of the Sun's disc, but nobody on the Earth
-    observes either a total or annular eclipse.
+The `kind` field thus holds one of the strings `"partial"`, `"annular"`, or `"total"`.
+A total eclipse is when the peak observer sees the Sun completely blocked by the Moon.
+An annular eclipse is like a total eclipse, but the Moon is too far from the Earth's surface
+to completely block the Sun; instead, the Sun takes on a ring-shaped appearance.
+A partial eclipse is when the Moon blocks part of the Sun's disc, but nobody on the Earth
+observes either a total or annular eclipse.
 
-    If `kind` is `"total"` or `"annular"`, the `latitude` and `longitude`
-    fields give the geographic coordinates of the center of the Moon's shadow projected
-    onto the daytime side of the Earth at the instant of the eclipse's peak.
-    If `kind` has any other value, `latitude` and `longitude` are undefined and should
-    not be used.  
+If `kind` is `"total"` or `"annular"`, the `latitude` and `longitude`
+fields give the geographic coordinates of the center of the Moon's shadow projected
+onto the daytime side of the Earth at the instant of the eclipse's peak.
+If `kind` has any other value, `latitude` and `longitude` are undefined and should
+not be used.  
 **Properties**
 
 | Name | Type | Description |
 | --- | --- | --- |
 | kind | <code>string</code> | One of the following string values: `"partial"`, `"annular"`, `"total"`. |
-| peak | [<code>AstroTime</code>](#AstroTime) | The date and time of the peak of the eclipse, defined as the instant         when the axis of the Moon's shadow cone passes closest to the Earth's center. |
-| distance | <code>number</code> | The distance in kilometers between the axis of the Moon's shadow cone         and the center of the Earth at the time indicated by `peak`. |
-| latitude | <code>number</code> \| <code>undefined</code> | If `kind` holds `"total"`, the geographic latitude in degrees         where the center of the Moon's shadow falls on the Earth at the         time indicated by `peak`; otherwise, `latitude` holds `undefined`. |
-| longitude | <code>number</code> \| <code>undefined</code> | If `kind` holds `"total"`, the geographic longitude in degrees         where the center of the Moon's shadow falls on the Earth at the         time indicated by `peak`; otherwise, `longitude` holds `undefined`. |
+| peak | [<code>AstroTime</code>](#AstroTime) | The date and time of the peak of the eclipse, defined as the instant     when the axis of the Moon's shadow cone passes closest to the Earth's center. |
+| distance | <code>number</code> | The distance in kilometers between the axis of the Moon's shadow cone     and the center of the Earth at the time indicated by `peak`. |
+| latitude | <code>number</code> \| <code>undefined</code> | If `kind` holds `"total"`, the geographic latitude in degrees     where the center of the Moon's shadow falls on the Earth at the     time indicated by `peak`; otherwise, `latitude` holds `undefined`. |
+| longitude | <code>number</code> \| <code>undefined</code> | If `kind` holds `"total"`, the geographic longitude in degrees     where the center of the Moon's shadow falls on the Earth at the     time indicated by `peak`; otherwise, `longitude` holds `undefined`. |
 
 
 * * *

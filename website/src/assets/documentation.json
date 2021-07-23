@@ -52616,11 +52616,11 @@
         "scope": "global"
     },
     {
-        "comment": "/**\n    @brief Reports the time and geographic location of the peak of a solar eclipse.\n\n    Returned by {@link SearchGlobalSolarEclipse} or {@link NextGlobalSolarEclipse}\n    to report information about a solar eclipse event.\n\n    Field `peak` holds the date and time of the peak of the eclipse, defined as\n    the instant when the axis of the Moon's shadow cone passes closest to the Earth's center.\n\n    The eclipse is classified as partial, annular, or total, depending on the\n    maximum amount of the Sun's disc obscured, as seen at the peak location\n    on the surface of the Earth.\n\n    The `kind` field thus holds one of the strings `\"partial\"`, `\"annular\"`, or `\"total\"`.\n    A total eclipse is when the peak observer sees the Sun completely blocked by the Moon.\n    An annular eclipse is like a total eclipse, but the Moon is too far from the Earth's surface\n    to completely block the Sun; instead, the Sun takes on a ring-shaped appearance.\n    A partial eclipse is when the Moon blocks part of the Sun's disc, but nobody on the Earth\n    observes either a total or annular eclipse.\n\n    If `kind` is `\"total\"` or `\"annular\"`, the `latitude` and `longitude`\n    fields give the geographic coordinates of the center of the Moon's shadow projected\n    onto the daytime side of the Earth at the instant of the eclipse's peak.\n    If `kind` has any other value, `latitude` and `longitude` are undefined and should\n    not be used.\n\n    @property {string} kind\n        One of the following string values: `\"partial\"`, `\"annular\"`, `\"total\"`.\n\n    @property {AstroTime} peak\n        The date and time of the peak of the eclipse, defined as the instant\n        when the axis of the Moon's shadow cone passes closest to the Earth's center.\n\n    @property {number} distance\n        The distance in kilometers between the axis of the Moon's shadow cone\n        and the center of the Earth at the time indicated by `peak`.\n\n    @property {number | undefined} latitude\n        If `kind` holds `\"total\"`, the geographic latitude in degrees\n        where the center of the Moon's shadow falls on the Earth at the\n        time indicated by `peak`; otherwise, `latitude` holds `undefined`.\n\n    @property {number | undefined} longitude\n        If `kind` holds `\"total\"`, the geographic longitude in degrees\n        where the center of the Moon's shadow falls on the Earth at the\n        time indicated by `peak`; otherwise, `longitude` holds `undefined`.\n*/",
+        "comment": "/**\n * @brief Reports the time and geographic location of the peak of a solar eclipse.\n *\n * Returned by {@link SearchGlobalSolarEclipse} or {@link NextGlobalSolarEclipse}\n * to report information about a solar eclipse event.\n *\n * Field `peak` holds the date and time of the peak of the eclipse, defined as\n * the instant when the axis of the Moon's shadow cone passes closest to the Earth's center.\n *\n * The eclipse is classified as partial, annular, or total, depending on the\n * maximum amount of the Sun's disc obscured, as seen at the peak location\n * on the surface of the Earth.\n *\n * The `kind` field thus holds one of the strings `\"partial\"`, `\"annular\"`, or `\"total\"`.\n * A total eclipse is when the peak observer sees the Sun completely blocked by the Moon.\n * An annular eclipse is like a total eclipse, but the Moon is too far from the Earth's surface\n * to completely block the Sun; instead, the Sun takes on a ring-shaped appearance.\n * A partial eclipse is when the Moon blocks part of the Sun's disc, but nobody on the Earth\n * observes either a total or annular eclipse.\n *\n * If `kind` is `\"total\"` or `\"annular\"`, the `latitude` and `longitude`\n * fields give the geographic coordinates of the center of the Moon's shadow projected\n * onto the daytime side of the Earth at the instant of the eclipse's peak.\n * If `kind` has any other value, `latitude` and `longitude` are undefined and should\n * not be used.\n *\n * @property {string} kind\n *     One of the following string values: `\"partial\"`, `\"annular\"`, `\"total\"`.\n *\n * @property {AstroTime} peak\n *     The date and time of the peak of the eclipse, defined as the instant\n *     when the axis of the Moon's shadow cone passes closest to the Earth's center.\n *\n * @property {number} distance\n *     The distance in kilometers between the axis of the Moon's shadow cone\n *     and the center of the Earth at the time indicated by `peak`.\n *\n * @property {number | undefined} latitude\n *     If `kind` holds `\"total\"`, the geographic latitude in degrees\n *     where the center of the Moon's shadow falls on the Earth at the\n *     time indicated by `peak`; otherwise, `latitude` holds `undefined`.\n *\n * @property {number | undefined} longitude\n *     If `kind` holds `\"total\"`, the geographic longitude in degrees\n *     where the center of the Moon's shadow falls on the Earth at the\n *     time indicated by `peak`; otherwise, `longitude` holds `undefined`.\n */",
         "meta": {
             "range": [
-                293498,
-                293753
+                293484,
+                293739
             ],
             "filename": "astronomy.js",
             "lineno": 7123,
@@ -52642,8 +52642,8 @@
             {
                 "originalTitle": "brief",
                 "title": "brief",
-                "text": "Reports the time and geographic location of the peak of a solar eclipse.\n\n    Returned by {@link SearchGlobalSolarEclipse} or {@link NextGlobalSolarEclipse}\n    to report information about a solar eclipse event.\n\n    Field `peak` holds the date and time of the peak of the eclipse, defined as\n    the instant when the axis of the Moon's shadow cone passes closest to the Earth's center.\n\n    The eclipse is classified as partial, annular, or total, depending on the\n    maximum amount of the Sun's disc obscured, as seen at the peak location\n    on the surface of the Earth.\n\n    The `kind` field thus holds one of the strings `\"partial\"`, `\"annular\"`, or `\"total\"`.\n    A total eclipse is when the peak observer sees the Sun completely blocked by the Moon.\n    An annular eclipse is like a total eclipse, but the Moon is too far from the Earth's surface\n    to completely block the Sun; instead, the Sun takes on a ring-shaped appearance.\n    A partial eclipse is when the Moon blocks part of the Sun's disc, but nobody on the Earth\n    observes either a total or annular eclipse.\n\n    If `kind` is `\"total\"` or `\"annular\"`, the `latitude` and `longitude`\n    fields give the geographic coordinates of the center of the Moon's shadow projected\n    onto the daytime side of the Earth at the instant of the eclipse's peak.\n    If `kind` has any other value, `latitude` and `longitude` are undefined and should\n    not be used.",
-                "value": "Reports the time and geographic location of the peak of a solar eclipse.\n\n    Returned by {@link SearchGlobalSolarEclipse} or {@link NextGlobalSolarEclipse}\n    to report information about a solar eclipse event.\n\n    Field `peak` holds the date and time of the peak of the eclipse, defined as\n    the instant when the axis of the Moon's shadow cone passes closest to the Earth's center.\n\n    The eclipse is classified as partial, annular, or total, depending on the\n    maximum amount of the Sun's disc obscured, as seen at the peak location\n    on the surface of the Earth.\n\n    The `kind` field thus holds one of the strings `\"partial\"`, `\"annular\"`, or `\"total\"`.\n    A total eclipse is when the peak observer sees the Sun completely blocked by the Moon.\n    An annular eclipse is like a total eclipse, but the Moon is too far from the Earth's surface\n    to completely block the Sun; instead, the Sun takes on a ring-shaped appearance.\n    A partial eclipse is when the Moon blocks part of the Sun's disc, but nobody on the Earth\n    observes either a total or annular eclipse.\n\n    If `kind` is `\"total\"` or `\"annular\"`, the `latitude` and `longitude`\n    fields give the geographic coordinates of the center of the Moon's shadow projected\n    onto the daytime side of the Earth at the instant of the eclipse's peak.\n    If `kind` has any other value, `latitude` and `longitude` are undefined and should\n    not be used."
+                "text": "Reports the time and geographic location of the peak of a solar eclipse.\n\nReturned by {@link SearchGlobalSolarEclipse} or {@link NextGlobalSolarEclipse}\nto report information about a solar eclipse event.\n\nField `peak` holds the date and time of the peak of the eclipse, defined as\nthe instant when the axis of the Moon's shadow cone passes closest to the Earth's center.\n\nThe eclipse is classified as partial, annular, or total, depending on the\nmaximum amount of the Sun's disc obscured, as seen at the peak location\non the surface of the Earth.\n\nThe `kind` field thus holds one of the strings `\"partial\"`, `\"annular\"`, or `\"total\"`.\nA total eclipse is when the peak observer sees the Sun completely blocked by the Moon.\nAn annular eclipse is like a total eclipse, but the Moon is too far from the Earth's surface\nto completely block the Sun; instead, the Sun takes on a ring-shaped appearance.\nA partial eclipse is when the Moon blocks part of the Sun's disc, but nobody on the Earth\nobserves either a total or annular eclipse.\n\nIf `kind` is `\"total\"` or `\"annular\"`, the `latitude` and `longitude`\nfields give the geographic coordinates of the center of the Moon's shadow projected\nonto the daytime side of the Earth at the instant of the eclipse's peak.\nIf `kind` has any other value, `latitude` and `longitude` are undefined and should\nnot be used.",
+                "value": "Reports the time and geographic location of the peak of a solar eclipse.\n\nReturned by {@link SearchGlobalSolarEclipse} or {@link NextGlobalSolarEclipse}\nto report information about a solar eclipse event.\n\nField `peak` holds the date and time of the peak of the eclipse, defined as\nthe instant when the axis of the Moon's shadow cone passes closest to the Earth's center.\n\nThe eclipse is classified as partial, annular, or total, depending on the\nmaximum amount of the Sun's disc obscured, as seen at the peak location\non the surface of the Earth.\n\nThe `kind` field thus holds one of the strings `\"partial\"`, `\"annular\"`, or `\"total\"`.\nA total eclipse is when the peak observer sees the Sun completely blocked by the Moon.\nAn annular eclipse is like a total eclipse, but the Moon is too far from the Earth's surface\nto completely block the Sun; instead, the Sun takes on a ring-shaped appearance.\nA partial eclipse is when the Moon blocks part of the Sun's disc, but nobody on the Earth\nobserves either a total or annular eclipse.\n\nIf `kind` is `\"total\"` or `\"annular\"`, the `latitude` and `longitude`\nfields give the geographic coordinates of the center of the Moon's shadow projected\nonto the daytime side of the Earth at the instant of the eclipse's peak.\nIf `kind` has any other value, `latitude` and `longitude` are undefined and should\nnot be used."
             }
         ],
         "properties": [
@@ -52662,7 +52662,7 @@
                         "AstroTime"
                     ]
                 },
-                "description": "The date and time of the peak of the eclipse, defined as the instant\n        when the axis of the Moon's shadow cone passes closest to the Earth's center.",
+                "description": "The date and time of the peak of the eclipse, defined as the instant\n    when the axis of the Moon's shadow cone passes closest to the Earth's center.",
                 "name": "peak"
             },
             {
@@ -52671,7 +52671,7 @@
                         "number"
                     ]
                 },
-                "description": "The distance in kilometers between the axis of the Moon's shadow cone\n        and the center of the Earth at the time indicated by `peak`.",
+                "description": "The distance in kilometers between the axis of the Moon's shadow cone\n    and the center of the Earth at the time indicated by `peak`.",
                 "name": "distance"
             },
             {
@@ -52681,7 +52681,7 @@
                         "undefined"
                     ]
                 },
-                "description": "If `kind` holds `\"total\"`, the geographic latitude in degrees\n        where the center of the Moon's shadow falls on the Earth at the\n        time indicated by `peak`; otherwise, `latitude` holds `undefined`.",
+                "description": "If `kind` holds `\"total\"`, the geographic latitude in degrees\n    where the center of the Moon's shadow falls on the Earth at the\n    time indicated by `peak`; otherwise, `latitude` holds `undefined`.",
                 "name": "latitude"
             },
             {
@@ -52691,7 +52691,7 @@
                         "undefined"
                     ]
                 },
-                "description": "If `kind` holds `\"total\"`, the geographic longitude in degrees\n        where the center of the Moon's shadow falls on the Earth at the\n        time indicated by `peak`; otherwise, `longitude` holds `undefined`.",
+                "description": "If `kind` holds `\"total\"`, the geographic longitude in degrees\n    where the center of the Moon's shadow falls on the Earth at the\n    time indicated by `peak`; otherwise, `longitude` holds `undefined`.",
                 "name": "longitude"
             }
         ],
@@ -52705,8 +52705,8 @@
         "comment": "",
         "meta": {
             "range": [
-                293533,
-                293751
+                293519,
+                293737
             ],
             "filename": "astronomy.js",
             "lineno": 7124,
@@ -52735,11 +52735,11 @@
         "params": []
     },
     {
-        "comment": "/**\n    @brief Reports the time and geographic location of the peak of a solar eclipse.\n\n    Returned by {@link SearchGlobalSolarEclipse} or {@link NextGlobalSolarEclipse}\n    to report information about a solar eclipse event.\n\n    Field `peak` holds the date and time of the peak of the eclipse, defined as\n    the instant when the axis of the Moon's shadow cone passes closest to the Earth's center.\n\n    The eclipse is classified as partial, annular, or total, depending on the\n    maximum amount of the Sun's disc obscured, as seen at the peak location\n    on the surface of the Earth.\n\n    The `kind` field thus holds one of the strings `\"partial\"`, `\"annular\"`, or `\"total\"`.\n    A total eclipse is when the peak observer sees the Sun completely blocked by the Moon.\n    An annular eclipse is like a total eclipse, but the Moon is too far from the Earth's surface\n    to completely block the Sun; instead, the Sun takes on a ring-shaped appearance.\n    A partial eclipse is when the Moon blocks part of the Sun's disc, but nobody on the Earth\n    observes either a total or annular eclipse.\n\n    If `kind` is `\"total\"` or `\"annular\"`, the `latitude` and `longitude`\n    fields give the geographic coordinates of the center of the Moon's shadow projected\n    onto the daytime side of the Earth at the instant of the eclipse's peak.\n    If `kind` has any other value, `latitude` and `longitude` are undefined and should\n    not be used.\n\n    @property {string} kind\n        One of the following string values: `\"partial\"`, `\"annular\"`, `\"total\"`.\n\n    @property {AstroTime} peak\n        The date and time of the peak of the eclipse, defined as the instant\n        when the axis of the Moon's shadow cone passes closest to the Earth's center.\n\n    @property {number} distance\n        The distance in kilometers between the axis of the Moon's shadow cone\n        and the center of the Earth at the time indicated by `peak`.\n\n    @property {number | undefined} latitude\n        If `kind` holds `\"total\"`, the geographic latitude in degrees\n        where the center of the Moon's shadow falls on the Earth at the\n        time indicated by `peak`; otherwise, `latitude` holds `undefined`.\n\n    @property {number | undefined} longitude\n        If `kind` holds `\"total\"`, the geographic longitude in degrees\n        where the center of the Moon's shadow falls on the Earth at the\n        time indicated by `peak`; otherwise, `longitude` holds `undefined`.\n*/",
+        "comment": "/**\n * @brief Reports the time and geographic location of the peak of a solar eclipse.\n *\n * Returned by {@link SearchGlobalSolarEclipse} or {@link NextGlobalSolarEclipse}\n * to report information about a solar eclipse event.\n *\n * Field `peak` holds the date and time of the peak of the eclipse, defined as\n * the instant when the axis of the Moon's shadow cone passes closest to the Earth's center.\n *\n * The eclipse is classified as partial, annular, or total, depending on the\n * maximum amount of the Sun's disc obscured, as seen at the peak location\n * on the surface of the Earth.\n *\n * The `kind` field thus holds one of the strings `\"partial\"`, `\"annular\"`, or `\"total\"`.\n * A total eclipse is when the peak observer sees the Sun completely blocked by the Moon.\n * An annular eclipse is like a total eclipse, but the Moon is too far from the Earth's surface\n * to completely block the Sun; instead, the Sun takes on a ring-shaped appearance.\n * A partial eclipse is when the Moon blocks part of the Sun's disc, but nobody on the Earth\n * observes either a total or annular eclipse.\n *\n * If `kind` is `\"total\"` or `\"annular\"`, the `latitude` and `longitude`\n * fields give the geographic coordinates of the center of the Moon's shadow projected\n * onto the daytime side of the Earth at the instant of the eclipse's peak.\n * If `kind` has any other value, `latitude` and `longitude` are undefined and should\n * not be used.\n *\n * @property {string} kind\n *     One of the following string values: `\"partial\"`, `\"annular\"`, `\"total\"`.\n *\n * @property {AstroTime} peak\n *     The date and time of the peak of the eclipse, defined as the instant\n *     when the axis of the Moon's shadow cone passes closest to the Earth's center.\n *\n * @property {number} distance\n *     The distance in kilometers between the axis of the Moon's shadow cone\n *     and the center of the Earth at the time indicated by `peak`.\n *\n * @property {number | undefined} latitude\n *     If `kind` holds `\"total\"`, the geographic latitude in degrees\n *     where the center of the Moon's shadow falls on the Earth at the\n *     time indicated by `peak`; otherwise, `latitude` holds `undefined`.\n *\n * @property {number | undefined} longitude\n *     If `kind` holds `\"total\"`, the geographic longitude in degrees\n *     where the center of the Moon's shadow falls on the Earth at the\n *     time indicated by `peak`; otherwise, `longitude` holds `undefined`.\n */",
         "meta": {
             "range": [
-                293498,
-                293753
+                293484,
+                293739
             ],
             "filename": "astronomy.js",
             "lineno": 7123,
@@ -52764,8 +52764,8 @@
             {
                 "originalTitle": "brief",
                 "title": "brief",
-                "text": "Reports the time and geographic location of the peak of a solar eclipse.\n\n    Returned by {@link SearchGlobalSolarEclipse} or {@link NextGlobalSolarEclipse}\n    to report information about a solar eclipse event.\n\n    Field `peak` holds the date and time of the peak of the eclipse, defined as\n    the instant when the axis of the Moon's shadow cone passes closest to the Earth's center.\n\n    The eclipse is classified as partial, annular, or total, depending on the\n    maximum amount of the Sun's disc obscured, as seen at the peak location\n    on the surface of the Earth.\n\n    The `kind` field thus holds one of the strings `\"partial\"`, `\"annular\"`, or `\"total\"`.\n    A total eclipse is when the peak observer sees the Sun completely blocked by the Moon.\n    An annular eclipse is like a total eclipse, but the Moon is too far from the Earth's surface\n    to completely block the Sun; instead, the Sun takes on a ring-shaped appearance.\n    A partial eclipse is when the Moon blocks part of the Sun's disc, but nobody on the Earth\n    observes either a total or annular eclipse.\n\n    If `kind` is `\"total\"` or `\"annular\"`, the `latitude` and `longitude`\n    fields give the geographic coordinates of the center of the Moon's shadow projected\n    onto the daytime side of the Earth at the instant of the eclipse's peak.\n    If `kind` has any other value, `latitude` and `longitude` are undefined and should\n    not be used.",
-                "value": "Reports the time and geographic location of the peak of a solar eclipse.\n\n    Returned by {@link SearchGlobalSolarEclipse} or {@link NextGlobalSolarEclipse}\n    to report information about a solar eclipse event.\n\n    Field `peak` holds the date and time of the peak of the eclipse, defined as\n    the instant when the axis of the Moon's shadow cone passes closest to the Earth's center.\n\n    The eclipse is classified as partial, annular, or total, depending on the\n    maximum amount of the Sun's disc obscured, as seen at the peak location\n    on the surface of the Earth.\n\n    The `kind` field thus holds one of the strings `\"partial\"`, `\"annular\"`, or `\"total\"`.\n    A total eclipse is when the peak observer sees the Sun completely blocked by the Moon.\n    An annular eclipse is like a total eclipse, but the Moon is too far from the Earth's surface\n    to completely block the Sun; instead, the Sun takes on a ring-shaped appearance.\n    A partial eclipse is when the Moon blocks part of the Sun's disc, but nobody on the Earth\n    observes either a total or annular eclipse.\n\n    If `kind` is `\"total\"` or `\"annular\"`, the `latitude` and `longitude`\n    fields give the geographic coordinates of the center of the Moon's shadow projected\n    onto the daytime side of the Earth at the instant of the eclipse's peak.\n    If `kind` has any other value, `latitude` and `longitude` are undefined and should\n    not be used."
+                "text": "Reports the time and geographic location of the peak of a solar eclipse.\n\nReturned by {@link SearchGlobalSolarEclipse} or {@link NextGlobalSolarEclipse}\nto report information about a solar eclipse event.\n\nField `peak` holds the date and time of the peak of the eclipse, defined as\nthe instant when the axis of the Moon's shadow cone passes closest to the Earth's center.\n\nThe eclipse is classified as partial, annular, or total, depending on the\nmaximum amount of the Sun's disc obscured, as seen at the peak location\non the surface of the Earth.\n\nThe `kind` field thus holds one of the strings `\"partial\"`, `\"annular\"`, or `\"total\"`.\nA total eclipse is when the peak observer sees the Sun completely blocked by the Moon.\nAn annular eclipse is like a total eclipse, but the Moon is too far from the Earth's surface\nto completely block the Sun; instead, the Sun takes on a ring-shaped appearance.\nA partial eclipse is when the Moon blocks part of the Sun's disc, but nobody on the Earth\nobserves either a total or annular eclipse.\n\nIf `kind` is `\"total\"` or `\"annular\"`, the `latitude` and `longitude`\nfields give the geographic coordinates of the center of the Moon's shadow projected\nonto the daytime side of the Earth at the instant of the eclipse's peak.\nIf `kind` has any other value, `latitude` and `longitude` are undefined and should\nnot be used.",
+                "value": "Reports the time and geographic location of the peak of a solar eclipse.\n\nReturned by {@link SearchGlobalSolarEclipse} or {@link NextGlobalSolarEclipse}\nto report information about a solar eclipse event.\n\nField `peak` holds the date and time of the peak of the eclipse, defined as\nthe instant when the axis of the Moon's shadow cone passes closest to the Earth's center.\n\nThe eclipse is classified as partial, annular, or total, depending on the\nmaximum amount of the Sun's disc obscured, as seen at the peak location\non the surface of the Earth.\n\nThe `kind` field thus holds one of the strings `\"partial\"`, `\"annular\"`, or `\"total\"`.\nA total eclipse is when the peak observer sees the Sun completely blocked by the Moon.\nAn annular eclipse is like a total eclipse, but the Moon is too far from the Earth's surface\nto completely block the Sun; instead, the Sun takes on a ring-shaped appearance.\nA partial eclipse is when the Moon blocks part of the Sun's disc, but nobody on the Earth\nobserves either a total or annular eclipse.\n\nIf `kind` is `\"total\"` or `\"annular\"`, the `latitude` and `longitude`\nfields give the geographic coordinates of the center of the Moon's shadow projected\nonto the daytime side of the Earth at the instant of the eclipse's peak.\nIf `kind` has any other value, `latitude` and `longitude` are undefined and should\nnot be used."
             }
         ],
         "scope": "global",
@@ -52785,7 +52785,7 @@
                         "AstroTime"
                     ]
                 },
-                "description": "The date and time of the peak of the eclipse, defined as the instant\n        when the axis of the Moon's shadow cone passes closest to the Earth's center.",
+                "description": "The date and time of the peak of the eclipse, defined as the instant\n    when the axis of the Moon's shadow cone passes closest to the Earth's center.",
                 "name": "peak"
             },
             {
@@ -52794,7 +52794,7 @@
                         "number"
                     ]
                 },
-                "description": "The distance in kilometers between the axis of the Moon's shadow cone\n        and the center of the Earth at the time indicated by `peak`.",
+                "description": "The distance in kilometers between the axis of the Moon's shadow cone\n    and the center of the Earth at the time indicated by `peak`.",
                 "name": "distance"
             },
             {
@@ -52804,7 +52804,7 @@
                         "undefined"
                     ]
                 },
-                "description": "If `kind` holds `\"total\"`, the geographic latitude in degrees\n        where the center of the Moon's shadow falls on the Earth at the\n        time indicated by `peak`; otherwise, `latitude` holds `undefined`.",
+                "description": "If `kind` holds `\"total\"`, the geographic latitude in degrees\n    where the center of the Moon's shadow falls on the Earth at the\n    time indicated by `peak`; otherwise, `latitude` holds `undefined`.",
                 "name": "latitude"
             },
             {
@@ -52814,7 +52814,7 @@
                         "undefined"
                     ]
                 },
-                "description": "If `kind` holds `\"total\"`, the geographic longitude in degrees\n        where the center of the Moon's shadow falls on the Earth at the\n        time indicated by `peak`; otherwise, `longitude` holds `undefined`.",
+                "description": "If `kind` holds `\"total\"`, the geographic longitude in degrees\n    where the center of the Moon's shadow falls on the Earth at the\n    time indicated by `peak`; otherwise, `longitude` holds `undefined`.",
                 "name": "longitude"
             }
         ]
@@ -52823,8 +52823,8 @@
         "comment": "",
         "meta": {
             "range": [
-                293598,
-                293614
+                293584,
+                293600
             ],
             "filename": "astronomy.js",
             "lineno": 7125,
@@ -52848,8 +52848,8 @@
         "comment": "",
         "meta": {
             "range": [
-                293624,
-                293640
+                293610,
+                293626
             ],
             "filename": "astronomy.js",
             "lineno": 7126,
@@ -52873,8 +52873,8 @@
         "comment": "",
         "meta": {
             "range": [
-                293650,
-                293674
+                293636,
+                293660
             ],
             "filename": "astronomy.js",
             "lineno": 7127,
@@ -52898,8 +52898,8 @@
         "comment": "",
         "meta": {
             "range": [
-                293684,
-                293708
+                293670,
+                293694
             ],
             "filename": "astronomy.js",
             "lineno": 7128,
@@ -52923,8 +52923,8 @@
         "comment": "",
         "meta": {
             "range": [
-                293718,
-                293744
+                293704,
+                293730
             ],
             "filename": "astronomy.js",
             "lineno": 7129,
@@ -52948,8 +52948,8 @@
         "comment": "",
         "meta": {
             "range": [
-                293754,
-                293809
+                293740,
+                293795
             ],
             "filename": "astronomy.js",
             "lineno": 7132,
@@ -52972,8 +52972,8 @@
         "comment": "",
         "meta": {
             "range": [
-                293811,
-                294129
+                293797,
+                294115
             ],
             "filename": "astronomy.js",
             "lineno": 7133,
@@ -52998,8 +52998,8 @@
         "comment": "",
         "meta": {
             "range": [
-                294130,
-                298262
+                294116,
+                298248
             ],
             "filename": "astronomy.js",
             "lineno": 7139,
@@ -53057,8 +53057,8 @@
         "comment": "",
         "meta": {
             "range": [
-                294172,
-                294188
+                294158,
+                294174
             ],
             "filename": "astronomy.js",
             "lineno": 7140,
@@ -53082,8 +53082,8 @@
         "comment": "",
         "meta": {
             "range": [
-                294198,
-                294216
+                294184,
+                294202
             ],
             "filename": "astronomy.js",
             "lineno": 7141,
@@ -53107,8 +53107,8 @@
         "comment": "",
         "meta": {
             "range": [
-                294226,
-                294245
+                294212,
+                294231
             ],
             "filename": "astronomy.js",
             "lineno": 7142,
@@ -53132,8 +53132,8 @@
         "comment": "",
         "meta": {
             "range": [
-                294255,
-                294263
+                294241,
+                294249
             ],
             "filename": "astronomy.js",
             "lineno": 7143,
@@ -53155,8 +53155,8 @@
         "comment": "",
         "meta": {
             "range": [
-                294312,
-                294321
+                294298,
+                294307
             ],
             "filename": "astronomy.js",
             "lineno": 7144,
@@ -53178,8 +53178,8 @@
         "comment": "",
         "meta": {
             "range": [
-                294651,
-                294686
+                294637,
+                294672
             ],
             "filename": "astronomy.js",
             "lineno": 7149,
@@ -53203,8 +53203,8 @@
         "comment": "",
         "meta": {
             "range": [
-                294698,
-                294731
+                294684,
+                294717
             ],
             "filename": "astronomy.js",
             "lineno": 7150,
@@ -53228,8 +53228,8 @@
         "comment": "",
         "meta": {
             "range": [
-                294796,
-                294832
+                294782,
+                294818
             ],
             "filename": "astronomy.js",
             "lineno": 7151,
@@ -53253,8 +53253,8 @@
         "comment": "",
         "meta": {
             "range": [
-                295177,
-                295201
+                295163,
+                295187
             ],
             "filename": "astronomy.js",
             "lineno": 7156,
@@ -53279,8 +53279,8 @@
         "comment": "",
         "meta": {
             "range": [
-                295207,
-                295231
+                295193,
+                295217
             ],
             "filename": "astronomy.js",
             "lineno": 7157,
@@ -53305,8 +53305,8 @@
         "comment": "",
         "meta": {
             "range": [
-                295237,
-                295280
+                295223,
+                295266
             ],
             "filename": "astronomy.js",
             "lineno": 7158,
@@ -53331,8 +53331,8 @@
         "comment": "",
         "meta": {
             "range": [
-                295286,
-                295310
+                295272,
+                295296
             ],
             "filename": "astronomy.js",
             "lineno": 7159,
@@ -53357,8 +53357,8 @@
         "comment": "",
         "meta": {
             "range": [
-                295316,
-                295340
+                295302,
+                295326
             ],
             "filename": "astronomy.js",
             "lineno": 7160,
@@ -53383,8 +53383,8 @@
         "comment": "",
         "meta": {
             "range": [
-                295346,
-                295389
+                295332,
+                295375
             ],
             "filename": "astronomy.js",
             "lineno": 7161,
@@ -53409,8 +53409,8 @@
         "comment": "",
         "meta": {
             "range": [
-                295549,
-                295579
+                295535,
+                295565
             ],
             "filename": "astronomy.js",
             "lineno": 7164,
@@ -53434,8 +53434,8 @@
         "comment": "",
         "meta": {
             "range": [
-                295591,
-                295628
+                295577,
+                295614
             ],
             "filename": "astronomy.js",
             "lineno": 7165,
@@ -53459,8 +53459,8 @@
         "comment": "",
         "meta": {
             "range": [
-                295640,
-                295686
+                295626,
+                295672
             ],
             "filename": "astronomy.js",
             "lineno": 7166,
@@ -53484,8 +53484,8 @@
         "comment": "",
         "meta": {
             "range": [
-                295698,
-                295745
+                295684,
+                295731
             ],
             "filename": "astronomy.js",
             "lineno": 7167,
@@ -53509,8 +53509,8 @@
         "comment": "",
         "meta": {
             "range": [
-                295757,
-                295782
+                295743,
+                295768
             ],
             "filename": "astronomy.js",
             "lineno": 7168,
@@ -53534,8 +53534,8 @@
         "comment": "",
         "meta": {
             "range": [
-                295939,
-                295976
+                295925,
+                295962
             ],
             "filename": "astronomy.js",
             "lineno": 7172,
@@ -53559,8 +53559,8 @@
         "comment": "",
         "meta": {
             "range": [
-                296070,
-                296088
+                296056,
+                296074
             ],
             "filename": "astronomy.js",
             "lineno": 7174,
@@ -53584,8 +53584,8 @@
         "comment": "",
         "meta": {
             "range": [
-                296104,
-                296122
+                296090,
+                296108
             ],
             "filename": "astronomy.js",
             "lineno": 7175,
@@ -53609,8 +53609,8 @@
         "comment": "",
         "meta": {
             "range": [
-                296138,
-                296177
+                296124,
+                296163
             ],
             "filename": "astronomy.js",
             "lineno": 7176,
@@ -53634,8 +53634,8 @@
         "comment": "",
         "meta": {
             "range": [
-                296268,
-                296343
+                296254,
+                296329
             ],
             "filename": "astronomy.js",
             "lineno": 7178,
@@ -53659,8 +53659,8 @@
         "comment": "",
         "meta": {
             "range": [
-                296382,
-                296419
+                296368,
+                296405
             ],
             "filename": "astronomy.js",
             "lineno": 7180,
@@ -53685,8 +53685,8 @@
         "comment": "",
         "meta": {
             "range": [
-                296446,
-                296495
+                296432,
+                296481
             ],
             "filename": "astronomy.js",
             "lineno": 7182,
@@ -53711,8 +53711,8 @@
         "comment": "",
         "meta": {
             "range": [
-                296577,
-                296603
+                296563,
+                296589
             ],
             "filename": "astronomy.js",
             "lineno": 7184,
@@ -53736,8 +53736,8 @@
         "comment": "",
         "meta": {
             "range": [
-                296613,
-                296685
+                296599,
+                296671
             ],
             "filename": "astronomy.js",
             "lineno": 7185,
@@ -53762,8 +53762,8 @@
         "comment": "",
         "meta": {
             "range": [
-                296732,
-                296750
+                296718,
+                296736
             ],
             "filename": "astronomy.js",
             "lineno": 7187,
@@ -53788,8 +53788,8 @@
         "comment": "",
         "meta": {
             "range": [
-                296801,
-                296819
+                296787,
+                296805
             ],
             "filename": "astronomy.js",
             "lineno": 7189,
@@ -53814,8 +53814,8 @@
         "comment": "",
         "meta": {
             "range": [
-                297077,
-                297103
+                297063,
+                297089
             ],
             "filename": "astronomy.js",
             "lineno": 7193,
@@ -53839,8 +53839,8 @@
         "comment": "",
         "meta": {
             "range": [
-                297268,
-                297367
+                297254,
+                297353
             ],
             "filename": "astronomy.js",
             "lineno": 7196,
@@ -53864,8 +53864,8 @@
         "comment": "",
         "meta": {
             "range": [
-                297449,
-                297473
+                297435,
+                297459
             ],
             "filename": "astronomy.js",
             "lineno": 7198,
@@ -53890,8 +53890,8 @@
         "comment": "",
         "meta": {
             "range": [
-                297543,
-                297565
+                297529,
+                297551
             ],
             "filename": "astronomy.js",
             "lineno": 7200,
@@ -53916,8 +53916,8 @@
         "comment": "",
         "meta": {
             "range": [
-                297575,
-                297597
+                297561,
+                297583
             ],
             "filename": "astronomy.js",
             "lineno": 7201,
@@ -53942,8 +53942,8 @@
         "comment": "",
         "meta": {
             "range": [
-                297607,
-                297629
+                297593,
+                297615
             ],
             "filename": "astronomy.js",
             "lineno": 7202,
@@ -53968,8 +53968,8 @@
         "comment": "",
         "meta": {
             "range": [
-                297738,
-                297808
+                297724,
+                297794
             ],
             "filename": "astronomy.js",
             "lineno": 7204,
@@ -53993,8 +53993,8 @@
         "comment": "",
         "meta": {
             "range": [
-                298133,
-                298171
+                298119,
+                298157
             ],
             "filename": "astronomy.js",
             "lineno": 7209,
@@ -54019,8 +54019,8 @@
         "comment": "/**\n * @brief Searches for the next lunar eclipse in a series.\n *\n * After using {@link SearchLunarEclipse} to find the first lunar eclipse\n * in a series, you can call this function to find the next consecutive lunar eclipse.\n * Pass in the `peak` value from the {@link LunarEclipseInfo} returned by the\n * previous call to `SearchLunarEclipse` or `NextLunarEclipse`\n * to find the next lunar eclipse.\n *\n * @param {AstroTime} prevEclipseTime\n *      A date and time near a full moon. Lunar eclipse search will start at the next full moon.\n *\n * @returns {LunarEclipseInfo}\n */",
         "meta": {
             "range": [
-                298842,
-                298981
+                298828,
+                298967
             ],
             "filename": "astronomy.js",
             "lineno": 7227,
@@ -54074,8 +54074,8 @@
         "comment": "",
         "meta": {
             "range": [
-                298897,
-                298936
+                298883,
+                298922
             ],
             "filename": "astronomy.js",
             "lineno": 7228,
@@ -54099,8 +54099,8 @@
         "comment": "",
         "meta": {
             "range": [
-                298982,
-                299025
+                298968,
+                299011
             ],
             "filename": "astronomy.js",
             "lineno": 7231,
@@ -54123,8 +54123,8 @@
         "comment": "/**\n * @brief Searches for a solar eclipse visible anywhere on the Earth's surface.\n *\n * This function finds the first solar eclipse that occurs after `startTime`.\n * A solar eclipse may be partial, annular, or total.\n * See {@link GlobalSolarEclipseInfo} for more information.\n * To find a series of solar eclipses, call this function once,\n * then keep calling {@link NextGlobalSolarEclipse} as many times as desired,\n * passing in the `peak` value returned from the previous call.\n *\n * @param {AstroTime} startTime\n *      The date and time for starting the search for a solar eclipse.\n *\n * @returns {GlobalSolarEclipseInfo}\n */",
         "meta": {
             "range": [
-                299662,
-                301279
+                299648,
+                301265
             ],
             "filename": "astronomy.js",
             "lineno": 7247,
@@ -54183,8 +54183,8 @@
         "comment": "",
         "meta": {
             "range": [
-                299719,
-                299738
+                299705,
+                299724
             ],
             "filename": "astronomy.js",
             "lineno": 7248,
@@ -54208,8 +54208,8 @@
         "comment": "",
         "meta": {
             "range": [
-                299914,
-                299932
+                299900,
+                299918
             ],
             "filename": "astronomy.js",
             "lineno": 7250,
@@ -54233,8 +54233,8 @@
         "comment": "",
         "meta": {
             "range": [
-                299942,
-                299949
+                299928,
+                299935
             ],
             "filename": "astronomy.js",
             "lineno": 7251,
@@ -54256,8 +54256,8 @@
         "comment": "",
         "meta": {
             "range": [
-                299960,
-                299971
+                299946,
+                299957
             ],
             "filename": "astronomy.js",
             "lineno": 7252,
@@ -54282,8 +54282,8 @@
         "comment": "",
         "meta": {
             "range": [
-                300084,
-                300128
+                300070,
+                300114
             ],
             "filename": "astronomy.js",
             "lineno": 7254,
@@ -54307,8 +54307,8 @@
         "comment": "",
         "meta": {
             "range": [
-                300311,
-                300359
+                300297,
+                300345
             ],
             "filename": "astronomy.js",
             "lineno": 7258,
@@ -54332,8 +54332,8 @@
         "comment": "",
         "meta": {
             "range": [
-                300599,
-                300631
+                300585,
+                300617
             ],
             "filename": "astronomy.js",
             "lineno": 7262,
@@ -54357,8 +54357,8 @@
         "comment": "",
         "meta": {
             "range": [
-                301046,
-                301076
+                301032,
+                301062
             ],
             "filename": "astronomy.js",
             "lineno": 7270,
@@ -54383,8 +54383,8 @@
         "comment": "",
         "meta": {
             "range": [
-                301280,
-                301339
+                301266,
+                301325
             ],
             "filename": "astronomy.js",
             "lineno": 7276,
@@ -54407,8 +54407,8 @@
         "comment": "/**\n * @brief Searches for the next global solar eclipse in a series.\n *\n * After using {@link SearchGlobalSolarEclipse} to find the first solar eclipse\n * in a series, you can call this function to find the next consecutive solar eclipse.\n * Pass in the `peak` value from the {@link GlobalSolarEclipseInfo} returned by the\n * previous call to `SearchGlobalSolarEclipse` or `NextGlobalSolarEclipse`\n * to find the next solar eclipse.\n *\n * @param {AstroTime} prevEclipseTime\n *      A date and time near a new moon. Solar eclipse search will start at the next new moon.\n *\n * @returns {GlobalSolarEclipseInfo}\n */",
         "meta": {
             "range": [
-                301955,
-                302108
+                301941,
+                302094
             ],
             "filename": "astronomy.js",
             "lineno": 7291,
@@ -54462,8 +54462,8 @@
         "comment": "",
         "meta": {
             "range": [
-                302016,
-                302057
+                302002,
+                302043
             ],
             "filename": "astronomy.js",
             "lineno": 7292,
@@ -54487,8 +54487,8 @@
         "comment": "",
         "meta": {
             "range": [
-                302109,
-                302164
+                302095,
+                302150
             ],
             "filename": "astronomy.js",
             "lineno": 7295,
@@ -54511,8 +54511,8 @@
         "comment": "/**\n * @brief Holds a time and the observed altitude of the Sun at that time.\n *\n * When reporting a solar eclipse observed at a specific location on the Earth\n * (a \"local\" solar eclipse), a series of events occur. In addition\n * to the time of each event, it is important to know the altitude of the Sun,\n * because each event may be invisible to the observer if the Sun is below\n * the horizon (i.e. it at night).\n *\n * If `altitude` is negative, the event is theoretical only; it would be\n * visible if the Earth were transparent, but the observer cannot actually see it.\n * If `altitude` is positive but less than a few degrees, visibility will be impaired by\n * atmospheric interference (sunrise or sunset conditions).\n *\n * @property {AstroTime} time\n *      The date and time of the event.\n *\n * @property {number} altitude\n *      The angular altitude of the center of the Sun above/below the horizon, at `time`,\n *      corrected for atmospheric refraction and expressed in degrees.\n */",
         "meta": {
             "range": [
-                303163,
-                303285
+                303149,
+                303271
             ],
             "filename": "astronomy.js",
             "lineno": 7317,
@@ -54565,8 +54565,8 @@
         "comment": "",
         "meta": {
             "range": [
-                303188,
-                303283
+                303174,
+                303269
             ],
             "filename": "astronomy.js",
             "lineno": 7318,
@@ -54595,8 +54595,8 @@
         "comment": "/**\n * @brief Holds a time and the observed altitude of the Sun at that time.\n *\n * When reporting a solar eclipse observed at a specific location on the Earth\n * (a \"local\" solar eclipse), a series of events occur. In addition\n * to the time of each event, it is important to know the altitude of the Sun,\n * because each event may be invisible to the observer if the Sun is below\n * the horizon (i.e. it at night).\n *\n * If `altitude` is negative, the event is theoretical only; it would be\n * visible if the Earth were transparent, but the observer cannot actually see it.\n * If `altitude` is positive but less than a few degrees, visibility will be impaired by\n * atmospheric interference (sunrise or sunset conditions).\n *\n * @property {AstroTime} time\n *      The date and time of the event.\n *\n * @property {number} altitude\n *      The angular altitude of the center of the Sun above/below the horizon, at `time`,\n *      corrected for atmospheric refraction and expressed in degrees.\n */",
         "meta": {
             "range": [
-                303163,
-                303285
+                303149,
+                303271
             ],
             "filename": "astronomy.js",
             "lineno": 7317,
@@ -54648,8 +54648,8 @@
         "comment": "",
         "meta": {
             "range": [
-                303226,
-                303242
+                303212,
+                303228
             ],
             "filename": "astronomy.js",
             "lineno": 7319,
@@ -54673,8 +54673,8 @@
         "comment": "",
         "meta": {
             "range": [
-                303252,
-                303276
+                303238,
+                303262
             ],
             "filename": "astronomy.js",
             "lineno": 7320,
@@ -54698,8 +54698,8 @@
         "comment": "",
         "meta": {
             "range": [
-                303286,
-                303321
+                303272,
+                303307
             ],
             "filename": "astronomy.js",
             "lineno": 7323,
@@ -54722,8 +54722,8 @@
         "comment": "/**\n * @brief Information about a solar eclipse as seen by an observer at a given time and geographic location.\n *\n * Returned by {@link SearchLocalSolarEclipse} or {@link NextLocalSolarEclipse}\n * to report information about a solar eclipse as seen at a given geographic location.\n *\n * When a solar eclipse is found, it is classified by setting `kind`\n * to `\"partial\"`, `\"annular\"`, or `\"total\"`.\n * A partial solar eclipse is when the Moon does not line up directly enough with the Sun\n * to completely block the Sun's light from reaching the observer.\n * An annular eclipse occurs when the Moon's disc is completely visible against the Sun\n * but the Moon is too far away to completely block the Sun's light; this leaves the\n * Sun with a ring-like appearance.\n * A total eclipse occurs when the Moon is close enough to the Earth and aligned with the\n * Sun just right to completely block all sunlight from reaching the observer.\n *\n * There are 5 \"event\" fields, each of which contains a time and a solar altitude.\n * Field `peak` holds the date and time of the center of the eclipse, when it is at its peak.\n * The fields `partial_begin` and `partial_end` are always set, and indicate when\n * the eclipse begins/ends. If the eclipse reaches totality or becomes annular,\n * `total_begin` and `total_end` indicate when the total/annular phase begins/ends.\n * When an event field is valid, the caller must also check its `altitude` field to\n * see whether the Sun is above the horizon at the time indicated by the `time` field.\n * See {@link EclipseEvent} for more information.\n *\n * @property {string} kind\n *      The type of solar eclipse found: `\"partial\"`, `\"annular\"`, or `\"total\"`.\n *\n * @property {EclipseEvent} partial_begin\n *      The time and Sun altitude at the beginning of the eclipse.\n *\n * @property {EclipseEvent | undefined} total_begin\n *      If this is an annular or a total eclipse, the time and Sun altitude when annular/total phase begins; otherwise undefined.\n *\n * @property {EclipseEvent} peak\n *      The time and Sun altitude when the eclipse reaches its peak.\n *\n * @property {EclipseEvent | undefined} total_end\n *      If this is an annular or a total eclipse, the time and Sun altitude when annular/total phase ends; otherwise undefined.\n *\n * @property {EclipseEvent} partial_end\n *      The time and Sun altitude at the end of the eclipse.\n */",
         "meta": {
             "range": [
-                305707,
-                306038
+                305693,
+                306024
             ],
             "filename": "astronomy.js",
             "lineno": 7367,
@@ -54818,8 +54818,8 @@
         "comment": "",
         "meta": {
             "range": [
-                305741,
-                306036
+                305727,
+                306022
             ],
             "filename": "astronomy.js",
             "lineno": 7368,
@@ -54852,8 +54852,8 @@
         "comment": "/**\n * @brief Information about a solar eclipse as seen by an observer at a given time and geographic location.\n *\n * Returned by {@link SearchLocalSolarEclipse} or {@link NextLocalSolarEclipse}\n * to report information about a solar eclipse as seen at a given geographic location.\n *\n * When a solar eclipse is found, it is classified by setting `kind`\n * to `\"partial\"`, `\"annular\"`, or `\"total\"`.\n * A partial solar eclipse is when the Moon does not line up directly enough with the Sun\n * to completely block the Sun's light from reaching the observer.\n * An annular eclipse occurs when the Moon's disc is completely visible against the Sun\n * but the Moon is too far away to completely block the Sun's light; this leaves the\n * Sun with a ring-like appearance.\n * A total eclipse occurs when the Moon is close enough to the Earth and aligned with the\n * Sun just right to completely block all sunlight from reaching the observer.\n *\n * There are 5 \"event\" fields, each of which contains a time and a solar altitude.\n * Field `peak` holds the date and time of the center of the eclipse, when it is at its peak.\n * The fields `partial_begin` and `partial_end` are always set, and indicate when\n * the eclipse begins/ends. If the eclipse reaches totality or becomes annular,\n * `total_begin` and `total_end` indicate when the total/annular phase begins/ends.\n * When an event field is valid, the caller must also check its `altitude` field to\n * see whether the Sun is above the horizon at the time indicated by the `time` field.\n * See {@link EclipseEvent} for more information.\n *\n * @property {string} kind\n *      The type of solar eclipse found: `\"partial\"`, `\"annular\"`, or `\"total\"`.\n *\n * @property {EclipseEvent} partial_begin\n *      The time and Sun altitude at the beginning of the eclipse.\n *\n * @property {EclipseEvent | undefined} total_begin\n *      If this is an annular or a total eclipse, the time and Sun altitude when annular/total phase begins; otherwise undefined.\n *\n * @property {EclipseEvent} peak\n *      The time and Sun altitude when the eclipse reaches its peak.\n *\n * @property {EclipseEvent | undefined} total_end\n *      If this is an annular or a total eclipse, the time and Sun altitude when annular/total phase ends; otherwise undefined.\n *\n * @property {EclipseEvent} partial_end\n *      The time and Sun altitude at the end of the eclipse.\n */",
         "meta": {
             "range": [
-                305707,
-                306038
+                305693,
+                306024
             ],
             "filename": "astronomy.js",
             "lineno": 7367,
@@ -54947,8 +54947,8 @@
         "comment": "",
         "meta": {
             "range": [
-                305827,
-                305843
+                305813,
+                305829
             ],
             "filename": "astronomy.js",
             "lineno": 7369,
@@ -54972,8 +54972,8 @@
         "comment": "",
         "meta": {
             "range": [
-                305853,
-                305887
+                305839,
+                305873
             ],
             "filename": "astronomy.js",
             "lineno": 7370,
@@ -54997,8 +54997,8 @@
         "comment": "",
         "meta": {
             "range": [
-                305897,
-                305927
+                305883,
+                305913
             ],
             "filename": "astronomy.js",
             "lineno": 7371,
@@ -55022,8 +55022,8 @@
         "comment": "",
         "meta": {
             "range": [
-                305937,
-                305953
+                305923,
+                305939
             ],
             "filename": "astronomy.js",
             "lineno": 7372,
@@ -55047,8 +55047,8 @@
         "comment": "",
         "meta": {
             "range": [
-                305963,
-                305989
+                305949,
+                305975
             ],
             "filename": "astronomy.js",
             "lineno": 7373,
@@ -55072,8 +55072,8 @@
         "comment": "",
         "meta": {
             "range": [
-                305999,
-                306029
+                305985,
+                306015
             ],
             "filename": "astronomy.js",
             "lineno": 7374,
@@ -55097,8 +55097,8 @@
         "comment": "",
         "meta": {
             "range": [
-                306039,
-                306092
+                306025,
+                306078
             ],
             "filename": "astronomy.js",
             "lineno": 7377,
@@ -55121,8 +55121,8 @@
         "comment": "",
         "meta": {
             "range": [
-                306094,
-                306169
+                306080,
+                306155
             ],
             "filename": "astronomy.js",
             "lineno": 7378,
@@ -55147,8 +55147,8 @@
         "comment": "",
         "meta": {
             "range": [
-                306170,
-                306371
+                306156,
+                306357
             ],
             "filename": "astronomy.js",
             "lineno": 7381,
@@ -55173,8 +55173,8 @@
         "comment": "",
         "meta": {
             "range": [
-                306372,
-                307496
+                306358,
+                307482
             ],
             "filename": "astronomy.js",
             "lineno": 7386,
@@ -55212,8 +55212,8 @@
         "comment": "",
         "meta": {
             "range": [
-                306424,
-                306444
+                306410,
+                306430
             ],
             "filename": "astronomy.js",
             "lineno": 7387,
@@ -55237,8 +55237,8 @@
         "comment": "",
         "meta": {
             "range": [
-                306456,
-                306475
+                306442,
+                306461
             ],
             "filename": "astronomy.js",
             "lineno": 7388,
@@ -55262,8 +55262,8 @@
         "comment": "",
         "meta": {
             "range": [
-                306487,
-                306526
+                306473,
+                306512
             ],
             "filename": "astronomy.js",
             "lineno": 7389,
@@ -55287,8 +55287,8 @@
         "comment": "",
         "meta": {
             "range": [
-                306536,
-                306577
+                306522,
+                306563
             ],
             "filename": "astronomy.js",
             "lineno": 7390,
@@ -55312,8 +55312,8 @@
         "comment": "",
         "meta": {
             "range": [
-                306587,
-                306628
+                306573,
+                306614
             ],
             "filename": "astronomy.js",
             "lineno": 7391,
@@ -55337,8 +55337,8 @@
         "comment": "",
         "meta": {
             "range": [
-                306640,
-                306735
+                306626,
+                306721
             ],
             "filename": "astronomy.js",
             "lineno": 7392,
@@ -55362,8 +55362,8 @@
         "comment": "",
         "meta": {
             "range": [
-                306747,
-                306840
+                306733,
+                306826
             ],
             "filename": "astronomy.js",
             "lineno": 7393,
@@ -55387,8 +55387,8 @@
         "comment": "",
         "meta": {
             "range": [
-                306850,
-                306861
+                306836,
+                306847
             ],
             "filename": "astronomy.js",
             "lineno": 7394,
@@ -55410,8 +55410,8 @@
         "comment": "",
         "meta": {
             "range": [
-                306871,
-                306880
+                306857,
+                306866
             ],
             "filename": "astronomy.js",
             "lineno": 7395,
@@ -55433,8 +55433,8 @@
         "comment": "",
         "meta": {
             "range": [
-                306890,
-                306894
+                306876,
+                306880
             ],
             "filename": "astronomy.js",
             "lineno": 7396,
@@ -55456,8 +55456,8 @@
         "comment": "",
         "meta": {
             "range": [
-                307007,
-                307046
+                306993,
+                307032
             ],
             "filename": "astronomy.js",
             "lineno": 7398,
@@ -55482,8 +55482,8 @@
         "comment": "",
         "meta": {
             "range": [
-                307056,
-                307095
+                307042,
+                307081
             ],
             "filename": "astronomy.js",
             "lineno": 7399,
@@ -55508,8 +55508,8 @@
         "comment": "",
         "meta": {
             "range": [
-                307105,
-                307196
+                307091,
+                307182
             ],
             "filename": "astronomy.js",
             "lineno": 7400,
@@ -55534,8 +55534,8 @@
         "comment": "",
         "meta": {
             "range": [
-                307206,
-                307295
+                307192,
+                307281
             ],
             "filename": "astronomy.js",
             "lineno": 7401,
@@ -55560,8 +55560,8 @@
         "comment": "",
         "meta": {
             "range": [
-                307305,
-                307342
+                307291,
+                307328
             ],
             "filename": "astronomy.js",
             "lineno": 7402,
@@ -55586,8 +55586,8 @@
         "comment": "",
         "meta": {
             "range": [
-                307369,
-                307385
+                307355,
+                307371
             ],
             "filename": "astronomy.js",
             "lineno": 7405,
@@ -55612,8 +55612,8 @@
         "comment": "",
         "meta": {
             "range": [
-                307497,
-                307859
+                307483,
+                307845
             ],
             "filename": "astronomy.js",
             "lineno": 7409,
@@ -55646,8 +55646,8 @@
         "comment": "",
         "meta": {
             "range": [
-                307570,
-                307698
+                307556,
+                307684
             ],
             "filename": "astronomy.js",
             "lineno": 7410,
@@ -55676,8 +55676,8 @@
         "comment": "",
         "meta": {
             "range": [
-                307610,
-                307650
+                307596,
+                307636
             ],
             "filename": "astronomy.js",
             "lineno": 7411,
@@ -55701,8 +55701,8 @@
         "comment": "",
         "meta": {
             "range": [
-                307709,
-                307742
+                307695,
+                307728
             ],
             "filename": "astronomy.js",
             "lineno": 7414,
@@ -55726,8 +55726,8 @@
         "comment": "",
         "meta": {
             "range": [
-                307860,
-                307993
+                307846,
+                307979
             ],
             "filename": "astronomy.js",
             "lineno": 7419,
@@ -55756,8 +55756,8 @@
         "comment": "",
         "meta": {
             "range": [
-                307907,
-                307945
+                307893,
+                307931
             ],
             "filename": "astronomy.js",
             "lineno": 7420,
@@ -55781,8 +55781,8 @@
         "comment": "",
         "meta": {
             "range": [
-                307994,
-                308190
+                307980,
+                308176
             ],
             "filename": "astronomy.js",
             "lineno": 7423,
@@ -55812,8 +55812,8 @@
         "comment": "",
         "meta": {
             "range": [
-                308043,
-                308094
+                308029,
+                308080
             ],
             "filename": "astronomy.js",
             "lineno": 7424,
@@ -55837,8 +55837,8 @@
         "comment": "",
         "meta": {
             "range": [
-                308106,
-                308162
+                308092,
+                308148
             ],
             "filename": "astronomy.js",
             "lineno": 7425,
@@ -55862,8 +55862,8 @@
         "comment": "/**\n * @brief Searches for a solar eclipse visible at a specific location on the Earth's surface.\n *\n * This function finds the first solar eclipse that occurs after `startTime`.\n * A solar eclipse may be partial, annular, or total.\n * See {@link LocalSolarEclipseInfo} for more information.\n *\n * To find a series of solar eclipses, call this function once,\n * then keep calling {@link NextLocalSolarEclipse} as many times as desired,\n * passing in the `peak` value returned from the previous call.\n *\n * IMPORTANT: An eclipse reported by this function might be partly or\n * completely invisible to the observer due to the time of day.\n * See {@link LocalSolarEclipseInfo} for more information about this topic.\n *\n * @param {AstroTime} startTime\n *      The date and time for starting the search for a solar eclipse.\n *\n * @param {Observer} observer\n *      The geographic location of the observer.\n *\n * @returns {LocalSolarEclipseInfo}\n */",
         "meta": {
             "range": [
-                309135,
-                310843
+                309121,
+                310829
             ],
             "filename": "astronomy.js",
             "lineno": 7451,
@@ -55932,8 +55932,8 @@
         "comment": "",
         "meta": {
             "range": [
-                309231,
-                309250
+                309217,
+                309236
             ],
             "filename": "astronomy.js",
             "lineno": 7453,
@@ -55957,8 +55957,8 @@
         "comment": "",
         "meta": {
             "range": [
-                309432,
-                309450
+                309418,
+                309436
             ],
             "filename": "astronomy.js",
             "lineno": 7455,
@@ -55982,8 +55982,8 @@
         "comment": "",
         "meta": {
             "range": [
-                309554,
-                309598
+                309540,
+                309584
             ],
             "filename": "astronomy.js",
             "lineno": 7458,
@@ -56007,8 +56007,8 @@
         "comment": "",
         "meta": {
             "range": [
-                309789,
-                309837
+                309775,
+                309823
             ],
             "filename": "astronomy.js",
             "lineno": 7462,
@@ -56032,8 +56032,8 @@
         "comment": "",
         "meta": {
             "range": [
-                310072,
-                310119
+                310058,
+                310105
             ],
             "filename": "astronomy.js",
             "lineno": 7466,
@@ -56057,8 +56057,8 @@
         "comment": "",
         "meta": {
             "range": [
-                310263,
-                310303
+                310249,
+                310289
             ],
             "filename": "astronomy.js",
             "lineno": 7469,
@@ -56082,8 +56082,8 @@
         "comment": "",
         "meta": {
             "range": [
-                310804,
-                310834
+                310790,
+                310820
             ],
             "filename": "astronomy.js",
             "lineno": 7478,
@@ -56108,8 +56108,8 @@
         "comment": "",
         "meta": {
             "range": [
-                310844,
-                310901
+                310830,
+                310887
             ],
             "filename": "astronomy.js",
             "lineno": 7481,
@@ -56132,8 +56132,8 @@
         "comment": "/**\n * @brief Searches for the next local solar eclipse in a series.\n *\n * After using {@link SearchLocalSolarEclipse} to find the first solar eclipse\n * in a series, you can call this function to find the next consecutive solar eclipse.\n * Pass in the `peak` value from the {@link LocalSolarEclipseInfo} returned by the\n * previous call to `SearchLocalSolarEclipse` or `NextLocalSolarEclipse`\n * to find the next solar eclipse.\n * This function finds the first solar eclipse that occurs after `startTime`.\n * A solar eclipse may be partial, annular, or total.\n * See {@link LocalSolarEclipseInfo} for more information.\n *\n * @param {AstroTime} prevEclipseTime\n *      The date and time for starting the search for a solar eclipse.\n *\n * @param {Observer} observer\n *      The geographic location of the observer.\n *\n * @returns {LocalSolarEclipseInfo}\n */",
         "meta": {
             "range": [
-                311760,
-                311931
+                311746,
+                311917
             ],
             "filename": "astronomy.js",
             "lineno": 7502,
@@ -56197,8 +56197,8 @@
         "comment": "",
         "meta": {
             "range": [
-                311830,
-                311871
+                311816,
+                311857
             ],
             "filename": "astronomy.js",
             "lineno": 7503,
@@ -56222,8 +56222,8 @@
         "comment": "",
         "meta": {
             "range": [
-                311932,
-                311985
+                311918,
+                311971
             ],
             "filename": "astronomy.js",
             "lineno": 7506,
@@ -56246,8 +56246,8 @@
         "comment": "/**\n * @brief Information about a transit of Mercury or Venus, as seen from the Earth.\n *\n * Returned by {@link SearchTransit} or {@link NextTransit} to report\n * information about a transit of Mercury or Venus.\n * A transit is when Mercury or Venus passes between the Sun and Earth so that\n * the other planet is seen in silhouette against the Sun.\n *\n * The calculations are performed from the point of view of a geocentric observer.\n *\n * @property {AstroTime} start\n *      The date and time at the beginning of the transit.\n *      This is the moment the planet first becomes visible against the Sun in its background.\n *\n * @property {AstroTime} peak\n *      When the planet is most aligned with the Sun, as seen from the Earth.\n *\n * @property {AstroTime} finish\n *      The date and time at the end of the transit.\n *      This is the moment the planet is last seen against the Sun in its background.\n *\n * @property {number} separation\n *      The minimum angular separation, in arcminutes, between the centers of the Sun and the planet.\n *      This angle pertains to the time stored in `peak`.\n */",
         "meta": {
             "range": [
-                313096,
-                313296
+                313082,
+                313282
             ],
             "filename": "astronomy.js",
             "lineno": 7532,
@@ -56320,8 +56320,8 @@
         "comment": "",
         "meta": {
             "range": [
-                313120,
-                313294
+                313106,
+                313280
             ],
             "filename": "astronomy.js",
             "lineno": 7533,
@@ -56352,8 +56352,8 @@
         "comment": "/**\n * @brief Information about a transit of Mercury or Venus, as seen from the Earth.\n *\n * Returned by {@link SearchTransit} or {@link NextTransit} to report\n * information about a transit of Mercury or Venus.\n * A transit is when Mercury or Venus passes between the Sun and Earth so that\n * the other planet is seen in silhouette against the Sun.\n *\n * The calculations are performed from the point of view of a geocentric observer.\n *\n * @property {AstroTime} start\n *      The date and time at the beginning of the transit.\n *      This is the moment the planet first becomes visible against the Sun in its background.\n *\n * @property {AstroTime} peak\n *      When the planet is most aligned with the Sun, as seen from the Earth.\n *\n * @property {AstroTime} finish\n *      The date and time at the end of the transit.\n *      This is the moment the planet is last seen against the Sun in its background.\n *\n * @property {number} separation\n *      The minimum angular separation, in arcminutes, between the centers of the Sun and the planet.\n *      This angle pertains to the time stored in `peak`.\n */",
         "meta": {
             "range": [
-                313096,
-                313296
+                313082,
+                313282
             ],
             "filename": "astronomy.js",
             "lineno": 7532,
@@ -56425,8 +56425,8 @@
         "comment": "",
         "meta": {
             "range": [
-                313175,
-                313193
+                313161,
+                313179
             ],
             "filename": "astronomy.js",
             "lineno": 7534,
@@ -56450,8 +56450,8 @@
         "comment": "",
         "meta": {
             "range": [
-                313203,
-                313219
+                313189,
+                313205
             ],
             "filename": "astronomy.js",
             "lineno": 7535,
@@ -56475,8 +56475,8 @@
         "comment": "",
         "meta": {
             "range": [
-                313229,
-                313249
+                313215,
+                313235
             ],
             "filename": "astronomy.js",
             "lineno": 7536,
@@ -56500,8 +56500,8 @@
         "comment": "",
         "meta": {
             "range": [
-                313259,
-                313287
+                313245,
+                313273
             ],
             "filename": "astronomy.js",
             "lineno": 7537,
@@ -56525,8 +56525,8 @@
         "comment": "",
         "meta": {
             "range": [
-                313297,
-                313330
+                313283,
+                313316
             ],
             "filename": "astronomy.js",
             "lineno": 7540,
@@ -56549,8 +56549,8 @@
         "comment": "",
         "meta": {
             "range": [
-                313332,
-                313515
+                313318,
+                313501
             ],
             "filename": "astronomy.js",
             "lineno": 7541,
@@ -56581,8 +56581,8 @@
         "comment": "",
         "meta": {
             "range": [
-                313415,
-                313466
+                313401,
+                313452
             ],
             "filename": "astronomy.js",
             "lineno": 7542,
@@ -56606,8 +56606,8 @@
         "comment": "",
         "meta": {
             "range": [
-                313516,
-                313886
+                313502,
+                313872
             ],
             "filename": "astronomy.js",
             "lineno": 7545,
@@ -56640,8 +56640,8 @@
         "comment": "",
         "meta": {
             "range": [
-                313708,
-                313800
+                313694,
+                313786
             ],
             "filename": "astronomy.js",
             "lineno": 7547,
@@ -56665,8 +56665,8 @@
         "comment": "/**\n * @brief Searches for the first transit of Mercury or Venus after a given date.\n *\n * Finds the first transit of Mercury or Venus after a specified date.\n * A transit is when an inferior planet passes between the Sun and the Earth\n * so that the silhouette of the planet is visible against the Sun in the background.\n * To continue the search, pass the `finish` time in the returned structure to\n * {@link NextTransit}.\n *\n * @param {Body} body\n *      The planet whose transit is to be found. Must be `\"Mercury\"` or `\"Venus\"`.\n *\n * @param {AstroTime} startTime\n *      The date and time for starting the search for a transit.\n *\n * @returns {TransitInfo}\n */",
         "meta": {
             "range": [
-                314553,
-                316745
+                314539,
+                316731
             ],
             "filename": "astronomy.js",
             "lineno": 7569,
@@ -56741,8 +56741,8 @@
         "comment": "",
         "meta": {
             "range": [
-                314605,
-                314626
+                314591,
+                314612
             ],
             "filename": "astronomy.js",
             "lineno": 7570,
@@ -56766,8 +56766,8 @@
         "comment": "",
         "meta": {
             "range": [
-                314699,
-                314712
+                314685,
+                314698
             ],
             "filename": "astronomy.js",
             "lineno": 7571,
@@ -56791,8 +56791,8 @@
         "comment": "",
         "meta": {
             "range": [
-                314775,
-                314791
+                314761,
+                314777
             ],
             "filename": "astronomy.js",
             "lineno": 7573,
@@ -56814,8 +56814,8 @@
         "comment": "",
         "meta": {
             "range": [
-                314852,
-                314877
+                314838,
+                314863
             ],
             "filename": "astronomy.js",
             "lineno": 7576,
@@ -56840,8 +56840,8 @@
         "comment": "",
         "meta": {
             "range": [
-                314935,
-                314960
+                314921,
+                314946
             ],
             "filename": "astronomy.js",
             "lineno": 7579,
@@ -56866,8 +56866,8 @@
         "comment": "",
         "meta": {
             "range": [
-                315055,
-                315078
+                315041,
+                315064
             ],
             "filename": "astronomy.js",
             "lineno": 7584,
@@ -56891,8 +56891,8 @@
         "comment": "",
         "meta": {
             "range": [
-                315312,
-                315366
+                315298,
+                315352
             ],
             "filename": "astronomy.js",
             "lineno": 7589,
@@ -56916,8 +56916,8 @@
         "comment": "",
         "meta": {
             "range": [
-                315469,
-                315511
+                315455,
+                315497
             ],
             "filename": "astronomy.js",
             "lineno": 7591,
@@ -56941,8 +56941,8 @@
         "comment": "",
         "meta": {
             "range": [
-                315843,
-                315898
+                315829,
+                315884
             ],
             "filename": "astronomy.js",
             "lineno": 7597,
@@ -56966,8 +56966,8 @@
         "comment": "",
         "meta": {
             "range": [
-                316089,
-                316132
+                316075,
+                316118
             ],
             "filename": "astronomy.js",
             "lineno": 7600,
@@ -56991,8 +56991,8 @@
         "comment": "",
         "meta": {
             "range": [
-                316156,
-                316241
+                316142,
+                316227
             ],
             "filename": "astronomy.js",
             "lineno": 7601,
@@ -57016,8 +57016,8 @@
         "comment": "",
         "meta": {
             "range": [
-                316265,
-                316307
+                316251,
+                316293
             ],
             "filename": "astronomy.js",
             "lineno": 7602,
@@ -57041,8 +57041,8 @@
         "comment": "",
         "meta": {
             "range": [
-                316331,
-                316416
+                316317,
+                316402
             ],
             "filename": "astronomy.js",
             "lineno": 7603,
@@ -57066,8 +57066,8 @@
         "comment": "",
         "meta": {
             "range": [
-                316440,
-                316495
+                316426,
+                316481
             ],
             "filename": "astronomy.js",
             "lineno": 7604,
@@ -57091,8 +57091,8 @@
         "comment": "",
         "meta": {
             "range": [
-                316704,
-                316736
+                316690,
+                316722
             ],
             "filename": "astronomy.js",
             "lineno": 7609,
@@ -57117,8 +57117,8 @@
         "comment": "",
         "meta": {
             "range": [
-                316746,
-                316783
+                316732,
+                316769
             ],
             "filename": "astronomy.js",
             "lineno": 7612,
@@ -57141,8 +57141,8 @@
         "comment": "/**\n * @brief Searches for the next transit of Mercury or Venus in a series.\n *\n * After calling {@link SearchTransit} to find a transit of Mercury or Venus,\n * this function finds the next transit after that.\n * Keep calling this function as many times as you want to keep finding more transits.\n *\n * @param {Body} body\n *      The planet whose transit is to be found. Must be `\"Mercury\"` or `\"Venus\"`.\n *\n * @param {AstroTime} prevTransitTime\n *      A date and time near the previous transit.\n *\n * @returns {TransitInfo}\n */",
         "meta": {
             "range": [
-                317315,
-                317459
+                317301,
+                317445
             ],
             "filename": "astronomy.js",
             "lineno": 7628,
@@ -57206,8 +57206,8 @@
         "comment": "",
         "meta": {
             "range": [
-                317371,
-                317413
+                317357,
+                317399
             ],
             "filename": "astronomy.js",
             "lineno": 7629,
@@ -57231,8 +57231,8 @@
         "comment": "",
         "meta": {
             "range": [
-                317460,
-                317493
+                317446,
+                317479
             ],
             "filename": "astronomy.js",
             "lineno": 7632,
@@ -57286,6 +57286,6 @@
             "type": "git",
             "url": "git+https://github.com/cosinekitty/astronomy.git"
         },
-        "version": "2.0.5"
+        "version": "2.0.6"
     }
 ]
