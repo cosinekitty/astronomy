@@ -28,8 +28,26 @@ exe/csdown csharp_prefix.md ../generate/dotnet/csharp_test/exe/astronomy.dll ../
 cd ../generate || Fail "Error changing back to generate directory"
 ./check_internal_links.py $(realpath ../source/csharp/README.md) || exit 1
 
-echo "Install NodeJS dev dependencies"
-[[ -d node_modules ]] || npm ci || Fail "Error installing npm devDependencies"
+if [[ ! -d node_modules ]]; then
+    # On Intel x64 architecture, we can use the
+    # native binary in google-closure-compiler-linux.
+    # But in other architectures, we have to fall back to
+    # the Java version in google-closure-compiler-java.
+    ARCH=$(uname -m) || Fail "Cannot determine machine architecture."
+    echo "Install NodeJS dev dependencies for architecture ${ARCH}"
+    if [[ "${ARCH}" == "x86_64" ]]; then
+        npm ci || Fail "Error installing npm dev dependencies."
+    else
+        # Fail early if java is not installed.
+        # This will save the user grief trying to figure out what's wrong.
+        java -version || Fail "Must install java/openjdk before building Astronomy Engine on non-Intel platforms."
+
+        # Work around bug in 'npm ci' by explicitly disabling optional dependencies.
+        # This prevents 'npm ci' from installing google-closure-compiler-linux,
+        # which contains the incorrect binary that works only on Intel x64.
+        npm ci --no-optional || Fail "Error installing npm dev dependencies (optional packages disabled)."
+    fi
+fi
 
 echo "Compiling TypeScript to JavaScript."
 npm run build || Fail "Error in typescript compiler"
