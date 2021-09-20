@@ -3484,7 +3484,7 @@ The calculations are performed from the point of view of a geocentric observer.
 <a name="astro_deltat_func"></a>
 ### `astro_deltat_func`
 
-`typedef double(*  astro_deltat_func) (double ut);`
+`typedef double(* astro_deltat_func) (double ut);`
 
 **A pointer to a function that calculates Delta T.** 
 
@@ -3497,7 +3497,7 @@ Delta T is the discrepancy between times measured using an atomic clock and time
 <a name="astro_search_func_t"></a>
 ### `astro_search_func_t`
 
-`typedef astro_func_result_t(*  astro_search_func_t) (void *context, astro_time_t time);`
+`typedef astro_func_result_t(* astro_search_func_t) (void *context, astro_time_t time);`
 
 **A pointer to a function that is to be passed as a callback to [`Astronomy_Search`](#Astronomy_Search).** 
 
