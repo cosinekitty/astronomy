@@ -1226,6 +1226,51 @@ export declare function NextMoonQuarter(mq: MoonQuarter): MoonQuarter;
  */
 export declare function SearchRiseSet(body: Body, observer: Observer, direction: number, dateStart: FlexibleDateTime, limitDays: number): AstroTime | null;
 /**
+ * @brief Finds the next time a body reaches a given altitude.
+ *
+ * Finds when the given body ascends or descends through a given
+ * altitude angle, as seen by an observer at the specified location on the Earth.
+ * By using the appropriate combination of `direction` and `altitude` parameters,
+ * this function can be used to find when civil, nautical, or astronomical twilight
+ * begins (dawn) or ends (dusk).
+ *
+ * Civil dawn begins before sunrise when the Sun ascends through 6 degrees below
+ * the horizon. To find civil dawn, pass +1 for `direction` and -6 for `altitude'.
+ *
+ * Civil dusk ends after sunset when the Sun descends through 6 degrees below the horizon.
+ * To find civil dusk, pass -1 for `direction` and -6 for `altitude`.
+ *
+ * Nautical twilight is similar to civil twilight, only the `altitude` value should be -12 degrees.
+ * Astronomical twilight uses -18 degrees as the `altitude` value.
+ *
+ * @param {Body} body
+ *      The name of the body for which to find the altitude event.
+ *
+ * @param {Observer} observer
+ *      Specifies the geographic coordinates and elevation above sea level of the observer.
+ *
+ * @param {number} direction
+ *      Either +1 to find when the body ascends through the altitude,
+ *      or -1 for when the body descends through the altitude.
+ *      Any other value will cause an exception to be thrown.
+ *
+ * @param {FlexibleDateTime} dateStart
+ *      The date and time after which the specified altitude event is to be found.
+ *
+ * @param {number} limitDays
+ *      The fractional number of days after `dateStart` that limits
+ *      when the altitude event is to be found.
+ *
+ * @param {number} altitude
+ *      The desired altitude angle of the body's center above (positive)
+ *      or below (negative) the observer's local horizon, expressed in degrees.
+ *
+ * @returns {AstroTime | null}
+ *      The date and time of the altitude event, or null if no such event
+ *      occurs within the specified time window.
+ */
+export declare function SearchAltitude(body: Body, observer: Observer, direction: number, dateStart: FlexibleDateTime, limitDays: number, altitude: number): AstroTime | null;
+/**
  * @brief Horizontal position of a body upon reaching an hour angle.
  *
  * Returns information about an occurrence of a celestial body

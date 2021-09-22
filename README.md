@@ -79,6 +79,8 @@ Calculations are also verified to be identical among all the supported programmi
 
 - Calculates rise, set, and culmination times of Sun, Moon, and planets.
 
+- Finds civil, nautical, and astronomical twilight times (dusk and dawn).
+
 - Finds date and time of Moon phases: new, first quarter, full, third quarter
   (or anywhere in between as expressed in degrees of ecliptic longitude).
 
@@ -149,7 +151,7 @@ of complexity. So I decided to create Astronomy Engine with the following engine
 
 - Support JavaScript, C, C#, and Python with the same algorithms, and verify them to produce identical results.
 - No external dependencies! The code must not require anything outside the standard library for each language.
-- Minified JavaScript code less than 100K. (The current size is <!--MINIFIED_SIZE-->96106 bytes.)
+- Minified JavaScript code less than 100K. (The current size is <!--MINIFIED_SIZE-->96290 bytes.)
 - Accuracy always within 1 arcminute of results from NOVAS.
 - It would be well documented, relatively easy to use, and support a wide variety of common use cases.
 

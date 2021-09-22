@@ -3569,10 +3569,13 @@ function BodyRadiusAu(body: Body): number {
  *      The date and time of the rise or set event, or null if no such event
  *      occurs within the specified time window.
  */
-export function SearchRiseSet(body: Body, observer: Observer, direction: number, dateStart: FlexibleDateTime, limitDays: number): AstroTime | null {
-    VerifyObserver(observer);
-    VerifyNumber(limitDays);
-
+export function SearchRiseSet(
+    body: Body,
+    observer: Observer,
+    direction: number,
+    dateStart: FlexibleDateTime,
+    limitDays: number): AstroTime | null
+{
     let body_radius_au:number = BodyRadiusAu(body);
 
     function peak_altitude(t: AstroTime): number {
@@ -3591,8 +3594,83 @@ export function SearchRiseSet(body: Body, observer: Observer, direction: number,
         return direction * alt;
     }
 
+    return InternalSearchAltitude(body, observer, direction, dateStart, limitDays, peak_altitude);
+}
+
+/**
+ * @brief Finds the next time a body reaches a given altitude.
+ *
+ * Finds when the given body ascends or descends through a given
+ * altitude angle, as seen by an observer at the specified location on the Earth.
+ * By using the appropriate combination of `direction` and `altitude` parameters,
+ * this function can be used to find when civil, nautical, or astronomical twilight
+ * begins (dawn) or ends (dusk).
+ *
+ * Civil dawn begins before sunrise when the Sun ascends through 6 degrees below
+ * the horizon. To find civil dawn, pass +1 for `direction` and -6 for `altitude'.
+ *
+ * Civil dusk ends after sunset when the Sun descends through 6 degrees below the horizon.
+ * To find civil dusk, pass -1 for `direction` and -6 for `altitude`.
+ *
+ * Nautical twilight is similar to civil twilight, only the `altitude` value should be -12 degrees.
+ * Astronomical twilight uses -18 degrees as the `altitude` value.
+ *
+ * @param {Body} body
+ *      The name of the body for which to find the altitude event.
+ *
+ * @param {Observer} observer
+ *      Specifies the geographic coordinates and elevation above sea level of the observer.
+ *
+ * @param {number} direction
+ *      Either +1 to find when the body ascends through the altitude,
+ *      or -1 for when the body descends through the altitude.
+ *      Any other value will cause an exception to be thrown.
+ *
+ * @param {FlexibleDateTime} dateStart
+ *      The date and time after which the specified altitude event is to be found.
+ *
+ * @param {number} limitDays
+ *      The fractional number of days after `dateStart` that limits
+ *      when the altitude event is to be found.
+ *
+ * @param {number} altitude
+ *      The desired altitude angle of the body's center above (positive)
+ *      or below (negative) the observer's local horizon, expressed in degrees.
+ *
+ * @returns {AstroTime | null}
+ *      The date and time of the altitude event, or null if no such event
+ *      occurs within the specified time window.
+ */
+ export function SearchAltitude(
+    body: Body,
+    observer: Observer,
+    direction: number,
+    dateStart: FlexibleDateTime,
+    limitDays: number,
+    altitude: number): AstroTime | null
+{
+    function altitude_error(t: AstroTime): number {
+        const ofdate = Equator(body, t, observer, true, true);
+        const hor = Horizon(t, observer, ofdate.ra, ofdate.dec);
+        return direction * (hor.altitude - altitude);
+    }
+
+    return InternalSearchAltitude(body, observer, direction, dateStart, limitDays, altitude_error);
+}
+
+function InternalSearchAltitude(
+    body: Body,
+    observer: Observer,
+    direction: number,
+    dateStart: FlexibleDateTime,
+    limitDays: number,
+    altitude_error: (t: AstroTime) => number):    AstroTime | null
+{
+    VerifyObserver(observer);
+    VerifyNumber(limitDays);
+
     if (body === Body.Earth)
-        throw 'Cannot find rise or set time of the Earth.';
+        throw 'Cannot find altitude event for the Earth.';
 
     // See if the body is currently above/below the horizon.
     // If we are looking for next rise time and the body is below the horizon,
@@ -3611,32 +3689,32 @@ export function SearchRiseSet(body: Body, observer: Observer, direction: number,
         ha_before = 0;      // culmination happens BEFORE the body sets.
         ha_after = 12;      // bottom happens AFTER the body sets.
     } else {
-        throw `SearchRiseSet: Invalid direction parameter ${direction} -- must be +1 or -1`;
+        throw `Invalid direction parameter ${direction} -- must be +1 or -1`;
     }
 
     let time_start = MakeTime(dateStart);
     let time_before: AstroTime;
     let evt_before: HourAngleEvent;
     let evt_after: HourAngleEvent;
-    let alt_before = peak_altitude(time_start);
-    let alt_after: number;
-    if (alt_before > 0) {
+    let error_before = altitude_error(time_start);
+    let error_after: number;
+    if (error_before > 0) {
         // We are past the sought event, so we have to wait for the next "before" event (culm/bottom).
         evt_before = SearchHourAngle(body, observer, ha_before, time_start);
         time_before = evt_before.time;
-        alt_before = peak_altitude(time_before);
+        error_before = altitude_error(time_before);
     } else {
         // We are before or at the sought event, so we find the next "after" event (bottom/culm),
         // and use the current time as the "before" event.
         time_before = time_start;
     }
     evt_after = SearchHourAngle(body, observer, ha_after, time_before);
-    alt_after = peak_altitude(evt_after.time);
+    error_after = altitude_error(evt_after.time);
 
     while (true) {
-        if (alt_before <= 0 && alt_after > 0) {
+        if (error_before <= 0 && error_after > 0) {
             // Search between evt_before and evt_after for the desired event.
-            let tx = Search(peak_altitude, time_before, evt_after.time, {init_f1:alt_before, init_f2:alt_after});
+            let tx = Search(altitude_error, time_before, evt_after.time, {init_f1:error_before, init_f2:error_after});
             if (tx)
                 return tx;
         }
@@ -3648,10 +3726,11 @@ export function SearchRiseSet(body: Body, observer: Observer, direction: number,
             return null;
 
         time_before = evt_before.time;
-        alt_before = peak_altitude(evt_before.time);
-        alt_after = peak_altitude(evt_after.time);
+        error_before = altitude_error(evt_before.time);
+        error_after = altitude_error(evt_after.time);
     }
 }
+
 
 /**
  * @brief Horizontal position of a body upon reaching an hour angle.

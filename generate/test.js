@@ -2267,11 +2267,23 @@ function BaryStateTest() {
 
 
 function TwilightTest() {
+    const tolerance_seconds = 60.0;
     const filename = 'riseset/twilight.txt';
     const text = fs.readFileSync(filename, {encoding:'utf8'});
     const lines = text.split(/\r?\n/);
     let lnum = 0;
+
+    const name = [
+        "astronomical dawn",
+        "nautical dawn",
+        "civil dawn",
+        "civil dusk",
+        "nautical dusk",
+        "astronomical dusk"
+    ];
+
     for (let line of lines) {
+        ++lnum;
         const tokens = line.split(/\s+/);
         if (tokens.length !== 9) {
             console.error(`JS TwilightTest: FAIL(${filename} line ${lnum}): incorrect number of tokens.`);
@@ -2279,16 +2291,37 @@ function TwilightTest() {
         }
         const lat = float(tokens[0]);
         const lon = float(tokens[1]);
-        const searchDate = Astronomy.MakeTime(new Date(tokens[2]));
-        const astro_dawn    = Astronomy.MakeTime(new Date(tokens[3]));
-        const nautical_dawn = Astronomy.MakeTime(new Date(tokens[4]));
-        const civil_dawn    = Astronomy.MakeTime(new Date(tokens[5]));
-        const civil_dusk    = Astronomy.MakeTime(new Date(tokens[6]));
-        const nautical_dusk = Astronomy.MakeTime(new Date(tokens[7]));
-        const astro_dusk    = Astronomy.MakeTime(new Date(tokens[8]));
-
         const observer = new Astronomy.Observer(lat, lon, 0);
-        ++lnum;
+
+        const searchDate = Astronomy.MakeTime(new Date(tokens[2]));
+        const correctTimes = [
+            Astronomy.MakeTime(new Date(tokens[3])),      // astronomical dawn
+            Astronomy.MakeTime(new Date(tokens[4])),      // nautical dawn
+            Astronomy.MakeTime(new Date(tokens[5])),      // civil dawn
+            Astronomy.MakeTime(new Date(tokens[6])),      // civil dusk
+            Astronomy.MakeTime(new Date(tokens[7])),      // nautical dusk
+            Astronomy.MakeTime(new Date(tokens[8]))       // astronomical dusk
+        ];
+
+        const calcTimes = [
+            Astronomy.SearchAltitude(Astronomy.Body.Sun, observer, +1, searchDate, 1, -18),   // astronomical dawn
+            Astronomy.SearchAltitude(Astronomy.Body.Sun, observer, +1, searchDate, 1, -12),   // nautical dawn
+            Astronomy.SearchAltitude(Astronomy.Body.Sun, observer, +1, searchDate, 1, -6),    // civil dawn
+            Astronomy.SearchAltitude(Astronomy.Body.Sun, observer, -1, searchDate, 1, -6),    // civil dusk
+            Astronomy.SearchAltitude(Astronomy.Body.Sun, observer, -1, searchDate, 1, -12),   // nautical dusk
+            Astronomy.SearchAltitude(Astronomy.Body.Sun, observer, -1, searchDate, 1, -18),   // astronomical dusk
+        ];
+
+        for (let i = 0; i < correctTimes.length; ++i) {
+            const correct = correctTimes[i];
+            const calc = calcTimes[i];
+            const diff = 86400 * abs(calc.ut - correct.ut);
+            if (diff > tolerance_seconds) {
+                console.error(`JS TwilightTest(${filename} line ${lnum}): EXCESSIVE ERROR = ${diff} seconds for ${name[i]}`);
+                console.error(`Expected ${correct} but calculated ${calc}`);
+                return 1;
+            }
+        }
     }
     console.log(`JS TwilightTest: PASS (${lnum} test cases)`);
     return 0;

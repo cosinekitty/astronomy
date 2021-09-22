@@ -34,8 +34,8 @@
 'use strict';
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.IlluminationInfo = exports.EclipticLongitude = exports.AngleFromSun = exports.PairLongitude = exports.SearchSunLongitude = exports.Search = exports.BaryState = exports.GeoVector = exports.HelioDistance = exports.HelioVector = exports.JupiterMoons = exports.JupiterMoonsInfo = exports.GeoMoon = exports.Ecliptic = exports.ObserverGravity = exports.VectorObserver = exports.ObserverVector = exports.Equator = exports.SunPosition = exports.Observer = exports.Horizon = exports.EclipticCoordinates = exports.HorizontalCoordinates = exports.MakeRotation = exports.RotationMatrix = exports.EquatorialCoordinates = exports.Spherical = exports.StateVector = exports.Vector = exports.CalcMoonCount = exports.MakeTime = exports.AstroTime = exports.SetDeltaTFunction = exports.DeltaT_JplHorizons = exports.DeltaT_EspenakMeeus = exports.Body = exports.AngleBetween = exports.CALLISTO_RADIUS_KM = exports.GANYMEDE_RADIUS_KM = exports.EUROPA_RADIUS_KM = exports.IO_RADIUS_KM = exports.JUPITER_MEAN_RADIUS_KM = exports.JUPITER_POLAR_RADIUS_KM = exports.JUPITER_EQUATORIAL_RADIUS_KM = exports.RAD2HOUR = exports.RAD2DEG = exports.HOUR2RAD = exports.DEG2RAD = exports.KM_PER_AU = exports.C_AUDAY = void 0;
-exports.Constellation = exports.ConstellationInfo = exports.Rotation_GAL_EQJ = exports.Rotation_EQJ_GAL = exports.Rotation_HOR_ECL = exports.Rotation_ECL_HOR = exports.Rotation_ECL_EQD = exports.Rotation_EQD_ECL = exports.Rotation_EQJ_HOR = exports.Rotation_HOR_EQJ = exports.Rotation_HOR_EQD = exports.Rotation_EQD_HOR = exports.Rotation_EQD_EQJ = exports.Rotation_EQJ_EQD = exports.Rotation_ECL_EQJ = exports.Rotation_EQJ_ECL = exports.RotateState = exports.RotateVector = exports.InverseRefraction = exports.Refraction = exports.VectorFromHorizon = exports.HorizonFromVector = exports.SphereFromVector = exports.EquatorFromVector = exports.VectorFromSphere = exports.Pivot = exports.IdentityMatrix = exports.CombineRotation = exports.InverseRotation = exports.NextPlanetApsis = exports.SearchPlanetApsis = exports.NextLunarApsis = exports.SearchLunarApsis = exports.Apsis = exports.SearchPeakMagnitude = exports.SearchMaxElongation = exports.Elongation = exports.ElongationEvent = exports.Seasons = exports.SeasonInfo = exports.SearchHourAngle = exports.HourAngleEvent = exports.SearchRiseSet = exports.NextMoonQuarter = exports.SearchMoonQuarter = exports.MoonQuarter = exports.SearchMoonPhase = exports.MoonPhase = exports.SearchRelativeLongitude = exports.Illumination = void 0;
-exports.NextTransit = exports.SearchTransit = exports.TransitInfo = exports.NextLocalSolarEclipse = exports.SearchLocalSolarEclipse = exports.LocalSolarEclipseInfo = exports.EclipseEvent = exports.NextGlobalSolarEclipse = exports.SearchGlobalSolarEclipse = exports.NextLunarEclipse = exports.GlobalSolarEclipseInfo = exports.SearchLunarEclipse = exports.LunarEclipseInfo = void 0;
+exports.ConstellationInfo = exports.Rotation_GAL_EQJ = exports.Rotation_EQJ_GAL = exports.Rotation_HOR_ECL = exports.Rotation_ECL_HOR = exports.Rotation_ECL_EQD = exports.Rotation_EQD_ECL = exports.Rotation_EQJ_HOR = exports.Rotation_HOR_EQJ = exports.Rotation_HOR_EQD = exports.Rotation_EQD_HOR = exports.Rotation_EQD_EQJ = exports.Rotation_EQJ_EQD = exports.Rotation_ECL_EQJ = exports.Rotation_EQJ_ECL = exports.RotateState = exports.RotateVector = exports.InverseRefraction = exports.Refraction = exports.VectorFromHorizon = exports.HorizonFromVector = exports.SphereFromVector = exports.EquatorFromVector = exports.VectorFromSphere = exports.Pivot = exports.IdentityMatrix = exports.CombineRotation = exports.InverseRotation = exports.NextPlanetApsis = exports.SearchPlanetApsis = exports.NextLunarApsis = exports.SearchLunarApsis = exports.Apsis = exports.SearchPeakMagnitude = exports.SearchMaxElongation = exports.Elongation = exports.ElongationEvent = exports.Seasons = exports.SeasonInfo = exports.SearchHourAngle = exports.HourAngleEvent = exports.SearchAltitude = exports.SearchRiseSet = exports.NextMoonQuarter = exports.SearchMoonQuarter = exports.MoonQuarter = exports.SearchMoonPhase = exports.MoonPhase = exports.SearchRelativeLongitude = exports.Illumination = void 0;
+exports.NextTransit = exports.SearchTransit = exports.TransitInfo = exports.NextLocalSolarEclipse = exports.SearchLocalSolarEclipse = exports.LocalSolarEclipseInfo = exports.EclipseEvent = exports.NextGlobalSolarEclipse = exports.SearchGlobalSolarEclipse = exports.NextLunarEclipse = exports.GlobalSolarEclipseInfo = exports.SearchLunarEclipse = exports.LunarEclipseInfo = exports.Constellation = void 0;
 /**
  * @brief The speed of light in AU/day.
  */
@@ -4179,8 +4179,6 @@ function BodyRadiusAu(body) {
  *      occurs within the specified time window.
  */
 function SearchRiseSet(body, observer, direction, dateStart, limitDays) {
-    VerifyObserver(observer);
-    VerifyNumber(limitDays);
     let body_radius_au = BodyRadiusAu(body);
     function peak_altitude(t) {
         // Return the angular altitude above or below the horizon
@@ -4196,8 +4194,67 @@ function SearchRiseSet(body, observer, direction, dateStart, limitDays) {
         const alt = hor.altitude + exports.RAD2DEG * (body_radius_au / ofdate.dist) + REFRACTION_NEAR_HORIZON;
         return direction * alt;
     }
+    return InternalSearchAltitude(body, observer, direction, dateStart, limitDays, peak_altitude);
+}
+exports.SearchRiseSet = SearchRiseSet;
+/**
+ * @brief Finds the next time a body reaches a given altitude.
+ *
+ * Finds when the given body ascends or descends through a given
+ * altitude angle, as seen by an observer at the specified location on the Earth.
+ * By using the appropriate combination of `direction` and `altitude` parameters,
+ * this function can be used to find when civil, nautical, or astronomical twilight
+ * begins (dawn) or ends (dusk).
+ *
+ * Civil dawn begins before sunrise when the Sun ascends through 6 degrees below
+ * the horizon. To find civil dawn, pass +1 for `direction` and -6 for `altitude'.
+ *
+ * Civil dusk ends after sunset when the Sun descends through 6 degrees below the horizon.
+ * To find civil dusk, pass -1 for `direction` and -6 for `altitude`.
+ *
+ * Nautical twilight is similar to civil twilight, only the `altitude` value should be -12 degrees.
+ * Astronomical twilight uses -18 degrees as the `altitude` value.
+ *
+ * @param {Body} body
+ *      The name of the body for which to find the altitude event.
+ *
+ * @param {Observer} observer
+ *      Specifies the geographic coordinates and elevation above sea level of the observer.
+ *
+ * @param {number} direction
+ *      Either +1 to find when the body ascends through the altitude,
+ *      or -1 for when the body descends through the altitude.
+ *      Any other value will cause an exception to be thrown.
+ *
+ * @param {FlexibleDateTime} dateStart
+ *      The date and time after which the specified altitude event is to be found.
+ *
+ * @param {number} limitDays
+ *      The fractional number of days after `dateStart` that limits
+ *      when the altitude event is to be found.
+ *
+ * @param {number} altitude
+ *      The desired altitude angle of the body's center above (positive)
+ *      or below (negative) the observer's local horizon, expressed in degrees.
+ *
+ * @returns {AstroTime | null}
+ *      The date and time of the altitude event, or null if no such event
+ *      occurs within the specified time window.
+ */
+function SearchAltitude(body, observer, direction, dateStart, limitDays, altitude) {
+    function altitude_error(t) {
+        const ofdate = Equator(body, t, observer, true, true);
+        const hor = Horizon(t, observer, ofdate.ra, ofdate.dec);
+        return direction * (hor.altitude - altitude);
+    }
+    return InternalSearchAltitude(body, observer, direction, dateStart, limitDays, altitude_error);
+}
+exports.SearchAltitude = SearchAltitude;
+function InternalSearchAltitude(body, observer, direction, dateStart, limitDays, altitude_error) {
+    VerifyObserver(observer);
+    VerifyNumber(limitDays);
     if (body === Body.Earth)
-        throw 'Cannot find rise or set time of the Earth.';
+        throw 'Cannot find altitude event for the Earth.';
     // See if the body is currently above/below the horizon.
     // If we are looking for next rise time and the body is below the horizon,
     // we use the current time as the lower time bound and the next culmination
@@ -4216,19 +4273,19 @@ function SearchRiseSet(body, observer, direction, dateStart, limitDays) {
         ha_after = 12; // bottom happens AFTER the body sets.
     }
     else {
-        throw `SearchRiseSet: Invalid direction parameter ${direction} -- must be +1 or -1`;
+        throw `Invalid direction parameter ${direction} -- must be +1 or -1`;
     }
     let time_start = MakeTime(dateStart);
     let time_before;
     let evt_before;
     let evt_after;
-    let alt_before = peak_altitude(time_start);
-    let alt_after;
-    if (alt_before > 0) {
+    let error_before = altitude_error(time_start);
+    let error_after;
+    if (error_before > 0) {
         // We are past the sought event, so we have to wait for the next "before" event (culm/bottom).
         evt_before = SearchHourAngle(body, observer, ha_before, time_start);
         time_before = evt_before.time;
-        alt_before = peak_altitude(time_before);
+        error_before = altitude_error(time_before);
     }
     else {
         // We are before or at the sought event, so we find the next "after" event (bottom/culm),
@@ -4236,11 +4293,11 @@ function SearchRiseSet(body, observer, direction, dateStart, limitDays) {
         time_before = time_start;
     }
     evt_after = SearchHourAngle(body, observer, ha_after, time_before);
-    alt_after = peak_altitude(evt_after.time);
+    error_after = altitude_error(evt_after.time);
     while (true) {
-        if (alt_before <= 0 && alt_after > 0) {
+        if (error_before <= 0 && error_after > 0) {
             // Search between evt_before and evt_after for the desired event.
-            let tx = Search(peak_altitude, time_before, evt_after.time, { init_f1: alt_before, init_f2: alt_after });
+            let tx = Search(altitude_error, time_before, evt_after.time, { init_f1: error_before, init_f2: error_after });
             if (tx)
                 return tx;
         }
@@ -4250,11 +4307,10 @@ function SearchRiseSet(body, observer, direction, dateStart, limitDays) {
         if (evt_before.time.ut >= time_start.ut + limitDays)
             return null;
         time_before = evt_before.time;
-        alt_before = peak_altitude(evt_before.time);
-        alt_after = peak_altitude(evt_after.time);
+        error_before = altitude_error(evt_before.time);
+        error_after = altitude_error(evt_after.time);
     }
 }
-exports.SearchRiseSet = SearchRiseSet;
 /**
  * @brief Horizontal position of a body upon reaching an hour angle.
  *
