@@ -2266,6 +2266,35 @@ function BaryStateTest() {
 }
 
 
+function TwilightTest() {
+    const filename = 'riseset/twilight.txt';
+    const text = fs.readFileSync(filename, {encoding:'utf8'});
+    const lines = text.split(/\r?\n/);
+    let lnum = 0;
+    for (let line of lines) {
+        const tokens = line.split(/\s+/);
+        if (tokens.length !== 9) {
+            console.error(`JS TwilightTest: FAIL(${filename} line ${lnum}): incorrect number of tokens.`);
+            return 1;
+        }
+        const lat = float(tokens[0]);
+        const lon = float(tokens[1]);
+        const searchDate = Astronomy.MakeTime(new Date(tokens[2]));
+        const astro_dawn    = Astronomy.MakeTime(new Date(tokens[3]));
+        const nautical_dawn = Astronomy.MakeTime(new Date(tokens[4]));
+        const civil_dawn    = Astronomy.MakeTime(new Date(tokens[5]));
+        const civil_dusk    = Astronomy.MakeTime(new Date(tokens[6]));
+        const nautical_dusk = Astronomy.MakeTime(new Date(tokens[7]));
+        const astro_dusk    = Astronomy.MakeTime(new Date(tokens[8]));
+
+        const observer = new Astronomy.Observer(lat, lon, 0);
+        ++lnum;
+    }
+    console.log(`JS TwilightTest: PASS (${lnum} test cases)`);
+    return 0;
+}
+
+
 const UnitTests = {
     aberration:             AberrationTest,
     barystate:              BaryStateTest,
@@ -2288,6 +2317,7 @@ const UnitTests = {
     rotation:               Rotation,
     seasons:                Seasons,
     transit:                Transit,
+    twilight:               TwilightTest,
 };
 
 
