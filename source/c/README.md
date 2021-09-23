@@ -1739,9 +1739,9 @@ If the search does not converge within 20 iterations, it will fail with status c
 
 Finds when the given body ascends or descends through a given altitude angle, as seen by an observer at the specified location on the Earth. By using the appropriate combination of `direction` and `altitude` parameters, this function can be used to find when civil, nautical, or astronomical twilight begins (dawn) or ends (dusk).
 
-Civil dawn begins before sunrise when the Sun ascends through 6 degrees below the horizon. To find civil dawn, pass +1 for `direction` and -6 for `altitude`.
+Civil dawn begins before sunrise when the Sun ascends through 6 degrees below the horizon. To find civil dawn, pass `DIRECTION_RISE` for `direction` and -6 for `altitude`.
 
-Civil dusk ends after sunset when the Sun descends through 6 degrees below the horizon. To find civil dusk, pass -1 for `direction` and -6 for `altitude`.
+Civil dusk ends after sunset when the Sun descends through 6 degrees below the horizon. To find civil dusk, pass `DIRECTION_SET` for `direction` and -6 for `altitude`.
 
 Nautical twilight is similar to civil twilight, only the `altitude` value should be -12 degrees.
 

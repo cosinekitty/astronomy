@@ -3775,12 +3775,62 @@ class Direction(enum.Enum):
     Rise = +1
     Set  = -1
 
+
+def _InternalSearchAltitude(body, observer, direction, startTime, limitDays, altitude_error_func, altitude_error_context):
+    if direction == Direction.Rise:
+        ha_before = 12.0    # minimum altitude (bottom) happens BEFORE the body rises.
+        ha_after  =  0.0    # maximum altitude (culmination) happens AFTER the body rises.
+    elif direction == Direction.Set:
+        ha_before =  0.0    # culmination happens BEFORE the body sets.
+        ha_after  = 12.0    # bottom happens AFTER the body sets.
+    else:
+        raise Error('Invalid value for direction parameter')
+
+    # See if the body is currently above/below the horizon.
+    # If we are looking for next rise time and the body is below the horizon,
+    # we use the current time as the lower time bound and the next culmination
+    # as the upper bound.
+    # If the body is above the horizon, we search for the next bottom and use it
+    # as the lower bound and the next culmination after that bottom as the upper bound.
+    # The same logic applies for finding set times, only we swap the hour angles.
+    time_start = startTime
+    alt_before = altitude_error_func(altitude_error_context, time_start)
+    if alt_before > 0.0:
+        # We are past the sought event, so we have to wait for the next "before" event (culm/bottom).
+        evt_before = SearchHourAngle(body, observer, ha_before, time_start)
+        time_before = evt_before.time
+        alt_before = altitude_error_func(altitude_error_context, time_before)
+    else:
+        # We are before or at the sought ebvent, so we find the next "after" event (bottom/culm),
+        # and use the current time as the "before" event.
+        time_before = time_start
+
+    evt_after = SearchHourAngle(body, observer, ha_after, time_before)
+    alt_after = altitude_error_func(altitude_error_context, evt_after.time)
+
+    while True:
+        if alt_before <= 0.0 and alt_after > 0.0:
+            # Search between the "before time" and the "after time" for the desired event.
+            event_time = Search(altitude_error_func, altitude_error_context, time_before, evt_after.time, 1.0)
+            if event_time is not None:
+                return event_time
+        # We didn't find the desired event, so use the "after" time to find the next "before" event.
+        evt_before = SearchHourAngle(body, observer, ha_before, evt_after.time)
+        evt_after = SearchHourAngle(body, observer, ha_after, evt_before.time)
+        if evt_before.time.ut >= time_start.ut + limitDays:
+            return None
+        time_before = evt_before.time
+        alt_before = altitude_error_func(altitude_error_context, evt_before.time)
+        alt_after = altitude_error_func(altitude_error_context, evt_after.time)
+
+
 class _peak_altitude_context:
     def __init__(self, body, direction, observer, body_radius_au):
         self.body = body
         self.direction = direction
         self.observer = observer
         self.body_radius_au = body_radius_au
+
 
 def _peak_altitude(context, time):
     # Return the angular altitude above or below the horizon
@@ -3798,6 +3848,7 @@ def _peak_altitude(context, time):
     hor = Horizon(time, context.observer, ofdate.ra, ofdate.dec, Refraction.Airless)
     alt = hor.altitude + math.degrees(context.body_radius_au / ofdate.dist)
     return context.direction.value * (alt + _REFRACTION_NEAR_HORIZON)
+
 
 def SearchRiseSet(body, observer, direction, startTime, limitDays):
     """Searches for the next time a celestial body rises or sets as seen by an observer on the Earth.
@@ -3851,53 +3902,68 @@ def SearchRiseSet(body, observer, direction, startTime, limitDays):
     else:
         body_radius = 0.0
 
-    if direction == Direction.Rise:
-        ha_before = 12.0    # minimum altitude (bottom) happens BEFORE the body rises.
-        ha_after  =  0.0    # maximum altitude (culmination) happens AFTER the body rises.
-    elif direction == Direction.Set:
-        ha_before =  0.0    # culmination happens BEFORE the body sets.
-        ha_after  = 12.0    # bottom happens AFTER the body sets.
-    else:
-        raise Error('Invalid value for direction parameter')
-
     context = _peak_altitude_context(body, direction, observer, body_radius)
+    return _InternalSearchAltitude(body, observer, direction, startTime, limitDays, _peak_altitude, context)
 
-    # See if the body is currently above/below the horizon.
-    # If we are looking for next rise time and the body is below the horizon,
-    # we use the current time as the lower time bound and the next culmination
-    # as the upper bound.
-    # If the body is above the horizon, we search for the next bottom and use it
-    # as the lower bound and the next culmination after that bottom as the upper bound.
-    # The same logic applies for finding set times, only we swap the hour angles.
-    time_start = startTime
-    alt_before = _peak_altitude(context, time_start)
-    if alt_before > 0.0:
-        # We are past the sought event, so we have to wait for the next "before" event (culm/bottom).
-        evt_before = SearchHourAngle(body, observer, ha_before, time_start)
-        time_before = evt_before.time
-        alt_before = _peak_altitude(context, time_before)
-    else:
-        # We are before or at the sought ebvent, so we find the next "after" event (bottom/culm),
-        # and use the current time as the "before" event.
-        time_before = time_start
 
-    evt_after = SearchHourAngle(body, observer, ha_after, time_before)
-    alt_after = _peak_altitude(context, evt_after.time)
+class _altitude_error_context:
+    def __init__(self, body, direction, observer, altitude):
+        self.body = body
+        self.direction = direction
+        self.observer = observer
+        self.altitude = altitude
 
-    while True:
-        if alt_before <= 0.0 and alt_after > 0.0:
-            # Search between the "before time" and the "after time" for the desired event.
-            event_time = Search(_peak_altitude, context, time_before, evt_after.time, 1.0)
-            if event_time is not None:
-                return event_time
-        # We didn't find the desired event, so use the "after" time to find the next "before" event.
-        evt_before = SearchHourAngle(body, observer, ha_before, evt_after.time)
-        evt_after = SearchHourAngle(body, observer, ha_after, evt_before.time)
-        if evt_before.time.ut >= time_start.ut + limitDays:
-            return None
-        time_before = evt_before.time
-        alt_before = _peak_altitude(context, evt_before.time)
-        alt_after = _peak_altitude(context, evt_after.time)
+def _altitude_error_func(context, time):
+    ofdate = Equator(context.body, time, context.observer, True, True)
+    hor = Horizon(time, context.observer, ofdate.ra, ofdate.dec, Refraction.Airless)
+    return context.direction.value * (hor.altitude - context.altitude)
+
+
+def SearchAltitude(body, observer, direction, dateStart, limitDays, altitude):
+    """Finds the next time a body reaches a given altitude.
+
+    Finds when the given body ascends or descends through a given
+    altitude angle, as seen by an observer at the specified location on the Earth.
+    By using the appropriate combination of `direction` and `altitude` parameters,
+    this function can be used to find when civil, nautical, or astronomical twilight
+    begins (dawn) or ends (dusk).
+
+    Civil dawn begins before sunrise when the Sun ascends through 6 degrees below
+    the horizon. To find civil dawn, pass `Direction.Rise` for `direction` and -6 for `altitude`.
+
+    Civil dusk ends after sunset when the Sun descends through 6 degrees below the horizon.
+    To find civil dusk, pass `Direction.Set` for `direction` and -6 for `altitude`.
+
+    Nautical twilight is similar to civil twilight, only the `altitude` value should be -12 degrees.
+
+    Astronomical twilight uses -18 degrees as the `altitude` value.
+
+    Parameters
+    ----------
+    body : Body
+        The Sun, Moon, or any planet other than the Earth.
+    observer : Observer
+        The location where observation takes place.
+    direction : Direction
+        Either `Direction.Rise` to find an ascending altitude event
+        or `Direction.Set` to find a descending altitude event.
+    startTime : Time
+        The date and time at which to start the search.
+    limitDays : float
+        The fractional number of days after `dateStart` that limits
+        when the altitude event is to be found. Must be a positive number.
+
+    Returns
+    -------
+    Time or `None`
+        If the altitude event time is found within the specified time window,
+        this function returns that time. Otherwise, it returns `None`.
+    """
+    if not (-90.0 <= altitude <= +90.0):
+        raise Error('Invalid altitude: {}'.format(altitude))
+
+    context = _altitude_error_context(body, direction, observer, altitude)
+    return _InternalSearchAltitude(body, observer, direction, dateStart, limitDays, _altitude_error_func, context)
 
 class SeasonInfo:
     """The dates and times of changes of season for a given calendar year.

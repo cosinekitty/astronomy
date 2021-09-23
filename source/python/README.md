@@ -50,6 +50,7 @@ To get started quickly, here are some [examples](../../demo/python/).
 | Function | Description |
 | -------- | ----------- |
 | [SearchRiseSet](#SearchRiseSet) | Finds time of rise or set for a body as seen by an observer on the Earth. |
+| [SearchAltitude](#SearchAltitude) | Finds time when a body reaches a given altitude above or below the horizon. Useful for finding civil, nautical, or astronomical twilight. |
 | [SearchHourAngle](#SearchHourAngle) | Finds when body reaches a given hour angle for an observer on the Earth. Hour angle = 0 finds culmination, the highest point in the sky. |
 
 ### Moon phases
@@ -2139,6 +2140,37 @@ In this case, the returned time value will always be within the
 inclusive range [`t1`, `t2`].
 If there is no ascending root, or there is more than one ascending root,
 the function returns `None`.
+
+---
+
+<a name="SearchAltitude"></a>
+### SearchAltitude(body, observer, direction, dateStart, limitDays, altitude)
+
+**Finds the next time a body reaches a given altitude.**
+
+Finds when the given body ascends or descends through a given
+altitude angle, as seen by an observer at the specified location on the Earth.
+By using the appropriate combination of `direction` and `altitude` parameters,
+this function can be used to find when civil, nautical, or astronomical twilight
+begins (dawn) or ends (dusk).
+Civil dawn begins before sunrise when the Sun ascends through 6 degrees below
+the horizon. To find civil dawn, pass `Direction.Rise` for `direction` and -6 for `altitude`.
+Civil dusk ends after sunset when the Sun descends through 6 degrees below the horizon.
+To find civil dusk, pass `Direction.Set` for `direction` and -6 for `altitude`.
+Nautical twilight is similar to civil twilight, only the `altitude` value should be -12 degrees.
+Astronomical twilight uses -18 degrees as the `altitude` value.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Body`](#Body) | `body` | The Sun, Moon, or any planet other than the Earth. |
+| [`Observer`](#Observer) | `observer` | The location where observation takes place. |
+| [`Direction`](#Direction) | `direction` | Either `Direction.Rise` to find an ascending altitude event or `Direction.Set` to find a descending altitude event. |
+| [`Time`](#Time) | `startTime` | The date and time at which to start the search. |
+| `float` | `limitDays` | The fractional number of days after `dateStart` that limits when the altitude event is to be found. Must be a positive number. |
+
+### Returns: [`Time`](#Time) or `None`
+If the altitude event time is found within the specified time window,
+this function returns that time. Otherwise, it returns `None`.
 
 ---
 

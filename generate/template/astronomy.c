@@ -4957,10 +4957,10 @@ astro_search_result_t Astronomy_SearchRiseSet(
  * begins (dawn) or ends (dusk).
  *
  * Civil dawn begins before sunrise when the Sun ascends through 6 degrees below
- * the horizon. To find civil dawn, pass +1 for `direction` and -6 for `altitude`.
+ * the horizon. To find civil dawn, pass `DIRECTION_RISE` for `direction` and -6 for `altitude`.
  *
  * Civil dusk ends after sunset when the Sun descends through 6 degrees below the horizon.
- * To find civil dusk, pass -1 for `direction` and -6 for `altitude`.
+ * To find civil dusk, pass `DIRECTION_SET` for `direction` and -6 for `altitude`.
  *
  * Nautical twilight is similar to civil twilight, only the `altitude` value should be -12 degrees.
  *

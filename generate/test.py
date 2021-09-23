@@ -2051,6 +2051,44 @@ def Aberration():
 
 #-----------------------------------------------------------------------------------------------------------
 
+def Twilight():
+    tolerance_seconds = 60.0
+    max_diff = 0.0
+    filename = 'riseset/twilight.txt'
+    with open(filename, 'rt') as infile:
+        lnum = 0
+        for line in infile:
+            lnum += 1
+            tokens = line.split()
+            if len(tokens) != 9:
+                print('PY Twilight({} line {}): incorrect number of tokens = {}'.format(filename, lnum, len(tokens)))
+                return 1
+            observer = astronomy.Observer(float(tokens[0]), float(tokens[1]), 0.0)
+            searchDate = astronomy.Time.Parse(tokens[2])
+            correctTimes = [astronomy.Time.Parse(t) for t in tokens[3:]]
+            calcTimes = [
+                astronomy.SearchAltitude(astronomy.Body.Sun, observer, astronomy.Direction.Rise, searchDate, 1.0, -18.0),   # astronomical dawn
+                astronomy.SearchAltitude(astronomy.Body.Sun, observer, astronomy.Direction.Rise, searchDate, 1.0, -12.0),   # nautical dawn
+                astronomy.SearchAltitude(astronomy.Body.Sun, observer, astronomy.Direction.Rise, searchDate, 1.0,  -6.0),   # civil dawn
+                astronomy.SearchAltitude(astronomy.Body.Sun, observer, astronomy.Direction.Set,  searchDate, 1.0,  -6.0),   # civil dusk
+                astronomy.SearchAltitude(astronomy.Body.Sun, observer, astronomy.Direction.Set,  searchDate, 1.0, -12.0),   # nautical dusk
+                astronomy.SearchAltitude(astronomy.Body.Sun, observer, astronomy.Direction.Set,  searchDate, 1.0, -18.0)    # astronomical dusk
+            ]
+            for i in range(6):
+                correct = correctTimes[i]
+                calc = calcTimes[i]
+                diff = 86400.0 * vabs(calc.ut - correct.ut)
+                if diff > tolerance_seconds:
+                    print('PY Twilight({} line {}): EXCESSIVE ERROR = {} seconds for case {}'.format(filename, lnum, diff, i))
+                    return 1
+                if diff > max_diff:
+                    max_diff = diff
+
+    print('PY Twilight: PASS ({} test cases, max error = {} seconds)'.format(lnum, max_diff))
+    return 0
+
+#-----------------------------------------------------------------------------------------------------------
+
 UnitTests = {
     'aberration':               Aberration,
     'barystate':                BaryState,
@@ -2075,6 +2113,7 @@ UnitTests = {
     'seasons':                  Seasons,
     'time':                     AstroTime,
     'transit':                  Transit,
+    'twilight':                 Twilight,
 }
 
 #-----------------------------------------------------------------------------------------------------------
