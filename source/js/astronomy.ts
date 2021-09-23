@@ -4601,16 +4601,18 @@ export function SearchRiseSet(
  * begins (dawn) or ends (dusk).
  *
  * Civil dawn begins before sunrise when the Sun ascends through 6 degrees below
- * the horizon. To find civil dawn, pass +1 for `direction` and -6 for `altitude'.
+ * the horizon. To find civil dawn, pass +1 for `direction` and -6 for `altitude`.
  *
  * Civil dusk ends after sunset when the Sun descends through 6 degrees below the horizon.
  * To find civil dusk, pass -1 for `direction` and -6 for `altitude`.
  *
  * Nautical twilight is similar to civil twilight, only the `altitude` value should be -12 degrees.
+ *
  * Astronomical twilight uses -18 degrees as the `altitude` value.
  *
  * @param {Body} body
  *      The name of the body for which to find the altitude event.
+ *      Can be the Sun, Moon, or any planet other than the Earth.
  *
  * @param {Observer} observer
  *      Specifies the geographic coordinates and elevation above sea level of the observer.
@@ -4625,11 +4627,12 @@ export function SearchRiseSet(
  *
  * @param {number} limitDays
  *      The fractional number of days after `dateStart` that limits
- *      when the altitude event is to be found.
+ *      when the altitude event is to be found. Must be a positive number.
  *
  * @param {number} altitude
  *      The desired altitude angle of the body's center above (positive)
  *      or below (negative) the observer's local horizon, expressed in degrees.
+ *      Must be in the range [-90, +90].
  *
  * @returns {AstroTime | null}
  *      The date and time of the altitude event, or null if no such event
@@ -4643,6 +4646,9 @@ export function SearchRiseSet(
     limitDays: number,
     altitude: number): AstroTime | null
 {
+    if (!Number.isFinite(altitude) || altitude < -90 || altitude > +90)
+        throw `Invalid altitude angle: ${altitude}`;
+
     function altitude_error(t: AstroTime): number {
         const ofdate = Equator(body, t, observer, true, true);
         const hor = Horizon(t, observer, ofdate.ra, ofdate.dec);
@@ -4662,6 +4668,8 @@ function InternalSearchAltitude(
 {
     VerifyObserver(observer);
     VerifyNumber(limitDays);
+    if (limitDays <= 0)
+        throw `Invalid value for limitDays: ${limitDays}`;
 
     if (body === Body.Earth)
         throw 'Cannot find altitude event for the Earth.';

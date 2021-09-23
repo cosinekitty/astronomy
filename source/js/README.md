@@ -44,6 +44,7 @@ and some [Node.js examples](../../demo/nodejs/).
 | Function | Description |
 | -------- | ----------- |
 | [SearchRiseSet](#SearchRiseSet) | Finds time of rise or set for a body as seen by an observer on the Earth. |
+| [SearchAltitude](#SearchAltitude) | Finds time when a body reaches a given altitude above or below the horizon. Useful for finding civil, nautical, or astronomical twilight. |
 | [SearchHourAngle](#SearchHourAngle) | Finds when body reaches a given hour angle for an observer on the Earth. Hour angle = 0 finds culmination, the highest point in the sky. |
 
 ### Moon phases
@@ -1509,22 +1510,23 @@ this function can be used to find when civil, nautical, or astronomical twilight
 begins (dawn) or ends (dusk).
 
 Civil dawn begins before sunrise when the Sun ascends through 6 degrees below
-the horizon. To find civil dawn, pass +1 for `direction` and -6 for `altitude'.
+the horizon. To find civil dawn, pass +1 for `direction` and -6 for `altitude`.
 
 Civil dusk ends after sunset when the Sun descends through 6 degrees below the horizon.
 To find civil dusk, pass -1 for `direction` and -6 for `altitude`.
 
 Nautical twilight is similar to civil twilight, only the `altitude` value should be -12 degrees.
+
 Astronomical twilight uses -18 degrees as the `altitude` value.  
 
 | Param | Type | Description |
 | --- | --- | --- |
-| body | [<code>Body</code>](#Body) | The name of the body for which to find the altitude event. |
+| body | [<code>Body</code>](#Body) | The name of the body for which to find the altitude event.      Can be the Sun, Moon, or any planet other than the Earth. |
 | observer | [<code>Observer</code>](#Observer) | Specifies the geographic coordinates and elevation above sea level of the observer. |
 | direction | <code>number</code> | Either +1 to find when the body ascends through the altitude,      or -1 for when the body descends through the altitude.      Any other value will cause an exception to be thrown. |
 | dateStart | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time after which the specified altitude event is to be found. |
-| limitDays | <code>number</code> | The fractional number of days after `dateStart` that limits      when the altitude event is to be found. |
-| altitude | <code>number</code> | The desired altitude angle of the body's center above (positive)      or below (negative) the observer's local horizon, expressed in degrees. |
+| limitDays | <code>number</code> | The fractional number of days after `dateStart` that limits      when the altitude event is to be found. Must be a positive number. |
+| altitude | <code>number</code> | The desired altitude angle of the body's center above (positive)      or below (negative) the observer's local horizon, expressed in degrees.      Must be in the range [-90, +90]. |
 
 
 * * *
