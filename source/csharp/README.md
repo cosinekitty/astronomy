@@ -47,6 +47,7 @@ To get started quickly, here are some [examples](../../demo/csharp/).
 | Function | Description |
 | -------- | ----------- |
 | [SearchRiseSet](#Astronomy.SearchRiseSet) | Finds time of rise or set for a body as seen by an observer on the Earth. |
+| [SearchAltitude](#Astronomy.SearchAltitude) | Finds time when a body reaches a given altitude above or below the horizon. Useful for finding civil, nautical, or astronomical twilight. |
 | [SearchHourAngle](#Astronomy.SearchHourAngle) | Finds when body reaches a given hour angle for an observer on the Earth. Hour angle = 0 finds culmination, the highest point in the sky. |
 
 ### Moon phases
@@ -1238,6 +1239,38 @@ If the search does not converge within 20 iterations, it will throw an exception
 | `double` | `dt_tolerance_seconds` | Specifies an amount of time in seconds within which a bounded ascending root is considered accurate enough to stop. A typical value is 1 second. |
 
 **Returns:** If successful, returns an [`AstroTime`](#AstroTime) value indicating a date and time that is within `dt_tolerance_seconds` of an ascending root. If no ascending root is found, or more than one root exists in the time window `t1`..`t2`, the function returns `null`. If the search does not converge within 20 iterations, an exception is thrown.
+
+<a name="Astronomy.SearchAltitude"></a>
+### Astronomy.SearchAltitude(body, observer, direction, startTime, limitDays, altitude) &#8658; [`AstroTime`](#AstroTime)
+
+**Finds the next time a body reaches a given altitude.**
+
+Finds when the given body ascends or descends through a given
+altitude angle, as seen by an observer at the specified location on the Earth.
+By using the appropriate combination of `direction` and `altitude` parameters,
+this function can be used to find when civil, nautical, or astronomical twilight
+begins (dawn) or ends (dusk).
+
+Civil dawn begins before sunrise when the Sun ascends through 6 degrees below
+the horizon. To find civil dawn, pass `Direction.Rise` for `direction` and -6 for `altitude`.
+
+Civil dusk ends after sunset when the Sun descends through 6 degrees below the horizon.
+To find civil dusk, pass `Direction.Set` for `direction` and -6 for `altitude`.
+
+Nautical twilight is similar to civil twilight, only the `altitude` value should be -12 degrees.
+
+Astronomical twilight uses -18 degrees as the `altitude` value.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Body`](#Body) | `body` | The Sun, Moon, or any planet other than the Earth. |
+| [`Observer`](#Observer) | `observer` | The location where observation takes place. |
+| [`Direction`](#Direction) | `direction` | Either `Direction.Rise` to find an ascending altitude event or `Direction.Set` to find a descending altitude event. |
+| [`AstroTime`](#AstroTime) | `startTime` | The date and time at which to start the search. |
+| `double` | `limitDays` | The fractional number of days after `dateStart` that limits when the altitude event is to be found. Must be a positive number. |
+| `double` | `altitude` | The desired altitude angle of the body's center above (positive) or below (negative) the observer's local horizon, expressed in degrees. Must be in the range [-90, +90]. |
+
+**Returns:** The date and time of the altitude event, or `null` if no such event occurs within the specified time window.
 
 <a name="Astronomy.SearchGlobalSolarEclipse"></a>
 ### Astronomy.SearchGlobalSolarEclipse(startTime) &#8658; [`GlobalSolarEclipseInfo`](#GlobalSolarEclipseInfo)

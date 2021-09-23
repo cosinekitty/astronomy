@@ -55,6 +55,7 @@ namespace csharp_test
             new Test("astro_check", AstroCheck),
             new Test("barystate", BaryStateTest),
             new Test("aberration", AberrationTest),
+            new Test("twilight", TwilightTest),
         };
 
         static int Main(string[] args)
@@ -2941,6 +2942,59 @@ namespace csharp_test
                 Console.WriteLine($"C# AberrationTest({filename}): PASS - Tested {count} cases. max_diff_seconds = {max_diff_seconds:F3}");
             }
 
+            return 0;
+        }
+
+        static int TwilightTest()
+        {
+            const string filename = "../../riseset/twilight.txt";
+            const double tolerance_seconds = 60.0;
+            double max_diff = 0.0;
+            int lnum = 0;
+            using (StreamReader infile = File.OpenText(filename))
+            {
+                string line;
+                while (null != (line = infile.ReadLine()))
+                {
+                    ++lnum;
+                    string[] tokens = line.Split();
+                    if (tokens.Length != 9)
+                    {
+                        Console.WriteLine($"C# TwilightTest({filename} line {lnum}): invalid number of tokens = {tokens.Length}");
+                        return 1;
+                    }
+
+                    double lat = double.Parse(tokens[0]);
+                    double lon = double.Parse(tokens[1]);
+                    var observer = new Observer(lat, lon, 0.0);
+                    AstroTime searchDate = ParseDate(tokens[2]);
+                    AstroTime[] correctTimes = tokens.Skip(3).Select(s => ParseDate(s)).ToArray();
+                    var calcTimes = new AstroTime[]
+                    {
+                        Astronomy.SearchAltitude(Body.Sun, observer, Direction.Rise, searchDate, 1.0, -18.0),  // astronomical dawn
+                        Astronomy.SearchAltitude(Body.Sun, observer, Direction.Rise, searchDate, 1.0, -12.0),  // nautical dawn
+                        Astronomy.SearchAltitude(Body.Sun, observer, Direction.Rise, searchDate, 1.0,  -6.0),  // civil dawn
+                        Astronomy.SearchAltitude(Body.Sun, observer, Direction.Set, searchDate,  1.0,  -6.0),  // civil dawn
+                        Astronomy.SearchAltitude(Body.Sun, observer, Direction.Set, searchDate,  1.0, -12.0),  // nautical dawn
+                        Astronomy.SearchAltitude(Body.Sun, observer, Direction.Set, searchDate,  1.0, -18.0),  // astronomical dawn
+                    };
+
+                    for (int i = 0; i < 6; ++i)
+                    {
+                        AstroTime correct = correctTimes[i];
+                        AstroTime calc = calcTimes[i];
+                        double diff = 86400.0 * abs(calc.ut - correct.ut);
+                        if (diff > tolerance_seconds)
+                        {
+                            Console.WriteLine($"C# TwilightTest({filename} line {lnum}): EXCESSIVE ERROR = {diff} seconds in test {i}.");
+                            return 1;
+                        }
+                        if (diff > max_diff)
+                            max_diff = diff;
+                    }
+                }
+            }
+            Console.WriteLine($"C# TwilightTest: PASS ({lnum} test cases, max error = {max_diff} seconds)");
             return 0;
         }
     }

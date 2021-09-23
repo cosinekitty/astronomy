@@ -1444,6 +1444,29 @@ namespace CosineKitty
         }
     }
 
+    internal class SearchContext_AltitudeError: SearchContext
+    {
+        private readonly Body body;
+        private readonly int direction;
+        private readonly Observer observer;
+        private readonly double altitude;
+
+        public SearchContext_AltitudeError(Body body, Direction direction, Observer observer, double altitude)
+        {
+            this.body = body;
+            this.direction = (int)direction;
+            this.observer = observer;
+            this.altitude = altitude;
+        }
+
+        public override double Eval(AstroTime time)
+        {
+            Equatorial ofdate = Astronomy.Equator(body, time, observer, EquatorEpoch.OfDate, Aberration.Corrected);
+            Topocentric hor = Astronomy.Horizon(time, observer, ofdate.ra, ofdate.dec, Refraction.None);
+            return direction * (hor.altitude - altitude);
+        }
+    }
+
     internal class SearchContext_PeakAltitude: SearchContext
     {
         private readonly Body body;
@@ -5697,6 +5720,89 @@ namespace CosineKitty
             return time;
         }
 
+        private static AstroTime InternalSearchAltitude(
+            Body body,
+            Observer observer,
+            Direction direction,
+            AstroTime startTime,
+            double limitDays,
+            SearchContext context)
+        {
+            if (body == Body.Earth)
+                throw new EarthNotAllowedException();
+
+            double ha_before, ha_after;
+            switch (direction)
+            {
+                case Direction.Rise:
+                    ha_before = 12.0;   /* minimum altitude (bottom) happens BEFORE the body rises. */
+                    ha_after = 0.0;     /* maximum altitude (culmination) happens AFTER the body rises. */
+                    break;
+
+                case Direction.Set:
+                    ha_before = 0.0;    /* culmination happens BEFORE the body sets. */
+                    ha_after = 12.0;    /* bottom happens AFTER the body sets. */
+                    break;
+
+                default:
+                    throw new ArgumentException(string.Format("Unsupported direction value {0}", direction));
+            }
+
+            /*
+                See if the body is currently above/below the horizon.
+                If we are looking for next rise time and the body is below the horizon,
+                we use the current time as the lower time bound and the next culmination
+                as the upper bound.
+                If the body is above the horizon, we search for the next bottom and use it
+                as the lower bound and the next culmination after that bottom as the upper bound.
+                The same logic applies for finding set times, only we swap the hour angles.
+            */
+
+            HourAngleInfo evt_before, evt_after;
+            AstroTime time_start = startTime;
+            double alt_before = context.Eval(time_start);
+            AstroTime time_before;
+            if (alt_before > 0.0)
+            {
+                /* We are past the sought event, so we have to wait for the next "before" event (culm/bottom). */
+                evt_before = SearchHourAngle(body, observer, ha_before, time_start);
+                time_before = evt_before.time;
+                alt_before = context.Eval(time_before);
+            }
+            else
+            {
+                /* We are before or at the sought event, so we find the next "after" event (bottom/culm), */
+                /* and use the current time as the "before" event. */
+                time_before = time_start;
+            }
+
+            evt_after = SearchHourAngle(body, observer, ha_after, time_before);
+            double alt_after = context.Eval(evt_after.time);
+
+            for(;;)
+            {
+                if (alt_before <= 0.0 && alt_after > 0.0)
+                {
+                    /* Search between evt_before and evt_after for the desired event. */
+                    AstroTime result = Search(context, time_before, evt_after.time, 1.0);
+                    if (result != null)
+                        return result;
+                }
+
+                /* If we didn't find the desired event, use evt_after.time to find the next before-event. */
+                evt_before = SearchHourAngle(body, observer, ha_before, evt_after.time);
+                evt_after = SearchHourAngle(body, observer, ha_after, evt_before.time);
+
+                if (evt_before.time.ut >= time_start.ut + limitDays)
+                    return null;
+
+                time_before = evt_before.time;
+
+                alt_before = context.Eval(evt_before.time);
+                alt_after = context.Eval(evt_after.time);
+            }
+        }
+
         /// <summary>
         /// Searches for the next time a celestial body rises or sets as seen by an observer on the Earth.
         /// </summary>
@@ -5750,80 +5856,67 @@ namespace CosineKitty
             AstroTime startTime,
             double limitDays)
         {
-            if (body == Body.Earth)
-                throw new EarthNotAllowedException();
-
-            double ha_before, ha_after;
-            switch (direction)
-            {
-                case Direction.Rise:
-                    ha_before = 12.0;   /* minimum altitude (bottom) happens BEFORE the body rises. */
-                    ha_after = 0.0;     /* maximum altitude (culmination) happens AFTER the body rises. */
-                    break;
-
-                case Direction.Set:
-                    ha_before = 0.0;    /* culmination happens BEFORE the body sets. */
-                    ha_after = 12.0;    /* bottom happens AFTER the body sets. */
-                    break;
-
-                default:
-                    throw new ArgumentException(string.Format("Unsupported direction value {0}", direction));
-            }
-
             var peak_altitude = new SearchContext_PeakAltitude(body, direction, observer);
-            /*
-                See if the body is currently above/below the horizon.
-                If we are looking for next rise time and the body is below the horizon,
-                we use the current time as the lower time bound and the next culmination
-                as the upper bound.
-                If the body is above the horizon, we search for the next bottom and use it
-                as the lower bound and the next culmination after that bottom as the upper bound.
-                The same logic applies for finding set times, only we swap the hour angles.
-            */
+            return InternalSearchAltitude(body, observer, direction, startTime, limitDays, peak_altitude);
+        }
 
-            HourAngleInfo evt_before, evt_after;
-            AstroTime time_start = startTime;
-            double alt_before = peak_altitude.Eval(time_start);
-            AstroTime time_before;
-            if (alt_before > 0.0)
-            {
-                /* We are past the sought event, so we have to wait for the next "before" event (culm/bottom). */
-                evt_before = SearchHourAngle(body, observer, ha_before, time_start);
-                time_before = evt_before.time;
-                alt_before = peak_altitude.Eval(time_before);
-            }
-            else
-            {
-                /* We are before or at the sought event, so we find the next "after" event (bottom/culm), */
-                /* and use the current time as the "before" event. */
-                time_before = time_start;
-            }
-
-            evt_after = SearchHourAngle(body, observer, ha_after, time_before);
-            double alt_after = peak_altitude.Eval(evt_after.time);
-
-            for(;;)
-            {
-                if (alt_before <= 0.0 && alt_after > 0.0)
-                {
-                    /* Search between evt_before and evt_after for the desired event. */
-                    AstroTime result = Search(peak_altitude, time_before, evt_after.time, 1.0);
-                    if (result != null)
-                        return result;
-                }
-
-                /* If we didn't find the desired event, use evt_after.time to find the next before-event. */
-                evt_before = SearchHourAngle(body, observer, ha_before, evt_after.time);
-                evt_after = SearchHourAngle(body, observer, ha_after, evt_before.time);
-
-                if (evt_before.time.ut >= time_start.ut + limitDays)
-                    return null;
-
-                time_before = evt_before.time;
-
-                alt_before = peak_altitude.Eval(evt_before.time);
-                alt_after = peak_altitude.Eval(evt_after.time);
-            }
+        /// <summary>
+        /// Finds the next time a body reaches a given altitude.
+        /// </summary>
+        /// <remarks>
+        /// Finds when the given body ascends or descends through a given
+        /// altitude angle, as seen by an observer at the specified location on the Earth.
+        /// By using the appropriate combination of `direction` and `altitude` parameters,
+        /// this function can be used to find when civil, nautical, or astronomical twilight
+        /// begins (dawn) or ends (dusk).
+        ///
+        /// Civil dawn begins before sunrise when the Sun ascends through 6 degrees below
+        /// the horizon. To find civil dawn, pass `Direction.Rise` for `direction` and -6 for `altitude`.
+        ///
+        /// Civil dusk ends after sunset when the Sun descends through 6 degrees below the horizon.
+        /// To find civil dusk, pass `Direction.Set` for `direction` and -6 for `altitude`.
+        ///
+        /// Nautical twilight is similar to civil twilight, only the `altitude` value should be -12 degrees.
+        ///
+        /// Astronomical twilight uses -18 degrees as the `altitude` value.
+        /// </remarks>
+        ///
+        /// <param name="body">The Sun, Moon, or any planet other than the Earth.</param>
+        ///
+        /// <param name="observer">The location where observation takes place.</param>
+        ///
+        /// <param name="direction">
+        /// Either `Direction.Rise` to find an ascending altitude event
+        /// or `Direction.Set` to find a descending altitude event.
+        /// </param>
+        ///
+        /// <param name="startTime">The date and time at which to start the search.</param>
+        ///
+        /// <param name="limitDays">
+        /// The fractional number of days after `dateStart` that limits
+        /// when the altitude event is to be found. Must be a positive number.
+        /// </param>
+        ///
+        /// <param name="altitude">
+        /// The desired altitude angle of the body's center above (positive)
+        /// or below (negative) the observer's local horizon, expressed in degrees.
+        /// Must be in the range [-90, +90].
+        /// </param>
+        ///
+        /// <returns>
+        /// The date and time of the altitude event, or `null` if no such event
+        /// occurs within the specified time window.
+        /// </returns>
+        public static AstroTime SearchAltitude(
+            Body body,
+            Observer observer,
+            Direction direction,
+            AstroTime startTime,
+            double limitDays,
+            double altitude)
+        {
+            var altitude_error = new SearchContext_AltitudeError(body, direction, observer, altitude);
+            return InternalSearchAltitude(body, observer, direction, startTime, limitDays, altitude_error);
         }
 
         /// <summary>
