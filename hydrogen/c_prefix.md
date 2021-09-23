@@ -70,6 +70,7 @@ To get started quickly, here are some [examples](../../demo/c/).
 | Function | Description |
 | -------- | ----------- |
 | [SearchRiseSet](#Astronomy_SearchRiseSet) | Finds time of rise or set for a body as seen by an observer on the Earth. |
+| [SearchAltitude](#Astronomy_SearchAltitude) | Finds time when a body reaches a given altitude above or below the horizon. Useful for finding civil, nautical, or astronomical twilight. |
 | [SearchHourAngle](#Astronomy_SearchHourAngle) | Finds when body reaches a given hour angle for an observer on the Earth. Hour angle = 0 finds culmination, the highest point in the sky. |
 
 ### Moon phases

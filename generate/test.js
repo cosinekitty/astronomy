@@ -2270,8 +2270,9 @@ function TwilightTest() {
     const tolerance_seconds = 60.0;
     const filename = 'riseset/twilight.txt';
     const text = fs.readFileSync(filename, {encoding:'utf8'});
-    const lines = text.split(/\r?\n/);
+    const lines = text.trimEnd().split(/\r?\n/);
     let lnum = 0;
+    let max_diff = 0.0;
 
     const name = [
         "astronomical dawn",
@@ -2286,7 +2287,7 @@ function TwilightTest() {
         ++lnum;
         const tokens = line.split(/\s+/);
         if (tokens.length !== 9) {
-            console.error(`JS TwilightTest: FAIL(${filename} line ${lnum}): incorrect number of tokens.`);
+            console.error(`JS TwilightTest: FAIL(${filename} line ${lnum}): incorrect number of tokens = ${tokens.length}.`);
             return 1;
         }
         const lat = float(tokens[0]);
@@ -2321,9 +2322,11 @@ function TwilightTest() {
                 console.error(`Expected ${correct} but calculated ${calc}`);
                 return 1;
             }
+            if (diff > max_diff)
+                max_diff = diff;
         }
     }
-    console.log(`JS TwilightTest: PASS (${lnum} test cases)`);
+    console.log(`JS TwilightTest: PASS (${lnum} test cases, max error = ${max_diff.toFixed(3)} seconds)`);
     return 0;
 }
 

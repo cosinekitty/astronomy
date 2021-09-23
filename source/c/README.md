@@ -70,6 +70,7 @@ To get started quickly, here are some [examples](../../demo/c/).
 | Function | Description |
 | -------- | ----------- |
 | [SearchRiseSet](#Astronomy_SearchRiseSet) | Finds time of rise or set for a body as seen by an observer on the Earth. |
+| [SearchAltitude](#Astronomy_SearchAltitude) | Finds time when a body reaches a given altitude above or below the horizon. Useful for finding civil, nautical, or astronomical twilight. |
 | [SearchHourAngle](#Astronomy_SearchHourAngle) | Finds when body reaches a given hour angle for an observer on the Earth. Hour angle = 0 finds culmination, the highest point in the sky. |
 
 ### Moon phases
@@ -1723,6 +1724,43 @@ If the search does not converge within 20 iterations, it will fail with status c
 | [`astro_time_t`](#astro_time_t) | `t1` |  The lower time bound of the search window. See function remarks for more details. | 
 | [`astro_time_t`](#astro_time_t) | `t2` |  The upper time bound of the search window. See function remarks for more details. | 
 | `double` | `dt_tolerance_seconds` |  Specifies an amount of time in seconds within which a bounded ascending root is considered accurate enough to stop. A typical value is 1 second. | 
+
+
+
+
+---
+
+<a name="Astronomy_SearchAltitude"></a>
+### Astronomy_SearchAltitude(body, observer, direction, startTime, limitDays, altitude) &#8658; [`astro_search_result_t`](#astro_search_result_t)
+
+**Finds the next time a body reaches a given altitude.** 
+
+
+
+Finds when the given body ascends or descends through a given altitude angle, as seen by an observer at the specified location on the Earth. By using the appropriate combination of `direction` and `altitude` parameters, this function can be used to find when civil, nautical, or astronomical twilight begins (dawn) or ends (dusk).
+
+Civil dawn begins before sunrise when the Sun ascends through 6 degrees below the horizon. To find civil dawn, pass +1 for `direction` and -6 for `altitude`.
+
+Civil dusk ends after sunset when the Sun descends through 6 degrees below the horizon. To find civil dusk, pass -1 for `direction` and -6 for `altitude`.
+
+Nautical twilight is similar to civil twilight, only the `altitude` value should be -12 degrees.
+
+Astronomical twilight uses -18 degrees as the `altitude` value.
+
+
+
+**Returns:**  On success, the `status` field in the returned structure contains `ASTRO_SUCCESS` and the `time` field contains the date and time of the requested altitude event. If the `status` field contains `ASTRO_SEARCH_FAILURE`, it means the altitude event does not occur within `limitDays` days of `startTime`. This is a normal condition, not an error. Any other value of `status` indicates an error of some kind. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_body_t`](#astro_body_t) | `body` |  The Sun, Moon, or any planet other than the Earth. | 
+| [`astro_observer_t`](#astro_observer_t) | `observer` |  The location where observation takes place. You can create an observer structure by calling [`Astronomy_MakeObserver`](#Astronomy_MakeObserver). | 
+| [`astro_direction_t`](#astro_direction_t) | `direction` |  Either `DIRECTION_RISE` to find when the body ascends through the altitude, or `DIRECTION_SET` for when the body descends through the altitude. | 
+| [`astro_time_t`](#astro_time_t) | `startTime` |  The date and time at which to start the search. | 
+| `double` | `limitDays` |  The fractional number of days after `startTime` that limits when the altitude event is to be found. Must be a positive number. | 
+| `double` | `altitude` |  The desired altitude angle of the body's center above (positive) or below (negative) the observer's local horizon, expressed in degrees. Must be in the range [-90, +90]. | 
 
 
 

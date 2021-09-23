@@ -5919,7 +5919,137 @@ typedef struct
     double              body_radius_au;
 }
 context_peak_altitude_t;
+
+typedef struct
+{
+    astro_body_t        body;
+    int                 direction;
+    astro_observer_t    observer;
+    double              altitude;
+}
+context_search_altitude_t;
+
 /** @endcond */
+
+
+static astro_search_result_t InternalSearchAltitude(
+    astro_body_t body,
+    astro_observer_t observer,
+    astro_direction_t direction,
+    astro_time_t startTime,
+    double limitDays,
+    astro_search_func_t altitude_error_func,
+    void *altitude_error_context)
+{
+    double ha_before, ha_after;
+    astro_time_t time_start, time_before;
+    astro_func_result_t alt_before, alt_after;
+    astro_hour_angle_t evt_before, evt_after;
+
+    if (body == BODY_EARTH)
+        return SearchError(ASTRO_EARTH_NOT_ALLOWED);
+
+    switch (direction)
+    {
+    case DIRECTION_RISE:
+        ha_before = 12.0;   /* minimum altitude (bottom) happens BEFORE the body rises. */
+        ha_after = 0.0;     /* maximum altitude (culmination) happens AFTER the body rises. */
+        break;
+
+    case DIRECTION_SET:
+        ha_before = 0.0;    /* culmination happens BEFORE the body sets. */
+        ha_after = 12.0;    /* bottom happens AFTER the body sets. */
+        break;
+
+    default:
+        return SearchError(ASTRO_INVALID_PARAMETER);
+    }
+
+    /*
+        See if the body is currently above/below the horizon.
+        If we are looking for next rise time and the body is below the horizon,
+        we use the current time as the lower time bound and the next culmination
+        as the upper bound.
+        If the body is above the horizon, we search for the next bottom and use it
+        as the lower bound and the next culmination after that bottom as the upper bound.
+        The same logic applies for finding set times, only we swap the hour angles.
+    */
+
+    time_start = startTime;
+    alt_before = altitude_error_func(altitude_error_context, time_start);
+    if (alt_before.status != ASTRO_SUCCESS)
+        return SearchError(alt_before.status);
+
+    if (alt_before.value > 0.0)
+    {
+        /* We are past the sought event, so we have to wait for the next "before" event (culm/bottom). */
+        evt_before = Astronomy_SearchHourAngle(body, observer, ha_before, time_start);
+        if (evt_before.status != ASTRO_SUCCESS)
+            return SearchError(evt_before.status);
+
+        time_before = evt_before.time;
+
+        alt_before = altitude_error_func(altitude_error_context, time_before);
+        if (alt_before.status != ASTRO_SUCCESS)
+            return SearchError(alt_before.status);
+    }
+    else
+    {
+        /* We are before or at the sought event, so we find the next "after" event (bottom/culm), */
+        /* and use the current time as the "before" event. */
+        time_before = time_start;
+    }
+
+    evt_after = Astronomy_SearchHourAngle(body, observer, ha_after, time_before);
+    if (evt_after.status != ASTRO_SUCCESS)
+        return SearchError(evt_after.status);
+
+    alt_after = altitude_error_func(altitude_error_context, evt_after.time);
+    if (alt_after.status != ASTRO_SUCCESS)
+        return SearchError(alt_after.status);
+
+    for(;;)
+    {
+        if (alt_before.value <= 0.0 && alt_after.value > 0.0)
+        {
+            /* Search between evt_before and evt_after for the desired event. */
+            astro_search_result_t result = Astronomy_Search(
+                altitude_error_func,
+                altitude_error_context,
+                time_before,
+                evt_after.time,
+                1.0);
+
+            /* ASTRO_SEARCH_FAILURE is a special error that indicates a normal lack of finding a solution. */
+            /* If successful, or any other error, return immediately. */
+            if (result.status != ASTRO_SEARCH_FAILURE)
+                return result;
+        }
+
+        /* If we didn't find the desired event, use evt_after.time to find the next before-event. */
+        evt_before = Astronomy_SearchHourAngle(body, observer, ha_before, evt_after.time);
+        if (evt_before.status != ASTRO_SUCCESS)
+            return SearchError(evt_before.status);
+
+        evt_after = Astronomy_SearchHourAngle(body, observer, ha_after, evt_before.time);
+        if (evt_after.status != ASTRO_SUCCESS)
+            return SearchError(evt_after.status);
+
+        if (evt_before.time.ut >= time_start.ut + limitDays)
+            return SearchError(ASTRO_SEARCH_FAILURE);
+
+        time_before = evt_before.time;
+
+        alt_before = altitude_error_func(altitude_error_context, evt_before.time);
+        if (alt_before.status != ASTRO_SUCCESS)
+            return SearchError(alt_before.status);
+
+        alt_after = altitude_error_func(altitude_error_context, evt_after.time);
+        if (alt_after.status != ASTRO_SUCCESS)
+            return SearchError(alt_after.status);
+    }
+}
+
 
 static astro_func_result_t peak_altitude(void *context, astro_time_t time)
 {
@@ -5949,6 +6079,24 @@ static astro_func_result_t peak_altitude(void *context, astro_time_t time)
     result.status = ASTRO_SUCCESS;
     return result;
 }
+
+static astro_func_result_t altitude_error(void *context, astro_time_t time)
+{
+    astro_func_result_t result;
+    astro_equatorial_t ofdate;
+    astro_horizon_t hor;
+    const context_search_altitude_t *p = context;
+
+    ofdate = Astronomy_Equator(p->body, &time, p->observer, EQUATOR_OF_DATE, ABERRATION);
+    if (ofdate.status != ASTRO_SUCCESS)
+        return FuncError(ofdate.status);
+
+    hor = Astronomy_Horizon(&time, p->observer, ofdate.ra, ofdate.dec, REFRACTION_NONE);
+    result.value = p->direction * (hor.altitude - p->altitude);
+    result.status = ASTRO_SUCCESS;
+    return result;
+}
+
 
 /**
  * @brief
@@ -6006,29 +6154,9 @@ astro_search_result_t Astronomy_SearchRiseSet(
     double limitDays)
 {
     context_peak_altitude_t context;
-    double ha_before, ha_after;
-    astro_time_t time_start, time_before;
-    astro_func_result_t alt_before, alt_after;
-    astro_hour_angle_t evt_before, evt_after;
 
     if (body == BODY_EARTH)
         return SearchError(ASTRO_EARTH_NOT_ALLOWED);
-
-    switch (direction)
-    {
-    case DIRECTION_RISE:
-        ha_before = 12.0;   /* minimum altitude (bottom) happens BEFORE the body rises. */
-        ha_after = 0.0;     /* maximum altitude (culmination) happens AFTER the body rises. */
-        break;
-
-    case DIRECTION_SET:
-        ha_before = 0.0;    /* culmination happens BEFORE the body sets. */
-        ha_after = 12.0;    /* bottom happens AFTER the body sets. */
-        break;
-
-    default:
-        return SearchError(ASTRO_INVALID_PARAMETER);
-    }
 
     /* Set up the context structure for the search function 'peak_altitude'. */
     context.body = body;
@@ -6041,85 +6169,77 @@ astro_search_result_t Astronomy_SearchRiseSet(
     default:        context.body_radius_au = 0.0;                           break;
     }
 
-    /*
-        See if the body is currently above/below the horizon.
-        If we are looking for next rise time and the body is below the horizon,
-        we use the current time as the lower time bound and the next culmination
-        as the upper bound.
-        If the body is above the horizon, we search for the next bottom and use it
-        as the lower bound and the next culmination after that bottom as the upper bound.
-        The same logic applies for finding set times, only we swap the hour angles.
-    */
-
-    time_start = startTime;
-    alt_before = peak_altitude(&context, time_start);
-    if (alt_before.status != ASTRO_SUCCESS)
-        return SearchError(alt_before.status);
-
-    if (alt_before.value > 0.0)
-    {
-        /* We are past the sought event, so we have to wait for the next "before" event (culm/bottom). */
-        evt_before = Astronomy_SearchHourAngle(body, observer, ha_before, time_start);
-        if (evt_before.status != ASTRO_SUCCESS)
-            return SearchError(evt_before.status);
-
-        time_before = evt_before.time;
-
-        alt_before = peak_altitude(&context, time_before);
-        if (alt_before.status != ASTRO_SUCCESS)
-            return SearchError(alt_before.status);
-    }
-    else
-    {
-        /* We are before or at the sought event, so we find the next "after" event (bottom/culm), */
-        /* and use the current time as the "before" event. */
-        time_before = time_start;
-    }
-
-    evt_after = Astronomy_SearchHourAngle(body, observer, ha_after, time_before);
-    if (evt_after.status != ASTRO_SUCCESS)
-        return SearchError(evt_after.status);
-
-    alt_after = peak_altitude(&context, evt_after.time);
-    if (alt_after.status != ASTRO_SUCCESS)
-        return SearchError(alt_after.status);
-
-    for(;;)
-    {
-        if (alt_before.value <= 0.0 && alt_after.value > 0.0)
-        {
-            /* Search between evt_before and evt_after for the desired event. */
-            astro_search_result_t result = Astronomy_Search(peak_altitude, &context, time_before, evt_after.time, 1.0);
-
-            /* ASTRO_SEARCH_FAILURE is a special error that indicates a normal lack of finding a solution. */
-            /* If successful, or any other error, return immediately. */
-            if (result.status != ASTRO_SEARCH_FAILURE)
-                return result;
-        }
-
-        /* If we didn't find the desired event, use evt_after.time to find the next before-event. */
-        evt_before = Astronomy_SearchHourAngle(body, observer, ha_before, evt_after.time);
-        if (evt_before.status != ASTRO_SUCCESS)
-            return SearchError(evt_before.status);
-
-        evt_after = Astronomy_SearchHourAngle(body, observer, ha_after, evt_before.time);
-        if (evt_after.status != ASTRO_SUCCESS)
-            return SearchError(evt_after.status);
-
-        if (evt_before.time.ut >= time_start.ut + limitDays)
-            return SearchError(ASTRO_SEARCH_FAILURE);
-
-        time_before = evt_before.time;
-
-        alt_before = peak_altitude(&context, evt_before.time);
-        if (alt_before.status != ASTRO_SUCCESS)
-            return SearchError(alt_before.status);
-
-        alt_after = peak_altitude(&context, evt_after.time);
-        if (alt_after.status != ASTRO_SUCCESS)
-            return SearchError(alt_after.status);
-    }
+    return InternalSearchAltitude(body, observer, direction, startTime, limitDays, peak_altitude, &context);
 }
+
+
+/**
+ * @brief Finds the next time a body reaches a given altitude.
+ *
+ * Finds when the given body ascends or descends through a given
+ * altitude angle, as seen by an observer at the specified location on the Earth.
+ * By using the appropriate combination of `direction` and `altitude` parameters,
+ * this function can be used to find when civil, nautical, or astronomical twilight
+ * begins (dawn) or ends (dusk).
+ *
+ * Civil dawn begins before sunrise when the Sun ascends through 6 degrees below
+ * the horizon. To find civil dawn, pass +1 for `direction` and -6 for `altitude`.
+ *
+ * Civil dusk ends after sunset when the Sun descends through 6 degrees below the horizon.
+ * To find civil dusk, pass -1 for `direction` and -6 for `altitude`.
+ *
+ * Nautical twilight is similar to civil twilight, only the `altitude` value should be -12 degrees.
+ *
+ * Astronomical twilight uses -18 degrees as the `altitude` value.
+ *
+ * @param body
+ *      The Sun, Moon, or any planet other than the Earth.
+ *
+ * @param observer
+ *      The location where observation takes place.
+ *      You can create an observer structure by calling #Astronomy_MakeObserver.
+ *
+ * @param direction
+ *      Either `DIRECTION_RISE` to find when the body ascends through the altitude,
+ *      or `DIRECTION_SET` for when the body descends through the altitude.
+ *
+ * @param startTime
+ *      The date and time at which to start the search.
+ *
+ * @param limitDays
+ *      The fractional number of days after `startTime` that limits
+ *      when the altitude event is to be found. Must be a positive number.
+ *
+ * @param altitude
+ *      The desired altitude angle of the body's center above (positive)
+ *      or below (negative) the observer's local horizon, expressed in degrees.
+ *      Must be in the range [-90, +90].
+ *
+ * @return
+ *      On success, the `status` field in the returned structure contains `ASTRO_SUCCESS`
+ *      and the `time` field contains the date and time of the requested altitude event.
+ *      If the `status` field contains `ASTRO_SEARCH_FAILURE`, it means the altitude
+ *      event does not occur within `limitDays` days of `startTime`. This is a normal condition,
+ *      not an error. Any other value of `status` indicates an error of some kind.
+ */
+astro_search_result_t Astronomy_SearchAltitude(
+    astro_body_t body,
+    astro_observer_t observer,
+    astro_direction_t direction,
+    astro_time_t startTime,
+    double limitDays,
+    double altitude)
+{
+    context_search_altitude_t context;
+
+    context.body = body;
+    context.direction = direction;
+    context.observer = observer;
+    context.altitude = altitude;
+
+    return InternalSearchAltitude(body, observer, direction, startTime, limitDays, altitude_error, &context);
+}
+
 
 static double MoonMagnitude(double phase, double helio_dist, double geo_dist)
 {

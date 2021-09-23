@@ -133,6 +133,7 @@ static int JupiterMoonsTest(void);
 static int Issue103(void);
 static int AberrationTest(void);
 static int BaryStateTest(void);
+static int Twilight(void);
 
 typedef int (* unit_test_func_t) (void);
 
@@ -169,7 +170,8 @@ static unit_test_t UnitTests[] =
     {"rotation",                RotationTest},
     {"seasons",                 SeasonsTest},
     {"time",                    Test_AstroTime},
-    {"transit",                 Transit}
+    {"transit",                 Transit},
+    {"twilight",                Twilight}
 };
 
 #define NUM_UNIT_TESTS    (sizeof(UnitTests) / sizeof(UnitTests[0]))
@@ -4494,6 +4496,78 @@ static int BaryStateTest(void)
 
     printf("C BaryStateTest: PASS\n");
 fail:
+    return error;
+}
+
+/*-----------------------------------------------------------------------------------------------------------*/
+
+static int Twilight(void)
+{
+    int error, lnum, nscanned, i;
+    char line[200];
+    char search_text[20];
+    char token[6][20];
+    astro_time_t search_time;
+    astro_time_t expected_time[6];
+    astro_search_result_t calc[6];
+    FILE *infile;
+    astro_observer_t observer;
+    double diff, max_diff = 0.0;
+    const double tolerance_seconds = 60.0;
+    const char *filename = "riseset/twilight.txt";
+
+    infile = fopen(filename, "rt");
+    if (infile == NULL)
+        FAIL("C Twilight: Cannot open input file: %s\n", filename);
+
+    lnum = 0;
+    observer.height = 0.0;
+    while (ReadLine(line, sizeof(line), infile, filename, lnum))
+    {
+        ++lnum;
+
+        nscanned = sscanf(line, "%lf %lf %17s %17s %17s %17s %17s %17s %17s",
+            &observer.latitude,
+            &observer.longitude,
+            search_text,
+            token[0], token[1], token[2], token[3], token[4], token[5]);
+
+        if (nscanned != 9)
+            FAIL("C Twilight(%s line %d): expected 9 tokens but found %d\n", filename, lnum, nscanned);
+
+        if (ParseDate(search_text, &search_time))
+            FAIL("C Twilight(%s line %d): BAD SEARCH TIME FORMAT.", filename, lnum);
+
+        for (i = 0; i < 6; ++i)
+            if (ParseDate(token[i], &expected_time[i]))
+                FAIL("C Twilight(%s line %d): BAD EXPECTED TIME [%d] FORMAT.\n", filename, lnum, i);
+
+        search_time = expected_time[0];
+        calc[0] = Astronomy_SearchAltitude(BODY_SUN, observer, DIRECTION_RISE, search_time, 1.0, -18.0);   // astronomical dawn
+        calc[1] = Astronomy_SearchAltitude(BODY_SUN, observer, DIRECTION_RISE, search_time, 1.0, -12.0);   // nautical dawn
+        calc[2] = Astronomy_SearchAltitude(BODY_SUN, observer, DIRECTION_RISE, search_time, 1.0,  -6.0);   // civil dawn
+        calc[3] = Astronomy_SearchAltitude(BODY_SUN, observer, DIRECTION_SET,  search_time, 1.0,  -6.0);   // civil dusk
+        calc[4] = Astronomy_SearchAltitude(BODY_SUN, observer, DIRECTION_SET,  search_time, 1.0, -12.0);   // nautical dusk
+        calc[5] = Astronomy_SearchAltitude(BODY_SUN, observer, DIRECTION_SET,  search_time, 1.0, -18.0);   // astronomical dusk
+
+        for (i = 0; i < 6; ++i)
+        {
+            if (calc[i].status != ASTRO_SUCCESS)
+                FAIL("C Twilight(%s line %d): error %d in search[%d]\n", filename, lnum, calc[i].status, i);
+
+            diff = 86400.0 * ABS(calc[i].time.ut - expected_time[i].ut);
+            if (diff > tolerance_seconds)
+                FAIL("C TwilightTest(%s line %d): EXCESSIVE ERROR = %0.3lf seconds for test %d.\n", filename, lnum, diff, i);
+
+            if (diff > max_diff)
+                max_diff = diff;
+        }
+    }
+
+    printf("C Twilight: PASS (%d test cases, max error = %0.3lf seconds)\n", lnum, max_diff);
+    error = 0;
+fail:
+    if (infile != NULL) fclose(infile);
     return error;
 }
 

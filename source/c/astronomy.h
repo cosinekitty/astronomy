@@ -1050,6 +1050,14 @@ astro_search_result_t Astronomy_SearchRiseSet(
     astro_time_t startTime,
     double limitDays);
 
+astro_search_result_t Astronomy_SearchAltitude(
+    astro_body_t body,
+    astro_observer_t observer,
+    astro_direction_t direction,
+    astro_time_t startTime,
+    double limitDays,
+    double altitude);
+
 astro_seasons_t Astronomy_Seasons(int year);
 astro_illum_t Astronomy_Illumination(astro_body_t body, astro_time_t time);
 astro_illum_t Astronomy_SearchPeakMagnitude(astro_body_t body, astro_time_t startTime);
