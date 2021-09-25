@@ -1373,7 +1373,7 @@ def _ecl2equ_vec(time, ecl):
         ecl[1]*sin_obl + ecl[2]*cos_obl
     ]
 
-def _precession_rot(time, dir):
+def _precession_rot(time, direction):
     eps0 = 84381.406
     t = time.tt / 36525
 
@@ -1418,7 +1418,7 @@ def _precession_rot(time, dir):
     xz =  sb * sc
     yz = -sc * cb * ca - sa * cc
     zz = -sc * cb * sa + cc * ca
-    if dir == _PrecessDir.Into2000:
+    if direction == _PrecessDir.Into2000:
         # Perform rotation from other epoch to J2000.0.
         return RotationMatrix([
             [xx, yx, zx],
@@ -1426,7 +1426,7 @@ def _precession_rot(time, dir):
             [xz, yz, zz]
         ])
 
-    if dir == _PrecessDir.From2000:
+    if direction == _PrecessDir.From2000:
         # Perform rotation from J2000.0 to other epoch.
         return RotationMatrix([
             [xx, xy, xz],
@@ -1436,8 +1436,8 @@ def _precession_rot(time, dir):
 
     raise Error('Inalid precession direction')
 
-def _precession(pos, time, dir):
-    r = _precession_rot(time, dir)
+def _precession(pos, time, direction):
+    r = _precession_rot(time, direction)
     return [
         r.rot[0][0]*pos[0] + r.rot[1][0]*pos[1] + r.rot[2][0]*pos[2],
         r.rot[0][1]*pos[0] + r.rot[1][1]*pos[1] + r.rot[2][1]*pos[2],
@@ -1494,7 +1494,7 @@ def _vector2radec(pos, time):
     return Equatorial(ra, dec, dist, vec)
 
 
-def _nutation_rot(time, dir):
+def _nutation_rot(time, direction):
     tilt = time._etilt()
     oblm = math.radians(tilt.mobl)
     oblt = math.radians(tilt.tobl)
@@ -1516,7 +1516,7 @@ def _nutation_rot(time, dir):
     yz = cpsi * cobm * sobt - sobm * cobt
     zz = cpsi * sobm * sobt + cobm * cobt
 
-    if dir == _PrecessDir.From2000:
+    if direction == _PrecessDir.From2000:
         # convert J2000 to of-date
         return RotationMatrix([
             [xx, xy, xz],
@@ -1524,7 +1524,7 @@ def _nutation_rot(time, dir):
             [zx, zy, zz]
         ])
 
-    if dir == _PrecessDir.Into2000:
+    if direction == _PrecessDir.Into2000:
         # convert of-date to J2000
         return RotationMatrix([
             [xx, yx, zx],
@@ -1535,8 +1535,8 @@ def _nutation_rot(time, dir):
     raise Error('Invalid nutation direction')
 
 
-def _nutation(pos, time, dir):
-    r = _nutation_rot(time, dir)
+def _nutation(pos, time, direction):
+    r = _nutation_rot(time, direction)
     return [
         r.rot[0][0]*pos[0] + r.rot[1][0]*pos[1] + r.rot[2][0]*pos[2],
         r.rot[0][1]*pos[0] + r.rot[1][1]*pos[1] + r.rot[2][1]*pos[2],
@@ -3359,12 +3359,15 @@ class _TerseVector:
         self.z = z
 
     def ToAstroVector(self, time):
+        '''Convert _TerseVector object to Vector object.'''
         return Vector(self.x, self.y, self.z, time)
 
     def quadrature(self):
+        '''Return magnitude squared of this vector.'''
         return self.x**2 + self.y**2 + self.z**2
 
     def mean(self, other):
+        '''Return the average of this vector and another vector.'''
         return _TerseVector((self.x + other.x)/2.0, (self.y + other.y)/2.0, (self.z + other.z)/2.0)
 
     def __add__(self, other):
@@ -3423,8 +3426,8 @@ class _major_bodies_t:
         self.Sun = _body_state_t(tt, -1*ssb.r, -1*ssb.v)
 
     def Acceleration(self, pos):
-        # Use barycentric coordinates of the Sun and major planets to calculate
-        # the gravitational acceleration vector experienced at location 'pos'.
+        '''Use barycentric coordinates of the Sun and major planets to calculate
+        the gravitational acceleration vector experienced at location 'pos'.'''
         acc  = _AccelerationIncrement(pos, _SUN_GM,     self.Sun.r)
         acc += _AccelerationIncrement(pos, _JUPITER_GM, self.Jupiter.r)
         acc += _AccelerationIncrement(pos, _SATURN_GM,  self.Saturn.r)
@@ -3889,7 +3892,7 @@ def _QuadInterp(tm, dt, fa, fm, fb):
 
     t = tm + x*dt
     df_dt = (2*Q*x + R) / dt
-    return (x, t, df_dt)
+    return (t, df_dt)
 
 def Search(func, context, t1, t2, dt_tolerance_seconds):
     """Searches for a time at which a function's value increases through zero.
@@ -3971,12 +3974,12 @@ def Search(func, context, t1, t2, dt_tolerance_seconds):
     dt_days = abs(dt_tolerance_seconds / _SECONDS_PER_DAY)
     f1 = func(context, t1)
     f2 = func(context, t2)
-    iter = 0
+    iter_count = 0
     iter_limit = 20
     calc_fmid = True
     while True:
-        iter += 1
-        if iter > iter_limit:
+        iter_count += 1
+        if iter_count > iter_limit:
             raise Error('Excessive iteration in Search')
 
         dt = (t2.tt - t1.tt) / 2.0
@@ -3996,7 +3999,7 @@ def Search(func, context, t1, t2, dt_tolerance_seconds):
         # (t1,f1), (tmid,fmid), (t2,f2).
         q = _QuadInterp(tmid.ut, t2.ut - tmid.ut, f1, fmid, f2)
         if q:
-            (q_x, q_ut, q_df_dt) = q
+            (q_ut, q_df_dt) = q
             tq = Time(q_ut)
             fq = func(context, tq)
             if q_df_dt != 0.0:
@@ -4172,7 +4175,7 @@ def GeoVector(body, time, aberration):
 
     # Correct for light-travel time, to get position of body as seen from Earth's center.
     ltime = time
-    for iter in range(10):
+    for _ in range(10):
         h = HelioVector(body, ltime)
         if aberration:
             # Include aberration, so make a good first-order approximation
@@ -4673,7 +4676,7 @@ def RefractionAngle(refraction, altitude):
     if altitude < -90.0 or altitude > +90.0:
         return 0.0      # No attempt to correct an invalid altitude
 
-    if refraction == Refraction.Normal or refraction == Refraction.JplHorizons:
+    if refraction in (Refraction.Normal, Refraction.JplHorizons):
         # http://extras.springer.com/1999/978-1-4471-0555-8/chap4/horizons/horizons.pdf
         # JPL Horizons says it uses refraction algorithm from
         # Meeus "Astronomical Algorithms", 1991, p. 101-102.
@@ -5067,7 +5070,7 @@ def SearchRelativeLongitude(body, targetRelLon, startTime):
     """
     if body == Body.Earth:
         raise EarthNotAllowedError()
-    if body == Body.Moon or body == Body.Sun:
+    if body in (Body.Moon, Body.Sun):
         raise InvalidBodyError()
     syn = _SynodicPeriod(body)
     direction = +1 if _IsSuperiorPlanet(body) else -1
@@ -5078,8 +5081,8 @@ def SearchRelativeLongitude(body, targetRelLon, startTime):
     if error_angle > 0.0:
         error_angle -= 360.0    # force searching forward in time
     time = startTime
-    iter = 0
-    while iter < 100:
+    iter_count = 0
+    while iter_count < 100:
         # Estimate how many days in the future (positive) or past (negative)
         # we have to go to get closer to the target relative longitude.
         day_adjust = (-error_angle/360.0) * syn
@@ -5095,7 +5098,7 @@ def SearchRelativeLongitude(body, targetRelLon, startTime):
             ratio = prev_angle / (prev_angle - error_angle)
             if 0.5 < ratio < 2.0:
                 syn *= ratio
-        iter += 1
+        iter_count += 1
     raise NoConvergeError()
 
 def _neg_elong_slope(body, time):
@@ -5142,8 +5145,8 @@ def SearchMaxElongation(body, startTime):
     else:
         raise InvalidBodyError()
     syn = _SynodicPeriod(body)
-    iter = 1
-    while iter <= 2:
+    iter_count = 1
+    while iter_count <= 2:
         plon = EclipticLongitude(body, startTime)
         elon = EclipticLongitude(Body.Earth, startTime)
         rlon = _LongitudeOffset(plon - elon)    # clamp to (-180, +180]
@@ -5151,7 +5154,7 @@ def SearchMaxElongation(body, startTime):
         # The slope function is not well-behaved when rlon is near 0 degrees or 180 degrees
         # because there is a cusp there that causes a discontinuity in the derivative.
         # So we need to guard against searching near such times.
-        if rlon >= -s1 and rlon < +s1:
+        if -s1 <= rlon < +s1:
             # Seek to the window [+s1, +s2].
             adjust_days = 0.0
             # Search forward for the time t1 when rel lon = +s1.
@@ -5211,7 +5214,7 @@ def SearchMaxElongation(body, startTime):
         # We need to search forward from t2 to find the next possible window.
         # We never need to search more than twice.
         startTime = t2.AddDays(1.0)
-        iter += 1
+        iter_count += 1
 
 
 def _sun_offset(targetLon, time):
@@ -5620,8 +5623,8 @@ def SearchPeakMagnitude(body, startTime):
     if body != Body.Venus:
         raise InvalidBodyError()
 
-    iter = 1
-    while iter <= 2:
+    iter_count = 1
+    while iter_count <= 2:
         # Find current heliocentric relative longitude between the
         # inferior planet and the Earth.
         plon = EclipticLongitude(body, startTime)
@@ -5688,7 +5691,7 @@ def SearchPeakMagnitude(body, startTime):
         # We need to search forward from t2 to find the next possible window.
         # We never need to search more than twice.
         startTime = t2.AddDays(1.0)
-        iter += 1
+        iter_count += 1
 
     # We should have found the peak magnitude in at most 2 iterations.
     raise InternalError()
@@ -5756,10 +5759,10 @@ def SearchHourAngle(body, observer, hourAngle, startTime):
     if hourAngle < 0.0 or hourAngle >= 24.0:
         raise Error('Invalid hour angle.')
 
-    iter = 0
+    iter_count = 0
     time = startTime
     while True:
-        iter += 1
+        iter_count += 1
         # Calculate Greenwich Apparent Sidereal Time (GAST) at the given time.
         gast = _sidereal_time(time)
         ofdate = Equator(body, time, observer, True, True)
@@ -5767,7 +5770,7 @@ def SearchHourAngle(body, observer, hourAngle, startTime):
         # Calculate the adjustment needed in sidereal time to bring
         # the hour angle to the desired value.
         delta_sidereal_hours = math.fmod(((hourAngle + ofdate.ra - observer.longitude/15) - gast), 24.0)
-        if iter == 1:
+        if iter_count == 1:
             # On the first iteration, always search forward in time.
             if delta_sidereal_hours < 0.0:
                 delta_sidereal_hours += 24.0
@@ -5925,7 +5928,8 @@ def SearchRiseSet(body, observer, direction, startTime, limitDays):
     """
     if body == Body.Earth:
         raise EarthNotAllowedError()
-    elif body == Body.Sun:
+
+    if body == Body.Sun:
         body_radius = _SUN_RADIUS_AU
     elif body == Body.Moon:
         body_radius = _MOON_EQUATORIAL_RADIUS_AU
@@ -6158,8 +6162,8 @@ def SearchLunarApsis(startTime):
     increment = 5.0     # number of days to skip on each iteration
     t1 = startTime
     m1 = _moon_distance_slope(+1, t1)
-    iter = 0
-    while iter * increment < 2.0 * _MEAN_SYNODIC_MONTH:
+    iter_count = 0
+    while iter_count * increment < 2.0 * _MEAN_SYNODIC_MONTH:
         t2 = t1.AddDays(increment)
         m2 = _moon_distance_slope(+1, t2)
         if m1 * m2 <= 0.0:
@@ -6190,7 +6194,7 @@ def SearchLunarApsis(startTime):
         # We have not yet found a slope polarity change. Keep searching.
         t1 = t2
         m1 = m2
-        iter += 1
+        iter_count += 1
 
     # It should not be possible to fail to find an apsis within 2 synodic months.
     raise InternalError()
@@ -6216,13 +6220,13 @@ def NextLunarApsis(apsis):
     """
     skip = 11.0     # number of days to skip to start looking for next apsis event
     time = apsis.time.AddDays(skip)
-    next = SearchLunarApsis(time)
+    next_apsis = SearchLunarApsis(time)
     # Verify that we found the opposite apsis from the previous one.
     if apsis.kind not in [ApsisKind.Apocenter, ApsisKind.Pericenter]:
         raise Error('Parameter "apsis" contains an invalid "kind" value.')
-    if next.kind.value + apsis.kind.value != 1:
+    if next_apsis.kind.value + apsis.kind.value != 1:
         raise InternalError()   # should have found opposite apsis kind
-    return next
+    return next_apsis
 
 
 def _planet_distance_slope(context, time):
@@ -6270,8 +6274,8 @@ def SearchPlanetApsis(body, startTime):
     increment = orbit_period_days / 6.0
     t1 = startTime
     m1 = _planet_distance_slope(positive_slope, t1)
-    iter = 0
-    while iter * increment < 2 * orbit_period_days:
+    iter_count = 0
+    while iter_count * increment < 2 * orbit_period_days:
         t2 = t1.AddDays(increment)
         m2 = _planet_distance_slope(positive_slope, t2)
         if m1 * m2 <= 0.0:
@@ -6298,7 +6302,7 @@ def SearchPlanetApsis(body, startTime):
             return Apsis(search, kind, dist)
         t1 = t2
         m1 = m2
-        iter += 1
+        iter_count += 1
     raise InternalError()   # should have found planet apsis within 2 planet orbits
 
 
@@ -6328,11 +6332,11 @@ def NextPlanetApsis(body, apsis):
     # Skip 1/4 of an orbit before starting search again.
     skip = 0.25 * _PlanetOrbitalPeriod[body.value]
     time = apsis.time.AddDays(skip)
-    next = SearchPlanetApsis(body, time)
+    next_apsis = SearchPlanetApsis(body, time)
     # Verify that we found the opposite apsis from the previous one.
-    if next.kind.value + apsis.kind.value != 1:
+    if next_apsis.kind.value + apsis.kind.value != 1:
         raise InternalError()   # should have found opposite planetary apsis type
-    return next
+    return next_apsis
 
 
 def _PlanetExtreme(body, kind, start_time, dayspan):
@@ -7701,25 +7705,25 @@ class EclipseKind(enum.Enum):
 
 
 class _ShadowInfo:
-    def __init__(self, time, u, r, k, p, target, dir):
+    def __init__(self, time, u, r, k, p, target, direction):
         self.time = time
         self.u = u   # dot product of (heliocentric earth) and (geocentric moon): defines the shadow plane where the Moon is
         self.r = r   # km distance between center of Moon and the line passing through the centers of the Sun and Earth.
         self.k = k   # umbra radius in km, at the shadow plane
         self.p = p   # penumbra radius in km, at the shadow plane
         self.target = target        # vector from center of shadow-casting body to target location that might receive the shadow
-        self.dir = dir              # vector from center of Sun to center of shadow-casting body
+        self.dir = direction        # vector from center of Sun to center of shadow-casting body
 
 
-def _CalcShadow(body_radius_km, time, target, dir):
-    u = (dir.x*target.x + dir.y*target.y + dir.z*target.z) / (dir.x*dir.x + dir.y*dir.y + dir.z*dir.z)
-    dx = (u * dir.x) - target.x
-    dy = (u * dir.y) - target.y
-    dz = (u * dir.z) - target.z
+def _CalcShadow(body_radius_km, time, target, sdir):
+    u = (sdir.x*target.x + sdir.y*target.y + sdir.z*target.z) / (sdir.x*sdir.x + sdir.y*sdir.y + sdir.z*sdir.z)
+    dx = (u * sdir.x) - target.x
+    dy = (u * sdir.y) - target.y
+    dz = (u * sdir.z) - target.z
     r = KM_PER_AU * math.sqrt(dx*dx + dy*dy + dz*dz)
     k = +_SUN_RADIUS_KM - (1.0 + u)*(_SUN_RADIUS_KM - body_radius_km)
     p = -_SUN_RADIUS_KM + (1.0 + u)*(_SUN_RADIUS_KM + body_radius_km)
-    return _ShadowInfo(time, u, r, k, p, target, dir)
+    return _ShadowInfo(time, u, r, k, p, target, sdir)
 
 
 def _EarthShadow(time):
@@ -8196,7 +8200,7 @@ def SearchLunarEclipse(startTime):
     """
     PruneLatitude = 1.8   # full Moon's ecliptic latitude above which eclipse is impossible
     fmtime = startTime
-    for fmcount in range(12):
+    for _ in range(12):
         # Search for the next full moon. Any eclipse will be near it.
         fullmoon = SearchMoonPhase(180, fmtime, 40)
         if fullmoon is None:
@@ -8280,7 +8284,7 @@ def SearchGlobalSolarEclipse(startTime):
     PruneLatitude = 1.8     # Moon's ecliptic latitude beyond which eclipse is impossible
     # Iterate through consecutive new moons until we find a solar eclipse visible somewhere on Earth.
     nmtime = startTime
-    for nmcount in range(12):
+    for _ in range(12):
         # Search for the next new moon. Any eclipse will be near it.
         newmoon = SearchMoonPhase(0.0, nmtime, 40.0)
         if newmoon is None:
