@@ -103,7 +103,9 @@ disable=invalid-name,
         chained-comparison,
         consider-using-in,
         too-many-nested-blocks,
-        too-many-instance-attributes
+        too-many-instance-attributes,
+        bad-whitespace,
+        bad-continuation
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option
