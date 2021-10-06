@@ -134,6 +134,7 @@ static int Issue103(void);
 static int AberrationTest(void);
 static int BaryStateTest(void);
 static int Twilight(void);
+static int LibrationTest(void);
 
 typedef int (* unit_test_func_t) (void);
 
@@ -156,6 +157,7 @@ static unit_test_t UnitTests[] =
     {"global_solar_eclipse",    GlobalSolarEclipseTest},
     {"issue_103",               Issue103},
     {"jupiter_moons",           JupiterMoonsTest},
+    {"libration",               LibrationTest},
     {"local_solar_eclipse",     LocalSolarEclipseTest},
     {"lunar_eclipse",           LunarEclipseTest},
     {"lunar_eclipse_78",        LunarEclipseIssue78},
@@ -1706,6 +1708,46 @@ fail:
 }
 
 /*-----------------------------------------------------------------------------------------------------------*/
+
+static int ParseMonthName(const char *mtext, int *month)
+{
+    if (month == NULL)
+        return 1;
+
+    *month = -1;
+
+    if (mtext == NULL)
+        return 2;
+
+    if (!strcmp(mtext, "Jan"))
+        *month = 1;
+    else if (!strcmp(mtext, "Feb"))
+        *month = 2;
+    else if (!strcmp(mtext, "Mar"))
+        *month = 3;
+    else if (!strcmp(mtext, "Apr"))
+        *month = 4;
+    else if (!strcmp(mtext, "May"))
+        *month = 5;
+    else if (!strcmp(mtext, "Jun"))
+        *month = 6;
+    else if (!strcmp(mtext, "Jul"))
+        *month = 7;
+    else if (!strcmp(mtext, "Aug"))
+        *month = 8;
+    else if (!strcmp(mtext, "Sep"))
+        *month = 9;
+    else if (!strcmp(mtext, "Oct"))
+        *month = 10;
+    else if (!strcmp(mtext, "Nov"))
+        *month = 11;
+    else if (!strcmp(mtext, "Dec"))
+        *month = 12;
+    else
+        return 3;
+
+    return 0;   /* success */
+}
 
 static const char *ParseJplHorizonsDateTime(const char *text, astro_time_t *time)
 {
@@ -4565,6 +4607,63 @@ static int Twilight(void)
     }
 
     printf("C Twilight: PASS (%d test cases, max error = %0.3lf seconds)\n", lnum, max_diff);
+    error = 0;
+fail:
+    if (infile != NULL) fclose(infile);
+    return error;
+}
+
+/*-----------------------------------------------------------------------------------------------------------*/
+
+static int LibrationTest(void)
+{
+    int error;
+    const char *filename = "libration/mooninfo_2020.txt";
+    FILE *infile;
+    int lnum, count, nscanned;
+    char line[200];
+    int day, month, year, hour, minute;
+    char mtext[4];
+    double phase, age, diam, dist, ra, dec, slon, slat, elon, elat, axisa;
+    astro_time_t time;
+
+    infile = fopen(filename, "rt");
+    if (infile == NULL)
+        FAIL("C LibrationTest: cannot open input file: %s\n", filename);
+
+    lnum = 0;
+    count = 0;
+    while (ReadLine(line, sizeof(line), infile, filename, lnum))
+    {
+        ++lnum;
+        if (lnum == 1)
+        {
+            if (strcmp(line, "   Date       Time    Phase    Age    Diam    Dist     RA        Dec      Slon      Slat     Elon     Elat   AxisA\n"))
+                FAIL("C LibrationTest(%s line %d): unexpected header line\n", filename, lnum);
+        }
+        else
+        {
+            /* 01 Jan 2020 00:00 UT  29.95   5.783  1774.5  403898  23.2609  -10.0824   114.557   -0.045   0.773    6.360  336.353 */
+            nscanned = sscanf(line,
+                "%d %3s %d %d:%d UT %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf",
+                &day, mtext, &year, &hour, &minute,
+                &phase, &age, &diam, &dist, &ra, &dec, &slon, &slat, &elon, &elat, &axisa);
+
+            if (nscanned != 16)
+                FAIL("C LibrationTest(%s line %d): expected 16 tokens, found %d\n", filename, lnum, nscanned);
+
+            /* Calculate the astronomy time value for this calendar date/time. */
+            if (ParseMonthName(mtext, &month))
+                FAIL("LibrationTest(%s line %d): invalid month symbol '%s'\n", filename, lnum, mtext);
+
+            time = Astronomy_MakeTime(year, month, day, hour, minute, 0.0);
+            (void)time;
+
+            ++count;
+        }
+    }
+
+    printf("C LibrationTest: PASS (%d test cases)\n", count);
     error = 0;
 fail:
     if (infile != NULL) fclose(infile);
