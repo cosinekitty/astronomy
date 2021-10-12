@@ -1757,7 +1757,7 @@ due to lensing of the Earth's atmosphere.
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| [`Refraction`](#Refraction) | `refraction` | The option for selecting whether to correct for atmospheric lensing. If `Refraction.Normal`, a well-behaved refraction model is used. If `Refraction.Airless`, no refraction correct is performed. `Refraction.JplHorizons` is used only for compatibility testing with the JPL Horizons online tool. |
+| [`Refraction`](#Refraction) | `refraction` | The option for selecting whether to correct for atmospheric lensing. If `Refraction.Normal`, a well-behaved refraction model is used. If `Refraction.Airless`, no refraction correct is performed. `Refraction.JplHorizons` is used only for compatibility testing with the JPL Horizons online tool. Any other value raises an exception. |
 | `float` | `altitude` | The number of degrees above (positive) or below (negative) the horizon an object is, before being corrected for refraction. |
 
 ### Returns: `float`

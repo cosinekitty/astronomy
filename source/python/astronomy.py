@@ -4662,6 +4662,7 @@ def RefractionAngle(refraction, altitude):
         If `Refraction.Airless`, no refraction correct is performed.
         `Refraction.JplHorizons` is used only for compatibility testing
         with the JPL Horizons online tool.
+        Any other value raises an exception.
     altitude : float
         The number of degrees above (positive) or below (negative) the
         horizon an object is, before being corrected for refraction.
@@ -4694,9 +4695,11 @@ def RefractionAngle(refraction, altitude):
             # When horizon angle is -1 degrees, the factor is exactly 1.
             # As altitude approaches -90 (the nadir), the fraction approaches 0 linearly.
             refr *= (altitude + 90.0) / 89.0
-    else:
-        # No refraction, or the refraction option is invalid.
+    elif refraction == Refraction.Airless:
+        # The caller does not want refraction correction.
         refr = 0.0
+    else:
+        raise Error('Inalid refraction option')
     return refr
 
 def InverseRefractionAngle(refraction, bent_altitude):

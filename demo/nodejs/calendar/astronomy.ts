@@ -5949,9 +5949,11 @@ export function Refraction(refraction: string, altitude: number): number {
             // As altitude approaches -90 (the nadir), the fraction approaches 0 linearly.
             refr *= (altitude + 90.0) / 89.0;
         }
-    } else {
-        /* No refraction, or the refraction option is invalid. */
+    } else if (!refraction) {
+        // The caller does not want refraction correction.
         refr = 0.0;
+    } else {
+        throw `Invalid refraction option: ${refraction}`;
     }
 
     return refr;
