@@ -78,7 +78,7 @@ void ChebApprox(
     int dimension,                  /* the number of dimensions: 1..CHEB_MAX_DIM */
     const double coeff[CHEB_MAX_DIM][CHEB_MAX_POLYS],        /* array of coefficients */
     double x,                       /* dimensionless independent variable in the range [-1, +1] */
-    double result[CHEB_MAX_DIM]);   /* output approximation vector */
+    double result[/*CHEB_MAX_DIM*/]);   /* output approximation vector */
 
 /*
     A utility function to scale a dimensional variable 't' in the problem domain

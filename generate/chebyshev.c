@@ -102,11 +102,11 @@ int ChebGenerate(
     Use Chebyshev polynomials to approximate the value of a function.
 */
 void ChebApprox(
-    int numpoly,                    /* the number of polynomial coefficients: 1..CHEB_MAX_POLYS */
-    int dimension,                  /* the number of dimensions: 1..CHEB_MAX_DIM */
+    int numpoly,                        /* the number of polynomial coefficients: 1..CHEB_MAX_POLYS */
+    int dimension,                      /* the number of dimensions: 1..CHEB_MAX_DIM */
     const double coeff[CHEB_MAX_DIM][CHEB_MAX_POLYS],        /* array of coefficients */
-    double x,                       /* dimensionless independent variable in the range [-1, +1] */
-    double result[CHEB_MAX_DIM])    /* output approximation vector */
+    double x,                           /* dimensionless independent variable in the range [-1, +1] */
+    double result[/*CHEB_MAX_DIM*/])    /* output approximation vector */
 {
     int k, d;
     double sum, p0, p1, p2;

@@ -9558,8 +9558,8 @@ short int make_cat_entry (char star_name[SIZE_OF_OBJ_NAME],
 /********make_object */
 
 short int make_object (short int type, short int number,
-                       char name[SIZE_OF_OBJ_NAME], cat_entry *star_data,
-
+                       char name[/*SIZE_OF_OBJ_NAME*/], 
+                       cat_entry *star_data,
                        object *cel_obj)
 /*
 ------------------------------------------------------------------------
