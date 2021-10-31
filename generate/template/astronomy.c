@@ -54,7 +54,7 @@ typedef struct
 }
 terse_vector_t;
 
-static const terse_vector_t VecZero;
+static const terse_vector_t VecZero = { 0.0, 0.0, 0.0 };
 
 static terse_vector_t VecAdd(terse_vector_t a, terse_vector_t b)
 {
@@ -1098,7 +1098,7 @@ astro_status_t Astronomy_FormatTime(
     if (nprinted < 0)
         return ASTRO_INTERNAL_ERROR;    /* should not be possible for snprintf to return a negative number */
 
-    if (1+(int)nprinted != min_size)
+    if ((size_t)(1+nprinted) != min_size)
         return ASTRO_INTERNAL_ERROR;    /* there must be a bug calculating min_size or formatting the string */
 
     return ASTRO_SUCCESS;
@@ -2375,7 +2375,7 @@ static astro_status_t GetSegment(int *seg_index, body_segment_t *cache[], double
     if (cache[*seg_index] == NULL)
     {
         /* Allocate memory for the segment (about 11K each). */
-        seg = cache[*seg_index] = calloc(1, sizeof(body_segment_t));
+        seg = cache[*seg_index] = (body_segment_t *) calloc(1, sizeof(body_segment_t));
         if (seg == NULL)
             return ASTRO_OUT_OF_MEMORY;
 
@@ -4830,7 +4830,7 @@ static astro_func_result_t peak_altitude(void *context, astro_time_t time)
     astro_func_result_t result;
     astro_equatorial_t ofdate;
     astro_horizon_t hor;
-    const context_peak_altitude_t *p = context;
+    const context_peak_altitude_t *p = (const context_peak_altitude_t *) context;
 
     /*
         Return the angular altitude above or below the horizon
@@ -4859,7 +4859,7 @@ static astro_func_result_t altitude_error(void *context, astro_time_t time)
     astro_func_result_t result;
     astro_equatorial_t ofdate;
     astro_horizon_t hor;
-    const context_search_altitude_t *p = context;
+    const context_search_altitude_t *p = (const context_search_altitude_t *) context;
 
     ofdate = Astronomy_Equator(p->body, &time, p->observer, EQUATOR_OF_DATE, ABERRATION);
     if (ofdate.status != ASTRO_SUCCESS)
@@ -5594,7 +5594,7 @@ planet_distance_context_t;
 static astro_func_result_t planet_distance_slope(void *context, astro_time_t time)
 {
     static const double dt = 0.001;
-    const planet_distance_context_t *pc = context;
+    const planet_distance_context_t *pc = (const planet_distance_context_t *) context;
     astro_time_t t1 = Astronomy_AddDays(time, -dt/2.0);
     astro_time_t t2 = Astronomy_AddDays(time, +dt/2.0);
     astro_func_result_t dist1, dist2, result;
@@ -7136,6 +7136,7 @@ static shadow_t PlanetShadow(astro_body_t body, double planet_radius_km, astro_t
         return ShadowError(e.status);
 
     /* Deduce light-travel-corrected vector from Sun to planet. */
+    p.status = ASTRO_SUCCESS;
     p.t = time;
     p.x = g.x - e.x;
     p.y = g.y - e.y;
@@ -7204,7 +7205,7 @@ static astro_func_result_t shadow_distance_slope(void *context, astro_time_t tim
     astro_time_t t1, t2;
     astro_func_result_t result;
     shadow_t shadow1, shadow2;
-    shadow_func_t shadowfunc = context;
+    shadow_func_t shadowfunc = (shadow_func_t) context;
 
     t1 = Astronomy_AddDays(time, -dt);
     t2 = Astronomy_AddDays(time, +dt);
@@ -7234,7 +7235,7 @@ static shadow_t PeakEarthShadow(astro_time_t search_center_time)
     t1 = Astronomy_AddDays(search_center_time, -window);
     t2 = Astronomy_AddDays(search_center_time, +window);
 
-    result = Astronomy_Search(shadow_distance_slope, EarthShadow, t1, t2, 1.0);
+    result = Astronomy_Search(shadow_distance_slope, (void *)EarthShadow, t1, t2, 1.0);
     if (result.status != ASTRO_SUCCESS)
         return ShadowError(result.status);
 
@@ -7253,7 +7254,7 @@ static shadow_t PeakMoonShadow(astro_time_t search_center_time)
     t1 = Astronomy_AddDays(search_center_time, -window);
     t2 = Astronomy_AddDays(search_center_time, +window);
 
-    result = Astronomy_Search(shadow_distance_slope, MoonShadow, t1, t2, 1.0);
+    result = Astronomy_Search(shadow_distance_slope, (void *)MoonShadow, t1, t2, 1.0);
     if (result.status != ASTRO_SUCCESS)
         return ShadowError(result.status);
 
@@ -7278,7 +7279,7 @@ static astro_func_result_t planet_shadow_distance_slope(void *context, astro_tim
     astro_time_t t1, t2;
     astro_func_result_t result;
     shadow_t shadow1, shadow2;
-    const planet_shadow_context_t *p = context;
+    const planet_shadow_context_t *p = (const planet_shadow_context_t *) context;
 
     t1 = Astronomy_AddDays(time, -dt);
     t2 = Astronomy_AddDays(time, +dt);
@@ -7324,7 +7325,7 @@ static shadow_t PeakPlanetShadow(astro_body_t body, double planet_radius_km, ast
 static astro_func_result_t shadow_distance(void *context, astro_time_t time)
 {
     astro_func_result_t result;
-    const shadow_context_t *p = context;
+    const shadow_context_t *p = (const shadow_context_t *) context;
     shadow_t shadow = EarthShadow(time);
     if (shadow.status != ASTRO_SUCCESS)
         return FuncError(shadow.status);
@@ -7761,7 +7762,7 @@ static astro_func_result_t local_shadow_distance_slope(void *context, astro_time
     astro_time_t t1, t2;
     astro_func_result_t result;
     shadow_t shadow1, shadow2;
-    const astro_observer_t *observer = context;
+    const astro_observer_t *observer = (const astro_observer_t *) context;
 
     t1 = Astronomy_AddDays(time, -dt);
     t2 = Astronomy_AddDays(time, +dt);
@@ -7829,7 +7830,7 @@ eclipse_transition_t;
 
 static astro_func_result_t local_eclipse_func(void *context, astro_time_t time)
 {
-    const eclipse_transition_t *trans = context;
+    const eclipse_transition_t *trans = (const eclipse_transition_t *) context;
     shadow_t shadow;
     astro_func_result_t result;
 
@@ -8071,7 +8072,7 @@ static astro_func_result_t planet_transit_bound(void *context, astro_time_t time
 {
     shadow_t shadow;
     astro_func_result_t result;
-    const planet_shadow_context_t *p = context;
+    const planet_shadow_context_t *p = (const planet_shadow_context_t *) context;
 
     shadow = PlanetShadow(p->body, p->planet_radius_km, time);
     if (shadow.status != ASTRO_SUCCESS)
