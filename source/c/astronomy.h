@@ -893,6 +893,17 @@ typedef enum
 astro_time_format_t;
 
 /**
+ * @brief Lunar libration angles, returned by #Astronomy_Libration.
+ */
+typedef struct
+{
+    double elat;                /**< Sub-Earth libration ecliptic latitude angle, in degrees. */
+    double elon;                /**< Sub-Earth libration ecliptic longitude angle, in degrees. */
+}
+astro_libration_t;
+
+
+/**
  * \def TIME_TEXT_BYTES
  * @brief The smallest number of characters that is always large enough for #Astronomy_FormatTime.
  */
@@ -969,6 +980,7 @@ astro_func_result_t Astronomy_HelioDistance(astro_body_t body, astro_time_t time
 astro_vector_t Astronomy_HelioVector(astro_body_t body, astro_time_t time);
 astro_vector_t Astronomy_GeoVector(astro_body_t body, astro_time_t time, astro_aberration_t aberration);
 astro_vector_t Astronomy_GeoMoon(astro_time_t time);
+astro_libration_t Astronomy_Libration(astro_time_t *time);
 astro_state_vector_t Astronomy_BaryState(astro_body_t body, astro_time_t time);
 astro_jupiter_moons_t Astronomy_JupiterMoons(astro_time_t time);
 

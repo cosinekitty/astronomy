@@ -2051,6 +2051,128 @@ astro_vector_t Astronomy_GeoMoon(astro_time_t time)
     return vector;
 }
 
+
+/**
+ * @brief Calculates the Moon's libration angles at a given moment in time.
+ *
+ * Libration is an observed back-and-forth wobble of the portion of the
+ * Moon visible from the Earth. It is caused by the imperfect tidal locking
+ * of the Moon's fixed rotation rate, compared to its variable angular speed
+ * of orbit around the Earth.
+ *
+ * @param time  The date and time for which to calculate libration angles.
+ * @return The Moon's libration in latitude and longitude as seen from the Earth.
+ */
+astro_libration_t Astronomy_Libration(astro_time_t *time)
+{
+    astro_libration_t lib;
+    double geo_eclip_lon, geo_eclip_lat, distance_au;
+    earth_tilt_t tilt;
+    double t, t2, t3, t4;
+    double f, omega, delta_u, w, a, ldash, ldash2, bdash, bdash2;
+    double k1, k2, m, mdash, d, e, rho, sigma, tau;
+    double I = DEG2RAD * 1.54242;
+
+    CalcMoon(time->tt / 36525.0, &geo_eclip_lon, &geo_eclip_lat, &distance_au);
+
+    tilt = e_tilt(time);
+    delta_u = DEG2RAD * (tilt.dpsi / 3600);     /* so small... is it worth calculating Earth tilt? */
+
+    t = time->tt / 36525.0;
+    t2 = t * t;
+    t3 = t2 * t;
+    t4 = t2 * t2;
+
+    /* Moon's argument of latitude in radians. */
+    f = DEG2RAD * NormalizeLongitude(93.2720950 + 483202.0175233*t - 0.0036539*t2 - t3/3526000 + t4/863310000);
+
+    /* Moon's ascending node's mean longitude in radians. */
+    omega = DEG2RAD * NormalizeLongitude(125.0445479 - 1934.1362891*t + 0.0020754*t2 + t3/467441 - t4/60616000);
+
+    /* Sun's mean anomaly. */
+    m = DEG2RAD * NormalizeLongitude(357.5291092 + 35999.0502909*t - 0.0001536*t2 + t3/24490000);
+
+    /* Moon's mean anomaly. */
+    mdash = DEG2RAD * NormalizeLongitude(134.9633964 + 477198.8675055*t + 0.0087414*t2 + t3/69699 - t4/14712000);
+
+    /* Moon's mean elongation. */
+    d = DEG2RAD * NormalizeLongitude(297.8501921 + 445267.1114034*t - 0.0018819*t2 + t3/545868 - t4/113065000);
+
+    /* Eccentricity of the Earth's orbit. */
+    e = 1.0 - 0.002516*t - 0.0000074*t2;
+
+    /* Optical librations */
+    w = geo_eclip_lon - delta_u/3600 - omega;   /* ??? the division by 3600 seems suspicious */
+    a = atan2(sin(w)*cos(geo_eclip_lat)*cos(I) - sin(geo_eclip_lat)*sin(I), cos(w)*cos(geo_eclip_lat));
+    ldash = LongitudeOffset(RAD2DEG * (a - f));
+    bdash = asin(-sin(w)*cos(geo_eclip_lat)*sin(I) - sin(geo_eclip_lat)*cos(I));
+
+    /* Physical librations */
+    k1 = DEG2RAD*(119.75 + 131.849*t);
+    k2 = DEG2RAD*(72.56 + 20.186*t);
+
+    rho = (
+        -0.02752*cos(mdash) +
+        -0.02245*sin(f) +
+        +0.00684*cos(mdash - 2*f) +
+        -0.00293*cos(2*f) +
+        -0.00085*cos(2*f - 2*d) +
+        -0.00054*cos(mdash - 2*d) +
+        -0.00020*sin(mdash + f) +
+        -0.00020*cos(mdash + 2*f) +
+        -0.00020*cos(mdash - f) +
+        +0.00014*cos(mdash + 2*f - 2*d)
+    );
+
+    sigma = (
+        -0.02816*sin(mdash) +
+        +0.02244*cos(f) +
+        -0.00682*sin(mdash - 2*f) +
+        -0.00279*sin(2*f) +
+        -0.00083*sin(2*f - 2*d) +
+        +0.00069*sin(mdash - 2*d) +
+        +0.00040*cos(mdash + f) +
+        -0.00025*sin(2*mdash) +
+        -0.00023*sin(mdash + 2*f) +
+        +0.00020*cos(mdash - f) +
+        +0.00019*sin(mdash - f) +
+        +0.00013*sin(mdash + 2*f - 2*d) +
+        -0.00010*cos(mdash - 3*f)
+    );
+
+    tau = (
+        +0.02520*e*sin(m) +
+        +0.00473*sin(2*mdash - 2*f) +
+        -0.00467*sin(mdash) +
+        +0.00396*sin(k1) +
+        +0.00276*sin(2*mdash - 2*d) +
+        +0.00196*sin(omega) +
+        -0.00183*cos(mdash - f) +
+        +0.00115*sin(mdash - 2*d) +
+        -0.00096*sin(mdash - d) +
+        +0.00046*sin(2*f - 2*d) +
+        -0.00039*sin(mdash - f) +
+        -0.00032*sin(mdash - m - d) +
+        +0.00027*sin(2*mdash - m - 2*d) +
+        +0.00023*sin(k2) +
+        -0.00014*sin(2*d) +
+        +0.00014*cos(2*mdash - 2*f) +
+        -0.00012*sin(mdash - 2*f) +
+        -0.00012*sin(2*mdash) +
+        +0.00011*sin(2*mdash - 2*m - 2*d)
+    );
+
+    ldash2 = -tau + (rho*cos(a) + sigma*sin(a))*tan(bdash);
+    bdash *= RAD2DEG;
+    bdash2 = sigma*cos(a) - rho*sin(a);
+
+    lib.elon = ldash + ldash2;
+    lib.elat = bdash + bdash2;
+
+    return lib;
+}
+
+
 /*------------------ VSOP ------------------*/
 
 /** @cond DOXYGEN_SKIP */

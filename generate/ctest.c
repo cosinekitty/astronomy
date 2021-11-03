@@ -4615,10 +4615,9 @@ fail:
 
 /*-----------------------------------------------------------------------------------------------------------*/
 
-static int LibrationTest(void)
+static int Libration(const char *filename)
 {
     int error;
-    const char *filename = "libration/mooninfo_2020.txt";
     FILE *infile;
     int lnum, count, nscanned;
     char line[200];
@@ -4626,10 +4625,13 @@ static int LibrationTest(void)
     char mtext[4];
     double phase, age, diam, dist, ra, dec, slon, slat, elon, elat, axisa;
     astro_time_t time;
+    astro_libration_t lib;
+    double diff_elon, diff_elat;
+    double max_diff_elon = 0.0, max_diff_elat = 0.0;
 
     infile = fopen(filename, "rt");
     if (infile == NULL)
-        FAIL("C LibrationTest: cannot open input file: %s\n", filename);
+        FAIL("C Libration: cannot open input file: %s\n", filename);
 
     lnum = 0;
     count = 0;
@@ -4639,7 +4641,7 @@ static int LibrationTest(void)
         if (lnum == 1)
         {
             if (strcmp(line, "   Date       Time    Phase    Age    Diam    Dist     RA        Dec      Slon      Slat     Elon     Elat   AxisA\n"))
-                FAIL("C LibrationTest(%s line %d): unexpected header line\n", filename, lnum);
+                FAIL("C Libration(%s line %d): unexpected header line\n", filename, lnum);
         }
         else
         {
@@ -4650,23 +4652,48 @@ static int LibrationTest(void)
                 &phase, &age, &diam, &dist, &ra, &dec, &slon, &slat, &elon, &elat, &axisa);
 
             if (nscanned != 16)
-                FAIL("C LibrationTest(%s line %d): expected 16 tokens, found %d\n", filename, lnum, nscanned);
+                FAIL("C Libration(%s line %d): expected 16 tokens, found %d\n", filename, lnum, nscanned);
 
             /* Calculate the astronomy time value for this calendar date/time. */
             if (ParseMonthName(mtext, &month))
-                FAIL("LibrationTest(%s line %d): invalid month symbol '%s'\n", filename, lnum, mtext);
+                FAIL("Libration(%s line %d): invalid month symbol '%s'\n", filename, lnum, mtext);
 
             time = Astronomy_MakeTime(year, month, day, hour, minute, 0.0);
-            (void)time;
+            lib = Astronomy_Libration(&time);
+
+            diff_elon = 60.0 * ABS(lib.elon - elon);
+            if (diff_elon > max_diff_elon)
+                max_diff_elon = diff_elon;
+
+            diff_elat = 60.0 * ABS(lib.elat - elat);
+            if (diff_elat > max_diff_elat)
+                max_diff_elat = diff_elat;
+
+            if (diff_elon > 0.130)
+                FAIL("C Libration(%s line %d): EXCESSIVE diff_elon = %0.4lf arcmin\n", filename, lnum, diff_elon);
+
+            if (diff_elat > 1.666)
+                FAIL("C Libration(%s line %d): EXCESSIVE diff_elat = %0.4lf arcmin\n", filename, lnum, diff_elat);
 
             ++count;
         }
     }
 
-    printf("C LibrationTest: PASS (%d test cases)\n", count);
+    printf("C Libration(%s): PASS (%d test cases, max_diff_elon = %0.4lf arcmin, max_diff_elat = %0.4lf arcmin)\n", 
+        filename, count, max_diff_elon, max_diff_elat);
+
     error = 0;
 fail:
     if (infile != NULL) fclose(infile);
+    return error;
+}
+
+static int LibrationTest(void)
+{
+    int error;
+    CHECK(Libration("libration/mooninfo_2020.txt"));
+    CHECK(Libration("libration/mooninfo_2021.txt"));
+fail:
     return error;
 }
 
