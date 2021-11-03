@@ -4615,7 +4615,7 @@ fail:
 
 /*-----------------------------------------------------------------------------------------------------------*/
 
-static int Libration(const char *filename)
+static int Libration(const char *filename, int *ndata, double *var_lon, double *var_lat)
 {
     int error;
     FILE *infile;
@@ -4675,6 +4675,10 @@ static int Libration(const char *filename)
             if (diff_elat > 1.666)
                 FAIL("C Libration(%s line %d): EXCESSIVE diff_elat = %0.4lf arcmin\n", filename, lnum, diff_elat);
 
+            /* Update sum-of-squared-errors. */
+            *var_lon += diff_elon * diff_elon;
+            *var_lat += diff_elat * diff_elat;
+
             ++count;
         }
     }
@@ -4682,6 +4686,7 @@ static int Libration(const char *filename)
     printf("C Libration(%s): PASS (%d test cases, max_diff_elon = %0.4lf arcmin, max_diff_elat = %0.4lf arcmin)\n", 
         filename, count, max_diff_elon, max_diff_elat);
 
+    *ndata += count;
     error = 0;
 fail:
     if (infile != NULL) fclose(infile);
@@ -4691,8 +4696,17 @@ fail:
 static int LibrationTest(void)
 {
     int error;
-    CHECK(Libration("libration/mooninfo_2020.txt"));
-    CHECK(Libration("libration/mooninfo_2021.txt"));
+    int ndata = 0;
+    double var_lat = 0.0;
+    double var_lon = 0.0;
+    double dev_lat, dev_lon;
+
+    CHECK(Libration("libration/mooninfo_2020.txt", &ndata, &var_lon, &var_lat));
+    CHECK(Libration("libration/mooninfo_2021.txt", &ndata, &var_lon, &var_lat));
+
+    dev_lon = sqrt(var_lon / ndata);
+    dev_lat = sqrt(var_lat / ndata);
+    printf("C LibrationTest: %d data points, dev_lon = %0.4lf arcmin, dev_lat = %0.4lf arcmin\n", ndata, dev_lon, dev_lat);
 fail:
     return error;
 }

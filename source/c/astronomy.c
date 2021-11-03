@@ -2067,16 +2067,12 @@ astro_libration_t Astronomy_Libration(astro_time_t *time)
 {
     astro_libration_t lib;
     double geo_eclip_lon, geo_eclip_lat, distance_au;
-    earth_tilt_t tilt;
     double t, t2, t3, t4;
-    double f, omega, delta_u, w, a, ldash, ldash2, bdash, bdash2;
+    double f, omega, w, a, ldash, ldash2, bdash, bdash2;
     double k1, k2, m, mdash, d, e, rho, sigma, tau;
     double I = DEG2RAD * 1.54242;
 
     CalcMoon(time->tt / 36525.0, &geo_eclip_lon, &geo_eclip_lat, &distance_au);
-
-    tilt = e_tilt(time);
-    delta_u = DEG2RAD * (tilt.dpsi / 3600);     /* so small... is it worth calculating Earth tilt? */
 
     t = time->tt / 36525.0;
     t2 = t * t;
@@ -2102,7 +2098,7 @@ astro_libration_t Astronomy_Libration(astro_time_t *time)
     e = 1.0 - 0.002516*t - 0.0000074*t2;
 
     /* Optical librations */
-    w = geo_eclip_lon - delta_u/3600 - omega;   /* ??? the division by 3600 seems suspicious */
+    w = geo_eclip_lon - omega;
     a = atan2(sin(w)*cos(geo_eclip_lat)*cos(I) - sin(geo_eclip_lat)*sin(I), cos(w)*cos(geo_eclip_lat));
     ldash = LongitudeOffset(RAD2DEG * (a - f));
     bdash = asin(-sin(w)*cos(geo_eclip_lat)*sin(I) - sin(geo_eclip_lat)*cos(I));
