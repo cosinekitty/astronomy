@@ -4626,8 +4626,8 @@ static int Libration(const char *filename, int *ndata, double *var_lon, double *
     double phase, age, diam, dist, ra, dec, slon, slat, elon, elat, axisa;
     astro_time_t time;
     astro_libration_t lib;
-    double diff_elon, diff_elat;
-    double max_diff_elon = 0.0, max_diff_elat = 0.0;
+    double diff_elon, diff_elat, diff_distance;
+    double max_diff_elon = 0.0, max_diff_elat = 0.0, max_diff_distance = 0.0;
 
     infile = fopen(filename, "rt");
     if (infile == NULL)
@@ -4659,7 +4659,7 @@ static int Libration(const char *filename, int *ndata, double *var_lon, double *
                 FAIL("Libration(%s line %d): invalid month symbol '%s'\n", filename, lnum, mtext);
 
             time = Astronomy_MakeTime(year, month, day, hour, minute, 0.0);
-            lib = Astronomy_Libration(&time);
+            lib = Astronomy_Libration(time);
 
             diff_elon = 60.0 * ABS(lib.elon - elon);
             if (diff_elon > max_diff_elon)
@@ -4669,11 +4669,18 @@ static int Libration(const char *filename, int *ndata, double *var_lon, double *
             if (diff_elat > max_diff_elat)
                 max_diff_elat = diff_elat;
 
+            diff_distance = ABS(lib.dist_km - dist);
+            if (diff_distance > max_diff_distance)
+                max_diff_distance = diff_distance;
+
             if (diff_elon > 0.130)
                 FAIL("C Libration(%s line %d): EXCESSIVE diff_elon = %0.4lf arcmin\n", filename, lnum, diff_elon);
 
             if (diff_elat > 1.666)
                 FAIL("C Libration(%s line %d): EXCESSIVE diff_elat = %0.4lf arcmin\n", filename, lnum, diff_elat);
+
+            if (diff_distance > 53.9)
+                FAIL("C Libration(%s line %d): EXCESSIVE diff_distance = %0.3lf km\n", filename, lnum, diff_distance);
 
             /* Update sum-of-squared-errors. */
             *var_lon += diff_elon * diff_elon;
@@ -4683,8 +4690,8 @@ static int Libration(const char *filename, int *ndata, double *var_lon, double *
         }
     }
 
-    printf("C Libration(%s): PASS (%d test cases, max_diff_elon = %0.4lf arcmin, max_diff_elat = %0.4lf arcmin)\n", 
-        filename, count, max_diff_elon, max_diff_elat);
+    printf("C Libration(%s): PASS (%d test cases, max_diff_elon = %0.4lf arcmin, max_diff_elat = %0.4lf arcmin, max_diff_distance = %0.3lf km)\n", 
+        filename, count, max_diff_elon, max_diff_elat, max_diff_distance);
 
     *ndata += count;
     error = 0;

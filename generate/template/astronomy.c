@@ -1877,24 +1877,32 @@ astro_vector_t Astronomy_GeoMoon(astro_time_t time)
  * of the Moon's fixed rotation rate, compared to its variable angular speed
  * of orbit around the Earth.
  *
+ * This function calculates a pair of perpendicular libration angles,
+ * one representing rotation of the Moon in eclitpic longitude `elon`, the other
+ * in ecliptic latitude `elat`, both relative to the Moon's mean Earth-facing position.
+ *
+ * This function also returns the geocentric position of the Moon
+ * expressed in ecliptic longitude `mlon`, ecliptic latitude `mlat`, and
+ * distance `dist_km` between the centers of the Earth and Moon expressed in kilometers.
+ *
  * @param time  The date and time for which to calculate libration angles.
- * @return The Moon's libration in latitude and longitude as seen from the Earth.
+ * @return The Moon's ecliptic position and libration angles as seen from the Earth.
  */
-astro_libration_t Astronomy_Libration(astro_time_t *time)
+astro_libration_t Astronomy_Libration(astro_time_t time)
 {
     astro_libration_t lib;
-    double geo_eclip_lon, geo_eclip_lat, distance_au;
     double t, t2, t3, t4;
     double f, omega, w, a, ldash, ldash2, bdash, bdash2;
     double k1, k2, m, mdash, d, e, rho, sigma, tau;
     double I = DEG2RAD * 1.54242;
 
-    CalcMoon(time->tt / 36525.0, &geo_eclip_lon, &geo_eclip_lat, &distance_au);
-
-    t = time->tt / 36525.0;
+    t = time.tt / 36525.0;
     t2 = t * t;
     t3 = t2 * t;
     t4 = t2 * t2;
+
+    CalcMoon(t, &lib.mlon, &lib.mlat, &lib.dist_km);
+    lib.dist_km *= KM_PER_AU;
 
     /* Moon's argument of latitude in radians. */
     f = DEG2RAD * NormalizeLongitude(93.2720950 + 483202.0175233*t - 0.0036539*t2 - t3/3526000 + t4/863310000);
@@ -1915,10 +1923,10 @@ astro_libration_t Astronomy_Libration(astro_time_t *time)
     e = 1.0 - 0.002516*t - 0.0000074*t2;
 
     /* Optical librations */
-    w = geo_eclip_lon - omega;
-    a = atan2(sin(w)*cos(geo_eclip_lat)*cos(I) - sin(geo_eclip_lat)*sin(I), cos(w)*cos(geo_eclip_lat));
+    w = lib.mlon - omega;
+    a = atan2(sin(w)*cos(lib.mlat)*cos(I) - sin(lib.mlat)*sin(I), cos(w)*cos(lib.mlat));
     ldash = LongitudeOffset(RAD2DEG * (a - f));
-    bdash = asin(-sin(w)*cos(geo_eclip_lat)*sin(I) - sin(geo_eclip_lat)*cos(I));
+    bdash = asin(-sin(w)*cos(lib.mlat)*sin(I) - sin(lib.mlat)*cos(I));
 
     /* Physical librations */
     k1 = DEG2RAD*(119.75 + 131.849*t);
