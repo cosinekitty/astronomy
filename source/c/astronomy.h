@@ -901,7 +901,7 @@ typedef struct
     double elon;                /**< Sub-Earth libration ecliptic longitude angle, in degrees. */
     double mlat;                /**< Moon's geocentric ecliptic latitude. */
     double mlon;                /**< Moon's geocentric ecliptic longitude. */
-    double dist_km;            /**< Distance between the centers of the Earth and Moon in kilometers. */
+    double dist_km;             /**< Distance between the centers of the Earth and Moon in kilometers. */
 }
 astro_libration_t;
 

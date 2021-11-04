@@ -696,6 +696,30 @@ to convert to geocentric positions.
 
 **Returns:** Position and velocity vectors of Jupiter's largest 4 moons.
 
+<a name="Astronomy.Libration"></a>
+### Astronomy.Libration(time) &#8658; [`LibrationInfo`](#LibrationInfo)
+
+**Calculates the Moon's libration angles at a given moment in time.**
+
+Libration is an observed back-and-forth wobble of the portion of the
+Moon visible from the Earth. It is caused by the imperfect tidal locking
+of the Moon's fixed rotation rate, compared to its variable angular speed
+of orbit around the Earth.
+
+This function calculates a pair of perpendicular libration angles,
+one representing rotation of the Moon in eclitpic longitude `elon`, the other
+in ecliptic latitude `elat`, both relative to the Moon's mean Earth-facing position.
+
+This function also returns the geocentric position of the Moon
+expressed in ecliptic longitude `mlon`, ecliptic latitude `mlat`, and
+distance `dist_km` between the centers of the Earth and Moon expressed in kilometers.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`AstroTime`](#AstroTime) | `time` | The date and time for which to calculate lunar libration. |
+
+**Returns:** The Moon's ecliptic position and libration angles as seen from the Earth.
+
 <a name="Astronomy.MoonPhase"></a>
 ### Astronomy.MoonPhase(time) &#8658; `double`
 
@@ -2185,6 +2209,21 @@ and the velocities in AU/day.
 | Type | Name | Description |
 | --- | --- | --- |
 | [`StateVector[]`](#StateVector[]) | `moon` | An array of state vectors for each of the 4 moons, in the following order: 0 = Io, 1 = Europa, 2 = Ganymede, 3 = Callisto. |
+
+---
+
+<a name="LibrationInfo"></a>
+## `struct LibrationInfo`
+
+**Lunar libration angles, returned by [`Astronomy.Libration`](#Astronomy.Libration).**
+
+| Type | Name | Description |
+| --- | --- | --- |
+| `double` | `elat` | Sub-Earth libration ecliptic latitude angle, in degrees. |
+| `double` | `elon` | Sub-Earth libration ecliptic longitude angle, in degrees. |
+| `double` | `mlat` | Moon's geocentric ecliptic latitude. |
+| `double` | `mlon` | Moon's geocentric ecliptic longitude. |
+| `double` | `dist_km` | Distance between the centers of the Earth and Moon in kilometers. |
 
 ---
 

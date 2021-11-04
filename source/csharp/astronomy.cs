@@ -956,6 +956,27 @@ namespace CosineKitty
     }
 
     /// <summary>
+    /// Lunar libration angles, returned by #Astronomy.Libration.
+    /// </summary>
+    public struct LibrationInfo
+    {
+        /// <summary>Sub-Earth libration ecliptic latitude angle, in degrees.</summary>
+        public double elat;
+
+        /// <summary>Sub-Earth libration ecliptic longitude angle, in degrees.</summary>
+        public double elon;
+
+        /// <summary>Moon's geocentric ecliptic latitude.</summary>
+        public double mlat;
+
+        /// <summary>Moon's geocentric ecliptic longitude.</summary>
+        public double mlon;
+
+        /// <summary>Distance between the centers of the Earth and Moon in kilometers.</summary>
+        public double dist_km;
+    }
+
+    /// <summary>
     /// Information about a celestial body crossing a specific hour angle.
     /// </summary>
     /// <remarks>
@@ -3922,7 +3943,6 @@ namespace CosineKitty
             return RotateState(Rotation_JUP_EQJ, state);
         }
 
-        ///
         /// <summary>
         /// Calculates jovicentric positions and velocities of Jupiter's largest 4 moons.
         /// </summary>
@@ -4519,6 +4539,132 @@ namespace CosineKitty
             AstroVector mpos2 = precession(mpos1, time, PrecessDirection.Into2000);
 
             return mpos2;
+        }
+
+        /// <summary>
+        /// Calculates the Moon's libration angles at a given moment in time.
+        /// </summary>
+        /// <remarks>
+        /// Libration is an observed back-and-forth wobble of the portion of the
+        /// Moon visible from the Earth. It is caused by the imperfect tidal locking
+        /// of the Moon's fixed rotation rate, compared to its variable angular speed
+        /// of orbit around the Earth.
+        ///
+        /// This function calculates a pair of perpendicular libration angles,
+        /// one representing rotation of the Moon in eclitpic longitude `elon`, the other
+        /// in ecliptic latitude `elat`, both relative to the Moon's mean Earth-facing position.
+        ///
+        /// This function also returns the geocentric position of the Moon
+        /// expressed in ecliptic longitude `mlon`, ecliptic latitude `mlat`, and
+        /// distance `dist_km` between the centers of the Earth and Moon expressed in kilometers.
+        /// </remarks>
+        /// <param name="time">The date and time for which to calculate lunar libration.</param>
+        /// <returns>The Moon's ecliptic position and libration angles as seen from the Earth.</returns>
+        public static LibrationInfo Libration(AstroTime time)
+        {
+            double t = time.tt / 36525.0;
+            double t2 = t * t;
+            double t3 = t2 * t;
+            double t4 = t2 * t2;
+
+            var context = new MoonContext(t);
+            MoonResult moon = context.CalcMoon();
+
+            LibrationInfo lib;
+            lib.mlon = moon.geo_eclip_lon;
+            lib.mlat = moon.geo_eclip_lat;
+            lib.dist_km = moon.distance_au * KM_PER_AU;
+
+            // Inclination angle
+            const double I = DEG2RAD * 1.54242;
+
+            // Moon's argument of latitude in radians.
+            double f = DEG2RAD * NormalizeLongitude(93.2720950 + 483202.0175233*t - 0.0036539*t2 - t3/3526000 + t4/863310000);
+
+            // Moon's ascending node's mean longitude in radians.
+            double omega = DEG2RAD * NormalizeLongitude(125.0445479 - 1934.1362891*t + 0.0020754*t2 + t3/467441 - t4/60616000);
+
+            // Sun's mean anomaly.
+            double m = DEG2RAD * NormalizeLongitude(357.5291092 + 35999.0502909*t - 0.0001536*t2 + t3/24490000);
+
+            // Moon's mean anomaly.
+            double mdash = DEG2RAD * NormalizeLongitude(134.9633964 + 477198.8675055*t + 0.0087414*t2 + t3/69699 - t4/14712000);
+
+            // Moon's mean elongation.
+            double d = DEG2RAD * NormalizeLongitude(297.8501921 + 445267.1114034*t - 0.0018819*t2 + t3/545868 - t4/113065000);
+
+            // Eccentricity of the Earth's orbit.
+            double e = 1.0 - 0.002516*t - 0.0000074*t2;
+
+            // Optical librations
+            double w = lib.mlon - omega;
+            double a = Math.Atan2(Math.Sin(w)*Math.Cos(lib.mlat)*Math.Cos(I) - Math.Sin(lib.mlat)*Math.Sin(I), Math.Cos(w)*Math.Cos(lib.mlat));
+            double ldash = LongitudeOffset(RAD2DEG * (a - f));
+            double bdash = Math.Asin(-Math.Sin(w)*Math.Cos(lib.mlat)*Math.Sin(I) - Math.Sin(lib.mlat)*Math.Cos(I));
+
+            // Physical librations
+            double k1 = DEG2RAD*(119.75 + 131.849*t);
+            double k2 = DEG2RAD*(72.56 + 20.186*t);
+
+            double rho = (
+                -0.02752*Math.Cos(mdash) +
+                -0.02245*Math.Sin(f) +
+                +0.00684*Math.Cos(mdash - 2*f) +
+                -0.00293*Math.Cos(2*f) +
+                -0.00085*Math.Cos(2*f - 2*d) +
+                -0.00054*Math.Cos(mdash - 2*d) +
+                -0.00020*Math.Sin(mdash + f) +
+                -0.00020*Math.Cos(mdash + 2*f) +
+                -0.00020*Math.Cos(mdash - f) +
+                +0.00014*Math.Cos(mdash + 2*f - 2*d)
+            );
+
+            double sigma = (
+                -0.02816*Math.Sin(mdash) +
+                +0.02244*Math.Cos(f) +
+                -0.00682*Math.Sin(mdash - 2*f) +
+                -0.00279*Math.Sin(2*f) +
+                -0.00083*Math.Sin(2*f - 2*d) +
+                +0.00069*Math.Sin(mdash - 2*d) +
+                +0.00040*Math.Cos(mdash + f) +
+                -0.00025*Math.Sin(2*mdash) +
+                -0.00023*Math.Sin(mdash + 2*f) +
+                +0.00020*Math.Cos(mdash - f) +
+                +0.00019*Math.Sin(mdash - f) +
+                +0.00013*Math.Sin(mdash + 2*f - 2*d) +
+                -0.00010*Math.Cos(mdash - 3*f)
+            );
+
+            double tau = (
+                +0.02520*e*Math.Sin(m) +
+                +0.00473*Math.Sin(2*mdash - 2*f) +
+                -0.00467*Math.Sin(mdash) +
+                +0.00396*Math.Sin(k1) +
+                +0.00276*Math.Sin(2*mdash - 2*d) +
+                +0.00196*Math.Sin(omega) +
+                -0.00183*Math.Cos(mdash - f) +
+                +0.00115*Math.Sin(mdash - 2*d) +
+                -0.00096*Math.Sin(mdash - d) +
+                +0.00046*Math.Sin(2*f - 2*d) +
+                -0.00039*Math.Sin(mdash - f) +
+                -0.00032*Math.Sin(mdash - m - d) +
+                +0.00027*Math.Sin(2*mdash - m - 2*d) +
+                +0.00023*Math.Sin(k2) +
+                -0.00014*Math.Sin(2*d) +
+                +0.00014*Math.Cos(2*mdash - 2*f) +
+                -0.00012*Math.Sin(mdash - 2*f) +
+                -0.00012*Math.Sin(2*mdash) +
+                +0.00011*Math.Sin(2*mdash - 2*m - 2*d)
+            );
+
+            double ldash2 = -tau + (rho*Math.Cos(a) + sigma*Math.Sin(a))*Math.Tan(bdash);
+            bdash *= RAD2DEG;
+            double bdash2 = sigma*Math.Cos(a) - rho*Math.Sin(a);
+
+            lib.elon = ldash + ldash2;
+            lib.elat = bdash + bdash2;
+
+            return lib;
         }
 
         private static AstroVector BarycenterContrib(AstroTime time, Body body, double planet_gm)
