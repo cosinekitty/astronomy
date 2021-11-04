@@ -461,6 +461,24 @@ and the velocities in AU/day.
 
 ---
 
+<a name="LibrationInfo"></a>
+### class LibrationInfo
+
+**Lunar libration angles, returned by [`Libration`](#Libration).**
+
+Contains lunar libration angles and lunar position information
+for a given moment in time. See [`Libration`](#Libration) for more details.
+
+| Type | Attribute | Description |
+| --- | --- | --- |
+| `float` | `elat` | Sub-Earth libration ecliptic latitude angle, in degrees. |
+| `float` | `elon` | Sub-Earth libration ecliptic longitude angle, in degrees. |
+| `float` | `mlat` | Moon's geocentric ecliptic latitude. |
+| `float` | `mlon` | Moon's geocentric ecliptic longitude. |
+| `float` | `dist_km` | Distance between the centers of the Earth and Moon in kilometers. |
+
+---
+
 <a name="LocalSolarEclipseInfo"></a>
 ### class LocalSolarEclipseInfo
 
@@ -1482,6 +1500,30 @@ to convert to geocentric vectors.
 
 ### Returns: [`JupiterMoonsInfo`](#JupiterMoonsInfo)
 The positions and velocities of Jupiter's 4 largest moons.
+
+---
+
+<a name="Libration"></a>
+### Libration(time)
+
+**Calculates the Moon's libration angles at a given moment in time.**
+
+Libration is an observed back-and-forth wobble of the portion of the
+Moon visible from the Earth. It is caused by the imperfect tidal locking
+of the Moon's fixed rotation rate, compared to its variable angular speed
+of orbit around the Earth.
+This function calculates a pair of perpendicular libration angles,
+one representing rotation of the Moon in eclitpic longitude `elon`, the other
+in ecliptic latitude `elat`, both relative to the Moon's mean Earth-facing position.
+This function also returns the geocentric position of the Moon
+expressed in ecliptic longitude `mlon`, ecliptic latitude `mlat`, and
+distance `dist_km` between the centers of the Earth and Moon expressed in kilometers.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Time`](#Time) | `time` | The date and time for which to calculate the Moon's libration angles. |
+
+### Returns: [`LibrationInfo`](#LibrationInfo)
 
 ---
 
