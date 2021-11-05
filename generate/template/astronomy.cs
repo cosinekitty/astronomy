@@ -974,6 +974,9 @@ namespace CosineKitty
 
         /// <summary>Distance between the centers of the Earth and Moon in kilometers.</summary>
         public double dist_km;
+
+        /// <summary>The apparent angular diameter of the Moon, in degrees, as seen from the center of the Earth.</summary>
+        public double diam_deg;
     }
 
     /// <summary>
@@ -3355,8 +3358,9 @@ $ASTRO_IAU_DATA()
         /// in ecliptic latitude `elat`, both relative to the Moon's mean Earth-facing position.
         ///
         /// This function also returns the geocentric position of the Moon
-        /// expressed in ecliptic longitude `mlon`, ecliptic latitude `mlat`, and
-        /// distance `dist_km` between the centers of the Earth and Moon expressed in kilometers.
+        /// expressed in ecliptic longitude `mlon`, ecliptic latitude `mlat`, the
+        /// distance `dist_km` between the centers of the Earth and Moon expressed in kilometers,
+        /// and the apparent angular diameter of the Moon `diam_deg`.
         /// </remarks>
         /// <param name="time">The date and time for which to calculate lunar libration.</param>
         /// <returns>The Moon's ecliptic position and libration angles as seen from the Earth.</returns>
@@ -3374,6 +3378,7 @@ $ASTRO_IAU_DATA()
             lib.mlon = moon.geo_eclip_lon;
             lib.mlat = moon.geo_eclip_lat;
             lib.dist_km = moon.distance_au * KM_PER_AU;
+            lib.diam_deg = (2.0 * RAD2DEG) * Math.Atan(MOON_MEAN_RADIUS_KM / Math.Sqrt(lib.dist_km*lib.dist_km - MOON_MEAN_RADIUS_KM*MOON_MEAN_RADIUS_KM));
 
             // Inclination angle
             const double I = DEG2RAD * 1.54242;

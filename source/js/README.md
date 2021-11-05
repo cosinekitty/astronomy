@@ -243,6 +243,7 @@ an `AstroTime` value that can be passed to Astronomy Engine functions.
 | mlat | <code>number</code> | Moon's geocentric ecliptic latitude. |
 | mlon | <code>number</code> | Moon's geocentric ecliptic longitude. |
 | dist_km | <code>number</code> | Distance between the centers of the Earth and Moon in kilometers. |
+| diam_deg | <code>number</code> | The apparent angular diameter of the Moon, in degrees, as seen from the center of the Earth. |
 
 
 * * *
@@ -927,8 +928,9 @@ one representing rotation of the Moon in eclitpic longitude `elon`, the other
 in ecliptic latitude `elat`, both relative to the Moon's mean Earth-facing position.
 
 This function also returns the geocentric position of the Moon
-expressed in ecliptic longitude `mlon`, ecliptic latitude `mlat`, and
-distance `dist_km` between the centers of the Earth and Moon expressed in kilometers.  
+expressed in ecliptic longitude `mlon`, ecliptic latitude `mlat`, the
+distance `dist_km` between the centers of the Earth and Moon expressed in kilometers,
+and the apparent angular diameter of the Moon `diam_deg`.  
 
 | Param | Type | Description |
 | --- | --- | --- |

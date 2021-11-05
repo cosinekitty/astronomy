@@ -2096,6 +2096,7 @@ def LibrationFile(filename):
     max_diff_elon = 0.0
     max_diff_elat = 0.0
     max_diff_distance = 0.0
+    max_diff_diam = 0.0
     count = 0
     with open(filename, 'rt') as infile:
         lnum = 0
@@ -2120,6 +2121,7 @@ def LibrationFile(filename):
                 hour = int(hmtoken[0])
                 minute = int(hmtoken[1])
                 time = astronomy.Time.Make(year, month, day, hour, minute, 0.0)
+                diam = float(token[7]) / 3600.0
                 dist = float(token[8])
                 elon = float(token[13])
                 elat = float(token[14])
@@ -2137,6 +2139,10 @@ def LibrationFile(filename):
                 if diff_distance > max_diff_distance:
                     max_diff_distance = diff_distance
 
+                diff_diam = vabs(lib.diam_deg - diam)
+                if diff_diam > max_diff_diam:
+                    max_diff_diam = diff_diam
+
                 if diff_elon > 0.130:
                     print('PY LibrationFile({} line {}): EXCESSIVE diff_elon = {}'.format(filename, lnum, diff_elon))
                     return 1
@@ -2151,8 +2157,8 @@ def LibrationFile(filename):
 
                 count += 1
 
-    print('PY Libration({}): PASS ({} test cases, max_diff_elon = {} arcmin, max_diff_elat = {} arcmin, max_diff_distance = {} km)'.format(
-        filename, count, max_diff_elon, max_diff_elat, max_diff_distance
+    print('PY Libration({}): PASS ({} test cases, max_diff_elon = {} arcmin, max_diff_elat = {} arcmin, max_diff_distance = {} km, max_diff_diam = {} deg)'.format(
+        filename, count, max_diff_elon, max_diff_elat, max_diff_distance, max_diff_diam
     ))
     return 0
 

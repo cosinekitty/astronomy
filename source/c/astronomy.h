@@ -902,6 +902,7 @@ typedef struct
     double mlat;                /**< Moon's geocentric ecliptic latitude. */
     double mlon;                /**< Moon's geocentric ecliptic longitude. */
     double dist_km;             /**< Distance between the centers of the Earth and Moon in kilometers. */
+    double diam_deg;            /**< The apparent angular diameter of the Moon, in degrees, as seen from the center of the Earth. */
 }
 astro_libration_t;
 

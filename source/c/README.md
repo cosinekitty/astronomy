@@ -918,7 +918,7 @@ Libration is an observed back-and-forth wobble of the portion of the Moon visibl
 
 This function calculates a pair of perpendicular libration angles, one representing rotation of the Moon in eclitpic longitude `elon`, the other in ecliptic latitude `elat`, both relative to the Moon's mean Earth-facing position.
 
-This function also returns the geocentric position of the Moon expressed in ecliptic longitude `mlon`, ecliptic latitude `mlat`, and distance `dist_km` between the centers of the Earth and Moon expressed in kilometers.
+This function also returns the geocentric position of the Moon expressed in ecliptic longitude `mlon`, ecliptic latitude `mlat`, the distance `dist_km` between the centers of the Earth and Moon expressed in kilometers, and the apparent angular diameter of the Moon `diam_deg`.
 
 
 
@@ -3290,6 +3290,7 @@ The following integer constants may be useful for indexing into the `moon` array
 | `double` | `mlat` |  Moon's geocentric ecliptic latitude.  |
 | `double` | `mlon` |  Moon's geocentric ecliptic longitude.  |
 | `double` | `dist_km` |  Distance between the centers of the Earth and Moon in kilometers.  |
+| `double` | `diam_deg` |  The apparent angular diameter of the Moon, in degrees, as seen from the center of the Earth.  |
 
 
 ---

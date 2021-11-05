@@ -1573,14 +1573,17 @@ function CalcMoon(time) {
  *      Moon's geocentric ecliptic longitude.
  * @property {number} dist_km
  *      Distance between the centers of the Earth and Moon in kilometers.
+ * @property {number} diam_deg
+ *      The apparent angular diameter of the Moon, in degrees, as seen from the center of the Earth.
  */
 export class LibrationInfo {
-    constructor(elat, elon, mlat, mlon, dist_km) {
+    constructor(elat, elon, mlat, mlon, dist_km, diam_deg) {
         this.elat = elat;
         this.elon = elon;
         this.mlat = mlat;
         this.mlon = mlon;
         this.dist_km = dist_km;
+        this.diam_deg = diam_deg;
     }
 }
 /**
@@ -1596,8 +1599,9 @@ export class LibrationInfo {
  * in ecliptic latitude `elat`, both relative to the Moon's mean Earth-facing position.
  *
  * This function also returns the geocentric position of the Moon
- * expressed in ecliptic longitude `mlon`, ecliptic latitude `mlat`, and
- * distance `dist_km` between the centers of the Earth and Moon expressed in kilometers.
+ * expressed in ecliptic longitude `mlon`, ecliptic latitude `mlat`, the
+ * distance `dist_km` between the centers of the Earth and Moon expressed in kilometers,
+ * and the apparent angular diameter of the Moon `diam_deg`.
  *
  * @param {FlexibleDateTime} date
  *      A Date object, a number of UTC days since the J2000 epoch (noon on January 1, 2000),
@@ -1681,7 +1685,8 @@ export function Libration(date) {
         +0.00011 * Math.sin(2 * mdash - 2 * m - 2 * d));
     const ldash2 = -tau + (rho * Math.cos(a) + sigma * Math.sin(a)) * Math.tan(bdash);
     const bdash2 = sigma * Math.cos(a) - rho * Math.sin(a);
-    return new LibrationInfo(RAD2DEG * bdash + bdash2, ldash + ldash2, mlat, mlon, dist_km);
+    const diam_deg = 2.0 * RAD2DEG * Math.atan(MOON_MEAN_RADIUS_KM / Math.sqrt(dist_km * dist_km - MOON_MEAN_RADIUS_KM * MOON_MEAN_RADIUS_KM));
+    return new LibrationInfo(RAD2DEG * bdash + bdash2, ldash + ldash2, mlat, mlon, dist_km, diam_deg);
 }
 function precession(pos, time, dir) {
     const r = precession_rot(time, dir);

@@ -4626,8 +4626,8 @@ static int Libration(const char *filename, int *ndata, double *var_lon, double *
     double phase, age, diam, dist, ra, dec, slon, slat, elon, elat, axisa;
     astro_time_t time;
     astro_libration_t lib;
-    double diff_elon, diff_elat, diff_distance;
-    double max_diff_elon = 0.0, max_diff_elat = 0.0, max_diff_distance = 0.0;
+    double diff_elon, diff_elat, diff_distance, diff_diam;
+    double max_diff_elon = 0.0, max_diff_elat = 0.0, max_diff_distance = 0.0, max_diff_diam = 0.0;
 
     infile = fopen(filename, "rt");
     if (infile == NULL)
@@ -4673,6 +4673,10 @@ static int Libration(const char *filename, int *ndata, double *var_lon, double *
             if (diff_distance > max_diff_distance)
                 max_diff_distance = diff_distance;
 
+            diff_diam = ABS(lib.diam_deg - diam/3600.0);
+            if (diff_diam > max_diff_diam)
+                max_diff_diam = diff_diam;
+
             if (diff_elon > 0.130)
                 FAIL("C Libration(%s line %d): EXCESSIVE diff_elon = %0.4lf arcmin\n", filename, lnum, diff_elon);
 
@@ -4690,8 +4694,8 @@ static int Libration(const char *filename, int *ndata, double *var_lon, double *
         }
     }
 
-    printf("C Libration(%s): PASS (%d test cases, max_diff_elon = %0.4lf arcmin, max_diff_elat = %0.4lf arcmin, max_diff_distance = %0.3lf km)\n", 
-        filename, count, max_diff_elon, max_diff_elat, max_diff_distance);
+    printf("C Libration(%s): PASS (%d test cases, max_diff_elon = %0.4lf arcmin, max_diff_elat = %0.4lf arcmin, max_diff_distance = %0.3lf km, max_diff_diam = %0.12lf deg)\n",
+        filename, count, max_diff_elon, max_diff_elat, max_diff_distance, max_diff_diam);
 
     *ndata += count;
     error = 0;

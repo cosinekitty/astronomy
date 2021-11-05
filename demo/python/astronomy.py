@@ -8554,13 +8554,16 @@ class LibrationInfo:
         Moon's geocentric ecliptic longitude.
     dist_km : float
         Distance between the centers of the Earth and Moon in kilometers.
+    diam_deg : float
+        The apparent angular diameter of the Moon as seen from the center of the Earth.
     """
-    def __init__(self, elat, elon, mlat, mlon, dist_km):
+    def __init__(self, elat, elon, mlat, mlon, dist_km, diam_deg):
         self.elat = elat
         self.elon = elon
         self.mlat = mlat
         self.mlon = mlon
         self.dist_km = dist_km
+        self.diam_deg = diam_deg
 
 
 def Libration(time):
@@ -8576,8 +8579,9 @@ def Libration(time):
     in ecliptic latitude `elat`, both relative to the Moon's mean Earth-facing position.
 
     This function also returns the geocentric position of the Moon
-    expressed in ecliptic longitude `mlon`, ecliptic latitude `mlat`, and
-    distance `dist_km` between the centers of the Earth and Moon expressed in kilometers.
+    expressed in ecliptic longitude `mlon`, ecliptic latitude `mlat`, the
+    distance `dist_km` between the centers of the Earth and Moon expressed in kilometers,
+    and the apparent angular diameter of the Moon `diam_deg`.
 
     Parameters
     ----------
@@ -8596,6 +8600,7 @@ def Libration(time):
     mlon = moon.geo_eclip_lon
     mlat = moon.geo_eclip_lat
     dist_km = moon.distance_au * KM_PER_AU
+    diam_deg = 2.0 * math.degrees(math.atan(_MOON_MEAN_RADIUS_KM / math.sqrt(dist_km*dist_km - _MOON_MEAN_RADIUS_KM*_MOON_MEAN_RADIUS_KM)))
 
     # Inclination angle
     I = math.radians(1.54242)
@@ -8682,4 +8687,4 @@ def Libration(time):
     ldash2 = -tau + (rho*math.cos(a) + sigma*math.sin(a))*math.tan(bdash)
     bdash = math.degrees(bdash)
     bdash2 = sigma*math.cos(a) - rho*math.sin(a)
-    return LibrationInfo(bdash + bdash2, ldash + ldash2, mlat, mlon, dist_km)
+    return LibrationInfo(bdash + bdash2, ldash + ldash2, mlat, mlon, dist_km, diam_deg)

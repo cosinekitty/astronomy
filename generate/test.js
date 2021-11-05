@@ -2345,6 +2345,7 @@ function Libration(filename) {
     let max_diff_elon = 0.0;
     let max_diff_elat = 0.0;
     let max_diff_distance = 0.0;
+    let max_diff_diam = 0.0;
     let count = 0;
     let lnum = 0;
     for (let line of lines) {
@@ -2373,6 +2374,7 @@ function Libration(filename) {
             const minute = int(hmtoken[1]);
             const time = Astronomy.MakeTime(new Date(Date.UTC(year, month-1, day, hour, minute)));
 
+            const diam = float(token[7]) / 3600.0;
             const dist = float(token[8]);
             const elon = float(token[13]);
             const elat = float(token[14]);
@@ -2391,6 +2393,10 @@ function Libration(filename) {
             if (diff_distance > max_diff_distance)
                 max_diff_distance = diff_distance;
 
+            const diff_diam = abs(lib.diam_deg - diam);
+            if (diff_diam > max_diff_diam)
+                max_diff_diam = diff_diam;
+
             if (diff_elon > 0.130) {
                 console.error(`JS Libration(${filename} line ${lnum}): EXCESSIVE diff_elon = ${diff_elon} arcmin`);
                 return 1;
@@ -2408,7 +2414,7 @@ function Libration(filename) {
             ++count;
         }
     }
-    console.log(`JS Libration(${filename}): PASS (${count} test cases, max_diff_elon = ${max_diff_elon} arcmin, max_diff_elat = ${max_diff_elat} arcmin, max_diff_distance = ${max_diff_distance} km)`);
+    console.log(`JS Libration(${filename}): PASS (${count} test cases, max_diff_elon = ${max_diff_elon} arcmin, max_diff_elat = ${max_diff_elat} arcmin, max_diff_distance = ${max_diff_distance} km, max_diff_diam = ${max_diff_diam} deg)`);
     return 0;
 }
 

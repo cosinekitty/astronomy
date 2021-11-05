@@ -1882,8 +1882,9 @@ astro_vector_t Astronomy_GeoMoon(astro_time_t time)
  * in ecliptic latitude `elat`, both relative to the Moon's mean Earth-facing position.
  *
  * This function also returns the geocentric position of the Moon
- * expressed in ecliptic longitude `mlon`, ecliptic latitude `mlat`, and
- * distance `dist_km` between the centers of the Earth and Moon expressed in kilometers.
+ * expressed in ecliptic longitude `mlon`, ecliptic latitude `mlat`, the
+ * distance `dist_km` between the centers of the Earth and Moon expressed in kilometers,
+ * and the apparent angular diameter of the Moon `diam_deg`.
  *
  * @param time  The date and time for which to calculate libration angles.
  * @return The Moon's ecliptic position and libration angles as seen from the Earth.
@@ -1903,6 +1904,7 @@ astro_libration_t Astronomy_Libration(astro_time_t time)
 
     CalcMoon(t, &lib.mlon, &lib.mlat, &lib.dist_km);
     lib.dist_km *= KM_PER_AU;
+    lib.diam_deg = (2.0 * RAD2DEG) * atan(MOON_MEAN_RADIUS_KM / sqrt(lib.dist_km*lib.dist_km - MOON_MEAN_RADIUS_KM*MOON_MEAN_RADIUS_KM));
 
     /* Moon's argument of latitude in radians. */
     f = DEG2RAD * NormalizeLongitude(93.2720950 + 483202.0175233*t - 0.0036539*t2 - t3/3526000 + t4/863310000);

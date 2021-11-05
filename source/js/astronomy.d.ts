@@ -255,6 +255,8 @@ export declare let CalcMoonCount: number;
  *      Moon's geocentric ecliptic longitude.
  * @property {number} dist_km
  *      Distance between the centers of the Earth and Moon in kilometers.
+ * @property {number} diam_deg
+ *      The apparent angular diameter of the Moon, in degrees, as seen from the center of the Earth.
  */
 export declare class LibrationInfo {
     elat: number;
@@ -262,7 +264,8 @@ export declare class LibrationInfo {
     mlat: number;
     mlon: number;
     dist_km: number;
-    constructor(elat: number, elon: number, mlat: number, mlon: number, dist_km: number);
+    diam_deg: number;
+    constructor(elat: number, elon: number, mlat: number, mlon: number, dist_km: number, diam_deg: number);
 }
 /**
  * @brief Calculates the Moon's libration angles at a given moment in time.
@@ -277,8 +280,9 @@ export declare class LibrationInfo {
  * in ecliptic latitude `elat`, both relative to the Moon's mean Earth-facing position.
  *
  * This function also returns the geocentric position of the Moon
- * expressed in ecliptic longitude `mlon`, ecliptic latitude `mlat`, and
- * distance `dist_km` between the centers of the Earth and Moon expressed in kilometers.
+ * expressed in ecliptic longitude `mlon`, ecliptic latitude `mlat`, the
+ * distance `dist_km` between the centers of the Earth and Moon expressed in kilometers,
+ * and the apparent angular diameter of the Moon `diam_deg`.
  *
  * @param {FlexibleDateTime} date
  *      A Date object, a number of UTC days since the J2000 epoch (noon on January 1, 2000),

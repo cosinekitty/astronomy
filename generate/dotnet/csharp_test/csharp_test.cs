@@ -3009,6 +3009,7 @@ namespace csharp_test
             double max_diff_elon = 0.0;
             double max_diff_elat = 0.0;
             double max_diff_distance = 0.0;
+            double max_diff_diam = 0.0;
             string line;
             while (null != (line = infile.ReadLine()))
             {
@@ -3046,6 +3047,7 @@ namespace csharp_test
                     int minute = int.Parse(hmtoken[1]);
                     var time = new AstroTime(year, month, day, hour, minute, 0);
 
+                    double diam = double.Parse(token[7]) / 3600.0;
                     double dist = double.Parse(token[8]);
                     double elon = double.Parse(token[13]);
                     double elat = double.Parse(token[14]);
@@ -3063,6 +3065,10 @@ namespace csharp_test
                     double diff_distance = abs(lib.dist_km - dist);
                     if (diff_distance > max_diff_distance)
                         max_diff_distance = diff_distance;
+
+                    double diff_diam = abs(lib.diam_deg - diam);
+                    if (diff_diam > max_diff_diam)
+                        max_diff_diam = diff_diam;
 
                     if (diff_elon > 0.130)
                     {
@@ -3085,7 +3091,7 @@ namespace csharp_test
                 }
             }
 
-            Console.WriteLine($"C# Libration({filename}): PASS ({count} test cases, max_diff_elon = {max_diff_elon} arcmin, max_diff_elat = {max_diff_elat} arcmin, max_diff_distance = {max_diff_distance})");
+            Console.WriteLine($"C# Libration({filename}): PASS ({count} test cases, max_diff_elon = {max_diff_elon} arcmin, max_diff_elat = {max_diff_elat} arcmin, max_diff_distance = {max_diff_distance} km, max_diff_diam = {max_diff_diam} deg)");
             return 0;
         }
 
