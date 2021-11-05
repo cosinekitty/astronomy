@@ -907,6 +907,34 @@ To convert to heliocentric position vectors, call [`Astronomy_HelioVector`](#Ast
 
 ---
 
+<a name="Astronomy_Libration"></a>
+### Astronomy_Libration(time) &#8658; [`astro_libration_t`](#astro_libration_t)
+
+**Calculates the Moon's libration angles at a given moment in time.** 
+
+
+
+Libration is an observed back-and-forth wobble of the portion of the Moon visible from the Earth. It is caused by the imperfect tidal locking of the Moon's fixed rotation rate, compared to its variable angular speed of orbit around the Earth.
+
+This function calculates a pair of perpendicular libration angles, one representing rotation of the Moon in eclitpic longitude `elon`, the other in ecliptic latitude `elat`, both relative to the Moon's mean Earth-facing position.
+
+This function also returns the geocentric position of the Moon expressed in ecliptic longitude `mlon`, ecliptic latitude `mlat`, the distance `dist_km` between the centers of the Earth and Moon expressed in kilometers, and the apparent angular diameter of the Moon `diam_deg`.
+
+
+
+**Returns:**  The Moon's ecliptic position and libration angles as seen from the Earth. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_time_t`](#astro_time_t) | `time` |  The date and time for which to calculate libration angles.  | 
+
+
+
+
+---
+
 <a name="Astronomy_MakeObserver"></a>
 ### Astronomy_MakeObserver(latitude, longitude, height) &#8658; [`astro_observer_t`](#astro_observer_t)
 
@@ -3244,6 +3272,25 @@ The following integer constants may be useful for indexing into the `moon` array
 | Type | Member | Description |
 | ---- | ------ | ----------- |
 | [`astro_state_vector_t`](#astro_state_vector_t) | `moon` |  Jovicentric position and velocity of each moon, as described above.  |
+
+
+---
+
+<a name="astro_libration_t"></a>
+### `astro_libration_t`
+
+**Lunar libration angles, returned by [`Astronomy_Libration`](#Astronomy_Libration).** 
+
+
+
+| Type | Member | Description |
+| ---- | ------ | ----------- |
+| `double` | `elat` |  Sub-Earth libration ecliptic latitude angle, in degrees.  |
+| `double` | `elon` |  Sub-Earth libration ecliptic longitude angle, in degrees.  |
+| `double` | `mlat` |  Moon's geocentric ecliptic latitude.  |
+| `double` | `mlon` |  Moon's geocentric ecliptic longitude.  |
+| `double` | `dist_km` |  Distance between the centers of the Earth and Moon in kilometers.  |
+| `double` | `diam_deg` |  The apparent angular diameter of the Moon, in degrees, as seen from the center of the Earth.  |
 
 
 ---

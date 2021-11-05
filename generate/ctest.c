@@ -134,6 +134,7 @@ static int Issue103(void);
 static int AberrationTest(void);
 static int BaryStateTest(void);
 static int Twilight(void);
+static int LibrationTest(void);
 
 typedef int (* unit_test_func_t) (void);
 
@@ -156,6 +157,7 @@ static unit_test_t UnitTests[] =
     {"global_solar_eclipse",    GlobalSolarEclipseTest},
     {"issue_103",               Issue103},
     {"jupiter_moons",           JupiterMoonsTest},
+    {"libration",               LibrationTest},
     {"local_solar_eclipse",     LocalSolarEclipseTest},
     {"lunar_eclipse",           LunarEclipseTest},
     {"lunar_eclipse_78",        LunarEclipseIssue78},
@@ -1706,6 +1708,46 @@ fail:
 }
 
 /*-----------------------------------------------------------------------------------------------------------*/
+
+static int ParseMonthName(const char *mtext, int *month)
+{
+    if (month == NULL)
+        return 1;
+
+    *month = -1;
+
+    if (mtext == NULL)
+        return 2;
+
+    if (!strcmp(mtext, "Jan"))
+        *month = 1;
+    else if (!strcmp(mtext, "Feb"))
+        *month = 2;
+    else if (!strcmp(mtext, "Mar"))
+        *month = 3;
+    else if (!strcmp(mtext, "Apr"))
+        *month = 4;
+    else if (!strcmp(mtext, "May"))
+        *month = 5;
+    else if (!strcmp(mtext, "Jun"))
+        *month = 6;
+    else if (!strcmp(mtext, "Jul"))
+        *month = 7;
+    else if (!strcmp(mtext, "Aug"))
+        *month = 8;
+    else if (!strcmp(mtext, "Sep"))
+        *month = 9;
+    else if (!strcmp(mtext, "Oct"))
+        *month = 10;
+    else if (!strcmp(mtext, "Nov"))
+        *month = 11;
+    else if (!strcmp(mtext, "Dec"))
+        *month = 12;
+    else
+        return 3;
+
+    return 0;   /* success */
+}
 
 static const char *ParseJplHorizonsDateTime(const char *text, astro_time_t *time)
 {
@@ -4568,6 +4610,115 @@ static int Twilight(void)
     error = 0;
 fail:
     if (infile != NULL) fclose(infile);
+    return error;
+}
+
+/*-----------------------------------------------------------------------------------------------------------*/
+
+static int Libration(const char *filename, int *ndata, double *var_lon, double *var_lat)
+{
+    int error;
+    FILE *infile;
+    int lnum, count, nscanned;
+    char line[200];
+    int day, month, year, hour, minute;
+    char mtext[4];
+    double phase, age, diam, dist, ra, dec, slon, slat, elon, elat, axisa;
+    astro_time_t time;
+    astro_libration_t lib;
+    double diff_elon, diff_elat, diff_distance, diff_diam;
+    double max_diff_elon = 0.0, max_diff_elat = 0.0, max_diff_distance = 0.0, max_diff_diam = 0.0;
+
+    infile = fopen(filename, "rt");
+    if (infile == NULL)
+        FAIL("C Libration: cannot open input file: %s\n", filename);
+
+    lnum = 0;
+    count = 0;
+    while (ReadLine(line, sizeof(line), infile, filename, lnum))
+    {
+        ++lnum;
+        if (lnum == 1)
+        {
+            if (strcmp(line, "   Date       Time    Phase    Age    Diam    Dist     RA        Dec      Slon      Slat     Elon     Elat   AxisA\n"))
+                FAIL("C Libration(%s line %d): unexpected header line\n", filename, lnum);
+        }
+        else
+        {
+            /* 01 Jan 2020 00:00 UT  29.95   5.783  1774.5  403898  23.2609  -10.0824   114.557   -0.045   0.773    6.360  336.353 */
+            nscanned = sscanf(line,
+                "%d %3s %d %d:%d UT %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf",
+                &day, mtext, &year, &hour, &minute,
+                &phase, &age, &diam, &dist, &ra, &dec, &slon, &slat, &elon, &elat, &axisa);
+
+            if (nscanned != 16)
+                FAIL("C Libration(%s line %d): expected 16 tokens, found %d\n", filename, lnum, nscanned);
+
+            /* Calculate the astronomy time value for this calendar date/time. */
+            if (ParseMonthName(mtext, &month))
+                FAIL("Libration(%s line %d): invalid month symbol '%s'\n", filename, lnum, mtext);
+
+            time = Astronomy_MakeTime(year, month, day, hour, minute, 0.0);
+            lib = Astronomy_Libration(time);
+
+            diff_elon = 60.0 * ABS(lib.elon - elon);
+            if (diff_elon > max_diff_elon)
+                max_diff_elon = diff_elon;
+
+            diff_elat = 60.0 * ABS(lib.elat - elat);
+            if (diff_elat > max_diff_elat)
+                max_diff_elat = diff_elat;
+
+            diff_distance = ABS(lib.dist_km - dist);
+            if (diff_distance > max_diff_distance)
+                max_diff_distance = diff_distance;
+
+            diff_diam = ABS(lib.diam_deg - diam/3600.0);
+            if (diff_diam > max_diff_diam)
+                max_diff_diam = diff_diam;
+
+            if (diff_elon > 0.130)
+                FAIL("C Libration(%s line %d): EXCESSIVE diff_elon = %0.4lf arcmin\n", filename, lnum, diff_elon);
+
+            if (diff_elat > 1.666)
+                FAIL("C Libration(%s line %d): EXCESSIVE diff_elat = %0.4lf arcmin\n", filename, lnum, diff_elat);
+
+            if (diff_distance > 53.9)
+                FAIL("C Libration(%s line %d): EXCESSIVE diff_distance = %0.3lf km\n", filename, lnum, diff_distance);
+
+            /* Update sum-of-squared-errors. */
+            *var_lon += diff_elon * diff_elon;
+            *var_lat += diff_elat * diff_elat;
+
+            ++count;
+        }
+    }
+
+    printf("C Libration(%s): PASS (%d test cases, max_diff_elon = %0.4lf arcmin, max_diff_elat = %0.4lf arcmin, max_diff_distance = %0.3lf km, max_diff_diam = %0.12lf deg)\n",
+        filename, count, max_diff_elon, max_diff_elat, max_diff_distance, max_diff_diam);
+
+    *ndata += count;
+    error = 0;
+fail:
+    if (infile != NULL) fclose(infile);
+    return error;
+}
+
+static int LibrationTest(void)
+{
+    int error;
+    int ndata = 0;
+    double var_lat = 0.0;
+    double var_lon = 0.0;
+    double dev_lat, dev_lon;
+
+    CHECK(Libration("libration/mooninfo_2020.txt", &ndata, &var_lon, &var_lat));
+    CHECK(Libration("libration/mooninfo_2021.txt", &ndata, &var_lon, &var_lat));
+
+    dev_lon = sqrt(var_lon / ndata);
+    dev_lat = sqrt(var_lat / ndata);
+    printf("C LibrationTest: %d data points, dev_lon = %0.4lf arcmin, dev_lat = %0.4lf arcmin\n", ndata, dev_lon, dev_lat);
+fail:
     return error;
 }
 

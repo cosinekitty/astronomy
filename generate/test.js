@@ -1563,6 +1563,14 @@ function Refraction() {
 }
 
 
+function MonthNumber(mtext) {
+    const index = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].indexOf(mtext);
+    if (index < 0)
+        throw `Invalid month text "${mtext}"`;
+    return 1 + index;
+}
+
+
 function Magnitude() {
     function LoadMagnitudeData(filename) {
         const text = fs.readFileSync(filename, 'utf8');
@@ -2331,6 +2339,95 @@ function TwilightTest() {
 }
 
 
+function Libration(filename) {
+    const text = fs.readFileSync(filename, {encoding:'utf8'});
+    const lines = text.trimEnd().split(/\r?\n/);
+    let max_diff_elon = 0.0;
+    let max_diff_elat = 0.0;
+    let max_diff_distance = 0.0;
+    let max_diff_diam = 0.0;
+    let count = 0;
+    let lnum = 0;
+    for (let line of lines) {
+        ++lnum;
+        if (lnum === 1) {
+            if (line !== "   Date       Time    Phase    Age    Diam    Dist     RA        Dec      Slon      Slat     Elon     Elat   AxisA") {
+                console.error(`JS Libration(${filename} line ${lnum}): unexpected header line.`);
+                return 1;
+            }
+        } else {
+            const token = line.split(/\s+/);
+            if (token.length !== 16) {
+                console.error(`JS Libration: FAIL(${filename} line ${lnum}): incorrect number of tokens = ${token.length}.`);
+                return 1;
+            }
+
+            const day = int(token[0]);
+            const month = MonthNumber(token[1]);
+            const year = int(token[2]);
+            const hmtoken = token[3].split(':');
+            if (hmtoken.length !== 2) {
+                Console.WriteLine(`JS Libration(${filename} line ${lnum}): expected hh:mm but found '${token[3]}'`);
+                return 1;
+            }
+            const hour = int(hmtoken[0]);
+            const minute = int(hmtoken[1]);
+            const time = Astronomy.MakeTime(new Date(Date.UTC(year, month-1, day, hour, minute)));
+
+            const diam = float(token[7]) / 3600.0;
+            const dist = float(token[8]);
+            const elon = float(token[13]);
+            const elat = float(token[14]);
+
+            const lib = Astronomy.Libration(time);
+
+            const diff_elon = 60.0 * abs(lib.elon - elon);
+            if (diff_elon > max_diff_elon)
+                max_diff_elon = diff_elon;
+
+            const diff_elat = 60.0 * abs(lib.elat - elat);
+            if (diff_elat > max_diff_elat)
+                max_diff_elat = diff_elat;
+
+            const diff_distance = abs(lib.dist_km - dist);
+            if (diff_distance > max_diff_distance)
+                max_diff_distance = diff_distance;
+
+            const diff_diam = abs(lib.diam_deg - diam);
+            if (diff_diam > max_diff_diam)
+                max_diff_diam = diff_diam;
+
+            if (diff_elon > 0.130) {
+                console.error(`JS Libration(${filename} line ${lnum}): EXCESSIVE diff_elon = ${diff_elon} arcmin`);
+                return 1;
+            }
+
+            if (diff_elat > 1.666) {
+                console.error(`JS Libration(${filename} line ${lnum}): EXCESSIVE diff_elat = ${diff_elat} arcmin`);
+                return 1;
+            }
+
+            if (diff_distance > 53.9) {
+                console.error(`JS Libration(${filename} line ${lnum}): EXCESSIVE diff_distance = ${diff_distance} km`);
+                return 1;
+            }
+            ++count;
+        }
+    }
+    console.log(`JS Libration(${filename}): PASS (${count} test cases, max_diff_elon = ${max_diff_elon} arcmin, max_diff_elat = ${max_diff_elat} arcmin, max_diff_distance = ${max_diff_distance} km, max_diff_diam = ${max_diff_diam} deg)`);
+    return 0;
+}
+
+
+function LibrationTest() {
+    return (
+        Libration("libration/mooninfo_2020.txt") ||
+        Libration("libration/mooninfo_2021.txt") ||
+        0
+    );
+}
+
+
 const UnitTests = {
     aberration:             AberrationTest,
     barystate:              BaryStateTest,
@@ -2340,6 +2437,7 @@ const UnitTests = {
     global_solar_eclipse:   GlobalSolarEclipse,
     issue_103:              Issue103,
     jupiter_moons:          JupiterMoons,
+    libration:              LibrationTest,
     local_solar_eclipse:    LocalSolarEclipse,
     lunar_apsis:            LunarApsis,
     lunar_eclipse:          LunarEclipse,

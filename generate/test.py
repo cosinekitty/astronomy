@@ -492,12 +492,15 @@ def Elongation():
 
 #-----------------------------------------------------------------------------------------------------------
 
+def MonthNumber(mtext):
+    return 1 + ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].index(mtext)
+
 def ParseJplHorizonsDateTime(line):
     m = re.match(r'^\s*(\d{4})-(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)-(\d{2})\s(\d{2}):(\d{2})\s+(.*)$', line)
     if not m:
         return None, None
     year = int(m.group(1))
-    month = 1 + ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].index(m.group(2))
+    month = MonthNumber(m.group(2))
     day = int(m.group(3))
     hour = int(m.group(4))
     minute = int(m.group(5))
@@ -2089,6 +2092,85 @@ def Twilight():
 
 #-----------------------------------------------------------------------------------------------------------
 
+def LibrationFile(filename):
+    max_diff_elon = 0.0
+    max_diff_elat = 0.0
+    max_diff_distance = 0.0
+    max_diff_diam = 0.0
+    count = 0
+    with open(filename, 'rt') as infile:
+        lnum = 0
+        for line in infile:
+            lnum += 1
+            token = line.split()
+            if lnum == 1:
+                if line != "   Date       Time    Phase    Age    Diam    Dist     RA        Dec      Slon      Slat     Elon     Elat   AxisA\n":
+                    print('PY LibrationFile({} line {}): unexpected header line'.format(filename, lnum))
+                    return 1
+            else:
+                if len(token) != 16:
+                    print('PY LibrationFile({} line {}): expected 16 tokens, found {}'.format(filename, lnum, len(token)))
+                    return 1
+                day = int(token[0])
+                month = MonthNumber(token[1])
+                year = int(token[2])
+                hmtoken = token[3].split(':')
+                if len(hmtoken) != 2:
+                    print('PY LibrationFile({} line {}): expected hh:mm but found "{}"'.format(filename, lnum, hmtoken))
+                    return 1
+                hour = int(hmtoken[0])
+                minute = int(hmtoken[1])
+                time = astronomy.Time.Make(year, month, day, hour, minute, 0.0)
+                diam = float(token[7]) / 3600.0
+                dist = float(token[8])
+                elon = float(token[13])
+                elat = float(token[14])
+                lib = astronomy.Libration(time)
+
+                diff_elon = 60.0 * vabs(lib.elon - elon)
+                if diff_elon > max_diff_elon:
+                    max_diff_elon = diff_elon
+
+                diff_elat = 60.0 * vabs(lib.elat - elat)
+                if diff_elat > max_diff_elat:
+                    max_diff_elat = diff_elat
+
+                diff_distance = vabs(lib.dist_km - dist)
+                if diff_distance > max_diff_distance:
+                    max_diff_distance = diff_distance
+
+                diff_diam = vabs(lib.diam_deg - diam)
+                if diff_diam > max_diff_diam:
+                    max_diff_diam = diff_diam
+
+                if diff_elon > 0.130:
+                    print('PY LibrationFile({} line {}): EXCESSIVE diff_elon = {}'.format(filename, lnum, diff_elon))
+                    return 1
+
+                if diff_elat > 1.666:
+                    print('PY LibrationFile({} line {}): EXCESSIVE diff_elat = {}'.format(filename, lnum, diff_elat))
+                    return 1
+
+                if diff_distance > 53.9:
+                    print('PY LibrationFile({} line {}): EXCESSIVE diff_distance = {}'.format(filename, lnum, diff_distance))
+                    return 1
+
+                count += 1
+
+    print('PY Libration({}): PASS ({} test cases, max_diff_elon = {} arcmin, max_diff_elat = {} arcmin, max_diff_distance = {} km, max_diff_diam = {} deg)'.format(
+        filename, count, max_diff_elon, max_diff_elat, max_diff_distance, max_diff_diam
+    ))
+    return 0
+
+def Libration():
+    if 0 != LibrationFile('libration/mooninfo_2020.txt'):
+        return 1
+    if 0 != LibrationFile('libration/mooninfo_2021.txt'):
+        return 1
+    return 0
+
+#-----------------------------------------------------------------------------------------------------------
+
 UnitTests = {
     'aberration':               Aberration,
     'barystate':                BaryState,
@@ -2098,6 +2180,7 @@ UnitTests = {
     'global_solar_eclipse':     GlobalSolarEclipse,
     'issue_103':                Issue103,
     'jupiter_moons':            JupiterMoons,
+    'libration':                Libration,
     'local_solar_eclipse':      LocalSolarEclipse,
     'lunar_apsis':              LunarApsis,
     'lunar_eclipse':            LunarEclipse,

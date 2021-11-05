@@ -8537,3 +8537,157 @@ def NextTransit(body, prevTransitTime):
     """
     startTime = prevTransitTime.AddDays(100.0)
     return SearchTransit(body, startTime)
+
+
+class LibrationInfo:
+    """Lunar libration angles, returned by #Libration.
+
+    Contains lunar libration angles and lunar position information
+    for a given moment in time. See #Libration for more details.
+
+    Attributes
+    ----------
+    elat : float
+        Sub-Earth libration ecliptic latitude angle, in degrees.
+    elon : float
+        Sub-Earth libration ecliptic longitude angle, in degrees.
+    mlat : float
+        Moon's geocentric ecliptic latitude.
+    mlon : float
+        Moon's geocentric ecliptic longitude.
+    dist_km : float
+        Distance between the centers of the Earth and Moon in kilometers.
+    diam_deg : float
+        The apparent angular diameter of the Moon as seen from the center of the Earth.
+    """
+    def __init__(self, elat, elon, mlat, mlon, dist_km, diam_deg):
+        self.elat = elat
+        self.elon = elon
+        self.mlat = mlat
+        self.mlon = mlon
+        self.dist_km = dist_km
+        self.diam_deg = diam_deg
+
+
+def Libration(time):
+    """Calculates the Moon's libration angles at a given moment in time.
+
+    Libration is an observed back-and-forth wobble of the portion of the
+    Moon visible from the Earth. It is caused by the imperfect tidal locking
+    of the Moon's fixed rotation rate, compared to its variable angular speed
+    of orbit around the Earth.
+
+    This function calculates a pair of perpendicular libration angles,
+    one representing rotation of the Moon in eclitpic longitude `elon`, the other
+    in ecliptic latitude `elat`, both relative to the Moon's mean Earth-facing position.
+
+    This function also returns the geocentric position of the Moon
+    expressed in ecliptic longitude `mlon`, ecliptic latitude `mlat`, the
+    distance `dist_km` between the centers of the Earth and Moon expressed in kilometers,
+    and the apparent angular diameter of the Moon `diam_deg`.
+
+    Parameters
+    ----------
+    time : Time
+        The date and time for which to calculate the Moon's libration angles.
+
+    Returns
+    -------
+    LibrationInfo
+    """
+    t = time.tt / 36525.0
+    t2 = t * t
+    t3 = t2 * t
+    t4 = t2 * t2
+    moon = _CalcMoon(time)
+    mlon = moon.geo_eclip_lon
+    mlat = moon.geo_eclip_lat
+    dist_km = moon.distance_au * KM_PER_AU
+    diam_deg = 2.0 * math.degrees(math.atan(_MOON_MEAN_RADIUS_KM / math.sqrt(dist_km*dist_km - _MOON_MEAN_RADIUS_KM*_MOON_MEAN_RADIUS_KM)))
+
+    # Inclination angle
+    I = math.radians(1.54242)
+
+    # Moon's argument of latitude in radians.
+    f = math.radians(_NormalizeLongitude(93.2720950 + 483202.0175233*t - 0.0036539*t2 - t3/3526000 + t4/863310000))
+
+    # Moon's ascending node's mean longitude in radians.
+    omega = math.radians(_NormalizeLongitude(125.0445479 - 1934.1362891*t + 0.0020754*t2 + t3/467441 - t4/60616000))
+
+    # Sun's mean anomaly.
+    m = math.radians(_NormalizeLongitude(357.5291092 + 35999.0502909*t - 0.0001536*t2 + t3/24490000))
+
+    # Moon's mean anomaly.
+    mdash = math.radians(_NormalizeLongitude(134.9633964 + 477198.8675055*t + 0.0087414*t2 + t3/69699 - t4/14712000))
+
+    # Moon's mean elongation.
+    d = math.radians(_NormalizeLongitude(297.8501921 + 445267.1114034*t - 0.0018819*t2 + t3/545868 - t4/113065000))
+
+    # Eccentricity of the Earth's orbit.
+    e = 1.0 - 0.002516*t - 0.0000074*t2
+
+    # Optical librations
+    w = mlon - omega
+    a = math.atan2(math.sin(w)*math.cos(mlat)*math.cos(I) - math.sin(mlat)*math.sin(I), math.cos(w)*math.cos(mlat))
+    ldash = _LongitudeOffset(math.degrees(a - f))
+    bdash = math.asin(-math.sin(w)*math.cos(mlat)*math.sin(I) - math.sin(mlat)*math.cos(I))
+
+    # Physical librations
+    k1 = math.radians(119.75 + 131.849*t)
+    k2 = math.radians(72.56 + 20.186*t)
+
+    rho = (
+        -0.02752*math.cos(mdash) +
+        -0.02245*math.sin(f) +
+        +0.00684*math.cos(mdash - 2*f) +
+        -0.00293*math.cos(2*f) +
+        -0.00085*math.cos(2*f - 2*d) +
+        -0.00054*math.cos(mdash - 2*d) +
+        -0.00020*math.sin(mdash + f) +
+        -0.00020*math.cos(mdash + 2*f) +
+        -0.00020*math.cos(mdash - f) +
+        +0.00014*math.cos(mdash + 2*f - 2*d)
+    )
+
+    sigma = (
+        -0.02816*math.sin(mdash) +
+        +0.02244*math.cos(f) +
+        -0.00682*math.sin(mdash - 2*f) +
+        -0.00279*math.sin(2*f) +
+        -0.00083*math.sin(2*f - 2*d) +
+        +0.00069*math.sin(mdash - 2*d) +
+        +0.00040*math.cos(mdash + f) +
+        -0.00025*math.sin(2*mdash) +
+        -0.00023*math.sin(mdash + 2*f) +
+        +0.00020*math.cos(mdash - f) +
+        +0.00019*math.sin(mdash - f) +
+        +0.00013*math.sin(mdash + 2*f - 2*d) +
+        -0.00010*math.cos(mdash - 3*f)
+    )
+
+    tau = (
+        +0.02520*e*math.sin(m) +
+        +0.00473*math.sin(2*mdash - 2*f) +
+        -0.00467*math.sin(mdash) +
+        +0.00396*math.sin(k1) +
+        +0.00276*math.sin(2*mdash - 2*d) +
+        +0.00196*math.sin(omega) +
+        -0.00183*math.cos(mdash - f) +
+        +0.00115*math.sin(mdash - 2*d) +
+        -0.00096*math.sin(mdash - d) +
+        +0.00046*math.sin(2*f - 2*d) +
+        -0.00039*math.sin(mdash - f) +
+        -0.00032*math.sin(mdash - m - d) +
+        +0.00027*math.sin(2*mdash - m - 2*d) +
+        +0.00023*math.sin(k2) +
+        -0.00014*math.sin(2*d) +
+        +0.00014*math.cos(2*mdash - 2*f) +
+        -0.00012*math.sin(mdash - 2*f) +
+        -0.00012*math.sin(2*mdash) +
+        +0.00011*math.sin(2*mdash - 2*m - 2*d)
+    )
+
+    ldash2 = -tau + (rho*math.cos(a) + sigma*math.sin(a))*math.tan(bdash)
+    bdash = math.degrees(bdash)
+    bdash2 = sigma*math.cos(a) - rho*math.sin(a)
+    return LibrationInfo(bdash + bdash2, ldash + ldash2, mlat, mlon, dist_km, diam_deg)

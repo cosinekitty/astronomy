@@ -2051,6 +2051,134 @@ astro_vector_t Astronomy_GeoMoon(astro_time_t time)
     return vector;
 }
 
+
+/**
+ * @brief Calculates the Moon's libration angles at a given moment in time.
+ *
+ * Libration is an observed back-and-forth wobble of the portion of the
+ * Moon visible from the Earth. It is caused by the imperfect tidal locking
+ * of the Moon's fixed rotation rate, compared to its variable angular speed
+ * of orbit around the Earth.
+ *
+ * This function calculates a pair of perpendicular libration angles,
+ * one representing rotation of the Moon in eclitpic longitude `elon`, the other
+ * in ecliptic latitude `elat`, both relative to the Moon's mean Earth-facing position.
+ *
+ * This function also returns the geocentric position of the Moon
+ * expressed in ecliptic longitude `mlon`, ecliptic latitude `mlat`, the
+ * distance `dist_km` between the centers of the Earth and Moon expressed in kilometers,
+ * and the apparent angular diameter of the Moon `diam_deg`.
+ *
+ * @param time  The date and time for which to calculate libration angles.
+ * @return The Moon's ecliptic position and libration angles as seen from the Earth.
+ */
+astro_libration_t Astronomy_Libration(astro_time_t time)
+{
+    astro_libration_t lib;
+    double t, t2, t3, t4;
+    double f, omega, w, a, ldash, ldash2, bdash, bdash2;
+    double k1, k2, m, mdash, d, e, rho, sigma, tau;
+    double I = DEG2RAD * 1.54242;
+
+    t = time.tt / 36525.0;
+    t2 = t * t;
+    t3 = t2 * t;
+    t4 = t2 * t2;
+
+    CalcMoon(t, &lib.mlon, &lib.mlat, &lib.dist_km);
+    lib.dist_km *= KM_PER_AU;
+    lib.diam_deg = (2.0 * RAD2DEG) * atan(MOON_MEAN_RADIUS_KM / sqrt(lib.dist_km*lib.dist_km - MOON_MEAN_RADIUS_KM*MOON_MEAN_RADIUS_KM));
+
+    /* Moon's argument of latitude in radians. */
+    f = DEG2RAD * NormalizeLongitude(93.2720950 + 483202.0175233*t - 0.0036539*t2 - t3/3526000 + t4/863310000);
+
+    /* Moon's ascending node's mean longitude in radians. */
+    omega = DEG2RAD * NormalizeLongitude(125.0445479 - 1934.1362891*t + 0.0020754*t2 + t3/467441 - t4/60616000);
+
+    /* Sun's mean anomaly. */
+    m = DEG2RAD * NormalizeLongitude(357.5291092 + 35999.0502909*t - 0.0001536*t2 + t3/24490000);
+
+    /* Moon's mean anomaly. */
+    mdash = DEG2RAD * NormalizeLongitude(134.9633964 + 477198.8675055*t + 0.0087414*t2 + t3/69699 - t4/14712000);
+
+    /* Moon's mean elongation. */
+    d = DEG2RAD * NormalizeLongitude(297.8501921 + 445267.1114034*t - 0.0018819*t2 + t3/545868 - t4/113065000);
+
+    /* Eccentricity of the Earth's orbit. */
+    e = 1.0 - 0.002516*t - 0.0000074*t2;
+
+    /* Optical librations */
+    w = lib.mlon - omega;
+    a = atan2(sin(w)*cos(lib.mlat)*cos(I) - sin(lib.mlat)*sin(I), cos(w)*cos(lib.mlat));
+    ldash = LongitudeOffset(RAD2DEG * (a - f));
+    bdash = asin(-sin(w)*cos(lib.mlat)*sin(I) - sin(lib.mlat)*cos(I));
+
+    /* Physical librations */
+    k1 = DEG2RAD*(119.75 + 131.849*t);
+    k2 = DEG2RAD*(72.56 + 20.186*t);
+
+    rho = (
+        -0.02752*cos(mdash) +
+        -0.02245*sin(f) +
+        +0.00684*cos(mdash - 2*f) +
+        -0.00293*cos(2*f) +
+        -0.00085*cos(2*f - 2*d) +
+        -0.00054*cos(mdash - 2*d) +
+        -0.00020*sin(mdash + f) +
+        -0.00020*cos(mdash + 2*f) +
+        -0.00020*cos(mdash - f) +
+        +0.00014*cos(mdash + 2*f - 2*d)
+    );
+
+    sigma = (
+        -0.02816*sin(mdash) +
+        +0.02244*cos(f) +
+        -0.00682*sin(mdash - 2*f) +
+        -0.00279*sin(2*f) +
+        -0.00083*sin(2*f - 2*d) +
+        +0.00069*sin(mdash - 2*d) +
+        +0.00040*cos(mdash + f) +
+        -0.00025*sin(2*mdash) +
+        -0.00023*sin(mdash + 2*f) +
+        +0.00020*cos(mdash - f) +
+        +0.00019*sin(mdash - f) +
+        +0.00013*sin(mdash + 2*f - 2*d) +
+        -0.00010*cos(mdash - 3*f)
+    );
+
+    tau = (
+        +0.02520*e*sin(m) +
+        +0.00473*sin(2*mdash - 2*f) +
+        -0.00467*sin(mdash) +
+        +0.00396*sin(k1) +
+        +0.00276*sin(2*mdash - 2*d) +
+        +0.00196*sin(omega) +
+        -0.00183*cos(mdash - f) +
+        +0.00115*sin(mdash - 2*d) +
+        -0.00096*sin(mdash - d) +
+        +0.00046*sin(2*f - 2*d) +
+        -0.00039*sin(mdash - f) +
+        -0.00032*sin(mdash - m - d) +
+        +0.00027*sin(2*mdash - m - 2*d) +
+        +0.00023*sin(k2) +
+        -0.00014*sin(2*d) +
+        +0.00014*cos(2*mdash - 2*f) +
+        -0.00012*sin(mdash - 2*f) +
+        -0.00012*sin(2*mdash) +
+        +0.00011*sin(2*mdash - 2*m - 2*d)
+    );
+
+    ldash2 = -tau + (rho*cos(a) + sigma*sin(a))*tan(bdash);
+    bdash *= RAD2DEG;
+    bdash2 = sigma*cos(a) - rho*sin(a);
+
+    lib.elon = ldash + ldash2;
+    lib.elat = bdash + bdash2;
+
+    return lib;
+}
+
+
 /*------------------ VSOP ------------------*/
 
 /** @cond DOXYGEN_SKIP */

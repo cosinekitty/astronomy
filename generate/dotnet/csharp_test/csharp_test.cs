@@ -39,6 +39,7 @@ namespace csharp_test
             new Test("elongation", ElongationTest),
             new Test("global_solar_eclipse", GlobalSolarEclipseTest),
             new Test("jupiter_moons", JupiterMoonsTest),
+            new Test("libration", LibrationTest),
             new Test("local_solar_eclipse", LocalSolarEclipseTest),
             new Test("lunar_apsis", LunarApsisTest),
             new Test("lunar_eclipse", LunarEclipseTest),
@@ -1074,6 +1075,26 @@ namespace csharp_test
 
         static readonly Regex JplRegex = new Regex(@"^\s*(\d{4})-(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)-(\d{2})\s+(\d{2}):(\d{2})\s+(.*)");
 
+        static int MonthNumber(string mtext)
+        {
+            switch (mtext)
+            {
+                case "Jan": return  1;
+                case "Feb": return  2;
+                case "Mar": return  3;
+                case "Apr": return  4;
+                case "May": return  5;
+                case "Jun": return  6;
+                case "Jul": return  7;
+                case "Aug": return  8;
+                case "Sep": return  9;
+                case "Oct": return 10;
+                case "Nov": return 11;
+                case "Dec": return 12;
+                default:
+                    throw new Exception(string.Format("Internal error: unexpected month name '{0}'", mtext));
+            }
+        }
 
         static JplDateTime ParseJplHorizonsDateTime(string line)
         {
@@ -1081,29 +1102,11 @@ namespace csharp_test
             if (!m.Success)
                 return null;
             int year = int.Parse(m.Groups[1].Value);
-            string mtext = m.Groups[2].Value;
+            int month = MonthNumber(m.Groups[2].Value);
             int day = int.Parse(m.Groups[3].Value);
             int hour = int.Parse(m.Groups[4].Value);
             int minute = int.Parse(m.Groups[5].Value);
             string rest = m.Groups[6].Value;
-            int month;
-            switch (mtext)
-            {
-                case "Jan": month =  1;  break;
-                case "Feb": month =  2;  break;
-                case "Mar": month =  3;  break;
-                case "Apr": month =  4;  break;
-                case "May": month =  5;  break;
-                case "Jun": month =  6;  break;
-                case "Jul": month =  7;  break;
-                case "Aug": month =  8;  break;
-                case "Sep": month =  9;  break;
-                case "Oct": month = 10;  break;
-                case "Nov": month = 11;  break;
-                case "Dec": month = 12;  break;
-                default:
-                    throw new Exception(string.Format("Internal error: unexpected month name '{0}'", mtext));
-            }
             AstroTime time = new AstroTime(year, month, day, hour, minute, 0);
             return new JplDateTime { Rest=rest, Time=time };
         }
@@ -2995,6 +2998,108 @@ namespace csharp_test
                 }
             }
             Console.WriteLine($"C# TwilightTest: PASS ({lnum} test cases, max error = {max_diff} seconds)");
+            return 0;
+        }
+
+        static int Libration(string filename)
+        {
+            using StreamReader infile = File.OpenText(filename);
+            int lnum = 0;
+            int count = 0;
+            double max_diff_elon = 0.0;
+            double max_diff_elat = 0.0;
+            double max_diff_distance = 0.0;
+            double max_diff_diam = 0.0;
+            string line;
+            while (null != (line = infile.ReadLine()))
+            {
+                ++lnum;
+                if (lnum == 1)
+                {
+                    //              0..2       3..4       5      6      7        8       9        10        11       12       13        14     15
+                    if (line != "   Date       Time    Phase    Age    Diam    Dist     RA        Dec      Slon      Slat     Elon     Elat   AxisA")
+                    {
+                        Console.WriteLine($"C# Libration({filename} line {lnum}): unexpected header line.");
+                        return 1;
+                    }
+                }
+                else
+                {
+                    //  0   1   2    3    4    5       6      7       8        9         10       11         12      13       14      15
+                    // 01 Jan 2020 00:00 UT  29.95   5.783  1774.5  403898  23.2609  -10.0824   114.557   -0.045   0.773    6.360  336.353
+                    string[] token = Tokenize(line);
+                    if (token.Length != 16)
+                    {
+                        Console.WriteLine($"C# Libration({filename} line {lnum}): expected 16 tokens, found {token.Length}.");
+                        return 1;
+                    }
+
+                    int day = int.Parse(token[0]);
+                    int month = MonthNumber(token[1]);
+                    int year = int.Parse(token[2]);
+                    string[] hmtoken = token[3].Split(':');
+                    if (hmtoken.Length != 2)
+                    {
+                        Console.WriteLine($"C# Libration({filename} line {lnum}): expected hh:mm but found '{token[3]}'");
+                        return 1;
+                    }
+                    int hour = int.Parse(hmtoken[0]);
+                    int minute = int.Parse(hmtoken[1]);
+                    var time = new AstroTime(year, month, day, hour, minute, 0);
+
+                    double diam = double.Parse(token[7]) / 3600.0;
+                    double dist = double.Parse(token[8]);
+                    double elon = double.Parse(token[13]);
+                    double elat = double.Parse(token[14]);
+
+                    LibrationInfo lib = Astronomy.Libration(time);
+
+                    double diff_elon = 60.0 * abs(lib.elon - elon);
+                    if (diff_elon > max_diff_elon)
+                        max_diff_elon = diff_elon;
+
+                    double diff_elat = 60.0 * abs(lib.elat - elat);
+                    if (diff_elat > max_diff_elat)
+                        max_diff_elat = diff_elat;
+
+                    double diff_distance = abs(lib.dist_km - dist);
+                    if (diff_distance > max_diff_distance)
+                        max_diff_distance = diff_distance;
+
+                    double diff_diam = abs(lib.diam_deg - diam);
+                    if (diff_diam > max_diff_diam)
+                        max_diff_diam = diff_diam;
+
+                    if (diff_elon > 0.130)
+                    {
+                        Console.WriteLine($"C# Libration({filename} line {lnum}): EXCESSIVE diff_elon = {diff_elon} arcmin");
+                        return 1;
+                    }
+
+                    if (diff_elat > 1.666)
+                    {
+                        Console.WriteLine($"C# Libration({filename} line {lnum}): EXCESSIVE diff_elat = {diff_elat} arcmin");
+                        return 1;
+                    }
+
+                    if (diff_distance > 53.9)
+                    {
+                        Console.WriteLine($"C# Libration({filename} line {lnum}): EXCESSIVE diff_distance = {diff_distance} km");
+                        return 1;
+                    }
+                    ++count;
+                }
+            }
+
+            Console.WriteLine($"C# Libration({filename}): PASS ({count} test cases, max_diff_elon = {max_diff_elon} arcmin, max_diff_elat = {max_diff_elat} arcmin, max_diff_distance = {max_diff_distance} km, max_diff_diam = {max_diff_diam} deg)");
+            return 0;
+        }
+
+
+        static int LibrationTest()
+        {
+            if (0 != Libration("../../libration/mooninfo_2020.txt")) return 1;
+            if (0 != Libration("../../libration/mooninfo_2021.txt")) return 1;
             return 0;
         }
     }
