@@ -229,6 +229,24 @@ an `AstroTime` value that can be passed to Astronomy Engine functions.
 
 * * *
 
+<a name="LibrationInfo"></a>
+
+## LibrationInfo
+**Kind**: global class  
+**Brief**: Lunar libration angles, returned by [Libration](#Libration).  
+**Properties**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| elat | <code>number</code> | Sub-Earth libration ecliptic latitude angle, in degrees. |
+| elon | <code>number</code> | Sub-Earth libration ecliptic longitude angle, in degrees. |
+| mlat | <code>number</code> | Moon's geocentric ecliptic latitude. |
+| mlon | <code>number</code> | Moon's geocentric ecliptic longitude. |
+| dist_km | <code>number</code> | Distance between the centers of the Earth and Moon in kilometers. |
+
+
+* * *
+
 <a name="Vector"></a>
 
 ## Vector
@@ -889,6 +907,32 @@ function calls may be more efficient than passing in native JavaScript Date obje
 | Param | Type | Description |
 | --- | --- | --- |
 | date | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | A Date object, a number of UTC days since the J2000 epoch (noon on January 1, 2000),      or an AstroTime object. See remarks above. |
+
+
+* * *
+
+<a name="Libration"></a>
+
+## Libration(date) ⇒ [<code>LibrationInfo</code>](#LibrationInfo)
+**Kind**: global function  
+**Brief**: Calculates the Moon's libration angles at a given moment in time.
+
+Libration is an observed back-and-forth wobble of the portion of the
+Moon visible from the Earth. It is caused by the imperfect tidal locking
+of the Moon's fixed rotation rate, compared to its variable angular speed
+of orbit around the Earth.
+
+This function calculates a pair of perpendicular libration angles,
+one representing rotation of the Moon in eclitpic longitude `elon`, the other
+in ecliptic latitude `elat`, both relative to the Moon's mean Earth-facing position.
+
+This function also returns the geocentric position of the Moon
+expressed in ecliptic longitude `mlon`, ecliptic latitude `mlat`, and
+distance `dist_km` between the centers of the Earth and Moon expressed in kilometers.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| date | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | A Date object, a number of UTC days since the J2000 epoch (noon on January 1, 2000),      or an AstroTime object. |
 
 
 * * *

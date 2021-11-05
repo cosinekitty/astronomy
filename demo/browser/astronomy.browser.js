@@ -34,9 +34,9 @@
  */
 'use strict';
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.IlluminationInfo = exports.EclipticLongitude = exports.AngleFromSun = exports.PairLongitude = exports.SearchSunLongitude = exports.Search = exports.BaryState = exports.GeoVector = exports.HelioDistance = exports.HelioVector = exports.JupiterMoons = exports.JupiterMoonsInfo = exports.GeoMoon = exports.Ecliptic = exports.ObserverGravity = exports.VectorObserver = exports.ObserverVector = exports.Equator = exports.SunPosition = exports.Observer = exports.Horizon = exports.EclipticCoordinates = exports.HorizontalCoordinates = exports.MakeRotation = exports.RotationMatrix = exports.EquatorialCoordinates = exports.Spherical = exports.StateVector = exports.Vector = exports.CalcMoonCount = exports.MakeTime = exports.AstroTime = exports.SetDeltaTFunction = exports.DeltaT_JplHorizons = exports.DeltaT_EspenakMeeus = exports.Body = exports.AngleBetween = exports.CALLISTO_RADIUS_KM = exports.GANYMEDE_RADIUS_KM = exports.EUROPA_RADIUS_KM = exports.IO_RADIUS_KM = exports.JUPITER_MEAN_RADIUS_KM = exports.JUPITER_POLAR_RADIUS_KM = exports.JUPITER_EQUATORIAL_RADIUS_KM = exports.RAD2HOUR = exports.RAD2DEG = exports.HOUR2RAD = exports.DEG2RAD = exports.KM_PER_AU = exports.C_AUDAY = void 0;
-exports.ConstellationInfo = exports.Rotation_GAL_EQJ = exports.Rotation_EQJ_GAL = exports.Rotation_HOR_ECL = exports.Rotation_ECL_HOR = exports.Rotation_ECL_EQD = exports.Rotation_EQD_ECL = exports.Rotation_EQJ_HOR = exports.Rotation_HOR_EQJ = exports.Rotation_HOR_EQD = exports.Rotation_EQD_HOR = exports.Rotation_EQD_EQJ = exports.Rotation_EQJ_EQD = exports.Rotation_ECL_EQJ = exports.Rotation_EQJ_ECL = exports.RotateState = exports.RotateVector = exports.InverseRefraction = exports.Refraction = exports.VectorFromHorizon = exports.HorizonFromVector = exports.SphereFromVector = exports.EquatorFromVector = exports.VectorFromSphere = exports.Pivot = exports.IdentityMatrix = exports.CombineRotation = exports.InverseRotation = exports.NextPlanetApsis = exports.SearchPlanetApsis = exports.NextLunarApsis = exports.SearchLunarApsis = exports.Apsis = exports.SearchPeakMagnitude = exports.SearchMaxElongation = exports.Elongation = exports.ElongationEvent = exports.Seasons = exports.SeasonInfo = exports.SearchHourAngle = exports.HourAngleEvent = exports.SearchAltitude = exports.SearchRiseSet = exports.NextMoonQuarter = exports.SearchMoonQuarter = exports.MoonQuarter = exports.SearchMoonPhase = exports.MoonPhase = exports.SearchRelativeLongitude = exports.Illumination = void 0;
-exports.NextTransit = exports.SearchTransit = exports.TransitInfo = exports.NextLocalSolarEclipse = exports.SearchLocalSolarEclipse = exports.LocalSolarEclipseInfo = exports.EclipseEvent = exports.NextGlobalSolarEclipse = exports.SearchGlobalSolarEclipse = exports.NextLunarEclipse = exports.GlobalSolarEclipseInfo = exports.SearchLunarEclipse = exports.LunarEclipseInfo = exports.Constellation = void 0;
+exports.AngleFromSun = exports.PairLongitude = exports.SearchSunLongitude = exports.Search = exports.BaryState = exports.GeoVector = exports.HelioDistance = exports.HelioVector = exports.JupiterMoons = exports.JupiterMoonsInfo = exports.GeoMoon = exports.Ecliptic = exports.ObserverGravity = exports.VectorObserver = exports.ObserverVector = exports.Equator = exports.SunPosition = exports.Observer = exports.Horizon = exports.EclipticCoordinates = exports.HorizontalCoordinates = exports.MakeRotation = exports.RotationMatrix = exports.EquatorialCoordinates = exports.Spherical = exports.StateVector = exports.Vector = exports.Libration = exports.LibrationInfo = exports.CalcMoonCount = exports.MakeTime = exports.AstroTime = exports.SetDeltaTFunction = exports.DeltaT_JplHorizons = exports.DeltaT_EspenakMeeus = exports.Body = exports.AngleBetween = exports.CALLISTO_RADIUS_KM = exports.GANYMEDE_RADIUS_KM = exports.EUROPA_RADIUS_KM = exports.IO_RADIUS_KM = exports.JUPITER_MEAN_RADIUS_KM = exports.JUPITER_POLAR_RADIUS_KM = exports.JUPITER_EQUATORIAL_RADIUS_KM = exports.RAD2HOUR = exports.RAD2DEG = exports.HOUR2RAD = exports.DEG2RAD = exports.KM_PER_AU = exports.C_AUDAY = void 0;
+exports.Rotation_EQJ_GAL = exports.Rotation_HOR_ECL = exports.Rotation_ECL_HOR = exports.Rotation_ECL_EQD = exports.Rotation_EQD_ECL = exports.Rotation_EQJ_HOR = exports.Rotation_HOR_EQJ = exports.Rotation_HOR_EQD = exports.Rotation_EQD_HOR = exports.Rotation_EQD_EQJ = exports.Rotation_EQJ_EQD = exports.Rotation_ECL_EQJ = exports.Rotation_EQJ_ECL = exports.RotateState = exports.RotateVector = exports.InverseRefraction = exports.Refraction = exports.VectorFromHorizon = exports.HorizonFromVector = exports.SphereFromVector = exports.EquatorFromVector = exports.VectorFromSphere = exports.Pivot = exports.IdentityMatrix = exports.CombineRotation = exports.InverseRotation = exports.NextPlanetApsis = exports.SearchPlanetApsis = exports.NextLunarApsis = exports.SearchLunarApsis = exports.Apsis = exports.SearchPeakMagnitude = exports.SearchMaxElongation = exports.Elongation = exports.ElongationEvent = exports.Seasons = exports.SeasonInfo = exports.SearchHourAngle = exports.HourAngleEvent = exports.SearchAltitude = exports.SearchRiseSet = exports.NextMoonQuarter = exports.SearchMoonQuarter = exports.MoonQuarter = exports.SearchMoonPhase = exports.MoonPhase = exports.SearchRelativeLongitude = exports.Illumination = exports.IlluminationInfo = exports.EclipticLongitude = void 0;
+exports.NextTransit = exports.SearchTransit = exports.TransitInfo = exports.NextLocalSolarEclipse = exports.SearchLocalSolarEclipse = exports.LocalSolarEclipseInfo = exports.EclipseEvent = exports.NextGlobalSolarEclipse = exports.SearchGlobalSolarEclipse = exports.NextLunarEclipse = exports.GlobalSolarEclipseInfo = exports.SearchLunarEclipse = exports.LunarEclipseInfo = exports.Constellation = exports.ConstellationInfo = exports.Rotation_GAL_EQJ = void 0;
 /**
  * @brief The speed of light in AU/day.
  */
@@ -1571,6 +1571,131 @@ function CalcMoon(time) {
         distance_au: (ARC * EARTH_EQUATORIAL_RADIUS_AU) / (0.999953253 * SINPI)
     };
 }
+/**
+ * @brief Lunar libration angles, returned by {@link Libration}.
+ *
+ * @property {number} elat
+ *      Sub-Earth libration ecliptic latitude angle, in degrees.
+ * @property {number} elon
+ *      Sub-Earth libration ecliptic longitude angle, in degrees.
+ * @property {number} mlat
+ *      Moon's geocentric ecliptic latitude.
+ * @property {number} mlon
+ *      Moon's geocentric ecliptic longitude.
+ * @property {number} dist_km
+ *      Distance between the centers of the Earth and Moon in kilometers.
+ */
+class LibrationInfo {
+    constructor(elat, elon, mlat, mlon, dist_km) {
+        this.elat = elat;
+        this.elon = elon;
+        this.mlat = mlat;
+        this.mlon = mlon;
+        this.dist_km = dist_km;
+    }
+}
+exports.LibrationInfo = LibrationInfo;
+/**
+ * @brief Calculates the Moon's libration angles at a given moment in time.
+ *
+ * Libration is an observed back-and-forth wobble of the portion of the
+ * Moon visible from the Earth. It is caused by the imperfect tidal locking
+ * of the Moon's fixed rotation rate, compared to its variable angular speed
+ * of orbit around the Earth.
+ *
+ * This function calculates a pair of perpendicular libration angles,
+ * one representing rotation of the Moon in eclitpic longitude `elon`, the other
+ * in ecliptic latitude `elat`, both relative to the Moon's mean Earth-facing position.
+ *
+ * This function also returns the geocentric position of the Moon
+ * expressed in ecliptic longitude `mlon`, ecliptic latitude `mlat`, and
+ * distance `dist_km` between the centers of the Earth and Moon expressed in kilometers.
+ *
+ * @param {FlexibleDateTime} date
+ *      A Date object, a number of UTC days since the J2000 epoch (noon on January 1, 2000),
+ *      or an AstroTime object.
+ *
+ * @returns {LibrationInfo}
+ */
+function Libration(date) {
+    const time = MakeTime(date);
+    const t = time.tt / 36525.0;
+    const t2 = t * t;
+    const t3 = t2 * t;
+    const t4 = t2 * t2;
+    const moon = CalcMoon(time);
+    const mlon = moon.geo_eclip_lon;
+    const mlat = moon.geo_eclip_lat;
+    const dist_km = moon.distance_au * exports.KM_PER_AU;
+    // Inclination angle
+    const I = exports.DEG2RAD * 1.54242;
+    // Moon's argument of latitude in radians.
+    const f = exports.DEG2RAD * NormalizeLongitude(93.2720950 + 483202.0175233 * t - 0.0036539 * t2 - t3 / 3526000 + t4 / 863310000);
+    // Moon's ascending node's mean longitude in radians.
+    const omega = exports.DEG2RAD * NormalizeLongitude(125.0445479 - 1934.1362891 * t + 0.0020754 * t2 + t3 / 467441 - t4 / 60616000);
+    // Sun's mean anomaly.
+    const m = exports.DEG2RAD * NormalizeLongitude(357.5291092 + 35999.0502909 * t - 0.0001536 * t2 + t3 / 24490000);
+    // Moon's mean anomaly.
+    const mdash = exports.DEG2RAD * NormalizeLongitude(134.9633964 + 477198.8675055 * t + 0.0087414 * t2 + t3 / 69699 - t4 / 14712000);
+    // Moon's mean elongation.
+    const d = exports.DEG2RAD * NormalizeLongitude(297.8501921 + 445267.1114034 * t - 0.0018819 * t2 + t3 / 545868 - t4 / 113065000);
+    // Eccentricity of the Earth's orbit.
+    const e = 1.0 - 0.002516 * t - 0.0000074 * t2;
+    // Optical librations
+    const w = mlon - omega;
+    const a = Math.atan2(Math.sin(w) * Math.cos(mlat) * Math.cos(I) - Math.sin(mlat) * Math.sin(I), Math.cos(w) * Math.cos(mlat));
+    const ldash = LongitudeOffset(exports.RAD2DEG * (a - f));
+    const bdash = Math.asin(-Math.sin(w) * Math.cos(mlat) * Math.sin(I) - Math.sin(mlat) * Math.cos(I));
+    // Physical librations
+    const k1 = exports.DEG2RAD * (119.75 + 131.849 * t);
+    const k2 = exports.DEG2RAD * (72.56 + 20.186 * t);
+    const rho = (-0.02752 * Math.cos(mdash) +
+        -0.02245 * Math.sin(f) +
+        +0.00684 * Math.cos(mdash - 2 * f) +
+        -0.00293 * Math.cos(2 * f) +
+        -0.00085 * Math.cos(2 * f - 2 * d) +
+        -0.00054 * Math.cos(mdash - 2 * d) +
+        -0.00020 * Math.sin(mdash + f) +
+        -0.00020 * Math.cos(mdash + 2 * f) +
+        -0.00020 * Math.cos(mdash - f) +
+        +0.00014 * Math.cos(mdash + 2 * f - 2 * d));
+    const sigma = (-0.02816 * Math.sin(mdash) +
+        +0.02244 * Math.cos(f) +
+        -0.00682 * Math.sin(mdash - 2 * f) +
+        -0.00279 * Math.sin(2 * f) +
+        -0.00083 * Math.sin(2 * f - 2 * d) +
+        +0.00069 * Math.sin(mdash - 2 * d) +
+        +0.00040 * Math.cos(mdash + f) +
+        -0.00025 * Math.sin(2 * mdash) +
+        -0.00023 * Math.sin(mdash + 2 * f) +
+        +0.00020 * Math.cos(mdash - f) +
+        +0.00019 * Math.sin(mdash - f) +
+        +0.00013 * Math.sin(mdash + 2 * f - 2 * d) +
+        -0.00010 * Math.cos(mdash - 3 * f));
+    const tau = (+0.02520 * e * Math.sin(m) +
+        +0.00473 * Math.sin(2 * mdash - 2 * f) +
+        -0.00467 * Math.sin(mdash) +
+        +0.00396 * Math.sin(k1) +
+        +0.00276 * Math.sin(2 * mdash - 2 * d) +
+        +0.00196 * Math.sin(omega) +
+        -0.00183 * Math.cos(mdash - f) +
+        +0.00115 * Math.sin(mdash - 2 * d) +
+        -0.00096 * Math.sin(mdash - d) +
+        +0.00046 * Math.sin(2 * f - 2 * d) +
+        -0.00039 * Math.sin(mdash - f) +
+        -0.00032 * Math.sin(mdash - m - d) +
+        +0.00027 * Math.sin(2 * mdash - m - 2 * d) +
+        +0.00023 * Math.sin(k2) +
+        -0.00014 * Math.sin(2 * d) +
+        +0.00014 * Math.cos(2 * mdash - 2 * f) +
+        -0.00012 * Math.sin(mdash - 2 * f) +
+        -0.00012 * Math.sin(2 * mdash) +
+        +0.00011 * Math.sin(2 * mdash - 2 * m - 2 * d));
+    const ldash2 = -tau + (rho * Math.cos(a) + sigma * Math.sin(a)) * Math.tan(bdash);
+    const bdash2 = sigma * Math.cos(a) - rho * Math.sin(a);
+    return new LibrationInfo(exports.RAD2DEG * bdash + bdash2, ldash + ldash2, mlat, mlon, dist_km);
+}
+exports.Libration = Libration;
 function precession(pos, time, dir) {
     const r = precession_rot(time, dir);
     return [

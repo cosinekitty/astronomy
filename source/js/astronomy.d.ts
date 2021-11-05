@@ -243,6 +243,51 @@ export declare class AstroTime {
 export declare function MakeTime(date: FlexibleDateTime): AstroTime;
 export declare let CalcMoonCount: number;
 /**
+ * @brief Lunar libration angles, returned by {@link Libration}.
+ *
+ * @property {number} elat
+ *      Sub-Earth libration ecliptic latitude angle, in degrees.
+ * @property {number} elon
+ *      Sub-Earth libration ecliptic longitude angle, in degrees.
+ * @property {number} mlat
+ *      Moon's geocentric ecliptic latitude.
+ * @property {number} mlon
+ *      Moon's geocentric ecliptic longitude.
+ * @property {number} dist_km
+ *      Distance between the centers of the Earth and Moon in kilometers.
+ */
+export declare class LibrationInfo {
+    elat: number;
+    elon: number;
+    mlat: number;
+    mlon: number;
+    dist_km: number;
+    constructor(elat: number, elon: number, mlat: number, mlon: number, dist_km: number);
+}
+/**
+ * @brief Calculates the Moon's libration angles at a given moment in time.
+ *
+ * Libration is an observed back-and-forth wobble of the portion of the
+ * Moon visible from the Earth. It is caused by the imperfect tidal locking
+ * of the Moon's fixed rotation rate, compared to its variable angular speed
+ * of orbit around the Earth.
+ *
+ * This function calculates a pair of perpendicular libration angles,
+ * one representing rotation of the Moon in eclitpic longitude `elon`, the other
+ * in ecliptic latitude `elat`, both relative to the Moon's mean Earth-facing position.
+ *
+ * This function also returns the geocentric position of the Moon
+ * expressed in ecliptic longitude `mlon`, ecliptic latitude `mlat`, and
+ * distance `dist_km` between the centers of the Earth and Moon expressed in kilometers.
+ *
+ * @param {FlexibleDateTime} date
+ *      A Date object, a number of UTC days since the J2000 epoch (noon on January 1, 2000),
+ *      or an AstroTime object.
+ *
+ * @returns {LibrationInfo}
+ */
+export declare function Libration(date: FlexibleDateTime): LibrationInfo;
+/**
  * @brief A 3D Cartesian vector with a time attached to it.
  *
  * Holds the Cartesian coordinates of a vector in 3D space,
