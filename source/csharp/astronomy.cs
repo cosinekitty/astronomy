@@ -1358,6 +1358,9 @@ namespace CosineKitty
         /// <summary>The angle in degrees between the Sun and the Earth, as seen from the body. Indicates the body's phase as seen from the Earth.</summary>
         public readonly double phase_angle;
 
+        /// <summary>A value in the range [0.0, 1.0] indicating what fraction of the body's apparent disc is illuminated, as seen from the Earth.</summary>
+        public readonly double phase_fraction;
+
         /// <summary>The distance between the Sun and the body at the observation time.</summary>
         public readonly double helio_dist;
 
@@ -1369,6 +1372,7 @@ namespace CosineKitty
             this.time = time;
             this.mag = mag;
             this.phase_angle = phase_angle;
+            this.phase_fraction = (1.0 + Math.Cos(Astronomy.DEG2RAD * phase_angle)) / 2.0;
             this.helio_dist = helio_dist;
             this.ring_tilt = ring_tilt;
         }

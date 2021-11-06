@@ -466,6 +466,7 @@ static astro_illum_t IllumError(astro_status_t status)
     result.time = TimeError();
     result.mag = NAN;
     result.phase_angle = NAN;
+    result.phase_fraction = NAN;
     result.helio_dist = NAN;
     result.ring_tilt = NAN;
 
@@ -5364,6 +5365,7 @@ astro_illum_t Astronomy_Illumination(astro_body_t body, astro_time_t time)
     illum.time = time;
     illum.mag = mag;
     illum.phase_angle = phase.angle;
+    illum.phase_fraction = (1.0 + cos(DEG2RAD * phase.angle)) / 2.0;
     illum.helio_dist = helio_dist;
     illum.ring_tilt = ring_tilt;
 

@@ -3252,6 +3252,7 @@ Returned by the functions [`Astronomy_Illumination`](#Astronomy_Illumination) an
 | [`astro_time_t`](#astro_time_t) | `time` |  The date and time of the observation.  |
 | `double` | `mag` |  The visual magnitude of the body. Smaller values are brighter.  |
 | `double` | `phase_angle` |  The angle in degrees between the Sun and the Earth, as seen from the body. Indicates the body's phase as seen from the Earth.  |
+| `double` | `phase_fraction` |  A value in the range [0.0, 1.0] indicating what fraction of the body's apparent disc is illuminated, as seen from the Earth.  |
 | `double` | `helio_dist` |  The distance between the Sun and the body at the observation time.  |
 | `double` | `ring_tilt` |  For Saturn, the tilt angle in degrees of its rings as seen from Earth. For all other bodies, 0.  |
 
