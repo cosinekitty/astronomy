@@ -168,6 +168,9 @@ class Vector:
     def __add__(self, other):
         return Vector(self.x + other.x, self.y + other.y, self.z + other.z, self.t)
 
+    def __sub__(self, other):
+        return Vector(self.x - other.x, self.y - other.y, self.z - other.z, self.t)
+
 class StateVector:
     """A combination of a position vector, a velocity vector, and a time.
 

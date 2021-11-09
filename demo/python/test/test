@@ -5,7 +5,7 @@ Fail()
     exit 1
 }
 
-rm -f test/{jupiter_moons,camera,constellation,moonphase,positions,riseset,seasons,culminate,horizon,lunar_eclipse,lunar_angles,galactic,triangulate,gravity}.txt
+rm -f test/{jupiter_moons,camera,constellation,moonphase,positions,riseset,seasons,culminate,horizon,lunar_eclipse,lunar_angles,galactic,triangulate,gravity,stars_near_moon}.txt
 
 echo "Testing example: jupiter_moons.py"
 ./jupiter_moons.py 2021-04-16T00:26:18Z > test/jupiter_moons.txt || Fail "Error testing jupiter_moons.py."
@@ -64,6 +64,10 @@ for latitude in {0..90}; do
     ./gravity.py ${latitude} 0 >> test/gravity.txt || Fail "Error running gravity.py."
 done
 diff test/gravity.txt test/gravity_correct.txt || Fail "Error comparing gravity.py output."
+
+echo "Testing example: stars_near_moon.py"
+./stars_near_moon.py 30 -80 2021-11-08T23:00:00Z >> test/stars_near_moon.txt || Fail "Error running stars_near_moon.py"
+diff test/stars_near_moon.txt test/stars_near_moon_correct.txt || Fail "Error comparing stars_near_moon output."
 
 echo "PASS: Python examples"
 exit 0

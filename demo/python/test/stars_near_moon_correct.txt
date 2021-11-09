@@ -1,0 +1,3 @@
+UTC date = 2021-11-08T23:00:00.000Z
+
+34Sig Sgr (Nunki) mag=2.05, angle=0.818 deg
