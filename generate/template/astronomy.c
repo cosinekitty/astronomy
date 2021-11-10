@@ -2442,8 +2442,11 @@ body_grav_calc_t GravSim(           /* out: [pos, vel, acc] of the simulated bod
     return calc2;
 }
 
-
+/* Allow customization of the time step inside a gravsim segment. */
+#ifndef PLUTO_DT
 #define PLUTO_DT 250
+#endif
+
 #if PLUTO_TIME_STEP % PLUTO_DT != 0
     #error Invalid combination of Pluto time step, time increment.
 #endif
@@ -2520,16 +2523,17 @@ static void PrintGravCalcDiff(
     terse_vector_t mv = VecMean(forward[index].v, reverse[index].v);
     double r_err, v_err;
 
+#if 0
     fprintf(outfile,
         "diff                              %23.16le  %23.16le  %23.16le     %23.16le  %23.16le  %23.16le\n",
         dr.x, dr.y, dr.z,
         dv.x, dv.y, dv.z);
+#endif
 
     r_err = VecMag(dr) / VecMag(mr);
     v_err = VecMag(dv) / VecMag(mv);
 
-    fprintf(outfile, "r_err = %0.3le, v_err = %0.3le\n", r_err, v_err);
-    fprintf(outfile, "\n");
+    fprintf(outfile, "d%03d  t=%10.1lf, r_err = %10.3le, v_err = %10.3le\n", index, forward[index].tt, r_err, v_err);
 }
 
 static void GravSimLog(const body_grav_calc_t *forward, const body_grav_calc_t *reverse)
@@ -2545,8 +2549,10 @@ static void GravSimLog(const body_grav_calc_t *forward, const body_grav_calc_t *
 
         for (i = 1; i < PLUTO_NSTEPS-1; ++i)
         {
+#if 0
             PrintGravCalc(outfile, "f", forward, i);
             PrintGravCalc(outfile, "r", reverse, i);
+#endif
             PrintGravCalcDiff(outfile, forward, reverse, i);
         }
 
