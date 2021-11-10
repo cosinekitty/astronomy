@@ -1613,9 +1613,33 @@ static int MoonTest(void)
     return 0;
 }
 
+static int CheckIlluminationInvalidBody(astro_body_t body)
+{
+    astro_illum_t illum;
+    astro_time_t time = Astronomy_MakeTime(2021, 11, 10, 0, 8, 16.0);
+
+    /* Verify that invalid bodies return errors. */
+
+    illum = Astronomy_Illumination(body, time);
+    if (illum.status == ASTRO_SUCCESS)
+    {
+        /* This should have failed! */
+        fprintf(stderr, "C CheckIlluminationInvalidBody: FAILURE -- incorrect success status for body %d\n", (int)body);
+        return 1;
+    }
+
+    return 0;   /* Correct behavior. */
+}
+
 static int MagnitudeTest(void)
 {
     int nfailed = 0;
+
+    nfailed += CheckIlluminationInvalidBody(BODY_INVALID);
+    nfailed += CheckIlluminationInvalidBody(BODY_EARTH);
+    nfailed += CheckIlluminationInvalidBody(BODY_EMB);
+    nfailed += CheckIlluminationInvalidBody(BODY_SSB);
+    nfailed += CheckIlluminationInvalidBody((astro_body_t)2112);
 
     nfailed += CheckMagnitudeData(BODY_SUN,     "magnitude/Sun.txt");
     nfailed += CheckMagnitudeData(BODY_MOON,    "magnitude/Moon.txt");

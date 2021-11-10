@@ -5358,6 +5358,8 @@ astro_illum_t Astronomy_Illumination(astro_body_t body, astro_time_t time)
 
     default:
         status = VisualMagnitude(body, phase.angle, helio_dist, geo_dist, &mag);
+        if (status != ASTRO_SUCCESS)
+            return IllumError(status);
         break;
     }
 
