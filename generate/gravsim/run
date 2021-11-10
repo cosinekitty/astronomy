@@ -1,0 +1,13 @@
+#!/bin/bash
+
+pushd .. > /dev/null
+./generate source || exit 1
+popd > /dev/null
+
+gcc -Wall -Werror -o gravsim_test \
+    -D ASTRONOMY_ENGINE_GRAVSIM_LOG \
+    -I ../../source/c/ \
+    ../../source/c/astronomy.c gravsim_test.c -lm || exit 1
+
+rm -f gravsim.log
+./gravsim_test

@@ -122,6 +122,13 @@ static terse_vector_t VecMean(terse_vector_t a, terse_vector_t b)
     return c;
 }
 
+#ifdef ASTRONOMY_ENGINE_GRAVSIM_LOG
+static double VecMag(terse_vector_t v)
+{
+    return sqrt(v.x*v.x + v.y*v.y + v.z*v.z);
+}
+#endif
+
 static astro_vector_t PublicVec(astro_time_t time, terse_vector_t terse)
 {
     astro_vector_t vector;
@@ -3534,6 +3541,77 @@ static body_grav_calc_t GravFromState(body_state_t bary[5], const body_state_t *
 }
 
 
+#ifdef ASTRONOMY_ENGINE_GRAVSIM_LOG
+
+static const char *GravSimLogFileName = "gravsim.log";
+
+static void PrintGravCalc(
+    FILE *outfile,
+    const char *name,
+    const body_grav_calc_t *array,
+    int index)
+{
+    body_grav_calc_t s = array[index];
+
+    fprintf(outfile, "%s%03d t=%23.16le r=(%23.16le, %23.16le, %23.16le) v=(%23.16le, %23.16le, %23.16le)\n",
+        name, index,
+        s.tt,
+        s.r.x, s.r.y, s.r.z,
+        s.v.x, s.v.y, s.v.z);
+}
+
+static void PrintGravCalcDiff(
+    FILE *outfile,
+    const body_grav_calc_t *forward,
+    const body_grav_calc_t *reverse,
+    int index)
+{
+    terse_vector_t dr = VecSub(forward[index].r, reverse[index].r);
+    terse_vector_t dv = VecSub(forward[index].v, reverse[index].v);
+    terse_vector_t mr = VecMean(forward[index].r, reverse[index].r);
+    terse_vector_t mv = VecMean(forward[index].r, reverse[index].r);
+    double r_err, v_err;
+
+    fprintf(outfile,
+        "diff                              %23.16le  %23.16le  %23.16le     %23.16le  %23.16le  %23.16le\n",
+        dr.x, dr.y, dr.z,
+        dv.x, dv.y, dv.z);
+
+    r_err = VecMag(dr) / VecMag(mr);
+    v_err = VecMag(dv) / VecMag(mv);
+
+    fprintf(outfile, "r_err = %0.3le, v_err = %0.3le\n", r_err, v_err);
+    fprintf(outfile, "\n");
+}
+
+static void GravSimLog(const body_grav_calc_t *forward, const body_grav_calc_t *reverse)
+{
+    FILE *outfile = fopen(GravSimLogFileName, "at");
+    if (outfile != NULL)
+    {
+        int i;
+
+        /* The first and last forward steps are exact, but reverse are undefined. */
+        PrintGravCalc(outfile, "e", forward, 0);
+        fprintf(outfile, "\n");
+
+        for (i = 1; i < PLUTO_NSTEPS-1; ++i)
+        {
+            PrintGravCalc(outfile, "f", forward, i);
+            PrintGravCalc(outfile, "r", reverse, i);
+            PrintGravCalcDiff(outfile, forward, reverse, i);
+        }
+
+        PrintGravCalc(outfile, "e", forward, PLUTO_NSTEPS-1);
+        fprintf(outfile, "\n================================================================================================================================\n");
+
+        fclose(outfile);
+    }
+}
+
+#endif
+
+
 static astro_status_t GetSegment(int *seg_index, body_segment_t *cache[], double tt)
 {
     int i;
@@ -3577,6 +3655,10 @@ static astro_status_t GetSegment(int *seg_index, body_segment_t *cache[], double
         reverse.step[PLUTO_NSTEPS-1] = seg->step[PLUTO_NSTEPS-1];
         for (i=PLUTO_NSTEPS-2; i > 0; --i)
             reverse.step[i] = GravSim(bary, step_tt -= PLUTO_DT, &reverse.step[i+1]);
+
+#ifdef ASTRONOMY_ENGINE_GRAVSIM_LOG
+        GravSimLog(seg->step, reverse.step);
+#endif
 
         /* Fade-mix the two series so that there are no discontinuities. */
         for (i=PLUTO_NSTEPS-2; i > 0; --i)
