@@ -3566,10 +3566,10 @@ static void PrintGravCalcDiff(
     const body_grav_calc_t *reverse,
     int index)
 {
-    terse_vector_t dr = VecSub(forward[index].r, reverse[index].r);
-    terse_vector_t dv = VecSub(forward[index].v, reverse[index].v);
+    terse_vector_t dr = VecSub (forward[index].r, reverse[index].r);
+    terse_vector_t dv = VecSub (forward[index].v, reverse[index].v);
     terse_vector_t mr = VecMean(forward[index].r, reverse[index].r);
-    terse_vector_t mv = VecMean(forward[index].r, reverse[index].r);
+    terse_vector_t mv = VecMean(forward[index].v, reverse[index].v);
     double r_err, v_err;
 
     fprintf(outfile,

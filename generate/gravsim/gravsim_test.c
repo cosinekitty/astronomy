@@ -8,12 +8,26 @@
 #include <stdio.h>
 #include "astronomy.h"
 
-int main(void)
+int TestYear(int year)
 {
     astro_time_t time;
+    astro_vector_t pos;
 
-    time = Astronomy_MakeTime(2020, 1, 1, 0, 0, 0.0);
-    Astronomy_HelioVector(BODY_PLUTO, time);
+    time = Astronomy_MakeTime(year, 1, 1, 0, 0, 0.0);
+    pos = Astronomy_HelioVector(BODY_PLUTO, time);
+    if (pos.status != ASTRO_SUCCESS)
+    {
+        fprintf(stderr, "TestYear(%d): HelioVector returned %d\n", year, (int)pos.status);
+        return 1;
+    }
+    printf("year=%d, tt=%0.6lf, pos=(%0.16lf, %0.16lf, %0.16lf)\n", year, pos.t.tt, pos.x, pos.y, pos.z);
+    return 0;
+}
 
+int main(void)
+{
+    if (TestYear(1950)) return 1;
+    if (TestYear(2050)) return 1;
+    if (TestYear(2150)) return 1;
     return 0;
 }
