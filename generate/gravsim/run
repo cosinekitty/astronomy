@@ -6,8 +6,13 @@ popd > /dev/null
 
 gcc -Wall -Werror -o gravsim_test \
     -D ASTRONOMY_ENGINE_GRAVSIM_LOG \
+    -I .. \
     -I ../../source/c/ \
-    ../../source/c/astronomy.c gravsim_test.c -lm || exit 1
+    -I ../top2013/ \
+    -I ../vsop/ \
+    ../../source/c/astronomy.c \
+    ../top2013/top2013.c \
+    gravsim_test.c -lm || exit 1
 
 rm -f gravsim.log
 ./gravsim_test
