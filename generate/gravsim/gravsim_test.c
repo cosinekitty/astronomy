@@ -6,19 +6,26 @@
 */
 
 #include <stdio.h>
+#include <string.h>
 #include <math.h>
 #include "astronomy.h"
 #include "top2013.h"
+#include "codegen.h"        // for CHECK macro
 
-int TestPluto(double tt, const top_model_t *model)
+static int DebugMode;
+
+int TestPluto(double tt, const top_model_t *model, double *arcmin)
 {
     astro_time_t time;
     astro_vector_t pos;
     top_elliptical_t ellip;
     top_rectangular_t ecl, equ;
-    double dx, dy, dz, arcmin;
+    double dx, dy, dz;
+    int error;
 
-    printf("tt = %0.1lf\n", tt);
+    *arcmin = 999.0;    /* bogus value in case of failure */
+
+    if (DebugMode) printf("tt = %0.1lf\n", tt);
 
     time = Astronomy_TerrestrialTime(tt);
     pos = Astronomy_HelioVector(BODY_PLUTO, time);
@@ -28,47 +35,70 @@ int TestPluto(double tt, const top_model_t *model)
         return 1;
     }
 
-    printf("HelioVector : pos=(%23.16lf, %23.16lf, %23.16lf)\n", pos.x, pos.y, pos.z);
+    if (DebugMode) printf("HelioVector : pos=(%23.16lf, %23.16lf, %23.16lf)\n", pos.x, pos.y, pos.z);
 
     /* Compare with untruncated TOP2013 model. */
-    if (TopCalcElliptical(model, tt, &ellip)) return 1;
-    if (TopEcliptic(model->planet, &ellip, &ecl)) return 1;
-    if (TopEquatorial(&ecl, &equ)) return 1;
-    printf("TOP2013     : pos=(%23.16lf, %23.16lf, %23.16lf)\n", equ.x, equ.y, equ.z);
+    CHECK(TopCalcElliptical(model, tt, &ellip));
+    CHECK(TopEcliptic(model->planet, &ellip, &ecl));
+    CHECK(TopEquatorial(&ecl, &equ));
+    if (DebugMode) printf("TOP2013     : pos=(%23.16lf, %23.16lf, %23.16lf)\n", equ.x, equ.y, equ.z);
 
     /* Calculate relative error and scale in arcminute units (as seen from the Sun). */
     dx = equ.x - pos.x;
     dy = equ.y - pos.y;
     dz = equ.z - pos.z;
-    arcmin = (RAD2DEG * 60.0) * sqrt((dx*dx + dy*dy + dz*dz) / (equ.x*equ.x + equ.y*equ.y + equ.z*equ.z));
-    printf("arcmin_error = %0.6lf\n", arcmin);
-    printf("\n");
+    *arcmin = (RAD2DEG * 60.0) * sqrt((dx*dx + dy*dy + dz*dz) / (equ.x*equ.x + equ.y*equ.y + equ.z*equ.z));
+    if (DebugMode) printf("arcmin_error = %0.6lf\n", *arcmin);
+    if (DebugMode) printf("\n");
 
-    return 0;
+    error = 0;
+fail:
+    return error;
 }
 
-int main(void)
+int main(int argc, const char *argv[])
 {
     top_model_t model;
-    const double delta_tt = 18250.0;
-    int error;
+    const double PLUTO_TIME_STEP = 36500.0;     /* must keep in sync with same-name symbol in astronomy.c */
+    const double PLUTO_DT = 250.0;              /* must keep in sync with same-name symbol in astronomy.c */
+    double arcmin, tt, dev;
+    int error, n, count;
+
+    DebugMode = (argc > 1) && !strcmp(argv[1], "-v");
 
     TopInitModel(&model);
-    error = TopLoadModel(&model, "../TOP2013.dat", 9);
-    if (error) goto fail;
+    CHECK(TopLoadModel(&model, "../TOP2013.dat", 9));
 
-    /*
-        The PlutoStateTable has exact values at tt = { ... , -36500, 0, +36500, ... }.
-        I want to exercise the calculator at the midpoints tt = { ..., -18250, +18250, ... }.
-        We also exercise at the exact points where we coincide with TOP2013, to verify we get
-        exact match.
-    */
-    for (int n = -5; n <= 5; ++n)
+    /* Verify that we are in sync at exact checkpoints. */
+    if (DebugMode) printf("(Expect exact matches...)\n");
+    for (n = -5; n < 5; ++n)
     {
-        double tt = n * delta_tt;
-        if (TestPluto(tt, &model)) goto fail;
+        tt = n * PLUTO_TIME_STEP;
+        CHECK(TestPluto(tt, &model, &arcmin));
+        if (arcmin > 1.0e-6)
+            FAIL("EXCESSIVE ERROR!\n");
     }
 
+    /* Now check worst-case at near-midpoints. */
+    if (DebugMode) printf("(Expect simulation differences...)\n");
+    count = 0;
+    dev = 0.0;
+    for (n = -5; n < 5; ++n)
+    {
+        /* Calculate a worst case value: the midpoint of a step, near the midpoint of a segment. */
+        /* Each segment is 36500 days, and each step is 250 days. */
+        tt = ((n + 0.5) * PLUTO_TIME_STEP) + (PLUTO_DT / 2.0);
+        CHECK(TestPluto(tt, &model, &arcmin));
+        dev += arcmin * arcmin;
+        ++count;
+    }
+
+    dev = sqrt(dev / count);
+    printf("gravsim_test.c: Pluto score = %0.6lf arcmin, over %d data points.\n", dev, count);
+    if (dev > 0.205303)
+        FAIL("gravsim_test.c: EXCESSIVE ERROR\n");
+
+    error = 0;
 fail:
     TopFreeModel(&model);
     return error;
