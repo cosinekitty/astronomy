@@ -2411,11 +2411,66 @@ static terse_vector_t SmallBodyAcceleration(terse_vector_t small_pos, const body
 
 
 body_grav_calc_t GravSim(           /* out: [pos, vel, acc] of the simulated body at time tt2 */
-    body_state_t bary2[5],          /* out: major body barycentric positions at tt2 */
-    double tt2,                     /* in:  a target time to be calculated (either before or after tt1 */
+    body_state_t bary2[5],          /* temp: work area for major body barycentric state */
+    double tt2,                     /* in:  a target time to be calculated (either before or after tt1) */
     const body_grav_calc_t *calc1)  /* in:  [pos, vel, acc] of the simulated body at time tt1 */
 {
     body_grav_calc_t calc2;
+
+#if 1
+    /* Runge-Kutta 4 (variation) */
+    /* Based on Numerical Recipes in FORTRAN, Second Edition; Section 16.1. "SUBROUTINE rk4". */
+
+    const double h = tt2 - calc1->tt;
+    const double ttmid = calc1->tt + (h/2);
+    body_state_t barymid[5];
+    body_state_t dyt, dym;
+
+    /* We need the major body states at the middle time and end time. */
+    MajorBodyBary(barymid, ttmid);
+    MajorBodyBary(bary2, tt2);
+
+    /* yt[i] = y[i] + (h/2)*dydx[i] */
+    /* Here, dydx is the derivative of the state vector calc1. */
+    /* deriv(calc1[r;v]) = calc1[v;a] */
+    /* We use 'calc2' as both 'yt' and 'yout' from the FORTRAN book. */
+    calc2.r = VecAdd(calc1->r, VecMul(h/2, calc1->v));
+    calc2.v = VecAdd(calc1->v, VecMul(h/2, calc1->a));
+
+    /* dyt = derivs(tmid, yt) */
+    /* Yes, it is confusing to assign a velocity into 'dyt.r', */
+    /* and an acceleration into 'dyt.v', but they represent derivatives. */
+    /* Think of 'dyt.r' as 'dr/dt', and 'dyt.v' as 'dv/dt'. */
+    dyt.r = calc2.v;
+    dyt.v = SmallBodyAcceleration(calc2.r, barymid);
+
+    /* yt[i] = y[i] + (h/2)*dyt[i] */
+    calc2.r = VecAdd(calc1->r, VecMul(h/2, dyt.r));
+    calc2.v = VecAdd(calc1->v, VecMul(h/2, dyt.v));
+
+    /* dym = derivs(tmid, yt) */
+    dym.r = calc2.v;
+    dym.v = SmallBodyAcceleration(calc2.r, barymid);
+
+    /* yt[i] = y[i] + h*dym[i] */
+    calc2.r = VecAdd(calc1->r, VecMul(h, dym.r));
+    calc2.v = VecAdd(calc1->v, VecMul(h, dym.v));
+
+    /* dym[i] += dyt[i] */
+    VecIncr(&dym.r, dyt.r);
+    VecIncr(&dym.v, dyt.v);
+
+    /* dyt = derivs(tt2, yt) */
+    dyt.r = calc2.v;
+    dyt.v = SmallBodyAcceleration(calc2.r, bary2);
+
+    /* yt[i] = y[i] + (h/6)*(dydx[i] + dyt[i] + 2*dym[i]) */
+    calc2.r = VecAdd(calc1->r, VecMul(h/6, VecAdd(calc1->v, VecAdd(dyt.r, VecMul(2, dym.r)))));
+    calc2.v = VecAdd(calc1->v, VecMul(h/6, VecAdd(calc1->a, VecAdd(dyt.v, VecMul(2, dym.v)))));
+    calc2.a = SmallBodyAcceleration(calc2.r, bary2);
+    calc2.tt = tt2;
+
+#else
     terse_vector_t approx_pos;
     terse_vector_t acc;
     const double dt = tt2 - calc1->tt;
@@ -2439,6 +2494,7 @@ body_grav_calc_t GravSim(           /* out: [pos, vel, acc] of the simulated bod
     calc2.v = VecAdd(calc1->v, VecMul(dt, acc));
     calc2.a = SmallBodyAcceleration(calc2.r, bary2);
     calc2.tt = tt2;
+#endif
     return calc2;
 }
 
