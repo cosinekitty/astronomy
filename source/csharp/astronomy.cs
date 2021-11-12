@@ -3467,6 +3467,8 @@ namespace CosineKitty
 
         private const int PLUTO_NUM_STATES = 41;
         private const int PLUTO_TIME_STEP  = 36500;
+        private const int PLUTO_DT         = 250;
+        private const int PLUTO_NSTEPS     = 147;
 
         private static readonly body_state_t[] PlutoStateTable = new body_state_t[]
         {
@@ -3581,9 +3583,6 @@ namespace CosineKitty
             acc = bary2.Acceleration(pos);
             return new body_grav_calc_t(tt2, pos, vel, acc);
         }
-
-        private const int PLUTO_DT = 250;
-        private const int PLUTO_NSTEPS = (PLUTO_TIME_STEP / PLUTO_DT) + 1;
 
         private static readonly body_grav_calc_t[][] pluto_cache = new body_grav_calc_t[PLUTO_NUM_STATES-1][];
 

@@ -1585,8 +1585,6 @@ def _GravSim(tt2, calc1):
     return _grav_sim_t(bary2, grav)
 
 
-_PLUTO_DT = 250
-_PLUTO_NSTEPS = (_PLUTO_TIME_STEP // _PLUTO_DT) + 1
 _pluto_cache = [None] * (_PLUTO_NUM_STATES - 1)
 
 

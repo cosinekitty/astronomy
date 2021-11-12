@@ -2751,6 +2751,8 @@ function CalcSolarSystemBarycenter(time) {
 // Pluto integrator begins ----------------------------------------------------
 const PLUTO_NUM_STATES = 41;
 const PLUTO_TIME_STEP = 36500;
+const PLUTO_DT = 250;
+const PLUTO_NSTEPS = 147;
 const PlutoStateTable = [
     [-730000.0, [-26.1182072321076, -14.3761681778250, 3.3844025152995], [1.6339372163656e-03, -2.7861699588508e-03, -1.3585880229445e-03]],
     [-693500.0, [43.6599275018261, 15.7782921408811, -8.2269833881374], [-2.5043046295860e-04, 2.1163039457238e-03, 7.3466073583102e-04]],
@@ -2940,8 +2942,6 @@ function GravSim(tt2, calc1) {
     const grav = new body_grav_calc_t(tt2, pos, vel, acc);
     return new grav_sim_t(bary2, grav);
 }
-const PLUTO_DT = 250;
-const PLUTO_NSTEPS = (PLUTO_TIME_STEP / PLUTO_DT) + 1;
 const pluto_cache = [];
 function ClampIndex(frac, nsteps) {
     const index = Math.floor(frac);

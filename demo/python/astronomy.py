@@ -3309,6 +3309,8 @@ def _CalcEarth(time):
 
 _PLUTO_NUM_STATES = 41
 _PLUTO_TIME_STEP  = 36500
+_PLUTO_DT         = 250
+_PLUTO_NSTEPS     = 147
 
 _PlutoStateTable = [
     [ -730000.0, [-26.1182072321076, -14.3761681778250,   3.3844025152995], [ 1.6339372163656e-03, -2.7861699588508e-03, -1.3585880229445e-03]]
@@ -3482,8 +3484,6 @@ def _GravSim(tt2, calc1):
     return _grav_sim_t(bary2, grav)
 
 
-_PLUTO_DT = 250
-_PLUTO_NSTEPS = (_PLUTO_TIME_STEP // _PLUTO_DT) + 1
 _pluto_cache = [None] * (_PLUTO_NUM_STATES - 1)
 
 

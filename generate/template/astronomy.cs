@@ -2604,9 +2604,6 @@ $ASTRO_PLUTO_TABLE();
             return new body_grav_calc_t(tt2, pos, vel, acc);
         }
 
-        private const int PLUTO_DT = 250;
-        private const int PLUTO_NSTEPS = (PLUTO_TIME_STEP / PLUTO_DT) + 1;
-
         private static readonly body_grav_calc_t[][] pluto_cache = new body_grav_calc_t[PLUTO_NUM_STATES-1][];
 
         private static int ClampIndex(double frac, int nsteps)

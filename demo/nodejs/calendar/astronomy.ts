@@ -2990,6 +2990,8 @@ function CalcSolarSystemBarycenter(time: AstroTime): Vector {
 
 const PLUTO_NUM_STATES = 41;
 const PLUTO_TIME_STEP  = 36500;
+const PLUTO_DT         = 250;
+const PLUTO_NSTEPS     = 147;
 
 const PlutoStateTable: BodyStateTableEntry[] = [
     [ -730000.0, [-26.1182072321076, -14.3761681778250,   3.3844025152995], [ 1.6339372163656e-03, -2.7861699588508e-03, -1.3585880229445e-03]]
@@ -3230,8 +3232,6 @@ function GravSim(tt2: number, calc1: body_grav_calc_t): grav_sim_t {
     return new grav_sim_t(bary2, grav);
 }
 
-const PLUTO_DT = 250;
-const PLUTO_NSTEPS = (PLUTO_TIME_STEP / PLUTO_DT) + 1;
 const pluto_cache: body_grav_calc_t[][] = [];
 
 function ClampIndex(frac: number, nsteps: number) {

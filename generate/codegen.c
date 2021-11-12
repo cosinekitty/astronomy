@@ -1257,7 +1257,10 @@ static int PlutoStateTable_CSharp(cg_context_t *context, const top_model_t *mode
     int i;
 
     fprintf(context->outfile, "        private const int PLUTO_NUM_STATES = %d;\n", PLUTO_NUM_STATES);
-    fprintf(context->outfile, "        private const int PLUTO_TIME_STEP  = %d;\n\n", PLUTO_TIME_STEP);
+    fprintf(context->outfile, "        private const int PLUTO_TIME_STEP  = %d;\n", PLUTO_TIME_STEP);
+    fprintf(context->outfile, "        private const int PLUTO_DT         = %d;\n", PLUTO_DT);
+    fprintf(context->outfile, "        private const int PLUTO_NSTEPS     = %d;\n", PLUTO_NSTEPS);
+    fprintf(context->outfile, "\n");
     fprintf(context->outfile, "        private static readonly body_state_t[] PlutoStateTable = new body_state_t[]\n");
     fprintf(context->outfile, "        {\n");
 
@@ -1288,7 +1291,10 @@ static int PlutoStateTable_JS(cg_context_t *context, const top_model_t *model)
     int i;
 
     fprintf(context->outfile, "const PLUTO_NUM_STATES = %d;\n", PLUTO_NUM_STATES);
-    fprintf(context->outfile, "const PLUTO_TIME_STEP  = %d;\n\n", PLUTO_TIME_STEP);
+    fprintf(context->outfile, "const PLUTO_TIME_STEP  = %d;\n", PLUTO_TIME_STEP);
+    fprintf(context->outfile, "const PLUTO_DT         = %d;\n", PLUTO_DT);
+    fprintf(context->outfile, "const PLUTO_NSTEPS     = %d;\n", PLUTO_NSTEPS);
+    fprintf(context->outfile, "\n");
     fprintf(context->outfile, "const PlutoStateTable: BodyStateTableEntry[] = [\n");
 
     for (i=0; i < PLUTO_NUM_STATES; ++i)
@@ -1318,7 +1324,10 @@ static int PlutoStateTable_Python(cg_context_t *context, const top_model_t *mode
     int i;
 
     fprintf(context->outfile, "_PLUTO_NUM_STATES = %d\n", PLUTO_NUM_STATES);
-    fprintf(context->outfile, "_PLUTO_TIME_STEP  = %d\n\n", PLUTO_TIME_STEP);
+    fprintf(context->outfile, "_PLUTO_TIME_STEP  = %d\n", PLUTO_TIME_STEP);
+    fprintf(context->outfile, "_PLUTO_DT         = %d\n", PLUTO_DT);
+    fprintf(context->outfile, "_PLUTO_NSTEPS     = %d\n", PLUTO_NSTEPS);
+    fprintf(context->outfile, "\n");
     fprintf(context->outfile, "_PlutoStateTable = [\n");
 
     for (i=0; i < PLUTO_NUM_STATES; ++i)

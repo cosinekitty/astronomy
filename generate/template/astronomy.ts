@@ -2373,8 +2373,6 @@ function GravSim(tt2: number, calc1: body_grav_calc_t): grav_sim_t {
     return new grav_sim_t(bary2, grav);
 }
 
-const PLUTO_DT = 250;
-const PLUTO_NSTEPS = (PLUTO_TIME_STEP / PLUTO_DT) + 1;
 const pluto_cache: body_grav_calc_t[][] = [];
 
 function ClampIndex(frac: number, nsteps: number) {
