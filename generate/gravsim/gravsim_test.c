@@ -11,6 +11,7 @@
 #include "astronomy.h"
 #include "top2013.h"
 #include "codegen.h"        // for CHECK macro
+#include "pluto_gravsim.h"
 
 static int DebugMode;
 
@@ -18,8 +19,7 @@ int TestPluto(double tt, const top_model_t *model, double *arcmin)
 {
     astro_time_t time;
     astro_vector_t pos;
-    top_elliptical_t ellip;
-    top_rectangular_t ecl, equ;
+    top_rectangular_t equ;
     double dx, dy, dz;
     int error;
 
@@ -38,9 +38,7 @@ int TestPluto(double tt, const top_model_t *model, double *arcmin)
     if (DebugMode) printf("HelioVector : pos=(%23.16lf, %23.16lf, %23.16lf)\n", pos.x, pos.y, pos.z);
 
     /* Compare with untruncated TOP2013 model. */
-    CHECK(TopCalcElliptical(model, tt, &ellip));
-    CHECK(TopEcliptic(model->planet, &ellip, &ecl));
-    CHECK(TopEquatorial(&ecl, &equ));
+    CHECK(TopPosition(model, tt, &equ));
     if (DebugMode) printf("TOP2013     : pos=(%23.16lf, %23.16lf, %23.16lf)\n", equ.x, equ.y, equ.z);
 
     /* Calculate relative error and scale in arcminute units (as seen from the Sun). */
@@ -59,8 +57,6 @@ fail:
 int main(int argc, const char *argv[])
 {
     top_model_t model;
-    const double PLUTO_TIME_STEP = 36500.0;     /* must keep in sync with same-name symbol in astronomy.c */
-    const double PLUTO_DT = 250.0;              /* must keep in sync with same-name symbol in astronomy.c */
     double arcmin, tt, dev;
     int error, n, count;
 

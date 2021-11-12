@@ -30,6 +30,7 @@
 #include "codegen.h"
 #include "top2013.h"
 #include "ephfile.h"
+#include "gravsim/pluto_gravsim.h"
 
 #define CG_MAX_LINE_LENGTH  200
 #define MAX_DATA_PER_LINE    20
@@ -1207,10 +1208,16 @@ fail:
     if (infile) fclose(infile);
     return error;
 }
-#define PLUTO_NUM_STATES    41
-#define PLUTO_TT1           (-730000.0)     /* 0001-04-30T12:00:00.000Z */
-#define PLUTO_TT2           (+730000.0)     /* 3998-09-03T12:00:00.000Z */
-#define PLUTO_DT            ((PLUTO_TT2 - PLUTO_TT1) / (PLUTO_NUM_STATES - 1))
+
+
+static int PlutoConstants_C(cg_context_t *context)
+{
+    fprintf(context->outfile, "#define PLUTO_NUM_STATES  %d\n", PLUTO_NUM_STATES);
+    fprintf(context->outfile, "#define PLUTO_TIME_STEP   %d\n", PLUTO_TIME_STEP);
+    fprintf(context->outfile, "#define PLUTO_DT          %d\n\n", PLUTO_DT);
+    fprintf(context->outfile, "#define PLUTO_NSTEPS      %d\n\n", PLUTO_NSTEPS);
+    return 0;
+}
 
 
 static int PlutoStateTable_C(cg_context_t *context, const top_model_t *model)
@@ -1220,14 +1227,12 @@ static int PlutoStateTable_C(cg_context_t *context, const top_model_t *model)
     top_rectangular_t equ;
     int i;
 
-    fprintf(context->outfile, "#define PLUTO_NUM_STATES  %d\n", PLUTO_NUM_STATES);
-    fprintf(context->outfile, "#define PLUTO_TIME_STEP   %0.0lf\n\n", PLUTO_DT);
     fprintf(context->outfile, "static const body_state_t PlutoStateTable[] =\n");
     fprintf(context->outfile, "{\n");
 
     for (i=0; i < PLUTO_NUM_STATES; ++i)
     {
-        tt = i*PLUTO_DT + PLUTO_TT1;
+        tt = i*PLUTO_TIME_STEP + PLUTO_TT1;
         CHECK(TopPosition(model, tt, &equ));
 
         fprintf(context->outfile,
@@ -1252,13 +1257,13 @@ static int PlutoStateTable_CSharp(cg_context_t *context, const top_model_t *mode
     int i;
 
     fprintf(context->outfile, "        private const int PLUTO_NUM_STATES = %d;\n", PLUTO_NUM_STATES);
-    fprintf(context->outfile, "        private const int PLUTO_TIME_STEP  = %0.0lf;\n\n", PLUTO_DT);
+    fprintf(context->outfile, "        private const int PLUTO_TIME_STEP  = %d;\n\n", PLUTO_TIME_STEP);
     fprintf(context->outfile, "        private static readonly body_state_t[] PlutoStateTable = new body_state_t[]\n");
     fprintf(context->outfile, "        {\n");
 
     for (i=0; i < PLUTO_NUM_STATES; ++i)
     {
-        tt = i*PLUTO_DT + PLUTO_TT1;
+        tt = i*PLUTO_TIME_STEP + PLUTO_TT1;
         CHECK(TopPosition(model, tt, &equ));
 
         fprintf(context->outfile,
@@ -1283,12 +1288,12 @@ static int PlutoStateTable_JS(cg_context_t *context, const top_model_t *model)
     int i;
 
     fprintf(context->outfile, "const PLUTO_NUM_STATES = %d;\n", PLUTO_NUM_STATES);
-    fprintf(context->outfile, "const PLUTO_TIME_STEP  = %0.0lf;\n\n", PLUTO_DT);
+    fprintf(context->outfile, "const PLUTO_TIME_STEP  = %d;\n\n", PLUTO_TIME_STEP);
     fprintf(context->outfile, "const PlutoStateTable: BodyStateTableEntry[] = [\n");
 
     for (i=0; i < PLUTO_NUM_STATES; ++i)
     {
-        tt = i*PLUTO_DT + PLUTO_TT1;
+        tt = i*PLUTO_TIME_STEP + PLUTO_TT1;
         CHECK(TopPosition(model, tt, &equ));
 
         fprintf(context->outfile,
@@ -1313,12 +1318,12 @@ static int PlutoStateTable_Python(cg_context_t *context, const top_model_t *mode
     int i;
 
     fprintf(context->outfile, "_PLUTO_NUM_STATES = %d\n", PLUTO_NUM_STATES);
-    fprintf(context->outfile, "_PLUTO_TIME_STEP  = %0.0lf\n\n", PLUTO_DT);
+    fprintf(context->outfile, "_PLUTO_TIME_STEP  = %d\n\n", PLUTO_TIME_STEP);
     fprintf(context->outfile, "_PlutoStateTable = [\n");
 
     for (i=0; i < PLUTO_NUM_STATES; ++i)
     {
-        tt = i*PLUTO_DT + PLUTO_TT1;
+        tt = i*PLUTO_TIME_STEP + PLUTO_TT1;
         CHECK(TopPosition(model, tt, &equ));
 
         fprintf(context->outfile,
@@ -1340,9 +1345,6 @@ static int PlutoStateTable(cg_context_t *context)
     int error = 1;
     top_model_t model;
     TopInitModel(&model);
-
-    if (PLUTO_DT != round(PLUTO_DT))
-        CHECK(LogError(context, "PlutoStateTable: PLUTO_DT = %lf is not an integer.\n", PLUTO_DT));
 
     CHECK(TopLoadModel(&model, "TOP2013.dat", 9));
 
@@ -1858,6 +1860,7 @@ static const cg_directive_entry DirectiveTable[] =
     { "IAU_DATA",           OptIauData          },
     { "ADDSOL",             OptAddSol           },
     { "CONSTEL",            ConstellationData   },
+    { "C_PLUTO_CONST",      PlutoConstants_C    },
     { "PLUTO_TABLE",        PlutoStateTable     },
     { "JUPITER_MOONS",      JupiterMoons        },
     { NULL, NULL }  /* Marks end of list */

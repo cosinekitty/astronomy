@@ -39,6 +39,8 @@ extern "C" {
 /** @cond DOXYGEN_SKIP */
 #define PI      3.14159265358979323846
 
+$ASTRO_C_PLUTO_CONST()
+
 typedef enum
 {
     FROM_2000,
@@ -53,6 +55,30 @@ typedef struct
     double z;
 }
 terse_vector_t;
+
+typedef struct
+{
+    double          tt;   /* J2000 terrestrial time [days] */
+    terse_vector_t  r;    /* position [au] */
+    terse_vector_t  v;    /* velocity [au/day] */
+    terse_vector_t  a;    /* acceleration [au/day^2] */
+}
+body_grav_calc_t;
+
+typedef struct
+{
+    body_grav_calc_t   step[PLUTO_NSTEPS];
+}
+body_segment_t;
+
+typedef struct
+{
+    double          tt;  /* Terrestrial Time in J2000 days */
+    terse_vector_t  r;   /* position [au] */
+    terse_vector_t  v;   /* velocity [au/day] */
+}
+body_state_t;
+/** @endcond */
 
 static const terse_vector_t VecZero = { 0.0, 0.0, 0.0 };
 
@@ -141,15 +167,6 @@ static astro_vector_t PublicVec(astro_time_t time, terse_vector_t terse)
 
     return vector;
 }
-
-typedef struct
-{
-    double          tt;  /* Terrestrial Time in J2000 days */
-    terse_vector_t  r;   /* position [au] */
-    terse_vector_t  v;   /* velocity [au/day] */
-}
-body_state_t;
-/** @endcond */
 
 static const double DAYS_PER_TROPICAL_YEAR = 365.24217;
 static const double ASEC360 = 1296000.0;
@@ -2308,16 +2325,6 @@ static astro_vector_t CalcSolarSystemBarycenter(astro_time_t time)
 
 /*------------------ begin Pluto integrator ------------------*/
 
-/** @cond DOXYGEN_SKIP */
-typedef struct
-{
-    double          tt;   /* J2000 terrestrial time [days] */
-    terse_vector_t  r;    /* position [au] */
-    terse_vector_t  v;    /* velocity [au/day] */
-    terse_vector_t  a;    /* acceleration [au/day^2] */
-} body_grav_calc_t;
-/** @endcond */
-
 $ASTRO_PLUTO_TABLE();
 
 
@@ -2497,26 +2504,6 @@ body_grav_calc_t GravSim(           /* out: [pos, vel, acc] of the simulated bod
 #endif
     return calc2;
 }
-
-/* Allow customization of the time step inside a gravsim segment. */
-#ifndef PLUTO_DT
-#define PLUTO_DT 250
-#endif
-
-#if PLUTO_TIME_STEP % PLUTO_DT != 0
-    #error Invalid combination of Pluto time step, time increment.
-#endif
-
-#define PLUTO_NSTEPS    ((PLUTO_TIME_STEP / PLUTO_DT) + 1)
-
-/** @cond DOXYGEN_SKIP */
-typedef struct
-{
-    body_grav_calc_t   step[PLUTO_NSTEPS];
-}
-body_segment_t;
-/** @endcond */
-
 
 /* FIXFIXFIX - Using a global is not thread-safe. Either add thread-locks or change API to accept a cache pointer. */
 static body_segment_t *pluto_cache[PLUTO_NUM_STATES-1];
