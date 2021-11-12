@@ -422,7 +422,7 @@
 2021-07-17T10:38:14.630Z sunrise
 2021-07-17T17:31:01.180Z Sun culminates 82.47 degrees above the horizon
 2021-07-17T17:55:12.612Z moonrise
-2021-07-17T22:28:45.828Z Pluto opposition
+2021-07-17T22:30:37.119Z Pluto opposition
 2021-07-17T23:48:17.422Z Moon culminates 51.18 degrees above the horizon
 2021-07-18T00:23:32.127Z sunset
 2021-07-18T05:35:02.065Z moonset
@@ -1584,7 +1584,7 @@
 2022-01-16T04:08:54.788Z Moon culminates 87.63 degrees above the horizon
 2022-01-16T11:25:58.067Z moonset
 2022-01-16T12:18:24.147Z sunrise
-2022-01-16T14:49:25.290Z Pluto conjunction
+2022-01-16T14:51:11.731Z Pluto conjunction
 2022-01-16T17:34:36.563Z Sun culminates 40.58 degrees above the horizon
 2022-01-16T21:43:28.137Z moonrise
 2022-01-16T22:51:01.796Z sunset
@@ -2766,7 +2766,7 @@
 2022-07-19T16:47:21.384Z moonset
 2022-07-19T17:31:09.551Z Sun culminates 82.15 degrees above the horizon
 2022-07-20T00:22:50.738Z sunset
-2022-07-20T01:20:53.412Z Pluto opposition
+2022-07-20T01:22:50.110Z Pluto opposition
 2022-07-20T04:46:40.923Z moonrise
 2022-07-20T10:39:44.359Z sunrise
 2022-07-20T11:12:12.129Z Moon culminates 69.28 degrees above the horizon
@@ -3921,7 +3921,7 @@
 2023-01-18T09:00:27.865Z moonrise
 2023-01-18T12:18:05.573Z sunrise
 2023-01-18T14:15:29.373Z Moon culminates 35.69 degrees above the horizon
-2023-01-18T14:42:47.754Z Pluto conjunction
+2023-01-18T14:44:39.420Z Pluto conjunction
 2023-01-18T17:35:10.047Z Sun culminates 40.93 degrees above the horizon
 2023-01-18T19:27:00.826Z moonset
 2023-01-18T22:52:28.076Z sunset
@@ -4188,7 +4188,7 @@
 2023-02-28T17:37:17.694Z Sun culminates 53.54 degrees above the horizon
 2023-02-28T23:24:00.065Z sunset
 2023-03-01T00:46:14.432Z Moon culminates 88.91 degrees above the horizon
-2023-03-01T04:07:40.176Z Pluto moves from Sagittarius to Capricornus
+2023-03-01T02:54:16.974Z Pluto moves from Sagittarius to Capricornus
 2023-03-01T04:46:35.714Z Mercury moves from Capricornus to Aquarius
 2023-03-01T08:07:32.060Z moonset
 2023-03-01T11:49:57.850Z sunrise
@@ -5012,7 +5012,7 @@
 2023-07-07T17:29:45.677Z Sun culminates 83.96 degrees above the horizon
 2023-07-08T00:26:15.855Z sunset
 2023-07-08T04:08:29.760Z moonrise
-2023-07-08T08:23:00.820Z Pluto moves from Capricornus to Sagittarius
+2023-07-08T09:53:37.512Z Pluto moves from Capricornus to Sagittarius
 2023-07-08T10:05:07.822Z Moon culminates 55.95 degrees above the horizon
 2023-07-08T10:33:32.481Z sunrise
 2023-07-08T16:09:07.491Z moonset
@@ -5102,7 +5102,7 @@
 2023-07-21T20:32:04.697Z Moon culminates 70.93 degrees above the horizon
 2023-07-22T00:22:04.774Z sunset
 2023-07-22T03:00:38.573Z moonset
-2023-07-22T03:34:39.949Z Pluto opposition
+2023-07-22T03:36:41.142Z Pluto opposition
 2023-07-22T10:40:42.640Z sunrise
 2023-07-22T14:49:31.932Z moonrise
 2023-07-22T17:31:18.369Z Sun culminates 81.62 degrees above the horizon
@@ -6156,7 +6156,7 @@
 2024-01-02T17:28:41.525Z Sun culminates 38.50 degrees above the horizon
 2024-01-02T22:39:46.944Z sunset
 2024-01-03T00:38:25.126Z Earth perihelion at 0.9833 AU
-2024-01-03T04:11:00.350Z Pluto moves from Sagittarius to Capricornus
+2024-01-03T03:08:48.677Z Pluto moves from Sagittarius to Capricornus
 2024-01-03T04:44:07.661Z moonrise
 2024-01-03T10:55:06.120Z Moon culminates 60.25 degrees above the horizon
 2024-01-03T12:17:55.660Z sunrise
@@ -6268,7 +6268,7 @@
 2024-01-20T07:53:39.876Z moonset
 2024-01-20T12:17:44.388Z sunrise
 2024-01-20T12:54:56.546Z Venus moves from Ophiuchus to Sagittarius
-2024-01-20T13:44:36.388Z Pluto conjunction
+2024-01-20T13:46:32.352Z Pluto conjunction
 2024-01-20T17:35:43.954Z Sun culminates 41.30 degrees above the horizon
 2024-01-20T18:29:16.446Z moonrise
 2024-01-20T22:53:57.774Z sunset
@@ -7446,7 +7446,7 @@
 2024-07-22T17:31:18.595Z Sun culminates 81.47 degrees above the horizon
 2024-07-23T00:21:12.978Z sunset
 2024-07-23T01:45:36.868Z moonrise
-2024-07-23T05:19:56.159Z Pluto opposition
+2024-07-23T05:22:02.928Z Pluto opposition
 2024-07-23T07:17:41.483Z Moon culminates 44.74 degrees above the horizon
 2024-07-23T10:41:39.382Z sunrise
 2024-07-23T12:56:25.032Z moonset
@@ -8606,7 +8606,7 @@
 2025-01-21T05:15:10.237Z moonrise
 2025-01-21T10:58:34.541Z Moon culminates 48.02 degrees above the horizon
 2025-01-21T12:17:15.759Z sunrise
-2025-01-21T12:27:09.391Z Pluto conjunction
+2025-01-21T12:29:10.385Z Pluto conjunction
 2025-01-21T16:36:18.173Z moonset
 2025-01-21T17:36:12.722Z Sun culminates 41.69 degrees above the horizon
 2025-01-21T20:31:25.389Z third quarter
@@ -9783,7 +9783,7 @@
 2025-07-24T19:11:44.254Z new moon
 2025-07-25T00:20:18.672Z sunset
 2025-07-25T00:38:20.506Z moonset
-2025-07-25T06:14:39.558Z Pluto opposition
+2025-07-25T06:16:50.469Z Pluto opposition
 2025-07-25T10:42:38.980Z sunrise
 2025-07-25T11:24:04.075Z moonrise
 2025-07-25T17:31:21.886Z Sun culminates 80.88 degrees above the horizon
@@ -10945,7 +10945,7 @@
 2026-01-22T22:56:03.334Z sunset
 2026-01-23T02:48:02.318Z moonset
 2026-01-23T03:31:23.335Z Mars moves from Sagittarius to Capricornus
-2026-01-23T10:26:27.463Z Pluto conjunction
+2026-01-23T10:28:32.812Z Pluto conjunction
 2026-01-23T12:16:43.705Z sunrise
 2026-01-23T15:09:20.943Z moonrise
 2026-01-23T17:36:40.804Z Sun culminates 42.10 degrees above the horizon
@@ -12122,7 +12122,7 @@
 2026-07-26T22:32:53.036Z moonrise
 2026-07-27T00:19:19.767Z sunset
 2026-07-27T03:36:23.487Z Moon culminates 33.24 degrees above the horizon
-2026-07-27T06:37:08.146Z Pluto opposition
+2026-07-27T06:39:24.616Z Pluto opposition
 2026-07-27T08:41:29.224Z moonset
 2026-07-27T10:43:38.091Z sunrise
 2026-07-27T17:31:21.087Z Sun culminates 80.49 degrees above the horizon
@@ -13278,7 +13278,7 @@
 2027-01-24T17:36:51.595Z Sun culminates 42.28 degrees above the horizon
 2027-01-24T22:57:31.203Z sunset
 2027-01-25T01:40:05.730Z moonrise
-2027-01-25T07:59:37.971Z Pluto conjunction
+2027-01-25T08:01:48.100Z Pluto conjunction
 2027-01-25T08:05:21.872Z Moon culminates 65.29 degrees above the horizon
 2027-01-25T12:16:06.001Z sunrise
 2027-01-25T14:22:32.858Z moonset
@@ -14459,7 +14459,7 @@
 2027-07-28T19:55:10.633Z moonset
 2027-07-29T00:18:16.302Z sunset
 2027-07-29T06:18:53.521Z moonrise
-2027-07-29T06:28:57.683Z Pluto opposition
+2027-07-29T06:31:18.165Z Pluto opposition
 2027-07-29T10:44:36.876Z sunrise
 2027-07-29T13:38:49.767Z Moon culminates 88.17 degrees above the horizon
 2027-07-29T17:31:17.995Z Sun culminates 80.08 degrees above the horizon
@@ -15618,7 +15618,7 @@
 2028-01-26T17:41:20.683Z Moon culminates 42.79 degrees above the horizon
 2028-01-26T22:58:59.343Z sunset
 2028-01-26T23:12:21.752Z moonset
-2028-01-27T05:00:40.417Z Pluto conjunction
+2028-01-27T05:02:55.015Z Pluto conjunction
 2028-01-27T12:15:24.034Z sunrise
 2028-01-27T12:47:50.480Z moonrise
 2028-01-27T17:37:28.273Z Sun culminates 42.97 degrees above the horizon
@@ -16802,7 +16802,7 @@
 2028-07-30T00:11:35.399Z Moon culminates 37.61 degrees above the horizon
 2028-07-30T00:17:09.503Z sunset
 2028-07-30T05:27:19.959Z moonset
-2028-07-30T05:44:50.973Z Pluto opposition
+2028-07-30T05:47:16.825Z Pluto opposition
 2028-07-30T10:45:36.458Z sunrise
 2028-07-30T17:31:13.544Z Sun culminates 79.65 degrees above the horizon
 2028-07-30T19:54:44.551Z moonrise
@@ -17958,7 +17958,7 @@
 2029-01-27T17:37:37.863Z Sun culminates 43.17 degrees above the horizon
 2029-01-27T20:30:30.414Z moonrise
 2029-01-27T23:00:27.878Z sunset
-2029-01-28T01:31:05.004Z Pluto conjunction
+2029-01-28T01:33:24.079Z Pluto conjunction
 2029-01-28T03:42:11.833Z Moon culminates 84.55 degrees above the horizon
 2029-01-28T10:49:54.690Z moonset
 2029-01-28T12:14:37.775Z sunrise
@@ -19138,7 +19138,7 @@
 2029-07-31T17:31:09.953Z Sun culminates 79.46 degrees above the horizon
 2029-08-01T00:15:57.921Z sunset
 2029-08-01T03:38:07.989Z moonrise
-2029-08-01T04:37:25.021Z Pluto opposition
+2029-08-01T04:39:54.892Z Pluto opposition
 2029-08-01T10:21:02.893Z Moon culminates 76.43 degrees above the horizon
 2029-08-01T10:41:17.955Z lunar apogee at 404298 km
 2029-08-01T10:46:34.733Z sunrise
@@ -20298,7 +20298,7 @@
 2030-01-29T13:51:19.187Z Moon culminates 37.14 degrees above the horizon
 2030-01-29T17:37:56.006Z Sun culminates 43.64 degrees above the horizon
 2030-01-29T19:08:30.667Z moonset
-2030-01-29T21:43:51.621Z Pluto conjunction
+2030-01-29T21:46:15.346Z Pluto conjunction
 2030-01-29T23:01:54.193Z sunset
 2030-01-30T09:33:22.770Z moonrise
 2030-01-30T12:13:45.905Z sunrise
@@ -21482,7 +21482,7 @@
 2030-08-02T19:58:40.535Z Moon culminates 59.76 degrees above the horizon
 2030-08-03T00:14:45.432Z sunset
 2030-08-03T02:04:14.452Z moonset
-2030-08-03T02:39:49.481Z Pluto opposition
+2030-08-03T02:42:24.424Z Pluto opposition
 2030-08-03T10:47:36.847Z sunrise
 2030-08-03T14:46:26.202Z moonrise
 2030-08-03T17:31:00.152Z Sun culminates 78.75 degrees above the horizon
@@ -22642,7 +22642,7 @@
 2031-01-30T23:46:25.520Z Moon culminates 79.93 degrees above the horizon
 2031-01-31T06:43:25.092Z moonset
 2031-01-31T12:13:22.624Z sunrise
-2031-01-31T17:24:44.766Z Pluto conjunction
+2031-01-31T17:27:12.560Z Pluto conjunction
 2031-01-31T17:34:53.810Z moonrise
 2031-01-31T17:38:12.819Z Sun culminates 44.13 degrees above the horizon
 2031-01-31T23:03:21.225Z sunset
@@ -23823,7 +23823,7 @@
 2031-08-04T12:29:37.709Z moonset
 2031-08-04T17:30:55.333Z Sun culminates 78.55 degrees above the horizon
 2031-08-05T00:13:26.923Z sunset
-2031-08-05T00:31:59.895Z Pluto opposition
+2031-08-05T00:34:38.958Z Pluto opposition
 2031-08-05T01:18:43.398Z moonrise
 2031-08-05T07:23:44.280Z Moon culminates 58.97 degrees above the horizon
 2031-08-05T10:48:35.257Z sunrise
@@ -24986,7 +24986,7 @@
 2032-02-02T07:14:44.347Z Mercury superior conjunction
 2032-02-02T09:37:53.020Z Moon culminates 51.84 degrees above the horizon
 2032-02-02T12:12:24.939Z sunrise
-2032-02-02T12:44:09.646Z Pluto conjunction
+2032-02-02T12:46:42.240Z Pluto conjunction
 2032-02-02T15:26:09.425Z moonset
 2032-02-02T17:38:26.537Z Sun culminates 44.63 degrees above the horizon
 2032-02-02T23:04:46.873Z sunset
@@ -26171,7 +26171,7 @@
 2032-08-05T10:49:00.407Z sunrise
 2032-08-05T17:03:02.384Z Moon culminates 74.54 degrees above the horizon
 2032-08-05T17:30:44.087Z Sun culminates 78.07 degrees above the horizon
-2032-08-05T21:53:19.035Z Pluto opposition
+2032-08-05T21:56:02.807Z Pluto opposition
 2032-08-05T23:42:28.997Z moonset
 2032-08-06T00:12:05.271Z sunset
 2032-08-06T05:12:03.049Z new moon

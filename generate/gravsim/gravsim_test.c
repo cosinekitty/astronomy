@@ -91,7 +91,7 @@ int main(int argc, const char *argv[])
 
     dev = sqrt(dev / count);
     printf("gravsim_test.c: Pluto score = %0.6lf arcmin, over %d data points.\n", dev, count);
-    if (dev > 0.129351)
+    if (dev > 0.058327)
         FAIL("gravsim_test.c: EXCESSIVE ERROR\n");
 
     error = 0;
