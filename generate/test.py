@@ -1956,7 +1956,7 @@ def BaryStateBody(body, filename, r_thresh, v_thresh):
                         return 1
                     count += 1
                 part = (part + 1) % 3
-                Debug('PY BaryStateBody({}): PASS - Tested {} cases. max rdiff={:0.3e}, vdiff={:0.3e}'.format(filename, count, stats.max_rdiff, stats.max_vdiff))
+        Debug('PY BaryStateBody({}): PASS - Tested {} cases. max rdiff={:0.3e}, vdiff={:0.3e}'.format(filename, count, stats.max_rdiff, stats.max_vdiff))
     return 0
 
 
@@ -1970,6 +1970,7 @@ def BaryState():
     if BaryStateBody(astronomy.Body.Saturn,  'barystate/Saturn.txt',   1.07e-3,  1.71e-6):  return 1
     if BaryStateBody(astronomy.Body.Uranus,  'barystate/Uranus.txt',   1.71e-3,  1.03e-6):  return 1
     if BaryStateBody(astronomy.Body.Neptune, 'barystate/Neptune.txt',  2.95e-3,  1.39e-6):  return 1
+    if BaryStateBody(astronomy.Body.Pluto,   'barystate/Pluto.txt',    2.05e-3,  1.91e-7):  return 1
     print('PY BaryState: PASS')
     return 0
 

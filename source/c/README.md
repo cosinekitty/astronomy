@@ -280,7 +280,7 @@ Given a body and a time, calculates the barycentric position and velocity vector
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| [`astro_body_t`](#astro_body_t) | `body` |  The celestial body whose barycentric state vector is to be calculated. Supported values are `BODY_SUN`, `BODY_SSB`, and all planets except Pluto: `BODY_MERCURY`, `BODY_VENUS`, `BODY_EARTH`, `BODY_MARS`, `BODY_JUPITER`, `BODY_SATURN`, `BODY_URANUS`, `BODY_NEPTUNE`.  | 
+| [`astro_body_t`](#astro_body_t) | `body` |  The celestial body whose barycentric state vector is to be calculated. Supported values are `BODY_SUN`, `BODY_SSB`, and all planets: `BODY_MERCURY`, `BODY_VENUS`, `BODY_EARTH`, `BODY_MARS`, `BODY_JUPITER`, `BODY_SATURN`, `BODY_URANUS`, `BODY_NEPTUNE`, `BODY_PLUTO`.  | 
 | [`astro_time_t`](#astro_time_t) | `time` |  The date and time for which to calculate position and velocity.  | 
 
 

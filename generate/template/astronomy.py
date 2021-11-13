@@ -1563,6 +1563,13 @@ def _UpdatePosition(dt, r, v, a):
         r.z + dt*(v.z + dt*a.z/2.0)
     )
 
+def _UpdateVelocity(dt, v, a):
+    return _TerseVector(
+        v.x + dt*a.x,
+        v.y + dt*a.y,
+        v.z + dt*a.z
+    )
+
 
 def _GravSim(tt2, calc1):
     dt = tt2 - calc1.tt
@@ -1658,7 +1665,8 @@ def _CalcPlutoOneWay(entry, target_tt, dt):
     return sim
 
 
-def _CalcPluto(time):
+def _CalcPluto(time, helio):
+    bary = None
     seg = _GetSegment(_pluto_cache, time.tt)
     if seg is None:
         # The target time is outside the year range 0000..4000.
@@ -1669,6 +1677,7 @@ def _CalcPluto(time):
         else:
             sim = _CalcPlutoOneWay(_PlutoStateTable[_PLUTO_NUM_STATES-1], time.tt, +_PLUTO_DT)
         r = sim.grav.r
+        v = sim.grav.v
         bary = sim.bary
     else:
         left = _ClampIndex((time.tt - seg[0].tt) / _PLUTO_DT, _PLUTO_NSTEPS-1)
@@ -1680,15 +1689,25 @@ def _CalcPluto(time):
 
         # Use Newtonian mechanics to extrapolate away from t1 in the positive time direction.
         ra = _UpdatePosition(time.tt - s1.tt, s1.r, s1.v, acc)
+        va = _UpdateVelocity(time.tt - s1.tt, s1.v, acc)
 
         # Use Newtonian mechanics to extrapolate away from t2 in the negative time direction.
         rb = _UpdatePosition(time.tt - s2.tt, s2.r, s2.v, acc)
+        vb = _UpdateVelocity(time.tt - s2.tt, s2.v, acc)
 
         # Use fade in/out idea to blend the two position estimates.
         ramp = (time.tt - s1.tt)/_PLUTO_DT
         r = ra*(1 - ramp) + rb*ramp
-        bary = _major_bodies_t(time.tt)
-    return (r - bary.Sun.r).ToAstroVector(time)
+        v = va*(1 - ramp) + vb*ramp
+
+    if helio:
+        # Convert barycentric vectors to heliocentric vectors.
+        if bary is None:
+            bary = _major_bodies_t(time.tt)
+        r -= bary.Sun.r
+        v -= bary.Sun.v
+
+    return StateVector(r.x, r.y, r.z, v.x, v.y, v.z, time)
 
 
 # END Pluto Integrator
@@ -2045,7 +2064,8 @@ def HelioVector(body, time):
         at the given time.
     """
     if body == Body.Pluto:
-        return _CalcPluto(time)
+        planet = _CalcPluto(time, True)
+        return Vector(planet.x, planet.y, planet.z, time)
 
     if 0 <= body.value < len(_vsop):
         return _CalcVsop(_vsop[body.value], time)
@@ -2192,9 +2212,9 @@ def BaryState(body, time):
     ----------
     body : Body
         The celestial body whose barycentric state vector is to be calculated.
-        Supported values are `Body.Sun`, `Body.SSB`, and all planets except Pluto:
+        Supported values are `Body.Sun`, `Body.SSB`, and all planets:
         `Body.Mercury`, `Body.Venus`, `Body.Earth`, `Body.Mars`, `Body.Jupiter`,
-        `Body.Saturn`, `Body.Uranus`, `Body.Neptune`.
+        `Body.Saturn`, `Body.Uranus`, `Body.Neptune`, `Body.Pluto`.
     time : Time
         The date and time for which to calculate position and velocity.
 
@@ -2206,6 +2226,9 @@ def BaryState(body, time):
     # Trivial case: the solar sytem barycenter itself.
     if body == Body.SSB:
         return StateVector(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, time)
+
+    if body == Body.Pluto:
+        return _CalcPluto(time, False)
 
     # Find the barycentric positions and velocities for the 5 major bodies.
     bary = _major_bodies_t(time.tt)
@@ -2244,7 +2267,7 @@ def BaryState(body, time):
             time
         )
 
-    # FIXFIXFIX: later, we can add support for Pluto, Moon, EMB, etc.
+    # FIXFIXFIX: later, we can add support for Moon, EMB, etc.
     raise InvalidBodyError()
 
 

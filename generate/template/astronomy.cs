@@ -2544,6 +2544,15 @@ $ASTRO_PLUTO_TABLE();
             );
         }
 
+        private static TerseVector UpdateVelocity(double dt, TerseVector v, TerseVector a)
+        {
+            return new TerseVector(
+                v.x + dt*a.x,
+                v.y + dt*a.y,
+                v.z + dt*a.z
+            );
+        }
+
         private static body_state_t AdjustBarycenterPosVel(ref body_state_t ssb, double tt, Body body, double planet_gm)
         {
             double shift = planet_gm / (planet_gm + SUN_GM);
@@ -2668,29 +2677,33 @@ $ASTRO_PLUTO_TABLE();
             return cache[seg_index];
         }
 
-        private static TerseVector CalcPlutoOneWay(out major_bodies_t bary, body_state_t init_state, double target_tt, double dt)
+        private static body_grav_calc_t CalcPlutoOneWay(
+            out major_bodies_t bary,
+            body_state_t init_state,
+            double target_tt,
+            double dt)
         {
             body_grav_calc_t calc = GravFromState(out bary, init_state);
             int n = (int) Math.Ceiling((target_tt - calc.tt) / dt);
             for (int i=0; i < n; ++i)
                 calc = GravSim(out bary, (i+1 == n) ? target_tt : (calc.tt + dt), calc);
-            return calc.r;
+            return calc;
         }
 
-        private static AstroVector CalcPluto(AstroTime time)
+        private static StateVector CalcPluto(AstroTime time, bool helio)
         {
-            TerseVector r;
+            body_grav_calc_t calc;
             body_grav_calc_t[] seg = GetSegment(pluto_cache, time.tt);
-            major_bodies_t bary;
+            var bary = new major_bodies_t();
             if (seg == null)
             {
                 // The target time is outside the year range 0000..4000.
                 // Calculate it by crawling backward from 0000 or forward from 4000.
                 // FIXFIXFIX - This is super slow. Could optimize this with extra caching if needed.
                 if (time.tt < PlutoStateTable[0].tt)
-                    r = CalcPlutoOneWay(out bary, PlutoStateTable[0], time.tt, -PLUTO_DT);
+                    calc = CalcPlutoOneWay(out bary, PlutoStateTable[0], time.tt, -PLUTO_DT);
                 else
-                    r = CalcPlutoOneWay(out bary, PlutoStateTable[PLUTO_NUM_STATES-1], time.tt, +PLUTO_DT);
+                    calc = CalcPlutoOneWay(out bary, PlutoStateTable[PLUTO_NUM_STATES-1], time.tt, +PLUTO_DT);
             }
             else
             {
@@ -2703,17 +2716,37 @@ $ASTRO_PLUTO_TABLE();
 
                 /* Use Newtonian mechanics to extrapolate away from t1 in the positive time direction. */
                 TerseVector ra = UpdatePosition(time.tt - s1.tt, s1.r, s1.v, acc);
+                TerseVector va = UpdateVelocity(time.tt - s1.tt, s1.v, acc);
 
                 /* Use Newtonian mechanics to extrapolate away from t2 in the negative time direction. */
                 TerseVector rb = UpdatePosition(time.tt - s2.tt, s2.r, s2.v, acc);
+                TerseVector vb = UpdateVelocity(time.tt - s2.tt, s2.v, acc);
 
                 /* Use fade in/out idea to blend the two position estimates. */
                 double ramp = (time.tt - s1.tt)/PLUTO_DT;
-                r = (1 - ramp)*ra + ramp*rb;
-                bary = MajorBodyBary(time.tt);
+                calc.r = (1 - ramp)*ra + ramp*rb;
+                calc.v = (1 - ramp)*va + ramp*vb;
+                if (helio)
+                    bary = MajorBodyBary(time.tt);
             }
 
-            return (r - bary.Sun.r).ToAstroVector(time);
+            if (helio)
+            {
+                // Convert barycentric vectors to heliocentric vectors
+                calc.r -= bary.Sun.r;
+                calc.v -= bary.Sun.v;
+            }
+
+            return new StateVector
+            {
+                t  = time,
+                x  = calc.r.x,
+                y  = calc.r.y,
+                z  = calc.r.z,
+                vx = calc.v.x,
+                vy = calc.v.y,
+                vz = calc.v.z,
+            };
         }
 
 #endregion  // Pluto
@@ -3530,7 +3563,8 @@ $ASTRO_IAU_DATA()
                     return CalcVsop(vsop[(int)body], time);
 
                 case Body.Pluto:
-                    return CalcPluto(time);
+                    StateVector planet = CalcPluto(time, true);
+                    return new AstroVector(planet.x, planet.y, planet.z, time);
 
                 case Body.Moon:
                     geomoon = GeoMoon(time);
@@ -3710,9 +3744,9 @@ $ASTRO_IAU_DATA()
         /// </remarks>
         /// <param name="body">
         /// The celestial body whose barycentric state vector is to be calculated.
-        /// Supported values are `Body.Sun`, `Body.SSB`, and all planets except Pluto:
+        /// Supported values are `Body.Sun`, `Body.SSB`, and all planets:
         /// `Body.Mercury`, `Body.Venus`, `Body.Earth`, `Body.Mars`, `Body.Jupiter`,
-        /// `Body.Saturn`, `Body.Uranus`, `Body.Neptune`.
+        /// `Body.Saturn`, `Body.Uranus`, `Body.Neptune`, `Body.Pluto`.
         /// </param>
         /// <param name="time">
         /// The date and time for which to calculate position and velocity.
@@ -3725,6 +3759,9 @@ $ASTRO_IAU_DATA()
             // Trivial case: the solar system barycenter itself.
             if (body == Body.SSB)
                 return new StateVector(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, time);
+
+            if (body == Body.Pluto)
+                return CalcPluto(time, false);
 
             // Find the barycentric positions and velocities for the 5 major bodies.
             major_bodies_t bary = MajorBodyBary(time.tt);

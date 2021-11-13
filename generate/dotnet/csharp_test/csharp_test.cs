@@ -2850,6 +2850,7 @@ namespace csharp_test
             if (0 != BaryStateBody(Body.Saturn,  "../../barystate/Saturn.txt",   1.07e-3,  1.71e-6)) return 1;
             if (0 != BaryStateBody(Body.Uranus,  "../../barystate/Uranus.txt",   1.71e-3,  1.03e-6)) return 1;
             if (0 != BaryStateBody(Body.Neptune, "../../barystate/Neptune.txt",  2.95e-3,  1.39e-6)) return 1;
+            if (0 != BaryStateBody(Body.Pluto,   "../../barystate/Pluto.txt",    2.05e-3,  1.91e-7)) return 1;
             Console.WriteLine("C# BaryStateTest: PASS");
             return 0;
         }

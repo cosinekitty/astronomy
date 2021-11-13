@@ -4558,6 +4558,7 @@ static int BaryStateTest(void)
     CHECK(BaryStateBody(BODY_SATURN,  "barystate/Saturn.txt",   1.07e-3,  1.71e-6));
     CHECK(BaryStateBody(BODY_URANUS,  "barystate/Uranus.txt",   1.71e-3,  1.03e-6));
     CHECK(BaryStateBody(BODY_NEPTUNE, "barystate/Neptune.txt",  2.95e-3,  1.39e-6));
+    CHECK(BaryStateBody(BODY_PLUTO,   "barystate/Pluto.txt",    2.05e-3,  1.91e-7));
 
     printf("C BaryStateTest: PASS\n");
 fail:

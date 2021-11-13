@@ -91,15 +91,6 @@ static terse_vector_t VecAdd(terse_vector_t a, terse_vector_t b)
     return c;
 }
 
-static terse_vector_t VecSub(terse_vector_t a, terse_vector_t b)
-{
-    terse_vector_t c;
-    c.x = a.x - b.x;
-    c.y = a.y - b.y;
-    c.z = a.z - b.z;
-    return c;
-}
-
 static void VecIncr(terse_vector_t *target, terse_vector_t source)
 {
     target->x += source.x;
@@ -146,19 +137,6 @@ static terse_vector_t VecMean(terse_vector_t a, terse_vector_t b)
     c.y = (a.y + b.y) / 2;
     c.z = (a.z + b.z) / 2;
     return c;
-}
-
-static astro_vector_t PublicVec(astro_time_t time, terse_vector_t terse)
-{
-    astro_vector_t vector;
-
-    vector.status = ASTRO_SUCCESS;
-    vector.t = time;
-    vector.x = terse.x;
-    vector.y = terse.y;
-    vector.z = terse.z;
-
-    return vector;
 }
 
 static const double DAYS_PER_TROPICAL_YEAR = 365.24217;
@@ -2330,6 +2308,15 @@ static terse_vector_t UpdatePosition(double dt, terse_vector_t r, terse_vector_t
 }
 
 
+static terse_vector_t UpdateVelocity(double dt, terse_vector_t v, terse_vector_t a)
+{
+    v.x += dt * a.x;
+    v.y += dt * a.y;
+    v.z += dt * a.z;
+    return v;
+}
+
+
 static body_state_t AdjustBarycenterPosVel(body_state_t *ssb, double tt, astro_body_t body, double planet_gm)
 {
     body_state_t planet;
@@ -2530,7 +2517,7 @@ static astro_status_t GetSegment(int *seg_index, body_segment_t *cache[], double
 }
 
 
-static terse_vector_t CalcPlutoOneWay(body_state_t bary[5], const body_state_t *init_state, double target_tt, double dt)
+static body_grav_calc_t CalcPlutoOneWay(body_state_t bary[5], const body_state_t *init_state, double target_tt, double dt)
 {
     body_grav_calc_t calc;
     int i, n;
@@ -2540,23 +2527,28 @@ static terse_vector_t CalcPlutoOneWay(body_state_t bary[5], const body_state_t *
     for (i=0; i < n; ++i)
         calc = GravSim(bary, (i+1 == n) ? target_tt : (calc.tt + dt), &calc);
 
-    return calc.r;
+    return calc;
 }
 
 
-static astro_vector_t CalcPluto(astro_time_t time)
+static astro_status_t CalcPluto(body_state_t *bstate, astro_time_t time, int helio)
 {
-    terse_vector_t acc, ra, rb, r;
+    terse_vector_t acc, ra, rb, va, vb;
     body_state_t bary[5];
     const body_segment_t *seg;
     int seg_index, left;
     const body_grav_calc_t *s1;
     const body_grav_calc_t *s2;
+    body_grav_calc_t calc;
     astro_status_t status;
+    double ramp;
+
+    memset(bstate, 0, sizeof(body_state_t));
+    bstate->tt = time.tt;
 
     status = GetSegment(&seg_index, pluto_cache, time.tt);
     if (status != ASTRO_SUCCESS)
-        return VecError(status, time);
+        return status;
 
     if (seg_index < 0)
     {
@@ -2564,9 +2556,12 @@ static astro_vector_t CalcPluto(astro_time_t time)
         /* Calculate it by crawling backward from 0000 or forward from 4000. */
         /* FIXFIXFIX - This is super slow. Could optimize this with extra caching if needed. */
         if (time.tt < PlutoStateTable[0].tt)
-            r = CalcPlutoOneWay(bary, &PlutoStateTable[0], time.tt, -PLUTO_DT);
+            calc = CalcPlutoOneWay(bary, &PlutoStateTable[0], time.tt, -PLUTO_DT);
         else
-            r = CalcPlutoOneWay(bary, &PlutoStateTable[PLUTO_NUM_STATES-1], time.tt, +PLUTO_DT);
+            calc = CalcPlutoOneWay(bary, &PlutoStateTable[PLUTO_NUM_STATES-1], time.tt, +PLUTO_DT);
+
+        bstate->r  = calc.r;
+        bstate->v  = calc.v;
     }
     else
     {
@@ -2580,17 +2575,29 @@ static astro_vector_t CalcPluto(astro_time_t time)
 
         /* Use Newtonian mechanics to extrapolate away from t1 in the positive time direction. */
         ra = UpdatePosition(time.tt - s1->tt, s1->r, s1->v, acc);
+        va = UpdateVelocity(time.tt - s1->tt, s1->v, acc);
 
         /* Use Newtonian mechanics to extrapolate away from t2 in the negative time direction. */
         rb = UpdatePosition(time.tt - s2->tt, s2->r, s2->v, acc);
+        vb = UpdateVelocity(time.tt - s2->tt, s2->v, acc);
 
         /* Use fade in/out idea to blend the two position estimates. */
-        r = VecRamp(ra, rb, (time.tt - s1->tt)/PLUTO_DT);
-        MajorBodyBary(bary, time.tt);
+        ramp = (time.tt - s1->tt)/PLUTO_DT;
+        bstate->r = VecRamp(ra, rb, ramp);
+        bstate->v = VecRamp(va, vb, ramp);
+
+        if (helio)
+            MajorBodyBary(bary, time.tt);
     }
 
-    /* Convert barycentric coordinates back to heliocentric coordinates. */
-    return PublicVec(time, VecSub(r, bary[0].r));
+    if (helio)
+    {
+        /* Convert barycentric coordinates back to heliocentric coordinates. */
+        VecDecr(&bstate->r, bary[0].r);
+        VecDecr(&bstate->v, bary[0].v);
+    }
+
+    return ASTRO_SUCCESS;
 }
 
 /*------------------ end Pluto integrator ------------------*/
@@ -2766,6 +2773,7 @@ astro_jupiter_moons_t Astronomy_JupiterMoons(astro_time_t time)
 astro_vector_t Astronomy_HelioVector(astro_body_t body, astro_time_t time)
 {
     astro_vector_t vector, earth;
+    body_state_t bstate;
 
     switch (body)
     {
@@ -2788,7 +2796,19 @@ astro_vector_t Astronomy_HelioVector(astro_body_t body, astro_time_t time)
         return CalcVsop(&vsop[body], time);
 
     case BODY_PLUTO:
-        return CalcPluto(time);
+        vector.t = time;
+        vector.status = CalcPluto(&bstate, time, 1);
+        if (vector.status != ASTRO_SUCCESS)
+        {
+            vector.x = vector.y = vector.z = NAN;
+        }
+        else
+        {
+            vector.x = bstate.r.x;
+            vector.y = bstate.r.y;
+            vector.z = bstate.r.z;
+        }
+        return vector;
 
     case BODY_MOON:
         vector = Astronomy_GeoMoon(time);
@@ -3004,9 +3024,9 @@ static astro_state_vector_t ExportState(body_state_t terse, astro_time_t time)
  *
  * @param body
  *      The celestial body whose barycentric state vector is to be calculated.
- *      Supported values are `BODY_SUN`, `BODY_SSB`, and all planets except Pluto:
+ *      Supported values are `BODY_SUN`, `BODY_SSB`, and all planets:
  *      `BODY_MERCURY`, `BODY_VENUS`, `BODY_EARTH`, `BODY_MARS`, `BODY_JUPITER`,
- *      `BODY_SATURN`, `BODY_URANUS`, `BODY_NEPTUNE`.
+ *      `BODY_SATURN`, `BODY_URANUS`, `BODY_NEPTUNE`, `BODY_PLUTO`.
  * @param time
  *      The date and time for which to calculate position and velocity.
  * @return
@@ -3026,6 +3046,14 @@ astro_state_vector_t Astronomy_BaryState(astro_body_t body, astro_time_t time)
         state.vx = state.vy = state.vz = 0.0;
         state.t = time;
         return state;
+    }
+
+    if (body == BODY_PLUTO)
+    {
+        astro_status_t status = CalcPluto(&planet, time, 0);
+        if (status != ASTRO_SUCCESS)
+            return StateVecError(status, time);
+        return ExportState(planet, time);
     }
 
     /*
@@ -3066,7 +3094,7 @@ astro_state_vector_t Astronomy_BaryState(astro_body_t body, astro_time_t time)
         state.status = ASTRO_SUCCESS;
         return state;
 
-    /* FIXFIXFIX - add support for BODY_MOON, BODY_EMB, BODY_PLUTO. */
+    /* FIXFIXFIX - add support for BODY_MOON, BODY_EMB. */
     default:
         return StateVecError(ASTRO_INVALID_BODY, time);
     }

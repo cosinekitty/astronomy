@@ -3221,6 +3221,14 @@ function UpdatePosition(dt: number, r: TerseVector, v: TerseVector, a: TerseVect
     );
 }
 
+function UpdateVelocity(dt: number, v: TerseVector, a: TerseVector): TerseVector {
+    return new TerseVector(
+        v.x + dt*a.x,
+        v.y + dt*a.y,
+        v.z + dt*a.z,
+    );
+}
+
 function GravSim(tt2: number, calc1: body_grav_calc_t): grav_sim_t {
     const dt = tt2 - calc1.tt;
 
@@ -3304,7 +3312,7 @@ function GetSegment(cache: body_grav_calc_t[][], tt: number): body_grav_calc_t[]
     return cache[seg_index];
 }
 
-function CalcPlutoOneWay(entry: BodyStateTableEntry, target_tt: number, dt: number) {
+function CalcPlutoOneWay(entry: BodyStateTableEntry, target_tt: number, dt: number): grav_sim_t {
     let sim = GravFromState(entry);
     const n = Math.ceil((target_tt - sim.grav.tt) / dt);
     for (let i=0; i < n; ++i)
@@ -3312,8 +3320,8 @@ function CalcPlutoOneWay(entry: BodyStateTableEntry, target_tt: number, dt: numb
     return sim;
 }
 
-function CalcPluto(time: AstroTime): Vector {
-    let r, bary;
+function CalcPluto(time: AstroTime, helio: boolean): StateVector {
+    let r, v, bary;
     const seg = GetSegment(pluto_cache, time.tt);
     if (!seg) {
         // The target time is outside the year range 0000..4000.
@@ -3325,6 +3333,7 @@ function CalcPluto(time: AstroTime): Vector {
         else
             sim = CalcPlutoOneWay(PlutoStateTable[PLUTO_NUM_STATES-1], time.tt, +PLUTO_DT);
         r = sim.grav.r;
+        v = sim.grav.v;
         bary = sim.bary;
     } else {
         const left = ClampIndex((time.tt - seg[0].tt) / PLUTO_DT, PLUTO_NSTEPS-1);
@@ -3336,16 +3345,27 @@ function CalcPluto(time: AstroTime): Vector {
 
         // Use Newtonian mechanics to extrapolate away from t1 in the positive time direction.
         const ra = UpdatePosition(time.tt - s1.tt, s1.r, s1.v, acc);
+        const va = UpdateVelocity(time.tt - s1.tt, s1.v, acc);
 
         // Use Newtonian mechanics to extrapolate away from t2 in the negative time direction.
         const rb = UpdatePosition(time.tt - s2.tt, s2.r, s2.v, acc);
+        const vb = UpdateVelocity(time.tt - s2.tt, s2.v, acc);
 
         // Use fade in/out idea to blend the two position estimates.
         const ramp = (time.tt - s1.tt)/PLUTO_DT;
         r = ra.mul(1 - ramp).add(rb.mul(ramp));
-        bary = new major_bodies_t(time.tt);
+        v = va.mul(1 - ramp).add(vb.mul(ramp));
     }
-    return r.sub(bary.Sun.r).ToAstroVector(time);
+
+    if (helio) {
+        // Convert barycentric vectors to heliocentric vectors.
+        if (!bary)
+            bary = new major_bodies_t(time.tt);
+        r = r.sub(bary.Sun.r);
+        v = v.sub(bary.Sun.r);
+    }
+
+    return new StateVector(r.x, r.y, r.z, v.x, v.y, v.z, time);
 }
 
 // Pluto integrator ends -----------------------------------------------------
@@ -3666,8 +3686,10 @@ export function HelioVector(body: Body, date: FlexibleDateTime): Vector {
     var time = MakeTime(date);
     if (body in vsop)
         return CalcVsop(vsop[body], time);
-    if (body === Body.Pluto)
-        return CalcPluto(time);
+    if (body === Body.Pluto) {
+        const p = CalcPluto(time, true);
+        return new Vector(p.x, p.y, p.z, time);
+    }
     if (body === Body.Sun)
         return new Vector(0, 0, 0, time);
     if (body === Body.Moon) {
@@ -3804,9 +3826,9 @@ function ExportState(terse: body_state_t, time: AstroTime): StateVector {
  *
  * @param {Body} body
  *      The celestial body whose barycentric state vector is to be calculated.
- *      Supported values are `Body.Sun`, `Body.SSB`, and all planets except Pluto:
+ *      Supported values are `Body.Sun`, `Body.SSB`, and all planets:
  *      `Body.Mercury`, `Body.Venus`, `Body.Earth`, `Body.Mars`, `Body.Jupiter`,
- *      `Body.Saturn`, `Body.Uranus`, `Body.Neptune`.
+ *      `Body.Saturn`, `Body.Uranus`, `Body.Neptune`, `Body.Pluto`.
  * @param {FlexibleDateTime} date
  *      The date and time for which to calculate position and velocity.
  * @returns {StateVector}
@@ -3814,9 +3836,13 @@ function ExportState(terse: body_state_t, time: AstroTime): StateVector {
  */
 export function BaryState(body: Body, date: FlexibleDateTime): StateVector {
     const time = MakeTime(date);
-    if (body == Body.SSB) {
+    if (body === Body.SSB) {
         // Trivial case: the solar system barycenter itself.
         return new StateVector(0, 0, 0, 0, 0, 0, time);
+    }
+
+    if (body === Body.Pluto) {
+        return CalcPluto(time, false);
     }
 
     // Find the barycentric positions and velocities for the 5 major bodies:

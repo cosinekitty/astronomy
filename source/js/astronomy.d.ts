@@ -842,9 +842,9 @@ export declare function GeoVector(body: Body, date: FlexibleDateTime, aberration
  *
  * @param {Body} body
  *      The celestial body whose barycentric state vector is to be calculated.
- *      Supported values are `Body.Sun`, `Body.SSB`, and all planets except Pluto:
+ *      Supported values are `Body.Sun`, `Body.SSB`, and all planets:
  *      `Body.Mercury`, `Body.Venus`, `Body.Earth`, `Body.Mars`, `Body.Jupiter`,
- *      `Body.Saturn`, `Body.Uranus`, `Body.Neptune`.
+ *      `Body.Saturn`, `Body.Uranus`, `Body.Neptune`, `Body.Pluto`.
  * @param {FlexibleDateTime} date
  *      The date and time for which to calculate position and velocity.
  * @returns {StateVector}

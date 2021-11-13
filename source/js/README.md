@@ -1245,7 +1245,7 @@ The vectors are expressed in equatorial J2000 coordinates (EQJ).
 
 | Param | Type | Description |
 | --- | --- | --- |
-| body | [<code>Body</code>](#Body) | The celestial body whose barycentric state vector is to be calculated.      Supported values are `Body.Sun`, `Body.SSB`, and all planets except Pluto:      `Body.Mercury`, `Body.Venus`, `Body.Earth`, `Body.Mars`, `Body.Jupiter`,      `Body.Saturn`, `Body.Uranus`, `Body.Neptune`. |
+| body | [<code>Body</code>](#Body) | The celestial body whose barycentric state vector is to be calculated.      Supported values are `Body.Sun`, `Body.SSB`, and all planets:      `Body.Mercury`, `Body.Venus`, `Body.Earth`, `Body.Mars`, `Body.Jupiter`,      `Body.Saturn`, `Body.Uranus`, `Body.Neptune`, `Body.Pluto`. |
 | date | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time for which to calculate position and velocity. |
 
 

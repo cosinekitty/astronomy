@@ -5,14 +5,14 @@ import re
 
 def PatchReadme(readmeFileName, jsFileName):
     nbytes = os.stat(jsFileName).st_size
-    if nbytes >= 100000:
+    if nbytes >= 120000:
         print('ERROR(patch_readme.py): The size of {} has grown to {} bytes. This is too large!'.format(jsFileName, nbytes))
         return 1
 
-    marker = '<!--MINIFIED_SIZE-->'
     with open(readmeFileName, 'rt') as infile:
         text = infile.read()
 
+    marker = '<!--MINIFIED_SIZE-->'
     pattern = marker + '[0-9]*'
     repl = marker + str(nbytes)
     updated = re.sub(pattern, repl, text)
