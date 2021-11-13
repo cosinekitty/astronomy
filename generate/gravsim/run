@@ -2,6 +2,7 @@
 
 if [[ "$1" != "skipgen" ]]; then
     pushd .. > /dev/null
+    ./build || exit $?
     ./generate source || exit $?
     popd > /dev/null
 fi

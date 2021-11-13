@@ -62,6 +62,9 @@ int main(int argc, const char *argv[])
 
     DebugMode = (argc > 1) && !strcmp(argv[1], "-v");
 
+    printf("PLUTO_TIME_STEP = %d\n", PLUTO_TIME_STEP);
+    printf("PLUTO_NSTEPS    = %d\n", PLUTO_NSTEPS);
+
     TopInitModel(&model);
     CHECK(TopLoadModel(&model, "../TOP2013.dat", 9));
 
@@ -72,7 +75,7 @@ int main(int argc, const char *argv[])
         tt = n * PLUTO_TIME_STEP;
         CHECK(TestPluto(tt, &model, &arcmin));
         if (arcmin > 1.0e-6)
-            FAIL("EXCESSIVE ERROR!\n");
+            FAIL("EXCESSIVE ERROR at node %d: %lf arcmin\n", n, arcmin);
     }
 
     /* Now check worst-case at near-midpoints. */
