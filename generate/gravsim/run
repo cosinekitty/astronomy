@@ -7,7 +7,6 @@ if [[ "$1" != "skipgen" ]]; then
 fi
 
 gcc -Wall -Werror -o gravsim_test \
-    -D ASTRONOMY_ENGINE_GRAVSIM_LOG \
     -I .. \
     -I ../../source/c/ \
     -I ../top2013/ \
@@ -16,6 +15,5 @@ gcc -Wall -Werror -o gravsim_test \
     ../top2013/top2013.c \
     gravsim_test.c -lm || exit $?
 
-rm -f gravsim.log
 ./gravsim_test || exit $?
 exit 0
