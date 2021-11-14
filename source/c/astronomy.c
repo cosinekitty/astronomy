@@ -2066,7 +2066,7 @@ astro_vector_t Astronomy_GeoMoon(astro_time_t time)
  * it is much more efficient to use #Astronomy_GeoMoon instead.
  *
  * @param time  The date and time for which to calculate the Moon's position and velocity.
- * @return The Moon's position and veloicty vectors in J2000 equatorial coordinates.
+ * @return The Moon's position and velocity vectors in J2000 equatorial coordinates.
  */
 astro_state_vector_t Astronomy_GeoMoonState(astro_time_t time)
 {
@@ -2099,6 +2099,31 @@ astro_state_vector_t Astronomy_GeoMoonState(astro_time_t time)
     s.t = time;
     s.status = ASTRO_SUCCESS;
 
+    return s;
+}
+
+
+/**
+ * @brief Calculates the geocentric position and velocity of the Earth/Moon barycenter.
+ *
+ * Given a time of observation, calculates the geocentric position and velocity vectors
+ * of the Earth/Moon barycenter (EMB).
+ * The position (x, y, z) components are expressed in AU (astronomical units).
+ * The velocity (vx, vy, vz) components are expressed in AU/day.
+ *
+ * @param time  The date and time for which to calculate the EMB vectors.
+ * @return The EMB's position and velocity vectors in geocentric J2000 equatorial coordinates.
+ */
+astro_state_vector_t Astronomy_GeoEmbState(astro_time_t time)
+{
+    astro_state_vector_t s = Astronomy_GeoMoonState(time);
+    const double d = 1.0 + EARTH_MOON_MASS_RATIO;
+    s.x /= d;
+    s.y /= d;
+    s.z /= d;
+    s.vx /= d;
+    s.vy /= d;
+    s.vz /= d;
     return s;
 }
 
@@ -4312,7 +4337,7 @@ static astro_state_vector_t ExportState(body_state_t terse, astro_time_t time)
  *
  * @param body
  *      The celestial body whose barycentric state vector is to be calculated.
- *      Supported values are `BODY_SUN`, `BODY_SSB`, and all planets:
+ *      Supported values are `BODY_SUN`, `BODY_MOON`, `BODY_EMB`, `BODY_SSB`, and all planets:
  *      `BODY_MERCURY`, `BODY_VENUS`, `BODY_EARTH`, `BODY_MARS`, `BODY_JUPITER`,
  *      `BODY_SATURN`, `BODY_URANUS`, `BODY_NEPTUNE`, `BODY_PLUTO`.
  * @param time
@@ -4381,8 +4406,12 @@ astro_state_vector_t Astronomy_BaryState(astro_body_t body, astro_time_t time)
         return state;
 
     case BODY_MOON:
-        state = Astronomy_GeoMoonState(time);
+    case BODY_EMB:
         earth = CalcVsopPosVel(&vsop[BODY_EARTH], time.tt);
+        if (body == BODY_MOON)
+            state = Astronomy_GeoMoonState(time);
+        else
+            state = Astronomy_GeoEmbState(time);
         state.x  += bary[0].r.x + earth.r.x;
         state.y  += bary[0].r.y + earth.r.y;
         state.z  += bary[0].r.z + earth.r.z;

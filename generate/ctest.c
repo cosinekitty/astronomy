@@ -4417,6 +4417,7 @@ static double StateVectorDiff(const double vec[3], double x, double y, double z)
 
 /* This is a hack for use inside unit tests only; it doesn't make sense for public consumption. */
 #define BODY_GEOMOON    ((astro_body_t)(-100))
+#define BODY_GEO_EMB    ((astro_body_t)(-101))
 
 
 static int VerifyBaryState(
@@ -4437,6 +4438,8 @@ static int VerifyBaryState(
 
     if (body == BODY_GEOMOON)
         state = Astronomy_GeoMoonState(time);
+    else if (body == BODY_GEO_EMB)
+        state = Astronomy_GeoEmbState(time);
     else
         state = Astronomy_BaryState(body, time);
     CHECK_STATUS(state);
@@ -4556,18 +4559,20 @@ static int BaryStateTest(void)
 {
     int error;  /* set as a side-effect of CHECK macro */
 
-    CHECK(BaryStateBody(BODY_SUN,     "barystate/Sun.txt",      1.23e-5,  1.14e-7));
-    CHECK(BaryStateBody(BODY_MERCURY, "barystate/Mercury.txt",  5.24e-5,  8.22e-6));
-    CHECK(BaryStateBody(BODY_VENUS,   "barystate/Venus.txt",    2.98e-5,  8.78e-7));
-    CHECK(BaryStateBody(BODY_EARTH,   "barystate/Earth.txt",    2.30e-5,  1.09e-6));
-    CHECK(BaryStateBody(BODY_MARS,    "barystate/Mars.txt",     4.34e-5,  8.23e-7));
-    CHECK(BaryStateBody(BODY_JUPITER, "barystate/Jupiter.txt",  3.74e-4,  1.78e-6));
-    CHECK(BaryStateBody(BODY_SATURN,  "barystate/Saturn.txt",   1.07e-3,  1.71e-6));
-    CHECK(BaryStateBody(BODY_URANUS,  "barystate/Uranus.txt",   1.71e-3,  1.03e-6));
-    CHECK(BaryStateBody(BODY_NEPTUNE, "barystate/Neptune.txt",  2.95e-3,  1.39e-6));
-    CHECK(BaryStateBody(BODY_PLUTO,   "barystate/Pluto.txt",    2.05e-3,  1.91e-7));
-    CHECK(BaryStateBody(BODY_MOON,    "barystate/Moon.txt",     2.35e-5,  1.13e-6));
-    CHECK(BaryStateBody(BODY_GEOMOON, "barystate/GeoMoon.txt",  1.04e-7,  3.40e-8));
+    CHECK(BaryStateBody(BODY_SUN,     "barystate/Sun.txt",      1.23e-05,  1.14e-07));
+    CHECK(BaryStateBody(BODY_MERCURY, "barystate/Mercury.txt",  5.24e-05,  8.22e-06));
+    CHECK(BaryStateBody(BODY_VENUS,   "barystate/Venus.txt",    2.98e-05,  8.78e-07));
+    CHECK(BaryStateBody(BODY_EARTH,   "barystate/Earth.txt",    2.30e-05,  1.09e-06));
+    CHECK(BaryStateBody(BODY_MARS,    "barystate/Mars.txt",     4.34e-05,  8.23e-07));
+    CHECK(BaryStateBody(BODY_JUPITER, "barystate/Jupiter.txt",  3.74e-04,  1.78e-06));
+    CHECK(BaryStateBody(BODY_SATURN,  "barystate/Saturn.txt",   1.07e-03,  1.71e-06));
+    CHECK(BaryStateBody(BODY_URANUS,  "barystate/Uranus.txt",   1.71e-03,  1.03e-06));
+    CHECK(BaryStateBody(BODY_NEPTUNE, "barystate/Neptune.txt",  2.95e-03,  1.39e-06));
+    CHECK(BaryStateBody(BODY_PLUTO,   "barystate/Pluto.txt",    2.05e-03,  1.91e-07));
+    CHECK(BaryStateBody(BODY_MOON,    "barystate/Moon.txt",     2.35e-05,  1.13e-06));
+    CHECK(BaryStateBody(BODY_EMB,     "barystate/EMB.txt",      2.35e-05,  1.11e-06));
+    CHECK(BaryStateBody(BODY_GEOMOON, "barystate/GeoMoon.txt",  1.04e-07,  3.40e-08));
+    CHECK(BaryStateBody(BODY_GEO_EMB, "barystate/GeoEMB.txt",   1.26e-09,  4.12e-10));
 
     printf("C BaryStateTest: PASS\n");
 fail:

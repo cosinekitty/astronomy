@@ -280,7 +280,7 @@ Given a body and a time, calculates the barycentric position and velocity vector
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| [`astro_body_t`](#astro_body_t) | `body` |  The celestial body whose barycentric state vector is to be calculated. Supported values are `BODY_SUN`, `BODY_SSB`, and all planets: `BODY_MERCURY`, `BODY_VENUS`, `BODY_EARTH`, `BODY_MARS`, `BODY_JUPITER`, `BODY_SATURN`, `BODY_URANUS`, `BODY_NEPTUNE`, `BODY_PLUTO`.  | 
+| [`astro_body_t`](#astro_body_t) | `body` |  The celestial body whose barycentric state vector is to be calculated. Supported values are `BODY_SUN`, `BODY_MOON`, `BODY_EMB`, `BODY_SSB`, and all planets: `BODY_MERCURY`, `BODY_VENUS`, `BODY_EARTH`, `BODY_MARS`, `BODY_JUPITER`, `BODY_SATURN`, `BODY_URANUS`, `BODY_NEPTUNE`, `BODY_PLUTO`.  | 
 | [`astro_time_t`](#astro_time_t) | `time` |  The date and time for which to calculate position and velocity.  | 
 
 
@@ -605,6 +605,30 @@ Given an [`astro_time_t`](#astro_time_t) value `time`, formats it as an ISO 8601
 
 ---
 
+<a name="Astronomy_GeoEmbState"></a>
+### Astronomy_GeoEmbState(time) &#8658; [`astro_state_vector_t`](#astro_state_vector_t)
+
+**Calculates the geocentric position and velocity of the Earth/Moon barycenter.** 
+
+
+
+Given a time of observation, calculates the geocentric position and velocity vectors of the Earth/Moon barycenter (EMB). The position (x, y, z) components are expressed in AU (astronomical units). The velocity (vx, vy, vz) components are expressed in AU/day.
+
+
+
+**Returns:**  The EMB's position and velocity vectors in geocentric J2000 equatorial coordinates. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_time_t`](#astro_time_t) | `time` |  The date and time for which to calculate the EMB vectors.  | 
+
+
+
+
+---
+
 <a name="Astronomy_GeoMoon"></a>
 ### Astronomy_GeoMoon(time) &#8658; [`astro_vector_t`](#astro_vector_t)
 
@@ -644,7 +668,7 @@ If you only need the Moon's geocentric position, and not its geocentric velocity
 
 
 
-**Returns:**  The Moon's position and veloicty vectors in J2000 equatorial coordinates. 
+**Returns:**  The Moon's position and velocity vectors in J2000 equatorial coordinates. 
 
 
 
