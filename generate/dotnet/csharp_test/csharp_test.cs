@@ -2375,7 +2375,7 @@ namespace csharp_test
 
                     transit = Astronomy.NextTransit(body, transit.finish);
                 }
-                Console.WriteLine("C# TransitFile({0}): PASS - verified {1}, max minutes = {2}, max sep arcmin = {3}\n", filename, lnum, max_minutes, max_sep);
+                Console.WriteLine("C# TransitFile({0}): PASS - verified {1}, max minutes = {2}, max sep arcmin = {3}", filename, lnum, max_minutes, max_sep);
                 return 0;
             }
         }
@@ -2419,12 +2419,12 @@ namespace csharp_test
             Debug("C# PlutoCheck: calc pos = [{0}, {1}, {2}]", vector.x, vector.y, vector.z);
             Debug("C# PlutoCheck: ref  pos = [{0}, {1}, {2}]", x, y, z);
             Debug("C# PlutoCheck: del  pos = [{0}, {1}, {2}]", vector.x - x, vector.y - y, vector.z - z);
-            Debug("C# PlutoCheck: diff = {0} AU, {1} arcmin\n", diff, arcmin);
+            Debug("C# PlutoCheck: diff = {0} AU, {1} arcmin", diff, arcmin);
             Debug("");
 
             if (v(arcmin) > arcmin_tolerance)
             {
-                Console.WriteLine("C# PlutoCheck: EXCESSIVE ERROR\n");
+                Console.WriteLine("C# PlutoCheck: EXCESSIVE ERROR");
                 return 1;
             }
             return 0;
