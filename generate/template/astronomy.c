@@ -1865,6 +1865,40 @@ astro_vector_t Astronomy_GeoMoon(astro_time_t time)
 }
 
 
+body_state_t GeoMoonState(astro_time_t time)
+{
+    /*
+        This is a hack, because trying to figure out how to derive a time
+        derivative for CalcMoon() would be extremely painful!
+        Calculate just before and just after the given time.
+        Average to find position, subtract to find velocity.
+    */
+    const double dt = 1.0e-5;   /* 0.864 seconds */
+    astro_vector_t r1, r2;
+    astro_time_t t1, t2;
+    body_state_t s;
+
+    t1 = Astronomy_AddDays(time, -dt);
+    t2 = Astronomy_AddDays(time, +dt);
+
+    r1 = Astronomy_GeoMoon(t1);
+    r2 = Astronomy_GeoMoon(t2);
+
+    /* The desired position is the average of the two calculated positions. */
+    s.r.x = (r1.x + r2.x) / 2;
+    s.r.y = (r1.y + r2.y) / 2;
+    s.r.z = (r1.z + r2.z) / 2;
+
+    /* The difference of the position vectors divided by the time span gives the velocity vector. */
+    s.v.x = (r2.x - r1.x) / (2 * dt);
+    s.v.y = (r2.y - r1.y) / (2 * dt);
+    s.v.z = (r2.z - r1.z) / (2 * dt);
+    s.tt = time.tt;
+
+    return s;
+}
+
+
 /**
  * @brief Calculates the Moon's libration angles at a given moment in time.
  *
@@ -3036,7 +3070,7 @@ astro_state_vector_t Astronomy_BaryState(astro_body_t body, astro_time_t time)
 {
     astro_state_vector_t state;
     body_state_t bary[5];
-    body_state_t planet;
+    body_state_t planet, earth;
 
     if (body == BODY_SSB)
     {
@@ -3076,14 +3110,12 @@ astro_state_vector_t Astronomy_BaryState(astro_body_t body, astro_time_t time)
     case BODY_NEPTUNE:  return ExportState(bary[4], time);
 
     /* Handle the remaining VSOP bodies: Mercury, Venus, Earth, Mars. */
-    /* Otherwise, we need to calculate the heliocentric state of the given body */
-    /* and add the Sun's heliocentric state to obtain the body's barycentric state. */
-    /* BarySun + HelioBody = BaryBody */
     case BODY_MERCURY:
     case BODY_VENUS:
     case BODY_EARTH:
     case BODY_MARS:
         planet = CalcVsopPosVel(&vsop[body], time.tt);
+        /* BarySun + HelioBody = BaryBody */
         state.x  = bary[0].r.x + planet.r.x;
         state.y  = bary[0].r.y + planet.r.y;
         state.z  = bary[0].r.z + planet.r.z;
@@ -3094,7 +3126,19 @@ astro_state_vector_t Astronomy_BaryState(astro_body_t body, astro_time_t time)
         state.status = ASTRO_SUCCESS;
         return state;
 
-    /* FIXFIXFIX - add support for BODY_MOON, BODY_EMB. */
+    case BODY_MOON:
+        planet = GeoMoonState(time);
+        earth = CalcVsopPosVel(&vsop[BODY_EARTH], time.tt);
+        state.x  = bary[0].r.x + earth.r.x + planet.r.x;
+        state.y  = bary[0].r.y + earth.r.y + planet.r.y;
+        state.z  = bary[0].r.z + earth.r.z + planet.r.z;
+        state.vx = bary[0].v.x + earth.v.x + planet.v.x;
+        state.vy = bary[0].v.y + earth.v.y + planet.v.y;
+        state.vz = bary[0].v.z + earth.v.z + planet.v.z;
+        state.t  = time;
+        state.status = ASTRO_SUCCESS;
+        return state;
+
     default:
         return StateVecError(ASTRO_INVALID_BODY, time);
     }
