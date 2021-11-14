@@ -1896,8 +1896,19 @@ def StateVectorDiff(vec, x, y, z):
     ds = sqrt(dx*dx + dy*dy + dz*dz)
     return ds
 
+# Constants for use inside unit tests only; they doesn't make sense for public consumption.
+_Body_GeoMoon = -100
+_Body_Geo_EMB = -101
+
+
 def VerifyBaryState(stats, body, filename, lnum, time, pos, vel, r_thresh, v_thresh):
-    state = astronomy.BaryState(body, time)
+    if body == _Body_GeoMoon:
+        state = astronomy.GeoMoonState(time)
+    elif body == _Body_Geo_EMB:
+        state = astronomy.GeoEmbState(time)
+    else:
+        state = astronomy.BaryState(body, time)
+
     rdiff = StateVectorDiff(pos, state.x, state.y, state.z)
     if rdiff > stats.max_rdiff:
         stats.max_rdiff = rdiff
@@ -1961,16 +1972,20 @@ def BaryStateBody(body, filename, r_thresh, v_thresh):
 
 
 def BaryState():
-    if BaryStateBody(astronomy.Body.Sun,     'barystate/Sun.txt',      1.23e-5,  1.14e-7):  return 1
-    if BaryStateBody(astronomy.Body.Mercury, 'barystate/Mercury.txt',  5.24e-5,  8.22e-6):  return 1
-    if BaryStateBody(astronomy.Body.Venus,   'barystate/Venus.txt',    2.98e-5,  8.78e-7):  return 1
-    if BaryStateBody(astronomy.Body.Earth,   'barystate/Earth.txt',    2.30e-5,  1.09e-6):  return 1
-    if BaryStateBody(astronomy.Body.Mars,    'barystate/Mars.txt',     4.34e-5,  8.23e-7):  return 1
-    if BaryStateBody(astronomy.Body.Jupiter, 'barystate/Jupiter.txt',  3.74e-4,  1.78e-6):  return 1
-    if BaryStateBody(astronomy.Body.Saturn,  'barystate/Saturn.txt',   1.07e-3,  1.71e-6):  return 1
-    if BaryStateBody(astronomy.Body.Uranus,  'barystate/Uranus.txt',   1.71e-3,  1.03e-6):  return 1
-    if BaryStateBody(astronomy.Body.Neptune, 'barystate/Neptune.txt',  2.95e-3,  1.39e-6):  return 1
-    if BaryStateBody(astronomy.Body.Pluto,   'barystate/Pluto.txt',    2.05e-3,  1.91e-7):  return 1
+    if BaryStateBody(astronomy.Body.Sun,     'barystate/Sun.txt',      1.23e-05,  1.14e-07):  return 1
+    if BaryStateBody(astronomy.Body.Mercury, 'barystate/Mercury.txt',  5.24e-05,  8.22e-06):  return 1
+    if BaryStateBody(astronomy.Body.Venus,   'barystate/Venus.txt',    2.98e-05,  8.78e-07):  return 1
+    if BaryStateBody(astronomy.Body.Earth,   'barystate/Earth.txt',    2.30e-05,  1.09e-06):  return 1
+    if BaryStateBody(astronomy.Body.Mars,    'barystate/Mars.txt',     4.34e-05,  8.23e-07):  return 1
+    if BaryStateBody(astronomy.Body.Jupiter, 'barystate/Jupiter.txt',  3.74e-04,  1.78e-06):  return 1
+    if BaryStateBody(astronomy.Body.Saturn,  'barystate/Saturn.txt',   1.07e-03,  1.71e-06):  return 1
+    if BaryStateBody(astronomy.Body.Uranus,  'barystate/Uranus.txt',   1.71e-03,  1.03e-06):  return 1
+    if BaryStateBody(astronomy.Body.Neptune, 'barystate/Neptune.txt',  2.95e-03,  1.39e-06):  return 1
+    if BaryStateBody(astronomy.Body.Pluto,   'barystate/Pluto.txt',    2.05e-03,  1.91e-07):  return 1
+    if BaryStateBody(astronomy.Body.Moon,    "barystate/Moon.txt",     2.35e-05,  1.13e-06):  return 1
+    if BaryStateBody(astronomy.Body.EMB,     "barystate/EMB.txt",      2.35e-05,  1.11e-06):  return 1
+    if BaryStateBody(_Body_GeoMoon,          "barystate/GeoMoon.txt",  1.04e-07,  3.40e-08):  return 1
+    if BaryStateBody(_Body_Geo_EMB,          "barystate/GeoEMB.txt",   1.26e-09,  4.12e-10):  return 1
     print('PY BaryState: PASS')
     return 0
 

@@ -1229,6 +1229,25 @@ Angular coordinates expressed in the same equatorial system as `vec`.
 
 ---
 
+<a name="GeoEmbState"></a>
+### GeoEmbState(time)
+
+**Calculates the geocentric position and velocity of the Earth/Moon barycenter.**
+
+Given a time of observation, calculates the geocentric position and velocity vectors
+of the Earth/Moon barycenter (EMB).
+The position (x, y, z) components are expressed in AU (astronomical units).
+The velocity (vx, vy, vz) components are expressed in AU/day.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Time`](#Time) | `time` | The date and time for which to calculate the EMB's geocentric state. |
+
+### Returns: [`StateVector`](#StateVector)
+The EMB's position and velocity vectors in J2000 equatorial coordinates.
+
+---
+
 <a name="GeoMoon"></a>
 ### GeoMoon(time)
 
@@ -1249,6 +1268,27 @@ by Montenbruck and Pfleger.
 
 ### Returns: [`Vector`](#Vector)
 The Moon's position as a vector in J2000 Cartesian equatorial coordinates.
+
+---
+
+<a name="GeoMoonState"></a>
+### GeoMoonState(time)
+
+**Calculates the geocentric position and velocity of the Moon at a given time.**
+
+Given a time of observation, calculates the Moon's position and velocity vectors.
+The position and velocity are of the Moon's center relative to the Earth's center.
+The position (x, y, z) components are expressed in AU (astronomical units).
+The velocity (vx, vy, vz) components are expressed in AU/day.
+If you need the Moon's position only, and not its velocity,
+it is much more efficient to use [`GeoMoon`](#GeoMoon) instead.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Time`](#Time) | `time` | The date and time for which to calculate the Moon's position and velocity. |
+
+### Returns: [`StateVector`](#StateVector)
+The Moon's position and velocity vectors in J2000 equatorial coordinates.
 
 ---
 

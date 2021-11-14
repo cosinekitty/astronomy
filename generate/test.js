@@ -2170,7 +2170,7 @@ function StateVectorDiff(vec, x, y, z) {
     return ds;
 }
 
-
+// Constants for use inside unit tests only; they doesn't make sense for public consumption.
 const Body_GeoMoon = -100;
 const Body_Geo_EMB = -101;
 

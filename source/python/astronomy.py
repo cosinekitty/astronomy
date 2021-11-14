@@ -2487,7 +2487,6 @@ def GeoMoon(time):
     -------
     Vector
         The Moon's position as a vector in J2000 Cartesian equatorial coordinates.
-
     """
     m = _CalcMoon(time)
 
@@ -2505,6 +2504,69 @@ def GeoMoon(time):
     # Convert from mean equinox of date to J2000.
     mpos2 = _precession(mpos1, time, _PrecessDir.Into2000)
     return Vector(mpos2[0], mpos2[1], mpos2[2], time)
+
+
+def GeoMoonState(time):
+    """Calculates the geocentric position and velocity of the Moon at a given time.
+
+    Given a time of observation, calculates the Moon's position and velocity vectors.
+    The position and velocity are of the Moon's center relative to the Earth's center.
+    The position (x, y, z) components are expressed in AU (astronomical units).
+    The velocity (vx, vy, vz) components are expressed in AU/day.
+    If you need the Moon's position only, and not its velocity,
+    it is much more efficient to use #GeoMoon instead.
+
+    Parameters
+    ----------
+    time : Time
+        The date and time for which to calculate the Moon's position and velocity.
+
+    Returns
+    -------
+    StateVector
+        The Moon's position and velocity vectors in J2000 equatorial coordinates.
+    """
+    # This is a hack, because trying to figure out how to derive a time
+    # derivative for CalcMoon() would be extremely painful!
+    # Calculate just before and just after the given time.
+    # Average to find position, subtract to find velocity.
+    dt = 1.0e-5   # 0.864 seconds
+    t1 = time.AddDays(-dt)
+    t2 = time.AddDays(+dt)
+    r1 = GeoMoon(t1)
+    r2 = GeoMoon(t2)
+    return StateVector(
+        (r1.x + r2.x) / 2,
+        (r1.y + r2.y) / 2,
+        (r1.z + r2.z) / 2,
+        (r2.x - r1.x) / (2 * dt),
+        (r2.y - r1.y) / (2 * dt),
+        (r2.z - r1.z) / (2 * dt),
+        time
+    )
+
+
+def GeoEmbState(time):
+    """Calculates the geocentric position and velocity of the Earth/Moon barycenter.
+
+    Given a time of observation, calculates the geocentric position and velocity vectors
+    of the Earth/Moon barycenter (EMB).
+    The position (x, y, z) components are expressed in AU (astronomical units).
+    The velocity (vx, vy, vz) components are expressed in AU/day.
+
+    Parameters
+    ----------
+    time : Time
+        The date and time for which to calculate the EMB's geocentric state.
+
+    Returns
+    -------
+    StateVector
+        The EMB's position and velocity vectors in J2000 equatorial coordinates.
+    """
+    s = GeoMoonState(time)
+    d = 1.0 + _EARTH_MOON_MASS_RATIO
+    return StateVector(s.x/d, s.y/d, s.z/d, s.vx/d, s.vy/d, s.vz/d, time)
 
 # END CalcMoon
 #----------------------------------------------------------------------------
@@ -4292,12 +4354,21 @@ def BaryState(body, time):
     if body == Body.Neptune:
         return _ExportState(bary.Neptune, time)
 
+    if body in [Body.Moon, Body.EMB]:
+        earth = _CalcVsopPosVel(_vsop[Body.Earth.value], time.tt)
+        state = GeoMoonState(time) if body == Body.Moon else GeoEmbState(time)
+        return StateVector(
+            state.x  + bary.Sun.r.x + earth.r.x,
+            state.y  + bary.Sun.r.y + earth.r.y,
+            state.z  + bary.Sun.r.z + earth.r.z,
+            state.vx + bary.Sun.v.x + earth.v.x,
+            state.vy + bary.Sun.v.y + earth.v.y,
+            state.vz + bary.Sun.v.z + earth.v.z,
+            time
+        )
+
     if 0 <= body.value < len(_vsop):
         # Handle the remaining VSOP bodies: Mercury, Venus, Earth, Mars.
-        # Calculate the heliocentric state of the given body
-        # and add the Sun's heliocentric state to obtain the
-        # body's barycentric state.
-        # BarySun + HelioBody = BaryBody
         planet = _CalcVsopPosVel(_vsop[body.value], time.tt)
         return StateVector(
             bary.Sun.r.x + planet.r.x,
@@ -4309,7 +4380,6 @@ def BaryState(body, time):
             time
         )
 
-    # FIXFIXFIX: later, we can add support for Moon, EMB, etc.
     raise InvalidBodyError()
 
 

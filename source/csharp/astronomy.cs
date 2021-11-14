@@ -4598,7 +4598,7 @@ namespace CosineKitty
         /// The position and velocity are of the Moon's center relative to the Earth's center.
         /// The position (x, y, z) components are expressed in AU (astronomical units).
         /// The velocity (vx, vy, vz) components are expressed in AU/day.
-        /// If you only need the Moon's geocentric position, and not its geocentric velocity,
+        /// If you need the Moon's position only, and not its velocity,
         /// it is much more efficient to use #Astronomy.GeoVector instead.
         /// </remarks>
         /// <param name="time">The date and time for which to calculate the Moon's position and velocity.</param>

@@ -2062,7 +2062,7 @@ astro_vector_t Astronomy_GeoMoon(astro_time_t time)
  * The position (x, y, z) components are expressed in AU (astronomical units).
  * The velocity (vx, vy, vz) components are expressed in AU/day.
  *
- * If you only need the Moon's geocentric position, and not its geocentric velocity,
+ * If you need the Moon's position only, and not its velocity,
  * it is much more efficient to use #Astronomy_GeoMoon instead.
  *
  * @param time  The date and time for which to calculate the Moon's position and velocity.

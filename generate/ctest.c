@@ -4415,7 +4415,7 @@ static double StateVectorDiff(const double vec[3], double x, double y, double z)
 }
 
 
-/* This is a hack for use inside unit tests only; it doesn't make sense for public consumption. */
+/* Constants for use inside unit tests only; they doesn't make sense for public consumption. */
 #define BODY_GEOMOON    ((astro_body_t)(-100))
 #define BODY_GEO_EMB    ((astro_body_t)(-101))
 

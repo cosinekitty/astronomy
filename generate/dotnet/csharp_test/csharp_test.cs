@@ -2714,7 +2714,7 @@ namespace csharp_test
             return ds;
         }
 
-        // Hacks for use inside unit tests only; they doesn't make sense for public consumption.
+        // Constants for use inside unit tests only; they doesn't make sense for public consumption.
         const Body Body_GeoMoon = (Body)(-100);
         const Body Body_Geo_EMB = (Body)(-101);
 
