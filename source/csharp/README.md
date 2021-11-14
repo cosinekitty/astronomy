@@ -310,7 +310,7 @@ The vectors are expressed in equatorial J2000 coordinates (EQJ).
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| [`Body`](#Body) | `body` | The celestial body whose barycentric state vector is to be calculated. Supported values are `Body.Sun`, `Body.SSB`, and all planets: `Body.Mercury`, `Body.Venus`, `Body.Earth`, `Body.Mars`, `Body.Jupiter`, `Body.Saturn`, `Body.Uranus`, `Body.Neptune`, `Body.Pluto`. |
+| [`Body`](#Body) | `body` | The celestial body whose barycentric state vector is to be calculated. Supported values are `Body.Sun`, `Body.Moon`, `Body.EMB`, `Body.SSB`, and all planets: `Body.Mercury`, `Body.Venus`, `Body.Earth`, `Body.Mars`, `Body.Jupiter`, `Body.Saturn`, `Body.Uranus`, `Body.Neptune`, `Body.Pluto`. |
 | [`AstroTime`](#AstroTime) | `time` | The date and time for which to calculate position and velocity. |
 
 **Returns:** A structure that contains barycentric position and velocity vectors.
@@ -460,6 +460,40 @@ which are relative to the plane of the Earth's orbit around the Sun.
 | [`AstroVector`](#AstroVector) | `equ` | Equatorial coordinates in the J2000 frame of reference. You can call [`Astronomy.GeoVector`](#Astronomy.GeoVector) to obtain suitable equatorial coordinates. |
 
 **Returns:** Ecliptic coordinates in the J2000 frame of reference.
+
+<a name="Astronomy.GeoEmbState"></a>
+### Astronomy.GeoEmbState(time) &#8658; [`StateVector`](#StateVector)
+
+**Calculates the geocentric position and velocity of the Earth/Moon barycenter.**
+
+Given a time of observation, calculates the geocentric position and velocity vectors
+of the Earth/Moon barycenter (EMB).
+The position (x, y, z) components are expressed in AU (astronomical units).
+The velocity (vx, vy, vz) components are expressed in AU/day.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`AstroTime`](#AstroTime) | `time` | The date and time for which to calculate the EMB vectors. |
+
+**Returns:** The EMB's position and velocity vectors in geocentric J2000 equatorial coordinates.
+
+<a name="Astronomy.GeoMoonState"></a>
+### Astronomy.GeoMoonState(time) &#8658; [`StateVector`](#StateVector)
+
+**Calculates the geocentric position and velocity of the Moon at a given time.**
+
+Given a time of observation, calculates the Moon's position and velocity vectors.
+The position and velocity are of the Moon's center relative to the Earth's center.
+The position (x, y, z) components are expressed in AU (astronomical units).
+The velocity (vx, vy, vz) components are expressed in AU/day.
+If you only need the Moon's geocentric position, and not its geocentric velocity,
+it is much more efficient to use [`Astronomy.GeoVector`](#Astronomy.GeoVector) instead.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`AstroTime`](#AstroTime) | `time` | The date and time for which to calculate the Moon's position and velocity. |
+
+**Returns:** The Moon's position and velocity vectors in J2000 equatorial coordinates.
 
 <a name="Astronomy.GeoVector"></a>
 ### Astronomy.GeoVector(body, time, aberration) &#8658; [`AstroVector`](#AstroVector)

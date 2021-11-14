@@ -2714,6 +2714,10 @@ namespace csharp_test
             return ds;
         }
 
+        // Hacks for use inside unit tests only; they doesn't make sense for public consumption.
+        const Body Body_GeoMoon = (Body)(-100);
+        const Body Body_Geo_EMB = (Body)(-101);
+
         static int VerifyBaryState(
             ref double max_rdiff,
             ref double max_vdiff,
@@ -2726,7 +2730,14 @@ namespace csharp_test
             double r_thresh,
             double v_thresh)
         {
-            StateVector state = Astronomy.BaryState(body, time);
+            StateVector state;
+            if (body == Body_GeoMoon)
+                state = Astronomy.GeoMoonState(time);
+            else if (body == Body_Geo_EMB)
+                state = Astronomy.GeoEmbState(time);
+            else
+                state = Astronomy.BaryState(body, time);
+
             double rdiff = StateVectorDiff(pos, state.x, state.y, state.z);
             if (rdiff > max_rdiff)
                 max_rdiff = rdiff;
@@ -2841,16 +2852,20 @@ namespace csharp_test
 
         static int BaryStateTest()
         {
-            if (0 != BaryStateBody(Body.Sun,     "../../barystate/Sun.txt",      1.23e-5,  1.14e-7)) return 1;
-            if (0 != BaryStateBody(Body.Mercury, "../../barystate/Mercury.txt",  5.24e-5,  8.22e-6)) return 1;
-            if (0 != BaryStateBody(Body.Venus,   "../../barystate/Venus.txt",    2.98e-5,  8.78e-7)) return 1;
-            if (0 != BaryStateBody(Body.Earth,   "../../barystate/Earth.txt",    2.30e-5,  1.09e-6)) return 1;
-            if (0 != BaryStateBody(Body.Mars,    "../../barystate/Mars.txt",     4.34e-5,  8.23e-7)) return 1;
-            if (0 != BaryStateBody(Body.Jupiter, "../../barystate/Jupiter.txt",  3.74e-4,  1.78e-6)) return 1;
-            if (0 != BaryStateBody(Body.Saturn,  "../../barystate/Saturn.txt",   1.07e-3,  1.71e-6)) return 1;
-            if (0 != BaryStateBody(Body.Uranus,  "../../barystate/Uranus.txt",   1.71e-3,  1.03e-6)) return 1;
-            if (0 != BaryStateBody(Body.Neptune, "../../barystate/Neptune.txt",  2.95e-3,  1.39e-6)) return 1;
-            if (0 != BaryStateBody(Body.Pluto,   "../../barystate/Pluto.txt",    2.05e-3,  1.91e-7)) return 1;
+            if (0 != BaryStateBody(Body.Sun,     "../../barystate/Sun.txt",      1.23e-05,  1.14e-07)) return 1;
+            if (0 != BaryStateBody(Body.Mercury, "../../barystate/Mercury.txt",  5.24e-05,  8.22e-06)) return 1;
+            if (0 != BaryStateBody(Body.Venus,   "../../barystate/Venus.txt",    2.98e-05,  8.78e-07)) return 1;
+            if (0 != BaryStateBody(Body.Earth,   "../../barystate/Earth.txt",    2.30e-05,  1.09e-06)) return 1;
+            if (0 != BaryStateBody(Body.Mars,    "../../barystate/Mars.txt",     4.34e-05,  8.23e-07)) return 1;
+            if (0 != BaryStateBody(Body.Jupiter, "../../barystate/Jupiter.txt",  3.74e-04,  1.78e-06)) return 1;
+            if (0 != BaryStateBody(Body.Saturn,  "../../barystate/Saturn.txt",   1.07e-03,  1.71e-06)) return 1;
+            if (0 != BaryStateBody(Body.Uranus,  "../../barystate/Uranus.txt",   1.71e-03,  1.03e-06)) return 1;
+            if (0 != BaryStateBody(Body.Neptune, "../../barystate/Neptune.txt",  2.95e-03,  1.39e-06)) return 1;
+            if (0 != BaryStateBody(Body.Pluto,   "../../barystate/Pluto.txt",    2.05e-03,  1.91e-07)) return 1;
+            if (0 != BaryStateBody(Body.Moon,    "../../barystate/Moon.txt",     2.35e-05,  1.13e-06)) return 1;
+            if (0 != BaryStateBody(Body.EMB,     "../../barystate/EMB.txt",      2.35e-05,  1.11e-06)) return 1;
+            if (0 != BaryStateBody(Body_GeoMoon, "../../barystate/GeoMoon.txt",  1.04e-07,  3.40e-08)) return 1;
+            if (0 != BaryStateBody(Body_Geo_EMB, "../../barystate/GeoEMB.txt",   1.26e-09,  4.12e-10)) return 1;
             Console.WriteLine("C# BaryStateTest: PASS");
             return 0;
         }

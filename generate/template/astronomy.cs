@@ -3379,6 +3379,72 @@ $ASTRO_IAU_DATA()
         }
 
         /// <summary>
+        /// Calculates the geocentric position and velocity of the Moon at a given time.
+        /// </summary>
+        /// <remarks>
+        /// Given a time of observation, calculates the Moon's position and velocity vectors.
+        /// The position and velocity are of the Moon's center relative to the Earth's center.
+        /// The position (x, y, z) components are expressed in AU (astronomical units).
+        /// The velocity (vx, vy, vz) components are expressed in AU/day.
+        /// If you only need the Moon's geocentric position, and not its geocentric velocity,
+        /// it is much more efficient to use #Astronomy.GeoVector instead.
+        /// </remarks>
+        /// <param name="time">The date and time for which to calculate the Moon's position and velocity.</param>
+        /// <returns>The Moon's position and velocity vectors in J2000 equatorial coordinates.</returns>
+        public static StateVector GeoMoonState(AstroTime time)
+        {
+            // This is a hack, because trying to figure out how to derive a time
+            // derivative for CalcMoon() would be extremely painful!
+            // Calculate just before and just after the given time.
+            // Average to find position, subtract to find velocity.
+            const double dt = 1.0e-5;   // 0.864 seconds
+
+            AstroTime t1 = time.AddDays(-dt);
+            AstroTime t2 = time.AddDays(+dt);
+
+            AstroVector r1 = GeoMoon(t1);
+            AstroVector r2 = GeoMoon(t2);
+
+            // The desired position is the average of the two calculated positions.
+            StateVector s;
+            s.x = (r1.x + r2.x) / 2;
+            s.y = (r1.y + r2.y) / 2;
+            s.z = (r1.z + r2.z) / 2;
+
+            // The difference of the position vectors divided by the time span gives the velocity vector.
+            s.vx = (r2.x - r1.x) / (2 * dt);
+            s.vy = (r2.y - r1.y) / (2 * dt);
+            s.vz = (r2.z - r1.z) / (2 * dt);
+            s.t = time;
+
+            return s;
+        }
+
+        /// <summary>
+        /// Calculates the geocentric position and velocity of the Earth/Moon barycenter.
+        /// </summary>
+        /// <remarks>
+        /// Given a time of observation, calculates the geocentric position and velocity vectors
+        /// of the Earth/Moon barycenter (EMB).
+        /// The position (x, y, z) components are expressed in AU (astronomical units).
+        /// The velocity (vx, vy, vz) components are expressed in AU/day.
+        /// </remarks>
+        /// <param name="time">The date and time for which to calculate the EMB vectors.</param>
+        /// <returns>The EMB's position and velocity vectors in geocentric J2000 equatorial coordinates.</returns>
+        public static StateVector GeoEmbState(AstroTime time)
+        {
+            StateVector s = GeoMoonState(time);
+            const double d = 1.0 + EARTH_MOON_MASS_RATIO;
+            s.x /= d;
+            s.y /= d;
+            s.z /= d;
+            s.vx /= d;
+            s.vy /= d;
+            s.vz /= d;
+            return s;
+        }
+
+        /// <summary>
         /// Calculates the Moon's libration angles at a given moment in time.
         /// </summary>
         /// <remarks>
@@ -3744,7 +3810,7 @@ $ASTRO_IAU_DATA()
         /// </remarks>
         /// <param name="body">
         /// The celestial body whose barycentric state vector is to be calculated.
-        /// Supported values are `Body.Sun`, `Body.SSB`, and all planets:
+        /// Supported values are `Body.Sun`, `Body.Moon`, `Body.EMB`, `Body.SSB`, and all planets:
         /// `Body.Mercury`, `Body.Venus`, `Body.Earth`, `Body.Mars`, `Body.Jupiter`,
         /// `Body.Saturn`, `Body.Uranus`, `Body.Neptune`, `Body.Pluto`.
         /// </param>
@@ -3774,11 +3840,28 @@ $ASTRO_IAU_DATA()
                 case Body.Saturn:   return ExportState(bary.Saturn, time);
                 case Body.Uranus:   return ExportState(bary.Uranus, time);
                 case Body.Neptune:  return ExportState(bary.Neptune, time);
+
+                case Body.Moon:
+                case Body.EMB:
+                    body_state_t earth = CalcVsopPosVel(vsop[(int)Body.Earth], time.tt);
+                    StateVector state;
+                    if (body == Body.Moon)
+                        state = GeoMoonState(time);
+                    else
+                        state = GeoEmbState(time);
+
+                    return new StateVector(
+                        state.x  + bary.Sun.r.x + earth.r.x,
+                        state.y  + bary.Sun.r.y + earth.r.y,
+                        state.z  + bary.Sun.r.z + earth.r.z,
+                        state.vx + bary.Sun.v.x + earth.v.x,
+                        state.vy + bary.Sun.v.y + earth.v.y,
+                        state.vz + bary.Sun.v.z + earth.v.z,
+                        time
+                    );
             }
 
             // Handle the remaining VSOP bodies: Mercury, Venus, Earth, Mars.
-            // Otherwise, we need to calculate the heliocentric state of the given body
-            // and add the Sun's heliocentric state to obtain the body's barycentric state.
             // BarySun + HelioBody = BaryBody
             int bindex = (int)body;
             if (bindex >= 0 && bindex < vsop.Length)
@@ -3795,7 +3878,6 @@ $ASTRO_IAU_DATA()
                 );
             }
 
-            // FIXFIXFIX: later, we can add support for Pluto, Moon, EMB, etc.
             throw new InvalidBodyException(body);
         }
 
