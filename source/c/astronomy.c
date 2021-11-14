@@ -2054,7 +2054,21 @@ astro_vector_t Astronomy_GeoMoon(astro_time_t time)
 }
 
 
-body_state_t GeoMoonState(astro_time_t time)
+/**
+ * @brief Calculates the geocentric position and velocity of the Moon at a given time.
+ *
+ * Given a time of observation, calculates the Moon's position and velocity vectors.
+ * The position and velocity are of the Moon's center relative to the Earth's center.
+ * The position (x, y, z) components are expressed in AU (astronomical units).
+ * The velocity (vx, vy, vz) components are expressed in AU/day.
+ *
+ * If you only need the Moon's geocentric position, and not its geocentric velocity,
+ * it is much more efficient to use #Astronomy_GeoMoon instead.
+ *
+ * @param time  The date and time for which to calculate the Moon's position and velocity.
+ * @return The Moon's position and veloicty vectors in J2000 equatorial coordinates.
+ */
+astro_state_vector_t Astronomy_GeoMoonState(astro_time_t time)
 {
     /*
         This is a hack, because trying to figure out how to derive a time
@@ -2065,7 +2079,7 @@ body_state_t GeoMoonState(astro_time_t time)
     const double dt = 1.0e-5;   /* 0.864 seconds */
     astro_vector_t r1, r2;
     astro_time_t t1, t2;
-    body_state_t s;
+    astro_state_vector_t s;
 
     t1 = Astronomy_AddDays(time, -dt);
     t2 = Astronomy_AddDays(time, +dt);
@@ -2074,15 +2088,16 @@ body_state_t GeoMoonState(astro_time_t time)
     r2 = Astronomy_GeoMoon(t2);
 
     /* The desired position is the average of the two calculated positions. */
-    s.r.x = (r1.x + r2.x) / 2;
-    s.r.y = (r1.y + r2.y) / 2;
-    s.r.z = (r1.z + r2.z) / 2;
+    s.x = (r1.x + r2.x) / 2;
+    s.y = (r1.y + r2.y) / 2;
+    s.z = (r1.z + r2.z) / 2;
 
     /* The difference of the position vectors divided by the time span gives the velocity vector. */
-    s.v.x = (r2.x - r1.x) / (2 * dt);
-    s.v.y = (r2.y - r1.y) / (2 * dt);
-    s.v.z = (r2.z - r1.z) / (2 * dt);
-    s.tt = time.tt;
+    s.vx = (r2.x - r1.x) / (2 * dt);
+    s.vy = (r2.y - r1.y) / (2 * dt);
+    s.vz = (r2.z - r1.z) / (2 * dt);
+    s.t = time;
+    s.status = ASTRO_SUCCESS;
 
     return s;
 }
@@ -4366,16 +4381,14 @@ astro_state_vector_t Astronomy_BaryState(astro_body_t body, astro_time_t time)
         return state;
 
     case BODY_MOON:
-        planet = GeoMoonState(time);
+        state = Astronomy_GeoMoonState(time);
         earth = CalcVsopPosVel(&vsop[BODY_EARTH], time.tt);
-        state.x  = bary[0].r.x + earth.r.x + planet.r.x;
-        state.y  = bary[0].r.y + earth.r.y + planet.r.y;
-        state.z  = bary[0].r.z + earth.r.z + planet.r.z;
-        state.vx = bary[0].v.x + earth.v.x + planet.v.x;
-        state.vy = bary[0].v.y + earth.v.y + planet.v.y;
-        state.vz = bary[0].v.z + earth.v.z + planet.v.z;
-        state.t  = time;
-        state.status = ASTRO_SUCCESS;
+        state.x  += bary[0].r.x + earth.r.x;
+        state.y  += bary[0].r.y + earth.r.y;
+        state.z  += bary[0].r.z + earth.r.z;
+        state.vx += bary[0].v.x + earth.v.x;
+        state.vy += bary[0].v.y + earth.v.y;
+        state.vz += bary[0].v.z + earth.v.z;
         return state;
 
     default:

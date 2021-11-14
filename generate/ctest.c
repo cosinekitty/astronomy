@@ -4415,6 +4415,10 @@ static double StateVectorDiff(const double vec[3], double x, double y, double z)
 }
 
 
+/* This is a hack for use inside unit tests only; it doesn't make sense for public consumption. */
+#define BODY_GEOMOON    ((astro_body_t)(-100))
+
+
 static int VerifyBaryState(
     double *max_rdiff,
     double *max_vdiff,
@@ -4431,7 +4435,10 @@ static int VerifyBaryState(
     astro_state_vector_t state;
     double rdiff, vdiff;
 
-    state = Astronomy_BaryState(body, time);
+    if (body == BODY_GEOMOON)
+        state = Astronomy_GeoMoonState(time);
+    else
+        state = Astronomy_BaryState(body, time);
     CHECK_STATUS(state);
 
     rdiff = StateVectorDiff(pos, state.x, state.y, state.z);
@@ -4560,6 +4567,7 @@ static int BaryStateTest(void)
     CHECK(BaryStateBody(BODY_NEPTUNE, "barystate/Neptune.txt",  2.95e-3,  1.39e-6));
     CHECK(BaryStateBody(BODY_PLUTO,   "barystate/Pluto.txt",    2.05e-3,  1.91e-7));
     CHECK(BaryStateBody(BODY_MOON,    "barystate/Moon.txt",     2.35e-5,  1.13e-6));
+    CHECK(BaryStateBody(BODY_GEOMOON, "barystate/GeoMoon.txt",  1.04e-7,  3.40e-8));
 
     printf("C BaryStateTest: PASS\n");
 fail:

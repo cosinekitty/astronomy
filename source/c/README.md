@@ -631,6 +631,32 @@ This algorithm is based on Nautical Almanac Office's *Improved Lunar Ephemeris* 
 
 ---
 
+<a name="Astronomy_GeoMoonState"></a>
+### Astronomy_GeoMoonState(time) &#8658; [`astro_state_vector_t`](#astro_state_vector_t)
+
+**Calculates the geocentric position and velocity of the Moon at a given time.** 
+
+
+
+Given a time of observation, calculates the Moon's position and velocity vectors. The position and velocity are of the Moon's center relative to the Earth's center. The position (x, y, z) components are expressed in AU (astronomical units). The velocity (vx, vy, vz) components are expressed in AU/day.
+
+If you only need the Moon's geocentric position, and not its geocentric velocity, it is much more efficient to use [`Astronomy_GeoMoon`](#Astronomy_GeoMoon) instead.
+
+
+
+**Returns:**  The Moon's position and veloicty vectors in J2000 equatorial coordinates. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_time_t`](#astro_time_t) | `time` |  The date and time for which to calculate the Moon's position and velocity.  | 
+
+
+
+
+---
+
 <a name="Astronomy_GeoVector"></a>
 ### Astronomy_GeoVector(body, time, aberration) &#8658; [`astro_vector_t`](#astro_vector_t)
 
