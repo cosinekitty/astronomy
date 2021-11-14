@@ -2606,6 +2606,53 @@ export function GeoMoon(date) {
     var mpos2 = precession(mpos1, time, PrecessDirection.Into2000);
     return new Vector(mpos2[0], mpos2[1], mpos2[2], time);
 }
+/**
+ * @brief Calculates the geocentric position and velocity of the Moon at a given time.
+ *
+ * Given a time of observation, calculates the Moon's position and velocity vectors.
+ * The position and velocity are of the Moon's center relative to the Earth's center.
+ * The position (x, y, z) components are expressed in AU (astronomical units).
+ * The velocity (vx, vy, vz) components are expressed in AU/day.
+ * If you only need the Moon's geocentric position, and not its geocentric velocity,
+ * it is much more efficient to use {@link GeoMoon} instead.
+ *
+ * @param {FlexibleDateTime} date
+ *      The date and time for which to calculate the Moon's geocentric state.
+ *
+ * @returns {StateVector}
+ */
+export function GeoMoonState(date) {
+    const time = MakeTime(date);
+    // This is a hack, because trying to figure out how to derive a time
+    // derivative for CalcMoon() would be extremely painful!
+    // Calculate just before and just after the given time.
+    // Average to find position, subtract to find velocity.
+    const dt = 1.0e-5; // 0.864 seconds
+    const t1 = time.AddDays(-dt);
+    const t2 = time.AddDays(+dt);
+    const r1 = GeoMoon(t1);
+    const r2 = GeoMoon(t2);
+    return new StateVector((r1.x + r2.x) / 2, (r1.y + r2.y) / 2, (r1.z + r2.z) / 2, (r2.x - r1.x) / (2 * dt), (r2.y - r1.y) / (2 * dt), (r2.z - r1.z) / (2 * dt), time);
+}
+/**
+ * @brief Calculates the geocentric position and velocity of the Earth/Moon barycenter.
+ *
+ * Given a time of observation, calculates the geocentric position and velocity vectors
+ * of the Earth/Moon barycenter (EMB).
+ * The position (x, y, z) components are expressed in AU (astronomical units).
+ * The velocity (vx, vy, vz) components are expressed in AU/day.
+ *
+ * @param {FlexibleDateTime} date
+ *      The date and time for which to calculate the EMB's geocentric state.
+ *
+ * @returns {StateVector}
+ */
+export function GeoEmbState(date) {
+    const time = MakeTime(date);
+    const s = GeoMoonState(time);
+    const d = 1.0 + EARTH_MOON_MASS_RATIO;
+    return new StateVector(s.x / d, s.y / d, s.z / d, s.vx / d, s.vy / d, s.vz / d, time);
+}
 function VsopFormula(formula, t, clamp_angle) {
     let tpower = 1;
     let coord = 0;
@@ -3427,7 +3474,7 @@ function ExportState(terse, time) {
  *
  * @param {Body} body
  *      The celestial body whose barycentric state vector is to be calculated.
- *      Supported values are `Body.Sun`, `Body.SSB`, and all planets:
+ *      Supported values are `Body.Sun`, `Body.Moon`, `Body.EMB`, `Body.SSB`, and all planets:
  *      `Body.Mercury`, `Body.Venus`, `Body.Earth`, `Body.Mars`, `Body.Jupiter`,
  *      `Body.Saturn`, `Body.Uranus`, `Body.Neptune`, `Body.Pluto`.
  * @param {FlexibleDateTime} date
@@ -3447,23 +3494,23 @@ export function BaryState(body, date) {
     // Find the barycentric positions and velocities for the 5 major bodies:
     // Sun, Jupiter, Saturn, Uranus, Neptune.
     const bary = new major_bodies_t(time.tt);
-    // If the caller is asking for one of the major bodies, we can immediately return the answer.
     switch (body) {
         case Body.Sun: return ExportState(bary.Sun, time);
         case Body.Jupiter: return ExportState(bary.Jupiter, time);
         case Body.Saturn: return ExportState(bary.Saturn, time);
         case Body.Uranus: return ExportState(bary.Uranus, time);
         case Body.Neptune: return ExportState(bary.Neptune, time);
+        case Body.Moon:
+        case Body.EMB:
+            const earth = CalcVsopPosVel(vsop[Body.Earth], time.tt);
+            const state = (body === Body.Moon) ? GeoMoonState(time) : GeoEmbState(time);
+            return new StateVector(state.x + bary.Sun.r.x + earth.r.x, state.y + bary.Sun.r.y + earth.r.y, state.z + bary.Sun.r.z + earth.r.z, state.vx + bary.Sun.v.x + earth.v.x, state.vy + bary.Sun.v.y + earth.v.y, state.vz + bary.Sun.v.z + earth.v.z, time);
     }
-    // Otherwise, we need to calculate the heliocentric state of the given body
-    // and add the Sun's heliocentric state to obtain the body's barycentric state.
-    // BarySun + HelioBody = BaryBody
     // Handle the remaining VSOP bodies: Mercury, Venus, Earth, Mars.
     if (body in vsop) {
         const planet = CalcVsopPosVel(vsop[body], time.tt);
         return new StateVector(bary.Sun.r.x + planet.r.x, bary.Sun.r.y + planet.r.y, bary.Sun.r.z + planet.r.z, bary.Sun.v.x + planet.v.x, bary.Sun.v.y + planet.v.y, bary.Sun.v.z + planet.v.z, time);
     }
-    // FIXFIXFIX: later, we can add support for Pluto, Moon, EMB, etc.
     throw `BaryState: Unsupported body "${body}"`;
 }
 function QuadInterp(tm, dt, fa, fm, fb) {

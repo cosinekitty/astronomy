@@ -1142,6 +1142,44 @@ by Montenbruck and Pfleger.
 
 * * *
 
+<a name="GeoMoonState"></a>
+
+## GeoMoonState(date) ⇒ [<code>StateVector</code>](#StateVector)
+**Kind**: global function  
+**Brief**: Calculates the geocentric position and velocity of the Moon at a given time.
+
+Given a time of observation, calculates the Moon's position and velocity vectors.
+The position and velocity are of the Moon's center relative to the Earth's center.
+The position (x, y, z) components are expressed in AU (astronomical units).
+The velocity (vx, vy, vz) components are expressed in AU/day.
+If you only need the Moon's geocentric position, and not its geocentric velocity,
+it is much more efficient to use [GeoMoon](#GeoMoon) instead.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| date | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time for which to calculate the Moon's geocentric state. |
+
+
+* * *
+
+<a name="GeoEmbState"></a>
+
+## GeoEmbState(date) ⇒ [<code>StateVector</code>](#StateVector)
+**Kind**: global function  
+**Brief**: Calculates the geocentric position and velocity of the Earth/Moon barycenter.
+
+Given a time of observation, calculates the geocentric position and velocity vectors
+of the Earth/Moon barycenter (EMB).
+The position (x, y, z) components are expressed in AU (astronomical units).
+The velocity (vx, vy, vz) components are expressed in AU/day.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| date | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time for which to calculate the EMB's geocentric state. |
+
+
+* * *
+
 <a name="JupiterMoons"></a>
 
 ## JupiterMoons(date) ⇒ [<code>JupiterMoonsInfo</code>](#JupiterMoonsInfo)
@@ -1245,7 +1283,7 @@ The vectors are expressed in equatorial J2000 coordinates (EQJ).
 
 | Param | Type | Description |
 | --- | --- | --- |
-| body | [<code>Body</code>](#Body) | The celestial body whose barycentric state vector is to be calculated.      Supported values are `Body.Sun`, `Body.SSB`, and all planets:      `Body.Mercury`, `Body.Venus`, `Body.Earth`, `Body.Mars`, `Body.Jupiter`,      `Body.Saturn`, `Body.Uranus`, `Body.Neptune`, `Body.Pluto`. |
+| body | [<code>Body</code>](#Body) | The celestial body whose barycentric state vector is to be calculated.      Supported values are `Body.Sun`, `Body.Moon`, `Body.EMB`, `Body.SSB`, and all planets:      `Body.Mercury`, `Body.Venus`, `Body.Earth`, `Body.Mars`, `Body.Jupiter`,      `Body.Saturn`, `Body.Uranus`, `Body.Neptune`, `Body.Pluto`. |
 | date | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time for which to calculate position and velocity. |
 
 

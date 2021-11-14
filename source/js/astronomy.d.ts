@@ -726,6 +726,36 @@ export declare function Ecliptic(equ: Vector): EclipticCoordinates;
  */
 export declare function GeoMoon(date: FlexibleDateTime): Vector;
 /**
+ * @brief Calculates the geocentric position and velocity of the Moon at a given time.
+ *
+ * Given a time of observation, calculates the Moon's position and velocity vectors.
+ * The position and velocity are of the Moon's center relative to the Earth's center.
+ * The position (x, y, z) components are expressed in AU (astronomical units).
+ * The velocity (vx, vy, vz) components are expressed in AU/day.
+ * If you only need the Moon's geocentric position, and not its geocentric velocity,
+ * it is much more efficient to use {@link GeoMoon} instead.
+ *
+ * @param {FlexibleDateTime} date
+ *      The date and time for which to calculate the Moon's geocentric state.
+ *
+ * @returns {StateVector}
+ */
+export declare function GeoMoonState(date: FlexibleDateTime): StateVector;
+/**
+ * @brief Calculates the geocentric position and velocity of the Earth/Moon barycenter.
+ *
+ * Given a time of observation, calculates the geocentric position and velocity vectors
+ * of the Earth/Moon barycenter (EMB).
+ * The position (x, y, z) components are expressed in AU (astronomical units).
+ * The velocity (vx, vy, vz) components are expressed in AU/day.
+ *
+ * @param {FlexibleDateTime} date
+ *      The date and time for which to calculate the EMB's geocentric state.
+ *
+ * @returns {StateVector}
+ */
+export declare function GeoEmbState(date: FlexibleDateTime): StateVector;
+/**
  * @brief Holds the positions and velocities of Jupiter's major 4 moons.
  *
  * The {@link JupiterMoons} function returns an object of this type
@@ -842,7 +872,7 @@ export declare function GeoVector(body: Body, date: FlexibleDateTime, aberration
  *
  * @param {Body} body
  *      The celestial body whose barycentric state vector is to be calculated.
- *      Supported values are `Body.Sun`, `Body.SSB`, and all planets:
+ *      Supported values are `Body.Sun`, `Body.Moon`, `Body.EMB`, `Body.SSB`, and all planets:
  *      `Body.Mercury`, `Body.Venus`, `Body.Earth`, `Body.Mars`, `Body.Jupiter`,
  *      `Body.Saturn`, `Body.Uranus`, `Body.Neptune`, `Body.Pluto`.
  * @param {FlexibleDateTime} date
