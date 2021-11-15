@@ -738,6 +738,31 @@ Given a date and time, this function calculates the distance between the center 
 
 ---
 
+<a name="Astronomy_HelioState"></a>
+### Astronomy_HelioState(body, time) &#8658; [`astro_state_vector_t`](#astro_state_vector_t)
+
+**Calculates heliocentric position and velocity vectors for the given body.** 
+
+
+
+Given a body and a time, calculates the position and velocity vectors for the center of that body at that time, relative to the center of the Sun. The vectors are expressed in equatorial J2000 coordinates (EQJ). If you need the position vector only, it is more efficient to call [`Astronomy_HelioVector`](#Astronomy_HelioVector). The Sun's center is a non-inertial frame of reference. In other words, the Sun experiences acceleration due to gravitational forces, mostly from the larger planets (Jupiter, Saturn, Uranus, and Neptune). If you want to calculate momentum, kinetic energy, or other quantities that require a non-accelerating frame of reference, consider using [`Astronomy_BaryState`](#Astronomy_BaryState) instead.
+
+
+
+**Returns:**  A structure that contains heliocentric position and velocity vectors. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_body_t`](#astro_body_t) | `body` |  The celestial body whose heliocentric state vector is to be calculated. Supported values are `BODY_SUN`, `BODY_MOON`, `BODY_EMB`, `BODY_SSB`, and all planets: `BODY_MERCURY`, `BODY_VENUS`, `BODY_EARTH`, `BODY_MARS`, `BODY_JUPITER`, `BODY_SATURN`, `BODY_URANUS`, `BODY_NEPTUNE`, `BODY_PLUTO`.  | 
+| [`astro_time_t`](#astro_time_t) | `time` |  The date and time for which to calculate position and velocity.  | 
+
+
+
+
+---
+
 <a name="Astronomy_HelioVector"></a>
 ### Astronomy_HelioVector(body, time) &#8658; [`astro_vector_t`](#astro_vector_t)
 

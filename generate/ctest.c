@@ -133,6 +133,7 @@ static int JupiterMoonsTest(void);
 static int Issue103(void);
 static int AberrationTest(void);
 static int BaryStateTest(void);
+static int HelioStateTest(void);
 static int Twilight(void);
 static int LibrationTest(void);
 
@@ -155,6 +156,7 @@ static unit_test_t UnitTests[] =
     {"elongation",              ElongationTest},
     {"geoid",                   GeoidTest},
     {"global_solar_eclipse",    GlobalSolarEclipseTest},
+    {"heliostate",              HelioStateTest},
     {"issue_103",               Issue103},
     {"jupiter_moons",           JupiterMoonsTest},
     {"libration",               LibrationTest},
@@ -4575,6 +4577,160 @@ static int BaryStateTest(void)
     CHECK(BaryStateBody(BODY_GEO_EMB, "barystate/GeoEMB.txt",   1.26e-09,  4.12e-10));
 
     printf("C BaryStateTest: PASS\n");
+fail:
+    return error;
+}
+
+/*-----------------------------------------------------------------------------------------------------------*/
+
+static int VerifyHelioState(
+    double *max_rdiff,
+    double *max_vdiff,
+    astro_body_t body,
+    const char *filename,
+    int lnum,
+    astro_time_t time,
+    const double pos[3],
+    const double vel[3],
+    double r_thresh,
+    double v_thresh)
+{
+    int error;
+    astro_state_vector_t state;
+    double rdiff, vdiff;
+
+    state = Astronomy_HelioState(body, time);
+    CHECK_STATUS(state);
+
+    rdiff = StateVectorDiff(pos, state.x, state.y, state.z);
+    if (rdiff > *max_rdiff)
+        *max_rdiff = rdiff;
+
+    vdiff = StateVectorDiff(vel, state.vx, state.vy, state.vz);
+    if (vdiff > *max_vdiff)
+        *max_vdiff = vdiff;
+
+    if (rdiff > r_thresh)
+        FAIL("C VerifyHelioState(%s line %d): EXCESSIVE position error = %0.4le\n", filename, lnum, rdiff);
+
+    if (vdiff > v_thresh)
+        FAIL("C VerifyHelioState(%s line %d): EXCESSIVE velocity error = %0.4le\n", filename, lnum, vdiff);
+
+    error = 0;
+fail:
+    return error;
+}
+
+static int HelioStateBody(astro_body_t body, const char *filename, double r_thresh, double v_thresh)
+{
+    int error, lnum, nscanned;
+    int found_begin = 0;
+    int found_end = 0;
+    int count = 0;
+    int part = 0;
+    FILE *infile = NULL;
+    char line[100];
+    astro_time_t time;
+    double jd, pos[3], vel[3];
+    double max_rdiff = 0.0, max_vdiff = 0.0;
+
+    infile = fopen(filename, "rt");
+    if (infile == NULL)
+        FAIL("C HelioStateBody: Cannot open input file: %s\n", filename);
+
+    lnum = 0;
+    while (!found_end && ReadLine(line, sizeof(line), infile, filename, lnum))
+    {
+        ++lnum;
+        if (!found_begin)
+        {
+            if (strlen(line) >= 5 && !memcmp(line, "$$SOE", 5))
+                found_begin = 1;
+        }
+        else
+        {
+            /*
+                Input comes in triplets of lines:
+
+                2444249.500000000 = A.D. 1980-Jan-11 00:00:00.0000 TDB
+                 X =-3.314860345089456E-01 Y = 8.463418210972562E-01 Z = 3.667227830514760E-01
+                 VX=-1.642704711077836E-02 VY=-5.494770742558920E-03 VZ=-2.383170237527642E-03
+
+                Track which of these 3 cases we are in using the 'part' variable...
+            */
+
+            switch (part)
+            {
+            case 0:
+                if (strlen(line) >= 5 && !memcmp(line, "$$EOE", 5))
+                {
+                    found_end = 1;
+                }
+                else
+                {
+                    nscanned = sscanf(line, "%lf", &jd);
+                    if (nscanned != 1)
+                        FAIL("C HelioStateBody(%s line %d) ERROR reading Julian date.\n", filename, lnum);
+                    V(jd);
+
+                    /* Convert julian TT day value to astro_time_t. */
+                    time = Astronomy_TerrestrialTime(jd - 2451545.0);
+                }
+                break;
+
+            case 1:
+                nscanned = sscanf(line, " X =%lf Y =%lf Z =%lf", &pos[0], &pos[1], &pos[2]);
+                if (nscanned != 3)
+                    FAIL("C HelioStateBody(%s line %d) ERROR reading position vector.\n", filename, lnum);
+                V(pos[0]);
+                V(pos[1]);
+                V(pos[2]);
+                break;
+
+            case 2:
+                nscanned = sscanf(line, " VX=%lf VY=%lf VZ=%lf", &vel[0], &vel[1], &vel[2]);
+                if (nscanned != 3)
+                    FAIL("C HelioStateBody(%s line %d) ERROR reading velocity vector.\n", filename, lnum);
+                V(vel[0]);
+                V(vel[1]);
+                V(vel[2]);
+                CHECK(VerifyHelioState(&max_rdiff, &max_vdiff, body, filename, lnum, time, pos, vel, r_thresh, v_thresh));
+                ++count;
+                break;
+
+            default:
+                FAIL("C HelioStateBody: INTERNAL ERROR : part=%d\n", part);
+            }
+
+            part = (part + 1) % 3;
+        }
+    }
+
+    DEBUG("C HelioStateBody(%s): PASS - Tested %d cases. max rdiff=%0.3le, vdiff=%0.3le\n", filename, count, max_rdiff, max_vdiff);
+    error = 0;
+fail:
+    if (infile != NULL) fclose(infile);
+    return error;
+}
+
+static int HelioStateTest(void)
+{
+    int error;  /* set as a side-effect of CHECK macro */
+
+    CHECK(HelioStateBody(BODY_SSB,     "heliostate/SSB.txt",      1.21e-05, 1.13e-07));
+    CHECK(HelioStateBody(BODY_MERCURY, "heliostate/Mercury.txt",  4.59e-05, 8.36e-06));
+    CHECK(HelioStateBody(BODY_VENUS,   "heliostate/Venus.txt",    2.54e-05, 9.14e-07));
+    CHECK(HelioStateBody(BODY_EARTH,   "heliostate/Earth.txt",    1.46e-05, 1.05e-06));
+    CHECK(HelioStateBody(BODY_MARS,    "heliostate/Mars.txt",     4.49e-05, 8.51e-07));
+    CHECK(HelioStateBody(BODY_JUPITER, "heliostate/Jupiter.txt",  3.78e-04, 1.85e-06));
+    CHECK(HelioStateBody(BODY_SATURN,  "heliostate/Saturn.txt",   1.07e-03, 1.74e-06));
+    CHECK(HelioStateBody(BODY_URANUS,  "heliostate/Uranus.txt",   1.71e-03, 1.10e-06));
+    CHECK(HelioStateBody(BODY_NEPTUNE, "heliostate/Neptune.txt",  2.95e-03, 1.43e-06));
+    CHECK(HelioStateBody(BODY_PLUTO,   "heliostate/Pluto.txt",    2.04e-03, 2.87e-07));
+    CHECK(HelioStateBody(BODY_MOON,    "heliostate/Moon.txt",     1.46e-05, 1.06e-06));
+    CHECK(HelioStateBody(BODY_EMB,     "heliostate/EMB.txt",      1.46e-05, 1.05e-06));
+
+    printf("C HelioStateTest: PASS\n");
 fail:
     return error;
 }
