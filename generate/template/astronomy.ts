@@ -2994,7 +2994,7 @@ export function HelioState(body: Body, date: FlexibleDateTime): StateVector {
         case Body.Saturn:
         case Body.Uranus:
         case Body.Neptune:
-            // Planets included in the VSOP87 model. */
+            // Planets included in the VSOP87 model.
             const planet = CalcVsopPosVel(vsop[body], time.tt);
             return ExportState(planet, time);
 

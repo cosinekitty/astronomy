@@ -4383,6 +4383,75 @@ def BaryState(body, time):
     raise InvalidBodyError()
 
 
+def HelioState(body, time):
+    """Calculates heliocentric position and velocity vectors for the given body.
+
+    Given a body and a time, calculates the position and velocity
+    vectors for the center of that body at that time, relative to the center of the Sun.
+    The vectors are expressed in equatorial J2000 coordinates (EQJ).
+    If you need the position vector only, it is more efficient to call #HelioVector.
+    The Sun's center is a non-inertial frame of reference. In other words, the Sun
+    experiences acceleration due to gravitational forces, mostly from the larger
+    planets (Jupiter, Saturn, Uranus, and Neptune). If you want to calculate momentum,
+    kinetic energy, or other quantities that require a non-accelerating frame
+    of reference, consider using #BaryState instead.
+
+    Parameters
+    ----------
+    body : Body
+        The celestial body whose heliocentric state vector is to be calculated.
+        Supported values are `Body.Sun`, `Body.SSB`, and all planets:
+        `Body.Mercury`, `Body.Venus`, `Body.Earth`, `Body.Mars`, `Body.Jupiter`,
+        `Body.Saturn`, `Body.Uranus`, `Body.Neptune`, `Body.Pluto`.
+    time : Time
+        The date and time for which to calculate position and velocity.
+
+    Returns
+    -------
+    StateVector
+        An object that contains heliocentric position and velocity vectors.
+    """
+    if body == Body.Sun:
+        # Trivial case: the Sun is the origin of the heliocentric frame.
+        return StateVector(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, time)
+
+    if body == Body.SSB:
+        # Calculate the barycentric Sun. Then the negative of that is the heliocentric SSB.
+        bary = _major_bodies_t(time.tt)
+        return StateVector(
+            -bary.Sun.r.x,
+            -bary.Sun.r.y,
+            -bary.Sun.r.z,
+            -bary.Sun.v.x,
+            -bary.Sun.v.y,
+            -bary.Sun.v.z,
+            time
+        )
+
+    if 0 <= body.value < len(_vsop):
+        # Planets included in the VSOP87 model.
+        planet = _CalcVsopPosVel(_vsop[body.value], time.tt)
+        return _ExportState(planet, time)
+
+    if body == Body.Pluto:
+        return _CalcPluto(time, True)
+
+    if body in [Body.Moon, Body.EMB]:
+        earth = _CalcVsopPosVel(_vsop[Body.Earth.value], time.tt)
+        state = GeoMoonState(time) if body == Body.Moon else GeoEmbState(time)
+        return StateVector(
+            state.x  + earth.r.x,
+            state.y  + earth.r.y,
+            state.z  + earth.r.z,
+            state.vx + earth.v.x,
+            state.vy + earth.v.y,
+            state.vz + earth.v.z,
+            time
+        )
+
+    raise InvalidBodyError()
+
+
 def Equator(body, time, observer, ofdate, aberration):
     """Calculates equatorial coordinates of a celestial body as seen by an observer on the Earth's surface.
 
