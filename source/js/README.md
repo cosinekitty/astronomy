@@ -1289,6 +1289,31 @@ The vectors are expressed in equatorial J2000 coordinates (EQJ).
 
 * * *
 
+<a name="HelioState"></a>
+
+## HelioState(body, date) ⇒ [<code>StateVector</code>](#StateVector)
+**Kind**: global function  
+**Returns**: [<code>StateVector</code>](#StateVector) - An object that contains heliocentric position and velocity vectors.  
+**Brief**: Calculates heliocentric position and velocity vectors for the given body.
+
+Given a body and a time, calculates the position and velocity
+vectors for the center of that body at that time, relative to the center of the Sun.
+The vectors are expressed in equatorial J2000 coordinates (EQJ).
+If you need the position vector only, it is more efficient to call [HelioVector](#HelioVector).
+The Sun's center is a non-inertial frame of reference. In other words, the Sun
+experiences acceleration due to gravitational forces, mostly from the larger
+planets (Jupiter, Saturn, Uranus, and Neptune). If you want to calculate momentum,
+kinetic energy, or other quantities that require a non-accelerating frame
+of reference, consider using [BaryState](#BaryState) instead.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| body | [<code>Body</code>](#Body) | The celestial body whose heliocentric state vector is to be calculated.      Supported values are `Body.Sun`, `Body.Moon`, `Body.EMB`, `Body.SSB`, and all planets:      `Body.Mercury`, `Body.Venus`, `Body.Earth`, `Body.Mars`, `Body.Jupiter`,      `Body.Saturn`, `Body.Uranus`, `Body.Neptune`, `Body.Pluto`. |
+| date | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time for which to calculate position and velocity. |
+
+
+* * *
+
 <a name="Search"></a>
 
 ## Search(func, t1, t2, options) ⇒ [<code>AstroTime</code>](#AstroTime) \| <code>null</code>

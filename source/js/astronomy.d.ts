@@ -881,6 +881,30 @@ export declare function GeoVector(body: Body, date: FlexibleDateTime, aberration
  *      An object that contains barycentric position and velocity vectors.
  */
 export declare function BaryState(body: Body, date: FlexibleDateTime): StateVector;
+/**
+ * @brief  Calculates heliocentric position and velocity vectors for the given body.
+ *
+ * Given a body and a time, calculates the position and velocity
+ * vectors for the center of that body at that time, relative to the center of the Sun.
+ * The vectors are expressed in equatorial J2000 coordinates (EQJ).
+ * If you need the position vector only, it is more efficient to call {@link HelioVector}.
+ * The Sun's center is a non-inertial frame of reference. In other words, the Sun
+ * experiences acceleration due to gravitational forces, mostly from the larger
+ * planets (Jupiter, Saturn, Uranus, and Neptune). If you want to calculate momentum,
+ * kinetic energy, or other quantities that require a non-accelerating frame
+ * of reference, consider using {@link BaryState} instead.
+ *
+ * @param {Body} body
+ *      The celestial body whose heliocentric state vector is to be calculated.
+ *      Supported values are `Body.Sun`, `Body.Moon`, `Body.EMB`, `Body.SSB`, and all planets:
+ *      `Body.Mercury`, `Body.Venus`, `Body.Earth`, `Body.Mars`, `Body.Jupiter`,
+ *      `Body.Saturn`, `Body.Uranus`, `Body.Neptune`, `Body.Pluto`.
+ * @param {FlexibleDateTime} date
+ *      The date and time for which to calculate position and velocity.
+ * @returns {StateVector}
+ *      An object that contains heliocentric position and velocity vectors.
+ */
+export declare function HelioState(body: Body, date: FlexibleDateTime): StateVector;
 export interface SearchOptions {
     dt_tolerance_seconds?: number;
     init_f1?: number;
