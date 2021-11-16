@@ -4316,7 +4316,7 @@ def BaryState(body, time):
     ----------
     body : Body
         The celestial body whose barycentric state vector is to be calculated.
-        Supported values are `Body.Sun`, `Body.SSB`, and all planets:
+        Supported values are `Body.Sun`, `Body.SSB`, `Body.Moon`, `Body.EMB`, and all planets:
         `Body.Mercury`, `Body.Venus`, `Body.Earth`, `Body.Mars`, `Body.Jupiter`,
         `Body.Saturn`, `Body.Uranus`, `Body.Neptune`, `Body.Pluto`.
     time : Time
@@ -4400,7 +4400,7 @@ def HelioState(body, time):
     ----------
     body : Body
         The celestial body whose heliocentric state vector is to be calculated.
-        Supported values are `Body.Sun`, `Body.SSB`, and all planets:
+        Supported values are `Body.Sun`, `Body.SSB`, `Body.Moon`, `Body.EMB`, and all planets:
         `Body.Mercury`, `Body.Venus`, `Body.Earth`, `Body.Mars`, `Body.Jupiter`,
         `Body.Saturn`, `Body.Uranus`, `Body.Neptune`, `Body.Pluto`.
     time : Time
