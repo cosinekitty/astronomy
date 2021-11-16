@@ -3240,7 +3240,6 @@ astro_state_vector_t Astronomy_HelioState(astro_body_t body, astro_time_t time)
         state.status = ASTRO_SUCCESS;
         return state;
 
-    /* Handle the remaining VSOP bodies: Mercury, Venus, Earth, Mars. */
     case BODY_MERCURY:
     case BODY_VENUS:
     case BODY_EARTH:
@@ -3249,6 +3248,7 @@ astro_state_vector_t Astronomy_HelioState(astro_body_t body, astro_time_t time)
     case BODY_SATURN:
     case BODY_URANUS:
     case BODY_NEPTUNE:
+        /* Planets included in the VSOP87 model. */
         planet = CalcVsopPosVel(&vsop[body], time.tt);
         return ExportState(planet, time);
 

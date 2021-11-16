@@ -542,6 +542,28 @@ of the resulting vector.
 
 **Returns:** The heliocentric distance in AU.
 
+<a name="Astronomy.HelioState"></a>
+### Astronomy.HelioState(body, time) &#8658; [`StateVector`](#StateVector)
+
+**Calculates heliocentric position and velocity vectors for the given body.**
+
+Given a body and a time, calculates the position and velocity
+vectors for the center of that body at that time, relative to the center of the Sun.
+The vectors are expressed in equatorial J2000 coordinates (EQJ).
+If you need the position vector only, it is more efficient to call [`Astronomy.HelioVector`](#Astronomy.HelioVector).
+The Sun's center is a non-inertial frame of reference. In other words, the Sun
+experiences acceleration due to gravitational forces, mostly from the larger
+planets (Jupiter, Saturn, Uranus, and Neptune). If you want to calculate momentum,
+kinetic energy, or other quantities that require a non-accelerating frame
+of reference, consider using [`Astronomy.BaryState`](#Astronomy.BaryState) instead.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Body`](#Body) | `body` | The celestial body whose heliocentric state vector is to be calculated. Supported values are `Body.Sun`, `Body.Moon`, `Body.EMB`, `Body.SSB`, and all planets: `Body.Mercury`, `Body.Venus`, `Body.Earth`, `Body.Mars`, `Body.Jupiter`, `Body.Saturn`, `Body.Uranus`, `Body.Neptune`, `Body.Pluto`. |
+| [`AstroTime`](#AstroTime) | `time` | The date and time for which to calculate position and velocity. |
+
+**Returns:** A structure that contains heliocentric position and velocity vectors.
+
 <a name="Astronomy.HelioVector"></a>
 ### Astronomy.HelioVector(body, time) &#8658; [`AstroVector`](#AstroVector)
 

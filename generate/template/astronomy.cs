@@ -3882,6 +3882,87 @@ $ASTRO_IAU_DATA()
         }
 
         /// <summary>
+        /// Calculates heliocentric position and velocity vectors for the given body.
+        /// </summary>
+        /// <remarks>
+        /// Given a body and a time, calculates the position and velocity
+        /// vectors for the center of that body at that time, relative to the center of the Sun.
+        /// The vectors are expressed in equatorial J2000 coordinates (EQJ).
+        /// If you need the position vector only, it is more efficient to call #Astronomy.HelioVector.
+        /// The Sun's center is a non-inertial frame of reference. In other words, the Sun
+        /// experiences acceleration due to gravitational forces, mostly from the larger
+        /// planets (Jupiter, Saturn, Uranus, and Neptune). If you want to calculate momentum,
+        /// kinetic energy, or other quantities that require a non-accelerating frame
+        /// of reference, consider using #Astronomy.BaryState instead.
+        /// </remarks>
+        /// <param name="body">
+        /// The celestial body whose heliocentric state vector is to be calculated.
+        /// Supported values are `Body.Sun`, `Body.Moon`, `Body.EMB`, `Body.SSB`, and all planets:
+        /// `Body.Mercury`, `Body.Venus`, `Body.Earth`, `Body.Mars`, `Body.Jupiter`,
+        /// `Body.Saturn`, `Body.Uranus`, `Body.Neptune`, `Body.Pluto`.
+        /// </param>
+        /// <param name="time">
+        /// The date and time for which to calculate position and velocity.
+        /// </param>
+        /// <returns>
+        /// A structure that contains heliocentric position and velocity vectors.
+        /// </returns>
+        public static StateVector HelioState(Body body, AstroTime time)
+        {
+            switch (body)
+            {
+                case Body.Sun:
+                    // Trivial case: the Sun is the origin of the heliocentric frame.
+                    return new StateVector(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, time);
+
+                case Body.SSB:
+                    // Calculate the barycentric Sun. Then the negative of that is the heliocentric SSB.
+                    major_bodies_t bary = MajorBodyBary(time.tt);
+                    return new StateVector(
+                        -bary.Sun.r.x,
+                        -bary.Sun.r.y,
+                        -bary.Sun.r.z,
+                        -bary.Sun.v.x,
+                        -bary.Sun.v.y,
+                        -bary.Sun.v.z,
+                        time
+                    );
+
+                case Body.Mercury:
+                case Body.Venus:
+                case Body.Earth:
+                case Body.Mars:
+                case Body.Jupiter:
+                case Body.Saturn:
+                case Body.Uranus:
+                case Body.Neptune:
+                    // Planets included in the VSOP87 model. */
+                    body_state_t planet = CalcVsopPosVel(vsop[(int)body], time.tt);
+                    return ExportState(planet, time);
+
+                case Body.Pluto:
+                    return CalcPluto(time, true);
+
+                case Body.Moon:
+                case Body.EMB:
+                    body_state_t earth = CalcVsopPosVel(vsop[(int)Body.Earth], time.tt);
+                    StateVector state = (body == Body.Moon) ? GeoMoonState(time) : GeoEmbState(time);
+                    return new StateVector(
+                        state.x  + earth.r.x,
+                        state.y  + earth.r.y,
+                        state.z  + earth.r.z,
+                        state.vx + earth.v.x,
+                        state.vy + earth.v.y,
+                        state.vz + earth.v.z,
+                        time
+                    );
+
+                default:
+                    throw new InvalidBodyException(body);
+            }
+        }
+
+        /// <summary>
         /// Calculates equatorial coordinates of a celestial body as seen by an observer on the Earth's surface.
         /// </summary>
         /// <remarks>

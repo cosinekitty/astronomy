@@ -55,6 +55,7 @@ namespace csharp_test
             new Test("transit", TransitTest),
             new Test("astro_check", AstroCheck),
             new Test("barystate", BaryStateTest),
+            new Test("heliostate", HelioStateTest),
             new Test("aberration", AberrationTest),
             new Test("twilight", TwilightTest),
         };
@@ -2867,6 +2868,150 @@ namespace csharp_test
             if (0 != BaryStateBody(Body_GeoMoon, "../../barystate/GeoMoon.txt",  1.04e-07,  3.40e-08)) return 1;
             if (0 != BaryStateBody(Body_Geo_EMB, "../../barystate/GeoEMB.txt",   1.26e-09,  4.12e-10)) return 1;
             Console.WriteLine("C# BaryStateTest: PASS");
+            return 0;
+        }
+
+        static int VerifyHelioState(
+            ref double max_rdiff,
+            ref double max_vdiff,
+            Body body,
+            string filename,
+            int lnum,
+            AstroTime time,
+            double[] pos,
+            double[] vel,
+            double r_thresh,
+            double v_thresh)
+        {
+            StateVector state = Astronomy.HelioState(body, time);
+
+            double rdiff = StateVectorDiff(pos, state.x, state.y, state.z);
+            if (rdiff > max_rdiff)
+                max_rdiff = rdiff;
+
+            double vdiff = StateVectorDiff(vel, state.vx, state.vy, state.vz);
+            if (vdiff > max_vdiff)
+                max_vdiff = vdiff;
+
+            if (rdiff > r_thresh)
+            {
+                Console.WriteLine($"C# VerifyHelioState({filename} line {lnum}): EXCESSIVE position error = {rdiff:E3}");
+                return 1;
+            }
+
+            if (vdiff > v_thresh)
+            {
+                Console.WriteLine($"C# VerifyHelioState({filename} line {lnum}): EXCESSIVE velocity error = {vdiff:E3}");
+                return 1;
+            }
+
+            return 0;
+        }
+
+        static int HelioStateBody(Body body, string filename, double r_thresh, double v_thresh)
+        {
+            using (StreamReader infile = File.OpenText(filename))
+            {
+                int lnum = 0;
+                string line;
+                bool found_begin = false;
+                bool found_end = false;
+                int part = 0;
+                AstroTime time = null;
+                var pos = new double[3];
+                var vel = new double[3];
+                int count = 0;
+                double max_rdiff = 0.0, max_vdiff = 0.0;
+                while (!found_end && null != (line = infile.ReadLine()))
+                {
+                    ++lnum;
+                    if (!found_begin)
+                    {
+                        if (line == "$$SOE")
+                            found_begin = true;
+                    }
+                    else
+                    {
+                        // Input comes in triplets of lines:
+                        //
+                        // 2444249.500000000 = A.D. 1980-Jan-11 00:00:00.0000 TDB
+                        // X =-3.314860345089456E-01 Y = 8.463418210972562E-01 Z = 3.667227830514760E-01
+                        // VX=-1.642704711077836E-02 VY=-5.494770742558920E-03 VZ=-2.383170237527642E-03
+                        //
+                        // Track which of these 3 cases we are in using the 'part' variable...
+                        Match match;
+                        switch (part)
+                        {
+                            case 0:
+                                if (line == "$$EOE")
+                                {
+                                    found_end = true;
+                                }
+                                else
+                                {
+                                    // 2444249.500000000 = A.D. 1980-Jan-11 00:00:00.0000 TDB
+                                    // Convert JD to J2000 TT.
+                                    double tt = double.Parse(line.Split()[0]) - 2451545.0;
+                                    time = AstroTime.FromTerrestrialTime(tt);
+                                }
+                                break;
+
+                            case 1:
+                                /* X = 1.134408131605554E-03 Y =-2.590904586750408E-03 Z =-7.490427225904720E-05 */
+                                match = Regex.Match(line, @"\s*X =\s*(\S+) Y =\s*(\S+) Z =\s*(\S+)");
+                                if (!match.Success)
+                                {
+                                    Console.WriteLine($"C# HelioStateBody({filename} line {lnum}): cannot parse position vector.");
+                                    return 1;
+                                }
+                                pos[0] = double.Parse(match.Groups[1].Value);
+                                pos[1] = double.Parse(match.Groups[2].Value);
+                                pos[2] = double.Parse(match.Groups[3].Value);
+                                break;
+
+                            case 2:
+                                /* VX= 9.148038778472862E-03 VY= 3.973823407182510E-03 VZ= 2.765660368640458E-04 */
+                                match = Regex.Match(line, @"\s*VX=\s*(\S+) VY=\s*(\S+) VZ=\s*(\S+)");
+                                if (!match.Success)
+                                {
+                                    Console.WriteLine($"C# HelioStateBody({filename} line {lnum}): cannot parse velocity vector.");
+                                    return 1;
+                                }
+                                vel[0] = double.Parse(match.Groups[1].Value);
+                                vel[1] = double.Parse(match.Groups[2].Value);
+                                vel[2] = double.Parse(match.Groups[3].Value);
+                                if (0 != VerifyHelioState(ref max_rdiff, ref max_vdiff, body, filename, lnum, time, pos, vel, r_thresh, v_thresh))
+                                    return 1;
+                                ++count;
+                                break;
+
+                            default:
+                                Console.WriteLine($"C# HelioStateBody({filename} line {lnum}): unexpected part = {part}.");
+                                return 1;
+                        }
+                        part = (part + 1) % 3;
+                    }
+                }
+                Debug($"C# HelioStateBody({filename}): PASS - Tested {count} cases. max rdiff={max_rdiff:E3}, vdiff={max_vdiff:E3}");
+                return 0;
+            }
+        }
+
+        static int HelioStateTest()
+        {
+            if (0 != HelioStateBody(Body.SSB,     "../../heliostate/SSB.txt",      1.21e-05, 1.13e-07)) return 1;
+            if (0 != HelioStateBody(Body.Mercury, "../../heliostate/Mercury.txt",  4.59e-05, 8.36e-06)) return 1;
+            if (0 != HelioStateBody(Body.Venus,   "../../heliostate/Venus.txt",    2.54e-05, 9.14e-07)) return 1;
+            if (0 != HelioStateBody(Body.Earth,   "../../heliostate/Earth.txt",    1.46e-05, 1.05e-06)) return 1;
+            if (0 != HelioStateBody(Body.Mars,    "../../heliostate/Mars.txt",     4.49e-05, 8.51e-07)) return 1;
+            if (0 != HelioStateBody(Body.Jupiter, "../../heliostate/Jupiter.txt",  3.78e-04, 1.85e-06)) return 1;
+            if (0 != HelioStateBody(Body.Saturn,  "../../heliostate/Saturn.txt",   1.07e-03, 1.74e-06)) return 1;
+            if (0 != HelioStateBody(Body.Uranus,  "../../heliostate/Uranus.txt",   1.71e-03, 1.10e-06)) return 1;
+            if (0 != HelioStateBody(Body.Neptune, "../../heliostate/Neptune.txt",  2.95e-03, 1.43e-06)) return 1;
+            if (0 != HelioStateBody(Body.Pluto,   "../../heliostate/Pluto.txt",    2.04e-03, 2.87e-07)) return 1;
+            if (0 != HelioStateBody(Body.Moon,    "../../heliostate/Moon.txt",     1.46e-05, 1.06e-06)) return 1;
+            if (0 != HelioStateBody(Body.EMB,     "../../heliostate/EMB.txt",      1.46e-05, 1.05e-06)) return 1;
+            Console.WriteLine("C# HelioStateTest: PASS");
             return 0;
         }
 
