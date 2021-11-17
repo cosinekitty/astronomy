@@ -1299,6 +1299,40 @@ This function implements the WGS 84 Ellipsoidal Gravity Formula. The result is a
 
 ---
 
+<a name="Astronomy_ObserverState"></a>
+### Astronomy_ObserverState(time, observer, equdate) &#8658; [`astro_state_vector_t`](#astro_state_vector_t)
+
+**Calculates geocentric equatorial position and velocity of an observer on the surface of the Earth.** 
+
+
+
+This function calculates a position vector from the center of the Earth to a point on or near the surface of the Earth, expressed in equatorial coordinates. It takes into account the rotation of the Earth at the given time, along with the given latitude, longitude, and elevation of the observer. It also calculates the observer's velocity with respect to the moving center of the Earth, also in equatorial coordinates.
+
+The caller may pass a value in `equdate` to select either `EQUATOR_J2000` for using J2000 coordinates, or `EQUATOR_OF_DATE` for using coordinates relative to the Earth's equator at the specified time.
+
+The returned position vector has components expressed in astronomical units (AU). To convert to kilometers, multiply the `x`, `y`, and `z` values by the constant value [`KM_PER_AU`](#KM_PER_AU).
+
+The returned velocity vector is measured in AU/day.
+
+If you need the position only, and not the velocity, [`Astronomy_ObserverVector`](#Astronomy_ObserverVector) is slightly more efficient than this function.
+
+
+
+**Returns:**  If successful, the returned state vector holds `ASTRO_SUCCESS` in its `status` field, and the position (x, y, z) and velocity (vx, vy, vz) vectors are valid. Otherwise, `status` holds an error code. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| <code><a href="#astro_time_t">astro_time_t</a> *</code> | `time` |  The date and time for which to calculate the observer's geocentric state vector. | 
+| [`astro_observer_t`](#astro_observer_t) | `observer` |  The geographic location of a point on or near the surface of the Earth. | 
+| [`astro_equator_date_t`](#astro_equator_date_t) | `equdate` |  Selects the date of the Earth's equator in which to express the equatorial coordinates. The caller may select `EQUATOR_J2000` to use the orientation of the Earth's equator at noon UTC on January 1, 2000, in which case this function corrects for precession and nutation of the Earth as it was at the moment specified by the `time` parameter. Or the caller may select `EQUATOR_OF_DATE` to use the Earth's equator at `time` as the orientation. | 
+
+
+
+
+---
+
 <a name="Astronomy_ObserverVector"></a>
 ### Astronomy_ObserverVector(time, observer, equdate) &#8658; [`astro_vector_t`](#astro_vector_t)
 

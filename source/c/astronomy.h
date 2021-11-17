@@ -1006,6 +1006,12 @@ astro_vector_t Astronomy_ObserverVector(
     astro_equator_date_t equdate
 );
 
+astro_state_vector_t Astronomy_ObserverState(
+    astro_time_t *time,
+    astro_observer_t observer,
+    astro_equator_date_t equdate
+);
+
 astro_observer_t Astronomy_VectorObserver(astro_vector_t vector, astro_equator_date_t equdate);
 
 double Astronomy_ObserverGravity(double latitude, double height);

@@ -1386,12 +1386,34 @@ static astro_rotation_t precession_rot(astro_time_t time, precess_dir_t dir)
 }
 
 
-static void precession(const double pos1[3], astro_time_t time, precess_dir_t dir, double pos2[3])
+static void rotate(const double invec[3], const double rot[3][3], double outvec[3])
+{
+    outvec[0] = rot[0][0]*invec[0] + rot[1][0]*invec[1] + rot[2][0]*invec[2];
+    outvec[1] = rot[0][1]*invec[0] + rot[1][1]*invec[1] + rot[2][1]*invec[2];
+    outvec[2] = rot[0][2]*invec[0] + rot[1][2]*invec[1] + rot[2][2]*invec[2];
+}
+
+static void precession(
+    const double pos1[3],
+    astro_time_t time,
+    precess_dir_t dir,
+    double pos2[3])
 {
     astro_rotation_t r = precession_rot(time, dir);
-    pos2[0] = r.rot[0][0]*pos1[0] + r.rot[1][0]*pos1[1] + r.rot[2][0]*pos1[2];
-    pos2[1] = r.rot[0][1]*pos1[0] + r.rot[1][1]*pos1[1] + r.rot[2][1]*pos1[2];
-    pos2[2] = r.rot[0][2]*pos1[0] + r.rot[1][2]*pos1[1] + r.rot[2][2]*pos1[2];
+    rotate(pos1, r.rot, pos2);
+}
+
+static void precession_posvel(
+    const double pos1[3],
+    const double vel1[3],
+    astro_time_t time,
+    precess_dir_t dir,
+    double pos2[3],
+    double vel2[3])
+{
+    astro_rotation_t r = precession_rot(time, dir);
+    rotate(pos1, r.rot, pos2);
+    rotate(vel1, r.rot, vel2);
 }
 
 
@@ -1497,12 +1519,27 @@ static astro_rotation_t nutation_rot(astro_time_t *time, precess_dir_t dir)
     return rotation;
 }
 
-static void nutation(const double inpos[3], astro_time_t *time, precess_dir_t dir, double outpos[3])
+static void nutation(
+    const double inpos[3],
+    astro_time_t *time,
+    precess_dir_t dir,
+    double outpos[3])
 {
     astro_rotation_t r = nutation_rot(time, dir);
-    outpos[0] = r.rot[0][0]*inpos[0] + r.rot[1][0]*inpos[1] + r.rot[2][0]*inpos[2];
-    outpos[1] = r.rot[0][1]*inpos[0] + r.rot[1][1]*inpos[1] + r.rot[2][1]*inpos[2];
-    outpos[2] = r.rot[0][2]*inpos[0] + r.rot[1][2]*inpos[1] + r.rot[2][2]*inpos[2];
+    rotate(inpos, r.rot, outpos);
+}
+
+static void nutation_posvel(
+    const double inpos[3],
+    const double invel[3],
+    astro_time_t *time,
+    precess_dir_t dir,
+    double outpos[3],
+    double outvel[3])
+{
+    astro_rotation_t r = nutation_rot(time, dir);
+    rotate(inpos, r.rot, outpos);
+    rotate(invel, r.rot, outvel);
 }
 
 static double era(double ut)        /* Earth Rotation Angle */
@@ -1606,8 +1643,10 @@ static astro_observer_t inverse_terra(const double ovec[3], double st)
     return observer;
 }
 
-static void terra(astro_observer_t observer, double st, double pos[3])
+static void terra(astro_observer_t observer, double st, double pos[3], double vel[3])
 {
+    static const double ANGVEL = 7.2921150e-5;
+
     double df2 = EARTH_FLATTENING * EARTH_FLATTENING;
     double phi = observer.latitude * DEG2RAD;
     double sinphi = sin(phi);
@@ -1621,27 +1660,30 @@ static void terra(astro_observer_t observer, double st, double pos[3])
     double sinst = sin(stlocl);
     double cosst = cos(stlocl);
 
-    pos[0] = ach * cosphi * cosst / KM_PER_AU;
-    pos[1] = ach * cosphi * sinst / KM_PER_AU;
-    pos[2] = ash * sinphi / KM_PER_AU;
+    if (pos != NULL)
+    {
+        pos[0] = ach * cosphi * cosst / KM_PER_AU;
+        pos[1] = ach * cosphi * sinst / KM_PER_AU;
+        pos[2] = ash * sinphi / KM_PER_AU;
+    }
 
-#if 0
-    /* If we ever need to calculate the observer's velocity vector, here is how NOVAS C 3.1 does it... */
-    static const double ANGVEL = 7.2921150e-5;
-    vel[0] = -ANGVEL * ach * cosphi * sinst * 86400.0;
-    vel[1] = +ANGVEL * ach * cosphi * cosst * 86400.0;
-    vel[2] = 0.0;
-#endif
+    if (vel != NULL)
+    {
+        vel[0] = -(ANGVEL * 86400.0 / KM_PER_AU) * ach * cosphi * sinst;
+        vel[1] = +(ANGVEL * 86400.0 / KM_PER_AU) * ach * cosphi * cosst;
+        vel[2] = 0.0;
+    }
 }
 
-static void geo_pos(astro_time_t *time, astro_observer_t observer, double outpos[3])
+static void geo_pos(astro_time_t *time, astro_observer_t observer, double pos[3])
 {
-    double gast, pos1[3], pos2[3];
+    double gast;
+    double pos1[3], pos2[3];
 
     gast = sidereal_time(time);
-    terra(observer, gast, pos1);
+    terra(observer, gast, pos1, NULL);
     nutation(pos1, time, INTO_2000, pos2);
-    precession(pos2, *time, INTO_2000, outpos);
+    precession(pos2, *time, INTO_2000, pos);
 }
 
 static void spin(double angle, const double pos1[3], double vec2[3])
@@ -4632,7 +4674,7 @@ astro_vector_t Astronomy_ObserverVector(
     double gast, pos[3], temp[3];
 
     gast = sidereal_time(time);
-    terra(observer, gast, pos);
+    terra(observer, gast, pos, NULL);
 
     switch (equdate)
     {
@@ -4657,6 +4699,88 @@ astro_vector_t Astronomy_ObserverVector(
     vec.t = *time;
     vec.status = ASTRO_SUCCESS;
     return vec;
+}
+
+
+/**
+ * @brief Calculates geocentric equatorial position and velocity of an observer on the surface of the Earth.
+ *
+ * This function calculates a position vector from the center of the Earth to
+ * a point on or near the surface of the Earth, expressed in equatorial
+ * coordinates. It takes into account the rotation of the Earth at the given
+ * time, along with the given latitude, longitude, and elevation of the observer.
+ * It also calculates the observer's velocity with respect to the moving center
+ * of the Earth, also in equatorial coordinates.
+ *
+ * The caller may pass a value in `equdate` to select either `EQUATOR_J2000`
+ * for using J2000 coordinates, or `EQUATOR_OF_DATE` for using coordinates relative
+ * to the Earth's equator at the specified time.
+ *
+ * The returned position vector has components expressed in astronomical units (AU).
+ * To convert to kilometers, multiply the `x`, `y`, and `z` values by
+ * the constant value #KM_PER_AU.
+ *
+ * The returned velocity vector is measured in AU/day.
+ *
+ * If you need the position only, and not the velocity, #Astronomy_ObserverVector
+ * is slightly more efficient than this function.
+ *
+ * @param time
+ *      The date and time for which to calculate the observer's geocentric state vector.
+ *
+ * @param observer
+ *      The geographic location of a point on or near the surface of the Earth.
+ *
+ * @param equdate
+ *      Selects the date of the Earth's equator in which to express the equatorial coordinates.
+ *      The caller may select `EQUATOR_J2000` to use the orientation of the Earth's equator
+ *      at noon UTC on January 1, 2000, in which case this function corrects for precession
+ *      and nutation of the Earth as it was at the moment specified by the `time` parameter.
+ *      Or the caller may select `EQUATOR_OF_DATE` to use the Earth's equator at `time`
+ *      as the orientation.
+ *
+ * @return
+ *      If successful, the returned state vector holds `ASTRO_SUCCESS` in its `status` field,
+ *      and the position (x, y, z) and velocity (vx, vy, vz) vectors are valid.
+ *      Otherwise, `status` holds an error code.
+ */
+astro_state_vector_t Astronomy_ObserverState(
+    astro_time_t *time,
+    astro_observer_t observer,
+    astro_equator_date_t equdate)
+{
+    astro_state_vector_t state;
+    double gast, pos[3], vel[3], postemp[3], veltemp[3];
+
+    gast = sidereal_time(time);
+    terra(observer, gast, pos, vel);
+
+    switch (equdate)
+    {
+    case EQUATOR_OF_DATE:
+        /* 'pos' and 'vel' already contain equator-of-date coordinates. */
+        break;
+
+    case EQUATOR_J2000:
+        /* Convert 'pos' from equator-of-date to J2000. */
+        nutation_posvel(pos, vel, time, INTO_2000, postemp, veltemp);
+        precession_posvel(postemp, veltemp, *time, INTO_2000, pos, vel);
+        break;
+
+    default:
+        /* This is not a valid value of the 'equdate' parameter. */
+        return StateVecError(ASTRO_INVALID_PARAMETER, *time);
+    }
+
+    state.x  = pos[0];
+    state.y  = pos[1];
+    state.z  = pos[2];
+    state.vx = vel[0];
+    state.vy = vel[1];
+    state.vz = vel[2];
+    state.t  = *time;
+    state.status = ASTRO_SUCCESS;
+    return state;
 }
 
 
