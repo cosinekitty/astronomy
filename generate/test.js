@@ -2170,18 +2170,9 @@ function StateVectorDiff(vec, x, y, z) {
     return ds;
 }
 
-// Constants for use inside unit tests only; they doesn't make sense for public consumption.
-const Body_GeoMoon = -100;
-const Body_Geo_EMB = -101;
 
-function VerifyBaryState(score, body, filename, lnum, time, pos, vel, r_thresh, v_thresh) {
-    let state;
-    if (body === Body_GeoMoon)
-        state = Astronomy.GeoMoonState(time);
-    else if (body === Body_Geo_EMB)
-        state = Astronomy.GeoEmbState(time);
-    else
-        state = Astronomy.BaryState(body, time);
+function VerifyState(func, score, body, filename, lnum, time, pos, vel, r_thresh, v_thresh) {
+    const state = func(body, time);
 
     const rdiff = StateVectorDiff(pos, state.x, state.y, state.z);
     if (rdiff > score.max_rdiff)
@@ -2192,12 +2183,12 @@ function VerifyBaryState(score, body, filename, lnum, time, pos, vel, r_thresh, 
         score.max_vdiff = vdiff;
 
     if (rdiff > r_thresh) {
-        console.error(`JS VerifyBaryState(${filename} line ${lnum}): EXCESSIVE POSITION ERROR = ${rdiff.toExponential(3)}`);
+        console.error(`JS VerifyState(${filename} line ${lnum}): EXCESSIVE POSITION ERROR = ${rdiff.toExponential(3)}`);
         return 1;
     }
 
     if (vdiff > v_thresh) {
-        console.error(`JS VerifyBaryState(${filename} line ${lnum}): EXCESSIVE VELOCITY ERROR = ${vdiff.toExponential(3)}`);
+        console.error(`JS VerifyState(${filename} line ${lnum}): EXCESSIVE VELOCITY ERROR = ${vdiff.toExponential(3)}`);
         return 1;
     }
 
@@ -2205,7 +2196,7 @@ function VerifyBaryState(score, body, filename, lnum, time, pos, vel, r_thresh, 
 }
 
 
-function BaryStateBody(body, filename, r_thresh, v_thresh) {
+function VerifyStateBody(func, body, filename, r_thresh, v_thresh) {
     const text = fs.readFileSync(filename, {encoding:'utf8'});
     const lines = text.split(/\r?\n/);
     let lnum = 0;
@@ -2249,7 +2240,7 @@ function BaryStateBody(body, filename, r_thresh, v_thresh) {
                     return 1;
                 }
                 vel = [ float(match[1]), float(match[2]), float(match[3]) ];
-                if (VerifyBaryState(score, body, filename, lnum, time, pos, vel, r_thresh, v_thresh))
+                if (VerifyState(func, score, body, filename, lnum, time, pos, vel, r_thresh, v_thresh))
                     return 1;
                 ++count;
                 break;
@@ -2267,125 +2258,54 @@ function BaryStateBody(body, filename, r_thresh, v_thresh) {
 }
 
 
+// Constants for use inside unit tests only; they doesn't make sense for public consumption.
+const Body_GeoMoon = -100;
+const Body_Geo_EMB = -101;
+
+function BaryState(body, time) {
+    if (body === Body_GeoMoon)
+        return Astronomy.GeoMoonState(time);
+
+    if (body === Body_Geo_EMB)
+        return Astronomy.GeoEmbState(time);
+
+    return Astronomy.BaryState(body, time);
+}
+
+
 function BaryStateTest() {
-    if (BaryStateBody(Astronomy.Body.Sun,     'barystate/Sun.txt',      1.23e-05,  1.14e-07)) return 1;
-    if (BaryStateBody(Astronomy.Body.Mercury, 'barystate/Mercury.txt',  5.24e-05,  8.22e-06)) return 1;
-    if (BaryStateBody(Astronomy.Body.Venus,   'barystate/Venus.txt',    2.98e-05,  8.22e-06)) return 1;
-    if (BaryStateBody(Astronomy.Body.Earth,   'barystate/Earth.txt',    2.30e-05,  1.09e-06)) return 1;
-    if (BaryStateBody(Astronomy.Body.Mars,    'barystate/Mars.txt',     4.34e-05,  8.23e-07)) return 1;
-    if (BaryStateBody(Astronomy.Body.Jupiter, 'barystate/Jupiter.txt',  3.74e-04,  1.78e-06)) return 1;
-    if (BaryStateBody(Astronomy.Body.Saturn,  'barystate/Saturn.txt',   1.07e-03,  1.71e-06)) return 1;
-    if (BaryStateBody(Astronomy.Body.Uranus,  'barystate/Uranus.txt',   1.71e-03,  1.03e-06)) return 1;
-    if (BaryStateBody(Astronomy.Body.Neptune, 'barystate/Neptune.txt',  2.95e-03,  1.39e-06)) return 1;
-    if (BaryStateBody(Astronomy.Body.Pluto,   'barystate/Pluto.txt',    2.05e-03,  1.91e-07)) return 1;
-    if (BaryStateBody(Astronomy.Body.Moon,    "barystate/Moon.txt",     2.35e-05,  1.13e-06)) return 1;
-    if (BaryStateBody(Astronomy.Body.EMB,     "barystate/EMB.txt",      2.35e-05,  1.11e-06)) return 1;
-    if (BaryStateBody(Body_GeoMoon,           "barystate/GeoMoon.txt",  1.04e-07,  3.40e-08)) return 1;
-    if (BaryStateBody(Body_Geo_EMB,           "barystate/GeoEMB.txt",   1.26e-09,  4.12e-10)) return 1;
+    if (VerifyStateBody(BaryState, Astronomy.Body.Sun,     'barystate/Sun.txt',      1.23e-05,  1.14e-07)) return 1;
+    if (VerifyStateBody(BaryState, Astronomy.Body.Mercury, 'barystate/Mercury.txt',  5.24e-05,  8.22e-06)) return 1;
+    if (VerifyStateBody(BaryState, Astronomy.Body.Venus,   'barystate/Venus.txt',    2.98e-05,  8.22e-06)) return 1;
+    if (VerifyStateBody(BaryState, Astronomy.Body.Earth,   'barystate/Earth.txt',    2.30e-05,  1.09e-06)) return 1;
+    if (VerifyStateBody(BaryState, Astronomy.Body.Mars,    'barystate/Mars.txt',     4.34e-05,  8.23e-07)) return 1;
+    if (VerifyStateBody(BaryState, Astronomy.Body.Jupiter, 'barystate/Jupiter.txt',  3.74e-04,  1.78e-06)) return 1;
+    if (VerifyStateBody(BaryState, Astronomy.Body.Saturn,  'barystate/Saturn.txt',   1.07e-03,  1.71e-06)) return 1;
+    if (VerifyStateBody(BaryState, Astronomy.Body.Uranus,  'barystate/Uranus.txt',   1.71e-03,  1.03e-06)) return 1;
+    if (VerifyStateBody(BaryState, Astronomy.Body.Neptune, 'barystate/Neptune.txt',  2.95e-03,  1.39e-06)) return 1;
+    if (VerifyStateBody(BaryState, Astronomy.Body.Pluto,   'barystate/Pluto.txt',    2.05e-03,  1.91e-07)) return 1;
+    if (VerifyStateBody(BaryState, Astronomy.Body.Moon,    "barystate/Moon.txt",     2.35e-05,  1.13e-06)) return 1;
+    if (VerifyStateBody(BaryState, Astronomy.Body.EMB,     "barystate/EMB.txt",      2.35e-05,  1.11e-06)) return 1;
+    if (VerifyStateBody(BaryState, Body_GeoMoon,           "barystate/GeoMoon.txt",  1.04e-07,  3.40e-08)) return 1;
+    if (VerifyStateBody(BaryState, Body_Geo_EMB,           "barystate/GeoEMB.txt",   1.26e-09,  4.12e-10)) return 1;
     console.log('JS BaryStateTest: PASS');
-    return 0;
-}
-
-function VerifyHelioState(score, body, filename, lnum, time, pos, vel, r_thresh, v_thresh) {
-    const state = Astronomy.HelioState(body, time);
-
-    const rdiff = StateVectorDiff(pos, state.x, state.y, state.z);
-    if (rdiff > score.max_rdiff)
-        score.max_rdiff = rdiff;
-
-    const vdiff = StateVectorDiff(vel, state.vx, state.vy, state.vz);
-    if (vdiff > score.max_vdiff)
-        score.max_vdiff = vdiff;
-
-    if (rdiff > r_thresh) {
-        console.error(`JS VerifyHelioState(${filename} line ${lnum}): EXCESSIVE POSITION ERROR = ${rdiff.toExponential(3)}`);
-        return 1;
-    }
-
-    if (vdiff > v_thresh) {
-        console.error(`JS VerifyHelioState(${filename} line ${lnum}): EXCESSIVE VELOCITY ERROR = ${vdiff.toExponential(3)}`);
-        return 1;
-    }
-
-    return 0;
-}
-
-
-function HelioStateBody(body, filename, r_thresh, v_thresh) {
-    const text = fs.readFileSync(filename, {encoding:'utf8'});
-    const lines = text.split(/\r?\n/);
-    let lnum = 0;
-    let found = false;
-    let part = -1;
-    let count = 0;
-    let tt, match, pos, vel, time;
-    let score = { max_rdiff:0, max_vdiff:0 };
-    for (let line of lines) {
-        ++lnum;
-        if (!found) {
-            if (line == '$$SOE') {
-                found = true;
-                part = 0;
-            }
-        } else if (line == '$$EOE') {
-            break;
-        } else {
-            switch (part) {
-            case 0:
-                // 2446545.000000000 = A.D. 1986-Apr-24 12:00:00.0000 TDB
-                tt = float(line.split()[0]) - 2451545.0;    // convert JD to J2000 TT
-                time = Astronomy.AstroTime.FromTerrestrialTime(tt);
-                break;
-
-            case 1:
-                // X = 1.134408131605554E-03 Y =-2.590904586750408E-03 Z =-7.490427225904720E-05
-                match = /\s*X =\s*(\S+) Y =\s*(\S+) Z =\s*(\S+)/.exec(line);
-                if (!match) {
-                    console.error(`JS HelioStateBody(${filename} line ${lnum}): cannot parse position vector.`);
-                    return 1;
-                }
-                pos = [ float(match[1]), float(match[2]), float(match[3]) ];
-                break;
-
-            case 2:
-                // VX= 9.148038778472862E-03 VY= 3.973823407182510E-03 VZ= 2.765660368640458E-04
-                match = /\s*VX=\s*(\S+) VY=\s*(\S+) VZ=\s*(\S+)/.exec(line);
-                if (!match) {
-                    console.error(`JS HelioStateBody(${filename} line ${lnum}): cannot parse velocity vector.`);
-                    return 1;
-                }
-                vel = [ float(match[1]), float(match[2]), float(match[3]) ];
-                if (VerifyHelioState(score, body, filename, lnum, time, pos, vel, r_thresh, v_thresh))
-                    return 1;
-                ++count;
-                break;
-
-            default:
-                console.error(`JS HelioStateBody(${filename} line ${lnum}): unexpected part = ${part}`);
-                return 1;
-            }
-            part = (part + 1) % 3;
-        }
-    }
-
-    if (Verbose) console.debug(`JS HelioStateBody(${filename}): PASS - Tested ${count} cases. max rdiff=${score.max_rdiff.toExponential(3)}, vdiff=${score.max_vdiff.toExponential(3)}`);
     return 0;
 }
 
 
 function HelioStateTest() {
-    if (0 != HelioStateBody(Astronomy.Body.SSB,     'heliostate/SSB.txt',      1.21e-05, 1.13e-07)) return 1;
-    if (0 != HelioStateBody(Astronomy.Body.Mercury, 'heliostate/Mercury.txt',  4.59e-05, 8.36e-06)) return 1;
-    if (0 != HelioStateBody(Astronomy.Body.Venus,   'heliostate/Venus.txt',    2.54e-05, 9.14e-07)) return 1;
-    if (0 != HelioStateBody(Astronomy.Body.Earth,   'heliostate/Earth.txt',    1.46e-05, 1.05e-06)) return 1;
-    if (0 != HelioStateBody(Astronomy.Body.Mars,    'heliostate/Mars.txt',     4.49e-05, 8.51e-07)) return 1;
-    if (0 != HelioStateBody(Astronomy.Body.Jupiter, 'heliostate/Jupiter.txt',  3.78e-04, 1.85e-06)) return 1;
-    if (0 != HelioStateBody(Astronomy.Body.Saturn,  'heliostate/Saturn.txt',   1.07e-03, 1.74e-06)) return 1;
-    if (0 != HelioStateBody(Astronomy.Body.Uranus,  'heliostate/Uranus.txt',   1.71e-03, 1.10e-06)) return 1;
-    if (0 != HelioStateBody(Astronomy.Body.Neptune, 'heliostate/Neptune.txt',  2.95e-03, 1.43e-06)) return 1;
-    if (0 != HelioStateBody(Astronomy.Body.Pluto,   'heliostate/Pluto.txt',    2.04e-03, 2.87e-07)) return 1;
-    if (0 != HelioStateBody(Astronomy.Body.Moon,    'heliostate/Moon.txt',     1.46e-05, 1.06e-06)) return 1;
-    if (0 != HelioStateBody(Astronomy.Body.EMB,     'heliostate/EMB.txt',      1.46e-05, 1.05e-06)) return 1;
+    if (VerifyStateBody(Astronomy.HelioState, Astronomy.Body.SSB,     'heliostate/SSB.txt',      1.21e-05, 1.13e-07)) return 1;
+    if (VerifyStateBody(Astronomy.HelioState, Astronomy.Body.Mercury, 'heliostate/Mercury.txt',  4.59e-05, 8.36e-06)) return 1;
+    if (VerifyStateBody(Astronomy.HelioState, Astronomy.Body.Venus,   'heliostate/Venus.txt',    2.54e-05, 9.14e-07)) return 1;
+    if (VerifyStateBody(Astronomy.HelioState, Astronomy.Body.Earth,   'heliostate/Earth.txt',    1.46e-05, 1.05e-06)) return 1;
+    if (VerifyStateBody(Astronomy.HelioState, Astronomy.Body.Mars,    'heliostate/Mars.txt',     4.49e-05, 8.51e-07)) return 1;
+    if (VerifyStateBody(Astronomy.HelioState, Astronomy.Body.Jupiter, 'heliostate/Jupiter.txt',  3.78e-04, 1.85e-06)) return 1;
+    if (VerifyStateBody(Astronomy.HelioState, Astronomy.Body.Saturn,  'heliostate/Saturn.txt',   1.07e-03, 1.74e-06)) return 1;
+    if (VerifyStateBody(Astronomy.HelioState, Astronomy.Body.Uranus,  'heliostate/Uranus.txt',   1.71e-03, 1.10e-06)) return 1;
+    if (VerifyStateBody(Astronomy.HelioState, Astronomy.Body.Neptune, 'heliostate/Neptune.txt',  2.95e-03, 1.43e-06)) return 1;
+    if (VerifyStateBody(Astronomy.HelioState, Astronomy.Body.Pluto,   'heliostate/Pluto.txt',    2.04e-03, 2.87e-07)) return 1;
+    if (VerifyStateBody(Astronomy.HelioState, Astronomy.Body.Moon,    'heliostate/Moon.txt',     1.46e-05, 1.06e-06)) return 1;
+    if (VerifyStateBody(Astronomy.HelioState, Astronomy.Body.EMB,     'heliostate/EMB.txt',      1.46e-05, 1.05e-06)) return 1;
     console.log('JS HelioStateTest: PASS');
     return 0;
 }
