@@ -1896,19 +1896,10 @@ def StateVectorDiff(vec, x, y, z):
     ds = sqrt(dx*dx + dy*dy + dz*dz)
     return ds
 
-# Constants for use inside unit tests only; they doesn't make sense for public consumption.
-_Body_GeoMoon = -100
-_Body_Geo_EMB = -101
-
 #-----------------------------------------------------------------------------------------------------------
 
-def VerifyBaryState(stats, body, filename, lnum, time, pos, vel, r_thresh, v_thresh):
-    if body == _Body_GeoMoon:
-        state = astronomy.GeoMoonState(time)
-    elif body == _Body_Geo_EMB:
-        state = astronomy.GeoEmbState(time)
-    else:
-        state = astronomy.BaryState(body, time)
+def VerifyState(func, stats, body, filename, lnum, time, pos, vel, r_thresh, v_thresh):
+    state = func(body, time)
 
     rdiff = StateVectorDiff(pos, state.x, state.y, state.z)
     if rdiff > stats.max_rdiff:
@@ -1919,17 +1910,17 @@ def VerifyBaryState(stats, body, filename, lnum, time, pos, vel, r_thresh, v_thr
         stats.max_vdiff = vdiff
 
     if rdiff > r_thresh:
-        print('PY VerifyBaryState({} line {}): EXCESSIVE position error = {:0.4e}'.format(filename, lnum, rdiff))
+        print('PY VerifyState({} line {}): EXCESSIVE position error = {:0.4e}'.format(filename, lnum, rdiff))
         return 1
 
     if vdiff > v_thresh:
-        print('PY VerifyBaryState({} line {}): EXCESSIVE velocity error = {:0.4e}'.format(filename, lnum, vdiff))
+        print('PY VerifyState({} line {}): EXCESSIVE velocity error = {:0.4e}'.format(filename, lnum, vdiff))
         return 1
 
     return 0
 
 
-def BaryStateBody(body, filename, r_thresh, v_thresh):
+def VerifyStateBody(func, body, filename, r_thresh, v_thresh):
     with open(filename, 'rt') as infile:
         lnum = 0
         part = 0
@@ -1953,123 +1944,72 @@ def BaryStateBody(body, filename, r_thresh, v_thresh):
                     # X = 1.134408131605554E-03 Y =-2.590904586750408E-03 Z =-7.490427225904720E-05
                     match = re.match(r'\s*X =\s*(\S+) Y =\s*(\S+) Z =\s*(\S+)', line)
                     if not match:
-                        print('PY BaryStateBody({} line {}): cannot parse position vector.'.format(filename, lnum))
+                        print('PY VerifyStateBody({} line {}): cannot parse position vector.'.format(filename, lnum))
                         return 1
                     pos = [ float(match.group(1)), float(match.group(2)), float(match.group(3)) ]
                 else:   # part == 2
                     # VX= 9.148038778472862E-03 VY= 3.973823407182510E-03 VZ= 2.765660368640458E-04
                     match = re.match(r'\s*VX=\s*(\S+) VY=\s*(\S+) VZ=\s*(\S+)', line)
                     if not match:
-                        print('PY BaryStateBody({} line {}): cannot parse velocity vector.'.format(filename, lnum))
+                        print('PY VerifyStateBody({} line {}): cannot parse velocity vector.'.format(filename, lnum))
                         return 1
                     vel = [ float(match.group(1)), float(match.group(2)), float(match.group(3)) ]
-                    if VerifyBaryState(stats, body, filename, lnum, time, pos, vel, r_thresh, v_thresh):
-                        print('PY BaryStateBody({} line {}): FAILED VERIFICATION.'.format(filename, lnum))
+                    if VerifyState(func, stats, body, filename, lnum, time, pos, vel, r_thresh, v_thresh):
+                        print('PY VerifyStateBody({} line {}): FAILED VERIFICATION.'.format(filename, lnum))
                         return 1
                     count += 1
                 part = (part + 1) % 3
-        Debug('PY BaryStateBody({}): PASS - Tested {} cases. max rdiff={:0.3e}, vdiff={:0.3e}'.format(filename, count, stats.max_rdiff, stats.max_vdiff))
+        Debug('PY VerifyStateBody({}): PASS - Tested {} cases. max rdiff={:0.3e}, vdiff={:0.3e}'.format(filename, count, stats.max_rdiff, stats.max_vdiff))
     return 0
 
+#-----------------------------------------------------------------------------------------------------------
+
+# Constants for use inside unit tests only; they doesn't make sense for public consumption.
+_Body_GeoMoon = -100
+_Body_Geo_EMB = -101
+
+def BaryStateFunc(body, time):
+    if body == _Body_GeoMoon:
+        return astronomy.GeoMoonState(time)
+
+    if body == _Body_Geo_EMB:
+        return astronomy.GeoEmbState(time)
+
+    return astronomy.BaryState(body, time)
 
 def BaryState():
-    if BaryStateBody(astronomy.Body.Sun,     'barystate/Sun.txt',      1.23e-05,  1.14e-07):  return 1
-    if BaryStateBody(astronomy.Body.Mercury, 'barystate/Mercury.txt',  5.24e-05,  8.22e-06):  return 1
-    if BaryStateBody(astronomy.Body.Venus,   'barystate/Venus.txt',    2.98e-05,  8.78e-07):  return 1
-    if BaryStateBody(astronomy.Body.Earth,   'barystate/Earth.txt',    2.30e-05,  1.09e-06):  return 1
-    if BaryStateBody(astronomy.Body.Mars,    'barystate/Mars.txt',     4.34e-05,  8.23e-07):  return 1
-    if BaryStateBody(astronomy.Body.Jupiter, 'barystate/Jupiter.txt',  3.74e-04,  1.78e-06):  return 1
-    if BaryStateBody(astronomy.Body.Saturn,  'barystate/Saturn.txt',   1.07e-03,  1.71e-06):  return 1
-    if BaryStateBody(astronomy.Body.Uranus,  'barystate/Uranus.txt',   1.71e-03,  1.03e-06):  return 1
-    if BaryStateBody(astronomy.Body.Neptune, 'barystate/Neptune.txt',  2.95e-03,  1.39e-06):  return 1
-    if BaryStateBody(astronomy.Body.Pluto,   'barystate/Pluto.txt',    2.05e-03,  1.91e-07):  return 1
-    if BaryStateBody(astronomy.Body.Moon,    "barystate/Moon.txt",     2.35e-05,  1.13e-06):  return 1
-    if BaryStateBody(astronomy.Body.EMB,     "barystate/EMB.txt",      2.35e-05,  1.11e-06):  return 1
-    if BaryStateBody(_Body_GeoMoon,          "barystate/GeoMoon.txt",  1.04e-07,  3.40e-08):  return 1
-    if BaryStateBody(_Body_Geo_EMB,          "barystate/GeoEMB.txt",   1.26e-09,  4.12e-10):  return 1
+    if VerifyStateBody(BaryStateFunc, astronomy.Body.Sun,     'barystate/Sun.txt',      1.23e-05,  1.14e-07):  return 1
+    if VerifyStateBody(BaryStateFunc, astronomy.Body.Mercury, 'barystate/Mercury.txt',  5.24e-05,  8.22e-06):  return 1
+    if VerifyStateBody(BaryStateFunc, astronomy.Body.Venus,   'barystate/Venus.txt',    2.98e-05,  8.78e-07):  return 1
+    if VerifyStateBody(BaryStateFunc, astronomy.Body.Earth,   'barystate/Earth.txt',    2.30e-05,  1.09e-06):  return 1
+    if VerifyStateBody(BaryStateFunc, astronomy.Body.Mars,    'barystate/Mars.txt',     4.34e-05,  8.23e-07):  return 1
+    if VerifyStateBody(BaryStateFunc, astronomy.Body.Jupiter, 'barystate/Jupiter.txt',  3.74e-04,  1.78e-06):  return 1
+    if VerifyStateBody(BaryStateFunc, astronomy.Body.Saturn,  'barystate/Saturn.txt',   1.07e-03,  1.71e-06):  return 1
+    if VerifyStateBody(BaryStateFunc, astronomy.Body.Uranus,  'barystate/Uranus.txt',   1.71e-03,  1.03e-06):  return 1
+    if VerifyStateBody(BaryStateFunc, astronomy.Body.Neptune, 'barystate/Neptune.txt',  2.95e-03,  1.39e-06):  return 1
+    if VerifyStateBody(BaryStateFunc, astronomy.Body.Pluto,   'barystate/Pluto.txt',    2.05e-03,  1.91e-07):  return 1
+    if VerifyStateBody(BaryStateFunc, astronomy.Body.Moon,    "barystate/Moon.txt",     2.35e-05,  1.13e-06):  return 1
+    if VerifyStateBody(BaryStateFunc, astronomy.Body.EMB,     "barystate/EMB.txt",      2.35e-05,  1.11e-06):  return 1
+    if VerifyStateBody(BaryStateFunc, _Body_GeoMoon,          "barystate/GeoMoon.txt",  1.04e-07,  3.40e-08):  return 1
+    if VerifyStateBody(BaryStateFunc, _Body_Geo_EMB,          "barystate/GeoEMB.txt",   1.26e-09,  4.12e-10):  return 1
     print('PY BaryState: PASS')
     return 0
 
 #-----------------------------------------------------------------------------------------------------------
 
-def VerifyHelioState(stats, body, filename, lnum, time, pos, vel, r_thresh, v_thresh):
-    state = astronomy.HelioState(body, time)
-
-    rdiff = StateVectorDiff(pos, state.x, state.y, state.z)
-    if rdiff > stats.max_rdiff:
-        stats.max_rdiff = rdiff
-
-    vdiff = StateVectorDiff(vel, state.vx, state.vy, state.vz)
-    if vdiff > stats.max_vdiff:
-        stats.max_vdiff = vdiff
-
-    if rdiff > r_thresh:
-        print('PY VerifyHelioState({} line {}): EXCESSIVE position error = {:0.4e}'.format(filename, lnum, rdiff))
-        return 1
-
-    if vdiff > v_thresh:
-        print('PY VerifyHelioState({} line {}): EXCESSIVE velocity error = {:0.4e}'.format(filename, lnum, vdiff))
-        return 1
-
-    return 0
-
-
-def HelioStateBody(body, filename, r_thresh, v_thresh):
-    with open(filename, 'rt') as infile:
-        lnum = 0
-        part = 0
-        count = 0
-        found_begin = False
-        stats = _bary_stats_t()
-        for line in infile:
-            line = line.rstrip()
-            lnum += 1
-            if not found_begin:
-                if line == '$$SOE':
-                    found_begin = True
-            elif line == '$$EOE':
-                break
-            else:
-                if part == 0:
-                    # 2446545.000000000 = A.D. 1986-Apr-24 12:00:00.0000 TDB
-                    tt = float(line.split()[0]) - 2451545.0    # convert JD to J2000 TT
-                    time = astronomy.Time.FromTerrestrialTime(tt)
-                elif part == 1:
-                    # X = 1.134408131605554E-03 Y =-2.590904586750408E-03 Z =-7.490427225904720E-05
-                    match = re.match(r'\s*X =\s*(\S+) Y =\s*(\S+) Z =\s*(\S+)', line)
-                    if not match:
-                        print('PY HelioStateBody({} line {}): cannot parse position vector.'.format(filename, lnum))
-                        return 1
-                    pos = [ float(match.group(1)), float(match.group(2)), float(match.group(3)) ]
-                else:   # part == 2
-                    # VX= 9.148038778472862E-03 VY= 3.973823407182510E-03 VZ= 2.765660368640458E-04
-                    match = re.match(r'\s*VX=\s*(\S+) VY=\s*(\S+) VZ=\s*(\S+)', line)
-                    if not match:
-                        print('PY HelioStateBody({} line {}): cannot parse velocity vector.'.format(filename, lnum))
-                        return 1
-                    vel = [ float(match.group(1)), float(match.group(2)), float(match.group(3)) ]
-                    if VerifyHelioState(stats, body, filename, lnum, time, pos, vel, r_thresh, v_thresh):
-                        print('PY HelioStateBody({} line {}): FAILED VERIFICATION.'.format(filename, lnum))
-                        return 1
-                    count += 1
-                part = (part + 1) % 3
-        Debug('PY HelioStateBody({}): PASS - Tested {} cases. max rdiff={:0.3e}, vdiff={:0.3e}'.format(filename, count, stats.max_rdiff, stats.max_vdiff))
-    return 0
-
-
 def HelioState():
-    if HelioStateBody(astronomy.Body.SSB,     'heliostate/SSB.txt',      1.21e-05, 1.13e-07): return 1
-    if HelioStateBody(astronomy.Body.Mercury, 'heliostate/Mercury.txt',  4.59e-05, 8.36e-06): return 1
-    if HelioStateBody(astronomy.Body.Venus,   'heliostate/Venus.txt',    2.54e-05, 9.14e-07): return 1
-    if HelioStateBody(astronomy.Body.Earth,   'heliostate/Earth.txt',    1.46e-05, 1.05e-06): return 1
-    if HelioStateBody(astronomy.Body.Mars,    'heliostate/Mars.txt',     4.49e-05, 8.51e-07): return 1
-    if HelioStateBody(astronomy.Body.Jupiter, 'heliostate/Jupiter.txt',  3.78e-04, 1.85e-06): return 1
-    if HelioStateBody(astronomy.Body.Saturn,  'heliostate/Saturn.txt',   1.07e-03, 1.74e-06): return 1
-    if HelioStateBody(astronomy.Body.Uranus,  'heliostate/Uranus.txt',   1.71e-03, 1.10e-06): return 1
-    if HelioStateBody(astronomy.Body.Neptune, 'heliostate/Neptune.txt',  2.95e-03, 1.43e-06): return 1
-    if HelioStateBody(astronomy.Body.Pluto,   'heliostate/Pluto.txt',    2.04e-03, 2.87e-07): return 1
-    if HelioStateBody(astronomy.Body.Moon,    'heliostate/Moon.txt',     1.46e-05, 1.06e-06): return 1
-    if HelioStateBody(astronomy.Body.EMB,     'heliostate/EMB.txt',      1.46e-05, 1.05e-06): return 1
+    if VerifyStateBody(astronomy.HelioState, astronomy.Body.SSB,     'heliostate/SSB.txt',      1.21e-05, 1.13e-07): return 1
+    if VerifyStateBody(astronomy.HelioState, astronomy.Body.Mercury, 'heliostate/Mercury.txt',  4.59e-05, 8.36e-06): return 1
+    if VerifyStateBody(astronomy.HelioState, astronomy.Body.Venus,   'heliostate/Venus.txt',    2.54e-05, 9.14e-07): return 1
+    if VerifyStateBody(astronomy.HelioState, astronomy.Body.Earth,   'heliostate/Earth.txt',    1.46e-05, 1.05e-06): return 1
+    if VerifyStateBody(astronomy.HelioState, astronomy.Body.Mars,    'heliostate/Mars.txt',     4.49e-05, 8.51e-07): return 1
+    if VerifyStateBody(astronomy.HelioState, astronomy.Body.Jupiter, 'heliostate/Jupiter.txt',  3.78e-04, 1.85e-06): return 1
+    if VerifyStateBody(astronomy.HelioState, astronomy.Body.Saturn,  'heliostate/Saturn.txt',   1.07e-03, 1.74e-06): return 1
+    if VerifyStateBody(astronomy.HelioState, astronomy.Body.Uranus,  'heliostate/Uranus.txt',   1.71e-03, 1.10e-06): return 1
+    if VerifyStateBody(astronomy.HelioState, astronomy.Body.Neptune, 'heliostate/Neptune.txt',  2.95e-03, 1.43e-06): return 1
+    if VerifyStateBody(astronomy.HelioState, astronomy.Body.Pluto,   'heliostate/Pluto.txt',    2.04e-03, 2.87e-07): return 1
+    if VerifyStateBody(astronomy.HelioState, astronomy.Body.Moon,    'heliostate/Moon.txt',     1.46e-05, 1.06e-06): return 1
+    if VerifyStateBody(astronomy.HelioState, astronomy.Body.EMB,     'heliostate/EMB.txt',      1.46e-05, 1.05e-06): return 1
     print('PY HelioState: PASS')
     return 0
 
