@@ -4416,12 +4416,6 @@ static double StateVectorDiff(const double vec[3], double x, double y, double z)
     return ds;
 }
 
-
-/* Constants for use inside unit tests only; they doesn't make sense for public consumption. */
-#define BODY_GEOMOON    ((astro_body_t)(-100))
-#define BODY_GEO_EMB    ((astro_body_t)(-101))
-
-
 typedef astro_state_vector_t (* state_func_t) (astro_body_t, astro_time_t);
 
 typedef struct
@@ -4429,7 +4423,6 @@ typedef struct
     state_func_t    func;
 }
 verify_state_context_t;
-
 
 static int VerifyState(
     verify_state_context_t *context,
@@ -4567,8 +4560,13 @@ fail:
     return error;
 }
 
+/*-----------------------------------------------------------------------------------------------------------*/
 
-astro_state_vector_t BaryState(astro_body_t body, astro_time_t time)
+/* Constants for use inside unit tests only; they doesn't make sense for public consumption. */
+#define BODY_GEOMOON    ((astro_body_t)(-100))
+#define BODY_GEO_EMB    ((astro_body_t)(-101))
+
+static astro_state_vector_t BaryState(astro_body_t body, astro_time_t time)
 {
     if (body == BODY_GEOMOON)
         return Astronomy_GeoMoonState(time);
@@ -4578,7 +4576,6 @@ astro_state_vector_t BaryState(astro_body_t body, astro_time_t time)
 
     return Astronomy_BaryState(body, time);
 }
-
 
 static int BaryStateTest(void)
 {
@@ -4608,7 +4605,6 @@ fail:
 }
 
 /*-----------------------------------------------------------------------------------------------------------*/
-
 
 static int HelioStateTest(void)
 {
