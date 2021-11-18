@@ -134,6 +134,7 @@ static int Issue103(void);
 static int AberrationTest(void);
 static int BaryStateTest(void);
 static int HelioStateTest(void);
+static int TopoStateTest(void);
 static int Twilight(void);
 static int LibrationTest(void);
 
@@ -174,6 +175,7 @@ static unit_test_t UnitTests[] =
     {"rotation",                RotationTest},
     {"seasons",                 SeasonsTest},
     {"time",                    Test_AstroTime},
+    {"topostate",               TopoStateTest},
     {"transit",                 Transit},
     {"twilight",                Twilight}
 };
@@ -4627,6 +4629,73 @@ static int HelioStateTest(void)
     CHECK(VerifyStateBody(&context, BODY_EMB,     "heliostate/EMB.txt",      1.46e-05, 1.05e-06));
 
     printf("C HelioStateTest: PASS\n");
+fail:
+    return error;
+}
+
+/*-----------------------------------------------------------------------------------------------------------*/
+
+static astro_state_vector_t TopoStateFunc(astro_body_t body, astro_time_t time)
+{
+    astro_observer_t        observer;
+    astro_state_vector_t    observer_state, state;
+
+    observer.latitude = 30.0;
+    observer.longitude = -80.0;
+    observer.height = 1000.0;
+
+    observer_state = Astronomy_ObserverState(&time, observer, EQUATOR_J2000);
+    if (observer_state.status != ASTRO_SUCCESS)
+    {
+        fprintf(stderr, "C TopoStateFunc: Astronomy_ObserverState returned error %d\n", observer_state.status);
+        return observer_state;
+    }
+
+    if (body == BODY_GEO_EMB)
+    {
+        state = Astronomy_GeoEmbState(time);
+    }
+    else if (body == BODY_EARTH)
+    {
+        state.status = ASTRO_SUCCESS;
+        state.t = time;
+        state.x = state.y = state.z = 0.0;
+        state.vx = state.vy = state.vz = 0.0;
+    }
+    else
+    {
+        fprintf(stderr, "C TopoStateFunc: Unsupported body %d\n", body);
+        memset(&state, 0, sizeof(state));
+        state.status = ASTRO_INVALID_BODY;
+        return state;
+    }
+
+    if (state.status != ASTRO_SUCCESS)
+    {
+        fprintf(stderr, "C TopoStateFunc: body %d resulted in error %d\n", body, state.status);
+        return state;
+    }
+
+    state.x  -= observer_state.x;
+    state.y  -= observer_state.y;
+    state.z  -= observer_state.z;
+    state.vx -= observer_state.vx;
+    state.vy -= observer_state.vy;
+    state.vz -= observer_state.vz;
+
+    return state;
+}
+
+static int TopoStateTest(void)
+{
+    int error;  /* set as a side-effect of CHECK macro */
+    verify_state_context_t context;
+
+    context.func = TopoStateFunc;
+    CHECK(VerifyStateBody(&context, BODY_EARTH,   "topostate/Earth_N30_W80_1000m.txt",  8.977e-09, 5.656e-08));
+    CHECK(VerifyStateBody(&context, BODY_GEO_EMB, "topostate/EMB_N30_W80_1000m.txt",    9.997e-09, 5.677e-08));
+
+    printf("C TopoStateTest: PASS\n");
 fail:
     return error;
 }
