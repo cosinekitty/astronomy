@@ -78,6 +78,16 @@ typedef struct
     terse_vector_t  v;   /* velocity [au/day] */
 }
 body_state_t;
+
+typedef struct
+{
+    body_state_t Sun;
+    body_state_t Jupiter;
+    body_state_t Saturn;
+    body_state_t Uranus;
+    body_state_t Neptune;
+}
+major_bodies_t;
 /** @endcond */
 
 static const terse_vector_t VecZero = { 0.0, 0.0, 0.0 };
@@ -2453,31 +2463,28 @@ static body_state_t AdjustBarycenterPosVel(body_state_t *ssb, double tt, astro_b
 }
 
 
-static void MajorBodyBary(body_state_t bary[5], double tt)
+static void MajorBodyBary(major_bodies_t *bary, double tt)
 {
-    int p;
-
     /* bary[0] starts out receiving the Solar System Barycenter. */
-    bary[0].tt = tt;
-    bary[0].r = VecZero;
-    bary[0].v = VecZero;
+    bary->Sun.tt = tt;
+    bary->Sun.r = VecZero;
+    bary->Sun.v = VecZero;
 
     /* Calculate heliocentric planet positions and SSB. */
-    bary[1] = AdjustBarycenterPosVel(&bary[0], tt, BODY_JUPITER, JUPITER_GM);
-    bary[2] = AdjustBarycenterPosVel(&bary[0], tt, BODY_SATURN,  SATURN_GM);
-    bary[3] = AdjustBarycenterPosVel(&bary[0], tt, BODY_URANUS,  URANUS_GM);
-    bary[4] = AdjustBarycenterPosVel(&bary[0], tt, BODY_NEPTUNE, NEPTUNE_GM);
+    bary->Jupiter = AdjustBarycenterPosVel(&bary->Sun, tt, BODY_JUPITER, JUPITER_GM);
+    bary->Saturn  = AdjustBarycenterPosVel(&bary->Sun, tt, BODY_SATURN,  SATURN_GM);
+    bary->Uranus  = AdjustBarycenterPosVel(&bary->Sun, tt, BODY_URANUS,  URANUS_GM);
+    bary->Neptune = AdjustBarycenterPosVel(&bary->Sun, tt, BODY_NEPTUNE, NEPTUNE_GM);
 
-    for (p=1; p < 5; ++p)
-    {
-        /* Convert major body [pos, vel] from heliocentric to barycentric. */
-        VecDecr(&bary[p].r, bary[0].r);
-        VecDecr(&bary[p].v, bary[0].v);
-    }
+    /* Convert planet [pos, vel] from heliocentric to barycentric. */
+    VecDecr(&bary->Jupiter.r, bary->Sun.r);  VecDecr(&bary->Jupiter.v, bary->Sun.v);
+    VecDecr(&bary->Saturn.r,  bary->Sun.r);  VecDecr(&bary->Saturn.v,  bary->Sun.v);
+    VecDecr(&bary->Uranus.r,  bary->Sun.r);  VecDecr(&bary->Uranus.v,  bary->Sun.v);
+    VecDecr(&bary->Neptune.r, bary->Sun.r);  VecDecr(&bary->Neptune.v, bary->Sun.v);
 
     /* Convert heliocentric SSB to barycentric Sun. */
-    VecScale(&bary[0].r, -1.0);
-    VecScale(&bary[0].v, -1.0);
+    VecScale(&bary->Sun.r, -1.0);
+    VecScale(&bary->Sun.v, -1.0);
 }
 
 
@@ -2498,23 +2505,23 @@ static void AddAcceleration(terse_vector_t *acc, terse_vector_t small_pos, doubl
 }
 
 
-static terse_vector_t SmallBodyAcceleration(terse_vector_t small_pos, const body_state_t bary[5])
+static terse_vector_t SmallBodyAcceleration(terse_vector_t small_pos, const major_bodies_t *bary)
 {
     terse_vector_t acc = VecZero;
 
     /* Use barycentric coordinates of the Sun and major planets to calculate gravitational accelerations. */
-    AddAcceleration(&acc, small_pos, SUN_GM,     bary[0].r);
-    AddAcceleration(&acc, small_pos, JUPITER_GM, bary[1].r);
-    AddAcceleration(&acc, small_pos, SATURN_GM,  bary[2].r);
-    AddAcceleration(&acc, small_pos, URANUS_GM,  bary[3].r);
-    AddAcceleration(&acc, small_pos, NEPTUNE_GM, bary[4].r);
+    AddAcceleration(&acc, small_pos, SUN_GM,     bary->Sun.r);
+    AddAcceleration(&acc, small_pos, JUPITER_GM, bary->Jupiter.r);
+    AddAcceleration(&acc, small_pos, SATURN_GM,  bary->Saturn.r);
+    AddAcceleration(&acc, small_pos, URANUS_GM,  bary->Uranus.r);
+    AddAcceleration(&acc, small_pos, NEPTUNE_GM, bary->Neptune.r);
 
     return acc;
 }
 
 
 body_grav_calc_t GravSim(           /* out: [pos, vel, acc] of the simulated body at time tt2 */
-    body_state_t bary2[5],          /* temp: work area for major body barycentric state */
+    major_bodies_t *bary2,          /* temp: work area for major body barycentric state */
     double tt2,                     /* in:  a target time to be calculated (either before or after tt1) */
     const body_grav_calc_t *calc1)  /* in:  [pos, vel, acc] of the simulated body at time tt1 */
 {
@@ -2560,15 +2567,15 @@ static int ClampIndex(double frac, int nsteps)
 }
 
 
-static body_grav_calc_t GravFromState(body_state_t bary[5], const body_state_t *state)
+static body_grav_calc_t GravFromState(major_bodies_t *bary, const body_state_t *state)
 {
     body_grav_calc_t calc;
 
     MajorBodyBary(bary, state->tt);
 
     calc.tt = state->tt;
-    calc.r  = VecAdd(state->r, bary[0].r);      /* convert heliocentric to barycentric */
-    calc.v  = VecAdd(state->v, bary[0].v);      /* convert heliocentric to barycentric */
+    calc.r  = VecAdd(state->r, bary->Sun.r);      /* convert heliocentric to barycentric */
+    calc.v  = VecAdd(state->v, bary->Sun.v);      /* convert heliocentric to barycentric */
     calc.a  = SmallBodyAcceleration(calc.r, bary);
 
     return calc;
@@ -2580,7 +2587,7 @@ static astro_status_t GetSegment(int *seg_index, body_segment_t *cache[], double
     int i;
     body_segment_t reverse;
     body_segment_t *seg;
-    body_state_t bary[5];
+    major_bodies_t bary;
     double step_tt, ramp;
 
     if (tt < PlutoStateTable[0].tt || tt > PlutoStateTable[PLUTO_NUM_STATES-1].tt)
@@ -2605,19 +2612,19 @@ static astro_status_t GetSegment(int *seg_index, body_segment_t *cache[], double
         /* Pick the pair of bracketing body states to fill the segment. */
 
         /* Each endpoint is exact. */
-        seg->step[0] = GravFromState(bary, &PlutoStateTable[*seg_index]);
-        seg->step[PLUTO_NSTEPS-1] = GravFromState(bary, &PlutoStateTable[*seg_index + 1]);
+        seg->step[0] = GravFromState(&bary, &PlutoStateTable[*seg_index]);
+        seg->step[PLUTO_NSTEPS-1] = GravFromState(&bary, &PlutoStateTable[*seg_index + 1]);
 
         /* Simulate forwards from the lower time bound. */
         step_tt = seg->step[0].tt;
         for (i=1; i < PLUTO_NSTEPS-1; ++i)
-            seg->step[i] = GravSim(bary, step_tt += PLUTO_DT, &seg->step[i-1]);
+            seg->step[i] = GravSim(&bary, step_tt += PLUTO_DT, &seg->step[i-1]);
 
         /* Simulate backwards from the upper time bound. */
         step_tt = seg->step[PLUTO_NSTEPS-1].tt;
         reverse.step[PLUTO_NSTEPS-1] = seg->step[PLUTO_NSTEPS-1];
         for (i=PLUTO_NSTEPS-2; i > 0; --i)
-            reverse.step[i] = GravSim(bary, step_tt -= PLUTO_DT, &reverse.step[i+1]);
+            reverse.step[i] = GravSim(&bary, step_tt -= PLUTO_DT, &reverse.step[i+1]);
 
         /* Fade-mix the two series so that there are no discontinuities. */
         for (i=PLUTO_NSTEPS-2; i > 0; --i)
@@ -2633,7 +2640,7 @@ static astro_status_t GetSegment(int *seg_index, body_segment_t *cache[], double
 }
 
 
-static body_grav_calc_t CalcPlutoOneWay(body_state_t bary[5], const body_state_t *init_state, double target_tt, double dt)
+static body_grav_calc_t CalcPlutoOneWay(major_bodies_t *bary, const body_state_t *init_state, double target_tt, double dt)
 {
     body_grav_calc_t calc;
     int i, n;
@@ -2650,7 +2657,7 @@ static body_grav_calc_t CalcPlutoOneWay(body_state_t bary[5], const body_state_t
 static astro_status_t CalcPluto(body_state_t *bstate, astro_time_t time, int helio)
 {
     terse_vector_t acc, ra, rb, va, vb;
-    body_state_t bary[5];
+    major_bodies_t bary;
     const body_segment_t *seg;
     int seg_index, left;
     const body_grav_calc_t *s1;
@@ -2672,9 +2679,9 @@ static astro_status_t CalcPluto(body_state_t *bstate, astro_time_t time, int hel
         /* Calculate it by crawling backward from 0000 or forward from 4000. */
         /* FIXFIXFIX - This is super slow. Could optimize this with extra caching if needed. */
         if (time.tt < PlutoStateTable[0].tt)
-            calc = CalcPlutoOneWay(bary, &PlutoStateTable[0], time.tt, -PLUTO_DT);
+            calc = CalcPlutoOneWay(&bary, &PlutoStateTable[0], time.tt, -PLUTO_DT);
         else
-            calc = CalcPlutoOneWay(bary, &PlutoStateTable[PLUTO_NUM_STATES-1], time.tt, +PLUTO_DT);
+            calc = CalcPlutoOneWay(&bary, &PlutoStateTable[PLUTO_NUM_STATES-1], time.tt, +PLUTO_DT);
 
         bstate->r  = calc.r;
         bstate->v  = calc.v;
@@ -2703,14 +2710,14 @@ static astro_status_t CalcPluto(body_state_t *bstate, astro_time_t time, int hel
         bstate->v = VecRamp(va, vb, ramp);
 
         if (helio)
-            MajorBodyBary(bary, time.tt);
+            MajorBodyBary(&bary, time.tt);
     }
 
     if (helio)
     {
         /* Convert barycentric coordinates back to heliocentric coordinates. */
-        VecDecr(&bstate->r, bary[0].r);
-        VecDecr(&bstate->v, bary[0].v);
+        VecDecr(&bstate->r, bary.Sun.r);
+        VecDecr(&bstate->v, bary.Sun.v);
     }
 
     return ASTRO_SUCCESS;
@@ -3151,7 +3158,7 @@ static astro_state_vector_t ExportState(body_state_t terse, astro_time_t time)
 astro_state_vector_t Astronomy_BaryState(astro_body_t body, astro_time_t time)
 {
     astro_state_vector_t state;
-    body_state_t bary[5];
+    major_bodies_t bary;
     body_state_t planet, earth;
 
     if (body == BODY_SSB)
@@ -3172,24 +3179,16 @@ astro_state_vector_t Astronomy_BaryState(astro_body_t body, astro_time_t time)
         return ExportState(planet, time);
     }
 
-    /*
-        Find the barycentric positions and velocities for the 5 major bodies:
-        bary[0] = Sun
-        bary[1] = Jupiter
-        bary[2] = Saturn
-        bary[3] = Uranus
-        bary[4] = Neptune
-    */
-    MajorBodyBary(bary, time.tt);
+    MajorBodyBary(&bary, time.tt);
 
     switch (body)
     {
     /* If the caller is asking for one of the major bodies, we can immediately return the answer. */
-    case BODY_SUN:      return ExportState(bary[0], time);
-    case BODY_JUPITER:  return ExportState(bary[1], time);
-    case BODY_SATURN:   return ExportState(bary[2], time);
-    case BODY_URANUS:   return ExportState(bary[3], time);
-    case BODY_NEPTUNE:  return ExportState(bary[4], time);
+    case BODY_SUN:      return ExportState(bary.Sun,     time);
+    case BODY_JUPITER:  return ExportState(bary.Jupiter, time);
+    case BODY_SATURN:   return ExportState(bary.Saturn,  time);
+    case BODY_URANUS:   return ExportState(bary.Uranus,  time);
+    case BODY_NEPTUNE:  return ExportState(bary.Neptune, time);
 
     /* Handle the remaining VSOP bodies: Mercury, Venus, Earth, Mars. */
     case BODY_MERCURY:
@@ -3198,12 +3197,12 @@ astro_state_vector_t Astronomy_BaryState(astro_body_t body, astro_time_t time)
     case BODY_MARS:
         planet = CalcVsopPosVel(&vsop[body], time.tt);
         /* BarySun + HelioBody = BaryBody */
-        state.x  = bary[0].r.x + planet.r.x;
-        state.y  = bary[0].r.y + planet.r.y;
-        state.z  = bary[0].r.z + planet.r.z;
-        state.vx = bary[0].v.x + planet.v.x;
-        state.vy = bary[0].v.y + planet.v.y;
-        state.vz = bary[0].v.z + planet.v.z;
+        state.x  = bary.Sun.r.x + planet.r.x;
+        state.y  = bary.Sun.r.y + planet.r.y;
+        state.z  = bary.Sun.r.z + planet.r.z;
+        state.vx = bary.Sun.v.x + planet.v.x;
+        state.vy = bary.Sun.v.y + planet.v.y;
+        state.vz = bary.Sun.v.z + planet.v.z;
         state.t  = time;
         state.status = ASTRO_SUCCESS;
         return state;
@@ -3215,12 +3214,12 @@ astro_state_vector_t Astronomy_BaryState(astro_body_t body, astro_time_t time)
             state = Astronomy_GeoMoonState(time);
         else
             state = Astronomy_GeoEmbState(time);
-        state.x  += bary[0].r.x + earth.r.x;
-        state.y  += bary[0].r.y + earth.r.y;
-        state.z  += bary[0].r.z + earth.r.z;
-        state.vx += bary[0].v.x + earth.v.x;
-        state.vy += bary[0].v.y + earth.v.y;
-        state.vz += bary[0].v.z + earth.v.z;
+        state.x  += bary.Sun.r.x + earth.r.x;
+        state.y  += bary.Sun.r.y + earth.r.y;
+        state.z  += bary.Sun.r.z + earth.r.z;
+        state.vx += bary.Sun.v.x + earth.v.x;
+        state.vy += bary.Sun.v.y + earth.v.y;
+        state.vz += bary.Sun.v.z + earth.v.z;
         return state;
 
     default:
@@ -3256,7 +3255,7 @@ astro_state_vector_t Astronomy_HelioState(astro_body_t body, astro_time_t time)
 {
     astro_status_t status;
     astro_state_vector_t state;
-    body_state_t bary[5];
+    major_bodies_t bary;
     body_state_t planet, earth;
 
     switch (body)
@@ -3271,14 +3270,14 @@ astro_state_vector_t Astronomy_HelioState(astro_body_t body, astro_time_t time)
 
     case BODY_SSB:
         /* Calculate the barycentric Sun. Then the negative of that is the heliocentric SSB. */
-        MajorBodyBary(bary, time.tt);
-        state.x = -bary[0].r.x;
-        state.y = -bary[0].r.y;
-        state.z = -bary[0].r.z;
-        state.vx = -bary[0].v.x;
-        state.vy = -bary[0].v.y;
-        state.vz = -bary[0].v.z;
-        state.t = time;
+        MajorBodyBary(&bary, time.tt);
+        state.x  = -bary.Sun.r.x;
+        state.y  = -bary.Sun.r.y;
+        state.z  = -bary.Sun.r.z;
+        state.vx = -bary.Sun.v.x;
+        state.vy = -bary.Sun.v.y;
+        state.vz = -bary.Sun.v.z;
+        state.t  = time;
         state.status = ASTRO_SUCCESS;
         return state;
 
