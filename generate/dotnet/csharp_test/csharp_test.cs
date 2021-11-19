@@ -56,6 +56,7 @@ namespace csharp_test
             new Test("astro_check", AstroCheck),
             new Test("barystate", BaryStateTest),
             new Test("heliostate", HelioStateTest),
+            new Test("topostate", TopoStateTest),
             new Test("aberration", AberrationTest),
             new Test("twilight", TwilightTest),
         };
@@ -2895,6 +2896,44 @@ namespace csharp_test
             if (0 != VerifyStateBody(Astronomy.HelioState, Body.Moon,    "../../heliostate/Moon.txt",     1.46e-05, 1.06e-06)) return 1;
             if (0 != VerifyStateBody(Astronomy.HelioState, Body.EMB,     "../../heliostate/EMB.txt",      1.46e-05, 1.05e-06)) return 1;
             Console.WriteLine("C# HelioStateTest: PASS");
+            return 0;
+        }
+
+        static StateVector TopoStateFunc(Body body, AstroTime time)
+        {
+            var observer = new Observer(30.0, -80.0, 1000.0);
+
+            StateVector observer_state = Astronomy.ObserverState(time, observer, EquatorEpoch.J2000);
+            StateVector state;
+            if (body == Body_Geo_EMB)
+            {
+                state = Astronomy.GeoEmbState(time);
+            }
+            else if (body == Body.Earth)
+            {
+                state = new StateVector(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, time);
+            }
+            else
+            {
+                throw new ArgumentException($"C# TopoStateFunction: unsupported body {body}");
+            }
+
+            state.x  -= observer_state.x;
+            state.y  -= observer_state.y;
+            state.z  -= observer_state.z;
+            state.vx -= observer_state.vx;
+            state.vy -= observer_state.vy;
+            state.vz -= observer_state.vz;
+
+            return state;
+        }
+
+
+        static int TopoStateTest()
+        {
+            if (0 != VerifyStateBody(TopoStateFunc, Body.Earth,   "../../topostate/Earth_N30_W80_1000m.txt",  2.108e-04, 2.430e-04)) return 1;
+            if (0 != VerifyStateBody(TopoStateFunc, Body_Geo_EMB, "../../topostate/EMB_N30_W80_1000m.txt",    7.195e-04, 2.497e-04)) return 1;
+            Console.WriteLine("C# TopoStateTest: PASS");
             return 0;
         }
 

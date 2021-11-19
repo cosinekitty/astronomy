@@ -536,6 +536,42 @@ namespace CosineKitty
             this.vz = vz;
             this.t = t;
         }
+
+        /// <summary>
+        /// Combines a position vector and a velocity vector into a single state vector.
+        /// </summary>
+        /// <param name="pos">A position vector.</param>
+        /// <param name="vel">A velocity vector.</param>
+        /// <param name="time">The common time that represents the given position and velocity.</param>
+        public StateVector(AstroVector pos, AstroVector vel, AstroTime time)
+        {
+            if (time == null)
+                throw new NullReferenceException("AstroTime parameter is not allowed to be null.");
+
+            this.x = pos.x;
+            this.y = pos.y;
+            this.z = pos.z;
+            this.vx = vel.x;
+            this.vy = vel.y;
+            this.vz = vel.z;
+            this.t = time;
+        }
+
+        /// <summary>
+        /// Returns the position vector associated with this state vector.
+        /// </summary>
+        public AstroVector Position()
+        {
+            return new AstroVector(x, y, z, t);
+        }
+
+        /// <summary>
+        /// Returns the velocity vector associated with this state vector.
+        /// </summary>
+        public AstroVector Velocity()
+        {
+            return new AstroVector(vx, vy, vz, t);
+        }
     }
 
     /// <summary>
@@ -2977,12 +3013,13 @@ $ASTRO_JUPITER_MOONS();
         private static AstroVector precession(AstroVector pos, AstroTime time, PrecessDirection dir)
         {
             RotationMatrix r = precession_rot(time, dir);
-            return new AstroVector(
-                r.rot[0, 0]*pos.x + r.rot[1, 0]*pos.y + r.rot[2, 0]*pos.z,
-                r.rot[0, 1]*pos.x + r.rot[1, 1]*pos.y + r.rot[2, 1]*pos.z,
-                r.rot[0, 2]*pos.x + r.rot[1, 2]*pos.y + r.rot[2, 2]*pos.z,
-                time
-            );
+            return RotateVector(r, pos);
+        }
+
+        private static StateVector precession_posvel(StateVector state, AstroTime time, PrecessDirection dir)
+        {
+            RotationMatrix rot = precession_rot(time, dir);
+            return RotateState(rot, state);
         }
 
         private struct earth_tilt_t
@@ -3176,7 +3213,7 @@ $ASTRO_IAU_DATA()
             return new Observer(lat_deg, lon_deg, 1000.0 * height_km);
         }
 
-        private static AstroVector terra(Observer observer, AstroTime time)
+        private static StateVector terra(Observer observer, AstroTime time)
         {
             double st = sidereal_time(time);
             double df = 1.0 - 0.003352819697896;    /* flattening of the Earth */
@@ -3193,10 +3230,13 @@ $ASTRO_IAU_DATA()
             double sinst = Math.Sin(stlocl);
             double cosst = Math.Cos(stlocl);
 
-            return new AstroVector(
+            return new StateVector(
                 ach * cosphi * cosst / KM_PER_AU,
                 ach * cosphi * sinst / KM_PER_AU,
                 ash * sinphi / KM_PER_AU,
+                -(ANGVEL * 86400.0 / KM_PER_AU) * ach * cosphi * sinst,
+                +(ANGVEL * 86400.0 / KM_PER_AU) * ach * cosphi * cosst,
+                0.0,
                 time
             );
         }
@@ -3263,13 +3303,14 @@ $ASTRO_IAU_DATA()
 
         private static AstroVector nutation(AstroVector pos, AstroTime time, PrecessDirection dir)
         {
-            RotationMatrix r = nutation_rot(time, dir);
-            return new AstroVector(
-                r.rot[0, 0]*pos.x + r.rot[1, 0]*pos.y + r.rot[2, 0]*pos.z,
-                r.rot[0, 1]*pos.x + r.rot[1, 1]*pos.y + r.rot[2, 1]*pos.z,
-                r.rot[0, 2]*pos.x + r.rot[1, 2]*pos.y + r.rot[2, 2]*pos.z,
-                time
-            );
+            RotationMatrix rot = nutation_rot(time, dir);
+            return RotateVector(rot, pos);
+        }
+
+        private static StateVector nutation_posvel(StateVector state, AstroTime time, PrecessDirection dir)
+        {
+            RotationMatrix rot = nutation_rot(time, dir);
+            return RotateState(rot, state);
         }
 
 
@@ -3321,9 +3362,19 @@ $ASTRO_IAU_DATA()
                 nutation(precession(pos, time, dir), time, dir);
         }
 
+        private static StateVector gyration_posvel(StateVector state, AstroTime time, PrecessDirection dir)
+        {
+            // Combine nutation and precession into a single operation I call "gyration".
+            // The order they are composed depends on the direction,
+            // because both directions are mutual inverse functions.
+            return (dir == PrecessDirection.Into2000) ?
+                precession_posvel(nutation_posvel(state, time, dir), time, dir) :
+                nutation_posvel(precession_posvel(state, time, dir), time, dir);
+        }
+
         private static AstroVector geo_pos(AstroTime time, Observer observer)
         {
-            AstroVector pos = terra(observer, time);
+            AstroVector pos = terra(observer, time).Position();
             return gyration(pos, time, PrecessDirection.Into2000);
         }
 
@@ -4042,10 +4093,10 @@ $ASTRO_IAU_DATA()
         ///
         /// <param name="equdate">
         /// Selects the date of the Earth's equator in which to express the equatorial coordinates.
-        /// The caller may select `EQUATOR_J2000` to use the orientation of the Earth's equator
+        /// The caller may select `EquatorEpoch.J2000` to use the orientation of the Earth's equator
         /// at noon UTC on January 1, 2000, in which case this function corrects for precession
         /// and nutation of the Earth as it was at the moment specified by the `time` parameter.
-        /// Or the caller may select `EQUATOR_OF_DATE` to use the Earth's equator at `time`
+        /// Or the caller may select `EquatorEpoch.OfDate` to use the Earth's equator at `time`
         /// as the orientation.
         /// </param>
         ///
@@ -4058,13 +4109,63 @@ $ASTRO_IAU_DATA()
             Observer observer,
             EquatorEpoch equdate)
         {
-            AstroVector pos = terra(observer, time);
+            return ObserverState(time, observer, equdate).Position();
+        }
+
+        /// <summary>
+        /// Calculates geocentric equatorial position and velocity of an observer on the surface of the Earth.
+        /// </summary>
+        ///
+        /// <remarks>
+        /// This function calculates position and velocity vectors of an observer
+        /// on or near the surface of the Earth, expressed in equatorial
+        /// coordinates. It takes into account the rotation of the Earth at the given
+        /// time, along with the given latitude, longitude, and elevation of the observer.
+        ///
+        /// The caller may pass a value in `equdate` to select either `EQUATOR_J2000`
+        /// for using J2000 coordinates, or `EQUATOR_OF_DATE` for using coordinates relative
+        /// to the Earth's equator at the specified time.
+        ///
+        /// The returned position vector has components expressed in astronomical units (AU).
+        /// To convert to kilometers, multiply the `x`, `y`, and `z` values by
+        /// the constant value #Astronomy.KM_PER_AU.
+        ///
+        /// The returned velocity vector is measured in AU/day.
+        /// </remarks>
+        ///
+        /// <param name="time">
+        /// The date and time for which to calculate the observer's geocentric state vector.
+        /// </param>
+        ///
+        /// <param name="observer">
+        /// The geographic location of a point on or near the surface of the Earth.
+        /// </param>
+        ///
+        /// <param name="equdate">
+        /// Selects the date of the Earth's equator in which to express the equatorial coordinates.
+        /// The caller may select `EquatorEpoch.J2000` to use the orientation of the Earth's equator
+        /// at noon UTC on January 1, 2000, in which case this function corrects for precession
+        /// and nutation of the Earth as it was at the moment specified by the `time` parameter.
+        /// Or the caller may select `EquatorEpoch.OfDate` to use the Earth's equator at `time`
+        /// as the orientation.
+        /// </param>
+        ///
+        /// <returns>
+        /// An equatorial vector from the center of the Earth to the specified location
+        /// on (or near) the Earth's surface.
+        /// </returns>
+        public static StateVector ObserverState(
+            AstroTime time,
+            Observer observer,
+            EquatorEpoch equdate)
+        {
+            StateVector state = terra(observer, time);
 
             if (equdate == EquatorEpoch.OfDate)
-                return pos;     // 'pos' already contains equator-of-date coordinates.
+                return state;
 
             if (equdate == EquatorEpoch.J2000)
-                return gyration(pos, time, PrecessDirection.Into2000);
+                return gyration_posvel(state, time, PrecessDirection.Into2000);
 
             throw new ArgumentException(string.Format("Unsupported equator epoch {0}", equdate));
         }

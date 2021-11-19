@@ -1306,7 +1306,7 @@ This function implements the WGS 84 Ellipsoidal Gravity Formula. The result is a
 
 
 
-This function calculates a position vector from the center of the Earth to a point on or near the surface of the Earth, expressed in equatorial coordinates. It takes into account the rotation of the Earth at the given time, along with the given latitude, longitude, and elevation of the observer. It also calculates the observer's velocity with respect to the moving center of the Earth, also in equatorial coordinates.
+This function calculates position and velocity vectors of an observer on or near the surface of the Earth, expressed in equatorial coordinates. It takes into account the rotation of the Earth at the given time, along with the given latitude, longitude, and elevation of the observer.
 
 The caller may pass a value in `equdate` to select either `EQUATOR_J2000` for using J2000 coordinates, or `EQUATOR_OF_DATE` for using coordinates relative to the Earth's equator at the specified time.
 

@@ -930,6 +930,34 @@ on the Earth.
 
 **Returns:** The effective gravitational acceleration expressed in meters per second squared [m/s^2].
 
+<a name="Astronomy.ObserverState"></a>
+### Astronomy.ObserverState(time, observer, equdate) &#8658; [`StateVector`](#StateVector)
+
+**Calculates geocentric equatorial position and velocity of an observer on the surface of the Earth.**
+
+This function calculates position and velocity vectors of an observer
+on or near the surface of the Earth, expressed in equatorial
+coordinates. It takes into account the rotation of the Earth at the given
+time, along with the given latitude, longitude, and elevation of the observer.
+
+The caller may pass a value in `equdate` to select either `EQUATOR_J2000`
+for using J2000 coordinates, or `EQUATOR_OF_DATE` for using coordinates relative
+to the Earth's equator at the specified time.
+
+The returned position vector has components expressed in astronomical units (AU).
+To convert to kilometers, multiply the `x`, `y`, and `z` values by
+the constant value [`Astronomy.KM_PER_AU`](#Astronomy.KM_PER_AU).
+
+The returned velocity vector is measured in AU/day.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`AstroTime`](#AstroTime) | `time` | The date and time for which to calculate the observer's geocentric state vector. |
+| [`Observer`](#Observer) | `observer` | The geographic location of a point on or near the surface of the Earth. |
+| [`EquatorEpoch`](#EquatorEpoch) | `equdate` | Selects the date of the Earth's equator in which to express the equatorial coordinates. The caller may select `EquatorEpoch.J2000` to use the orientation of the Earth's equator at noon UTC on January 1, 2000, in which case this function corrects for precession and nutation of the Earth as it was at the moment specified by the `time` parameter. Or the caller may select `EquatorEpoch.OfDate` to use the Earth's equator at `time` as the orientation. |
+
+**Returns:** An equatorial vector from the center of the Earth to the specified location on (or near) the Earth's surface.
+
 <a name="Astronomy.ObserverVector"></a>
 ### Astronomy.ObserverVector(time, observer, equdate) &#8658; [`AstroVector`](#AstroVector)
 
@@ -954,7 +982,7 @@ The inverse of this function is also available: [`Astronomy.VectorObserver`](#As
 | --- | --- | --- |
 | [`AstroTime`](#AstroTime) | `time` | The date and time for which to calculate the observer's position vector. |
 | [`Observer`](#Observer) | `observer` | The geographic location of a point on or near the surface of the Earth. |
-| [`EquatorEpoch`](#EquatorEpoch) | `equdate` | Selects the date of the Earth's equator in which to express the equatorial coordinates. The caller may select `EQUATOR_J2000` to use the orientation of the Earth's equator at noon UTC on January 1, 2000, in which case this function corrects for precession and nutation of the Earth as it was at the moment specified by the `time` parameter. Or the caller may select `EQUATOR_OF_DATE` to use the Earth's equator at `time` as the orientation. |
+| [`EquatorEpoch`](#EquatorEpoch) | `equdate` | Selects the date of the Earth's equator in which to express the equatorial coordinates. The caller may select `EquatorEpoch.J2000` to use the orientation of the Earth's equator at noon UTC on January 1, 2000, in which case this function corrects for precession and nutation of the Earth as it was at the moment specified by the `time` parameter. Or the caller may select `EquatorEpoch.OfDate` to use the Earth's equator at `time` as the orientation. |
 
 **Returns:** An equatorial vector from the center of the Earth to the specified location on (or near) the Earth's surface.
 
@@ -2477,6 +2505,18 @@ along with the velocity vector of the point, expressed in AU/day.
 | `double` | `vy` | The velocity y-component in AU/day. |
 | `double` | `vz` | The velocity z-component in AU/day. |
 | [`AstroTime`](#AstroTime) | `t` | The date and time at which this vector is valid. |
+
+### member functions
+
+<a name="StateVector.Position"></a>
+### StateVector.Position() &#8658; [`AstroVector`](#AstroVector)
+
+**Returns the position vector associated with this state vector.**
+
+<a name="StateVector.Velocity"></a>
+### StateVector.Velocity() &#8658; [`AstroVector`](#AstroVector)
+
+**Returns the velocity vector associated with this state vector.**
 
 ---
 
