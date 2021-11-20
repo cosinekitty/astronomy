@@ -4072,8 +4072,8 @@ $ASTRO_IAU_DATA()
         /// coordinates. It takes into account the rotation of the Earth at the given
         /// time, along with the given latitude, longitude, and elevation of the observer.
         ///
-        /// The caller may pass a value in `equdate` to select either `EQUATOR_J2000`
-        /// for using J2000 coordinates, or `EQUATOR_OF_DATE` for using coordinates relative
+        /// The caller may pass a value in `equdate` to select either `EquatorEpoch.J2000`
+        /// for using J2000 coordinates, or `EquatorEpoch.OfDate` for using coordinates relative
         /// to the Earth's equator at the specified time.
         ///
         /// The returned vector has components expressed in astronomical units (AU).
@@ -4122,8 +4122,8 @@ $ASTRO_IAU_DATA()
         /// coordinates. It takes into account the rotation of the Earth at the given
         /// time, along with the given latitude, longitude, and elevation of the observer.
         ///
-        /// The caller may pass a value in `equdate` to select either `EQUATOR_J2000`
-        /// for using J2000 coordinates, or `EQUATOR_OF_DATE` for using coordinates relative
+        /// The caller may pass a value in `equdate` to select either `EquatorEpoch.J2000`
+        /// for using J2000 coordinates, or `EquatorEpoch.OfDate` for using coordinates relative
         /// to the Earth's equator at the specified time.
         ///
         /// The returned position vector has components expressed in astronomical units (AU).
@@ -4151,8 +4151,7 @@ $ASTRO_IAU_DATA()
         /// </param>
         ///
         /// <returns>
-        /// An equatorial vector from the center of the Earth to the specified location
-        /// on (or near) the Earth's surface.
+        /// The position and velocity of the given geographic location, relative to the center of the Earth.
         /// </returns>
         public static StateVector ObserverState(
             AstroTime time,
