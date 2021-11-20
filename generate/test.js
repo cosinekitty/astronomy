@@ -2311,6 +2311,39 @@ function HelioStateTest() {
 }
 
 
+function TopoStateFunc(body, time) {
+    var observer = new Astronomy.Observer(30.0, -80.0, 1000.0);
+
+    let observer_state = Astronomy.ObserverState(time, observer, false);
+    let state;
+    if (body == Body_Geo_EMB) {
+        state = Astronomy.GeoEmbState(time);
+    } else if (body == Astronomy.Body.Earth) {
+        state = new Astronomy.StateVector(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, time);
+    } else {
+        throw `JS TopoStateFunction: unsupported body ${body}`;
+    }
+
+    state.x  -= observer_state.x;
+    state.y  -= observer_state.y;
+    state.z  -= observer_state.z;
+    state.vx -= observer_state.vx;
+    state.vy -= observer_state.vy;
+    state.vz -= observer_state.vz;
+
+    return state;
+}
+
+
+function TopoStateTest() {
+    if (VerifyStateBody(TopoStateFunc, Astronomy.Body.Earth,  "topostate/Earth_N30_W80_1000m.txt",  2.108e-04, 2.430e-04)) return 1;
+    if (VerifyStateBody(TopoStateFunc, Body_Geo_EMB,          "topostate/EMB_N30_W80_1000m.txt",    7.195e-04, 2.497e-04)) return 1;
+    console.log("JS TopoStateTest: PASS");
+    return 0;
+}
+
+
+
 function TwilightTest() {
     const tolerance_seconds = 60.0;
     const filename = 'riseset/twilight.txt';
@@ -2488,6 +2521,7 @@ const UnitTests = {
     rise_set:               RiseSet,
     rotation:               Rotation,
     seasons:                Seasons,
+    topostate:              TopoStateTest,
     transit:                Transit,
     twilight:               TwilightTest,
 };

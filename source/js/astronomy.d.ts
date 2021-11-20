@@ -646,6 +646,39 @@ export declare function Equator(body: Body, date: FlexibleDateTime, observer: Ob
  */
 export declare function ObserverVector(date: FlexibleDateTime, observer: Observer, ofdate: boolean): Vector;
 /**
+ * @brief Calculates geocentric equatorial position and velocity of an observer on the surface of the Earth.
+ *
+ * This function calculates position and velocity vectors of an observer
+ * on or near the surface of the Earth, expressed in equatorial
+ * coordinates. It takes into account the rotation of the Earth at the given
+ * time, along with the given latitude, longitude, and elevation of the observer.
+ *
+ * The caller may pass `ofdate` as `true` to return coordinates relative to the Earth's
+ * equator at the specified time, or `false` to use the J2000 equator.
+ *
+ * The returned position vector has components expressed in astronomical units (AU).
+ * To convert to kilometers, multiply the `x`, `y`, and `z` values by
+ * the constant value {@link KM_PER_AU}.
+ * The returned velocity vector has components expressed in AU/day.
+ *
+ * @param {FlexibleDateTime} date
+ *      The date and time for which to calculate the observer's position and velocity vectors.
+ *
+ * @param {Observer} observer
+ *      The geographic location of a point on or near the surface of the Earth.
+ *
+ * @param {boolean} ofdate
+ *      Selects the date of the Earth's equator in which to express the equatorial coordinates.
+ *      The caller may pass `false` to use the orientation of the Earth's equator
+ *      at noon UTC on January 1, 2000, in which case this function corrects for precession
+ *      and nutation of the Earth as it was at the moment specified by the `time` parameter.
+ *      Or the caller may pass `true` to use the Earth's equator at `time`
+ *      as the orientation.
+ *
+ * @returns {StateVector}
+ */
+export declare function ObserverState(date: FlexibleDateTime, observer: Observer, ofdate: boolean): StateVector;
+/**
  * @brief Calculates the geographic location corresponding to an equatorial vector.
  *
  * This is the inverse function of {@link ObserverVector}.

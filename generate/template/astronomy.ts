@@ -1013,13 +1013,22 @@ export function Libration(date: FlexibleDateTime): LibrationInfo {
     return new LibrationInfo(RAD2DEG*bdash + bdash2, ldash + ldash2, mlat, mlon, dist_km, diam_deg);
 }
 
+function rotate(rot: RotationMatrix, vec: ArrayVector): ArrayVector {
+    return [
+        rot.rot[0][0]*vec[0] + rot.rot[1][0]*vec[1] + rot.rot[2][0]*vec[2],
+        rot.rot[0][1]*vec[0] + rot.rot[1][1]*vec[1] + rot.rot[2][1]*vec[2],
+        rot.rot[0][2]*vec[0] + rot.rot[1][2]*vec[1] + rot.rot[2][2]*vec[2]
+    ];
+}
+
 function precession(pos: ArrayVector, time: AstroTime, dir: PrecessDirection): ArrayVector {
     const r = precession_rot(time, dir);
-    return [
-        r.rot[0][0]*pos[0] + r.rot[1][0]*pos[1] + r.rot[2][0]*pos[2],
-        r.rot[0][1]*pos[0] + r.rot[1][1]*pos[1] + r.rot[2][1]*pos[2],
-        r.rot[0][2]*pos[0] + r.rot[1][2]*pos[1] + r.rot[2][2]*pos[2]
-    ];
+    return rotate(r, pos);
+}
+
+function precession_posvel(state: StateVector, time: AstroTime, dir: PrecessDirection): StateVector {
+    const r = precession_rot(time, dir);
+    return RotateState(r, state);
 }
 
 function precession_rot(time: AstroTime, dir: PrecessDirection): RotationMatrix {
@@ -1193,17 +1202,18 @@ function terra(observer: Observer, st: number): TerraInfo {
     const cosst = Math.cos(stlocl);
     return {
         pos: [ach*cosphi*cosst/KM_PER_AU, ach*cosphi*sinst/KM_PER_AU, ash*sinphi/KM_PER_AU],
-        vel: [-ANGVEL*ach*cosphi*sinst*86400, ANGVEL*ach*cosphi*cosst*86400, 0]
+        vel: [-ANGVEL*ach*cosphi*sinst*86400/KM_PER_AU, ANGVEL*ach*cosphi*cosst*86400/KM_PER_AU, 0]
     };
 }
 
 function nutation(pos: ArrayVector, time: AstroTime, dir: PrecessDirection): ArrayVector {
     const r = nutation_rot(time, dir);
-    return [
-        r.rot[0][0]*pos[0] + r.rot[1][0]*pos[1] + r.rot[2][0]*pos[2],
-        r.rot[0][1]*pos[0] + r.rot[1][1]*pos[1] + r.rot[2][1]*pos[2],
-        r.rot[0][2]*pos[0] + r.rot[1][2]*pos[1] + r.rot[2][2]*pos[2]
-    ];
+    return rotate(r, pos);
+}
+
+function nutation_posvel(state: StateVector, time: AstroTime, dir: PrecessDirection): StateVector {
+    const r = nutation_rot(time, dir);
+    return RotateState(r, state);
 }
 
 function nutation_rot(time: AstroTime, dir: PrecessDirection): RotationMatrix {
@@ -1256,6 +1266,15 @@ function gyration(pos: ArrayVector, time: AstroTime, dir: PrecessDirection) {
     return (dir === PrecessDirection.Into2000) ?
         precession(nutation(pos, time, dir), time, dir) :
         nutation(precession(pos, time, dir), time, dir);
+}
+
+function gyration_posvel(state: StateVector, time: AstroTime, dir: PrecessDirection) {
+    // Combine nutation and precession into a single operation I call "gyration".
+    // The order they are composed depends on the direction,
+    // because both directions are mutual inverse functions.
+    return (dir === PrecessDirection.Into2000) ?
+        precession_posvel(nutation_posvel(state, time, dir), time, dir) :
+        nutation_posvel(precession_posvel(state, time, dir), time, dir);
 }
 
 function geo_pos(time: AstroTime, observer: Observer): ArrayVector {
@@ -1888,6 +1907,54 @@ export function ObserverVector(date: FlexibleDateTime, observer: Observer, ofdat
     if (!ofdate)
         ovec = gyration(ovec, time, PrecessDirection.Into2000);
     return VectorFromArray(ovec, time);
+}
+
+/**
+ * @brief Calculates geocentric equatorial position and velocity of an observer on the surface of the Earth.
+ *
+ * This function calculates position and velocity vectors of an observer
+ * on or near the surface of the Earth, expressed in equatorial
+ * coordinates. It takes into account the rotation of the Earth at the given
+ * time, along with the given latitude, longitude, and elevation of the observer.
+ *
+ * The caller may pass `ofdate` as `true` to return coordinates relative to the Earth's
+ * equator at the specified time, or `false` to use the J2000 equator.
+ *
+ * The returned position vector has components expressed in astronomical units (AU).
+ * To convert to kilometers, multiply the `x`, `y`, and `z` values by
+ * the constant value {@link KM_PER_AU}.
+ * The returned velocity vector has components expressed in AU/day.
+ *
+ * @param {FlexibleDateTime} date
+ *      The date and time for which to calculate the observer's position and velocity vectors.
+ *
+ * @param {Observer} observer
+ *      The geographic location of a point on or near the surface of the Earth.
+ *
+ * @param {boolean} ofdate
+ *      Selects the date of the Earth's equator in which to express the equatorial coordinates.
+ *      The caller may pass `false` to use the orientation of the Earth's equator
+ *      at noon UTC on January 1, 2000, in which case this function corrects for precession
+ *      and nutation of the Earth as it was at the moment specified by the `time` parameter.
+ *      Or the caller may pass `true` to use the Earth's equator at `time`
+ *      as the orientation.
+ *
+ * @returns {StateVector}
+ */
+ export function ObserverState(date: FlexibleDateTime, observer: Observer, ofdate: boolean): StateVector {
+    const time = MakeTime(date);
+    const gast = sidereal_time(time);
+    const svec = terra(observer, gast);
+    const state = new StateVector(
+        svec.pos[0], svec.pos[1], svec.pos[2],
+        svec.vel[0], svec.vel[1], svec.vel[2],
+        time
+    );
+
+    if (!ofdate)
+        return gyration_posvel(state, time, PrecessDirection.Into2000);
+
+    return state;
 }
 
 /**
