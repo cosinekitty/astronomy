@@ -903,13 +903,20 @@ def _precession_rot(time, direction):
 
     raise Error('Inalid precession direction')
 
+def _rotate(rot, vec):
+    return [
+        rot.rot[0][0]*vec[0] + rot.rot[1][0]*vec[1] + rot.rot[2][0]*vec[2],
+        rot.rot[0][1]*vec[0] + rot.rot[1][1]*vec[1] + rot.rot[2][1]*vec[2],
+        rot.rot[0][2]*vec[0] + rot.rot[1][2]*vec[1] + rot.rot[2][2]*vec[2]
+    ]
+
 def _precession(pos, time, direction):
     r = _precession_rot(time, direction)
-    return [
-        r.rot[0][0]*pos[0] + r.rot[1][0]*pos[1] + r.rot[2][0]*pos[2],
-        r.rot[0][1]*pos[0] + r.rot[1][1]*pos[1] + r.rot[2][1]*pos[2],
-        r.rot[0][2]*pos[0] + r.rot[1][2]*pos[1] + r.rot[2][2]*pos[2]
-    ]
+    return _rotate(r, pos)
+
+def _precession_posvel(state, time, direction):
+    r = _precession_rot(time, direction)
+    return RotateState(r, state)
 
 class Equatorial:
     """Equatorial angular coordinates
@@ -1001,14 +1008,13 @@ def _nutation_rot(time, direction):
 
     raise Error('Invalid nutation direction')
 
-
 def _nutation(pos, time, direction):
     r = _nutation_rot(time, direction)
-    return [
-        r.rot[0][0]*pos[0] + r.rot[1][0]*pos[1] + r.rot[2][0]*pos[2],
-        r.rot[0][1]*pos[0] + r.rot[1][1]*pos[1] + r.rot[2][1]*pos[2],
-        r.rot[0][2]*pos[0] + r.rot[1][2]*pos[1] + r.rot[2][2]*pos[2]
-    ]
+    return _rotate(r, pos)
+
+def _nutation_posvel(state, time, direction):
+    r = _nutation_rot(time, direction)
+    return RotateState(r, state)
 
 def _era(time):        # Earth Rotation Angle
     thet1 = 0.7790572732640 + 0.00273781191135448 * time.ut
@@ -1092,7 +1098,7 @@ def _inverse_terra(ovec, st):
             height_km = p/cos - adjust
     return Observer(lat_deg, lon_deg, 1000*height_km)
 
-def _terra(observer, st):
+def _terra_posvel(observer, st):
     df2 = _EARTH_FLATTENING ** 2
     phi = math.radians(observer.latitude)
     sinphi = math.sin(phi)
@@ -1108,8 +1114,14 @@ def _terra(observer, st):
     return [
         ach * cosphi * cosst / KM_PER_AU,
         ach * cosphi * sinst / KM_PER_AU,
-        ash * sinphi / KM_PER_AU
+        ash * sinphi / KM_PER_AU,
+        -_ANGVEL * ach * cosphi * sinst * 86400 / KM_PER_AU,
+        +_ANGVEL * ach * cosphi * cosst * 86400 / KM_PER_AU,
+        0.0
     ]
+
+def _terra(observer, st):
+    return _terra_posvel(observer, st)[0:3]
 
 def _geo_pos(time, observer):
     gast = _sidereal_time(time)
@@ -2506,6 +2518,53 @@ def ObserverVector(time, observer, ofdate):
         ovec = _nutation(ovec, time, _PrecessDir.Into2000)
         ovec = _precession(ovec, time, _PrecessDir.Into2000)
     return Vector(ovec[0], ovec[1], ovec[2], time)
+
+def ObserverState(time, observer, ofdate):
+    """Calculates geocentric equatorial position and velocity of an observer on the surface of the Earth.
+
+    This function calculates position and velocity vectors of an observer
+    on or near the surface of the Earth, expressed in equatorial
+    coordinates. It takes into account the rotation of the Earth at the given
+    time, along with the given latitude, longitude, and elevation of the observer.
+
+    The caller may pass `ofdate` as `True` to return coordinates relative to the Earth's
+    equator at the specified time, or `False` to use the J2000 equator.
+
+    The returned position vector has components expressed in astronomical units (AU).
+    To convert to kilometers, multiply the `x`, `y`, and `z` values by
+    the constant value #KM_PER_AU.
+    The returned velocity vector has components expressed in AU/day.
+
+    Parameters
+    ----------
+    time : Time
+        The date and time for which to calculate the observer's position and velocity vectors.
+    observer : Observer
+        The geographic location of a point on or near the surface of the Earth.
+    ofdate : bool
+        Selects the date of the Earth's equator in which to express the equatorial coordinates.
+        The caller may pass `False` to use the orientation of the Earth's equator
+        at noon UTC on January 1, 2000, in which case this function corrects for precession
+        and nutation of the Earth as it was at the moment specified by the `time` parameter.
+        Or the caller may pass `true` to use the Earth's equator at `time`
+        as the orientation.
+
+    Returns
+    -------
+    StateVector
+        An equatorial position vector and velocity vector relative to the center of the Earth.
+    """
+    gast = _sidereal_time(time)
+    ovec = _terra_posvel(observer, gast)
+    state = StateVector(
+        ovec[0], ovec[1], ovec[2],
+        ovec[3], ovec[4], ovec[5],
+        time
+    )
+    if not ofdate:
+        state = _nutation_posvel(state, time, _PrecessDir.Into2000)
+        state = _precession_posvel(state, time, _PrecessDir.Into2000)
+    return state
 
 def VectorObserver(vector, ofdate):
     """Calculates the geographic location corresponding to an equatorial vector.

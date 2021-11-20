@@ -2016,6 +2016,31 @@ def HelioState():
 
 #-----------------------------------------------------------------------------------------------------------
 
+def TopoStateFunc(body, time):
+    observer = astronomy.Observer(30.0, -80.0, 1000.0)
+    observer_state = astronomy.ObserverState(time, observer, False)
+    if body == _Body_Geo_EMB:
+        state = astronomy.GeoEmbState(time)
+    elif body == astronomy.Body.Earth:
+        state = astronomy.StateVector(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, time)
+    else:
+        raise Exception('PY TopoStateFunction: unsupported body ' + body)
+    state.x  -= observer_state.x
+    state.y  -= observer_state.y
+    state.z  -= observer_state.z
+    state.vx -= observer_state.vx
+    state.vy -= observer_state.vy
+    state.vz -= observer_state.vz
+    return state
+
+def TopoState():
+    if VerifyStateBody(TopoStateFunc, astronomy.Body.Earth, 'topostate/Earth_N30_W80_1000m.txt', 2.108e-04, 2.430e-04): return 1
+    if VerifyStateBody(TopoStateFunc, _Body_Geo_EMB,        'topostate/EMB_N30_W80_1000m.txt',   7.195e-04, 2.497e-04): return 1
+    print('PY TopoState: PASS')
+    return 0
+
+#-----------------------------------------------------------------------------------------------------------
+
 def Aberration():
     THRESHOLD_SECONDS = 0.4
     filename = 'equatorial/Mars_j2000_ofdate_aberration.txt'
@@ -2236,6 +2261,7 @@ UnitTests = {
     'rotation':                 Rotation,
     'seasons':                  Seasons,
     'time':                     AstroTime,
+    'topostate':                TopoState,
     'transit':                  Transit,
     'twilight':                 Twilight,
 }
