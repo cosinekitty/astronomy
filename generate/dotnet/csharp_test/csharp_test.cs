@@ -2706,14 +2706,15 @@ namespace csharp_test
             return 0;
         }
 
-        static double StateVectorDiff(double[] vec, double x, double y, double z)
+        static double StateVectorDiff(bool relative, double[] vec, double x, double y, double z)
         {
             double dx = vec[0] - x;
             double dy = vec[1] - y;
             double dz = vec[2] - z;
             double diff_squared = dx*dx + dy*dy + dz*dz;
-            double mag_squared = vec[0]*vec[0] + vec[1]*vec[1] + vec[2]*vec[2];
-            return sqrt(diff_squared / mag_squared);
+            if (relative)
+                diff_squared /= (vec[0]*vec[0] + vec[1]*vec[1] + vec[2]*vec[2]);
+            return sqrt(diff_squared);
         }
 
         static int VerifyState(
@@ -2731,21 +2732,21 @@ namespace csharp_test
         {
             StateVector state = func(body, time);
 
-            double rdiff = StateVectorDiff(pos, state.x, state.y, state.z);
+            double rdiff = StateVectorDiff((r_thresh > 0.0), pos, state.x, state.y, state.z);
             if (rdiff > max_rdiff)
                 max_rdiff = rdiff;
 
-            double vdiff = StateVectorDiff(vel, state.vx, state.vy, state.vz);
+            double vdiff = StateVectorDiff((v_thresh > 0.0), vel, state.vx, state.vy, state.vz);
             if (vdiff > max_vdiff)
                 max_vdiff = vdiff;
 
-            if (rdiff > r_thresh)
+            if (rdiff > Math.Abs(r_thresh))
             {
                 Console.WriteLine($"C# VerifyState({filename} line {lnum}): EXCESSIVE position error = {rdiff:E3}");
                 return 1;
             }
 
-            if (vdiff > v_thresh)
+            if (vdiff > Math.Abs(v_thresh))
             {
                 Console.WriteLine($"C# VerifyState({filename} line {lnum}): EXCESSIVE velocity error = {vdiff:E3}");
                 return 1;
@@ -2864,38 +2865,38 @@ namespace csharp_test
 
         static int BaryStateTest()
         {
-            if (0 != VerifyStateBody(BaryState, Body.Sun,     "../../barystate/Sun.txt",      1.571e-02, 2.147e-02)) return 1;
-            if (0 != VerifyStateBody(BaryState, Body.Mercury, "../../barystate/Mercury.txt",  1.672e-04, 2.698e-04)) return 1;
-            if (0 != VerifyStateBody(BaryState, Body.Venus,   "../../barystate/Venus.txt",    4.123e-05, 4.308e-05)) return 1;
-            if (0 != VerifyStateBody(BaryState, Body.Earth,   "../../barystate/Earth.txt",    2.296e-05, 6.359e-05)) return 1;
-            if (0 != VerifyStateBody(BaryState, Body.Mars,    "../../barystate/Mars.txt",     3.107e-05, 5.550e-05)) return 1;
-            if (0 != VerifyStateBody(BaryState, Body.Jupiter, "../../barystate/Jupiter.txt",  7.389e-05, 2.471e-04)) return 1;
-            if (0 != VerifyStateBody(BaryState, Body.Saturn,  "../../barystate/Saturn.txt",   1.067e-04, 3.220e-04)) return 1;
-            if (0 != VerifyStateBody(BaryState, Body.Uranus,  "../../barystate/Uranus.txt",   9.035e-05, 2.519e-04)) return 1;
-            if (0 != VerifyStateBody(BaryState, Body.Neptune, "../../barystate/Neptune.txt",  9.838e-05, 4.446e-04)) return 1;
-            if (0 != VerifyStateBody(BaryState, Body.Pluto,   "../../barystate/Pluto.txt",    4.259e-05, 7.827e-05)) return 1;
-            if (0 != VerifyStateBody(BaryState, Body.Moon,    "../../barystate/Moon.txt",     2.354e-05, 6.604e-05)) return 1;
-            if (0 != VerifyStateBody(BaryState, Body.EMB,     "../../barystate/EMB.txt",      2.353e-05, 6.511e-05)) return 1;
-            if (0 != VerifyStateBody(BaryState, Body_GeoMoon, "../../barystate/GeoMoon.txt",  4.086e-05, 5.347e-05)) return 1;
-            if (0 != VerifyStateBody(BaryState, Body_Geo_EMB, "../../barystate/GeoEMB.txt",   4.076e-05, 5.335e-05)) return 1;
+            if (0 != VerifyStateBody(BaryState, Body.Sun,     "../../barystate/Sun.txt",     -1.224e-05, -1.134e-07)) return 1;
+            if (0 != VerifyStateBody(BaryState, Body.Mercury, "../../barystate/Mercury.txt",  1.672e-04,  2.698e-04)) return 1;
+            if (0 != VerifyStateBody(BaryState, Body.Venus,   "../../barystate/Venus.txt",    4.123e-05,  4.308e-05)) return 1;
+            if (0 != VerifyStateBody(BaryState, Body.Earth,   "../../barystate/Earth.txt",    2.296e-05,  6.359e-05)) return 1;
+            if (0 != VerifyStateBody(BaryState, Body.Mars,    "../../barystate/Mars.txt",     3.107e-05,  5.550e-05)) return 1;
+            if (0 != VerifyStateBody(BaryState, Body.Jupiter, "../../barystate/Jupiter.txt",  7.389e-05,  2.471e-04)) return 1;
+            if (0 != VerifyStateBody(BaryState, Body.Saturn,  "../../barystate/Saturn.txt",   1.067e-04,  3.220e-04)) return 1;
+            if (0 != VerifyStateBody(BaryState, Body.Uranus,  "../../barystate/Uranus.txt",   9.035e-05,  2.519e-04)) return 1;
+            if (0 != VerifyStateBody(BaryState, Body.Neptune, "../../barystate/Neptune.txt",  9.838e-05,  4.446e-04)) return 1;
+            if (0 != VerifyStateBody(BaryState, Body.Pluto,   "../../barystate/Pluto.txt",    4.259e-05,  7.827e-05)) return 1;
+            if (0 != VerifyStateBody(BaryState, Body.Moon,    "../../barystate/Moon.txt",     2.354e-05,  6.604e-05)) return 1;
+            if (0 != VerifyStateBody(BaryState, Body.EMB,     "../../barystate/EMB.txt",      2.353e-05,  6.511e-05)) return 1;
+            if (0 != VerifyStateBody(BaryState, Body_GeoMoon, "../../barystate/GeoMoon.txt",  4.086e-05,  5.347e-05)) return 1;
+            if (0 != VerifyStateBody(BaryState, Body_Geo_EMB, "../../barystate/GeoEMB.txt",   4.076e-05,  5.335e-05)) return 1;
             Console.WriteLine("C# BaryStateTest: PASS");
             return 0;
         }
 
         static int HelioStateTest()
         {
-            if (0 != VerifyStateBody(Astronomy.HelioState, Body.SSB,     "../../heliostate/SSB.txt",      1.533e-02, 2.034e-02)) return 1;
-            if (0 != VerifyStateBody(Astronomy.HelioState, Body.Mercury, "../../heliostate/Mercury.txt",  1.481e-04, 2.756e-04)) return 1;
-            if (0 != VerifyStateBody(Astronomy.HelioState, Body.Venus,   "../../heliostate/Venus.txt",    3.528e-05, 4.485e-05)) return 1;
-            if (0 != VerifyStateBody(Astronomy.HelioState, Body.Earth,   "../../heliostate/Earth.txt",    1.476e-05, 6.105e-05)) return 1;
-            if (0 != VerifyStateBody(Astronomy.HelioState, Body.Mars,    "../../heliostate/Mars.txt",     3.154e-05, 5.603e-05)) return 1;
-            if (0 != VerifyStateBody(Astronomy.HelioState, Body.Jupiter, "../../heliostate/Jupiter.txt",  7.455e-05, 2.562e-04)) return 1;
-            if (0 != VerifyStateBody(Astronomy.HelioState, Body.Saturn,  "../../heliostate/Saturn.txt",   1.066e-04, 3.150e-04)) return 1;
-            if (0 != VerifyStateBody(Astronomy.HelioState, Body.Uranus,  "../../heliostate/Uranus.txt",   9.034e-05, 2.712e-04)) return 1;
-            if (0 != VerifyStateBody(Astronomy.HelioState, Body.Neptune, "../../heliostate/Neptune.txt",  9.834e-05, 4.534e-04)) return 1;
-            if (0 != VerifyStateBody(Astronomy.HelioState, Body.Pluto,   "../../heliostate/Pluto.txt",    4.271e-05, 1.198e-04)) return 1;
-            if (0 != VerifyStateBody(Astronomy.HelioState, Body.Moon,    "../../heliostate/Moon.txt",     1.477e-05, 6.195e-05)) return 1;
-            if (0 != VerifyStateBody(Astronomy.HelioState, Body.EMB,     "../../heliostate/EMB.txt",      1.476e-05, 6.106e-05)) return 1;
+            if (0 != VerifyStateBody(Astronomy.HelioState, Body.SSB,     "../../heliostate/SSB.txt",     -1.209e-05, -1.125e-07)) return 1;
+            if (0 != VerifyStateBody(Astronomy.HelioState, Body.Mercury, "../../heliostate/Mercury.txt",  1.481e-04,  2.756e-04)) return 1;
+            if (0 != VerifyStateBody(Astronomy.HelioState, Body.Venus,   "../../heliostate/Venus.txt",    3.528e-05,  4.485e-05)) return 1;
+            if (0 != VerifyStateBody(Astronomy.HelioState, Body.Earth,   "../../heliostate/Earth.txt",    1.476e-05,  6.105e-05)) return 1;
+            if (0 != VerifyStateBody(Astronomy.HelioState, Body.Mars,    "../../heliostate/Mars.txt",     3.154e-05,  5.603e-05)) return 1;
+            if (0 != VerifyStateBody(Astronomy.HelioState, Body.Jupiter, "../../heliostate/Jupiter.txt",  7.455e-05,  2.562e-04)) return 1;
+            if (0 != VerifyStateBody(Astronomy.HelioState, Body.Saturn,  "../../heliostate/Saturn.txt",   1.066e-04,  3.150e-04)) return 1;
+            if (0 != VerifyStateBody(Astronomy.HelioState, Body.Uranus,  "../../heliostate/Uranus.txt",   9.034e-05,  2.712e-04)) return 1;
+            if (0 != VerifyStateBody(Astronomy.HelioState, Body.Neptune, "../../heliostate/Neptune.txt",  9.834e-05,  4.534e-04)) return 1;
+            if (0 != VerifyStateBody(Astronomy.HelioState, Body.Pluto,   "../../heliostate/Pluto.txt",    4.271e-05,  1.198e-04)) return 1;
+            if (0 != VerifyStateBody(Astronomy.HelioState, Body.Moon,    "../../heliostate/Moon.txt",     1.477e-05,  6.195e-05)) return 1;
+            if (0 != VerifyStateBody(Astronomy.HelioState, Body.EMB,     "../../heliostate/EMB.txt",      1.476e-05,  6.106e-05)) return 1;
             Console.WriteLine("C# HelioStateTest: PASS");
             return 0;
         }

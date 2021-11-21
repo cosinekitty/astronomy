@@ -4409,15 +4409,15 @@ fail:
 
 /*-----------------------------------------------------------------------------------------------------------*/
 
-static double StateVectorDiff(const double vec[3], double x, double y, double z)
+static double StateVectorDiff(int relative, const double vec[3], double x, double y, double z)
 {
     double dx = V(vec[0] - x);
     double dy = V(vec[1] - y);
     double dz = V(vec[2] - z);
     double diff_squared = dx*dx + dy*dy + dz*dz;
-    double mag_squared = vec[0]*vec[0] + vec[1]*vec[1] + vec[2]*vec[2];
-    double ds = V(sqrt(diff_squared / mag_squared));
-    return ds;
+    if (relative)
+        diff_squared /= (vec[0]*vec[0] + vec[1]*vec[1] + vec[2]*vec[2]);
+    return V(sqrt(diff_squared));
 }
 
 typedef astro_state_vector_t (* state_func_t) (astro_body_t, astro_time_t);
@@ -4448,18 +4448,18 @@ static int VerifyState(
     state = context->func(body, time);
     CHECK_STATUS(state);
 
-    rdiff = StateVectorDiff(pos, state.x, state.y, state.z);
+    rdiff = StateVectorDiff((r_thresh > 0.0), pos, state.x, state.y, state.z);
     if (rdiff > *max_rdiff)
         *max_rdiff = rdiff;
 
-    vdiff = StateVectorDiff(vel, state.vx, state.vy, state.vz);
+    vdiff = StateVectorDiff((v_thresh > 0.0), vel, state.vx, state.vy, state.vz);
     if (vdiff > *max_vdiff)
         *max_vdiff = vdiff;
 
-    if (rdiff > r_thresh)
+    if (rdiff > fabs(r_thresh))
         FAIL("C VerifyState(%s line %d): EXCESSIVE position error = %0.4le\n", filename, lnum, rdiff);
 
-    if (vdiff > v_thresh)
+    if (vdiff > fabs(v_thresh))
         FAIL("C VerifyState(%s line %d): EXCESSIVE velocity error = %0.4le\n", filename, lnum, vdiff);
 
     error = 0;
@@ -4588,20 +4588,20 @@ static int BaryStateTest(void)
 
     context.func = BaryState;
 
-    CHECK(VerifyStateBody(&context, BODY_SUN,     "barystate/Sun.txt",      1.571e-02, 2.147e-02));
-    CHECK(VerifyStateBody(&context, BODY_MERCURY, "barystate/Mercury.txt",  1.672e-04, 2.698e-04));
-    CHECK(VerifyStateBody(&context, BODY_VENUS,   "barystate/Venus.txt",    4.123e-05, 4.308e-05));
-    CHECK(VerifyStateBody(&context, BODY_EARTH,   "barystate/Earth.txt",    2.296e-05, 6.359e-05));
-    CHECK(VerifyStateBody(&context, BODY_MARS,    "barystate/Mars.txt",     3.107e-05, 5.550e-05));
-    CHECK(VerifyStateBody(&context, BODY_JUPITER, "barystate/Jupiter.txt",  7.389e-05, 2.471e-04));
-    CHECK(VerifyStateBody(&context, BODY_SATURN,  "barystate/Saturn.txt",   1.067e-04, 3.220e-04));
-    CHECK(VerifyStateBody(&context, BODY_URANUS,  "barystate/Uranus.txt",   9.035e-05, 2.519e-04));
-    CHECK(VerifyStateBody(&context, BODY_NEPTUNE, "barystate/Neptune.txt",  9.838e-05, 4.446e-04));
-    CHECK(VerifyStateBody(&context, BODY_PLUTO,   "barystate/Pluto.txt",    4.259e-05, 7.827e-05));
-    CHECK(VerifyStateBody(&context, BODY_MOON,    "barystate/Moon.txt",     2.354e-05, 6.604e-05));
-    CHECK(VerifyStateBody(&context, BODY_EMB,     "barystate/EMB.txt",      2.353e-05, 6.511e-05));
-    CHECK(VerifyStateBody(&context, BODY_GEOMOON, "barystate/GeoMoon.txt",  4.086e-05, 5.347e-05));
-    CHECK(VerifyStateBody(&context, BODY_GEO_EMB, "barystate/GeoEMB.txt",   4.076e-05, 5.335e-05));
+    CHECK(VerifyStateBody(&context, BODY_SUN,     "barystate/Sun.txt",      -1.224e-05, -1.134e-07));
+    CHECK(VerifyStateBody(&context, BODY_MERCURY, "barystate/Mercury.txt",   1.672e-04,  2.698e-04));
+    CHECK(VerifyStateBody(&context, BODY_VENUS,   "barystate/Venus.txt",     4.123e-05,  4.308e-05));
+    CHECK(VerifyStateBody(&context, BODY_EARTH,   "barystate/Earth.txt",     2.296e-05,  6.359e-05));
+    CHECK(VerifyStateBody(&context, BODY_MARS,    "barystate/Mars.txt",      3.107e-05,  5.550e-05));
+    CHECK(VerifyStateBody(&context, BODY_JUPITER, "barystate/Jupiter.txt",   7.389e-05,  2.471e-04));
+    CHECK(VerifyStateBody(&context, BODY_SATURN,  "barystate/Saturn.txt",    1.067e-04,  3.220e-04));
+    CHECK(VerifyStateBody(&context, BODY_URANUS,  "barystate/Uranus.txt",    9.035e-05,  2.519e-04));
+    CHECK(VerifyStateBody(&context, BODY_NEPTUNE, "barystate/Neptune.txt",   9.838e-05,  4.446e-04));
+    CHECK(VerifyStateBody(&context, BODY_PLUTO,   "barystate/Pluto.txt",     4.259e-05,  7.827e-05));
+    CHECK(VerifyStateBody(&context, BODY_MOON,    "barystate/Moon.txt",      2.354e-05,  6.604e-05));
+    CHECK(VerifyStateBody(&context, BODY_EMB,     "barystate/EMB.txt",       2.353e-05,  6.511e-05));
+    CHECK(VerifyStateBody(&context, BODY_GEOMOON, "barystate/GeoMoon.txt",   4.086e-05,  5.347e-05));
+    CHECK(VerifyStateBody(&context, BODY_GEO_EMB, "barystate/GeoEMB.txt",    4.076e-05,  5.335e-05));
 
     printf("C BaryStateTest: PASS\n");
 fail:
@@ -4617,18 +4617,18 @@ static int HelioStateTest(void)
 
     context.func = Astronomy_HelioState;
 
-    CHECK(VerifyStateBody(&context, BODY_SSB,     "heliostate/SSB.txt",      1.533e-02, 2.034e-02));
-    CHECK(VerifyStateBody(&context, BODY_MERCURY, "heliostate/Mercury.txt",  1.481e-04, 2.756e-04));
-    CHECK(VerifyStateBody(&context, BODY_VENUS,   "heliostate/Venus.txt",    3.528e-05, 4.485e-05));
-    CHECK(VerifyStateBody(&context, BODY_EARTH,   "heliostate/Earth.txt",    1.476e-05, 6.105e-05));
-    CHECK(VerifyStateBody(&context, BODY_MARS,    "heliostate/Mars.txt",     3.154e-05, 5.603e-05));
-    CHECK(VerifyStateBody(&context, BODY_JUPITER, "heliostate/Jupiter.txt",  7.455e-05, 2.562e-04));
-    CHECK(VerifyStateBody(&context, BODY_SATURN,  "heliostate/Saturn.txt",   1.066e-04, 3.150e-04));
-    CHECK(VerifyStateBody(&context, BODY_URANUS,  "heliostate/Uranus.txt",   9.034e-05, 2.712e-04));
-    CHECK(VerifyStateBody(&context, BODY_NEPTUNE, "heliostate/Neptune.txt",  9.834e-05, 4.534e-04));
-    CHECK(VerifyStateBody(&context, BODY_PLUTO,   "heliostate/Pluto.txt",    4.271e-05, 1.198e-04));
-    CHECK(VerifyStateBody(&context, BODY_MOON,    "heliostate/Moon.txt",     1.477e-05, 6.195e-05));
-    CHECK(VerifyStateBody(&context, BODY_EMB,     "heliostate/EMB.txt",      1.476e-05, 6.106e-05));
+    CHECK(VerifyStateBody(&context, BODY_SSB,     "heliostate/SSB.txt",     -1.209e-05, -1.125e-07));
+    CHECK(VerifyStateBody(&context, BODY_MERCURY, "heliostate/Mercury.txt",  1.481e-04,  2.756e-04));
+    CHECK(VerifyStateBody(&context, BODY_VENUS,   "heliostate/Venus.txt",    3.528e-05,  4.485e-05));
+    CHECK(VerifyStateBody(&context, BODY_EARTH,   "heliostate/Earth.txt",    1.476e-05,  6.105e-05));
+    CHECK(VerifyStateBody(&context, BODY_MARS,    "heliostate/Mars.txt",     3.154e-05,  5.603e-05));
+    CHECK(VerifyStateBody(&context, BODY_JUPITER, "heliostate/Jupiter.txt",  7.455e-05,  2.562e-04));
+    CHECK(VerifyStateBody(&context, BODY_SATURN,  "heliostate/Saturn.txt",   1.066e-04,  3.150e-04));
+    CHECK(VerifyStateBody(&context, BODY_URANUS,  "heliostate/Uranus.txt",   9.034e-05,  2.712e-04));
+    CHECK(VerifyStateBody(&context, BODY_NEPTUNE, "heliostate/Neptune.txt",  9.834e-05,  4.534e-04));
+    CHECK(VerifyStateBody(&context, BODY_PLUTO,   "heliostate/Pluto.txt",    4.271e-05,  1.198e-04));
+    CHECK(VerifyStateBody(&context, BODY_MOON,    "heliostate/Moon.txt",     1.477e-05,  6.195e-05));
+    CHECK(VerifyStateBody(&context, BODY_EMB,     "heliostate/EMB.txt",      1.476e-05,  6.106e-05));
 
     printf("C HelioStateTest: PASS\n");
 fail:
