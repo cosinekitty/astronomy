@@ -7,6 +7,9 @@ See the [home page](https://github.com/cosinekitty/astronomy) for more info.
 ---
 
 ## Quick Start
+To include Astronomy Engine in your own Python program, all you need is
+the file `astronomy.py` from this directory.
+
 To get started quickly, here are some [examples](../../demo/python/).
 
 ---

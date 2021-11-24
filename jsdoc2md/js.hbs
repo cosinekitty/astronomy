@@ -13,6 +13,13 @@ See the [home page](https://github.com/cosinekitty/astronomy) for more info.
 ---
 
 ## Quick Start
+To use Astronomy Engine in your own project, you can use the TypeScript file `astronomy.ts`
+from this directory.
+
+For convenience, this directory also contains human-readable JavaScript files `astronomy.js`
+and minified versions for the browser (`astronomy.browser.min.js`) and Node.js (`astronomy.min.js`).
+These JavaScript sources are all compiled from the TypeScript source `astronomy.ts`.
+
 To get started quickly, here are some [browser scripting examples](../../demo/browser/)
 and some [Node.js examples](../../demo/nodejs/).
 

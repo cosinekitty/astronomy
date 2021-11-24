@@ -36,11 +36,11 @@
         <td style="text-align: center;"><a href="demo/python/">Examples</a></td>
     </tr>
     <tr>
-        <td style="text-align: center;"><a href="source/c/">Documentation</a></td>
-        <td style="text-align: center;"><a href="source/csharp/">Documentation</a></td>
-        <td style="text-align: center;"><a href="source/js/">Documentation</a></td>
-        <td style="text-align: center;"><a href="source/js/">Documentation</a></td>
-        <td style="text-align: center;"><a href="source/python/">Documentation</a></td>
+        <td style="text-align: center;"><a href="source/c/">Code &amp; Docs</a></td>
+        <td style="text-align: center;"><a href="source/csharp/">Code &amp; Docs</a></td>
+        <td style="text-align: center;"><a href="source/js/">Code &amp; Docs</a></td>
+        <td style="text-align: center;"><a href="source/js/">Code &amp; Docs</a></td>
+        <td style="text-align: center;"><a href="source/python/">Code &amp; Docs</a></td>
     </tr>
 </table>
 
