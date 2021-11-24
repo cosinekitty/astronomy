@@ -13,7 +13,7 @@
     "build:browser": "browserify ../source/js/astronomy.js -o ../source/js/astronomy.browser.js -p esmify -s Astronomy",
     "minify": "google-closure-compiler --js ../source/js/astronomy.js --js_output_file ../source/js/astronomy.min.js",
     "minify:browser": "google-closure-compiler --js ../source/js/astronomy.browser.js --js_output_file ../source/js/astronomy.browser.min.js",
-    "docs:md": "jsdoc2md --separators --template ../jsdoc2md/js.hbs --files ../source/js/astronomy.js > ../source/js/README.md",
+    "docs:md": "jsdoc2md --separators --template jsdoc2md/js.hbs --files ../source/js/astronomy.js > ../source/js/README.md",
     "docs:json": "jsdoc -X -P ../source/js/package.json ../source/js/astronomy.js > ../website/src/assets/documentation.json",
     "docs:html": "jsdoc -a all -c jsdoc.json -u ../tutorials -r ../source/js/astronomy.js --destination html"
   },

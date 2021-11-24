@@ -35,15 +35,15 @@ echo.Building C# code to get documentation.
 cd dotnet\csharp_test
 dotnet build --output !CD!\exe
 if errorlevel 1 (exit /b 1)
-cd ..\..\..\csdown
+cd ..\..\csdown
 call build.bat
 if errorlevel 1 (exit /b 1)
-dotnet exe\csdown.dll csharp_prefix.md ..\generate\dotnet\csharp_test\exe\astronomy.dll ..\generate\dotnet\csharp_test\exe\astronomy.xml ..\source\csharp\README.md
+dotnet exe\csdown.dll csharp_prefix.md ..\dotnet\csharp_test\exe\astronomy.dll ..\dotnet\csharp_test\exe\astronomy.xml ..\..\source\csharp\README.md
 if errorlevel 1 (
     echo.Error generating C# documentation.
     exit /b 1
 )
-cd ..\generate
+cd ..
 node eol_hack.js ..\source\csharp\README.md
 if errorlevel 1 (
     echo.FATAL: error in eol_hack.js [C#]
@@ -160,7 +160,7 @@ if exist generate_c_docs (
     )
     cd ..
     echo.Translating doxygen XML to Markdown.
-    node ..\..\hydrogen\hydrogen.js ..\..\hydrogen\c_prefix.md .\xml\all.xml
+    node ..\..\generate\hydrogen\hydrogen.js ..\..\generate\hydrogen\c_prefix.md .\xml\all.xml
     if errorlevel 1 (
         echo.Error in hydrogen.js.
         exit /b 1
@@ -176,7 +176,7 @@ if exist generate_c_docs (
 )
 
 echo.Generating Python documentation.
-..\pydown\pydown.py ..\pydown\py_prefix.md ..\source\python\astronomy.py ..\source\python\README.md
+pydown\pydown.py pydown\py_prefix.md ..\source\python\astronomy.py ..\source\python\README.md
 if errorlevel 1 (exit /b 1)
 
 echo.Making redundant copies of source in demo folders.

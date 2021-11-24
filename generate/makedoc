@@ -22,10 +22,17 @@ done
 echo "Building C# code to get documentation XML."
 cd dotnet/csharp_test || "Cannot change to directory dotnet/csharp_test"
 dotnet build --output ${PWD}/exe || Fail "Error building C# source code"
-cd ../../../csdown || Fail "Error changing to csdown directory"
+cd ../../csdown || Fail "Error changing to csdown directory"
 ./build || exit 1
-exe/csdown csharp_prefix.md ../generate/dotnet/csharp_test/exe/astronomy.dll ../generate/dotnet/csharp_test/exe/astronomy.xml ../source/csharp/README.md || Fail "Error generating C# documentation."
-cd ../generate || Fail "Error changing back to generate directory"
+
+exe/csdown \
+    csharp_prefix.md \
+    ../dotnet/csharp_test/exe/astronomy.dll \
+    ../dotnet/csharp_test/exe/astronomy.xml \
+    ../../source/csharp/README.md \
+    || Fail "Error generating C# documentation."
+
+cd .. || Fail "Error changing back to generate directory"
 ./check_internal_links.py $(realpath ../source/csharp/README.md) || exit 1
 
 if [[ ! -d node_modules ]]; then
@@ -86,7 +93,7 @@ if [[ -f generate_c_docs ]]; then
     xsltproc combine.xslt index.xml > all.xml || Fail "Error merging doxygen xml"
     cd .. || Fail "Error changing to parent directory"
     echo "Translating doxygen XML to Markdown."
-    node ../../hydrogen/hydrogen.js ../../hydrogen/c_prefix.md ./xml/all.xml || Fail "Error in hydrogen.js"
+    node ../../generate/hydrogen/hydrogen.js ../../generate/hydrogen/c_prefix.md ./xml/all.xml || Fail "Error in hydrogen.js"
     cd ../../generate || Fail "Error changing directory back"
     ./check_internal_links.py $(realpath ../source/c/README.md) || exit 1
 else
@@ -94,7 +101,7 @@ else
 fi
 
 echo "Generating Python documentation."
-python3 ../pydown/pydown.py ../pydown/py_prefix.md ../source/python/astronomy.py ../source/python/README.md || Fail "Error generating Markdown from Python source."
+python3 pydown/pydown.py pydown/py_prefix.md ../source/python/astronomy.py ../source/python/README.md || Fail "Error generating Markdown from Python source."
 ./check_internal_links.py $(realpath ../source/python/README.md) || exit 1
 
 echo "Making redundant copies of source in demo folders."
