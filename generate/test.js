@@ -52,6 +52,17 @@ function sqrt(x) {
     return v(Math.sqrt(v(x)));
 }
 
+function ReadLines(filename) {
+    // Load the entire text of the given file.
+    const text = fs.readFileSync(filename, {encoding:'utf8'});
+
+    // Split it into lines, handling the different line endings
+    // in Linux and Windows.
+    // FIXFIXFIX: This might not work on Mac OS or other operating systems.
+    const lines = text.trimEnd().split(/\r?\n/);
+    return lines;
+}
+
 function AstroCheck() {
     var date = Astronomy.MakeTime(new Date('1700-01-01T00:00:00Z'));
     var stop = Astronomy.MakeTime(new Date('2200-01-01T00:00:00Z'));
@@ -101,8 +112,7 @@ function AstroCheck() {
 function MoonPhase() {
     function LoadMoonPhaseData(filename) {
         // Load known moon phase times from US Naval Observatory.
-        const text = fs.readFileSync(filename, {encoding:'utf8'});
-        const lines = text.trimRight().split('\n');
+        const lines = ReadLines(filename);
         let data = [];
         for (let row of lines) {
             let token = row.split(' ');
@@ -227,8 +237,7 @@ function MoonPhase() {
 
 function LunarApsis() {
     const filename = 'apsides/moon.txt';
-    const text = fs.readFileSync(filename, {encoding:'utf8'});
-    const lines = text.split(/\r?\n/);
+    const lines = ReadLines(filename);
 
     const time_before = new Date();
     let evt = Astronomy.SearchLunarApsis(new Date(Date.UTC(2001, 0, 1)));
@@ -301,8 +310,7 @@ function LunarEclipseIssue78() {
 function LunarEclipse() {
     Astronomy.CalcMoonCount = 0;
     const filename = 'eclipse/lunar_eclipse.txt';
-    const text = fs.readFileSync(filename, {encoding:'utf8'});
-    const lines = text.trim().split(/\r?\n/);
+    const lines = ReadLines(filename);
     const diff_limit = 2.0;
     let lnum = 0;
     let skip_count = 0;
@@ -438,8 +446,7 @@ function AngleDiff(alat, alon, blat, blon) {
 function GlobalSolarEclipse() {
     const expected_count = 1180;
     const filename = 'eclipse/solar_eclipse.txt';
-    const text = fs.readFileSync(filename, {encoding:'utf8'});
-    const lines = text.trim().split(/\r?\n/);
+    const lines = ReadLines(filename);
     let max_minutes = 0.0;
     let max_angle = 0.0;
     let skip_count = 0;
@@ -533,8 +540,7 @@ function LocalSolarEclipse1() {
 
     const expected_count = 1180;
     const filename = 'eclipse/solar_eclipse.txt';
-    const text = fs.readFileSync(filename, {encoding:'utf8'});
-    const lines = text.trim().split(/\r?\n/);
+    const lines = ReadLines(filename);
     let max_minutes = 0.0;
     let skip_count = 0;
     let lnum = 0;
@@ -624,8 +630,7 @@ function LocalSolarEclipse2() {
     // the peak position on the Earth.
 
     const filename = 'eclipse/local_solar_eclipse.txt';
-    const text = fs.readFileSync(filename, {encoding:'utf8'});
-    const lines = text.trim().split(/\r?\n/);
+    const lines = ReadLines(filename);
     let lnum = 0;
     let verify_count = 0;
     let max_minutes = 0.0;
@@ -728,8 +733,7 @@ function PlanetApsis() {
         let max_dist_ratio = 0.0;
         let apsis = Astronomy.SearchPlanetApsis(body, start_time);
         const filename = `apsides/apsis_${pindex}.txt`;
-        const text = fs.readFileSync(filename, {encoding:'utf8'});
-        const lines = text.split(/\r?\n/);
+        const lines = ReadLines(filename);
         for (const line of lines) {
             if (line.trim() == '') {
                 continue;
@@ -861,8 +865,7 @@ function Elongation() {
     }
 
     function LoadData(filename) {
-        const text = fs.readFileSync(filename, {encoding:'utf8'});
-        const lines = text.trimRight().split('\n');
+        const lines = ReadLines(filename);
         let data = [];
         for (let row of lines) {
             let token = row.split(/\s+/);
@@ -962,8 +965,7 @@ function Elongation() {
 function Seasons() {
     function LoadTestData(filename) {
         // Moon  150 -45 2050-03-07T19:13Z s
-        const text = fs.readFileSync(filename, {encoding:'utf8'});
-        const lines = text.trimRight().split('\n');
+        const lines = ReadLines(filename);
         let data = [];
         let lnum = 0;
         let minByMonth = [];
@@ -1072,8 +1074,7 @@ function Seasons() {
 function RiseSet() {
     function LoadTestData(filename) {
         // Moon  150 -45 2050-03-07T19:13Z s
-        const text = fs.readFileSync(filename, {encoding:'utf8'});
-        const lines = text.trimRight().split('\n');
+        const lines = ReadLines(filename);
         let data = [];
         let lnum = 0;
         for (let row of lines) {
@@ -1282,8 +1283,7 @@ function Rotation() {
     function Test_GAL_EQJ_NOVAS(filename) {
         const THRESHOLD_SECONDS = 8.8;
         const rot = Astronomy.Rotation_EQJ_GAL();
-        const text = fs.readFileSync(filename, {encoding:'utf8'});
-        const lines = text.trimRight().split('\n');
+        const lines = ReadLines(filename);
         const time = new Astronomy.AstroTime(0);    // placeholder time - value does not matter
         let lnum = 0;
         let max_diff = 0;
@@ -1573,8 +1573,7 @@ function MonthNumber(mtext) {
 
 function Magnitude() {
     function LoadMagnitudeData(filename) {
-        const text = fs.readFileSync(filename, 'utf8');
-        const lines = text.split(/[\r\n]+/);
+        const lines = ReadLines(filename);
         let lnum = 0;
         let rows = [];
         for (let line of lines) {
@@ -1674,8 +1673,7 @@ function Magnitude() {
         // ranges found using JPL Horizons ephemeris data that has been
         // pre-processed by magnitude/findmax.py.
 
-        const text = fs.readFileSync(filename, 'utf8');
-        const lines = text.trim().split(/[\r\n]+/);
+        const lines = ReadLines(filename);
         let date = new Date(Date.UTC(2000, 0, 1));
         let max_diff = 0;
         for (let line of lines) {
@@ -1721,8 +1719,7 @@ function Magnitude() {
 
 function Constellation() {
     const filename = 'constellation/test_input.txt';
-    const text = fs.readFileSync(filename, {encoding:'utf8'});
-    const lines = text.trimRight().split('\n');
+    const lines = ReadLines(filename);
     let lnum = 0;
     let failcount = 0;
     for (let row of lines) {
@@ -1753,8 +1750,7 @@ function Constellation() {
 
 
 function TransitFile(body, filename, limit_minutes, limit_sep) {
-    const text = fs.readFileSync(filename, {encoding: 'utf8'});
-    const lines = text.trimRight().split('\n');
+    const lines = ReadLines(filename);
     let lnum = 0;
     let max_minutes = 0;
     let max_sep = 0;
@@ -1993,8 +1989,7 @@ function JupiterMoons_CheckJpl(mindex, tt, pos, vel) {
 function JupiterMoons() {
     for (let mindex = 0; mindex < 4; ++mindex) {
         const filename = `jupiter_moons/horizons/jm${mindex}.txt`;
-        const text = fs.readFileSync(filename, {encoding:'utf8'});
-        const lines = text.split(/\r?\n/);
+        const lines = ReadLines(filename);
         let lnum = 0;
         let found = false;
         let part = -1;
@@ -2092,8 +2087,7 @@ function Issue103() {
 function AberrationTest() {
     const THRESHOLD_SECONDS = 0.4;
     const filename = 'equatorial/Mars_j2000_ofdate_aberration.txt';
-    const text = fs.readFileSync(filename, {encoding:'utf8'});
-    const lines = text.split(/\r?\n/);
+    const lines = ReadLines(filename);
     let lnum = 0;
     let found_begin = false;
     let max_diff_seconds = 0;
@@ -2199,8 +2193,7 @@ function VerifyState(func, score, body, filename, lnum, time, pos, vel, r_thresh
 
 
 function VerifyStateBody(func, body, filename, r_thresh, v_thresh) {
-    const text = fs.readFileSync(filename, {encoding:'utf8'});
-    const lines = text.split(/\r?\n/);
+    const lines = ReadLines(filename);
     let lnum = 0;
     let found = false;
     let part = -1;
@@ -2349,8 +2342,7 @@ function TopoStateTest() {
 function TwilightTest() {
     const tolerance_seconds = 60.0;
     const filename = 'riseset/twilight.txt';
-    const text = fs.readFileSync(filename, {encoding:'utf8'});
-    const lines = text.trimEnd().split(/\r?\n/);
+    const lines = ReadLines(filename);
     let lnum = 0;
     let max_diff = 0.0;
 
@@ -2412,8 +2404,7 @@ function TwilightTest() {
 
 
 function Libration(filename) {
-    const text = fs.readFileSync(filename, {encoding:'utf8'});
-    const lines = text.trimEnd().split(/\r?\n/);
+    const lines = ReadLines(filename);
     let max_diff_elon = 0.0;
     let max_diff_elat = 0.0;
     let max_diff_distance = 0.0;
