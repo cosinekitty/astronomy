@@ -6,7 +6,7 @@ language implementations of Astronomy Engine.
 It is only needed by contributors who want to make enhancements
 or fix bugs.  People who just want to use the astronomy calculator
 for a given programming langauge can safely ignore this directory
-and use the source code that has already been generated for that language.
+and use the [source code that has already been generated for that language](../source).
 
 ---
 
@@ -85,3 +85,4 @@ I could use some help getting this to work on the Mac. If you are looking
 for an open source project to help with, and you have a Mac, here is your chance!
 Creating issues is welcome. Creating pull requests is even *more* welcome!
 This should be similar to the Linux steps, but may require some tweaks.
+
