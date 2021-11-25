@@ -99,16 +99,18 @@ for %%f in (
     )
 )
 
-echo.Generating JS documentation in JSON format.
-call npm run docs:json
-if errorlevel 1 (
-    echo.Error generating JSON documentation.
-    exit /b 1
-)
-node jsdoc_strip_path.js
-if errorlevel 1 (
-    echo.Error stripping absolute paths.
-    exit /b 1
+if exist ..\website (
+    echo.Generating JS documentation in JSON format.
+    call npm run docs:json
+    if errorlevel 1 (
+        echo.Error generating JSON documentation.
+        exit /b 1
+    )
+    node jsdoc_strip_path.js
+    if errorlevel 1 (
+        echo.Error stripping absolute paths.
+        exit /b 1
+    )
 )
 
 echo.Generating JS documentation in Markdown format.

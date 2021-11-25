@@ -214,9 +214,11 @@ REM ----------------------------------------------------------------------------
 call diffcalc.bat
 if errorlevel 1 (exit /b 1)
 
-REM *** documentation.json never generates the same in Windows as Linux.
-REM *** For now, hack around this by discarding any local changes.
-git checkout -- ../website/src/assets/documentation.json
+if exist ..\website\src\assets\documentation.json (
+    REM *** documentation.json never generates the same in Windows as Linux.
+    REM *** For now, hack around this by discarding any local changes.
+    git checkout -- ../website/src/assets/documentation.json
+)
 
 type pass.txt
 exit /b 0
