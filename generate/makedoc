@@ -67,20 +67,25 @@ npm run minify || Fail "Error minifying astronomy.js"
 npm run minify:browser || Fail "Error minifying astronomy.browser.js"
 ./patch_readme.py ../README.md ../source/js/astronomy.browser.min.js || Fail "Error patching README.md."
 
-echo "Generating JS documentation in JSON format."
-npm run docs:json || Fail "Error generating JSON documentation."
-node jsdoc_strip_path.js || Fail "Error stripping absolute paths."
+# Making this step optional because the website is not ready for prime time.
+if [[ -d ../website ]]; then
+    echo "Generating JS documentation in JSON format."
+    npm run docs:json || Fail "Error generating JSON documentation."
+    node jsdoc_strip_path.js || Fail "Error stripping absolute paths."
+fi
 
 echo "Generating JS documentation in Markdown format."
 npm run docs:md || Fail "Error generating JS documentation."
 ./check_internal_links.py $(realpath ../source/js/README.md) || exit 1
 
-if [[ -d html ]]; then
-    echo "Generating JS documentation in HTML format for local viewing."
-    rm -rf html
-    npm run docs:html || Fail "Error generating HTML preview"
-else
-    echo "(Skipping local HTML generation because html directory does not exist.)"
+if [[ -d ../tutorials ]]; then
+    if [[ -d html ]]; then
+        echo "Generating JS documentation in HTML format for local viewing."
+        rm -rf html
+        npm run docs:html || Fail "Error generating HTML preview"
+    else
+        echo "(Skipping local HTML generation because html directory does not exist.)"
+    fi
 fi
 
 if [[ -f generate_c_docs ]]; then
@@ -92,6 +97,11 @@ if [[ -f generate_c_docs ]]; then
     echo "Merging doxygen XML files."
     xsltproc combine.xslt index.xml > all.xml || Fail "Error merging doxygen xml"
     cd .. || Fail "Error changing to parent directory"
+    if [[ ! -d ../../generate/hydrogen/node_modules/xml2js ]]; then
+        pushd ../../generate/hydrogen > /dev/null || Fail "Cannot pushd hydrogen"
+        npm ci || Fail "Error installing Node modules for hydrogen"
+        popd
+    fi
     echo "Translating doxygen XML to Markdown."
     node ../../generate/hydrogen/hydrogen.js ../../generate/hydrogen/c_prefix.md ./xml/all.xml || Fail "Error in hydrogen.js"
     cd ../../generate || Fail "Error changing directory back"
