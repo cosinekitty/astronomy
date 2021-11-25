@@ -88,7 +88,9 @@ if [[ -d ../tutorials ]]; then
     fi
 fi
 
-if [[ -f generate_c_docs ]]; then
+if [[ -f disable_generate_c_docs ]]; then
+    echo "Generation of C documentation is disabled."
+else
     echo "Generating C documentation."
     cd ../source/c || Fail "Error changing directory to ../source/c"
     rm -rf xml
@@ -106,8 +108,6 @@ if [[ -f generate_c_docs ]]; then
     node ../../generate/hydrogen/hydrogen.js ../../generate/hydrogen/c_prefix.md ./xml/all.xml || Fail "Error in hydrogen.js"
     cd ../../generate || Fail "Error changing directory back"
     ./check_internal_links.py $(realpath ../source/c/README.md) || exit 1
-else
-    echo "(Skipping generation of C documentation because file generate_c_docs does not exist.)"
 fi
 
 echo "Generating Python documentation."

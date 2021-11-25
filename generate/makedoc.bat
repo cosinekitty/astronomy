@@ -133,7 +133,9 @@ if errorlevel 1 (
     echo.FATAL: error in jsdoc
 )
 
-if exist generate_c_docs (
+if exist disable_generate_c_docs (
+    echo.Generation of C documentation is disabled.
+) else (
     echo.Generating C documentation.
     cd ..\source\c
     for %%d in (html xml latex) do (
@@ -159,6 +161,15 @@ if exist generate_c_docs (
         exit /b 1
     )
     cd ..
+    if not exist ..\..\generate\hydrogen\node_modules\xml2js (
+        pushd ..\..\generate\hydrogen
+        npm ci
+        if errorlevel 1 (
+            echo.Error installing dependencies for hydrogen.
+            exit /b 1
+        )
+        popd
+    )
     echo.Translating doxygen XML to Markdown.
     node ..\..\generate\hydrogen\hydrogen.js ..\..\generate\hydrogen\c_prefix.md .\xml\all.xml
     if errorlevel 1 (
@@ -171,8 +182,6 @@ if exist generate_c_docs (
         echo.Error in eol_hack.js
         exit /b 1
     )
-) else (
-    echo.Skipping generation of C documentation because file generate_c_docs does not exist.
 )
 
 echo.Generating Python documentation.
