@@ -137,6 +137,7 @@ static int HelioStateTest(void);
 static int TopoStateTest(void);
 static int Twilight(void);
 static int LibrationTest(void);
+static int DE405_Check(void);
 
 typedef int (* unit_test_func_t) (void);
 
@@ -153,6 +154,7 @@ static unit_test_t UnitTests[] =
     {"barystate",               BaryStateTest},
     {"check",                   AstroCheck},
     {"constellation",           ConstellationTest},
+    {"de405",                   DE405_Check},
     {"earth_apsis",             EarthApsis},
     {"elongation",              ElongationTest},
     {"geoid",                   GeoidTest},
@@ -4880,6 +4882,101 @@ static int LibrationTest(void)
     dev_lat = sqrt(var_lat / ndata);
     printf("C LibrationTest: %d data points, dev_lon = %0.4lf arcmin, dev_lat = %0.4lf arcmin\n", ndata, dev_lon, dev_lat);
 fail:
+    return error;
+}
+
+/*-----------------------------------------------------------------------------------------------------------*/
+
+static int DE405_Check(void)
+{
+    int error, lnum, nscanned;
+    const char *filename = "barystate/de405_state.txt";
+    FILE *infile;
+    double jd;
+    astro_time_t time;
+    char line[200];
+    char name[10];
+    double pos[3], vel[3];
+    astro_body_t body;
+    astro_state_vector_t state;
+    double dx, dy, dz, dr, dv;
+    double scale;
+
+    infile = fopen(filename, "rt");
+    if (infile == NULL)
+        FAIL("C DE450_Check: cannot open input file: %s\n", filename);
+
+    lnum = 0;
+    while (ReadLine(line, sizeof(line), infile, filename, 0))
+    {
+        ++lnum;
+        if (line[0] == '*')
+            break;
+
+        if (lnum == 1)
+        {
+            if (1 != sscanf(line, "%lf", &jd))
+                FAIL("DE405_Check(%s line %d): cannot scan Julian Date\n", filename, lnum);
+            time = Astronomy_TerrestrialTime(jd - 2451545.0);
+            Astronomy_FormatTime(time, TIME_FORMAT_MILLI, line, sizeof(line));
+            DEBUG("C DE405_Check: time = %s\n", line);
+        }
+        else
+        {
+            nscanned = sscanf(line, "%10[A-Za-z] %lf %lf %lf %lf %lf %lf", name, &pos[0], &pos[1], &pos[2], &vel[0], &vel[1], &vel[2]);
+            if (nscanned != 7)
+                FAIL("C DE405_Check(%s line %d): expected 7 tokens, found %d\n", filename, lnum, nscanned);
+            body = Astronomy_BodyCode(name);
+            if (body == BODY_INVALID)
+                FAIL("C DE405_Check(%s line %d): unrecognized body name '%s'\n", filename, lnum, name);
+
+            switch (body)
+            {
+            case BODY_MOON:
+                /* geocentric Moon */
+                state = Astronomy_GeoMoonState(time);
+                scale = sqrt(pos[0]*pos[0] + pos[1]*pos[1] + pos[2]*pos[2]);
+                break;
+
+            case BODY_SUN:
+                /* barycentric Sun */
+                state = Astronomy_BaryState(body, time);
+                scale = 1.0;
+                break;
+
+            default:
+                /* heliocentric planet */
+                state = Astronomy_HelioState(body, time);
+                scale = sqrt(pos[0]*pos[0] + pos[1]*pos[1] + pos[2]*pos[2]);
+                break;
+            }
+
+            if (state.status != ASTRO_SUCCESS)
+                FAIL("C DE405_Check(%s line %d): status = %d\n", filename, lnum, state.status);
+
+            dx = pos[0] - state.x;
+            dy = pos[1] - state.y;
+            dz = pos[2] - state.z;
+            dr = V(sqrt(dx*dx + dy*dy + dz*dz) / scale);
+
+            dx = vel[0] - state.vx;
+            dy = vel[1] - state.vy;
+            dz = vel[2] - state.vz;
+            dv = V(sqrt(dx*dx + dy*dy + dz*dz));
+
+            DEBUG("C DE405_Check: %-10s dr=%0.4le dv=%0.4le\n", name, dr, dv);
+            if (dr > 8.7e-5)
+                FAIL("C DE405_Check(%s line %d): EXCESSIVE POSITION ERROR\n", filename, lnum);
+
+            if (dv > 7.3e-6)
+                FAIL("C DE405_Check(%s line %d): EXCESSIVE VELOCITY ERROR\n", filename, lnum);
+        }
+    }
+
+    printf("C DE405_Check: PASS\n");
+    error = 0;
+fail:
+    if (infile != NULL) fclose(infile);
     return error;
 }
 
