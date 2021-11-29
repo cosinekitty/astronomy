@@ -522,6 +522,14 @@ static astro_transit_t TransitErr(astro_status_t status)
     return transit;
 }
 
+static astro_axis_t AxisErr(astro_status_t status)
+{
+    astro_axis_t axis;
+    axis.status = status;
+    axis.ra = axis.dec = NAN;
+    return axis;
+}
+
 static astro_func_result_t SynodicPeriod(astro_body_t body)
 {
     double Tp;                         /* planet's orbital period in days */
@@ -10396,6 +10404,74 @@ void Astronomy_Reset(void)
         pluto_cache[i] = NULL;
     }
 }
+
+
+/**
+ * @brief Calculates information about a body's rotation axis at a given time.
+ *
+ * This function uses formulas standardized by the IAU Working Group
+ * on Cartographics and Rotational Elements 2015 report, as described
+ * in the following document:
+ *
+ * https://astropedia.astrogeology.usgs.gov/download/Docs/WGCCRE/WGCCRE2015reprint.pdf
+ *
+ * See #astro_axis_t for more detailed information.
+ *
+ * @param body
+ *      The body whose rotation axis is to be found.
+ *
+ * @param time
+ *      The time for which the body's rotation axis is to be found.
+ *
+ * @return astro_axis_t
+ */
+astro_axis_t Astronomy_RotationAxis(astro_body_t body, astro_time_t time)
+{
+    astro_axis_t axis;
+    double ra, dec, w;
+    double d = time.tt;
+    double T = d / 36525.0;
+    double M1, M2, M3, M4, M5;
+
+    switch (body)
+    {
+    case BODY_SUN:
+        ra = 286.13;
+        dec = 68.87;
+        w = 84.176 + (14.1844 * d);
+        break;
+
+    case BODY_MERCURY:
+        ra = 281.0103 - (0.0328 * T);
+        dec = 61.4155 - (0.0049 * T);
+        M1 = DEG2RAD * (174.7910857 + (4.092335 * d));
+        M2 = DEG2RAD * (349.5821714 + (8.184670 * d));
+        M3 = DEG2RAD * (164.3732571 + (12.277005 * d));
+        M4 = DEG2RAD * (339.1643429 + (16.369340 * d));
+        M5 = DEG2RAD * (153.9554286 + (20.461675 * d));
+        w = (
+            329.5988
+            + (6.1385108 * d)
+            + (0.01067257 * sin(M1))
+            - (0.00112309 * sin(M2))
+            - (0.00011040 * sin(M3))
+            - (0.00002539 * sin(M4))
+            - (0.00000571 * sin(M5))
+        );
+        break;
+
+    default:
+        return AxisErr(ASTRO_INVALID_BODY);
+    }
+
+    axis.ra = ra / 15.0;      /* convert degrees to sidereal hours */
+    axis.dec = dec;
+    axis.spin = w;
+    axis.status = ASTRO_SUCCESS;
+
+    return axis;
+}
+
 
 
 #ifdef __cplusplus

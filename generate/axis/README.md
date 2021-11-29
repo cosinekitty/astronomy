@@ -1,6 +1,6 @@
 # Document
 
-The file `iau_rotation_elements.pdf` is a copy of the source document [Report of the IAU Working Group on Cartographic Coordinates and Rotational Elements: 2009](https://astropedia.astrogeology.usgs.gov/alfresco/d/d/workspace/SpacesStore/28fd9e81-1964-44d6-a58b-fbbf61e64e15/WGCCRE2009reprint.pdf), stored here as an archival reference. It shows where I got the formulas for calculating planetary rotation axes as a function of time.
+The file `iau_rotation_elements_2015.pdf` is a copy of the source document [Report of the IAU Working Group on Cartographic Coordinates and Rotational Elements: 2015](https://astropedia.astrogeology.usgs.gov/download/Docs/WGCCRE/WGCCRE2015reprint.pdf), stored here as an archival reference. It shows where I got the formulas for calculating planetary rotation axes as a function of time.
 
 # Planetary Rotation Axis Data
 The `*.txt` data files were generated using the [JPL Horizons](https://ssd.jpl.nasa.gov/horizons/app.html#/) online ephemeris tool.

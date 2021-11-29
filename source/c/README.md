@@ -1514,6 +1514,35 @@ This function transforms a vector in one orientation to a vector in another orie
 
 ---
 
+<a name="Astronomy_RotationAxis"></a>
+### Astronomy_RotationAxis(body, time) &#8658; [`astro_axis_t`](#astro_axis_t)
+
+**Calculates information about a body's rotation axis at a given time.** 
+
+
+
+This function uses formulas standardized by the IAU Working Group on Cartographics and Rotational Elements 2015 report, as described in the following document:
+
+[https://astropedia.astrogeology.usgs.gov/download/Docs/WGCCRE/WGCCRE2015reprint.pdf](https://astropedia.astrogeology.usgs.gov/download/Docs/WGCCRE/WGCCRE2015reprint.pdf)
+
+See [`astro_axis_t`](#astro_axis_t) for more detailed information.
+
+
+
+**Returns:**  [`astro_axis_t`](#astro_axis_t)
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_body_t`](#astro_body_t) | `body` |  The body whose rotation axis is to be found. | 
+| [`astro_time_t`](#astro_time_t) | `time` |  The time for which the body's rotation axis is to be found. | 
+
+
+
+
+---
+
 <a name="Astronomy_Rotation_ECL_EQD"></a>
 ### Astronomy_Rotation_ECL_EQD(time) &#8658; [`astro_rotation_t`](#astro_rotation_t)
 
@@ -3166,6 +3195,31 @@ This data structure is returned by [`Astronomy_SearchLunarApsis`](#Astronomy_Sea
 | [`astro_apsis_kind_t`](#astro_apsis_kind_t) | `kind` |  Whether this is a pericenter or apocenter event.  |
 | `double` | `dist_au` |  The distance between the centers of the bodies in astronomical units.  |
 | `double` | `dist_km` |  The distance between the centers of the bodies in kilometers.  |
+
+
+---
+
+<a name="astro_axis_t"></a>
+### `astro_axis_t`
+
+**Information about a body's rotation axis at a given time.** 
+
+
+
+This structure is returned by [`Astronomy_RotationAxis`](#Astronomy_RotationAxis) to report the orientation of a body's rotation axis at a given moment in time. The axis is specified by the direction in space that the body's north pole points, using angular equatorial coordinates in the J2000 system (EQJ).
+
+Thus `ra` is the right ascension, and `dec` is the declination, of the body's north pole vector at the given moment in time. The north pole of a body is defined as the pole that lies on the north side of the [Solar System's invariable plane](https://en.wikipedia.org/wiki/Invariable_plane), regardless of the body's direction of rotation.
+
+The `spin` field indicates the angular position of a prime meridian arbitrarily recommended for the body by the International Astronomical Union (IAU).
+
+The fields `ra`, `dec`, and `spin` correspond to the variables α0, δ0, and W, respectively, from [Report of the IAU Working Group on Cartographic Coordinates and Rotational Elements: 2015](https://astropedia.astrogeology.usgs.gov/download/Docs/WGCCRE/WGCCRE2015reprint.pdf). 
+
+| Type | Member | Description |
+| ---- | ------ | ----------- |
+| [`astro_status_t`](#astro_status_t) | `status` |  `ASTRO_SUCCESS` if this struct is valid; otherwise an error code.  |
+| `double` | `ra` |  The J2000 right ascension of the body's north pole direction, in sidereal hours.  |
+| `double` | `dec` |  The J2000 declination of the body's north pole direction, in degrees.  |
+| `double` | `spin` |  Rotation angle of the body's prime meridian, in degrees.  |
 
 
 ---

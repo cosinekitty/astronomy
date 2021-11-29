@@ -138,6 +138,7 @@ static int TopoStateTest(void);
 static int Twilight(void);
 static int LibrationTest(void);
 static int DE405_Check(void);
+static int AxisTest(void);
 
 typedef int (* unit_test_func_t) (void);
 
@@ -151,6 +152,7 @@ unit_test_t;
 static unit_test_t UnitTests[] =
 {
     {"aberration",              AberrationTest},
+    {"axis",                    AxisTest},
     {"barystate",               BaryStateTest},
     {"check",                   AstroCheck},
     {"constellation",           ConstellationTest},
@@ -4977,6 +4979,72 @@ static int DE405_Check(void)
     error = 0;
 fail:
     if (infile != NULL) fclose(infile);
+    return error;
+}
+
+/*-----------------------------------------------------------------------------------------------------------*/
+
+static int AxisTestBody(astro_body_t body, const char *filename)
+{
+    int error, lnum, nscanned, found_data;
+    astro_axis_t axis;
+    astro_time_t time;
+    double jd, ra, dec;
+    FILE *infile;
+    char line[100];
+
+    infile = fopen(filename, "rt");
+    if (infile == NULL)
+        FAIL("AxisTestBody: cannot open input file: %s\n", filename);
+
+    lnum = 0;
+    found_data = 0;
+    while (ReadLine(line, sizeof(line), infile, filename, lnum))
+    {
+        ++lnum;
+        if (!found_data)
+        {
+            if (0 == memcmp(line, "$$SOE", 5))
+                found_data = 1;
+        }
+        else
+        {
+            if (0 == memcmp(line, "$$EOE", 5))
+                break;
+
+            /* [ 1979-Jun-13 00:00 2444037.500000000     181.44164   89.88493] */
+            if (strlen(line) < 61)
+                FAIL("C AxisTestBody(%s line %d): line is too short\n", filename, lnum);
+
+            nscanned = sscanf(&line[19], "%lf %lf %lf", &jd, &ra, &dec);
+            if (nscanned != 3)
+                FAIL("C AxisTestBody(%s line %d): could not scan data.\n", filename, lnum);
+
+            ra /= 15.0;     /* convert degrees to sidereal hours */
+
+            time = Astronomy_TimeFromDays(jd - 2451545.0);
+            axis = Astronomy_RotationAxis(body, time);
+            if (axis.status != ASTRO_SUCCESS)
+                FAIL("C AxisTestBody(%s line %d): Astronomy_Axis returned error %d\n", filename, lnum, axis.status);
+
+            /* Find angle between two versions of the north pole. Use that as the measure of error. */
+            DEBUG("C AxisTestBody(%s): correct (ra=%lf, dec=%lf) calc(ra=%lf, dec=%lf)\n", filename, ra, dec, axis.ra, axis.dec);
+        }
+    }
+
+    error = 0;
+fail:
+    if (infile != NULL) fclose(infile);
+    return error;
+}
+
+static int AxisTest(void)
+{
+    int error;
+    CHECK(AxisTestBody(BODY_SUN,      "axis/Sun.txt"));
+    CHECK(AxisTestBody(BODY_MERCURY,  "axis/Mercury.txt"));
+    printf("C AxisBody: PASS\n");
+fail:
     return error;
 }
 

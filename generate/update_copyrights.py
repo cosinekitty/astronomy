@@ -12,13 +12,14 @@ def UpdateCopyrights(fn):
     update = 'Copyright (c) 2019-' + CurrentYear + ' Don Cross'
     newlines = []
     with open(fn, 'rt') as infile:
-        for line in infile:
-            m = rx.search(line)
-            if m:
-                if m.group(2) != CurrentYear:
-                    count += 1
-                    line = rx.sub(update, line)
-            newlines.append(line)
+        if not fn.endswith('.pdf'):
+            for line in infile:
+                m = rx.search(line)
+                if m:
+                    if m.group(2) != CurrentYear:
+                        count += 1
+                        line = rx.sub(update, line)
+                newlines.append(line)
     if count > 0:
         print('update_copyrights.py: {}'.format(fn))
         with open(fn, 'wt') as outfile:

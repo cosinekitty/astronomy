@@ -907,6 +907,37 @@ typedef struct
 }
 astro_libration_t;
 
+/**
+ * @brief Information about a body's rotation axis at a given time.
+ *
+ * This structure is returned by #Astronomy_RotationAxis to report
+ * the orientation of a body's rotation axis at a given moment in time.
+ * The axis is specified by the direction in space that the body's north pole
+ * points, using angular equatorial coordinates in the J2000 system (EQJ).
+ *
+ * Thus `ra` is the right ascension, and `dec` is the declination, of the
+ * body's north pole vector at the given moment in time. The north pole
+ * of a body is defined as the pole that lies on the north side of the
+ * [Solar System's invariable plane](https://en.wikipedia.org/wiki/Invariable_plane),
+ * regardless of the body's direction of rotation.
+ *
+ * The `spin` field indicates the angular position of a prime meridian
+ * arbitrarily recommended for the body by the International Astronomical
+ * Union (IAU).
+ *
+ * The fields `ra`, `dec`, and `spin` correspond to the variables
+ * α0, δ0, and W, respectively, from
+ * [Report of the IAU Working Group on Cartographic Coordinates and Rotational Elements: 2015](https://astropedia.astrogeology.usgs.gov/download/Docs/WGCCRE/WGCCRE2015reprint.pdf).
+ */
+typedef struct
+{
+    astro_status_t  status;     /**< `ASTRO_SUCCESS` if this struct is valid; otherwise an error code. */
+    double          ra;         /**< The J2000 right ascension of the body's north pole direction, in sidereal hours. */
+    double          dec;        /**< The J2000 declination of the body's north pole direction, in degrees. */
+    double          spin;       /**< Rotation angle of the body's prime meridian, in degrees. */
+}
+astro_axis_t;
+
 
 /**
  * \def TIME_TEXT_BYTES
@@ -1083,6 +1114,8 @@ astro_search_result_t Astronomy_SearchAltitude(
     astro_time_t startTime,
     double limitDays,
     double altitude);
+
+astro_axis_t Astronomy_RotationAxis(astro_body_t body, astro_time_t time);
 
 astro_seasons_t Astronomy_Seasons(int year);
 astro_illum_t Astronomy_Illumination(astro_body_t body, astro_time_t time);
