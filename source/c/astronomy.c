@@ -10432,12 +10432,13 @@ astro_axis_t Astronomy_RotationAxis(astro_body_t body, astro_time_t time)
     double d = time.tt;
     double T = d / 36525.0;
     double M1, M2, M3, M4, M5;
+    double radlat, radlon, rcoslat;
 
     switch (body)
     {
     case BODY_SUN:
         ra = 286.13;
-        dec = 68.87;
+        dec = 63.87;
         w = 84.176 + (14.1844 * d);
         break;
 
@@ -10467,8 +10468,18 @@ astro_axis_t Astronomy_RotationAxis(astro_body_t body, astro_time_t time)
     axis.ra = ra / 15.0;      /* convert degrees to sidereal hours */
     axis.dec = dec;
     axis.spin = w;
-    axis.status = ASTRO_SUCCESS;
 
+    /* calculate the north pole vector using the given angles. */
+    radlat = dec * DEG2RAD;
+    radlon = ra * DEG2RAD;
+    rcoslat = cos(radlat);
+    axis.zdir.x = rcoslat * cos(radlon);
+    axis.zdir.y = rcoslat * sin(radlon);
+    axis.zdir.z = sin(radlat);
+    axis.zdir.t = time;
+    axis.zdir.status = ASTRO_SUCCESS;
+
+    axis.status = ASTRO_SUCCESS;
     return axis;
 }
 

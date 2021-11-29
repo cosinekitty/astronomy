@@ -3220,6 +3220,7 @@ The fields `ra`, `dec`, and `spin` correspond to the variables α0, δ0, and W, 
 | `double` | `ra` |  The J2000 right ascension of the body's north pole direction, in sidereal hours.  |
 | `double` | `dec` |  The J2000 declination of the body's north pole direction, in degrees.  |
 | `double` | `spin` |  Rotation angle of the body's prime meridian, in degrees.  |
+| [`astro_vector_t`](#astro_vector_t) | `zdir` |  A J2000 dimensionless unit vector pointing in the direction of the body's north pole.  |
 
 
 ---

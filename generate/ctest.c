@@ -4984,12 +4984,15 @@ fail:
 
 /*-----------------------------------------------------------------------------------------------------------*/
 
-static int AxisTestBody(astro_body_t body, const char *filename)
+static int AxisTestBody(astro_body_t body, const char *filename, double arcmin_tolerance)
 {
-    int error, lnum, nscanned, found_data;
+    int error, lnum, nscanned, found_data, count;
     astro_axis_t axis;
     astro_time_t time;
-    double jd, ra, dec;
+    astro_spherical_t sphere;
+    astro_vector_t north;
+    astro_angle_result_t diff;
+    double jd, ra, dec, arcmin, max_arcmin;
     FILE *infile;
     char line[100];
 
@@ -4997,8 +5000,10 @@ static int AxisTestBody(astro_body_t body, const char *filename)
     if (infile == NULL)
         FAIL("AxisTestBody: cannot open input file: %s\n", filename);
 
+    count = 0;
     lnum = 0;
     found_data = 0;
+    max_arcmin = 0.0;
     while (ReadLine(line, sizeof(line), infile, filename, lnum))
     {
         ++lnum;
@@ -5020,18 +5025,36 @@ static int AxisTestBody(astro_body_t body, const char *filename)
             if (nscanned != 3)
                 FAIL("C AxisTestBody(%s line %d): could not scan data.\n", filename, lnum);
 
-            ra /= 15.0;     /* convert degrees to sidereal hours */
-
             time = Astronomy_TimeFromDays(jd - 2451545.0);
             axis = Astronomy_RotationAxis(body, time);
             if (axis.status != ASTRO_SUCCESS)
                 FAIL("C AxisTestBody(%s line %d): Astronomy_Axis returned error %d\n", filename, lnum, axis.status);
 
+            /* Convert the reference angles to a reference north pole vector. */
+            sphere.status = ASTRO_SUCCESS;
+            sphere.dist = 1.0;
+            sphere.lat = dec;
+            sphere.lon = ra;    /* tricky: RA is in degrees, not sidereal hours */
+            north = Astronomy_VectorFromSphere(sphere, time);
+            if (north.status != ASTRO_SUCCESS)
+                FAIL("C AxisTestBody(%s line %d): VectorFromSphere error %d\n", filename, lnum, north.status);
+
             /* Find angle between two versions of the north pole. Use that as the measure of error. */
-            DEBUG("C AxisTestBody(%s): correct (ra=%lf, dec=%lf) calc(ra=%lf, dec=%lf)\n", filename, ra, dec, axis.ra, axis.dec);
+            diff = Astronomy_AngleBetween(north, axis.zdir);
+            if (diff.status != ASTRO_SUCCESS)
+                FAIL("C AxisTestBody(%s line %d): AngleBetween error %d\n", filename, lnum, diff.status);
+
+            arcmin = diff.angle * 60.0;     /* convert error degrees to arcminutes */
+            if (arcmin > max_arcmin)
+                max_arcmin = arcmin;
+
+            ++count;
         }
     }
 
+    DEBUG("C AxisTestBody(%s): %d test cases, max arcmin error = %0.6lf.\n", filename, count, max_arcmin);
+    if (max_arcmin > arcmin_tolerance)
+        FAIL("C AxisTestBody(%s): EXCESSIVE ERROR = %lf arcmin\n", filename, max_arcmin);
     error = 0;
 fail:
     if (infile != NULL) fclose(infile);
@@ -5041,8 +5064,8 @@ fail:
 static int AxisTest(void)
 {
     int error;
-    CHECK(AxisTestBody(BODY_SUN,      "axis/Sun.txt"));
-    CHECK(AxisTestBody(BODY_MERCURY,  "axis/Mercury.txt"));
+    CHECK(AxisTestBody(BODY_SUN,      "axis/Sun.txt",       0.000000));
+    CHECK(AxisTestBody(BODY_MERCURY,  "axis/Mercury.txt",   0.074340));
     printf("C AxisBody: PASS\n");
 fail:
     return error;
