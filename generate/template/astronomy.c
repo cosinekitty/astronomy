@@ -8737,7 +8737,6 @@ astro_axis_t Astronomy_RotationAxis(astro_body_t body, astro_time_t time)
     double ra, dec, w;
     double d = time.tt;
     double T = d / 36525.0;
-    double M1, M2, M3, M4, M5;
     double radlat, radlon, rcoslat;
 
     switch (body)
@@ -8751,19 +8750,50 @@ astro_axis_t Astronomy_RotationAxis(astro_body_t body, astro_time_t time)
     case BODY_MERCURY:
         ra = 281.0103 - (0.0328 * T);
         dec = 61.4155 - (0.0049 * T);
-        M1 = DEG2RAD * (174.7910857 + (4.092335 * d));
-        M2 = DEG2RAD * (349.5821714 + (8.184670 * d));
-        M3 = DEG2RAD * (164.3732571 + (12.277005 * d));
-        M4 = DEG2RAD * (339.1643429 + (16.369340 * d));
-        M5 = DEG2RAD * (153.9554286 + (20.461675 * d));
         w = (
             329.5988
             + (6.1385108 * d)
-            + (0.01067257 * sin(M1))
-            - (0.00112309 * sin(M2))
-            - (0.00011040 * sin(M3))
-            - (0.00002539 * sin(M4))
-            - (0.00000571 * sin(M5))
+            + (0.01067257 * sin(DEG2RAD*(174.7910857 + 4.092335*d)))
+            - (0.00112309 * sin(DEG2RAD*(349.5821714 + 8.184670*d)))
+            - (0.00011040 * sin(DEG2RAD*(164.3732571 + 12.277005*d)))
+            - (0.00002539 * sin(DEG2RAD*(339.1643429 + 16.369340*d)))
+            - (0.00000571 * sin(DEG2RAD*(153.9554286 + 20.461675*d)))
+        );
+        break;
+
+    case BODY_VENUS:
+        ra = 272.76;
+        dec = 67.16;
+        w = 160.20 - (1.4813688 * d);
+        break;
+
+    case BODY_MARS:
+        ra = (
+            317.269202 - 0.10927547*T
+            + 0.000068 * sin(DEG2RAD*(198.991226 + 19139.4819985*T))
+            + 0.000238 * sin(DEG2RAD*(226.292679 + 38280.8511281*T))
+            + 0.000052 * sin(DEG2RAD*(249.663391 + 57420.7251593*T))
+            + 0.000009 * sin(DEG2RAD*(266.183510 + 76560.6367950*T))
+            + 0.419057 * sin(DEG2RAD*(79.398797 + 0.5042615*T))
+        );
+
+        dec = (
+            54.432516 - 0.05827105*T
+            + 0.000051*cos(DEG2RAD*(122.433576 + 19139.9407476*T))
+            + 0.000141*cos(DEG2RAD*(43.058401 + 38280.8753272*T))
+            + 0.000031*cos(DEG2RAD*(57.663379 + 57420.7517205*T))
+            + 0.000005*cos(DEG2RAD*(79.476401 + 76560.6495004*T))
+            + 1.591274*cos(DEG2RAD*(166.325722 + 0.5042615*T))
+        );
+
+        w = (
+            176.049863 + 350.891982443297*d
+            + 0.000145*sin(DEG2RAD*(129.071773 + 19140.0328244*T))
+            + 0.000157*sin(DEG2RAD*(36.352167 + 38281.0473591*T))
+            + 0.000040*sin(DEG2RAD*(56.668646 + 57420.9295360*T))
+            + 0.000001*sin(DEG2RAD*(67.364003 + 76560.2552215*T))
+            + 0.000001*sin(DEG2RAD*(104.792680 + 95700.4387578*T))
+            + 0.584542*sin(DEG2RAD*(95.391654 + 0.5042615*T))
         );
         break;
 
@@ -8779,11 +8809,11 @@ astro_axis_t Astronomy_RotationAxis(astro_body_t body, astro_time_t time)
     radlat = dec * DEG2RAD;
     radlon = ra * DEG2RAD;
     rcoslat = cos(radlat);
-    axis.zdir.x = rcoslat * cos(radlon);
-    axis.zdir.y = rcoslat * sin(radlon);
-    axis.zdir.z = sin(radlat);
-    axis.zdir.t = time;
-    axis.zdir.status = ASTRO_SUCCESS;
+    axis.north.x = rcoslat * cos(radlon);
+    axis.north.y = rcoslat * sin(radlon);
+    axis.north.z = sin(radlat);
+    axis.north.t = time;
+    axis.north.status = ASTRO_SUCCESS;
 
     axis.status = ASTRO_SUCCESS;
     return axis;

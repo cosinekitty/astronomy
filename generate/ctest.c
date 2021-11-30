@@ -5040,7 +5040,7 @@ static int AxisTestBody(astro_body_t body, const char *filename, double arcmin_t
                 FAIL("C AxisTestBody(%s line %d): VectorFromSphere error %d\n", filename, lnum, north.status);
 
             /* Find angle between two versions of the north pole. Use that as the measure of error. */
-            diff = Astronomy_AngleBetween(north, axis.zdir);
+            diff = Astronomy_AngleBetween(north, axis.north);
             if (diff.status != ASTRO_SUCCESS)
                 FAIL("C AxisTestBody(%s line %d): AngleBetween error %d\n", filename, lnum, diff.status);
 
@@ -5064,8 +5064,10 @@ fail:
 static int AxisTest(void)
 {
     int error;
-    CHECK(AxisTestBody(BODY_SUN,      "axis/Sun.txt",       0.000000));
+    CHECK(AxisTestBody(BODY_SUN,      "axis/Sun.txt",       0.0));
     CHECK(AxisTestBody(BODY_MERCURY,  "axis/Mercury.txt",   0.074340));
+    CHECK(AxisTestBody(BODY_VENUS,    "axis/Venus.txt",     0.0));
+    CHECK(AxisTestBody(BODY_MARS,     "axis/Mars.txt",      0.075323));
     printf("C AxisBody: PASS\n");
 fail:
     return error;
