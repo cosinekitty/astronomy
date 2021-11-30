@@ -8845,6 +8845,12 @@ astro_axis_t Astronomy_RotationAxis(astro_body_t body, astro_time_t time)
         w = 249.978 + 541.1397757*d - 0.48*sin(N);
         break;
 
+    case BODY_PLUTO:
+        ra = 132.993;
+        dec = -6.163;
+        w = 302.695 + 56.3625225*d;
+        break;
+
     default:
         return AxisErr(ASTRO_INVALID_BODY);
     }

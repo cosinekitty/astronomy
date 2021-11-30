@@ -5072,6 +5072,7 @@ static int AxisTest(void)
     CHECK(AxisTestBody(BODY_SATURN,   "axis/Saturn.txt",    0.000304));
     CHECK(AxisTestBody(BODY_URANUS,   "axis/Uranus.txt",    0.0));
     CHECK(AxisTestBody(BODY_NEPTUNE,  "axis/Neptune.txt",   0.000462));
+    CHECK(AxisTestBody(BODY_PLUTO,    "axis/Pluto.txt",     0.0));
     printf("C AxisBody: PASS\n");
 fail:
     return error;
