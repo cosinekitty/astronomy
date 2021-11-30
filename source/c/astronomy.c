@@ -10432,6 +10432,7 @@ astro_axis_t Astronomy_RotationAxis(astro_body_t body, astro_time_t time)
     double d = time.tt;
     double T = d / 36525.0;
     double radlat, radlon, rcoslat;
+    double Ja, Jb, Jc, Jd, Je, N;
 
     switch (body)
     {
@@ -10489,6 +10490,53 @@ astro_axis_t Astronomy_RotationAxis(astro_body_t body, astro_time_t time)
             + 0.000001*sin(DEG2RAD*(104.792680 + 95700.4387578*T))
             + 0.584542*sin(DEG2RAD*(95.391654 + 0.5042615*T))
         );
+        break;
+
+    case BODY_JUPITER:
+        Ja = DEG2RAD*(99.360714 + 4850.4046*T);
+        Jb = DEG2RAD*(175.895369 + 1191.9605*T);
+        Jc = DEG2RAD*(300.323162 + 262.5475*T);
+        Jd = DEG2RAD*(114.012305 + 6070.2476*T);
+        Je = DEG2RAD*(49.511251 + 64.3000*T);
+
+        ra = (
+            268.056595 - 0.006499*T
+            + 0.000117*sin(Ja)
+            + 0.000938*sin(Jb)
+            + 0.001432*sin(Jc)
+            + 0.000030*sin(Jd)
+            + 0.002150*sin(Je)
+        );
+
+        dec = (
+            64.495303 + 0.002413*T
+            + 0.000050*cos(Ja)
+            + 0.000404*cos(Jb)
+            + 0.000617*cos(Jc)
+            - 0.000013*cos(Jd)
+            + 0.000926*cos(Je)
+        );
+
+        w = 284.95 + 870.536*d;
+        break;
+
+    case BODY_SATURN:
+        ra = 40.589 - 0.036*T;
+        dec = 83.537 - 0.004*T;
+        w = 38.90 + 810.7939024*d;
+        break;
+
+    case BODY_URANUS:
+        ra = 257.311;
+        dec = -15.175;
+        w = 203.81 - 501.1600928*d;
+        break;
+
+    case BODY_NEPTUNE:
+        N = DEG2RAD*(357.85 + 52.316*T);
+        ra = 299.36 + 0.70*sin(N);
+        dec = 43.46 - 0.51*cos(N);
+        w = 249.978 + 541.1397757*d - 0.48*sin(N);
         break;
 
     default:
