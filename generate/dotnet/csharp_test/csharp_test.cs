@@ -59,6 +59,7 @@ namespace csharp_test
             new Test("topostate", TopoStateTest),
             new Test("aberration", AberrationTest),
             new Test("twilight", TwilightTest),
+            new Test("axis", AxisTest),
         };
 
         static int Main(string[] args)
@@ -3183,6 +3184,90 @@ namespace csharp_test
         {
             if (0 != Libration("../../libration/mooninfo_2020.txt")) return 1;
             if (0 != Libration("../../libration/mooninfo_2021.txt")) return 1;
+            return 0;
+        }
+
+        static int AxisTest()
+        {
+            if (0 != AxisTestBody(Body.Sun,      "../../axis/Sun.txt",       0.0))        return 1;
+            if (0 != AxisTestBody(Body.Mercury,  "../../axis/Mercury.txt",   0.074340))   return 1;
+            if (0 != AxisTestBody(Body.Venus,    "../../axis/Venus.txt",     0.0))        return 1;
+            if (0 != AxisTestBody(Body.Earth,    "../../axis/Earth.txt",     0.000591))   return 1;
+            if (0 != AxisTestBody(Body.Mars,     "../../axis/Mars.txt",      0.075323))   return 1;
+            if (0 != AxisTestBody(Body.Jupiter,  "../../axis/Jupiter.txt",   0.000324))   return 1;
+            if (0 != AxisTestBody(Body.Saturn,   "../../axis/Saturn.txt",    0.000304))   return 1;
+            if (0 != AxisTestBody(Body.Uranus,   "../../axis/Uranus.txt",    0.0))        return 1;
+            if (0 != AxisTestBody(Body.Neptune,  "../../axis/Neptune.txt",   0.000462))   return 1;
+            if (0 != AxisTestBody(Body.Pluto,    "../../axis/Pluto.txt",     0.0))        return 1;
+            Console.WriteLine("C# AxisTest: PASS");
+            return 0;
+        }
+
+        static int AxisTestBody(Body body, string filename, double arcmin_tolerance)
+        {
+            double max_arcmin = 0.0;
+            int count = 0;
+            using (StreamReader infile = File.OpenText(filename))
+            {
+                bool found_data = false;
+                int lnum = 0;
+                string line;
+                while (null != (line = infile.ReadLine()))
+                {
+                    ++lnum;
+                    if (!found_data)
+                    {
+                        if (line == "$$SOE")
+                            found_data = true;
+                    }
+                    else
+                    {
+                        if (line == "$$EOE")
+                            break;
+
+                        if (line.Length < 61)
+                        {
+                            Console.WriteLine($"C# AxisBodyTest({filename} line {lnum}): line is too short.");
+                            return 1;
+                        }
+
+                        string[] token = Tokenize(line.Substring(19));
+                        if (token.Length != 3)
+                        {
+                            Console.WriteLine($"C# AxisBodyTest({filename} line {lnum}): expected 3 tokens but found {token.Length}.");
+                            return 1;
+                        }
+                        if (!double.TryParse(token[0], out double jd) ||
+                            !double.TryParse(token[1], out double ra) ||
+                            !double.TryParse(token[2], out double dec))
+                        {
+                            Console.WriteLine($"C# AxisBodyTest({filename} line {lnum}): error parsing floating point numbers.");
+                            return 1;
+                        }
+
+                        var time = new AstroTime(jd - 2451545.0);
+                        AxisInfo axis = Astronomy.RotationAxis(body, time);
+
+                        // Convert the reference angles to a reference north pole vector.
+                        // tricky: `ra` is in degrees, not sidereal hours; so don't multiply by 15.
+                        var sphere = new Spherical(dec, ra, 1.0);
+                        AstroVector north = Astronomy.VectorFromSphere(sphere, time);
+
+                        /* Find angle between two versions of the north pole. Use that as the measure of error. */
+                        double arcmin = 60.0 * Astronomy.AngleBetween(north, axis.north);
+                        if (arcmin > max_arcmin)
+                            max_arcmin = arcmin;
+
+                        ++count;
+                    }
+                }
+            }
+            Debug($"C# AxisTestBody({body}): {count} test cases, max arcmin error = {max_arcmin}.");
+            if (max_arcmin > arcmin_tolerance)
+            {
+                Console.WriteLine($"C AxisTestBody({body}): EXCESSIVE ERROR = {max_arcmin} arcmin.");
+                return 1;
+            }
             return 0;
         }
     }

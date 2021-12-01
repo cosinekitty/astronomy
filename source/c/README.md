@@ -1521,6 +1521,8 @@ This function transforms a vector in one orientation to a vector in another orie
 
 
 
+Calculates the orientation of a body's rotation axis, along with the rotation angle of its prime meridian, at a given moment in time.
+
 This function uses formulas standardized by the IAU Working Group on Cartographics and Rotational Elements 2015 report, as described in the following document:
 
 [https://astropedia.astrogeology.usgs.gov/download/Docs/WGCCRE/WGCCRE2015reprint.pdf](https://astropedia.astrogeology.usgs.gov/download/Docs/WGCCRE/WGCCRE2015reprint.pdf)
@@ -1535,7 +1537,7 @@ See [`astro_axis_t`](#astro_axis_t) for more detailed information.
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| [`astro_body_t`](#astro_body_t) | `body` |  The body whose rotation axis is to be found. | 
+| [`astro_body_t`](#astro_body_t) | `body` |  The body whose rotation axis is to be found. The supported bodies are the Sun and the planets: `BODY_SUN`, `BODY_MERCURY`, `BODY_VENUS`, `BODY_EARTH`, `BODY_MARS`, `BODY_JUPITER`, `BODY_SATURN`, `BODY_URANUS`, `BODY_NEPTUNE`, `BODY_PLUTO`. | 
 | [`astro_time_t`](#astro_time_t) | `time` |  The time for which the body's rotation axis is to be found. | 
 
 

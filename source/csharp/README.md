@@ -1302,6 +1302,29 @@ Target: EQJ = equatorial system, using equator at the J2000 epoch.
 
 **Returns:** A rotation matrix that converts HOR to EQD at `time` and for `observer`.
 
+<a name="Astronomy.RotationAxis"></a>
+### Astronomy.RotationAxis(body, time) &#8658; [`AxisInfo`](#AxisInfo)
+
+**Calculates information about a body's rotation axis at a given time.**
+
+Calculates the orientation of a body's rotation axis, along with
+the rotation angle of its prime meridian, at a given moment in time.
+
+This function uses formulas standardized by the IAU Working Group
+on Cartographics and Rotational Elements 2015 report, as described
+in the following document:
+
+https://astropedia.astrogeology.usgs.gov/download/Docs/WGCCRE/WGCCRE2015reprint.pdf
+
+See [`AxisInfo`](#AxisInfo) for more detailed information.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Body`](#Body) | `body` | One of the following values: `Body.Sun`, `Body.Mercury`, `Body.Venus`, `Body.Earth`, `Body.Mars`, `Body.Jupiter`, `Body.Saturn`, `Body.Uranus`, `Body.Neptune`, `Body.Pluto`. |
+| [`AstroTime`](#AstroTime) | `time` | The time at which to calculate the body's rotation axis. |
+
+**Returns:** North pole orientation and body spin angle.
+
 <a name="Astronomy.Search"></a>
 ### Astronomy.Search(func, t1, t2, dt_tolerance_seconds) &#8658; [`AstroTime`](#AstroTime)
 
@@ -2002,6 +2025,39 @@ an `AstroTime` value that can be passed to Astronomy Engine functions.
 **Calculates the total distance in AU represented by this vector.**
 
 **Returns:** The nonnegative length of the Cartisian vector in AU.
+
+---
+
+<a name="AxisInfo"></a>
+## `struct AxisInfo`
+
+**Information about a body's rotation axis at a given time.**
+
+This structure is returned by [`Astronomy.RotationAxis`](#Astronomy.RotationAxis) to report
+the orientation of a body's rotation axis at a given moment in time.
+The axis is specified by the direction in space that the body's north pole
+points, using angular equatorial coordinates in the J2000 system (EQJ).
+
+Thus `ra` is the right ascension, and `dec` is the declination, of the
+body's north pole vector at the given moment in time. The north pole
+of a body is defined as the pole that lies on the north side of the
+[Solar System's invariable plane](https://en.wikipedia.org/wiki/Invariable_plane),
+regardless of the body's direction of rotation.
+
+The `spin` field indicates the angular position of a prime meridian
+arbitrarily recommended for the body by the International Astronomical
+Union (IAU).
+
+The fields `ra`, `dec`, and `spin` correspond to the variables
+α0, δ0, and W, respectively, from
+[Report of the IAU Working Group on Cartographic Coordinates and Rotational Elements: 2015](https://astropedia.astrogeology.usgs.gov/download/Docs/WGCCRE/WGCCRE2015reprint.pdf).
+
+| Type | Name | Description |
+| --- | --- | --- |
+| `double` | `ra` | The J2000 right ascension of the body's north pole direction, in sidereal hours. |
+| `double` | `dec` | The J2000 declination of the body's north pole direction, in degrees. |
+| `double` | `spin` | Rotation angle of the body's prime meridian, in degrees. |
+| [`AstroVector`](#AstroVector) | `north` | A J2000 dimensionless unit vector pointing in the direction of the body's north pole. |
 
 ---
 

@@ -1415,6 +1415,44 @@ namespace CosineKitty
     }
 
     /// <summary>
+    /// Information about a body's rotation axis at a given time.
+    /// </summary>
+    /// <remarks>
+    /// This structure is returned by #Astronomy.RotationAxis to report
+    /// the orientation of a body's rotation axis at a given moment in time.
+    /// The axis is specified by the direction in space that the body's north pole
+    /// points, using angular equatorial coordinates in the J2000 system (EQJ).
+    ///
+    /// Thus `ra` is the right ascension, and `dec` is the declination, of the
+    /// body's north pole vector at the given moment in time. The north pole
+    /// of a body is defined as the pole that lies on the north side of the
+    /// [Solar System's invariable plane](https://en.wikipedia.org/wiki/Invariable_plane),
+    /// regardless of the body's direction of rotation.
+    ///
+    /// The `spin` field indicates the angular position of a prime meridian
+    /// arbitrarily recommended for the body by the International Astronomical
+    /// Union (IAU).
+    ///
+    /// The fields `ra`, `dec`, and `spin` correspond to the variables
+    /// α0, δ0, and W, respectively, from
+    /// [Report of the IAU Working Group on Cartographic Coordinates and Rotational Elements: 2015](https://astropedia.astrogeology.usgs.gov/download/Docs/WGCCRE/WGCCRE2015reprint.pdf).
+    /// </remarks>
+    public struct AxisInfo
+    {
+        /// <summary>The J2000 right ascension of the body's north pole direction, in sidereal hours.</summary>
+        public double ra;
+
+        /// <summary>The J2000 declination of the body's north pole direction, in degrees.</summary>
+        public double dec;
+
+        /// <summary>Rotation angle of the body's prime meridian, in degrees.</summary>
+        public double spin;
+
+        /// <summary>A J2000 dimensionless unit vector pointing in the direction of the body's north pole.</summary>
+        public AstroVector north;
+    }
+
+    /// <summary>
     /// Represents a function whose ascending root is to be found.
     /// See #Astronomy.Search.
     /// </summary>
@@ -7444,6 +7482,33 @@ $ASTRO_IAU_DATA()
             return refr;
         }
 
+        private static AxisInfo EarthRotationAxis(AstroTime time)
+        {
+            AxisInfo axis;
+
+            // Unlike the other planets, we have a model of precession and nutation
+            // for the Earth's axis that provides a north pole vector.
+            // So calculate the vector first, then derive the (RA,DEC) angles from the vector.
+
+            // Start with a north pole vector in equator-of-date coordinates: (0,0,1).
+            var pos1 = new AstroVector(0.0, 0.0, 1.0, time);
+
+            // Convert the vector into J2000 coordinates.
+            AstroVector pos2 = nutation(pos1, time, PrecessDirection.Into2000);
+            axis.north = precession(pos2, time, PrecessDirection.Into2000);
+
+            // Derive angular values: right ascension and declination.
+            Equatorial equ = Astronomy.EquatorFromVector(axis.north);
+            axis.ra = equ.ra;
+            axis.dec = equ.dec;
+
+            // Use a modified version of the era() function that does not trim to 0..360 degrees.
+            // This expression is also corrected to give the correct angle at the J2000 epoch.
+            axis.spin = 190.41375788700253 + (360.9856122880876 * time.ut);
+
+            return axis;
+        }
+
 
         /// <summary>
         /// Calculates the inverse of an atmospheric refraction angle.
@@ -7485,6 +7550,170 @@ $ASTRO_IAU_DATA()
             }
         }
 
+        /// <summary>
+        /// Calculates information about a body's rotation axis at a given time.
+        /// </summary>
+        /// <remarks>
+        /// Calculates the orientation of a body's rotation axis, along with
+        /// the rotation angle of its prime meridian, at a given moment in time.
+        ///
+        /// This function uses formulas standardized by the IAU Working Group
+        /// on Cartographics and Rotational Elements 2015 report, as described
+        /// in the following document:
+        ///
+        /// https://astropedia.astrogeology.usgs.gov/download/Docs/WGCCRE/WGCCRE2015reprint.pdf
+        ///
+        /// See #AxisInfo for more detailed information.
+        /// </remarks>
+        /// <param name="body">
+        /// One of the following values:
+        /// `Body.Sun`, `Body.Mercury`, `Body.Venus`, `Body.Earth`, `Body.Mars`,
+        /// `Body.Jupiter`, `Body.Saturn`, `Body.Uranus`, `Body.Neptune`, `Body.Pluto`.
+        /// </param>
+        /// <param name="time">The time at which to calculate the body's rotation axis.</param>
+        /// <returns>North pole orientation and body spin angle.</returns>
+        public static AxisInfo RotationAxis(Body body, AstroTime time)
+        {
+            double d = time.tt;
+            double T = d / 36525.0;
+            double ra, dec, w;
+
+            switch (body)
+            {
+            case Body.Sun:
+                ra = 286.13;
+                dec = 63.87;
+                w = 84.176 + (14.1844 * d);
+                break;
+
+            case Body.Mercury:
+                ra = 281.0103 - (0.0328 * T);
+                dec = 61.4155 - (0.0049 * T);
+                w = (
+                    329.5988
+                    + (6.1385108 * d)
+                    + (0.01067257 * Math.Sin(DEG2RAD*(174.7910857 + 4.092335*d)))
+                    - (0.00112309 * Math.Sin(DEG2RAD*(349.5821714 + 8.184670*d)))
+                    - (0.00011040 * Math.Sin(DEG2RAD*(164.3732571 + 12.277005*d)))
+                    - (0.00002539 * Math.Sin(DEG2RAD*(339.1643429 + 16.369340*d)))
+                    - (0.00000571 * Math.Sin(DEG2RAD*(153.9554286 + 20.461675*d)))
+                );
+                break;
+
+            case Body.Venus:
+                ra = 272.76;
+                dec = 67.16;
+                w = 160.20 - (1.4813688 * d);
+                break;
+
+            case Body.Earth:
+                return EarthRotationAxis(time);
+
+            case Body.Mars:
+                ra = (
+                    317.269202 - 0.10927547*T
+                    + 0.000068 * Math.Sin(DEG2RAD*(198.991226 + 19139.4819985*T))
+                    + 0.000238 * Math.Sin(DEG2RAD*(226.292679 + 38280.8511281*T))
+                    + 0.000052 * Math.Sin(DEG2RAD*(249.663391 + 57420.7251593*T))
+                    + 0.000009 * Math.Sin(DEG2RAD*(266.183510 + 76560.6367950*T))
+                    + 0.419057 * Math.Sin(DEG2RAD*(79.398797 + 0.5042615*T))
+                );
+
+                dec = (
+                    54.432516 - 0.05827105*T
+                    + 0.000051*Math.Cos(DEG2RAD*(122.433576 + 19139.9407476*T))
+                    + 0.000141*Math.Cos(DEG2RAD*(43.058401 + 38280.8753272*T))
+                    + 0.000031*Math.Cos(DEG2RAD*(57.663379 + 57420.7517205*T))
+                    + 0.000005*Math.Cos(DEG2RAD*(79.476401 + 76560.6495004*T))
+                    + 1.591274*Math.Cos(DEG2RAD*(166.325722 + 0.5042615*T))
+                );
+
+                w = (
+                    176.049863 + 350.891982443297*d
+                    + 0.000145*Math.Sin(DEG2RAD*(129.071773 + 19140.0328244*T))
+                    + 0.000157*Math.Sin(DEG2RAD*(36.352167 + 38281.0473591*T))
+                    + 0.000040*Math.Sin(DEG2RAD*(56.668646 + 57420.9295360*T))
+                    + 0.000001*Math.Sin(DEG2RAD*(67.364003 + 76560.2552215*T))
+                    + 0.000001*Math.Sin(DEG2RAD*(104.792680 + 95700.4387578*T))
+                    + 0.584542*Math.Sin(DEG2RAD*(95.391654 + 0.5042615*T))
+                );
+                break;
+
+            case Body.Jupiter:
+                double Ja = DEG2RAD*(99.360714 + 4850.4046*T);
+                double Jb = DEG2RAD*(175.895369 + 1191.9605*T);
+                double Jc = DEG2RAD*(300.323162 + 262.5475*T);
+                double Jd = DEG2RAD*(114.012305 + 6070.2476*T);
+                double Je = DEG2RAD*(49.511251 + 64.3000*T);
+
+                ra = (
+                    268.056595 - 0.006499*T
+                    + 0.000117*Math.Sin(Ja)
+                    + 0.000938*Math.Sin(Jb)
+                    + 0.001432*Math.Sin(Jc)
+                    + 0.000030*Math.Sin(Jd)
+                    + 0.002150*Math.Sin(Je)
+                );
+
+                dec = (
+                    64.495303 + 0.002413*T
+                    + 0.000050*Math.Cos(Ja)
+                    + 0.000404*Math.Cos(Jb)
+                    + 0.000617*Math.Cos(Jc)
+                    - 0.000013*Math.Cos(Jd)
+                    + 0.000926*Math.Cos(Je)
+                );
+
+                w = 284.95 + 870.536*d;
+                break;
+
+            case Body.Saturn:
+                ra = 40.589 - 0.036*T;
+                dec = 83.537 - 0.004*T;
+                w = 38.90 + 810.7939024*d;
+                break;
+
+            case Body.Uranus:
+                ra = 257.311;
+                dec = -15.175;
+                w = 203.81 - 501.1600928*d;
+                break;
+
+            case Body.Neptune:
+                double N = DEG2RAD*(357.85 + 52.316*T);
+                ra = 299.36 + 0.70*Math.Sin(N);
+                dec = 43.46 - 0.51*Math.Cos(N);
+                w = 249.978 + 541.1397757*d - 0.48*Math.Sin(N);
+                break;
+
+            case Body.Pluto:
+                ra = 132.993;
+                dec = -6.163;
+                w = 302.695 + 56.3625225*d;
+                break;
+
+            default:
+                throw new InvalidBodyException(body);
+            }
+
+            AxisInfo axis;
+            axis.ra = ra / 15.0;      // convert degrees to sidereal hours
+            axis.dec = dec;
+            axis.spin = w;
+
+            // Calculate the north pole vector using the given angles.
+            double radlat = dec * DEG2RAD;
+            double radlon = ra * DEG2RAD;
+            double rcoslat = Math.Cos(radlat);
+            axis.north = new AstroVector(
+                rcoslat * Math.Cos(radlon),
+                rcoslat * Math.Sin(radlon),
+                Math.Sin(radlat),
+                time
+            );
+
+            return axis;
+        }
 
         /// <summary>Calculates a rotation matrix from equatorial J2000 (EQJ) to ecliptic J2000 (ECL).</summary>
         /// <remarks>

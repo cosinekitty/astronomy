@@ -10450,6 +10450,9 @@ static astro_axis_t EarthRotationAxis(astro_time_t time)
 /**
  * @brief Calculates information about a body's rotation axis at a given time.
  *
+ * Calculates the orientation of a body's rotation axis, along with
+ * the rotation angle of its prime meridian, at a given moment in time.
+ *
  * This function uses formulas standardized by the IAU Working Group
  * on Cartographics and Rotational Elements 2015 report, as described
  * in the following document:
@@ -10459,7 +10462,9 @@ static astro_axis_t EarthRotationAxis(astro_time_t time)
  * See #astro_axis_t for more detailed information.
  *
  * @param body
- *      The body whose rotation axis is to be found.
+ *      The body whose rotation axis is to be found. The supported bodies are the Sun and
+ *      the planets: `BODY_SUN`, `BODY_MERCURY`, `BODY_VENUS`, `BODY_EARTH`, `BODY_MARS`,
+ *      `BODY_JUPITER`, `BODY_SATURN`, `BODY_URANUS`, `BODY_NEPTUNE`, `BODY_PLUTO`.
  *
  * @param time
  *      The time for which the body's rotation axis is to be found.
