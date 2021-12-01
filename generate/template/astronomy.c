@@ -8712,6 +8712,50 @@ void Astronomy_Reset(void)
 }
 
 
+static astro_axis_t EarthRotationAxis(astro_time_t time)
+{
+    astro_axis_t axis;
+    double pos1[3];
+    double pos2[3];
+    astro_equatorial_t equ;
+
+    /*
+        Unlike the other planets, we have a model of precession and nutation
+        for the Earth's axis that provides a north pole vector.
+        So calculate the vector first, then derive the (RA,DEC) angles from the vector.
+    */
+
+    /* Start with a north pole vector in equator-of-date coordinates: (0,0,1). */
+    pos1[0] = 0.0;
+    pos1[1] = 0.0;
+    pos1[2] = 1.0;
+
+    /* Convert the vector into J2000 coordinates. */
+    nutation(pos1, &time, INTO_2000, pos2);
+    precession(pos2, time, INTO_2000, pos1);
+    axis.north.x = pos1[0];
+    axis.north.y = pos1[1];
+    axis.north.z = pos1[2];
+    axis.north.t = time;
+    axis.north.status = ASTRO_SUCCESS;
+
+    /* Derive angular values: right ascension and declination. */
+    equ = Astronomy_EquatorFromVector(axis.north);
+    if (equ.status != ASTRO_SUCCESS)
+        return AxisErr(equ.status);
+    axis.ra = equ.ra;
+    axis.dec = equ.dec;
+
+    /* Use a modified version of the era() function that does not trim to 0..360 degrees. */
+    /* This expression is also corrected to give the correct angle at the J2000 epoch. */
+    axis.spin = 190.41375788700253 + (360.9856122880876 * time.ut);
+
+    axis.status = ASTRO_SUCCESS;
+
+    return axis;
+}
+
+
 /**
  * @brief Calculates information about a body's rotation axis at a given time.
  *
@@ -8735,10 +8779,10 @@ astro_axis_t Astronomy_RotationAxis(astro_body_t body, astro_time_t time)
 {
     astro_axis_t axis;
     double ra, dec, w;
-    double d = time.tt;
-    double T = d / 36525.0;
     double radlat, radlon, rcoslat;
     double Ja, Jb, Jc, Jd, Je, N;
+    const double d = time.tt;
+    const double T = d / 36525.0;
 
     switch (body)
     {
@@ -8767,6 +8811,9 @@ astro_axis_t Astronomy_RotationAxis(astro_body_t body, astro_time_t time)
         dec = 67.16;
         w = 160.20 - (1.4813688 * d);
         break;
+
+    case BODY_EARTH:
+        return EarthRotationAxis(time);
 
     case BODY_MARS:
         ra = (
@@ -8872,8 +8919,6 @@ astro_axis_t Astronomy_RotationAxis(astro_body_t body, astro_time_t time)
     axis.status = ASTRO_SUCCESS;
     return axis;
 }
-
-
 
 #ifdef __cplusplus
 }
