@@ -329,18 +329,6 @@ typedef enum
 astro_body_t;
 
 /**
- * \def MIN_BODY
- * @brief Minimum valid astro_body_t value; useful for iteration.
- */
-#define MIN_BODY    BODY_MERCURY
-
-/**
- * \def MAX_BODY
- * @brief Maximum valid astro_body_t value; useful for iteration.
- */
-#define MAX_BODY    BODY_SSB
-
-/**
  * @brief The location of an observer on (or near) the surface of the Earth.
  *
  * This structure is passed to functions that calculate phenomena as observed

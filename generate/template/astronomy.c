@@ -5081,9 +5081,6 @@ astro_hour_angle_t Astronomy_SearchHourAngle(
     astro_hour_angle_t result;
     double delta_sidereal_hours, delta_days, gast;
 
-    if (body < MIN_BODY || body > MAX_BODY)
-        return HourAngleError(ASTRO_INVALID_BODY);
-
     if (body == BODY_EARTH)
         return HourAngleError(ASTRO_EARTH_NOT_ALLOWED);
 

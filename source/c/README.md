@@ -2856,36 +2856,6 @@ This is the inverse function of [`Astronomy_ObserverVector`](#Astronomy_Observer
 
 ---
 
-<a name="MAX_BODY"></a>
-### `MAX_BODY`
-
-**Maximum valid astro_body_t value; useful for iteration.** 
-
-
-
-```C
-#define MAX_BODY  BODY_SSB
-```
-
-
-
----
-
-<a name="MIN_BODY"></a>
-### `MIN_BODY`
-
-**Minimum valid astro_body_t value; useful for iteration.** 
-
-
-
-```C
-#define MIN_BODY  BODY_MERCURY
-```
-
-
-
----
-
 <a name="NUM_JUPITER_MOONS"></a>
 ### `NUM_JUPITER_MOONS`
 
