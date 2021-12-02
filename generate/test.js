@@ -2491,8 +2491,69 @@ function LibrationTest() {
 }
 
 
+function AxisTest() {
+    if (0 !== AxisTestBody(Astronomy.Body.Sun,      "axis/Sun.txt",       0.0))        return 1;
+    if (0 !== AxisTestBody(Astronomy.Body.Mercury,  "axis/Mercury.txt",   0.074340))   return 1;
+    if (0 !== AxisTestBody(Astronomy.Body.Venus,    "axis/Venus.txt",     0.0))        return 1;
+    if (0 !== AxisTestBody(Astronomy.Body.Earth,    "axis/Earth.txt",     0.000591))   return 1;
+    if (0 !== AxisTestBody(Astronomy.Body.Mars,     "axis/Mars.txt",      0.075323))   return 1;
+    if (0 !== AxisTestBody(Astronomy.Body.Jupiter,  "axis/Jupiter.txt",   0.000324))   return 1;
+    if (0 !== AxisTestBody(Astronomy.Body.Saturn,   "axis/Saturn.txt",    0.000304))   return 1;
+    if (0 !== AxisTestBody(Astronomy.Body.Uranus,   "axis/Uranus.txt",    0.0))        return 1;
+    if (0 !== AxisTestBody(Astronomy.Body.Neptune,  "axis/Neptune.txt",   0.000464))   return 1;
+    if (0 !== AxisTestBody(Astronomy.Body.Pluto,    "axis/Pluto.txt",     0.0))        return 1;
+    console.log("JS AxisTest: PASS");
+    return 0;
+}
+
+
+function AxisTestBody(body, filename, arcmin_tolerance) {
+    const lines = ReadLines(filename);
+    let max_arcmin = 0;
+    let lnum = 0;
+    let count = 0;
+    let found_data = false;
+    for (let line of lines) {
+        ++lnum;
+        if (!found_data) {
+            if (line === '$$SOE')
+                found_data = true;
+        } else {
+            if (line === '$$EOE')
+                break;
+
+            const token = line.trim().split(/\s+/);
+            // [ '1970-Jan-01', '00:00', '2440587.500000000', '281.01954', '61.41577' ]
+            if (token.length !== 5) {
+                console.error(`JS AxisBodyTest(${filename} line ${lnum}): expected 5 tokens, found ${tokens.length}`);
+                return 1;
+            }
+            const jd = float(token[2]);
+            const ra = float(token[3]);
+            const dec = float(token[4]);
+            const time = Astronomy.MakeTime(jd - 2451545.0);
+            const axis = Astronomy.RotationAxis(body, time);
+            const sphere = new Astronomy.Spherical(dec, ra, 1);
+            const north = Astronomy.VectorFromSphere(sphere, time);
+            const arcmin = 60 * Astronomy.AngleBetween(north, axis.north);
+            if (arcmin > max_arcmin)
+                max_arcmin = arcmin;
+
+            ++count;
+        }
+    }
+    if (Verbose) console.debug(`JS AxisTestBody(${body}): ${count} test cases, max arcmin error = ${max_arcmin}.`);
+    if (max_arcmin > arcmin_tolerance) {
+        console.log(`JS AxisTestBody(${body}): EXCESSIVE ERROR = ${max_arcmin} arcmin.`);
+        return 1;
+    }
+    return 0;
+}
+
+
 const UnitTests = {
     aberration:             AberrationTest,
+    axis:                   AxisTest,
     barystate:              BaryStateTest,
     constellation:          Constellation,
     elongation:             Elongation,

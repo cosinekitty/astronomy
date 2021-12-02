@@ -35,7 +35,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.HelioState = exports.BaryState = exports.GeoVector = exports.HelioDistance = exports.HelioVector = exports.JupiterMoons = exports.JupiterMoonsInfo = exports.GeoEmbState = exports.GeoMoonState = exports.GeoMoon = exports.Ecliptic = exports.ObserverGravity = exports.VectorObserver = exports.ObserverState = exports.ObserverVector = exports.Equator = exports.SunPosition = exports.Observer = exports.Horizon = exports.EclipticCoordinates = exports.HorizontalCoordinates = exports.MakeRotation = exports.RotationMatrix = exports.EquatorialCoordinates = exports.Spherical = exports.StateVector = exports.Vector = exports.Libration = exports.LibrationInfo = exports.CalcMoonCount = exports.MakeTime = exports.AstroTime = exports.SetDeltaTFunction = exports.DeltaT_JplHorizons = exports.DeltaT_EspenakMeeus = exports.Body = exports.AngleBetween = exports.CALLISTO_RADIUS_KM = exports.GANYMEDE_RADIUS_KM = exports.EUROPA_RADIUS_KM = exports.IO_RADIUS_KM = exports.JUPITER_MEAN_RADIUS_KM = exports.JUPITER_POLAR_RADIUS_KM = exports.JUPITER_EQUATORIAL_RADIUS_KM = exports.RAD2HOUR = exports.RAD2DEG = exports.HOUR2RAD = exports.DEG2RAD = exports.KM_PER_AU = exports.C_AUDAY = void 0;
 exports.Rotation_EQD_ECL = exports.Rotation_EQJ_HOR = exports.Rotation_HOR_EQJ = exports.Rotation_HOR_EQD = exports.Rotation_EQD_HOR = exports.Rotation_EQD_EQJ = exports.Rotation_EQJ_EQD = exports.Rotation_ECL_EQJ = exports.Rotation_EQJ_ECL = exports.RotateState = exports.RotateVector = exports.InverseRefraction = exports.Refraction = exports.VectorFromHorizon = exports.HorizonFromVector = exports.SphereFromVector = exports.EquatorFromVector = exports.VectorFromSphere = exports.Pivot = exports.IdentityMatrix = exports.CombineRotation = exports.InverseRotation = exports.NextPlanetApsis = exports.SearchPlanetApsis = exports.NextLunarApsis = exports.SearchLunarApsis = exports.Apsis = exports.SearchPeakMagnitude = exports.SearchMaxElongation = exports.Elongation = exports.ElongationEvent = exports.Seasons = exports.SeasonInfo = exports.SearchHourAngle = exports.HourAngleEvent = exports.SearchAltitude = exports.SearchRiseSet = exports.NextMoonQuarter = exports.SearchMoonQuarter = exports.MoonQuarter = exports.SearchMoonPhase = exports.MoonPhase = exports.SearchRelativeLongitude = exports.Illumination = exports.IlluminationInfo = exports.EclipticLongitude = exports.AngleFromSun = exports.PairLongitude = exports.SearchSunLongitude = exports.Search = void 0;
-exports.NextTransit = exports.SearchTransit = exports.TransitInfo = exports.NextLocalSolarEclipse = exports.SearchLocalSolarEclipse = exports.LocalSolarEclipseInfo = exports.EclipseEvent = exports.NextGlobalSolarEclipse = exports.SearchGlobalSolarEclipse = exports.NextLunarEclipse = exports.GlobalSolarEclipseInfo = exports.SearchLunarEclipse = exports.LunarEclipseInfo = exports.Constellation = exports.ConstellationInfo = exports.Rotation_GAL_EQJ = exports.Rotation_EQJ_GAL = exports.Rotation_HOR_ECL = exports.Rotation_ECL_HOR = exports.Rotation_ECL_EQD = void 0;
+exports.RotationAxis = exports.AxisInfo = exports.NextTransit = exports.SearchTransit = exports.TransitInfo = exports.NextLocalSolarEclipse = exports.SearchLocalSolarEclipse = exports.LocalSolarEclipseInfo = exports.EclipseEvent = exports.NextGlobalSolarEclipse = exports.SearchGlobalSolarEclipse = exports.NextLunarEclipse = exports.GlobalSolarEclipseInfo = exports.SearchLunarEclipse = exports.LunarEclipseInfo = exports.Constellation = exports.ConstellationInfo = exports.Rotation_GAL_EQJ = exports.Rotation_EQJ_GAL = exports.Rotation_HOR_ECL = exports.Rotation_ECL_HOR = exports.Rotation_ECL_EQD = void 0;
 /**
  * @brief The speed of light in AU/day.
  */
@@ -8016,3 +8016,187 @@ function NextTransit(body, prevTransitTime) {
     return SearchTransit(body, startTime);
 }
 exports.NextTransit = NextTransit;
+/**
+ * @brief Information about a body's rotation axis at a given time.
+ *
+ * This structure is returned by {@link RotationAxis} to report
+ * the orientation of a body's rotation axis at a given moment in time.
+ * The axis is specified by the direction in space that the body's north pole
+ * points, using angular equatorial coordinates in the J2000 system (EQJ).
+ *
+ * Thus `ra` is the right ascension, and `dec` is the declination, of the
+ * body's north pole vector at the given moment in time. The north pole
+ * of a body is defined as the pole that lies on the north side of the
+ * [Solar System's invariable plane](https://en.wikipedia.org/wiki/Invariable_plane),
+ * regardless of the body's direction of rotation.
+ *
+ * The `spin` field indicates the angular position of a prime meridian
+ * arbitrarily recommended for the body by the International Astronomical
+ * Union (IAU).
+ *
+ * The fields `ra`, `dec`, and `spin` correspond to the variables
+ * α0, δ0, and W, respectively, from
+ * [Report of the IAU Working Group on Cartographic Coordinates and Rotational Elements: 2015](https://astropedia.astrogeology.usgs.gov/download/Docs/WGCCRE/WGCCRE2015reprint.pdf).
+ *
+ * @property {number} ra
+ *      The J2000 right ascension of the body's north pole direction, in sidereal hours.
+ *
+ * @property {number} dec
+ *      The J2000 declination of the body's north pole direction, in degrees.
+ *
+ * @property {number} spin
+ *      Rotation angle of the body's prime meridian, in degrees.
+ *
+ * @property {Vector} north
+ *      A J2000 dimensionless unit vector pointing in the direction of the body's north pole.
+ */
+class AxisInfo {
+    constructor(ra, dec, spin, north) {
+        this.ra = ra;
+        this.dec = dec;
+        this.spin = spin;
+        this.north = north;
+    }
+}
+exports.AxisInfo = AxisInfo;
+function EarthRotationAxis(time) {
+    // Unlike the other planets, we have a model of precession and nutation
+    // for the Earth's axis that provides a north pole vector.
+    // So calculate the vector first, then derive the (RA,DEC) angles from the vector.
+    // Start with a north pole vector in equator-of-date coordinates: (0,0,1).
+    // Convert the vector into J2000 coordinates.
+    const pos2 = nutation([0, 0, 1], time, PrecessDirection.Into2000);
+    const nvec = precession(pos2, time, PrecessDirection.Into2000);
+    const north = new Vector(nvec[0], nvec[1], nvec[2], time);
+    // Derive angular values: right ascension and declination.
+    const equ = EquatorFromVector(north);
+    // Use a modified version of the era() function that does not trim to 0..360 degrees.
+    // This expression is also corrected to give the correct angle at the J2000 epoch.
+    const spin = 190.41375788700253 + (360.9856122880876 * time.ut);
+    return new AxisInfo(equ.ra, equ.dec, spin, north);
+}
+/**
+ * @brief Calculates information about a body's rotation axis at a given time.
+ * Calculates the orientation of a body's rotation axis, along with
+ * the rotation angle of its prime meridian, at a given moment in time.
+ *
+ * This function uses formulas standardized by the IAU Working Group
+ * on Cartographics and Rotational Elements 2015 report, as described
+ * in the following document:
+ *
+ * https://astropedia.astrogeology.usgs.gov/download/Docs/WGCCRE/WGCCRE2015reprint.pdf
+ *
+ * See {@link AxisInfo} for more detailed information.
+ *
+ * @param {Body} body
+ *      One of the following values:
+ *      `Body.Sun`, `Body.Mercury`, `Body.Venus`, `Body.Earth`, `Body.Mars`,
+ *      `Body.Jupiter`, `Body.Saturn`, `Body.Uranus`, `Body.Neptune`, `Body.Pluto`.
+ *
+ * @param {FlexibleDateTime} date
+ *      The time at which to calculate the body's rotation axis.
+ *
+ * @returns {AxisInfo}
+ */
+function RotationAxis(body, date) {
+    const time = MakeTime(date);
+    const d = time.tt;
+    const T = d / 36525.0;
+    let ra, dec, w;
+    switch (body) {
+        case Body.Sun:
+            ra = 286.13;
+            dec = 63.87;
+            w = 84.176 + (14.1844 * d);
+            break;
+        case Body.Mercury:
+            ra = 281.0103 - (0.0328 * T);
+            dec = 61.4155 - (0.0049 * T);
+            w = (329.5988
+                + (6.1385108 * d)
+                + (0.01067257 * Math.sin(exports.DEG2RAD * (174.7910857 + 4.092335 * d)))
+                - (0.00112309 * Math.sin(exports.DEG2RAD * (349.5821714 + 8.184670 * d)))
+                - (0.00011040 * Math.sin(exports.DEG2RAD * (164.3732571 + 12.277005 * d)))
+                - (0.00002539 * Math.sin(exports.DEG2RAD * (339.1643429 + 16.369340 * d)))
+                - (0.00000571 * Math.sin(exports.DEG2RAD * (153.9554286 + 20.461675 * d))));
+            break;
+        case Body.Venus:
+            ra = 272.76;
+            dec = 67.16;
+            w = 160.20 - (1.4813688 * d);
+            break;
+        case Body.Earth:
+            return EarthRotationAxis(time);
+        case Body.Mars:
+            ra = (317.269202 - 0.10927547 * T
+                + 0.000068 * Math.sin(exports.DEG2RAD * (198.991226 + 19139.4819985 * T))
+                + 0.000238 * Math.sin(exports.DEG2RAD * (226.292679 + 38280.8511281 * T))
+                + 0.000052 * Math.sin(exports.DEG2RAD * (249.663391 + 57420.7251593 * T))
+                + 0.000009 * Math.sin(exports.DEG2RAD * (266.183510 + 76560.6367950 * T))
+                + 0.419057 * Math.sin(exports.DEG2RAD * (79.398797 + 0.5042615 * T)));
+            dec = (54.432516 - 0.05827105 * T
+                + 0.000051 * Math.cos(exports.DEG2RAD * (122.433576 + 19139.9407476 * T))
+                + 0.000141 * Math.cos(exports.DEG2RAD * (43.058401 + 38280.8753272 * T))
+                + 0.000031 * Math.cos(exports.DEG2RAD * (57.663379 + 57420.7517205 * T))
+                + 0.000005 * Math.cos(exports.DEG2RAD * (79.476401 + 76560.6495004 * T))
+                + 1.591274 * Math.cos(exports.DEG2RAD * (166.325722 + 0.5042615 * T)));
+            w = (176.049863 + 350.891982443297 * d
+                + 0.000145 * Math.sin(exports.DEG2RAD * (129.071773 + 19140.0328244 * T))
+                + 0.000157 * Math.sin(exports.DEG2RAD * (36.352167 + 38281.0473591 * T))
+                + 0.000040 * Math.sin(exports.DEG2RAD * (56.668646 + 57420.9295360 * T))
+                + 0.000001 * Math.sin(exports.DEG2RAD * (67.364003 + 76560.2552215 * T))
+                + 0.000001 * Math.sin(exports.DEG2RAD * (104.792680 + 95700.4387578 * T))
+                + 0.584542 * Math.sin(exports.DEG2RAD * (95.391654 + 0.5042615 * T)));
+            break;
+        case Body.Jupiter:
+            const Ja = exports.DEG2RAD * (99.360714 + 4850.4046 * T);
+            const Jb = exports.DEG2RAD * (175.895369 + 1191.9605 * T);
+            const Jc = exports.DEG2RAD * (300.323162 + 262.5475 * T);
+            const Jd = exports.DEG2RAD * (114.012305 + 6070.2476 * T);
+            const Je = exports.DEG2RAD * (49.511251 + 64.3000 * T);
+            ra = (268.056595 - 0.006499 * T
+                + 0.000117 * Math.sin(Ja)
+                + 0.000938 * Math.sin(Jb)
+                + 0.001432 * Math.sin(Jc)
+                + 0.000030 * Math.sin(Jd)
+                + 0.002150 * Math.sin(Je));
+            dec = (64.495303 + 0.002413 * T
+                + 0.000050 * Math.cos(Ja)
+                + 0.000404 * Math.cos(Jb)
+                + 0.000617 * Math.cos(Jc)
+                - 0.000013 * Math.cos(Jd)
+                + 0.000926 * Math.cos(Je));
+            w = 284.95 + 870.536 * d;
+            break;
+        case Body.Saturn:
+            ra = 40.589 - 0.036 * T;
+            dec = 83.537 - 0.004 * T;
+            w = 38.90 + 810.7939024 * d;
+            break;
+        case Body.Uranus:
+            ra = 257.311;
+            dec = -15.175;
+            w = 203.81 - 501.1600928 * d;
+            break;
+        case Body.Neptune:
+            const N = exports.DEG2RAD * (357.85 + 52.316 * T);
+            ra = 299.36 + 0.70 * Math.sin(N);
+            dec = 43.46 - 0.51 * Math.cos(N);
+            w = 249.978 + 541.1397757 * d - 0.48 * Math.sin(N);
+            break;
+        case Body.Pluto:
+            ra = 132.993;
+            dec = -6.163;
+            w = 302.695 + 56.3625225 * d;
+            break;
+        default:
+            throw `Invalid body: ${body}`;
+    }
+    // Calculate the north pole vector using the given angles.
+    const radlat = dec * exports.DEG2RAD;
+    const radlon = ra * exports.DEG2RAD;
+    const rcoslat = Math.cos(radlat);
+    const north = new Vector(rcoslat * Math.cos(radlon), rcoslat * Math.sin(radlon), Math.sin(radlat), time);
+    return new AxisInfo(ra / 15, dec, w, north);
+}
+exports.RotationAxis = RotationAxis;

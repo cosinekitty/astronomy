@@ -751,6 +751,42 @@ The calculations are performed from the point of view of a geocentric observer.
 
 * * *
 
+<a name="AxisInfo"></a>
+
+## AxisInfo
+**Kind**: global class  
+**Brief**: Information about a body's rotation axis at a given time.
+
+This structure is returned by [RotationAxis](#RotationAxis) to report
+the orientation of a body's rotation axis at a given moment in time.
+The axis is specified by the direction in space that the body's north pole
+points, using angular equatorial coordinates in the J2000 system (EQJ).
+
+Thus `ra` is the right ascension, and `dec` is the declination, of the
+body's north pole vector at the given moment in time. The north pole
+of a body is defined as the pole that lies on the north side of the
+[Solar System's invariable plane](https://en.wikipedia.org/wiki/Invariable_plane),
+regardless of the body's direction of rotation.
+
+The `spin` field indicates the angular position of a prime meridian
+arbitrarily recommended for the body by the International Astronomical
+Union (IAU).
+
+The fields `ra`, `dec`, and `spin` correspond to the variables
+α0, δ0, and W, respectively, from
+[Report of the IAU Working Group on Cartographic Coordinates and Rotational Elements: 2015](https://astropedia.astrogeology.usgs.gov/download/Docs/WGCCRE/WGCCRE2015reprint.pdf).  
+**Properties**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| ra | <code>number</code> | The J2000 right ascension of the body's north pole direction, in sidereal hours. |
+| dec | <code>number</code> | The J2000 declination of the body's north pole direction, in degrees. |
+| spin | <code>number</code> | Rotation angle of the body's prime meridian, in degrees. |
+| north | [<code>Vector</code>](#Vector) | A J2000 dimensionless unit vector pointing in the direction of the body's north pole. |
+
+
+* * *
+
 <a name="C_AUDAY"></a>
 
 ## C\_AUDAY
@@ -2565,6 +2601,30 @@ Keep calling this function as many times as you want to keep finding more transi
 | --- | --- | --- |
 | body | [<code>Body</code>](#Body) | The planet whose transit is to be found. Must be `"Mercury"` or `"Venus"`. |
 | prevTransitTime | [<code>AstroTime</code>](#AstroTime) | A date and time near the previous transit. |
+
+
+* * *
+
+<a name="RotationAxis"></a>
+
+## RotationAxis(body, date) ⇒ [<code>AxisInfo</code>](#AxisInfo)
+**Kind**: global function  
+**Brief**: Calculates information about a body's rotation axis at a given time.
+Calculates the orientation of a body's rotation axis, along with
+the rotation angle of its prime meridian, at a given moment in time.
+
+This function uses formulas standardized by the IAU Working Group
+on Cartographics and Rotational Elements 2015 report, as described
+in the following document:
+
+https://astropedia.astrogeology.usgs.gov/download/Docs/WGCCRE/WGCCRE2015reprint.pdf
+
+See [AxisInfo](#AxisInfo) for more detailed information.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| body | [<code>Body</code>](#Body) | One of the following values:      `Body.Sun`, `Body.Mercury`, `Body.Venus`, `Body.Earth`, `Body.Mars`,      `Body.Jupiter`, `Body.Saturn`, `Body.Uranus`, `Body.Neptune`, `Body.Pluto`. |
+| date | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The time at which to calculate the body's rotation axis. |
 
 
 * * *
