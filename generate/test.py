@@ -2237,8 +2237,59 @@ def Libration():
 
 #-----------------------------------------------------------------------------------------------------------
 
+def Axis():
+    if AxisTestBody(astronomy.Body.Sun,      'axis/Sun.txt',       0.0)      :  return 1
+    if AxisTestBody(astronomy.Body.Mercury,  'axis/Mercury.txt',   0.074340) :  return 1
+    if AxisTestBody(astronomy.Body.Venus,    'axis/Venus.txt',     0.0)      :  return 1
+    if AxisTestBody(astronomy.Body.Earth,    'axis/Earth.txt',     0.000591) :  return 1
+    if AxisTestBody(astronomy.Body.Mars,     'axis/Mars.txt',      0.075323) :  return 1
+    if AxisTestBody(astronomy.Body.Jupiter,  'axis/Jupiter.txt',   0.000324) :  return 1
+    if AxisTestBody(astronomy.Body.Saturn,   'axis/Saturn.txt',    0.000304) :  return 1
+    if AxisTestBody(astronomy.Body.Uranus,   'axis/Uranus.txt',    0.0)      :  return 1
+    if AxisTestBody(astronomy.Body.Neptune,  'axis/Neptune.txt',   0.000464) :  return 1
+    if AxisTestBody(astronomy.Body.Pluto,    'axis/Pluto.txt',     0.0)      :  return 1
+    print('PY AxisTest: PASS')
+    return 0
+
+def AxisTestBody(body, filename, arcmin_tolerance):
+    max_arcmin = 0
+    lnum = 0
+    count = 0
+    found_data = False
+    with open(filename, 'rt') as infile:
+        for line in infile:
+            line = line.strip()
+            lnum += 1
+            if not found_data:
+                if line == '$$SOE':
+                    found_data = True
+            else:
+                if line == '$$EOE':
+                    break
+                token = line.split()
+                # [ '1970-Jan-01', '00:00', '2440587.500000000', '281.01954', '61.41577' ]
+                jd = float(token[2])
+                ra = float(token[3])
+                dec = float(token[4])
+                time = astronomy.Time(jd - 2451545.0)
+                axis = astronomy.RotationAxis(body, time)
+                sphere = astronomy.Spherical(dec, ra, 1.0)
+                north = astronomy.VectorFromSphere(sphere, time)
+                arcmin = 60.0 * astronomy.AngleBetween(north, axis.north)
+                if arcmin > max_arcmin:
+                    max_arcmin = arcmin
+                count += 1
+    Debug('PY AxisTestBody({}): {} test cases, max arcmin error = {}.'.format(body, count, max_arcmin))
+    if max_arcmin > arcmin_tolerance:
+        print('PY AxisTestBody({}): EXCESSIVE ERROR = {}'.format(body, max_arcmin))
+        return 1
+    return 0
+
+#-----------------------------------------------------------------------------------------------------------
+
 UnitTests = {
     'aberration':               Aberration,
+    'axis':                     Axis,
     'barystate':                BaryState,
     'constellation':            Constellation,
     'elongation':               Elongation,

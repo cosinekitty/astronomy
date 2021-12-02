@@ -8925,3 +8925,212 @@ def Libration(time):
     bdash = math.degrees(bdash)
     bdash2 = sigma*math.cos(a) - rho*math.sin(a)
     return LibrationInfo(bdash + bdash2, ldash + ldash2, mlat, mlon, dist_km, diam_deg)
+
+
+class AxisInfo:
+    """Information about a body's rotation axis at a given time.
+
+    This structure is returned by #RotationAxis to report
+    the orientation of a body's rotation axis at a given moment in time.
+    The axis is specified by the direction in space that the body's north pole
+    points, using angular equatorial coordinates in the J2000 system (EQJ).
+
+    Thus `ra` is the right ascension, and `dec` is the declination, of the
+    body's north pole vector at the given moment in time. The north pole
+    of a body is defined as the pole that lies on the north side of the
+    [Solar System's invariable plane](https://en.wikipedia.org/wiki/Invariable_plane),
+    regardless of the body's direction of rotation.
+
+    The `spin` field indicates the angular position of a prime meridian
+    arbitrarily recommended for the body by the International Astronomical
+    Union (IAU).
+
+    The fields `ra`, `dec`, and `spin` correspond to the variables
+    α0, δ0, and W, respectively, from
+    [Report of the IAU Working Group on Cartographic Coordinates and Rotational Elements: 2015](https://astropedia.astrogeology.usgs.gov/download/Docs/WGCCRE/WGCCRE2015reprint.pdf).
+
+    The field `north` is a unit vector pointing in the direction of the body's north pole.
+    It is expressed in the equatorial J2000 system (EQJ).
+
+    Attributes
+    ----------
+    ra : float
+        The J2000 right ascension of the body's north pole direction, in sidereal hours.
+    dec : float
+        The J2000 declination of the body's north pole direction, in degrees.
+    spin : float
+        Rotation angle of the body's prime meridian, in degrees.
+    north : Vector
+        A J2000 dimensionless unit vector pointing in the direction of the body's north pole.
+    """
+    def __init__(self, ra, dec, spin, north):
+        self.ra = ra
+        self.dec = dec
+        self.spin = spin
+        self.north = north
+
+
+def _EarthRotationAxis(time):
+    # Unlike the other planets, we have a model of precession and nutation
+    # for the Earth's axis that provides a north pole vector.
+    # So calculate the vector first, then derive the (RA,DEC) angles from the vector.
+
+    # Start with a north pole vector in equator-of-date coordinates: (0,0,1).
+    # Convert the vector into J2000 coordinates.
+    pos2 = _nutation([0, 0, 1], time, _PrecessDir.Into2000)
+    nvec = _precession(pos2, time, _PrecessDir.Into2000)
+    north = Vector(nvec[0], nvec[1], nvec[2], time)
+
+    # Derive angular values: right ascension and declination.
+    equ = EquatorFromVector(north)
+
+    # Use a modified version of the era() function that does not trim to 0..360 degrees.
+    # This expression is also corrected to give the correct angle at the J2000 epoch.
+    spin = 190.41375788700253 + (360.9856122880876 * time.ut)
+
+    return AxisInfo(equ.ra, equ.dec, spin, north)
+
+
+def RotationAxis(body, time):
+    """Calculates information about a body's rotation axis at a given time.
+
+    Calculates the orientation of a body's rotation axis, along with
+    the rotation angle of its prime meridian, at a given moment in time.
+
+    This function uses formulas standardized by the IAU Working Group
+    on Cartographics and Rotational Elements 2015 report, as described
+    in the following document:
+
+    https://astropedia.astrogeology.usgs.gov/download/Docs/WGCCRE/WGCCRE2015reprint.pdf
+
+    See #AxisInfo for more detailed information.
+
+    Parameters:
+    body : Body
+        One of the following values:
+        `Body.Sun`, `Body.Mercury`, `Body.Venus`, `Body.Earth`, `Body.Mars`,
+        `Body.Jupiter`, `Body.Saturn`, `Body.Uranus`, `Body.Neptune`, `Body.Pluto`.
+
+    time : Time
+        The time at which to calculate the body's rotation axis.
+
+    Returns
+    -------
+    AxisInfo
+        The body's north pole direction and angle of its prime meridian.
+    """
+    d = time.tt
+    T = d / 36525.0
+    if body == Body.Sun:
+        ra = 286.13
+        dec = 63.87
+        w = 84.176 + (14.1844 * d)
+    elif body == Body.Mercury:
+        ra = 281.0103 - (0.0328 * T)
+        dec = 61.4155 - (0.0049 * T)
+        w = (
+            329.5988
+            + (6.1385108 * d)
+            + (0.01067257 * math.sin(math.radians(174.7910857 + 4.092335*d)))
+            - (0.00112309 * math.sin(math.radians(349.5821714 + 8.184670*d)))
+            - (0.00011040 * math.sin(math.radians(164.3732571 + 12.277005*d)))
+            - (0.00002539 * math.sin(math.radians(339.1643429 + 16.369340*d)))
+            - (0.00000571 * math.sin(math.radians(153.9554286 + 20.461675*d)))
+        )
+    elif body == Body.Venus:
+        ra = 272.76
+        dec = 67.16
+        w = 160.20 - (1.4813688 * d)
+    elif body == Body.Earth:
+        return _EarthRotationAxis(time)
+    elif body == Body.Mars:
+        ra = (
+            317.269202 - 0.10927547*T
+            + 0.000068 * math.sin(math.radians(198.991226 + 19139.4819985*T))
+            + 0.000238 * math.sin(math.radians(226.292679 + 38280.8511281*T))
+            + 0.000052 * math.sin(math.radians(249.663391 + 57420.7251593*T))
+            + 0.000009 * math.sin(math.radians(266.183510 + 76560.6367950*T))
+            + 0.419057 * math.sin(math.radians(79.398797 + 0.5042615*T))
+        )
+
+        dec = (
+            54.432516 - 0.05827105*T
+            + 0.000051*math.cos(math.radians(122.433576 + 19139.9407476*T))
+            + 0.000141*math.cos(math.radians(43.058401 + 38280.8753272*T))
+            + 0.000031*math.cos(math.radians(57.663379 + 57420.7517205*T))
+            + 0.000005*math.cos(math.radians(79.476401 + 76560.6495004*T))
+            + 1.591274*math.cos(math.radians(166.325722 + 0.5042615*T))
+        )
+
+        w = (
+            176.049863 + 350.891982443297*d
+            + 0.000145*math.sin(math.radians(129.071773 + 19140.0328244*T))
+            + 0.000157*math.sin(math.radians(36.352167 + 38281.0473591*T))
+            + 0.000040*math.sin(math.radians(56.668646 + 57420.9295360*T))
+            + 0.000001*math.sin(math.radians(67.364003 + 76560.2552215*T))
+            + 0.000001*math.sin(math.radians(104.792680 + 95700.4387578*T))
+            + 0.584542*math.sin(math.radians(95.391654 + 0.5042615*T))
+        )
+
+    elif body == Body.Jupiter:
+        Ja = math.radians(99.360714 + 4850.4046*T)
+        Jb = math.radians(175.895369 + 1191.9605*T)
+        Jc = math.radians(300.323162 + 262.5475*T)
+        Jd = math.radians(114.012305 + 6070.2476*T)
+        Je = math.radians(49.511251 + 64.3000*T)
+
+        ra = (
+            268.056595 - 0.006499*T
+            + 0.000117*math.sin(Ja)
+            + 0.000938*math.sin(Jb)
+            + 0.001432*math.sin(Jc)
+            + 0.000030*math.sin(Jd)
+            + 0.002150*math.sin(Je)
+        )
+
+        dec = (
+            64.495303 + 0.002413*T
+            + 0.000050*math.cos(Ja)
+            + 0.000404*math.cos(Jb)
+            + 0.000617*math.cos(Jc)
+            - 0.000013*math.cos(Jd)
+            + 0.000926*math.cos(Je)
+        )
+
+        w = 284.95 + 870.536*d
+
+    elif body == Body.Saturn:
+        ra = 40.589 - 0.036*T
+        dec = 83.537 - 0.004*T
+        w = 38.90 + 810.7939024*d
+
+    elif body == Body.Uranus:
+        ra = 257.311
+        dec = -15.175
+        w = 203.81 - 501.1600928*d
+
+    elif body == Body.Neptune:
+        N = math.radians(357.85 + 52.316*T)
+        ra = 299.36 + 0.70*math.sin(N)
+        dec = 43.46 - 0.51*math.cos(N)
+        w = 249.978 + 541.1397757*d - 0.48*math.sin(N)
+
+    elif body == Body.Pluto:
+        ra = 132.993
+        dec = -6.163
+        w = 302.695 + 56.3625225*d
+
+    else:
+        raise InvalidBodyError()
+
+    # Calculate the north pole vector using the given angles.
+    radlat = math.radians(dec)
+    radlon = math.radians(ra)
+    rcoslat = math.cos(radlat)
+    north = Vector(
+        rcoslat * math.cos(radlon),
+        rcoslat * math.sin(radlon),
+        math.sin(radlat),
+        time
+    )
+    return AxisInfo(ra/15.0, dec, w, north)

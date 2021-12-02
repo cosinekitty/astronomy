@@ -3184,7 +3184,9 @@ Thus `ra` is the right ascension, and `dec` is the declination, of the body's no
 
 The `spin` field indicates the angular position of a prime meridian arbitrarily recommended for the body by the International Astronomical Union (IAU).
 
-The fields `ra`, `dec`, and `spin` correspond to the variables α0, δ0, and W, respectively, from [Report of the IAU Working Group on Cartographic Coordinates and Rotational Elements: 2015](https://astropedia.astrogeology.usgs.gov/download/Docs/WGCCRE/WGCCRE2015reprint.pdf). 
+The fields `ra`, `dec`, and `spin` correspond to the variables α0, δ0, and W, respectively, from [Report of the IAU Working Group on Cartographic Coordinates and Rotational Elements: 2015](https://astropedia.astrogeology.usgs.gov/download/Docs/WGCCRE/WGCCRE2015reprint.pdf).
+
+The field `north` is a unit vector pointing in the direction of the body's north pole. It is expressed in the equatorial J2000 system (EQJ). 
 
 | Type | Member | Description |
 | ---- | ------ | ----------- |

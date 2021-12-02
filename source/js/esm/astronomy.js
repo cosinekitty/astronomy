@@ -7928,6 +7928,8 @@ export function NextTransit(body, prevTransitTime) {
  * The fields `ra`, `dec`, and `spin` correspond to the variables
  * α0, δ0, and W, respectively, from
  * [Report of the IAU Working Group on Cartographic Coordinates and Rotational Elements: 2015](https://astropedia.astrogeology.usgs.gov/download/Docs/WGCCRE/WGCCRE2015reprint.pdf).
+ * The field `north` is a unit vector pointing in the direction of the body's north pole.
+ * It is expressed in the equatorial J2000 system (EQJ).
  *
  * @property {number} ra
  *      The J2000 right ascension of the body's north pole direction, in sidereal hours.
