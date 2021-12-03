@@ -3155,7 +3155,7 @@ namespace csharp_test
                     if (diff_diam > max_diff_diam)
                         max_diff_diam = diff_diam;
 
-                    if (diff_elon > 0.130)
+                    if (diff_elon > 0.133)
                     {
                         Console.WriteLine($"C# Libration({filename} line {lnum}): EXCESSIVE diff_elon = {diff_elon} arcmin");
                         return 1;
@@ -3167,7 +3167,7 @@ namespace csharp_test
                         return 1;
                     }
 
-                    if (diff_distance > 53.9)
+                    if (diff_distance > 54.4)
                     {
                         Console.WriteLine($"C# Libration({filename} line {lnum}): EXCESSIVE diff_distance = {diff_distance} km");
                         return 1;
@@ -3184,6 +3184,7 @@ namespace csharp_test
         {
             if (0 != Libration("../../libration/mooninfo_2020.txt")) return 1;
             if (0 != Libration("../../libration/mooninfo_2021.txt")) return 1;
+            if (0 != Libration("../../libration/mooninfo_2022.txt")) return 1;
             return 0;
         }
 

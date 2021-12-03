@@ -2209,7 +2209,7 @@ def LibrationFile(filename):
                 if diff_diam > max_diff_diam:
                     max_diff_diam = diff_diam
 
-                if diff_elon > 0.130:
+                if diff_elon > 0.133:
                     print('PY LibrationFile({} line {}): EXCESSIVE diff_elon = {}'.format(filename, lnum, diff_elon))
                     return 1
 
@@ -2217,7 +2217,7 @@ def LibrationFile(filename):
                     print('PY LibrationFile({} line {}): EXCESSIVE diff_elat = {}'.format(filename, lnum, diff_elat))
                     return 1
 
-                if diff_distance > 53.9:
+                if diff_distance > 54.4:
                     print('PY LibrationFile({} line {}): EXCESSIVE diff_distance = {}'.format(filename, lnum, diff_distance))
                     return 1
 
@@ -2229,11 +2229,12 @@ def LibrationFile(filename):
     return 0
 
 def Libration():
-    if 0 != LibrationFile('libration/mooninfo_2020.txt'):
-        return 1
-    if 0 != LibrationFile('libration/mooninfo_2021.txt'):
-        return 1
-    return 0
+    return (
+        LibrationFile('libration/mooninfo_2020.txt') or
+        LibrationFile('libration/mooninfo_2021.txt') or
+        LibrationFile('libration/mooninfo_2022.txt') or
+        0
+    )
 
 #-----------------------------------------------------------------------------------------------------------
 

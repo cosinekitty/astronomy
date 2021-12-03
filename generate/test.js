@@ -2460,7 +2460,7 @@ function Libration(filename) {
             if (diff_diam > max_diff_diam)
                 max_diff_diam = diff_diam;
 
-            if (diff_elon > 0.130) {
+            if (diff_elon > 0.133) {
                 console.error(`JS Libration(${filename} line ${lnum}): EXCESSIVE diff_elon = ${diff_elon} arcmin`);
                 return 1;
             }
@@ -2470,7 +2470,7 @@ function Libration(filename) {
                 return 1;
             }
 
-            if (diff_distance > 53.9) {
+            if (diff_distance > 54.4) {
                 console.error(`JS Libration(${filename} line ${lnum}): EXCESSIVE diff_distance = ${diff_distance} km`);
                 return 1;
             }
@@ -2486,6 +2486,7 @@ function LibrationTest() {
     return (
         Libration("libration/mooninfo_2020.txt") ||
         Libration("libration/mooninfo_2021.txt") ||
+        Libration("libration/mooninfo_2022.txt") ||
         0
     );
 }
