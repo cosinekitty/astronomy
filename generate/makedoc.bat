@@ -126,13 +126,16 @@ if errorlevel 1 (exit /b 1)
 check_internal_links.py ..\source\js\README.md
 if errorlevel 1 (exit /b 1)
 
-echo.Making documentation in HTML format for local viewing.
-if exist html (
-    rd /s/q html
-)
-call npm run docs:html
-if errorlevel 1 (
-    echo.FATAL: error in jsdoc
+if exist ..\tutorials (
+    echo.Making documentation in HTML format for local viewing.
+    if exist html (
+        rd /s/q html
+    )
+    call npm run docs:html
+    if errorlevel 1 (
+        echo.FATAL: error in jsdoc
+        exit /b 1
+    )
 )
 
 if exist disable_generate_c_docs (
