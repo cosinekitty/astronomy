@@ -390,7 +390,7 @@ def main():
     const_md, const_set = ConstantsMd(inPythonFileName)
     md = Markdown(module, const_md, const_set)
 
-    with open(outMarkdownFileName, 'wt') as outfile:
+    with open(outMarkdownFileName, 'wt', encoding='utf-8') as outfile:
         outfile.write(prefix)
         outfile.write(md)
 
