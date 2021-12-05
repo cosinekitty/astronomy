@@ -184,6 +184,9 @@ static const double SUN_RADIUS_KM  = 695700.0;
 #define MOON_POLAR_RADIUS_KM        1736.0
 #define MOON_EQUATORIAL_RADIUS_AU   (MOON_EQUATORIAL_RADIUS_KM / KM_PER_AU)
 
+/* The inclination of the moon's rotation axis to the ecliptic plane, in radians. */
+#define MOON_AXIS_INCLINATION_RADIANS    (DEG2RAD * 1.54242)
+
 static const double ASEC180 = 180.0 * 60.0 * 60.0;      /* arcseconds per 180 degrees (or pi radians) */
 static const double EARTH_MOON_MASS_RATIO = 81.30056;
 
@@ -2214,7 +2217,8 @@ astro_libration_t Astronomy_Libration(astro_time_t time)
     double t, t2, t3, t4;
     double f, omega, w, a, ldash, ldash2, bdash, bdash2;
     double k1, k2, m, mdash, d, e, rho, sigma, tau;
-    double I = DEG2RAD * 1.54242;
+    const double sin_I = sin(MOON_AXIS_INCLINATION_RADIANS);
+    const double cos_I = cos(MOON_AXIS_INCLINATION_RADIANS);
 
     t = time.tt / 36525.0;
     t2 = t * t;
@@ -2245,9 +2249,9 @@ astro_libration_t Astronomy_Libration(astro_time_t time)
 
     /* Optical librations */
     w = lib.mlon - omega;
-    a = atan2(sin(w)*cos(lib.mlat)*cos(I) - sin(lib.mlat)*sin(I), cos(w)*cos(lib.mlat));
+    a = atan2(sin(w)*cos(lib.mlat)*cos_I - sin(lib.mlat)*sin_I, cos(w)*cos(lib.mlat));
     ldash = LongitudeOffset(RAD2DEG * (a - f));
-    bdash = asin(-sin(w)*cos(lib.mlat)*sin(I) - sin(lib.mlat)*cos(I));
+    bdash = asin(-sin(w)*cos(lib.mlat)*sin_I - sin(lib.mlat)*cos_I);
 
     /* Physical librations */
     k1 = DEG2RAD*(119.75 + 131.849*t);
@@ -10447,6 +10451,102 @@ static astro_axis_t EarthRotationAxis(astro_time_t time)
 }
 
 
+static astro_axis_t MoonRotationAxis(astro_time_t time)
+{
+    astro_axis_t axis;
+    astro_equatorial_t equ;
+    astro_state_vector_t state;
+    terse_vector_t n;   /* northward unit vector normal to Moon's orbital plane */
+    terse_vector_t e;   /* northward unit vector normal to the ecliptic plane */
+    terse_vector_t a;   /* Moon's rotation axis -- northward unit vector */
+    double length, A, B, C, e_dot_n, alpha, radic, u;
+
+    /*
+        Cassini's Laws are good first-order approximations for finding the Moon's rotation axis.
+        But they must be corrected using phyisical libration angles.
+
+        Cassini's Law #1: The Moon orbits the Earth with roughly the same
+        side always facing the Earth. (There is significant "wobble" called "libration".)
+
+        Cassini's Law #2: The Moon's rotation axis precesses, but with a
+        a fixed inclination (MOON_AXIS_INCLINATION_RADIANS) to the ecliptic plane.
+
+        Cassini's Law #3: Two lines define a plane that always contains the Moon's
+        rotation axis:
+        (1) The line normal to the ecliptic plane.
+        (2) The line normal to the Moon's orbit around the Earth.
+        The rotation axis and the orbit normal lie on opposite sides
+        of the ecliptic normal.
+    */
+
+    /* The ecliptic north pole in EQJ coordinates. */
+    e.x =  0.0;
+    e.y = -0.3977769691083922;
+    e.z = +0.9174821430670688;
+
+    /* Calculate the geocentric position and velocity vectors of the Moon. */
+    state = Astronomy_GeoMoonState(time);
+
+    /* The cross product (r x v) gives the direction normal to the Moon's instantaneous orbital plane. */
+    n.x = state.y*state.vz - state.z*state.vy;
+    n.y = state.z*state.vx - state.x*state.vz;
+    n.z = state.x*state.vy - state.y*state.vx;
+
+    /* Convert the orbit normal vector to a unit vector. */
+    length = sqrt(n.x*n.x + n.y*n.y + n.z*n.z);
+    n.x /= length;
+    n.y /= length;
+    n.z /= length;
+
+    /* alpha = (cos(I))^2 */
+    alpha = cos(MOON_AXIS_INCLINATION_RADIANS);
+    alpha *= alpha;
+
+    /* Solve quadratic equation to find scalar u that tilts I radians away from ecliptic north pole. */
+    e_dot_n = e.x*n.x + e.y*n.y + e.z*n.z;
+    A = e_dot_n*e_dot_n - alpha;
+    B = 2.0*(1.0 - alpha)*e_dot_n;
+    C = 1.0 - alpha;
+    radic = B*B - 4*A*C;
+    if (radic <= 0.0)
+        return AxisErr(ASTRO_INTERNAL_ERROR);   /* equation roots should be real, not complex */
+
+    /*
+        There are two distinct real roots 'u' to the quadratic equation.
+        The correct one places the Moon's rotation axis on the opposite side of
+        the eclitpic normal from the orbital normal:
+            u = (-B + sqrt(radic)) / (2*A)
+
+        The incorrect solution places the rotation and orbital axes on the same
+        side of the ecliptic normal:
+            u = (-B - sqrt(radic)) / (2*A)
+    */
+    u = (-B + sqrt(radic)) / (2*A);
+
+    /* Use the scalar 'u' to find the axis vector 'a'. */
+    a.x = e.x + u*n.x;
+    a.y = e.y + u*n.y;
+    a.z = e.z + u*n.z;
+    length = sqrt(a.x*a.x + a.y*a.y + a.z*a.z);
+    axis.north.x = a.x / length;
+    axis.north.y = a.y / length;
+    axis.north.z = a.z / length;
+    axis.north.t = time;
+    axis.north.status = ASTRO_SUCCESS;
+
+    /* Derive angular values: right ascension and declination. */
+    equ = Astronomy_EquatorFromVector(axis.north);
+    if (equ.status != ASTRO_SUCCESS)
+        return AxisErr(equ.status);
+    axis.ra = equ.ra;
+    axis.dec = equ.dec;
+
+    axis.spin = NAN;    /* FIXFIXFIX - Don't yet know how to calculate this! */
+    axis.status = ASTRO_SUCCESS;
+    return axis;
+}
+
+
 /**
  * @brief Calculates information about a body's rotation axis at a given time.
  *
@@ -10462,8 +10562,8 @@ static astro_axis_t EarthRotationAxis(astro_time_t time)
  * See #astro_axis_t for more detailed information.
  *
  * @param body
- *      The body whose rotation axis is to be found. The supported bodies are the Sun and
- *      the planets: `BODY_SUN`, `BODY_MERCURY`, `BODY_VENUS`, `BODY_EARTH`, `BODY_MARS`,
+ *      The body whose rotation axis is to be found. The supported bodies are:
+ *      `BODY_SUN`, `BODY_MOON`, `BODY_MERCURY`, `BODY_VENUS`, `BODY_EARTH`, `BODY_MARS`,
  *      `BODY_JUPITER`, `BODY_SATURN`, `BODY_URANUS`, `BODY_NEPTUNE`, `BODY_PLUTO`.
  *
  * @param time
@@ -10510,6 +10610,9 @@ astro_axis_t Astronomy_RotationAxis(astro_body_t body, astro_time_t time)
 
     case BODY_EARTH:
         return EarthRotationAxis(time);
+
+    case BODY_MOON:
+        return MoonRotationAxis(time);
 
     case BODY_MARS:
         ra = (

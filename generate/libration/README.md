@@ -13,3 +13,10 @@ comes from: [Moon Phase and Libration 2022](https://svs.gsfc.nasa.gov/4955)
 
 These Moon Phase and Libration pages contain some wonderful videos, images, and explanatory text that
 help make the complexities of the Moon's orbit and libration understandable.
+
+# Further Reading
+
+The PDF document [Computation of the Quantities Describing the Lunar Librations
+in The Astronomical Almanac](https://astro.ukho.gov.uk/data/tn/naotn74.pdf) provides a
+detailed explanation of the meaning of lunar libration quantities like sub-solar angles,
+sub-earth angles, and polar position angles.

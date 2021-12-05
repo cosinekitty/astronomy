@@ -5069,6 +5069,7 @@ static int AxisTest(void)
     CHECK(AxisTestBody(BODY_MERCURY,  "axis/Mercury.txt",   0.074340));
     CHECK(AxisTestBody(BODY_VENUS,    "axis/Venus.txt",     0.0));
     CHECK(AxisTestBody(BODY_EARTH,    "axis/Earth.txt",     0.000591));
+    CHECK(AxisTestBody(BODY_MOON,     "axis/Moon.txt",      5.336));        /* FIXFIXFIX: decrease after correcting for physical libration */
     CHECK(AxisTestBody(BODY_MARS,     "axis/Mars.txt",      0.075323));
     CHECK(AxisTestBody(BODY_JUPITER,  "axis/Jupiter.txt",   0.000324));
     CHECK(AxisTestBody(BODY_SATURN,   "axis/Saturn.txt",    0.000304));

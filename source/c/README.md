@@ -1537,7 +1537,7 @@ See [`astro_axis_t`](#astro_axis_t) for more detailed information.
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| [`astro_body_t`](#astro_body_t) | `body` |  The body whose rotation axis is to be found. The supported bodies are the Sun and the planets: `BODY_SUN`, `BODY_MERCURY`, `BODY_VENUS`, `BODY_EARTH`, `BODY_MARS`, `BODY_JUPITER`, `BODY_SATURN`, `BODY_URANUS`, `BODY_NEPTUNE`, `BODY_PLUTO`. | 
+| [`astro_body_t`](#astro_body_t) | `body` |  The body whose rotation axis is to be found. The supported bodies are: `BODY_SUN`, `BODY_MOON`, `BODY_MERCURY`, `BODY_VENUS`, `BODY_EARTH`, `BODY_MARS`, `BODY_JUPITER`, `BODY_SATURN`, `BODY_URANUS`, `BODY_NEPTUNE`, `BODY_PLUTO`. | 
 | [`astro_time_t`](#astro_time_t) | `time` |  The time for which the body's rotation axis is to be found. | 
 
 
