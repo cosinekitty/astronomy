@@ -8757,102 +8757,6 @@ static astro_axis_t EarthRotationAxis(astro_time_t time)
 }
 
 
-static astro_axis_t MoonRotationAxis(astro_time_t time)
-{
-    astro_axis_t axis;
-    astro_equatorial_t equ;
-    astro_state_vector_t state;
-    terse_vector_t n;   /* northward unit vector normal to Moon's orbital plane */
-    terse_vector_t e;   /* northward unit vector normal to the ecliptic plane */
-    terse_vector_t a;   /* Moon's rotation axis -- northward unit vector */
-    double length, A, B, C, e_dot_n, alpha, radic, u;
-
-    /*
-        Cassini's Laws are good first-order approximations for finding the Moon's rotation axis.
-        But they must be corrected using phyisical libration angles.
-
-        Cassini's Law #1: The Moon orbits the Earth with roughly the same
-        side always facing the Earth. (There is significant "wobble" called "libration".)
-
-        Cassini's Law #2: The Moon's rotation axis precesses, but with a
-        a fixed inclination (MOON_AXIS_INCLINATION_RADIANS) to the ecliptic plane.
-
-        Cassini's Law #3: Two lines define a plane that always contains the Moon's
-        rotation axis:
-        (1) The line normal to the ecliptic plane.
-        (2) The line normal to the Moon's orbit around the Earth.
-        The rotation axis and the orbit normal lie on opposite sides
-        of the ecliptic normal.
-    */
-
-    /* The ecliptic north pole in EQJ coordinates. */
-    e.x =  0.0;
-    e.y = -0.3977769691083922;
-    e.z = +0.9174821430670688;
-
-    /* Calculate the geocentric position and velocity vectors of the Moon. */
-    state = Astronomy_GeoMoonState(time);
-
-    /* The cross product (r x v) gives the direction normal to the Moon's instantaneous orbital plane. */
-    n.x = state.y*state.vz - state.z*state.vy;
-    n.y = state.z*state.vx - state.x*state.vz;
-    n.z = state.x*state.vy - state.y*state.vx;
-
-    /* Convert the orbit normal vector to a unit vector. */
-    length = sqrt(n.x*n.x + n.y*n.y + n.z*n.z);
-    n.x /= length;
-    n.y /= length;
-    n.z /= length;
-
-    /* alpha = (cos(I))^2 */
-    alpha = cos(MOON_AXIS_INCLINATION_RADIANS);
-    alpha *= alpha;
-
-    /* Solve quadratic equation to find scalar 'u' that tilts 'I' radians away from ecliptic north pole. */
-    e_dot_n = e.x*n.x + e.y*n.y + e.z*n.z;
-    A = e_dot_n*e_dot_n - alpha;
-    B = 2.0*(1.0 - alpha)*e_dot_n;
-    C = 1.0 - alpha;
-    radic = B*B - 4*A*C;
-    if (radic <= 0.0)
-        return AxisErr(ASTRO_INTERNAL_ERROR);   /* equation roots should be real, not complex */
-
-    /*
-        There are two distinct real roots 'u' to the quadratic equation.
-        The correct one places the Moon's rotation axis on the opposite side of
-        the eclitpic normal from the orbital normal:
-            u = (-B + sqrt(radic)) / (2*A)
-
-        The incorrect solution places the rotation and orbital axes on the same
-        side of the ecliptic normal:
-            u = (-B - sqrt(radic)) / (2*A)
-    */
-    u = (-B + sqrt(radic)) / (2*A);
-
-    /* Use the scalar 'u' to find the axis vector 'a'. */
-    a.x = e.x + u*n.x;
-    a.y = e.y + u*n.y;
-    a.z = e.z + u*n.z;
-    length = sqrt(a.x*a.x + a.y*a.y + a.z*a.z);
-    axis.north.x = a.x / length;
-    axis.north.y = a.y / length;
-    axis.north.z = a.z / length;
-    axis.north.t = time;
-    axis.north.status = ASTRO_SUCCESS;
-
-    /* Derive angular values: right ascension and declination. */
-    equ = Astronomy_EquatorFromVector(axis.north);
-    if (equ.status != ASTRO_SUCCESS)
-        return AxisErr(equ.status);
-    axis.ra = equ.ra;
-    axis.dec = equ.dec;
-
-    axis.spin = NAN;    /* FIXFIXFIX - Don't yet know how to calculate this! */
-    axis.status = ASTRO_SUCCESS;
-    return axis;
-}
-
-
 /**
  * @brief Calculates information about a body's rotation axis at a given time.
  *
@@ -8883,6 +8787,7 @@ astro_axis_t Astronomy_RotationAxis(astro_body_t body, astro_time_t time)
     double ra, dec, w;
     double radlat, radlon, rcoslat;
     double Ja, Jb, Jc, Jd, Je, N;
+    double E1, E2, E3, E4, E5, E6, E7, E8, E9, E10, E11, E12, E13;
     const double d = time.tt;
     const double T = d / 36525.0;
 
@@ -8918,7 +8823,64 @@ astro_axis_t Astronomy_RotationAxis(astro_body_t body, astro_time_t time)
         return EarthRotationAxis(time);
 
     case BODY_MOON:
-        return MoonRotationAxis(time);
+        /*
+            https://astropedia.astrogeology.usgs.gov/alfresco/d/d/workspace/SpacesStore/28fd9e81-1964-44d6-a58b-fbbf61e64e15/WGCCRE2009reprint.pdf
+            Page 8, Table 2.
+        */
+        E1  = DEG2RAD * (125.045 -  0.0529921*d);
+        E2  = DEG2RAD * (250.089 -  0.1059842*d);
+        E3  = DEG2RAD * (260.008 + 13.0120009*d);
+        E4  = DEG2RAD * (176.625 + 13.3407154*d);
+        E5  = DEG2RAD * (357.529 +  0.9856003*d);
+        E6  = DEG2RAD * (311.589 + 26.4057084*d);
+        E7  = DEG2RAD * (134.963 + 13.0649930*d);
+        E8  = DEG2RAD * (276.617 +  0.3287146*d);
+        E9  = DEG2RAD * (34.226  +  1.7484877*d);
+        E10 = DEG2RAD * (15.134  -  0.1589763*d);
+        E11 = DEG2RAD * (119.743 +  0.0036096*d);
+        E12 = DEG2RAD * (239.961 +  0.1643573*d);
+        E13 = DEG2RAD * (25.053  + 12.9590088*d);
+
+        ra = (
+            269.9949 + 0.0031*T
+            - 3.8787*sin(E1)
+            - 0.1204*sin(E2)
+            + 0.0700*sin(E3)
+            - 0.0172*sin(E4)
+            + 0.0072*sin(E6)
+            - 0.0052*sin(E10)
+            + 0.0043*sin(E13)
+        );
+
+        dec = (
+            66.5392 + 0.0130*T
+            + 1.5419*cos(E1)
+            + 0.0239*cos(E2)
+            - 0.0278*cos(E3)
+            + 0.0068*cos(E4)
+            - 0.0029*cos(E6)
+            + 0.0009*cos(E7)
+            + 0.0008*cos(E10)
+            - 0.0009*cos(E13)
+        );
+
+        w = (
+            38.3213 + (13.17635815 - 1.4e-12*d)*d
+            + 3.5610*sin(E1)
+            + 0.1208*sin(E2)
+            - 0.0642*sin(E3)
+            + 0.0158*sin(E4)
+            + 0.0252*sin(E5)
+            - 0.0066*sin(E6)
+            - 0.0047*sin(E7)
+            - 0.0046*sin(E8)
+            + 0.0028*sin(E9)
+            + 0.0052*sin(E10)
+            + 0.0040*sin(E11)
+            + 0.0019*sin(E12)
+            - 0.0044*sin(E13)
+        );
+        break;
 
     case BODY_MARS:
         ra = (
