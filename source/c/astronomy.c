@@ -185,7 +185,7 @@ static const double SUN_RADIUS_KM  = 695700.0;
 #define MOON_EQUATORIAL_RADIUS_AU   (MOON_EQUATORIAL_RADIUS_KM / KM_PER_AU)
 
 /* The inclination of the moon's rotation axis to the ecliptic plane, in radians. */
-#define MOON_AXIS_INCLINATION_RADIANS    (DEG2RAD * 1.54242)
+#define MOON_AXIS_INCLINATION_RADIANS    (DEG2RAD * 1.543)
 
 static const double ASEC180 = 180.0 * 60.0 * 60.0;      /* arcseconds per 180 degrees (or pi radians) */
 static const double EARTH_MOON_MASS_RATIO = 81.30056;
@@ -10502,7 +10502,7 @@ static astro_axis_t MoonRotationAxis(astro_time_t time)
     alpha = cos(MOON_AXIS_INCLINATION_RADIANS);
     alpha *= alpha;
 
-    /* Solve quadratic equation to find scalar u that tilts I radians away from ecliptic north pole. */
+    /* Solve quadratic equation to find scalar 'u' that tilts 'I' radians away from ecliptic north pole. */
     e_dot_n = e.x*n.x + e.y*n.y + e.z*n.z;
     A = e_dot_n*e_dot_n - alpha;
     B = 2.0*(1.0 - alpha)*e_dot_n;
