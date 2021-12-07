@@ -8,7 +8,7 @@ jobs:
     - name: Init dotnet core
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: 5.0.x
+        dotnet-version: 6.0.x
     - name: Init Python 3.7
       uses: actions/setup-python@v2
       with:
