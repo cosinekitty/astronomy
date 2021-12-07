@@ -2651,7 +2651,7 @@ export declare class AxisInfo {
  *
  * @param {Body} body
  *      One of the following values:
- *      `Body.Sun`, `Body.Mercury`, `Body.Venus`, `Body.Earth`, `Body.Mars`,
+ *      `Body.Sun`, `Body.Moon`, `Body.Mercury`, `Body.Venus`, `Body.Earth`, `Body.Mars`,
  *      `Body.Jupiter`, `Body.Saturn`, `Body.Uranus`, `Body.Neptune`, `Body.Pluto`.
  *
  * @param {FlexibleDateTime} date

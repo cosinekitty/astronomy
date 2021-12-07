@@ -3155,19 +3155,19 @@ namespace csharp_test
                     if (diff_diam > max_diff_diam)
                         max_diff_diam = diff_diam;
 
-                    if (diff_elon > 0.133)
+                    if (diff_elon > 0.1304)
                     {
                         Console.WriteLine($"C# Libration({filename} line {lnum}): EXCESSIVE diff_elon = {diff_elon} arcmin");
                         return 1;
                     }
 
-                    if (diff_elat > 1.666)
+                    if (diff_elat > 1.6476)
                     {
                         Console.WriteLine($"C# Libration({filename} line {lnum}): EXCESSIVE diff_elat = {diff_elat} arcmin");
                         return 1;
                     }
 
-                    if (diff_distance > 54.4)
+                    if (diff_distance > 54.377)
                     {
                         Console.WriteLine($"C# Libration({filename} line {lnum}): EXCESSIVE diff_distance = {diff_distance} km");
                         return 1;
@@ -3194,6 +3194,7 @@ namespace csharp_test
             if (0 != AxisTestBody(Body.Mercury,  "../../axis/Mercury.txt",   0.074340))   return 1;
             if (0 != AxisTestBody(Body.Venus,    "../../axis/Venus.txt",     0.0))        return 1;
             if (0 != AxisTestBody(Body.Earth,    "../../axis/Earth.txt",     0.000591))   return 1;
+            if (0 != AxisTestBody(Body.Moon,     "../../axis/Moon.txt",      0.264845))   return 1;
             if (0 != AxisTestBody(Body.Mars,     "../../axis/Mars.txt",      0.075323))   return 1;
             if (0 != AxisTestBody(Body.Jupiter,  "../../axis/Jupiter.txt",   0.000324))   return 1;
             if (0 != AxisTestBody(Body.Saturn,   "../../axis/Saturn.txt",    0.000304))   return 1;

@@ -1320,7 +1320,7 @@ See [`AxisInfo`](#AxisInfo) for more detailed information.
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| [`Body`](#Body) | `body` | One of the following values: `Body.Sun`, `Body.Mercury`, `Body.Venus`, `Body.Earth`, `Body.Mars`, `Body.Jupiter`, `Body.Saturn`, `Body.Uranus`, `Body.Neptune`, `Body.Pluto`. |
+| [`Body`](#Body) | `body` | One of the following values: `Body.Sun`, `Body.Moon`, `Body.Mercury`, `Body.Venus`, `Body.Earth`, `Body.Mars`, `Body.Jupiter`, `Body.Saturn`, `Body.Uranus`, `Body.Neptune`, `Body.Pluto`. |
 | [`AstroTime`](#AstroTime) | `time` | The time at which to calculate the body's rotation axis. |
 
 **Returns:** North pole orientation and body spin angle.

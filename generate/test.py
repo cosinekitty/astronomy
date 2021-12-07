@@ -2209,15 +2209,15 @@ def LibrationFile(filename):
                 if diff_diam > max_diff_diam:
                     max_diff_diam = diff_diam
 
-                if diff_elon > 0.133:
+                if diff_elon > 0.1304:
                     print('PY LibrationFile({} line {}): EXCESSIVE diff_elon = {}'.format(filename, lnum, diff_elon))
                     return 1
 
-                if diff_elat > 1.666:
+                if diff_elat > 1.6476:
                     print('PY LibrationFile({} line {}): EXCESSIVE diff_elat = {}'.format(filename, lnum, diff_elat))
                     return 1
 
-                if diff_distance > 54.4:
+                if diff_distance > 54.377:
                     print('PY LibrationFile({} line {}): EXCESSIVE diff_distance = {}'.format(filename, lnum, diff_distance))
                     return 1
 
@@ -2243,6 +2243,7 @@ def Axis():
     if AxisTestBody(astronomy.Body.Mercury,  'axis/Mercury.txt',   0.074340) :  return 1
     if AxisTestBody(astronomy.Body.Venus,    'axis/Venus.txt',     0.0)      :  return 1
     if AxisTestBody(astronomy.Body.Earth,    'axis/Earth.txt',     0.000591) :  return 1
+    if AxisTestBody(astronomy.Body.Moon,     'axis/Moon.txt',      0.264845) :  return 1
     if AxisTestBody(astronomy.Body.Mars,     'axis/Mars.txt',      0.075323) :  return 1
     if AxisTestBody(astronomy.Body.Jupiter,  'axis/Jupiter.txt',   0.000324) :  return 1
     if AxisTestBody(astronomy.Body.Saturn,   'axis/Saturn.txt',    0.000304) :  return 1

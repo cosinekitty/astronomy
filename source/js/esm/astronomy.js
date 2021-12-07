@@ -1620,7 +1620,7 @@ export function Libration(date) {
     const mlat = moon.geo_eclip_lat;
     const dist_km = moon.distance_au * KM_PER_AU;
     // Inclination angle
-    const I = DEG2RAD * 1.54242;
+    const I = DEG2RAD * 1.543;
     // Moon's argument of latitude in radians.
     const f = DEG2RAD * NormalizeLongitude(93.2720950 + 483202.0175233 * t - 0.0036539 * t2 - t3 / 3526000 + t4 / 863310000);
     // Moon's ascending node's mean longitude in radians.
@@ -7982,7 +7982,7 @@ function EarthRotationAxis(time) {
  *
  * @param {Body} body
  *      One of the following values:
- *      `Body.Sun`, `Body.Mercury`, `Body.Venus`, `Body.Earth`, `Body.Mars`,
+ *      `Body.Sun`, `Body.Moon`, `Body.Mercury`, `Body.Venus`, `Body.Earth`, `Body.Mars`,
  *      `Body.Jupiter`, `Body.Saturn`, `Body.Uranus`, `Body.Neptune`, `Body.Pluto`.
  *
  * @param {FlexibleDateTime} date
@@ -8019,6 +8019,54 @@ export function RotationAxis(body, date) {
             break;
         case Body.Earth:
             return EarthRotationAxis(time);
+        case Body.Moon:
+            // See page 8, Table 2 in:
+            // https://astropedia.astrogeology.usgs.gov/alfresco/d/d/workspace/SpacesStore/28fd9e81-1964-44d6-a58b-fbbf61e64e15/WGCCRE2009reprint.pdf
+            const E1 = DEG2RAD * (125.045 - 0.0529921 * d);
+            const E2 = DEG2RAD * (250.089 - 0.1059842 * d);
+            const E3 = DEG2RAD * (260.008 + 13.0120009 * d);
+            const E4 = DEG2RAD * (176.625 + 13.3407154 * d);
+            const E5 = DEG2RAD * (357.529 + 0.9856003 * d);
+            const E6 = DEG2RAD * (311.589 + 26.4057084 * d);
+            const E7 = DEG2RAD * (134.963 + 13.0649930 * d);
+            const E8 = DEG2RAD * (276.617 + 0.3287146 * d);
+            const E9 = DEG2RAD * (34.226 + 1.7484877 * d);
+            const E10 = DEG2RAD * (15.134 - 0.1589763 * d);
+            const E11 = DEG2RAD * (119.743 + 0.0036096 * d);
+            const E12 = DEG2RAD * (239.961 + 0.1643573 * d);
+            const E13 = DEG2RAD * (25.053 + 12.9590088 * d);
+            ra = (269.9949 + 0.0031 * T
+                - 3.8787 * Math.sin(E1)
+                - 0.1204 * Math.sin(E2)
+                + 0.0700 * Math.sin(E3)
+                - 0.0172 * Math.sin(E4)
+                + 0.0072 * Math.sin(E6)
+                - 0.0052 * Math.sin(E10)
+                + 0.0043 * Math.sin(E13));
+            dec = (66.5392 + 0.0130 * T
+                + 1.5419 * Math.cos(E1)
+                + 0.0239 * Math.cos(E2)
+                - 0.0278 * Math.cos(E3)
+                + 0.0068 * Math.cos(E4)
+                - 0.0029 * Math.cos(E6)
+                + 0.0009 * Math.cos(E7)
+                + 0.0008 * Math.cos(E10)
+                - 0.0009 * Math.cos(E13));
+            w = (38.3213 + (13.17635815 - 1.4e-12 * d) * d
+                + 3.5610 * Math.sin(E1)
+                + 0.1208 * Math.sin(E2)
+                - 0.0642 * Math.sin(E3)
+                + 0.0158 * Math.sin(E4)
+                + 0.0252 * Math.sin(E5)
+                - 0.0066 * Math.sin(E6)
+                - 0.0047 * Math.sin(E7)
+                - 0.0046 * Math.sin(E8)
+                + 0.0028 * Math.sin(E9)
+                + 0.0052 * Math.sin(E10)
+                + 0.0040 * Math.sin(E11)
+                + 0.0019 * Math.sin(E12)
+                - 0.0044 * Math.sin(E13));
+            break;
         case Body.Mars:
             ra = (317.269202 - 0.10927547 * T
                 + 0.000068 * Math.sin(DEG2RAD * (198.991226 + 19139.4819985 * T))

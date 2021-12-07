@@ -6347,7 +6347,7 @@ def Libration(time):
     diam_deg = 2.0 * math.degrees(math.atan(_MOON_MEAN_RADIUS_KM / math.sqrt(dist_km*dist_km - _MOON_MEAN_RADIUS_KM*_MOON_MEAN_RADIUS_KM)))
 
     # Inclination angle
-    I = math.radians(1.54242)
+    I = math.radians(1.543)
 
     # Moon's argument of latitude in radians.
     f = math.radians(_NormalizeLongitude(93.2720950 + 483202.0175233*t - 0.0036539*t2 - t3/3526000 + t4/863310000))
@@ -6515,7 +6515,7 @@ def RotationAxis(body, time):
     Parameters:
     body : Body
         One of the following values:
-        `Body.Sun`, `Body.Mercury`, `Body.Venus`, `Body.Earth`, `Body.Mars`,
+        `Body.Sun`, `Body.Moon`, `Body.Mercury`, `Body.Venus`, `Body.Earth`, `Body.Mars`,
         `Body.Jupiter`, `Body.Saturn`, `Body.Uranus`, `Body.Neptune`, `Body.Pluto`.
 
     time : Time
@@ -6550,6 +6550,62 @@ def RotationAxis(body, time):
         w = 160.20 - (1.4813688 * d)
     elif body == Body.Earth:
         return _EarthRotationAxis(time)
+    elif body == Body.Moon:
+        # See page 8, Table 2 in:
+        # https://astropedia.astrogeology.usgs.gov/alfresco/d/d/workspace/SpacesStore/28fd9e81-1964-44d6-a58b-fbbf61e64e15/WGCCRE2009reprint.pdf
+        E1  = math.radians(125.045 -  0.0529921*d)
+        E2  = math.radians(250.089 -  0.1059842*d)
+        E3  = math.radians(260.008 + 13.0120009*d)
+        E4  = math.radians(176.625 + 13.3407154*d)
+        E5  = math.radians(357.529 +  0.9856003*d)
+        E6  = math.radians(311.589 + 26.4057084*d)
+        E7  = math.radians(134.963 + 13.0649930*d)
+        E8  = math.radians(276.617 +  0.3287146*d)
+        E9  = math.radians(34.226  +  1.7484877*d)
+        E10 = math.radians(15.134  -  0.1589763*d)
+        E11 = math.radians(119.743 +  0.0036096*d)
+        E12 = math.radians(239.961 +  0.1643573*d)
+        E13 = math.radians(25.053  + 12.9590088*d)
+
+        ra = (
+            269.9949 + 0.0031*T
+            - 3.8787*math.sin(E1)
+            - 0.1204*math.sin(E2)
+            + 0.0700*math.sin(E3)
+            - 0.0172*math.sin(E4)
+            + 0.0072*math.sin(E6)
+            - 0.0052*math.sin(E10)
+            + 0.0043*math.sin(E13)
+        )
+
+        dec = (
+            66.5392 + 0.0130*T
+            + 1.5419*math.cos(E1)
+            + 0.0239*math.cos(E2)
+            - 0.0278*math.cos(E3)
+            + 0.0068*math.cos(E4)
+            - 0.0029*math.cos(E6)
+            + 0.0009*math.cos(E7)
+            + 0.0008*math.cos(E10)
+            - 0.0009*math.cos(E13)
+        )
+
+        w = (
+            38.3213 + (13.17635815 - 1.4e-12*d)*d
+            + 3.5610*math.sin(E1)
+            + 0.1208*math.sin(E2)
+            - 0.0642*math.sin(E3)
+            + 0.0158*math.sin(E4)
+            + 0.0252*math.sin(E5)
+            - 0.0066*math.sin(E6)
+            - 0.0047*math.sin(E7)
+            - 0.0046*math.sin(E8)
+            + 0.0028*math.sin(E9)
+            + 0.0052*math.sin(E10)
+            + 0.0040*math.sin(E11)
+            + 0.0019*math.sin(E12)
+            - 0.0044*math.sin(E13)
+        )
     elif body == Body.Mars:
         ra = (
             317.269202 - 0.10927547*T

@@ -4842,13 +4842,13 @@ static int Libration(const char *filename, int *ndata, double *var_lon, double *
             if (diff_diam > max_diff_diam)
                 max_diff_diam = diff_diam;
 
-            if (diff_elon > 0.133)
+            if (diff_elon > 0.1304)
                 FAIL("C Libration(%s line %d): EXCESSIVE diff_elon = %0.4lf arcmin\n", filename, lnum, diff_elon);
 
-            if (diff_elat > 1.666)
+            if (diff_elat > 1.6476)
                 FAIL("C Libration(%s line %d): EXCESSIVE diff_elat = %0.4lf arcmin\n", filename, lnum, diff_elat);
 
-            if (diff_distance > 54.4)
+            if (diff_distance > 54.377)
                 FAIL("C Libration(%s line %d): EXCESSIVE diff_distance = %0.3lf km\n", filename, lnum, diff_distance);
 
             /* Update sum-of-squared-errors. */
@@ -5076,7 +5076,7 @@ static int AxisTest(void)
     CHECK(AxisTestBody(BODY_URANUS,   "axis/Uranus.txt",    0.0));
     CHECK(AxisTestBody(BODY_NEPTUNE,  "axis/Neptune.txt",   0.000462));
     CHECK(AxisTestBody(BODY_PLUTO,    "axis/Pluto.txt",     0.0));
-    printf("C AxisBody: PASS\n");
+    printf("C AxisTest: PASS\n");
 fail:
     return error;
 }

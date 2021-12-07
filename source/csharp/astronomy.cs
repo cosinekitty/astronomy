@@ -4785,7 +4785,7 @@ namespace CosineKitty
             lib.diam_deg = (2.0 * RAD2DEG) * Math.Atan(MOON_MEAN_RADIUS_KM / Math.Sqrt(lib.dist_km*lib.dist_km - MOON_MEAN_RADIUS_KM*MOON_MEAN_RADIUS_KM));
 
             // Inclination angle
-            const double I = DEG2RAD * 1.54242;
+            const double I = DEG2RAD * 1.543;
 
             // Moon's argument of latitude in radians.
             double f = DEG2RAD * NormalizeLongitude(93.2720950 + 483202.0175233*t - 0.0036539*t2 - t3/3526000 + t4/863310000);
@@ -8782,7 +8782,7 @@ namespace CosineKitty
         /// </remarks>
         /// <param name="body">
         /// One of the following values:
-        /// `Body.Sun`, `Body.Mercury`, `Body.Venus`, `Body.Earth`, `Body.Mars`,
+        /// `Body.Sun`, `Body.Moon`, `Body.Mercury`, `Body.Venus`, `Body.Earth`, `Body.Mars`,
         /// `Body.Jupiter`, `Body.Saturn`, `Body.Uranus`, `Body.Neptune`, `Body.Pluto`.
         /// </param>
         /// <param name="time">The time at which to calculate the body's rotation axis.</param>
@@ -8823,6 +8823,64 @@ namespace CosineKitty
 
             case Body.Earth:
                 return EarthRotationAxis(time);
+
+            case Body.Moon:
+                // See page 8, Table 2 in:
+                // https://astropedia.astrogeology.usgs.gov/alfresco/d/d/workspace/SpacesStore/28fd9e81-1964-44d6-a58b-fbbf61e64e15/WGCCRE2009reprint.pdf
+                double E1  = DEG2RAD * (125.045 -  0.0529921*d);
+                double E2  = DEG2RAD * (250.089 -  0.1059842*d);
+                double E3  = DEG2RAD * (260.008 + 13.0120009*d);
+                double E4  = DEG2RAD * (176.625 + 13.3407154*d);
+                double E5  = DEG2RAD * (357.529 +  0.9856003*d);
+                double E6  = DEG2RAD * (311.589 + 26.4057084*d);
+                double E7  = DEG2RAD * (134.963 + 13.0649930*d);
+                double E8  = DEG2RAD * (276.617 +  0.3287146*d);
+                double E9  = DEG2RAD * (34.226  +  1.7484877*d);
+                double E10 = DEG2RAD * (15.134  -  0.1589763*d);
+                double E11 = DEG2RAD * (119.743 +  0.0036096*d);
+                double E12 = DEG2RAD * (239.961 +  0.1643573*d);
+                double E13 = DEG2RAD * (25.053  + 12.9590088*d);
+
+                ra = (
+                    269.9949 + 0.0031*T
+                    - 3.8787*Math.Sin(E1)
+                    - 0.1204*Math.Sin(E2)
+                    + 0.0700*Math.Sin(E3)
+                    - 0.0172*Math.Sin(E4)
+                    + 0.0072*Math.Sin(E6)
+                    - 0.0052*Math.Sin(E10)
+                    + 0.0043*Math.Sin(E13)
+                );
+
+                dec = (
+                    66.5392 + 0.0130*T
+                    + 1.5419*Math.Cos(E1)
+                    + 0.0239*Math.Cos(E2)
+                    - 0.0278*Math.Cos(E3)
+                    + 0.0068*Math.Cos(E4)
+                    - 0.0029*Math.Cos(E6)
+                    + 0.0009*Math.Cos(E7)
+                    + 0.0008*Math.Cos(E10)
+                    - 0.0009*Math.Cos(E13)
+                );
+
+                w = (
+                    38.3213 + (13.17635815 - 1.4e-12*d)*d
+                    + 3.5610*Math.Sin(E1)
+                    + 0.1208*Math.Sin(E2)
+                    - 0.0642*Math.Sin(E3)
+                    + 0.0158*Math.Sin(E4)
+                    + 0.0252*Math.Sin(E5)
+                    - 0.0066*Math.Sin(E6)
+                    - 0.0047*Math.Sin(E7)
+                    - 0.0046*Math.Sin(E8)
+                    + 0.0028*Math.Sin(E9)
+                    + 0.0052*Math.Sin(E10)
+                    + 0.0040*Math.Sin(E11)
+                    + 0.0019*Math.Sin(E12)
+                    - 0.0044*Math.Sin(E13)
+                );
+                break;
 
             case Body.Mars:
                 ra = (

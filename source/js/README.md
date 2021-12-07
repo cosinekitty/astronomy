@@ -2625,7 +2625,7 @@ See [AxisInfo](#AxisInfo) for more detailed information.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| body | [<code>Body</code>](#Body) | One of the following values:      `Body.Sun`, `Body.Mercury`, `Body.Venus`, `Body.Earth`, `Body.Mars`,      `Body.Jupiter`, `Body.Saturn`, `Body.Uranus`, `Body.Neptune`, `Body.Pluto`. |
+| body | [<code>Body</code>](#Body) | One of the following values:      `Body.Sun`, `Body.Moon`, `Body.Mercury`, `Body.Venus`, `Body.Earth`, `Body.Mars`,      `Body.Jupiter`, `Body.Saturn`, `Body.Uranus`, `Body.Neptune`, `Body.Pluto`. |
 | date | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The time at which to calculate the body's rotation axis. |
 
 

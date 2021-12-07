@@ -1990,7 +1990,7 @@ See [`AxisInfo`](#AxisInfo) for more detailed information.
 Parameters:
 body : Body
     One of the following values:
-    `Body.Sun`, `Body.Mercury`, `Body.Venus`, `Body.Earth`, `Body.Mars`,
+    `Body.Sun`, `Body.Moon`, `Body.Mercury`, `Body.Venus`, `Body.Earth`, `Body.Mars`,
     `Body.Jupiter`, `Body.Saturn`, `Body.Uranus`, `Body.Neptune`, `Body.Pluto`.
 time : Time
     The time at which to calculate the body's rotation axis.
