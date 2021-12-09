@@ -1,4 +1,4 @@
-# Astronomy Engine
+<img src="https://github.com/cosinekitty/astronomy/blob/master/astronomy_engine_logo.png" width="640" height="362">
 
 [![build status](https://github.com/cosinekitty/astronomy/actions/workflows/astronomy-engine-tests.yml/badge.svg)](https://github.com/cosinekitty/astronomy/actions)
 [![npm package](https://img.shields.io/npm/v/astronomy-engine.svg)](https://www.npmjs.com/package/astronomy-engine)
