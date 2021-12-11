@@ -2291,7 +2291,6 @@ $ASTRO_CSHARP_VSOP(Neptune)
         /// </remarks>
         /// <param name="ut">The floating point number of days since noon UTC on January 1, 2000.</param>
         /// <returns>The estimated difference TT-UT on the given date, expressed in seconds.</returns>
-
         public static double DeltaT_EspenakMeeus(double ut)
         {
             /*

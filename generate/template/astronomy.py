@@ -64,7 +64,6 @@ _EPOCH = datetime.datetime(2000, 1, 1, 12)
 _ASEC360 = 1296000.0
 _ASEC2RAD = 4.848136811095359935899141e-6
 _ARC = 3600.0 * 180.0 / math.pi     # arcseconds per radian
-_METERS_PER_AU = KM_PER_AU * 1000.0
 _ANGVEL = 7.2921150e-5
 _SECONDS_PER_DAY = 24.0 * 3600.0
 _SOLAR_DAYS_PER_SIDEREAL_DAY = 0.9972695717592592
@@ -2007,19 +2006,15 @@ def Search(func, context, t1, t2, dt_tolerance_seconds):
     func : function(context, Time)
         A function that takes an arbitrary context parameter and a #Time parameter.
         Returns a float value.  See remarks above for more details.
-
     context : object
         An arbitrary data structure needed to be passed to the function `func`
         every time it is called.
-
     t1 : float
         The lower time bound of the search window.
         See remarks above for more details.
-
     t2 : float
         The upper time bound of the search window.
         See remarks above for more details.
-
     dt_tolerance_seconds : float
         Specifies an amount of time in seconds within which a bounded ascending root
         is considered accurate enough to stop. A typical value is 1 second.
@@ -3045,7 +3040,6 @@ def EclipticLongitude(body, time):
     ----------
     body : Body
         A body other than the Sun.
-
     time : Time
         The date and time at which the body's ecliptic longitude is to be calculated.
 
@@ -3188,7 +3182,6 @@ def Elongation(body, time):
     ----------
     body : Body
         The celestial body whose visibility is to be calculated.
-
     time : Time
         The date and time of the observation.
 
@@ -3433,7 +3426,6 @@ def SearchSunLongitude(targetLon, startTime, limitDays):
 
     Parameters
     ----------
-
     targetLon : float
          The desired ecliptic longitude in degrees, relative to the true equinox of date.
          This may be any value in the range [0, 360), although certain values have
@@ -4181,6 +4173,10 @@ def SearchAltitude(body, observer, direction, dateStart, limitDays, altitude):
     limitDays : float
         The fractional number of days after `dateStart` that limits
         when the altitude event is to be found. Must be a positive number.
+    altitude : float
+        The desired altitude angle of the body's center above (positive)
+        or below (negative) the observer's local horizon, expressed in degrees.
+        Must be in the range [-90, +90].
 
     Returns
     -------
@@ -4791,7 +4787,6 @@ def CombineRotation(a, b):
     ----------
     a : RotationMatrix
         The first rotation to apply.
-
     b : RotationMatrix
         The second rotation to apply.
 
@@ -6512,12 +6507,12 @@ def RotationAxis(body, time):
 
     See #AxisInfo for more detailed information.
 
-    Parameters:
+    Parameters
+    ----------
     body : Body
         One of the following values:
         `Body.Sun`, `Body.Moon`, `Body.Mercury`, `Body.Venus`, `Body.Earth`, `Body.Mars`,
         `Body.Jupiter`, `Body.Saturn`, `Body.Uranus`, `Body.Neptune`, `Body.Pluto`.
-
     time : Time
         The time at which to calculate the body's rotation axis.
 

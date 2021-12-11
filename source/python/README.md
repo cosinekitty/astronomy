@@ -1102,12 +1102,11 @@ Otherwise, returns `Body.Invalid`.
 
 Given two rotation matrices, returns a combined rotation matrix that is
 equivalent to rotating based on the first matrix, followed by the second.
-b : RotationMatrix
-    The second rotation to apply.
 
 | Type | Parameter | Description |
 | --- | --- | --- |
 | [`RotationMatrix`](#RotationMatrix) | `a` | The first rotation to apply. |
+| [`RotationMatrix`](#RotationMatrix) | `b` | The second rotation to apply. |
 
 ### Returns: [`RotationMatrix`](#RotationMatrix)
 The combined rotation matrix.
@@ -1180,12 +1179,11 @@ This function calculates the angle around the plane of the Earth's orbit
 of a celestial body, as seen from the center of the Sun.
 The angle is measured prograde (in the direction of the Earth's orbit around the Sun)
 in degrees from the J2000 equinox. The ecliptic longitude is always in the range [0, 360).
-time : Time
-    The date and time at which the body's ecliptic longitude is to be calculated.
 
 | Type | Parameter | Description |
 | --- | --- | --- |
 | [`Body`](#Body) | `body` | A body other than the Sun. |
+| [`Time`](#Time) | `time` | The date and time at which the body's ecliptic longitude is to be calculated. |
 
 ### Returns: `float`
 An angular value in degrees indicating the ecliptic longitude of the body.
@@ -1210,12 +1208,11 @@ information about the given celestial body at the given time:
   of the Earth. This angle measures around the plane of the Earth's orbit, and ignores
   how far above or below that plane the body is.
   The ecliptic separation is measured in degrees and is always in the range [0, 180].
-time : Time
-    The date and time of the observation.
 
 | Type | Parameter | Description |
 | --- | --- | --- |
 | [`Body`](#Body) | `body` | The celestial body whose visibility is to be calculated. |
+| [`Time`](#Time) | `time` | The date and time of the observation. |
 
 ### Returns: [`ElongationEvent`](#ElongationEvent)
 
@@ -1987,13 +1984,11 @@ on Cartographics and Rotational Elements 2015 report, as described
 in the following document:
 https://astropedia.astrogeology.usgs.gov/download/Docs/WGCCRE/WGCCRE2015reprint.pdf
 See [`AxisInfo`](#AxisInfo) for more detailed information.
-Parameters:
-body : Body
-    One of the following values:
-    `Body.Sun`, `Body.Moon`, `Body.Mercury`, `Body.Venus`, `Body.Earth`, `Body.Mars`,
-    `Body.Jupiter`, `Body.Saturn`, `Body.Uranus`, `Body.Neptune`, `Body.Pluto`.
-time : Time
-    The time at which to calculate the body's rotation axis.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Body`](#Body) | `body` | One of the following values: `Body.Sun`, `Body.Moon`, `Body.Mercury`, `Body.Venus`, `Body.Earth`, `Body.Mars`, `Body.Jupiter`, `Body.Saturn`, `Body.Uranus`, `Body.Neptune`, `Body.Pluto`. |
+| [`Time`](#Time) | `time` | The time at which to calculate the body's rotation axis. |
 
 ### Returns: [`AxisInfo`](#AxisInfo)
 The body's north pole direction and angle of its prime meridian.
@@ -2312,22 +2307,14 @@ If an ascending root is not found, or more than one root
 `Search` will return `None` to indicate a normal search failure.
 If the search does not converge within 20 iterations, it will raise
 an [`Error`](#Error) exception.
-context : object
-    An arbitrary data structure needed to be passed to the function `func`
-    every time it is called.
-t1 : float
-    The lower time bound of the search window.
-    See remarks above for more details.
-t2 : float
-    The upper time bound of the search window.
-    See remarks above for more details.
-dt_tolerance_seconds : float
-    Specifies an amount of time in seconds within which a bounded ascending root
-    is considered accurate enough to stop. A typical value is 1 second.
 
 | Type | Parameter | Description |
 | --- | --- | --- |
 | `function(context, Time)` | `func` | A function that takes an arbitrary context parameter and a [`Time`](#Time) parameter. Returns a float value.  See remarks above for more details. |
+| `object` | `context` | An arbitrary data structure needed to be passed to the function `func` every time it is called. |
+| `float` | `t1` | The lower time bound of the search window. See remarks above for more details. |
+| `float` | `t2` | The upper time bound of the search window. See remarks above for more details. |
+| `float` | `dt_tolerance_seconds` | Specifies an amount of time in seconds within which a bounded ascending root is considered accurate enough to stop. A typical value is 1 second. |
 
 ### Returns: [`Time`](#Time) or `None`
 If the search is successful, returns a #Time object that is within
@@ -2363,6 +2350,7 @@ Astronomical twilight uses -18 degrees as the `altitude` value.
 | [`Direction`](#Direction) | `direction` | Either `Direction.Rise` to find an ascending altitude event or `Direction.Set` to find a descending altitude event. |
 | [`Time`](#Time) | `startTime` | The date and time at which to start the search. |
 | `float` | `limitDays` | The fractional number of days after `dateStart` that limits when the altitude event is to be found. Must be a positive number. |
+| `float` | `altitude` | The desired altitude angle of the body's center above (positive) or below (negative) the observer's local horizon, expressed in degrees. Must be in the range [-90, +90]. |
 
 ### Returns: [`Time`](#Time) or `None`
 If the altitude event time is found within the specified time window,
@@ -2701,18 +2689,12 @@ The function searches the window of time specified by `startTime` and `startTime
 The search will return `None` if the Sun never reaches the longitude `targetLon` or
 if the window is so large that the longitude ranges more than 180 degrees within it.
 It is recommended to keep the window smaller than 10 days when possible.
-targetLon : float
-     The desired ecliptic longitude in degrees, relative to the true equinox of date.
-     This may be any value in the range [0, 360), although certain values have
-     conventional meanings:
-     0 = March equinox, 90 = June solstice, 180 = September equinox, 270 = December solstice.
-startTime : Time
-     The date and time for starting the search for the desired longitude event.
-limitDays : float
-     The real-valued number of days, which when added to `startTime`, limits the
-     range of time over which the search looks.
-     It is recommended to keep this value between 1 and 10 days.
-     See remarks above for more details.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| `float` | `targetLon` | The desired ecliptic longitude in degrees, relative to the true equinox of date. This may be any value in the range [0, 360), although certain values have conventional meanings: 0 = March equinox, 90 = June solstice, 180 = September equinox, 270 = December solstice. |
+| [`Time`](#Time) | `startTime` | The date and time for starting the search for the desired longitude event. |
+| `float` | `limitDays` | The real-valued number of days, which when added to `startTime`, limits the range of time over which the search looks. It is recommended to keep this value between 1 and 10 days. See remarks above for more details. |
 
 ### Returns: [`Time`](#Time) or `None`
 
