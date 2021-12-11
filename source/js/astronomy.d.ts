@@ -215,7 +215,7 @@ export declare class AstroTime {
  * or an {@link AstroTime} object.
  *
  * This flexibility is for convenience of outside callers.
- * Internally, Astronomy Engine always converts a `FlexibleTime` parameter
+ * Internally, Astronomy Engine always converts a `FlexibleDateTime` parameter
  * to an `AstroTime` object by calling {@link MakeTime}.
  *
  * @typedef {Date | number | AstroTime} FlexibleDateTime
@@ -585,7 +585,7 @@ export declare function SunPosition(date: FlexibleDateTime): EclipticCoordinates
  *
  * @param {Body} body
  *      The body for which to find equatorial coordinates.
- *      Not allowed to be `"Earth"`.
+ *      Not allowed to be `Body.Earth`.
  *
  * @param {FlexibleDateTime} date
  *      Specifies the date and time at which the body is to be observed.
@@ -822,8 +822,11 @@ export declare class JupiterMoonsInfo {
  * add the jovicentric vectors. Likewise, you can call {@link GeoVector}
  * to convert to geocentric vectors.
  *
- * @param {FlexibleDateTime} date  The date and time for which to calculate Jupiter's moons.
- * @return {JupiterMoonsInfo} Position and velocity vectors of Jupiter's largest 4 moons.
+ * @param {FlexibleDateTime} date
+ *      The date and time for which to calculate Jupiter's moons.
+ *
+ * @return {JupiterMoonsInfo}
+ *      Position and velocity vectors of Jupiter's largest 4 moons.
  */
 export declare function JupiterMoons(date: FlexibleDateTime): JupiterMoonsInfo;
 /**
@@ -834,11 +837,11 @@ export declare function JupiterMoons(date: FlexibleDateTime): JupiterMoonsInfo;
  * body at a specified time. The position is not corrected for light travel time or aberration.
  *
  * @param {Body} body
- *      One of the strings
- *      `"Sun"`, `"Moon"`, `"Mercury"`, `"Venus"`,
- *      `"Earth"`, `"Mars"`, `"Jupiter"`, `"Saturn"`,
- *      `"Uranus"`, `"Neptune"`, `"Pluto"`,
- *      `"SSB"`, or `"EMB"`.
+ *      One of the following values:
+ *      `Body.Sun`, `Body.Moon`, `Body.Mercury`, `Body.Venus`,
+ *      `Body.Earth`, `Body.Mars`, `Body.Jupiter`, `Body.Saturn`,
+ *      `Body.Uranus`, `Body.Neptune`, `Body.Pluto`,
+ *      `Body.SSB`, or `Body.EMB`.
  *
  * @param {FlexibleDateTime} date
  *      The date and time for which the body's position is to be calculated.
@@ -880,10 +883,10 @@ export declare function HelioDistance(body: Body, date: FlexibleDateTime): numbe
  * coming from that body.
  *
  * @param {Body} body
- *      One of the strings
- *      `"Sun"`, `"Moon"`, `"Mercury"`, `"Venus"`,
- *      `"Earth"`, `"Mars"`, `"Jupiter"`, `"Saturn"`,
- *      `"Uranus"`, `"Neptune"`, or `"Pluto"`.
+ *      One of the following values:
+ *      `Body.Sun`, `Body.Moon`, `Body.Mercury`, `Body.Venus`,
+ *      `Body.Earth`, `Body.Mars`, `Body.Jupiter`, `Body.Saturn`,
+ *      `Body.Uranus`, `Body.Neptune`, or `Body.Pluto`.
  *
  * @param {FlexibleDateTime} date
  *      The date and time for which the body's position is to be calculated.
@@ -908,9 +911,11 @@ export declare function GeoVector(body: Body, date: FlexibleDateTime, aberration
  *      Supported values are `Body.Sun`, `Body.Moon`, `Body.EMB`, `Body.SSB`, and all planets:
  *      `Body.Mercury`, `Body.Venus`, `Body.Earth`, `Body.Mars`, `Body.Jupiter`,
  *      `Body.Saturn`, `Body.Uranus`, `Body.Neptune`, `Body.Pluto`.
+ *
  * @param {FlexibleDateTime} date
  *      The date and time for which to calculate position and velocity.
- * @returns {StateVector}
+ *
+ *  @returns {StateVector}
  *      An object that contains barycentric position and velocity vectors.
  */
 export declare function BaryState(body: Body, date: FlexibleDateTime): StateVector;
@@ -932,9 +937,11 @@ export declare function BaryState(body: Body, date: FlexibleDateTime): StateVect
  *      Supported values are `Body.Sun`, `Body.Moon`, `Body.EMB`, `Body.SSB`, and all planets:
  *      `Body.Mercury`, `Body.Venus`, `Body.Earth`, `Body.Mars`, `Body.Jupiter`,
  *      `Body.Saturn`, `Body.Uranus`, `Body.Neptune`, `Body.Pluto`.
- * @param {FlexibleDateTime} date
+ *
+ *  @param {FlexibleDateTime} date
  *      The date and time for which to calculate position and velocity.
- * @returns {StateVector}
+ *
+ *  @returns {StateVector}
  *      An object that contains heliocentric position and velocity vectors.
  */
 export declare function HelioState(body: Body, date: FlexibleDateTime): StateVector;
@@ -1194,7 +1201,7 @@ export declare class IlluminationInfo {
  *
  * @param {Body} body
  *      The name of the celestial body being observed.
- *      Not allowed to be `"Earth"`.
+ *      Not allowed to be `Body.Earth`.
  *
  * @param {FlexibleDateTime} date
  *      The date and time for which to calculate the illumination data for the given body.
@@ -1217,7 +1224,7 @@ export declare function Illumination(body: Body, date: FlexibleDateTime): Illumi
  * This means the Earth and the other planet are on opposite sides of the Sun.
  *
  * @param {Body} body
- *      The name of a planet other than the Earth.
+ *      Any planet other than the Earth.
  *
  * @param {number} targetRelLon
  *      The desired angular difference in degrees between the ecliptic longitudes
@@ -1326,6 +1333,8 @@ export declare function SearchMoonQuarter(dateStart: FlexibleDateTime): MoonQuar
  *
  * @param {MoonQuarter} mq
  *      The return value of a prior call to {@link MoonQuarter} or `NextMoonQuarter`.
+ *
+ * @returns {MoonQuarter}
  */
 export declare function NextMoonQuarter(mq: MoonQuarter): MoonQuarter;
 /**
@@ -1340,7 +1349,7 @@ export declare function NextMoonQuarter(mq: MoonQuarter): MoonQuarter;
  * The times are adjusted for typical atmospheric refraction conditions.
  *
  * @param {Body} body
- *      The name of the body to find the rise or set time for.
+ *      The body to find the rise or set time for.
  *
  * @param {Observer} observer
  *      Specifies the geographic coordinates and elevation above sea level of the observer.
@@ -1381,7 +1390,7 @@ export declare function SearchRiseSet(body: Body, observer: Observer, direction:
  * Astronomical twilight uses -18 degrees as the `altitude` value.
  *
  * @param {Body} body
- *      The name of the body for which to find the altitude event.
+ *      The body for which to find the altitude event.
  *      Can be the Sun, Moon, or any planet other than the Earth.
  *
  * @param {Observer} observer
@@ -1442,7 +1451,7 @@ export declare class HourAngleEvent {
  * at its minimum altitude.
  *
  * @param {Body} body
- *      The name of a celestial body other than the Earth.
+ *      A celestial body other than the Earth.
  *
  * @param {Observer} observer
  *      Specifies the geographic coordinates and elevation above sea level of the observer.
@@ -1576,7 +1585,10 @@ export declare class ElongationEvent {
  * It is also used to determine how far a planet is from opposition, conjunction, or quadrature.
  *
  * @param {Body} body
- *      The name of the observed body. Not allowed to be `"Earth"`.
+ *      The name of the observed body. Not allowed to be `Body.Earth`.
+ *
+ * @param {FlexibleDateTime} date
+ *      The date and time of the observation.
  *
  * @returns {ElongationEvent}
  */
@@ -1593,8 +1605,11 @@ export declare function Elongation(body: Body, date: FlexibleDateTime): Elongati
  * maximum elongation, the elongation in degrees, and whether
  * the body is visible in the morning or evening.
  *
- * @param {Body} body     Either `"Mercury"` or `"Venus"`.
- * @param {FlexibleDateTime} startDate  The date and time after which to search for the next maximum elongation event.
+ * @param {Body} body
+ *      Either `Body.Mercury` or `Body.Venus`.
+ *
+ * @param {FlexibleDateTime} startDate
+ *      The date and time after which to search for the next maximum elongation event.
  *
  * @returns {ElongationEvent}
  */
@@ -1603,8 +1618,8 @@ export declare function SearchMaxElongation(body: Body, startDate: FlexibleDateT
  * @brief Searches for the date and time Venus will next appear brightest as seen from the Earth.
  *
  * @param {Body} body
- *      Currently only `"Venus"` is supported.
- *      Mercury's peak magnitude occurs at superior conjunction, when it is virtually impossible to see from Earth,
+ *      Currently only `Body.Venus` is supported.
+ *      Mercury's peak magnitude occurs at superior conjunction, when it is impossible to see from Earth,
  *      so peak magnitude events have little practical value for that planet.
  *      The Moon reaches peak magnitude very close to full moon, which can be found using
  *      {@link SearchMoonQuarter} or {@link SearchMoonPhase}.
@@ -1638,6 +1653,8 @@ export declare function SearchPeakMagnitude(body: Body, startDate: FlexibleDateT
  *
  * @see {@link SearchLunarApsis}
  * @see {@link NextLunarApsis}
+ * @see {@link SearchPlanetApsis}
+ * @see {@link NextPlanetApsis}
  */
 export declare class Apsis {
     time: AstroTime;
@@ -1694,15 +1711,15 @@ export declare function NextLunarApsis(apsis: Apsis): Apsis;
  *
  * @param {Body} body
  *      The planet for which to find the next perihelion/aphelion event.
- *      Not allowed to be `"Sun"` or `"Moon"`.
+ *      Not allowed to be `Body.Sun` or `Body.Moon`.
  *
- * @param {AstroTime} startTime
+ * @param {FlexibleDateTime} startTime
  *      The date and time at which to start searching for the next perihelion or aphelion.
  *
  * @returns {Apsis}
  *      The next perihelion or aphelion that occurs after `startTime`.
  */
-export declare function SearchPlanetApsis(body: Body, startTime: AstroTime): Apsis;
+export declare function SearchPlanetApsis(body: Body, startTime: FlexibleDateTime): Apsis;
 /**
  * @brief Finds the next planetary perihelion or aphelion event in a series.
  *
@@ -1713,7 +1730,7 @@ export declare function SearchPlanetApsis(body: Body, startTime: AstroTime): Aps
  *
  * @param {Body} body
  *      The planet for which to find the next perihelion/aphelion event.
- *      Not allowed to be `"Sun"` or `"Moon"`.
+ *      Not allowed to be `Body.Sun` or `Body.Moon`.
  *      Must match the body passed into the call that produced the `apsis` parameter.
  *
  * @param {Apsis} apsis
@@ -1805,13 +1822,13 @@ export declare function Pivot(rotation: RotationMatrix, axis: 0 | 1 | 2, angle: 
  * @param {Spherical} sphere
  *      Spherical coordinates to be converted.
  *
- * @param {AstroTime} time
+ * @param {FlexibleDateTime} time
  *      The time that should be included in the returned vector.
  *
  * @returns {Vector}
  *      The vector form of the supplied spherical coordinates.
  */
-export declare function VectorFromSphere(sphere: Spherical, time: AstroTime): Vector;
+export declare function VectorFromSphere(sphere: Spherical, time: FlexibleDateTime): Vector;
 /**
  * @brief Given an equatorial vector, calculates equatorial angular coordinates.
  *
@@ -1875,7 +1892,7 @@ export declare function HorizonFromVector(vector: Vector, refraction: string): S
  *      `lon` holds the azimuth in degrees clockwise from north,
  *      and `dist` holds the distance from the observer to the object in AU.
  *
- * @param {AstroTime} time
+ * @param {FlexibleDateTime} time
  *      The date and time of the observation. This is needed because the returned
  *      vector object requires a valid time value when passed to certain other functions.
  *
@@ -1887,7 +1904,7 @@ export declare function HorizonFromVector(vector: Vector, refraction: string): S
  * @returns {Vector}
  *      A vector in the horizontal system: `x` = north, `y` = west, and `z` = zenith (up).
  */
-export declare function VectorFromHorizon(sphere: Spherical, time: AstroTime, refraction: string): Vector;
+export declare function VectorFromHorizon(sphere: Spherical, time: FlexibleDateTime, refraction: string): Vector;
 /**
  * @brief Calculates the amount of "lift" to an altitude angle caused by atmospheric refraction.
  *
@@ -2096,7 +2113,7 @@ export declare function Rotation_HOR_EQJ(time: FlexibleDateTime, observer: Obser
  * @param {Observer} observer
  *      A location near the Earth's mean sea level that defines the observer's horizon.
  *
- * @return
+ * @returns {RotationMatrix}
  *      A rotation matrix that converts EQJ to HOR at `time` and for `observer`.
  *      The components of the horizontal vector are:
  *      x = north, y = west, z = zenith (straight up from the observer).
@@ -2367,12 +2384,12 @@ export declare class GlobalSolarEclipseInfo {
  * previous call to `SearchLunarEclipse` or `NextLunarEclipse`
  * to find the next lunar eclipse.
  *
- * @param {AstroTime} prevEclipseTime
+ * @param {FlexibleDateTime} prevEclipseTime
  *      A date and time near a full moon. Lunar eclipse search will start at the next full moon.
  *
  * @returns {LunarEclipseInfo}
  */
-export declare function NextLunarEclipse(prevEclipseTime: AstroTime): LunarEclipseInfo;
+export declare function NextLunarEclipse(prevEclipseTime: FlexibleDateTime): LunarEclipseInfo;
 /**
  * @brief Searches for a solar eclipse visible anywhere on the Earth's surface.
  *
@@ -2383,12 +2400,12 @@ export declare function NextLunarEclipse(prevEclipseTime: AstroTime): LunarEclip
  * then keep calling {@link NextGlobalSolarEclipse} as many times as desired,
  * passing in the `peak` value returned from the previous call.
  *
- * @param {AstroTime} startTime
+ * @param {FlexibleDateTime} startTime
  *      The date and time for starting the search for a solar eclipse.
  *
  * @returns {GlobalSolarEclipseInfo}
  */
-export declare function SearchGlobalSolarEclipse(startTime: AstroTime): GlobalSolarEclipseInfo;
+export declare function SearchGlobalSolarEclipse(startTime: FlexibleDateTime): GlobalSolarEclipseInfo;
 /**
  * @brief Searches for the next global solar eclipse in a series.
  *
@@ -2398,12 +2415,12 @@ export declare function SearchGlobalSolarEclipse(startTime: AstroTime): GlobalSo
  * previous call to `SearchGlobalSolarEclipse` or `NextGlobalSolarEclipse`
  * to find the next solar eclipse.
  *
- * @param {AstroTime} prevEclipseTime
+ * @param {FlexibleDateTime} prevEclipseTime
  *      A date and time near a new moon. Solar eclipse search will start at the next new moon.
  *
  * @returns {GlobalSolarEclipseInfo}
  */
-export declare function NextGlobalSolarEclipse(prevEclipseTime: AstroTime): GlobalSolarEclipseInfo;
+export declare function NextGlobalSolarEclipse(prevEclipseTime: FlexibleDateTime): GlobalSolarEclipseInfo;
 /**
  * @brief Holds a time and the observed altitude of the Sun at that time.
  *
@@ -2497,7 +2514,7 @@ export declare class LocalSolarEclipseInfo {
  * completely invisible to the observer due to the time of day.
  * See {@link LocalSolarEclipseInfo} for more information about this topic.
  *
- * @param {AstroTime} startTime
+ * @param {FlexibleDateTime} startTime
  *      The date and time for starting the search for a solar eclipse.
  *
  * @param {Observer} observer
@@ -2505,7 +2522,7 @@ export declare class LocalSolarEclipseInfo {
  *
  * @returns {LocalSolarEclipseInfo}
  */
-export declare function SearchLocalSolarEclipse(startTime: AstroTime, observer: Observer): LocalSolarEclipseInfo;
+export declare function SearchLocalSolarEclipse(startTime: FlexibleDateTime, observer: Observer): LocalSolarEclipseInfo;
 /**
  * @brief Searches for the next local solar eclipse in a series.
  *
@@ -2518,7 +2535,7 @@ export declare function SearchLocalSolarEclipse(startTime: AstroTime, observer: 
  * A solar eclipse may be partial, annular, or total.
  * See {@link LocalSolarEclipseInfo} for more information.
  *
- * @param {AstroTime} prevEclipseTime
+ * @param {FlexibleDateTime} prevEclipseTime
  *      The date and time for starting the search for a solar eclipse.
  *
  * @param {Observer} observer
@@ -2526,7 +2543,7 @@ export declare function SearchLocalSolarEclipse(startTime: AstroTime, observer: 
  *
  * @returns {LocalSolarEclipseInfo}
  */
-export declare function NextLocalSolarEclipse(prevEclipseTime: AstroTime, observer: Observer): LocalSolarEclipseInfo;
+export declare function NextLocalSolarEclipse(prevEclipseTime: FlexibleDateTime, observer: Observer): LocalSolarEclipseInfo;
 /**
  * @brief Information about a transit of Mercury or Venus, as seen from the Earth.
  *
@@ -2569,14 +2586,14 @@ export declare class TransitInfo {
  * {@link NextTransit}.
  *
  * @param {Body} body
- *      The planet whose transit is to be found. Must be `"Mercury"` or `"Venus"`.
+ *      The planet whose transit is to be found. Must be `Body.Mercury` or `Body.Venus`.
  *
- * @param {AstroTime} startTime
+ * @param {FlexibleDateTime} startTime
  *      The date and time for starting the search for a transit.
  *
  * @returns {TransitInfo}
  */
-export declare function SearchTransit(body: Body, startTime: AstroTime): TransitInfo;
+export declare function SearchTransit(body: Body, startTime: FlexibleDateTime): TransitInfo;
 /**
  * @brief Searches for the next transit of Mercury or Venus in a series.
  *
@@ -2585,14 +2602,14 @@ export declare function SearchTransit(body: Body, startTime: AstroTime): Transit
  * Keep calling this function as many times as you want to keep finding more transits.
  *
  * @param {Body} body
- *      The planet whose transit is to be found. Must be `"Mercury"` or `"Venus"`.
+ *      The planet whose transit is to be found. Must be `Body.Mercury` or `Body.Venus`.
  *
- * @param {AstroTime} prevTransitTime
+ * @param {FlexibleDateTime} prevTransitTime
  *      A date and time near the previous transit.
  *
  * @returns {TransitInfo}
  */
-export declare function NextTransit(body: Body, prevTransitTime: AstroTime): TransitInfo;
+export declare function NextTransit(body: Body, prevTransitTime: FlexibleDateTime): TransitInfo;
 /**
  * @brief Information about a body's rotation axis at a given time.
  *

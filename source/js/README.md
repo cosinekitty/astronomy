@@ -552,6 +552,8 @@ For the Moon orbiting the Earth, apsis is a perigee or apogee, respectively.
 
 - [SearchLunarApsis](#SearchLunarApsis)
 - [NextLunarApsis](#NextLunarApsis)
+- [SearchPlanetApsis](#SearchPlanetApsis)
+- [NextPlanetApsis](#NextPlanetApsis)
 
 **Properties**
 
@@ -1067,7 +1069,7 @@ However, it can have a small effect on the apparent positions of other bodies.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| body | [<code>Body</code>](#Body) | The body for which to find equatorial coordinates.      Not allowed to be `"Earth"`. |
+| body | [<code>Body</code>](#Body) | The body for which to find equatorial coordinates.      Not allowed to be `Body.Earth`. |
 | date | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | Specifies the date and time at which the body is to be observed. |
 | observer | [<code>Observer</code>](#Observer) | The location on the Earth of the observer. |
 | ofdate | <code>bool</code> | Pass `true` to return equatorial coordinates of date,      i.e. corrected for precession and nutation at the given date.      This is needed to get correct horizontal coordinates when you call      [Horizon](#Horizon).      Pass `false` to return equatorial coordinates in the J2000 system. |
@@ -1291,7 +1293,7 @@ body at a specified time. The position is not corrected for light travel time or
 
 | Param | Type | Description |
 | --- | --- | --- |
-| body | [<code>Body</code>](#Body) | One of the strings      `"Sun"`, `"Moon"`, `"Mercury"`, `"Venus"`,      `"Earth"`, `"Mars"`, `"Jupiter"`, `"Saturn"`,      `"Uranus"`, `"Neptune"`, `"Pluto"`,      `"SSB"`, or `"EMB"`. |
+| body | [<code>Body</code>](#Body) | One of the following values:      `Body.Sun`, `Body.Moon`, `Body.Mercury`, `Body.Venus`,      `Body.Earth`, `Body.Mars`, `Body.Jupiter`, `Body.Saturn`,      `Body.Uranus`, `Body.Neptune`, `Body.Pluto`,      `Body.SSB`, or `Body.EMB`. |
 | date | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time for which the body's position is to be calculated. |
 
 
@@ -1336,7 +1338,7 @@ coming from that body.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| body | [<code>Body</code>](#Body) | One of the strings      `"Sun"`, `"Moon"`, `"Mercury"`, `"Venus"`,      `"Earth"`, `"Mars"`, `"Jupiter"`, `"Saturn"`,      `"Uranus"`, `"Neptune"`, or `"Pluto"`. |
+| body | [<code>Body</code>](#Body) | One of the following values:      `Body.Sun`, `Body.Moon`, `Body.Mercury`, `Body.Venus`,      `Body.Earth`, `Body.Mars`, `Body.Jupiter`, `Body.Saturn`,      `Body.Uranus`, `Body.Neptune`, or `Body.Pluto`. |
 | date | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time for which the body's position is to be calculated. |
 | aberration | <code>bool</code> | Pass `true` to correct for      <a href="https://en.wikipedia.org/wiki/Aberration_of_light">aberration</a>,      or `false` to leave uncorrected. |
 
@@ -1531,7 +1533,7 @@ at the given date and time, as seen from the Earth.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| body | [<code>Body</code>](#Body) | The name of the celestial body being observed.      Not allowed to be `"Earth"`. |
+| body | [<code>Body</code>](#Body) | The name of the celestial body being observed.      Not allowed to be `Body.Earth`. |
 | date | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time for which to calculate the illumination data for the given body. |
 
 
@@ -1557,7 +1559,7 @@ This means the Earth and the other planet are on opposite sides of the Sun.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| body | [<code>Body</code>](#Body) | The name of a planet other than the Earth. |
+| body | [<code>Body</code>](#Body) | Any planet other than the Earth. |
 | targetRelLon | <code>number</code> | The desired angular difference in degrees between the ecliptic longitudes      of `body` and the Earth. Must be in the range (-180, +180]. |
 | startDate | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time after which to find the next occurrence of the      body and the Earth reaching the desired relative longitude. |
 
@@ -1635,7 +1637,7 @@ passing the previous return value as the argument to the next call.
 
 <a name="NextMoonQuarter"></a>
 
-## NextMoonQuarter(mq)
+## NextMoonQuarter(mq) ⇒ [<code>MoonQuarter</code>](#MoonQuarter)
 **Kind**: global function  
 **Brief**: Finds the next quarter lunar phase in a series.
 
@@ -1668,7 +1670,7 @@ The times are adjusted for typical atmospheric refraction conditions.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| body | [<code>Body</code>](#Body) | The name of the body to find the rise or set time for. |
+| body | [<code>Body</code>](#Body) | The body to find the rise or set time for. |
 | observer | [<code>Observer</code>](#Observer) | Specifies the geographic coordinates and elevation above sea level of the observer. |
 | direction | <code>number</code> | Either +1 to find rise time or -1 to find set time.      Any other value will cause an exception to be thrown. |
 | dateStart | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time after which the specified rise or set time is to be found. |
@@ -1703,7 +1705,7 @@ Astronomical twilight uses -18 degrees as the `altitude` value.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| body | [<code>Body</code>](#Body) | The name of the body for which to find the altitude event.      Can be the Sun, Moon, or any planet other than the Earth. |
+| body | [<code>Body</code>](#Body) | The body for which to find the altitude event.      Can be the Sun, Moon, or any planet other than the Earth. |
 | observer | [<code>Observer</code>](#Observer) | Specifies the geographic coordinates and elevation above sea level of the observer. |
 | direction | <code>number</code> | Either +1 to find when the body ascends through the altitude,      or -1 for when the body descends through the altitude.      Any other value will cause an exception to be thrown. |
 | dateStart | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time after which the specified altitude event is to be found. |
@@ -1731,7 +1733,7 @@ at its minimum altitude.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| body | [<code>Body</code>](#Body) | The name of a celestial body other than the Earth. |
+| body | [<code>Body</code>](#Body) | A celestial body other than the Earth. |
 | observer | [<code>Observer</code>](#Observer) | Specifies the geographic coordinates and elevation above sea level of the observer. |
 | hourAngle | <code>number</code> | The hour angle expressed in      <a href="https://en.wikipedia.org/wiki/Sidereal_time">sidereal</a>      hours for which the caller seeks to find the body attain.      The value must be in the range [0, 24).      The hour angle represents the number of sidereal hours that have      elapsed since the most recent time the body crossed the observer's local      <a href="https://en.wikipedia.org/wiki/Meridian_(astronomy)">meridian</a>.      This specifying `hourAngle` = 0 finds the moment in time      the body reaches the highest angular altitude in a given sidereal day. |
 | dateStart | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time after which the desired hour angle crossing event      is to be found. |
@@ -1754,7 +1756,7 @@ at its minimum altitude.
 
 <a name="Elongation"></a>
 
-## Elongation(body) ⇒ [<code>ElongationEvent</code>](#ElongationEvent)
+## Elongation(body, date) ⇒ [<code>ElongationEvent</code>](#ElongationEvent)
 **Kind**: global function  
 **Brief**: Calculates the viewing conditions of a body relative to the Sun.
 
@@ -1770,7 +1772,8 @@ It is also used to determine how far a planet is from opposition, conjunction, o
 
 | Param | Type | Description |
 | --- | --- | --- |
-| body | [<code>Body</code>](#Body) | The name of the observed body. Not allowed to be `"Earth"`. |
+| body | [<code>Body</code>](#Body) | The name of the observed body. Not allowed to be `Body.Earth`. |
+| date | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time of the observation. |
 
 
 * * *
@@ -1792,7 +1795,7 @@ the body is visible in the morning or evening.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| body | [<code>Body</code>](#Body) | Either `"Mercury"` or `"Venus"`. |
+| body | [<code>Body</code>](#Body) | Either `Body.Mercury` or `Body.Venus`. |
 | startDate | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time after which to search for the next maximum elongation event. |
 
 
@@ -1806,7 +1809,7 @@ the body is visible in the morning or evening.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| body | [<code>Body</code>](#Body) | Currently only `"Venus"` is supported.      Mercury's peak magnitude occurs at superior conjunction, when it is virtually impossible to see from Earth,      so peak magnitude events have little practical value for that planet.      The Moon reaches peak magnitude very close to full moon, which can be found using      [SearchMoonQuarter](#SearchMoonQuarter) or [SearchMoonPhase](#SearchMoonPhase).      The other planets reach peak magnitude very close to opposition,      which can be found using [SearchRelativeLongitude](#SearchRelativeLongitude). |
+| body | [<code>Body</code>](#Body) | Currently only `Body.Venus` is supported.      Mercury's peak magnitude occurs at superior conjunction, when it is impossible to see from Earth,      so peak magnitude events have little practical value for that planet.      The Moon reaches peak magnitude very close to full moon, which can be found using      [SearchMoonQuarter](#SearchMoonQuarter) or [SearchMoonPhase](#SearchMoonPhase).      The other planets reach peak magnitude very close to opposition,      which can be found using [SearchRelativeLongitude](#SearchRelativeLongitude). |
 | startDate | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time after which to find the next peak magnitude event. |
 
 
@@ -1872,8 +1875,8 @@ as many times as desired.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| body | [<code>Body</code>](#Body) | The planet for which to find the next perihelion/aphelion event.      Not allowed to be `"Sun"` or `"Moon"`. |
-| startTime | [<code>AstroTime</code>](#AstroTime) | The date and time at which to start searching for the next perihelion or aphelion. |
+| body | [<code>Body</code>](#Body) | The planet for which to find the next perihelion/aphelion event.      Not allowed to be `Body.Sun` or `Body.Moon`. |
+| startTime | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time at which to start searching for the next perihelion or aphelion. |
 
 
 * * *
@@ -1892,7 +1895,7 @@ See [SearchPlanetApsis](#SearchPlanetApsis) for more details.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| body | [<code>Body</code>](#Body) | The planet for which to find the next perihelion/aphelion event.      Not allowed to be `"Sun"` or `"Moon"`.      Must match the body passed into the call that produced the `apsis` parameter. |
+| body | [<code>Body</code>](#Body) | The planet for which to find the next perihelion/aphelion event.      Not allowed to be `Body.Sun` or `Body.Moon`.      Must match the body passed into the call that produced the `apsis` parameter. |
 | apsis | [<code>Apsis</code>](#Apsis) | An apsis event obtained from a call to [SearchPlanetApsis](#SearchPlanetApsis) or `NextPlanetApsis`. |
 
 
@@ -1987,7 +1990,7 @@ includes the time, as required by `AstroTime`.
 | Param | Type | Description |
 | --- | --- | --- |
 | sphere | [<code>Spherical</code>](#Spherical) | Spherical coordinates to be converted. |
-| time | [<code>AstroTime</code>](#AstroTime) | The time that should be included in the returned vector. |
+| time | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The time that should be included in the returned vector. |
 
 
 * * *
@@ -2064,7 +2067,7 @@ and is expressed in astronomical units (AU).
 | Param | Type | Description |
 | --- | --- | --- |
 | sphere | [<code>Spherical</code>](#Spherical) | A structure that contains apparent horizontal coordinates:      `lat` holds the refracted azimuth angle,      `lon` holds the azimuth in degrees clockwise from north,      and `dist` holds the distance from the observer to the object in AU. |
-| time | [<code>AstroTime</code>](#AstroTime) | The date and time of the observation. This is needed because the returned      vector object requires a valid time value when passed to certain other functions. |
+| time | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time of the observation. This is needed because the returned      vector object requires a valid time value when passed to certain other functions. |
 | refraction | <code>string</code> | `"normal"`: correct altitude for atmospheric refraction (recommended).      `"jplhor"`: for JPL Horizons compatibility testing only; not recommended for normal use.      `null`: no atmospheric refraction correction is performed. |
 
 
@@ -2284,9 +2287,9 @@ Target: EQJ = equatorial system, using equator at the J2000 epoch.
 
 <a name="Rotation_EQJ_HOR"></a>
 
-## Rotation\_EQJ\_HOR(time, observer) ⇒
+## Rotation\_EQJ\_HOR(time, observer) ⇒ [<code>RotationMatrix</code>](#RotationMatrix)
 **Kind**: global function  
-**Returns**: A rotation matrix that converts EQJ to HOR at `time` and for `observer`.
+**Returns**: [<code>RotationMatrix</code>](#RotationMatrix) - A rotation matrix that converts EQJ to HOR at `time` and for `observer`.
      The components of the horizontal vector are:
      x = north, y = west, z = zenith (straight up from the observer).
      These components are chosen so that the "right-hand rule" works for the vector
@@ -2476,7 +2479,7 @@ to find the next lunar eclipse.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| prevEclipseTime | [<code>AstroTime</code>](#AstroTime) | A date and time near a full moon. Lunar eclipse search will start at the next full moon. |
+| prevEclipseTime | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | A date and time near a full moon. Lunar eclipse search will start at the next full moon. |
 
 
 * * *
@@ -2496,7 +2499,7 @@ passing in the `peak` value returned from the previous call.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| startTime | [<code>AstroTime</code>](#AstroTime) | The date and time for starting the search for a solar eclipse. |
+| startTime | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time for starting the search for a solar eclipse. |
 
 
 * * *
@@ -2515,7 +2518,7 @@ to find the next solar eclipse.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| prevEclipseTime | [<code>AstroTime</code>](#AstroTime) | A date and time near a new moon. Solar eclipse search will start at the next new moon. |
+| prevEclipseTime | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | A date and time near a new moon. Solar eclipse search will start at the next new moon. |
 
 
 * * *
@@ -2540,7 +2543,7 @@ See [LocalSolarEclipseInfo](#LocalSolarEclipseInfo) for more information about t
 
 | Param | Type | Description |
 | --- | --- | --- |
-| startTime | [<code>AstroTime</code>](#AstroTime) | The date and time for starting the search for a solar eclipse. |
+| startTime | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time for starting the search for a solar eclipse. |
 | observer | [<code>Observer</code>](#Observer) | The geographic location of the observer. |
 
 
@@ -2563,7 +2566,7 @@ See [LocalSolarEclipseInfo](#LocalSolarEclipseInfo) for more information.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| prevEclipseTime | [<code>AstroTime</code>](#AstroTime) | The date and time for starting the search for a solar eclipse. |
+| prevEclipseTime | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time for starting the search for a solar eclipse. |
 | observer | [<code>Observer</code>](#Observer) | The geographic location of the observer. |
 
 
@@ -2583,8 +2586,8 @@ To continue the search, pass the `finish` time in the returned structure to
 
 | Param | Type | Description |
 | --- | --- | --- |
-| body | [<code>Body</code>](#Body) | The planet whose transit is to be found. Must be `"Mercury"` or `"Venus"`. |
-| startTime | [<code>AstroTime</code>](#AstroTime) | The date and time for starting the search for a transit. |
+| body | [<code>Body</code>](#Body) | The planet whose transit is to be found. Must be `Body.Mercury` or `Body.Venus`. |
+| startTime | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time for starting the search for a transit. |
 
 
 * * *
@@ -2601,8 +2604,8 @@ Keep calling this function as many times as you want to keep finding more transi
 
 | Param | Type | Description |
 | --- | --- | --- |
-| body | [<code>Body</code>](#Body) | The planet whose transit is to be found. Must be `"Mercury"` or `"Venus"`. |
-| prevTransitTime | [<code>AstroTime</code>](#AstroTime) | A date and time near the previous transit. |
+| body | [<code>Body</code>](#Body) | The planet whose transit is to be found. Must be `Body.Mercury` or `Body.Venus`. |
+| prevTransitTime | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | A date and time near the previous transit. |
 
 
 * * *
@@ -2643,7 +2646,7 @@ a number representing the real-valued number of UT days since the J2000 epoch,
 or an [AstroTime](#AstroTime) object.
 
 This flexibility is for convenience of outside callers.
-Internally, Astronomy Engine always converts a `FlexibleTime` parameter
+Internally, Astronomy Engine always converts a `FlexibleDateTime` parameter
 to an `AstroTime` object by calling [MakeTime](#MakeTime).  
 
 * * *
