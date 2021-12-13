@@ -1,0 +1,1 @@
+g++ -o raytrace -O3 -I.. -I../../../source/c *.cpp ../astro_demo_common.c ../../../source/c/astronomy.c
