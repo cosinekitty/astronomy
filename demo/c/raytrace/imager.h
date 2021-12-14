@@ -1,6 +1,6 @@
 /*
     imager.h
-    
+
     Copyright (C) 2013 by Don Cross  -  http://cosinekitty.com/raytrace
 
     This software is provided 'as-is', without any express or implied
@@ -42,7 +42,7 @@ namespace Imager
     // whether or not a point is inside a solid or not,
     // or whether a point is at least a minimum distance
     // away from another point.
-    const double EPSILON = 1.0e-6;      
+    const double EPSILON = 1.0e-6;
 
     inline double RadiansFromDegrees(double degrees)
     {
@@ -76,7 +76,7 @@ namespace Imager
     // An exception thrown when multiple intersections lie at the
     // same distance from the vantage point.  SaveImage catches
     // these and marks such pixels as ambiguous.  It performs a second
-    // pass later that averages the color values of surrounding 
+    // pass later that averages the color values of surrounding
     // non-ambiguous pixels.
     class AmbiguousIntersectionException
     {
@@ -91,7 +91,7 @@ namespace Imager
         double y;
         double z;
 
-        // Default constructor: create a vector whose 
+        // Default constructor: create a vector whose
         // x, y, z components are all zero.
         Vector()
             : x(0.0)
@@ -100,7 +100,7 @@ namespace Imager
         {
         }
 
-        // This constructor initializes a vector 
+        // This constructor initializes a vector
         // to any desired component values.
         Vector(double _x, double _y, double _z)
             : x(_x)
@@ -164,7 +164,7 @@ namespace Imager
         return Vector(-a.x, -a.y, -a.z);
     }
 
-    inline double DotProduct (const Vector& a, const Vector& b) 
+    inline double DotProduct (const Vector& a, const Vector& b)
     {
         return (a.x*b.x) + (a.y*b.y) + (a.z*b.z);
     }
@@ -172,8 +172,8 @@ namespace Imager
     inline Vector CrossProduct (const Vector& a, const Vector& b)
     {
         return Vector(
-            (a.y * b.z) - (a.z * b.y), 
-            (a.z * b.x) - (a.x * b.z), 
+            (a.y * b.z) - (a.z * b.y),
+            (a.z * b.x) - (a.x * b.z),
             (a.x * b.y) - (a.y * b.x));
     }
 
@@ -261,8 +261,8 @@ namespace Imager
     inline Color operator * (double scalar, const Color &color)
     {
         return Color(
-            scalar * color.red, 
-            scalar * color.green, 
+            scalar * color.red,
+            scalar * color.green,
             scalar * color.blue);
     }
 
@@ -292,7 +292,7 @@ namespace Imager
 
     inline void ValidateRefraction(double refraction)
     {
-        if (refraction < REFRACTION_MINIMUM || 
+        if (refraction < REFRACTION_MINIMUM ||
             refraction > REFRACTION_MAXIMUM)
         {
             throw ImagerException("Invalid refractive index.");
@@ -313,7 +313,7 @@ namespace Imager
         }
 
         explicit Optics(
-            Color _matteColor, 
+            Color _matteColor,
             Color _glossColor  = Color(0.0, 0.0, 0.0),
             double _opacity    = 1.0)
         {
@@ -357,7 +357,7 @@ namespace Imager
         // The location of the intersection point.
         Vector point;
 
-        // The unit vector perpendicular to the 
+        // The unit vector perpendicular to the
         // surface at the intersection point.
         Vector surfaceNormal;
 
@@ -365,15 +365,15 @@ namespace Imager
         // intersected with.
         const SolidObject* solid;
 
-        // An optional tag for classes derived from SolidObject to cache 
-        // arbitrary information about surface optics.  Most classes can 
-        // safely leave this pointer as NULL, its default value.
+        // An optional tag for classes derived from SolidObject to cache
+        // arbitrary information about surface optics.  Most classes can
+        // safely leave this pointer as nullptr, its default value.
         const void* context;
 
         // An optional tag used for debugging.
-        // Anything that finds an intersection may elect to make tag point 
-        // at a static string to help the programmer figure out, for example, 
-        // which of multiple surfaces was involved.  This is just a char* 
+        // Anything that finds an intersection may elect to make tag point
+        // at a static string to help the programmer figure out, for example,
+        // which of multiple surfaces was involved.  This is just a char*
         // instead of std::string to minimize overhead by eliminating dynamic
         // memory allocation.
         const char* tag;
@@ -384,9 +384,9 @@ namespace Imager
             : distanceSquared(1.0e+20)  // larger than any reasonable value
             , point()
             , surfaceNormal()
-            , solid(NULL)
-            , context(NULL)
-            , tag(NULL)
+            , solid(nullptr)
+            , context(nullptr)
+            , tag(nullptr)
         {
         }
     };
@@ -394,7 +394,7 @@ namespace Imager
     typedef std::vector<Intersection> IntersectionList;
 
     int PickClosestIntersection(
-        const IntersectionList& list, 
+        const IntersectionList& list,
         Intersection& intersection);
 
     //------------------------------------------------------------------------
@@ -437,29 +437,29 @@ namespace Imager
         {
         }
 
-        // Appends to 'intersectionList' all the 
-        // intersections found starting at the specified vantage 
+        // Appends to 'intersectionList' all the
+        // intersections found starting at the specified vantage
         // point in the direction of the direction vector.
         virtual void AppendAllIntersections(
-            const Vector& vantage, 
-            const Vector& direction, 
+            const Vector& vantage,
+            const Vector& direction,
             IntersectionList& intersectionList) const = 0;
 
-        // Searches for any intersections with this solid from the 
-        // vantage point in the given direction.  If none are found, the 
-        // function returns 0 and the 'intersection' parameter is left 
-        // unchanged.  Otherwise, returns the positive number of 
-        // intersections that lie at minimal distance from the vantage point 
-        // in that direction.  Usually this number will be 1 (a unique 
-        // intersection is closer than all the others) but it can be greater 
-        // if multiple intersections are equally close (e.g. the ray hitting 
-        // exactly at the corner of a cube could cause this function to 
-        // return 3).  If this function returns a value greater than zero, 
+        // Searches for any intersections with this solid from the
+        // vantage point in the given direction.  If none are found, the
+        // function returns 0 and the 'intersection' parameter is left
+        // unchanged.  Otherwise, returns the positive number of
+        // intersections that lie at minimal distance from the vantage point
+        // in that direction.  Usually this number will be 1 (a unique
+        // intersection is closer than all the others) but it can be greater
+        // if multiple intersections are equally close (e.g. the ray hitting
+        // exactly at the corner of a cube could cause this function to
+        // return 3).  If this function returns a value greater than zero,
         // it means the 'intersection' parameter has been filled in with the
         // closest intersection (or one of the equally closest intersections).
         int FindClosestIntersection(
-            const Vector& vantage, 
-            const Vector& direction, 
+            const Vector& vantage,
+            const Vector& direction,
             Intersection &intersection) const
         {
             cachedIntersectionList.clear();
@@ -488,7 +488,7 @@ namespace Imager
             return uniformOptics;
         }
 
-        // Returns the index of refraction of this solid.  
+        // Returns the index of refraction of this solid.
         // The refractive index is uniform throughout the solid.
         double GetRefractiveIndex() const
         {
@@ -504,7 +504,7 @@ namespace Imager
         virtual SolidObject& RotateZ(double angleInDegrees) = 0;
 
         // Moves the entire solid object by the delta values dx, dy, dz.
-        // Derived classes that override this method must chain to it 
+        // Derived classes that override this method must chain to it
         // in order to translate the center of rotation.
         virtual SolidObject& Translate(double dx, double dy, double dz)
         {
@@ -514,7 +514,7 @@ namespace Imager
             return *this;
         }
 
-        // Moves the center of the solid object to 
+        // Moves the center of the solid object to
         // the new location (cx, cy, cz).
         SolidObject& Move(double cx, double cy, double cz)
         {
@@ -522,7 +522,7 @@ namespace Imager
             return *this;
         }
 
-        // Moves the center of the solid object to the 
+        // Moves the center of the solid object to the
         // location specified by the position vector newCenter.
         SolidObject& Move(const Vector& newCenter)
         {
@@ -559,7 +559,7 @@ namespace Imager
             const Color& rawGlossColor)
         {
             uniformOptics.SetMatteGlossBalance(
-                glossFactor, 
+                glossFactor,
                 rawMatteColor,
                 rawGlossColor);
         }
@@ -599,7 +599,7 @@ namespace Imager
         // properties.
         Optics uniformOptics;
 
-        // A solid object has a uniform refractive index 
+        // A solid object has a uniform refractive index
         // throughout its contained volume.
         double refractiveIndex;
 
@@ -611,9 +611,9 @@ namespace Imager
         // and therefore make this flag irrelevant.
         const bool isFullyEnclosed;
 
-        // The following members are an optimization to minimize 
-        // the overhead and fragmentation caused by repeated 
-        // memory allocations creating and destroying 
+        // The following members are an optimization to minimize
+        // the overhead and fragmentation caused by repeated
+        // memory allocations creating and destroying
         // std::vector contents.
         mutable IntersectionList cachedIntersectionList;
         mutable IntersectionList enclosureList;
@@ -621,19 +621,19 @@ namespace Imager
 
     //------------------------------------------------------------------------
 
-    // This class encapsulates the notion of a binary operator 
-    // that operates on two SolidObjects.  Both SolidObjects 
+    // This class encapsulates the notion of a binary operator
+    // that operates on two SolidObjects.  Both SolidObjects
     // must support the Contains() method, or an exception
     // will occur during rendering.
     class SolidObject_BinaryOperator: public SolidObject
     {
     public:
-        // The parameters '_left' and '_right' must be dynamically 
-        // allocated using operator new. This class will own 
+        // The parameters '_left' and '_right' must be dynamically
+        // allocated using operator new. This class will own
         // responsibility for deleting them when it is itself deleted.
         SolidObject_BinaryOperator(
-            const Vector& _center, 
-            SolidObject* _left, 
+            const Vector& _center,
+            SolidObject* _left,
             SolidObject* _right)
                 : SolidObject(_center)
                 , left(_left)
@@ -644,13 +644,13 @@ namespace Imager
         virtual ~SolidObject_BinaryOperator()
         {
             delete left;
-            left = NULL;
+            left = nullptr;
 
             delete right;
-            right = NULL;
+            right = nullptr;
         }
 
-        // All rotations and translations are applied 
+        // All rotations and translations are applied
         // to the two nested solids in tandem.
 
         // The following three member functions rotate this
@@ -668,24 +668,24 @@ namespace Imager
         SolidObject& Right() const { return *right; }
 
         void NestedRotateX(
-            SolidObject &nested, 
-            double angleInDegrees, 
-            double a, 
+            SolidObject &nested,
+            double angleInDegrees,
+            double a,
             double b);
 
         void NestedRotateY(
-            SolidObject &nested, 
-            double angleInDegrees, 
-            double a, 
+            SolidObject &nested,
+            double angleInDegrees,
+            double a,
             double b);
 
         void NestedRotateZ(
-            SolidObject &nested, 
-            double angleInDegrees, 
-            double a, 
+            SolidObject &nested,
+            double angleInDegrees,
+            double a,
             double b);
 
-        // The following list is for caching and filtering 
+        // The following list is for caching and filtering
         // intersections with the left and right nested solids.
         // It is mutable to allow modification from const methods.
         mutable IntersectionList tempIntersectionList;
@@ -707,13 +707,13 @@ namespace Imager
         }
 
         virtual void AppendAllIntersections(
-            const Vector& vantage, 
-            const Vector& direction, 
+            const Vector& vantage,
+            const Vector& direction,
             IntersectionList& intersectionList) const;
 
         virtual bool Contains(const Vector& point) const
         {
-            // A point is inside the set union if 
+            // A point is inside the set union if
             // it is in either of the nested solids.
             return Left().Contains(point) || Right().Contains(point);
         }
@@ -725,8 +725,8 @@ namespace Imager
     {
     public:
         SetIntersection(
-            const Vector& _center, 
-            SolidObject* _left, 
+            const Vector& _center,
+            SolidObject* _left,
             SolidObject* _right)
                 : SolidObject_BinaryOperator(_center, _left, _right)
         {
@@ -734,13 +734,13 @@ namespace Imager
         }
 
         virtual void AppendAllIntersections(
-            const Vector& vantage, 
-            const Vector& direction, 
+            const Vector& vantage,
+            const Vector& direction,
             IntersectionList& intersectionList) const;
 
         virtual bool Contains(const Vector& point) const
         {
-            // A point is inside the set intersection if 
+            // A point is inside the set intersection if
             // it is inside both of the nested solids.
             return Left().Contains(point) && Right().Contains(point);
         }
@@ -749,8 +749,8 @@ namespace Imager
         void AppendOverlappingIntersections(
             const Vector& vantage,
             const Vector& direction,
-            const SolidObject& aSolid, 
-            const SolidObject& bSolid, 
+            const SolidObject& aSolid,
+            const SolidObject& bSolid,
             IntersectionList& intersectionList) const;
 
         bool HasOverlappingIntersection(
@@ -777,19 +777,19 @@ namespace Imager
         virtual ~SetComplement()
         {
             delete other;
-            other = NULL;
+            other = nullptr;
         }
 
         virtual bool Contains(const Vector& point) const
         {
-            // This is the core of the set complement: 
+            // This is the core of the set complement:
             // toggling the value of any point containment:
             return !other->Contains(point);
         }
 
         virtual void AppendAllIntersections(
-            const Vector& vantage, 
-            const Vector& direction, 
+            const Vector& vantage,
+            const Vector& direction,
             IntersectionList& intersectionList) const;
 
         virtual SolidObject& Translate(double dx, double dy, double dz)
@@ -829,8 +829,8 @@ namespace Imager
     {
     public:
         SetDifference(
-            const Vector& _center, 
-            SolidObject* _left, 
+            const Vector& _center,
+            SolidObject* _left,
             SolidObject* _right)
                 : SetIntersection(_center, _left, new SetComplement(_right))
         {
@@ -842,7 +842,7 @@ namespace Imager
 
     // This derived abstract class is specialized for objects (like torus)
     // that are easy to define in terms of a fixed orientation and position
-    // in space, but for which generalized rotation makes the algebra 
+    // in space, but for which generalized rotation makes the algebra
     // annoyingly difficult. Instead, we allow defining the object in terms
     // of a new coordinate system <r,s,t> and translate locations and rays
     // from <x,y,z> camera coordinates into <r,s,t> object coordinates.
@@ -860,16 +860,16 @@ namespace Imager
         {
         }
 
-        // Fills in 'intersectionList' with a list of all the 
-        // intersections found starting at the specified 
+        // Fills in 'intersectionList' with a list of all the
+        // intersections found starting at the specified
         // vantage point in the specified direction.
-        // Any pre-existing content in 'intersectionList' 
+        // Any pre-existing content in 'intersectionList'
         // is discarded first.
-        // Returns the number of intersections found, 
+        // Returns the number of intersections found,
         // which will have the same value as intersectionList.size().
         virtual void AppendAllIntersections(
-            const Vector& vantage, 
-            const Vector& direction, 
+            const Vector& vantage,
+            const Vector& direction,
             IntersectionList& intersectionList) const;
 
         virtual SolidObject& RotateX(double angleInDegrees);
@@ -892,23 +892,23 @@ namespace Imager
 
     protected:
         // The following method is called by AppendAllIntersections,
-        // but with 'vantage' and 'direction' vectors transformed 
+        // but with 'vantage' and 'direction' vectors transformed
         // from <x,y,z> camera space into <r,s,t> object space.
         // Intersection objects are returned in terms of object coordinates,
-        // and they are automatically translated back into camera 
+        // and they are automatically translated back into camera
         // coordinates by the caller.
         virtual void ObjectSpace_AppendAllIntersections(
-            const Vector& vantage, 
-            const Vector& direction, 
+            const Vector& vantage,
+            const Vector& direction,
             IntersectionList& intersectionList) const = 0;
 
-        // Returns true if the specified point in object space 
+        // Returns true if the specified point in object space
         // is on or inside the solid object.
-        // Actually, well-behaved derived classes should provide 
-        // a tolerance for points slightly outside the object's 
+        // Actually, well-behaved derived classes should provide
+        // a tolerance for points slightly outside the object's
         // boundaries and return true then also.
-        // This tolerance handles small floating point rounding 
-        // errors that may cause a point that is supposed to be 
+        // This tolerance handles small floating point rounding
+        // errors that may cause a point that is supposed to be
         // considered part of the solid to be incorrectly excluded.
         virtual bool ObjectSpace_Contains(const Vector& point) const = 0;
 
@@ -922,8 +922,8 @@ namespace Imager
         Vector ObjectDirFromCameraDir(const Vector& cameraDir) const
         {
             return Vector(
-                DotProduct(cameraDir,rDir), 
-                DotProduct(cameraDir,sDir), 
+                DotProduct(cameraDir,rDir),
+                DotProduct(cameraDir,sDir),
                 DotProduct(cameraDir,tDir));
         }
 
@@ -935,8 +935,8 @@ namespace Imager
         Vector CameraDirFromObjectDir(const Vector& objectDir) const
         {
             return Vector(
-                DotProduct(objectDir,xDir), 
-                DotProduct(objectDir,yDir), 
+                DotProduct(objectDir,xDir),
+                DotProduct(objectDir,yDir),
                 DotProduct(objectDir,zDir));
         }
 
@@ -958,13 +958,13 @@ namespace Imager
         }
 
     private:
-        // The members rDir, sDir, tDir are unit vectors in the direction of 
+        // The members rDir, sDir, tDir are unit vectors in the direction of
         // the <r,s,t> object axes, each expressed in <x,y,z> camera space.
-        // For any point P = <Px,Py,Pz> in camera coordinates, we can 
-        // determine object-relative coordinates as dot products 
+        // For any point P = <Px,Py,Pz> in camera coordinates, we can
+        // determine object-relative coordinates as dot products
         // <(P-C).rDir,(P-C).sDir,(P-C).tDir>,
         // where C = the center of the object as returned by method Center().
-        // Another way to look at this is that (rDir, sDir, tDir) taken 
+        // Another way to look at this is that (rDir, sDir, tDir) taken
         // together are really just a 3*3 rotation matrix.
         Vector  rDir;
         Vector  sDir;
@@ -972,8 +972,8 @@ namespace Imager
 
         // The members xDir, yDir, zDir are unit vectors in the direction
         // of the <x,y,z> camera axes, each expressed in <r,s,t> object space.
-        // These are maintained in tandem with rDir, sDir, tDir as various 
-        // rotations take place.  Taken together, they form an inverse 
+        // These are maintained in tandem with rDir, sDir, tDir as various
+        // rotations take place.  Taken together, they form an inverse
         // rotation matrix, so (xDir,yDir,zDir) as a 3*3 matrix
         // is calculated as the transpose of the 3*3 matrix (rDir,sDir,tDir).
         // Because an object is never rotated during the rendering of a given
@@ -998,15 +998,15 @@ namespace Imager
 
     protected:
         virtual void ObjectSpace_AppendAllIntersections(
-            const Vector& vantage, 
-            const Vector& direction, 
+            const Vector& vantage,
+            const Vector& direction,
             IntersectionList& intersectionList) const;
 
         virtual bool ObjectSpace_Contains(const Vector& point) const;
 
         int SolveIntersections(
-            const Vector& vantage, 
-            const Vector& direction, 
+            const Vector& vantage,
+            const Vector& direction,
             double uArray[4]) const;
 
         Vector SurfaceNormal(const Vector& point) const;
@@ -1033,13 +1033,13 @@ namespace Imager
 
     protected:
         virtual void ObjectSpace_AppendAllIntersections(
-            const Vector& vantage, 
-            const Vector& direction, 
+            const Vector& vantage,
+            const Vector& direction,
             IntersectionList& intersectionList) const;
 
         virtual bool ObjectSpace_Contains(const Vector& point) const
         {
-            return 
+            return
                 (fabs(point.x) <= a + EPSILON) &&
                 (fabs(point.y) <= b + EPSILON) &&
                 (fabs(point.z) <= c + EPSILON);
@@ -1053,7 +1053,7 @@ namespace Imager
 
     //------------------------------------------------------------------------
 
-    // A thin ring is a zero-thickness circular disc with an optional 
+    // A thin ring is a zero-thickness circular disc with an optional
     // disc-shaped hole in the center.
     class ThinRing: public SolidObject_Reorientable
     {
@@ -1068,8 +1068,8 @@ namespace Imager
 
     protected:
         virtual void ObjectSpace_AppendAllIntersections(
-            const Vector& vantage, 
-            const Vector& direction, 
+            const Vector& vantage,
+            const Vector& direction,
             IntersectionList& intersectionList) const;
 
         virtual bool ObjectSpace_Contains(const Vector& point) const
@@ -1077,8 +1077,8 @@ namespace Imager
             if (fabs(point.z) <= EPSILON)
             {
                 const double magSquared = point.x*point.x + point.y*point.y;
-                return 
-                    (r1*r1 <= EPSILON + magSquared) && 
+                return
+                    (r1*r1 <= EPSILON + magSquared) &&
                     (magSquared <= EPSILON + r2*r2);
             }
 
@@ -1089,11 +1089,11 @@ namespace Imager
         double  r1;     // The radius of the hole at the center of the ring.
         double  r2;     // The outer radius of the ring.
 
-        // A temporary intersection list, cached inside this object 
+        // A temporary intersection list, cached inside this object
         // to avoid repeated memory allocations.
         // Marked mutable to allow const functions to cache
         // lists whose memory may be reused as needed.
-        mutable IntersectionList tempIntersectionList;      
+        mutable IntersectionList tempIntersectionList;
     };
 
     //------------------------------------------------------------------------
@@ -1112,7 +1112,7 @@ namespace Imager
 
     //------------------------------------------------------------------------
 
-    // A circular, right cylinder (may be used to make "tin can" shapes, 
+    // A circular, right cylinder (may be used to make "tin can" shapes,
     // discs with thickness, etc.)
     // Consists of a curved lateral surface and a top and bottom disc.
     class Cylinder: public SolidObject_Reorientable
@@ -1128,22 +1128,22 @@ namespace Imager
 
     protected:
         virtual void ObjectSpace_AppendAllIntersections(
-            const Vector& vantage, 
-            const Vector& direction, 
+            const Vector& vantage,
+            const Vector& direction,
             IntersectionList& intersectionList) const;
 
         virtual bool ObjectSpace_Contains(const Vector& point) const
         {
-            return 
+            return
                 (fabs(point.z) <= b + EPSILON) &&
                 (point.x*point.x + point.y*point.y <= a*a + EPSILON);
         }
 
     private:
         void AppendDiskIntersection(
-            const Vector& vantage, 
-            const Vector& direction, 
-            double zDisk, 
+            const Vector& vantage,
+            const Vector& direction,
+            double zDisk,
             IntersectionList& intersectionList) const;
 
         const double  a;  // the radius of the cylinder
@@ -1152,7 +1152,7 @@ namespace Imager
 
     //------------------------------------------------------------------------
 
-    // A sphere-like object, only with different dimensions allowed in 
+    // A sphere-like object, only with different dimensions allowed in
     // the x, y, and z directions.
     class Spheroid: public SolidObject_Reorientable
     {
@@ -1171,8 +1171,8 @@ namespace Imager
 
     protected:
         virtual void ObjectSpace_AppendAllIntersections(
-            const Vector& vantage, 
-            const Vector& direction, 
+            const Vector& vantage,
+            const Vector& direction,
             IntersectionList& intersectionList) const;
 
         virtual bool ObjectSpace_Contains(const Vector& point) const
@@ -1207,23 +1207,23 @@ namespace Imager
         }
 
         virtual void AppendAllIntersections(
-            const Vector& vantage, 
-            const Vector& direction, 
+            const Vector& vantage,
+            const Vector& direction,
             IntersectionList& intersectionList) const;
 
         virtual bool Contains(const Vector& point) const
         {
             // Add a little bit to the actual radius to be more tolerant
-            // of rounding errors that would incorrectly exclude a 
+            // of rounding errors that would incorrectly exclude a
             // point that should be inside the sphere.
-            const double r = radius + EPSILON;  
+            const double r = radius + EPSILON;
 
-            // A point is inside the sphere if the square of its distance 
+            // A point is inside the sphere if the square of its distance
             // from the center is within the square of the radius.
             return (point - Center()).MagnitudeSquared() <= (r * r);
         }
 
-        // The nice thing about a sphere is that rotating 
+        // The nice thing about a sphere is that rotating
         // it has no effect on its appearance!
         virtual SolidObject& RotateX(double angleInDegrees) { return *this; }
         virtual SolidObject& RotateY(double angleInDegrees) { return *this; }
@@ -1236,15 +1236,15 @@ namespace Imager
     //------------------------------------------------------------------------
 
     // A solid object consisting of nothing but triangular faces.
-    // Faces are added after construction by calling AddPoint() 
+    // Faces are added after construction by calling AddPoint()
     // to append a series of vertex points,
-    // followed by AddTriangle() to refer to the indices 
+    // followed by AddTriangle() to refer to the indices
     // of previously added points.
     class TriangleMesh: public SolidObject
     {
     public:
         TriangleMesh(
-            const Vector& center = Vector(), 
+            const Vector& center = Vector(),
             bool _isFullyEnclosed = true)
                 : SolidObject(center, _isFullyEnclosed)
         {
@@ -1252,8 +1252,8 @@ namespace Imager
         }
 
         virtual void AppendAllIntersections(
-            const Vector& vantage, 
-            const Vector& direction, 
+            const Vector& vantage,
+            const Vector& direction,
             IntersectionList& intersectionList) const;
 
         virtual SolidObject& Translate(double dx, double dy, double dz);
@@ -1261,66 +1261,66 @@ namespace Imager
         virtual SolidObject& RotateY(double angleInDegrees);
         virtual SolidObject& RotateZ(double angleInDegrees);
 
-        // Appends a new vertex point whose point index is to be 
+        // Appends a new vertex point whose point index is to be
         // referenced later by AddTriangle.
-        // expectedIndex is the zero-based value that must match 
+        // expectedIndex is the zero-based value that must match
         // the insertion order of the point.
-        // For example, the first call to AddPoint must pass 
+        // For example, the first call to AddPoint must pass
         // expectedIndex==0, the second must pass expectedIndex==1, etc.
-        // This is a sanity check so that the caller avoids insertion 
-        // order mistakes, since the vertex point index will be 
+        // This is a sanity check so that the caller avoids insertion
+        // order mistakes, since the vertex point index will be
         // referenced later when calling AddTriangle.
         void AddPoint(int expectedIndex, double x, double y, double z)
         {
             if (expectedIndex != pointList.size())
             {
-                // Sanity check failed that caller is passing 
+                // Sanity check failed that caller is passing
                 // in correct indexes for points.
-                throw ImagerException("Point index mismatch.");     
+                throw ImagerException("Point index mismatch.");
             }
 
             pointList.push_back(Vector(x, y, z));
         }
 
-        // Given the vertex point indices of three distinct points 
-        // that have already been added (using a call to AddPoint), 
-        // appends a new triangular face with those three points 
+        // Given the vertex point indices of three distinct points
+        // that have already been added (using a call to AddPoint),
+        // appends a new triangular face with those three points
         // as vertices.  Uses the specified optical properties for this face.
         void AddTriangle(
-            int aPointIndex, 
-            int bPointIndex, 
-            int cPointIndex, 
+            int aPointIndex,
+            int bPointIndex,
+            int cPointIndex,
             const Optics& optics);
 
-        // A convenience method for cases where we know we have 
+        // A convenience method for cases where we know we have
         // a quadrilateral surface that can be split into two triangles.
-        // The point indices (a,b,c,d) are passed in counterclockwise 
+        // The point indices (a,b,c,d) are passed in counterclockwise
         // order viewed from outside the surface.
-        // This is important for calculating normal vectors that 
+        // This is important for calculating normal vectors that
         // point outward from the solid, not inward.
         void AddQuad(
-            int aPointIndex, 
-            int bPointIndex, 
-            int cPointIndex, 
-            int dPointIndex, 
+            int aPointIndex,
+            int bPointIndex,
+            int cPointIndex,
+            int dPointIndex,
             const Optics& optics)
         {
-            // We preserve counterclockwise ordering by making 
+            // We preserve counterclockwise ordering by making
             // two triangles: (a,b,c) and (c,d,a).
             AddTriangle(aPointIndex, bPointIndex, cPointIndex, optics);
             AddTriangle(cPointIndex, dPointIndex, aPointIndex, optics);
         }
 
-        // Another convenience method for solids that 
+        // Another convenience method for solids that
         // have pentagonal faces. A pentagon can be split into 3 triangles.
-        // As in AddTriangle and AddQuad, the caller must pass the point 
+        // As in AddTriangle and AddQuad, the caller must pass the point
         // indices in a counterclockwise order as seen from outside the solid.
         void AddPentagon(
-            int aPointIndex, 
-            int bPointIndex, 
-            int cPointIndex, 
-            int dPointIndex, 
-            int ePointIndex, 
+            int aPointIndex,
+            int bPointIndex,
+            int cPointIndex,
+            int dPointIndex,
+            int ePointIndex,
             const Optics &optics)
         {
             AddTriangle(aPointIndex, bPointIndex, cPointIndex, optics);
@@ -1332,7 +1332,7 @@ namespace Imager
         // to override SurfaceOptics() to replace the default behavior
         // of having uniform optics for the whole solid.
         virtual Optics SurfaceOptics(
-            const Vector& surfacePoint, 
+            const Vector& surfacePoint,
             const void *context) const;
 
     protected:
@@ -1344,42 +1344,42 @@ namespace Imager
             }
         }
 
-        // Attempts to find an intersection of the given direction 
-        // passing through the given vantage point with the plane 
+        // Attempts to find an intersection of the given direction
+        // passing through the given vantage point with the plane
         // that passes through the triangle (A, B, C).
-        // If an intersection can be found, returns true and sets 
+        // If an intersection can be found, returns true and sets
         // the output parameters:
         //
-        //     u = The scalar multiple such that the intersection 
+        //     u = The scalar multiple such that the intersection
         //         point = (u*direction + vantage).
         //
-        //     v = The component of the vector difference B-A, 
+        //     v = The component of the vector difference B-A,
         //         starting at A, of the intersection point.
         //
-        //     w = The component of the vector difference C-A, 
+        //     w = The component of the vector difference C-A,
         //         starting at A, of the intersection point.
         //
-        // Returns false and leaves u, v, w undefined if an 
+        // Returns false and leaves u, v, w undefined if an
         // intersection cannot be found.
-        // Note that it is possible that calling AttemptPlaneIntersection 
-        // may succeed with one ordering of the plane points (A, B, C), 
+        // Note that it is possible that calling AttemptPlaneIntersection
+        // may succeed with one ordering of the plane points (A, B, C),
         // but may fail on another ordering.
         static bool AttemptPlaneIntersection(
             const Vector& vantage,
-            const Vector& direction, 
+            const Vector& direction,
             const Vector& A,
             const Vector& B,
             const Vector& C,
-            double &u, 
-            double &v, 
+            double &u,
+            double &v,
             double &w)
         {
             return Algebra::SolveLinearEquations(
                 direction.x, A.x-B.x, A.x-C.x, -(A.x - vantage.x),
                 direction.y, A.y-B.y, A.y-C.y, -(A.y - vantage.y),
                 direction.z, A.z-B.z, A.z-C.z, -(A.z - vantage.z),
-                u, 
-                v, 
+                u,
+                v,
                 w);
         }
 
@@ -1406,7 +1406,7 @@ namespace Imager
             }
         };
 
-        // Returns a unit vector at right angles to the triangle, 
+        // Returns a unit vector at right angles to the triangle,
         // using right-hand rule with respect to A,B,C ordering.
         Vector NormalVector(const Triangle& triangle) const;
 
@@ -1414,11 +1414,11 @@ namespace Imager
         typedef std::vector<Vector>     PointList;
         typedef std::vector<Triangle>   TriangleList;
 
-        // A list of all the vertex points used to define triangles.  
+        // A list of all the vertex points used to define triangles.
         // A given point may be referenced by one or more triangles.
-        PointList       pointList;      
+        PointList       pointList;
 
-        // A list of all the triangles, each of which refers 
+        // A list of all the triangles, each of which refers
         // to 3 distinct points in pointList.
         TriangleList    triangleList;
     };
@@ -1443,7 +1443,15 @@ namespace Imager
 
     //------------------------------------------------------------------------
 
-    // The Scene object renders a collection of SolidObjects and 
+    class Aimer        // base class for arbitrary vector aiming logic
+    {
+    public:
+        virtual Vector Aim(const Vector& raw) const = 0;
+    };
+
+    //------------------------------------------------------------------------
+
+    // The Scene object renders a collection of SolidObjects and
     // LightSources that illuminate them.
     // SolidObjects are added one by one using the method AddSolidObject.
     // Likewise, LightSources are added using AddLightSource.
@@ -1453,13 +1461,19 @@ namespace Imager
         explicit Scene(const Color& _backgroundColor = Color())
             : backgroundColor(_backgroundColor)
             , ambientRefraction(REFRACTION_VACUUM)
-            , activeDebugPoint(NULL)
+            , activeDebugPoint(nullptr)
+            , aimer(nullptr)
         {
         }
 
         virtual ~Scene()
         {
             ClearSolidObjectList();
+        }
+
+        void SetAimer(Aimer *_aimer)
+        {
+            aimer = _aimer;
         }
 
         // Caller must allocate solidObject via operator new.
@@ -1475,25 +1489,25 @@ namespace Imager
             lightSourceList.push_back(lightSource);
         }
 
-        // Renders an image of the current scene, with the camera 
+        // Renders an image of the current scene, with the camera
         // at <0, 0, 0> and looking into the +z axis, with the +y axis upward.
-        // Writes the image to the specified PNG file, which should have a 
+        // Writes the image to the specified PNG file, which should have a
         // ".png" extension.
-        // The resulting image will have pixel dimensions pixelsWide wide 
+        // The resulting image will have pixel dimensions pixelsWide wide
         // by pixelsHigh high.
-        // The zoom factor specifies magnification level: use 1.0 
-        // to start with, and try larger/smaller values to 
+        // The zoom factor specifies magnification level: use 1.0
+        // to start with, and try larger/smaller values to
         // increase/decrease magnification.
-        // antiAliasFactor specifies what multiplier to use 
-        // for oversampling.  Note that this causes run time and memory usage 
-        // to increase O(N^2), so it is best to use a value between 1 
+        // antiAliasFactor specifies what multiplier to use
+        // for oversampling.  Note that this causes run time and memory usage
+        // to increase O(N^2), so it is best to use a value between 1
         // (fastest but most "jaggy") to 4 (16 times slower but results
         // in much smoother images).
         void SaveImage(
-            const char *outPngFileName, 
-            size_t pixelsWide, 
-            size_t pixelsHigh, 
-            double zoom, 
+            const char *outPngFileName,
+            size_t pixelsWide,
+            size_t pixelsHigh,
+            double zoom,
             size_t antiAliasFactor) const;
 
         // By default, regions of space that are not
@@ -1519,12 +1533,12 @@ namespace Imager
         void ClearSolidObjectList();
 
         int FindClosestIntersection(
-            const Vector& vantage, 
-            const Vector& direction, 
+            const Vector& vantage,
+            const Vector& direction,
             Intersection& intersection) const;
 
         bool HasClearLineOfSight(
-            const Vector& point1, 
+            const Vector& point1,
             const Vector& point2) const;
 
         Color TraceRay(
@@ -1535,8 +1549,8 @@ namespace Imager
             int recursionDepth) const;
 
         Color CalculateLighting(
-            const Intersection& intersection, 
-            const Vector& direction, 
+            const Intersection& intersection,
+            const Vector& direction,
             double refractiveIndex,
             Color rayIntensity,
             int recursionDepth) const;
@@ -1544,15 +1558,15 @@ namespace Imager
         Color CalculateMatte(const Intersection& intersection) const;
 
         Color CalculateReflection(
-            const Intersection& intersection, 
-            const Vector& incidentDir, 
+            const Intersection& intersection,
+            const Vector& incidentDir,
             double refractiveIndex,
             Color rayIntensity,
             int recursionDepth) const;
 
         Color CalculateRefraction(
-            const Intersection& intersection, 
-            const Vector& direction, 
+            const Intersection& intersection,
+            const Vector& direction,
             double sourceRefractiveIndex,
             Color rayIntensity,
             int recursionDepth,
@@ -1568,14 +1582,14 @@ namespace Imager
 
         void ResolveAmbiguousPixel(ImageBuffer& buffer, size_t i, size_t j) const;
 
-        // Convert a floating point color component value, 
+        // Convert a floating point color component value,
         // based on the maximum component value,
         // to a byte RGB value in the range 0x00 to 0xff.
         static unsigned char ConvertPixelValue(
-            double colorComponent, 
+            double colorComponent,
             double maxColorValue)
         {
-            int pixelValue = 
+            int pixelValue =
                 static_cast<int> (255.0 * colorComponent / maxColorValue);
 
             // Clamp to the allowed range of values 0..255.
@@ -1591,9 +1605,9 @@ namespace Imager
             return static_cast<unsigned char>(pixelValue);
         }
 
-        // The color to use for pixels where no solid 
+        // The color to use for pixels where no solid
         // object intersection was found.
-        Color backgroundColor;                  
+        Color backgroundColor;
 
         // Define some list types used by member variables below.
         typedef std::vector<SolidObject*> SolidObjectList;
@@ -1621,7 +1635,7 @@ namespace Imager
 
         // The refractive index of every point in space
         // that is not explicitly occupied by some object.
-        // By default, this is REFRACTION_VACUUM, but may be 
+        // By default, this is REFRACTION_VACUUM, but may be
         // set to a higher value to simulate the entire
         // scene being immersed in some transparent substance
         // like water.
@@ -1645,6 +1659,7 @@ namespace Imager
         typedef std::vector<DebugPoint> DebugPointList;
         DebugPointList debugPointList;
         mutable const DebugPoint* activeDebugPoint;
+        Aimer *aimer;
     };
 
     //------------------------------------------------------------------------
@@ -1664,14 +1679,14 @@ namespace Imager
 
     //------------------------------------------------------------------------
     // Holds an image in memory as it is being rendered.
-    // Once calculated, the image in the buffer can be translated 
+    // Once calculated, the image in the buffer can be translated
     // into a graphics format like PNG.
     class ImageBuffer
     {
     public:
         ImageBuffer (
-            size_t _pixelsWide, 
-            size_t _pixelsHigh, 
+            size_t _pixelsWide,
+            size_t _pixelsHigh,
             const Color &backgroundColor)
                 : pixelsWide(_pixelsWide)
                 , pixelsHigh(_pixelsHigh)
@@ -1683,11 +1698,11 @@ namespace Imager
         virtual ~ImageBuffer()
         {
             delete[] array;
-            array = NULL;
+            array = nullptr;
             pixelsWide = pixelsHigh = numPixels = 0;
         }
 
-        // Returns a read/write reference to the pixel data for the 
+        // Returns a read/write reference to the pixel data for the
         // specified column (i) and row (j).
         // Throws an exception if the coordinates are out of bounds.
         PixelData& Pixel(size_t i, size_t j) const
@@ -1717,7 +1732,7 @@ namespace Imager
         double MaxColorValue() const
         {
             double max = 0.0;
-            for (size_t i=0; i < numPixels; ++i) 
+            for (size_t i=0; i < numPixels; ++i)
             {
                 array[i].color.Validate();
                 if (array[i].color.red > max)
@@ -1743,7 +1758,7 @@ namespace Imager
             return max;
         }
 
-    private:        
+    private:
         size_t  pixelsWide;     // the width of the image in pixels (columns).
         size_t  pixelsHigh;     // the height of the image in pixels (rows).
         size_t  numPixels;      // the total number of pixels.

@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "algebra.h"
-#include "planet.h"
+#include "imager.h"
 #include "astro_demo_common.h"
 
 static const char UsageText[] =
@@ -23,47 +23,167 @@ static const char UsageText[] =
 "    planet = Jupiter\n"
 "\n";
 
-void SpheroidTest()
+
+class RotationMatrixAimer : public Imager::Aimer
 {
-    using namespace Imager;
+private:
+    astro_rotation_t rotation;
+    astro_time_t dummyTime;
 
-    Scene scene(Color(0.0, 0.0, 0.0));
+public:
+    RotationMatrixAimer(astro_rotation_t _rotation)
+        : rotation(_rotation)
+        , dummyTime(Astronomy_TimeFromDays(0.0))
+    {
+    }
 
-    Spheroid* spheroid = new Spheroid(4.0, 2.0, 1.0);
-    spheroid->Move(0.0, 0.0, -50.0);
-    spheroid->RotateX(-12.0);
-    spheroid->RotateY(-60.0);
+    virtual Imager::Vector Aim(const Imager::Vector& raw) const
+    {
+        astro_vector_t v;
+        v.x = raw.x;
+        v.y = raw.y;
+        v.z = raw.z;
+        v.t = dummyTime;
+        v.status = ASTRO_SUCCESS;
+        astro_vector_t rv = Astronomy_RotateVector(rotation, v);
+        return Imager::Vector(rv.x, rv.y, rv.z);
+    }
+};
 
-    scene.AddSolidObject(spheroid);
-    scene.AddLightSource(LightSource(Vector(+35.0, +50.0, +20.0), Color(0.2, 1.0, 1.0)));
-    scene.AddLightSource(LightSource(Vector(-47.0, -37.0, +12.0), Color(1.0, 0.2, 0.2)));
-
-    const char *filename = "spheroid.png";
-    scene.SaveImage(filename, 300, 300, 8.0, 2);
-    std::cout << "Wrote " << filename << std::endl;
-}
-
-void SaturnTest()
-{
-    using namespace Imager;
-
-    Scene scene(Color(0.0, 0.0, 0.0));
-    Saturn* saturn = new Saturn();
-    saturn->Move(0.0, 0.0, -100.0);
-    saturn->RotateY(-15.0);
-    saturn->RotateX(-83.0);
-    scene.AddSolidObject(saturn);
-    scene.AddLightSource(LightSource(Vector(+30.0, +26.0, +20.0), Color(1.0, 1.0, 1.0)));
-
-    const char *filename = "saturn.png";
-    scene.SaveImage(filename, 500, 250, 4.0, 4);
-    std::cout << "Wrote " << filename << std::endl;
-}
 
 int JupiterImage(const char *filename, int width, astro_time_t time)
 {
+    using namespace Imager;
+
+    // Calculate the geocentric position of Jupiter, corrected for light travel time.
+    astro_vector_t jupiter = Astronomy_GeoVector(BODY_JUPITER, time, ABERRATION);
+    if (jupiter.status != ASTRO_SUCCESS)
+    {
+        fprintf(stderr, "Error %d calculating Jupiter geocentric position\n", jupiter.status);
+        return 1;
+    }
+
+    // Calculate the geocentric position of the Sun, as our light source.
+    astro_vector_t sun = Astronomy_GeoVector(BODY_SUN, time, ABERRATION);
+    if (sun.status != ASTRO_SUCCESS)
+    {
+        fprintf(stderr, "Error %d calculating Sun geocentric position\n", sun.status);
+        return 1;
+    }
+
+    // Calculate the time light left the Jupiter system to be seen on Earth.
+    double light_travel_time = Astronomy_VectorLength(jupiter) / C_AUDAY;
+    astro_time_t depart = Astronomy_AddDays(time, -light_travel_time);
+
+    // Calculate the orientation of Jupiter's rotation axis.
+    astro_axis_t axis = Astronomy_RotationAxis(BODY_JUPITER, depart);
+    if (axis.status != ASTRO_SUCCESS)
+    {
+        fprintf(stderr, "Error %d calculating Jupiter's rotation axis.\n", axis.status);
+        return 1;
+    }
+
+    // Calculate the position of Jupiter's moons at the backdated time.
+    astro_jupiter_moons_t jm = Astronomy_JupiterMoons(depart);
+
+    Scene scene(Color(0.0, 0.0, 0.0));
+
+    const double equ_radius_au = JUPITER_EQUATORIAL_RADIUS_KM / KM_PER_AU;
+    const double pol_radius_au = JUPITER_POLAR_RADIUS_KM / KM_PER_AU;
+    Spheroid *planet = new Spheroid(equ_radius_au, equ_radius_au, pol_radius_au);
+    scene.AddSolidObject(planet);
+    planet->SetFullMatte(Color(1.0, 1.0, 0.7));
+    planet->Move(Vector(jupiter.x, jupiter.y, jupiter.z));
+
+    // Reorient Jupiter's rotation axis to match the calculated orientation.
+    planet->RotateY(90.0 - axis.dec);       // ?? not sure about direction
+    planet->RotateZ(15.0 * axis.ra);        // ?? not sure about direction
+
+    // Add Jupiter's moons to the scene.
+
+    // Io
+    const double io_radius = IO_RADIUS_KM / KM_PER_AU;
+    Spheroid *io = new Spheroid(io_radius, io_radius, io_radius);
+    scene.AddSolidObject(io);
+    io->SetFullMatte(Color(1.0, 1.0, 1.0));     // ??? Actual moon colors ???
+    io->Move(Vector(
+        jm.moon[JM_IO].x + jupiter.x,
+        jm.moon[JM_IO].y + jupiter.y,
+        jm.moon[JM_IO].z + jupiter.z)
+    );
+
+    // Europa
+    const double eu_radius = EUROPA_RADIUS_KM / KM_PER_AU;
+    Spheroid *europa = new Spheroid(eu_radius, eu_radius, eu_radius);
+    scene.AddSolidObject(europa);
+    europa->SetFullMatte(Color(1.0, 1.0, 1.0));     // ??? Actual moon colors ???
+    europa->Move(Vector(
+        jm.moon[JM_EUROPA].x + jupiter.x,
+        jm.moon[JM_EUROPA].y + jupiter.y,
+        jm.moon[JM_EUROPA].z + jupiter.z)
+    );
+
+    // Ganymede
+    const double gan_radius = GANYMEDE_RADIUS_KM / KM_PER_AU;
+    Spheroid *ganymede = new Spheroid(gan_radius, gan_radius, gan_radius);
+    scene.AddSolidObject(ganymede);
+    ganymede->SetFullMatte(Color(1.0, 1.0, 1.0));     // ??? Actual moon colors ???
+    ganymede->Move(Vector(
+        jm.moon[JM_GANYMEDE].x + jupiter.x,
+        jm.moon[JM_GANYMEDE].y + jupiter.y,
+        jm.moon[JM_GANYMEDE].z + jupiter.z)
+    );
+
+    // Callisto
+    const double cal_radius = CALLISTO_RADIUS_KM / KM_PER_AU;
+    Spheroid *callisto = new Spheroid(cal_radius, cal_radius, cal_radius);
+    scene.AddSolidObject(callisto);
+    callisto->SetFullMatte(Color(1.0, 1.0, 1.0));     // ??? Actual moon colors ???
+    callisto->Move(Vector(
+        jm.moon[JM_CALLISTO].x + jupiter.x,
+        jm.moon[JM_CALLISTO].y + jupiter.y,
+        jm.moon[JM_CALLISTO].z + jupiter.z)
+    );
+
+    // Add the Sun as the point light source.
+    scene.AddLightSource(LightSource(Vector(sun.x, sun.y, sun.z), Color(1.0, 1.0, 1.0)));
+
+    // Aim the camera at the center of Jupiter.
+    // Start with an identity matrix, which leaves the camera pointing in the -z direction,
+    // i.e. <0, 0, -1>.
+    astro_rotation_t rotation = Astronomy_IdentityMatrix();
+
+    // Convert Jupiter's rectangular coordinates to angular spherical coordinates.
+    astro_spherical_t sph = Astronomy_SphereFromVector(jupiter);
+
+    // Rotate 90 degrees around the y-axis, plus the declination of Jupiter,
+    // to bring the camera up to the declination level of Jupiter.
+    rotation = Astronomy_Pivot(rotation, 1, -(90.0 + sph.lat));
+
+    // Rotate around the z-axis to aim the camera at Jupiter's right ascension.
+    rotation = Astronomy_Pivot(rotation, 2, sph.lon);
+
+    RotationMatrixAimer aimer(rotation);
+    // Verify that the aimer redirects the vector <0, 0, -1> directly
+    // toward the center of Jupiter.
+    Vector aimTest = aimer.Aim(Vector(0.0, 0.0, -1.0));
+    printf("Aim Test: x = %12.8lf, y = %12.8lf, z = %12.8lf\n", aimTest.x, aimTest.y, aimTest.z);
+
+    printf("Jupiter : x = %12.8lf, y = %12.8lf, z = %12.8lf\n",
+        jupiter.x / sph.dist,
+        jupiter.y / sph.dist,
+        jupiter.z / sph.dist);
+
+    scene.SetAimer(&aimer);
+
+    // Magnify the image as appropriate for Jupiter's closest approach (opposition).
+    // Render the image.
+    const double zoom = 200.0;
+    scene.SaveImage(filename, (size_t)width, (size_t)width, zoom, 4);
+
     return 0;
 }
+
 
 int main(int argc, const char *argv[])
 {
@@ -80,6 +200,7 @@ int main(int argc, const char *argv[])
         }
         const char *planet = argv[3];
         astro_time_t time;
+        printf("time = [%s]\n", argv[4]);
         if (ParseTime(argv[4], &time))
             return 1;
 

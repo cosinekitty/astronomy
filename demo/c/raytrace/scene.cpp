@@ -785,14 +785,11 @@ namespace Imager
                 PixelData& pixel = buffer.Pixel(i,j);
                 try
                 {
+                    Vector aim = (aimer != nullptr) ? aimer->Aim(direction) : direction;
+
                     // Trace a ray from the camera toward the given direction
                     // to figure out what color to assign to this pixel.
-                    pixel.color = TraceRay(
-                        camera,
-                        direction,
-                        ambientRefraction,
-                        fullIntensity,
-                        0);
+                    pixel.color = TraceRay(camera, aim, ambientRefraction, fullIntensity, 0);
                 }
                 catch (AmbiguousIntersectionException)
                 {
