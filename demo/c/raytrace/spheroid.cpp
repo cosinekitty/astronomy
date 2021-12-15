@@ -24,7 +24,7 @@
 
     -------------------------------------------------------------------------
     Implements class Spheroid.
-    A spheroid is like a sphere, only it may have three different 
+    A spheroid is like a sphere, only it may have three different
     diameters in the x-, y-, and z-directions.
 */
 
@@ -34,8 +34,8 @@
 namespace Imager
 {
     void Spheroid::ObjectSpace_AppendAllIntersections(
-        const Vector& vantage, 
-        const Vector& direction, 
+        const Vector& vantage,
+        const Vector& direction,
         IntersectionList& intersectionList) const
     {
         double u[2];
@@ -55,9 +55,9 @@ namespace Imager
                 intersection.distanceSquared = displacement.MagnitudeSquared();
                 intersection.point = vantage + displacement;
 
-                // The surface normal vector was calculated by expressing the spheroid as a 
+                // The surface normal vector was calculated by expressing the spheroid as a
                 // function z(x,y) = sqrt(1 - (x/a)^2 - (y/b)^2),
-                // taking partial derivatives dz/dx = (c*c*x)/(a*a*z), dz/dy = (c*c*y)/(b*b*z), 
+                // taking partial derivatives dz/dx = (c*c*x)/(a*a*z), dz/dy = (c*c*y)/(b*b*z),
                 // and using these to calculate the vectors <1, 0, dz/dx> and <0, 1, dy,dz>.
                 // The normalized cross product of these two vectors yields the surface normal vector.
                 const double x = intersection.point.x;
@@ -74,7 +74,7 @@ namespace Imager
                     }
                     else
                     {
-                        // The equation devolves to an ellipse on the xy plane : 
+                        // The equation devolves to an ellipse on the xy plane :
                         // (x^2)/(a^2) + (y^2)/(b^2) = 1.
                         intersection.surfaceNormal = Vector(-1.0, -(a2*y)/(b2*x), 0.0).UnitVector();
                     }

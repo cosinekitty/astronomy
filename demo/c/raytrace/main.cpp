@@ -88,12 +88,16 @@ int JupiterImage(const char *filename, int width, astro_time_t time)
 
     Scene scene(Color(0.0, 0.0, 0.0));
 
-    const double equ_radius_au = JUPITER_EQUATORIAL_RADIUS_KM / KM_PER_AU;
-    const double pol_radius_au = JUPITER_POLAR_RADIUS_KM / KM_PER_AU;
-    Spheroid *planet = new Spheroid(equ_radius_au, equ_radius_au, pol_radius_au);
+    const double km_scale = 10000.0;   // makes Jupiter's radius about 7 units.
+    const double au_scale = km_scale / KM_PER_AU;
+
+    const double equ_radius = JUPITER_EQUATORIAL_RADIUS_KM / km_scale;
+    const double pol_radius = JUPITER_POLAR_RADIUS_KM / km_scale;
+    Spheroid *planet = new Spheroid(equ_radius, equ_radius, pol_radius);
     scene.AddSolidObject(planet);
     planet->SetFullMatte(Color(1.0, 1.0, 0.7));
-    planet->Move(Vector(jupiter.x, jupiter.y, jupiter.z));
+    planet->Move(Vector(jupiter.x, jupiter.y, jupiter.z) / au_scale);
+    planet->SetTag("Jupiter");
 
     // Reorient Jupiter's rotation axis to match the calculated orientation.
     planet->RotateY(90.0 - axis.dec);       // ?? not sure about direction
@@ -102,51 +106,54 @@ int JupiterImage(const char *filename, int width, astro_time_t time)
     // Add Jupiter's moons to the scene.
 
     // Io
-    const double io_radius = IO_RADIUS_KM / KM_PER_AU;
+    const double io_radius = IO_RADIUS_KM / km_scale;
     Spheroid *io = new Spheroid(io_radius, io_radius, io_radius);
     scene.AddSolidObject(io);
     io->SetFullMatte(Color(1.0, 1.0, 1.0));     // ??? Actual moon colors ???
     io->Move(Vector(
         jm.moon[JM_IO].x + jupiter.x,
         jm.moon[JM_IO].y + jupiter.y,
-        jm.moon[JM_IO].z + jupiter.z)
+        jm.moon[JM_IO].z + jupiter.z) / au_scale
     );
+    io->SetTag("Io");
 
     // Europa
-    const double eu_radius = EUROPA_RADIUS_KM / KM_PER_AU;
+    const double eu_radius = EUROPA_RADIUS_KM / km_scale;
     Spheroid *europa = new Spheroid(eu_radius, eu_radius, eu_radius);
     scene.AddSolidObject(europa);
     europa->SetFullMatte(Color(1.0, 1.0, 1.0));     // ??? Actual moon colors ???
     europa->Move(Vector(
         jm.moon[JM_EUROPA].x + jupiter.x,
         jm.moon[JM_EUROPA].y + jupiter.y,
-        jm.moon[JM_EUROPA].z + jupiter.z)
+        jm.moon[JM_EUROPA].z + jupiter.z) / au_scale
     );
+    europa->SetTag("Europa");
 
     // Ganymede
-    const double gan_radius = GANYMEDE_RADIUS_KM / KM_PER_AU;
+    const double gan_radius = GANYMEDE_RADIUS_KM / km_scale;
     Spheroid *ganymede = new Spheroid(gan_radius, gan_radius, gan_radius);
     scene.AddSolidObject(ganymede);
     ganymede->SetFullMatte(Color(1.0, 1.0, 1.0));     // ??? Actual moon colors ???
     ganymede->Move(Vector(
         jm.moon[JM_GANYMEDE].x + jupiter.x,
         jm.moon[JM_GANYMEDE].y + jupiter.y,
-        jm.moon[JM_GANYMEDE].z + jupiter.z)
+        jm.moon[JM_GANYMEDE].z + jupiter.z) / au_scale
     );
 
     // Callisto
-    const double cal_radius = CALLISTO_RADIUS_KM / KM_PER_AU;
+    const double cal_radius = CALLISTO_RADIUS_KM / km_scale;
     Spheroid *callisto = new Spheroid(cal_radius, cal_radius, cal_radius);
     scene.AddSolidObject(callisto);
     callisto->SetFullMatte(Color(1.0, 1.0, 1.0));     // ??? Actual moon colors ???
     callisto->Move(Vector(
         jm.moon[JM_CALLISTO].x + jupiter.x,
         jm.moon[JM_CALLISTO].y + jupiter.y,
-        jm.moon[JM_CALLISTO].z + jupiter.z)
+        jm.moon[JM_CALLISTO].z + jupiter.z) / au_scale
     );
+    callisto->SetTag("Callisto");
 
     // Add the Sun as the point light source.
-    scene.AddLightSource(LightSource(Vector(sun.x, sun.y, sun.z), Color(1.0, 1.0, 1.0)));
+    scene.AddLightSource(LightSource(Vector(sun.x, sun.y, sun.z) / au_scale, Color(1.0, 1.0, 1.0)));
 
     // Aim the camera at the center of Jupiter.
     // Start with an identity matrix, which leaves the camera pointing in the -z direction,
@@ -178,7 +185,7 @@ int JupiterImage(const char *filename, int width, astro_time_t time)
 
     // Magnify the image as appropriate for Jupiter's closest approach (opposition).
     // Render the image.
-    const double zoom = 200.0;
+    const double zoom = 300.0;
     scene.SaveImage(filename, (size_t)width, (size_t)width, zoom, 4);
 
     return 0;
