@@ -33,20 +33,25 @@ private:
     astro_rotation_t rotation;
     astro_time_t dummyTime;
     int flip;
+    double xspin, yspin;
 
 public:
-    RotationMatrixAimer(astro_rotation_t _rotation, int _flip)
+    RotationMatrixAimer(astro_rotation_t _rotation, int _flip, double _spinAngleDegrees)
         : rotation(_rotation)
         , dummyTime(Astronomy_TimeFromDays(0.0))
         , flip(_flip)
+        , xspin(cos(_spinAngleDegrees * DEG2RAD))
+        , yspin(sin(_spinAngleDegrees * DEG2RAD))
     {
     }
 
     virtual Imager::Vector Aim(const Imager::Vector& raw) const
     {
         astro_vector_t v;
-        v.x = flip ? -raw.x : raw.x;
-        v.y = raw.y;
+        double x = flip ? -raw.x : raw.x;
+        double y = raw.y;
+        v.x = xspin*x - yspin*y;
+        v.y = yspin*x + xspin*y;
         v.z = raw.z;
         v.t = dummyTime;
         v.status = ASTRO_SUCCESS;
@@ -56,7 +61,7 @@ public:
 };
 
 
-int JupiterImage(const char *filename, int width, astro_time_t time, int flip)
+int JupiterImage(const char *filename, int width, astro_time_t time, int flip, double spin, double zoom)
 {
     using namespace Imager;
 
@@ -100,7 +105,7 @@ int JupiterImage(const char *filename, int width, astro_time_t time, int flip)
     const double pol_radius = JUPITER_POLAR_RADIUS_KM / km_scale;
     Spheroid *planet = new Spheroid(equ_radius, equ_radius, pol_radius);
     scene.AddSolidObject(planet);
-    planet->SetFullMatte(Color(1.0, 1.0, 0.7));
+    planet->SetFullMatte(Color(1.0, 0.95, 0.85));
     planet->Move(Vector(jupiter.x, jupiter.y, jupiter.z) / au_scale);
     planet->SetTag("Jupiter");
 
@@ -175,7 +180,7 @@ int JupiterImage(const char *filename, int width, astro_time_t time, int flip)
     // Rotate around the z-axis to aim the camera at Jupiter's right ascension.
     rotation = Astronomy_Pivot(rotation, 2, sph.lon);
 
-    RotationMatrixAimer aimer(rotation, flip);
+    RotationMatrixAimer aimer(rotation, flip, spin);
     // Verify that the aimer redirects the vector <0, 0, -1> directly
     // toward the center of Jupiter.
     Vector aimTest = aimer.Aim(Vector(0.0, 0.0, -1.0));
@@ -188,9 +193,7 @@ int JupiterImage(const char *filename, int width, astro_time_t time, int flip)
 
     scene.SetAimer(&aimer);
 
-    // Magnify the image as appropriate for Jupiter's closest approach (opposition).
-    // Zoomed-out image showing all moons.
-    scene.SaveImage(filename, (size_t)width, (size_t)width, 1000.0, 4);
+    scene.SaveImage(filename, (size_t)width, (size_t)width, zoom, 4);
 
     return 0;
 }
@@ -203,11 +206,31 @@ int main(int argc, const char *argv[])
     if (argc >= 5)
     {
         int flip = 0;
+        double spin = 0.0;
+        double zoom = 200.0;
 
         for (int i = 5; i < argc; ++i)
         {
             if (!strcmp(argv[i], "-f"))
+            {
                 flip = 1;
+            }
+            else if (argv[i][0] == '-' && argv[i][1] == 's')
+            {
+                if (1 != sscanf(&argv[i][2], "%lf", &spin) || !isfinite(spin) || spin < -360 || spin > +360)
+                {
+                    fprintf(stderr, "ERROR: invalid spin angle after '-s'\n");
+                    return 1;
+                }
+            }
+            else if (argv[i][0] == '-' && argv[i][1] == 'z')
+            {
+                if (1 != sscanf(&argv[i][2], "%lf", &zoom) || !isfinite(zoom) || zoom < 1 || zoom > 1.0e+6)
+                {
+                    fprintf(stderr, "ERROR: invalid zoom factor after '-z'\n");
+                    return 1;
+                }
+            }
             else
             {
                 fprintf(stderr, "ERROR: Unknown option: %s\n", argv[i]);
@@ -229,7 +252,7 @@ int main(int argc, const char *argv[])
             return 1;
 
         if (!strcmp(planet, "Jupiter"))
-            return JupiterImage(filename, width, time, flip);
+            return JupiterImage(filename, width, time, flip, spin, zoom);
 
         fprintf(stderr, "ERROR: Unknown planet '%s'\n", planet);
         return 1;
