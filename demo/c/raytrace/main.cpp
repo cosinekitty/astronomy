@@ -15,12 +15,15 @@ static const char UsageText[] =
 "\n"
 "USAGE:\n"
 "\n"
-"raytrace outfile.png width planet yyyy-mm-ddThh:mm:ssZ\n"
+"raytrace outfile.png width planet yyyy-mm-ddThh:mm:ssZ [-f]\n"
 "\n"
 "where\n"
 "    outfile.png = name of output PNG image\n"
 "    width = number of pixels wide to make the image\n"
 "    planet = Jupiter\n"
+"\n"
+"options:\n"
+"    -f   =  flip the image (match inverted telescope view)\n"
 "\n";
 
 
@@ -29,18 +32,20 @@ class RotationMatrixAimer : public Imager::Aimer
 private:
     astro_rotation_t rotation;
     astro_time_t dummyTime;
+    int flip;
 
 public:
-    RotationMatrixAimer(astro_rotation_t _rotation)
+    RotationMatrixAimer(astro_rotation_t _rotation, int _flip)
         : rotation(_rotation)
         , dummyTime(Astronomy_TimeFromDays(0.0))
+        , flip(_flip)
     {
     }
 
     virtual Imager::Vector Aim(const Imager::Vector& raw) const
     {
         astro_vector_t v;
-        v.x = raw.x;
+        v.x = flip ? -raw.x : raw.x;
         v.y = raw.y;
         v.z = raw.z;
         v.t = dummyTime;
@@ -51,7 +56,7 @@ public:
 };
 
 
-int JupiterImage(const char *filename, int width, astro_time_t time)
+int JupiterImage(const char *filename, int width, astro_time_t time, int flip)
 {
     using namespace Imager;
 
@@ -170,7 +175,7 @@ int JupiterImage(const char *filename, int width, astro_time_t time)
     // Rotate around the z-axis to aim the camera at Jupiter's right ascension.
     rotation = Astronomy_Pivot(rotation, 2, sph.lon);
 
-    RotationMatrixAimer aimer(rotation);
+    RotationMatrixAimer aimer(rotation, flip);
     // Verify that the aimer redirects the vector <0, 0, -1> directly
     // toward the center of Jupiter.
     Vector aimTest = aimer.Aim(Vector(0.0, 0.0, -1.0));
@@ -184,9 +189,8 @@ int JupiterImage(const char *filename, int width, astro_time_t time)
     scene.SetAimer(&aimer);
 
     // Magnify the image as appropriate for Jupiter's closest approach (opposition).
-    // Render the image.
-    const double zoom = 300.0;
-    scene.SaveImage(filename, (size_t)width, (size_t)width, zoom, 4);
+    // Zoomed-out image showing all moons.
+    scene.SaveImage(filename, (size_t)width, (size_t)width, 1000.0, 4);
 
     return 0;
 }
@@ -196,8 +200,21 @@ int main(int argc, const char *argv[])
 {
     using namespace std;
 
-    if (argc == 5)
+    if (argc >= 5)
     {
+        int flip = 0;
+
+        for (int i = 5; i < argc; ++i)
+        {
+            if (!strcmp(argv[i], "-f"))
+                flip = 1;
+            else
+            {
+                fprintf(stderr, "ERROR: Unknown option: %s\n", argv[i]);
+                return 1;
+            }
+        }
+
         const char *filename = argv[1];
         int width = atoi(argv[2]);
         if (width < 100 || width > 60000)
@@ -212,7 +229,7 @@ int main(int argc, const char *argv[])
             return 1;
 
         if (!strcmp(planet, "Jupiter"))
-            return JupiterImage(filename, width, time);
+            return JupiterImage(filename, width, time, flip);
 
         fprintf(stderr, "ERROR: Unknown planet '%s'\n", planet);
         return 1;
