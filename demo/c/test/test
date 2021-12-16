@@ -59,5 +59,10 @@ for latitude in {0..90}; do
 done
 diff test/gravity.txt test/gravity_correct.txt || Fail "Error comparing gravity.c output."
 
+cd raytrace || Fail "error changing to raytrace directory"
+./build || Fail "build raytracer"
+./run || Fail "run raytracer"
+cd ..
+
 echo "PASS: C examples"
 exit 0
