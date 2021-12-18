@@ -189,9 +189,7 @@ namespace Imager
                 // is positive does this light source make the point brighter.
                 if (incidence > 0.0)
                 {
-                    const double intensity =
-                        incidence / direction.MagnitudeSquared();
-
+                    const double intensity = incidence / direction.MagnitudeSquared();
                     colorSum += intensity * source.color;
                 }
             }
@@ -355,9 +353,7 @@ namespace Imager
         // Oversample the image using the anti-aliasing factor.
         const size_t largePixelsWide = antiAliasFactor * pixelsWide;
         const size_t largePixelsHigh = antiAliasFactor * pixelsHigh;
-        const size_t smallerDim =
-            ((pixelsWide < pixelsHigh) ? pixelsWide : pixelsHigh);
-
+        const size_t smallerDim = ((pixelsWide < pixelsHigh) ? pixelsWide : pixelsHigh);
         const double largeZoom  = antiAliasFactor * zoom * smallerDim;
         ImageBuffer buffer(largePixelsWide, largePixelsHigh, backgroundColor);
 
@@ -432,9 +428,7 @@ namespace Imager
         const unsigned BYTES_PER_PIXEL = 4;
 
         // The number of bytes in buffer to be passed to LodePNG.
-        const unsigned RGBA_BUFFER_SIZE =
-            pixelsWide * pixelsHigh * BYTES_PER_PIXEL;
-
+        const unsigned RGBA_BUFFER_SIZE = pixelsWide * pixelsHigh * BYTES_PER_PIXEL;
         std::vector<unsigned char> rgbaBuffer(RGBA_BUFFER_SIZE);
         unsigned rgbaIndex = 0;
         const double patchSize = antiAliasFactor * antiAliasFactor;
@@ -464,11 +458,7 @@ namespace Imager
         }
 
         // Write the PNG file
-        const unsigned error = lodepng::encode(
-            outPngFileName,
-            rgbaBuffer,
-            pixelsWide,
-            pixelsHigh);
+        const unsigned error = lodepng::encode(outPngFileName, rgbaBuffer, pixelsWide, pixelsHigh);
 
         // If there was an encoding error, throw an exception.
         if (error != 0)
@@ -479,10 +469,7 @@ namespace Imager
         }
     }
 
-    void Scene::ResolveAmbiguousPixel(
-        ImageBuffer& buffer,
-        size_t i,
-        size_t j) const
+    void Scene::ResolveAmbiguousPixel(ImageBuffer& buffer, size_t i, size_t j) const
     {
         // This function is called whenever SaveImage could not
         // figure out what color to assign to a pixel, because
@@ -513,9 +500,7 @@ namespace Imager
         }
 
         if (numFound > 0)   // avoid division by zero
-        {
             colorSum /= numFound;
-        }
 
         // "Airbrush" out the imperfection.
         // This is not perfect, but it looks a lot better

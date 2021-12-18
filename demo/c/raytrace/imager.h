@@ -1140,13 +1140,9 @@ namespace Imager
         PixelData& Pixel(size_t i, size_t j) const
         {
             if ((i < pixelsWide) && (j < pixelsHigh))
-            {
                 return array[(j * pixelsWide) + i];
-            }
-            else
-            {
-                throw ImagerException("Pixel coordinate(s) out of bounds");
-            }
+
+            throw ImagerException("Pixel coordinate(s) out of bounds");
         }
 
         size_t GetPixelsWide() const
@@ -1168,17 +1164,11 @@ namespace Imager
             {
                 array[i].color.Validate();
                 if (array[i].color.red > max)
-                {
                     max = array[i].color.red;
-                }
                 if (array[i].color.green > max)
-                {
                     max = array[i].color.green;
-                }
                 if (array[i].color.blue > max)
-                {
                     max = array[i].color.blue;
-                }
             }
             if (max == 0.0)
             {
