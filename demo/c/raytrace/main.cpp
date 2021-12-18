@@ -116,50 +116,46 @@ int JupiterImage(const char *filename, int width, astro_time_t time, int flip, d
     // Add Jupiter's moons to the scene.
 
     // Io
-    const double io_radius = IO_RADIUS_KM / km_scale;
-    Spheroid *io = new Spheroid(io_radius, io_radius, io_radius);
-    scene.AddSolidObject(io);
-    io->SetFullMatte(Color(1.0, 1.0, 1.0));     // ??? Actual moon colors ???
-    io->Move(Vector(
+    Vector io_center(
         jm.moon[JM_IO].x + jupiter.x,
         jm.moon[JM_IO].y + jupiter.y,
-        jm.moon[JM_IO].z + jupiter.z) / au_scale
+        jm.moon[JM_IO].z + jupiter.z
     );
+    Sphere *io = new Sphere(io_center/au_scale, IO_RADIUS_KM/km_scale);
+    scene.AddSolidObject(io);
+    io->SetFullMatte(Color(1.0, 1.0, 1.0));     // ??? Actual moon colors ???
     io->SetTag("Io");
 
     // Europa
-    const double eu_radius = EUROPA_RADIUS_KM / km_scale;
-    Spheroid *europa = new Spheroid(eu_radius, eu_radius, eu_radius);
-    scene.AddSolidObject(europa);
-    europa->SetFullMatte(Color(1.0, 1.0, 1.0));     // ??? Actual moon colors ???
-    europa->Move(Vector(
+    Vector eu_center(
         jm.moon[JM_EUROPA].x + jupiter.x,
         jm.moon[JM_EUROPA].y + jupiter.y,
-        jm.moon[JM_EUROPA].z + jupiter.z) / au_scale
+        jm.moon[JM_EUROPA].z + jupiter.z
     );
+    Sphere *europa = new Sphere(eu_center/au_scale, EUROPA_RADIUS_KM/km_scale);
+    scene.AddSolidObject(europa);
+    europa->SetFullMatte(Color(1.0, 1.0, 1.0));     // ??? Actual moon colors ???
     europa->SetTag("Europa");
 
     // Ganymede
-    const double gan_radius = GANYMEDE_RADIUS_KM / km_scale;
-    Spheroid *ganymede = new Spheroid(gan_radius, gan_radius, gan_radius);
-    scene.AddSolidObject(ganymede);
-    ganymede->SetFullMatte(Color(1.0, 1.0, 1.0));     // ??? Actual moon colors ???
-    ganymede->Move(Vector(
+    Vector gan_center(
         jm.moon[JM_GANYMEDE].x + jupiter.x,
         jm.moon[JM_GANYMEDE].y + jupiter.y,
-        jm.moon[JM_GANYMEDE].z + jupiter.z) / au_scale
+        jm.moon[JM_GANYMEDE].z + jupiter.z
     );
+    Sphere *ganymede = new Sphere(gan_center/au_scale, GANYMEDE_RADIUS_KM/km_scale);
+    scene.AddSolidObject(ganymede);
+    ganymede->SetFullMatte(Color(1.0, 1.0, 1.0));     // ??? Actual moon colors ???
 
     // Callisto
-    const double cal_radius = CALLISTO_RADIUS_KM / km_scale;
-    Spheroid *callisto = new Spheroid(cal_radius, cal_radius, cal_radius);
-    scene.AddSolidObject(callisto);
-    callisto->SetFullMatte(Color(1.0, 1.0, 1.0));     // ??? Actual moon colors ???
-    callisto->Move(Vector(
+    Vector cal_center(
         jm.moon[JM_CALLISTO].x + jupiter.x,
         jm.moon[JM_CALLISTO].y + jupiter.y,
-        jm.moon[JM_CALLISTO].z + jupiter.z) / au_scale
+        jm.moon[JM_CALLISTO].z + jupiter.z
     );
+    Sphere *callisto = new Sphere(cal_center/au_scale, CALLISTO_RADIUS_KM/km_scale);
+    scene.AddSolidObject(callisto);
+    callisto->SetFullMatte(Color(1.0, 1.0, 1.0));     // ??? Actual moon colors ???
     callisto->SetTag("Callisto");
 
     // Add the Sun as the point light source.
