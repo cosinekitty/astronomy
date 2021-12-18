@@ -1138,25 +1138,6 @@ namespace Imager
             double zoom,
             size_t antiAliasFactor) const;
 
-        // By default, regions of space that are not
-        // explicitly occupied by some object have
-        // the refractive index of vacuum, or
-        // REFRACTION_VACUUM = 1.  The following
-        // function allows the caller to override
-        // this default.  The value of the 'refraction'
-        // parameter must be in the range
-        // REFRACTION_MINIMUM to REFRACTION_MAXIMUM.
-        void SetAmbientRefraction(double refraction)
-        {
-            ValidateRefraction(refraction);
-            ambientRefraction = refraction;
-        }
-
-        void AddDebugPoint(int iPixel, int jPixel)
-        {
-            debugPointList.push_back(DebugPoint(iPixel, jPixel));
-        }
-
     private:
         void ClearSolidObjectList();
 
@@ -1184,29 +1165,6 @@ namespace Imager
             int recursionDepth) const;
 
         Color CalculateMatte(const Intersection& intersection) const;
-
-        Color CalculateReflection(
-            const Intersection& intersection,
-            const Vector& incidentDir,
-            double refractiveIndex,
-            Color rayIntensity,
-            int recursionDepth) const;
-
-        Color CalculateRefraction(
-            const Intersection& intersection,
-            const Vector& direction,
-            double sourceRefractiveIndex,
-            Color rayIntensity,
-            int recursionDepth,
-            double& outReflectionFactor) const;
-
-        const SolidObject* PrimaryContainer(const Vector& point) const;
-
-        double PolarizedReflection(
-            double n1,              // source material's index of refraction
-            double n2,              // target material's index of refraction
-            double cos_a1,          // incident or outgoing ray angle cosine
-            double cos_a2) const;   // outgoing or incident ray angle cosine
 
         void ResolveAmbiguousPixel(ImageBuffer& buffer, size_t i, size_t j) const;
 
@@ -1284,8 +1242,6 @@ namespace Imager
             {
             }
         };
-        typedef std::vector<DebugPoint> DebugPointList;
-        DebugPointList debugPointList;
         Aimer *aimer;
     };
 
