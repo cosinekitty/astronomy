@@ -273,31 +273,6 @@ namespace Imager
     }
 
     //------------------------------------------------------------------------
-    //  Refractive indexes of common substances/media...
-
-    const double REFRACTION_VACUUM   = 1.0000;
-    const double REFRACTION_AIR      = 1.0003;
-    const double REFRACTION_ICE      = 1.3100;
-    const double REFRACTION_WATER    = 1.3330;
-    const double REFRACTION_GASOLINE = 1.3980;
-    const double REFRACTION_GLASS    = 1.5500;
-    const double REFRACTION_SAPPHIRE = 1.7700;
-    const double REFRACTION_DIAMOND  = 2.4190;
-
-    // Range of allowed refraction values...
-    const double REFRACTION_MINIMUM  = 1.0000;
-    const double REFRACTION_MAXIMUM  = 9.0000;
-
-    inline void ValidateRefraction(double refraction)
-    {
-        if (refraction < REFRACTION_MINIMUM ||
-            refraction > REFRACTION_MAXIMUM)
-        {
-            throw ImagerException("Invalid refractive index.");
-        }
-    }
-
-    //------------------------------------------------------------------------
     // class Optics describes the way a surface point interacts with light.
 
     class Optics
@@ -305,41 +280,23 @@ namespace Imager
     public:
         Optics()
             : matteColor(Color(1.0, 1.0, 1.0))
-            , glossColor(Color(0.0, 0.0, 0.0))
-            , opacity(1.0)
         {
         }
 
-        explicit Optics(
-            Color _matteColor,
-            Color _glossColor  = Color(0.0, 0.0, 0.0),
-            double _opacity    = 1.0)
+        explicit Optics(Color _matteColor)
         {
             SetMatteColor(_matteColor);
-            SetGlossColor(_glossColor);
-            SetOpacity(_opacity);
         }
 
-        void SetMatteGlossBalance(
-            double glossFactor,     // 0..1: balance between matte and gloss
-            const Color& rawMatteColor,
-            const Color& rawGlossColor);
-
-        void SetMatteColor(const Color& _matteColor);
-        void SetGlossColor(const Color& _glossColor);
-        void SetOpacity(double _opacity);
+        void SetMatteColor(const Color& _matteColor)
+        {
+            matteColor = _matteColor;
+        }
 
         const Color& GetMatteColor() const { return matteColor; }
-        const Color& GetGlossColor() const { return glossColor; }
-        const double GetOpacity()    const { return opacity;    }
-
-    protected:
-        void ValidateReflectionColor(const Color& color) const;
 
     private:
         Color   matteColor;     // color, intensity of scattered reflection
-        Color   glossColor;     // color, intensity of mirror reflection
-        double  opacity;        // fraction 0..1 of reflected light
     };
 
     //------------------------------------------------------------------------
@@ -426,7 +383,6 @@ namespace Imager
     public:
         SolidObject(const Vector& _center = Vector(), bool _isFullyEnclosed = true)
             : center(_center)
-            , refractiveIndex(REFRACTION_GLASS)
             , isFullyEnclosed(_isFullyEnclosed)
         {
         }
@@ -486,13 +442,6 @@ namespace Imager
             return uniformOptics;
         }
 
-        // Returns the index of refraction of this solid.
-        // The refractive index is uniform throughout the solid.
-        double GetRefractiveIndex() const
-        {
-            return refractiveIndex;
-        }
-
         // The following three member functions rotate this
         // object counterclockwise around a line parallel
         // to the x, y, or z axis, as seen from the positive
@@ -544,41 +493,9 @@ namespace Imager
             uniformOptics = optics;
         }
 
-        // Helper method for solids with uniform optics (see above).
-        // Defines the shiny reflection color (gloss) and
-        // dull reflection color (matte), with glossFactor = 0..1
-        // that balances between the two modes of reflection.
-        // If glossFactor = 0, the object has a completely dull
-        // surface.  If glossFactor = 1, the surface is completely
-        // mirror-like.
-        void SetMatteGlossBalance(
-            double glossFactor,
-            const Color& rawMatteColor,
-            const Color& rawGlossColor)
-        {
-            uniformOptics.SetMatteGlossBalance(
-                glossFactor,
-                rawMatteColor,
-                rawGlossColor);
-        }
-
         void SetFullMatte(const Color& matteColor)
         {
-            uniformOptics.SetMatteGlossBalance(
-                0.0,        // glossFactor=0 indicates full matte reflection
-                matteColor,
-                Color(0.0, 0.0, 0.0));  // irrelevant, but mass pass something
-        }
-
-        void SetOpacity(const double opacity)
-        {
-            uniformOptics.SetOpacity(opacity);
-        }
-
-        void SetRefraction(const double refraction)
-        {
-            ValidateRefraction(refraction);
-            refractiveIndex = refraction;
+            uniformOptics = Optics(matteColor);
         }
 
     protected:
@@ -596,10 +513,6 @@ namespace Imager
         // the member variable uniformOptics holds these optical
         // properties.
         Optics uniformOptics;
-
-        // A solid object has a uniform refractive index
-        // throughout its contained volume.
-        double refractiveIndex;
 
         // A flag that indicates whether the Contains() method
         // should try to determine whether a point is inside this
@@ -1089,7 +1002,6 @@ namespace Imager
     public:
         explicit Scene(const Color& _backgroundColor = Color())
             : backgroundColor(_backgroundColor)
-            , ambientRefraction(REFRACTION_VACUUM)
             , aimer(nullptr)
         {
         }
@@ -1153,14 +1065,12 @@ namespace Imager
         Color TraceRay(
             const Vector& vantage,
             const Vector& direction,
-            double refractiveIndex,
             Color rayIntensity,
             int recursionDepth) const;
 
         Color CalculateLighting(
             const Intersection& intersection,
             const Vector& direction,
-            double refractiveIndex,
             Color rayIntensity,
             int recursionDepth) const;
 
@@ -1219,29 +1129,9 @@ namespace Imager
         // A list of all the point light sources in the scene.
         LightSourceList lightSourceList;
 
-        // The refractive index of every point in space
-        // that is not explicitly occupied by some object.
-        // By default, this is REFRACTION_VACUUM, but may be
-        // set to a higher value to simulate the entire
-        // scene being immersed in some transparent substance
-        // like water.
-        double ambientRefraction;
-
         // Help performance by avoiding constant construction/destruction
         // of intersection lists.
         mutable IntersectionList cachedIntersectionList;
-
-        struct DebugPoint
-        {
-            int     iPixel;
-            int     jPixel;
-
-            DebugPoint(int _iPixel, int _jPixel)
-                : iPixel(_iPixel)
-                , jPixel(_jPixel)
-            {
-            }
-        };
         Aimer *aimer;
     };
 

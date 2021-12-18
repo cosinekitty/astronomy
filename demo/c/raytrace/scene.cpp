@@ -72,7 +72,6 @@ namespace Imager
     Color Scene::TraceRay(
         const Vector& vantage,
         const Vector& direction,
-        double refractiveIndex,
         Color rayIntensity,
         int recursionDepth) const
     {
@@ -96,7 +95,6 @@ namespace Imager
             return CalculateLighting(
                 intersection,
                 direction,
-                refractiveIndex,
                 rayIntensity,
                 1 + recursionDepth);
 
@@ -115,7 +113,6 @@ namespace Imager
     Color Scene::CalculateLighting(
         const Intersection& intersection,
         const Vector& direction,
-        double refractiveIndex,
         Color rayIntensity,
         int recursionDepth) const
     {
@@ -406,7 +403,7 @@ namespace Imager
 
                     // Trace a ray from the camera toward the given direction
                     // to figure out what color to assign to this pixel.
-                    pixel.color = TraceRay(camera, aim, ambientRefraction, fullIntensity, 0);
+                    pixel.color = TraceRay(camera, aim, fullIntensity, 0);
                 }
                 catch (AmbiguousIntersectionException)
                 {
