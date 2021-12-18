@@ -30,8 +30,6 @@
 #include <cmath>
 #include "algebra.h"
 
-#define RAYTRACE_DEBUG_POINTS 0
-
 namespace Imager
 {
     const double PI = 3.141592653589793238462643383279502884;
@@ -1461,7 +1459,6 @@ namespace Imager
         explicit Scene(const Color& _backgroundColor = Color())
             : backgroundColor(_backgroundColor)
             , ambientRefraction(REFRACTION_VACUUM)
-            , activeDebugPoint(nullptr)
             , aimer(nullptr)
         {
         }
@@ -1658,7 +1655,6 @@ namespace Imager
         };
         typedef std::vector<DebugPoint> DebugPointList;
         DebugPointList debugPointList;
-        mutable const DebugPoint* activeDebugPoint;
         Aimer *aimer;
     };
 

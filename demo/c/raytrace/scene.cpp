@@ -121,30 +121,6 @@ namespace Imager
     {
         Color colorSum(0.0, 0.0, 0.0);
 
-#if RAYTRACE_DEBUG_POINTS
-        if (activeDebugPoint)
-        {
-            using namespace std;
-
-            Indent(cout, recursionDepth);
-            cout << "CalculateLighting[" << recursionDepth << "] {" << endl;
-
-            Indent(cout, 1+recursionDepth);
-            cout << intersection << endl;
-
-            Indent(cout, 1+recursionDepth);
-            cout << "direction=" << direction << endl;
-
-            Indent(cout, 1+recursionDepth);
-            cout.precision(4);
-            cout << "refract=" << fixed << refractiveIndex;
-            cout << ", intensity=" << rayIntensity << endl;
-
-            Indent(cout, recursionDepth);
-            cout << "}" << endl;
-        }
-#endif
-
         // Check for recursion stopping conditions.
         // The first is an absolute upper limit on recursion,
         // so as to avoid stack overflow crashes and to
@@ -191,18 +167,6 @@ namespace Imager
                         CalculateMatte(intersection);
 
                     colorSum += matteColor;
-
-#if RAYTRACE_DEBUG_POINTS
-                    if (activeDebugPoint)
-                    {
-                        using namespace std;
-
-                        Indent(cout, recursionDepth);
-                        cout << "matteColor=" << matteColor;
-                        cout << ", colorSum=" << colorSum;
-                        cout << endl;
-                    }
-#endif
                 }
 
                 double refractiveReflectionFactor = 0.0;
@@ -265,17 +229,6 @@ namespace Imager
                 }
             }
         }
-
-#if RAYTRACE_DEBUG_POINTS
-        if (activeDebugPoint)
-        {
-            using namespace std;
-
-            Indent(cout, recursionDepth);
-            cout << "CalculateLighting[" << recursionDepth << "] returning ";
-            cout << colorSum << endl;
-        }
-#endif
 
         return colorSum;
     }
@@ -759,29 +712,6 @@ namespace Imager
             {
                 direction.y = (largePixelsHigh/2.0 - j) / largeZoom;
 
-#if RAYTRACE_DEBUG_POINTS
-                {
-                    using namespace std;
-
-                    // Assume no active debug point unless we find one below.
-                    activeDebugPoint = NULL;
-
-                    DebugPointList::const_iterator iter = debugPointList.begin();
-                    DebugPointList::const_iterator end  = debugPointList.end();
-                    for(; iter != end; ++iter)
-                    {
-                        if ((iter->iPixel == i) && (iter->jPixel == j))
-                        {
-                            cout << endl;
-                            cout << "Hit breakpoint at (";
-                            cout << i << ", " << j <<")" << endl;
-                            activeDebugPoint = &(*iter);
-                            break;
-                        }
-                    }
-                }
-#endif
-
                 PixelData& pixel = buffer.Pixel(i,j);
                 try
                 {
@@ -811,11 +741,6 @@ namespace Imager
                 }
             }
         }
-
-#if RAYTRACE_DEBUG_POINTS
-        // Leave no chance of a dangling pointer into debug points.
-        activeDebugPoint = NULL;
-#endif
 
         // Go back and "heal" ambiguous pixels as best we can.
         PixelList::const_iterator iter = ambiguousPixelList.begin();
