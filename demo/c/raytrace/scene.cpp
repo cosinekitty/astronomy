@@ -141,12 +141,12 @@ namespace Imager
 
                 // Determine the optical properties at the specified
                 // point on whatever solid object the ray intersected with.
-                const Optics optics = solid.SurfaceOptics(
+                const Color color = solid.SurfaceOptics(
                     intersection.point,
                     intersection.context
                 );
 
-                colorSum = optics.GetMatteColor() * rayIntensity * CalculateMatte(intersection);
+                colorSum = color * rayIntensity * CalculateMatte(intersection);
             }
         }
 

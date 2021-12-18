@@ -273,33 +273,6 @@ namespace Imager
     }
 
     //------------------------------------------------------------------------
-    // class Optics describes the way a surface point interacts with light.
-
-    class Optics
-    {
-    public:
-        Optics()
-            : matteColor(Color(1.0, 1.0, 1.0))
-        {
-        }
-
-        explicit Optics(Color _matteColor)
-        {
-            SetMatteColor(_matteColor);
-        }
-
-        void SetMatteColor(const Color& _matteColor)
-        {
-            matteColor = _matteColor;
-        }
-
-        const Color& GetMatteColor() const { return matteColor; }
-
-    private:
-        Color   matteColor;     // color, intensity of scattered reflection
-    };
-
-    //------------------------------------------------------------------------
     // struct Intersection provides information about a ray intersecting
     // with a point on the surface of a SolidObject.
 
@@ -435,11 +408,11 @@ namespace Imager
         // patterns of different colors or gloss.
         // It is recommended to keep constant refractive index
         // throughout the solid, or the results may look weird.
-        virtual Optics SurfaceOptics(
+        virtual Color SurfaceOptics(
             const Vector& surfacePoint,
             const void *context) const
         {
-            return uniformOptics;
+            return uniformColor;
         }
 
         // The following three member functions rotate this
@@ -479,29 +452,15 @@ namespace Imager
 
         const Vector& Center() const { return center; }
 
-        // Derived classes are allowed to report different optical
-        // properties at different points on their surface(s).
-        // For example, different points might have different matte
-        // colors in order to depict some kind of pattern on the solid.
-        // However, by default, solids have uniform optical properites
-        // everywhere on their surface(s).  This method allows callers
-        // that know a solid to have this default behavior to define
-        // the uniform optical properties.  All writes must take place
-        // before rendering starts in order to avoid weird/ugly results.
-        void SetUniformOptics(const Optics& optics)
-        {
-            uniformOptics = optics;
-        }
-
         void SetFullMatte(const Color& matteColor)
         {
-            uniformOptics = Optics(matteColor);
+            uniformColor = matteColor;
         }
 
     protected:
-        const Optics& GetUniformOptics() const
+        const Color& GetUniformOptics() const
         {
-            return uniformOptics;
+            return uniformColor;
         }
 
     private:
@@ -512,7 +471,7 @@ namespace Imager
         // overrides the virtual member function SurfaceOptics(),
         // the member variable uniformOptics holds these optical
         // properties.
-        Optics uniformOptics;
+        Color uniformColor;
 
         // A flag that indicates whether the Contains() method
         // should try to determine whether a point is inside this
@@ -721,7 +680,7 @@ namespace Imager
             return ObjectSpace_Contains(ObjectPointFromCameraPoint(point));
         }
 
-        virtual Optics SurfaceOptics(
+        virtual Color SurfaceOptics(
             const Vector& surfacePoint,
             const void *context) const
         {
@@ -752,7 +711,7 @@ namespace Imager
         // considered part of the solid to be incorrectly excluded.
         virtual bool ObjectSpace_Contains(const Vector& point) const = 0;
 
-        virtual Optics ObjectSpace_SurfaceOptics(
+        virtual Color ObjectSpace_SurfaceOptics(
             const Vector& surfacePoint,
             const void *context) const
         {
