@@ -707,7 +707,14 @@ namespace Imager
         virtual void AppendAllIntersections(
             const Vector& vantage,
             const Vector& direction,
-            IntersectionList& intersectionList) const;
+            IntersectionList& intersectionList) const
+        {
+            // Find all intersections with the left solid.
+            Left().AppendAllIntersections(vantage, direction, intersectionList);
+
+            // Append all intersections with the right solid.
+            Right().AppendAllIntersections(vantage, direction, intersectionList);
+        }
 
         virtual bool Contains(const Vector& point) const
         {
@@ -756,84 +763,6 @@ namespace Imager
             const Vector& direction,
             const SolidObject& aSolid,
             const SolidObject& bSolid) const;
-    };
-
-    //------------------------------------------------------------------------
-
-    // Filters a SolidObject, except toggles the inside/outside property.
-    // For example, a sphere becomes the set of points outside the sphere.
-    class SetComplement: public SolidObject
-    {
-    public:
-        explicit SetComplement(SolidObject* _other)
-            : SolidObject(_other->Center())
-            , other(_other)
-        {
-            SetTag("SetComplement");
-        }
-
-        virtual ~SetComplement()
-        {
-            delete other;
-            other = nullptr;
-        }
-
-        virtual bool Contains(const Vector& point) const
-        {
-            // This is the core of the set complement:
-            // toggling the value of any point containment:
-            return !other->Contains(point);
-        }
-
-        virtual void AppendAllIntersections(
-            const Vector& vantage,
-            const Vector& direction,
-            IntersectionList& intersectionList) const;
-
-        virtual SolidObject& Translate(double dx, double dy, double dz)
-        {
-            SolidObject::Translate(dx, dy, dz);
-            other->Translate(dx, dy, dz);
-            return *this;
-        }
-
-        virtual SolidObject& RotateX(double angleInDegrees)
-        {
-            other->RotateX(angleInDegrees);
-            return *this;
-        }
-
-        virtual SolidObject& RotateY(double angleInDegrees)
-        {
-            other->RotateY(angleInDegrees);
-            return *this;
-        }
-
-        virtual SolidObject& RotateZ(double angleInDegrees)
-        {
-            other->RotateZ(angleInDegrees);
-            return *this;
-        }
-
-    private:
-        SolidObject* other;
-    };
-
-    //------------------------------------------------------------------------
-
-    // Set difference is a variation on set intersection:
-    // The difference A - B is identical to the intersection of A and not(B).
-    class SetDifference: public SetIntersection
-    {
-    public:
-        SetDifference(
-            const Vector& _center,
-            SolidObject* _left,
-            SolidObject* _right)
-                : SetIntersection(_center, _left, new SetComplement(_right))
-        {
-            SetTag("SetDifference");
-        }
     };
 
     //------------------------------------------------------------------------
@@ -983,74 +912,6 @@ namespace Imager
 
     //------------------------------------------------------------------------
 
-    class Torus: public SolidObject_Reorientable
-    {
-    public:
-        Torus(double _R, double _S)
-            : SolidObject_Reorientable()
-            , R(_R)
-            , S(_S)
-        {
-            SetTag("Torus");
-        }
-
-    protected:
-        virtual void ObjectSpace_AppendAllIntersections(
-            const Vector& vantage,
-            const Vector& direction,
-            IntersectionList& intersectionList) const;
-
-        virtual bool ObjectSpace_Contains(const Vector& point) const;
-
-        int SolveIntersections(
-            const Vector& vantage,
-            const Vector& direction,
-            double uArray[4]) const;
-
-        Vector SurfaceNormal(const Vector& point) const;
-
-    private:
-        const double R;    // distance from center of hole to center of tube
-        const double S;    // distance from center of tube to outside of tube
-    };
-
-    //------------------------------------------------------------------------
-
-    // A box with rectangular faces, all of which are mutually perpendicular.
-    class Cuboid: public SolidObject_Reorientable
-    {
-    public:
-        Cuboid(double _a, double _b, double _c)
-            : SolidObject_Reorientable()
-            , a(_a)
-            , b(_b)
-            , c(_c)
-        {
-            SetTag("Cuboid");
-        }
-
-    protected:
-        virtual void ObjectSpace_AppendAllIntersections(
-            const Vector& vantage,
-            const Vector& direction,
-            IntersectionList& intersectionList) const;
-
-        virtual bool ObjectSpace_Contains(const Vector& point) const
-        {
-            return
-                (fabs(point.x) <= a + EPSILON) &&
-                (fabs(point.y) <= b + EPSILON) &&
-                (fabs(point.z) <= c + EPSILON);
-        }
-
-    private:
-        const double  a;   // half of the width:  faces at r = -a and r = +a.
-        const double  b;   // half of the length: faces at s = -b and s = +b.
-        const double  c;   // half of the height: faces at t = -c and t = +c.
-    };
-
-    //------------------------------------------------------------------------
-
     // A thin ring is a zero-thickness circular disc with an optional
     // disc-shaped hole in the center.
     class ThinRing: public SolidObject_Reorientable
@@ -1106,46 +967,6 @@ namespace Imager
         {
             SetTag("ThinDisc");
         }
-    };
-
-    //------------------------------------------------------------------------
-
-    // A circular, right cylinder (may be used to make "tin can" shapes,
-    // discs with thickness, etc.)
-    // Consists of a curved lateral surface and a top and bottom disc.
-    class Cylinder: public SolidObject_Reorientable
-    {
-    public:
-        Cylinder(double _radius, double _height)
-            : SolidObject_Reorientable()
-            , a(_radius)
-            , b(_height / 2.0)
-        {
-            SetTag("Cylinder");
-        }
-
-    protected:
-        virtual void ObjectSpace_AppendAllIntersections(
-            const Vector& vantage,
-            const Vector& direction,
-            IntersectionList& intersectionList) const;
-
-        virtual bool ObjectSpace_Contains(const Vector& point) const
-        {
-            return
-                (fabs(point.z) <= b + EPSILON) &&
-                (point.x*point.x + point.y*point.y <= a*a + EPSILON);
-        }
-
-    private:
-        void AppendDiskIntersection(
-            const Vector& vantage,
-            const Vector& direction,
-            double zDisk,
-            IntersectionList& intersectionList) const;
-
-        const double  a;  // the radius of the cylinder
-        const double  b;  // half height of the cylinder
     };
 
     //------------------------------------------------------------------------
@@ -1229,196 +1050,6 @@ namespace Imager
 
     private:
         double  radius;
-    };
-
-    //------------------------------------------------------------------------
-
-    // A solid object consisting of nothing but triangular faces.
-    // Faces are added after construction by calling AddPoint()
-    // to append a series of vertex points,
-    // followed by AddTriangle() to refer to the indices
-    // of previously added points.
-    class TriangleMesh: public SolidObject
-    {
-    public:
-        TriangleMesh(
-            const Vector& center = Vector(),
-            bool _isFullyEnclosed = true)
-                : SolidObject(center, _isFullyEnclosed)
-        {
-            SetTag("TriangleMesh");
-        }
-
-        virtual void AppendAllIntersections(
-            const Vector& vantage,
-            const Vector& direction,
-            IntersectionList& intersectionList) const;
-
-        virtual SolidObject& Translate(double dx, double dy, double dz);
-        virtual SolidObject& RotateX(double angleInDegrees);
-        virtual SolidObject& RotateY(double angleInDegrees);
-        virtual SolidObject& RotateZ(double angleInDegrees);
-
-        // Appends a new vertex point whose point index is to be
-        // referenced later by AddTriangle.
-        // expectedIndex is the zero-based value that must match
-        // the insertion order of the point.
-        // For example, the first call to AddPoint must pass
-        // expectedIndex==0, the second must pass expectedIndex==1, etc.
-        // This is a sanity check so that the caller avoids insertion
-        // order mistakes, since the vertex point index will be
-        // referenced later when calling AddTriangle.
-        void AddPoint(int expectedIndex, double x, double y, double z)
-        {
-            if (expectedIndex != pointList.size())
-            {
-                // Sanity check failed that caller is passing
-                // in correct indexes for points.
-                throw ImagerException("Point index mismatch.");
-            }
-
-            pointList.push_back(Vector(x, y, z));
-        }
-
-        // Given the vertex point indices of three distinct points
-        // that have already been added (using a call to AddPoint),
-        // appends a new triangular face with those three points
-        // as vertices.  Uses the specified optical properties for this face.
-        void AddTriangle(
-            int aPointIndex,
-            int bPointIndex,
-            int cPointIndex,
-            const Optics& optics);
-
-        // A convenience method for cases where we know we have
-        // a quadrilateral surface that can be split into two triangles.
-        // The point indices (a,b,c,d) are passed in counterclockwise
-        // order viewed from outside the surface.
-        // This is important for calculating normal vectors that
-        // point outward from the solid, not inward.
-        void AddQuad(
-            int aPointIndex,
-            int bPointIndex,
-            int cPointIndex,
-            int dPointIndex,
-            const Optics& optics)
-        {
-            // We preserve counterclockwise ordering by making
-            // two triangles: (a,b,c) and (c,d,a).
-            AddTriangle(aPointIndex, bPointIndex, cPointIndex, optics);
-            AddTriangle(cPointIndex, dPointIndex, aPointIndex, optics);
-        }
-
-        // Another convenience method for solids that
-        // have pentagonal faces. A pentagon can be split into 3 triangles.
-        // As in AddTriangle and AddQuad, the caller must pass the point
-        // indices in a counterclockwise order as seen from outside the solid.
-        void AddPentagon(
-            int aPointIndex,
-            int bPointIndex,
-            int cPointIndex,
-            int dPointIndex,
-            int ePointIndex,
-            const Optics &optics)
-        {
-            AddTriangle(aPointIndex, bPointIndex, cPointIndex, optics);
-            AddTriangle(cPointIndex, dPointIndex, aPointIndex, optics);
-            AddTriangle(dPointIndex, ePointIndex, aPointIndex, optics);
-        }
-
-        // Because each triangle can have different optics, we need
-        // to override SurfaceOptics() to replace the default behavior
-        // of having uniform optics for the whole solid.
-        virtual Optics SurfaceOptics(
-            const Vector& surfacePoint,
-            const void *context) const;
-
-    protected:
-        void ValidatePointIndex(size_t pointIndex) const
-        {
-            if ((pointIndex < 0) || (pointIndex >= pointList.size()))
-            {
-                throw ImagerException("Point index is out of bounds");
-            }
-        }
-
-        // Attempts to find an intersection of the given direction
-        // passing through the given vantage point with the plane
-        // that passes through the triangle (A, B, C).
-        // If an intersection can be found, returns true and sets
-        // the output parameters:
-        //
-        //     u = The scalar multiple such that the intersection
-        //         point = (u*direction + vantage).
-        //
-        //     v = The component of the vector difference B-A,
-        //         starting at A, of the intersection point.
-        //
-        //     w = The component of the vector difference C-A,
-        //         starting at A, of the intersection point.
-        //
-        // Returns false and leaves u, v, w undefined if an
-        // intersection cannot be found.
-        // Note that it is possible that calling AttemptPlaneIntersection
-        // may succeed with one ordering of the plane points (A, B, C),
-        // but may fail on another ordering.
-        static bool AttemptPlaneIntersection(
-            const Vector& vantage,
-            const Vector& direction,
-            const Vector& A,
-            const Vector& B,
-            const Vector& C,
-            double &u,
-            double &v,
-            double &w)
-        {
-            return Algebra::SolveLinearEquations(
-                direction.x, A.x-B.x, A.x-C.x, -(A.x - vantage.x),
-                direction.y, A.y-B.y, A.y-C.y, -(A.y - vantage.y),
-                direction.z, A.z-B.z, A.z-C.z, -(A.z - vantage.z),
-                u,
-                v,
-                w);
-        }
-
-        Vector GetPointFromIndex(int pointIndex) const
-        {
-            return pointList[pointIndex];
-        }
-
-    private:
-        struct Triangle
-        {
-            int a;  // index into pointList for first  vertex of the triangle
-            int b;  // index into pointList for second vertex of the triangle
-            int c;  // index into pointList for third  vertex of the triangle
-
-            Optics optics;      // surface color of the triangle
-
-            Triangle(int _a, int _b, int _c, const Optics& _optics)
-                : a(_a)
-                , b(_b)
-                , c(_c)
-                , optics(_optics)
-            {
-            }
-        };
-
-        // Returns a unit vector at right angles to the triangle,
-        // using right-hand rule with respect to A,B,C ordering.
-        Vector NormalVector(const Triangle& triangle) const;
-
-        // Type definitions for convenient use of vector templates.
-        typedef std::vector<Vector>     PointList;
-        typedef std::vector<Triangle>   TriangleList;
-
-        // A list of all the vertex points used to define triangles.
-        // A given point may be referenced by one or more triangles.
-        PointList       pointList;
-
-        // A list of all the triangles, each of which refers
-        // to 3 distinct points in pointList.
-        TriangleList    triangleList;
     };
 
     //------------------------------------------------------------------------
