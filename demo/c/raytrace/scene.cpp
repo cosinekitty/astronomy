@@ -40,13 +40,8 @@ namespace Imager
     // the SolidObjects that were in it.
     void Scene::ClearSolidObjectList()
     {
-        SolidObjectList::iterator iter = solidObjectList.begin();
-        SolidObjectList::iterator end  = solidObjectList.end();
-        for (; iter != end; ++iter)
-        {
-            delete *iter;
-            *iter = NULL;
-        }
+        for (SolidObject *solid : solidObjectList)
+            delete solid;
         solidObjectList.clear();
     }
 
@@ -165,14 +160,8 @@ namespace Imager
         Color colorSum(0.0, 0.0, 0.0);
 
         // Iterate through all of the light sources.
-        LightSourceList::const_iterator iter = lightSourceList.begin();
-        LightSourceList::const_iterator end  = lightSourceList.end();
-        for (; iter != end; ++iter)
+        for (const LightSource& source : lightSourceList)
         {
-            // Each time through the loop, 'source'
-            // will refer to one of the light sources.
-            const LightSource& source = *iter;
-
             // See if we can draw a line from the intersection
             // point toward the light source without hitting any surfaces.
             if (HasClearLineOfSight(intersection.point, source.location))
@@ -240,25 +229,30 @@ namespace Imager
         default:
             // There are 2 or more intersections, so we need
             // to find the closest one, and look for ties.
-            IntersectionList::const_iterator iter = list.begin();
-            IntersectionList::const_iterator end  = list.end();
-            IntersectionList::const_iterator closest = iter;
+            const Intersection *closest = nullptr;
             int tieCount = 1;
-            for (++iter; iter != end; ++iter)
+            for (const Intersection & isect : list)
             {
-                const double diff = iter->distanceSquared - closest->distanceSquared;
-                if (fabs(diff) < EPSILON)
+                if (closest == nullptr)
                 {
-                    // Within tolerance of the closest so far,
-                    // so consider this a tie.
-                    ++tieCount;
+                    closest = &isect;
                 }
-                else if (diff < 0.0)
+                else
                 {
-                    // This new intersection is definitely closer
-                    // to the vantage point.
-                    tieCount = 1;
-                    closest = iter;
+                    const double diff = isect.distanceSquared - closest->distanceSquared;
+                    if (fabs(diff) < EPSILON)
+                    {
+                        // Within tolerance of the closest so far,
+                        // so consider this a tie.
+                        ++tieCount;
+                    }
+                    else if (diff < 0.0)
+                    {
+                        // This new intersection is definitely closer
+                        // to the vantage point.
+                        tieCount = 1;
+                        closest = &isect;
+                    }
                 }
             }
             intersection = *closest;
@@ -288,12 +282,9 @@ namespace Imager
     {
         // Build a list of all intersections from all objects.
         cachedIntersectionList.clear();     // empty any previous contents
-        SolidObjectList::const_iterator iter = solidObjectList.begin();
-        SolidObjectList::const_iterator end  = solidObjectList.end();
-        for (; iter != end; ++iter)
+        for (const SolidObject *solid : solidObjectList)
         {
-            const SolidObject& solid = *(*iter);
-            solid.AppendAllIntersections(
+            solid->AppendAllIntersections(
                 vantage,
                 direction,
                 cachedIntersectionList);
@@ -314,18 +305,14 @@ namespace Imager
         const double gapDistanceSquared = dir.MagnitudeSquared();
 
         // Iterate through all the solid objects in this scene.
-        SolidObjectList::const_iterator iter = solidObjectList.begin();
-        SolidObjectList::const_iterator end  = solidObjectList.end();
-        for (; iter != end; ++iter)
+        for (const SolidObject *solid : solidObjectList)
         {
             // If any object blocks the line of sight,
             // we can return false immediately.
-            const SolidObject& solid = *(*iter);
-
             // Find the closest intersection from point1
             // in the direction toward point2.
             Intersection closest;
-            if (0 != solid.FindClosestIntersection(point1, dir, closest))
+            if (0 != solid->FindClosestIntersection(point1, dir, closest))
             {
                 // We found the closest intersection, but it is only
                 // a blocker if it is closer to point1 than point2 is.
@@ -427,11 +414,8 @@ namespace Imager
         }
 
         // Go back and "heal" ambiguous pixels as best we can.
-        PixelList::const_iterator iter = ambiguousPixelList.begin();
-        PixelList::const_iterator end  = ambiguousPixelList.end();
-        for (; iter != end; ++iter)
+        for (const PixelCoordinates &p : ambiguousPixelList)
         {
-            const PixelCoordinates& p = *iter;
             ResolveAmbiguousPixel(buffer, p.i, p.j);
         }
 
