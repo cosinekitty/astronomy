@@ -15,11 +15,12 @@ static const char UsageText[] =
 "\n"
 "USAGE:\n"
 "\n"
-"raytrace outfile.png width planet yyyy-mm-ddThh:mm:ssZ [-f]\n"
+"raytrace outfile.png width height planet yyyy-mm-ddThh:mm:ssZ [-f]\n"
 "\n"
 "where\n"
 "    outfile.png = name of output PNG image\n"
-"    width = number of pixels wide to make the image\n"
+"    width  = number of horizontal pixels in the output image\n"
+"    height = number of vertical pixels in the output image\n"
 "    planet = Jupiter\n"
 "\n"
 "options:\n"
@@ -61,7 +62,7 @@ public:
 };
 
 
-int JupiterImage(const char *filename, int width, astro_time_t time, int flip, double spin, double zoom)
+int JupiterImage(const char *filename, int width, int height, astro_time_t time, int flip, double spin, double zoom)
 {
     using namespace Imager;
 
@@ -189,7 +190,7 @@ int JupiterImage(const char *filename, int width, astro_time_t time, int flip, d
 
     scene.SetAimer(&aimer);
 
-    scene.SaveImage(filename, (size_t)width, (size_t)width, zoom, 4);
+    scene.SaveImage(filename, (size_t)width, (size_t)height, zoom, 4);
 
     return 0;
 }
@@ -199,13 +200,13 @@ int main(int argc, const char *argv[])
 {
     using namespace std;
 
-    if (argc >= 5)
+    if (argc >= 6)
     {
         int flip = 0;
         double spin = 0.0;
         double zoom = 200.0;
 
-        for (int i = 5; i < argc; ++i)
+        for (int i = 6; i < argc; ++i)
         {
             if (!strcmp(argv[i], "-f"))
             {
@@ -241,14 +242,20 @@ int main(int argc, const char *argv[])
             fprintf(stderr, "ERROR: Pixel width must be in the range 100..60000\n");
             return 1;
         }
-        const char *planet = argv[3];
+        int height = atoi(argv[3]);
+        if (height < 100 || height > 60000)
+        {
+            fprintf(stderr, "ERROR: Pixel height must be in the range 100..60000\n");
+            return 1;
+        }
+        const char *planet = argv[4];
         astro_time_t time;
-        printf("time = [%s]\n", argv[4]);
-        if (ParseTime(argv[4], &time))
+        printf("time = [%s]\n", argv[5]);
+        if (ParseTime(argv[5], &time))
             return 1;
 
         if (!strcmp(planet, "Jupiter"))
-            return JupiterImage(filename, width, time, flip, spin, zoom);
+            return JupiterImage(filename, width, height, time, flip, spin, zoom);
 
         fprintf(stderr, "ERROR: Unknown planet '%s'\n", planet);
         return 1;
