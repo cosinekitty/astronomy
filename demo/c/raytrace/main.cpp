@@ -188,6 +188,13 @@ int JupiterImage(const char *filename, int width, int height, astro_time_t time,
         jupiter.y / sph.dist,
         jupiter.z / sph.dist);
 
+    const double diff = (aimTest - Vector(jupiter.x/sph.dist, jupiter.y/sph.dist, jupiter.z/sph.dist)).Magnitude();
+    if (diff > 1.0e-15)
+    {
+        fprintf(stderr, "FAIL aim test: diff = %le\n", diff);
+        return 1;
+    }
+
     scene.SetAimer(&aimer);
 
     scene.SaveImage(filename, (size_t)width, (size_t)height, zoom, 4);
