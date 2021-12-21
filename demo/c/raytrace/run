@@ -1,2 +1,4 @@
 #!/bin/bash
-./raytrace jupiter.png 640 500 Jupiter 2021-12-10T23:12:00Z -f -s271 -z4000
+./raytrace jupiter_zoom.png 640 500 Jupiter 2021-12-10T23:12:00Z -f -s-20 -z4000 || exit 1
+./raytrace jupiter_full.png 1000 150 Jupiter 2021-12-10T23:20:00Z -f -s-20 -z3000 || exit 1
+exit 0

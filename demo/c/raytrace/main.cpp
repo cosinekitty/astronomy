@@ -170,12 +170,22 @@ int JupiterImage(const char *filename, int width, int height, astro_time_t time,
     // Convert Jupiter's rectangular coordinates to angular spherical coordinates.
     astro_spherical_t sph = Astronomy_SphereFromVector(jupiter);
 
-    // Rotate 90 degrees around the y-axis, plus the declination of Jupiter,
-    // to bring the camera up to the declination level of Jupiter.
-    rotation = Astronomy_Pivot(rotation, 1, -(90.0 + sph.lat));
+    // The camera starts aimed at the direction <0, 0, -1>,
+    // i.e. pointing away from the z-axis.
+    // Perform a series of rotations that aims the camera toward
+    // the center of Jupiter, but keeping the left/right direction
+    // in the image parallel to the equatorial reference plane (the x-y plane).
+    //
+    // Start by rotating 90 degrees around the x-axis, to bring the camera center
+    // to point in the y-direction. This leaves the image oriented with
+    // the x-y plane horizontal, and the x-axis to the right.
+    // Add the extra angle needed to bring the camera to Jupiter's declination.
+    rotation = Astronomy_Pivot(rotation, 0, sph.lat + 90.0);
 
-    // Rotate around the z-axis to aim the camera at Jupiter's right ascension.
-    rotation = Astronomy_Pivot(rotation, 2, sph.lon);
+    // Now rotate around the z-axis to bring the camera to the
+    // same right ascension as Jupiter. Subtract 90 degrees because
+    // we are aimed at the y-axis, not the x-axis.
+    rotation = Astronomy_Pivot(rotation, 2, sph.lon - 90.0);
 
     RotationMatrixAimer aimer(rotation, flip, spin);
     // Verify that the aimer redirects the vector <0, 0, -1> directly
