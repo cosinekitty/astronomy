@@ -24,22 +24,41 @@ static const char UsageText[] =
 "    planet = Jupiter\n"
 "\n"
 "options:\n"
-"    -f   =  flip the image (match inverted telescope view)\n"
+"    -f       =  flip the image (match inverted telescope view)\n"
+"    -s<ang>  =  spin the image by the specified angle in degrees\n"
+"    -s       =  auto-spin the image to make the planet's north pole upward\n"
+"    -z<fac>  =  zoom in by the given multiplication factor\n"
 "\n";
+
+
+const double AUTO_SPIN = 999.0;
+
+const astro_time_t dummyTime = Astronomy_TimeFromDays(0.0);
+
+astro_vector_t MakeAstroVector(double x, double y, double z)
+{
+    astro_vector_t a;
+
+    a.x = x;
+    a.y = y;
+    a.z = z;
+    a.t = dummyTime;
+    a.status = ASTRO_SUCCESS;
+
+    return a;
+}
 
 
 class RotationMatrixAimer : public Imager::Aimer
 {
 private:
     astro_rotation_t rotation;
-    astro_time_t dummyTime;
     int flip;
     double xspin, yspin;
 
 public:
     RotationMatrixAimer(astro_rotation_t _rotation, int _flip, double _spinAngleDegrees)
         : rotation(_rotation)
-        , dummyTime(Astronomy_TimeFromDays(0.0))
         , flip(_flip)
         , xspin(cos(_spinAngleDegrees * DEG2RAD))
         , yspin(sin(_spinAngleDegrees * DEG2RAD))
@@ -187,6 +206,44 @@ int JupiterImage(const char *filename, int width, int height, astro_time_t time,
     // we are aimed at the y-axis, not the x-axis.
     rotation = Astronomy_Pivot(rotation, 2, sph.lon - 90.0);
 
+    Vector planetUnitVector(jupiter.x/sph.dist, jupiter.y/sph.dist, jupiter.z/sph.dist);
+
+    // Check for the sentinel value that indicates the caller
+    // wants us to calculate the spin angle that shows the planet's
+    // north pole in the upward-facing direction.
+    if (spin == AUTO_SPIN)
+    {
+        // Earth-equatorial north is aligned with the camera's vertical direction.
+        // We want to spin the camera around its aim point so that the planet's
+        // north pole is aligned with the vertical direction instead.
+        // So we calculate two angles:
+        // (1) The angle of the Earth's north pole projected onto the camera's focal plane.
+        // (2) The angle of the planet's north pole projected onto the camera's focal plane.
+        // Subtract these two angles to obtain the desired spin angle.
+        // We know angle (1) trivially as 90 degrees counterclockwise from the image's right.
+
+        // The rotation matrix in 'rotation' converts from camera coordinates to EQJ.
+        // Calculate the inverse matrix, which converts from EQJ to camera coordinates.
+        astro_rotation_t inv = Astronomy_InverseRotation(rotation);
+
+        // As a sanity check, reorient the Earth's north pole axis and verify
+        // it is still pointing upward in the camera's focal plane.
+        astro_vector_t earthNorthPole = MakeAstroVector(0, 0, 1);
+        astro_vector_t earthCheck = Astronomy_RotateVector(inv, earthNorthPole);
+        printf("Earth north pole check: (%lf, %lf, %lf)\n", earthCheck.x, earthCheck.y, earthCheck.z);
+        if (fabs(earthCheck.x) > 1.0e-6 || earthCheck.y <= 0.0)
+        {
+            fprintf(stderr, "FAIL Earth north pole check.\n");
+            return 1;
+        }
+
+        // Now do the same thing with the planet's north pole axis.
+        astro_vector_t axisShadow = Astronomy_RotateVector(inv, axis.north);
+        printf("Planet north pole shadow: (%lf, %lf, %lf)\n", axisShadow.x, axisShadow.y, axisShadow.z);
+        spin = (RAD2DEG * atan2(axisShadow.y, axisShadow.x)) - 90.0;
+        printf("Auto-spin angle = %0.3lf degrees\n", spin);
+    }
+
     RotationMatrixAimer aimer(rotation, flip, spin);
     // Verify that the aimer redirects the vector <0, 0, -1> directly
     // toward the center of Jupiter.
@@ -194,11 +251,11 @@ int JupiterImage(const char *filename, int width, int height, astro_time_t time,
     printf("Aim Test: x = %12.8lf, y = %12.8lf, z = %12.8lf\n", aimTest.x, aimTest.y, aimTest.z);
 
     printf("Jupiter : x = %12.8lf, y = %12.8lf, z = %12.8lf\n",
-        jupiter.x / sph.dist,
-        jupiter.y / sph.dist,
-        jupiter.z / sph.dist);
+        planetUnitVector.x,
+        planetUnitVector.y,
+        planetUnitVector.z);
 
-    const double diff = (aimTest - Vector(jupiter.x/sph.dist, jupiter.y/sph.dist, jupiter.z/sph.dist)).Magnitude();
+    const double diff = (aimTest - planetUnitVector).Magnitude();
     if (diff > 1.0e-15)
     {
         fprintf(stderr, "FAIL aim test: diff = %le\n", diff);
@@ -231,7 +288,14 @@ int main(int argc, const char *argv[])
             }
             else if (argv[i][0] == '-' && argv[i][1] == 's')
             {
-                if (1 != sscanf(&argv[i][2], "%lf", &spin) || !isfinite(spin) || spin < -360 || spin > +360)
+                if (argv[i][2] == '\0')
+                {
+                    // The "auto-spin" option. Set a sentinel value for 'spin' to indicate
+                    // that the imager should calculate the ideal spin angle to make the planet's
+                    // north pole appear toward the top of the generated image.
+                    spin = AUTO_SPIN;
+                }
+                else if (1 != sscanf(&argv[i][2], "%lf", &spin) || !isfinite(spin) || spin < -360 || spin > +360)
                 {
                     fprintf(stderr, "ERROR: invalid spin angle after '-s'\n");
                     return 1;
