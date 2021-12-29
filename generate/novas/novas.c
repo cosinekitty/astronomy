@@ -7972,7 +7972,8 @@ short int cio_array (double jd_tdb, long int n_pts,
    the last value of 'n_pts'.
 */
 
-   del_n_pts = abs (n_pts - last_n_pts);
+   /* [Don Cross - 2021-12-29] Removed 'abs', because it was not necessary. */
+   del_n_pts = n_pts - last_n_pts;
 
 /*
    Allocate memory for the 't' and 'ra' arrays.
@@ -8036,7 +8037,9 @@ short int cio_array (double jd_tdb, long int n_pts,
 */
 
    del_index = index_rec - last_index_rec;
-   abs_del_index = abs (del_index);
+
+   /* [Don Cross - 2021-12-29] Reworked abs() with inline logic to eliminate warnings about long int. */
+   abs_del_index = (del_index < 0) ? -del_index : del_index;
 
 /*
    Determine the file read strategy.
