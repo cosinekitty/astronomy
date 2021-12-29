@@ -11,6 +11,8 @@
 #include "imager.h"
 #include "astro_demo_common.h"
 
+bool Verbose = false;
+
 static const char UsageText[] =
 "\n"
 "USAGE:\n"
@@ -230,7 +232,7 @@ int JupiterImage(const char *filename, int width, int height, astro_time_t time,
         // it is still pointing upward in the camera's focal plane.
         astro_vector_t earthNorthPole = MakeAstroVector(0, 0, 1);
         astro_vector_t earthCheck = Astronomy_RotateVector(inv, earthNorthPole);
-        printf("Earth north pole check: (%lf, %lf, %lf)\n", earthCheck.x, earthCheck.y, earthCheck.z);
+        if (Verbose) printf("Earth north pole check: (%lf, %lf, %lf)\n", earthCheck.x, earthCheck.y, earthCheck.z);
         if (fabs(earthCheck.x) > 1.0e-6 || earthCheck.y <= 0.0)
         {
             fprintf(stderr, "FAIL Earth north pole check.\n");
@@ -239,21 +241,24 @@ int JupiterImage(const char *filename, int width, int height, astro_time_t time,
 
         // Now do the same thing with the planet's north pole axis.
         astro_vector_t axisShadow = Astronomy_RotateVector(inv, axis.north);
-        printf("Planet north pole shadow: (%lf, %lf, %lf)\n", axisShadow.x, axisShadow.y, axisShadow.z);
+        if (Verbose) printf("Planet north pole shadow: (%lf, %lf, %lf)\n", axisShadow.x, axisShadow.y, axisShadow.z);
         spin = (RAD2DEG * atan2(axisShadow.y, axisShadow.x)) - 90.0;
-        printf("Auto-spin angle = %0.3lf degrees\n", spin);
+        if (Verbose) printf("Auto-spin angle = %0.3lf degrees\n", spin);
     }
 
     RotationMatrixAimer aimer(rotation, flip, spin);
     // Verify that the aimer redirects the vector <0, 0, -1> directly
     // toward the center of Jupiter.
     Vector aimTest = aimer.Aim(Vector(0.0, 0.0, -1.0));
-    printf("Aim Test: x = %12.8lf, y = %12.8lf, z = %12.8lf\n", aimTest.x, aimTest.y, aimTest.z);
+    if (Verbose)
+    {
+        printf("Aim Test: x = %12.8lf, y = %12.8lf, z = %12.8lf\n", aimTest.x, aimTest.y, aimTest.z);
 
-    printf("Jupiter : x = %12.8lf, y = %12.8lf, z = %12.8lf\n",
-        planetUnitVector.x,
-        planetUnitVector.y,
-        planetUnitVector.z);
+        printf("Jupiter : x = %12.8lf, y = %12.8lf, z = %12.8lf\n",
+            planetUnitVector.x,
+            planetUnitVector.y,
+            planetUnitVector.z);
+    }
 
     const double diff = (aimTest - planetUnitVector).Magnitude();
     if (diff > 1.0e-15)
@@ -285,6 +290,10 @@ int main(int argc, const char *argv[])
             if (!strcmp(argv[i], "-f"))
             {
                 flip = 1;
+            }
+            else if (!strcmp(argv[i], "-v"))
+            {
+                Verbose = true;
             }
             else if (argv[i][0] == '-' && argv[i][1] == 's')
             {
@@ -331,7 +340,7 @@ int main(int argc, const char *argv[])
         }
         const char *planet = argv[4];
         astro_time_t time;
-        printf("time = [%s]\n", argv[5]);
+        if (Verbose) printf("time = [%s]\n", argv[5]);
         if (ParseTime(argv[5], &time))
             return 1;
 
