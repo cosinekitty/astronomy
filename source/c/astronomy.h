@@ -73,6 +73,12 @@ extern "C" {
  */
 #define RAD2HOUR    3.819718634205488
 
+/**
+ * \def VENUS_RADIUS_KM
+ * @brief The mean radius of Venus, expressed in kilometers. Venus is nearly spherical.
+ */
+#define VENUS_RADIUS_KM     6051.8
+
 /*
     Jupiter radius data are nominal values obtained from:
     https://www.iau.org/static/resolutions/IAU2015_English.pdf

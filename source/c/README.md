@@ -2915,6 +2915,21 @@ This is the inverse function of [`Astronomy_ObserverVector`](#Astronomy_Observer
 ```
 
 
+
+---
+
+<a name="VENUS_RADIUS_KM"></a>
+### `VENUS_RADIUS_KM`
+
+**The mean radius of Venus, expressed in kilometers. Venus is nearly spherical.** 
+
+
+
+```C
+#define VENUS_RADIUS_KM  6051.8
+```
+
+
 <a name="enums"></a>
 ## Enumerated Types
 

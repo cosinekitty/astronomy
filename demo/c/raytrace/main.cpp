@@ -83,15 +83,68 @@ public:
 };
 
 
-int JupiterImage(const char *filename, int width, int height, astro_time_t time, int flip, double spin, double zoom)
+double BodyEquatorialRadiusKm(astro_body_t body)
+{
+    switch (body)
+    {
+    case BODY_VENUS:
+        return VENUS_RADIUS_KM;
+
+    case BODY_JUPITER:
+        return JUPITER_EQUATORIAL_RADIUS_KM;
+
+    default:
+        return -1.0;    // error code: unsupported body
+    }
+}
+
+
+double BodyPolarRadiusKm(astro_body_t body)
+{
+    switch (body)
+    {
+    case BODY_VENUS:
+        return VENUS_RADIUS_KM;
+
+    case BODY_JUPITER:
+        return JUPITER_POLAR_RADIUS_KM;
+
+    default:
+        return -1.0;    // error code: unsupported body
+    }
+}
+
+
+Imager::Color BodyColor(astro_body_t body)
+{
+    switch (body)
+    {
+    case BODY_JUPITER:
+        return Imager::Color(1.0, 0.95, 0.85);
+
+    default:
+        return Imager::Color(1.0, 1.0, 1.0);
+    }
+}
+
+
+int PlanetImage(
+    astro_body_t body,
+    const char *filename,
+    int width,
+    int height,
+    astro_time_t time,
+    int flip,
+    double spin,
+    double zoom)
 {
     using namespace Imager;
 
-    // Calculate the geocentric position of Jupiter, corrected for light travel time.
-    astro_vector_t jupiter = Astronomy_GeoVector(BODY_JUPITER, time, ABERRATION);
-    if (jupiter.status != ASTRO_SUCCESS)
+    // Calculate the geocentric position of the planet, corrected for light travel time.
+    astro_vector_t geo_planet = Astronomy_GeoVector(body, time, ABERRATION);
+    if (geo_planet.status != ASTRO_SUCCESS)
     {
-        fprintf(stderr, "Error %d calculating Jupiter geocentric position\n", jupiter.status);
+        fprintf(stderr, "Error %d calculating planet geocentric position\n", geo_planet.status);
         return 1;
     }
 
@@ -103,112 +156,120 @@ int JupiterImage(const char *filename, int width, int height, astro_time_t time,
         return 1;
     }
 
-    // Calculate the time light left the Jupiter system to be seen on Earth.
-    double light_travel_time = Astronomy_VectorLength(jupiter) / C_AUDAY;
+    // Calculate the time light left the planet to be seen on Earth.
+    double light_travel_time = Astronomy_VectorLength(geo_planet) / C_AUDAY;
     astro_time_t depart = Astronomy_AddDays(time, -light_travel_time);
 
-    // Calculate the orientation of Jupiter's rotation axis.
-    astro_axis_t axis = Astronomy_RotationAxis(BODY_JUPITER, depart);
+    // Calculate the orientation of the planet's rotation axis.
+    astro_axis_t axis = Astronomy_RotationAxis(body, depart);
     if (axis.status != ASTRO_SUCCESS)
     {
-        fprintf(stderr, "Error %d calculating Jupiter's rotation axis.\n", axis.status);
+        fprintf(stderr, "Error %d calculating planet's rotation axis.\n", axis.status);
         return 1;
     }
 
-    // Calculate the position of Jupiter's moons at the backdated time.
-    astro_jupiter_moons_t jm = Astronomy_JupiterMoons(depart);
-
     Scene scene(Color(0.0, 0.0, 0.0));
 
-    const double km_scale = 10000.0;   // makes Jupiter's radius about 7 units.
+    const double km_scale = 10000.0;
     const double au_scale = km_scale / KM_PER_AU;
 
-    const double equ_radius = JUPITER_EQUATORIAL_RADIUS_KM / km_scale;
-    const double pol_radius = JUPITER_POLAR_RADIUS_KM / km_scale;
+    const double equ_radius = BodyEquatorialRadiusKm(body) / km_scale;
+    const double pol_radius = BodyPolarRadiusKm(body) / km_scale;
+    if (equ_radius < 0.0 || pol_radius < 0.0)
+    {
+        fprintf(stderr, "Error: cannot find radius data for requested body.\n");
+        return 1;
+    }
     Spheroid *planet = new Spheroid(equ_radius, equ_radius, pol_radius);
     scene.AddSolidObject(planet);
-    planet->SetFullMatte(Color(1.0, 0.95, 0.85));
-    planet->Move(Vector(jupiter.x, jupiter.y, jupiter.z) / au_scale);
-    planet->SetTag("Jupiter");
+    planet->SetFullMatte(BodyColor(body));
+    planet->Move(Vector(geo_planet.x, geo_planet.y, geo_planet.z) / au_scale);
+    planet->SetTag(Astronomy_BodyName(body));
 
-    // Reorient Jupiter's rotation axis to match the calculated orientation.
-    planet->RotateY(90.0 - axis.dec);       // ?? not sure about direction
-    planet->RotateZ(15.0 * axis.ra);        // ?? not sure about direction
+    // Reorient the planet's rotation axis to match the calculated orientation.
+    planet->RotateY(90.0 - axis.dec);
+    planet->RotateZ(15.0 * axis.ra);
 
-    // Add Jupiter's moons to the scene.
+    if (body == BODY_JUPITER)
+    {
+        // Calculate the position of Jupiter's moons at the backdated time.
+        astro_jupiter_moons_t jm = Astronomy_JupiterMoons(depart);
 
-    // Io
-    Vector io_center(
-        jm.moon[JM_IO].x + jupiter.x,
-        jm.moon[JM_IO].y + jupiter.y,
-        jm.moon[JM_IO].z + jupiter.z
-    );
-    Sphere *io = new Sphere(io_center/au_scale, IO_RADIUS_KM/km_scale);
-    scene.AddSolidObject(io);
-    io->SetFullMatte(Color(1.0, 1.0, 1.0));     // ??? Actual moon colors ???
-    io->SetTag("Io");
+        // Add Jupiter's moons to the scene.
 
-    // Europa
-    Vector eu_center(
-        jm.moon[JM_EUROPA].x + jupiter.x,
-        jm.moon[JM_EUROPA].y + jupiter.y,
-        jm.moon[JM_EUROPA].z + jupiter.z
-    );
-    Sphere *europa = new Sphere(eu_center/au_scale, EUROPA_RADIUS_KM/km_scale);
-    scene.AddSolidObject(europa);
-    europa->SetFullMatte(Color(1.0, 1.0, 1.0));     // ??? Actual moon colors ???
-    europa->SetTag("Europa");
+        // Io
+        Vector io_center(
+            jm.moon[JM_IO].x + geo_planet.x,
+            jm.moon[JM_IO].y + geo_planet.y,
+            jm.moon[JM_IO].z + geo_planet.z
+        );
+        Sphere *io = new Sphere(io_center/au_scale, IO_RADIUS_KM/km_scale);
+        scene.AddSolidObject(io);
+        io->SetFullMatte(Color(1.0, 1.0, 1.0));     // ??? Actual moon colors ???
+        io->SetTag("Io");
 
-    // Ganymede
-    Vector gan_center(
-        jm.moon[JM_GANYMEDE].x + jupiter.x,
-        jm.moon[JM_GANYMEDE].y + jupiter.y,
-        jm.moon[JM_GANYMEDE].z + jupiter.z
-    );
-    Sphere *ganymede = new Sphere(gan_center/au_scale, GANYMEDE_RADIUS_KM/km_scale);
-    scene.AddSolidObject(ganymede);
-    ganymede->SetFullMatte(Color(1.0, 1.0, 1.0));     // ??? Actual moon colors ???
+        // Europa
+        Vector eu_center(
+            jm.moon[JM_EUROPA].x + geo_planet.x,
+            jm.moon[JM_EUROPA].y + geo_planet.y,
+            jm.moon[JM_EUROPA].z + geo_planet.z
+        );
+        Sphere *europa = new Sphere(eu_center/au_scale, EUROPA_RADIUS_KM/km_scale);
+        scene.AddSolidObject(europa);
+        europa->SetFullMatte(Color(1.0, 1.0, 1.0));     // ??? Actual moon colors ???
+        europa->SetTag("Europa");
 
-    // Callisto
-    Vector cal_center(
-        jm.moon[JM_CALLISTO].x + jupiter.x,
-        jm.moon[JM_CALLISTO].y + jupiter.y,
-        jm.moon[JM_CALLISTO].z + jupiter.z
-    );
-    Sphere *callisto = new Sphere(cal_center/au_scale, CALLISTO_RADIUS_KM/km_scale);
-    scene.AddSolidObject(callisto);
-    callisto->SetFullMatte(Color(1.0, 1.0, 1.0));     // ??? Actual moon colors ???
-    callisto->SetTag("Callisto");
+        // Ganymede
+        Vector gan_center(
+            jm.moon[JM_GANYMEDE].x + geo_planet.x,
+            jm.moon[JM_GANYMEDE].y + geo_planet.y,
+            jm.moon[JM_GANYMEDE].z + geo_planet.z
+        );
+        Sphere *ganymede = new Sphere(gan_center/au_scale, GANYMEDE_RADIUS_KM/km_scale);
+        scene.AddSolidObject(ganymede);
+        ganymede->SetFullMatte(Color(1.0, 1.0, 1.0));     // ??? Actual moon colors ???
+
+        // Callisto
+        Vector cal_center(
+            jm.moon[JM_CALLISTO].x + geo_planet.x,
+            jm.moon[JM_CALLISTO].y + geo_planet.y,
+            jm.moon[JM_CALLISTO].z + geo_planet.z
+        );
+        Sphere *callisto = new Sphere(cal_center/au_scale, CALLISTO_RADIUS_KM/km_scale);
+        scene.AddSolidObject(callisto);
+        callisto->SetFullMatte(Color(1.0, 1.0, 1.0));     // ??? Actual moon colors ???
+        callisto->SetTag("Callisto");
+    }
 
     // Add the Sun as the point light source.
     scene.AddLightSource(LightSource(Vector(sun.x, sun.y, sun.z) / au_scale, Color(1.0, 1.0, 1.0)));
 
-    // Aim the camera at the center of Jupiter.
+    // Aim the camera at the planet's center.
     // Start with an identity matrix, which leaves the camera pointing in the -z direction,
     // i.e. <0, 0, -1>.
     astro_rotation_t rotation = Astronomy_IdentityMatrix();
 
-    // Convert Jupiter's rectangular coordinates to angular spherical coordinates.
-    astro_spherical_t sph = Astronomy_SphereFromVector(jupiter);
+    // Convert the planet's rectangular coordinates to angular spherical coordinates.
+    astro_spherical_t sph = Astronomy_SphereFromVector(geo_planet);
 
     // The camera starts aimed at the direction <0, 0, -1>,
     // i.e. pointing away from the z-axis.
     // Perform a series of rotations that aims the camera toward
-    // the center of Jupiter, but keeping the left/right direction
+    // the center of the planet, but keeping the left/right direction
     // in the image parallel to the equatorial reference plane (the x-y plane).
     //
     // Start by rotating 90 degrees around the x-axis, to bring the camera center
     // to point in the y-direction. This leaves the image oriented with
     // the x-y plane horizontal, and the x-axis to the right.
-    // Add the extra angle needed to bring the camera to Jupiter's declination.
+    // Add the extra angle needed to bring the camera to the planet's declination.
     rotation = Astronomy_Pivot(rotation, 0, sph.lat + 90.0);
 
     // Now rotate around the z-axis to bring the camera to the
-    // same right ascension as Jupiter. Subtract 90 degrees because
+    // same right ascension as the planet. Subtract 90 degrees because
     // we are aimed at the y-axis, not the x-axis.
     rotation = Astronomy_Pivot(rotation, 2, sph.lon - 90.0);
 
-    Vector planetUnitVector(jupiter.x/sph.dist, jupiter.y/sph.dist, jupiter.z/sph.dist);
+    Vector planetUnitVector(geo_planet.x/sph.dist, geo_planet.y/sph.dist, geo_planet.z/sph.dist);
 
     // Check for the sentinel value that indicates the caller
     // wants us to calculate the spin angle that shows the planet's
@@ -248,13 +309,13 @@ int JupiterImage(const char *filename, int width, int height, astro_time_t time,
 
     RotationMatrixAimer aimer(rotation, flip, spin);
     // Verify that the aimer redirects the vector <0, 0, -1> directly
-    // toward the center of Jupiter.
+    // toward the center of the planet.
     Vector aimTest = aimer.Aim(Vector(0.0, 0.0, -1.0));
     if (Verbose)
     {
         printf("Aim Test: x = %12.8lf, y = %12.8lf, z = %12.8lf\n", aimTest.x, aimTest.y, aimTest.z);
 
-        printf("Jupiter : x = %12.8lf, y = %12.8lf, z = %12.8lf\n",
+        printf("Planet : x = %12.8lf, y = %12.8lf, z = %12.8lf\n",
             planetUnitVector.x,
             planetUnitVector.y,
             planetUnitVector.z);
@@ -340,15 +401,19 @@ int main(int argc, const char *argv[])
         }
         const char *planet = argv[4];
         astro_time_t time;
+
         if (Verbose) printf("time = [%s]\n", argv[5]);
         if (ParseTime(argv[5], &time))
             return 1;
 
-        if (!strcmp(planet, "Jupiter"))
-            return JupiterImage(filename, width, height, time, flip, spin, zoom);
+        astro_body_t body = Astronomy_BodyCode(planet);
+        if (body == BODY_INVALID)
+        {
+            fprintf(stderr, "ERROR: Unknown body '%s'", planet);
+            return 1;
+        }
 
-        fprintf(stderr, "ERROR: Unknown planet '%s'\n", planet);
-        return 1;
+        return PlanetImage(body, filename, width, height, time, flip, spin, zoom);
     }
 
     fprintf(stderr, "%s", UsageText);
