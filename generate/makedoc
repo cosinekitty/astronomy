@@ -33,7 +33,7 @@ exe/csdown \
     || Fail "Error generating C# documentation."
 
 cd .. || Fail "Error changing back to generate directory"
-./check_internal_links.py $(realpath ../source/csharp/README.md) || exit 1
+./check_internal_links.py ../source/csharp/README.md || exit 1
 
 if [[ ! -d node_modules ]]; then
     # On Intel x64 architecture, we can use the
@@ -76,7 +76,7 @@ fi
 
 echo "Generating JS documentation in Markdown format."
 npm run docs:md || Fail "Error generating JS documentation."
-./check_internal_links.py $(realpath ../source/js/README.md) || exit 1
+./check_internal_links.py ../source/js/README.md || exit 1
 
 if [[ -d ../tutorials ]]; then
     if [[ -d html ]]; then
@@ -107,12 +107,12 @@ else
     echo "Translating doxygen XML to Markdown."
     node ../../generate/hydrogen/hydrogen.js ../../generate/hydrogen/c_prefix.md ./xml/all.xml || Fail "Error in hydrogen.js"
     cd ../../generate || Fail "Error changing directory back"
-    ./check_internal_links.py $(realpath ../source/c/README.md) || exit 1
+    ./check_internal_links.py ../source/c/README.md || exit 1
 fi
 
 echo "Generating Python documentation."
 python3 pydown/pydown.py pydown/py_prefix.md ../source/python/astronomy.py ../source/python/README.md || Fail "Error generating Markdown from Python source."
-./check_internal_links.py $(realpath ../source/python/README.md) || exit 1
+./check_internal_links.py ../source/python/README.md || exit 1
 
 echo "Making redundant copies of source in demo folders."
 cp -v ../source/js/astronomy.browser.js     ../demo/browser/ || exit $?

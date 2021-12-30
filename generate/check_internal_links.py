@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import sys
 import re
+import os
 
 def FindBrokenLinks(text):
     # Search for all link names, of the form: (#Some.Name)
@@ -24,7 +25,7 @@ if __name__ == '__main__':
         sys.exit(1)
 
     rc = 0
-    filename = sys.argv[1]
+    filename = os.path.realpath(sys.argv[1])
     with open(filename, 'rt') as infile:
         text = infile.read()
 
