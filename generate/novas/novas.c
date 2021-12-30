@@ -8084,7 +8084,10 @@ short int cio_array (double jd_tdb, long int n_pts,
 
     else if ((abs_del_index <= n_pts) && (del_n_pts == 0))
    {
-      n_swap = abs (n_pts - abs_del_index);
+      /* [Don Cross - 2021-12-30] Reworked abs() with inline logic to eliminate warnings about long int. */
+      n_swap = n_pts - abs_del_index;
+      if (n_swap < 0)
+         n_swap = -n_swap;
       n_read = abs_del_index;
 
 /*
