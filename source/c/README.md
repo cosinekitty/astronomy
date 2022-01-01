@@ -2903,6 +2903,36 @@ This is the inverse function of [`Astronomy_ObserverVector`](#Astronomy_Observer
 
 ---
 
+<a name="SATURN_EQUATORIAL_RADIUS_KM"></a>
+### `SATURN_EQUATORIAL_RADIUS_KM`
+
+**The equatorial radius of Saturn, expressed in kilometers.** 
+
+
+
+```C
+#define SATURN_EQUATORIAL_RADIUS_KM  60268.0
+```
+
+
+
+---
+
+<a name="SATURN_POLAR_RADIUS_KM"></a>
+### `SATURN_POLAR_RADIUS_KM`
+
+**The polar radius of Saturn, expressed in kilometers.** 
+
+
+
+```C
+#define SATURN_POLAR_RADIUS_KM  54364.0
+```
+
+
+
+---
+
 <a name="TIME_TEXT_BYTES"></a>
 ### `TIME_TEXT_BYTES`
 

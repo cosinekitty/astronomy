@@ -4,7 +4,7 @@
 
     MIT License
 
-    Copyright (c) 2019-2021 Don Cross <cosinekitty@gmail.com>
+    Copyright (c) 2019-2022 Don Cross <cosinekitty@gmail.com>
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to deal
@@ -78,6 +78,18 @@ extern "C" {
  * @brief The mean radius of Venus, expressed in kilometers. Venus is nearly spherical.
  */
 #define VENUS_RADIUS_KM     6051.8
+
+/**
+ * \def SATURN_EQUATORIAL_RADIUS_KM
+ * @brief The equatorial radius of Saturn, expressed in kilometers.
+ */
+#define SATURN_EQUATORIAL_RADIUS_KM     60268.0
+
+/**
+ * \def SATURN_POLAR_RADIUS_KM
+ * @brief The polar radius of Saturn, expressed in kilometers.
+ */
+#define SATURN_POLAR_RADIUS_KM          54364.0
 
 /*
     Jupiter radius data are nominal values obtained from:

@@ -24,17 +24,17 @@
 
     -------------------------------------------------------------------------
     Implements class ThinRing.
-    A thin ring is a disc-shaped surface with zero thickness 
+    A thin ring is a disc-shaped surface with zero thickness
     that has a smaller disc-shaped hole at a common center.
 */
 
-#include "planet.h"
+#include "imager.h"
 
 namespace Imager
 {
     void ThinRing::ObjectSpace_AppendAllIntersections(
-        const Vector& vantage, 
-        const Vector& direction, 
+        const Vector& vantage,
+        const Vector& direction,
         IntersectionList& intersectionList) const
     {
         if (fabs(direction.z) > EPSILON)
@@ -53,7 +53,7 @@ namespace Imager
 
                     // We "cheat" a little bit in calculating the normal vector by knowing too much about the caller.
                     // This is necessary because this is not really a normal solid object, but an infinitesimally thin surface.
-                    // Therefore, we provide a different normal vector depending on the supplied vantage, 
+                    // Therefore, we provide a different normal vector depending on the supplied vantage,
                     // such that the point of view of the observer determines which side of the surface is seen.
                     // (Doing otherwise would cause the surface to appear completely black in some cases.)
                     intersection.surfaceNormal = Vector(0.0, 0.0, (vantage.z >= 0.0) ? +1.0 : -1.0);

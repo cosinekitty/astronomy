@@ -93,6 +93,9 @@ double BodyEquatorialRadiusKm(astro_body_t body)
     case BODY_JUPITER:
         return JUPITER_EQUATORIAL_RADIUS_KM;
 
+    case BODY_SATURN:
+        return SATURN_EQUATORIAL_RADIUS_KM;
+
     default:
         return -1.0;    // error code: unsupported body
     }
@@ -109,6 +112,9 @@ double BodyPolarRadiusKm(astro_body_t body)
     case BODY_JUPITER:
         return JUPITER_POLAR_RADIUS_KM;
 
+    case BODY_SATURN:
+        return SATURN_POLAR_RADIUS_KM;
+
     default:
         return -1.0;    // error code: unsupported body
     }
@@ -119,13 +125,68 @@ Imager::Color BodyColor(astro_body_t body)
 {
     switch (body)
     {
+    case BODY_VENUS:
+        return Imager::Color(0.9, 0.9, 1.0);
+
     case BODY_JUPITER:
         return Imager::Color(1.0, 0.95, 0.85);
+
+    case BODY_SATURN:
+        return Imager::Color(1.0, 1.0, 0.6, 0.335);
 
     default:
         return Imager::Color(1.0, 1.0, 1.0);
     }
 }
+
+
+static Imager::SolidObject* CreateSaturnRings(double km_scale)
+{
+    using namespace Imager;
+
+    struct RingData
+    {
+        double  innerRadiusKm;
+        double  outerRadiusKm;
+        double  red;
+        double  green;
+        double  blue;
+    };
+
+    static const RingData ringData[] =
+    {
+        {  92154.0,  117733.0,  196.0,  194.0,  180.0 },
+        { 122405.0,  133501.0,  157.0,  160.0,  158.0 },
+        { 134085.0,  136888.0,  136.0,  140.0,  142.0 }
+    };
+
+    SolidObject* ringSystem = nullptr;
+
+    static const size_t NUM_RINGS = sizeof(ringData) / sizeof(ringData[0]);
+    for (size_t i=0; i < NUM_RINGS; ++i)
+    {
+        const Color color(
+            ringData[i].red / 255.0,
+            ringData[i].green / 255.0,
+            ringData[i].blue / 255.0
+        );
+
+        ThinRing* ringSolid = new ThinRing(
+            ringData[i].innerRadiusKm / km_scale,
+            ringData[i].outerRadiusKm / km_scale
+        );
+
+        ringSolid->SetFullMatte(color);
+
+        if (ringSystem != nullptr)
+            ringSystem = new SetUnion(Vector(), ringSolid, ringSystem);
+        else
+            ringSystem = ringSolid;
+    }
+
+    return ringSystem;
+}
+
 
 
 int PlanetImage(
@@ -180,9 +241,16 @@ int PlanetImage(
         fprintf(stderr, "Error: cannot find radius data for requested body.\n");
         return 1;
     }
-    Spheroid *planet = new Spheroid(equ_radius, equ_radius, pol_radius);
-    scene.AddSolidObject(planet);
+    SolidObject *planet = new Spheroid(equ_radius, equ_radius, pol_radius);
     planet->SetFullMatte(BodyColor(body));
+
+    if (body == BODY_SATURN)
+    {
+        // Replace the spheroid with a union of the spheroid and its system of rings.
+        planet = new SetUnion(Vector(), planet, CreateSaturnRings(km_scale));
+    }
+
+    scene.AddSolidObject(planet);
     planet->Move(Vector(geo_planet.x, geo_planet.y, geo_planet.z) / au_scale);
     planet->SetTag(Astronomy_BodyName(body));
 
