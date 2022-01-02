@@ -2,5 +2,5 @@
 ./raytrace jupiter_zoom.png 640 500 Jupiter 2021-12-10T23:12:00Z -v -f -s -z4000 || exit 1
 ./raytrace jupiter_full.png 1000 150 Jupiter 2021-12-10T23:20:00Z -v -f -s -z3000 || exit 1
 ./raytrace venus.png 150 150 Venus 2021-12-28T00:00:00Z -v -z3000 || exit 1
-./raytrace saturn.png 600 350 Saturn 2021-12-28T00:00:00Z -v -z8000 || exit 1
+./raytrace saturn.png 600 350 Saturn 2021-12-28T00:00:00Z -s -v -z8000 || exit 1
 exit 0
