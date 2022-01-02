@@ -33,6 +33,7 @@ static const char UsageText[] =
 "\n";
 
 
+const double AUTO_ZOOM = 0.0;
 const double AUTO_SPIN = 999.0;
 
 const astro_time_t dummyTime = Astronomy_TimeFromDays(0.0);
@@ -276,7 +277,8 @@ int PlanetImage(
     }
 
     // Calculate the time light left the planet to be seen on Earth.
-    double light_travel_time = Astronomy_VectorLength(geo_planet) / C_AUDAY;
+    double planet_distance_au = Astronomy_VectorLength(geo_planet);
+    double light_travel_time = planet_distance_au / C_AUDAY;
     astro_time_t depart = Astronomy_AddDays(time, -light_travel_time);
 
     // Calculate the orientation of the planet's rotation axis.
@@ -411,6 +413,17 @@ int PlanetImage(
 
     scene.SetAimer(&aimer);
 
+    // Calculate the zoom factor that will fit the planet into
+    // the smaller pixel dimension. To be more precise, calculate
+    // the equatorial angular diameter with a 10% cushion for the
+    // smaller of the two pixel dimensions (width or height).
+    double diameter_radians = (2.0 * equ_radius) / (planet_distance_au / au_scale);
+    double factor = 0.9 / diameter_radians;
+    if (zoom == AUTO_ZOOM)
+        zoom = factor;
+    else
+        zoom *= factor;
+
     scene.SaveImage(filename, (size_t)width, (size_t)height, zoom, 4);
 
     return 0;
@@ -425,7 +438,7 @@ int main(int argc, const char *argv[])
     {
         int flip = 0;
         double spin = 0.0;
-        double zoom = 200.0;
+        double zoom = AUTO_ZOOM;
 
         for (int i = 6; i < argc; ++i)
         {
@@ -454,7 +467,7 @@ int main(int argc, const char *argv[])
             }
             else if (argv[i][0] == '-' && argv[i][1] == 'z')
             {
-                if (1 != sscanf(&argv[i][2], "%lf", &zoom) || !isfinite(zoom) || zoom < 1 || zoom > 1.0e+6)
+                if (1 != sscanf(&argv[i][2], "%lf", &zoom) || !isfinite(zoom) || zoom < 0.001 || zoom > 1000.0)
                 {
                     fprintf(stderr, "ERROR: invalid zoom factor after '-z'\n");
                     return 1;
