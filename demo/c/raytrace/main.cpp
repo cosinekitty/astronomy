@@ -31,7 +31,7 @@ static const char UsageText[] =
 "    -z<fac>  =  zoom in by the given multiplication factor\n"
 "\n";
 
-const double KM_SCALE = 10000.0;
+const double KM_SCALE = 1000.0;
 const double AU_SCALE = KM_SCALE / KM_PER_AU;
 const double AUTO_ZOOM = 0.0;
 const double AUTO_SPIN = 999.0;
