@@ -28,7 +28,6 @@ static const char UsageText[] =
 "options:\n"
 "    -f       =  flip the image (match inverted telescope view)\n"
 "    -s<ang>  =  spin the image by the specified angle in degrees\n"
-"    -s       =  auto-spin the image to make the planet's north pole upward\n"
 "    -z<fac>  =  zoom in by the given multiplication factor\n"
 "\n";
 
@@ -437,7 +436,7 @@ int main(int argc, const char *argv[])
     if (argc >= 6)
     {
         int flip = 0;
-        double spin = 0.0;
+        double spin = AUTO_SPIN;
         double zoom = AUTO_ZOOM;
 
         for (int i = 6; i < argc; ++i)
@@ -452,14 +451,7 @@ int main(int argc, const char *argv[])
             }
             else if (argv[i][0] == '-' && argv[i][1] == 's')
             {
-                if (argv[i][2] == '\0')
-                {
-                    // The "auto-spin" option. Set a sentinel value for 'spin' to indicate
-                    // that the imager should calculate the ideal spin angle to make the planet's
-                    // north pole appear toward the top of the generated image.
-                    spin = AUTO_SPIN;
-                }
-                else if (1 != sscanf(&argv[i][2], "%lf", &spin) || !isfinite(spin) || spin < -360 || spin > +360)
+                if (1 != sscanf(&argv[i][2], "%lf", &spin) || !isfinite(spin) || spin < -360 || spin > +360)
                 {
                     fprintf(stderr, "ERROR: invalid spin angle after '-s'\n");
                     return 1;
