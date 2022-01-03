@@ -2678,6 +2678,51 @@ This is the inverse function of [`Astronomy_ObserverVector`](#Astronomy_Observer
 
 ---
 
+<a name="EARTH_EQUATORIAL_RADIUS_KM"></a>
+### `EARTH_EQUATORIAL_RADIUS_KM`
+
+**The equatorial radius of the Earth, expressed in kilometers.** 
+
+
+
+```C
+#define EARTH_EQUATORIAL_RADIUS_KM  6378.1366
+```
+
+
+
+---
+
+<a name="EARTH_FLATTENING"></a>
+### `EARTH_FLATTENING`
+
+**The Earth's polar radius divided by its equatorial radius.** 
+
+
+
+```C
+#define EARTH_FLATTENING  0.996647180302104
+```
+
+
+
+---
+
+<a name="EARTH_POLAR_RADIUS_KM"></a>
+### `EARTH_POLAR_RADIUS_KM`
+
+**The polar radius of the Earth, expressed in kilometers.** 
+
+
+
+```C
+#define EARTH_POLAR_RADIUS_KM  ([EARTH_EQUATORIAL_RADIUS_KM](#EARTH_EQUATORIAL_RADIUS_KM) * [EARTH_FLATTENING](#EARTH_FLATTENING))
+```
+
+
+
+---
+
 <a name="EUROPA_RADIUS_KM"></a>
 ### `EUROPA_RADIUS_KM`
 
@@ -2858,6 +2903,126 @@ This is the inverse function of [`Astronomy_ObserverVector`](#Astronomy_Observer
 
 ---
 
+<a name="MARS_EQUATORIAL_RADIUS_KM"></a>
+### `MARS_EQUATORIAL_RADIUS_KM`
+
+**The equatorial radius of Mars, expressed in kilometers.** 
+
+
+
+```C
+#define MARS_EQUATORIAL_RADIUS_KM  3396.2
+```
+
+
+
+---
+
+<a name="MARS_POLAR_RADIUS_KM"></a>
+### `MARS_POLAR_RADIUS_KM`
+
+**The polar radius of Mars, expressed in kilometers.** 
+
+
+
+```C
+#define MARS_POLAR_RADIUS_KM  3376.2
+```
+
+
+
+---
+
+<a name="MERCURY_EQUATORIAL_RADIUS_KM"></a>
+### `MERCURY_EQUATORIAL_RADIUS_KM`
+
+**The equatorial radius of Mercury, expressed in kilometers.** 
+
+
+
+```C
+#define MERCURY_EQUATORIAL_RADIUS_KM  2440.5
+```
+
+
+
+---
+
+<a name="MERCURY_POLAR_RADIUS_KM"></a>
+### `MERCURY_POLAR_RADIUS_KM`
+
+**The polar radius of Mercury, expressed in kilometers.** 
+
+
+
+```C
+#define MERCURY_POLAR_RADIUS_KM  2438.3
+```
+
+
+
+---
+
+<a name="MOON_EQUATORIAL_RADIUS_KM"></a>
+### `MOON_EQUATORIAL_RADIUS_KM`
+
+**The equatorial radius of the Moon, expressed in kilometers.** 
+
+
+
+```C
+#define MOON_EQUATORIAL_RADIUS_KM  1738.1
+```
+
+
+
+---
+
+<a name="MOON_POLAR_RADIUS_KM"></a>
+### `MOON_POLAR_RADIUS_KM`
+
+**The polar radius of the Moon, expressed in kilometers.** 
+
+
+
+```C
+#define MOON_POLAR_RADIUS_KM  1736.0
+```
+
+
+
+---
+
+<a name="NEPTUNE_EQUATORIAL_RADIUS_KM"></a>
+### `NEPTUNE_EQUATORIAL_RADIUS_KM`
+
+**The equatorial radius of Neptune, expressed in kilometers.** 
+
+
+
+```C
+#define NEPTUNE_EQUATORIAL_RADIUS_KM  24764.0
+```
+
+
+
+---
+
+<a name="NEPTUNE_POLAR_RADIUS_KM"></a>
+### `NEPTUNE_POLAR_RADIUS_KM`
+
+**The polar radius of Neptune, expressed in kilometers.** 
+
+
+
+```C
+#define NEPTUNE_POLAR_RADIUS_KM  24341.0
+```
+
+
+
+---
+
 <a name="NUM_JUPITER_MOONS"></a>
 ### `NUM_JUPITER_MOONS`
 
@@ -2867,6 +3032,21 @@ This is the inverse function of [`Astronomy_ObserverVector`](#Astronomy_Observer
 
 ```C
 #define NUM_JUPITER_MOONS  4
+```
+
+
+
+---
+
+<a name="PLUTO_RADIUS_KM"></a>
+### `PLUTO_RADIUS_KM`
+
+**The mean radius of Pluto, expressed in kilometers. Pluto is nearly spherical.** 
+
+
+
+```C
+#define PLUTO_RADIUS_KM  1188.3
 ```
 
 
@@ -2933,6 +3113,21 @@ This is the inverse function of [`Astronomy_ObserverVector`](#Astronomy_Observer
 
 ---
 
+<a name="SUN_RADIUS_KM"></a>
+### `SUN_RADIUS_KM`
+
+**The mean radius of the Sun's photosphere, expressed in kilometers. The Sun is nearly spherical.** 
+
+
+
+```C
+#define SUN_RADIUS_KM  695700.0
+```
+
+
+
+---
+
 <a name="TIME_TEXT_BYTES"></a>
 ### `TIME_TEXT_BYTES`
 
@@ -2942,6 +3137,36 @@ This is the inverse function of [`Astronomy_ObserverVector`](#Astronomy_Observer
 
 ```C
 #define TIME_TEXT_BYTES  25
+```
+
+
+
+---
+
+<a name="URANUS_EQUATORIAL_RADIUS_KM"></a>
+### `URANUS_EQUATORIAL_RADIUS_KM`
+
+**The equatorial radius of Uranus, expressed in kilometers.** 
+
+
+
+```C
+#define URANUS_EQUATORIAL_RADIUS_KM  25559.0
+```
+
+
+
+---
+
+<a name="URANUS_POLAR_RADIUS_KM"></a>
+### `URANUS_POLAR_RADIUS_KM`
+
+**The polar radius of Uranus, expressed in kilometers.** 
+
+
+
+```C
+#define URANUS_POLAR_RADIUS_KM  24973.0
 ```
 
 

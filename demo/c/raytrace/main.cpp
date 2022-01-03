@@ -88,14 +88,32 @@ double BodyEquatorialRadiusKm(astro_body_t body)
 {
     switch (body)
     {
+    case BODY_MERCURY:
+        return MERCURY_EQUATORIAL_RADIUS_KM;
+
     case BODY_VENUS:
         return VENUS_RADIUS_KM;
+
+    case BODY_MOON:
+        return MOON_EQUATORIAL_RADIUS_KM;
+
+    case BODY_MARS:
+        return MARS_EQUATORIAL_RADIUS_KM;
 
     case BODY_JUPITER:
         return JUPITER_EQUATORIAL_RADIUS_KM;
 
     case BODY_SATURN:
         return SATURN_EQUATORIAL_RADIUS_KM;
+
+    case BODY_URANUS:
+        return URANUS_EQUATORIAL_RADIUS_KM;
+
+    case BODY_NEPTUNE:
+        return NEPTUNE_EQUATORIAL_RADIUS_KM;
+
+    case BODY_PLUTO:
+        return PLUTO_RADIUS_KM;
 
     default:
         return -1.0;    // error code: unsupported body
@@ -107,14 +125,32 @@ double BodyPolarRadiusKm(astro_body_t body)
 {
     switch (body)
     {
+    case BODY_MERCURY:
+        return MERCURY_POLAR_RADIUS_KM;
+
     case BODY_VENUS:
         return VENUS_RADIUS_KM;
+
+    case BODY_MOON:
+        return MOON_POLAR_RADIUS_KM;
+
+    case BODY_MARS:
+        return MARS_POLAR_RADIUS_KM;
 
     case BODY_JUPITER:
         return JUPITER_POLAR_RADIUS_KM;
 
     case BODY_SATURN:
         return SATURN_POLAR_RADIUS_KM;
+
+    case BODY_URANUS:
+        return URANUS_POLAR_RADIUS_KM;
+
+    case BODY_NEPTUNE:
+        return NEPTUNE_POLAR_RADIUS_KM;
+
+    case BODY_PLUTO:
+        return PLUTO_RADIUS_KM;
 
     default:
         return -1.0;    // error code: unsupported body

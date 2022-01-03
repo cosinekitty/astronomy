@@ -161,21 +161,14 @@ static const double EARTH_ORBITAL_PERIOD = 365.256;
 static const double NEPTUNE_ORBITAL_PERIOD = 60189.0;
 static const double REFRACTION_NEAR_HORIZON = 34.0 / 60.0;   /* degrees of refractive "lift" seen for objects near horizon */
 
-static const double SUN_RADIUS_KM  = 695700.0;
 #define             SUN_RADIUS_AU  (SUN_RADIUS_KM / KM_PER_AU)
 
-#define EARTH_FLATTENING            0.996647180302104
-#define EARTH_EQUATORIAL_RADIUS_KM  6378.1366
-#define EARTH_EQUATORIAL_RADIUS_AU  (EARTH_EQUATORIAL_RADIUS_KM / KM_PER_AU)
-#define EARTH_POLAR_RADIUS_KM       (EARTH_EQUATORIAL_RADIUS_KM * EARTH_FLATTENING)
 #define EARTH_MEAN_RADIUS_KM        6371.0            /* mean radius of the Earth's geoid, without atmosphere */
 #define EARTH_ATMOSPHERE_KM           88.0            /* effective atmosphere thickness for lunar eclipses */
 #define EARTH_ECLIPSE_RADIUS_KM     (EARTH_MEAN_RADIUS_KM + EARTH_ATMOSPHERE_KM)
-/* Note: if we ever need Earth's polar radius, it is (EARTH_FLATTENING * EARTH_EQUATORIAL_RADIUS_KM) */
+#define EARTH_EQUATORIAL_RADIUS_AU  (EARTH_EQUATORIAL_RADIUS_KM / KM_PER_AU)
 
-#define MOON_EQUATORIAL_RADIUS_KM   1738.1
 #define MOON_MEAN_RADIUS_KM         1737.4
-#define MOON_POLAR_RADIUS_KM        1736.0
 #define MOON_EQUATORIAL_RADIUS_AU   (MOON_EQUATORIAL_RADIUS_KM / KM_PER_AU)
 
 /* The inclination of the moon's rotation axis to the ecliptic plane, in radians. */
