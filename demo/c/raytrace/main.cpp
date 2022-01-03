@@ -31,7 +31,8 @@ static const char UsageText[] =
 "    -z<fac>  =  zoom in by the given multiplication factor\n"
 "\n";
 
-
+const double KM_SCALE = 10000.0;
+const double AU_SCALE = KM_SCALE / KM_PER_AU;
 const double AUTO_ZOOM = 0.0;
 const double AUTO_SPIN = 999.0;
 
@@ -140,7 +141,7 @@ Imager::Color BodyColor(astro_body_t body)
 }
 
 
-static Imager::SolidObject* CreateSaturnRings(double km_scale)
+static Imager::SolidObject* CreateSaturnRings()
 {
     using namespace Imager;
 
@@ -172,8 +173,8 @@ static Imager::SolidObject* CreateSaturnRings(double km_scale)
         );
 
         ThinRing* ringSolid = new ThinRing(
-            ringData[i].innerRadiusKm / km_scale,
-            ringData[i].outerRadiusKm / km_scale
+            ringData[i].innerRadiusKm / KM_SCALE,
+            ringData[i].outerRadiusKm / KM_SCALE
         );
 
         ringSolid->SetFullMatte(color);
@@ -191,9 +192,7 @@ static Imager::SolidObject* CreateSaturnRings(double km_scale)
 static void AddJupiterMoons(
     Imager::Scene &scene,
     astro_vector_t geo_planet,
-    astro_time_t depart,
-    double au_scale,
-    double km_scale)
+    astro_time_t depart)
 {
     using namespace Imager;
 
@@ -208,7 +207,7 @@ static void AddJupiterMoons(
         jm.moon[JM_IO].y + geo_planet.y,
         jm.moon[JM_IO].z + geo_planet.z
     );
-    Sphere *io = new Sphere(io_center/au_scale, IO_RADIUS_KM/km_scale);
+    Sphere *io = new Sphere(io_center/AU_SCALE, IO_RADIUS_KM/KM_SCALE);
     scene.AddSolidObject(io);
     io->SetFullMatte(Color(1.0, 1.0, 1.0));     // ??? Actual moon colors ???
     io->SetTag("Io");
@@ -219,7 +218,7 @@ static void AddJupiterMoons(
         jm.moon[JM_EUROPA].y + geo_planet.y,
         jm.moon[JM_EUROPA].z + geo_planet.z
     );
-    Sphere *europa = new Sphere(eu_center/au_scale, EUROPA_RADIUS_KM/km_scale);
+    Sphere *europa = new Sphere(eu_center/AU_SCALE, EUROPA_RADIUS_KM/KM_SCALE);
     scene.AddSolidObject(europa);
     europa->SetFullMatte(Color(1.0, 1.0, 1.0));     // ??? Actual moon colors ???
     europa->SetTag("Europa");
@@ -230,7 +229,7 @@ static void AddJupiterMoons(
         jm.moon[JM_GANYMEDE].y + geo_planet.y,
         jm.moon[JM_GANYMEDE].z + geo_planet.z
     );
-    Sphere *ganymede = new Sphere(gan_center/au_scale, GANYMEDE_RADIUS_KM/km_scale);
+    Sphere *ganymede = new Sphere(gan_center/AU_SCALE, GANYMEDE_RADIUS_KM/KM_SCALE);
     scene.AddSolidObject(ganymede);
     ganymede->SetFullMatte(Color(1.0, 1.0, 1.0));     // ??? Actual moon colors ???
 
@@ -240,7 +239,7 @@ static void AddJupiterMoons(
         jm.moon[JM_CALLISTO].y + geo_planet.y,
         jm.moon[JM_CALLISTO].z + geo_planet.z
     );
-    Sphere *callisto = new Sphere(cal_center/au_scale, CALLISTO_RADIUS_KM/km_scale);
+    Sphere *callisto = new Sphere(cal_center/AU_SCALE, CALLISTO_RADIUS_KM/KM_SCALE);
     scene.AddSolidObject(callisto);
     callisto->SetFullMatte(Color(1.0, 1.0, 1.0));     // ??? Actual moon colors ???
     callisto->SetTag("Callisto");
@@ -290,11 +289,8 @@ int PlanetImage(
 
     Scene scene(Color(0.0, 0.0, 0.0));
 
-    const double km_scale = 10000.0;
-    const double au_scale = km_scale / KM_PER_AU;
-
-    const double equ_radius = BodyEquatorialRadiusKm(body) / km_scale;
-    const double pol_radius = BodyPolarRadiusKm(body) / km_scale;
+    const double equ_radius = BodyEquatorialRadiusKm(body) / KM_SCALE;
+    const double pol_radius = BodyPolarRadiusKm(body) / KM_SCALE;
     if (equ_radius < 0.0 || pol_radius < 0.0)
     {
         fprintf(stderr, "Error: cannot find radius data for requested body.\n");
@@ -307,16 +303,16 @@ int PlanetImage(
     {
     case BODY_SATURN:
         // Replace the spheroid with a union of the spheroid and its system of rings.
-        planet = new SetUnion(Vector(), planet, CreateSaturnRings(km_scale));
+        planet = new SetUnion(Vector(), planet, CreateSaturnRings());
         break;
 
     case BODY_JUPITER:
-        AddJupiterMoons(scene, geo_planet, depart, au_scale, km_scale);
+        AddJupiterMoons(scene, geo_planet, depart);
         break;
     }
 
     scene.AddSolidObject(planet);
-    planet->Move(Vector(geo_planet.x, geo_planet.y, geo_planet.z) / au_scale);
+    planet->Move(Vector(geo_planet.x, geo_planet.y, geo_planet.z) / AU_SCALE);
     planet->SetTag(Astronomy_BodyName(body));
 
     // Reorient the planet's rotation axis to match the calculated orientation.
@@ -324,7 +320,7 @@ int PlanetImage(
     planet->RotateZ(15.0 * axis.ra);
 
     // Add the Sun as the point light source.
-    scene.AddLightSource(LightSource(Vector(sun.x, sun.y, sun.z) / au_scale, Color(1.0, 1.0, 1.0)));
+    scene.AddLightSource(LightSource(Vector(sun.x, sun.y, sun.z) / AU_SCALE, Color(1.0, 1.0, 1.0)));
 
     // Aim the camera at the planet's center.
     // Start with an identity matrix, which leaves the camera pointing in the -z direction,
@@ -416,7 +412,7 @@ int PlanetImage(
     // the smaller pixel dimension. To be more precise, calculate
     // the equatorial angular diameter with a 10% cushion for the
     // smaller of the two pixel dimensions (width or height).
-    double diameter_radians = (2.0 * equ_radius) / (planet_distance_au / au_scale);
+    double diameter_radians = (2.0 * equ_radius) / (planet_distance_au / AU_SCALE);
     double factor = 0.9 / diameter_radians;
     if (zoom == AUTO_ZOOM)
         zoom = factor;
