@@ -162,14 +162,32 @@ Imager::Color BodyColor(astro_body_t body)
 {
     switch (body)
     {
+    case BODY_MERCURY:
+        return Imager::Color(168.0 / 255.0, 175.0 / 255.0, 168.0 / 255.0);
+
     case BODY_VENUS:
-        return Imager::Color(0.9, 0.9, 1.0);
+        return Imager::Color(1.0, 1.0, 1.0);
+
+    case BODY_MOON:
+        return Imager::Color(112.0 / 255.0, 108.0 / 255.0, 107.0 / 255.0);
+
+    case BODY_MARS:
+        return Imager::Color(255.0 / 255.0, 133.0 / 255.0, 94.0 / 255.0);
 
     case BODY_JUPITER:
-        return Imager::Color(1.0, 0.95, 0.85);
+        return Imager::Color(210.0 / 255.0, 198.0 / 255.0, 174.0 / 255.0);
 
     case BODY_SATURN:
-        return Imager::Color(1.0, 1.0, 0.6, 0.335);
+        return Imager::Color(169.0 / 255.0, 149.0 / 255.0,  99.0 / 255.0, 0.45);
+
+    case BODY_URANUS:
+        return Imager::Color(142.0 / 255.0, 164.0 / 255.0, 177.0 / 255.0);
+
+    case BODY_NEPTUNE:
+        return Imager::Color(119.0 / 255.0, 154.0 / 255.0, 192.0 / 255.0);
+
+    case BODY_PLUTO:
+        return Imager::Color(216.0 / 255.0, 201.0 / 255.0, 180.0 / 255.0);
 
     default:
         return Imager::Color(1.0, 1.0, 1.0);
@@ -192,9 +210,9 @@ static Imager::SolidObject* CreateSaturnRings()
 
     static const RingData ringData[] =
     {
-        {  92154.0,  117733.0,  196.0,  194.0,  180.0 },
-        { 122405.0,  133501.0,  157.0,  160.0,  158.0 },
-        { 134085.0,  136888.0,  136.0,  140.0,  142.0 }
+        {  92154.0,  117733.0,  125.0,  118.0,   99.0 },
+        { 122405.0,  133501.0,  118.0,  112.0,  100.0 },
+        { 134085.0,  136888.0,  100.0,   94.0,   82.0 }
     };
 
     SolidObject* ringSystem = nullptr;
