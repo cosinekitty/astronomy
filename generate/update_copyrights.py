@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Copyright (c) 2019-2021 Don Cross <cosinekitty@gmail.com>
+# Copyright (c) 2019-2022 Don Cross <cosinekitty@gmail.com>
 import sys
 import re
 import datetime
