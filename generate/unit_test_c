@@ -8,7 +8,7 @@ Fail()
 [[ "$1" == "" || "$1" == "-v" ]] || Fail "Invalid command line options."
 
 # Verify that the source can be built as modern C++.
-g++ -std=c++17 -c -Wall -Werror -O3 ../source/c/astronomy.c || Fail "Cannot compile as C++"
+g++ -x c++ -std=c++17 -c -Wall -Werror -O3 ../source/c/astronomy.c || Fail "Cannot compile as C++"
 rm -f astronomy.o
 
 ./ctbuild || exit 1
