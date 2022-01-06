@@ -1,0 +1,9 @@
+#!/bin/bash
+
+if [[ "$1" == "debug" ]]; then
+    BUILDOPT='-g -Og'
+else
+    BUILDOPT='-O3'
+fi
+
+g++ -x c++ -o raytrace $BUILDOPT -I.. -I../../../source/c *.cpp ../astro_demo_common.c ../../../source/c/astronomy.c

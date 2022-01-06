@@ -73,6 +73,72 @@ extern "C" {
  */
 #define RAD2HOUR    3.819718634205488
 
+/**
+ * \def SUN_RADIUS_KM
+ * @brief The mean radius of the Sun's photosphere, expressed in kilometers. The Sun is nearly spherical.
+ */
+#define SUN_RADIUS_KM               695700.0
+
+/**
+ * \def MERCURY_EQUATORIAL_RADIUS_KM
+ * @brief The equatorial radius of Mercury, expressed in kilometers.
+ */
+#define MERCURY_EQUATORIAL_RADIUS_KM    2440.5
+
+/**
+ * \def MERCURY_POLAR_RADIUS_KM
+ * @brief The polar radius of Mercury, expressed in kilometers.
+ */
+#define MERCURY_POLAR_RADIUS_KM         2438.3
+
+/**
+ * \def VENUS_RADIUS_KM
+ * @brief The mean radius of Venus, expressed in kilometers. Venus is nearly spherical.
+ */
+#define VENUS_RADIUS_KM     6051.8
+
+/**
+ * \def EARTH_EQUATORIAL_RADIUS_KM
+ * @brief The equatorial radius of the Earth, expressed in kilometers.
+ */
+#define EARTH_EQUATORIAL_RADIUS_KM  6378.1366
+
+/**
+ * \def EARTH_FLATTENING
+ * @brief The Earth's polar radius divided by its equatorial radius.
+ */
+#define EARTH_FLATTENING            0.996647180302104
+
+/**
+ * \def EARTH_POLAR_RADIUS_KM
+ * @brief The polar radius of the Earth, expressed in kilometers.
+ */
+#define EARTH_POLAR_RADIUS_KM       (EARTH_EQUATORIAL_RADIUS_KM * EARTH_FLATTENING)
+
+/**
+ * \def MOON_EQUATORIAL_RADIUS_KM
+ * @brief The equatorial radius of the Moon, expressed in kilometers.
+ */
+#define MOON_EQUATORIAL_RADIUS_KM   1738.1
+
+/**
+ * \def MOON_POLAR_RADIUS_KM
+ * @brief The polar radius of the Moon, expressed in kilometers.
+ */
+#define MOON_POLAR_RADIUS_KM        1736.0
+
+/**
+ * \def MARS_EQUATORIAL_RADIUS_KM
+ * @brief The equatorial radius of Mars, expressed in kilometers.
+ */
+#define MARS_EQUATORIAL_RADIUS_KM   3396.2
+
+/**
+ * \def MARS_POLAR_RADIUS_KM
+ * @brief The polar radius of Mars, expressed in kilometers.
+ */
+#define MARS_POLAR_RADIUS_KM        3376.2
+
 /*
     Jupiter radius data are nominal values obtained from:
     https://www.iau.org/static/resolutions/IAU2015_English.pdf
@@ -126,6 +192,47 @@ extern "C" {
  */
 #define CALLISTO_RADIUS_KM      2410.3
 
+/**
+ * \def SATURN_EQUATORIAL_RADIUS_KM
+ * @brief The equatorial radius of Saturn, expressed in kilometers.
+ */
+#define SATURN_EQUATORIAL_RADIUS_KM     60268.0
+
+/**
+ * \def SATURN_POLAR_RADIUS_KM
+ * @brief The polar radius of Saturn, expressed in kilometers.
+ */
+#define SATURN_POLAR_RADIUS_KM          54364.0
+
+/**
+ * \def URANUS_EQUATORIAL_RADIUS_KM
+ * @brief The equatorial radius of Uranus, expressed in kilometers.
+ */
+#define URANUS_EQUATORIAL_RADIUS_KM     25559.0
+
+/**
+ * \def URANUS_POLAR_RADIUS_KM
+ * @brief The polar radius of Uranus, expressed in kilometers.
+ */
+#define URANUS_POLAR_RADIUS_KM          24973.0
+
+/**
+ * \def NEPTUNE_EQUATORIAL_RADIUS_KM
+ * @brief The equatorial radius of Neptune, expressed in kilometers.
+ */
+#define NEPTUNE_EQUATORIAL_RADIUS_KM    24764.0
+
+/**
+ * \def NEPTUNE_POLAR_RADIUS_KM
+ * @brief The polar radius of Neptune, expressed in kilometers.
+ */
+#define NEPTUNE_POLAR_RADIUS_KM         24341.0
+
+/**
+ * \def PLUTO_RADIUS_KM
+ * @brief The mean radius of Pluto, expressed in kilometers. Pluto is nearly spherical.
+ */
+#define PLUTO_RADIUS_KM             1188.3
 
 
 /*---------- types ----------*/

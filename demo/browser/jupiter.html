@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Jupiter's Moons</title>
+        <meta name="viewport" content="width=device-width,maximum-scale=2">
+        <link rel="stylesheet" href="astro_demo.css" />
+    </head>
+
+    <body>
+        <div>
+            <canvas id="GraphCanvas" class="PlotCanvas"></canvas>
+        </div>
+    </body>
+
+    <script src="astronomy.browser.js"></script>
+    <script>
+        window.onload = function() {
+            const ReservedPixelsBottom = 0;
+            const graph = document.getElementById('GraphCanvas');
+            const context = graph.getContext('2d');
+            const jm_letter = ['I', 'E', 'G', 'C'];     // Io, Europa, Ganymede, Callisto.
+            const jm_radius = [
+                Astronomy.IO_RADIUS_KM,
+                Astronomy.EUROPA_RADIUS_KM,
+                Astronomy.GANYMEDE_RADIUS_KM,
+                Astronomy.CALLISTO_RADIUS_KM
+            ];
+
+            class Ellipsoid {
+                constructor(center, equ_radius_km, pol_radius_km, letter) {
+                    this.center = center;
+                    this.equ_radius = equ_radius_km / Astronomy.KM_PER_AU;
+                    this.pol_radius = pol_radius_km / Astronomy.KM_PER_AU;
+                    this.letter = letter;
+                }
+            }
+
+            class RayTracer {
+                constructor() {
+                    this.bodylist = [];
+                }
+
+                AddPlanet(center) {
+                    this.AddEllipsoid(
+                        center,
+                        Astronomy.JUPITER_EQUATORIAL_RADIUS_KM,
+                        Astronomy.JUPITER_POLAR_RADIUS_KM,
+                        null
+                    );
+                }
+
+                AddMoon(center, radius, letter) {
+                    this.AddEllipsoid(center, radius, radius, letter);
+                }
+
+                AddEllipsoid(center, equ_radius_km, pol_radius_km, letter) {
+                    this.bodylist.push(new Ellipsoid(center, equ_radius_km, pol_radius_km, letter));
+                }
+            }
+
+            function ResizeGraph() {
+                // Make the canvas fit the available space inside the browser window.
+                // Reserve some space below the graph for sliders.
+                graph.width = window.innerWidth;
+                graph.height = window.innerHeight - ReservedPixelsBottom;
+            }
+
+            function UpdateScreen() {
+                // Calculate Jupiter's position, corrected for light travel time.
+                const now = new Date();
+                const jup = Astronomy.GeoVector(Astronomy.Body.Jupiter, now, true);
+
+                // Use the distance from Jupiter to figure how much light-travel backdating to apply.
+                const lightdays = jup.Length() / Astronomy.C_AUDAY;
+                const depart = jup.t.AddDays(-lightdays);
+
+                // Calculate Jupiter's moons how they were when light departed Jupiter toward the Earth.
+                const jm = Astronomy.JupiterMoons(depart);
+
+                // Add each object as an ellipsoid to the raytracer model.
+                // Convert Jupiter's moons coordinates from jovicentric EQJ to geocentric EQJ.
+                const rt = new RayTracer();
+                rt.AddPlanet(jup);
+                for (let i = 0; i < 4; ++i) {
+                    const geo = new Astronomy.Vector(
+                        jm.moon[i].x + jup.x,
+                        jm.moon[i].y + jup.y,
+                        jm.moon[i].z + jup.z,
+                        jm.moon[i].t
+                    );
+                    rt.AddMoon(geo, jm_radius[i], jm_letter[i]);
+                }
+
+                //setTimeout(UpdateScreen, 1000);
+            }
+
+            ResizeGraph();
+            //window.addEventListener('resize', ResizeGraph);
+            UpdateScreen();
+        }
+    </script>
+</html>

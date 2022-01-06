@@ -1,0 +1,12 @@
+#!/bin/bash
+./raytrace mercury.png 200 200 Mercury 2022-01-02T00:00:00Z -v || exit 1
+./raytrace venus.png 200 200 Venus 2021-12-28T00:00:00Z -v -z0.8 || exit 1
+./raytrace moon.png 200 200 Moon 2022-01-02T00:00:00Z -v || exit 1
+./raytrace mars.png 200 200 Mars 2022-01-02T00:00:00Z -v || exit 1
+./raytrace jupiter_zoom.png 700 500 Jupiter 2021-12-10T23:12:00Z -v -f || exit 1
+./raytrace jupiter_full.png 1400 150 Jupiter 2021-12-10T23:20:00Z -v -f || exit 1
+./raytrace saturn.png 800 350 Saturn 2021-12-28T00:00:00Z -v || exit 1
+./raytrace uranus.png 200 200 Uranus 2022-01-02T00:00:00Z -v || exit 1
+./raytrace neptune.png 200 200 Neptune 2022-01-02T00:00:00Z -v || exit 1
+./raytrace pluto.png 200 200 Pluto 2022-01-02T00:00:00Z -v || exit 1
+exit 0
