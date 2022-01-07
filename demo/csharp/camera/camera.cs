@@ -65,7 +65,7 @@ namespace camera
             vec.x /= radius;
             vec.y /= radius;
             vec.z /= radius;
-            Console.WriteLine($"Moon check: x = {vec.x}, y = {vec.y}, z = {vec.z}");
+            Console.WriteLine($"Moon check: x = {vec.x:F6}, y = {Math.Abs(vec.y):F6}, z = {Math.Abs(vec.z):F6}");
             if (!double.IsFinite(vec.x) || Math.Abs(vec.x - 1.0) > tolerance)
             {
                 Console.WriteLine("Excessive error in moon check (x).");

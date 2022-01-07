@@ -1,5 +1,5 @@
 Moon horizontal position: azimuth = 274.486, altitude = 52.101
-Moon check: (1.0, -2.072588670409689e-16, -1.0362943352048446e-16, 2021-03-22T02:45:00.000Z)
+Moon check: x=1.000000, y=0.000000, z=0.000000
 Sun vector: (-0.08853032065573567, -0.31939127849027193, -0.9396631499852881, 2021-03-22T02:45:00.000Z)
 Tilt angle of sunlit side of the Moon = -108.773 degrees counterclockwise from up.
 Moon magnitude = -10.27, phase angle = 84.22 degrees.

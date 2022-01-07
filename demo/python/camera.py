@@ -61,7 +61,7 @@ def Camera(observer, time):
     vec.x /= radius
     vec.y /= radius
     vec.z /= radius
-    print('Moon check: {}'.format(vec))
+    print('Moon check: x={:0.6f}, y={:0.6f}, z={:0.6f}'.format(vec.x, abs(vec.y), abs(vec.z)))
     if abs(vec.x - 1.0) > tolerance:
         print("Excessive error in moon check (x).")
         return 1

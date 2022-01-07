@@ -99,7 +99,7 @@ static int CameraImage(astro_observer_t observer, astro_time_t time)
     vec.x /= radius;
     vec.y /= radius;
     vec.z /= radius;
-    printf("Moon check: x = %0.4le, y = %0.4le, z = %0.4le\n", vec.x, vec.y, vec.z);
+    printf("Moon check: x = %0.6lf, y = %0.6lf, z = %0.6lf\n", vec.x, fabs(vec.y), fabs(vec.z));
     if (!isfinite(vec.x) || fabs(vec.x - 1.0) > tolerance)
         FAIL("Excessive error in moon check (x)\n");
 

@@ -71,7 +71,7 @@ function Camera(observer, time) {
     vec.x /= radius;
     vec.y /= radius;
     vec.z /= radius;
-    console.log(`Moon check: x = ${vec.x}, y = ${vec.y}, z = ${vec.z}`);
+    console.log(`Moon check: x = ${vec.x.toFixed(6)}, y = ${Math.abs(vec.y).toFixed(6)}, z = ${Math.abs(vec.z).toFixed(6)}`);
     if (!Number.isFinite(vec.x) || Math.abs(vec.x - 1.0) > tolerance) {
         console.error("Excessive error in moon check (x).");
         return 1;
