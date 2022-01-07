@@ -115,7 +115,7 @@
                 var hour = Pad(date.getHours(), 2);
                 var minute = Pad(date.getMinutes(), 2);
                 var second = Pad(date.getSeconds(), 2);
-                return `${year}-${month}-${day} ${hour}:${minute}:${second}`;
+                return `${year}-${month}-${day}T${hour}:${minute}:${second}`;
             }
 
             function DisplayEvent(name, evt) {
