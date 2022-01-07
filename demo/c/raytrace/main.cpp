@@ -363,6 +363,9 @@ int PlanetImage(
     case BODY_JUPITER:
         AddJupiterMoons(scene, geo_planet, depart);
         break;
+
+    default:
+        break;
     }
 
     scene.AddSolidObject(planet);
