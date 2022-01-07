@@ -1,7 +1,7 @@
 name: Astronomy Engine Unit Tests
 on: [push]
 jobs:
-  Astronomy-Engine:
+  Astronomy-Engine-Linux:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
