@@ -142,12 +142,16 @@
             const StorageKey = 'AstroDemo.Options';
             var Options;
 
+            function ParseDate(s) {
+                return new Date(s.replace(' ', 'T'));   // Safari doesn't like the space character
+            }
+
             function IsValidNumber(s) {
                 return typeof s === 'string' && /^[\-\+]?\d+(\.\d*)?$/.test(s);
             }
 
             function IsValidDate(s) {
-                const d = new Date(s);
+                const d = ParseDate(s);
                 return Number.isFinite(d.getTime());
             }
 
@@ -227,7 +231,7 @@
                     timebox.value = FormatDate(date);
                 } else {
                     // Try to parse a date/time from the user's input.
-                    date = new Date(timebox.value);
+                    date = ParseDate(timebox.value);
                 }
 
                 if (!IsValidDate(timebox.value) || !IsValidNumber(text_latitude) || !IsValidNumber(text_longitude) || !IsValidNumber(text_elevation)) {
