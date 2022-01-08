@@ -107,7 +107,11 @@ function FindEclipticCrossings(observer, time) {
             else
                 direction = 'descends';
 
-            console.log(`Ecliptic longitude ${s.ex.toFixed(4)} ${direction} through horizon az ${s.h.lon.toFixed(4)}, alt ${s.h.lat.toExponential(4)}`);
+            console.log(`Ecliptic longitude ${s.ex.toFixed(4)} ${direction} through horizon at azimuth ${s.h.lon.toFixed(4)}`);
+            if (Math.abs(s.h.lat) > 5.0e-7) {
+                console.error(`FindEclipticCrossing: excessive altitude = ${s.h.lat}`);
+                process.exit(1);
+            }
         }
     }
 }

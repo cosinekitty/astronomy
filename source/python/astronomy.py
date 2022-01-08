@@ -170,6 +170,11 @@ class Vector:
     def __sub__(self, other):
         return Vector(self.x - other.x, self.y - other.y, self.z - other.z, self.t)
 
+    def format(self, coord_format):
+        """Returns a custom format string representation of the vector."""
+        layout = '({:' + coord_format + '}, {:' + coord_format + '}, {:' + coord_format + '}, {})'
+        return layout.format(self.x, self.y, self.z, str(self.t))
+
 class StateVector:
     """A combination of a position vector, a velocity vector, and a time.
 
@@ -758,10 +763,10 @@ class Observer:
     def __str__(self):
         text = '('
         text += 'S' if (self.latitude < 0) else 'N'
-        text += '{}, '.format(abs(self.latitude))
+        text += '{:0.8f}, '.format(abs(self.latitude))
         text += 'W' if (self.longitude < 0) else 'E'
-        text += '{}, '.format(abs(self.longitude))
-        text += '{}m'.format(self.height)
+        text += '{:0.8f}, '.format(abs(self.longitude))
+        text += '{:0.3f}m'.format(self.height)
         text += ')'
         return text
 

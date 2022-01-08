@@ -829,6 +829,11 @@ The vector also includes a time stamp.
 
 Returns the length of the vector in AU.
 
+<a name="Vector.format"></a>
+### Vector.format(self, coord_format)
+
+Returns a custom format string representation of the vector.
+
 ---
 
 <a name="enumerations"></a>

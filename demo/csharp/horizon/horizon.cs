@@ -141,7 +141,12 @@ namespace horizon
                     else
                         direction = "descends";     /* azimuth is more toward the west than the east */
 
-                    Console.WriteLine("Ecliptic longitude {0,9:0.0000} {1} through horizon az {2,9:0.0000}, alt {3,12:0.000e+00}", ex, direction, hx.lon, hx.lat);
+                    Console.WriteLine("Ecliptic longitude {0,9:0.0000} {1} through horizon at azimuth {2,9:0.0000}", ex, direction, hx.lon);
+                    if (Math.Abs(hx.lat) > 5.0e-7)
+                    {
+                        Console.Error.WriteLine("FindEclipticCrossings: Excessive altitude = {0}", hx.lat);
+                        return 1;
+                    }
                 }
             }
             return 0;

@@ -59,9 +59,9 @@ def Camera(observer, time):
     # Convert to unit vector.
     radius = vec.Length()
     vec.x /= radius
-    vec.y /= radius
-    vec.z /= radius
-    print('Moon check: x={:0.6f}, y={:0.6f}, z={:0.6f}'.format(vec.x, abs(vec.y), abs(vec.z)))
+    vec.y = abs(vec.y / radius)     # prevent "-0"
+    vec.z = abs(vec.z / radius)     # prevent "-0"
+    print('Moon check:', vec.format('0.8f'))
     if abs(vec.x - 1.0) > tolerance:
         print("Excessive error in moon check (x).")
         return 1
@@ -80,7 +80,7 @@ def Camera(observer, time):
     vec = astronomy.RotateVector(rot, sun_equ.vec)
 
     # Don't bother normalizing the Sun vector, because in AU it will be close to unit anyway.
-    print('Sun vector: {}'.format(vec))
+    print('Sun vector:', vec.format('0.8f'))
 
     # Calculate the tilt angle of the sunlit side, as seen by the camera.
     # The x-axis is now pointing directly at the object, z is up in the camera image, y is to the left.
