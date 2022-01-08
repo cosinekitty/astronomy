@@ -1618,9 +1618,9 @@ static int JupiterMoons_C(cg_context_t *context, const jupiter_moon_model_t *mod
     fprintf(context->outfile, "{\n");
     fprintf(context->outfile, "    ASTRO_SUCCESS,\n");
     fprintf(context->outfile, "    {\n");
-    fprintf(context->outfile, "        { %22.15le, %22.15le, %22.15le },\n", model->rot[0][0], model->rot[0][1], model->rot[0][2]);
-    fprintf(context->outfile, "        { %22.15le, %22.15le, %22.15le },\n", model->rot[1][0], model->rot[1][1], model->rot[1][2]);
-    fprintf(context->outfile, "        { %22.15le, %22.15le, %22.15le }\n",  model->rot[2][0], model->rot[2][1], model->rot[2][2]);
+    fprintf(context->outfile, "        { %21.14le, %21.14le, %21.14le },\n", model->rot[0][0], model->rot[0][1], model->rot[0][2]);
+    fprintf(context->outfile, "        { %21.14le, %21.14le, %21.14le },\n", model->rot[1][0], model->rot[1][1], model->rot[1][2]);
+    fprintf(context->outfile, "        { %21.14le, %21.14le, %21.14le }\n",  model->rot[2][0], model->rot[2][1], model->rot[2][2]);
     fprintf(context->outfile, "    }\n");
     fprintf(context->outfile, "};\n\n");
 
@@ -1676,9 +1676,9 @@ static int JupiterMoons_CSharp(cg_context_t *context, const jupiter_moon_model_t
     fprintf(context->outfile, "        private static readonly RotationMatrix Rotation_JUP_EQJ = new RotationMatrix(\n");
     fprintf(context->outfile, "            new double[3,3]\n");
     fprintf(context->outfile, "            {\n");
-    fprintf(context->outfile, "                { %22.15le, %22.15le, %22.15le },\n", model->rot[0][0], model->rot[0][1], model->rot[0][2]);
-    fprintf(context->outfile, "                { %22.15le, %22.15le, %22.15le },\n", model->rot[1][0], model->rot[1][1], model->rot[1][2]);
-    fprintf(context->outfile, "                { %22.15le, %22.15le, %22.15le }\n",  model->rot[2][0], model->rot[2][1], model->rot[2][2]);
+    fprintf(context->outfile, "                { %21.14le, %21.14le, %21.14le },\n", model->rot[0][0], model->rot[0][1], model->rot[0][2]);
+    fprintf(context->outfile, "                { %21.14le, %21.14le, %21.14le },\n", model->rot[1][0], model->rot[1][1], model->rot[1][2]);
+    fprintf(context->outfile, "                { %21.14le, %21.14le, %21.14le }\n",  model->rot[2][0], model->rot[2][1], model->rot[2][2]);
     fprintf(context->outfile, "            }\n");
     fprintf(context->outfile, "        );\n\n");
 
@@ -1724,9 +1724,9 @@ static int JupiterMoons_JS(cg_context_t *context, const jupiter_moon_model_t *mo
     const char *var_name[] = { "a", "l", "z", "zeta" };
 
     fprintf(context->outfile, "const Rotation_JUP_EQJ = new RotationMatrix([\n");
-    fprintf(context->outfile, "    [ %22.15le, %22.15le, %22.15le ],\n", model->rot[0][0], model->rot[0][1], model->rot[0][2]);
-    fprintf(context->outfile, "    [ %22.15le, %22.15le, %22.15le ],\n", model->rot[1][0], model->rot[1][1], model->rot[1][2]);
-    fprintf(context->outfile, "    [ %22.15le, %22.15le, %22.15le ]\n",  model->rot[2][0], model->rot[2][1], model->rot[2][2]);
+    fprintf(context->outfile, "    [ %21.14le, %21.14le, %21.14le ],\n", model->rot[0][0], model->rot[0][1], model->rot[0][2]);
+    fprintf(context->outfile, "    [ %21.14le, %21.14le, %21.14le ],\n", model->rot[1][0], model->rot[1][1], model->rot[1][2]);
+    fprintf(context->outfile, "    [ %21.14le, %21.14le, %21.14le ]\n",  model->rot[2][0], model->rot[2][1], model->rot[2][2]);
     fprintf(context->outfile, "]);\n\n");
 
     fprintf(context->outfile, "const JupiterMoonModel: jupiter_moon_t[] = [\n");
@@ -1770,9 +1770,9 @@ static int JupiterMoons_Python(cg_context_t *context, const jupiter_moon_model_t
     const char *var_name[] = { "a", "l", "z", "zeta" };
 
     fprintf(context->outfile, "_Rotation_JUP_EQJ = RotationMatrix([\n");
-    fprintf(context->outfile, "    [ %22.15le, %22.15le, %22.15le ],\n", model->rot[0][0], model->rot[0][1], model->rot[0][2]);
-    fprintf(context->outfile, "    [ %22.15le, %22.15le, %22.15le ],\n", model->rot[1][0], model->rot[1][1], model->rot[1][2]);
-    fprintf(context->outfile, "    [ %22.15le, %22.15le, %22.15le ]\n",  model->rot[2][0], model->rot[2][1], model->rot[2][2]);
+    fprintf(context->outfile, "    [ %21.14le, %21.14le, %21.14le ],\n", model->rot[0][0], model->rot[0][1], model->rot[0][2]);
+    fprintf(context->outfile, "    [ %21.14le, %21.14le, %21.14le ],\n", model->rot[1][0], model->rot[1][1], model->rot[1][2]);
+    fprintf(context->outfile, "    [ %21.14le, %21.14le, %21.14le ]\n",  model->rot[2][0], model->rot[2][1], model->rot[2][2]);
     fprintf(context->outfile, "])\n\n");
 
     fprintf(context->outfile, "_JupiterMoonModel = [\n");
