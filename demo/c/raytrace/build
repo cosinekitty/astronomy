@@ -6,4 +6,6 @@ else
     BUILDOPT='-O3'
 fi
 
-g++ -x c++ -o raytrace $BUILDOPT -I.. -I../../../source/c *.cpp ../astro_demo_common.c ../../../source/c/astronomy.c
+g++ -Wall -Werror -x c++ -std=c++11 -o raytrace $BUILDOPT \
+    -I.. -I../../../source/c \
+    *.cpp ../astro_demo_common.c ../../../source/c/astronomy.c

@@ -10,7 +10,7 @@ and use the [source code that has already been generated for that language](../s
 
 ---
 
-# Linux
+# Linux and macOS
 
 ## Tool setup
 
@@ -24,6 +24,7 @@ The following tools are required for developers:
 - doxygen
 - xsltproc
 - graphviz
+- coreutils
 
 Change into the directory `hydrogen` and execute:  `npm init`.
 
@@ -59,13 +60,3 @@ Once you have all the tools installed and configured, you are ready to proceed.
 Change into the `generate` directory (this directory) and run the
 batch file `run.bat` to rebuild all code, generate all documentation,
 and run all the unit tests.
-
----
-
-# Mac
-
-I could use some help getting this to work on the Mac. If you are looking
-for an open source project to help with, and you have a Mac, here is your chance!
-This should be similar to the Linux steps, but may require some tweaks.
-See issue #142 for more information.
-

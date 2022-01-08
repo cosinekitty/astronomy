@@ -870,7 +870,7 @@ namespace Imager
         {
             const double xr = point.x / a;
             const double yr = point.y / b;
-            const double zr = point.z / b;
+            const double zr = point.z / c;
             return xr*xr + yr*yr + zr*zr <= 1.0 + EPSILON;
         }
 

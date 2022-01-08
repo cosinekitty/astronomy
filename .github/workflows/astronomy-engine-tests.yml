@@ -1,7 +1,7 @@
 name: Astronomy Engine Unit Tests
 on: [push]
 jobs:
-  Astronomy-Engine:
+  Astronomy-Engine-Linux:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -17,6 +17,29 @@ jobs:
       run: python -m pip install --upgrade pip && pip install pylint
     - name: Install documentation tools
       run: sudo apt install -y doxygen xsltproc
+    - name: Init Node.js 14.x
+      uses: actions/setup-node@v2
+      with:
+        node-version: 14.x
+    - name: Test Astronomy Engine
+      run: cd generate && rm -f output/vsop*.txt output/*.eph output/jupiter_moons.txt && ./run && ./verify_clean
+
+  Astronomy-Engine-Macos:
+    runs-on: macos-11
+    steps:
+    - uses: actions/checkout@v2
+    - name: Init dotnet core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 6.0.x
+    - name: Init Python 3.7
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.7
+    - name: Install Python linter
+      run: python -m pip install --upgrade pip && pip install pylint
+    - name: Install documentation tools
+      run: HOMEBREW_NO_AUTO_UPDATE=1 brew install doxygen
     - name: Init Node.js 14.x
       uses: actions/setup-node@v2
       with:
