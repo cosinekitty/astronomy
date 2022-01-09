@@ -247,13 +247,13 @@ REM     A special download process helps keep the repo size reasonable.
 
         if defined wgetexe (
             echo.Trying download using !wgetexe! ...
-            !wgetexe! !EPHURL!
+            "!wgetexe!" !EPHURL!
             if not errorlevel 1 goto verify_eph
         )
 
         if defined curlexe (
             echo.Trying download using !curlexe! ...
-            !curlexe! -L -o !EPHFILE! !EPHURL!
+            "!curlexe!" -L -o !EPHFILE! !EPHURL!
             if not errorlevel 1 goto verify_eph
         )
 
@@ -270,7 +270,7 @@ REM     A special download process helps keep the repo size reasonable.
     :verify_eph
     if defined md5exe (
         echo.Using !md5exe! to test integrity of downloaded !EPHFILE!
-        !md5exe! -c !MD5FILE!
+        "!md5exe!" -c !MD5FILE!
         if errorlevel 1 (
             echo.Corrupt ephemeris file !EPHFILE! detected.
             if exist !EPHFILE! (del !EPHFILE!)
