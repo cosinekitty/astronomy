@@ -46,3 +46,28 @@ jobs:
         node-version: 14.x
     - name: Test Astronomy Engine
       run: cd generate && rm -f output/vsop*.txt output/*.eph output/jupiter_moons.txt && ./run && ./verify_clean
+
+  Astronomy-Engine-Windows:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Init dotnet core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 6.0.x
+    - name: Init Python 3.7
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.7
+    - name: Install Python linter
+      run: python -m pip install --upgrade pip
+      run: pip install pylint
+    - name: Init Node.js 14.x
+      uses: actions/setup-node@v2
+      with:
+        node-version: 14.x
+    - name: Test Astronomy Engine
+      run: cd generate
+      run: del output\vsop*.txt output\*.eph output\jupiter_moons.txt
+      run: run.bat
+      run: verify_clean.bat
