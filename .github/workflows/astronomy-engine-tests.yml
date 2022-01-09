@@ -68,6 +68,7 @@ jobs:
       with:
         node-version: 14.x
     - name: Test Astronomy Engine
+      shell: cmd
       run: |
         cd generate
         del output\vsop*.txt output\*.eph output\jupiter_moons.txt
