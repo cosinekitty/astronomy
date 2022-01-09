@@ -60,7 +60,7 @@ jobs:
       with:
         python-version: 3.7
     - name: Install Python linter
-      run: 
+      run: |
         python -m pip install --upgrade pip
         pip install pylint
     - name: Init Node.js 14.x
@@ -68,7 +68,7 @@ jobs:
       with:
         node-version: 14.x
     - name: Test Astronomy Engine
-      run: 
+      run: |
         cd generate
         del output\vsop*.txt output\*.eph output\jupiter_moons.txt
         run.bat
