@@ -19,8 +19,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{2DE332E0-4135-4325-88FA-D1EDAB6746A5}</ProjectGuid>
-    <RootNamespace>seasons</RootNamespace>
+    <ProjectGuid>{D460EC2E-5FCD-487C-A102-283D70F76A07}</ProjectGuid>
+    <RootNamespace>culminate</RootNamespace>
     <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -74,7 +74,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>C:\don\github\astronomy\source\c;C:\don\github\astronomy\demo\c;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\..\..\demo\c;C:\don\github\astronomy\source\c;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
   </ItemDefinitionGroup>
@@ -83,7 +83,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>C:\don\github\astronomy\source\c;C:\don\github\astronomy\demo\c;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\..\..\c;C:\don\github\astronomy\source\c;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
   </ItemDefinitionGroup>
@@ -94,7 +94,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>C:\don\github\astronomy\source\c;C:\don\github\astronomy\demo\c;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\..\..\demo\c;C:\don\github\astronomy\source\c;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
@@ -109,7 +109,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>C:\don\github\astronomy\source\c;C:\don\github\astronomy\demo\c;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\..\..\demo\c;C:\don\github\astronomy\source\c;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
@@ -118,13 +118,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\demo\c\astro_demo_common.c" />
-    <ClCompile Include="..\..\..\demo\c\seasons.c" />
-    <ClCompile Include="..\..\..\source\c\astronomy.c" />
+    <ClCompile Include="..\..\..\..\demo\c\astro_demo_common.c" />
+    <ClCompile Include="..\..\..\..\demo\c\culminate.c" />
+    <ClCompile Include="..\..\..\..\source\c\astronomy.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\demo\c\astro_demo_common.h" />
-    <ClInclude Include="..\..\..\source\c\astronomy.h" />
+    <ClInclude Include="..\..\..\..\demo\c\astro_demo_common.h" />
+    <ClInclude Include="..\..\..\..\source\c\astronomy.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
