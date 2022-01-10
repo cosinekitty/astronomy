@@ -51,6 +51,8 @@ jobs:
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v2
+    - name: Add msbuild to path
+      uses: microsoft/setup-msbuild@v1.1
     - name: Init dotnet core
       uses: actions/setup-dotnet@v1
       with:

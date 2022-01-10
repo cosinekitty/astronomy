@@ -1,6 +1,14 @@
 @echo off
 setlocal EnableDelayedExpansion
-set msbuild=%ProgramFiles(x86)%\MSBuild\14.0\Bin\amd64\msbuild.exe
+
+for %%x in (msbuild.exe) do (set msbuild=%%~$PATH:x)
+if defined msbuild (
+    echo Found pre-defined msbuild = !msbuild!
+) else (
+    set msbuild=%ProgramFiles(x86)%\MSBuild\14.0\Bin\amd64\msbuild.exe
+    echo Defined msbuild = !msbuild!
+)
+
 if not exist "!msbuild!" (
     echo.ERROR: cannot find msbuild.exe
     exit /b 1
