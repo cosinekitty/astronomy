@@ -73,6 +73,7 @@ jobs:
       shell: cmd
       run: |
         cd generate
+        md disable_generate_c_docs
         del output\vsop*.txt output\*.eph output\jupiter_moons.txt
         run.bat
         verify_clean.bat
