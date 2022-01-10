@@ -2,7 +2,7 @@
 setlocal EnableDelayedExpansion
 
 for %%x in (msbuild.exe) do (set msbuild=%%~$PATH:x)
-if not defined msbuild set msbuild=%ProgramFiles(x86)%\MSBuild\14.0\Bin\amd64\msbuild.exe
+if not defined msbuild set msbuild=c:\Program Files (x86)\Microsoft Visual Studio\2019\Professional\MSBuild\Current\Bin\MSBuild.exe
 if not exist "!msbuild!" (
     echo.ERROR: cannot find msbuild.exe
     exit /b 1

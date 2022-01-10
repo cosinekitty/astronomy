@@ -15,87 +15,87 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\astro_vector.c">
+    <ClCompile Include="..\..\astro_vector.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\chebyshev.c">
+    <ClCompile Include="..\..\chebyshev.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\codegen.c">
+    <ClCompile Include="..\..\codegen.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\earth.c">
+    <ClCompile Include="..\..\earth.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ephfile.c">
+    <ClCompile Include="..\..\ephfile.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\generate.c">
+    <ClCompile Include="..\..\generate.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\novas\eph_manager.c">
+    <ClCompile Include="..\..\novas\eph_manager.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\novas\novas.c">
+    <ClCompile Include="..\..\novas\novas.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\novas\novascon.c">
+    <ClCompile Include="..\..\novas\novascon.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\novas\nutation.c">
+    <ClCompile Include="..\..\novas\nutation.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\novas\solsys1.c">
+    <ClCompile Include="..\..\novas\readeph0.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\vsop\vsop.c">
+    <ClCompile Include="..\..\novas\solsys1.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\novas\readeph0.c">
+    <ClCompile Include="..\..\top2013\top2013.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\top2013\top2013.c">
+    <ClCompile Include="..\..\vsop\vsop.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\astro_vector.h">
+    <ClInclude Include="..\..\astro_vector.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\chebyshev.h">
+    <ClInclude Include="..\..\chebyshev.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\codegen.h">
+    <ClInclude Include="..\..\codegen.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\earth.h">
+    <ClInclude Include="..\..\earth.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\ephfile.h">
+    <ClInclude Include="..\..\ephfile.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\novas_body.h">
+    <ClInclude Include="..\..\novas\eph_manager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\vsop\vsop.h">
+    <ClInclude Include="..\..\novas\novas.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\novas\eph_manager.h">
+    <ClInclude Include="..\..\novas\novascon.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\novas\novas.h">
+    <ClInclude Include="..\..\novas\nutation.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\novas\novascon.h">
+    <ClInclude Include="..\..\novas\solarsystem.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\novas\nutation.h">
+    <ClInclude Include="..\..\novas_body.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\novas\solarsystem.h">
+    <ClInclude Include="..\..\top2013\top2013.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\top2013\top2013.h">
+    <ClInclude Include="..\..\vsop\vsop.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
