@@ -23,9 +23,14 @@ if not exist "!GENEXE!" (
 )
 
 if exist constellation\test_input.txt (del constellation\test_input.txt)
-make_constellation_data.py
+py make_constellation_data.py
 if errorlevel 1 (
     echo.Error creating constellation test data.
+    exit /b 1
+)
+
+if not exist constellation\test_input.txt (
+    echo.ERROR - file was not created: constellation\test_input.txt
     exit /b 1
 )
 
@@ -108,7 +113,7 @@ for %%f in (
 ) do (
     if exist %%f (del %%f)
 )
-norm.py
+py norm.py
 if errorlevel 1 (
     echo.Error normalizing eclipse test data.
     exit /b 1
@@ -193,7 +198,7 @@ for %%f in (temp\c_longitude_*.txt) do (
 REM -----------------------------------------------------------------------------------------
 
 echo.Running Python tests.
-test.py all
+py test.py all
 if errorlevel 1 (exit /b 1)
 
 for %%f in (temp\py_longitude_*.txt) do (
@@ -202,7 +207,7 @@ for %%f in (temp\py_longitude_*.txt) do (
 )
 
 echo.Generating Python test output.
-test.py astro_check > temp\py_check.txt
+py test.py astro_check > temp\py_check.txt
 if errorlevel 1 (exit /b 1)
 
 echo.Verifying Python test output.
