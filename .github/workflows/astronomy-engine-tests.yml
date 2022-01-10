@@ -83,5 +83,5 @@ jobs:
       run: |
         cd generate
         del output\vsop*.txt output\*.eph output\jupiter_moons.txt
-        run.bat
-        verify_clean.bat
+        call run.bat
+        call verify_clean.bat
