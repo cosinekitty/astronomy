@@ -65,6 +65,15 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install pylint
+    - name: Install documentation tools
+      shell: cmd
+      run: |
+        md bin
+        cd bin
+        curl -o doxygen.zip https://www.doxygen.nl/files/doxygen-1.9.3.windows.x64.bin.zip
+        7z x doxygen.zip
+        del doxygen.zip
+        cd ..
     - name: Init Node.js 14.x
       uses: actions/setup-node@v2
       with:
@@ -73,7 +82,6 @@ jobs:
       shell: cmd
       run: |
         cd generate
-        md disable_generate_c_docs
         del output\vsop*.txt output\*.eph output\jupiter_moons.txt
         run.bat
         verify_clean.bat

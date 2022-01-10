@@ -149,7 +149,11 @@ if exist disable_generate_c_docs (
             rd /s/q %%d
         )
     )
-    doxygen Doxyfile > doxygen.log
+    if exist ..\..\bin\doxygen.exe (
+        ..\..\bin\doxygen Doxyfile > doxygen.log
+    ) else (
+        doxygen Doxyfile > doxygen.log
+    )
     if errorlevel 1 (
         echo.Error in doxygen
         exit /b 1
