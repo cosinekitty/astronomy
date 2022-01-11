@@ -1,1 +1,3 @@
 *.pyc
+astronomy_engine.egg-info/
+dist/
