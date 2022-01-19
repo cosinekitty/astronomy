@@ -1,13 +1,13 @@
 @echo off
 setlocal EnableDelayedExpansion
 
-call :Download https://github.com/cosinekitty/ephemeris/raw/master/lnxp1600p2200.405 lnxp1600p2200.405 ephemeris.md5
+call :Download https://github.com/cosinekitty/ephemeris/raw/master/lnxp1600p2200.405 lnxp1600p2200.405 ephemeris.sha256
 if errorlevel 1 (exit /b 1)
 
-call :Download https://github.com/cosinekitty/ephemeris/raw/master/top2013/TOP2013.dat TOP2013.dat top2013.md5
+call :Download https://github.com/cosinekitty/ephemeris/raw/master/top2013/TOP2013.dat TOP2013.dat top2013.sha256
 if errorlevel 1 (exit /b 1)
 
-call :Download https://raw.githubusercontent.com/astronexus/HYG-Database/master/hygdata_v3.csv hygdata_v3.csv hygdata_v3.md5
+call :Download https://raw.githubusercontent.com/astronexus/HYG-Database/master/hygdata_v3.csv hygdata_v3.csv hygdata_v3.sha256
 if errorlevel 1 (exit /b 1)
 
 set FASTMODE=true
@@ -239,10 +239,9 @@ REM     A special download process helps keep the repo size reasonable.
     setlocal
     for %%x in (wget.exe) do (set wgetexe=%%~$PATH:x)
     for %%x in (curl.exe) do (set curlexe=%%~$PATH:x)
-    for %%x in (md5sum.exe) do (set md5exe=%%~$PATH:x)
     set EPHURL=%1
     set EPHFILE=%2
-    set MD5FILE=%3
+    set SHAFILE=%3
     if not exist !EPHFILE! (
         echo.
         echo.Local file not found: !EPHFILE!
@@ -273,14 +272,15 @@ REM     A special download process helps keep the repo size reasonable.
     )
 
     :verify_eph
-    if defined md5exe (
-        echo.Using !md5exe! to test integrity of downloaded !EPHFILE!
-        "!md5exe!" -c !MD5FILE!
-        if errorlevel 1 (
-            echo.Corrupt ephemeris file !EPHFILE! detected.
-            if exist !EPHFILE! (del !EPHFILE!)
-            exit /b 1
-        )
+    echo.Using checksum.bat to test integrity of downloaded !EPHFILE!
+    call checksum.bat sha256 !SHAFILE!
+    if errorlevel 2 (
+        echo.Error verifying checksum for !EPHFILE!.
+        exit /b 1
+    ) else if errorlevel 1 (
+        echo.Corrupt ephemeris file !EPHFILE! detected.
+        if exist !EPHFILE! (del !EPHFILE!)
+        exit /b 1
     )
     exit /b 0
 
