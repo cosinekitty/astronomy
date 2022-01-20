@@ -17,13 +17,11 @@ and use the [source code that has already been generated for that language](../s
 The following tools are required for developers:
 - gcc
 - Node.js
-- npm
+- npm (needed to install other tools like TypeScript, jsdoc2md, ...)
 - Python 3.7+
 - Microsoft .NET 6.0 SDK
-- jsdoc2md
 - doxygen
 - xsltproc
-- graphviz
 - coreutils
 
 Change into the directory `hydrogen` and execute:  `npm init`.
@@ -44,14 +42,24 @@ Change into the `generate` directory (this directory) and run the bash script
 The following tools are required for developers:
 - Microsoft .NET 6.0 SDK
 - Node.js
-- npm
+- npm (needed to install other tools like TypeScript, jsdoc2md, ...)
 - Python 3.7+
-- jsdoc2md
 - doxygen
 - xsltproc  (Follow instructions at https://www.zlatkovic.com/libxml.en.html)
-- graphviz
 
-Change into the directory `hydrogen` and execute:  `npm init`.
+    Hint for 64-bit Windows: You will need to download the following archives from [here](https://www.zlatkovic.com/pub/libxml/64bit/): 
+    - iconv-1.14-win32-x86_64.7z
+    - libtool-2.4.6-win32-x86_64.7z
+    - libxml2-2.9.3-win32-x86_64.7z
+    - libxslt-1.1.28-win32-x86_64.7z
+    - mingwrt-5.2.0-win32-x86_64.7z
+    
+    Use [7-Zip](https://www.7-zip.org/) to expand these archives into a newly-created
+    empty directory. Just unzip them all to the same place. Verify that the `bin`
+    directory beneath your new directory contains `xsltproc.exe` and a bunch of DLLs.
+    Either copy the contents of `bin` to somewhere in your `PATH`, or add this `bin`
+    directory to your `PATH`. Verify that you can run `xsltproc.exe` from the command
+    prompt without any popups about missing DLLs.
 
 ## Build process
 
