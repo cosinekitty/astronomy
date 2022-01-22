@@ -334,7 +334,7 @@ int PlanetImage(
     astro_time_t depart = Astronomy_AddDays(time, -light_travel_time);
 
     // Calculate the orientation of the planet's rotation axis.
-    astro_axis_t axis = Astronomy_RotationAxis(body, depart);
+    astro_axis_t axis = Astronomy_RotationAxis(body, &depart);
     if (axis.status != ASTRO_SUCCESS)
     {
         fprintf(stderr, "Error %d calculating planet's rotation axis.\n", axis.status);

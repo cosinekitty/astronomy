@@ -99,7 +99,7 @@ static int DirectionVector(
     }
 
     /* Find the rotation matrix that converts horizontal vectors to equatorial vectors. */
-    rot = Astronomy_Rotation_HOR_EQD(time, observer);
+    rot = Astronomy_Rotation_HOR_EQD(&time, observer);
     if (rot.status != ASTRO_SUCCESS)
     {
         fprintf(stderr, "ERROR: Astronomy_Rotation_HOR_EQD returned %d\n", rot.status);
@@ -153,7 +153,7 @@ static int Intersect(
     miss = AddScale(1.0, a, -1.0, b);   /*  miss = a-b          */
 
     dist = (KM_PER_AU * 1000.0 / 2.0) * Astronomy_VectorLength(miss);   /* error radius in meters */
-    obs = Astronomy_VectorObserver(c, EQUATOR_OF_DATE);
+    obs = Astronomy_VectorObserver(&c, EQUATOR_OF_DATE);
 
     printf("Solution: lat = %0.6lf, lon = %0.6lf, elv = %0.3lf meters; error = %0.3lf meters\n",
         obs.latitude, obs.longitude, obs.height, dist);

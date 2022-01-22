@@ -2752,7 +2752,7 @@ static int Test_EQJ_EQD(astro_body_t body)
     CHECK_STATUS(v2000);
 
     /* Find rotation matrix. */
-    r = Astronomy_Rotation_EQJ_EQD(time);
+    r = Astronomy_Rotation_EQJ_EQD(&time);
     CHECK_ROTMAT(r);
 
     /* Rotate EQJ vector to EQD vector. */
@@ -2772,7 +2772,7 @@ static int Test_EQJ_EQD(astro_body_t body)
         FAIL("C Test_EQJ_EQD: EXCESSIVE ERROR\n");
 
     /* Perform the inverse conversion back to equatorial J2000 coordinates. */
-    r = Astronomy_Rotation_EQD_EQJ(time);
+    r = Astronomy_Rotation_EQD_EQJ(&time);
     CHECK_ROTMAT(r);
     t2000 = Astronomy_RotateVector(r, vdate);
     CHECK_STATUS(t2000);
@@ -2809,7 +2809,7 @@ static int Test_EQD_HOR(astro_body_t body)
     CHECK_VECTOR(vec_eqd, eqd.vec);
 
     /* Calculate rotation matrix to convert equatorial J2000 vector to horizontal vector. */
-    rot = Astronomy_Rotation_EQD_HOR(time, observer);
+    rot = Astronomy_Rotation_EQD_HOR(&time, observer);
     CHECK_ROTMAT(rot);
 
     /* Rotate the equator of date vector to a horizontal vector. */
@@ -2836,7 +2836,7 @@ static int Test_EQD_HOR(astro_body_t body)
         FAIL("C Test_EQD_HOR: EXCESSIVE ERROR IN HORIZONTAL RECOVERY.\n");
 
     /* Verify the inverse translation from horizontal vector to equatorial of-date vector. */
-    rot = Astronomy_Rotation_HOR_EQD(time, observer);
+    rot = Astronomy_Rotation_HOR_EQD(&time, observer);
     CHECK_ROTMAT(rot);
     CHECK_VECTOR(check_eqd, Astronomy_RotateVector(rot, vec_hor));
     CHECK(VectorDiff(check_eqd, vec_eqd, &diff));
@@ -2848,7 +2848,7 @@ static int Test_EQD_HOR(astro_body_t body)
     CHECK_EQU(eqj, Astronomy_Equator(body, &time, observer, EQUATOR_J2000, ABERRATION));
     CHECK_VECTOR(vec_eqj, eqj.vec);
 
-    rot = Astronomy_Rotation_HOR_EQJ(time, observer);
+    rot = Astronomy_Rotation_HOR_EQJ(&time, observer);
     CHECK_ROTMAT(rot);
     CHECK_VECTOR(check_eqj, Astronomy_RotateVector(rot, vec_hor));
     CHECK(VectorDiff(check_eqj, vec_eqj, &diff));
@@ -2857,7 +2857,7 @@ static int Test_EQD_HOR(astro_body_t body)
         FAIL("C Test_EQD_HOR: EXCESSIVE J2000 INVERSE HORIZONTAL ERROR.\n");
 
     /* Verify the inverse translation: EQJ to HOR. */
-    rot = Astronomy_Rotation_EQJ_HOR(time, observer);
+    rot = Astronomy_Rotation_EQJ_HOR(&time, observer);
     CHECK_ROTMAT(rot);
     CHECK_VECTOR(check_hor, Astronomy_RotateVector(rot, vec_eqj));
     CHECK(VectorDiff(check_hor, vec_hor, &diff));
@@ -2933,8 +2933,8 @@ static int Test_RotRoundTrip(void)
     */
 
     /* Round trip #1: EQJ <==> EQD. */
-    eqj_eqd = Astronomy_Rotation_EQJ_EQD(time);
-    eqd_eqj = Astronomy_Rotation_EQD_EQJ(time);
+    eqj_eqd = Astronomy_Rotation_EQJ_EQD(&time);
+    eqd_eqj = Astronomy_Rotation_EQD_EQJ(&time);
     CHECK_INVERSE(eqj_eqd, eqd_eqj);
 
     /* Round trip #2: EQJ <==> ECL. */
@@ -2943,23 +2943,23 @@ static int Test_RotRoundTrip(void)
     CHECK_INVERSE(eqj_ecl, ecl_eqj);
 
     /* Round trip #3: EQJ <==> HOR. */
-    eqj_hor = Astronomy_Rotation_EQJ_HOR(time, observer);
-    hor_eqj = Astronomy_Rotation_HOR_EQJ(time, observer);
+    eqj_hor = Astronomy_Rotation_EQJ_HOR(&time, observer);
+    hor_eqj = Astronomy_Rotation_HOR_EQJ(&time, observer);
     CHECK_INVERSE(eqj_hor, hor_eqj);
 
     /* Round trip #4: EQD <==> HOR. */
-    eqd_hor = Astronomy_Rotation_EQD_HOR(time, observer);
-    hor_eqd = Astronomy_Rotation_HOR_EQD(time, observer);
+    eqd_hor = Astronomy_Rotation_EQD_HOR(&time, observer);
+    hor_eqd = Astronomy_Rotation_HOR_EQD(&time, observer);
     CHECK_INVERSE(eqd_hor, hor_eqd);
 
     /* Round trip #5: EQD <==> ECL. */
-    eqd_ecl = Astronomy_Rotation_EQD_ECL(time);
-    ecl_eqd = Astronomy_Rotation_ECL_EQD(time);
+    eqd_ecl = Astronomy_Rotation_EQD_ECL(&time);
+    ecl_eqd = Astronomy_Rotation_ECL_EQD(&time);
     CHECK_INVERSE(eqd_ecl, ecl_eqd);
 
     /* Round trip #6: HOR <==> ECL. */
-    hor_ecl = Astronomy_Rotation_HOR_ECL(time, observer);
-    ecl_hor = Astronomy_Rotation_ECL_HOR(time, observer);
+    hor_ecl = Astronomy_Rotation_HOR_ECL(&time, observer);
+    ecl_hor = Astronomy_Rotation_ECL_HOR(&time, observer);
     CHECK_INVERSE(hor_ecl, ecl_hor);
 
     /*
@@ -4007,7 +4007,7 @@ static int GeoidTestCase(astro_time_t time, astro_observer_t observer, astro_equ
     if (equdate == EQUATOR_OF_DATE)
     {
         /* Astronomy_GeoMoon() returns J2000 coordinates. Convert to equator-of-date coordinates. */
-        astro_rotation_t rot = Astronomy_Rotation_EQJ_EQD(time);
+        astro_rotation_t rot = Astronomy_Rotation_EQJ_EQD(&time);
         CHECK_STATUS(rot);
         geo_moon = Astronomy_RotateVector(rot, geo_moon);
     }
@@ -4032,7 +4032,7 @@ static int GeoidTestCase(astro_time_t time, astro_observer_t observer, astro_equ
         FAIL("C GeoidTestCase: EXCESSIVE POSITION ERROR.\n");
 
     /* Verify that we can convert the surface vector back to an observer. */
-    vobs = Astronomy_VectorObserver(surface, equdate);
+    vobs = Astronomy_VectorObserver(&surface, equdate);
     lat_diff = ABS(vobs.latitude - observer.latitude);
 
     /* Longitude is meaningless at the poles, so don't bother checking it there. */
@@ -4377,7 +4377,7 @@ static int AberrationTest(void)
             eqj_vec.z += eqj_earth.vz;
 
             /* Calculate the rotation matrix that converts J2000 coordinates to of-date coordinates. */
-            rot = Astronomy_Rotation_EQJ_EQD(time);
+            rot = Astronomy_Rotation_EQJ_EQD(&time);
             CHECK_STATUS(rot);
 
             /* Use the rotation matrix to re-orient the EQJ vector to a EQD vector. */
@@ -5027,7 +5027,7 @@ static int AxisTestBody(astro_body_t body, const char *filename, double arcmin_t
                 FAIL("C AxisTestBody(%s line %d): could not scan data.\n", filename, lnum);
 
             time = Astronomy_TimeFromDays(jd - 2451545.0);
-            axis = Astronomy_RotationAxis(body, time);
+            axis = Astronomy_RotationAxis(body, &time);
             if (axis.status != ASTRO_SUCCESS)
                 FAIL("C AxisTestBody(%s line %d): Astronomy_Axis returned error %d\n", filename, lnum, axis.status);
 

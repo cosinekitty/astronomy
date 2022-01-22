@@ -36,7 +36,7 @@ int GalaticToHorizontal(
     /*
         Adjust the rotation matrix to convert galatic to horizontal (HOR).
     */
-    adjust_rot = Astronomy_Rotation_EQJ_HOR(time, observer);
+    adjust_rot = Astronomy_Rotation_EQJ_HOR(&time, observer);
     rot = Astronomy_CombineRotation(rot, adjust_rot);
 
     /*

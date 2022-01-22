@@ -66,7 +66,7 @@ static int CameraImage(astro_observer_t observer, astro_time_t time)
     printf("Moon horizontal position: azimuth = %0.3lf, altitude = %0.3lf\n", moon_hor.azimuth, moon_hor.altitude);
 
     /* Get the rotation matrix that converts equatorial to horizontal coordintes for this place and time. */
-    rot = Astronomy_Rotation_EQD_HOR(time, observer);
+    rot = Astronomy_Rotation_EQD_HOR(&time, observer);
 
     /*
         Modify the rotation matrix in two steps:

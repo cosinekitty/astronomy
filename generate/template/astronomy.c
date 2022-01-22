@@ -3558,7 +3558,9 @@ astro_state_vector_t Astronomy_ObserverState(
  *      The geocentric equatorial position vector for which to find geographic coordinates.
  *      The components are expressed in Astronomical Units (AU).
  *      You can calculate AU by dividing kilometers by the constant #KM_PER_AU.
- *      The time `vector.t` determines the Earth's rotation.
+ *      The time `vector.t` determines the Earth's rotation. The caller must set `vector.t` to a valid time.
+ *      The vector is passed by reference (using a pointer) so that nutation calculations
+ *      can be cached inside `vector.t` as an optimization.
  *
  * @param equdate
  *      Selects the date of the Earth's equator in which `vector` is expressed.
@@ -3573,21 +3575,21 @@ astro_state_vector_t Astronomy_ObserverState(
  *      that corresponds to the given equatorial vector.
  */
 astro_observer_t Astronomy_VectorObserver(
-    astro_vector_t vector,
+    astro_vector_t *vector,
     astro_equator_date_t equdate)
 {
     double gast;
     double pos1[3];
     double pos2[3];
 
-    gast = sidereal_time(&vector.t);
-    pos1[0] = vector.x;
-    pos1[1] = vector.y;
-    pos1[2] = vector.z;
+    gast = sidereal_time(&vector->t);
+    pos1[0] = vector->x;
+    pos1[1] = vector->y;
+    pos1[2] = vector->z;
     if (equdate == EQUATOR_J2000)
     {
-        precession(pos1, vector.t, FROM_2000, pos2);
-        nutation(pos2, &vector.t, FROM_2000, pos1);
+        precession(pos1, vector->t, FROM_2000, pos2);
+        nutation(pos2, &vector->t, FROM_2000, pos1);
     }
     return inverse_terra(pos1, gast);
 }
@@ -7020,12 +7022,12 @@ astro_rotation_t Astronomy_Rotation_ECL_EQJ(void)
  * @return
  *      A rotation matrix that converts EQJ to EQD at `time`.
  */
-astro_rotation_t Astronomy_Rotation_EQJ_EQD(astro_time_t time)
+astro_rotation_t Astronomy_Rotation_EQJ_EQD(astro_time_t *time)
 {
     astro_rotation_t prec, nut;
 
-    prec = precession_rot(time, FROM_2000);
-    nut = nutation_rot(&time, FROM_2000);
+    prec = precession_rot(*time, FROM_2000);
+    nut = nutation_rot(time, FROM_2000);
     return Astronomy_CombineRotation(prec, nut);
 }
 
@@ -7044,12 +7046,12 @@ astro_rotation_t Astronomy_Rotation_EQJ_EQD(astro_time_t time)
  * @return
  *      A rotation matrix that converts EQD at `time` to EQJ.
  */
-astro_rotation_t Astronomy_Rotation_EQD_EQJ(astro_time_t time)
+astro_rotation_t Astronomy_Rotation_EQD_EQJ(astro_time_t *time)
 {
     astro_rotation_t prec, nut;
 
-    nut = nutation_rot(&time, INTO_2000);
-    prec = precession_rot(time, INTO_2000);
+    nut = nutation_rot(time, INTO_2000);
+    prec = precession_rot(*time, INTO_2000);
     return Astronomy_CombineRotation(nut, prec);
 }
 
@@ -7076,7 +7078,7 @@ astro_rotation_t Astronomy_Rotation_EQD_EQJ(astro_time_t time)
  *      These components are chosen so that the "right-hand rule" works for the vector
  *      and so that north represents the direction where azimuth = 0.
  */
-astro_rotation_t Astronomy_Rotation_EQD_HOR(astro_time_t time, astro_observer_t observer)
+astro_rotation_t Astronomy_Rotation_EQD_HOR(astro_time_t *time, astro_observer_t observer)
 {
     astro_rotation_t rot;
     double uze[3], une[3], uwe[3];
@@ -7100,7 +7102,7 @@ astro_rotation_t Astronomy_Rotation_EQD_HOR(astro_time_t time, astro_observer_t 
     uwe[1] = -coslon;
     uwe[2] = 0.0;
 
-    spin_angle = -15.0 * sidereal_time(&time);
+    spin_angle = -15.0 * sidereal_time(time);
     spin(spin_angle, uze, uz);
     spin(spin_angle, une, un);
     spin(spin_angle, uwe, uw);
@@ -7132,7 +7134,7 @@ astro_rotation_t Astronomy_Rotation_EQD_HOR(astro_time_t time, astro_observer_t 
  * @return
  *      A rotation matrix that converts HOR to EQD at `time` and for `observer`.
  */
-astro_rotation_t Astronomy_Rotation_HOR_EQD(astro_time_t time, astro_observer_t observer)
+astro_rotation_t Astronomy_Rotation_HOR_EQD(astro_time_t *time, astro_observer_t observer)
 {
     astro_rotation_t rot = Astronomy_Rotation_EQD_HOR(time, observer);
     return Astronomy_InverseRotation(rot);
@@ -7157,7 +7159,7 @@ astro_rotation_t Astronomy_Rotation_HOR_EQD(astro_time_t time, astro_observer_t 
  * @return
  *      A rotation matrix that converts HOR to EQD at `time` and for `observer`.
  */
-astro_rotation_t Astronomy_Rotation_HOR_EQJ(astro_time_t time, astro_observer_t observer)
+astro_rotation_t Astronomy_Rotation_HOR_EQJ(astro_time_t *time, astro_observer_t observer)
 {
     astro_rotation_t hor_eqd, eqd_eqj;
 
@@ -7189,7 +7191,7 @@ astro_rotation_t Astronomy_Rotation_HOR_EQJ(astro_time_t time, astro_observer_t 
  *      These components are chosen so that the "right-hand rule" works for the vector
  *      and so that north represents the direction where azimuth = 0.
  */
-astro_rotation_t Astronomy_Rotation_EQJ_HOR(astro_time_t time, astro_observer_t observer)
+astro_rotation_t Astronomy_Rotation_EQJ_HOR(astro_time_t *time, astro_observer_t observer)
 {
     astro_rotation_t rot = Astronomy_Rotation_HOR_EQJ(time, observer);
     return Astronomy_InverseRotation(rot);
@@ -7211,7 +7213,7 @@ astro_rotation_t Astronomy_Rotation_EQJ_HOR(astro_time_t time, astro_observer_t 
  * @return
  *      A rotation matrix that converts EQD to ECL.
  */
-astro_rotation_t Astronomy_Rotation_EQD_ECL(astro_time_t time)
+astro_rotation_t Astronomy_Rotation_EQD_ECL(astro_time_t *time)
 {
     astro_rotation_t eqd_eqj;
     astro_rotation_t eqj_ecl;
@@ -7237,7 +7239,7 @@ astro_rotation_t Astronomy_Rotation_EQD_ECL(astro_time_t time)
  * @return
  *      A rotation matrix that converts ECL to EQD.
  */
-astro_rotation_t Astronomy_Rotation_ECL_EQD(astro_time_t time)
+astro_rotation_t Astronomy_Rotation_ECL_EQD(astro_time_t *time)
 {
     astro_rotation_t rot = Astronomy_Rotation_EQD_ECL(time);
     return Astronomy_InverseRotation(rot);
@@ -7265,7 +7267,7 @@ astro_rotation_t Astronomy_Rotation_ECL_EQD(astro_time_t time)
  *      These components are chosen so that the "right-hand rule" works for the vector
  *      and so that north represents the direction where azimuth = 0.
  */
-astro_rotation_t Astronomy_Rotation_ECL_HOR(astro_time_t time, astro_observer_t observer)
+astro_rotation_t Astronomy_Rotation_ECL_HOR(astro_time_t *time, astro_observer_t observer)
 {
     astro_rotation_t ecl_eqd = Astronomy_Rotation_ECL_EQD(time);
     astro_rotation_t eqd_hor = Astronomy_Rotation_EQD_HOR(time, observer);
@@ -7290,7 +7292,7 @@ astro_rotation_t Astronomy_Rotation_ECL_HOR(astro_time_t time, astro_observer_t 
  * @return
  *      A rotation matrix that converts HOR to ECL.
  */
-astro_rotation_t Astronomy_Rotation_HOR_ECL(astro_time_t time, astro_observer_t observer)
+astro_rotation_t Astronomy_Rotation_HOR_ECL(astro_time_t *time, astro_observer_t observer)
 {
     astro_rotation_t rot = Astronomy_Rotation_ECL_HOR(time, observer);
     return Astronomy_InverseRotation(rot);
@@ -7450,7 +7452,7 @@ astro_constellation_t Astronomy_Constellation(double ra, double dec)
             or 1874-12-31T18:12:21.950Z.
         */
         astro_time_t time = Astronomy_TimeFromDays(-45655.74141261017);
-        rot = Astronomy_Rotation_EQJ_EQD(time);
+        rot = Astronomy_Rotation_EQJ_EQD(&time);
         if (rot.status != ASTRO_SUCCESS)
             return ConstelErr(rot.status);
 
@@ -7965,7 +7967,7 @@ static astro_global_solar_eclipse_t GeoidIntersect(shadow_t shadow)
         coordinates that are perfectly aligned with the Earth's equator at this
         moment in time.
     */
-    rot = Astronomy_Rotation_EQJ_EQD(shadow.time);
+    rot = Astronomy_Rotation_EQJ_EQD(&shadow.time);
     if (rot.status != ASTRO_SUCCESS)
         return GlobalSolarEclipseError(rot.status);
 
@@ -8706,7 +8708,7 @@ void Astronomy_Reset(void)
 }
 
 
-static astro_axis_t EarthRotationAxis(astro_time_t time)
+static astro_axis_t EarthRotationAxis(astro_time_t *time)
 {
     astro_axis_t axis;
     double pos1[3];
@@ -8725,12 +8727,12 @@ static astro_axis_t EarthRotationAxis(astro_time_t time)
     pos1[2] = 1.0;
 
     /* Convert the vector into J2000 coordinates. */
-    nutation(pos1, &time, INTO_2000, pos2);
-    precession(pos2, time, INTO_2000, pos1);
+    nutation(pos1, time, INTO_2000, pos2);
+    precession(pos2, *time, INTO_2000, pos1);
     axis.north.x = pos1[0];
     axis.north.y = pos1[1];
     axis.north.z = pos1[2];
-    axis.north.t = time;
+    axis.north.t = *time;
     axis.north.status = ASTRO_SUCCESS;
 
     /* Derive angular values: right ascension and declination. */
@@ -8742,7 +8744,7 @@ static astro_axis_t EarthRotationAxis(astro_time_t time)
 
     /* Use a modified version of the era() function that does not trim to 0..360 degrees. */
     /* This expression is also corrected to give the correct angle at the J2000 epoch. */
-    axis.spin = 190.41375788700253 + (360.9856122880876 * time.ut);
+    axis.spin = 190.41375788700253 + (360.9856122880876 * time->ut);
 
     axis.status = ASTRO_SUCCESS;
 
@@ -8774,14 +8776,14 @@ static astro_axis_t EarthRotationAxis(astro_time_t time)
  *
  * @return astro_axis_t
  */
-astro_axis_t Astronomy_RotationAxis(astro_body_t body, astro_time_t time)
+astro_axis_t Astronomy_RotationAxis(astro_body_t body, astro_time_t *time)
 {
     astro_axis_t axis;
     double ra, dec, w;
     double radlat, radlon, rcoslat;
     double Ja, Jb, Jc, Jd, Je, N;
     double E1, E2, E3, E4, E5, E6, E7, E8, E9, E10, E11, E12, E13;
-    const double d = time.tt;
+    const double d = time->tt;
     const double T = d / 36525.0;
 
     switch (body)
@@ -8973,7 +8975,7 @@ astro_axis_t Astronomy_RotationAxis(astro_body_t body, astro_time_t time)
     axis.north.x = rcoslat * cos(radlon);
     axis.north.y = rcoslat * sin(radlon);
     axis.north.z = sin(radlat);
-    axis.north.t = time;
+    axis.north.t = *time;
     axis.north.status = ASTRO_SUCCESS;
 
     axis.status = ASTRO_SUCCESS;

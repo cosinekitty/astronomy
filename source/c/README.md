@@ -1538,7 +1538,7 @@ See [`astro_axis_t`](#astro_axis_t) for more detailed information.
 | Type | Parameter | Description |
 | --- | --- | --- |
 | [`astro_body_t`](#astro_body_t) | `body` |  The body whose rotation axis is to be found. The supported bodies are: `BODY_SUN`, `BODY_MOON`, `BODY_MERCURY`, `BODY_VENUS`, `BODY_EARTH`, `BODY_MARS`, `BODY_JUPITER`, `BODY_SATURN`, `BODY_URANUS`, `BODY_NEPTUNE`, `BODY_PLUTO`. | 
-| [`astro_time_t`](#astro_time_t) | `time` |  The time for which the body's rotation axis is to be found. | 
+| <code><a href="#astro_time_t">astro_time_t</a> *</code> | `time` |  The time for which the body's rotation axis is to be found. | 
 
 
 
@@ -1562,7 +1562,7 @@ This is one of the family of functions that returns a rotation matrix for conver
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| [`astro_time_t`](#astro_time_t) | `time` |  The date and time of the desired equator. | 
+| <code><a href="#astro_time_t">astro_time_t</a> *</code> | `time` |  The date and time of the desired equator. | 
 
 
 
@@ -1603,7 +1603,7 @@ This is one of the family of functions that returns a rotation matrix for conver
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| [`astro_time_t`](#astro_time_t) | `time` |  The date and time of the desired horizontal orientation. | 
+| <code><a href="#astro_time_t">astro_time_t</a> *</code> | `time` |  The date and time of the desired horizontal orientation. | 
 | [`astro_observer_t`](#astro_observer_t) | `observer` |  A location near the Earth's mean sea level that defines the observer's horizon. | 
 
 
@@ -1628,7 +1628,7 @@ This is one of the family of functions that returns a rotation matrix for conver
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| [`astro_time_t`](#astro_time_t) | `time` |  The date and time of the source equator. | 
+| <code><a href="#astro_time_t">astro_time_t</a> *</code> | `time` |  The date and time of the source equator. | 
 
 
 
@@ -1652,7 +1652,7 @@ This is one of the family of functions that returns a rotation matrix for conver
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| [`astro_time_t`](#astro_time_t) | `time` |  The date and time at which the Earth's equator defines the source orientation. | 
+| <code><a href="#astro_time_t">astro_time_t</a> *</code> | `time` |  The date and time at which the Earth's equator defines the source orientation. | 
 
 
 
@@ -1676,7 +1676,7 @@ This is one of the family of functions that returns a rotation matrix for conver
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| [`astro_time_t`](#astro_time_t) | `time` |  The date and time at which the Earth's equator applies. | 
+| <code><a href="#astro_time_t">astro_time_t</a> *</code> | `time` |  The date and time at which the Earth's equator applies. | 
 | [`astro_observer_t`](#astro_observer_t) | `observer` |  A location near the Earth's mean sea level that defines the observer's horizon. | 
 
 
@@ -1718,7 +1718,7 @@ This is one of the family of functions that returns a rotation matrix for conver
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| [`astro_time_t`](#astro_time_t) | `time` |  The date and time at which the Earth's equator defines the target orientation. | 
+| <code><a href="#astro_time_t">astro_time_t</a> *</code> | `time` |  The date and time at which the Earth's equator defines the target orientation. | 
 
 
 
@@ -1759,7 +1759,7 @@ This is one of the family of functions that returns a rotation matrix for conver
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| [`astro_time_t`](#astro_time_t) | `time` |  The date and time of the desired horizontal orientation. | 
+| <code><a href="#astro_time_t">astro_time_t</a> *</code> | `time` |  The date and time of the desired horizontal orientation. | 
 | [`astro_observer_t`](#astro_observer_t) | `observer` |  A location near the Earth's mean sea level that defines the observer's horizon. | 
 
 
@@ -1801,7 +1801,7 @@ This is one of the family of functions that returns a rotation matrix for conver
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| [`astro_time_t`](#astro_time_t) | `time` |  The date and time of the horizontal observation. | 
+| <code><a href="#astro_time_t">astro_time_t</a> *</code> | `time` |  The date and time of the horizontal observation. | 
 | [`astro_observer_t`](#astro_observer_t) | `observer` |  The location of the horizontal observer. | 
 
 
@@ -1826,7 +1826,7 @@ This is one of the family of functions that returns a rotation matrix for conver
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| [`astro_time_t`](#astro_time_t) | `time` |  The date and time at which the Earth's equator applies. | 
+| <code><a href="#astro_time_t">astro_time_t</a> *</code> | `time` |  The date and time at which the Earth's equator applies. | 
 | [`astro_observer_t`](#astro_observer_t) | `observer` |  A location near the Earth's mean sea level that defines the observer's horizon. | 
 
 
@@ -1851,7 +1851,7 @@ This is one of the family of functions that returns a rotation matrix for conver
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| [`astro_time_t`](#astro_time_t) | `time` |  The date and time of the observation. | 
+| <code><a href="#astro_time_t">astro_time_t</a> *</code> | `time` |  The date and time of the observation. | 
 | [`astro_observer_t`](#astro_observer_t) | `observer` |  A location near the Earth's mean sea level that defines the observer's horizon. | 
 
 
@@ -2621,7 +2621,7 @@ This is the inverse function of [`Astronomy_ObserverVector`](#Astronomy_Observer
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| [`astro_vector_t`](#astro_vector_t) | `vector` |  The geocentric equatorial position vector for which to find geographic coordinates. The components are expressed in Astronomical Units (AU). You can calculate AU by dividing kilometers by the constant [`KM_PER_AU`](#KM_PER_AU). The time `vector.t` determines the Earth's rotation. | 
+| <code><a href="#astro_vector_t">astro_vector_t</a> *</code> | `vector` |  The geocentric equatorial position vector for which to find geographic coordinates. The components are expressed in Astronomical Units (AU). You can calculate AU by dividing kilometers by the constant [`KM_PER_AU`](#KM_PER_AU). The time `vector.t` determines the Earth's rotation. The caller must set `vector.t` to a valid time. The vector is passed by reference (using a pointer) so that nutation calculations can be cached inside `vector.t` as an optimization. | 
 | [`astro_equator_date_t`](#astro_equator_date_t) | `equdate` |  Selects the date of the Earth's equator in which `vector` is expressed. The caller may select `EQUATOR_J2000` to use the orientation of the Earth's equator at noon UTC on January 1, 2000, in which case this function corrects for precession and nutation of the Earth as it was at the moment specified by `vector.t`. Or the caller may select `EQUATOR_OF_DATE` to use the Earth's equator at `vector.t` as the orientation. | 
 
 

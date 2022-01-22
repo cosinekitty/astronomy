@@ -1142,7 +1142,7 @@ astro_state_vector_t Astronomy_ObserverState(
     astro_equator_date_t equdate
 );
 
-astro_observer_t Astronomy_VectorObserver(astro_vector_t vector, astro_equator_date_t equdate);
+astro_observer_t Astronomy_VectorObserver(astro_vector_t *vector, astro_equator_date_t equdate);
 
 double Astronomy_ObserverGravity(double latitude, double height);
 
@@ -1214,7 +1214,7 @@ astro_search_result_t Astronomy_SearchAltitude(
     double limitDays,
     double altitude);
 
-astro_axis_t Astronomy_RotationAxis(astro_body_t body, astro_time_t time);
+astro_axis_t Astronomy_RotationAxis(astro_body_t body, astro_time_t *time);
 
 astro_seasons_t Astronomy_Seasons(int year);
 astro_illum_t Astronomy_Illumination(astro_body_t body, astro_time_t time);
@@ -1236,18 +1236,18 @@ astro_spherical_t Astronomy_HorizonFromVector(astro_vector_t vector, astro_refra
 astro_vector_t Astronomy_RotateVector(astro_rotation_t rotation, astro_vector_t vector);
 astro_state_vector_t Astronomy_RotateState(astro_rotation_t rotation, astro_state_vector_t state);
 
-astro_rotation_t Astronomy_Rotation_EQD_EQJ(astro_time_t time);
-astro_rotation_t Astronomy_Rotation_EQD_ECL(astro_time_t time);
-astro_rotation_t Astronomy_Rotation_EQD_HOR(astro_time_t time, astro_observer_t observer);
-astro_rotation_t Astronomy_Rotation_EQJ_EQD(astro_time_t time);
+astro_rotation_t Astronomy_Rotation_EQD_EQJ(astro_time_t *time);
+astro_rotation_t Astronomy_Rotation_EQD_ECL(astro_time_t *time);
+astro_rotation_t Astronomy_Rotation_EQD_HOR(astro_time_t *time, astro_observer_t observer);
+astro_rotation_t Astronomy_Rotation_EQJ_EQD(astro_time_t *time);
 astro_rotation_t Astronomy_Rotation_EQJ_ECL(void);
-astro_rotation_t Astronomy_Rotation_EQJ_HOR(astro_time_t time, astro_observer_t observer);
-astro_rotation_t Astronomy_Rotation_ECL_EQD(astro_time_t time);
+astro_rotation_t Astronomy_Rotation_EQJ_HOR(astro_time_t *time, astro_observer_t observer);
+astro_rotation_t Astronomy_Rotation_ECL_EQD(astro_time_t *time);
 astro_rotation_t Astronomy_Rotation_ECL_EQJ(void);
-astro_rotation_t Astronomy_Rotation_ECL_HOR(astro_time_t time, astro_observer_t observer);
-astro_rotation_t Astronomy_Rotation_HOR_EQD(astro_time_t time, astro_observer_t observer);
-astro_rotation_t Astronomy_Rotation_HOR_EQJ(astro_time_t time, astro_observer_t observer);
-astro_rotation_t Astronomy_Rotation_HOR_ECL(astro_time_t time, astro_observer_t observer);
+astro_rotation_t Astronomy_Rotation_ECL_HOR(astro_time_t *time, astro_observer_t observer);
+astro_rotation_t Astronomy_Rotation_HOR_EQD(astro_time_t *time, astro_observer_t observer);
+astro_rotation_t Astronomy_Rotation_HOR_EQJ(astro_time_t *time, astro_observer_t observer);
+astro_rotation_t Astronomy_Rotation_HOR_ECL(astro_time_t *time, astro_observer_t observer);
 astro_rotation_t Astronomy_Rotation_EQJ_GAL(void);
 astro_rotation_t Astronomy_Rotation_GAL_EQJ(void);
 

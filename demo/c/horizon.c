@@ -138,7 +138,7 @@ static int FindEclipticCrossings(astro_observer_t observer, astro_time_t time)
         Calculate a rotation matrix that converts J2000 ecliptic vectors
         to horizontal vectors for this observer and time.
     */
-    rot = Astronomy_Rotation_ECL_HOR(time, observer);
+    rot = Astronomy_Rotation_ECL_HOR(&time, observer);
     if (rot.status != ASTRO_SUCCESS)
     {
         fprintf(stderr, "FindEclipticCrossings: error %d trying to find rotation matrix.\n", rot.status);
