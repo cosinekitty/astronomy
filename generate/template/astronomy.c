@@ -376,7 +376,7 @@ static astro_spherical_t SphereError(astro_status_t status)
 static astro_time_t TimeError(void)
 {
     astro_time_t time;
-    time.tt = time.ut = time.eps = time.psi = NAN;
+    time.tt = time.ut = time.eps = time.psi = time.st = NAN;
     return time;
 }
 
@@ -776,7 +776,7 @@ astro_time_t Astronomy_TimeFromDays(double ut)
     astro_time_t  time;
     time.ut = ut;
     time.tt = TerrestrialTime(ut);
-    time.psi = time.eps = NAN;
+    time.psi = time.eps = time.st = NAN;
     return time;
 }
 
@@ -831,7 +831,7 @@ astro_time_t Astronomy_CurrentTime(void)
 
     t.ut = (time(NULL) / SECONDS_PER_DAY) - 10957.5;
     t.tt = TerrestrialTime(t.ut);
-    t.psi = t.eps = NAN;
+    t.psi = t.eps = t.st = NAN;
     return t;
 }
 
@@ -873,7 +873,7 @@ astro_time_t Astronomy_MakeTime(int year, int month, int day, int hour, int minu
 
     time.ut = (double)y2000 - 0.5 + (hour / 24.0) + (minute / (24.0 * 60.0)) + (second / (24.0 * 3600.0));
     time.tt = TerrestrialTime(time.ut);
-    time.psi = time.eps = NAN;
+    time.psi = time.eps = time.st = NAN;
 
     return time;
 }
@@ -911,7 +911,7 @@ astro_time_t Astronomy_AddDays(astro_time_t time, double days)
 
     sum.ut = time.ut + days;
     sum.tt = TerrestrialTime(sum.ut);
-    sum.eps = sum.psi = NAN;
+    sum.eps = sum.psi = sum.st = NAN;
 
     return sum;
 }
@@ -1485,21 +1485,26 @@ static double era(double ut)        /* Earth Rotation Angle */
 
 static double sidereal_time(astro_time_t *time)
 {
-    double t = time->tt / 36525.0;
-    double eqeq = 15.0 * e_tilt(time).ee;    /* Replace with eqeq=0 to get GMST instead of GAST (if we ever need it) */
-    double theta = era(time->ut);
-    double st = (eqeq + 0.014506 +
-        (((( -    0.0000000368   * t
-            -    0.000029956  ) * t
-            -    0.00000044   ) * t
-            +    1.3915817    ) * t
-            + 4612.156534     ) * t);
+    if (isnan(time->st))
+    {
+        double t = time->tt / 36525.0;
+        double eqeq = 15.0 * e_tilt(time).ee;    /* Replace with eqeq=0 to get GMST instead of GAST (if we ever need it) */
+        double theta = era(time->ut);
+        double st = (eqeq + 0.014506 +
+            (((( -    0.0000000368   * t
+                -    0.000029956  ) * t
+                -    0.00000044   ) * t
+                +    1.3915817    ) * t
+                + 4612.156534     ) * t);
 
-    double gst = fmod(st/3600.0 + theta, 360.0) / 15.0;
-    if (gst < 0.0)
-        gst += 24.0;
+        double gst = fmod(st/3600.0 + theta, 360.0) / 15.0;
+        if (gst < 0.0)
+            gst += 24.0;
 
-    return gst;     /* return sidereal hours in the half-open range [0, 24). */
+        time->st = gst;
+    }
+
+    return time->st;     /* return sidereal hours in the half-open range [0, 24). */
 }
 
 static astro_observer_t inverse_terra(const double ovec[3], double st)

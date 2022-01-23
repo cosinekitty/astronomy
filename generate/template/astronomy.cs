@@ -202,6 +202,7 @@ namespace CosineKitty
 
         internal double psi = double.NaN;    // For internal use only. Used to optimize Earth tilt calculations.
         internal double eps = double.NaN;    // For internal use only. Used to optimize Earth tilt calculations.
+        internal double st = double.NaN;     // For internal use only.  Lazy-caches sidereal time (Earth rotation).
 
         private AstroTime(double ut, double tt)
         {
@@ -3170,21 +3171,25 @@ $ASTRO_IAU_DATA()
 
         private static double sidereal_time(AstroTime time)
         {
-            double t = time.tt / 36525.0;
-            double eqeq = 15.0 * e_tilt(time).ee;    /* Replace with eqeq=0 to get GMST instead of GAST (if we ever need it) */
-            double theta = era(time.ut);
-            double st = (eqeq + 0.014506 +
-                (((( -    0.0000000368   * t
-                    -    0.000029956  ) * t
-                    -    0.00000044   ) * t
-                    +    1.3915817    ) * t
-                    + 4612.156534     ) * t);
+            if (double.IsNaN(time.st))
+            {
+                double t = time.tt / 36525.0;
+                double eqeq = 15.0 * e_tilt(time).ee;    /* Replace with eqeq=0 to get GMST instead of GAST (if we ever need it) */
+                double theta = era(time.ut);
+                double st = (eqeq + 0.014506 +
+                    (((( -    0.0000000368   * t
+                        -    0.000029956  ) * t
+                        -    0.00000044   ) * t
+                        +    1.3915817    ) * t
+                        + 4612.156534     ) * t);
 
-            double gst = ((st/3600.0 + theta) % 360.0) / 15.0;
-            if (gst < 0.0)
-                gst += 24.0;
+                double gst = ((st/3600.0 + theta) % 360.0) / 15.0;
+                if (gst < 0.0)
+                    gst += 24.0;
 
-            return gst;     // return sidereal hours in the half-open range [0, 24).
+                time.st = gst;
+            }
+            return time.st;     // return sidereal hours in the half-open range [0, 24).
         }
 
         static Observer inverse_terra(AstroVector ovec, double st)

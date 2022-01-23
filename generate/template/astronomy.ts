@@ -1109,22 +1109,35 @@ function era(time: AstroTime): number {    // Earth Rotation Angle
     return theta;
 }
 
-function sidereal_time(time: AstroTime): number {          // calculates Greenwich Apparent Sidereal Time (GAST)
-    const t = time.tt / 36525;
-    let eqeq = 15 * e_tilt(time).ee;    // Replace with eqeq=0 to get GMST instead of GAST (if we ever need it)
-    const theta = era(time);
-    const st = (eqeq + 0.014506 +
-             (((( -    0.0000000368   * t
-                  -    0.000029956  ) * t
-                  -    0.00000044   ) * t
-                  +    1.3915817    ) * t
-                  + 4612.156534     ) * t);
+interface SiderealTimeInfo {
+    tt: number;
+    st: number;
+}
 
-    let gst = ((st/3600 + theta) % 360) / 15;
-    if (gst < 0) {
-        gst += 24;
+let sidereal_time_cache: SiderealTimeInfo;
+
+function sidereal_time(time: AstroTime): number {          // calculates Greenwich Apparent Sidereal Time (GAST)
+    if (!sidereal_time_cache || sidereal_time_cache.tt !== time.tt) {
+        const t = time.tt / 36525;
+        let eqeq = 15 * e_tilt(time).ee;    // Replace with eqeq=0 to get GMST instead of GAST (if we ever need it)
+        const theta = era(time);
+        const st = (eqeq + 0.014506 +
+                 (((( -    0.0000000368   * t
+                      -    0.000029956  ) * t
+                      -    0.00000044   ) * t
+                      +    1.3915817    ) * t
+                      + 4612.156534     ) * t);
+
+        let gst = ((st/3600 + theta) % 360) / 15;
+        if (gst < 0) {
+            gst += 24;
+        }
+        sidereal_time_cache = {
+            tt: time.tt,
+            st: gst
+        };
     }
-    return gst;     // return sidereal hours in the half-open range [0, 24).
+    return sidereal_time_cache.st;     // return sidereal hours in the half-open range [0, 24).
 }
 
 function inverse_terra(ovec: ArrayVector, st: number): Observer {

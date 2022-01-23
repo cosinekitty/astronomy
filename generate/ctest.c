@@ -12,6 +12,8 @@
 #include <ctype.h>
 #include "astronomy.h"
 
+#define PERFORMANCE_TESTS 0
+
 char *ReadLine(char *s, int n, FILE *f, const char *filename, int lnum)
 {
     char *ret = fgets(s, n, f);
@@ -140,6 +142,10 @@ static int LibrationTest(void);
 static int DE405_Check(void);
 static int AxisTest(void);
 
+#if PERFORMANCE_TESTS
+static int MapPerformanceTest(void);
+#endif
+
 typedef int (* unit_test_func_t) (void);
 
 typedef struct
@@ -169,6 +175,9 @@ static unit_test_t UnitTests[] =
     {"lunar_eclipse",           LunarEclipseTest},
     {"lunar_eclipse_78",        LunarEclipseIssue78},
     {"magnitude",               MagnitudeTest},
+#if PERFORMANCE_TESTS
+    {"map",                     MapPerformanceTest},
+#endif
     {"moon",                    MoonTest},
     {"moon_apsis",              LunarApsis},
     {"moon_phase",              MoonPhase},
@@ -5080,5 +5089,58 @@ static int AxisTest(void)
 fail:
     return error;
 }
+
+/*-----------------------------------------------------------------------------------------------------------*/
+
+#if PERFORMANCE_TESTS
+
+static int MapPerformanceTest(void)
+{
+    int error;
+    int count;
+    astro_observer_t observer;
+    astro_time_t time;
+    astro_vector_t ovec;
+    astro_rotation_t rot;
+
+    time = Astronomy_MakeTime(2022, 1, 22, 12, 30, 0.0);
+
+    count = 0;
+    observer.height = 0.0;
+    for (observer.longitude = -180.0; observer.longitude < +180.0; observer.longitude += 0.01)
+    {
+        for (observer.latitude = -85.0; observer.latitude <= +85.0; observer.latitude += 0.01)
+        {
+            ovec = Astronomy_ObserverVector(&time, observer, EQUATOR_OF_DATE);
+            CHECK_STATUS(ovec);
+            rot = Astronomy_Rotation_EQD_HOR(&time, observer);
+            CHECK_STATUS(rot);
+            ++count;
+        }
+    }
+
+    /*
+        612,017,000 geographic locations.
+
+        Before sidereal time optimization:
+        Trial #1: 236.420 seconds.
+        Trial #2: 235.906 seconds.
+        Trial #3: 238.809 seconds.
+
+        After sidereal time optimization:
+        Trial #1: 103.452 seconds.
+        Trial #2: 104.249 seconds.
+        Trial #3: 103.657 seconds.
+
+        Mean performance improvement ratio = 2.284.
+    */
+
+    printf("MapPerformanceTest: PASS (%d geographic locations)\n", count);
+    error = 0;
+fail:
+    return error;
+}
+
+#endif
 
 /*-----------------------------------------------------------------------------------------------------------*/

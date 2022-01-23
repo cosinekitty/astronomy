@@ -560,7 +560,8 @@ class Time:
             self.tt = _TerrestrialTime(ut)
         else:
             self.tt = tt
-        self.etilt = None
+        self._et = None     # lazy-cache for earth tilt
+        self._st = None     # lazy-cache for sidereal time
 
     @staticmethod
     def FromTerrestrialTime(tt):
@@ -717,9 +718,9 @@ class Time:
         # Calculates precession and nutation of the Earth's axis.
         # The calculations are very expensive, so lazy-evaluate and cache
         # the result inside this Time object.
-        if self.etilt is None:
-            self.etilt = _e_tilt(self)
-        return self.etilt
+        if self._et is None:
+            self._et = _e_tilt(self)
+        return self._et
 
     def __lt__(self, other):
         return self.tt < other.tt
@@ -1565,20 +1566,22 @@ def _era(time):        # Earth Rotation Angle
     return theta
 
 def _sidereal_time(time):
-    t = time.tt / 36525.0
-    eqeq = 15.0 * time._etilt().ee    # Replace with eqeq=0 to get GMST instead of GAST (if we ever need it)
-    theta = _era(time)
-    st = (eqeq + 0.014506 +
-        (((( -    0.0000000368   * t
-            -    0.000029956  ) * t
-            -    0.00000044   ) * t
-            +    1.3915817    ) * t
-            + 4612.156534     ) * t)
-    gst = math.fmod((st/3600.0 + theta), 360.0) / 15.0
-    if gst < 0.0:
-        gst += 24.0
+    if time._st is None:
+        t = time.tt / 36525.0
+        eqeq = 15.0 * time._etilt().ee    # Replace with eqeq=0 to get GMST instead of GAST (if we ever need it)
+        theta = _era(time)
+        st = (eqeq + 0.014506 +
+            (((( -    0.0000000368   * t
+                -    0.000029956  ) * t
+                -    0.00000044   ) * t
+                +    1.3915817    ) * t
+                + 4612.156534     ) * t)
+        gst = math.fmod((st/3600.0 + theta), 360.0) / 15.0
+        if gst < 0.0:
+            gst += 24.0
+        time._st = gst
     # return sidereal hours in the half-open range [0, 24).
-    return gst
+    return time._st
 
 def _inverse_terra(ovec, st):
     # Convert from AU to kilometers

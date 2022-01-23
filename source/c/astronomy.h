@@ -345,6 +345,11 @@ typedef struct
      * @brief   For internal use only.  Used to optimize Earth tilt calculations.
      */
     double eps;
+
+    /**
+     * @brief   For internal use only.  Lazy-caches sidereal time (Earth rotation).
+     */
+    double st;
 }
 astro_time_t;
 

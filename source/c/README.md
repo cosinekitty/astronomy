@@ -3909,6 +3909,7 @@ In cases where `[`astro_time_t`](#astro_time_t)` is included in a structure retu
 | `double` | `tt` | **Terrestrial Time days since noon on January 1, 2000.**  Terrestrial Time is an atomic time scale defined as a number of days since noon on January 1, 2000. In this system, days are not based on Earth rotations, but instead by the number of elapsed [SI seconds](https://physics.nist.gov/cuu/Units/second.html) divided by 86400. Unlike `ut`, `tt` increases uniformly without adjustments for changes in the Earth's rotation. The value in `tt` is used for calculations of movements not involving the Earth's rotation, such as the orbits of planets around the Sun, or the Moon around the Earth. Historically, Terrestrial Time has also been known by the term *Ephemeris Time* (ET).  |
 | `double` | `psi` | **For internal use only. Used to optimize Earth tilt calculations.**  |
 | `double` | `eps` | **For internal use only. Used to optimize Earth tilt calculations.**  |
+| `double` | `st` | **For internal use only. Lazy-caches sidereal time (Earth rotation).**  |
 
 
 ---
