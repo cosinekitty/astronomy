@@ -4662,7 +4662,19 @@ namespace CosineKitty
             );
         }
 
-        private static AstroVector GeoMoon(AstroTime time)
+        /// <summary>
+        /// Calculates equatorial geocentric position of the Moon at a given time.
+        /// </summary>
+        /// <remarks>
+        /// Given a time of observation, calculates the Moon's position vector.
+        /// The vector indicates the Moon's center relative to the Earth's center.
+        /// The vector components are expressed in AU (astronomical units).
+        /// The coordinates are oriented with respect to the Earth's equator at the J2000 epoch.
+        /// In Astronomy Engine, this orientation is called EQJ.
+        /// </remarks>
+        /// <param name="time">The date and time for which to calculate the Moon's position.</param>
+        /// <returns>The Moon's position vector in J2000 equatorial coordinates (EQJ).</returns>
+        public static AstroVector GeoMoon(AstroTime time)
         {
             var context = new MoonContext(time.tt / 36525.0);
             MoonResult moon = context.CalcMoon();
@@ -4687,18 +4699,20 @@ namespace CosineKitty
         }
 
         /// <summary>
-        /// Calculates the geocentric position and velocity of the Moon at a given time.
+        /// Calculates equatorial geocentric position and velocity of the Moon at a given time.
         /// </summary>
         /// <remarks>
         /// Given a time of observation, calculates the Moon's position and velocity vectors.
         /// The position and velocity are of the Moon's center relative to the Earth's center.
         /// The position (x, y, z) components are expressed in AU (astronomical units).
         /// The velocity (vx, vy, vz) components are expressed in AU/day.
+        /// The coordinates are oriented with respect to the Earth's equator at the J2000 epoch.
+        /// In Astronomy Engine, this orientation is called EQJ.
         /// If you need the Moon's position only, and not its velocity,
-        /// it is much more efficient to use #Astronomy.GeoVector instead.
+        /// it is much more efficient to use #Astronomy.GeoMoon instead.
         /// </remarks>
         /// <param name="time">The date and time for which to calculate the Moon's position and velocity.</param>
-        /// <returns>The Moon's position and velocity vectors in J2000 equatorial coordinates.</returns>
+        /// <returns>The Moon's position and velocity vectors in J2000 equatorial coordinates (EQJ).</returns>
         public static StateVector GeoMoonState(AstroTime time)
         {
             // This is a hack, because trying to figure out how to derive a time

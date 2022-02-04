@@ -1879,20 +1879,22 @@ $ASTRO_ADDSOL()
 /** @endcond */
 
 /**
- * @brief Calculates the geocentric position of the Moon at a given time.
+ * @brief Calculates equatorial geocentric position of the Moon at a given time.
  *
  * Given a time of observation, calculates the Moon's position as a vector.
  * The vector gives the location of the Moon's center relative to the Earth's center
  * with x-, y-, and z-components measured in astronomical units.
+ * The coordinates are oriented with respect to the Earth's equator at the J2000 epoch.
+ * In Astronomy Engine, this orientation is called EQJ.
  *
- * This algorithm is based on Nautical Almanac Office's *Improved Lunar Ephemeris* of 1954,
+ * This algorithm is based on the Nautical Almanac Office's *Improved Lunar Ephemeris* of 1954,
  * which in turn derives from E. W. Brown's lunar theories from the early twentieth century.
  * It is adapted from Turbo Pascal code from the book
  * [Astronomy on the Personal Computer](https://www.springer.com/us/book/9783540672210)
  * by Montenbruck and Pfleger.
  *
  * @param time  The date and time for which to calculate the Moon's position.
- * @return The Moon's position as a vector in J2000 Cartesian equatorial coordinates.
+ * @return The Moon's position as a vector in J2000 Cartesian equatorial (EQJ) coordinates.
  */
 astro_vector_t Astronomy_GeoMoon(astro_time_t time)
 {
@@ -1927,18 +1929,20 @@ astro_vector_t Astronomy_GeoMoon(astro_time_t time)
 
 
 /**
- * @brief Calculates the geocentric position and velocity of the Moon at a given time.
+ * @brief Calculates equatorial geocentric position and velocity of the Moon at a given time.
  *
  * Given a time of observation, calculates the Moon's position and velocity vectors.
  * The position and velocity are of the Moon's center relative to the Earth's center.
  * The position (x, y, z) components are expressed in AU (astronomical units).
  * The velocity (vx, vy, vz) components are expressed in AU/day.
+ * The coordinates are oriented with respect to the Earth's equator at the J2000 epoch.
+ * In Astronomy Engine, this orientation is called EQJ.
  *
  * If you need the Moon's position only, and not its velocity,
  * it is much more efficient to use #Astronomy_GeoMoon instead.
  *
  * @param time  The date and time for which to calculate the Moon's position and velocity.
- * @return The Moon's position and velocity vectors in J2000 equatorial coordinates.
+ * @return The Moon's position and velocity vectors in J2000 equatorial coordinates (EQJ).
  */
 astro_state_vector_t Astronomy_GeoMoonState(astro_time_t time)
 {
@@ -1982,6 +1986,8 @@ astro_state_vector_t Astronomy_GeoMoonState(astro_time_t time)
  * of the Earth/Moon barycenter (EMB).
  * The position (x, y, z) components are expressed in AU (astronomical units).
  * The velocity (vx, vy, vz) components are expressed in AU/day.
+ * The coordinates are oriented with respect to the Earth's equator at the J2000 epoch.
+ * In Astronomy Engine, this orientation is called EQJ.
  *
  * @param time  The date and time for which to calculate the EMB vectors.
  * @return The EMB's position and velocity vectors in geocentric J2000 equatorial coordinates.

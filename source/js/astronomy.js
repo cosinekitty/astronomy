@@ -2669,8 +2669,13 @@ function Ecliptic(equ) {
 }
 exports.Ecliptic = Ecliptic;
 /**
- * @brief Calculates the geocentric Cartesian coordinates for the Moon in the J2000 equatorial system.
+ * @brief Calculates equatorial geocentric Cartesian coordinates for the Moon.
  *
+ * Given a time of observation, calculates the Moon's position as a vector.
+ * The vector gives the location of the Moon's center relative to the Earth's center
+ * with x-, y-, and z-components measured in astronomical units.
+ * The coordinates are oriented with respect to the Earth's equator at the J2000 epoch.
+ * In Astronomy Engine, this orientation is called EQJ.
  * Based on the Nautical Almanac Office's <i>Improved Lunar Ephemeris</i> of 1954,
  * which in turn derives from E. W. Brown's lunar theories.
  * Adapted from Turbo Pascal code from the book
@@ -2700,12 +2705,14 @@ function GeoMoon(date) {
 }
 exports.GeoMoon = GeoMoon;
 /**
- * @brief Calculates the geocentric position and velocity of the Moon at a given time.
+ * @brief Calculates equatorial geocentric position and velocity of the Moon at a given time.
  *
  * Given a time of observation, calculates the Moon's position and velocity vectors.
  * The position and velocity are of the Moon's center relative to the Earth's center.
  * The position (x, y, z) components are expressed in AU (astronomical units).
  * The velocity (vx, vy, vz) components are expressed in AU/day.
+ * The coordinates are oriented with respect to the Earth's equator at the J2000 epoch.
+ * In Astronomy Engine, this orientation is called EQJ.
  * If you need the Moon's position only, and not its velocity,
  * it is much more efficient to use {@link GeoMoon} instead.
  *

@@ -480,23 +480,42 @@ The velocity (vx, vy, vz) components are expressed in AU/day.
 
 **Returns:** The EMB's position and velocity vectors in geocentric J2000 equatorial coordinates.
 
+<a name="Astronomy.GeoMoon"></a>
+### Astronomy.GeoMoon(time) &#8658; [`AstroVector`](#AstroVector)
+
+**Calculates equatorial geocentric position of the Moon at a given time.**
+
+Given a time of observation, calculates the Moon's position vector.
+The vector indicates the Moon's center relative to the Earth's center.
+The vector components are expressed in AU (astronomical units).
+The coordinates are oriented with respect to the Earth's equator at the J2000 epoch.
+In Astronomy Engine, this orientation is called EQJ.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`AstroTime`](#AstroTime) | `time` | The date and time for which to calculate the Moon's position. |
+
+**Returns:** The Moon's position vector in J2000 equatorial coordinates (EQJ).
+
 <a name="Astronomy.GeoMoonState"></a>
 ### Astronomy.GeoMoonState(time) &#8658; [`StateVector`](#StateVector)
 
-**Calculates the geocentric position and velocity of the Moon at a given time.**
+**Calculates equatorial geocentric position and velocity of the Moon at a given time.**
 
 Given a time of observation, calculates the Moon's position and velocity vectors.
 The position and velocity are of the Moon's center relative to the Earth's center.
 The position (x, y, z) components are expressed in AU (astronomical units).
 The velocity (vx, vy, vz) components are expressed in AU/day.
+The coordinates are oriented with respect to the Earth's equator at the J2000 epoch.
+In Astronomy Engine, this orientation is called EQJ.
 If you need the Moon's position only, and not its velocity,
-it is much more efficient to use [`Astronomy.GeoVector`](#Astronomy.GeoVector) instead.
+it is much more efficient to use [`Astronomy.GeoMoon`](#Astronomy.GeoMoon) instead.
 
 | Type | Parameter | Description |
 | --- | --- | --- |
 | [`AstroTime`](#AstroTime) | `time` | The date and time for which to calculate the Moon's position and velocity. |
 
-**Returns:** The Moon's position and velocity vectors in J2000 equatorial coordinates.
+**Returns:** The Moon's position and velocity vectors in J2000 equatorial coordinates (EQJ).
 
 <a name="Astronomy.GeoVector"></a>
 ### Astronomy.GeoVector(body, time, aberration) &#8658; [`AstroVector`](#AstroVector)
