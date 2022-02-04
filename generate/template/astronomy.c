@@ -1893,6 +1893,8 @@ $ASTRO_ADDSOL()
  * [Astronomy on the Personal Computer](https://www.springer.com/us/book/9783540672210)
  * by Montenbruck and Pfleger.
  *
+ * To calculate ecliptic spherical coordinates instead, see #Astronomy_EclipticGeoMoon.
+ *
  * @param time  The date and time for which to calculate the Moon's position.
  * @return The Moon's position as a vector in J2000 Cartesian equatorial (EQJ) coordinates.
  */
@@ -1925,6 +1927,40 @@ astro_vector_t Astronomy_GeoMoon(astro_time_t time)
     vector.z = mpos2[2];
     vector.t = time;
     return vector;
+}
+
+
+/**
+ * @brief Calculates spherical ecliptic geocentric position of the Moon.
+ *
+ * Given a time of observation, calculates the Moon's geocentric position
+ * in ecliptic spherical coordinates. Provides the ecliptic latitude and
+ * longitude in degrees, and the geocentric distance in astronomical units (AU).
+ * The ecliptic longitude is measured relative to the equinox of date.
+ *
+ * This algorithm is based on the Nautical Almanac Office's *Improved Lunar Ephemeris* of 1954,
+ * which in turn derives from E. W. Brown's lunar theories from the early twentieth century.
+ * It is adapted from Turbo Pascal code from the book
+ * [Astronomy on the Personal Computer](https://www.springer.com/us/book/9783540672210)
+ * by Montenbruck and Pfleger.
+ *
+ * To calculate an equatorial J2000 vector instead, use #Astronomy_GeoMoon.
+ *
+ * @param time  The date and time for which to calculate the Moon's position.
+ * @return The Moon's position expressed in ecliptic coordinates using the mean equinox of date.
+ */
+astro_spherical_t Astronomy_EclipticGeoMoon(astro_time_t time)
+{
+    astro_spherical_t sphere;
+
+    CalcMoon(time.tt / 36525.0, &sphere.lon, &sphere.lat, &sphere.dist);
+
+    /* Convert angles from radians to degrees. */
+    sphere.lon *= RAD2DEG;
+    sphere.lat *= RAD2DEG;
+
+    sphere.status = ASTRO_SUCCESS;
+    return sphere;
 }
 
 

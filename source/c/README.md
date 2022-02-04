@@ -468,6 +468,34 @@ Given coordinates relative to the Earth's equator at J2000 (the instant of noon 
 
 ---
 
+<a name="Astronomy_EclipticGeoMoon"></a>
+### Astronomy_EclipticGeoMoon(time) &#8658; [`astro_spherical_t`](#astro_spherical_t)
+
+**Calculates spherical ecliptic geocentric position of the Moon.** 
+
+
+
+Given a time of observation, calculates the Moon's geocentric position in ecliptic spherical coordinates. Provides the ecliptic latitude and longitude in degrees, and the geocentric distance in astronomical units (AU). The ecliptic longitude is measured relative to the equinox of date.
+
+This algorithm is based on the Nautical Almanac Office's *Improved Lunar Ephemeris* of 1954, which in turn derives from E. W. Brown's lunar theories from the early twentieth century. It is adapted from Turbo Pascal code from the book [Astronomy on the Personal Computer](https://www.springer.com/us/book/9783540672210) by Montenbruck and Pfleger.
+
+To calculate an equatorial J2000 vector instead, use [`Astronomy_GeoMoon`](#Astronomy_GeoMoon).
+
+
+
+**Returns:**  The Moon's position expressed in ecliptic coordinates using the mean equinox of date. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_time_t`](#astro_time_t) | `time` |  The date and time for which to calculate the Moon's position.  | 
+
+
+
+
+---
+
 <a name="Astronomy_EclipticLongitude"></a>
 ### Astronomy_EclipticLongitude(body, time) &#8658; [`astro_angle_result_t`](#astro_angle_result_t)
 
@@ -642,6 +670,8 @@ Given a time of observation, calculates the geocentric position and velocity vec
 Given a time of observation, calculates the Moon's position as a vector. The vector gives the location of the Moon's center relative to the Earth's center with x-, y-, and z-components measured in astronomical units. The coordinates are oriented with respect to the Earth's equator at the J2000 epoch. In Astronomy Engine, this orientation is called EQJ.
 
 This algorithm is based on the Nautical Almanac Office's *Improved Lunar Ephemeris* of 1954, which in turn derives from E. W. Brown's lunar theories from the early twentieth century. It is adapted from Turbo Pascal code from the book [Astronomy on the Personal Computer](https://www.springer.com/us/book/9783540672210) by Montenbruck and Pfleger.
+
+To calculate ecliptic spherical coordinates instead, see [`Astronomy_EclipticGeoMoon`](#Astronomy_EclipticGeoMoon).
 
 
 

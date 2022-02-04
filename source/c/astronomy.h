@@ -1120,6 +1120,7 @@ astro_func_result_t Astronomy_HelioDistance(astro_body_t body, astro_time_t time
 astro_vector_t Astronomy_HelioVector(astro_body_t body, astro_time_t time);
 astro_vector_t Astronomy_GeoVector(astro_body_t body, astro_time_t time, astro_aberration_t aberration);
 astro_vector_t Astronomy_GeoMoon(astro_time_t time);
+astro_spherical_t Astronomy_EclipticGeoMoon(astro_time_t time);
 astro_state_vector_t Astronomy_GeoMoonState(astro_time_t time);
 astro_state_vector_t Astronomy_GeoEmbState(astro_time_t time);
 astro_libration_t Astronomy_Libration(astro_time_t time);
