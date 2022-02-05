@@ -33,6 +33,15 @@ MonthTable = {
     'Dec': 12
 }
 
+def HourMin(htext, mtext):
+    h = float(htext)
+    m = float(mtext) / 60.0
+    if h < 0.0:
+        h -= m
+    else:
+        h += m
+    return h
+
 def ParseNode(kind, year, text):
     #            1         2         3
     #  01234567890123456789012345678901234
@@ -43,8 +52,8 @@ def ParseNode(kind, year, text):
     day = int(text[4:6], 10)
     hour = int(text[8:10], 10)
     minute = int(text[11:13], 10)
-    ra = float(text[17:19]) + float(text[20:24])/60.0
-    dec = float(text[27:30]) + float(text[31:])/60.0
+    ra = HourMin(text[17:19], text[20:24])
+    dec = HourMin(text[27:30], text[31:])
     return Node(kind, year, month, day, hour, minute, ra, dec)
 
 if __name__ == '__main__':
