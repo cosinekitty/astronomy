@@ -5162,9 +5162,15 @@ static int MoonNodes(void)
     astro_vector_t vec_eqj, vec_eqd, vec_test;
     double diff_lat, max_lat = 0.0;
     double diff_angle, max_angle = 0.0;
+    double diff_minutes, max_minutes = 0.0;
+    double dt, min_dt = 1.0e+99, max_dt = 0.0;
     astro_rotation_t rot;
     astro_spherical_t sphere;
     astro_angle_result_t result;
+    astro_node_event_t node;
+
+    memset(&node, 0, sizeof(node));
+    node.status = ASTRO_NOT_INITIALIZED;
 
     infile = fopen(filename, "rt");
     if (infile == NULL)
@@ -5238,6 +5244,51 @@ static int MoonNodes(void)
         if (diff_angle > 1.54)
             FAIL("MoonNodes(%s line %d): EXCESSIVE equatorial error = %0.3lf arcmin\n", filename, lnum, diff_angle);
 
+        /* Now test the Astronomy Engine moon node searcher. */
+        if (lnum == 1)
+        {
+            /* The very first time, so search for the first node in the series. */
+            /* Back up a few days to make sure we really are finding it ourselves. */
+            astro_time_t earlier = Astronomy_AddDays(time, -6.5472);    /* pick a weird amount of time */
+            node = Astronomy_SearchMoonNode(earlier);
+        }
+        else
+        {
+            double prev_tt = node.time.tt;
+
+            /* Use the previous node to find the next node. */
+            node = Astronomy_NextMoonNode(node);
+
+            /* Find the range of time intervals between consecutive nodes. */
+            dt = node.time.tt - prev_tt;
+            if (dt < min_dt)
+                min_dt = dt;
+            if (dt > max_dt)
+                max_dt = dt;
+        }
+
+        if (node.status != ASTRO_SUCCESS)
+            FAIL("MoonNodes(%s line %d): error %d returned by node search\n", filename, lnum, node.status);
+
+        /* Verify the ecliptic longitude is very close to zero here. */
+        ecl = Astronomy_EclipticGeoMoon(node.time);
+        CHECK_STATUS(ecl);
+        diff_lat = 60.0 * ABS(ecl.lat);
+        if (diff_lat > 8.1e-4)
+            FAIL("MoonNodes(%s line %d): found node has excessive latitude = %0.4le arcmin\n", filename, lnum, diff_lat);
+
+        /* Verify the time agrees with Espenak's time to within a few minutes. */
+        diff_minutes = (24.0 * 60.0) * ABS(node.time.tt - time.tt);
+        if (diff_minutes > max_minutes)
+            max_minutes = diff_minutes;
+
+        /* Verify the kind of node matches what Espenak says (ascending or descending). */
+        if (kind == 'A' && node.kind != ASCENDING_NODE)
+            FAIL("MoonNodes(%s line %d): did not find ascending node as expected.\n", filename, lnum);
+
+        if (kind == 'D' && node.kind != DESCENDING_NODE)
+            FAIL("MoonNodes(%s line %d): did not find descending node as expected.\n", filename, lnum);
+
         /* Prepare for the next iteration. */
         prev_kind = kind;
     }
@@ -5245,7 +5296,11 @@ static int MoonNodes(void)
     if (max_lat > 0.183)
         FAIL("MoonNodes: EXCESSIVE ecliptic latitude error = %0.3lf arcmin\n", max_lat);
 
-    printf("MoonNodes: PASS (%d nodes, max lat error = %0.3lf arcmin, max equ error = %0.3lf arcmin)\n", lnum, max_lat, max_angle);
+    if (max_minutes > 3.682)
+        FAIL("MoonNodes: EXCESSIVE time prediction error = %0.3lf minutes\n", max_minutes);
+
+    DEBUG("MoonNodes: min_dt = %0.3lf days, max_dt = %0.3lf days.\n", min_dt, max_dt);
+    printf("MoonNodes: PASS (%d nodes, max lat error = %0.3lf arcmin, max equ error = %0.3lf arcmin, max time error = %0.3lf minutes)\n", lnum, max_lat, max_angle, max_minutes);
     error = 0;
 fail:
     if (infile != NULL) fclose(infile);

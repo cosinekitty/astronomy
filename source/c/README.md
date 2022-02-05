@@ -1231,6 +1231,30 @@ After using [`Astronomy_SearchLunarEclipse`](#Astronomy_SearchLunarEclipse) to f
 
 ---
 
+<a name="Astronomy_NextMoonNode"></a>
+### Astronomy_NextMoonNode(prevNode) &#8658; [`astro_node_event_t`](#astro_node_event_t)
+
+**Searches for the next time when the Moon's center crosses through the ecliptic plane.** 
+
+
+
+Call [`Astronomy_SearchMoonNode`](#Astronomy_SearchMoonNode) to find the first of a series of nodes. Then call `Astronomy_NextMoonNode` to find as many more nodes as desired.
+
+
+
+**Returns:**  If successful, the `status` field in the returned structure holds `ASTRO_SUCCESS` and the other fields are as documented in [`astro_node_event_t`](#astro_node_event_t). Otherwise, `status` holds an error code and the other structure members are undefined. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_node_event_t`](#astro_node_event_t) | `prevNode` |  The previous node found from calling [`Astronomy_SearchMoonNode`](#Astronomy_SearchMoonNode) or Astronomy_NextMoonNode. | 
+
+
+
+
+---
+
 <a name="Astronomy_NextMoonQuarter"></a>
 ### Astronomy_NextMoonQuarter(mq) &#8658; [`astro_moon_quarter_t`](#astro_moon_quarter_t)
 
@@ -1293,7 +1317,7 @@ After calling [`Astronomy_SearchTransit`](#Astronomy_SearchTransit) to find a tr
 
 
 
-**Returns:**  If successful, the `status` field in the returned structure hold `ASTRO_SUCCESS` and the other fields are as documented in [`astro_transit_t`](#astro_transit_t). Otherwise, `status` holds an error code and the other structure members are undefined. 
+**Returns:**  If successful, the `status` field in the returned structure holds `ASTRO_SUCCESS` and the other fields are as documented in [`astro_transit_t`](#astro_transit_t). Otherwise, `status` holds an error code and the other structure members are undefined. 
 
 
 
@@ -2125,6 +2149,32 @@ This function solves for those times, reporting the next maximum elongation even
 | --- | --- | --- |
 | [`astro_body_t`](#astro_body_t) | `body` |  Either `BODY_MERCURY` or `BODY_VENUS`. Any other value will fail with the error `ASTRO_INVALID_BODY`. To find the best viewing opportunites for planets farther from the Sun than the Earth is (Mars through Pluto) use [`Astronomy_SearchRelativeLongitude`](#Astronomy_SearchRelativeLongitude) to find the next opposition event. | 
 | [`astro_time_t`](#astro_time_t) | `startTime` |  The date and time at which to begin the search. The maximum elongation event found will always be the first one that occurs after this date and time. | 
+
+
+
+
+---
+
+<a name="Astronomy_SearchMoonNode"></a>
+### Astronomy_SearchMoonNode(startTime) &#8658; [`astro_node_event_t`](#astro_node_event_t)
+
+**Searches for a time when the Moon's center crosses through the ecliptic plane.** 
+
+
+
+Searches for the first ascending or descending node of the Moon after `startTime`. An ascending node is when the Moon's center passes through the ecliptic plane (the plane of the Earth's orbit around the Sun) from the south to the north. A descending node is when the Moon's center passes through the ecliptic plane from the north to the south. Nodes indicate possible times of solar or lunar eclipses, if the Moon also happens to be in the correct phase (new or full, respectively).
+
+Call `Astronomy_SearchMoonNode` to find the first of a series of nodes. Then call [`Astronomy_NextMoonNode`](#Astronomy_NextMoonNode) to find as many more nodes as desired.
+
+
+
+**Returns:**  If successful, the `status` field in the returned structure holds `ASTRO_SUCCESS` and the other fields are as documented in [`astro_node_event_t`](#astro_node_event_t). Otherwise, `status` holds an error code and the other structure members are undefined. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_time_t`](#astro_time_t) | `startTime` |  The date and time for starting the search for an ascending or descending node of the Moon. | 
 
 
 
@@ -3348,6 +3398,23 @@ For some other purposes, it is more helpful to represent coordinates using the E
 
 ---
 
+<a name="astro_node_kind_t"></a>
+### `astro_node_kind_t`
+
+**Indicates whether a crossing through the ecliptic plane is ascending or descending.** 
+
+
+
+| Enum Value | Description |
+| --- | --- |
+| `INVALID_NODE` |  Placeholder value for a missing or invalid node.  |
+| `ASCENDING_NODE` |  The body passes through the ecliptic plane from south to north.  |
+| `DESCENDING_NODE` |  The body passes through the ecliptic plane from north to south.  |
+
+
+
+---
+
 <a name="astro_refraction_t"></a>
 ### `astro_refraction_t`
 
@@ -3804,6 +3871,24 @@ Fields `sd_penum`, `sd_partial`, and `sd_total` hold the semi-duration of each p
 | [`astro_status_t`](#astro_status_t) | `status` |  `ASTRO_SUCCESS` if this struct is valid; otherwise an error code.  |
 | `int` | `quarter` |  0=new moon, 1=first quarter, 2=full moon, 3=third quarter.  |
 | [`astro_time_t`](#astro_time_t) | `time` |  The date and time of the lunar quarter.  |
+
+
+---
+
+<a name="astro_node_event_t"></a>
+### `astro_node_event_t`
+
+**Information about an ascending or descending node of a body.** 
+
+
+
+This structure is returned by [`Astronomy_SearchMoonNode`](#Astronomy_SearchMoonNode) and [`Astronomy_NextMoonNode`](#Astronomy_NextMoonNode) to report information about the center of the Moon passing through the ecliptic plane. 
+
+| Type | Member | Description |
+| ---- | ------ | ----------- |
+| [`astro_status_t`](#astro_status_t) | `status` |  `ASTRO_SUCCESS` if this struct is valid; otherwise an error code.  |
+| [`astro_time_t`](#astro_time_t) | `time` |  The time when the body passes through the ecliptic plane.  |
+| [`astro_node_kind_t`](#astro_node_kind_t) | `kind` |  Either `ASCENDING_NODE` or `DESCENDING_NODE`, depending on the direction of the ecliptic plane crossing.  |
 
 
 ---

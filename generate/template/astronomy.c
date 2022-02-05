@@ -8719,7 +8719,7 @@ astro_transit_t Astronomy_SearchTransit(astro_body_t body, astro_time_t startTim
  *      A date and time near the previous transit.
  *
  * @return
- *      If successful, the `status` field in the returned structure hold `ASTRO_SUCCESS`
+ *      If successful, the `status` field in the returned structure holds `ASTRO_SUCCESS`
  *      and the other fields are as documented in #astro_transit_t.
  *      Otherwise, `status` holds an error code and the other structure members are undefined.
  */
@@ -8729,6 +8729,135 @@ astro_transit_t Astronomy_NextTransit(astro_body_t body, astro_time_t prevTransi
 
     startTime = Astronomy_AddDays(prevTransitTime, 100.0);
     return Astronomy_SearchTransit(body, startTime);
+}
+
+
+static astro_node_event_t NodeError(astro_status_t status)
+{
+    astro_node_event_t node;
+
+    node.status = status;
+    node.time = TimeError();
+    node.kind = INVALID_NODE;
+
+    return node;
+}
+
+static astro_func_result_t MoonNodeSearchFunc(void *context, astro_time_t time)
+{
+    astro_func_result_t result;
+    astro_spherical_t eclip;
+    astro_node_kind_t kind = *((astro_node_kind_t *)context);
+
+    eclip = Astronomy_EclipticGeoMoon(time);
+
+    result.value = eclip.lat * (double)kind;
+    result.status = ASTRO_SUCCESS;
+    return result;
+}
+
+static const double MOON_NODE_STEP_DAYS = +10.0;    /* a safe number of days to step without missing a Moon node */
+
+/**
+ * @brief Searches for a time when the Moon's center crosses through the ecliptic plane.
+ *
+ * Searches for the first ascending or descending node of the Moon after `startTime`.
+ * An ascending node is when the Moon's center passes through the ecliptic plane
+ * (the plane of the Earth's orbit around the Sun) from the south to the north.
+ * A descending node is when the Moon's center passes through the ecliptic plane
+ * from the north to the south. Nodes indicate possible times of solar or lunar eclipses,
+ * if the Moon also happens to be in the correct phase (new or full, respectively).
+ *
+ * Call `Astronomy_SearchMoonNode` to find the first of a series of nodes.
+ * Then call #Astronomy_NextMoonNode to find as many more nodes as desired.
+ *
+ * @param startTime
+ *      The date and time for starting the search for an ascending or descending node of the Moon.
+ *
+ * @return
+ *      If successful, the `status` field in the returned structure holds `ASTRO_SUCCESS`
+ *      and the other fields are as documented in #astro_node_event_t.
+ *      Otherwise, `status` holds an error code and the other structure members are undefined.
+ */
+astro_node_event_t Astronomy_SearchMoonNode(astro_time_t startTime)
+{
+    astro_node_event_t node;
+    astro_time_t time1, time2;
+    astro_spherical_t eclip1, eclip2;
+    astro_node_kind_t kind;
+    astro_search_result_t result;
+
+    /* Start at the given moment in time and sample the Moon's ecliptic latitude. */
+    /* Step 10 days at a time, searching for an interval where that latitude crosses zero. */
+    time1 = startTime;
+    eclip1 = Astronomy_EclipticGeoMoon(time1);    /* never returns a failure code */
+
+    for(;;)
+    {
+        time2 = Astronomy_AddDays(time1, MOON_NODE_STEP_DAYS);
+        eclip2 = Astronomy_EclipticGeoMoon(time2);      /* never returns a failure code */
+        if (eclip1.lat * eclip2.lat <= 0.0)
+        {
+            /* There is a node somewhere inside this closed time interval. */
+            /* Figure out whether it is an ascending node or a descending node. */
+            kind = (eclip2.lat > eclip1.lat) ? ASCENDING_NODE : DESCENDING_NODE;
+            result = Astronomy_Search(MoonNodeSearchFunc, &kind, time1, time2, 1.0);
+            if (result.status != ASTRO_SUCCESS)
+                return NodeError(result.status);
+
+            node.status = ASTRO_SUCCESS;
+            node.time = result.time;
+            node.kind = kind;
+            return node;
+        }
+        time1 = time2;
+        eclip1 = eclip2;
+    }
+}
+
+
+/**
+ * @brief Searches for the next time when the Moon's center crosses through the ecliptic plane.
+ *
+ * Call #Astronomy_SearchMoonNode to find the first of a series of nodes.
+ * Then call `Astronomy_NextMoonNode` to find as many more nodes as desired.
+ *
+ * @param prevNode
+ *      The previous node found from calling #Astronomy_SearchMoonNode or Astronomy_NextMoonNode.
+ *
+ * @return
+ *      If successful, the `status` field in the returned structure holds `ASTRO_SUCCESS`
+ *      and the other fields are as documented in #astro_node_event_t.
+ *      Otherwise, `status` holds an error code and the other structure members are undefined.
+ */
+astro_node_event_t Astronomy_NextMoonNode(astro_node_event_t prevNode)
+{
+    astro_time_t time;
+    astro_node_event_t node;
+
+    if (prevNode.status != ASTRO_SUCCESS)
+        return NodeError(ASTRO_INVALID_PARAMETER);
+
+    if (prevNode.kind != ASCENDING_NODE && prevNode.kind != DESCENDING_NODE)
+        return NodeError(ASTRO_INVALID_PARAMETER);
+
+    time = Astronomy_AddDays(prevNode.time, MOON_NODE_STEP_DAYS);
+    node = Astronomy_SearchMoonNode(time);
+    if (node.status == ASTRO_SUCCESS)
+    {
+        /* Verify nodes are alternating as expected. */
+        if (prevNode.kind == ASCENDING_NODE)
+        {
+            if (node.kind != DESCENDING_NODE)
+                return NodeError(ASTRO_INTERNAL_ERROR);
+        }
+        else
+        {
+            if (node.kind != ASCENDING_NODE)
+                return NodeError(ASTRO_INTERNAL_ERROR);
+        }
+    }
+    return node;
 }
 
 

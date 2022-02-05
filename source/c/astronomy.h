@@ -1100,6 +1100,32 @@ typedef struct
 astro_jupiter_moons_t;
 
 
+/**
+ * @brief  Indicates whether a crossing through the ecliptic plane is ascending or descending.
+ */
+typedef enum
+{
+    INVALID_NODE    =  0,   /**< Placeholder value for a missing or invalid node. */
+    ASCENDING_NODE  = +1,   /**< The body passes through the ecliptic plane from south to north. */
+    DESCENDING_NODE = -1    /**< The body passes through the ecliptic plane from north to south. */
+}
+astro_node_kind_t;
+
+/**
+ * @brief Information about an ascending or descending node of a body.
+ *
+ * This structure is returned by #Astronomy_SearchMoonNode and #Astronomy_NextMoonNode
+ * to report information about the center of the Moon passing through the ecliptic plane.
+ */
+typedef struct
+{
+    astro_status_t      status;     /**< `ASTRO_SUCCESS` if this struct is valid; otherwise an error code. */
+    astro_time_t        time;       /**< The time when the body passes through the ecliptic plane. */
+    astro_node_kind_t   kind;       /**< Either `ASCENDING_NODE` or `DESCENDING_NODE`, depending on the direction of the ecliptic plane crossing. */
+}
+astro_node_event_t;
+
+
 /*---------- functions ----------*/
 
 void Astronomy_Reset(void);
@@ -1186,6 +1212,8 @@ astro_local_solar_eclipse_t Astronomy_SearchLocalSolarEclipse(astro_time_t start
 astro_local_solar_eclipse_t Astronomy_NextLocalSolarEclipse(astro_time_t prevEclipseTime, astro_observer_t observer);
 astro_transit_t Astronomy_SearchTransit(astro_body_t body, astro_time_t startTime);
 astro_transit_t Astronomy_NextTransit(astro_body_t body, astro_time_t prevTransitTime);
+astro_node_event_t Astronomy_SearchMoonNode(astro_time_t startTime);
+astro_node_event_t Astronomy_NextMoonNode(astro_node_event_t prevNode);
 
 astro_search_result_t Astronomy_Search(
     astro_search_func_t func,
