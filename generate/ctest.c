@@ -5152,23 +5152,29 @@ static int MoonNodes(void)
     const char *filename = "moon_nodes/moon_nodes.txt";
     int error;
     int lnum, nscanned;
-    char kind;
+    char kind, prev_kind;
     astro_time_t time;
     double ra, dec;
     FILE *infile;
     char line[100];
     char date[20];
+    astro_spherical_t ecl;
+    double diff_lat, max_lat = 0.0;
 
     infile = fopen(filename, "rt");
     if (infile == NULL)
         FAIL("MoonNodes: Cannot open input file: %s\n", filename);
 
     lnum = 0;
+    prev_kind = '?';
     while (ReadLine(line, sizeof(line), infile, filename, lnum))
     {
         ++lnum;
-        // A 2001-01-09T13:53Z    7.1233   22.5350
-        // D 2001-01-22T22:22Z   19.1250  -21.4683
+
+        /* Parse the line from the test data file. */
+        /* A 2001-01-09T13:53Z    7.1233   22.5350 */
+        /* D 2001-01-22T22:22Z   19.1250  -21.4683 */
+
         if (strlen(line) < 40)
             FAIL("MoonNodes(%s line %d): line is too short\n", filename, lnum);
 
@@ -5179,6 +5185,9 @@ static int MoonNodes(void)
         if (kind != 'A' && kind != 'D')
             FAIL("MoonNodes(%s line %d): invalid kind character.\n", filename, lnum);
 
+        if (kind == prev_kind)
+            FAIL("MoonNodes(%s line %d): duplicate ascending/descending kind.\n", filename, lnum);
+
         if (ParseDate(date, &time))
             FAIL("MoonNodes(%s line %d): invalid date/time.\n", filename, lnum);
 
@@ -5187,9 +5196,25 @@ static int MoonNodes(void)
 
         if (!isfinite(dec) || dec < -90.0 || dec > +90.0)
             FAIL("MoonNodes(%s line %d): invalid declination.\n", filename, lnum);
+
+        /* Calculate the Moon's ecliptic angles. Verify latitude is very close to zero. */
+        ecl = Astronomy_EclipticGeoMoon(time);
+        CHECK_STATUS(ecl);
+        diff_lat = 60.0 * ABS(ecl.lat);  /* calculate arcminute latitude error */
+        V(ecl.lon);
+        V(ecl.dist);
+
+        if (diff_lat > max_lat)
+            max_lat = diff_lat;
+
+        /* Prepare for the next iteration. */
+        prev_kind = kind;
     }
 
-    printf("MoonNodes: PASS (%d nodes)\n", lnum);
+    if (max_lat > 0.183)
+        FAIL("MoonNodes: EXCESSIVE ecliptic latitude error = %0.3lf arcmin\n", max_lat);
+
+    printf("MoonNodes: PASS (%d nodes, max lat error = %0.3lf arcmin)\n", lnum, max_lat);
     error = 0;
 fail:
     if (infile != NULL) fclose(infile);
