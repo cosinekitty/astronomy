@@ -106,6 +106,7 @@ static int Diff(double tolerance, const char *a_filename, const char *b_filename
 static int DiffLine(int lnum, const char *aline, const char *bline, maxdiff_column_t column[]);
 static int SeasonsTest(void);
 static int MoonPhase(void);
+static int MoonNodes(void);
 static int RiseSet(void);
 static int LunarApsis(void);
 static int EarthApsis(void);
@@ -180,6 +181,7 @@ static unit_test_t UnitTests[] =
 #endif
     {"moon",                    MoonTest},
     {"moon_apsis",              LunarApsis},
+    {"moon_nodes",              MoonNodes},
     {"moon_phase",              MoonPhase},
     {"planet_apsis",            PlanetApsis},
     {"pluto",                   PlutoCheck},
@@ -5142,5 +5144,56 @@ fail:
 }
 
 #endif
+
+/*-----------------------------------------------------------------------------------------------------------*/
+
+static int MoonNodes(void)
+{
+    const char *filename = "moon_nodes/moon_nodes.txt";
+    int error;
+    int lnum, nscanned;
+    char kind;
+    astro_time_t time;
+    double ra, dec;
+    FILE *infile;
+    char line[100];
+    char date[20];
+
+    infile = fopen(filename, "rt");
+    if (infile == NULL)
+        FAIL("MoonNodes: Cannot open input file: %s\n", filename);
+
+    lnum = 0;
+    while (ReadLine(line, sizeof(line), infile, filename, lnum))
+    {
+        ++lnum;
+        // A 2001-01-09T13:53Z    7.1233   22.5350
+        // D 2001-01-22T22:22Z   19.1250  -21.4683
+        if (strlen(line) < 40)
+            FAIL("MoonNodes(%s line %d): line is too short\n", filename, lnum);
+
+        nscanned = sscanf(line, "%c %20s %lf %lf", &kind, date, &ra, &dec);
+        if (nscanned != 4)
+            FAIL("MoonNodes(%s line %d): syntax error\n", filename, lnum);
+
+        if (kind != 'A' && kind != 'D')
+            FAIL("MoonNodes(%s line %d): invalid kind character.\n", filename, lnum);
+
+        if (ParseDate(date, &time))
+            FAIL("MoonNodes(%s line %d): invalid date/time.\n", filename, lnum);
+
+        if (!isfinite(ra) || ra < 0.0 || ra > 24.0)
+            FAIL("MoonNodes(%s line %d): invalid right ascension.\n", filename, lnum);
+
+        if (!isfinite(dec) || dec < -90.0 || dec > +90.0)
+            FAIL("MoonNodes(%s line %d): invalid declination.\n", filename, lnum);
+    }
+
+    printf("MoonNodes: PASS (%d nodes)\n", lnum);
+    error = 0;
+fail:
+    if (infile != NULL) fclose(infile);
+    return error;
+}
 
 /*-----------------------------------------------------------------------------------------------------------*/
