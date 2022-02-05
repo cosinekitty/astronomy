@@ -5159,7 +5159,12 @@ static int MoonNodes(void)
     char line[100];
     char date[20];
     astro_spherical_t ecl;
+    astro_vector_t vec_eqj, vec_eqd, vec_test;
     double diff_lat, max_lat = 0.0;
+    double diff_angle, max_angle = 0.0;
+    astro_rotation_t rot;
+    astro_spherical_t sphere;
+    astro_angle_result_t result;
 
     infile = fopen(filename, "rt");
     if (infile == NULL)
@@ -5197,6 +5202,14 @@ static int MoonNodes(void)
         if (!isfinite(dec) || dec < -90.0 || dec > +90.0)
             FAIL("MoonNodes(%s line %d): invalid declination.\n", filename, lnum);
 
+        /* Convert RA/DEC to a vector. */
+        sphere.status = ASTRO_SUCCESS;
+        sphere.lat = dec;
+        sphere.lon = 15.0 * ra;
+        sphere.dist = 1.0;
+        vec_test = Astronomy_VectorFromSphere(sphere, time);
+        CHECK_STATUS(vec_test);
+
         /* Calculate the Moon's ecliptic angles. Verify latitude is very close to zero. */
         ecl = Astronomy_EclipticGeoMoon(time);
         CHECK_STATUS(ecl);
@@ -5207,6 +5220,24 @@ static int MoonNodes(void)
         if (diff_lat > max_lat)
             max_lat = diff_lat;
 
+        /* Calculate EQD coordinates. Verify against input file. */
+        vec_eqj = Astronomy_GeoMoon(time);
+        CHECK_STATUS(vec_eqj);
+
+        rot = Astronomy_Rotation_EQJ_EQD(&time);
+        CHECK_STATUS(rot);
+        vec_eqd = Astronomy_RotateVector(rot, vec_eqj);
+        CHECK_STATUS(vec_eqd);
+
+        /* Measure the error angle between the correct vector and the calculated vector. */
+        result = Astronomy_AngleBetween(vec_test, vec_eqd);
+        CHECK_STATUS(result);
+        diff_angle = 60.0 * ABS(result.angle);
+        if (diff_angle > max_angle)
+            max_angle = diff_angle;
+        if (diff_angle > 1.54)
+            FAIL("MoonNodes(%s line %d): EXCESSIVE equatorial error = %0.3lf arcmin\n", filename, lnum, diff_angle);
+
         /* Prepare for the next iteration. */
         prev_kind = kind;
     }
@@ -5214,7 +5245,7 @@ static int MoonNodes(void)
     if (max_lat > 0.183)
         FAIL("MoonNodes: EXCESSIVE ecliptic latitude error = %0.3lf arcmin\n", max_lat);
 
-    printf("MoonNodes: PASS (%d nodes, max lat error = %0.3lf arcmin)\n", lnum, max_lat);
+    printf("MoonNodes: PASS (%d nodes, max lat error = %0.3lf arcmin, max equ error = %0.3lf arcmin)\n", lnum, max_lat, max_angle);
     error = 0;
 fail:
     if (infile != NULL) fclose(infile);

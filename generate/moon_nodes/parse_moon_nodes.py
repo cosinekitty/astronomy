@@ -34,13 +34,12 @@ MonthTable = {
 }
 
 def HourMin(htext, mtext):
-    h = float(htext)
-    m = float(mtext) / 60.0
-    if h < 0.0:
-        h -= m
-    else:
-        h += m
-    return h
+    if htext[0] in '+-':
+        x = float(htext[1:]) + float(mtext)/60.0
+        if htext[0] == '+':
+            return x
+        return -x
+    return float(htext) + float(mtext)/60.0
 
 def ParseNode(kind, year, text):
     #            1         2         3
