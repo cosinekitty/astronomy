@@ -5187,26 +5187,26 @@ static int MoonNodes(void)
         /* D 2001-01-22T22:22Z   19.1250  -21.4683 */
 
         if (strlen(line) < 40)
-            FAIL("MoonNodes(%s line %d): line is too short\n", filename, lnum);
+            FAIL("C MoonNodes(%s line %d): line is too short\n", filename, lnum);
 
         nscanned = sscanf(line, "%c %20s %lf %lf", &kind, date, &ra, &dec);
         if (nscanned != 4)
-            FAIL("MoonNodes(%s line %d): syntax error\n", filename, lnum);
+            FAIL("C MoonNodes(%s line %d): syntax error\n", filename, lnum);
 
         if (kind != 'A' && kind != 'D')
-            FAIL("MoonNodes(%s line %d): invalid kind character.\n", filename, lnum);
+            FAIL("C MoonNodes(%s line %d): invalid kind character.\n", filename, lnum);
 
         if (kind == prev_kind)
-            FAIL("MoonNodes(%s line %d): duplicate ascending/descending kind.\n", filename, lnum);
+            FAIL("C MoonNodes(%s line %d): duplicate ascending/descending kind.\n", filename, lnum);
 
         if (ParseDate(date, &time))
-            FAIL("MoonNodes(%s line %d): invalid date/time.\n", filename, lnum);
+            FAIL("C MoonNodes(%s line %d): invalid date/time.\n", filename, lnum);
 
         if (!isfinite(ra) || ra < 0.0 || ra > 24.0)
-            FAIL("MoonNodes(%s line %d): invalid right ascension.\n", filename, lnum);
+            FAIL("C MoonNodes(%s line %d): invalid right ascension.\n", filename, lnum);
 
         if (!isfinite(dec) || dec < -90.0 || dec > +90.0)
-            FAIL("MoonNodes(%s line %d): invalid declination.\n", filename, lnum);
+            FAIL("C MoonNodes(%s line %d): invalid declination.\n", filename, lnum);
 
         /* Convert RA/DEC to a vector. */
         sphere.status = ASTRO_SUCCESS;
@@ -5242,9 +5242,9 @@ static int MoonNodes(void)
         if (diff_angle > max_angle)
             max_angle = diff_angle;
         if (diff_angle > 1.54)
-            FAIL("MoonNodes(%s line %d): EXCESSIVE equatorial error = %0.3lf arcmin\n", filename, lnum, diff_angle);
+            FAIL("C MoonNodes(%s line %d): EXCESSIVE equatorial error = %0.3lf arcmin\n", filename, lnum, diff_angle);
 
-        /* Now test the Astronomy Engine moon node searcher. */
+        /* Test the Astronomy Engine moon node searcher. */
         if (lnum == 1)
         {
             /* The very first time, so search for the first node in the series. */
@@ -5268,14 +5268,14 @@ static int MoonNodes(void)
         }
 
         if (node.status != ASTRO_SUCCESS)
-            FAIL("MoonNodes(%s line %d): error %d returned by node search\n", filename, lnum, node.status);
+            FAIL("C MoonNodes(%s line %d): error %d returned by node search\n", filename, lnum, node.status);
 
-        /* Verify the ecliptic longitude is very close to zero here. */
+        /* Verify the ecliptic longitude is very close to zero at the alleged node. */
         ecl = Astronomy_EclipticGeoMoon(node.time);
         CHECK_STATUS(ecl);
         diff_lat = 60.0 * ABS(ecl.lat);
         if (diff_lat > 8.1e-4)
-            FAIL("MoonNodes(%s line %d): found node has excessive latitude = %0.4le arcmin\n", filename, lnum, diff_lat);
+            FAIL("C MoonNodes(%s line %d): found node has excessive latitude = %0.4le arcmin\n", filename, lnum, diff_lat);
 
         /* Verify the time agrees with Espenak's time to within a few minutes. */
         diff_minutes = (24.0 * 60.0) * ABS(node.time.tt - time.tt);
@@ -5284,23 +5284,23 @@ static int MoonNodes(void)
 
         /* Verify the kind of node matches what Espenak says (ascending or descending). */
         if (kind == 'A' && node.kind != ASCENDING_NODE)
-            FAIL("MoonNodes(%s line %d): did not find ascending node as expected.\n", filename, lnum);
+            FAIL("C MoonNodes(%s line %d): did not find ascending node as expected.\n", filename, lnum);
 
         if (kind == 'D' && node.kind != DESCENDING_NODE)
-            FAIL("MoonNodes(%s line %d): did not find descending node as expected.\n", filename, lnum);
+            FAIL("C MoonNodes(%s line %d): did not find descending node as expected.\n", filename, lnum);
 
         /* Prepare for the next iteration. */
         prev_kind = kind;
     }
 
     if (max_lat > 0.183)
-        FAIL("MoonNodes: EXCESSIVE ecliptic latitude error = %0.3lf arcmin\n", max_lat);
+        FAIL("C MoonNodes: EXCESSIVE ecliptic latitude error = %0.3lf arcmin\n", max_lat);
 
     if (max_minutes > 3.682)
-        FAIL("MoonNodes: EXCESSIVE time prediction error = %0.3lf minutes\n", max_minutes);
+        FAIL("C MoonNodes: EXCESSIVE time prediction error = %0.3lf minutes\n", max_minutes);
 
-    DEBUG("MoonNodes: min_dt = %0.3lf days, max_dt = %0.3lf days.\n", min_dt, max_dt);
-    printf("MoonNodes: PASS (%d nodes, max lat error = %0.3lf arcmin, max equ error = %0.3lf arcmin, max time error = %0.3lf minutes)\n", lnum, max_lat, max_angle, max_minutes);
+    DEBUG("C MoonNodes: min_dt = %0.3lf days, max_dt = %0.3lf days.\n", min_dt, max_dt);
+    printf("C MoonNodes: PASS (%d nodes, max lat error = %0.3lf arcmin, max equ error = %0.3lf arcmin, max time error = %0.3lf minutes)\n", lnum, max_lat, max_angle, max_minutes);
     error = 0;
 fail:
     if (infile != NULL) fclose(infile);

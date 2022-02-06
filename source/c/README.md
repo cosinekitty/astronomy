@@ -1238,7 +1238,7 @@ After using [`Astronomy_SearchLunarEclipse`](#Astronomy_SearchLunarEclipse) to f
 
 
 
-Call [`Astronomy_SearchMoonNode`](#Astronomy_SearchMoonNode) to find the first of a series of nodes. Then call `Astronomy_NextMoonNode` to find as many more nodes as desired.
+Call [`Astronomy_SearchMoonNode`](#Astronomy_SearchMoonNode) to find the first of a series of nodes. Then call `Astronomy_NextMoonNode` to find as many more consecutive nodes as desired.
 
 
 
@@ -1248,7 +1248,7 @@ Call [`Astronomy_SearchMoonNode`](#Astronomy_SearchMoonNode) to find the first o
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| [`astro_node_event_t`](#astro_node_event_t) | `prevNode` |  The previous node found from calling [`Astronomy_SearchMoonNode`](#Astronomy_SearchMoonNode) or Astronomy_NextMoonNode. | 
+| [`astro_node_event_t`](#astro_node_event_t) | `prevNode` |  The previous node found from calling [`Astronomy_SearchMoonNode`](#Astronomy_SearchMoonNode) or `Astronomy_NextMoonNode`. | 
 
 
 
@@ -2162,9 +2162,9 @@ This function solves for those times, reporting the next maximum elongation even
 
 
 
-Searches for the first ascending or descending node of the Moon after `startTime`. An ascending node is when the Moon's center passes through the ecliptic plane (the plane of the Earth's orbit around the Sun) from the south to the north. A descending node is when the Moon's center passes through the ecliptic plane from the north to the south. Nodes indicate possible times of solar or lunar eclipses, if the Moon also happens to be in the correct phase (new or full, respectively).
+Searches for the first ascending or descending node of the Moon after `startTime`. An ascending node is when the Moon's center passes through the ecliptic plane (the plane of the Earth's orbit around the Sun) from south to north. A descending node is when the Moon's center passes through the ecliptic plane from north to south. Nodes indicate possible times of solar or lunar eclipses, if the Moon also happens to be in the correct phase (new or full, respectively).
 
-Call `Astronomy_SearchMoonNode` to find the first of a series of nodes. Then call [`Astronomy_NextMoonNode`](#Astronomy_NextMoonNode) to find as many more nodes as desired.
+Call `Astronomy_SearchMoonNode` to find the first of a series of nodes. Then call [`Astronomy_NextMoonNode`](#Astronomy_NextMoonNode) to find as many more consecutive nodes as desired.
 
 
 

@@ -8763,13 +8763,13 @@ static const double MOON_NODE_STEP_DAYS = +10.0;    /* a safe number of days to 
  *
  * Searches for the first ascending or descending node of the Moon after `startTime`.
  * An ascending node is when the Moon's center passes through the ecliptic plane
- * (the plane of the Earth's orbit around the Sun) from the south to the north.
+ * (the plane of the Earth's orbit around the Sun) from south to north.
  * A descending node is when the Moon's center passes through the ecliptic plane
- * from the north to the south. Nodes indicate possible times of solar or lunar eclipses,
+ * from north to south. Nodes indicate possible times of solar or lunar eclipses,
  * if the Moon also happens to be in the correct phase (new or full, respectively).
  *
  * Call `Astronomy_SearchMoonNode` to find the first of a series of nodes.
- * Then call #Astronomy_NextMoonNode to find as many more nodes as desired.
+ * Then call #Astronomy_NextMoonNode to find as many more consecutive nodes as desired.
  *
  * @param startTime
  *      The date and time for starting the search for an ascending or descending node of the Moon.
@@ -8820,10 +8820,10 @@ astro_node_event_t Astronomy_SearchMoonNode(astro_time_t startTime)
  * @brief Searches for the next time when the Moon's center crosses through the ecliptic plane.
  *
  * Call #Astronomy_SearchMoonNode to find the first of a series of nodes.
- * Then call `Astronomy_NextMoonNode` to find as many more nodes as desired.
+ * Then call `Astronomy_NextMoonNode` to find as many more consecutive nodes as desired.
  *
  * @param prevNode
- *      The previous node found from calling #Astronomy_SearchMoonNode or Astronomy_NextMoonNode.
+ *      The previous node found from calling #Astronomy_SearchMoonNode or `Astronomy_NextMoonNode`.
  *
  * @return
  *      If successful, the `status` field in the returned structure holds `ASTRO_SUCCESS`

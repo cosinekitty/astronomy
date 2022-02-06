@@ -46,6 +46,7 @@ namespace csharp_test
             new Test("lunar_eclipse_78", LunarEclipseIssue78),
             new Test("magnitude", MagnitudeTest),
             new Test("moonphase", MoonPhaseTest),
+            new Test("moon_nodes", MoonNodesTest),
             new Test("planet_apsis", PlanetApsisTest),
             new Test("pluto", PlutoCheck),
             new Test("refraction", RefractionTest),
@@ -479,6 +480,133 @@ namespace csharp_test
                 Console.WriteLine("C# MoonPhaseTest: passed {0} lines for file {1} : max_arcmin = {2:0.000000}, maxdiff = {3:0.000} seconds, {4} quarters",
                     lnum, filename, max_arcmin, maxdiff, quarter_count);
 
+                return 0;
+            }
+        }
+
+        static int MoonNodesTest()
+        {
+            const string filename = "../../moon_nodes/moon_nodes.txt";
+            using (StreamReader infile = File.OpenText(filename))
+            {
+                var node = new NodeEventInfo();
+                double max_angle = 0.0;
+                double max_minutes = 0.0;
+                int lnum = 0;
+                string line;
+                string prev_kind = "?";
+                while (null != (line = infile.ReadLine()))
+                {
+                    ++lnum;
+
+                    // Parse the line from the test data file.
+                    // A 2001-01-09T13:53Z    7.1233   22.5350
+                    // D 2001-01-22T22:22Z   19.1250  -21.4683
+                    string[] token = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                    if (token.Length != 4)
+                    {
+                        Console.WriteLine($"C# MoonNodesTest({filename} line {lnum}): syntax error");
+                        return 1;
+                    }
+
+                    string kind = token[0];
+                    if (kind != "A" && kind != "D")
+                    {
+                        Console.WriteLine($"C# MoonNodesTest({filename} line {lnum}): incorrect node kind [{kind}].");
+                        return 1;
+                    }
+
+                    if (kind == prev_kind)
+                    {
+                        Console.WriteLine($"C# MoonNodesTest({filename} line {lnum}): duplicate ascending/descending node.");
+                        return 1;
+                    }
+
+                    AstroTime time = ParseDate(token[1]);
+
+                    double ra;
+                    if (!double.TryParse(token[2], out ra) || !double.IsFinite(ra) || (ra < 0.0) || (ra > 24.0))
+                    {
+                        Console.WriteLine($"C# MoonNodesTest({filename} line {lnum}): invalid RA.");
+                        return 1;
+                    }
+
+                    double dec;
+                    if (!double.TryParse(token[3], out dec) || !double.IsFinite(dec) || (dec < -90.0) || (dec > +90.0))
+                    {
+                        Console.WriteLine($"C# MoonNodesTest({filename} line {lnum}): invalid DEC.");
+                        return 1;
+                    }
+
+                    var sphere = new Spherical(dec, 15.0 * ra, 1.0);
+                    AstroVector vec_test = Astronomy.VectorFromSphere(sphere, time);
+
+                    // Calculate EQD coordinates of the Moon. Verify against input file.
+                    AstroVector vec_eqj = Astronomy.GeoMoon(time);
+                    RotationMatrix rot = Astronomy.Rotation_EQJ_EQD(time);
+                    AstroVector vec_eqd = Astronomy.RotateVector(rot, vec_eqj);
+                    double angle = Astronomy.AngleBetween(vec_test, vec_eqd);
+                    double diff_angle = 60.0 * abs(angle);
+                    if (diff_angle > max_angle)
+                        max_angle = diff_angle;
+                    if (diff_angle > 1.54)
+                    {
+                        Console.WriteLine($"C# MoonNodesTest({filename} line {lnum}): EXCESSIVE equatorial error = {diff_angle:F3} arcmin.");
+                        return 1;
+                    }
+
+                    // Test the Astronomy Engine moon node searcher.
+                    if (lnum == 1)
+                    {
+                        // The very first time, so search for the first node in the series.
+                        // Back up a few days to make sure we really are finding it ourselves.
+                        AstroTime earlier = time.AddDays(-6.5472);    // back up by a weird amount of time
+                        node = Astronomy.SearchMoonNode(earlier);
+                    }
+                    else
+                    {
+                        // Use the previous node to find the next node.
+                        node = Astronomy.NextMoonNode(node);
+                    }
+
+                    // Verify the ecliptic longitude is very close to zero at the alleged node.
+                    Spherical ecl = Astronomy.EclipticGeoMoon(node.time);
+                    double diff_lat = 60.0 * abs(ecl.lat);
+                    if (diff_lat > 8.1e-4)
+                    {
+                        Console.WriteLine($"C# MoonNodesTest({filename} line {lnum}): found node has excessive latitude = {diff_lat:F4} arcmin");
+                        return 1;
+                    }
+
+                    // Verify the time agrees with Espenak's time to within a few minutes.
+                    double diff_minutes = (24.0 * 60.0) * abs(node.time.tt - time.tt);
+                    if (diff_minutes > max_minutes)
+                        max_minutes = diff_minutes;
+
+                    // Verify the kind of node matches what Espenak says (ascending or descending).
+                    if (kind == "A" && node.kind != NodeEventKind.Ascending)
+                    {
+                        Console.WriteLine($"C# MoonNodesTest({filename} line {lnum}): did not find ascending node as expected.");
+                        return 1;
+                    }
+
+                    if (kind == "D" && node.kind != NodeEventKind.Descending)
+                    {
+                        Console.WriteLine($"C# MoonNodesTest({filename} line {lnum}): did not find descending node as expected.");
+                        return 1;
+                    }
+
+                    // Prepare for the next iteration.
+                    prev_kind = kind;
+                }
+
+                if (max_minutes > 3.682)
+                {
+                    Console.WriteLine($"C# MoonNodesTest: EXCESSIVE time prediction error = {max_minutes:F3} minutes.");
+                    return 1;
+                }
+
+                Console.WriteLine($"C# MoonNodesTest: PASS ({lnum} nodes, max equ error = {max_angle:F3}, max time error = {max_minutes:F3} minutes).");
                 return 0;
             }
         }
@@ -2452,7 +2580,7 @@ namespace csharp_test
 
             if (epoch == EquatorEpoch.OfDate)
             {
-                // Astronomy_GeoMoon() returns J2000 coordinates. Convert to equator-of-date coordinates.
+                // Astronomy.GeoVector() returns J2000 coordinates. Convert to equator-of-date coordinates.
                 RotationMatrix rot = Astronomy.Rotation_EQJ_EQD(time);
                 geo_moon = Astronomy.RotateVector(rot, geo_moon);
             }

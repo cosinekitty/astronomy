@@ -1457,6 +1457,41 @@ namespace CosineKitty
     }
 
     /// <summary>
+    /// Information about an ascending node or descending node of a body
+    /// </summary>
+    /// <remarks>
+    /// This structure is returned by #Astronomy.SearchMoonNode and #Astronomy.NextMoonNode
+    /// to report information about the center of the Moon passing through the ecliptic plane.
+    /// </remarks>
+    public enum NodeEventKind
+    {
+        /// <summary>Placeholder value for a missing or invalid node.</summary>
+        Invalid = 0,
+
+        /// <summary>The body passes through the ecliptic plane from south to north.</summary>
+        Ascending = +1,
+
+        /// <summary>The body passes through the ecliptic plane from north to south.</summary>
+        Descending = -1,
+    }
+
+    /// <summary>
+    /// Information about an ascending or descending node of a body.
+    /// </summary>
+    /// <remarks>
+    /// This structure is returned by #Astronomy.SearchMoonNode and #Astronomy.NextMoonNode
+    /// to report information about the center of the Moon passing through the ecliptic plane.
+    /// </remarks>
+    public struct NodeEventInfo
+    {
+        /// <summary>The time when the body passes through the ecliptic plane.</summary>
+        public AstroTime        time;
+
+        /// <summary>Whether the node is ascending (south to north) or descending (north to south).</summary>
+        public NodeEventKind    kind;
+    }
+
+    /// <summary>
     /// Represents a function whose ascending root is to be found.
     /// See #Astronomy.Search.
     /// </summary>
@@ -1547,6 +1582,17 @@ namespace CosineKitty
         {
             double angle = Astronomy.MoonPhase(time);
             return Astronomy.LongitudeOffset(angle - targetLon);
+        }
+    }
+
+    internal class SearchContext_MoonNode: SearchContext
+    {
+        public double Direction;
+
+        public override double Eval(AstroTime time)
+        {
+            Spherical moon = Astronomy.EclipticGeoMoon(time);
+            return Direction * moon.lat;
         }
     }
 
@@ -4696,6 +4742,37 @@ namespace CosineKitty
             AstroVector mpos2 = precession(mpos1, time, PrecessDirection.Into2000);
 
             return mpos2;
+        }
+
+        /// <summary>
+        /// Calculates spherical ecliptic geocentric position of the Moon.
+        /// </summary>
+        /// <remarks>
+        /// Given a time of observation, calculates the Moon's geocentric position
+        /// in ecliptic spherical coordinates. Provides the ecliptic latitude and
+        /// longitude in degrees, and the geocentric distance in astronomical units (AU).
+        /// The ecliptic longitude is measured relative to the equinox of date.
+        ///
+        /// This algorithm is based on the Nautical Almanac Office's *Improved Lunar Ephemeris* of 1954,
+        /// which in turn derives from E. W. Brown's lunar theories from the early twentieth century.
+        /// It is adapted from Turbo Pascal code from the book
+        /// [Astronomy on the Personal Computer](https://www.springer.com/us/book/9783540672210)
+        /// by Montenbruck and Pfleger.
+        ///
+        /// To calculate an equatorial J2000 vector instead, use #Astronomy.GeoMoon.
+        /// </remarks>
+        /// <param name="time">
+        /// The date and time for which to calculate the Moon's position.
+        /// </param>
+        public static Spherical EclipticGeoMoon(AstroTime time)
+        {
+            var context = new MoonContext(time.tt / 36525.0);
+            MoonResult moon = context.CalcMoon();
+            return new Spherical(
+                moon.geo_eclip_lat * RAD2DEG,
+                moon.geo_eclip_lon * RAD2DEG,
+                moon.distance_au
+            );
         }
 
         /// <summary>
@@ -8025,6 +8102,94 @@ namespace CosineKitty
         {
             AstroTime startTime = prevTransitTime.AddDays(100.0);
             return SearchTransit(body, startTime);
+        }
+
+        private const double MoonNodeStepDays = +10.0; // a safe number of days to step without missing a Moon node
+
+        /// <summary>
+        /// Searches for a time when the Moon's center crosses through the ecliptic plane.
+        /// </summary>
+        /// <remarks>
+        /// Searches for the first ascending or descending node of the Moon after `startTime`.
+        /// An ascending node is when the Moon's center passes through the ecliptic plane
+        /// (the plane of the Earth's orbit around the Sun) from south to north.
+        /// A descending node is when the Moon's center passes through the ecliptic plane
+        /// from north to south. Nodes indicate possible times of solar or lunar eclipses,
+        /// if the Moon also happens to be in the correct phase (new or full, respectively).
+        /// Call `Astronomy.SearchMoonNode` to find the first of a series of nodes.
+        /// Then call #Astronomy.NextMoonNode to find as many more consecutive nodes as desired.
+        /// </remarks>
+        /// <param name="startTime">
+        /// The date and time for starting the search for an ascending or descending node of the Moon.
+        /// </param>
+        public static NodeEventInfo SearchMoonNode(AstroTime startTime)
+        {
+            // Start at the given moment in time and sample the Moon's ecliptic latitude.
+            // Step 10 days at a time, searching for an interval where that latitude crosses zero.
+            AstroTime time1 = startTime;
+            Spherical eclip1 = EclipticGeoMoon(time1);
+            var context = new SearchContext_MoonNode();
+
+            for(;;)
+            {
+                AstroTime time2 = time1.AddDays(MoonNodeStepDays);
+                Spherical eclip2 = EclipticGeoMoon(time2);
+                if (eclip1.lat * eclip2.lat <= 0.0)
+                {
+                    // There is a node somewhere inside this closed time interval.
+                    // Figure out whether it is an ascending node or a descending node.
+                    NodeEventKind kind;
+                    if (eclip2.lat > eclip1.lat)
+                    {
+                        context.Direction = +1;
+                        kind = NodeEventKind.Ascending;
+                    }
+                    else
+                    {
+                        context.Direction = -1;
+                        kind = NodeEventKind.Descending;
+                    }
+                    AstroTime result = Search(context, time1, time2, 1.0);
+                    if (result == null)
+                        throw new Exception("Could not find Moon node.");   // should never happen
+
+                    return new NodeEventInfo { time = result, kind = kind };
+                }
+                time1 = time2;
+                eclip1 = eclip2;
+            }
+        }
+
+        /// <summary>
+        /// Searches for the next time when the Moon's center crosses through the ecliptic plane.
+        /// </summary>
+        /// <remarks>
+        /// Call #Astronomy.SearchMoonNode to find the first of a series of nodes.
+        /// Then call `Astronomy.NextMoonNode` to find as many more consecutive nodes as desired.
+        /// </remarks>
+        /// <param name="prevNode">
+        /// The previous node found from calling #Astronomy.SearchMoonNode or `Astronomy.NextMoonNode`.
+        /// </param>
+        public static NodeEventInfo NextMoonNode(NodeEventInfo prevNode)
+        {
+            AstroTime time = prevNode.time.AddDays(MoonNodeStepDays);
+            NodeEventInfo node = SearchMoonNode(time);
+            switch (prevNode.kind)
+            {
+                case NodeEventKind.Ascending:
+                    if (node.kind != NodeEventKind.Descending)
+                        throw new Exception("Internal error: previous node was ascending, but this node was: " + node.kind);
+                    break;
+
+                case NodeEventKind.Descending:
+                    if (node.kind != NodeEventKind.Ascending)
+                        throw new Exception("Internal error: previous node was descending, but this node was: " + node.kind);
+                    break;
+
+                default:
+                    throw new Exception("Previous node has an invalid node kind.");
+            }
+            return node;
         }
 
         /// <summary>

@@ -364,6 +364,28 @@ This is the default Delta T function used by Astronomy Engine.
 
 **Returns:** The estimated difference TT-UT on the given date, expressed in seconds.
 
+<a name="Astronomy.EclipticGeoMoon"></a>
+### Astronomy.EclipticGeoMoon(time) &#8658; [`Spherical`](#Spherical)
+
+**Calculates spherical ecliptic geocentric position of the Moon.**
+
+Given a time of observation, calculates the Moon's geocentric position
+in ecliptic spherical coordinates. Provides the ecliptic latitude and
+longitude in degrees, and the geocentric distance in astronomical units (AU).
+The ecliptic longitude is measured relative to the equinox of date.
+
+This algorithm is based on the Nautical Almanac Office's *Improved Lunar Ephemeris* of 1954,
+which in turn derives from E. W. Brown's lunar theories from the early twentieth century.
+It is adapted from Turbo Pascal code from the book
+[Astronomy on the Personal Computer](https://www.springer.com/us/book/9783540672210)
+by Montenbruck and Pfleger.
+
+To calculate an equatorial J2000 vector instead, use [`Astronomy.GeoMoon`](#Astronomy.GeoMoon).
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`AstroTime`](#AstroTime) | `time` | The date and time for which to calculate the Moon's position. |
+
 <a name="Astronomy.EclipticLongitude"></a>
 ### Astronomy.EclipticLongitude(body, time) &#8658; `double`
 
@@ -883,6 +905,18 @@ to find the next lunar eclipse.
 | [`AstroTime`](#AstroTime) | `prevEclipseTime` | A date and time near a full moon. Lunar eclipse search will start at the next full moon. |
 
 **Returns:** A [`LunarEclipseInfo`](#LunarEclipseInfo) structure containing information about the lunar eclipse.
+
+<a name="Astronomy.NextMoonNode"></a>
+### Astronomy.NextMoonNode(prevNode) &#8658; [`NodeEventInfo`](#NodeEventInfo)
+
+**Searches for the next time when the Moon's center crosses through the ecliptic plane.**
+
+Call [`Astronomy.SearchMoonNode`](#Astronomy.SearchMoonNode) to find the first of a series of nodes.
+Then call `Astronomy.NextMoonNode` to find as many more consecutive nodes as desired.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`NodeEventInfo`](#NodeEventInfo) | `prevNode` | The previous node found from calling [`Astronomy.SearchMoonNode`](#Astronomy.SearchMoonNode) or `Astronomy.NextMoonNode`. |
 
 <a name="Astronomy.NextMoonQuarter"></a>
 ### Astronomy.NextMoonQuarter(mq) &#8658; [`MoonQuarterInfo`](#MoonQuarterInfo)
@@ -1563,6 +1597,24 @@ observed in the morning or evening. See [`Astronomy.Elongation`](#Astronomy.Elon
 | [`AstroTime`](#AstroTime) | `startTime` | The date and time at which to begin the search. The maximum elongation event found will always be the first one that occurs after this date and time. |
 
 **Returns:** Either an exception will be thrown, or the function will return a valid value.
+
+<a name="Astronomy.SearchMoonNode"></a>
+### Astronomy.SearchMoonNode(startTime) &#8658; [`NodeEventInfo`](#NodeEventInfo)
+
+**Searches for a time when the Moon's center crosses through the ecliptic plane.**
+
+Searches for the first ascending or descending node of the Moon after `startTime`.
+An ascending node is when the Moon's center passes through the ecliptic plane
+(the plane of the Earth's orbit around the Sun) from south to north.
+A descending node is when the Moon's center passes through the ecliptic plane
+from north to south. Nodes indicate possible times of solar or lunar eclipses,
+if the Moon also happens to be in the correct phase (new or full, respectively).
+Call `Astronomy.SearchMoonNode` to find the first of a series of nodes.
+Then call [`Astronomy.NextMoonNode`](#Astronomy.NextMoonNode) to find as many more consecutive nodes as desired.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`AstroTime`](#AstroTime) | `startTime` | The date and time for starting the search for an ascending or descending node of the Moon. |
 
 <a name="Astronomy.SearchMoonPhase"></a>
 ### Astronomy.SearchMoonPhase(targetLon, startTime, limitDays) &#8658; [`AstroTime`](#AstroTime)
@@ -2476,6 +2528,37 @@ may determine the date and time of the beginning/end of each eclipse phase.
 | --- | --- | --- |
 | `int` | `quarter` | 0=new moon, 1=first quarter, 2=full moon, 3=third quarter. |
 | [`AstroTime`](#AstroTime) | `time` | The date and time of the lunar quarter. |
+
+---
+
+<a name="NodeEventInfo"></a>
+## `struct NodeEventInfo`
+
+**Information about an ascending or descending node of a body.**
+
+This structure is returned by [`Astronomy.SearchMoonNode`](#Astronomy.SearchMoonNode) and [`Astronomy.NextMoonNode`](#Astronomy.NextMoonNode)
+to report information about the center of the Moon passing through the ecliptic plane.
+
+| Type | Name | Description |
+| --- | --- | --- |
+| [`AstroTime`](#AstroTime) | `time` | The time when the body passes through the ecliptic plane. |
+| [`NodeEventKind`](#NodeEventKind) | `kind` | Whether the node is ascending (south to north) or descending (north to south). |
+
+---
+
+<a name="NodeEventKind"></a>
+## `enum NodeEventKind`
+
+**Information about an ascending node or descending node of a body**
+
+This structure is returned by [`Astronomy.SearchMoonNode`](#Astronomy.SearchMoonNode) and [`Astronomy.NextMoonNode`](#Astronomy.NextMoonNode)
+to report information about the center of the Moon passing through the ecliptic plane.
+
+| Value | Description |
+| --- | --- |
+| `Invalid` | Placeholder value for a missing or invalid node. |
+| `Ascending` | The body passes through the ecliptic plane from south to north. |
+| `Descending` | The body passes through the ecliptic plane from north to south. |
 
 ---
 
