@@ -34,9 +34,9 @@
  */
 'use strict';
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.HelioState = exports.BaryState = exports.GeoVector = exports.HelioDistance = exports.HelioVector = exports.JupiterMoons = exports.JupiterMoonsInfo = exports.GeoEmbState = exports.GeoMoonState = exports.GeoMoon = exports.Ecliptic = exports.ObserverGravity = exports.VectorObserver = exports.ObserverState = exports.ObserverVector = exports.Equator = exports.SunPosition = exports.Observer = exports.Horizon = exports.EclipticCoordinates = exports.HorizontalCoordinates = exports.MakeRotation = exports.RotationMatrix = exports.EquatorialCoordinates = exports.Spherical = exports.StateVector = exports.Vector = exports.Libration = exports.LibrationInfo = exports.CalcMoonCount = exports.MakeTime = exports.AstroTime = exports.SetDeltaTFunction = exports.DeltaT_JplHorizons = exports.DeltaT_EspenakMeeus = exports.Body = exports.AngleBetween = exports.CALLISTO_RADIUS_KM = exports.GANYMEDE_RADIUS_KM = exports.EUROPA_RADIUS_KM = exports.IO_RADIUS_KM = exports.JUPITER_MEAN_RADIUS_KM = exports.JUPITER_POLAR_RADIUS_KM = exports.JUPITER_EQUATORIAL_RADIUS_KM = exports.RAD2HOUR = exports.RAD2DEG = exports.HOUR2RAD = exports.DEG2RAD = exports.KM_PER_AU = exports.C_AUDAY = void 0;
-exports.Rotation_EQD_ECL = exports.Rotation_EQJ_HOR = exports.Rotation_HOR_EQJ = exports.Rotation_HOR_EQD = exports.Rotation_EQD_HOR = exports.Rotation_EQD_EQJ = exports.Rotation_EQJ_EQD = exports.Rotation_ECL_EQJ = exports.Rotation_EQJ_ECL = exports.RotateState = exports.RotateVector = exports.InverseRefraction = exports.Refraction = exports.VectorFromHorizon = exports.HorizonFromVector = exports.SphereFromVector = exports.EquatorFromVector = exports.VectorFromSphere = exports.Pivot = exports.IdentityMatrix = exports.CombineRotation = exports.InverseRotation = exports.NextPlanetApsis = exports.SearchPlanetApsis = exports.NextLunarApsis = exports.SearchLunarApsis = exports.Apsis = exports.SearchPeakMagnitude = exports.SearchMaxElongation = exports.Elongation = exports.ElongationEvent = exports.Seasons = exports.SeasonInfo = exports.SearchHourAngle = exports.HourAngleEvent = exports.SearchAltitude = exports.SearchRiseSet = exports.NextMoonQuarter = exports.SearchMoonQuarter = exports.MoonQuarter = exports.SearchMoonPhase = exports.MoonPhase = exports.SearchRelativeLongitude = exports.Illumination = exports.IlluminationInfo = exports.EclipticLongitude = exports.AngleFromSun = exports.PairLongitude = exports.SearchSunLongitude = exports.Search = void 0;
-exports.RotationAxis = exports.AxisInfo = exports.NextTransit = exports.SearchTransit = exports.TransitInfo = exports.NextLocalSolarEclipse = exports.SearchLocalSolarEclipse = exports.LocalSolarEclipseInfo = exports.EclipseEvent = exports.NextGlobalSolarEclipse = exports.SearchGlobalSolarEclipse = exports.NextLunarEclipse = exports.GlobalSolarEclipseInfo = exports.SearchLunarEclipse = exports.LunarEclipseInfo = exports.Constellation = exports.ConstellationInfo = exports.Rotation_GAL_EQJ = exports.Rotation_EQJ_GAL = exports.Rotation_HOR_ECL = exports.Rotation_ECL_HOR = exports.Rotation_ECL_EQD = void 0;
+exports.BaryState = exports.GeoVector = exports.HelioDistance = exports.HelioVector = exports.JupiterMoons = exports.JupiterMoonsInfo = exports.GeoEmbState = exports.GeoMoonState = exports.EclipticGeoMoon = exports.GeoMoon = exports.Ecliptic = exports.ObserverGravity = exports.VectorObserver = exports.ObserverState = exports.ObserverVector = exports.Equator = exports.SunPosition = exports.Observer = exports.Horizon = exports.EclipticCoordinates = exports.HorizontalCoordinates = exports.MakeRotation = exports.RotationMatrix = exports.EquatorialCoordinates = exports.Spherical = exports.StateVector = exports.Vector = exports.Libration = exports.LibrationInfo = exports.CalcMoonCount = exports.MakeTime = exports.AstroTime = exports.SetDeltaTFunction = exports.DeltaT_JplHorizons = exports.DeltaT_EspenakMeeus = exports.Body = exports.AngleBetween = exports.CALLISTO_RADIUS_KM = exports.GANYMEDE_RADIUS_KM = exports.EUROPA_RADIUS_KM = exports.IO_RADIUS_KM = exports.JUPITER_MEAN_RADIUS_KM = exports.JUPITER_POLAR_RADIUS_KM = exports.JUPITER_EQUATORIAL_RADIUS_KM = exports.RAD2HOUR = exports.RAD2DEG = exports.HOUR2RAD = exports.DEG2RAD = exports.KM_PER_AU = exports.C_AUDAY = void 0;
+exports.Rotation_EQJ_HOR = exports.Rotation_HOR_EQJ = exports.Rotation_HOR_EQD = exports.Rotation_EQD_HOR = exports.Rotation_EQD_EQJ = exports.Rotation_EQJ_EQD = exports.Rotation_ECL_EQJ = exports.Rotation_EQJ_ECL = exports.RotateState = exports.RotateVector = exports.InverseRefraction = exports.Refraction = exports.VectorFromHorizon = exports.HorizonFromVector = exports.SphereFromVector = exports.EquatorFromVector = exports.VectorFromSphere = exports.Pivot = exports.IdentityMatrix = exports.CombineRotation = exports.InverseRotation = exports.NextPlanetApsis = exports.SearchPlanetApsis = exports.NextLunarApsis = exports.SearchLunarApsis = exports.Apsis = exports.SearchPeakMagnitude = exports.SearchMaxElongation = exports.Elongation = exports.ElongationEvent = exports.Seasons = exports.SeasonInfo = exports.SearchHourAngle = exports.HourAngleEvent = exports.SearchAltitude = exports.SearchRiseSet = exports.NextMoonQuarter = exports.SearchMoonQuarter = exports.MoonQuarter = exports.SearchMoonPhase = exports.MoonPhase = exports.SearchRelativeLongitude = exports.Illumination = exports.IlluminationInfo = exports.EclipticLongitude = exports.AngleFromSun = exports.PairLongitude = exports.SearchSunLongitude = exports.Search = exports.HelioState = void 0;
+exports.RotationAxis = exports.AxisInfo = exports.NextMoonNode = exports.SearchMoonNode = exports.NodeEventInfo = exports.NodeEventKind = exports.NextTransit = exports.SearchTransit = exports.TransitInfo = exports.NextLocalSolarEclipse = exports.SearchLocalSolarEclipse = exports.LocalSolarEclipseInfo = exports.EclipseEvent = exports.NextGlobalSolarEclipse = exports.SearchGlobalSolarEclipse = exports.NextLunarEclipse = exports.GlobalSolarEclipseInfo = exports.SearchLunarEclipse = exports.LunarEclipseInfo = exports.Constellation = exports.ConstellationInfo = exports.Rotation_GAL_EQJ = exports.Rotation_EQJ_GAL = exports.Rotation_HOR_ECL = exports.Rotation_ECL_HOR = exports.Rotation_ECL_EQD = exports.Rotation_EQD_ECL = void 0;
 /**
  * @brief The speed of light in AU/day.
  */
@@ -2689,22 +2689,49 @@ exports.Ecliptic = Ecliptic;
  * @returns {Vector}
  */
 function GeoMoon(date) {
-    var time = MakeTime(date);
-    var moon = CalcMoon(time);
+    const time = MakeTime(date);
+    const moon = CalcMoon(time);
     // Convert geocentric ecliptic spherical coords to cartesian coords.
-    var dist_cos_lat = moon.distance_au * Math.cos(moon.geo_eclip_lat);
-    var gepos = [
+    const dist_cos_lat = moon.distance_au * Math.cos(moon.geo_eclip_lat);
+    const gepos = [
         dist_cos_lat * Math.cos(moon.geo_eclip_lon),
         dist_cos_lat * Math.sin(moon.geo_eclip_lon),
         moon.distance_au * Math.sin(moon.geo_eclip_lat)
     ];
     // Convert ecliptic coordinates to equatorial coordinates, both in mean equinox of date.
-    var mpos1 = ecl2equ_vec(time, gepos);
+    const mpos1 = ecl2equ_vec(time, gepos);
     // Convert from mean equinox of date to J2000...
-    var mpos2 = precession(mpos1, time, PrecessDirection.Into2000);
+    const mpos2 = precession(mpos1, time, PrecessDirection.Into2000);
     return new Vector(mpos2[0], mpos2[1], mpos2[2], time);
 }
 exports.GeoMoon = GeoMoon;
+/**
+ * @brief Calculates spherical ecliptic geocentric position of the Moon.
+ *
+ * Given a time of observation, calculates the Moon's geocentric position
+ * in ecliptic spherical coordinates. Provides the ecliptic latitude and
+ * longitude in degrees, and the geocentric distance in astronomical units (AU).
+ * The ecliptic longitude is measured relative to the equinox of date.
+ *
+ * This algorithm is based on the Nautical Almanac Office's <i>Improved Lunar Ephemeris</i> of 1954,
+ * which in turn derives from E. W. Brown's lunar theories from the early twentieth century.
+ * It is adapted from Turbo Pascal code from the book
+ * <a href="https://www.springer.com/us/book/9783540672210">Astronomy on the Personal Computer</a>
+ * by Montenbruck and Pfleger.
+ *
+ * To calculate an equatorial J2000 vector instead, use {@link GeoMoon}.
+ *
+ * @param {FlexibleDateTime} date
+ *      The date and time for which to calculate the Moon's position.
+ *
+ * @returns {Spherical}
+ */
+function EclipticGeoMoon(date) {
+    const time = MakeTime(date);
+    const moon = CalcMoon(time);
+    return new Spherical(moon.geo_eclip_lat * exports.RAD2DEG, moon.geo_eclip_lon * exports.RAD2DEG, moon.distance_au);
+}
+exports.EclipticGeoMoon = EclipticGeoMoon;
 /**
  * @brief Calculates equatorial geocentric position and velocity of the Moon at a given time.
  *
@@ -8058,6 +8085,106 @@ function NextTransit(body, prevTransitTime) {
     return SearchTransit(body, startTime);
 }
 exports.NextTransit = NextTransit;
+/**
+ * @brief Indicates whether a crossing through the ecliptic plane is ascending or descending.
+ *
+ * `Invalid` is a placeholder for an unknown or missing node.
+ * `Ascending` indicates a body passing through the ecliptic plane from south to north.
+ * `Descending` indicates a body passing through the ecliptic plane from north to south.
+ *
+ * @enum {number}
+ */
+var NodeEventKind;
+(function (NodeEventKind) {
+    NodeEventKind[NodeEventKind["Invalid"] = 0] = "Invalid";
+    NodeEventKind[NodeEventKind["Ascending"] = 1] = "Ascending";
+    NodeEventKind[NodeEventKind["Descending"] = -1] = "Descending";
+})(NodeEventKind = exports.NodeEventKind || (exports.NodeEventKind = {}));
+/**
+ * @brief Information about an ascending or descending node of a body.
+ *
+ * This object is returned by {@link SearchMoonNode} and {@link NextMoonNode}
+ * to report information about the center of the Moon passing through the ecliptic plane.
+ *
+ * @property {NodeEventKind} kind   Whether the node is ascending (south to north) or descending (north to south).
+ * @property {AstroTime} time       The time when the body passes through the ecliptic plane.</summary>
+ */
+class NodeEventInfo {
+    constructor(kind, time) {
+        this.kind = kind;
+        this.time = time;
+    }
+}
+exports.NodeEventInfo = NodeEventInfo;
+const MoonNodeStepDays = +10.0; // a safe number of days to step without missing a Moon node
+/**
+ * @brief Searches for a time when the Moon's center crosses through the ecliptic plane.
+ *
+ * Searches for the first ascending or descending node of the Moon after `startTime`.
+ * An ascending node is when the Moon's center passes through the ecliptic plane
+ * (the plane of the Earth's orbit around the Sun) from south to north.
+ * A descending node is when the Moon's center passes through the ecliptic plane
+ * from north to south. Nodes indicate possible times of solar or lunar eclipses,
+ * if the Moon also happens to be in the correct phase (new or full, respectively).
+ * Call `SearchMoonNode` to find the first of a series of nodes.
+ * Then call {@link NextMoonNode} to find as many more consecutive nodes as desired.
+ *
+ * @param {FlexibleDateTime} startTime
+ *      The date and time for starting the search for an ascending or descending node of the Moon.
+ *
+ * @returns {NodeEventInfo}
+ */
+function SearchMoonNode(startTime) {
+    // Start at the given moment in time and sample the Moon's ecliptic latitude.
+    // Step 10 days at a time, searching for an interval where that latitude crosses zero.
+    let time1 = MakeTime(startTime);
+    let eclip1 = EclipticGeoMoon(time1);
+    for (;;) {
+        const time2 = time1.AddDays(MoonNodeStepDays);
+        const eclip2 = EclipticGeoMoon(time2);
+        if (eclip1.lat * eclip2.lat <= 0.0) {
+            // There is a node somewhere inside this closed time interval.
+            // Figure out whether it is an ascending node or a descending node.
+            const kind = (eclip2.lat > eclip1.lat) ? NodeEventKind.Ascending : NodeEventKind.Descending;
+            const result = Search(t => kind * EclipticGeoMoon(t).lat, time1, time2);
+            if (!result)
+                throw `Could not find moon node.`; // should never happen
+            return new NodeEventInfo(kind, result);
+        }
+        time1 = time2;
+        eclip1 = eclip2;
+    }
+}
+exports.SearchMoonNode = SearchMoonNode;
+/**
+ * @brief Searches for the next time when the Moon's center crosses through the ecliptic plane.
+ *
+ * Call {@link SearchMoonNode} to find the first of a series of nodes.
+ * Then call `NextMoonNode` to find as many more consecutive nodes as desired.
+ *
+ * @param {NodeEventInfo} prevNode
+ *      The previous node found from calling {@link SearchMoonNode} or `NextMoonNode`.
+ *
+ * @returns {NodeEventInfo}
+ */
+function NextMoonNode(prevNode) {
+    const time = prevNode.time.AddDays(MoonNodeStepDays);
+    const node = SearchMoonNode(time);
+    switch (prevNode.kind) {
+        case NodeEventKind.Ascending:
+            if (node.kind !== NodeEventKind.Descending)
+                throw `Internal error: previous node was ascending, but this node was: ${node.kind}`;
+            break;
+        case NodeEventKind.Descending:
+            if (node.kind !== NodeEventKind.Ascending)
+                throw `Internal error: previous node was descending, but this node was: ${node.kind}`;
+            break;
+        default:
+            throw `Previous node has an invalid node kind: ${prevNode.kind}`;
+    }
+    return node;
+}
+exports.NextMoonNode = NextMoonNode;
 /**
  * @brief Information about a body's rotation axis at a given time.
  *

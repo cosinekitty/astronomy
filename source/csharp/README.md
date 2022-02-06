@@ -2549,10 +2549,7 @@ to report information about the center of the Moon passing through the ecliptic 
 <a name="NodeEventKind"></a>
 ## `enum NodeEventKind`
 
-**Information about an ascending node or descending node of a body**
-
-This structure is returned by [`Astronomy.SearchMoonNode`](#Astronomy.SearchMoonNode) and [`Astronomy.NextMoonNode`](#Astronomy.NextMoonNode)
-to report information about the center of the Moon passing through the ecliptic plane.
+**Indicates whether a crossing through the ecliptic plane is ascending or descending.**
 
 | Value | Description |
 | --- | --- |

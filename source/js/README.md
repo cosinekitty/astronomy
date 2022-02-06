@@ -753,6 +753,24 @@ The calculations are performed from the point of view of a geocentric observer.
 
 * * *
 
+<a name="NodeEventInfo"></a>
+
+## NodeEventInfo
+**Kind**: global class  
+**Brief**: Information about an ascending or descending node of a body.
+
+This object is returned by [SearchMoonNode](#SearchMoonNode) and [NextMoonNode](#NextMoonNode)
+to report information about the center of the Moon passing through the ecliptic plane.  
+**Properties**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| kind | [<code>NodeEventKind</code>](#NodeEventKind) | Whether the node is ascending (south to north) or descending (north to south). |
+| time | [<code>AstroTime</code>](#AstroTime) | The time when the body passes through the ecliptic plane.</summary> |
+
+
+* * *
+
 <a name="AxisInfo"></a>
 
 ## AxisInfo
@@ -912,6 +930,18 @@ to find which bodies it supports.
 
 You can also use enumeration syntax for the bodies, like
 `Astronomy.Body.Moon`, `Astronomy.Body.Jupiter`, etc.  
+
+* * *
+
+<a name="NodeEventKind"></a>
+
+## NodeEventKind : <code>enum</code>
+**Kind**: global enum  
+**Brief**: Indicates whether a crossing through the ecliptic plane is ascending or descending.
+
+`Invalid` is a placeholder for an unknown or missing node.
+`Ascending` indicates a body passing through the ecliptic plane from south to north.
+`Descending` indicates a body passing through the ecliptic plane from north to south.  
 
 * * *
 
@@ -1218,6 +1248,32 @@ by Montenbruck and Pfleger.
 | Param | Type | Description |
 | --- | --- | --- |
 | date | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time for which to calculate the Moon's geocentric position. |
+
+
+* * *
+
+<a name="EclipticGeoMoon"></a>
+
+## EclipticGeoMoon(date) ⇒ [<code>Spherical</code>](#Spherical)
+**Kind**: global function  
+**Brief**: Calculates spherical ecliptic geocentric position of the Moon.
+
+Given a time of observation, calculates the Moon's geocentric position
+in ecliptic spherical coordinates. Provides the ecliptic latitude and
+longitude in degrees, and the geocentric distance in astronomical units (AU).
+The ecliptic longitude is measured relative to the equinox of date.
+
+This algorithm is based on the Nautical Almanac Office's <i>Improved Lunar Ephemeris</i> of 1954,
+which in turn derives from E. W. Brown's lunar theories from the early twentieth century.
+It is adapted from Turbo Pascal code from the book
+<a href="https://www.springer.com/us/book/9783540672210">Astronomy on the Personal Computer</a>
+by Montenbruck and Pfleger.
+
+To calculate an equatorial J2000 vector instead, use [GeoMoon](#GeoMoon).  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| date | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time for which to calculate the Moon's position. |
 
 
 * * *
@@ -2613,6 +2669,44 @@ Keep calling this function as many times as you want to keep finding more transi
 | --- | --- | --- |
 | body | [<code>Body</code>](#Body) | The planet whose transit is to be found. Must be `Body.Mercury` or `Body.Venus`. |
 | prevTransitTime | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | A date and time near the previous transit. |
+
+
+* * *
+
+<a name="SearchMoonNode"></a>
+
+## SearchMoonNode(startTime) ⇒ [<code>NodeEventInfo</code>](#NodeEventInfo)
+**Kind**: global function  
+**Brief**: Searches for a time when the Moon's center crosses through the ecliptic plane.
+
+Searches for the first ascending or descending node of the Moon after `startTime`.
+An ascending node is when the Moon's center passes through the ecliptic plane
+(the plane of the Earth's orbit around the Sun) from south to north.
+A descending node is when the Moon's center passes through the ecliptic plane
+from north to south. Nodes indicate possible times of solar or lunar eclipses,
+if the Moon also happens to be in the correct phase (new or full, respectively).
+Call `SearchMoonNode` to find the first of a series of nodes.
+Then call [NextMoonNode](#NextMoonNode) to find as many more consecutive nodes as desired.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| startTime | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time for starting the search for an ascending or descending node of the Moon. |
+
+
+* * *
+
+<a name="NextMoonNode"></a>
+
+## NextMoonNode(prevNode) ⇒ [<code>NodeEventInfo</code>](#NodeEventInfo)
+**Kind**: global function  
+**Brief**: Searches for the next time when the Moon's center crosses through the ecliptic plane.
+
+Call [SearchMoonNode](#SearchMoonNode) to find the first of a series of nodes.
+Then call `NextMoonNode` to find as many more consecutive nodes as desired.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| prevNode | [<code>NodeEventInfo</code>](#NodeEventInfo) | The previous node found from calling [SearchMoonNode](#SearchMoonNode) or `NextMoonNode`. |
 
 
 * * *

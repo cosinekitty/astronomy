@@ -2553,6 +2553,96 @@ function AxisTestBody(body, filename, arcmin_tolerance) {
 }
 
 
+function MoonNodes() {
+    const filename = 'moon_nodes/moon_nodes.txt';
+    const lines = ReadLines(filename);
+    let lnum = 0;
+    let prev_kind = '?';
+    let max_angle = 0;
+    let max_minutes = 0;
+    let node;
+    for (let line of lines) {
+        ++lnum;
+        const token = line.trim().split(/\s+/);
+        if (token.length !== 4) {
+            console.error(`JS MoonNodes(${filename} line ${lnum}): Unexpected number of tokens = ${tokens.length}`);
+            return 1;
+        }
+        const kind = token[0];
+        if (kind !== 'A' && kind !== 'D') {
+            console.error(`JS MoonNodes(${filename} line ${lnum}): Invalid node kind '${kind}'`);
+            return 1;
+        }
+        if (kind === prev_kind) {
+            console.error(`JS MoonNodes(${filename} line ${lnum}): Duplicate node kind.`);
+            return 1;
+        }
+
+        // Convert file's EQD Moon position angles to vector form.
+        const time = Astronomy.MakeTime(new Date(token[1]));
+        const ra = float(token[2]);
+        const dec = float(token[3]);
+        const sphere = new Astronomy.Spherical(dec, 15*ra, 1);
+        const vec_test = Astronomy.VectorFromSphere(sphere, time);
+
+        // Calculate EQD coordinates of the Moon. Verify against input file.
+        const vec_eqj = Astronomy.GeoMoon(time);
+        const rot = Astronomy.Rotation_EQJ_EQD(time);
+        const vec_eqd = Astronomy.RotateVector(rot, vec_eqj);
+        const angle = Astronomy.AngleBetween(vec_test, vec_eqd);
+        const diff_angle = 60 * abs(angle);
+        if (diff_angle > max_angle)
+            max_angle = diff_angle;
+        if (diff_angle > 1.54) {
+            console.error(`JS MoonNodes(${filename} line ${lnum}): EXCESSIVE equatorial error = ${diff_angle.toFixed(3)} arcmin.`);
+            return 1;
+        }
+
+        // Test the Astronomy Engine moon node searcher.
+        if (lnum === 1) {
+            // The very first time, so search for the first node in the series.
+            // Back up a few days to make sure we really are finding it ourselves.
+            const earlier = time.AddDays(-6.5472);      // back up by a weird amount of time
+            node = Astronomy.SearchMoonNode(earlier);
+        } else {
+            node = Astronomy.NextMoonNode(node);
+        }
+
+        // Verify the ecliptic longitude is very close to zero at the alleged node.
+        const ecl = Astronomy.EclipticGeoMoon(node.time);
+        const diff_lat = 60 * abs(ecl.lat);
+        if (diff_lat > 8.1e-4) {
+            console.error(`JS MoonNodes(${filename} line ${lnum}): found node has excessive latitude = ${diff_lat} arcmin.`);
+            return 1;
+        }
+
+        // Verify the time agrees with Espenak's time to within a few minutes.
+        const diff_minutes = (24 * 60) * abs(node.time.tt - time.tt);
+        if (diff_minutes > max_minutes)
+            max_minutes = diff_minutes;
+
+        // Verify the kind of node matches what Espenak says (ascending or descending).
+        if (kind === 'A' && node.kind !== Astronomy.NodeEventKind.Ascending) {
+            console.error(`JS MoonNodes(${filename} line ${lnum}): did not find ascending node as expected.`);
+            return 1;
+        }
+        if (kind === 'D' && node.kind !== Astronomy.NodeEventKind.Descending) {
+            console.error(`JS MoonNodes(${filename} line ${lnum}): did not find descending node as expected.`);
+            return 1;
+        }
+
+        // Prepare for the next iteration.
+        prev_kind = kind;
+    }
+    if (max_minutes > 3.682) {
+        console.error(`JS MoonNodes: EXCESSIVE time prediction error = ${max_minutes.toFixed(3)} minutes.`);
+        return 1;
+    }
+    console.log(`JS MoonNodes: PASS (${lnum} nodes, max equ error = ${max_angle.toFixed(3)} arcmin, max time error = ${max_minutes.toFixed(3)} minutes.)`);
+    return 0;
+}
+
+
 const UnitTests = {
     aberration:             AberrationTest,
     axis:                   AxisTest,
@@ -2569,10 +2659,11 @@ const UnitTests = {
     lunar_apsis:            LunarApsis,
     lunar_eclipse:          LunarEclipse,
     lunar_eclipse_78:       LunarEclipseIssue78,
+    magnitude:              Magnitude,
+    moon_nodes:             MoonNodes,
+    moon_phase:             MoonPhase,
     planet_apsis:           PlanetApsis,
     pluto:                  PlutoCheck,
-    magnitude:              Magnitude,
-    moon_phase:             MoonPhase,
     refraction:             Refraction,
     rise_set:               RiseSet,
     rotation:               Rotation,

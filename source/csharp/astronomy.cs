@@ -1457,12 +1457,8 @@ namespace CosineKitty
     }
 
     /// <summary>
-    /// Information about an ascending node or descending node of a body
+    /// Indicates whether a crossing through the ecliptic plane is ascending or descending.
     /// </summary>
-    /// <remarks>
-    /// This structure is returned by #Astronomy.SearchMoonNode and #Astronomy.NextMoonNode
-    /// to report information about the center of the Moon passing through the ecliptic plane.
-    /// </remarks>
     public enum NodeEventKind
     {
         /// <summary>Placeholder value for a missing or invalid node.</summary>

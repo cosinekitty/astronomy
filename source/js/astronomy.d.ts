@@ -764,6 +764,28 @@ export declare function Ecliptic(equ: Vector): EclipticCoordinates;
  */
 export declare function GeoMoon(date: FlexibleDateTime): Vector;
 /**
+ * @brief Calculates spherical ecliptic geocentric position of the Moon.
+ *
+ * Given a time of observation, calculates the Moon's geocentric position
+ * in ecliptic spherical coordinates. Provides the ecliptic latitude and
+ * longitude in degrees, and the geocentric distance in astronomical units (AU).
+ * The ecliptic longitude is measured relative to the equinox of date.
+ *
+ * This algorithm is based on the Nautical Almanac Office's <i>Improved Lunar Ephemeris</i> of 1954,
+ * which in turn derives from E. W. Brown's lunar theories from the early twentieth century.
+ * It is adapted from Turbo Pascal code from the book
+ * <a href="https://www.springer.com/us/book/9783540672210">Astronomy on the Personal Computer</a>
+ * by Montenbruck and Pfleger.
+ *
+ * To calculate an equatorial J2000 vector instead, use {@link GeoMoon}.
+ *
+ * @param {FlexibleDateTime} date
+ *      The date and time for which to calculate the Moon's position.
+ *
+ * @returns {Spherical}
+ */
+export declare function EclipticGeoMoon(date: FlexibleDateTime): Spherical;
+/**
  * @brief Calculates equatorial geocentric position and velocity of the Moon at a given time.
  *
  * Given a time of observation, calculates the Moon's position and velocity vectors.
@@ -2617,6 +2639,64 @@ export declare function SearchTransit(body: Body, startTime: FlexibleDateTime): 
  * @returns {TransitInfo}
  */
 export declare function NextTransit(body: Body, prevTransitTime: FlexibleDateTime): TransitInfo;
+/**
+ * @brief Indicates whether a crossing through the ecliptic plane is ascending or descending.
+ *
+ * `Invalid` is a placeholder for an unknown or missing node.
+ * `Ascending` indicates a body passing through the ecliptic plane from south to north.
+ * `Descending` indicates a body passing through the ecliptic plane from north to south.
+ *
+ * @enum {number}
+ */
+export declare enum NodeEventKind {
+    Invalid = 0,
+    Ascending = 1,
+    Descending = -1
+}
+/**
+ * @brief Information about an ascending or descending node of a body.
+ *
+ * This object is returned by {@link SearchMoonNode} and {@link NextMoonNode}
+ * to report information about the center of the Moon passing through the ecliptic plane.
+ *
+ * @property {NodeEventKind} kind   Whether the node is ascending (south to north) or descending (north to south).
+ * @property {AstroTime} time       The time when the body passes through the ecliptic plane.</summary>
+ */
+export declare class NodeEventInfo {
+    kind: NodeEventKind;
+    time: AstroTime;
+    constructor(kind: NodeEventKind, time: AstroTime);
+}
+/**
+ * @brief Searches for a time when the Moon's center crosses through the ecliptic plane.
+ *
+ * Searches for the first ascending or descending node of the Moon after `startTime`.
+ * An ascending node is when the Moon's center passes through the ecliptic plane
+ * (the plane of the Earth's orbit around the Sun) from south to north.
+ * A descending node is when the Moon's center passes through the ecliptic plane
+ * from north to south. Nodes indicate possible times of solar or lunar eclipses,
+ * if the Moon also happens to be in the correct phase (new or full, respectively).
+ * Call `SearchMoonNode` to find the first of a series of nodes.
+ * Then call {@link NextMoonNode} to find as many more consecutive nodes as desired.
+ *
+ * @param {FlexibleDateTime} startTime
+ *      The date and time for starting the search for an ascending or descending node of the Moon.
+ *
+ * @returns {NodeEventInfo}
+ */
+export declare function SearchMoonNode(startTime: FlexibleDateTime): NodeEventInfo;
+/**
+ * @brief Searches for the next time when the Moon's center crosses through the ecliptic plane.
+ *
+ * Call {@link SearchMoonNode} to find the first of a series of nodes.
+ * Then call `NextMoonNode` to find as many more consecutive nodes as desired.
+ *
+ * @param {NodeEventInfo} prevNode
+ *      The previous node found from calling {@link SearchMoonNode} or `NextMoonNode`.
+ *
+ * @returns {NodeEventInfo}
+ */
+export declare function NextMoonNode(prevNode: NodeEventInfo): NodeEventInfo;
 /**
  * @brief Information about a body's rotation axis at a given time.
  *
