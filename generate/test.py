@@ -2289,6 +2289,49 @@ def AxisTestBody(body, filename, arcmin_tolerance):
 
 #-----------------------------------------------------------------------------------------------------------
 
+def MoonNodes():
+    filename = 'moon_nodes/moon_nodes.txt'
+    with open(filename, 'rt') as infile:
+        max_angle = 0.0
+        prev_kind = '?'
+        lnum = 0
+        for line in infile:
+            line = line.strip()
+            lnum += 1
+            token = line.split()
+            if len(token) != 4:
+                print('PY MoonNodes({} line {}): syntax error'.format(filename, lnum))
+                return 1
+            kind = token[0]
+            if kind not in 'AD':
+                print('PY MoonNodes({} line {}): invalid node kind'.format(filename, lnum))
+                return 1
+            if kind == prev_kind:
+                print('PY MoonNodes({} line {}): duplicate ascending/descending node'.format(filename, lnum))
+                return 1
+            time = astronomy.Time.Parse(token[1])
+            ra = float(token[2])
+            dec = float(token[3])
+            sphere = astronomy.Spherical(dec, 15.0 * ra, 1.0)
+            vec_test = astronomy.VectorFromSphere(sphere, time)
+
+            # Calculate EQD coordinates of the Moon. Verify against input file.
+            vec_eqj = astronomy.GeoMoon(time)
+            rot = astronomy.Rotation_EQJ_EQD(time)
+            vec_eqd = astronomy.RotateVector(rot, vec_eqj)
+            angle = astronomy.AngleBetween(vec_test, vec_eqd)
+            diff_angle = 60.0 * abs(angle)
+            if diff_angle > max_angle:
+                max_angle = diff_angle
+            if diff_angle > 1.54:
+                print('PY MoonNodes({} line {}): EXCESSIVE equatorial error = {:0.3f} arcmin'.format(filename, lnum, diff_angle))
+
+            prev_kind = kind
+    print('PY MoonNodes: PASS ({} nodes, max equ error = {:0.3f} arcmin.)'.format(lnum, max_angle))
+    return 0
+
+#-----------------------------------------------------------------------------------------------------------
+
 UnitTests = {
     'aberration':               Aberration,
     'axis':                     Axis,
@@ -2307,6 +2350,7 @@ UnitTests = {
     'lunar_eclipse_78':         LunarEclipseIssue78,
     'magnitude':                Magnitude,
     'moon':                     GeoMoon,
+    'moon_nodes':               MoonNodes,
     'moonphase':                MoonPhase,
     'planet_apsis':             PlanetApsis,
     'pluto':                    PlutoCheck,
