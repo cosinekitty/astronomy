@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='astronomy-engine',
-    version='2.0.10',
+    version='2.0.11',
     description='Astronomy calculation for Sun, Moon, and planets.',
     long_description=open('README.md').read(),
     long_description_content_type='text/markdown',
