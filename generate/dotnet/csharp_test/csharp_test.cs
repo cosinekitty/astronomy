@@ -600,7 +600,7 @@ namespace csharp_test
                     prev_kind = kind;
                 }
 
-                if (max_minutes > 3.682)
+                if (max_minutes > 3.681)
                 {
                     Console.WriteLine($"C# MoonNodesTest: EXCESSIVE time prediction error = {max_minutes:F3} minutes.");
                     return 1;

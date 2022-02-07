@@ -5296,7 +5296,7 @@ static int MoonNodes(void)
     if (max_lat > 0.183)
         FAIL("C MoonNodes: EXCESSIVE ecliptic latitude error = %0.3lf arcmin\n", max_lat);
 
-    if (max_minutes > 3.682)
+    if (max_minutes > 3.681)
         FAIL("C MoonNodes: EXCESSIVE time prediction error = %0.3lf minutes\n", max_minutes);
 
     DEBUG("C MoonNodes: min_dt = %0.3lf days, max_dt = %0.3lf days.\n", min_dt, max_dt);

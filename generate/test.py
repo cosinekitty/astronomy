@@ -2293,6 +2293,7 @@ def MoonNodes():
     filename = 'moon_nodes/moon_nodes.txt'
     with open(filename, 'rt') as infile:
         max_angle = 0.0
+        max_minutes = 0.0
         prev_kind = '?'
         lnum = 0
         for line in infile:
@@ -2326,8 +2327,41 @@ def MoonNodes():
             if diff_angle > 1.54:
                 print('PY MoonNodes({} line {}): EXCESSIVE equatorial error = {:0.3f} arcmin'.format(filename, lnum, diff_angle))
 
+            if lnum == 1:
+                # The very first time, so search for the first node in the series.
+                # Back up a few days to make sure we really are finding it ourselves.
+                earlier = time.AddDays(-6.5472)    # back up by a weird amount of time
+                node = astronomy.SearchMoonNode(earlier)
+            else:
+                # Use the previous node to find the next node.
+                node = astronomy.NextMoonNode(node)
+
+            # Verify the ecliptic longitude is very close to zero at the alleged node.
+            ecl = astronomy.EclipticGeoMoon(node.time)
+            diff_lat = 60.0 * abs(ecl.lat)
+            if diff_lat > 8.1e-4:
+                print('PY MoonNodes({} line {}): found node has excessive latitude = {:0.4f} arcmin.'.format(filename, lnum, diff_lat))
+                return 1
+
+            # Verify the time agrees with Espenak's time to within a few minutes.
+            diff_minutes = (24.0 * 60.0) * abs(node.time.tt - time.tt)
+            if diff_minutes > max_minutes:
+                max_minutes = diff_minutes
+
+            # Verify the kind of node matches what Espenak says (ascending or descending).
+            if kind == 'A' and node.kind != astronomy.NodeEventKind.Ascending:
+                print('PY MoonNodes({} line {}): did not find ascending node as expected.'.format(filename, lnum))
+                return 1
+
+            if kind == 'D' and node.kind != astronomy.NodeEventKind.Descending:
+                print('PY MoonNodes({} line {}): did not find descending node as expected.'.format(filename, lnum))
+                return 1
+
             prev_kind = kind
-    print('PY MoonNodes: PASS ({} nodes, max equ error = {:0.3f} arcmin.)'.format(lnum, max_angle))
+    if max_minutes > 3.681:
+        print('PY MoonNodes: EXCESSIVE time prediction error = {:0.3f} minutes.'.format(max_minutes))
+        return 1
+    print('PY MoonNodes: PASS ({} nodes, max equ error = {:0.3f} arcmin, max time error = {:0.3f} minutes.)'.format(lnum, max_angle, max_minutes))
     return 0
 
 #-----------------------------------------------------------------------------------------------------------

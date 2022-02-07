@@ -7996,7 +7996,7 @@ export var NodeEventKind;
  * to report information about the center of the Moon passing through the ecliptic plane.
  *
  * @property {NodeEventKind} kind   Whether the node is ascending (south to north) or descending (north to south).
- * @property {AstroTime} time       The time when the body passes through the ecliptic plane.</summary>
+ * @property {AstroTime} time       The time when the body passes through the ecliptic plane.
  */
 export class NodeEventInfo {
     constructor(kind, time) {

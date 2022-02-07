@@ -2634,7 +2634,7 @@ function MoonNodes() {
         // Prepare for the next iteration.
         prev_kind = kind;
     }
-    if (max_minutes > 3.682) {
+    if (max_minutes > 3.681) {
         console.error(`JS MoonNodes: EXCESSIVE time prediction error = ${max_minutes.toFixed(3)} minutes.`);
         return 1;
     }

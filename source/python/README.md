@@ -601,6 +601,21 @@ when the lunar quarter event happens.
 
 ---
 
+<a name="NodeEventInfo"></a>
+### class NodeEventInfo
+
+**Information about an ascending or descending node of a body.**
+
+This object is returned by [`SearchMoonNode`](#SearchMoonNode) and [`NextMoonNode`](#NextMoonNode)
+to report information about the center of the Moon passing through the ecliptic plane.
+
+| Type | Attribute | Description |
+| --- | --- | --- |
+| [`NodeEventKind`](#NodeEventKind) | `kind` | Whether the node is ascending (south to north) or descending (north to south). |
+| [`Time`](#Time) | `time` | The time when the body passes through the ecliptic plane. |
+
+---
+
 <a name="Observer"></a>
 ### class Observer
 
@@ -918,6 +933,19 @@ as seen by an observer on the surface of the Earth.
 
 ---
 
+<a name="NodeEventKind"></a>
+### enum NodeEventKind
+
+**Indicates whether a crossing through the ecliptic plane is ascending or descending.**
+
+| Value | Description |
+| --- | --- |
+| `Invalid` | A placeholder for an invalid or undefined node. |
+| `Ascending` | indicates a body passing through the ecliptic plane from south to north. |
+| `Descending` | indicates a body passing through the ecliptic plane from north to south. |
+
+---
+
 <a name="Refraction"></a>
 ### enum Refraction
 
@@ -1175,6 +1203,31 @@ Ecliptic coordinates in the J2000 frame of reference.
 
 ---
 
+<a name="EclipticGeoMoon"></a>
+### EclipticGeoMoon(time)
+
+**Calculates spherical ecliptic geocentric position of the Moon.**
+
+Given a time of observation, calculates the Moon's geocentric position
+in ecliptic spherical coordinates. Provides the ecliptic latitude and
+longitude in degrees, and the geocentric distance in astronomical units (AU).
+The ecliptic longitude is measured relative to the equinox of date.
+This algorithm is based on the Nautical Almanac Office's *Improved Lunar Ephemeris* of 1954,
+which in turn derives from E. W. Brown's lunar theories from the early twentieth century.
+It is adapted from Turbo Pascal code from the book
+[Astronomy on the Personal Computer](https://www.springer.com/us/book/9783540672210)
+by Montenbruck and Pfleger.
+To calculate an equatorial J2000 vector instead, use [`GeoMoon`](#GeoMoon).
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Time`](#Time) | `time` | The date and time for which to calculate the Moon's position. |
+
+### Returns: [`Spherical`](#Spherical)
+The Moon's position as a distance, ecliptic latitude, and ecliptic longitude.
+
+---
+
 <a name="EclipticLongitude"></a>
 ### EclipticLongitude(body, time)
 
@@ -1295,7 +1348,7 @@ The vector gives the location of the Moon's center relative to the Earth's cente
 with x-, y-, and z-components measured in astronomical units.
 The coordinates are oriented with respect to the Earth's equator at the J2000 epoch.
 In Astronomy Engine, this orientation is called EQJ.
-This algorithm is based on Nautical Almanac Office's *Improved Lunar Ephemeris* of 1954,
+This algorithm is based on the Nautical Almanac Office's *Improved Lunar Ephemeris* of 1954,
 which in turn derives from E. W. Brown's lunar theories from the early twentieth century.
 It is adapted from Turbo Pascal code from the book
 [Astronomy on the Personal Computer](https://www.springer.com/us/book/9783540672210)
@@ -1730,6 +1783,22 @@ See [`SearchLunarApsis`](#SearchLunarApsis) for more details.
 | [`Time`](#Time) | `prevEclipseTime` | A date and time near a full moon. Lunar eclipse search will start at the next full moon. |
 
 ### Returns: [`LunarEclipseInfo`](#LunarEclipseInfo)
+
+---
+
+<a name="NextMoonNode"></a>
+### NextMoonNode(prevNode)
+
+**Searches for the next time when the Moon's center crosses through the ecliptic plane.**
+
+Call [`SearchMoonNode`](#SearchMoonNode) to find the first of a series of nodes.
+Then call `NextMoonNode` to find as many more consecutive nodes as desired.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`NodeEventInfo`](#NodeEventInfo) | `prevNode` | The previous node find from calling [`SearchMoonNode`](#SearchMoonNode) or `NextMoonNode`. |
+
+### Returns: [`NodeEventInfo`](#NodeEventInfo)
 
 ---
 
@@ -2509,6 +2578,28 @@ observed in the morning or evening. See [`ElongationEvent`](#ElongationEvent) fo
 | [`Time`](#Time) | `startTime` | The date and time at which to begin the search. The maximum elongation event found will always be the first one that occurs after this date and time. |
 
 ### Returns: [`ElongationEvent`](#ElongationEvent)
+
+---
+
+<a name="SearchMoonNode"></a>
+### SearchMoonNode(startTime)
+
+**Searches for a time when the Moon's center crosses through the ecliptic plane.**
+
+Searches for the first ascending or descending node of the Moon after `startTime`.
+An ascending node is when the Moon's center passes through the ecliptic plane
+(the plane of the Earth's orbit around the Sun) from south to north.
+A descending node is when the Moon's center passes through the ecliptic plane
+from north to south. Nodes indicate possible times of solar or lunar eclipses,
+if the Moon also happens to be in the correct phase (new or full, respectively).
+Call `SearchMoonNode` to find the first of a series of nodes.
+Then call [`NextMoonNode`](#NextMoonNode) to find as many more consecutive nodes as desired.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Time`](#Time) | `startTime` | The date and time for starting the search for an ascending or descending node of the Moon. |
+
+### Returns: [`NodeEventInfo`](#NodeEventInfo)
 
 ---
 

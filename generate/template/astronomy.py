@@ -1270,7 +1270,7 @@ def GeoMoon(time):
     The coordinates are oriented with respect to the Earth's equator at the J2000 epoch.
     In Astronomy Engine, this orientation is called EQJ.
 
-    This algorithm is based on Nautical Almanac Office's *Improved Lunar Ephemeris* of 1954,
+    This algorithm is based on the Nautical Almanac Office's *Improved Lunar Ephemeris* of 1954,
     which in turn derives from E. W. Brown's lunar theories from the early twentieth century.
     It is adapted from Turbo Pascal code from the book
     [Astronomy on the Personal Computer](https://www.springer.com/us/book/9783540672210)
@@ -1302,6 +1302,40 @@ def GeoMoon(time):
     # Convert from mean equinox of date to J2000.
     mpos2 = _precession(mpos1, time, _PrecessDir.Into2000)
     return Vector(mpos2[0], mpos2[1], mpos2[2], time)
+
+
+def EclipticGeoMoon(time):
+    """Calculates spherical ecliptic geocentric position of the Moon.
+
+    Given a time of observation, calculates the Moon's geocentric position
+    in ecliptic spherical coordinates. Provides the ecliptic latitude and
+    longitude in degrees, and the geocentric distance in astronomical units (AU).
+    The ecliptic longitude is measured relative to the equinox of date.
+
+    This algorithm is based on the Nautical Almanac Office's *Improved Lunar Ephemeris* of 1954,
+    which in turn derives from E. W. Brown's lunar theories from the early twentieth century.
+    It is adapted from Turbo Pascal code from the book
+    [Astronomy on the Personal Computer](https://www.springer.com/us/book/9783540672210)
+    by Montenbruck and Pfleger.
+
+    To calculate an equatorial J2000 vector instead, use #GeoMoon.
+
+    Parameters
+    ----------
+    time : Time
+        The date and time for which to calculate the Moon's position.
+
+    Returns
+    -------
+    Spherical
+        The Moon's position as a distance, ecliptic latitude, and ecliptic longitude.
+    """
+    moon = _CalcMoon(time)
+    return Spherical(
+        math.degrees(moon.geo_eclip_lat),
+        math.degrees(moon.geo_eclip_lon),
+        moon.distance_au
+    )
 
 
 def GeoMoonState(time):
@@ -6285,6 +6319,110 @@ def NextTransit(body, prevTransitTime):
     """
     startTime = prevTransitTime.AddDays(100.0)
     return SearchTransit(body, startTime)
+
+
+@enum.unique
+class NodeEventKind(enum.Enum):
+    """Indicates whether a crossing through the ecliptic plane is ascending or descending.
+
+    Values
+    ------
+    Invalid: A placeholder for an invalid or undefined node.
+    Ascending: indicates a body passing through the ecliptic plane from south to north.
+    Descending: indicates a body passing through the ecliptic plane from north to south.
+    """
+    Invalid = 0
+    Ascending = +1
+    Descending = -1
+
+class NodeEventInfo:
+    """Information about an ascending or descending node of a body.
+
+    This object is returned by #SearchMoonNode and #NextMoonNode
+    to report information about the center of the Moon passing through the ecliptic plane.
+
+    Attributes
+    ----------
+    kind : NodeEventKind
+        Whether the node is ascending (south to north) or descending (north to south).
+    time : Time
+        The time when the body passes through the ecliptic plane.
+    """
+    def __init__(self, kind, time):
+        self.kind = kind
+        self.time = time
+
+_MoonNodeStepDays = +10.0   # a safe number of days to step without missing a Moon node
+
+def _MoonNodeSearchFunc(direction, time):
+    return direction * EclipticGeoMoon(time).lat
+
+def SearchMoonNode(startTime):
+    """Searches for a time when the Moon's center crosses through the ecliptic plane.
+
+    Searches for the first ascending or descending node of the Moon after `startTime`.
+    An ascending node is when the Moon's center passes through the ecliptic plane
+    (the plane of the Earth's orbit around the Sun) from south to north.
+    A descending node is when the Moon's center passes through the ecliptic plane
+    from north to south. Nodes indicate possible times of solar or lunar eclipses,
+    if the Moon also happens to be in the correct phase (new or full, respectively).
+    Call `SearchMoonNode` to find the first of a series of nodes.
+    Then call #NextMoonNode to find as many more consecutive nodes as desired.
+
+    Parameters
+    ----------
+    startTime : Time
+        The date and time for starting the search for an ascending or descending node of the Moon.
+
+    Returns
+    -------
+    NodeEventInfo
+    """
+    # Start at the given moment in time and sample the Moon's ecliptic latitude.
+    # Step 10 days at a time, searching for an interval where that latitude crosses zero.
+    time1 = startTime
+    eclip1 = EclipticGeoMoon(time1)
+    while True:
+        time2 = time1.AddDays(_MoonNodeStepDays)
+        eclip2 = EclipticGeoMoon(time2)
+        if eclip1.lat * eclip2.lat <= 0.0:
+            # There is a node somewhere inside this closed time interval.
+            # Figure out whether it is an ascending node or a descending node.
+            kind = NodeEventKind.Ascending if (eclip2.lat > eclip1.lat) else NodeEventKind.Descending
+            result = Search(_MoonNodeSearchFunc, kind.value, time1, time2, 1.0)
+            if result is None:
+                raise InternalError()
+            return NodeEventInfo(kind, result)
+        time1 = time2
+        eclip1 = eclip2
+
+
+def NextMoonNode(prevNode):
+    """Searches for the next time when the Moon's center crosses through the ecliptic plane.
+
+    Call #SearchMoonNode to find the first of a series of nodes.
+    Then call `NextMoonNode` to find as many more consecutive nodes as desired.
+
+    Parameters
+    ----------
+    prevNode : NodeEventInfo
+        The previous node find from calling #SearchMoonNode or `NextMoonNode`.
+
+    Returns
+    -------
+    NodeEventInfo
+    """
+    time = prevNode.time.AddDays(_MoonNodeStepDays)
+    node = SearchMoonNode(time)
+    if prevNode.kind == NodeEventKind.Ascending:
+        if node.kind != NodeEventKind.Descending:
+            raise InternalError()
+    elif prevNode.kind == NodeEventKind.Descending:
+        if node.kind != NodeEventKind.Ascending:
+            raise InternalError()
+    else:
+        raise Error('prevNode contains an invalid node kind: {}'.format(prevNode.kind))
+    return node
 
 
 class LibrationInfo:

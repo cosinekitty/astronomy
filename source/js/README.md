@@ -766,7 +766,7 @@ to report information about the center of the Moon passing through the ecliptic 
 | Name | Type | Description |
 | --- | --- | --- |
 | kind | [<code>NodeEventKind</code>](#NodeEventKind) | Whether the node is ascending (south to north) or descending (north to south). |
-| time | [<code>AstroTime</code>](#AstroTime) | The time when the body passes through the ecliptic plane.</summary> |
+| time | [<code>AstroTime</code>](#AstroTime) | The time when the body passes through the ecliptic plane. |
 
 
 * * *
