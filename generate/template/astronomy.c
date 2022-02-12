@@ -3436,18 +3436,20 @@ astro_state_vector_t Astronomy_LagrangePoint(
     }
     else
     {
-        switch (point)
+        if (point == 1 || point == 2)
         {
-        case 1:
-            scale = 1.0 - cbrt(minorMass / (3.0 * majorMass));
-            break;
-        case 2:
-            scale = 1.0 + cbrt(minorMass / (3.0 * majorMass));
-            break;
-        case 3:
+            scale = (majorMass / (majorMass + minorMass)) * cbrt(minorMass / (3.0 * majorMass));
+            if (point == 1)
+                scale = 1.0 - scale;
+            else
+                scale = 1.0 + scale;
+        }
+        else if (point == 3)
+        {
             scale = ((7.0/12.0)*minorMass - majorMass) / (minorMass + majorMass);
-            break;
-        default:
+        }
+        else
+        {
             return StateVecError(ASTRO_INVALID_PARAMETER, majorState.t);
         }
         p.x  = scale*(minorState.x  - majorState.x );

@@ -4790,8 +4790,8 @@ static int LagrangeTest(void)
 #endif
     context.major = BODY_EARTH;
 
-    context.point = 1;  CHECK(VerifyStateBody(&context, BODY_MOON,  "lagrange/em_L1.txt",   2.0e-2, 2.0e-2));
-    context.point = 2;  CHECK(VerifyStateBody(&context, BODY_MOON,  "lagrange/em_L2.txt",   2.0e-2, 2.0e-2));
+    context.point = 1;  CHECK(VerifyStateBody(&context, BODY_MOON,  "lagrange/em_L1.txt",   8.5e-3, 8.5e-3));
+    context.point = 2;  CHECK(VerifyStateBody(&context, BODY_MOON,  "lagrange/em_L2.txt",   8.5e-3, 8.5e-3));
     /* JPL Horizons does not provide L3 calculations. */
 #if 0
     context.point = 4;  CHECK(VerifyStateBody(&context, BODY_MOON,  "lagrange/em_L4.txt",   0.0, 0.0));
@@ -4961,8 +4961,8 @@ static int LagrangeJplAnalyzeFiles(
     pos_dev = sqrt(pos_dev / mb.length);
     vel_dev = sqrt(vel_dev / mb.length);
 
-    printf("C LagrangeJplAnalyzeFiles(%s): %d samples\n    mag mean = %0.8lf, dev = %0.8lf; vel mean = %0.8lf, dev = %0.8lf\n",
-        lp_filename, mb.length,
+    printf("C LagrangeJplAnalyzeFiles(%s): %d samples\n", lp_filename, mb.length);
+    printf("    mag [mean = %0.8lf, dev = %0.8lf]; vel [mean = %0.8lf, dev = %0.8lf]\n",
         pos_mag_ratio, pos_dev,
         vel_mag_ratio, vel_dev);
 fail:
