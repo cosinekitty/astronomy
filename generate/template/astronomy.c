@@ -193,13 +193,14 @@ static const double SUN_GM     = 0.2959122082855911e-03;
 static const double MERCURY_GM = 0.4912547451450812e-10;
 static const double VENUS_GM   = 0.7243452486162703e-09;
 static const double EARTH_GM   = 0.8887692390113509e-09;
-static const double MOON_GM    = EARTH_GM / EARTH_MOON_MASS_RATIO;
 static const double MARS_GM    = 0.9549535105779258e-10;
 static const double JUPITER_GM = 0.2825345909524226e-06;
 static const double SATURN_GM  = 0.8459715185680659e-07;
 static const double URANUS_GM  = 0.1292024916781969e-07;
 static const double NEPTUNE_GM = 0.1524358900784276e-07;
 static const double PLUTO_GM   = 0.2188699765425970e-11;
+
+#define MOON_GM   (EARTH_GM / EARTH_MOON_MASS_RATIO)
 
 /** @cond DOXYGEN_SKIP */
 #define ARRAYSIZE(x)    (sizeof(x) / sizeof(x[0]))
