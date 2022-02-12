@@ -100,6 +100,68 @@ maxdiff_column_t;
 #define NUM_J_COLUMNS       8
 #define NUM_DIFF_COLUMNS    (NUM_V_COLUMNS + NUM_S_COLUMNS + NUM_J_COLUMNS)
 
+/*-------------------------------------------------------------------------------------------------*/
+
+typedef struct
+{
+    int size;       /* number of array entries allocated */
+    int length;     /* number of array entries that contain valid state vectors */
+    astro_state_vector_t *array;
+}
+state_vector_batch_t;
+
+static state_vector_batch_t EmptyStateVectorBatch()
+{
+    state_vector_batch_t batch;
+    batch.size = 0;
+    batch.length = 0;
+    batch.array = NULL;
+    return batch;
+}
+
+static void FreeStateVectorBatch(state_vector_batch_t *batch)
+{
+    free(batch->array);
+    batch->array = NULL;
+    batch->size = 0;
+    batch->length = 0;
+}
+
+static int AppendStateVector(state_vector_batch_t *batch, astro_state_vector_t state)
+{
+    int error;
+
+    if (batch->array == NULL)
+    {
+        /* This is the first time appending a state vector. */
+        const int INIT_SIZE = 100;
+        batch->array = calloc((size_t)INIT_SIZE, sizeof(batch->array[0]));
+        if (batch->array == NULL)
+            FAIL("AppendStateVector: failed initial memory allocation!\n");
+        batch->size = INIT_SIZE;
+        batch->length = 0;
+    }
+    else if (batch->length == batch->size)
+    {
+        /* The buffer is full. Allocate a larger one. */
+        int longer = 2 * batch->size;
+        astro_state_vector_t *bigger = calloc((size_t)longer, sizeof(batch->array[0]));
+        if (bigger == NULL)
+            FAIL("AppendStateVector: failed to increase memory allocation!\n");
+        memcpy(bigger, batch->array, (size_t)(batch->size) * sizeof(batch->array[0]));
+        free(batch->array);
+        batch->array = bigger;
+        batch->size = longer;
+    }
+    batch->array[(batch->length)++] = state;
+    error = 0;
+fail:
+    return error;
+}
+
+/*-------------------------------------------------------------------------------------------------*/
+
+
 static int Test_AstroTime(void);
 static int AstroCheck(void);
 static int Diff(double tolerance, const char *a_filename, const char *b_filename);
@@ -137,6 +199,7 @@ static int AberrationTest(void);
 static int BaryStateTest(void);
 static int HelioStateTest(void);
 static int LagrangeTest(void);
+static int LagrangeJplAnalysis(void);
 static int TopoStateTest(void);
 static int Twilight(void);
 static int LibrationTest(void);
@@ -172,6 +235,7 @@ static unit_test_t UnitTests[] =
     {"issue_103",               Issue103},
     {"jupiter_moons",           JupiterMoonsTest},
     {"lagrange",                LagrangeTest},
+    {"lagrange_jpl",            LagrangeJplAnalysis},
     {"libration",               LibrationTest},
     {"local_solar_eclipse",     LocalSolarEclipseTest},
     {"lunar_eclipse",           LunarEclipseTest},
@@ -4738,6 +4802,151 @@ static int LagrangeTest(void)
 fail:
     return error;
 }
+
+/*-----------------------------------------------------------------------------------------------------------*/
+
+static int LoadStateVectors(
+    state_vector_batch_t *batch,
+    const char *filename)
+{
+    int error, lnum, nscanned;
+    int found_begin = 0;
+    int found_end = 0;
+    int part = 0;
+    FILE *infile = NULL;
+    char line[100];
+    double jd;
+    astro_state_vector_t state;
+
+    infile = fopen(filename, "rt");
+    if (infile == NULL)
+        FAIL("C LoadStateVectors: Cannot open input file: %s\n", filename);
+
+    lnum = 0;
+    while (!found_end && ReadLine(line, sizeof(line), infile, filename, lnum))
+    {
+        ++lnum;
+        if (!found_begin)
+        {
+            if (strlen(line) >= 5 && !memcmp(line, "$$SOE", 5))
+                found_begin = 1;
+        }
+        else
+        {
+            /*
+                Input comes in triplets of lines:
+
+                2444249.500000000 = A.D. 1980-Jan-11 00:00:00.0000 TDB
+                 X =-3.314860345089456E-01 Y = 8.463418210972562E-01 Z = 3.667227830514760E-01
+                 VX=-1.642704711077836E-02 VY=-5.494770742558920E-03 VZ=-2.383170237527642E-03
+
+                Track which of these 3 cases we are in using the 'part' variable...
+            */
+
+            switch (part)
+            {
+            case 0:
+                if (strlen(line) >= 5 && !memcmp(line, "$$EOE", 5))
+                {
+                    found_end = 1;
+                }
+                else
+                {
+                    nscanned = sscanf(line, "%lf", &jd);
+                    if (nscanned != 1)
+                        FAIL("C VerifyStateBody(%s line %d) ERROR reading Julian date.\n", filename, lnum);
+                    V(jd);
+
+                    /* Convert julian TT day value to astro_time_t. */
+                    state.t = Astronomy_TerrestrialTime(jd - 2451545.0);
+                }
+                break;
+
+            case 1:
+                nscanned = sscanf(line, " X =%lf Y =%lf Z =%lf", &state.x, &state.y, &state.z);
+                if (nscanned != 3)
+                    FAIL("C VerifyStateBody(%s line %d) ERROR reading position vector.\n", filename, lnum);
+                V(state.x);
+                V(state.y);
+                V(state.z);
+                break;
+
+            case 2:
+                nscanned = sscanf(line, " VX=%lf VY=%lf VZ=%lf", &state.vx, &state.vy, &state.vz);
+                if (nscanned != 3)
+                    FAIL("C VerifyStateBody(%s line %d) ERROR reading velocity vector.\n", filename, lnum);
+                V(state.vx);
+                V(state.vy);
+                V(state.vz);
+                CHECK(AppendStateVector(batch, state));
+                break;
+
+            default:
+                FAIL("C VerifyStateBody: INTERNAL ERROR : part=%d\n", part);
+            }
+
+            part = (part + 1) % 3;
+        }
+    }
+
+    error = 0;
+fail:
+    if (infile != NULL) fclose(infile);
+    return error;
+}
+
+
+static int LagrangeJplAnalyzeFiles(
+    const char *mb_filename,        /* filename containing minor body state vectors relative to major body */
+    const char *lp_filename,        /* filename containing Lagrange point state vectors relative to major body */
+    int point)                      /* Lagrange point 1..5 */
+{
+    int error;
+    state_vector_batch_t mb = EmptyStateVectorBatch();
+    state_vector_batch_t lp = EmptyStateVectorBatch();
+
+    /*
+        [Don Cross - 2022-02-12]
+        I am trying to understand how JPL Horizons calculates L4 and L5.
+        So I generated data for heliocentric EMB state vectors
+        and geocentric Moon vectors. This should be enough to run statistics
+        on distance ratios, angles, and planes of alignment (normal vectors).
+
+        Quantities I would like to find means and standard deviations for:
+        1. Distance from the major and minor bodies.
+        2. Angle away from the vector from the major body toward the minor body.
+        3. (L4/L5 only) Normal vector to the plane that contains both L4/L5 vector and minor body vector.
+    */
+
+    CHECK(LoadStateVectors(&mb, mb_filename));
+    CHECK(LoadStateVectors(&lp, lp_filename));
+    if (mb.length != lp.length)
+        FAIL("C LagrangeJplAnalyzeFiles: %d state vectors in %s, but %d in %s\n", mb.length, mb_filename, lp.length, lp_filename);
+    printf("LagrangeJplAnalyzeFiles: FINISHED %d state vectors in %s\n", mb.length, lp_filename);
+fail:
+    FreeStateVectorBatch(&mb);
+    FreeStateVectorBatch(&lp);
+    return error;
+}
+
+
+static int LagrangeJplAnalysis(void)
+{
+    int error;
+
+    CHECK(LagrangeJplAnalyzeFiles("lagrange/helio_emb.txt", "lagrange/semb_L1.txt", 1));
+    CHECK(LagrangeJplAnalyzeFiles("lagrange/helio_emb.txt", "lagrange/semb_L2.txt", 2));
+    CHECK(LagrangeJplAnalyzeFiles("lagrange/helio_emb.txt", "lagrange/semb_L4.txt", 4));
+    CHECK(LagrangeJplAnalyzeFiles("lagrange/helio_emb.txt", "lagrange/semb_L5.txt", 5));
+
+    CHECK(LagrangeJplAnalyzeFiles("lagrange/geo_moon.txt", "lagrange/em_L1.txt", 1));
+    CHECK(LagrangeJplAnalyzeFiles("lagrange/geo_moon.txt", "lagrange/em_L2.txt", 2));
+    CHECK(LagrangeJplAnalyzeFiles("lagrange/geo_moon.txt", "lagrange/em_L4.txt", 4));
+    CHECK(LagrangeJplAnalyzeFiles("lagrange/geo_moon.txt", "lagrange/em_L5.txt", 5));
+fail:
+    return error;
+}
+
 
 /*-----------------------------------------------------------------------------------------------------------*/
 
