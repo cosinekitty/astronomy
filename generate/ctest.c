@@ -136,6 +136,7 @@ static int Issue103(void);
 static int AberrationTest(void);
 static int BaryStateTest(void);
 static int HelioStateTest(void);
+static int LagrangeTest(void);
 static int TopoStateTest(void);
 static int Twilight(void);
 static int LibrationTest(void);
@@ -170,6 +171,7 @@ static unit_test_t UnitTests[] =
     {"heliostate",              HelioStateTest},
     {"issue_103",               Issue103},
     {"jupiter_moons",           JupiterMoonsTest},
+    {"lagrange",                LagrangeTest},
     {"libration",               LibrationTest},
     {"local_solar_eclipse",     LocalSolarEclipseTest},
     {"lunar_eclipse",           LunarEclipseTest},
@@ -4433,11 +4435,17 @@ static double StateVectorDiff(int relative, const double vec[3], double x, doubl
     return V(sqrt(diff_squared));
 }
 
-typedef astro_state_vector_t (* state_func_t) (astro_body_t, astro_time_t);
+struct _verify_state_context_t;
 
-typedef struct
+typedef astro_state_vector_t (* state_func_t) (struct _verify_state_context_t *, astro_body_t, astro_time_t);
+
+typedef struct _verify_state_context_t
 {
     state_func_t    func;
+
+    /* The following are used for Lagrange point testing only. */
+    astro_body_t    major;
+    int             point;      /* 1=L1, 2=L2, ..., 5=L5. */
 }
 verify_state_context_t;
 
@@ -4458,8 +4466,9 @@ static int VerifyState(
     astro_state_vector_t state;
     double rdiff, vdiff;
 
-    state = context->func(body, time);
-    CHECK_STATUS(state);
+    state = context->func(context, body, time);
+    if (state.status != ASTRO_SUCCESS)
+        FAIL("C VerifyState(%s line %d): state function returned error %d\n", filename, lnum, state.status);
 
     rdiff = StateVectorDiff((r_thresh > 0.0), pos, state.x, state.y, state.z);
     if (rdiff > *max_rdiff)
@@ -4583,8 +4592,10 @@ fail:
 #define BODY_GEOMOON    ((astro_body_t)(-100))
 #define BODY_GEO_EMB    ((astro_body_t)(-101))
 
-static astro_state_vector_t BaryState(astro_body_t body, astro_time_t time)
+static astro_state_vector_t BaryState(verify_state_context_t *context, astro_body_t body, astro_time_t time)
 {
+    (void)context;
+
     if (body == BODY_GEOMOON)
         return Astronomy_GeoMoonState(time);
 
@@ -4599,6 +4610,7 @@ static int BaryStateTest(void)
     int error;  /* set as a side-effect of CHECK macro */
     verify_state_context_t context;
 
+    memset(&context, 0, sizeof(context));
     context.func = BaryState;
 
     CHECK(VerifyStateBody(&context, BODY_SUN,     "barystate/Sun.txt",      -1.224e-05, -1.134e-07));
@@ -4623,12 +4635,19 @@ fail:
 
 /*-----------------------------------------------------------------------------------------------------------*/
 
+static astro_state_vector_t HelioStateFunc(verify_state_context_t *context, astro_body_t body, astro_time_t time)
+{
+    (void)context;
+    return Astronomy_HelioState(body, time);
+}
+
 static int HelioStateTest(void)
 {
     int error;  /* set as a side-effect of CHECK macro */
     verify_state_context_t context;
 
-    context.func = Astronomy_HelioState;
+    memset(&context, 0, sizeof(context));
+    context.func = HelioStateFunc;
 
     CHECK(VerifyStateBody(&context, BODY_SSB,     "heliostate/SSB.txt",     -1.209e-05, -1.125e-07));
     CHECK(VerifyStateBody(&context, BODY_MERCURY, "heliostate/Mercury.txt",  1.481e-04,  2.756e-04));
@@ -4650,10 +4669,80 @@ fail:
 
 /*-----------------------------------------------------------------------------------------------------------*/
 
-static astro_state_vector_t TopoStateFunc(astro_body_t body, astro_time_t time)
+static astro_state_vector_t LagrangeFunc(verify_state_context_t *context, astro_body_t minor_body, astro_time_t time)
+{
+    astro_state_vector_t major_state, minor_state;
+    double major_mass, minor_mass;
+
+    major_mass = Astronomy_MassProduct(context->major);
+    if (major_mass <= 0.0)
+        goto bad_mass;
+
+    minor_mass = Astronomy_MassProduct(minor_body);
+    if (minor_mass <= 0.0)
+        goto bad_mass;
+
+    /* Calculate the state vectors for the major and minor bodies. */
+    major_state = Astronomy_BaryState(context->major, time);
+    if (major_state.status != ASTRO_SUCCESS)
+        return major_state;
+
+    minor_state = Astronomy_BaryState(minor_body, time);
+    if (minor_state.status != ASTRO_SUCCESS)
+        return minor_state;
+
+    return Astronomy_LagrangePoint(
+        context->point,
+        major_state,
+        major_mass,
+        minor_state,
+        minor_mass
+    );
+
+bad_mass:
+    fprintf(stderr, "C LagrangeFunc: invalid mass product encountered.\n");
+    memset(&major_state, 0, sizeof(major_state));
+    major_state.status = ASTRO_INVALID_BODY;
+    return major_state;
+}
+
+
+static int LagrangeTest(void)
+{
+    int error;  /* set as a side-effect of CHECK macro */
+    verify_state_context_t context;
+
+    memset(&context, 0, sizeof(context));
+    context.func = LagrangeFunc;
+    context.major = BODY_SUN;
+
+    context.point = 1;  CHECK(VerifyStateBody(&context, BODY_EMB,   "lagrange/semb_L1.txt",   4.5e-5, 9.1e-5));
+    context.point = 2;  CHECK(VerifyStateBody(&context, BODY_EMB,   "lagrange/semb_L2.txt",   4.5e-5, 9.1e-5));
+    /* JPL Horizons does not provide L3 calculations. */
+    context.point = 4;  CHECK(VerifyStateBody(&context, BODY_EMB,   "lagrange/semb_L4.txt",   2.0e-2, 2.0e-2));
+    context.point = 5;  CHECK(VerifyStateBody(&context, BODY_EMB,   "lagrange/semb_L5.txt",   4.5e-5, 9.1e-5));
+
+    context.major = BODY_EARTH;
+
+    context.point = 1;  CHECK(VerifyStateBody(&context, BODY_MOON,  "lagrange/em_L1.txt",   0.0, 0.0));
+    context.point = 2;  CHECK(VerifyStateBody(&context, BODY_MOON,  "lagrange/em_L2.txt",   0.0, 0.0));
+    /* JPL Horizons does not provide L3 calculations. */
+    context.point = 4;  CHECK(VerifyStateBody(&context, BODY_MOON,  "lagrange/em_L4.txt",   0.0, 0.0));
+    context.point = 5;  CHECK(VerifyStateBody(&context, BODY_MOON,  "lagrange/em_L5.txt",   0.0, 0.0));
+
+    printf("C LagrangeTest: PASS\n");
+fail:
+    return error;
+}
+
+/*-----------------------------------------------------------------------------------------------------------*/
+
+static astro_state_vector_t TopoStateFunc(verify_state_context_t *context, astro_body_t body, astro_time_t time)
 {
     astro_observer_t        observer;
     astro_state_vector_t    observer_state, state;
+
+    (void)context;
 
     observer.latitude = 30.0;
     observer.longitude = -80.0;

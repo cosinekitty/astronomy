@@ -196,19 +196,16 @@ static const double EARTH_MOON_MASS_RATIO = 81.30056;
     the products GM[i] are known extremely accurately.
 */
 static const double SUN_GM     = 0.2959122082855911e-03;
+static const double MERCURY_GM = 0.4912547451450812e-10;
+static const double VENUS_GM   = 0.7243452486162703e-09;
+static const double EARTH_GM   = 0.8887692390113509e-09;
+static const double MOON_GM    = EARTH_GM / EARTH_MOON_MASS_RATIO;
+static const double MARS_GM    = 0.9549535105779258e-10;
 static const double JUPITER_GM = 0.2825345909524226e-06;
 static const double SATURN_GM  = 0.8459715185680659e-07;
 static const double URANUS_GM  = 0.1292024916781969e-07;
 static const double NEPTUNE_GM = 0.1524358900784276e-07;
-
-#if 0
-/* These values are not currently used, but recorded here just in case. */
-static const double MERCURY_GM = 0.4912547451450812e-10;
-static const double VENUS_GM   = 0.7243452486162703e-09;
-static const double EARTH_GM   = 0.8887692390113509e-09;
-static const double MARS_GM    = 0.9549535105779258e-10;
 static const double PLUTO_GM   = 0.2188699765425970e-11;
-#endif
 
 /** @cond DOXYGEN_SKIP */
 #define ARRAYSIZE(x)    (sizeof(x) / sizeof(x[0]))
@@ -4566,6 +4563,141 @@ astro_state_vector_t Astronomy_HelioState(astro_body_t body, astro_time_t time)
     default:
         return StateVecError(ASTRO_INVALID_BODY, time);
     }
+}
+
+
+/**
+ * @brief Returns the product of mass and universal gravitational constant of a Solar System body.
+ *
+ * For problems involving the gravitational interactions of Solar System bodies,
+ * it is helpful to know the product G*M, where G = the universal gravitational constant
+ * and M = the mass of the body. In practice, G*M is known to a higher precision than
+ * either G or M alone, and thus using the product results in the most accurate results.
+ * This function returns the product G*M in the units au^3/day^2, or 0 for invalid bodies.
+ * The values come from page 10 of a
+ * [JPL memorandum regarding the DE405/LE405 ephemeris](https://web.archive.org/web/20120220062549/http://iau-comm4.jpl.nasa.gov/de405iom/de405iom.pdf).
+ *
+ * @param body      The body for which to find the G*M product.
+ * @return          The mass product of the given body.
+ */
+double Astronomy_MassProduct(astro_body_t body)
+{
+    switch (body)
+    {
+    case BODY_SUN:      return SUN_GM;
+    case BODY_MERCURY:  return MERCURY_GM;
+    case BODY_VENUS:    return VENUS_GM;
+    case BODY_EARTH:    return EARTH_GM;
+    case BODY_MOON:     return MOON_GM;
+    case BODY_EMB:      return EARTH_GM + MOON_GM;
+    case BODY_MARS:     return MARS_GM;
+    case BODY_JUPITER:  return JUPITER_GM;
+    case BODY_SATURN:   return SATURN_GM;
+    case BODY_URANUS:   return URANUS_GM;
+    case BODY_NEPTUNE:  return NEPTUNE_GM;
+    case BODY_PLUTO:    return PLUTO_GM;
+    default:            return 0.0;         /* invalid body */
+    }
+}
+
+
+/**
+ * @brief Calculates one of the 5 Lagrange points for a given pair of bodies.
+ *
+ * Given a more massive "major" body and a much less massive "minor" body,
+ * calculates one of the five Lagrange points in relation to the minor body's
+ * orbit around the major body. The parameter `point` is an integer that
+ * selects the Lagrange point as follows:
+ *
+ * 1 = the Lagrange point between the major body and minor body.
+ * 2 = the Lagrange point on the far side of the minor body.
+ * 3 = the Lagrange point on the far side of the major body.
+ * 4 = the Lagrange point 60 degrees ahead of the minor body's orbital position.
+ * 5 = the Lagrange point 60 degrees behind the minor body's orbital position.
+ *
+ * The caller passes in the state vector and relative mass for both bodies.
+ * The state vectors can be in any orientation and frame of reference.
+ * The body masses can be passed using any consistent units, although
+ * it is recommended to call the #Astronomy_MassProduct to get high-precision values.
+ *
+ * The function returns the state vector for the selected Lagrange point
+ * using the same orientation as the state vector parameters `majorState` and `minorState`,
+ * and the position and velocity components are with respect to the major body's center.
+ *
+ * @param point         A value 1..5 that selects which of the Lagrange points to calculate.
+ * @param majorState    The state vector of the major (more massive) of the pair of bodies.
+ * @param majorMass     The relative mass of the major body.
+ * @param minorState    The state vector of the minor (less massive) of the pair of bodies.
+ * @param minorMass     The relative mass of the minor body.
+ * @return              The position and velocity of the selected Lagrange point.
+ */
+astro_state_vector_t Astronomy_LagrangePoint(
+    int point,
+    astro_state_vector_t majorState,
+    double majorMass,
+    astro_state_vector_t minorState,
+    double minorMass)
+{
+    const double cos_60 = 0.5;
+    const double sin_60 = 0.8660254037844386;   /* sqrt(3) / 2 */
+    double scale, ratio, dx, dy, dz;
+    astro_state_vector_t  p;
+
+    if (majorState.status != ASTRO_SUCCESS || minorState.status != ASTRO_SUCCESS)
+        return StateVecError(ASTRO_INVALID_PARAMETER, majorState.t);
+
+    if (!isfinite(majorMass) || majorMass <= 0.0)
+        return StateVecError(ASTRO_INVALID_PARAMETER, majorState.t);
+
+    if (!isfinite(minorMass) || minorMass <= 0.0)
+        return StateVecError(ASTRO_INVALID_PARAMETER, majorState.t);
+
+    if (point == 4 || point == 5)
+    {
+        /* Convert the velocity vector to a position vector orthogonal to the radius vector. */
+        dx = minorState.x - majorState.x;
+        dy = minorState.y - majorState.y;
+        dz = minorState.z - majorState.z;
+        ratio = (dx*dx + dy*dy + dz*dz);
+        dx = minorState.vx - majorState.vx;
+        dy = minorState.vy - majorState.vy;
+        dz = minorState.vz - majorState.vz;
+        ratio = sqrt(ratio / (dx*dx + dy*dy + dz*dz));
+        if (point == 5)
+            ratio *= -1.0;
+        p.x  = cos_60*(minorState.x  - majorState.x ) + (sin_60*ratio)*(minorState.vx - majorState.vx);
+        p.y  = cos_60*(minorState.y  - majorState.y ) + (sin_60*ratio)*(minorState.vy - majorState.vy);
+        p.z  = cos_60*(minorState.z  - majorState.z ) + (sin_60*ratio)*(minorState.vz - majorState.vz);
+        p.vx = cos_60*(minorState.vx - majorState.vx) - (sin_60/ratio)*(minorState.x  - majorState.x );
+        p.vy = cos_60*(minorState.vy - majorState.vy) - (sin_60/ratio)*(minorState.y  - majorState.y );
+        p.vz = cos_60*(minorState.vz - majorState.vz) - (sin_60/ratio)*(minorState.z  - majorState.z );
+    }
+    else
+    {
+        switch (point)
+        {
+        case 1:
+            scale = 1.0 - cbrt(minorMass / (3.0 * majorMass));
+            break;
+        case 2:
+            scale = 1.0 + cbrt(minorMass / (3.0 * majorMass));
+            break;
+        case 3:
+            scale = ((7.0/12.0)*minorMass - majorMass) / (minorMass + majorMass);
+            break;
+        default:
+            return StateVecError(ASTRO_INVALID_PARAMETER, majorState.t);
+        }
+        p.x  = scale*(minorState.x  - majorState.x );
+        p.y  = scale*(minorState.y  - majorState.y );
+        p.z  = scale*(minorState.z  - majorState.z );
+        p.vx = scale*(minorState.vx - majorState.vx);
+        p.vy = scale*(minorState.vy - majorState.vy);
+        p.vz = scale*(minorState.vz - majorState.vz);
+    }
+    p.t = majorState.t;
+    p.status = ASTRO_SUCCESS;
+    return p;
 }
 
 

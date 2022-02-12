@@ -985,6 +985,40 @@ To convert to heliocentric position vectors, call [`Astronomy_HelioVector`](#Ast
 
 ---
 
+<a name="Astronomy_LagrangePoint"></a>
+### Astronomy_LagrangePoint(point, majorState, majorMass, minorState, minorMass) &#8658; [`astro_state_vector_t`](#astro_state_vector_t)
+
+**Calculates one of the 5 Lagrange points for a given pair of bodies.** 
+
+
+
+Given a more massive "major" body and a much less massive "minor" body, calculates one of the five Lagrange points in relation to the minor body's orbit around the major body. The parameter `point` is an integer that selects the Lagrange point as follows:
+
+1 = the Lagrange point between the major body and minor body. 2 = the Lagrange point on the far side of the minor body. 3 = the Lagrange point on the far side of the major body. 4 = the Lagrange point 60 degrees ahead of the minor body's orbital position. 5 = the Lagrange point 60 degrees behind the minor body's orbital position.
+
+The caller passes in the state vector and relative mass for both bodies. The state vectors can be in any orientation and frame of reference. The body masses can be passed using any consistent units, although it is recommended to call the [`Astronomy_MassProduct`](#Astronomy_MassProduct) to get high-precision values.
+
+The function returns the state vector for the selected Lagrange point using the same orientation as the state vector parameters `majorState` and `minorState`, and the position and velocity components are with respect to the major body's center.
+
+
+
+**Returns:**  The position and velocity of the selected Lagrange point. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| `int` | `point` |  A value 1..5 that selects which of the Lagrange points to calculate.  | 
+| [`astro_state_vector_t`](#astro_state_vector_t) | `majorState` |  The state vector of the major (more massive) of the pair of bodies.  | 
+| `double` | `majorMass` |  The relative mass of the major body.  | 
+| [`astro_state_vector_t`](#astro_state_vector_t) | `minorState` |  The state vector of the minor (less massive) of the pair of bodies.  | 
+| `double` | `minorMass` |  The relative mass of the minor body.  | 
+
+
+
+
+---
+
 <a name="Astronomy_Libration"></a>
 ### Astronomy_Libration(time) &#8658; [`astro_libration_t`](#astro_libration_t)
 
@@ -1064,6 +1098,30 @@ It is the caller's responsibility to ensure that the parameter values are correc
 | `int` | `hour` |  The UTC hour of the day in the range 0..23.  | 
 | `int` | `minute` |  The UTC minute in the range 0..59.  | 
 | `double` | `second` |  The UTC floating-point second in the range [0, 60). | 
+
+
+
+
+---
+
+<a name="Astronomy_MassProduct"></a>
+### Astronomy_MassProduct(body) &#8658; `double`
+
+**Returns the product of mass and universal gravitational constant of a Solar System body.** 
+
+
+
+For problems involving the gravitational interactions of Solar System bodies, it is helpful to know the product G*M, where G = the universal gravitational constant and M = the mass of the body. In practice, G*M is known to a higher precision than either G or M alone, and thus using the product results in the most accurate results. This function returns the product G*M in the units au^3/day^2, or 0 for invalid bodies. The values come from page 10 of a [JPL memorandum regarding the DE405/LE405 ephemeris](https://web.archive.org/web/20120220062549/http://iau-comm4.jpl.nasa.gov/de405iom/de405iom.pdf).
+
+
+
+**Returns:**  The mass product of the given body. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_body_t`](#astro_body_t) | `body` |  The body for which to find the G*M product.  | 
 
 
 
