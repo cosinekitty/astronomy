@@ -4901,9 +4901,10 @@ static int LagrangeJplAnalyzeFiles(
     const char *lp_filename,        /* filename containing Lagrange point state vectors relative to major body */
     int point)                      /* Lagrange point 1..5 */
 {
-    int error;
+    int error, i;
     state_vector_batch_t mb = EmptyStateVectorBatch();
     state_vector_batch_t lp = EmptyStateVectorBatch();
+    double pos_mag_ratio, vel_mag_ratio;
 
     /*
         [Don Cross - 2022-02-12]
@@ -4922,7 +4923,28 @@ static int LagrangeJplAnalyzeFiles(
     CHECK(LoadStateVectors(&lp, lp_filename));
     if (mb.length != lp.length)
         FAIL("C LagrangeJplAnalyzeFiles: %d state vectors in %s, but %d in %s\n", mb.length, mb_filename, lp.length, lp_filename);
-    printf("LagrangeJplAnalyzeFiles: FINISHED %d state vectors in %s\n", mb.length, lp_filename);
+
+    if (mb.length < 10)
+        FAIL("C LagrangeJplAnalyzeFiles(%s): %d state vectors is not enough for statistical analysis.\n", mb_filename, mb.length);
+
+    /* First pass: calculate position/velocity magnitude ratios for (Lagrange points) / (minor body). */
+    pos_mag_ratio = vel_mag_ratio = 0.0;
+    for (i = 0; i < mb.length; ++i)
+    {
+        astro_state_vector_t m = mb.array[i];
+        astro_state_vector_t p = lp.array[i];
+
+        /* Sanity check that the time offsets match between the two files. */
+        if (m.t.tt != p.t.tt)
+            FAIL("C LagrangeJplAnalyzeFiles(%d, %s): time mismatch", i, lp_filename);
+
+        pos_mag_ratio += sqrt((p.x*p.x + p.y*p.y + p.z*p.z) / (m.x*m.x + m.y*m.y + m.z*m.z));
+        vel_mag_ratio += sqrt((p.vx*p.vx + p.vy*p.vy + p.vz*p.vz) / (m.vx*m.vx + m.vy*m.vy + m.vz*m.vz));
+    }
+    pos_mag_ratio /= mb.length;
+    vel_mag_ratio /= mb.length;
+
+    printf("C LagrangeJplAnalyzeFiles(%s): %d samples, mean mag ratio = %0.8lf, mean_vel_ratio = %0.8lf\n", lp_filename, mb.length, pos_mag_ratio, vel_mag_ratio);
 fail:
     FreeStateVectorBatch(&mb);
     FreeStateVectorBatch(&lp);
