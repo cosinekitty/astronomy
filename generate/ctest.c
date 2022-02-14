@@ -4896,6 +4896,18 @@ fail:
 }
 
 
+static double ArcCos(double x)
+{
+    if (x <= -1.0)
+        return 180.0;
+
+    if (x >= +1.0)
+        return 0.0;
+
+    return RAD2DEG * acos(x);
+}
+
+
 static int LagrangeJplAnalyzeFiles(
     const char *mb_filename,        /* filename containing minor body state vectors relative to major body */
     const char *lp_filename,        /* filename containing Lagrange point state vectors relative to major body */
@@ -4904,9 +4916,10 @@ static int LagrangeJplAnalyzeFiles(
     int error, i;
     state_vector_batch_t mb = EmptyStateVectorBatch();
     state_vector_batch_t lp = EmptyStateVectorBatch();
-    double pos_mag_ratio, vel_mag_ratio;
-    double pos_dev, vel_dev;
-    double dr, dv;
+    double pos_mag_ratio, vel_mag_ratio, angle;
+    double pos_dev, vel_dev, angle_dev;
+    double dr, dv, da;
+    double m_mag, p_mag;
     astro_state_vector_t m, p;
 
     /*
@@ -4931,7 +4944,7 @@ static int LagrangeJplAnalyzeFiles(
         FAIL("C LagrangeJplAnalyzeFiles(%s): %d state vectors is not enough for statistical analysis.\n", mb_filename, mb.length);
 
     /* Calculate mean values. */
-    pos_mag_ratio = vel_mag_ratio = 0.0;
+    angle = pos_mag_ratio = vel_mag_ratio = 0.0;
     for (i = 0; i < mb.length; ++i)
     {
         m = mb.array[i];
@@ -4941,30 +4954,41 @@ static int LagrangeJplAnalyzeFiles(
         if (m.t.tt != p.t.tt)
             FAIL("C LagrangeJplAnalyzeFiles(%d, %s): time mismatch", i, lp_filename);
 
-        pos_mag_ratio += sqrt((p.x*p.x + p.y*p.y + p.z*p.z) / (m.x*m.x + m.y*m.y + m.z*m.z));
+        m_mag = sqrt(m.x*m.x + m.y*m.y + m.z*m.z);
+        p_mag = sqrt(p.x*p.x + p.y*p.y + p.z*p.z);
+        pos_mag_ratio += p_mag/m_mag;
         vel_mag_ratio += sqrt((p.vx*p.vx + p.vy*p.vy + p.vz*p.vz) / (m.vx*m.vx + m.vy*m.vy + m.vz*m.vz));
+        angle += ArcCos((m.x*p.x + m.y*p.y + m.z*p.z) / (m_mag * p_mag));
     }
     pos_mag_ratio /= mb.length;
     vel_mag_ratio /= mb.length;
+    angle /= mb.length;
 
     /* Calculate standard deviations. */
-    pos_dev = vel_dev = 0.0;
+    pos_dev = vel_dev = angle_dev = 0.0;
     for (i = 0; i < mb.length; ++i)
     {
         m = mb.array[i];
         p = lp.array[i];
-        dr = pos_mag_ratio - sqrt((p.x*p.x + p.y*p.y + p.z*p.z) / (m.x*m.x + m.y*m.y + m.z*m.z));
+        m_mag = sqrt(m.x*m.x + m.y*m.y + m.z*m.z);
+        p_mag = sqrt(p.x*p.x + p.y*p.y + p.z*p.z);
+        dr = pos_mag_ratio - p_mag/m_mag;
         dv = vel_mag_ratio - sqrt((p.vx*p.vx + p.vy*p.vy + p.vz*p.vz) / (m.vx*m.vx + m.vy*m.vy + m.vz*m.vz));
+        da = angle - ArcCos((m.x*p.x + m.y*p.y + m.z*p.z) / (m_mag * p_mag));
         pos_dev += (dr * dr);
         vel_dev += (dv * dv);
+        angle_dev += (da * da);
     }
     pos_dev = sqrt(pos_dev / mb.length);
     vel_dev = sqrt(vel_dev / mb.length);
+    angle_dev = sqrt(angle_dev / mb.length);
 
     printf("C LagrangeJplAnalyzeFiles(%s): %d samples\n", lp_filename, mb.length);
     printf("    mag [mean = %0.8lf, dev = %0.8lf]; vel [mean = %0.8lf, dev = %0.8lf]\n",
         pos_mag_ratio, pos_dev,
         vel_mag_ratio, vel_dev);
+    printf("    angle [mean = %0.8lf, dev = %0.8lf]\n",
+        angle, angle_dev);
 fail:
     FreeStateVectorBatch(&mb);
     FreeStateVectorBatch(&lp);
