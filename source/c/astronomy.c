@@ -4642,6 +4642,7 @@ astro_state_vector_t Astronomy_LagrangePoint(
     const double cos_60 = 0.5;
     const double sin_60 = 0.8660254037844386;   /* sqrt(3) / 2 */
     double scale, ratio, dx, dy, dz;
+    double R, r1, r2, x, deltax, dr1, dr2, numer1, numer2, omega2, accel, deriv;
     astro_state_vector_t  p;
 
     if (majorState.status != ASTRO_SUCCESS || minorState.status != ASTRO_SUCCESS)
@@ -4653,13 +4654,16 @@ astro_state_vector_t Astronomy_LagrangePoint(
     if (!isfinite(minorMass) || minorMass <= 0.0)
         return StateVecError(ASTRO_INVALID_PARAMETER, majorState.t);
 
+    dx = minorState.x - majorState.x;
+    dy = minorState.y - majorState.y;
+    dz = minorState.z - majorState.z;
+    ratio = (dx*dx + dy*dy + dz*dz);
+    /* R = Total distance between the bodies. */
+    R = sqrt(ratio);
+
     if (point == 4 || point == 5)
     {
         /* Convert the velocity vector to a position vector orthogonal to the radius vector. */
-        dx = minorState.x - majorState.x;
-        dy = minorState.y - majorState.y;
-        dz = minorState.z - majorState.z;
-        ratio = (dx*dx + dy*dy + dz*dz);
         dx = minorState.vx - majorState.vx;
         dy = minorState.vy - majorState.vy;
         dz = minorState.vz - majorState.vz;
@@ -4675,22 +4679,64 @@ astro_state_vector_t Astronomy_LagrangePoint(
     }
     else
     {
+        /* Calculate the distances of each body from their mutual barycenter. */
+        /* r1 = negative distance of major mass from barycenter (e.g. Sun to the left of barycenter) */
+        /* r2 = positive distance of minor mass from barycenter (e.g. Earth to the right of barycenter) */
+
+        r1 = -R * (minorMass / (majorMass + minorMass));
+        r2 = +R * (majorMass / (majorMass + minorMass));
+
+        /* Calculate the square of the angular orbital speed in [rad^2 / day^2]. */
+        omega2 = (majorMass + minorMass) / (R*R*R);
+
+        /*
+            Use Newton's Method to numerically solve for the location where
+            outward centrifugal acceleration in the rotating frame of reference
+            is equal to net inward gravitational acceleration.
+            First derive a good initial guess based on approximate analysis.
+        */
         if (point == 1 || point == 2)
         {
             scale = (majorMass / (majorMass + minorMass)) * cbrt(minorMass / (3.0 * majorMass));
+            numer1 = -majorMass;    /* The major mass is to the left of L1 and L2 */
             if (point == 1)
+            {
                 scale = 1.0 - scale;
+                numer2 = +minorMass;    /* The minor mass is to the right of L1. */
+            }
             else
+            {
                 scale = 1.0 + scale;
+                numer2 = -minorMass;    /* The minor mass is to the left of L2. */
+            }
         }
         else if (point == 3)
         {
             scale = ((7.0/12.0)*minorMass - majorMass) / (minorMass + majorMass);
+            numer1 = +majorMass;    /* major mass is to the right of L3. */
+            numer2 = +minorMass;    /* minor mass is to the right of L3. */
         }
         else
         {
             return StateVecError(ASTRO_INVALID_PARAMETER, majorState.t);
         }
+
+        /* Iterate Newton's Method until it converges. */
+        x = R*scale - r1;
+
+        do
+        {
+            dr1 = x - r1;
+            dr2 = x - r2;
+            accel = omega2*x + numer1/(dr1*dr1) + numer2/(dr2*dr2);
+            deriv = omega2 - 2*numer1/(dr1*dr1*dr1) - 2*numer2/(dr2*dr2*dr2);
+            deltax = accel/deriv;
+            x -= deltax;
+        }
+        while (fabs(deltax/R) > 1.0e-14);
+
+        scale = (x - r1) / R;
+
         p.x  = scale*(minorState.x  - majorState.x );
         p.y  = scale*(minorState.y  - majorState.y );
         p.z  = scale*(minorState.z  - majorState.z );

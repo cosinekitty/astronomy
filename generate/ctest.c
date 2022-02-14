@@ -4780,8 +4780,8 @@ static int LagrangeTest(void)
     context.func = LagrangeFunc;
     context.major = BODY_SUN;
 
-    context.point = 1;  CHECK(VerifyStateBody(&context, BODY_EMB,   "lagrange/semb_L1.txt",   4.5e-5, 9.1e-5));
-    context.point = 2;  CHECK(VerifyStateBody(&context, BODY_EMB,   "lagrange/semb_L2.txt",   4.5e-5, 9.1e-5));
+    context.point = 1;  CHECK(VerifyStateBody(&context, BODY_EMB,   "lagrange/semb_L1.txt",   1.4e-5, 6.2e-5));
+    context.point = 2;  CHECK(VerifyStateBody(&context, BODY_EMB,   "lagrange/semb_L2.txt",   1.4e-5, 6.2e-5));
     /* JPL Horizons does not provide L3 calculations. */
 
 #if 0
@@ -4790,8 +4790,8 @@ static int LagrangeTest(void)
 #endif
     context.major = BODY_EARTH;
 
-    context.point = 1;  CHECK(VerifyStateBody(&context, BODY_MOON,  "lagrange/em_L1.txt",   8.5e-3, 8.5e-3));
-    context.point = 2;  CHECK(VerifyStateBody(&context, BODY_MOON,  "lagrange/em_L2.txt",   8.5e-3, 8.5e-3));
+    context.point = 1;  CHECK(VerifyStateBody(&context, BODY_MOON,  "lagrange/em_L1.txt",   3.8e-5, 5.1e-5));
+    context.point = 2;  CHECK(VerifyStateBody(&context, BODY_MOON,  "lagrange/em_L2.txt",   3.8e-5, 5.1e-5));
     /* JPL Horizons does not provide L3 calculations. */
 #if 0
     context.point = 4;  CHECK(VerifyStateBody(&context, BODY_MOON,  "lagrange/em_L4.txt",   0.0, 0.0));
