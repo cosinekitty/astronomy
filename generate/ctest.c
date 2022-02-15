@@ -4908,6 +4908,20 @@ static double ArcCos(double x)
 }
 
 
+static astro_vector_t CrossProduct(astro_vector_t a, astro_vector_t b)
+{
+    astro_vector_t c;
+
+    c.status = ASTRO_SUCCESS;
+    c.t = a.t;
+    c.x = a.y*b.z - a.z*b.y;
+    c.y = a.z*b.x - a.x*b.z;
+    c.z = a.x*b.y - a.y*b.x;
+
+    return c;
+}
+
+
 static int LagrangeJplAnalyzeFiles(
     const char *mb_filename,        /* filename containing minor body state vectors relative to major body */
     const char *lp_filename,        /* filename containing Lagrange point state vectors relative to major body */
@@ -4989,6 +5003,54 @@ static int LagrangeJplAnalyzeFiles(
         vel_mag_ratio, vel_dev);
     printf("    angle [mean = %0.8lf, dev = %0.8lf]\n",
         angle, angle_dev);
+
+    /* Special case for L4, L5: try to understand the instantaneous co-orbital plane. */
+    if (point == 4 || point == 5)
+    {
+        double max_pole_diff = 0.0;
+        astro_angle_result_t pole_diff;
+        double v_mag;
+        astro_vector_t m_unit, p_unit, mp_norm;
+        astro_vector_t v_unit, mv_norm;
+        m_unit.status = p_unit.status = v_unit.status = ASTRO_SUCCESS;
+
+        for (i = 0; i < mb.length; ++i)
+        {
+            m = mb.array[i];
+            p = lp.array[i];
+
+            m_mag = sqrt(m.x*m.x + m.y*m.y + m.z*m.z);
+            m_unit.x = m.x / m_mag;
+            m_unit.y = m.y / m_mag;
+            m_unit.z = m.z / m_mag;
+            m_unit.t = m.t;
+
+            p_mag = sqrt(p.x*p.x + p.y*p.y + p.z*p.z);
+            p_unit.x = p.x / p_mag;
+            p_unit.y = p.y / p_mag;
+            p_unit.z = p.z / p_mag;
+            p_unit.t = p.t;
+
+            v_mag = sqrt(m.vx*m.vx + m.vy*m.vy + m.vz*m.vz);
+            v_unit.x = m.vx / v_mag;
+            v_unit.y = m.vy / v_mag;
+            v_unit.z = m.vz / v_mag;
+            v_unit.t = m.t;
+
+            if (point == 4)
+                mp_norm = CrossProduct(m_unit, p_unit);
+            else
+                mp_norm = CrossProduct(p_unit, m_unit);
+
+            mv_norm = CrossProduct(m_unit, v_unit);
+            pole_diff = Astronomy_AngleBetween(mp_norm, mv_norm);
+            CHECK_STATUS(pole_diff);
+            if (pole_diff.angle > max_pole_diff)
+                max_pole_diff = pole_diff.angle;
+        }
+        printf("    max L%d pole diff angle = %0.6lf degrees.\n", point, max_pole_diff);
+    }
+
 fail:
     FreeStateVectorBatch(&mb);
     FreeStateVectorBatch(&lp);
