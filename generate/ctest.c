@@ -5057,6 +5057,104 @@ static int LagrangeJplAnalyzeFiles(
         printf("    max L%d pole diff angle = %0.6lf degrees.\n", point, max_pole_diff);
     }
 
+    /* Special case for L4, L5: confirm velocity vector would leave distances as an equilateral triangle. */
+    if (point == 4 || point == 5)
+    {
+        double a, b, c;      /* distances before v*dt increment */
+        double dx, dy, dz;
+        double ratio;
+        double min_ratio_before = NAN, max_ratio_before = NAN;
+        double min_ratio_after  = NAN, max_ratio_after  = NAN;
+        const double dt = 5.0;
+
+        for (i = 0; i < mb.length; ++i)
+        {
+            m = mb.array[i];
+            p = lp.array[i];
+
+            /* a = distance from major body to minor body */
+            a = sqrt(m.x*m.x + m.y*m.y + m.z*m.z);
+
+            /* b = distance from major body to L4/L5 */
+            b = sqrt(p.x*p.x + p.y*p.y + p.z*p.z);
+
+            /* c = distance from minor body to L4/L5 */
+            dx = p.x - m.x;
+            dy = p.y - m.y;
+            dz = p.z - m.z;
+            c = sqrt(dx*dx + dy*dy + dz*dz);
+
+            ratio = b / a;
+            if (i == 0)
+            {
+                min_ratio_before = max_ratio_before = ratio;
+            }
+            else
+            {
+                if (ratio < min_ratio_before)
+                    min_ratio_before = ratio;
+                if (ratio > max_ratio_before)
+                    max_ratio_before = ratio;
+            }
+
+            ratio = c / a;
+            if (ratio < min_ratio_before)
+                min_ratio_before = ratio;
+            if (ratio > max_ratio_before)
+                max_ratio_before = ratio;
+
+            ratio = c / b;
+            if (ratio < min_ratio_before)
+                min_ratio_before = ratio;
+            if (ratio > max_ratio_before)
+                max_ratio_before = ratio;
+
+            /* simulate a small movement of the body over a time period dt */
+            dx = m.x + dt*m.vx;
+            dy = m.y + dt*m.vy;
+            dz = m.z + dt*m.vz;
+            a = sqrt(dx*dx + dy*dy + dz*dz);
+
+            dx = p.x + dt*p.vx;
+            dy = p.y + dt*p.vy;
+            dz = p.z + dt*p.vz;
+            b = sqrt(dx*dx + dy*dy + dz*dz);
+
+            dx -= m.x + dt*m.vx;
+            dy -= m.y + dt*m.vy;
+            dz -= m.z + dt*m.vz;
+            c = sqrt(dx*dx + dy*dy + dz*dz);
+
+            ratio = b / a;
+            if (i == 0)
+            {
+                min_ratio_after = max_ratio_after = ratio;
+            }
+            else
+            {
+                if (ratio < min_ratio_after)
+                    min_ratio_after = ratio;
+                if (ratio > max_ratio_after)
+                    max_ratio_after = ratio;
+            }
+
+            ratio = c / a;
+            if (ratio < min_ratio_after)
+                min_ratio_after = ratio;
+            if (ratio > max_ratio_after)
+                max_ratio_after = ratio;
+
+            ratio = c / b;
+            if (ratio < min_ratio_after)
+                min_ratio_after = ratio;
+            if (ratio > max_ratio_after)
+                max_ratio_after = ratio;
+        }
+
+        printf("    length ratios before: min = %0.6lf, max = %0.6lf\n", min_ratio_before, max_ratio_before);
+        printf("    length ratios after : min = %0.6lf, max = %0.6lf\n", min_ratio_after,  max_ratio_after );
+    }
+
 fail:
     FreeStateVectorBatch(&mb);
     FreeStateVectorBatch(&lp);
