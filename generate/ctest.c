@@ -4747,13 +4747,30 @@ static astro_state_vector_t LagrangeFunc(verify_state_context_t *context, astro_
         goto bad_mass;
 
     /* Calculate the state vectors for the major and minor bodies. */
-    major_state = Astronomy_BaryState(context->major, time);
-    if (major_state.status != ASTRO_SUCCESS)
-        return major_state;
+    if (context->major == BODY_EARTH && minor_body == BODY_MOON)
+    {
+        /* Use geocentric calculations for more precision. */
 
-    minor_state = Astronomy_BaryState(minor_body, time);
-    if (minor_state.status != ASTRO_SUCCESS)
-        return minor_state;
+        /* The Earth's geocentric state is trivial. */
+        major_state.status = ASTRO_SUCCESS;
+        major_state.t = time;
+        major_state.x = major_state.y = major_state.z = 0.0;
+        major_state.vx = major_state.vy = major_state.vz = 0.0;
+
+        minor_state = Astronomy_GeoMoonState(time);
+        if (minor_state.status != ASTRO_SUCCESS)
+            return minor_state;
+    }
+    else
+    {
+        major_state = Astronomy_HelioState(context->major, time);
+        if (major_state.status != ASTRO_SUCCESS)
+            return major_state;
+
+        minor_state = Astronomy_HelioState(minor_body, time);
+        if (minor_state.status != ASTRO_SUCCESS)
+            return minor_state;
+    }
 
     return Astronomy_LagrangePoint(
         context->point,
@@ -4799,8 +4816,8 @@ static int LagrangeTest(void)
     CHECK(VerifyStateLagrange(BODY_SUN, BODY_EMB, 4, "lagrange/semb_L4.txt",   3.75e-5, 5.28e-5));
     CHECK(VerifyStateLagrange(BODY_SUN, BODY_EMB, 5, "lagrange/semb_L5.txt",   3.75e-5, 5.28e-5));
 
-    CHECK(VerifyStateLagrange(BODY_EARTH, BODY_MOON, 1, "lagrange/em_L1.txt",  3.78e-5, 5.05e-5));
-    CHECK(VerifyStateLagrange(BODY_EARTH, BODY_MOON, 2, "lagrange/em_L2.txt",  3.78e-5, 5.05e-5));
+    CHECK(VerifyStateLagrange(BODY_EARTH, BODY_MOON, 1, "lagrange/em_L1.txt",  3.79e-5, 5.06e-5));
+    CHECK(VerifyStateLagrange(BODY_EARTH, BODY_MOON, 2, "lagrange/em_L2.txt",  3.79e-5, 5.06e-5));
     CHECK(VerifyStateLagrange(BODY_EARTH, BODY_MOON, 4, "lagrange/em_L4.txt",  3.79e-5, 1.59e-3));
     CHECK(VerifyStateLagrange(BODY_EARTH, BODY_MOON, 5, "lagrange/em_L5.txt",  3.79e-5, 1.59e-3));
 
@@ -5065,7 +5082,7 @@ static int LagrangeJplAnalyzeFiles(
         double ratio;
         double min_ratio_before = NAN, max_ratio_before = NAN;
         double min_ratio_after  = NAN, max_ratio_after  = NAN;
-        const double dt = 5.0;
+        const double dt = 1.0;
 
         for (i = 0; i < mb.length; ++i)
         {
@@ -5115,15 +5132,19 @@ static int LagrangeJplAnalyzeFiles(
             dz = m.z + dt*m.vz;
             a = sqrt(dx*dx + dy*dy + dz*dz);
 
+            /* simulate straight-line movement of Lagrange point over dt */
             dx = p.x + dt*p.vx;
             dy = p.y + dt*p.vy;
             dz = p.z + dt*p.vz;
             b = sqrt(dx*dx + dy*dy + dz*dz);
 
+            /* measure extrapolated distance between minor body and Lagrange point */
             dx -= m.x + dt*m.vx;
             dy -= m.y + dt*m.vy;
             dz -= m.z + dt*m.vz;
             c = sqrt(dx*dx + dy*dy + dz*dz);
+
+            /* All 3 distances (a, b, c) should be the same. */
 
             ratio = b / a;
             if (i == 0)
@@ -5149,10 +5170,16 @@ static int LagrangeJplAnalyzeFiles(
                 min_ratio_after = ratio;
             if (ratio > max_ratio_after)
                 max_ratio_after = ratio;
+
+            if (ABS(1.0 - min_ratio_after) > 1.0e-7)
+                FAIL("LagrangeJplAnalyzeFiles(%s): BAD min_ratio_after = %0.15lf\n", lp_filename, min_ratio_after);
+
+            if (ABS(1.0 - max_ratio_after) > 1.0e-7)
+                FAIL("LagrangeJplAnalyzeFiles(%s): BAD max_ratio_after = %0.15lf\n", lp_filename, max_ratio_after);
         }
 
-        printf("    length ratios before: min = %0.6lf, max = %0.6lf\n", min_ratio_before, max_ratio_before);
-        printf("    length ratios after : min = %0.6lf, max = %0.6lf\n", min_ratio_after,  max_ratio_after );
+        printf("    length ratios before: min = %0.15lf, max = %0.15lf\n", min_ratio_before, max_ratio_before);
+        printf("    length ratios after : min = %0.15lf, max = %0.15lf\n", min_ratio_after,  max_ratio_after );
     }
 
 fail:
