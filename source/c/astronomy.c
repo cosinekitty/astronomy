@@ -4641,8 +4641,8 @@ astro_state_vector_t Astronomy_LagrangePoint(
 {
     const double cos_60 = 0.5;
     const double sin_60 = 0.8660254037844386;   /* sqrt(3) / 2 */
-    double scale, ratio, dx, dy, dz;
-    double R, r1, r2, x, deltax, dr1, dr2, numer1, numer2, omega2, accel, deriv;
+    double scale, dx, dy, dz;
+    double R2, R, r1, r2, x, deltax, dr1, dr2, numer1, numer2, omega2, accel, deriv;
     astro_state_vector_t  p;
 
     if (majorState.status != ASTRO_SUCCESS || minorState.status != ASTRO_SUCCESS)
@@ -4657,37 +4657,75 @@ astro_state_vector_t Astronomy_LagrangePoint(
     dx = minorState.x - majorState.x;
     dy = minorState.y - majorState.y;
     dz = minorState.z - majorState.z;
-    ratio = (dx*dx + dy*dy + dz*dz);
+    R2 = (dx*dx + dy*dy + dz*dz);
+
     /* R = Total distance between the bodies. */
-    R = sqrt(ratio);
+    R = sqrt(R2);
 
     if (point == 4 || point == 5)
     {
-        /* Convert the velocity vector to a position vector orthogonal to the radius vector. */
-        dx = minorState.vx - majorState.vx;
-        dy = minorState.vy - majorState.vy;
-        dz = minorState.vz - majorState.vz;
-        ratio = sqrt(ratio / (dx*dx + dy*dy + dz*dz));
-        if (point == 5)
-            ratio *= -1.0;
-        p.x  = cos_60*(minorState.x  - majorState.x ) + (sin_60*ratio)*(minorState.vx - majorState.vx);
-        p.y  = cos_60*(minorState.y  - majorState.y ) + (sin_60*ratio)*(minorState.vy - majorState.vy);
-        p.z  = cos_60*(minorState.z  - majorState.z ) + (sin_60*ratio)*(minorState.vz - majorState.vz);
-        p.vx = cos_60*(minorState.vx - majorState.vx) - (sin_60/ratio)*(minorState.x  - majorState.x );
-        p.vy = cos_60*(minorState.vy - majorState.vy) - (sin_60/ratio)*(minorState.y  - majorState.y );
-        p.vz = cos_60*(minorState.vz - majorState.vz) - (sin_60/ratio)*(minorState.z  - majorState.z );
+        double vx, vy, vz;
+        double ux, uy, uz, vert;
+        double vtan, vrad;      /* minor body tangential, radial speed components */
+        double wtan, wrad;      /* L4/L5 speed components in the minor body's tangential/radial directions */
+        /*
+            For L4 and L5, we need to find points 60 degrees away from the
+            line connecting the two bodies and in the instantaneous orbital plane.
+            Define the instantaneous orbital plane as the unique plane that contains
+            both the relative position vector and the relative velocity vector.
+            The velocity vector is NOT perpendicular to the position vector,
+            but we need a vector that is perpendicular to the position vector.
+            We take care of this by finding the tangential component of the velocity vector.
+        */
+
+        /* Convert the relative position vector into a unit vector. */
+        dx /= R;
+        dy /= R;
+        dz /= R;
+
+        /* Find the unit tangential velocity vector: u = v - (v.d)d */
+        vx = minorState.vx - majorState.vx;
+        vy = minorState.vy - majorState.vy;
+        vz = minorState.vz - majorState.vz;
+        vrad = vx*dx + vy*dy + vz*dz;    /* minor body's radial speed */
+        ux = vx - vrad*dx;
+        uy = vy - vrad*dy;
+        uz = vz - vrad*dz;
+        vtan = sqrt(ux*ux + uy*uy + uz*uz);     /* minor body's tangential speed */
+        ux /= vtan;
+        uy /= vtan;
+        uz /= vtan;
+
+        /* Now we have two perpendicular unit vectors in the orbital plane. */
+        /* Calculate L4/L5 positions relative to the major body. */
+        vert = (point == 4) ? +sin_60 : -sin_60;
+        p.x = R*(cos_60*dx + vert*ux);
+        p.y = R*(cos_60*dy + vert*uy);
+        p.z = R*(cos_60*dz + vert*uz);
+
+        /* Calculate L4/L5 velocities. */
+
+        /* Rotate the minor body's velocity vector by 60 degrees. */
+        wrad = cos_60*vrad - vert*vtan;
+        wtan = cos_60*vtan + vert*vrad;
+
+        /* Convert from (radius,tangent) coordinates back to caller's (x,y,z) coordinates. */
+        p.vx = wrad*dx + wtan*ux;
+        p.vy = wrad*dy + wtan*uy;
+        p.vz = wrad*dz + wtan*uz;
     }
     else
     {
-        /* Calculate the distances of each body from their mutual barycenter. */
-        /* r1 = negative distance of major mass from barycenter (e.g. Sun to the left of barycenter) */
-        /* r2 = positive distance of minor mass from barycenter (e.g. Earth to the right of barycenter) */
-
+        /*
+            Calculate the distances of each body from their mutual barycenter.
+            r1 = negative distance of major mass from barycenter (e.g. Sun to the left of barycenter)
+            r2 = positive distance of minor mass from barycenter (e.g. Earth to the right of barycenter)
+        */
         r1 = -R * (minorMass / (majorMass + minorMass));
         r2 = +R * (majorMass / (majorMass + minorMass));
 
         /* Calculate the square of the angular orbital speed in [rad^2 / day^2]. */
-        omega2 = (majorMass + minorMass) / (R*R*R);
+        omega2 = (majorMass + minorMass) / (R2*R);
 
         /*
             Use Newton's Method to numerically solve for the location where
@@ -4723,7 +4761,6 @@ astro_state_vector_t Astronomy_LagrangePoint(
 
         /* Iterate Newton's Method until it converges. */
         x = R*scale - r1;
-
         do
         {
             dr1 = x - r1;
@@ -4734,7 +4771,6 @@ astro_state_vector_t Astronomy_LagrangePoint(
             x -= deltax;
         }
         while (fabs(deltax/R) > 1.0e-14);
-
         scale = (x - r1) / R;
 
         p.x  = scale*(minorState.x  - majorState.x );

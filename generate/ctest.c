@@ -4771,32 +4771,38 @@ bad_mass:
 }
 
 
+static int VerifyStateLagrange(
+    astro_body_t majorBody,
+    astro_body_t minorBody,
+    int point,
+    const char *filename,
+    double r_thresh,
+    double v_thresh)
+{
+    verify_state_context_t context;
+    memset(&context, 0, sizeof(context));
+    context.func = LagrangeFunc;
+    context.major = majorBody;
+    context.point = point;
+    return VerifyStateBody(&context, minorBody, filename, r_thresh, v_thresh);
+}
+
+
 static int LagrangeTest(void)
 {
     int error;  /* set as a side-effect of CHECK macro */
-    verify_state_context_t context;
 
-    memset(&context, 0, sizeof(context));
-    context.func = LagrangeFunc;
-    context.major = BODY_SUN;
+    /* NOTE: JPL Horizons does not provide L3 calculations. */
 
-    context.point = 1;  CHECK(VerifyStateBody(&context, BODY_EMB,   "lagrange/semb_L1.txt",   1.4e-5, 6.2e-5));
-    context.point = 2;  CHECK(VerifyStateBody(&context, BODY_EMB,   "lagrange/semb_L2.txt",   1.4e-5, 6.2e-5));
-    /* JPL Horizons does not provide L3 calculations. */
+    CHECK(VerifyStateLagrange(BODY_SUN, BODY_EMB, 1, "lagrange/semb_L1.txt",   1.33e-5, 6.13e-5));
+    CHECK(VerifyStateLagrange(BODY_SUN, BODY_EMB, 2, "lagrange/semb_L2.txt",   1.33e-5, 6.13e-5));
+    CHECK(VerifyStateLagrange(BODY_SUN, BODY_EMB, 4, "lagrange/semb_L4.txt",   3.75e-5, 5.28e-5));
+    CHECK(VerifyStateLagrange(BODY_SUN, BODY_EMB, 5, "lagrange/semb_L5.txt",   3.75e-5, 5.28e-5));
 
-#if 0
-    context.point = 4;  CHECK(VerifyStateBody(&context, BODY_EMB,   "lagrange/semb_L4.txt",   2.0e-2, 2.0e-2));
-    context.point = 5;  CHECK(VerifyStateBody(&context, BODY_EMB,   "lagrange/semb_L5.txt",   4.5e-5, 9.1e-5));
-#endif
-    context.major = BODY_EARTH;
-
-    context.point = 1;  CHECK(VerifyStateBody(&context, BODY_MOON,  "lagrange/em_L1.txt",   3.8e-5, 5.1e-5));
-    context.point = 2;  CHECK(VerifyStateBody(&context, BODY_MOON,  "lagrange/em_L2.txt",   3.8e-5, 5.1e-5));
-    /* JPL Horizons does not provide L3 calculations. */
-#if 0
-    context.point = 4;  CHECK(VerifyStateBody(&context, BODY_MOON,  "lagrange/em_L4.txt",   0.0, 0.0));
-    context.point = 5;  CHECK(VerifyStateBody(&context, BODY_MOON,  "lagrange/em_L5.txt",   0.0, 0.0));
-#endif
+    CHECK(VerifyStateLagrange(BODY_EARTH, BODY_MOON, 1, "lagrange/em_L1.txt",  3.78e-5, 5.05e-5));
+    CHECK(VerifyStateLagrange(BODY_EARTH, BODY_MOON, 2, "lagrange/em_L2.txt",  3.78e-5, 5.05e-5));
+    CHECK(VerifyStateLagrange(BODY_EARTH, BODY_MOON, 4, "lagrange/em_L4.txt",  3.79e-5, 1.59e-3));
+    CHECK(VerifyStateLagrange(BODY_EARTH, BODY_MOON, 5, "lagrange/em_L5.txt",  3.79e-5, 1.59e-3));
 
     printf("C LagrangeTest: PASS\n");
 fail:
