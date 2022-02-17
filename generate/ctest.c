@@ -4513,6 +4513,29 @@ typedef struct _verify_state_context_t
 }
 verify_state_context_t;
 
+static double ArcCos(double x)
+{
+    if (x <= -1.0)
+        return 180.0;
+
+    if (x >= +1.0)
+        return 0.0;
+
+    return RAD2DEG * acos(x);
+}
+
+static void PrintDiagnostic(double x, double y, double z, const double ref[3])
+{
+    double calc_mag, ref_mag, angle;
+
+    calc_mag = sqrt(x*x + y*y + z*z);
+    ref_mag = sqrt(ref[0]*ref[0] + ref[1]*ref[1] + ref[2]*ref[2]);
+    angle = 60.0 * ArcCos((x*ref[0] + y*ref[1] + z*ref[2])/(calc_mag * ref_mag));
+    fprintf(stderr, "CALCULATED x = %22.16le, y = %22.16le, z = %22.16le [mag = %22.16le]\n", x, y, z, calc_mag);
+    fprintf(stderr, "REFERENCE  x = %22.16le, y = %22.16le, z = %22.16le [mag = %22.16le]\n", ref[0], ref[1], ref[2], ref_mag);
+    fprintf(stderr, "ANGLE ERROR = %0.6lf arcmin, MAG ERROR = %0.6lf\n", angle, (calc_mag-ref_mag)/ref_mag);
+}
+
 static int VerifyState(
     verify_state_context_t *context,
     double *max_rdiff,
@@ -4543,10 +4566,16 @@ static int VerifyState(
         *max_vdiff = vdiff;
 
     if (rdiff > fabs(r_thresh))
+    {
+        PrintDiagnostic(state.x, state.y, state.z, pos);
         FAIL("C VerifyState(%s line %d): EXCESSIVE position error = %0.4le\n", filename, lnum, rdiff);
+    }
 
     if (vdiff > fabs(v_thresh))
+    {
+        PrintDiagnostic(state.vx, state.vy, state.vz, vel);
         FAIL("C VerifyState(%s line %d): EXCESSIVE velocity error = %0.4le\n", filename, lnum, vdiff);
+    }
 
     error = 0;
 fail:
@@ -4916,18 +4945,6 @@ static int LoadStateVectors(
 fail:
     if (infile != NULL) fclose(infile);
     return error;
-}
-
-
-static double ArcCos(double x)
-{
-    if (x <= -1.0)
-        return 180.0;
-
-    if (x >= +1.0)
-        return 0.0;
-
-    return RAD2DEG * acos(x);
 }
 
 
