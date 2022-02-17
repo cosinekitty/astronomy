@@ -3377,10 +3377,12 @@ double Astronomy_MassProduct(astro_body_t body)
  * 4 = the Lagrange point 60 degrees ahead of the minor body's orbital position.
  * 5 = the Lagrange point 60 degrees behind the minor body's orbital position.
  *
- * The caller passes in the state vector and relative mass for both bodies.
+ * The caller passes in the state vector and mass for both bodies.
  * The state vectors can be in any orientation and frame of reference.
- * The body masses can be passed using any consistent units, although
- * it is recommended to call the #Astronomy_MassProduct to get high-precision values.
+ * The body masses are expressed as GM products, where G = the universal
+ * gravitation constant and M = the body's mass. Thus the units for
+ * `majorMass` and `minorMass` must be au^3/day^2.
+ * Use #Astronomy_MassProduct to obtain GM values for various solar system bodies.
  *
  * The function returns the state vector for the selected Lagrange point
  * using the same orientation as the state vector parameters `majorState` and `minorState`,
@@ -3428,19 +3430,19 @@ astro_state_vector_t Astronomy_LagrangePoint(
         double vx, vy, vz;
         double ux, uy, uz, vert;
         double vtan, vrad;      /* minor body tangential, radial speed components */
-        double wtan, wrad;      /* L4/L5 speed components in the minor body's tangential/radial directions */
+        double Dx, Dy, Dz;
+        double Ux, Uy, Uz;
         /*
             For L4 and L5, we need to find points 60 degrees away from the
             line connecting the two bodies and in the instantaneous orbital plane.
             Define the instantaneous orbital plane as the unique plane that contains
             both the relative position vector and the relative velocity vector.
-            The velocity vector is NOT perpendicular to the position vector,
-            but we need a vector that is perpendicular to the position vector.
+            The velocity vector is NOT perpendicular to the position vector.
             Resolve the minor body's velocity into radial and tangential components.
-            The tangential velocity is perpendicular and prograde to the radial position.
+            The tangential velocity is perpendicular and prograde to the radial position & velocity.
         */
 
-        /* Convert the relative position vector into a unit vector. */
+        /* Convert the relative position vector into a unit vector in the radial direction. */
         dx /= R;
         dy /= R;
         dz /= R;
@@ -3461,22 +3463,29 @@ astro_state_vector_t Astronomy_LagrangePoint(
         uz /= vtan;
 
         /* Now we have two perpendicular unit vectors in the orbital plane. */
-        /* Calculate L4/L5 positions relative to the major body. */
+
+        /* Create new unit vectors rotated (+/-)60 degrees from the radius/tangent directions. */
         vert = (point == 4) ? +sin_60 : -sin_60;
-        p.x = R*(cos_60*dx + vert*ux);
-        p.y = R*(cos_60*dy + vert*uy);
-        p.z = R*(cos_60*dz + vert*uz);
+
+        /* Rotated radial vector */
+        Dx = cos_60*dx + vert*ux;
+        Dy = cos_60*dy + vert*uy;
+        Dz = cos_60*dz + vert*uz;
+
+        /* Rotated tangent vector */
+        Ux = cos_60*ux - vert*dx;
+        Uy = cos_60*uy - vert*dy;
+        Uz = cos_60*uz - vert*dz;
+
+        /* Calculate L4/L5 positions relative to the major body. */
+        p.x = R * Dx;
+        p.y = R * Dy;
+        p.z = R * Dz;
 
         /* Calculate L4/L5 velocities. */
-
-        /* Rotate the minor body's velocity vector by 60 degrees. */
-        wrad = cos_60*vrad - vert*vtan;
-        wtan = cos_60*vtan + vert*vrad;
-
-        /* Convert from (radius,tangent) coordinates back to caller's (x,y,z) coordinates. */
-        p.vx = wrad*dx + wtan*ux;
-        p.vy = wrad*dy + wtan*uy;
-        p.vz = wrad*dz + wtan*uz;
+        p.vx = vrad*Dx + vtan*Ux;
+        p.vy = vrad*Dy + vtan*Uy;
+        p.vz = vrad*Dz + vtan*Uz;
     }
     else
     {

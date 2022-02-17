@@ -996,7 +996,7 @@ Given a more massive "major" body and a much less massive "minor" body, calculat
 
 1 = the Lagrange point between the major body and minor body. 2 = the Lagrange point on the far side of the minor body. 3 = the Lagrange point on the far side of the major body. 4 = the Lagrange point 60 degrees ahead of the minor body's orbital position. 5 = the Lagrange point 60 degrees behind the minor body's orbital position.
 
-The caller passes in the state vector and relative mass for both bodies. The state vectors can be in any orientation and frame of reference. The body masses can be passed using any consistent units, although it is recommended to call the [`Astronomy_MassProduct`](#Astronomy_MassProduct) to get high-precision values.
+The caller passes in the state vector and mass for both bodies. The state vectors can be in any orientation and frame of reference. The body masses are expressed as GM products, where G = the universal gravitation constant and M = the body's mass. Thus the units for `majorMass` and `minorMass` must be au^3/day^2. Use [`Astronomy_MassProduct`](#Astronomy_MassProduct) to obtain GM values for various solar system bodies.
 
 The function returns the state vector for the selected Lagrange point using the same orientation as the state vector parameters `majorState` and `minorState`, and the position and velocity components are with respect to the major body's center.
 
