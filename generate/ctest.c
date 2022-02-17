@@ -4850,7 +4850,7 @@ static int VerifyEquilateral(
     double *max_arcmin)
 {
     int error = 0;
-    const double LENGTH_TOLERANCE = 5.2e-16;
+    const double LENGTH_TOLERANCE = 5.8e-16;
     const double ARCMIN_TOLERANCE = 2.2e-12;
     double dx, dy, dz, dlength;
     double mlength, plength, diff, dotprod;

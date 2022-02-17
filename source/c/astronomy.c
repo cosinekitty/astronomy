@@ -4644,6 +4644,7 @@ astro_state_vector_t Astronomy_LagrangePoint(
     const double cos_60 = 0.5;
     const double sin_60 = 0.8660254037844386;   /* sqrt(3) / 2 */
     double scale, dx, dy, dz;
+    double vx, vy, vz;
     double R2, R, r1, r2, x, deltax, dr1, dr2, numer1, numer2, omega2, accel, deriv;
     astro_state_vector_t  p;
 
@@ -4656,6 +4657,7 @@ astro_state_vector_t Astronomy_LagrangePoint(
     if (!isfinite(minorMass) || minorMass <= 0.0)
         return StateVecError(ASTRO_INVALID_PARAMETER, majorState.t);
 
+    /* Find the relative position vector <dx, dy, dz>. */
     dx = minorState.x - majorState.x;
     dy = minorState.y - majorState.y;
     dz = minorState.z - majorState.z;
@@ -4664,44 +4666,48 @@ astro_state_vector_t Astronomy_LagrangePoint(
     /* R = Total distance between the bodies. */
     R = sqrt(R2);
 
+    /* Find the velocity vector <vx, vy, vz>. */
+    vx = minorState.vx - majorState.vx;
+    vy = minorState.vy - majorState.vy;
+    vz = minorState.vz - majorState.vz;
+
     if (point == 4 || point == 5)
     {
-        double vx, vy, vz;
-        double ux, uy, uz, vert;
-        double vtan, vrad;      /* minor body tangential, radial speed components */
+        double nx, ny, nz;
+        double ux, uy, uz, U;
         double Dx, Dy, Dz;
         double Ux, Uy, Uz;
+        double vert, vrad, vtan;
+
         /*
             For L4 and L5, we need to find points 60 degrees away from the
             line connecting the two bodies and in the instantaneous orbital plane.
             Define the instantaneous orbital plane as the unique plane that contains
             both the relative position vector and the relative velocity vector.
-            The velocity vector is NOT perpendicular to the position vector.
-            Resolve the minor body's velocity into radial and tangential components.
-            The tangential velocity is perpendicular and prograde to the radial position & velocity.
         */
 
-        /* Convert the relative position vector into a unit vector in the radial direction. */
+        /* Take the cross product of position and velocity to find a normal vector <nx, ny, nz>. */
+        nx = dy*vz - dz*vy;
+        ny = dz*vx - dx*vz;
+        nz = dx*vy - dy*vx;
+
+        /* Take the cross product normal*position to get a tangential vector <ux, uy, uz>. */
+        ux = ny*dz - nz*dy;
+        uy = nz*dx - nx*dz;
+        uz = nx*dy - ny*dx;
+
+        /* Convert the tangential direction vector to a unit vector. */
+        U = sqrt(ux*ux + uy*uy + uz*uz);
+        ux /= U;
+        uy /= U;
+        uz /= U;
+
+        /* Convert the relative position vector into a unit vector. */
         dx /= R;
         dy /= R;
         dz /= R;
 
-        /* Find the unit tangential velocity vector: u = v - (v.d)d */
-        vx = minorState.vx - majorState.vx;
-        vy = minorState.vy - majorState.vy;
-        vz = minorState.vz - majorState.vz;
-        vrad = vx*dx + vy*dy + vz*dz;    /* minor body's radial speed */
-        /* Subtract radial velocity from total velocity to get tangential velocity. */
-        ux = vx - vrad*dx;
-        uy = vy - vrad*dy;
-        uz = vz - vrad*dz;
-        vtan = sqrt(ux*ux + uy*uy + uz*uz);     /* minor body's tangential speed */
-        /* Create a tangential unit vector <ux,uy,uz> perpendicular to the radial unit vector <dx,dy,dz>. */
-        ux /= vtan;
-        uy /= vtan;
-        uz /= vtan;
-
-        /* Now we have two perpendicular unit vectors in the orbital plane. */
+        /* Now we have two perpendicular unit vectors in the orbital plane: 'd' and 'u'. */
 
         /* Create new unit vectors rotated (+/-)60 degrees from the radius/tangent directions. */
         vert = (point == 4) ? +sin_60 : -sin_60;
@@ -4720,6 +4726,10 @@ astro_state_vector_t Astronomy_LagrangePoint(
         p.x = R * Dx;
         p.y = R * Dy;
         p.z = R * Dz;
+
+        /* Use dot products to find radial and tangential components of the relative velocity. */
+        vrad = vx*dx + vy*dy + vz*dz;
+        vtan = vx*ux + vy*uy + vz*uz;
 
         /* Calculate L4/L5 velocities. */
         p.vx = vrad*Dx + vtan*Ux;
@@ -4785,12 +4795,12 @@ astro_state_vector_t Astronomy_LagrangePoint(
         while (fabs(deltax/R) > 1.0e-14);
         scale = (x - r1) / R;
 
-        p.x  = scale*(minorState.x  - majorState.x );
-        p.y  = scale*(minorState.y  - majorState.y );
-        p.z  = scale*(minorState.z  - majorState.z );
-        p.vx = scale*(minorState.vx - majorState.vx);
-        p.vy = scale*(minorState.vy - majorState.vy);
-        p.vz = scale*(minorState.vz - majorState.vz);
+        p.x  = scale * dx;
+        p.y  = scale * dy;
+        p.z  = scale * dz;
+        p.vx = scale * vx;
+        p.vy = scale * vy;
+        p.vz = scale * vz;
     }
     p.t = majorState.t;
     p.status = ASTRO_SUCCESS;
