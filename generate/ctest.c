@@ -5182,6 +5182,54 @@ static int LagrangeJplAnalyzeFiles(
         printf("    length ratios after : min = %0.15lf, max = %0.15lf\n", min_ratio_after,  max_ratio_after );
     }
 
+    /* Special case for L4/L5: confirm velocity vectors are 60 degrees apart. */
+    if (point == 4 || point == 5)
+    {
+        double speed, angle, arcmin_error;
+        double mx, my, mz;
+        double px, py, pz;
+        double min_angle = NAN;
+        double max_angle = NAN;
+
+        for (i = 0; i < mb.length; ++i)
+        {
+            m = mb.array[i];
+            p = lp.array[i];
+
+            /* Calculate unit vector in direction of the minor body's velocity. */
+            speed = sqrt(m.vx*m.vx + m.vy*m.vy + m.vz*m.vz);
+            mx = m.vx / speed;
+            my = m.vy / speed;
+            mz = m.vz / speed;
+
+            /* Calculate unit vector in the direction of the Lagrange point's velocity. */
+            speed = sqrt(p.vx*p.vx + p.vy*p.vy + p.vz*p.vz);
+            px = p.vx / speed;
+            py = p.vy / speed;
+            pz = p.vz / speed;
+
+            /* The dot product should always be very close to 0.5 (an angle of 60 degrees). */
+            angle = ArcCos(px*mx + py*my + pz*mz);
+            arcmin_error = 60.0 * ABS(angle - 60.0);
+            if (arcmin_error > 0.0026)
+                FAIL("C LagrangeJplAnalyzeFiles(%d, %s): velocity angle is out of bounds: %0.16lf (error = %0.4le arcmin)\n", i, lp_filename, angle, arcmin_error);
+
+            if (i == 0)
+            {
+                min_angle = max_angle = angle;
+            }
+            else
+            {
+                if (angle < min_angle)
+                    min_angle = angle;
+                if (angle > max_angle)
+                    max_angle = angle;
+            }
+        }
+
+        printf("    speed angles: min_angle = %0.15lf, max_angle = %0.15lf, spread = %0.4le\n", min_angle, max_angle, max_angle - min_angle);
+    }
+
 fail:
     FreeStateVectorBatch(&mb);
     FreeStateVectorBatch(&lp);
