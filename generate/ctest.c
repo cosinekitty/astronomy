@@ -4846,12 +4846,15 @@ static int VerifyEquilateral(
     double px,
     double py,
     double pz,
-    double *max_diff)
+    double *max_diff,
+    double *max_arcmin)
 {
     int error = 0;
     const double LENGTH_TOLERANCE = 5.2e-16;
+    const double ARCMIN_TOLERANCE = 2.2e-12;
     double dx, dy, dz, dlength;
-    double mlength, plength, diff;
+    double mlength, plength, diff, dotprod;
+    double arcmin;
     char tag[100];
 
     snprintf(tag, sizeof(tag),
@@ -4883,6 +4886,28 @@ static int VerifyEquilateral(
     if (diff > *max_diff)
         *max_diff = diff;
 
+    /* The 3 mutual angles should all be 60 degrees. */
+    dotprod = (mx*px + my*py + mz*pz) / (mlength * plength);
+    arcmin = ABS(60.0 * (60.0 - ArcCos(dotprod)));
+    if (arcmin > ARCMIN_TOLERANCE)
+        FAIL("%s: FAIL m/p angle error = %0.6le arcmin.\n", tag, arcmin);
+    if (arcmin > *max_arcmin)
+        *max_arcmin = arcmin;
+
+    dotprod = -(mx*dx + my*dy + mz*dz) / (mlength * dlength);       /* negate because pointing opposite dirs */
+    arcmin = ABS(60.0 * (60.0 - ArcCos(dotprod)));
+    if (arcmin > ARCMIN_TOLERANCE)
+        FAIL("%s: FAIL m/d angle error = %0.6le arcmin.\n", tag, arcmin);
+    if (arcmin > *max_arcmin)
+        *max_arcmin = arcmin;
+
+    dotprod = (px*dx + py*dy + pz*dz) / (plength * dlength);       /* negate because pointing opposite dirs */
+    arcmin = ABS(60.0 * (60.0 - ArcCos(dotprod)));
+    if (arcmin > ARCMIN_TOLERANCE)
+        FAIL("%s: FAIL p/d angle error = %0.6le arcmin.\n", tag, arcmin);
+    if (arcmin > *max_arcmin)
+        *max_arcmin = arcmin;
+
 fail:
     return error;
 }
@@ -4890,7 +4915,7 @@ fail:
 
 static int VerifyLagrangeTriangle(astro_body_t major_body, astro_body_t minor_body, int point)
 {
-    int error;
+    int error, count;
     char tag[100];
     astro_state_vector_t major_state, minor_state, point_state;
     double major_mass, minor_mass;
@@ -4898,8 +4923,8 @@ static int VerifyLagrangeTriangle(astro_body_t major_body, astro_body_t minor_bo
     const double tt2 = 7425.5;      /* 2020-05-01T00:00Z */
     const double dt = 0.125;        /* 1/8 is exactly represented in binary */
     astro_time_t time;
-    double max_pos_diff = 0.0;
-    double max_vel_diff = 0.0;
+    double max_pos_diff = 0.0, max_pos_arcmin = 0.0;
+    double max_vel_diff = 0.0, max_vel_arcmin = 0.0;
 
     snprintf(tag, sizeof(tag),
         "C VerifyLagrangeTriangle(%s,%s,L%d)",
@@ -4919,9 +4944,12 @@ static int VerifyLagrangeTriangle(astro_body_t major_body, astro_body_t minor_bo
     if (minor_mass <= 0.0)
         FAIL("%s: Invalid mass product for minor body.\n", tag);
 
+    count = 0;
     time = Astronomy_TerrestrialTime(tt1);
     while (time.tt <= tt2)
     {
+        ++count;
+
         major_state = Astronomy_HelioState(major_body, time);
         if (major_state.status != ASTRO_SUCCESS)
             FAIL("%s: HelioState falied for major body.\n", tag);
@@ -4947,7 +4975,8 @@ static int VerifyLagrangeTriangle(astro_body_t major_body, astro_body_t minor_bo
             point_state.x,
             point_state.y,
             point_state.z,
-            &max_pos_diff
+            &max_pos_diff,
+            &max_pos_arcmin
         ));
 
         CHECK(VerifyEquilateral(
@@ -4962,13 +4991,20 @@ static int VerifyLagrangeTriangle(astro_body_t major_body, astro_body_t minor_bo
             point_state.vx,
             point_state.vy,
             point_state.vz,
-            &max_vel_diff
+            &max_vel_diff,
+            &max_vel_arcmin
         ));
 
         time = Astronomy_TerrestrialTime(time.tt + dt);
     }
 
-    DEBUG("%s: PASS: max_pos_diff=%0.3le, max_vel_diff=%0.3le\n", tag, max_pos_diff, max_vel_diff);
+    DEBUG("%s: PASS (%d cases):\n    max_pos_diff = %0.3le, max_vel_diff = %0.3le\n    max_pos_arcmin = %0.3le, max_vel_arcmin = %0.3le\n",
+        tag,
+        count,
+        max_pos_diff, max_vel_diff,
+        max_pos_arcmin, max_vel_arcmin
+    );
+
     error = 0;
 fail:
     return error;
