@@ -4834,9 +4834,154 @@ static int VerifyStateLagrange(
 }
 
 
+static int VerifyEquilateral(
+    const char *kind,
+    astro_body_t major_body,
+    astro_body_t minor_body,
+    int point,
+    astro_time_t time,
+    double mx,
+    double my,
+    double mz,
+    double px,
+    double py,
+    double pz,
+    double *max_diff)
+{
+    int error = 0;
+    const double LENGTH_TOLERANCE = 5.2e-16;
+    double dx, dy, dz, dlength;
+    double mlength, plength, diff;
+    char tag[100];
+
+    snprintf(tag, sizeof(tag),
+        "C VerifyEquilateral(%s,%s,%s,L%d,tt=%0.3lf)",
+        kind,
+        Astronomy_BodyName(major_body),
+        Astronomy_BodyName(minor_body),
+        point,
+        time.tt
+    );
+
+    /* Verify minor body vector and Lagrange point vector are the same length. */
+    mlength = sqrt(mx*mx + my*my + mz*mz);
+    plength = sqrt(px*px + py*py + pz*pz);
+    diff = ABS((plength - mlength) / mlength);
+    if (diff > LENGTH_TOLERANCE)
+        FAIL("%s: FAIL mlength = %0.6le, plength = %0.6le, diff = %0.6le\n", tag, mlength, plength, diff);
+    if (diff > *max_diff)
+        *max_diff = diff;
+
+    /* Verify the third triangle leg (minor body to Lagrange point) is also the same length. */
+    dx = px - mx;
+    dy = py - my;
+    dz = pz - mz;
+    dlength = sqrt(dx*dx + dy*dy + dz*dz);
+    diff = ABS((dlength - mlength) / mlength);
+    if (diff > LENGTH_TOLERANCE)
+        FAIL("%s: FAIL mlength = %0.6le, dlength = %0.6le, diff = %0.6le\n", tag, mlength, dlength, diff);
+    if (diff > *max_diff)
+        *max_diff = diff;
+
+fail:
+    return error;
+}
+
+
+static int VerifyLagrangeTriangle(astro_body_t major_body, astro_body_t minor_body, int point)
+{
+    int error;
+    char tag[100];
+    astro_state_vector_t major_state, minor_state, point_state;
+    double major_mass, minor_mass;
+    const double tt1 = 7335.5;      /* 2020-02-01T00:00Z */
+    const double tt2 = 7425.5;      /* 2020-05-01T00:00Z */
+    const double dt = 0.125;        /* 1/8 is exactly represented in binary */
+    astro_time_t time;
+    double max_pos_diff = 0.0;
+    double max_vel_diff = 0.0;
+
+    snprintf(tag, sizeof(tag),
+        "C VerifyLagrangeTriangle(%s,%s,L%d)",
+        Astronomy_BodyName(major_body),
+        Astronomy_BodyName(minor_body),
+        point
+    );
+
+    if (point != 4 && point != 5)
+        FAIL("%s: Invalid Lagrange point %d\n", tag, point);
+
+    major_mass = Astronomy_MassProduct(major_body);
+    if (major_mass <= 0.0)
+        FAIL("%s: Invalid mass product for major body.\n", tag);
+
+    minor_mass = Astronomy_MassProduct(minor_body);
+    if (minor_mass <= 0.0)
+        FAIL("%s: Invalid mass product for minor body.\n", tag);
+
+    time = Astronomy_TerrestrialTime(tt1);
+    while (time.tt <= tt2)
+    {
+        major_state = Astronomy_HelioState(major_body, time);
+        if (major_state.status != ASTRO_SUCCESS)
+            FAIL("%s: HelioState falied for major body.\n", tag);
+
+        minor_state = Astronomy_HelioState(minor_body, time);
+        if (minor_state.status != ASTRO_SUCCESS)
+            FAIL("%s: HelioState falied for minor body.\n", tag);
+
+        point_state = Astronomy_LagrangePoint(point, major_state, major_mass, minor_state, minor_mass);
+        if (point_state.status != ASTRO_SUCCESS)
+            FAIL("%s: Astronomy_LagrangePoint returned status = %d\n", tag, point_state.status);
+
+        /* Verify the (major, minor, L4/L5) triangle is equilateral, both in position and velocity. */
+        CHECK(VerifyEquilateral(
+            "position",
+            major_body,
+            minor_body,
+            point,
+            time,
+            minor_state.x - major_state.x,
+            minor_state.y - major_state.y,
+            minor_state.z - major_state.z,
+            point_state.x,
+            point_state.y,
+            point_state.z,
+            &max_pos_diff
+        ));
+
+        CHECK(VerifyEquilateral(
+            "velocity",
+            major_body,
+            minor_body,
+            point,
+            time,
+            minor_state.vx - major_state.vx,
+            minor_state.vy - major_state.vy,
+            minor_state.vz - major_state.vz,
+            point_state.vx,
+            point_state.vy,
+            point_state.vz,
+            &max_vel_diff
+        ));
+
+        time = Astronomy_TerrestrialTime(time.tt + dt);
+    }
+
+    DEBUG("%s: PASS: max_pos_diff=%0.3le, max_vel_diff=%0.3le\n", tag, max_pos_diff, max_vel_diff);
+    error = 0;
+fail:
+    return error;
+}
+
+
 static int LagrangeTest(void)
 {
     int error;  /* set as a side-effect of CHECK macro */
+
+    /* Before verifying against JPL values, do self-consistency checks for L4/L5. */
+    CHECK(VerifyLagrangeTriangle(BODY_EARTH, BODY_MOON, 4));
+    CHECK(VerifyLagrangeTriangle(BODY_EARTH, BODY_MOON, 5));
 
     /* NOTE: JPL Horizons does not provide L3 calculations. */
 
