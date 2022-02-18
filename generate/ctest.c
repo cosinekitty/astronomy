@@ -131,6 +131,9 @@ static int AppendStateVector(state_vector_batch_t *batch, astro_state_vector_t s
 {
     int error;
 
+    if (state.status != ASTRO_SUCCESS)
+        FAIL("AppendStateVector: attempt to append state with status = %d\n", state.status);
+
     if (batch->array == NULL)
     {
         /* This is the first time appending a state vector. */
@@ -158,6 +161,8 @@ static int AppendStateVector(state_vector_batch_t *batch, astro_state_vector_t s
 fail:
     return error;
 }
+
+static int LoadStateVectors(state_vector_batch_t *batch, const char *filename);
 
 /*-------------------------------------------------------------------------------------------------*/
 
@@ -5013,14 +5018,90 @@ fail:
 
 static int VerifyGeoMoon(const char *filename)
 {
-    int error;  /* set as a side-effect of CHECK macro */
     verify_state_context_t context;
 
     memset(&context, 0, sizeof(context));
     context.func = BaryState;
-    CHECK(VerifyStateBody(&context, BODY_GEOMOON, filename, 3.777e-05, 5.047e-05));
+    return VerifyStateBody(&context, BODY_GEOMOON, filename, 3.777e-5, 5.047e-5);
+}
 
+
+static double ErrorArcmin(
+    double ax, double ay, double az,
+    double bx, double by, double bz)
+{
+    double dx = ax - bx;
+    double dy = ay - by;
+    double dz = az - bz;
+    double error = sqrt(dx*dx + dy*dy + dz*dz);
+    double mag = sqrt(ax*ax + ay*ay + az*az);
+    return (error / mag) * (RAD2DEG * 60.0);
+}
+
+
+static int LagrangeJplGeoMoon(const char *mb_filename, const char *lp_filename, int point)
+{
+    int error, i;
+    double major_mass, minor_mass;
+    astro_state_vector_t major;
+    astro_state_vector_t m, p, q;
+    state_vector_batch_t mb = EmptyStateVectorBatch();
+    state_vector_batch_t lp = EmptyStateVectorBatch();
+    double arcmin;
+    double max_pos_arcmin = 0.0;
+    double max_vel_arcmin = 0.0;
+
+    /* The major body is the Earth, and we do everything geocentrically. */
+    major.x = major.y = major.z = 0.0;
+    major.vx = major.vy = major.vz = 0.0;
+    memset(&major.t, 0, sizeof(major.t));
+    major.status = ASTRO_SUCCESS;
+
+    major_mass = Astronomy_MassProduct(BODY_EARTH);
+    if (major_mass <= 0.0)
+        FAIL("LagrangeJplGeoMoon: cannot find Earth mass\n");
+
+    minor_mass = Astronomy_MassProduct(BODY_MOON);
+    if (minor_mass <= 0.0)
+        FAIL("LagrangeJplGeoMoon: cannot find Moon mass\n");
+
+    /* Use state vectors provided by JPL to calculate Lagrange points. */
+    /* Compare calculated Lagrange points against JPL Lagrange points. */
+
+    CHECK(LoadStateVectors(&mb, mb_filename));
+    CHECK(LoadStateVectors(&lp, lp_filename));
+    if (mb.length != lp.length)
+        FAIL("C LagrangeJplGeoMoon: %s has %d states, but %s has %d\n", mb_filename, mb.length, lp_filename, lp.length);
+
+    for (i = 0; i < mb.length; ++i)
+    {
+        m = mb.array[i];
+        p = lp.array[i];
+        if (m.t.tt != p.t.tt)
+            FAIL("C LagrangeJplGeoMoon(%s): mismatching time: %0.16lf != %0.16lf.\n", lp_filename, m.t.tt, p.t.tt);
+
+        major.t = m.t;
+        q = Astronomy_LagrangePoint(point, major, major_mass, m, minor_mass);
+        if (q.status != ASTRO_SUCCESS)
+            FAIL("C LagrangeJplGeoMoon(%s): Astronomy_LagrangePoint returned status %d.\n", lp_filename, q.status);
+
+        arcmin = ErrorArcmin(p.x, p.y, p.z, q.x, q.y, q.z);
+        if (arcmin > max_pos_arcmin)
+            max_pos_arcmin = arcmin;
+        if (arcmin > 4.9e-5)
+            FAIL("C LagrangeJplGeoMoon(%s, %d): EXCESSIVE position error = %0.6lf arcmin.\n", lp_filename, i, arcmin);
+
+        arcmin = ErrorArcmin(p.vx, p.vy, p.vz, q.vx, q.vy, q.vz);
+        if (arcmin > max_vel_arcmin)
+            max_vel_arcmin = arcmin;
+        if (arcmin > 5.45)      /* !!! REPORT TO JPL !!! */
+            FAIL("C LagrangeJplGeoMoon(%s, %d): EXCESSIVE velocity error = %0.6lf arcmin.\n", lp_filename, i, arcmin);
+    }
+
+    DEBUG("C LagrangeJplGeoMoon(%s): PASS: %d cases, max pos arcmin = %0.16lf, max vel arcmin = %0.16lf\n", lp_filename, mb.length, max_pos_arcmin, max_vel_arcmin);
 fail:
+    FreeStateVectorBatch(&mb);
+    FreeStateVectorBatch(&lp);
     return error;
 }
 
@@ -5035,6 +5116,10 @@ static int LagrangeTest(void)
 
     /* Make sure our geocentric moon calculations match JPL's. */
     CHECK(VerifyGeoMoon("lagrange/geo_moon.txt"));
+
+    /* Try feeding JPL states into Astronomy_LagrangePoint(). */
+    CHECK(LagrangeJplGeoMoon("lagrange/geo_moon.txt", "lagrange/em_L4.txt", 4));
+    CHECK(LagrangeJplGeoMoon("lagrange/geo_moon.txt", "lagrange/em_L5.txt", 5));
 
     /* NOTE: JPL Horizons does not provide L3 calculations. */
 
@@ -5067,6 +5152,8 @@ static int LoadStateVectors(
     char line[100];
     double jd;
     astro_state_vector_t state;
+
+    memset(&state, 0, sizeof(state));
 
     infile = fopen(filename, "rt");
     if (infile == NULL)
@@ -5128,6 +5215,7 @@ static int LoadStateVectors(
                 V(state.vx);
                 V(state.vy);
                 V(state.vz);
+                state.status = ASTRO_SUCCESS;
                 CHECK(AppendStateVector(batch, state));
                 break;
 
