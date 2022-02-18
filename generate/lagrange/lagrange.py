@@ -27,19 +27,19 @@ def ArcminBetween(a, b):
     # Convert radians to arcminutes.
     return 60.0 * math.degrees(radians)
 
-# Geocentric Moon state vector from JPL Horizons:
-# 2458932.750000000 = A.D. 2020-Mar-24 06:00:00.0000 TDB
-# X = 2.705953999132032E-03 Y = 1.893525408300819E-04 Z =-1.752774223513111E-04
-# VX=-1.991849279045934E-05 VY= 5.148133848757774E-04 VZ= 2.218646176831359E-04
-moon_pos = Vector( 2.705953999132032E-03, 1.893525408300819E-04, -1.752774223513111E-04)
-moon_vel = Vector(-1.991849279045934E-05, 5.148133848757774E-04,  2.218646176831359E-04)
+# EMB-centered Moon state vector from JPL Horizons:
+#2458932.750000000 = A.D. 2020-Mar-24 06:00:00.0000 TDB 
+# X = 2.673075076694347E-03 Y = 1.870517968021612E-04 Z =-1.731476992383482E-04
+# VX=-1.967647146277114E-05 VY= 5.085581013947419E-04 VZ= 2.191688329215286E-04
+moon_pos = Vector( 2.673075076694347E-03, 1.870517968021612E-04, -1.731476992383482E-04)
+moon_vel = Vector(-1.967647146277114E-05, 5.085581013947419E-04,  2.191688329215286E-04)
 
-# Geocentric L4 state vector from JPL Horizons:
-# 2458932.750000000 = A.D. 2020-Mar-24 06:00:00.0000 TDB
-# X = 1.262170577138596E-03 Y = 2.254660738885763E-03 Z = 8.439158665950467E-04
-# VX=-4.935321457947509E-04 VY= 2.245912867279576E-04 VZ= 1.436629421560135E-04
-L4_pos = Vector( 1.262170577138596E-03,  2.254660738885763E-03,  8.439158665950467E-04)
-L4_vel = Vector(-4.935321457947509E-04,  2.245912867279576E-04,  1.436629421560135E-04)
+# EMB-centered L4 state vector from JPL Horizons:
+#2458932.750000000 = A.D. 2020-Mar-24 06:00:00.0000 TDB 
+# X = 1.229291654700910E-03 Y = 2.252359994857843E-03 Z = 8.460455897080097E-04
+# VX=-4.932901244670627E-04 VY= 2.183360032469220E-04 VZ= 1.409671573944061E-04
+L4_pos = Vector( 1.229291654700910E-03, 2.252359994857843E-03, 8.460455897080097E-04)
+L4_vel = Vector(-4.932901244670627E-04, 2.183360032469220E-04, 1.409671573944061E-04)
 
 moon_norm = Normal(moon_pos, moon_vel)
 print('moon_norm = ', moon_norm)
@@ -47,7 +47,6 @@ print('moon_norm = ', moon_norm)
 L4_norm = Normal(L4_pos, L4_vel)
 print('L4_norm   = ', L4_norm)
 
-# The normal vectors should be the same, but they aren't.
-# Find the angle between the two vectors.
+# Find the angle between the two normal vectors.
 arcmin = ArcminBetween(moon_norm, L4_norm)
 print('Angle between vectors = {:0.6f} arcmin'.format(arcmin))
