@@ -5011,6 +5011,20 @@ fail:
 }
 
 
+static int VerifyGeoMoon(const char *filename)
+{
+    int error;  /* set as a side-effect of CHECK macro */
+    verify_state_context_t context;
+
+    memset(&context, 0, sizeof(context));
+    context.func = BaryState;
+    CHECK(VerifyStateBody(&context, BODY_GEOMOON, filename, 3.777e-05, 5.047e-05));
+
+fail:
+    return error;
+}
+
+
 static int LagrangeTest(void)
 {
     int error;  /* set as a side-effect of CHECK macro */
@@ -5018,6 +5032,9 @@ static int LagrangeTest(void)
     /* Before verifying against JPL values, do self-consistency checks for L4/L5. */
     CHECK(VerifyLagrangeTriangle(BODY_EARTH, BODY_MOON, 4));
     CHECK(VerifyLagrangeTriangle(BODY_EARTH, BODY_MOON, 5));
+
+    /* Make sure our geocentric moon calculations match JPL's. */
+    CHECK(VerifyGeoMoon("lagrange/geo_moon.txt"));
 
     /* NOTE: JPL Horizons does not provide L3 calculations. */
 
