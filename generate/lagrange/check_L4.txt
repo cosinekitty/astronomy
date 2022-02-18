@@ -1,0 +1,110 @@
+﻿*******************************************************************************
+ Revised: Jul 11, 2019                 EM-L4                               3014
+                              (Earth-Moon Lagrange 4)
+
+  #1) The Earth-Moon Lagrange-4 point (EM-L4) is a location where the Moon's 
+       gravitational field partially counters that of the Earth. EM-L4 is one 
+       of the stable "Trojan" points (along with EM-L5). Small perturbations 
+       can displace an object from EM-L4, but it can return to the stable 
+       point.
+
+  #2) EM-L4 lies 60 degrees ahead of the Earth-Moon system along the Moon's 
+       orbit in plane of the orbit. It is about 1 lunar distance from the 
+       Earth and from the Moon (straight-lines), so 356000 to 407000 km,
+       averaging 385000 km from Earth and Moon centers, forming the apex of
+       an equilateral triangle, with the Earth and Moon defining the base-line.
+
+ Time-span available: 1900-Jan-01 to 2151-Jan-01
+*******************************************************************************
+
+
+*******************************************************************************
+Ephemeris / WWW_USER Thu Feb 17 18:31:54 2022 Pasadena, USA      / Horizons
+*******************************************************************************
+Target body name: EM-L4 (3014)                    {source: Earth-Moon_L4}
+Center body name: Earth (399)                     {source: DE441}
+Center-site name: BODY CENTER
+*******************************************************************************
+Start time      : A.D. 2020-Mar-24 06:00:00.0000 TDB
+Stop  time      : A.D. 2020-Mar-25 06:00:00.0000 TDB
+Step-size       : 1440 minutes
+*******************************************************************************
+Center geodetic : 0.00000000,0.00000000,0.0000000 {E-lon(deg),Lat(deg),Alt(km)}
+Center cylindric: 0.00000000,0.00000000,0.0000000 {E-lon(deg),Dxy(km),Dz(km)}
+Center radii    : 6378.1 x 6378.1 x 6356.8 km     {Equator, meridian, pole}    
+Output units    : AU-D
+Output type     : GEOMETRIC cartesian states
+Output format   : 2 (position and velocity)
+EOP file        : eop.220216.p220512
+EOP coverage    : DATA-BASED 1962-JAN-20 TO 2022-FEB-16. PREDICTS-> 2022-MAY-11
+Reference frame : ICRF
+*******************************************************************************
+JDTDB
+   X     Y     Z
+   VX    VY    VZ
+*******************************************************************************
+$$SOE
+2458932.750000000 = A.D. 2020-Mar-24 06:00:00.0000 TDB 
+ X = 1.262170577138596E-03 Y = 2.254660738885763E-03 Z = 8.439158665950467E-04
+ VX=-4.935321457947509E-04 VY= 2.245912867279576E-04 VZ= 1.436629421560135E-04
+2458933.750000000 = A.D. 2020-Mar-25 06:00:00.0000 TDB 
+ X = 7.445211227239128E-04 Y = 2.427928910875577E-03 Z = 9.679787398326978E-04
+ VX=-5.378861860962063E-04 VY= 1.206328432960384E-04 VZ= 1.035202699747598E-04
+$$EOE
+*******************************************************************************
+ 
+TIME
+
+  Barycentric Dynamical Time ("TDB" or T_eph) output was requested. This
+continuous relativistic coordinate time is equivalent to the relativistic
+proper time of a clock at rest in a reference frame comoving with the
+solar system barycenter but outside the system's gravity well. It is the
+independent variable in the solar system relativistic equations of motion.
+
+  TDB runs at a uniform rate of one SI second per second and is independent
+of irregularities in Earth's rotation.
+
+  Calendar dates prior to 1582-Oct-15 are in the Julian calendar system.
+Later calendar dates are in the Gregorian system.
+
+REFERENCE FRAME AND COORDINATES
+
+  International Celestial Reference Frame (ICRF)
+
+    The ICRF is an adopted reference frame whose axes are defined relative to 
+    fixed extragalactic radio sources distributed across the sky.
+
+    The ICRF was aligned with the prior FK5/J2000 dynamical system at the ~0.02 
+    arcsecond level but is not identical and has no associated standard epoch.
+
+  Symbol meaning [1 au= 149597870.700 km, 1 day= 86400.0 s]:
+
+    JDTDB    Julian Day Number, Barycentric Dynamical Time
+      X      X-component of position vector (au)
+      Y      Y-component of position vector (au)
+      Z      Z-component of position vector (au)
+      VX     X-component of velocity vector (au/day)                           
+      VY     Y-component of velocity vector (au/day)                           
+      VZ     Z-component of velocity vector (au/day)                           
+
+ABERRATIONS AND CORRECTIONS
+
+ Geometric state vectors have NO corrections or aberrations applied.
+
+Computations by ...
+
+    Solar System Dynamics Group, Horizons On-Line Ephemeris System
+    4800 Oak Grove Drive, Jet Propulsion Laboratory
+    Pasadena, CA  91109   USA
+
+    General site: https://ssd.jpl.nasa.gov/
+    Mailing list: https://ssd.jpl.nasa.gov/email_list.html
+    System news : https://ssd.jpl.nasa.gov/horizons/news.html
+    User Guide  : https://ssd.jpl.nasa.gov/horizons/manual.html
+    Connect     : browser        https://ssd.jpl.nasa.gov/horizons/app.html#/x
+                  API            https://ssd-api.jpl.nasa.gov/doc/horizons.html
+                  command-line   telnet ssd.jpl.nasa.gov 6775
+                  e-mail/batch   https://ssd.jpl.nasa.gov/ftp/ssd/hrzn_batch.txt
+                  scripts        https://ssd.jpl.nasa.gov/ftp/ssd/SCRIPTS
+    Author      : Jon.D.Giorgini@jpl.nasa.gov
+*******************************************************************************
