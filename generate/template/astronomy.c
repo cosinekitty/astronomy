@@ -185,7 +185,7 @@ static const double EARTH_MOON_MASS_RATIO = 81.30056;
     https://web.archive.org/web/20120220062549/http://iau-comm4.jpl.nasa.gov/de405iom/de405iom.pdf
 
     Page 10 in the above document describes the constants used in the DE405 ephemeris.
-    The following are G*M values (gravity constant * mass) in [au^3 / day^2].
+    The following are GM values (gravity constant * mass) in [au^3 / day^2].
     This side-steps issues of not knowing the exact values of G and masses M[i];
     the products GM[i] are known extremely accurately.
 */
@@ -3332,15 +3332,15 @@ astro_state_vector_t Astronomy_HelioState(astro_body_t body, astro_time_t time)
  * @brief Returns the product of mass and universal gravitational constant of a Solar System body.
  *
  * For problems involving the gravitational interactions of Solar System bodies,
- * it is helpful to know the product G*M, where G = the universal gravitational constant
- * and M = the mass of the body. In practice, G*M is known to a higher precision than
+ * it is helpful to know the product GM, where G = the universal gravitational constant
+ * and M = the mass of the body. In practice, GM is known to a higher precision than
  * either G or M alone, and thus using the product results in the most accurate results.
- * This function returns the product G*M in the units au^3/day^2, or 0 for invalid bodies.
+ * This function returns the product GM in the units au^3/day^2, or 0 for invalid bodies.
  * The values come from page 10 of a
  * [JPL memorandum regarding the DE405/LE405 ephemeris](https://web.archive.org/web/20120220062549/http://iau-comm4.jpl.nasa.gov/de405iom/de405iom.pdf).
  *
- * @param body      The body for which to find the G*M product.
- * @return          The mass product of the given body.
+ * @param body      The body for which to find the GM product.
+ * @return          The mass product of the given body in au^3/day^2.
  */
 double Astronomy_MassProduct(astro_body_t body)
 {
@@ -3396,7 +3396,7 @@ double Astronomy_MassProduct(astro_body_t body)
  * @param time          The time at which the Lagrange point is to be calculated.
  * @param major_body    The more massive of the co-orbiting bodies: `BODY_SUN` or `BODY_EARTH`.
  * @param minor_body    The less massive of the co-orbiting bodies. See main remarks.
- * @return              The position and velocity of the selected Lagrange point.
+ * @return              The position and velocity of the selected Lagrange point with respect to the major body's center.
  */
 astro_state_vector_t Astronomy_LagrangePoint(
     int point,
@@ -3469,7 +3469,7 @@ astro_state_vector_t Astronomy_LagrangePoint(
  * The state vectors can be in any orientation and frame of reference.
  * The body masses are expressed as GM products, where G = the universal
  * gravitation constant and M = the body's mass. Thus the units for
- * `majorMass` and `minorMass` must be au^3/day^2.
+ * `major_mass` and `minor_mass` must be au^3/day^2.
  * Use #Astronomy_MassProduct to obtain GM values for various solar system bodies.
  *
  * The function returns the state vector for the selected Lagrange point
@@ -3483,7 +3483,7 @@ astro_state_vector_t Astronomy_LagrangePoint(
  * @param major_mass    The relative mass of the major body.
  * @param minor_state   The state vector of the minor (less massive) of the pair of bodies.
  * @param minor_mass    The relative mass of the minor body.
- * @return              The position and velocity of the selected Lagrange point.
+ * @return              The position and velocity of the selected Lagrange point with respect to the major body's center.
  */
 astro_state_vector_t Astronomy_LagrangePointFast(
     int point,

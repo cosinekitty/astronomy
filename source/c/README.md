@@ -1004,7 +1004,7 @@ In some cases, it may be more efficient to call [`Astronomy_LagrangePointFast`](
 
 
 
-**Returns:**  The position and velocity of the selected Lagrange point. 
+**Returns:**  The position and velocity of the selected Lagrange point with respect to the major body's center. 
 
 
 
@@ -1031,7 +1031,7 @@ Given a more massive "major" body and a much less massive "minor" body, calculat
 
 1 = the Lagrange point between the major body and minor body. 2 = the Lagrange point on the far side of the minor body. 3 = the Lagrange point on the far side of the major body. 4 = the Lagrange point 60 degrees ahead of the minor body's orbital position. 5 = the Lagrange point 60 degrees behind the minor body's orbital position.
 
-The caller passes in the state vector and mass for both bodies. The state vectors can be in any orientation and frame of reference. The body masses are expressed as GM products, where G = the universal gravitation constant and M = the body's mass. Thus the units for `majorMass` and `minorMass` must be au^3/day^2. Use [`Astronomy_MassProduct`](#Astronomy_MassProduct) to obtain GM values for various solar system bodies.
+The caller passes in the state vector and mass for both bodies. The state vectors can be in any orientation and frame of reference. The body masses are expressed as GM products, where G = the universal gravitation constant and M = the body's mass. Thus the units for `major_mass` and `minor_mass` must be au^3/day^2. Use [`Astronomy_MassProduct`](#Astronomy_MassProduct) to obtain GM values for various solar system bodies.
 
 The function returns the state vector for the selected Lagrange point using the same orientation as the state vector parameters `major_state` and `minor_state`, and the position and velocity components are with respect to the major body's center.
 
@@ -1039,7 +1039,7 @@ Consider calling [`Astronomy_LagrangePoint`](#Astronomy_LagrangePoint), instead 
 
 
 
-**Returns:**  The position and velocity of the selected Lagrange point. 
+**Returns:**  The position and velocity of the selected Lagrange point with respect to the major body's center. 
 
 
 
@@ -1148,17 +1148,17 @@ It is the caller's responsibility to ensure that the parameter values are correc
 
 
 
-For problems involving the gravitational interactions of Solar System bodies, it is helpful to know the product G*M, where G = the universal gravitational constant and M = the mass of the body. In practice, G*M is known to a higher precision than either G or M alone, and thus using the product results in the most accurate results. This function returns the product G*M in the units au^3/day^2, or 0 for invalid bodies. The values come from page 10 of a [JPL memorandum regarding the DE405/LE405 ephemeris](https://web.archive.org/web/20120220062549/http://iau-comm4.jpl.nasa.gov/de405iom/de405iom.pdf).
+For problems involving the gravitational interactions of Solar System bodies, it is helpful to know the product GM, where G = the universal gravitational constant and M = the mass of the body. In practice, GM is known to a higher precision than either G or M alone, and thus using the product results in the most accurate results. This function returns the product GM in the units au^3/day^2, or 0 for invalid bodies. The values come from page 10 of a [JPL memorandum regarding the DE405/LE405 ephemeris](https://web.archive.org/web/20120220062549/http://iau-comm4.jpl.nasa.gov/de405iom/de405iom.pdf).
 
 
 
-**Returns:**  The mass product of the given body. 
+**Returns:**  The mass product of the given body in au^3/day^2. 
 
 
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| [`astro_body_t`](#astro_body_t) | `body` |  The body for which to find the G*M product.  | 
+| [`astro_body_t`](#astro_body_t) | `body` |  The body for which to find the GM product.  | 
 
 
 
