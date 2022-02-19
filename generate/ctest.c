@@ -275,6 +275,7 @@ int main(int argc, const char *argv[])
         ++argv;
         --argc;
         Verbose = 1;
+        fprintf(stderr, "ctest: DEBUG enabled.\n");
     }
 
     if (argc > 1)
