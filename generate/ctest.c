@@ -275,7 +275,6 @@ int main(int argc, const char *argv[])
         ++argv;
         --argc;
         Verbose = 1;
-        fprintf(stderr, "ctest: DEBUG enabled.\n");
     }
 
     if (argc > 1)
@@ -4939,6 +4938,8 @@ static int VerifyLagrangeTriangle(astro_body_t major_body, astro_body_t minor_bo
         point
     );
 
+    DEBUG("%s: entering\n", tag);
+
     if (point != 4 && point != 5)
         FAIL("%s: Invalid Lagrange point %d\n", tag, point);
 
@@ -5004,15 +5005,15 @@ static int VerifyLagrangeTriangle(astro_body_t major_body, astro_body_t minor_bo
         time = Astronomy_TerrestrialTime(time.tt + dt);
     }
 
-    DEBUG("%s: PASS (%d cases):\n    max_pos_diff = %0.3le, max_vel_diff = %0.3le\n    max_pos_arcmin = %0.3le, max_vel_arcmin = %0.3le\n",
-        tag,
-        count,
-        max_pos_diff, max_vel_diff,
-        max_pos_arcmin, max_vel_arcmin
-    );
-
+    if (Verbose)
+    {
+        printf("%s: PASS (%d cases)\n", tag, count);
+        printf("    max_pos_diff = %0.3le, max_vel_diff = %0.3le\n", max_pos_diff, max_vel_diff);
+        printf("    max_pos_arcmin = %0.3le, max_vel_arcmin = %0.3le\n", max_pos_arcmin, max_vel_arcmin);
+    }
     error = 0;
 fail:
+    DEBUG("%s: returning %d\n", tag, error);
     return error;
 }
 
@@ -5136,6 +5137,7 @@ static int LagrangeTest(void)
 
     printf("C LagrangeTest: PASS\n");
 fail:
+    DEBUG("C LagrangeTest: returning %d\n", error);
     return error;
 }
 
