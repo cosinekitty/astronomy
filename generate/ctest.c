@@ -38,8 +38,8 @@ char *ReadLine(char *s, int n, FILE *f, const char *filename, int lnum)
 #define PI      3.14159265358979323846
 
 #define CHECK(x)        do{if(0 != (error = (x))) goto fail;}while(0)
-#define FAIL(...)       do{fprintf(stderr, __VA_ARGS__); error = 1; goto fail;}while(0)
-#define FAILRET(...)    do{fprintf(stderr, __VA_ARGS__); return 1;}while(0)
+#define FAIL(...)       do{printf(__VA_ARGS__); error = 1; goto fail;}while(0)
+#define FAILRET(...)    do{printf(__VA_ARGS__); return 1;}while(0)
 
 static int CheckInverse(const char *aname, const char *bname, astro_rotation_t arot, astro_rotation_t brot);
 #define CHECK_INVERSE(a,b)   CHECK(CheckInverse(#a, #b, a, b))
@@ -4914,6 +4914,7 @@ static int VerifyEquilateral(
         *max_arcmin = arcmin;
 
 fail:
+    if (error != 0) printf("%s: returning %d\n", tag, error);
     return error;
 }
 
@@ -4961,11 +4962,11 @@ static int VerifyLagrangeTriangle(astro_body_t major_body, astro_body_t minor_bo
 
         major_state = Astronomy_HelioState(major_body, time);
         if (major_state.status != ASTRO_SUCCESS)
-            FAIL("%s: HelioState falied for major body.\n", tag);
+            FAIL("%s: HelioState failed for major body.\n", tag);
 
         minor_state = Astronomy_HelioState(minor_body, time);
         if (minor_state.status != ASTRO_SUCCESS)
-            FAIL("%s: HelioState falied for minor body.\n", tag);
+            FAIL("%s: HelioState failed for minor body.\n", tag);
 
         point_state = Astronomy_LagrangePoint(point, major_state, major_mass, minor_state, minor_mass);
         if (point_state.status != ASTRO_SUCCESS)
