@@ -4772,56 +4772,12 @@ fail:
 
 static astro_state_vector_t LagrangeFunc(verify_state_context_t *context, astro_body_t minor_body, astro_time_t time)
 {
-    astro_state_vector_t major_state, minor_state;
-    double major_mass, minor_mass;
-
-    major_mass = Astronomy_MassProduct(context->major);
-    if (major_mass <= 0.0)
-        goto bad_mass;
-
-    minor_mass = Astronomy_MassProduct(minor_body);
-    if (minor_mass <= 0.0)
-        goto bad_mass;
-
-    /* Calculate the state vectors for the major and minor bodies. */
-    if (context->major == BODY_EARTH && minor_body == BODY_MOON)
-    {
-        /* Use geocentric calculations for more precision. */
-
-        /* The Earth's geocentric state is trivial. */
-        major_state.status = ASTRO_SUCCESS;
-        major_state.t = time;
-        major_state.x = major_state.y = major_state.z = 0.0;
-        major_state.vx = major_state.vy = major_state.vz = 0.0;
-
-        minor_state = Astronomy_GeoMoonState(time);
-        if (minor_state.status != ASTRO_SUCCESS)
-            return minor_state;
-    }
-    else
-    {
-        major_state = Astronomy_HelioState(context->major, time);
-        if (major_state.status != ASTRO_SUCCESS)
-            return major_state;
-
-        minor_state = Astronomy_HelioState(minor_body, time);
-        if (minor_state.status != ASTRO_SUCCESS)
-            return minor_state;
-    }
-
     return Astronomy_LagrangePoint(
         context->point,
-        major_state,
-        major_mass,
-        minor_state,
-        minor_mass
+        time,
+        context->major,
+        minor_body
     );
-
-bad_mass:
-    fprintf(stderr, "C LagrangeFunc: invalid mass product encountered.\n");
-    memset(&major_state, 0, sizeof(major_state));
-    major_state.status = ASTRO_INVALID_BODY;
-    return major_state;
 }
 
 
@@ -4967,7 +4923,7 @@ static int VerifyLagrangeTriangle(astro_body_t major_body, astro_body_t minor_bo
         if (minor_state.status != ASTRO_SUCCESS)
             FAIL("%s: HelioState failed for minor body.\n", tag);
 
-        point_state = Astronomy_LagrangePoint(point, major_state, major_mass, minor_state, minor_mass);
+        point_state = Astronomy_LagrangePointFast(point, major_state, major_mass, minor_state, minor_mass);
         if (point_state.status != ASTRO_SUCCESS)
             FAIL("%s: Astronomy_LagrangePoint returned status = %d\n", tag, point_state.status);
 
@@ -5084,7 +5040,7 @@ static int LagrangeJplGeoMoon(const char *mb_filename, const char *lp_filename, 
             FAIL("C LagrangeJplGeoMoon(%s): mismatching time: %0.16lf != %0.16lf.\n", lp_filename, m.t.tt, p.t.tt);
 
         major.t = m.t;
-        q = Astronomy_LagrangePoint(point, major, major_mass, m, minor_mass);
+        q = Astronomy_LagrangePointFast(point, major, major_mass, m, minor_mass);
         if (q.status != ASTRO_SUCCESS)
             FAIL("C LagrangeJplGeoMoon(%s): Astronomy_LagrangePoint returned status %d.\n", lp_filename, q.status);
 

@@ -4603,7 +4603,95 @@ double Astronomy_MassProduct(astro_body_t body)
 
 
 /**
- * @brief Calculates one of the 5 Lagrange points for a given pair of bodies.
+ * @brief Calculates one of the 5 Lagrange points for a pair of co-orbiting bodies.
+ *
+ * Given a more massive "major" body and a much less massive "minor" body,
+ * calculates one of the five Lagrange points in relation to the minor body's
+ * orbit around the major body. The parameter `point` is an integer that
+ * selects the Lagrange point as follows:
+ *
+ * 1 = the Lagrange point between the major body and minor body.
+ * 2 = the Lagrange point on the far side of the minor body.
+ * 3 = the Lagrange point on the far side of the major body.
+ * 4 = the Lagrange point 60 degrees ahead of the minor body's orbital position.
+ * 5 = the Lagrange point 60 degrees behind the minor body's orbital position.
+ *
+ * The function returns the state vector for the selected Lagrange point
+ * in equatorial J2000 coordinates (EQJ), with respect to the center of the
+ * major body.
+ *
+ * To calculate Sun/Earth Lagrange points, pass in `BODY_SUN` for `major_body`
+ * and `BODY_EMB` (Earth/Moon barycenter) for `minor_body`.
+ * For Lagrange points of the Sun and any other planet, pass in just that planet by itself,
+ * e.g. `BODY_JUPITER` for `minor_body`.
+ * To calculate Earth/Moon Lagrange points, pass in `BODY_EARTH` and `BODY_MOON`
+ * for the major and minor bodies respectively.
+ *
+ * In some cases, it may be more efficient to call #Astronomy_LagrangePointFast,
+ * especially when the state vectors have already been calculated, or are needed
+ * for some other purpose.
+ *
+ * @param point         A value 1..5 that selects which of the Lagrange points to calculate.
+ * @param time          The time at which the Lagrange point is to be calculated.
+ * @param major_body    The more massive of the co-orbiting bodies: `BODY_SUN` or `BODY_EARTH`.
+ * @param minor_body    The less massive of the co-orbiting bodies. See main remarks.
+ * @return              The position and velocity of the selected Lagrange point.
+ */
+astro_state_vector_t Astronomy_LagrangePoint(
+    int point,
+    astro_time_t time,
+    astro_body_t major_body,
+    astro_body_t minor_body)
+{
+    astro_state_vector_t major_state, minor_state;
+    double major_mass, minor_mass;
+
+    major_mass = Astronomy_MassProduct(major_body);
+    if (major_mass <= 0.0)
+        return StateVecError(ASTRO_INVALID_BODY, time);
+
+    minor_mass = Astronomy_MassProduct(minor_body);
+    if (minor_mass <= 0.0)
+        return StateVecError(ASTRO_INVALID_BODY, time);
+
+    /* Calculate the state vectors for the major and minor bodies. */
+    if (major_body == BODY_EARTH && minor_body == BODY_MOON)
+    {
+        /* Use geocentric calculations for more precision. */
+
+        /* The Earth's geocentric state is trivial. */
+        major_state.status = ASTRO_SUCCESS;
+        major_state.t = time;
+        major_state.x = major_state.y = major_state.z = 0.0;
+        major_state.vx = major_state.vy = major_state.vz = 0.0;
+
+        minor_state = Astronomy_GeoMoonState(time);
+        if (minor_state.status != ASTRO_SUCCESS)
+            return minor_state;
+    }
+    else
+    {
+        major_state = Astronomy_HelioState(major_body, time);
+        if (major_state.status != ASTRO_SUCCESS)
+            return major_state;
+
+        minor_state = Astronomy_HelioState(minor_body, time);
+        if (minor_state.status != ASTRO_SUCCESS)
+            return minor_state;
+    }
+
+    return Astronomy_LagrangePointFast(
+        point,
+        major_state,
+        major_mass,
+        minor_state,
+        minor_mass
+    );
+}
+
+
+/**
+ * @brief Calculates one of the 5 Lagrange points from body masses and state vectors.
  *
  * Given a more massive "major" body and a much less massive "minor" body,
  * calculates one of the five Lagrange points in relation to the minor body's
@@ -4624,22 +4712,24 @@ double Astronomy_MassProduct(astro_body_t body)
  * Use #Astronomy_MassProduct to obtain GM values for various solar system bodies.
  *
  * The function returns the state vector for the selected Lagrange point
- * using the same orientation as the state vector parameters `majorState` and `minorState`,
+ * using the same orientation as the state vector parameters `major_state` and `minor_state`,
  * and the position and velocity components are with respect to the major body's center.
  *
+ * Consider calling #Astronomy_LagrangePoint, instead of this function, for simpler usage in most cases.
+ *
  * @param point         A value 1..5 that selects which of the Lagrange points to calculate.
- * @param majorState    The state vector of the major (more massive) of the pair of bodies.
- * @param majorMass     The relative mass of the major body.
- * @param minorState    The state vector of the minor (less massive) of the pair of bodies.
- * @param minorMass     The relative mass of the minor body.
+ * @param major_state   The state vector of the major (more massive) of the pair of bodies.
+ * @param major_mass    The relative mass of the major body.
+ * @param minor_state   The state vector of the minor (less massive) of the pair of bodies.
+ * @param minor_mass    The relative mass of the minor body.
  * @return              The position and velocity of the selected Lagrange point.
  */
-astro_state_vector_t Astronomy_LagrangePoint(
+astro_state_vector_t Astronomy_LagrangePointFast(
     int point,
-    astro_state_vector_t majorState,
-    double majorMass,
-    astro_state_vector_t minorState,
-    double minorMass)
+    astro_state_vector_t major_state,
+    double major_mass,
+    astro_state_vector_t minor_state,
+    double minor_mass)
 {
     const double cos_60 = 0.5;
     const double sin_60 = 0.8660254037844386;   /* sqrt(3) / 2 */
@@ -4648,28 +4738,31 @@ astro_state_vector_t Astronomy_LagrangePoint(
     double R2, R, r1, r2, x, deltax, dr1, dr2, numer1, numer2, omega2, accel, deriv;
     astro_state_vector_t  p;
 
-    if (majorState.status != ASTRO_SUCCESS || minorState.status != ASTRO_SUCCESS)
-        return StateVecError(ASTRO_INVALID_PARAMETER, majorState.t);
+    if (point < 1 || point > 5)
+        return StateVecError(ASTRO_INVALID_PARAMETER, major_state.t);
 
-    if (!isfinite(majorMass) || majorMass <= 0.0)
-        return StateVecError(ASTRO_INVALID_PARAMETER, majorState.t);
+    if (major_state.status != ASTRO_SUCCESS || minor_state.status != ASTRO_SUCCESS)
+        return StateVecError(ASTRO_INVALID_PARAMETER, major_state.t);
 
-    if (!isfinite(minorMass) || minorMass <= 0.0)
-        return StateVecError(ASTRO_INVALID_PARAMETER, majorState.t);
+    if (!isfinite(major_mass) || major_mass <= 0.0)
+        return StateVecError(ASTRO_INVALID_PARAMETER, major_state.t);
+
+    if (!isfinite(minor_mass) || minor_mass <= 0.0)
+        return StateVecError(ASTRO_INVALID_PARAMETER, major_state.t);
 
     /* Find the relative position vector <dx, dy, dz>. */
-    dx = minorState.x - majorState.x;
-    dy = minorState.y - majorState.y;
-    dz = minorState.z - majorState.z;
+    dx = minor_state.x - major_state.x;
+    dy = minor_state.y - major_state.y;
+    dz = minor_state.z - major_state.z;
     R2 = (dx*dx + dy*dy + dz*dz);
 
     /* R = Total distance between the bodies. */
     R = sqrt(R2);
 
     /* Find the velocity vector <vx, vy, vz>. */
-    vx = minorState.vx - majorState.vx;
-    vy = minorState.vy - majorState.vy;
-    vz = minorState.vz - majorState.vz;
+    vx = minor_state.vx - major_state.vx;
+    vy = minor_state.vy - major_state.vy;
+    vz = minor_state.vz - major_state.vz;
 
     if (point == 4 || point == 5)
     {
@@ -4743,11 +4836,11 @@ astro_state_vector_t Astronomy_LagrangePoint(
             r1 = negative distance of major mass from barycenter (e.g. Sun to the left of barycenter)
             r2 = positive distance of minor mass from barycenter (e.g. Earth to the right of barycenter)
         */
-        r1 = -R * (minorMass / (majorMass + minorMass));
-        r2 = +R * (majorMass / (majorMass + minorMass));
+        r1 = -R * (minor_mass / (major_mass + minor_mass));
+        r2 = +R * (major_mass / (major_mass + minor_mass));
 
         /* Calculate the square of the angular orbital speed in [rad^2 / day^2]. */
-        omega2 = (majorMass + minorMass) / (R2*R);
+        omega2 = (major_mass + minor_mass) / (R2*R);
 
         /*
             Use Newton's Method to numerically solve for the location where
@@ -4757,28 +4850,24 @@ astro_state_vector_t Astronomy_LagrangePoint(
         */
         if (point == 1 || point == 2)
         {
-            scale = (majorMass / (majorMass + minorMass)) * cbrt(minorMass / (3.0 * majorMass));
-            numer1 = -majorMass;    /* The major mass is to the left of L1 and L2 */
+            scale = (major_mass / (major_mass + minor_mass)) * cbrt(minor_mass / (3.0 * major_mass));
+            numer1 = -major_mass;    /* The major mass is to the left of L1 and L2 */
             if (point == 1)
             {
                 scale = 1.0 - scale;
-                numer2 = +minorMass;    /* The minor mass is to the right of L1. */
+                numer2 = +minor_mass;    /* The minor mass is to the right of L1. */
             }
             else
             {
                 scale = 1.0 + scale;
-                numer2 = -minorMass;    /* The minor mass is to the left of L2. */
+                numer2 = -minor_mass;    /* The minor mass is to the left of L2. */
             }
         }
-        else if (point == 3)
+        else /* point == 3 */
         {
-            scale = ((7.0/12.0)*minorMass - majorMass) / (minorMass + majorMass);
-            numer1 = +majorMass;    /* major mass is to the right of L3. */
-            numer2 = +minorMass;    /* minor mass is to the right of L3. */
-        }
-        else
-        {
-            return StateVecError(ASTRO_INVALID_PARAMETER, majorState.t);
+            scale = ((7.0/12.0)*minor_mass - major_mass) / (minor_mass + major_mass);
+            numer1 = +major_mass;    /* major mass is to the right of L3. */
+            numer2 = +minor_mass;    /* minor mass is to the right of L3. */
         }
 
         /* Iterate Newton's Method until it converges. */
@@ -4802,7 +4891,7 @@ astro_state_vector_t Astronomy_LagrangePoint(
         p.vy = scale * vy;
         p.vz = scale * vz;
     }
-    p.t = majorState.t;
+    p.t = major_state.t;
     p.status = ASTRO_SUCCESS;
     return p;
 }

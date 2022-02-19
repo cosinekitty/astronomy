@@ -986,9 +986,9 @@ To convert to heliocentric position vectors, call [`Astronomy_HelioVector`](#Ast
 ---
 
 <a name="Astronomy_LagrangePoint"></a>
-### Astronomy_LagrangePoint(point, majorState, majorMass, minorState, minorMass) &#8658; [`astro_state_vector_t`](#astro_state_vector_t)
+### Astronomy_LagrangePoint(point, time, major_body, minor_body) &#8658; [`astro_state_vector_t`](#astro_state_vector_t)
 
-**Calculates one of the 5 Lagrange points for a given pair of bodies.** 
+**Calculates one of the 5 Lagrange points for a pair of co-orbiting bodies.** 
 
 
 
@@ -996,9 +996,11 @@ Given a more massive "major" body and a much less massive "minor" body, calculat
 
 1 = the Lagrange point between the major body and minor body. 2 = the Lagrange point on the far side of the minor body. 3 = the Lagrange point on the far side of the major body. 4 = the Lagrange point 60 degrees ahead of the minor body's orbital position. 5 = the Lagrange point 60 degrees behind the minor body's orbital position.
 
-The caller passes in the state vector and mass for both bodies. The state vectors can be in any orientation and frame of reference. The body masses are expressed as GM products, where G = the universal gravitation constant and M = the body's mass. Thus the units for `majorMass` and `minorMass` must be au^3/day^2. Use [`Astronomy_MassProduct`](#Astronomy_MassProduct) to obtain GM values for various solar system bodies.
+The function returns the state vector for the selected Lagrange point in equatorial J2000 coordinates (EQJ), with respect to the center of the major body.
 
-The function returns the state vector for the selected Lagrange point using the same orientation as the state vector parameters `majorState` and `minorState`, and the position and velocity components are with respect to the major body's center.
+To calculate Sun/Earth Lagrange points, pass in `BODY_SUN` for `major_body` and `BODY_EMB` (Earth/Moon barycenter) for `minor_body`. For Lagrange points of the Sun and any other planet, pass in just that planet by itself, e.g. `BODY_JUPITER` for `minor_body`. To calculate Earth/Moon Lagrange points, pass in `BODY_EARTH` and `BODY_MOON` for the major and minor bodies respectively.
+
+In some cases, it may be more efficient to call [`Astronomy_LagrangePointFast`](#Astronomy_LagrangePointFast), especially when the state vectors have already been calculated, or are needed for some other purpose.
 
 
 
@@ -1009,10 +1011,45 @@ The function returns the state vector for the selected Lagrange point using the 
 | Type | Parameter | Description |
 | --- | --- | --- |
 | `int` | `point` |  A value 1..5 that selects which of the Lagrange points to calculate.  | 
-| [`astro_state_vector_t`](#astro_state_vector_t) | `majorState` |  The state vector of the major (more massive) of the pair of bodies.  | 
-| `double` | `majorMass` |  The relative mass of the major body.  | 
-| [`astro_state_vector_t`](#astro_state_vector_t) | `minorState` |  The state vector of the minor (less massive) of the pair of bodies.  | 
-| `double` | `minorMass` |  The relative mass of the minor body.  | 
+| [`astro_time_t`](#astro_time_t) | `time` |  The time at which the Lagrange point is to be calculated.  | 
+| [`astro_body_t`](#astro_body_t) | `major_body` |  The more massive of the co-orbiting bodies: `BODY_SUN` or `BODY_EARTH`.  | 
+| [`astro_body_t`](#astro_body_t) | `minor_body` |  The less massive of the co-orbiting bodies. See main remarks.  | 
+
+
+
+
+---
+
+<a name="Astronomy_LagrangePointFast"></a>
+### Astronomy_LagrangePointFast(point, major_state, major_mass, minor_state, minor_mass) &#8658; [`astro_state_vector_t`](#astro_state_vector_t)
+
+**Calculates one of the 5 Lagrange points from body masses and state vectors.** 
+
+
+
+Given a more massive "major" body and a much less massive "minor" body, calculates one of the five Lagrange points in relation to the minor body's orbit around the major body. The parameter `point` is an integer that selects the Lagrange point as follows:
+
+1 = the Lagrange point between the major body and minor body. 2 = the Lagrange point on the far side of the minor body. 3 = the Lagrange point on the far side of the major body. 4 = the Lagrange point 60 degrees ahead of the minor body's orbital position. 5 = the Lagrange point 60 degrees behind the minor body's orbital position.
+
+The caller passes in the state vector and mass for both bodies. The state vectors can be in any orientation and frame of reference. The body masses are expressed as GM products, where G = the universal gravitation constant and M = the body's mass. Thus the units for `majorMass` and `minorMass` must be au^3/day^2. Use [`Astronomy_MassProduct`](#Astronomy_MassProduct) to obtain GM values for various solar system bodies.
+
+The function returns the state vector for the selected Lagrange point using the same orientation as the state vector parameters `major_state` and `minor_state`, and the position and velocity components are with respect to the major body's center.
+
+Consider calling [`Astronomy_LagrangePoint`](#Astronomy_LagrangePoint), instead of this function, for simpler usage in most cases.
+
+
+
+**Returns:**  The position and velocity of the selected Lagrange point. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| `int` | `point` |  A value 1..5 that selects which of the Lagrange points to calculate.  | 
+| [`astro_state_vector_t`](#astro_state_vector_t) | `major_state` |  The state vector of the major (more massive) of the pair of bodies.  | 
+| `double` | `major_mass` |  The relative mass of the major body.  | 
+| [`astro_state_vector_t`](#astro_state_vector_t) | `minor_state` |  The state vector of the minor (less massive) of the pair of bodies.  | 
+| `double` | `minor_mass` |  The relative mass of the minor body.  | 
 
 
 
