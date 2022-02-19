@@ -287,7 +287,8 @@ int main(int argc, const char *argv[])
             if (!strcmp(verb, "all"))
             {
                 for (i=0; i < NUM_UNIT_TESTS; ++i)
-                    CHECK(UnitTests[i].func());
+                    if (UnitTests[i].func())
+                        FAIL("ctest: Unit test failed: %s\n", UnitTests[i].name);
                 goto success;
             }
 
@@ -354,6 +355,8 @@ success:
 
 fail:
     Astronomy_Reset();      /* Free memory so valgrind doesn't see any leaks. */
+    fflush(stdout);
+    fflush(stderr);
     return error;
 }
 
@@ -4939,8 +4942,6 @@ static int VerifyLagrangeTriangle(astro_body_t major_body, astro_body_t minor_bo
         point
     );
 
-    printf("%s: entering\n", tag);
-
     if (point != 4 && point != 5)
         FAIL("%s: Invalid Lagrange point %d\n", tag, point);
 
@@ -4957,8 +4958,6 @@ static int VerifyLagrangeTriangle(astro_body_t major_body, astro_body_t minor_bo
     while (time.tt <= tt2)
     {
         ++count;
-
-        printf("%s: count=%d, tt=%0.6lf\n", tag, count, time.tt);
 
         major_state = Astronomy_HelioState(major_body, time);
         if (major_state.status != ASTRO_SUCCESS)
@@ -5016,7 +5015,6 @@ static int VerifyLagrangeTriangle(astro_body_t major_body, astro_body_t minor_bo
     }
     error = 0;
 fail:
-    printf("%s: returning %d\n", tag, error);
     return error;
 }
 
@@ -5140,7 +5138,6 @@ static int LagrangeTest(void)
 
     printf("C LagrangeTest: PASS\n");
 fail:
-    DEBUG("C LagrangeTest: returning %d\n", error);
     return error;
 }
 
