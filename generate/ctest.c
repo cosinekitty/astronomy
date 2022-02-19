@@ -4938,7 +4938,7 @@ static int VerifyLagrangeTriangle(astro_body_t major_body, astro_body_t minor_bo
         point
     );
 
-    DEBUG("%s: entering\n", tag);
+    printf("%s: entering\n", tag);
 
     if (point != 4 && point != 5)
         FAIL("%s: Invalid Lagrange point %d\n", tag, point);
@@ -4956,6 +4956,8 @@ static int VerifyLagrangeTriangle(astro_body_t major_body, astro_body_t minor_bo
     while (time.tt <= tt2)
     {
         ++count;
+
+        printf("%s: count=%d, tt=%0.6lf\n", tag, count, time.tt);
 
         major_state = Astronomy_HelioState(major_body, time);
         if (major_state.status != ASTRO_SUCCESS)
@@ -5013,7 +5015,7 @@ static int VerifyLagrangeTriangle(astro_body_t major_body, astro_body_t minor_bo
     }
     error = 0;
 fail:
-    DEBUG("%s: returning %d\n", tag, error);
+    printf("%s: returning %d\n", tag, error);
     return error;
 }
 

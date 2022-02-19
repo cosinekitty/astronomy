@@ -134,7 +134,7 @@ echo ""
 ( cd gravsim && ./run skipgen && cd .. ) || exit $?
 ./unit_test_csharp $1 || exit $?
 ./unit_test_js $1 || exit $?
-./unit_test_c -v || exit $?
+./unit_test_c $1 || exit $?
 ./unit_test_python $1 || exit $?
 
 ./diffcalc || exit $?
