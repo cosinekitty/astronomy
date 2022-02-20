@@ -2796,7 +2796,7 @@ This is the inverse function of [`Astronomy_ObserverVector`](#Astronomy_Observer
 
 
 ```C
-#define EARTH_POLAR_RADIUS_KM  ([EARTH_EQUATORIAL_RADIUS_KM](#EARTH_EQUATORIAL_RADIUS_KM) * [EARTH_FLATTENING](#EARTH_FLATTENING))
+#define EARTH_POLAR_RADIUS_KM  (EARTH_EQUATORIAL_RADIUS_KM * EARTH_FLATTENING)
 ```
 
 

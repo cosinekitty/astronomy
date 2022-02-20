@@ -261,11 +261,7 @@ class Define extends Item {
         md += this.MdDescription(this.brief, this.detail, true, '#define ' + name);
         let defn = '';
         for (let term of this.init['$$']) {
-            if (term['#name'] === 'ref') {
-                defn += `[${term._}](#${term._})`;
-            } else {
-                defn += term._;
-            }
+            defn += term._;
         }
         md += "\n\n```C\n#define " + name + "  " + defn + "\n```\n\n";
         return md;
