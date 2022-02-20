@@ -45,17 +45,22 @@ function ParseDate(text) {
 function Demo() {
     const date = (process.argv.length === 3) ? ParseDate(process.argv[2]) : new Date();
 
-    // Calculate the Moon's current phase angle,
+    // Calculate the Moon's ecliptic phase angle,
     // which ranges from 0 to 360 degrees.
     //   0 degrees = new moon,
     //  90 degrees = first quarter,
     // 180 degrees = full moon,
     // 270 degrees = third quarter.
     const phase = Astronomy.MoonPhase(date);
-    console.log(`${FormatDate(date)} : Moon's phase angle = ${phase.toFixed(6)} degrees.`);
+    console.log(`${FormatDate(date)} : Moon's ecliptic phase angle = ${phase.toFixed(3)} degrees.`);
+
+    // Calculate the fraction of the Moon's disc
+    // that appears illuminated, as seen from the Earth.
+    const illum = Astronomy.Illumination(Astronomy.Body.Moon, date);
+    console.log(`${FormatDate(date)} : Moon's illuminated fraction = ${illum.phase_fraction.toFixed(2)}%.`);
     console.log('');
 
-    // Now we predict when the next 10 lunar quarter phases will happen.
+    // Predict when the next 10 lunar quarter phases will happen.
     console.log('The next 10 lunar quarters are:');
     const QuarterName = ['New Moon', 'First Quarter', 'Full Moon', 'Third Quarter'];
     let mq;

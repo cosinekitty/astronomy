@@ -1,5 +1,5 @@
-2019-06-15T09:15:33Z : Moon's phase angle = 156.100612 degrees.
-
+2019-06-15T09:15:33Z : Moon's ecliptic phase angle = 156.101 degrees.
+2019-06-15T09:15:33Z : Moon's illuminated fraction = 95.63%.
 The next 10 lunar quarters are:
 2019-06-17T08:31:18Z : Full Moon
 2019-06-25T09:47:08Z : Third Quarter

@@ -5,8 +5,8 @@
 #    Example Python program for Astronomy Engine:
 #    https://github.com/cosinekitty/astronomy
 #
-#    This program calculates the Moon's phase for a given date and time,
-#    or for the computer's current date and time if none is given.
+#    This program calculates the Moon's ecliptic phase and illumination percentage
+#    for a given date and time, or for the computer's current date and time if none is given.
 #    It also finds the dates and times of the subsequent 10 quarter phase changes.
 #
 #    To execute, run the command:
@@ -31,9 +31,22 @@ def main(args):
     else:
         print('USAGE: {} [yyyy-mm-ddThh:mm:ssZ]'.format(args[0]))
         return 1
+    # Calculate the Moon's ecliptic phase angle,
+    # which ranges from 0 to 360 degrees.
+    #   0 degrees = new moon,
+    #  90 degrees = first quarter,
+    # 180 degrees = full moon,
+    # 270 degrees = third quarter.
     phase = astronomy.MoonPhase(time)
-    print("{} : Moon's phase angle = {:0.6f} degrees.".format(time, phase))
+    print("{} : Moon's ecliptic phase angle = {:0.3f} degrees.".format(time, phase))
+
+    # Calculate the fraction of the Moon's disc
+    # that appears illuminated, as seen from the Earth.
+    illum = astronomy.Illumination(astronomy.Body.Moon, time)
+    print("{} : Moon's illuminated fraction = {:0.2f}%.".format(time, 100.0 * illum.phase_fraction))
     print()
+
+    # Predict when the next 10 lunar quarter phases will happen.
     print('The next 10 lunar quarters are:')
     for i in range(10):
         if i == 0:

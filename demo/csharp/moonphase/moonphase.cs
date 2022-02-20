@@ -37,7 +37,7 @@ namespace moonphase
             }
 
             /*
-                Calculate the Moon's current phase angle,
+                Calculate the Moon's ecliptic phase angle,
                 which ranges from 0 to 360 degrees.
 
                 0 = new moon,
@@ -46,7 +46,14 @@ namespace moonphase
                 270 = third quarter.
             */
             double phase = Astronomy.MoonPhase(time);
-            Console.WriteLine("{0} : Moon's phase angle = {1:0.000000} degrees.", time, phase);
+            Console.WriteLine("{0} : Moon's ecliptic phase angle = {1:F3} degrees.", time, phase);
+
+            /*
+                Calculate the percentage of the Moon's disc that is illuminated
+                from the Earth's point of view.
+            */
+            IllumInfo illum = Astronomy.Illumination(Body.Moon, time);
+            Console.WriteLine("{0} : Moon's illuminated fraction = {1:F2}%.", time, 100.0 * illum.phase_fraction);
 
             /* Find the next 10 lunar quarter phases. */
             Console.WriteLine();

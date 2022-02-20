@@ -29,6 +29,7 @@ int main(int argc, const char *argv[])
     astro_time_t time;
     astro_angle_result_t phase;
     astro_moon_quarter_t mq;
+    astro_illum_t illum;
     int i;
 
     switch (argc)
@@ -48,7 +49,7 @@ int main(int argc, const char *argv[])
     }
 
     /*
-        Calculate the Moon's current phase angle,
+        Calculate the Moon's ecliptic phase angle,
         which ranges from 0 to 360 degrees.
 
           0 = new moon,
@@ -64,7 +65,21 @@ int main(int argc, const char *argv[])
     }
 
     PrintTime(time);
-    printf(" : Moon's phase angle = %0.6lf degrees.\n", phase.angle);
+    printf(" : Moon's ecliptic phase angle = %0.3lf degrees.\n", phase.angle);
+
+    /*
+        Calculate the percentage of the Moon's disc that is illuminated
+        from the Earth's point of view.
+    */
+    illum = Astronomy_Illumination(BODY_MOON, time);
+    if (illum.status != ASTRO_SUCCESS)
+    {
+        printf("Astronomy_Illumination error %d\n", illum.status);
+        return 1;
+    }
+
+    PrintTime(time);
+    printf(" : Moon's illuminated fraction = %0.2lf%%.", 100.0 * illum.phase_fraction);
 
     /* Find the next 10 lunar quarter phases. */
     printf("\nThe next 10 lunar quarters are:\n");
