@@ -106,6 +106,7 @@ const SOLAR_DAYS_PER_SIDEREAL_DAY = 0.9972695717592592;
 const SUN_RADIUS_KM = 695700.0;
 const SUN_RADIUS_AU = SUN_RADIUS_KM / KM_PER_AU;
 const EARTH_FLATTENING = 0.996647180302104;
+const EARTH_FLATTENING_SQUARED = EARTH_FLATTENING * EARTH_FLATTENING;
 const EARTH_EQUATORIAL_RADIUS_KM = 6378.1366;
 const EARTH_EQUATORIAL_RADIUS_AU = EARTH_EQUATORIAL_RADIUS_KM / KM_PER_AU;
 const EARTH_POLAR_RADIUS_KM = EARTH_EQUATORIAL_RADIUS_KM * EARTH_FLATTENING;
@@ -184,8 +185,7 @@ export function AngleBetween(a, b) {
         return 180;
     if (dot >= +1.0)
         return 0;
-    const angle = RAD2DEG * Math.acos(dot);
-    return angle;
+    return RAD2DEG * Math.acos(dot);
 }
 /**
  * @brief String constants that represent the solar system bodies supported by Astronomy Engine.
@@ -1797,7 +1797,7 @@ function inverse_terra(ovec, st) {
     const x = ovec[0] * KM_PER_AU;
     const y = ovec[1] * KM_PER_AU;
     const z = ovec[2] * KM_PER_AU;
-    const p = Math.sqrt(x * x + y * y);
+    const p = Math.hypot(x, y);
     let lon_deg, lat_deg, height_km;
     if (p < 1.0e-6) {
         // Special case: within 1 millimeter of a pole!
@@ -1817,7 +1817,6 @@ function inverse_terra(ovec, st) {
         while (lon_deg > +180)
             lon_deg -= 360;
         // Numerically solve for exact latitude, using Newton's Method.
-        const F = EARTH_FLATTENING * EARTH_FLATTENING;
         // Start with initial latitude estimate, based on a spherical Earth.
         let lat = Math.atan2(z, p);
         let cos, sin, denom;
@@ -1826,17 +1825,17 @@ function inverse_terra(ovec, st) {
             // We try to find the root of W, meaning where the error is 0.
             cos = Math.cos(lat);
             sin = Math.sin(lat);
-            const factor = (F - 1) * EARTH_EQUATORIAL_RADIUS_KM;
+            const factor = (EARTH_FLATTENING_SQUARED - 1) * EARTH_EQUATORIAL_RADIUS_KM;
             const cos2 = cos * cos;
             const sin2 = sin * sin;
-            const radicand = cos2 + F * sin2;
+            const radicand = cos2 + EARTH_FLATTENING_SQUARED * sin2;
             denom = Math.sqrt(radicand);
             const W = (factor * sin * cos) / denom - z * cos + p * sin;
             if (Math.abs(W) < 1.0e-12)
                 break; // The error is now negligible
             // Error is still too large. Find the next estimate.
             // Calculate D = the derivative of W with respect to lat.
-            const D = factor * ((cos2 - sin2) / denom - sin2 * cos2 * (F - 1) / (factor * radicand)) + z * sin + p * cos;
+            const D = factor * ((cos2 - sin2) / denom - sin2 * cos2 * (EARTH_FLATTENING_SQUARED - 1) / (factor * radicand)) + z * sin + p * cos;
             lat -= W / D;
         }
         // We now have a solution for the latitude in radians.
@@ -1845,20 +1844,18 @@ function inverse_terra(ovec, st) {
         // There are two formulas I can use. Use whichever has the less risky denominator.
         const adjust = EARTH_EQUATORIAL_RADIUS_KM / denom;
         if (Math.abs(sin) > Math.abs(cos))
-            height_km = z / sin - F * adjust;
+            height_km = z / sin - EARTH_FLATTENING_SQUARED * adjust;
         else
             height_km = p / cos - adjust;
     }
     return new Observer(lat_deg, lon_deg, 1000 * height_km);
 }
 function terra(observer, st) {
-    const df = 1 - 0.003352819697896; // flattening of the Earth
-    const df2 = df * df;
     const phi = observer.latitude * DEG2RAD;
     const sinphi = Math.sin(phi);
     const cosphi = Math.cos(phi);
-    const c = 1 / Math.sqrt(cosphi * cosphi + df2 * sinphi * sinphi);
-    const s = df2 * c;
+    const c = 1 / Math.hypot(cosphi, EARTH_FLATTENING * sinphi);
+    const s = EARTH_FLATTENING_SQUARED * c;
     const ht_km = observer.height / 1000;
     const ach = EARTH_EQUATORIAL_RADIUS_KM * c + ht_km;
     const ash = EARTH_EQUATORIAL_RADIUS_KM * s + ht_km;
@@ -1960,7 +1957,7 @@ export class Vector {
      * @returns {number}
      */
     Length() {
-        return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
+        return Math.hypot(this.x, this.y, this.z);
     }
 }
 /**
@@ -2272,7 +2269,7 @@ export function Horizon(date, observer, ra, dec, refraction) {
     const pn = p[0] * un[0] + p[1] * un[1] + p[2] * un[2];
     const pw = p[0] * uw[0] + p[1] * uw[1] + p[2] * uw[2];
     // proj is the "shadow" of the body vector along the observer's flat ground.
-    let proj = Math.sqrt(pn * pn + pw * pw);
+    let proj = Math.hypot(pn, pw);
     // Calculate az = azimuth (compass direction clockwise from East.)
     let az;
     if (proj > 0) {
@@ -2304,7 +2301,7 @@ export function Horizon(date, observer, ra, dec, refraction) {
             for (let j = 0; j < 3; ++j) {
                 pr.push(((p[j] - coszd0 * uz[j]) / sinzd0) * sinzd + uz[j] * coszd);
             }
-            proj = Math.sqrt(pr[0] * pr[0] + pr[1] * pr[1]);
+            proj = Math.hypot(pr[0], pr[1]);
             if (proj > 0) {
                 out_ra = RAD2HOUR * Math.atan2(pr[1], pr[0]);
                 if (out_ra < 0) {
@@ -2605,7 +2602,7 @@ function RotateEquatorialToEcliptic(equ, cos_ob, sin_ob) {
     const ex = equ.x;
     const ey = equ.y * cos_ob + equ.z * sin_ob;
     const ez = -equ.y * sin_ob + equ.z * cos_ob;
-    const xyproj = Math.sqrt(ex * ex + ey * ey);
+    const xyproj = Math.hypot(ex, ey);
     let elon = 0;
     if (xyproj > 0) {
         elon = RAD2DEG * Math.atan2(ey, ex);
@@ -7240,7 +7237,7 @@ function CalcShadow(body_radius_km, time, target, dir) {
     const dx = (u * dir.x) - target.x;
     const dy = (u * dir.y) - target.y;
     const dz = (u * dir.z) - target.z;
-    const r = KM_PER_AU * Math.sqrt(dx * dx + dy * dy + dz * dz);
+    const r = KM_PER_AU * Math.hypot(dx, dy, dz);
     const k = +SUN_RADIUS_KM - (1.0 + u) * (SUN_RADIUS_KM - body_radius_km);
     const p = -SUN_RADIUS_KM + (1.0 + u) * (SUN_RADIUS_KM + body_radius_km);
     return new ShadowInfo(time, u, r, k, p, target, dir);
@@ -7522,7 +7519,7 @@ function GeoidIntersect(shadow) {
         const py = u * v.y - e.y;
         const pz = (u * v.z - e.z) * EARTH_FLATTENING;
         // Convert cartesian coordinates into geodetic latitude/longitude.
-        const proj = Math.sqrt(px * px + py * py) * (EARTH_FLATTENING * EARTH_FLATTENING);
+        const proj = Math.hypot(px, py) * EARTH_FLATTENING_SQUARED;
         if (proj == 0.0)
             latitude = (pz > 0.0) ? +90.0 : -90.0;
         else

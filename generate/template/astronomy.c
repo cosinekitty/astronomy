@@ -1518,7 +1518,7 @@ static astro_observer_t inverse_terra(const double ovec[3], double st)
     x = ovec[0] * KM_PER_AU;
     y = ovec[1] * KM_PER_AU;
     z = ovec[2] * KM_PER_AU;
-    p = sqrt(x*x + y*y);
+    p = hypot(x, y);
     if (p < 1.0e-6)
     {
         /* Special case: within 1 millimeter of a pole! */
@@ -1582,12 +1582,11 @@ static void terra(astro_observer_t observer, double st, double pos[3], double ve
 {
     static const double ANGVEL = 7.2921150e-5;
 
-    double df2 = EARTH_FLATTENING * EARTH_FLATTENING;
     double phi = observer.latitude * DEG2RAD;
     double sinphi = sin(phi);
     double cosphi = cos(phi);
-    double c = 1.0 / sqrt(cosphi*cosphi + df2*sinphi*sinphi);
-    double s = df2 * c;
+    double c = 1.0 / hypot(cosphi, sinphi*EARTH_FLATTENING);
+    double s = c * (EARTH_FLATTENING * EARTH_FLATTENING);
     double ht_km = observer.height / 1000.0;
     double ach = EARTH_EQUATORIAL_RADIUS_KM*c + ht_km;
     double ash = EARTH_EQUATORIAL_RADIUS_KM*s + ht_km;
@@ -3814,7 +3813,7 @@ astro_horizon_t Astronomy_Horizon(
     pz = p[0]*uz[0] + p[1]*uz[1] + p[2]*uz[2];
 
     /* proj is the "shadow" of the body vector along the observer's flat ground. */
-    proj = sqrt(pn*pn + pw*pw);
+    proj = hypot(pn, pw);
     if (proj > 0.0)
     {
         /* If the body is not exactly straight up/down, it has an azimuth. */
@@ -3855,7 +3854,7 @@ astro_horizon_t Astronomy_Horizon(
             for (j=0; j<3; ++j)
                 pr[j] = ((p[j] - coszd0 * uz[j]) / sinzd0)*sinzd + uz[j]*coszd;
 
-            proj = sqrt(pr[0]*pr[0] + pr[1]*pr[1]);
+            proj = hypot(pr[0], pr[1]);
             if (proj > 0)
             {
                 hor.ra = RAD2HOUR * atan2(pr[1], pr[0]);
@@ -4013,7 +4012,7 @@ static astro_ecliptic_t RotateEquatorialToEcliptic(const double pos[3], double o
     ecl.vec.y = +pos[1]*cos_ob + pos[2]*sin_ob;
     ecl.vec.z = -pos[1]*sin_ob + pos[2]*cos_ob;
 
-    xyproj = sqrt(ecl.vec.x*ecl.vec.x + ecl.vec.y*ecl.vec.y);
+    xyproj = hypot(ecl.vec.x, ecl.vec.y);
     if (xyproj > 0.0)
     {
         ecl.elon = RAD2DEG * atan2(ecl.vec.y, ecl.vec.x);
@@ -8062,7 +8061,7 @@ static astro_global_solar_eclipse_t GeoidIntersect(shadow_t shadow)
         pz = (u*v.z - e.z) * EARTH_FLATTENING;
 
         /* Convert cartesian coordinates into geodetic latitude/longitude. */
-        proj = sqrt(px*px + py*py) * (EARTH_FLATTENING * EARTH_FLATTENING);
+        proj = hypot(px, py) * (EARTH_FLATTENING * EARTH_FLATTENING);
         if (proj == 0.0)
             eclipse.latitude = (pz > 0.0) ? +90.0 : -90.0;
         else

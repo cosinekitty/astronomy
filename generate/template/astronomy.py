@@ -76,6 +76,7 @@ _SUN_RADIUS_KM = 695700.0
 _SUN_RADIUS_AU  = _SUN_RADIUS_KM / KM_PER_AU
 
 _EARTH_FLATTENING = 0.996647180302104
+_EARTH_FLATTENING_SQUARED = _EARTH_FLATTENING ** 2
 _EARTH_EQUATORIAL_RADIUS_KM = 6378.1366
 _EARTH_POLAR_RADIUS_KM = _EARTH_EQUATORIAL_RADIUS_KM * _EARTH_FLATTENING
 _EARTH_EQUATORIAL_RADIUS_AU = _EARTH_EQUATORIAL_RADIUS_KM / KM_PER_AU
@@ -162,6 +163,8 @@ class Vector:
 
     def Length(self):
         """Returns the length of the vector in AU."""
+        # It would be nice to use math.hypot() here,
+        # but before Python 3.8, it only accepts 2 arguments.
         return math.sqrt(self.x**2 + self.y**2 + self.z**2)
 
     def __add__(self, other):
@@ -1052,7 +1055,7 @@ def _inverse_terra(ovec, st):
     x = ovec[0] * KM_PER_AU
     y = ovec[1] * KM_PER_AU
     z = ovec[2] * KM_PER_AU
-    p = math.sqrt(x*x + y*y)
+    p = math.hypot(x, y)
     if p < 1.0e-6:
         # Special case: within 1 millimeter of a pole!
         # Use arbitrary longitude, and latitude determined by polarity of z.
@@ -1073,7 +1076,6 @@ def _inverse_terra(ovec, st):
         while lon_deg > +180.0:
             lon_deg -= 360.0
         # Numerically solve for exact latitude, using Newton's Method.
-        F = _EARTH_FLATTENING ** 2
         # Start with initial latitude estimate, based on a spherical Earth.
         lat = math.atan2(z, p)
         while True:
@@ -1081,10 +1083,10 @@ def _inverse_terra(ovec, st):
             # We try to find the root of W, meaning where the error is 0.
             cos = math.cos(lat)
             sin = math.sin(lat)
-            factor = (F-1)*_EARTH_EQUATORIAL_RADIUS_KM
+            factor = (_EARTH_FLATTENING_SQUARED - 1)*_EARTH_EQUATORIAL_RADIUS_KM
             cos2 = cos*cos
             sin2 = sin*sin
-            radicand = cos2 + F*sin2
+            radicand = cos2 + _EARTH_FLATTENING_SQUARED*sin2
             denom = math.sqrt(radicand)
             W = (factor*sin*cos)/denom - z*cos + p*sin
             if abs(W) < 1.0e-12:
@@ -1092,7 +1094,7 @@ def _inverse_terra(ovec, st):
                 break
             # Error is still too large. Find the next estimate.
             # Calculate D = the derivative of W with respect to lat.
-            D = factor*((cos2 - sin2)/denom - sin2*cos2*(F-1)/(factor*radicand)) + z*sin + p*cos
+            D = factor*((cos2 - sin2)/denom - sin2*cos2*(_EARTH_FLATTENING_SQUARED - 1)/(factor*radicand)) + z*sin + p*cos
             lat -= W/D
         # We now have a solution for the latitude in radians.
         lat_deg = math.degrees(lat)
@@ -1100,18 +1102,17 @@ def _inverse_terra(ovec, st):
         # There are two formulas I can use. Use whichever has the less risky denominator.
         adjust = _EARTH_EQUATORIAL_RADIUS_KM / denom
         if abs(sin) > abs(cos):
-            height_km = z/sin - F*adjust
+            height_km = z/sin - _EARTH_FLATTENING_SQUARED*adjust
         else:
             height_km = p/cos - adjust
     return Observer(lat_deg, lon_deg, 1000*height_km)
 
 def _terra_posvel(observer, st):
-    df2 = _EARTH_FLATTENING ** 2
     phi = math.radians(observer.latitude)
     sinphi = math.sin(phi)
     cosphi = math.cos(phi)
-    c = 1.0 / math.sqrt(cosphi*cosphi + df2*sinphi*sinphi)
-    s = df2 * c
+    c = 1.0 / math.hypot(cosphi, sinphi*_EARTH_FLATTENING)
+    s = _EARTH_FLATTENING_SQUARED * c
     ht_km = observer.height / 1000.0
     ach = _EARTH_EQUATORIAL_RADIUS_KM*c + ht_km
     ash = _EARTH_EQUATORIAL_RADIUS_KM*s + ht_km
@@ -2836,7 +2837,7 @@ def Horizon(time, observer, ra, dec, refraction):
     pw = p[0]*uw[0] + p[1]*uw[1] + p[2]*uw[2]
 
     # proj is the "shadow" of the body vector along the observer's flat ground.
-    proj = math.sqrt(pn*pn + pw*pw)
+    proj = math.hypot(pn, pw)
 
     # Calculate az = azimuth (compass direction clockwise from East.)
     if proj > 0.0:
@@ -2868,7 +2869,7 @@ def Horizon(time, observer, ra, dec, refraction):
             coszd0 = math.cos(zd0rad)
 
             pr = [(((p[j] - coszd0 * uz[j]) / sinzd0)*sinzd + uz[j]*coszd) for j in range(3)]
-            proj = math.sqrt(pr[0]*pr[0] + pr[1]*pr[1])
+            proj = math.hypot(pr[0], pr[1])
             if proj > 0:
                 hor_ra = _RAD2HOUR * math.atan2(pr[1], pr[0])
                 if hor_ra < 0:
@@ -3000,7 +3001,7 @@ def _RotateEquatorialToEcliptic(pos, obliq_radians, time):
     ex = +pos[0]
     ey = +pos[1]*cos_ob + pos[2]*sin_ob
     ez = -pos[1]*sin_ob + pos[2]*cos_ob
-    xyproj = math.sqrt(ex*ex + ey*ey)
+    xyproj = math.hypot(ex, ey)
     if xyproj > 0.0:
         elon = math.degrees(math.atan2(ey, ex))
         if elon < 0.0:
@@ -5900,7 +5901,7 @@ def _GeoidIntersect(shadow):
         pz = (u*v.z - e.z) * _EARTH_FLATTENING
 
         # Convert cartesian coordinates into geodetic latitude/longitude.
-        proj = math.sqrt(px*px + py*py) * (_EARTH_FLATTENING * _EARTH_FLATTENING)
+        proj = math.hypot(px, py) * _EARTH_FLATTENING_SQUARED
         if proj == 0.0:
             if pz > 0.0:
                 latitude = +90.0
