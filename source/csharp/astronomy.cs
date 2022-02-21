@@ -8588,7 +8588,7 @@ namespace CosineKitty
                 throw new ArgumentException($"Invalid coordinate axis = {axis}. Must be 0..2.");
 
             /* Check for an invalid angle value. */
-            if (!double.IsFinite(angle))
+            if (double.IsNaN(angle) || double.IsInfinity(angle))
                 throw new ArgumentException("Angle is not a finite number.");
 
             double radians = angle * DEG2RAD;
