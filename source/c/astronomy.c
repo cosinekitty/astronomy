@@ -4719,9 +4719,9 @@ astro_state_vector_t Astronomy_LagrangePoint(
  *
  * @param point         A value 1..5 that selects which of the Lagrange points to calculate.
  * @param major_state   The state vector of the major (more massive) of the pair of bodies.
- * @param major_mass    The relative mass of the major body.
+ * @param major_mass    The mass product GM of the major body.
  * @param minor_state   The state vector of the minor (less massive) of the pair of bodies.
- * @param minor_mass    The relative mass of the minor body.
+ * @param minor_mass    The mass product GM of the minor body.
  * @return              The position and velocity of the selected Lagrange point with respect to the major body's center.
  */
 astro_state_vector_t Astronomy_LagrangePointFast(

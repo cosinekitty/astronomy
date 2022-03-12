@@ -1047,9 +1047,9 @@ Consider calling [`Astronomy_LagrangePoint`](#Astronomy_LagrangePoint), instead 
 | --- | --- | --- |
 | `int` | `point` |  A value 1..5 that selects which of the Lagrange points to calculate.  | 
 | [`astro_state_vector_t`](#astro_state_vector_t) | `major_state` |  The state vector of the major (more massive) of the pair of bodies.  | 
-| `double` | `major_mass` |  The relative mass of the major body.  | 
+| `double` | `major_mass` |  The mass product GM of the major body.  | 
 | [`astro_state_vector_t`](#astro_state_vector_t) | `minor_state` |  The state vector of the minor (less massive) of the pair of bodies.  | 
-| `double` | `minor_mass` |  The relative mass of the minor body.  | 
+| `double` | `minor_mass` |  The mass product GM of the minor body.  | 
 
 
 
