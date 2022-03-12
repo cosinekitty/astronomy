@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -40,6 +41,7 @@ namespace csharp_test
             new Test("global_solar_eclipse", GlobalSolarEclipseTest),
             new Test("jupiter_moons", JupiterMoonsTest),
             new Test("libration", LibrationTest),
+            new Test("lagrange", LagrangeTest),
             new Test("local_solar_eclipse", LocalSolarEclipseTest),
             new Test("lunar_apsis", LunarApsisTest),
             new Test("lunar_eclipse", LunarEclipseTest),
@@ -2763,91 +2765,24 @@ namespace csharp_test
             double r_thresh,
             double v_thresh)
         {
-            using (StreamReader infile = File.OpenText(filename))
+            double max_rdiff = 0.0, max_vdiff = 0.0;
+            var pos = new double[3];
+            var vel = new double[3];
+            int count = 0;
+            foreach (JplStateRecord rec in JplHorizonsStateVectors(filename))
             {
-                int lnum = 0;
-                string line;
-                bool found_begin = false;
-                bool found_end = false;
-                int part = 0;
-                AstroTime time = null;
-                var pos = new double[3];
-                var vel = new double[3];
-                int count = 0;
-                double max_rdiff = 0.0, max_vdiff = 0.0;
-                while (!found_end && null != (line = infile.ReadLine()))
-                {
-                    ++lnum;
-                    if (!found_begin)
-                    {
-                        if (line == "$$SOE")
-                            found_begin = true;
-                    }
-                    else
-                    {
-                        // Input comes in triplets of lines:
-                        //
-                        // 2444249.500000000 = A.D. 1980-Jan-11 00:00:00.0000 TDB
-                        // X =-3.314860345089456E-01 Y = 8.463418210972562E-01 Z = 3.667227830514760E-01
-                        // VX=-1.642704711077836E-02 VY=-5.494770742558920E-03 VZ=-2.383170237527642E-03
-                        //
-                        // Track which of these 3 cases we are in using the 'part' variable...
-                        Match match;
-                        switch (part)
-                        {
-                            case 0:
-                                if (line == "$$EOE")
-                                {
-                                    found_end = true;
-                                }
-                                else
-                                {
-                                    // 2444249.500000000 = A.D. 1980-Jan-11 00:00:00.0000 TDB
-                                    // Convert JD to J2000 TT.
-                                    double tt = double.Parse(line.Split()[0]) - 2451545.0;
-                                    time = AstroTime.FromTerrestrialTime(tt);
-                                }
-                                break;
-
-                            case 1:
-                                /* X = 1.134408131605554E-03 Y =-2.590904586750408E-03 Z =-7.490427225904720E-05 */
-                                match = Regex.Match(line, @"\s*X =\s*(\S+) Y =\s*(\S+) Z =\s*(\S+)");
-                                if (!match.Success)
-                                {
-                                    Console.WriteLine($"C# VerifyStateBody({filename} line {lnum}): cannot parse position vector.");
-                                    return 1;
-                                }
-                                pos[0] = double.Parse(match.Groups[1].Value);
-                                pos[1] = double.Parse(match.Groups[2].Value);
-                                pos[2] = double.Parse(match.Groups[3].Value);
-                                break;
-
-                            case 2:
-                                /* VX= 9.148038778472862E-03 VY= 3.973823407182510E-03 VZ= 2.765660368640458E-04 */
-                                match = Regex.Match(line, @"\s*VX=\s*(\S+) VY=\s*(\S+) VZ=\s*(\S+)");
-                                if (!match.Success)
-                                {
-                                    Console.WriteLine($"C# VerifyStateBody({filename} line {lnum}): cannot parse velocity vector.");
-                                    return 1;
-                                }
-                                vel[0] = double.Parse(match.Groups[1].Value);
-                                vel[1] = double.Parse(match.Groups[2].Value);
-                                vel[2] = double.Parse(match.Groups[3].Value);
-                                if (0 != VerifyState(func, ref max_rdiff, ref max_vdiff, body, filename, lnum, time, pos, vel, r_thresh, v_thresh))
-                                    return 1;
-                                ++count;
-                                break;
-
-                            default:
-                                Console.WriteLine($"C# VerifyStateBody({filename} line {lnum}): unexpected part = {part}.");
-                                return 1;
-                        }
-                        part = (part + 1) % 3;
-                    }
-                }
-                Debug($"C# VerifyStateBody({filename}): PASS - Tested {count} cases. max rdiff={max_rdiff:E3}, vdiff={max_vdiff:E3}");
-                return 0;
+                pos[0] = rec.state.x;
+                pos[1] = rec.state.y;
+                pos[2] = rec.state.z;
+                vel[0] = rec.state.vx;
+                vel[1] = rec.state.vy;
+                vel[2] = rec.state.vz;
+                if (0 != VerifyState(func, ref max_rdiff, ref max_vdiff, body, filename, rec.lnum, rec.state.t, pos, vel, r_thresh, v_thresh))
+                    return 1;
+                ++count;
             }
+            Debug($"C# VerifyStateBody({filename}): PASS - Tested {count} cases. max rdiff={max_rdiff:E3}, vdiff={max_vdiff:E3}");
+            return 0;
         }
 
         // Constants for use inside unit tests only; they doesn't make sense for public consumption.
@@ -3272,5 +3207,102 @@ namespace csharp_test
             }
             return 0;
         }
+
+        //-----------------------------------------------------------------------------------------
+
+        internal struct JplStateRecord
+        {
+            public int lnum;            // the line number where the state vector ends in the JPL Horizons text file.
+            public StateVector state;   // the state vector itself: position, velocity, and time.
+        }
+
+        static IEnumerable<JplStateRecord> JplHorizonsStateVectors(string filename)
+        {
+            using (StreamReader infile = File.OpenText(filename))
+            {
+                int lnum = 0;
+                string line;
+                bool found_begin = false;
+                bool found_end = false;
+                int part = 0;
+                AstroTime time = null;
+                var pos = new double[3];
+                var vel = new double[3];
+                while (!found_end && null != (line = infile.ReadLine()))
+                {
+                    ++lnum;
+                    if (!found_begin)
+                    {
+                        if (line == "$$SOE")
+                            found_begin = true;
+                    }
+                    else
+                    {
+                        // Input comes in triplets of lines:
+                        //
+                        // 2444249.500000000 = A.D. 1980-Jan-11 00:00:00.0000 TDB
+                        // X =-3.314860345089456E-01 Y = 8.463418210972562E-01 Z = 3.667227830514760E-01
+                        // VX=-1.642704711077836E-02 VY=-5.494770742558920E-03 VZ=-2.383170237527642E-03
+                        //
+                        // Track which of these 3 cases we are in using the 'part' variable...
+                        Match match;
+                        switch (part)
+                        {
+                            case 0:
+                                if (line == "$$EOE")
+                                {
+                                    found_end = true;
+                                }
+                                else
+                                {
+                                    // 2444249.500000000 = A.D. 1980-Jan-11 00:00:00.0000 TDB
+                                    // Convert JD to J2000 TT.
+                                    double tt = double.Parse(line.Split()[0]) - 2451545.0;
+                                    time = AstroTime.FromTerrestrialTime(tt);
+                                }
+                                break;
+
+                            case 1:
+                                /* X = 1.134408131605554E-03 Y =-2.590904586750408E-03 Z =-7.490427225904720E-05 */
+                                match = Regex.Match(line, @"\s*X =\s*(\S+) Y =\s*(\S+) Z =\s*(\S+)");
+                                if (!match.Success)
+                                    throw new Exception($"C# JplHorizonsStateVectors({filename} line {lnum}): cannot parse position vector.");
+                                pos[0] = double.Parse(match.Groups[1].Value);
+                                pos[1] = double.Parse(match.Groups[2].Value);
+                                pos[2] = double.Parse(match.Groups[3].Value);
+                                break;
+
+                            case 2:
+                                /* VX= 9.148038778472862E-03 VY= 3.973823407182510E-03 VZ= 2.765660368640458E-04 */
+                                match = Regex.Match(line, @"\s*VX=\s*(\S+) VY=\s*(\S+) VZ=\s*(\S+)");
+                                if (!match.Success)
+                                    throw new Exception($"C# JplHorizonsStateVectors({filename} line {lnum}): cannot parse velocity vector.");
+                                vel[0] = double.Parse(match.Groups[1].Value);
+                                vel[1] = double.Parse(match.Groups[2].Value);
+                                vel[2] = double.Parse(match.Groups[3].Value);
+                                var state = new StateVector(
+                                    pos[0], pos[1], pos[2],
+                                    vel[0], vel[1], vel[2],
+                                    time
+                                );
+                                yield return new JplStateRecord { lnum = lnum, state = state };
+                                break;
+
+                            default:
+                                throw new Exception($"C# JplHorizonsStateVectors({filename} line {lnum}): unexpected part = {part}.");
+                        }
+                        part = (part + 1) % 3;
+                    }
+                }
+                yield break;
+            }
+        }
+
+        static int LagrangeTest()
+        {
+            return 0;   // not yet implemented
+        }
+
+        //-----------------------------------------------------------------------------------------
     }
 }
