@@ -5150,7 +5150,7 @@ static int LoadStateVectors(
                 {
                     nscanned = sscanf(line, "%lf", &jd);
                     if (nscanned != 1)
-                        FAIL("C VerifyStateBody(%s line %d) ERROR reading Julian date.\n", filename, lnum);
+                        FAIL("C LoadStateVectors(%s line %d) ERROR reading Julian date.\n", filename, lnum);
                     V(jd);
 
                     /* Convert julian TT day value to astro_time_t. */
@@ -5161,7 +5161,7 @@ static int LoadStateVectors(
             case 1:
                 nscanned = sscanf(line, " X =%lf Y =%lf Z =%lf", &state.x, &state.y, &state.z);
                 if (nscanned != 3)
-                    FAIL("C VerifyStateBody(%s line %d) ERROR reading position vector.\n", filename, lnum);
+                    FAIL("C LoadStateVectors(%s line %d) ERROR reading position vector.\n", filename, lnum);
                 V(state.x);
                 V(state.y);
                 V(state.z);
@@ -5170,7 +5170,7 @@ static int LoadStateVectors(
             case 2:
                 nscanned = sscanf(line, " VX=%lf VY=%lf VZ=%lf", &state.vx, &state.vy, &state.vz);
                 if (nscanned != 3)
-                    FAIL("C VerifyStateBody(%s line %d) ERROR reading velocity vector.\n", filename, lnum);
+                    FAIL("C LoadStateVectors(%s line %d) ERROR reading velocity vector.\n", filename, lnum);
                 V(state.vx);
                 V(state.vy);
                 V(state.vz);
@@ -5179,7 +5179,7 @@ static int LoadStateVectors(
                 break;
 
             default:
-                FAIL("C VerifyStateBody: INTERNAL ERROR : part=%d\n", part);
+                FAIL("C LoadStateVectors: INTERNAL ERROR : part=%d\n", part);
             }
 
             part = (part + 1) % 3;
