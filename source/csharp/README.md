@@ -788,8 +788,8 @@ for some other purpose.
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| `int` | `point` | A value 1..5 that selects which of the Lagrange points to calculate. |
-| [`AstroTime`](#AstroTime) | `time` | The time at which the Lagrange point is to be calculated. |
+| `int` | `point` | An integer 1..5 that selects which of the Lagrange points to calculate. |
+| [`AstroTime`](#AstroTime) | `time` | The time for which the Lagrange point is to be calculated. |
 | [`Body`](#Body) | `major_body` | The more massive of the co-orbiting bodies: `Body.Sun` or `Body.Earth`. |
 | [`Body`](#Body) | `minor_body` | The less massive of the co-orbiting bodies. See main remarks. |
 
@@ -826,7 +826,7 @@ Consider calling [`Astronomy.LagrangePoint`](#Astronomy.LagrangePoint), instead 
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| `int` | `point` | A value 1..5 that selects which of the Lagrange points to calculate. |
+| `int` | `point` | An integer 1..5 that selects which of the Lagrange points to calculate. |
 | [`StateVector`](#StateVector) | `major_state` | The state vector of the major (more massive) of the pair of bodies. |
 | `double` | `major_mass` | The mass product GM of the major body. |
 | [`StateVector`](#StateVector) | `minor_state` | The state vector of the minor (less massive) of the pair of bodies. |

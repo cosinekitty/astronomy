@@ -2302,6 +2302,39 @@ def AxisTestBody(body, filename, arcmin_tolerance):
 
 #-----------------------------------------------------------------------------------------------------------
 
+class LagrangeFunc:
+    def __init__(self, point, major_body, minor_body):
+        self.point = point
+        self.major_body = major_body
+        self.minor_body = minor_body
+
+    def Eval(self, time):
+        return astronomy.LagrangePoint(self.point, time, self.major_body, self.minor_body)
+
+
+def VerifyStateLagrange(major_body, minor_body, point, filename, r_thresh, v_thresh):
+    func = LagrangeFunc(point, major_body, minor_body)
+    return VerifyStateBody(func, filename, r_thresh, v_thresh)
+
+
+def Lagrange():
+    # Test Sun/EMB Lagrange points.
+    if VerifyStateLagrange(astronomy.Body.Sun, astronomy.Body.EMB, 1, 'lagrange/semb_L1.txt',   1.33e-5, 6.13e-5): return 1
+    if VerifyStateLagrange(astronomy.Body.Sun, astronomy.Body.EMB, 2, 'lagrange/semb_L2.txt',   1.33e-5, 6.13e-5): return 1
+    if VerifyStateLagrange(astronomy.Body.Sun, astronomy.Body.EMB, 4, 'lagrange/semb_L4.txt',   3.75e-5, 5.28e-5): return 1
+    if VerifyStateLagrange(astronomy.Body.Sun, astronomy.Body.EMB, 5, 'lagrange/semb_L5.txt',   3.75e-5, 5.28e-5): return 1
+
+    # Test Earth/Moon Lagrange points.
+    if VerifyStateLagrange(astronomy.Body.Earth, astronomy.Body.Moon, 1, 'lagrange/em_L1.txt',  3.79e-5, 5.06e-5): return 1
+    if VerifyStateLagrange(astronomy.Body.Earth, astronomy.Body.Moon, 2, 'lagrange/em_L2.txt',  3.79e-5, 5.06e-5): return 1
+    if VerifyStateLagrange(astronomy.Body.Earth, astronomy.Body.Moon, 4, 'lagrange/em_L4.txt',  3.79e-5, 1.59e-3): return 1
+    if VerifyStateLagrange(astronomy.Body.Earth, astronomy.Body.Moon, 5, 'lagrange/em_L5.txt',  3.79e-5, 1.59e-3): return 1
+
+    print('PY Lagrange: PASS')
+    return 0
+
+#-----------------------------------------------------------------------------------------------------------
+
 UnitTests = {
     'aberration':               Aberration,
     'axis':                     Axis,
@@ -2313,6 +2346,7 @@ UnitTests = {
     'heliostate':               HelioState,
     'issue_103':                Issue103,
     'jupiter_moons':            JupiterMoons,
+    'lagrange':                 Lagrange,
     'libration':                Libration,
     'local_solar_eclipse':      LocalSolarEclipse,
     'lunar_apsis':              LunarApsis,

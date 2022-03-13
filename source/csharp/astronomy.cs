@@ -8378,8 +8378,8 @@ namespace CosineKitty
         /// especially when the state vectors have already been calculated, or are needed
         /// for some other purpose.
         /// </remarks>
-        /// <param name="point">A value 1..5 that selects which of the Lagrange points to calculate.</param>
-        /// <param name="time">The time at which the Lagrange point is to be calculated.</param>
+        /// <param name="point">An integer 1..5 that selects which of the Lagrange points to calculate.</param>
+        /// <param name="time">The time for which the Lagrange point is to be calculated.</param>
         /// <param name="major_body">The more massive of the co-orbiting bodies: `Body.Sun` or `Body.Earth`.</param>
         /// <param name="minor_body">The less massive of the co-orbiting bodies. See main remarks.</param>
         /// <returns>The position and velocity of the selected Lagrange point with respect to the major body's center.</returns>
@@ -8450,7 +8450,7 @@ namespace CosineKitty
         ///
         /// Consider calling #Astronomy.LagrangePoint, instead of this function, for simpler usage in most cases.
         /// </remarks>
-        /// <param name="point">A value 1..5 that selects which of the Lagrange points to calculate.</param>
+        /// <param name="point">An integer 1..5 that selects which of the Lagrange points to calculate.</param>
         /// <param name="major_state">The state vector of the major (more massive) of the pair of bodies.</param>
         /// <param name="major_mass">The mass product GM of the major body.</param>
         /// <param name="minor_state">The state vector of the minor (less massive) of the pair of bodies.</param>
