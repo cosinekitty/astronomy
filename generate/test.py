@@ -1900,8 +1900,8 @@ def StateVectorDiff(relative, vec, x, y, z):
 
 #-----------------------------------------------------------------------------------------------------------
 
-def VerifyState(func, stats, body, filename, lnum, time, pos, vel, r_thresh, v_thresh):
-    state = func(body, time)
+def VerifyState(func, stats, filename, lnum, time, pos, vel, r_thresh, v_thresh):
+    state = func.Eval(time)
 
     rdiff = StateVectorDiff((r_thresh > 0.0), pos, state.x, state.y, state.z)
     if rdiff > stats.max_rdiff:
@@ -1922,7 +1922,7 @@ def VerifyState(func, stats, body, filename, lnum, time, pos, vel, r_thresh, v_t
     return 0
 
 
-def VerifyStateBody(func, body, filename, r_thresh, v_thresh):
+def VerifyStateBody(func, filename, r_thresh, v_thresh):
     with open(filename, 'rt') as infile:
         lnum = 0
         part = 0
@@ -1956,7 +1956,7 @@ def VerifyStateBody(func, body, filename, r_thresh, v_thresh):
                         print('PY VerifyStateBody({} line {}): cannot parse velocity vector.'.format(filename, lnum))
                         return 1
                     vel = [ float(match.group(1)), float(match.group(2)), float(match.group(3)) ]
-                    if VerifyState(func, stats, body, filename, lnum, time, pos, vel, r_thresh, v_thresh):
+                    if VerifyState(func, stats, filename, lnum, time, pos, vel, r_thresh, v_thresh):
                         print('PY VerifyStateBody({} line {}): FAILED VERIFICATION.'.format(filename, lnum))
                         return 1
                     count += 1
@@ -1970,73 +1970,86 @@ def VerifyStateBody(func, body, filename, r_thresh, v_thresh):
 _Body_GeoMoon = -100
 _Body_Geo_EMB = -101
 
-def BaryStateFunc(body, time):
-    if body == _Body_GeoMoon:
-        return astronomy.GeoMoonState(time)
+class BaryStateFunc:
+    def __init__(self, body):
+        self.body = body
 
-    if body == _Body_Geo_EMB:
-        return astronomy.GeoEmbState(time)
-
-    return astronomy.BaryState(body, time)
+    def Eval(self, time):
+        if self.body == _Body_GeoMoon:
+            return astronomy.GeoMoonState(time)
+        if self.body == _Body_Geo_EMB:
+            return astronomy.GeoEmbState(time)
+        return astronomy.BaryState(self.body, time)
 
 def BaryState():
-    if VerifyStateBody(BaryStateFunc, astronomy.Body.Sun,     'barystate/Sun.txt',     -1.224e-05, -1.134e-07):  return 1
-    if VerifyStateBody(BaryStateFunc, astronomy.Body.Mercury, 'barystate/Mercury.txt',  1.672e-04,  2.698e-04):  return 1
-    if VerifyStateBody(BaryStateFunc, astronomy.Body.Venus,   'barystate/Venus.txt',    4.123e-05,  4.308e-05):  return 1
-    if VerifyStateBody(BaryStateFunc, astronomy.Body.Earth,   'barystate/Earth.txt',    2.296e-05,  6.359e-05):  return 1
-    if VerifyStateBody(BaryStateFunc, astronomy.Body.Mars,    'barystate/Mars.txt',     3.107e-05,  5.550e-05):  return 1
-    if VerifyStateBody(BaryStateFunc, astronomy.Body.Jupiter, 'barystate/Jupiter.txt',  7.389e-05,  2.471e-04):  return 1
-    if VerifyStateBody(BaryStateFunc, astronomy.Body.Saturn,  'barystate/Saturn.txt',   1.067e-04,  3.220e-04):  return 1
-    if VerifyStateBody(BaryStateFunc, astronomy.Body.Uranus,  'barystate/Uranus.txt',   9.035e-05,  2.519e-04):  return 1
-    if VerifyStateBody(BaryStateFunc, astronomy.Body.Neptune, 'barystate/Neptune.txt',  9.838e-05,  4.446e-04):  return 1
-    if VerifyStateBody(BaryStateFunc, astronomy.Body.Pluto,   'barystate/Pluto.txt',    4.259e-05,  7.827e-05):  return 1
-    if VerifyStateBody(BaryStateFunc, astronomy.Body.Moon,    "barystate/Moon.txt",     2.354e-05,  6.604e-05):  return 1
-    if VerifyStateBody(BaryStateFunc, astronomy.Body.EMB,     "barystate/EMB.txt",      2.353e-05,  6.511e-05):  return 1
-    if VerifyStateBody(BaryStateFunc, _Body_GeoMoon,          "barystate/GeoMoon.txt",  4.086e-05,  5.347e-05):  return 1
-    if VerifyStateBody(BaryStateFunc, _Body_Geo_EMB,          "barystate/GeoEMB.txt",   4.076e-05,  5.335e-05):  return 1
+    if VerifyStateBody(BaryStateFunc(astronomy.Body.Sun),     'barystate/Sun.txt',     -1.224e-05, -1.134e-07):  return 1
+    if VerifyStateBody(BaryStateFunc(astronomy.Body.Mercury), 'barystate/Mercury.txt',  1.672e-04,  2.698e-04):  return 1
+    if VerifyStateBody(BaryStateFunc(astronomy.Body.Venus),   'barystate/Venus.txt',    4.123e-05,  4.308e-05):  return 1
+    if VerifyStateBody(BaryStateFunc(astronomy.Body.Earth),   'barystate/Earth.txt',    2.296e-05,  6.359e-05):  return 1
+    if VerifyStateBody(BaryStateFunc(astronomy.Body.Mars),    'barystate/Mars.txt',     3.107e-05,  5.550e-05):  return 1
+    if VerifyStateBody(BaryStateFunc(astronomy.Body.Jupiter), 'barystate/Jupiter.txt',  7.389e-05,  2.471e-04):  return 1
+    if VerifyStateBody(BaryStateFunc(astronomy.Body.Saturn),  'barystate/Saturn.txt',   1.067e-04,  3.220e-04):  return 1
+    if VerifyStateBody(BaryStateFunc(astronomy.Body.Uranus),  'barystate/Uranus.txt',   9.035e-05,  2.519e-04):  return 1
+    if VerifyStateBody(BaryStateFunc(astronomy.Body.Neptune), 'barystate/Neptune.txt',  9.838e-05,  4.446e-04):  return 1
+    if VerifyStateBody(BaryStateFunc(astronomy.Body.Pluto),   'barystate/Pluto.txt',    4.259e-05,  7.827e-05):  return 1
+    if VerifyStateBody(BaryStateFunc(astronomy.Body.Moon),    "barystate/Moon.txt",     2.354e-05,  6.604e-05):  return 1
+    if VerifyStateBody(BaryStateFunc(astronomy.Body.EMB),     "barystate/EMB.txt",      2.353e-05,  6.511e-05):  return 1
+    if VerifyStateBody(BaryStateFunc(_Body_GeoMoon),          "barystate/GeoMoon.txt",  4.086e-05,  5.347e-05):  return 1
+    if VerifyStateBody(BaryStateFunc(_Body_Geo_EMB),          "barystate/GeoEMB.txt",   4.076e-05,  5.335e-05):  return 1
     print('PY BaryState: PASS')
     return 0
 
 #-----------------------------------------------------------------------------------------------------------
 
+class HelioStateFunc:
+    def __init__(self, body):
+        self.body = body
+
+    def Eval(self, time):
+        return astronomy.HelioState(self.body, time)
+
 def HelioState():
-    if VerifyStateBody(astronomy.HelioState, astronomy.Body.SSB,     'heliostate/SSB.txt',     -1.209e-05, -1.125e-07): return 1
-    if VerifyStateBody(astronomy.HelioState, astronomy.Body.Mercury, 'heliostate/Mercury.txt',  1.481e-04,  2.756e-04): return 1
-    if VerifyStateBody(astronomy.HelioState, astronomy.Body.Venus,   'heliostate/Venus.txt',    3.528e-05,  4.485e-05): return 1
-    if VerifyStateBody(astronomy.HelioState, astronomy.Body.Earth,   'heliostate/Earth.txt',    1.476e-05,  6.105e-05): return 1
-    if VerifyStateBody(astronomy.HelioState, astronomy.Body.Mars,    'heliostate/Mars.txt',     3.154e-05,  5.603e-05): return 1
-    if VerifyStateBody(astronomy.HelioState, astronomy.Body.Jupiter, 'heliostate/Jupiter.txt',  7.455e-05,  2.562e-04): return 1
-    if VerifyStateBody(astronomy.HelioState, astronomy.Body.Saturn,  'heliostate/Saturn.txt',   1.066e-04,  3.150e-04): return 1
-    if VerifyStateBody(astronomy.HelioState, astronomy.Body.Uranus,  'heliostate/Uranus.txt',   9.034e-05,  2.712e-04): return 1
-    if VerifyStateBody(astronomy.HelioState, astronomy.Body.Neptune, 'heliostate/Neptune.txt',  9.834e-05,  4.534e-04): return 1
-    if VerifyStateBody(astronomy.HelioState, astronomy.Body.Pluto,   'heliostate/Pluto.txt',    4.271e-05,  1.198e-04): return 1
-    if VerifyStateBody(astronomy.HelioState, astronomy.Body.Moon,    'heliostate/Moon.txt',     1.477e-05,  6.195e-05): return 1
-    if VerifyStateBody(astronomy.HelioState, astronomy.Body.EMB,     'heliostate/EMB.txt',      1.476e-05,  6.106e-05): return 1
+    if VerifyStateBody(HelioStateFunc(astronomy.Body.SSB),     'heliostate/SSB.txt',     -1.209e-05, -1.125e-07): return 1
+    if VerifyStateBody(HelioStateFunc(astronomy.Body.Mercury), 'heliostate/Mercury.txt',  1.481e-04,  2.756e-04): return 1
+    if VerifyStateBody(HelioStateFunc(astronomy.Body.Venus),   'heliostate/Venus.txt',    3.528e-05,  4.485e-05): return 1
+    if VerifyStateBody(HelioStateFunc(astronomy.Body.Earth),   'heliostate/Earth.txt',    1.476e-05,  6.105e-05): return 1
+    if VerifyStateBody(HelioStateFunc(astronomy.Body.Mars),    'heliostate/Mars.txt',     3.154e-05,  5.603e-05): return 1
+    if VerifyStateBody(HelioStateFunc(astronomy.Body.Jupiter), 'heliostate/Jupiter.txt',  7.455e-05,  2.562e-04): return 1
+    if VerifyStateBody(HelioStateFunc(astronomy.Body.Saturn),  'heliostate/Saturn.txt',   1.066e-04,  3.150e-04): return 1
+    if VerifyStateBody(HelioStateFunc(astronomy.Body.Uranus),  'heliostate/Uranus.txt',   9.034e-05,  2.712e-04): return 1
+    if VerifyStateBody(HelioStateFunc(astronomy.Body.Neptune), 'heliostate/Neptune.txt',  9.834e-05,  4.534e-04): return 1
+    if VerifyStateBody(HelioStateFunc(astronomy.Body.Pluto),   'heliostate/Pluto.txt',    4.271e-05,  1.198e-04): return 1
+    if VerifyStateBody(HelioStateFunc(astronomy.Body.Moon),    'heliostate/Moon.txt',     1.477e-05,  6.195e-05): return 1
+    if VerifyStateBody(HelioStateFunc(astronomy.Body.EMB),     'heliostate/EMB.txt',      1.476e-05,  6.106e-05): return 1
     print('PY HelioState: PASS')
     return 0
 
 #-----------------------------------------------------------------------------------------------------------
 
-def TopoStateFunc(body, time):
-    observer = astronomy.Observer(30.0, -80.0, 1000.0)
-    observer_state = astronomy.ObserverState(time, observer, False)
-    if body == _Body_Geo_EMB:
-        state = astronomy.GeoEmbState(time)
-    elif body == astronomy.Body.Earth:
-        state = astronomy.StateVector(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, time)
-    else:
-        raise Exception('PY TopoStateFunction: unsupported body ' + body)
-    state.x  -= observer_state.x
-    state.y  -= observer_state.y
-    state.z  -= observer_state.z
-    state.vx -= observer_state.vx
-    state.vy -= observer_state.vy
-    state.vz -= observer_state.vz
-    return state
+class TopoStateFunc:
+    def __init__(self, body):
+        self.body = body
+
+    def Eval(self, time):
+        observer = astronomy.Observer(30.0, -80.0, 1000.0)
+        observer_state = astronomy.ObserverState(time, observer, False)
+        if self.body == _Body_Geo_EMB:
+            state = astronomy.GeoEmbState(time)
+        elif self.body == astronomy.Body.Earth:
+            state = astronomy.StateVector(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, time)
+        else:
+            raise Exception('PY TopoStateFunction: unsupported body ' + self.body)
+        state.x  -= observer_state.x
+        state.y  -= observer_state.y
+        state.z  -= observer_state.z
+        state.vx -= observer_state.vx
+        state.vy -= observer_state.vy
+        state.vz -= observer_state.vz
+        return state
 
 def TopoState():
-    if VerifyStateBody(TopoStateFunc, astronomy.Body.Earth, 'topostate/Earth_N30_W80_1000m.txt', 2.108e-04, 2.430e-04): return 1
-    if VerifyStateBody(TopoStateFunc, _Body_Geo_EMB,        'topostate/EMB_N30_W80_1000m.txt',   7.195e-04, 2.497e-04): return 1
+    if VerifyStateBody(TopoStateFunc(astronomy.Body.Earth), 'topostate/Earth_N30_W80_1000m.txt', 2.108e-04, 2.430e-04): return 1
+    if VerifyStateBody(TopoStateFunc(_Body_Geo_EMB),        'topostate/EMB_N30_W80_1000m.txt',   7.195e-04, 2.497e-04): return 1
     print('PY TopoState: PASS')
     return 0
 
