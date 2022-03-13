@@ -777,8 +777,8 @@ major body.
 
 To calculate Sun/Earth Lagrange points, pass in `Body.Sun` for `major_body`
 and `Body.EMB` (Earth/Moon barycenter) for `minor_body`.
-For Lagrange points of the Sun and any other planet, pass in just that planet by itself,
-e.g. `Body.Jupiter` for `minor_body`.
+For Lagrange points of the Sun and any other planet, pass in just that planet
+(e.g. `Body.Jupiter`) for `minor_body`.
 To calculate Earth/Moon Lagrange points, pass in `Body.Earth` and `Body.Moon`
 for the major and minor bodies respectively.
 
@@ -792,6 +792,8 @@ for some other purpose.
 | [`AstroTime`](#AstroTime) | `time` | The time at which the Lagrange point is to be calculated. |
 | [`Body`](#Body) | `major_body` | The more massive of the co-orbiting bodies: `Body.Sun` or `Body.Earth`. |
 | [`Body`](#Body) | `minor_body` | The less massive of the co-orbiting bodies. See main remarks. |
+
+**Returns:** The position and velocity of the selected Lagrange point with respect to the major body's center.
 
 <a name="Astronomy.LagrangePointFast"></a>
 ### Astronomy.LagrangePointFast(point, major_state, major_mass, minor_state, minor_mass) &#8658; [`StateVector`](#StateVector)

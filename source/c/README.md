@@ -998,7 +998,7 @@ Given a more massive "major" body and a much less massive "minor" body, calculat
 
 The function returns the state vector for the selected Lagrange point in equatorial J2000 coordinates (EQJ), with respect to the center of the major body.
 
-To calculate Sun/Earth Lagrange points, pass in `BODY_SUN` for `major_body` and `BODY_EMB` (Earth/Moon barycenter) for `minor_body`. For Lagrange points of the Sun and any other planet, pass in just that planet by itself, e.g. `BODY_JUPITER` for `minor_body`. To calculate Earth/Moon Lagrange points, pass in `BODY_EARTH` and `BODY_MOON` for the major and minor bodies respectively.
+To calculate Sun/Earth Lagrange points, pass in `BODY_SUN` for `major_body` and `BODY_EMB` (Earth/Moon barycenter) for `minor_body`. For Lagrange points of the Sun and any other planet, pass in that planet (e.g. `BODY_JUPITER`) for `minor_body`. To calculate Earth/Moon Lagrange points, pass in `BODY_EARTH` and `BODY_MOON` for the major and minor bodies respectively.
 
 In some cases, it may be more efficient to call [`Astronomy_LagrangePointFast`](#Astronomy_LagrangePointFast), especially when the state vectors have already been calculated, or are needed for some other purpose.
 

@@ -4622,8 +4622,8 @@ double Astronomy_MassProduct(astro_body_t body)
  *
  * To calculate Sun/Earth Lagrange points, pass in `BODY_SUN` for `major_body`
  * and `BODY_EMB` (Earth/Moon barycenter) for `minor_body`.
- * For Lagrange points of the Sun and any other planet, pass in just that planet by itself,
- * e.g. `BODY_JUPITER` for `minor_body`.
+ * For Lagrange points of the Sun and any other planet, pass in that planet
+ * (e.g. `BODY_JUPITER`) for `minor_body`.
  * To calculate Earth/Moon Lagrange points, pass in `BODY_EARTH` and `BODY_MOON`
  * for the major and minor bodies respectively.
  *

@@ -2221,7 +2221,7 @@ function VerifyStateBody(func, filename, r_thresh, v_thresh) {
                 // X = 1.134408131605554E-03 Y =-2.590904586750408E-03 Z =-7.490427225904720E-05
                 match = /\s*X =\s*(\S+) Y =\s*(\S+) Z =\s*(\S+)/.exec(line);
                 if (!match) {
-                    console.error(`JS BaryStateBody(${filename} line ${lnum}): cannot parse position vector.`);
+                    console.error(`JS VerifyStateBody(${filename} line ${lnum}): cannot parse position vector.`);
                     return 1;
                 }
                 pos = [ float(match[1]), float(match[2]), float(match[3]) ];
@@ -2231,7 +2231,7 @@ function VerifyStateBody(func, filename, r_thresh, v_thresh) {
                 // VX= 9.148038778472862E-03 VY= 3.973823407182510E-03 VZ= 2.765660368640458E-04
                 match = /\s*VX=\s*(\S+) VY=\s*(\S+) VZ=\s*(\S+)/.exec(line);
                 if (!match) {
-                    console.error(`JS BaryStateBody(${filename} line ${lnum}): cannot parse velocity vector.`);
+                    console.error(`JS VerifyStateBody(${filename} line ${lnum}): cannot parse velocity vector.`);
                     return 1;
                 }
                 vel = [ float(match[1]), float(match[2]), float(match[3]) ];
@@ -2241,14 +2241,14 @@ function VerifyStateBody(func, filename, r_thresh, v_thresh) {
                 break;
 
             default:
-                console.error(`JS BaryStateBody(${filename} line ${lnum}): unexpected part = ${part}`);
+                console.error(`JS VerifyStateBody(${filename} line ${lnum}): unexpected part = ${part}`);
                 return 1;
             }
             part = (part + 1) % 3;
         }
     }
 
-    if (Verbose) console.debug(`JS BaryStateBody(${filename}): PASS - Tested ${count} cases. max rdiff=${score.max_rdiff.toExponential(3)}, vdiff=${score.max_vdiff.toExponential(3)}`);
+    if (Verbose) console.debug(`JS VerifyStateBody(${filename}): PASS - Tested ${count} cases. max rdiff=${score.max_rdiff.toExponential(3)}, vdiff=${score.max_vdiff.toExponential(3)}`);
     return 0;
 }
 
@@ -2575,6 +2575,43 @@ function AxisTestBody(body, filename, arcmin_tolerance) {
 }
 
 
+class LagrangeFunc {
+    constructor(point, major_body, minor_body) {
+        this.point = point;
+        this.major_body = major_body;
+        this.minor_body = minor_body;
+    }
+
+    Eval(time) {
+        return Astronomy.LagrangePoint(this.point, time, this.major_body, this.minor_body);
+    }
+}
+
+
+function VerifyStateLagrange(major_body, minor_body, point, filename, r_thresh, v_thresh) {
+    const func = new LagrangeFunc(point, major_body, minor_body);
+    return VerifyStateBody(func, filename, r_thresh, v_thresh);
+}
+
+
+function LagrangeTest() {
+    // Test Sun/EMB Lagrange points.
+    if (0 != VerifyStateLagrange(Astronomy.Body.Sun, Astronomy.Body.EMB, 1, "lagrange/semb_L1.txt",   1.33e-5, 6.13e-5)) return 1;
+    if (0 != VerifyStateLagrange(Astronomy.Body.Sun, Astronomy.Body.EMB, 2, "lagrange/semb_L2.txt",   1.33e-5, 6.13e-5)) return 1;
+    if (0 != VerifyStateLagrange(Astronomy.Body.Sun, Astronomy.Body.EMB, 4, "lagrange/semb_L4.txt",   3.75e-5, 5.28e-5)) return 1;
+    if (0 != VerifyStateLagrange(Astronomy.Body.Sun, Astronomy.Body.EMB, 5, "lagrange/semb_L5.txt",   3.75e-5, 5.28e-5)) return 1;
+
+    // Test Earth/Moon Lagrange points.
+    if (0 != VerifyStateLagrange(Astronomy.Body.Earth, Astronomy.Body.Moon, 1, "lagrange/em_L1.txt",  3.79e-5, 5.06e-5)) return 1;
+    if (0 != VerifyStateLagrange(Astronomy.Body.Earth, Astronomy.Body.Moon, 2, "lagrange/em_L2.txt",  3.79e-5, 5.06e-5)) return 1;
+    if (0 != VerifyStateLagrange(Astronomy.Body.Earth, Astronomy.Body.Moon, 4, "lagrange/em_L4.txt",  3.79e-5, 1.59e-3)) return 1;
+    if (0 != VerifyStateLagrange(Astronomy.Body.Earth, Astronomy.Body.Moon, 5, "lagrange/em_L5.txt",  3.79e-5, 1.59e-3)) return 1;
+
+    console.log("JS LagrangeTest: PASS");
+    return 0;   // not yet implemented
+}
+
+
 const UnitTests = {
     aberration:             AberrationTest,
     axis:                   AxisTest,
@@ -2586,6 +2623,7 @@ const UnitTests = {
     heliostate:             HelioStateTest,
     issue_103:              Issue103,
     jupiter_moons:          JupiterMoons,
+    lagrange:               LagrangeTest,
     libration:              LibrationTest,
     local_solar_eclipse:    LocalSolarEclipse,
     lunar_apsis:            LunarApsis,
