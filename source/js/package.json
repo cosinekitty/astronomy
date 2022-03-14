@@ -1,6 +1,6 @@
 {
   "name": "astronomy-engine",
-  "version": "2.0.12",
+  "version": "2.0.13",
   "description": "Astronomy calculation for Sun, Moon, and planets.",
   "main": "./astronomy.js",
   "module": "./esm/astronomy.js",

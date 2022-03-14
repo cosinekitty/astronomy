@@ -1,4 +1,5 @@
 #!/bin/bash
+rm -f dist/*
 python3 -m build || exit $?
-python3 -m twine upload dist/* || exit $?
+python3 -m twine upload --repository astronomy-engine dist/* || exit $?
 exit 0
