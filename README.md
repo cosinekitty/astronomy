@@ -2,6 +2,7 @@
 
 [![build status](https://github.com/cosinekitty/astronomy/actions/workflows/astronomy-engine-tests.yml/badge.svg)](https://github.com/cosinekitty/astronomy/actions)
 [![npm package](https://img.shields.io/npm/v/astronomy-engine.svg)](https://www.npmjs.com/package/astronomy-engine)
+[![PyPI version](https://badge.fury.io/py/astronomy-engine.svg)](https://badge.fury.io/py/astronomy-engine)
 
 ### Supported Programming Languages
 
