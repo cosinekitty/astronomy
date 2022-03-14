@@ -185,24 +185,22 @@ static const double EARTH_MOON_MASS_RATIO = 81.30056;
     https://web.archive.org/web/20120220062549/http://iau-comm4.jpl.nasa.gov/de405iom/de405iom.pdf
 
     Page 10 in the above document describes the constants used in the DE405 ephemeris.
-    The following are G*M values (gravity constant * mass) in [au^3 / day^2].
+    The following are GM values (gravity constant * mass) in [au^3 / day^2].
     This side-steps issues of not knowing the exact values of G and masses M[i];
     the products GM[i] are known extremely accurately.
 */
 static const double SUN_GM     = 0.2959122082855911e-03;
-static const double JUPITER_GM = 0.2825345909524226e-06;
-static const double SATURN_GM  = 0.8459715185680659e-07;
-static const double URANUS_GM  = 0.1292024916781969e-07;
-static const double NEPTUNE_GM = 0.1524358900784276e-07;
-
-#if 0
-/* These values are not currently used, but recorded here just in case. */
 static const double MERCURY_GM = 0.4912547451450812e-10;
 static const double VENUS_GM   = 0.7243452486162703e-09;
 static const double EARTH_GM   = 0.8887692390113509e-09;
 static const double MARS_GM    = 0.9549535105779258e-10;
+static const double JUPITER_GM = 0.2825345909524226e-06;
+static const double SATURN_GM  = 0.8459715185680659e-07;
+static const double URANUS_GM  = 0.1292024916781969e-07;
+static const double NEPTUNE_GM = 0.1524358900784276e-07;
 static const double PLUTO_GM   = 0.2188699765425970e-11;
-#endif
+
+#define MOON_GM   (EARTH_GM / EARTH_MOON_MASS_RATIO)
 
 /** @cond DOXYGEN_SKIP */
 #define ARRAYSIZE(x)    (sizeof(x) / sizeof(x[0]))
@@ -3368,6 +3366,336 @@ astro_state_vector_t Astronomy_HelioState(astro_body_t body, astro_time_t time)
     default:
         return StateVecError(ASTRO_INVALID_BODY, time);
     }
+}
+
+
+/**
+ * @brief Returns the product of mass and universal gravitational constant of a Solar System body.
+ *
+ * For problems involving the gravitational interactions of Solar System bodies,
+ * it is helpful to know the product GM, where G = the universal gravitational constant
+ * and M = the mass of the body. In practice, GM is known to a higher precision than
+ * either G or M alone, and thus using the product results in the most accurate results.
+ * This function returns the product GM in the units au^3/day^2, or 0 for invalid bodies.
+ * The values come from page 10 of a
+ * [JPL memorandum regarding the DE405/LE405 ephemeris](https://web.archive.org/web/20120220062549/http://iau-comm4.jpl.nasa.gov/de405iom/de405iom.pdf).
+ *
+ * @param body      The body for which to find the GM product.
+ * @return          The mass product of the given body in au^3/day^2.
+ */
+double Astronomy_MassProduct(astro_body_t body)
+{
+    switch (body)
+    {
+    case BODY_SUN:      return SUN_GM;
+    case BODY_MERCURY:  return MERCURY_GM;
+    case BODY_VENUS:    return VENUS_GM;
+    case BODY_EARTH:    return EARTH_GM;
+    case BODY_MOON:     return MOON_GM;
+    case BODY_EMB:      return EARTH_GM + MOON_GM;
+    case BODY_MARS:     return MARS_GM;
+    case BODY_JUPITER:  return JUPITER_GM;
+    case BODY_SATURN:   return SATURN_GM;
+    case BODY_URANUS:   return URANUS_GM;
+    case BODY_NEPTUNE:  return NEPTUNE_GM;
+    case BODY_PLUTO:    return PLUTO_GM;
+    default:            return 0.0;         /* invalid body */
+    }
+}
+
+
+/**
+ * @brief Calculates one of the 5 Lagrange points for a pair of co-orbiting bodies.
+ *
+ * Given a more massive "major" body and a much less massive "minor" body,
+ * calculates one of the five Lagrange points in relation to the minor body's
+ * orbit around the major body. The parameter `point` is an integer that
+ * selects the Lagrange point as follows:
+ *
+ * 1 = the Lagrange point between the major body and minor body.
+ * 2 = the Lagrange point on the far side of the minor body.
+ * 3 = the Lagrange point on the far side of the major body.
+ * 4 = the Lagrange point 60 degrees ahead of the minor body's orbital position.
+ * 5 = the Lagrange point 60 degrees behind the minor body's orbital position.
+ *
+ * The function returns the state vector for the selected Lagrange point
+ * in equatorial J2000 coordinates (EQJ), with respect to the center of the
+ * major body.
+ *
+ * To calculate Sun/Earth Lagrange points, pass in `BODY_SUN` for `major_body`
+ * and `BODY_EMB` (Earth/Moon barycenter) for `minor_body`.
+ * For Lagrange points of the Sun and any other planet, pass in that planet
+ * (e.g. `BODY_JUPITER`) for `minor_body`.
+ * To calculate Earth/Moon Lagrange points, pass in `BODY_EARTH` and `BODY_MOON`
+ * for the major and minor bodies respectively.
+ *
+ * In some cases, it may be more efficient to call #Astronomy_LagrangePointFast,
+ * especially when the state vectors have already been calculated, or are needed
+ * for some other purpose.
+ *
+ * @param point         A value 1..5 that selects which of the Lagrange points to calculate.
+ * @param time          The time at which the Lagrange point is to be calculated.
+ * @param major_body    The more massive of the co-orbiting bodies: `BODY_SUN` or `BODY_EARTH`.
+ * @param minor_body    The less massive of the co-orbiting bodies. See main remarks.
+ * @return              The position and velocity of the selected Lagrange point with respect to the major body's center.
+ */
+astro_state_vector_t Astronomy_LagrangePoint(
+    int point,
+    astro_time_t time,
+    astro_body_t major_body,
+    astro_body_t minor_body)
+{
+    astro_state_vector_t major_state, minor_state;
+    double major_mass, minor_mass;
+
+    major_mass = Astronomy_MassProduct(major_body);
+    if (major_mass <= 0.0)
+        return StateVecError(ASTRO_INVALID_BODY, time);
+
+    minor_mass = Astronomy_MassProduct(minor_body);
+    if (minor_mass <= 0.0)
+        return StateVecError(ASTRO_INVALID_BODY, time);
+
+    /* Calculate the state vectors for the major and minor bodies. */
+    if (major_body == BODY_EARTH && minor_body == BODY_MOON)
+    {
+        /* Use geocentric calculations for more precision. */
+
+        /* The Earth's geocentric state is trivial. */
+        major_state.status = ASTRO_SUCCESS;
+        major_state.t = time;
+        major_state.x = major_state.y = major_state.z = 0.0;
+        major_state.vx = major_state.vy = major_state.vz = 0.0;
+
+        minor_state = Astronomy_GeoMoonState(time);
+        if (minor_state.status != ASTRO_SUCCESS)
+            return minor_state;
+    }
+    else
+    {
+        major_state = Astronomy_HelioState(major_body, time);
+        if (major_state.status != ASTRO_SUCCESS)
+            return major_state;
+
+        minor_state = Astronomy_HelioState(minor_body, time);
+        if (minor_state.status != ASTRO_SUCCESS)
+            return minor_state;
+    }
+
+    return Astronomy_LagrangePointFast(
+        point,
+        major_state,
+        major_mass,
+        minor_state,
+        minor_mass
+    );
+}
+
+
+/**
+ * @brief Calculates one of the 5 Lagrange points from body masses and state vectors.
+ *
+ * Given a more massive "major" body and a much less massive "minor" body,
+ * calculates one of the five Lagrange points in relation to the minor body's
+ * orbit around the major body. The parameter `point` is an integer that
+ * selects the Lagrange point as follows:
+ *
+ * 1 = the Lagrange point between the major body and minor body.
+ * 2 = the Lagrange point on the far side of the minor body.
+ * 3 = the Lagrange point on the far side of the major body.
+ * 4 = the Lagrange point 60 degrees ahead of the minor body's orbital position.
+ * 5 = the Lagrange point 60 degrees behind the minor body's orbital position.
+ *
+ * The caller passes in the state vector and mass for both bodies.
+ * The state vectors can be in any orientation and frame of reference.
+ * The body masses are expressed as GM products, where G = the universal
+ * gravitation constant and M = the body's mass. Thus the units for
+ * `major_mass` and `minor_mass` must be au^3/day^2.
+ * Use #Astronomy_MassProduct to obtain GM values for various solar system bodies.
+ *
+ * The function returns the state vector for the selected Lagrange point
+ * using the same orientation as the state vector parameters `major_state` and `minor_state`,
+ * and the position and velocity components are with respect to the major body's center.
+ *
+ * Consider calling #Astronomy_LagrangePoint, instead of this function, for simpler usage in most cases.
+ *
+ * @param point         A value 1..5 that selects which of the Lagrange points to calculate.
+ * @param major_state   The state vector of the major (more massive) of the pair of bodies.
+ * @param major_mass    The mass product GM of the major body.
+ * @param minor_state   The state vector of the minor (less massive) of the pair of bodies.
+ * @param minor_mass    The mass product GM of the minor body.
+ * @return              The position and velocity of the selected Lagrange point with respect to the major body's center.
+ */
+astro_state_vector_t Astronomy_LagrangePointFast(
+    int point,
+    astro_state_vector_t major_state,
+    double major_mass,
+    astro_state_vector_t minor_state,
+    double minor_mass)
+{
+    const double cos_60 = 0.5;
+    const double sin_60 = 0.8660254037844386;   /* sqrt(3) / 2 */
+    double scale, dx, dy, dz;
+    double vx, vy, vz;
+    double R2, R, r1, r2, x, deltax, dr1, dr2, numer1, numer2, omega2, accel, deriv;
+    astro_state_vector_t  p;
+
+    if (point < 1 || point > 5)
+        return StateVecError(ASTRO_INVALID_PARAMETER, major_state.t);
+
+    if (major_state.status != ASTRO_SUCCESS || minor_state.status != ASTRO_SUCCESS)
+        return StateVecError(ASTRO_INVALID_PARAMETER, major_state.t);
+
+    if (!isfinite(major_mass) || major_mass <= 0.0)
+        return StateVecError(ASTRO_INVALID_PARAMETER, major_state.t);
+
+    if (!isfinite(minor_mass) || minor_mass <= 0.0)
+        return StateVecError(ASTRO_INVALID_PARAMETER, major_state.t);
+
+    /* Find the relative position vector <dx, dy, dz>. */
+    dx = minor_state.x - major_state.x;
+    dy = minor_state.y - major_state.y;
+    dz = minor_state.z - major_state.z;
+    R2 = (dx*dx + dy*dy + dz*dz);
+
+    /* R = Total distance between the bodies. */
+    R = sqrt(R2);
+
+    /* Find the velocity vector <vx, vy, vz>. */
+    vx = minor_state.vx - major_state.vx;
+    vy = minor_state.vy - major_state.vy;
+    vz = minor_state.vz - major_state.vz;
+
+    if (point == 4 || point == 5)
+    {
+        double nx, ny, nz;
+        double ux, uy, uz, U;
+        double Dx, Dy, Dz;
+        double Ux, Uy, Uz;
+        double vert, vrad, vtan;
+
+        /*
+            For L4 and L5, we need to find points 60 degrees away from the
+            line connecting the two bodies and in the instantaneous orbital plane.
+            Define the instantaneous orbital plane as the unique plane that contains
+            both the relative position vector and the relative velocity vector.
+        */
+
+        /* Take the cross product of position and velocity to find a normal vector <nx, ny, nz>. */
+        nx = dy*vz - dz*vy;
+        ny = dz*vx - dx*vz;
+        nz = dx*vy - dy*vx;
+
+        /* Take the cross product normal*position to get a tangential vector <ux, uy, uz>. */
+        ux = ny*dz - nz*dy;
+        uy = nz*dx - nx*dz;
+        uz = nx*dy - ny*dx;
+
+        /* Convert the tangential direction vector to a unit vector. */
+        U = sqrt(ux*ux + uy*uy + uz*uz);
+        ux /= U;
+        uy /= U;
+        uz /= U;
+
+        /* Convert the relative position vector into a unit vector. */
+        dx /= R;
+        dy /= R;
+        dz /= R;
+
+        /* Now we have two perpendicular unit vectors in the orbital plane: 'd' and 'u'. */
+
+        /* Create new unit vectors rotated (+/-)60 degrees from the radius/tangent directions. */
+        vert = (point == 4) ? +sin_60 : -sin_60;
+
+        /* Rotated radial vector */
+        Dx = cos_60*dx + vert*ux;
+        Dy = cos_60*dy + vert*uy;
+        Dz = cos_60*dz + vert*uz;
+
+        /* Rotated tangent vector */
+        Ux = cos_60*ux - vert*dx;
+        Uy = cos_60*uy - vert*dy;
+        Uz = cos_60*uz - vert*dz;
+
+        /* Calculate L4/L5 positions relative to the major body. */
+        p.x = R * Dx;
+        p.y = R * Dy;
+        p.z = R * Dz;
+
+        /* Use dot products to find radial and tangential components of the relative velocity. */
+        vrad = vx*dx + vy*dy + vz*dz;
+        vtan = vx*ux + vy*uy + vz*uz;
+
+        /* Calculate L4/L5 velocities. */
+        p.vx = vrad*Dx + vtan*Ux;
+        p.vy = vrad*Dy + vtan*Uy;
+        p.vz = vrad*Dz + vtan*Uz;
+    }
+    else
+    {
+        /*
+            Calculate the distances of each body from their mutual barycenter.
+            r1 = negative distance of major mass from barycenter (e.g. Sun to the left of barycenter)
+            r2 = positive distance of minor mass from barycenter (e.g. Earth to the right of barycenter)
+        */
+        r1 = -R * (minor_mass / (major_mass + minor_mass));
+        r2 = +R * (major_mass / (major_mass + minor_mass));
+
+        /* Calculate the square of the angular orbital speed in [rad^2 / day^2]. */
+        omega2 = (major_mass + minor_mass) / (R2*R);
+
+        /*
+            Use Newton's Method to numerically solve for the location where
+            outward centrifugal acceleration in the rotating frame of reference
+            is equal to net inward gravitational acceleration.
+            First derive a good initial guess based on approximate analysis.
+        */
+        if (point == 1 || point == 2)
+        {
+            scale = (major_mass / (major_mass + minor_mass)) * cbrt(minor_mass / (3.0 * major_mass));
+            numer1 = -major_mass;    /* The major mass is to the left of L1 and L2 */
+            if (point == 1)
+            {
+                scale = 1.0 - scale;
+                numer2 = +minor_mass;    /* The minor mass is to the right of L1. */
+            }
+            else
+            {
+                scale = 1.0 + scale;
+                numer2 = -minor_mass;    /* The minor mass is to the left of L2. */
+            }
+        }
+        else /* point == 3 */
+        {
+            scale = ((7.0/12.0)*minor_mass - major_mass) / (minor_mass + major_mass);
+            numer1 = +major_mass;    /* major mass is to the right of L3. */
+            numer2 = +minor_mass;    /* minor mass is to the right of L3. */
+        }
+
+        /* Iterate Newton's Method until it converges. */
+        x = R*scale - r1;
+        do
+        {
+            dr1 = x - r1;
+            dr2 = x - r2;
+            accel = omega2*x + numer1/(dr1*dr1) + numer2/(dr2*dr2);
+            deriv = omega2 - 2*numer1/(dr1*dr1*dr1) - 2*numer2/(dr2*dr2*dr2);
+            deltax = accel/deriv;
+            x -= deltax;
+        }
+        while (fabs(deltax/R) > 1.0e-14);
+        scale = (x - r1) / R;
+
+        p.x  = scale * dx;
+        p.y  = scale * dy;
+        p.z  = scale * dz;
+        p.vx = scale * vx;
+        p.vy = scale * vy;
+        p.vz = scale * vz;
+    }
+    p.t = major_state.t;
+    p.status = ASTRO_SUCCESS;
+    return p;
 }
 
 

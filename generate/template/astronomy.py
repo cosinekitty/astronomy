@@ -36,6 +36,11 @@ import datetime
 import enum
 import re
 
+def _cbrt(x):
+    if x < 0.0:
+        return -((-x) ** (1.0 / 3.0))
+    return x ** (1.0 / 3.0)
+
 KM_PER_AU = 1.4959787069098932e+8   #<const> The number of kilometers per astronomical unit.
 C_AUDAY   = 173.1446326846693       #<const> The speed of light expressed in astronomical units per day.
 
@@ -106,10 +111,55 @@ _EARTH_MOON_MASS_RATIO = 81.30056
 #    the products GM[i] are known extremely accurately.
 #
 _SUN_GM     = 0.2959122082855911e-03
+_MERCURY_GM = 0.4912547451450812e-10
+_VENUS_GM   = 0.7243452486162703e-09
+_EARTH_GM   = 0.8887692390113509e-09
+_MARS_GM    = 0.9549535105779258e-10
 _JUPITER_GM = 0.2825345909524226e-06
 _SATURN_GM  = 0.8459715185680659e-07
 _URANUS_GM  = 0.1292024916781969e-07
 _NEPTUNE_GM = 0.1524358900784276e-07
+_PLUTO_GM   = 0.2188699765425970e-11
+
+_MOON_GM = _EARTH_GM / _EARTH_MOON_MASS_RATIO
+
+
+def MassProduct(body):
+    """Returns the product of mass and universal gravitational constant of a Solar System body.
+
+    For problems involving the gravitational interactions of Solar System bodies,
+    it is helpful to know the product GM, where G = the universal gravitational constant
+    and M = the mass of the body. In practice, GM is known to a higher precision than
+    either G or M alone, and thus using the product results in the most accurate results.
+    This function returns the product GM in the units au^3/day^2.
+    The values come from page 10 of a
+    [JPL memorandum regarding the DE405/LE405 ephemeris](https://web.archive.org/web/20120220062549/http://iau-comm4.jpl.nasa.gov/de405iom/de405iom.pdf).
+
+    Parameters
+    ----------
+    body : Body
+        The body for which to find the GM product.
+        Allowed to be the Sun, Moon, EMB (Earth/Moon Barycenter), or any planet.
+        Any other value will cause an exception to be thrown.
+
+    Returns
+    -------
+    float
+        The mass product of the given body in au^3/day^2.
+    """
+    if body == Body.Sun:      return _SUN_GM
+    if body == Body.Mercury:  return _MERCURY_GM
+    if body == Body.Venus:    return _VENUS_GM
+    if body == Body.Earth:    return _EARTH_GM
+    if body == Body.Moon:     return _MOON_GM
+    if body == Body.EMB:      return _EARTH_GM + _MOON_GM
+    if body == Body.Mars:     return _MARS_GM
+    if body == Body.Jupiter:  return _JUPITER_GM
+    if body == Body.Saturn:   return _SATURN_GM
+    if body == Body.Uranus:   return _URANUS_GM
+    if body == Body.Neptune:  return _NEPTUNE_GM
+    if body == Body.Pluto:    return _PLUTO_GM
+    raise InvalidBodyError()
 
 @enum.unique
 class _PrecessDir(enum.Enum):
@@ -6843,3 +6893,244 @@ def RotationAxis(body, time):
         time
     )
     return AxisInfo(ra/15.0, dec, w, north)
+
+
+def LagrangePoint(point, time, major_body, minor_body):
+    """Calculates one of the 5 Lagrange points for a pair of co-orbiting bodies.
+
+    Given a more massive "major" body and a much less massive "minor" body,
+    calculates one of the five Lagrange points in relation to the minor body's
+    orbit around the major body. The parameter `point` is an integer that
+    selects the Lagrange point as follows:
+
+    1 = the Lagrange point between the major body and minor body.
+    2 = the Lagrange point on the far side of the minor body.
+    3 = the Lagrange point on the far side of the major body.
+    4 = the Lagrange point 60 degrees ahead of the minor body's orbital position.
+    5 = the Lagrange point 60 degrees behind the minor body's orbital position.
+
+    The function returns the state vector for the selected Lagrange point
+    in equatorial J2000 coordinates (EQJ), with respect to the center of the
+    major body.
+
+    To calculate Sun/Earth Lagrange points, pass in `Body.Sun` for `major_body`
+    and `Body.EMB` (Earth/Moon barycenter) for `minor_body`.
+    For Lagrange points of the Sun and any other planet, pass in just that planet
+    (e.g. `Body.Jupiter`) for `minor_body`.
+    To calculate Earth/Moon Lagrange points, pass in `Body.Earth` and `Body.Moon`
+    for the major and minor bodies respectively.
+
+    In some cases, it may be more efficient to call #LagrangePointFast,
+    especially when the state vectors have already been calculated, or are needed
+    for some other purpose.
+
+    Parameters
+    ----------
+    point : int
+        An integer 1..5 that selects which of the Lagrange points to calculate.
+    time : Time
+        The time for which the Lagrange point is to be calculated.
+    major_body : Body
+        The more massive of the co-orbiting bodies: `Body.Sun` or `Body.Earth`.
+    minor_body : Body
+        The less massive of the co-orbiting bodies. See main remarks.
+
+    Returns
+    -------
+    StateVector
+        The position and velocity of the selected Lagrange point with respect to the major body's center.
+    """
+    major_mass = MassProduct(major_body)
+    minor_mass = MassProduct(minor_body)
+
+    # Calculate the state vectors for the major and minor bodies.
+    if major_body == Body.Earth and minor_body == Body.Moon:
+        # Use geocentric calculations for more precision.
+        major_state = StateVector(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, time)
+        minor_state = GeoMoonState(time)
+    else:
+        major_state = HelioState(major_body, time)
+        minor_state = HelioState(minor_body, time)
+
+    return LagrangePointFast(
+        point,
+        major_state,
+        major_mass,
+        minor_state,
+        minor_mass
+    )
+
+
+def LagrangePointFast(point, major_state, major_mass, minor_state, minor_mass):
+    """Calculates one of the 5 Lagrange points from body masses and state vectors.
+
+    Given a more massive "major" body and a much less massive "minor" body,
+    calculates one of the five Lagrange points in relation to the minor body's
+    orbit around the major body. The parameter `point` is an integer that
+    selects the Lagrange point as follows:
+
+    1 = the Lagrange point between the major body and minor body.
+    2 = the Lagrange point on the far side of the minor body.
+    3 = the Lagrange point on the far side of the major body.
+    4 = the Lagrange point 60 degrees ahead of the minor body's orbital position.
+    5 = the Lagrange point 60 degrees behind the minor body's orbital position.
+
+    The caller passes in the state vector and mass for both bodies.
+    The state vectors can be in any orientation and frame of reference.
+    The body masses are expressed as GM products, where G = the universal
+    gravitation constant and M = the body's mass. Thus the units for
+    `major_mass` and `minor_mass` must be au^3/day^2.
+    Use #MassProduct to obtain GM values for various solar system bodies.
+
+    The function returns the state vector for the selected Lagrange point
+    using the same orientation as the state vector parameters `major_state` and `minor_state`,
+    and the position and velocity components are with respect to the major body's center.
+
+    Consider calling #LagrangePoint, instead of this function, for simpler usage in most cases.
+
+    Parameters
+    ----------
+    point : int
+        An integer 1..5 that selects which of the Lagrange points to calculate.
+    major_state : StateVector
+        The state vector of the major (more massive) of the pair of bodies.
+    major_mass : float
+        The mass product GM of the major body.
+    minor_state : StateVector
+        The state vector of the minor (less massive) of the pair of bodies.
+    minor_mass : float
+        The mass product GM of the minor body.
+
+    Returns
+    -------
+    StateVector
+        The position and velocity of the selected Lagrange point with respect to the major body's center.
+    """
+    cos_60 = 0.5
+    sin_60 = 0.8660254037844386   # sqrt(3) / 2
+
+    if point not in [1, 2, 3, 4, 5]:
+        raise Error('Invalid Lagrange point [{}]. Must be an integer 1..5.'.format(point))
+
+    if major_mass <= 0.0:
+        raise Error('Major mass must be a positive number.')
+
+    if minor_mass <= 0.0:
+        raise Error('Minor mass must be a positive number.')
+
+    # Find the relative position vector <dx, dy, dz>.
+    dx = minor_state.x - major_state.x
+    dy = minor_state.y - major_state.y
+    dz = minor_state.z - major_state.z
+    R2 = (dx*dx + dy*dy + dz*dz)
+
+    # R = Total distance between the bodies.
+    R = math.sqrt(R2)
+
+    # Find the velocity vector <vx, vy, vz>.
+    vx = minor_state.vx - major_state.vx
+    vy = minor_state.vy - major_state.vy
+    vz = minor_state.vz - major_state.vz
+
+    if point in [4, 5]:
+        # For L4 and L5, we need to find points 60 degrees away from the
+        # line connecting the two bodies and in the instantaneous orbital plane.
+        # Define the instantaneous orbital plane as the unique plane that contains
+        # both the relative position vector and the relative velocity vector.
+
+        # Take the cross product of position and velocity to find a normal vector <nx, ny, nz>.
+        nx = dy*vz - dz*vy
+        ny = dz*vx - dx*vz
+        nz = dx*vy - dy*vx
+
+        # Take the cross product normal*position to get a tangential vector <ux, uy, uz>.
+        ux = ny*dz - nz*dy
+        uy = nz*dx - nx*dz
+        uz = nx*dy - ny*dx
+
+        # Convert the tangential direction vector to a unit vector.
+        U = math.sqrt(ux*ux + uy*uy + uz*uz)
+        ux /= U
+        uy /= U
+        uz /= U
+
+        # Convert the relative position vector into a unit vector.
+        dx /= R
+        dy /= R
+        dz /= R
+
+        # Now we have two perpendicular unit vectors in the orbital plane: 'd' and 'u'.
+
+        # Create new unit vectors rotated (+/-)60 degrees from the radius/tangent directions.
+        if point == 4:
+            vert = +sin_60
+        else:
+            vert = -sin_60
+
+        # Rotated radial vector
+        Dx = cos_60*dx + vert*ux
+        Dy = cos_60*dy + vert*uy
+        Dz = cos_60*dz + vert*uz
+
+        # Rotated tangent vector
+        Ux = cos_60*ux - vert*dx
+        Uy = cos_60*uy - vert*dy
+        Uz = cos_60*uz - vert*dz
+
+        # Calculate L4/L5 positions relative to the major body.
+        px = R * Dx
+        py = R * Dy
+        pz = R * Dz
+
+        # Use dot products to find radial and tangential components of the relative velocity.
+        vrad = vx*dx + vy*dy + vz*dz
+        vtan = vx*ux + vy*uy + vz*uz
+
+        # Calculate L4/L5 velocities.
+        pvx = vrad*Dx + vtan*Ux
+        pvy = vrad*Dy + vtan*Uy
+        pvz = vrad*Dz + vtan*Uz
+
+        return StateVector(px, py, pz, pvx, pvy, pvz, major_state.t)
+
+    # Handle Langrange points 1, 2, 3.
+    # Calculate the distances of each body from their mutual barycenter.
+    # r1 = negative distance of major mass from barycenter (e.g. Sun to the left of barycenter)
+    # r2 = positive distance of minor mass from barycenter (e.g. Earth to the right of barycenter)
+    r1 = -R * (minor_mass / (major_mass + minor_mass))
+    r2 = +R * (major_mass / (major_mass + minor_mass))
+
+    # Calculate the square of the angular orbital speed in [rad^2 / day^2].
+    omega2 = (major_mass + minor_mass) / (R2*R)
+
+    # Use Newton's Method to numerically solve for the location where
+    # outward centrifugal acceleration in the rotating frame of reference
+    # is equal to net inward gravitational acceleration.
+    # First derive a good initial guess based on approximate analysis.
+    if point in [1, 2]:
+        scale = (major_mass / (major_mass + minor_mass)) * _cbrt(minor_mass / (3.0 * major_mass))
+        numer1 = -major_mass    # The major mass is to the left of L1 and L2
+        if point == 1:
+            scale = 1.0 - scale
+            numer2 = +minor_mass    # The minor mass is to the right of L1.
+        else:
+            scale = 1.0 + scale
+            numer2 = -minor_mass    # The minor mass is to the left of L2.
+    else:  # point == 3
+        scale = ((7.0/12.0)*minor_mass - major_mass) / (minor_mass + major_mass)
+        numer1 = +major_mass    # major mass is to the right of L3.
+        numer2 = +minor_mass    # minor mass is to the right of L3.
+
+    # Iterate Newton's Method until it converges.
+    x = R*scale - r1
+    while True:
+        dr1 = x - r1
+        dr2 = x - r2
+        accel = omega2*x + numer1/(dr1*dr1) + numer2/(dr2*dr2)
+        deriv = omega2 - 2*numer1/(dr1*dr1*dr1) - 2*numer2/(dr2*dr2*dr2)
+        deltax = accel/deriv
+        x -= deltax
+        if abs(deltax/R) <= 1.0e-14:
+            break
+    scale = (x - r1) / R
+    return StateVector(scale*dx, scale*dy, scale*dz, scale*vx, scale*vy, scale*vz, major_state.t)

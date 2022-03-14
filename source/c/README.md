@@ -1015,6 +1015,77 @@ To convert to heliocentric position vectors, call [`Astronomy_HelioVector`](#Ast
 
 ---
 
+<a name="Astronomy_LagrangePoint"></a>
+### Astronomy_LagrangePoint(point, time, major_body, minor_body) &#8658; [`astro_state_vector_t`](#astro_state_vector_t)
+
+**Calculates one of the 5 Lagrange points for a pair of co-orbiting bodies.** 
+
+
+
+Given a more massive "major" body and a much less massive "minor" body, calculates one of the five Lagrange points in relation to the minor body's orbit around the major body. The parameter `point` is an integer that selects the Lagrange point as follows:
+
+1 = the Lagrange point between the major body and minor body. 2 = the Lagrange point on the far side of the minor body. 3 = the Lagrange point on the far side of the major body. 4 = the Lagrange point 60 degrees ahead of the minor body's orbital position. 5 = the Lagrange point 60 degrees behind the minor body's orbital position.
+
+The function returns the state vector for the selected Lagrange point in equatorial J2000 coordinates (EQJ), with respect to the center of the major body.
+
+To calculate Sun/Earth Lagrange points, pass in `BODY_SUN` for `major_body` and `BODY_EMB` (Earth/Moon barycenter) for `minor_body`. For Lagrange points of the Sun and any other planet, pass in that planet (e.g. `BODY_JUPITER`) for `minor_body`. To calculate Earth/Moon Lagrange points, pass in `BODY_EARTH` and `BODY_MOON` for the major and minor bodies respectively.
+
+In some cases, it may be more efficient to call [`Astronomy_LagrangePointFast`](#Astronomy_LagrangePointFast), especially when the state vectors have already been calculated, or are needed for some other purpose.
+
+
+
+**Returns:**  The position and velocity of the selected Lagrange point with respect to the major body's center. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| `int` | `point` |  A value 1..5 that selects which of the Lagrange points to calculate.  | 
+| [`astro_time_t`](#astro_time_t) | `time` |  The time at which the Lagrange point is to be calculated.  | 
+| [`astro_body_t`](#astro_body_t) | `major_body` |  The more massive of the co-orbiting bodies: `BODY_SUN` or `BODY_EARTH`.  | 
+| [`astro_body_t`](#astro_body_t) | `minor_body` |  The less massive of the co-orbiting bodies. See main remarks.  | 
+
+
+
+
+---
+
+<a name="Astronomy_LagrangePointFast"></a>
+### Astronomy_LagrangePointFast(point, major_state, major_mass, minor_state, minor_mass) &#8658; [`astro_state_vector_t`](#astro_state_vector_t)
+
+**Calculates one of the 5 Lagrange points from body masses and state vectors.** 
+
+
+
+Given a more massive "major" body and a much less massive "minor" body, calculates one of the five Lagrange points in relation to the minor body's orbit around the major body. The parameter `point` is an integer that selects the Lagrange point as follows:
+
+1 = the Lagrange point between the major body and minor body. 2 = the Lagrange point on the far side of the minor body. 3 = the Lagrange point on the far side of the major body. 4 = the Lagrange point 60 degrees ahead of the minor body's orbital position. 5 = the Lagrange point 60 degrees behind the minor body's orbital position.
+
+The caller passes in the state vector and mass for both bodies. The state vectors can be in any orientation and frame of reference. The body masses are expressed as GM products, where G = the universal gravitation constant and M = the body's mass. Thus the units for `major_mass` and `minor_mass` must be au^3/day^2. Use [`Astronomy_MassProduct`](#Astronomy_MassProduct) to obtain GM values for various solar system bodies.
+
+The function returns the state vector for the selected Lagrange point using the same orientation as the state vector parameters `major_state` and `minor_state`, and the position and velocity components are with respect to the major body's center.
+
+Consider calling [`Astronomy_LagrangePoint`](#Astronomy_LagrangePoint), instead of this function, for simpler usage in most cases.
+
+
+
+**Returns:**  The position and velocity of the selected Lagrange point with respect to the major body's center. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| `int` | `point` |  A value 1..5 that selects which of the Lagrange points to calculate.  | 
+| [`astro_state_vector_t`](#astro_state_vector_t) | `major_state` |  The state vector of the major (more massive) of the pair of bodies.  | 
+| `double` | `major_mass` |  The mass product GM of the major body.  | 
+| [`astro_state_vector_t`](#astro_state_vector_t) | `minor_state` |  The state vector of the minor (less massive) of the pair of bodies.  | 
+| `double` | `minor_mass` |  The mass product GM of the minor body.  | 
+
+
+
+
+---
+
 <a name="Astronomy_Libration"></a>
 ### Astronomy_Libration(time) &#8658; [`astro_libration_t`](#astro_libration_t)
 
@@ -1094,6 +1165,30 @@ It is the caller's responsibility to ensure that the parameter values are correc
 | `int` | `hour` |  The UTC hour of the day in the range 0..23.  | 
 | `int` | `minute` |  The UTC minute in the range 0..59.  | 
 | `double` | `second` |  The UTC floating-point second in the range [0, 60). | 
+
+
+
+
+---
+
+<a name="Astronomy_MassProduct"></a>
+### Astronomy_MassProduct(body) &#8658; `double`
+
+**Returns the product of mass and universal gravitational constant of a Solar System body.** 
+
+
+
+For problems involving the gravitational interactions of Solar System bodies, it is helpful to know the product GM, where G = the universal gravitational constant and M = the mass of the body. In practice, GM is known to a higher precision than either G or M alone, and thus using the product results in the most accurate results. This function returns the product GM in the units au^3/day^2, or 0 for invalid bodies. The values come from page 10 of a [JPL memorandum regarding the DE405/LE405 ephemeris](https://web.archive.org/web/20120220062549/http://iau-comm4.jpl.nasa.gov/de405iom/de405iom.pdf).
+
+
+
+**Returns:**  The mass product of the given body in au^3/day^2. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_body_t`](#astro_body_t) | `body` |  The body for which to find the GM product.  | 
 
 
 

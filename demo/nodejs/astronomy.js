@@ -33,9 +33,9 @@
  */
 'use strict';
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.BaryState = exports.GeoVector = exports.HelioDistance = exports.HelioVector = exports.JupiterMoons = exports.JupiterMoonsInfo = exports.GeoEmbState = exports.GeoMoonState = exports.EclipticGeoMoon = exports.GeoMoon = exports.Ecliptic = exports.ObserverGravity = exports.VectorObserver = exports.ObserverState = exports.ObserverVector = exports.Equator = exports.SunPosition = exports.Observer = exports.Horizon = exports.EclipticCoordinates = exports.HorizontalCoordinates = exports.MakeRotation = exports.RotationMatrix = exports.EquatorialCoordinates = exports.Spherical = exports.StateVector = exports.Vector = exports.Libration = exports.LibrationInfo = exports.CalcMoonCount = exports.MakeTime = exports.AstroTime = exports.SetDeltaTFunction = exports.DeltaT_JplHorizons = exports.DeltaT_EspenakMeeus = exports.Body = exports.AngleBetween = exports.CALLISTO_RADIUS_KM = exports.GANYMEDE_RADIUS_KM = exports.EUROPA_RADIUS_KM = exports.IO_RADIUS_KM = exports.JUPITER_MEAN_RADIUS_KM = exports.JUPITER_POLAR_RADIUS_KM = exports.JUPITER_EQUATORIAL_RADIUS_KM = exports.RAD2HOUR = exports.RAD2DEG = exports.HOUR2RAD = exports.DEG2RAD = exports.KM_PER_AU = exports.C_AUDAY = void 0;
-exports.Rotation_EQJ_HOR = exports.Rotation_HOR_EQJ = exports.Rotation_HOR_EQD = exports.Rotation_EQD_HOR = exports.Rotation_EQD_EQJ = exports.Rotation_EQJ_EQD = exports.Rotation_ECL_EQJ = exports.Rotation_EQJ_ECL = exports.RotateState = exports.RotateVector = exports.InverseRefraction = exports.Refraction = exports.VectorFromHorizon = exports.HorizonFromVector = exports.SphereFromVector = exports.EquatorFromVector = exports.VectorFromSphere = exports.Pivot = exports.IdentityMatrix = exports.CombineRotation = exports.InverseRotation = exports.NextPlanetApsis = exports.SearchPlanetApsis = exports.NextLunarApsis = exports.SearchLunarApsis = exports.Apsis = exports.SearchPeakMagnitude = exports.SearchMaxElongation = exports.Elongation = exports.ElongationEvent = exports.Seasons = exports.SeasonInfo = exports.SearchHourAngle = exports.HourAngleEvent = exports.SearchAltitude = exports.SearchRiseSet = exports.NextMoonQuarter = exports.SearchMoonQuarter = exports.MoonQuarter = exports.SearchMoonPhase = exports.MoonPhase = exports.SearchRelativeLongitude = exports.Illumination = exports.IlluminationInfo = exports.EclipticLongitude = exports.AngleFromSun = exports.PairLongitude = exports.SearchSunLongitude = exports.Search = exports.HelioState = void 0;
-exports.RotationAxis = exports.AxisInfo = exports.NextMoonNode = exports.SearchMoonNode = exports.NodeEventInfo = exports.NodeEventKind = exports.NextTransit = exports.SearchTransit = exports.TransitInfo = exports.NextLocalSolarEclipse = exports.SearchLocalSolarEclipse = exports.LocalSolarEclipseInfo = exports.EclipseEvent = exports.NextGlobalSolarEclipse = exports.SearchGlobalSolarEclipse = exports.NextLunarEclipse = exports.GlobalSolarEclipseInfo = exports.SearchLunarEclipse = exports.LunarEclipseInfo = exports.Constellation = exports.ConstellationInfo = exports.Rotation_GAL_EQJ = exports.Rotation_EQJ_GAL = exports.Rotation_HOR_ECL = exports.Rotation_ECL_HOR = exports.Rotation_ECL_EQD = exports.Rotation_EQD_ECL = void 0;
+exports.GeoVector = exports.HelioDistance = exports.HelioVector = exports.JupiterMoons = exports.JupiterMoonsInfo = exports.GeoEmbState = exports.GeoMoonState = exports.EclipticGeoMoon = exports.GeoMoon = exports.Ecliptic = exports.ObserverGravity = exports.VectorObserver = exports.ObserverState = exports.ObserverVector = exports.Equator = exports.SunPosition = exports.Observer = exports.Horizon = exports.EclipticCoordinates = exports.HorizontalCoordinates = exports.MakeRotation = exports.RotationMatrix = exports.EquatorialCoordinates = exports.Spherical = exports.StateVector = exports.Vector = exports.Libration = exports.LibrationInfo = exports.CalcMoonCount = exports.MakeTime = exports.AstroTime = exports.SetDeltaTFunction = exports.DeltaT_JplHorizons = exports.DeltaT_EspenakMeeus = exports.Body = exports.AngleBetween = exports.MassProduct = exports.CALLISTO_RADIUS_KM = exports.GANYMEDE_RADIUS_KM = exports.EUROPA_RADIUS_KM = exports.IO_RADIUS_KM = exports.JUPITER_MEAN_RADIUS_KM = exports.JUPITER_POLAR_RADIUS_KM = exports.JUPITER_EQUATORIAL_RADIUS_KM = exports.RAD2HOUR = exports.RAD2DEG = exports.HOUR2RAD = exports.DEG2RAD = exports.KM_PER_AU = exports.C_AUDAY = void 0;
+exports.Rotation_HOR_EQJ = exports.Rotation_HOR_EQD = exports.Rotation_EQD_HOR = exports.Rotation_EQD_EQJ = exports.Rotation_EQJ_EQD = exports.Rotation_ECL_EQJ = exports.Rotation_EQJ_ECL = exports.RotateState = exports.RotateVector = exports.InverseRefraction = exports.Refraction = exports.VectorFromHorizon = exports.HorizonFromVector = exports.SphereFromVector = exports.EquatorFromVector = exports.VectorFromSphere = exports.Pivot = exports.IdentityMatrix = exports.CombineRotation = exports.InverseRotation = exports.NextPlanetApsis = exports.SearchPlanetApsis = exports.NextLunarApsis = exports.SearchLunarApsis = exports.Apsis = exports.SearchPeakMagnitude = exports.SearchMaxElongation = exports.Elongation = exports.ElongationEvent = exports.Seasons = exports.SeasonInfo = exports.SearchHourAngle = exports.HourAngleEvent = exports.SearchAltitude = exports.SearchRiseSet = exports.NextMoonQuarter = exports.SearchMoonQuarter = exports.MoonQuarter = exports.SearchMoonPhase = exports.MoonPhase = exports.SearchRelativeLongitude = exports.Illumination = exports.IlluminationInfo = exports.EclipticLongitude = exports.AngleFromSun = exports.PairLongitude = exports.SearchSunLongitude = exports.Search = exports.HelioState = exports.BaryState = void 0;
+exports.LagrangePointFast = exports.LagrangePoint = exports.RotationAxis = exports.AxisInfo = exports.NextMoonNode = exports.SearchMoonNode = exports.NodeEventInfo = exports.NodeEventKind = exports.NextTransit = exports.SearchTransit = exports.TransitInfo = exports.NextLocalSolarEclipse = exports.SearchLocalSolarEclipse = exports.LocalSolarEclipseInfo = exports.EclipseEvent = exports.NextGlobalSolarEclipse = exports.SearchGlobalSolarEclipse = exports.NextLunarEclipse = exports.GlobalSolarEclipseInfo = exports.SearchLunarEclipse = exports.LunarEclipseInfo = exports.Constellation = exports.ConstellationInfo = exports.Rotation_GAL_EQJ = exports.Rotation_EQJ_GAL = exports.Rotation_HOR_ECL = exports.Rotation_ECL_HOR = exports.Rotation_ECL_EQD = exports.Rotation_EQD_ECL = exports.Rotation_EQJ_HOR = void 0;
 /**
  * @brief The speed of light in AU/day.
  */
@@ -136,10 +136,54 @@ const EARTH_MOON_MASS_RATIO = 81.30056;
     the products GM[i] are known extremely accurately.
 */
 const SUN_GM = 0.2959122082855911e-03;
+const MERCURY_GM = 0.4912547451450812e-10;
+const VENUS_GM = 0.7243452486162703e-09;
+const EARTH_GM = 0.8887692390113509e-09;
+const MARS_GM = 0.9549535105779258e-10;
 const JUPITER_GM = 0.2825345909524226e-06;
 const SATURN_GM = 0.8459715185680659e-07;
 const URANUS_GM = 0.1292024916781969e-07;
 const NEPTUNE_GM = 0.1524358900784276e-07;
+const PLUTO_GM = 0.2188699765425970e-11;
+const MOON_GM = EARTH_GM / EARTH_MOON_MASS_RATIO;
+/**
+ * @brief Returns the product of mass and universal gravitational constant of a Solar System body.
+ *
+ * For problems involving the gravitational interactions of Solar System bodies,
+ * it is helpful to know the product GM, where G = the universal gravitational constant
+ * and M = the mass of the body. In practice, GM is known to a higher precision than
+ * either G or M alone, and thus using the product results in the most accurate results.
+ * This function returns the product GM in the units au^3/day^2.
+ * The values come from page 10 of a
+ * [JPL memorandum regarding the DE405/LE405 ephemeris](https://web.archive.org/web/20120220062549/http://iau-comm4.jpl.nasa.gov/de405iom/de405iom.pdf).
+ *
+ * @param {Body} body
+ *      The body for which to find the GM product.
+ *      Allowed to be the Sun, Moon, EMB (Earth/Moon Barycenter), or any planet.
+ *      Any other value will cause an exception to be thrown.
+ *
+ * @returns {number}
+ *      The mass product of the given body in au^3/day^2.
+ */
+function MassProduct(body) {
+    switch (body) {
+        case Body.Sun: return SUN_GM;
+        case Body.Mercury: return MERCURY_GM;
+        case Body.Venus: return VENUS_GM;
+        case Body.Earth: return EARTH_GM;
+        case Body.Moon: return MOON_GM;
+        case Body.EMB: return EARTH_GM + MOON_GM;
+        case Body.Mars: return MARS_GM;
+        case Body.Jupiter: return JUPITER_GM;
+        case Body.Saturn: return SATURN_GM;
+        case Body.Uranus: return URANUS_GM;
+        case Body.Neptune: return NEPTUNE_GM;
+        case Body.Pluto: return PLUTO_GM;
+        default:
+            throw `Do not know mass product for body: ${body}`;
+    }
+}
+exports.MassProduct = MassProduct;
 let ob2000; // lazy-evaluated mean obliquity of the ecliptic at J2000, in radians
 let cos_ob2000;
 let sin_ob2000;
@@ -8415,3 +8459,229 @@ function RotationAxis(body, date) {
     return new AxisInfo(ra / 15, dec, w, north);
 }
 exports.RotationAxis = RotationAxis;
+/**
+ * @brief Calculates one of the 5 Lagrange points for a pair of co-orbiting bodies.
+ *
+ * Given a more massive "major" body and a much less massive "minor" body,
+ * calculates one of the five Lagrange points in relation to the minor body's
+ * orbit around the major body. The parameter `point` is an integer that
+ * selects the Lagrange point as follows:
+ *
+ * 1 = the Lagrange point between the major body and minor body.
+ * 2 = the Lagrange point on the far side of the minor body.
+ * 3 = the Lagrange point on the far side of the major body.
+ * 4 = the Lagrange point 60 degrees ahead of the minor body's orbital position.
+ * 5 = the Lagrange point 60 degrees behind the minor body's orbital position.
+ *
+ * The function returns the state vector for the selected Lagrange point
+ * in equatorial J2000 coordinates (EQJ), with respect to the center of the
+ * major body.
+ *
+ * To calculate Sun/Earth Lagrange points, pass in `Body.Sun` for `major_body`
+ * and `Body.EMB` (Earth/Moon barycenter) for `minor_body`.
+ * For Lagrange points of the Sun and any other planet, pass in that planet
+ * (e.g. `Body.Jupiter`) for `minor_body`.
+ * To calculate Earth/Moon Lagrange points, pass in `Body.Earth` and `Body.Moon`
+ * for the major and minor bodies respectively.
+ *
+ * In some cases, it may be more efficient to call {@link LagrangePointFast},
+ * especially when the state vectors have already been calculated, or are needed
+ * for some other purpose.
+ *
+ * @param {number} point
+ *      An integer 1..5 that selects which of the Lagrange points to calculate.
+ *
+ * @param {FlexibleDateTime} date
+ *      The time at which the Lagrange point is to be calculated.
+ *
+ * @param {Body} major_body
+ *      The more massive of the co-orbiting bodies: `Body.Sun` or `Body.Earth`.
+ *
+ * @param {Body} minor_body
+ *      The less massive of the co-orbiting bodies. See main remarks.
+ *
+ * @returns {StateVector}
+ *      The position and velocity of the selected Lagrange point with respect to the major body's center.
+ */
+function LagrangePoint(point, date, major_body, minor_body) {
+    const time = MakeTime(date);
+    const major_mass = MassProduct(major_body);
+    const minor_mass = MassProduct(minor_body);
+    let major_state;
+    let minor_state;
+    // Calculate the state vectors for the major and minor bodies.
+    if (major_body === Body.Earth && minor_body === Body.Moon) {
+        // Use geocentric calculations for more precision.
+        // The Earth's geocentric state is trivial.
+        major_state = new StateVector(0, 0, 0, 0, 0, 0, time);
+        minor_state = GeoMoonState(time);
+    }
+    else {
+        major_state = HelioState(major_body, time);
+        minor_state = HelioState(minor_body, time);
+    }
+    return LagrangePointFast(point, major_state, major_mass, minor_state, minor_mass);
+}
+exports.LagrangePoint = LagrangePoint;
+/**
+ * @brief Calculates one of the 5 Lagrange points from body masses and state vectors.
+ *
+ * Given a more massive "major" body and a much less massive "minor" body,
+ * calculates one of the five Lagrange points in relation to the minor body's
+ * orbit around the major body. The parameter `point` is an integer that
+ * selects the Lagrange point as follows:
+ *
+ * 1 = the Lagrange point between the major body and minor body.
+ * 2 = the Lagrange point on the far side of the minor body.
+ * 3 = the Lagrange point on the far side of the major body.
+ * 4 = the Lagrange point 60 degrees ahead of the minor body's orbital position.
+ * 5 = the Lagrange point 60 degrees behind the minor body's orbital position.
+ *
+ * The caller passes in the state vector and mass for both bodies.
+ * The state vectors can be in any orientation and frame of reference.
+ * The body masses are expressed as GM products, where G = the universal
+ * gravitation constant and M = the body's mass. Thus the units for
+ * `major_mass` and `minor_mass` must be au^3/day^2.
+ * Use {@link MassProduct} to obtain GM values for various solar system bodies.
+ *
+ * The function returns the state vector for the selected Lagrange point
+ * using the same orientation as the state vector parameters `major_state` and `minor_state`,
+ * and the position and velocity components are with respect to the major body's center.
+ *
+ * Consider calling {@link LagrangePoint}, instead of this function, for simpler usage in most cases.
+ *
+ * @param {number} point
+ *      A value 1..5 that selects which of the Lagrange points to calculate.
+ *
+ * @param {StateVector} major_state
+ *      The state vector of the major (more massive) of the pair of bodies.
+ *
+ * @param {number} major_mass
+ *      The mass product GM of the major body.
+ *
+ * @param {StateVector} minor_state
+ *      The state vector of the minor (less massive) of the pair of bodies.
+ *
+ * @param {number} minor_mass
+ *      The mass product GM of the minor body.
+ *
+ * @returns {StateVector}
+ *      The position and velocity of the selected Lagrange point with respect to the major body's center.
+ */
+function LagrangePointFast(point, major_state, major_mass, minor_state, minor_mass) {
+    const cos_60 = 0.5;
+    const sin_60 = 0.8660254037844386; /* sqrt(3) / 2 */
+    if (point < 1 || point > 5)
+        throw `Invalid lagrange point ${point}`;
+    if (!Number.isFinite(major_mass) || major_mass <= 0.0)
+        throw 'Major mass must be a positive number.';
+    if (!Number.isFinite(minor_mass) || minor_mass <= 0.0)
+        throw 'Minor mass must be a negative number.';
+    // Find the relative position vector <dx, dy, dz>.
+    let dx = minor_state.x - major_state.x;
+    let dy = minor_state.y - major_state.y;
+    let dz = minor_state.z - major_state.z;
+    const R2 = (dx * dx + dy * dy + dz * dz);
+    // R = Total distance between the bodies.
+    const R = Math.sqrt(R2);
+    // Find the relative velocity vector <vx, vy, vz>.
+    const vx = minor_state.vx - major_state.vx;
+    const vy = minor_state.vy - major_state.vy;
+    const vz = minor_state.vz - major_state.vz;
+    let p;
+    if (point === 4 || point === 5) {
+        // For L4 and L5, we need to find points 60 degrees away from the
+        // line connecting the two bodies and in the instantaneous orbital plane.
+        // Define the instantaneous orbital plane as the unique plane that contains
+        // both the relative position vector and the relative velocity vector.
+        // Take the cross product of position and velocity to find a normal vector <nx, ny, nz>.
+        const nx = dy * vz - dz * vy;
+        const ny = dz * vx - dx * vz;
+        const nz = dx * vy - dy * vx;
+        // Take the cross product normal*position to get a tangential vector <ux, uy, uz>.
+        let ux = ny * dz - nz * dy;
+        let uy = nz * dx - nx * dz;
+        let uz = nx * dy - ny * dx;
+        // Convert the tangential direction vector to a unit vector.
+        const U = Math.sqrt(ux * ux + uy * uy + uz * uz);
+        ux /= U;
+        uy /= U;
+        uz /= U;
+        // Convert the relative position vector into a unit vector.
+        dx /= R;
+        dy /= R;
+        dz /= R;
+        // Now we have two perpendicular unit vectors in the orbital plane: 'd' and 'u'.
+        // Create new unit vectors rotated (+/-)60 degrees from the radius/tangent directions.
+        const vert = (point == 4) ? +sin_60 : -sin_60;
+        // Rotated radial vector
+        const Dx = cos_60 * dx + vert * ux;
+        const Dy = cos_60 * dy + vert * uy;
+        const Dz = cos_60 * dz + vert * uz;
+        // Rotated tangent vector
+        const Ux = cos_60 * ux - vert * dx;
+        const Uy = cos_60 * uy - vert * dy;
+        const Uz = cos_60 * uz - vert * dz;
+        // Calculate L4/L5 positions relative to the major body.
+        const px = R * Dx;
+        const py = R * Dy;
+        const pz = R * Dz;
+        // Use dot products to find radial and tangential components of the relative velocity.
+        const vrad = vx * dx + vy * dy + vz * dz;
+        const vtan = vx * ux + vy * uy + vz * uz;
+        // Calculate L4/L5 velocities.
+        const pvx = vrad * Dx + vtan * Ux;
+        const pvy = vrad * Dy + vtan * Uy;
+        const pvz = vrad * Dz + vtan * Uz;
+        p = new StateVector(px, py, pz, pvx, pvy, pvz, major_state.t);
+    }
+    else {
+        // Calculate the distances of each body from their mutual barycenter.
+        // r1 = negative distance of major mass from barycenter (e.g. Sun to the left of barycenter)
+        // r2 = positive distance of minor mass from barycenter (e.g. Earth to the right of barycenter)
+        const r1 = -R * (minor_mass / (major_mass + minor_mass));
+        const r2 = +R * (major_mass / (major_mass + minor_mass));
+        // Calculate the square of the angular orbital speed in [rad^2 / day^2].
+        const omega2 = (major_mass + minor_mass) / (R2 * R);
+        // Use Newton's Method to numerically solve for the location where
+        // outward centrifugal acceleration in the rotating frame of reference
+        // is equal to net inward gravitational acceleration.
+        // First derive a good initial guess based on approximate analysis.
+        let scale, numer1, numer2;
+        if (point === 1 || point === 2) {
+            scale = (major_mass / (major_mass + minor_mass)) * Math.cbrt(minor_mass / (3.0 * major_mass));
+            numer1 = -major_mass; // The major mass is to the left of L1 and L2.
+            if (point == 1) {
+                scale = 1.0 - scale;
+                numer2 = +minor_mass; // The minor mass is to the right of L1.
+            }
+            else {
+                scale = 1.0 + scale;
+                numer2 = -minor_mass; // The minor mass is to the left of L2.
+            }
+        }
+        else if (point === 3) {
+            scale = ((7.0 / 12.0) * minor_mass - major_mass) / (minor_mass + major_mass);
+            numer1 = +major_mass; // major mass is to the right of L3.
+            numer2 = +minor_mass; // minor mass is to the right of L3.
+        }
+        else {
+            throw `Invalid Langrage point ${point}. Must be an integer 1..5.`;
+        }
+        // Iterate Newton's Method until it converges.
+        let x = R * scale - r1;
+        let deltax;
+        do {
+            const dr1 = x - r1;
+            const dr2 = x - r2;
+            const accel = omega2 * x + numer1 / (dr1 * dr1) + numer2 / (dr2 * dr2);
+            const deriv = omega2 - 2 * numer1 / (dr1 * dr1 * dr1) - 2 * numer2 / (dr2 * dr2 * dr2);
+            deltax = accel / deriv;
+            x -= deltax;
+        } while (Math.abs(deltax / R) > 1.0e-14);
+        scale = (x - r1) / R;
+        p = new StateVector(scale * dx, scale * dy, scale * dz, scale * vx, scale * vy, scale * vz, major_state.t);
+    }
+    return p;
+}
+exports.LagrangePointFast = LagrangePointFast;

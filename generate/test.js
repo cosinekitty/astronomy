@@ -2167,8 +2167,8 @@ function StateVectorDiff(relative, vec, x, y, z) {
 }
 
 
-function VerifyState(func, score, body, filename, lnum, time, pos, vel, r_thresh, v_thresh) {
-    const state = func(body, time);
+function VerifyState(func, score, filename, lnum, time, pos, vel, r_thresh, v_thresh) {
+    const state = func.Eval(time);
 
     const rdiff = StateVectorDiff((r_thresh > 0.0), pos, state.x, state.y, state.z);
     if (rdiff > score.max_rdiff)
@@ -2192,7 +2192,7 @@ function VerifyState(func, score, body, filename, lnum, time, pos, vel, r_thresh
 }
 
 
-function VerifyStateBody(func, body, filename, r_thresh, v_thresh) {
+function VerifyStateBody(func, filename, r_thresh, v_thresh) {
     const lines = ReadLines(filename);
     let lnum = 0;
     let found = false;
@@ -2221,7 +2221,7 @@ function VerifyStateBody(func, body, filename, r_thresh, v_thresh) {
                 // X = 1.134408131605554E-03 Y =-2.590904586750408E-03 Z =-7.490427225904720E-05
                 match = /\s*X =\s*(\S+) Y =\s*(\S+) Z =\s*(\S+)/.exec(line);
                 if (!match) {
-                    console.error(`JS BaryStateBody(${filename} line ${lnum}): cannot parse position vector.`);
+                    console.error(`JS VerifyStateBody(${filename} line ${lnum}): cannot parse position vector.`);
                     return 1;
                 }
                 pos = [ float(match[1]), float(match[2]), float(match[3]) ];
@@ -2231,24 +2231,24 @@ function VerifyStateBody(func, body, filename, r_thresh, v_thresh) {
                 // VX= 9.148038778472862E-03 VY= 3.973823407182510E-03 VZ= 2.765660368640458E-04
                 match = /\s*VX=\s*(\S+) VY=\s*(\S+) VZ=\s*(\S+)/.exec(line);
                 if (!match) {
-                    console.error(`JS BaryStateBody(${filename} line ${lnum}): cannot parse velocity vector.`);
+                    console.error(`JS VerifyStateBody(${filename} line ${lnum}): cannot parse velocity vector.`);
                     return 1;
                 }
                 vel = [ float(match[1]), float(match[2]), float(match[3]) ];
-                if (VerifyState(func, score, body, filename, lnum, time, pos, vel, r_thresh, v_thresh))
+                if (VerifyState(func, score, filename, lnum, time, pos, vel, r_thresh, v_thresh))
                     return 1;
                 ++count;
                 break;
 
             default:
-                console.error(`JS BaryStateBody(${filename} line ${lnum}): unexpected part = ${part}`);
+                console.error(`JS VerifyStateBody(${filename} line ${lnum}): unexpected part = ${part}`);
                 return 1;
             }
             part = (part + 1) % 3;
         }
     }
 
-    if (Verbose) console.debug(`JS BaryStateBody(${filename}): PASS - Tested ${count} cases. max rdiff=${score.max_rdiff.toExponential(3)}, vdiff=${score.max_vdiff.toExponential(3)}`);
+    if (Verbose) console.debug(`JS VerifyStateBody(${filename}): PASS - Tested ${count} cases. max rdiff=${score.max_rdiff.toExponential(3)}, vdiff=${score.max_vdiff.toExponential(3)}`);
     return 0;
 }
 
@@ -2257,82 +2257,104 @@ function VerifyStateBody(func, body, filename, r_thresh, v_thresh) {
 const Body_GeoMoon = -100;
 const Body_Geo_EMB = -101;
 
-function BaryState(body, time) {
-    if (body === Body_GeoMoon)
-        return Astronomy.GeoMoonState(time);
+class BaryStateFunc {
+    constructor(body) {
+        this.body = body;
+    }
 
-    if (body === Body_Geo_EMB)
-        return Astronomy.GeoEmbState(time);
+    Eval(time) {
+        if (this.body === Body_GeoMoon)
+            return Astronomy.GeoMoonState(time);
 
-    return Astronomy.BaryState(body, time);
+        if (this.body === Body_Geo_EMB)
+            return Astronomy.GeoEmbState(time);
+
+        return Astronomy.BaryState(this.body, time);
+    }
 }
 
 
 function BaryStateTest() {
-    if (VerifyStateBody(BaryState, Astronomy.Body.Sun,     'barystate/Sun.txt',     -1.224e-05, -1.134e-07)) return 1;
-    if (VerifyStateBody(BaryState, Astronomy.Body.Mercury, 'barystate/Mercury.txt',  1.672e-04,  2.698e-04)) return 1;
-    if (VerifyStateBody(BaryState, Astronomy.Body.Venus,   'barystate/Venus.txt',    4.123e-05,  4.308e-05)) return 1;
-    if (VerifyStateBody(BaryState, Astronomy.Body.Earth,   'barystate/Earth.txt',    2.296e-05,  6.359e-05)) return 1;
-    if (VerifyStateBody(BaryState, Astronomy.Body.Mars,    'barystate/Mars.txt',     3.107e-05,  5.550e-05)) return 1;
-    if (VerifyStateBody(BaryState, Astronomy.Body.Jupiter, 'barystate/Jupiter.txt',  7.389e-05,  2.471e-04)) return 1;
-    if (VerifyStateBody(BaryState, Astronomy.Body.Saturn,  'barystate/Saturn.txt',   1.067e-04,  3.220e-04)) return 1;
-    if (VerifyStateBody(BaryState, Astronomy.Body.Uranus,  'barystate/Uranus.txt',   9.035e-05,  2.519e-04)) return 1;
-    if (VerifyStateBody(BaryState, Astronomy.Body.Neptune, 'barystate/Neptune.txt',  9.838e-05,  4.446e-04)) return 1;
-    if (VerifyStateBody(BaryState, Astronomy.Body.Pluto,   'barystate/Pluto.txt',    4.259e-05,  7.827e-05)) return 1;
-    if (VerifyStateBody(BaryState, Astronomy.Body.Moon,    "barystate/Moon.txt",     2.354e-05,  6.604e-05)) return 1;
-    if (VerifyStateBody(BaryState, Astronomy.Body.EMB,     "barystate/EMB.txt",      2.353e-05,  6.511e-05)) return 1;
-    if (VerifyStateBody(BaryState, Body_GeoMoon,           "barystate/GeoMoon.txt",  4.086e-05,  5.347e-05)) return 1;
-    if (VerifyStateBody(BaryState, Body_Geo_EMB,           "barystate/GeoEMB.txt",   4.076e-05,  5.335e-05)) return 1;
+    if (VerifyStateBody(new BaryStateFunc(Astronomy.Body.Sun),     'barystate/Sun.txt',     -1.224e-05, -1.134e-07)) return 1;
+    if (VerifyStateBody(new BaryStateFunc(Astronomy.Body.Mercury), 'barystate/Mercury.txt',  1.672e-04,  2.698e-04)) return 1;
+    if (VerifyStateBody(new BaryStateFunc(Astronomy.Body.Venus),   'barystate/Venus.txt',    4.123e-05,  4.308e-05)) return 1;
+    if (VerifyStateBody(new BaryStateFunc(Astronomy.Body.Earth),   'barystate/Earth.txt',    2.296e-05,  6.359e-05)) return 1;
+    if (VerifyStateBody(new BaryStateFunc(Astronomy.Body.Mars),    'barystate/Mars.txt',     3.107e-05,  5.550e-05)) return 1;
+    if (VerifyStateBody(new BaryStateFunc(Astronomy.Body.Jupiter), 'barystate/Jupiter.txt',  7.389e-05,  2.471e-04)) return 1;
+    if (VerifyStateBody(new BaryStateFunc(Astronomy.Body.Saturn),  'barystate/Saturn.txt',   1.067e-04,  3.220e-04)) return 1;
+    if (VerifyStateBody(new BaryStateFunc(Astronomy.Body.Uranus),  'barystate/Uranus.txt',   9.035e-05,  2.519e-04)) return 1;
+    if (VerifyStateBody(new BaryStateFunc(Astronomy.Body.Neptune), 'barystate/Neptune.txt',  9.838e-05,  4.446e-04)) return 1;
+    if (VerifyStateBody(new BaryStateFunc(Astronomy.Body.Pluto),   'barystate/Pluto.txt',    4.259e-05,  7.827e-05)) return 1;
+    if (VerifyStateBody(new BaryStateFunc(Astronomy.Body.Moon),    "barystate/Moon.txt",     2.354e-05,  6.604e-05)) return 1;
+    if (VerifyStateBody(new BaryStateFunc(Astronomy.Body.EMB),     "barystate/EMB.txt",      2.353e-05,  6.511e-05)) return 1;
+    if (VerifyStateBody(new BaryStateFunc(Body_GeoMoon),           "barystate/GeoMoon.txt",  4.086e-05,  5.347e-05)) return 1;
+    if (VerifyStateBody(new BaryStateFunc(Body_Geo_EMB),           "barystate/GeoEMB.txt",   4.076e-05,  5.335e-05)) return 1;
     console.log('JS BaryStateTest: PASS');
     return 0;
 }
 
 
+class HelioStateFunc {
+    constructor(body) {
+        this.body = body;
+    }
+
+    Eval(time) {
+        return Astronomy.HelioState(this.body, time);
+    }
+}
+
+
 function HelioStateTest() {
-    if (VerifyStateBody(Astronomy.HelioState, Astronomy.Body.SSB,     'heliostate/SSB.txt',     -1.209e-05, -1.125e-07)) return 1;
-    if (VerifyStateBody(Astronomy.HelioState, Astronomy.Body.Mercury, 'heliostate/Mercury.txt',  1.481e-04,  2.756e-04)) return 1;
-    if (VerifyStateBody(Astronomy.HelioState, Astronomy.Body.Venus,   'heliostate/Venus.txt',    3.528e-05,  4.485e-05)) return 1;
-    if (VerifyStateBody(Astronomy.HelioState, Astronomy.Body.Earth,   'heliostate/Earth.txt',    1.476e-05,  6.105e-05)) return 1;
-    if (VerifyStateBody(Astronomy.HelioState, Astronomy.Body.Mars,    'heliostate/Mars.txt',     3.154e-05,  5.603e-05)) return 1;
-    if (VerifyStateBody(Astronomy.HelioState, Astronomy.Body.Jupiter, 'heliostate/Jupiter.txt',  7.455e-05,  2.562e-04)) return 1;
-    if (VerifyStateBody(Astronomy.HelioState, Astronomy.Body.Saturn,  'heliostate/Saturn.txt',   1.066e-04,  3.150e-04)) return 1;
-    if (VerifyStateBody(Astronomy.HelioState, Astronomy.Body.Uranus,  'heliostate/Uranus.txt',   9.034e-05,  2.712e-04)) return 1;
-    if (VerifyStateBody(Astronomy.HelioState, Astronomy.Body.Neptune, 'heliostate/Neptune.txt',  9.834e-05,  4.534e-04)) return 1;
-    if (VerifyStateBody(Astronomy.HelioState, Astronomy.Body.Pluto,   'heliostate/Pluto.txt',    4.271e-05,  1.198e-04)) return 1;
-    if (VerifyStateBody(Astronomy.HelioState, Astronomy.Body.Moon,    'heliostate/Moon.txt',     1.477e-05,  6.195e-05)) return 1;
-    if (VerifyStateBody(Astronomy.HelioState, Astronomy.Body.EMB,     'heliostate/EMB.txt',      1.476e-05,  6.106e-05)) return 1;
+    if (VerifyStateBody(new HelioStateFunc(Astronomy.Body.SSB),     'heliostate/SSB.txt',     -1.209e-05, -1.125e-07)) return 1;
+    if (VerifyStateBody(new HelioStateFunc(Astronomy.Body.Mercury), 'heliostate/Mercury.txt',  1.481e-04,  2.756e-04)) return 1;
+    if (VerifyStateBody(new HelioStateFunc(Astronomy.Body.Venus),   'heliostate/Venus.txt',    3.528e-05,  4.485e-05)) return 1;
+    if (VerifyStateBody(new HelioStateFunc(Astronomy.Body.Earth),   'heliostate/Earth.txt',    1.476e-05,  6.105e-05)) return 1;
+    if (VerifyStateBody(new HelioStateFunc(Astronomy.Body.Mars),    'heliostate/Mars.txt',     3.154e-05,  5.603e-05)) return 1;
+    if (VerifyStateBody(new HelioStateFunc(Astronomy.Body.Jupiter), 'heliostate/Jupiter.txt',  7.455e-05,  2.562e-04)) return 1;
+    if (VerifyStateBody(new HelioStateFunc(Astronomy.Body.Saturn),  'heliostate/Saturn.txt',   1.066e-04,  3.150e-04)) return 1;
+    if (VerifyStateBody(new HelioStateFunc(Astronomy.Body.Uranus),  'heliostate/Uranus.txt',   9.034e-05,  2.712e-04)) return 1;
+    if (VerifyStateBody(new HelioStateFunc(Astronomy.Body.Neptune), 'heliostate/Neptune.txt',  9.834e-05,  4.534e-04)) return 1;
+    if (VerifyStateBody(new HelioStateFunc(Astronomy.Body.Pluto),   'heliostate/Pluto.txt',    4.271e-05,  1.198e-04)) return 1;
+    if (VerifyStateBody(new HelioStateFunc(Astronomy.Body.Moon),    'heliostate/Moon.txt',     1.477e-05,  6.195e-05)) return 1;
+    if (VerifyStateBody(new HelioStateFunc(Astronomy.Body.EMB),     'heliostate/EMB.txt',      1.476e-05,  6.106e-05)) return 1;
     console.log('JS HelioStateTest: PASS');
     return 0;
 }
 
 
-function TopoStateFunc(body, time) {
-    var observer = new Astronomy.Observer(30.0, -80.0, 1000.0);
-
-    let observer_state = Astronomy.ObserverState(time, observer, false);
-    let state;
-    if (body == Body_Geo_EMB) {
-        state = Astronomy.GeoEmbState(time);
-    } else if (body == Astronomy.Body.Earth) {
-        state = new Astronomy.StateVector(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, time);
-    } else {
-        throw `JS TopoStateFunction: unsupported body ${body}`;
+class TopoStateFunc {
+    constructor(body) {
+        this.body = body;
     }
 
-    state.x  -= observer_state.x;
-    state.y  -= observer_state.y;
-    state.z  -= observer_state.z;
-    state.vx -= observer_state.vx;
-    state.vy -= observer_state.vy;
-    state.vz -= observer_state.vz;
+    Eval(time) {
+        const observer = new Astronomy.Observer(30.0, -80.0, 1000.0);
 
-    return state;
+        let observer_state = Astronomy.ObserverState(time, observer, false);
+        let state;
+        if (this.body == Body_Geo_EMB) {
+            state = Astronomy.GeoEmbState(time);
+        } else if (this.body == Astronomy.Body.Earth) {
+            state = new Astronomy.StateVector(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, time);
+        } else {
+            throw `JS TopoStateFunction: unsupported body ${this.body}`;
+        }
+
+        state.x  -= observer_state.x;
+        state.y  -= observer_state.y;
+        state.z  -= observer_state.z;
+        state.vx -= observer_state.vx;
+        state.vy -= observer_state.vy;
+        state.vz -= observer_state.vz;
+
+        return state;
+    }
 }
 
-
 function TopoStateTest() {
-    if (VerifyStateBody(TopoStateFunc, Astronomy.Body.Earth,  "topostate/Earth_N30_W80_1000m.txt",  2.108e-04, 2.430e-04)) return 1;
-    if (VerifyStateBody(TopoStateFunc, Body_Geo_EMB,          "topostate/EMB_N30_W80_1000m.txt",    7.195e-04, 2.497e-04)) return 1;
+    if (VerifyStateBody(new TopoStateFunc(Astronomy.Body.Earth),  "topostate/Earth_N30_W80_1000m.txt",  2.108e-04, 2.430e-04)) return 1;
+    if (VerifyStateBody(new TopoStateFunc(Body_Geo_EMB),          "topostate/EMB_N30_W80_1000m.txt",    7.195e-04, 2.497e-04)) return 1;
     console.log("JS TopoStateTest: PASS");
     return 0;
 }
@@ -2643,6 +2665,43 @@ function MoonNodes() {
 }
 
 
+class LagrangeFunc {
+    constructor(point, major_body, minor_body) {
+        this.point = point;
+        this.major_body = major_body;
+        this.minor_body = minor_body;
+    }
+
+    Eval(time) {
+        return Astronomy.LagrangePoint(this.point, time, this.major_body, this.minor_body);
+    }
+}
+
+
+function VerifyStateLagrange(major_body, minor_body, point, filename, r_thresh, v_thresh) {
+    const func = new LagrangeFunc(point, major_body, minor_body);
+    return VerifyStateBody(func, filename, r_thresh, v_thresh);
+}
+
+
+function LagrangeTest() {
+    // Test Sun/EMB Lagrange points.
+    if (0 != VerifyStateLagrange(Astronomy.Body.Sun, Astronomy.Body.EMB, 1, "lagrange/semb_L1.txt",   1.33e-5, 6.13e-5)) return 1;
+    if (0 != VerifyStateLagrange(Astronomy.Body.Sun, Astronomy.Body.EMB, 2, "lagrange/semb_L2.txt",   1.33e-5, 6.13e-5)) return 1;
+    if (0 != VerifyStateLagrange(Astronomy.Body.Sun, Astronomy.Body.EMB, 4, "lagrange/semb_L4.txt",   3.75e-5, 5.28e-5)) return 1;
+    if (0 != VerifyStateLagrange(Astronomy.Body.Sun, Astronomy.Body.EMB, 5, "lagrange/semb_L5.txt",   3.75e-5, 5.28e-5)) return 1;
+
+    // Test Earth/Moon Lagrange points.
+    if (0 != VerifyStateLagrange(Astronomy.Body.Earth, Astronomy.Body.Moon, 1, "lagrange/em_L1.txt",  3.79e-5, 5.06e-5)) return 1;
+    if (0 != VerifyStateLagrange(Astronomy.Body.Earth, Astronomy.Body.Moon, 2, "lagrange/em_L2.txt",  3.79e-5, 5.06e-5)) return 1;
+    if (0 != VerifyStateLagrange(Astronomy.Body.Earth, Astronomy.Body.Moon, 4, "lagrange/em_L4.txt",  3.79e-5, 1.59e-3)) return 1;
+    if (0 != VerifyStateLagrange(Astronomy.Body.Earth, Astronomy.Body.Moon, 5, "lagrange/em_L5.txt",  3.79e-5, 1.59e-3)) return 1;
+
+    console.log("JS LagrangeTest: PASS");
+    return 0;
+}
+
+
 const UnitTests = {
     aberration:             AberrationTest,
     axis:                   AxisTest,
@@ -2654,6 +2713,7 @@ const UnitTests = {
     heliostate:             HelioStateTest,
     issue_103:              Issue103,
     jupiter_moons:          JupiterMoons,
+    lagrange:               LagrangeTest,
     libration:              LibrationTest,
     local_solar_eclipse:    LocalSolarEclipse,
     lunar_apsis:            LunarApsis,

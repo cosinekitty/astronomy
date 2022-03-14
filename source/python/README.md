@@ -1663,6 +1663,83 @@ The positions and velocities of Jupiter's 4 largest moons.
 
 ---
 
+<a name="LagrangePoint"></a>
+### LagrangePoint(point, time, major_body, minor_body)
+
+**Calculates one of the 5 Lagrange points for a pair of co-orbiting bodies.**
+
+Given a more massive "major" body and a much less massive "minor" body,
+calculates one of the five Lagrange points in relation to the minor body's
+orbit around the major body. The parameter `point` is an integer that
+selects the Lagrange point as follows:
+1 = the Lagrange point between the major body and minor body.
+2 = the Lagrange point on the far side of the minor body.
+3 = the Lagrange point on the far side of the major body.
+4 = the Lagrange point 60 degrees ahead of the minor body's orbital position.
+5 = the Lagrange point 60 degrees behind the minor body's orbital position.
+The function returns the state vector for the selected Lagrange point
+in equatorial J2000 coordinates (EQJ), with respect to the center of the
+major body.
+To calculate Sun/Earth Lagrange points, pass in `Body.Sun` for `major_body`
+and `Body.EMB` (Earth/Moon barycenter) for `minor_body`.
+For Lagrange points of the Sun and any other planet, pass in just that planet
+(e.g. `Body.Jupiter`) for `minor_body`.
+To calculate Earth/Moon Lagrange points, pass in `Body.Earth` and `Body.Moon`
+for the major and minor bodies respectively.
+In some cases, it may be more efficient to call [`LagrangePointFast`](#LagrangePointFast),
+especially when the state vectors have already been calculated, or are needed
+for some other purpose.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| `int` | `point` | An integer 1..5 that selects which of the Lagrange points to calculate. |
+| [`Time`](#Time) | `time` | The time for which the Lagrange point is to be calculated. |
+| [`Body`](#Body) | `major_body` | The more massive of the co-orbiting bodies: `Body.Sun` or `Body.Earth`. |
+| [`Body`](#Body) | `minor_body` | The less massive of the co-orbiting bodies. See main remarks. |
+
+### Returns: [`StateVector`](#StateVector)
+The position and velocity of the selected Lagrange point with respect to the major body's center.
+
+---
+
+<a name="LagrangePointFast"></a>
+### LagrangePointFast(point, major_state, major_mass, minor_state, minor_mass)
+
+**Calculates one of the 5 Lagrange points from body masses and state vectors.**
+
+Given a more massive "major" body and a much less massive "minor" body,
+calculates one of the five Lagrange points in relation to the minor body's
+orbit around the major body. The parameter `point` is an integer that
+selects the Lagrange point as follows:
+1 = the Lagrange point between the major body and minor body.
+2 = the Lagrange point on the far side of the minor body.
+3 = the Lagrange point on the far side of the major body.
+4 = the Lagrange point 60 degrees ahead of the minor body's orbital position.
+5 = the Lagrange point 60 degrees behind the minor body's orbital position.
+The caller passes in the state vector and mass for both bodies.
+The state vectors can be in any orientation and frame of reference.
+The body masses are expressed as GM products, where G = the universal
+gravitation constant and M = the body's mass. Thus the units for
+`major_mass` and `minor_mass` must be au^3/day^2.
+Use [`MassProduct`](#MassProduct) to obtain GM values for various solar system bodies.
+The function returns the state vector for the selected Lagrange point
+using the same orientation as the state vector parameters `major_state` and `minor_state`,
+and the position and velocity components are with respect to the major body's center.
+Consider calling [`LagrangePoint`](#LagrangePoint), instead of this function, for simpler usage in most cases.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| `int` | `point` | An integer 1..5 that selects which of the Lagrange points to calculate. |
+| [`StateVector`](#StateVector) | `major_state` | The state vector of the major (more massive) of the pair of bodies. |
+| `float` | `major_mass` | The mass product GM of the major body. |
+| [`StateVector`](#StateVector) | `minor_state` | The state vector of the minor (less massive) of the pair of bodies. |
+| `float` | `minor_mass` | The mass product GM of the minor body. |
+
+### Returns: [`StateVector`](#StateVector)
+The position and velocity of the selected Lagrange point with respect to the major body's center.
+
+---
+
 <a name="Libration"></a>
 ### Libration(time)
 
@@ -1685,6 +1762,28 @@ and the apparent angular diameter of the Moon `diam_deg`.
 | [`Time`](#Time) | `time` | The date and time for which to calculate the Moon's libration angles. |
 
 ### Returns: [`LibrationInfo`](#LibrationInfo)
+
+---
+
+<a name="MassProduct"></a>
+### MassProduct(body)
+
+**Returns the product of mass and universal gravitational constant of a Solar System body.**
+
+For problems involving the gravitational interactions of Solar System bodies,
+it is helpful to know the product GM, where G = the universal gravitational constant
+and M = the mass of the body. In practice, GM is known to a higher precision than
+either G or M alone, and thus using the product results in the most accurate results.
+This function returns the product GM in the units au^3/day^2.
+The values come from page 10 of a
+[JPL memorandum regarding the DE405/LE405 ephemeris](https://web.archive.org/web/20120220062549/http://iau-comm4.jpl.nasa.gov/de405iom/de405iom.pdf).
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Body`](#Body) | `body` | The body for which to find the GM product. Allowed to be the Sun, Moon, EMB (Earth/Moon Barycenter), or any planet. Any other value will cause an exception to be thrown. |
+
+### Returns: `float`
+The mass product of the given body in au^3/day^2.
 
 ---
 

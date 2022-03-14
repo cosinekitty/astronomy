@@ -38,8 +38,8 @@ char *ReadLine(char *s, int n, FILE *f, const char *filename, int lnum)
 #define PI      3.14159265358979323846
 
 #define CHECK(x)        do{if(0 != (error = (x))) goto fail;}while(0)
-#define FAIL(...)       do{fprintf(stderr, __VA_ARGS__); error = 1; goto fail;}while(0)
-#define FAILRET(...)    do{fprintf(stderr, __VA_ARGS__); return 1;}while(0)
+#define FAIL(...)       do{printf(__VA_ARGS__); error = 1; goto fail;}while(0)
+#define FAILRET(...)    do{printf(__VA_ARGS__); return 1;}while(0)
 
 static int CheckInverse(const char *aname, const char *bname, astro_rotation_t arot, astro_rotation_t brot);
 #define CHECK_INVERSE(a,b)   CHECK(CheckInverse(#a, #b, a, b))
@@ -100,6 +100,73 @@ maxdiff_column_t;
 #define NUM_J_COLUMNS       8
 #define NUM_DIFF_COLUMNS    (NUM_V_COLUMNS + NUM_S_COLUMNS + NUM_J_COLUMNS)
 
+/*-------------------------------------------------------------------------------------------------*/
+
+typedef struct
+{
+    int size;       /* number of array entries allocated */
+    int length;     /* number of array entries that contain valid state vectors */
+    astro_state_vector_t *array;
+}
+state_vector_batch_t;
+
+static state_vector_batch_t EmptyStateVectorBatch()
+{
+    state_vector_batch_t batch;
+    batch.size = 0;
+    batch.length = 0;
+    batch.array = NULL;
+    return batch;
+}
+
+static void FreeStateVectorBatch(state_vector_batch_t *batch)
+{
+    free(batch->array);
+    batch->array = NULL;
+    batch->size = 0;
+    batch->length = 0;
+}
+
+static int AppendStateVector(state_vector_batch_t *batch, astro_state_vector_t state)
+{
+    int error;
+
+    if (state.status != ASTRO_SUCCESS)
+        FAIL("AppendStateVector: attempt to append state with status = %d\n", state.status);
+
+    if (batch->array == NULL)
+    {
+        /* This is the first time appending a state vector. */
+        const int INIT_SIZE = 100;
+        batch->array = calloc((size_t)INIT_SIZE, sizeof(batch->array[0]));
+        if (batch->array == NULL)
+            FAIL("AppendStateVector: failed initial memory allocation!\n");
+        batch->size = INIT_SIZE;
+        batch->length = 0;
+    }
+    else if (batch->length == batch->size)
+    {
+        /* The buffer is full. Allocate a larger one. */
+        int longer = 2 * batch->size;
+        astro_state_vector_t *bigger = calloc((size_t)longer, sizeof(batch->array[0]));
+        if (bigger == NULL)
+            FAIL("AppendStateVector: failed to increase memory allocation!\n");
+        memcpy(bigger, batch->array, (size_t)(batch->size) * sizeof(batch->array[0]));
+        free(batch->array);
+        batch->array = bigger;
+        batch->size = longer;
+    }
+    batch->array[(batch->length)++] = state;
+    error = 0;
+fail:
+    return error;
+}
+
+static int LoadStateVectors(state_vector_batch_t *batch, const char *filename);
+
+/*-------------------------------------------------------------------------------------------------*/
+
+
 static int Test_AstroTime(void);
 static int AstroCheck(void);
 static int Diff(double tolerance, const char *a_filename, const char *b_filename);
@@ -137,6 +204,8 @@ static int Issue103(void);
 static int AberrationTest(void);
 static int BaryStateTest(void);
 static int HelioStateTest(void);
+static int LagrangeTest(void);
+static int LagrangeJplAnalysis(void);
 static int TopoStateTest(void);
 static int Twilight(void);
 static int LibrationTest(void);
@@ -171,6 +240,8 @@ static unit_test_t UnitTests[] =
     {"heliostate",              HelioStateTest},
     {"issue_103",               Issue103},
     {"jupiter_moons",           JupiterMoonsTest},
+    {"lagrange",                LagrangeTest},
+    {"lagrange_jpl",            LagrangeJplAnalysis},
     {"libration",               LibrationTest},
     {"local_solar_eclipse",     LocalSolarEclipseTest},
     {"lunar_eclipse",           LunarEclipseTest},
@@ -218,7 +289,8 @@ int main(int argc, const char *argv[])
             if (!strcmp(verb, "all"))
             {
                 for (i=0; i < NUM_UNIT_TESTS; ++i)
-                    CHECK(UnitTests[i].func());
+                    if (UnitTests[i].func())
+                        FAIL("ctest: Unit test failed: %s\n", UnitTests[i].name);
                 goto success;
             }
 
@@ -285,6 +357,8 @@ success:
 
 fail:
     Astronomy_Reset();      /* Free memory so valgrind doesn't see any leaks. */
+    fflush(stdout);
+    fflush(stderr);
     return error;
 }
 
@@ -4435,13 +4509,42 @@ static double StateVectorDiff(int relative, const double vec[3], double x, doubl
     return V(sqrt(diff_squared));
 }
 
-typedef astro_state_vector_t (* state_func_t) (astro_body_t, astro_time_t);
+struct _verify_state_context_t;
 
-typedef struct
+typedef astro_state_vector_t (* state_func_t) (struct _verify_state_context_t *, astro_body_t, astro_time_t);
+
+typedef struct _verify_state_context_t
 {
     state_func_t    func;
+
+    /* The following are used for Lagrange point testing only. */
+    astro_body_t    major;
+    int             point;      /* 1=L1, 2=L2, ..., 5=L5. */
 }
 verify_state_context_t;
+
+static double ArcCos(double x)
+{
+    if (x <= -1.0)
+        return 180.0;
+
+    if (x >= +1.0)
+        return 0.0;
+
+    return RAD2DEG * acos(x);
+}
+
+static void PrintDiagnostic(double x, double y, double z, const double ref[3])
+{
+    double calc_mag, ref_mag, angle;
+
+    calc_mag = sqrt(x*x + y*y + z*z);
+    ref_mag = sqrt(ref[0]*ref[0] + ref[1]*ref[1] + ref[2]*ref[2]);
+    angle = 60.0 * ArcCos((x*ref[0] + y*ref[1] + z*ref[2])/(calc_mag * ref_mag));
+    fprintf(stderr, "CALCULATED x = %22.16le, y = %22.16le, z = %22.16le [mag = %22.16le]\n", x, y, z, calc_mag);
+    fprintf(stderr, "REFERENCE  x = %22.16le, y = %22.16le, z = %22.16le [mag = %22.16le]\n", ref[0], ref[1], ref[2], ref_mag);
+    fprintf(stderr, "ANGLE ERROR = %0.6lf arcmin, MAG ERROR = %0.6lf\n", angle, (calc_mag-ref_mag)/ref_mag);
+}
 
 static int VerifyState(
     verify_state_context_t *context,
@@ -4460,8 +4563,9 @@ static int VerifyState(
     astro_state_vector_t state;
     double rdiff, vdiff;
 
-    state = context->func(body, time);
-    CHECK_STATUS(state);
+    state = context->func(context, body, time);
+    if (state.status != ASTRO_SUCCESS)
+        FAIL("C VerifyState(%s line %d): state function returned error %d\n", filename, lnum, state.status);
 
     rdiff = StateVectorDiff((r_thresh > 0.0), pos, state.x, state.y, state.z);
     if (rdiff > *max_rdiff)
@@ -4472,10 +4576,16 @@ static int VerifyState(
         *max_vdiff = vdiff;
 
     if (rdiff > fabs(r_thresh))
+    {
+        PrintDiagnostic(state.x, state.y, state.z, pos);
         FAIL("C VerifyState(%s line %d): EXCESSIVE position error = %0.4le\n", filename, lnum, rdiff);
+    }
 
     if (vdiff > fabs(v_thresh))
+    {
+        PrintDiagnostic(state.vx, state.vy, state.vz, vel);
         FAIL("C VerifyState(%s line %d): EXCESSIVE velocity error = %0.4le\n", filename, lnum, vdiff);
+    }
 
     error = 0;
 fail:
@@ -4585,8 +4695,10 @@ fail:
 #define BODY_GEOMOON    ((astro_body_t)(-100))
 #define BODY_GEO_EMB    ((astro_body_t)(-101))
 
-static astro_state_vector_t BaryState(astro_body_t body, astro_time_t time)
+static astro_state_vector_t BaryState(verify_state_context_t *context, astro_body_t body, astro_time_t time)
 {
+    (void)context;
+
     if (body == BODY_GEOMOON)
         return Astronomy_GeoMoonState(time);
 
@@ -4601,6 +4713,7 @@ static int BaryStateTest(void)
     int error;  /* set as a side-effect of CHECK macro */
     verify_state_context_t context;
 
+    memset(&context, 0, sizeof(context));
     context.func = BaryState;
 
     CHECK(VerifyStateBody(&context, BODY_SUN,     "barystate/Sun.txt",      -1.224e-05, -1.134e-07));
@@ -4625,12 +4738,19 @@ fail:
 
 /*-----------------------------------------------------------------------------------------------------------*/
 
+static astro_state_vector_t HelioStateFunc(verify_state_context_t *context, astro_body_t body, astro_time_t time)
+{
+    (void)context;
+    return Astronomy_HelioState(body, time);
+}
+
 static int HelioStateTest(void)
 {
     int error;  /* set as a side-effect of CHECK macro */
     verify_state_context_t context;
 
-    context.func = Astronomy_HelioState;
+    memset(&context, 0, sizeof(context));
+    context.func = HelioStateFunc;
 
     CHECK(VerifyStateBody(&context, BODY_SSB,     "heliostate/SSB.txt",     -1.209e-05, -1.125e-07));
     CHECK(VerifyStateBody(&context, BODY_MERCURY, "heliostate/Mercury.txt",  1.481e-04,  2.756e-04));
@@ -4652,10 +4772,761 @@ fail:
 
 /*-----------------------------------------------------------------------------------------------------------*/
 
-static astro_state_vector_t TopoStateFunc(astro_body_t body, astro_time_t time)
+static astro_state_vector_t LagrangeFunc(verify_state_context_t *context, astro_body_t minor_body, astro_time_t time)
+{
+    return Astronomy_LagrangePoint(
+        context->point,
+        time,
+        context->major,
+        minor_body
+    );
+}
+
+
+static int VerifyStateLagrange(
+    astro_body_t majorBody,
+    astro_body_t minorBody,
+    int point,
+    const char *filename,
+    double r_thresh,
+    double v_thresh)
+{
+    verify_state_context_t context;
+    memset(&context, 0, sizeof(context));
+    context.func = LagrangeFunc;
+    context.major = majorBody;
+    context.point = point;
+    return VerifyStateBody(&context, minorBody, filename, r_thresh, v_thresh);
+}
+
+
+static int VerifyEquilateral(
+    const char *kind,
+    astro_body_t major_body,
+    astro_body_t minor_body,
+    int point,
+    astro_time_t time,
+    double mx,
+    double my,
+    double mz,
+    double px,
+    double py,
+    double pz,
+    double *max_diff,
+    double *max_arcmin)
+{
+    int error = 0;
+    const double LENGTH_TOLERANCE = 1.0e-15;
+    const double ARCMIN_TOLERANCE = 3.0e-12;
+    double dx, dy, dz, dlength;
+    double mlength, plength, diff, dotprod;
+    double arcmin;
+    char tag[100];
+
+    snprintf(tag, sizeof(tag),
+        "C VerifyEquilateral(%s,%s,%s,L%d,tt=%0.3lf)",
+        kind,
+        Astronomy_BodyName(major_body),
+        Astronomy_BodyName(minor_body),
+        point,
+        time.tt
+    );
+
+    /* Verify minor body vector and Lagrange point vector are the same length. */
+    mlength = sqrt(mx*mx + my*my + mz*mz);
+    plength = sqrt(px*px + py*py + pz*pz);
+    diff = ABS((plength - mlength) / mlength);
+    if (diff > LENGTH_TOLERANCE)
+        FAIL("%s: FAIL mlength = %0.6le, plength = %0.6le, diff = %0.6le\n", tag, mlength, plength, diff);
+    if (diff > *max_diff)
+        *max_diff = diff;
+
+    /* Verify the third triangle leg (minor body to Lagrange point) is also the same length. */
+    dx = px - mx;
+    dy = py - my;
+    dz = pz - mz;
+    dlength = sqrt(dx*dx + dy*dy + dz*dz);
+    diff = ABS((dlength - mlength) / mlength);
+    if (diff > LENGTH_TOLERANCE)
+        FAIL("%s: FAIL mlength = %0.6le, dlength = %0.6le, diff = %0.6le\n", tag, mlength, dlength, diff);
+    if (diff > *max_diff)
+        *max_diff = diff;
+
+    /* The 3 mutual angles should all be 60 degrees. */
+    dotprod = (mx*px + my*py + mz*pz) / (mlength * plength);
+    arcmin = ABS(60.0 * (60.0 - ArcCos(dotprod)));
+    if (arcmin > ARCMIN_TOLERANCE)
+        FAIL("%s: FAIL m/p angle error = %0.6le arcmin.\n", tag, arcmin);
+    if (arcmin > *max_arcmin)
+        *max_arcmin = arcmin;
+
+    dotprod = -(mx*dx + my*dy + mz*dz) / (mlength * dlength);       /* negate because pointing opposite dirs */
+    arcmin = ABS(60.0 * (60.0 - ArcCos(dotprod)));
+    if (arcmin > ARCMIN_TOLERANCE)
+        FAIL("%s: FAIL m/d angle error = %0.6le arcmin.\n", tag, arcmin);
+    if (arcmin > *max_arcmin)
+        *max_arcmin = arcmin;
+
+    dotprod = (px*dx + py*dy + pz*dz) / (plength * dlength);       /* negate because pointing opposite dirs */
+    arcmin = ABS(60.0 * (60.0 - ArcCos(dotprod)));
+    if (arcmin > ARCMIN_TOLERANCE)
+        FAIL("%s: FAIL p/d angle error = %0.6le arcmin.\n", tag, arcmin);
+    if (arcmin > *max_arcmin)
+        *max_arcmin = arcmin;
+
+fail:
+    if (error != 0) printf("%s: returning %d\n", tag, error);
+    return error;
+}
+
+
+static int VerifyLagrangeTriangle(astro_body_t major_body, astro_body_t minor_body, int point)
+{
+    int error, count;
+    char tag[100];
+    astro_state_vector_t major_state, minor_state, point_state;
+    double major_mass, minor_mass;
+    const double tt1 = 7335.5;      /* 2020-02-01T00:00Z */
+    const double tt2 = 7425.5;      /* 2020-05-01T00:00Z */
+    const double dt = 0.125;        /* 1/8 is exactly represented in binary */
+    astro_time_t time;
+    double max_pos_diff = 0.0, max_pos_arcmin = 0.0;
+    double max_vel_diff = 0.0, max_vel_arcmin = 0.0;
+
+    snprintf(tag, sizeof(tag),
+        "C VerifyLagrangeTriangle(%s,%s,L%d)",
+        Astronomy_BodyName(major_body),
+        Astronomy_BodyName(minor_body),
+        point
+    );
+
+    if (point != 4 && point != 5)
+        FAIL("%s: Invalid Lagrange point %d\n", tag, point);
+
+    major_mass = Astronomy_MassProduct(major_body);
+    if (major_mass <= 0.0)
+        FAIL("%s: Invalid mass product for major body.\n", tag);
+
+    minor_mass = Astronomy_MassProduct(minor_body);
+    if (minor_mass <= 0.0)
+        FAIL("%s: Invalid mass product for minor body.\n", tag);
+
+    count = 0;
+    time = Astronomy_TerrestrialTime(tt1);
+    while (time.tt <= tt2)
+    {
+        ++count;
+
+        major_state = Astronomy_HelioState(major_body, time);
+        if (major_state.status != ASTRO_SUCCESS)
+            FAIL("%s: HelioState failed for major body.\n", tag);
+
+        minor_state = Astronomy_HelioState(minor_body, time);
+        if (minor_state.status != ASTRO_SUCCESS)
+            FAIL("%s: HelioState failed for minor body.\n", tag);
+
+        point_state = Astronomy_LagrangePointFast(point, major_state, major_mass, minor_state, minor_mass);
+        if (point_state.status != ASTRO_SUCCESS)
+            FAIL("%s: Astronomy_LagrangePoint returned status = %d\n", tag, point_state.status);
+
+        /* Verify the (major, minor, L4/L5) triangle is equilateral, both in position and velocity. */
+        CHECK(VerifyEquilateral(
+            "position",
+            major_body,
+            minor_body,
+            point,
+            time,
+            minor_state.x - major_state.x,
+            minor_state.y - major_state.y,
+            minor_state.z - major_state.z,
+            point_state.x,
+            point_state.y,
+            point_state.z,
+            &max_pos_diff,
+            &max_pos_arcmin
+        ));
+
+        CHECK(VerifyEquilateral(
+            "velocity",
+            major_body,
+            minor_body,
+            point,
+            time,
+            minor_state.vx - major_state.vx,
+            minor_state.vy - major_state.vy,
+            minor_state.vz - major_state.vz,
+            point_state.vx,
+            point_state.vy,
+            point_state.vz,
+            &max_vel_diff,
+            &max_vel_arcmin
+        ));
+
+        time = Astronomy_TerrestrialTime(time.tt + dt);
+    }
+
+    if (Verbose)
+    {
+        printf("%s: PASS (%d cases)\n", tag, count);
+        printf("    max_pos_diff = %0.3le, max_vel_diff = %0.3le\n", max_pos_diff, max_vel_diff);
+        printf("    max_pos_arcmin = %0.3le, max_vel_arcmin = %0.3le\n", max_pos_arcmin, max_vel_arcmin);
+    }
+    error = 0;
+fail:
+    return error;
+}
+
+
+static int VerifyGeoMoon(const char *filename)
+{
+    verify_state_context_t context;
+
+    memset(&context, 0, sizeof(context));
+    context.func = BaryState;
+    return VerifyStateBody(&context, BODY_GEOMOON, filename, 3.777e-5, 5.047e-5);
+}
+
+
+static double ErrorArcmin(
+    double ax, double ay, double az,
+    double bx, double by, double bz)
+{
+    double dx = ax - bx;
+    double dy = ay - by;
+    double dz = az - bz;
+    double error = sqrt(dx*dx + dy*dy + dz*dz);
+    double mag = sqrt(ax*ax + ay*ay + az*az);
+    return (error / mag) * (RAD2DEG * 60.0);
+}
+
+
+static int LagrangeJplGeoMoon(const char *mb_filename, const char *lp_filename, int point)
+{
+    int error, i;
+    double major_mass, minor_mass;
+    astro_state_vector_t major;
+    astro_state_vector_t m, p, q;
+    state_vector_batch_t mb = EmptyStateVectorBatch();
+    state_vector_batch_t lp = EmptyStateVectorBatch();
+    double arcmin;
+    double max_pos_arcmin = 0.0;
+    double max_vel_arcmin = 0.0;
+
+    /* The major body is the Earth, and we do everything geocentrically. */
+    major.x = major.y = major.z = 0.0;
+    major.vx = major.vy = major.vz = 0.0;
+    memset(&major.t, 0, sizeof(major.t));
+    major.status = ASTRO_SUCCESS;
+
+    major_mass = Astronomy_MassProduct(BODY_EARTH);
+    if (major_mass <= 0.0)
+        FAIL("LagrangeJplGeoMoon: cannot find Earth mass\n");
+
+    minor_mass = Astronomy_MassProduct(BODY_MOON);
+    if (minor_mass <= 0.0)
+        FAIL("LagrangeJplGeoMoon: cannot find Moon mass\n");
+
+    /* Use state vectors provided by JPL to calculate Lagrange points. */
+    /* Compare calculated Lagrange points against JPL Lagrange points. */
+
+    CHECK(LoadStateVectors(&mb, mb_filename));
+    CHECK(LoadStateVectors(&lp, lp_filename));
+    if (mb.length != lp.length)
+        FAIL("C LagrangeJplGeoMoon: %s has %d states, but %s has %d\n", mb_filename, mb.length, lp_filename, lp.length);
+
+    for (i = 0; i < mb.length; ++i)
+    {
+        m = mb.array[i];
+        p = lp.array[i];
+        if (m.t.tt != p.t.tt)
+            FAIL("C LagrangeJplGeoMoon(%s): mismatching time: %0.16lf != %0.16lf.\n", lp_filename, m.t.tt, p.t.tt);
+
+        major.t = m.t;
+        q = Astronomy_LagrangePointFast(point, major, major_mass, m, minor_mass);
+        if (q.status != ASTRO_SUCCESS)
+            FAIL("C LagrangeJplGeoMoon(%s): Astronomy_LagrangePoint returned status %d.\n", lp_filename, q.status);
+
+        arcmin = ErrorArcmin(p.x, p.y, p.z, q.x, q.y, q.z);
+        if (arcmin > max_pos_arcmin)
+            max_pos_arcmin = arcmin;
+        if (arcmin > 4.9e-5)
+            FAIL("C LagrangeJplGeoMoon(%s, %d): EXCESSIVE position error = %0.6lf arcmin.\n", lp_filename, i, arcmin);
+
+        arcmin = ErrorArcmin(p.vx, p.vy, p.vz, q.vx, q.vy, q.vz);
+        if (arcmin > max_vel_arcmin)
+            max_vel_arcmin = arcmin;
+        if (arcmin > 5.45)      /* !!! REPORT TO JPL !!! */
+            FAIL("C LagrangeJplGeoMoon(%s, %d): EXCESSIVE velocity error = %0.6lf arcmin.\n", lp_filename, i, arcmin);
+    }
+
+    DEBUG("C LagrangeJplGeoMoon(%s): PASS: %d cases, max pos arcmin = %0.16lf, max vel arcmin = %0.16lf\n", lp_filename, mb.length, max_pos_arcmin, max_vel_arcmin);
+fail:
+    FreeStateVectorBatch(&mb);
+    FreeStateVectorBatch(&lp);
+    return error;
+}
+
+
+static int LagrangeTest(void)
+{
+    int error;  /* set as a side-effect of CHECK macro */
+
+    /* Before verifying against JPL values, do self-consistency checks for L4/L5. */
+    CHECK(VerifyLagrangeTriangle(BODY_EARTH, BODY_MOON, 4));
+    CHECK(VerifyLagrangeTriangle(BODY_EARTH, BODY_MOON, 5));
+
+    /* Make sure our geocentric moon calculations match JPL's. */
+    CHECK(VerifyGeoMoon("lagrange/geo_moon.txt"));
+
+    /* Try feeding JPL states into Astronomy_LagrangePoint(). */
+    CHECK(LagrangeJplGeoMoon("lagrange/geo_moon.txt", "lagrange/em_L4.txt", 4));
+    CHECK(LagrangeJplGeoMoon("lagrange/geo_moon.txt", "lagrange/em_L5.txt", 5));
+
+    /* NOTE: JPL Horizons does not provide L3 calculations. */
+
+    CHECK(VerifyStateLagrange(BODY_SUN, BODY_EMB, 1, "lagrange/semb_L1.txt",   1.33e-5, 6.13e-5));
+    CHECK(VerifyStateLagrange(BODY_SUN, BODY_EMB, 2, "lagrange/semb_L2.txt",   1.33e-5, 6.13e-5));
+    CHECK(VerifyStateLagrange(BODY_SUN, BODY_EMB, 4, "lagrange/semb_L4.txt",   3.75e-5, 5.28e-5));
+    CHECK(VerifyStateLagrange(BODY_SUN, BODY_EMB, 5, "lagrange/semb_L5.txt",   3.75e-5, 5.28e-5));
+
+    CHECK(VerifyStateLagrange(BODY_EARTH, BODY_MOON, 1, "lagrange/em_L1.txt",  3.79e-5, 5.06e-5));
+    CHECK(VerifyStateLagrange(BODY_EARTH, BODY_MOON, 2, "lagrange/em_L2.txt",  3.79e-5, 5.06e-5));
+    CHECK(VerifyStateLagrange(BODY_EARTH, BODY_MOON, 4, "lagrange/em_L4.txt",  3.79e-5, 1.59e-3));
+    CHECK(VerifyStateLagrange(BODY_EARTH, BODY_MOON, 5, "lagrange/em_L5.txt",  3.79e-5, 1.59e-3));
+
+    printf("C LagrangeTest: PASS\n");
+fail:
+    return error;
+}
+
+/*-----------------------------------------------------------------------------------------------------------*/
+
+static int LoadStateVectors(
+    state_vector_batch_t *batch,
+    const char *filename)
+{
+    int error, lnum, nscanned;
+    int found_begin = 0;
+    int found_end = 0;
+    int part = 0;
+    FILE *infile = NULL;
+    char line[100];
+    double jd;
+    astro_state_vector_t state;
+
+    memset(&state, 0, sizeof(state));
+
+    infile = fopen(filename, "rt");
+    if (infile == NULL)
+        FAIL("C LoadStateVectors: Cannot open input file: %s\n", filename);
+
+    lnum = 0;
+    while (!found_end && ReadLine(line, sizeof(line), infile, filename, lnum))
+    {
+        ++lnum;
+        if (!found_begin)
+        {
+            if (strlen(line) >= 5 && !memcmp(line, "$$SOE", 5))
+                found_begin = 1;
+        }
+        else
+        {
+            /*
+                Input comes in triplets of lines:
+
+                2444249.500000000 = A.D. 1980-Jan-11 00:00:00.0000 TDB
+                 X =-3.314860345089456E-01 Y = 8.463418210972562E-01 Z = 3.667227830514760E-01
+                 VX=-1.642704711077836E-02 VY=-5.494770742558920E-03 VZ=-2.383170237527642E-03
+
+                Track which of these 3 cases we are in using the 'part' variable...
+            */
+
+            switch (part)
+            {
+            case 0:
+                if (strlen(line) >= 5 && !memcmp(line, "$$EOE", 5))
+                {
+                    found_end = 1;
+                }
+                else
+                {
+                    nscanned = sscanf(line, "%lf", &jd);
+                    if (nscanned != 1)
+                        FAIL("C LoadStateVectors(%s line %d) ERROR reading Julian date.\n", filename, lnum);
+                    V(jd);
+
+                    /* Convert julian TT day value to astro_time_t. */
+                    state.t = Astronomy_TerrestrialTime(jd - 2451545.0);
+                }
+                break;
+
+            case 1:
+                nscanned = sscanf(line, " X =%lf Y =%lf Z =%lf", &state.x, &state.y, &state.z);
+                if (nscanned != 3)
+                    FAIL("C LoadStateVectors(%s line %d) ERROR reading position vector.\n", filename, lnum);
+                V(state.x);
+                V(state.y);
+                V(state.z);
+                break;
+
+            case 2:
+                nscanned = sscanf(line, " VX=%lf VY=%lf VZ=%lf", &state.vx, &state.vy, &state.vz);
+                if (nscanned != 3)
+                    FAIL("C LoadStateVectors(%s line %d) ERROR reading velocity vector.\n", filename, lnum);
+                V(state.vx);
+                V(state.vy);
+                V(state.vz);
+                state.status = ASTRO_SUCCESS;
+                CHECK(AppendStateVector(batch, state));
+                break;
+
+            default:
+                FAIL("C LoadStateVectors: INTERNAL ERROR : part=%d\n", part);
+            }
+
+            part = (part + 1) % 3;
+        }
+    }
+
+    error = 0;
+fail:
+    if (infile != NULL) fclose(infile);
+    return error;
+}
+
+
+static astro_vector_t CrossProduct(astro_vector_t a, astro_vector_t b)
+{
+    astro_vector_t c;
+
+    c.status = ASTRO_SUCCESS;
+    c.t = a.t;
+    c.x = a.y*b.z - a.z*b.y;
+    c.y = a.z*b.x - a.x*b.z;
+    c.z = a.x*b.y - a.y*b.x;
+
+    return c;
+}
+
+
+static int LagrangeJplAnalyzeFiles(
+    const char *mb_filename,        /* filename containing minor body state vectors relative to major body */
+    const char *lp_filename,        /* filename containing Lagrange point state vectors relative to major body */
+    int point)                      /* Lagrange point 1..5 */
+{
+    int error, i;
+    state_vector_batch_t mb = EmptyStateVectorBatch();
+    state_vector_batch_t lp = EmptyStateVectorBatch();
+    double pos_mag_ratio, vel_mag_ratio, angle;
+    double pos_dev, vel_dev, angle_dev;
+    double dr, dv, da;
+    double m_mag, p_mag;
+    astro_state_vector_t m, p;
+
+    /*
+        [Don Cross - 2022-02-12]
+        I am trying to understand how JPL Horizons calculates L4 and L5.
+        So I generated data for heliocentric EMB state vectors
+        and geocentric Moon vectors. This should be enough to run statistics
+        on distance ratios, angles, and planes of alignment (normal vectors).
+
+        Quantities I would like to find means and standard deviations for:
+        1. Distance from the major and minor bodies.
+        2. Angle away from the vector from the major body toward the minor body.
+        3. (L4/L5 only) Normal vector to the plane that contains both L4/L5 vector and minor body vector.
+    */
+
+    CHECK(LoadStateVectors(&mb, mb_filename));
+    CHECK(LoadStateVectors(&lp, lp_filename));
+    if (mb.length != lp.length)
+        FAIL("C LagrangeJplAnalyzeFiles: %d state vectors in %s, but %d in %s\n", mb.length, mb_filename, lp.length, lp_filename);
+
+    if (mb.length < 10)
+        FAIL("C LagrangeJplAnalyzeFiles(%s): %d state vectors is not enough for statistical analysis.\n", mb_filename, mb.length);
+
+    /* Calculate mean values. */
+    angle = pos_mag_ratio = vel_mag_ratio = 0.0;
+    for (i = 0; i < mb.length; ++i)
+    {
+        m = mb.array[i];
+        p = lp.array[i];
+
+        /* Sanity check that the time offsets match between the two files. */
+        if (m.t.tt != p.t.tt)
+            FAIL("C LagrangeJplAnalyzeFiles(%d, %s): time mismatch", i, lp_filename);
+
+        m_mag = sqrt(m.x*m.x + m.y*m.y + m.z*m.z);
+        p_mag = sqrt(p.x*p.x + p.y*p.y + p.z*p.z);
+        pos_mag_ratio += p_mag/m_mag;
+        vel_mag_ratio += sqrt((p.vx*p.vx + p.vy*p.vy + p.vz*p.vz) / (m.vx*m.vx + m.vy*m.vy + m.vz*m.vz));
+        angle += ArcCos((m.x*p.x + m.y*p.y + m.z*p.z) / (m_mag * p_mag));
+    }
+    pos_mag_ratio /= mb.length;
+    vel_mag_ratio /= mb.length;
+    angle /= mb.length;
+
+    /* Calculate standard deviations. */
+    pos_dev = vel_dev = angle_dev = 0.0;
+    for (i = 0; i < mb.length; ++i)
+    {
+        m = mb.array[i];
+        p = lp.array[i];
+        m_mag = sqrt(m.x*m.x + m.y*m.y + m.z*m.z);
+        p_mag = sqrt(p.x*p.x + p.y*p.y + p.z*p.z);
+        dr = pos_mag_ratio - p_mag/m_mag;
+        dv = vel_mag_ratio - sqrt((p.vx*p.vx + p.vy*p.vy + p.vz*p.vz) / (m.vx*m.vx + m.vy*m.vy + m.vz*m.vz));
+        da = angle - ArcCos((m.x*p.x + m.y*p.y + m.z*p.z) / (m_mag * p_mag));
+        pos_dev += (dr * dr);
+        vel_dev += (dv * dv);
+        angle_dev += (da * da);
+    }
+    pos_dev = sqrt(pos_dev / mb.length);
+    vel_dev = sqrt(vel_dev / mb.length);
+    angle_dev = sqrt(angle_dev / mb.length);
+
+    printf("C LagrangeJplAnalyzeFiles(%s): %d samples\n", lp_filename, mb.length);
+    printf("    mag [mean = %0.8lf, dev = %0.8lf]; vel [mean = %0.8lf, dev = %0.8lf]\n",
+        pos_mag_ratio, pos_dev,
+        vel_mag_ratio, vel_dev);
+    printf("    angle [mean = %0.8lf, dev = %0.8lf]\n",
+        angle, angle_dev);
+
+    /* Special case for L4, L5: try to understand the instantaneous co-orbital plane. */
+    if (point == 4 || point == 5)
+    {
+        double max_pole_diff = 0.0;
+        astro_angle_result_t pole_diff;
+        double v_mag;
+        astro_vector_t m_unit, p_unit, mp_norm;
+        astro_vector_t v_unit, mv_norm;
+        m_unit.status = p_unit.status = v_unit.status = ASTRO_SUCCESS;
+
+        for (i = 0; i < mb.length; ++i)
+        {
+            m = mb.array[i];
+            p = lp.array[i];
+
+            m_mag = sqrt(m.x*m.x + m.y*m.y + m.z*m.z);
+            m_unit.x = m.x / m_mag;
+            m_unit.y = m.y / m_mag;
+            m_unit.z = m.z / m_mag;
+            m_unit.t = m.t;
+
+            p_mag = sqrt(p.x*p.x + p.y*p.y + p.z*p.z);
+            p_unit.x = p.x / p_mag;
+            p_unit.y = p.y / p_mag;
+            p_unit.z = p.z / p_mag;
+            p_unit.t = p.t;
+
+            v_mag = sqrt(m.vx*m.vx + m.vy*m.vy + m.vz*m.vz);
+            v_unit.x = m.vx / v_mag;
+            v_unit.y = m.vy / v_mag;
+            v_unit.z = m.vz / v_mag;
+            v_unit.t = m.t;
+
+            if (point == 4)
+                mp_norm = CrossProduct(m_unit, p_unit);
+            else
+                mp_norm = CrossProduct(p_unit, m_unit);
+
+            mv_norm = CrossProduct(m_unit, v_unit);
+            pole_diff = Astronomy_AngleBetween(mp_norm, mv_norm);
+            CHECK_STATUS(pole_diff);
+            if (pole_diff.angle > max_pole_diff)
+                max_pole_diff = pole_diff.angle;
+        }
+        printf("    max L%d pole diff angle = %0.6lf degrees.\n", point, max_pole_diff);
+    }
+
+    /* Special case for L4, L5: confirm velocity vector would leave distances as an equilateral triangle. */
+    if (point == 4 || point == 5)
+    {
+        double a, b, c;      /* distances before v*dt increment */
+        double dx, dy, dz;
+        double ratio;
+        double min_ratio_before = NAN, max_ratio_before = NAN;
+        double min_ratio_after  = NAN, max_ratio_after  = NAN;
+        const double dt = 1.0;
+
+        for (i = 0; i < mb.length; ++i)
+        {
+            m = mb.array[i];
+            p = lp.array[i];
+
+            /* a = distance from major body to minor body */
+            a = sqrt(m.x*m.x + m.y*m.y + m.z*m.z);
+
+            /* b = distance from major body to L4/L5 */
+            b = sqrt(p.x*p.x + p.y*p.y + p.z*p.z);
+
+            /* c = distance from minor body to L4/L5 */
+            dx = p.x - m.x;
+            dy = p.y - m.y;
+            dz = p.z - m.z;
+            c = sqrt(dx*dx + dy*dy + dz*dz);
+
+            ratio = b / a;
+            if (i == 0)
+            {
+                min_ratio_before = max_ratio_before = ratio;
+            }
+            else
+            {
+                if (ratio < min_ratio_before)
+                    min_ratio_before = ratio;
+                if (ratio > max_ratio_before)
+                    max_ratio_before = ratio;
+            }
+
+            ratio = c / a;
+            if (ratio < min_ratio_before)
+                min_ratio_before = ratio;
+            if (ratio > max_ratio_before)
+                max_ratio_before = ratio;
+
+            ratio = c / b;
+            if (ratio < min_ratio_before)
+                min_ratio_before = ratio;
+            if (ratio > max_ratio_before)
+                max_ratio_before = ratio;
+
+            /* simulate a small movement of the body over a time period dt */
+            dx = m.x + dt*m.vx;
+            dy = m.y + dt*m.vy;
+            dz = m.z + dt*m.vz;
+            a = sqrt(dx*dx + dy*dy + dz*dz);
+
+            /* simulate straight-line movement of Lagrange point over dt */
+            dx = p.x + dt*p.vx;
+            dy = p.y + dt*p.vy;
+            dz = p.z + dt*p.vz;
+            b = sqrt(dx*dx + dy*dy + dz*dz);
+
+            /* measure extrapolated distance between minor body and Lagrange point */
+            dx -= m.x + dt*m.vx;
+            dy -= m.y + dt*m.vy;
+            dz -= m.z + dt*m.vz;
+            c = sqrt(dx*dx + dy*dy + dz*dz);
+
+            /* All 3 distances (a, b, c) should be the same. */
+
+            ratio = b / a;
+            if (i == 0)
+            {
+                min_ratio_after = max_ratio_after = ratio;
+            }
+            else
+            {
+                if (ratio < min_ratio_after)
+                    min_ratio_after = ratio;
+                if (ratio > max_ratio_after)
+                    max_ratio_after = ratio;
+            }
+
+            ratio = c / a;
+            if (ratio < min_ratio_after)
+                min_ratio_after = ratio;
+            if (ratio > max_ratio_after)
+                max_ratio_after = ratio;
+
+            ratio = c / b;
+            if (ratio < min_ratio_after)
+                min_ratio_after = ratio;
+            if (ratio > max_ratio_after)
+                max_ratio_after = ratio;
+
+            if (ABS(1.0 - min_ratio_after) > 1.0e-7)
+                FAIL("LagrangeJplAnalyzeFiles(%s): BAD min_ratio_after = %0.15lf\n", lp_filename, min_ratio_after);
+
+            if (ABS(1.0 - max_ratio_after) > 1.0e-7)
+                FAIL("LagrangeJplAnalyzeFiles(%s): BAD max_ratio_after = %0.15lf\n", lp_filename, max_ratio_after);
+        }
+
+        printf("    length ratios before: min = %0.15lf, max = %0.15lf\n", min_ratio_before, max_ratio_before);
+        printf("    length ratios after : min = %0.15lf, max = %0.15lf\n", min_ratio_after,  max_ratio_after );
+    }
+
+    /* Special case for L4/L5: confirm velocity vectors are 60 degrees apart. */
+    if (point == 4 || point == 5)
+    {
+        double speed, angle, arcmin_error;
+        double mx, my, mz;
+        double px, py, pz;
+        double min_angle = NAN;
+        double max_angle = NAN;
+
+        for (i = 0; i < mb.length; ++i)
+        {
+            m = mb.array[i];
+            p = lp.array[i];
+
+            /* Calculate unit vector in direction of the minor body's velocity. */
+            speed = sqrt(m.vx*m.vx + m.vy*m.vy + m.vz*m.vz);
+            mx = m.vx / speed;
+            my = m.vy / speed;
+            mz = m.vz / speed;
+
+            /* Calculate unit vector in the direction of the Lagrange point's velocity. */
+            speed = sqrt(p.vx*p.vx + p.vy*p.vy + p.vz*p.vz);
+            px = p.vx / speed;
+            py = p.vy / speed;
+            pz = p.vz / speed;
+
+            /* The dot product should always be very close to 0.5 (an angle of 60 degrees). */
+            angle = ArcCos(px*mx + py*my + pz*mz);
+            arcmin_error = 60.0 * ABS(angle - 60.0);
+            if (arcmin_error > 0.0026)
+                FAIL("C LagrangeJplAnalyzeFiles(%d, %s): velocity angle is out of bounds: %0.16lf (error = %0.4le arcmin)\n", i, lp_filename, angle, arcmin_error);
+
+            if (i == 0)
+            {
+                min_angle = max_angle = angle;
+            }
+            else
+            {
+                if (angle < min_angle)
+                    min_angle = angle;
+                if (angle > max_angle)
+                    max_angle = angle;
+            }
+        }
+
+        printf("    speed angles: min_angle = %0.15lf, max_angle = %0.15lf, spread = %0.4le\n", min_angle, max_angle, max_angle - min_angle);
+    }
+
+fail:
+    FreeStateVectorBatch(&mb);
+    FreeStateVectorBatch(&lp);
+    return error;
+}
+
+
+static int LagrangeJplAnalysis(void)
+{
+    int error;
+
+    CHECK(LagrangeJplAnalyzeFiles("lagrange/helio_emb.txt", "lagrange/semb_L1.txt", 1));
+    CHECK(LagrangeJplAnalyzeFiles("lagrange/helio_emb.txt", "lagrange/semb_L2.txt", 2));
+    CHECK(LagrangeJplAnalyzeFiles("lagrange/helio_emb.txt", "lagrange/semb_L4.txt", 4));
+    CHECK(LagrangeJplAnalyzeFiles("lagrange/helio_emb.txt", "lagrange/semb_L5.txt", 5));
+
+    CHECK(LagrangeJplAnalyzeFiles("lagrange/geo_moon.txt", "lagrange/em_L1.txt", 1));
+    CHECK(LagrangeJplAnalyzeFiles("lagrange/geo_moon.txt", "lagrange/em_L2.txt", 2));
+    CHECK(LagrangeJplAnalyzeFiles("lagrange/geo_moon.txt", "lagrange/em_L4.txt", 4));
+    CHECK(LagrangeJplAnalyzeFiles("lagrange/geo_moon.txt", "lagrange/em_L5.txt", 5));
+fail:
+    return error;
+}
+
+
+/*-----------------------------------------------------------------------------------------------------------*/
+
+static astro_state_vector_t TopoStateFunc(verify_state_context_t *context, astro_body_t body, astro_time_t time)
 {
     astro_observer_t        observer;
     astro_state_vector_t    observer_state, state;
+
+    (void)context;
 
     observer.latitude = 30.0;
     observer.longitude = -80.0;

@@ -47,13 +47,13 @@ The following tools are required for developers:
 - doxygen
 - xsltproc  (Follow instructions at https://www.zlatkovic.com/libxml.en.html)
 
-    Hint for 64-bit Windows: You will need to download the following archives from [here](https://www.zlatkovic.com/pub/libxml/64bit/): 
+    Hint for 64-bit Windows: You will need to download the following archives from [here](https://www.zlatkovic.com/pub/libxml/64bit/):
     - iconv-1.14-win32-x86_64.7z
     - libtool-2.4.6-win32-x86_64.7z
     - libxml2-2.9.3-win32-x86_64.7z
     - libxslt-1.1.28-win32-x86_64.7z
     - mingwrt-5.2.0-win32-x86_64.7z
-    
+
     Use [7-Zip](https://www.7-zip.org/) to expand these archives into a newly-created
     empty directory. Just unzip them all to the same place. Verify that the `bin`
     directory beneath your new directory contains `xsltproc.exe` and a bunch of DLLs.

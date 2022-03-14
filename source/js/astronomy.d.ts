@@ -80,6 +80,26 @@ export declare const GANYMEDE_RADIUS_KM = 2631.2;
  */
 export declare const CALLISTO_RADIUS_KM = 2410.3;
 /**
+ * @brief Returns the product of mass and universal gravitational constant of a Solar System body.
+ *
+ * For problems involving the gravitational interactions of Solar System bodies,
+ * it is helpful to know the product GM, where G = the universal gravitational constant
+ * and M = the mass of the body. In practice, GM is known to a higher precision than
+ * either G or M alone, and thus using the product results in the most accurate results.
+ * This function returns the product GM in the units au^3/day^2.
+ * The values come from page 10 of a
+ * [JPL memorandum regarding the DE405/LE405 ephemeris](https://web.archive.org/web/20120220062549/http://iau-comm4.jpl.nasa.gov/de405iom/de405iom.pdf).
+ *
+ * @param {Body} body
+ *      The body for which to find the GM product.
+ *      Allowed to be the Sun, Moon, EMB (Earth/Moon Barycenter), or any planet.
+ *      Any other value will cause an exception to be thrown.
+ *
+ * @returns {number}
+ *      The mass product of the given body in au^3/day^2.
+ */
+export declare function MassProduct(body: Body): number;
+/**
  * @brief Calculates the angle in degrees between two vectors.
  *
  * Given a pair of vectors, this function returns the angle in degrees
@@ -2764,3 +2784,94 @@ export declare class AxisInfo {
  * @returns {AxisInfo}
  */
 export declare function RotationAxis(body: Body, date: FlexibleDateTime): AxisInfo;
+/**
+ * @brief Calculates one of the 5 Lagrange points for a pair of co-orbiting bodies.
+ *
+ * Given a more massive "major" body and a much less massive "minor" body,
+ * calculates one of the five Lagrange points in relation to the minor body's
+ * orbit around the major body. The parameter `point` is an integer that
+ * selects the Lagrange point as follows:
+ *
+ * 1 = the Lagrange point between the major body and minor body.
+ * 2 = the Lagrange point on the far side of the minor body.
+ * 3 = the Lagrange point on the far side of the major body.
+ * 4 = the Lagrange point 60 degrees ahead of the minor body's orbital position.
+ * 5 = the Lagrange point 60 degrees behind the minor body's orbital position.
+ *
+ * The function returns the state vector for the selected Lagrange point
+ * in equatorial J2000 coordinates (EQJ), with respect to the center of the
+ * major body.
+ *
+ * To calculate Sun/Earth Lagrange points, pass in `Body.Sun` for `major_body`
+ * and `Body.EMB` (Earth/Moon barycenter) for `minor_body`.
+ * For Lagrange points of the Sun and any other planet, pass in that planet
+ * (e.g. `Body.Jupiter`) for `minor_body`.
+ * To calculate Earth/Moon Lagrange points, pass in `Body.Earth` and `Body.Moon`
+ * for the major and minor bodies respectively.
+ *
+ * In some cases, it may be more efficient to call {@link LagrangePointFast},
+ * especially when the state vectors have already been calculated, or are needed
+ * for some other purpose.
+ *
+ * @param {number} point
+ *      An integer 1..5 that selects which of the Lagrange points to calculate.
+ *
+ * @param {FlexibleDateTime} date
+ *      The time at which the Lagrange point is to be calculated.
+ *
+ * @param {Body} major_body
+ *      The more massive of the co-orbiting bodies: `Body.Sun` or `Body.Earth`.
+ *
+ * @param {Body} minor_body
+ *      The less massive of the co-orbiting bodies. See main remarks.
+ *
+ * @returns {StateVector}
+ *      The position and velocity of the selected Lagrange point with respect to the major body's center.
+ */
+export declare function LagrangePoint(point: number, date: FlexibleDateTime, major_body: Body, minor_body: Body): StateVector;
+/**
+ * @brief Calculates one of the 5 Lagrange points from body masses and state vectors.
+ *
+ * Given a more massive "major" body and a much less massive "minor" body,
+ * calculates one of the five Lagrange points in relation to the minor body's
+ * orbit around the major body. The parameter `point` is an integer that
+ * selects the Lagrange point as follows:
+ *
+ * 1 = the Lagrange point between the major body and minor body.
+ * 2 = the Lagrange point on the far side of the minor body.
+ * 3 = the Lagrange point on the far side of the major body.
+ * 4 = the Lagrange point 60 degrees ahead of the minor body's orbital position.
+ * 5 = the Lagrange point 60 degrees behind the minor body's orbital position.
+ *
+ * The caller passes in the state vector and mass for both bodies.
+ * The state vectors can be in any orientation and frame of reference.
+ * The body masses are expressed as GM products, where G = the universal
+ * gravitation constant and M = the body's mass. Thus the units for
+ * `major_mass` and `minor_mass` must be au^3/day^2.
+ * Use {@link MassProduct} to obtain GM values for various solar system bodies.
+ *
+ * The function returns the state vector for the selected Lagrange point
+ * using the same orientation as the state vector parameters `major_state` and `minor_state`,
+ * and the position and velocity components are with respect to the major body's center.
+ *
+ * Consider calling {@link LagrangePoint}, instead of this function, for simpler usage in most cases.
+ *
+ * @param {number} point
+ *      A value 1..5 that selects which of the Lagrange points to calculate.
+ *
+ * @param {StateVector} major_state
+ *      The state vector of the major (more massive) of the pair of bodies.
+ *
+ * @param {number} major_mass
+ *      The mass product GM of the major body.
+ *
+ * @param {StateVector} minor_state
+ *      The state vector of the minor (less massive) of the pair of bodies.
+ *
+ * @param {number} minor_mass
+ *      The mass product GM of the minor body.
+ *
+ * @returns {StateVector}
+ *      The position and velocity of the selected Lagrange point with respect to the major body's center.
+ */
+export declare function LagrangePointFast(point: number, major_state: StateVector, major_mass: number, minor_state: StateVector, minor_mass: number): StateVector;

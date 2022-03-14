@@ -1152,6 +1152,24 @@ astro_state_vector_t Astronomy_GeoEmbState(astro_time_t time);
 astro_libration_t Astronomy_Libration(astro_time_t time);
 astro_state_vector_t Astronomy_BaryState(astro_body_t body, astro_time_t time);
 astro_state_vector_t Astronomy_HelioState(astro_body_t body, astro_time_t time);
+
+double Astronomy_MassProduct(astro_body_t body);
+
+astro_state_vector_t Astronomy_LagrangePoint(
+    int point,
+    astro_time_t time,
+    astro_body_t major_body,
+    astro_body_t minor_body
+);
+
+astro_state_vector_t Astronomy_LagrangePointFast(
+    int point,
+    astro_state_vector_t major_state,
+    double major_mass,
+    astro_state_vector_t minor_state,
+    double minor_mass
+);
+
 astro_jupiter_moons_t Astronomy_JupiterMoons(astro_time_t time);
 
 astro_equatorial_t Astronomy_Equator(

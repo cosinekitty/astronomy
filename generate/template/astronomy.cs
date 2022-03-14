@@ -2223,10 +2223,56 @@ $ASTRO_ADDSOL()
             the products GM[i] are known extremely accurately.
         */
         private const double SUN_GM     = 0.2959122082855911e-03;
+        private const double MERCURY_GM = 0.4912547451450812e-10;
+        private const double VENUS_GM   = 0.7243452486162703e-09;
+        private const double EARTH_GM   = 0.8887692390113509e-09;
+        private const double MARS_GM    = 0.9549535105779258e-10;
         private const double JUPITER_GM = 0.2825345909524226e-06;
         private const double SATURN_GM  = 0.8459715185680659e-07;
         private const double URANUS_GM  = 0.1292024916781969e-07;
         private const double NEPTUNE_GM = 0.1524358900784276e-07;
+        private const double PLUTO_GM   = 0.2188699765425970e-11;
+
+        private const double MOON_GM = EARTH_GM / EARTH_MOON_MASS_RATIO;
+
+        /// <summary>
+        /// Returns the product of mass and universal gravitational constant of a Solar System body.
+        /// </summary>
+        /// <remarks>
+        /// For problems involving the gravitational interactions of Solar System bodies,
+        /// it is helpful to know the product GM, where G = the universal gravitational constant
+        /// and M = the mass of the body. In practice, GM is known to a higher precision than
+        /// either G or M alone, and thus using the product results in the most accurate results.
+        /// This function returns the product GM in the units au^3/day^2.
+        /// The values come from page 10 of a
+        /// [JPL memorandum regarding the DE405/LE405 ephemeris](https://web.archive.org/web/20120220062549/http://iau-comm4.jpl.nasa.gov/de405iom/de405iom.pdf).
+        /// </remarks>
+        /// <param name="body">
+        /// The body for which to find the GM product.
+        /// Allowed to be the Sun, Moon, EMB (Earth/Moon Barycenter), or any planet.
+        /// Any other value will cause an exception to be thrown.
+        /// </param>
+        /// <returns>The mass product of the given body in au^3/day^2.</returns>
+        public static double MassProduct(Body body)
+        {
+            switch (body)
+            {
+                case Body.Sun:      return SUN_GM;
+                case Body.Mercury:  return MERCURY_GM;
+                case Body.Venus:    return VENUS_GM;
+                case Body.Earth:    return EARTH_GM;
+                case Body.Moon:     return MOON_GM;
+                case Body.EMB:      return EARTH_GM + MOON_GM;
+                case Body.Mars:     return MARS_GM;
+                case Body.Jupiter:  return JUPITER_GM;
+                case Body.Saturn:   return SATURN_GM;
+                case Body.Uranus:   return URANUS_GM;
+                case Body.Neptune:  return NEPTUNE_GM;
+                case Body.Pluto:    return PLUTO_GM;
+                default:
+                    throw new InvalidBodyException(body);
+            }
+        }
 
         /// <summary>Counter used for performance testing.</summary>
         public static int CalcMoonCount;
@@ -7263,6 +7309,275 @@ $ASTRO_IAU_DATA()
             }
             // This should never happen. If it does, please report as a bug in Astronomy Engine.
             throw new Exception("Peak magnitude search failed.");
+        }
+
+        /// <summary>
+        /// Calculates one of the 5 Lagrange points for a pair of co-orbiting bodies.
+        /// </summary>
+        /// <remarks>
+        /// Given a more massive "major" body and a much less massive "minor" body,
+        /// calculates one of the five Lagrange points in relation to the minor body's
+        /// orbit around the major body. The parameter `point` is an integer that
+        /// selects the Lagrange point as follows:
+        ///
+        /// 1 = the Lagrange point between the major body and minor body.
+        /// 2 = the Lagrange point on the far side of the minor body.
+        /// 3 = the Lagrange point on the far side of the major body.
+        /// 4 = the Lagrange point 60 degrees ahead of the minor body's orbital position.
+        /// 5 = the Lagrange point 60 degrees behind the minor body's orbital position.
+        ///
+        /// The function returns the state vector for the selected Lagrange point
+        /// in equatorial J2000 coordinates (EQJ), with respect to the center of the
+        /// major body.
+        ///
+        /// To calculate Sun/Earth Lagrange points, pass in `Body.Sun` for `major_body`
+        /// and `Body.EMB` (Earth/Moon barycenter) for `minor_body`.
+        /// For Lagrange points of the Sun and any other planet, pass in just that planet
+        /// (e.g. `Body.Jupiter`) for `minor_body`.
+        /// To calculate Earth/Moon Lagrange points, pass in `Body.Earth` and `Body.Moon`
+        /// for the major and minor bodies respectively.
+        ///
+        /// In some cases, it may be more efficient to call #Astronomy.LagrangePointFast,
+        /// especially when the state vectors have already been calculated, or are needed
+        /// for some other purpose.
+        /// </remarks>
+        /// <param name="point">An integer 1..5 that selects which of the Lagrange points to calculate.</param>
+        /// <param name="time">The time for which the Lagrange point is to be calculated.</param>
+        /// <param name="major_body">The more massive of the co-orbiting bodies: `Body.Sun` or `Body.Earth`.</param>
+        /// <param name="minor_body">The less massive of the co-orbiting bodies. See main remarks.</param>
+        /// <returns>The position and velocity of the selected Lagrange point with respect to the major body's center.</returns>
+        public static StateVector LagrangePoint(
+            int point,
+            AstroTime time,
+            Body major_body,
+            Body minor_body)
+        {
+            double major_mass = MassProduct(major_body);
+            double minor_mass = MassProduct(minor_body);
+
+            StateVector major_state;
+            StateVector minor_state;
+
+            /* Calculate the state vectors for the major and minor bodies. */
+            if (major_body == Body.Earth && minor_body == Body.Moon)
+            {
+                /* Use geocentric calculations for more precision. */
+
+                /* The Earth's geocentric state is trivial. */
+                major_state.t = time;
+                major_state.x = major_state.y = major_state.z = 0.0;
+                major_state.vx = major_state.vy = major_state.vz = 0.0;
+
+                minor_state = GeoMoonState(time);
+            }
+            else
+            {
+                major_state = HelioState(major_body, time);
+                minor_state = HelioState(minor_body, time);
+            }
+
+            return LagrangePointFast(
+                point,
+                major_state,
+                major_mass,
+                minor_state,
+                minor_mass
+            );
+        }
+
+        /// <summary>
+        /// Calculates one of the 5 Lagrange points from body masses and state vectors.
+        /// </summary>
+        /// <remarks>
+        /// Given a more massive "major" body and a much less massive "minor" body,
+        /// calculates one of the five Lagrange points in relation to the minor body's
+        /// orbit around the major body. The parameter `point` is an integer that
+        /// selects the Lagrange point as follows:
+        ///
+        /// 1 = the Lagrange point between the major body and minor body.
+        /// 2 = the Lagrange point on the far side of the minor body.
+        /// 3 = the Lagrange point on the far side of the major body.
+        /// 4 = the Lagrange point 60 degrees ahead of the minor body's orbital position.
+        /// 5 = the Lagrange point 60 degrees behind the minor body's orbital position.
+        ///
+        /// The caller passes in the state vector and mass for both bodies.
+        /// The state vectors can be in any orientation and frame of reference.
+        /// The body masses are expressed as GM products, where G = the universal
+        /// gravitation constant and M = the body's mass. Thus the units for
+        /// `major_mass` and `minor_mass` must be au^3/day^2.
+        /// Use #Astronomy.MassProduct to obtain GM values for various solar system bodies.
+        ///
+        /// The function returns the state vector for the selected Lagrange point
+        /// using the same orientation as the state vector parameters `major_state` and `minor_state`,
+        /// and the position and velocity components are with respect to the major body's center.
+        ///
+        /// Consider calling #Astronomy.LagrangePoint, instead of this function, for simpler usage in most cases.
+        /// </remarks>
+        /// <param name="point">An integer 1..5 that selects which of the Lagrange points to calculate.</param>
+        /// <param name="major_state">The state vector of the major (more massive) of the pair of bodies.</param>
+        /// <param name="major_mass">The mass product GM of the major body.</param>
+        /// <param name="minor_state">The state vector of the minor (less massive) of the pair of bodies.</param>
+        /// <param name="minor_mass">The mass product GM of the minor body.</param>
+        /// <returns>The position and velocity of the selected Lagrange point with respect to the major body's center.</returns>
+        public static StateVector LagrangePointFast(
+            int point,
+            StateVector major_state,
+            double major_mass,
+            StateVector minor_state,
+            double minor_mass)
+        {
+            const double cos_60 = 0.5;
+            const double sin_60 = 0.8660254037844386;   /* sqrt(3) / 2 */
+
+            if (point < 1 || point > 5)
+                throw new ArgumentException($"Invalid lagrange point {point}");
+
+            if (double.IsNaN(major_mass) || double.IsInfinity(major_mass) || major_mass <= 0.0)
+                throw new ArgumentException("Major mass must be a positive number.");
+
+            if (double.IsNaN(minor_mass) || double.IsInfinity(minor_mass) || minor_mass <= 0.0)
+                throw new ArgumentException("Minor mass must be a positive number.");
+
+            /* Find the relative position vector <dx, dy, dz>. */
+            double dx = minor_state.x - major_state.x;
+            double dy = minor_state.y - major_state.y;
+            double dz = minor_state.z - major_state.z;
+            double R2 = (dx*dx + dy*dy + dz*dz);
+
+            /* R = Total distance between the bodies. */
+            double R = Math.Sqrt(R2);
+
+            /* Find the velocity vector <vx, vy, vz>. */
+            double vx = minor_state.vx - major_state.vx;
+            double vy = minor_state.vy - major_state.vy;
+            double vz = minor_state.vz - major_state.vz;
+
+            StateVector p;
+            if (point == 4 || point == 5)
+            {
+                /*
+                    For L4 and L5, we need to find points 60 degrees away from the
+                    line connecting the two bodies and in the instantaneous orbital plane.
+                    Define the instantaneous orbital plane as the unique plane that contains
+                    both the relative position vector and the relative velocity vector.
+                */
+
+                /* Take the cross product of position and velocity to find a normal vector <nx, ny, nz>. */
+                double nx = dy*vz - dz*vy;
+                double ny = dz*vx - dx*vz;
+                double nz = dx*vy - dy*vx;
+
+                /* Take the cross product normal*position to get a tangential vector <ux, uy, uz>. */
+                double ux = ny*dz - nz*dy;
+                double uy = nz*dx - nx*dz;
+                double uz = nx*dy - ny*dx;
+
+                /* Convert the tangential direction vector to a unit vector. */
+                double U = Math.Sqrt(ux*ux + uy*uy + uz*uz);
+                ux /= U;
+                uy /= U;
+                uz /= U;
+
+                /* Convert the relative position vector into a unit vector. */
+                dx /= R;
+                dy /= R;
+                dz /= R;
+
+                /* Now we have two perpendicular unit vectors in the orbital plane: 'd' and 'u'. */
+
+                /* Create new unit vectors rotated (+/-)60 degrees from the radius/tangent directions. */
+                double vert = (point == 4) ? +sin_60 : -sin_60;
+
+                /* Rotated radial vector */
+                double Dx = cos_60*dx + vert*ux;
+                double Dy = cos_60*dy + vert*uy;
+                double Dz = cos_60*dz + vert*uz;
+
+                /* Rotated tangent vector */
+                double Ux = cos_60*ux - vert*dx;
+                double Uy = cos_60*uy - vert*dy;
+                double Uz = cos_60*uz - vert*dz;
+
+                /* Calculate L4/L5 positions relative to the major body. */
+                p.x = R * Dx;
+                p.y = R * Dy;
+                p.z = R * Dz;
+
+                /* Use dot products to find radial and tangential components of the relative velocity. */
+                double vrad = vx*dx + vy*dy + vz*dz;
+                double vtan = vx*ux + vy*uy + vz*uz;
+
+                /* Calculate L4/L5 velocities. */
+                p.vx = vrad*Dx + vtan*Ux;
+                p.vy = vrad*Dy + vtan*Uy;
+                p.vz = vrad*Dz + vtan*Uz;
+            }
+            else
+            {
+                /*
+                    Calculate the distances of each body from their mutual barycenter.
+                    r1 = negative distance of major mass from barycenter (e.g. Sun to the left of barycenter)
+                    r2 = positive distance of minor mass from barycenter (e.g. Earth to the right of barycenter)
+                */
+                double r1 = -R * (minor_mass / (major_mass + minor_mass));
+                double r2 = +R * (major_mass / (major_mass + minor_mass));
+
+                /* Calculate the square of the angular orbital speed in [rad^2 / day^2]. */
+                double omega2 = (major_mass + minor_mass) / (R2*R);
+
+                /*
+                    Use Newton's Method to numerically solve for the location where
+                    outward centrifugal acceleration in the rotating frame of reference
+                    is equal to net inward gravitational acceleration.
+                    First derive a good initial guess based on approximate analysis.
+                */
+                double scale, numer1, numer2;
+                if (point == 1 || point == 2)
+                {
+                    scale = (major_mass / (major_mass + minor_mass)) * Math.Cbrt(minor_mass / (3.0 * major_mass));
+                    numer1 = -major_mass;    /* The major mass is to the left of L1 and L2 */
+                    if (point == 1)
+                    {
+                        scale = 1.0 - scale;
+                        numer2 = +minor_mass;    /* The minor mass is to the right of L1. */
+                    }
+                    else
+                    {
+                        scale = 1.0 + scale;
+                        numer2 = -minor_mass;    /* The minor mass is to the left of L2. */
+                    }
+                }
+                else /* point == 3 */
+                {
+                    scale = ((7.0/12.0)*minor_mass - major_mass) / (minor_mass + major_mass);
+                    numer1 = +major_mass;    /* major mass is to the right of L3. */
+                    numer2 = +minor_mass;    /* minor mass is to the right of L3. */
+                }
+
+                /* Iterate Newton's Method until it converges. */
+                double x = R*scale - r1;
+                double deltax;
+                do
+                {
+                    double dr1 = x - r1;
+                    double dr2 = x - r2;
+                    double accel = omega2*x + numer1/(dr1*dr1) + numer2/(dr2*dr2);
+                    double deriv = omega2 - 2*numer1/(dr1*dr1*dr1) - 2*numer2/(dr2*dr2*dr2);
+                    deltax = accel/deriv;
+                    x -= deltax;
+                }
+                while (Math.Abs(deltax/R) > 1.0e-14);
+                scale = (x - r1) / R;
+
+                p.x  = scale * dx;
+                p.y  = scale * dy;
+                p.z  = scale * dz;
+                p.vx = scale * vx;
+                p.vy = scale * vy;
+                p.vz = scale * vz;
+            }
+            p.t = major_state.t;
+            return p;
         }
 
         /// <summary>Calculates the inverse of a rotation matrix.</summary>
