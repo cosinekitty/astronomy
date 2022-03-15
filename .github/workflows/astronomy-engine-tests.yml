@@ -53,6 +53,13 @@ jobs:
         node-version: 14.x
     - name: Test Astronomy Engine
       run: cd generate && rm -f output/vsop*.txt output/*.eph output/jupiter_moons.txt && ./run && ./verify_clean
+    - name: set up JDK 1.8
+      uses: actions/setup-java@v1
+      with:
+        java-version: 1.8
+    - uses: gradle/wrapper-validation-action@v1
+    - name: Build with Gradle
+      run: cd source/kotlin && ./gradlew assemble build test dokkaHtml
 
   Astronomy-Engine-Windows:
     runs-on: windows-latest
@@ -92,3 +99,12 @@ jobs:
         del output\vsop*.txt output\*.eph output\jupiter_moons.txt
         call run.bat
         call verify_clean.bat
+    - name: set up JDK 1.8
+      uses: actions/setup-java@v1
+      with:
+        java-version: 1.8
+    - name: Build with Gradle
+      shell: cmd
+      run: |
+        cd source/kotlin
+        gradlew.bat assemble build test dokkaHtml
