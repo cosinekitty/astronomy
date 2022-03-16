@@ -1618,7 +1618,36 @@ def _era(time):        # Earth Rotation Angle
         theta += 360.0
     return theta
 
-def _sidereal_time(time):
+def SiderealTime(time):
+    """Calculates Greenwich Apparent Sidereal Time (GAST).
+
+    Given a date and time, this function calculates the rotation of the
+    Earth, represented by the equatorial angle of the Greenwich prime meridian
+    with respect to distant stars (not the Sun, which moves relative to background
+    stars by almost one degree per day).
+    This angle is called Greenwich Apparent Sidereal Time (GAST).
+    GAST is measured in sidereal hours in the half-open range [0, 24).
+    When GAST = 0, it means the prime meridian is aligned with the of-date equinox,
+    corrected at that time for precession and nutation of the Earth's axis.
+    In this context, the "equinox" is the direction in space where the Earth's
+    orbital plane (the ecliptic) intersects with the plane of the Earth's equator,
+    at the location on the Earth's orbit of the (seasonal) March equinox.
+    As the Earth rotates, GAST increases from 0 up to 24 sidereal hours,
+    then starts over at 0.
+    To convert to degrees, multiply the return value by 15.
+
+    Parameters
+    ----------
+    time : Time
+        The date and time for which to find GAST.
+        As an optimization, this function caches the sideral time value in `time`,
+        unless it has already been cached, in which case the cached value is reused.
+
+    Returns
+    -------
+    float
+        GAST expressed in sidereal hours.
+    """
     if time._st is None:
         t = time.tt / 36525.0
         eqeq = 15.0 * time._etilt().ee    # Replace with eqeq=0 to get GMST instead of GAST (if we ever need it)
@@ -1718,7 +1747,7 @@ def _terra(observer, st):
     return _terra_posvel(observer, st)[0:3]
 
 def _geo_pos(time, observer):
-    gast = _sidereal_time(time)
+    gast = SiderealTime(time)
     pos1 = _terra(observer, gast)
     pos2 = _nutation(pos1, time, _PrecessDir.Into2000)
     outpos = _precession(pos2, time, _PrecessDir.Into2000)
@@ -4646,7 +4675,7 @@ def ObserverVector(time, observer, ofdate):
         An equatorial vector from the center of the Earth to the specified location
         on (or near) the Earth's surface.
     """
-    gast = _sidereal_time(time)
+    gast = SiderealTime(time)
     ovec = _terra(observer, gast)
     if not ofdate:
         ovec = _nutation(ovec, time, _PrecessDir.Into2000)
@@ -4688,7 +4717,7 @@ def ObserverState(time, observer, ofdate):
     StateVector
         An equatorial position vector and velocity vector relative to the center of the Earth.
     """
-    gast = _sidereal_time(time)
+    gast = SiderealTime(time)
     ovec = _terra_posvel(observer, gast)
     state = StateVector(
         ovec[0], ovec[1], ovec[2],
@@ -4726,7 +4755,7 @@ def VectorObserver(vector, ofdate):
         The geographic latitude, longitude, and elevation above sea level
         that corresponds to the given equatorial vector.
     """
-    gast = _sidereal_time(vector.t)
+    gast = SiderealTime(vector.t)
     ovec = [vector.x, vector.y, vector.z]
     if not ofdate:
         ovec = _precession(ovec, vector.t, _PrecessDir.From2000)
@@ -4905,7 +4934,7 @@ def Horizon(time, observer, ra, dec, refraction):
     # Multiply sidereal hours by -15 to convert to degrees and flip eastward
     # rotation of the Earth to westward apparent movement of objects with time.
 
-    angle = -15.0 * _sidereal_time(time)
+    angle = -15.0 * SiderealTime(time)
     uz = _spin(angle, uze)
     un = _spin(angle, une)
     uw = _spin(angle, uwe)
@@ -6090,7 +6119,7 @@ def SearchHourAngle(body, observer, hourAngle, startTime):
     while True:
         iter_count += 1
         # Calculate Greenwich Apparent Sidereal Time (GAST) at the given time.
-        gast = _sidereal_time(time)
+        gast = SiderealTime(time)
         ofdate = Equator(body, time, observer, True, True)
 
         # Calculate the adjustment needed in sidereal time to bring
@@ -7225,7 +7254,7 @@ def Rotation_EQD_HOR(time, observer):
     uze = [coslat * coslon, coslat * sinlon, sinlat]
     une = [-sinlat * coslon, -sinlat * sinlon, coslat]
     uwe = [sinlon, -coslon, 0.0]
-    spin_angle = -15.0 * _sidereal_time(time)
+    spin_angle = -15.0 * SiderealTime(time)
     uz = _spin(spin_angle, uze)
     un = _spin(spin_angle, une)
     uw = _spin(spin_angle, uwe)
@@ -8454,7 +8483,7 @@ def _GeoidIntersect(shadow):
             latitude = math.degrees(math.atan(pz / proj))
 
         # Adjust longitude for Earth's rotation at the given UT.
-        gast = _sidereal_time(peak)
+        gast = SiderealTime(peak)
         longitude = math.fmod(math.degrees(math.atan2(py, px)) - (15*gast), 360.0)
         if longitude <= -180.0:
             longitude += 360.0

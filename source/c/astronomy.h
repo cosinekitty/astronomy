@@ -1142,6 +1142,7 @@ astro_status_t Astronomy_FormatTime(astro_time_t time, astro_time_format_t forma
 astro_time_t Astronomy_TimeFromDays(double ut);
 astro_time_t Astronomy_TerrestrialTime(double tt);
 astro_time_t Astronomy_AddDays(astro_time_t time, double days);
+double Astronomy_SiderealTime(astro_time_t *time);
 astro_func_result_t Astronomy_HelioDistance(astro_body_t body, astro_time_t time);
 astro_vector_t Astronomy_HelioVector(astro_body_t body, astro_time_t time);
 astro_vector_t Astronomy_GeoVector(astro_body_t body, astro_time_t time, astro_aberration_t aberration);

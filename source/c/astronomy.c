@@ -1565,7 +1565,33 @@ static double era(double ut)        /* Earth Rotation Angle */
     return theta;
 }
 
-static double sidereal_time(astro_time_t *time)
+/**
+ * @brief Calculates Greenwich Apparent Sidereal Time (GAST).
+ *
+ * Given a date and time, this function calculates the rotation of the
+ * Earth, represented by the equatorial angle of the Greenwich prime meridian
+ * with respect to distant stars (not the Sun, which moves relative to background
+ * stars by almost one degree per day).
+ * This angle is called Greenwich Apparent Sidereal Time (GAST).
+ * GAST is measured in sidereal hours in the half-open range [0, 24).
+ * When GAST = 0, it means the prime meridian is aligned with the of-date equinox,
+ * corrected at that time for precession and nutation of the Earth's axis.
+ * In this context, the "equinox" is the direction in space where the Earth's
+ * orbital plane (the ecliptic) intersects with the plane of the Earth's equator,
+ * at the location on the Earth's orbit of the (seasonal) March equinox.
+ * As the Earth rotates, GAST increases from 0 up to 24 sidereal hours,
+ * then starts over at 0.
+ * To convert to degrees, multiply the return value by 15.
+ *
+ * @param time
+ *      The date and time for which to find GAST.
+ *      The parameter is passed by address because it can be modified by the call:
+ *      As an optimization, this function caches the sideral time value in `time`,
+ *      unless it has already been cached, in which case the cached value is reused.
+ *
+ * @returns {number}
+ */
+double Astronomy_SiderealTime(astro_time_t *time)
 {
     if (isnan(time->st))
     {
@@ -1696,7 +1722,7 @@ static void geo_pos(astro_time_t *time, astro_observer_t observer, double pos[3]
     double gast;
     double pos1[3], pos2[3];
 
-    gast = sidereal_time(time);
+    gast = Astronomy_SiderealTime(time);
     terra(observer, gast, pos1, NULL);
     nutation(pos1, time, INTO_2000, pos2);
     precession(pos2, *time, INTO_2000, pos);
@@ -5051,7 +5077,7 @@ astro_vector_t Astronomy_ObserverVector(
     astro_vector_t vec;
     double gast, pos[3], temp[3];
 
-    gast = sidereal_time(time);
+    gast = Astronomy_SiderealTime(time);
     terra(observer, gast, pos, NULL);
 
     switch (equdate)
@@ -5128,7 +5154,7 @@ astro_state_vector_t Astronomy_ObserverState(
     astro_state_vector_t state;
     double gast, pos[3], vel[3], postemp[3], veltemp[3];
 
-    gast = sidereal_time(time);
+    gast = Astronomy_SiderealTime(time);
     terra(observer, gast, pos, vel);
 
     switch (equdate)
@@ -5195,7 +5221,7 @@ astro_observer_t Astronomy_VectorObserver(
     double pos1[3];
     double pos2[3];
 
-    gast = sidereal_time(&vector->t);
+    gast = Astronomy_SiderealTime(&vector->t);
     pos1[0] = vector->x;
     pos1[1] = vector->y;
     pos1[2] = vector->z;
@@ -5350,7 +5376,7 @@ astro_horizon_t Astronomy_Horizon(
         rotation of the Earth to westward apparent movement of objects with time.
     */
 
-    spin_angle = -15.0 * sidereal_time(time);
+    spin_angle = -15.0 * Astronomy_SiderealTime(time);
     spin(spin_angle, uze, uz);
     spin(spin_angle, une, un);
     spin(spin_angle, uwe, uw);
@@ -6705,7 +6731,7 @@ astro_hour_angle_t Astronomy_SearchHourAngle(
         ++iter;
 
         /* Calculate Greenwich Apparent Sidereal Time (GAST) at the given time. */
-        gast = sidereal_time(&time);
+        gast = Astronomy_SiderealTime(&time);
 
         /* Obtain equatorial coordinates of date for the body. */
         ofdate = Astronomy_Equator(body, &time, observer, EQUATOR_OF_DATE, ABERRATION);
@@ -8715,7 +8741,7 @@ astro_rotation_t Astronomy_Rotation_EQD_HOR(astro_time_t *time, astro_observer_t
     uwe[1] = -coslon;
     uwe[2] = 0.0;
 
-    spin_angle = -15.0 * sidereal_time(time);
+    spin_angle = -15.0 * Astronomy_SiderealTime(time);
     spin(spin_angle, uze, uz);
     spin(spin_angle, une, un);
     spin(spin_angle, uwe, uw);
@@ -10090,7 +10116,7 @@ static astro_global_solar_eclipse_t GeoidIntersect(shadow_t shadow)
             eclipse.latitude = RAD2DEG * atan(pz / proj);
 
         /* Adjust longitude for Earth's rotation at the given UT. */
-        gast = sidereal_time(&eclipse.peak);
+        gast = Astronomy_SiderealTime(&eclipse.peak);
         eclipse.longitude = fmod((RAD2DEG*atan2(py, px)) - (15*gast), 360.0);
         if (eclipse.longitude <= -180.0)
             eclipse.longitude += 360.0;

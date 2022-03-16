@@ -2702,6 +2702,21 @@ function LagrangeTest() {
 }
 
 
+function SiderealTimeTest() {
+    const date = new Date('2022-03-15T21:50:00Z');
+    const gast = Astronomy.SiderealTime(date);
+    const correct = 140.975528 / 15;    // https://eco.mtk.nao.ac.jp/cgi-bin/koyomi/cande/gst_en.cgi
+    const diff_ms = 3.6e+6 * abs(gast - correct);   // calculate time error in milliseconds
+    console.log(`JS SiderealTimeTest: gast=${gast.toFixed(10)}, correct=${correct.toFixed(10)}, diff=${diff_ms.toFixed(3)} milliseconds.`);
+    if (diff_ms > 0.263) {
+        console.error('JS SiderealTimeTest: FAIL - excessive error.');
+        return 1;
+    }
+    console.log('JS SiderealTimeTest: PASS');
+    return 0;
+}
+
+
 const UnitTests = {
     aberration:             AberrationTest,
     axis:                   AxisTest,
@@ -2728,6 +2743,7 @@ const UnitTests = {
     rise_set:               RiseSet,
     rotation:               Rotation,
     seasons:                Seasons,
+    sidereal:               SiderealTimeTest,
     topostate:              TopoStateTest,
     transit:                Transit,
     twilight:               TwilightTest,

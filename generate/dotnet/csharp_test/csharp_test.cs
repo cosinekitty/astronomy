@@ -55,6 +55,7 @@ namespace csharp_test
             new Test("riseset", RiseSetTest),
             new Test("rotation", RotationTest),
             new Test("seasons", SeasonsTest),
+            new Test("sidereal", SiderealTimeTest),
             new Test("transit", TransitTest),
             new Test("astro_check", AstroCheck),
             new Test("barystate", BaryStateTest),
@@ -3513,6 +3514,24 @@ namespace csharp_test
 
             Console.WriteLine("C# LagrangeTest: PASS");
             return 0;   // not yet implemented
+        }
+
+        //-----------------------------------------------------------------------------------------
+
+        static int SiderealTimeTest()
+        {
+            const double correct = 140.975528 / 15;    // https://eco.mtk.nao.ac.jp/cgi-bin/koyomi/cande/gst_en.cgi
+            var time = new AstroTime(2022, 3, 15, 21, 50, 0);
+            double gast = Astronomy.SiderealTime(time);
+            double diff = 3.6e+6 * abs(gast - correct);     // calculate error in milliseconds
+            Console.WriteLine($"C# SiderealTimeTest: gast={gast:F10}, correct={correct:F10}, diff={diff:F3} milliseconds.");
+            if (diff > 0.263)
+            {
+                Console.WriteLine("C# SiderealTimeTest: EXCESSIVE ERROR");
+                return 1;
+            }
+            Console.WriteLine("C# SiderealTimeTest: PASS");
+            return 0;
         }
 
         //-----------------------------------------------------------------------------------------
