@@ -218,7 +218,7 @@ REM ----------------------------------------------------------------------------
 
 echo.Running Kotlin tests.
 pushd ..\source\kotlin
-gradlew assemble build test dokkaHtml
+call gradlew.bat assemble build test dokkaHtml
 if errorlevel 1 (exit /b 1)
 popd
 
