@@ -15,7 +15,7 @@ and use the [source code that has already been generated for that language](../s
 ## Tool setup
 
 The following tools are required for developers:
-- gcc
+- gcc and g++
 - Node.js
 - npm (needed to install other tools like TypeScript, jsdoc2md, ...)
 - Python 3.7+
@@ -23,8 +23,12 @@ The following tools are required for developers:
 - doxygen
 - xsltproc
 - coreutils
-
-Change into the directory `hydrogen` and execute:  `npm init`.
+- Java Developer Kit (JDK), for Kotlin.
+    - Hint for quick start: install [Android Developer Studio](https://developer.android.com/studio)
+    or the Community version of [IntelliJ IDEA](https://www.jetbrains.com/idea/).
+    - Set the environment variable `JAVA_HOME` to point to the JDK that comes bundled with either.
+    - For example, if you install Android Developer Studio to `/home/yourname/android_studio`,
+    you can add the following to your `.bash_aliases` file: `export JAVA_HOME=/home/yourname/android_studio/jre`.
 
 ## Build process
 
@@ -60,6 +64,16 @@ The following tools are required for developers:
     Either copy the contents of `bin` to somewhere in your `PATH`, or add this `bin`
     directory to your `PATH`. Verify that you can run `xsltproc.exe` from the command
     prompt without any popups about missing DLLs.
+
+- Java Developer Kit (JDK), for Kotlin.
+    - Hint for quick start: install [Android Developer Studio](https://developer.android.com/studio)
+    or the Community version of [IntelliJ IDEA](https://www.jetbrains.com/idea/).
+    - Set the environment variable `JAVA_HOME` to point to the JDK that comes bundled with either.
+    - For example, if you install IntelliJ IDEA to its default location, you can set your user
+      environment variable `JAVA_HOME` to the following (adjusting for your actual version):
+
+      `C:\Program Files\JetBrains\IntelliJ IDEA Community Edition 2021.3.3\jbr`
+
 
 ## Build process
 

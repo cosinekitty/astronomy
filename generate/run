@@ -136,6 +136,7 @@ echo ""
 ./unit_test_js $1 || exit $?
 ./unit_test_c $1 || exit $?
 ./unit_test_python $1 || exit $?
+./unit_test_kotlin $1 || exit $?
 
 ./diffcalc || exit $?
 

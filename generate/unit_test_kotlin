@@ -1,0 +1,18 @@
+#!/bin/bash
+Fail()
+{
+    echo "ERROR($0): $1"
+    exit 1
+}
+
+[[ "$1" == "" || "$1" == "-v" ]] || Fail "Invalid command line options."
+
+cd ../source/kotlin || Fail "Cannot change dir to ../source/kotlin"
+./gradlew assemble build test dokkaHtml || Fail "Error building/testing Kotlin code."
+
+#for file in temp/kotlin_longitude_*.txt; do
+#    ./generate $1 check ${file} || Fail "Failed verification of file ${file}"
+#done
+
+echo "unit_test_kotlin: success"
+exit 0

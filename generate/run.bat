@@ -216,6 +216,14 @@ if errorlevel 1 (exit /b 1)
 
 REM -----------------------------------------------------------------------------------------
 
+echo.Running Kotlin tests.
+pushd ..\source\kotlin
+gradlew assemble build test dokkaHtml
+if errorlevel 1 (exit /b 1)
+popd
+
+REM -----------------------------------------------------------------------------------------
+
 call diffcalc.bat
 if errorlevel 1 (exit /b 1)
 
@@ -233,7 +241,7 @@ REM     Subroutine for downloading an external file.
 REM     Some of the files needed to generate source code are large.
 REM     These files are only needed by Astronomy Engine contributors,
 REM     not by developers who are using the published version of Astronomy Engine.
-REM     A special download process helps keep the repo size reasonable.
+REM     A special download process helps keep the repo size reasonable for most users.
 
 :Download
     setlocal
