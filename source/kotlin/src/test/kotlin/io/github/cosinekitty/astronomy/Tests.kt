@@ -6,6 +6,9 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 
 class Tests {
+
+
+    /*
     @Test
     fun `tests accumulator`() {
         val accumulator = Accumulator()
@@ -24,5 +27,6 @@ class Tests {
     fun `tests addition`(a: Int, b: Int, result: Int) {
         assertEquals(result, add(a, b))
     }
+    */
 }
 
