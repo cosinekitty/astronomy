@@ -852,6 +852,7 @@ static int GenerateSource(void)
     CHECK(GenerateCode(CODEGEN_LANGUAGE_CSHARP, "../source/csharp/astronomy.cs", "template/astronomy.cs",  "output"));
     CHECK(GenerateCode(CODEGEN_LANGUAGE_JS, "../source/js/astronomy.ts", "template/astronomy.ts", "output"));
     CHECK(GenerateCode(CODEGEN_LANGUAGE_PYTHON, "../source/python/astronomy.py", "template/astronomy.py", "output"));
+    CHECK(GenerateCode(CODEGEN_LANGUAGE_KOTLIN, "../source/kotlin/src/main/kotlin/io/github/cosinekitty/astronomy/Main.kt", "template/astronomy.kt", "output"));
 fail:
     return error;
 }
