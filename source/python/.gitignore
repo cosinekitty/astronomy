@@ -1,4 +1,3 @@
 *.pyc
 astronomy_engine.egg-info/
 dist/
-astronomy/__init__.py
