@@ -1,5 +1,7 @@
 #!/bin/bash
-rm -f dist/*
+mkdir -pv astronomy || exit $?
+rm -f dist/* astronomy/*
+cp -v astronomy.py astronomy/__init__.py || exit $?
 python3 -m build || exit $?
 python3 -m twine upload --repository astronomy-engine dist/* || exit $?
 exit 0

@@ -7,7 +7,7 @@ Fail()
 
 echo "Trimming trailing whitespace in source code."
 for file in template/astronomy.{c,cs,ts,py} ../source/c/astronomy.h; do
-    node trimspace.js ${file} || Fail "Cannot trim whitespace from file: ${file}"
+    node trimspace.js ${file} || Fail "Cannot trim whitespace from template file: ${file}"
 done
 
 echo "Generating target code."
@@ -15,7 +15,7 @@ echo "Generating target code."
 
 echo "Trimming trailing whitespace in target code."
 for file in ../source/c/astronomy.c ../source/js/astronomy.ts ../source/python/astronomy.py ../source/csharp/astronomy.cs; do
-    node trimspace.js ${file}
+    node trimspace.js ${file} || Fail "Cannot trim whitespace from target file: ${file}"
 done
 
 # C# is a special case: we have to compile the code to get its documentation.
