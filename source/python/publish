@@ -1,6 +1,5 @@
 #!/bin/bash
 rm -f dist/*
-cp -v astronomy.py astronomy/astronomy.py || exit $?
 python3 -m build || exit $?
 python3 -m twine upload --repository astronomy-engine dist/* || exit $?
 exit 0

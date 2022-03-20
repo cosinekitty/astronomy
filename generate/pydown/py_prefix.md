@@ -7,8 +7,22 @@ See the [home page](https://github.com/cosinekitty/astronomy) for more info.
 ---
 
 ## Quick Start
-To include Astronomy Engine in your own Python program, all you need is
-the file `astronomy.py` from this directory.
+To include Astronomy Engine in your own Python program,
+you can use the [astronomy-engine](https://pypi.org/project/astronomy-engine/) package:
+
+```
+pip install astronomy-engine
+```
+
+Alternatively, you can copy the file [astronomy/astronomy.py](astronomy/astronomy.py)
+into your project directory.
+
+With either approach, add the following line toward the top of your program:
+
+```python
+import astronomy
+```
+
 
 To get started quickly, here are some [examples](../../demo/python/).
 

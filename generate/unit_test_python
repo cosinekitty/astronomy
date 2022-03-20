@@ -8,7 +8,7 @@ Fail()
 [[ "$1" == "" || "$1" == "-v" ]] || Fail "Invalid command line options."
 
 python3 --version || Fail "Cannot print python version"
-python3 -m pylint  --init-hook="import sys; sys.setrecursionlimit(2000)" ../source/python/astronomy.py || Fail "pylint detected problems"
+python3 -m pylint  --init-hook="import sys; sys.setrecursionlimit(2000)" ../source/python/astronomy/astronomy.py || Fail "pylint detected problems"
 python3 test.py $1 all || Fail "Failed Python unit tests."
 for file in temp/py_longitude_*.txt; do
     ./generate $1 check ${file} || Fail "Failed verification of file ${file}"
