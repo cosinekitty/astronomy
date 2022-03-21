@@ -4469,7 +4469,32 @@ namespace CosineKitty
             return theta;
         }
 
-        private static double sidereal_time(AstroTime time)
+        /// <summary>
+        /// Calculates Greenwich Apparent Sidereal Time (GAST).
+        /// </summary>
+        /// <remarks>
+        /// Given a date and time, this function calculates the rotation of the
+        /// Earth, represented by the equatorial angle of the Greenwich prime meridian
+        /// with respect to distant stars (not the Sun, which moves relative to background
+        /// stars by almost one degree per day).
+        /// This angle is called Greenwich Apparent Sidereal Time (GAST).
+        /// GAST is measured in sidereal hours in the half-open range [0, 24).
+        /// When GAST = 0, it means the prime meridian is aligned with the of-date equinox,
+        /// corrected at that time for precession and nutation of the Earth's axis.
+        /// In this context, the "equinox" is the direction in space where the Earth's
+        /// orbital plane (the ecliptic) intersects with the plane of the Earth's equator,
+        /// at the location on the Earth's orbit of the (seasonal) March equinox.
+        /// As the Earth rotates, GAST increases from 0 up to 24 sidereal hours,
+        /// then starts over at 0.
+        /// To convert to degrees, multiply the return value by 15.
+        /// </remarks>
+        /// <param name="time">
+        /// The date and time for which to find GAST.
+        /// As an optimization, this function caches the sideral time value in `time`,
+        /// unless it has already been cached, in which case the cached value is reused.
+        /// </param>
+        /// <returns>GAST in sidereal hours.</returns>
+        public static double SiderealTime(AstroTime time)
         {
             if (double.IsNaN(time.st))
             {
@@ -4560,7 +4585,7 @@ namespace CosineKitty
 
         private static StateVector terra(Observer observer, AstroTime time)
         {
-            double st = sidereal_time(time);
+            double st = SiderealTime(time);
             double df = 1.0 - 0.003352819697896;    /* flattening of the Earth */
             double df2 = df * df;
             double phi = observer.latitude * DEG2RAD;
@@ -5593,7 +5618,7 @@ namespace CosineKitty
             AstroVector vector,
             EquatorEpoch equdate)
         {
-            double gast = sidereal_time(vector.t);
+            double gast = SiderealTime(vector.t);
             if (equdate == EquatorEpoch.J2000)
                 vector = gyration(vector, vector.t, PrecessDirection.From2000);
             return inverse_terra(vector, gast);
@@ -5710,7 +5735,7 @@ namespace CosineKitty
             // the Earth's axis to yield corrected unit vectors uz, un, uw.
             // Multiply sidereal hours by -15 to convert to degrees and flip eastward
             // rotation of the Earth to westward apparent movement of objects with time.
-            double angle = -15.0 * sidereal_time(time);
+            double angle = -15.0 * SiderealTime(time);
             AstroVector uz = spin(angle, uze);
             AstroVector un = spin(angle, une);
             AstroVector uw = spin(angle, uwe);
@@ -6630,7 +6655,7 @@ namespace CosineKitty
                 ++iter;
 
                 /* Calculate Greenwich Apparent Sidereal Time (GAST) at the given time. */
-                double gast = sidereal_time(time);
+                double gast = SiderealTime(time);
 
                 /* Obtain equatorial coordinates of date for the body. */
                 Equatorial ofdate = Equator(body, time, observer, EquatorEpoch.OfDate, Aberration.Corrected);
@@ -7710,7 +7735,7 @@ namespace CosineKitty
                     eclipse.latitude = RAD2DEG * Math.Atan(pz / proj);
 
                 /* Adjust longitude for Earth's rotation at the given UT. */
-                double gast = sidereal_time(eclipse.peak);
+                double gast = SiderealTime(eclipse.peak);
                 eclipse.longitude = ((RAD2DEG*Math.Atan2(py, px)) - (15*gast)) % 360.0;
                 if (eclipse.longitude <= -180.0)
                     eclipse.longitude += 360.0;
@@ -9609,7 +9634,7 @@ namespace CosineKitty
 
             // Multiply sidereal hours by -15 to convert to degrees and flip eastward
             // rotation of the Earth to westward apparent movement of objects with time.
-            double angle = -15.0 * sidereal_time(time);
+            double angle = -15.0 * SiderealTime(time);
             AstroVector uz = spin(angle, uze);
             AstroVector un = spin(angle, une);
             AstroVector uw = spin(angle, uwe);

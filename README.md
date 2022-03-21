@@ -1,6 +1,5 @@
 <img src="https://raw.githubusercontent.com/cosinekitty/astronomy/master/astronomy_engine_logo.png" width="640">
 
-[![build status](https://github.com/cosinekitty/astronomy/actions/workflows/astronomy-engine-tests.yml/badge.svg)](https://github.com/cosinekitty/astronomy/actions)
 [![npm package](https://img.shields.io/npm/v/astronomy-engine.svg)](https://www.npmjs.com/package/astronomy-engine)
 [![PyPI version](https://badge.fury.io/py/astronomy-engine.svg)](https://badge.fury.io/py/astronomy-engine)
 
@@ -152,7 +151,7 @@ of complexity. So I decided to create Astronomy Engine with the following engine
 
 - Support JavaScript, C, C#, and Python with the same algorithms, and verify them to produce identical results.
 - No external dependencies! The code must not require anything outside the standard library for each language.
-- Minified JavaScript code less than 120K. (The current size is <!--MINIFIED_SIZE-->108817 bytes.)
+- Minified JavaScript code less than 120K. (The current size is <!--MINIFIED_SIZE-->108883 bytes.)
 - Accuracy always within 1 arcminute of results from NOVAS.
 - It would be well documented, relatively easy to use, and support a wide variety of common use cases.
 

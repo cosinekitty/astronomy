@@ -7,15 +7,15 @@ Fail()
 
 echo "Trimming trailing whitespace in source code."
 for file in template/astronomy.{c,cs,ts,py} ../source/c/astronomy.h; do
-    node trimspace.js ${file} || Fail "Cannot trim whitespace from file: ${file}"
+    node trimspace.js ${file} || Fail "Cannot trim whitespace from template file: ${file}"
 done
 
 echo "Generating target code."
 ./generate source || Fail "Problem generating target code."
 
 echo "Trimming trailing whitespace in target code."
-for file in ../source/c/astronomy.c ../source/js/astronomy.ts ../source/python/astronomy.py ../source/csharp/astronomy.cs; do
-    node trimspace.js ${file}
+for file in ../source/c/astronomy.c ../source/js/astronomy.ts ../source/python/astronomy/astronomy.py ../source/csharp/astronomy.cs; do
+    node trimspace.js ${file} || Fail "Cannot trim whitespace from target file: ${file}"
 done
 
 # C# is a special case: we have to compile the code to get its documentation.
@@ -111,12 +111,12 @@ else
 fi
 
 echo "Generating Python documentation."
-python3 pydown/pydown.py pydown/py_prefix.md ../source/python/astronomy.py ../source/python/README.md || Fail "Error generating Markdown from Python source."
+python3 pydown/pydown.py pydown/py_prefix.md ../source/python/astronomy/astronomy.py ../source/python/README.md || Fail "Error generating Markdown from Python source."
 ./check_internal_links.py ../source/python/README.md || exit 1
 
 echo "Making redundant copies of source in demo folders."
 cp -v ../source/js/astronomy.browser.js     ../demo/browser/ || exit $?
 cp -v ../source/js/astronomy.js     ../demo/nodejs/  || exit $?
-cp -v ../source/python/astronomy.py ../demo/python/  || exit $?
+cp -v ../source/python/astronomy/astronomy.py ../demo/python/  || exit $?
 
 exit 0

@@ -25,7 +25,7 @@ if errorlevel 1 (
 )
 
 echo.Trimming trailing whitespace in target code.
-for %%f in (..\source\c\astronomy.c ..\source\js\astronomy.js ..\source\python\astronomy.py ..\source\csharp\astronomy.cs) do (
+for %%f in (..\source\c\astronomy.c ..\source\js\astronomy.js ..\source\python\astronomy\astronomy.py ..\source\csharp\astronomy.cs) do (
     node trimspace.js %%f
     if errorlevel 1 (exit /b 1)
 )
@@ -194,7 +194,7 @@ if exist disable_generate_c_docs (
 )
 
 echo.Generating Python documentation.
-pydown\pydown.py pydown\py_prefix.md ..\source\python\astronomy.py ..\source\python\README.md
+pydown\pydown.py pydown\py_prefix.md ..\source\python\astronomy\astronomy.py ..\source\python\README.md
 if errorlevel 1 (exit /b 1)
 
 echo.Making redundant copies of source in demo folders.
@@ -205,7 +205,7 @@ if errorlevel 1 (exit /b 1)
 copy ..\source\js\astronomy.js ..\demo\nodejs\
 if errorlevel 1 (exit /b 1)
 
-copy ..\source\python\astronomy.py ..\demo\python\
+copy ..\source\python\astronomy\astronomy.py ..\demo\python\
 if errorlevel 1 (exit /b 1)
 
 exit /b 0
