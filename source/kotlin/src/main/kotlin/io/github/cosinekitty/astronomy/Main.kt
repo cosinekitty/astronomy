@@ -1,5 +1,7 @@
 package io.github.cosinekitty.astronomy
 
+import java.util.*
+
 /*
     Astronomy Engine for Kotlin / JVM.
     https://github.com/cosinekitty/astronomy
@@ -174,16 +176,57 @@ class AstroTime {
     internal var st = Double.NaN
 
     private constructor(ut: Double, tt: Double) {
-        this.ut = ut;
-        this.tt = tt;
+        this.ut = ut
+        this.tt = tt
     }
 
     constructor(ut: Double) : this(ut, Astronomy.terrestrialTime(ut))
+
+    /**
+     * Creates an `AstroTime` object from a `Date` object.
+     *
+     * @param d The date and time to be converted to AstroTime format.
+     */
+    constructor(d: Date) : this((d.time - origin.time).toDouble() / MILLIS_PER_DAY)
+
+    /**
+     * Creates an `AstroTime` object from a `Calendar` object.
+     *
+     * @param d The date and time to be converted to AstroTime format.
+     */
+    constructor(d: Calendar) : this(d.time)
+
+    /**
+     * Creates an `AstroTime` object from a UTC year, month, day, hour, minute and second.
+     *
+     * @param year The UTC year value.
+     * @param month The UTC month value 1..12.
+     * @param day The UTC day of the month 1..31.
+     * @param hour The UTC hour value 0..23.
+     * @param minute The UTC minute value 0..59.
+     * @param second The UTC second value 0..59.
+     */
+    constructor(year: Int, month: Int, day: Int, hour: Int, minute: Int, second: Int) : this(
+        GregorianCalendar(TimeZone.getTimeZone("UTC")).also {
+            it.set(year, month - 1, day, hour, minute, second)
+            it.set(Calendar.MILLISECOND, 0)
+        }
+    )
+
+    companion object {
+        private val origin = GregorianCalendar(TimeZone.getTimeZone("UTC")).also {
+            it.set(2000, 0, 1, 12, 0, 0)
+            it.set(Calendar.MILLISECOND, 0)
+        }.time
+
+        private const val MILLIS_PER_DAY = 24 * 3600 * 1000
+    }
 }
 
 
 object Astronomy {
-    internal fun terrestrialTime(ut: Double): Double = ut + deltaT(ut) / 86400.0
+    private const val SECONDS_PER_DAY = 24 * 3600
+    internal fun terrestrialTime(ut: Double): Double = ut + deltaT(ut) / SECONDS_PER_DAY
 
     internal fun deltaT(ut: Double): Double {
         /*
