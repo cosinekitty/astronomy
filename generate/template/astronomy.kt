@@ -188,8 +188,7 @@ class AstroTime {
 class Astronomy {
     internal fun TerrestrialTime(ut: Double): Double = ut + DeltaT(ut) / 86400.0;
 
-    internal fun DeltaT(ut: Double): Double
-    {
+    internal fun DeltaT(ut: Double): Double {
         /*
             Fred Espenak writes about Delta-T generically here:
             https://eclipse.gsfc.nasa.gov/SEhelp/deltaT.html
@@ -208,7 +207,7 @@ class Astronomy {
         var u4: Double;
         var u5: Double;
         var u6: Double;
-        var u7 :Double;
+        var u7: Double;
         val y = 2000.0 + ((ut - 14.0) / DAYS_PER_TROPICAL_YEAR);
         if (y < -500.0) {
             u = (y - 1820.0) / 100.0;
