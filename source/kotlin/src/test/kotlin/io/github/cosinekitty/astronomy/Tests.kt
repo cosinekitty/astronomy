@@ -5,28 +5,12 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 
-class Tests {
-
-
-    /*
+class Tests 
+{
     @Test
-    fun `tests accumulator`() {
-        val accumulator = Accumulator()
-        accumulator.accumulate(2)
-        assertEquals(2, accumulator.state)
+    fun `test DeltaT calculation`()
+    {
+        val time = AstroTime(0.0);
+        assertEquals(time.tt, 0.0007389709440951036);
     }
-
-    @ParameterizedTest
-    @CsvSource(
-        value = [
-            "1, 2, 3",
-            "32, 32, 64",
-            "22, 33, 55",
-        ]
-    )
-    fun `tests addition`(a: Int, b: Int, result: Int) {
-        assertEquals(result, add(a, b))
-    }
-    */
 }
-
