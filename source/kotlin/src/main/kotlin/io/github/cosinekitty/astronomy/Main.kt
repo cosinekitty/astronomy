@@ -33,7 +33,7 @@ import kotlin.math.roundToLong
 */
 
 
-private const val DAYS_PER_TROPICAL_YEAR = 365.24217;
+private const val DAYS_PER_TROPICAL_YEAR = 365.24217
 
 
 /**
@@ -118,7 +118,7 @@ enum class Body {
 /**
  * A date and time used for astronomical calculations.
  */
-class AstroTime {
+class AstroTime private constructor(
     /**
      * UT1/UTC number of days since noon on January 1, 2000.
      *
@@ -145,7 +145,7 @@ class AstroTime {
      * Before the era of atomic timekeeping, days based on the Earth's rotation
      * were often known as *mean solar days*.
      */
-    val ut: Double
+    val ut: Double,
 
     /**
      * Terrestrial Time days since noon on January 1, 2000.
@@ -162,7 +162,7 @@ class AstroTime {
      * Historically, Terrestrial Time has also been known by the term *Ephemeris Time* (ET).
      */
     val tt: Double
-
+) {
     /*
      * For internal use only. Used to optimize Earth tilt calculations.
      */
@@ -177,11 +177,6 @@ class AstroTime {
      * For internal use only. Lazy-caches sidereal time (Earth rotation).
      */
     internal var st = Double.NaN
-
-    private constructor(ut: Double, tt: Double) {
-        this.ut = ut
-        this.tt = tt
-    }
 
     constructor(ut: Double) : this(ut, Astronomy.terrestrialTime(ut))
 
@@ -384,9 +379,9 @@ object Astronomy {
         // dt = tt - ut
         var dt = terrestrialTime(tt) - tt
         while (true) {
-            val ut = tt - dt;
+            val ut = tt - dt
             val ttCheck = terrestrialTime(ut)
-            val err = ttCheck - tt;
+            val err = ttCheck - tt
             if (err.absoluteValue < 1.0e-12) return ut
             dt += err
         }
