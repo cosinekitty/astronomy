@@ -15,23 +15,25 @@ class Tests {
     @ParameterizedTest
     @CsvSource(
         value = [
-            "2000, 1, 1, 12, 0, 0, 0, '2000-01-01 12:00:00.0 +0000'",
-            "2022, 1, 1, 12, 0, 0, 8036, '2022-01-01 12:00:00.0 +0000'",
-            "2022, 1, 1, 18, 0, 0, 8036.25, '2022-01-01 18:00:00.0 +0000'",
+            "2000, 1, 1, 12, 0, 0.0, 0.0, '2000-01-01T12:00:00.000Z'",
+            "2022, 1, 1, 12, 0, 0.0, 8036.0, '2022-01-01T12:00:00.000Z'",
+            "2022, 1, 1, 18, 0, 0.0, 8036.25, '2022-01-01T18:00:00.000Z'",
+            "1970, 12, 13, 23, 45, 12.345, -10610.510273784723, '1970-12-13T23:45:12.345Z'",
+            "2022, 1, 1, 18, 59, 59.9999, 8036.291666655093, '2022-01-01T18:59:59.999Z'",
         ]
     )
     fun `universal time calculation should match expectations`(
-        year: Int, month: Int, day: Int, hour: Int, minute: Int, second: Int, deltaT: Double, expectedToString: String
+        year: Int, month: Int, day: Int, hour: Int, minute: Int, second: Double, ut: Double, expectedToString: String
     ) {
         val time = AstroTime(year, month, day, hour, minute, second)
-        assertEquals(deltaT, time.ut)
+        assertEquals(ut, time.ut)
         assertEquals(time.toString(), expectedToString)
     }
 
     @Test
-    fun `AstroTime should be able to add days`() {
-        val time = AstroTime(2000, 1, 1, 12, 0, 0)
-        assertEquals("2000-01-02 12:00:00.0 +0000", time.addDays(1.0).toString())
+    fun `AstroTime should be able to add fractional days`() {
+        val time = AstroTime(2000, 1, 1, 12, 0, 0.0)
+        assertEquals("2000-01-02T18:00:00.000Z", time.addDays(1.25).toString())
     }
 
     @Test

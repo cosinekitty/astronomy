@@ -273,7 +273,7 @@ namespace CosineKitty
         /// <summary>
         /// Converts this `AstroTime` to ISO 8601 format, expressed in UTC with millisecond resolution.
         /// </summary>
-        /// <returns>Example: "2019-08-30T17:45:22.763".</returns>
+        /// <returns>Example: "2019-08-30T17:45:22.763Z".</returns>
         public override string ToString()
         {
             return ToUtcDateTime().ToString("yyyy-MM-ddTHH:mm:ss.fffZ");

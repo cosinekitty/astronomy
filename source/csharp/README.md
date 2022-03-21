@@ -2189,7 +2189,7 @@ an `AstroTime` value that can be passed to Astronomy Engine functions.
 
 **Converts this `AstroTime` to ISO 8601 format, expressed in UTC with millisecond resolution.**
 
-**Returns:** Example: "2019-08-30T17:45:22.763".
+**Returns:** Example: "2019-08-30T17:45:22.763Z".
 
 <a name="AstroTime.ToUtcDateTime"></a>
 ### AstroTime.ToUtcDateTime() &#8658; `DateTime`

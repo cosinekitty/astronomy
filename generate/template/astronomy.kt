@@ -1,11 +1,5 @@
 package io.github.cosinekitty.astronomy
 
-import java.text.SimpleDateFormat
-import java.util.*
-import kotlin.math.absoluteValue
-import kotlin.math.roundToLong
-import kotlin.math.sqrt
-
 /*
     Astronomy Engine for Kotlin / JVM.
     https://github.com/cosinekitty/astronomy
@@ -33,7 +27,14 @@ import kotlin.math.sqrt
     SOFTWARE.
 */
 
+import java.text.SimpleDateFormat
+import java.util.*
+import kotlin.math.absoluteValue
+import kotlin.math.roundToLong
+import kotlin.math.sqrt
 
+
+private val TimeZoneUtc = TimeZone.getTimeZone("UTC")
 private const val DAYS_PER_TROPICAL_YEAR = 365.24217
 
 
@@ -120,49 +121,49 @@ enum class Body {
  * A date and time used for astronomical calculations.
  */
 class AstroTime private constructor(
-    /**
-     * UT1/UTC number of days since noon on January 1, 2000.
-     *
-     * The floating point number of days of Universal Time since noon UTC January 1, 2000.
-     * Astronomy Engine approximates UTC and UT1 as being the same thing, although they are
-     * not exactly equivalent; UTC and UT1 can disagree by up to plus or minus 0.9 seconds.
-     * This approximation is sufficient for the accuracy requirements of Astronomy Engine.
-     *
-     * Universal Time Coordinate (UTC) is the international standard for legal and civil
-     * timekeeping and replaces the older Greenwich Mean Time (GMT) standard.
-     * UTC is kept in sync with unpredictable observed changes in the Earth's rotation
-     * by occasionally adding leap seconds as needed.
-     *
-     * UT1 is an idealized time scale based on observed rotation of the Earth, which
-     * gradually slows down in an unpredictable way over time, due to tidal drag by the Moon and Sun,
-     * large scale weather events like hurricanes, and internal seismic and convection effects.
-     * Conceptually, UT1 drifts from atomic time continuously and erratically, whereas UTC
-     * is adjusted by a scheduled whole number of leap seconds as needed.
-     *
-     * The value in `ut` is appropriate for any calculation involving the Earth's rotation,
-     * such as calculating rise/set times, culumination, and anything involving apparent
-     * sidereal time.
-     *
-     * Before the era of atomic timekeeping, days based on the Earth's rotation
-     * were often known as *mean solar days*.
-     */
-    val ut: Double,
+        /**
+         * UT1/UTC number of days since noon on January 1, 2000.
+         *
+         * The floating point number of days of Universal Time since noon UTC January 1, 2000.
+         * Astronomy Engine approximates UTC and UT1 as being the same thing, although they are
+         * not exactly equivalent; UTC and UT1 can disagree by up to plus or minus 0.9 seconds.
+         * This approximation is sufficient for the accuracy requirements of Astronomy Engine.
+         *
+         * Universal Time Coordinate (UTC) is the international standard for legal and civil
+         * timekeeping and replaces the older Greenwich Mean Time (GMT) standard.
+         * UTC is kept in sync with unpredictable observed changes in the Earth's rotation
+         * by occasionally adding leap seconds as needed.
+         *
+         * UT1 is an idealized time scale based on observed rotation of the Earth, which
+         * gradually slows down in an unpredictable way over time, due to tidal drag by the Moon and Sun,
+         * large scale weather events like hurricanes, and internal seismic and convection effects.
+         * Conceptually, UT1 drifts from atomic time continuously and erratically, whereas UTC
+         * is adjusted by a scheduled whole number of leap seconds as needed.
+         *
+         * The value in `ut` is appropriate for any calculation involving the Earth's rotation,
+         * such as calculating rise/set times, culumination, and anything involving apparent
+         * sidereal time.
+         *
+         * Before the era of atomic timekeeping, days based on the Earth's rotation
+         * were often known as *mean solar days*.
+         */
+        val ut: Double,
 
-    /**
-     * Terrestrial Time days since noon on January 1, 2000.
-     *
-     * Terrestrial Time is an atomic time scale defined as a number of days since noon on January 1, 2000.
-     * In this system, days are not based on Earth rotations, but instead by
-     * the number of elapsed [SI seconds](https://physics.nist.gov/cuu/Units/second.html)
-     * divided by 86400. Unlike `ut`, `tt` increases uniformly without adjustments
-     * for changes in the Earth's rotation.
-     *
-     * The value in `tt` is used for calculations of movements not involving the Earth's rotation,
-     * such as the orbits of planets around the Sun, or the Moon around the Earth.
-     *
-     * Historically, Terrestrial Time has also been known by the term *Ephemeris Time* (ET).
-     */
-    val tt: Double
+        /**
+         * Terrestrial Time days since noon on January 1, 2000.
+         *
+         * Terrestrial Time is an atomic time scale defined as a number of days since noon on January 1, 2000.
+         * In this system, days are not based on Earth rotations, but instead by
+         * the number of elapsed [SI seconds](https://physics.nist.gov/cuu/Units/second.html)
+         * divided by 86400. Unlike `ut`, `tt` increases uniformly without adjustments
+         * for changes in the Earth's rotation.
+         *
+         * The value in `tt` is used for calculations of movements not involving the Earth's rotation,
+         * such as the orbits of planets around the Sun, or the Moon around the Earth.
+         *
+         * Historically, Terrestrial Time has also been known by the term *Ephemeris Time* (ET).
+         */
+        val tt: Double
 ) {
     /*
      * For internal use only. Used to optimize Earth tilt calculations.
@@ -203,26 +204,27 @@ class AstroTime private constructor(
      * @param day The UTC day of the month 1..31.
      * @param hour The UTC hour value 0..23.
      * @param minute The UTC minute value 0..59.
-     * @param second The UTC second value 0..59.
+     * @param second The UTC second in the half-open range [0, 60).
      */
-    constructor(year: Int, month: Int, day: Int, hour: Int, minute: Int, second: Int) : this(
-        GregorianCalendar(TimeZone.getTimeZone("UTC")).also {
-            it.set(year, month - 1, day, hour, minute, second)
-            it.set(Calendar.MILLISECOND, 0)
-        }
+    constructor(year: Int, month: Int, day: Int, hour: Int, minute: Int, second: Double) : this(
+            GregorianCalendar(TimeZoneUtc).also {
+                val totalMillis: Int = Math.floor(second * 1000.0).toInt()
+                it.set(year, month - 1, day, hour, minute, totalMillis / 1000)
+                it.set(Calendar.MILLISECOND, totalMillis % 1000)
+            }
     )
 
     /**
-     * Converts this object to .NET `DateTime` format.
+     * Converts this object to a native `Date` equivalent.
      *
-     * @return a UTC `DateTime` object for this `AstroTime` value.
+     * @return a UTC `Date` object for this `AstroTime` value.
      */
     fun toDate(): Date = Date(origin.time + (ut * MILLIS_PER_DAY).roundToLong())
 
     /**
      * Converts this `AstroTime` to ISO 8601 format, expressed in UTC with millisecond resolution.
      *
-     * @return Example: "2019-08-30T17:45:22.763".
+     * @return Example: "2019-08-30T17:45:22.763Z".
      */
     override fun toString(): String = dateFormat.format(toDate())
 
@@ -243,15 +245,15 @@ class AstroTime private constructor(
     fun addDays(days: Double): AstroTime = AstroTime(ut + days)
 
     companion object {
-        private val origin = GregorianCalendar(TimeZone.getTimeZone("UTC")).also {
+        private val origin = GregorianCalendar(TimeZoneUtc).also {
             it.set(2000, 0, 1, 12, 0, 0)
             it.set(Calendar.MILLISECOND, 0)
         }.time
 
         private const val MILLIS_PER_DAY = 24 * 3600 * 1000
 
-        private val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S Z").also {
-            it.timeZone = TimeZone.getTimeZone("UTC")
+        private val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").also {
+            it.timeZone = TimeZoneUtc
         }
 
         /**
@@ -396,16 +398,16 @@ internal data class TerseVector(val x: Double, val y: Double, val z: Double) {
     // fun toAstroVector(time: AstroTime): AstroVector = AstroVector(x, y, z, time)
 
     operator fun plus(other: TerseVector): TerseVector =
-        TerseVector(x + other.x, y + other.y, z + other.z)
+            TerseVector(x + other.x, y + other.y, z + other.z)
 
     operator fun rem(other: TerseVector): TerseVector =
-        TerseVector(x - other.x, y - other.y, z - other.z)
+            TerseVector(x - other.x, y - other.y, z - other.z)
 
     operator fun times(other: Double): TerseVector =
-        TerseVector(x * other, y * other, z * other)
+            TerseVector(x * other, y * other, z * other)
 
     operator fun div(other: Double): TerseVector =
-        TerseVector(x / other, y / other, z / other)
+            TerseVector(x / other, y / other, z / other)
 
     val quadrature get() = x * x + y * y + z * z
     val magnitude get() = sqrt(quadrature)
