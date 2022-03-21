@@ -27,8 +27,6 @@ package io.github.cosinekitty.astronomy
     SOFTWARE.
 */
 
-private val astro = Astronomy()
-
 
 private const val DAYS_PER_TROPICAL_YEAR = 365.24217;
 
@@ -180,11 +178,11 @@ class AstroTime {
         this.tt = tt;
     }
 
-    constructor(ut: Double) : this(ut, astro.terrestrialTime(ut))
+    constructor(ut: Double) : this(ut, Astronomy.terrestrialTime(ut))
 }
 
 
-class Astronomy {
+object Astronomy {
     internal fun terrestrialTime(ut: Double): Double = ut + deltaT(ut) / 86400.0
 
     internal fun deltaT(ut: Double): Double {
