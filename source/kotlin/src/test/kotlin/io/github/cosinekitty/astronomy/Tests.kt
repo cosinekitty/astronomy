@@ -33,4 +33,15 @@ class Tests {
         val time = AstroTime(2000, 1, 1, 12, 0, 0)
         assertEquals("2000-01-02 12:00:00.0 +0000", time.addDays(1.0).toString())
     }
+
+    @Test
+    fun `TerseVector methods should work as expected`() {
+        val ones = TerseVector(1.0, 1.0, 1.0)
+        assertEquals(ones, ones + TerseVector.zero)
+        assertEquals(ones, ones + TerseVector.zero)
+        assertEquals(TerseVector(6.0, 8.0, 4.0), TerseVector(3.0, 4.0, 2.0) * 2.0)
+        assertEquals(TerseVector(-1.5, 2.0, -1.0), TerseVector(-3.0, 4.0, -2.0) / 2.0)
+        assertEquals(29.0, TerseVector(-3.0, 4.0, -2.0).quadrature)
+        assertEquals(5.744562646538029, TerseVector(-2.0, -2.0, 5.0).magnitude)
+    }
 }

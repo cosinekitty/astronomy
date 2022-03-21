@@ -4,6 +4,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.math.absoluteValue
 import kotlin.math.roundToLong
+import kotlin.math.sqrt
 
 /*
     Astronomy Engine for Kotlin / JVM.
@@ -385,5 +386,28 @@ object Astronomy {
             if (err.absoluteValue < 1.0e-12) return ut
             dt += err
         }
+    }
+}
+
+internal data class TerseVector(val x: Double, val y: Double, val z: Double) {
+    // fun toAstroVector(time: AstroTime): AstroVector = AstroVector(x, y, z, time)
+
+    operator fun plus(other: TerseVector): TerseVector =
+        TerseVector(x + other.x, y + other.y, z + other.z)
+
+    operator fun rem(other: TerseVector): TerseVector =
+        TerseVector(x - other.x, y - other.y, z - other.z)
+
+    operator fun times(other: Double): TerseVector =
+        TerseVector(x * other, y * other, z * other)
+
+    operator fun div(other: Double): TerseVector =
+        TerseVector(x / other, y / other, z / other)
+
+    val quadrature get() = x * x + y * y + z * z
+    val magnitude get() = sqrt(quadrature)
+
+    companion object {
+        val zero = TerseVector(0.0, 0.0, 0.0)
     }
 }
