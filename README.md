@@ -11,36 +11,48 @@
             <div>C</div>
             <div><img src="source/c/c_language.svg" width="100" height="100" alt="C" /></div>
         </td>
+        <td style="text-align: center;"><a href="demo/c/">Examples</a></td>
+        <td style="text-align: center;"><a href="source/c/">Code &amp; Docs</a></td>
+    </tr>
+    <tr>
         <td style="text-align: center;">
             <div>C#</div>
             <div><img src="source/csharp/csharp_language.svg" width="100" height="100" alt="C#" /></div>
         </td>
+        <td style="text-align: center;"><a href="demo/csharp/">Examples</a></td>
+        <td style="text-align: center;"><a href="source/csharp/">Code &amp; Docs</a></td>
+    </tr>
+    <tr>
         <td style="text-align: center;">
-            <div>Browser</div>
+            <div>JS (Browser)</div>
             <div><img src="source/js/javascript.svg" width="100" height="100" alt="JavaScript" /></div>
         </td>
+        <td style="text-align: center;"><a href="demo/browser/">Examples</a></td>
+        <td style="text-align: center;"><a href="source/js/">Code &amp; Docs</a></td>
+    </tr>
+    <tr>
         <td style="text-align: center;">
             <div>Node.js</div>
             <div><img src="source/js/nodejs.svg" width="100" height="100" alt="Node.js" /></div>
         </td>
+        <td style="text-align: center;"><a href="demo/nodejs/">Examples</a></td>
+        <td style="text-align: center;"><a href="source/js/">Code &amp; Docs</a></td>
+    </tr>
+    <tr>
         <td style="text-align: center;">
             <div>Python</div>
             <div><img src="source/python/python_language.svg" width="100" height="100" alt="Python" /></div>
         </td>
-    </tr>
-    <tr>
-        <td style="text-align: center;"><a href="demo/c/">Examples</a></td>
-        <td style="text-align: center;"><a href="demo/csharp/">Examples</a></td>
-        <td style="text-align: center;"><a href="demo/browser/">Examples</a></td>
-        <td style="text-align: center;"><a href="demo/nodejs/">Examples</a></td>
         <td style="text-align: center;"><a href="demo/python/">Examples</a></td>
+        <td style="text-align: center;"><a href="source/python/">Code &amp; Docs</a></td>
     </tr>
     <tr>
-        <td style="text-align: center;"><a href="source/c/">Code &amp; Docs</a></td>
-        <td style="text-align: center;"><a href="source/csharp/">Code &amp; Docs</a></td>
-        <td style="text-align: center;"><a href="source/js/">Code &amp; Docs</a></td>
-        <td style="text-align: center;"><a href="source/js/">Code &amp; Docs</a></td>
-        <td style="text-align: center;"><a href="source/python/">Code &amp; Docs</a></td>
+        <td style="text-align: center;">
+            <div>Kotlin / JVM</div>
+            <div><img src="source/kotlin/kotlin_language.svg" width="100" height="100" alt="Kotlin" /></div>
+        </td>
+        <td style="text-align: center;"><a href="demo/kotlin/">Examples</a></td>
+        <td style="text-align: center;"><a href="source/kotlin/">Code &amp; Docs</a></td>
     </tr>
 </table>
 
