@@ -27,7 +27,7 @@ package io.github.cosinekitty.astronomy
     SOFTWARE.
 */
 
-private val astro = Astronomy();
+private val astro = Astronomy()
 
 
 private const val DAYS_PER_TROPICAL_YEAR = 365.24217;
@@ -142,7 +142,7 @@ class AstroTime {
      * Before the era of atomic timekeeping, days based on the Earth's rotation
      * were often known as *mean solar days*.
      */
-    val ut: Double;
+    val ut: Double
 
     /**
      * Terrestrial Time days since noon on January 1, 2000.
@@ -158,37 +158,36 @@ class AstroTime {
      *
      * Historically, Terrestrial Time has also been known by the term *Ephemeris Time* (ET).
      */
-    val tt: Double;
+    val tt: Double
 
     /*
      * For internal use only. Used to optimize Earth tilt calculations.
      */
-    internal var psi = Double.NaN;
+    internal var psi = Double.NaN
 
     /*
      * For internal use only. Used to optimize Earth tilt calculations.
      */
-    internal var eps = Double.NaN;
+    internal var eps = Double.NaN
 
     /*
      * For internal use only. Lazy-caches sidereal time (Earth rotation).
      */
-    internal var st = Double.NaN;
+    internal var st = Double.NaN
 
     private constructor(ut: Double, tt: Double) {
         this.ut = ut;
         this.tt = tt;
     }
 
-    constructor(ut: Double) : this(ut, astro.TerrestrialTime(ut)) {
-    }
+    constructor(ut: Double) : this(ut, astro.terrestrialTime(ut))
 }
 
 
 class Astronomy {
-    internal fun TerrestrialTime(ut: Double): Double = ut + DeltaT(ut) / 86400.0;
+    internal fun terrestrialTime(ut: Double): Double = ut + deltaT(ut) / 86400.0
 
-    internal fun DeltaT(ut: Double): Double {
+    internal fun deltaT(ut: Double): Double {
         /*
             Fred Espenak writes about Delta-T generically here:
             https://eclipse.gsfc.nasa.gov/SEhelp/deltaT.html
@@ -201,84 +200,84 @@ class Astronomy {
             to the UTC Date 15-January-2000. Convert difference in days
             to mean tropical years.
         */
-        var u: Double;
-        var u2: Double;
-        var u3: Double;
-        var u4: Double;
-        var u5: Double;
-        var u6: Double;
-        var u7: Double;
-        val y = 2000.0 + ((ut - 14.0) / DAYS_PER_TROPICAL_YEAR);
+        val u: Double
+        val u2: Double
+        val u3: Double
+        val u4: Double
+        val u5: Double
+        val u6: Double
+        val u7: Double
+        val y = 2000.0 + ((ut - 14.0) / DAYS_PER_TROPICAL_YEAR)
         if (y < -500.0) {
-            u = (y - 1820.0) / 100.0;
-            return -20.0 + (32.0 * u * u);
+            u = (y - 1820.0) / 100.0
+            return -20.0 + (32.0 * u * u)
         }
         if (y < 500.0) {
-            u = y / 100.0;
-            u2 = u * u; u3 = u * u2; u4 = u2 * u2; u5 = u2 * u3; u6 = u3 * u3;
-            return 10583.6 - 1014.41 * u + 33.78311 * u2 - 5.952053 * u3 - 0.1798452 * u4 + 0.022174192 * u5 + 0.0090316521 * u6;
+            u = y / 100.0
+            u2 = u * u; u3 = u * u2; u4 = u2 * u2; u5 = u2 * u3; u6 = u3 * u3
+            return 10583.6 - 1014.41 * u + 33.78311 * u2 - 5.952053 * u3 - 0.1798452 * u4 + 0.022174192 * u5 + 0.0090316521 * u6
         }
         if (y < 1600.0) {
-            u = (y - 1000.0) / 100.0;
-            u2 = u * u; u3 = u * u2; u4 = u2 * u2; u5 = u2 * u3; u6 = u3 * u3;
-            return 1574.2 - 556.01 * u + 71.23472 * u2 + 0.319781 * u3 - 0.8503463 * u4 - 0.005050998 * u5 + 0.0083572073 * u6;
+            u = (y - 1000.0) / 100.0
+            u2 = u * u; u3 = u * u2; u4 = u2 * u2; u5 = u2 * u3; u6 = u3 * u3
+            return 1574.2 - 556.01 * u + 71.23472 * u2 + 0.319781 * u3 - 0.8503463 * u4 - 0.005050998 * u5 + 0.0083572073 * u6
         }
         if (y < 1700.0) {
-            u = y - 1600.0;
-            u2 = u * u; u3 = u * u2;
-            return 120.0 - 0.9808 * u - 0.01532 * u2 + u3 / 7129.0;
+            u = y - 1600.0
+            u2 = u * u; u3 = u * u2
+            return 120.0 - 0.9808 * u - 0.01532 * u2 + u3 / 7129.0
         }
         if (y < 1800.0) {
-            u = y - 1700.0;
-            u2 = u * u; u3 = u * u2; u4 = u2 * u2;
-            return 8.83 + 0.1603 * u - 0.0059285 * u2 + 0.00013336 * u3 - u4 / 1174000.0;
+            u = y - 1700.0
+            u2 = u * u; u3 = u * u2; u4 = u2 * u2
+            return 8.83 + 0.1603 * u - 0.0059285 * u2 + 0.00013336 * u3 - u4 / 1174000.0
         }
         if (y < 1860.0) {
-            u = y - 1800.0;
-            u2 = u * u; u3 = u * u2; u4 = u2 * u2; u5 = u2 * u3; u6 = u3 * u3; u7 = u3 * u4;
-            return 13.72 - 0.332447 * u + 0.0068612 * u2 + 0.0041116 * u3 - 0.00037436 * u4 + 0.0000121272 * u5 - 0.0000001699 * u6 + 0.000000000875 * u7;
+            u = y - 1800.0
+            u2 = u * u; u3 = u * u2; u4 = u2 * u2; u5 = u2 * u3; u6 = u3 * u3; u7 = u3 * u4
+            return 13.72 - 0.332447 * u + 0.0068612 * u2 + 0.0041116 * u3 - 0.00037436 * u4 + 0.0000121272 * u5 - 0.0000001699 * u6 + 0.000000000875 * u7
         }
         if (y < 1900.0) {
-            u = y - 1860.0;
-            u2 = u * u; u3 = u * u2; u4 = u2 * u2; u5 = u2 * u3;
-            return 7.62 + 0.5737 * u - 0.251754 * u2 + 0.01680668 * u3 - 0.0004473624 * u4 + u5 / 233174.0;
+            u = y - 1860.0
+            u2 = u * u; u3 = u * u2; u4 = u2 * u2; u5 = u2 * u3
+            return 7.62 + 0.5737 * u - 0.251754 * u2 + 0.01680668 * u3 - 0.0004473624 * u4 + u5 / 233174.0
         }
         if (y < 1920.0) {
-            u = y - 1900.0;
-            u2 = u * u; u3 = u * u2; u4 = u2 * u2;
-            return -2.79 + 1.494119 * u - 0.0598939 * u2 + 0.0061966 * u3 - 0.000197 * u4;
+            u = y - 1900.0
+            u2 = u * u; u3 = u * u2; u4 = u2 * u2
+            return -2.79 + 1.494119 * u - 0.0598939 * u2 + 0.0061966 * u3 - 0.000197 * u4
         }
         if (y < 1941.0) {
-            u = y - 1920.0;
-            u2 = u * u; u3 = u * u2;
-            return 21.20 + 0.84493 * u - 0.076100 * u2 + 0.0020936 * u3;
+            u = y - 1920.0
+            u2 = u * u; u3 = u * u2
+            return 21.20 + 0.84493 * u - 0.076100 * u2 + 0.0020936 * u3
         }
         if (y < 1961) {
-            u = y - 1950;
-            u2 = u * u; u3 = u * u2;
-            return 29.07 + 0.407 * u - u2 / 233 + u3 / 2547.0;
+            u = y - 1950
+            u2 = u * u; u3 = u * u2
+            return 29.07 + 0.407 * u - u2 / 233 + u3 / 2547.0
         }
         if (y < 1986.0) {
-            u = y - 1975.0;
-            u2 = u * u; u3 = u * u2;
-            return 45.45 + 1.067 * u - u2 / 260 - u3 / 718.0;
+            u = y - 1975.0
+            u2 = u * u; u3 = u * u2
+            return 45.45 + 1.067 * u - u2 / 260 - u3 / 718.0
         }
         if (y < 2005) {
-            u = y - 2000;
-            u2 = u * u; u3 = u * u2; u4 = u2 * u2; u5 = u2 * u3;
-            return 63.86 + 0.3345 * u - 0.060374 * u2 + 0.0017275 * u3 + 0.000651814 * u4 + 0.00002373599 * u5;
+            u = y - 2000
+            u2 = u * u; u3 = u * u2; u4 = u2 * u2; u5 = u2 * u3
+            return 63.86 + 0.3345 * u - 0.060374 * u2 + 0.0017275 * u3 + 0.000651814 * u4 + 0.00002373599 * u5
         }
         if (y < 2050.0) {
-            u = y - 2000.0;
-            return 62.92 + 0.32217 * u + 0.005589 * u * u;
+            u = y - 2000.0
+            return 62.92 + 0.32217 * u + 0.005589 * u * u
         }
         if (y < 2150.0) {
-            u = (y - 1820.0) / 100.0;
-            return -20.0 + 32.0 * u * u - 0.5628 * (2150.0 - y);
+            u = (y - 1820.0) / 100.0
+            return -20.0 + 32.0 * u * u - 0.5628 * (2150.0 - y)
         }
 
         /* all years after 2150 */
-        u = (y - 1820.0) / 100.0;
-        return -20.0 + (32.0 * u * u);
+        u = (y - 1820.0) / 100.0
+        return -20.0 + (32.0 * u * u)
     }
 }
