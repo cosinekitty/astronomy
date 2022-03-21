@@ -213,9 +213,9 @@ class AstroTime private constructor(
     )
 
     /**
-     * Converts this object to .NET `DateTime` format.
+     * Converts this object to Java `Date` object.
      *
-     * @return a UTC `DateTime` object for this `AstroTime` value.
+     * @return a UTC `Date` object for this `AstroTime` value.
      */
     fun toDate(): Date = Date(origin.time + (ut * MILLIS_PER_DAY).roundToLong())
 
@@ -250,7 +250,7 @@ class AstroTime private constructor(
 
         private const val MILLIS_PER_DAY = 24 * 3600 * 1000
 
-        private val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S Z").also {
+        private val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'").also {
             it.timeZone = TimeZone.getTimeZone("UTC")
         }
 
