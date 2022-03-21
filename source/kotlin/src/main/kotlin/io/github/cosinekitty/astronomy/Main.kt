@@ -1,7 +1,9 @@
 package io.github.cosinekitty.astronomy
 
+import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.math.absoluteValue
+import kotlin.math.roundToLong
 
 /*
     Astronomy Engine for Kotlin / JVM.
@@ -214,6 +216,20 @@ class AstroTime {
         }
     )
 
+    /**
+     * Converts this object to .NET `DateTime` format.
+     *
+     * @returns a UTC `DateTime` object for this `AstroTime` value.
+     */
+    fun toDate(): Date = Date(origin.time + (ut * MILLIS_PER_DAY).roundToLong())
+
+    /**
+     * Converts this `AstroTime` to ISO 8601 format, expressed in UTC with millisecond resolution.
+     *
+     * @returns: Example: "2019-08-30T17:45:22.763".
+     */
+    override fun toString(): String = dateFormat.format(toDate())
+
     companion object {
         private val origin = GregorianCalendar(TimeZone.getTimeZone("UTC")).also {
             it.set(2000, 0, 1, 12, 0, 0)
@@ -221,6 +237,10 @@ class AstroTime {
         }.time
 
         private const val MILLIS_PER_DAY = 24 * 3600 * 1000
+
+        private val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S Z").also {
+            it.timeZone = TimeZone.getTimeZone("UTC")
+        }
 
         /**
          * Creates an `AstroTime` object from a Terrestrial Time day value.

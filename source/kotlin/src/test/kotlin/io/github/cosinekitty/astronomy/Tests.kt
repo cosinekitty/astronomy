@@ -9,21 +9,22 @@ class Tests {
     @Test
     fun `test deltaT calculation`() {
         val time = AstroTime(0.0)
-        assertEquals(time.tt, 0.0007389709440951036)
+        assertEquals(0.0007389709440951036, time.tt)
     }
 
     @ParameterizedTest
     @CsvSource(
         value = [
-            "2000, 1, 1, 12, 0, 0, 0",
-            "2022, 1, 1, 12, 0, 0, 8036",
-            "2022, 1, 1, 18, 0, 0, 8036.25",
+            "2000, 1, 1, 12, 0, 0, 0, '2000-01-01 12:00:00.0 +0000'",
+            "2022, 1, 1, 12, 0, 0, 8036, '2022-01-01 12:00:00.0 +0000'",
+            "2022, 1, 1, 18, 0, 0, 8036.25, '2022-01-01 18:00:00.0 +0000'",
         ]
     )
     fun `universal time calculation should match expectations`(
-        year: Int, month: Int, day: Int, hour: Int, minute: Int, second: Int, deltaT: Double
+        year: Int, month: Int, day: Int, hour: Int, minute: Int, second: Int, deltaT: Double, expectedToString: String
     ) {
         val time = AstroTime(year, month, day, hour, minute, second)
-        assertEquals(time.ut, deltaT)
+        assertEquals(deltaT, time.ut)
+        assertEquals(time.toString(), expectedToString)
     }
 }
