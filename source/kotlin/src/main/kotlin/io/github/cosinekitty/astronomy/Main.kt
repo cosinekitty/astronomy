@@ -219,16 +219,32 @@ class AstroTime {
     /**
      * Converts this object to .NET `DateTime` format.
      *
-     * @returns a UTC `DateTime` object for this `AstroTime` value.
+     * @return a UTC `DateTime` object for this `AstroTime` value.
      */
     fun toDate(): Date = Date(origin.time + (ut * MILLIS_PER_DAY).roundToLong())
 
     /**
      * Converts this `AstroTime` to ISO 8601 format, expressed in UTC with millisecond resolution.
      *
-     * @returns: Example: "2019-08-30T17:45:22.763".
+     * @return Example: "2019-08-30T17:45:22.763".
      */
     override fun toString(): String = dateFormat.format(toDate())
+
+    /**
+     * Calculates the sum or difference of an #AstroTime with a specified floating point number of days.
+     *
+     * Sometimes we need to adjust a given #AstroTime value by a certain amount of time.
+     * This function adds the given real number of days in `days` to the date and time in this object.
+     *
+     * More precisely, the result's Universal Time field `ut` is exactly adjusted by `days` and
+     * the Terrestrial Time field `tt` is adjusted for the resulting UTC date and time,
+     * using a best-fit piecewise polynomial model devised by
+     * [Espenak and Meeus](https://eclipse.gsfc.nasa.gov/SEhelp/deltatpoly2004.html).
+     *
+     * @param days A floating point number of days by which to adjust `time`. May be negative, 0, or positive.
+     * @return A date and time that is conceptually equal to `time + days`.
+     */
+    fun addDays(days: Double): AstroTime = AstroTime(ut + days)
 
     companion object {
         private val origin = GregorianCalendar(TimeZone.getTimeZone("UTC")).also {
@@ -256,8 +272,7 @@ class AstroTime {
          *
          * @param tt The number of days after the J2000 epoch.
          */
-        fun fromTerrestrialTime(tt: Double): AstroTime =
-            AstroTime(Astronomy.universalTime(tt), tt)
+        fun fromTerrestrialTime(tt: Double): AstroTime = AstroTime(Astronomy.universalTime(tt), tt)
     }
 }
 

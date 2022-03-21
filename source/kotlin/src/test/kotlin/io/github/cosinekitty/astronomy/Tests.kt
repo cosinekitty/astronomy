@@ -27,4 +27,10 @@ class Tests {
         assertEquals(deltaT, time.ut)
         assertEquals(time.toString(), expectedToString)
     }
+
+    @Test
+    fun `AstroTime should be able to add days`() {
+        val time = AstroTime(2000, 1, 1, 12, 0, 0)
+        assertEquals("2000-01-02 12:00:00.0 +0000", time.addDays(1.0).toString())
+    }
 }
