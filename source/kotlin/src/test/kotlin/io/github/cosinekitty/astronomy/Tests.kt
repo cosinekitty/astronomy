@@ -15,9 +15,9 @@ class Tests {
     @ParameterizedTest
     @CsvSource(
         value = [
-            "2000, 1, 1, 12, 0, 0, 0, '2000-01-01T12:00Z'",
-            "2022, 1, 1, 12, 0, 0, 8036, '2022-01-01T12:00Z'",
-            "2022, 1, 1, 18, 0, 0, 8036.25, '2022-01-01T18:00Z'",
+            "2000, 1, 1, 12, 0, 0, 0, '2000-01-01T12:00:00.000Z'",
+            "2022, 1, 1, 12, 0, 0, 8036, '2022-01-01T12:00:00.000Z'",
+            "2022, 1, 1, 18, 0, 0, 8036.25, '2022-01-01T18:00:00.000Z'",
         ]
     )
     fun `universal time calculation should match expectations`(
@@ -31,7 +31,7 @@ class Tests {
     @Test
     fun `AstroTime should be able to add days`() {
         val time = AstroTime(2000, 1, 1, 12, 0, 0)
-        assertEquals("2000-01-02T12:00Z", time.addDays(1.0).toString())
+        assertEquals("2000-01-02T12:00:00.000Z", time.addDays(1.0).toString())
     }
 
     @Test

@@ -250,7 +250,7 @@ class AstroTime private constructor(
 
         private const val MILLIS_PER_DAY = 24 * 3600 * 1000
 
-        private val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'").also {
+        private val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.sss'Z'").also {
             it.timeZone = TimeZone.getTimeZone("UTC")
         }
 
