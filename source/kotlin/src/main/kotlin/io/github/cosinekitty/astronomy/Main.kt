@@ -1,6 +1,7 @@
 package io.github.cosinekitty.astronomy
 
 import java.util.*
+import kotlin.math.absoluteValue
 
 /*
     Astronomy Engine for Kotlin / JVM.
@@ -220,6 +221,23 @@ class AstroTime {
         }.time
 
         private const val MILLIS_PER_DAY = 24 * 3600 * 1000
+
+        /**
+         * Creates an `AstroTime` object from a Terrestrial Time day value.
+         *
+         * This function can be used in rare cases where a time must be based
+         * on Terrestrial Time (TT) rather than Universal Time (UT).
+         * Most developers will want to invoke `new AstroTime(ut)` with a universal time
+         * instead of this function, because usually time is based on civil time adjusted
+         * by leap seconds to match the Earth's rotation, rather than the uniformly
+         * flowing TT used to calculate solar system dynamics. In rare cases
+         * where the caller already knows TT, this function is provided to create
+         * an `AstroTime` value that can be passed to Astronomy Engine functions.
+         *
+         * @param tt The number of days after the J2000 epoch.
+         */
+        fun fromTerrestrialTime(tt: Double): AstroTime =
+            AstroTime(Astronomy.universalTime(tt), tt)
     }
 }
 
@@ -320,5 +338,22 @@ object Astronomy {
         /* all years after 2150 */
         u = (y - 1820.0) / 100.0
         return -20.0 + (32.0 * u * u)
+    }
+
+    internal fun universalTime(tt: Double): Double {
+        // This is the inverse function of TerrestrialTime.
+        // This is an iterative numerical solver, but because
+        // the relationship between UT and TT is almost perfectly linear,
+        // it converges extremely fast (never more than 3 iterations).
+
+        // dt = tt - ut
+        var dt = terrestrialTime(tt) - tt
+        while (true) {
+            val ut = tt - dt;
+            val ttCheck = terrestrialTime(ut)
+            val err = ttCheck - tt;
+            if (err.absoluteValue < 1.0e-12) return ut
+            dt += err
+        }
     }
 }
