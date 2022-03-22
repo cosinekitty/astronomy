@@ -21,6 +21,12 @@ application {
     mainClass.set("io.github.cosinekitty.astronomy.demo.Main")
 }
 
+tasks.jar {
+    manifest.attributes["Main-Class"] = "io.github.cosinekitty.astronomy.demo.Main"
+    from(configurations.runtimeClasspath.get().map(::zipTree))
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
 tasks.getByName<Test>("test") {
     useJUnitPlatform()
 }
