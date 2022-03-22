@@ -150,6 +150,8 @@ cd ../python || Fail "Cannot change directory to ../python"
 test/test || Fail "Error testing Python examples."
 cd ../csharp || Fail "Cannot change directory to ../csharp"
 test/test || Fail "Error testing C# examples."
+cd ../java || Fail "Cannot change directory to ../java"
+./demotest || Fail "Error testing Java examples."
 cd ../../generate || Fail "Cannot change back to generate directory."
 
 cat pass.txt

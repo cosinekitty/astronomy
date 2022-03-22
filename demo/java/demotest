@@ -1,0 +1,22 @@
+#!/bin/bash
+Fail()
+{
+    echo "FATAL($0): $1"
+    exit 1
+}
+
+RunDemo()
+{
+    java -jar build/libs/astronomy-demo-0.0.1.jar $*
+}
+
+./gradlew jar || Fail "Cannot build jar file."
+echo ""
+echo "Java demos: starting"
+echo ""
+
+RunDemo now || Fail "Error running test: now"
+
+echo ""
+echo "Java demos: PASS"
+exit 0
