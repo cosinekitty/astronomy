@@ -4,7 +4,7 @@ import java.util.Date;
 import io.github.cosinekitty.astronomy.AstroTime;
 
 public class Main {
-    private static String UsageText = String.join(System.getProperty("line.separator"),
+    private static final String usageText = String.join(System.getProperty("line.separator"),
         "Command line arguments:",
         "",
         "    now",
@@ -15,17 +15,14 @@ public class Main {
     public static void main(String[] args) {
         int rc = 1;
         if (args.length == 0) {
-            System.out.println(UsageText);
+            System.out.println(usageText);
         } else {
             switch (args[0]) {
-                case "now":
+                case "now" -> {
                     System.out.println(new AstroTime(new Date()));
                     rc = 0;
-                    break;
-
-                default:
-                    System.out.println("ERROR: Unknown command line argument");
-                    break;
+                }
+                default -> System.out.println("ERROR: Unknown command line argument");
             }
         }
         System.exit(rc);

@@ -21,6 +21,10 @@ application {
     mainClass.set("io.github.cosinekitty.astronomy.demo.Main")
 }
 
+configure<JavaPluginExtension> {
+    sourceCompatibility = JavaVersion.VERSION_17
+}
+
 tasks.jar {
     manifest.attributes["Main-Class"] = "io.github.cosinekitty.astronomy.demo.Main"
     from(configurations.runtimeClasspath.get().map(::zipTree))
