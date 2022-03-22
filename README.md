@@ -51,7 +51,14 @@
             <div>Kotlin / JVM</div>
             <div><img src="source/kotlin/kotlin_language.svg" width="100" height="100" alt="Kotlin" /></div>
         </td>
-        <td style="text-align: center;"><a href="demo/kotlin/">Examples</a></td>
+        <td>
+            <h3 style="text-align: center;">Examples</h3>
+            <ul>
+                <li><a href="demo/kotlin/">Kotlin</a></li>
+                <li><a href="demo/android/">Android</a></li>
+                <li><a href="demo/java/">Java</a></li>
+            </ul>
+        </td>
         <td style="text-align: center;"><a href="source/kotlin/">Code &amp; Docs</a></td>
     </tr>
 </table>
