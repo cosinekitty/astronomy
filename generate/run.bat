@@ -227,6 +227,16 @@ REM ----------------------------------------------------------------------------
 call diffcalc.bat
 if errorlevel 1 (exit /b 1)
 
+REM -----------------------------------------------------------------------------------------
+
+echo.Validating Java demos.
+pushd ..\demo\java
+call demotest.bat
+if errorlevel 1 (exit /b 1)
+popd
+
+REM -----------------------------------------------------------------------------------------
+
 if exist ..\website\src\assets\documentation.json (
     REM *** documentation.json never generates the same in Windows as Linux.
     REM *** For now, hack around this by discarding any local changes.
