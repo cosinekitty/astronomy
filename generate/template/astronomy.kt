@@ -242,7 +242,7 @@ class AstroTime private constructor(
      * @param days A floating point number of days by which to adjust `time`. May be negative, 0, or positive.
      * @return A date and time that is conceptually equal to `time + days`.
      */
-    fun addDays(days: Double): AstroTime = AstroTime(ut + days)
+    fun addDays(days: Double) = AstroTime(ut + days)
 
     companion object {
         private val origin = GregorianCalendar(TimeZoneUtc).also {
@@ -395,18 +395,19 @@ object Astronomy {
 }
 
 internal data class TerseVector(val x: Double, val y: Double, val z: Double) {
-    // fun toAstroVector(time: AstroTime): AstroVector = AstroVector(x, y, z, time)
+    fun toAstroVector(time: AstroTime) =
+            AstroVector(x, y, z, time)
 
-    operator fun plus(other: TerseVector): TerseVector =
+    operator fun plus(other: TerseVector) =
             TerseVector(x + other.x, y + other.y, z + other.z)
 
-    operator fun rem(other: TerseVector): TerseVector =
+    operator fun minus(other: TerseVector) =
             TerseVector(x - other.x, y - other.y, z - other.z)
 
-    operator fun times(other: Double): TerseVector =
+    operator fun times(other: Double) =
             TerseVector(x * other, y * other, z * other)
 
-    operator fun div(other: Double): TerseVector =
+    operator fun div(other: Double) =
             TerseVector(x / other, y / other, z / other)
 
     val quadrature get() = x * x + y * y + z * z
@@ -416,3 +417,57 @@ internal data class TerseVector(val x: Double, val y: Double, val z: Double) {
         val zero = TerseVector(0.0, 0.0, 0.0)
     }
 }
+
+data class AstroVector(
+    /**
+     * A Cartesian x-coordinate expressed in AU.
+     */
+    val x: Double, 
+
+    /**
+     * A Cartesian y-coordinate expressed in AU.
+     */
+    val y: Double, 
+
+    /**
+     * A Cartesian z-coordinate expressed in AU.
+     */
+    val z: Double, 
+
+    /**
+     * The date and time at which this vector is valid.
+     */
+    val t: AstroTime
+) {
+    /**
+     * The total distance in AU represented by this vector.
+     */
+    fun length() =
+        sqrt(x*x + y*y + z*z)
+
+    private fun verifyIdenticalTimes(otherTime: AstroTime): AstroTime {
+        if (t.tt != otherTime.tt)
+            throw IllegalArgumentException("Attempt to operate on two vectors from different times.")
+        return t
+    }
+
+    operator fun plus(other: AstroVector) = 
+            AstroVector(x + other.x, y + other.y, z + other.z, verifyIdenticalTimes(other.t))
+
+    operator fun minus(other: AstroVector) = 
+            AstroVector(x - other.x, y - other.y, z - other.z, verifyIdenticalTimes(other.t))
+
+    operator fun unaryMinus() =
+            AstroVector(-x, -y, -z, t)
+
+    operator fun times(other: AstroVector): Double {    // scalar dot product
+        verifyIdenticalTimes(other.t)
+        return x*other.x + y*other.y + z*other.z
+    }
+
+    operator fun div(denom: Double) =
+            AstroVector(x/denom, y/denom, z/denom, t)
+}
+
+operator fun Double.times(vec: AstroVector) =
+        AstroVector(this*vec.x, this*vec.y, this*vec.z, vec.t)
