@@ -24,18 +24,16 @@
     </tr>
     <tr>
         <td style="text-align: center;">
-            <div>JS (Browser)</div>
-            <div><img src="source/js/javascript.svg" width="100" height="100" alt="JavaScript" /></div>
-        </td>
-        <td style="text-align: center;"><a href="demo/browser/">Examples</a></td>
-        <td style="text-align: center;"><a href="source/js/">Code &amp; Docs</a></td>
-    </tr>
-    <tr>
-        <td style="text-align: center;">
-            <div>Node.js</div>
+            <div>JavaScript</div>
             <div><img src="source/js/nodejs.svg" width="100" height="100" alt="Node.js" /></div>
         </td>
-        <td style="text-align: center;"><a href="demo/nodejs/">Examples</a></td>
+        <td>
+            <div style="text-align: center;">Examples</div>
+            <ul>
+                <li><a href="demo/browser/">Browser</a></li>
+                <li><a href="demo/nodejs/">Node.js</a></li>
+            </ul>
+        </td>
         <td style="text-align: center;"><a href="source/js/">Code &amp; Docs</a></td>
     </tr>
     <tr>
@@ -52,7 +50,7 @@
             <div><img src="source/kotlin/kotlin_language.svg" width="100" height="100" alt="Kotlin" /></div>
         </td>
         <td>
-            <h3 style="text-align: center;">Examples</h3>
+            <div style="text-align: center;">Examples</div>
             <ul>
                 <li><a href="demo/kotlin/">Kotlin</a></li>
                 <li><a href="demo/android/">Android</a></li>
