@@ -1618,7 +1618,7 @@ the rings appear edge-on, and are thus nearly invisible from the Earth. The `rin
 **Calculates the inverse of an atmospheric refraction angle.**
 
 Given an observed altitude angle that includes atmospheric refraction,
-calculate the negative angular correction to obtain the unrefracted
+calculates the negative angular correction to obtain the unrefracted
 altitude. This is useful for cases where observed horizontal
 coordinates are to be converted to another orientation system,
 but refraction first must be removed from the observed position.

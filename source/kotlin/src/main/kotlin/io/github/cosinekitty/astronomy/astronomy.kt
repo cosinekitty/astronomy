@@ -30,10 +30,12 @@ package io.github.cosinekitty.astronomy
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.math.absoluteValue
-import kotlin.math.roundToLong
+import kotlin.math.atan2
 import kotlin.math.cos
+import kotlin.math.roundToLong
 import kotlin.math.sin
 import kotlin.math.sqrt
+import kotlin.math.tan
 
 
 /**
@@ -42,14 +44,33 @@ import kotlin.math.sqrt
 const val DEG2RAD = 0.017453292519943296
 
 /**
+ * Convert an angle expressed in degrees to an angle expressed in radians.
+ */
+private fun Double.degreesToRadians() = this * DEG2RAD
+
+/**
  * The factor to convert radians to degrees = 180/pi.
  */
 const val RAD2DEG = 57.295779513082321
 
+/**
+ * Convert an angle expressed in radians to an angle expressed in degrees.
+ */
+private fun Double.radiansToDegrees() = this * RAD2DEG
 
 private val TimeZoneUtc = TimeZone.getTimeZone("UTC")
 private const val DAYS_PER_TROPICAL_YEAR = 365.24217
 
+private fun Double.withMinDegreeValue(min: Double): Double {
+    var deg = this
+    while (deg < min)
+        deg += 360.0
+    while (deg >= min + 360.0)
+        deg -= 360.0
+    return deg
+}
+
+private fun toggleAzimuthDirection(az: Double) = (360.0 - az).withMinDegreeValue(0.0)
 
 /**
  * The enumeration of celestial bodies supported by Astronomy Engine.
@@ -312,6 +333,7 @@ internal data class TerseVector(val x: Double, val y: Double, val z: Double) {
     }
 }
 
+
 data class AstroVector(
     /**
      * A Cartesian x-coordinate expressed in AU.
@@ -361,6 +383,73 @@ data class AstroVector(
 
     operator fun div(denom: Double) =
             AstroVector(x/denom, y/denom, z/denom, t)
+
+    /**
+     * Converts Cartesian coordinates to spherical coordinates.
+     *
+     * Given a Cartesian vector, returns latitude, longitude, and distance.
+     */
+    fun toSpherical(): Spherical {
+        val xyproj = x*x + y*y
+        val dist = sqrt(xyproj + z*z)
+        var lat: Double
+        var lon: Double
+        if (xyproj == 0.0) {
+            if (z == 0.0) {
+                // Indeterminate coordinates; pos vector has zero length.
+                throw IllegalArgumentException("Cannot convert zero-length vector to spherical coordinates.")
+            }
+            lon = 0.0
+            lat = if (z < 0.0) -90.0 else +90.0
+        } else {
+            lon = atan2(y, x).radiansToDegrees().withMinDegreeValue(0.0)
+            lat = atan2(z, sqrt(xyproj)).radiansToDegrees()
+        }
+        return Spherical(lat, lon, dist)
+    }
+
+    /**
+     * Given an equatorial vector, calculates equatorial angular coordinates.
+     */
+    fun toEquatorial(): Equatorial {
+        val sphere = toSpherical()
+        return Equatorial(sphere.lon / 15.0, sphere.lat, sphere.dist, this)
+    }
+
+    /**
+     * Converts Cartesian coordinates to horizontal coordinates.
+     *
+     * Given a horizontal Cartesian vector, returns horizontal azimuth and altitude.
+     * *IMPORTANT:* This function differs from #AstroVector.toSpherical in two ways:
+     * - `toSpherical` returns a `lon` value that represents azimuth defined counterclockwise
+     *   from north (e.g., west = +90), but this function represents a clockwise rotation
+     *   (e.g., east = +90). The difference is because `toSpherical` is intended
+     *   to preserve the vector "right-hand rule", while this function defines azimuth in a more
+     *   traditional way as used in navigation and cartography.
+     * - This function optionally corrects for atmospheric refraction, while `toSpherical`
+     *   does not.
+     *
+     * The returned object contains the azimuth in `lon`.
+     * It is measured in degrees clockwise from north: east = +90 degrees, west = +270 degrees.
+     *
+     * The altitude is stored in `lat`.
+     *
+     * The distance to the observed object is stored in `dist`,
+     * and is expressed in astronomical units (AU).
+     *
+     * @param refraction
+     *      `Refraction.None`: no atmospheric refraction correction is performed.
+     *      `Refraction.Normal`: correct altitude for atmospheric refraction.
+     *      `Refraction.JplHor`: for JPL Horizons compatibility testing only; not recommended for normal use.
+     */
+    fun toHorizontal(refraction: Refraction): Spherical {
+        val sphere = toSpherical()
+        return Spherical(
+            sphere.lat + Astronomy.refractionAngle(refraction, sphere.lat),
+            toggleAzimuthDirection(sphere.lon),
+            sphere.dist
+        )
+    }
 }
 
 operator fun Double.times(vec: AstroVector) =
@@ -456,7 +545,7 @@ class RotationMatrix(
     val rot: Array<DoubleArray>
 ) {
     init {
-        if (rot.size != 3 || rot[0].size != 3 || rot[1].size != 3 || rot[2].size != 3)
+        if (rot.size != 3 || rot.any { it.size != 3 })
             throw IllegalArgumentException("Rotation matrix must be a 3x3 array.")
     }
 
@@ -566,7 +655,7 @@ class RotationMatrix(
         if (!angle.isFinite())
             throw IllegalArgumentException("Angle must be a finite number.")
 
-        val radians = angle * DEG2RAD
+        val radians = angle.degreesToRadians()
         val c = cos(radians)
         val s = sin(radians)
 
@@ -628,7 +717,56 @@ data class Spherical(
      * Distance in AU.
      */
     val dist: Double
-)
+) {
+    /**
+     * Converts spherical coordinates to Cartesian coordinates.
+     *
+     * Given spherical coordinates and a time at which they are valid,
+     * returns a vector of Cartesian coordinates. The returned value
+     * includes the time, as required by the type #AstroVector.
+     *
+     * @param time
+     *      The time that should be included in the return value.
+     */
+    fun toVector(time: AstroTime): AstroVector {
+        val radlat = lat.degreesToRadians()
+        val radlon = lon.degreesToRadians()
+        val rcoslat = dist * cos(radlat)
+        return AstroVector(
+            rcoslat * cos(radlon),
+            rcoslat * sin(radlon),
+            dist * sin(radlat),
+            time
+        )
+    }
+
+    /**
+     * Given apparent angular horizontal coordinates, calculate the unrefracted horizontal vector.
+     *
+     * Assumes `this` contains apparent horizontal coordinates:
+     * `lat` holds the refracted azimuth angle,
+     * `lon` holds the azimuth in degrees clockwise from north,
+     * and `dist` holds the distance from the observer to the object in AU.
+     *
+     * @param time
+     *      The date and time of the observation. This is needed because the returned
+     *      #AstroVector requires a valid time value when passed to certain other functions.
+     *
+     * @param refraction
+     *      The refraction option used to model atmospheric lensing. See #Astronomy.refractionAngle.
+     *      This specifies how refraction is to be removed from the altitude stored in `this.lat`.
+     *
+     * @returns
+     *      A vector in the horizontal system: `x` = north, `y` = west, and `z` = zenith (up).
+     */
+    fun toVectorFromHorizon(time: AstroTime, refraction: Refraction): AstroVector =
+        Spherical(
+            lat + Astronomy.inverseRefractionAngle(refraction, lat),
+            toggleAzimuthDirection(lon),
+            dist
+        )
+        .toVector(time)
+}
 
 /**
  * The location of an observer on (or near) the surface of the Earth.
@@ -900,7 +1038,7 @@ object Astronomy {
     }
 
     internal fun universalTime(tt: Double): Double {
-        // This is the inverse function of TerrestrialTime.
+        // This is the inverse function of terrestrialTime.
         // This is an iterative numerical solver, but because
         // the relationship between UT and TT is almost perfectly linear,
         // it converges extremely fast (never more than 3 iterations).
@@ -913,6 +1051,93 @@ object Astronomy {
             val err = ttCheck - tt
             if (err.absoluteValue < 1.0e-12) return ut
             dt += err
+        }
+    }
+
+    /**
+     * Calculates the amount of "lift" to an altitude angle caused by atmospheric refraction.
+     *
+     * Given an altitude angle and a refraction option, calculates
+     * the amount of "lift" caused by atmospheric refraction.
+     * This is the number of degrees higher in the sky an object appears
+     * due to the lensing of the Earth's atmosphere.
+     *
+     * @param refraction
+     *      The option selecting which refraction correction to use.
+     *      If `Refraction.Normal`, uses a well-behaved refraction model that works well for
+     *      all valid values (-90 to +90) of `altitude`.
+     *      If `Refraction.JplHor`, this function returns a compatible value with the JPL Horizons tool.
+     *      If any other value, including `Refraction.None`, this function returns 0.
+     *
+     * @param altitude
+     *      An altitude angle in a horizontal coordinate system. Must be a value between -90 and +90.
+     */
+    fun refractionAngle(refraction: Refraction, altitude: Double): Double {
+        if (altitude < -90.0 || altitude > +90.0)
+            return 0.0     // no attempt to correct an invalid altitude
+
+        var angle: Double
+        if (refraction == Refraction.Normal || refraction == Refraction.JplHor) {
+            // http://extras.springer.com/1999/978-1-4471-0555-8/chap4/horizons/horizons.pdf
+            // JPL Horizons says it uses refraction algorithm from
+            // Meeus "Astronomical Algorithms", 1991, p. 101-102.
+            // I found the following Go implementation:
+            // https://github.com/soniakeys/meeus/blob/master/v3/refraction/refract.go
+            // This is a translation from the function "Saemundsson" there.
+            // I found experimentally that JPL Horizons clamps the angle to 1 degree below the horizon.
+            // This is important because the 'refr' formula below goes crazy near hd = -5.11.
+            var hd = altitude
+            if (hd < -1.0)
+                hd = -1.0
+
+            angle = (1.02 / tan((hd+10.3/(hd+5.11))*DEG2RAD)) / 60.0
+
+            if (refraction == Refraction.Normal && altitude < -1.0) {
+                // In "normal" mode we gradually reduce refraction toward the nadir
+                // so that we never get an altitude angle less than -90 degrees.
+                // When horizon angle is -1 degrees, the factor is exactly 1.
+                // As altitude approaches -90 (the nadir), the fraction approaches 0 linearly.
+                angle *= (altitude + 90.0) / 89.0
+            }
+        } else {
+            // No refraction, or the refraction option is invalid.
+            angle = 0.0
+        }
+        return angle
+    }
+
+    /**
+     * Calculates the inverse of an atmospheric refraction angle.
+     *
+     * Given an observed altitude angle that includes atmospheric refraction,
+     * calculates the negative angular correction to obtain the unrefracted
+     * altitude. This is useful for cases where observed horizontal
+     * coordinates are to be converted to another orientation system,
+     * but refraction first must be removed from the observed position.
+     *
+     * @param refraction
+     *      The option selecting which refraction correction to use.
+     *
+     * @param bentAltitude
+     *      The apparent altitude that includes atmospheric refraction.
+     *
+     * @param
+     *      The angular adjustment in degrees to be added to the
+     *      altitude angle to remove atmospheric lensing.
+     *      This will be less than or equal to zero.
+     */
+    fun inverseRefractionAngle(refraction: Refraction, bentAltitude: Double): Double {
+        if (bentAltitude < -90.0 || bentAltitude > +90.0)
+            return 0.0     // no attempt to correct an invalid altitude
+
+        // Find the pre-adjusted altitude whose refraction correction leads to 'altitude'.
+        var altitude = bentAltitude - refractionAngle(refraction, bentAltitude)
+        while (true) {
+            // See how close we got.
+            var diff = (altitude + refractionAngle(refraction, altitude)) - bentAltitude
+            if (diff.absoluteValue < 1.0e-14)
+                return altitude - bentAltitude
+            altitude -= diff
         }
     }
 }
