@@ -8820,7 +8820,7 @@ namespace CosineKitty
         /// <summary>Calculates the inverse of a rotation matrix.</summary>
         /// <remarks>
         /// Given a rotation matrix that performs some coordinate transform,
-        /// this function returns the matrix that reverses that trasnform.
+        /// this function returns the matrix that reverses that transform.
         /// </remarks>
         /// <param name="rotation">The rotation matrix to be inverted.</param>
         /// <returns>A rotation matrix that performs the opposite transformation.</returns>

@@ -31,7 +31,20 @@ import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.math.absoluteValue
 import kotlin.math.roundToLong
+import kotlin.math.cos
+import kotlin.math.sin
 import kotlin.math.sqrt
+
+
+/**
+ * The factor to convert degrees to radians = pi/180.
+ */
+const val DEG2RAD = 0.017453292519943296
+
+/**
+ * The factor to convert radians to degrees = 180/pi.
+ */
+const val RAD2DEG = 57.295779513082321
 
 
 private val TimeZoneUtc = TimeZone.getTimeZone("UTC")
@@ -341,7 +354,7 @@ data class AstroVector(
     operator fun unaryMinus() =
             AstroVector(-x, -y, -z, t)
 
-    operator fun times(other: AstroVector): Double {    // scalar dot product
+    infix fun dot(other: AstroVector): Double {
         verifyIdenticalTimes(other.t)
         return x*other.x + y*other.y + z*other.z
     }
@@ -445,6 +458,138 @@ class RotationMatrix(
     init {
         if (rot.size != 3 || rot[0].size != 3 || rot[1].size != 3 || rot[2].size != 3)
             throw IllegalArgumentException("Rotation matrix must be a 3x3 array.")
+    }
+
+    constructor(
+        a00: Double, a01: Double, a02: Double,
+        a10: Double, a11: Double, a12: Double,
+        a20: Double, a21: Double, a22: Double
+    ) : this(
+        arrayOf(
+            doubleArrayOf(a00, a01, a02),
+            doubleArrayOf(a10, a11, a12),
+            doubleArrayOf(a20, a21, a22)
+        )
+    )
+
+    /**
+     * Calculates the inverse of a rotation matrix.
+     *
+     * Returns a rotation matrix that performs the reverse transformation
+     * that this rotation matrix performs.
+     */
+    fun inverse() = RotationMatrix(
+        rot[0][0], rot[1][0], rot[2][0],
+        rot[0][1], rot[1][1], rot[2][1],
+        rot[0][2], rot[1][2], rot[2][2]
+    )
+
+    /**
+     * Applies a rotation to a vector, yielding a rotated vector.
+     *
+     * This function transforms a vector in one orientation to a vector
+     * in another orientation.
+     *
+     * @param vec
+     *      The vector whose orientation is to be changed.
+     */
+    fun rotate(vec: AstroVector) = AstroVector(
+        rot[0][0]*vec.x + rot[1][0]*vec.y + rot[2][0]*vec.z,
+        rot[0][1]*vec.x + rot[1][1]*vec.y + rot[2][1]*vec.z,
+        rot[0][2]*vec.x + rot[1][2]*vec.y + rot[2][2]*vec.z,
+        vec.t
+    )
+
+    /**
+     * Creates a rotation based on applying one rotation followed by another.
+     *
+     * Given two rotation matrices, returns a combined rotation matrix that is
+     * equivalent to rotating based on this matrix, followed by the matrix `other`.
+     */
+    infix fun combine(other: RotationMatrix) = RotationMatrix (
+        other.rot[0][0]*rot[0][0] + other.rot[1][0]*rot[0][1] + other.rot[2][0]*rot[0][2],
+        other.rot[0][1]*rot[0][0] + other.rot[1][1]*rot[0][1] + other.rot[2][1]*rot[0][2],
+        other.rot[0][2]*rot[0][0] + other.rot[1][2]*rot[0][1] + other.rot[2][2]*rot[0][2],
+        other.rot[0][0]*rot[1][0] + other.rot[1][0]*rot[1][1] + other.rot[2][0]*rot[1][2],
+        other.rot[0][1]*rot[1][0] + other.rot[1][1]*rot[1][1] + other.rot[2][1]*rot[1][2],
+        other.rot[0][2]*rot[1][0] + other.rot[1][2]*rot[1][1] + other.rot[2][2]*rot[1][2],
+        other.rot[0][0]*rot[2][0] + other.rot[1][0]*rot[2][1] + other.rot[2][0]*rot[2][2],
+        other.rot[0][1]*rot[2][0] + other.rot[1][1]*rot[2][1] + other.rot[2][1]*rot[2][2],
+        other.rot[0][2]*rot[2][0] + other.rot[1][2]*rot[2][1] + other.rot[2][2]*rot[2][2]
+    )
+
+    /**
+     * Re-orients the rotation matrix by pivoting it by an angle around one of its axes.
+     *
+     * Given this rotation matrix, a selected coordinate axis, and an angle in degrees,
+     * this function pivots the rotation matrix by that angle around that coordinate axis.
+     * The function returns a new rotation matrix; it does not mutate this matrix.
+     *
+     * For example, if you have rotation matrix that converts ecliptic coordinates (ECL)
+     * to horizontal coordinates (HOR), but you really want to convert ECL to the orientation
+     * of a telescope camera pointed at a given body, you can use `RotationMatrix.pivot` twice:
+     * (1) pivot around the zenith axis by the body's azimuth, then (2) pivot around the
+     * western axis by the body's altitude angle. The resulting rotation matrix will then
+     * reorient ECL coordinates to the orientation of your telescope camera.
+     *
+     * @param axis
+     *      An integer that selects which coordinate axis to rotate around:
+     *      0 = x, 1 = y, 2 = z. Any other value will cause an exception.
+     *
+     * @param angle
+     *      An angle in degrees indicating the amount of rotation around the specified axis.
+     *      Positive angles indicate rotation counterclockwise as seen from the positive
+     *      direction along that axis, looking towards the origin point of the orientation system.
+     *      Any finite number of degrees is allowed, but best precision will result from keeping
+     *      `angle` in the range [-360, +360].
+     */
+    fun pivot(axis: Int, angle: Double): RotationMatrix {
+        if (axis < 0 || axis > 2)
+            throw IllegalArgumentException("Invalid coordinate axis $axis. Must be 0..2.")
+
+        if (!angle.isFinite())
+            throw IllegalArgumentException("Angle must be a finite number.")
+
+        val radians = angle * DEG2RAD
+        val c = cos(radians)
+        val s = sin(radians)
+
+        // We need to maintain the "right-hand" rule, no matter which
+        // axis was selected. That means we pick (i, j, k) axis order
+        // such that the following vector cross product is satisfied:
+        // i x j = k
+        val i = (axis + 1) % 3
+        val j = (axis + 2) % 3;
+        val k = axis
+
+        val piv = arrayOf(DoubleArray(3), DoubleArray(3), DoubleArray(3))
+
+        piv[i][i] = c*rot[i][i] - s*rot[i][j];
+        piv[i][j] = s*rot[i][i] + c*rot[i][j];
+        piv[i][k] = rot[i][k];
+        piv[j][i] = c*rot[j][i] - s*rot[j][j];
+        piv[j][j] = s*rot[j][i] + c*rot[j][j];
+        piv[j][k] = rot[j][k];
+        piv[k][i] = c*rot[k][i] - s*rot[k][j];
+        piv[k][j] = s*rot[k][i] + c*rot[k][j];
+        piv[k][k] = rot[k][k];
+
+        return RotationMatrix(piv)
+    }
+
+    companion object {
+        /**
+         * The identity rotation matrix.
+         *
+         * A matrix that has no effect on orientation.
+         * This matrix can be the starting point for other operations,
+         * such as calling a series of #RotationMatrix.combine or #RotationMatrix.pivot.
+         */
+        val identity = RotationMatrix (
+            1.0, 0.0, 0.0,
+            0.0, 1.0, 0.0,
+            0.0, 0.0, 1.0
+        )
     }
 }
 

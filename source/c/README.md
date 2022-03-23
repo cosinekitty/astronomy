@@ -972,7 +972,7 @@ Given an observed altitude angle that includes atmospheric refraction, calculate
 
 
 
-Given a rotation matrix that performs some coordinate transform, this function returns the matrix that reverses that trasnform.
+Given a rotation matrix that performs some coordinate transform, this function returns the matrix that reverses that transform.
 
 
 

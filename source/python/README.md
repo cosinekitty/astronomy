@@ -1641,7 +1641,7 @@ This will be less than or equal to zero.
 **Calculates the inverse of a rotation matrix.**
 
 Given a rotation matrix that performs some coordinate transform,
-this function returns the matrix that reverses that trasnform.
+this function returns the matrix that reverses that transform.
 
 | Type | Parameter | Description |
 | --- | --- | --- |

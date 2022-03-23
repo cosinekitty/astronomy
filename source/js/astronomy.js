@@ -5561,7 +5561,7 @@ exports.NextPlanetApsis = NextPlanetApsis;
  * @brief Calculates the inverse of a rotation matrix.
  *
  * Given a rotation matrix that performs some coordinate transform,
- * this function returns the matrix that reverses that trasnform.
+ * this function returns the matrix that reverses that transform.
  *
  * @param {RotationMatrix} rotation
  *      The rotation matrix to be inverted.
