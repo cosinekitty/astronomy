@@ -501,6 +501,22 @@ class RotationMatrix(
     )
 
     /**
+     * Applies a rotation to a state vector, yielding a rotated state vector.
+     *
+     * This function transforms a state vector in one orientation to a state vector in another orientation.
+     * The resulting state vector has both position and velocity reoriented.
+     *
+     * @param state
+     *      The state vector whose orientation is to be changed.
+     *      The value of `state` is not changed; the return value is a new state vector object.
+     */
+    fun rotate(state: StateVector) = StateVector(
+        rotate(state.position),
+        rotate(state.velocity),
+        state.t
+    )
+
+    /**
      * Creates a rotation based on applying one rotation followed by another.
      *
      * Given two rotation matrices, returns a combined rotation matrix that is
