@@ -422,17 +422,17 @@ data class AstroVector(
     /**
      * A Cartesian x-coordinate expressed in AU.
      */
-    val x: Double, 
+    val x: Double,
 
     /**
      * A Cartesian y-coordinate expressed in AU.
      */
-    val y: Double, 
+    val y: Double,
 
     /**
      * A Cartesian z-coordinate expressed in AU.
      */
-    val z: Double, 
+    val z: Double,
 
     /**
      * The date and time at which this vector is valid.
@@ -451,10 +451,10 @@ data class AstroVector(
         return t
     }
 
-    operator fun plus(other: AstroVector) = 
+    operator fun plus(other: AstroVector) =
             AstroVector(x + other.x, y + other.y, z + other.z, verifyIdenticalTimes(other.t))
 
-    operator fun minus(other: AstroVector) = 
+    operator fun minus(other: AstroVector) =
             AstroVector(x - other.x, y - other.y, z - other.z, verifyIdenticalTimes(other.t))
 
     operator fun unaryMinus() =
@@ -471,3 +471,294 @@ data class AstroVector(
 
 operator fun Double.times(vec: AstroVector) =
         AstroVector(this*vec.x, this*vec.y, this*vec.z, vec.t)
+
+
+data class StateVector(
+    /**
+     * A Cartesian position x-coordinate expressed in AU.
+     */
+    val x: Double,
+
+    /**
+     * A Cartesian position y-coordinate expressed in AU.
+     */
+    val y: Double,
+
+    /**
+     * A Cartesian position z-coordinate expressed in AU.
+     */
+    val z: Double,
+
+    /**
+     * A Cartesian velocity x-component expressed in AU/day.
+     */
+    val vx: Double,
+
+    /**
+     * A Cartesian velocity y-component expressed in AU/day.
+     */
+    val vy: Double,
+
+    /**
+     * A Cartesian velocity z-component expressed in AU/day.
+     */
+    val vz: Double,
+
+    /**
+     * The date and time at which this vector is valid.
+     */
+    val t: AstroTime
+) {
+
+    /**
+     * Combines a position vector and a velocity vector into a single state vector.
+     *
+     * @param pos   A position vector.
+     * @param vel   A velocity vector.
+     * @param time  The common time that represents the given position and velocity.
+     */
+    constructor(pos: AstroVector, vel: AstroVector, time: AstroTime)
+        : this(pos.x, pos.y, pos.z, vel.x, vel.y, vel.z, time)
+
+    /**
+     * Returns the position vector associated with this state vector.
+     */
+    val position get() = AstroVector(x, y, z, t)
+
+    /**
+     * Returns the velocity vector associated with this state vector.
+     */
+    val velocity get() = AstroVector(vx, vy, vz, t)
+}
+
+
+/**
+ * Holds the positions and velocities of Jupiter's major 4 moons.
+ *
+ * The #Astronomy.JupiterMoons function returns an object of this type
+ * to report position and velocity vectors for Jupiter's largest 4 moons
+ * Io, Europa, Ganymede, and Callisto. Each position vector is relative
+ * to the center of Jupiter. Both position and velocity are oriented in
+ * the EQJ system (that is, using Earth's equator at the J2000 epoch).
+ * The positions are expressed in astronomical units (AU),
+ * and the velocities in AU/day.
+ */
+class JupiterMoonsInfo(
+    /**
+     * An array of state vectors for each of the 4 moons, in the following order:
+     * 0 = Io, 1 = Europa, 2 = Ganymede, 3 = Callisto.
+     */
+    val moon: Array<StateVector>
+) {
+}
+
+
+/**
+ * A rotation matrix that can be used to transform one coordinate system to another.
+ */
+class RotationMatrix(
+    /**
+     * A 3x3 array of numbers to initialize the rotation matrix.
+     */
+    val rot: Array<Array<Double>>
+) {
+    init {
+        if (rot.size != 3 || rot[0].size != 3 || rot[1].size != 3 || rot[2].size != 3)
+            throw IllegalArgumentException("Rotation matrix must be a 3x3 array.")
+    }
+}
+
+
+/**
+ * Spherical coordinates: latitude, longitude, distance.
+ */
+data class Spherical(
+    /**
+     * The latitude angle: -90..+90 degrees.
+     */
+    val lat: Double,
+
+    /**
+     * The longitude angle: 0..360 degrees.
+     */
+    val lon: Double,
+
+    /**
+     * Distance in AU.
+     */
+    val dist: Double
+) {
+}
+
+
+/**
+ * The location of an observer on (or near) the surface of the Earth.
+ *
+ * This object is passed to functions that calculate phenomena as observed
+ * from a particular place on the Earth.
+ */
+data class Observer(
+    /**
+     * Geographic latitude in degrees north (positive) or south (negative) of the equator.
+     */
+    val latitude: Double,
+
+    /**
+     * Geographic longitude in degrees east (positive) or west (negative) of the prime meridian at Greenwich, England.
+     */
+    val longitude: Double,
+
+    /**
+     * The height above (positive) or below (negative) sea level, expressed in meters.
+     */
+    val height: Double
+) {
+
+}
+
+
+/**
+ * Selects the date for which the Earth's equator is to be used for representing equatorial coordinates.
+ *
+ * The Earth's equator is not always in the same plane due to precession and nutation.
+ *
+ * Sometimes it is useful to have a fixed plane of reference for equatorial coordinates
+ * across different calendar dates.  In these cases, a fixed *epoch*, or reference time,
+ * is helpful. Astronomy Engine provides the J2000 epoch for such cases.  This refers
+ * to the plane of the Earth's orbit as it was on noon UTC on 1 January 2000.
+ *
+ * For some other purposes, it is more helpful to represent coordinates using the Earth's
+ * equator exactly as it is on that date. For example, when calculating rise/set times
+ * or horizontal coordinates, it is most accurate to use the orientation of the Earth's
+ * equator at that same date and time. For these uses, Astronomy Engine allows *of-date*
+ * calculations.
+ */
+enum class EquatorEpoch {
+    /**
+     * Represent equatorial coordinates in the J2000 epoch.
+     */
+    J2000,
+
+    /**
+     * Represent equatorial coordinates using the Earth's equator at the given date and time.
+     */
+    OfDate,
+}
+
+
+/**
+ * Aberration calculation options.
+ *
+ * [Aberration](https://en.wikipedia.org/wiki/Aberration_of_light) is an effect
+ * causing the apparent direction of an observed body to be shifted due to transverse
+ * movement of the Earth with respect to the rays of light coming from that body.
+ * This angular correction can be anywhere from 0 to about 20 arcseconds,
+ * depending on the position of the observed body relative to the instantaneous
+ * velocity vector of the Earth.
+ *
+ * Some Astronomy Engine functions allow optional correction for aberration by
+ * passing in a value of this enumerated type.
+ *
+ * Aberration correction is useful to improve accuracy of coordinates of
+ * apparent locations of bodies seen from the Earth.
+ * However, because aberration affects not only the observed body (such as a planet)
+ * but the surrounding stars, aberration may be unhelpful (for example)
+ * for determining exactly when a planet crosses from one constellation to another.
+ */
+enum class Aberration {
+    /**
+     * Request correction for aberration.
+     */
+    Corrected,
+
+    /**
+     * Do not correct for aberration.
+     */
+    None,
+}
+
+
+/**
+ * Selects whether to correct for atmospheric refraction, and if so, how.
+ */
+enum class Refraction {
+    /**
+     * No atmospheric refraction correction (airless).
+     */
+    None,
+
+    /**
+     * Recommended correction for standard atmospheric refraction.
+     */
+    Normal,
+
+    /**
+     * Used only for compatibility testing with JPL Horizons online tool.
+     */
+    JplHor,
+}
+
+
+/**
+ * Selects whether to search for a rising event or a setting event for a celestial body.
+ */
+enum class Direction {
+    /**
+     * Indicates a rising event: a celestial body is observed to rise above the horizon by an observer on the Earth.
+     */
+    Rise,
+
+    /**
+     * Indicates a setting event: a celestial body is observed to sink below the horizon by an observer on the Earth.
+     */
+    Set,
+}
+
+
+/**
+ * Indicates whether a body (especially Mercury or Venus) is best seen in the morning or evening.
+ */
+enum class Visibility {
+    /**
+     * The body is best visible in the morning, before sunrise.
+     */
+    Morning,
+
+    /**
+     * The body is best visible in the evening, after sunset.
+     */
+    Evening,
+}
+
+
+/**
+ * Equatorial angular and cartesian coordinates.
+ *
+ * Coordinates of a celestial body as seen from the Earth
+ * (geocentric or topocentric, depending on context),
+ * oriented with respect to the projection of the Earth's equator onto the sky.
+ */
+class Equatorial(
+    /**
+     * Right ascension in sidereal hours.
+     */
+    val ra: Double,
+
+    /**
+     * Declination in degrees.
+     */
+    val dec: Double,
+
+    /**
+     * Distance to the celestial body in AU.
+     */
+    val dist: Double,
+
+    /**
+     * Equatorial coordinates in cartesian vector form: x = March equinox, y = June solstice, z = north.
+     */
+    val vec: AstroVector
+) {
+}
+
+

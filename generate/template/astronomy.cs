@@ -602,7 +602,7 @@ namespace CosineKitty
     }
 
     /// <summary>
-    /// Contains a rotation matrix that can be used to transform one coordinate system to another.
+    /// A rotation matrix that can be used to transform one coordinate system to another.
     /// </summary>
     public struct RotationMatrix
     {

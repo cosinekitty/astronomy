@@ -1,0 +1,7 @@
+#!/bin/bash
+# Helps me quickly fix syntax errors while writing new Kotlin code in Linux.
+pushd ../../generate > /dev/null
+./generate source || exit $?
+popd > /dev/null
+./gradlew assemble build test dokkaHtml || exit $?
+exit 0
