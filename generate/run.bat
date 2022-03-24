@@ -218,6 +218,17 @@ REM ----------------------------------------------------------------------------
 
 echo.Running Kotlin tests.
 pushd ..\source\kotlin
+if exist build (
+    rd /s/q build
+    if errorlevel 1 (
+        echo.run.bat: ERROR deleting source/kotlin/build directory.
+        exit /b 1
+    )
+    if exist build (
+        echo.run.bat: FATAL: source/kotlin/build directory still exists after attempted deletion.
+        exit /b 1
+    )
+)
 call gradlew.bat assemble build test dokkaHtml
 if errorlevel 1 (exit /b 1)
 popd
