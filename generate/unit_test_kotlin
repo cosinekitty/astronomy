@@ -10,6 +10,12 @@ Fail()
 cd ../source/kotlin || Fail "Cannot change dir to ../source/kotlin"
 ./gradlew assemble build test dokkaGfm || Fail "Error building/testing Kotlin code."
 
+# The above gradlew call also generated all the Markdown documentation.
+# The other languages do this from makedoc, but Kotlin is an exception.
+# Finish putting together custom documentation for GitHub.
+cd ../../generate/kotlindoc || Fail "Cannot change dir to ../../generate/kotlindoc"
+./format_kotlin_doc.py || Fail "Error running ./format_kotlin_doc.py"
+
 #for file in temp/kotlin_longitude_*.txt; do
 #    ./generate $1 check ${file} || Fail "Failed verification of file ${file}"
 #done
