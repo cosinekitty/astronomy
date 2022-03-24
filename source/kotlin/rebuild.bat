@@ -4,6 +4,6 @@ pushd ..\..\generate
 bin\generate.exe source
 if errorlevel 1 (exit /b 1)
 popd
-call gradlew.bat assemble build test dokkaHtml
+call gradlew.bat assemble build test 
 if errorlevel 1 (exit /b 1)
 exit /b 0

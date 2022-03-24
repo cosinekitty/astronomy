@@ -3,5 +3,5 @@
 pushd ../../generate > /dev/null
 ./generate source || exit $?
 popd > /dev/null
-./gradlew assemble build test dokkaHtml || exit $?
+./gradlew assemble build test || exit $?
 exit 0
