@@ -1085,7 +1085,7 @@ object Astronomy {
             // https://github.com/soniakeys/meeus/blob/master/v3/refraction/refract.go
             // This is a translation from the function "Saemundsson" there.
             // I found experimentally that JPL Horizons clamps the angle to 1 degree below the horizon.
-            // This is important because the 'refr' formula below goes crazy near hd = -5.11.
+            // This is important because the tangent formula below goes crazy near hd = -5.11.
             val hd = altitude.coerceAtLeast(-1.0)
             angle = (1.02 / tan((hd+10.3/(hd+5.11)).degreesToRadians())) / 60.0
 

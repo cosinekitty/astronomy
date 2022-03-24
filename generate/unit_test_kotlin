@@ -8,6 +8,7 @@ Fail()
 [[ "$1" == "" || "$1" == "-v" ]] || Fail "Invalid command line options."
 
 cd ../source/kotlin || Fail "Cannot change dir to ../source/kotlin"
+rm -rf build
 ./gradlew assemble build test dokkaGfm || Fail "Error building/testing Kotlin code."
 
 # The above gradlew call also generated all the Markdown documentation.
