@@ -81,6 +81,8 @@ these are used in function and type names.
 
 | Name | Summary |
 |---|---|
+| [degreesToRadians](doc/degrees-to-radians.md) | [jvm]<br>fun [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html).[degreesToRadians](doc/degrees-to-radians.md)(): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)<br>Convert an angle expressed in degrees to an angle expressed in radians. |
+| [radiansToDegrees](doc/radians-to-degrees.md) | [jvm]<br>fun [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html).[radiansToDegrees](doc/radians-to-degrees.md)(): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)<br>Convert an angle expressed in radians to an angle expressed in degrees. |
 | [times](doc/times.md) | [jvm]<br>operator fun [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html).[times](doc/times.md)(vec: [AstroVector](doc/-astro-vector/index.md)): [AstroVector](doc/-astro-vector/index.md) |
 
 ## Properties

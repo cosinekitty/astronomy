@@ -46,7 +46,7 @@ const val DEG2RAD = 0.017453292519943296
 /**
  * Convert an angle expressed in degrees to an angle expressed in radians.
  */
-private fun Double.degreesToRadians() = this * DEG2RAD
+fun Double.degreesToRadians() = this * DEG2RAD
 
 /**
  * The factor to convert radians to degrees = 180/pi.
@@ -56,7 +56,7 @@ const val RAD2DEG = 57.295779513082321
 /**
  * Convert an angle expressed in radians to an angle expressed in degrees.
  */
-private fun Double.radiansToDegrees() = this * RAD2DEG
+fun Double.radiansToDegrees() = this * RAD2DEG
 
 private val TimeZoneUtc = TimeZone.getTimeZone("UTC")
 private const val DAYS_PER_TROPICAL_YEAR = 365.24217
@@ -1086,11 +1086,8 @@ object Astronomy {
             // This is a translation from the function "Saemundsson" there.
             // I found experimentally that JPL Horizons clamps the angle to 1 degree below the horizon.
             // This is important because the 'refr' formula below goes crazy near hd = -5.11.
-            var hd = altitude
-            if (hd < -1.0)
-                hd = -1.0
-
-            angle = (1.02 / tan((hd+10.3/(hd+5.11))*DEG2RAD)) / 60.0
+            val hd = altitude.coerceAtLeast(-1.0)
+            angle = (1.02 / tan((hd+10.3/(hd+5.11)).degreesToRadians())) / 60.0
 
             if (refraction == Refraction.Normal && altitude < -1.0) {
                 // In "normal" mode we gradually reduce refraction toward the nadir
