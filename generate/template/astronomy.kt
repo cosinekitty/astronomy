@@ -241,11 +241,11 @@ class AstroTime private constructor(
      * @param second The UTC second in the half-open range [0, 60).
      */
     constructor(year: Int, month: Int, day: Int, hour: Int, minute: Int, second: Double) : this(
-            GregorianCalendar(TimeZoneUtc).also {
-                val totalMillis: Int = Math.floor(second * 1000.0).toInt()
-                it.set(year, month - 1, day, hour, minute, totalMillis / 1000)
-                it.set(Calendar.MILLISECOND, totalMillis % 1000)
-            }
+        GregorianCalendar(TimeZoneUtc).also {
+            val totalMillis: Int = Math.floor(second * 1000.0).toInt()
+            it.set(year, month - 1, day, hour, minute, totalMillis / 1000)
+            it.set(Calendar.MILLISECOND, totalMillis % 1000)
+        }
     )
 
     /**
@@ -311,19 +311,19 @@ class AstroTime private constructor(
 
 internal data class TerseVector(val x: Double, val y: Double, val z: Double) {
     fun toAstroVector(time: AstroTime) =
-            AstroVector(x, y, z, time)
+        AstroVector(x, y, z, time)
 
     operator fun plus(other: TerseVector) =
-            TerseVector(x + other.x, y + other.y, z + other.z)
+        TerseVector(x + other.x, y + other.y, z + other.z)
 
     operator fun minus(other: TerseVector) =
-            TerseVector(x - other.x, y - other.y, z - other.z)
+        TerseVector(x - other.x, y - other.y, z - other.z)
 
     operator fun times(other: Double) =
-            TerseVector(x * other, y * other, z * other)
+        TerseVector(x * other, y * other, z * other)
 
     operator fun div(other: Double) =
-            TerseVector(x / other, y / other, z / other)
+        TerseVector(x / other, y / other, z / other)
 
     val quadrature get() = x * x + y * y + z * z
     val magnitude get() = sqrt(quadrature)
@@ -368,13 +368,13 @@ data class AstroVector(
     }
 
     operator fun plus(other: AstroVector) =
-            AstroVector(x + other.x, y + other.y, z + other.z, verifyIdenticalTimes(other.t))
+        AstroVector(x + other.x, y + other.y, z + other.z, verifyIdenticalTimes(other.t))
 
     operator fun minus(other: AstroVector) =
-            AstroVector(x - other.x, y - other.y, z - other.z, verifyIdenticalTimes(other.t))
+        AstroVector(x - other.x, y - other.y, z - other.z, verifyIdenticalTimes(other.t))
 
     operator fun unaryMinus() =
-            AstroVector(-x, -y, -z, t)
+        AstroVector(-x, -y, -z, t)
 
     infix fun dot(other: AstroVector): Double {
         verifyIdenticalTimes(other.t)
@@ -382,7 +382,7 @@ data class AstroVector(
     }
 
     operator fun div(denom: Double) =
-            AstroVector(x/denom, y/denom, z/denom, t)
+        AstroVector(x/denom, y/denom, z/denom, t)
 
     /**
      * Converts Cartesian coordinates to spherical coordinates.
@@ -1002,22 +1002,22 @@ class SeasonsInfo(
     /**
      * The date and time of the March equinox for the specified year.
      */
-    val mar_equinox: AstroTime,
+    val marEquinox: AstroTime,
 
     /**
      * The date and time of the June soltice for the specified year.
      */
-    val jun_solstice: AstroTime,
+    val junSolstice: AstroTime,
 
     /**
      * The date and time of the September equinox for the specified year.
      */
-    val sep_equinox: AstroTime,
+    val sepEquinox: AstroTime,
 
     /**
      * The date and time of the December solstice for the specified year.
      */
-    val dec_solstice: AstroTime
+    val decSolstice: AstroTime
 )
 
 
@@ -1064,12 +1064,12 @@ data class LibrationInfo(
     /**
      * Distance between the centers of the Earth and Moon in kilometers.
      */
-    val dist_km: Double,
+    val distKm: Double,
 
     /**
      * The apparent angular diameter of the Moon, in degrees, as seen from the center of the Earth.
      */
-    val diam_deg: Double
+    val diamDeg: Double
 )
 
 
@@ -1166,12 +1166,12 @@ class ApsisInfo(
     /**
      * The distance between the centers of the bodies in astronomical units.
      */
-    val dist_au: Double,
+    val distAu: Double,
 
     /**
      * The distance between the centers of the bodies in kilometers.
      */
-    val dist_km: Double
+    val distKm: Double
 )
 
 
@@ -1222,7 +1222,7 @@ enum class EclipseKind {
  *
  * Field `peak` holds the date and time of the center of the eclipse, when it is at its peak.
  *
- * Fields `sd_penum`, `sd_partial`, and `sd_total` hold the semi-duration of each phase
+ * Fields `sdPenum`, `sdPartial`, and `sdTotal` hold the semi-duration of each phase
  * of the eclipse, which is half of the amount of time the eclipse spends in each
  * phase (expressed in minutes), or 0.0 if the eclipse never reaches that phase.
  * By converting from minutes to days, and subtracting/adding with `peak`, the caller
@@ -1243,17 +1243,17 @@ class LunarEclipseInfo(
     /**
      * The semi-duration of the penumbral phase in minutes.
      */
-    val sd_penum: Double,
+    val sdPenum: Double,
 
     /**
      * The semi-duration of the partial phase in minutes, or 0.0 if none.
      */
-    val sd_partial: Double,
+    val sdPartial: Double,
 
     /**
      * The semi-duration of the total phase in minutes, or 0.0 if none.
      */
-    val sd_total: Double
+    val sdTotal: Double
 )
 
 
@@ -1293,68 +1293,67 @@ object Astronomy {
             y < 500.0 -> {
                 u = y / 100
                 u2 = u * u; u3 = u * u2; u4 = u2 * u2; u5 = u2 * u3; u6 = u3 * u3
-                10583.6 - 1014.41 * u + 33.78311 * u2 - 5.952053 * u3 - 0.1798452 * u4 + 0.022174192 * u5 + 0.0090316521 * u6
+                10583.6 - (1014.41 * u) + (33.78311 * u2) - (5.952053 * u3) - (0.1798452 * u4) + (0.022174192 * u5) + (0.0090316521 * u6)
             }
             y < 1600.0 -> {
                 u = (y - 1000) / 100
                 u2 = u * u; u3 = u * u2; u4 = u2 * u2; u5 = u2 * u3; u6 = u3 * u3
-                1574.2 - 556.01 * u + 71.23472 * u2 + 0.319781 * u3 - 0.8503463 * u4 - 0.005050998 * u5 + 0.0083572073 * u6
+                1574.2 - (556.01 * u) + (71.23472 * u2) + (0.319781 * u3) - (0.8503463 * u4) - (0.005050998 * u5) + (0.0083572073 * u6)
             }
             y < 1700.0 -> {
                 u = y - 1600
                 u2 = u * u; u3 = u * u2
-                120.0 - 0.9808 * u - 0.01532 * u2 + u3 / 7129
+                120.0 - (0.9808 * u) - (0.01532 * u2) + (u3 / 7129)
             }
             y < 1800.0 -> {
                 u = y - 1700
                 u2 = u * u; u3 = u * u2; u4 = u2 * u2
-                8.83 + 0.1603 * u - 0.0059285 * u2 + 0.00013336 * u3 - u4 / 1174000
+                8.83 + (0.1603 * u) - (0.0059285 * u2) + (0.00013336 * u3) - (u4 / 1174000)
             }
             y < 1860.0 -> {
                 u = y - 1800
                 u2 = u * u; u3 = u * u2; u4 = u2 * u2; u5 = u2 * u3; u6 = u3 * u3; u7 = u3 * u4
-                13.72 - 0.332447 * u + 0.0068612 * u2 + 0.0041116 * u3 - 0.00037436 * u4 + 0.0000121272 * u5 - 0.0000001699 * u6 + 0.000000000875 * u7
+                13.72 - (0.332447 * u) + (0.0068612 * u2) + (0.0041116 * u3) - (0.00037436 * u4) + (0.0000121272 * u5) - (0.0000001699 * u6) + (0.000000000875 * u7)
             }
             y < 1900.0 -> {
                 u = y - 1860
                 u2 = u * u; u3 = u * u2; u4 = u2 * u2; u5 = u2 * u3
-                7.62 + 0.5737 * u - 0.251754 * u2 + 0.01680668 * u3 - 0.0004473624 * u4 + u5 / 233174
+                7.62 + (0.5737 * u) - (0.251754 * u2) + (0.01680668 * u3) - (0.0004473624 * u4) + (u5 / 233174)
             }
             y < 1920.0 -> {
                 u = y - 1900
                 u2 = u * u; u3 = u * u2; u4 = u2 * u2
-                -2.79 + 1.494119 * u - 0.0598939 * u2 + 0.0061966 * u3 - 0.000197 * u4
+                -2.79 + (1.494119 * u) - (0.0598939 * u2) + (0.0061966 * u3) - (0.000197 * u4)
             }
             y < 1941.0 -> {
                 u = y - 1920
                 u2 = u * u; u3 = u * u2
-                21.20 + 0.84493 * u - 0.076100 * u2 + 0.0020936 * u3
+                21.20 + (0.84493 * u) - (0.076100 * u2) + (0.0020936 * u3)
             }
             y < 1961 -> {
                 u = y - 1950
                 u2 = u * u; u3 = u * u2
-                29.07 + 0.407 * u - u2 / 233 + u3 / 2547
+                29.07 + (0.407 * u) - (u2 / 233) + (u3 / 2547)
             }
             y < 1986.0 -> {
                 u = y - 1975
                 u2 = u * u; u3 = u * u2
-                45.45 + 1.067 * u - u2 / 260 - u3 / 718
+                45.45 + (1.067 * u) - (u2 / 260) - (u3 / 718)
             }
             y < 2005 -> {
                 u = y - 2000
                 u2 = u * u; u3 = u * u2; u4 = u2 * u2; u5 = u2 * u3
-                63.86 + 0.3345 * u - 0.060374 * u2 + 0.0017275 * u3 + 0.000651814 * u4 + 0.00002373599 * u5
+                63.86 + (0.3345 * u) - (0.060374 * u2) + (0.0017275 * u3) + (0.000651814 * u4) + (0.00002373599 * u5)
             }
             y < 2050 -> {
                 u = y - 2000
-                62.92 + 0.32217 * u + 0.005589 * u * u
+                62.92 + (0.32217 * u) + (0.005589 * u * u)
             }
             y < 2150 -> {
                 u = (y - 1820) / 100
-                -20 + 32 * u * u - 0.5628 * (2150 - y)
+                -20 + (32 * u * u) - (0.5628 * (2150 - y))
             }
-            /* all years after 2150 */
-            else -> {
+            else -> {   // all years after 2150
                 u = (y - 1820) / 100
                 -20 + (32 * u * u)
             }

@@ -3,4 +3,4 @@
 # LunarEclipseInfo
 
 [jvm]\
-fun [LunarEclipseInfo](-lunar-eclipse-info.md)(kind: [EclipseKind](../-eclipse-kind/index.md), peak: [AstroTime](../-astro-time/index.md), sd_penum: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), sd_partial: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), sd_total: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html))
+fun [LunarEclipseInfo](-lunar-eclipse-info.md)(kind: [EclipseKind](../-eclipse-kind/index.md), peak: [AstroTime](../-astro-time/index.md), sdPenum: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), sdPartial: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), sdTotal: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html))
