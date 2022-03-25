@@ -5548,11 +5548,7 @@ def Constellation(ra, dec):
 
 @enum.unique
 class EclipseKind(enum.Enum):
-    """Selects if/how to correct for atmospheric refraction.
-
-    Some functions allow enabling or disabling atmospheric refraction
-    for the calculated apparent position of a celestial body
-    as seen by an observer on the surface of the Earth.
+    """The different kinds of lunar/solar eclipses.
 
     Values
     ------

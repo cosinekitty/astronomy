@@ -2369,7 +2369,7 @@ atmospheric interference (sunrise or sunset conditions).
 <a name="EclipseKind"></a>
 ## `enum EclipseKind`
 
-**different kinds of lunar/solar eclipses.**
+**The different kinds of lunar/solar eclipses.**
 
 | Value | Description |
 | --- | --- |

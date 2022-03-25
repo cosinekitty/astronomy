@@ -1129,7 +1129,7 @@ namespace CosineKitty
         }
     }
 
-    /// <summary>different kinds of lunar/solar eclipses.</summary>
+    /// <summary>The different kinds of lunar/solar eclipses.</summary>
     public enum EclipseKind
     {
         /// <summary>No eclipse found.</summary>

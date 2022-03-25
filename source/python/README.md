@@ -931,11 +931,7 @@ and `Direction.Set` is used to find sunset times.
 <a name="EclipseKind"></a>
 ### enum EclipseKind
 
-**Selects if/how to correct for atmospheric refraction.**
-
-Some functions allow enabling or disabling atmospheric refraction
-for the calculated apparent position of a celestial body
-as seen by an observer on the surface of the Earth.
+**The different kinds of lunar/solar eclipses.**
 
 | Value | Description |
 | --- | --- |
