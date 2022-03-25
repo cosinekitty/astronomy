@@ -36,7 +36,12 @@ import kotlin.math.roundToLong
 import kotlin.math.sin
 import kotlin.math.sqrt
 import kotlin.math.tan
+import kotlin.math.PI
 
+/**
+ * An invalid body was specified for the given function.
+ */
+class InvalidBodyException(body: Body) : Exception("Invalid body: $body")
 
 /**
  * The factor to convert degrees to radians = pi/180.
@@ -54,12 +59,123 @@ fun Double.degreesToRadians() = this * DEG2RAD
 const val RAD2DEG = 57.295779513082321
 
 /**
+ * The factor to convert radians to sidereal hours = 12/pi.
+ */
+const val RAD2HOUR = 3.819718634205488
+
+/**
+ * The factor to convert sidereal hours to radians = pi/12.
+ */
+const val HOUR2RAD = 0.2617993877991494365
+
+
+/**
+ * The equatorial radius of Jupiter, expressed in kilometers.
+ */
+const val JUPITER_EQUATORIAL_RADIUS_KM = 71492.0
+
+/**
+ * The polar radius of Jupiter, expressed in kilometers.
+ */
+const val JUPITER_POLAR_RADIUS_KM = 66854.0
+
+/**
+ * The volumetric mean radius of Jupiter, expressed in kilometers.
+ */
+const val JUPITER_MEAN_RADIUS_KM = 69911.0
+
+/**
+ * The mean radius of Jupiter's moon Io, expressed in kilometers.
+ */
+const val IO_RADIUS_KM = 1821.6
+
+/**
+ * The mean radius of Jupiter's moon Europa, expressed in kilometers.
+ */
+const val EUROPA_RADIUS_KM = 1560.8
+
+/**
+ * The mean radius of Jupiter's moon Ganymede, expressed in kilometers.
+ */
+const val GANYMEDE_RADIUS_KM = 2631.2
+
+/**
+ * The mean radius of Jupiter's moon Callisto, expressed in kilometers.
+ */
+const val CALLISTO_RADIUS_KM = 2410.3
+
+/**
+ * The speed of light in AU/day.
+ */
+const val C_AUDAY = 173.1446326846693
+
+
+/**
  * Convert an angle expressed in radians to an angle expressed in degrees.
  */
 fun Double.radiansToDegrees() = this * RAD2DEG
 
+/**
+ * The number of kilometers in one astronomical unit (AU).
+ */
+const val KM_PER_AU = 1.4959787069098932e+8
+
+
 private val TimeZoneUtc = TimeZone.getTimeZone("UTC")
 private const val DAYS_PER_TROPICAL_YEAR = 365.24217
+
+private const val ASEC360 = 1296000.0
+private const val ASEC2RAD = 4.848136811095359935899141e-6
+private const val PI2 = 2.0 * PI
+private const val ARC = 3600.0 * 180.0 / PI       // arcseconds per radian
+private const val SUN_RADIUS_KM  = 695700.0
+private const val SUN_RADIUS_AU  = SUN_RADIUS_KM / KM_PER_AU
+private const val EARTH_FLATTENING = 0.996647180302104
+private const val EARTH_EQUATORIAL_RADIUS_KM = 6378.1366
+private const val EARTH_EQUATORIAL_RADIUS_AU = EARTH_EQUATORIAL_RADIUS_KM / KM_PER_AU
+private const val EARTH_POLAR_RADIUS_KM = EARTH_EQUATORIAL_RADIUS_KM * EARTH_FLATTENING
+private const val EARTH_MEAN_RADIUS_KM = 6371.0    // mean radius of the Earth's geoid, without atmosphere
+private const val EARTH_ATMOSPHERE_KM = 88.0       // effective atmosphere thickness for lunar eclipses
+private const val EARTH_ECLIPSE_RADIUS_KM = EARTH_MEAN_RADIUS_KM + EARTH_ATMOSPHERE_KM
+private const val MOON_EQUATORIAL_RADIUS_KM = 1738.1
+private const val MOON_MEAN_RADIUS_KM       = 1737.4
+private const val MOON_POLAR_RADIUS_KM      = 1736.0
+private const val MOON_EQUATORIAL_RADIUS_AU = (MOON_EQUATORIAL_RADIUS_KM / KM_PER_AU)
+private const val ANGVEL = 7.2921150e-5
+private const val SECONDS_PER_DAY = 24.0 * 3600.0
+private const val SOLAR_DAYS_PER_SIDEREAL_DAY = 0.9972695717592592
+private const val MEAN_SYNODIC_MONTH = 29.530588     // average number of days for Moon to return to the same phase
+private const val EARTH_ORBITAL_PERIOD = 365.256
+private const val NEPTUNE_ORBITAL_PERIOD = 60189.0
+private const val REFRACTION_NEAR_HORIZON = 34.0 / 60.0  // degrees of refractive "lift" seen for objects near horizon
+private const val ASEC180 = 180.0 * 60.0 * 60.0;         // arcseconds per 180 degrees (or pi radians)
+private const val AU_PER_PARSEC = (ASEC180 / PI)         // exact definition of how many AU = one parsec
+private const val EARTH_MOON_MASS_RATIO = 81.30056
+
+/*
+    Masses of the Sun and outer planets, used for:
+    (1) Calculating the Solar System Barycenter
+    (2) Integrating the movement of Pluto
+
+    https://web.archive.org/web/20120220062549/http://iau-comm4.jpl.nasa.gov/de405iom/de405iom.pdf
+
+    Page 10 in the above document describes the constants used in the DE405 ephemeris.
+    The following are G*M values (gravity constant * mass) in [au^3 / day^2].
+    This side-steps issues of not knowing the exact values of G and masses M[i];
+    the products GM[i] are known extremely accurately.
+*/
+private const val SUN_GM     = 0.2959122082855911e-03
+private const val MERCURY_GM = 0.4912547451450812e-10
+private const val VENUS_GM   = 0.7243452486162703e-09
+private const val EARTH_GM   = 0.8887692390113509e-09
+private const val MARS_GM    = 0.9549535105779258e-10
+private const val JUPITER_GM = 0.2825345909524226e-06
+private const val SATURN_GM  = 0.8459715185680659e-07
+private const val URANUS_GM  = 0.1292024916781969e-07
+private const val NEPTUNE_GM = 0.1524358900784276e-07
+private const val PLUTO_GM   = 0.2188699765425970e-11
+private const val MOON_GM = EARTH_GM / EARTH_MOON_MASS_RATIO
+
 
 private fun Double.withMinDegreeValue(min: Double): Double {
     var deg = this
@@ -70,7 +186,19 @@ private fun Double.withMinDegreeValue(min: Double): Double {
     return deg
 }
 
+private fun Double.withMaxDegreeValue(max: Double): Double {
+    var deg = this
+    while (deg <= max - 360.0)
+        deg += 360.0
+    while (deg > max)
+        deg -= 360.0
+    return deg
+}
+
+
 private fun toggleAzimuthDirection(az: Double) = (360.0 - az).withMinDegreeValue(0.0)
+private fun longitudeOffset(diff: Double) = diff.withMaxDegreeValue(+180.0)
+private fun normalizeLongitude(lon: Double) = lon.withMinDegreeValue(0.0)
 
 /**
  * The enumeration of celestial bodies supported by Astronomy Engine.
@@ -1597,6 +1725,52 @@ class NodeEventInfo(
 )
 
 
+interface SearchContext {
+    /**
+     * Evaluates a scalar function at a given time.
+     *
+     * @param time
+     *      The time at which to evaluate the function.
+     *
+     * @returns
+     *      The floating point value of the scalar function at the given time.
+     */
+    fun Eval(time: AstroTime): Double
+}
+
+
+/**
+ * Reports the constellation that a given celestial point lies within.
+ *
+ * The #Astronomy.constellation function returns this object
+ * to report which constellation corresponds with a given point in the sky.
+ * Constellations are defined with respect to the B1875 equatorial system
+ * per IAU standard. Although `Astronomy.constellation` requires J2000 equatorial
+ * coordinates, `ConstellationInfo` contains converted B1875 coordinates for reference.
+ */
+class ConstellationInfo(
+    /**
+     * 3-character mnemonic symbol for the constellation, e.g. "Ori".
+     */
+    val symbol: String,
+
+    /**
+     * Full name of constellation, e.g. "Orion".
+     */
+    val name: String,
+
+    /**
+     * Right ascension expressed in B1875 coordinates.
+     */
+    val ra1875: Double,
+
+    /**
+     * Declination expressed in B1875 coordinates.
+     */
+    val dec1875: Double
+)
+
+
 /**
  * The main container of astronomy calculation functions.
  */
@@ -1800,4 +1974,40 @@ object Astronomy {
             altitude -= diff
         }
     }
+
+    /**
+     * Returns the product of mass and universal gravitational constant of a Solar System body.
+     *
+     * For problems involving the gravitational interactions of Solar System bodies,
+     * it is helpful to know the product GM, where G = the universal gravitational constant
+     * and M = the mass of the body. In practice, GM is known to a higher precision than
+     * either G or M alone, and thus using the product results in the most accurate results.
+     * This function returns the product GM in the units au^3/day^2.
+     * The values come from page 10 of a
+     * [JPL memorandum regarding the DE405/LE405 ephemeris](https://web.archive.org/web/20120220062549/http://iau-comm4.jpl.nasa.gov/de405iom/de405iom.pdf).
+     *
+     * @param body
+     *      The body for which to find the GM product.
+     *      Allowed to be the Sun, Moon, EMB (Earth/Moon Barycenter), or any planet.
+     *      Any other value will cause an exception to be thrown.
+     *
+     * @returns
+     *      The mass product of the given body in au^3/day^2.
+     */
+    fun massProduct(body: Body) =
+        when (body) {
+            Body.Sun     -> SUN_GM
+            Body.Mercury -> MERCURY_GM
+            Body.Venus   -> VENUS_GM
+            Body.Earth   -> EARTH_GM
+            Body.Moon    -> MOON_GM
+            Body.EMB     -> EARTH_GM + MOON_GM
+            Body.Mars    -> MARS_GM
+            Body.Jupiter -> JUPITER_GM
+            Body.Saturn  -> SATURN_GM
+            Body.Uranus  -> URANUS_GM
+            Body.Neptune -> NEPTUNE_GM
+            Body.Pluto   -> PLUTO_GM
+            else -> throw InvalidBodyException(body)
+        }
 }

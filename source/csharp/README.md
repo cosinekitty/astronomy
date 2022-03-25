@@ -172,7 +172,7 @@ these are used in function and type names.
 <a name="Astronomy.CALLISTO_RADIUS_KM"></a>
 ### `const double Astronomy.CALLISTO_RADIUS_KM = 2410.3;`
 
-**The The mean radius of Jupiter's moon Callisto, expressed in kilometers.**
+**The mean radius of Jupiter's moon Callisto, expressed in kilometers.**
 
 
 ---
@@ -188,7 +188,7 @@ these are used in function and type names.
 <a name="Astronomy.EUROPA_RADIUS_KM"></a>
 ### `const double Astronomy.EUROPA_RADIUS_KM = 1560.8;`
 
-**The The mean radius of Jupiter's moon Europa, expressed in kilometers.**
+**The mean radius of Jupiter's moon Europa, expressed in kilometers.**
 
 
 ---
@@ -196,7 +196,7 @@ these are used in function and type names.
 <a name="Astronomy.GANYMEDE_RADIUS_KM"></a>
 ### `const double Astronomy.GANYMEDE_RADIUS_KM = 2631.2;`
 
-**The The mean radius of Jupiter's moon Ganymede, expressed in kilometers.**
+**The mean radius of Jupiter's moon Ganymede, expressed in kilometers.**
 
 
 ---
@@ -212,7 +212,7 @@ these are used in function and type names.
 <a name="Astronomy.IO_RADIUS_KM"></a>
 ### `const double Astronomy.IO_RADIUS_KM = 1821.6;`
 
-**The The mean radius of Jupiter's moon Io, expressed in kilometers.**
+**The mean radius of Jupiter's moon Io, expressed in kilometers.**
 
 
 ---
