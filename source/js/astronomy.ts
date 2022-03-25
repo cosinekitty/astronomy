@@ -7853,9 +7853,6 @@ export function SearchLunarEclipse(date: FlexibleDateTime): LunarEclipseInfo {
  * Returned by {@link SearchGlobalSolarEclipse} or {@link NextGlobalSolarEclipse}
  * to report information about a solar eclipse event.
  *
- * Field `peak` holds the date and time of the peak of the eclipse, defined as
- * the instant when the axis of the Moon's shadow cone passes closest to the Earth's center.
- *
  * The eclipse is classified as partial, annular, or total, depending on the
  * maximum amount of the Sun's disc obscured, as seen at the peak location
  * on the surface of the Earth.
@@ -7877,8 +7874,8 @@ export function SearchLunarEclipse(date: FlexibleDateTime): LunarEclipseInfo {
  *     One of the following string values: `"partial"`, `"annular"`, `"total"`.
  *
  * @property {AstroTime} peak
- *     The date and time of the peak of the eclipse, defined as the instant
- *     when the axis of the Moon's shadow cone passes closest to the Earth's center.
+ *     The date and time when the solar eclipse is darkest.
+ *     This is the instant when the axis of the Moon's shadow cone passes closest to the Earth's center.
  *
  * @property {number} distance
  *     The distance in kilometers between the axis of the Moon's shadow cone
@@ -8102,7 +8099,7 @@ export function NextGlobalSolarEclipse(prevEclipseTime: FlexibleDateTime): Globa
  * (a "local" solar eclipse), a series of events occur. In addition
  * to the time of each event, it is important to know the altitude of the Sun,
  * because each event may be invisible to the observer if the Sun is below
- * the horizon (i.e. it at night).
+ * the horizon.
  *
  * If `altitude` is negative, the event is theoretical only; it would be
  * visible if the Earth were transparent, but the observer cannot actually see it.

@@ -776,9 +776,6 @@ astro_lunar_eclipse_t;
  * If `status` holds any value other than `ASTRO_SUCCESS`, it is an error code;
  * in that case, `kind` holds `ECLIPSE_NONE` and all the other fields are undefined.
  *
- * Field `peak` holds the date and time of the peak of the eclipse, defined as
- * the instant when the axis of the Moon's shadow cone passes closest to the Earth's center.
- *
  * The eclipse is classified as partial, annular, or total, depending on the
  * maximum amount of the Sun's disc obscured, as seen at the peak location
  * on the surface of the Earth.
@@ -800,7 +797,7 @@ typedef struct
 {
     astro_status_t          status;         /**< `ASTRO_SUCCESS` if this struct is valid; otherwise an error code. */
     astro_eclipse_kind_t    kind;           /**< The type of solar eclipse found. */
-    astro_time_t            peak;           /**< The date and time of the eclipse at its peak. */
+    astro_time_t            peak;           /**< The date and time when the solar eclipse is darkest. This is the instant when the axis of the Moon's shadow cone passes closest to the Earth's center. */
     double                  distance;       /**< The distance between the Sun/Moon shadow axis and the center of the Earth, in kilometers. */
     double                  latitude;       /**< The geographic latitude at the center of the peak eclipse shadow. */
     double                  longitude;      /**< The geographic longitude at the center of the peak eclipse shadow. */
@@ -815,7 +812,7 @@ astro_global_solar_eclipse_t;
  * (a "local" solar eclipse), a series of events occur. In addition
  * to the time of each event, it is important to know the altitude of the Sun,
  * because each event may be invisible to the observer if the Sun is below
- * the horizon (i.e. it at night).
+ * the horizon.
  *
  * If `altitude` is negative, the event is theoretical only; it would be
  * visible if the Earth were transparent, but the observer cannot actually see it.

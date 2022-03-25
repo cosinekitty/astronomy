@@ -630,9 +630,6 @@ may determine the date and time of the beginning/end of each eclipse phase.
 Returned by [SearchGlobalSolarEclipse](#SearchGlobalSolarEclipse) or [NextGlobalSolarEclipse](#NextGlobalSolarEclipse)
 to report information about a solar eclipse event.
 
-Field `peak` holds the date and time of the peak of the eclipse, defined as
-the instant when the axis of the Moon's shadow cone passes closest to the Earth's center.
-
 The eclipse is classified as partial, annular, or total, depending on the
 maximum amount of the Sun's disc obscured, as seen at the peak location
 on the surface of the Earth.
@@ -654,7 +651,7 @@ not be used.
 | Name | Type | Description |
 | --- | --- | --- |
 | kind | <code>string</code> | One of the following string values: `"partial"`, `"annular"`, `"total"`. |
-| peak | [<code>AstroTime</code>](#AstroTime) | The date and time of the peak of the eclipse, defined as the instant     when the axis of the Moon's shadow cone passes closest to the Earth's center. |
+| peak | [<code>AstroTime</code>](#AstroTime) | The date and time when the solar eclipse is darkest.     This is the instant when the axis of the Moon's shadow cone passes closest to the Earth's center. |
 | distance | <code>number</code> | The distance in kilometers between the axis of the Moon's shadow cone     and the center of the Earth at the time indicated by `peak`. |
 | latitude | <code>number</code> \| <code>undefined</code> | If `kind` holds `"total"`, the geographic latitude in degrees     where the center of the Moon's shadow falls on the Earth at the     time indicated by `peak`; otherwise, `latitude` holds `undefined`. |
 | longitude | <code>number</code> \| <code>undefined</code> | If `kind` holds `"total"`, the geographic longitude in degrees     where the center of the Moon's shadow falls on the Earth at the     time indicated by `peak`; otherwise, `longitude` holds `undefined`. |
@@ -672,7 +669,7 @@ When reporting a solar eclipse observed at a specific location on the Earth
 (a "local" solar eclipse), a series of events occur. In addition
 to the time of each event, it is important to know the altitude of the Sun,
 because each event may be invisible to the observer if the Sun is below
-the horizon (i.e. it at night).
+the horizon.
 
 If `altitude` is negative, the event is theoretical only; it would be
 visible if the Earth were transparent, but the observer cannot actually see it.

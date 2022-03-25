@@ -1258,6 +1258,346 @@ class LunarEclipseInfo(
 
 
 /**
+ * Reports the time and geographic location of the peak of a solar eclipse.
+ *
+ * Returned by #Astronomy.searchGlobalSolarEclipse or #Astronomy.nextGlobalSolarEclipse
+ * to report information about a solar eclipse event.
+ *
+ * The eclipse is classified as partial, annular, or total, depending on the
+ * maximum amount of the Sun's disc obscured, as seen at the peak location
+ * on the surface of the Earth.
+ *
+ * The `kind` field thus holds `EclipseKind.Partial`, `EclipseKind.Annular`, or `EclipseKind.Total`.
+ * A total eclipse is when the peak observer sees the Sun completely blocked by the Moon.
+ * An annular eclipse is like a total eclipse, but the Moon is too far from the Earth's surface
+ * to completely block the Sun; instead, the Sun takes on a ring-shaped appearance.
+ * A partial eclipse is when the Moon blocks part of the Sun's disc, but nobody on the Earth
+ * observes either a total or annular eclipse.
+ *
+ * If `kind` is `EclipseKind.Total` or `EclipseKind.Annular`, the `latitude` and `longitude`
+ * fields give the geographic coordinates of the center of the Moon's shadow projected
+ * onto the daytime side of the Earth at the instant of the eclipse's peak.
+ * If `kind` has any other value, `latitude` and `longitude` are undefined and should
+ * not be used.
+ */
+class GlobalSolarEclipseInfo(
+    /**
+     * The type of solar eclipse: `EclipseKind.Partial`, `EclipseKind.Annular`, or `EclipseKind.Total`.
+     */
+    val kind: EclipseKind,
+
+    /**
+     * The date and time when the solar eclipse is darkest.
+     * This is the instant when the axis of the Moon's shadow cone passes closest to the Earth's center.
+     */
+    val peak: AstroTime,
+
+    /**
+     * The distance between the Sun/Moon shadow axis and the center of the Earth, in kilometers.
+     */
+    val distance: Double,
+
+    /**
+     * The geographic latitude at the center of the peak eclipse shadow.
+     */
+    val latitude: Double,
+
+    /**
+     * The geographic longitude at the center of the peak eclipse shadow.
+     */
+    val longitude: Double
+)
+
+
+/**
+ * Holds a time and the observed altitude of the Sun at that time.
+ *
+ * When reporting a solar eclipse observed at a specific location on the Earth
+ * (a "local" solar eclipse), a series of events occur. In addition
+ * to the time of each event, it is important to know the altitude of the Sun,
+ * because each event may be invisible to the observer if the Sun is below
+ * the horizon (i.e. it at night).
+ *
+ * If `altitude` is negative, the event is theoretical only; it would be
+ * visible if the Earth were transparent, but the observer cannot actually see it.
+ * If `altitude` is positive but less than a few degrees, visibility will be impaired by
+ * atmospheric interference (sunrise or sunset conditions).
+ */
+class EclipseEvent (
+    /**
+     * The date and time of the event.
+     */
+    val time: AstroTime,
+
+    /**
+     * The angular altitude of the center of the Sun above/below the horizon, at `time`,
+     * corrected for atmospheric refraction and expressed in degrees.
+     */
+    val altitude: Double
+)
+
+
+/**
+ * Information about a solar eclipse as seen by an observer at a given time and geographic location.
+ *
+ * Returned by #Astronomy.searchLocalSolarEclipse or #Astronomy.nextLocalSolarEclipse
+ * to report information about a solar eclipse as seen at a given geographic location.
+ *
+ * When a solar eclipse is found, it is classified as partial, annular, or total.
+ * The `kind` field thus holds `EclipseKind.Partial`, `EclipseKind.Annular`, or `EclipseKind.Total`.
+ * A partial solar eclipse is when the Moon does not line up directly enough with the Sun
+ * to completely block the Sun's light from reaching the observer.
+ * An annular eclipse occurs when the Moon's disc is completely visible against the Sun
+ * but the Moon is too far away to completely block the Sun's light; this leaves the
+ * Sun with a ring-like appearance.
+ * A total eclipse occurs when the Moon is close enough to the Earth and aligned with the
+ * Sun just right to completely block all sunlight from reaching the observer.
+ *
+ * There are 5 "event" fields, each of which contains a time and a solar altitude.
+ * Field `peak` holds the date and time of the center of the eclipse, when it is at its peak.
+ * The fields `partialBegin` and `partialEnd` are always set, and indicate when
+ * the eclipse begins/ends. If the eclipse reaches totality or becomes annular,
+ * `totalBegin` and `totalEnd` indicate when the total/annular phase begins/ends.
+ * When an event field is valid, the caller must also check its `altitude` field to
+ * see whether the Sun is above the horizon at the time indicated by the `time` field.
+ * </remarks>
+ */
+class LocalSolarEclipseInfo (
+    /**
+     * The type of solar eclipse: `EclipseKind.Partial`, `EclipseKind.Annular`, or `EclipseKind.Total`.
+     */
+    val kind: EclipseKind,
+
+    /**
+     * The time and Sun altitude at the beginning of the eclipse.
+     */
+    val partialBegin: EclipseEvent,
+
+    /**
+     * If this is an annular or a total eclipse, the time and Sun altitude when annular/total phase begins; otherwise invalid.
+     */
+    val totalBegin: EclipseEvent,
+
+    /**
+     * The time and Sun altitude when the eclipse reaches its peak.
+     */
+    val peak: EclipseEvent,
+
+    /**
+     * If this is an annular or a total eclipse, the time and Sun altitude when annular/total phase ends; otherwise invalid.
+     */
+    val totalEnd: EclipseEvent,
+
+    /**
+     * The time and Sun altitude at the end of the eclipse.
+     */
+    val partialEnd: EclipseEvent
+)
+
+
+/**
+ * Information about a transit of Mercury or Venus, as seen from the Earth.
+ *
+ * Returned by #Astronomy.searchTransit or #Astronomy.nextTransit to report
+ * information about a transit of Mercury or Venus.
+ * A transit is when Mercury or Venus passes between the Sun and Earth so that
+ * the other planet is seen in silhouette against the Sun.
+ *
+ * The `start` field reports the moment in time when the planet first becomes
+ * visible against the Sun in its background.
+ * The `peak` field reports when the planet is most aligned with the Sun,
+ * as seen from the Earth.
+ * The `finish` field reports the last moment when the planet is visible
+ * against the Sun in its background.
+ *
+ * The calculations are performed from the point of view of a geocentric observer.
+ */
+class TransitInfo(
+    /**
+     * Date and time at the beginning of the transit.
+     */
+    val start: AstroTime,
+
+    /**
+     * Date and time of the peak of the transit.
+     */
+    val peak: AstroTime,
+
+    /**
+     * Date and time at the end of the transit.
+     */
+    val finish: AstroTime,
+
+    /**
+     * Angular separation in arcminutes between the centers of the Sun and the planet at time `peak`.
+     */
+    val separation: Double
+)
+
+
+internal class ShadowInfo(
+    /**
+     * The time of the shadow state.
+     */
+    val time: AstroTime,
+
+    /**
+     * Dot product of (heliocentric earth) and (geocentric moon).
+     * Defines the shadow plane where the Moon is.
+     */
+    val u: Double,
+
+    /**
+     * km distance between center of Moon and the line passing through the centers of the Sun and Earth.
+     */
+    val r: Double,
+
+    /**
+     * Umbra radius in km, at the shadow plane.
+     */
+    val k: Double,
+
+    /**
+     * Penumbra radius in km, at the shadow plane.
+     */
+    val p: Double,
+
+    /**
+     * Coordinates of target body relative to shadow-casting body at `time`.
+     */
+    val target: AstroVector,
+
+    /**
+     * Heliocentric coordinates of shadow-casting body at `time`.
+     */
+    val dir: AstroVector
+)
+
+
+/**
+ * Information about the brightness and illuminated shape of a celestial body.
+ *
+ * Returned by the functions #Astronomy.illumination and #Astronomy.searchPeakMagnitude
+ * to report the visual magnitude and illuminated fraction of a celestial body at a given date and time.
+ */
+class IllumInfo(
+    /**
+     * The date and time of the observation.
+     */
+    val time: AstroTime,
+
+    /**
+     * The visual magnitude of the body. Smaller values are brighter.
+     */
+    val mag: Double,
+
+    /**
+     * The angle in degrees between the Sun and the Earth, as seen from the body.
+     * Indicates the body's phase as seen from the Earth.
+     */
+    val phaseAngle: Double,
+
+    /**
+     * A value in the range [0.0, 1.0] indicating what fraction of the body's
+     * apparent disc is illuminated, as seen from the Earth.
+     */
+    val phaseFraction: Double,
+
+    /**
+     * The distance between the Sun and the body at the observation time.
+     */
+    val helioDist: Double,
+
+    /**
+     * For Saturn, the tilt angle in degrees of its rings as seen from Earth.
+     * For all other bodies, 0.0.
+     */
+    val ringTilt: Double
+)
+
+
+/**
+ * Information about a body's rotation axis at a given time.
+ *
+ * This structure is returned by #Astronomy.rotationAxis to report
+ * the orientation of a body's rotation axis at a given moment in time.
+ * The axis is specified by the direction in space that the body's north pole
+ * points, using angular equatorial coordinates in the J2000 system (EQJ).
+ *
+ * Thus `ra` is the right ascension, and `dec` is the declination, of the
+ * body's north pole vector at the given moment in time. The north pole
+ * of a body is defined as the pole that lies on the north side of the
+ * [Solar System's invariable plane](https://en.wikipedia.org/wiki/Invariable_plane),
+ * regardless of the body's direction of rotation.
+ *
+ * The `spin` field indicates the angular position of a prime meridian
+ * arbitrarily recommended for the body by the International Astronomical
+ * Union (IAU).
+ *
+ * The fields `ra`, `dec`, and `spin` correspond to the variables
+ * α0, δ0, and W, respectively, from
+ * [Report of the IAU Working Group on Cartographic Coordinates and Rotational Elements: 2015](https://astropedia.astrogeology.usgs.gov/download/Docs/WGCCRE/WGCCRE2015reprint.pdf).
+ *
+ * The field `north` is a unit vector pointing in the direction of the body's north pole.
+ * It is expressed in the equatorial J2000 system (EQJ).
+ */
+class AxisInfo(
+    /**
+     * The J2000 right ascension of the body's north pole direction, in sidereal hours.
+     */
+    val ra: Double,
+
+    /**
+     * The J2000 declination of the body's north pole direction, in degrees.
+     */
+    val dec: Double,
+
+    /**
+     * Rotation angle of the body's prime meridian, in degrees.
+     */
+    val spin: Double,
+
+    /**
+     * A J2000 dimensionless unit vector pointing in the direction of the body's north pole.
+     */
+    val north: AstroVector
+)
+
+
+/**
+ * Indicates whether a crossing through the ecliptic plane is ascending or descending.
+ */
+enum class NodeEventKind {
+    /**
+     * Placeholder value for a missing or invalid node.
+     */
+    Invalid,
+
+    /**
+     * The body passes through the ecliptic plane from south to north.
+     */
+    Ascending,
+
+    /**
+     * The body passes through the ecliptic plane from north to south.
+     */
+    Descending,
+}
+
+
+/**
+ * Information about an ascending or descending node of a body.
+ *
+ * This object is returned by #Astronomy.searchMoonNode and #Astronomy.nextMoonNode
+ * to report information about the center of the Moon passing through the ecliptic plane.
+ */
+class NodeEventInfo(
+    val time: AstroTime,
+    val kind: NodeEventKind
+)
+
+
+/**
  * The main container of astronomy calculation functions.
  */
 object Astronomy {
