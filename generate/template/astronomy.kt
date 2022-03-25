@@ -936,6 +936,330 @@ class Equatorial(
 )
 
 
+/**
+ * Ecliptic angular and Cartesian coordinates.
+ *
+ * Coordinates of a celestial body as seen from the center of the Sun (heliocentric),
+ * oriented with respect to the plane of the Earth's orbit around the Sun (the ecliptic).
+ */
+data class Ecliptic(
+    /**
+     * Cartesian ecliptic vector, with components as follows:
+     * x: the direction of the equinox along the ecliptic plane.
+     * y: in the ecliptic plane 90 degrees prograde from the equinox.
+     * z: perpendicular to the ecliptic plane. Positive is north.
+     */
+    val vec: AstroVector,
+
+    /**
+     * Latitude in degrees north (positive) or south (negative) of the ecliptic plane.
+     */
+    val elat: Double,
+
+    /**
+     * Longitude in degrees around the ecliptic plane prograde from the equinox.
+     */
+    val elon: Double
+)
+
+
+/**
+ * Coordinates of a celestial body as seen by a topocentric observer.
+ *
+ * Horizontal and equatorial coordinates seen by an observer on or near
+ * the surface of the Earth (a topocentric observer).
+ * Optionally corrected for atmospheric refraction.
+ */
+data class Topocentric(
+    /**
+     * Compass direction around the horizon in degrees. 0=North, 90=East, 180=South, 270=West.
+     */
+    val azimuth: Double,
+
+    /**
+     * Angle in degrees above (positive) or below (negative) the observer's horizon.
+     */
+    val altitude: Double,
+
+    /**
+     * Right ascension in sidereal hours.
+     */
+    val ra: Double,
+
+    /**
+     * Declination in degrees.
+     */
+    val dec: Double
+)
+
+
+/**
+ * The dates and times of changes of season for a given calendar year.
+ *
+ * Call #Astronomy.seasons to calculate this data structure for a given year.
+ */
+class SeasonsInfo(
+    /**
+     * The date and time of the March equinox for the specified year.
+     */
+    mar_equinox: AstroTime,
+
+    /**
+     * The date and time of the June soltice for the specified year.
+     */
+    jun_solstice: AstroTime,
+
+    /**
+     * The date and time of the September equinox for the specified year.
+     */
+    sep_equinox: AstroTime,
+
+    /**
+     * The date and time of the December solstice for the specified year.
+     */
+    dec_solstice: AstroTime
+)
+
+
+/**
+ * A lunar quarter event (new moon, first quarter, full moon, or third quarter) along with its date and time.
+ */
+class MoonQuarterInfo(
+    /**
+    * 0=new moon, 1=first quarter, 2=full moon, 3=third quarter.
+    */
+    val quarter: Int,
+
+    /**
+    * The date and time of the lunar quarter.
+    */
+    val time: AstroTime
+)
+
+
+/**
+ * Lunar libration angles, returned by #Astronomy.libration.
+ */
+data class LibrationInfo(
+    /**
+     * Sub-Earth libration ecliptic latitude angle, in degrees.
+     */
+    val elat: Double,
+
+    /**
+     * Sub-Earth libration ecliptic longitude angle, in degrees.
+     */
+    val elon: Double,
+
+    /**
+     * Moon's geocentric ecliptic latitude.
+     */
+    val mlat: Double,
+
+    /**
+     * Moon's geocentric ecliptic longitude.
+     */
+    val mlon: Double,
+
+    /**
+     * Distance between the centers of the Earth and Moon in kilometers.
+     */
+    val dist_km: Double,
+
+    /**
+     * The apparent angular diameter of the Moon, in degrees, as seen from the center of the Earth.
+     */
+    val diam_deg: Double
+)
+
+
+/**
+ * Information about a celestial body crossing a specific hour angle.
+ *
+ * Returned by the function #Astronomy.searchHourAngle to report information about
+ * a celestial body crossing a certain hour angle as seen by a specified topocentric observer.
+ */
+class HourAngleInfo(
+    /**
+     * The date and time when the body crosses the specified hour angle.
+     */
+    val time: AstroTime,
+
+    /**
+     * Apparent coordinates of the body at the time it crosses the specified hour angle.
+     */
+    val hor: Topocentric
+)
+
+
+/**
+ * Contains information about the visibility of a celestial body at a given date and time.
+ *
+ * See #Astronomy.elongation for more detailed information about the members of this class.
+ * See also #Astronomy.searchMaxElongation for how to search for maximum elongation events.
+ */
+class ElongationInfo(
+    /**
+     * The date and time of the observation.
+     */
+    val time: AstroTime,
+
+    /**
+     * Whether the body is best seen in the morning or the evening.
+     */
+    val visibility: Visibility,
+
+    /**
+     * The angle in degrees between the body and the Sun, as seen from the Earth.
+     */
+    val elongation: Double,
+
+    /**
+     * The difference between the ecliptic longitudes of the body and the Sun, as seen from the Earth.
+     */
+    val eclipticSeparation: Double
+)
+
+
+/**
+ * The type of apsis: pericenter (closest approach) or apocenter (farthest distance).
+ */
+enum class ApsisKind {
+    /**
+     * The body is at its closest approach to the object it orbits.
+     */
+    Pericenter,
+
+    /**
+     * The body is at its farthest distance from the object it orbits.
+     */
+    Apocenter,
+}
+
+
+/**
+ * An apsis event: pericenter (closest approach) or apocenter (farthest distance).
+ *
+ * For the Moon orbiting the Earth, or a planet orbiting the Sun, an *apsis* is an
+ * event where the orbiting body reaches its closest or farthest point from the primary body.
+ * The closest approach is called *pericenter* and the farthest point is *apocenter*.
+ *
+ * More specific terminology is common for particular orbiting bodies.
+ * The Moon's closest approach to the Earth is called *perigee* and its farthest
+ * point is called *apogee*. The closest approach of a planet to the Sun is called
+ * *perihelion* and the furthest point is called *aphelion*.
+ *
+ * This data structure is returned by #Astronomy.searchLunarApsis and #Astronomy.nextLunarApsis
+ * to iterate through consecutive alternating perigees and apogees.
+ */
+class ApsisInfo(
+    /**
+     * The date and time of the apsis.
+     */
+    val time: AstroTime,
+
+    /**
+     * Whether this is a pericenter or apocenter event.
+     */
+    val kind: ApsisKind,
+
+    /**
+     * The distance between the centers of the bodies in astronomical units.
+     */
+    val dist_au: Double,
+
+    /**
+     * The distance between the centers of the bodies in kilometers.
+     */
+    val dist_km: Double
+)
+
+
+/**
+ * The different kinds of lunar/solar eclipses.
+ */
+enum class EclipseKind {
+    /**
+     * No eclipse found.
+     */
+    None,
+
+    /**
+     * A penumbral lunar eclipse. (Never used for a solar eclipse.)
+     */
+    Penumbral,
+
+    /**
+     * A partial lunar/solar eclipse.
+     */
+    Partial,
+
+    /**
+     * An annular solar eclipse. (Never used for a lunar eclipse.)
+     */
+    Annular,
+
+    /**
+     * A total lunar/solar eclipse.
+     */
+    Total,
+}
+
+
+/**
+ * Information about a lunar eclipse.
+ *
+ * Returned by #Astronomy.searchLunarEclipse or #Astronomy.nextLunarEclipse
+ * to report information about a lunar eclipse event.
+ * When a lunar eclipse is found, it is classified as penumbral, partial, or total.
+ * Penumbral eclipses are difficult to observe, because the Moon is only slightly dimmed
+ * by the Earth's penumbra; no part of the Moon touches the Earth's umbra.
+ * Partial eclipses occur when part, but not all, of the Moon touches the Earth's umbra.
+ * Total eclipses occur when the entire Moon passes into the Earth's umbra.
+ *
+ * The `kind` field thus holds `EclipseKind.Penumbral`, `EclipseKind.Partial`,
+ * or `EclipseKind.Total`, depending on the kind of lunar eclipse found.
+ *
+ * Field `peak` holds the date and time of the center of the eclipse, when it is at its peak.
+ *
+ * Fields `sd_penum`, `sd_partial`, and `sd_total` hold the semi-duration of each phase
+ * of the eclipse, which is half of the amount of time the eclipse spends in each
+ * phase (expressed in minutes), or 0.0 if the eclipse never reaches that phase.
+ * By converting from minutes to days, and subtracting/adding with `peak`, the caller
+ * may determine the date and time of the beginning/end of each eclipse phase.
+ */
+class LunarEclipseInfo(
+
+    /**
+     * The type of lunar eclipse found.
+     */
+    val kind: EclipseKind,
+
+    /**
+     * The time of the eclipse at its peak.
+     */
+    val peak: AstroTime,
+
+    /**
+     * The semi-duration of the penumbral phase in minutes.
+     */
+    val sd_penum: Double,
+
+    /**
+     * The semi-duration of the partial phase in minutes, or 0.0 if none.
+     */
+    val sd_partial: Double,
+
+    /**
+     * The semi-duration of the total phase in minutes, or 0.0 if none.
+     */
+    val sd_total: Double
+)
+
+
+/**
+ * The main container of astronomy calculation functions.
+ */
 object Astronomy {
     private const val SECONDS_PER_DAY = 24 * 3600
     internal fun terrestrialTime(ut: Double): Double = ut + deltaT(ut) / SECONDS_PER_DAY

@@ -5,6 +5,8 @@
 [jvm]\
 object [Astronomy](index.md)
 
+The main container of astronomy calculation functions.
+
 ## Functions
 
 | Name | Summary |

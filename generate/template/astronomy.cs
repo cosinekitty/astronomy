@@ -1129,7 +1129,7 @@ namespace CosineKitty
         }
     }
 
-    /// <summary>different kinds of lunar/solar eclipses.</summary>
+    /// <summary>The different kinds of lunar/solar eclipses.</summary>
     public enum EclipseKind
     {
         /// <summary>No eclipse found.</summary>
@@ -1155,7 +1155,7 @@ namespace CosineKitty
     /// Returned by #Astronomy.SearchLunarEclipse or #Astronomy.NextLunarEclipse
     /// to report information about a lunar eclipse event.
     /// When a lunar eclipse is found, it is classified as penumbral, partial, or total.
-    /// Penumbral eclipses are difficult to observe, because the moon is only slightly dimmed
+    /// Penumbral eclipses are difficult to observe, because the Moon is only slightly dimmed
     /// by the Earth's penumbra; no part of the Moon touches the Earth's umbra.
     /// Partial eclipses occur when part, but not all, of the Moon touches the Earth's umbra.
     /// Total eclipses occur when the entire Moon passes into the Earth's umbra.

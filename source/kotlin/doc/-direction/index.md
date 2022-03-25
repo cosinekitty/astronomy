@@ -18,5 +18,5 @@ Selects whether to search for a rising event or a setting event for a celestial 
 
 | Name | Summary |
 |---|---|
-| [name](../-visibility/-morning/index.md#-372974862%2FProperties%2F-1216412040) | [jvm]<br>val [name](../-visibility/-morning/index.md#-372974862%2FProperties%2F-1216412040): [String](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
-| [ordinal](../-visibility/-morning/index.md#-739389684%2FProperties%2F-1216412040) | [jvm]<br>val [ordinal](../-visibility/-morning/index.md#-739389684%2FProperties%2F-1216412040): [Int](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) |
+| [name](../-eclipse-kind/-none/index.md#-372974862%2FProperties%2F-1216412040) | [jvm]<br>val [name](../-eclipse-kind/-none/index.md#-372974862%2FProperties%2F-1216412040): [String](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
+| [ordinal](../-eclipse-kind/-none/index.md#-739389684%2FProperties%2F-1216412040) | [jvm]<br>val [ordinal](../-eclipse-kind/-none/index.md#-739389684%2FProperties%2F-1216412040): [Int](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) |

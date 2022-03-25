@@ -737,7 +737,7 @@ astro_eclipse_kind_t;
  * If `status` holds any other value, it is an error code and the other fields are undefined.
  *
  * When a lunar eclipse is found, it is classified as penumbral, partial, or total.
- * Penumbral eclipses are difficult to observe, because the moon is only slightly dimmed
+ * Penumbral eclipses are difficult to observe, because the Moon is only slightly dimmed
  * by the Earth's penumbra; no part of the Moon touches the Earth's umbra.
  * Partial eclipses occur when part, but not all, of the Moon touches the Earth's umbra.
  * Total eclipses occur when the entire Moon passes into the Earth's umbra.
