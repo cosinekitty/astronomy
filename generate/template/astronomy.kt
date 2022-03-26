@@ -2327,6 +2327,53 @@ object Astronomy {
         return Observer(lat_deg, lon_deg, 1000.0 * height_km)
     }
 
+    private fun nutationRot(time: AstroTime, dir: PrecessDirection): RotationMatrix {
+        val tilt = earthTilt(time)
+        val oblm = tilt.mobl.degreesToRadians()
+        val oblt = tilt.tobl.degreesToRadians()
+        val psi = tilt.dpsi * ASEC2RAD
+        val cobm = cos(oblm)
+        val sobm = sin(oblm)
+        val cobt = cos(oblt)
+        val sobt = sin(oblt)
+        val cpsi = cos(psi)
+        val spsi = sin(psi)
+
+        val xx = cpsi
+        val yx = -spsi * cobm
+        val zx = -spsi * sobm
+        val xy = spsi * cobt
+        val yy = cpsi * cobm * cobt + sobm * sobt
+        val zy = cpsi * sobm * cobt - cobm * sobt
+        val xz = spsi * sobt
+        val yz = cpsi * cobm * sobt - sobm * cobt
+        val zz = cpsi * sobm * sobt + cobm * cobt
+
+        return when (dir) {
+            // Perform rotation from other epoch to J2000.0.
+            PrecessDirection.Into2000 ->
+                RotationMatrix(
+                    xx, yx, zx,
+                    xy, yy, zy,
+                    xz, yz, zz
+                )
+
+            // Perform rotation from J2000.0 to other epoch.
+            PrecessDirection.From2000 ->
+                RotationMatrix(
+                    xx, xy, xz,
+                    yx, yy, yz,
+                    zx, zy, zz
+                )
+        }
+    }
+
+    private fun nutation(pos: AstroVector, dir: PrecessDirection) =
+        nutationRot(pos.t, dir).rotate(pos)
+
+    private fun nutationPosVel(state: StateVector, dir: PrecessDirection) =
+        nutationRot(state.t, dir).rotate(state)
+
     //==================================================================================================
     // Generated code goes to the bottom of the source file,
     // so that most line numbers are consistent between template code and target code.

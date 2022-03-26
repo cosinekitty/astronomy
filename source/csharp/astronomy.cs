@@ -4273,15 +4273,15 @@ namespace CosineKitty
             return new RotationMatrix(rot);
         }
 
-        private static AstroVector precession(AstroVector pos, AstroTime time, PrecessDirection dir)
+        private static AstroVector precession(AstroVector pos, PrecessDirection dir)
         {
-            RotationMatrix r = precession_rot(time, dir);
+            RotationMatrix r = precession_rot(pos.t, dir);
             return RotateVector(r, pos);
         }
 
-        private static StateVector precession_posvel(StateVector state, AstroTime time, PrecessDirection dir)
+        private static StateVector precession_posvel(StateVector state, PrecessDirection dir)
         {
-            RotationMatrix rot = precession_rot(time, dir);
+            RotationMatrix rot = precession_rot(state.t, dir);
             return RotateState(rot, state);
         }
 
@@ -4671,15 +4671,15 @@ namespace CosineKitty
         }
 
 
-        private static AstroVector nutation(AstroVector pos, AstroTime time, PrecessDirection dir)
+        private static AstroVector nutation(AstroVector pos, PrecessDirection dir)
         {
-            RotationMatrix rot = nutation_rot(time, dir);
+            RotationMatrix rot = nutation_rot(pos.t, dir);
             return RotateVector(rot, pos);
         }
 
-        private static StateVector nutation_posvel(StateVector state, AstroTime time, PrecessDirection dir)
+        private static StateVector nutation_posvel(StateVector state, PrecessDirection dir)
         {
-            RotationMatrix rot = nutation_rot(time, dir);
+            RotationMatrix rot = nutation_rot(state.t, dir);
             return RotateState(rot, state);
         }
 
@@ -4699,16 +4699,8 @@ namespace CosineKitty
                     throw new ArgumentException("Bad vector");
                 }
 
-                if (pos.z < 0)
-                {
-                    ra = 0.0;
-                    dec = -90.0;
-                }
-                else
-                {
-                    ra = 0.0;
-                    dec = +90.0;
-                }
+                ra = 0.0;
+                dec = (pos.z < 0) ? -90.0 : +90.0;
             }
             else
             {
@@ -4722,30 +4714,30 @@ namespace CosineKitty
             return new Equatorial(ra, dec, dist, pos);
         }
 
-        private static AstroVector gyration(AstroVector pos, AstroTime time, PrecessDirection dir)
+        private static AstroVector gyration(AstroVector pos, PrecessDirection dir)
         {
             // Combine nutation and precession into a single operation I call "gyration".
             // The order they are composed depends on the direction,
             // because both directions are mutual inverse functions.
             return (dir == PrecessDirection.Into2000) ?
-                precession(nutation(pos, time, dir), time, dir) :
-                nutation(precession(pos, time, dir), time, dir);
+                precession(nutation(pos, dir), dir) :
+                nutation(precession(pos, dir), dir);
         }
 
-        private static StateVector gyration_posvel(StateVector state, AstroTime time, PrecessDirection dir)
+        private static StateVector gyration_posvel(StateVector state, PrecessDirection dir)
         {
             // Combine nutation and precession into a single operation I call "gyration".
             // The order they are composed depends on the direction,
             // because both directions are mutual inverse functions.
             return (dir == PrecessDirection.Into2000) ?
-                precession_posvel(nutation_posvel(state, time, dir), time, dir) :
-                nutation_posvel(precession_posvel(state, time, dir), time, dir);
+                precession_posvel(nutation_posvel(state, dir), dir) :
+                nutation_posvel(precession_posvel(state, dir), dir);
         }
 
         private static AstroVector geo_pos(AstroTime time, Observer observer)
         {
             AstroVector pos = terra(observer, time).Position();
-            return gyration(pos, time, PrecessDirection.Into2000);
+            return gyration(pos, PrecessDirection.Into2000);
         }
 
         private static AstroVector spin(double angle, AstroVector pos)
@@ -4806,7 +4798,7 @@ namespace CosineKitty
             AstroVector mpos1 = ecl2equ_vec(time, gepos);
 
             /* Convert from mean equinox of date to J2000. */
-            AstroVector mpos2 = precession(mpos1, time, PrecessDirection.Into2000);
+            AstroVector mpos2 = precession(mpos1, PrecessDirection.Into2000);
 
             return mpos2;
         }
@@ -5466,7 +5458,7 @@ namespace CosineKitty
             switch (equdate)
             {
                 case EquatorEpoch.OfDate:
-                    AstroVector datevect = gyration(j2000, time, PrecessDirection.From2000);
+                    AstroVector datevect = gyration(j2000, PrecessDirection.From2000);
                     return vector2radec(datevect);
 
                 case EquatorEpoch.J2000:
@@ -5579,7 +5571,7 @@ namespace CosineKitty
                 return state;
 
             if (equdate == EquatorEpoch.J2000)
-                return gyration_posvel(state, time, PrecessDirection.Into2000);
+                return gyration_posvel(state, PrecessDirection.Into2000);
 
             throw new ArgumentException(string.Format("Unsupported equator epoch {0}", equdate));
         }
@@ -5619,7 +5611,7 @@ namespace CosineKitty
             EquatorEpoch equdate)
         {
             if (equdate == EquatorEpoch.J2000)
-                vector = gyration(vector, vector.t, PrecessDirection.From2000);
+                vector = gyration(vector, PrecessDirection.From2000);
             return inverse_terra(vector);
         }
 
@@ -5853,7 +5845,7 @@ namespace CosineKitty
             AstroVector sun2000 = new AstroVector(-earth2000.x, -earth2000.y, -earth2000.z, adjusted_time);
 
             /* Convert to equatorial Cartesian coordinates of date. */
-            AstroVector sun_ofdate = gyration(sun2000, adjusted_time, PrecessDirection.From2000);
+            AstroVector sun_ofdate = gyration(sun2000, PrecessDirection.From2000);
 
             /* Convert equatorial coordinates to ecliptic coordinates. */
             double true_obliq = DEG2RAD * e_tilt(adjusted_time).tobl;
@@ -9227,8 +9219,8 @@ namespace CosineKitty
             var pos1 = new AstroVector(0.0, 0.0, 1.0, time);
 
             // Convert the vector into J2000 coordinates.
-            AstroVector pos2 = nutation(pos1, time, PrecessDirection.Into2000);
-            axis.north = precession(pos2, time, PrecessDirection.Into2000);
+            AstroVector pos2 = nutation(pos1, PrecessDirection.Into2000);
+            axis.north = precession(pos2, PrecessDirection.Into2000);
 
             // Derive angular values: right ascension and declination.
             Equatorial equ = Astronomy.EquatorFromVector(axis.north);
