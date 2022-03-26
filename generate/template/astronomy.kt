@@ -2010,4 +2010,136 @@ object Astronomy {
             Body.Pluto   -> PLUTO_GM
             else -> throw InvalidBodyException(body)
         }
+
+    private enum class PrecessDirection {
+        From2000,
+        Into2000,
+    }
+
+    private fun precessionRot(time: AstroTime, dir: PrecessDirection): RotationMatrix {
+        val t = time.tt / 36525
+        val eps0 = 84381.406 * ASEC2RAD
+
+        val psia   = (((((-    0.0000000951  * t
+                          +    0.000132851 ) * t
+                          -    0.00114045  ) * t
+                          -    1.0790069   ) * t
+                          + 5038.481507    ) * t) * ASEC2RAD
+
+        val omegaa = (((((+    0.0000003337  * t
+                          -    0.000000467 ) * t
+                          -    0.00772503  ) * t
+                          +    0.0512623   ) * t
+                          -    0.025754    ) * t + eps0) * ASEC2RAD
+
+        val chia   = (((((-    0.0000000560  * t
+                          +    0.000170663 ) * t
+                          -    0.00121197  ) * t
+                          -    2.3814292   ) * t
+                          +   10.556403    ) * t) * ASEC2RAD
+
+        val sa = sin(eps0)
+        val ca = cos(eps0)
+        val sb = sin(-psia)
+        val cb = cos(-psia)
+        val sc = sin(-omegaa)
+        val cc = cos(-omegaa)
+        val sd = sin(chia)
+        val cd = cos(chia)
+
+        val xx =  cd*cb - sb*sd*cc
+        val yx =  cd*sb*ca + sd*cc*cb*ca - sa*sd*sc
+        val zx =  cd*sb*sa + sd*cc*cb*sa + ca*sd*sc
+        val xy = -sd*cb - sb*cd*cc
+        val yy = -sd*sb * ca + cd*cc*cb*ca - sa*cd*sc
+        val zy = -sd*sb * sa + cd*cc*cb*sa + ca*cd*sc
+        val xz =  sb*sc
+        val yz = -sc*cb*ca - sa*cc
+        val zz = -sc*cb*sa + cc*ca
+
+        return when (dir) {
+            // Perform rotation from other epoch to J2000.0.
+            PrecessDirection.Into2000 ->
+                RotationMatrix(
+                    xx, yx, zx,
+                    xy, yy, zy,
+                    xz, yz, zz
+                )
+
+            // Perform rotation from J2000.0 to other epoch.
+            PrecessDirection.From2000 ->
+                RotationMatrix(
+                    xx, xy, xz,
+                    yx, yy, yz,
+                    zx, zy, zz
+                )
+        }
+    }
+
+    private fun precession(pos: AstroVector, time: AstroTime, dir: PrecessDirection) =
+        precessionRot(time, dir).rotate(pos)
+
+    private fun precessionPosVel(state: StateVector, time: AstroTime, dir: PrecessDirection) =
+        precessionRot(time, dir).rotate(state)
+
+    private class EarthTilt(
+        val tt: Double,
+        val dpsi: Double,
+        val deps: Double,
+        val ee: Double,
+        val mobl: Double,
+        val tobl: Double
+    )
+
+    private class IauRow(
+        val nals0: Int,
+        val nals1: Int,
+        val nals2: Int,
+        val nals3: Int,
+        val nals4: Int,
+        val cls0: Double,
+        val cls1: Double,
+        val cls2: Double,
+        val cls3: Double,
+        val cls4: Double,
+        val cls5: Double
+    )
+
+    private fun iau2000b(time: AstroTime) {
+        // Adapted from the NOVAS C 3.1 function of the same name.
+        // We cache Earth nutation angles `psi` and `eps` inside AstroTime for efficiency.
+        // If nutation has not already been calculated, these values will be NaN.
+        // Lazy-evaluate both angles.
+
+        if (time.psi.isNaN()) {
+            val t = time.tt / 36525.0
+            val el  = ((485868.249036 + t * 1717915923.2178) % ASEC360) * ASEC2RAD
+            val elp = ((1287104.79305 + t * 129596581.0481)  % ASEC360) * ASEC2RAD
+            val f   = ((335779.526232 + t * 1739527262.8478) % ASEC360) * ASEC2RAD
+            val d   = ((1072260.70369 + t * 1602961601.2090) % ASEC360) * ASEC2RAD
+            val om  = ((450160.398036 - t * 6962890.5431)    % ASEC360) * ASEC2RAD
+            var dp = 0.0
+            var de = 0.0
+            for (i in 76 downTo 0) {
+                val arg = (
+                    iauRow[i].nals0*el + iauRow[i].nals1*elp +
+                    iauRow[i].nals2*f + iauRow[i].nals3*d +
+                    iauRow[i].nals4*om
+                ) % PI2
+                val sarg = sin(arg)
+                val carg = cos(arg)
+                dp += (iauRow[i].cls0 + iauRow[i].cls1*t) * sarg + iauRow[i].cls2*carg
+                de += (iauRow[i].cls3 + iauRow[i].cls4*t) * carg + iauRow[i].cls5*sarg
+            }
+            time.psi = -0.000135 + (dp * 1.0e-7)
+            time.eps = +0.000388 + (de * 1.0e-7)
+        }
+    }
+
+    //==================================================================================================
+    // Generated code goes to the bottom of the source file,
+    // so that most line numbers are consistent between template code and target code.
+
+    // Table of coefficients for calculating nutation using the IAU2000b model.
+    private val iauRow: Array<IauRow> = arrayOf($ASTRO_IAU_DATA())
 }
