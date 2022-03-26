@@ -6187,13 +6187,13 @@ static int SiderealTimeTest(void)
     int error;
     astro_time_t time;
     double gast, diff;
-    const double correct = 140.975528 / 15;    /* https://eco.mtk.nao.ac.jp/cgi-bin/koyomi/cande/gst_en.cgi */
+    const double correct = 9.398368460418821;
 
     time = Astronomy_MakeTime(2022, 3, 15, 21, 50, 0.0);
     gast = Astronomy_SiderealTime(&time);
-    diff = 3.6e+6 * ABS(gast - correct);    /* calculate error in milliseconds */
-    printf("C SiderealTimeTest: gast=%0.10lf, correct=%0.10lf, diff=%0.3lf milliseconds.\n", gast, correct, diff);
-    if (diff > 0.263)
+    diff = ABS(gast - correct);
+    printf("C SiderealTimeTest: gast=%0.15f, correct=%0.15lf, diff=%0.3le hours.\n", gast, correct, diff);
+    if (diff > 1.0e-15)
         FAIL("C SiderealTimeTest: EXCESSIVE ERROR\n");
 
     printf("C SiderealTimeTest: PASS\n");

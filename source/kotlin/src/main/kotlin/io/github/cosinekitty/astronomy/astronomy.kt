@@ -406,6 +406,8 @@ class AstroTime private constructor(
      */
     fun addDays(days: Double) = AstroTime(ut + days)
 
+    internal fun julianCenturies() = tt / 36525.0
+
     companion object {
         private val origin = GregorianCalendar(TimeZoneUtc).also {
             it.set(2000, 0, 1, 12, 0, 0)
@@ -2017,7 +2019,7 @@ object Astronomy {
     }
 
     private fun precessionRot(time: AstroTime, dir: PrecessDirection): RotationMatrix {
-        val t = time.tt / 36525
+        val t = time.julianCenturies()
         val eps0 = 84381.406 * ASEC2RAD
 
         val psia   = (((((-    0.0000000951  * t
@@ -2112,7 +2114,7 @@ object Astronomy {
         // Lazy-evaluate both angles.
 
         if (time.psi.isNaN()) {
-            val t = time.tt / 36525.0
+            val t = time.julianCenturies()
             val el  = ((485868.249036 + t * 1717915923.2178) % ASEC360) * ASEC2RAD
             val elp = ((1287104.79305 + t * 129596581.0481)  % ASEC360) * ASEC2RAD
             val f   = ((335779.526232 + t * 1739527262.8478) % ASEC360) * ASEC2RAD
@@ -2134,6 +2136,72 @@ object Astronomy {
             time.psi = -0.000135 + (dp * 1.0e-7)
             time.eps = +0.000388 + (de * 1.0e-7)
         }
+    }
+
+    private fun meanObliquity(time: AstroTime): Double {
+        val t = time.julianCenturies()
+        val asec =
+            ((((  -0.0000000434   * t
+                -  0.000000576  ) * t
+                +  0.00200340   ) * t
+                -  0.0001831    ) * t
+                - 46.836769     ) * t + 84381.406
+        return asec / 3600
+    }
+
+    private fun earthTilt(time: AstroTime): EarthTilt {
+        iau2000b(time)  // lazy-evaluate time.psi and time.eps
+        val mobl = meanObliquity(time)
+        val tobl = mobl + (time.eps / 3600)
+        val ee = time.psi * cos(mobl.degreesToRadians()) / 15.0
+        return EarthTilt(time.tt, time.psi, time.eps, ee, mobl, tobl)
+    }
+
+    private fun earthRotationAngle(time: AstroTime): Double {
+        val thet1 = 0.7790572732640 + (0.00273781191135448 * time.ut)
+        val thet3 = time.ut % 1.0
+        val theta = 360.0 *((thet1 + thet3) % 1.0)
+        return if (theta < 0.0) theta + 360.0 else theta
+    }
+
+    /**
+     * Calculates Greenwich Apparent Sidereal Time (GAST).
+     *
+     * Given a date and time, this function calculates the rotation of the
+     * Earth, represented by the equatorial angle of the Greenwich prime meridian
+     * with respect to distant stars (not the Sun, which moves relative to background
+     * stars by almost one degree per day).
+     * This angle is called Greenwich Apparent Sidereal Time (GAST).
+     * GAST is measured in sidereal hours in the half-open range [0, 24).
+     * When GAST = 0, it means the prime meridian is aligned with the of-date equinox,
+     * corrected at that time for precession and nutation of the Earth's axis.
+     * In this context, the *equinox* is the direction in space where the Earth's
+     * orbital plane (the ecliptic) intersects with the plane of the Earth's equator,
+     * at the location on the Earth's orbit of the (seasonal) March equinox.
+     * As the Earth rotates, GAST increases from 0 up to 24 sidereal hours,
+     * then starts over at 0.
+     * To convert to degrees, multiply the return value by 15.
+     *
+     * @param time
+     *      The date and time for which to find GAST.
+     *      As an optimization, this function caches the sideral time value in `time`,
+     *      unless it has already been cached, in which case the cached value is reused.
+     */
+    fun siderealTime(time: AstroTime): Double {
+        if (time.st.isNaN()) {
+            val t = time.julianCenturies()
+            val eqeq = 15.0 * earthTilt(time).ee
+            val theta = earthRotationAngle(time)
+            val st = (eqeq + 0.014506 +
+                   (((( -    0.0000000368  * t
+                       -    0.000029956  ) * t
+                       -    0.00000044   ) * t
+                       +    1.3915817    ) * t
+                       + 4612.156534     ) * t)
+            val gst = ((st/3600.0 + theta) % 360.0) / 15.0
+            time.st = if (gst < 0.0) gst + 24.0 else gst
+        }
+        return time.st
     }
 
     //==================================================================================================

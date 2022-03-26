@@ -3520,12 +3520,12 @@ namespace csharp_test
 
         static int SiderealTimeTest()
         {
-            const double correct = 140.975528 / 15;    // https://eco.mtk.nao.ac.jp/cgi-bin/koyomi/cande/gst_en.cgi
+            const double correct = 9.398368460418821;
             var time = new AstroTime(2022, 3, 15, 21, 50, 0);
             double gast = Astronomy.SiderealTime(time);
-            double diff = 3.6e+6 * abs(gast - correct);     // calculate error in milliseconds
-            Console.WriteLine($"C# SiderealTimeTest: gast={gast:F10}, correct={correct:F10}, diff={diff:F3} milliseconds.");
-            if (diff > 0.263)
+            double diff = abs(gast - correct);
+            Console.WriteLine($"C# SiderealTimeTest: gast={gast:F10}, correct={correct:F10}, diff={diff:E3}.");
+            if (diff > 1.0e-15)
             {
                 Console.WriteLine("C# SiderealTimeTest: EXCESSIVE ERROR");
                 return 1;

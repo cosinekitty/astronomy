@@ -146,4 +146,20 @@ class Tests {
     }
 
     //----------------------------------------------------------------------------------------
+
+    @Test
+    fun `Sanity check sidereal time`() {
+        // An exhaustive test is not needed, because sidereal time calculations
+        // are indirectly tested through their use in thousands of other
+        // verified calculations. This is just to help isolate a problem
+        // in sidereal time in case it is broken.
+        val correct = 9.398368460418821
+        val time = AstroTime(2022, 3, 15, 21, 50, 0.0)
+        val gast = Astronomy.siderealTime(time)
+        assertTrue(gast.isFinite())
+        val diff = abs(gast - correct)
+        assertTrue(diff < 1.0e-15, "correct=$correct, gast=$gast, diff=$diff")
+    }
+
+    //----------------------------------------------------------------------------------------
 }

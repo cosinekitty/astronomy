@@ -2424,12 +2424,12 @@ def Lagrange():
 #-----------------------------------------------------------------------------------------------------------
 
 def SiderealTime():
-    correct = 140.975528 / 15    # https://eco.mtk.nao.ac.jp/cgi-bin/koyomi/cande/gst_en.cgi
+    correct = 9.398368460418821
     time = astronomy.Time.Make(2022, 3, 15, 21, 50, 0)
     gast = astronomy.SiderealTime(time)
-    diff = 3.6e+6 * abs(gast - correct)     # calculate error in millseconds
-    print('PY SiderealTime: gast={:0.10f}, correct={:0.10f}, diff={:0.3f} milliseconds.'.format(gast, correct, diff))
-    if diff > 0.263:
+    diff = abs(gast - correct)
+    print('PY SiderealTime: gast={:0.15f}, correct={:0.15f}, diff={:0.3e}'.format(gast, correct, diff))
+    if diff > 1.0e-15:
         print('PY SiderealTime: EXCESSIVE ERROR')
         return 1
     print('PY SiderealTime: PASS')

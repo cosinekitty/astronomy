@@ -2705,10 +2705,10 @@ function LagrangeTest() {
 function SiderealTimeTest() {
     const date = new Date('2022-03-15T21:50:00Z');
     const gast = Astronomy.SiderealTime(date);
-    const correct = 140.975528 / 15;    // https://eco.mtk.nao.ac.jp/cgi-bin/koyomi/cande/gst_en.cgi
-    const diff_ms = 3.6e+6 * abs(gast - correct);   // calculate time error in milliseconds
-    console.log(`JS SiderealTimeTest: gast=${gast.toFixed(10)}, correct=${correct.toFixed(10)}, diff=${diff_ms.toFixed(3)} milliseconds.`);
-    if (diff_ms > 0.263) {
+    const correct = 9.398368460418821;
+    const diff = abs(gast - correct);
+    console.log(`JS SiderealTimeTest: gast=${gast.toFixed(15)}, correct=${correct.toFixed(15)}, diff=${diff.toExponential(3)}`);
+    if (diff > 1.0e-15) {
         console.error('JS SiderealTimeTest: FAIL - excessive error.');
         return 1;
     }

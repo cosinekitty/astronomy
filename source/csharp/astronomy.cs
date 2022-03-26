@@ -4502,7 +4502,7 @@ namespace CosineKitty
                 double eqeq = 15.0 * e_tilt(time).ee;    /* Replace with eqeq=0 to get GMST instead of GAST (if we ever need it) */
                 double theta = era(time.ut);
                 double st = (eqeq + 0.014506 +
-                    (((( -    0.0000000368   * t
+                    (((( -    0.0000000368  * t
                         -    0.000029956  ) * t
                         -    0.00000044   ) * t
                         +    1.3915817    ) * t
