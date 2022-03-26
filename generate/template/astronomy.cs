@@ -3305,7 +3305,7 @@ $ASTRO_IAU_DATA()
             return time.st;     // return sidereal hours in the half-open range [0, 24).
         }
 
-        static Observer inverse_terra(AstroVector ovec, double st)
+        private static Observer inverse_terra(AstroVector ovec)
         {
             double lon_deg, lat_deg, height_km;
 
@@ -3326,6 +3326,7 @@ $ASTRO_IAU_DATA()
             else
             {
                 double stlocl = Math.Atan2(y, x);
+                double st = SiderealTime(ovec.t);
                 /* Calculate exact longitude. */
                 lon_deg = RAD2DEG*stlocl - (15.0 * st);
                 /* Normalize longitude to the range (-180, +180]. */
@@ -3359,7 +3360,7 @@ $ASTRO_IAU_DATA()
                 }
                 /* We now have a solution for the latitude in radians. */
                 lat_deg = lat * RAD2DEG;
-                /* Solve for exact height in meters. */
+                /* Solve for exact height in kilometers. */
                 /* There are two formulas I can use. Use whichever has the less risky denominator. */
                 double adjust = EARTH_EQUATORIAL_RADIUS_KM / denom;
                 if (Math.Abs(s) > Math.Abs(c))
@@ -3374,8 +3375,7 @@ $ASTRO_IAU_DATA()
         private static StateVector terra(Observer observer, AstroTime time)
         {
             double st = SiderealTime(time);
-            double df = 1.0 - 0.003352819697896;    /* flattening of the Earth */
-            double df2 = df * df;
+            double df2 = EARTH_FLATTENING * EARTH_FLATTENING;
             double phi = observer.latitude * DEG2RAD;
             double sinphi = Math.Sin(phi);
             double cosphi = Math.Cos(phi);
@@ -4406,10 +4406,9 @@ $ASTRO_IAU_DATA()
             AstroVector vector,
             EquatorEpoch equdate)
         {
-            double gast = SiderealTime(vector.t);
             if (equdate == EquatorEpoch.J2000)
                 vector = gyration(vector, vector.t, PrecessDirection.From2000);
-            return inverse_terra(vector, gast);
+            return inverse_terra(vector);
         }
 
         /// <summary>

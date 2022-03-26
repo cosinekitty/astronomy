@@ -29,14 +29,16 @@ package io.github.cosinekitty.astronomy
 
 import java.text.SimpleDateFormat
 import java.util.*
+
 import kotlin.math.absoluteValue
 import kotlin.math.atan2
 import kotlin.math.cos
+import kotlin.math.hypot
+import kotlin.math.PI
 import kotlin.math.roundToLong
 import kotlin.math.sin
 import kotlin.math.sqrt
 import kotlin.math.tan
-import kotlin.math.PI
 
 /**
  * An invalid body was specified for the given function.
@@ -131,6 +133,7 @@ private const val ARC = 3600.0 * 180.0 / PI       // arcseconds per radian
 private const val SUN_RADIUS_KM  = 695700.0
 private const val SUN_RADIUS_AU  = SUN_RADIUS_KM / KM_PER_AU
 private const val EARTH_FLATTENING = 0.996647180302104
+private const val EARTH_FLATTENING_SQUARED = EARTH_FLATTENING * EARTH_FLATTENING
 private const val EARTH_EQUATORIAL_RADIUS_KM = 6378.1366
 private const val EARTH_EQUATORIAL_RADIUS_AU = EARTH_EQUATORIAL_RADIUS_KM / KM_PER_AU
 private const val EARTH_POLAR_RADIUS_KM = EARTH_EQUATORIAL_RADIUS_KM * EARTH_FLATTENING
@@ -2202,6 +2205,126 @@ object Astronomy {
             time.st = if (gst < 0.0) gst + 24.0 else gst
         }
         return time.st
+    }
+
+    /**
+     * Calcluate the geocentric position and velocity of a topocentric observer.
+     *
+     * Given the geographic location of an observer and a time, calculate the position
+     * and velocity of the observer, relative to the center of the Earth.
+     * The state vector is expressed in the equator-of-date system (EQD).
+     *
+     * @param observer
+     *      The latitude, longitude, and elevation of the observer.
+     *
+     * @param time
+     *      The time of the observation.
+     *
+     * @returns
+     *      An EQD state vector that holds the geocentric position and velocity
+     *      of the observer at the given time.
+     */
+    private fun terra(observer: Observer, time: AstroTime): StateVector {
+        val st = siderealTime(time)
+        val phi = observer.latitude.degreesToRadians()
+        val sinphi = sin(phi)
+        val cosphi = cos(phi)
+        val c = 1.0 / hypot(cosphi,  EARTH_FLATTENING * sinphi)
+        val s = c * EARTH_FLATTENING_SQUARED
+        val ht_km = observer.height / 1000.0
+        val ach = (EARTH_EQUATORIAL_RADIUS_KM * c) + ht_km
+        val ash = (EARTH_EQUATORIAL_RADIUS_KM * s) + ht_km
+        val stlocl = (15.0*st + observer.longitude).degreesToRadians()
+        val sinst = sin(stlocl)
+        val cosst = cos(stlocl)
+
+        return StateVector(
+            ach * cosphi * cosst / KM_PER_AU,
+            ach * cosphi * sinst / KM_PER_AU,
+            ash * sinphi / KM_PER_AU,
+            -(ANGVEL * 86400.0 / KM_PER_AU) * ach * cosphi * sinst,
+            +(ANGVEL * 86400.0 / KM_PER_AU) * ach * cosphi * cosst,
+            0.0,
+            time
+        )
+    }
+
+    /**
+     * Calculate the geographic coordinates corresponding to a position vector.
+     *
+     * Given a geocentric position vector expressed in equator-of-date (EQD) coordinates,
+     * this function calculates the latitude, longitude, and elevation of that location.
+     * Note that the time `ovec.t` must be set correctly in order to determine the
+     * Earth's rotation angle.
+     *
+     * This function is intended for positions known to be on or near the Earth's surface.
+     *
+     * @param ovec
+     *      A geocentric position on or near the Earth's surface, in EQD coordinates.
+     *
+     * @returns
+     *      The location on or near the Earth's surface corresponding to
+     *      the given position vector and time.
+     */
+    private fun inverseTerra(ovec: AstroVector): Observer {
+        var lon_deg: Double
+        var lat_deg: Double
+        var height_km: Double
+
+        // Convert from AU to kilometers.
+        val x = ovec.x * KM_PER_AU
+        val y = ovec.y * KM_PER_AU
+        val z = ovec.z * KM_PER_AU
+        val p = hypot(x, y)
+        if (p < 1.0e-6) {
+            // Special case: within 1 millimeter of a pole!
+            // Use arbitrary longitude, and latitude determined by polarity of z.
+            lon_deg = 0.0
+            lat_deg = if (z > 0.0) +90.0 else -90.0
+            // Elevation is calculated directly from z.
+            height_km = z.absoluteValue - EARTH_POLAR_RADIUS_KM
+        } else {
+            // Calculate exact longitude in the half-open range (-180, +180].
+            val stlocl = atan2(y, x)
+            lon_deg = longitudeOffset(stlocl.radiansToDegrees() - (15 * siderealTime(ovec.t)))
+            // Numerically solve for exact latitude, using Newton's Method.
+            val F = EARTH_FLATTENING_SQUARED
+            // Start with initial latitude estimate, based on a spherical Earth.
+            var lat = atan2(z, p)
+            var c: Double
+            var s: Double
+            var denom: Double
+            while (true) {
+                // Calculate the error function W(lat).
+                // We try to find the root of W, meaning where the error is 0.
+                c = cos(lat)
+                s = sin(lat)
+                val factor = (F-1)*EARTH_EQUATORIAL_RADIUS_KM
+                val c2 = c*c
+                val s2 = s*s
+                val radicand = c2 + F*s2
+                denom = sqrt(radicand)
+                val W = ((factor * s * c) / denom) - (z * c) + (p * s)
+                if (W.absoluteValue < 1.0e-12)
+                    break  // The error is now negligible.
+                // Error is still too large. Find the next estimate.
+                // Calculate D = the derivative of W with respect to lat.
+                val D = (factor * ((c2 - s2) / denom) - (s2 * c2 * (F - 1)/(factor * radicand))) + (z * s) + (p * c)
+                lat -= (W / D)
+            }
+            // We now have a solution for the latitude in radians.
+            lat_deg = lat.radiansToDegrees()
+            // Solve for exact height in kilometers.
+            // There are two formulas I can use. Use whichever has the less risky denominator.
+            val adjust = EARTH_EQUATORIAL_RADIUS_KM / denom
+            height_km =
+                if (s.absoluteValue > c.absoluteValue)
+                    z/s - F*adjust
+                else
+                    p/c - adjust
+        }
+
+        return Observer(lat_deg, lon_deg, 1000.0 * height_km)
     }
 
     //==================================================================================================
