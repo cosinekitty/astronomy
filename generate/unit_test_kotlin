@@ -9,7 +9,12 @@ Fail()
 
 cd ../source/kotlin || Fail "Cannot change dir to ../source/kotlin"
 rm -rf build
-./gradlew assemble build test dokkaGfm || Fail "Error building/testing Kotlin code."
+if ! ./gradlew assemble build test dokkaGfm; then
+    # Dump the contents of the unit tests to the console,
+    # so if the test fails on GitHub Actions, I can see what went wrong.
+    cat build/test-results/test/*.xml
+    Fail "Error building/testing Kotlin code."
+fi
 
 # The above gradlew call also generated all the Markdown documentation.
 # The other languages do this from makedoc, but Kotlin is an exception.
