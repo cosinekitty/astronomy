@@ -3471,37 +3471,6 @@ $ASTRO_IAU_DATA()
             return RotateState(rot, state);
         }
 
-
-        private static Equatorial vector2radec(AstroVector pos)
-        {
-            double ra, dec, dist;
-            double xyproj;
-
-            xyproj = pos.x*pos.x + pos.y*pos.y;
-            dist = Math.Sqrt(xyproj + pos.z*pos.z);
-            if (xyproj == 0.0)
-            {
-                if (pos.z == 0.0)
-                {
-                    /* Indeterminate coordinates; pos vector has zero length. */
-                    throw new ArgumentException("Bad vector");
-                }
-
-                ra = 0.0;
-                dec = (pos.z < 0) ? -90.0 : +90.0;
-            }
-            else
-            {
-                ra = RAD2HOUR * Math.Atan2(pos.y, pos.x);
-                if (ra < 0)
-                    ra += 24.0;
-
-                dec = RAD2DEG * Math.Atan2(pos.z, Math.Sqrt(xyproj));
-            }
-
-            return new Equatorial(ra, dec, dist, pos);
-        }
-
         private static AstroVector gyration(AstroVector pos, PrecessDirection dir)
         {
             // Combine nutation and precession into a single operation I call "gyration".
@@ -4247,10 +4216,10 @@ $ASTRO_IAU_DATA()
             {
                 case EquatorEpoch.OfDate:
                     AstroVector datevect = gyration(j2000, PrecessDirection.From2000);
-                    return vector2radec(datevect);
+                    return EquatorFromVector(datevect);
 
                 case EquatorEpoch.J2000:
-                    return vector2radec(j2000);
+                    return EquatorFromVector(j2000);
 
                 default:
                     throw new ArgumentException(string.Format("Unsupported equator epoch {0}", equdate));
@@ -7995,34 +7964,6 @@ $ASTRO_IAU_DATA()
             return refr;
         }
 
-        private static AxisInfo EarthRotationAxis(AstroTime time)
-        {
-            AxisInfo axis;
-
-            // Unlike the other planets, we have a model of precession and nutation
-            // for the Earth's axis that provides a north pole vector.
-            // So calculate the vector first, then derive the (RA,DEC) angles from the vector.
-
-            // Start with a north pole vector in equator-of-date coordinates: (0,0,1).
-            var pos1 = new AstroVector(0.0, 0.0, 1.0, time);
-
-            // Convert the vector into J2000 coordinates.
-            AstroVector pos2 = nutation(pos1, PrecessDirection.Into2000);
-            axis.north = precession(pos2, PrecessDirection.Into2000);
-
-            // Derive angular values: right ascension and declination.
-            Equatorial equ = Astronomy.EquatorFromVector(axis.north);
-            axis.ra = equ.ra;
-            axis.dec = equ.dec;
-
-            // Use a modified version of the era() function that does not trim to 0..360 degrees.
-            // This expression is also corrected to give the correct angle at the J2000 epoch.
-            axis.spin = 190.41375788700253 + (360.9856122880876 * time.ut);
-
-            return axis;
-        }
-
-
         /// <summary>
         /// Calculates the inverse of an atmospheric refraction angle.
         /// </summary>
@@ -8062,6 +8003,35 @@ $ASTRO_IAU_DATA()
                 altitude -= diff;
             }
         }
+
+
+        private static AxisInfo EarthRotationAxis(AstroTime time)
+        {
+            AxisInfo axis;
+
+            // Unlike the other planets, we have a model of precession and nutation
+            // for the Earth's axis that provides a north pole vector.
+            // So calculate the vector first, then derive the (RA,DEC) angles from the vector.
+
+            // Start with a north pole vector in equator-of-date coordinates: (0,0,1).
+            var pos1 = new AstroVector(0.0, 0.0, 1.0, time);
+
+            // Convert the vector into J2000 coordinates.
+            AstroVector pos2 = nutation(pos1, PrecessDirection.Into2000);
+            axis.north = precession(pos2, PrecessDirection.Into2000);
+
+            // Derive angular values: right ascension and declination.
+            Equatorial equ = Astronomy.EquatorFromVector(axis.north);
+            axis.ra = equ.ra;
+            axis.dec = equ.dec;
+
+            // Use a modified version of the era() function that does not trim to 0..360 degrees.
+            // This expression is also corrected to give the correct angle at the J2000 epoch.
+            axis.spin = 190.41375788700253 + (360.9856122880876 * time.ut);
+
+            return axis;
+        }
+
 
         /// <summary>
         /// Calculates information about a body's rotation axis at a given time.

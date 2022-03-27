@@ -1,13 +1,22 @@
 package io.github.cosinekitty.astronomy
 
+import java.io.File
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlin.math.abs
+import kotlin.text.Regex
+
+private const val dataRootDir = "../../generate/"
+
+private fun tokenize(s: String): List<String> {
+    return s.split(Regex("""\s+"""))
+}
 
 class Tests {
+
     @Test
     fun `test deltaT calculation`() {
         val time = AstroTime(0.0)
@@ -159,6 +168,62 @@ class Tests {
         assertTrue(gast.isFinite())
         val diff = abs(gast - correct)
         assertTrue(diff < 1.0e-15, "correct=$correct, gast=$gast, diff=$diff")
+    }
+
+    //----------------------------------------------------------------------------------------
+
+    @Test
+    fun `Verify body axis calculations`() {
+        axisTestBody(Body.Sun,      "Sun.txt",       0.0)
+        axisTestBody(Body.Mercury,  "Mercury.txt",   0.074340)
+        axisTestBody(Body.Venus,    "Venus.txt",     0.0)
+        axisTestBody(Body.Earth,    "Earth.txt",     0.000591)
+        axisTestBody(Body.Moon,     "Moon.txt",      0.264845)
+        axisTestBody(Body.Mars,     "Mars.txt",      0.075323)
+        axisTestBody(Body.Jupiter,  "Jupiter.txt",   0.000324)
+        axisTestBody(Body.Saturn,   "Saturn.txt",    0.000304)
+        axisTestBody(Body.Uranus,   "Uranus.txt",    0.0)
+        axisTestBody(Body.Neptune,  "Neptune.txt",   0.000462)
+        axisTestBody(Body.Pluto,    "Pluto.txt",     0.0)
+    }
+
+    private fun axisTestBody(body: Body, shortName: String, arcminTolerance: Double) {
+        val filename = dataRootDir + "axis/" + shortName
+        val file = File(filename)
+        var lnum = 0
+        var foundData = false
+        var maxArcmin = 0.0
+        for (line in file.readLines()) {
+            ++lnum
+            if (!foundData) {
+                if (line == "\$\$SEO")
+                    foundData = true
+            } else {
+                if (line == "\$\$EOE")
+                    break
+
+                assertTrue(line.length >= 61, "axisBodyTest($filename line $lnum): line is too short")
+                val token = tokenize(line.substring(19))
+                assertTrue(token.size == 3, "axisBodyTest($filename line $lnum): expected 3 tokens but found ${token.size}")
+                val jd = token[0].toDouble()
+                val ra = token[1].toDouble()
+                val dec = token[2].toDouble()
+                val time = AstroTime(jd - 2451545.0)
+                val axis = Astronomy.rotationAxis(body, time)
+
+                // Convert the reference angles to a reference north pole vector.
+                // tricky: `ra` is in degrees, not sidereal hours; so don't multiply by 15.
+                val sphere = Spherical(dec, ra, 1.0);
+                val north = sphere.toVector(time)
+
+                // Find angle between two versions of the north pole. Use that as the measure of error.
+                val arcmin = 60.0 * north.angleWith(axis.north)
+                if (arcmin > maxArcmin)
+                    maxArcmin = arcmin
+            }
+        }
+        assertTrue(maxArcmin <= arcminTolerance, "axisBodyTest($body): excessive error = $maxArcmin arcmin.")
+        assertTrue(lnum > 900, "axisBodyTest($filename): only processed $lnum lines")
     }
 
     //----------------------------------------------------------------------------------------

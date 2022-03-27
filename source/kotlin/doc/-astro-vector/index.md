@@ -9,6 +9,7 @@ data class [AstroVector](index.md)(x: [Double](https://kotlinlang.org/api/latest
 
 | Name | Summary |
 |---|---|
+| [angleWith](angle-with.md) | [jvm]<br>fun [angleWith](angle-with.md)(other: [AstroVector](index.md)): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html) |
 | [div](div.md) | [jvm]<br>operator fun [div](div.md)(denom: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)): [AstroVector](index.md) |
 | [dot](dot.md) | [jvm]<br>infix fun [dot](dot.md)(other: [AstroVector](index.md)): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html) |
 | [length](length.md) | [jvm]<br>fun [length](length.md)(): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)<br>The total distance in AU represented by this vector. |

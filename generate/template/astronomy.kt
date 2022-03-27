@@ -31,6 +31,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 import kotlin.math.absoluteValue
+import kotlin.math.acos
 import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.hypot
@@ -54,6 +55,10 @@ const val DEG2RAD = 0.017453292519943296
  * Convert an angle expressed in degrees to an angle expressed in radians.
  */
 fun Double.degreesToRadians() = this * DEG2RAD
+
+internal fun dsin(degrees: Double) = sin(degrees.degreesToRadians())
+internal fun dcos(degrees: Double) = cos(degrees.degreesToRadians())
+internal fun dtan(degrees: Double) = tan(degrees.degreesToRadians())
 
 /**
  * The factor to convert radians to degrees = 180/pi.
@@ -512,6 +517,19 @@ data class AstroVector(
     infix fun dot(other: AstroVector): Double {
         verifyIdenticalTimes(other.t)
         return x*other.x + y*other.y + z*other.z
+    }
+
+    fun angleWith(other: AstroVector): Double {
+        val r = length() * other.length()
+        val d = (this dot other) / r
+        return (
+            if (d <= -1.0)
+                180.0
+            else if (d >= +1.0)
+                0.0
+            else
+                acos(d).radiansToDegrees()
+        )
     }
 
     operator fun div(denom: Double) =
@@ -1929,7 +1947,7 @@ object Astronomy {
             // I found experimentally that JPL Horizons clamps the angle to 1 degree below the horizon.
             // This is important because the tangent formula below goes crazy near hd = -5.11.
             val hd = altitude.coerceAtLeast(-1.0)
-            angle = (1.02 / tan((hd+10.3/(hd+5.11)).degreesToRadians())) / 60.0
+            angle = (1.02 / dtan(hd + 10.3/(hd + 5.11))) / 60.0
 
             if (refraction == Refraction.Normal && altitude < -1.0) {
                 // In "normal" mode we gradually reduce refraction toward the nadir
@@ -2081,11 +2099,11 @@ object Astronomy {
         }
     }
 
-    private fun precession(pos: AstroVector, time: AstroTime, dir: PrecessDirection) =
-        precessionRot(time, dir).rotate(pos)
+    private fun precession(pos: AstroVector, dir: PrecessDirection) =
+        precessionRot(pos.t, dir).rotate(pos)
 
-    private fun precessionPosVel(state: StateVector, time: AstroTime, dir: PrecessDirection) =
-        precessionRot(time, dir).rotate(state)
+    private fun precessionPosVel(state: StateVector, dir: PrecessDirection) =
+        precessionRot(state.t, dir).rotate(state)
 
     private class EarthTilt(
         val tt: Double,
@@ -2156,7 +2174,7 @@ object Astronomy {
         iau2000b(time)  // lazy-evaluate time.psi and time.eps
         val mobl = meanObliquity(time)
         val tobl = mobl + (time.eps / 3600)
-        val ee = time.psi * cos(mobl.degreesToRadians()) / 15.0
+        val ee = time.psi * dcos(mobl) / 15.0
         return EarthTilt(time.tt, time.psi, time.eps, ee, mobl, tobl)
     }
 
@@ -2373,6 +2391,263 @@ object Astronomy {
 
     private fun nutationPosVel(state: StateVector, dir: PrecessDirection) =
         nutationRot(state.t, dir).rotate(state)
+
+    /**
+     * Given an equatorial vector, calculates equatorial angular coordinates.
+     *
+     * @vector
+     *      A vector in an equatorial coordinate system.
+     *
+     * @returns
+     *      Angular coordinates expressed in the same equatorial system as `vector`.
+     */
+    fun equatorFromVector(vector: AstroVector): Equatorial {
+        val sphere = vector.toSpherical()
+        return Equatorial(sphere.lon / 15.0, sphere.lat, sphere.dist, vector)
+    }
+
+
+    private fun earthRotationAxis(time: AstroTime): AxisInfo {
+        // Unlike the other planets, we have a model of precession and nutation
+        // for the Earth's axis that provides a north pole vector.
+        // So calculate the vector first, then derive the (RA,DEC) angles from the vector.
+
+        // Start with a north pole vector in equator-of-date coordinates: (0,0,1).
+        val pos1 = AstroVector(0.0, 0.0, 1.0, time)
+
+        // Convert the vector into J2000 coordinates to find the north pole direction.
+        val pos2 = nutation(pos1, PrecessDirection.Into2000)
+        val north = precession(pos2, PrecessDirection.Into2000)
+
+        // Derive angular values: right ascension and declination.
+        val equ = north.toEquatorial()
+
+        // Use a modified version of the era() function that does not trim to 0..360 degrees.
+        // This expression is also corrected to give the correct angle at the J2000 epoch.
+        val spin = 190.41375788700253 + (360.9856122880876 * time.ut)
+
+        return AxisInfo(equ.ra, equ.dec, spin, north)
+    }
+
+
+    /**
+     * Calculates information about a body's rotation axis at a given time.
+     *
+     * Calculates the orientation of a body's rotation axis, along with
+     * the rotation angle of its prime meridian, at a given moment in time.
+     *
+     * This function uses formulas standardized by the IAU Working Group
+     * on Cartographics and Rotational Elements 2015 report, as described
+     * in the following document:
+     *
+     * https://astropedia.astrogeology.usgs.gov/download/Docs/WGCCRE/WGCCRE2015reprint.pdf
+     *
+     * See #AxisInfo for more detailed information.
+     *
+     * @param body
+     *      One of the following values:
+     *      `Body.Sun`, `Body.Moon`, `Body.Mercury`, `Body.Venus`, `Body.Earth`, `Body.Mars`,
+     *      `Body.Jupiter`, `Body.Saturn`, `Body.Uranus`, `Body.Neptune`, `Body.Pluto`.
+     *
+     * @param time
+     *      The time at which to calculate the body's rotation axis.
+     *
+     * @returns
+     *      North pole orientation and body spin angle.
+     */
+    fun rotationAxis(body: Body, time: AstroTime): AxisInfo {
+        if (body == Body.Earth)
+            return earthRotationAxis(time)
+
+        val d = time.tt
+        val T = time.julianCenturies()
+        val ra: Double
+        val dec: Double
+        val w: Double
+        when (body) {
+            Body.Sun -> {
+                ra = 286.13
+                dec = 63.87
+                w = 84.176 + (14.1844 * d)
+            }
+
+            Body.Mercury -> {
+                ra = 281.0103 - (0.0328 * T)
+                dec = 61.4155 - (0.0049 * T)
+                w = (
+                    329.5988
+                    + (6.1385108 * d)
+                    + (0.01067257 * dsin((174.7910857 + 4.092335*d)))
+                    - (0.00112309 * dsin((349.5821714 + 8.184670*d)))
+                    - (0.00011040 * dsin((164.3732571 + 12.277005*d)))
+                    - (0.00002539 * dsin((339.1643429 + 16.369340*d)))
+                    - (0.00000571 * dsin((153.9554286 + 20.461675*d)))
+                )
+            }
+
+            Body.Venus -> {
+                ra = 272.76
+                dec = 67.16
+                w = 160.20 - (1.4813688 * d)
+            }
+
+            Body.Moon -> {
+                // See page 8, Table 2 in:
+                // https://astropedia.astrogeology.usgs.gov/alfresco/d/d/workspace/SpacesStore/28fd9e81-1964-44d6-a58b-fbbf61e64e15/WGCCRE2009reprint.pdf
+                val E1  = 125.045 -  0.0529921*d
+                val E2  = 250.089 -  0.1059842*d
+                val E3  = 260.008 + 13.0120009*d
+                val E4  = 176.625 + 13.3407154*d
+                val E5  = 357.529 +  0.9856003*d
+                val E6  = 311.589 + 26.4057084*d
+                val E7  = 134.963 + 13.0649930*d
+                val E8  = 276.617 +  0.3287146*d
+                val E9  = 34.226  +  1.7484877*d
+                val E10 = 15.134  -  0.1589763*d
+                val E11 = 119.743 +  0.0036096*d
+                val E12 = 239.961 +  0.1643573*d
+                val E13 = 25.053  + 12.9590088*d
+
+                ra = (
+                    269.9949 + 0.0031*T
+                    - 3.8787*dsin(E1)
+                    - 0.1204*dsin(E2)
+                    + 0.0700*dsin(E3)
+                    - 0.0172*dsin(E4)
+                    + 0.0072*dsin(E6)
+                    - 0.0052*dsin(E10)
+                    + 0.0043*dsin(E13)
+                )
+
+                dec = (
+                    66.5392 + 0.0130*T
+                    + 1.5419*dcos(E1)
+                    + 0.0239*dcos(E2)
+                    - 0.0278*dcos(E3)
+                    + 0.0068*dcos(E4)
+                    - 0.0029*dcos(E6)
+                    + 0.0009*dcos(E7)
+                    + 0.0008*dcos(E10)
+                    - 0.0009*dcos(E13)
+                )
+
+                w = (
+                    38.3213 + (13.17635815 - 1.4e-12*d)*d
+                    + 3.5610*dsin(E1)
+                    + 0.1208*dsin(E2)
+                    - 0.0642*dsin(E3)
+                    + 0.0158*dsin(E4)
+                    + 0.0252*dsin(E5)
+                    - 0.0066*dsin(E6)
+                    - 0.0047*dsin(E7)
+                    - 0.0046*dsin(E8)
+                    + 0.0028*dsin(E9)
+                    + 0.0052*dsin(E10)
+                    + 0.0040*dsin(E11)
+                    + 0.0019*dsin(E12)
+                    - 0.0044*dsin(E13)
+                )
+            }
+
+            Body.Mars -> {
+                ra = (
+                    317.269202 - 0.10927547*T
+                    + 0.000068 * dsin(198.991226 + 19139.4819985*T)
+                    + 0.000238 * dsin(226.292679 + 38280.8511281*T)
+                    + 0.000052 * dsin(249.663391 + 57420.7251593*T)
+                    + 0.000009 * dsin(266.183510 + 76560.6367950*T)
+                    + 0.419057 * dsin(79.398797 + 0.5042615*T)
+                )
+
+                dec = (
+                    54.432516 - 0.05827105*T
+                    + 0.000051 * dcos(122.433576 + 19139.9407476*T)
+                    + 0.000141 * dcos(43.058401 + 38280.8753272*T)
+                    + 0.000031 * dcos(57.663379 + 57420.7517205*T)
+                    + 0.000005 * dcos(79.476401 + 76560.6495004*T)
+                    + 1.591274 * dcos(166.325722 + 0.5042615*T)
+                )
+
+                w = (
+                    176.049863 + 350.891982443297*d
+                    + 0.000145 * dsin(129.071773 + 19140.0328244*T)
+                    + 0.000157 * dsin(36.352167 + 38281.0473591*T)
+                    + 0.000040 * dsin(56.668646 + 57420.9295360*T)
+                    + 0.000001 * dsin(67.364003 + 76560.2552215*T)
+                    + 0.000001 * dsin(104.792680 + 95700.4387578*T)
+                    + 0.584542 * dsin(95.391654 + 0.5042615*T)
+                )
+            }
+
+            Body.Jupiter -> {
+                val Ja = 99.360714  + 4850.4046*T
+                val Jb = 175.895369 + 1191.9605*T
+                val Jc = 300.323162 + 262.5475*T
+                val Jd = 114.012305 + 6070.2476*T
+                val Je = 49.511251  + 64.3000*T
+
+                ra = (
+                    268.056595 - 0.006499*T
+                    + 0.000117 * dsin(Ja)
+                    + 0.000938 * dsin(Jb)
+                    + 0.001432 * dsin(Jc)
+                    + 0.000030 * dsin(Jd)
+                    + 0.002150 * dsin(Je)
+                )
+
+                dec = (
+                    64.495303 + 0.002413*T
+                    + 0.000050 * dcos(Ja)
+                    + 0.000404 * dcos(Jb)
+                    + 0.000617 * dcos(Jc)
+                    - 0.000013 * dcos(Jd)
+                    + 0.000926 * dcos(Je)
+                )
+
+                w = 284.95 + 870.536*d
+            }
+
+            Body.Saturn -> {
+                ra = 40.589 - 0.036*T
+                dec = 83.537 - 0.004*T
+                w = 38.90 + 810.7939024*d
+            }
+
+            Body.Uranus -> {
+                ra = 257.311
+                dec = -15.175
+                w = 203.81 - 501.1600928*d
+            }
+
+            Body.Neptune -> {
+                val N = 357.85 + 52.316*T
+                val sinN = dsin(N)
+                ra = 299.36 + 0.70*sinN
+                dec = 43.46 - 0.51*dcos(N)
+                w = 249.978 + 541.1397757*d - 0.48*sinN
+            }
+
+            Body.Pluto -> {
+                ra = 132.993
+                dec = -6.163
+                w = 302.695 + 56.3625225*d
+            }
+
+            else -> throw InvalidBodyException(body)
+        }
+
+        // Calculate the north pole vector using the given angles.
+        val rcoslat = dcos(dec)
+        val north = AstroVector(
+            rcoslat * dcos(ra),
+            rcoslat * dsin(ra),
+            dsin(dec),
+            time
+        )
+
+        return AxisInfo(ra / 15.0, dec, w, north)
+    }
+
 
     //==================================================================================================
     // Generated code goes to the bottom of the source file,
