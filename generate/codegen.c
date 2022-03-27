@@ -432,6 +432,83 @@ fail:
     return error;
 }
 
+static int KotlinVsop_Series(cg_context_t *context, const vsop_series_t *series, const char *varprefix, int s)
+{
+    int i;
+
+    fprintf(context->outfile, "private val %s%d = VsopSeries(arrayOf(\n", varprefix, s);
+    for (i = 0; i < series->nterms_total; ++i)
+    {
+        const vsop_term_t *term = &series->term[i];
+
+        fprintf(context->outfile, "    VsopTerm(%0.11lf, %0.11lf, %0.11lf)%s\n",
+            term->amplitude,
+            term->phase,
+            term->frequency,
+            (i + 1 < series->nterms_total) ? "," : "");
+    }
+    fprintf(context->outfile, "))\n\n");
+
+    return 0;
+}
+
+static int KotlinVsop_Formula(cg_context_t *context, const vsop_formula_t *formula, const char *coord_name, const char *body_name)
+{
+    int error = 0;
+    int s;
+    char varprefix[100];
+    char sname[120];
+
+    snprintf(varprefix, sizeof(varprefix), "vsop%s%s", coord_name, body_name);
+
+    for (s=0; s < formula->nseries_total; ++s)
+        CHECK(KotlinVsop_Series(context, &formula->series[s], varprefix, s));
+
+    fprintf(context->outfile, "private val %s = VsopFormula(arrayOf(\n", varprefix);
+    for (s=0; s < formula->nseries_total; ++s)
+    {
+        snprintf(sname, sizeof(sname), "%s%d", varprefix, s);
+
+        fprintf(context->outfile, "    %s%s\n",
+            sname,
+            (s+1 < formula->nseries_total) ? "," : "");
+    }
+    fprintf(context->outfile, "))\n\n");
+
+fail:
+    return error;
+}
+
+static int KotlinVsop(cg_context_t *context)
+{
+    int error;
+    const char *name;
+    vsop_body_t body;
+    vsop_model_t model;
+    int check_length;
+    int k;
+    char filename[100];
+    const char *coord_name[3] = { "Lon", "Lat", "Rad" };
+
+    VsopInit(&model);
+
+    name = context->args;
+    CHECK(ParseVsopBodyName(context, name, &body));
+
+    check_length = snprintf(filename, sizeof(filename), "%s/vsop_%d.txt", context->datapath, (int)body);
+    if (check_length < 0 || check_length != (int)strlen(filename))
+        CHECK(LogError(context, "VSOP model filename is too long!"));
+
+    CHECK(VsopReadTrunc(&model, filename));
+
+    for (k=0; k < model.ncoords; ++k)
+        CHECK(KotlinVsop_Formula(context, &model.formula[k], coord_name[k], name));
+
+fail:
+    VsopFreeModel(&model);
+    return error;
+}
+
 #define UDEF(expr)  ((u = (expr)), (u2 = u*u), (u3 = u*u2), (u4 = u2*u2), (u5 = u2*u3), (u6 = u3*u3), (u7 = u3*u4))
 
 double ExtrapolatedDeltaT(int year)
@@ -785,7 +862,7 @@ static int OptIauKotlin(cg_context_t *context, int lnum, const double *data)
 {
     int i;
 
-    fprintf(context->outfile, "        IauRow(%2.0lf", data[0]);
+    fprintf(context->outfile, "    IauRow(%2.0lf", data[0]);
 
     for (i=1; i < 5; ++i)
         fprintf(context->outfile, ", %2.0lf", data[i]);
@@ -798,7 +875,7 @@ static int OptIauKotlin(cg_context_t *context, int lnum, const double *data)
     if (lnum < IAU_DATA_NUM_ROWS)
         fprintf(context->outfile, ",\n");
     else
-        fprintf(context->outfile, "\n    ");
+        fprintf(context->outfile, "\n");
 
     return 0;
 }
@@ -1891,6 +1968,7 @@ static const cg_directive_entry DirectiveTable[] =
 {
     { "C_VSOP",             CVsop               },
     { "CSHARP_VSOP",        CsharpVsop          },
+    { "KOTLIN_VSOP",        KotlinVsop          },
     { "LIST_VSOP",          ListVsop            },
     { "IAU_DATA",           OptIauData          },
     { "ADDSOL",             OptAddSol           },

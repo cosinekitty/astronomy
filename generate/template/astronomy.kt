@@ -1794,6 +1794,47 @@ class ConstellationInfo(
 )
 
 
+//---------------------------------------------------------------------------------------
+// VSOP87: semi-analytic model of major planet positions
+
+private class VsopTerm(
+    val amplitude: Double,
+    val phase: Double,
+    val frequency: Double
+)
+
+private class VsopSeries(
+    val term: Array<VsopTerm>
+)
+
+private class VsopFormula(
+    val series: Array<VsopSeries>
+)
+
+private class VsopModel(
+    val lon: VsopFormula,
+    val lat: VsopFormula,
+    val rad: VsopFormula
+)
+
+private fun vsopTableIndex(body: Body): Int =
+    when (body) {
+        Body.Mercury -> 0
+        Body.Venus   -> 1
+        Body.Earth   -> 2
+        Body.Mars    -> 3
+        Body.Jupiter -> 4
+        Body.Saturn  -> 5
+        Body.Uranus  -> 6
+        Body.Neptune -> 7
+        else -> throw InvalidBodyException(body)
+    }
+
+private fun vsopModel(body: Body) = vsopTable[vsopTableIndex(body)]
+
+//---------------------------------------------------------------------------------------
+
+
 /**
  * The main container of astronomy calculation functions.
  */
@@ -2112,20 +2153,6 @@ object Astronomy {
         val ee: Double,
         val mobl: Double,
         val tobl: Double
-    )
-
-    private class IauRow(
-        val nals0: Int,
-        val nals1: Int,
-        val nals2: Int,
-        val nals3: Int,
-        val nals4: Int,
-        val cls0: Double,
-        val cls1: Double,
-        val cls2: Double,
-        val cls3: Double,
-        val cls4: Double,
-        val cls5: Double
     )
 
     private fun iau2000b(time: AstroTime) {
@@ -2647,12 +2674,52 @@ object Astronomy {
 
         return AxisInfo(ra / 15.0, dec, w, north)
     }
-
-
-    //==================================================================================================
-    // Generated code goes to the bottom of the source file,
-    // so that most line numbers are consistent between template code and target code.
-
-    // Table of coefficients for calculating nutation using the IAU2000b model.
-    private val iauRow: Array<IauRow> = arrayOf($ASTRO_IAU_DATA())
 }
+
+
+private class IauRow(
+    val nals0: Int,
+    val nals1: Int,
+    val nals2: Int,
+    val nals3: Int,
+    val nals4: Int,
+    val cls0: Double,
+    val cls1: Double,
+    val cls2: Double,
+    val cls3: Double,
+    val cls4: Double,
+    val cls5: Double
+)
+
+//==================================================================================================
+// Generated code goes to the bottom of the source file,
+// so that most line numbers are consistent between template code and target code.
+
+//---------------------------------------------------------------------------------------
+// Table of coefficients for calculating nutation using the IAU2000b model.
+private val iauRow: Array<IauRow> = arrayOf($ASTRO_IAU_DATA())
+
+//---------------------------------------------------------------------------------------
+// VSOP87 coefficients, for calculating major planet state vectors.
+
+$ASTRO_KOTLIN_VSOP(Mercury)
+$ASTRO_KOTLIN_VSOP(Venus)
+$ASTRO_KOTLIN_VSOP(Earth)
+$ASTRO_KOTLIN_VSOP(Mars)
+$ASTRO_KOTLIN_VSOP(Jupiter)
+$ASTRO_KOTLIN_VSOP(Saturn)
+$ASTRO_KOTLIN_VSOP(Uranus)
+$ASTRO_KOTLIN_VSOP(Neptune)
+
+private val vsopTable: Array<VsopModel> = arrayOf (
+    VsopModel(vsopLonMercury,  vsopLatMercury,   vsopRadMercury),   // 0
+    VsopModel(vsopLonVenus,    vsopLatVenus,     vsopRadVenus  ),   // 1
+    VsopModel(vsopLonEarth,    vsopLatEarth,     vsopRadEarth  ),   // 2
+    VsopModel(vsopLonMars,     vsopLatMars,      vsopRadMars   ),   // 3
+    VsopModel(vsopLonJupiter,  vsopLatJupiter,   vsopRadJupiter),   // 4
+    VsopModel(vsopLonSaturn,   vsopLatSaturn,    vsopRadSaturn ),   // 5
+    VsopModel(vsopLonUranus,   vsopLatUranus,    vsopRadUranus ),   // 6
+    VsopModel(vsopLonNeptune,  vsopLatNeptune,   vsopRadNeptune)    // 7
+)
+
+//---------------------------------------------------------------------------------------
