@@ -3812,9 +3812,12 @@ $ASTRO_IAU_DATA()
         /// The position is not corrected for light travel time or aberration.
         /// This is different from the behavior of #Astronomy.GeoVector.
         ///
-        /// If given an invalid value for `body`, this function will throw an `ArgumentException`.
+        /// If given an invalid value for `body`, this function will throw an #InvalidBodyException.
         /// </remarks>
-        /// <param name="body">A body for which to calculate a heliocentric position: the Sun, Moon, EMB, SSB, or any of the planets.</param>
+        /// <param name="body">
+        /// A body for which to calculate a heliocentric position:
+        /// the Sun, Moon, EMB, SSB, or any of the planets.
+        /// </param>
         /// <param name="time">The date and time for which to calculate the position.</param>
         /// <returns>A heliocentric position vector of the center of the given body.</returns>
         public static AstroVector HelioVector(Body body, AstroTime time)
@@ -3863,14 +3866,14 @@ $ASTRO_IAU_DATA()
         /// </summary>
         /// <remarks>
         /// Given a date and time, this function calculates the distance between
-        /// the center of `body` and the center of the Sun.
+        /// the center of `body` and the center of the Sun, expressed in AU.
         /// For the planets Mercury through Neptune, this function is significantly
         /// more efficient than calling #Astronomy.HelioVector followed by taking the length
         /// of the resulting vector.
         /// </remarks>
         /// <param name="body">
         /// A body for which to calculate a heliocentric distance:
-        /// the Sun, Moon, or any of the planets.
+        /// the Sun, Moon, EMB, SSB, or any of the planets.
         /// </param>
         /// <param name="time">
         /// The date and time for which to calculate the heliocentric distance.

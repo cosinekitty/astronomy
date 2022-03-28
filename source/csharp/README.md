@@ -574,14 +574,14 @@ movement of the Earth with respect to the rays of light coming from that body.
 **Calculates the distance between a body and the Sun at a given time.**
 
 Given a date and time, this function calculates the distance between
-the center of `body` and the center of the Sun.
+the center of `body` and the center of the Sun, expressed in AU.
 For the planets Mercury through Neptune, this function is significantly
 more efficient than calling [`Astronomy.HelioVector`](#Astronomy.HelioVector) followed by taking the length
 of the resulting vector.
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| [`Body`](#Body) | `body` | A body for which to calculate a heliocentric distance: the Sun, Moon, or any of the planets. |
+| [`Body`](#Body) | `body` | A body for which to calculate a heliocentric distance: the Sun, Moon, EMB, SSB, or any of the planets. |
 | [`AstroTime`](#AstroTime) | `time` | The date and time for which to calculate the heliocentric distance. |
 
 **Returns:** The heliocentric distance in AU.
@@ -621,7 +621,7 @@ of the Earth at noon UTC on 1 January 2000.
 The position is not corrected for light travel time or aberration.
 This is different from the behavior of [`Astronomy.GeoVector`](#Astronomy.GeoVector).
 
-If given an invalid value for `body`, this function will throw an `ArgumentException`.
+If given an invalid value for `body`, this function will throw an [`InvalidBodyException`](#InvalidBodyException).
 
 | Type | Parameter | Description |
 | --- | --- | --- |

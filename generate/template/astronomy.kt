@@ -131,6 +131,7 @@ const val KM_PER_AU = 1.4959787069098932e+8
 
 private val TimeZoneUtc = TimeZone.getTimeZone("UTC")
 private const val DAYS_PER_TROPICAL_YEAR = 365.24217
+private const val DAYS_PER_MILLENNIUM = 365250.0
 
 private const val ASEC360 = 1296000.0
 private const val ASEC2RAD = 4.848136811095359935899141e-6
@@ -416,6 +417,7 @@ class AstroTime private constructor(
     fun addDays(days: Double) = AstroTime(ut + days)
 
     internal fun julianCenturies() = tt / 36525.0
+    internal fun julianMillennia() = tt / DAYS_PER_MILLENNIUM
 
     companion object {
         private val origin = GregorianCalendar(TimeZoneUtc).also {
@@ -464,7 +466,7 @@ internal data class TerseVector(val x: Double, val y: Double, val z: Double) {
     operator fun div(other: Double) =
         TerseVector(x / other, y / other, z / other)
 
-    val quadrature get() = x * x + y * y + z * z
+    val quadrature get() = (x * x) + (y * y) + (z * z)
     val magnitude get() = sqrt(quadrature)
 
     companion object {
@@ -497,8 +499,7 @@ data class AstroVector(
     /**
      * The total distance in AU represented by this vector.
      */
-    fun length() =
-        sqrt(x*x + y*y + z*z)
+    fun length() = sqrt((x * x) + (y * y) + (z * z))
 
     private fun verifyIdenticalTimes(otherTime: AstroTime): AstroTime {
         if (t.tt != otherTime.tt)
@@ -1818,20 +1819,139 @@ private class VsopModel(
     val rad: VsopFormula
 )
 
-private fun vsopTableIndex(body: Body): Int =
-    when (body) {
-        Body.Mercury -> 0
-        Body.Venus   -> 1
-        Body.Earth   -> 2
-        Body.Mars    -> 3
-        Body.Jupiter -> 4
-        Body.Saturn  -> 5
-        Body.Uranus  -> 6
-        Body.Neptune -> 7
-        else -> throw InvalidBodyException(body)
+private fun vsopFormulaCalc(formula: VsopFormula, t: Double, clampAngle: Boolean): Double {
+    var coord = 0.0
+    var tpower = 1.0
+    for (series in formula.series) {
+        var sum = 0.0
+        for (term in series.term)
+            sum += term.amplitude * cos(term.phase + (t * term.frequency))
+        coord +=
+            if (clampAngle)
+                (tpower * sum) % PI2    // improve precision: longitude angles can be hundreds of radians
+            else
+                tpower * sum
+        tpower *= t
     }
+    return coord
+}
 
-private fun vsopModel(body: Body) = vsopTable[vsopTableIndex(body)]
+private fun vsopDistance(model: VsopModel, time: AstroTime) =
+    vsopFormulaCalc(model.rad, time.julianMillennia(), false)
+
+private fun vsopRotate(eclip: TerseVector) =
+    TerseVector(
+        eclip.x + 0.000000440360*eclip.y - 0.000000190919*eclip.z,
+        -0.000000479966*eclip.x + 0.917482137087*eclip.y - 0.397776982902*eclip.z,
+        0.397776982902*eclip.y + 0.917482137087*eclip.z
+    )
+
+private fun vsopSphereToRect(lon: Double, lat: Double, radius: Double): TerseVector {
+    val rCosLat = radius * cos(lat)
+    return TerseVector (
+        rCosLat * cos(lon),
+        rCosLat * sin(lon),
+        radius * sin(lat)
+    )
+}
+
+private fun calcVsop(model: VsopModel, time: AstroTime): AstroVector {
+    val t = time.julianMillennia()
+
+    // Calculate the VSOP "B" trigonometric series to obtain ecliptic spherical coordinates.
+    val lon = vsopFormulaCalc(model.lon, t, true)
+    val lat = vsopFormulaCalc(model.lat, t, false)
+    val rad = vsopFormulaCalc(model.rad, t, false)
+
+    // Convert ecliptic spherical coordinates to ecliptic Cartesian coordinates.
+    val eclip = vsopSphereToRect(lon, lat, rad)
+
+    // Convert ecliptic Cartesian coordinates to equatorial Cartesian coordinates.
+    // Also convert from TerseVector (coordinates only) to AstroVector (coordinates + time).
+    return vsopRotate(eclip).toAstroVector(time)
+}
+
+private fun vsopDerivCalc(formula: VsopFormula, t: Double): Double {
+    var tpower = 1.0        // t^s
+    var dpower = 0.0        // t^(s-1)
+    var deriv = 0.0
+    var s: Int = 0
+    for (series in formula.series) {
+        var sinSum = 0.0
+        var cosSum = 0.0
+        for (term in series.term) {
+            val angle = term.phase + (term.frequency * t)
+            sinSum += term.amplitude * (term.frequency * sin(angle))
+            if (s > 0)
+                cosSum += term.amplitude * cos(angle)
+        }
+        deriv += (s * dpower * cosSum) - (tpower * sinSum)
+        dpower = tpower
+        tpower *= t
+        ++s
+    }
+    return deriv
+}
+
+private class BodyState(
+    val tt: Double,
+    val r: TerseVector,
+    val v: TerseVector
+)
+
+private fun calcVsopPosVel(model: VsopModel, tt: Double): BodyState {
+    val t = tt / DAYS_PER_MILLENNIUM
+
+    // Calculate the VSOP "B" trigonometric series to obtain ecliptic spherical coordinates.
+    val lon = vsopFormulaCalc(model.lon, t, true)
+    val lat = vsopFormulaCalc(model.lat, t, false)
+    val rad = vsopFormulaCalc(model.rad, t, false)
+
+    val eclipPos = vsopSphereToRect(lon, lat, rad)
+
+    // Calculate derivatives of spherical coordinates with respect to time.
+    val dlon = vsopDerivCalc(model.lon, t);     // dlon = d(lon) / dt
+    val dlat = vsopDerivCalc(model.lat, t);     // dlat = d(lat) / dt
+    val drad = vsopDerivCalc(model.rad, t);     // drad = d(rad) / dt
+
+    // Use spherical coords and spherical derivatives to calculate
+    // the velocity vector in rectangular coordinates.
+
+    val coslon = cos(lon);
+    val sinlon = sin(lon);
+    val coslat = cos(lat);
+    val sinlat = sin(lat);
+
+    val vx = (
+        + (drad * coslat * coslon)
+        - (rad * sinlat * coslon * dlat)
+        - (rad * coslat * sinlon * dlon)
+    )
+
+    val vy = (
+        + (drad * coslat * sinlon)
+        - (rad * sinlat * sinlon * dlat)
+        + (rad * coslat * coslon * dlon)
+    )
+
+    val vz = (
+        + (drad * sinlat)
+        + (rad * coslat * dlat)
+    )
+
+    // Convert speed units from [AU/millennium] to [AU/day].
+    val eclipVel = TerseVector(
+        vx / DAYS_PER_MILLENNIUM,
+        vy / DAYS_PER_MILLENNIUM,
+        vz / DAYS_PER_MILLENNIUM
+    )
+
+    // Rotate the vectors from ecliptic to equatorial coordinates.
+    val equPos = vsopRotate(eclipPos)
+    val equVel = vsopRotate(eclipVel)
+    return BodyState(tt, equPos, equVel)
+}
+
 
 //---------------------------------------------------------------------------------------
 // Geocentric Moon
@@ -2935,6 +3055,82 @@ object Astronomy {
         val equVec = eclipticToEquatorial(eclVec)
         return precession(equVec, PrecessDirection.Into2000)
     }
+
+    private fun helioEarth(time: AstroTime) = calcVsop(vsopTable[2], time)
+
+    /**
+     * Calculates heliocentric Cartesian coordinates of a body in the J2000 equatorial system.
+     *
+     * This function calculates the position of the given celestial body as a vector,
+     * using the center of the Sun as the origin.  The result is expressed as a Cartesian
+     * vector in the J2000 equatorial system: the coordinates are based on the mean equator
+     * of the Earth at noon UTC on 1 January 2000.
+     *
+     * The position is not corrected for light travel time or aberration.
+     * This is different from the behavior of #Astronomy.geoVector.
+     *
+     * If given an invalid value for `body`, this function will throw an #InvalidBodyException.
+     *
+     * @param body
+     *      A body for which to calculate a heliocentric position:
+     *      the Sun, Moon, EMB, SSB, or any of the planets.
+     *
+     * @param time
+     *      The date and time for which to calculate the position.
+     *
+     * @returns
+     *      The heliocentric position vector of the center of the given body.
+     */
+    fun helioVector(body: Body, time: AstroTime): AstroVector =
+        when (body) {
+            Body.Sun     -> AstroVector(0.0, 0.0, 0.0, time)
+            Body.Mercury -> calcVsop(vsopTable[0], time)
+            Body.Venus   -> calcVsop(vsopTable[1], time)
+            Body.Earth   -> calcVsop(vsopTable[2], time)
+            Body.Mars    -> calcVsop(vsopTable[3], time)
+            Body.Jupiter -> calcVsop(vsopTable[4], time)
+            Body.Saturn  -> calcVsop(vsopTable[5], time)
+            Body.Uranus  -> calcVsop(vsopTable[6], time)
+            Body.Neptune -> calcVsop(vsopTable[7], time)
+            Body.Moon    -> helioEarth(time) + geoMoon(time)
+            Body.EMB     -> helioEarth(time) + (geoMoon(time) / (1.0 + EARTH_MOON_MASS_RATIO))
+            // FIXFIXFIX: add Pluto
+            // FIXFIXFIX: add Solar System Barycenter
+            else -> throw InvalidBodyException(body)
+        }
+
+    /**
+     * Calculates the distance between a body and the Sun at a given time.
+     *
+     * Given a date and time, this function calculates the distance between
+     * the center of `body` and the center of the Sun, expressed in AU.
+     * For the planets Mercury through Neptune, this function is significantly
+     * more efficient than calling #Astronomy.helioVector followed by taking the length
+     * of the resulting vector.
+     *
+     * @param body
+     *      A body for which to calculate a heliocentric distance:
+     *      the Sun, Moon, EMB, SSB, or any of the planets.
+     *
+     * @param time
+     *      The date and time for which to calculate the distance.
+     *
+     * @returns
+     *      The heliocentric distance in AU.
+     */
+    fun helioDistance(body: Body, time: AstroTime): Double =
+        when (body) {
+            Body.Sun     -> 0.0
+            Body.Mercury -> vsopDistance(vsopTable[0], time)
+            Body.Venus   -> vsopDistance(vsopTable[1], time)
+            Body.Earth   -> vsopDistance(vsopTable[2], time)
+            Body.Mars    -> vsopDistance(vsopTable[3], time)
+            Body.Jupiter -> vsopDistance(vsopTable[4], time)
+            Body.Saturn  -> vsopDistance(vsopTable[5], time)
+            Body.Uranus  -> vsopDistance(vsopTable[6], time)
+            Body.Neptune -> vsopDistance(vsopTable[7], time)
+            else -> helioVector(body, time).length()
+        }
 }
 
 //=======================================================================================
