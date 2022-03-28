@@ -1912,20 +1912,14 @@ namespace CosineKitty
                     -64E-9 * Sine(0.39943-5.37511*T);
         }
 
-        private readonly int[] I = new int[4];
-
         void Term(int p, int q, int r, int s, out double x, out double y)
         {
-            I[0] = p;
-            I[1] = q;
-            I[2] = r;
-            I[3] = s;
             x = 1.0;
             y = 0.0;
-
-            for (int k=1; k<=4; ++k)
-                if (I[k-1] != 0.0)
-                    AddThe(x, y, CO[I[k-1], k], SI[I[k-1], k], out x, out y);
+            if (p != 0) AddThe(x, y, CO[p, 1], SI[p, 1], out x, out y);
+            if (q != 0) AddThe(x, y, CO[q, 2], SI[q, 2], out x, out y);
+            if (r != 0) AddThe(x, y, CO[r, 3], SI[r, 3], out x, out y);
+            if (s != 0) AddThe(x, y, CO[s, 4], SI[s, 4], out x, out y);
         }
 
         void AddSol(
@@ -1946,27 +1940,26 @@ namespace CosineKitty
             SINPI += coeffp*x;
         }
 
-        void ADDN(double coeffn, int p, int q, int r, int s, out double x, out double y)
+        void ADDN(double coeffn, int p, int q, int r, int s)
         {
+            double x, y;
             Term(p, q, r, s, out x, out y);
             N += coeffn * y;
         }
 
         void SolarN()
         {
-            double x, y;
-
             N = 0.0;
-            ADDN(-526.069, 0, 0,1,-2, out x, out y);
-            ADDN(  -3.352, 0, 0,1,-4, out x, out y);
-            ADDN( +44.297,+1, 0,1,-2, out x, out y);
-            ADDN(  -6.000,+1, 0,1,-4, out x, out y);
-            ADDN( +20.599,-1, 0,1, 0, out x, out y);
-            ADDN( -30.598,-1, 0,1,-2, out x, out y);
-            ADDN( -24.649,-2, 0,1, 0, out x, out y);
-            ADDN(  -2.000,-2, 0,1,-2, out x, out y);
-            ADDN( -22.571, 0,+1,1,-2, out x, out y);
-            ADDN( +10.985, 0,-1,1,-2, out x, out y);
+            ADDN(-526.069,  0, 0, 1, -2);
+            ADDN(  -3.352,  0, 0, 1, -4);
+            ADDN( +44.297, +1, 0, 1, -2);
+            ADDN(  -6.000, +1, 0, 1, -4);
+            ADDN( +20.599, -1, 0, 1,  0);
+            ADDN( -30.598, -1, 0, 1, -2);
+            ADDN( -24.649, -2, 0, 1,  0);
+            ADDN(  -2.000, -2, 0, 1, -2);
+            ADDN( -22.571,  0,+1, 1, -2);
+            ADDN( +10.985,  0,-1, 1, -2);
         }
 
         void Planetary()
@@ -1991,7 +1984,7 @@ namespace CosineKitty
             DLAM = 0;
             DS = 0;
             GAM1C = 0;
-            SINPI = 3422.7000;
+            SINPI = 3422.7;
             LongPeriodic();
             L0 = Astronomy.PI2*Frac(0.60643382+1336.85522467*T-0.00000313*T2) + DL0/Astronomy.ARC;
             L  = Astronomy.PI2*Frac(0.37489701+1325.55240982*T+0.00002565*T2) + DL /Astronomy.ARC;
@@ -3510,9 +3503,9 @@ $ASTRO_IAU_DATA()
             );
         }
 
-        private static AstroVector ecl2equ_vec(AstroTime time, AstroVector ecl)
+        private static AstroVector ecl2equ_vec(AstroVector ecl)
         {
-            double obl = mean_obliq(time.tt) * DEG2RAD;
+            double obl = mean_obliq(ecl.t.tt) * DEG2RAD;
             double cos_obl = Math.Cos(obl);
             double sin_obl = Math.Sin(obl);
 
@@ -3520,7 +3513,7 @@ $ASTRO_IAU_DATA()
                 ecl.x,
                 ecl.y*cos_obl - ecl.z*sin_obl,
                 ecl.y*sin_obl + ecl.z*cos_obl,
-                time
+                ecl.t
             );
         }
 
@@ -3552,7 +3545,7 @@ $ASTRO_IAU_DATA()
             );
 
             /* Convert ecliptic coordinates to equatorial coordinates, both in mean equinox of date. */
-            AstroVector mpos1 = ecl2equ_vec(time, gepos);
+            AstroVector mpos1 = ecl2equ_vec(gepos);
 
             /* Convert from mean equinox of date to J2000. */
             AstroVector mpos2 = precession(mpos1, PrecessDirection.Into2000);

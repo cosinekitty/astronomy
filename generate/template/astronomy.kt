@@ -34,6 +34,7 @@ import kotlin.math.absoluteValue
 import kotlin.math.acos
 import kotlin.math.atan2
 import kotlin.math.cos
+import kotlin.math.floor
 import kotlin.math.hypot
 import kotlin.math.PI
 import kotlin.math.roundToLong
@@ -1833,7 +1834,215 @@ private fun vsopTableIndex(body: Body): Int =
 private fun vsopModel(body: Body) = vsopTable[vsopTableIndex(body)]
 
 //---------------------------------------------------------------------------------------
+// Geocentric Moon
 
+/**
+ * Emulate two-dimensional arrays from the Pascal programming language.
+ *
+ * The original Pascal source code used 2D arrays
+ * with negative lower bounds on the indices. This is trivial
+ * in Pascal, but most other languages use 0-based arrays.
+ * This wrapper class adapts the original algorithm to Kotlin's
+ * zero-based arrays.
+ */
+private class PascalArray2(
+    val xmin: Int,
+    val xmax: Int,
+    val ymin: Int,
+    val ymax: Int
+) {
+    private val array = Array<DoubleArray>((xmax- xmin) + 1) { _ -> DoubleArray((ymax - ymin) + 1) }
+    operator fun get(x: Int, y: Int) = array[x - xmin][y - ymin]
+    operator fun set(x: Int, y: Int, v: Double) { array[x - xmin][y - ymin] = v }
+}
+
+private class MoonContext(time: AstroTime) {
+    // Variable names inside this class do not follow coding style on purpose.
+    // They reflect the exact names from the original Pascal source code,
+    // for easy of porting and consistent code generation.
+    private var T: Double
+    private var DGAM = 0.0
+    private var DLAM: Double
+    private var N = 0.0
+    private var GAM1C: Double
+    private var SINPI: Double
+    private var L0: Double
+    private var L: Double
+    private var LS: Double
+    private var F: Double
+    private var D: Double
+    private var DL0 = 0.0
+    private var DL = 0.0
+    private var DLS = 0.0
+    private var DF = 0.0
+    private var DD = 0.0
+    private var DS = 0.0
+    private val CO = PascalArray2(-6, 6, 1, 4)
+    private val SI = PascalArray2(-6, 6, 1, 4)
+    private val ARC = 3600.0 * RAD2DEG      // arcseconds per radian
+
+    init {
+        T = time.julianCenturies()
+        val T2 = T*T
+        DLAM = 0.0
+        DS = 0.0
+        GAM1C = 0.0
+        SINPI = 3422.7
+        longPeriodic()
+        L0 = PI2 * frac(0.60643382 + (1336.85522467 * T) - (0.00000313 * T2)) + (DL0 / ARC)
+        L  = PI2 * frac(0.37489701 + (1325.55240982 * T) + (0.00002565 * T2)) + (DL  / ARC)
+        LS = PI2 * frac(0.99312619 + (  99.99735956 * T) - (0.00000044 * T2)) + (DLS / ARC)
+        F  = PI2 * frac(0.25909118 + (1342.22782980 * T) - (0.00000892 * T2)) + (DF  / ARC)
+        D  = PI2 * frac(0.82736186 + (1236.85308708 * T) - (0.00000397 * T2)) + (DD  / ARC)
+        for (I in 1..4) {
+            var ARG: Double
+            var MAX: Int
+            var FAC: Double
+            when (I) {
+                1    -> { ARG=L;  MAX=4; FAC=1.000002208               }
+                2    -> { ARG=LS; MAX=3; FAC=0.997504612-0.002495388*T }
+                3    -> { ARG=F;  MAX=4; FAC=1.000002708+139.978*DGAM  }
+                else -> { ARG=D;  MAX=6; FAC=1.0;                      }
+            }
+            CO[0,I] = 1.0
+            CO[1,I] = cos(ARG) * FAC
+            SI[0,I] = 0.0
+            SI[1,I] = sin(ARG) * FAC
+
+            for (J in 2..MAX) {
+                val c1 = CO[J-1,I]
+                val s1 = SI[J-1,I]
+                val c2 = CO[1,I]
+                val s2 = SI[1,I]
+                CO[J,I] = c1*c2 - s1*s2
+                SI[J,I] = s1*c2 + c1*s2
+            }
+
+            for (J in 1..MAX) {
+                CO[-J,I] =  CO[J,I];
+                SI[-J,I] = -SI[J,I];
+            }
+        }
+    }
+
+    /**
+     * Sine of an angle `phi` expressed in revolutions, not radians or degrees.
+     */
+    private fun sine(phi: Double) = sin(PI2 * phi)
+
+    private fun frac(x: Double) = x - floor(x)
+
+    private fun longPeriodic() {
+        val S1 = sine(0.19833 + (0.05611 * T))
+        val S2 = sine(0.27869 + (0.04508 * T))
+        val S3 = sine(0.16827 - (0.36903 * T))
+        val S4 = sine(0.34734 - (5.37261 * T))
+        val S5 = sine(0.10498 - (5.37899 * T))
+        val S6 = sine(0.42681 - (0.41855 * T))
+        val S7 = sine(0.14943 - (5.37511 * T))
+
+        DL0 = ( 0.84 * S1) + (0.31 * S2) + (14.27 * S3) + (7.26 * S4) + (0.28 * S5) + (0.24 * S6)
+        DL  = ( 2.94 * S1) + (0.31 * S2) + (14.27 * S3) + (9.34 * S4) + (1.12 * S5) + (0.83 * S6)
+        DLS = (-6.40 * S1) - (1.89 * S6)
+        DF  = ( 0.21 * S1) + (0.31 * S2) + (14.27 * S3) - (88.70*S4) - (15.30 * S5) + (0.24 * S6) - (1.86 * S7)
+        DD  = DL0 - DLS
+        DGAM = (
+            -3332.0e-9 * sine(0.59734 - (5.37261 * T))
+             -539.0e-9 * sine(0.35498 - (5.37899 * T))
+              -64.0e-9 * sine(0.39943 - (5.37511 * T))
+        )
+    }
+
+    // This is an ugly hack for efficiency.
+    // Kotlin does not allow passing variables by reference.
+    // Because this function is called *millions* of times
+    // during the unit test, we can't afford to be allocating
+    // tiny arrays or classes to pass a tuple (xTerm, yTerm) by reference.
+    // It is much more efficient to keep (xTerm, yTerm) at object scope,
+    // and allow term() to overwrite their values.
+    // Callers know that each time they call term(), they must
+    // access the output through (xTerm, yTerm) before calling term() again.
+
+    var xTerm = Double.NaN
+    var yTerm = Double.NaN
+    private fun term(p: Int, q: Int, r: Int, s: Int) {
+        xTerm = 1.0
+        yTerm = 0.0
+        if (p != 0) addTheta(CO[p, 1], SI[p, 1])
+        if (q != 0) addTheta(CO[q, 2], SI[q, 2])
+        if (r != 0) addTheta(CO[r, 3], SI[r, 3])
+        if (s != 0) addTheta(CO[s, 4], SI[s, 4])
+    }
+
+    private fun addTheta(c2: Double, s2: Double) {
+        val c1 = xTerm
+        val s1 = yTerm
+        xTerm = c1*c2 - s1*s2
+        yTerm = s1*c2 + c1*s2
+    }
+
+    internal fun addSol(
+        coeffl: Double,
+        coeffs: Double,
+        coeffg: Double,
+        coeffp: Double,
+        p: Int,
+        q: Int,
+        r: Int,
+        s: Int
+    ) {
+        term(p, q, r, s)
+        DLAM  += coeffl * yTerm
+        DS    += coeffs * yTerm
+        GAM1C += coeffg * xTerm
+        SINPI += coeffp * xTerm
+    }
+
+    internal fun addn(coeffn: Double, p: Int, q: Int, r: Int, s: Int) {
+        term(p, q, r, s)
+        N += (coeffn * yTerm)
+    }
+
+    private fun solarN() {
+        N = 0.0
+        addn(-526.069,  0, 0, 1, -2)
+        addn(  -3.352,  0, 0, 1, -4)
+        addn( +44.297, +1, 0, 1, -2)
+        addn(  -6.000, +1, 0, 1, -4)
+        addn( +20.599, -1, 0, 1,  0)
+        addn( -30.598, -1, 0, 1, -2)
+        addn( -24.649, -2, 0, 1,  0)
+        addn(  -2.000, -2, 0, 1, -2)
+        addn( -22.571,  0,+1, 1, -2)
+        addn( +10.985,  0,-1, 1, -2)
+    }
+
+    private fun planetary() {
+        DLAM += (
+            +0.82*sine(0.7736   -62.5512*T) + 0.31*sine(0.0466  -125.1025*T)
+            +0.35*sine(0.5785   -25.1042*T) + 0.66*sine(0.4591 +1335.8075*T)
+            +0.64*sine(0.3130   -91.5680*T) + 1.14*sine(0.1480 +1331.2898*T)
+            +0.21*sine(0.5918 +1056.5859*T) + 0.44*sine(0.5784 +1322.8595*T)
+            +0.24*sine(0.2275    -5.7374*T) + 0.28*sine(0.2965    +2.6929*T)
+            +0.33*sine(0.3132    +6.3368*T)
+        )
+    }
+
+    internal fun calcMoon(): Spherical {
+        addSolarTerms(this)
+        solarN()
+        planetary()
+        val S = F + DS/ARC
+        val lat_seconds = (1.000002708 + 139.978*DGAM)*(18518.511+1.189+GAM1C)*sin(S)-6.24*sin(3*S) + N
+        return Spherical(
+            lat_seconds / 3600.0,
+            360.0 * frac((L0+DLAM/ARC) / PI2),
+            (ARC * EARTH_EQUATORIAL_RADIUS_AU) / (0.999953253 * SINPI)
+        )
+    }
+}
+
+//---------------------------------------------------------------------------------------
 
 /**
  * The main container of astronomy calculation functions.
@@ -2082,7 +2291,7 @@ object Astronomy {
 
     private fun precessionRot(time: AstroTime, dir: PrecessDirection): RotationMatrix {
         val t = time.julianCenturies()
-        val eps0 = 84381.406 * ASEC2RAD
+        val eps0 = 84381.406
 
         val psia   = (((((-    0.0000000951  * t
                           +    0.000132851 ) * t
@@ -2102,8 +2311,8 @@ object Astronomy {
                           -    2.3814292   ) * t
                           +   10.556403    ) * t) * ASEC2RAD
 
-        val sa = sin(eps0)
-        val ca = cos(eps0)
+        val sa = sin(eps0 * ASEC2RAD)
+        val ca = cos(eps0 * ASEC2RAD)
         val sb = sin(-psia)
         val cb = cos(-psia)
         val sc = sin(-omegaa)
@@ -2419,6 +2628,18 @@ object Astronomy {
     private fun nutationPosVel(state: StateVector, dir: PrecessDirection) =
         nutationRot(state.t, dir).rotate(state)
 
+    private fun eclipticToEquatorial(ecl: AstroVector): AstroVector {
+        val obl = meanObliquity(ecl.t).degreesToRadians()
+        val cosObl = cos(obl)
+        val sinObl = sin(obl)
+        return AstroVector(
+            ecl.x,
+            (ecl.y * cosObl) - (ecl.z * sinObl),
+            (ecl.y * sinObl) + (ecl.z * cosObl),
+            ecl.t
+        )
+    }
+
     /**
      * Given an equatorial vector, calculates equatorial angular coordinates.
      *
@@ -2674,8 +2895,54 @@ object Astronomy {
 
         return AxisInfo(ra / 15.0, dec, w, north)
     }
+
+    /**
+    * Calculates spherical ecliptic geocentric position of the Moon.
+    *
+    * Given a time of observation, calculates the Moon's geocentric position
+    * in ecliptic spherical coordinates. Provides the ecliptic latitude and
+    * longitude in degrees, and the geocentric distance in astronomical units (AU).
+    * The ecliptic longitude is measured relative to the equinox of date.
+    *
+    * This algorithm is based on the Nautical Almanac Office's *Improved Lunar Ephemeris* of 1954,
+    * which in turn derives from E. W. Brown's lunar theories from the early twentieth century.
+    * It is adapted from Turbo Pascal code from the book
+    * [Astronomy on the Personal Computer](https://www.springer.com/us/book/9783540672210)
+    * by Montenbruck and Pfleger.
+    *
+    * To calculate an equatorial J2000 vector instead, use #Astronomy.geoMoon.
+    */
+    fun eclipticGeoMoon(time: AstroTime) = MoonContext(time).calcMoon()
+
+    /**
+     * Calculates equatorial geocentric position of the Moon at a given time.
+     *
+     * Given a time of observation, calculates the Moon's position vector.
+     * The vector indicates the Moon's center relative to the Earth's center.
+     * The vector components are expressed in AU (astronomical units).
+     * The coordinates are oriented with respect to the Earth's equator at the J2000 epoch.
+     * In Astronomy Engine, this orientation is called EQJ.
+     *
+     * @param time
+     *      The date and time for which to calculate the Moon's position.
+     *
+     * @returns
+     *      The Moon's position vector in J2000 equatorial coordinates (EQJ).
+     */
+    fun geoMoon(time: AstroTime): AstroVector {
+        val eclSphere = eclipticGeoMoon(time)
+        val eclVec = eclSphere.toVector(time)
+        val equVec = eclipticToEquatorial(eclVec)
+        return precession(equVec, PrecessDirection.Into2000)
+    }
 }
 
+//=======================================================================================
+// Generated code goes to the bottom of the source file,
+// so that most line numbers are consistent between template code and target code.
+
+//---------------------------------------------------------------------------------------
+// Table of coefficients for calculating nutation using the IAU2000b model.
 
 private class IauRow(
     val nals0: Int,
@@ -2691,12 +2958,6 @@ private class IauRow(
     val cls5: Double
 )
 
-//==================================================================================================
-// Generated code goes to the bottom of the source file,
-// so that most line numbers are consistent between template code and target code.
-
-//---------------------------------------------------------------------------------------
-// Table of coefficients for calculating nutation using the IAU2000b model.
 private val iauRow: Array<IauRow> = arrayOf($ASTRO_IAU_DATA())
 
 //---------------------------------------------------------------------------------------
@@ -2721,5 +2982,10 @@ private val vsopTable: Array<VsopModel> = arrayOf (
     VsopModel(vsopLonUranus,   vsopLatUranus,    vsopRadUranus ),   // 6
     VsopModel(vsopLonNeptune,  vsopLatNeptune,   vsopRadNeptune)    // 7
 )
+
+//---------------------------------------------------------------------------------------
+// Geocentric Moon
+
+private fun addSolarTerms(context: MoonContext) {$ASTRO_ADDSOL()}
 
 //---------------------------------------------------------------------------------------

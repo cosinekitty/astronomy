@@ -11,7 +11,9 @@ The main container of astronomy calculation functions.
 
 | Name | Summary |
 |---|---|
+| [eclipticGeoMoon](ecliptic-geo-moon.md) | [jvm]<br>fun [eclipticGeoMoon](ecliptic-geo-moon.md)(time: [AstroTime](../-astro-time/index.md)): [Spherical](../-spherical/index.md)<br>Calculates spherical ecliptic geocentric position of the Moon. |
 | [equatorFromVector](equator-from-vector.md) | [jvm]<br>fun [equatorFromVector](equator-from-vector.md)(vector: [AstroVector](../-astro-vector/index.md)): [Equatorial](../-equatorial/index.md)<br>Given an equatorial vector, calculates equatorial angular coordinates. |
+| [geoMoon](geo-moon.md) | [jvm]<br>fun [geoMoon](geo-moon.md)(time: [AstroTime](../-astro-time/index.md)): [AstroVector](../-astro-vector/index.md)<br>Calculates equatorial geocentric position of the Moon at a given time. |
 | [inverseRefractionAngle](inverse-refraction-angle.md) | [jvm]<br>fun [inverseRefractionAngle](inverse-refraction-angle.md)(refraction: [Refraction](../-refraction/index.md), bentAltitude: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)<br>Calculates the inverse of an atmospheric refraction angle. |
 | [massProduct](mass-product.md) | [jvm]<br>fun [massProduct](mass-product.md)(body: [Body](../-body/index.md)): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)<br>Returns the product of mass and universal gravitational constant of a Solar System body. |
 | [refractionAngle](refraction-angle.md) | [jvm]<br>fun [refractionAngle](refraction-angle.md)(refraction: [Refraction](../-refraction/index.md), altitude: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)<br>Calculates the amount of "lift" to an altitude angle caused by atmospheric refraction. |

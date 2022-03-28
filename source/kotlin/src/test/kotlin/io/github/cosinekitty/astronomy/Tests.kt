@@ -7,6 +7,7 @@ import org.junit.jupiter.params.provider.CsvSource
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlin.math.abs
+import kotlin.math.sqrt
 import kotlin.text.Regex
 
 private const val dataRootDir = "../../generate/"
@@ -224,6 +225,28 @@ class Tests {
         }
         assertTrue(maxArcmin <= arcminTolerance, "axisBodyTest($body): excessive error = $maxArcmin arcmin.")
         assertTrue(lnum > 900, "axisBodyTest($filename): only processed $lnum lines")
+    }
+
+    //----------------------------------------------------------------------------------------
+
+    @Test
+    fun `Sanity check geocentric moon`() {
+        val time = AstroTime(2019, 6, 24, 15, 45, 37.0)
+
+        val eclSphere = Astronomy.eclipticGeoMoon(time)
+        val dlat = eclSphere.lat  - (-4.851798346972171)
+        val dlon = eclSphere.lon  - (+354.5951298193645)
+        var drad = eclSphere.dist - 0.0026968810499258147
+        assertTrue(abs(dlat) < 1.0e-15, "eclipticGeoMoon: excessive latitude error $dlat")
+        assertTrue(abs(dlon) < 1.0e-15, "eclipticGeoMoon: excessive longitude error $dlon")
+        assertTrue(abs(drad) < 1.0e-17, "eclipticGeoMoon: excessive distance error $drad")
+
+        val equVec = Astronomy.geoMoon(time)
+        val dx = equVec.x - (+0.002674037026701135)
+        val dy = equVec.y - (-0.0001531610316600666)
+        val dz = equVec.z - (-0.0003150159927069429)
+        val diff = sqrt(dx*dx + dy*dy + dz*dz)
+        assertTrue(diff < 5.43e-20, "geoMoon excessive error = $diff")
     }
 
     //----------------------------------------------------------------------------------------
