@@ -213,21 +213,21 @@ private fun normalizeLongitude(lon: Double) = lon.withMinDegreeValue(0.0)
 /**
  * The enumeration of celestial bodies supported by Astronomy Engine.
  */
-enum class Body {
+enum class Body(internal val massProduct: Double?) {
     /**
      * A placeholder value representing an invalid or unknown celestial body.
      */
-    Invalid,
+    Invalid(massProduct = null),
 
     /**
      * The planet Mercury.
      */
-    Mercury,
+    Mercury(massProduct = MERCURY_GM),
 
     /**
      * The planet Venus.
      */
-    Venus,
+    Venus(massProduct = VENUS_GM),
 
     /**
      * The planet Earth.
@@ -235,57 +235,57 @@ enum class Body {
      * because they assume that an observation is being made from the Earth,
      * and therefore the Earth is not a target of observation.
      */
-    Earth,
+    Earth(massProduct = EARTH_GM),
 
     /**
      * The planet Mars.
      */
-    Mars,
+    Mars(massProduct = MARS_GM),
 
     /**
      * The planet Jupiter.
      */
-    Jupiter,
+    Jupiter(massProduct = JUPITER_GM),
 
     /**
      * The planet Saturn.
      */
-    Saturn,
+    Saturn(massProduct = SATURN_GM),
 
     /**
      * The planet Uranus.
      */
-    Uranus,
+    Uranus(massProduct = URANUS_GM),
 
     /**
      * The planet Neptune.
      */
-    Neptune,
+    Neptune(massProduct = NEPTUNE_GM),
 
     /**
      * The planet Pluto.
      */
-    Pluto,
+    Pluto(massProduct = PLUTO_GM),
 
     /**
      * The Sun.
      */
-    Sun,
+    Sun(massProduct = SUN_GM),
 
     /**
      * The Earth's natural satellite, the Moon.
      */
-    Moon,
+    Moon(massProduct = MOON_GM),
 
     /**
      * The Earth/Moon Barycenter.
      */
-    EMB,
+    EMB(massProduct = EARTH_GM + MOON_GM),
 
     /**
      * The Solar System Barycenter.
      */
-    SSB,
+    SSB(massProduct = null),
 }
 
 
@@ -2387,22 +2387,7 @@ object Astronomy {
      * @returns
      *      The mass product of the given body in au^3/day^2.
      */
-    fun massProduct(body: Body) =
-        when (body) {
-            Body.Sun     -> SUN_GM
-            Body.Mercury -> MERCURY_GM
-            Body.Venus   -> VENUS_GM
-            Body.Earth   -> EARTH_GM
-            Body.Moon    -> MOON_GM
-            Body.EMB     -> EARTH_GM + MOON_GM
-            Body.Mars    -> MARS_GM
-            Body.Jupiter -> JUPITER_GM
-            Body.Saturn  -> SATURN_GM
-            Body.Uranus  -> URANUS_GM
-            Body.Neptune -> NEPTUNE_GM
-            Body.Pluto   -> PLUTO_GM
-            else -> throw InvalidBodyException(body)
-        }
+    fun massProduct(body: Body) = body.massProduct ?: throw InvalidBodyException(body)
 
     private enum class PrecessDirection {
         From2000,
