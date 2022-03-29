@@ -1405,6 +1405,39 @@ fail:
 }
 
 
+static int PlutoStateTable_Kotlin(cg_context_t *context, const top_model_t *model)
+{
+    int error = 1;
+    double tt;
+    top_rectangular_t equ;
+    int i;
+
+    fprintf(context->outfile, "private const val PLUTO_NUM_STATES = %d\n", PLUTO_NUM_STATES);
+    fprintf(context->outfile, "private const val PLUTO_TIME_STEP  = %d\n", PLUTO_TIME_STEP);
+    fprintf(context->outfile, "private const val PLUTO_DT         = %d\n", PLUTO_DT);
+    fprintf(context->outfile, "private const val PLUTO_NSTEPS     = %d\n", PLUTO_NSTEPS);
+    fprintf(context->outfile, "\n");
+    fprintf(context->outfile, "private val plutoStateTable: Array<BodyState> = arrayOf(\n");
+
+    for (i=0; i < PLUTO_NUM_STATES; ++i)
+    {
+        tt = i*PLUTO_TIME_STEP + PLUTO_TT1;
+        CHECK(TopPosition(model, tt, &equ));
+
+        fprintf(context->outfile,
+            "%c   BodyState(%10.1lf, TerseVector(%16.12lf, %16.12lf, %16.12lf), TerseVector(%20.13le, %20.13le, %20.13le))\n",
+            (i==0 ? ' ' : ','),
+            tt, equ.x, equ.y, equ.z, equ.vx, equ.vy, equ.vz);
+    }
+
+    fprintf(context->outfile, ")");
+
+    error = 0;
+fail:
+    return error;
+}
+
+
 static int PlutoStateTable_JS(cg_context_t *context, const top_model_t *model)
 {
     int error = 1;
@@ -1487,6 +1520,10 @@ static int PlutoStateTable(cg_context_t *context)
 
     case CODEGEN_LANGUAGE_CSHARP:
         CHECK(PlutoStateTable_CSharp(context, &model));
+        break;
+
+    case CODEGEN_LANGUAGE_KOTLIN:
+        CHECK(PlutoStateTable_Kotlin(context, &model));
         break;
 
     case CODEGEN_LANGUAGE_JS:

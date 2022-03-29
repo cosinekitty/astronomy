@@ -3821,8 +3821,8 @@ namespace CosineKitty
                         seg[i].a = (1 - ramp)*seg[i].a + ramp*reverse[i].a;
                     }
                 }
+                return cache[seg_index];
             }
-            return cache[seg_index];
         }
 
         private static body_grav_calc_t CalcPlutoOneWay(

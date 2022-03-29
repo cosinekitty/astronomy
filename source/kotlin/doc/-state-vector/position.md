@@ -3,6 +3,6 @@
 # position
 
 [jvm]\
-val [position](position.md): [AstroVector](../-astro-vector/index.md)
+fun [position](position.md)(): [AstroVector](../-astro-vector/index.md)
 
 Returns the position vector associated with this state vector.

@@ -80,12 +80,12 @@ class Tests {
     @Test
     fun `TerseVector methods should work as expected`() {
         val ones = TerseVector(1.0, 1.0, 1.0)
-        assertEquals(ones, ones + TerseVector.zero)
-        assertEquals(ones, ones + TerseVector.zero)
+        assertEquals(ones, ones + TerseVector.zero())
+        assertEquals(ones, ones + TerseVector.zero())
         assertEquals(TerseVector(6.0, 8.0, 4.0), TerseVector(3.0, 4.0, 2.0) * 2.0)
         assertEquals(TerseVector(-1.5, 2.0, -1.0), TerseVector(-3.0, 4.0, -2.0) / 2.0)
-        assertEquals(29.0, TerseVector(-3.0, 4.0, -2.0).quadrature)
-        assertEquals(5.744562646538029, TerseVector(-2.0, -2.0, 5.0).magnitude)
+        assertEquals(29.0, TerseVector(-3.0, 4.0, -2.0).quadrature())
+        assertEquals(5.744562646538029, TerseVector(-2.0, -2.0, 5.0).magnitude())
     }
 
     //----------------------------------------------------------------------------------------
@@ -352,14 +352,12 @@ class Tests {
             // 0.00038196533635370553, 0.0029105280185167605, 0.0011819337466936254
         )
 
-/*
         verifyHelio(
             Body.Pluto,
             time,
             15.377665594383952, -27.85223298004125, -13.32288901996256
             // 0.0028887491551056084, 0.0010313534744949828, -0.0005469417328328084
         )
-*/
 
         verifyHelio(
             Body.Moon,

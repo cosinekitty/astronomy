@@ -33,6 +33,7 @@ import java.util.*
 import kotlin.math.absoluteValue
 import kotlin.math.acos
 import kotlin.math.atan2
+import kotlin.math.ceil
 import kotlin.math.cos
 import kotlin.math.floor
 import kotlin.math.hypot
@@ -293,49 +294,49 @@ enum class Body {
  * A date and time used for astronomical calculations.
  */
 class AstroTime private constructor(
-        /**
-         * UT1/UTC number of days since noon on January 1, 2000.
-         *
-         * The floating point number of days of Universal Time since noon UTC January 1, 2000.
-         * Astronomy Engine approximates UTC and UT1 as being the same thing, although they are
-         * not exactly equivalent; UTC and UT1 can disagree by up to plus or minus 0.9 seconds.
-         * This approximation is sufficient for the accuracy requirements of Astronomy Engine.
-         *
-         * Universal Time Coordinate (UTC) is the international standard for legal and civil
-         * timekeeping and replaces the older Greenwich Mean Time (GMT) standard.
-         * UTC is kept in sync with unpredictable observed changes in the Earth's rotation
-         * by occasionally adding leap seconds as needed.
-         *
-         * UT1 is an idealized time scale based on observed rotation of the Earth, which
-         * gradually slows down in an unpredictable way over time, due to tidal drag by the Moon and Sun,
-         * large scale weather events like hurricanes, and internal seismic and convection effects.
-         * Conceptually, UT1 drifts from atomic time continuously and erratically, whereas UTC
-         * is adjusted by a scheduled whole number of leap seconds as needed.
-         *
-         * The value in `ut` is appropriate for any calculation involving the Earth's rotation,
-         * such as calculating rise/set times, culumination, and anything involving apparent
-         * sidereal time.
-         *
-         * Before the era of atomic timekeeping, days based on the Earth's rotation
-         * were often known as *mean solar days*.
-         */
-        val ut: Double,
+    /**
+     * UT1/UTC number of days since noon on January 1, 2000.
+     *
+     * The floating point number of days of Universal Time since noon UTC January 1, 2000.
+     * Astronomy Engine approximates UTC and UT1 as being the same thing, although they are
+     * not exactly equivalent; UTC and UT1 can disagree by up to plus or minus 0.9 seconds.
+     * This approximation is sufficient for the accuracy requirements of Astronomy Engine.
+     *
+     * Universal Time Coordinate (UTC) is the international standard for legal and civil
+     * timekeeping and replaces the older Greenwich Mean Time (GMT) standard.
+     * UTC is kept in sync with unpredictable observed changes in the Earth's rotation
+     * by occasionally adding leap seconds as needed.
+     *
+     * UT1 is an idealized time scale based on observed rotation of the Earth, which
+     * gradually slows down in an unpredictable way over time, due to tidal drag by the Moon and Sun,
+     * large scale weather events like hurricanes, and internal seismic and convection effects.
+     * Conceptually, UT1 drifts from atomic time continuously and erratically, whereas UTC
+     * is adjusted by a scheduled whole number of leap seconds as needed.
+     *
+     * The value in `ut` is appropriate for any calculation involving the Earth's rotation,
+     * such as calculating rise/set times, culumination, and anything involving apparent
+     * sidereal time.
+     *
+     * Before the era of atomic timekeeping, days based on the Earth's rotation
+     * were often known as *mean solar days*.
+     */
+    val ut: Double,
 
-        /**
-         * Terrestrial Time days since noon on January 1, 2000.
-         *
-         * Terrestrial Time is an atomic time scale defined as a number of days since noon on January 1, 2000.
-         * In this system, days are not based on Earth rotations, but instead by
-         * the number of elapsed [SI seconds](https://physics.nist.gov/cuu/Units/second.html)
-         * divided by 86400. Unlike `ut`, `tt` increases uniformly without adjustments
-         * for changes in the Earth's rotation.
-         *
-         * The value in `tt` is used for calculations of movements not involving the Earth's rotation,
-         * such as the orbits of planets around the Sun, or the Moon around the Earth.
-         *
-         * Historically, Terrestrial Time has also been known by the term *Ephemeris Time* (ET).
-         */
-        val tt: Double
+    /**
+     * Terrestrial Time days since noon on January 1, 2000.
+     *
+     * Terrestrial Time is an atomic time scale defined as a number of days since noon on January 1, 2000.
+     * In this system, days are not based on Earth rotations, but instead by
+     * the number of elapsed [SI seconds](https://physics.nist.gov/cuu/Units/second.html)
+     * divided by 86400. Unlike `ut`, `tt` increases uniformly without adjustments
+     * for changes in the Earth's rotation.
+     *
+     * The value in `tt` is used for calculations of movements not involving the Earth's rotation,
+     * such as the orbits of planets around the Sun, or the Moon around the Earth.
+     *
+     * Historically, Terrestrial Time has also been known by the term *Ephemeris Time* (ET).
+     */
+    val tt: Double
 ) {
     /*
      * For internal use only. Used to optimize Earth tilt calculations.
@@ -450,7 +451,7 @@ class AstroTime private constructor(
 }
 
 
-internal data class TerseVector(val x: Double, val y: Double, val z: Double) {
+internal data class TerseVector(var x: Double, var y: Double, var z: Double) {
     fun toAstroVector(time: AstroTime) =
         AstroVector(x, y, z, time)
 
@@ -460,19 +461,46 @@ internal data class TerseVector(val x: Double, val y: Double, val z: Double) {
     operator fun minus(other: TerseVector) =
         TerseVector(x - other.x, y - other.y, z - other.z)
 
+    operator fun unaryMinus() =
+        TerseVector(-x, -y, -z)
+
     operator fun times(other: Double) =
         TerseVector(x * other, y * other, z * other)
 
     operator fun div(other: Double) =
         TerseVector(x / other, y / other, z / other)
 
-    val quadrature get() = (x * x) + (y * y) + (z * z)
-    val magnitude get() = sqrt(quadrature)
+    fun mean(other: TerseVector) =
+        TerseVector((x + other.x) / 2.0, (y + other.y) / 2.0, (z + other.z) / 2.0)
+
+    fun quadrature() = (x * x) + (y * y) + (z * z)
+    fun magnitude() = sqrt(quadrature())
+
+    fun decrement(other: TerseVector) {
+        x -= other.x
+        y -= other.y
+        z -= other.z
+    }
+
+    fun increment(other: TerseVector) {
+        x += other.x
+        y += other.y
+        z += other.z
+    }
+
+    fun mix(ramp: Double, other: TerseVector) {
+        x = (1.0 - ramp)*x + ramp*other.x
+        y = (1.0 - ramp)*y + ramp*other.y
+        z = (1.0 - ramp)*z + ramp*other.z
+    }
 
     companion object {
-        val zero = TerseVector(0.0, 0.0, 0.0)
+        fun zero() = TerseVector(0.0, 0.0, 0.0)
     }
 }
+
+internal operator fun Double.times(vec: TerseVector) =
+    TerseVector(this * vec.x, this * vec.y, this * vec.z)
 
 
 data class AstroVector(
@@ -659,12 +687,12 @@ data class StateVector(
     /**
      * Returns the position vector associated with this state vector.
      */
-    val position get() = AstroVector(x, y, z, t)
+    fun position() = AstroVector(x, y, z, t)
 
     /**
      * Returns the velocity vector associated with this state vector.
      */
-    val velocity get() = AstroVector(vx, vy, vz, t)
+    fun velocity() = AstroVector(vx, vy, vz, t)
 }
 
 
@@ -753,8 +781,8 @@ class RotationMatrix(
      *      The value of `state` is not changed; the return value is a new state vector object.
      */
     fun rotate(state: StateVector) = StateVector(
-        rotate(state.position),
-        rotate(state.velocity),
+        rotate(state.position()),
+        rotate(state.velocity()),
         state.t
     )
 
@@ -817,20 +845,20 @@ class RotationMatrix(
         // such that the following vector cross product is satisfied:
         // i x j = k
         val i = (axis + 1) % 3
-        val j = (axis + 2) % 3;
+        val j = (axis + 2) % 3
         val k = axis
 
         val piv = arrayOf(DoubleArray(3), DoubleArray(3), DoubleArray(3))
 
-        piv[i][i] = c*rot[i][i] - s*rot[i][j];
-        piv[i][j] = s*rot[i][i] + c*rot[i][j];
-        piv[i][k] = rot[i][k];
-        piv[j][i] = c*rot[j][i] - s*rot[j][j];
-        piv[j][j] = s*rot[j][i] + c*rot[j][j];
-        piv[j][k] = rot[j][k];
-        piv[k][i] = c*rot[k][i] - s*rot[k][j];
-        piv[k][j] = s*rot[k][i] + c*rot[k][j];
-        piv[k][k] = rot[k][k];
+        piv[i][i] = c*rot[i][i] - s*rot[i][j]
+        piv[i][j] = s*rot[i][i] + c*rot[i][j]
+        piv[i][k] = rot[i][k]
+        piv[j][i] = c*rot[j][i] - s*rot[j][j]
+        piv[j][j] = s*rot[j][i] + c*rot[j][j]
+        piv[j][k] = rot[j][k]
+        piv[k][i] = c*rot[k][i] - s*rot[k][j]
+        piv[k][j] = s*rot[k][i] + c*rot[k][j]
+        piv[k][k] = rot[k][k]
 
         return RotationMatrix(piv)
     }
@@ -1897,7 +1925,12 @@ private class BodyState(
     val tt: Double,
     val r: TerseVector,
     val v: TerseVector
-)
+) {
+    fun decrement(other: BodyState) {
+        r.decrement(other.r)
+        v.decrement(other.v)
+    }
+}
 
 private fun calcVsopPosVel(model: VsopModel, tt: Double): BodyState {
     val t = tt / DAYS_PER_MILLENNIUM
@@ -1952,6 +1985,22 @@ private fun calcVsopPosVel(model: VsopModel, tt: Double): BodyState {
     return BodyState(tt, equPos, equVel)
 }
 
+private fun vsopModel(body: Body) =
+    when (body) {
+        Body.Mercury -> vsopTable[0]
+        Body.Venus   -> vsopTable[1]
+        Body.Earth   -> vsopTable[2]
+        Body.Mars    -> vsopTable[3]
+        Body.Jupiter -> vsopTable[4]
+        Body.Saturn  -> vsopTable[5]
+        Body.Uranus  -> vsopTable[6]
+        Body.Neptune -> vsopTable[7]
+        else -> throw InvalidBodyException(body)
+    }
+
+private fun vsopHelioState(body: Body, tt: Double) =
+    calcVsopPosVel(vsopModel(body), tt)
+
 
 //---------------------------------------------------------------------------------------
 // Geocentric Moon
@@ -1979,7 +2028,7 @@ private class PascalArray2(
 private class MoonContext(time: AstroTime) {
     // Variable names inside this class do not follow coding style on purpose.
     // They reflect the exact names from the original Pascal source code,
-    // for easy of porting and consistent code generation.
+    // for ease of porting and consistent code generation.
     private var T: Double
     private var DGAM = 0.0
     private var DLAM: Double
@@ -2160,6 +2209,262 @@ private class MoonContext(time: AstroTime) {
             (ARC * EARTH_EQUATORIAL_RADIUS_AU) / (0.999953253 * SINPI)
         )
     }
+}
+
+//---------------------------------------------------------------------------------------
+// Pluto/SSB gravitation simulator
+
+private class BodyGravCalc(
+    val tt: Double,         // J2000 terrestrial time [days]
+    val r: TerseVector,     // position [au]
+    val v: TerseVector,     // velocity [au/day]
+    val a: TerseVector      // acceleration [au/day]
+)
+
+private class MajorBodies(
+    val sun:        BodyState,
+    val jupiter:    BodyState,
+    val saturn:     BodyState,
+    val uranus:     BodyState,
+    val neptune:    BodyState
+) {
+    fun acceleration(smallPos: TerseVector): TerseVector = (
+        accelerationIncrement(smallPos, SUN_GM,     sun.r    ) +
+        accelerationIncrement(smallPos, JUPITER_GM, jupiter.r) +
+        accelerationIncrement(smallPos, SATURN_GM,  saturn.r ) +
+        accelerationIncrement(smallPos, URANUS_GM,  uranus.r ) +
+        accelerationIncrement(smallPos, NEPTUNE_GM, neptune.r)
+    )
+
+    private fun accelerationIncrement(smallPos: TerseVector, gm: Double, majorPos: TerseVector): TerseVector {
+        val delta = majorPos - smallPos
+        val r2 = delta.quadrature()
+        return (gm / (r2 * sqrt(r2))) * delta
+    }
+}
+
+private fun updatePosition(dt: Double, r: TerseVector, v: TerseVector, a: TerseVector) =
+    TerseVector(
+        r.x + dt*(v.x + dt*a.x/2.0),
+        r.y + dt*(v.y + dt*a.y/2.0),
+        r.z + dt*(v.z + dt*a.z/2.0),
+    )
+
+private fun updateVelocity(dt: Double, v: TerseVector, a: TerseVector) =
+    TerseVector(
+        v.x + dt*a.x,
+        v.y + dt*a.y,
+        v.z + dt*a.z
+    )
+
+private fun adjustBarycenterPosVel(ssb: BodyState, tt: Double, body: Body, planetGm: Double): BodyState {
+    val shift = planetGm / (planetGm + SUN_GM)
+    val planet = vsopHelioState(body, tt)
+    ssb.r.increment(shift * planet.r)
+    ssb.v.increment(shift * planet.v)
+    return planet
+}
+
+private fun majorBodyBary(tt: Double): MajorBodies {
+    // Calculate the state vector of the Solar System Barycenter (SSB).
+    val ssb = BodyState(tt, TerseVector.zero(), TerseVector.zero())
+    val jupiter = adjustBarycenterPosVel(ssb, tt, Body.Jupiter, JUPITER_GM)
+    val saturn  = adjustBarycenterPosVel(ssb, tt, Body.Saturn,  SATURN_GM )
+    val uranus  = adjustBarycenterPosVel(ssb, tt, Body.Uranus,  URANUS_GM )
+    val neptune = adjustBarycenterPosVel(ssb, tt, Body.Neptune, NEPTUNE_GM)
+
+    // Convert planet state vectors from heliocentric to barycentric.
+    jupiter.decrement(ssb)
+    saturn.decrement(ssb)
+    uranus.decrement(ssb)
+    neptune.decrement(ssb)
+
+    // Convert the heliocentric SSB to a barycentric Sun state.
+    val sun = BodyState(tt, -ssb.r, -ssb.v)
+
+    return MajorBodies(sun, jupiter, saturn, uranus, neptune)
+}
+
+private class GravSim(
+    val bary: MajorBodies,
+    val grav: BodyGravCalc
+)
+
+private fun simulateGravity(
+    tt2: Double,            // a target time to be calculated (before or after current time tt1)
+    calc1: BodyGravCalc     // [pos, vel, acc] of the simulated body at tt1
+): GravSim {
+    val dt = tt2 - calc1.tt
+
+    // Calculate where the major bodies (Sun, Jupiter...Neptune) will be at tt2.
+    val bary = majorBodyBary(tt2)
+
+    // Estimate the position of the small body as if the current
+    // acceleration applies across the whole time interval.
+    val approxPos = updatePosition(dt, calc1.r, calc1.v, calc1.a)
+
+    // Calculate the average acceleration of the endpoints.
+    // This becomes our estimate of the mean effective acceleration
+    // over the whole time interval.
+    val meanAcc = bary.acceleration(approxPos).mean(calc1.a)
+
+    // Refine the estimates of [pos, vel, acc] at tt2 using the mean acceleration.
+    val pos = updatePosition(dt, calc1.r, calc1.v, meanAcc)
+    val vel = updateVelocity(dt, calc1.v, meanAcc)
+    val acc = bary.acceleration(pos)
+
+    val grav = BodyGravCalc(tt2, pos, vel, acc)
+    return GravSim(bary, grav)
+}
+
+
+private fun clampIndex(frac: Double, nsteps: Int): Int {
+    val index = frac.toInt()
+    return (
+        if (index < 0)
+            0
+        else if (index >= nsteps)
+            nsteps - 1
+        else
+            index
+    )
+}
+
+private fun gravFromState(state: BodyState): GravSim {
+    val bary = majorBodyBary(state.tt)
+    val r = state.r + bary.sun.r
+    val v = state.v + bary.sun.v
+    val a = bary.acceleration(r)
+    val grav = BodyGravCalc(state.tt, r, v, a)
+    return GravSim(bary, grav)
+}
+
+private fun getPlutoSegment(tt: Double): List<BodyGravCalc>? {
+    if (tt < plutoStateTable[0].tt || tt > plutoStateTable[PLUTO_NUM_STATES-1].tt)
+        return null     // Don't bother calculating a segment. Let the caller crawl backward/forward to this time
+
+    val segIndex = clampIndex((tt - plutoStateTable[0].tt) / PLUTO_TIME_STEP, PLUTO_NUM_STATES-1)
+    synchronized (plutoCache) {
+        var list = plutoCache.get(segIndex)
+        if (list == null) {
+            val seg = ArrayList<BodyGravCalc>()
+
+            // The first endpoint is exact.
+            var sim = gravFromState(plutoStateTable[segIndex])
+            seg.add(sim.grav)
+
+            // Simulate forwards from the lower time bound.
+            var steptt = sim.grav.tt
+            for (i in 1..(PLUTO_NSTEPS-1)) {
+                steptt += PLUTO_DT
+                sim = simulateGravity(steptt, sim.grav)
+                seg.add(sim.grav)
+            }
+
+            // The last endpoint is exact.
+            sim = gravFromState(plutoStateTable[segIndex + 1])
+            seg.add(sim.grav)
+
+            // Simulate backwards from the upper time bound.
+            val backward = ArrayList<BodyGravCalc>()
+            backward.add(sim.grav)
+
+            steptt = sim.grav.tt
+            for (i in (PLUTO_NSTEPS-2) downTo 1) {
+                steptt -= PLUTO_DT
+                sim = simulateGravity(steptt, sim.grav)
+                backward.add(sim.grav)
+            }
+
+            backward.add(seg[0])
+            val reverse = backward.reversed()
+
+            // Fade-mix the two series so that there are no discontinuities.
+            for (i in (PLUTO_NSTEPS-2) downTo 1) {
+                val ramp = i.toDouble() / (PLUTO_NSTEPS - 1)
+                seg[i].r.mix(ramp, reverse[i].r)
+                seg[i].v.mix(ramp, reverse[i].v)
+                seg[i].a.mix(ramp, reverse[i].a)
+            }
+
+            list = seg.toList()
+            plutoCache.set(segIndex, list)
+        }
+        return list
+    }
+}
+
+private fun calcPlutoOneWay(
+    initState: BodyState,
+    targetTt: Double,
+    dt: Double
+) : GravSim {
+    var sim = gravFromState(initState)
+    val n: Int = ceil((targetTt - sim.grav.tt) / dt).toInt()
+    for (i in 0..(n-1)) {
+        val tt = if (i+1 == n) targetTt else (sim.grav.tt + dt)
+        sim = simulateGravity(tt, sim.grav)
+    }
+    return sim
+}
+
+private fun calcPluto(time: AstroTime, helio: Boolean): StateVector {
+    val seg = getPlutoSegment(time.tt)
+    var calc: BodyGravCalc
+    var bary: MajorBodies? = null
+    if (seg == null) {
+        // The target time is outside the year range 0000..4000.
+        // Calculate it by crawling backward from 0000 or forward from 4000.
+        // FIXFIXFIX - This is super slow. Could optimize this with extra caching if needed.
+        val sim =
+            if (time.tt < plutoStateTable[0].tt)
+                calcPlutoOneWay(plutoStateTable[0], time.tt, (-PLUTO_DT).toDouble())
+            else
+                calcPlutoOneWay(plutoStateTable[PLUTO_NUM_STATES-1], time.tt, (+PLUTO_DT).toDouble())
+
+        calc = sim.grav
+        bary = sim.bary
+    } else {
+        val left = clampIndex((time.tt - seg[0].tt) / PLUTO_DT, PLUTO_NSTEPS-1)
+        val s1 = seg[left]
+        val s2 = seg[left+1]
+
+        // Find mean acceleration vector over the interval.
+        val acc: TerseVector = s1.a.mean(s2.a)
+
+        // Use Newtonian mechanics to extrapolate away from t1 in the positive time direction.
+        val ra: TerseVector = updatePosition(time.tt - s1.tt, s1.r, s1.v, acc)
+        val va: TerseVector = updateVelocity(time.tt - s1.tt, s1.v, acc)
+
+        // Use Newtonian mechanics to extrapolate away from t2 in the negative time direction.
+        val rb: TerseVector = updatePosition(time.tt - s2.tt, s2.r, s2.v, acc)
+        val vb: TerseVector = updateVelocity(time.tt - s2.tt, s2.v, acc)
+
+        // Use fade in/out idea to blend the two position estimates.
+        val ramp = (time.tt - s1.tt)/PLUTO_DT
+        calc = BodyGravCalc(
+            time.tt,
+            (1.0 - ramp)*ra + ramp*rb,      // ramp/mix the position vector
+            (1.0 - ramp)*va + ramp*vb,      // ramp/mix the velocity vector
+            TerseVector.zero()              // the acceleration isn't used
+        )
+    }
+
+    if (helio) {
+        // Lazy evaluate the Solar System Barycenter state if needed.
+        if (bary == null)
+            bary = majorBodyBary(time.tt)
+
+        // Convert barycentric vectors to heliocentric vectors.
+        calc.r.decrement(bary.sun.r)
+        calc.v.decrement(bary.sun.v)
+    }
+
+    return StateVector(
+        calc.r.x, calc.r.y, calc.r.z,
+        calc.v.x, calc.v.y, calc.v.z,
+        time
+    )
 }
 
 //---------------------------------------------------------------------------------------
@@ -3092,9 +3397,9 @@ object Astronomy {
             Body.Saturn  -> calcVsop(vsopTable[5], time)
             Body.Uranus  -> calcVsop(vsopTable[6], time)
             Body.Neptune -> calcVsop(vsopTable[7], time)
+            Body.Pluto   -> calcPluto(time, true).position()
             Body.Moon    -> helioEarth(time) + geoMoon(time)
             Body.EMB     -> helioEarth(time) + (geoMoon(time) / (1.0 + EARTH_MOON_MASS_RATIO))
-            // FIXFIXFIX: add Pluto
             // FIXFIXFIX: add Solar System Barycenter
             else -> throw InvalidBodyException(body)
         }
@@ -3185,3 +3490,7 @@ private val vsopTable: Array<VsopModel> = arrayOf (
 private fun addSolarTerms(context: MoonContext) {$ASTRO_ADDSOL()}
 
 //---------------------------------------------------------------------------------------
+// Pluto state table
+
+$ASTRO_PLUTO_TABLE()
+private val plutoCache = HashMap<Int, List<BodyGravCalc>>()

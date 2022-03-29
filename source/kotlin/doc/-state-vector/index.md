@@ -11,13 +11,18 @@ data class [StateVector](index.md)(x: [Double](https://kotlinlang.org/api/latest
 |---|---|
 | [StateVector](-state-vector.md) | [jvm]<br>fun [StateVector](-state-vector.md)(pos: [AstroVector](../-astro-vector/index.md), vel: [AstroVector](../-astro-vector/index.md), time: [AstroTime](../-astro-time/index.md))<br>Combines a position vector and a velocity vector into a single state vector. |
 
+## Functions
+
+| Name | Summary |
+|---|---|
+| [position](position.md) | [jvm]<br>fun [position](position.md)(): [AstroVector](../-astro-vector/index.md)<br>Returns the position vector associated with this state vector. |
+| [velocity](velocity.md) | [jvm]<br>fun [velocity](velocity.md)(): [AstroVector](../-astro-vector/index.md)<br>Returns the velocity vector associated with this state vector. |
+
 ## Properties
 
 | Name | Summary |
 |---|---|
-| [position](position.md) | [jvm]<br>val [position](position.md): [AstroVector](../-astro-vector/index.md)<br>Returns the position vector associated with this state vector. |
 | [t](t.md) | [jvm]<br>val [t](t.md): [AstroTime](../-astro-time/index.md)<br>The date and time at which this vector is valid. |
-| [velocity](velocity.md) | [jvm]<br>val [velocity](velocity.md): [AstroVector](../-astro-vector/index.md)<br>Returns the velocity vector associated with this state vector. |
 | [vx](vx.md) | [jvm]<br>val [vx](vx.md): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)<br>A Cartesian velocity x-component expressed in AU/day. |
 | [vy](vy.md) | [jvm]<br>val [vy](vy.md): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)<br>A Cartesian velocity y-component expressed in AU/day. |
 | [vz](vz.md) | [jvm]<br>val [vz](vz.md): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)<br>A Cartesian velocity z-component expressed in AU/day. |
