@@ -3,7 +3,7 @@
 # Mercury
 
 [jvm]\
-[Mercury](index.md)()
+[Mercury](index.md)(MERCURY_GM, VsopModel(vsopLonMercury, vsopLatMercury, vsopRadMercury))
 
 The planet Mercury.
 

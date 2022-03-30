@@ -3,7 +3,7 @@
 # Mars
 
 [jvm]\
-[Mars](index.md)()
+[Mars](index.md)(MARS_GM, VsopModel(vsopLonMars, vsopLatMars, vsopRadMars))
 
 The planet Mars.
 

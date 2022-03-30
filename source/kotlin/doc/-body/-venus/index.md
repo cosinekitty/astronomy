@@ -3,7 +3,7 @@
 # Venus
 
 [jvm]\
-[Venus](index.md)()
+[Venus](index.md)(VENUS_GM, VsopModel(vsopLonVenus, vsopLatVenus, vsopRadVenus))
 
 The planet Venus.
 

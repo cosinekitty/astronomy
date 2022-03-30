@@ -3,7 +3,7 @@
 # EMB
 
 [jvm]\
-[EMB](index.md)()
+[EMB](index.md)(EARTH_GM + MOON_GM, null)
 
 The Earth/Moon Barycenter.
 

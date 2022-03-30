@@ -3,7 +3,7 @@
 # Saturn
 
 [jvm]\
-[Saturn](index.md)()
+[Saturn](index.md)(SATURN_GM, VsopModel(vsopLonSaturn, vsopLatSaturn, vsopRadSaturn))
 
 The planet Saturn.
 

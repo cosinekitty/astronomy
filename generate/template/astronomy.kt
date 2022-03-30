@@ -214,21 +214,25 @@ private fun normalizeLongitude(lon: Double) = lon.withMinDegreeValue(0.0)
 /**
  * The enumeration of celestial bodies supported by Astronomy Engine.
  */
-enum class Body {
-    /**
-     * A placeholder value representing an invalid or unknown celestial body.
-     */
-    Invalid,
-
+enum class Body(
+    internal val massProduct: Double?,
+    internal val vsopModel: VsopModel?
+) {
     /**
      * The planet Mercury.
      */
-    Mercury,
+    Mercury(
+        MERCURY_GM,
+        VsopModel(vsopLonMercury, vsopLatMercury, vsopRadMercury)
+    ),
 
     /**
      * The planet Venus.
      */
-    Venus,
+    Venus(
+        VENUS_GM,
+        VsopModel(vsopLonVenus, vsopLatVenus, vsopRadVenus)
+    ),
 
     /**
      * The planet Earth.
@@ -236,57 +240,90 @@ enum class Body {
      * because they assume that an observation is being made from the Earth,
      * and therefore the Earth is not a target of observation.
      */
-    Earth,
+    Earth(
+        EARTH_GM,
+        VsopModel(vsopLonEarth, vsopLatEarth, vsopRadEarth)
+    ),
 
     /**
      * The planet Mars.
      */
-    Mars,
+    Mars(
+        MARS_GM,
+        VsopModel(vsopLonMars, vsopLatMars, vsopRadMars)
+    ),
 
     /**
      * The planet Jupiter.
      */
-    Jupiter,
+    Jupiter(
+        JUPITER_GM,
+        VsopModel(vsopLonJupiter, vsopLatJupiter, vsopRadJupiter)
+    ),
 
     /**
      * The planet Saturn.
      */
-    Saturn,
+    Saturn(
+        SATURN_GM,
+        VsopModel(vsopLonSaturn, vsopLatSaturn, vsopRadSaturn)
+    ),
 
     /**
      * The planet Uranus.
      */
-    Uranus,
+    Uranus(
+        URANUS_GM,
+        VsopModel(vsopLonUranus, vsopLatUranus, vsopRadUranus)
+    ),
 
     /**
      * The planet Neptune.
      */
-    Neptune,
+    Neptune(
+        NEPTUNE_GM,
+        VsopModel(vsopLonNeptune, vsopLatNeptune, vsopRadNeptune)
+    ),
 
     /**
      * The planet Pluto.
      */
-    Pluto,
+    Pluto(
+        PLUTO_GM,
+        null,
+    ),
 
     /**
      * The Sun.
      */
-    Sun,
+    Sun(
+        SUN_GM,
+        null
+    ),
 
     /**
      * The Earth's natural satellite, the Moon.
      */
-    Moon,
+    Moon(
+        MOON_GM,
+        null
+    ),
 
     /**
      * The Earth/Moon Barycenter.
      */
-    EMB,
+    EMB(
+        EARTH_GM + MOON_GM,
+        null
+    ),
 
     /**
      * The Solar System Barycenter.
      */
-    SSB,
+    SSB(
+        null,
+        null
+    ),
 }
 
 
@@ -1856,21 +1893,21 @@ class ConstellationInfo(
 //---------------------------------------------------------------------------------------
 // VSOP87: semi-analytic model of major planet positions
 
-private class VsopTerm(
+internal class VsopTerm(
     val amplitude: Double,
     val phase: Double,
     val frequency: Double
 )
 
-private class VsopSeries(
+internal class VsopSeries(
     val term: Array<VsopTerm>
 )
 
-private class VsopFormula(
+internal class VsopFormula(
     val series: Array<VsopSeries>
 )
 
-private class VsopModel(
+internal class VsopModel(
     val lon: VsopFormula,
     val lat: VsopFormula,
     val rad: VsopFormula
@@ -2014,18 +2051,8 @@ private fun calcVsopPosVel(model: VsopModel, tt: Double): BodyState {
     return BodyState(tt, equPos, equVel)
 }
 
-private fun vsopModel(body: Body) =
-    when (body) {
-        Body.Mercury -> vsopTable[0]
-        Body.Venus   -> vsopTable[1]
-        Body.Earth   -> vsopTable[2]
-        Body.Mars    -> vsopTable[3]
-        Body.Jupiter -> vsopTable[4]
-        Body.Saturn  -> vsopTable[5]
-        Body.Uranus  -> vsopTable[6]
-        Body.Neptune -> vsopTable[7]
-        else -> throw InvalidBodyException(body)
-    }
+private fun vsopModel(body: Body): VsopModel =
+    body.vsopModel ?: throw InvalidBodyException(body)
 
 private fun vsopHelioVector(body: Body, time: AstroTime) =
     calcVsop(vsopModel(body), time)
@@ -2720,22 +2747,8 @@ object Astronomy {
      * @returns
      *      The mass product of the given body in au^3/day^2.
      */
-    fun massProduct(body: Body) =
-        when (body) {
-            Body.Sun     -> SUN_GM
-            Body.Mercury -> MERCURY_GM
-            Body.Venus   -> VENUS_GM
-            Body.Earth   -> EARTH_GM
-            Body.Moon    -> MOON_GM
-            Body.EMB     -> EARTH_GM + MOON_GM
-            Body.Mars    -> MARS_GM
-            Body.Jupiter -> JUPITER_GM
-            Body.Saturn  -> SATURN_GM
-            Body.Uranus  -> URANUS_GM
-            Body.Neptune -> NEPTUNE_GM
-            Body.Pluto   -> PLUTO_GM
-            else -> throw InvalidBodyException(body)
-        }
+    fun massProduct(body: Body): Double =
+        body.massProduct ?: throw InvalidBodyException(body)
 
     private enum class PrecessDirection {
         From2000,
@@ -3432,10 +3445,10 @@ object Astronomy {
     }
 
     private fun helioEarthPos(time: AstroTime) =
-        calcVsop(vsopTable[2], time)
+        calcVsop(vsopModel(Body.Earth), time)
 
     private fun helioEarthState(time: AstroTime) =
-        StateVector(calcVsopPosVel(vsopTable[2], time.tt), time)
+        StateVector(calcVsopPosVel(vsopModel(Body.Earth), time.tt), time)
 
     private fun barycenterPosContrib(time: AstroTime, body: Body, planetGm: Double) =
         (planetGm / (planetGm + SUN_GM)) * vsopHelioVector(body, time)
@@ -3507,16 +3520,10 @@ object Astronomy {
      *      The heliocentric position vector of the center of the given body.
      */
     fun helioVector(body: Body, time: AstroTime): AstroVector =
-        when (body) {
+        if (body.vsopModel != null)
+            calcVsop(body.vsopModel, time)
+        else when (body) {
             Body.Sun     -> AstroVector(0.0, 0.0, 0.0, time)
-            Body.Mercury -> calcVsop(vsopTable[0], time)
-            Body.Venus   -> calcVsop(vsopTable[1], time)
-            Body.Earth   -> calcVsop(vsopTable[2], time)
-            Body.Mars    -> calcVsop(vsopTable[3], time)
-            Body.Jupiter -> calcVsop(vsopTable[4], time)
-            Body.Saturn  -> calcVsop(vsopTable[5], time)
-            Body.Uranus  -> calcVsop(vsopTable[6], time)
-            Body.Neptune -> calcVsop(vsopTable[7], time)
             Body.Pluto   -> calcPluto(time, true).position()
             Body.Moon    -> helioEarthPos(time) + geoMoon(time)
             Body.EMB     -> helioEarthPos(time) + (geoMoon(time) / (1.0 + EARTH_MOON_MASS_RATIO))
@@ -3544,18 +3551,12 @@ object Astronomy {
      *      The heliocentric distance in AU.
      */
     fun helioDistance(body: Body, time: AstroTime): Double =
-        when (body) {
-            Body.Sun     -> 0.0
-            Body.Mercury -> vsopDistance(vsopTable[0], time)
-            Body.Venus   -> vsopDistance(vsopTable[1], time)
-            Body.Earth   -> vsopDistance(vsopTable[2], time)
-            Body.Mars    -> vsopDistance(vsopTable[3], time)
-            Body.Jupiter -> vsopDistance(vsopTable[4], time)
-            Body.Saturn  -> vsopDistance(vsopTable[5], time)
-            Body.Uranus  -> vsopDistance(vsopTable[6], time)
-            Body.Neptune -> vsopDistance(vsopTable[7], time)
-            else -> helioVector(body, time).length()
-        }
+        if (body == Body.Sun)
+            0.0
+        else if (body.vsopModel != null)
+            vsopDistance(body.vsopModel, time)
+        else
+            helioVector(body, time).length()
 
     /**
      * Calculates heliocentric position and velocity vectors for the given body.
@@ -3585,20 +3586,14 @@ object Astronomy {
      *      The velocities are expressed in AU/day.
      */
     fun helioState(body: Body, time: AstroTime): StateVector =
-        when (body) {
-            Body.Sun     -> StateVector(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, time)
-            Body.Mercury -> StateVector(calcVsopPosVel(vsopTable[0], time.tt), time)
-            Body.Venus   -> StateVector(calcVsopPosVel(vsopTable[1], time.tt), time)
-            Body.Earth   -> StateVector(calcVsopPosVel(vsopTable[2], time.tt), time)
-            Body.Mars    -> StateVector(calcVsopPosVel(vsopTable[3], time.tt), time)
-            Body.Jupiter -> StateVector(calcVsopPosVel(vsopTable[4], time.tt), time)
-            Body.Saturn  -> StateVector(calcVsopPosVel(vsopTable[5], time.tt), time)
-            Body.Uranus  -> StateVector(calcVsopPosVel(vsopTable[6], time.tt), time)
-            Body.Neptune -> StateVector(calcVsopPosVel(vsopTable[7], time.tt), time)
-            Body.Pluto   -> calcPluto(time, true)
-            Body.Moon    -> helioEarthState(time) + geoMoonState(time)
-            Body.EMB     -> helioEarthState(time) + (geoMoonState(time) / (1.0 + EARTH_MOON_MASS_RATIO))
-            Body.SSB     -> solarSystemBarycenterState(time)
+        if (body.vsopModel != null)
+            StateVector(calcVsopPosVel(body.vsopModel, time.tt), time)
+        else when (body) {
+            Body.Sun   -> StateVector(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, time)
+            Body.Pluto -> calcPluto(time, true)
+            Body.Moon  -> helioEarthState(time) + geoMoonState(time)
+            Body.EMB   -> helioEarthState(time) + (geoMoonState(time) / (1.0 + EARTH_MOON_MASS_RATIO))
+            Body.SSB   -> solarSystemBarycenterState(time)
             else -> throw InvalidBodyException(body)
         }
 }
@@ -3637,17 +3632,6 @@ $ASTRO_KOTLIN_VSOP(Jupiter)
 $ASTRO_KOTLIN_VSOP(Saturn)
 $ASTRO_KOTLIN_VSOP(Uranus)
 $ASTRO_KOTLIN_VSOP(Neptune)
-
-private val vsopTable: Array<VsopModel> = arrayOf (
-    VsopModel(vsopLonMercury,  vsopLatMercury,   vsopRadMercury),   // 0
-    VsopModel(vsopLonVenus,    vsopLatVenus,     vsopRadVenus  ),   // 1
-    VsopModel(vsopLonEarth,    vsopLatEarth,     vsopRadEarth  ),   // 2
-    VsopModel(vsopLonMars,     vsopLatMars,      vsopRadMars   ),   // 3
-    VsopModel(vsopLonJupiter,  vsopLatJupiter,   vsopRadJupiter),   // 4
-    VsopModel(vsopLonSaturn,   vsopLatSaturn,    vsopRadSaturn ),   // 5
-    VsopModel(vsopLonUranus,   vsopLatUranus,    vsopRadUranus ),   // 6
-    VsopModel(vsopLonNeptune,  vsopLatNeptune,   vsopRadNeptune)    // 7
-)
 
 //---------------------------------------------------------------------------------------
 // Geocentric Moon

@@ -3,7 +3,7 @@
 # Moon
 
 [jvm]\
-[Moon](index.md)()
+[Moon](index.md)(MOON_GM, null)
 
 The Earth's natural satellite, the Moon.
 

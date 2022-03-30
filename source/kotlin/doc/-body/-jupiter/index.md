@@ -3,7 +3,7 @@
 # Jupiter
 
 [jvm]\
-[Jupiter](index.md)()
+[Jupiter](index.md)(JUPITER_GM, VsopModel(vsopLonJupiter, vsopLatJupiter, vsopRadJupiter))
 
 The planet Jupiter.
 
