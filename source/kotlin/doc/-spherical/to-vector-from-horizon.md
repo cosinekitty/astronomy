@@ -15,5 +15,5 @@ jvm
 
 | | |
 |---|---|
-| time | The date and time of the observation. This is needed because the returned     #AstroVector requires a valid time value when passed to certain other functions. |
-| refraction | The refraction option used to model atmospheric lensing. See #Astronomy.refractionAngle.     This specifies how refraction is to be removed from the altitude stored in `this.lat`. |
+| time | The date and time of the observation. This is needed because the returned     [AstroVector] requires a valid time value when passed to certain other functions. |
+| refraction | The refraction option used to model atmospheric lensing. See [Astronomy.refractionAngle].     This specifies how refraction is to be removed from the altitude stored in `this.lat`. |

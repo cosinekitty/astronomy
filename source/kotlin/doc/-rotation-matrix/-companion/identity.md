@@ -7,4 +7,4 @@ val [identity](identity.md): [RotationMatrix](../index.md)
 
 The identity rotation matrix.
 
-A matrix that has no effect on orientation. This matrix can be the starting point for other operations, such as calling a series of #RotationMatrix.combine or #RotationMatrix.pivot.
+A matrix that has no effect on orientation. This matrix can be the starting point for other operations, such as calling a series of [RotationMatrix.combine](../combine.md) or [RotationMatrix.pivot](../pivot.md).

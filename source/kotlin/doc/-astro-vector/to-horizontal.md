@@ -7,7 +7,7 @@ fun [toHorizontal](to-horizontal.md)(refraction: [Refraction](../-refraction/ind
 
 Converts Cartesian coordinates to horizontal coordinates.
 
-Given a horizontal Cartesian vector, returns horizontal azimuth and altitude. *IMPORTANT:* This function differs from #AstroVector.toSpherical in two ways:
+Given a horizontal Cartesian vector, returns horizontal azimuth and altitude. *IMPORTANT:* This function differs from [AstroVector.toSpherical](to-spherical.md) in two ways:
 
 - 
    toSpherical returns a lon value that represents azimuth defined counterclockwise from north (e.g., west = +90), but this function represents a clockwise rotation (e.g., east = +90). The difference is because toSpherical is intended to preserve the vector "right-hand rule", while this function defines azimuth in a more traditional way as used in navigation and cartography.

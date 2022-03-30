@@ -7,7 +7,7 @@ fun [helioDistance](helio-distance.md)(body: [Body](../-body/index.md), time: [A
 
 Calculates the distance between a body and the Sun at a given time.
 
-Given a date and time, this function calculates the distance between the center of body and the center of the Sun, expressed in AU. For the planets Mercury through Neptune, this function is significantly more efficient than calling #Astronomy.helioVector followed by taking the length of the resulting vector.
+Given a date and time, this function calculates the distance between the center of body and the center of the Sun, expressed in AU. For the planets Mercury through Neptune, this function is significantly more efficient than calling [Astronomy.helioVector](helio-vector.md) followed by taking the length of the resulting vector.
 
 ## Parameters
 

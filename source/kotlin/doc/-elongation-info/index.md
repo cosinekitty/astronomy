@@ -7,7 +7,7 @@ class [ElongationInfo](index.md)(time: [AstroTime](../-astro-time/index.md), vis
 
 Contains information about the visibility of a celestial body at a given date and time.
 
-See #Astronomy.elongation for more detailed information about the members of this class. See also #Astronomy.searchMaxElongation for how to search for maximum elongation events.
+See Astronomy.elongation for more detailed information about the members of this class. See also Astronomy.searchMaxElongation for how to search for maximum elongation events.
 
 ## Constructors
 

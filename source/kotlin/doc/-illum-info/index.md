@@ -7,7 +7,7 @@ class [IllumInfo](index.md)(time: [AstroTime](../-astro-time/index.md), mag: [Do
 
 Information about the brightness and illuminated shape of a celestial body.
 
-Returned by the functions #Astronomy.illumination and #Astronomy.searchPeakMagnitude to report the visual magnitude and illuminated fraction of a celestial body at a given date and time.
+Returned by the functions Astronomy.illumination and Astronomy.searchPeakMagnitude to report the visual magnitude and illuminated fraction of a celestial body at a given date and time.
 
 ## Constructors
 

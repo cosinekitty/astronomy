@@ -7,7 +7,7 @@ fun [toVector](to-vector.md)(time: [AstroTime](../-astro-time/index.md)): [Astro
 
 Converts spherical coordinates to Cartesian coordinates.
 
-Given spherical coordinates and a time at which they are valid, returns a vector of Cartesian coordinates. The returned value includes the time, as required by the type #AstroVector.
+Given spherical coordinates and a time at which they are valid, returns a vector of Cartesian coordinates. The returned value includes the time, as required by the type [AstroVector](../-astro-vector/index.md).
 
 ## Parameters
 

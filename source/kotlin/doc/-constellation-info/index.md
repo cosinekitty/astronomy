@@ -7,7 +7,7 @@ class [ConstellationInfo](index.md)(symbol: [String](https://kotlinlang.org/api/
 
 Reports the constellation that a given celestial point lies within.
 
-The #Astronomy.constellation function returns this object to report which constellation corresponds with a given point in the sky. Constellations are defined with respect to the B1875 equatorial system per IAU standard. Although Astronomy.constellation requires J2000 equatorial coordinates, ConstellationInfo contains converted B1875 coordinates for reference.
+The Astronomy.constellation function returns this object to report which constellation corresponds with a given point in the sky. Constellations are defined with respect to the B1875 equatorial system per IAU standard. Although Astronomy.constellation requires J2000 equatorial coordinates, ConstellationInfo contains converted B1875 coordinates for reference.
 
 ## Constructors
 

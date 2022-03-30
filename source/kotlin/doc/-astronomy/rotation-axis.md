@@ -13,7 +13,7 @@ This function uses formulas standardized by the IAU Working Group on Cartographi
 
 https://astropedia.astrogeology.usgs.gov/download/Docs/WGCCRE/WGCCRE2015reprint.pdf
 
-See #AxisInfo for more detailed information.
+See [AxisInfo](../-axis-info/index.md) for more detailed information.
 
 ## Parameters
 

@@ -7,7 +7,7 @@ class [SeasonsInfo](index.md)(marEquinox: [AstroTime](../-astro-time/index.md), 
 
 The dates and times of changes of season for a given calendar year.
 
-Call #Astronomy.seasons to calculate this data structure for a given year.
+Call Astronomy.seasons to calculate this data structure for a given year.
 
 ## Constructors
 

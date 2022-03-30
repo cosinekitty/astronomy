@@ -439,9 +439,9 @@ class AstroTime private constructor(
     override fun toString(): String = dateFormat.format(toDate())
 
     /**
-     * Calculates the sum or difference of an #AstroTime with a specified floating point number of days.
+     * Calculates the sum or difference of an [AstroTime] with a specified floating point number of days.
      *
-     * Sometimes we need to adjust a given #AstroTime value by a certain amount of time.
+     * Sometimes we need to adjust a given [AstroTime] value by a certain amount of time.
      * This function adds the given real number of days in `days` to the date and time in this object.
      *
      * More precisely, the result's Universal Time field `ut` is exactly adjusted by `days` and
@@ -639,7 +639,7 @@ data class AstroVector(
      * Converts Cartesian coordinates to horizontal coordinates.
      *
      * Given a horizontal Cartesian vector, returns horizontal azimuth and altitude.
-     * *IMPORTANT:* This function differs from #AstroVector.toSpherical in two ways:
+     * *IMPORTANT:* This function differs from [AstroVector.toSpherical] in two ways:
      * - `toSpherical` returns a `lon` value that represents azimuth defined counterclockwise
      *   from north (e.g., west = +90), but this function represents a clockwise rotation
      *   (e.g., east = +90). The difference is because `toSpherical` is intended
@@ -765,7 +765,7 @@ data class StateVector(
 /**
  * Holds the positions and velocities of Jupiter's major 4 moons.
  *
- * The #Astronomy.JupiterMoons function returns an object of this type
+ * The [Astronomy.jupiterMoons] function returns an object of this type
  * to report position and velocity vectors for Jupiter's largest 4 moons
  * Io, Europa, Ganymede, and Callisto. Each position vector is relative
  * to the center of Jupiter. Both position and velocity are oriented in
@@ -935,7 +935,7 @@ class RotationMatrix(
          *
          * A matrix that has no effect on orientation.
          * This matrix can be the starting point for other operations,
-         * such as calling a series of #RotationMatrix.combine or #RotationMatrix.pivot.
+         * such as calling a series of [RotationMatrix.combine] or [RotationMatrix.pivot].
          */
         val identity = RotationMatrix (
             1.0, 0.0, 0.0,
@@ -970,7 +970,7 @@ data class Spherical(
      *
      * Given spherical coordinates and a time at which they are valid,
      * returns a vector of Cartesian coordinates. The returned value
-     * includes the time, as required by the type #AstroVector.
+     * includes the time, as required by the type [AstroVector].
      *
      * @param time
      *      The time that should be included in the return value.
@@ -997,10 +997,10 @@ data class Spherical(
      *
      * @param time
      *      The date and time of the observation. This is needed because the returned
-     *      #AstroVector requires a valid time value when passed to certain other functions.
+     *      [AstroVector] requires a valid time value when passed to certain other functions.
      *
      * @param refraction
-     *      The refraction option used to model atmospheric lensing. See #Astronomy.refractionAngle.
+     *      The refraction option used to model atmospheric lensing. See [Astronomy.refractionAngle].
      *      This specifies how refraction is to be removed from the altitude stored in `this.lat`.
      *
      * @returns
@@ -1243,7 +1243,7 @@ data class Topocentric(
 /**
  * The dates and times of changes of season for a given calendar year.
  *
- * Call #Astronomy.seasons to calculate this data structure for a given year.
+ * Call [Astronomy.seasons] to calculate this data structure for a given year.
  */
 class SeasonsInfo(
     /**
@@ -1285,7 +1285,7 @@ class MoonQuarterInfo(
 
 
 /**
- * Lunar libration angles, returned by #Astronomy.libration.
+ * Lunar libration angles, returned by [Astronomy.libration].
  */
 data class LibrationInfo(
     /**
@@ -1323,7 +1323,7 @@ data class LibrationInfo(
 /**
  * Information about a celestial body crossing a specific hour angle.
  *
- * Returned by the function #Astronomy.searchHourAngle to report information about
+ * Returned by the function [Astronomy.searchHourAngle] to report information about
  * a celestial body crossing a certain hour angle as seen by a specified topocentric observer.
  */
 class HourAngleInfo(
@@ -1342,8 +1342,8 @@ class HourAngleInfo(
 /**
  * Contains information about the visibility of a celestial body at a given date and time.
  *
- * See #Astronomy.elongation for more detailed information about the members of this class.
- * See also #Astronomy.searchMaxElongation for how to search for maximum elongation events.
+ * See [Astronomy.elongation] for more detailed information about the members of this class.
+ * See also [Astronomy.searchMaxElongation] for how to search for maximum elongation events.
  */
 class ElongationInfo(
     /**
@@ -1396,7 +1396,7 @@ enum class ApsisKind {
  * point is called *apogee*. The closest approach of a planet to the Sun is called
  * *perihelion* and the furthest point is called *aphelion*.
  *
- * This data structure is returned by #Astronomy.searchLunarApsis and #Astronomy.nextLunarApsis
+ * This data structure is returned by [Astronomy.searchLunarApsis] and [Astronomy.nextLunarApsis]
  * to iterate through consecutive alternating perigees and apogees.
  */
 class ApsisInfo(
@@ -1456,7 +1456,7 @@ enum class EclipseKind {
 /**
  * Information about a lunar eclipse.
  *
- * Returned by #Astronomy.searchLunarEclipse or #Astronomy.nextLunarEclipse
+ * Returned by [Astronomy.searchLunarEclipse] or [Astronomy.nextLunarEclipse]
  * to report information about a lunar eclipse event.
  * When a lunar eclipse is found, it is classified as penumbral, partial, or total.
  * Penumbral eclipses are difficult to observe, because the Moon is only slightly dimmed
@@ -1507,7 +1507,7 @@ class LunarEclipseInfo(
 /**
  * Reports the time and geographic location of the peak of a solar eclipse.
  *
- * Returned by #Astronomy.searchGlobalSolarEclipse or #Astronomy.nextGlobalSolarEclipse
+ * Returned by [Astronomy.searchGlobalSolarEclipse] or [Astronomy.nextGlobalSolarEclipse]
  * to report information about a solar eclipse event.
  *
  * The eclipse is classified as partial, annular, or total, depending on the
@@ -1587,7 +1587,7 @@ class EclipseEvent (
 /**
  * Information about a solar eclipse as seen by an observer at a given time and geographic location.
  *
- * Returned by #Astronomy.searchLocalSolarEclipse or #Astronomy.nextLocalSolarEclipse
+ * Returned by [Astronomy.searchLocalSolarEclipse] or [Astronomy.nextLocalSolarEclipse]
  * to report information about a solar eclipse as seen at a given geographic location.
  *
  * When a solar eclipse is found, it is classified as partial, annular, or total.
@@ -1645,7 +1645,7 @@ class LocalSolarEclipseInfo (
 /**
  * Information about a transit of Mercury or Venus, as seen from the Earth.
  *
- * Returned by #Astronomy.searchTransit or #Astronomy.nextTransit to report
+ * Returned by [Astronomy.searchTransit] or [Astronomy.nextTransit] to report
  * information about a transit of Mercury or Venus.
  * A transit is when Mercury or Venus passes between the Sun and Earth so that
  * the other planet is seen in silhouette against the Sun.
@@ -1724,7 +1724,7 @@ internal class ShadowInfo(
 /**
  * Information about the brightness and illuminated shape of a celestial body.
  *
- * Returned by the functions #Astronomy.illumination and #Astronomy.searchPeakMagnitude
+ * Returned by the functions [Astronomy.illumination] and [Astronomy.searchPeakMagnitude]
  * to report the visual magnitude and illuminated fraction of a celestial body at a given date and time.
  */
 class IllumInfo(
@@ -1766,7 +1766,7 @@ class IllumInfo(
 /**
  * Information about a body's rotation axis at a given time.
  *
- * This structure is returned by #Astronomy.rotationAxis to report
+ * This structure is returned by [Astronomy.rotationAxis] to report
  * the orientation of a body's rotation axis at a given moment in time.
  * The axis is specified by the direction in space that the body's north pole
  * points, using angular equatorial coordinates in the J2000 system (EQJ).
@@ -1835,7 +1835,7 @@ enum class NodeEventKind {
 /**
  * Information about an ascending or descending node of a body.
  *
- * This object is returned by #Astronomy.searchMoonNode and #Astronomy.nextMoonNode
+ * This object is returned by [Astronomy.searchMoonNode] and [Astronomy.nextMoonNode]
  * to report information about the center of the Moon passing through the ecliptic plane.
  */
 class NodeEventInfo(
@@ -1861,7 +1861,7 @@ interface SearchContext {
 /**
  * Reports the constellation that a given celestial point lies within.
  *
- * The #Astronomy.constellation function returns this object
+ * The [Astronomy.constellation] function returns this object
  * to report which constellation corresponds with a given point in the sky.
  * Constellations are defined with respect to the B1875 equatorial system
  * per IAU standard. Although `Astronomy.constellation` requires J2000 equatorial
@@ -3156,7 +3156,7 @@ object Astronomy {
      *
      * https://astropedia.astrogeology.usgs.gov/download/Docs/WGCCRE/WGCCRE2015reprint.pdf
      *
-     * See #AxisInfo for more detailed information.
+     * See [AxisInfo] for more detailed information.
      *
      * @param body
      *      One of the following values:
@@ -3376,7 +3376,7 @@ object Astronomy {
     * [Astronomy on the Personal Computer](https://www.springer.com/us/book/9783540672210)
     * by Montenbruck and Pfleger.
     *
-    * To calculate an equatorial J2000 vector instead, use #Astronomy.geoMoon.
+    * To calculate an equatorial J2000 vector instead, use [Astronomy.geoMoon].
     */
     fun eclipticGeoMoon(time: AstroTime) = MoonContext(time).calcMoon()
 
@@ -3505,9 +3505,9 @@ object Astronomy {
      * of the Earth at noon UTC on 1 January 2000.
      *
      * The position is not corrected for light travel time or aberration.
-     * This is different from the behavior of #Astronomy.geoVector.
+     * This is different from the behavior of [Astronomy.geoVector].
      *
-     * If given an invalid value for `body`, this function will throw an #InvalidBodyException.
+     * If given an invalid value for `body`, this function will throw an [InvalidBodyException].
      *
      * @param body
      *      A body for which to calculate a heliocentric position:
@@ -3537,7 +3537,7 @@ object Astronomy {
      * Given a date and time, this function calculates the distance between
      * the center of `body` and the center of the Sun, expressed in AU.
      * For the planets Mercury through Neptune, this function is significantly
-     * more efficient than calling #Astronomy.helioVector followed by taking the length
+     * more efficient than calling [Astronomy.helioVector] followed by taking the length
      * of the resulting vector.
      *
      * @param body

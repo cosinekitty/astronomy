@@ -5,7 +5,7 @@
 [jvm]\
 data class [LibrationInfo](index.md)(elat: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), elon: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), mlat: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), mlon: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), distKm: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), diamDeg: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html))
 
-Lunar libration angles, returned by #Astronomy.libration.
+Lunar libration angles, returned by Astronomy.libration.
 
 ## Constructors
 

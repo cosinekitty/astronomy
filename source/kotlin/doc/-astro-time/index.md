@@ -26,7 +26,7 @@ A date and time used for astronomical calculations.
 
 | Name | Summary |
 |---|---|
-| [addDays](add-days.md) | [jvm]<br>fun [addDays](add-days.md)(days: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)): [AstroTime](index.md)<br>Calculates the sum or difference of an #AstroTime with a specified floating point number of days. |
+| [addDays](add-days.md) | [jvm]<br>fun [addDays](add-days.md)(days: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)): [AstroTime](index.md)<br>Calculates the sum or difference of an [AstroTime](index.md) with a specified floating point number of days. |
 | [toDate](to-date.md) | [jvm]<br>fun [toDate](to-date.md)(): [Date](https://docs.oracle.com/javase/8/docs/api/java/util/Date.html)<br>Converts this object to a native Date equivalent. |
 | [toString](to-string.md) | [jvm]<br>open override fun [toString](to-string.md)(): [String](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Converts this AstroTime to ISO 8601 format, expressed in UTC with millisecond resolution. |
 

@@ -7,7 +7,7 @@ class [AxisInfo](index.md)(ra: [Double](https://kotlinlang.org/api/latest/jvm/st
 
 Information about a body's rotation axis at a given time.
 
-This structure is returned by #Astronomy.rotationAxis to report the orientation of a body's rotation axis at a given moment in time. The axis is specified by the direction in space that the body's north pole points, using angular equatorial coordinates in the J2000 system (EQJ).
+This structure is returned by [Astronomy.rotationAxis](../-astronomy/rotation-axis.md) to report the orientation of a body's rotation axis at a given moment in time. The axis is specified by the direction in space that the body's north pole points, using angular equatorial coordinates in the J2000 system (EQJ).
 
 Thus ra is the right ascension, and dec is the declination, of the body's north pole vector at the given moment in time. The north pole of a body is defined as the pole that lies on the north side of the [Solar System's invariable plane](https://en.wikipedia.org/wiki/Invariable_plane), regardless of the body's direction of rotation.
 
