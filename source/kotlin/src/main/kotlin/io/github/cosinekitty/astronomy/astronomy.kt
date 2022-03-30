@@ -633,6 +633,9 @@ data class AstroVector(
     }
 }
 
+/**
+ * Multiply a scalar by a vector, yielding another vector.
+ */
 operator fun Double.times(vec: AstroVector) =
         AstroVector(this*vec.x, this*vec.y, this*vec.z, vec.t)
 
@@ -1997,6 +2000,9 @@ private fun vsopModel(body: Body) =
         Body.Neptune -> vsopTable[7]
         else -> throw InvalidBodyException(body)
     }
+
+private fun vsopHelioVector(body: Body, time: AstroTime) =
+    calcVsop(vsopModel(body), time)
 
 private fun vsopHelioState(body: Body, tt: Double) =
     calcVsopPosVel(vsopModel(body), tt)
@@ -3363,6 +3369,22 @@ object Astronomy {
 
     private fun helioEarth(time: AstroTime) = calcVsop(vsopTable[2], time)
 
+    private fun barycenterContrib(time: AstroTime, body: Body, planetGm: Double) =
+        (planetGm / (planetGm + SUN_GM)) * vsopHelioVector(body, time)
+
+    private fun solarSystemBarycenter(time: AstroTime): AstroVector {
+        val j = barycenterContrib(time, Body.Jupiter, JUPITER_GM)
+        val s = barycenterContrib(time, Body.Saturn,  SATURN_GM)
+        var u = barycenterContrib(time, Body.Uranus,  URANUS_GM)
+        var n = barycenterContrib(time, Body.Neptune, NEPTUNE_GM)
+        return AstroVector(
+            j.x + s.x + u.x + n.x,
+            j.y + s.y + u.y + n.y,
+            j.z + s.z + u.z + n.z,
+            time
+        )
+    }
+
     /**
      * Calculates heliocentric Cartesian coordinates of a body in the J2000 equatorial system.
      *
@@ -3400,7 +3422,7 @@ object Astronomy {
             Body.Pluto   -> calcPluto(time, true).position()
             Body.Moon    -> helioEarth(time) + geoMoon(time)
             Body.EMB     -> helioEarth(time) + (geoMoon(time) / (1.0 + EARTH_MOON_MASS_RATIO))
-            // FIXFIXFIX: add Solar System Barycenter
+            Body.SSB     -> solarSystemBarycenter(time)
             else -> throw InvalidBodyException(body)
         }
 

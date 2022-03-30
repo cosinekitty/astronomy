@@ -50,7 +50,7 @@
 |---|---|
 | [degreesToRadians](degrees-to-radians.md) | [jvm]<br>fun [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html).[degreesToRadians](degrees-to-radians.md)(): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)<br>Convert an angle expressed in degrees to an angle expressed in radians. |
 | [radiansToDegrees](radians-to-degrees.md) | [jvm]<br>fun [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html).[radiansToDegrees](radians-to-degrees.md)(): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)<br>Convert an angle expressed in radians to an angle expressed in degrees. |
-| [times](times.md) | [jvm]<br>operator fun [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html).[times](times.md)(vec: [AstroVector](-astro-vector/index.md)): [AstroVector](-astro-vector/index.md) |
+| [times](times.md) | [jvm]<br>operator fun [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html).[times](times.md)(vec: [AstroVector](-astro-vector/index.md)): [AstroVector](-astro-vector/index.md)<br>Multiply a scalar by a vector, yielding another vector. |
 
 ## Properties
 
