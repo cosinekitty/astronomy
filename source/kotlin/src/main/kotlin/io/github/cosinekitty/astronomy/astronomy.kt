@@ -467,8 +467,8 @@ internal data class TerseVector(var x: Double, var y: Double, var z: Double) {
     operator fun times(other: Double) =
         TerseVector(x * other, y * other, z * other)
 
-    operator fun div(other: Double) =
-        TerseVector(x / other, y / other, z / other)
+    operator fun div(denom: Double) =
+        TerseVector(x / denom, y / denom, z / denom)
 
     fun mean(other: TerseVector) =
         TerseVector((x + other.x) / 2.0, (y + other.y) / 2.0, (z + other.z) / 2.0)
@@ -503,6 +503,13 @@ internal operator fun Double.times(vec: TerseVector) =
     TerseVector(this * vec.x, this * vec.y, this * vec.z)
 
 
+internal fun verifyIdenticalTimes(t1: AstroTime, t2: AstroTime): AstroTime {
+    if (t1.tt != t2.tt)
+        throw IllegalArgumentException("Attempt to operate on two vectors from different times.")
+    return t1
+}
+
+
 data class AstroVector(
     /**
      * A Cartesian x-coordinate expressed in AU.
@@ -529,23 +536,17 @@ data class AstroVector(
      */
     fun length() = sqrt((x * x) + (y * y) + (z * z))
 
-    private fun verifyIdenticalTimes(otherTime: AstroTime): AstroTime {
-        if (t.tt != otherTime.tt)
-            throw IllegalArgumentException("Attempt to operate on two vectors from different times.")
-        return t
-    }
-
     operator fun plus(other: AstroVector) =
-        AstroVector(x + other.x, y + other.y, z + other.z, verifyIdenticalTimes(other.t))
+        AstroVector(x + other.x, y + other.y, z + other.z, verifyIdenticalTimes(t, other.t))
 
     operator fun minus(other: AstroVector) =
-        AstroVector(x - other.x, y - other.y, z - other.z, verifyIdenticalTimes(other.t))
+        AstroVector(x - other.x, y - other.y, z - other.z, verifyIdenticalTimes(t, other.t))
 
     operator fun unaryMinus() =
         AstroVector(-x, -y, -z, t)
 
     infix fun dot(other: AstroVector): Double {
-        verifyIdenticalTimes(other.t)
+        verifyIdenticalTimes(t, other.t)
         return x*other.x + y*other.y + z*other.z
     }
 
@@ -687,6 +688,9 @@ data class StateVector(
     constructor(pos: AstroVector, vel: AstroVector, time: AstroTime)
         : this(pos.x, pos.y, pos.z, vel.x, vel.y, vel.z, time)
 
+    internal constructor(state: BodyState, time: AstroTime)
+        : this(state.r.x, state.r.y, state.r.z, state.v.x, state.v.y, state.v.z, time)
+
     /**
      * Returns the position vector associated with this state vector.
      */
@@ -696,6 +700,28 @@ data class StateVector(
      * Returns the velocity vector associated with this state vector.
      */
     fun velocity() = AstroVector(vx, vy, vz, t)
+
+    operator fun plus(other: StateVector) =
+        StateVector(
+            x + other.x,
+            y + other.y,
+            z + other.z,
+            vx + other.vx,
+            vy + other.vy,
+            vz + other.vz,
+            verifyIdenticalTimes(t, other.t)
+        )
+
+    operator fun div(denom: Double) =
+        StateVector(
+            x / denom,
+            y / denom,
+            z / denom,
+            vx / denom,
+            vy / denom,
+            vz / denom,
+            t
+        )
 }
 
 
@@ -1924,7 +1950,7 @@ private fun vsopDerivCalc(formula: VsopFormula, t: Double): Double {
     return deriv
 }
 
-private class BodyState(
+internal class BodyState(
     val tt: Double,
     val r: TerseVector,
     val v: TerseVector
@@ -2003,10 +2029,6 @@ private fun vsopModel(body: Body) =
 
 private fun vsopHelioVector(body: Body, time: AstroTime) =
     calcVsop(vsopModel(body), time)
-
-private fun vsopHelioState(body: Body, tt: Double) =
-    calcVsopPosVel(vsopModel(body), tt)
-
 
 //---------------------------------------------------------------------------------------
 // Geocentric Moon
@@ -2265,7 +2287,7 @@ private fun updateVelocity(dt: Double, v: TerseVector, a: TerseVector) =
 
 private fun adjustBarycenterPosVel(ssb: BodyState, tt: Double, body: Body, planetGm: Double): BodyState {
     val shift = planetGm / (planetGm + SUN_GM)
-    val planet = vsopHelioState(body, tt)
+    val planet = calcVsopPosVel(vsopModel(body), tt)
     ssb.r.increment(shift * planet.r)
     ssb.v.increment(shift * planet.v)
     return planet
@@ -3367,20 +3389,96 @@ object Astronomy {
         return precession(equVec, PrecessDirection.Into2000)
     }
 
-    private fun helioEarth(time: AstroTime) = calcVsop(vsopTable[2], time)
+    /**
+     * Calculates equatorial geocentric position and velocity of the Moon at a given time.
+     *
+     * Given a time of observation, calculates the Moon's position and velocity vectors.
+     * The position and velocity are of the Moon's center relative to the Earth's center.
+     * The position (x, y, z) components are expressed in AU (astronomical units).
+     * The velocity (vx, vy, vz) components are expressed in AU/day.
+     * The coordinates are oriented with respect to the Earth's equator at the J2000 epoch.
+     * In Astronomy Engine, this orientation is called EQJ.
+     * If you need the Moon's position only, and not its velocity,
+     * it is much more efficient to use [Astronomy.geoMoon] instead.
+     *
+     * @param time
+     *      The date and time for which to calculate the Moon's position and velocity.
+     *
+     * @returns
+     *      The Moon's position and velocity vectors in J2000 equatorial coordinates (EQJ).
+     */
+    fun geoMoonState(time: AstroTime): StateVector {
+        // This is a hack, because trying to figure out how to derive
+        // a time derivative for MoonContext.calcMoon() would be painful!
+        // Calculate just before and just after the given time.
+        // Average to find position, subtract to find velocity.
+        val dt = 1.0e-5        // 0.864 seconds
+        val t1 = time.addDays(-dt)
+        val t2 = time.addDays(+dt)
+        val r1 = geoMoon(t1)
+        val r2 = geoMoon(t2)
 
-    private fun barycenterContrib(time: AstroTime, body: Body, planetGm: Double) =
+        // The desired position is the average of the two calculated positions.
+        // The difference of position vectors divided by the time span gives the velocity vector.
+        return StateVector(
+            (r1.x + r2.x) / 2.0,
+            (r1.y + r2.y) / 2.0,
+            (r1.z + r2.z) / 2.0,
+            (r2.x - r1.x) / (2.0 * dt),
+            (r2.y - r1.y) / (2.0 * dt),
+            (r2.z - r1.z) / (2.0 * dt),
+            time
+        )
+    }
+
+    private fun helioEarthPos(time: AstroTime) =
+        calcVsop(vsopTable[2], time)
+
+    private fun helioEarthState(time: AstroTime) =
+        StateVector(calcVsopPosVel(vsopTable[2], time.tt), time)
+
+    private fun barycenterPosContrib(time: AstroTime, body: Body, planetGm: Double) =
         (planetGm / (planetGm + SUN_GM)) * vsopHelioVector(body, time)
 
-    private fun solarSystemBarycenter(time: AstroTime): AstroVector {
-        val j = barycenterContrib(time, Body.Jupiter, JUPITER_GM)
-        val s = barycenterContrib(time, Body.Saturn,  SATURN_GM)
-        var u = barycenterContrib(time, Body.Uranus,  URANUS_GM)
-        var n = barycenterContrib(time, Body.Neptune, NEPTUNE_GM)
+    private fun solarSystemBarycenterPos(time: AstroTime): AstroVector {
+        val j = barycenterPosContrib(time, Body.Jupiter, JUPITER_GM)
+        val s = barycenterPosContrib(time, Body.Saturn,  SATURN_GM)
+        var u = barycenterPosContrib(time, Body.Uranus,  URANUS_GM)
+        var n = barycenterPosContrib(time, Body.Neptune, NEPTUNE_GM)
         return AstroVector(
             j.x + s.x + u.x + n.x,
             j.y + s.y + u.y + n.y,
             j.z + s.z + u.z + n.z,
+            time
+        )
+    }
+
+    private fun barycenterStateContrib(time: AstroTime, body: Body, planetGm: Double): StateVector {
+        val helioPlanet = calcVsopPosVel(vsopModel(body), time.tt)
+        val factor = planetGm / (planetGm + SUN_GM)
+        return StateVector(
+            factor * helioPlanet.r.x,
+            factor * helioPlanet.r.y,
+            factor * helioPlanet.r.z,
+            factor * helioPlanet.v.x,
+            factor * helioPlanet.v.y,
+            factor * helioPlanet.v.z,
+            time
+        )
+    }
+
+    private fun solarSystemBarycenterState(time: AstroTime): StateVector {
+        val j = barycenterStateContrib(time, Body.Jupiter, JUPITER_GM)
+        val s = barycenterStateContrib(time, Body.Saturn,  SATURN_GM)
+        var u = barycenterStateContrib(time, Body.Uranus,  URANUS_GM)
+        var n = barycenterStateContrib(time, Body.Neptune, NEPTUNE_GM)
+        return StateVector(
+            j.x + s.x + u.x + n.x,
+            j.y + s.y + u.y + n.y,
+            j.z + s.z + u.z + n.z,
+            j.vx + s.vx + u.vx + n.vx,
+            j.vy + s.vy + u.vy + n.vy,
+            j.vz + s.vz + u.vz + n.vz,
             time
         )
     }
@@ -3420,9 +3518,9 @@ object Astronomy {
             Body.Uranus  -> calcVsop(vsopTable[6], time)
             Body.Neptune -> calcVsop(vsopTable[7], time)
             Body.Pluto   -> calcPluto(time, true).position()
-            Body.Moon    -> helioEarth(time) + geoMoon(time)
-            Body.EMB     -> helioEarth(time) + (geoMoon(time) / (1.0 + EARTH_MOON_MASS_RATIO))
-            Body.SSB     -> solarSystemBarycenter(time)
+            Body.Moon    -> helioEarthPos(time) + geoMoon(time)
+            Body.EMB     -> helioEarthPos(time) + (geoMoon(time) / (1.0 + EARTH_MOON_MASS_RATIO))
+            Body.SSB     -> solarSystemBarycenterPos(time)
             else -> throw InvalidBodyException(body)
         }
 
@@ -3457,6 +3555,51 @@ object Astronomy {
             Body.Uranus  -> vsopDistance(vsopTable[6], time)
             Body.Neptune -> vsopDistance(vsopTable[7], time)
             else -> helioVector(body, time).length()
+        }
+
+    /**
+     * Calculates heliocentric position and velocity vectors for the given body.
+     *
+     * Given a body and a time, calculates the position and velocity
+     * vectors for the center of that body at that time, relative to the center of the Sun.
+     * The vectors are expressed in equatorial J2000 coordinates (EQJ).
+     * If you need the position vector only, it is more efficient to call [Astronomy.helioVector].
+     * The Sun's center is a non-inertial frame of reference. In other words, the Sun
+     * experiences acceleration due to gravitational forces, mostly from the larger
+     * planets (Jupiter, Saturn, Uranus, and Neptune). If you want to calculate momentum,
+     * kinetic energy, or other quantities that require a non-accelerating frame
+     * of reference, consider using [Astronomy.baryState] instead.
+     *
+     * @param body
+     * The celestial body whose heliocentric state vector is to be calculated.
+     * Supported values are `Body.Sun`, `Body.Moon`, `Body.EMB`, `Body.SSB`, and all planets:
+     * `Body.Mercury`, `Body.Venus`, `Body.Earth`, `Body.Mars`, `Body.Jupiter`,
+     * `Body.Saturn`, `Body.Uranus`, `Body.Neptune`, `Body.Pluto`.
+     *
+     * @param time
+     *      The date and time for which to calculate position and velocity.
+     *
+     * @returns
+     *      A state vector that contains heliocentric position and velocity vectors.
+     *      The positions are expressed in AU.
+     *      The velocities are expressed in AU/day.
+     */
+    fun helioState(body: Body, time: AstroTime): StateVector =
+        when (body) {
+            Body.Sun     -> StateVector(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, time)
+            Body.Mercury -> StateVector(calcVsopPosVel(vsopTable[0], time.tt), time)
+            Body.Venus   -> StateVector(calcVsopPosVel(vsopTable[1], time.tt), time)
+            Body.Earth   -> StateVector(calcVsopPosVel(vsopTable[2], time.tt), time)
+            Body.Mars    -> StateVector(calcVsopPosVel(vsopTable[3], time.tt), time)
+            Body.Jupiter -> StateVector(calcVsopPosVel(vsopTable[4], time.tt), time)
+            Body.Saturn  -> StateVector(calcVsopPosVel(vsopTable[5], time.tt), time)
+            Body.Uranus  -> StateVector(calcVsopPosVel(vsopTable[6], time.tt), time)
+            Body.Neptune -> StateVector(calcVsopPosVel(vsopTable[7], time.tt), time)
+            Body.Pluto   -> calcPluto(time, true)
+            Body.Moon    -> helioEarthState(time) + geoMoonState(time)
+            Body.EMB     -> helioEarthState(time) + (geoMoonState(time) / (1.0 + EARTH_MOON_MASS_RATIO))
+            Body.SSB     -> solarSystemBarycenterState(time)
+            else -> throw InvalidBodyException(body)
         }
 }
 

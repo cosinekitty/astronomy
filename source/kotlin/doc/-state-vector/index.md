@@ -15,6 +15,8 @@ data class [StateVector](index.md)(x: [Double](https://kotlinlang.org/api/latest
 
 | Name | Summary |
 |---|---|
+| [div](div.md) | [jvm]<br>operator fun [div](div.md)(denom: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)): [StateVector](index.md) |
+| [plus](plus.md) | [jvm]<br>operator fun [plus](plus.md)(other: [StateVector](index.md)): [StateVector](index.md) |
 | [position](position.md) | [jvm]<br>fun [position](position.md)(): [AstroVector](../-astro-vector/index.md)<br>Returns the position vector associated with this state vector. |
 | [velocity](velocity.md) | [jvm]<br>fun [velocity](velocity.md)(): [AstroVector](../-astro-vector/index.md)<br>Returns the velocity vector associated with this state vector. |
 
