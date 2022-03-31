@@ -3940,8 +3940,8 @@ object Astronomy {
         val coslon = dcos(observer.longitude)
         val sindc = dsin(dec)
         val cosdc = dcos(dec)
-        val sinra = dsin(ra)
-        val cosra = dcos(ra)
+        val sinra = dsin(ra * 15.0)
+        val cosra = dcos(ra * 15.0)
 
         // Calculate three mutually perpendicular unit vectors
         // in equatorial coordinates: uze, une, uwe.

@@ -395,6 +395,30 @@ class Tests {
         )
     }
 
+    @Test
+    fun `Venus horizontal coords`() {
+        val body = Body.Venus
+        val time = AstroTime.fromTerrestrialTime(10373.141119633277)  // UT 2028-05-26T15:21:56.183Z
+        val pos = Astronomy.helioVector(body, time)
+        checkVector(
+            pos,
+            -0.34191041083994594, -0.5908265808125958, -0.24422546639998666,
+            1.0e-16,
+            "Venus heliocentric position"
+        )
+
+        val observer = Observer(29.0, -81.0, 10.0)
+
+        val ofdate = Astronomy.equator(body, time, observer, EquatorEpoch.OfDate, Aberration.Corrected)
+        checkScalar(ofdate.ra,   4.893134408107621,   8.9e-16, "Venus EQD RA")
+        checkScalar(ofdate.dec, 24.6998405830952,     1.0e-16, "Venus EQD DEC")
+        checkScalar(ofdate.dist, 0.29355004763155124, 1.0e-16, "Venus EQD distance")
+
+        val hor = Astronomy.horizon(time, observer, ofdate.ra, ofdate.dec, Refraction.None)
+        checkScalar(hor.azimuth,  87.5963687042015,   1.0e-16, "Venus azimuth")
+        checkScalar(hor.altitude, 54.929061963517746, 7.2e-15, "Venus altitude")
+    }
+
     private fun verifyHelio(
         body: Body,
         time: AstroTime,
