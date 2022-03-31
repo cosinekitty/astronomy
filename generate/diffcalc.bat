@@ -12,7 +12,7 @@ echo.Diffing calculations.
 !CTESTEXE! diff 4.9e-15 temp\c_check.txt dotnet\csharp_test\csharp_check.txt
 if errorlevel 1 (exit /b 1)
 
-!CTESTEXE! diff 6.1e-15 temp\c_check.txt temp\k_check.txt
+!CTESTEXE! diff 6.3e-15 temp\c_check.txt temp\k_check.txt
 if errorlevel 1 (exit /b 1)
 
 !CTESTEXE! diff 5.6e-15 temp\c_check.txt temp\js_check.txt
