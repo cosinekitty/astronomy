@@ -383,6 +383,18 @@ class Tests {
         )
     }
 
+    @Test
+    fun `Another Pluto test`() {
+        // This time offset caused an excessive discrepancy compared to the C code's output.
+        val time = AstroTime.fromTerrestrialTime(-58402.247295546535)
+        verifyHelio(
+            Body.Pluto,
+            time,
+            42.937184148112564, 20.340210822720223, -6.589767515046609,
+            -0.0005050118478242109, 0.0019911149712207757, 0.0007743560643446314
+        )
+    }
+
     private fun verifyHelio(
         body: Body,
         time: AstroTime,

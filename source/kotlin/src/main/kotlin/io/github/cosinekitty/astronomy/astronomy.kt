@@ -2409,7 +2409,7 @@ private fun getPlutoSegment(tt: Double): List<BodyGravCalc>? {
 
             // Simulate forwards from the lower time bound.
             var steptt = sim.grav.tt
-            for (i in 1 until PLUTO_NSTEPS) {
+            for (i in 1 until PLUTO_NSTEPS-1) {
                 steptt += PLUTO_DT
                 sim = simulateGravity(steptt, sim.grav)
                 seg.add(sim.grav)
