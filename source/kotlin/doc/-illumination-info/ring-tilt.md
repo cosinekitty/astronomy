@@ -1,4 +1,4 @@
-//[astronomy](../../../index.md)/[io.github.cosinekitty.astronomy](../index.md)/[IllumInfo](index.md)/[ringTilt](ring-tilt.md)
+//[astronomy](../../../index.md)/[io.github.cosinekitty.astronomy](../index.md)/[IlluminationInfo](index.md)/[ringTilt](ring-tilt.md)
 
 # ringTilt
 

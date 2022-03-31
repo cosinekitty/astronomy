@@ -1,4 +1,4 @@
-//[astronomy](../../../index.md)/[io.github.cosinekitty.astronomy](../index.md)/[IllumInfo](index.md)/[phaseAngle](phase-angle.md)
+//[astronomy](../../../index.md)/[io.github.cosinekitty.astronomy](../index.md)/[IlluminationInfo](index.md)/[phaseAngle](phase-angle.md)
 
 # phaseAngle
 

@@ -1,4 +1,4 @@
-//[astronomy](../../../index.md)/[io.github.cosinekitty.astronomy](../index.md)/[IllumInfo](index.md)/[phaseFraction](phase-fraction.md)
+//[astronomy](../../../index.md)/[io.github.cosinekitty.astronomy](../index.md)/[IlluminationInfo](index.md)/[phaseFraction](phase-fraction.md)
 
 # phaseFraction
 

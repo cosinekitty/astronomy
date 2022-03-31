@@ -9,4 +9,4 @@ interface [SearchContext](index.md)
 
 | Name | Summary |
 |---|---|
-| [Eval](-eval.md) | [jvm]<br>abstract fun [Eval](-eval.md)(time: [AstroTime](../-astro-time/index.md)): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)<br>Evaluates a scalar function at a given time. |
+| [eval](eval.md) | [jvm]<br>abstract fun [eval](eval.md)(time: [AstroTime](../-astro-time/index.md)): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)<br>Evaluates a scalar function at a given time. |

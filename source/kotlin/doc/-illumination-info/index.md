@@ -1,9 +1,9 @@
-//[astronomy](../../../index.md)/[io.github.cosinekitty.astronomy](../index.md)/[IllumInfo](index.md)
+//[astronomy](../../../index.md)/[io.github.cosinekitty.astronomy](../index.md)/[IlluminationInfo](index.md)
 
-# IllumInfo
+# IlluminationInfo
 
 [jvm]\
-class [IllumInfo](index.md)(time: [AstroTime](../-astro-time/index.md), mag: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), phaseAngle: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), phaseFraction: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), helioDist: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), ringTilt: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html))
+class [IlluminationInfo](index.md)(time: [AstroTime](../-astro-time/index.md), mag: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), phaseAngle: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), phaseFraction: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), helioDist: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), ringTilt: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html))
 
 Information about the brightness and illuminated shape of a celestial body.
 
@@ -13,7 +13,7 @@ Returned by the functions Astronomy.illumination and Astronomy.searchPeakMagnitu
 
 | | |
 |---|---|
-| [IllumInfo](-illum-info.md) | [jvm]<br>fun [IllumInfo](-illum-info.md)(time: [AstroTime](../-astro-time/index.md), mag: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), phaseAngle: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), phaseFraction: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), helioDist: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), ringTilt: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)) |
+| [IlluminationInfo](-illumination-info.md) | [jvm]<br>fun [IlluminationInfo](-illumination-info.md)(time: [AstroTime](../-astro-time/index.md), mag: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), phaseAngle: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), phaseFraction: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), helioDist: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), ringTilt: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)) |
 
 ## Properties
 

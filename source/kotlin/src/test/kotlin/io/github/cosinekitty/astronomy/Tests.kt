@@ -1,12 +1,14 @@
 package io.github.cosinekitty.astronomy
 
 import java.io.File
+import java.io.PrintWriter
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlin.math.abs
+import kotlin.math.PI
 import kotlin.math.sqrt
 import kotlin.text.Regex
 
@@ -398,6 +400,76 @@ class Tests {
         val calcState = Astronomy.helioState(body, time)
         checkVector(calcState.position(), x, y, z, tolerance, "helioState($body).position")
         checkVector(calcState.velocity(), vx, vy, vz, tolerance, "helioState($body).velocity")
+    }
+
+    //----------------------------------------------------------------------------------------
+
+    @Test
+    fun `Write numeric check output file`() {
+        // The primary purpose of this test is to generate an output
+        // file full of various calculations in a format that is understood
+        // by the `generate check` command, which runs later in the build process.
+        // That command compares the output of one Astronomy Engine language
+        // implementation with another.
+        // Even if this test passes, the numeric output may deviate from expectations
+        // in a later build step, causing the script `unit_test_kotlin` to fail.
+        // For comparison, see the functions named `AstroCheck` in:
+        // - generate/ctest.c
+        // - generate/test.js
+        // - generate/test.py
+        // - generate/dotnet/csharp_test/csharp_test.cs
+        val filename = dataRootDir + "temp/k_check.txt"
+        File(filename).printWriter().use { outfile -> AstroCheck(outfile) }
+    }
+
+    private fun AstroCheck(outfile: PrintWriter) {
+        val bodylist = arrayOf (
+            Body.Sun, Body.Mercury, Body.Venus, Body.Earth, Body.Mars,
+            Body.Jupiter, Body.Saturn, Body.Uranus, Body.Neptune, Body.Pluto,
+            Body.SSB, Body.EMB
+        )
+
+        val vectorOnlyList = arrayOf(
+            Body.Earth, Body.SSB, Body.EMB
+        )
+
+        val observer = Observer(29.0, -81.0, 10.0)
+        var time = AstroTime(1700, 1, 1, 0, 0, 0.0)
+        val stop = AstroTime(2200, 1, 1, 0, 0, 0.0)
+        var pos: AstroVector
+        var j2000: Equatorial
+        var ofdate: Equatorial
+        var hor: Topocentric
+
+        outfile.println("o ${observer.latitude} ${observer.longitude} ${observer.height}")
+        while (time.tt < stop.tt) {
+            for (body in bodylist) {
+                pos = Astronomy.helioVector(body, time)
+                outfile.println("v ${body} ${pos.t.tt} ${pos.x} ${pos.y} ${pos.z}")
+                if (body !in vectorOnlyList) {
+                    j2000 = Astronomy.equator(body, time, observer, EquatorEpoch.J2000, Aberration.None)
+                    ofdate = Astronomy.equator(body, time, observer, EquatorEpoch.OfDate, Aberration.Corrected)
+                    hor = Astronomy.horizon(time, observer, ofdate.ra, ofdate.dec, Refraction.None)
+                    outfile.println("s ${body} ${time.tt} ${time.ut} ${j2000.ra} ${j2000.dec} ${j2000.dist} ${hor.azimuth} ${hor.altitude}")
+                }
+            }
+            pos = Astronomy.geoVector(Body.Moon, time, Aberration.None)
+            outfile.println("v GM ${pos.t.tt} ${pos.x} ${pos.y} ${pos.z}")
+            j2000 = Astronomy.equator(Body.Moon, time, observer, EquatorEpoch.J2000, Aberration.None)
+            ofdate = Astronomy.equator(Body.Moon, time, observer, EquatorEpoch.OfDate, Aberration.Corrected)
+            hor = Astronomy.horizon(time, observer, ofdate.ra, ofdate.dec, Refraction.None)
+            outfile.println("s GM ${time.tt} ${time.ut} ${j2000.ra} ${j2000.dec} ${j2000.dist} ${hor.azimuth} ${hor.altitude}")
+
+/*
+            val jm = Astronomy.jupiterMoons(time)
+            var mindex = 0
+            for (moon in jm.moon) {
+                outfile.println("j ${mindex} ${time.tt} ${time.ut} ${moon.x} ${moon.y} ${moon.z} {moon.vx} {moon.vy} {moon.vz}")
+                ++mindex
+            }
+*/
+            time = time.addDays(10.0 + PI/100.0)
+        }
     }
 
     //----------------------------------------------------------------------------------------

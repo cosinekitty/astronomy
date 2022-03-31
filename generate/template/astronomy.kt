@@ -49,6 +49,11 @@ import kotlin.math.tan
 class InvalidBodyException(body: Body) : Exception("Invalid body: $body")
 
 /**
+ * An unexpected internal error occurred in Astronomy Engine
+ */
+class InternalError(message: String) : Exception(message)
+
+/**
  * The factor to convert degrees to radians = pi/180.
  */
 const val DEG2RAD = 0.017453292519943296
@@ -590,14 +595,11 @@ data class AstroVector(
     fun angleWith(other: AstroVector): Double {
         val r = length() * other.length()
         val d = (this dot other) / r
-        return (
-            if (d <= -1.0)
-                180.0
-            else if (d >= +1.0)
-                0.0
-            else
-                acos(d).radiansToDegrees()
-        )
+        return when {
+            d <= -1.0 -> 180.0
+            d >= +1.0 -> 0.0
+            else -> acos(d).radiansToDegrees()
+        }
     }
 
     operator fun div(denom: Double) =
@@ -1727,7 +1729,7 @@ internal class ShadowInfo(
  * Returned by the functions [Astronomy.illumination] and [Astronomy.searchPeakMagnitude]
  * to report the visual magnitude and illuminated fraction of a celestial body at a given date and time.
  */
-class IllumInfo(
+class IlluminationInfo(
     /**
      * The date and time of the observation.
      */
@@ -1854,7 +1856,7 @@ interface SearchContext {
      * @returns
      *      The floating point value of the scalar function at the given time.
      */
-    fun Eval(time: AstroTime): Double
+    fun eval(time: AstroTime): Double
 }
 
 
@@ -2375,14 +2377,11 @@ private fun simulateGravity(
 
 private fun clampIndex(frac: Double, nsteps: Int): Int {
     val index = frac.toInt()
-    return (
-        if (index < 0)
-            0
-        else if (index >= nsteps)
-            nsteps - 1
-        else
-            index
-    )
+    return when {
+        index < 0 -> 0
+        index >= nsteps -> nsteps - 1
+        else -> index
+    }
 }
 
 private fun gravFromState(state: BodyState): GravSim {
@@ -2410,7 +2409,7 @@ private fun getPlutoSegment(tt: Double): List<BodyGravCalc>? {
 
             // Simulate forwards from the lower time bound.
             var steptt = sim.grav.tt
-            for (i in 1..(PLUTO_NSTEPS-1)) {
+            for (i in 1 until PLUTO_NSTEPS) {
                 steptt += PLUTO_DT
                 sim = simulateGravity(steptt, sim.grav)
                 seg.add(sim.grav)
@@ -2456,7 +2455,7 @@ private fun calcPlutoOneWay(
 ) : GravSim {
     var sim = gravFromState(initState)
     val n: Int = ceil((targetTt - sim.grav.tt) / dt).toInt()
-    for (i in 0..(n-1)) {
+    for (i in 0 until n) {
         val tt = if (i+1 == n) targetTt else (sim.grav.tt + dt)
         sim = simulateGravity(tt, sim.grav)
     }
@@ -3047,6 +3046,35 @@ object Astronomy {
         return Observer(lat_deg, lon_deg, 1000.0 * height_km)
     }
 
+    private fun gyration(pos: AstroVector, dir: PrecessDirection) =
+        when (dir) {
+            PrecessDirection.Into2000 -> precession(nutation(pos, dir), dir)
+            PrecessDirection.From2000 -> nutation(precession(pos, dir), dir)
+        }
+
+    private fun gyrationPosVel(state: StateVector, dir: PrecessDirection) =
+        when (dir) {
+            PrecessDirection.Into2000 -> precessionPosVel(nutationPosVel(state, dir), dir)
+            PrecessDirection.From2000 -> nutationPosVel(precessionPosVel(state, dir), dir)
+        }
+
+    private fun geoPos(time: AstroTime, observer: Observer) =
+        gyration(
+            terra(observer, time).position(),
+            PrecessDirection.Into2000
+        )
+
+    private fun spin(angle: Double, pos: AstroVector): AstroVector {
+        val cosang = dcos(angle)
+        val sinang = dsin(angle)
+        return AstroVector(
+            +cosang*pos.x + sinang*pos.y,
+            -sinang*pos.x + cosang*pos.y,
+            pos.z,
+            pos.t
+        )
+    }
+
     private fun nutationRot(time: AstroTime, dir: PrecessDirection): RotationMatrix {
         val tilt = earthTilt(time)
         val oblm = tilt.mobl.degreesToRadians()
@@ -3551,12 +3579,11 @@ object Astronomy {
      *      The heliocentric distance in AU.
      */
     fun helioDistance(body: Body, time: AstroTime): Double =
-        if (body == Body.Sun)
-            0.0
-        else if (body.vsopModel != null)
-            vsopDistance(body.vsopModel, time)
-        else
-            helioVector(body, time).length()
+        when {
+            body == Body.Sun -> 0.0
+            body.vsopModel != null -> vsopDistance(body.vsopModel, time)
+            else -> helioVector(body, time).length()
+        }
 
     /**
      * Calculates heliocentric position and velocity vectors for the given body.
@@ -3596,6 +3623,309 @@ object Astronomy {
             Body.SSB   -> solarSystemBarycenterState(time)
             else -> throw InvalidBodyException(body)
         }
+
+    /**
+     * Calculates geocentric Cartesian coordinates of a body in the J2000 equatorial system.
+     *
+     * This function calculates the position of the given celestial body as a vector,
+     * using the center of the Earth as the origin.  The result is expressed as a Cartesian
+     * vector in the J2000 equatorial system: the coordinates are based on the mean equator
+     * of the Earth at noon UTC on 1 January 2000.
+     *
+     * If given an invalid value for `body`, this function will throw an exception.
+     *
+     * Unlike [Astronomy.helioVector], this function always corrects for light travel time.
+     * This means the position of the body is "back-dated" by the amount of time it takes
+     * light to travel from that body to an observer on the Earth.
+     *
+     * Also, the position can optionally be corrected for
+     * [aberration](https://en.wikipedia.org/wiki/Aberration_of_light), an effect
+     * causing the apparent direction of the body to be shifted due to transverse
+     * movement of the Earth with respect to the rays of light coming from that body.
+     *
+     * @param body
+     *      A body for which to calculate a heliocentric position: the Sun, Moon, or any of the planets.
+     *
+     * @param time
+     *      The date and time for which to calculate the position.
+     *
+     * @param aberration
+     *      `Aberration.Corrected` to correct for aberration, or `Aberration.None` to leave uncorrected.
+     *
+     * @returns
+     *      A geocentric position vector of the center of the given body.
+     */
+    fun geoVector(body: Body, time: AstroTime, aberration: Aberration): AstroVector {
+        if (body == Body.Earth)
+            return AstroVector(0.0, 0.0, 0.0, time)
+
+        if (body == Body.Moon)
+            return geoMoon(time)
+
+        // For all other bodies, apply light travel time correction.
+        // The intention is to find the apparent position of the body
+        // from the Earth's point of view.
+
+        var earth = helioEarthPos(time)
+
+        var ltime = time
+        for (iter in 0..9) {
+            val helio = helioVector(body, ltime)
+            if (aberration == Aberration.Corrected && iter > 0) {
+                // Include aberration, so make a good first-order approximation
+                // by backdating the Earth's position also.
+                // This is confusing, but it works for objects within the Solar System
+                // because the distance the Earth moves in that small amount of light
+                // travel time (a few minutes to a few hours) is well approximated
+                // by a line segment that substends the angle seen from the remote
+                // body viewing Earth. That angle is pretty close to the aberration
+                // angle of the moving Earth viewing the remote body.
+                // In other words, both of the following approximate the aberration angle:
+                //     (transverse distance Earth moves) / (distance to body)
+                //     (transverse speed of Earth) / (speed of light).
+                earth = helioEarthPos(ltime)
+            }
+
+            // Convert heliocentric vector to geocentric vector.
+            // Tricky: we cannot use the subtraction operator because
+            // it will get angry that we are using mismatching times!
+            // It is intentional here that the calculation time was backdated,
+            // but the observation time is not.
+            var geopos = AstroVector(
+                helio.x - earth.x,
+                helio.y - earth.y,
+                helio.z - earth.z,
+                time
+            )
+
+            // Calculate the time in the past when light left the body on its way toward Earth.
+            val ltime2 = time.addDays(-geopos.length() / C_AUDAY)
+
+            // Very quickly we should converge on a solution for how far
+            // in the past light must have left the planet in order to
+            // reach the Earth at the given time, even though the observed
+            // body was in a slightly different orbital position when
+            // light left it.
+            if ((ltime2.tt - ltime.tt).absoluteValue < 1.0e-9)
+                return geopos
+
+            // Otherwise we refine the estimate and try again.
+            ltime = ltime2
+        }
+
+        // This should never happen. Usually the solver converges
+        // after 3 iterations. We allow for 10 iterations.
+        // Something is really wrong if this ever happens.
+        throw InternalError("Light travel time did not converge")
+    }
+
+    /**
+     * Calculates equatorial coordinates of a celestial body as seen by an observer on the Earth's surface.
+     *
+     * Calculates topocentric equatorial coordinates in one of two different systems:
+     * J2000 or true-equator-of-date, depending on the value of the `equdate` parameter.
+     * Equatorial coordinates include right ascension, declination, and distance in astronomical units.
+     *
+     * This function corrects for light travel time: it adjusts the apparent location
+     * of the observed body based on how long it takes for light to travel from the body to the Earth.
+     *
+     * This function corrects for *topocentric parallax*, meaning that it adjusts for the
+     * angular shift depending on where the observer is located on the Earth. This is most
+     * significant for the Moon, because it is so close to the Earth. However, parallax corection
+     * has a small effect on the apparent positions of other bodies.
+     *
+     * Correction for aberration is optional, using the `aberration` parameter.
+     *
+     * @param body
+     *      The celestial body to be observed. Not allowed to be `Body.Earth`.
+     *
+     * @param time
+     *      The date and time at which the observation takes place.
+     *
+     * @param observer
+     *      A location on or near the surface of the Earth.
+     *
+     * @param equdate
+     *      Selects the date of the Earth's equator in which to express the equatorial coordinates.
+     *
+     * @param aberration
+     *      Selects whether or not to correct for aberration.
+     *
+     * @returns
+     *      Topocentric equatorial coordinates of the celestial body.
+     */
+    fun equator(
+        body: Body,
+        time: AstroTime,
+        observer: Observer,
+        equdate: EquatorEpoch,
+        aberration: Aberration
+    ): Equatorial {
+        val gcObserver = geoPos(time, observer)
+        val gc = geoVector(body, time, aberration)
+        val j2000 = gc - gcObserver
+        val vector = when (equdate) {
+            EquatorEpoch.OfDate -> gyration(j2000, PrecessDirection.From2000)
+            EquatorEpoch.J2000  -> j2000
+        }
+        return equatorFromVector(vector)
+    }
+
+    /**
+     * Calculates the apparent location of a body relative to the local horizon of an observer on the Earth.
+     *
+     * Given a date and time, the geographic location of an observer on the Earth, and
+     * equatorial coordinates (right ascension and declination) of a celestial body,
+     * this function returns horizontal coordinates (azimuth and altitude angles) for the body
+     * relative to the horizon at the geographic location.
+     *
+     * The right ascension `ra` and declination `dec` passed in must be *equator of date*
+     * coordinates, based on the Earth's true equator at the date and time of the observation.
+     * Otherwise the resulting horizontal coordinates will be inaccurate.
+     * Equator of date coordinates can be obtained by calling [Astronomy.equator], passing in
+     * [EquatorEpoch.OfDate] as its `equdate` parameter. It is also recommended to enable
+     * aberration correction by passing in [Aberration.Corrected] as the `aberration` parameter.
+     *
+     * This function optionally corrects for atmospheric refraction.
+     * For most uses, it is recommended to pass [Refraction.Normal] in the `refraction` parameter to
+     * correct for optical lensing of the Earth's atmosphere that causes objects
+     * to appear somewhat higher above the horizon than they actually are.
+     * However, callers may choose to avoid this correction by passing in [Refraction.None].
+     * If refraction correction is enabled, the azimuth, altitude, right ascension, and declination
+     * in the [Topocentric] object returned by this function will all be corrected for refraction.
+     * If refraction is disabled, none of these four coordinates will be corrected; in that case,
+     * the right ascension and declination in the returned structure will be numerically identical
+     * to the respective `ra` and `dec` values passed in.
+     *
+     * @param time
+     *      The date and time of the observation.
+     *
+     * @param observer
+     *      The geographic location of the observer.
+     *
+     * @param ra
+     *      The right ascension of the body in sidereal hours. See remarks above for more details.
+     *
+     * @param dec
+     *      The declination of the body in degrees. See remarks above for more details.
+     *
+     * @param refraction
+     *      Selects whether to correct for atmospheric refraction, and if so, which model to use.
+     *      The recommended value for most uses is `Refraction.Normal`.
+     *      See remarks above for more details.
+     *
+     * @returns
+     *      The body's apparent horizontal coordinates and equatorial coordinates, both optionally corrected for refraction.
+     */
+    fun horizon(
+        time: AstroTime,
+        observer: Observer,
+        ra: Double,
+        dec: Double,
+        refraction: Refraction
+    ): Topocentric {
+        val sinlat = dsin(observer.latitude)
+        val coslat = dcos(observer.latitude)
+        val sinlon = dsin(observer.longitude)
+        val coslon = dcos(observer.longitude)
+        val sindc = dsin(dec)
+        val cosdc = dcos(dec)
+        val sinra = dsin(ra)
+        val cosra = dcos(ra)
+
+        // Calculate three mutually perpendicular unit vectors
+        // in equatorial coordinates: uze, une, uwe.
+        //
+        // uze = The direction of the observer's local zenith (straight up).
+        // une = The direction toward due north on the observer's horizon.
+        // uwe = The direction toward due west on the observer's horizon.
+        //
+        // HOWEVER, these are uncorrected for the Earth's rotation due to the time of day.
+        //
+        // The components of these 3 vectors are as follows:
+        // x = direction from center of Earth toward 0 degrees longitude (the prime meridian) on equator.
+        // y = direction from center of Earth toward 90 degrees west longitude on equator.
+        // z = direction from center of Earth toward the north pole.
+        val uze = AstroVector(coslat * coslon, coslat * sinlon, sinlat, time)
+        val une = AstroVector(-sinlat * coslon, -sinlat * sinlon, coslat, time)
+        val uwe = AstroVector(sinlon, -coslon, 0.0, time)
+
+        // Correct the vectors uze, une, uwe for the Earth's rotation by calculating
+        // sideral time. Call spin() for each uncorrected vector to rotate about
+        // the Earth's axis to yield corrected unit vectors uz, un, uw.
+        // Multiply sidereal hours by -15 to convert to degrees and flip eastward
+        // rotation of the Earth to westward apparent movement of objects with time.
+        val angle = -15.0 * siderealTime(time)
+        val uz = spin(angle, uze)
+        val un = spin(angle, une)
+        val uw = spin(angle, uwe)
+
+        // Convert angular equatorial coordinates (RA, DEC) to
+        // cartesian equatorial coordinates in 'p', using the
+        // same orientation system as uze, une, uwe.
+        val p = AstroVector(cosdc * cosra, cosdc * sinra, sindc, time)
+
+        // Use dot products of p with the zenith, north, and west
+        // vectors to obtain the cartesian coordinates of the body in
+        // the observer's horizontal orientation system.
+        // pz = zenith component [-1, +1]
+        // pn = north  component [-1, +1]
+        // pw = west   component [-1, +1]
+        val pz = p dot uz
+        val pn = p dot un
+        val pw = p dot uw
+
+        // projHor is the "shadow" of the body vector along the observer's flat ground.
+        val projHor = hypot(pn, pw)
+
+        // Calculate az = azimuth (compass direction clockwise from East.)
+        val az = (
+            if (projHor > 0.0) (
+                // If the body is not exactly straight up/down, it has an azimuth.
+                // Invert the angle to produce degrees eastward from north.
+                (-atan2(pw, pn)).radiansToDegrees().withMinDegreeValue(0.0)
+            ) else (
+                // The body is straight up/down, so it does not have an azimuth.
+                // Report an arbitrary but reasonable value.
+                0.0
+            )
+        )
+
+        // zd = the angle of the body away from the observer's zenith, in degrees.
+        var zd = atan2(projHor, pz).radiansToDegrees()
+        var hor_ra = ra
+        var hor_dec = dec
+
+        if (refraction != Refraction.None) {
+            val zd0 = zd
+            val refr = refractionAngle(refraction, 90.0 - zd)
+            zd -= refr
+
+            if (refr > 0.0 && zd > 3.0e-4) {
+                // Calculate refraction-corrected equatorial coordinates.
+                val sinzd  = dsin(zd)
+                val coszd  = dcos(zd)
+                val sinzd0 = dsin(zd0)
+                val coszd0 = dcos(zd0)
+
+                val prx = ((p.x - coszd0 * uz.x) / sinzd0)*sinzd + uz.x*coszd
+                val pry = ((p.y - coszd0 * uz.y) / sinzd0)*sinzd + uz.y*coszd
+                val prz = ((p.z - coszd0 * uz.z) / sinzd0)*sinzd + uz.z*coszd
+
+                val projEqu = hypot(prx, pry)
+
+                hor_ra =
+                    if (projEqu > 0.0)
+                        atan2(pry, prx).radiansToDegrees().withMinDegreeValue(0.0) / 15.0
+                    else
+                        0.0
+
+                hor_dec = atan2(prz, projEqu).radiansToDegrees()
+            }
+        }
+
+        return Topocentric(az, 90.0 - zd, hor_ra, hor_dec)
+    }
 }
 
 //=======================================================================================

@@ -9,7 +9,7 @@ Calculates heliocentric Cartesian coordinates of a body in the J2000 equatorial 
 
 This function calculates the position of the given celestial body as a vector, using the center of the Sun as the origin.  The result is expressed as a Cartesian vector in the J2000 equatorial system: the coordinates are based on the mean equator of the Earth at noon UTC on 1 January 2000.
 
-The position is not corrected for light travel time or aberration. This is different from the behavior of Astronomy.geoVector.
+The position is not corrected for light travel time or aberration. This is different from the behavior of [Astronomy.geoVector](geo-vector.md).
 
 If given an invalid value for body, this function will throw an [InvalidBodyException](../-invalid-body-exception/index.md).
 

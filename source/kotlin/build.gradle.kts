@@ -42,3 +42,12 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach 
         allWarningsAsErrors = true
     }
 }
+
+tasks.dokkaGfm.configure {
+    dokkaSourceSets {
+        named("main") {
+            includeNonPublic.set(false)
+            reportUndocumented.set(true)
+        }
+    }
+}
