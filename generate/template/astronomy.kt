@@ -164,7 +164,7 @@ private const val MEAN_SYNODIC_MONTH = 29.530588     // average number of days f
 private const val EARTH_ORBITAL_PERIOD = 365.256
 private const val NEPTUNE_ORBITAL_PERIOD = 60189.0
 private const val REFRACTION_NEAR_HORIZON = 34.0 / 60.0  // degrees of refractive "lift" seen for objects near horizon
-private const val ASEC180 = 180.0 * 60.0 * 60.0;         // arcseconds per 180 degrees (or pi radians)
+private const val ASEC180 = 180.0 * 60.0 * 60.0          // arcseconds per 180 degrees (or pi radians)
 private const val AU_PER_PARSEC = (ASEC180 / PI)         // exact definition of how many AU = one parsec
 private const val EARTH_MOON_MASS_RATIO = 81.30056
 
@@ -2011,17 +2011,17 @@ private fun calcVsopPosVel(model: VsopModel, tt: Double): BodyState {
     val eclipPos = vsopSphereToRect(lon, lat, rad)
 
     // Calculate derivatives of spherical coordinates with respect to time.
-    val dlon = vsopDerivCalc(model.lon, t);     // dlon = d(lon) / dt
-    val dlat = vsopDerivCalc(model.lat, t);     // dlat = d(lat) / dt
-    val drad = vsopDerivCalc(model.rad, t);     // drad = d(rad) / dt
+    val dlon = vsopDerivCalc(model.lon, t)      // dlon = d(lon) / dt
+    val dlat = vsopDerivCalc(model.lat, t)      // dlat = d(lat) / dt
+    val drad = vsopDerivCalc(model.rad, t)      // drad = d(rad) / dt
 
     // Use spherical coords and spherical derivatives to calculate
     // the velocity vector in rectangular coordinates.
 
-    val coslon = cos(lon);
-    val sinlon = sin(lon);
-    val coslat = cos(lat);
-    val sinlat = sin(lat);
+    val coslon = cos(lon)
+    val sinlon = sin(lon)
+    val coslat = cos(lat)
+    val sinlat = sin(lat)
 
     val vx = (
         + (drad * coslat * coslon)
@@ -2145,8 +2145,8 @@ private class MoonContext(time: AstroTime) {
             }
 
             for (J in 1..MAX) {
-                CO[-J,I] =  CO[J,I];
-                SI[-J,I] = -SI[J,I];
+                CO[-J,I] =  CO[J,I]
+                SI[-J,I] = -SI[J,I]
             }
         }
     }
@@ -2259,9 +2259,9 @@ private class MoonContext(time: AstroTime) {
         solarN()
         planetary()
         val S = F + DS/ARC
-        val lat_seconds = (1.000002708 + 139.978*DGAM)*(18518.511+1.189+GAM1C)*sin(S)-6.24*sin(3*S) + N
+        val latSeconds = (1.000002708 + 139.978*DGAM)*(18518.511+1.189+GAM1C)*sin(S)-6.24*sin(3*S) + N
         return Spherical(
-            lat_seconds / 3600.0,
+            latSeconds / 3600.0,
             360.0 * frac((L0+DLAM/ARC) / PI2),
             (ARC * EARTH_EQUATORIAL_RADIUS_AU) / (0.999953253 * SINPI)
         )
@@ -2555,7 +2555,7 @@ private fun jupiterMoonElemToPv(
     var EE = AL + K*sin(AL) - H*cos(AL)
     do {
         CE = cos(EE)
-        SE = sin(EE);
+        SE = sin(EE)
         DE = (AL - EE + K*SE - H*CE) / (1.0 - K*CE - H*SE)
         EE += DE
     } while (DE.absoluteValue >= 1.0e-12)
@@ -2627,7 +2627,7 @@ private fun calcJupiterMoon(time: AstroTime, m: JupiterMoon): StateVector {
     val state = jupiterMoonElemToPv(time, m.mu, elem0, elem1, elem2, elem3, elem4, elem5)
 
     // Re-orient position and velocity vectors from Jupiter-equatorial (JUP) to Earth-equatorial in J2000 (EQJ).
-    return rotation_JUP_EQJ.rotate(state)
+    return rotationJupEqj.rotate(state)
 }
 
 
@@ -3060,9 +3060,9 @@ object Astronomy {
         val cosphi = cos(phi)
         val c = 1.0 / hypot(cosphi,  EARTH_FLATTENING * sinphi)
         val s = c * EARTH_FLATTENING_SQUARED
-        val ht_km = observer.height / 1000.0
-        val ach = (EARTH_EQUATORIAL_RADIUS_KM * c) + ht_km
-        val ash = (EARTH_EQUATORIAL_RADIUS_KM * s) + ht_km
+        val heightKm = observer.height / 1000.0
+        val ach = (EARTH_EQUATORIAL_RADIUS_KM * c) + heightKm
+        val ash = (EARTH_EQUATORIAL_RADIUS_KM * s) + heightKm
         val stlocl = (15.0*st + observer.longitude).degreesToRadians()
         val sinst = sin(stlocl)
         val cosst = cos(stlocl)
@@ -3096,9 +3096,9 @@ object Astronomy {
      *      the given position vector and time.
      */
     private fun inverseTerra(ovec: AstroVector): Observer {
-        var lon_deg: Double
-        var lat_deg: Double
-        var height_km: Double
+        var lonDeg: Double
+        var latDeg: Double
+        var heightKm: Double
 
         // Convert from AU to kilometers.
         val x = ovec.x * KM_PER_AU
@@ -3108,14 +3108,14 @@ object Astronomy {
         if (p < 1.0e-6) {
             // Special case: within 1 millimeter of a pole!
             // Use arbitrary longitude, and latitude determined by polarity of z.
-            lon_deg = 0.0
-            lat_deg = if (z > 0.0) +90.0 else -90.0
+            lonDeg = 0.0
+            latDeg = if (z > 0.0) +90.0 else -90.0
             // Elevation is calculated directly from z.
-            height_km = z.absoluteValue - EARTH_POLAR_RADIUS_KM
+            heightKm = z.absoluteValue - EARTH_POLAR_RADIUS_KM
         } else {
             // Calculate exact longitude in the half-open range (-180, +180].
             val stlocl = atan2(y, x)
-            lon_deg = longitudeOffset(stlocl.radiansToDegrees() - (15 * siderealTime(ovec.t)))
+            lonDeg = longitudeOffset(stlocl.radiansToDegrees() - (15 * siderealTime(ovec.t)))
             // Numerically solve for exact latitude, using Newton's Method.
             val F = EARTH_FLATTENING_SQUARED
             // Start with initial latitude estimate, based on a spherical Earth.
@@ -3142,18 +3142,18 @@ object Astronomy {
                 lat -= (W / D)
             }
             // We now have a solution for the latitude in radians.
-            lat_deg = lat.radiansToDegrees()
+            latDeg = lat.radiansToDegrees()
             // Solve for exact height in kilometers.
             // There are two formulas I can use. Use whichever has the less risky denominator.
             val adjust = EARTH_EQUATORIAL_RADIUS_KM / denom
-            height_km =
+            heightKm =
                 if (s.absoluteValue > c.absoluteValue)
                     z/s - F*adjust
                 else
                     p/c - adjust
         }
 
-        return Observer(lat_deg, lon_deg, 1000.0 * height_km)
+        return Observer(latDeg, lonDeg, 1000.0 * heightKm)
     }
 
     private fun gyration(pos: AstroVector, dir: PrecessDirection) =
@@ -4003,8 +4003,8 @@ object Astronomy {
 
         // zd = the angle of the body away from the observer's zenith, in degrees.
         var zd = atan2(projHor, pz).radiansToDegrees()
-        var hor_ra = ra
-        var hor_dec = dec
+        var horRa = ra
+        var horDec = dec
 
         if (refraction != Refraction.None) {
             val zd0 = zd
@@ -4024,17 +4024,17 @@ object Astronomy {
 
                 val projEqu = hypot(prx, pry)
 
-                hor_ra =
+                horRa =
                     if (projEqu > 0.0)
                         atan2(pry, prx).radiansToDegrees().withMinDegreeValue(0.0) / 15.0
                     else
                         0.0
 
-                hor_dec = atan2(prz, projEqu).radiansToDegrees()
+                horDec = atan2(prz, projEqu).radiansToDegrees()
             }
         }
 
-        return Topocentric(az, 90.0 - zd, hor_ra, hor_dec)
+        return Topocentric(az, 90.0 - zd, horRa, horDec)
     }
 
     /**

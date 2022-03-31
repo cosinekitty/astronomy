@@ -1927,7 +1927,7 @@ static int JupiterMoons_Kotlin(cg_context_t *context, const jupiter_moon_model_t
     const char *moon_name[] = { "Io", "Europa", "Ganymede", "Callisto" };
     const char *var_name[] = { "a", "l", "z", "zeta" };
 
-    fprintf(context->outfile, "private val rotation_JUP_EQJ = RotationMatrix(\n");
+    fprintf(context->outfile, "private val rotationJupEqj = RotationMatrix(\n");
     fprintf(context->outfile, "    %21.14le, %21.14le, %21.14le,\n", model->rot[0][0], model->rot[0][1], model->rot[0][2]);
     fprintf(context->outfile, "    %21.14le, %21.14le, %21.14le,\n", model->rot[1][0], model->rot[1][1], model->rot[1][2]);
     fprintf(context->outfile, "    %21.14le, %21.14le, %21.14le\n",  model->rot[2][0], model->rot[2][1], model->rot[2][2]);
