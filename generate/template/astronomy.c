@@ -2927,8 +2927,14 @@ static astro_state_vector_t CalcJupiterMoon(astro_time_t time, int mindex)
  *
  * To convert to heliocentric position vectors, call #Astronomy_HelioVector
  * with `BODY_JUPITER` to get Jupiter's heliocentric position, then
- * add the jovicentric positions. Likewise, you can call #Astronomy_GeoVector
+ * add the jovicentric positions.
+ *
+ * Likewise, you can call #Astronomy_GeoVector
  * with `BODY_JUPITER` to convert to geocentric positions.
+ * However, you will have to manually correct for light travel time
+ * from the Jupiter system to Earth to figure out what time to pass
+ * to `Astronomy_JupiterMoons` to get an accurate picture
+ * of how Jupiter and its moons look from Earth.
  *
  * @param time  The date and time for which to calculate the position vectors.
  * @return Position vectors of Jupiter's largest 4 moons, as described above.

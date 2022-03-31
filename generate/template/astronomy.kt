@@ -2523,6 +2523,116 @@ private fun calcPluto(time: AstroTime, helio: Boolean): StateVector {
 
 //---------------------------------------------------------------------------------------
 
+internal class JupiterMoon (
+    val mu: Double,
+    val al0: Double,
+    val al1: Double,
+    val a: Array<VsopTerm>,
+    val l: Array<VsopTerm>,
+    val z: Array<VsopTerm>,
+    val zeta: Array<VsopTerm>
+)
+
+
+private fun jupiterMoonElemToPv(
+    time: AstroTime,
+    mu: Double,
+    A: Double,
+    AL: Double,
+    K: Double,
+    H: Double,
+    Q: Double,
+    P: Double
+): StateVector {
+    // Translation of FORTRAN subroutine ELEM2PV from:
+    // https://ftp.imcce.fr/pub/ephem/satel/galilean/L1/L1.2/
+
+    val AN = sqrt(mu / (A*A*A))
+
+    var CE: Double
+    var SE: Double
+    var DE: Double
+    var EE = AL + K*sin(AL) - H*cos(AL)
+    do {
+        CE = cos(EE)
+        SE = sin(EE);
+        DE = (AL - EE + K*SE - H*CE) / (1.0 - K*CE - H*SE)
+        EE += DE
+    } while (DE.absoluteValue >= 1.0e-12)
+
+    CE = cos(EE)
+    SE = sin(EE)
+    val DLE = H*CE - K*SE
+    val RSAM1 = -K*CE - H*SE
+    val ASR = 1.0/(1.0 + RSAM1)
+    val PHI = sqrt(1.0 - K*K - H*H)
+    val PSI = 1.0/(1.0 + PHI)
+    val X1 = A*(CE - K - PSI*H*DLE)
+    val Y1 = A*(SE - H + PSI*K*DLE)
+    val VX1 = AN*ASR*A*(-SE - PSI*H*RSAM1)
+    val VY1 = AN*ASR*A*(+CE + PSI*K*RSAM1)
+    val F2 = 2.0*sqrt(1.0 - Q*Q - P*P)
+    val P2 = 1.0 - 2.0*P*P
+    val Q2 = 1.0 - 2.0*Q*Q
+    val PQ = 2.0*P*Q
+
+    return StateVector(
+        X1*P2 + Y1*PQ,
+        X1*PQ + Y1*Q2,
+        (Q*Y1 - X1*P)*F2,
+        VX1*P2 + VY1*PQ,
+        VX1*PQ + VY1*Q2,
+        (Q*VY1 - VX1*P)*F2,
+        time
+    )
+}
+
+
+private fun calcJupiterMoon(time: AstroTime, m: JupiterMoon): StateVector {
+    // This is a translation of FORTRAN code by Duriez, Lainey, and Vienne:
+    // https://ftp.imcce.fr/pub/ephem/satel/galilean/L1/L1.2/
+
+    val t = time.tt + 18262.5     // number of days since 1950-01-01T00:00:00Z
+
+    // Calculate 6 orbital elements at the given time t.
+    var elem0 = 0.0
+    for (term in m.a)
+        elem0 += term.amplitude * cos(term.phase + (t * term.frequency))
+
+    var elem1 = m.al0 + (t * m.al1)
+    for (term in m.l)
+        elem1 += term.amplitude * sin(term.phase + (t * term.frequency))
+
+    elem1 %= PI2
+    if (elem1 < 0)
+        elem1 += PI2
+
+    var elem2 = 0.0
+    var elem3 = 0.0
+    for (term in m.z) {
+        val arg = term.phase + (t * term.frequency)
+        elem2 += term.amplitude * cos(arg)
+        elem3 += term.amplitude * sin(arg)
+    }
+
+    var elem4 = 0.0
+    var elem5 = 0.0
+    for (term in m.zeta) {
+        var arg = term.phase + (t * term.frequency)
+        elem4 += term.amplitude * cos(arg)
+        elem5 += term.amplitude * sin(arg)
+    }
+
+    // Convert the oribital elements into position vectors in the Jupiter equatorial system (JUP).
+    val state = jupiterMoonElemToPv(time, m.mu, elem0, elem1, elem2, elem3, elem4, elem5)
+
+    // Re-orient position and velocity vectors from Jupiter-equatorial (JUP) to Earth-equatorial in J2000 (EQJ).
+    return rotation_JUP_EQJ.rotate(state)
+}
+
+
+//---------------------------------------------------------------------------------------
+
 /**
  * The main container of astronomy calculation functions.
  */
@@ -3926,6 +4036,32 @@ object Astronomy {
 
         return Topocentric(az, 90.0 - zd, hor_ra, hor_dec)
     }
+
+    /**
+     * Calculates jovicentric positions and velocities of Jupiter's largest 4 moons.
+     *
+     * Calculates position and velocity vectors for Jupiter's moons
+     * Io, Europa, Ganymede, and Callisto, at the given date and time.
+     * The vectors are jovicentric (relative to the center of Jupiter).
+     * Their orientation is the Earth's equatorial system at the J2000 epoch (EQJ).
+     * The position components are expressed in astronomical units (AU), and the
+     * velocity components are in AU/day.
+     *
+     * To convert to heliocentric position vectors, call [Astronomy.helioVector]
+     * with `Body.Jupiter` to get Jupiter's heliocentric position, then
+     * add the jovicentric positions. Likewise, you can call [Astronomy.geoVector]
+     * to convert to geocentric positions; however, you will have to manually
+     * correct for light travel time from the Jupiter system to Earth to
+     * figure out what time to pass to `jupiterMoons` to get an accurate picture
+     * of how Jupiter and its moons look from Earth.
+     */
+    fun jupiterMoons(time: AstroTime) =
+        JupiterMoonsInfo(arrayOf(
+            calcJupiterMoon(time, jupiterMoonModel[0]),
+            calcJupiterMoon(time, jupiterMoonModel[1]),
+            calcJupiterMoon(time, jupiterMoonModel[2]),
+            calcJupiterMoon(time, jupiterMoonModel[3])
+        ))
 }
 
 //=======================================================================================
@@ -3973,3 +4109,8 @@ private fun addSolarTerms(context: MoonContext) {$ASTRO_ADDSOL()}
 
 $ASTRO_PLUTO_TABLE()
 private val plutoCache = HashMap<Int, List<BodyGravCalc>>()
+
+//---------------------------------------------------------------------------------------
+// Models for Jupiter's four largest moons.
+
+$ASTRO_JUPITER_MOONS()

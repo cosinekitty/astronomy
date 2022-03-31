@@ -7,7 +7,7 @@ class [JupiterMoonsInfo](index.md)(moon: [Array](https://kotlinlang.org/api/late
 
 Holds the positions and velocities of Jupiter's major 4 moons.
 
-The Astronomy.jupiterMoons function returns an object of this type to report position and velocity vectors for Jupiter's largest 4 moons Io, Europa, Ganymede, and Callisto. Each position vector is relative to the center of Jupiter. Both position and velocity are oriented in the EQJ system (that is, using Earth's equator at the J2000 epoch). The positions are expressed in astronomical units (AU), and the velocities in AU/day.
+The [Astronomy.jupiterMoons](../-astronomy/jupiter-moons.md) function returns an object of this type to report position and velocity vectors for Jupiter's largest 4 moons Io, Europa, Ganymede, and Callisto. Each position vector is relative to the center of Jupiter. Both position and velocity are oriented in the EQJ system (that is, using Earth's equator at the J2000 epoch). The positions are expressed in astronomical units (AU), and the velocities in AU/day.
 
 ## Constructors
 

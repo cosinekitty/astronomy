@@ -788,7 +788,10 @@ velocity components are in AU/day.
 To convert to heliocentric position vectors, call [`Astronomy.HelioVector`](#Astronomy.HelioVector)
 with `Body.Jupiter` to get Jupiter's heliocentric position, then
 add the jovicentric positions. Likewise, you can call [`Astronomy.GeoVector`](#Astronomy.GeoVector)
-to convert to geocentric positions.
+to convert to geocentric positions; however, you will have to manually
+correct for light travel time from the Jupiter system to Earth to
+figure out what time to pass to `jupiterMoons` to get an accurate picture
+of how Jupiter and its moons look from Earth.
 
 | Type | Parameter | Description |
 | --- | --- | --- |
