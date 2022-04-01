@@ -4,3 +4,5 @@
 
 [jvm]\
 operator fun [div](div.md)(denom: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)): [AstroVector](index.md)
+
+Divides a vector by a scalar.

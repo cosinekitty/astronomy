@@ -5,18 +5,21 @@
 [jvm]\
 data class [StateVector](index.md)(x: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), y: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), z: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), vx: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), vy: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), vz: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), t: [AstroTime](../-astro-time/index.md))
 
+Represents a combined position vector and velocity vector at a given moment in time.
+
 ## Constructors
 
 | | |
 |---|---|
 | [StateVector](-state-vector.md) | [jvm]<br>fun [StateVector](-state-vector.md)(pos: [AstroVector](../-astro-vector/index.md), vel: [AstroVector](../-astro-vector/index.md), time: [AstroTime](../-astro-time/index.md))<br>Combines a position vector and a velocity vector into a single state vector. |
+| [StateVector](-state-vector.md) | [jvm]<br>fun [StateVector](-state-vector.md)(x: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), y: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), z: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), vx: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), vy: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), vz: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), t: [AstroTime](../-astro-time/index.md)) |
 
 ## Functions
 
 | Name | Summary |
 |---|---|
-| [div](div.md) | [jvm]<br>operator fun [div](div.md)(denom: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)): [StateVector](index.md) |
-| [plus](plus.md) | [jvm]<br>operator fun [plus](plus.md)(other: [StateVector](index.md)): [StateVector](index.md) |
+| [div](div.md) | [jvm]<br>operator fun [div](div.md)(denom: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)): [StateVector](index.md)<br>Divides a state vector by a scalar. |
+| [plus](plus.md) | [jvm]<br>operator fun [plus](plus.md)(other: [StateVector](index.md)): [StateVector](index.md)<br>Adds two state vetors, yielding the state vector sum. |
 | [position](position.md) | [jvm]<br>fun [position](position.md)(): [AstroVector](../-astro-vector/index.md)<br>Returns the position vector associated with this state vector. |
 | [velocity](velocity.md) | [jvm]<br>fun [velocity](velocity.md)(): [AstroVector](../-astro-vector/index.md)<br>Returns the velocity vector associated with this state vector. |
 

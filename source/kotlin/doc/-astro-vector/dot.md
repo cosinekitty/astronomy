@@ -4,3 +4,5 @@
 
 [jvm]\
 infix fun [dot](dot.md)(other: [AstroVector](index.md)): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)
+
+Takes the dot product of two vectors.

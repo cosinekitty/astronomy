@@ -4,3 +4,5 @@
 
 [jvm]\
 operator fun [plus](plus.md)(other: [StateVector](index.md)): [StateVector](index.md)
+
+Adds two state vetors, yielding the state vector sum.

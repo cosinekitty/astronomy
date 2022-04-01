@@ -4,3 +4,5 @@
 
 [jvm]\
 operator fun [plus](plus.md)(other: [AstroVector](index.md)): [AstroVector](index.md)
+
+Adds two vectors. Both operands must have identical times.

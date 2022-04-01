@@ -4,3 +4,5 @@
 
 [jvm]\
 operator fun [minus](minus.md)(other: [AstroVector](index.md)): [AstroVector](index.md)
+
+Subtracts one vector from another. Both operands must have identical times.

@@ -552,6 +552,9 @@ internal fun verifyIdenticalTimes(t1: AstroTime, t2: AstroTime): AstroTime {
 }
 
 
+/**
+ * A 3D Cartesian vector whose components are expressed in Astronomical Units (AU).
+ */
 data class AstroVector(
     /**
      * A Cartesian x-coordinate expressed in AU.
@@ -578,23 +581,37 @@ data class AstroVector(
      */
     fun length() = sqrt((x * x) + (y * y) + (z * z))
 
+    /**
+     * Adds two vectors. Both operands must have identical times.
+     */
     operator fun plus(other: AstroVector) =
         AstroVector(x + other.x, y + other.y, z + other.z, verifyIdenticalTimes(t, other.t))
 
+    /**
+     * Subtracts one vector from another. Both operands must have identical times.
+     */
     operator fun minus(other: AstroVector) =
         AstroVector(x - other.x, y - other.y, z - other.z, verifyIdenticalTimes(t, other.t))
 
+    /**
+     * Negates a vector; the same as multiplying the vector by the scalar -1.
+     */
     operator fun unaryMinus() =
         AstroVector(-x, -y, -z, t)
 
+    /**
+     * Takes the dot product of two vectors.
+     */
     infix fun dot(other: AstroVector): Double {
         verifyIdenticalTimes(t, other.t)
         return x*other.x + y*other.y + z*other.z
     }
 
+    /**
+     * Calculates the angle in degrees (0..180) between two vectors.
+     */
     fun angleWith(other: AstroVector): Double {
-        val r = length() * other.length()
-        val d = (this dot other) / r
+        val d = (this dot other) / (length() * other.length())
         return when {
             d <= -1.0 -> 180.0
             d >= +1.0 -> 0.0
@@ -602,6 +619,9 @@ data class AstroVector(
         }
     }
 
+    /**
+     * Divides a vector by a scalar.
+     */
     operator fun div(denom: Double) =
         AstroVector(x/denom, y/denom, z/denom, t)
 
@@ -680,6 +700,9 @@ operator fun Double.times(vec: AstroVector) =
         AstroVector(this*vec.x, this*vec.y, this*vec.z, vec.t)
 
 
+/**
+ * Represents a combined position vector and velocity vector at a given moment in time.
+ */
 data class StateVector(
     /**
      * A Cartesian position x-coordinate expressed in AU.
@@ -740,6 +763,9 @@ data class StateVector(
      */
     fun velocity() = AstroVector(vx, vy, vz, t)
 
+    /**
+     * Adds two state vetors, yielding the state vector sum.
+     */
     operator fun plus(other: StateVector) =
         StateVector(
             x + other.x,
@@ -751,6 +777,9 @@ data class StateVector(
             verifyIdenticalTimes(t, other.t)
         )
 
+    /**
+     * Divides a state vector by a scalar.
+     */
     operator fun div(denom: Double) =
         StateVector(
             x / denom,
@@ -4062,6 +4091,59 @@ object Astronomy {
             calcJupiterMoon(time, jupiterMoonModel[2]),
             calcJupiterMoon(time, jupiterMoonModel[3])
         ))
+
+    /**
+     * Calculates a rotation matrix from equatorial J2000 (EQJ) to ecliptic J2000 (ECL).
+     *
+     * This is one of the family of functions that returns a rotation matrix
+     * for converting from one orientation to another.
+     * Source: EQJ = equatorial system, using equator at J2000 epoch.
+     * Target: ECL = ecliptic system, using equator at J2000 epoch.
+     */
+    fun rotationEqjEcl(): RotationMatrix {
+        // ob = mean obliquity of the J2000 ecliptic = 0.40909260059599012 radians.
+        val c = 0.9174821430670688    // cos(ob)
+        val s = 0.3977769691083922    // sin(ob)
+        return RotationMatrix(
+            1.0, 0.0, 0.0,
+            0.0,  +c,  -s,
+            0.0,  +s,  +c
+        )
+    }
+
+    /**
+     * Calculates a rotation matrix from ecliptic J2000 (ECL) to equatorial J2000 (EQJ).
+     *
+     * This is one of the family of functions that returns a rotation matrix
+     * for converting from one orientation to another.
+     * Source: ECL = ecliptic system, using equator at J2000 epoch.
+     * Target: EQJ = equatorial system, using equator at J2000 epoch.
+     */
+    fun rotationEclEqj(): RotationMatrix {
+        // ob = mean obliquity of the J2000 ecliptic = 0.40909260059599012 radians.
+        val c = 0.9174821430670688    // cos(ob)
+        val s = 0.3977769691083922    // sin(ob)
+        return RotationMatrix(
+            1.0, 0.0, 0.0,
+            0.0,  +c,  +s,
+            0.0,  -s,  +c
+        )
+    }
+
+    /**
+     * Calculates a rotation matrix from equatorial J2000 (EQJ) to equatorial of-date (EQD).
+     *
+     * This is one of the family of functions that returns a rotation matrix
+     * for converting from one orientation to another.
+     * Source: EQJ = equatorial system, using equator at J2000 epoch.
+     * Target: EQD = equatorial system, using equator of the specified date/time.
+     *
+     * @param time
+     *      The date and time at which the Earth's equator defines the target orientation.
+     */
+    fun rotationEqjEqd(time: AstroTime): RotationMatrix =
+        precessionRot(time, PrecessDirection.From2000) combine
+        nutationRot(time, PrecessDirection.From2000)
 }
 
 //=======================================================================================

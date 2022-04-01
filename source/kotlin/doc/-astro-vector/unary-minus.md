@@ -4,3 +4,5 @@
 
 [jvm]\
 operator fun [unaryMinus](unary-minus.md)(): [AstroVector](index.md)
+
+Negates a vector; the same as multiplying the vector by the scalar -1.

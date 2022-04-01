@@ -508,4 +508,51 @@ class Tests {
     }
 
     //----------------------------------------------------------------------------------------
+
+    private fun compareMatrices(a: RotationMatrix, b: RotationMatrix, comment: String, tolerance: Double = 1.0e-16) {
+        for (i in 0..2) {
+            for (j in 0..2) {
+                val diff = abs(a.rot[i][j] - b.rot[i][j])
+                assertTrue(diff < tolerance, "Matrix mismatch ($comment): a[$i,$j]=${a.rot[i][j]}, b=${b.rot[i][j]}, diff=$diff")
+            }
+        }
+    }
+
+    @Test
+    fun `Orientation conversion using rotation matrices`() {
+        val time = AstroTime(8126.418466077072)
+        assertTrue(time.toString() == "2022-04-01T22:02:35.469Z", "Unexpected time string.")
+
+        compareMatrices(
+            Astronomy.rotationEqjEcl(),
+            RotationMatrix(
+                1.0, 0.0, 0.0,
+                0.0, +0.9174821430670688, -0.3977769691083922,
+                0.0, +0.3977769691083922, +0.9174821430670688
+            ),
+            "EQJ ECL"
+        )
+
+        compareMatrices(
+            Astronomy.rotationEclEqj(),
+            RotationMatrix(
+                1.0, 0.0, 0.0,
+                0.0, +0.9174821430670688, +0.3977769691083922,
+                0.0, -0.3977769691083922, +0.9174821430670688
+            ),
+            "EQJ ECL"
+        )
+
+        compareMatrices(
+            Astronomy.rotationEqjEqd(time),
+            RotationMatrix(
+                0.9999856608656787, 0.004911515527973243, 0.002134262929010771,
+                -0.004911577234051216, 0.9999879378516134, 2.367175135753887e-05,
+                -0.002134120921040258, -3.4154009138639524e-05, 0.9999977221781049
+            ),
+            "EQJ EQD"
+        )
+    }
+
+    //----------------------------------------------------------------------------------------
 }
