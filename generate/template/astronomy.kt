@@ -4306,6 +4306,51 @@ object Astronomy {
      */
     fun rotationEclEqd(time: AstroTime): RotationMatrix =
         rotationEqdEcl(time).inverse()
+
+    /**
+     * Calculates a rotation matrix from ecliptic J2000 (ECL) to horizontal (HOR).
+     *
+     * This is one of the family of functions that returns a rotation matrix
+     * for converting from one orientation to another.
+     * Source: ECL = ecliptic system, using equator at J2000 epoch.
+     * Target: HOR = horizontal system.
+     *
+     * @param time
+     *      The date and time of the desired horizontal orientation.
+     *
+     * @param observer
+     *      A location near the Earth's mean sea level that defines the observer's horizon.
+     *
+     * @returns
+     *      A rotation matrix that converts ECL to HOR at `time` and for `observer`.
+     *      The components of the horizontal vector are:
+     *      x = north, y = west, z = zenith (straight up from the observer).
+     *      These components are chosen so that the "right-hand rule" works for the vector
+     *      and so that north represents the direction where azimuth = 0.
+     */
+    fun rotationEclHor(time: AstroTime, observer: Observer): RotationMatrix =
+        rotationEclEqd(time) combine
+        rotationEqdHor(time, observer)
+
+    /**
+     * Calculates a rotation matrix from horizontal (HOR) to ecliptic J2000 (ECL).
+     *
+     * This is one of the family of functions that returns a rotation matrix
+     * for converting from one orientation to another.
+     * Source: HOR = horizontal system.
+     * Target: ECL = ecliptic system, using equator at J2000 epoch.
+     *
+     * @param time
+     *      The date and time of the horizontal observation.
+     *
+     * @param observer
+     *      The location of the horizontal observer.
+     *
+     * @returns
+     *      A rotation matrix that converts HOR to ECL.
+     */
+    fun rotationHorEcl(time: AstroTime, observer: Observer): RotationMatrix =
+        rotationEclHor(time, observer).inverse()
 }
 
 //=======================================================================================
