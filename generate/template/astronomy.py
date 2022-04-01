@@ -5334,7 +5334,7 @@ def Rotation_HOR_EQJ(time, observer):
     Returns
     -------
     RotationMatrix
-        A rotation matrix that converts HOR to EQD at `time` and for `observer`.
+        A rotation matrix that converts HOR to EQJ at `time` and for `observer`.
     """
     hor_eqd = Rotation_HOR_EQD(time, observer)
     eqd_eqj = Rotation_EQD_EQJ(time)

@@ -1454,7 +1454,7 @@ Target: EQJ = equatorial system, using equator at the J2000 epoch.
 | [`AstroTime`](#AstroTime) | `time` | The date and time of the observation. |
 | [`Observer`](#Observer) | `observer` | A location near the Earth's mean sea level that defines the observer's horizon. |
 
-**Returns:** A rotation matrix that converts HOR to EQD at `time` and for `observer`.
+**Returns:** A rotation matrix that converts HOR to EQJ at `time` and for `observer`.
 
 <a name="Astronomy.RotationAxis"></a>
 ### Astronomy.RotationAxis(body, time) &#8658; [`AxisInfo`](#AxisInfo)

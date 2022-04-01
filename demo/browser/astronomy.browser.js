@@ -6140,7 +6140,7 @@ exports.Rotation_HOR_EQD = Rotation_HOR_EQD;
  *      A location near the Earth's mean sea level that defines the observer's horizon.
  *
  * @returns {RotationMatrix}
- *      A rotation matrix that converts HOR to EQD at `time` and for `observer`.
+ *      A rotation matrix that converts HOR to EQJ at `time` and for `observer`.
  */
 function Rotation_HOR_EQJ(time, observer) {
     time = MakeTime(time);

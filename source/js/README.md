@@ -2379,7 +2379,7 @@ Target: EQD = equatorial system, using equator of the specified date/time.
 
 ## Rotation\_HOR\_EQJ(time, observer) ⇒ [<code>RotationMatrix</code>](#RotationMatrix)
 **Kind**: global function  
-**Returns**: [<code>RotationMatrix</code>](#RotationMatrix) - A rotation matrix that converts HOR to EQD at `time` and for `observer`.  
+**Returns**: [<code>RotationMatrix</code>](#RotationMatrix) - A rotation matrix that converts HOR to EQJ at `time` and for `observer`.  
 **Brief**: Calculates a rotation matrix from horizontal (HOR) to J2000 equatorial (EQJ).
 
 This is one of the family of functions that returns a rotation matrix

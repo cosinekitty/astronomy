@@ -8802,7 +8802,7 @@ astro_rotation_t Astronomy_Rotation_HOR_EQD(astro_time_t *time, astro_observer_t
  *      A location near the Earth's mean sea level that defines the observer's horizon.
  *
  * @return
- *      A rotation matrix that converts HOR to EQD at `time` and for `observer`.
+ *      A rotation matrix that converts HOR to EQJ at `time` and for `observer`.
  */
 astro_rotation_t Astronomy_Rotation_HOR_EQJ(astro_time_t *time, astro_observer_t observer)
 {

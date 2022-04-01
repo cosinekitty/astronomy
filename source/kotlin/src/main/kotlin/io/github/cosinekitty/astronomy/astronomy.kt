@@ -4227,6 +4227,50 @@ object Astronomy {
      */
     fun rotationHorEqd(time: AstroTime, observer: Observer): RotationMatrix =
         rotationEqdHor(time, observer).inverse()
+
+    /**
+     * Calculates a rotation matrix from horizontal (HOR) to J2000 equatorial (EQJ).
+     * This is one of the family of functions that returns a rotation matrix
+     * for converting from one orientation to another.
+     * Source: HOR = horizontal system (x=North, y=West, z=Zenith).
+     * Target: EQJ = equatorial system, using equator at the J2000 epoch.
+     *
+     * @param time
+     *      The date and time of the observation.
+     *
+     * @param observer
+     *      A location near the Earth's mean sea level that defines the observer's horizon.
+     *
+     * @returns
+     *      A rotation matrix that converts HOR to EQJ at `time` and for `observer`.
+     */
+    fun rotationHorEqj(time: AstroTime, observer: Observer): RotationMatrix =
+        rotationHorEqd(time, observer) combine
+        rotationEqdEqj(time)
+
+    /**
+     * Calculates a rotation matrix from equatorial J2000 (EQJ) to horizontal (HOR).
+     *
+     * This is one of the family of functions that returns a rotation matrix
+     * for converting from one orientation to another.
+     * Source: EQJ = equatorial system, using the equator at the J2000 epoch.
+     * Target: HOR = horizontal system.
+     *
+     * @param time
+     *      The date and time of the observation.
+     *
+     * @param observer
+     *      A location near the Earth's mean sea level that defines the observer's horizon.
+     *
+     * @returns
+     *      A rotation matrix that converts EQJ to HOR at `time` and for `observer`.
+     *      The components of the horizontal vector are:
+     *      x = north, y = west, z = zenith (straight up from the observer).
+     *      These components are chosen so that the "right-hand rule" works for the vector
+     *      and so that north represents the direction where azimuth = 0.
+     */
+    fun rotationEqjHor(time: AstroTime, observer: Observer): RotationMatrix =
+        rotationHorEqj(time, observer).inverse()
 }
 
 //=======================================================================================
