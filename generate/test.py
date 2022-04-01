@@ -2437,6 +2437,51 @@ def SiderealTime():
 
 #-----------------------------------------------------------------------------------------------------------
 
+def Repr():
+    time = astronomy.Time.Make(2022, 3, 31, 21, 4, 45.123)
+    if str(time) != '2022-03-31T21:04:45.123Z':
+        print('PY Repr: FAIL str(time)')
+        return 1
+
+    if repr(time) != "Time('2022-03-31T21:04:45.123Z')":
+        print('PY Repr: FAIL repr(time)')
+        return 1
+
+    vec = astronomy.Vector(-1.8439088914585775, 1.51657508881031, 0.8366600265340756, time)
+    if repr(vec) != "Vector(-1.8439088914585775, 1.51657508881031, 0.8366600265340756, Time('2022-03-31T21:04:45.123Z'))":
+        print('PY Repr: FAIL repr(vec)')
+        return 1
+
+    state = astronomy.StateVector(vec.x, vec.y, vec.z, -vec.x/3, -vec.y/3, -vec.z/3, vec.t)
+    if repr(state) != "StateVector(x=-1.8439088914585775, y=1.51657508881031, z=0.8366600265340756, vx=0.6146362971528592, vy=-0.5055250296034367, vz=-0.27888667551135854, t=Time('2022-03-31T21:04:45.123Z'))":
+        print('PY Repr: FAIL repr(state)')
+        return 1
+
+    observer = astronomy.Observer(32.1, 45.6, 98.765)
+    if repr(observer) != 'Observer(latitude=32.1, longitude=45.6, height=98.765)':
+        print('PY Repr: FAIL repr(observer)')
+        return 1
+
+    rot = astronomy.Rotation_EQJ_ECL()
+    if repr(rot) != 'RotationMatrix([[1, 0, 0], [0, 0.9174821430670688, -0.3977769691083922], [0, 0.3977769691083922, 0.9174821430670688]])':
+        print('PY Repr: FAIL repr(rot)')
+        return 1
+
+    sph = astronomy.Spherical(lat=-27.3, lon=85.2, dist=2.54)
+    if repr(sph) != 'Spherical(lat=-27.3, lon=85.2, dist=2.54)':
+        print('PY Repr: FAIL repr(sph)')
+        return 1
+
+    equ = astronomy.Equatorial(8.54, -23.753, 2.986, vec)
+    if repr(equ) != "Equatorial(ra=8.54, dec=-23.753, dist=2.986, vec=Vector(-1.8439088914585775, 1.51657508881031, 0.8366600265340756, Time('2022-03-31T21:04:45.123Z')))":
+        print('PY Repr: FAIL repr(equ)')
+        return 1
+
+    print('PY Repr: PASS')
+    return 0
+
+#-----------------------------------------------------------------------------------------------------------
+
 UnitTests = {
     'aberration':               Aberration,
     'axis':                     Axis,
@@ -2461,6 +2506,7 @@ UnitTests = {
     'planet_apsis':             PlanetApsis,
     'pluto':                    PlutoCheck,
     'refraction':               Refraction,
+    'repr':                     Repr,
     'riseset':                  RiseSet,
     'rotation':                 Rotation,
     'seasons':                  Seasons,

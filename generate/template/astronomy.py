@@ -206,10 +206,7 @@ class Vector:
         self.t = t
 
     def __repr__(self):
-        return 'Vector({}, {}, {}, {})'.format(self.x, self.y, self.z, str(self.t))
-
-    def __str__(self):
-        return '({}, {}, {}, {})'.format(self.x, self.y, self.z, str(self.t))
+        return 'Vector({}, {}, {}, {})'.format(self.x, self.y, self.z, repr(self.t))
 
     def Length(self):
         """Returns the length of the vector in AU."""
@@ -263,14 +260,10 @@ class StateVector:
         self.t = t
 
     def __repr__(self):
-        return 'StateVector[pos=({}, {}, {}), vel=({}, {}, {}), t={}]'.format(
+        return 'StateVector(x={}, y={}, z={}, vx={}, vy={}, vz={}, t={})'.format(
             self.x, self.y, self.z,
             self.vx, self.vy, self.vz,
-            str(self.t))
-
-    def __str__(self):
-        return '({}, {}, {}, {}, {}, {}, {})'.format(self.x, self.y, self.z, self.vx, self.vy, self.vz, str(self.t))
-
+            repr(self.t))
 
 @enum.unique
 class Body(enum.Enum):
@@ -608,11 +601,17 @@ class Time:
         Historically, Terrestrial Time has also been known by the term *Ephemeris Time* (ET).
     """
     def __init__(self, ut, tt = None):
-        self.ut = ut
-        if tt is None:
-            self.tt = _TerrestrialTime(ut)
+        if isinstance(ut, str):
+            # Undocumented hack, to make repr(time) reversible.
+            other = Time.Parse(ut)
+            self.ut = other.ut
+            self.tt = other.tt
         else:
-            self.tt = tt
+            self.ut = ut
+            if tt is None:
+                self.tt = _TerrestrialTime(ut)
+            else:
+                self.tt = tt
         self._et = None     # lazy-cache for earth tilt
         self._st = None     # lazy-cache for sidereal time
 
@@ -748,7 +747,7 @@ class Time:
         return Time(self.ut + days)
 
     def __repr__(self):
-        return 'Time(' + str(self) + ')'
+        return 'Time(\'' + str(self) + '\')'
 
     def __str__(self):
         millis = round(self.ut * 86400000.0)
@@ -812,7 +811,7 @@ class Observer:
         self.height = height
 
     def __repr__(self):
-        return 'Observer({}, {}, {})'.format(self.latitude, self.longitude, self.height)
+        return 'Observer(latitude={}, longitude={}, height={})'.format(self.latitude, self.longitude, self.height)
 
     def __str__(self):
         text = '('
@@ -836,6 +835,9 @@ class RotationMatrix:
     def __init__(self, rot):
         self.rot = rot
 
+    def __repr__(self):
+        return 'RotationMatrix({})'.format(self.rot)
+
 class Spherical:
     """Holds spherical coordinates: latitude, longitude, distance.
 
@@ -852,6 +854,9 @@ class Spherical:
         self.lat = lat
         self.lon = lon
         self.dist = dist
+
+    def __repr__(self):
+        return 'Spherical(lat={}, lon={}, dist={})'.format(self.lat, self.lon, self.dist)
 
 class _iau2000b:
     def __init__(self, time):
@@ -1003,6 +1008,9 @@ class Equatorial:
         self.dec = dec
         self.dist = dist
         self.vec = vec
+
+    def __repr__(self):
+        return 'Equatorial(ra={}, dec={}, dist={}, vec={})'.format(self.ra, self.dec, self.dist, repr(self.vec))
 
 
 def _vector2radec(pos, time):
@@ -1935,6 +1943,9 @@ class JupiterMoonsInfo:
     def __init__(self, moon):
         self.moon = moon
 
+    def __repr__(self):
+        return 'JupiterMoonsInfo({})'.format(repr(self.moon))
+
 
 def _JupiterMoon_elem2pv(time, mu, A, AL, K, H, Q, P):
     # Translation of FORTRAN subroutine ELEM2PV from:
@@ -2796,6 +2807,14 @@ class HorizontalCoordinates:
         self.ra = ra
         self.dec = dec
 
+    def __repr__(self):
+        return 'HorizontalCoordinates(azimuth={}, altitude={}, ra={}, dec={})'.format(
+            self.azimuth,
+            self.altitude,
+            self.ra,
+            self.dec
+        )
+
 def Horizon(time, observer, ra, dec, refraction):
     """Calculates the apparent location of a body relative to the local horizon of an observer on the Earth.
 
@@ -3074,6 +3093,9 @@ class EclipticCoordinates:
         self.elat = elat
         self.elon = elon
 
+    def __repr__(self):
+        return 'EclipticCoordinates({}, elat={}, elon={})'.format(repr(self.vec), self.elat, self.elon)
+
 def _RotateEquatorialToEcliptic(pos, obliq_radians, time):
     cos_ob = math.cos(obliq_radians)
     sin_ob = math.sin(obliq_radians)
@@ -3271,6 +3293,14 @@ class ElongationEvent:
         self.visibility = visibility
         self.elongation = elongation
         self.ecliptic_separation = ecliptic_separation
+
+    def __repr__(self):
+        return 'ElongationEvent({}, {}, elongation={}, ecliptic_separation={})'.format(
+            repr(self.time),
+            self.visibility,
+            self.elongation,
+            self.ecliptic_separation
+        )
 
 @enum.unique
 class Visibility(enum.Enum):
@@ -3674,6 +3704,9 @@ class MoonQuarter:
         self.quarter = quarter
         self.time = time
 
+    def __repr__(self):
+        return 'MoonQuarter({}, {})'.format(self.quarter, repr(self.time))
+
 def SearchMoonQuarter(startTime):
     """Finds the first lunar quarter after the specified date and time.
 
@@ -3751,22 +3784,40 @@ class IlluminationInfo:
         body's apparent disc is illuminated, as seen from the Earth.
     helio_dist : float
         The distance between the Sun and the body at the observation time, in AU.
+    geo_dist : dist
+        The distance between the Earth and the both at the observation time, in AU.
+    hc : Vector
+        The body's heliocentric vector.
+    gc : Vector
+        The body's geocentric vector.
     ring_tilt : float
         For Saturn, the tilt angle in degrees of its rings as seen from Earth.
         When the `ring_tilt` is very close to 0, it means the rings are edge-on
         as seen from observers on the Earth, and are thus very difficult to see.
         For bodies other than Saturn, `ring_tilt` is `None`.
     """
-    def __init__(self, time, mag, phase, helio_dist, geo_dist, gc, hc, ring_tilt):
+    def __init__(self, time, mag, phase, helio_dist, geo_dist, hc, gc, ring_tilt):
         self.time = time
         self.mag = mag
         self.phase_angle = phase
         self.phase_fraction = (1.0 + math.cos(math.radians(phase))) / 2.0
         self.helio_dist = helio_dist
         self.geo_dist = geo_dist
-        self.gc = gc
         self.hc = hc
+        self.gc = gc
         self.ring_tilt = ring_tilt
+
+    def __repr__(self):
+        return 'IlluminationInfo({}, mag={}, phase_angle={}, helio_dist={}, geo_dist={}, hc={}, gc={}, ring_tilt={})'.format(
+            repr(self.time),
+            self.mag,
+            self.phase_angle,
+            self.helio_dist,
+            self.geo_dist,
+            repr(self.hc),
+            repr(self.gc),
+            repr(self.ring_tilt)
+        )
 
 def _MoonMagnitude(phase, helio_dist, geo_dist):
     # https://astronomy.stackexchange.com/questions/10246/is-there-a-simple-analytical-formula-for-the-lunar-phase-brightness-curve
@@ -3889,7 +3940,7 @@ def Illumination(body, time):
         mag, ring_tilt = _SaturnMagnitude(phase, helio_dist, geo_dist, gc, time)
     else:
         mag = _VisualMagnitude(body, phase, helio_dist, geo_dist)
-    return IlluminationInfo(time, mag, phase, helio_dist, geo_dist, gc, hc, ring_tilt)
+    return IlluminationInfo(time, mag, phase, helio_dist, geo_dist, hc, gc, ring_tilt)
 
 def _mag_slope(body, time):
     # The Search() function finds a transition from negative to positive values.
@@ -4025,6 +4076,9 @@ class HourAngleEvent:
     def __init__(self, time, hor):
         self.time = time
         self.hor = hor
+
+    def __repr__(self):
+        return 'HourAngleEvent({}, {})'.format(repr(self.time), repr(self.hor))
 
 def SearchHourAngle(body, observer, hourAngle, startTime):
     """Searches for the time when a celestial body reaches a specified hour angle as seen by an observer on the Earth.
@@ -4338,6 +4392,14 @@ class SeasonInfo:
         self.sep_equinox = sep_equinox
         self.dec_solstice = dec_solstice
 
+    def __repr__(self):
+        return 'SeasonInfo(mar_equinox={}, jun_solstice={}, sep_equinox={}, dec_solstice={})'.format(
+            repr(self.mar_equinox),
+            repr(self.jun_solstice),
+            repr(self.sep_equinox),
+            repr(self.dec_solstice)
+        )
+
 def _FindSeasonChange(targetLon, year, month, day):
     startTime = Time.Make(year, month, day, 0, 0, 0)
     time = SearchSunLongitude(targetLon, startTime, 4.0)
@@ -4449,6 +4511,13 @@ class Apsis:
         self.kind = kind
         self.dist_au = dist_au
         self.dist_km = dist_au * KM_PER_AU
+
+    def __repr__(self):
+        return 'Apsis({}, {}, dist_au={})'.format(
+            repr(self.time),
+            self.kind,
+            self.dist_au
+        )
 
 def SearchLunarApsis(startTime):
     """Finds the time of the first lunar apogee or perigee after the given time.
@@ -5473,6 +5542,14 @@ class ConstellationInfo:
         self.ra1875 = ra1875
         self.dec1875 = dec1875
 
+    def __repr__(self):
+        return 'ConstellationInfo(symbol={}, name={}, ra1875={}, dec1875={})'.format(
+            repr(self.symbol),
+            repr(self.name),
+            self.ra1875,
+            self.dec1875
+        )
+
 
 _ConstelRot = None
 _Epoch2000 = None
@@ -5720,7 +5797,7 @@ class LunarEclipseInfo:
 
     Attributes
     ----------
-    kind : string
+    kind : EclipseKind
          The type of lunar eclipse found.
     peak : Time
          The time of the eclipse at its peak.
@@ -5737,6 +5814,15 @@ class LunarEclipseInfo:
         self.sd_penum = sd_penum
         self.sd_partial = sd_partial
         self.sd_total = sd_total
+
+    def __repr__(self):
+        return 'LunarEclipseInfo({}, peak={}, sd_penum={}, sd_partial={}, sd_total={})'.format(
+            self.kind,
+            repr(self.peak),
+            self.sd_penum,
+            self.sd_partial,
+            self.sd_total
+        )
 
 
 class GlobalSolarEclipseInfo:
@@ -5785,6 +5871,15 @@ class GlobalSolarEclipseInfo:
         self.latitude = latitude
         self.longitude = longitude
 
+    def __repr__(self):
+        return 'GlobalSolarEclipseInfo({}, peak={}, distance={}, latitude={}, longitude={})'.format(
+            self.kind,
+            repr(self.peak),
+            self.distance,
+            self.latitude,
+            self.longitude
+        )
+
 
 class EclipseEvent:
     """Holds a time and the observed altitude of the Sun at that time.
@@ -5811,6 +5906,12 @@ class EclipseEvent:
     def __init__(self, time, altitude):
         self.time = time
         self.altitude = altitude
+
+    def __repr__(self):
+        return 'EclipseEvent({}, altitude={})'.format(
+            repr(self.time),
+            self.altitude
+        )
 
 
 class LocalSolarEclipseInfo:
@@ -5860,6 +5961,16 @@ class LocalSolarEclipseInfo:
         self.peak = peak
         self.total_end = total_end
         self.partial_end = partial_end
+
+    def __repr__(self):
+        return 'LocalSolarEclipseInfo({}, partial_begin={}, total_begin={}, peak={}, total_end={}, partial_end={})'.format(
+            self.kind,
+            repr(self.partial_begin),
+            repr(self.total_begin),
+            repr(self.peak),
+            repr(self.total_end),
+            repr(self.partial_end)
+        )
 
 
 def _EclipseKindFromUmbra(k):
@@ -6299,6 +6410,14 @@ class TransitInfo:
         self.finish = finish
         self.separation = separation
 
+    def __repr__(self):
+        return 'TransitInfo(start={}, peak={}, finish={}, separation={})'.format(
+            repr(self.start),
+            repr(self.peak),
+            repr(self.finish),
+            self.separation
+        )
+
 
 def _PlanetShadowBoundary(context, time):
     (body, planet_radius_km, direction) = context
@@ -6428,6 +6547,9 @@ class NodeEventInfo:
         self.kind = kind
         self.time = time
 
+    def __repr__(self):
+        return 'NodeEventInfo({}, {})'.format(self.kind, repr(self.time))
+
 _MoonNodeStepDays = +10.0   # a safe number of days to step without missing a Moon node
 
 def _MoonNodeSearchFunc(direction, time):
@@ -6529,6 +6651,16 @@ class LibrationInfo:
         self.mlon = mlon
         self.dist_km = dist_km
         self.diam_deg = diam_deg
+
+    def __repr__(self):
+        return 'LibrationInfo(elat={}, elon={}, mlat={}, mlon={}, dist_km={}, diam_deg={})'.format(
+            self.elat,
+            self.elon,
+            self.mlat,
+            self.mlon,
+            self.dist_km,
+            self.diam_deg
+        )
 
 
 def Libration(time):
@@ -6696,6 +6828,14 @@ class AxisInfo:
         self.dec = dec
         self.spin = spin
         self.north = north
+
+    def __repr__(self):
+        return 'AxisInfo(ra={}, dec={}, spin={}, north={})'.format(
+            self.ra,
+            self.dec,
+            self.spin,
+            repr(self.north)
+        )
 
 
 def _EarthRotationAxis(time):
