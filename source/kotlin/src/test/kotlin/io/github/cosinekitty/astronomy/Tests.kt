@@ -509,7 +509,7 @@ class Tests {
 
     //----------------------------------------------------------------------------------------
 
-    private fun compareMatrices(a: RotationMatrix, b: RotationMatrix, comment: String, tolerance: Double = 1.0e-16) {
+    private fun compareMatrices(a: RotationMatrix, b: RotationMatrix, comment: String, tolerance: Double = 1.0e-99) {
         for (i in 0..2) {
             for (j in 0..2) {
                 val diff = abs(a.rot[i][j] - b.rot[i][j])
@@ -522,6 +522,8 @@ class Tests {
     fun `Orientation conversion using rotation matrices`() {
         val time = AstroTime(8126.418466077072)
         assertTrue(time.toString() == "2022-04-01T22:02:35.469Z", "Unexpected time string.")
+
+        val observer = Observer(-30.0, +150.0, 200.0)
 
         compareMatrices(
             Astronomy.rotationEqjEcl(),
@@ -561,6 +563,26 @@ class Tests {
                 0.002134262929010771, 2.367175135753887e-05, 0.9999977221781049,
             ),
             "EQD EQJ"
+        )
+
+        compareMatrices(
+            Astronomy.rotationEqdHor(time, observer),
+            RotationMatrix(
+                0.3272894142412824, -0.7559937548038297, 0.5668818942453582,
+                -0.3779968774019148, -0.6545788284825649, -0.6547097967625005,
+                0.8660254037844387, 0.0, -0.49999999999999994,
+            ),
+            "EQD HOR"
+        )
+
+        compareMatrices(
+            Astronomy.rotationHorEqd(time, observer),
+            RotationMatrix(
+                0.3272894142412824, -0.3779968774019148, 0.8660254037844387,
+                -0.7559937548038297, -0.6545788284825649, 0.0,
+                0.5668818942453582, -0.6547097967625005, -0.49999999999999994,
+            ),
+            "HOR EQD"
         )
     }
 

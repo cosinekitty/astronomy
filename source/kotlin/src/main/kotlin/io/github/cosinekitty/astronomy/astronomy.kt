@@ -4159,6 +4159,74 @@ object Astronomy {
     fun rotationEqdEqj(time: AstroTime): RotationMatrix =
         nutationRot(time, PrecessDirection.Into2000) combine
         precessionRot(time, PrecessDirection.Into2000)
+
+    /**
+     * Calculates a rotation matrix from equatorial of-date (EQD) to horizontal (HOR).
+     *
+     * This is one of the family of functions that returns a rotation matrix
+     * for converting from one orientation to another.
+     * Source: EQD = equatorial system, using equator of the specified date/time.
+     * Target: HOR = horizontal system.
+     *
+     * @param time
+     *      The date and time at which the Earth's equator applies.
+     *
+     * @param observer
+     *      A location near the Earth's mean sea level that defines the observer's horizon.
+     *
+     * @returns
+     *      A rotation matrix that converts EQD to HOR at `time` and for `observer`.
+     *      The components of the horizontal vector are:
+     *      x = north, y = west, z = zenith (straight up from the observer).
+     *      These components are chosen so that the "right-hand rule" works for the vector
+     *      and so that north represents the direction where azimuth = 0.
+     */
+    fun rotationEqdHor(time: AstroTime, observer: Observer): RotationMatrix {
+        // See the `horizon` function for more explanation of how this works.
+
+        val sinlat = dsin(observer.latitude)
+        val coslat = dcos(observer.latitude)
+        val sinlon = dsin(observer.longitude)
+        val coslon = dcos(observer.longitude)
+
+        val uze = AstroVector(coslat * coslon, coslat * sinlon, sinlat, time)
+        val une = AstroVector(-sinlat * coslon, -sinlat * sinlon, coslat, time)
+        val uwe = AstroVector(sinlon, -coslon, 0.0, time)
+
+        // Multiply sidereal hours by -15 to convert to degrees and flip eastward
+        // rotation of the Earth to westward apparent movement of objects with time.
+
+        val angle = -15.0 * siderealTime(time)
+        val uz = spin(angle, uze)
+        val un = spin(angle, une)
+        val uw = spin(angle, uwe)
+
+        return RotationMatrix(
+            un.x, uw.x, uz.x,
+            un.y, uw.y, uz.y,
+            un.z, uw.z, uz.z
+        )
+    }
+
+    /**
+     * Calculates a rotation matrix from horizontal (HOR) to equatorial of-date (EQD).
+     *
+     * This is one of the family of functions that returns a rotation matrix
+     * for converting from one orientation to another.
+     * Source: HOR = horizontal system (x=North, y=West, z=Zenith).
+     * Target: EQD = equatorial system, using equator of the specified date/time.
+     *
+     * @param time
+     *      The date and time at which the Earth's equator applies.
+     *
+     * @param observer
+     *      A location near the Earth's mean sea level that defines the observer's horizon.
+     *
+     * @returns
+     *      A rotation matrix that converts HOR to EQD at `time` and for `observer`.
+     */
+    fun rotationHorEqd(time: AstroTime, observer: Observer): RotationMatrix =
+        rotationEqdHor(time, observer).inverse()
 }
 
 //=======================================================================================
