@@ -485,6 +485,9 @@ body at a given date and time.
 | `float` | `phase_angle` | The angle in degrees between the Sun and the Earth, as seen from the body. Indicates the body's phase as seen from the Earth. |
 | `float` | `phase_fraction` | A value in the range [0.0, 1.0] indicating what fraction of the body's apparent disc is illuminated, as seen from the Earth. |
 | `float` | `helio_dist` | The distance between the Sun and the body at the observation time, in AU. |
+| `dist` | `geo_dist` | The distance between the Earth and the both at the observation time, in AU. |
+| [`Vector`](#Vector) | `hc` | The body's heliocentric vector. |
+| [`Vector`](#Vector) | `gc` | The body's geocentric vector. |
 | `float` | `ring_tilt` | For Saturn, the tilt angle in degrees of its rings as seen from Earth. When the `ring_tilt` is very close to 0, it means the rings are edge-on as seen from observers on the Earth, and are thus very difficult to see. For bodies other than Saturn, `ring_tilt` is `None`. |
 
 ---
@@ -586,7 +589,7 @@ may determine the date and time of the beginning/end of each eclipse phase.
 
 | Type | Attribute | Description |
 | --- | --- | --- |
-| `string` | `kind` | The type of lunar eclipse found. |
+| [`EclipseKind`](#EclipseKind) | `kind` | The type of lunar eclipse found. |
 | [`Time`](#Time) | `peak` | The time of the eclipse at its peak. |
 | `float` | `sd_penum` | The semi-duration of the penumbral phase in minutes. |
 | `float` | `sd_partial` | The semi-duration of the penumbral phase in minutes, or 0.0 if none. |
