@@ -4144,6 +4144,21 @@ object Astronomy {
     fun rotationEqjEqd(time: AstroTime): RotationMatrix =
         precessionRot(time, PrecessDirection.From2000) combine
         nutationRot(time, PrecessDirection.From2000)
+
+    /**
+     * Calculates a rotation matrix from equatorial of-date (EQD) to equatorial J2000 (EQJ).
+     *
+     * This is one of the family of functions that returns a rotation matrix
+     * for converting from one orientation to another.
+     * Source: EQD = equatorial system, using equator of the specified date/time.
+     * Target: EQJ = equatorial system, using equator at J2000 epoch.
+     *
+     * @param time
+     *      The date and time at which the Earth's equator defines the source orientation.
+     */
+    fun rotationEqdEqj(time: AstroTime): RotationMatrix =
+        nutationRot(time, PrecessDirection.Into2000) combine
+        precessionRot(time, PrecessDirection.Into2000)
 }
 
 //=======================================================================================

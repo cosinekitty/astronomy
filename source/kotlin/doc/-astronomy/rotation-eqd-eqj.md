@@ -1,0 +1,18 @@
+//[astronomy](../../../index.md)/[io.github.cosinekitty.astronomy](../index.md)/[Astronomy](index.md)/[rotationEqdEqj](rotation-eqd-eqj.md)
+
+# rotationEqdEqj
+
+[jvm]\
+fun [rotationEqdEqj](rotation-eqd-eqj.md)(time: [AstroTime](../-astro-time/index.md)): [RotationMatrix](../-rotation-matrix/index.md)
+
+Calculates a rotation matrix from equatorial of-date (EQD) to equatorial J2000 (EQJ).
+
+This is one of the family of functions that returns a rotation matrix for converting from one orientation to another. Source: EQD = equatorial system, using equator of the specified date/time. Target: EQJ = equatorial system, using equator at J2000 epoch.
+
+## Parameters
+
+jvm
+
+| | |
+|---|---|
+| time | The date and time at which the Earth's equator defines the source orientation. |
