@@ -4271,6 +4271,41 @@ object Astronomy {
      */
     fun rotationEqjHor(time: AstroTime, observer: Observer): RotationMatrix =
         rotationHorEqj(time, observer).inverse()
+
+    /**
+     * Calculates a rotation matrix from equatorial of-date (EQD) to ecliptic J2000 (ECL).
+     *
+     * This is one of the family of functions that returns a rotation matrix
+     * for converting from one orientation to another.
+     * Source: EQD = equatorial system, using equator of date.
+     * Target: ECL = ecliptic system, using equator at J2000 epoch.
+     *
+     * @param time
+     *      The date and time of the source equator.
+     *
+     * @returns
+     *      A rotation matrix that converts EQD to ECL.
+     */
+    fun rotationEqdEcl(time: AstroTime): RotationMatrix =
+        rotationEqdEqj(time) combine
+        rotationEqjEcl()
+
+    /**
+     * Calculates a rotation matrix from ecliptic J2000 (ECL) to equatorial of-date (EQD).
+     *
+     * This is one of the family of functions that returns a rotation matrix
+     * for converting from one orientation to another.
+     * Source: ECL = ecliptic system, using equator at J2000 epoch.
+     * Target: EQD = equatorial system, using equator of date.
+     *
+     * @param time
+     *      The date and time of the desired equator.
+     *
+     * @returns
+     *      A rotation matrix that converts ECL to EQD.
+     */
+    fun rotationEclEqd(time: AstroTime): RotationMatrix =
+        rotationEqdEcl(time).inverse()
 }
 
 //=======================================================================================
