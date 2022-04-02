@@ -5,6 +5,7 @@ import java.io.PrintWriter
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
+import kotlin.test.fail
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlin.math.abs
@@ -664,6 +665,30 @@ class Tests {
             ),
             "EQJ GAL"
         )
+    }
+
+    //----------------------------------------------------------------------------------------
+
+    @Test
+    fun `Verify constellations`() {
+        val filename = dataRootDir + "constellation/test_input.txt"
+        val infile = File(filename)
+        var lnum = 0
+        val regex = Regex("""^\s*(\d+)\s+(\S+)\s+(\S+)\s+([A-Z][a-zA-Z]{2})\s*$""")
+        for (line in infile.readLines()) {
+            val m = regex.matchEntire(line)
+            if (m == null) {
+                fail("$filename line $lnum: syntax error")
+            }
+            val id: Int = (m.groups[1] ?: fail("$filename line $lnum: cannot parse ID")).value.toInt()
+            val ra: Double = (m.groups[2] ?: fail("$filename line $lnum: cannot parse RA")).value.toDouble()
+            val dec: Double = (m.groups[3] ?: fail("$filename line $lnum: cannot parse DEC")).value.toDouble()
+            val symbol: String = (m.groups[4] ?: fail("$filename line $lnum: cannot parse symbol")).value
+            val constel = Astronomy.constellation(ra, dec)
+            assertTrue(constel.symbol == symbol, "$filename line $lnum: expected constellation $symbol, but found id=$id, symbol=${constel.symbol}")
+
+            ++lnum;
+        }
     }
 
     //----------------------------------------------------------------------------------------

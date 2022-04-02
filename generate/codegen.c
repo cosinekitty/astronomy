@@ -1199,6 +1199,17 @@ static int ConstellationData(cg_context_t *context)
             fprintf(context->outfile, "   ['%s', '%s'%*s]  // %2d\n", d, d+4, (20-len), "", lnum-1);
             break;
 
+        case CODEGEN_LANGUAGE_KOTLIN:
+            if (lnum == 1)
+            {
+                fprintf(context->outfile, "internal val constelNames: Array<ConstellationText> = arrayOf(\n");
+                fprintf(context->outfile, "    ");
+            }
+            else
+                fprintf(context->outfile, ",   ");
+            fprintf(context->outfile, "ConstellationText(\"%s\", \"%s\"%*s)    // %2d\n", d, d+4, (20-len), "", lnum-1);
+            break;
+
         case CODEGEN_LANGUAGE_PYTHON:
             if (lnum == 1)
                 fprintf(context->outfile, "_ConstelNames = (\n ");
@@ -1239,6 +1250,11 @@ static int ConstellationData(cg_context_t *context)
     case CODEGEN_LANGUAGE_JS:
         fprintf(context->outfile, "];\n\n");
         fprintf(context->outfile, "const ConstelBounds = [\n");
+        break;
+
+    case CODEGEN_LANGUAGE_KOTLIN:
+        fprintf(context->outfile, ")\n\n");
+        fprintf(context->outfile, "internal val constelBounds: Array<ConstellationBoundary> = arrayOf(\n");
         break;
 
     case CODEGEN_LANGUAGE_PYTHON:
@@ -1291,6 +1307,12 @@ static int ConstellationData(cg_context_t *context)
                 index, ra_lo, ra_hi, dec, symbol);
             break;
 
+        case CODEGEN_LANGUAGE_KOTLIN:
+            fprintf(context->outfile, "%c   ConstellationBoundary(%2d, %6.1lf, %6.1lf, %7.1lf)    // %s\n",
+                ((lnum == 1) ? ' ' : ','),
+                index, ra_lo, ra_hi, dec, symbol);
+            break;
+
         case CODEGEN_LANGUAGE_PYTHON:
             fprintf(context->outfile, "%c   ( %2d, %6lg, %6lg, %6lg )    # %s\n",
                 ((lnum == 1) ? ' ' : ','),
@@ -1315,6 +1337,10 @@ static int ConstellationData(cg_context_t *context)
 
     case CODEGEN_LANGUAGE_JS:
         fprintf(context->outfile, "];\n\n");
+        break;
+
+    case CODEGEN_LANGUAGE_KOTLIN:
+        fprintf(context->outfile, ")");
         break;
 
     case CODEGEN_LANGUAGE_PYTHON:

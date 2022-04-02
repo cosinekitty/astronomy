@@ -1888,6 +1888,7 @@ interface SearchContext {
     fun eval(time: AstroTime): Double
 }
 
+//---------------------------------------------------------------------------------------
 
 /**
  * Reports the constellation that a given celestial point lies within.
@@ -1920,6 +1921,17 @@ class ConstellationInfo(
     val dec1875: Double
 )
 
+internal class ConstellationText(
+    val symbol: String,
+    val name: String
+)
+
+internal class ConstellationBoundary(
+    val index: Int,
+    val raLo: Double,
+    val raHi: Double,
+    val decLo: Double
+)
 
 //---------------------------------------------------------------------------------------
 // VSOP87: semi-analytic model of major planet positions
@@ -2668,6 +2680,22 @@ private fun calcJupiterMoon(time: AstroTime, m: JupiterMoon): StateVector {
 object Astronomy {
     private const val SECONDS_PER_DAY = 24 * 3600
     internal fun terrestrialTime(ut: Double): Double = ut + deltaT(ut) / SECONDS_PER_DAY
+
+    // Create a rotation matrix for converting J2000 to B1875.
+    // Need to calculate the B1875 epoch. Based on this:
+    // https://en.wikipedia.org/wiki/Epoch_(astronomy)#Besselian_years
+    // B = 1900 + (JD - 2415020.31352) / 365.242198781
+    // I'm interested in using TT instead of JD, giving:
+    // B = 1900 + ((TT+2451545) - 2415020.31352) / 365.242198781
+    // B = 1900 + (TT + 36524.68648) / 365.242198781
+    // TT = 365.242198781*(B - 1900) - 36524.68648 = -45655.741449525
+    // But the AstroTime constructor wants UT, not TT.
+    // Near that date, I get a historical correction of ut-tt = 3.2 seconds.
+    // That gives UT = -45655.74141261017 for the B1875 epoch,
+    // or 1874-12-31T18:12:21.950Z.
+    private val constelRot: RotationMatrix = Astronomy.rotationEqjEqd(AstroTime(-45655.74141261017))
+
+    private val epoch2000 = AstroTime(0.0)
 
     internal fun deltaT(ut: Double): Double {
         /*
@@ -4391,6 +4419,50 @@ object Astronomy {
             +0.4941095946388765, -0.4447938112296831, +0.7470034631630423,
             -0.8676668813529025, -0.1980677870294097, +0.4559861124470794
         )
+
+    /**
+     * Determines the constellation that contains the given point in the sky.
+     *
+     * Given J2000 equatorial (EQJ) coordinates of a point in the sky, determines the
+     * constellation that contains that point.
+     *
+     * @param ra
+     *      The right ascension (RA) of a point in the sky, using the J2000 equatorial system (EQJ).
+     *
+     * @param dec
+     *      The declination (DEC) of a point in the sky, using the J2000 equatorial system (EQJ).
+     *
+     * @returns
+     *      A structure that contains the 3-letter abbreviation and full name
+     *      of the constellation that contains the given (ra,dec), along with
+     *      the converted B1875 (ra,dec) for that point.
+     */
+    fun constellation(ra: Double, dec: Double): ConstellationInfo {
+        if (dec < -90.0 || dec > +90.0)
+            throw IllegalArgumentException("Invalid declination angle $dec. Must be -90..+90.")
+
+        // Convert right ascension to degrees, and normalize to the range [0, 360).
+        val raDeg = (ra * 15.0).withMinDegreeValue(0.0)
+
+        // Convert coordinates from J2000 to B1875.
+        var sph2000 = Spherical(dec, raDeg, 1.0)
+        val vec2000 = sph2000.toVector(epoch2000)
+        val vec1875 = constelRot.rotate(vec2000)
+        val equ1875 = vec1875.toEquatorial()
+
+        // Convert DEC from degrees and RA from hours,
+        // into compact angle units used in the constelBounds table.
+        val xDec = 24.0 * equ1875.dec
+        val xRa = (24.0 * 15.0) * equ1875.ra
+
+        // Search for the constellation using the B1875 coordinates.
+        for (b in constelBounds)
+            if ((b.decLo <= xDec) && (b.raHi > xRa) && (b.raLo <= xRa))
+                return ConstellationInfo(constelNames[b.index].symbol, constelNames[b.index].name, equ1875.ra, equ1875.dec)
+
+        // This should never happen! If it does, please report to: https://github.com/cosinekitty/astronomy/issues
+        throw InternalError("Unable to find constellation for coordinates RA=$ra, DEC=$dec")
+    }
 }
 
 //=======================================================================================
@@ -4443,3 +4515,10 @@ private val plutoCache = HashMap<Int, List<BodyGravCalc>>()
 // Models for Jupiter's four largest moons.
 
 $ASTRO_JUPITER_MOONS()
+
+//---------------------------------------------------------------------------------------
+// Constellation lookup table.
+
+$ASTRO_CONSTEL()
+
+//---------------------------------------------------------------------------------------

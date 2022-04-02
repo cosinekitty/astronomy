@@ -11,6 +11,7 @@ The main container of astronomy calculation functions.
 
 | Name | Summary |
 |---|---|
+| [constellation](constellation.md) | [jvm]<br>fun [constellation](constellation.md)(ra: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), dec: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)): [ConstellationInfo](../-constellation-info/index.md)<br>Determines the constellation that contains the given point in the sky. |
 | [eclipticGeoMoon](ecliptic-geo-moon.md) | [jvm]<br>fun [eclipticGeoMoon](ecliptic-geo-moon.md)(time: [AstroTime](../-astro-time/index.md)): [Spherical](../-spherical/index.md)<br>Calculates spherical ecliptic geocentric position of the Moon. |
 | [equator](equator.md) | [jvm]<br>fun [equator](equator.md)(body: [Body](../-body/index.md), time: [AstroTime](../-astro-time/index.md), observer: [Observer](../-observer/index.md), equdate: [EquatorEpoch](../-equator-epoch/index.md), aberration: [Aberration](../-aberration/index.md)): [Equatorial](../-equatorial/index.md)<br>Calculates equatorial coordinates of a celestial body as seen by an observer on the Earth's surface. |
 | [equatorFromVector](equator-from-vector.md) | [jvm]<br>fun [equatorFromVector](equator-from-vector.md)(vector: [AstroVector](../-astro-vector/index.md)): [Equatorial](../-equatorial/index.md)<br>Given an equatorial vector, calculates equatorial angular coordinates. |

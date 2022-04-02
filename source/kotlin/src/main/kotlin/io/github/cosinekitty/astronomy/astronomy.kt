@@ -1888,6 +1888,7 @@ interface SearchContext {
     fun eval(time: AstroTime): Double
 }
 
+//---------------------------------------------------------------------------------------
 
 /**
  * Reports the constellation that a given celestial point lies within.
@@ -1920,6 +1921,17 @@ class ConstellationInfo(
     val dec1875: Double
 )
 
+internal class ConstellationText(
+    val symbol: String,
+    val name: String
+)
+
+internal class ConstellationBoundary(
+    val index: Int,
+    val raLo: Double,
+    val raHi: Double,
+    val decLo: Double
+)
 
 //---------------------------------------------------------------------------------------
 // VSOP87: semi-analytic model of major planet positions
@@ -2668,6 +2680,22 @@ private fun calcJupiterMoon(time: AstroTime, m: JupiterMoon): StateVector {
 object Astronomy {
     private const val SECONDS_PER_DAY = 24 * 3600
     internal fun terrestrialTime(ut: Double): Double = ut + deltaT(ut) / SECONDS_PER_DAY
+
+    // Create a rotation matrix for converting J2000 to B1875.
+    // Need to calculate the B1875 epoch. Based on this:
+    // https://en.wikipedia.org/wiki/Epoch_(astronomy)#Besselian_years
+    // B = 1900 + (JD - 2415020.31352) / 365.242198781
+    // I'm interested in using TT instead of JD, giving:
+    // B = 1900 + ((TT+2451545) - 2415020.31352) / 365.242198781
+    // B = 1900 + (TT + 36524.68648) / 365.242198781
+    // TT = 365.242198781*(B - 1900) - 36524.68648 = -45655.741449525
+    // But the AstroTime constructor wants UT, not TT.
+    // Near that date, I get a historical correction of ut-tt = 3.2 seconds.
+    // That gives UT = -45655.74141261017 for the B1875 epoch,
+    // or 1874-12-31T18:12:21.950Z.
+    private val constelRot: RotationMatrix = Astronomy.rotationEqjEqd(AstroTime(-45655.74141261017))
+
+    private val epoch2000 = AstroTime(0.0)
 
     internal fun deltaT(ut: Double): Double {
         /*
@@ -4391,6 +4419,50 @@ object Astronomy {
             +0.4941095946388765, -0.4447938112296831, +0.7470034631630423,
             -0.8676668813529025, -0.1980677870294097, +0.4559861124470794
         )
+
+    /**
+     * Determines the constellation that contains the given point in the sky.
+     *
+     * Given J2000 equatorial (EQJ) coordinates of a point in the sky, determines the
+     * constellation that contains that point.
+     *
+     * @param ra
+     *      The right ascension (RA) of a point in the sky, using the J2000 equatorial system (EQJ).
+     *
+     * @param dec
+     *      The declination (DEC) of a point in the sky, using the J2000 equatorial system (EQJ).
+     *
+     * @returns
+     *      A structure that contains the 3-letter abbreviation and full name
+     *      of the constellation that contains the given (ra,dec), along with
+     *      the converted B1875 (ra,dec) for that point.
+     */
+    fun constellation(ra: Double, dec: Double): ConstellationInfo {
+        if (dec < -90.0 || dec > +90.0)
+            throw IllegalArgumentException("Invalid declination angle $dec. Must be -90..+90.")
+
+        // Convert right ascension to degrees, and normalize to the range [0, 360).
+        val raDeg = (ra * 15.0).withMinDegreeValue(0.0)
+
+        // Convert coordinates from J2000 to B1875.
+        var sph2000 = Spherical(dec, raDeg, 1.0)
+        val vec2000 = sph2000.toVector(epoch2000)
+        val vec1875 = constelRot.rotate(vec2000)
+        val equ1875 = vec1875.toEquatorial()
+
+        // Convert DEC from degrees and RA from hours,
+        // into compact angle units used in the constelBounds table.
+        val xDec = 24.0 * equ1875.dec
+        val xRa = (24.0 * 15.0) * equ1875.ra
+
+        // Search for the constellation using the B1875 coordinates.
+        for (b in constelBounds)
+            if ((b.decLo <= xDec) && (b.raHi > xRa) && (b.raLo <= xRa))
+                return ConstellationInfo(constelNames[b.index].symbol, constelNames[b.index].name, equ1875.ra, equ1875.dec)
+
+        // This should never happen! If it does, please report to: https://github.com/cosinekitty/astronomy/issues
+        throw InternalError("Unable to find constellation for coordinates RA=$ra, DEC=$dec")
+    }
 }
 
 //=======================================================================================
@@ -5574,3 +5646,459 @@ private val jupiterMoonModel: Array<JupiterMoon> = arrayOf(
         )
     )
 )
+
+//---------------------------------------------------------------------------------------
+// Constellation lookup table.
+
+internal val constelNames: Array<ConstellationText> = arrayOf(
+    ConstellationText("And", "Andromeda"           )    //  0
+,   ConstellationText("Ant", "Antila"              )    //  1
+,   ConstellationText("Aps", "Apus"                )    //  2
+,   ConstellationText("Aql", "Aquila"              )    //  3
+,   ConstellationText("Aqr", "Aquarius"            )    //  4
+,   ConstellationText("Ara", "Ara"                 )    //  5
+,   ConstellationText("Ari", "Aries"               )    //  6
+,   ConstellationText("Aur", "Auriga"              )    //  7
+,   ConstellationText("Boo", "Bootes"              )    //  8
+,   ConstellationText("Cae", "Caelum"              )    //  9
+,   ConstellationText("Cam", "Camelopardis"        )    // 10
+,   ConstellationText("Cap", "Capricornus"         )    // 11
+,   ConstellationText("Car", "Carina"              )    // 12
+,   ConstellationText("Cas", "Cassiopeia"          )    // 13
+,   ConstellationText("Cen", "Centaurus"           )    // 14
+,   ConstellationText("Cep", "Cepheus"             )    // 15
+,   ConstellationText("Cet", "Cetus"               )    // 16
+,   ConstellationText("Cha", "Chamaeleon"          )    // 17
+,   ConstellationText("Cir", "Circinus"            )    // 18
+,   ConstellationText("CMa", "Canis Major"         )    // 19
+,   ConstellationText("CMi", "Canis Minor"         )    // 20
+,   ConstellationText("Cnc", "Cancer"              )    // 21
+,   ConstellationText("Col", "Columba"             )    // 22
+,   ConstellationText("Com", "Coma Berenices"      )    // 23
+,   ConstellationText("CrA", "Corona Australis"    )    // 24
+,   ConstellationText("CrB", "Corona Borealis"     )    // 25
+,   ConstellationText("Crt", "Crater"              )    // 26
+,   ConstellationText("Cru", "Crux"                )    // 27
+,   ConstellationText("Crv", "Corvus"              )    // 28
+,   ConstellationText("CVn", "Canes Venatici"      )    // 29
+,   ConstellationText("Cyg", "Cygnus"              )    // 30
+,   ConstellationText("Del", "Delphinus"           )    // 31
+,   ConstellationText("Dor", "Dorado"              )    // 32
+,   ConstellationText("Dra", "Draco"               )    // 33
+,   ConstellationText("Equ", "Equuleus"            )    // 34
+,   ConstellationText("Eri", "Eridanus"            )    // 35
+,   ConstellationText("For", "Fornax"              )    // 36
+,   ConstellationText("Gem", "Gemini"              )    // 37
+,   ConstellationText("Gru", "Grus"                )    // 38
+,   ConstellationText("Her", "Hercules"            )    // 39
+,   ConstellationText("Hor", "Horologium"          )    // 40
+,   ConstellationText("Hya", "Hydra"               )    // 41
+,   ConstellationText("Hyi", "Hydrus"              )    // 42
+,   ConstellationText("Ind", "Indus"               )    // 43
+,   ConstellationText("Lac", "Lacerta"             )    // 44
+,   ConstellationText("Leo", "Leo"                 )    // 45
+,   ConstellationText("Lep", "Lepus"               )    // 46
+,   ConstellationText("Lib", "Libra"               )    // 47
+,   ConstellationText("LMi", "Leo Minor"           )    // 48
+,   ConstellationText("Lup", "Lupus"               )    // 49
+,   ConstellationText("Lyn", "Lynx"                )    // 50
+,   ConstellationText("Lyr", "Lyra"                )    // 51
+,   ConstellationText("Men", "Mensa"               )    // 52
+,   ConstellationText("Mic", "Microscopium"        )    // 53
+,   ConstellationText("Mon", "Monoceros"           )    // 54
+,   ConstellationText("Mus", "Musca"               )    // 55
+,   ConstellationText("Nor", "Norma"               )    // 56
+,   ConstellationText("Oct", "Octans"              )    // 57
+,   ConstellationText("Oph", "Ophiuchus"           )    // 58
+,   ConstellationText("Ori", "Orion"               )    // 59
+,   ConstellationText("Pav", "Pavo"                )    // 60
+,   ConstellationText("Peg", "Pegasus"             )    // 61
+,   ConstellationText("Per", "Perseus"             )    // 62
+,   ConstellationText("Phe", "Phoenix"             )    // 63
+,   ConstellationText("Pic", "Pictor"              )    // 64
+,   ConstellationText("PsA", "Pisces Austrinus"    )    // 65
+,   ConstellationText("Psc", "Pisces"              )    // 66
+,   ConstellationText("Pup", "Puppis"              )    // 67
+,   ConstellationText("Pyx", "Pyxis"               )    // 68
+,   ConstellationText("Ret", "Reticulum"           )    // 69
+,   ConstellationText("Scl", "Sculptor"            )    // 70
+,   ConstellationText("Sco", "Scorpius"            )    // 71
+,   ConstellationText("Sct", "Scutum"              )    // 72
+,   ConstellationText("Ser", "Serpens"             )    // 73
+,   ConstellationText("Sex", "Sextans"             )    // 74
+,   ConstellationText("Sge", "Sagitta"             )    // 75
+,   ConstellationText("Sgr", "Sagittarius"         )    // 76
+,   ConstellationText("Tau", "Taurus"              )    // 77
+,   ConstellationText("Tel", "Telescopium"         )    // 78
+,   ConstellationText("TrA", "Triangulum Australe" )    // 79
+,   ConstellationText("Tri", "Triangulum"          )    // 80
+,   ConstellationText("Tuc", "Tucana"              )    // 81
+,   ConstellationText("UMa", "Ursa Major"          )    // 82
+,   ConstellationText("UMi", "Ursa Minor"          )    // 83
+,   ConstellationText("Vel", "Vela"                )    // 84
+,   ConstellationText("Vir", "Virgo"               )    // 85
+,   ConstellationText("Vol", "Volans"              )    // 86
+,   ConstellationText("Vul", "Vulpecula"           )    // 87
+)
+
+internal val constelBounds: Array<ConstellationBoundary> = arrayOf(
+    ConstellationBoundary(83,    0.0, 8640.0,  2112.0)    // UMi
+,   ConstellationBoundary(83, 2880.0, 5220.0,  2076.0)    // UMi
+,   ConstellationBoundary(83, 7560.0, 8280.0,  2068.0)    // UMi
+,   ConstellationBoundary(83, 6480.0, 7560.0,  2064.0)    // UMi
+,   ConstellationBoundary(15,    0.0, 2880.0,  2040.0)    // Cep
+,   ConstellationBoundary(10, 3300.0, 3840.0,  1968.0)    // Cam
+,   ConstellationBoundary(15,    0.0, 1800.0,  1920.0)    // Cep
+,   ConstellationBoundary(10, 3840.0, 5220.0,  1920.0)    // Cam
+,   ConstellationBoundary(83, 6300.0, 6480.0,  1920.0)    // UMi
+,   ConstellationBoundary(33, 7260.0, 7560.0,  1920.0)    // Dra
+,   ConstellationBoundary(15,    0.0, 1263.0,  1848.0)    // Cep
+,   ConstellationBoundary(10, 4140.0, 4890.0,  1848.0)    // Cam
+,   ConstellationBoundary(83, 5952.0, 6300.0,  1800.0)    // UMi
+,   ConstellationBoundary(15, 7260.0, 7440.0,  1800.0)    // Cep
+,   ConstellationBoundary(10, 2868.0, 3300.0,  1764.0)    // Cam
+,   ConstellationBoundary(33, 3300.0, 4080.0,  1764.0)    // Dra
+,   ConstellationBoundary(83, 4680.0, 5952.0,  1680.0)    // UMi
+,   ConstellationBoundary(13, 1116.0, 1230.0,  1632.0)    // Cas
+,   ConstellationBoundary(33, 7350.0, 7440.0,  1608.0)    // Dra
+,   ConstellationBoundary(33, 4080.0, 4320.0,  1596.0)    // Dra
+,   ConstellationBoundary(15,    0.0,  120.0,  1584.0)    // Cep
+,   ConstellationBoundary(83, 5040.0, 5640.0,  1584.0)    // UMi
+,   ConstellationBoundary(15, 8490.0, 8640.0,  1584.0)    // Cep
+,   ConstellationBoundary(33, 4320.0, 4860.0,  1536.0)    // Dra
+,   ConstellationBoundary(33, 4860.0, 5190.0,  1512.0)    // Dra
+,   ConstellationBoundary(15, 8340.0, 8490.0,  1512.0)    // Cep
+,   ConstellationBoundary(10, 2196.0, 2520.0,  1488.0)    // Cam
+,   ConstellationBoundary(33, 7200.0, 7350.0,  1476.0)    // Dra
+,   ConstellationBoundary(15, 7393.2, 7416.0,  1462.0)    // Cep
+,   ConstellationBoundary(10, 2520.0, 2868.0,  1440.0)    // Cam
+,   ConstellationBoundary(82, 2868.0, 3030.0,  1440.0)    // UMa
+,   ConstellationBoundary(33, 7116.0, 7200.0,  1428.0)    // Dra
+,   ConstellationBoundary(15, 7200.0, 7393.2,  1428.0)    // Cep
+,   ConstellationBoundary(15, 8232.0, 8340.0,  1418.0)    // Cep
+,   ConstellationBoundary(13,    0.0,  876.0,  1404.0)    // Cas
+,   ConstellationBoundary(33, 6990.0, 7116.0,  1392.0)    // Dra
+,   ConstellationBoundary(13,  612.0,  687.0,  1380.0)    // Cas
+,   ConstellationBoundary(13,  876.0, 1116.0,  1368.0)    // Cas
+,   ConstellationBoundary(10, 1116.0, 1140.0,  1368.0)    // Cam
+,   ConstellationBoundary(15, 8034.0, 8232.0,  1350.0)    // Cep
+,   ConstellationBoundary(10, 1800.0, 2196.0,  1344.0)    // Cam
+,   ConstellationBoundary(82, 5052.0, 5190.0,  1332.0)    // UMa
+,   ConstellationBoundary(33, 5190.0, 6990.0,  1332.0)    // Dra
+,   ConstellationBoundary(10, 1140.0, 1200.0,  1320.0)    // Cam
+,   ConstellationBoundary(15, 7968.0, 8034.0,  1320.0)    // Cep
+,   ConstellationBoundary(15, 7416.0, 7908.0,  1316.0)    // Cep
+,   ConstellationBoundary(13,    0.0,  612.0,  1296.0)    // Cas
+,   ConstellationBoundary(50, 2196.0, 2340.0,  1296.0)    // Lyn
+,   ConstellationBoundary(82, 4350.0, 4860.0,  1272.0)    // UMa
+,   ConstellationBoundary(33, 5490.0, 5670.0,  1272.0)    // Dra
+,   ConstellationBoundary(15, 7908.0, 7968.0,  1266.0)    // Cep
+,   ConstellationBoundary(10, 1200.0, 1800.0,  1260.0)    // Cam
+,   ConstellationBoundary(13, 8232.0, 8400.0,  1260.0)    // Cas
+,   ConstellationBoundary(33, 5670.0, 6120.0,  1236.0)    // Dra
+,   ConstellationBoundary(62,  735.0,  906.0,  1212.0)    // Per
+,   ConstellationBoundary(33, 6120.0, 6564.0,  1212.0)    // Dra
+,   ConstellationBoundary(13,    0.0,  492.0,  1200.0)    // Cas
+,   ConstellationBoundary(62,  492.0,  600.0,  1200.0)    // Per
+,   ConstellationBoundary(50, 2340.0, 2448.0,  1200.0)    // Lyn
+,   ConstellationBoundary(13, 8400.0, 8640.0,  1200.0)    // Cas
+,   ConstellationBoundary(82, 4860.0, 5052.0,  1164.0)    // UMa
+,   ConstellationBoundary(13,    0.0,  402.0,  1152.0)    // Cas
+,   ConstellationBoundary(13, 8490.0, 8640.0,  1152.0)    // Cas
+,   ConstellationBoundary(39, 6543.0, 6564.0,  1140.0)    // Her
+,   ConstellationBoundary(33, 6564.0, 6870.0,  1140.0)    // Dra
+,   ConstellationBoundary(30, 6870.0, 6900.0,  1140.0)    // Cyg
+,   ConstellationBoundary(62,  600.0,  735.0,  1128.0)    // Per
+,   ConstellationBoundary(82, 3030.0, 3300.0,  1128.0)    // UMa
+,   ConstellationBoundary(13,   60.0,  312.0,  1104.0)    // Cas
+,   ConstellationBoundary(82, 4320.0, 4350.0,  1080.0)    // UMa
+,   ConstellationBoundary(50, 2448.0, 2652.0,  1068.0)    // Lyn
+,   ConstellationBoundary(30, 7887.0, 7908.0,  1056.0)    // Cyg
+,   ConstellationBoundary(30, 7875.0, 7887.0,  1050.0)    // Cyg
+,   ConstellationBoundary(30, 6900.0, 6984.0,  1044.0)    // Cyg
+,   ConstellationBoundary(82, 3300.0, 3660.0,  1008.0)    // UMa
+,   ConstellationBoundary(82, 3660.0, 3882.0,   960.0)    // UMa
+,   ConstellationBoundary( 8, 5556.0, 5670.0,   960.0)    // Boo
+,   ConstellationBoundary(39, 5670.0, 5880.0,   960.0)    // Her
+,   ConstellationBoundary(50, 3330.0, 3450.0,   954.0)    // Lyn
+,   ConstellationBoundary( 0,    0.0,  906.0,   882.0)    // And
+,   ConstellationBoundary(62,  906.0,  924.0,   882.0)    // Per
+,   ConstellationBoundary(51, 6969.0, 6984.0,   876.0)    // Lyr
+,   ConstellationBoundary(62, 1620.0, 1689.0,   864.0)    // Per
+,   ConstellationBoundary(30, 7824.0, 7875.0,   864.0)    // Cyg
+,   ConstellationBoundary(44, 7875.0, 7920.0,   864.0)    // Lac
+,   ConstellationBoundary( 7, 2352.0, 2652.0,   852.0)    // Aur
+,   ConstellationBoundary(50, 2652.0, 2790.0,   852.0)    // Lyn
+,   ConstellationBoundary( 0,    0.0,  720.0,   840.0)    // And
+,   ConstellationBoundary(44, 7920.0, 8214.0,   840.0)    // Lac
+,   ConstellationBoundary(44, 8214.0, 8232.0,   828.0)    // Lac
+,   ConstellationBoundary( 0, 8232.0, 8460.0,   828.0)    // And
+,   ConstellationBoundary(62,  924.0,  978.0,   816.0)    // Per
+,   ConstellationBoundary(82, 3882.0, 3960.0,   816.0)    // UMa
+,   ConstellationBoundary(29, 4320.0, 4440.0,   816.0)    // CVn
+,   ConstellationBoundary(50, 2790.0, 3330.0,   804.0)    // Lyn
+,   ConstellationBoundary(48, 3330.0, 3558.0,   804.0)    // LMi
+,   ConstellationBoundary( 0,  258.0,  507.0,   792.0)    // And
+,   ConstellationBoundary( 8, 5466.0, 5556.0,   792.0)    // Boo
+,   ConstellationBoundary( 0, 8460.0, 8550.0,   770.0)    // And
+,   ConstellationBoundary(29, 4440.0, 4770.0,   768.0)    // CVn
+,   ConstellationBoundary( 0, 8550.0, 8640.0,   752.0)    // And
+,   ConstellationBoundary(29, 5025.0, 5052.0,   738.0)    // CVn
+,   ConstellationBoundary(80,  870.0,  978.0,   736.0)    // Tri
+,   ConstellationBoundary(62,  978.0, 1620.0,   736.0)    // Per
+,   ConstellationBoundary( 7, 1620.0, 1710.0,   720.0)    // Aur
+,   ConstellationBoundary(51, 6543.0, 6969.0,   720.0)    // Lyr
+,   ConstellationBoundary(82, 3960.0, 4320.0,   696.0)    // UMa
+,   ConstellationBoundary(30, 7080.0, 7530.0,   696.0)    // Cyg
+,   ConstellationBoundary( 7, 1710.0, 2118.0,   684.0)    // Aur
+,   ConstellationBoundary(48, 3558.0, 3780.0,   684.0)    // LMi
+,   ConstellationBoundary(29, 4770.0, 5025.0,   684.0)    // CVn
+,   ConstellationBoundary( 0,    0.0,   24.0,   672.0)    // And
+,   ConstellationBoundary(80,  507.0,  600.0,   672.0)    // Tri
+,   ConstellationBoundary( 7, 2118.0, 2352.0,   672.0)    // Aur
+,   ConstellationBoundary(37, 2838.0, 2880.0,   672.0)    // Gem
+,   ConstellationBoundary(30, 7530.0, 7824.0,   672.0)    // Cyg
+,   ConstellationBoundary(30, 6933.0, 7080.0,   660.0)    // Cyg
+,   ConstellationBoundary(80,  690.0,  870.0,   654.0)    // Tri
+,   ConstellationBoundary(25, 5820.0, 5880.0,   648.0)    // CrB
+,   ConstellationBoundary( 8, 5430.0, 5466.0,   624.0)    // Boo
+,   ConstellationBoundary(25, 5466.0, 5820.0,   624.0)    // CrB
+,   ConstellationBoundary(51, 6612.0, 6792.0,   624.0)    // Lyr
+,   ConstellationBoundary(48, 3870.0, 3960.0,   612.0)    // LMi
+,   ConstellationBoundary(51, 6792.0, 6933.0,   612.0)    // Lyr
+,   ConstellationBoundary(80,  600.0,  690.0,   600.0)    // Tri
+,   ConstellationBoundary(66,  258.0,  306.0,   570.0)    // Psc
+,   ConstellationBoundary(48, 3780.0, 3870.0,   564.0)    // LMi
+,   ConstellationBoundary(87, 7650.0, 7710.0,   564.0)    // Vul
+,   ConstellationBoundary(77, 2052.0, 2118.0,   548.0)    // Tau
+,   ConstellationBoundary( 0,   24.0,   51.0,   528.0)    // And
+,   ConstellationBoundary(73, 5730.0, 5772.0,   528.0)    // Ser
+,   ConstellationBoundary(37, 2118.0, 2238.0,   516.0)    // Gem
+,   ConstellationBoundary(87, 7140.0, 7290.0,   510.0)    // Vul
+,   ConstellationBoundary(87, 6792.0, 6930.0,   506.0)    // Vul
+,   ConstellationBoundary( 0,   51.0,  306.0,   504.0)    // And
+,   ConstellationBoundary(87, 7290.0, 7404.0,   492.0)    // Vul
+,   ConstellationBoundary(37, 2811.0, 2838.0,   480.0)    // Gem
+,   ConstellationBoundary(87, 7404.0, 7650.0,   468.0)    // Vul
+,   ConstellationBoundary(87, 6930.0, 7140.0,   460.0)    // Vul
+,   ConstellationBoundary( 6, 1182.0, 1212.0,   456.0)    // Ari
+,   ConstellationBoundary(75, 6792.0, 6840.0,   444.0)    // Sge
+,   ConstellationBoundary(59, 2052.0, 2076.0,   432.0)    // Ori
+,   ConstellationBoundary(37, 2238.0, 2271.0,   420.0)    // Gem
+,   ConstellationBoundary(75, 6840.0, 7140.0,   388.0)    // Sge
+,   ConstellationBoundary(77, 1788.0, 1920.0,   384.0)    // Tau
+,   ConstellationBoundary(39, 5730.0, 5790.0,   384.0)    // Her
+,   ConstellationBoundary(75, 7140.0, 7290.0,   378.0)    // Sge
+,   ConstellationBoundary(77, 1662.0, 1788.0,   372.0)    // Tau
+,   ConstellationBoundary(77, 1920.0, 2016.0,   372.0)    // Tau
+,   ConstellationBoundary(23, 4620.0, 4860.0,   360.0)    // Com
+,   ConstellationBoundary(39, 6210.0, 6570.0,   344.0)    // Her
+,   ConstellationBoundary(23, 4272.0, 4620.0,   336.0)    // Com
+,   ConstellationBoundary(37, 2700.0, 2811.0,   324.0)    // Gem
+,   ConstellationBoundary(39, 6030.0, 6210.0,   308.0)    // Her
+,   ConstellationBoundary(61,    0.0,   51.0,   300.0)    // Peg
+,   ConstellationBoundary(77, 2016.0, 2076.0,   300.0)    // Tau
+,   ConstellationBoundary(37, 2520.0, 2700.0,   300.0)    // Gem
+,   ConstellationBoundary(61, 7602.0, 7680.0,   300.0)    // Peg
+,   ConstellationBoundary(37, 2271.0, 2496.0,   288.0)    // Gem
+,   ConstellationBoundary(39, 6570.0, 6792.0,   288.0)    // Her
+,   ConstellationBoundary(31, 7515.0, 7578.0,   284.0)    // Del
+,   ConstellationBoundary(61, 7578.0, 7602.0,   284.0)    // Peg
+,   ConstellationBoundary(45, 4146.0, 4272.0,   264.0)    // Leo
+,   ConstellationBoundary(59, 2247.0, 2271.0,   240.0)    // Ori
+,   ConstellationBoundary(37, 2496.0, 2520.0,   240.0)    // Gem
+,   ConstellationBoundary(21, 2811.0, 2853.0,   240.0)    // Cnc
+,   ConstellationBoundary(61, 8580.0, 8640.0,   240.0)    // Peg
+,   ConstellationBoundary( 6,  600.0, 1182.0,   238.0)    // Ari
+,   ConstellationBoundary(31, 7251.0, 7308.0,   204.0)    // Del
+,   ConstellationBoundary( 8, 4860.0, 5430.0,   192.0)    // Boo
+,   ConstellationBoundary(61, 8190.0, 8580.0,   180.0)    // Peg
+,   ConstellationBoundary(21, 2853.0, 3330.0,   168.0)    // Cnc
+,   ConstellationBoundary(45, 3330.0, 3870.0,   168.0)    // Leo
+,   ConstellationBoundary(58, 6570.0, 6718.4,   150.0)    // Oph
+,   ConstellationBoundary( 3, 6718.4, 6792.0,   150.0)    // Aql
+,   ConstellationBoundary(31, 7500.0, 7515.0,   144.0)    // Del
+,   ConstellationBoundary(20, 2520.0, 2526.0,   132.0)    // CMi
+,   ConstellationBoundary(73, 6570.0, 6633.0,   108.0)    // Ser
+,   ConstellationBoundary(39, 5790.0, 6030.0,    96.0)    // Her
+,   ConstellationBoundary(58, 6570.0, 6633.0,    72.0)    // Oph
+,   ConstellationBoundary(61, 7728.0, 7800.0,    66.0)    // Peg
+,   ConstellationBoundary(66,    0.0,  720.0,    48.0)    // Psc
+,   ConstellationBoundary(73, 6690.0, 6792.0,    48.0)    // Ser
+,   ConstellationBoundary(31, 7308.0, 7500.0,    48.0)    // Del
+,   ConstellationBoundary(34, 7500.0, 7680.0,    48.0)    // Equ
+,   ConstellationBoundary(61, 7680.0, 7728.0,    48.0)    // Peg
+,   ConstellationBoundary(61, 7920.0, 8190.0,    48.0)    // Peg
+,   ConstellationBoundary(61, 7800.0, 7920.0,    42.0)    // Peg
+,   ConstellationBoundary(20, 2526.0, 2592.0,    36.0)    // CMi
+,   ConstellationBoundary(77, 1290.0, 1662.0,     0.0)    // Tau
+,   ConstellationBoundary(59, 1662.0, 1680.0,     0.0)    // Ori
+,   ConstellationBoundary(20, 2592.0, 2910.0,     0.0)    // CMi
+,   ConstellationBoundary(85, 5280.0, 5430.0,     0.0)    // Vir
+,   ConstellationBoundary(58, 6420.0, 6570.0,     0.0)    // Oph
+,   ConstellationBoundary(16,  954.0, 1182.0,   -42.0)    // Cet
+,   ConstellationBoundary(77, 1182.0, 1290.0,   -42.0)    // Tau
+,   ConstellationBoundary(73, 5430.0, 5856.0,   -78.0)    // Ser
+,   ConstellationBoundary(59, 1680.0, 1830.0,   -96.0)    // Ori
+,   ConstellationBoundary(59, 2100.0, 2247.0,   -96.0)    // Ori
+,   ConstellationBoundary(73, 6420.0, 6468.0,   -96.0)    // Ser
+,   ConstellationBoundary(73, 6570.0, 6690.0,   -96.0)    // Ser
+,   ConstellationBoundary( 3, 6690.0, 6792.0,   -96.0)    // Aql
+,   ConstellationBoundary(66, 8190.0, 8580.0,   -96.0)    // Psc
+,   ConstellationBoundary(45, 3870.0, 4146.0,  -144.0)    // Leo
+,   ConstellationBoundary(85, 4146.0, 4260.0,  -144.0)    // Vir
+,   ConstellationBoundary(66,    0.0,  120.0,  -168.0)    // Psc
+,   ConstellationBoundary(66, 8580.0, 8640.0,  -168.0)    // Psc
+,   ConstellationBoundary(85, 5130.0, 5280.0,  -192.0)    // Vir
+,   ConstellationBoundary(58, 5730.0, 5856.0,  -192.0)    // Oph
+,   ConstellationBoundary( 3, 7200.0, 7392.0,  -216.0)    // Aql
+,   ConstellationBoundary( 4, 7680.0, 7872.0,  -216.0)    // Aqr
+,   ConstellationBoundary(58, 6180.0, 6468.0,  -240.0)    // Oph
+,   ConstellationBoundary(54, 2100.0, 2910.0,  -264.0)    // Mon
+,   ConstellationBoundary(35, 1770.0, 1830.0,  -264.0)    // Eri
+,   ConstellationBoundary(59, 1830.0, 2100.0,  -264.0)    // Ori
+,   ConstellationBoundary(41, 2910.0, 3012.0,  -264.0)    // Hya
+,   ConstellationBoundary(74, 3450.0, 3870.0,  -264.0)    // Sex
+,   ConstellationBoundary(85, 4260.0, 4620.0,  -264.0)    // Vir
+,   ConstellationBoundary(58, 6330.0, 6360.0,  -280.0)    // Oph
+,   ConstellationBoundary( 3, 6792.0, 7200.0,  -288.8)    // Aql
+,   ConstellationBoundary(35, 1740.0, 1770.0,  -348.0)    // Eri
+,   ConstellationBoundary( 4, 7392.0, 7680.0,  -360.0)    // Aqr
+,   ConstellationBoundary(73, 6180.0, 6570.0,  -384.0)    // Ser
+,   ConstellationBoundary(72, 6570.0, 6792.0,  -384.0)    // Sct
+,   ConstellationBoundary(41, 3012.0, 3090.0,  -408.0)    // Hya
+,   ConstellationBoundary(58, 5856.0, 5895.0,  -438.0)    // Oph
+,   ConstellationBoundary(41, 3090.0, 3270.0,  -456.0)    // Hya
+,   ConstellationBoundary(26, 3870.0, 3900.0,  -456.0)    // Crt
+,   ConstellationBoundary(71, 5856.0, 5895.0,  -462.0)    // Sco
+,   ConstellationBoundary(47, 5640.0, 5730.0,  -480.0)    // Lib
+,   ConstellationBoundary(28, 4530.0, 4620.0,  -528.0)    // Crv
+,   ConstellationBoundary(85, 4620.0, 5130.0,  -528.0)    // Vir
+,   ConstellationBoundary(41, 3270.0, 3510.0,  -576.0)    // Hya
+,   ConstellationBoundary(16,  600.0,  954.0,  -585.2)    // Cet
+,   ConstellationBoundary(35,  954.0, 1350.0,  -585.2)    // Eri
+,   ConstellationBoundary(26, 3900.0, 4260.0,  -588.0)    // Crt
+,   ConstellationBoundary(28, 4260.0, 4530.0,  -588.0)    // Crv
+,   ConstellationBoundary(47, 5130.0, 5370.0,  -588.0)    // Lib
+,   ConstellationBoundary(58, 5856.0, 6030.0,  -590.0)    // Oph
+,   ConstellationBoundary(16,    0.0,  600.0,  -612.0)    // Cet
+,   ConstellationBoundary(11, 7680.0, 7872.0,  -612.0)    // Cap
+,   ConstellationBoundary( 4, 7872.0, 8580.0,  -612.0)    // Aqr
+,   ConstellationBoundary(16, 8580.0, 8640.0,  -612.0)    // Cet
+,   ConstellationBoundary(41, 3510.0, 3690.0,  -636.0)    // Hya
+,   ConstellationBoundary(35, 1692.0, 1740.0,  -654.0)    // Eri
+,   ConstellationBoundary(46, 1740.0, 2202.0,  -654.0)    // Lep
+,   ConstellationBoundary(11, 7200.0, 7680.0,  -672.0)    // Cap
+,   ConstellationBoundary(41, 3690.0, 3810.0,  -700.0)    // Hya
+,   ConstellationBoundary(41, 4530.0, 5370.0,  -708.0)    // Hya
+,   ConstellationBoundary(47, 5370.0, 5640.0,  -708.0)    // Lib
+,   ConstellationBoundary(71, 5640.0, 5760.0,  -708.0)    // Sco
+,   ConstellationBoundary(35, 1650.0, 1692.0,  -720.0)    // Eri
+,   ConstellationBoundary(58, 6030.0, 6336.0,  -720.0)    // Oph
+,   ConstellationBoundary(76, 6336.0, 6420.0,  -720.0)    // Sgr
+,   ConstellationBoundary(41, 3810.0, 3900.0,  -748.0)    // Hya
+,   ConstellationBoundary(19, 2202.0, 2652.0,  -792.0)    // CMa
+,   ConstellationBoundary(41, 4410.0, 4530.0,  -792.0)    // Hya
+,   ConstellationBoundary(41, 3900.0, 4410.0,  -840.0)    // Hya
+,   ConstellationBoundary(36, 1260.0, 1350.0,  -864.0)    // For
+,   ConstellationBoundary(68, 3012.0, 3372.0,  -882.0)    // Pyx
+,   ConstellationBoundary(35, 1536.0, 1650.0,  -888.0)    // Eri
+,   ConstellationBoundary(76, 6420.0, 6900.0,  -888.0)    // Sgr
+,   ConstellationBoundary(65, 7680.0, 8280.0,  -888.0)    // PsA
+,   ConstellationBoundary(70, 8280.0, 8400.0,  -888.0)    // Scl
+,   ConstellationBoundary(36, 1080.0, 1260.0,  -950.0)    // For
+,   ConstellationBoundary( 1, 3372.0, 3960.0,  -954.0)    // Ant
+,   ConstellationBoundary(70,    0.0,  600.0,  -960.0)    // Scl
+,   ConstellationBoundary(36,  600.0, 1080.0,  -960.0)    // For
+,   ConstellationBoundary(35, 1392.0, 1536.0,  -960.0)    // Eri
+,   ConstellationBoundary(70, 8400.0, 8640.0,  -960.0)    // Scl
+,   ConstellationBoundary(14, 5100.0, 5370.0, -1008.0)    // Cen
+,   ConstellationBoundary(49, 5640.0, 5760.0, -1008.0)    // Lup
+,   ConstellationBoundary(71, 5760.0, 5911.5, -1008.0)    // Sco
+,   ConstellationBoundary( 9, 1740.0, 1800.0, -1032.0)    // Cae
+,   ConstellationBoundary(22, 1800.0, 2370.0, -1032.0)    // Col
+,   ConstellationBoundary(67, 2880.0, 3012.0, -1032.0)    // Pup
+,   ConstellationBoundary(35, 1230.0, 1392.0, -1056.0)    // Eri
+,   ConstellationBoundary(71, 5911.5, 6420.0, -1092.0)    // Sco
+,   ConstellationBoundary(24, 6420.0, 6900.0, -1092.0)    // CrA
+,   ConstellationBoundary(76, 6900.0, 7320.0, -1092.0)    // Sgr
+,   ConstellationBoundary(53, 7320.0, 7680.0, -1092.0)    // Mic
+,   ConstellationBoundary(35, 1080.0, 1230.0, -1104.0)    // Eri
+,   ConstellationBoundary( 9, 1620.0, 1740.0, -1116.0)    // Cae
+,   ConstellationBoundary(49, 5520.0, 5640.0, -1152.0)    // Lup
+,   ConstellationBoundary(63,    0.0,  840.0, -1156.0)    // Phe
+,   ConstellationBoundary(35,  960.0, 1080.0, -1176.0)    // Eri
+,   ConstellationBoundary(40, 1470.0, 1536.0, -1176.0)    // Hor
+,   ConstellationBoundary( 9, 1536.0, 1620.0, -1176.0)    // Cae
+,   ConstellationBoundary(38, 7680.0, 7920.0, -1200.0)    // Gru
+,   ConstellationBoundary(67, 2160.0, 2880.0, -1218.0)    // Pup
+,   ConstellationBoundary(84, 2880.0, 2940.0, -1218.0)    // Vel
+,   ConstellationBoundary(35,  870.0,  960.0, -1224.0)    // Eri
+,   ConstellationBoundary(40, 1380.0, 1470.0, -1224.0)    // Hor
+,   ConstellationBoundary(63,    0.0,  660.0, -1236.0)    // Phe
+,   ConstellationBoundary(12, 2160.0, 2220.0, -1260.0)    // Car
+,   ConstellationBoundary(84, 2940.0, 3042.0, -1272.0)    // Vel
+,   ConstellationBoundary(40, 1260.0, 1380.0, -1276.0)    // Hor
+,   ConstellationBoundary(32, 1380.0, 1440.0, -1276.0)    // Dor
+,   ConstellationBoundary(63,    0.0,  570.0, -1284.0)    // Phe
+,   ConstellationBoundary(35,  780.0,  870.0, -1296.0)    // Eri
+,   ConstellationBoundary(64, 1620.0, 1800.0, -1296.0)    // Pic
+,   ConstellationBoundary(49, 5418.0, 5520.0, -1296.0)    // Lup
+,   ConstellationBoundary(84, 3042.0, 3180.0, -1308.0)    // Vel
+,   ConstellationBoundary(12, 2220.0, 2340.0, -1320.0)    // Car
+,   ConstellationBoundary(14, 4260.0, 4620.0, -1320.0)    // Cen
+,   ConstellationBoundary(49, 5100.0, 5418.0, -1320.0)    // Lup
+,   ConstellationBoundary(56, 5418.0, 5520.0, -1320.0)    // Nor
+,   ConstellationBoundary(32, 1440.0, 1560.0, -1356.0)    // Dor
+,   ConstellationBoundary(84, 3180.0, 3960.0, -1356.0)    // Vel
+,   ConstellationBoundary(14, 3960.0, 4050.0, -1356.0)    // Cen
+,   ConstellationBoundary( 5, 6300.0, 6480.0, -1368.0)    // Ara
+,   ConstellationBoundary(78, 6480.0, 7320.0, -1368.0)    // Tel
+,   ConstellationBoundary(38, 7920.0, 8400.0, -1368.0)    // Gru
+,   ConstellationBoundary(40, 1152.0, 1260.0, -1380.0)    // Hor
+,   ConstellationBoundary(64, 1800.0, 1980.0, -1380.0)    // Pic
+,   ConstellationBoundary(12, 2340.0, 2460.0, -1392.0)    // Car
+,   ConstellationBoundary(63,    0.0,  480.0, -1404.0)    // Phe
+,   ConstellationBoundary(35,  480.0,  780.0, -1404.0)    // Eri
+,   ConstellationBoundary(63, 8400.0, 8640.0, -1404.0)    // Phe
+,   ConstellationBoundary(32, 1560.0, 1650.0, -1416.0)    // Dor
+,   ConstellationBoundary(56, 5520.0, 5911.5, -1440.0)    // Nor
+,   ConstellationBoundary(43, 7320.0, 7680.0, -1440.0)    // Ind
+,   ConstellationBoundary(64, 1980.0, 2160.0, -1464.0)    // Pic
+,   ConstellationBoundary(18, 5460.0, 5520.0, -1464.0)    // Cir
+,   ConstellationBoundary( 5, 5911.5, 5970.0, -1464.0)    // Ara
+,   ConstellationBoundary(18, 5370.0, 5460.0, -1526.0)    // Cir
+,   ConstellationBoundary( 5, 5970.0, 6030.0, -1526.0)    // Ara
+,   ConstellationBoundary(64, 2160.0, 2460.0, -1536.0)    // Pic
+,   ConstellationBoundary(12, 2460.0, 3252.0, -1536.0)    // Car
+,   ConstellationBoundary(14, 4050.0, 4260.0, -1536.0)    // Cen
+,   ConstellationBoundary(27, 4260.0, 4620.0, -1536.0)    // Cru
+,   ConstellationBoundary(14, 4620.0, 5232.0, -1536.0)    // Cen
+,   ConstellationBoundary(18, 4860.0, 4920.0, -1560.0)    // Cir
+,   ConstellationBoundary( 5, 6030.0, 6060.0, -1560.0)    // Ara
+,   ConstellationBoundary(40,  780.0, 1152.0, -1620.0)    // Hor
+,   ConstellationBoundary(69, 1152.0, 1650.0, -1620.0)    // Ret
+,   ConstellationBoundary(18, 5310.0, 5370.0, -1620.0)    // Cir
+,   ConstellationBoundary( 5, 6060.0, 6300.0, -1620.0)    // Ara
+,   ConstellationBoundary(60, 6300.0, 6480.0, -1620.0)    // Pav
+,   ConstellationBoundary(81, 7920.0, 8400.0, -1620.0)    // Tuc
+,   ConstellationBoundary(32, 1650.0, 2370.0, -1680.0)    // Dor
+,   ConstellationBoundary(18, 4920.0, 5310.0, -1680.0)    // Cir
+,   ConstellationBoundary(79, 5310.0, 6120.0, -1680.0)    // TrA
+,   ConstellationBoundary(81,    0.0,  480.0, -1800.0)    // Tuc
+,   ConstellationBoundary(42, 1260.0, 1650.0, -1800.0)    // Hyi
+,   ConstellationBoundary(86, 2370.0, 3252.0, -1800.0)    // Vol
+,   ConstellationBoundary(12, 3252.0, 4050.0, -1800.0)    // Car
+,   ConstellationBoundary(55, 4050.0, 4920.0, -1800.0)    // Mus
+,   ConstellationBoundary(60, 6480.0, 7680.0, -1800.0)    // Pav
+,   ConstellationBoundary(43, 7680.0, 8400.0, -1800.0)    // Ind
+,   ConstellationBoundary(81, 8400.0, 8640.0, -1800.0)    // Tuc
+,   ConstellationBoundary(81,  270.0,  480.0, -1824.0)    // Tuc
+,   ConstellationBoundary(42,    0.0, 1260.0, -1980.0)    // Hyi
+,   ConstellationBoundary(17, 2760.0, 4920.0, -1980.0)    // Cha
+,   ConstellationBoundary( 2, 4920.0, 6480.0, -1980.0)    // Aps
+,   ConstellationBoundary(52, 1260.0, 2760.0, -2040.0)    // Men
+,   ConstellationBoundary(57,    0.0, 8640.0, -2160.0)    // Oct
+)
+
+//---------------------------------------------------------------------------------------

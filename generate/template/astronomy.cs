@@ -8684,10 +8684,10 @@ $ASTRO_IAU_DATA()
         /// constellation that contains that point.
         /// </remarks>
         /// <param name="ra">
-        /// The right ascension (RA) of a point in the sky, using the J2000 equatorial system.
+        /// The right ascension (RA) of a point in the sky, using the J2000 equatorial system (EQJ).
         /// </param>
         /// <param name="dec">
-        /// The declination (DEC) of a point in the sky, using the J2000 equatorial system.
+        /// The declination (DEC) of a point in the sky, using the J2000 equatorial system (EQJ).
         /// </param>
         /// <returns>
         /// A structure that contains the 3-letter abbreviation and full name
@@ -8742,7 +8742,7 @@ $ASTRO_IAU_DATA()
                     return new ConstellationInfo(ConstelNames[b.index].symbol, ConstelNames[b.index].name, equ1875.ra, equ1875.dec);
 
             // This should never happen!
-            throw new Exception("Unable to find constellation for given coordinates.");
+            throw new Exception($"Unable to find constellation for coordinates: RA={ra}, DEC={dec}");
         }
 
 $ASTRO_CONSTEL()
