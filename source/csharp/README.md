@@ -343,8 +343,8 @@ constellation that contains that point.
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| `double` | `ra` | The right ascension (RA) of a point in the sky, using the J2000 equatorial system. |
-| `double` | `dec` | The declination (DEC) of a point in the sky, using the J2000 equatorial system. |
+| `double` | `ra` | The right ascension (RA) of a point in the sky, using the J2000 equatorial system (EQJ). |
+| `double` | `dec` | The declination (DEC) of a point in the sky, using the J2000 equatorial system (EQJ). |
 
 **Returns:** A structure that contains the 3-letter abbreviation and full name of the constellation that contains the given (ra,dec), along with the converted B1875 (ra,dec) for that point.
 
