@@ -4166,8 +4166,14 @@ static astro_state_vector_t CalcJupiterMoon(astro_time_t time, int mindex)
  *
  * To convert to heliocentric position vectors, call #Astronomy_HelioVector
  * with `BODY_JUPITER` to get Jupiter's heliocentric position, then
- * add the jovicentric positions. Likewise, you can call #Astronomy_GeoVector
+ * add the jovicentric positions.
+ *
+ * Likewise, you can call #Astronomy_GeoVector
  * with `BODY_JUPITER` to convert to geocentric positions.
+ * However, you will have to manually correct for light travel time
+ * from the Jupiter system to Earth to figure out what time to pass
+ * to `Astronomy_JupiterMoons` to get an accurate picture
+ * of how Jupiter and its moons look from Earth.
  *
  * @param time  The date and time for which to calculate the position vectors.
  * @return Position vectors of Jupiter's largest 4 moons, as described above.
@@ -8028,7 +8034,7 @@ astro_apsis_t Astronomy_NextPlanetApsis(astro_body_t body, astro_apsis_t apsis)
  * @brief Calculates the inverse of a rotation matrix.
  *
  * Given a rotation matrix that performs some coordinate transform,
- * this function returns the matrix that reverses that trasnform.
+ * this function returns the matrix that reverses that transform.
  *
  * @param rotation
  *      The rotation matrix to be inverted.
@@ -8487,7 +8493,7 @@ double Astronomy_Refraction(astro_refraction_t refraction, double altitude)
  *      Calculates the inverse of an atmospheric refraction angle.
  *
  * Given an observed altitude angle that includes atmospheric refraction,
- * calculate the negative angular correction to obtain the unrefracted
+ * calculates the negative angular correction to obtain the unrefracted
  * altitude. This is useful for cases where observed horizontal
  * coordinates are to be converted to another orientation system,
  * but refraction first must be removed from the observed position.
@@ -8796,7 +8802,7 @@ astro_rotation_t Astronomy_Rotation_HOR_EQD(astro_time_t *time, astro_observer_t
  *      A location near the Earth's mean sea level that defines the observer's horizon.
  *
  * @return
- *      A rotation matrix that converts HOR to EQD at `time` and for `observer`.
+ *      A rotation matrix that converts HOR to EQJ at `time` and for `observer`.
  */
 astro_rotation_t Astronomy_Rotation_HOR_EQJ(astro_time_t *time, astro_observer_t observer)
 {

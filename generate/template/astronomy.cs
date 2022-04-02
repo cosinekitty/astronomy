@@ -273,7 +273,7 @@ namespace CosineKitty
         /// <summary>
         /// Converts this `AstroTime` to ISO 8601 format, expressed in UTC with millisecond resolution.
         /// </summary>
-        /// <returns>Example: "2019-08-30T17:45:22.763".</returns>
+        /// <returns>Example: "2019-08-30T17:45:22.763Z".</returns>
         public override string ToString()
         {
             return ToUtcDateTime().ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
@@ -602,7 +602,7 @@ namespace CosineKitty
     }
 
     /// <summary>
-    /// Contains a rotation matrix that can be used to transform one coordinate system to another.
+    /// A rotation matrix that can be used to transform one coordinate system to another.
     /// </summary>
     public struct RotationMatrix
     {
@@ -1155,7 +1155,7 @@ namespace CosineKitty
     /// Returned by #Astronomy.SearchLunarEclipse or #Astronomy.NextLunarEclipse
     /// to report information about a lunar eclipse event.
     /// When a lunar eclipse is found, it is classified as penumbral, partial, or total.
-    /// Penumbral eclipses are difficult to observe, because the moon is only slightly dimmed
+    /// Penumbral eclipses are difficult to observe, because the Moon is only slightly dimmed
     /// by the Earth's penumbra; no part of the Moon touches the Earth's umbra.
     /// Partial eclipses occur when part, but not all, of the Moon touches the Earth's umbra.
     /// Total eclipses occur when the entire Moon passes into the Earth's umbra.
@@ -1206,9 +1206,6 @@ namespace CosineKitty
     /// Returned by #Astronomy.SearchGlobalSolarEclipse or #Astronomy.NextGlobalSolarEclipse
     /// to report information about a solar eclipse event.
     ///
-    /// Field `peak` holds the date and time of the peak of the eclipse, defined as
-    /// the instant when the axis of the Moon's shadow cone passes closest to the Earth's center.
-    ///
     /// The eclipse is classified as partial, annular, or total, depending on the
     /// maximum amount of the Sun's disc obscured, as seen at the peak location
     /// on the surface of the Earth.
@@ -1231,7 +1228,10 @@ namespace CosineKitty
         /// <summary>The type of solar eclipse: `EclipseKind.Partial`, `EclipseKind.Annular`, or `EclipseKind.Total`.</summary>
         public EclipseKind kind;
 
-        /// <summary>The date and time of the eclipse at its peak.</summary>
+        /// <summary>
+        /// The date and time when the solar eclipse is at its darkest.
+        /// This is the instant when the axis of the Moon's shadow cone passes closest to the Earth's center.
+        /// </summary>
         public AstroTime peak;
 
         /// <summary>The distance between the Sun/Moon shadow axis and the center of the Earth, in kilometers.</summary>
@@ -1253,7 +1253,7 @@ namespace CosineKitty
     /// (a "local" solar eclipse), a series of events occur. In addition
     /// to the time of each event, it is important to know the altitude of the Sun,
     /// because each event may be invisible to the observer if the Sun is below
-    /// the horizon (i.e. it at night).
+    /// the horizon.
     ///
     /// If `altitude` is negative, the event is theoretical only; it would be
     /// visible if the Earth were transparent, but the observer cannot actually see it.
@@ -1912,20 +1912,14 @@ namespace CosineKitty
                     -64E-9 * Sine(0.39943-5.37511*T);
         }
 
-        private readonly int[] I = new int[4];
-
         void Term(int p, int q, int r, int s, out double x, out double y)
         {
-            I[0] = p;
-            I[1] = q;
-            I[2] = r;
-            I[3] = s;
             x = 1.0;
             y = 0.0;
-
-            for (int k=1; k<=4; ++k)
-                if (I[k-1] != 0.0)
-                    AddThe(x, y, CO[I[k-1], k], SI[I[k-1], k], out x, out y);
+            if (p != 0) AddThe(x, y, CO[p, 1], SI[p, 1], out x, out y);
+            if (q != 0) AddThe(x, y, CO[q, 2], SI[q, 2], out x, out y);
+            if (r != 0) AddThe(x, y, CO[r, 3], SI[r, 3], out x, out y);
+            if (s != 0) AddThe(x, y, CO[s, 4], SI[s, 4], out x, out y);
         }
 
         void AddSol(
@@ -1946,27 +1940,26 @@ namespace CosineKitty
             SINPI += coeffp*x;
         }
 
-        void ADDN(double coeffn, int p, int q, int r, int s, out double x, out double y)
+        void ADDN(double coeffn, int p, int q, int r, int s)
         {
+            double x, y;
             Term(p, q, r, s, out x, out y);
             N += coeffn * y;
         }
 
         void SolarN()
         {
-            double x, y;
-
             N = 0.0;
-            ADDN(-526.069, 0, 0,1,-2, out x, out y);
-            ADDN(  -3.352, 0, 0,1,-4, out x, out y);
-            ADDN( +44.297,+1, 0,1,-2, out x, out y);
-            ADDN(  -6.000,+1, 0,1,-4, out x, out y);
-            ADDN( +20.599,-1, 0,1, 0, out x, out y);
-            ADDN( -30.598,-1, 0,1,-2, out x, out y);
-            ADDN( -24.649,-2, 0,1, 0, out x, out y);
-            ADDN(  -2.000,-2, 0,1,-2, out x, out y);
-            ADDN( -22.571, 0,+1,1,-2, out x, out y);
-            ADDN( +10.985, 0,-1,1,-2, out x, out y);
+            ADDN(-526.069,  0, 0, 1, -2);
+            ADDN(  -3.352,  0, 0, 1, -4);
+            ADDN( +44.297, +1, 0, 1, -2);
+            ADDN(  -6.000, +1, 0, 1, -4);
+            ADDN( +20.599, -1, 0, 1,  0);
+            ADDN( -30.598, -1, 0, 1, -2);
+            ADDN( -24.649, -2, 0, 1,  0);
+            ADDN(  -2.000, -2, 0, 1, -2);
+            ADDN( -22.571,  0,+1, 1, -2);
+            ADDN( +10.985,  0,-1, 1, -2);
         }
 
         void Planetary()
@@ -1991,7 +1984,7 @@ namespace CosineKitty
             DLAM = 0;
             DS = 0;
             GAM1C = 0;
-            SINPI = 3422.7000;
+            SINPI = 3422.7;
             LongPeriodic();
             L0 = Astronomy.PI2*Frac(0.60643382+1336.85522467*T-0.00000313*T2) + DL0/Astronomy.ARC;
             L  = Astronomy.PI2*Frac(0.37489701+1325.55240982*T+0.00002565*T2) + DL /Astronomy.ARC;
@@ -2153,22 +2146,22 @@ $ASTRO_ADDSOL()
         // https://ssd.jpl.nasa.gov/?sat_phys_par
 
         /// <summary>
-        /// The The mean radius of Jupiter's moon Io, expressed in kilometers.
+        /// The mean radius of Jupiter's moon Io, expressed in kilometers.
         /// </summary>
         public const double IO_RADIUS_KM = 1821.6;
 
         /// <summary>
-        /// The The mean radius of Jupiter's moon Europa, expressed in kilometers.
+        /// The mean radius of Jupiter's moon Europa, expressed in kilometers.
         /// </summary>
         public const double EUROPA_RADIUS_KM = 1560.8;
 
         /// <summary>
-        /// The The mean radius of Jupiter's moon Ganymede, expressed in kilometers.
+        /// The mean radius of Jupiter's moon Ganymede, expressed in kilometers.
         /// </summary>
         public const double GANYMEDE_RADIUS_KM = 2631.2;
 
         /// <summary>
-        /// The The mean radius of Jupiter's moon Callisto, expressed in kilometers.
+        /// The mean radius of Jupiter's moon Callisto, expressed in kilometers.
         /// </summary>
         public const double CALLISTO_RADIUS_KM = 2410.3;
 
@@ -2838,8 +2831,8 @@ $ASTRO_PLUTO_TABLE();
                         seg[i].a = (1 - ramp)*seg[i].a + ramp*reverse[i].a;
                     }
                 }
+                return cache[seg_index];
             }
-            return cache[seg_index];
         }
 
         private static body_grav_calc_t CalcPlutoOneWay(
@@ -3037,7 +3030,10 @@ $ASTRO_JUPITER_MOONS();
         /// To convert to heliocentric position vectors, call #Astronomy.HelioVector
         /// with `Body.Jupiter` to get Jupiter's heliocentric position, then
         /// add the jovicentric positions. Likewise, you can call #Astronomy.GeoVector
-        /// to convert to geocentric positions.
+        /// to convert to geocentric positions; however, you will have to manually
+        /// correct for light travel time from the Jupiter system to Earth to
+        /// figure out what time to pass to `jupiterMoons` to get an accurate picture
+        /// of how Jupiter and its moons look from Earth.
         /// </remarks>
         /// <param name="time">The date and time for which to calculate the position vectors.</param>
         /// <returns>Position and velocity vectors of Jupiter's largest 4 moons.</returns>
@@ -3139,15 +3135,15 @@ $ASTRO_JUPITER_MOONS();
             return new RotationMatrix(rot);
         }
 
-        private static AstroVector precession(AstroVector pos, AstroTime time, PrecessDirection dir)
+        private static AstroVector precession(AstroVector pos, PrecessDirection dir)
         {
-            RotationMatrix r = precession_rot(time, dir);
+            RotationMatrix r = precession_rot(pos.t, dir);
             return RotateVector(r, pos);
         }
 
-        private static StateVector precession_posvel(StateVector state, AstroTime time, PrecessDirection dir)
+        private static StateVector precession_posvel(StateVector state, PrecessDirection dir)
         {
-            RotationMatrix rot = precession_rot(time, dir);
+            RotationMatrix rot = precession_rot(state.t, dir);
             return RotateState(rot, state);
         }
 
@@ -3290,7 +3286,7 @@ $ASTRO_IAU_DATA()
                 double eqeq = 15.0 * e_tilt(time).ee;    /* Replace with eqeq=0 to get GMST instead of GAST (if we ever need it) */
                 double theta = era(time.ut);
                 double st = (eqeq + 0.014506 +
-                    (((( -    0.0000000368   * t
+                    (((( -    0.0000000368  * t
                         -    0.000029956  ) * t
                         -    0.00000044   ) * t
                         +    1.3915817    ) * t
@@ -3305,7 +3301,7 @@ $ASTRO_IAU_DATA()
             return time.st;     // return sidereal hours in the half-open range [0, 24).
         }
 
-        static Observer inverse_terra(AstroVector ovec, double st)
+        private static Observer inverse_terra(AstroVector ovec)
         {
             double lon_deg, lat_deg, height_km;
 
@@ -3326,6 +3322,7 @@ $ASTRO_IAU_DATA()
             else
             {
                 double stlocl = Math.Atan2(y, x);
+                double st = SiderealTime(ovec.t);
                 /* Calculate exact longitude. */
                 lon_deg = RAD2DEG*stlocl - (15.0 * st);
                 /* Normalize longitude to the range (-180, +180]. */
@@ -3359,7 +3356,7 @@ $ASTRO_IAU_DATA()
                 }
                 /* We now have a solution for the latitude in radians. */
                 lat_deg = lat * RAD2DEG;
-                /* Solve for exact height in meters. */
+                /* Solve for exact height in kilometers. */
                 /* There are two formulas I can use. Use whichever has the less risky denominator. */
                 double adjust = EARTH_EQUATORIAL_RADIUS_KM / denom;
                 if (Math.Abs(s) > Math.Abs(c))
@@ -3374,8 +3371,7 @@ $ASTRO_IAU_DATA()
         private static StateVector terra(Observer observer, AstroTime time)
         {
             double st = SiderealTime(time);
-            double df = 1.0 - 0.003352819697896;    /* flattening of the Earth */
-            double df2 = df * df;
+            double df2 = EARTH_FLATTENING * EARTH_FLATTENING;
             double phi = observer.latitude * DEG2RAD;
             double sinphi = Math.Sin(phi);
             double cosphi = Math.Cos(phi);
@@ -3459,81 +3455,42 @@ $ASTRO_IAU_DATA()
         }
 
 
-        private static AstroVector nutation(AstroVector pos, AstroTime time, PrecessDirection dir)
+        private static AstroVector nutation(AstroVector pos, PrecessDirection dir)
         {
-            RotationMatrix rot = nutation_rot(time, dir);
+            RotationMatrix rot = nutation_rot(pos.t, dir);
             return RotateVector(rot, pos);
         }
 
-        private static StateVector nutation_posvel(StateVector state, AstroTime time, PrecessDirection dir)
+        private static StateVector nutation_posvel(StateVector state, PrecessDirection dir)
         {
-            RotationMatrix rot = nutation_rot(time, dir);
+            RotationMatrix rot = nutation_rot(state.t, dir);
             return RotateState(rot, state);
         }
 
-
-        private static Equatorial vector2radec(AstroVector pos)
-        {
-            double ra, dec, dist;
-            double xyproj;
-
-            xyproj = pos.x*pos.x + pos.y*pos.y;
-            dist = Math.Sqrt(xyproj + pos.z*pos.z);
-            if (xyproj == 0.0)
-            {
-                if (pos.z == 0.0)
-                {
-                    /* Indeterminate coordinates; pos vector has zero length. */
-                    throw new ArgumentException("Bad vector");
-                }
-
-                if (pos.z < 0)
-                {
-                    ra = 0.0;
-                    dec = -90.0;
-                }
-                else
-                {
-                    ra = 0.0;
-                    dec = +90.0;
-                }
-            }
-            else
-            {
-                ra = RAD2HOUR * Math.Atan2(pos.y, pos.x);
-                if (ra < 0)
-                    ra += 24.0;
-
-                dec = RAD2DEG * Math.Atan2(pos.z, Math.Sqrt(xyproj));
-            }
-
-            return new Equatorial(ra, dec, dist, pos);
-        }
-
-        private static AstroVector gyration(AstroVector pos, AstroTime time, PrecessDirection dir)
+        private static AstroVector gyration(AstroVector pos, PrecessDirection dir)
         {
             // Combine nutation and precession into a single operation I call "gyration".
             // The order they are composed depends on the direction,
             // because both directions are mutual inverse functions.
             return (dir == PrecessDirection.Into2000) ?
-                precession(nutation(pos, time, dir), time, dir) :
-                nutation(precession(pos, time, dir), time, dir);
+                precession(nutation(pos, dir), dir) :
+                nutation(precession(pos, dir), dir);
         }
 
-        private static StateVector gyration_posvel(StateVector state, AstroTime time, PrecessDirection dir)
+        private static StateVector gyration_posvel(StateVector state, PrecessDirection dir)
         {
             // Combine nutation and precession into a single operation I call "gyration".
             // The order they are composed depends on the direction,
             // because both directions are mutual inverse functions.
             return (dir == PrecessDirection.Into2000) ?
-                precession_posvel(nutation_posvel(state, time, dir), time, dir) :
-                nutation_posvel(precession_posvel(state, time, dir), time, dir);
+                precession_posvel(nutation_posvel(state, dir), dir) :
+                nutation_posvel(precession_posvel(state, dir), dir);
         }
 
         private static AstroVector geo_pos(AstroTime time, Observer observer)
         {
             AstroVector pos = terra(observer, time).Position();
-            return gyration(pos, time, PrecessDirection.Into2000);
+            return gyration(pos, PrecessDirection.Into2000);
         }
 
         private static AstroVector spin(double angle, AstroVector pos)
@@ -3549,9 +3506,9 @@ $ASTRO_IAU_DATA()
             );
         }
 
-        private static AstroVector ecl2equ_vec(AstroTime time, AstroVector ecl)
+        private static AstroVector ecl2equ_vec(AstroVector ecl)
         {
-            double obl = mean_obliq(time.tt) * DEG2RAD;
+            double obl = mean_obliq(ecl.t.tt) * DEG2RAD;
             double cos_obl = Math.Cos(obl);
             double sin_obl = Math.Sin(obl);
 
@@ -3559,7 +3516,7 @@ $ASTRO_IAU_DATA()
                 ecl.x,
                 ecl.y*cos_obl - ecl.z*sin_obl,
                 ecl.y*sin_obl + ecl.z*cos_obl,
-                time
+                ecl.t
             );
         }
 
@@ -3591,10 +3548,10 @@ $ASTRO_IAU_DATA()
             );
 
             /* Convert ecliptic coordinates to equatorial coordinates, both in mean equinox of date. */
-            AstroVector mpos1 = ecl2equ_vec(time, gepos);
+            AstroVector mpos1 = ecl2equ_vec(gepos);
 
             /* Convert from mean equinox of date to J2000. */
-            AstroVector mpos2 = precession(mpos1, time, PrecessDirection.Into2000);
+            AstroVector mpos2 = precession(mpos1, PrecessDirection.Into2000);
 
             return mpos2;
         }
@@ -3858,9 +3815,12 @@ $ASTRO_IAU_DATA()
         /// The position is not corrected for light travel time or aberration.
         /// This is different from the behavior of #Astronomy.GeoVector.
         ///
-        /// If given an invalid value for `body`, this function will throw an `ArgumentException`.
+        /// If given an invalid value for `body`, this function will throw an #InvalidBodyException.
         /// </remarks>
-        /// <param name="body">A body for which to calculate a heliocentric position: the Sun, Moon, EMB, SSB, or any of the planets.</param>
+        /// <param name="body">
+        /// A body for which to calculate a heliocentric position:
+        /// the Sun, Moon, EMB, SSB, or any of the planets.
+        /// </param>
         /// <param name="time">The date and time for which to calculate the position.</param>
         /// <returns>A heliocentric position vector of the center of the given body.</returns>
         public static AstroVector HelioVector(Body body, AstroTime time)
@@ -3909,14 +3869,14 @@ $ASTRO_IAU_DATA()
         /// </summary>
         /// <remarks>
         /// Given a date and time, this function calculates the distance between
-        /// the center of `body` and the center of the Sun.
+        /// the center of `body` and the center of the Sun, expressed in AU.
         /// For the planets Mercury through Neptune, this function is significantly
         /// more efficient than calling #Astronomy.HelioVector followed by taking the length
         /// of the resulting vector.
         /// </remarks>
         /// <param name="body">
         /// A body for which to calculate a heliocentric distance:
-        /// the Sun, Moon, or any of the planets.
+        /// the Sun, Moon, EMB, SSB, or any of the planets.
         /// </param>
         /// <param name="time">
         /// The date and time for which to calculate the heliocentric distance.
@@ -4254,11 +4214,11 @@ $ASTRO_IAU_DATA()
             switch (equdate)
             {
                 case EquatorEpoch.OfDate:
-                    AstroVector datevect = gyration(j2000, time, PrecessDirection.From2000);
-                    return vector2radec(datevect);
+                    AstroVector datevect = gyration(j2000, PrecessDirection.From2000);
+                    return EquatorFromVector(datevect);
 
                 case EquatorEpoch.J2000:
-                    return vector2radec(j2000);
+                    return EquatorFromVector(j2000);
 
                 default:
                     throw new ArgumentException(string.Format("Unsupported equator epoch {0}", equdate));
@@ -4367,7 +4327,7 @@ $ASTRO_IAU_DATA()
                 return state;
 
             if (equdate == EquatorEpoch.J2000)
-                return gyration_posvel(state, time, PrecessDirection.Into2000);
+                return gyration_posvel(state, PrecessDirection.Into2000);
 
             throw new ArgumentException(string.Format("Unsupported equator epoch {0}", equdate));
         }
@@ -4406,10 +4366,9 @@ $ASTRO_IAU_DATA()
             AstroVector vector,
             EquatorEpoch equdate)
         {
-            double gast = SiderealTime(vector.t);
             if (equdate == EquatorEpoch.J2000)
-                vector = gyration(vector, vector.t, PrecessDirection.From2000);
-            return inverse_terra(vector, gast);
+                vector = gyration(vector, PrecessDirection.From2000);
+            return inverse_terra(vector);
         }
 
         /// <summary>
@@ -4642,7 +4601,7 @@ $ASTRO_IAU_DATA()
             AstroVector sun2000 = new AstroVector(-earth2000.x, -earth2000.y, -earth2000.z, adjusted_time);
 
             /* Convert to equatorial Cartesian coordinates of date. */
-            AstroVector sun_ofdate = gyration(sun2000, adjusted_time, PrecessDirection.From2000);
+            AstroVector sun_ofdate = gyration(sun2000, PrecessDirection.From2000);
 
             /* Convert equatorial coordinates to ecliptic coordinates. */
             double true_obliq = DEG2RAD * e_tilt(adjusted_time).tobl;
@@ -7608,7 +7567,7 @@ $ASTRO_IAU_DATA()
         /// <summary>Calculates the inverse of a rotation matrix.</summary>
         /// <remarks>
         /// Given a rotation matrix that performs some coordinate transform,
-        /// this function returns the matrix that reverses that trasnform.
+        /// this function returns the matrix that reverses that transform.
         /// </remarks>
         /// <param name="rotation">The rotation matrix to be inverted.</param>
         /// <returns>A rotation matrix that performs the opposite transformation.</returns>
@@ -8004,40 +7963,12 @@ $ASTRO_IAU_DATA()
             return refr;
         }
 
-        private static AxisInfo EarthRotationAxis(AstroTime time)
-        {
-            AxisInfo axis;
-
-            // Unlike the other planets, we have a model of precession and nutation
-            // for the Earth's axis that provides a north pole vector.
-            // So calculate the vector first, then derive the (RA,DEC) angles from the vector.
-
-            // Start with a north pole vector in equator-of-date coordinates: (0,0,1).
-            var pos1 = new AstroVector(0.0, 0.0, 1.0, time);
-
-            // Convert the vector into J2000 coordinates.
-            AstroVector pos2 = nutation(pos1, time, PrecessDirection.Into2000);
-            axis.north = precession(pos2, time, PrecessDirection.Into2000);
-
-            // Derive angular values: right ascension and declination.
-            Equatorial equ = Astronomy.EquatorFromVector(axis.north);
-            axis.ra = equ.ra;
-            axis.dec = equ.dec;
-
-            // Use a modified version of the era() function that does not trim to 0..360 degrees.
-            // This expression is also corrected to give the correct angle at the J2000 epoch.
-            axis.spin = 190.41375788700253 + (360.9856122880876 * time.ut);
-
-            return axis;
-        }
-
-
         /// <summary>
         /// Calculates the inverse of an atmospheric refraction angle.
         /// </summary>
         /// <remarks>
         /// Given an observed altitude angle that includes atmospheric refraction,
-        /// calculate the negative angular correction to obtain the unrefracted
+        /// calculates the negative angular correction to obtain the unrefracted
         /// altitude. This is useful for cases where observed horizontal
         /// coordinates are to be converted to another orientation system,
         /// but refraction first must be removed from the observed position.
@@ -8071,6 +8002,35 @@ $ASTRO_IAU_DATA()
                 altitude -= diff;
             }
         }
+
+
+        private static AxisInfo EarthRotationAxis(AstroTime time)
+        {
+            AxisInfo axis;
+
+            // Unlike the other planets, we have a model of precession and nutation
+            // for the Earth's axis that provides a north pole vector.
+            // So calculate the vector first, then derive the (RA,DEC) angles from the vector.
+
+            // Start with a north pole vector in equator-of-date coordinates: (0,0,1).
+            var pos1 = new AstroVector(0.0, 0.0, 1.0, time);
+
+            // Convert the vector into J2000 coordinates.
+            AstroVector pos2 = nutation(pos1, PrecessDirection.Into2000);
+            axis.north = precession(pos2, PrecessDirection.Into2000);
+
+            // Derive angular values: right ascension and declination.
+            Equatorial equ = Astronomy.EquatorFromVector(axis.north);
+            axis.ra = equ.ra;
+            axis.dec = equ.dec;
+
+            // Use a modified version of the era() function that does not trim to 0..360 degrees.
+            // This expression is also corrected to give the correct angle at the J2000 epoch.
+            axis.spin = 190.41375788700253 + (360.9856122880876 * time.ut);
+
+            return axis;
+        }
+
 
         /// <summary>
         /// Calculates information about a body's rotation axis at a given time.
@@ -8477,7 +8437,7 @@ $ASTRO_IAU_DATA()
         /// A location near the Earth's mean sea level that defines the observer's horizon.
         /// </param>
         /// <returns>
-        /// A rotation matrix that converts HOR to EQD at `time` and for `observer`.
+        /// A rotation matrix that converts HOR to EQJ at `time` and for `observer`.
         /// </returns>
         public static RotationMatrix Rotation_HOR_EQJ(AstroTime time, Observer observer)
         {
@@ -8724,10 +8684,10 @@ $ASTRO_IAU_DATA()
         /// constellation that contains that point.
         /// </remarks>
         /// <param name="ra">
-        /// The right ascension (RA) of a point in the sky, using the J2000 equatorial system.
+        /// The right ascension (RA) of a point in the sky, using the J2000 equatorial system (EQJ).
         /// </param>
         /// <param name="dec">
-        /// The declination (DEC) of a point in the sky, using the J2000 equatorial system.
+        /// The declination (DEC) of a point in the sky, using the J2000 equatorial system (EQJ).
         /// </param>
         /// <returns>
         /// A structure that contains the 3-letter abbreviation and full name
@@ -8782,7 +8742,7 @@ $ASTRO_IAU_DATA()
                     return new ConstellationInfo(ConstelNames[b.index].symbol, ConstelNames[b.index].name, equ1875.ra, equ1875.dec);
 
             // This should never happen!
-            throw new Exception("Unable to find constellation for given coordinates.");
+            throw new Exception($"Unable to find constellation for coordinates: RA={ra}, DEC={dec}");
         }
 
 $ASTRO_CONSTEL()

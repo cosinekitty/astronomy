@@ -172,7 +172,7 @@ these are used in function and type names.
 <a name="Astronomy.CALLISTO_RADIUS_KM"></a>
 ### `const double Astronomy.CALLISTO_RADIUS_KM = 2410.3;`
 
-**The The mean radius of Jupiter's moon Callisto, expressed in kilometers.**
+**The mean radius of Jupiter's moon Callisto, expressed in kilometers.**
 
 
 ---
@@ -188,7 +188,7 @@ these are used in function and type names.
 <a name="Astronomy.EUROPA_RADIUS_KM"></a>
 ### `const double Astronomy.EUROPA_RADIUS_KM = 1560.8;`
 
-**The The mean radius of Jupiter's moon Europa, expressed in kilometers.**
+**The mean radius of Jupiter's moon Europa, expressed in kilometers.**
 
 
 ---
@@ -196,7 +196,7 @@ these are used in function and type names.
 <a name="Astronomy.GANYMEDE_RADIUS_KM"></a>
 ### `const double Astronomy.GANYMEDE_RADIUS_KM = 2631.2;`
 
-**The The mean radius of Jupiter's moon Ganymede, expressed in kilometers.**
+**The mean radius of Jupiter's moon Ganymede, expressed in kilometers.**
 
 
 ---
@@ -212,7 +212,7 @@ these are used in function and type names.
 <a name="Astronomy.IO_RADIUS_KM"></a>
 ### `const double Astronomy.IO_RADIUS_KM = 1821.6;`
 
-**The The mean radius of Jupiter's moon Io, expressed in kilometers.**
+**The mean radius of Jupiter's moon Io, expressed in kilometers.**
 
 
 ---
@@ -343,8 +343,8 @@ constellation that contains that point.
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| `double` | `ra` | The right ascension (RA) of a point in the sky, using the J2000 equatorial system. |
-| `double` | `dec` | The declination (DEC) of a point in the sky, using the J2000 equatorial system. |
+| `double` | `ra` | The right ascension (RA) of a point in the sky, using the J2000 equatorial system (EQJ). |
+| `double` | `dec` | The declination (DEC) of a point in the sky, using the J2000 equatorial system (EQJ). |
 
 **Returns:** A structure that contains the 3-letter abbreviation and full name of the constellation that contains the given (ra,dec), along with the converted B1875 (ra,dec) for that point.
 
@@ -574,14 +574,14 @@ movement of the Earth with respect to the rays of light coming from that body.
 **Calculates the distance between a body and the Sun at a given time.**
 
 Given a date and time, this function calculates the distance between
-the center of `body` and the center of the Sun.
+the center of `body` and the center of the Sun, expressed in AU.
 For the planets Mercury through Neptune, this function is significantly
 more efficient than calling [`Astronomy.HelioVector`](#Astronomy.HelioVector) followed by taking the length
 of the resulting vector.
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| [`Body`](#Body) | `body` | A body for which to calculate a heliocentric distance: the Sun, Moon, or any of the planets. |
+| [`Body`](#Body) | `body` | A body for which to calculate a heliocentric distance: the Sun, Moon, EMB, SSB, or any of the planets. |
 | [`AstroTime`](#AstroTime) | `time` | The date and time for which to calculate the heliocentric distance. |
 
 **Returns:** The heliocentric distance in AU.
@@ -621,7 +621,7 @@ of the Earth at noon UTC on 1 January 2000.
 The position is not corrected for light travel time or aberration.
 This is different from the behavior of [`Astronomy.GeoVector`](#Astronomy.GeoVector).
 
-If given an invalid value for `body`, this function will throw an `ArgumentException`.
+If given an invalid value for `body`, this function will throw an [`InvalidBodyException`](#InvalidBodyException).
 
 | Type | Parameter | Description |
 | --- | --- | --- |
@@ -747,7 +747,7 @@ the rings appear edge-on, and are thus nearly invisible from the Earth. The `rin
 **Calculates the inverse of an atmospheric refraction angle.**
 
 Given an observed altitude angle that includes atmospheric refraction,
-calculate the negative angular correction to obtain the unrefracted
+calculates the negative angular correction to obtain the unrefracted
 altitude. This is useful for cases where observed horizontal
 coordinates are to be converted to another orientation system,
 but refraction first must be removed from the observed position.
@@ -765,7 +765,7 @@ but refraction first must be removed from the observed position.
 **Calculates the inverse of a rotation matrix.**
 
 Given a rotation matrix that performs some coordinate transform,
-this function returns the matrix that reverses that trasnform.
+this function returns the matrix that reverses that transform.
 
 | Type | Parameter | Description |
 | --- | --- | --- |
@@ -788,7 +788,10 @@ velocity components are in AU/day.
 To convert to heliocentric position vectors, call [`Astronomy.HelioVector`](#Astronomy.HelioVector)
 with `Body.Jupiter` to get Jupiter's heliocentric position, then
 add the jovicentric positions. Likewise, you can call [`Astronomy.GeoVector`](#Astronomy.GeoVector)
-to convert to geocentric positions.
+to convert to geocentric positions; however, you will have to manually
+correct for light travel time from the Jupiter system to Earth to
+figure out what time to pass to `jupiterMoons` to get an accurate picture
+of how Jupiter and its moons look from Earth.
 
 | Type | Parameter | Description |
 | --- | --- | --- |
@@ -1451,7 +1454,7 @@ Target: EQJ = equatorial system, using equator at the J2000 epoch.
 | [`AstroTime`](#AstroTime) | `time` | The date and time of the observation. |
 | [`Observer`](#Observer) | `observer` | A location near the Earth's mean sea level that defines the observer's horizon. |
 
-**Returns:** A rotation matrix that converts HOR to EQD at `time` and for `observer`.
+**Returns:** A rotation matrix that converts HOR to EQJ at `time` and for `observer`.
 
 <a name="Astronomy.RotationAxis"></a>
 ### Astronomy.RotationAxis(body, time) &#8658; [`AxisInfo`](#AxisInfo)
@@ -2189,7 +2192,7 @@ an `AstroTime` value that can be passed to Astronomy Engine functions.
 
 **Converts this `AstroTime` to ISO 8601 format, expressed in UTC with millisecond resolution.**
 
-**Returns:** Example: "2019-08-30T17:45:22.763".
+**Returns:** Example: "2019-08-30T17:45:22.763Z".
 
 <a name="AstroTime.ToUtcDateTime"></a>
 ### AstroTime.ToUtcDateTime() &#8658; `DateTime`
@@ -2352,7 +2355,7 @@ When reporting a solar eclipse observed at a specific location on the Earth
 (a "local" solar eclipse), a series of events occur. In addition
 to the time of each event, it is important to know the altitude of the Sun,
 because each event may be invisible to the observer if the Sun is below
-the horizon (i.e. it at night).
+the horizon.
 
 If `altitude` is negative, the event is theoretical only; it would be
 visible if the Earth were transparent, but the observer cannot actually see it.
@@ -2464,9 +2467,6 @@ oriented with respect to the projection of the Earth's equator onto the sky.
 Returned by [`Astronomy.SearchGlobalSolarEclipse`](#Astronomy.SearchGlobalSolarEclipse) or [`Astronomy.NextGlobalSolarEclipse`](#Astronomy.NextGlobalSolarEclipse)
 to report information about a solar eclipse event.
 
-Field `peak` holds the date and time of the peak of the eclipse, defined as
-the instant when the axis of the Moon's shadow cone passes closest to the Earth's center.
-
 The eclipse is classified as partial, annular, or total, depending on the
 maximum amount of the Sun's disc obscured, as seen at the peak location
 on the surface of the Earth.
@@ -2487,7 +2487,7 @@ not be used.
 | Type | Name | Description |
 | --- | --- | --- |
 | [`EclipseKind`](#EclipseKind) | `kind` | The type of solar eclipse: `EclipseKind.Partial`, `EclipseKind.Annular`, or `EclipseKind.Total`. |
-| [`AstroTime`](#AstroTime) | `peak` | The date and time of the eclipse at its peak. |
+| [`AstroTime`](#AstroTime) | `peak` | The date and time when the solar eclipse is at its darkest. This is the instant when the axis of the Moon's shadow cone passes closest to the Earth's center. |
 | `double` | `distance` | The distance between the Sun/Moon shadow axis and the center of the Earth, in kilometers. |
 | `double` | `latitude` | The geographic latitude at the center of the peak eclipse shadow. |
 | `double` | `longitude` | The geographic longitude at the center of the peak eclipse shadow. |
@@ -2617,7 +2617,7 @@ See [`EclipseEvent`](#EclipseEvent) for more information.
 Returned by [`Astronomy.SearchLunarEclipse`](#Astronomy.SearchLunarEclipse) or [`Astronomy.NextLunarEclipse`](#Astronomy.NextLunarEclipse)
 to report information about a lunar eclipse event.
 When a lunar eclipse is found, it is classified as penumbral, partial, or total.
-Penumbral eclipses are difficult to observe, because the moon is only slightly dimmed
+Penumbral eclipses are difficult to observe, because the Moon is only slightly dimmed
 by the Earth's penumbra; no part of the Moon touches the Earth's umbra.
 Partial eclipses occur when part, but not all, of the Moon touches the Earth's umbra.
 Total eclipses occur when the entire Moon passes into the Earth's umbra.
@@ -2715,7 +2715,7 @@ from a particular place on the Earth.
 <a name="RotationMatrix"></a>
 ## `struct RotationMatrix`
 
-**Contains a rotation matrix that can be used to transform one coordinate system to another.**
+**A rotation matrix that can be used to transform one coordinate system to another.**
 
 | Type | Name | Description |
 | --- | --- | --- |

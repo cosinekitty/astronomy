@@ -593,7 +593,7 @@ For the Moon orbiting the Earth, apsis is a perigee or apogee, respectively.
 Returned by [SearchLunarEclipse](#SearchLunarEclipse) or [NextLunarEclipse](#NextLunarEclipse)
 to report information about a lunar eclipse event.
 When a lunar eclipse is found, it is classified as penumbral, partial, or total.
-Penumbral eclipses are difficult to observe, because the moon is only slightly dimmed
+Penumbral eclipses are difficult to observe, because the Moon is only slightly dimmed
 by the Earth's penumbra; no part of the Moon touches the Earth's umbra.
 Partial eclipses occur when part, but not all, of the Moon touches the Earth's umbra.
 Total eclipses occur when the entire Moon passes into the Earth's umbra.
@@ -630,9 +630,6 @@ may determine the date and time of the beginning/end of each eclipse phase.
 Returned by [SearchGlobalSolarEclipse](#SearchGlobalSolarEclipse) or [NextGlobalSolarEclipse](#NextGlobalSolarEclipse)
 to report information about a solar eclipse event.
 
-Field `peak` holds the date and time of the peak of the eclipse, defined as
-the instant when the axis of the Moon's shadow cone passes closest to the Earth's center.
-
 The eclipse is classified as partial, annular, or total, depending on the
 maximum amount of the Sun's disc obscured, as seen at the peak location
 on the surface of the Earth.
@@ -654,7 +651,7 @@ not be used.
 | Name | Type | Description |
 | --- | --- | --- |
 | kind | <code>string</code> | One of the following string values: `"partial"`, `"annular"`, `"total"`. |
-| peak | [<code>AstroTime</code>](#AstroTime) | The date and time of the peak of the eclipse, defined as the instant     when the axis of the Moon's shadow cone passes closest to the Earth's center. |
+| peak | [<code>AstroTime</code>](#AstroTime) | The date and time when the solar eclipse is darkest.     This is the instant when the axis of the Moon's shadow cone passes closest to the Earth's center. |
 | distance | <code>number</code> | The distance in kilometers between the axis of the Moon's shadow cone     and the center of the Earth at the time indicated by `peak`. |
 | latitude | <code>number</code> \| <code>undefined</code> | If `kind` holds `"total"`, the geographic latitude in degrees     where the center of the Moon's shadow falls on the Earth at the     time indicated by `peak`; otherwise, `latitude` holds `undefined`. |
 | longitude | <code>number</code> \| <code>undefined</code> | If `kind` holds `"total"`, the geographic longitude in degrees     where the center of the Moon's shadow falls on the Earth at the     time indicated by `peak`; otherwise, `longitude` holds `undefined`. |
@@ -672,7 +669,7 @@ When reporting a solar eclipse observed at a specific location on the Earth
 (a "local" solar eclipse), a series of events occur. In addition
 to the time of each event, it is important to know the altitude of the Sun,
 because each event may be invisible to the observer if the Sun is below
-the horizon (i.e. it at night).
+the horizon.
 
 If `altitude` is negative, the event is theoretical only; it would be
 visible if the Earth were transparent, but the observer cannot actually see it.
@@ -2022,7 +2019,7 @@ See [SearchPlanetApsis](#SearchPlanetApsis) for more details.
 **Brief**: Calculates the inverse of a rotation matrix.
 
 Given a rotation matrix that performs some coordinate transform,
-this function returns the matrix that reverses that trasnform.  
+this function returns the matrix that reverses that transform.  
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -2216,7 +2213,7 @@ due to the lensing of the Earth's atmosphere.
 **Brief**: Calculates the inverse of an atmospheric refraction angle.
 
 Given an observed altitude angle that includes atmospheric refraction,
-calculate the negative angular correction to obtain the unrefracted
+calculates the negative angular correction to obtain the unrefracted
 altitude. This is useful for cases where observed horizontal
 coordinates are to be converted to another orientation system,
 but refraction first must be removed from the observed position.  
@@ -2382,7 +2379,7 @@ Target: EQD = equatorial system, using equator of the specified date/time.
 
 ## Rotation\_HOR\_EQJ(time, observer) ⇒ [<code>RotationMatrix</code>](#RotationMatrix)
 **Kind**: global function  
-**Returns**: [<code>RotationMatrix</code>](#RotationMatrix) - A rotation matrix that converts HOR to EQD at `time` and for `observer`.  
+**Returns**: [<code>RotationMatrix</code>](#RotationMatrix) - A rotation matrix that converts HOR to EQJ at `time` and for `observer`.  
 **Brief**: Calculates a rotation matrix from horizontal (HOR) to J2000 equatorial (EQJ).
 
 This is one of the family of functions that returns a rotation matrix

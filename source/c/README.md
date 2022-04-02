@@ -947,7 +947,7 @@ When the body is Saturn, the returned structure contains a field `ring_tilt` tha
 
 
 
-Given an observed altitude angle that includes atmospheric refraction, calculate the negative angular correction to obtain the unrefracted altitude. This is useful for cases where observed horizontal coordinates are to be converted to another orientation system, but refraction first must be removed from the observed position.
+Given an observed altitude angle that includes atmospheric refraction, calculates the negative angular correction to obtain the unrefracted altitude. This is useful for cases where observed horizontal coordinates are to be converted to another orientation system, but refraction first must be removed from the observed position.
 
 
 
@@ -972,7 +972,7 @@ Given an observed altitude angle that includes atmospheric refraction, calculate
 
 
 
-Given a rotation matrix that performs some coordinate transform, this function returns the matrix that reverses that trasnform.
+Given a rotation matrix that performs some coordinate transform, this function returns the matrix that reverses that transform.
 
 
 
@@ -998,7 +998,9 @@ Given a rotation matrix that performs some coordinate transform, this function r
 
 Calculates position and velocity vectors for Jupiter's moons Io, Europa, Ganymede, and Callisto, at the given date and time. The vectors are jovicentric (relative to the center of Jupiter). Their orientation is the Earth's equatorial system at the J2000 epoch (EQJ). The position components are expressed in astronomical units (AU), and the velocity components are in AU/day.
 
-To convert to heliocentric position vectors, call [`Astronomy_HelioVector`](#Astronomy_HelioVector) with `BODY_JUPITER` to get Jupiter's heliocentric position, then add the jovicentric positions. Likewise, you can call [`Astronomy_GeoVector`](#Astronomy_GeoVector) with `BODY_JUPITER` to convert to geocentric positions.
+To convert to heliocentric position vectors, call [`Astronomy_HelioVector`](#Astronomy_HelioVector) with `BODY_JUPITER` to get Jupiter's heliocentric position, then add the jovicentric positions.
+
+Likewise, you can call [`Astronomy_GeoVector`](#Astronomy_GeoVector) with `BODY_JUPITER` to convert to geocentric positions. However, you will have to manually correct for light travel time from the Jupiter system to Earth to figure out what time to pass to `Astronomy_JupiterMoons` to get an accurate picture of how Jupiter and its moons look from Earth.
 
 
 
@@ -1994,7 +1996,7 @@ This is one of the family of functions that returns a rotation matrix for conver
 
 
 
-**Returns:**  A rotation matrix that converts HOR to EQD at `time` and for `observer`. 
+**Returns:**  A rotation matrix that converts HOR to EQJ at `time` and for `observer`. 
 
 
 

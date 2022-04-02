@@ -9,7 +9,7 @@ if not exist !CTESTEXE! (
 
 echo.Diffing calculations.
 
-!CTESTEXE! diff 7.9e-17 temp\c_check.txt dotnet\csharp_test\csharp_check.txt
+!CTESTEXE! diff 4.9e-15 temp\c_check.txt dotnet\csharp_test\csharp_check.txt
 if errorlevel 1 (exit /b 1)
 
 !CTESTEXE! diff 5.6e-15 temp\c_check.txt temp\js_check.txt

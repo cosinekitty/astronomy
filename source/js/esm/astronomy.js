@@ -5491,7 +5491,7 @@ export function NextPlanetApsis(body, apsis) {
  * @brief Calculates the inverse of a rotation matrix.
  *
  * Given a rotation matrix that performs some coordinate transform,
- * this function returns the matrix that reverses that trasnform.
+ * this function returns the matrix that reverses that transform.
  *
  * @param {RotationMatrix} rotation
  *      The rotation matrix to be inverted.
@@ -5821,7 +5821,7 @@ export function Refraction(refraction, altitude) {
  * @brief Calculates the inverse of an atmospheric refraction angle.
  *
  * Given an observed altitude angle that includes atmospheric refraction,
- * calculate the negative angular correction to obtain the unrefracted
+ * calculates the negative angular correction to obtain the unrefracted
  * altitude. This is useful for cases where observed horizontal
  * coordinates are to be converted to another orientation system,
  * but refraction first must be removed from the observed position.
@@ -6050,7 +6050,7 @@ export function Rotation_HOR_EQD(time, observer) {
  *      A location near the Earth's mean sea level that defines the observer's horizon.
  *
  * @returns {RotationMatrix}
- *      A rotation matrix that converts HOR to EQD at `time` and for `observer`.
+ *      A rotation matrix that converts HOR to EQJ at `time` and for `observer`.
  */
 export function Rotation_HOR_EQJ(time, observer) {
     time = MakeTime(time);
@@ -7202,7 +7202,7 @@ export function Constellation(ra, dec) {
  * Returned by {@link SearchLunarEclipse} or {@link NextLunarEclipse}
  * to report information about a lunar eclipse event.
  * When a lunar eclipse is found, it is classified as penumbral, partial, or total.
- * Penumbral eclipses are difficult to observe, because the moon is only slightly dimmed
+ * Penumbral eclipses are difficult to observe, because the Moon is only slightly dimmed
  * by the Earth's penumbra; no part of the Moon touches the Earth's umbra.
  * Partial eclipses occur when part, but not all, of the Moon touches the Earth's umbra.
  * Total eclipses occur when the entire Moon passes into the Earth's umbra.
@@ -7494,9 +7494,6 @@ export function SearchLunarEclipse(date) {
  * Returned by {@link SearchGlobalSolarEclipse} or {@link NextGlobalSolarEclipse}
  * to report information about a solar eclipse event.
  *
- * Field `peak` holds the date and time of the peak of the eclipse, defined as
- * the instant when the axis of the Moon's shadow cone passes closest to the Earth's center.
- *
  * The eclipse is classified as partial, annular, or total, depending on the
  * maximum amount of the Sun's disc obscured, as seen at the peak location
  * on the surface of the Earth.
@@ -7518,8 +7515,8 @@ export function SearchLunarEclipse(date) {
  *     One of the following string values: `"partial"`, `"annular"`, `"total"`.
  *
  * @property {AstroTime} peak
- *     The date and time of the peak of the eclipse, defined as the instant
- *     when the axis of the Moon's shadow cone passes closest to the Earth's center.
+ *     The date and time when the solar eclipse is darkest.
+ *     This is the instant when the axis of the Moon's shadow cone passes closest to the Earth's center.
  *
  * @property {number} distance
  *     The distance in kilometers between the axis of the Moon's shadow cone
@@ -7714,7 +7711,7 @@ export function NextGlobalSolarEclipse(prevEclipseTime) {
  * (a "local" solar eclipse), a series of events occur. In addition
  * to the time of each event, it is important to know the altitude of the Sun,
  * because each event may be invisible to the observer if the Sun is below
- * the horizon (i.e. it at night).
+ * the horizon.
  *
  * If `altitude` is negative, the event is theoretical only; it would be
  * visible if the Earth were transparent, but the observer cannot actually see it.
