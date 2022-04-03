@@ -7,6 +7,9 @@ Fail()
 
 [[ "$1" == "" || "$1" == "-v" ]] || Fail "Invalid command line options."
 
+# Make sure we don't get confused by stale calculations.
+rm -f temp/k_check.txt
+
 cd ../source/kotlin || Fail "Cannot change dir to ../source/kotlin"
 rm -rf build
 if ! ./gradlew assemble build test dokkaGfm; then
@@ -16,11 +19,15 @@ if ! ./gradlew assemble build test dokkaGfm; then
     Fail "Error building/testing Kotlin code."
 fi
 
+cd ../../generate || Fail "Cannot change dir to ../../generate"
+./generate $1 check temp/k_check.txt || Fail "Verification failure for Kotlin unit test output."
+
 # The above gradlew call also generated all the Markdown documentation.
 # The other languages do this from makedoc, but Kotlin is an exception.
 # Finish putting together custom documentation for GitHub.
-cd ../../generate/kotlindoc || Fail "Cannot change dir to ../../generate/kotlindoc"
+cd kotlindoc || Fail "Cannot change dir to kotlindoc"
 ./format_kotlin_doc.py || Fail "Error running ./format_kotlin_doc.py"
+cd .. || Fail "Cannot change dir to .."
 
 #for file in temp/kotlin_longitude_*.txt; do
 #    ./generate $1 check ${file} || Fail "Failed verification of file ${file}"
