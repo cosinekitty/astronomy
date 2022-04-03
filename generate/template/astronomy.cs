@@ -4765,8 +4765,6 @@ $ASTRO_IAU_DATA()
         /// thus the difference would equal zero at the moment in time the planet reaches the
         /// desired longitude.
         ///
-        /// Every call to `func.Eval` must either return a valid #AstroTime or throw an exception.
-        ///
         /// The search calls `func.Eval` repeatedly to rapidly narrow in on any ascending
         /// root within the time window specified by `t1` and `t2`. The search never
         /// reports a solution outside this time window.
@@ -4842,8 +4840,8 @@ $ASTRO_IAU_DATA()
                 /* Try to find a parabola that passes through the 3 points we have sampled: */
                 /* (t1,f1), (tmid,fmid), (t2,f2) */
 
-                double q_x, q_ut, q_df_dt;
-                if (QuadInterp(tmid.ut, t2.ut - tmid.ut, f1, fmid, f2, out q_x, out q_ut, out q_df_dt))
+                double q_ut, q_df_dt;
+                if (QuadInterp(tmid.ut, t2.ut - tmid.ut, f1, fmid, f2, out q_ut, out q_df_dt))
                 {
                     var tq = new AstroTime(q_ut);
                     double fq = func.Eval(tq);
@@ -4866,9 +4864,8 @@ $ASTRO_IAU_DATA()
                             {
                                 if ((tright.ut - t1.ut)*(tright.ut - t2.ut) < 0.0)
                                 {
-                                    double fleft, fright;
-                                    fleft = func.Eval(tleft);
-                                    fright = func.Eval(tright);
+                                    double fleft = func.Eval(tleft);
+                                    double fright = func.Eval(tright);
                                     if (fleft<0.0 && fright>=0.0)
                                     {
                                         f1 = fleft;
@@ -4909,12 +4906,13 @@ $ASTRO_IAU_DATA()
 
         private static bool QuadInterp(
             double tm, double dt, double fa, double fm, double fb,
-            out double out_x, out double out_t, out double out_df_dt)
+            out double out_t, out double out_df_dt)
         {
             double Q, R, S;
-            double u, ru, x1, x2;
+            double u, ru;
+            double x, x1, x2;
 
-            out_x = out_t = out_df_dt = 0.0;
+            out_t = out_df_dt = 0.0;
 
             Q = (fb + fa)/2.0 - fm;
             R = (fb - fa)/2.0;
@@ -4925,8 +4923,8 @@ $ASTRO_IAU_DATA()
                 /* This is a line, not a parabola. */
                 if (R == 0.0)
                     return false;       /* This is a HORIZONTAL line... can't make progress! */
-                out_x = -S / R;
-                if (out_x < -1.0 || out_x > +1.0)
+                x = -S / R;
+                if (x < -1.0 || x > +1.0)
                     return false;   /* out of bounds */
             }
             else
@@ -4943,16 +4941,16 @@ $ASTRO_IAU_DATA()
                 {
                     if (-1.0 <= x2 && x2 <= +1.0)
                         return false;   /* two roots are within bounds; we require a unique zero-crossing. */
-                    out_x = x1;
+                    x = x1;
                 }
                 else if (-1.0 <= x2 && x2 <= +1.0)
-                    out_x = x2;
+                    x = x2;
                 else
                     return false;   /* neither root is within bounds */
             }
 
-            out_t = tm + out_x*dt;
-            out_df_dt = (2*Q*out_x + R) / dt;
+            out_t = tm + x*dt;
+            out_df_dt = (2*Q*x + R) / dt;
             return true;   /* success */
         }
 

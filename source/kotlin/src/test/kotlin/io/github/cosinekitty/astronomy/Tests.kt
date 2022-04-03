@@ -9,6 +9,7 @@ import kotlin.test.fail
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlin.math.abs
+import kotlin.math.cos
 import kotlin.math.PI
 import kotlin.math.sqrt
 import kotlin.text.Regex
@@ -689,6 +690,28 @@ class Tests {
 
             ++lnum;
         }
+    }
+
+    //----------------------------------------------------------------------------------------
+
+    @Test
+    fun `Basic search`() {
+        class CosineIdentityFunc : SearchContext {
+            override fun eval(time: AstroTime) = time.ut - cos(time.ut)
+        }
+
+        val toleranceDays = 1.0e-9
+        val toleranceSeconds = toleranceDays / 86400.0
+        val func = CosineIdentityFunc()
+        val time1 = AstroTime(0.0)
+        val time2 = AstroTime(1.0)
+        val tsolve = Astronomy.search(func, time1, time2, toleranceSeconds)
+        if (tsolve == null)
+            fail("Basic search failed")
+
+        val utCorrect = 0.7390851332151607
+        val diff = abs(tsolve.ut - utCorrect)
+        assertTrue(diff <= toleranceDays, "search found a solution outside tolerance: diff = $diff")
     }
 
     //----------------------------------------------------------------------------------------

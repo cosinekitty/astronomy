@@ -4,3 +4,5 @@
 
 [jvm]\
 val [time](time.md): [AstroTime](../-astro-time/index.md)
+
+The time of the body's node.

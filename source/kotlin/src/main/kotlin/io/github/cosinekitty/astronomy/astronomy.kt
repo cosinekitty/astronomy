@@ -31,6 +31,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 import kotlin.math.absoluteValue
+import kotlin.math.abs
 import kotlin.math.acos
 import kotlin.math.atan2
 import kotlin.math.ceil
@@ -1870,11 +1871,26 @@ enum class NodeEventKind {
  * to report information about the center of the Moon passing through the ecliptic plane.
  */
 class NodeEventInfo(
+    /**
+     * The time of the body's node.
+     */
     val time: AstroTime,
+
+    /**
+     * Whether the node is ascending or descending.
+     */
     val kind: NodeEventKind
 )
 
 
+/**
+ * Represents a function whose ascending root is to be found.
+ *
+ * This interface must be implemented for callers of [Astronomy.search]
+ * in order to find the ascending root of a smooth function.
+ * A class that implements `SearchContext` can hold state information
+ * needed to evaluate the scalar function `eval`.
+ */
 interface SearchContext {
     /**
      * Evaluates a scalar function at a given time.
@@ -4119,6 +4135,193 @@ object Astronomy {
             calcJupiterMoon(time, jupiterMoonModel[2]),
             calcJupiterMoon(time, jupiterMoonModel[3])
         ))
+
+    /**
+     * Searches for a time at which a function's value increases through zero.
+     *
+     * Certain astronomy calculations involve finding a time when an event occurs.
+     * Often such events can be defined as the root of a function:
+     * the time at which the function's value becomes zero.
+     *
+     * `search` finds the *ascending root* of a function: the time at which
+     * the function's value becomes zero while having a positive slope. That is, as time increases,
+     * the function transitions from a negative value, through zero at a specific moment,
+     * to a positive value later. The goal of the search is to find that specific moment.
+     *
+     * The `func` parameter is an instance of the interface [SearchContext].
+     * As an example, a caller may wish to find the moment a celestial body reaches a certain
+     * ecliptic longitude. In that case, the caller might derive a class that contains
+     * a [Body] member to specify the body and a `Double` to hold the target longitude.
+     * It could subtract the target longitude from the actual longitude at a given time;
+     * thus the difference would equal zero at the moment in time the planet reaches the
+     * desired longitude.
+     *
+     * Every time it is called, `func.eval` returns a `Double` value or it throws an exception.
+     * If `func.eval` throws an exception, the search immediately fails and the exception
+     * is propagated to the caller. Otherwise, the search proceeds until it either finds
+     * the ascending root or fails for some reason.
+     *
+     * The search calls `func.eval` repeatedly to rapidly narrow in on any ascending
+     * root within the time window specified by `time1` and `time2`. The search never
+     * reports a solution outside this time window.
+     *
+     * `search` uses a combination of bisection and quadratic interpolation
+     * to minimize the number of function calls. However, it is critical that the
+     * supplied time window be small enough that there cannot be more than one root
+     * (ascedning or descending) within it; otherwise the search can fail.
+     * Beyond that, it helps to make the time window as small as possible, ideally
+     * such that the function itself resembles a smooth parabolic curve within that window.
+     *
+     * If an ascending root is not found, or more than one root
+     * (ascending and/or descending) exists within the window `time1`..`time2`,
+     * the search will return `null`.
+     *
+     * If the search does not converge within 20 iterations, it will throw an exception.
+     *
+     * @param func
+     *      The function for which to find the time of an ascending root.
+     *      See remarks above for more details.
+     *
+     * @param time1
+     *      The lower time bound of the search window.
+     *      See remarks above for more details.
+     *
+     * @param time2
+     *      The upper time bound of the search window.
+     *      See remarks above for more details.
+     *
+     * @param toleranceSeconds
+     *      Specifies an amount of time in seconds within which a bounded ascending root
+     *      is considered accurate enough to stop. A typical value is 1 second.
+     *
+     * @returns
+     *      If successful, returns an [AstroTime] value indicating a date and time
+     *      that is within `toleranceSeconds` of an ascending root.
+     *      If no ascending root is found, or more than one root exists in the time
+     *      window `time1`..`time2`, the function returns `null`.
+     */
+    fun search(
+        func: SearchContext,
+        time1: AstroTime,
+        time2: AstroTime,
+        toleranceSeconds: Double
+    ): AstroTime? {
+        var t1 = time1
+        var t2 = time2
+        val iterLimit = 20
+        val toleranceDays = abs(toleranceSeconds / SECONDS_PER_DAY)
+        var f1 = func.eval(t1)
+        var f2 = func.eval(t2)
+        var calcFmid = true
+        var fmid = 0.0
+
+        for (iter in 1..iterLimit) {
+            val dt = (t2.tt - t1.tt) / 2.0
+            val tmid = t1.addDays(dt)
+            if (dt.absoluteValue < toleranceDays) {
+                // We are close enough to the event to stop the search.
+                return tmid
+            }
+
+            if (calcFmid)
+                fmid = func.eval(tmid)
+            else
+                calcFmid = true     // we already have the correct value of fmid from the previous loop
+
+            // Quadratic interpolation:
+            // Try to find a parabola that passes through the 3 points we have sampled:
+            // (t1,f1), (tmid,fmid), (t2,f2).
+            val tm = tmid.ut
+            val tspan = t2.ut - tmid.ut
+            val q = (f2 + f1) - fmid
+            val r = (f2 - f1) / 2.0
+            val s = fmid
+            var foundInterpolation = false
+            var x = Double.NaN
+            if (q == 0.0) {
+                // This is a line, not a parabola.
+                if (r != 0.0) {     // skip horizontal lines: they don't have a root
+                    x = -s / r
+                    foundInterpolation = (-1.0 <= x && x <= +1.0)
+                }
+            } else {
+                // This really is a parabola. Find its roots x1, x2.
+                val u = r*r - 4.0*q*s
+                if (u > 0.0) {      // skip imaginary or tangent roots
+                    // See if there is a unique solution for x in the range [-1, +1].
+                    val ru = sqrt(u)
+                    val x1 = (-r + ru) / (2.0 * q)
+                    val x2 = (-r - ru) / (2.0 * q)
+                    val x1Valid = (-1.0 <= x1 && x1 <= +1.0)
+                    val x2Valid = (-1.0 <= x2 && x2 <= +1.0)
+                    if (x1Valid && !x2Valid) {
+                        x = x1
+                        foundInterpolation = true
+                    } else if (x2Valid && !x1Valid) {
+                        x = x2
+                        foundInterpolation = true
+                    }
+                }
+            }
+            if (foundInterpolation) {
+                val qut = tm + x*tspan
+                val qslope = (2*q*x + r) / tspan
+                val tq = AstroTime(qut)
+                val fq = func.eval(tq)
+                if (qslope != 0.0) {
+                    var dtGuess = abs(fq / qslope)
+                    if (dtGuess < toleranceDays) {
+                        // The estimated time error is small enough that we can quit now.
+                        return tq
+                    }
+
+                    // Try guessing a tighter boundary with the interpolated root at the center.
+                    dtGuess *= 1.2
+                    if (dtGuess < dt / 10.0) {
+                        val tleft = tq.addDays(-dtGuess)
+                        val tright = tq.addDays(+dtGuess)
+                        if ((tleft.ut - t1.ut)*(tleft.ut - t2.ut) < 0.0) {
+                            if ((tright.ut - t1.ut)*(tright.ut - t2.ut) < 0.0) {
+                                val fleft = func.eval(tleft)
+                                val fright = func.eval(tright)
+                                if ((fleft < 0.0) && (fright >= 0.0)) {
+                                    f1 = fleft
+                                    f2 = fright
+                                    t1 = tleft
+                                    t2 = tright
+                                    fmid = fq
+                                    calcFmid = false    // save a little work; no need to recalculate fmid next time
+                                    continue
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // The quadratic interpolation didn't work this time.
+            // Use bisection: divide the region in two parts and pick
+            // whichever one appears to contain a root.
+            if (f1 < 0.0 && fmid >= 0.0) {
+                t2 = tmid
+                f2 = fmid
+                continue
+            }
+
+            if (fmid < 0.0 && f2 >= 0.0) {
+                t1 = tmid
+                f1 = fmid
+                continue
+            }
+
+            // Either there is no ascending zero-crossing in this range
+            // or the search window is too wide (more than one zero-crossing).
+            // Either way, the search has failed.
+            return null
+        }
+
+        throw InternalError("Search did not converge within $iterLimit iterations.")
+    }
 
     /**
      * Calculates a rotation matrix from equatorial J2000 (EQJ) to ecliptic J2000 (ECL).

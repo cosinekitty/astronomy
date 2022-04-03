@@ -19,5 +19,5 @@ This object is returned by Astronomy.searchMoonNode and Astronomy.nextMoonNode t
 
 | Name | Summary |
 |---|---|
-| [kind](kind.md) | [jvm]<br>val [kind](kind.md): [NodeEventKind](../-node-event-kind/index.md) |
-| [time](time.md) | [jvm]<br>val [time](time.md): [AstroTime](../-astro-time/index.md) |
+| [kind](kind.md) | [jvm]<br>val [kind](kind.md): [NodeEventKind](../-node-event-kind/index.md)<br>Whether the node is ascending or descending. |
+| [time](time.md) | [jvm]<br>val [time](time.md): [AstroTime](../-astro-time/index.md)<br>The time of the body's node. |

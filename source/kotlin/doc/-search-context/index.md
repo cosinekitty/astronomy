@@ -5,6 +5,10 @@
 [jvm]\
 interface [SearchContext](index.md)
 
+Represents a function whose ascending root is to be found.
+
+This interface must be implemented for callers of [Astronomy.search](../-astronomy/search.md) in order to find the ascending root of a smooth function. A class that implements SearchContext can hold state information needed to evaluate the scalar function eval.
+
 ## Functions
 
 | Name | Summary |

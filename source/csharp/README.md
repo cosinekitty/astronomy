@@ -1501,8 +1501,6 @@ It could subtract the target longitude from the actual longitude at a given time
 thus the difference would equal zero at the moment in time the planet reaches the
 desired longitude.
 
-Every call to `func.Eval` must either return a valid [`AstroTime`](#AstroTime) or throw an exception.
-
 The search calls `func.Eval` repeatedly to rapidly narrow in on any ascending
 root within the time window specified by `t1` and `t2`. The search never
 reports a solution outside this time window.
