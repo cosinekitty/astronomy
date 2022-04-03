@@ -157,10 +157,10 @@ popd
 REM -----------------------------------------------------------------------------------------
 echo.
 echo.Validating JavaScript code.
-node test.js astro_check > temp/js_check.txt
+node test.js astro_check > temp\js_check.txt
 if errorlevel 1 (exit /b 1)
 
-!GENEXE! check temp/js_check.txt
+!GENEXE! check temp\js_check.txt
 if errorlevel 1 (exit /b 1)
 
 echo.
@@ -217,6 +217,11 @@ if errorlevel 1 (exit /b 1)
 REM -----------------------------------------------------------------------------------------
 
 echo.Running Kotlin tests.
+if exist temp\k_check.txt (
+    del temp\k_check.txt
+    if errorlevel 1 (exit /b 1)
+)
+
 pushd ..\source\kotlin
 if exist build (
     rd /s/q build
@@ -232,6 +237,9 @@ if exist build (
 call gradlew.bat assemble build test dokkaHtml
 if errorlevel 1 (exit /b 1)
 popd
+
+!GENEXE! check temp\k_check.txt
+if errorlevel 1 (exit /b 1)
 
 REM -----------------------------------------------------------------------------------------
 
