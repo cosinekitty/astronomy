@@ -677,10 +677,7 @@ class Tests {
         var lnum = 0
         val regex = Regex("""^\s*(\d+)\s+(\S+)\s+(\S+)\s+([A-Z][a-zA-Z]{2})\s*$""")
         for (line in infile.readLines()) {
-            val m = regex.matchEntire(line)
-            if (m == null) {
-                fail("$filename line $lnum: syntax error")
-            }
+            val m = regex.matchEntire(line) ?: fail("$filename line $lnum: syntax error")
             val id: Int = (m.groups[1] ?: fail("$filename line $lnum: cannot parse ID")).value.toInt()
             val ra: Double = (m.groups[2] ?: fail("$filename line $lnum: cannot parse RA")).value.toDouble()
             val dec: Double = (m.groups[3] ?: fail("$filename line $lnum: cannot parse DEC")).value.toDouble()
@@ -712,6 +709,89 @@ class Tests {
         val utCorrect = 0.7390851332151607
         val diff = abs(tsolve.ut - utCorrect)
         assertTrue(diff <= toleranceDays, "search found a solution outside tolerance: diff = $diff")
+    }
+
+    //----------------------------------------------------------------------------------------
+
+    @Test
+    fun `Seasons test`() {
+        val filename = dataRootDir + "seasons/seasons.txt"
+        val regex = Regex("""^(\d+)-(\d+)-(\d+)T(\d+):(\d+)Z\s+([A-Za-z]+)\s*$""")
+        var lnum = 0
+        var currentYear = 0
+        var marchCount = 0
+        var juneCount = 0
+        var septemberCount = 0
+        var decemberCount = 0
+        var seasons: SeasonsInfo? = null
+        val infile = File(filename)
+        var maxMinutes = 0.0
+        for (line in infile.readLines()) {
+            ++lnum
+            // 2019-01-03T05:20Z Perihelion
+            // 2019-03-20T21:58Z Equinox
+            // 2019-06-21T15:54Z Solstice
+            // 2019-07-04T22:11Z Aphelion
+            // 2019-09-23T07:50Z Equinox
+            // 2019-12-22T04:19Z Solstice
+            val m = regex.matchEntire(line) ?: fail("$filename line $lnum: syntax error")
+            val year = (m.groups[1] ?: fail("$filename line $lnum: cannot parse year")).value.toInt()
+            val month = (m.groups[2] ?: fail("$filename line $lnum: cannot parse month")).value.toInt()
+            val day = (m.groups[3] ?: fail("$filename line $lnum: cannot parse day")).value.toInt()
+            val hour = (m.groups[4] ?: fail("$filename line $lnum: cannot parse hour")).value.toInt()
+            val minute = (m.groups[5] ?: fail("$filename line $lnum: cannot parse minute")).value.toInt()
+            val name = (m.groups[6] ?: fail("$filename line $lnum: cannot parse event name")).value
+            val correctTime = AstroTime(year, month, day, hour, minute, 0.0)
+            if (year != currentYear) {
+                currentYear = year
+                seasons = Astronomy.seasons(year)
+            }
+
+            if (seasons == null)
+                fail("internal error: seasons == null")
+
+            var calcTime: AstroTime
+            when (name) {
+                "Equinox" -> when (month) {
+                    3 -> {
+                        calcTime = seasons.marchEquinox
+                        ++marchCount
+                    }
+                    9 -> {
+                        calcTime = seasons.septemberEquinox
+                        ++septemberCount
+                    }
+                    else -> fail("$filename line $lnum: Invalid equinox date in test data.")
+                }
+                "Solstice" -> when (month) {
+                    6 -> {
+                        calcTime = seasons.juneSolstice
+                        ++juneCount
+                    }
+                    12 -> {
+                        calcTime = seasons.decemberSolstice
+                        ++decemberCount
+                    }
+                    else -> fail("$filename line $lnum: Invalid solstice date in test data.")
+                }
+                "Aphelion", "Perihelion" -> {
+                    // not yet calculated
+                    continue
+                }
+                else -> fail("$filename line $lnum: unknown event type: $name")
+            }
+            // Verify that the calculated time matches the current time for this event.
+            val diffMinutes = (24.0 * 60.0) * abs(calcTime.tt - correctTime.tt)
+            if (diffMinutes > maxMinutes)
+                maxMinutes = diffMinutes
+
+            if (diffMinutes > 2.38)
+                fail("$filename line $lnum: excessive error ($name): $diffMinutes minutes.")
+        }
+        assertTrue(marchCount == 301, "marchCount = $marchCount")
+        assertTrue(juneCount == 301, "juneCount = $marchCount")
+        assertTrue(septemberCount == 301, "septemberCount = $marchCount")
+        assertTrue(decemberCount == 301, "decemberCount = $marchCount")
     }
 
     //----------------------------------------------------------------------------------------

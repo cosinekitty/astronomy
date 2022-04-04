@@ -3,23 +3,23 @@
 # SeasonsInfo
 
 [jvm]\
-class [SeasonsInfo](index.md)(marEquinox: [AstroTime](../-astro-time/index.md), junSolstice: [AstroTime](../-astro-time/index.md), sepEquinox: [AstroTime](../-astro-time/index.md), decSolstice: [AstroTime](../-astro-time/index.md))
+class [SeasonsInfo](index.md)(marchEquinox: [AstroTime](../-astro-time/index.md), juneSolstice: [AstroTime](../-astro-time/index.md), septemberEquinox: [AstroTime](../-astro-time/index.md), decemberSolstice: [AstroTime](../-astro-time/index.md))
 
 The dates and times of changes of season for a given calendar year.
 
-Call Astronomy.seasons to calculate this data structure for a given year.
+Call [Astronomy.seasons](../-astronomy/seasons.md) to calculate this data structure for a given year.
 
 ## Constructors
 
 | | |
 |---|---|
-| [SeasonsInfo](-seasons-info.md) | [jvm]<br>fun [SeasonsInfo](-seasons-info.md)(marEquinox: [AstroTime](../-astro-time/index.md), junSolstice: [AstroTime](../-astro-time/index.md), sepEquinox: [AstroTime](../-astro-time/index.md), decSolstice: [AstroTime](../-astro-time/index.md)) |
+| [SeasonsInfo](-seasons-info.md) | [jvm]<br>fun [SeasonsInfo](-seasons-info.md)(marchEquinox: [AstroTime](../-astro-time/index.md), juneSolstice: [AstroTime](../-astro-time/index.md), septemberEquinox: [AstroTime](../-astro-time/index.md), decemberSolstice: [AstroTime](../-astro-time/index.md)) |
 
 ## Properties
 
 | Name | Summary |
 |---|---|
-| [decSolstice](dec-solstice.md) | [jvm]<br>val [decSolstice](dec-solstice.md): [AstroTime](../-astro-time/index.md)<br>The date and time of the December solstice for the specified year. |
-| [junSolstice](jun-solstice.md) | [jvm]<br>val [junSolstice](jun-solstice.md): [AstroTime](../-astro-time/index.md)<br>The date and time of the June soltice for the specified year. |
-| [marEquinox](mar-equinox.md) | [jvm]<br>val [marEquinox](mar-equinox.md): [AstroTime](../-astro-time/index.md)<br>The date and time of the March equinox for the specified year. |
-| [sepEquinox](sep-equinox.md) | [jvm]<br>val [sepEquinox](sep-equinox.md): [AstroTime](../-astro-time/index.md)<br>The date and time of the September equinox for the specified year. |
+| [decemberSolstice](december-solstice.md) | [jvm]<br>val [decemberSolstice](december-solstice.md): [AstroTime](../-astro-time/index.md)<br>The date and time of the December solstice for the specified year. |
+| [juneSolstice](june-solstice.md) | [jvm]<br>val [juneSolstice](june-solstice.md): [AstroTime](../-astro-time/index.md)<br>The date and time of the June soltice for the specified year. |
+| [marchEquinox](march-equinox.md) | [jvm]<br>val [marchEquinox](march-equinox.md): [AstroTime](../-astro-time/index.md)<br>The date and time of the March equinox for the specified year. |
+| [septemberEquinox](september-equinox.md) | [jvm]<br>val [septemberEquinox](september-equinox.md): [AstroTime](../-astro-time/index.md)<br>The date and time of the September equinox for the specified year. |

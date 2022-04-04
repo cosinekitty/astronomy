@@ -5912,7 +5912,8 @@ namespace CosineKitty
         private static AstroTime FindSeasonChange(double targetLon, int year, int month, int day)
         {
             var startTime = new AstroTime(year, month, day, 0, 0, 0);
-            return SearchSunLongitude(targetLon, startTime, 4.0);
+            return SearchSunLongitude(targetLon, startTime, 4.0) ??
+                throw new Exception($"Cannot find solution for Sun longitude {targetLon}");
         }
 
         /// <summary>
@@ -5927,7 +5928,7 @@ namespace CosineKitty
         /// to calculate all equinoxes and solstices for a given calendar year.
         ///
         /// The function searches the window of time specified by `startTime` and `startTime+limitDays`.
-        /// The search will return an error if the Sun never reaches the longitude `targetLon` or
+        /// The search will return `null` if the Sun never reaches the longitude `targetLon` or
         /// if the window is so large that the longitude ranges more than 180 degrees within it.
         /// It is recommended to keep the window smaller than 10 days when possible.
         /// </remarks>

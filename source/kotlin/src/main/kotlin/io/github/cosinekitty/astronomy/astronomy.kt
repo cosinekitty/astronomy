@@ -1281,22 +1281,22 @@ class SeasonsInfo(
     /**
      * The date and time of the March equinox for the specified year.
      */
-    val marEquinox: AstroTime,
+    val marchEquinox: AstroTime,
 
     /**
      * The date and time of the June soltice for the specified year.
      */
-    val junSolstice: AstroTime,
+    val juneSolstice: AstroTime,
 
     /**
      * The date and time of the September equinox for the specified year.
      */
-    val sepEquinox: AstroTime,
+    val septemberEquinox: AstroTime,
 
     /**
      * The date and time of the December solstice for the specified year.
      */
-    val decSolstice: AstroTime
+    val decemberSolstice: AstroTime
 )
 
 
@@ -4321,6 +4321,136 @@ object Astronomy {
         }
 
         throw InternalError("Search did not converge within $iterLimit iterations.")
+    }
+
+    /**
+     * Calculates geocentric ecliptic coordinates for the Sun.
+     *
+     * This function calculates the position of the Sun as seen from the Earth.
+     * The returned value includes both Cartesian and spherical coordinates.
+     * The x-coordinate and longitude values in the returned object are based
+     * on the *true equinox of date*: one of two points in the sky where the instantaneous
+     * plane of the Earth's equator at the given date and time (the *equatorial plane*)
+     * intersects with the plane of the Earth's orbit around the Sun (the *ecliptic plane*).
+     * By convention, the apparent location of the Sun at the March equinox is chosen
+     * as the longitude origin and x-axis direction, instead of the one for September.
+     *
+     * `sunPosition` corrects for precession and nutation of the Earth's axis
+     * in order to obtain the exact equatorial plane at the given time.
+     *
+     * This function can be used for calculating changes of seasons: equinoxes and solstices.
+     * In fact, the function [Astronomy.seasons] does use this function for that purpose.
+     *
+     * @param time
+     *      The date and time for which to calculate the Sun's position.
+     *
+     * @returns
+     *      The ecliptic coordinates of the Sun using the Earth's true equator of date.
+     */
+    fun sunPosition(time: AstroTime): Ecliptic {
+        // Correct for light travel time from the Sun.
+        // Otherwise season calculations (equinox, solstice) will all be early by about 8 minutes!
+        val adjustedTime = time.addDays(-1.0 / C_AUDAY)
+        val earth2000 = helioEarthPos(adjustedTime)
+
+        // Convert heliocentric location of Earth to geocentric location of Sun.
+        val sun2000 = -earth2000
+
+        // Convert to equatorial Cartesian coordinates of date.
+        val sunOfDate = gyration(sun2000, PrecessDirection.From2000)
+
+        // Convert equatorial coordinates to ecliptic coordinates.
+        val trueObliq = earthTilt(adjustedTime).tobl.degreesToRadians()
+        return rotateEquatorialToEcliptic(sunOfDate, trueObliq)
+    }
+
+    private fun rotateEquatorialToEcliptic(pos: AstroVector, obliqRadians: Double): Ecliptic {
+        val cosOb = cos(obliqRadians)
+        val sinOb = sin(obliqRadians)
+        val ex = +pos.x
+        val ey = +pos.y*cosOb + pos.z*sinOb
+        val ez = -pos.y*sinOb + pos.z*cosOb
+        val xyproj = hypot(ex, ey)
+        var elon = 0.0
+        if (xyproj > 0.0) {
+            elon = atan2(ey, ex).radiansToDegrees().withMinDegreeValue(0.0)
+        }
+        val elat = atan2(ez, xyproj).radiansToDegrees()
+        val vec = AstroVector(ex, ey, ez, pos.t)
+        return Ecliptic(vec, elat, elon)
+    }
+
+    /**
+     * Searches for the time when the Sun reaches an apparent ecliptic longitude as seen from the Earth.
+     *
+     * This function finds the moment in time, if any exists in the given time window,
+     * that the center of the Sun reaches a specific ecliptic longitude as seen from the center of the Earth.
+     *
+     * This function can be used to determine equinoxes and solstices.
+     * However, it is usually more convenient and efficient to call [Astronomy.seasons]
+     * to calculate all equinoxes and solstices for a given calendar year.
+     *
+     * The function searches the window of time specified by `startTime` and `startTime+limitDays`.
+     * The search will return `null` if the Sun never reaches the longitude `targetLon` or
+     * if the window is so large that the longitude ranges more than 180 degrees within it.
+     * It is recommended to keep the window smaller than 10 days when possible.
+     */
+    fun searchSunLongitude(targetLon: Double, startTime: AstroTime, limitDays: Double): AstroTime? {
+        class Context(val targetLon: Double) : SearchContext {
+            override fun eval(time: AstroTime) =
+                longitudeOffset(Astronomy.sunPosition(time).elon - targetLon)
+        }
+        val context = Context(targetLon)
+        val time2 = startTime.addDays(limitDays)
+        return search(context, startTime, time2, 1.0)
+    }
+
+    /**
+     * Finds both equinoxes and both solstices for a given calendar year.
+     *
+     * The changes of seasons are defined by solstices and equinoxes.
+     * Given a calendar year number, this function calculates the
+     * March and September equinoxes and the June and December solstices.
+     *
+     * The equinoxes are the moments twice each year when the plane of the
+     * Earth's equator passes through the center of the Sun. In other words,
+     * the Sun's declination is zero at both equinoxes.
+     * The March equinox defines the beginning of spring in the northern hemisphere
+     * and the beginning of autumn in the southern hemisphere.
+     * The September equinox defines the beginning of autumn in the northern hemisphere
+     * and the beginning of spring in the southern hemisphere.
+     *
+     * The solstices are the moments twice each year when one of the Earth's poles
+     * is most tilted toward the Sun. More precisely, the Sun's declination reaches
+     * its minimum value at the December solstice, which defines the beginning of
+     * winter in the northern hemisphere and the beginning of summer in the southern
+     * hemisphere. The Sun's declination reaches its maximum value at the June solstice,
+     * which defines the beginning of summer in the northern hemisphere and the beginning
+     * of winter in the southern hemisphere.
+     *
+     * @param year
+     *      The calendar year number for which to calculate equinoxes and solstices.
+     *      The value may be any integer, but only the years 1800 through 2100 have been
+     *      validated for accuracy: unit testing against data from the
+     *      United States Naval Observatory confirms that all equinoxes and solstices
+     *      for that range of years are within 2 minutes of the correct time.
+     *
+     * @returns
+     *      A [SeasonsInfo] object that contains four [AstroTime] values:
+     *      the March and September equinoxes and the June and December solstices.
+     */
+    fun seasons(year: Int) =
+        SeasonsInfo(
+            findSeasonChange(  0.0, year,  3, 19),
+            findSeasonChange( 90.0, year,  6, 19),
+            findSeasonChange(180.0, year,  9, 21),
+            findSeasonChange(270.0, year, 12, 20)
+        )
+
+    private fun findSeasonChange(targetLon: Double, year: Int, month: Int, day: Int): AstroTime {
+        var startTime = AstroTime(year, month, day, 0, 0, 0.0)
+        return searchSunLongitude(targetLon, startTime, 4.0) ?:
+            throw InternalError("Cannot find solution for Sun longitude $targetLon")
     }
 
     /**

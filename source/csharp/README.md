@@ -1894,7 +1894,7 @@ However, it is usually more convenient and efficient to call [`Astronomy.Seasons
 to calculate all equinoxes and solstices for a given calendar year.
 
 The function searches the window of time specified by `startTime` and `startTime+limitDays`.
-The search will return an error if the Sun never reaches the longitude `targetLon` or
+The search will return `null` if the Sun never reaches the longitude `targetLon` or
 if the window is so large that the longitude ranges more than 180 degrees within it.
 It is recommended to keep the window smaller than 10 days when possible.
 
