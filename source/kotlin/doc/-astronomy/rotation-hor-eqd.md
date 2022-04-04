@@ -11,7 +11,7 @@ This is one of the family of functions that returns a rotation matrix for conver
 
 #### Return
 
-    A rotation matrix that converts HOR to EQD at `time` and for `observer`.
+A rotation matrix that converts HOR to EQD at time and for observer.
 
 ## Parameters
 

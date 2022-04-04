@@ -11,11 +11,7 @@ This is one of the family of functions that returns a rotation matrix for conver
 
 #### Return
 
-    A rotation matrix that converts EQD to HOR at `time` and for `observer`.
-    The components of the horizontal vector are:
-    x = north, y = west, z = zenith (straight up from the observer).
-    These components are chosen so that the "right-hand rule" works for the vector
-    and so that north represents the direction where azimuth = 0.
+A rotation matrix that converts EQD to HOR at time and for observer. The components of the horizontal vector are: x = north, y = west, z = zenith (straight up from the observer). These components are chosen so that the "right-hand rule" works for the vector and so that north represents the direction where azimuth = 0.
 
 ## Parameters
 

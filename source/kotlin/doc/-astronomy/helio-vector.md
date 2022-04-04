@@ -15,7 +15,7 @@ If given an invalid value for body, this function will throw an [InvalidBodyExce
 
 #### Return
 
-    The heliocentric position vector of the center of the given body.
+The heliocentric position vector of the center of the given body.
 
 ## Parameters
 

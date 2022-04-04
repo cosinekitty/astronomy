@@ -11,7 +11,7 @@ Given a date and time, this function calculates the distance between the center 
 
 #### Return
 
-    The heliocentric distance in AU.
+The heliocentric distance in AU.
 
 ## Parameters
 

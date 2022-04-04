@@ -15,7 +15,7 @@ This function can be used for calculating changes of seasons: equinoxes and sols
 
 #### Return
 
-    The ecliptic coordinates of the Sun using the Earth's true equator of date.
+The ecliptic coordinates of the Sun using the Earth's true equator of date.
 
 ## Parameters
 

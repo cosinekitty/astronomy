@@ -15,7 +15,7 @@ This function optionally corrects for atmospheric refraction. For most uses, it 
 
 #### Return
 
-    The body's apparent horizontal coordinates and equatorial coordinates, both optionally corrected for refraction.
+The body's apparent horizontal coordinates and equatorial coordinates, both optionally corrected for refraction.
 
 ## Parameters
 

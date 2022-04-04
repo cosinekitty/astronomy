@@ -11,7 +11,7 @@ Assumes this contains apparent horizontal coordinates: lat holds the refracted a
 
 #### Return
 
-    A vector in the horizontal system: `x` = north, `y` = west, and `z` = zenith (up).
+A vector in the horizontal system: x = north, y = west, and z = zenith (up).
 
 ## Parameters
 

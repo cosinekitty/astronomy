@@ -17,7 +17,7 @@ Correction for aberration is optional, using the aberration parameter.
 
 #### Return
 
-    Topocentric equatorial coordinates of the celestial body.
+Topocentric equatorial coordinates of the celestial body.
 
 ## Parameters
 

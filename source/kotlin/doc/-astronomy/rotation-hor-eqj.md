@@ -9,7 +9,7 @@ Calculates a rotation matrix from horizontal (HOR) to J2000 equatorial (EQJ). Th
 
 #### Return
 
-    A rotation matrix that converts HOR to EQJ at `time` and for `observer`.
+A rotation matrix that converts HOR to EQJ at time and for observer.
 
 ## Parameters
 

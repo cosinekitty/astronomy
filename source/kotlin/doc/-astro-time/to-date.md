@@ -9,4 +9,4 @@ Converts this object to a native Date equivalent.
 
 #### Return
 
-a UTC Date object for this AstroTime value.
+A UTC Date object for this AstroTime value.

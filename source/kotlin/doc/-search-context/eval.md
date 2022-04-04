@@ -9,7 +9,7 @@ Evaluates a scalar function at a given time.
 
 #### Return
 
-    The floating point value of the scalar function at the given time.
+The floating point value of the scalar function at the given time.
 
 ## Parameters
 

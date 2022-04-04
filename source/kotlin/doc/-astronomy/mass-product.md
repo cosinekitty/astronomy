@@ -11,7 +11,7 @@ For problems involving the gravitational interactions of Solar System bodies, it
 
 #### Return
 
-    The mass product of the given body in au^3/day^2.
+The mass product of the given body in au^3/day^2.
 
 ## Parameters
 

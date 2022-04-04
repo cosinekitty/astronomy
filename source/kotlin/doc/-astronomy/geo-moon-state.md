@@ -11,7 +11,7 @@ Given a time of observation, calculates the Moon's position and velocity vectors
 
 #### Return
 
-    The Moon's position and velocity vectors in J2000 equatorial coordinates (EQJ).
+The Moon's position and velocity vectors in J2000 equatorial coordinates (EQJ).
 
 ## Parameters
 

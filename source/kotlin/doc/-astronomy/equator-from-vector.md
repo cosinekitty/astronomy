@@ -9,4 +9,4 @@ Given an equatorial vector, calculates equatorial angular coordinates.
 
 #### Return
 
-    Angular coordinates expressed in the same equatorial system as `vector`.
+Angular coordinates expressed in the same equatorial system as vector.

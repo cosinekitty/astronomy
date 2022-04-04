@@ -17,7 +17,7 @@ Also, the position can optionally be corrected for [aberration](https://en.wikip
 
 #### Return
 
-    A geocentric position vector of the center of the given body.
+A geocentric position vector of the center of the given body.
 
 ## Parameters
 

@@ -11,9 +11,7 @@ Given J2000 equatorial (EQJ) coordinates of a point in the sky, determines the c
 
 #### Return
 
-    A structure that contains the 3-letter abbreviation and full name
-    of the constellation that contains the given (ra,dec), along with
-    the converted B1875 (ra,dec) for that point.
+A structure that contains the 3-letter abbreviation and full name of the constellation that contains the given (ra,dec), along with the converted B1875 (ra,dec) for that point.
 
 ## Parameters
 

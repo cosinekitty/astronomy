@@ -17,7 +17,7 @@ See [AxisInfo](../-axis-info/index.md) for more detailed information.
 
 #### Return
 
-    North pole orientation and body spin angle.
+North pole orientation and body spin angle.
 
 ## Parameters
 

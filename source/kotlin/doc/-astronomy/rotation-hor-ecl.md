@@ -11,7 +11,7 @@ This is one of the family of functions that returns a rotation matrix for conver
 
 #### Return
 
-    A rotation matrix that converts HOR to ECL.
+A rotation matrix that converts HOR to ECL.
 
 ## Parameters
 
