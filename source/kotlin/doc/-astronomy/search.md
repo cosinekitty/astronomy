@@ -23,6 +23,13 @@ If an ascending root is not found, or more than one root (ascending and/or desce
 
 If the search does not converge within 20 iterations, it will throw an exception.
 
+#### Return
+
+    If successful, returns an [AstroTime] value indicating a date and time
+    that is within `toleranceSeconds` of an ascending root.
+    If no ascending root is found, or more than one root exists in the time
+    window `time1`..`time2`, the function returns `null`.
+
 ## Parameters
 
 jvm

@@ -13,6 +13,10 @@ The position is not corrected for light travel time or aberration. This is diffe
 
 If given an invalid value for body, this function will throw an [InvalidBodyException](../-invalid-body-exception/index.md).
 
+#### Return
+
+    The heliocentric position vector of the center of the given body.
+
 ## Parameters
 
 jvm

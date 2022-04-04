@@ -15,6 +15,10 @@ https://astropedia.astrogeology.usgs.gov/download/Docs/WGCCRE/WGCCRE2015reprint.
 
 See [AxisInfo](../-axis-info/index.md) for more detailed information.
 
+#### Return
+
+    North pole orientation and body spin angle.
+
 ## Parameters
 
 jvm

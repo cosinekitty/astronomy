@@ -9,6 +9,10 @@ Calculates equatorial geocentric position and velocity of the Moon at a given ti
 
 Given a time of observation, calculates the Moon's position and velocity vectors. The position and velocity are of the Moon's center relative to the Earth's center. The position (x, y, z) components are expressed in AU (astronomical units). The velocity (vx, vy, vz) components are expressed in AU/day. The coordinates are oriented with respect to the Earth's equator at the J2000 epoch. In Astronomy Engine, this orientation is called EQJ. If you need the Moon's position only, and not its velocity, it is much more efficient to use [Astronomy.geoMoon](geo-moon.md) instead.
 
+#### Return
+
+    The Moon's position and velocity vectors in J2000 equatorial coordinates (EQJ).
+
 ## Parameters
 
 jvm

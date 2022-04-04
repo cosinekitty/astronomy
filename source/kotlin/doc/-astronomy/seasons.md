@@ -13,6 +13,11 @@ The equinoxes are the moments twice each year when the plane of the Earth's equa
 
 The solstices are the moments twice each year when one of the Earth's poles is most tilted toward the Sun. More precisely, the Sun's declination reaches its minimum value at the December solstice, which defines the beginning of winter in the northern hemisphere and the beginning of summer in the southern hemisphere. The Sun's declination reaches its maximum value at the June solstice, which defines the beginning of summer in the northern hemisphere and the beginning of winter in the southern hemisphere.
 
+#### Return
+
+    A [SeasonsInfo] object that contains four [AstroTime] values:
+    the March and September equinoxes and the June and December solstices.
+
 ## Parameters
 
 jvm

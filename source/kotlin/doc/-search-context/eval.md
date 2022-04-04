@@ -7,6 +7,10 @@ abstract fun [eval](eval.md)(time: [AstroTime](../-astro-time/index.md)): [Doubl
 
 Evaluates a scalar function at a given time.
 
+#### Return
+
+    The floating point value of the scalar function at the given time.
+
 ## Parameters
 
 jvm

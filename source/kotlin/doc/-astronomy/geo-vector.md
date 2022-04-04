@@ -15,6 +15,10 @@ Unlike [Astronomy.helioVector](helio-vector.md), this function always corrects f
 
 Also, the position can optionally be corrected for [aberration](https://en.wikipedia.org/wiki/Aberration_of_light), an effect causing the apparent direction of the body to be shifted due to transverse movement of the Earth with respect to the rays of light coming from that body.
 
+#### Return
+
+    A geocentric position vector of the center of the given body.
+
 ## Parameters
 
 jvm

@@ -9,6 +9,12 @@ Determines the constellation that contains the given point in the sky.
 
 Given J2000 equatorial (EQJ) coordinates of a point in the sky, determines the constellation that contains that point.
 
+#### Return
+
+    A structure that contains the 3-letter abbreviation and full name
+    of the constellation that contains the given (ra,dec), along with
+    the converted B1875 (ra,dec) for that point.
+
 ## Parameters
 
 jvm

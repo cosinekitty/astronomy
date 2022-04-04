@@ -9,6 +9,10 @@ Calculates the distance between a body and the Sun at a given time.
 
 Given a date and time, this function calculates the distance between the center of body and the center of the Sun, expressed in AU. For the planets Mercury through Neptune, this function is significantly more efficient than calling [Astronomy.helioVector](helio-vector.md) followed by taking the length of the resulting vector.
 
+#### Return
+
+    The heliocentric distance in AU.
+
 ## Parameters
 
 jvm

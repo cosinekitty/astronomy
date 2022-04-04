@@ -1035,7 +1035,7 @@ data class Spherical(
      *      The refraction option used to model atmospheric lensing. See [Astronomy.refractionAngle].
      *      This specifies how refraction is to be removed from the altitude stored in `this.lat`.
      *
-     * @returns
+     * @return
      *      A vector in the horizontal system: `x` = north, `y` = west, and `z` = zenith (up).
      */
     fun toVectorFromHorizon(time: AstroTime, refraction: Refraction): AstroVector =
@@ -1898,7 +1898,7 @@ interface SearchContext {
      * @param time
      *      The time at which to evaluate the function.
      *
-     * @returns
+     * @return
      *      The floating point value of the scalar function at the given time.
      */
     fun eval(time: AstroTime): Double
@@ -2926,7 +2926,7 @@ object Astronomy {
      *      Allowed to be the Sun, Moon, EMB (Earth/Moon Barycenter), or any planet.
      *      Any other value will cause an exception to be thrown.
      *
-     * @returns
+     * @return
      *      The mass product of the given body in au^3/day^2.
      */
     fun massProduct(body: Body): Double =
@@ -3122,7 +3122,7 @@ object Astronomy {
      * @param time
      *      The time of the observation.
      *
-     * @returns
+     * @return
      *      An EQD state vector that holds the geocentric position and velocity
      *      of the observer at the given time.
      */
@@ -3164,7 +3164,7 @@ object Astronomy {
      * @param ovec
      *      A geocentric position on or near the Earth's surface, in EQD coordinates.
      *
-     * @returns
+     * @return
      *      The location on or near the Earth's surface corresponding to
      *      the given position vector and time.
      */
@@ -3323,7 +3323,7 @@ object Astronomy {
      * @vector
      *      A vector in an equatorial coordinate system.
      *
-     * @returns
+     * @return
      *      Angular coordinates expressed in the same equatorial system as `vector`.
      */
     fun equatorFromVector(vector: AstroVector): Equatorial {
@@ -3377,7 +3377,7 @@ object Astronomy {
      * @param time
      *      The time at which to calculate the body's rotation axis.
      *
-     * @returns
+     * @return
      *      North pole orientation and body spin angle.
      */
     fun rotationAxis(body: Body, time: AstroTime): AxisInfo {
@@ -3603,7 +3603,7 @@ object Astronomy {
      * @param time
      *      The date and time for which to calculate the Moon's position.
      *
-     * @returns
+     * @return
      *      The Moon's position vector in J2000 equatorial coordinates (EQJ).
      */
     fun geoMoon(time: AstroTime): AstroVector {
@@ -3628,7 +3628,7 @@ object Astronomy {
      * @param time
      *      The date and time for which to calculate the Moon's position and velocity.
      *
-     * @returns
+     * @return
      *      The Moon's position and velocity vectors in J2000 equatorial coordinates (EQJ).
      */
     fun geoMoonState(time: AstroTime): StateVector {
@@ -3727,7 +3727,7 @@ object Astronomy {
      * @param time
      *      The date and time for which to calculate the position.
      *
-     * @returns
+     * @return
      *      The heliocentric position vector of the center of the given body.
      */
     fun helioVector(body: Body, time: AstroTime): AstroVector =
@@ -3758,7 +3758,7 @@ object Astronomy {
      * @param time
      *      The date and time for which to calculate the distance.
      *
-     * @returns
+     * @return
      *      The heliocentric distance in AU.
      */
     fun helioDistance(body: Body, time: AstroTime): Double =
@@ -3790,7 +3790,7 @@ object Astronomy {
      * @param time
      *      The date and time for which to calculate position and velocity.
      *
-     * @returns
+     * @return
      *      A state vector that contains heliocentric position and velocity vectors.
      *      The positions are expressed in AU.
      *      The velocities are expressed in AU/day.
@@ -3835,7 +3835,7 @@ object Astronomy {
      * @param aberration
      *      `Aberration.Corrected` to correct for aberration, or `Aberration.None` to leave uncorrected.
      *
-     * @returns
+     * @return
      *      A geocentric position vector of the center of the given body.
      */
     fun geoVector(body: Body, time: AstroTime, aberration: Aberration): AstroVector {
@@ -3934,7 +3934,7 @@ object Astronomy {
      * @param aberration
      *      Selects whether or not to correct for aberration.
      *
-     * @returns
+     * @return
      *      Topocentric equatorial coordinates of the celestial body.
      */
     fun equator(
@@ -3997,7 +3997,7 @@ object Astronomy {
      *      The recommended value for most uses is `Refraction.Normal`.
      *      See remarks above for more details.
      *
-     * @returns
+     * @return
      *      The body's apparent horizontal coordinates and equatorial coordinates, both optionally corrected for refraction.
      */
     fun horizon(
@@ -4194,7 +4194,7 @@ object Astronomy {
      *      Specifies an amount of time in seconds within which a bounded ascending root
      *      is considered accurate enough to stop. A typical value is 1 second.
      *
-     * @returns
+     * @return
      *      If successful, returns an [AstroTime] value indicating a date and time
      *      that is within `toleranceSeconds` of an ascending root.
      *      If no ascending root is found, or more than one root exists in the time
@@ -4344,7 +4344,7 @@ object Astronomy {
      * @param time
      *      The date and time for which to calculate the Sun's position.
      *
-     * @returns
+     * @return
      *      The ecliptic coordinates of the Sun using the Earth's true equator of date.
      */
     fun sunPosition(time: AstroTime): Ecliptic {
@@ -4435,7 +4435,7 @@ object Astronomy {
      *      United States Naval Observatory confirms that all equinoxes and solstices
      *      for that range of years are within 2 minutes of the correct time.
      *
-     * @returns
+     * @return
      *      A [SeasonsInfo] object that contains four [AstroTime] values:
      *      the March and September equinoxes and the June and December solstices.
      */
@@ -4535,7 +4535,7 @@ object Astronomy {
      * @param observer
      *      A location near the Earth's mean sea level that defines the observer's horizon.
      *
-     * @returns
+     * @return
      *      A rotation matrix that converts EQD to HOR at `time` and for `observer`.
      *      The components of the horizontal vector are:
      *      x = north, y = west, z = zenith (straight up from the observer).
@@ -4583,7 +4583,7 @@ object Astronomy {
      * @param observer
      *      A location near the Earth's mean sea level that defines the observer's horizon.
      *
-     * @returns
+     * @return
      *      A rotation matrix that converts HOR to EQD at `time` and for `observer`.
      */
     fun rotationHorEqd(time: AstroTime, observer: Observer): RotationMatrix =
@@ -4602,7 +4602,7 @@ object Astronomy {
      * @param observer
      *      A location near the Earth's mean sea level that defines the observer's horizon.
      *
-     * @returns
+     * @return
      *      A rotation matrix that converts HOR to EQJ at `time` and for `observer`.
      */
     fun rotationHorEqj(time: AstroTime, observer: Observer): RotationMatrix =
@@ -4623,7 +4623,7 @@ object Astronomy {
      * @param observer
      *      A location near the Earth's mean sea level that defines the observer's horizon.
      *
-     * @returns
+     * @return
      *      A rotation matrix that converts EQJ to HOR at `time` and for `observer`.
      *      The components of the horizontal vector are:
      *      x = north, y = west, z = zenith (straight up from the observer).
@@ -4644,7 +4644,7 @@ object Astronomy {
      * @param time
      *      The date and time of the source equator.
      *
-     * @returns
+     * @return
      *      A rotation matrix that converts EQD to ECL.
      */
     fun rotationEqdEcl(time: AstroTime): RotationMatrix =
@@ -4662,7 +4662,7 @@ object Astronomy {
      * @param time
      *      The date and time of the desired equator.
      *
-     * @returns
+     * @return
      *      A rotation matrix that converts ECL to EQD.
      */
     fun rotationEclEqd(time: AstroTime): RotationMatrix =
@@ -4682,7 +4682,7 @@ object Astronomy {
      * @param observer
      *      A location near the Earth's mean sea level that defines the observer's horizon.
      *
-     * @returns
+     * @return
      *      A rotation matrix that converts ECL to HOR at `time` and for `observer`.
      *      The components of the horizontal vector are:
      *      x = north, y = west, z = zenith (straight up from the observer).
@@ -4707,7 +4707,7 @@ object Astronomy {
      * @param observer
      *      The location of the horizontal observer.
      *
-     * @returns
+     * @return
      *      A rotation matrix that converts HOR to ECL.
      */
     fun rotationHorEcl(time: AstroTime, observer: Observer): RotationMatrix =
@@ -4721,7 +4721,7 @@ object Astronomy {
      * Source: GAL = galactic system (IAU 1958 definition).
      * Target: EQJ = equatorial system, using the equator at the J2000 epoch.
      *
-     * @returns
+     * @return
      *      A rotation matrix that converts GAL to EQJ.
      */
     fun rotationEqjGal() =
@@ -4741,7 +4741,7 @@ object Astronomy {
      * Source: GAL = galactic system (IAU 1958 definition).
      * Target: EQJ = equatorial system, using the equator at the J2000 epoch.
      *
-     * @returns
+     * @return
      *      A rotation matrix that converts GAL to EQJ.
      */
     fun rotationGalEqj() =
@@ -4765,7 +4765,7 @@ object Astronomy {
      * @param dec
      *      The declination (DEC) of a point in the sky, using the J2000 equatorial system (EQJ).
      *
-     * @returns
+     * @return
      *      A structure that contains the 3-letter abbreviation and full name
      *      of the constellation that contains the given (ra,dec), along with
      *      the converted B1875 (ra,dec) for that point.

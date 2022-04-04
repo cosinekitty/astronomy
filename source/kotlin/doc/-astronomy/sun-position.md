@@ -13,6 +13,10 @@ sunPosition corrects for precession and nutation of the Earth's axis in order to
 
 This function can be used for calculating changes of seasons: equinoxes and solstices. In fact, the function [Astronomy.seasons](seasons.md) does use this function for that purpose.
 
+#### Return
+
+    The ecliptic coordinates of the Sun using the Earth's true equator of date.
+
 ## Parameters
 
 jvm

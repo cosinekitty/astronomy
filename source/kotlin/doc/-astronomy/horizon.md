@@ -13,6 +13,10 @@ The right ascension ra and declination dec passed in must be *equator of date* c
 
 This function optionally corrects for atmospheric refraction. For most uses, it is recommended to pass [Refraction.Normal](../-refraction/-normal/index.md) in the refraction parameter to correct for optical lensing of the Earth's atmosphere that causes objects to appear somewhat higher above the horizon than they actually are. However, callers may choose to avoid this correction by passing in [Refraction.None](../-refraction/-none/index.md). If refraction correction is enabled, the azimuth, altitude, right ascension, and declination in the [Topocentric](../-topocentric/index.md) object returned by this function will all be corrected for refraction. If refraction is disabled, none of these four coordinates will be corrected; in that case, the right ascension and declination in the returned structure will be numerically identical to the respective ra and dec values passed in.
 
+#### Return
+
+    The body's apparent horizontal coordinates and equatorial coordinates, both optionally corrected for refraction.
+
 ## Parameters
 
 jvm
