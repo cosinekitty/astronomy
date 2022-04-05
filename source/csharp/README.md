@@ -1740,7 +1740,7 @@ This function is useful for finding general phase angles outside those four quar
 | [`AstroTime`](#AstroTime) | `startTime` | The beginning of the time window in which to search for the Moon reaching the specified phase. |
 | `double` | `limitDays` | The number of days after `startTime` that limits the time window for the search. |
 
-**Returns:** If successful, returns the date and time the moon reaches the phase specified by `targetlon`. This function will return throw an exception if the phase does not occur within `limitDays` of `startTime`; that is, if the search window is too small.
+**Returns:** If successful, returns the date and time the moon reaches the phase specified by `targetlon`. This function will return `null` if the phase does not occur within `limitDays` of `startTime`; that is, if the search window is too small.
 
 <a name="Astronomy.SearchMoonQuarter"></a>
 ### Astronomy.SearchMoonQuarter(startTime) &#8658; [`MoonQuarterInfo`](#MoonQuarterInfo)
@@ -2525,6 +2525,15 @@ to report the visual magnitude and illuminated fraction of a celestial body at a
 | `double` | `phase_fraction` | A value in the range [0.0, 1.0] indicating what fraction of the body's apparent disc is illuminated, as seen from the Earth. |
 | `double` | `helio_dist` | The distance between the Sun and the body at the observation time. |
 | `double` | `ring_tilt` | For Saturn, the tilt angle in degrees of its rings as seen from Earth. For all other bodies, 0. |
+
+---
+
+<a name="InternalError"></a>
+## `class InternalError`
+
+**This exception indicates an unexpected error occurred inside Astronomy Engine.
+Please report any such errors by creating an issue at:
+https://github.com/cosinekitty/astronomy/issues**
 
 ---
 

@@ -378,7 +378,7 @@ class InternalError(Error):
     Astronomy Engine for everyone! (Thank you in advance from the author.)
     """
     def __init__(self):
-        Error.__init__(self, 'Internal error - please report issue at https://github.com/cosinekitty/astronomy/issues')
+        Error.__init__(self, 'Internal error - please report issue, including stack trace, at https://github.com/cosinekitty/astronomy/issues')
 
 class NoConvergeError(Error):
     """A numeric solver did not converge.
@@ -8667,7 +8667,7 @@ def SearchLunarEclipse(startTime):
         # Search for the next full moon. Any eclipse will be near it.
         fullmoon = SearchMoonPhase(180, fmtime, 40)
         if fullmoon is None:
-            raise Error('Cannot find full moon.')
+            raise InternalError()   # should have always found the next full moon
 
         # Pruning: if the full Moon's ecliptic latitude is too large,
         # a lunar eclipse is not possible. Avoid needless work searching for
@@ -8751,7 +8751,7 @@ def SearchGlobalSolarEclipse(startTime):
         # Search for the next new moon. Any eclipse will be near it.
         newmoon = SearchMoonPhase(0.0, nmtime, 40.0)
         if newmoon is None:
-            raise Error('Cannot find new moon')
+            raise InternalError()   # should always find the next new moon
 
         # Pruning: if the new moon's ecliptic latitude is too large, a solar eclipse is not possible.
         eclip_lat = _MoonEclipticLatitudeDegrees(newmoon)
@@ -8826,6 +8826,8 @@ def SearchLocalSolarEclipse(startTime, observer):
     while True:
         # Search for the next new moon. Any eclipse will be near it.
         newmoon = SearchMoonPhase(0.0, nmtime, 40.0)
+        if newmoon is None:
+            raise InternalError()   # should always find the next new moon
 
         # Pruning: if the new moon's ecliptic latitude is too large, a solar eclipse is not possible.
         eclip_lat = _MoonEclipticLatitudeDegrees(newmoon)
@@ -9080,7 +9082,7 @@ def SearchMoonNode(startTime):
             kind = NodeEventKind.Ascending if (eclip2.lat > eclip1.lat) else NodeEventKind.Descending
             result = Search(_MoonNodeSearchFunc, kind.value, time1, time2, 1.0)
             if result is None:
-                raise InternalError()
+                raise InternalError()   # should always find the next lunar node
             return NodeEventInfo(kind, result)
         time1 = time2
         eclip1 = eclip2
