@@ -6249,7 +6249,8 @@ $ASTRO_IAU_DATA()
             const double window = 0.03;        /* initial search window, in days, before/after given time */
             AstroTime t1 = search_center_time.AddDays(-window);
             AstroTime t2 = search_center_time.AddDays(+window);
-            AstroTime tx = Search(earthShadowSlopeContext, t1, t2, 1.0);
+            AstroTime tx = Search(earthShadowSlopeContext, t1, t2, 1.0) ??
+                throw new InternalError("Failed to find Earth peak shadow event.");
             return EarthShadow(tx);
         }
 
@@ -6356,8 +6357,10 @@ $ASTRO_IAU_DATA()
             double window = window_minutes / (24.0 * 60.0);
             AstroTime before = center_time.AddDays(-window);
             AstroTime after  = center_time.AddDays(+window);
-            AstroTime t1 = Search(new SearchContext_EarthShadow(radius_limit, -1.0), before, center_time, 1.0);
-            AstroTime t2 = Search(new SearchContext_EarthShadow(radius_limit, +1.0), center_time, after, 1.0);
+            AstroTime t1 = Search(new SearchContext_EarthShadow(radius_limit, -1.0), before, center_time, 1.0) ??
+                throw new InternalError("Failed to find start of shadow event.");
+            AstroTime t2 = Search(new SearchContext_EarthShadow(radius_limit, +1.0), center_time, after, 1.0) ??
+                throw new InternalError("Failed to find end of shadow event.");
             return (t2.ut - t1.ut) * ((24.0 * 60.0) / 2.0);    // convert days to minutes and average the semi-durations.
         }
 
@@ -6550,7 +6553,8 @@ $ASTRO_IAU_DATA()
             const double window = 0.03;     /* days before/after new moon to search for minimum shadow distance */
             AstroTime t1 = search_center_time.AddDays(-window);
             AstroTime t2 = search_center_time.AddDays(+window);
-            AstroTime time = Search(moonShadowSlopeContext, t1, t2, 1.0);
+            AstroTime time = Search(moonShadowSlopeContext, t1, t2, 1.0) ??
+                throw new InternalError("Failed to find Moon shadow event.");
             return MoonShadow(time);
         }
 
@@ -6564,7 +6568,8 @@ $ASTRO_IAU_DATA()
             AstroTime t1 = search_center_time.AddDays(-window);
             AstroTime t2 = search_center_time.AddDays(+window);
             var context = new SearchContext_LocalMoonShadowSlope(observer);
-            AstroTime time = Search(context, t1, t2, 1.0);
+            AstroTime time = Search(context, t1, t2, 1.0) ??
+                throw new InternalError("Failed to find local Moon peak shadow event.");
             return LocalMoonShadow(time, observer);
         }
 
@@ -6575,7 +6580,8 @@ $ASTRO_IAU_DATA()
             AstroTime t1 = search_center_time.AddDays(-window);
             AstroTime t2 = search_center_time.AddDays(+window);
             var context = new SearchContext_PlanetShadowSlope(body, planet_radius_km);
-            AstroTime time = Search(context, t1, t2, 1.0);
+            AstroTime time = Search(context, t1, t2, 1.0) ??
+                throw new InternalError("Failed to find peak planet shadow event.");
             return PlanetShadow(body, planet_radius_km, time);
         }
 
