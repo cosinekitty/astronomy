@@ -51,7 +51,20 @@ namespace CosineKitty
     {
         /// <summary>Creates an exception indicating that the given body is not valid for this operation.</summary>
         public InvalidBodyException(Body body):
-            base(string.Format("Invalid body: {0}", body))
+            base("Invalid body: " + body)
+            {}
+    }
+
+    /// <summary>
+    /// This exception indicates an unexpected error occurred inside Astronomy Engine.
+    /// Please report any such errors by creating an issue at:
+    /// https://github.com/cosinekitty/astronomy/issues
+    /// </summary>
+    public class InternalError: Exception
+    {
+        /// <summary>Creates an exception indicating that an unexpected error ocurred.</summary>
+        public InternalError(string message):
+            base("Internal error. Please report an issue at: https://github.com/cosinekitty/astronomy/issues. Diagnostic: " + message)
             {}
     }
 
@@ -5213,7 +5226,7 @@ namespace CosineKitty
 
                     ltime = ltime2;
                 }
-                throw new Exception("Light travel time correction did not converge");
+                throw new InternalError("Light travel time correction did not converge");
             }
         }
 
@@ -5913,7 +5926,7 @@ namespace CosineKitty
         {
             var startTime = new AstroTime(year, month, day, 0, 0, 0);
             return SearchSunLongitude(targetLon, startTime, 4.0) ??
-                throw new Exception($"Cannot find solution for Sun longitude {targetLon}");
+                throw new InternalError($"Cannot find solution for Sun longitude {targetLon}");
         }
 
         /// <summary>
@@ -6034,7 +6047,7 @@ namespace CosineKitty
             for(;;)
             {
                 if (++iter > iter_limit)
-                    throw new Exception(string.Format("Search did not converge within {0} iterations.", iter_limit));
+                    throw new InternalError(string.Format("Search did not converge within {0} iterations.", iter_limit));
 
                 double dt = (t2.tt - t1.tt) / 2.0;
                 AstroTime tmid = t1.AddDays(dt);
@@ -6247,9 +6260,10 @@ namespace CosineKitty
         /// </returns>
         public static MoonQuarterInfo SearchMoonQuarter(AstroTime startTime)
         {
-            double angres = MoonPhase(startTime);
-            int quarter = (1 + (int)Math.Floor(angres / 90.0)) % 4;
-            AstroTime qtime = SearchMoonPhase(90.0 * quarter, startTime, 10.0);
+            double currentPhaseAngle = MoonPhase(startTime);
+            int quarter = (1 + (int)Math.Floor(currentPhaseAngle / 90.0)) % 4;
+            AstroTime qtime = SearchMoonPhase(90.0 * quarter, startTime, 10.0) ??
+                throw new InternalError($"Unable to find moon quarter {quarter} for startTime={startTime}.");
             return new MoonQuarterInfo(quarter, qtime);
         }
 
@@ -6266,15 +6280,15 @@ namespace CosineKitty
         /// <returns>The moon quarter that occurs next in time after the one passed in `mq`.</returns>
         public static MoonQuarterInfo NextMoonQuarter(MoonQuarterInfo mq)
         {
-            /* Skip 6 days past the previous found moon quarter to find the next one. */
-            /* This is less than the minimum possible increment. */
-            /* So far I have seen the interval well contained by the range (6.5, 8.3) days. */
+            // Skip 6 days past the previous found moon quarter to find the next one.
+            // This is less than the minimum possible increment.
+            // So far I have seen the interval well contained by the range (6.5, 8.3) days.
 
             AstroTime time = mq.time.AddDays(6.0);
             MoonQuarterInfo next_mq = SearchMoonQuarter(time);
             /* Verify that we found the expected moon quarter. */
             if (next_mq.quarter != (1 + mq.quarter) % 4)
-                throw new Exception("Internal error: found the wrong moon quarter.");
+                throw new InternalError("found the wrong moon quarter.");
             return next_mq;
         }
 
@@ -6307,7 +6321,7 @@ namespace CosineKitty
         /// </param>
         /// <returns>
         /// If successful, returns the date and time the moon reaches the phase specified by
-        /// `targetlon`. This function will return throw an exception if the phase does not
+        /// `targetlon`. This function will return `null` if the phase does not
         /// occur within `limitDays` of `startTime`; that is, if the search window is too small.
         /// </returns>
         public static AstroTime SearchMoonPhase(double targetLon, AstroTime startTime, double limitDays)
@@ -6322,7 +6336,6 @@ namespace CosineKitty
                 I have seen more than 0.9 days away from the simple prediction.
                 To be safe, we take the predicted time of the event and search
                 +/-1.5 days around it (a 3-day wide window).
-                Return null if the final result goes beyond limitDays after startTime.
             */
 
             const double uncertainty = 1.5;
@@ -6339,10 +6352,7 @@ namespace CosineKitty
                 dt2 = limitDays;
             AstroTime t1 = startTime.AddDays(dt1);
             AstroTime t2 = startTime.AddDays(dt2);
-            AstroTime time = Search(moon_offset, t1, t2, 1.0);
-            if (time == null)
-                throw new Exception(string.Format("Could not find moon longitude {0} within {1} days of {2}", targetLon, limitDays, startTime));
-            return time;
+            return Search(moon_offset, t1, t2, 1.0);
         }
 
         private static AstroTime InternalSearchAltitude(
@@ -6740,7 +6750,7 @@ namespace CosineKitty
                 }
             }
 
-            throw new Exception("Relative longitude search failed to converge.");
+            throw new InternalError("Relative longitude search failed to converge.");
         }
 
         private static double rlon_offset(Body body, AstroTime time, int direction, double targetRelLon)
@@ -6984,16 +6994,15 @@ namespace CosineKitty
                 /* Confirm the bracketing. */
                 double m1 = neg_elong_slope.Eval(t1);
                 if (m1 >= 0.0)
-                    throw new Exception("There is a bug in the bracketing algorithm! m1 = " + m1);
+                    throw new InternalError("There is a bug in the bracketing algorithm! m1 = " + m1);
 
                 double m2 = neg_elong_slope.Eval(t2);
                 if (m2 <= 0.0)
-                    throw new Exception("There is a bug in the bracketing algorithm! m2 = " + m2);
+                    throw new InternalError("There is a bug in the bracketing algorithm! m2 = " + m2);
 
                 /* Use the generic search algorithm to home in on where the slope crosses from negative to positive. */
-                AstroTime searchx = Search(neg_elong_slope, t1, t2, 10.0);
-                if (searchx == null)
-                    throw new Exception("Maximum elongation search failed.");
+                AstroTime searchx = Search(neg_elong_slope, t1, t2, 10.0) ??
+                    throw new InternalError("Maximum elongation search failed.");
 
                 if (searchx.tt >= startTime.tt)
                     return Elongation(body, searchx);
@@ -7004,7 +7013,7 @@ namespace CosineKitty
                 startTime = t2.AddDays(1.0);
             }
 
-            throw new Exception("Maximum elongation search iterated too many times.");
+            throw new InternalError("Maximum elongation search iterated too many times.");
         }
 
         ///
@@ -7057,7 +7066,7 @@ namespace CosineKitty
         {
             double r = a.Length() * b.Length();
             if (r < 1.0e-8)
-                throw new Exception("Cannot find angle between vectors because they are too short.");
+                throw new ArgumentException("Cannot find angle between vectors because they are too short.");
 
             double dot = (a.x*b.x + a.y*b.y + a.z*b.z) / r;
 
@@ -7139,11 +7148,11 @@ namespace CosineKitty
                     else
                     {
                         /* This should never happen. It should not be possible for both slopes to be zero. */
-                        throw new Exception("Internal error with slopes in SearchLunarApsis");
+                        throw new InternalError("both slopes are zero in SearchLunarApsis.");
                     }
 
                     if (search == null)
-                        throw new Exception("Failed to find slope transition in lunar apsis search.");
+                        throw new InternalError("Failed to find slope transition in lunar apsis search.");
 
                     double dist_au = SearchContext_MoonDistanceSlope.MoonDistance(search);
                     return new ApsisInfo(search, kind, dist_au);
@@ -7154,7 +7163,7 @@ namespace CosineKitty
             }
 
             /* It should not be possible to fail to find an apsis within 2 synodic months. */
-            throw new Exception("Internal error: should have found lunar apsis within 2 synodic months.");
+            throw new InternalError("should have found lunar apsis within 2 synodic months.");
         }
 
         /// <summary>
@@ -7184,7 +7193,7 @@ namespace CosineKitty
             AstroTime time = apsis.time.AddDays(skip);
             ApsisInfo next =  SearchLunarApsis(time);
             if ((int)next.kind + (int)apsis.kind != 1)
-                throw new Exception(string.Format("Internal error: previous apsis was {0}, but found {1} for next apsis.", apsis.kind, next.kind));
+                throw new InternalError($"Internal error: previous apsis was {apsis.kind}, but found {next.kind} for next apsis.");
             return next;
         }
 
@@ -7307,7 +7316,7 @@ namespace CosineKitty
             if (aphelion.time.tt >= startTime.tt)
                 return aphelion;
 
-            throw new Exception("Internal error: failed to find planet apsis.");
+            throw new InternalError("failed to find planet apsis.");
         }
 
 
@@ -7382,12 +7391,11 @@ namespace CosineKitty
                     else
                     {
                         /* This should never happen. It should not be possible for both slopes to be zero. */
-                        throw new Exception("Internal error with slopes in SearchPlanetApsis");
+                        throw new InternalError("Both slopes were zero in SearchPlanetApsis");
                     }
 
-                    AstroTime search = Search(slope_func, t1, t2, 1.0);
-                    if (search == null)
-                        throw new Exception("Failed to find slope transition in planetary apsis search.");
+                    AstroTime search = Search(slope_func, t1, t2, 1.0) ??
+                        throw new InternalError("Failed to find slope transition in planetary apsis search.");
 
                     double dist = HelioDistance(body, search);
                     return new ApsisInfo(search, kind, dist);
@@ -7397,7 +7405,7 @@ namespace CosineKitty
                 m1 = m2;
             }
             /* It should not be possible to fail to find an apsis within 2 planet orbits. */
-            throw new Exception("Internal error: should have found planetary apsis within 2 orbital periods.");
+            throw new InternalError("should have found planetary apsis within 2 orbital periods.");
         }
 
         /// <summary>
@@ -7435,7 +7443,7 @@ namespace CosineKitty
 
             /* Verify that we found the opposite apsis from the previous one. */
             if ((int)next.kind + (int)apsis.kind != 1)
-                throw new Exception(string.Format("Internal error: previous apsis was {0}, but found {1} for next apsis.", apsis.kind, next.kind));
+                throw new InternalError($"previous apsis was {apsis.kind}, but found {next.kind} for next apsis.");
 
             return next;
         }
@@ -7451,7 +7459,8 @@ namespace CosineKitty
             const double window = 0.03;        /* initial search window, in days, before/after given time */
             AstroTime t1 = search_center_time.AddDays(-window);
             AstroTime t2 = search_center_time.AddDays(+window);
-            AstroTime tx = Search(earthShadowSlopeContext, t1, t2, 1.0);
+            AstroTime tx = Search(earthShadowSlopeContext, t1, t2, 1.0) ??
+                throw new InternalError("Failed to find Earth peak shadow event.");
             return EarthShadow(tx);
         }
 
@@ -7479,7 +7488,8 @@ namespace CosineKitty
             for (int fmcount=0; fmcount < 12; ++fmcount)
             {
                 // Search for the next full moon. Any eclipse will be near it.
-                AstroTime fullmoon = SearchMoonPhase(180.0, fmtime, 40.0);
+                AstroTime fullmoon = SearchMoonPhase(180.0, fmtime, 40.0) ??
+                    throw new InternalError("Failed to find next full moon.");
 
                 /*
                     Pruning: if the full Moon's ecliptic latitude is too large,
@@ -7524,7 +7534,7 @@ namespace CosineKitty
             }
 
             // This should never happen, because there should be at least 2 lunar eclipses per year.
-            throw new Exception("Internal error: failed to find lunar eclipse within 12 full moons.");
+            throw new InternalError("failed to find lunar eclipse within 12 full moons.");
         }
 
 
@@ -7557,8 +7567,10 @@ namespace CosineKitty
             double window = window_minutes / (24.0 * 60.0);
             AstroTime before = center_time.AddDays(-window);
             AstroTime after  = center_time.AddDays(+window);
-            AstroTime t1 = Search(new SearchContext_EarthShadow(radius_limit, -1.0), before, center_time, 1.0);
-            AstroTime t2 = Search(new SearchContext_EarthShadow(radius_limit, +1.0), center_time, after, 1.0);
+            AstroTime t1 = Search(new SearchContext_EarthShadow(radius_limit, -1.0), before, center_time, 1.0) ??
+                throw new InternalError("Failed to find start of shadow event.");
+            AstroTime t2 = Search(new SearchContext_EarthShadow(radius_limit, +1.0), center_time, after, 1.0) ??
+                throw new InternalError("Failed to find end of shadow event.");
             return (t2.ut - t1.ut) * ((24.0 * 60.0) / 2.0);    // convert days to minutes and average the semi-durations.
         }
 
@@ -7584,7 +7596,8 @@ namespace CosineKitty
             for (int nmcount=0; nmcount < 12; ++nmcount)
             {
                 /* Search for the next new moon. Any eclipse will be near it. */
-                AstroTime newmoon = SearchMoonPhase(0.0, nmtime, 40.0);
+                AstroTime newmoon = SearchMoonPhase(0.0, nmtime, 40.0) ??
+                    throw new InternalError("Failed to find next new moon.");
 
                 /* Pruning: if the new moon's ecliptic latitude is too large, a solar eclipse is not possible. */
                 double eclip_lat = MoonEclipticLatitudeDegrees(newmoon);
@@ -7607,7 +7620,7 @@ namespace CosineKitty
 
             /* Safety valve to prevent infinite loop. */
             /* This should never happen, because at least 2 solar eclipses happen per year. */
-            throw new Exception("Failure to find global solar eclipse.");
+            throw new InternalError("Failure to find global solar eclipse.");
         }
 
 
@@ -7723,7 +7736,7 @@ namespace CosineKitty
                 /* If we did everything right, the shadow distance should be very close to zero. */
                 /* That's because we already determined the observer 'o' is on the shadow axis! */
                 if (surface.r > 1.0e-9 || surface.r < 0.0)
-                    throw new Exception("Invalid surface distance from intersection.");
+                    throw new InternalError("Invalid surface distance from intersection.");
 
                 eclipse.kind = EclipseKindFromUmbra(surface.k);
             }
@@ -7750,7 +7763,8 @@ namespace CosineKitty
             const double window = 0.03;     /* days before/after new moon to search for minimum shadow distance */
             AstroTime t1 = search_center_time.AddDays(-window);
             AstroTime t2 = search_center_time.AddDays(+window);
-            AstroTime time = Search(moonShadowSlopeContext, t1, t2, 1.0);
+            AstroTime time = Search(moonShadowSlopeContext, t1, t2, 1.0) ??
+                throw new InternalError("Failed to find Moon shadow event.");
             return MoonShadow(time);
         }
 
@@ -7764,7 +7778,8 @@ namespace CosineKitty
             AstroTime t1 = search_center_time.AddDays(-window);
             AstroTime t2 = search_center_time.AddDays(+window);
             var context = new SearchContext_LocalMoonShadowSlope(observer);
-            AstroTime time = Search(context, t1, t2, 1.0);
+            AstroTime time = Search(context, t1, t2, 1.0) ??
+                throw new InternalError("Failed to find local Moon peak shadow event.");
             return LocalMoonShadow(time, observer);
         }
 
@@ -7775,7 +7790,8 @@ namespace CosineKitty
             AstroTime t1 = search_center_time.AddDays(-window);
             AstroTime t2 = search_center_time.AddDays(+window);
             var context = new SearchContext_PlanetShadowSlope(body, planet_radius_km);
-            AstroTime time = Search(context, t1, t2, 1.0);
+            AstroTime time = Search(context, t1, t2, 1.0) ??
+                throw new InternalError("Failed to find peak planet shadow event.");
             return PlanetShadow(body, planet_radius_km, time);
         }
 
@@ -7886,7 +7902,8 @@ namespace CosineKitty
             for(;;)
             {
                 /* Search for the next new moon. Any eclipse will be near it. */
-                AstroTime newmoon = SearchMoonPhase(0.0, nmtime, 40.0);
+                AstroTime newmoon = SearchMoonPhase(0.0, nmtime, 40.0) ??
+                    throw new InternalError("Failed to find next new moon.");
 
                 /* Pruning: if the new moon's ecliptic latitude is too large, a solar eclipse is not possible. */
                 double eclip_lat = MoonEclipticLatitudeDegrees(newmoon);
@@ -7988,9 +8005,8 @@ namespace CosineKitty
             AstroTime t2)
         {
             var context = new SearchContext_LocalEclipseTransition(func, direction, observer);
-            AstroTime search = Search(context, t1, t2, 1.0);
-            if (search == null)
-                throw new Exception("Local eclipse transition search failed.");
+            AstroTime search = Search(context, t1, t2, 1.0) ??
+                throw new InternalError("Local eclipse transition search failed.");
             return CalcEvent(observer, search);
         }
 
@@ -8019,9 +8035,8 @@ namespace CosineKitty
         {
             /* Search for the time the planet's penumbra begins/ends making contact with the center of the Earth. */
             var context = new SearchContext_PlanetShadowBoundary(body, planet_radius_km, direction);
-            AstroTime time = Search(context, t1, t2, 1.0);
-            if (time == null)
-                throw new Exception("Planet transit boundary search failed");
+            AstroTime time = Search(context, t1, t2, 1.0) ??
+                throw new InternalError("Planet transit boundary search failed");
             return time;
         }
 
@@ -8174,9 +8189,8 @@ namespace CosineKitty
                         context.Direction = -1;
                         kind = NodeEventKind.Descending;
                     }
-                    AstroTime result = Search(context, time1, time2, 1.0);
-                    if (result == null)
-                        throw new Exception("Could not find Moon node.");   // should never happen
+                    AstroTime result = Search(context, time1, time2, 1.0) ??
+                        throw new InternalError("Could not find Moon node.");
 
                     return new NodeEventInfo { time = result, kind = kind };
                 }
@@ -8203,16 +8217,16 @@ namespace CosineKitty
             {
                 case NodeEventKind.Ascending:
                     if (node.kind != NodeEventKind.Descending)
-                        throw new Exception("Internal error: previous node was ascending, but this node was: " + node.kind);
+                        throw new InternalError("previous node was ascending, but this node was: " + node.kind);
                     break;
 
                 case NodeEventKind.Descending:
                     if (node.kind != NodeEventKind.Ascending)
-                        throw new Exception("Internal error: previous node was descending, but this node was: " + node.kind);
+                        throw new InternalError("previous node was descending, but this node was: " + node.kind);
                     break;
 
                 default:
-                    throw new Exception("Previous node has an invalid node kind.");
+                    throw new ArgumentException("Previous node has an invalid node kind.");
             }
             return node;
         }
@@ -8483,16 +8497,15 @@ namespace CosineKitty
                 /* Confirm the bracketing. */
                 double m1 = mag_slope.Eval(t1);
                 if (m1 >= 0.0)
-                    throw new Exception("Internal error: m1 >= 0");    /* should never happen! */
+                    throw new InternalError("m1 >= 0");    /* should never happen! */
 
                 double m2 = mag_slope.Eval(t2);
                 if (m2 <= 0.0)
-                    throw new Exception("Internal error: m2 <= 0");    /* should never happen! */
+                    throw new InternalError("m2 <= 0");    /* should never happen! */
 
                 /* Use the generic search algorithm to home in on where the slope crosses from negative to positive. */
-                AstroTime tx = Search(mag_slope, t1, t2, 10.0);
-                if (tx == null)
-                    throw new Exception("Failed to find magnitude slope transition.");
+                AstroTime tx = Search(mag_slope, t1, t2, 10.0) ??
+                    throw new InternalError("Failed to find magnitude slope transition.");
 
                 if (tx.tt >= startTime.tt)
                     return Illumination(body, tx);
@@ -8503,7 +8516,7 @@ namespace CosineKitty
                 startTime = t2.AddDays(1.0);
             }
             // This should never happen. If it does, please report as a bug in Astronomy Engine.
-            throw new Exception("Peak magnitude search failed.");
+            throw new InternalError("Peak magnitude search failed.");
         }
 
         /// <summary>
@@ -9953,7 +9966,7 @@ namespace CosineKitty
                     return new ConstellationInfo(ConstelNames[b.index].symbol, ConstelNames[b.index].name, equ1875.ra, equ1875.dec);
 
             // This should never happen!
-            throw new Exception($"Unable to find constellation for coordinates: RA={ra}, DEC={dec}");
+            throw new InternalError($"Unable to find constellation for coordinates: RA={ra}, DEC={dec}");
         }
 
         private static readonly constel_info_t[] ConstelNames = new constel_info_t[]
