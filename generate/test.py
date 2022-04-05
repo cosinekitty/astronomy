@@ -220,7 +220,7 @@ def Seasons(filename = 'seasons/seasons.txt'):
 #-----------------------------------------------------------------------------------------------------------
 
 def MoonPhase(filename = 'moonphase/moonphases.txt'):
-    threshold_seconds = 120.0       # max tolerable prediction error in seconds
+    threshold_seconds = 90.0       # max tolerable prediction error in seconds
     max_arcmin = 0.0
     maxdiff = 0.0
     quarter_count = 0

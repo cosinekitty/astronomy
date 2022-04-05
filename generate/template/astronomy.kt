@@ -38,6 +38,7 @@ import kotlin.math.ceil
 import kotlin.math.cos
 import kotlin.math.floor
 import kotlin.math.hypot
+import kotlin.math.min
 import kotlin.math.PI
 import kotlin.math.roundToLong
 import kotlin.math.sin
@@ -4358,14 +4359,34 @@ object Astronomy {
         val ey = +pos.y*cosOb + pos.z*sinOb
         val ez = -pos.y*sinOb + pos.z*cosOb
         val xyproj = hypot(ex, ey)
-        var elon = 0.0
-        if (xyproj > 0.0) {
-            elon = atan2(ey, ex).radiansToDegrees().withMinDegreeValue(0.0)
-        }
+        val elon =
+            if (xyproj > 0.0)
+                atan2(ey, ex).radiansToDegrees().withMinDegreeValue(0.0)
+            else
+                0.0
         val elat = atan2(ez, xyproj).radiansToDegrees()
         val vec = AstroVector(ex, ey, ez, pos.t)
         return Ecliptic(vec, elat, elon)
     }
+
+    /**
+     * Converts J2000 equatorial Cartesian coordinates to J2000 ecliptic coordinates.
+     *
+     * Given coordinates relative to the Earth's equator at J2000 (the instant of noon UTC
+     * on 1 January 2000), this function converts those coordinates to J2000 ecliptic coordinates,
+     * which are relative to the plane of the Earth's orbit around the Sun.
+     *
+     * @param equ
+     *      Equatorial coordinates in the J2000 frame of reference.
+     *      You can call [Astronomy.geoVector] to obtain suitable equatorial coordinates.
+     *
+     * @return Ecliptic coordinates in the J2000 frame of reference (ECL).
+     */
+    fun equatorialToEcliptic(equ: AstroVector): Ecliptic =
+        rotateEquatorialToEcliptic(
+            equ,
+            0.40909260059599012     // mean obliquity of the J2000 ecliptic in radians
+        )
 
     /**
      * Searches for the time when the Sun reaches an apparent ecliptic longitude as seen from the Earth.
@@ -4438,6 +4459,166 @@ object Astronomy {
         var startTime = AstroTime(year, month, day, 0, 0, 0.0)
         return searchSunLongitude(targetLon, startTime, 4.0) ?:
             throw InternalError("Cannot find solution for Sun longitude $targetLon")
+    }
+
+    /**
+     * Returns one body's ecliptic longitude with respect to another, as seen from the Earth.
+     *
+     * This function determines where one body appears around the ecliptic plane
+     * (the plane of the Earth's orbit around the Sun) as seen from the Earth,
+     * relative to the another body's apparent position.
+     * The function returns an angle in the half-open range [0, 360) degrees.
+     * The value is the ecliptic longitude of `body1` relative to the ecliptic
+     * longitude of `body2`.
+     *
+     * The angle is 0 when the two bodies are at the same ecliptic longitude
+     * as seen from the Earth. The angle increases in the prograde direction
+     * (the direction that the planets orbit the Sun and the Moon orbits the Earth).
+     *
+     * When the angle is 180 degrees, it means the two bodies appear on opposite sides
+     * of the sky for an Earthly observer.
+     *
+     * Neither `body1` nor `body2` is allowed to be `Body.Earth`.
+     * If this happens, the function throws an exception.
+     *
+     * @param body1 The first body, whose longitude is to be found relative to the second body.
+     * @param body2 The second body, relative to which the longitude of the first body is to be found.
+     * @param time  The date and time of the observation.
+     * @return An angle in the range [0, 360), expressed in degrees.
+     */
+    fun pairLongitude(body1: Body, body2: Body, time: AstroTime): Double {
+        if (body1 == Body.Earth || body2 == Body.Earth)
+            throw InvalidBodyException(Body.Earth)
+
+        val vector1 = geoVector(body1, time, Aberration.None)
+        val eclip1 = equatorialToEcliptic(vector1)
+
+        val vector2 = geoVector(body2, time, Aberration.None)
+        val eclip2 = equatorialToEcliptic(vector2)
+
+        return normalizeLongitude(eclip1.elon - eclip2.elon)
+    }
+
+    /**
+     * Returns the Moon's phase as an angle from 0 to 360 degrees.
+     *
+     * This function determines the phase of the Moon using its apparent
+     * ecliptic longitude relative to the Sun, as seen from the center of the Earth.
+     * Certain values of the angle have conventional definitions:
+     *
+     * - 0 = new moon
+     * - 90 = first quarter
+     * - 180 = full moon
+     * - 270 = third quarter
+     *
+     * @param time  The date and time of the observation.
+     * @return The angle as described above, a value in the range 0..360 degrees.
+     */
+    fun moonPhase(time: AstroTime): Double =
+        pairLongitude(Body.Moon, Body.Sun, time)
+
+    /**
+     * Searches for the time that the Moon reaches a specified phase.
+     *
+     * Lunar phases are conventionally defined in terms of the Moon's geocentric ecliptic
+     * longitude with respect to the Sun's geocentric ecliptic longitude.
+     * When the Moon and the Sun have the same longitude, that is defined as a new moon.
+     * When their longitudes are 180 degrees apart, that is defined as a full moon.
+     *
+     * This function searches for any value of the lunar phase expressed as an
+     * angle in degrees in the range [0, 360).
+     *
+     * If you want to iterate through lunar quarters (new moon, first quarter, full moon, third quarter)
+     * it is much easier to call the functions [Astronomy.searchMoonQuarter] and [Astronomy.nextMoonQuarter].
+     * This function is useful for finding general phase angles outside those four quarters.
+     *
+     * @param targetLon
+     *      The difference in geocentric longitude between the Sun and Moon
+     *      that specifies the lunar phase being sought. This can be any value
+     *      in the range [0, 360).  Certain values have conventional names:
+     *      0 = new moon, 90 = first quarter, 180 = full moon, 270 = third quarter.
+     *
+     * @param startTime
+     *      The beginning of the time window in which to search for the Moon reaching the specified phase.
+     *
+     * @param limitDays
+     *      The number of days after `startTime` that limits the time window for the search.
+     *
+     * @return
+     * If successful, returns the date and time the moon reaches the phase specified by
+     * `targetlon`. This function will return `null` if the phase does not
+     * occur within `limitDays` of `startTime`; that is, if the search window is too small.
+     */
+    fun searchMoonPhase(targetLon: Double, startTime: AstroTime, limitDays: Double): AstroTime? {
+        // To avoid discontinuities in the moonOffset function causing problems,
+        // we need to approximate when that function will next return 0.
+        // We probe it with the start time and take advantage of the fact
+        // that every lunar phase repeats roughly every 29.5 days.
+        // There is a surprising uncertainty in the quarter timing,
+        // due to the eccentricity of the moon's orbit.
+        // I have seen more than 0.9 days away from the simple prediction.
+        // To be safe, we take the predicted time of the event and search
+        // +/-1.5 days around it (a 3-day wide window).
+        class Context(val targetLon : Double) : SearchContext {
+            override fun eval(time: AstroTime) = longitudeOffset(moonPhase(time) - targetLon)
+        }
+        val moonOffset = Context(targetLon)
+        var ya = moonOffset.eval(startTime)
+        if (ya > 0.0) ya -= 360.0  // force searching forward in time, not backward
+        val uncertainty = 1.5
+        val estDt = -(MEAN_SYNODIC_MONTH * ya) / 360.0
+        val dt1 = estDt - uncertainty
+        if (dt1 > limitDays)
+            return null    // not possible for moon phase to occur within specified window (too short)
+        val dt2 = min(limitDays, estDt + uncertainty)
+        val t1 = startTime.addDays(dt1)
+        val t2 = startTime.addDays(dt2)
+        return search(moonOffset, t1, t2, 1.0)
+    }
+
+    /**
+     * Finds the first lunar quarter after the specified date and time.
+     * A lunar quarter is one of the following four lunar phase events:
+     * new moon, first quarter, full moon, third quarter.
+     * This function finds the lunar quarter that happens soonest
+     * after the specified date and time.
+     *
+     * To continue iterating through consecutive lunar quarters, call this function once,
+     * followed by calls to #Astronomy.NextMoonQuarter as many times as desired.
+     *
+     * @param startTime The date and time at which to start the search.
+     * @return A [MoonQuarterInfo] object reporting the next quarter phase and the time it will occur.
+     */
+    fun searchMoonQuarter(startTime: AstroTime): MoonQuarterInfo {
+        val currentPhaseAngle = moonPhase(startTime)
+        val quarter: Int = (1 + floor(currentPhaseAngle / 90.0).toInt()) % 4
+        val quarterTime = searchMoonPhase(90.0 * quarter, startTime, 10.0) ?:
+            throw InternalError("Unable to find moon quarter $quarter for startTime=$startTime")
+        return MoonQuarterInfo(quarter, quarterTime)
+    }
+
+    /**
+     * Continues searching for lunar quarters from a previous search.
+     *
+     * After calling [Astronomy.searchMoonQuarter], this function can be called
+     * one or more times to continue finding consecutive lunar quarters.
+     * This function finds the next consecutive moon quarter event after
+     * the one passed in as the parameter `mq`.
+     *
+     * @param The previous moon quarter found by a call to [Astronomy.searchMoonQuarter] or `Astronomy.nextMoonQuarter`.
+     * @return The moon quarter that occurs next in time after the one passed in `mq`.
+     */
+    fun nextMoonQuarter(mq: MoonQuarterInfo): MoonQuarterInfo {
+        // Skip 6 days past the previous found moon quarter to find the next one.
+        // This is less than the minimum possible increment.
+        // So far I have seen the interval well contained by the range (6.5, 8.3) days.
+        val time = mq.time.addDays(6.0)
+        val nextMoonQuarter = searchMoonQuarter(time)
+        // Verify that we found the expected moon quarter.
+        val expected = (1 + mq.quarter) % 4
+        if (nextMoonQuarter.quarter != expected)
+            throw InternalError("Expected to find next quarter $expected, but found ${nextMoonQuarter.quarter}")
+        return nextMoonQuarter
     }
 
     /**

@@ -997,7 +997,7 @@ static int MoonPhase(void)
     astro_angle_result_t result;
     double degree_error, arcmin, max_arcmin = 0.0;
     double diff_seconds, maxdiff = 0.0;
-    const double threshold_seconds = 120.0; /* max tolerable prediction error in seconds */
+    const double threshold_seconds = 90.0; /* max tolerable prediction error in seconds */
     astro_moon_quarter_t mq;
     char line[200];
 

@@ -396,7 +396,7 @@ namespace csharp_test
             const string filename = "../../moonphase/moonphases.txt";
             using (StreamReader infile = File.OpenText(filename))
             {
-                const double threshold_seconds = 120.0;
+                const double threshold_seconds = 90.0;
                 int lnum = 0;
                 string line;
                 double max_arcmin = 0.0;

@@ -141,7 +141,7 @@ function MoonPhase() {
 
     function SearchYear(year, data, index) {
         const millis_per_minute = 60*1000;
-        const threshold_minutes = 2;    // max tolerable prediction error in minutes
+        const threshold_minutes = 1.5;    // max tolerable prediction error in minutes
         let date = new Date(Date.UTC(year, 0, 1));
         let maxdiff = 0;
         let count = 0;

@@ -20,6 +20,15 @@ private fun tokenize(s: String): List<String> {
     return s.split(Regex("""\s+"""))
 }
 
+private fun groupString(match: MatchResult, groupIndex: Int, filename: String, lnum: Int): String =
+    (match.groups[groupIndex] ?: fail("$filename line $lnum: cannot extract group $groupIndex")).value
+
+private fun groupInt(match: MatchResult, groupIndex: Int, filename: String, lnum: Int): Int =
+    groupString(match, groupIndex, filename, lnum).toInt()
+
+private fun groupDouble(match: MatchResult, groupIndex: Int, filename: String, lnum: Int): Double =
+    groupString(match, groupIndex, filename, lnum).toDouble()
+
 class Tests {
     private fun checkVector(
         vec: AstroVector,
@@ -678,10 +687,10 @@ class Tests {
         val regex = Regex("""^\s*(\d+)\s+(\S+)\s+(\S+)\s+([A-Z][a-zA-Z]{2})\s*$""")
         for (line in infile.readLines()) {
             val m = regex.matchEntire(line) ?: fail("$filename line $lnum: syntax error")
-            val id: Int = (m.groups[1] ?: fail("$filename line $lnum: cannot parse ID")).value.toInt()
-            val ra: Double = (m.groups[2] ?: fail("$filename line $lnum: cannot parse RA")).value.toDouble()
-            val dec: Double = (m.groups[3] ?: fail("$filename line $lnum: cannot parse DEC")).value.toDouble()
-            val symbol: String = (m.groups[4] ?: fail("$filename line $lnum: cannot parse symbol")).value
+            val id: Int = groupInt(m, 1, filename, lnum)
+            val ra: Double = groupDouble(m, 2, filename, lnum)
+            val dec: Double = groupDouble(m, 3, filename, lnum)
+            val symbol: String = groupString(m, 4, filename, lnum)
             val constel = Astronomy.constellation(ra, dec)
             assertTrue(constel.symbol == symbol, "$filename line $lnum: expected constellation $symbol, but found id=$id, symbol=${constel.symbol}")
 
@@ -735,12 +744,12 @@ class Tests {
             // 2019-09-23T07:50Z Equinox
             // 2019-12-22T04:19Z Solstice
             val m = regex.matchEntire(line) ?: fail("$filename line $lnum: syntax error")
-            val year = (m.groups[1] ?: fail("$filename line $lnum: cannot parse year")).value.toInt()
-            val month = (m.groups[2] ?: fail("$filename line $lnum: cannot parse month")).value.toInt()
-            val day = (m.groups[3] ?: fail("$filename line $lnum: cannot parse day")).value.toInt()
-            val hour = (m.groups[4] ?: fail("$filename line $lnum: cannot parse hour")).value.toInt()
-            val minute = (m.groups[5] ?: fail("$filename line $lnum: cannot parse minute")).value.toInt()
-            val name = (m.groups[6] ?: fail("$filename line $lnum: cannot parse event name")).value
+            val year = groupInt(m, 1, filename, lnum)
+            val month = groupInt(m, 2, filename, lnum)
+            val day = groupInt(m, 3, filename, lnum)
+            val hour = groupInt(m, 4, filename, lnum)
+            val minute = groupInt(m, 5, filename, lnum)
+            val name = groupString(m, 6, filename, lnum)
             val correctTime = AstroTime(year, month, day, hour, minute, 0.0)
             if (year != currentYear) {
                 currentYear = year
@@ -789,9 +798,71 @@ class Tests {
                 fail("$filename line $lnum: excessive error ($name): $diffMinutes minutes.")
         }
         assertTrue(marchCount == 301, "marchCount = $marchCount")
-        assertTrue(juneCount == 301, "juneCount = $marchCount")
-        assertTrue(septemberCount == 301, "septemberCount = $marchCount")
-        assertTrue(decemberCount == 301, "decemberCount = $marchCount")
+        assertTrue(juneCount == 301, "juneCount = $juneCount")
+        assertTrue(septemberCount == 301, "septemberCount = $septemberCount")
+        assertTrue(decemberCount == 301, "decemberCount = $decemberCount")
+    }
+
+    //----------------------------------------------------------------------------------------
+
+    @Test
+    fun `Moon phase search`() {
+        var thresholdSeconds = 90.0
+        val filename = dataRootDir + "moonphase/moonphases.txt"
+        val infile = File(filename)
+        var lnum = 0
+        var maxArcmin = 0.0
+        var prevYear = 0
+        var mq: MoonQuarterInfo? = null
+        // 0 1800-01-25T03:21:00.000Z
+        // 1 1800-02-01T20:40:00.000Z
+        // 2 1800-02-09T17:26:00.000Z
+        // 3 1800-02-16T15:49:00.000Z
+        var re = Regex("""^([0-3])\s+(\d+)-(\d+)-(\d+)T(\d+):(\d+):(\d+)\.000Z$""")
+        for (line in infile.readLines()) {
+            ++lnum
+            val m = re.matchEntire(line) ?: fail("$filename line $lnum: syntax error")
+            val quarter = groupInt(m, 1, filename, lnum)
+            val year = groupInt(m, 2, filename, lnum)
+            val month = groupInt(m, 3, filename, lnum)
+            val day = groupInt(m, 4, filename, lnum)
+            val hour = groupInt(m, 5, filename, lnum)
+            val minute = groupInt(m, 6, filename, lnum)
+            val second = groupDouble(m, 7, filename, lnum)
+
+            val expectedTime = AstroTime(year, month, day, hour, minute, second)
+            val expectedElong = 90.0 * quarter
+            val calcElong = Astronomy.moonPhase(expectedTime)
+            var degreeError = abs(calcElong - expectedElong)
+            if (degreeError > 180.0)
+                degreeError = 360.0 - degreeError
+            val arcmin = 60.0 * degreeError
+            assertTrue(arcmin < 1.0, "$filename line $lnum: excessive angular error = $arcmin arcmin.")
+            if (arcmin > maxArcmin)
+                maxArcmin = arcmin
+            if (year != prevYear) {
+                prevYear = year
+                // The test data contains a single year's worth of data for every 10 years.
+                // Every time we see the year value change, it breaks continuity of the phases.
+                // Start the search over again.
+                val startTime = AstroTime(year, 1, 1, 0, 0, 0.0)
+                mq = Astronomy.searchMoonQuarter(startTime)
+            } else {
+                if (mq == null)
+                    fail("mq == null")  // should not be possible
+
+                // Yet another lunar quarter in the same year.
+                val expectedQuarter = (1 + mq.quarter) % 4
+                mq = Astronomy.nextMoonQuarter(mq)
+
+                // Make sure we find the next expected quarter.
+                assertTrue(expectedQuarter == mq.quarter, "$filename line $lnum: expected quarter $expectedQuarter, but found ${mq.quarter}")
+            }
+
+            // Make sure the time matches what we expect.
+            val diffSeconds = abs(mq.time.tt - expectedTime.tt) * 86400
+            assertTrue(diffSeconds <= thresholdSeconds, "$filename line $lnum: excessive time error = $diffSeconds seconds.")
+        }
     }
 
     //----------------------------------------------------------------------------------------
