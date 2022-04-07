@@ -51,6 +51,11 @@ import kotlin.math.tan
 class InvalidBodyException(body: Body) : Exception("Invalid body: $body")
 
 /**
+ * The Earth is not allowed as the body parameter.
+ */
+class EarthNotAllowedException() : Exception("The Earth is not allowed as the body parameter.")
+
+/**
  * An unexpected internal error occurred in Astronomy Engine
  */
 class InternalError(message: String) : Exception(message)
@@ -1156,16 +1161,22 @@ enum class Refraction {
 /**
  * Selects whether to search for a rising event or a setting event for a celestial body.
  */
-enum class Direction {
+enum class Direction(
+    /**
+     * A numeric value that is helpful in formulas involving rise/set.
+     * The sign is +1 for a rising event, or -1 for a setting event.
+     */
+    val sign: Int
+) {
     /**
      * Indicates a rising event: a celestial body is observed to rise above the horizon by an observer on the Earth.
      */
-    Rise,
+    Rise(+1),
 
     /**
      * Indicates a setting event: a celestial body is observed to sink below the horizon by an observer on the Earth.
      */
-    Set,
+    Set(-1),
 }
 
 
@@ -4488,7 +4499,7 @@ object Astronomy {
      */
     fun pairLongitude(body1: Body, body2: Body, time: AstroTime): Double {
         if (body1 == Body.Earth || body2 == Body.Earth)
-            throw InvalidBodyException(Body.Earth)
+            throw EarthNotAllowedException()
 
         val vector1 = geoVector(body1, time, Aberration.None)
         val eclip1 = equatorialToEcliptic(vector1)
@@ -4595,6 +4606,248 @@ object Astronomy {
         val quarterTime = searchMoonPhase(90.0 * quarter, startTime, 10.0) ?:
             throw InternalError("Unable to find moon quarter $quarter for startTime=$startTime")
         return MoonQuarterInfo(quarter, quarterTime)
+    }
+
+    /**
+     * Searches for the time when a celestial body reaches a specified hour angle as seen by an observer on the Earth.
+     *
+     * The *hour angle* of a celestial body indicates its position in the sky with respect
+     * to the Earth's rotation. The hour angle depends on the location of the observer on the Earth.
+     * The hour angle is 0 when the body reaches its highest angle above the horizon in a given day.
+     * The hour angle increases by 1 unit for every sidereal hour that passes after that point, up
+     * to 24 sidereal hours when it reaches the highest point again. So the hour angle indicates
+     * the number of hours that have passed since the most recent time that the body has culminated,
+     * or reached its highest point.
+     *
+     * This function searches for the next time a celestial body reaches the given hour angle
+     * after the date and time specified by `startTime`.
+     * To find when a body culminates, pass 0 for `hourAngle`.
+     * To find when a body reaches its lowest point in the sky, pass 12 for `hourAngle`.
+     *
+     * Note that, especially close to the Earth's poles, a body as seen on a given day
+     * may always be above the horizon or always below the horizon, so the caller cannot
+     * assume that a culminating object is visible nor that an object is below the horizon
+     * at its minimum altitude.
+     *
+     * On success, the function reports the date and time, along with the horizontal coordinates
+     * of the body at that time, as seen by the given observer.
+     *
+     * @param body
+     *      The celestial body, which can the Sun, the Moon, or any planet other than the Earth.
+     * @param observer
+     *      A location on or near the surface of the Earth where the observer is located.
+     * @param hourAngle
+     *      An hour angle value in the range [0, 24) indicating the number of sidereal hours after the
+     *      body's most recent culmination.
+     * @param startTime
+     *      The date and time at which to start the search.
+     * @return The time when the body reaches the hour angle, and the horizontal coordinates of the body at that time.
+     */
+    fun searchHourAngle(
+        body: Body,
+        observer: Observer,
+        hourAngle: Double,
+        startTime: AstroTime
+    ): HourAngleInfo {
+        if (body == Body.Earth)
+            throw EarthNotAllowedException()
+
+        if (hourAngle < 0.0 || hourAngle >= 24.0)
+            throw IllegalArgumentException("hourAngle=$hourAngle is out of the allowed range [0, 24).")
+
+        var time = startTime
+        var iter = 0
+        while (true) {
+            ++iter
+
+            // Calculate Greenwich Apparent Sidereal Time (GAST) at the given time.
+            val gast = siderealTime(time)
+
+            // Obtain equatorial coordinates of date for the body.
+            val ofdate = equator(body, time, observer, EquatorEpoch.OfDate, Aberration.Corrected)
+
+            // Calculate the adjustment needed in sidereal time
+            // to bring the hour angle to the desired value.
+            var deltaSiderealHours = ((hourAngle + ofdate.ra - observer.longitude/15.0) - gast) % 24.0
+            if (iter == 1) {
+                // On the first iteration, always search forward in time.
+                if (deltaSiderealHours < 0.0)
+                    deltaSiderealHours += 24.0
+            } else {
+                // On subsequent iterations, we make the smallest possible adjustment,
+                // either forward or backward in time.
+                if (deltaSiderealHours < -12.0)
+                    deltaSiderealHours += 24.0
+                else if (deltaSiderealHours > +12.0)
+                    deltaSiderealHours -= 24.0
+            }
+
+            // If the error is tolerable (less than 0.1 seconds), the search has succeeded.
+            if (deltaSiderealHours.absoluteValue * 3600.0 < 0.1) {
+                val hor = horizon(time, observer, ofdate.ra, ofdate.dec, Refraction.Normal)
+                return HourAngleInfo(time, hor)
+            }
+
+            // We need to loop another time to get more accuracy.
+            // Update the terrestrial time (in solar days) by adjusting sidereal time.
+            time = time.addDays((deltaSiderealHours / 24.0) * SOLAR_DAYS_PER_SIDEREAL_DAY)
+        }
+    }
+
+    private fun internalSearchAltitude(
+        body: Body,
+        observer: Observer,
+        direction: Direction,
+        startTime: AstroTime,
+        limitDays: Double,
+        context: SearchContext
+    ): AstroTime? {
+        if (body == Body.Earth)
+            throw EarthNotAllowedException()
+
+        // Find the pair of hour angles that bound the desired event.
+        // When a body's hour angle is 0, it means it is at its highest point
+        // in the observer's sky, called culmination.
+        // If the body's hour angle is 12, it means it is at its lowest point in the sky.
+        // (Note that it is possible for a body to be above OR below the horizon in either case.)
+        // If the caller wants a rising event, we want the pair haBefore=12, haAfter=0.
+        // If the caller wants a setting event, the desired pair is haBefore=0, haAfter=12.
+        val haBefore: Double = when (direction) {
+            Direction.Rise -> 12.0      // minimum altitude (bottom) happens before the body rises
+            Direction.Set  ->  0.0      // culmination happens before the body sets
+        }
+        val haAfter: Double = 12.0 - haBefore
+
+        // See if the body is currently above/below the horizon.
+        // If we are looking for next rise time and the body is below the horizon,
+        // we use the current time as the lower time bound and the next culmination
+        // as the upper bound.
+        // If the body is above the horizon, we search for the next bottom and use it
+        // as the lower bound and the next culmination after that bottom as the upper bound.
+        // The same logic applies for finding set times, only we swap the hour angles.
+
+        var altBefore = context.eval(startTime)
+        var timeBefore: AstroTime
+        if (altBefore > 0.0) {
+            // We are past the sought event, so we have to wait for the next "before" event (culm/bottom).
+            timeBefore = searchHourAngle(body, observer, haBefore, startTime).time
+            altBefore = context.eval(timeBefore)
+        } else {
+            // We are before or at the sought event, so we find the next "after" event,
+            // and use the current time as the "before" event.
+            timeBefore = startTime
+        }
+
+        var timeAfter = searchHourAngle(body, observer, haAfter, timeBefore).time
+        var altAfter = context.eval(timeAfter)
+
+        while (true) {
+            if (altBefore <= 0.0 && altAfter > 0.0) {
+                // The body crosses the horizon during the time interval.
+                // Search between evtBefore and evtAfter for the desired event.
+                val time = search(context, timeBefore, timeAfter, 1.0)
+                if (time != null)
+                    return time
+            }
+
+            // If we didn't find the desired event, find the next hour angle bracket and try again.
+            val evtBefore = searchHourAngle(body, observer, haBefore, timeAfter)
+            val evtAfter = searchHourAngle(body, observer, haAfter, timeBefore)
+
+            if (evtBefore.time.ut >= startTime.ut + limitDays)
+                return null
+
+            timeBefore = evtBefore.time
+            timeAfter = evtAfter.time
+            altBefore = context.eval(timeBefore)
+            altAfter = context.eval(timeAfter)
+        }
+    }
+
+    private class SearchContextPeakAltitude(
+        private val body: Body,
+        private val direction: Direction,
+        private val observer: Observer
+    ): SearchContext {
+        private val bodyRadiusAu: Double
+
+        init {
+            bodyRadiusAu = when(body) {
+                Body.Sun -> SUN_RADIUS_AU
+                Body.Moon -> MOON_EQUATORIAL_RADIUS_AU
+                else -> 0.0
+            }
+        }
+
+        override fun eval(time: AstroTime): Double {
+            // Return the angular altitude above or below the horizon
+            // of the highest part (the peak) of the given object.
+            // This is defined as the apparent altitude of the center of the body plus
+            // the body's angular radius.
+            // The 'direction' parameter controls whether the angle is measured
+            // positive above the horizon or positive below the horizon,
+            // depending on whether the caller wants rise times or set times, respectively.
+
+            val ofdate: Equatorial = Astronomy.equator(body, time, observer, EquatorEpoch.OfDate, Aberration.Corrected)
+            val hor: Topocentric = Astronomy.horizon(time, observer, ofdate.ra, ofdate.dec, Refraction.None)
+            return direction.sign * (hor.altitude + (bodyRadiusAu / ofdate.dist).radiansToDegrees() + REFRACTION_NEAR_HORIZON)
+        }
+    }
+
+    /**
+     * Searches for the next time a celestial body rises or sets as seen by an observer on the Earth.
+     *
+     * This function finds the next rise or set time of the Sun, Moon, or planet other than the Earth.
+     * Rise time is when the body first starts to be visible above the horizon.
+     * For example, sunrise is the moment that the top of the Sun first appears to peek above the horizon.
+     * Set time is the moment when the body appears to vanish below the horizon.
+     *
+     * This function corrects for typical atmospheric refraction, which causes celestial
+     * bodies to appear higher above the horizon than they would if the Earth had no atmosphere.
+     * It also adjusts for the apparent angular radius of the observed body (significant only for the Sun and Moon).
+     *
+     * Note that rise or set may not occur in every 24 hour period.
+     * For example, near the Earth's poles, there are long periods of time where
+     * the Sun stays below the horizon, never rising.
+     * Also, it is possible for the Moon to rise just before midnight but not set during the subsequent 24-hour day.
+     * This is because the Moon sets nearly an hour later each day due to orbiting the Earth a
+     * significant amount during each rotation of the Earth.
+     * Therefore callers must not assume that the function will always succeed.
+     *
+     * @param body
+     *      The Sun, Moon, or any planet other than the Earth.
+     *
+     * @param observer
+     *      The location where observation takes place.
+     *
+     * @param direction
+     *      Either [Direction.Rise] to find a rise time or [Direction.Set] to find a set time.
+     *
+     * @param startTime
+     *      The date and time at which to start the search.
+     *
+     * @param limitDays
+     *      Limits how many days to search for a rise or set time.
+     *      To limit a rise or set time to the same day, you can use a value of 1 day.
+     *      In cases where you want to find the next rise or set time no matter how far
+     *      in the future (for example, for an observer near the south pole), you can
+     *      pass in a larger value like 365.
+     *
+     * @return
+     * On success, returns the date and time of the rise or set time as requested.
+     * If the function returns `null`, it means the rise or set event does not occur
+     * within `limitDays` days of `startTime`. This is a normal condition,
+     * not an error.
+     */
+    fun searchRiseSet(
+        body: Body,
+        observer: Observer,
+        direction: Direction,
+        startTime: AstroTime,
+        limitDays: Double
+    ): AstroTime? {
+        val context = SearchContextPeakAltitude(body, direction, observer)
+        return internalSearchAltitude(body, observer, direction, startTime, limitDays, context)
     }
 
     /**

@@ -29,6 +29,16 @@ private fun groupInt(match: MatchResult, groupIndex: Int, filename: String, lnum
 private fun groupDouble(match: MatchResult, groupIndex: Int, filename: String, lnum: Int): Double =
     groupString(match, groupIndex, filename, lnum).toDouble()
 
+private fun groupBody(match: MatchResult, groupIndex: Int, filename: String, lnum: Int): Body =
+    Body.valueOf(groupString(match, groupIndex, filename, lnum))
+
+private fun groupDirection(match: MatchResult, groupIndex: Int, filename: String, lnum: Int): Direction =
+    when (val text = groupString(match, groupIndex, filename, lnum)) {
+        "r" -> Direction.Rise
+        "s" -> Direction.Set
+        else -> fail("Invalid direction symbol: $text")
+    }
+
 class Tests {
     private fun checkVector(
         vec: AstroVector,
@@ -862,6 +872,99 @@ class Tests {
             // Make sure the time matches what we expect.
             val diffSeconds = abs(mq.time.tt - expectedTime.tt) * 86400
             assertTrue(diffSeconds <= thresholdSeconds, "$filename line $lnum: excessive time error = $diffSeconds seconds.")
+        }
+    }
+
+    //----------------------------------------------------------------------------------------
+
+    @Test
+    fun `Rise set test`() {
+        val filename = dataRootDir + "riseset/riseset.txt"
+        val infile = File(filename)
+        var lnum = 0
+        // Moon  103 -61 1944-01-02T17:08Z s
+        // Moon  103 -61 1944-01-03T05:47Z r
+        var re = Regex("""^([A-Za-z]+)\s+([\-\+]?\d+\.?\d*)\s+([\-\+]?\d+\.?\d*)\s+(\d+)-(\d+)-(\d+)T(\d+):(\d+)Z\s+([rs])\s*$""")
+        var currentBody: Body? = null
+        var observer: Observer? = null
+        var rSearchDate: AstroTime? = null
+        var sSearchDate: AstroTime? = null
+        var rEvt: AstroTime?            // rise event search result
+        var sEvt: AstroTime?            // set event search result
+        var aEvt: AstroTime?            // chronologically first event (whether rise or set)
+        var bEvt: AstroTime? = null     // chronologically second event (whether rise or set)
+        var aDir: Direction
+        var bDir = Direction.Rise
+        val nudgeDays = 0.01
+        for (line in infile.readLines()) {
+            ++lnum
+            var m: MatchResult = re.matchEntire(line) ?: fail("$filename line $lnum: syntax error")
+            val body = groupBody(m, 1, filename, lnum)
+            val longitude = groupDouble(m, 2, filename, lnum)
+            val latitude = groupDouble(m, 3, filename, lnum)
+            val year = groupInt(m, 4, filename, lnum)
+            val month = groupInt(m, 5, filename, lnum)
+            val day = groupInt(m, 6, filename, lnum)
+            val hour = groupInt(m, 7, filename, lnum)
+            val minute = groupInt(m, 8, filename, lnum)
+            val direction = groupDirection(m, 9, filename, lnum)
+
+            val correctDate = AstroTime(year, month, day, hour, minute, 0.0)
+
+            // Every time we see a new geographic location or body, start a new iteration
+            // of finding all rise/set times for that UTC calendar year.
+            if (observer == null || observer.latitude != latitude || observer.longitude != longitude
+                || currentBody == null || currentBody != body
+            ) {
+                currentBody = body
+                observer = Observer(latitude, longitude, 0.0)
+                rSearchDate = AstroTime(year, 1, 1, 0, 0, 0.0)
+                sSearchDate = rSearchDate
+                bEvt = null
+            }
+
+            if (bEvt != null) {
+                // The previous iteration found two events.
+                // We already processed the earlier event (aEvt).
+                // Now it is time to process the later event (bEvt).
+                aEvt = bEvt
+                aDir = bDir
+                bEvt = null
+            } else {
+                rEvt = Astronomy.searchRiseSet(body, observer, Direction.Rise, rSearchDate!!, 366.0)
+                if (rEvt == null)
+                    fail("$filename line $lnum: did not find $body rise event.")
+
+                sEvt = Astronomy.searchRiseSet(body, observer, Direction.Set, sSearchDate!!, 366.0)
+                if (sEvt == null)
+                    fail("$filename line $lnum: did not find $body set event.")
+
+                // Sort the two events chronologically.
+                // We will check the earlier event in this iteration,
+                // and check the later event in the next iteration.
+
+                if (rEvt.tt < sEvt.tt) {
+                    aEvt = rEvt
+                    bEvt = sEvt
+                    aDir = Direction.Rise
+                    bDir = Direction.Set
+                } else {
+                    aEvt = sEvt
+                    bEvt = rEvt
+                    aDir = Direction.Set
+                    bDir = Direction.Rise
+                }
+
+                // Nudge the event times forward a tiny amount.
+                // This prevents us from getting stuck in a loop, finding the same event repeatedly.
+                rSearchDate = rEvt.addDays(nudgeDays)
+                sSearchDate = sEvt.addDays(nudgeDays)
+            }
+
+            // Expect the current search result to match the earlier of the found dates.
+            assertTrue(aDir == direction, "$filename line $lnum: expected direction $direction, bound found $aDir")
+            val errorMinutes = (24.0 * 60.0) * abs(aEvt.tt - correctDate.tt)
+            assertTrue(errorMinutes < 0.57, "$filename line $lnum: excessive prediction time error = $errorMinutes minutes.")
         }
     }
 

@@ -626,8 +626,8 @@ namespace csharp_test
                 Observer observer = new Observer();
                 bool foundObserver = false;
                 AstroTime r_search_date = null, s_search_date = null;
-                AstroTime r_evt = null, s_evt = null;     /* rise event, set event: search results */
-                AstroTime a_evt = null, b_evt = null;     /* chronologically first and second events */
+                AstroTime r_evt = null, s_evt = null;     // rise event, set event: search results
+                AstroTime a_evt = null, b_evt = null;     // chronologically first and second events
                 Direction a_dir = Direction.Rise, b_dir = Direction.Rise;
                 const double nudge_days = 0.01;
                 double sum_minutes = 0.0;
@@ -656,8 +656,8 @@ namespace csharp_test
                     Direction direction = (m.Groups[9].Value == "r") ? Direction.Rise : Direction.Set;
                     var correct_date = new AstroTime(year, month, day, hour, minute, 0);
 
-                    /* Every time we see a new geographic location or body, start a new iteration */
-                    /* of finding all rise/set times for that UTC calendar year. */
+                    // Every time we see a new geographic location or body, start a new iteration
+                    // of finding all rise/set times for that UTC calendar year.
                     if (!foundObserver || observer.latitude != latitude || observer.longitude != longitude || current_body != body)
                     {
                         current_body = body;
@@ -670,6 +670,9 @@ namespace csharp_test
 
                     if (b_evt != null)
                     {
+                        // The previous iteration found two events.
+                        // We already processed the earlier event (a_evt).
+                        // Now it is time to process the later event (b_evt).
                         a_evt = b_evt;
                         a_dir = b_dir;
                         b_evt = null;
@@ -686,11 +689,13 @@ namespace csharp_test
                         s_evt = Astronomy.SearchRiseSet(body, observer, Direction.Set, s_search_date, 366.0);
                         if (s_evt == null)
                         {
-                            Console.WriteLine("C# RiseSetTest({0} line {1}): Did not find {2} rise event.", filename, lnum, body);
+                            Console.WriteLine("C# RiseSetTest({0} line {1}): Did not find {2} set event.", filename, lnum, body);
                             return 1;
                         }
 
-                        /* Expect the current event to match the earlier of the found dates. */
+                        // Sort the two events chronologically.
+                        // We will check the earlier event in this iteration,
+                        // and check the later event in the next iteration.
                         if (r_evt.tt < s_evt.tt)
                         {
                             a_evt = r_evt;
@@ -706,16 +711,20 @@ namespace csharp_test
                             b_dir = Direction.Rise;
                         }
 
-                        /* Nudge the event times forward a tiny amount. */
+                        // Nudge the event times forward a tiny amount.
+                        // This prevents us from getting stuck in a loop, finding the same event repeatedly.
                         r_search_date = r_evt.AddDays(nudge_days);
                         s_search_date = s_evt.AddDays(nudge_days);
                     }
+
+                    // Expect the current search result to match the earlier of the found dates.
 
                     if (a_dir != direction)
                     {
                         Console.WriteLine("C# RiseSetTest({0} line {1}): expected dir={2} but found {3}", filename, lnum, a_dir, direction);
                         return 1;
                     }
+
                     double error_minutes = (24.0 * 60.0) * abs(a_evt.tt - correct_date.tt);
                     sum_minutes += error_minutes * error_minutes;
                     if (error_minutes > max_minutes)

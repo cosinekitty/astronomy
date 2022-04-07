@@ -6394,13 +6394,12 @@ namespace CosineKitty
             */
 
             HourAngleInfo evt_before, evt_after;
-            AstroTime time_start = startTime;
-            double alt_before = context.Eval(time_start);
+            double alt_before = context.Eval(startTime);
             AstroTime time_before;
             if (alt_before > 0.0)
             {
                 /* We are past the sought event, so we have to wait for the next "before" event (culm/bottom). */
-                evt_before = SearchHourAngle(body, observer, ha_before, time_start);
+                evt_before = SearchHourAngle(body, observer, ha_before, startTime);
                 time_before = evt_before.time;
                 alt_before = context.Eval(time_before);
             }
@@ -6408,7 +6407,7 @@ namespace CosineKitty
             {
                 /* We are before or at the sought event, so we find the next "after" event (bottom/culm), */
                 /* and use the current time as the "before" event. */
-                time_before = time_start;
+                time_before = startTime;
             }
 
             evt_after = SearchHourAngle(body, observer, ha_after, time_before);
@@ -6419,16 +6418,16 @@ namespace CosineKitty
                 if (alt_before <= 0.0 && alt_after > 0.0)
                 {
                     /* Search between evt_before and evt_after for the desired event. */
-                    AstroTime result = Search(context, time_before, evt_after.time, 1.0);
-                    if (result != null)
-                        return result;
+                    AstroTime time = Search(context, time_before, evt_after.time, 1.0);
+                    if (time != null)
+                        return time;
                 }
 
                 /* If we didn't find the desired event, use evt_after.time to find the next before-event. */
                 evt_before = SearchHourAngle(body, observer, ha_before, evt_after.time);
                 evt_after = SearchHourAngle(body, observer, ha_after, evt_before.time);
 
-                if (evt_before.time.ut >= time_start.ut + limitDays)
+                if (evt_before.time.ut >= startTime.ut + limitDays)
                     return null;
 
                 time_before = evt_before.time;
