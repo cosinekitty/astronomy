@@ -39,6 +39,25 @@ private fun groupDirection(match: MatchResult, groupIndex: Int, filename: String
         else -> fail("Invalid direction symbol: $text")
     }
 
+private val regexDate = Regex("""^(\d+)-(\d+)-(\d+)T(\d+):(\d+)(:(\d+))?Z$""")
+
+private fun parseDate(text: String): AstroTime {
+    val m = regexDate.matchEntire(text) ?: fail("parseDate failed for string: '$text'")
+    val year   = (m.groups[1] ?: fail("Cannot parse year from string: '$text'")).value.toInt()
+    val month  = (m.groups[2] ?: fail("Cannot parse month from string: '$text'")).value.toInt()
+    val day    = (m.groups[3] ?: fail("Cannot parse day from string: '$text'")).value.toInt()
+    val hour   = (m.groups[4] ?: fail("Cannot parse hour from string: '$text'")).value.toInt()
+    val minute = (m.groups[5] ?: fail("Cannot parse minute from string: '$text'")).value.toInt()
+    val secondText = m.groups[7]?.value
+    var second = (
+        if (secondText != null && secondText != "")
+            secondText.toDouble()
+        else
+            0.0
+    )
+    return AstroTime(year, month, day, hour, minute, second)
+}
+
 class Tests {
     private fun checkVector(
         vec: AstroVector,
@@ -965,6 +984,41 @@ class Tests {
             assertTrue(aDir == direction, "$filename line $lnum: expected direction $direction, bound found $aDir")
             val errorMinutes = (24.0 * 60.0) * abs(aEvt.tt - correctDate.tt)
             assertTrue(errorMinutes < 0.57, "$filename line $lnum: excessive prediction time error = $errorMinutes minutes.")
+        }
+    }
+
+    //----------------------------------------------------------------------------------------
+
+    @Test
+    fun `Twilight test`() {
+        val filename = dataRootDir + "riseset/twilight.txt"
+        val toleranceSeconds = 60.0
+        var lnum = 0
+        val infile = File(filename)
+        for (line in infile.readLines()) {
+            ++lnum
+            val tokens = tokenize(line)
+            assertTrue(tokens.size == 9, "$filename line $lnum: invalid number of tokens.")
+            val lat = tokens[0].toDouble()
+            val lon = tokens[1].toDouble()
+            val observer = Observer(lat, lon, 0.0)
+            val searchDate = parseDate(tokens[2])
+            val correctTimes = tokens.drop(3).map { it -> parseDate(it) }
+            val calcTimes = arrayOf(
+                Astronomy.searchAltitude(Body.Sun, observer, Direction.Rise, searchDate, 1.0, -18.0),  // astronomical dawn
+                Astronomy.searchAltitude(Body.Sun, observer, Direction.Rise, searchDate, 1.0, -12.0),  // nautical dawn
+                Astronomy.searchAltitude(Body.Sun, observer, Direction.Rise, searchDate, 1.0,  -6.0),  // civil dawn
+                Astronomy.searchAltitude(Body.Sun, observer, Direction.Set,  searchDate, 1.0,  -6.0),  // civil dawn
+                Astronomy.searchAltitude(Body.Sun, observer, Direction.Set,  searchDate, 1.0, -12.0),  // nautical dawn
+                Astronomy.searchAltitude(Body.Sun, observer, Direction.Set,  searchDate, 1.0, -18.0),  // astronomical dawn
+            )
+            assertTrue(correctTimes.size == calcTimes.size, "correctTimes.size = ${correctTimes.size}, but calcTimes.size = ${calcTimes.size}")
+            for (i in 0 until correctTimes.size) {
+                val correct = correctTimes[i]
+                val calc = calcTimes[i] ?: fail("$filename line $lnum: calcTimes[$i] search failed.")
+                val diff = 86400.0 * abs(calc.ut - correct.ut)
+                assertTrue(diff < toleranceSeconds, "$filename line $lnum: excessive error = $diff seconds.")
+            }
         }
     }
 

@@ -4850,6 +4850,58 @@ object Astronomy {
         return internalSearchAltitude(body, observer, direction, startTime, limitDays, context)
     }
 
+    private class SearchContextAltitudeError(
+        private val body: Body,
+        private val direction: Direction,
+        private val observer: Observer,
+        private val altitude: Double
+    ): SearchContext {
+        override fun eval(time: AstroTime): Double {
+            val ofdate = Astronomy.equator(body, time, observer, EquatorEpoch.OfDate, Aberration.Corrected)
+            val hor = Astronomy.horizon(time, observer, ofdate.ra, ofdate.dec, Refraction.None)
+            return direction.sign * (hor.altitude - altitude)
+        }
+    }
+
+    /**
+     * Finds the next time a body reaches a given altitude.
+     *
+     * Finds when the given body ascends or descends through a given
+     * altitude angle, as seen by an observer at the specified location on the Earth.
+     * By using the appropriate combination of `direction` and `altitude` parameters,
+     * this function can be used to find when civil, nautical, or astronomical twilight
+     * begins (dawn) or ends (dusk).
+     *
+     * Civil dawn begins before sunrise when the Sun ascends through 6 degrees below
+     * the horizon. To find civil dawn, pass `Direction.Rise` for `direction` and -6 for `altitude`.
+     *
+     * Civil dusk ends after sunset when the Sun descends through 6 degrees below the horizon.
+     * To find civil dusk, pass `Direction.Set` for `direction` and -6 for `altitude`.
+     *
+     * Nautical twilight is similar to civil twilight, only the `altitude` value should be -12 degrees.
+     *
+     * Astronomical twilight uses -18 degrees as the `altitude` value.
+     *
+     * @param body The Sun, Moon, or any planet other than the Earth.
+     * @param observer The location where observation takes place.
+     * @param direction Either `Direction.Rise` to find an ascending altitude event or `Direction.Set` to find a descending altitude event.
+     * @param startTime The date and time at which to start the search.
+     * @param limitDays The fractional number of days after `dateStart` that limits when the altitude event is to be found. Must be a positive number.
+     * @param altitude The desired altitude angle of the body's center above (positive) or below (negative) the observer's local horizon, expressed in degrees. Must be in the range [-90, +90].
+     * @return The date and time of the altitude event, or `null` if no such event occurs within the specified time window.
+     */
+    fun searchAltitude(
+        body: Body,
+        observer: Observer,
+        direction: Direction,
+        startTime: AstroTime,
+        limitDays: Double,
+        altitude: Double
+    ): AstroTime? {
+        val context = SearchContextAltitudeError(body, direction, observer, altitude)
+        return internalSearchAltitude(body, observer, direction, startTime, limitDays, context)
+    }
+
     /**
      * Continues searching for lunar quarters from a previous search.
      *

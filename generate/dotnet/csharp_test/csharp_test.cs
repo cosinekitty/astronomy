@@ -3173,9 +3173,9 @@ namespace csharp_test
                         Astronomy.SearchAltitude(Body.Sun, observer, Direction.Rise, searchDate, 1.0, -18.0),  // astronomical dawn
                         Astronomy.SearchAltitude(Body.Sun, observer, Direction.Rise, searchDate, 1.0, -12.0),  // nautical dawn
                         Astronomy.SearchAltitude(Body.Sun, observer, Direction.Rise, searchDate, 1.0,  -6.0),  // civil dawn
-                        Astronomy.SearchAltitude(Body.Sun, observer, Direction.Set, searchDate,  1.0,  -6.0),  // civil dawn
-                        Astronomy.SearchAltitude(Body.Sun, observer, Direction.Set, searchDate,  1.0, -12.0),  // nautical dawn
-                        Astronomy.SearchAltitude(Body.Sun, observer, Direction.Set, searchDate,  1.0, -18.0),  // astronomical dawn
+                        Astronomy.SearchAltitude(Body.Sun, observer, Direction.Set,  searchDate, 1.0,  -6.0),  // civil dawn
+                        Astronomy.SearchAltitude(Body.Sun, observer, Direction.Set,  searchDate, 1.0, -12.0),  // nautical dawn
+                        Astronomy.SearchAltitude(Body.Sun, observer, Direction.Set,  searchDate, 1.0, -18.0),  // astronomical dawn
                     };
 
                     for (int i = 0; i < 6; ++i)
