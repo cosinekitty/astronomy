@@ -29,10 +29,17 @@ configure<JavaPluginExtension> {
     sourceCompatibility = JavaVersion.VERSION_1_8
 }
 
+val sourceJar by tasks.creating(Jar::class) {
+    dependsOn(tasks["classes"])
+    archiveClassifier.set("sources")
+    from(sourceSets["main"].allSource)
+}
+
 publishing {
     publications {
         register("mavenJava", MavenPublication::class) {
-            from(components["java"])
+            from(components["kotlin"])
+            artifact(sourceJar)
         }
     }
 }
