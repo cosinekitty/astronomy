@@ -217,6 +217,20 @@ def Seasons(filename = 'seasons/seasons.txt'):
     print('PY Seasons: Event counts: mar={}, jun={}, sep={}, dec={}'.format(mar_count, jun_count, sep_count, dec_count))
     return 0
 
+
+def SeasonsIssue187():
+    # This is a regression test for:
+    # https://github.com/cosinekitty/astronomy/issues/187
+    # For years far from the present, the seasons search was sometimes failing.
+    for year in range(1, 9999, 1):
+        try:
+            astronomy.Seasons(year)
+        except astronomy.InternalError:
+            print('PY SeasonsIssue187: FAIL - internal error for year {}'.format(year))
+            return 1
+    print('PY SeasonsIssue187: PASS')
+    return 0
+
 #-----------------------------------------------------------------------------------------------------------
 
 def MoonPhase(filename = 'moonphase/moonphases.txt'):
@@ -2510,6 +2524,7 @@ UnitTests = {
     'riseset':                  RiseSet,
     'rotation':                 Rotation,
     'seasons':                  Seasons,
+    'seasons187':               SeasonsIssue187,
     'sidereal':                 SiderealTime,
     'time':                     AstroTime,
     'topostate':                TopoState,

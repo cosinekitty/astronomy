@@ -832,6 +832,15 @@ class Tests {
         assertTrue(decemberCount == 301, "decemberCount = $decemberCount")
     }
 
+    @Test
+    fun `Seasons issue 187`() {
+        // This is a regression test for:
+        // https://github.com/cosinekitty/astronomy/issues/187
+        // For years far from the present, the seasons search was sometimes failing.
+        for (year in 1 .. 9999)
+            Astronomy.seasons(year)
+    }
+
     //----------------------------------------------------------------------------------------
 
     @Test

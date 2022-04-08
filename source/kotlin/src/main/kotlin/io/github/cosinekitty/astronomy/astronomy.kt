@@ -4233,8 +4233,8 @@ object Astronomy {
             // (t1,f1), (tmid,fmid), (t2,f2).
             val tm = tmid.ut
             val tspan = t2.ut - tmid.ut
-            val q = (f2 + f1) - fmid
-            val r = (f2 - f1) / 2.0
+            val q = (f2 + f1)/2.0 - fmid
+            val r = (f2 - f1)/2.0
             val s = fmid
             var foundInterpolation = false
             var x = Double.NaN
@@ -4421,7 +4421,7 @@ object Astronomy {
         }
         val context = Context(targetLon)
         val time2 = startTime.addDays(limitDays)
-        return search(context, startTime, time2, 1.0)
+        return search(context, startTime, time2, 0.01)
     }
 
     /**
@@ -4460,16 +4460,16 @@ object Astronomy {
      */
     fun seasons(year: Int) =
         SeasonsInfo(
-            findSeasonChange(  0.0, year,  3, 19),
-            findSeasonChange( 90.0, year,  6, 19),
-            findSeasonChange(180.0, year,  9, 21),
-            findSeasonChange(270.0, year, 12, 20)
+            findSeasonChange(  0.0, year,  3, 10),
+            findSeasonChange( 90.0, year,  6, 10),
+            findSeasonChange(180.0, year,  9, 10),
+            findSeasonChange(270.0, year, 12, 10)
         )
 
     private fun findSeasonChange(targetLon: Double, year: Int, month: Int, day: Int): AstroTime {
         var startTime = AstroTime(year, month, day, 0, 0, 0.0)
-        return searchSunLongitude(targetLon, startTime, 4.0) ?:
-            throw InternalError("Cannot find solution for Sun longitude $targetLon")
+        return searchSunLongitude(targetLon, startTime, 20.0) ?:
+            throw InternalError("Cannot find solution for Sun longitude $targetLon for year $year")
     }
 
     /**

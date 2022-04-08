@@ -5642,7 +5642,7 @@ def SearchSunLongitude(targetLon, startTime, limitDays):
     Time or `None`
     """
     t2 = startTime.AddDays(limitDays)
-    return Search(_sun_offset, targetLon, startTime, t2, 1.0)
+    return Search(_sun_offset, targetLon, startTime, t2, 0.01)
 
 def MoonPhase(time):
     """Returns the Moon's phase as an angle from 0 to 360 degrees.
@@ -6444,7 +6444,7 @@ class SeasonInfo:
 
 def _FindSeasonChange(targetLon, year, month, day):
     startTime = Time.Make(year, month, day, 0, 0, 0)
-    time = SearchSunLongitude(targetLon, startTime, 4.0)
+    time = SearchSunLongitude(targetLon, startTime, 20.0)
     if time is None:
         # We should always be able to find a season change.
         raise InternalError()
@@ -6486,10 +6486,17 @@ def Seasons(year):
     -------
     SeasonInfo
     """
-    mar_equinox = _FindSeasonChange(0, year, 3, 19)
-    jun_solstice = _FindSeasonChange(90, year, 6, 19)
-    sep_equinox = _FindSeasonChange(180, year, 9, 21)
-    dec_solstice = _FindSeasonChange(270, year, 12, 20)
+    # https://github.com/cosinekitty/astronomy/issues/187
+    # Solstices and equinoxes drift over long spans of time,
+    # due to precession of the Earth's axis.
+    # Therefore, we have to search a wider range of time than
+    # one might expect. It turns out this has very little
+    # effect on efficiency, thanks to the quick convergence
+    # of quadratic interpolation inside the `Search` function.
+    mar_equinox  = _FindSeasonChange(  0, year,  3, 10)
+    jun_solstice = _FindSeasonChange( 90, year,  6, 10)
+    sep_equinox  = _FindSeasonChange(180, year,  9, 10)
+    dec_solstice = _FindSeasonChange(270, year, 12, 10)
     return SeasonInfo(mar_equinox, jun_solstice, sep_equinox, dec_solstice)
 
 def _MoonDistance(time):

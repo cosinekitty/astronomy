@@ -5914,19 +5914,27 @@ namespace CosineKitty
         /// </returns>
         public static SeasonsInfo Seasons(int year)
         {
+            // https://github.com/cosinekitty/astronomy/issues/187
+            // Solstices and equinoxes drift over long spans of time,
+            // due to precession of the Earth's axis.
+            // Therefore, we have to search a wider range of time than
+            // one might expect. It turns out this has very little
+            // effect on efficiency, thanks to the quick convergence
+            // of quadratic interpolation inside the `Search` function.
+
             return new SeasonsInfo(
-                FindSeasonChange(  0, year,  3, 19),
-                FindSeasonChange( 90, year,  6, 19),
-                FindSeasonChange(180, year,  9, 21),
-                FindSeasonChange(270, year, 12, 20)
+                FindSeasonChange(  0, year,  3, 10),
+                FindSeasonChange( 90, year,  6, 10),
+                FindSeasonChange(180, year,  9, 10),
+                FindSeasonChange(270, year, 12, 10)
             );
         }
 
         private static AstroTime FindSeasonChange(double targetLon, int year, int month, int day)
         {
             var startTime = new AstroTime(year, month, day, 0, 0, 0);
-            return SearchSunLongitude(targetLon, startTime, 4.0) ??
-                throw new InternalError($"Cannot find solution for Sun longitude {targetLon}");
+            return SearchSunLongitude(targetLon, startTime, 20.0) ??
+                throw new InternalError($"Cannot find solution for Sun longitude {targetLon} in year {year}");
         }
 
         /// <summary>
@@ -5967,7 +5975,7 @@ namespace CosineKitty
         {
             var sun_offset = new SearchContext_SunOffset(targetLon);
             AstroTime t2 = startTime.AddDays(limitDays);
-            return Search(sun_offset, startTime, t2, 1.0);
+            return Search(sun_offset, startTime, t2, 0.01);
         }
 
         /// <summary>

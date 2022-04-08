@@ -1068,6 +1068,26 @@ function Seasons() {
         }
     }
     console.log('JS Seasons: PASS');
+    return 0;
+}
+
+
+function SeasonsIssue187() {
+    // This is a regression test for:
+    // https://github.com/cosinekitty/astronomy/issues/187
+    // For years far from the present, the seasons search was sometimes failing.
+
+    for (let year = -2000; year <= +9999; ++year) {
+        try {
+            Astronomy.Seasons(year);
+        } catch (e) {
+            console.error(`JS SeasonsIssue187: FAIL (year = ${year}): `, e);
+            return 1;
+        }
+    }
+
+    console.log('JS SeasonsIssue187: PASS');
+    return 0;
 }
 
 
@@ -2743,6 +2763,7 @@ const UnitTests = {
     rise_set:               RiseSet,
     rotation:               Rotation,
     seasons:                Seasons,
+    seasons187:             SeasonsIssue187,
     sidereal:               SiderealTimeTest,
     topostate:              TopoStateTest,
     transit:                Transit,

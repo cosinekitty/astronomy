@@ -55,6 +55,7 @@ namespace csharp_test
             new Test("riseset", RiseSetTest),
             new Test("rotation", RotationTest),
             new Test("seasons", SeasonsTest),
+            new Test("seasons187", SeasonsIssue187),
             new Test("sidereal", SiderealTimeTest),
             new Test("transit", TransitTest),
             new Test("astro_check", AstroCheck),
@@ -389,6 +390,17 @@ namespace csharp_test
                 Console.WriteLine("C# SeasonsTest: Event counts: mar={0}, jun={1}, sep={2}, dec={3}", mar_count, jun_count, sep_count, dec_count);
                 return 0;
             }
+        }
+
+        static int SeasonsIssue187()
+        {
+            // This is a regression test for:
+            // https://github.com/cosinekitty/astronomy/issues/187
+            // For years far from the present, the seasons search was sometimes failing.
+            for (int year = 1; year <= 9999; ++year)
+                Astronomy.Seasons(year);
+
+            return 0;
         }
 
         static int MoonPhaseTest()

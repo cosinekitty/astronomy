@@ -172,6 +172,7 @@ static int AstroCheck(void);
 static int Diff(double tolerance, const char *a_filename, const char *b_filename);
 static int DiffLine(int lnum, const char *aline, const char *bline, maxdiff_column_t column[]);
 static int SeasonsTest(void);
+static int SeasonsIssue187(void);
 static int MoonPhase(void);
 static int MoonNodes(void);
 static int RiseSet(void);
@@ -261,6 +262,7 @@ static unit_test_t UnitTests[] =
     {"riseset",                 RiseSet},
     {"rotation",                RotationTest},
     {"seasons",                 SeasonsTest},
+    {"seasons187",              SeasonsIssue187},
     {"sidereal",                SiderealTimeTest},
     {"time",                    Test_AstroTime},
     {"topostate",               TopoStateTest},
@@ -978,6 +980,43 @@ static int SeasonsTest(void)
 
 fail:
     if (infile != NULL) fclose(infile);
+    return error;
+}
+
+static int SeasonsIssue187(void)
+{
+    int error, year;
+    astro_seasons_t seasons;
+    char text[TIME_TEXT_BYTES];
+
+    // This is a regression test for:
+    // https://github.com/cosinekitty/astronomy/issues/187
+    // For years far from the present, the seasons search was sometimes failing.
+
+    for (year = -2000; year <= +9999; ++year)
+    {
+        seasons = Astronomy_Seasons(year);
+        if (seasons.status != ASTRO_SUCCESS)
+            FAIL("C SeasonsIssue187: Search error %d for year %d.\n", (int)seasons.status, year);
+
+        if (Verbose && ((year > 0) && (year % 1000 == 999)))
+        {
+            printf("C SeasonsIssue187: DEBUG");
+            Astronomy_FormatTime(seasons.mar_equinox, TIME_FORMAT_DAY, text, sizeof(text));
+            printf(" %s", text);
+            Astronomy_FormatTime(seasons.jun_solstice, TIME_FORMAT_DAY, text, sizeof(text));
+            printf(" %s", text);
+            Astronomy_FormatTime(seasons.sep_equinox, TIME_FORMAT_DAY, text, sizeof(text));
+            printf(" %s", text);
+            Astronomy_FormatTime(seasons.dec_solstice, TIME_FORMAT_DAY, text, sizeof(text));
+            printf(" %s\n", text);
+        }
+    }
+
+    printf("C SeasonsIssue187: PASS\n");
+    error = 0;
+
+fail:
     return error;
 }
 

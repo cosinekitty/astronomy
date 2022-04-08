@@ -4022,7 +4022,7 @@ function SearchSunLongitude(targetLon, dateStart, limitDays) {
     VerifyNumber(limitDays);
     let t1 = MakeTime(dateStart);
     let t2 = t1.AddDays(limitDays);
-    return Search(sun_offset, t1, t2);
+    return Search(sun_offset, t1, t2, { dt_tolerance_seconds: 0.01 });
 }
 exports.SearchSunLongitude = SearchSunLongitude;
 /**
@@ -4921,7 +4921,7 @@ exports.SeasonInfo = SeasonInfo;
 function Seasons(year) {
     function find(targetLon, month, day) {
         let startDate = new Date(Date.UTC(year, month - 1, day));
-        let time = SearchSunLongitude(targetLon, startDate, 4);
+        let time = SearchSunLongitude(targetLon, startDate, 20);
         if (!time)
             throw `Cannot find season change near ${startDate.toISOString()}`;
         return time;
@@ -4930,10 +4930,10 @@ function Seasons(year) {
         year = year.getUTCFullYear();
     if (!Number.isSafeInteger(year))
         throw `Cannot calculate seasons because year argument ${year} is neither a Date nor a safe integer.`;
-    let mar_equinox = find(0, 3, 19);
-    let jun_solstice = find(90, 6, 19);
-    let sep_equinox = find(180, 9, 21);
-    let dec_solstice = find(270, 12, 20);
+    let mar_equinox = find(0, 3, 10);
+    let jun_solstice = find(90, 6, 10);
+    let sep_equinox = find(180, 9, 10);
+    let dec_solstice = find(270, 12, 10);
     return new SeasonInfo(mar_equinox, jun_solstice, sep_equinox, dec_solstice);
 }
 exports.Seasons = Seasons;
